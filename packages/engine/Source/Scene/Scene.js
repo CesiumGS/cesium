@@ -73,6 +73,8 @@ import SunPostProcess from "./SunPostProcess.js";
 import TweenCollection from "./TweenCollection.js";
 import View from "./View.js";
 import DebugInspector from "./DebugInspector.js";
+import VoxelCell from "./VoxelCell.js";
+import VoxelPrimitive from "./VoxelPrimitive.js";
 
 const requestRenderAfterFrame = function (scene) {
   return function () {
@@ -1866,10 +1868,12 @@ function getOccluder(scene) {
 
 /**
  * @private
+ * @param {FrameState.Passes} passes
  */
 Scene.prototype.clearPasses = function (passes) {
   passes.render = false;
   passes.pick = false;
+  passes.pickVoxel = false;
   passes.depth = false;
   passes.postProcess = false;
   passes.offscreen = false;
@@ -2128,6 +2132,7 @@ function executeCommand(command, scene, context, passState, debugFramebuffer) {
   const passes = frameState.passes;
   if (
     !passes.pick &&
+    !passes.pickVoxel &&
     !passes.depth &&
     scene._hdr &&
     defined(command.derivedCommands) &&
@@ -2281,12 +2286,10 @@ const scratchOrthographicFrustum = new OrthographicFrustum();
 const scratchOrthographicOffCenterFrustum = new OrthographicOffCenterFrustum();
 
 function executeCommands(scene, passState) {
-  const camera = scene.camera;
-  const context = scene.context;
-  const frameState = scene.frameState;
-  const us = context.uniformState;
+  const { camera, context, frameState } = scene;
+  const { uniformState } = context;
 
-  us.updateCamera(camera);
+  uniformState.updateCamera(camera);
 
   // Create a working frustum from the original camera frustum.
   let frustum;
@@ -2304,11 +2307,11 @@ function executeCommands(scene, passState) {
   // early-z, but we would have to draw it in each frustum
   frustum.near = camera.frustum.near;
   frustum.far = camera.frustum.far;
-  us.updateFrustum(frustum);
-  us.updatePass(Pass.ENVIRONMENT);
+  uniformState.updateFrustum(frustum);
+  uniformState.updatePass(Pass.ENVIRONMENT);
 
   const passes = frameState.passes;
-  const picking = passes.pick;
+  const picking = passes.pick || passes.pickVoxel;
   const environmentState = scene._environmentState;
   const view = scene._view;
   const renderTranslucentDepthForPick =
@@ -2410,8 +2413,8 @@ function executeCommands(scene, passState) {
       camera.position.z = height2D - frustumCommands.near + 1.0;
       frustum.far = Math.max(1.0, frustumCommands.far - frustumCommands.near);
       frustum.near = 1.0;
-      us.update(frameState);
-      us.updateFrustum(frustum);
+      uniformState.update(frameState);
+      uniformState.updateFrustum(frustum);
     } else {
       // Avoid tearing artifacts between adjacent frustums in the opaque passes
       frustum.near =
@@ -2419,7 +2422,7 @@ function executeCommands(scene, passState) {
           ? frustumCommands.near * scene.opaqueFrustumNearOffset
           : frustumCommands.near;
       frustum.far = frustumCommands.far;
-      us.updateFrustum(frustum);
+      uniformState.updateFrustum(frustum);
     }
 
     clearDepth.execute(context, passState);
@@ -2428,7 +2431,7 @@ function executeCommands(scene, passState) {
       clearStencil.execute(context, passState);
     }
 
-    us.updatePass(Pass.GLOBE);
+    uniformState.updatePass(Pass.GLOBE);
     let commands = frustumCommands.commands[Pass.GLOBE];
     let length = frustumCommands.indices[Pass.GLOBE];
 
@@ -2453,7 +2456,7 @@ function executeCommands(scene, passState) {
 
     // Draw terrain classification
     if (!environmentState.renderTranslucentDepthForPick) {
-      us.updatePass(Pass.TERRAIN_CLASSIFICATION);
+      uniformState.updatePass(Pass.TERRAIN_CLASSIFICATION);
       commands = frustumCommands.commands[Pass.TERRAIN_CLASSIFICATION];
       length = frustumCommands.indices[Pass.TERRAIN_CLASSIFICATION];
 
@@ -2487,7 +2490,7 @@ function executeCommands(scene, passState) {
       // Common/fastest path. Draw 3D Tiles and classification normally.
 
       // Draw 3D Tiles
-      us.updatePass(Pass.CESIUM_3D_TILE);
+      uniformState.updatePass(Pass.CESIUM_3D_TILE);
       commands = frustumCommands.commands[Pass.CESIUM_3D_TILE];
       length = frustumCommands.indices[Pass.CESIUM_3D_TILE];
       for (j = 0; j < length; ++j) {
@@ -2509,7 +2512,7 @@ function executeCommands(scene, passState) {
 
         // Draw classifications. Modifies 3D Tiles color.
         if (!environmentState.renderTranslucentDepthForPick) {
-          us.updatePass(Pass.CESIUM_3D_TILE_CLASSIFICATION);
+          uniformState.updatePass(Pass.CESIUM_3D_TILE_CLASSIFICATION);
           commands =
             frustumCommands.commands[Pass.CESIUM_3D_TILE_CLASSIFICATION];
           length = frustumCommands.indices[Pass.CESIUM_3D_TILE_CLASSIFICATION];
@@ -2557,7 +2560,7 @@ function executeCommands(scene, passState) {
       passState.framebuffer = scene._invertClassification._fbo.framebuffer;
 
       // Draw normally
-      us.updatePass(Pass.CESIUM_3D_TILE);
+      uniformState.updatePass(Pass.CESIUM_3D_TILE);
       commands = frustumCommands.commands[Pass.CESIUM_3D_TILE];
       length = frustumCommands.indices[Pass.CESIUM_3D_TILE];
       for (j = 0; j < length; ++j) {
@@ -2575,7 +2578,7 @@ function executeCommands(scene, passState) {
       }
 
       // Set stencil
-      us.updatePass(Pass.CESIUM_3D_TILE_CLASSIFICATION_IGNORE_SHOW);
+      uniformState.updatePass(Pass.CESIUM_3D_TILE_CLASSIFICATION_IGNORE_SHOW);
       commands =
         frustumCommands.commands[
           Pass.CESIUM_3D_TILE_CLASSIFICATION_IGNORE_SHOW
@@ -2601,7 +2604,7 @@ function executeCommands(scene, passState) {
       }
 
       // Draw style over classification.
-      us.updatePass(Pass.CESIUM_3D_TILE_CLASSIFICATION);
+      uniformState.updatePass(Pass.CESIUM_3D_TILE_CLASSIFICATION);
       commands = frustumCommands.commands[Pass.CESIUM_3D_TILE_CLASSIFICATION];
       length = frustumCommands.indices[Pass.CESIUM_3D_TILE_CLASSIFICATION];
       for (j = 0; j < length; ++j) {
@@ -2613,13 +2616,13 @@ function executeCommands(scene, passState) {
       clearStencil.execute(context, passState);
     }
 
-    us.updatePass(Pass.VOXELS);
+    uniformState.updatePass(Pass.VOXELS);
     commands = frustumCommands.commands[Pass.VOXELS];
     length = frustumCommands.indices[Pass.VOXELS];
     commands.length = length;
     executeVoxelCommands(scene, executeCommand, passState, commands);
 
-    us.updatePass(Pass.OPAQUE);
+    uniformState.updatePass(Pass.OPAQUE);
     commands = frustumCommands.commands[Pass.OPAQUE];
     length = frustumCommands.indices[Pass.OPAQUE];
     for (j = 0; j < length; ++j) {
@@ -2629,7 +2632,7 @@ function executeCommands(scene, passState) {
     if (index !== 0 && scene.mode !== SceneMode.SCENE2D) {
       // Do not overlap frustums in the translucent pass to avoid blending artifacts
       frustum.near = frustumCommands.near;
-      us.updateFrustum(frustum);
+      uniformState.updateFrustum(frustum);
     }
 
     let invertClassification;
@@ -2643,7 +2646,7 @@ function executeCommands(scene, passState) {
       invertClassification = scene._invertClassification;
     }
 
-    us.updatePass(Pass.TRANSLUCENT);
+    uniformState.updatePass(Pass.TRANSLUCENT);
     commands = frustumCommands.commands[Pass.TRANSLUCENT];
     commands.length = frustumCommands.indices[Pass.TRANSLUCENT];
     executeTranslucentCommands(
@@ -2702,9 +2705,9 @@ function executeCommands(scene, passState) {
         ? frustumCommands.near * scene.opaqueFrustumNearOffset
         : frustumCommands.near;
     frustum.far = frustumCommands.far;
-    us.updateFrustum(frustum);
+    uniformState.updateFrustum(frustum);
 
-    us.updatePass(Pass.GLOBE);
+    uniformState.updatePass(Pass.GLOBE);
     commands = frustumCommands.commands[Pass.GLOBE];
     length = frustumCommands.indices[Pass.GLOBE];
 
@@ -2732,21 +2735,21 @@ function executeCommands(scene, passState) {
       depthPlane.execute(context, passState);
     }
 
-    us.updatePass(Pass.CESIUM_3D_TILE);
+    uniformState.updatePass(Pass.CESIUM_3D_TILE);
     commands = frustumCommands.commands[Pass.CESIUM_3D_TILE];
     length = frustumCommands.indices[Pass.CESIUM_3D_TILE];
     for (j = 0; j < length; ++j) {
       executeIdCommand(commands[j], scene, context, passState);
     }
 
-    us.updatePass(Pass.OPAQUE);
+    uniformState.updatePass(Pass.OPAQUE);
     commands = frustumCommands.commands[Pass.OPAQUE];
     length = frustumCommands.indices[Pass.OPAQUE];
     for (j = 0; j < length; ++j) {
       executeIdCommand(commands[j], scene, context, passState);
     }
 
-    us.updatePass(Pass.TRANSLUCENT);
+    uniformState.updatePass(Pass.TRANSLUCENT);
     commands = frustumCommands.commands[Pass.TRANSLUCENT];
     length = frustumCommands.indices[Pass.TRANSLUCENT];
     for (j = 0; j < length; ++j) {
@@ -3337,7 +3340,10 @@ function updateShadowMaps(scene) {
   const length = shadowMaps.length;
 
   const shadowsEnabled =
-    length > 0 && !frameState.passes.pick && scene.mode === SceneMode.SCENE3D;
+    length > 0 &&
+    !frameState.passes.pick &&
+    !frameState.passes.pickVoxel &&
+    scene.mode === SceneMode.SCENE3D;
   if (shadowsEnabled !== frameState.shadowState.shadowsEnabled) {
     // Update derived commands when shadowsEnabled changes
     ++frameState.shadowState.lastDirtyTime;
@@ -3401,7 +3407,7 @@ function updateAndClearFramebuffers(scene, passState, clearColor) {
   const view = scene._view;
 
   const passes = scene._frameState.passes;
-  const picking = passes.pick;
+  const picking = passes.pick || passes.pickVoxel;
   if (defined(view.globeDepth)) {
     view.globeDepth.picking = picking;
   }
@@ -4143,6 +4149,59 @@ Scene.prototype.clampLineWidth = function (width) {
  */
 Scene.prototype.pick = function (windowPosition, width, height) {
   return this._picking.pick(this, windowPosition, width, height);
+};
+
+/**
+ * Returns a {@link VoxelCell} for the voxel sample rendered at a particular window coordinate,
+ * or undefined if no voxel is rendered at that position.
+ *
+ * @example
+ * On left click, report the value of the "color" property at that voxel sample.
+ * handler.setInputAction(function(movement) {
+ *   const voxelCell = scene.pickVoxel(movement.position);
+ *   if (defined(voxelCell)) {
+ *     console.log(voxelCell.getProperty("color"));
+ *   }
+ * }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+ *
+ * @param {Cartesian2} windowPosition Window coordinates to perform picking on.
+ * @param {number} [width=3] Width of the pick rectangle.
+ * @param {number} [height=3] Height of the pick rectangle.
+ * @returns {VoxelCell|undefined} Information about the voxel cell rendered at the picked position.
+ *
+ * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
+ */
+Scene.prototype.pickVoxel = function (windowPosition, width, height) {
+  const pickedObject = this.pick(windowPosition, width, height);
+  if (!defined(pickedObject)) {
+    return;
+  }
+  const voxelPrimitive = pickedObject.primitive;
+  if (!(voxelPrimitive instanceof VoxelPrimitive)) {
+    return;
+  }
+  const voxelCoordinate = this._picking.pickVoxelCoordinate(
+    this,
+    windowPosition,
+    width,
+    height
+  );
+  // Look up the keyframeNode containing this picked cell
+  const tileIndex = 255 * voxelCoordinate[0] + voxelCoordinate[1];
+  const keyframeNode = voxelPrimitive._traversal.findKeyframeNode(tileIndex);
+  if (!defined(keyframeNode)) {
+    // The tile rendered at the pick position has since been discarded by
+    // a traversal update
+    return;
+  }
+  // Look up the metadata for the picked cell
+  const sampleIndex = 255 * voxelCoordinate[2] + voxelCoordinate[3];
+  return VoxelCell.fromKeyframeNode(
+    voxelPrimitive,
+    tileIndex,
+    sampleIndex,
+    keyframeNode
+  );
 };
 
 /**

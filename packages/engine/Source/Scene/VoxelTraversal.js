@@ -49,16 +49,14 @@ function VoxelTraversal(
    */
   this._primitive = primitive;
 
-  const length = types.length;
-
   /**
    * @type {Megatexture[]}
    * @readonly
    */
-  this.megatextures = new Array(length);
+  this.megatextures = new Array(types.length);
 
   // TODO make sure to split the maximumTextureMemoryByteLength across all the megatextures
-  for (let i = 0; i < length; i++) {
+  for (let i = 0; i < types.length; i++) {
     const type = types[i];
     const componentCount = MetadataType.getComponentCount(type);
     const componentType = componentTypes[i];
@@ -217,6 +215,18 @@ function VoxelTraversal(
    */
   this.leafNodeTexelSizeUv = new Cartesian2();
 }
+
+/**
+ * Finds a keyframe node in the traversal
+ *
+ * @param {number} megatextureIndex
+ * @returns {KeyframeNode}
+ */
+VoxelTraversal.prototype.findKeyframeNode = function (megatextureIndex) {
+  return this._keyframeNodesInMegatexture.find(function (keyframeNode) {
+    return keyframeNode.megatextureIndex === megatextureIndex;
+  });
+};
 
 function binaryTreeWeightingRecursive(arr, start, end, depth) {
   if (start > end) {
@@ -382,10 +392,7 @@ VoxelTraversal.prototype.destroy = function () {
  * @private
  */
 function recomputeBoundingVolumesRecursive(that, node) {
-  const primitive = that._primitive;
-  const shape = primitive._shape;
-  const dimensions = primitive._provider.dimensions;
-  node.computeBoundingVolumes(shape, dimensions);
+  node.computeBoundingVolumes(that._primitive._shape);
   if (defined(node.children)) {
     for (let i = 0; i < 8; i++) {
       const child = node.children[i];
@@ -410,12 +417,11 @@ function requestData(that, keyframeNode) {
     return;
   }
 
-  const primitive = that._primitive;
-  const provider = primitive._provider;
+  const provider = that._primitive._provider;
 
   function postRequestSuccess(result) {
     that._simultaneousRequestCount--;
-    const length = primitive._provider.types.length;
+    const length = provider.types.length;
 
     if (!defined(result)) {
       keyframeNode.state = KeyframeNode.LoadState.UNAVAILABLE;
@@ -434,7 +440,7 @@ function requestData(that, keyframeNode) {
         const data = result[i];
         const expectedLength = tileVoxelCount * channelCount;
         if (data.length === expectedLength) {
-          keyframeNode.metadatas[i] = data;
+          keyframeNode.metadata[i] = data;
           // State is received only when all metadata requests have been received
           keyframeNode.state = KeyframeNode.LoadState.RECEIVED;
         } else {
@@ -492,41 +498,21 @@ function loadAndUnload(that, frameState) {
   const frameNumber = that._frameNumber;
   const primitive = that._primitive;
   const shape = primitive._shape;
-  const { dimensions } = primitive;
   const targetScreenSpaceError = primitive.screenSpaceError;
   const priorityQueue = that._priorityQueue;
-  const keyframeLocation = that._keyframeLocation;
   const keyframeCount = that._keyframeCount;
-  const rootNode = that.rootNode;
+
+  const previousKeyframe = CesiumMath.clamp(
+    Math.floor(that._keyframeLocation),
+    0,
+    keyframeCount - 2
+  );
+  const nextKeyframe = previousKeyframe + 1;
 
   const { camera, context, pixelRatio } = frameState;
   const { positionWC, frustum } = camera;
   const screenHeight = context.drawingBufferHeight / pixelRatio;
   const screenSpaceErrorMultiplier = screenHeight / frustum.sseDenominator;
-
-  function keyframePriority(previousKeyframe, keyframe, nextKeyframe) {
-    const keyframeDifference = Math.min(
-      Math.abs(keyframe - previousKeyframe),
-      Math.abs(keyframe - nextKeyframe)
-    );
-    const maxKeyframeDifference = Math.max(
-      previousKeyframe,
-      keyframeCount - nextKeyframe - 1,
-      1
-    );
-    const keyframeFactor = Math.pow(
-      1.0 - keyframeDifference / maxKeyframeDifference,
-      4.0
-    );
-    const binaryTreeFactor = Math.exp(
-      -that._binaryTreeKeyframeWeighting[keyframe]
-    );
-    return CesiumMath.lerp(
-      binaryTreeFactor,
-      keyframeFactor,
-      0.15 + 0.85 * keyframeFactor
-    );
-  }
 
   /**
    * @ignore
@@ -545,13 +531,6 @@ function loadAndUnload(that, frameState) {
     }
     spatialNode.visitedFrameNumber = frameNumber;
 
-    const previousKeyframe = CesiumMath.clamp(
-      Math.floor(keyframeLocation),
-      0,
-      keyframeCount - 2
-    );
-    const nextKeyframe = previousKeyframe + 1;
-
     // Create keyframe nodes at the playhead.
     // If they already exist, nothing will be created.
     if (keyframeCount === 1) {
@@ -561,16 +540,21 @@ function loadAndUnload(that, frameState) {
         spatialNode.createKeyframeNode(k);
       }
     }
-    const ssePriority = mapInfiniteRangeToZeroOne(spatialNode.screenSpaceError);
+    const { screenSpaceError, keyframeNodes } = spatialNode;
+    const ssePriority = mapInfiniteRangeToZeroOne(screenSpaceError);
 
     let hasLoadedKeyframe = false;
-    const keyframeNodes = spatialNode.keyframeNodes;
     for (let i = 0; i < keyframeNodes.length; i++) {
       const keyframeNode = keyframeNodes[i];
 
       keyframeNode.priority =
         10.0 * ssePriority +
-        keyframePriority(previousKeyframe, keyframeNode.keyframe, nextKeyframe);
+        keyframePriority(
+          previousKeyframe,
+          keyframeNode.keyframe,
+          nextKeyframe,
+          that
+        );
 
       if (
         keyframeNode.state !== KeyframeNode.LoadState.UNAVAILABLE &&
@@ -584,16 +568,14 @@ function loadAndUnload(that, frameState) {
       }
     }
 
-    const meetsScreenSpaceError =
-      spatialNode.screenSpaceError < targetScreenSpaceError;
-    if (meetsScreenSpaceError || !hasLoadedKeyframe) {
+    if (screenSpaceError < targetScreenSpaceError || !hasLoadedKeyframe) {
       // Free up memory
       spatialNode.children = undefined;
       return;
     }
 
     if (!defined(spatialNode.children)) {
-      spatialNode.constructChildNodes(shape, dimensions);
+      spatialNode.constructChildNodes(shape);
     }
     for (let childIndex = 0; childIndex < 8; childIndex++) {
       const child = spatialNode.children[childIndex];
@@ -601,9 +583,11 @@ function loadAndUnload(that, frameState) {
     }
   }
 
+  // Add all the nodes to the queue, to sort them by priority.
   priorityQueue.reset();
-  addToQueueRecursive(rootNode, CullingVolume.MASK_INDETERMINATE);
+  addToQueueRecursive(that.rootNode, CullingVolume.MASK_INDETERMINATE);
 
+  // Move the nodes from the queue to array of high priority nodes.
   const highPriorityKeyframeNodes = that._highPriorityKeyframeNodes;
   let highPriorityKeyframeNodeCount = 0;
   let highPriorityKeyframeNode;
@@ -616,6 +600,8 @@ function loadAndUnload(that, frameState) {
     highPriorityKeyframeNodeCount++;
   }
 
+  // Sort the list of keyframe nodes in the megatexture by priority, so
+  // we can remove the lowest priority nodes if we need space.
   const keyframeNodesInMegatexture = that._keyframeNodesInMegatexture;
   // TODO: some of the megatexture state should be stored once, not duplicate for each megatexture
   const megatexture = that.megatextures[0];
@@ -628,6 +614,8 @@ function loadAndUnload(that, frameState) {
     return b.highPriorityFrameNumber - a.highPriorityFrameNumber;
   });
 
+  // Add the high priority nodes to the megatexture,
+  // removing existing lower-priority nodes if necessary.
   let destroyedCount = 0;
   let addedCount = 0;
 
@@ -673,6 +661,40 @@ function loadAndUnload(that, frameState) {
       keyframeNodesInMegatexture[addNodeIndex] = highPriorityKeyframeNode;
     }
   }
+}
+
+/**
+ * Compute a priority for a keyframe node.
+ *
+ * @private
+ * @param {number} previousKeyframe
+ * @param {number} keyframe
+ * @param {number} nextKeyframe
+ * @param {VoxelTraversal} traversal
+ * @returns {number} The computed priority
+ */
+function keyframePriority(previousKeyframe, keyframe, nextKeyframe, traversal) {
+  const keyframeDifference = Math.min(
+    Math.abs(keyframe - previousKeyframe),
+    Math.abs(keyframe - nextKeyframe)
+  );
+  const maxKeyframeDifference = Math.max(
+    previousKeyframe,
+    traversal._keyframeCount - nextKeyframe - 1,
+    1
+  );
+  const keyframeFactor = Math.pow(
+    1.0 - keyframeDifference / maxKeyframeDifference,
+    4.0
+  );
+  const binaryTreeFactor = Math.exp(
+    -traversal._binaryTreeKeyframeWeighting[keyframe]
+  );
+  return CesiumMath.lerp(
+    binaryTreeFactor,
+    keyframeFactor,
+    0.15 + 0.85 * keyframeFactor
+  );
 }
 
 /**
