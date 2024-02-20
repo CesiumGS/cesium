@@ -235,6 +235,9 @@ void intersectShape(in Ray ray, inout Intersections ix) {
         return;
     }
 
+    // Inner ellipsoid
+    RayShapeIntersection innerIntersect = intersectHeight(ray, u_clipMinMaxHeight.x, false);
+
     if (innerIntersect.entry.w == NO_HIT) {
         setShapeIntersection(ix, ELLIPSOID_INTERSECTION_INDEX_HEIGHT_MIN, innerIntersect);
     } else {
@@ -273,14 +276,14 @@ void intersectShape(in Ray ray, inout Intersections ix) {
 
     // Bottom cone
     #if defined(ELLIPSOID_HAS_RENDER_BOUNDS_LATITUDE_MIN_UNDER_HALF)
-        RayShapeIntersection bottomConeIntersection = intersectRegularCone(ray, u_ellipsoidRenderLatitudeCosHalfMinMax.x, false);
+        RayShapeIntersection bottomConeIntersection = intersectRegularCone(ray, u_ellipsoidRenderLatitudeSinMinMax.x, false);
         setShapeIntersection(ix, ELLIPSOID_INTERSECTION_INDEX_LATITUDE_MIN, bottomConeIntersection);
     #elif defined(ELLIPSOID_HAS_RENDER_BOUNDS_LATITUDE_MIN_EQUAL_HALF)
         RayShapeIntersection bottomConeIntersection = intersectZPlane(ray, -1.0);
         setShapeIntersection(ix, ELLIPSOID_INTERSECTION_INDEX_LATITUDE_MIN, bottomConeIntersection);
     #elif defined(ELLIPSOID_HAS_RENDER_BOUNDS_LATITUDE_MIN_OVER_HALF)
         RayShapeIntersection bottomConeIntersections[2];
-        intersectFlippedCone(ray, u_ellipsoidRenderLatitudeCosHalfMinMax.x, bottomConeIntersections);
+        intersectFlippedCone(ray, u_ellipsoidRenderLatitudeSinMinMax.x, bottomConeIntersections);
         setShapeIntersection(ix, ELLIPSOID_INTERSECTION_INDEX_LATITUDE_MIN + 0, bottomConeIntersections[0]);
         setShapeIntersection(ix, ELLIPSOID_INTERSECTION_INDEX_LATITUDE_MIN + 1, bottomConeIntersections[1]);
     #endif
@@ -288,14 +291,14 @@ void intersectShape(in Ray ray, inout Intersections ix) {
     // Top cone
     #if defined(ELLIPSOID_HAS_RENDER_BOUNDS_LATITUDE_MAX_UNDER_HALF)
         RayShapeIntersection topConeIntersections[2];
-        intersectFlippedCone(ray, u_ellipsoidRenderLatitudeCosHalfMinMax.y, topConeIntersections);
+        intersectFlippedCone(ray, u_ellipsoidRenderLatitudeSinMinMax.y, topConeIntersections);
         setShapeIntersection(ix, ELLIPSOID_INTERSECTION_INDEX_LATITUDE_MAX + 0, topConeIntersections[0]);
         setShapeIntersection(ix, ELLIPSOID_INTERSECTION_INDEX_LATITUDE_MAX + 1, topConeIntersections[1]);
     #elif defined(ELLIPSOID_HAS_RENDER_BOUNDS_LATITUDE_MAX_EQUAL_HALF)
         RayShapeIntersection topConeIntersection = intersectZPlane(ray, 1.0);
         setShapeIntersection(ix, ELLIPSOID_INTERSECTION_INDEX_LATITUDE_MAX, topConeIntersection);
     #elif defined(ELLIPSOID_HAS_RENDER_BOUNDS_LATITUDE_MAX_OVER_HALF)
-        RayShapeIntersection topConeIntersection = intersectRegularCone(ray, u_ellipsoidRenderLatitudeCosHalfMinMax.y, false);
+        RayShapeIntersection topConeIntersection = intersectRegularCone(ray, u_ellipsoidRenderLatitudeSinMinMax.y, false);
         setShapeIntersection(ix, ELLIPSOID_INTERSECTION_INDEX_LATITUDE_MAX, topConeIntersection);
     #endif
 

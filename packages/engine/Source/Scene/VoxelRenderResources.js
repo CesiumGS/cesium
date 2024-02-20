@@ -132,17 +132,17 @@ function VoxelRenderResources(primitive) {
     ]);
   } else if (shapeType === "CYLINDER") {
     shaderBuilder.addFragmentLines([
+      convertUvToCylinder,
       IntersectLongitude,
       IntersectCylinder,
       Intersection,
-      convertUvToCylinder,
     ]);
   } else if (shapeType === "ELLIPSOID") {
     shaderBuilder.addFragmentLines([
+      convertUvToEllipsoid,
       IntersectLongitude,
       IntersectEllipsoid,
       Intersection,
-      convertUvToEllipsoid,
     ]);
   }
 
