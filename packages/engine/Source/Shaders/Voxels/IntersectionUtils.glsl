@@ -20,6 +20,36 @@ struct RayShapeIntersection {
     vec4 exit;
 };
 
+vec4 intersectionMin(in vec4 intersect0, in vec4 intersect1)
+{
+    if (intersect0.w == NO_HIT) {
+        return intersect1;
+    }
+    return (intersect0.w <= intersect1.w) ? intersect0 : intersect1;
+}
+
+vec4 intersectionMax(in vec4 intersect0, in vec4 intersect1)
+{
+    return (intersect0.w >= intersect1.w) ? intersect0 : intersect1;
+}
+
+RayShapeIntersection intersectIntersections(in Ray ray, in RayShapeIntersection intersect0, in RayShapeIntersection intersect1)
+{
+    bool missed = (intersect0.entry.w == NO_HIT) ||
+        (intersect1.entry.w == NO_HIT) ||
+        (intersect0.exit.w < intersect1.entry.w) ||
+        (intersect0.entry.w > intersect1.exit.w);
+    if (missed) {
+        vec4 miss = vec4(normalize(ray.dir), NO_HIT);
+        return RayShapeIntersection(miss, miss);
+    }
+
+    vec4 entry = intersectionMax(intersect0.entry, intersect1.entry);
+    vec4 exit = intersectionMin(intersect0.exit, intersect1.exit);
+
+    return RayShapeIntersection(entry, exit);
+}
+
 struct Intersections {
     // Don't access these member variables directly - call the functions instead.
 
