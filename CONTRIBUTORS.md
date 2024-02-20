@@ -163,6 +163,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
   - [Mark Dane](https://github.com/angrycat9000)
   - [jjspace](https://github.com/jjspace)
   - [Siddhesh Ranade](https://github.com/siddheshranade)
+  - [Adam Morris](https://github.com/weegeekps)
 - [Northrop Grumman](http://www.northropgrumman.com)
   - [Joseph Stein](https://github.com/nahgrin)
 - [EOX IT Services GmbH](https://eox.at)
