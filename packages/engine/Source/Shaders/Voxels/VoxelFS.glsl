@@ -9,7 +9,11 @@
 // See Megatexture.glsl for the definition of accumulatePropertiesFromMegatexture
 
 #define STEP_COUNT_MAX 1000 // Harcoded value because GLSL doesn't like variable length loops
-#define ALPHA_ACCUM_MAX 0.98 // Must be > 0.0 and <= 1.0
+#if defined(PICKING_VOXEL)
+    #define ALPHA_ACCUM_MAX 0.1
+#else
+    #define ALPHA_ACCUM_MAX 0.98 // Must be > 0.0 and <= 1.0
+#endif
 
 uniform mat3 u_transformDirectionViewToLocal;
 uniform vec3 u_cameraPositionUv;
@@ -40,6 +44,30 @@ vec4 getStepSize(in SampleData sampleData, in Ray viewRay, in RayShapeIntersecti
     float dimAtLevel = pow(2.0, float(sampleData.tileCoords.w));
     return vec4(viewRay.dir, u_stepSize / dimAtLevel);
 #endif
+}
+
+vec2 packIntToVec2(int value) {
+    float shifted = float(value) / 255.0;
+    float lowBits = fract(shifted);
+    float highBits = floor(shifted) / 255.0;
+    return vec2(highBits, lowBits);
+}
+
+vec2 packFloatToVec2(float value) {
+    float lowBits = fract(value);
+    float highBits = floor(value) / 255.0;
+    return vec2(highBits, lowBits);
+}
+
+int getSampleIndex(in vec3 tileUv) {
+    ivec3 voxelDimensions = u_dimensions;
+    vec3 tileCoordinate = clamp(tileUv, 0.0, 1.0) * vec3(voxelDimensions);
+    ivec3 tileIndex = ivec3(floor(tileCoordinate));
+    #if defined(PADDING)
+        voxelDimensions += u_paddingBefore + u_paddingAfter;
+        tileIndex += u_paddingBefore;
+    #endif
+    return tileIndex.x + voxelDimensions.x * (tileIndex.y + voxelDimensions.y * tileIndex.z);
 }
 
 void main()
@@ -102,6 +130,8 @@ void main()
         fragmentInput.voxel.viewDirWorld = viewDirWorld;
         fragmentInput.voxel.surfaceNormal = step.xyz;
         fragmentInput.voxel.travelDistance = step.w;
+        fragmentInput.voxel.tileIndex = sampleDatas[0].megatextureIndex;
+        fragmentInput.voxel.sampleIndex = getSampleIndex(sampleDatas[0].tileUv);
 
         // Run the custom shader
         czm_modelMaterial materialOutput;
@@ -164,6 +194,14 @@ void main()
             discard;
         }
         out_FragColor = u_pickColor;
+    #elif defined(PICKING_VOXEL)
+        // If alpha is 0.0 there is nothing to pick
+        if (colorAccum.a == 0.0) {
+            discard;
+        }
+        vec2 megatextureId = packIntToVec2(sampleDatas[0].megatextureIndex);
+        vec2 sampleIndex = packIntToVec2(getSampleIndex(sampleDatas[0].tileUv));
+        out_FragColor = vec4(megatextureId, sampleIndex);
     #else
         out_FragColor = colorAccum;
     #endif

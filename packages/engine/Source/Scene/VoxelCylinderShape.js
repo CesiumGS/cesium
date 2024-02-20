@@ -645,6 +645,87 @@ VoxelCylinderShape.prototype.computeOrientedBoundingBoxForTile = function (
   );
 };
 
+const sampleSizeScratch = new Cartesian3();
+const scratchTileMinBounds = new Cartesian3();
+const scratchTileMaxBounds = new Cartesian3();
+
+/**
+ * Computes an oriented bounding box for a specified sample within a specified tile.
+ * The update function must be called before calling this function.
+ *
+ * @param {SpatialNode} spatialNode The spatial node containing the sample
+ * @param {Cartesian3} tileDimensions The size of the tile in number of samples, before padding
+ * @param {Cartesian3} tileUv The sample coordinate within the tile
+ * @param {OrientedBoundingBox} result The oriented bounding box that will be set to enclose the specified sample
+ * @returns {OrientedBoundingBox} The oriented bounding box.
+ */
+VoxelCylinderShape.prototype.computeOrientedBoundingBoxForSample = function (
+  spatialNode,
+  tileDimensions,
+  tileUv,
+  result
+) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("spatialNode", spatialNode);
+  Check.typeOf.object("tileDimensions", tileDimensions);
+  Check.typeOf.object("tileUv", tileUv);
+  Check.typeOf.object("result", result);
+  //>>includeEnd('debug');
+
+  const tileSizeAtLevel = 1.0 / Math.pow(2.0, spatialNode.level);
+  const sampleSize = Cartesian3.divideComponents(
+    Cartesian3.ONE,
+    tileDimensions,
+    sampleSizeScratch
+  );
+  const sampleSizeAtLevel = Cartesian3.multiplyByScalar(
+    sampleSize,
+    tileSizeAtLevel,
+    sampleSizeScratch
+  );
+
+  const minLerp = Cartesian3.multiplyByScalar(
+    Cartesian3.fromElements(
+      spatialNode.x + tileUv.x,
+      spatialNode.y + tileUv.y,
+      spatialNode.z + tileUv.z,
+      scratchTileMinBounds
+    ),
+    tileSizeAtLevel,
+    scratchTileMinBounds
+  );
+  const maxLerp = Cartesian3.add(
+    minLerp,
+    sampleSizeAtLevel,
+    scratchTileMaxBounds
+  );
+
+  const minimumRadius = this._minimumRadius;
+  const maximumRadius = this._maximumRadius;
+  const minimumHeight = this._minimumHeight;
+  const maximumHeight = this._maximumHeight;
+  const minimumAngle = this._minimumAngle;
+  const maximumAngle = this._maximumAngle;
+
+  const radiusStart = CesiumMath.lerp(minimumRadius, maximumRadius, minLerp.x);
+  const radiusEnd = CesiumMath.lerp(minimumRadius, maximumRadius, maxLerp.x);
+  const heightStart = CesiumMath.lerp(minimumHeight, maximumHeight, minLerp.y);
+  const heightEnd = CesiumMath.lerp(minimumHeight, maximumHeight, maxLerp.y);
+  const angleStart = CesiumMath.lerp(minimumAngle, maximumAngle, minLerp.z);
+  const angleEnd = CesiumMath.lerp(minimumAngle, maximumAngle, maxLerp.z);
+
+  return getCylinderChunkObb(
+    radiusStart,
+    radiusEnd,
+    heightStart,
+    heightEnd,
+    angleStart,
+    angleEnd,
+    this.shapeTransform,
+    result
+  );
+};
+
 const scratchOrientedBoundingBox = new OrientedBoundingBox();
 const scratchVoxelScale = new Cartesian3();
 const scratchRootScale = new Cartesian3();
