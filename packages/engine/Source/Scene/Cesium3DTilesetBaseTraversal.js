@@ -295,9 +295,7 @@ function executeEmptyTraversal(root, frameState) {
     }
   }
 
-  return (
-    root.hasEmptyContent || root.hasImplicitContent || allDescendantsLoaded
-  );
+  return root.hasEmptyContent || allDescendantsLoaded;
 }
 
 export default Cesium3DTilesetBaseTraversal;
