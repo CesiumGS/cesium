@@ -139,7 +139,6 @@ function updateAndPushChildren(tile, stack, frameState) {
         childRefines = false;
       } else if (!child.hasRenderableContent) {
         childRefines = executeEmptyTraversal(child, frameState);
-        // childRefines = true;
       } else {
         childRefines = child.contentAvailable;
       }
