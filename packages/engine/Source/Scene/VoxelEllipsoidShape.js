@@ -126,7 +126,6 @@ function VoxelEllipsoidShape() {
     ELLIPSOID_HAS_RENDER_BOUNDS_LATITUDE_MIN_EQUAL_HALF: undefined,
     ELLIPSOID_HAS_RENDER_BOUNDS_LATITUDE_MIN_OVER_HALF: undefined,
     ELLIPSOID_HAS_SHAPE_BOUNDS_LATITUDE: undefined,
-    ELLIPSOID_HAS_SHAPE_BOUNDS_HEIGHT_FLAT: undefined,
     ELLIPSOID_INTERSECTION_INDEX_LONGITUDE: undefined,
     ELLIPSOID_INTERSECTION_INDEX_LATITUDE_MAX: undefined,
     ELLIPSOID_INTERSECTION_INDEX_LATITUDE_MIN: undefined,
@@ -429,7 +428,7 @@ VoxelEllipsoidShape.prototype.update = function (
   // Keep track of how many intersections there are going to be.
   let intersectionCount = 0;
 
-  // Intersects an outer ellipsoid for the max height.
+  // Intersects outer and inner ellipsoid for the max and min height.
   shaderDefines["ELLIPSOID_INTERSECTION_INDEX_HEIGHT_MAX"] = intersectionCount;
   intersectionCount += 1;
   shaderDefines["ELLIPSOID_INTERSECTION_INDEX_HEIGHT_MIN"] = intersectionCount;
@@ -445,7 +444,7 @@ VoxelEllipsoidShape.prototype.update = function (
   const thickness = (shapeMaxBounds.z - shapeMinBounds.z) / shapeMaxExtent;
   shaderUniforms.ellipsoidInverseHeightDifferenceUv = 1.0 / thickness;
   if (shapeMinBounds.z === shapeMaxBounds.z) {
-    shaderDefines["ELLIPSOID_HAS_SHAPE_BOUNDS_HEIGHT_FLAT"] = true;
+    shaderUniforms.ellipsoidInverseHeightDifferenceUv = 0.0;
   }
 
   // Intersects a wedge for the min and max longitude.
@@ -610,11 +609,9 @@ VoxelEllipsoidShape.prototype.update = function (
       }
     }
 
-    const sinMinLatitude = Math.sin(renderMinBounds.y);
-    const sinMaxLatitude = Math.sin(renderMaxBounds.y);
     shaderUniforms.ellipsoidRenderLatitudeSinMinMax = Cartesian2.fromElements(
-      sinMinLatitude,
-      sinMaxLatitude,
+      Math.sin(renderMinBounds.y),
+      Math.sin(renderMaxBounds.y),
       shaderUniforms.ellipsoidRenderLatitudeSinMinMax
     );
   }

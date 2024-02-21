@@ -4,7 +4,6 @@
 #define ELLIPSOID_HAS_SHAPE_BOUNDS_LONGITUDE
 #define ELLIPSOID_HAS_SHAPE_BOUNDS_LONGITUDE_MIN_MAX_REVERSED
 #define ELLIPSOID_HAS_SHAPE_BOUNDS_LATITUDE
-#define ELLIPSOID_HAS_SHAPE_BOUNDS_HEIGHT_FLAT
 */
 
 uniform vec3 u_ellipsoidRadiiUv; // [0,1]
@@ -18,9 +17,7 @@ uniform vec3 u_ellipsoidInverseRadiiSquaredUv;
 #if defined(ELLIPSOID_HAS_SHAPE_BOUNDS_LATITUDE)
     uniform vec2 u_ellipsoidUvToShapeUvLatitude; // x = scale, y = offset
 #endif
-#if !defined(ELLIPSOID_HAS_SHAPE_BOUNDS_HEIGHT_FLAT)
-    uniform float u_ellipsoidInverseHeightDifferenceUv;
-#endif
+uniform float u_ellipsoidInverseHeightDifferenceUv;
 
 // robust iterative solution without trig functions
 // https://github.com/0xfaded/ellipse_demo/issues/1
@@ -95,15 +92,8 @@ vec3 convertUvToShapeUvSpace(in vec3 positionUv) {
     #endif
 
     // Compute height
-    #if defined(ELLIPSOID_HAS_SHAPE_BOUNDS_HEIGHT_FLAT)
-        // TODO: This breaks down when minBounds == maxBounds. To fix it, this
-        // function would have to know if ray is intersecting the front or back of the shape
-        // and set the shape space position to 1 (front) or 0 (back) accordingly.
-        float height = 1.0;
-    #else
-        float heightSign = length(posEllipse) < length(surfacePoint) ? -1.0 : 1.0;
-        float height = 1.0 + heightSign * length(posEllipse - surfacePoint) * u_ellipsoidInverseHeightDifferenceUv;
-    #endif
+    float heightSign = length(posEllipse) < length(surfacePoint) ? -1.0 : 1.0;
+    float height = 1.0 + heightSign * length(posEllipse - surfacePoint) * u_ellipsoidInverseHeightDifferenceUv;
 
     return vec3(longitude, latitude, height);
 }
