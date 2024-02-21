@@ -428,7 +428,6 @@ Camera.prototype._updateCameraChanged = function () {
     camera._changed.raiseEvent(
       Math.max(rollChangedPercentage, headingChangedPercentage)
     );
-    return;
   }
   if (camera._mode === SceneMode.SCENE2D) {
     if (!defined(camera._changedFrustum)) {
