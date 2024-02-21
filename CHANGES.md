@@ -4,6 +4,11 @@
 
 #### @cesium/engine
 
+##### Breaking Changes :mega:
+
+- By default, instances of `Cesium3DTileset ` will no longer default to enable collisions for camera collision or for clamping entities.
+  - This behavior can be enabled by setting `Cesium3DTileset.enableCollision` to true.
+
 ##### Fixes :wrench:
 
 - Fixed a bug affecting voxel shader compilation in WebGL1 contexts. [#11798](https://github.com/CesiumGS/cesium/pull/11798)
@@ -13,6 +18,10 @@
 ##### Additions :tada:
 
 - Added `Scene.pickVoxel` to pick individual cells from a `VoxelPrimitive`, and `VoxelCell` to report information about the picked cell. [#11828](https://github.com/CesiumGS/cesium/pull/11828)
+
+##### Deprecated :hourglass_flowing_sand:
+
+- `Cesium3DTileset.disableCollision` has been deprecated and will be removed in 1.116. Use `Cesium3DTileset.enableCollision` instead.
 
 ### 1.114 - 2024-02-01
 
