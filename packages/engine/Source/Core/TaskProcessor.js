@@ -226,6 +226,10 @@ const createOnmessageHandler = (worker, id, resolve, reject) => {
 
 const emptyTransferableObjectArray = [];
 async function runTask(processor, parameters, transferableObjects) {
+  if (TaskProcessor._skipTaskRun) {
+    return;
+  }
+
   const canTransfer = await Promise.resolve(canTransferArrayBuffer());
   if (!defined(transferableObjects)) {
     transferableObjects = emptyTransferableObjectArray;
@@ -407,4 +411,5 @@ TaskProcessor.taskCompletedEvent = taskCompletedEvent;
 TaskProcessor._defaultWorkerModulePrefix = "Workers/";
 TaskProcessor._workerModulePrefix = TaskProcessor._defaultWorkerModulePrefix;
 TaskProcessor._canTransferArrayBuffer = undefined;
+TaskProcessor._skipTaskRun = undefined;
 export default TaskProcessor;

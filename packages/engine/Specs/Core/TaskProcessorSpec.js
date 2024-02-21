@@ -69,19 +69,15 @@ describe("Core/TaskProcessor", function () {
     // Setup a cross origin BASE_URL
     const oldCESIUM_BASE_URL = window.CESIUM_BASE_URL;
     window.CESIUM_BASE_URL = "http://test.com/source/";
+    TaskProcessor._skipTaskRun = true;
     buildModuleUrl._clearBaseResource();
 
-    const blobSpy = spyOn(window, "Blob");
+    const blobSpy = spyOn(window, "Blob").and.callThrough();
 
     // Provide just the module ID, as is prevalent in the codebase
     taskProcessor = new TaskProcessor("transferTypedArrayTest");
 
-    try {
-      await taskProcessor.scheduleTask();
-    } catch {
-      // We expect this to throw as we cannot setup a true cross-origin base in tests
-      // However, it should have attempted to create a blob for the shim before that happens.
-    }
+    await taskProcessor.scheduleTask();
 
     expect(blobSpy).toHaveBeenCalledWith(
       [`import "http://test.com/source/Workers/transferTypedArrayTest.js";`],
@@ -91,24 +87,24 @@ describe("Core/TaskProcessor", function () {
     // Reset old values for BASE_URL
     window.CESIUM_BASE_URL = oldCESIUM_BASE_URL;
     buildModuleUrl._clearBaseResource();
+    TaskProcessor._skipTaskRun = undefined;
   });
 
   it("when provided a cross-origin URI, loads worker with appropriate shim", async function () {
-    const blobSpy = spyOn(window, "Blob");
+    TaskProcessor._skipTaskRun = true;
+
+    const blobSpy = spyOn(window, "Blob").and.callThrough();
 
     taskProcessor = new TaskProcessor("http://test.com/Workers/testing.js");
 
-    try {
-      await taskProcessor.scheduleTask();
-    } catch {
-      // We expect this to throw as we cannot setup a true cross-origin base in tests
-      // However, it should have attempted to create a blob for the shim before that happens.
-    }
+    await taskProcessor.scheduleTask();
 
     expect(blobSpy).toHaveBeenCalledWith(
       [`import "http://test.com/Workers/testing.js";`],
       { type: "application/javascript" }
     );
+
+    TaskProcessor._skipTaskRun = undefined;
   });
 
   it("can be destroyed", function () {
