@@ -445,7 +445,7 @@ VoxelCylinderShape.prototype.update = function (
     shaderUniforms.cylinderRenderAngleMinMax = Cartesian2.fromElements(
       renderMinAngle,
       renderMaxAngle,
-      shaderUniforms.cylinderAngleMinMax
+      shaderUniforms.cylinderRenderAngleMinMax
     );
   }
 

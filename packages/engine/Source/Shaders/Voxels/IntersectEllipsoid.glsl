@@ -267,13 +267,6 @@ void intersectShape(in Ray ray, inout Intersections ix) {
         setSurfaceIntersection(ix, 3, outerIntersect.exit, true, false);  // positive, exit
     }
 
-    // Flip the ray because the intersection function expects a cone growing towards +Z.
-    #if defined(ELLIPSOID_HAS_RENDER_BOUNDS_LATITUDE_MIN_UNDER_HALF) || defined(ELLIPSOID_HAS_RENDER_BOUNDS_LATITUDE_MIN_EQUAL_HALF) || defined(ELLIPSOID_HAS_RENDER_BOUNDS_LATITUDE_MAX_UNDER_HALF)
-        Ray flippedRay = ray;
-        flippedRay.dir.z *= -1.0;
-        flippedRay.pos.z *= -1.0;
-    #endif
-
     // Bottom cone
     #if defined(ELLIPSOID_HAS_RENDER_BOUNDS_LATITUDE_MIN_UNDER_HALF)
         RayShapeIntersection bottomConeIntersection = intersectRegularCone(ray, u_ellipsoidRenderLatitudeSinMinMax.x, false);
