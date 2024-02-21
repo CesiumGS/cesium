@@ -217,6 +217,7 @@ function Camera(scene) {
   this._changedDirection = undefined;
   this._changedFrustum = undefined;
   this._changedHeading = undefined;
+  this._changedRoll = undefined;
 
   /**
    * The amount the camera has to change before the <code>changed</code> event is raised. The value is a percentage in the [0, 1] range.
