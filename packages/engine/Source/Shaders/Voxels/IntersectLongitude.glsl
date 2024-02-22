@@ -61,36 +61,41 @@ void intersectHalfPlane(in Ray ray, in float angle, out RayShapeIntersection int
     }
 }
 
-RayShapeIntersection intersectRegularWedge(in Ray ray, in vec2 minMaxAngle, in bool convex)
+RayShapeIntersection intersectRegularWedge(in Ray ray, in vec2 minMaxAngle)
 {
-    // Compute intersections with the two planes
-    // TODO: the sign of the normals looks backwards?? But it works for convex == false
-    vec4 intersect1 = intersectLongitude(ray, minMaxAngle.x, convex);
-    vec4 intersect2 = intersectLongitude(ray, minMaxAngle.y, !convex);
+    // Note: works for maxAngle > minAngle + pi, where the "regular wedge"
+    // is actually a negative volume.
+    // Compute intersections with the two planes.
+    // Normals will point toward the "outside" (negative space)
+    vec4 intersect1 = intersectLongitude(ray, minMaxAngle.x, false);
+    vec4 intersect2 = intersectLongitude(ray, minMaxAngle.y, true);
 
-    // Choose intersection with smallest T as the "entry", the other as "exit"
-    // Note: entry or exit could be in the "shadow" wedge, beyond the tip
+    // Choose intersection with smallest T as the "first", the other as "last"
+    // Note: first or last could be in the "shadow" wedge, beyond the tip
     bool inOrder = intersect1.w <= intersect2.w;
-    vec4 entry = inOrder ? intersect1 : intersect2;
-    vec4 exit = inOrder ? intersect2 : intersect1;
+    vec4 first = inOrder ? intersect1 : intersect2;
+    vec4 last = inOrder ? intersect2 : intersect1;
 
-    bool enterFromOutside = (entry.w >= 0.0) == (dot(ray.pos.xy, entry.xy) < 0.0);
-    bool exitFromInside = (exit.w > 0.0) == (dot(ray.pos.xy, exit.xy) >= 0.0);
+    bool firstIsAhead = first.w >= 0.0;
+    bool startedInsideFirst = dot(ray.pos.xy, first.xy) < 0.0;
+    bool exitFromInside = firstIsAhead == startedInsideFirst;
+    bool lastIsAhead = last.w > 0.0;
+    bool startedOutsideLast = dot(ray.pos.xy, last.xy) >= 0.0;
+    bool enterFromOutside = lastIsAhead == startedOutsideLast;
 
-    float farSideDirection = (convex) ? -1.0 : 1.0;
-    vec4 farSide = vec4(normalize(ray.dir) * farSideDirection, INF_HIT);
+    vec4 farSide = vec4(normalize(ray.dir), INF_HIT);
     vec4 miss = vec4(normalize(ray.dir), NO_HIT);
 
-    if (enterFromOutside && exitFromInside) {
-        // Ray crosses both faces of wedge
-        return RayShapeIntersection(entry, exit);
-    } else if (!enterFromOutside && exitFromInside) {
-        // Ray starts inside wedge. exit is in shadow wedge, and entry is actually the exit
-        return RayShapeIntersection(-1.0 * farSide, entry);
-    } else if (enterFromOutside && !exitFromInside) {
-        // First intersection was in the shadow wedge, so exit is actually the entry
-        return RayShapeIntersection(exit, farSide);
-    } else { // !enterFromOutside && !exitFromInside
+    if (exitFromInside && enterFromOutside) {
+        // Ray crosses both faces of negative wedge, exiting then entering the positive shape
+        return RayShapeIntersection(first, last);
+    } else if (!exitFromInside && enterFromOutside) {
+        // Ray starts inside wedge. last is in shadow wedge, and first is actually the entry
+        return RayShapeIntersection(-1.0 * farSide, first);
+    } else if (exitFromInside && !enterFromOutside) {
+        // First intersection was in the shadow wedge, so last is actually the exit
+        return RayShapeIntersection(last, farSide);
+    } else { // !exitFromInside && !enterFromOutside
         // Both intersections were in the shadow wedge
         return RayShapeIntersection(miss, miss);
     }
