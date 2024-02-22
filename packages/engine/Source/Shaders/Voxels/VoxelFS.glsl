@@ -100,6 +100,7 @@ void main()
         copyPropertiesToMetadata(properties, fragmentInput.metadata);
         fragmentInput.voxel.positionUv = positionUv;
         fragmentInput.voxel.positionShapeUv = positionUvShapeSpace;
+        fragmentInput.voxel.gradient = convertUvToShapeSpaceDerivative(positionUv, viewDirUv).gradient;
         fragmentInput.voxel.positionUvLocal = sampleDatas[0].tileUv;
         fragmentInput.voxel.viewDirUv = viewDirUv;
         fragmentInput.voxel.viewDirWorld = viewDirWorld;

@@ -7,9 +7,9 @@
 #define RAY_SHIFT (0.000003163)
 #define RAY_SCALE (1.003163)
 
-struct CoordinateAndDerivative {
-    vec3 coordinate;
-    vec3 derivative;
+struct PointGradient3 {
+    vec3 point;
+    vec3 gradient;
 };
 
 struct Ray {

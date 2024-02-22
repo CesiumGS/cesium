@@ -29,7 +29,7 @@ vec2 nearestPointOnEllipse(vec2 pos, vec2 radii) {
 
     // We describe the ellipse parametrically: v = radii * vec2(cos(t), sin(t))
     // but store the cos and sin of t in a vec2 for efficiency.
-    // Initial guess: t = cos(pi/4)
+    // Initial guess: t = pi/4
     vec2 tTrigs = vec2(0.70710678118);
     vec2 v = radii * tTrigs;
 
@@ -48,6 +48,8 @@ vec2 nearestPointOnEllipse(vec2 pos, vec2 radii) {
     return v * sign(pos);
 }
 
+// TODO: rewrite as PointGradient3 ellipsoidNormalGradient(vec3 posEllipsoid),
+// where the return is the height vector (length = height) and the gradient
 vec3 nearestPointAndRadiusOnEllipse(vec2 pos, vec2 radii) {
     vec2 p = abs(pos);
     vec2 inverseRadii = 1.0 / radii;
@@ -55,22 +57,24 @@ vec3 nearestPointAndRadiusOnEllipse(vec2 pos, vec2 radii) {
 
     // We describe the ellipse parametrically: v = radii * vec2(cos(t), sin(t))
     // but store the cos and sin of t in a vec2 for efficiency.
-    // Initial guess: t = cos(pi/4)
+    // Initial guess: t = pi/4
     vec2 tTrigs = vec2(0.70710678118);
+    // Initial guess of point on ellipsoid
     vec2 v = radii * tTrigs;
+    // Center of curvature of the ellipse at v
+    vec2 evolute = evoluteScale * tTrigs * tTrigs * tTrigs;
 
     const int iterations = 3;
     for (int i = 0; i < iterations; ++i) {
         // Find the evolute of the ellipse (center of curvature) at v.
-        vec2 evolute = evoluteScale * tTrigs * tTrigs * tTrigs;
         // Find the (approximate) intersection of p - evolute with the ellipsoid.
         vec2 q = normalize(p - evolute) * length(v - evolute);
         // Update the estimate of t.
         tTrigs = (q + evolute) * inverseRadii;
         tTrigs = normalize(clamp(tTrigs, 0.0, 1.0));
         v = radii * tTrigs;
+        evolute = evoluteScale * tTrigs * tTrigs * tTrigs;
     }
-
 
     return vec3(v * sign(pos), length(v - evolute));
 }
@@ -99,7 +103,7 @@ vec3 convertUvToShapeSpace(in vec3 positionUv) {
     return vec3(longitude, latitude, height);
 }
 
-CoordinateAndDerivative convertUvToShapeSpaceDerivative(in vec3 positionUv, in vec3 direction) {
+PointGradient3 convertUvToShapeSpaceDerivative(in vec3 positionUv, in vec3 direction) {
     // Convert from UV space [0, 1] to local space [-1, 1]
     vec3 position = positionUv * 2.0 - 1.0;
     direction *= 2.0;
@@ -126,10 +130,10 @@ CoordinateAndDerivative convertUvToShapeSpaceDerivative(in vec3 positionUv, in v
     vec3 up = normalize(cross(east, north));
     north = north / (surfacePointAndRadius.z + height);
 
-    vec3 coordinate = vec3(longitude, latitude, height);
+    vec3 point = vec3(longitude, latitude, height);
     // TODO: construct the Jacobian matrix for clarity. Left or right multiply??
-    vec3 derivative = vec3(dot(direction, east), dot(direction, north), dot(direction, up));
-    return CoordinateAndDerivative(coordinate, derivative);
+    vec3 gradient = vec3(dot(direction, east), dot(direction, north), dot(direction, up));
+    return PointGradient3(point, gradient);
 }
 
 vec3 convertShapeToShapeUvSpace(in vec3 positionShape) {
