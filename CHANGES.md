@@ -4,6 +4,10 @@
 
 #### @cesium/engine
 
+##### Additions :tada:
+
+- Surface normals are now computed for clipping and shape bounds in VoxelEllipsoidShape and VoxelCylinderShape. [#11847](https://github.com/CesiumGS/cesium/pull/11847)
+
 ##### Fixes :wrench:
 
 - Fixed a bug affecting voxel shader compilation in WebGL1 contexts. [#11798](https://github.com/CesiumGS/cesium/pull/11798)
