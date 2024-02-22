@@ -7,6 +7,11 @@
 #define RAY_SHIFT (0.000003163)
 #define RAY_SCALE (1.003163)
 
+struct CoordinateAndDerivative {
+    vec3 coordinate;
+    vec3 derivative;
+};
+
 struct Ray {
     vec3 pos;
     vec3 dir;

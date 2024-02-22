@@ -48,6 +48,33 @@ vec2 nearestPointOnEllipse(vec2 pos, vec2 radii) {
     return v * sign(pos);
 }
 
+vec3 nearestPointAndRadiusOnEllipse(vec2 pos, vec2 radii) {
+    vec2 p = abs(pos);
+    vec2 inverseRadii = 1.0 / radii;
+    vec2 evoluteScale = (radii.x * radii.x - radii.y * radii.y) * vec2(1.0, -1.0) * inverseRadii;
+
+    // We describe the ellipse parametrically: v = radii * vec2(cos(t), sin(t))
+    // but store the cos and sin of t in a vec2 for efficiency.
+    // Initial guess: t = cos(pi/4)
+    vec2 tTrigs = vec2(0.70710678118);
+    vec2 v = radii * tTrigs;
+
+    const int iterations = 3;
+    for (int i = 0; i < iterations; ++i) {
+        // Find the evolute of the ellipse (center of curvature) at v.
+        vec2 evolute = evoluteScale * tTrigs * tTrigs * tTrigs;
+        // Find the (approximate) intersection of p - evolute with the ellipsoid.
+        vec2 q = normalize(p - evolute) * length(v - evolute);
+        // Update the estimate of t.
+        tTrigs = (q + evolute) * inverseRadii;
+        tTrigs = normalize(clamp(tTrigs, 0.0, 1.0));
+        v = radii * tTrigs;
+    }
+
+
+    return vec3(v * sign(pos), length(v - evolute));
+}
+
 vec3 convertUvToShapeSpace(in vec3 positionUv) {
     // Convert positionUv [0,1] to local space [-1,+1]
     vec3 positionLocal = positionUv * 2.0 - 1.0;
@@ -70,6 +97,39 @@ vec3 convertUvToShapeSpace(in vec3 positionUv) {
     float height = heightSign * length(posEllipse - surfacePoint);
 
     return vec3(longitude, latitude, height);
+}
+
+CoordinateAndDerivative convertUvToShapeSpaceDerivative(in vec3 positionUv, in vec3 direction) {
+    // Convert from UV space [0, 1] to local space [-1, 1]
+    vec3 position = positionUv * 2.0 - 1.0;
+    direction *= 2.0;
+    // Undo the scaling from ellipsoid to sphere
+    position = position * u_ellipsoidRadiiUv;
+    direction = direction * u_ellipsoidRadiiUv;
+
+    float longitude = atan(position.y, position.x);
+    vec3 east = vec3(-position.y, position.x, 0.0) / dot(position.xy, position.xy);
+
+    // Convert the 3D position to a 2D position relative to the ellipse (radii.x, radii.z)
+    // (assume radii.y == radii.x) and find the nearest point on the ellipse and its normal
+    vec2 posEllipse = vec2(length(position.xy), position.z);
+    vec3 surfacePointAndRadius = nearestPointAndRadiusOnEllipse(posEllipse, u_ellipsoidRadiiUv.xz);
+    vec2 surfacePoint = surfacePointAndRadius.xy;
+    
+    vec2 normal2d = normalize(surfacePoint * u_ellipsoidInverseRadiiSquaredUv.xz);
+    float latitude = atan(normal2d.y, normal2d.x);
+    vec2 cosSinLongitude = normalize(position.xy);
+    vec3 north = vec3(-normal2d.y * cosSinLongitude, normal2d.x);
+ 
+    float heightSign = length(posEllipse) < length(surfacePoint) ? -1.0 : 1.0;
+    float height = heightSign * length(posEllipse - surfacePoint);
+    vec3 up = normalize(cross(east, north));
+    north = north / (surfacePointAndRadius.z + height);
+
+    vec3 coordinate = vec3(longitude, latitude, height);
+    // TODO: construct the Jacobian matrix for clarity. Left or right multiply??
+    vec3 derivative = vec3(dot(direction, east), dot(direction, north), dot(direction, up));
+    return CoordinateAndDerivative(coordinate, derivative);
 }
 
 vec3 convertShapeToShapeUvSpace(in vec3 positionShape) {
