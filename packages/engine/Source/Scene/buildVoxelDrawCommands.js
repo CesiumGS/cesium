@@ -58,8 +58,17 @@ function buildVoxelDrawCommands(primitive, context) {
   // Compile shaders
   const shaderBuilderPick = shaderBuilder.clone();
   shaderBuilderPick.addDefine("PICKING", undefined, ShaderDestination.FRAGMENT);
+  const shaderBuilderPickVoxel = shaderBuilder.clone();
+  shaderBuilderPickVoxel.addDefine(
+    "PICKING_VOXEL",
+    undefined,
+    ShaderDestination.FRAGMENT
+  );
   const shaderProgram = shaderBuilder.buildShaderProgram(context);
   const shaderProgramPick = shaderBuilderPick.buildShaderProgram(context);
+  const shaderProgramPickVoxel = shaderBuilderPickVoxel.buildShaderProgram(
+    context
+  );
   const renderState = RenderState.fromCache({
     cull: {
       enabled: true,
@@ -98,6 +107,14 @@ function buildVoxelDrawCommands(primitive, context) {
   drawCommandPick.shaderProgram = shaderProgramPick;
   drawCommandPick.pickOnly = true;
 
+  // Create the pick voxels draw command
+  const drawCommandPickVoxel = DrawCommand.shallowClone(
+    drawCommand,
+    new DrawCommand()
+  );
+  drawCommandPickVoxel.shaderProgram = shaderProgramPickVoxel;
+  drawCommandPickVoxel.pickOnly = true;
+
   // Delete the old shader programs
   if (defined(primitive._drawCommand)) {
     const command = primitive._drawCommand;
@@ -109,9 +126,15 @@ function buildVoxelDrawCommands(primitive, context) {
     command.shaderProgram =
       command.shaderProgram && command.shaderProgram.destroy();
   }
+  if (defined(primitive._drawCommandPickVoxel)) {
+    const command = primitive._drawCommandPickVoxel;
+    command.shaderProgram =
+      command.shaderProgram && command.shaderProgram.destroy();
+  }
 
   primitive._drawCommand = drawCommand;
   primitive._drawCommandPick = drawCommandPick;
+  primitive._drawCommandPickVoxel = drawCommandPickVoxel;
 }
 
 export default buildVoxelDrawCommands;
