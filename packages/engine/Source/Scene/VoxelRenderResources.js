@@ -8,6 +8,7 @@ import VoxelVS from "../Shaders/Voxels/VoxelVS.js";
 import IntersectionUtils from "../Shaders/Voxels/IntersectionUtils.js";
 import IntersectDepth from "../Shaders/Voxels/IntersectDepth.js";
 import IntersectClippingPlanes from "../Shaders/Voxels/IntersectClippingPlanes.js";
+import IntersectLongitude from "../Shaders/Voxels/IntersectLongitude.js";
 import IntersectBox from "../Shaders/Voxels/IntersectBox.js";
 import IntersectCylinder from "../Shaders/Voxels/IntersectCylinder.js";
 import IntersectEllipsoid from "../Shaders/Voxels/IntersectEllipsoid.js";
@@ -131,12 +132,14 @@ function VoxelRenderResources(primitive) {
     ]);
   } else if (shapeType === "CYLINDER") {
     shaderBuilder.addFragmentLines([
+      IntersectLongitude,
       IntersectCylinder,
       Intersection,
       convertUvToCylinder,
     ]);
   } else if (shapeType === "ELLIPSOID") {
     shaderBuilder.addFragmentLines([
+      IntersectLongitude,
       IntersectEllipsoid,
       Intersection,
       convertUvToEllipsoid,
