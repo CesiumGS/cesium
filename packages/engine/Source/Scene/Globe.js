@@ -1106,6 +1106,7 @@ Globe.prototype.beginFrame = function (frameState) {
     tileProvider.undergroundColor = this._undergroundColor;
     tileProvider.undergroundColorAlphaByDistance = this._undergroundColorAlphaByDistance;
     tileProvider.lambertDiffuseMultiplier = this.lambertDiffuseMultiplier;
+
     surface.beginFrame(frameState);
   }
 };

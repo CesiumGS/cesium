@@ -2502,7 +2502,9 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
       uniformMapProperties.localizedTranslucencyRectangle
     );
 
-    // For performance, use fog in the shader only when the tile is in fog.
+    // For performance, render fog only when fog is enabled and the effect of
+    // fog would be non-negligible. This prevents the shader from running when
+    // the camera is in space, for example.
     const applyFog =
       enableFog &&
       CesiumMath.fog(tile._distance, frameState.fog.density) >

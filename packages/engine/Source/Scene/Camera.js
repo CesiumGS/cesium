@@ -197,7 +197,7 @@ function Camera(scene) {
   this.defaultZoomAmount = 100000.0;
   /**
    * If set, the camera will not be able to rotate past this axis in either direction.
-   * @type {Cartesian3}
+   * @type {Cartesian3 | undefined}
    * @default undefined
    */
   this.constrainedAxis = undefined;
@@ -1233,6 +1233,11 @@ const scratchSetViewMatrix3 = new Matrix3();
 const scratchSetViewCartographic = new Cartographic();
 
 function setView3D(camera, position, hpr) {
+  //>>includeStart('debug', pragmas.debug);
+  if (isNaN(position.x) || isNaN(position.y) || isNaN(position.z)) {
+    throw new DeveloperError("position has a NaN component");
+  }
+  //>>includeEnd('debug');
   const currentTransform = Matrix4.clone(
     camera.transform,
     scratchSetViewTransform1
@@ -1473,6 +1478,12 @@ Camera.prototype.setView = function (options) {
       destination,
       scratchSetViewCartesian
     );
+    //>>includeStart('debug', pragmas.debug);
+    // destination.z may be null in 2D, but .x and .y should be numeric
+    if (isNaN(destination.x) || isNaN(destination.y)) {
+      throw new DeveloperError(`destination has a NaN component`);
+    }
+    //>>includeEnd('debug');
     convert = false;
   }
 

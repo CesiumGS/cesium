@@ -854,6 +854,91 @@ VoxelEllipsoidShape.prototype.computeOrientedBoundingBoxForTile = function (
   );
 };
 
+const sampleSizeScratch = new Cartesian3();
+const scratchTileMinBounds = new Cartesian3();
+const scratchTileMaxBounds = new Cartesian3();
+
+/**
+ * Computes an oriented bounding box for a specified sample within a specified tile.
+ * The update function must be called before calling this function.
+ *
+ * @param {SpatialNode} spatialNode The spatial node containing the sample
+ * @param {Cartesian3} tileDimensions The size of the tile in number of samples, before padding
+ * @param {Cartesian3} tileUv The sample coordinate within the tile
+ * @param {OrientedBoundingBox} result The oriented bounding box that will be set to enclose the specified sample
+ * @returns {OrientedBoundingBox} The oriented bounding box.
+ */
+VoxelEllipsoidShape.prototype.computeOrientedBoundingBoxForSample = function (
+  spatialNode,
+  tileDimensions,
+  tileUv,
+  result
+) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("spatialNode", spatialNode);
+  Check.typeOf.object("tileDimensions", tileDimensions);
+  Check.typeOf.object("tileUv", tileUv);
+  Check.typeOf.object("result", result);
+  //>>includeEnd('debug');
+
+  const tileSizeAtLevel = 1.0 / Math.pow(2.0, spatialNode.level);
+  const sampleSize = Cartesian3.divideComponents(
+    Cartesian3.ONE,
+    tileDimensions,
+    sampleSizeScratch
+  );
+  const sampleSizeAtLevel = Cartesian3.multiplyByScalar(
+    sampleSize,
+    tileSizeAtLevel,
+    sampleSizeScratch
+  );
+
+  const minLerp = Cartesian3.multiplyByScalar(
+    Cartesian3.fromElements(
+      spatialNode.x + tileUv.x,
+      spatialNode.y + tileUv.y,
+      spatialNode.z + tileUv.z,
+      scratchTileMinBounds
+    ),
+    tileSizeAtLevel,
+    scratchTileMinBounds
+  );
+  const maxLerp = Cartesian3.add(
+    minLerp,
+    sampleSizeAtLevel,
+    scratchTileMaxBounds
+  );
+
+  const rectangle = Rectangle.subsection(
+    this._rectangle,
+    minLerp.x,
+    minLerp.y,
+    maxLerp.x,
+    maxLerp.y,
+    scratchRectangle
+  );
+  const minHeight = CesiumMath.lerp(
+    this._minimumHeight,
+    this._maximumHeight,
+    minLerp.z
+  );
+  const maxHeight = CesiumMath.lerp(
+    this._minimumHeight,
+    this._maximumHeight,
+    maxLerp.z
+  );
+
+  return getEllipsoidChunkObb(
+    rectangle,
+    minHeight,
+    maxHeight,
+    this._ellipsoid,
+    this._translation,
+    this._rotation,
+    result
+  );
+};
+
 /**
  * Computes an approximate step size for raymarching the root tile of a voxel grid.
  * The update function must be called before calling this function.
@@ -928,7 +1013,11 @@ function getEllipsoidChunkObb(
  * @readonly
  */
 VoxelEllipsoidShape.DefaultMinBounds = Object.freeze(
-  new Cartesian3(-CesiumMath.PI, -CesiumMath.PI_OVER_TWO, -Number.MAX_VALUE)
+  new Cartesian3(
+    -CesiumMath.PI,
+    -CesiumMath.PI_OVER_TWO,
+    -Ellipsoid.WGS84.minimumRadius
+  )
 );
 
 /**
@@ -939,7 +1028,11 @@ VoxelEllipsoidShape.DefaultMinBounds = Object.freeze(
  * @readonly
  */
 VoxelEllipsoidShape.DefaultMaxBounds = Object.freeze(
-  new Cartesian3(+CesiumMath.PI, +CesiumMath.PI_OVER_TWO, +Number.MAX_VALUE)
+  new Cartesian3(
+    CesiumMath.PI,
+    CesiumMath.PI_OVER_TWO,
+    10.0 * Ellipsoid.WGS84.maximumRadius
+  )
 );
 
 export default VoxelEllipsoidShape;

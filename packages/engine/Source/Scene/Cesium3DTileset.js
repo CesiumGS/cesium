@@ -1,4 +1,5 @@
 import ApproximateTerrainHeights from "../Core/ApproximateTerrainHeights.js";
+import BoundingSphere from "../Core/BoundingSphere.js";
 import Cartesian2 from "../Core/Cartesian2.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Cartographic from "../Core/Cartographic.js";
@@ -267,6 +268,8 @@ function Cesium3DTileset(options) {
   this._modelMatrix = defined(options.modelMatrix)
     ? Matrix4.clone(options.modelMatrix)
     : Matrix4.clone(Matrix4.IDENTITY);
+
+  this._addHeightCallbacks = [];
 
   this._statistics = new Cesium3DTilesetStatistics();
   this._statisticsLast = new Cesium3DTilesetStatistics();
@@ -1996,7 +1999,8 @@ Object.defineProperties(Cesium3DTileset.prototype, {
  * @param {Cesium3DTileset.ConstructorOptions} [options] An object describing initialization options
  * @returns {Promise<Cesium3DTileset>}
  *
- * @exception {DeveloperError} The tileset must be 3D Tiles version 0.0 or 1.0.
+ * @exception {RuntimeError} When the tileset asset version is not 0.0, 1.0, or 1.1,
+ * or when the tileset contains a required extension that is not supported.
  *
  * @see Cesium3DTileset#fromUrl
  *
@@ -2026,7 +2030,8 @@ Cesium3DTileset.fromIonAssetId = async function (assetId, options) {
  * @param {Cesium3DTileset.ConstructorOptions} [options] An object describing initialization options
  * @returns {Promise<Cesium3DTileset>}
  *
- * @exception {DeveloperError} The tileset must be 3D Tiles version 0.0 or 1.0.
+ * @exception {RuntimeError} When the tileset asset version is not 0.0, 1.0, or 1.1,
+ * or when the tileset contains a required extension that is not supported.
  *
  * @see Cesium3DTileset#fromIonAssetId
  *
@@ -2168,6 +2173,9 @@ Cesium3DTileset.prototype.makeStyleDirty = function () {
 
 /**
  * Loads the main tileset JSON file or a tileset JSON file referenced from a tile.
+ *
+ * @exception {RuntimeError} When the tileset asset version is not 0.0, 1.0, or 1.1,
+ * or when the tileset contains a required extension that is not supported.
  *
  * @private
  */
@@ -2667,6 +2675,55 @@ function filterProcessingQueue(tileset) {
   tiles.length -= removeCount;
 }
 
+const scratchUpdateHeightCartographic = new Cartographic();
+const scratchUpdateHeightCartographic2 = new Cartographic();
+const scratchUpdateHeightCartesian = new Cartesian3();
+function processUpdateHeight(tileset, tile, frameState) {
+  const heightCallbackData = tileset._addHeightCallbacks;
+  const boundingSphere = tile.boundingSphere;
+
+  for (const callbackData of heightCallbackData) {
+    // No need to upadate if the tile was already visible last frame
+    if (callbackData.invoked || tile._wasSelectedLastFrame) {
+      continue;
+    }
+
+    const ellipsoid = callbackData.ellipsoid;
+    const positionCartographic = Cartographic.clone(
+      callbackData.positionCartographic,
+      scratchUpdateHeightCartographic
+    );
+    const centerCartographic = Cartographic.fromCartesian(
+      boundingSphere.center,
+      ellipsoid,
+      scratchUpdateHeightCartographic2
+    );
+
+    // This can be undefined when the bounding sphere is at the origin
+    if (defined(centerCartographic)) {
+      positionCartographic.height = centerCartographic.height;
+    }
+
+    const position = Cartographic.toCartesian(
+      positionCartographic,
+      ellipsoid,
+      scratchUpdateHeightCartesian
+    );
+    if (
+      Cartesian3.distance(position, boundingSphere.center) <=
+      boundingSphere.radius
+    ) {
+      frameState.afterRender.push(() => {
+        // Callback can be removed before it actually invoked at the end of the frame
+        if (defined(callbackData.callback)) {
+          callbackData.callback(positionCartographic);
+        }
+        callbackData.invoked = false;
+      });
+    }
+  }
+}
+
 /**
  * Process tiles in the PROCESSING state so they will eventually move to the READY state.
  * @private
@@ -2934,6 +2991,7 @@ function updateTiles(tileset, frameState, passOptions) {
     if (isRender) {
       tileVisible.raiseEvent(tile);
     }
+    processUpdateHeight(tileset, tile, frameState);
     tile.update(tileset, frameState, passOptions);
     statistics.incrementSelectionCounts(tile.content);
     ++statistics.selected;
@@ -3510,6 +3568,7 @@ Cesium3DTileset.prototype.getHeight = function (cartographic, scene) {
     cartographic,
     ray.direction
   );
+  Cartesian3.normalize(ray.direction, ray.direction);
 
   ray.direction = Cartesian3.normalize(position, ray.direction);
   ray.direction = Cartesian3.negate(position, ray.direction);
@@ -3528,6 +3587,51 @@ Cesium3DTileset.prototype.getHeight = function (cartographic, scene) {
     intersection,
     scratchGetHeightCartographic
   )?.height;
+};
+
+/**
+ * Calls the callback when a new tile is rendered that contains the given cartographic. The only parameter
+ * is the cartographic position on the tile.
+ *
+ * @private
+ *
+ * @param {Scene} scene The scene where visualization is taking place.
+ * @param {Cartographic} cartographic The cartographic position.
+ * @param {Function} callback The function to be called when a new tile is loaded.
+ * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid to use.
+ * @returns {Function} The function to remove this callback from the quadtree.
+ */
+Cesium3DTileset.prototype.updateHeight = function (
+  cartographic,
+  callback,
+  ellipsoid
+) {
+  ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
+
+  const object = {
+    positionCartographic: cartographic,
+    ellipsoid: ellipsoid,
+    callback: callback,
+    invoked: false,
+  };
+
+  const removeCallback = () => {
+    const addedCallbacks = this._addHeightCallbacks;
+    const length = addedCallbacks.length;
+    for (let i = 0; i < length; ++i) {
+      if (addedCallbacks[i] === object) {
+        addedCallbacks.splice(i, 1);
+        break;
+      }
+    }
+
+    if (object.callback) {
+      object.callback = undefined;
+    }
+  };
+
+  this._addHeightCallbacks.push(object);
+  return removeCallback;
 };
 
 const scratchSphereIntersection = new Interval();
@@ -3550,42 +3654,50 @@ Cesium3DTileset.prototype.pick = function (ray, frameState, result) {
 
   const selectedTiles = this._selectedTiles;
   const selectedLength = selectedTiles.length;
+  const candidates = [];
 
-  let intersection;
-  let minDistance = Number.POSITIVE_INFINITY;
   for (let i = 0; i < selectedLength; ++i) {
     const tile = selectedTiles[i];
     const boundsIntersection = IntersectionTests.raySphere(
       ray,
-      tile.boundingSphere,
+      tile.contentBoundingVolume.boundingSphere,
       scratchSphereIntersection
     );
-    if (!defined(boundsIntersection)) {
+    if (!defined(boundsIntersection) || !defined(tile.content)) {
       continue;
     }
 
-    const candidate = tile.content?.pick(
+    candidates.push(tile);
+  }
+
+  const length = candidates.length;
+  candidates.sort((a, b) => {
+    const aDist = BoundingSphere.distanceSquaredTo(
+      a.contentBoundingVolume.boundingSphere,
+      ray.origin
+    );
+    const bDist = BoundingSphere.distanceSquaredTo(
+      b.contentBoundingVolume.boundingSphere,
+      ray.origin
+    );
+
+    return aDist - bDist;
+  });
+
+  let intersection;
+  for (let i = 0; i < length; ++i) {
+    const tile = candidates[i];
+    const candidate = tile.content.pick(
       ray,
       frameState,
       scratchPickIntersection
     );
 
-    if (!defined(candidate)) {
-      continue;
-    }
-
-    const distance = Cartesian3.distance(ray.origin, candidate);
-    if (distance < minDistance) {
+    if (defined(candidate)) {
       intersection = Cartesian3.clone(candidate, result);
-      minDistance = distance;
+      return intersection;
     }
   }
-
-  if (!defined(intersection)) {
-    return undefined;
-  }
-
-  return intersection;
 };
 
 /**
