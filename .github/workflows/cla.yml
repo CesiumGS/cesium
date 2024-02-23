@@ -1,6 +1,7 @@
 name: CLA Checking
 on:
   pull_request:
+    types: [opened]
 
 jobs:
   check-cla:
