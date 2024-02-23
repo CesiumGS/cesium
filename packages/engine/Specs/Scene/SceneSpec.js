@@ -1263,7 +1263,30 @@ describe(
       expect(args[0][0]).toBeGreaterThan(scene.camera.percentageChanged);
     });
 
-    it("raises the camera changed event on heading changed", function () {
+    it("raises the camera changed event on heading changed when looking up", function () {
+      const spyListener = jasmine.createSpy("listener");
+
+      scene.camera.lookUp(0.785398);
+      scene.camera.changed.addEventListener(spyListener);
+
+      scene.initializeFrame();
+      scene.render();
+
+      scene.camera.twistLeft(
+        CesiumMath.PI * (scene.camera.percentageChanged + 0.1)
+      );
+
+      scene.initializeFrame();
+      scene.render();
+
+      expect(spyListener.calls.count()).toBe(1);
+
+      const args = spyListener.calls.allArgs();
+      expect(args.length).toEqual(1);
+      expect(args[0].length).toEqual(1);
+      expect(args[0][0]).toBeGreaterThan(scene.camera.percentageChanged);
+    });
+    it("raises the camera changed event on roll changed", function () {
       const spyListener = jasmine.createSpy("listener");
       scene.camera.changed.addEventListener(spyListener);
 
@@ -1284,7 +1307,6 @@ describe(
       expect(args[0].length).toEqual(1);
       expect(args[0][0]).toBeGreaterThan(scene.camera.percentageChanged);
     });
-
     it("raises the camera changed event on position changed", function () {
       const spyListener = jasmine.createSpy("listener");
       scene.camera.changed.addEventListener(spyListener);
