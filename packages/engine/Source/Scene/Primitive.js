@@ -2507,13 +2507,8 @@ Primitive.prototype.destroy = function () {
 function setReady(primitive, frameState, state, error) {
   primitive._error = error;
   primitive._state = state;
-  frameState.afterRender.push(function () {
-    primitive._ready =
-      primitive._state === PrimitiveState.COMPLETE ||
-      primitive._state === PrimitiveState.FAILED;
-    if (!defined(error)) {
-      return true;
-    }
-  });
+  primitive._ready =
+    primitive._state === PrimitiveState.COMPLETE ||
+    primitive._state === PrimitiveState.FAILED;
 }
 export default Primitive;
