@@ -117,11 +117,11 @@ PointJacobianT convertUvToShapeSpaceDerivative(in vec3 positionUv) {
     vec2 posEllipse = vec2(distanceFromZAxis, position.z);
     vec3 surfacePointAndRadius = nearestPointAndRadiusOnEllipse(posEllipse, u_ellipsoidRadiiUv.xz);
     vec2 surfacePoint = surfacePointAndRadius.xy;
-    
+
     vec2 normal2d = normalize(surfacePoint * u_ellipsoidInverseRadiiSquaredUv.xz);
     float latitude = atan(normal2d.y, normal2d.x);
-    vec3 north = vec3(-normal2d.y * normalize(position.xy), normal2d.x);
- 
+    vec3 north = vec3(-normal2d.y * normalize(position.xy), abs(normal2d.x));
+
     float heightSign = length(posEllipse) < length(surfacePoint) ? -1.0 : 1.0;
     float height = heightSign * length(posEllipse - surfacePoint);
     vec3 up = normalize(cross(east, north));
