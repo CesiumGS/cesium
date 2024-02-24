@@ -28,7 +28,7 @@ float hash(vec2 p)
 }
 #endif
 
-vec4 getStepSize(in SampleData sampleData, in Ray viewRay, in RayShapeIntersection shapeIntersection, in float currT) {
+vec4 getStepSize(in SampleData sampleData, in Ray viewRay, in RayShapeIntersection shapeIntersection, in float currT, in vec3 gradient) {
 #if defined(SHAPE_BOX)
     Box voxelBox = constructVoxelBox(sampleData.tileCoords, sampleData.tileUv);
     RayShapeIntersection voxelIntersection = intersectBox(viewRay, voxelBox);
@@ -36,6 +36,18 @@ vec4 getStepSize(in SampleData sampleData, in Ray viewRay, in RayShapeIntersecti
     float exit = min(voxelIntersection.exit.w, shapeIntersection.exit.w);
     float dt = (exit - entry.w) * RAY_SCALE;
     return vec4(normalize(entry.xyz), dt);
+#elif defined(SHAPE_ELLIPSOID)
+    float dimAtLevel = pow(2.0, float(sampleData.tileCoords.w));
+    float tileSizeAtLevel = 1.0 / dimAtLevel;
+    vec3 sampleSizeUv = tileSizeAtLevel / vec3(u_dimensions);
+    vec3 sampleSizeShape = scaleShapeUvToShapeSpace(sampleSizeUv);
+    vec3 sampleSizeAlongRay = sampleSizeShape / abs(gradient);
+    float stepSize = min(sampleSizeAlongRay.x, sampleSizeAlongRay.y);
+    stepSize = min(stepSize, sampleSizeAlongRay.z) * 0.5;
+    float shapeEntryT = shapeIntersection.entry.w * RAY_SCALE;
+    float constantStep = u_stepSize / dimAtLevel;
+    vec3 normal = (currT < shapeEntryT + constantStep) ? shapeIntersection.entry.xyz : viewRay.dir;
+    return vec4(normalize(normal), stepSize);
 #else
     float dimAtLevel = pow(2.0, float(sampleData.tileCoords.w));
     float shapeEntryT = shapeIntersection.entry.w * RAY_SCALE;
@@ -71,13 +83,14 @@ void main()
     float currT = shapeIntersection.entry.w * RAY_SCALE;
     float endT = shapeIntersection.exit.w;
     vec3 positionUv = viewPosUv + currT * viewDirUv;
-    vec3 positionUvShapeSpace = convertUvToShapeUvSpace(positionUv);
+    PointGradient3 pointGradientShapeSpace = convertUvToShapeSpaceDerivative(positionUv, viewDirUv);
+    vec3 positionUvShapeSpace = convertShapeToShapeUvSpace(pointGradientShapeSpace.point);
 
     // Traverse the tree from the start position
     TraversalData traversalData;
     SampleData sampleDatas[SAMPLE_COUNT];
     traverseOctreeFromBeginning(positionUvShapeSpace, traversalData, sampleDatas);
-    vec4 step = getStepSize(sampleDatas[0], viewRayUv, shapeIntersection, currT);
+    vec4 step = getStepSize(sampleDatas[0], viewRayUv, shapeIntersection, currT, pointGradientShapeSpace.gradient);
 
     #if defined(JITTER)
         float noise = hash(screenCoord); // [0,1]
@@ -100,7 +113,7 @@ void main()
         copyPropertiesToMetadata(properties, fragmentInput.metadata);
         fragmentInput.voxel.positionUv = positionUv;
         fragmentInput.voxel.positionShapeUv = positionUvShapeSpace;
-        fragmentInput.voxel.gradient = convertUvToShapeSpaceDerivative(positionUv, viewDirUv).gradient;
+        fragmentInput.voxel.gradient = pointGradientShapeSpace.gradient;
         fragmentInput.voxel.positionUvLocal = sampleDatas[0].tileUv;
         fragmentInput.voxel.viewDirUv = viewDirUv;
         fragmentInput.voxel.viewDirWorld = viewDirWorld;
@@ -154,9 +167,10 @@ void main()
 
         // Traverse the tree from the current ray position.
         // This is similar to traverseOctreeFromBeginning but is faster when the ray is in the same tile as the previous step.
-        positionUvShapeSpace = convertUvToShapeUvSpace(positionUv);
+        pointGradientShapeSpace = convertUvToShapeSpaceDerivative(positionUv, viewDirUv);
+        positionUvShapeSpace = convertShapeToShapeUvSpace(pointGradientShapeSpace.point);
         traverseOctreeFromExisting(positionUvShapeSpace, traversalData, sampleDatas);
-        step = getStepSize(sampleDatas[0], viewRayUv, shapeIntersection, currT);
+        step = getStepSize(sampleDatas[0], viewRayUv, shapeIntersection, currT, pointGradientShapeSpace.gradient);
     }
 
     // Convert the alpha from [0,ALPHA_ACCUM_MAX] to [0,1]

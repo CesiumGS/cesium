@@ -66,7 +66,6 @@ vec3 nearestPointAndRadiusOnEllipse(vec2 pos, vec2 radii) {
 
     const int iterations = 3;
     for (int i = 0; i < iterations; ++i) {
-        // Find the evolute of the ellipse (center of curvature) at v.
         // Find the (approximate) intersection of p - evolute with the ellipsoid.
         vec2 q = normalize(p - evolute) * length(v - evolute);
         // Update the estimate of t.
@@ -131,8 +130,8 @@ PointGradient3 convertUvToShapeSpaceDerivative(in vec3 positionUv, in vec3 direc
     north = north / (surfacePointAndRadius.z + height);
 
     vec3 point = vec3(longitude, latitude, height);
-    // TODO: construct the Jacobian matrix for clarity. Left or right multiply??
-    vec3 gradient = vec3(dot(direction, east), dot(direction, north), dot(direction, up));
+    mat3 jacobian = transpose(mat3(east, north, up));
+    vec3 gradient = jacobian * direction;
     return PointGradient3(point, gradient);
 }
 
@@ -173,4 +172,24 @@ vec3 convertShapeToShapeUvSpace(in vec3 positionShape) {
 vec3 convertUvToShapeUvSpace(in vec3 positionUv) {
     vec3 positionShape = convertUvToShapeSpace(positionUv);
     return convertShapeToShapeUvSpace(positionShape);
+}
+
+vec3 scaleShapeUvToShapeSpace(in vec3 shapeUv) {
+    float longitude = shapeUv.x;
+    #if defined (ELLIPSOID_HAS_SHAPE_BOUNDS_LONGITUDE)
+        longitude /= u_ellipsoidUvToShapeUvLongitude.x;
+    #endif
+    // Convert from [0, 1] to radians [-pi, pi]
+    longitude *= czm_twoPi;
+
+    float latitude = shapeUv.y;
+    #if defined(ELLIPSOID_HAS_SHAPE_BOUNDS_LATITUDE)
+        latitude /= u_ellipsoidUvToShapeUvLatitude.x;
+    #endif
+    // Convert from [0, 1] to radians [-pi/2, pi/2]
+    latitude *= czm_pi;
+    
+    float height = shapeUv.z / u_ellipsoidInverseHeightDifferenceUv;
+
+    return vec3(longitude, latitude, height);
 }

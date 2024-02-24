@@ -138,6 +138,11 @@ function VoxelRenderResources(primitive) {
       Intersection,
     ]);
   } else if (shapeType === "ELLIPSOID") {
+    shaderBuilder.addDefine(
+      "SHAPE_ELLIPSOID",
+      undefined,
+      ShaderDestination.FRAGMENT
+    );
     shaderBuilder.addFragmentLines([
       convertUvToEllipsoid,
       IntersectLongitude,
