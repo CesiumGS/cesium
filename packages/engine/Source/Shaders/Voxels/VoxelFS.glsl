@@ -33,20 +33,34 @@ float minComponent(in vec3 v) {
 }
 
 /**
- * Compute the normal of the surface the ray intersected when it entered the voxel.
+ * Compute the normal of the surface the ray intersected when it entered the voxel,
+ * and the length of the step along the ray to reach the back side of the voxel
  */
-vec3 getVoxelNormalShapeSpace(in vec3 tileUv, in vec3 gradient) {
-    vec3 voxelCoord = tileUv * vec3(u_dimensions);
+vec4 getShapeSpaceStep(in SampleData sampleData, in vec3 gradient) {
+    float tileSizeAtLevel = exp2(-1.0 * float(sampleData.tileCoords.w));
+    vec3 sampleSizeUv = tileSizeAtLevel / vec3(u_dimensions);
+    vec3 sampleSizeShape = scaleShapeUvToShapeSpace(sampleSizeUv);
+    vec3 sampleSizeAlongRay = sampleSizeShape / gradient;
+    float fixedStep = minComponent(abs(sampleSizeAlongRay)) * u_stepSize;
+
+    vec3 voxelCoord = sampleData.tileUv * vec3(u_dimensions);
     vec3 directions = sign(gradient);
     vec3 positiveDirections = max(directions, 0.0);
-    vec3 entryShapeUv = mix(ceil(voxelCoord), floor(voxelCoord), positiveDirections);
-    vec3 sampleDistanceFromEntry = voxelCoord - entryShapeUv;
-    vec3 tileDistanceFromEntry = sampleDistanceFromEntry / vec3(u_dimensions);
-    vec3 distanceFromEntry = scaleShapeUvToShapeSpace(tileDistanceFromEntry);
-    vec3 distanceAlongRay = distanceFromEntry / gradient; // All positive
-    float lastEntry = minComponent(distanceAlongRay);
-    bvec3 isLastEntry = lessThanEqual(distanceAlongRay, vec3(lastEntry));
-    return -1.0 * vec3(isLastEntry) * directions;
+    vec3 entryCoord = mix(ceil(voxelCoord), floor(voxelCoord), positiveDirections);
+    vec3 exitCoord = mix(floor(voxelCoord), ceil(voxelCoord), positiveDirections);
+
+    vec3 distanceFromEntry = (voxelCoord - entryCoord) * sampleSizeAlongRay;
+    vec3 distanceFromExit = (exitCoord - voxelCoord) * sampleSizeAlongRay;
+
+    float lastEntry = minComponent(distanceFromEntry);
+    bvec3 isLastEntry = lessThanEqual(distanceFromEntry, vec3(lastEntry));
+    vec3 normal = -1.0 * vec3(isLastEntry) * directions;
+
+    float firstExit = minComponent(distanceFromExit);
+    float variableStep = firstExit * u_stepSize;
+    float stepSize = max(variableStep, fixedStep * 0.13);
+
+    return vec4(normal, stepSize);
 }
 
 vec4 getStepSize(in SampleData sampleData, in Ray viewRay, in RayShapeIntersection shapeIntersection, in mat3 jacobianT) {
@@ -58,24 +72,16 @@ vec4 getStepSize(in SampleData sampleData, in Ray viewRay, in RayShapeIntersecti
     float dt = (exit - entry.w) * RAY_SCALE;
     return vec4(normalize(entry.xyz), dt);
 #elif defined(SHAPE_ELLIPSOID)
-    float dimAtLevel = pow(2.0, float(sampleData.tileCoords.w));
-    float tileSizeAtLevel = 1.0 / dimAtLevel;
-    vec3 sampleSizeUv = tileSizeAtLevel / vec3(u_dimensions);
-    vec3 sampleSizeShape = scaleShapeUvToShapeSpace(sampleSizeUv);
-
     // TODO: don't recompute this
     vec3 directionUnWarped = 2.0 * viewRay.dir * u_ellipsoidRadiiUv;
     vec3 gradient = directionUnWarped * jacobianT;
 
-    vec3 normalShapeSpace = getVoxelNormalShapeSpace(sampleData.tileUv, gradient);
-    vec3 normal = normalize(jacobianT * normalShapeSpace);
-
-    vec3 sampleSizeAlongRay = sampleSizeShape / abs(gradient);
-    float stepSize = minComponent(sampleSizeAlongRay) * u_stepSize;
+    vec4 shapeSpaceStep = getShapeSpaceStep(sampleData, gradient);
+    vec3 normal = normalize(jacobianT * shapeSpaceStep.xyz);
 
     // TODO: check if shapeIntersection.entry is truncating the sample intersection
     //return vec4(normalize(shapeIntersection.entry.xyz), stepSize);
-    return vec4(normal, stepSize);
+    return vec4(normal, shapeSpaceStep.w);
 #else
     float dimAtLevel = pow(2.0, float(sampleData.tileCoords.w));
     float shapeEntryT = shapeIntersection.entry.w * RAY_SCALE;
