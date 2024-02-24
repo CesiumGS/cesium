@@ -2507,8 +2507,10 @@ Primitive.prototype.destroy = function () {
 function setReady(primitive, frameState, state, error) {
   primitive._error = error;
   primitive._state = state;
-  primitive._ready =
-    primitive._state === PrimitiveState.COMPLETE ||
-    primitive._state === PrimitiveState.FAILED;
+  frameState.afterRender.push(function () {
+    primitive._ready =
+      primitive._state === PrimitiveState.COMPLETE ||
+      primitive._state === PrimitiveState.FAILED;
+  });
 }
 export default Primitive;
