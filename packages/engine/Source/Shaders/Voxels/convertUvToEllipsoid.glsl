@@ -102,37 +102,33 @@ vec3 convertUvToShapeSpace(in vec3 positionUv) {
     return vec3(longitude, latitude, height);
 }
 
-PointGradient3 convertUvToShapeSpaceDerivative(in vec3 positionUv, in vec3 direction) {
+PointJacobianT convertUvToShapeSpaceDerivative(in vec3 positionUv) {
     // Convert from UV space [0, 1] to local space [-1, 1]
     vec3 position = positionUv * 2.0 - 1.0;
-    direction *= 2.0;
     // Undo the scaling from ellipsoid to sphere
     position = position * u_ellipsoidRadiiUv;
-    direction = direction * u_ellipsoidRadiiUv;
 
     float longitude = atan(position.y, position.x);
-    vec3 east = vec3(-position.y, position.x, 0.0) / dot(position.xy, position.xy);
+    vec3 east = normalize(vec3(-position.y, position.x, 0.0));
 
     // Convert the 3D position to a 2D position relative to the ellipse (radii.x, radii.z)
     // (assume radii.y == radii.x) and find the nearest point on the ellipse and its normal
-    vec2 posEllipse = vec2(length(position.xy), position.z);
+    float distanceFromZAxis = length(position.xy);
+    vec2 posEllipse = vec2(distanceFromZAxis, position.z);
     vec3 surfacePointAndRadius = nearestPointAndRadiusOnEllipse(posEllipse, u_ellipsoidRadiiUv.xz);
     vec2 surfacePoint = surfacePointAndRadius.xy;
     
     vec2 normal2d = normalize(surfacePoint * u_ellipsoidInverseRadiiSquaredUv.xz);
     float latitude = atan(normal2d.y, normal2d.x);
-    vec2 cosSinLongitude = normalize(position.xy);
-    vec3 north = vec3(-normal2d.y * cosSinLongitude, normal2d.x);
+    vec3 north = vec3(-normal2d.y * normalize(position.xy), normal2d.x);
  
     float heightSign = length(posEllipse) < length(surfacePoint) ? -1.0 : 1.0;
     float height = heightSign * length(posEllipse - surfacePoint);
     vec3 up = normalize(cross(east, north));
-    north = north / (surfacePointAndRadius.z + height);
 
     vec3 point = vec3(longitude, latitude, height);
-    mat3 jacobian = transpose(mat3(east, north, up));
-    vec3 gradient = jacobian * direction;
-    return PointGradient3(point, gradient);
+    mat3 jacobianT = mat3(east / distanceFromZAxis, north / (surfacePointAndRadius.z + height), up);
+    return PointJacobianT(point, jacobianT);
 }
 
 vec3 convertShapeToShapeUvSpace(in vec3 positionShape) {

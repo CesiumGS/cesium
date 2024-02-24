@@ -735,15 +735,8 @@ VoxelEllipsoidShape.prototype.computeApproximateStepSize = function (
   Check.typeOf.object("dimensions", dimensions);
   //>>includeEnd('debug');
 
-  const ellipsoid = this._ellipsoid;
-  const ellipsoidMaximumRadius = ellipsoid.maximumRadius;
-  const minimumHeight = this._minimumHeight;
-  const maximumHeight = this._maximumHeight;
-
-  const shellToEllipsoidRatio =
-    (maximumHeight - minimumHeight) / (ellipsoidMaximumRadius + maximumHeight);
-  const stepSize = (0.5 * shellToEllipsoidRatio) / dimensions.z;
-  return stepSize;
+  // Voxel size is now computed in the shader
+  return 1.0;
 };
 
 /**
