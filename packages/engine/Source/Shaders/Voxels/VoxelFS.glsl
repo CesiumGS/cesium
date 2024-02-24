@@ -40,11 +40,13 @@ vec3 getVoxelNormalShapeSpace(in vec3 tileUv, in vec3 gradient) {
     vec3 directions = sign(gradient);
     vec3 positiveDirections = max(directions, 0.0);
     vec3 entryShapeUv = mix(ceil(voxelCoord), floor(voxelCoord), positiveDirections);
-    vec3 distanceFromEntry = scaleShapeUvToShapeSpace(voxelCoord - entryShapeUv);
+    vec3 sampleDistanceFromEntry = voxelCoord - entryShapeUv;
+    vec3 tileDistanceFromEntry = sampleDistanceFromEntry / vec3(u_dimensions);
+    vec3 distanceFromEntry = scaleShapeUvToShapeSpace(tileDistanceFromEntry);
     vec3 distanceAlongRay = distanceFromEntry / gradient; // All positive
     float lastEntry = minComponent(distanceAlongRay);
-    bvec3 isLastEntry = equal(distanceAlongRay, vec3(lastEntry));
-    return -1.0 * float(isLastEntry) * directions;
+    bvec3 isLastEntry = lessThanEqual(distanceAlongRay, vec3(lastEntry));
+    return -1.0 * vec3(isLastEntry) * directions;
 }
 
 vec4 getStepSize(in SampleData sampleData, in Ray viewRay, in RayShapeIntersection shapeIntersection, in mat3 jacobianT) {
@@ -71,6 +73,7 @@ vec4 getStepSize(in SampleData sampleData, in Ray viewRay, in RayShapeIntersecti
     vec3 sampleSizeAlongRay = sampleSizeShape / abs(gradient);
     float stepSize = minComponent(sampleSizeAlongRay) * u_stepSize;
 
+    // TODO: check if shapeIntersection.entry is truncating the sample intersection
     //return vec4(normalize(shapeIntersection.entry.xyz), stepSize);
     return vec4(normal, stepSize);
 #else
