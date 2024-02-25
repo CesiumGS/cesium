@@ -57,8 +57,8 @@ vec4 getShapeSpaceStep(in SampleData sampleData, in vec3 gradient) {
     vec3 normal = -1.0 * vec3(isLastEntry) * directions;
 
     float firstExit = minComponent(distanceFromExit);
-    float variableStep = firstExit * u_stepSize;
-    float stepSize = max(variableStep, fixedStep * 0.13);
+    float variableStep = firstExit * u_stepSize + fixedStep * 0.01;
+    float stepSize = max(variableStep, fixedStep * 0.05);
 
     return vec4(normal, stepSize);
 }
