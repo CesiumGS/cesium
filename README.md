@@ -18,6 +18,8 @@ Built on open formats, CesiumJS is designed for robust interoperability and scal
 
 ## :rocket: Get started
 
+Do not merge
+
 Visit the [Downloads page](https://cesium.com/downloads/) to download a pre-built copy of CesiumJS.
 
 ### npm & yarn
