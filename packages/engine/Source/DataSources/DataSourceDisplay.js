@@ -120,6 +120,18 @@ function DataSourceDisplay(options) {
   this._ready = false;
 }
 
+const ExtraVisualizers = [];
+/**
+ * Add the provided Visualizer to the default visualizers callback
+ * @private
+ * @param {Visualizer} visualizer
+ */
+DataSourceDisplay.registerVisualizer = function (visualizer) {
+  if (!ExtraVisualizers.includes(visualizer)) {
+    ExtraVisualizers.push(visualizer);
+  }
+};
+
 /**
  * Gets or sets the default function which creates an array of visualizers used for visualization.
  * By default, this function uses all standard visualizers.
@@ -151,6 +163,7 @@ DataSourceDisplay.defaultVisualizersCallback = function (
       dataSource._primitives,
       dataSource._groundPrimitives
     ),
+    ...ExtraVisualizers.map((Visualizer) => new Visualizer(scene, entities)),
   ];
 };
 

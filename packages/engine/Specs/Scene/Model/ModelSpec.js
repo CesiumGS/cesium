@@ -1282,6 +1282,7 @@ describe(
 
             // Renders without style.
             let original;
+            verifyRender(model, true);
             expect(renderOptions).toRenderAndCall(function (rgba) {
               original = rgba;
             });
@@ -1292,6 +1293,7 @@ describe(
             });
 
             model.style = style;
+            verifyRender(model, true);
             expect(renderOptions).toRenderAndCall(function (rgba) {
               expect(rgba[0]).toEqual(original[0]);
               expect(rgba[1]).toBeLessThan(original[1]);
@@ -1305,6 +1307,7 @@ describe(
             });
 
             model.style = style;
+            verifyRender(model, true);
             expect(renderOptions).toRenderAndCall(function (rgba) {
               expect(rgba[0]).toBeLessThan(original[0]);
               expect(rgba[1]).toBeLessThan(original[1]);

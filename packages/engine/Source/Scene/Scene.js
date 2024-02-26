@@ -172,7 +172,7 @@ function Scene(options) {
   this._globeHeightDirty = undefined;
   this._cameraUnderground = false;
 
-  this._logDepthBuffer = context.fragmentDepth;
+  this._logDepthBuffer = Scene.defaultLogDepthBuffer && context.fragmentDepth;
   this._logDepthBufferDirty = true;
 
   this._tweens = new TweenCollection();
@@ -733,6 +733,12 @@ function Scene(options) {
   this.updateFrameState();
   this.initializeFrame();
 }
+
+/**
+ * Use this to set the default value for {@link Scene#logarithmicDepthBuffer} in newly constructed Scenes
+ * This property relies on fragmentDepth being supported.
+ */
+Scene.defaultLogDepthBuffer = true;
 
 function updateGlobeListeners(scene, globe) {
   for (let i = 0; i < scene._removeGlobeCallbacks.length; ++i) {
