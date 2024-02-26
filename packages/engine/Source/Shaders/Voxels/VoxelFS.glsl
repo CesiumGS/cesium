@@ -147,14 +147,13 @@ void main()
     // TODO: remove 2.0 factor?
     vec3 directionUnWarped = 2.0 * viewDirUv * u_ellipsoidRadiiUv;
     // TODO: revisit naming
-    PointJacobianT pointJacobianShapeSpace = convertUvToShapeSpaceDerivative(positionUv);
-    vec3 positionUvShapeSpace = convertShapeToShapeUvSpace(pointJacobianShapeSpace.point);
+    PointJacobianT pointJacobian = convertUvToShapeUvSpaceDerivative(positionUv);
 
     // Traverse the tree from the start position
     TraversalData traversalData;
     SampleData sampleDatas[SAMPLE_COUNT];
-    traverseOctreeFromBeginning(positionUvShapeSpace, traversalData, sampleDatas);
-    vec4 step = getStepSize(sampleDatas[0], viewRayUv, shapeIntersection, pointJacobianShapeSpace.jacobianT);
+    traverseOctreeFromBeginning(pointJacobian.point, traversalData, sampleDatas);
+    vec4 step = getStepSize(sampleDatas[0], viewRayUv, shapeIntersection, pointJacobian.jacobianT);
 
     #if defined(JITTER)
         float noise = hash(screenCoord); // [0,1]
@@ -176,8 +175,8 @@ void main()
         // Prepare the custom shader inputs
         copyPropertiesToMetadata(properties, fragmentInput.metadata);
         fragmentInput.voxel.positionUv = positionUv;
-        fragmentInput.voxel.positionShapeUv = positionUvShapeSpace;
-        fragmentInput.voxel.gradient = directionUnWarped * pointJacobianShapeSpace.jacobianT;
+        fragmentInput.voxel.positionShapeUv = pointJacobian.point;
+        fragmentInput.voxel.gradient = directionUnWarped * pointJacobian.jacobianT;
         fragmentInput.voxel.positionUvLocal = sampleDatas[0].tileUv;
         fragmentInput.voxel.viewDirUv = viewDirUv;
         fragmentInput.voxel.viewDirWorld = viewDirWorld;
@@ -233,10 +232,9 @@ void main()
 
         // Traverse the tree from the current ray position.
         // This is similar to traverseOctreeFromBeginning but is faster when the ray is in the same tile as the previous step.
-        pointJacobianShapeSpace = convertUvToShapeSpaceDerivative(positionUv);
-        positionUvShapeSpace = convertShapeToShapeUvSpace(pointJacobianShapeSpace.point);
-        traverseOctreeFromExisting(positionUvShapeSpace, traversalData, sampleDatas);
-        step = getStepSize(sampleDatas[0], viewRayUv, shapeIntersection, pointJacobianShapeSpace.jacobianT);
+        pointJacobian = convertUvToShapeUvSpaceDerivative(positionUv);
+        traverseOctreeFromExisting(pointJacobian.point, traversalData, sampleDatas);
+        step = getStepSize(sampleDatas[0], viewRayUv, shapeIntersection, pointJacobian.jacobianT);
     }
 
     // Convert the alpha from [0,ALPHA_ACCUM_MAX] to [0,1]

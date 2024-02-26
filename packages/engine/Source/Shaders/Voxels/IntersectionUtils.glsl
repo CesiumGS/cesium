@@ -7,11 +7,6 @@
 #define RAY_SHIFT (0.000003163)
 #define RAY_SCALE (1.00003163)
 
-struct PointJacobianT {
-    vec3 point;
-    mat3 jacobianT;
-};
-
 struct Ray {
     vec3 pos;
     vec3 dir;

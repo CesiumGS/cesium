@@ -19,41 +19,18 @@ uniform vec3 u_ellipsoidInverseRadiiSquaredUv;
 #endif
 uniform float u_ellipsoidInverseHeightDifferenceUv;
 
+struct PointJacobianT {
+    vec3 point;
+    mat3 jacobianT;
+};
+
 // robust iterative solution without trig functions
 // https://github.com/0xfaded/ellipse_demo/issues/1
 // https://stackoverflow.com/questions/22959698/distance-from-given-point-to-given-ellipse
-vec2 nearestPointOnEllipse(vec2 pos, vec2 radii) {
-    vec2 p = abs(pos);
-    vec2 inverseRadii = 1.0 / radii;
-    vec2 evoluteScale = (radii.x * radii.x - radii.y * radii.y) * vec2(1.0, -1.0) * inverseRadii;
-
-    // We describe the ellipse parametrically: v = radii * vec2(cos(t), sin(t))
-    // but store the cos and sin of t in a vec2 for efficiency.
-    // Initial guess: t = pi/4
-    vec2 tTrigs = vec2(0.70710678118);
-    vec2 v = radii * tTrigs;
-
-    const int iterations = 3;
-    for (int i = 0; i < iterations; ++i) {
-        // Find the evolute of the ellipse (center of curvature) at v.
-        vec2 evolute = evoluteScale * tTrigs * tTrigs * tTrigs;
-        // Find the (approximate) intersection of p - evolute with the ellipsoid.
-        vec2 q = normalize(p - evolute) * length(v - evolute);
-        // Update the estimate of t.
-        tTrigs = (q + evolute) * inverseRadii;
-        tTrigs = normalize(clamp(tTrigs, 0.0, 1.0));
-        v = radii * tTrigs;
-    }
-
-    return v * sign(pos);
-}
-
-// TODO: rewrite as PointGradient3 ellipsoidNormalGradient(vec3 posEllipsoid),
-// where the return is the height vector (length = height) and the gradient
+// Extended to return radius of curvature along with the point
 vec3 nearestPointAndRadiusOnEllipse(vec2 pos, vec2 radii) {
     vec2 p = abs(pos);
     vec2 inverseRadii = 1.0 / radii;
-    vec2 evoluteScale = (radii.x * radii.x - radii.y * radii.y) * vec2(1.0, -1.0) * inverseRadii;
 
     // We describe the ellipse parametrically: v = radii * vec2(cos(t), sin(t))
     // but store the cos and sin of t in a vec2 for efficiency.
@@ -62,6 +39,7 @@ vec3 nearestPointAndRadiusOnEllipse(vec2 pos, vec2 radii) {
     // Initial guess of point on ellipsoid
     vec2 v = radii * tTrigs;
     // Center of curvature of the ellipse at v
+    vec2 evoluteScale = (radii.x * radii.x - radii.y * radii.y) * vec2(1.0, -1.0) * inverseRadii;
     vec2 evolute = evoluteScale * tTrigs * tTrigs * tTrigs;
 
     const int iterations = 3;
@@ -76,30 +54,6 @@ vec3 nearestPointAndRadiusOnEllipse(vec2 pos, vec2 radii) {
     }
 
     return vec3(v * sign(pos), length(v - evolute));
-}
-
-vec3 convertUvToShapeSpace(in vec3 positionUv) {
-    // Convert positionUv [0,1] to local space [-1,+1]
-    vec3 positionLocal = positionUv * 2.0 - 1.0;
-
-    float longitude = atan(positionLocal.y, positionLocal.x);
-
-    // Convert position to "normalized" cartesian space [-a,+a] where a = (radii + height) / (max(radii) + height).
-    // A point on the largest ellipsoid axis would be [-1,+1] and everything else would be smaller.
-    vec3 posEllipsoid = positionLocal * u_ellipsoidRadiiUv;
-
-    // Convert the 3D position to a 2D position relative to the ellipse (radii.x, radii.z)
-    // (assume radii.y == radii.x) and find the nearest point on the ellipse.
-    vec2 posEllipse = vec2(length(posEllipsoid.xy), posEllipsoid.z);
-    vec2 surfacePoint = nearestPointOnEllipse(posEllipse, u_ellipsoidRadiiUv.xz);
-
-    vec2 normal = normalize(surfacePoint * u_ellipsoidInverseRadiiSquaredUv.xz);
-    float latitude = atan(normal.y, normal.x);
-
-    float heightSign = length(posEllipse) < length(surfacePoint) ? -1.0 : 1.0;
-    float height = heightSign * length(posEllipse - surfacePoint);
-
-    return vec3(longitude, latitude, height);
 }
 
 PointJacobianT convertUvToShapeSpaceDerivative(in vec3 positionUv) {
@@ -165,9 +119,10 @@ vec3 convertShapeToShapeUvSpace(in vec3 positionShape) {
     return vec3(longitude, latitude, height);
 }
 
-vec3 convertUvToShapeUvSpace(in vec3 positionUv) {
-    vec3 positionShape = convertUvToShapeSpace(positionUv);
-    return convertShapeToShapeUvSpace(positionShape);
+PointJacobianT convertUvToShapeUvSpaceDerivative(in vec3 positionUv) {
+    PointJacobianT pointJacobian = convertUvToShapeSpaceDerivative(positionUv);
+    pointJacobian.point = convertShapeToShapeUvSpace(pointJacobian.point);
+    return pointJacobian;
 }
 
 vec3 scaleShapeUvToShapeSpace(in vec3 shapeUv) {
