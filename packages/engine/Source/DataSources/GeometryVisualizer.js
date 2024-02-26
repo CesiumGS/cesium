@@ -32,6 +32,7 @@ import WallGeometryUpdater from "./WallGeometryUpdater.js";
 
 const emptyArray = [];
 
+/** @type {GeometryUpdater[]} */
 const geometryUpdaters = [
   BoxGeometryUpdater,
   CylinderGeometryUpdater,
@@ -292,6 +293,17 @@ function GeometryVisualizer(
     emptyArray
   );
 }
+
+/**
+ * Add the provided updater to the default list of updaters
+ * @private
+ * @param {GeometryUpdater} updater
+ */
+GeometryVisualizer.registerUpdater = function (updater) {
+  if (!geometryUpdaters.includes(updater)) {
+    geometryUpdaters.push(updater);
+  }
+};
 
 /**
  * Updates all of the primitives created by this visualizer to match their
