@@ -1647,7 +1647,7 @@ function rotateCVOnTerrain(controller, startPosition, movement) {
   );
 
   if (controller.enableCollisionDetection) {
-    adjustHeightForTerrain(controller);
+    adjustHeightForTerrain(controller, true);
   }
 
   if (!Cartesian3.equals(camera.positionWC, originalPosition)) {
@@ -2653,7 +2653,7 @@ function tilt3DOnTerrain(controller, startPosition, movement) {
   );
 
   if (controller.enableCollisionDetection) {
-    adjustHeightForTerrain(controller);
+    adjustHeightForTerrain(controller, true);
   }
 
   if (!Cartesian3.equals(camera.positionWC, originalPosition)) {
