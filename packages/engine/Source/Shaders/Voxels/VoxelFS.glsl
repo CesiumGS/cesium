@@ -23,19 +23,6 @@ uniform float u_stepSize;
     uniform vec4 u_pickColor;
 #endif
 
-#if defined(JITTER)
-float hash(vec2 p)
-{
-    vec3 p3 = fract(vec3(p.xyx) * 50.0); // magic number = hashscale
-    p3 += dot(p3, p3.yzx + 19.19);
-    return fract((p3.x + p3.y) * p3.z);
-}
-#endif
-
-float minComponent(in vec3 v) {
-    return min(min(v.x, v.y), v.z);
-}
-
 vec3 getSampleSize(in int level) {
     float tileSizeAtLevel = exp2(-1.0 * float(level));
     vec3 sampleSizeUv = tileSizeAtLevel / vec3(u_dimensions);
@@ -50,10 +37,8 @@ vec4 getStepSize(in SampleData sampleData, in Ray viewRay, in RayShapeIntersecti
     float exit = min(voxelIntersection.exit.w, shapeIntersection.exit.w);
     float dt = (exit - entry.w) * RAY_SCALE;
     return vec4(normalize(entry.xyz), dt);
-#elif defined(SHAPE_ELLIPSOID)
-    // TODO: don't recompute this
-    vec3 directionUnWarped = 2.0 * viewRay.dir * u_ellipsoidRadiiUv;
-    vec3 gradient = directionUnWarped * jacobianT;
+#else
+    vec3 gradient = viewRay.rawDir * jacobianT;
 
     vec3 sampleSizeAlongRay = getSampleSize(sampleData.tileCoords.w) / gradient;
     float fixedStep = minComponent(abs(sampleSizeAlongRay)) * u_stepSize;
@@ -79,11 +64,6 @@ vec4 getStepSize(in SampleData sampleData, in Ray viewRay, in RayShapeIntersecti
     float stepSize = max(variableStep, fixedStep * 0.05);
 
     return vec4(entry.xyz, stepSize);
-#else
-    float dimAtLevel = pow(2.0, float(sampleData.tileCoords.w));
-    float shapeEntryT = shapeIntersection.entry.w * RAY_SCALE;
-    float constantStep = u_stepSize / dimAtLevel;
-    return vec4(normalize(shapeIntersection.entry.xyz), constantStep);
 #endif
 }
 
@@ -122,8 +102,14 @@ void main()
     #if defined(SHAPE_BOX)
         vec3 dInv = 1.0 / viewDirUv;
         Ray viewRayUv = Ray(viewPosUv, viewDirUv, dInv);
+    #elif defined(SHAPE_ELLIPSOID)
+        // TODO: remove 2.0 factor?
+        vec3 rawDir = 2.0 * viewDirUv * u_ellipsoidRadiiUv;
+        Ray viewRayUv = Ray(viewPosUv, viewDirUv, rawDir);
     #else
-        Ray viewRayUv = Ray(viewPosUv, viewDirUv);
+        // TODO: remove 2.0 factor?
+        vec3 rawDir = 2.0 * viewDirUv;
+        Ray viewRayUv = Ray(viewPosUv, viewDirUv, rawDir);
     #endif
 
     Intersections ix;
@@ -137,8 +123,6 @@ void main()
     float currT = shapeIntersection.entry.w * RAY_SCALE;
     float endT = shapeIntersection.exit.w;
     vec3 positionUv = viewPosUv + currT * viewDirUv;
-    // TODO: remove 2.0 factor?
-    vec3 directionUnWarped = 2.0 * viewDirUv * u_ellipsoidRadiiUv;
     // TODO: revisit naming
     PointJacobianT pointJacobian = convertUvToShapeUvSpaceDerivative(positionUv);
 
@@ -169,7 +153,7 @@ void main()
         copyPropertiesToMetadata(properties, fragmentInput.metadata);
         fragmentInput.voxel.positionUv = positionUv;
         fragmentInput.voxel.positionShapeUv = pointJacobian.point;
-        fragmentInput.voxel.gradient = directionUnWarped * pointJacobian.jacobianT;
+        fragmentInput.voxel.gradient = viewRayUv.rawDir * pointJacobian.jacobianT;
         fragmentInput.voxel.positionUvLocal = sampleDatas[0].tileUv;
         fragmentInput.voxel.viewDirUv = viewDirUv;
         fragmentInput.voxel.viewDirWorld = viewDirWorld;

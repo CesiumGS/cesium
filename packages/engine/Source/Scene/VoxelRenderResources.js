@@ -3,6 +3,7 @@ import combine from "../Core/combine.js";
 import defined from "../Core/defined.js";
 import ShaderBuilder from "../Renderer/ShaderBuilder.js";
 import ShaderDestination from "../Renderer/ShaderDestination.js";
+import VoxelUtils from "../Shaders/Voxels/VoxelUtils.js";
 import VoxelFS from "../Shaders/Voxels/VoxelFS.js";
 import VoxelVS from "../Shaders/Voxels/VoxelVS.js";
 import IntersectionUtils from "../Shaders/Voxels/IntersectionUtils.js";
@@ -89,6 +90,7 @@ function VoxelRenderResources(primitive) {
     customShader.fragmentShaderText,
     "#line 0",
     Octree,
+    VoxelUtils,
     IntersectionUtils,
     Megatexture,
   ]);

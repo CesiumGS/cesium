@@ -19,11 +19,6 @@ uniform vec3 u_ellipsoidInverseRadiiSquaredUv;
 #endif
 uniform float u_ellipsoidInverseHeightDifferenceUv;
 
-struct PointJacobianT {
-    vec3 point;
-    mat3 jacobianT;
-};
-
 // robust iterative solution without trig functions
 // https://github.com/0xfaded/ellipse_demo/issues/1
 // https://stackoverflow.com/questions/22959698/distance-from-given-point-to-given-ellipse
@@ -126,19 +121,17 @@ PointJacobianT convertUvToShapeUvSpaceDerivative(in vec3 positionUv) {
 }
 
 vec3 scaleShapeUvToShapeSpace(in vec3 shapeUv) {
-    float longitude = shapeUv.x;
+    // Convert from [0, 1] to radians [-pi, pi]
+    float longitude = shapeUv.x * czm_twoPi;
     #if defined (ELLIPSOID_HAS_SHAPE_BOUNDS_LONGITUDE)
         longitude /= u_ellipsoidUvToShapeUvLongitude.x;
     #endif
-    // Convert from [0, 1] to radians [-pi, pi]
-    longitude *= czm_twoPi;
 
-    float latitude = shapeUv.y;
+    // Convert from [0, 1] to radians [-pi/2, pi/2]
+    float latitude = shapeUv.y * czm_pi;
     #if defined(ELLIPSOID_HAS_SHAPE_BOUNDS_LATITUDE)
         latitude /= u_ellipsoidUvToShapeUvLatitude.x;
     #endif
-    // Convert from [0, 1] to radians [-pi/2, pi/2]
-    latitude *= czm_pi;
     
     float height = shapeUv.z / u_ellipsoidInverseHeightDifferenceUv;
 

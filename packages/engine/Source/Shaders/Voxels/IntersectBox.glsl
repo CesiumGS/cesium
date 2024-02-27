@@ -23,7 +23,7 @@ Box constructVoxelBox(in ivec4 octreeCoords, in vec3 tileUv)
     vec3 coordP1 = coordP0 + voxelSize;
 
     // Transform to the UV coordinates of the scaled tileset
-    float tileSize = 1.0 / pow(2.0, float(octreeCoords.w));
+    float tileSize = exp2(-1.0 * float(octreeCoords.w));
     vec3 p0 = convertShapeUvToUvSpace(coordP0 * tileSize);
     vec3 p1 = convertShapeUvToUvSpace(coordP1 * tileSize);
 
