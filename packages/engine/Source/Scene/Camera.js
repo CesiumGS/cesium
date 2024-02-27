@@ -217,6 +217,7 @@ function Camera(scene) {
   this._changedDirection = undefined;
   this._changedFrustum = undefined;
   this._changedHeading = undefined;
+  this._changedRoll = undefined;
 
   /**
    * The amount the camera has to change before the <code>changed</code> event is raised. The value is a percentage in the [0, 1] range.
@@ -380,25 +381,55 @@ Camera.prototype._updateCameraChanged = function () {
 
   const percentageChanged = camera.percentageChanged;
 
+  // check heading
   const currentHeading = camera.heading;
 
   if (!defined(camera._changedHeading)) {
     camera._changedHeading = currentHeading;
   }
 
-  let delta =
+  let headingDelta =
     Math.abs(camera._changedHeading - currentHeading) % CesiumMath.TWO_PI;
-  delta = delta > CesiumMath.PI ? CesiumMath.TWO_PI - delta : delta;
+  headingDelta =
+    headingDelta > CesiumMath.PI
+      ? CesiumMath.TWO_PI - headingDelta
+      : headingDelta;
 
   // Since delta is computed as the shortest distance between two angles
   // the percentage is relative to the half circle.
-  const headingChangedPercentage = delta / Math.PI;
+  const headingChangedPercentage = headingDelta / Math.PI;
 
   if (headingChangedPercentage > percentageChanged) {
-    camera._changed.raiseEvent(headingChangedPercentage);
     camera._changedHeading = currentHeading;
   }
 
+  // check roll
+  const currentRoll = camera.roll;
+
+  if (!defined(camera._changedRoll)) {
+    camera._changedRoll = currentRoll;
+  }
+
+  let rollDelta =
+    Math.abs(camera._changedRoll - currentRoll) % CesiumMath.TWO_PI;
+  rollDelta =
+    rollDelta > CesiumMath.PI ? CesiumMath.TWO_PI - rollDelta : rollDelta;
+
+  // Since delta is computed as the shortest distance between two angles
+  // the percentage is relative to the half circle.
+  const rollChangedPercentage = rollDelta / Math.PI;
+
+  if (rollChangedPercentage > percentageChanged) {
+    camera._changedRoll = currentRoll;
+  }
+  if (
+    rollChangedPercentage > percentageChanged ||
+    headingChangedPercentage > percentageChanged
+  ) {
+    camera._changed.raiseEvent(
+      Math.max(rollChangedPercentage, headingChangedPercentage)
+    );
+  }
   if (camera._mode === SceneMode.SCENE2D) {
     if (!defined(camera._changedFrustum)) {
       camera._changedPosition = Cartesian3.clone(
@@ -1233,6 +1264,11 @@ const scratchSetViewMatrix3 = new Matrix3();
 const scratchSetViewCartographic = new Cartographic();
 
 function setView3D(camera, position, hpr) {
+  //>>includeStart('debug', pragmas.debug);
+  if (isNaN(position.x) || isNaN(position.y) || isNaN(position.z)) {
+    throw new DeveloperError("position has a NaN component");
+  }
+  //>>includeEnd('debug');
   const currentTransform = Matrix4.clone(
     camera.transform,
     scratchSetViewTransform1
@@ -1473,6 +1509,12 @@ Camera.prototype.setView = function (options) {
       destination,
       scratchSetViewCartesian
     );
+    //>>includeStart('debug', pragmas.debug);
+    // destination.z may be null in 2D, but .x and .y should be numeric
+    if (isNaN(destination.x) || isNaN(destination.y)) {
+      throw new DeveloperError(`destination has a NaN component`);
+    }
+    //>>includeEnd('debug');
     convert = false;
   }
 
