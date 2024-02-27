@@ -255,6 +255,8 @@ function ScreenSpaceCameraController(scene) {
   this._globe = undefined;
   this._ellipsoid = undefined;
 
+  this._lastGlobeHeight = 0.0;
+
   this._aggregator = new CameraEventAggregator(scene.canvas);
 
   this._lastInertiaSpinMovement = undefined;
@@ -2854,7 +2856,7 @@ function update3D(controller) {
 const scratchAdjustHeightTransform = new Matrix4();
 const scratchAdjustHeightCartographic = new Cartographic();
 
-function adjustHeightForTerrain(controller) {
+function adjustHeightForTerrain(controller, cameraChanged) {
   controller._adjustedHeightForTerrain = true;
 
   const scene = controller._scene;
@@ -2889,7 +2891,14 @@ function adjustHeightForTerrain(controller) {
     const globeHeight = controller._scene.globeHeight;
     if (defined(globeHeight)) {
       const height = globeHeight + controller.minimumZoomDistance;
-      if (cartographic.height < height) {
+      const difference = globeHeight - controller._lastGlobeHeight;
+      const percentDifference = difference / controller._lastGlobeHeight;
+
+      // To avoid big jumps during tile loads, only make incremental updates unless the camera has bee moved by user input
+      if (
+        cartographic.height < height &&
+        (cameraChanged || Math.abs(percentDifference) <= 0.1)
+      ) {
         cartographic.height = height;
         if (mode === SceneMode.SCENE3D) {
           ellipsoid.cartographicToCartesian(cartographic, camera.position);
@@ -2897,6 +2906,12 @@ function adjustHeightForTerrain(controller) {
           projection.project(cartographic, camera.position);
         }
         heightUpdated = true;
+      }
+
+      if (cameraChanged || Math.abs(percentDifference) <= 0.1) {
+        controller._lastGlobeHeight = globeHeight;
+      } else {
+        controller._lastGlobeHeight += difference * 0.1;
       }
     }
   }
@@ -3004,9 +3019,7 @@ ScreenSpaceCameraController.prototype.update = function () {
     const cameraChanged =
       !Cartesian3.equals(previousPosition, camera.positionWC) ||
       !Cartesian3.equals(previousDirection, camera.directionWC);
-    if (cameraChanged) {
-      adjustHeightForTerrain(this);
-    }
+    adjustHeightForTerrain(this, cameraChanged);
   }
 
   this._aggregator.reset();
