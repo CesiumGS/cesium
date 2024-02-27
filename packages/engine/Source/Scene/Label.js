@@ -90,6 +90,8 @@ function parseFont(label) {
  *
  * Initialization options for the Label constructor
  *
+ * @property {PositionProperty | Cartesian3} position The position of the label in the scene.
+ * @property {string} [id] A user-defined object to return when the label is picked with {@link Scene#pick}.
  * @property {Property | boolean} [show=true] A boolean Property specifying the visibility of the label.
  * @property {Property | string} [text] A Property specifying the text. Explicit newlines '\n' are supported.
  * @property {Property | string} [font='30px sans-serif'] A Property specifying the CSS font.
