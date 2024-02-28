@@ -122,13 +122,25 @@ function DataSourceDisplay(options) {
 
 const ExtraVisualizers = [];
 /**
- * Add the provided Visualizer to the default visualizers callback
+ * Add the provided Visualizer to the default visualizers callback if not already included
  * @private
  * @param {Visualizer} visualizer
  */
 DataSourceDisplay.registerVisualizer = function (visualizer) {
   if (!ExtraVisualizers.includes(visualizer)) {
     ExtraVisualizers.push(visualizer);
+  }
+};
+
+/**
+ * Remove the provided Visualizer from the default visualizers callback if it's included
+ * @private
+ * @param {Visualizer} visualizer
+ */
+DataSourceDisplay.unregisterVisualizer = function (visualizer) {
+  if (ExtraVisualizers.includes(visualizer)) {
+    const index = ExtraVisualizers.indexOf(visualizer);
+    ExtraVisualizers.splice(index, 1);
   }
 };
 

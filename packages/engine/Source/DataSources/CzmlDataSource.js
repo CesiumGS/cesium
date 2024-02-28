@@ -5037,13 +5037,25 @@ CzmlDataSource.updaters = [
 ];
 
 /**
- * Add the provided updater to the list of updaters
+ * Add the provided updater to the list of updaters if not already included
  * @private
  * @param {CzmlDataSource.UpdaterFunction} updater
  */
 CzmlDataSource.registerUpdater = function (updater) {
   if (!CzmlDataSource.updaters.includes(updater)) {
     CzmlDataSource.updaters.push(updater);
+  }
+};
+
+/**
+ * Remove the provided updater from the list of updaters if already included
+ * @private
+ * @param {CzmlDataSource.UpdaterFunction} updater
+ */
+CzmlDataSource.unregisterUpdater = function (updater) {
+  if (CzmlDataSource.updaters.includes(updater)) {
+    const index = CzmlDataSource.updaters.indexOf(updater);
+    CzmlDataSource.updaters.splice(index, 1);
   }
 };
 

@@ -10123,4 +10123,24 @@ describe("DataSources/CzmlDataSource", function () {
       expect(e.properties.custom_wsenDegrees.getValue(documentStopDate)).toEqual(Rectangle.fromDegrees(37, 16, 25, 23));
     });
   });
+
+  it("registers custom updaters", () => {
+    function processFakeEntity() {}
+
+    expect(CzmlDataSource.updaters.length)
+      .withContext("length before register")
+      .toEqual(23);
+
+    CzmlDataSource.registerUpdater(processFakeEntity);
+
+    expect(CzmlDataSource.updaters.length)
+      .withContext("length after register")
+      .toEqual(24);
+    expect(CzmlDataSource.updaters[23]).toEqual(processFakeEntity);
+
+    CzmlDataSource.unregisterUpdater(processFakeEntity);
+    expect(CzmlDataSource.updaters.length)
+      .withContext("length after unregister")
+      .toEqual(23);
+  });
 });
