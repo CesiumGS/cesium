@@ -1,7 +1,7 @@
-import { I3SBSLExplorer } from "../../index.js";
+import { I3SBuildingSceneLayerExplorer } from "../../index.js";
 import DomEventSimulator from "../../../../Specs/DomEventSimulator.js";
 
-describe("Widgets/I3SBSLExplorer/I3SBSLExplorer", function () {
+describe("Widgets/I3SBuildingSceneLayerExplorer/I3SBuildingSceneLayerExplorer", function () {
   const i3sProvider = {
     sublayers: [
       {
@@ -39,8 +39,10 @@ describe("Widgets/I3SBSLExplorer/I3SBSLExplorer", function () {
     container.id = "testContainer";
     document.body.appendChild(container);
 
-    const widget = new I3SBSLExplorer("testContainer", { sublayers: [] });
-    expect(widget).toBeInstanceOf(I3SBSLExplorer);
+    const widget = new I3SBuildingSceneLayerExplorer("testContainer", {
+      sublayers: [],
+    });
+    expect(widget).toBeInstanceOf(I3SBuildingSceneLayerExplorer);
 
     expect(container.childElementCount).toEqual(1);
     expect(container.children[0].childElementCount).toEqual(3);
@@ -60,7 +62,7 @@ describe("Widgets/I3SBSLExplorer/I3SBSLExplorer", function () {
 
   it("throws dev error with no container", function () {
     expect(function () {
-      return new I3SBSLExplorer();
+      return new I3SBuildingSceneLayerExplorer();
     }).toThrowDeveloperError();
   });
 
@@ -70,7 +72,7 @@ describe("Widgets/I3SBSLExplorer/I3SBSLExplorer", function () {
     document.body.appendChild(container);
 
     expect(function () {
-      return new I3SBSLExplorer("testContainer");
+      return new I3SBuildingSceneLayerExplorer("testContainer");
     }).toThrowDeveloperError();
     document.body.removeChild(container);
   });
@@ -81,8 +83,11 @@ describe("Widgets/I3SBSLExplorer/I3SBSLExplorer", function () {
     document.body.appendChild(container);
 
     i3sProvider.filterByAttributes = jasmine.createSpy();
-    const widget = new I3SBSLExplorer("testContainer", i3sProvider);
-    expect(widget).toBeInstanceOf(I3SBSLExplorer);
+    const widget = new I3SBuildingSceneLayerExplorer(
+      "testContainer",
+      i3sProvider
+    );
+    expect(widget).toBeInstanceOf(I3SBuildingSceneLayerExplorer);
 
     const expander = document.querySelector(".expandItem");
     const nestedList = expander.parentElement.parentElement.querySelector(

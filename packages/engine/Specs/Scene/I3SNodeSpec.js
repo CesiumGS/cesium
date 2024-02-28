@@ -3,6 +3,7 @@ import {
   Cartographic,
   Cesium3DTileRefine,
   Cesium3DTileset,
+  clone,
   Math as CesiumMath,
   Ellipsoid,
   Event,
@@ -18,7 +19,6 @@ import {
   Resource,
   WebMercatorProjection,
 } from "../../index.js";
-import clone from "../../Source/Core/clone.js";
 
 describe("Scene/I3SNode", function () {
   // Mock geoid data. 2x2 pixels for the whole world

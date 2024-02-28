@@ -1,8 +1,8 @@
-import { I3SBSLExplorerViewModel } from "../../index.js";
+import { I3SBuildingSceneLayerExplorerViewModel } from "../../index.js";
 
 import { knockout } from "../../index.js";
 
-describe("Widgets/I3SBSLExplorer/I3SBSLExplorerViewModel", function () {
+describe("Widgets/I3SBuildingSceneLayerExplorer/I3SBuildingSceneLayerExplorerViewModel", function () {
   const i3sProvider = {
     sublayers: [
       {
@@ -49,7 +49,7 @@ describe("Widgets/I3SBSLExplorer/I3SBSLExplorerViewModel", function () {
   };
 
   it("can create bsl explorer ViewModel", function () {
-    const viewModel = new I3SBSLExplorerViewModel(i3sProvider);
+    const viewModel = new I3SBuildingSceneLayerExplorerViewModel(i3sProvider);
     expect(viewModel.levels).toEqual(["All", 0, 1]);
     expect(viewModel.selectedLevel).toEqual("All");
 
@@ -89,7 +89,9 @@ describe("Widgets/I3SBSLExplorer/I3SBSLExplorerViewModel", function () {
   });
 
   it("can create bsl explorer ViewModel if no Overview", function () {
-    const viewModel = new I3SBSLExplorerViewModel(i3sProviderWithoutOverview);
+    const viewModel = new I3SBuildingSceneLayerExplorerViewModel(
+      i3sProviderWithoutOverview
+    );
     expect(viewModel.sublayers.length).toEqual(1);
     expect(viewModel.sublayers[0].name).toEqual("Full Model");
     expect(viewModel.sublayers[0].modelName).toEqual("FullModel");
@@ -123,7 +125,7 @@ describe("Widgets/I3SBSLExplorer/I3SBSLExplorerViewModel", function () {
 
   it("can handle filtering by level", function () {
     i3sProvider.filterByAttributes = jasmine.createSpy();
-    const viewModel = new I3SBSLExplorerViewModel(i3sProvider);
+    const viewModel = new I3SBuildingSceneLayerExplorerViewModel(i3sProvider);
     knockout.track(viewModel);
 
     viewModel.currentLevel = 1;
@@ -144,7 +146,7 @@ describe("Widgets/I3SBSLExplorer/I3SBSLExplorerViewModel", function () {
     document.body.appendChild(bslWrapper);
 
     i3sProvider.filterByAttributes = jasmine.createSpy();
-    const viewModel = new I3SBSLExplorerViewModel(i3sProvider);
+    const viewModel = new I3SBuildingSceneLayerExplorerViewModel(i3sProvider);
     knockout.track(viewModel);
 
     viewModel.currentLayer = {
@@ -183,7 +185,9 @@ describe("Widgets/I3SBSLExplorer/I3SBSLExplorerViewModel", function () {
     document.body.appendChild(bslWrapper);
 
     i3sProviderWithoutOverview.filterByAttributes = jasmine.createSpy();
-    const viewModel = new I3SBSLExplorerViewModel(i3sProviderWithoutOverview);
+    const viewModel = new I3SBuildingSceneLayerExplorerViewModel(
+      i3sProviderWithoutOverview
+    );
     knockout.track(viewModel);
 
     viewModel.currentLayer = {
