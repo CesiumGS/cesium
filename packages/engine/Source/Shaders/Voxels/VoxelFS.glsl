@@ -141,7 +141,6 @@ void main()
         copyPropertiesToMetadata(properties, fragmentInput.metadata);
         fragmentInput.voxel.positionUv = positionUv;
         fragmentInput.voxel.positionShapeUv = pointJacobian.point;
-        fragmentInput.voxel.gradient = viewRayUv.rawDir * pointJacobian.jacobianT;
         fragmentInput.voxel.positionUvLocal = sampleDatas[0].tileUv;
         fragmentInput.voxel.viewDirUv = viewDirUv;
         fragmentInput.voxel.viewDirWorld = viewDirWorld;
