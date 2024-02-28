@@ -135,13 +135,13 @@ function I3SBSLExplorerViewModel(i3sProvider) {
   // There is no Full Model and/or Overview
   if (this.viewModel.topLayers.length === 1 && sublayers.length > 0) {
     i3sProvider.show = false;
-    this.viewModel.defaultLayer = {
+    const fullModel = {
       name: "Full Model",
       modelName: "FullModel",
       visibility: i3sProvider.show,
       sublayers: i3sProvider.sublayers,
     };
-    addTopLayer(this.viewModel.defaultLayer, this.viewModel);
+    this.viewModel.defaultLayer = addTopLayer(fullModel, this.viewModel);
     this.viewModel.currentLayer.subscribe(function (layer) {
       i3sProvider.show = isFullModel(layer);
     });
