@@ -4,10 +4,9 @@
 struct Ray {
     vec3 pos;
     vec3 dir;
+    vec3 rawDir;
 #if defined(SHAPE_BOX)
     vec3 dInv;
-#else
-    vec3 rawDir;
 #endif
 };
 

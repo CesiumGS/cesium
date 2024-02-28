@@ -30,14 +30,6 @@ vec3 getSampleSize(in int level) {
 }
 
 vec4 getStepSize(in SampleData sampleData, in Ray viewRay, in RayShapeIntersection shapeIntersection, in mat3 jacobianT, in float currentT) {
-#if defined(SHAPE_BOX)
-    Box voxelBox = constructVoxelBox(sampleData.tileCoords, sampleData.tileUv);
-    RayShapeIntersection voxelIntersection = intersectBox(viewRay, voxelBox);
-    vec4 entry = intersectionMax(shapeIntersection.entry, voxelIntersection.entry);
-    float exit = min(voxelIntersection.exit.w, shapeIntersection.exit.w);
-    float dt = (exit - entry.w) * RAY_SCALE;
-    return vec4(normalize(entry.xyz), dt);
-#else
     vec3 gradient = viewRay.rawDir * jacobianT;
 
     vec3 sampleSizeAlongRay = getSampleSize(sampleData.tileCoords.w) / gradient;
@@ -64,7 +56,6 @@ vec4 getStepSize(in SampleData sampleData, in Ray viewRay, in RayShapeIntersecti
     float stepSize = max(variableStep, fixedStep * 0.05);
 
     return vec4(entry.xyz, stepSize);
-#endif
 }
 
 vec2 packIntToVec2(int value) {
@@ -100,8 +91,10 @@ void main()
     vec3 viewDirUv = normalize(u_transformDirectionViewToLocal * eyeDirection); // normalize again just in case
     vec3 viewPosUv = u_cameraPositionUv;
     #if defined(SHAPE_BOX)
+        // TODO: remove 2.0 factor?
+        vec3 rawDir = 2.0 * viewDirUv;
         vec3 dInv = 1.0 / viewDirUv;
-        Ray viewRayUv = Ray(viewPosUv, viewDirUv, dInv);
+        Ray viewRayUv = Ray(viewPosUv, viewDirUv, rawDir, dInv);
     #elif defined(SHAPE_ELLIPSOID)
         // TODO: remove 2.0 factor?
         vec3 rawDir = 2.0 * viewDirUv * u_ellipsoidRadiiUv;
