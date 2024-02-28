@@ -6,12 +6,6 @@ describe("Widgets/I3SBSLExplorer/I3SBSLExplorerViewModel", function () {
   const i3sProvider = {
     sublayers: [
       {
-        name: "Overview",
-        modelName: "Overview",
-        visibility: true,
-        sublayers: [],
-      },
-      {
         name: "Full Model",
         modelName: "FullModel",
         visibility: true,
@@ -25,6 +19,12 @@ describe("Widgets/I3SBSLExplorer/I3SBSLExplorerViewModel", function () {
             ],
           },
         ],
+      },
+      {
+        name: "Overview",
+        modelName: "Overview",
+        visibility: true,
+        sublayers: [],
       },
     ],
     getAttributeNames: function () {
@@ -54,37 +54,38 @@ describe("Widgets/I3SBSLExplorer/I3SBSLExplorerViewModel", function () {
     expect(viewModel.selectedLevel).toEqual("All");
 
     expect(viewModel.sublayers.length).toEqual(2);
-    expect(viewModel.sublayers[0].name).toEqual("Overview");
-    expect(viewModel.sublayers[0].modelName).toEqual("Overview");
-    expect(viewModel.sublayers[0].visibility).toEqual(false);
-    expect(viewModel.sublayers[0].sublayers.length).toEqual(0);
-    expect(viewModel.sublayers[1].name).toEqual("Full Model");
-    expect(viewModel.sublayers[1].modelName).toEqual("FullModel");
+    expect(viewModel.sublayers[1].name).toEqual("Overview");
+    expect(viewModel.sublayers[1].modelName).toEqual("Overview");
     expect(viewModel.sublayers[1].visibility).toEqual(false);
-    expect(viewModel.sublayers[1].sublayers.length).toEqual(1);
-    expect(viewModel.sublayers[1].sublayers[0].name).toEqual("Cat1");
-    expect(viewModel.sublayers[1].sublayers[0].visibility).toEqual(true);
-    expect(viewModel.sublayers[1].sublayers[0].sublayers.length).toEqual(2);
-    expect(viewModel.sublayers[1].sublayers[0].sublayers[0].name).toEqual(
+    expect(viewModel.sublayers[1].sublayers.length).toEqual(0);
+    expect(viewModel.sublayers[0].name).toEqual("Full Model");
+    expect(viewModel.sublayers[0].modelName).toEqual("FullModel");
+    expect(viewModel.sublayers[0].visibility).toEqual(false);
+    expect(viewModel.sublayers[0].sublayers.length).toEqual(1);
+    expect(viewModel.sublayers[0].sublayers[0].name).toEqual("Cat1");
+    expect(viewModel.sublayers[0].sublayers[0].visibility).toEqual(true);
+    expect(viewModel.sublayers[0].sublayers[0].sublayers.length).toEqual(2);
+    expect(viewModel.sublayers[0].sublayers[0].sublayers[0].name).toEqual(
       "SubCat1"
     );
-    expect(viewModel.sublayers[1].sublayers[0].sublayers[0].visibility).toEqual(
+    expect(viewModel.sublayers[0].sublayers[0].sublayers[0].visibility).toEqual(
       true
     );
     expect(
-      viewModel.sublayers[1].sublayers[0].sublayers[0].sublayers.length
+      viewModel.sublayers[0].sublayers[0].sublayers[0].sublayers.length
     ).toEqual(0);
-    expect(viewModel.sublayers[1].sublayers[0].sublayers[1].name).toEqual(
+    expect(viewModel.sublayers[0].sublayers[0].sublayers[1].name).toEqual(
       "SubCat2"
     );
-    expect(viewModel.sublayers[1].sublayers[0].sublayers[1].visibility).toEqual(
+    expect(viewModel.sublayers[0].sublayers[0].sublayers[1].visibility).toEqual(
       false
     );
     expect(
-      viewModel.sublayers[1].sublayers[0].sublayers[1].sublayers.length
+      viewModel.sublayers[0].sublayers[0].sublayers[1].sublayers.length
     ).toEqual(0);
 
     expect(viewModel.topLayers.length).toEqual(3);
+    expect(viewModel.defaultLayer.modelName).toEqual("Overview");
   });
 
   it("can create bsl explorer ViewModel if no Overview", function () {
@@ -117,6 +118,7 @@ describe("Widgets/I3SBSLExplorer/I3SBSLExplorerViewModel", function () {
     ).toEqual(0);
 
     expect(viewModel.topLayers.length).toEqual(2);
+    expect(viewModel.defaultLayer.modelName).toEqual("FullModel");
   });
 
   it("can handle filtering by level", function () {
