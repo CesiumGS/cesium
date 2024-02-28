@@ -1,4 +1,4 @@
-import { Check } from "@cesium/engine";
+import { Check, defined } from "@cesium/engine";
 import knockout from "../ThirdParty/knockout.js";
 import I3SBSLExplorerViewModel from "./I3SBSLExplorerViewModel.js";
 
@@ -71,5 +71,10 @@ function I3SBSLExplorer(containerId, i3sProvider) {
 
   knockout.track(viewModel);
   knockout.applyBindings(viewModel, container);
+
+  if (defined(viewModel.defaultLayer)) {
+    // Select a model by default
+    viewModel.currentLayer = viewModel.defaultLayer;
+  }
 }
 export default I3SBSLExplorer;

@@ -1,3 +1,4 @@
+import { defined } from "@cesium/engine";
 import knockout from "../ThirdParty/knockout.js";
 
 function expandItemsHandler(data, event) {
@@ -36,13 +37,15 @@ function addTopLayer(layer, viewModel) {
       layer.sublayers[i].visibility = true;
     }
 
-    viewModel.topLayers.push({
+    const topLayer = {
       name: layer.name,
       modelName: layer.modelName,
       disable: knockout.observable(false),
       index: viewModel.sublayers.length,
-    });
+    };
+    viewModel.topLayers.push(topLayer);
     viewModel.sublayers.push(layer);
+    return topLayer;
   }
 }
 
@@ -108,6 +111,7 @@ function I3SBSLExplorerViewModel(i3sProvider) {
     setOptionDisable: function (option, item) {
       knockout.applyBindingsToNode(option, { disable: item.disable }, item);
     },
+    defaultLayer: undefined,
   };
 
   // Handling change of a layer for exploring
@@ -119,18 +123,25 @@ function I3SBSLExplorerViewModel(i3sProvider) {
   const sublayers = i3sProvider.sublayers;
   for (let i = 0; i < sublayers.length; i++) {
     trackSublayer(sublayers[i], this.viewModel);
-    addTopLayer(sublayers[i], this.viewModel);
+    const topLayer = addTopLayer(sublayers[i], this.viewModel);
+    if (
+      defined(topLayer) &&
+      (isOverview(topLayer) ||
+        (!defined(this.viewModel.defaultLayer) && isFullModel(topLayer)))
+    ) {
+      this.viewModel.defaultLayer = topLayer;
+    }
   }
   // There is no Full Model and/or Overview
   if (this.viewModel.topLayers.length === 1 && sublayers.length > 0) {
     i3sProvider.show = false;
-    const fullModel = {
+    this.viewModel.defaultLayer = {
       name: "Full Model",
       modelName: "FullModel",
       visibility: i3sProvider.show,
       sublayers: i3sProvider.sublayers,
     };
-    addTopLayer(fullModel, this.viewModel);
+    addTopLayer(this.viewModel.defaultLayer, this.viewModel);
     this.viewModel.currentLayer.subscribe(function (layer) {
       i3sProvider.show = isFullModel(layer);
     });
