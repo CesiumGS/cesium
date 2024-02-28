@@ -792,9 +792,6 @@ async function loadGeoidData(provider) {
   const geoidTerrainProvider = provider._geoidTiledTerrainProvider;
 
   if (!defined(geoidTerrainProvider)) {
-    console.log(
-      "No Geoid Terrain service provided - no geoid conversion will be performed."
-    );
     return;
   }
 
