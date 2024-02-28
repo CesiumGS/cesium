@@ -174,7 +174,6 @@
                 if (i3sNode.fields.hasOwnProperty(fieldName)) {
                   description += `<tr><th>${fieldName}</th><td>`;
                   description += `${fields[fieldName]}</td></tr>`;
-                  console.log(`${fieldName}: ${fields[fieldName]}`);
                   if (!Cesium.defined(name) && isNameProperty(fieldName)) {
                     name = fields[fieldName];
                   }
