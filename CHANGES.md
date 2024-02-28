@@ -30,9 +30,11 @@
 
 - `Cesium3DTileset.disableCollision` has been deprecated and will be removed in 1.116. Use `Cesium3DTileset.enableCollision` instead.
 
+#### @cesium/engine
+
 ##### Additions :tada:
 
-- Added `Scene.pickVoxel` to pick individual cells from a `VoxelPrimitive`, and `VoxelCell` to report information about the picked cell. [#11828](https://github.com/CesiumGS/cesium/pull/11828)
+- Added `I3SBuildingSceneLayerExplorer` widget for working with I3S Building Scene Layer data. [#11678](https://github.com/CesiumGS/cesium/pull/11678)
 
 ### 1.114 - 2024-02-01
 

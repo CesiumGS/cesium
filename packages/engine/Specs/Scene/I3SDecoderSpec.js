@@ -38,6 +38,11 @@ describe("Scene/I3SDecoder", function () {
     },
   ];
 
+  beforeEach(function () {
+    // Reset the initialized state
+    I3SDecoder._promise = undefined;
+  });
+
   it("constructor", function () {
     expect(new I3SDecoder()).toBeDefined();
   });
@@ -59,14 +64,12 @@ describe("Scene/I3SDecoder", function () {
   });
 
   it("throws if not initialized", async function () {
-    I3SDecoder._promise = undefined;
     spyOn(TaskProcessor.prototype, "initWebAssemblyModule").and.returnValue(
       Promise.resolve(false)
     );
     await expectAsync(
       I3SDecoder.decode("mockUrl", defaultGeometrySchema, geometryDataObb)
     ).toBeRejectedWithError(RuntimeError);
-    I3SDecoder._promise = undefined;
   });
 
   it("empty geometry with obb", async function () {

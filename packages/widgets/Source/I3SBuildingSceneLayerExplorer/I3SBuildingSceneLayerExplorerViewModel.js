@@ -85,13 +85,13 @@ async function setLevels(i3sProvider, levels) {
 }
 
 /**
- * The view model for {@link I3SBSLExplorer}.
- * @alias I3SBSLExplorerViewModel
+ * The view model for {@link I3SBuildingSceneLayerExplorer}.
+ * @alias I3sBslExplorerViewModel
  * @constructor
  *
  * @param {I3SDataProvider} i3sProvider I3S Data provider instance.
  */
-function I3SBSLExplorerViewModel(i3sProvider) {
+function I3SBuildingSceneLayerExplorerViewModel(i3sProvider) {
   const that = this;
   this.levels = [];
   this.viewModel = {
@@ -169,4 +169,4 @@ function I3SBSLExplorerViewModel(i3sProvider) {
   return this.viewModel;
 }
 
-export default I3SBSLExplorerViewModel;
+export default I3SBuildingSceneLayerExplorerViewModel;

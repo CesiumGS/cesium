@@ -1,11 +1,11 @@
 import { Check, defined } from "@cesium/engine";
 import knockout from "../ThirdParty/knockout.js";
-import I3SBSLExplorerViewModel from "./I3SBSLExplorerViewModel.js";
+import I3SBuildingSceneLayerExplorerViewModel from "./I3SBuildingSceneLayerExplorerViewModel.js";
 
 /**
  * I3S Building Scene Layer widget
  *
- * @alias I3SBSLExplorer
+ * @alias I3SBuildingSceneLayerExplorer
  * @constructor
  *
  * @param {string} containerId The DOM element ID that will contain the widget.
@@ -13,7 +13,7 @@ import I3SBSLExplorerViewModel from "./I3SBSLExplorerViewModel.js";
  *
  * @demo {@link https://sandcastle.cesium.com/index.html?src=I3S%20Building%20Scene%20Layer.html|I3S Building Scene Layer}
  */
-function I3SBSLExplorer(containerId, i3sProvider) {
+function I3SBuildingSceneLayerExplorer(containerId, i3sProvider) {
   const container = document.getElementById(containerId);
 
   //>>includeStart('debug', pragmas.debug);
@@ -67,7 +67,7 @@ function I3SBSLExplorer(containerId, i3sProvider) {
         </div>`;
   container.appendChild(htmlWrapper);
 
-  const viewModel = new I3SBSLExplorerViewModel(i3sProvider);
+  const viewModel = new I3SBuildingSceneLayerExplorerViewModel(i3sProvider);
 
   knockout.track(viewModel);
   knockout.applyBindings(viewModel, container);
@@ -77,4 +77,4 @@ function I3SBSLExplorer(containerId, i3sProvider) {
     viewModel.currentLayer = viewModel.defaultLayer;
   }
 }
-export default I3SBSLExplorer;
+export default I3SBuildingSceneLayerExplorer;
