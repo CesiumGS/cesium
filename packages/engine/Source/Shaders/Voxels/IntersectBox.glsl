@@ -44,8 +44,8 @@ RayShapeIntersection intersectBox(in Ray ray, in Box box)
 {
     // Consider the box as the intersection of the space between 3 pairs of parallel planes
     // Compute the distance along the ray to each plane
-    vec3 t0 = (box.p0 - ray.pos) * ray.dInv;
-    vec3 t1 = (box.p1 - ray.pos) * ray.dInv;
+    vec3 t0 = (box.p0 - ray.pos) / ray.dir;
+    vec3 t1 = (box.p1 - ray.pos) / ray.dir;
 
     // Identify candidate entries/exits based on distance from ray.pos
     vec3 entries = min(t0, t1);

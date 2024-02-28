@@ -90,12 +90,7 @@ void main()
     vec3 viewDirWorld = normalize(czm_inverseViewRotation * eyeDirection); // normalize again just in case
     vec3 viewDirUv = normalize(u_transformDirectionViewToLocal * eyeDirection); // normalize again just in case
     vec3 viewPosUv = u_cameraPositionUv;
-    #if defined(SHAPE_BOX)
-        // TODO: remove 2.0 factor?
-        vec3 rawDir = 2.0 * viewDirUv;
-        vec3 dInv = 1.0 / viewDirUv;
-        Ray viewRayUv = Ray(viewPosUv, viewDirUv, rawDir, dInv);
-    #elif defined(SHAPE_ELLIPSOID)
+    #if defined(SHAPE_ELLIPSOID)
         // TODO: remove 2.0 factor?
         vec3 rawDir = 2.0 * viewDirUv * u_ellipsoidRadiiUv;
         Ray viewRayUv = Ray(viewPosUv, viewDirUv, rawDir);
