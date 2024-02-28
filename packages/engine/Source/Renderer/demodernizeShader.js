@@ -26,7 +26,10 @@ function demodernizeShader(input, isFragmentShader) {
 
   if (isFragmentShader) {
     // Replace the in with varying.
-    output = output.replaceAll(/(in)\s+(vec\d|mat\d|float)/g, `varying $2`);
+    output = output.replaceAll(
+      /\n\s*(in)\s+(vec\d|mat\d|float)/g,
+      `\nvarying $2`
+    );
 
     if (/out_FragData_(\d+)/.test(output)) {
       output = `#extension GL_EXT_draw_buffers : enable\n${output}`;
