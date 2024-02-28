@@ -3668,7 +3668,7 @@ Scene.prototype.getHeight = function (cartographic, heightReference) {
       if (
         !primitive.isCesium3DTileset ||
         !primitive.show ||
-        primitive.disableCollision
+        !primitive.enableCollision
       ) {
         continue;
       }
@@ -3748,7 +3748,7 @@ Scene.prototype.updateHeight = function (
     if (
       ignore3dTiles ||
       !primitive.isCesium3DTileset ||
-      primitive.disableCollision
+      !primitive.enableCollision
     ) {
       return;
     }
