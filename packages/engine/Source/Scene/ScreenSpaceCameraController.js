@@ -2894,7 +2894,8 @@ function adjustHeightForTerrain(controller, cameraChanged) {
       const difference = globeHeight - controller._lastGlobeHeight;
       const percentDifference = difference / controller._lastGlobeHeight;
 
-      // To avoid big jumps during tile loads, only make incremental updates unless the camera has bee moved by user input
+      // Unless the camera has been moved by user input, to avoid big jumps during tile loads
+      // only make height updates when the globe height has been fairly stable across several frames
       if (
         cartographic.height < height &&
         (cameraChanged || Math.abs(percentDifference) <= 0.1)

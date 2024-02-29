@@ -3891,8 +3891,11 @@ Scene.prototype.initializeFrame = function () {
   this._tweens.update();
 
   if (this._globeHeightDirty) {
-    this._removeUpdateHeightCallback =
-      this._removeUpdateHeightCallback && this._removeUpdateHeightCallback();
+    if (defined(this._removeUpdateHeightCallback)) {
+      this._removeUpdateHeightCallback();
+      this._removeUpdateHeightCallback = undefined;
+    }
+
     this._globeHeight = getGlobeHeight(this);
     this._globeHeightDirty = false;
 
@@ -4867,6 +4870,11 @@ Scene.prototype.destroy = function () {
     this._removeGlobeCallbacks[i]();
   }
   this._removeGlobeCallbacks.length = 0;
+
+  if (defined(this._removeUpdateHeightCallback)) {
+    this._removeUpdateHeightCallback();
+    this._removeUpdateHeightCallback = undefined;
+  }
 
   return destroyObject(this);
 };
