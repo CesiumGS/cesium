@@ -27,6 +27,8 @@ const geometryUpdaters = [
 ];
 
 /**
+ * Manages a set of "updater" classes for the {@link GeometryVisualizer} for each entity
+ *
  * @private
  * @param {Entity} entity
  * @param {Scene} scene
@@ -36,13 +38,12 @@ function GeometryUpdaterSet(entity, scene) {
   this.scene = scene;
   const updaters = new Array(geometryUpdaters.length);
   const geometryChanged = new Event();
-  function raiseEvent(geometry) {
-    geometryChanged.raiseEvent(geometry);
-  }
   const eventHelper = new EventHelper();
   for (let i = 0; i < updaters.length; i++) {
     const updater = new geometryUpdaters[i](entity, scene);
-    eventHelper.add(updater.geometryChanged, raiseEvent);
+    eventHelper.add(updater.geometryChanged, (geometry) => {
+      geometryChanged.raiseEvent(geometry);
+    });
     updaters[i] = updater;
   }
   this.updaters = updaters;
@@ -95,7 +96,6 @@ GeometryUpdaterSet.prototype.destroy = function () {
  */
 GeometryUpdaterSet.registerUpdater = function (updater) {
   if (!geometryUpdaters.includes(updater)) {
-    console.log("registerUpdater", updater);
     geometryUpdaters.push(updater);
   }
 };

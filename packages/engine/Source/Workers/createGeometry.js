@@ -1,4 +1,5 @@
 import DeveloperError from "../Core/DeveloperError.js";
+import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import PrimitivePipeline from "../Scene/PrimitivePipeline.js";
 import createTaskProcessorWorker from "./createTaskProcessorWorker.js";
@@ -7,7 +8,7 @@ import createTaskProcessorWorker from "./createTaskProcessorWorker.js";
 const moduleCache = {};
 
 async function getModule(moduleName, modulePath) {
-  let module = moduleCache[moduleName] ?? moduleCache[modulePath];
+  let module = defaultValue(moduleCache[modulePath] ?? moduleCache[moduleName]);
 
   if (defined(module)) {
     return module;
@@ -18,29 +19,28 @@ async function getModule(moduleName, modulePath) {
     if (typeof exports === "object") {
       // Use CommonJS-style require.
       module = require(modulePath);
-      moduleCache[modulePath] = module;
     } else {
       // Use ESM-style dynamic import
       const result = await import(modulePath);
       module = result.default;
-      moduleCache[modulePath] = module;
     }
+
+    moduleCache[modulePath] = module;
     return module;
   }
 
   if (typeof exports === "object") {
     // Use CommonJS-style require.
     module = require(`Workers/${moduleName}`);
-    moduleCache[module] = module;
   } else {
     // Use ESM-style dynamic import
     const result = defined(modulePath)
       ? await import(modulePath)
       : await import(`./${moduleName}.js`);
     module = result.default;
-    moduleCache[module] = module;
   }
 
+  moduleCache[moduleName] = module;
   return module;
 }
 
@@ -56,7 +56,7 @@ async function createGeometry(parameters, transferableObjects) {
     const modulePath = task.modulePath;
 
     if (defined(moduleName) && defined(modulePath)) {
-      throw new DeveloperError("Must only set moduleName OR modulePath");
+      throw new DeveloperError("Must only set moduleName or modulePath");
     }
 
     if (defined(moduleName) || defined(modulePath)) {

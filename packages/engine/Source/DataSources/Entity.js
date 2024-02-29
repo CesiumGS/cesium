@@ -500,8 +500,8 @@ Object.defineProperties(Entity.prototype, {
 /**
  * Add the specified type and construct the properties for it in the Entity class
  * @private
- * @param {string} propertyName
- * @param {any} Type
+ * @param {string} propertyName name of the property that controls/accesses this entity type
+ * @param {{ constructor: function }} Type The Graphics class to associate with this entity type
  */
 Entity.registerEntityType = function (propertyName, Type) {
   Object.defineProperties(Entity.prototype, {
