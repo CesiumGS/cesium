@@ -11,6 +11,7 @@
 
 ##### Fixes :wrench:
 
+- Fixed a bug where the camera can stay underground when 3D Tiles are loading in. [#11824](https://github.com/CesiumGS/cesium/issues/11824)
 - Fixed a bug with where a mix of empty and non-empty tiles were not refining. [#9356](https://github.com/CesiumGS/cesium/issues/9356)
 - Fixed a bug with camera collision with tilesets containing tiles with interleaved buffers [#11812](https://github.com/CesiumGS/cesium/issues/11812)
 - Fixed a bug affecting voxel shader compilation in WebGL1 contexts. [#11798](https://github.com/CesiumGS/cesium/pull/11798)

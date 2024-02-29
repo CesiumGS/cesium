@@ -37,6 +37,9 @@ describe(
         frameState.commandList.push(command);
       };
       this.destroy = function () {};
+      this.isDestroyed = function () {
+        return false;
+      };
     }
 
     it("throws if no shader is provided", function () {
