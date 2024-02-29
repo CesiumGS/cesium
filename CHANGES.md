@@ -18,6 +18,12 @@
 - Fixed a bug causing the wrong tile to be selected for some implicit tilesets.
 - Fixes how `Camera.changed` handles changes in `roll`. [#11844](https://github.com/CesiumGS/cesium/pull/11844)
 
+##### Additions :tada:
+
+- Added `Scene.pickVoxel` to pick individual cells from a `VoxelPrimitive`, and `VoxelCell` to report information about the picked cell. [#11828](https://github.com/CesiumGS/cesium/pull/11828)
+- Added `Scene.defaultLogDepthbuffer` to allow changing the default behavior of the `logDepthBuffer` for newly created `Scene` instances
+- Added `SensorVolumePortionToDisplay` to assist `CzmlDataSource` in parsing CZML
+
 ##### Deprecated :hourglass_flowing_sand:
 
 - `Cesium3DTileset.disableCollision` has been deprecated and will be removed in 1.116. Use `Cesium3DTileset.enableCollision` instead.

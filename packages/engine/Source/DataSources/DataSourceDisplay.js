@@ -124,7 +124,7 @@ const ExtraVisualizers = [];
 /**
  * Add the provided Visualizer to the default visualizers callback if not already included
  * @private
- * @param {Visualizer} visualizer
+ * @param {Visualizer} visualizer Visualizer class to add
  */
 DataSourceDisplay.registerVisualizer = function (visualizer) {
   if (!ExtraVisualizers.includes(visualizer)) {
@@ -133,9 +133,9 @@ DataSourceDisplay.registerVisualizer = function (visualizer) {
 };
 
 /**
- * Remove the provided Visualizer from the default visualizers callback if it's included
+ * Remove the provided Visualizer from the default visualizers callback if it's already included
  * @private
- * @param {Visualizer} visualizer
+ * @param {Visualizer} visualizer Visualizer class to remove
  */
 DataSourceDisplay.unregisterVisualizer = function (visualizer) {
   if (ExtraVisualizers.includes(visualizer)) {
@@ -175,7 +175,9 @@ DataSourceDisplay.defaultVisualizersCallback = function (
       dataSource._primitives,
       dataSource._groundPrimitives
     ),
-    ...ExtraVisualizers.map((Visualizer) => new Visualizer(scene, entities)),
+    ...ExtraVisualizers.map(
+      (VisualizerClass) => new VisualizerClass(scene, entities)
+    ),
   ];
 };
 

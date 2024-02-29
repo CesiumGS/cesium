@@ -1179,7 +1179,7 @@ function loadAsynchronous(primitive, frameState) {
         (!defined(geometry._workerName) && !defined(geometry._workerPath))
       ) {
         throw new DeveloperError(
-          "Must define _workerName OR _workerPath for asynchronous geometry."
+          "Must define either _workerName or _workerPath for asynchronous geometry."
         );
       }
       //>>includeEnd('debug');
