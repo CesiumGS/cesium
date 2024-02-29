@@ -21,8 +21,8 @@
 ##### Additions :tada:
 
 - Added `Scene.pickVoxel` to pick individual cells from a `VoxelPrimitive`, and `VoxelCell` to report information about the picked cell. [#11828](https://github.com/CesiumGS/cesium/pull/11828)
-- Added `Scene.defaultLogDepthbuffer` to allow changing the default behavior of the `logDepthBuffer` for newly created `Scene` instances
-- Added `SensorVolumePortionToDisplay` to assist `CzmlDataSource` in parsing CZML
+- Added `Scene.defaultLogDepthbuffer` to allow changing the default behavior of the `logDepthBuffer` for newly created `Scene` instances. [#11859](https://github.com/CesiumGS/cesium/pull/11859)
+- Added `SensorVolumePortionToDisplay` to assist `CzmlDataSource` in parsing CZML. [#11859](https://github.com/CesiumGS/cesium/pull/11859)
 - Added support for I3S Building Scene Layer. [#11678](https://github.com/CesiumGS/cesium/pull/11678)
 
 ##### Deprecated :hourglass_flowing_sand:
