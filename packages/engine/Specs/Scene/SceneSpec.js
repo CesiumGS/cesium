@@ -127,79 +127,93 @@ describe(
       });
     }
 
-    it("constructor has expected defaults", function () {
-      expect(scene.canvas).toBeInstanceOf(HTMLCanvasElement);
-      expect(scene.primitives).toBeInstanceOf(PrimitiveCollection);
-      expect(scene.camera).toBeInstanceOf(Camera);
-      expect(scene.screenSpaceCameraController).toBeInstanceOf(
-        ScreenSpaceCameraController
-      );
-      expect(scene.mapProjection).toBeInstanceOf(GeographicProjection);
-      expect(scene.frameState).toBeInstanceOf(FrameState);
-      expect(scene.tweens).toBeInstanceOf(TweenCollection);
+    describe("constructor", () => {
+      it("has expected defaults", function () {
+        expect(scene.canvas).toBeInstanceOf(HTMLCanvasElement);
+        expect(scene.primitives).toBeInstanceOf(PrimitiveCollection);
+        expect(scene.camera).toBeInstanceOf(Camera);
+        expect(scene.screenSpaceCameraController).toBeInstanceOf(
+          ScreenSpaceCameraController
+        );
+        expect(scene.mapProjection).toBeInstanceOf(GeographicProjection);
+        expect(scene.frameState).toBeInstanceOf(FrameState);
+        expect(scene.tweens).toBeInstanceOf(TweenCollection);
 
-      const contextAttributes = scene.context._gl.getContextAttributes();
-      // Do not check depth and antialias since they are requests not requirements
-      expect(contextAttributes.alpha).toEqual(false);
-      expect(contextAttributes.stencil).toEqual(true);
-      expect(contextAttributes.premultipliedAlpha).toEqual(true);
-      expect(contextAttributes.preserveDrawingBuffer).toEqual(false);
-      expect(scene._depthPlane._ellipsoidOffset).toEqual(0);
-    });
-
-    it("constructor sets options", function () {
-      const webglOptions = {
-        alpha: true,
-        depth: false,
-        stencil: true,
-        antialias: false,
-        premultipliedAlpha: false,
-        preserveDrawingBuffer: true,
-      };
-      const mapProjection = new WebMercatorProjection();
-
-      const s = createScene({
-        contextOptions: {
-          webgl: webglOptions,
-        },
-        mapProjection: mapProjection,
-        depthPlaneEllipsoidOffset: Number.POSITIVE_INFINITY,
+        const contextAttributes = scene.context._gl.getContextAttributes();
+        // Do not check depth and antialias since they are requests not requirements
+        expect(contextAttributes.alpha).toEqual(false);
+        expect(contextAttributes.stencil).toEqual(true);
+        expect(contextAttributes.premultipliedAlpha).toEqual(true);
+        expect(contextAttributes.preserveDrawingBuffer).toEqual(false);
+        expect(scene._depthPlane._ellipsoidOffset).toEqual(0);
       });
 
-      const contextAttributes = s.context._gl.getContextAttributes();
-      expect(contextAttributes.alpha).toEqual(webglOptions.alpha);
-      expect(contextAttributes.depth).toEqual(webglOptions.depth);
-      expect(contextAttributes.stencil).toEqual(webglOptions.stencil);
-      expect(contextAttributes.antialias).toEqual(webglOptions.antialias);
-      expect(contextAttributes.premultipliedAlpha).toEqual(
-        webglOptions.premultipliedAlpha
-      );
-      expect(contextAttributes.preserveDrawingBuffer).toEqual(
-        webglOptions.preserveDrawingBuffer
-      );
-      expect(s.mapProjection).toEqual(mapProjection);
-      expect(s._depthPlane._ellipsoidOffset).toEqual(Number.POSITIVE_INFINITY);
+      it("respects default log depth buffer override", () => {
+        const previous = Scene.defaultLogDepthBuffer;
 
-      s.destroyForSpecs();
-    });
+        Scene.defaultLogDepthBuffer = false;
+        const newScene = createScene();
+        expect(newScene._logDepthBuffer).toEqual(false);
 
-    it("constructor throws without options", function () {
-      expect(function () {
-        return new Scene();
-      }).toThrowDeveloperError();
-    });
+        Scene.defaultLogDepthBuffer = previous;
+      });
 
-    it("constructor throws without options.canvas", function () {
-      expect(function () {
-        return new Scene({});
-      }).toThrowDeveloperError();
-    });
+      it("sets options", function () {
+        const webglOptions = {
+          alpha: true,
+          depth: false,
+          stencil: true,
+          antialias: false,
+          premultipliedAlpha: false,
+          preserveDrawingBuffer: true,
+        };
+        const mapProjection = new WebMercatorProjection();
 
-    it("draws background color", function () {
-      expect(scene).toRender([0, 0, 0, 255]);
+        const s = createScene({
+          contextOptions: {
+            webgl: webglOptions,
+          },
+          mapProjection: mapProjection,
+          depthPlaneEllipsoidOffset: Number.POSITIVE_INFINITY,
+        });
 
-      scene.backgroundColor = Color.BLUE;
-      expect(scene).toRender([0, 0, 255, 255]);
+        const contextAttributes = s.context._gl.getContextAttributes();
+        expect(contextAttributes.alpha).toEqual(webglOptions.alpha);
+        expect(contextAttributes.depth).toEqual(webglOptions.depth);
+        expect(contextAttributes.stencil).toEqual(webglOptions.stencil);
+        expect(contextAttributes.antialias).toEqual(webglOptions.antialias);
+        expect(contextAttributes.premultipliedAlpha).toEqual(
+          webglOptions.premultipliedAlpha
+        );
+        expect(contextAttributes.preserveDrawingBuffer).toEqual(
+          webglOptions.preserveDrawingBuffer
+        );
+        expect(s.mapProjection).toEqual(mapProjection);
+        expect(s._depthPlane._ellipsoidOffset).toEqual(
+          Number.POSITIVE_INFINITY
+        );
+
+        s.destroyForSpecs();
+      });
+
+      it("throws without options", function () {
+        expect(function () {
+          return new Scene();
+        }).toThrowDeveloperError();
+      });
+
+      it("throws without options.canvas", function () {
+        expect(function () {
+          return new Scene({});
+        }).toThrowDeveloperError();
+      });
+
+      it("draws background color", function () {
+        expect(scene).toRender([0, 0, 0, 255]);
+
+        scene.backgroundColor = Color.BLUE;
+        expect(scene).toRender([0, 0, 255, 255]);
+      });
     });
 
     it("calls afterRender functions", function () {
