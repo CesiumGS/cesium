@@ -1,0 +1,31 @@
+ul {
+  list-style-type: none;
+}
+
+.layersList {
+  padding: 0;
+}
+
+input {
+  margin: 0 3px 0 0;
+}
+.expandItem {
+  cursor: pointer;
+  user-select: none;
+  width: 20px;
+}
+
+.nested,
+#bsl-wrapper {
+  display: none;
+}
+
+.active {
+  display: block;
+}
+
+.li-wrapper {
+  display: flex;
+  flex-direction: row;
+  align-content: center;
+}

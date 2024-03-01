@@ -2681,7 +2681,7 @@ function processUpdateHeight(tileset, tile, frameState) {
   const boundingSphere = tile.boundingSphere;
 
   for (const callbackData of heightCallbackData) {
-    // No need to upadate if the tile was already visible last frame
+    // No need to update if the tile was already visible last frame
     if (callbackData.invoked || tile._wasSelectedLastFrame) {
       continue;
     }
