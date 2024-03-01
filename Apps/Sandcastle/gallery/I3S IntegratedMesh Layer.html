@@ -61,15 +61,9 @@
             "https://tiles.arcgis.com/tiles/z2tnIkrLQ2BRzr6P/arcgis/rest/services/EGM2008/ImageServer"
           );
 
-          // Create i3s and Cesium3DTileset options to pass optional parameters useful for debugging and visualizing
-          const cesium3dTilesetOptions = {
-            skipLevelOfDetail: false,
-            debugShowBoundingVolume: false,
-          };
+          // Create i3s options to pass optional parameters useful for debugging and visualizing
           const i3sOptions = {
-            traceFetches: false, // for tracing I3S fetches
             geoidTiledTerrainProvider: geoidService, // pass the geoid service
-            cesium3dTilesetOptions: cesium3dTilesetOptions, // options for internal Cesium3dTileset
           };
 
           // Create I3S data provider

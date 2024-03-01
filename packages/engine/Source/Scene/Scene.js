@@ -169,10 +169,11 @@ function Scene(options) {
   this._groundPrimitives = new PrimitiveCollection();
 
   this._globeHeight = undefined;
-  this._globeHeightDirty = undefined;
+  this._globeHeightDirty = true;
   this._cameraUnderground = false;
+  this._removeUpdateHeightCallback = undefined;
 
-  this._logDepthBuffer = context.fragmentDepth;
+  this._logDepthBuffer = Scene.defaultLogDepthBuffer && context.fragmentDepth;
   this._logDepthBufferDirty = true;
 
   this._tweens = new TweenCollection();
@@ -734,6 +735,12 @@ function Scene(options) {
   this.initializeFrame();
 }
 
+/**
+ * Use this to set the default value for {@link Scene#logarithmicDepthBuffer} in newly constructed Scenes
+ * This property relies on fragmentDepth being supported.
+ */
+Scene.defaultLogDepthBuffer = true;
+
 function updateGlobeListeners(scene, globe) {
   for (let i = 0; i < scene._removeGlobeCallbacks.length; ++i) {
     scene._removeGlobeCallbacks[i]();
@@ -751,11 +758,6 @@ function updateGlobeListeners(scene, globe) {
       globe.terrainProviderChanged.addEventListener(
         requestRenderAfterFrame(scene)
       )
-    );
-    removeGlobeCallbacks.push(
-      globe.tileLoadProgressEvent.addEventListener(() => {
-        scene._globeHeightDirty = true;
-      })
     );
   }
   scene._removeGlobeCallbacks = removeGlobeCallbacks;
@@ -3747,8 +3749,8 @@ Scene.prototype.updateHeight = function (
   const createPrimitiveEventListener = (primitive) => {
     if (
       ignore3dTiles ||
-      !primitive.isCesium3DTileset ||
-      !primitive.enableCollision
+      primitive.isDestroyed() ||
+      !primitive.isCesium3DTileset
     ) {
       return;
     }
@@ -3774,11 +3776,12 @@ Scene.prototype.updateHeight = function (
   );
   const removeRemovedListener = this.primitives.primitiveRemoved.addEventListener(
     (primitive) => {
-      if (!primitive.isCesium3DTileset) {
+      if (primitive.isDestroyed() || !primitive.isCesium3DTileset) {
         return;
       }
-
-      tilesetRemoveCallbacks[primitive.id]();
+      if (defined(tilesetRemoveCallbacks[primitive.id])) {
+        tilesetRemoveCallbacks[primitive.id]();
+      }
       delete tilesetRemoveCallbacks[primitive.id];
     }
   );
@@ -3834,8 +3837,25 @@ Scene.prototype.initializeFrame = function () {
   this._tweens.update();
 
   if (this._globeHeightDirty) {
+    if (defined(this._removeUpdateHeightCallback)) {
+      this._removeUpdateHeightCallback();
+      this._removeUpdateHeightCallback = undefined;
+    }
+
     this._globeHeight = getGlobeHeight(this);
     this._globeHeightDirty = false;
+
+    const cartographic = this.camera.positionCartographic;
+    this._removeUpdateHeightCallback = this.updateHeight(
+      cartographic,
+      (updatedCartographic) => {
+        if (this.isDestroyed()) {
+          return;
+        }
+
+        this._globeHeight = updatedCartographic.height;
+      }
+    );
   }
   this._cameraUnderground = isCameraUnderground(this);
   this._globeTranslucencyState.update(this);
@@ -4796,6 +4816,11 @@ Scene.prototype.destroy = function () {
     this._removeGlobeCallbacks[i]();
   }
   this._removeGlobeCallbacks.length = 0;
+
+  if (defined(this._removeUpdateHeightCallback)) {
+    this._removeUpdateHeightCallback();
+    this._removeUpdateHeightCallback = undefined;
+  }
 
   return destroyObject(this);
 };

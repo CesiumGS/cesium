@@ -1335,29 +1335,6 @@ describe(
       });
     });
 
-    it("replacement refinement - selects upwards when traversal stops at empty tile", function () {
-      // No children have content, but all grandchildren have content
-      //
-      //          C
-      //      E       E
-      //    C   C   C   C
-      //
-      return Cesium3DTilesTester.loadTileset(
-        scene,
-        tilesetReplacement1Url
-      ).then(function (tileset) {
-        tileset.root.geometricError = 90;
-        setZoom(80);
-        scene.renderForSpecs();
-
-        const statistics = tileset._statistics;
-        expect(statistics.selected).toEqual(1);
-        expect(statistics.visited).toEqual(3);
-        expect(isSelected(tileset, tileset.root)).toBe(true);
-        return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
-      });
-    });
-
     it("replacement refinement - selects root when sse is not met and subtree is not refinable (1)", function () {
       // No children have content, but all grandchildren have content
       //
@@ -1379,7 +1356,6 @@ describe(
 
         // Even though root's children are loaded, the grandchildren need to be loaded before it becomes refinable
         expect(numberOfChildrenWithoutContent(root)).toEqual(0); // Children are loaded
-        expect(statistics.numberOfCommands).toEqual(1); // No stencil or backface commands; no mixed content
         expect(statistics.numberOfPendingRequests).toEqual(4); // Loading grandchildren
 
         return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(

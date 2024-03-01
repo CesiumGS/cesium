@@ -198,6 +198,8 @@ export default function pickModel(
         primitive,
         VertexAttributeSemantic.POSITION
       );
+      const byteOffset = positionAttribute.byteOffset;
+      const byteStride = positionAttribute.byteStride;
       const vertexCount = positionAttribute.count;
 
       if (!defined(primitive.indices)) {
@@ -234,7 +236,19 @@ export default function pickModel(
       }
 
       const numComponents = AttributeType.getNumberOfComponents(attributeType);
-      const elementCount = vertexCount * numComponents;
+      const bytes = ComponentDatatype.getSizeInBytes(componentDatatype);
+      const isInterleaved =
+        !defined(vertices) &&
+        defined(byteStride) &&
+        byteStride !== numComponents * bytes;
+
+      let elementStride = numComponents;
+      let offset = 0;
+      if (isInterleaved) {
+        elementStride = byteStride / bytes;
+        offset = byteOffset / bytes;
+      }
+      const elementCount = vertexCount * elementStride;
 
       if (!defined(vertices)) {
         const verticesBuffer = positionAttribute.buffer;
@@ -246,7 +260,7 @@ export default function pickModel(
           );
           verticesBuffer.getBufferData(
             vertices,
-            positionAttribute.byteOffset,
+            isInterleaved ? 0 : byteOffset,
             0,
             elementCount
           );
@@ -280,7 +294,8 @@ export default function pickModel(
           const v0 = getVertexPosition(
             vertices,
             i0,
-            numComponents,
+            offset,
+            elementStride,
             quantization,
             instanceTransform,
             verticalExaggeration,
@@ -291,7 +306,8 @@ export default function pickModel(
           const v1 = getVertexPosition(
             vertices,
             i1,
-            numComponents,
+            offset,
+            elementStride,
             quantization,
             instanceTransform,
             verticalExaggeration,
@@ -302,7 +318,8 @@ export default function pickModel(
           const v2 = getVertexPosition(
             vertices,
             i2,
-            numComponents,
+            offset,
+            elementStride,
             quantization,
             instanceTransform,
             verticalExaggeration,
@@ -350,7 +367,8 @@ export default function pickModel(
 function getVertexPosition(
   vertices,
   index,
-  numComponents,
+  offset,
+  numElements,
   quantization,
   instanceTransform,
   verticalExaggeration,
@@ -358,7 +376,7 @@ function getVertexPosition(
   ellipsoid,
   result
 ) {
-  const i = index * numComponents;
+  const i = offset + index * numElements;
   result.x = vertices[i];
   result.y = vertices[i + 1];
   result.z = vertices[i + 2];
