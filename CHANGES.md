@@ -6,7 +6,7 @@
 
 ##### Breaking Changes :mega:
 
-- By default, instances of `Cesium3DTileset ` will no longer default to enable collisions for camera collision or for clamping entities.
+- By default, instances of `Cesium3DTileset ` will no longer default to enable collisions for camera collision or for clamping entities. [#11829](https://github.com/CesiumGS/cesium/pull/11829)
   - This behavior can be enabled by setting `Cesium3DTileset.enableCollision` to true.
 
 ##### Fixes :wrench:
@@ -17,7 +17,6 @@
 - Fixed a bug affecting voxel shader compilation in WebGL1 contexts. [#11798](https://github.com/CesiumGS/cesium/pull/11798)
 - Fixed a bug where legacy B3DM files that contained glTF 1.0 data that used a `CONSTANT` technique in the `KHR_material_common` extension and only defined ambient- or emissive textures (but no diffuse textures) showed up without any texture [#11825](https://github.com/CesiumGS/cesium/pull/11825)
 - Fixed an error when the `screenSpaceEventHandler` was destroyed before `Viewer` [#10576](https://github.com/CesiumGS/cesium/issues/10576)
-- Fixed a bug causing the wrong tile to be selected for some implicit tilesets.
 - Fixes how `Camera.changed` handles changes in `roll`. [#11844](https://github.com/CesiumGS/cesium/pull/11844)
 
 ##### Additions :tada:
