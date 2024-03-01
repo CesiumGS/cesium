@@ -8,7 +8,7 @@ import createTaskProcessorWorker from "./createTaskProcessorWorker.js";
 const moduleCache = {};
 
 async function getModule(moduleName, modulePath) {
-  let module = defaultValue(moduleCache[modulePath] ?? moduleCache[moduleName]);
+  let module = defaultValue(moduleCache[modulePath], moduleCache[moduleName]);
 
   if (defined(module)) {
     return module;
