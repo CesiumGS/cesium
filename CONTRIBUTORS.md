@@ -162,6 +162,8 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
   - [Mia Tang](https://github.com/miatang13)
   - [Mark Dane](https://github.com/angrycat9000)
   - [jjspace](https://github.com/jjspace)
+  - [Siddhesh Ranade](https://github.com/siddheshranade)
+  - [Adam Morris](https://github.com/weegeekps)
 - [Northrop Grumman](http://www.northropgrumman.com)
   - [Joseph Stein](https://github.com/nahgrin)
 - [EOX IT Services GmbH](https://eox.at)
@@ -378,3 +380,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [Anne Gropler](https://github.com/anne-gropler)
 - [Harsh Lakhara](https://github.com/harshlakhara)
 - [Pavlo Skakun](https://github.com/p-skakun)
+- [Taylor Huffman](https://github.com/huffmantayler)

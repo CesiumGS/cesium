@@ -1,5 +1,4 @@
 import Check from "../Core/Check.js";
-import CesiumMath from "../Core/Math.js";
 import Matrix3 from "../Core/Matrix3.js";
 import Matrix4 from "../Core/Matrix4.js";
 
@@ -41,7 +40,8 @@ const Axis = {
  * @constant
  */
 Axis.Y_UP_TO_Z_UP = Matrix4.fromRotationTranslation(
-  Matrix3.fromRotationX(CesiumMath.PI_OVER_TWO)
+  // Rotation about PI/2 around the X-axis
+  Matrix3.fromArray([1, 0, 0, 0, 0, 1, 0, -1, 0])
 );
 
 /**
@@ -51,7 +51,8 @@ Axis.Y_UP_TO_Z_UP = Matrix4.fromRotationTranslation(
  * @constant
  */
 Axis.Z_UP_TO_Y_UP = Matrix4.fromRotationTranslation(
-  Matrix3.fromRotationX(-CesiumMath.PI_OVER_TWO)
+  // Rotation about -PI/2 around the X-axis
+  Matrix3.fromArray([1, 0, 0, 0, 0, -1, 0, 1, 0])
 );
 
 /**
@@ -61,7 +62,8 @@ Axis.Z_UP_TO_Y_UP = Matrix4.fromRotationTranslation(
  * @constant
  */
 Axis.X_UP_TO_Z_UP = Matrix4.fromRotationTranslation(
-  Matrix3.fromRotationY(-CesiumMath.PI_OVER_TWO)
+  // Rotation about -PI/2 around the Y-axis
+  Matrix3.fromArray([0, 0, 1, 0, 1, 0, -1, 0, 0])
 );
 
 /**
@@ -71,7 +73,8 @@ Axis.X_UP_TO_Z_UP = Matrix4.fromRotationTranslation(
  * @constant
  */
 Axis.Z_UP_TO_X_UP = Matrix4.fromRotationTranslation(
-  Matrix3.fromRotationY(CesiumMath.PI_OVER_TWO)
+  // Rotation about PI/2 around the Y-axis
+  Matrix3.fromArray([0, 0, -1, 0, 1, 0, 1, 0, 0])
 );
 
 /**
@@ -81,7 +84,8 @@ Axis.Z_UP_TO_X_UP = Matrix4.fromRotationTranslation(
  * @constant
  */
 Axis.X_UP_TO_Y_UP = Matrix4.fromRotationTranslation(
-  Matrix3.fromRotationZ(CesiumMath.PI_OVER_TWO)
+  // Rotation about PI/2 around the Z-axis
+  Matrix3.fromArray([0, 1, 0, -1, 0, 0, 0, 0, 1])
 );
 
 /**
@@ -91,7 +95,8 @@ Axis.X_UP_TO_Y_UP = Matrix4.fromRotationTranslation(
  * @constant
  */
 Axis.Y_UP_TO_X_UP = Matrix4.fromRotationTranslation(
-  Matrix3.fromRotationZ(-CesiumMath.PI_OVER_TWO)
+  // Rotation about -PI/2 around the Z-axis
+  Matrix3.fromArray([0, -1, 0, 1, 0, 0, 0, 0, 1])
 );
 
 /**

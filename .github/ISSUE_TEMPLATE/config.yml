@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+- name: Ask a question
+  url: https://community.cesium.com/c/cesiumjs/5
+  about: CesiumJS is a big project, so we use GitHub for feature requests and bug tracking exclusively. Please use the community forum for general questions. The Cesium team and community actively monitor it and love seeing what people are working on!

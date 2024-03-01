@@ -23,7 +23,6 @@ import OrientedBoundingBox from "../Core/OrientedBoundingBox.js";
  */
 function SpatialNode(level, x, y, z, parent, shape, voxelDimensions) {
   /**
-   * @ignore
    * @type {SpatialNode[]}
    */
   this.children = undefined;
@@ -35,24 +34,24 @@ function SpatialNode(level, x, y, z, parent, shape, voxelDimensions) {
   this.z = z;
 
   /**
-   * @ignore
+   * @type {Cartesian3}
+   */
+  this.dimensions = Cartesian3.clone(voxelDimensions);
+  /**
    * @type {KeyframeNode[]}
    */
   this.keyframeNodes = [];
   /**
-   * @ignore
    * @type {KeyframeNode[]}
    */
   this.renderableKeyframeNodes = [];
 
   this.renderableKeyframeNodeLerp = 0.0;
   /**
-   * @ignore
    * @type {KeyframeNode}
    */
   this.renderableKeyframeNodePrevious = undefined;
   /**
-   * @ignore
    * @type {KeyframeNode}
    */
   this.renderableKeyframeNodeNext = undefined;
@@ -62,19 +61,15 @@ function SpatialNode(level, x, y, z, parent, shape, voxelDimensions) {
   this.screenSpaceError = 0.0;
   this.visitedFrameNumber = -1;
 
-  this.computeBoundingVolumes(shape, voxelDimensions);
+  this.computeBoundingVolumes(shape);
 }
 
 const scratchObbHalfScale = new Cartesian3();
 
 /**
  * @param {VoxelShape} shape
- * @param {Cartesian3} voxelDimensions
  */
-SpatialNode.prototype.computeBoundingVolumes = function (
-  shape,
-  voxelDimensions
-) {
+SpatialNode.prototype.computeBoundingVolumes = function (shape) {
   this.orientedBoundingBox = shape.computeOrientedBoundingBoxForTile(
     this.level,
     this.x,
@@ -89,15 +84,14 @@ SpatialNode.prototype.computeBoundingVolumes = function (
   );
   const maximumScale = 2.0 * Cartesian3.maximumComponent(halfScale);
   this.approximateVoxelSize =
-    maximumScale / Cartesian3.minimumComponent(voxelDimensions);
+    maximumScale / Cartesian3.minimumComponent(this.dimensions);
 };
 
 /**
  * @param {VoxelShape} shape The shape of the parent VoxelPrimitive
- * @param {Cartesian3} voxelDimensions
  * @private
  */
-SpatialNode.prototype.constructChildNodes = function (shape, voxelDimensions) {
+SpatialNode.prototype.constructChildNodes = function (shape) {
   const { level, x, y, z } = this;
   const xMin = x * 2;
   const yMin = y * 2;
@@ -119,7 +113,7 @@ SpatialNode.prototype.constructChildNodes = function (shape, voxelDimensions) {
   ];
 
   this.children = childCoords.map(([level, x, y, z]) => {
-    return new SpatialNode(level, x, y, z, this, shape, voxelDimensions);
+    return new SpatialNode(level, x, y, z, this, shape, this.dimensions);
   });
 };
 
@@ -328,7 +322,7 @@ SpatialNode.prototype.destroyKeyframeNode = function (
 
   keyframeNode.spatialNode = undefined;
   keyframeNode.state = KeyframeNode.LoadState.UNLOADED;
-  keyframeNode.metadatas = {};
+  keyframeNode.metadata = {};
   keyframeNode.megatextureIndex = -1;
   keyframeNode.priority = -Number.MAX_VALUE;
   keyframeNode.highPriorityFrameNumber = -1;
@@ -345,15 +339,14 @@ SpatialNode.prototype.addKeyframeNodeToMegatextures = function (
   if (
     keyframeNode.state !== KeyframeNode.LoadState.RECEIVED ||
     keyframeNode.megatextureIndex !== -1 ||
-    keyframeNode.metadatas.length !== megatextures.length
+    keyframeNode.metadata.length !== megatextures.length
   ) {
     throw new DeveloperError("Keyframe node cannot be added to megatexture");
   }
 
   for (let i = 0; i < megatextures.length; i++) {
     const megatexture = megatextures[i];
-    keyframeNode.megatextureIndex = megatexture.add(keyframeNode.metadatas[i]);
-    keyframeNode.metadatas[i] = undefined; // data is in megatexture so no need to hold onto it
+    keyframeNode.megatextureIndex = megatexture.add(keyframeNode.metadata[i]);
   }
 
   keyframeNode.state = KeyframeNode.LoadState.LOADED;

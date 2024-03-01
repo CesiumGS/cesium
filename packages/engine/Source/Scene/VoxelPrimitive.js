@@ -531,7 +531,7 @@ Object.defineProperties(VoxelPrimitive.prototype, {
    */
   orientedBoundingBox: {
     get: function () {
-      return this.shape.orientedBoundingBox;
+      return this._shape.orientedBoundingBox;
     },
   },
 
@@ -1137,6 +1137,8 @@ VoxelPrimitive.prototype.update = function (frameState) {
   // Render the primitive
   const command = frameState.passes.pick
     ? this._drawCommandPick
+    : frameState.passes.pickVoxel
+    ? this._drawCommandPickVoxel
     : this._drawCommand;
   command.boundingVolume = shape.boundingSphere;
   frameState.commandList.push(command);
