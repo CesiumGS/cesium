@@ -7,6 +7,7 @@
 */
 
 uniform vec3 u_ellipsoidRadiiUv; // [0,1]
+uniform vec2 u_evoluteScale; // (radiiUv.x ^ 2 - radiiUv.z ^ 2) * vec2(1.0, -1.0) / radiiUv;
 uniform vec3 u_ellipsoidInverseRadiiSquaredUv;
 #if defined(ELLIPSOID_HAS_RENDER_BOUNDS_LONGITUDE_MIN_DISCONTINUITY) || defined(ELLIPSOID_HAS_RENDER_BOUNDS_LONGITUDE_MAX_DISCONTINUITY) || defined(ELLIPSOID_HAS_SHAPE_BOUNDS_LONGITUDE_MIN_MAX_REVERSED)
     uniform vec3 u_ellipsoidShapeUvLongitudeMinMaxMid;
@@ -30,12 +31,11 @@ vec3 nearestPointAndRadiusOnEllipse(vec2 pos, vec2 radii) {
     // We describe the ellipse parametrically: v = radii * vec2(cos(t), sin(t))
     // but store the cos and sin of t in a vec2 for efficiency.
     // Initial guess: t = pi/4
-    vec2 tTrigs = vec2(0.70710678118);
+    vec2 tTrigs = vec2(0.7071067811865476);
     // Initial guess of point on ellipsoid
     vec2 v = radii * tTrigs;
     // Center of curvature of the ellipse at v
-    vec2 evoluteScale = (radii.x * radii.x - radii.y * radii.y) * vec2(1.0, -1.0) * inverseRadii;
-    vec2 evolute = evoluteScale * tTrigs * tTrigs * tTrigs;
+    vec2 evolute = u_evoluteScale * tTrigs * tTrigs * tTrigs;
 
     const int iterations = 3;
     for (int i = 0; i < iterations; ++i) {
@@ -45,7 +45,7 @@ vec3 nearestPointAndRadiusOnEllipse(vec2 pos, vec2 radii) {
         tTrigs = (q + evolute) * inverseRadii;
         tTrigs = normalize(clamp(tTrigs, 0.0, 1.0));
         v = radii * tTrigs;
-        evolute = evoluteScale * tTrigs * tTrigs * tTrigs;
+        evolute = u_evoluteScale * tTrigs * tTrigs * tTrigs;
     }
 
     return vec3(v * sign(pos), length(v - evolute));
