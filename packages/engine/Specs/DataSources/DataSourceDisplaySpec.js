@@ -9,6 +9,15 @@ import {
   Entity,
   GroundPolylinePrimitive,
   GroundPrimitive,
+  defined,
+  BillboardVisualizer,
+  GeometryVisualizer,
+  LabelVisualizer,
+  ModelVisualizer,
+  Cesium3DTilesetVisualizer,
+  PointVisualizer,
+  PathVisualizer,
+  PolylineVisualizer,
 } from "../../index.js";
 
 import createScene from "../../../../Specs/createScene.js";
@@ -39,7 +48,7 @@ describe(
     });
 
     afterEach(function () {
-      if (!display.isDestroyed()) {
+      if (defined(display) && !display.isDestroyed()) {
         display.destroy();
       }
       dataSourceCollection.removeAll();
@@ -596,6 +605,57 @@ describe(
       expect(scene.groundPrimitives.contains(display._groundPrimitives)).toBe(
         true
       );
+    });
+
+    it("has expected default visualizers", () => {
+      const dataSource = new MockDataSource();
+      const entityCluster = dataSource.clustering;
+      const callback = DataSourceDisplay.defaultVisualizersCallback(
+        scene,
+        entityCluster,
+        dataSource
+      );
+      expect(callback.length).toEqual(8);
+      expect(callback[0]).toBeInstanceOf(BillboardVisualizer);
+      expect(callback[1]).toBeInstanceOf(GeometryVisualizer);
+      expect(callback[2]).toBeInstanceOf(LabelVisualizer);
+      expect(callback[3]).toBeInstanceOf(ModelVisualizer);
+      expect(callback[4]).toBeInstanceOf(Cesium3DTilesetVisualizer);
+      expect(callback[5]).toBeInstanceOf(PointVisualizer);
+      expect(callback[6]).toBeInstanceOf(PathVisualizer);
+      expect(callback[7]).toBeInstanceOf(PolylineVisualizer);
+    });
+
+    it("registers extra visualizers", () => {
+      function FakeVisualizer() {}
+      const dataSource = new MockDataSource();
+      const entityCluster = dataSource.clustering;
+
+      const callback = DataSourceDisplay.defaultVisualizersCallback(
+        scene,
+        entityCluster,
+        dataSource
+      );
+      expect(callback.length).withContext("length before register").toEqual(8);
+
+      DataSourceDisplay.registerVisualizer(FakeVisualizer);
+      const callback2 = DataSourceDisplay.defaultVisualizersCallback(
+        scene,
+        entityCluster,
+        dataSource
+      );
+      expect(callback2.length).withContext("length after register").toEqual(9);
+      expect(callback2[8]).toBeInstanceOf(FakeVisualizer);
+
+      DataSourceDisplay.unregisterVisualizer(FakeVisualizer);
+      const callback3 = DataSourceDisplay.defaultVisualizersCallback(
+        scene,
+        entityCluster,
+        dataSource
+      );
+      expect(callback3.length)
+        .withContext("length after unregister")
+        .toEqual(8);
     });
   },
   "WebGL"
