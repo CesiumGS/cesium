@@ -1,4 +1,3 @@
-#define RAY_SHIFT (0.000003163)
 #define RAY_SCALE (1.00003163)
 
 struct Ray {

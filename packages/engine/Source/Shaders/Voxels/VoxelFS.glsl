@@ -24,16 +24,19 @@ uniform float u_stepSize;
 #endif
 
 vec3 getSampleSize(in int level) {
-    float tileSizeAtLevel = exp2(-1.0 * float(level));
-    vec3 sampleSizeUv = tileSizeAtLevel / vec3(u_dimensions);
+    vec3 sampleCount = exp2(float(level)) * vec3(u_dimensions);
+    vec3 sampleSizeUv = 1.0 / sampleCount;
     return scaleShapeUvToShapeSpace(sampleSizeUv);
 }
 
 vec4 getStepSize(in SampleData sampleData, in Ray viewRay, in RayShapeIntersection shapeIntersection, in mat3 jacobianT, in float currentT) {
-    vec3 gradient = viewRay.rawDir * jacobianT;
+    // The Jacobian is computed in a space where the ellipsoid spans [-1, 1].
+    // But the ray is marched in a space where the ellipsoid fils [0, 1].
+    // So we need to scale the Jacobian by 2.
+    vec3 gradient = 2.0 * viewRay.rawDir * jacobianT;
 
-    vec3 sampleSizeAlongRay = getSampleSize(sampleData.tileCoords.w) / gradient;
-    float fixedStep = minComponent(abs(sampleSizeAlongRay)) * u_stepSize;
+    vec3 sampleSizeAlongRay = getSampleSize(sampleData.tileCoords.w) / abs(gradient);
+    float fixedStep = minComponent(sampleSizeAlongRay) * u_stepSize;
 
     vec3 voxelCoord = sampleData.tileUv * vec3(u_dimensions);
     vec3 directions = sign(gradient);
@@ -41,8 +44,8 @@ vec4 getStepSize(in SampleData sampleData, in Ray viewRay, in RayShapeIntersecti
     vec3 entryCoord = mix(ceil(voxelCoord), floor(voxelCoord), positiveDirections);
     vec3 exitCoord = mix(floor(voxelCoord), ceil(voxelCoord), positiveDirections);
 
-    vec3 distanceFromEntry = (voxelCoord - entryCoord) * sampleSizeAlongRay;
-    vec3 distanceToExit = (exitCoord - voxelCoord) * sampleSizeAlongRay;
+    vec3 distanceFromEntry = abs(voxelCoord - entryCoord) * sampleSizeAlongRay;
+    vec3 distanceToExit = abs(exitCoord - voxelCoord) * sampleSizeAlongRay;
 
     float lastEntry = minComponent(distanceFromEntry);
     bvec3 isLastEntry = equal(distanceFromEntry, vec3(lastEntry));
@@ -52,8 +55,8 @@ vec4 getStepSize(in SampleData sampleData, in Ray viewRay, in RayShapeIntersecti
     vec4 entry = intersectionMax(shapeIntersection.entry, voxelEntry);
 
     float firstExit = minComponent(distanceToExit);
-    float variableStep = firstExit * u_stepSize + fixedStep * 0.01;
-    float stepSize = max(variableStep, fixedStep * 0.05);
+    float variableStep = firstExit + fixedStep * 0.01;
+    float stepSize = clamp(variableStep, fixedStep * 0.05, fixedStep);
 
     return vec4(entry.xyz, stepSize);
 }
@@ -91,13 +94,12 @@ void main()
     vec3 viewDirUv = normalize(u_transformDirectionViewToLocal * eyeDirection); // normalize again just in case
     vec3 viewPosUv = u_cameraPositionUv;
     #if defined(SHAPE_ELLIPSOID)
-        // TODO: remove 2.0 factor?
-        vec3 rawDir = 2.0 * viewDirUv * u_ellipsoidRadiiUv;
+        // viewDirUv has been scaled to a space where the ellipsoid is a sphere.
+        // Undo this scaling to get the raw direction.
+        vec3 rawDir = viewDirUv * u_ellipsoidRadiiUv;
         Ray viewRayUv = Ray(viewPosUv, viewDirUv, rawDir);
     #else
-        // TODO: remove 2.0 factor?
-        vec3 rawDir = 2.0 * viewDirUv;
-        Ray viewRayUv = Ray(viewPosUv, viewDirUv, rawDir);
+        Ray viewRayUv = Ray(viewPosUv, viewDirUv, viewDirUv);
     #endif
 
     Intersections ix;
