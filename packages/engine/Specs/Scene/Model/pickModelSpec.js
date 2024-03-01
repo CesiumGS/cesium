@@ -30,6 +30,8 @@ describe("Scene/Model/pickModel", function () {
     "./Data/Models/glTF-2.0/BoxCesiumRtc/glTF/BoxCesiumRtc.gltf";
   const boxBackFaceCullingUrl =
     "./Data/Models/glTF-2.0/BoxBackFaceCulling/glTF/BoxBackFaceCulling.gltf";
+  const boxInterleaved =
+    "./Data/Models/glTF-2.0/BoxInterleaved/glTF/BoxInterleaved.gltf";
 
   let scene;
   beforeAll(function () {
@@ -220,6 +222,28 @@ describe("Scene/Model/pickModel", function () {
     );
 
     const expected = new Cartesian3(1.0, 0, 1.0);
+    expect(pickModel(model, ray, scene.frameState)).toEqualEpsilon(
+      expected,
+      CesiumMath.EPSILON12
+    );
+  });
+
+  it("returns position of intersection with interleaved model", async function () {
+    const model = await loadAndZoomToModelAsync(
+      {
+        url: boxInterleaved,
+        enablePick: !scene.frameState.context.webgl2,
+      },
+      scene
+    );
+    const ray = scene.camera.getPickRay(
+      new Cartesian2(
+        scene.drawingBufferWidth / 2.0,
+        scene.drawingBufferHeight / 2.0
+      )
+    );
+
+    const expected = new Cartesian3(0.5, 0, 0.5);
     expect(pickModel(model, ray, scene.frameState)).toEqualEpsilon(
       expected,
       CesiumMath.EPSILON12

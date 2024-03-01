@@ -20,6 +20,9 @@ function createGlobe(ellipsoid) {
     terrainProviderChanged: new Event(),
     tileLoadProgressEvent: new Event(),
     destroy: function () {},
+    isDestroyed: function () {
+      return false;
+    },
   };
 
   globe._surface.updateHeight = function (position, callback) {

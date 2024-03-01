@@ -21,6 +21,8 @@ import {
   MaterialAppearance,
   PerInstanceColorAppearance,
   ShadowMode,
+  Event,
+  GeometryUpdaterSet,
 } from "../../index.js";
 
 import createDynamicProperty from "../../../../Specs/createDynamicProperty.js";
@@ -1013,6 +1015,24 @@ describe(
           entities.removeAll();
           visualizer.destroy();
         });
+    });
+
+    it("registers new updater", () => {
+      function FakeUpdater() {}
+      FakeUpdater.prototype.geometryChanged = new Event();
+      const spy = spyOn(GeometryUpdaterSet, "registerUpdater");
+
+      GeometryUpdaterSet.registerUpdater(FakeUpdater);
+      expect(spy).toHaveBeenCalledOnceWith(FakeUpdater);
+    });
+
+    it("unregisters custom updaters", () => {
+      function FakeUpdater() {}
+      FakeUpdater.prototype.geometryChanged = new Event();
+      const spy = spyOn(GeometryUpdaterSet, "unregisterUpdater");
+
+      GeometryUpdaterSet.unregisterUpdater(FakeUpdater);
+      expect(spy).toHaveBeenCalledOnceWith(FakeUpdater);
     });
   },
   "WebGL"

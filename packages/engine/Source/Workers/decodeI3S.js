@@ -1,12 +1,15 @@
 import createTaskProcessorWorker from "./createTaskProcessorWorker.js";
+import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import WebMercatorProjection from "../Core/WebMercatorProjection.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
 import Cartographic from "../Core/Cartographic.js";
 import Cartesian3 from "../Core/Cartesian3.js";
+import Color from "../Core/Color.js";
 import Matrix3 from "../Core/Matrix3.js";
 import CesiumMath from "../Core/Math.js";
 import dracoModule from "draco3d/draco_decoder_nodejs.js";
+import srgbToLinear from "../Core/srgbToLinear.js";
 
 let draco;
 
@@ -196,13 +199,440 @@ function cropUVs(vertexCount, uv0s, uvRegions) {
   }
 }
 
+function generateIndexArray(
+  vertexCount,
+  indices,
+  colors,
+  splitGeometryByColorTransparency
+) {
+  // Allocate array
+  const indexArray = new Uint32Array(vertexCount);
+  const vertexIndexFn = defined(indices)
+    ? (vertexIndex) => indices[vertexIndex]
+    : (vertexIndex) => vertexIndex;
+
+  let transparentVertexOffset = 0;
+  if (splitGeometryByColorTransparency && defined(colors)) {
+    // The blending alpha mode for opaque colors is not rendered properly.
+    // If geometry contains both opaque and transparent colors we need to split vertices into two mesh primitives.
+    // Each mesh primitive could use a separate material with the specific alpha mode depending on the vertex trancparency.
+    const isVertexTransparentFn = (vertexIndex) =>
+      colors[vertexIndexFn(vertexIndex) * 4 + 3] < 255;
+    // Copy opaque vertices first
+    for (let vertexIndex = 0; vertexIndex < vertexCount; vertexIndex += 3) {
+      if (
+        !isVertexTransparentFn(vertexIndex) &&
+        !isVertexTransparentFn(vertexIndex + 1) &&
+        !isVertexTransparentFn(vertexIndex + 2)
+      ) {
+        indexArray[transparentVertexOffset++] = vertexIndexFn(vertexIndex);
+        indexArray[transparentVertexOffset++] = vertexIndexFn(vertexIndex + 1);
+        indexArray[transparentVertexOffset++] = vertexIndexFn(vertexIndex + 2);
+      }
+    }
+    if (transparentVertexOffset > 0) {
+      // Copy transparent vertices
+      let offset = transparentVertexOffset;
+      for (let vertexIndex = 0; vertexIndex < vertexCount; vertexIndex += 3) {
+        if (
+          isVertexTransparentFn(vertexIndex) ||
+          isVertexTransparentFn(vertexIndex + 1) ||
+          isVertexTransparentFn(vertexIndex + 2)
+        ) {
+          indexArray[offset++] = vertexIndexFn(vertexIndex);
+          indexArray[offset++] = vertexIndexFn(vertexIndex + 1);
+          indexArray[offset++] = vertexIndexFn(vertexIndex + 2);
+        }
+      }
+    } else {
+      // All vertices are tranparent
+      for (let vertexIndex = 0; vertexIndex < vertexCount; ++vertexIndex) {
+        indexArray[vertexIndex] = vertexIndexFn(vertexIndex);
+      }
+    }
+  } else {
+    // All vertices are considered opaque
+    transparentVertexOffset = vertexCount;
+    for (let vertexIndex = 0; vertexIndex < vertexCount; ++vertexIndex) {
+      indexArray[vertexIndex] = vertexIndexFn(vertexIndex);
+    }
+  }
+
+  return {
+    indexArray: indexArray,
+    transparentVertexOffset: transparentVertexOffset,
+  };
+}
+
+function getFeatureHash(symbologyData, outlinesHash, featureIndex) {
+  const featureHash = outlinesHash[featureIndex];
+  if (defined(featureHash)) {
+    return featureHash;
+  }
+  const newFeatureHash = (outlinesHash[featureIndex] = {
+    positions: {},
+    indices: {},
+    edges: {},
+  });
+  const featureSymbology = defaultValue(
+    symbologyData[featureIndex],
+    symbologyData.default
+  );
+  newFeatureHash.hasOutline = defined(featureSymbology?.edges);
+  return newFeatureHash;
+}
+
+function addVertexToHash(indexHash, positionHash, vertexIndex, positions) {
+  if (!defined(indexHash[vertexIndex])) {
+    const startPositionIndex = vertexIndex * 3;
+    let coordinateHash = positionHash;
+    for (let index = 0; index < 3; index++) {
+      const coordinate = positions[startPositionIndex + index];
+      if (!defined(coordinateHash[coordinate])) {
+        coordinateHash[coordinate] = {};
+      }
+      coordinateHash = coordinateHash[coordinate];
+    }
+    if (!defined(coordinateHash.index)) {
+      coordinateHash.index = vertexIndex;
+    }
+    indexHash[vertexIndex] = coordinateHash.index;
+  }
+}
+
+function addEdgeToHash(
+  edgeHash,
+  vertexAIndex,
+  vertexBIndex,
+  vertexAIndexUnique,
+  vertexBIndexUnique,
+  normalIndex
+) {
+  let startVertexIndex;
+  let endVertexIndex;
+  if (vertexAIndexUnique < vertexBIndexUnique) {
+    startVertexIndex = vertexAIndexUnique;
+    endVertexIndex = vertexBIndexUnique;
+  } else {
+    startVertexIndex = vertexBIndexUnique;
+    endVertexIndex = vertexAIndexUnique;
+  }
+  let edgeStart = edgeHash[startVertexIndex];
+  if (!defined(edgeStart)) {
+    edgeStart = edgeHash[startVertexIndex] = {};
+  }
+  let edgeEnd = edgeStart[endVertexIndex];
+  if (!defined(edgeEnd)) {
+    edgeEnd = edgeStart[endVertexIndex] = {
+      normalsIndex: [],
+      outlines: [],
+    };
+  }
+  edgeEnd.normalsIndex.push(normalIndex);
+  if (
+    edgeEnd.outlines.length === 0 ||
+    vertexAIndex !== vertexAIndexUnique ||
+    vertexBIndex !== vertexBIndexUnique
+  ) {
+    edgeEnd.outlines.push(vertexAIndex, vertexBIndex);
+  }
+}
+
+function generateOutlinesHash(
+  symbologyData,
+  featureIndexArray,
+  indexArray,
+  positions
+) {
+  const outlinesHash = [];
+  for (let i = 0; i < indexArray.length; i += 3) {
+    const featureIndex = defined(featureIndexArray)
+      ? featureIndexArray[indexArray[i]]
+      : "default";
+    const featureHash = getFeatureHash(
+      symbologyData,
+      outlinesHash,
+      featureIndex
+    );
+    if (!featureHash.hasOutline) {
+      continue;
+    }
+
+    const indexHash = featureHash.indices;
+    const positionHash = featureHash.positions;
+    for (let vertex = 0; vertex < 3; vertex++) {
+      const vertexIndex = indexArray[i + vertex];
+      addVertexToHash(indexHash, positionHash, vertexIndex, positions);
+    }
+
+    const edgeHash = featureHash.edges;
+    for (let vertex = 0; vertex < 3; vertex++) {
+      const vertexIndex = indexArray[i + vertex];
+      const nextVertexIndex = indexArray[i + ((vertex + 1) % 3)];
+      const uniqueVertexIndex = indexHash[vertexIndex];
+      const uniqueNextVertexIndex = indexHash[nextVertexIndex];
+      addEdgeToHash(
+        edgeHash,
+        vertexIndex,
+        nextVertexIndex,
+        uniqueVertexIndex,
+        uniqueNextVertexIndex,
+        i
+      );
+    }
+  }
+  return outlinesHash;
+}
+
+const calculateFaceNormalA = new Cartesian3();
+const calculateFaceNormalB = new Cartesian3();
+const calculateFaceNormalC = new Cartesian3();
+function calculateFaceNormal(normals, vertexAIndex, indexArray, positions) {
+  const positionAIndex = indexArray[vertexAIndex] * 3;
+  const positionBIndex = indexArray[vertexAIndex + 1] * 3;
+  const positionCIndex = indexArray[vertexAIndex + 2] * 3;
+  Cartesian3.fromArray(positions, positionAIndex, calculateFaceNormalA);
+  Cartesian3.fromArray(positions, positionBIndex, calculateFaceNormalB);
+  Cartesian3.fromArray(positions, positionCIndex, calculateFaceNormalC);
+
+  Cartesian3.subtract(
+    calculateFaceNormalB,
+    calculateFaceNormalA,
+    calculateFaceNormalB
+  );
+  Cartesian3.subtract(
+    calculateFaceNormalC,
+    calculateFaceNormalA,
+    calculateFaceNormalC
+  );
+  Cartesian3.cross(
+    calculateFaceNormalB,
+    calculateFaceNormalC,
+    calculateFaceNormalA
+  );
+  const magnitude = Cartesian3.magnitude(calculateFaceNormalA);
+  if (magnitude !== 0) {
+    Cartesian3.divideByScalar(
+      calculateFaceNormalA,
+      magnitude,
+      calculateFaceNormalA
+    );
+  }
+  const normalAIndex = vertexAIndex * 3;
+  const normalBIndex = (vertexAIndex + 1) * 3;
+  const normalCIndex = (vertexAIndex + 2) * 3;
+  Cartesian3.pack(calculateFaceNormalA, normals, normalAIndex);
+  Cartesian3.pack(calculateFaceNormalA, normals, normalBIndex);
+  Cartesian3.pack(calculateFaceNormalA, normals, normalCIndex);
+}
+
+const isEdgeSmoothA = new Cartesian3();
+const isEdgeSmoothB = new Cartesian3();
+function isEdgeSmooth(normals, normalAIndex, normalBIndex) {
+  Cartesian3.fromArray(normals, normalAIndex, isEdgeSmoothA);
+  Cartesian3.fromArray(normals, normalBIndex, isEdgeSmoothB);
+  const cosine = Cartesian3.dot(isEdgeSmoothA, isEdgeSmoothB);
+  const sine = Cartesian3.magnitude(
+    Cartesian3.cross(isEdgeSmoothA, isEdgeSmoothB, isEdgeSmoothA)
+  );
+  return Math.atan2(sine, cosine) < 0.25;
+}
+
+function addOutlinesForEdge(
+  outlines,
+  edgeData,
+  indexArray,
+  positions,
+  normals
+) {
+  if (edgeData.normalsIndex.length > 1) {
+    const normalsByIndex = positions.length === normals.length;
+    for (let indexA = 0; indexA < edgeData.normalsIndex.length; indexA++) {
+      const vertexAIndex = edgeData.normalsIndex[indexA];
+      if (!defined(normals[vertexAIndex * 3])) {
+        calculateFaceNormal(normals, vertexAIndex, indexArray, positions);
+      }
+      if (indexA === 0) {
+        continue;
+      }
+      for (let indexB = 0; indexB < indexA; indexB++) {
+        const vertexBIndex = edgeData.normalsIndex[indexB];
+        const normalAIndex = normalsByIndex
+          ? indexArray[vertexAIndex] * 3
+          : vertexAIndex * 3;
+        const normalBIndex = normalsByIndex
+          ? indexArray[vertexBIndex] * 3
+          : vertexBIndex * 3;
+        if (isEdgeSmooth(normals, normalAIndex, normalBIndex)) {
+          return;
+        }
+      }
+    }
+  }
+  outlines.push(...edgeData.outlines);
+}
+
+function addOutlinesForFeature(
+  outlines,
+  edgeHash,
+  indexArray,
+  positions,
+  normals
+) {
+  const edgeStartKeys = Object.keys(edgeHash);
+  for (let startIndex = 0; startIndex < edgeStartKeys.length; startIndex++) {
+    const edgeEnds = edgeHash[edgeStartKeys[startIndex]];
+    const edgeEndKeys = Object.keys(edgeEnds);
+    for (let endIndex = 0; endIndex < edgeEndKeys.length; endIndex++) {
+      const edgeData = edgeEnds[edgeEndKeys[endIndex]];
+      addOutlinesForEdge(outlines, edgeData, indexArray, positions, normals);
+    }
+  }
+}
+
+function generateOutlinesFromHash(
+  outlinesHash,
+  indexArray,
+  positions,
+  normals
+) {
+  const outlines = [];
+  const features = Object.keys(outlinesHash);
+  for (let featureIndex = 0; featureIndex < features.length; featureIndex++) {
+    const edgeHash = outlinesHash[features[featureIndex]].edges;
+    addOutlinesForFeature(outlines, edgeHash, indexArray, positions, normals);
+  }
+  return outlines;
+}
+
+function generateOutlinesIndexArray(
+  symbologyData,
+  featureIndexArray,
+  indexArray,
+  positions,
+  normals
+) {
+  if (!defined(symbologyData) || Object.keys(symbologyData).length === 0) {
+    return undefined;
+  }
+  const outlinesHash = generateOutlinesHash(
+    symbologyData,
+    featureIndexArray,
+    indexArray,
+    positions
+  );
+  if (!defined(normals) || indexArray.length * 3 !== normals.length) {
+    // Need to calculate flat normals per faces
+    normals = [];
+  }
+  const outlines = generateOutlinesFromHash(
+    outlinesHash,
+    indexArray,
+    positions,
+    normals
+  );
+  const outlinesIndexArray =
+    outlines.length > 0 ? new Uint32Array(outlines) : undefined;
+  return outlinesIndexArray;
+}
+
+function convertColorsArray(colors) {
+  // Colors are assumed to be normalized sRGB [0,255] while in glTF they are interpreted as linear.
+  // All values RGBA need to be stored as float to keep the precision after sRGB to linear conversion.
+  const colorsArray = new Float32Array(colors.length);
+  for (let index = 0; index < colors.length; index += 4) {
+    colorsArray[index] = srgbToLinear(Color.byteToFloat(colors[index]));
+    colorsArray[index + 1] = srgbToLinear(Color.byteToFloat(colors[index + 1]));
+    colorsArray[index + 2] = srgbToLinear(Color.byteToFloat(colors[index + 2]));
+    colorsArray[index + 3] = Color.byteToFloat(colors[index + 3]);
+  }
+  return colorsArray;
+}
+
+function generateNormals(
+  vertexCount,
+  indices,
+  positions,
+  normals,
+  uv0s,
+  colors,
+  featureIndex
+) {
+  const result = {
+    normals: undefined,
+    positions: undefined,
+    uv0s: undefined,
+    colors: undefined,
+    featureIndex: undefined,
+    vertexCount: undefined,
+  };
+  if (
+    vertexCount === 0 ||
+    !defined(positions) ||
+    positions.length === 0 ||
+    defined(normals)
+  ) {
+    return result;
+  }
+
+  if (defined(indices)) {
+    result.vertexCount = indices.length;
+    result.positions = new Float32Array(indices.length * 3);
+    result.uv0s = defined(uv0s)
+      ? new Float32Array(indices.length * 2)
+      : undefined;
+    result.colors = defined(colors)
+      ? new Uint8Array(indices.length * 4)
+      : undefined;
+    result.featureIndex = defined(featureIndex)
+      ? new Array(indices.length)
+      : undefined;
+    for (let i = 0; i < indices.length; i++) {
+      const index = indices[i];
+      result.positions[i * 3] = positions[index * 3];
+      result.positions[i * 3 + 1] = positions[index * 3 + 1];
+      result.positions[i * 3 + 2] = positions[index * 3 + 2];
+      if (defined(result.uv0s)) {
+        result.uv0s[i * 2] = uv0s[index * 2];
+        result.uv0s[i * 2 + 1] = uv0s[index * 2 + 1];
+      }
+      if (defined(result.colors)) {
+        result.colors[i * 4] = colors[index * 4];
+        result.colors[i * 4 + 1] = colors[index * 4 + 1];
+        result.colors[i * 4 + 2] = colors[index * 4 + 2];
+        result.colors[i * 4 + 3] = colors[index * 4 + 3];
+      }
+      if (defined(result.featureIndex)) {
+        result.featureIndex[i] = featureIndex[index];
+      }
+    }
+
+    vertexCount = indices.length;
+    positions = result.positions;
+  }
+
+  indices = new Array(vertexCount);
+  for (let i = 0; i < vertexCount; i++) {
+    indices[i] = i;
+  }
+
+  result.normals = new Float32Array(indices.length * 3);
+  for (let i = 0; i < indices.length; i += 3) {
+    calculateFaceNormal(result.normals, i, indices, positions);
+  }
+
+  return result;
+}
+
 function generateGltfBuffer(
   vertexCount,
   indices,
   positions,
   normals,
   uv0s,
-  colors
+  colors,
+  featureIndex,
+  parameters
 ) {
   if (vertexCount === 0 || !defined(positions) || positions.length === 0) {
     return {
@@ -221,6 +651,8 @@ function generateGltfBuffer(
   const meshes = [];
   const nodes = [];
   const nodesInScene = [];
+  const rootExtensions = {};
+  const extensionsUsed = [];
 
   // If we provide indices, then the vertex count is the length
   // of that array, otherwise we assume non-indexed triangle
@@ -228,30 +660,53 @@ function generateGltfBuffer(
     vertexCount = indices.length;
   }
 
-  // Allocate array
-  const indexArray = new Uint32Array(vertexCount);
-
-  if (defined(indices)) {
-    // Set the indices
-    for (let vertexIndex = 0; vertexIndex < vertexCount; ++vertexIndex) {
-      indexArray[vertexIndex] = indices[vertexIndex];
-    }
-  } else {
-    // Generate indices
-    for (
-      let newVertexIndex = 0;
-      newVertexIndex < vertexCount;
-      ++newVertexIndex
-    ) {
-      indexArray[newVertexIndex] = newVertexIndex;
-    }
-  }
+  // Generate index array
+  const { indexArray, transparentVertexOffset } = generateIndexArray(
+    vertexCount,
+    indices,
+    colors,
+    parameters.splitGeometryByColorTransparency
+  );
 
   // Push to the buffers, bufferViews and accessors
   const indicesBlob = new Blob([indexArray], { type: "application/binary" });
   const indicesURL = URL.createObjectURL(indicesBlob);
 
   const endIndex = vertexCount;
+
+  // Feature index array gives a higher level of detail, each feature object can be accessed separately
+  const featureIndexArray =
+    parameters.enableFeatures && defined(featureIndex)
+      ? new Float32Array(featureIndex.length)
+      : undefined;
+  let featureCount = 0;
+
+  if (defined(featureIndexArray)) {
+    for (let index = 0; index < featureIndex.length; ++index) {
+      featureIndexArray[index] = featureIndex[index];
+      const countByIndex = featureIndex[index] + 1;
+      if (featureCount < countByIndex) {
+        // Feature count is defined by the maximum feature index
+        featureCount = countByIndex;
+      }
+    }
+  }
+
+  // Outlines indices
+  let outlinesIndicesURL;
+  const outlinesIndexArray = generateOutlinesIndexArray(
+    parameters.symbologyData,
+    featureIndex,
+    indexArray,
+    positions,
+    normals
+  );
+  if (defined(outlinesIndexArray)) {
+    const outlinesIndicesBlob = new Blob([outlinesIndexArray], {
+      type: "application/binary",
+    });
+    outlinesIndicesURL = URL.createObjectURL(outlinesIndicesBlob);
+  }
 
   // POSITIONS
   const meshPositions = positions.subarray(0, endIndex * 3);
@@ -296,7 +751,7 @@ function generateGltfBuffer(
 
   // COLORS
   const meshColorsInBytes = defined(colors)
-    ? colors.subarray(0, endIndex * 4)
+    ? convertColorsArray(colors.subarray(0, endIndex * 4))
     : undefined;
   let colorsURL;
   if (defined(meshColorsInBytes)) {
@@ -306,33 +761,56 @@ function generateGltfBuffer(
     colorsURL = URL.createObjectURL(colorsBlob);
   }
 
-  const posIndex = 0;
-  let normalIndex = 0;
-  let uv0Index = 0;
-  let colorIndex = 0;
-  let indicesIndex = 0;
+  // _FEATURE_ID_0
+  // The actual feature identifiers don't make much sense for reading attribute values, it is enough to use feature index
+  const meshFeatureId0 = defined(featureIndexArray)
+    ? featureIndexArray.subarray(0, endIndex)
+    : undefined;
+  let featureId0URL;
+  if (defined(meshFeatureId0)) {
+    const featureId0Blob = new Blob([meshFeatureId0], {
+      type: "application/binary",
+    });
+    featureId0URL = URL.createObjectURL(featureId0Blob);
+  }
 
-  let currentIndex = posIndex;
+  // Feature index property table
+  // This table has no practical use, but at least one property table is required to build a feature table
+  const meshPropertyTable0 = defined(featureIndexArray)
+    ? new Float32Array(featureCount)
+    : undefined;
+  let propertyTable0URL;
+  if (defined(meshPropertyTable0)) {
+    // This table just maps the feature index to itself
+    for (let index = 0; index < meshPropertyTable0.length; ++index) {
+      meshPropertyTable0[index] = index;
+    }
+    const propertyTable0Blob = new Blob([meshPropertyTable0], {
+      type: "application/binary",
+    });
+    propertyTable0URL = URL.createObjectURL(propertyTable0Blob);
+  }
 
   const attributes = {};
+  const extensions = {};
 
   // POSITIONS
-  attributes.POSITION = posIndex;
+  attributes.POSITION = accessors.length;
   buffers.push({
     uri: positionsURL,
     byteLength: meshPositions.byteLength,
   });
   bufferViews.push({
-    buffer: posIndex,
+    buffer: buffers.length - 1,
     byteOffset: 0,
     byteLength: meshPositions.byteLength,
     target: 34962,
   });
   accessors.push({
-    bufferView: posIndex,
+    bufferView: bufferViews.length - 1,
     byteOffset: 0,
     componentType: 5126,
-    count: vertexCount,
+    count: meshPositions.length / 3,
     type: "VEC3",
     max: [minX, minY, minZ],
     min: [maxX, maxY, maxZ],
@@ -340,107 +818,230 @@ function generateGltfBuffer(
 
   // NORMALS
   if (defined(normalsURL)) {
-    ++currentIndex;
-    normalIndex = currentIndex;
-    attributes.NORMAL = normalIndex;
+    attributes.NORMAL = accessors.length;
     buffers.push({
       uri: normalsURL,
       byteLength: meshNormals.byteLength,
     });
     bufferViews.push({
-      buffer: normalIndex,
+      buffer: buffers.length - 1,
       byteOffset: 0,
       byteLength: meshNormals.byteLength,
       target: 34962,
     });
     accessors.push({
-      bufferView: normalIndex,
+      bufferView: bufferViews.length - 1,
       byteOffset: 0,
       componentType: 5126,
-      count: vertexCount,
+      count: meshNormals.length / 3,
       type: "VEC3",
     });
   }
 
   // UV0
   if (defined(uv0URL)) {
-    ++currentIndex;
-    uv0Index = currentIndex;
-    attributes.TEXCOORD_0 = uv0Index;
+    attributes.TEXCOORD_0 = accessors.length;
     buffers.push({
       uri: uv0URL,
       byteLength: meshUv0s.byteLength,
     });
     bufferViews.push({
-      buffer: uv0Index,
+      buffer: buffers.length - 1,
       byteOffset: 0,
       byteLength: meshUv0s.byteLength,
       target: 34962,
     });
     accessors.push({
-      bufferView: uv0Index,
+      bufferView: bufferViews.length - 1,
       byteOffset: 0,
       componentType: 5126,
-      count: vertexCount,
+      count: meshUv0s.length / 2,
       type: "VEC2",
     });
   }
 
   // COLORS
   if (defined(colorsURL)) {
-    ++currentIndex;
-    colorIndex = currentIndex;
-    attributes.COLOR_0 = colorIndex;
+    attributes.COLOR_0 = accessors.length;
     buffers.push({
       uri: colorsURL,
       byteLength: meshColorsInBytes.byteLength,
     });
     bufferViews.push({
-      buffer: colorIndex,
+      buffer: buffers.length - 1,
       byteOffset: 0,
       byteLength: meshColorsInBytes.byteLength,
       target: 34962,
     });
     accessors.push({
-      bufferView: colorIndex,
+      bufferView: bufferViews.length - 1,
       byteOffset: 0,
-      componentType: 5121,
-      normalized: true,
-      count: vertexCount,
+      componentType: 5126,
+      count: meshColorsInBytes.length / 4,
       type: "VEC4",
     });
   }
 
+  // _FEATURE_ID_0
+  if (defined(featureId0URL)) {
+    attributes._FEATURE_ID_0 = accessors.length;
+    buffers.push({
+      uri: featureId0URL,
+      byteLength: meshFeatureId0.byteLength,
+    });
+    bufferViews.push({
+      buffer: buffers.length - 1,
+      byteOffset: 0,
+      byteLength: meshFeatureId0.byteLength,
+      target: 34963,
+    });
+    accessors.push({
+      bufferView: bufferViews.length - 1,
+      byteOffset: 0,
+      componentType: 5126,
+      count: meshFeatureId0.length,
+      type: "SCALAR",
+    });
+
+    // Mesh features extension associates feature ids by vertex
+    extensions.EXT_mesh_features = {
+      featureIds: [
+        {
+          attribute: 0,
+          propertyTable: 0,
+          featureCount: featureCount,
+        },
+      ],
+    };
+    extensionsUsed.push("EXT_mesh_features");
+  }
+
+  // Feature index property table
+  if (defined(propertyTable0URL)) {
+    buffers.push({
+      uri: propertyTable0URL,
+      byteLength: meshPropertyTable0.byteLength,
+    });
+    bufferViews.push({
+      buffer: buffers.length - 1,
+      byteOffset: 0,
+      byteLength: meshPropertyTable0.byteLength,
+      target: 34963,
+    });
+
+    rootExtensions.EXT_structural_metadata = {
+      schema: {
+        id: "i3s-metadata-schema-001",
+        name: "I3S metadata schema 001",
+        description: "The schema for I3S metadata",
+        version: "1.0",
+        classes: {
+          feature: {
+            name: "feature",
+            description: "Feature metadata",
+            properties: {
+              index: {
+                description: "The feature index",
+                type: "SCALAR",
+                componentType: "FLOAT32",
+                required: true,
+              },
+            },
+          },
+        },
+      },
+      propertyTables: [
+        {
+          name: "feature-indices-mapping",
+          class: "feature",
+          count: featureCount,
+          properties: {
+            index: {
+              values: bufferViews.length - 1,
+            },
+          },
+        },
+      ],
+    };
+    extensionsUsed.push("EXT_structural_metadata");
+  }
+
+  // Outlines indices
+  if (defined(outlinesIndicesURL)) {
+    buffers.push({
+      uri: outlinesIndicesURL,
+      byteLength: outlinesIndexArray.byteLength,
+    });
+    bufferViews.push({
+      buffer: buffers.length - 1,
+      byteOffset: 0,
+      byteLength: outlinesIndexArray.byteLength,
+      target: 34963,
+    });
+    accessors.push({
+      bufferView: bufferViews.length - 1,
+      byteOffset: 0,
+      componentType: 5125,
+      count: outlinesIndexArray.length,
+      type: "SCALAR",
+    });
+    extensions.CESIUM_primitive_outline = {
+      indices: accessors.length - 1,
+    };
+    extensionsUsed.push("CESIUM_primitive_outline");
+  }
+
   // INDICES
-  ++currentIndex;
-  indicesIndex = currentIndex;
   buffers.push({
     uri: indicesURL,
     byteLength: indexArray.byteLength,
   });
   bufferViews.push({
-    buffer: indicesIndex,
+    buffer: buffers.length - 1,
     byteOffset: 0,
     byteLength: indexArray.byteLength,
     target: 34963,
   });
-  accessors.push({
-    bufferView: indicesIndex,
-    byteOffset: 0,
-    componentType: 5125,
-    count: vertexCount,
-    type: "SCALAR",
-  });
 
-  // Create a new mesh for this page
-  meshes.push({
-    primitives: [
-      {
-        attributes: attributes,
-        indices: indicesIndex,
-        material: 0,
+  const meshPrimitives = [];
+  if (transparentVertexOffset > 0) {
+    // Add opaque mesh primitive
+    accessors.push({
+      bufferView: bufferViews.length - 1,
+      byteOffset: 0,
+      componentType: 5125,
+      count: transparentVertexOffset,
+      type: "SCALAR",
+    });
+    meshPrimitives.push({
+      attributes: attributes,
+      indices: accessors.length - 1,
+      material: meshPrimitives.length,
+      extensions: extensions,
+    });
+  }
+  if (transparentVertexOffset < vertexCount) {
+    // Add transparent mesh primitive
+    accessors.push({
+      bufferView: bufferViews.length - 1,
+      byteOffset: 4 * transparentVertexOffset, // skip 4 bytes for each opaque vertex
+      componentType: 5125,
+      count: vertexCount - transparentVertexOffset,
+      type: "SCALAR",
+    });
+    // Indicate the vertices transparancy for the mesh primitive
+    meshPrimitives.push({
+      attributes: attributes,
+      indices: accessors.length - 1,
+      material: meshPrimitives.length,
+      extensions: extensions,
+      extra: {
+        isTransparent: true,
       },
-    ],
+    });
+  }
+  meshes.push({
+    primitives: meshPrimitives,
   });
   nodesInScene.push(0);
   nodes.push({ mesh: 0 });
@@ -452,6 +1053,8 @@ function generateGltfBuffer(
     meshes: meshes,
     nodes: nodes,
     nodesInScene: nodesInScene,
+    rootExtensions: rootExtensions,
+    extensionsUsed: extensionsUsed,
   };
 }
 
@@ -954,32 +1557,12 @@ function decodeAndCreateGltf(parameters) {
     );
   }
 
-  // Create the final buffer
-  const meshData = generateGltfBuffer(
-    geometryData.vertexCount,
-    geometryData.indices,
-    geometryData.positions,
-    geometryData.normals,
-    geometryData.uv0s,
-    geometryData.colors
-  );
-
-  const customAttributes = {};
+  let featureIndex;
   if (defined(geometryData["feature-index"])) {
-    customAttributes.positions = geometryData.positions;
-    customAttributes.indices = geometryData.indices;
-    customAttributes.featureIndex = geometryData["feature-index"];
-    customAttributes.cartesianCenter = parameters.cartesianCenter;
-    customAttributes.parentRotation = parameters.parentRotation;
+    featureIndex = geometryData["feature-index"];
   } else if (defined(geometryData["faceRange"])) {
-    customAttributes.positions = geometryData.positions;
-    customAttributes.indices = geometryData.indices;
-    customAttributes.sourceURL = parameters.url;
-    customAttributes.cartesianCenter = parameters.cartesianCenter;
-    customAttributes.parentRotation = parameters.parentRotation;
-
     // Build the feature index array from the faceRange.
-    customAttributes.featureIndex = new Array(geometryData.positions.length);
+    featureIndex = new Array(geometryData.vertexCount);
     for (
       let range = 0;
       range < geometryData["faceRange"].length - 1;
@@ -989,13 +1572,56 @@ function decodeAndCreateGltf(parameters) {
       const rangeStart = geometryData["faceRange"][range];
       const rangeEnd = geometryData["faceRange"][range + 1];
       for (let i = rangeStart; i <= rangeEnd; i++) {
-        customAttributes.featureIndex[i * 3] = curIndex;
-        customAttributes.featureIndex[i * 3 + 1] = curIndex;
-        customAttributes.featureIndex[i * 3 + 2] = curIndex;
+        featureIndex[i * 3] = curIndex;
+        featureIndex[i * 3 + 1] = curIndex;
+        featureIndex[i * 3 + 2] = curIndex;
       }
     }
   }
 
+  if (parameters.calculateNormals) {
+    const data = generateNormals(
+      geometryData.vertexCount,
+      geometryData.indices,
+      geometryData.positions,
+      geometryData.normals,
+      geometryData.uv0s,
+      geometryData.colors,
+      featureIndex
+    );
+    if (defined(data.normals)) {
+      geometryData.normals = data.normals;
+      if (defined(data.vertexCount)) {
+        geometryData.vertexCount = data.vertexCount;
+        geometryData.indices = data.indices;
+        geometryData.positions = data.positions;
+        geometryData.uv0s = data.uv0s;
+        geometryData.colors = data.colors;
+        featureIndex = data.featureIndex;
+      }
+    }
+  }
+
+  // Create the final buffer
+  const meshData = generateGltfBuffer(
+    geometryData.vertexCount,
+    geometryData.indices,
+    geometryData.positions,
+    geometryData.normals,
+    geometryData.uv0s,
+    geometryData.colors,
+    featureIndex,
+    parameters
+  );
+
+  const customAttributes = {
+    positions: geometryData.positions,
+    indices: geometryData.indices,
+    featureIndex: featureIndex,
+    sourceURL: parameters.url,
+    cartesianCenter: parameters.cartesianCenter,
+    parentRotation: parameters.parentRotation,
+  };
   meshData._customAttributes = customAttributes;
 
   const results = {
