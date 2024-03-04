@@ -813,24 +813,6 @@ VoxelEllipsoidShape.prototype.computeOrientedBoundingBoxForSample = function (
 };
 
 /**
- * Computes an approximate step size for raymarching the root tile of a voxel grid.
- * The update function must be called before calling this function.
- *
- * @param {Cartesian3} dimensions The voxel grid dimensions for a tile.
- * @returns {number} The step size.
- */
-VoxelEllipsoidShape.prototype.computeApproximateStepSize = function (
-  dimensions
-) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("dimensions", dimensions);
-  //>>includeEnd('debug');
-
-  // Voxel size is now computed in the shader
-  return 1.0;
-};
-
-/**
  * Computes an {@link OrientedBoundingBox} for a subregion of the shape.
  *
  * @function

@@ -127,24 +127,6 @@ describe(
       expect(primitive.style).toBe(VoxelPrimitive.DefaultStyle);
     });
 
-    it("updates step size", async function () {
-      const primitive = new VoxelPrimitive({ provider });
-      scene.primitives.add(primitive);
-      scene.renderForSpecs();
-
-      const shape = primitive._shape;
-      shape.translation = new Cartesian3(2.382, -3.643, 1.084);
-
-      await pollToPromise(() => {
-        scene.renderForSpecs();
-        return primitive.ready;
-      });
-
-      primitive.update(scene.frameState);
-      const stepSizeUv = shape.computeApproximateStepSize(primitive.dimensions);
-      expect(primitive._stepSizeUv).toBe(stepSizeUv);
-    });
-
     it("accepts a new Custom Shader", async function () {
       const primitive = new VoxelPrimitive({ provider });
       scene.primitives.add(primitive);

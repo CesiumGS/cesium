@@ -320,12 +320,6 @@ function VoxelPrimitive(options) {
    */
   this._transformNormalLocalToWorld = new Matrix3();
 
-  /**
-   * @type {number}
-   * @private
-   */
-  this._stepSizeUv = 1.0;
-
   // Rendering
   /**
    * @type {boolean}
@@ -1132,7 +1126,7 @@ VoxelPrimitive.prototype.update = function (frameState) {
     cameraPositionWorld,
     uniforms.cameraPositionUv
   );
-  uniforms.stepSize = this._stepSizeUv * this._stepSizeMultiplier;
+  uniforms.stepSize = this._stepSizeMultiplier;
 
   // Render the primitive
   const command = frameState.passes.pick
@@ -1345,8 +1339,6 @@ function updateShapeAndTransforms(primitive, shape, provider) {
   );
 
   // Set member variables when the shape is dirty
-  const dimensions = provider.dimensions;
-  primitive._stepSizeUv = shape.computeApproximateStepSize(dimensions);
   primitive._transformPositionWorldToUv = Matrix4.multiplyTransformation(
     transformPositionLocalToUv,
     transformPositionWorldToLocal,
