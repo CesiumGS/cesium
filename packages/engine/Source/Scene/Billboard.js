@@ -27,28 +27,28 @@ import VerticalOrigin from "./VerticalOrigin.js";
  *
  * Initialization options for the first param of Billboard constructor
  *
- * @property {PositionProperty | Cartesian3} position The position of the billboard.
+ * @property {Cartesian3} position The position of the billboard.
  * @property {string} [id] A user-defined object to return when the billboard is picked with {@link Scene#pick}.
- * @property {Property | boolean} [show=true] A boolean Property specifying the visibility of the billboard.
- * @property {Property | string | HTMLCanvasElement} [image] A Property specifying the Image, URI, or Canvas to use for the billboard.
- * @property {Property | number} [scale=1.0] A numeric Property specifying the scale to apply to the image size.
- * @property {Property | Cartesian2} [pixelOffset=Cartesian2.ZERO] A {@link Cartesian2} Property specifying the pixel offset.
- * @property {Property | Cartesian3} [eyeOffset=Cartesian3.ZERO] A {@link Cartesian3} Property specifying the eye offset.
- * @property {Property | HorizontalOrigin} [horizontalOrigin=HorizontalOrigin.CENTER] A Property specifying the {@link HorizontalOrigin}.
- * @property {Property | VerticalOrigin} [verticalOrigin=VerticalOrigin.CENTER] A Property specifying the {@link VerticalOrigin}.
- * @property {Property | HeightReference} [heightReference=HeightReference.NONE] A Property specifying what the height is relative to.
- * @property {Property | Color} [color=Color.WHITE] A Property specifying the tint {@link Color} of the image.
- * @property {Property | number} [rotation=0] A numeric Property specifying the rotation about the alignedAxis.
- * @property {Property | Cartesian3} [alignedAxis=Cartesian3.ZERO] A {@link Cartesian3} Property specifying the unit vector axis of rotation.
- * @property {Property | boolean} [sizeInMeters] A boolean Property specifying whether this billboard's size should be measured in meters.
- * @property {Property | number} [width] A numeric Property specifying the width of the billboard in pixels, overriding the native size.
- * @property {Property | number} [height] A numeric Property specifying the height of the billboard in pixels, overriding the native size.
- * @property {Property | NearFarScalar} [scaleByDistance] A {@link NearFarScalar} Property used to scale the point based on distance from the camera.
- * @property {Property | NearFarScalar} [translucencyByDistance] A {@link NearFarScalar} Property used to set translucency based on distance from the camera.
- * @property {Property | NearFarScalar} [pixelOffsetScaleByDistance] A {@link NearFarScalar} Property used to set pixelOffset based on distance from the camera.
- * @property {Property | BoundingRectangle} [imageSubRegion] A Property specifying a {@link BoundingRectangle} that defines a sub-region of the image to use for the billboard, rather than the entire image, measured in pixels from the bottom-left.
- * @property {Property | DistanceDisplayCondition} [distanceDisplayCondition] A Property specifying at what distance from the camera that this billboard will be displayed.
- * @property {Property | number} [disableDepthTestDistance] A Property specifying the distance from the camera at which to disable the depth test to.
+ * @property {boolean} [show=true] A boolean Property specifying the visibility of the billboard.
+ * @property {string | HTMLCanvasElement} [image] A Property specifying the Image, URI, or Canvas to use for the billboard.
+ * @property {number} [scale=1.0] A numeric Property specifying the scale to apply to the image size.
+ * @property {Cartesian2} [pixelOffset=Cartesian2.ZERO] A {@link Cartesian2} Property specifying the pixel offset.
+ * @property {Cartesian3} [eyeOffset=Cartesian3.ZERO] A {@link Cartesian3} Property specifying the eye offset.
+ * @property {HorizontalOrigin} [horizontalOrigin=HorizontalOrigin.CENTER] A Property specifying the {@link HorizontalOrigin}.
+ * @property {VerticalOrigin} [verticalOrigin=VerticalOrigin.CENTER] A Property specifying the {@link VerticalOrigin}.
+ * @property {HeightReference} [heightReference=HeightReference.NONE] A Property specifying what the height is relative to.
+ * @property {Color} [color=Color.WHITE] A Property specifying the tint {@link Color} of the image.
+ * @property {number} [rotation=0] A numeric Property specifying the rotation about the alignedAxis.
+ * @property {Cartesian3} [alignedAxis=Cartesian3.ZERO] A {@link Cartesian3} Property specifying the unit vector axis of rotation.
+ * @property {boolean} [sizeInMeters] A boolean Property specifying whether this billboard's size should be measured in meters.
+ * @property {number} [width] A numeric Property specifying the width of the billboard in pixels, overriding the native size.
+ * @property {number} [height] A numeric Property specifying the height of the billboard in pixels, overriding the native size.
+ * @property {NearFarScalar} [scaleByDistance] A {@link NearFarScalar} Property used to scale the point based on distance from the camera.
+ * @property {NearFarScalar} [translucencyByDistance] A {@link NearFarScalar} Property used to set translucency based on distance from the camera.
+ * @property {NearFarScalar} [pixelOffsetScaleByDistance] A {@link NearFarScalar} Property used to set pixelOffset based on distance from the camera.
+ * @property {BoundingRectangle} [imageSubRegion] A Property specifying a {@link BoundingRectangle} that defines a sub-region of the image to use for the billboard, rather than the entire image, measured in pixels from the bottom-left.
+ * @property {DistanceDisplayCondition} [distanceDisplayCondition] A Property specifying at what distance from the camera that this billboard will be displayed.
+ * @property {number} [disableDepthTestDistance] A Property specifying the distance from the camera at which to disable the depth test to.
  */
 
 /**
