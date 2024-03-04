@@ -149,14 +149,14 @@ function I3SDataProvider(options) {
   this._showFeatures = defaultValue(options.showFeatures, false);
   this._adjustMaterialAlphaMode = defaultValue(
     options.adjustMaterialAlphaMode,
-    false
+    false,
   );
   this._applySymbology = defaultValue(options.applySymbology, false);
   this._calculateNormals = defaultValue(options.calculateNormals, false);
 
   this._cesium3dTilesetOptions = defaultValue(
     options.cesium3dTilesetOptions,
-    defaultValue.EMPTY_OBJECT
+    defaultValue.EMPTY_OBJECT,
   );
 
   this._layers = [];
@@ -452,7 +452,7 @@ async function addLayers(provider, data, options) {
           provider,
           buildingLayerUrl,
           data.sublayers[i],
-          provider
+          provider,
         );
         promises.push(promise);
       }
@@ -476,7 +476,7 @@ async function addLayers(provider, data, options) {
         data.fullExtent.xmin,
         data.fullExtent.ymin,
         data.fullExtent.xmax,
-        data.fullExtent.ymax
+        data.fullExtent.ymax,
       );
       provider._layersExtent.push(extent);
     }
@@ -500,7 +500,7 @@ async function addLayers(provider, data, options) {
   } else {
     // Filter other scene layer types out
     console.log(
-      `${data.layerType} layer ${data.name} is skipped as not supported.`
+      `${data.layerType} layer ${data.name} is skipped as not supported.`,
     );
   }
 }
@@ -571,7 +571,7 @@ I3SDataProvider.fromUrl = async function (url, options) {
   const layerPromises = [];
   for (let i = 0; i < provider._layers.length; i++) {
     layerPromises.push(
-      provider._layers[i].load(options.cesium3dTilesetOptions)
+      provider._layers[i].load(options.cesium3dTilesetOptions),
     );
   }
 
@@ -646,7 +646,7 @@ I3SDataProvider.prototype._binarizeGltf = function (rawGltf) {
     chunkData: new Uint8Array(
       binaryGltfData.buffer,
       20,
-      rawGltfData.byteLength
+      rawGltfData.byteLength,
     ),
   };
 
@@ -662,32 +662,6 @@ I3SDataProvider.prototype._binarizeGltf = function (rawGltf) {
   binaryGltf.chunkData.set(rawGltfData);
 
   return binaryGltfData;
-};
-
-/**
- * @private
- * @returns {Promise<TaskProcessor>}
- */
-I3SDataProvider.prototype.getDecoderTaskProcessor = function () {
-  if (defined(this._taskProcessorReadyPromise)) {
-    return this._taskProcessorReadyPromise;
-  }
-
-  if (!defined(this._decoderTaskProcessor)) {
-    const processor = new TaskProcessor("decodeI3S");
-    this._taskProcessorReadyPromise = processor
-      .initWebAssemblyModule({
-        modulePath: "ThirdParty/Workers/draco_decoder_nodejs.js",
-        wasmBinaryFile: "ThirdParty/draco_decoder.wasm",
-      })
-      .then(() => {
-        return processor;
-      });
-
-    this._decoderTaskProcessor = processor;
-  }
-
-  return this._taskProcessorReadyPromise;
 };
 
 const scratchCartesian2 = new Cartesian2();
@@ -706,7 +680,7 @@ function getCoveredTiles(terrainProvider, extent) {
   const minCornerXY = tilingScheme.positionToTileXY(topLeftCorner, maxLevel);
   const maxCornerXY = tilingScheme.positionToTileXY(
     bottomRightCorner,
-    maxLevel
+    maxLevel,
   );
 
   // Get all the tiles in between
@@ -737,7 +711,7 @@ function getCoveredTiles(terrainProvider, extent) {
     const requestPromise = tileRequest.terrainProvider.requestTileGeometry(
       tileRequest.x,
       tileRequest.y,
-      tileRequest.level
+      tileRequest.level,
     );
 
     tilePromises.push(requestPromise);
@@ -765,7 +739,7 @@ function getCoveredTiles(terrainProvider, extent) {
         nativeExtent: tilingScheme.tileXYToNativeRectangle(
           options.x,
           options.y,
-          options.level
+          options.level,
         ),
         height: heightMap._height,
         width: heightMap._width,
@@ -798,12 +772,12 @@ async function loadGeoidData(provider) {
   try {
     const heightMaps = await getCoveredTiles(
       geoidTerrainProvider,
-      provider._extent
+      provider._extent,
     );
     provider._geoidDataList = heightMaps;
   } catch (error) {
     console.log(
-      "Error retrieving Geoid Terrain tiles - no geoid conversion will be performed."
+      "Error retrieving Geoid Terrain tiles - no geoid conversion will be performed.",
     );
   }
 }

@@ -99,8 +99,6 @@
     "prismjs": "^1.28.0",
     "request": "^2.79.0",
     "rimraf": "^5.0.0",
-    "rollup": "^3.23.0",
-    "rollup-plugin-strip-pragma": "^1.0.0",
     "sinon": "^17.0.0",
     "stream-to-promise": "^3.0.0",
     "tsd-jsdoc": "^2.5.0",
