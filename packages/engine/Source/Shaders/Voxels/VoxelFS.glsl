@@ -177,7 +177,7 @@ void main()
 
         // Keep raymarching
         currT += step.w;
-        positionUv += step.w * viewDirUv;
+        positionUv = viewPosUv + currT * viewDirUv;
 
         // Check if there's more intersections.
         if (currT > endT) {
