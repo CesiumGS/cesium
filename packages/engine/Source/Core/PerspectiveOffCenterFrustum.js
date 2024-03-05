@@ -92,6 +92,50 @@ function PerspectiveOffCenterFrustum(options) {
   this._infinitePerspective = new Matrix4();
 }
 
+/**
+ * Obtains a PerspectiveOffCenterFrustum from a projection matrix.
+ *
+ * @param {Matrix4} projectionMatrix The matrix representing the projection tranformation.
+ * @param {PerspectiveOffCenterFrustum} [result] The object into which to store the result.
+ * @returns {PerspectiveOffCenterFrustum} The modified result parameter or a new PerspectiveOffCenterFrustum instance if one was not provided.
+ */
+PerspectiveOffCenterFrustum.fromProjectionMatrix = function (
+  projectionMatrix,
+  result
+) {
+  if (!defined(result)) {
+    result = new PerspectiveOffCenterFrustum();
+  }
+
+  const near =
+    projectionMatrix[Matrix4.COLUMN3ROW2] /
+    (projectionMatrix[Matrix4.COLUMN2ROW2] - 1);
+
+  result.near = near;
+
+  result.far =
+    projectionMatrix[Matrix4.COLUMN3ROW2] /
+    (1 + projectionMatrix[Matrix4.COLUMN2ROW2]);
+
+  result.right =
+    (near * (1 + projectionMatrix[Matrix4.COLUMN2ROW0])) /
+    projectionMatrix[Matrix4.COLUMN0ROW0];
+
+  result.left =
+    (near * (projectionMatrix[Matrix4.COLUMN2ROW0] - 1)) /
+    projectionMatrix[Matrix4.COLUMN0ROW0];
+
+  result.top =
+    (near * (1 + projectionMatrix[Matrix4.COLUMN2ROW1])) /
+    projectionMatrix[Matrix4.COLUMN1ROW1];
+
+  result.bottom =
+    (near * (projectionMatrix[Matrix4.COLUMN2ROW1] - 1)) /
+    projectionMatrix[Matrix4.COLUMN1ROW1];
+
+  return result;
+};
+
 function update(frustum) {
   //>>includeStart('debug', pragmas.debug);
   if (
