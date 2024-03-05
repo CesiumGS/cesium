@@ -47,6 +47,7 @@ describe(
         render: function () {},
         endFrame: function () {},
         destroy: function () {},
+        isDestroyed: () => false,
       };
 
       scene.globe.getHeight = function () {

@@ -1174,15 +1174,19 @@ function loadAsynchronous(primitive, frameState) {
       instanceIds.push(instances[i].id);
 
       //>>includeStart('debug', pragmas.debug);
-      if (!defined(geometry._workerName)) {
+      if (
+        (defined(geometry._workerName) && defined(geometry._workerPath)) ||
+        (!defined(geometry._workerName) && !defined(geometry._workerPath))
+      ) {
         throw new DeveloperError(
-          "_workerName must be defined for asynchronous geometry."
+          "Must define either _workerName or _workerPath for asynchronous geometry."
         );
       }
       //>>includeEnd('debug');
 
       subTasks.push({
         moduleName: geometry._workerName,
+        modulePath: geometry._workerPath,
         geometry: geometry,
       });
     }

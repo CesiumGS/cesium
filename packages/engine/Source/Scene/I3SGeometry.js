@@ -1,6 +1,8 @@
 import Cartesian3 from "../Core/Cartesian3.js";
+import clone from "../Core/clone.js";
 import defined from "../Core/defined.js";
 import Matrix3 from "../Core/Matrix3.js";
+import srgbToLinear from "../Core/srgbToLinear.js";
 
 /**
  * This class implements an I3S Geometry. Each I3SGeometry
@@ -267,6 +269,19 @@ I3SGeometry.prototype.getClosestPointIndexOnTriangle = function (px, py, pz) {
   };
 };
 
+function convertColorFactor(factor) {
+  const convertedFactor = [];
+  const length = factor.length;
+  for (let i = 0; i < length; i++) {
+    if (i < 3) {
+      convertedFactor.push(srgbToLinear(factor[i]));
+    } else {
+      convertedFactor.push(factor[i]);
+    }
+  }
+  return convertedFactor;
+}
+
 /**
  * @private
  */
@@ -276,7 +291,9 @@ I3SGeometry.prototype._generateGltf = function (
   meshes,
   buffers,
   bufferViews,
-  accessors
+  accessors,
+  extensions,
+  extensionsUsed
 ) {
   // Get the material definition
   let gltfMaterial = {
@@ -344,6 +361,21 @@ I3SGeometry.prototype._generateGltf = function (
           }).url;
         }
       }
+
+      // Convert color factors from sRGB to linear color space
+      if (
+        defined(gltfMaterial.pbrMetallicRoughness) &&
+        defined(gltfMaterial.pbrMetallicRoughness.baseColorFactor)
+      ) {
+        gltfMaterial.pbrMetallicRoughness.baseColorFactor = convertColorFactor(
+          gltfMaterial.pbrMetallicRoughness.baseColorFactor
+        );
+      }
+      if (defined(gltfMaterial.emissiveFactor)) {
+        gltfMaterial.emissiveFactor = convertColorFactor(
+          gltfMaterial.emissiveFactor
+        );
+      }
     }
   } else if (defined(this._parent._data.textureData)) {
     // No material definition, but if there's a texture reference, we can create a simple material using it (version 1.6 support)
@@ -352,6 +384,10 @@ I3SGeometry.prototype._generateGltf = function (
       url: `${this._parent._data.textureData[0].href}`,
     }).url;
     gltfMaterial.pbrMetallicRoughness.baseColorTexture = { index: 0 };
+  }
+  if (defined(gltfMaterial.alphaMode)) {
+    // I3S specifies alphaMode values in lowercase, but glTF expects values in uppercase
+    gltfMaterial.alphaMode = gltfMaterial.alphaMode.toUpperCase();
   }
 
   let gltfTextures = [];
@@ -382,6 +418,36 @@ I3SGeometry.prototype._generateGltf = function (
     ];
   }
 
+  const gltfMaterials = [];
+  const meshesLength = meshes.length;
+  for (let meshIndex = 0; meshIndex < meshesLength; meshIndex++) {
+    const primitives = meshes[meshIndex].primitives;
+    const primitivesLength = primitives.length;
+    for (
+      let primitiveIndex = 0;
+      primitiveIndex < primitivesLength;
+      primitiveIndex++
+    ) {
+      const primitive = primitives[primitiveIndex];
+      if (defined(primitive.material)) {
+        // Create as many copies of the material as specified in the mesh primitives
+        while (primitive.material >= gltfMaterials.length) {
+          const material = clone(gltfMaterial, true);
+          gltfMaterials.push(material);
+        }
+        const primitiveMaterial = gltfMaterials[primitive.material];
+        if (defined(primitive.extra) && primitive.extra.isTransparent) {
+          // If the alpha mode is not specified in the original material but the geometry is transparent, we need to force set BLEND alpha mode. Otherwise the geometry will be rendered opaque.
+          if (!defined(primitiveMaterial.alphaMode)) {
+            primitiveMaterial.alphaMode = "BLEND";
+          }
+        } else if (primitiveMaterial.alphaMode === "BLEND") {
+          // If the geometry is not transparent, but the alpha mode is set to BLEND in the original material, we need to force set OPAQUE alpha mode. Otherwise the geometry will be rendered transparent.
+          primitiveMaterial.alphaMode = "OPAQUE";
+        }
+      }
+    }
+  }
   const gltfData = {
     scene: 0,
     scenes: [
@@ -394,13 +460,15 @@ I3SGeometry.prototype._generateGltf = function (
     buffers: buffers,
     bufferViews: bufferViews,
     accessors: accessors,
-    materials: [gltfMaterial],
+    materials: gltfMaterials,
     textures: gltfTextures,
     images: gltfImages,
     samplers: gltfSamplers,
     asset: {
       version: "2.0",
     },
+    extensions: extensions,
+    extensionsUsed: extensionsUsed,
   };
 
   return gltfData;

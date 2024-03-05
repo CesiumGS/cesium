@@ -90,6 +90,7 @@ import VelocityOrientationProperty from "./VelocityOrientationProperty.js";
 import VelocityVectorProperty from "./VelocityVectorProperty.js";
 import WallGraphics from "./WallGraphics.js";
 import Cesium3DTilesetGraphics from "./Cesium3DTilesetGraphics.js";
+import SensorVolumePortionToDisplay from "../Scene/SensorVolumePortionToDisplay.js";
 
 // A marker type to distinguish CZML properties where we need to end up with a unit vector.
 // The data is still loaded into Cartesian3 objects but they are normalized.
@@ -576,6 +577,10 @@ function unwrapInterval(type, czmlInterval, sourceUri) {
       return unwrapQuaternionInterval(czmlInterval);
     case Rotation:
       return defaultValue(czmlInterval.number, czmlInterval);
+    case SensorVolumePortionToDisplay:
+      return SensorVolumePortionToDisplay[
+        defaultValue(czmlInterval.portionToDisplay, czmlInterval)
+      ];
     case ShadowMode:
       return ShadowMode[
         defaultValue(
@@ -598,7 +603,7 @@ function unwrapInterval(type, czmlInterval, sourceUri) {
         defaultValue(czmlInterval.verticalOrigin, czmlInterval)
       ];
     default:
-      throw new RuntimeError(type);
+      throw new RuntimeError(`Unknown CzmlDataSource interval type: ${type}`);
   }
 }
 
@@ -5006,30 +5011,53 @@ Object.defineProperties(CzmlDataSource.prototype, {
  * @type {CzmlDataSource.UpdaterFunction[]}
  */
 CzmlDataSource.updaters = [
-  processBillboard, //
-  processBox, //
-  processCorridor, //
-  processCylinder, //
-  processEllipse, //
-  processEllipsoid, //
-  processLabel, //
-  processModel, //
-  processName, //
-  processDescription, //
-  processPath, //
-  processPoint, //
-  processPolygon, //
-  processPolyline, //
-  processPolylineVolume, //
-  processProperties, //
-  processRectangle, //
-  processPosition, //
-  processTileset, //
-  processViewFrom, //
-  processWall, //
-  processOrientation, //
+  processBillboard,
+  processBox,
+  processCorridor,
+  processCylinder,
+  processEllipse,
+  processEllipsoid,
+  processLabel,
+  processModel,
+  processName,
+  processDescription,
+  processPath,
+  processPoint,
+  processPolygon,
+  processPolyline,
+  processPolylineVolume,
+  processProperties,
+  processRectangle,
+  processPosition,
+  processTileset,
+  processViewFrom,
+  processWall,
+  processOrientation,
   processAvailability,
 ];
+
+/**
+ * Add the provided updater to the list of updaters if not already included
+ * @private
+ * @param {CzmlDataSource.UpdaterFunction} updater
+ */
+CzmlDataSource.registerUpdater = function (updater) {
+  if (!CzmlDataSource.updaters.includes(updater)) {
+    CzmlDataSource.updaters.push(updater);
+  }
+};
+
+/**
+ * Remove the provided updater from the list of updaters if already included
+ * @private
+ * @param {CzmlDataSource.UpdaterFunction} updater
+ */
+CzmlDataSource.unregisterUpdater = function (updater) {
+  if (CzmlDataSource.updaters.includes(updater)) {
+    const index = CzmlDataSource.updaters.indexOf(updater);
+    CzmlDataSource.updaters.splice(index, 1);
+  }
+};
 
 /**
  * Processes the provided url or CZML object without clearing any existing data.
