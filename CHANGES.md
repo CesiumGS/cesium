@@ -1,5 +1,13 @@
 # Change Log
 
+### 1.116 - 2024-04-01
+
+#### @cesium/engine
+
+##### Fixes :wrench:
+
+- Fixes issue with `BingMapsImageryProvider` where given culture option is ineffective [#11695](https://github.com/CesiumGS/cesium/issues/11695)
+
 ### 1.115 - 2024-03-01
 
 #### @cesium/engine
