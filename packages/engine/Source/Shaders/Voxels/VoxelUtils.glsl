@@ -1,5 +1,3 @@
-#define RAY_SCALE (1.00003163)
-
 struct Ray {
     vec3 pos;
     vec3 dir;

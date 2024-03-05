@@ -31,7 +31,7 @@ vec3 getSampleSize(in int level) {
 
 vec4 getStepSize(in SampleData sampleData, in Ray viewRay, in RayShapeIntersection shapeIntersection, in mat3 jacobianT, in float currentT) {
     // The Jacobian is computed in a space where the ellipsoid spans [-1, 1].
-    // But the ray is marched in a space where the ellipsoid fils [0, 1].
+    // But the ray is marched in a space where the ellipsoid fills [0, 1].
     // So we need to scale the Jacobian by 2.
     vec3 gradient = 2.0 * viewRay.rawDir * jacobianT;
 
@@ -55,8 +55,7 @@ vec4 getStepSize(in SampleData sampleData, in Ray viewRay, in RayShapeIntersecti
     vec4 entry = intersectionMax(shapeIntersection.entry, voxelEntry);
 
     float firstExit = minComponent(distanceToExit);
-    float variableStep = firstExit + fixedStep * 0.01;
-    float stepSize = clamp(variableStep, fixedStep * 0.05, fixedStep);
+    float stepSize = clamp(firstExit, fixedStep * 0.02, fixedStep);
 
     return vec4(entry.xyz, stepSize);
 }
@@ -110,7 +109,7 @@ void main()
         discard;
     }
 
-    float currT = shapeIntersection.entry.w * RAY_SCALE;
+    float currT = shapeIntersection.entry.w;
     float endT = shapeIntersection.exit.w;
     vec3 positionUv = viewPosUv + currT * viewDirUv;
     // TODO: revisit naming
@@ -189,7 +188,7 @@ void main()
                     break;
                 } else {
                     // Found another intersection. Resume raymarching there
-                    currT = shapeIntersection.entry.w * RAY_SCALE;
+                    currT = shapeIntersection.entry.w;
                     endT = shapeIntersection.exit.w;
                     positionUv = viewPosUv + currT * viewDirUv;
                 }
