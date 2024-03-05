@@ -90,29 +90,29 @@ function parseFont(label) {
  *
  * Initialization options for the Label constructor
  *
- * @property {Cartesian3} position The position of the label in the scene.
+ * @property {Cartesian3} position The cartesian position of the label.
  * @property {string} [id] A user-defined object to return when the label is picked with {@link Scene#pick}.
- * @property {boolean} [show=true] A boolean Property specifying the visibility of the label.
- * @property {string} [text] A Property specifying the text. Explicit newlines '\n' are supported.
- * @property {string} [font='30px sans-serif'] A Property specifying the CSS font.
- * @property {LabelStyle} [style=LabelStyle.FILL] A Property specifying the {@link LabelStyle}.
- * @property {number} [scale=1.0] A numeric Property specifying the scale to apply to the text.
- * @property {boolean} [showBackground=false] A boolean Property specifying the visibility of the background behind the label.
- * @property {Color} [backgroundColor=new Color(0.165, 0.165, 0.165, 0.8)] A Property specifying the background {@link Color}.
- * @property {Cartesian2} [backgroundPadding=new Cartesian2(7, 5)] A {@link Cartesian2} Property specifying the horizontal and vertical background padding in pixels.
- * @property {Cartesian2} [pixelOffset=Cartesian2.ZERO] A {@link Cartesian2} Property specifying the pixel offset.
- * @property {Cartesian3} [eyeOffset=Cartesian3.ZERO] A {@link Cartesian3} Property specifying the eye offset.
- * @property {HorizontalOrigin} [horizontalOrigin=HorizontalOrigin.CENTER] A Property specifying the {@link HorizontalOrigin}.
- * @property {VerticalOrigin} [verticalOrigin=VerticalOrigin.CENTER] A Property specifying the {@link VerticalOrigin}.
- * @property {HeightReference} [heightReference=HeightReference.NONE] A Property specifying what the height is relative to.
- * @property {Color} [fillColor=Color.WHITE] A Property specifying the fill {@link Color}.
- * @property {Color} [outlineColor=Color.BLACK] A Property specifying the outline {@link Color}.
- * @property {number} [outlineWidth=1.0] A numeric Property specifying the outline width.
- * @property {NearFarScalar} [translucencyByDistance] A {@link NearFarScalar} Property used to set translucency based on distance from the camera.
- * @property {NearFarScalar} [pixelOffsetScaleByDistance] A {@link NearFarScalar} Property used to set pixelOffset based on distance from the camera.
- * @property {NearFarScalar} [scaleByDistance] A {@link NearFarScalar} Property used to set scale based on distance from the camera.
- * @property {DistanceDisplayCondition} [distanceDisplayCondition] A Property specifying at what distance from the camera that this label will be displayed.
- * @property {number} [disableDepthTestDistance] A Property specifying the distance from the camera at which to disable the depth test to.
+ * @property {boolean} [show=true] Determines if this label will be shown.
+ * @property {string} [text] A string specifying the text of the label.
+ * @property {string} [font='30px sans-serif'] A string specifying the font used to draw this label. Fonts are specified using the same syntax as the CSS 'font' property.
+ * @property {LabelStyle} [style=LabelStyle.FILL] A {@link LabelStyle} specifying the style of the label.
+ * @property {number} [scale=1.0] A number specifying the uniform scale that is multiplied with the label size.
+ * @property {boolean} [showBackground=false] Determines if a background behind this label will be shown.
+ * @property {Color} [backgroundColor=new Color(0.165, 0.165, 0.165, 0.8)] A {@link Color} specifying the background color of the label.
+ * @property {Cartesian2} [backgroundPadding=new Cartesian2(7, 5)] A {@link Cartesian2} Specifying the horizontal and vertical background padding in pixels.
+ * @property {Cartesian2} [pixelOffset=Cartesian2.ZERO] A {@link Cartesian2} specifying the pixel offset in screen space from the origin of this label.
+ * @property {Cartesian3} [eyeOffset=Cartesian3.ZERO] A {@link Cartesian3} specifying the 3D Cartesian offset applied to this label in eye coordinates.
+ * @property {HorizontalOrigin} [horizontalOrigin=HorizontalOrigin.CENTER] A {@link HorizontalOrigin} specifying the horizontal origin of this label.
+ * @property {VerticalOrigin} [verticalOrigin=VerticalOrigin.CENTER] A {@link VerticalOrigin} specifying the vertical origin of this label.
+ * @property {HeightReference} [heightReference=HeightReference.NONE] A {@link HeightReference} specifying the height reference of this label.
+ * @property {Color} [fillColor=Color.WHITE] A {@link Color} specifying the fill color of the label.
+ * @property {Color} [outlineColor=Color.BLACK] A {@link Color} specifying the outline color of the label.
+ * @property {number} [outlineWidth=1.0] A number specifying the outline width of the label.
+ * @property {NearFarScalar} [translucencyByDistance] A {@link NearFarScalar} specifying near and far translucency properties of the label based on the label's distance from the camera.
+ * @property {NearFarScalar} [pixelOffsetScaleByDistance] A {@link NearFarScalar} specifying near and far pixel offset scaling properties of the label based on the label's distance from the camera.
+ * @property {NearFarScalar} [scaleByDistance] A {@link NearFarScalar} specifying near and far scaling properties of the label based on the label's distance from the camera.
+ * @property {DistanceDisplayCondition} [distanceDisplayCondition] A {@link DistanceDisplayCondition} specifying at what distance from the camera that this label will be displayed.
+ * @property {number} [disableDepthTestDistance] A number specifying the distance from the camera at which to disable the depth test to, for example, prevent clipping against terrain.
  */
 
 /**
