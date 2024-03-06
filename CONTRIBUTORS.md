@@ -191,6 +191,9 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [Terradepth, Inc.](https://www.terradepth.com/)
   - [Marc Johnson](https://github.com/marcejohnson)
   - [Jacob Frazer](https://github.com/coderjake91)
+- [T2 Software](http://t2.com.tr/)
+  - [Hüseyin ATEŞ](https://github.com/ateshuseyin)
+  - [İbrahim Furkan Aygar](https://github.com/furkanaygar)
 
 ## [Individual CLA](Documentation/Contributors/CLAs/individual-contributor-license-agreement-v1.0.pdf)
 
@@ -381,3 +384,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [Harsh Lakhara](https://github.com/harshlakhara)
 - [Pavlo Skakun](https://github.com/p-skakun)
 - [Taylor Huffman](https://github.com/huffmantayler)
+- [蒋宇梁](https://github.com/s3xysteak)
