@@ -5,6 +5,7 @@
 #### @cesium/engine
 
 ##### Breaking Changes :mega:
+
 - `Cesium3DTileset.disableCollision` has been removed. Use `Cesium3DTileset.enableCollision` instead.
 
 ##### Fixes :wrench:
