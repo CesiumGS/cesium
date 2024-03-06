@@ -1,5 +1,13 @@
 # Change Log
 
+### 1.116 - 2024-04-01
+
+#### @cesium/engine
+
+##### Breaking Changes :mega:
+
+- `Cesium3DTileset.disableCollision` has been removed. Use `Cesium3DTileset.enableCollision` instead.
+
 ### 1.115 - 2024-03-01
 
 #### @cesium/engine
