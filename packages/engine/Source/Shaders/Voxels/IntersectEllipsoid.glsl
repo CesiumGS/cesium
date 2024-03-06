@@ -47,14 +47,13 @@ RayShapeIntersection intersectHeight(in Ray ray, in float relativeHeight, in boo
 {
     // Scale the ray by the ellipsoid axes to make it a unit sphere
     // Note: approximating ellipsoid + height as an ellipsoid
-    // Note: may be better to approximate radiiCorrection for small relative heights
     vec3 radiiCorrection = u_ellipsoidRadiiUv / (u_ellipsoidRadiiUv + relativeHeight);
     vec3 position = ray.pos * radiiCorrection;
     vec3 direction = ray.dir * radiiCorrection;
 
     float a = dot(direction, direction); // ~ 1.0 (or maybe 4.0 if ray is scaled)
     float b = dot(direction, position); // roughly inside [-1.0, 1.0] when zoomed in
-    float c = dot(position, position) - 1.0; // ~ 0.0 when zoomed in. Note cancellation problem!
+    float c = dot(position, position) - 1.0; // ~ 0.0 when zoomed in.
     float determinant = b * b - a * c; // ~ b * b when zoomed in
 
     if (determinant < 0.0) {
@@ -92,15 +91,15 @@ vec2 intersectDoubleEndedCone(in Ray ray, in float cosSqrHalfAngle)
     vec3 o = ray.pos;
     vec3 d = ray.dir;
     float sinSqrHalfAngle = 1.0 - cosSqrHalfAngle;
-    // a = d.z * d.z - dot(d, d) * cosSqrHalfAngle;
+
     float aSin = d.z * d.z * sinSqrHalfAngle;
     float aCos = -dot(d.xy, d.xy) * cosSqrHalfAngle;
     float a = aSin + aCos;
-    // b = d.z * o.z - dot(o, d) * cosSqrHalfAngle;
+
     float bSin = d.z * o.z * sinSqrHalfAngle;
     float bCos = -dot(o.xy, d.xy) * cosSqrHalfAngle;
     float b = bSin + bCos;
-    // c = o.z * o.z - dot(o, o) * cosSqrHalfAngle;
+
     float cSin = o.z * o.z * sinSqrHalfAngle;
     float cCos = -dot(o.xy, o.xy) * cosSqrHalfAngle;
     float c = cSin + cCos;
