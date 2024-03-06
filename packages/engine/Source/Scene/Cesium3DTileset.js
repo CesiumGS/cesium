@@ -113,7 +113,6 @@ import Ray from "../Core/Ray.js";
  * @property {boolean} [showCreditsOnScreen=false] Whether to display the credits of this tileset on screen.
  * @property {SplitDirection} [splitDirection=SplitDirection.NONE] The {@link SplitDirection} split to apply to this tileset.
  * @property {boolean} [enableCollision=false] When <code>true</code>, enables collisions for camera or CPU picking. While this is <code>true</code> the camera will be prevented from going below the tileset surface if {@link ScreenSpaceCameraController#enableCollisionDetection} is true.
- * @property {boolean} [disableCollision=true] Whether to turn off collisions for camera collisions or picking. While this is <code>true</code> the camera will be allowed to go in or below the tileset surface if {@link ScreenSpaceCameraController#enableCollisionDetection} is true. Deprecated.
  * @property {boolean} [projectTo2D=false] Whether to accurately project the tileset to 2D. If this is true, the tileset will be projected accurately to 2D, but it will use more memory to do so. If this is false, the tileset will use less memory and will still render in 2D / CV mode, but its projected positions may be inaccurate. This cannot be set after the tileset has been created.
  * @property {boolean} [enablePick=false] Whether to allow collision and CPU picking with <code>pick</code> when using WebGL 1. If using WebGL 2 or above, this option will be ignored. If using WebGL 1 and this is true, the <code>pick</code> operation will work correctly, but it will use more memory to do so. If running with WebGL 1 and this is false, the model will use less memory, but <code>pick</code> will always return <code>undefined</code>. This cannot be set after the tileset has loaded.
  * @property {string} [debugHeatmapTilePropertyName] The tile variable to colorize as a heatmap. All rendered tiles will be colorized relative to each other's specified variable value.
@@ -871,16 +870,6 @@ function Cesium3DTileset(options) {
    * @default false
    */
   this.enableCollision = defaultValue(options.enableCollision, false);
-
-  if (defined(options.disableCollision)) {
-    deprecationWarning(
-      "Cesium3DTileset options.disableCollision",
-      "Cesium3DTileset options.disableCollision has been deprecated in CesiumJS 1.115.  It will be removed in CesiumJS 1.116. Use options.enableCollision instead."
-    );
-
-    this.enableCollision = !options.disableCollision;
-  }
-
   this._projectTo2D = defaultValue(options.projectTo2D, false);
   this._enablePick = defaultValue(options.enablePick, false);
 
@@ -1080,34 +1069,6 @@ Object.defineProperties(Cesium3DTileset.prototype, {
   isCesium3DTileset: {
     get: function () {
       return true;
-    },
-  },
-
-  /**
-   * Whether to turn off collisions for camera collisions or picking. While this is <code>true</code> the camera will be allowed to go in or below the tileset surface if {@link ScreenSpaceCameraController#enableCollisionDetection} is true.
-   * @memberof Cesium3DTileset.prototype
-   *
-   * @type {boolean}
-   * @default true
-   *
-   * @deprecated
-   */
-  disableCollision: {
-    get: function () {
-      deprecationWarning(
-        "Cesium3DTileset.disableCollision",
-        "Cesium3DTileset.disableCollision has been deprecated in CesiumJS 1.115.  It will be removed in CesiumJS 1.116. Use Cesium3DTileset.enableCollision instead."
-      );
-
-      return !this.enableCollision;
-    },
-    set: function (value) {
-      deprecationWarning(
-        "Cesium3DTileset.disableCollision",
-        "Cesium3DTileset.disableCollision has been deprecated in CesiumJS 1.115.  It will be removed in CesiumJS 1.116. Use Cesium3DTileset.enableCollision instead."
-      );
-
-      this.enableCollision = !value;
     },
   },
 
