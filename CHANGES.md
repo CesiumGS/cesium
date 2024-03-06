@@ -7,7 +7,8 @@
 ##### Breaking Changes :mega:
 
 - `Cesium3DTileset.disableCollision` has been removed. Use `Cesium3DTileset.enableCollision` instead.
-- 
+-
+
 ##### Fixes :wrench:
 
 - Fixes issue with `BingMapsImageryProvider` where given culture option is ineffective [#11695](https://github.com/CesiumGS/cesium/issues/11695)
