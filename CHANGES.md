@@ -13,6 +13,10 @@
 - Fixes issue with `BingMapsImageryProvider` where given culture option is ineffective [#11695](https://github.com/CesiumGS/cesium/issues/11695)
 - Fixed a bug where dynamic geometries caused the Scene to continuously render when running in requestRenderMode [#6631](https://github.com/CesiumGS/cesium/issues/6631)
 
+##### Additions :tada:
+
+- Surface normals are now computed for clipping and shape bounds in VoxelEllipsoidShape and VoxelCylinderShape. [#11847](https://github.com/CesiumGS/cesium/pull/11847)
+
 ### 1.115 - 2024-03-01
 
 #### @cesium/engine
