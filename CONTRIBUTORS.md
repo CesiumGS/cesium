@@ -385,3 +385,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [Pavlo Skakun](https://github.com/p-skakun)
 - [Taylor Huffman](https://github.com/huffmantayler)
 - [蒋宇梁](https://github.com/s3xysteak)
+- [dslming](https://github.com/dslming)
