@@ -141,6 +141,13 @@ function VoxelEllipsoidShape() {
   this.shaderMaximumIntersectionsLength = 0; // not known until update
 }
 
+const scratchActualMinBounds = new Cartesian3();
+const scratchShapeMinBounds = new Cartesian3();
+const scratchShapeMaxBounds = new Cartesian3();
+const scratchClipMinBounds = new Cartesian3();
+const scratchClipMaxBounds = new Cartesian3();
+const scratchRenderMinBounds = new Cartesian3();
+const scratchRenderMaxBounds = new Cartesian3();
 const scratchScale = new Cartesian3();
 const scratchRotationScale = new Matrix3();
 const scratchShapeOuterExtent = new Cartesian3();
@@ -181,42 +188,45 @@ VoxelEllipsoidShape.prototype.update = function (
 
   // Don't let the height go below the center of the ellipsoid.
   const radii = Matrix4.getScale(modelMatrix, scratchScale);
-  const actualMinBounds = Cartesian3.clone(DefaultMinBounds, new Cartesian3());
+  const actualMinBounds = Cartesian3.clone(
+    DefaultMinBounds,
+    scratchActualMinBounds
+  );
   actualMinBounds.z = -Cartesian3.minimumComponent(radii);
 
   const shapeMinBounds = Cartesian3.clamp(
     minBounds,
     actualMinBounds,
     DefaultMaxBounds,
-    new Cartesian3()
+    scratchShapeMinBounds
   );
   const shapeMaxBounds = Cartesian3.clamp(
     maxBounds,
     actualMinBounds,
     DefaultMaxBounds,
-    new Cartesian3()
+    scratchShapeMaxBounds
   );
   const clampedClipMinBounds = Cartesian3.clamp(
     clipMinBounds,
     actualMinBounds,
     DefaultMaxBounds,
-    new Cartesian3()
+    scratchClipMinBounds
   );
   const clampedClipMaxBounds = Cartesian3.clamp(
     clipMaxBounds,
     actualMinBounds,
     DefaultMaxBounds,
-    new Cartesian3()
+    scratchClipMaxBounds
   );
   const renderMinBounds = Cartesian3.maximumByComponent(
     shapeMinBounds,
     clampedClipMinBounds,
-    new Cartesian3()
+    scratchRenderMinBounds
   );
   const renderMaxBounds = Cartesian3.minimumByComponent(
     shapeMaxBounds,
     clampedClipMaxBounds,
-    new Cartesian3()
+    scratchRenderMaxBounds
   );
 
   // Compute the farthest a point can be from the center of the ellipsoid.
