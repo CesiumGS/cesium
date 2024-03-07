@@ -14,6 +14,8 @@ vec4 intersectionMin(in vec4 intersect0, in vec4 intersect1)
 {
     if (intersect0.w == NO_HIT) {
         return intersect1;
+    } else if (intersect1.w == NO_HIT) {
+        return intersect0;
     }
     return (intersect0.w <= intersect1.w) ? intersect0 : intersect1;
 }
