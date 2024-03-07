@@ -126,7 +126,6 @@ function VoxelRenderResources(primitive) {
 
   const shapeType = primitive._provider.shape;
   if (shapeType === "BOX") {
-    shaderBuilder.addDefine("SHAPE_BOX", undefined, ShaderDestination.FRAGMENT);
     shaderBuilder.addFragmentLines([
       convertUvToBox,
       IntersectBox,
