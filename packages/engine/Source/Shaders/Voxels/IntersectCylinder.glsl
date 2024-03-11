@@ -1,4 +1,4 @@
-// See IntersectionUtils.glsl for the definitions of Ray, NO_HIT,
+// See IntersectionUtils.glsl for the definitions of Ray, NO_HIT, Intersections,
 // RayShapeIntersection, setSurfaceIntersection, setShapeIntersection,
 // intersectIntersections
 // See IntersectLongitude.glsl for the definitions of intersectHalfPlane,
