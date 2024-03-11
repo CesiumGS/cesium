@@ -32,17 +32,20 @@ float hash(vec2 p)
 }
 #endif
 
-vec4 getStepSize(in SampleData sampleData, in Ray viewRay, in RayShapeIntersection shapeIntersection) {
+vec4 getStepSize(in SampleData sampleData, in Ray viewRay, in RayShapeIntersection shapeIntersection, in float currentT) {
 #if defined(SHAPE_BOX)
     Box voxelBox = constructVoxelBox(sampleData.tileCoords, sampleData.tileUv);
     RayShapeIntersection voxelIntersection = intersectBox(viewRay, voxelBox);
-    vec4 entry = shapeIntersection.entry.w >= voxelIntersection.entry.w ? shapeIntersection.entry : voxelIntersection.entry;
+    vec4 entry = intersectionMax(shapeIntersection.entry, voxelIntersection.entry);
     float exit = min(voxelIntersection.exit.w, shapeIntersection.exit.w);
     float dt = (exit - entry.w) * RAY_SCALE;
     return vec4(normalize(entry.xyz), dt);
 #else
     float dimAtLevel = pow(2.0, float(sampleData.tileCoords.w));
-    return vec4(viewRay.dir, u_stepSize / dimAtLevel);
+    float shapeEntryT = shapeIntersection.entry.w * RAY_SCALE;
+    float constantStep = u_stepSize / dimAtLevel;
+    vec3 normal = (currentT < shapeEntryT + constantStep) ? shapeIntersection.entry.xyz : viewRay.dir;
+    return vec4(normalize(normal), constantStep);
 #endif
 }
 
@@ -93,20 +96,20 @@ void main()
         discard;
     }
 
-    float currT = shapeIntersection.entry.w * RAY_SCALE;
+    float currentT = shapeIntersection.entry.w * RAY_SCALE;
     float endT = shapeIntersection.exit.w;
-    vec3 positionUv = viewPosUv + currT * viewDirUv;
+    vec3 positionUv = viewPosUv + currentT * viewDirUv;
     vec3 positionUvShapeSpace = convertUvToShapeUvSpace(positionUv);
 
     // Traverse the tree from the start position
     TraversalData traversalData;
     SampleData sampleDatas[SAMPLE_COUNT];
     traverseOctreeFromBeginning(positionUvShapeSpace, traversalData, sampleDatas);
-    vec4 step = getStepSize(sampleDatas[0], viewRayUv, shapeIntersection);
+    vec4 step = getStepSize(sampleDatas[0], viewRayUv, shapeIntersection, currentT);
 
     #if defined(JITTER)
         float noise = hash(screenCoord); // [0,1]
-        currT += noise * step.w;
+        currentT += noise * step.w;
         positionUv += noise * step.w * viewDirUv;
     #endif
 
@@ -115,7 +118,7 @@ void main()
         setStatistics(fragmentInput.metadata.statistics);
     #endif
 
-    vec4 colorAccum =vec4(0.0);
+    vec4 colorAccum = vec4(0.0);
 
     for (int stepCount = 0; stepCount < STEP_COUNT_MAX; ++stepCount) {
         // Read properties from the megatexture based on the traversal state
@@ -158,11 +161,11 @@ void main()
         }
 
         // Keep raymarching
-        currT += step.w;
+        currentT += step.w;
         positionUv += step.w * viewDirUv;
 
         // Check if there's more intersections.
-        if (currT > endT) {
+        if (currentT > endT) {
             #if (INTERSECTION_COUNT == 1)
                 break;
             #else
@@ -171,9 +174,9 @@ void main()
                     break;
                 } else {
                     // Found another intersection. Resume raymarching there
-                    currT = shapeIntersection.entry.w * RAY_SCALE;
+                    currentT = shapeIntersection.entry.w * RAY_SCALE;
                     endT = shapeIntersection.exit.w;
-                    positionUv = viewPosUv + currT * viewDirUv;
+                    positionUv = viewPosUv + currentT * viewDirUv;
                 }
             #endif
         }
@@ -182,7 +185,7 @@ void main()
         // This is similar to traverseOctreeFromBeginning but is faster when the ray is in the same tile as the previous step.
         positionUvShapeSpace = convertUvToShapeUvSpace(positionUv);
         traverseOctreeFromExisting(positionUvShapeSpace, traversalData, sampleDatas);
-        step = getStepSize(sampleDatas[0], viewRayUv, shapeIntersection);
+        step = getStepSize(sampleDatas[0], viewRayUv, shapeIntersection, currentT);
     }
 
     // Convert the alpha from [0,ALPHA_ACCUM_MAX] to [0,1]
