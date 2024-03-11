@@ -24,6 +24,7 @@
 #if defined(ELLIPSOID_HAS_RENDER_BOUNDS_LONGITUDE)
     uniform vec2 u_ellipsoidRenderLongitudeMinMax;
 #endif
+uniform float u_eccentricitySquared;
 uniform vec2 u_ellipsoidRenderLatitudeSinMinMax;
 uniform vec2 u_clipMinMaxHeight;
 
@@ -143,7 +144,26 @@ vec3 getConeNormal(in vec3 p, in bool convex) {
     return normalize(vec3(radial, z) * flip);
 }
 
+/**
+ * Compute the shift between the ellipsoid origin and the apex of a cone of latitude
+ */
+float getLatitudeConeShift(in float sinLatitude) {
+    // Find prime vertical radius of curvature: 
+    // the distance along the ellipsoid normal to the intersection with the z-axis
+    float x2 = u_eccentricitySquared * sinLatitude * sinLatitude;
+    float primeVerticalRadius = inversesqrt(1.0 - x2);
+
+    // Compute a shift from the origin to the intersection of the cone with the z-axis
+    return primeVerticalRadius * u_eccentricitySquared * sinLatitude;
+}
+
 void intersectFlippedCone(in Ray ray, in float cosHalfAngle, out RayShapeIntersection intersections[2]) {
+    // Undo the scaling from ellipsoid to sphere
+    ray.pos = ray.pos * u_ellipsoidRadiiUv;
+    ray.dir = ray.dir * u_ellipsoidRadiiUv;
+    // Shift the ray to account for the latitude cone not being centered at the Earth center
+    ray.pos.z += getLatitudeConeShift(cosHalfAngle);
+
     float cosSqrHalfAngle = cosHalfAngle * cosHalfAngle;
     vec2 intersect = intersectDoubleEndedCone(ray, cosSqrHalfAngle);
 
@@ -186,6 +206,12 @@ void intersectFlippedCone(in Ray ray, in float cosHalfAngle, out RayShapeInterse
 }
 
 RayShapeIntersection intersectRegularCone(in Ray ray, in float cosHalfAngle, in bool convex) {
+    // Undo the scaling from ellipsoid to sphere
+    ray.pos = ray.pos * u_ellipsoidRadiiUv;
+    ray.dir = ray.dir * u_ellipsoidRadiiUv;
+    // Shift the ray to account for the latitude cone not being centered at the Earth center
+    ray.pos.z += getLatitudeConeShift(cosHalfAngle);
+
     float cosSqrHalfAngle = cosHalfAngle * cosHalfAngle;
     vec2 intersect = intersectDoubleEndedCone(ray, cosSqrHalfAngle);
 
