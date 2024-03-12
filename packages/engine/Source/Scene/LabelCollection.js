@@ -10,7 +10,7 @@ import writeTextToCanvas from "../Core/writeTextToCanvas.js";
 import bitmapSDF from "bitmap-sdf";
 import BillboardCollection from "./BillboardCollection.js";
 import BlendOption from "./BlendOption.js";
-import HeightReference from "./HeightReference.js";
+import { isHeightReferenceClamp } from "./HeightReference.js";
 import HorizontalOrigin from "./HorizontalOrigin.js";
 import Label from "./Label.js";
 import LabelStyle from "./LabelStyle.js";
@@ -510,7 +510,7 @@ function repositionAllGlyphs(label) {
     );
   }
 
-  if (label.heightReference === HeightReference.CLAMP_TO_GROUND) {
+  if (isHeightReferenceClamp(label.heightReference)) {
     for (glyphIndex = 0; glyphIndex < glyphLength; ++glyphIndex) {
       glyph = glyphs[glyphIndex];
       const billboard = glyph.billboard;
@@ -710,7 +710,7 @@ Object.defineProperties(LabelCollection.prototype, {
  * Creates and adds a label with the specified initial properties to the collection.
  * The added label is returned so it can be modified or removed from the collection later.
  *
- * @param {object} [options] A template describing the label's properties as shown in Example 1.
+ * @param {Label.ConstructorOptions} [options] A template describing the label's properties as shown in Example 1.
  * @returns {Label} The label that was added to the collection.
  *
  * @performance Calling <code>add</code> is expected constant time.  However, the collection's vertex buffer
@@ -754,6 +754,7 @@ Object.defineProperties(LabelCollection.prototype, {
  *   text : 'Hello World',
  *   font : '24px Helvetica',
  * });
+ *
  *
  * @see LabelCollection#remove
  * @see LabelCollection#removeAll

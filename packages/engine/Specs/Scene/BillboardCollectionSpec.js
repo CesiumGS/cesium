@@ -3,10 +3,12 @@ import {
   BoundingSphere,
   Cartesian2,
   Cartesian3,
+  Cartographic,
   CesiumTerrainProvider,
   Color,
   createGuid,
   DistanceDisplayCondition,
+  Globe,
   NearFarScalar,
   OrthographicOffCenterFrustum,
   PerspectiveFrustum,
@@ -23,7 +25,6 @@ import {
 
 import { Math as CesiumMath } from "../../index.js";
 
-import createGlobe from "../../../../Specs/createGlobe.js";
 import createScene from "../../../../Specs/createScene.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
 
@@ -2394,7 +2395,7 @@ describe(
     describe("height referenced billboards", function () {
       let billboardsWithHeight;
       beforeEach(function () {
-        scene.globe = createGlobe();
+        scene.globe = new Globe();
         billboardsWithHeight = new BillboardCollection({
           scene: scene,
         });
@@ -2417,63 +2418,127 @@ describe(
       });
 
       it("creating with a height reference creates a height update callback", function () {
+        spyOn(scene, "updateHeight");
+
+        const position = Cartesian3.fromDegrees(-72.0, 40.0);
         billboardsWithHeight.add({
           heightReference: HeightReference.CLAMP_TO_GROUND,
-          position: Cartesian3.fromDegrees(-72.0, 40.0),
+          position: position,
         });
-        expect(scene.globe.callback).toBeDefined();
+
+        expect(scene.updateHeight).toHaveBeenCalledWith(
+          Cartographic.fromCartesian(position),
+          jasmine.any(Function),
+          HeightReference.CLAMP_TO_GROUND
+        );
       });
 
       it("set height reference property creates a height update callback", function () {
+        spyOn(scene, "updateHeight");
+
+        const position = Cartesian3.fromDegrees(-72.0, 40.0);
         const b = billboardsWithHeight.add({
-          position: Cartesian3.fromDegrees(-72.0, 40.0),
+          position: position,
         });
         b.heightReference = HeightReference.CLAMP_TO_GROUND;
-        expect(scene.globe.callback).toBeDefined();
+
+        expect(scene.updateHeight).toHaveBeenCalledWith(
+          Cartographic.fromCartesian(position),
+          jasmine.any(Function),
+          HeightReference.CLAMP_TO_GROUND
+        );
       });
 
       it("updates the callback when the height reference changes", function () {
+        spyOn(scene, "updateHeight");
+
+        const position = Cartesian3.fromDegrees(-72.0, 40.0);
         const b = billboardsWithHeight.add({
           heightReference: HeightReference.CLAMP_TO_GROUND,
-          position: Cartesian3.fromDegrees(-72.0, 40.0),
+          position: position,
         });
-        expect(scene.globe.callback).toBeDefined();
+
+        expect(scene.updateHeight).toHaveBeenCalledWith(
+          Cartographic.fromCartesian(position),
+          jasmine.any(Function),
+          HeightReference.CLAMP_TO_GROUND
+        );
 
         b.heightReference = HeightReference.RELATIVE_TO_GROUND;
-        expect(scene.globe.removedCallback).toEqual(true);
-        expect(scene.globe.callback).toBeDefined();
 
-        scene.globe.removedCallback = false;
+        expect(scene.updateHeight).toHaveBeenCalledWith(
+          Cartographic.fromCartesian(position),
+          jasmine.any(Function),
+          HeightReference.RELATIVE_TO_GROUND
+        );
+      });
+
+      it("removes the callback when the height reference changes", function () {
+        const removeCallback = jasmine.createSpy();
+        spyOn(scene, "updateHeight").and.returnValue(removeCallback);
+
+        const position = Cartesian3.fromDegrees(-72.0, 40.0);
+        const b = billboardsWithHeight.add({
+          heightReference: HeightReference.CLAMP_TO_GROUND,
+          position: position,
+        });
+
         b.heightReference = HeightReference.NONE;
-        expect(scene.globe.removedCallback).toEqual(true);
-        expect(scene.globe.callback).toBeUndefined();
+        expect(removeCallback).toHaveBeenCalled();
       });
 
       it("changing the position updates the callback", function () {
+        const removeCallback = jasmine.createSpy();
+        spyOn(scene, "updateHeight").and.returnValue(removeCallback);
+
+        let position = Cartesian3.fromDegrees(-72.0, 40.0);
         const b = billboardsWithHeight.add({
           heightReference: HeightReference.CLAMP_TO_GROUND,
-          position: Cartesian3.fromDegrees(-72.0, 40.0),
+          position: position,
         });
-        expect(scene.globe.callback).toBeDefined();
 
-        b.position = Cartesian3.fromDegrees(-73.0, 40.0);
-        expect(scene.globe.removedCallback).toEqual(true);
-        expect(scene.globe.callback).toBeDefined();
+        expect(scene.updateHeight).toHaveBeenCalledWith(
+          Cartographic.fromCartesian(position),
+          jasmine.any(Function),
+          HeightReference.CLAMP_TO_GROUND
+        );
+
+        position = b.position = Cartesian3.fromDegrees(-73.0, 40.0);
+
+        expect(removeCallback).toHaveBeenCalled();
+        expect(scene.updateHeight).toHaveBeenCalledWith(
+          Cartographic.fromCartesian(position),
+          jasmine.any(Function),
+          HeightReference.CLAMP_TO_GROUND
+        );
       });
 
       it("callback updates the position", function () {
+        let invokeCallback;
+        spyOn(scene, "updateHeight").and.callFake(
+          (cartographic, updateCallback) => {
+            invokeCallback = (height) => {
+              cartographic.height = height;
+              updateCallback(cartographic);
+            };
+          }
+        );
+
+        const position = Cartesian3.fromDegrees(-72.0, 40.0);
         const b = billboardsWithHeight.add({
           heightReference: HeightReference.CLAMP_TO_GROUND,
-          position: Cartesian3.fromDegrees(-72.0, 40.0),
+          position: position,
         });
-        expect(scene.globe.callback).toBeDefined();
+
+        expect(scene.updateHeight).toHaveBeenCalled();
 
         let cartographic = scene.globe.ellipsoid.cartesianToCartographic(
           b._clampedPosition
         );
         expect(cartographic.height).toEqual(0.0);
 
-        scene.globe.callback(Cartesian3.fromDegrees(-72.0, 40.0, 100.0));
+        invokeCallback(100.0);
+
         cartographic = scene.globe.ellipsoid.cartesianToCartographic(
           b._clampedPosition
         );
@@ -2484,14 +2549,16 @@ describe(
         expect(b._clampedPosition).toBeUndefined();
       });
 
-      it("disableDepthTest after another function", function () {
+      it("removes callback after disableDepthTest", function () {
+        const removeCallback = jasmine.createSpy();
+        spyOn(scene, "updateHeight").and.returnValue(removeCallback);
+
         const b = billboardsWithHeight.add({
           heightReference: HeightReference.CLAMP_TO_GROUND,
           position: Cartesian3.fromDegrees(-122, 46.0),
           disableDepthTestDistance: Number.POSITIVE_INFINITY,
         });
         scene.renderForSpecs();
-        expect(scene.globe.callback).toBeDefined();
         expect(b._clampedPosition).toBeDefined();
 
         //After changing disableDepthTestDistance and heightReference, the callback should be undefined
@@ -2499,18 +2566,24 @@ describe(
         b.heightReference = HeightReference.NONE;
 
         scene.renderForSpecs();
-        expect(scene.globe.callback).toBeUndefined();
         expect(b._clampedPosition).toBeUndefined();
+        expect(removeCallback).toHaveBeenCalled();
       });
 
-      it("changing the terrain provider", async function () {
-        const b = billboardsWithHeight.add({
-          heightReference: HeightReference.CLAMP_TO_GROUND,
-          position: Cartesian3.fromDegrees(-72.0, 40.0),
-        });
-        expect(scene.globe.callback).toBeDefined();
+      it("updates the callback when the terrain provider is changed", async function () {
+        const removeCallback = jasmine.createSpy();
+        spyOn(scene, "updateHeight").and.returnValue(removeCallback);
 
-        spyOn(b, "_updateClamping").and.callThrough();
+        const position = Cartesian3.fromDegrees(-72.0, 40.0);
+        billboardsWithHeight.add({
+          heightReference: HeightReference.CLAMP_TO_GROUND,
+          position: position,
+        });
+        expect(scene.updateHeight).toHaveBeenCalledWith(
+          Cartographic.fromCartesian(position),
+          jasmine.any(Function),
+          HeightReference.CLAMP_TO_GROUND
+        );
 
         const terrainProvider = await CesiumTerrainProvider.fromUrl(
           "made/up/url",
@@ -2521,7 +2594,12 @@ describe(
 
         scene.terrainProvider = terrainProvider;
 
-        expect(b._updateClamping).toHaveBeenCalled();
+        expect(scene.updateHeight).toHaveBeenCalledWith(
+          Cartographic.fromCartesian(position),
+          jasmine.any(Function),
+          HeightReference.CLAMP_TO_GROUND
+        );
+        expect(removeCallback).toHaveBeenCalled();
       });
 
       it("height reference without a scene rejects", function () {
@@ -2543,15 +2621,17 @@ describe(
         }).toThrowDeveloperError();
       });
 
-      it("height reference without a globe rejects", function () {
+      it("height reference without a globe works", function () {
         scene.globe = undefined;
 
         expect(function () {
-          return billboardsWithHeight.add({
+          billboardsWithHeight.add({
             heightReference: HeightReference.CLAMP_TO_GROUND,
             position: Cartesian3.fromDegrees(-72.0, 40.0),
           });
-        }).toThrowDeveloperError();
+
+          scene.renderForSpecs();
+        }).not.toThrowError();
       });
 
       it("changing height reference without a globe throws DeveloperError", function () {
@@ -2563,7 +2643,8 @@ describe(
 
         expect(function () {
           b.heightReference = HeightReference.CLAMP_TO_GROUND;
-        }).toThrowDeveloperError();
+          scene.renderForSpecs();
+        }).not.toThrowDeveloperError();
       });
     });
   },

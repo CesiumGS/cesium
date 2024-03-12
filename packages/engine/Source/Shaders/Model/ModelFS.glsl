@@ -84,5 +84,9 @@ void main()
     silhouetteStage(color);
     #endif
 
+    #ifdef HAS_ATMOSPHERE
+    atmosphereStage(color, attributes);
+    #endif
+
     out_FragColor = color;
 }

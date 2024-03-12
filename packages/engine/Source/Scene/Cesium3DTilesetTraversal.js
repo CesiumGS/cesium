@@ -79,6 +79,8 @@ Cesium3DTilesetTraversal.selectTile = function (tile, frameState) {
     return;
   }
 
+  tile._wasSelectedLastFrame = true;
+
   const { content, tileset } = tile;
   if (content.featurePropertiesDirty) {
     // A feature's property in this tile changed, the tile needs to be re-styled.
@@ -88,7 +90,9 @@ Cesium3DTilesetTraversal.selectTile = function (tile, frameState) {
   } else if (tile._selectedFrame < frameState.frameNumber - 1) {
     // Tile is newly selected; it is selected this frame, but was not selected last frame.
     tileset._selectedTilesToStyle.push(tile);
+    tile._wasSelectedLastFrame = false;
   }
+
   tile._selectedFrame = frameState.frameNumber;
   tileset._selectedTiles.push(tile);
 };

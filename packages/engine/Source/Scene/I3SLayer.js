@@ -1,9 +1,13 @@
+import Cartesian4 from "../Core/Cartesian4.js";
+import clone from "../Core/clone.js";
+import Color from "../Core/Color.js";
 import defined from "../Core/defined.js";
 import Rectangle from "../Core/Rectangle.js";
 import Resource from "../Core/Resource.js";
 import RuntimeError from "../Core/RuntimeError.js";
 import Cesium3DTileset from "./Cesium3DTileset.js";
 import I3SNode from "./I3SNode.js";
+import I3SSymbology from "./I3SSymbology.js";
 
 /**
  * This class implements an I3S layer. In CesiumJS each I3SLayer creates a Cesium3DTileset.
@@ -14,24 +18,25 @@ import I3SNode from "./I3SNode.js";
  * @internalConstructor
  * @privateParam {I3SDataProvider} dataProvider The i3s data provider
  * @privateParam {object} layerData The layer data that is loaded from the scene layer
- * @privateParam {number} index The index of the layer to be reflected
+ * @privateParam {I3SDataProvider|I3SSublayer} parent The parent of that layer
  */
-function I3SLayer(dataProvider, layerData, index) {
+function I3SLayer(dataProvider, layerData, parent) {
   this._dataProvider = dataProvider;
+  this._parent = parent;
 
-  if (!defined(layerData.href) && defined(index)) {
+  if (!defined(layerData.href) && defined(layerData.id)) {
     // assign a default layer
-    layerData.href = `layers/${index}`;
+    layerData.href = `layers/${layerData.id}`;
   }
 
-  const dataProviderUrl = this._dataProvider.resource.getUrlComponent();
+  const parentUrl = this._parent.resource.getUrlComponent();
 
   let tilesetUrl = "";
-  if (dataProviderUrl.match(/layers\/\d/)) {
-    tilesetUrl = `${dataProviderUrl}`.replace(/\/+$/, "");
+  if (parentUrl.match(/layers\/\d/)) {
+    tilesetUrl = `${parentUrl}`.replace(/\/+$/, "");
   } else {
     // Add '/' to url if needed + `${layerData.href}` if tilesetUrl not already in ../layers/[id] format
-    tilesetUrl = `${dataProviderUrl}`
+    tilesetUrl = `${parentUrl}`
       .replace(/\/?$/, "/")
       .concat(`${layerData.href}`);
   }
@@ -53,6 +58,8 @@ function I3SLayer(dataProvider, layerData, index) {
   this._extent = undefined;
   this._tileset = undefined;
   this._geometryDefinitions = undefined;
+  this._filters = [];
+  this._symbology = undefined;
 
   this._computeGeometryDefinitions(true);
   this._computeExtent();
@@ -166,7 +173,7 @@ Object.defineProperties(I3SLayer.prototype, {
 /**
  * Loads the content, including the root node definition and its children
  * @param {Cesium3DTileset.ConstructorOptions} [cesium3dTilesetOptions] options for Cesium3dTileset constructor
- * @returns {Promise} A promise that is resolved when the layer data is loaded
+ * @returns {Promise<void>} A promise that is resolved when the layer data is loaded
  * @private
  */
 I3SLayer.prototype.load = async function (cesium3dTilesetOptions) {
@@ -176,6 +183,9 @@ I3SLayer.prototype.load = async function (cesium3dTilesetOptions) {
     );
   }
 
+  if (this._dataProvider.applySymbology) {
+    this._symbology = new I3SSymbology(this);
+  }
   await this._dataProvider.loadGeoidData();
   await this._loadRootNode(cesium3dTilesetOptions);
   await this._create3DTileset(cesium3dTilesetOptions);
@@ -387,11 +397,20 @@ I3SLayer.prototype._create3DTileset = async function (cesium3dTilesetOptions) {
   });
 
   const tilesetUrl = URL.createObjectURL(tilesetBlob);
+  const outlineColor = this._symbology?.defaultSymbology?.edges?.color;
+  if (defined(outlineColor) && !defined(cesium3dTilesetOptions?.outlineColor)) {
+    cesium3dTilesetOptions = defined(cesium3dTilesetOptions)
+      ? clone(cesium3dTilesetOptions)
+      : {};
+    cesium3dTilesetOptions.outlineColor = Color.fromCartesian4(
+      Cartesian4.fromArray(outlineColor)
+    );
+  }
   this._tileset = await Cesium3DTileset.fromUrl(
     tilesetUrl,
     cesium3dTilesetOptions
   );
-  this._tileset.show = this._dataProvider.show;
+  this._tileset.show = this._parent.show;
   this._tileset._isI3STileSet = true;
   this._tileset.tileUnload.addEventListener(function (tile) {
     tile._i3sNode._clearGeometryData();
@@ -404,6 +423,32 @@ I3SLayer.prototype._create3DTileset = async function (cesium3dTilesetOptions) {
       tile._i3sNode._loadChildren();
     }
   });
+};
+
+/**
+ * @private
+ */
+I3SLayer.prototype._updateVisibility = function () {
+  if (defined(this._tileset)) {
+    this._tileset.show = this._parent.show;
+  }
+};
+
+/**
+ * Filters the drawn elements of a layer to specific attribute names and values
+ * @param {I3SNode.AttributeFilter[]} [filters=[]] The collection of attribute filters
+ * @returns {Promise<void>} A promise that is resolved when the filter is applied
+ */
+I3SLayer.prototype.filterByAttributes = function (filters) {
+  // Filters are applied for each node in the layer when the node model is loaded
+  this._filters = defined(filters) ? clone(filters, true) : [];
+
+  // Forced filtering is required for loaded nodes only
+  const rootNode = this._rootNode;
+  if (defined(rootNode)) {
+    return rootNode._filterFeatures();
+  }
+  return Promise.resolve();
 };
 
 export default I3SLayer;

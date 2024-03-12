@@ -41,11 +41,13 @@ describe(
         },
         terrainProviderChanged: new Event(),
         imageryLayersUpdatedEvent: new Event(),
+        tileLoadProgressEvent: new Event(),
         beginFrame: function () {},
         update: function () {},
         render: function () {},
         endFrame: function () {},
         destroy: function () {},
+        isDestroyed: () => false,
       };
 
       scene.globe.getHeight = function () {

@@ -46,6 +46,7 @@ import Cesium3DTilesTester from "../../../../Specs/Cesium3DTilesTester.js";
 import createScene from "../../../../Specs/createScene.js";
 import generateJsonBuffer from "../../../../Specs/generateJsonBuffer.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
+import Ellipsoid from "../../Source/Core/Ellipsoid.js";
 
 describe(
   "Scene/Cesium3DTileset",
@@ -211,6 +212,7 @@ describe(
     });
 
     afterEach(function () {
+      scene.verticalExaggeration = 1.0;
       scene.primitives.removeAll();
       ResourceCache.clearForSpecs();
     });
@@ -267,7 +269,7 @@ describe(
     it("loads json with static loadJson method", async function () {
       const tilesetJson = {
         asset: {
-          version: 2.0,
+          version: 1.1,
         },
       };
 
@@ -1333,29 +1335,6 @@ describe(
       });
     });
 
-    it("replacement refinement - selects upwards when traversal stops at empty tile", function () {
-      // No children have content, but all grandchildren have content
-      //
-      //          C
-      //      E       E
-      //    C   C   C   C
-      //
-      return Cesium3DTilesTester.loadTileset(
-        scene,
-        tilesetReplacement1Url
-      ).then(function (tileset) {
-        tileset.root.geometricError = 90;
-        setZoom(80);
-        scene.renderForSpecs();
-
-        const statistics = tileset._statistics;
-        expect(statistics.selected).toEqual(1);
-        expect(statistics.visited).toEqual(3);
-        expect(isSelected(tileset, tileset.root)).toBe(true);
-        return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
-      });
-    });
-
     it("replacement refinement - selects root when sse is not met and subtree is not refinable (1)", function () {
       // No children have content, but all grandchildren have content
       //
@@ -1377,7 +1356,6 @@ describe(
 
         // Even though root's children are loaded, the grandchildren need to be loaded before it becomes refinable
         expect(numberOfChildrenWithoutContent(root)).toEqual(0); // Children are loaded
-        expect(statistics.numberOfCommands).toEqual(1); // No stencil or backface commands; no mixed content
         expect(statistics.numberOfPendingRequests).toEqual(4); // Loading grandchildren
 
         return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(
@@ -2442,6 +2420,199 @@ describe(
           expect(arg.url).toContain("parent.b3dm");
           expect(arg.message).toBeDefined();
         });
+    });
+
+    it("picks", async function () {
+      const tileset = await Cesium3DTilesTester.loadTileset(scene, tilesetUrl, {
+        enablePick: !scene.frameState.context.webgl2,
+      });
+      viewRootOnly();
+      scene.renderForSpecs();
+
+      const ray = scene.camera.getPickRay(
+        new Cartesian2(
+          scene.drawingBufferWidth / 2.0,
+          scene.drawingBufferHeight / 2.0
+        )
+      );
+
+      const expected = new Cartesian3(
+        1215026.8094312553,
+        -4736367.339076743,
+        4081652.238842398
+      );
+      expect(tileset.pick(ray, scene.frameState)).toEqualEpsilon(
+        expected,
+        CesiumMath.EPSILON12
+      );
+    });
+
+    it("picks tileset of tilesets", async function () {
+      const tileset = await Cesium3DTilesTester.loadTileset(
+        scene,
+        tilesetOfTilesetsUrl,
+        {
+          enablePick: !scene.frameState.context.webgl2,
+        }
+      );
+      viewRootOnly();
+      scene.renderForSpecs();
+
+      const ray = scene.camera.getPickRay(
+        new Cartesian2(
+          scene.drawingBufferWidth / 2.0,
+          scene.drawingBufferHeight / 2.0
+        )
+      );
+
+      const expected = new Cartesian3(
+        1215026.8094312553,
+        -4736367.339076743,
+        4081652.238842398
+      );
+      expect(tileset.pick(ray, scene.frameState)).toEqualEpsilon(
+        expected,
+        CesiumMath.EPSILON12
+      );
+    });
+
+    it("picks instanced tileset", async function () {
+      const tileset = await Cesium3DTilesTester.loadTileset(
+        scene,
+        instancedUrl,
+        {
+          enablePick: !scene.frameState.context.webgl2,
+        }
+      );
+      viewInstances();
+      scene.renderForSpecs();
+
+      const ray = scene.camera.getPickRay(
+        new Cartesian2(
+          scene.drawingBufferWidth / 2.0,
+          scene.drawingBufferHeight / 2.0
+        )
+      );
+
+      const expected = new Cartesian3(
+        1215015.7820120894,
+        -4736324.352446682,
+        4081615.004915994
+      );
+      expect(tileset.pick(ray, scene.frameState)).toEqualEpsilon(
+        expected,
+        CesiumMath.EPSILON12
+      );
+    });
+
+    it("picks translucent tileset", async function () {
+      const tileset = await Cesium3DTilesTester.loadTileset(
+        scene,
+        translucentUrl,
+        {
+          enablePick: !scene.frameState.context.webgl2,
+        }
+      );
+      viewAllTiles();
+      scene.renderForSpecs();
+
+      const ray = scene.camera.getPickRay(
+        new Cartesian2(
+          scene.drawingBufferWidth / 2.0,
+          scene.drawingBufferHeight / 2.0
+        )
+      );
+
+      const expected = new Cartesian3(
+        1215013.1035421563,
+        -4736313.911345786,
+        4081605.96109977
+      );
+      expect(tileset.pick(ray, scene.frameState)).toEqualEpsilon(
+        expected,
+        CesiumMath.EPSILON12
+      );
+    });
+
+    it("picks tileset with transforms", async function () {
+      const tileset = await Cesium3DTilesTester.loadTileset(
+        scene,
+        tilesetWithTransformsUrl,
+        {
+          enablePick: !scene.frameState.context.webgl2,
+        }
+      );
+      viewAllTiles();
+      scene.renderForSpecs();
+
+      const ray = scene.camera.getPickRay(
+        new Cartesian2(
+          scene.drawingBufferWidth / 2.0,
+          scene.drawingBufferHeight / 2.0
+        )
+      );
+
+      const expected = new Cartesian3(
+        1215013.1035421563,
+        -4736313.911345786,
+        4081605.96109977
+      );
+      expect(tileset.pick(ray, scene.frameState)).toEqualEpsilon(
+        expected,
+        CesiumMath.EPSILON12
+      );
+    });
+
+    it("picking point cloud tileset returns undefined", async function () {
+      const tileset = await Cesium3DTilesTester.loadTileset(
+        scene,
+        pointCloudUrl,
+        {
+          enablePick: !scene.frameState.context.webgl2,
+        }
+      );
+      viewAllTiles();
+      scene.renderForSpecs();
+
+      const ray = scene.camera.getPickRay(
+        new Cartesian2(
+          scene.drawingBufferWidth / 2.0,
+          scene.drawingBufferHeight / 2.0
+        )
+      );
+
+      expect(tileset.pick(ray, scene.frameState)).toBeUndefined();
+    });
+
+    it("getHeight samples height at a cartographic position", async function () {
+      const tileset = await Cesium3DTilesTester.loadTileset(scene, tilesetUrl, {
+        enablePick: !scene.frameState.context.webgl2,
+      });
+      viewRootOnly();
+      await Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
+      scene.renderForSpecs();
+
+      const center = Ellipsoid.WGS84.cartesianToCartographic(
+        tileset.boundingSphere.center
+      );
+      const height = tileset.getHeight(center, scene);
+      expect(height).toEqualEpsilon(78.1558019795064, CesiumMath.EPSILON12);
+    });
+
+    it("getHeight samples height accounting for vertical exaggeration", async function () {
+      const tileset = await Cesium3DTilesTester.loadTileset(scene, tilesetUrl, {
+        enablePick: !scene.frameState.context.webgl2,
+      });
+      viewRootOnly();
+      await Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
+      scene.verticalExaggeration = 2.0;
+      scene.renderForSpecs();
+
+      const center = Ellipsoid.WGS84.cartesianToCartographic(
+        tileset.boundingSphere.center
+      );
+      const height = tileset.getHeight(center, scene);
+      expect(height).toEqualEpsilon(156.31161477299992, CesiumMath.EPSILON12);
     });
 
     it("destroys", function () {
