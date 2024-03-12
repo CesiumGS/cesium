@@ -456,7 +456,6 @@ function makeModelOptions(tileset, tile, content, additionalOptions) {
     instanceFeatureIdLabel: tileset.instanceFeatureIdLabel,
     pointCloudShading: tileset.pointCloudShading,
     clippingPlanes: tileset.clippingPlanes,
-    clippingPolygons: tileset.clippingPolygons,
     backFaceCulling: tileset.backFaceCulling,
     shadows: tileset.shadows,
     showCreditsOnScreen: tileset.showCreditsOnScreen,

@@ -490,7 +490,7 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
   this._refines = false;
   this._shouldSelect = false;
   this._isClipped = true;
-  this._isClippedByPolygon = true;
+  this._isClippedByPolygon = false;
   this._clippingPlanesState = 0; // encapsulates (_isClipped, clippingPlanes.enabled) and number/function
   this._clippingPolygonsState = 0; // encapsulates (_isClipped, clippingPolygons.enabled) and number/function
   this._debugBoundingVolume = undefined;

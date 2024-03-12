@@ -23,6 +23,12 @@ function ClippingPolygon(options) {
   this.ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
   this.arcType = defaultValue(options.arcType, ArcType.GEODESIC);
   this.positions = options.positions;
+
+  this._rectangle = PolygonGeometry.computeRectangleFromPositions(
+    this.positions,
+    this.ellipsoid,
+    this.arcType
+  ); // TODO:
 }
 
 Object.defineProperties(ClippingPolygon.prototype, {});
@@ -45,12 +51,7 @@ ClippingPolygon.clone = function (clippingPlane, result) {
  * @returns {Rectangle} The result rectangle
  */
 ClippingPolygon.prototype.computeRectangle = function (result) {
-  return PolygonGeometry.computeRectangleFromPositions(
-    this.positions,
-    this.ellipsoid,
-    this.arcType,
-    result
-  );
+  return this._rectangle; // TODO
 };
 
 export default ClippingPolygon;

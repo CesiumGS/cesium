@@ -76,7 +76,7 @@ void main()
     #endif
 
     #ifdef HAS_CLIPPING_POLYGONS
-    modelClippingPolygonsStage();
+    modelClippingPolygonsStage(color);
     #endif
 
 
