@@ -86,6 +86,36 @@ function parseFont(label) {
 }
 
 /**
+ * @typedef {object} Label.ConstructorOptions
+ *
+ * Initialization options for the Label constructor
+ *
+ * @property {Cartesian3} position The cartesian position of the label.
+ * @property {string} [id] A user-defined object to return when the label is picked with {@link Scene#pick}.
+ * @property {boolean} [show=true] Determines if this label will be shown.
+ * @property {string} [text] A string specifying the text of the label.
+ * @property {string} [font='30px sans-serif'] A string specifying the font used to draw this label. Fonts are specified using the same syntax as the CSS 'font' property.
+ * @property {LabelStyle} [style=LabelStyle.FILL] A {@link LabelStyle} specifying the style of the label.
+ * @property {number} [scale=1.0] A number specifying the uniform scale that is multiplied with the label size.
+ * @property {boolean} [showBackground=false] Determines if a background behind this label will be shown.
+ * @property {Color} [backgroundColor=new Color(0.165, 0.165, 0.165, 0.8)] A {@link Color} specifying the background color of the label.
+ * @property {Cartesian2} [backgroundPadding=new Cartesian2(7, 5)] A {@link Cartesian2} Specifying the horizontal and vertical background padding in pixels.
+ * @property {Cartesian2} [pixelOffset=Cartesian2.ZERO] A {@link Cartesian2} specifying the pixel offset in screen space from the origin of this label.
+ * @property {Cartesian3} [eyeOffset=Cartesian3.ZERO] A {@link Cartesian3} specifying the 3D Cartesian offset applied to this label in eye coordinates.
+ * @property {HorizontalOrigin} [horizontalOrigin=HorizontalOrigin.CENTER] A {@link HorizontalOrigin} specifying the horizontal origin of this label.
+ * @property {VerticalOrigin} [verticalOrigin=VerticalOrigin.CENTER] A {@link VerticalOrigin} specifying the vertical origin of this label.
+ * @property {HeightReference} [heightReference=HeightReference.NONE] A {@link HeightReference} specifying the height reference of this label.
+ * @property {Color} [fillColor=Color.WHITE] A {@link Color} specifying the fill color of the label.
+ * @property {Color} [outlineColor=Color.BLACK] A {@link Color} specifying the outline color of the label.
+ * @property {number} [outlineWidth=1.0] A number specifying the outline width of the label.
+ * @property {NearFarScalar} [translucencyByDistance] A {@link NearFarScalar} specifying near and far translucency properties of the label based on the label's distance from the camera.
+ * @property {NearFarScalar} [pixelOffsetScaleByDistance] A {@link NearFarScalar} specifying near and far pixel offset scaling properties of the label based on the label's distance from the camera.
+ * @property {NearFarScalar} [scaleByDistance] A {@link NearFarScalar} specifying near and far scaling properties of the label based on the label's distance from the camera.
+ * @property {DistanceDisplayCondition} [distanceDisplayCondition] A {@link DistanceDisplayCondition} specifying at what distance from the camera that this label will be displayed.
+ * @property {number} [disableDepthTestDistance] A number specifying the distance from the camera at which to disable the depth test to, for example, prevent clipping against terrain.
+ */
+
+/**
  * <div class="notice">
  * Create labels by calling {@link LabelCollection#add}. Do not call the constructor directly.
  * </div>
@@ -93,6 +123,9 @@ function parseFont(label) {
  * @alias Label
  * @internalConstructor
  * @class
+ *
+ * @param {Label.ConstructorOptions} options Object describing initialization options
+ * @param {LabelCollection} labelCollection Instance of LabelCollection
  *
  * @exception {DeveloperError} translucencyByDistance.far must be greater than translucencyByDistance.near
  * @exception {DeveloperError} pixelOffsetScaleByDistance.far must be greater than pixelOffsetScaleByDistance.near

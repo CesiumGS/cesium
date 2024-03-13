@@ -1,20 +1,61 @@
 # Change Log
 
-### 1.115 - 2024-03-01
+### 1.116 - 2024-04-01
 
 #### @cesium/engine
 
+##### Breaking Changes :mega:
+
+- `Cesium3DTileset.disableCollision` has been removed. Use `Cesium3DTileset.enableCollision` instead.
+
 ##### Fixes :wrench:
 
-- Fixed a bug affecting voxel shader compilation in WebGL1 contexts. [#11798](https://github.com/CesiumGS/cesium/pull/11798)
-- Fixed a bug where legacy B3DM files that contained glTF 1.0 data that used a `CONSTANT` technique in the `KHR_material_common` extension and only defined ambient- or emissive textures (but no diffuse textures) showed up without any texture [#11825](https://github.com/CesiumGS/cesium/pull/11825)
-- Fixed an error when the `screenSpaceEventHandler` was destroyed before `Viewer` [#10576](https://github.com/CesiumGS/cesium/issues/10576)
+- Fixes issue with `BingMapsImageryProvider` where given culture option is ineffective [#11695](https://github.com/CesiumGS/cesium/issues/11695)
+- Fixed a bug where dynamic geometries caused the Scene to continuously render when running in requestRenderMode [#6631](https://github.com/CesiumGS/cesium/issues/6631)
+- Fixes issue with PolygonGeometry uvs are improperly computed [#11767](https://github.com/CesiumGS/cesium/issues/11767)
+- Fixed voxel rendering bugs for non-spherical ellipsoid shapes [#11848](https://github.com/CesiumGS/cesium/pull/11848)
 - Fixed a bug where `TaskProcessor` worker loading would check the worker module ID rather than the absolute URL when determining if it is cross-origin. [#11833](https://github.com/CesiumGS/cesium/pull/11833)
 - Fixed a bug where cross-origin workers would error when loaded with the CommonJS `importScripts` shim instead of an ESM `import`. [#11833](https://github.com/CesiumGS/cesium/pull/11833)
 
 ##### Additions :tada:
 
+- Surface normals are now computed for clipping and shape bounds in VoxelEllipsoidShape and VoxelCylinderShape. [#11847](https://github.com/CesiumGS/cesium/pull/11847)
+
+### 1.115 - 2024-03-01
+
+#### @cesium/engine
+
+##### Breaking Changes :mega:
+
+- By default, instances of `Cesium3DTileset ` will no longer default to enable collisions for camera collision or for clamping entities. [#11829](https://github.com/CesiumGS/cesium/pull/11829)
+  - This behavior can be enabled by setting `Cesium3DTileset.enableCollision` to true.
+
+##### Fixes :wrench:
+
+- Fixed a bug where the camera can stay underground when 3D Tiles are loading in. [#11824](https://github.com/CesiumGS/cesium/issues/11824)
+- Fixed a bug with where a mix of empty and non-empty tiles were not refining. [#9356](https://github.com/CesiumGS/cesium/issues/9356)
+- Fixed a bug with camera collision with tilesets containing tiles with interleaved buffers [#11812](https://github.com/CesiumGS/cesium/issues/11812)
+- Fixed a bug affecting voxel shader compilation in WebGL1 contexts. [#11798](https://github.com/CesiumGS/cesium/pull/11798)
+- Fixed a bug where legacy B3DM files that contained glTF 1.0 data that used a `CONSTANT` technique in the `KHR_material_common` extension and only defined ambient- or emissive textures (but no diffuse textures) showed up without any texture [#11825](https://github.com/CesiumGS/cesium/pull/11825)
+- Fixed an error when the `screenSpaceEventHandler` was destroyed before `Viewer` [#10576](https://github.com/CesiumGS/cesium/issues/10576)
+- Fixed how `Camera.changed` handles changes in `roll`. [#11844](https://github.com/CesiumGS/cesium/pull/11844)
+
+##### Additions :tada:
+
+- Added support for I3S Building Scene Layer. [#11678](https://github.com/CesiumGS/cesium/pull/11678)
 - Added `Scene.pickVoxel` to pick individual cells from a `VoxelPrimitive`, and `VoxelCell` to report information about the picked cell. [#11828](https://github.com/CesiumGS/cesium/pull/11828)
+- Added `Scene.defaultLogDepthBuffer` to allow changing the default behavior of the `logDepthBuffer` for newly created `Scene` instances. [#11859](https://github.com/CesiumGS/cesium/pull/11859)
+- Added `SensorVolumePortionToDisplay` to assist `CzmlDataSource` in parsing CZML. [#11859](https://github.com/CesiumGS/cesium/pull/11859)
+
+##### Deprecated :hourglass_flowing_sand:
+
+- `Cesium3DTileset.disableCollision` has been deprecated and will be removed in 1.116. Use `Cesium3DTileset.enableCollision` instead.
+
+#### @cesium/engine
+
+##### Additions :tada:
+
+- Added `I3SBuildingSceneLayerExplorer` widget for working with I3S Building Scene Layer data. [#11678](https://github.com/CesiumGS/cesium/pull/11678)
 
 ### 1.114 - 2024-02-01
 

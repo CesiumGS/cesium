@@ -508,7 +508,10 @@ function addWithCancellationCheck(left, right, tolerance) {
   return difference;
 }
 
-function quadraticVectorExpression(A, b, c, x, w) {
+/**
+ * @private
+ */
+IntersectionTests.quadraticVectorExpression = function (A, b, c, x, w) {
   const xSquared = x * x;
   const wSquared = w * w;
 
@@ -634,7 +637,7 @@ function quadraticVectorExpression(A, b, c, x, w) {
   }
 
   return solutions;
-}
+};
 
 const firstAxisScratch = new Cartesian3();
 const secondAxisScratch = new Cartesian3();
@@ -740,7 +743,7 @@ IntersectionTests.grazingAltitudeLocation = function (ray, ellipsoid) {
   const b = Matrix3.multiplyByVector(temp, position, bCart);
 
   // Solve for the solutions to the expression in standard form:
-  const solutions = quadraticVectorExpression(
+  const solutions = IntersectionTests.quadraticVectorExpression(
     A,
     Cartesian3.negate(b, firstAxisScratch),
     0.0,
