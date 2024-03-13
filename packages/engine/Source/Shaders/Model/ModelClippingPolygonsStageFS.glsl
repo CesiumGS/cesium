@@ -1,26 +1,17 @@
-void clipPolygons(vec4 fragCoord, highp sampler2D clipAmount, vec4 rectangle, int polygonLength) {
-    vec4 eyeCoordinate = czm_windowToEyeCoordinates(fragCoord);
-    vec4 worldCoordinate4 = czm_inverseView * eyeCoordinate;
-    vec3 worldCoordinate = worldCoordinate4.xyz / worldCoordinate4.w;
+void clipPolygons(highp sampler2D clipAmount, int polygonLength, inout vec4 color) {
+    vec2 uv = v_clipUv;
 
-    vec2 sphericalLatLong = czm_approximateSphericalCoordinates(worldCoordinate);
-    sphericalLatLong.y = czm_branchFreeTernary(sphericalLatLong.y < czm_pi, sphericalLatLong.y, sphericalLatLong.y - czm_twoPi);
-    float x = sphericalLatLong.x;
-    float y = sphericalLatLong.y;
-
-    bool inside = false;
-    int lastPolygonIndex = 0;
-    // for (int polygonIndex = 0; polygonIndex < polygonLength && !inside; ++polygonIndex) {
-
-    // }
-
-    vec2 extents = rectangle.yw - rectangle.xz;
-    vec2 uv = vec2((x - rectangle.x) / extents.x, (y - rectangle.y) / extents.y);
-    if (uv.x < 0.0 || uv.y < 0.0 || uv.x > 1.0 || uv.y > 0.0) {
+    if (uv.x < 0.0 || uv.y < 0.0 || uv.x > 1.0 || uv.y > 1.0) {
         return;
     }
 
-    inside = texture(clipAmount, uv).x < 0.0;
+    bool inside = texture(clipAmount, uv).r < 0.01;
+    if (inside) {
+        color.r = -texture(clipAmount, uv).r;
+    } else {
+        color.b = texture(clipAmount, uv).r;
+    }
+    return;
 
     #ifdef CLIPPING_INVERSE
     if (!inside) {
@@ -35,5 +26,5 @@ void clipPolygons(vec4 fragCoord, highp sampler2D clipAmount, vec4 rectangle, in
 
 void modelClippingPolygonsStage(inout vec4 color)
 {
-    clipPolygons(gl_FragCoord, model_clipAmount, model_clipRectangle, CLIPPING_POLYGONS_LENGTH);
+    clipPolygons(model_clipAmount, CLIPPING_POLYGONS_LENGTH, color);
 }

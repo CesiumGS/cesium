@@ -1,7 +1,9 @@
 import Cartesian2 from "../../Core/Cartesian2.js";
 import ClippingPolygonCollection from "../ClippingPolygonCollection.js";
+import Cartesian4 from "../../Core/Cartesian4.js";
 import combine from "../../Core/combine.js";
 import Rectangle from "../../Core/Rectangle.js";
+import ModelClippingPolygonsStageVS from "../../Shaders/Model/ModelClippingPolygonsStageVS.js";
 import ModelClippingPolygonsStageFS from "../../Shaders/Model/ModelClippingPolygonsStageFS.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 
@@ -52,14 +54,14 @@ ModelClippingPolygonsPipelineStage.process = function (
     shaderBuilder.addDefine(
       "CLIPPING_INVERSE",
       undefined,
-      ShaderDestination.BOTH
+      ShaderDestination.FRAGMENT
     );
   }
 
   shaderBuilder.addDefine(
     "CLIPPING_POLYGONS_LENGTH",
     clippingPolygons.length,
-    ShaderDestination.BOTH
+    ShaderDestination.FRAGMENT
   );
 
   const textureResolution = ClippingPolygonCollection.getClipTextureResolution(
@@ -71,7 +73,7 @@ ModelClippingPolygonsPipelineStage.process = function (
   shaderBuilder.addDefine(
     "CLIPPING_POLYGONS_TEXTURE_WIDTH",
     textureResolution.x,
-    ShaderDestination.BOTH
+    ShaderDestination.FRAGMENT
   );
 
   shaderBuilder.addDefine(
@@ -89,15 +91,19 @@ ModelClippingPolygonsPipelineStage.process = function (
   shaderBuilder.addUniform(
     "vec4",
     "model_clipRectangle",
-    ShaderDestination.FRAGMENT
+    ShaderDestination.VERTEX
   );
 
+  shaderBuilder.addVarying("vec2", "v_clipUv");
+  shaderBuilder.addVertexLines(ModelClippingPolygonsStageVS);
   shaderBuilder.addFragmentLines(ModelClippingPolygonsStageFS);
 
-  const packedRectangle = Rectangle.pack(clippingPolygons.rectangle, []);
+  const packedRectangle = Cartesian4.unpack(
+    Rectangle.pack(clippingPolygons.getSphericalExtents(new Rectangle()), [])
+  );
 
   const uniformMap = {
-    model_clippingPolygons: function () {
+    model_clipAmount: function () {
       return clippingPolygons.clipTexture;
     },
     model_clipRectangle: function () {

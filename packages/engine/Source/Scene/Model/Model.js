@@ -2030,6 +2030,7 @@ function updateClippingPolygons(model, frameState) {
   if (model.isClippingPolygonsEnabled()) {
     if (model._clippingPolygons.owner === model) {
       model._clippingPolygons.update(frameState);
+      model._clippingPolygons.queueCommands(frameState);
     }
     currentClippingPolygonsState =
       model._clippingPolygons.clippingPolygonsState;

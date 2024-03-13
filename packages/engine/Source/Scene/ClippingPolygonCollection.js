@@ -1,4 +1,7 @@
 import Cartesian2 from "../Core/Cartesian2.js";
+import Cartesian3 from "../Core/Cartesian3.js";
+import Cartesian4 from "../Core/Cartesian4.js";
+import CesiumMath from "../Core/Math.js";
 import Check from "../Core/Check.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
@@ -13,6 +16,9 @@ import ContextLimits from "../Renderer/ContextLimits.js";
 import PixelDatatype from "../Renderer/PixelDatatype.js";
 import Sampler from "../Renderer/Sampler.js";
 import Texture from "../Renderer/Texture.js";
+import TextureMagnificationFilter from "../Renderer/TextureMagnificationFilter.js";
+import TextureMinificationFilter from "../Renderer/TextureMinificationFilter.js";
+import TextureWrap from "../Renderer/TextureWrap.js";
 import ClippingPolygon from "./ClippingPolygon.js";
 import ComputeCommand from "../Renderer/ComputeCommand.js";
 import PolygonSignedDistanceFS from "../Shaders/PolygonSignedDistanceFS.js";
@@ -67,7 +73,7 @@ function ClippingPolygonCollection(options) {
   this._clippingPolygonsTexture = undefined;
   this._signedDistanceTexture = undefined;
 
-  this._signedDistanceTexturePromise = undefined;
+  this._signedDistanceTextureCommand = undefined;
 
   this._dirty = false;
 
@@ -379,7 +385,6 @@ ClippingPolygonCollection.prototype.removeAll = function () {
 //   }
 // }
 
-const scratchCartographic = new Cartographic();
 function packPolygonsAsFloats(clippingPolygonCollection) {
   const float32View = clippingPolygonCollection._float32View;
   const polygons = clippingPolygonCollection._polygons;
@@ -393,9 +398,9 @@ function packPolygonsAsFloats(clippingPolygonCollection) {
     floatIndex += 2;
 
     for (let i = 0; i < length; ++i) {
-      const position = polygon.positions[i];
+      const spherePoint = polygon.positions[i];
 
-      // // Convert to approximate spherical coordinates
+      // Convert to approximate spherical coordinates
       // const latitudeApproximation = CesiumMath.fastApproximateAtan2(
       //   Math.sqrt(position.x * position.x + position.y * position.y),
       //   position.z
@@ -404,13 +409,24 @@ function packPolygonsAsFloats(clippingPolygonCollection) {
       //   position.x,
       //   position.y
       // );
-      const cartographic = polygon.ellipsoid.cartesianToCartographic(
-        position,
-        scratchCartographic
+
+      // Project into plane with vertical for latitude
+      const magXY = Math.sqrt(
+        spherePoint.x * spherePoint.x + spherePoint.y * spherePoint.y
       );
 
-      float32View[floatIndex++] = cartographic.latitude; //latitudeApproximation;
-      float32View[floatIndex++] = cartographic.longitude; //longitudeApproximation;
+      // Use fastApproximateAtan2 for alignment with shader
+      const latitudeApproximation = CesiumMath.fastApproximateAtan2(
+        magXY,
+        spherePoint.z
+      );
+      const longitudeApproximation = CesiumMath.fastApproximateAtan2(
+        spherePoint.x,
+        spherePoint.y
+      );
+
+      float32View[floatIndex++] = latitudeApproximation;
+      float32View[floatIndex++] = longitudeApproximation;
     }
   }
 }
@@ -470,11 +486,17 @@ ClippingPolygonCollection.prototype.update = function (frameState) {
   if (!defined(signedDistanceTexture)) {
     signedDistanceTexture = new Texture({
       context: context,
-      width: 1024, // TODO
-      height: 1024,
-      pixelFormat: PixelFormat.R,
+      width: ContextLimits.maximumTextureSize / 2,
+      height: ContextLimits.maximumTextureSize / 2,
+      pixelFormat: context.webgl2 ? PixelFormat.RED : PixelFormat.LUMINANCE,
       pixelDatatype: PixelDatatype.FLOAT,
-      sampler: Sampler.NEAREST,
+      sampler: new Sampler({
+        wrapS: TextureWrap.CLAMP_TO_EDGE,
+        wrapT: TextureWrap.CLAMP_TO_EDGE,
+        minificationFilter: TextureMinificationFilter.LINEAR,
+        magnificationFilter: TextureMagnificationFilter.LINEAR,
+        maximumAnisotropy: ContextLimits.maximumTextureFilterAnisotropy,
+      }),
       flipY: false,
     });
   }
@@ -525,20 +547,12 @@ ClippingPolygonCollection.prototype.update = function (frameState) {
   }
 
   if (useFloatTexture) {
-    packPolygonsAsFloats(this);
-    clippingPolygonTexture.copyFrom({
-      source: {
-        width: clippingPolygonTexture.width,
-        height: clippingPolygonTexture.height,
-        arrayBufferView: this._float32View,
-      },
-    });
-
-    if (defined(this._signedDistanceTexturePromise)) {
+    if (defined(this._signedDistanceTextureCommand)) {
       // TODO: Await?
+      // TODO: Cancel?
     }
 
-    this._signedDistanceTexturePromise = createSignedDistanceTexture(
+    this._signedDistanceTextureCommand = createSignedDistanceTextureCommand(
       this,
       frameState
     );
@@ -556,30 +570,114 @@ ClippingPolygonCollection.prototype.update = function (frameState) {
   this._dirty = false;
 };
 
-function createSignedDistanceTexture(collection, frameState) {
-  return new Promise((resolve) => {
-    const polygonTexture = collection.clippingPolygonTexture;
-    const packedRectangle = Rectangle.pack(collection._rectangle, []); // TODO: This should probably be an array, should we pack it in the polygonTexture?
+ClippingPolygonCollection.prototype.queueCommands = function (frameState) {
+  if (defined(this._signedDistanceTextureCommand)) {
+    frameState.commandList.push(this._signedDistanceTextureCommand);
+  }
+};
 
-    const textureCommand = new ComputeCommand({
-      fragmentShaderSource: PolygonSignedDistanceFS,
-      outputTexture: collection._signedDistanceTexture,
-      uniformMap: {
-        u_rectangle: () => packedRectangle,
-        u_polygonLength: () => collection.length,
-        u_polygonTexture: () => polygonTexture,
-        u_polygonTextureDimensions: () => {
-          return new Cartesian2(polygonTexture.width, polygonTexture.height);
-        },
+const scratchCartesian = new Cartesian2();
+const scratchRectangle = new Rectangle();
+function createSignedDistanceTextureCommand(collection, frameState) {
+  //return new Promise((resolve) => {
+  const polygonTexture = collection._clippingPolygonsTexture;
+  const packedRectangle = Cartesian4.unpack(
+    Rectangle.pack(collection.getSphericalExtents(scratchRectangle), [])
+  ); // TODO: This should probably be an array, should we pack it in the polygonTexture?
+  return new ComputeCommand({
+    fragmentShaderSource: PolygonSignedDistanceFS,
+    outputTexture: collection._signedDistanceTexture,
+    uniformMap: {
+      u_rectangle: function () {
+        return packedRectangle;
       },
-      persists: true, // TODO:?
-      owner: collection,
-      postExecute: resolve,
-    });
-
-    frameState.commandList.push(textureCommand);
+      u_polygonLength: function () {
+        return collection.length;
+      },
+      u_polygonTexture: function () {
+        return polygonTexture;
+      },
+      u_polygonTextureDimensions: function () {
+        return ClippingPolygonCollection.getTextureResolution(
+          collection,
+          frameState.context,
+          scratchCartesian
+        );
+      },
+    },
+    persists: true, // TODO:?
+    owner: collection,
+    preExecute: () => {
+      packPolygonsAsFloats(collection);
+      polygonTexture.copyFrom({
+        source: {
+          width: polygonTexture.width,
+          height: polygonTexture.height,
+          arrayBufferView: collection._float32View,
+        },
+      });
+    },
+    postExecute: (texture) => {
+      collection._signedDistanceTextureCommand = undefined;
+    },
   });
+  //});
 }
+
+const spherePointScratch = new Cartesian3();
+/**
+ * TODO
+ * @param {*} ellipsoid
+ * @param {*} result
+ * @returns
+ */
+ClippingPolygonCollection.prototype.getSphericalExtents = function (result) {
+  const rectangle = this.rectangle;
+
+  let spherePoint = Cartographic.toCartesian(
+    Rectangle.southwest(rectangle),
+    undefined, // TODO
+    spherePointScratch
+  );
+
+  // Project into plane with vertical for latitude
+  let magXY = Math.sqrt(
+    spherePoint.x * spherePoint.x + spherePoint.y * spherePoint.y
+  );
+
+  // Use fastApproximateAtan2 for alignment with shader
+  let sphereLatitude = CesiumMath.fastApproximateAtan2(magXY, spherePoint.z);
+  let sphereLongitude = CesiumMath.fastApproximateAtan2(
+    spherePoint.x,
+    spherePoint.y
+  );
+
+  result.south = sphereLatitude;
+  result.west = sphereLongitude;
+
+  spherePoint = Cartographic.toCartesian(
+    Rectangle.northeast(rectangle),
+    undefined, // TODO
+    spherePointScratch
+  );
+
+  // Project into plane with vertical for latitude
+  magXY = Math.sqrt(
+    spherePoint.x * spherePoint.x + spherePoint.y * spherePoint.y
+  );
+
+  // Use fastApproximateAtan2 for alignment with shader
+  sphereLatitude = CesiumMath.fastApproximateAtan2(magXY, spherePoint.z);
+  sphereLongitude = CesiumMath.fastApproximateAtan2(
+    spherePoint.x,
+    spherePoint.y
+  );
+
+  result.north = sphereLatitude;
+  result.east = sphereLongitude;
+
+  return result;
+};
 
 const scratchRectangleTile = new Rectangle();
 const scratchRectangleIntersection = new Rectangle();
@@ -747,7 +845,10 @@ ClippingPolygonCollection.getClipTextureResolution = function (
     return result;
   }
 
-  return new Cartesian2(1024, 1024);
+  return new Cartesian2(
+    ContextLimits.maximumTextureSize,
+    ContextLimits.maximumTextureSize
+  );
 };
 
 /**
