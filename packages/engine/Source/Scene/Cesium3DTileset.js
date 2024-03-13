@@ -112,7 +112,7 @@ import Ray from "../Core/Ray.js";
  * @property {string|number} [instanceFeatureIdLabel="instanceFeatureId_0"] Label of the instance feature ID set used for picking and styling. If instanceFeatureIdLabel is set to an integer N, it is converted to the string "instanceFeatureId_N" automatically. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
  * @property {boolean} [showCreditsOnScreen=false] Whether to display the credits of this tileset on screen.
  * @property {SplitDirection} [splitDirection=SplitDirection.NONE] The {@link SplitDirection} split to apply to this tileset.
- * @property {boolean} [disableCollision=false] Whether to turn off collisions for camera collisions or picking. While this is <code>true</code> the camera will be allowed to go in or below the tileset surface if {@link ScreenSpaceCameraController#enableCollisionDetection} is true.
+ * @property {boolean} [enableCollision=false] When <code>true</code>, enables collisions for camera or CPU picking. While this is <code>true</code> the camera will be prevented from going below the tileset surface if {@link ScreenSpaceCameraController#enableCollisionDetection} is true.
  * @property {boolean} [projectTo2D=false] Whether to accurately project the tileset to 2D. If this is true, the tileset will be projected accurately to 2D, but it will use more memory to do so. If this is false, the tileset will use less memory and will still render in 2D / CV mode, but its projected positions may be inaccurate. This cannot be set after the tileset has been created.
  * @property {boolean} [enablePick=false] Whether to allow collision and CPU picking with <code>pick</code> when using WebGL 1. If using WebGL 2 or above, this option will be ignored. If using WebGL 1 and this is true, the <code>pick</code> operation will work correctly, but it will use more memory to do so. If running with WebGL 1 and this is false, the model will use less memory, but <code>pick</code> will always return <code>undefined</code>. This cannot be set after the tileset has loaded.
  * @property {string} [debugHeatmapTilePropertyName] The tile variable to colorize as a heatmap. All rendered tiles will be colorized relative to each other's specified variable value.
@@ -155,11 +155,11 @@ import Ray from "../Core/Ray.js";
  * }
  *
  * @example
- * // Allow camera to go inside and under 3D tileset
+ * // Turn on camera collisions with the tileset.
  * try {
  *   const tileset = await Cesium.Cesium3DTileset.fromUrl(
  *      "http://localhost:8002/tilesets/Seattle/tileset.json",
- *      { disableCollision: true }
+ *      { enableCollision: true }
  *   );
  *   scene.primitives.add(tileset);
  * } catch (error) {
@@ -864,13 +864,12 @@ function Cesium3DTileset(options) {
   );
 
   /**
-   * Whether to turn off collisions for camera collisions or picking. While this is  <code>true</code> the camera will be allowed to go in or below the tileset surface if {@link ScreenSpaceCameraController#enableCollisionDetection} is true.
+   * If <code>true</code>, allows collisions for camera collisions or picking. While this is  <code>true</code> the camera will be prevented from going in or below the tileset surface if {@link ScreenSpaceCameraController#enableCollisionDetection} is true. This can have performance implecations if the tileset contains tile with a larger number of vertices.
    *
    * @type {boolean}
    * @default false
    */
-  this.disableCollision = defaultValue(options.disableCollision, false);
-
+  this.enableCollision = defaultValue(options.enableCollision, false);
   this._projectTo2D = defaultValue(options.projectTo2D, false);
   this._enablePick = defaultValue(options.enablePick, false);
 
@@ -2643,7 +2642,7 @@ function processUpdateHeight(tileset, tile, frameState) {
   const boundingSphere = tile.boundingSphere;
 
   for (const callbackData of heightCallbackData) {
-    // No need to upadate if the tile was already visible last frame
+    // No need to update if the tile was already visible last frame
     if (callbackData.invoked || tile._wasSelectedLastFrame) {
       continue;
     }

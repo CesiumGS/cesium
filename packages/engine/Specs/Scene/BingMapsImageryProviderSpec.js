@@ -82,7 +82,7 @@ describe("Scene/BingMapsImageryProvider", function () {
     expect(BingMapsImageryProvider).toConformToInterface(ImageryProvider);
   });
 
-  function installFakeMetadataRequest(url, mapStyle, mapLayer) {
+  function installFakeMetadataRequest(url, mapStyle, mapLayer, culture) {
     const baseUri = new Uri(appendForwardSlash(url));
     const expectedUri = new Uri(
       `REST/v1/Imagery/Metadata/${mapStyle}`
@@ -101,6 +101,10 @@ describe("Scene/BingMapsImageryProvider", function () {
 
       if (defined(mapLayer)) {
         expect(query.mapLayer).toEqual(mapLayer);
+      }
+
+      if (defined(culture)) {
+        expect(query.culture).toEqual(culture);
       }
 
       uri.query("");
@@ -434,11 +438,10 @@ describe("Scene/BingMapsImageryProvider", function () {
   it("sets correct culture in tile requests", async function () {
     const url = "http://fake.fake.invalid";
     const mapStyle = BingMapsStyle.AERIAL_WITH_LABELS;
-
-    installFakeMetadataRequest(url, mapStyle);
-    installFakeImageRequest();
-
     const culture = "ja-jp";
+
+    installFakeMetadataRequest(url, mapStyle, undefined, culture);
+    installFakeImageRequest();
 
     const provider = await BingMapsImageryProvider.fromUrl(url, {
       key: "",

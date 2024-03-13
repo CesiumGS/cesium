@@ -40,9 +40,7 @@
         const viewer = new Cesium.Viewer("cesiumContainer");
 
         try {
-          const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(125737, {
-            disableCollision: true,
-          });
+          const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(125737);
           viewer.scene.primitives.add(tileset);
         } catch (error) {
           console.log(`Error loading tileset: ${error}`);

@@ -1,16 +1,18 @@
 import {
+  Cartesian3,
+  Cesium3DTilesVoxelProvider,
+  CullingVolume,
+  KeyframeNode,
+  Math as CesiumMath,
   Matrix4,
+  MetadataType,
+  OrientedBoundingBox,
   VoxelEllipsoidShape,
   VoxelTraversal,
   VoxelPrimitive,
-  Cartesian3,
-  OrientedBoundingBox,
-  Math as CesiumMath,
-  MetadataType,
-  CullingVolume,
-  Cesium3DTilesVoxelProvider,
 } from "../../index.js";
 import createScene from "../../../../Specs/createScene.js";
+import pollToPromise from "../../../../Specs/pollToPromise.js";
 
 const towardPrimitive = Cartesian3.fromElements(1.0, 1.0, 1.0);
 
@@ -38,11 +40,11 @@ describe(
       );
 
       camera = scene.camera;
-      camera.position = Cartesian3.fromElements(-10, -10, -10);
+      camera.position = Cartesian3.fromElements(-6378000, -6378000, -6378000);
       camera.direction = Cartesian3.fromElements(1, 1, 1);
       camera.frustum.fov = CesiumMath.PI_OVER_TWO;
       primitive = new VoxelPrimitive({
-        voxelProvider: provider,
+        provider: provider,
       });
       scene.primitives.add(primitive);
       scene.renderForSpecs();
@@ -145,32 +147,46 @@ describe(
       expect(traversal.isDestroyed()).toBe(true);
     });
 
-    xit("loads tiles into megatexture", function () {
+    it("loads tiles into megatexture", async function () {
       const keyFrameLocation = 0;
       const recomputeBoundingVolumes = true;
       const pauseUpdate = false;
-      traversal.update(
-        scene.frameState,
-        keyFrameLocation,
-        recomputeBoundingVolumes,
-        pauseUpdate
-      );
+      await pollToPromise(function () {
+        traversal.update(
+          scene.frameState,
+          keyFrameLocation,
+          recomputeBoundingVolumes,
+          pauseUpdate
+        );
+        scene.renderForSpecs();
+        return traversal.megatextures[0].occupiedCount > 0;
+      });
 
       const megatexture = traversal.megatextures[0];
-      let tilesInMegatextureCount = megatexture.occupiedCount;
-      const tileInQueueWhenLookingAtRoot = tilesInMegatextureCount === 1;
-      expect(tileInQueueWhenLookingAtRoot).toBe(true);
+      expect(megatexture.occupiedCount).toBe(1);
+    });
 
-      turnCameraAround(scene);
-      traversal.update(
-        scene.frameState,
-        keyFrameLocation,
-        recomputeBoundingVolumes,
-        pauseUpdate
-      );
-      tilesInMegatextureCount = traversal.megatextures[0].occupiedCount;
-      const tileNotInQueueWhenLookingAway = tilesInMegatextureCount === 0;
-      expect(tileNotInQueueWhenLookingAway).toBe(true);
+    it("finds keyframe node with expected metadata values", async function () {
+      const keyFrameLocation = 0;
+      const recomputeBoundingVolumes = true;
+      const pauseUpdate = false;
+      await pollToPromise(function () {
+        traversal.update(
+          scene.frameState,
+          keyFrameLocation,
+          recomputeBoundingVolumes,
+          pauseUpdate
+        );
+        scene.renderForSpecs();
+        return traversal.megatextures[0].occupiedCount > 0;
+      });
+
+      const megatextureIndex = 0;
+      const keyframeNode = traversal.findKeyframeNode(megatextureIndex);
+      expect(keyframeNode).toBeDefined();
+      expect(keyframeNode.state).toBe(KeyframeNode.LoadState.LOADED);
+      const expectedMetadata = new Float32Array([0, 0, 0, 0, 1, 1, 1, 1]);
+      expect(keyframeNode.metadata[0]).toEqual(expectedMetadata);
     });
 
     xit("unloads tiles in megatexture", function () {

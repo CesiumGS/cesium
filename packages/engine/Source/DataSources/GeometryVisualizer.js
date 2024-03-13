@@ -4,104 +4,22 @@ import Check from "../Core/Check.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
-import Event from "../Core/Event.js";
-import EventHelper from "../Core/EventHelper.js";
 import ClassificationType from "../Scene/ClassificationType.js";
 import MaterialAppearance from "../Scene/MaterialAppearance.js";
 import PerInstanceColorAppearance from "../Scene/PerInstanceColorAppearance.js";
 import ShadowMode from "../Scene/ShadowMode.js";
 import BoundingSphereState from "./BoundingSphereState.js";
-import BoxGeometryUpdater from "./BoxGeometryUpdater.js";
 import ColorMaterialProperty from "./ColorMaterialProperty.js";
-import CorridorGeometryUpdater from "./CorridorGeometryUpdater.js";
-import CylinderGeometryUpdater from "./CylinderGeometryUpdater.js";
 import DynamicGeometryBatch from "./DynamicGeometryBatch.js";
-import EllipseGeometryUpdater from "./EllipseGeometryUpdater.js";
-import EllipsoidGeometryUpdater from "./EllipsoidGeometryUpdater.js";
 import Entity from "./Entity.js";
-import PlaneGeometryUpdater from "./PlaneGeometryUpdater.js";
-import PolygonGeometryUpdater from "./PolygonGeometryUpdater.js";
-import PolylineVolumeGeometryUpdater from "./PolylineVolumeGeometryUpdater.js";
-import RectangleGeometryUpdater from "./RectangleGeometryUpdater.js";
+import GeometryUpdaterSet from "./GeometryUpdaterSet.js";
 import StaticGeometryColorBatch from "./StaticGeometryColorBatch.js";
 import StaticGeometryPerMaterialBatch from "./StaticGeometryPerMaterialBatch.js";
 import StaticGroundGeometryColorBatch from "./StaticGroundGeometryColorBatch.js";
 import StaticGroundGeometryPerMaterialBatch from "./StaticGroundGeometryPerMaterialBatch.js";
 import StaticOutlineGeometryBatch from "./StaticOutlineGeometryBatch.js";
-import WallGeometryUpdater from "./WallGeometryUpdater.js";
 
 const emptyArray = [];
-
-const geometryUpdaters = [
-  BoxGeometryUpdater,
-  CylinderGeometryUpdater,
-  CorridorGeometryUpdater,
-  EllipseGeometryUpdater,
-  EllipsoidGeometryUpdater,
-  PlaneGeometryUpdater,
-  PolygonGeometryUpdater,
-  PolylineVolumeGeometryUpdater,
-  RectangleGeometryUpdater,
-  WallGeometryUpdater,
-];
-
-function GeometryUpdaterSet(entity, scene) {
-  this.entity = entity;
-  this.scene = scene;
-  const updaters = new Array(geometryUpdaters.length);
-  const geometryChanged = new Event();
-  function raiseEvent(geometry) {
-    geometryChanged.raiseEvent(geometry);
-  }
-  const eventHelper = new EventHelper();
-  for (let i = 0; i < updaters.length; i++) {
-    const updater = new geometryUpdaters[i](entity, scene);
-    eventHelper.add(updater.geometryChanged, raiseEvent);
-    updaters[i] = updater;
-  }
-  this.updaters = updaters;
-  this.geometryChanged = geometryChanged;
-  this.eventHelper = eventHelper;
-
-  this._removeEntitySubscription = entity.definitionChanged.addEventListener(
-    GeometryUpdaterSet.prototype._onEntityPropertyChanged,
-    this
-  );
-}
-
-GeometryUpdaterSet.prototype._onEntityPropertyChanged = function (
-  entity,
-  propertyName,
-  newValue,
-  oldValue
-) {
-  const updaters = this.updaters;
-  for (let i = 0; i < updaters.length; i++) {
-    updaters[i]._onEntityPropertyChanged(
-      entity,
-      propertyName,
-      newValue,
-      oldValue
-    );
-  }
-};
-
-GeometryUpdaterSet.prototype.forEach = function (callback) {
-  const updaters = this.updaters;
-  for (let i = 0; i < updaters.length; i++) {
-    callback(updaters[i]);
-  }
-};
-
-GeometryUpdaterSet.prototype.destroy = function () {
-  this.eventHelper.removeAll();
-  const updaters = this.updaters;
-  for (let i = 0; i < updaters.length; i++) {
-    updaters[i].destroy();
-  }
-  this._removeEntitySubscription();
-  destroyObject(this);
-};
 
 /**
  * A general purpose visualizer for geometry represented by {@link Primitive} instances.
@@ -292,6 +210,24 @@ function GeometryVisualizer(
     emptyArray
   );
 }
+
+/**
+ * Add the provided updater to the default list of updaters if not already included
+ * @private
+ * @param {GeometryUpdater} updater
+ */
+GeometryVisualizer.registerUpdater = function (updater) {
+  GeometryUpdaterSet.registerUpdater(updater);
+};
+
+/**
+ * Remove the provided updater from the default list of updaters if included
+ * @private
+ * @param {GeometryUpdater} updater
+ */
+GeometryVisualizer.unregisterUpdater = function (updater) {
+  GeometryUpdaterSet.unregisterUpdater(updater);
+};
 
 /**
  * Updates all of the primitives created by this visualizer to match their
