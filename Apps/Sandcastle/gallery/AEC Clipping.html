@@ -421,6 +421,12 @@
           600.0
         );
         viewer.zoomTo(buildingTileset, cameraOffset);
+        viewer.homeButton.viewModel.command.beforeExecute.addEventListener(
+          (e) => {
+            e.cancel = true;
+            viewer.zoomTo(buildingTileset, cameraOffset);
+          }
+        );
 
         // Enable toggling of new building visibility
         Sandcastle.addToggleButton("Show proposed building", true, function (

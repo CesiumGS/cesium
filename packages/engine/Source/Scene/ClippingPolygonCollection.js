@@ -486,16 +486,15 @@ ClippingPolygonCollection.prototype.update = function (frameState) {
   if (!defined(signedDistanceTexture)) {
     signedDistanceTexture = new Texture({
       context: context,
-      width: ContextLimits.maximumTextureSize / 2,
-      height: ContextLimits.maximumTextureSize / 2,
+      width: ContextLimits.maximumTextureSize / 4.0,
+      height: ContextLimits.maximumTextureSize / 4.0,
       pixelFormat: context.webgl2 ? PixelFormat.RED : PixelFormat.LUMINANCE,
       pixelDatatype: PixelDatatype.FLOAT,
       sampler: new Sampler({
         wrapS: TextureWrap.CLAMP_TO_EDGE,
         wrapT: TextureWrap.CLAMP_TO_EDGE,
-        minificationFilter: TextureMinificationFilter.LINEAR,
+        minificationFilter: TextureMinificationFilter.NEAREST,
         magnificationFilter: TextureMagnificationFilter.LINEAR,
-        maximumAnisotropy: ContextLimits.maximumTextureFilterAnisotropy,
       }),
       flipY: false,
     });
@@ -846,8 +845,8 @@ ClippingPolygonCollection.getClipTextureResolution = function (
   }
 
   return new Cartesian2(
-    ContextLimits.maximumTextureSize,
-    ContextLimits.maximumTextureSize
+    ContextLimits.maximumTextureSize / 4.0,
+    ContextLimits.maximumTextureSize / 4.0
   );
 };
 

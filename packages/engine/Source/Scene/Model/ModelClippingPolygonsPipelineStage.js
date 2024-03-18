@@ -73,13 +73,13 @@ ModelClippingPolygonsPipelineStage.process = function (
   shaderBuilder.addDefine(
     "CLIPPING_POLYGONS_TEXTURE_WIDTH",
     textureResolution.x,
-    ShaderDestination.FRAGMENT
+    ShaderDestination.BOTH
   );
 
   shaderBuilder.addDefine(
     "CLIPPING_POLYGONS_TEXTURE_HEIGHT",
     textureResolution.y,
-    ShaderDestination.FRAGMENT
+    ShaderDestination.BOTH
   );
 
   shaderBuilder.addUniform(
@@ -95,6 +95,8 @@ ModelClippingPolygonsPipelineStage.process = function (
   );
 
   shaderBuilder.addVarying("vec2", "v_clipUv");
+  shaderBuilder.addVarying("float", "v_clipAmount");
+  shaderBuilder.addVarying("vec2", "v_clipPixelSize");
   shaderBuilder.addVertexLines(ModelClippingPolygonsStageVS);
   shaderBuilder.addFragmentLines(ModelClippingPolygonsStageFS);
 

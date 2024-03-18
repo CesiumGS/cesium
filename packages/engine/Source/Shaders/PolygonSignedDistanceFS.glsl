@@ -37,47 +37,40 @@ void main() {
     int lastPolygonIndex = 0;
     vec2 extents = abs(u_rectangle.zw - u_rectangle.xy);
 
+    float s = 1.0;
+
     float clipAmount = czm_infinity;
-    vec2 cp = vec2(czm_infinity, czm_infinity);
       for (int polygonIndex = 0; polygonIndex < u_polygonLength; polygonIndex++) {
         int positionsLength = getPositionsLength(u_polygonTexture, lastPolygonIndex);
         lastPolygonIndex += 1;
         
+            
             // Check each edge
-            for (int i = 0, j = positionsLength - 1; i < positionsLength; j = i++) {
+            for (int i = 0, j = positionsLength - 1; i < positionsLength; j = i, i++) {
                 vec2 a = getPolygonPosition(u_polygonTexture, lastPolygonIndex + i);
                 vec2 b = getPolygonPosition(u_polygonTexture, lastPolygonIndex + j);
  
-                vec2 ab = a - b;
-                vec2 abn = normalize(vec2(ab.y, -ab.x));
+                vec2 ab = b - a;
+                vec2 abn = a + vec2(-ab.y, ab.x);
 
-                vec2 pb = p - b;
-                float t = dot(pb, ab) / length(ab);
-                t = min(1.0, max(0.0, t));
+                vec2 pa = p - a;
+                float t = dot(pa, ab) / dot(ab, ab);
+                t = clamp(t, 0.0, 1.0);
 
-                vec2 q = b + t * ab;
-                vec2 pq = p - q;
-                float d = distance(p, q) * sign(dot(pq, abn));
+                vec2 pq = pa - t * ab;
+                float d = length(pq);
+
+                // Inside / outside
+                bvec3 cond = bvec3(p.y >= a.y, 
+                            p.y < b.y, 
+                            ab.x * pa.y > ab.y * pa.x);
+                if( all(cond) || all(not(cond)) ) s=-s;   
                 if (abs(d) < abs(clipAmount)) {
                     clipAmount = d;
-                    cp = q;
-                }
-            }
-
-            //Check each vertex (to avoid artifacts at the corners)
-            for (int i = 0; i < positionsLength; i++) {
-                vec2 a = getPolygonPosition(u_polygonTexture, lastPolygonIndex + i);
-                float d = distance(a, p); // TODO: Signed
-                if (abs(d) < abs(clipAmount)) {
-                     clipAmount = d;
-                     cp = a;
                 }
             }
         lastPolygonIndex += positionsLength;
     }
     
-    
-    //clipAmount = (p.x - u_rectangle.y) / extents.y;
-    //clipAmount = (p.y - u_rectangle.x) / extents.x;
-    out_FragColor = vec4(clipAmount / length(extents));
+    out_FragColor = (s * vec4(clipAmount / length(extents))) / 2.0 + 0.5;
 }

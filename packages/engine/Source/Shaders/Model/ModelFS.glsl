@@ -79,7 +79,6 @@ void main()
     modelClippingPolygonsStage(color);
     #endif
 
-
     #if defined(HAS_SILHOUETTE) && defined(HAS_NORMALS)
     silhouetteStage(color);
     #endif

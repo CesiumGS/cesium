@@ -10,4 +10,5 @@ void modelClippingPolygonsStage(ProcessedAttributes attributes)
     vec4 rectangle = model_clipRectangle;
     vec2 extents = abs(rectangle.zw - rectangle.xy);
     v_clipUv = vec2((x - rectangle.x) / extents.x, (y - rectangle.y) / extents.y);
+    v_clipPixelSize = extents / vec2(CLIPPING_POLYGONS_TEXTURE_WIDTH, CLIPPING_POLYGONS_TEXTURE_HEIGHT);
 }
