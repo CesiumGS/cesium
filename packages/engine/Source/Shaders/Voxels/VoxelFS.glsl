@@ -29,6 +29,8 @@ vec3 getSampleSize(in int level) {
     return scaleShapeUvToShapeSpace(sampleSizeUv);
 }
 
+#define MINIMUM_STEP_SCALAR (0.02)
+
 vec4 getStepSize(in SampleData sampleData, in Ray viewRay, in RayShapeIntersection shapeIntersection, in mat3 jacobianT, in float currentT) {
     // The Jacobian is computed in a space where the ellipsoid spans [-1, 1].
     // But the ray is marched in a space where the ellipsoid fills [0, 1].
@@ -55,7 +57,7 @@ vec4 getStepSize(in SampleData sampleData, in Ray viewRay, in RayShapeIntersecti
     vec4 entry = intersectionMax(shapeIntersection.entry, voxelEntry);
 
     float firstExit = minComponent(distanceToExit);
-    float stepSize = clamp(firstExit, fixedStep * 0.02, fixedStep);
+    float stepSize = clamp(firstExit, fixedStep * MINIMUM_STEP_SCALAR, fixedStep);
 
     return vec4(entry.xyz, stepSize);
 }

@@ -24,13 +24,13 @@
 #endif
 
 PointJacobianT convertUvToShapeSpaceDerivative(in vec3 positionUv) {
-    // Convert from UV space [0, 1] to local space [-1, 1]
+    // Convert from Cartesian UV space [0, 1] to Cartesian local space [-1, 1]
     vec3 position = positionUv * 2.0 - 1.0;
 
     float radius = length(position.xy); // [0, 1]
     vec3 radial = normalize(vec3(position.xy, 0.0));
 
-    // TODO: why??? Why not the local z in [-1, 1] ??
+    // Shape space height is defined within [0, 1]
     float height = positionUv.z; // [0, 1]
     vec3 z = vec3(0.0, 0.0, 1.0);
 
