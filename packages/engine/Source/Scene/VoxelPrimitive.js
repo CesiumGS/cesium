@@ -1231,10 +1231,15 @@ function computeBoxExaggerationTranslation(primitive, frameState) {
 
   // Find the cartographic height
   const ellipsoid = Ellipsoid.WGS84;
-  const centerHeight = ellipsoid.cartesianToCartographic(
+  const centerCartographic = ellipsoid.cartesianToCartographic(
     transformedCenter,
     scratchCartographicCenter
-  ).height;
+  );
+
+  let centerHeight = 0.0;
+  if (defined(centerCartographic)) {
+    centerHeight = centerCartographic.height;
+  }
 
   // Find the shift that will put the center in the right position relative
   // to relativeHeight, after it is scaled by verticalExaggeration
