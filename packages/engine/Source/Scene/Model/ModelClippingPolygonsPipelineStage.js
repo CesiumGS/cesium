@@ -41,7 +41,6 @@ ModelClippingPolygonsPipelineStage.process = function (
   frameState
 ) {
   const clippingPolygons = model.clippingPolygons;
-  const context = frameState.context;
   const shaderBuilder = renderResources.shaderBuilder;
 
   shaderBuilder.addDefine(
@@ -66,7 +65,6 @@ ModelClippingPolygonsPipelineStage.process = function (
 
   const textureResolution = ClippingPolygonCollection.getClipTextureResolution(
     clippingPolygons,
-    context,
     textureResolutionScratch
   );
 
@@ -94,9 +92,7 @@ ModelClippingPolygonsPipelineStage.process = function (
     ShaderDestination.VERTEX
   );
 
-  shaderBuilder.addVarying("vec2", "v_clipUv");
-  shaderBuilder.addVarying("float", "v_clipAmount");
-  shaderBuilder.addVarying("vec2", "v_clipPixelSize");
+  shaderBuilder.addVarying("vec2", "v_clipPosition");
   shaderBuilder.addVertexLines(ModelClippingPolygonsStageVS);
   shaderBuilder.addFragmentLines(ModelClippingPolygonsStageFS);
 

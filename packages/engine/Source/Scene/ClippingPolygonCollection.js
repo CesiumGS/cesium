@@ -1,6 +1,4 @@
 import Cartesian2 from "../Core/Cartesian2.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import Cartesian4 from "../Core/Cartesian4.js";
 import CesiumMath from "../Core/Math.js";
 import Check from "../Core/Check.js";
 import defaultValue from "../Core/defaultValue.js";
@@ -22,7 +20,6 @@ import TextureWrap from "../Renderer/TextureWrap.js";
 import ClippingPolygon from "./ClippingPolygon.js";
 import ComputeCommand from "../Renderer/ComputeCommand.js";
 import PolygonSignedDistanceFS from "../Shaders/PolygonSignedDistanceFS.js";
-import Cartographic from "../Core/Cartographic.js";
 
 /**
  * Specifies a set of clipping polygons. Clipping polygons selectively disable rendering in a region on the
@@ -34,7 +31,7 @@ import Cartographic from "../Core/Cartographic.js";
  * @param {object} [options] Object with the following properties:
  * @param {ClippingPolygon[]} [options.polygons=[]] An array of {@link ClippingPolygon} objects used to selectively disable rendering on the inside of each polygon.
  * @param {boolean} [options.enabled=true] Determines whether the clipping polygons are active.
- * @param {boolean} [options.inverse=false]
+ * @param {boolean} [options.inverse=false] If true, a region will be clipped if it is on the outside of any polygon in the collection. Otherwise, a region will only be clipped if it is on the inside of every polygon.
  *
  * // TODO: Example
  */
@@ -67,7 +64,6 @@ function ClippingPolygonCollection(options) {
   // This is because in a Cesium3DTileset multiple models may reference the tileset's ClippingPolygonCollection.
   this._owner = undefined;
 
-  this._uint8View = undefined;
   this._float32View = undefined;
 
   this._clippingPolygonsTexture = undefined;
@@ -105,7 +101,14 @@ Object.defineProperties(ClippingPolygonCollection.prototype, {
     },
   },
 
-  // TODO
+  /**
+   * Returns the total number of positions in all polygons in the collection.
+   *
+   * @memberof ClippingPolygonCollection.prototype
+   * @type {number}
+   * @readonly
+   * @private
+   */
   totalPositions: {
     get: function () {
       return this._totalPositions;
@@ -153,21 +156,7 @@ Object.defineProperties(ClippingPolygonCollection.prototype, {
   },
 
   /**
-   * Returns a texture containing packed clipping polygons.
-   *
-   * @memberof ClippingPolygonCollection.prototype
-   * @type {Texture}
-   * @readonly
-   * @private
-   */
-  texture: {
-    get: function () {
-      return this._clippingPolygonsTexture;
-    },
-  },
-
-  /**
-   * Returns a texture with the computed signed distance
+   * Returns a texture containing the computed signed distance of each polygon.
    *
    * @memberof ClippingPolygonCollection.prototype
    * @type {Texture}
@@ -194,7 +183,7 @@ Object.defineProperties(ClippingPolygonCollection.prototype, {
   },
 
   /**
-   * Returns a Number encapsulating the state for this ClippingPolygonCollection.
+   * Returns a number encapsulating the state for this ClippingPolygonCollection.
    *
    * Clipping mode is encoded in the sign of the number, which is just the total position count.
    * If this value changes, then shader regeneration is necessary.
@@ -226,7 +215,7 @@ Object.defineProperties(ClippingPolygonCollection.prototype, {
 
 /**
  * Adds the specified {@link ClippingPolygon} to the collection to be used to selectively disable rendering
- * on the insode of each polygon. Use {@link ClippingPolygonCollection#unionClippingRegions} to modify
+ * on the inside of each polygon. Use {@link ClippingPolygonCollection#unionClippingRegions} to modify
  * how modify the clipping behavior of multiple polygons.
  *
  * @param {ClippingPolygon} polygon The ClippingPolygon to add to the collection.
@@ -354,61 +343,28 @@ ClippingPolygonCollection.prototype.removeAll = function () {
   this._polygons = [];
 };
 
-// const distanceEncodeScratch = new Cartesian4();
-// const oct32EncodeScratch = new Cartesian4();
-// function packPlanesAsUint8(clippingPolygonsCollection, startIndex, endIndex) {
-//   const uint8View = clippingPolygonsCollection._uint8View;
-//   const polygons = clippingPolygonsCollection._polygons;
-//   let byteIndex = 0;
-//   for (let i = startIndex; i < endIndex; ++i) {
-//     const polygon = polygons[i];
-
-//     const oct32Normal = AttributeCompression.octEncodeToCartesian4(
-//       polygon.normal,
-//       oct32EncodeScratch
-//     );
-//     uint8View[byteIndex] = oct32Normal.x;
-//     uint8View[byteIndex + 1] = oct32Normal.y;
-//     uint8View[byteIndex + 2] = oct32Normal.z;
-//     uint8View[byteIndex + 3] = oct32Normal.w;
-
-//     const encodedDistance = Cartesian4.packFloat(
-//       polygon.distance,
-//       distanceEncodeScratch
-//     );
-//     uint8View[byteIndex + 4] = encodedDistance.x;
-//     uint8View[byteIndex + 5] = encodedDistance.y;
-//     uint8View[byteIndex + 6] = encodedDistance.z;
-//     uint8View[byteIndex + 7] = encodedDistance.w;
-
-//     byteIndex += 8;
-//   }
-// }
-
+const scratchRectangle = new Rectangle();
 function packPolygonsAsFloats(clippingPolygonCollection) {
   const float32View = clippingPolygonCollection._float32View;
   const polygons = clippingPolygonCollection._polygons;
 
   let floatIndex = 0;
   for (const polygon of polygons) {
-    const length = polygon.positions.length;
+    // Pack the spherical extents
+    const extents = polygon.computeSphericalExtents(scratchRectangle);
+    Rectangle.pack(extents, float32View, floatIndex);
+    floatIndex += 4;
+
     // Pack the length of the polygon
+    const length = polygon.length;
     float32View[floatIndex] = length;
 
     floatIndex += 2;
 
+    // Pack the polygon positions
+    const hierarchy = polygon.hierarchy; // TODO: Pack holes
     for (let i = 0; i < length; ++i) {
-      const spherePoint = polygon.positions[i];
-
-      // Convert to approximate spherical coordinates
-      // const latitudeApproximation = CesiumMath.fastApproximateAtan2(
-      //   Math.sqrt(position.x * position.x + position.y * position.y),
-      //   position.z
-      // );
-      // const longitudeApproximation = CesiumMath.fastApproximateAtan2(
-      //   position.x,
-      //   position.y
-      // );
+      const spherePoint = hierarchy.positions[i];
 
       // Project into plane with vertical for latitude
       const magXY = Math.sqrt(
@@ -450,15 +406,14 @@ ClippingPolygonCollection.prototype.update = function (frameState) {
   let clippingPolygonTexture = this._clippingPolygonsTexture;
   let signedDistanceTexture = this._signedDistanceTexture;
   const context = frameState.context;
-  const useFloatTexture = true; //ClippingPolygonCollection.useFloatTexture(context); TODO
 
-  // Compute texture requirements for current polygons TODO
-  // In RGBA FLOAT, A polygon is 2 floats packed to a RGBA.
-  // In RGBA UNSIGNED_BYTE, A plane is a float in [0, 1) packed to RGBA and an Oct32 quantized normal,
-  // so 8 bits or 2 pixels in RGBA.
-  const pixelsNeeded = useFloatTexture
-    ? this.totalPositions + this.length
-    : this.totalPositions * 2;
+  if (!ClippingPolygonCollection.isSupported(context)) {
+    throw new DeveloperError("ClippingPolygonCollections are not supported");
+  }
+
+  // In RGBA FLOAT, each polygon position is 2 floats packed to a RGBA.
+  // Each polygon is the extents (4 floats) + t
+  const pixelsNeeded = this.totalPositions + this.length;
 
   if (defined(clippingPolygonTexture)) {
     const currentPixelCount =
@@ -484,10 +439,14 @@ ClippingPolygonCollection.prototype.update = function (frameState) {
   }
 
   if (!defined(signedDistanceTexture)) {
+    const textureDimensions = ClippingPolygonCollection.getClipTextureResolution(
+      this,
+      textureResolutionScratch
+    );
     signedDistanceTexture = new Texture({
       context: context,
-      width: ContextLimits.maximumTextureSize / 4.0,
-      height: ContextLimits.maximumTextureSize / 4.0,
+      width: textureDimensions.x,
+      height: textureDimensions.y,
       pixelFormat: context.webgl2 ? PixelFormat.RED : PixelFormat.LUMINANCE,
       pixelDatatype: PixelDatatype.FLOAT,
       sampler: new Sampler({
@@ -509,33 +468,18 @@ ClippingPolygonCollection.prototype.update = function (frameState) {
     // Allocate in the Y direction, since texture may be as wide as context texture support.
     requiredResolution.y *= 2;
 
-    if (useFloatTexture) {
-      clippingPolygonTexture = new Texture({
-        context: context,
-        width: requiredResolution.x,
-        height: requiredResolution.y,
-        pixelFormat: PixelFormat.RG,
-        pixelDatatype: PixelDatatype.FLOAT,
-        sampler: Sampler.NEAREST,
-        flipY: false,
-      });
-      this._float32View = new Float32Array(
-        requiredResolution.x * requiredResolution.y * 2
-      );
-    } else {
-      // clippingPolygonTexture = new Texture({
-      //   context: context,
-      //   width: requiredResolution.x,
-      //   height: requiredResolution.y,
-      //   pixelFormat: PixelFormat.RGBA,
-      //   pixelDatatype: PixelDatatype.UNSIGNED_BYTE,
-      //   sampler: Sampler.NEAREST,
-      //   flipY: false,
-      // });
-      // this._uint8View = new Uint8Array(
-      //   requiredResolution.x * requiredResolution.y * 4
-      // );
-    }
+    clippingPolygonTexture = new Texture({
+      context: context,
+      width: requiredResolution.x,
+      height: requiredResolution.y,
+      pixelFormat: PixelFormat.RG,
+      pixelDatatype: PixelDatatype.FLOAT,
+      sampler: Sampler.NEAREST,
+      flipY: false,
+    });
+    this._float32View = new Float32Array(
+      requiredResolution.x * requiredResolution.y * 2
+    );
 
     this._signedDistanceTexture = signedDistanceTexture;
     this._clippingPolygonsTexture = clippingPolygonTexture;
@@ -545,26 +489,10 @@ ClippingPolygonCollection.prototype.update = function (frameState) {
     return;
   }
 
-  if (useFloatTexture) {
-    if (defined(this._signedDistanceTextureCommand)) {
-      // TODO: Await?
-      // TODO: Cancel?
-    }
-
-    this._signedDistanceTextureCommand = createSignedDistanceTextureCommand(
-      this,
-      frameState
-    );
-  } else {
-    // packPlanesAsUint8(this, 0, this._planes.length);
-    // clippingPolygonTexture.copyFrom({
-    //   source: {
-    //     width: clippingPolygonTexture.width,
-    //     height: clippingPolygonTexture.height,
-    //     arrayBufferView: this._uint8View,
-    //   },
-    // });
-  }
+  this._signedDistanceTextureCommand = createSignedDistanceTextureCommand(
+    this,
+    frameState
+  );
 
   this._dirty = false;
 };
@@ -576,20 +504,12 @@ ClippingPolygonCollection.prototype.queueCommands = function (frameState) {
 };
 
 const scratchCartesian = new Cartesian2();
-const scratchRectangle = new Rectangle();
 function createSignedDistanceTextureCommand(collection, frameState) {
-  //return new Promise((resolve) => {
   const polygonTexture = collection._clippingPolygonsTexture;
-  const packedRectangle = Cartesian4.unpack(
-    Rectangle.pack(collection.getSphericalExtents(scratchRectangle), [])
-  ); // TODO: This should probably be an array, should we pack it in the polygonTexture?
   return new ComputeCommand({
     fragmentShaderSource: PolygonSignedDistanceFS,
     outputTexture: collection._signedDistanceTexture,
     uniformMap: {
-      u_rectangle: function () {
-        return packedRectangle;
-      },
       u_polygonLength: function () {
         return collection.length;
       },
@@ -599,12 +519,11 @@ function createSignedDistanceTextureCommand(collection, frameState) {
       u_polygonTextureDimensions: function () {
         return ClippingPolygonCollection.getTextureResolution(
           collection,
-          frameState.context,
           scratchCartesian
         );
       },
     },
-    persists: true, // TODO:?
+    persists: false, // TODO:?
     owner: collection,
     preExecute: () => {
       packPolygonsAsFloats(collection);
@@ -620,63 +539,7 @@ function createSignedDistanceTextureCommand(collection, frameState) {
       collection._signedDistanceTextureCommand = undefined;
     },
   });
-  //});
 }
-
-const spherePointScratch = new Cartesian3();
-/**
- * TODO
- * @param {*} ellipsoid
- * @param {*} result
- * @returns
- */
-ClippingPolygonCollection.prototype.getSphericalExtents = function (result) {
-  const rectangle = this.rectangle;
-
-  let spherePoint = Cartographic.toCartesian(
-    Rectangle.southwest(rectangle),
-    undefined, // TODO
-    spherePointScratch
-  );
-
-  // Project into plane with vertical for latitude
-  let magXY = Math.sqrt(
-    spherePoint.x * spherePoint.x + spherePoint.y * spherePoint.y
-  );
-
-  // Use fastApproximateAtan2 for alignment with shader
-  let sphereLatitude = CesiumMath.fastApproximateAtan2(magXY, spherePoint.z);
-  let sphereLongitude = CesiumMath.fastApproximateAtan2(
-    spherePoint.x,
-    spherePoint.y
-  );
-
-  result.south = sphereLatitude;
-  result.west = sphereLongitude;
-
-  spherePoint = Cartographic.toCartesian(
-    Rectangle.northeast(rectangle),
-    undefined, // TODO
-    spherePointScratch
-  );
-
-  // Project into plane with vertical for latitude
-  magXY = Math.sqrt(
-    spherePoint.x * spherePoint.x + spherePoint.y * spherePoint.y
-  );
-
-  // Use fastApproximateAtan2 for alignment with shader
-  sphereLatitude = CesiumMath.fastApproximateAtan2(magXY, spherePoint.z);
-  sphereLongitude = CesiumMath.fastApproximateAtan2(
-    spherePoint.x,
-    spherePoint.y
-  );
-
-  result.north = sphereLatitude;
-  result.east = sphereLongitude;
-
-  return result;
-};
 
 const scratchRectangleTile = new Rectangle();
 const scratchRectangleIntersection = new Rectangle();
@@ -775,15 +638,14 @@ ClippingPolygonCollection.setOwner = function (
 };
 
 /**
- * Function for checking if the context will allow clipping polygons with floating point textures.
+ * Function for checking if the context will allow clipping polygons, which require floating point textures.
  *
  * @param {Context} context The Context that will contain clipped objects and clipping textures.
  * @returns {boolean} <code>true</code> if floating point textures can be used for clipping polygons.
  * @private
  */
-ClippingPolygonCollection.useFloatTexture = function (context) {
+ClippingPolygonCollection.isSupported = function (context) {
   return context.floatingPointTexture;
-  // TODO: Always assume
 };
 
 /**
@@ -792,14 +654,12 @@ ClippingPolygonCollection.useFloatTexture = function (context) {
  * allocated based on the current polygon count.
  *
  * @param {ClippingPolygonCollection} clippingPolygonCollection The clipping polygon collection
- * @param {Context} context The rendering context
  * @param {Cartesian2} result A Cartesian2 for the result.
  * @returns {Cartesian2} The required resolution.
  * @private
  */
 ClippingPolygonCollection.getTextureResolution = function (
   clippingPolygonCollection,
-  context,
   result
 ) {
   const texture = clippingPolygonCollection.texture;
@@ -809,11 +669,9 @@ ClippingPolygonCollection.getTextureResolution = function (
     return result;
   }
 
-  const pixelsNeeded = ClippingPolygonCollection.useFloatTexture(context)
-    ? clippingPolygonCollection.totalPositions +
-      clippingPolygonCollection.length
-    : clippingPolygonCollection.totalPositions +
-      clippingPolygonCollection.length * 2;
+  const pixelsNeeded =
+    clippingPolygonCollection.totalPositions +
+    clippingPolygonCollection.length * 3; // rectangle + polygon position length + positions
   const requiredResolution = computeTextureResolution(pixelsNeeded, result);
 
   // Allocate twice as much space as needed to avoid frequent texture reallocation.
@@ -827,14 +685,12 @@ ClippingPolygonCollection.getTextureResolution = function (
  * allocated based on the current polygon count.
  *
  * @param {ClippingPolygonCollection} clippingPolygonCollection The clipping polygon collection
- * @param {Context} context The rendering context
  * @param {Cartesian2} result A Cartesian2 for the result. TODO
  * @returns {Cartesian2} The required resolution.
  * @private
  */
 ClippingPolygonCollection.getClipTextureResolution = function (
   clippingPolygonCollection,
-  context,
   result
 ) {
   const texture = clippingPolygonCollection.signedDistanceTexture;
@@ -845,8 +701,8 @@ ClippingPolygonCollection.getClipTextureResolution = function (
   }
 
   return new Cartesian2(
-    ContextLimits.maximumTextureSize / 4.0,
-    ContextLimits.maximumTextureSize / 4.0
+    ContextLimits.maximumTextureSize / 2.0,
+    ContextLimits.maximumTextureSize / 2.0
   );
 };
 
