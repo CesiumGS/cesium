@@ -30,10 +30,11 @@ vec3 getSampleSize(in int level) {
 }
 
 #define MINIMUM_STEP_SCALAR (0.02)
+#define SHIFT_FRACTION (0.001)
 
 vec4 getStepSize(in SampleData sampleData, in Ray viewRay, in RayShapeIntersection shapeIntersection, in mat3 jacobianT, in float currentT) {
-    // The Jacobian is computed in a space where the ellipsoid spans [-1, 1].
-    // But the ray is marched in a space where the ellipsoid fills [0, 1].
+    // The Jacobian is computed in a space where the shape spans [-1, 1].
+    // But the ray is marched in a space where the shape fills [0, 1].
     // So we need to scale the Jacobian by 2.
     vec3 gradient = 2.0 * viewRay.rawDir * jacobianT;
 
@@ -44,7 +45,7 @@ vec4 getStepSize(in SampleData sampleData, in Ray viewRay, in RayShapeIntersecti
     vec3 directions = sign(gradient);
     vec3 positiveDirections = max(directions, 0.0);
     vec3 entryCoord = mix(ceil(voxelCoord), floor(voxelCoord), positiveDirections);
-    vec3 exitCoord = mix(floor(voxelCoord), ceil(voxelCoord), positiveDirections);
+    vec3 exitCoord = entryCoord + directions;
 
     vec3 distanceFromEntry = abs(voxelCoord - entryCoord) * sampleSizeAlongRay;
     vec3 distanceToExit = abs(exitCoord - voxelCoord) * sampleSizeAlongRay;
@@ -56,8 +57,9 @@ vec4 getStepSize(in SampleData sampleData, in Ray viewRay, in RayShapeIntersecti
     vec4 voxelEntry = vec4(normal, currentT - lastEntry);
     vec4 entry = intersectionMax(shapeIntersection.entry, voxelEntry);
 
-    float firstExit = minComponent(distanceToExit);
-    float stepSize = clamp(firstExit, fixedStep * MINIMUM_STEP_SCALAR, fixedStep);
+    float shift = fixedStep * SHIFT_FRACTION;
+    float firstExit = minComponent(distanceToExit) + shift;
+    float stepSize = clamp(firstExit, fixedStep * MINIMUM_STEP_SCALAR, fixedStep + shift);
 
     return vec4(entry.xyz, stepSize);
 }
@@ -148,6 +150,7 @@ void main()
         fragmentInput.voxel.viewDirWorld = viewDirWorld;
         fragmentInput.voxel.surfaceNormal = step.xyz;
         fragmentInput.voxel.travelDistance = step.w;
+        fragmentInput.voxel.stepCount = stepCount;
         fragmentInput.voxel.tileIndex = sampleDatas[0].megatextureIndex;
         fragmentInput.voxel.sampleIndex = getSampleIndex(sampleDatas[0].tileUv);
 

@@ -9,8 +9,9 @@
 
 PointJacobianT convertUvToShapeSpaceDerivative(in vec3 positionUv) {
     // For BOX, UV space = shape space, so we can use positionUv as-is,
-    // and the Jacobian is the identity matrix
-    return PointJacobianT(positionUv, mat3(1.0));
+    // and the Jacobian is the identity matrix, except that a step of 1
+    // only spans half the shape space [-1, 1], so the identity is scaled.
+    return PointJacobianT(positionUv, mat3(0.5));
 }
 
 vec3 convertShapeToShapeUvSpace(in vec3 positionShape) {
