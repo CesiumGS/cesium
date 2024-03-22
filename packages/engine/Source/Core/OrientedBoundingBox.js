@@ -14,6 +14,7 @@ import CesiumMath from "./Math.js";
 import Matrix3 from "./Matrix3.js";
 import Matrix4 from "./Matrix4.js";
 import Plane from "./Plane.js";
+import Ray from "./Ray.js";
 import Rectangle from "./Rectangle.js";
 
 /**
@@ -670,13 +671,8 @@ OrientedBoundingBox.clone = function (box, result) {
  */
 OrientedBoundingBox.intersectPlane = function (box, plane) {
   //>>includeStart('debug', pragmas.debug);
-  if (!defined(box)) {
-    throw new DeveloperError("box is required.");
-  }
-
-  if (!defined(plane)) {
-    throw new DeveloperError("plane is required.");
-  }
+  Check.defined("box", box);
+  Check.defined("plane", plane);
   //>>includeEnd('debug');
 
   const center = box.center;
@@ -712,6 +708,141 @@ OrientedBoundingBox.intersectPlane = function (box, plane) {
     return Intersect.INSIDE;
   }
   return Intersect.INTERSECTING;
+};
+
+const scratchInverse = new Matrix4();
+const scratchNormal = new Cartesian3();
+const scratchRay = new Ray();
+
+/**
+ * Computes the nearest intersection along the ray with the oriented bounding box.
+ *
+ * @param {OrientedBoundingBox} box The oriented bounding box to test.
+ * @param {Ray} ray The ray to test against.
+ * @param {Cartesian3} [result] The nearest intersection along the provided ray with the oriented bounding box.
+ * @returns {Cartesian3|undefined} The nearest intersection along the provided ray with the oriented bounding box, or <code>undefined</code> if there is no intersection.
+ */
+OrientedBoundingBox.intersectRay = function (box, ray, result) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("box", box);
+  Check.defined("ray", ray);
+  //>>includeEnd('debug');
+
+  const transformedRay = scratchRay;
+  transformedRay.origin = Cartesian3.subtract(
+    ray.origin,
+    box.center,
+    transformedRay.origin
+  );
+  transformedRay.direction = Cartesian3.clone(
+    ray.direction,
+    transformedRay.direction
+  );
+
+  const transform = Matrix4.multiplyByMatrix3(
+    Matrix4.IDENTITY,
+    box.halfAxes,
+    scratchInverse
+  );
+  const inverseHalfAxis = Matrix4.inverse(transform, scratchInverse);
+  Ray.transform(transformedRay, inverseHalfAxis, transformedRay);
+
+  const origin = transformedRay.origin;
+  const direction = transformedRay.direction;
+
+  let tNear = -Infinity,
+    tFar = Infinity;
+
+  // Implementation based on https://education.siggraph.org/static/HyperGraph/raytrace/rtinter3.htm#:~:text=We%20can%20use%20a%20box,bounding%20volume%20or%20a%20box.
+  let normal = Cartesian3.UNIT_X;
+  let denominator = Cartesian3.dot(normal, direction);
+  if (Math.abs(denominator) < CesiumMath.EPSILON15) {
+    // The ray is paralell to the faces
+    if (origin.x > 1.0 || origin.x < -1.0) {
+      return;
+    }
+  } else {
+    const negativeNormal = Cartesian3.negate(normal, scratchNormal);
+    const negativeDenominator = Cartesian3.dot(negativeNormal, direction);
+    let tx1 = (-1.0 - Cartesian3.dot(normal, origin)) / denominator;
+    let tx2 =
+      (-1.0 - Cartesian3.dot(negativeNormal, origin)) / negativeDenominator;
+
+    if (tx1 > tx2) {
+      const swap = tx1;
+      tx1 = tx2;
+      tx2 = swap;
+    }
+
+    tNear = Math.max(tNear, tx1);
+    tFar = Math.min(tFar, tx2);
+
+    if (tNear > tFar || tFar < 0.0) {
+      return;
+    }
+  }
+
+  normal = Cartesian3.UNIT_Y;
+  denominator = Cartesian3.dot(normal, direction);
+  if (Math.abs(denominator) < CesiumMath.EPSILON15) {
+    // The ray is paralell to the faces
+    if (origin.y > 1.0 || origin.y < -1.0) {
+      return;
+    }
+  } else {
+    const negativeNormal = Cartesian3.negate(normal, scratchNormal);
+    const negativeDenominator = Cartesian3.dot(negativeNormal, direction);
+    let ty1 = (-1.0 - Cartesian3.dot(normal, origin)) / denominator;
+    let ty2 =
+      (-1.0 - Cartesian3.dot(negativeNormal, origin)) / negativeDenominator;
+
+    if (ty1 > ty2) {
+      const swap = ty1;
+      ty1 = ty2;
+      ty2 = swap;
+    }
+
+    tNear = Math.max(tNear, ty1);
+    tFar = Math.min(tFar, ty2);
+
+    if (tNear > tFar || tFar < 0.0) {
+      return;
+    }
+  }
+
+  normal = Cartesian3.UNIT_Z;
+  denominator = Cartesian3.dot(normal, direction);
+  if (Math.abs(denominator) < CesiumMath.EPSILON15) {
+    // The ray is paralell to the faces
+    if (origin.z > 1.0 || origin.z < -1.0) {
+      return;
+    }
+  } else {
+    const negativeNormal = Cartesian3.negate(normal, scratchNormal);
+    const negativeDenominator = Cartesian3.dot(negativeNormal, direction);
+    let tz1 = (-1.0 - Cartesian3.dot(normal, origin)) / denominator;
+    let tz2 =
+      (-1.0 - Cartesian3.dot(negativeNormal, origin)) / negativeDenominator;
+
+    if (tz1 > tz2) {
+      const swap = tz1;
+      tz1 = tz2;
+      tz2 = swap;
+    }
+
+    tNear = Math.max(tNear, tz1);
+    tFar = Math.min(tFar, tz2);
+
+    if (tNear > tFar || tFar < 0.0) {
+      return;
+    }
+  }
+
+  if (tNear <= 0.0) {
+    return Ray.getPoint(ray, tFar, result);
+  }
+
+  return Ray.getPoint(ray, tNear, result);
 };
 
 const scratchCartesianU = new Cartesian3();
@@ -1159,6 +1290,17 @@ OrientedBoundingBox.isOccluded = function (box, occluder) {
  */
 OrientedBoundingBox.prototype.intersectPlane = function (plane) {
   return OrientedBoundingBox.intersectPlane(this, plane);
+};
+
+/**
+ * Computes the nearest intersection along the ray with the oriented bounding box.
+ *
+ * @param {Ray} ray The ray to test against.
+ * @param {Cartesian3} [result] The nearest intersection along the provided ray with the oriented bounding box.
+ * @returns {Cartesian3|undefined} The nearest intersection along the provided ray with the oriented bounding box, or <code>undefined</code> if there is no intersection.
+ */
+OrientedBoundingBox.prototype.intersectRay = function (ray, result) {
+  return OrientedBoundingBox.intersectRay(this, ray, result);
 };
 
 /**

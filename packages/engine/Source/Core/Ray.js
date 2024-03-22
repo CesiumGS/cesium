@@ -2,6 +2,7 @@ import Cartesian3 from "./Cartesian3.js";
 import Check from "./Check.js";
 import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
+import Matrix4 from "./Matrix4.js";
 
 /**
  * Represents a ray that extends infinitely from the provided origin in the provided direction.
@@ -77,4 +78,33 @@ Ray.getPoint = function (ray, t, result) {
   result = Cartesian3.multiplyByScalar(ray.direction, t, result);
   return Cartesian3.add(ray.origin, result, result);
 };
+
+/**
+ * Transforms the ray by the given transformation matrix. The resulting ray's direction is not garunteed to be normalized.
+ *
+ * @param {Ray} ray The ray.
+ * @param {Matrix4} transform The transformation matrix.
+ * @param {Ray} [result] The transformed ray.
+ * @returns {Ray} The transformed ray.
+ */
+Ray.transform = function (ray, transform, result) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("ray", ray);
+  Check.typeOf.object("transform", transform);
+  //>>includeEnd('debug');
+
+  if (!defined(result)) {
+    result = new Ray();
+  }
+
+  result.origin = Matrix4.multiplyByPoint(transform, ray.origin, result.origin);
+  result.direction = Matrix4.multiplyByPointAsVector(
+    transform,
+    ray.direction,
+    result.direction
+  );
+
+  return result;
+};
+
 export default Ray;
