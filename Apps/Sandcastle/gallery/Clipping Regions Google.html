@@ -103,21 +103,28 @@
         viewer.zoomTo(buildingTileset, cameraOffset);
 
         // Enable toggling of new building visibility
-        Sandcastle.addToggleButton("Show proposed building", true, function (
-          checked
-        ) {
+        Sandcastle.addToggleButton("Show building", true, function (checked) {
           buildingTileset.show = checked;
         });
 
         // Enable toggling of target location highlight
-        Sandcastle.addToggleButton("Clip target location", true, function (
-          checked
-        ) {
+        Sandcastle.addToggleButton("Enable clipping", true, function (checked) {
           clippingPolygons.enabled = checked;
         });
 
-        Sandcastle.addToggleButton("Inverse clip", false, function (checked) {
+        Sandcastle.addToggleButton("Inverse clipping", false, function (
+          checked
+        ) {
           clippingPolygons.inverse = checked;
+        });
+
+        Sandcastle.addToolbarButton("Remove last polygon", () => {
+          if (clippingPolygons.length === 0) {
+            return;
+          }
+          clippingPolygons.remove(
+            clippingPolygons.get(clippingPolygons.length - 1)
+          );
         });
 
         viewer.cesiumWidget.screenSpaceEventHandler.removeInputAction(
@@ -179,7 +186,6 @@
               activeShape = drawShape(dynamicPositions);
             }
             activeShapePoints.push(earthPosition);
-            createPoint(earthPosition);
           }
         }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
@@ -194,9 +200,12 @@
             }
           }
         }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
-        // Redraw the shape so it's not dynamic and remove the dynamic shape.
 
         function createClippingPolygon(positions) {
+          if (positions.length < 3) {
+            return;
+          }
+
           clippingPolygons.add(
             new Cesium.ClippingPolygon({
               positions: positions,

@@ -38,6 +38,7 @@ import RenderState from "../Renderer/RenderState.js";
 import VertexArray from "../Renderer/VertexArray.js";
 import BlendingState from "./BlendingState.js";
 import ClippingPlaneCollection from "./ClippingPlaneCollection.js";
+import ClippingPolygonCollection from "./ClippingPolygonCollection.js";
 import DepthFunction from "./DepthFunction.js";
 import GlobeSurfaceTile from "./GlobeSurfaceTile.js";
 import ImageryLayer from "./ImageryLayer.js";
@@ -171,6 +172,13 @@ function GlobeSurfaceTileProvider(options) {
   this._clippingPlanes = undefined;
 
   /**
+   * A property specifying a {@link ClippingPolygonCollection} used to selectively disable rendering inside or outside a list of polygons.
+   * @type {ClippingPolygonCollection}
+   * @private
+   */
+  this._clippingPolygons = undefined;
+
+  /**
    * A property specifying a {@link Rectangle} used to selectively limit terrain and imagery rendering.
    * @type {Rectangle}
    */
@@ -290,7 +298,7 @@ Object.defineProperties(GlobeSurfaceTileProvider.prototype, {
     },
   },
   /**
-   * The {@link ClippingPlaneCollection} used to selectively disable rendering the tileset.
+   * The {@link ClippingPlaneCollection} used to selectively disable rendering.
    *
    * @type {ClippingPlaneCollection}
    *
@@ -302,6 +310,22 @@ Object.defineProperties(GlobeSurfaceTileProvider.prototype, {
     },
     set: function (value) {
       ClippingPlaneCollection.setOwner(value, this, "_clippingPlanes");
+    },
+  },
+
+  /**
+   * The {@link ClippingPolygonCollection} used to selectively disable rendering inside or outside a list of polygons.
+   *
+   * @type {ClippingPolygonCollection}
+   *
+   * @private
+   */
+  clippingPolygons: {
+    get: function () {
+      return this._clippingPolygons;
+    },
+    set: function (value) {
+      ClippingPolygonCollection.setOwner(value, this, "_clippingPolygons");
     },
   },
 });

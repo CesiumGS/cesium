@@ -1,40 +1,41 @@
 in vec2 v_textureCoordinates;
 
-uniform int u_polygonLength;
+uniform int u_polygonsLength;
 uniform highp sampler2D u_polygonTexture;
 uniform vec2 u_polygonTextureDimensions;
+uniform highp sampler2D u_extentsTexture;
+uniform vec2 u_extentsTextureDimensions;
 
-int getPolygonIndex(vec4 coord) {
-   float dimension = ceil(log2(float(u_polygonLength)));
+int getPolygonIndex(float dimension, vec2 coord) {
    vec2 uv = coord.xy * dimension;
-   return int(floor(uv.y) * dimension + floor(uv.x)));
+   return int(floor(uv.y) * dimension + floor(uv.x));
 }
 
-vec2 getLookupUv(int i) {
-    int pixY = i / int(u_polygonTextureDimensions.x);
-    int pixX = i - (pixY * int(u_polygonTextureDimensions.x));
-    float pixelWidth = 1.0 / u_polygonTextureDimensions.x;
-    float pixelHeight = 1.0 / u_polygonTextureDimensions.y;
+vec2 getLookupUv(vec2 dimensions, int i) {
+    int pixY = i / int(dimensions.x);
+    int pixX = i - (pixY * int(dimensions.x));
+    float pixelWidth = 1.0 / dimensions.x;
+    float pixelHeight = 1.0 / dimensions.y;
     float u = (float(pixX) + 0.5) * pixelWidth; // sample from center of pixel
     float v = (float(pixY) + 0.5) * pixelHeight;
     return vec2(u, v);
 }
 
-vec4 getRectangle(highp sampler2D polygonTexture, int i) {
-    return vec4(texture(polygonTexture, getLookupUv(i)).xy, texture(polygonTexture, getLookupUv(i + 1)).xy);
+vec4 getRectangle(int i) {
+    return texture(u_extentsTexture, getLookupUv(u_extentsTextureDimensions, i));
 }
 
-int getPositionsLength(highp sampler2D polygonTexture, int i) {
-    vec2 uv = getLookupUv(i);
-    return int(texture(polygonTexture, uv).x);
+int getPositionsLength(int i) {
+    vec2 uv = getLookupUv(u_polygonTextureDimensions, i);
+    return int(texture(u_polygonTexture, uv).x);
 }
 
-vec2 getPolygonPosition(highp sampler2D polygonTexture, int i) {
-    vec2 uv = getLookupUv(i);
-    return texture(polygonTexture, uv).xy;
+vec2 getPolygonPosition(int i) {
+    vec2 uv = getLookupUv(u_polygonTextureDimensions, i);
+    return texture(u_polygonTexture, uv).xy;
 }
 
-vec2 getCoordinates(vec2 textureCoordinates, rectangle) {
+vec2 getCoordinates(vec2 textureCoordinates, vec4 rectangle) {
     float latitude = mix(rectangle.y, rectangle.w, textureCoordinates.y);
     float longitude = mix(rectangle.x, rectangle.z, textureCoordinates.x);
     return vec2(latitude, longitude);
@@ -43,26 +44,27 @@ vec2 getCoordinates(vec2 textureCoordinates, rectangle) {
 void main() {
     int lastPolygonIndex = 0;
     float clipAmount = czm_infinity;
-    int polygonRegionIndex = getPolygonIndex(gl_FragCoord);
+    float dimension = ceil(log2(float(u_polygonsLength + 1)));
+    int polygonRegionIndex = getPolygonIndex(dimension, v_textureCoordinates);
 
     // Only traverse up to the needed polygon
-    for (int polygonIndex = 0; polygonIndex <= u_polygonLength && polygonIndex <= polygonRegionIndex; polygonIndex++) {
-        vec4 rectangle = getRectangle(u_polygonTexture, lastPolygonIndex);
-        lastPolygonIndex += 2;
+    for (int polygonIndex = 0; polygonIndex < u_polygonsLength && polygonIndex <= polygonRegionIndex; polygonIndex++) {
+        vec4 rectangle = getRectangle(polygonIndex);
 
-        int positionsLength = getPositionsLength(u_polygonTexture, lastPolygonIndex);
+        int positionsLength = getPositionsLength(lastPolygonIndex);
         lastPolygonIndex += 1;
-
-         vec2 extents = abs(rectangle.zw - rectangle.xy);
-         vec2 p = getCoordinates(v_textureCoordinates, rectangle);
-         float s = 1.0;
 
          // Only compute signed distance for the relevant polygon
          if (polygonIndex == polygonRegionIndex) {
+                     vec2 extents = abs(rectangle.zw - rectangle.xy);
+            vec2 textureOffset = vec2(mod(float(polygonIndex), dimension), floor(float(polygonIndex) / dimension));
+            vec2 p = getCoordinates(v_textureCoordinates * dimension - textureOffset, rectangle);
+            float s = 1.0;
+
             // Check each edge for absolute distance
             for (int i = 0, j = positionsLength - 1; i < positionsLength; j = i, i++) {
-                vec2 a = getPolygonPosition(u_polygonTexture, lastPolygonIndex + i);
-                vec2 b = getPolygonPosition(u_polygonTexture, lastPolygonIndex + j);
+                vec2 a = getPolygonPosition(lastPolygonIndex + i);
+                vec2 b = getPolygonPosition(lastPolygonIndex + j);
  
                 vec2 ab = b - a;
                 vec2 abn = a + vec2(-ab.y, ab.x);

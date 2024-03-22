@@ -1,8 +1,6 @@
 import Cartesian2 from "../../Core/Cartesian2.js";
 import ClippingPolygonCollection from "../ClippingPolygonCollection.js";
-import Cartesian4 from "../../Core/Cartesian4.js";
 import combine from "../../Core/combine.js";
-import Rectangle from "../../Core/Rectangle.js";
 import ModelClippingPolygonsStageVS from "../../Shaders/Model/ModelClippingPolygonsStageVS.js";
 import ModelClippingPolygonsStageFS from "../../Shaders/Model/ModelClippingPolygonsStageFS.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
@@ -18,15 +16,18 @@ const ModelClippingPolygonsPipelineStage = {
   name: "ModelClippingPolygonsPipelineStage", // Helps with debugging
 };
 
-const textureResolutionScratch = new Cartesian2();
+const distanceResolutionScratch = new Cartesian2();
+const extentsResolutionScratch = new Cartesian2();
 /**
- * Process a model. This modifies the following parts of the render resources:
+ * Process a model for polygon clipping. This modifies the following parts of the render resources:
  *
- * <ul> TODO
- *  <li>adds a define to the fragment shader to indicate that the model has clipping planes</li>
- *  <li>adds the defines to the fragment shader for parameters related to clipping planes, such as the number of planes</li>
- *  <li>adds a function to the fragment shader to apply the clipping planes to the model's base color</li>
- *  <li>adds the uniforms for the fragment shader for the clipping plane texture and matrix</li>
+ * <ul>
+ *  <li>adds a define to both the vertex and fragment shaders to indicate that the model has clipping polygons</li>
+ *  <li>adds the defines to both the vertex and fragment shaders for parameters related to clipping polygons, such as the number of polygons</li>
+ *  <li>adds a function to the vertex shader to determine lookup uvs</li>
+ *  <li>adds a function to the fragment shader to discard clipped regions</li>
+ *  <li>adds the uniforms to the vertex and fragment shaders for the clipping extents texture and clipping distance respectively</li>
+ *  <li>adds a varying for lookup uvs in the clipping texture</li>
  *</ul>
  *
  * @param {ModelRenderResources} renderResources The render resources for this model.
@@ -63,49 +64,62 @@ ModelClippingPolygonsPipelineStage.process = function (
     ShaderDestination.FRAGMENT
   );
 
-  const textureResolution = ClippingPolygonCollection.getClipTextureResolution(
+  const distanceTextureResolution = ClippingPolygonCollection.getClippingDistanceTextureResolution(
     clippingPolygons,
-    textureResolutionScratch
+    distanceResolutionScratch
+  );
+
+  const extentsTextureResolution = ClippingPolygonCollection.getClippingExtentsTextureResolution(
+    clippingPolygons,
+    extentsResolutionScratch
   );
 
   shaderBuilder.addDefine(
-    "CLIPPING_POLYGONS_TEXTURE_WIDTH",
-    textureResolution.x,
-    ShaderDestination.BOTH
+    "CLIPPING_DISTANCE_TEXTURE_WIDTH",
+    distanceTextureResolution.x,
+    ShaderDestination.FRAGMENT
   );
 
   shaderBuilder.addDefine(
-    "CLIPPING_POLYGONS_TEXTURE_HEIGHT",
-    textureResolution.y,
-    ShaderDestination.BOTH
+    "CLIPPING_DISTANCE_TEXTURE_HEIGHT",
+    distanceTextureResolution.y,
+    ShaderDestination.FRAGMENT
   );
 
-  shaderBuilder.addUniform(
-    "sampler2D",
-    "model_clipAmount",
+  shaderBuilder.addDefine(
+    "CLIPPING_EXTENTS_TEXTURE_WIDTH",
+    extentsTextureResolution.x,
+    ShaderDestination.FRAGMENT
+  );
+
+  shaderBuilder.addDefine(
+    "CLIPPING_EXTENTS_TEXTURE_HEIGHT",
+    extentsTextureResolution.y,
     ShaderDestination.FRAGMENT
   );
 
   shaderBuilder.addUniform(
-    "vec4",
-    "model_clipRectangle",
-    ShaderDestination.VERTEX
+    "sampler2D",
+    "model_clippingDistance",
+    ShaderDestination.FRAGMENT
   );
 
-  shaderBuilder.addVarying("vec2", "v_clipPosition");
+  shaderBuilder.addUniform(
+    "sampler2D",
+    "model_clippingExtents",
+    ShaderDestination.FRAGMENT
+  );
+
+  shaderBuilder.addVarying("vec2", "v_clippingPosition");
   shaderBuilder.addVertexLines(ModelClippingPolygonsStageVS);
   shaderBuilder.addFragmentLines(ModelClippingPolygonsStageFS);
 
-  const packedRectangle = Cartesian4.unpack(
-    Rectangle.pack(clippingPolygons.getSphericalExtents(new Rectangle()), [])
-  );
-
   const uniformMap = {
-    model_clipAmount: function () {
-      return clippingPolygons.clipTexture;
+    model_clippingDistance: function () {
+      return clippingPolygons.clippingTexture;
     },
-    model_clipRectangle: function () {
-      return packedRectangle;
+    model_clippingExtents: function () {
+      return clippingPolygons.extentsTexture;
     },
   };
 

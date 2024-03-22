@@ -1537,9 +1537,8 @@ Cesium3DTile.prototype.visibility = function (
     );
 
     this._isClippedByPolygon = intersection !== Intersect.OUTSIDE;
-    if (intersection === Intersect.INSIDE) {
-      return CullingVolume.MASK_OUTSIDE;
-    }
+    // Polygon clipping intersections are determined by outer rectangles, therefor we cannot
+    // preemptively determine if a tile is completely clipped or not here.
   }
 
   return cullingVolume.computeVisibilityWithPlaneMask(

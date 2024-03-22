@@ -2,6 +2,7 @@ import Check from "../Core/Check.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Cartographic from "../Core/Cartographic.js";
 import defaultValue from "../Core/defaultValue.js";
+import defined from "../Core/defined.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
 import CesiumMath from "../Core/Math.js";
 import PolygonGeometry from "../Core/PolygonGeometry.js";
@@ -13,24 +14,40 @@ import Rectangle from "../Core/Rectangle.js";
  * @constructor
  *
  * @param {object} options Object with the following properties:
- * @param {PolygonHierarchy} options.hierarchy TODO
+ * @param {Cartesian3[]} options.positions A list of three or more Cartesian coordinates defining the outer ring of the clipping polygon.
  * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84]
  *
- * TODO: Example
+ * @example
+ * const positions = Cesium.Cartesian3.fromRadiansArray([
+ *     -1.3194369277314022,
+ *     0.6988062530900625,
+ *     -1.31941,
+ *     0.69879,
+ *     -1.3193955980204217,
+ *     0.6988091578771254,
+ *     -1.3193931220959367,
+ *     0.698743632490865,
+ *     -1.3194358224045408,
+ *     0.6987471965556998,
+ * ]);
+ *
+ * const polygon = new Cesium.ClippingPolygon({
+ *     positions: positions
+ * });
  */
 function ClippingPolygon(options) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options", options);
-  Check.typeOf.object("options.hierarchy", options.hierarchy);
+  Check.typeOf.object("options.positions", options.positions); // TODO: Go back to positions. Holes can be later.
   Check.typeOf.number.greaterThanOrEquals(
-    "options.hierarchy.positions",
-    options.hierarchy.positions,
+    "options.positions.length",
+    options.positions.length,
     3
   );
   //>>includeEnd('debug');
 
-  this.ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
-  this.hierarchy = options.hierarchy;
+  this._ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
+  this._positions = [...options.positions];
 }
 
 Object.defineProperties(ClippingPolygon.prototype, {
@@ -43,14 +60,7 @@ Object.defineProperties(ClippingPolygon.prototype, {
    */
   length: {
     get: function () {
-      const hierarchy = this.hierarchy;
-      let length = hierarchy.positions.length;
-      let holes = hierarchy.holes;
-      while (holes.positions.length > 0) {
-        length += holes.positions.length;
-        holes = holes.holes;
-      }
-      return length;
+      return this._positions.length;
     },
   },
   /**
@@ -60,33 +70,77 @@ Object.defineProperties(ClippingPolygon.prototype, {
    * @type {Cartesian3[]}
    * @readonly
    */
-  outerPositions: {
+  positions: {
     get: function () {
-      return this.hierarchy.positions;
+      return this._positions;
+    },
+  },
+  /**
+   * Returns the ellipsoid used to project the polygon onto surfaces when clipping.
+   *
+   * @memberof ClippingPolygon.prototype
+   * @type {Ellipsoid}
+   * @readonly
+   */
+  ellipsoid: {
+    get: function () {
+      return this._ellipsoid;
     },
   },
 });
 
 /**
  * Clones the ClippingPolygon without setting its ownership.
- * @param {ClippingPolygon} clippingPolygon The ClippingPolygon to be cloned
+ * @param {ClippingPolygon} polygon The ClippingPolygon to be cloned
  * @param {ClippingPolygon} [result] The object on which to store the cloned parameters.
  * @returns {ClippingPolygon} a clone of the input ClippingPolygon
  */
-ClippingPolygon.clone = function (clippingPlane, result) {
-  // TODO
+ClippingPolygon.clone = function (polygon, result) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("polygon", polygon);
+  //>>includeEnd('debug');
+
+  if (!defined(result)) {
+    return new ClippingPolygon({
+      positions: polygon.positions,
+      ellipsoid: polygon.ellipsoid,
+    });
+  }
+
+  result._ellipsoid = polygon.ellipsoid;
+  result._positions.length = 0;
+  result._positions.push(...polygon.positions);
+  return result;
+};
+
+/**
+ * Compares the provided ClippingPolygons and returns
+ * <code>true</code> if they are equal, <code>false</code> otherwise.
+ *
+ * @param {Plane} left The first polygon.
+ * @param {Plane} right The second polygon.
+ * @returns {boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
+ */
+ClippingPolygon.equals = function (left, right) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("left", left);
+  Check.typeOf.object("right", right);
+  //>>includeEnd('debug');
+
+  return (
+    left.ellipsoid.equals(right.ellipsoid) && left.positions === right.positions
+  );
 };
 
 /**
  * Computes a cartographic rectangle which encloses the polygon defined by the list of positions, including cases over the international date line and the poles.
  *
  * @param {Rectangle} [result] An object in which to store the result.
- *
  * @returns {Rectangle} The result rectangle
  */
 ClippingPolygon.prototype.computeRectangle = function (result) {
   return PolygonGeometry.computeRectangleFromPositions(
-    this.hierarchy.positions,
+    this.positions,
     this.ellipsoid,
     undefined,
     result
@@ -104,12 +158,11 @@ const spherePointScratch = new Cartesian3();
  * @returns {Rectangle} The result rectangle with spherical extents.
  */
 ClippingPolygon.prototype.computeSphericalExtents = function (result) {
-  const rectangle = PolygonGeometry.computeRectangleFromPositions(
-    this.hierarchy.positions,
-    this.ellipsoid,
-    undefined,
-    scratchRectangle
-  );
+  if (!defined(result)) {
+    result = new Rectangle();
+  }
+
+  const rectangle = this.computeRectangle(scratchRectangle);
 
   let spherePoint = Cartographic.toCartesian(
     Rectangle.southwest(rectangle),
