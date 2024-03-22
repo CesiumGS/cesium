@@ -194,6 +194,8 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [T2 Software](http://t2.com.tr/)
   - [Hüseyin ATEŞ](https://github.com/ateshuseyin)
   - [İbrahim Furkan Aygar](https://github.com/furkanaygar)
+- [tobiga UG (haftungsbeschränkt)](https://tobiga.de/)
+  - [Tobias Gassmann](https://github.com/tobias74)
 
 ## [Individual CLA](Documentation/Contributors/CLAs/individual-contributor-license-agreement-v1.0.pdf)
 
