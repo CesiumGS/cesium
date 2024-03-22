@@ -1,4 +1,5 @@
 import Cartographic from "../Core/Cartographic.js";
+import Check from "../Core/Check.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
@@ -14,6 +15,16 @@ import I3SDecoder from "./I3SDecoder.js";
 import I3SFeature from "./I3SFeature.js";
 import I3SField from "./I3SField.js";
 import I3SGeometry from "./I3SGeometry.js";
+
+/**
+ * @typedef {object} I3SNode.AttributeFilter
+ *
+ * A filter given by an attribute name and values.
+ * The 3D feature object should be hidden if its value for the attribute name is not specified in the collection of values.
+ *
+ * @property {string} name The name of the attribute
+ * @property {string[]|number[]} values The collection of values
+ */
 
 /**
  * This class implements an I3S Node. In CesiumJS each I3SNode creates a Cesium3DTile.
@@ -64,6 +75,7 @@ function I3SNode(parent, ref, isRoot) {
   this._globalTransform = undefined;
   this._inverseGlobalTransform = undefined;
   this._inverseRotationMatrix = undefined;
+  this._symbologyData = undefined;
 }
 
 Object.defineProperties(I3SNode.prototype, {
@@ -192,10 +204,7 @@ I3SNode.prototype.load = async function () {
 
   // If we don't have a nodepage index load from json
   if (!defined(this._nodeIndex)) {
-    const data = await I3SDataProvider.loadJson(
-      this._resource,
-      this._dataProvider._traceFetches
-    );
+    const data = await I3SDataProvider.loadJson(this._resource);
     that._data = data;
     processData();
     return;
@@ -217,6 +226,12 @@ I3SNode.prototype.load = async function () {
   processData();
 };
 
+function createAndLoadField(node, storageInfo) {
+  const newField = new I3SField(node, storageInfo);
+  node._fields[storageInfo.name] = newField;
+  return newField.load();
+}
+
 /**
  * Loads the node fields.
  * @returns {Promise<void>} A promise that is resolved when the I3S Node fields are loaded
@@ -225,21 +240,48 @@ I3SNode.prototype.loadFields = function () {
   // Check if we must load fields
   const fields = this._layer._data.attributeStorageInfo;
 
-  const that = this;
-  function createAndLoadField(fields, index) {
-    const newField = new I3SField(that, fields[index]);
-    that._fields[newField._storageInfo.name] = newField;
-    return newField.load();
-  }
-
   const promises = [];
   if (defined(fields)) {
     for (let i = 0; i < fields.length; i++) {
-      promises.push(createAndLoadField(fields, i));
+      const storageInfo = fields[i];
+      const field = this._fields[storageInfo.name];
+      if (defined(field)) {
+        promises.push(field.load());
+      } else {
+        promises.push(createAndLoadField(this, storageInfo));
+      }
     }
   }
 
   return Promise.all(promises);
+};
+
+/**
+ * Loads the node field.
+ * @param {string} name The field name
+ * @returns {Promise<void>} A promise that is resolved when the I3S Node field is loaded
+ */
+I3SNode.prototype.loadField = function (name) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("name", name);
+  //>>includeEnd('debug');
+
+  const field = this._fields[name];
+  if (defined(field)) {
+    return field.load();
+  }
+
+  const fields = this._layer._data.attributeStorageInfo;
+  if (defined(fields)) {
+    for (let i = 0; i < fields.length; i++) {
+      const storageInfo = fields[i];
+      if (storageInfo.name === name) {
+        return createAndLoadField(this, storageInfo);
+      }
+    }
+  }
+
+  return Promise.resolve();
 };
 
 /**
@@ -611,6 +653,15 @@ I3SNode.prototype._create3DTileDefinition = function () {
 /**
  * @private
  */
+I3SNode.prototype._loadSymbology = async function () {
+  if (!defined(this._symbologyData) && defined(this._layer._symbology)) {
+    this._symbologyData = await this._layer._symbology._getSymbology(this);
+  }
+};
+
+/**
+ * @private
+ */
 I3SNode.prototype._createContentURL = async function () {
   let rawGltf = {
     scene: 0,
@@ -646,6 +697,10 @@ I3SNode.prototype._createContentURL = async function () {
   await Promise.all(dataPromises);
   // Binary glTF
   if (defined(this._geometryData) && this._geometryData.length > 0) {
+    if (this._dataProvider._applySymbology) {
+      await this._loadSymbology();
+    }
+
     const url = this._geometryData[0].resource.url;
     const geometrySchema = this._layer._data.store.defaultGeometrySchema;
     const geometryData = this._geometryData[0];
@@ -653,7 +708,8 @@ I3SNode.prototype._createContentURL = async function () {
       url,
       geometrySchema,
       geometryData,
-      this._featureData[0]
+      this._featureData[0],
+      this._symbologyData
     );
     if (!defined(result)) {
       // Postponed
@@ -666,7 +722,9 @@ I3SNode.prototype._createContentURL = async function () {
       result.meshData.meshes,
       result.meshData.buffers,
       result.meshData.bufferViews,
-      result.meshData.accessors
+      result.meshData.accessors,
+      result.meshData.rootExtensions,
+      result.meshData.extensionsUsed
     );
 
     this._geometryData[0]._customAttributes = result.meshData._customAttributes;
@@ -677,6 +735,91 @@ I3SNode.prototype._createContentURL = async function () {
     type: "application/binary",
   });
   return URL.createObjectURL(glbDataBlob);
+};
+
+async function loadFilters(node) {
+  const filters = node._layer._filters;
+  const promises = [];
+  for (let i = 0; i < filters.length; i++) {
+    const promise = node.loadField(filters[i].name);
+    promises.push(promise);
+  }
+  await Promise.all(promises);
+  return filters;
+}
+
+function checkFeatureValue(featureIndex, field, filter) {
+  if (!defined(filter.values) || filter.values.length === 0) {
+    return false;
+  }
+
+  const fieldValues = defined(field) ? field.values : [];
+  let featureValue;
+  if (featureIndex < fieldValues.length) {
+    featureValue = fieldValues[featureIndex];
+  }
+  let matches = false;
+  for (let i = 0; i < filter.values.length; i++) {
+    if (filter.values[i] === featureValue) {
+      matches = true;
+      break;
+    }
+  }
+  return matches;
+}
+
+async function filterFeatures(node, contentModel) {
+  const batchTable = node._tile.content.batchTable;
+  if (defined(batchTable) && batchTable.featuresLength > 0) {
+    batchTable.setAllShow(true);
+
+    const filters = await loadFilters(node);
+    if (filters.length > 0) {
+      for (
+        let featureIndex = 0;
+        featureIndex < batchTable.featuresLength;
+        featureIndex++
+      ) {
+        for (let filterIndex = 0; filterIndex < filters.length; filterIndex++) {
+          const filter = filters[filterIndex];
+          if (
+            !checkFeatureValue(featureIndex, node._fields[filter.name], filter)
+          ) {
+            batchTable.setShow(featureIndex, false);
+            break;
+          }
+        }
+      }
+    }
+  }
+  contentModel.show = true;
+}
+
+/**
+ * @private
+ */
+I3SNode.prototype._filterFeatures = function () {
+  const promises = [];
+  // Forced filtering is required for loaded nodes only
+  for (let i = 0; i < this._children.length; i++) {
+    const promise = this._children[i]._filterFeatures();
+    promises.push(promise);
+  }
+
+  // Filters are applied for nodes with geometry data only
+  const contentModel = this._tile?.content?._model;
+  if (
+    defined(this._geometryData) &&
+    this._geometryData.length > 0 &&
+    defined(contentModel) &&
+    contentModel.ready
+  ) {
+    // The model needs to be hidden till the filters are applied
+    contentModel.show = false;
+    const promise = filterFeatures(this, contentModel);
+    promises.push(promise);
+  }
+  return Promise.all(promises);
 };
 
 // Reimplement Cesium3DTile.prototype.requestContent so that
@@ -700,19 +843,33 @@ Cesium3DTile.prototype.requestContent = function () {
 
   if (!this._isLoading) {
     this._isLoading = true;
+    const that = this;
     return this._i3sNode
       ._createContentURL()
       .then((url) => {
         if (!defined(url)) {
-          this._isLoading = false;
+          that._isLoading = false;
           return;
         }
 
-        this._contentResource = new Resource({ url: url });
-        return this._hookedRequestContent();
+        that._contentResource = new Resource({ url: url });
+        return that._hookedRequestContent();
       })
       .then((content) => {
-        this._isLoading = false;
+        // Filters are applied for nodes with geometry data only
+        const contentModel = content?._model;
+        if (
+          defined(that._i3sNode._geometryData) &&
+          that._i3sNode._geometryData.length > 0 &&
+          defined(contentModel)
+        ) {
+          // The model needs to be hidden till the filters are applied
+          contentModel.show = false;
+          contentModel.readyEvent.addEventListener(() => {
+            filterFeatures(that._i3sNode, contentModel);
+          });
+        }
+        that._isLoading = false;
         return content;
       });
   }

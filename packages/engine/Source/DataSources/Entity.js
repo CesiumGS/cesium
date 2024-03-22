@@ -41,6 +41,8 @@ import WallGraphics from "./WallGraphics.js";
 
 const cartoScratch = new Cartographic();
 
+const ExtraPropertyNames = [];
+
 function createConstantPositionProperty(value) {
   return new ConstantPositionProperty(value);
 }
@@ -127,7 +129,7 @@ function Entity(options) {
     "corridor",
     "cylinder",
     "description",
-    "ellipse", //
+    "ellipse",
     "ellipsoid",
     "label",
     "model",
@@ -136,7 +138,7 @@ function Entity(options) {
     "path",
     "plane",
     "point",
-    "polygon", //
+    "polygon",
     "polyline",
     "polylineVolume",
     "position",
@@ -144,6 +146,7 @@ function Entity(options) {
     "rectangle",
     "viewFrom",
     "wall",
+    ...ExtraPropertyNames,
   ];
 
   this._billboard = undefined;
@@ -493,6 +496,21 @@ Object.defineProperties(Entity.prototype, {
    */
   wall: createPropertyTypeDescriptor("wall", WallGraphics),
 });
+
+/**
+ * Add the specified type and construct the properties for it in the Entity class
+ * @private
+ * @param {string} propertyName name of the property that controls/accesses this entity type
+ * @param {{ constructor: function }} Type The Graphics class to associate with this entity type
+ */
+Entity.registerEntityType = function (propertyName, Type) {
+  Object.defineProperties(Entity.prototype, {
+    [propertyName]: createPropertyTypeDescriptor(propertyName, Type),
+  });
+  if (!ExtraPropertyNames.includes(propertyName)) {
+    ExtraPropertyNames.push(propertyName);
+  }
+};
 
 /**
  * Given a time, returns true if this object should have data during that time.

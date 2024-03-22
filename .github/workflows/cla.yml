@@ -1,0 +1,27 @@
+name: check-cla
+on:
+  pull_request_target:
+    types: [opened]
+
+jobs:
+  check-cla:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v3
+      - name: install node 20
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+      - name: install npm packages
+        run: npm install googleapis @octokit/core handlebars fs-extra        
+      - name: run script
+        run: node .github/actions/check-for-CLA/index.js
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PULL_REQUEST_ID: ${{ github.event.number }}      
+          GOOGLE_KEYS: ${{ secrets.GOOGLE_KEYS }}
+          INDIVIDUAL_CLA_SHEET_ID: ${{ secrets.INDIVIDUAL_CLA_SHEET_ID }}  
+          CORPORATE_CLA_SHEET_ID: ${{ secrets.CORPORATE_CLA_SHEET_ID }}  

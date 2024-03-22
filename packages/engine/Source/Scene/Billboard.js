@@ -23,6 +23,35 @@ import SceneTransforms from "./SceneTransforms.js";
 import VerticalOrigin from "./VerticalOrigin.js";
 
 /**
+ * @typedef {object} Billboard.ConstructorOptions
+ *
+ * Initialization options for the first param of Billboard constructor
+ *
+ * @property {Cartesian3} position The cartesian position of the billboard.
+ * @property {string} [id] A user-defined object to return when the billboard is picked with {@link Scene#pick}.
+ * @property {boolean} [show=true] Determines if this billboard will be shown.
+ * @property {string | HTMLCanvasElement} [image] A loaded HTMLImageElement, ImageData, or a url to an image to use for the billboard.
+ * @property {number} [scale=1.0] A number specifying the uniform scale that is multiplied with the billboard's image size in pixels.
+ * @property {Cartesian2} [pixelOffset=Cartesian2.ZERO] A {@link Cartesian2} Specifying the pixel offset in screen space from the origin of this billboard.
+ * @property {Cartesian3} [eyeOffset=Cartesian3.ZERO] A {@link Cartesian3} Specifying the 3D Cartesian offset applied to this billboard in eye coordinates.
+ * @property {HorizontalOrigin} [horizontalOrigin=HorizontalOrigin.CENTER] A {@link HorizontalOrigin} Specifying the horizontal origin of this billboard.
+ * @property {VerticalOrigin} [verticalOrigin=VerticalOrigin.CENTER] A {@link VerticalOrigin} Specifying the vertical origin of this billboard.
+ * @property {HeightReference} [heightReference=HeightReference.NONE] A {@link HeightReference} Specifying the height reference of this billboard.
+ * @property {Color} [color=Color.WHITE] A {@link Color} Specifying the color that is multiplied with the billboard's texture.
+ * @property {number} [rotation=0] A number specifying the rotation angle in radians.
+ * @property {Cartesian3} [alignedAxis=Cartesian3.ZERO] A {@link Cartesian3} Specifying the aligned axis in world space.
+ * @property {boolean} [sizeInMeters] A boolean specifying if the billboard size is in meters or pixels.
+ * @property {number} [width] A number specifying the width of the billboard. If undefined, the image width will be used.
+ * @property {number} [height] A number specifying the height of the billboard. If undefined, the image height will be used.
+ * @property {NearFarScalar} [scaleByDistance] A {@link NearFarScalar} Specifying near and far scaling properties of a Billboard based on the billboard's distance from the camera.
+ * @property {NearFarScalar} [translucencyByDistance] A {@link NearFarScalar} Specifying near and far translucency properties of a Billboard based on the billboard's distance from the camera.
+ * @property {NearFarScalar} [pixelOffsetScaleByDistance] A {@link NearFarScalar} Specifying near and far pixel offset scaling properties of a Billboard based on the billboard's distance from the camera.
+ * @property {BoundingRectangle} [imageSubRegion] A {@link BoundingRectangle} Specifying the sub-region of the image to use for the billboard, rather than the entire image.
+ * @property {DistanceDisplayCondition} [distanceDisplayCondition] A {@link DistanceDisplayCondition} Specifying the distance from the camera at which this billboard will be displayed.
+ * @property {number} [disableDepthTestDistance] A number specifying the distance from the camera at which to disable the depth test to, for example, prevent clipping against terrain.
+ */
+
+/**
  * <div class="notice">
  * A billboard is created and its initial
  * properties are set by calling {@link BillboardCollection#add}. Do not call the constructor directly.
@@ -55,6 +84,9 @@ import VerticalOrigin from "./VerticalOrigin.js";
  *
  * @internalConstructor
  * @class
+ *
+ * @param {Billboard.ConstructorOptions} options Object describing initialization options
+ * @param {BillboardCollection} billboardCollection Instance of BillboardCollection
  *
  * @demo {@link https://sandcastle.cesium.com/index.html?src=Billboards.html|Cesium Sandcastle Billboard Demo}
  */

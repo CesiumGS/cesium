@@ -419,32 +419,4 @@ describe("Scene/VoxelCylinderShape", function () {
       );
     }).toThrowDeveloperError();
   });
-
-  it("computeApproximateStepSize returns step size for the specified voxel grid dimension", () => {
-    const shape = new VoxelCylinderShape();
-    const translation = new Cartesian3(1.0, 2.0, 3.0);
-    const scale = new Cartesian3(2.0, 3.0, 4.0);
-    const rotation = Quaternion.IDENTITY;
-    const modelMatrix = Matrix4.fromTranslationQuaternionRotationScale(
-      translation,
-      rotation,
-      scale,
-      new Matrix4()
-    );
-
-    // Half revolution
-    const minRadius = 0.25;
-    const maxRadius = 0.75;
-    const minHeight = -0.5;
-    const maxHeight = +0.5;
-    const minAngle = -CesiumMath.PI;
-    const maxAngle = 0.0;
-    const minBounds = new Cartesian3(minRadius, minHeight, minAngle);
-    const maxBounds = new Cartesian3(maxRadius, maxHeight, maxAngle);
-    shape.update(modelMatrix, minBounds, maxBounds);
-
-    const dimensions = new Cartesian3(0.5, 1, CesiumMath.PI);
-    const result = shape.computeApproximateStepSize(dimensions);
-    expect(result).toEqualEpsilon(0.5, CesiumMath.EPSILON7);
-  });
 });

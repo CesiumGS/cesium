@@ -192,9 +192,7 @@
 
         try {
           // Power Plant design model provided by Bentley Systems
-          const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(2464651, {
-            disableCollision: true,
-          });
+          const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(2464651);
           viewer.scene.primitives.add(tileset);
         } catch (error) {
           console.log(`Error loading tileset: ${error}`);

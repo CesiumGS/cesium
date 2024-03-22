@@ -1,5 +1,5 @@
 // See IntersectionUtils.glsl for the definitions of Ray, Intersections, INF_HIT,
-// NO_HIT, setIntersectionPair
+// NO_HIT, setShapeIntersection
 
 /* Clipping plane defines (set in Scene/VoxelRenderResources.js)
 #define CLIPPING_PLANES_UNION
