@@ -19,6 +19,7 @@
 ##### Additions :tada:
 
 - Surface normals are now computed for clipping and shape bounds in VoxelEllipsoidShape and VoxelCylinderShape. [#11847](https://github.com/CesiumGS/cesium/pull/11847)
+- Implemented sharper rendering and lighting on voxels with CYLINDER and ELLIPSOID shape. [#11076](https://github.com/CesiumGS/cesium/pull/11076)
 
 ### 1.115 - 2024-03-01
 
