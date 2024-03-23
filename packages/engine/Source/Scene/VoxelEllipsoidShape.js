@@ -115,27 +115,20 @@ function VoxelEllipsoidShape() {
     ELLIPSOID_HAS_RENDER_BOUNDS_LONGITUDE: undefined,
     ELLIPSOID_HAS_RENDER_BOUNDS_LONGITUDE_RANGE_EQUAL_ZERO: undefined,
     ELLIPSOID_HAS_RENDER_BOUNDS_LONGITUDE_RANGE_UNDER_HALF: undefined,
-    ELLIPSOID_HAS_RENDER_BOUNDS_LONGITUDE_RANGE_EQUAL_HALF: undefined,
     ELLIPSOID_HAS_RENDER_BOUNDS_LONGITUDE_RANGE_OVER_HALF: undefined,
     ELLIPSOID_HAS_RENDER_BOUNDS_LONGITUDE_MIN_DISCONTINUITY: undefined,
     ELLIPSOID_HAS_RENDER_BOUNDS_LONGITUDE_MAX_DISCONTINUITY: undefined,
     ELLIPSOID_HAS_SHAPE_BOUNDS_LONGITUDE: undefined,
-    ELLIPSOID_HAS_SHAPE_BOUNDS_LONGITUDE_RANGE_EQUAL_ZERO: undefined,
     ELLIPSOID_HAS_SHAPE_BOUNDS_LONGITUDE_MIN_MAX_REVERSED: undefined,
-    ELLIPSOID_HAS_RENDER_BOUNDS_LATITUDE: undefined,
     ELLIPSOID_HAS_RENDER_BOUNDS_LATITUDE_MAX_UNDER_HALF: undefined,
     ELLIPSOID_HAS_RENDER_BOUNDS_LATITUDE_MAX_EQUAL_HALF: undefined,
     ELLIPSOID_HAS_RENDER_BOUNDS_LATITUDE_MAX_OVER_HALF: undefined,
     ELLIPSOID_HAS_RENDER_BOUNDS_LATITUDE_MIN_UNDER_HALF: undefined,
     ELLIPSOID_HAS_RENDER_BOUNDS_LATITUDE_MIN_EQUAL_HALF: undefined,
     ELLIPSOID_HAS_RENDER_BOUNDS_LATITUDE_MIN_OVER_HALF: undefined,
-    ELLIPSOID_HAS_RENDER_BOUNDS_LATITUDE_RANGE_EQUAL_ZERO: undefined,
     ELLIPSOID_HAS_SHAPE_BOUNDS_LATITUDE: undefined,
-    ELLIPSOID_HAS_SHAPE_BOUNDS_LATITUDE_RANGE_EQUAL_ZERO: undefined,
     ELLIPSOID_HAS_RENDER_BOUNDS_HEIGHT_MAX: undefined,
     ELLIPSOID_HAS_RENDER_BOUNDS_HEIGHT_MIN: undefined,
-    ELLIPSOID_HAS_RENDER_BOUNDS_HEIGHT_FLAT: undefined,
-    ELLIPSOID_HAS_SHAPE_BOUNDS_HEIGHT_MIN: undefined,
     ELLIPSOID_HAS_SHAPE_BOUNDS_HEIGHT_FLAT: undefined,
     ELLIPSOID_IS_SPHERE: undefined,
     ELLIPSOID_INTERSECTION_INDEX_LONGITUDE: undefined,
@@ -156,7 +149,6 @@ function VoxelEllipsoidShape() {
 const scratchScale = new Cartesian3();
 const scratchRotationScale = new Matrix3();
 const scratchShapeOuterExtent = new Cartesian3();
-const scratchShapeInnerExtent = new Cartesian3();
 const scratchRenderOuterExtent = new Cartesian3();
 const scratchRenderInnerExtent = new Cartesian3();
 const scratchRenderRectangle = new Rectangle();
@@ -265,17 +257,7 @@ VoxelEllipsoidShape.prototype.update = function (
   const renderMinHeight = Math.max(shapeMinHeight, clipMinHeight);
   const renderMaxHeight = Math.min(shapeMaxHeight, clipMaxHeight);
 
-  // Compute the closest and farthest a point can be from the center of the ellipsoid.
-  const shapeInnerExtent = Cartesian3.add(
-    radii,
-    Cartesian3.fromElements(
-      shapeMinHeight,
-      shapeMinHeight,
-      shapeMinHeight,
-      scratchShapeInnerExtent
-    ),
-    scratchShapeInnerExtent
-  );
+  // Compute the farthest a point can be from the center of the ellipsoid.
   const shapeOuterExtent = Cartesian3.add(
     radii,
     Cartesian3.fromElements(
@@ -381,18 +363,14 @@ VoxelEllipsoidShape.prototype.update = function (
     renderIsLongitudeReversed * defaultLongitudeRange;
   const renderIsLongitudeRangeZero = renderLongitudeRange <= epsilonLongitude;
   const renderIsLongitudeRangeUnderHalf =
-    renderLongitudeRange > defaultLongitudeRangeHalf + epsilonLongitude &&
-    renderLongitudeRange < defaultLongitudeRange - epsilonLongitude;
-  const renderIsLongitudeRangeHalf =
     renderLongitudeRange >= defaultLongitudeRangeHalf - epsilonLongitude &&
-    renderLongitudeRange <= defaultLongitudeRangeHalf + epsilonLongitude;
+    renderLongitudeRange < defaultLongitudeRange - epsilonLongitude;
   const renderIsLongitudeRangeOverHalf =
     renderLongitudeRange > epsilonLongitude &&
     renderLongitudeRange < defaultLongitudeRangeHalf - epsilonLongitude;
   const renderHasLongitude =
     renderIsLongitudeRangeZero ||
     renderIsLongitudeRangeUnderHalf ||
-    renderIsLongitudeRangeHalf ||
     renderIsLongitudeRangeOverHalf;
 
   const shapeIsLongitudeReversed = shapeMaxLongitude < shapeMinLongitude;
@@ -400,7 +378,6 @@ VoxelEllipsoidShape.prototype.update = function (
     shapeMaxLongitude -
     shapeMinLongitude +
     shapeIsLongitudeReversed * defaultLongitudeRange;
-  const shapeIsLongitudeRangeZero = shapeLongitudeRange <= epsilonLongitude;
   const shapeIsLongitudeRangeUnderHalf =
     shapeLongitudeRange > defaultLongitudeRangeHalf + epsilonLongitude &&
     shapeLongitudeRange < defaultLongitudeRange - epsilonLongitude;
@@ -408,10 +385,8 @@ VoxelEllipsoidShape.prototype.update = function (
     shapeLongitudeRange >= defaultLongitudeRangeHalf - epsilonLongitude &&
     shapeLongitudeRange <= defaultLongitudeRangeHalf + epsilonLongitude;
   const shapeIsLongitudeRangeOverHalf =
-    shapeLongitudeRange > epsilonLongitude &&
     shapeLongitudeRange < defaultLongitudeRangeHalf - epsilonLongitude;
   const shapeHasLongitude =
-    shapeIsLongitudeRangeZero ||
     shapeIsLongitudeRangeUnderHalf ||
     shapeIsLongitudeRangeHalf ||
     shapeIsLongitudeRangeOverHalf;
@@ -475,20 +450,8 @@ VoxelEllipsoidShape.prototype.update = function (
     renderOuterExtent,
     Cartesian3.ZERO
   );
-  const renderHasHeight = renderHasMinHeight || renderHasMaxHeight;
-  const renderHeightRange = renderMaxHeight - renderMinHeight;
-  const shapeHasMinHeight = !Cartesian3.equals(
-    shapeInnerExtent,
-    Cartesian3.ZERO
-  );
-  const shapeHasMaxHeight = !Cartesian3.equals(
-    shapeOuterExtent,
-    Cartesian3.ZERO
-  );
-  const shapeHasHeight = shapeHasMinHeight || shapeHasMaxHeight;
 
-  const shaderUniforms = this.shaderUniforms;
-  const shaderDefines = this.shaderDefines;
+  const { shaderUniforms, shaderDefines } = this;
 
   // To keep things simple, clear the defines every time
   for (const key in shaderDefines) {
@@ -522,49 +485,37 @@ VoxelEllipsoidShape.prototype.update = function (
   shaderDefines["ELLIPSOID_INTERSECTION_INDEX_HEIGHT_MAX"] = intersectionCount;
   intersectionCount += 1;
 
-  if (renderHasHeight) {
-    if (renderHeightRange === 0.0) {
-      shaderDefines["ELLIPSOID_HAS_RENDER_BOUNDS_HEIGHT_FLAT"] = true;
-    }
+  if (renderHasMinHeight) {
+    shaderDefines["ELLIPSOID_HAS_RENDER_BOUNDS_HEIGHT_MIN"] = true;
+    shaderDefines[
+      "ELLIPSOID_INTERSECTION_INDEX_HEIGHT_MIN"
+    ] = intersectionCount;
+    intersectionCount += 1;
 
-    if (renderHasMinHeight) {
-      shaderDefines["ELLIPSOID_HAS_RENDER_BOUNDS_HEIGHT_MIN"] = true;
-      shaderDefines[
-        "ELLIPSOID_INTERSECTION_INDEX_HEIGHT_MIN"
-      ] = intersectionCount;
-      intersectionCount += 1;
-
-      // The inverse of the percent of space that is taken up by the inner ellipsoid, relative to the shape bounds
-      // 1.0 / (1.0 - thickness) // thickness = percent of space that is between the min and max height.
-      // 1.0 / (1.0 - (shapeMaxHeight - renderMinHeight) / shapeMaxExtent)
-      // shapeMaxExtent / (shapeMaxExtent - (shapeMaxHeight - renderMinHeight))
-      shaderUniforms.ellipsoidInverseInnerScaleUv =
-        shapeMaxExtent / (shapeMaxExtent - (shapeMaxHeight - renderMinHeight));
-    }
-
-    if (renderHasMaxHeight) {
-      shaderDefines["ELLIPSOID_HAS_RENDER_BOUNDS_HEIGHT_MAX"] = true;
-      shaderUniforms.ellipsoidInverseOuterScaleUv =
-        shapeMaxExtent / (shapeMaxExtent - (shapeMaxHeight - renderMaxHeight));
-    }
+    // The inverse of the percent of space that is taken up by the inner ellipsoid, relative to the shape bounds
+    // 1.0 / (1.0 - thickness) // thickness = percent of space that is between the min and max height.
+    // 1.0 / (1.0 - (shapeMaxHeight - renderMinHeight) / shapeMaxExtent)
+    // shapeMaxExtent / (shapeMaxExtent - (shapeMaxHeight - renderMinHeight))
+    shaderUniforms.ellipsoidInverseInnerScaleUv =
+      shapeMaxExtent / (shapeMaxExtent - (shapeMaxHeight - renderMinHeight));
   }
 
-  if (shapeHasHeight) {
-    if (shapeHasMinHeight) {
-      shaderDefines["ELLIPSOID_HAS_SHAPE_BOUNDS_HEIGHT_MIN"] = true;
+  if (renderHasMaxHeight) {
+    shaderDefines["ELLIPSOID_HAS_RENDER_BOUNDS_HEIGHT_MAX"] = true;
+    shaderUniforms.ellipsoidInverseOuterScaleUv =
+      shapeMaxExtent / (shapeMaxExtent - (shapeMaxHeight - renderMaxHeight));
+  }
 
-      // The percent of space that is between the inner and outer ellipsoid.
-      const thickness = (shapeMaxHeight - shapeMinHeight) / shapeMaxExtent;
-      shaderUniforms.ellipsoidInverseHeightDifferenceUv = 1.0 / thickness;
-      shaderUniforms.ellipseInnerRadiiUv = Cartesian2.fromElements(
-        shaderUniforms.ellipsoidRadiiUv.x * (1.0 - thickness),
-        shaderUniforms.ellipsoidRadiiUv.z * (1.0 - thickness),
-        shaderUniforms.ellipseInnerRadiiUv
-      );
-    }
-    if (shapeMinHeight === shapeMaxHeight) {
-      shaderDefines["ELLIPSOID_HAS_SHAPE_BOUNDS_HEIGHT_FLAT"] = true;
-    }
+  // The percent of space that is between the inner and outer ellipsoid.
+  const thickness = (shapeMaxHeight - shapeMinHeight) / shapeMaxExtent;
+  shaderUniforms.ellipsoidInverseHeightDifferenceUv = 1.0 / thickness;
+  shaderUniforms.ellipseInnerRadiiUv = Cartesian2.fromElements(
+    shaderUniforms.ellipsoidRadiiUv.x * (1.0 - thickness),
+    shaderUniforms.ellipsoidRadiiUv.z * (1.0 - thickness),
+    shaderUniforms.ellipseInnerRadiiUv
+  );
+  if (shapeMinHeight === shapeMaxHeight) {
+    shaderDefines["ELLIPSOID_HAS_SHAPE_BOUNDS_HEIGHT_FLAT"] = true;
   }
 
   // Intersects a wedge for the min and max longitude.
@@ -582,11 +533,6 @@ VoxelEllipsoidShape.prototype.update = function (
         "ELLIPSOID_HAS_RENDER_BOUNDS_LONGITUDE_RANGE_OVER_HALF"
       ] = true;
       intersectionCount += 2;
-    } else if (renderIsLongitudeRangeHalf) {
-      shaderDefines[
-        "ELLIPSOID_HAS_RENDER_BOUNDS_LONGITUDE_RANGE_EQUAL_HALF"
-      ] = true;
-      intersectionCount += 1;
     } else if (renderIsLongitudeRangeZero) {
       shaderDefines[
         "ELLIPSOID_HAS_RENDER_BOUNDS_LONGITUDE_RANGE_EQUAL_ZERO"
@@ -621,14 +567,22 @@ VoxelEllipsoidShape.prototype.update = function (
     // offset = -minLongitudeUv / (maxLongitudeUv - minLongitudeUv)
     // offset = -((minLongitude - pi) / (2.0 * pi)) / (((maxLongitude - pi) / (2.0 * pi)) - ((minLongitude - pi) / (2.0 * pi)))
     // offset = -(minLongitude - pi) / (maxLongitude - minLongitude)
-    const scale = defaultLongitudeRange / shapeLongitudeRange;
-    const offset =
-      -(shapeMinLongitude - defaultMinLongitude) / shapeLongitudeRange;
-    shaderUniforms.ellipsoidUvToShapeUvLongitude = Cartesian2.fromElements(
-      scale,
-      offset,
-      shaderUniforms.ellipsoidUvToShapeUvLongitude
-    );
+    if (shapeLongitudeRange <= epsilonLongitude) {
+      shaderUniforms.ellipsoidUvToShapeUvLongitude = Cartesian2.fromElements(
+        0.0,
+        1.0,
+        shaderUniforms.ellipsoidUvToShapeUvLongitude
+      );
+    } else {
+      const scale = defaultLongitudeRange / shapeLongitudeRange;
+      const offset =
+        -(shapeMinLongitude - defaultMinLongitude) / shapeLongitudeRange;
+      shaderUniforms.ellipsoidUvToShapeUvLongitude = Cartesian2.fromElements(
+        scale,
+        offset,
+        shaderUniforms.ellipsoidUvToShapeUvLongitude
+      );
+    }
   }
 
   if (renderHasLongitude) {
@@ -676,8 +630,6 @@ VoxelEllipsoidShape.prototype.update = function (
   }
 
   if (renderHasLatitude) {
-    shaderDefines["ELLIPSOID_HAS_RENDER_BOUNDS_LATITUDE"] = true;
-
     // Intersects a cone for min latitude
     if (renderHasLatitudeMin) {
       shaderDefines["ELLIPSOID_HAS_RENDER_BOUNDS_LATITUDE_MIN"] = true;
@@ -728,12 +680,6 @@ VoxelEllipsoidShape.prototype.update = function (
       }
     }
 
-    if (renderMinLatitude === renderMaxLatitude) {
-      shaderDefines[
-        "ELLIPSOID_HAS_RENDER_BOUNDS_LATITUDE_RANGE_EQUAL_ZERO"
-      ] = true;
-    }
-
     const minCosHalfAngleSqr = Math.pow(
       Math.cos(CesiumMath.PI_OVER_TWO - Math.abs(renderMinLatitude)),
       2.0
@@ -752,12 +698,6 @@ VoxelEllipsoidShape.prototype.update = function (
   if (shapeHasLatitude) {
     shaderDefines["ELLIPSOID_HAS_SHAPE_BOUNDS_LATITUDE"] = true;
 
-    if (shapeMinLatitude === shapeMaxLatitude) {
-      shaderDefines[
-        "ELLIPSOID_HAS_SHAPE_BOUNDS_LATITUDE_RANGE_EQUAL_ZERO"
-      ] = true;
-    }
-
     // delerp(latitudeUv, minLatitudeUv, maxLatitudeUv)
     // (latitudeUv - minLatitudeUv) / (maxLatitudeUv - minLatitudeUv)
     // latitudeUv / (maxLatitudeUv - minLatitudeUv) - minLatitudeUv / (maxLatitudeUv - minLatitudeUv)
@@ -768,13 +708,22 @@ VoxelEllipsoidShape.prototype.update = function (
     // offset = -((minLatitude - -pi) / (2.0 * pi)) / (((maxLatitude - pi) / (2.0 * pi)) - ((minLatitude - pi) / (2.0 * pi)))
     // offset = -(minLatitude - -pi) / (maxLatitude - minLatitude)
     // offset = (-pi - minLatitude) / (maxLatitude - minLatitude)
-    const scale = defaultLatitudeRange / shapeLatitudeRange;
-    const offset = (defaultMinLatitude - shapeMinLatitude) / shapeLatitudeRange;
-    shaderUniforms.ellipsoidUvToShapeUvLatitude = Cartesian2.fromElements(
-      scale,
-      offset,
-      shaderUniforms.ellipsoidUvToShapeUvLatitude
-    );
+    if (shapeLatitudeRange < epsilonLatitude) {
+      shaderUniforms.ellipsoidUvToShapeUvLatitude = Cartesian2.fromElements(
+        0.0,
+        1.0,
+        shaderUniforms.ellipsoidUvToShapeUvLatitude
+      );
+    } else {
+      const scale = defaultLatitudeRange / shapeLatitudeRange;
+      const offset =
+        (defaultMinLatitude - shapeMinLatitude) / shapeLatitudeRange;
+      shaderUniforms.ellipsoidUvToShapeUvLatitude = Cartesian2.fromElements(
+        scale,
+        offset,
+        shaderUniforms.ellipsoidUvToShapeUvLatitude
+      );
+    }
   }
 
   if (isSphere) {
@@ -841,6 +790,91 @@ VoxelEllipsoidShape.prototype.computeOrientedBoundingBoxForTile = function (
     this._minimumHeight,
     this._maximumHeight,
     maxHeightLerp
+  );
+
+  return getEllipsoidChunkObb(
+    rectangle,
+    minHeight,
+    maxHeight,
+    this._ellipsoid,
+    this._translation,
+    this._rotation,
+    result
+  );
+};
+
+const sampleSizeScratch = new Cartesian3();
+const scratchTileMinBounds = new Cartesian3();
+const scratchTileMaxBounds = new Cartesian3();
+
+/**
+ * Computes an oriented bounding box for a specified sample within a specified tile.
+ * The update function must be called before calling this function.
+ *
+ * @param {SpatialNode} spatialNode The spatial node containing the sample
+ * @param {Cartesian3} tileDimensions The size of the tile in number of samples, before padding
+ * @param {Cartesian3} tileUv The sample coordinate within the tile
+ * @param {OrientedBoundingBox} result The oriented bounding box that will be set to enclose the specified sample
+ * @returns {OrientedBoundingBox} The oriented bounding box.
+ */
+VoxelEllipsoidShape.prototype.computeOrientedBoundingBoxForSample = function (
+  spatialNode,
+  tileDimensions,
+  tileUv,
+  result
+) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("spatialNode", spatialNode);
+  Check.typeOf.object("tileDimensions", tileDimensions);
+  Check.typeOf.object("tileUv", tileUv);
+  Check.typeOf.object("result", result);
+  //>>includeEnd('debug');
+
+  const tileSizeAtLevel = 1.0 / Math.pow(2.0, spatialNode.level);
+  const sampleSize = Cartesian3.divideComponents(
+    Cartesian3.ONE,
+    tileDimensions,
+    sampleSizeScratch
+  );
+  const sampleSizeAtLevel = Cartesian3.multiplyByScalar(
+    sampleSize,
+    tileSizeAtLevel,
+    sampleSizeScratch
+  );
+
+  const minLerp = Cartesian3.multiplyByScalar(
+    Cartesian3.fromElements(
+      spatialNode.x + tileUv.x,
+      spatialNode.y + tileUv.y,
+      spatialNode.z + tileUv.z,
+      scratchTileMinBounds
+    ),
+    tileSizeAtLevel,
+    scratchTileMinBounds
+  );
+  const maxLerp = Cartesian3.add(
+    minLerp,
+    sampleSizeAtLevel,
+    scratchTileMaxBounds
+  );
+
+  const rectangle = Rectangle.subsection(
+    this._rectangle,
+    minLerp.x,
+    minLerp.y,
+    maxLerp.x,
+    maxLerp.y,
+    scratchRectangle
+  );
+  const minHeight = CesiumMath.lerp(
+    this._minimumHeight,
+    this._maximumHeight,
+    minLerp.z
+  );
+  const maxHeight = CesiumMath.lerp(
+    this._minimumHeight,
+    this._maximumHeight,
+    maxLerp.z
   );
 
   return getEllipsoidChunkObb(
@@ -928,7 +962,11 @@ function getEllipsoidChunkObb(
  * @readonly
  */
 VoxelEllipsoidShape.DefaultMinBounds = Object.freeze(
-  new Cartesian3(-CesiumMath.PI, -CesiumMath.PI_OVER_TWO, -Number.MAX_VALUE)
+  new Cartesian3(
+    -CesiumMath.PI,
+    -CesiumMath.PI_OVER_TWO,
+    -Ellipsoid.WGS84.minimumRadius
+  )
 );
 
 /**
@@ -939,7 +977,11 @@ VoxelEllipsoidShape.DefaultMinBounds = Object.freeze(
  * @readonly
  */
 VoxelEllipsoidShape.DefaultMaxBounds = Object.freeze(
-  new Cartesian3(+CesiumMath.PI, +CesiumMath.PI_OVER_TWO, +Number.MAX_VALUE)
+  new Cartesian3(
+    CesiumMath.PI,
+    CesiumMath.PI_OVER_TWO,
+    10.0 * Ellipsoid.WGS84.maximumRadius
+  )
 );
 
 export default VoxelEllipsoidShape;

@@ -2,6 +2,7 @@ import {
   AlphaPipelineStage,
   BatchTexturePipelineStage,
   Cesium3DTileStyle,
+  ClassificationPipelineStage,
   CustomShader,
   CustomShaderMode,
   CustomShaderPipelineStage,
@@ -30,7 +31,8 @@ import {
   WireframePipelineStage,
   ClassificationType,
 } from "../../../index.js";
-import ClassificationPipelineStage from "../../../Source/Scene/Model/ClassificationPipelineStage.js";
+
+import createFrameState from "../../../../../Specs/createFrameState.js";
 
 describe("Scene/Model/ModelRuntimePrimitive", function () {
   const mockPrimitive = {
@@ -43,33 +45,21 @@ describe("Scene/Model/ModelRuntimePrimitive", function () {
     allowPicking: true,
     featureIdLabel: "featureId_0",
   };
-  const mockFrameState = {
-    context: {
-      webgl2: false,
-    },
-    mode: SceneMode.SCENE3D,
+  const mockWebgl1Context = {
+    webgl2: false,
+  };
+  const mockWebgl2Context = {
+    webgl2: true,
   };
 
-  const mockFrameStateWebgl2 = {
-    context: {
-      webgl2: true,
-    },
-  };
+  const mockFrameState = createFrameState(mockWebgl1Context);
+  const mockFrameStateWebgl2 = createFrameState(mockWebgl2Context);
 
-  const mockFrameState2D = {
-    context: {
-      webgl2: false,
-    },
-    mode: SceneMode.SCENE2D,
-  };
+  const mockFrameState2D = createFrameState(mockWebgl1Context);
+  mockFrameState2D.mode = SceneMode.SCENE2D;
 
-  const mockFrameState3DOnly = {
-    context: {
-      webgl2: false,
-    },
-    mode: SceneMode.SCENE3D,
-    scene3DOnly: true,
-  };
+  const mockFrameState3DOnly = createFrameState(mockWebgl1Context);
+  mockFrameState3DOnly.scene3DOnly = true;
 
   const emptyVertexShader =
     "void vertexMain(VertexInput vsInput, inout vec3 position) {}";
@@ -160,7 +150,6 @@ describe("Scene/Model/ModelRuntimePrimitive", function () {
       MaterialPipelineStage,
       FeatureIdPipelineStage,
       MetadataPipelineStage,
-      VerticalExaggerationPipelineStage,
       LightingPipelineStage,
       AlphaPipelineStage,
       PrimitiveStatisticsPipelineStage,
@@ -203,7 +192,6 @@ describe("Scene/Model/ModelRuntimePrimitive", function () {
       SelectedFeatureIdPipelineStage,
       BatchTexturePipelineStage,
       CPUStylingPipelineStage,
-      VerticalExaggerationPipelineStage,
       LightingPipelineStage,
       PickingPipelineStage,
       AlphaPipelineStage,
@@ -250,7 +238,6 @@ describe("Scene/Model/ModelRuntimePrimitive", function () {
       SelectedFeatureIdPipelineStage,
       BatchTexturePipelineStage,
       CPUStylingPipelineStage,
-      VerticalExaggerationPipelineStage,
       LightingPipelineStage,
       PickingPipelineStage,
       AlphaPipelineStage,
@@ -307,7 +294,6 @@ describe("Scene/Model/ModelRuntimePrimitive", function () {
       MaterialPipelineStage,
       FeatureIdPipelineStage,
       MetadataPipelineStage,
-      VerticalExaggerationPipelineStage,
       LightingPipelineStage,
       PickingPipelineStage,
       AlphaPipelineStage,
@@ -335,7 +321,6 @@ describe("Scene/Model/ModelRuntimePrimitive", function () {
       MaterialPipelineStage,
       FeatureIdPipelineStage,
       MetadataPipelineStage,
-      VerticalExaggerationPipelineStage,
       CustomShaderPipelineStage,
       LightingPipelineStage,
       AlphaPipelineStage,
@@ -366,7 +351,6 @@ describe("Scene/Model/ModelRuntimePrimitive", function () {
       GeometryPipelineStage,
       FeatureIdPipelineStage,
       MetadataPipelineStage,
-      VerticalExaggerationPipelineStage,
       CustomShaderPipelineStage,
       LightingPipelineStage,
       AlphaPipelineStage,
@@ -397,7 +381,6 @@ describe("Scene/Model/ModelRuntimePrimitive", function () {
       MaterialPipelineStage,
       FeatureIdPipelineStage,
       MetadataPipelineStage,
-      VerticalExaggerationPipelineStage,
       CustomShaderPipelineStage,
       LightingPipelineStage,
       AlphaPipelineStage,
@@ -438,7 +421,6 @@ describe("Scene/Model/ModelRuntimePrimitive", function () {
       MaterialPipelineStage,
       FeatureIdPipelineStage,
       MetadataPipelineStage,
-      VerticalExaggerationPipelineStage,
       LightingPipelineStage,
       AlphaPipelineStage,
       PrimitiveStatisticsPipelineStage,
@@ -473,7 +455,6 @@ describe("Scene/Model/ModelRuntimePrimitive", function () {
       MaterialPipelineStage,
       FeatureIdPipelineStage,
       MetadataPipelineStage,
-      VerticalExaggerationPipelineStage,
       LightingPipelineStage,
       AlphaPipelineStage,
       PrimitiveStatisticsPipelineStage,
@@ -507,7 +488,6 @@ describe("Scene/Model/ModelRuntimePrimitive", function () {
       MaterialPipelineStage,
       FeatureIdPipelineStage,
       MetadataPipelineStage,
-      VerticalExaggerationPipelineStage,
       LightingPipelineStage,
       AlphaPipelineStage,
       PrimitiveStatisticsPipelineStage,
@@ -538,7 +518,6 @@ describe("Scene/Model/ModelRuntimePrimitive", function () {
       MaterialPipelineStage,
       FeatureIdPipelineStage,
       MetadataPipelineStage,
-      VerticalExaggerationPipelineStage,
       LightingPipelineStage,
       AlphaPipelineStage,
       PrimitiveStatisticsPipelineStage,
@@ -570,7 +549,6 @@ describe("Scene/Model/ModelRuntimePrimitive", function () {
       MaterialPipelineStage,
       FeatureIdPipelineStage,
       MetadataPipelineStage,
-      VerticalExaggerationPipelineStage,
       LightingPipelineStage,
       AlphaPipelineStage,
       PrimitiveStatisticsPipelineStage,
@@ -600,7 +578,6 @@ describe("Scene/Model/ModelRuntimePrimitive", function () {
       MaterialPipelineStage,
       FeatureIdPipelineStage,
       MetadataPipelineStage,
-      VerticalExaggerationPipelineStage,
       LightingPipelineStage,
       AlphaPipelineStage,
       PrimitiveStatisticsPipelineStage,
@@ -633,7 +610,6 @@ describe("Scene/Model/ModelRuntimePrimitive", function () {
       MaterialPipelineStage,
       FeatureIdPipelineStage,
       MetadataPipelineStage,
-      VerticalExaggerationPipelineStage,
       LightingPipelineStage,
       AlphaPipelineStage,
       PrimitiveStatisticsPipelineStage,
@@ -675,7 +651,6 @@ describe("Scene/Model/ModelRuntimePrimitive", function () {
       MaterialPipelineStage,
       FeatureIdPipelineStage,
       MetadataPipelineStage,
-      VerticalExaggerationPipelineStage,
       LightingPipelineStage,
       AlphaPipelineStage,
       PrimitiveStatisticsPipelineStage,
@@ -708,7 +683,6 @@ describe("Scene/Model/ModelRuntimePrimitive", function () {
       MaterialPipelineStage,
       FeatureIdPipelineStage,
       MetadataPipelineStage,
-      VerticalExaggerationPipelineStage,
       LightingPipelineStage,
       AlphaPipelineStage,
       PrimitiveStatisticsPipelineStage,
@@ -740,7 +714,6 @@ describe("Scene/Model/ModelRuntimePrimitive", function () {
       MaterialPipelineStage,
       FeatureIdPipelineStage,
       MetadataPipelineStage,
-      VerticalExaggerationPipelineStage,
       LightingPipelineStage,
       AlphaPipelineStage,
       PrimitiveStatisticsPipelineStage,
@@ -772,7 +745,6 @@ describe("Scene/Model/ModelRuntimePrimitive", function () {
       MaterialPipelineStage,
       FeatureIdPipelineStage,
       MetadataPipelineStage,
-      VerticalExaggerationPipelineStage,
       LightingPipelineStage,
       AlphaPipelineStage,
       PrimitiveStatisticsPipelineStage,
@@ -803,7 +775,6 @@ describe("Scene/Model/ModelRuntimePrimitive", function () {
       MaterialPipelineStage,
       FeatureIdPipelineStage,
       MetadataPipelineStage,
-      VerticalExaggerationPipelineStage,
       LightingPipelineStage,
       AlphaPipelineStage,
       PrimitiveStatisticsPipelineStage,
@@ -835,7 +806,6 @@ describe("Scene/Model/ModelRuntimePrimitive", function () {
       MaterialPipelineStage,
       FeatureIdPipelineStage,
       MetadataPipelineStage,
-      VerticalExaggerationPipelineStage,
       LightingPipelineStage,
       AlphaPipelineStage,
       PrimitiveStatisticsPipelineStage,
@@ -866,7 +836,6 @@ describe("Scene/Model/ModelRuntimePrimitive", function () {
       MaterialPipelineStage,
       FeatureIdPipelineStage,
       MetadataPipelineStage,
-      VerticalExaggerationPipelineStage,
       LightingPipelineStage,
       AlphaPipelineStage,
       PrimitiveStatisticsPipelineStage,
@@ -897,7 +866,6 @@ describe("Scene/Model/ModelRuntimePrimitive", function () {
       MaterialPipelineStage,
       FeatureIdPipelineStage,
       MetadataPipelineStage,
-      VerticalExaggerationPipelineStage,
       LightingPipelineStage,
       AlphaPipelineStage,
       PrimitiveStatisticsPipelineStage,
@@ -929,7 +897,6 @@ describe("Scene/Model/ModelRuntimePrimitive", function () {
       MaterialPipelineStage,
       FeatureIdPipelineStage,
       MetadataPipelineStage,
-      VerticalExaggerationPipelineStage,
       LightingPipelineStage,
       PrimitiveOutlinePipelineStage,
       AlphaPipelineStage,
@@ -962,7 +929,6 @@ describe("Scene/Model/ModelRuntimePrimitive", function () {
       MaterialPipelineStage,
       FeatureIdPipelineStage,
       MetadataPipelineStage,
-      VerticalExaggerationPipelineStage,
       LightingPipelineStage,
       AlphaPipelineStage,
       PrimitiveStatisticsPipelineStage,
@@ -993,13 +959,37 @@ describe("Scene/Model/ModelRuntimePrimitive", function () {
       MaterialPipelineStage,
       FeatureIdPipelineStage,
       MetadataPipelineStage,
-      VerticalExaggerationPipelineStage,
       LightingPipelineStage,
       AlphaPipelineStage,
       PrimitiveStatisticsPipelineStage,
     ];
 
     primitive.configurePipeline(mockFrameState);
+    verifyExpectedStages(primitive.pipelineStages, expectedStages);
+  });
+
+  it("configures pipeline stages for vertical exaggeration", function () {
+    const primitive = new ModelRuntimePrimitive({
+      primitive: mockPrimitive,
+      node: mockNode,
+      model: mockModel,
+    });
+    const frameState = createFrameState(mockWebgl2Context);
+    frameState.verticalExaggeration = 2.0;
+
+    const expectedStages = [
+      GeometryPipelineStage,
+      MaterialPipelineStage,
+      FeatureIdPipelineStage,
+      MetadataPipelineStage,
+      VerticalExaggerationPipelineStage,
+      LightingPipelineStage,
+      PickingPipelineStage,
+      AlphaPipelineStage,
+      PrimitiveStatisticsPipelineStage,
+    ];
+
+    primitive.configurePipeline(frameState);
     verifyExpectedStages(primitive.pipelineStages, expectedStages);
   });
 });

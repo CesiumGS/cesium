@@ -11,8 +11,9 @@ in float v_translucent;
 
 void main (void)
 {
-    vec3 lightDirection = getLightDirection(v_outerPositionWC);
-   
+    float lightEnum = u_radiiAndDynamicAtmosphereColor.z;
+    vec3 lightDirection = czm_getDynamicAtmosphereLightDirection(v_outerPositionWC, lightEnum);
+
     vec3 mieColor;
     vec3 rayleighColor;
     float opacity;
@@ -42,14 +43,8 @@ void main (void)
     #endif
 
     #ifdef COLOR_CORRECT
-        // Convert rgb color to hsb
-        vec3 hsb = czm_RGBToHSB(color.rgb);
-        // Perform hsb shift
-        hsb.x += u_hsbShift.x; // hue
-        hsb.y = clamp(hsb.y + u_hsbShift.y, 0.0, 1.0); // saturation
-        hsb.z = hsb.z > czm_epsilon7 ? hsb.z + u_hsbShift.z : 0.0; // brightness
-        // Convert shifted hsb back to rgb
-        color.rgb = czm_HSBToRGB(hsb);
+        const bool ignoreBlackPixels = true;
+        color.rgb = czm_applyHSBShift(color.rgb, u_hsbShift, ignoreBlackPixels);
     #endif
 
     // For the parts of the sky atmosphere that are not behind a translucent globe,

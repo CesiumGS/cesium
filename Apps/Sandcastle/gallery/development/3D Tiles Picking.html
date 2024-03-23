@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <meta
+      name="description"
+      content="A sample BIM dataset rendered with 3D Tiles."
+    />
+    <meta name="cesium-sandcastle-labels" content="Showcases, 3D Tiles" />
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script
+      type="text/javascript"
+      src="../../../Build/CesiumUnminified/Cesium.js"
+      nomodule
+    ></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
+  </head>
+  <body
+    class="sandcastle-loading"
+    data-sandcastle-bucket="bucket-requirejs.html"
+  >
+    <style>
+      @import url(../templates/bucket.css);
+    </style>
+    <div id="cesiumContainer" class="fullSize"></div>
+    <div id="loadingOverlay"><h1>Loading...</h1></div>
+    <div id="toolbar"></div>
+    <script id="cesium_sandcastle_script">
+      window.startup = async function (Cesium) {
+        "use strict";
+        //Sandcastle_Begin
+        const viewer = new Cesium.Viewer("cesiumContainer", {
+          timeline: false,
+          animation: false,
+          baseLayerPicker: false,
+          globe: false,
+        });
+        const scene = viewer.scene;
+
+        let tileset;
+        const options = [
+          {
+            text: "Google P3DT",
+            onselect: async () => {
+              scene.primitives.remove(tileset);
+              try {
+                tileset = await Cesium.createGooglePhotorealistic3DTileset();
+                scene.primitives.add(tileset);
+              } catch (error) {
+                console.log(error);
+              }
+            },
+          },
+          {
+            text: "Maxar OWT WFF 1.2",
+            onselect: async () => {
+              scene.primitives.remove(tileset);
+              try {
+                tileset = await Cesium.Cesium3DTileset.fromIonAssetId(691510, {
+                  maximumScreenSpaceError: 4,
+                });
+                scene.primitives.add(tileset);
+              } catch (error) {
+                console.log(error);
+              }
+            },
+          },
+          {
+            text: "Bentley BIM Model",
+            onselect: async () => {
+              scene.primitives.remove(tileset);
+              try {
+                tileset = await Cesium.Cesium3DTileset.fromIonAssetId(2464651);
+                scene.primitives.add(tileset);
+                viewer.zoomTo(tileset);
+              } catch (error) {
+                console.log(error);
+              }
+            },
+          },
+          {
+            text: "Instanced",
+            onselect: async () => {
+              scene.primitives.remove(tileset);
+              try {
+                tileset = await Cesium.Cesium3DTileset.fromUrl(
+                  "../../SampleData/Cesium3DTiles/Instanced/InstancedWithBatchTable/tileset.json"
+                );
+                scene.primitives.add(tileset);
+                viewer.zoomTo(tileset);
+              } catch (error) {
+                console.log(error);
+              }
+            },
+          },
+        ];
+
+        Sandcastle.addDefaultToolbarMenu(options);
+
+        const scratchCartesian = new Cesium.Cartesian3();
+        const handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
+        handler.setInputAction(function (movement) {
+          const pickedPositionResult = scene.pickPosition(movement.position);
+          if (Cesium.defined(pickedPositionResult)) {
+            viewer.entities.add({
+              position: pickedPositionResult,
+              point: {
+                pixelSize: 10,
+                color: Cesium.Color.RED,
+                disableDepthTestDistance: Number.POSITIVE_INFINITY,
+              },
+            });
+          }
+
+          const ray = scene.camera.getPickRay(movement.position);
+          const picked = tileset.pick(ray, scene.frameState, scratchCartesian);
+
+          if (Cesium.defined(picked)) {
+            viewer.entities.add({
+              position: picked,
+              point: {
+                pixelSize: 10,
+                color: Cesium.Color.YELLOW,
+                disableDepthTestDistance: Number.POSITIVE_INFINITY,
+              },
+            });
+          }
+        }, Cesium.ScreenSpaceEventType.LEFT_CLICK); //Sandcastle_End
+      };
+      if (typeof Cesium !== "undefined") {
+        window.startupCalled = true;
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+        Sandcastle.finishedLoading();
+      }
+    </script>
+  </body>
+</html>
