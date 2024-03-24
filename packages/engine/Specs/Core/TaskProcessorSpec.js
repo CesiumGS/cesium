@@ -1,4 +1,9 @@
-import { FeatureDetection, RuntimeError, TaskProcessor } from "../../index.js";
+import {
+  buildModuleUrl,
+  FeatureDetection,
+  RuntimeError,
+  TaskProcessor,
+} from "../../index.js";
 
 import absolutize from "../../../../Specs/absolutize.js";
 
@@ -58,6 +63,48 @@ describe("Core/TaskProcessor", function () {
     await expectAsync(taskProcessor.scheduleTask(parameters)).toBeResolvedTo(
       parameters
     );
+  });
+
+  it("when workers loaded via module ID and it is cross-origin, loads worker with appropriate shim", async function () {
+    // Setup a cross origin BASE_URL
+    const oldCESIUM_BASE_URL = window.CESIUM_BASE_URL;
+    window.CESIUM_BASE_URL = "http://test.com/source/";
+    TaskProcessor._skipTaskRun = true;
+    buildModuleUrl._clearBaseResource();
+
+    const blobSpy = spyOn(window, "Blob").and.callThrough();
+
+    // Provide just the module ID, as is prevalent in the codebase
+    taskProcessor = new TaskProcessor("transferTypedArrayTest");
+
+    await taskProcessor.scheduleTask();
+
+    expect(blobSpy).toHaveBeenCalledWith(
+      [`import "http://test.com/source/Workers/transferTypedArrayTest.js";`],
+      { type: "application/javascript" }
+    );
+
+    // Reset old values for BASE_URL
+    window.CESIUM_BASE_URL = oldCESIUM_BASE_URL;
+    buildModuleUrl._clearBaseResource();
+    TaskProcessor._skipTaskRun = undefined;
+  });
+
+  it("when provided a cross-origin URI, loads worker with appropriate shim", async function () {
+    TaskProcessor._skipTaskRun = true;
+
+    const blobSpy = spyOn(window, "Blob").and.callThrough();
+
+    taskProcessor = new TaskProcessor("http://test.com/Workers/testing.js");
+
+    await taskProcessor.scheduleTask();
+
+    expect(blobSpy).toHaveBeenCalledWith(
+      [`import "http://test.com/Workers/testing.js";`],
+      { type: "application/javascript" }
+    );
+
+    TaskProcessor._skipTaskRun = undefined;
   });
 
   it("can be destroyed", function () {

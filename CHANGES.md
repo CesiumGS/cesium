@@ -15,6 +15,8 @@
 - Fixed a bug with performance in scenes with multiple tilesets [#11878](https://github.com/CesiumGS/cesium/pull/11878)
 - Fixes issue with PolygonGeometry uvs are improperly computed [#11767](https://github.com/CesiumGS/cesium/issues/11767)
 - Fixed voxel rendering bugs for non-spherical ellipsoid shapes [#11848](https://github.com/CesiumGS/cesium/pull/11848)
+- Fixed a bug where `TaskProcessor` worker loading would check the worker module ID rather than the absolute URL when determining if it is cross-origin. [#11833](https://github.com/CesiumGS/cesium/pull/11833)
+- Fixed a bug where cross-origin workers would error when loaded with the CommonJS `importScripts` shim instead of an ESM `import`. [#11833](https://github.com/CesiumGS/cesium/pull/11833)
 
 ##### Additions :tada:
 
