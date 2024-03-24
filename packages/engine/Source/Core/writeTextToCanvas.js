@@ -3,98 +3,6 @@ import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 
-function measureText(context2D, textString, font, stroke, fill) {
-  const metrics = context2D.measureText(textString);
-  const isSpace = !/\S/.test(textString);
-
-  if (!isSpace) {
-    const fontSize = document.defaultView
-      .getComputedStyle(context2D.canvas)
-      .getPropertyValue("font-size")
-      .replace("px", "");
-    const canvas = document.createElement("canvas");
-    const padding = 100;
-    const width = (metrics.width + padding) | 0;
-    const height = 3 * fontSize;
-    const baseline = height / 2;
-    canvas.width = width;
-    canvas.height = height;
-
-    const ctx = canvas.getContext("2d");
-    ctx.font = font;
-    ctx.fillStyle = "white";
-    ctx.fillRect(0, 0, canvas.width + 1, canvas.height + 1);
-
-    if (stroke) {
-      ctx.strokeStyle = "black";
-      ctx.lineWidth = context2D.lineWidth;
-      ctx.strokeText(textString, padding / 2, baseline);
-    }
-
-    if (fill) {
-      ctx.fillStyle = "black";
-      ctx.fillText(textString, padding / 2, baseline);
-    }
-
-    // Context image data has width * height * 4 elements, because
-    // each pixel's R, G, B and A are consecutive values in the array.
-    const pixelData = ctx.getImageData(0, 0, width, height).data;
-    const length = pixelData.length;
-    const width4 = width * 4;
-    let i, j;
-
-    let ascent, descent;
-    // Find the number of rows (from the top) until the first non-white pixel
-    for (i = 0; i < length; ++i) {
-      if (pixelData[i] !== 255) {
-        ascent = (i / width4) | 0;
-        break;
-      }
-    }
-
-    // Find the number of rows (from the bottom) until the first non-white pixel
-    for (i = length - 1; i >= 0; --i) {
-      if (pixelData[i] !== 255) {
-        descent = (i / width4) | 0;
-        break;
-      }
-    }
-
-    let minx = -1;
-    // For each column, for each row, check for first non-white pixel
-    for (i = 0; i < width && minx === -1; ++i) {
-      for (j = 0; j < height; ++j) {
-        const pixelIndex = i * 4 + j * width4;
-        if (
-          pixelData[pixelIndex] !== 255 ||
-          pixelData[pixelIndex + 1] !== 255 ||
-          pixelData[pixelIndex + 2] !== 255 ||
-          pixelData[pixelIndex + 3] !== 255
-        ) {
-          minx = i;
-          break;
-        }
-      }
-    }
-
-    return {
-      width: metrics.width,
-      height: descent - ascent,
-      ascent: baseline - ascent,
-      descent: descent - baseline,
-      minx: minx - padding / 2,
-    };
-  }
-
-  return {
-    width: metrics.width,
-    height: 0,
-    ascent: 0,
-    descent: 0,
-    minx: 0,
-  };
-}
-
 let imageSmoothingEnabledName;
 
 /**
@@ -168,7 +76,15 @@ function writeTextToCanvas(text, options) {
   canvas.style.visibility = "hidden";
   document.body.appendChild(canvas);
 
-  const dimensions = measureText(context2D, text, font, stroke, fill);
+  const metrics = context2D.measureText(text);
+  const dimensions = {
+    width: metrics.width,
+    height: metrics.actualBoundingBoxDescent + metrics.actualBoundingBoxAscent,
+    ascent: metrics.actualBoundingBoxAscent,
+    descent: metrics.actualBoundingBoxDescent,
+    minx: metrics.actualBoundingBoxLeft,
+  };
+
   // Set canvas.dimensions to be accessed in LabelCollection
   canvas.dimensions = dimensions;
 
