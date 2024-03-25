@@ -469,10 +469,10 @@ function initialize(primitive, provider) {
     maxBounds = VoxelShapeType.getMaxBounds(shapeType),
   } = provider;
 
-  primitive._minBounds = minBounds;
-  primitive._maxBounds = maxBounds;
-  primitive._minClippingBounds = VoxelShapeType.getMinBounds(shapeType);
-  primitive._maxClippingBounds = VoxelShapeType.getMaxBounds(shapeType);
+  primitive.minBounds = minBounds;
+  primitive.maxBounds = maxBounds;
+  primitive.minClippingBounds = VoxelShapeType.getMinBounds(shapeType);
+  primitive.maxClippingBounds = VoxelShapeType.getMaxBounds(shapeType);
 
   // Initialize the exaggerated versions of bounds and model matrix
   primitive._exaggeratedMinBounds = Cartesian3.clone(
@@ -866,6 +866,7 @@ Object.defineProperties(VoxelPrimitive.prototype, {
       return this._minClippingBounds;
     },
     set: function (minClippingBounds) {
+      console.log(`minClippingBounds = ${minClippingBounds}`);
       //>>includeStart('debug', pragmas.debug);
       Check.defined("minClippingBounds", minClippingBounds);
       //>>includeEnd('debug');
@@ -874,6 +875,7 @@ Object.defineProperties(VoxelPrimitive.prototype, {
         minClippingBounds,
         this._minClippingBounds
       );
+      console.log(`this._minClippingBounds = ${this._minClippingBounds}`);
     },
   },
 
