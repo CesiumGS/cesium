@@ -866,7 +866,6 @@ Object.defineProperties(VoxelPrimitive.prototype, {
       return this._minClippingBounds;
     },
     set: function (minClippingBounds) {
-      console.log(`minClippingBounds = ${minClippingBounds}`);
       //>>includeStart('debug', pragmas.debug);
       Check.defined("minClippingBounds", minClippingBounds);
       //>>includeEnd('debug');
@@ -875,7 +874,6 @@ Object.defineProperties(VoxelPrimitive.prototype, {
         minClippingBounds,
         this._minClippingBounds
       );
-      console.log(`this._minClippingBounds = ${this._minClippingBounds}`);
     },
   },
 
