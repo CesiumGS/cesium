@@ -469,17 +469,30 @@ function initialize(primitive, provider) {
     maxBounds = VoxelShapeType.getMaxBounds(shapeType),
   } = provider;
 
-  primitive.minBounds = minBounds;
-  primitive.maxBounds = maxBounds;
-  primitive.minClippingBounds = VoxelShapeType.getMinBounds(shapeType);
-  primitive.maxClippingBounds = VoxelShapeType.getMaxBounds(shapeType);
+  primitive._minBounds = minBounds;
+  primitive._maxBounds = maxBounds;
+  primitive._minClippingBounds = VoxelShapeType.getMinBounds(shapeType);
+  primitive._maxClippingBounds = VoxelShapeType.getMaxBounds(shapeType);
+
+  // Initialize the exaggerated versions of bounds and model matrix
+  primitive._exaggeratedMinBounds = Cartesian3.clone(
+    primitive._minBounds,
+    primitive._exaggeratedMinBounds
+  );
+  primitive._exaggeratedMaxBounds = Cartesian3.clone(
+    primitive._maxBounds,
+    primitive._exaggeratedMaxBounds
+  );
+  primitive._exaggeratedModelMatrix = Matrix4.clone(
+    primitive._modelMatrix,
+    primitive._exaggeratedModelMatrix
+  );
 
   checkTransformAndBounds(primitive, provider);
 
   // Create the shape object, and update it so it is valid for VoxelTraversal
   const ShapeConstructor = VoxelShapeType.getShapeConstructor(shapeType);
   primitive._shape = new ShapeConstructor();
-  updateVerticalExaggeration(primitive);
   primitive._shapeVisible = updateShapeAndTransforms(
     primitive,
     primitive._shape,
@@ -1158,7 +1171,7 @@ const scratchExaggerationTranslation = new Cartesian3();
  * Update the exaggerated bounds of a primitive to account for vertical exaggeration
  * Currently only applies to Ellipsoid shape type
  * @param {VoxelPrimitive} primitive
- * @param {FrameState} [frameState]
+ * @param {FrameState} frameState
  * @private
  */
 function updateVerticalExaggeration(primitive, frameState) {
@@ -1170,13 +1183,7 @@ function updateVerticalExaggeration(primitive, frameState) {
     primitive._maxBounds,
     primitive._exaggeratedMaxBounds
   );
-  if (!defined(frameState)) {
-    primitive._exaggeratedModelMatrix = Matrix4.clone(
-      primitive._modelMatrix,
-      primitive._exaggeratedModelMatrix
-    );
-    return;
-  }
+
   if (primitive.shape === VoxelShapeType.ELLIPSOID) {
     // Apply the exaggeration by stretching the height bounds
     const relativeHeight = frameState.verticalExaggerationRelativeHeight;
