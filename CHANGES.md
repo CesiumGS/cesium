@@ -19,6 +19,8 @@
 ##### Additions :tada:
 
 - Surface normals are now computed for clipping and shape bounds in VoxelEllipsoidShape and VoxelCylinderShape. [#11847](https://github.com/CesiumGS/cesium/pull/11847)
+- Added `ClippingPolygon` and `ClippingPolygonCollection` for applying multiple clipping regions, with support for concave regions and inverse clipping regions, to 3D Tiles and Terrain. [#11750](https://github.com/CesiumGS/cesium/pull/11750)
+- Added `Cesium3DTileset.clippingPolygons`, `Globe.clippingPolygons`, and `Model.clippingPolygons` properties for defining clipping regions from world positions.
 
 ### 1.115 - 2024-03-01
 
@@ -80,11 +82,6 @@
 - Fog rendering now applies to glTF models and 3D Tiles. This can be configured using `scene.fog` and `scene.atmosphere`. [#11744](https://github.com/CesiumGS/cesium/pull/11744)
 - Added `scene.atmosphere` to store common atmosphere lighting parameters. [#11744](https://github.com/CesiumGS/cesium/pull/11744) and [#11681](https://github.com/CesiumGS/cesium/issues/11681)
 - Added `createWorldBathymetryAsync` helper function to make it easier to load Bathymetry terrain. [#11790](https://github.com/CesiumGS/cesium/issues/11790)
-
-##### Additions :tada:
-
-- Added `ClippingPolygon` and `ClippingPolygonCollection` for applying multiple clipping regions, with support for concave regions and inverse clipping regions, to 3D Tiles and Terrain. [#11750](https://github.com/CesiumGS/cesium/pull/11750)
-- Added `Cesium3DTileset.clippingPolygons` and `Model.clippingPolygons` properties for defining clipping regions from world positions.
 
 ##### Fixes :wrench:
 

@@ -47,8 +47,6 @@
         // Enable rendering the sky
         viewer.scene.skyAtmosphere.show = true;
 
-        viewer.scene.debugShowFramesPerSecond = true;
-
         const currentTime = Cesium.JulianDate.fromIso8601(
           "2020-01-09T23:00:39.018261982600961346Z"
         );
@@ -374,7 +372,7 @@
         const footprint = viewer.entities.add({
           polygon: {
             hierarchy: positions,
-            material: Cesium.Color.WHITE.withAlpha(0.5),
+            material: Cesium.Color.YELLOW.withAlpha(0.5),
             heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
           },
         });

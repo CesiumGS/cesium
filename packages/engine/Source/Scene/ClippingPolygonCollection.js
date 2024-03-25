@@ -885,4 +885,23 @@ ClippingPolygonCollection.prototype.destroy = function () {
     this._signedDistanceTexture && this._signedDistanceTexture.destroy();
   return destroyObject(this);
 };
+
+/**
+ * Function for getting the clipping collection's signed distance texture resolution.
+ * If the ClippingPolygonCollection hasn't been updated, returns the resolution that will be
+ * allocated based on the current settings
+ *
+ * @param {ClippingPolygonCollection} clippingPolygonCollection The clipping polygon collection
+ * @param {Cartesian2} result A Cartesian2 for the result.
+ * @returns {Cartesian2} The required resolution.
+ * @private
+ */
+ClippingPolygonCollection.getClippingFS = function (
+  clippingPolygonCollection,
+  result
+) {
+  // TODO
+  return `czm_clipPolygons(u_clippingExtents, u_clippingDistance, u_clippingExtentsTextureDimensions, u_clippingDistanceTextureDimensions, clipPosition, u_polygonsLength)`;
+};
+
 export default ClippingPolygonCollection;

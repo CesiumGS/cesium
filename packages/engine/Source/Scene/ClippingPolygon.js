@@ -38,7 +38,7 @@ import Rectangle from "../Core/Rectangle.js";
 function ClippingPolygon(options) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options", options);
-  Check.typeOf.object("options.positions", options.positions); // TODO: Go back to positions. Holes can be later.
+  Check.typeOf.object("options.positions", options.positions);
   Check.typeOf.number.greaterThanOrEquals(
     "options.positions.length",
     options.positions.length,

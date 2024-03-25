@@ -44,7 +44,7 @@ vec2 getCoordinates(vec2 textureCoordinates, vec4 rectangle) {
 void main() {
     int lastPolygonIndex = 0;
     float clipAmount = czm_infinity;
-    float dimension = ceil(log2(float(u_polygonsLength + 1)));
+    float dimension = max(ceil(log2(float(u_polygonsLength))), float(u_polygonsLength));
     int polygonRegionIndex = getPolygonIndex(dimension, v_textureCoordinates);
 
     // Only traverse up to the needed polygon
@@ -56,7 +56,7 @@ void main() {
 
          // Only compute signed distance for the relevant polygon
          if (polygonIndex == polygonRegionIndex) {
-                     vec2 extents = abs(rectangle.zw - rectangle.xy);
+            vec2 extents = abs(rectangle.zw - rectangle.xy);
             vec2 textureOffset = vec2(mod(float(polygonIndex), dimension), floor(float(polygonIndex) / dimension));
             vec2 p = getCoordinates(v_textureCoordinates * dimension - textureOffset, rectangle);
             float s = 1.0;
