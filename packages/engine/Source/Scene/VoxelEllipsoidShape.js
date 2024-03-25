@@ -96,6 +96,7 @@ function VoxelEllipsoidShape() {
   this.shaderUniforms = {
     ellipsoidRadiiUv: new Cartesian3(),
     eccentricitySquared: 0.0,
+    evoluteScale: new Cartesian2(),
     ellipsoidInverseRadiiSquaredUv: new Cartesian3(),
     ellipsoidRenderLongitudeMinMax: new Cartesian2(),
     ellipsoidShapeUvLongitudeMinMaxMid: new Cartesian3(),
@@ -420,9 +421,14 @@ VoxelEllipsoidShape.prototype.update = function (
     shapeMaxExtent,
     shaderUniforms.ellipsoidRadiiUv
   );
-  const axisRatio =
-    Cartesian3.minimumComponent(shapeOuterExtent) / shapeMaxExtent;
+  const { x: radiiUvX, z: radiiUvZ } = shaderUniforms.ellipsoidRadiiUv;
+  const axisRatio = radiiUvZ / radiiUvX;
   shaderUniforms.eccentricitySquared = 1.0 - axisRatio * axisRatio;
+  shaderUniforms.evoluteScale = Cartesian2.fromElements(
+    (radiiUvX * radiiUvX - radiiUvZ * radiiUvZ) / radiiUvX,
+    (radiiUvZ * radiiUvZ - radiiUvX * radiiUvX) / radiiUvZ,
+    shaderUniforms.evoluteScale
+  );
 
   // Used to compute geodetic surface normal.
   shaderUniforms.ellipsoidInverseRadiiSquaredUv = Cartesian3.divideComponents(
@@ -814,31 +820,6 @@ VoxelEllipsoidShape.prototype.computeOrientedBoundingBoxForSample = function (
     this._rotation,
     result
   );
-};
-
-/**
- * Computes an approximate step size for raymarching the root tile of a voxel grid.
- * The update function must be called before calling this function.
- *
- * @param {Cartesian3} dimensions The voxel grid dimensions for a tile.
- * @returns {number} The step size.
- */
-VoxelEllipsoidShape.prototype.computeApproximateStepSize = function (
-  dimensions
-) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("dimensions", dimensions);
-  //>>includeEnd('debug');
-
-  const ellipsoid = this._ellipsoid;
-  const ellipsoidMaximumRadius = ellipsoid.maximumRadius;
-  const minimumHeight = this._minimumHeight;
-  const maximumHeight = this._maximumHeight;
-
-  const shellToEllipsoidRatio =
-    (maximumHeight - minimumHeight) / (ellipsoidMaximumRadius + maximumHeight);
-  const stepSize = (0.5 * shellToEllipsoidRatio) / dimensions.z;
-  return stepSize;
 };
 
 /**
