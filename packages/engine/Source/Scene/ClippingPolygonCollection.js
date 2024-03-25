@@ -439,7 +439,7 @@ const textureResolutionScratch = new Cartesian2();
 ClippingPolygonCollection.prototype.update = function (frameState) {
   const context = frameState.context;
 
-  if (!ClippingPolygonCollection.isSupported(context)) {
+  if (!context.floatingPointTexture) {
     throw new DeveloperError(
       "ClippingPolygonCollections are not supported on this device."
     );
@@ -749,11 +749,11 @@ ClippingPolygonCollection.setOwner = function (
 /**
  * Function for checking if the context will allow clipping polygons, which require floating point textures.
  *
- * @param {Context} context The Context that will contain clipped objects and clipping textures.
+ * @param {Scene} scene The scene that will contain clipped objects and clipping textures.
  * @returns {boolean} <code>true</code> if floating point textures can be used for clipping polygons.
  */
-ClippingPolygonCollection.isSupported = function (context) {
-  return context.floatingPointTexture;
+ClippingPolygonCollection.isSupported = function (scene) {
+  return scene.context.floatingPointTexture;
 };
 
 /**

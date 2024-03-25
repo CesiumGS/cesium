@@ -172,6 +172,7 @@ describe("Scene/ClippingPolygonCollection", function () {
     const polygons = new ClippingPolygonCollection();
 
     const scene = createScene();
+    scene.context._textureFloat = false;
 
     expect(() => {
       polygons.update(scene.frameState);
