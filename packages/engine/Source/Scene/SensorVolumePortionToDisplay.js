@@ -1,4 +1,4 @@
-import { DeveloperError } from "@cesium/engine";
+import DeveloperError from "../Core/DeveloperError.js";
 
 /**
  * Constants used to indicated what part of the sensor volume to display.
