@@ -28,7 +28,7 @@ import HeightReference from "./HeightReference.js";
  * @param {number} options.minimumHeight The minimum height of the terrain covered by the tile.
  * @param {number} options.maximumHeight The maximum height of the terrain covered by the tile.
  * @param {Rectangle} options.rectangle The rectangle containing the tile.
- * @param {HeightReference} options.heightReference The height reference of the tile.
+ * @param {HeightReference} options.heightReference Determines how billboard and label features are positioned relative to terrain or 3d tiles.
  * @param {Cesium3DTileBatchTable} options.batchTable The batch table for the tile containing the batched polygons.
  * @param {Uint16Array} options.batchIds The batch ids for each polygon.
  * @param {Scene} options.scene  The Cesium Viewer {@link Scene}. This is required for clamping billboards and labels with {@link HeightReference}
