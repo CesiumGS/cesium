@@ -10,14 +10,16 @@
 
 ##### Fixes :wrench:
 
-- Fixes issue with `BingMapsImageryProvider` where given culture option is ineffective [#11695](https://github.com/CesiumGS/cesium/issues/11695)
+- Fixed issue with `BingMapsImageryProvider` where given culture option is ineffective [#11695](https://github.com/CesiumGS/cesium/issues/11695)
 - Fixed a bug where dynamic geometries caused the Scene to continuously render when running in requestRenderMode [#6631](https://github.com/CesiumGS/cesium/issues/6631)
+- Fixed a bug with performance in scenes with multiple tilesets [#11878](https://github.com/CesiumGS/cesium/pull/11878)
 - Fixes issue with PolygonGeometry uvs are improperly computed [#11767](https://github.com/CesiumGS/cesium/issues/11767)
 - Fixed voxel rendering bugs for non-spherical ellipsoid shapes [#11848](https://github.com/CesiumGS/cesium/pull/11848)
 
 ##### Additions :tada:
 
 - Surface normals are now computed for clipping and shape bounds in VoxelEllipsoidShape and VoxelCylinderShape. [#11847](https://github.com/CesiumGS/cesium/pull/11847)
+- Implemented sharper rendering and lighting on voxels with CYLINDER and ELLIPSOID shape. [#11076](https://github.com/CesiumGS/cesium/pull/11076)
 
 ### 1.115 - 2024-03-01
 

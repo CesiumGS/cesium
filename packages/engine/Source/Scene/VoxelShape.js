@@ -131,16 +131,6 @@ VoxelShape.prototype.computeOrientedBoundingBoxForSample =
   DeveloperError.throwInstantiationError;
 
 /**
- * Computes an approximate step size for raymarching the root tile of a voxel grid.
- * The update function must be called before calling this function.
- *
- * @param {Cartesian3} voxelDimensions The voxel grid dimensions for a tile.
- * @returns {number} The step size.
- */
-VoxelShape.prototype.computeApproximateStepSize =
-  DeveloperError.throwInstantiationError;
-
-/**
  * Defines the minimum bounds of the shape. The meaning can vary per-shape.
  *
  * @type {Cartesian3}

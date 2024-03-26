@@ -2638,6 +2638,10 @@ const scratchUpdateHeightCartographic = new Cartographic();
 const scratchUpdateHeightCartographic2 = new Cartographic();
 const scratchUpdateHeightCartesian = new Cartesian3();
 function processUpdateHeight(tileset, tile, frameState) {
+  if (!tileset.enableCollision || !tileset.show) {
+    return;
+  }
+
   const heightCallbackData = tileset._addHeightCallbacks;
   const boundingSphere = tile.boundingSphere;
 

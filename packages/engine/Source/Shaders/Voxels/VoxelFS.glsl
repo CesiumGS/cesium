@@ -23,30 +23,68 @@ uniform float u_stepSize;
     uniform vec4 u_pickColor;
 #endif
 
-#if defined(JITTER)
-float hash(vec2 p)
-{
-    vec3 p3 = fract(vec3(p.xyx) * 50.0); // magic number = hashscale
-    p3 += dot(p3, p3.yzx + 19.19);
-    return fract((p3.x + p3.y) * p3.z);
+vec3 getSampleSize(in int level) {
+    vec3 sampleCount = exp2(float(level)) * vec3(u_dimensions);
+    vec3 sampleSizeUv = 1.0 / sampleCount;
+    return scaleShapeUvToShapeSpace(sampleSizeUv);
 }
-#endif
 
-vec4 getStepSize(in SampleData sampleData, in Ray viewRay, in RayShapeIntersection shapeIntersection, in float currentT) {
-#if defined(SHAPE_BOX)
-    Box voxelBox = constructVoxelBox(sampleData.tileCoords, sampleData.tileUv);
-    RayShapeIntersection voxelIntersection = intersectBox(viewRay, voxelBox);
-    vec4 entry = intersectionMax(shapeIntersection.entry, voxelIntersection.entry);
-    float exit = min(voxelIntersection.exit.w, shapeIntersection.exit.w);
-    float dt = (exit - entry.w) * RAY_SCALE;
-    return vec4(normalize(entry.xyz), dt);
-#else
-    float dimAtLevel = pow(2.0, float(sampleData.tileCoords.w));
-    float shapeEntryT = shapeIntersection.entry.w * RAY_SCALE;
-    float constantStep = u_stepSize / dimAtLevel;
-    vec3 normal = (currentT < shapeEntryT + constantStep) ? shapeIntersection.entry.xyz : viewRay.dir;
-    return vec4(normalize(normal), constantStep);
-#endif
+#define MINIMUM_STEP_SCALAR (0.02)
+#define SHIFT_FRACTION (0.001)
+
+/**
+ * Given a coordinate within a tile, and sample spacings along a ray through
+ * the coordinate, find the distance to the points where the ray entered and
+ * exited the voxel cell, along with the surface normals at those points.
+ * The surface normals are returned in shape space coordinates.
+ */
+RayShapeIntersection getVoxelIntersection(in vec3 tileUv, in vec3 sampleSizeAlongRay) {
+    vec3 voxelCoord = tileUv * vec3(u_dimensions);
+    vec3 directions = sign(sampleSizeAlongRay);
+    vec3 positiveDirections = max(directions, 0.0);
+    vec3 entryCoord = mix(ceil(voxelCoord), floor(voxelCoord), positiveDirections);
+    vec3 exitCoord = entryCoord + directions;
+
+    vec3 distanceFromEntry = -abs((entryCoord - voxelCoord) * sampleSizeAlongRay);
+    float lastEntry = maxComponent(distanceFromEntry);
+    bvec3 isLastEntry = equal(distanceFromEntry, vec3(lastEntry));
+    vec3 entryNormal = -1.0 * vec3(isLastEntry) * directions;
+    vec4 entry = vec4(entryNormal, lastEntry);
+
+    vec3 distanceToExit = abs((exitCoord - voxelCoord) * sampleSizeAlongRay);
+    float firstExit = minComponent(distanceToExit);
+    bvec3 isFirstExit = equal(distanceToExit, vec3(firstExit));
+    vec3 exitNormal = vec3(isFirstExit) * directions;
+    vec4 exit = vec4(exitNormal, firstExit);
+
+    return RayShapeIntersection(entry, exit);
+}
+
+vec4 getStepSize(in SampleData sampleData, in Ray viewRay, in RayShapeIntersection shapeIntersection, in mat3 jacobianT, in float currentT) {
+    // The Jacobian is computed in a space where the shape spans [-1, 1].
+    // But the ray is marched in a space where the shape fills [0, 1].
+    // So we need to scale the Jacobian by 2.
+    vec3 gradient = 2.0 * viewRay.rawDir * jacobianT;
+    vec3 sampleSizeAlongRay = getSampleSize(sampleData.tileCoords.w) / gradient;
+
+    RayShapeIntersection voxelIntersection = getVoxelIntersection(sampleData.tileUv, sampleSizeAlongRay);
+
+    // Transform normal from shape space to Cartesian space
+    vec3 voxelNormal = normalize(jacobianT * voxelIntersection.entry.xyz);
+    // Compare with the shape intersection, to choose the appropriate normal
+    vec4 voxelEntry = vec4(voxelNormal, currentT + voxelIntersection.entry.w);
+    vec4 entry = intersectionMax(shapeIntersection.entry, voxelEntry);
+
+    float fixedStep = minComponent(abs(sampleSizeAlongRay)) * u_stepSize;
+    float shift = fixedStep * SHIFT_FRACTION;
+    float dt = voxelIntersection.exit.w + shift;
+    if ((currentT + dt) > shapeIntersection.exit.w) {
+        // Stop at end of shape
+        dt = shapeIntersection.exit.w - currentT + shift;
+    }
+    float stepSize = clamp(dt, fixedStep * MINIMUM_STEP_SCALAR, fixedStep + shift);
+
+    return vec4(entry.xyz, stepSize);
 }
 
 vec2 packIntToVec2(int value) {
@@ -81,11 +119,13 @@ void main()
     vec3 viewDirWorld = normalize(czm_inverseViewRotation * eyeDirection); // normalize again just in case
     vec3 viewDirUv = normalize(u_transformDirectionViewToLocal * eyeDirection); // normalize again just in case
     vec3 viewPosUv = u_cameraPositionUv;
-    #if defined(SHAPE_BOX)
-        vec3 dInv = 1.0 / viewDirUv;
-        Ray viewRayUv = Ray(viewPosUv, viewDirUv, dInv);
+    #if defined(SHAPE_ELLIPSOID)
+        // viewDirUv has been scaled to a space where the ellipsoid is a sphere.
+        // Undo this scaling to get the raw direction.
+        vec3 rawDir = viewDirUv * u_ellipsoidRadiiUv;
+        Ray viewRayUv = Ray(viewPosUv, viewDirUv, rawDir);
     #else
-        Ray viewRayUv = Ray(viewPosUv, viewDirUv);
+        Ray viewRayUv = Ray(viewPosUv, viewDirUv, viewDirUv);
     #endif
 
     Intersections ix;
@@ -96,16 +136,16 @@ void main()
         discard;
     }
 
-    float currentT = shapeIntersection.entry.w * RAY_SCALE;
+    float currentT = shapeIntersection.entry.w;
     float endT = shapeIntersection.exit.w;
     vec3 positionUv = viewPosUv + currentT * viewDirUv;
-    vec3 positionUvShapeSpace = convertUvToShapeUvSpace(positionUv);
+    PointJacobianT pointJacobian = convertUvToShapeUvSpaceDerivative(positionUv);
 
     // Traverse the tree from the start position
     TraversalData traversalData;
     SampleData sampleDatas[SAMPLE_COUNT];
-    traverseOctreeFromBeginning(positionUvShapeSpace, traversalData, sampleDatas);
-    vec4 step = getStepSize(sampleDatas[0], viewRayUv, shapeIntersection, currentT);
+    traverseOctreeFromBeginning(pointJacobian.point, traversalData, sampleDatas);
+    vec4 step = getStepSize(sampleDatas[0], viewRayUv, shapeIntersection, pointJacobian.jacobianT, currentT);
 
     #if defined(JITTER)
         float noise = hash(screenCoord); // [0,1]
@@ -127,12 +167,13 @@ void main()
         // Prepare the custom shader inputs
         copyPropertiesToMetadata(properties, fragmentInput.metadata);
         fragmentInput.voxel.positionUv = positionUv;
-        fragmentInput.voxel.positionShapeUv = positionUvShapeSpace;
+        fragmentInput.voxel.positionShapeUv = pointJacobian.point;
         fragmentInput.voxel.positionUvLocal = sampleDatas[0].tileUv;
         fragmentInput.voxel.viewDirUv = viewDirUv;
         fragmentInput.voxel.viewDirWorld = viewDirWorld;
         fragmentInput.voxel.surfaceNormal = step.xyz;
         fragmentInput.voxel.travelDistance = step.w;
+        fragmentInput.voxel.stepCount = stepCount;
         fragmentInput.voxel.tileIndex = sampleDatas[0].megatextureIndex;
         fragmentInput.voxel.sampleIndex = getSampleIndex(sampleDatas[0].tileUv);
 
@@ -162,7 +203,7 @@ void main()
 
         // Keep raymarching
         currentT += step.w;
-        positionUv += step.w * viewDirUv;
+        positionUv = viewPosUv + currentT * viewDirUv;
 
         // Check if there's more intersections.
         if (currentT > endT) {
@@ -174,7 +215,7 @@ void main()
                     break;
                 } else {
                     // Found another intersection. Resume raymarching there
-                    currentT = shapeIntersection.entry.w * RAY_SCALE;
+                    currentT = shapeIntersection.entry.w;
                     endT = shapeIntersection.exit.w;
                     positionUv = viewPosUv + currentT * viewDirUv;
                 }
@@ -183,9 +224,9 @@ void main()
 
         // Traverse the tree from the current ray position.
         // This is similar to traverseOctreeFromBeginning but is faster when the ray is in the same tile as the previous step.
-        positionUvShapeSpace = convertUvToShapeUvSpace(positionUv);
-        traverseOctreeFromExisting(positionUvShapeSpace, traversalData, sampleDatas);
-        step = getStepSize(sampleDatas[0], viewRayUv, shapeIntersection, currentT);
+        pointJacobian = convertUvToShapeUvSpaceDerivative(positionUv);
+        traverseOctreeFromExisting(pointJacobian.point, traversalData, sampleDatas);
+        step = getStepSize(sampleDatas[0], viewRayUv, shapeIntersection, pointJacobian.jacobianT, currentT);
     }
 
     // Convert the alpha from [0,ALPHA_ACCUM_MAX] to [0,1]
