@@ -2887,7 +2887,10 @@ function adjustHeightForTerrain(controller, cameraChanged) {
   }
 
   let heightUpdated = false;
-  if (cartographic.height < controller._minimumCollisionTerrainHeight) {
+  if (
+    cartographic.height < controller._minimumCollisionTerrainHeight &&
+    cartographic.height > -controller._minimumCollisionTerrainHeight
+  ) {
     const globeHeight = controller._scene.globeHeight;
     if (defined(globeHeight)) {
       const height = globeHeight + controller.minimumZoomDistance;
