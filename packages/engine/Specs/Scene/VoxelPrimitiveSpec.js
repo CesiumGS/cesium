@@ -119,6 +119,49 @@ describe(
       expect(primitive.maxClippingBounds.equals(setValue)).toBe(true);
     });
 
+    it("vertically exaggerates height bounds for ellipsoid-shaped voxels", function () {
+      const primitive = new VoxelPrimitive({ provider });
+      scene.primitives.add(primitive);
+      scene.renderForSpecs();
+
+      const { minBounds, maxBounds } = primitive;
+      expect(primitive._exaggeratedMinBounds).toEqual(minBounds);
+      expect(primitive._exaggeratedMaxBounds).toEqual(maxBounds);
+
+      const exaggerationFactor = 2.0;
+      scene.verticalExaggeration = exaggerationFactor;
+      scene.renderForSpecs();
+      const expectedMinBounds = minBounds.clone();
+      expectedMinBounds.z *= exaggerationFactor;
+      const expectedMaxBounds = maxBounds.clone();
+      expectedMaxBounds.z *= exaggerationFactor;
+      expect(primitive._exaggeratedMinBounds).toEqual(expectedMinBounds);
+      expect(primitive._exaggeratedMaxBounds).toEqual(expectedMaxBounds);
+    });
+
+    it("applies vertical exaggeration to box-shaped voxels by scaling the model matrix", async function () {
+      const boxProvider = await Cesium3DTilesVoxelProvider.fromUrl(
+        "./Data/Cesium3DTiles/Voxel/VoxelBox3DTiles/tileset.json"
+      );
+      const primitive = new VoxelPrimitive({ provider: boxProvider });
+      scene.primitives.add(primitive);
+      scene.renderForSpecs();
+
+      const modelMatrix = primitive.modelMatrix.clone();
+      expect(primitive._exaggeratedModelMatrix).toEqual(modelMatrix);
+
+      const exaggerationFactor = 2.0;
+      scene.verticalExaggeration = exaggerationFactor;
+      scene.renderForSpecs();
+      const scalar = Cartesian3.fromElements(1.0, 1.0, exaggerationFactor);
+      const expectedModelMatrix = Matrix4.multiplyByScale(
+        modelMatrix,
+        scalar,
+        new Matrix4()
+      );
+      expect(primitive._exaggeratedModelMatrix).toEqual(expectedModelMatrix);
+    });
+
     it("uses default style", function () {
       const primitive = new VoxelPrimitive({ provider });
       scene.primitives.add(primitive);
