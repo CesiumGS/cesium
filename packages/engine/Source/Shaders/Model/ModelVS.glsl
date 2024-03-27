@@ -111,9 +111,14 @@ void main()
     atmosphereStage(attributes);
     #endif
 
+    #ifdef HAS_CLIPPING_POLYGONS
+    modelClippingPolygonsStage(attributes);
+    #endif
+
     #ifdef HAS_SILHOUETTE
     silhouetteStage(attributes, positionClip);
     #endif
+    
 
     #ifdef HAS_POINT_CLOUD_SHOW_STYLE
     float show = pointCloudShowStylingStage(attributes, metadata);

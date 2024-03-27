@@ -412,6 +412,16 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
   this.clippingPlanesDirty = false;
 
   /**
+   * Tracks if the tile's relationship with a ClippingPolygonCollection has changed with regards
+   * to the ClippingPolygonCollection's state.
+   *
+   * @type {boolean}
+   *
+   * @private
+   */
+  this.clippingPolygonsDirty = false;
+
+  /**
    * Tracks if the tile's request should be deferred until all non-deferred
    * tiles load.
    *
@@ -481,7 +491,9 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
   this._refines = false;
   this._shouldSelect = false;
   this._isClipped = true;
+  this._isClippedByPolygon = false;
   this._clippingPlanesState = 0; // encapsulates (_isClipped, clippingPlanes.enabled) and number/function
+  this._clippingPolygonsState = 0; // encapsulates (_isClipped, clippingPolygons.enabled) and number/function
   this._debugBoundingVolume = undefined;
   this._debugContentBoundingVolume = undefined;
   this._debugViewerRequestVolume = undefined;
@@ -1418,6 +1430,8 @@ Cesium3DTile.prototype.unloadContent = function () {
   this.lastStyleTime = 0.0;
   this.clippingPlanesDirty = this._clippingPlanesState === 0;
   this._clippingPlanesState = 0;
+  this.clippingPolygonsDirty = this._clippingPolygonsState === 0;
+  this._clippingPolygonsState = 0;
 
   this._debugColorizeTiles = false;
 
@@ -1516,6 +1530,17 @@ Cesium3DTile.prototype.visibility = function (
     }
   }
 
+  const clippingPolygons = tileset.clippingPolygons;
+  if (defined(clippingPolygons) && clippingPolygons.enabled) {
+    const intersection = clippingPolygons.computeIntersectionWithBoundingVolume(
+      boundingVolume
+    );
+
+    this._isClippedByPolygon = intersection !== Intersect.OUTSIDE;
+    // Polygon clipping intersections are determined by outer rectangles, therefore we cannot
+    // preemptively determine if a tile is completely clipped or not here.
+  }
+
   return cullingVolume.computeVisibilityWithPlaneMask(
     boundingVolume,
     parentVisibilityPlaneMask
@@ -1558,6 +1583,17 @@ Cesium3DTile.prototype.contentVisibility = function (frameState) {
     );
     this._isClipped = intersection !== Intersect.INSIDE;
     if (intersection === Intersect.OUTSIDE) {
+      return Intersect.OUTSIDE;
+    }
+  }
+
+  const clippingPolygons = tileset.clippingPolygons;
+  if (defined(clippingPolygons) && clippingPolygons.enabled) {
+    const intersection = clippingPolygons.computeIntersectionWithBoundingVolume(
+      boundingVolume
+    );
+    this._isClippedByPolygon = intersection !== Intersect.OUTSIDE;
+    if (intersection === Intersect.INSIDE) {
       return Intersect.OUTSIDE;
     }
   }
@@ -2151,6 +2187,33 @@ function updateClippingPlanes(tile, tileset) {
 }
 
 /**
+ * Compute and compare ClippingPolygons state:
+ *  - enabled-ness - are clipping polygons enabled? is this tile clipped?
+ *  - clipping polygon count & position count
+ *  - clipping function (inverse)
+
+ * @private
+ * @param {Cesium3DTile} tile
+ * @param {Cesium3DTileset} tileset
+ */
+function updateClippingPolygons(tile, tileset) {
+  const clippingPolygons = tileset.clippingPolygons;
+  let currentClippingPolygonsState = 0;
+  if (
+    defined(clippingPolygons) &&
+    tile._isClippedByPolygon &&
+    clippingPolygons.enabled
+  ) {
+    currentClippingPolygonsState = clippingPolygons.clippingPolygonsState;
+  }
+  // If clippingPolygonState for tile changed, mark clippingPolygonsDirty so content can update
+  if (currentClippingPolygonsState !== tile._clippingPolygonsState) {
+    tile._clippingPolygonsState = currentClippingPolygonsState;
+    tile.clippingPolygonsDirty = true;
+  }
+}
+
+/**
  * Get the draw commands needed to render this tile.
  *
  * @private
@@ -2163,6 +2226,7 @@ Cesium3DTile.prototype.update = function (tileset, frameState, passOptions) {
   const commandStart = commandList.length;
 
   updateClippingPlanes(this, tileset);
+  updateClippingPolygons(this, tileset);
   applyDebugSettings(this, tileset, frameState, passOptions);
   updateContent(this, tileset, frameState);
 
@@ -2176,6 +2240,7 @@ Cesium3DTile.prototype.update = function (tileset, frameState, passOptions) {
   }
 
   this.clippingPlanesDirty = false; // reset after content update
+  this.clippingPolygonsDirty = false;
 };
 
 const scratchCommandList = [];

@@ -6,6 +6,7 @@ import {
   Cartesian4,
   Color,
   Intersect,
+  Math as CesiumMath,
   Matrix4,
   PixelFormat,
   Plane,
@@ -15,8 +16,6 @@ import {
   ClippingPlane,
   ClippingPlaneCollection,
 } from "../../index.js";
-
-import { Math as CesiumMath } from "../../index.js";
 
 import createScene from "../../../../Specs/createScene.js";
 

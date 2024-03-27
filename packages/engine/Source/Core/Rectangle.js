@@ -1,3 +1,4 @@
+import Cartesian3 from "./Cartesian3.js";
 import Cartographic from "./Cartographic.js";
 import Check from "./Check.js";
 import defaultValue from "./defaultValue.js";
@@ -335,6 +336,87 @@ Rectangle.fromCartesianArray = function (cartesians, ellipsoid, result) {
   result.east = east;
   result.north = north;
   return result;
+};
+
+const fromBoundingSphereScratch = new Cartesian3();
+const fromBoundingSphereEastScratch = new Cartesian3();
+const fromBoundingSphereNorthScratch = new Cartesian3();
+const fromBoundingSphereWestScratch = new Cartesian3();
+const fromBoundingSphereSouthScratch = new Cartesian3();
+const fromBoundingSpherePositionsScratch = new Array(4);
+for (let n = 0; n < fromBoundingSpherePositionsScratch.length; ++n) {
+  fromBoundingSpherePositionsScratch[n] = new Cartesian3();
+}
+/**
+ * Create a rectangle from a bounding sphere, ignoring height.
+ *
+ *
+ * @param {BoundingSphere} boundingSphere The bounding sphere.
+ * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid.
+ * @param {Rectangle} [result] The object onto which to store the result, or undefined if a new instance should be created.
+ * @returns {Rectangle} The modified result parameter or a new Rectangle instance if none was provided.
+ */
+Rectangle.fromBoundingSphere = function (boundingSphere, ellipsoid, result) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("boundingSphere", boundingSphere);
+  //>>includeEnd('debug');
+
+  const center = boundingSphere.center;
+  const radius = boundingSphere.radius;
+
+  if (!defined(ellipsoid)) {
+    ellipsoid = Ellipsoid.WGS84;
+  }
+
+  if (!defined(result)) {
+    result = new Rectangle();
+  }
+
+  if (Cartesian3.equals(center, Cartesian3.ZERO)) {
+    Rectangle.clone(Rectangle.MAX_VALUE, result);
+    return result;
+  }
+
+  const normal = ellipsoid.geodeticSurfaceNormal(
+    center,
+    fromBoundingSphereScratch
+  );
+
+  const east = Cartesian3.cross(
+    Cartesian3.UNIT_Z,
+    normal,
+    fromBoundingSphereEastScratch
+  );
+  Cartesian3.normalize(east, east);
+  const north = Cartesian3.cross(normal, east, fromBoundingSphereNorthScratch);
+  Cartesian3.normalize(north, north);
+
+  Cartesian3.multiplyByScalar(normal, radius, normal);
+  Cartesian3.multiplyByScalar(north, radius, north);
+  Cartesian3.multiplyByScalar(east, radius, east);
+
+  const south = Cartesian3.negate(north, fromBoundingSphereSouthScratch);
+  const west = Cartesian3.negate(east, fromBoundingSphereWestScratch);
+
+  const positions = fromBoundingSpherePositionsScratch;
+
+  // North
+  let corner = positions[0];
+  Cartesian3.add(normal, north, corner);
+
+  // West
+  corner = positions[1];
+  Cartesian3.add(corner, west, corner);
+
+  // South
+  corner = positions[2];
+  Cartesian3.add(normal, south, corner);
+
+  // East
+  corner = positions[3];
+  Cartesian3.add(corner, east, corner);
+
+  return Rectangle.fromCartesianArray(positions, ellipsoid, result);
 };
 
 /**

@@ -77,6 +77,11 @@ uniform mat4 u_clippingPlanesMatrix;
 uniform vec4 u_clippingPlanesEdgeStyle;
 #endif
 
+#ifdef ENABLE_CLIPPING_POLYGONS
+uniform highp sampler2D u_clippingDistance;
+uniform highp sampler2D u_clippingExtents;
+#endif
+
 #if defined(GROUND_ATMOSPHERE) || defined(FOG) && defined(DYNAMIC_ATMOSPHERE_LIGHTING) && (defined(ENABLE_VERTEX_LIGHTING) || defined(ENABLE_DAYNIGHT_SHADING))
 uniform float u_minimumBrightness;
 #endif
@@ -411,6 +416,14 @@ void main()
     {
         finalColor = clippingPlanesEdgeColor;
     }
+#endif
+
+#ifdef ENABLE_CLIPPING_POLYGONS
+    vec2 sphericalLatLong = czm_approximateSphericalCoordinates(v_positionMC);
+    sphericalLatLong.y = czm_branchFreeTernary(sphericalLatLong.y < czm_pi, sphericalLatLong.y, sphericalLatLong.y - czm_twoPi);
+    
+    vec2 clippingPosition = vec2(sphericalLatLong.y, sphericalLatLong.x);
+    czm_clipPolygons(u_clippingExtents, u_clippingDistance, vec2(CLIPPING_EXTENTS_TEXTURE_WIDTH, CLIPPING_EXTENTS_TEXTURE_HEIGHT), vec2(CLIPPING_DISTANCE_TEXTURE_WIDTH, CLIPPING_DISTANCE_TEXTURE_HEIGHT), CLIPPING_POLYGONS_LENGTH, clippingPosition);
 #endif
 
 #ifdef HIGHLIGHT_FILL_TILE
