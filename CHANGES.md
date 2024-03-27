@@ -7,6 +7,7 @@
 ##### Breaking Changes :mega:
 
 - `Cesium3DTileset.disableCollision` has been removed. Use `Cesium3DTileset.enableCollision` instead.
+- `Globe.terrainExaggeration` and `Globe.terrainExaggerationRelativeHeight` have been removed. Use `Scene.verticalExaggeration` and `Scene.verticalExaggerationRelativeHeight` instead.
 
 ##### Fixes :wrench:
 
