@@ -1391,9 +1391,6 @@ describe(
       );
       scene.camera.flyHome(0.0);
 
-      scene.globe.terrainExaggeration = 1.0;
-      scene.globe.terrainExaggerationRelativeHeight = 0.0;
-
       return updateUntilDone(scene.globe).then(function () {
         forEachRenderedTile(scene.globe._surface, 1, undefined, function (
           tile
@@ -1405,9 +1402,6 @@ describe(
           expect(encoding.hasGeodeticSurfaceNormals).toEqual(false);
           expect(boundingSphere.radius).toBeLessThan(7000000.0);
         });
-
-        scene.globe.terrainExaggeration = 2.0;
-        scene.globe.terrainExaggerationRelativeHeight = -1000000.0;
 
         return updateUntilDone(scene.globe).then(function () {
           forEachRenderedTile(scene.globe._surface, 1, undefined, function (
@@ -1421,9 +1415,6 @@ describe(
             expect(encoding.hasGeodeticSurfaceNormals).toEqual(true);
             expect(boundingSphere.radius).toBeGreaterThan(7000000.0);
           });
-
-          scene.globe.terrainExaggeration = 1.0;
-          scene.globe.terrainExaggerationRelativeHeight = 0.0;
 
           return updateUntilDone(scene.globe).then(function () {
             forEachRenderedTile(scene.globe._surface, 1, undefined, function (
