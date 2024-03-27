@@ -15,4 +15,5 @@ async function test() {
   assert(results[1].height < 10000);
 }
 
-test();
+test()
+

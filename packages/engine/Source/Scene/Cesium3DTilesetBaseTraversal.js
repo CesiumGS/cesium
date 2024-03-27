@@ -271,12 +271,10 @@ function executeEmptyTraversal(root, frameState) {
 
     // Only traverse if the tile is empty - traversal stops at descendants with content
     const traverse = !tile.hasRenderableContent && canTraverse(tile);
-    const emptyLeaf = !tile.hasRenderableContent && tile.children.length === 0;
 
     // Traversal stops but the tile does not have content yet
     // There will be holes if the parent tries to refine to its children, so don't refine
-    // One exception: a parent may refine even if one of its descendants is an empty leaf
-    if (!traverse && !tile.contentAvailable && !emptyLeaf) {
+    if (!traverse && !tile.contentAvailable) {
       allDescendantsLoaded = false;
     }
 
@@ -295,7 +293,7 @@ function executeEmptyTraversal(root, frameState) {
     }
   }
 
-  return allDescendantsLoaded;
+  return root.hasEmptyContent || allDescendantsLoaded;
 }
 
 export default Cesium3DTilesetBaseTraversal;

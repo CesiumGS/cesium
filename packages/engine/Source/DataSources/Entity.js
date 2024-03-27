@@ -13,7 +13,9 @@ import Quaternion from "../Core/Quaternion.js";
 import Transforms from "../Core/Transforms.js";
 import GroundPolylinePrimitive from "../Scene/GroundPolylinePrimitive.js";
 import GroundPrimitive from "../Scene/GroundPrimitive.js";
-import HeightReference from "../Scene/HeightReference.js";
+import HeightReference, {
+  isHeightReferenceClamp,
+} from "../Scene/HeightReference.js";
 import BillboardGraphics from "./BillboardGraphics.js";
 import BoxGraphics from "./BoxGraphics.js";
 import ConstantPositionProperty from "./ConstantPositionProperty.js";
@@ -38,6 +40,8 @@ import RectangleGraphics from "./RectangleGraphics.js";
 import WallGraphics from "./WallGraphics.js";
 
 const cartoScratch = new Cartographic();
+
+const ExtraPropertyNames = [];
 
 function createConstantPositionProperty(value) {
   return new ConstantPositionProperty(value);
@@ -71,8 +75,8 @@ function createPropertyTypeDescriptor(name, Type) {
  * @property {boolean} [show] A boolean value indicating if the entity and its children are displayed.
  * @property {Property | string} [description] A string Property specifying an HTML description for this entity.
  * @property {PositionProperty | Cartesian3} [position] A Property specifying the entity position.
- * @property {Property} [orientation] A Property specifying the entity orientation.
- * @property {Property} [viewFrom] A suggested initial offset for viewing this object.
+ * @property {Property | Quaternion} [orientation=Transforms.eastNorthUpToFixedFrame(position)] A Property specifying the entity orientation in respect to Earth-fixed-Earth-centered (ECEF). If undefined, east-north-up at entity position is used.
+ * @property {Property | Cartesian3} [viewFrom] A suggested initial offset for viewing this object.
  * @property {Entity} [parent] A parent entity to associate with this entity.
  * @property {BillboardGraphics | BillboardGraphics.ConstructorOptions} [billboard] A billboard to associate with this entity.
  * @property {BoxGraphics | BoxGraphics.ConstructorOptions} [box] A box to associate with this entity.
@@ -125,7 +129,7 @@ function Entity(options) {
     "corridor",
     "cylinder",
     "description",
-    "ellipse", //
+    "ellipse",
     "ellipsoid",
     "label",
     "model",
@@ -134,7 +138,7 @@ function Entity(options) {
     "path",
     "plane",
     "point",
-    "polygon", //
+    "polygon",
     "polyline",
     "polylineVolume",
     "position",
@@ -142,6 +146,7 @@ function Entity(options) {
     "rectangle",
     "viewFrom",
     "wall",
+    ...ExtraPropertyNames,
   ];
 
   this._billboard = undefined;
@@ -413,7 +418,8 @@ Object.defineProperties(Entity.prototype, {
    */
   tileset: createPropertyTypeDescriptor("tileset", Cesium3DTilesetGraphics),
   /**
-   * Gets or sets the orientation.
+   * Gets or sets the orientation in respect to Earth-fixed-Earth-centered (ECEF).
+   * Defaults to east-north-up at entity position.
    * @memberof Entity.prototype
    * @type {Property|undefined}
    */
@@ -490,6 +496,21 @@ Object.defineProperties(Entity.prototype, {
    */
   wall: createPropertyTypeDescriptor("wall", WallGraphics),
 });
+
+/**
+ * Add the specified type and construct the properties for it in the Entity class
+ * @private
+ * @param {string} propertyName name of the property that controls/accesses this entity type
+ * @param {{ constructor: function }} Type The Graphics class to associate with this entity type
+ */
+Entity.registerEntityType = function (propertyName, Type) {
+  Object.defineProperties(Entity.prototype, {
+    [propertyName]: createPropertyTypeDescriptor(propertyName, Type),
+  });
+  if (!ExtraPropertyNames.includes(propertyName)) {
+    ExtraPropertyNames.push(propertyName);
+  }
+};
 
 /**
  * Given a time, returns true if this object should have data during that time.
@@ -706,7 +727,7 @@ Entity.prototype.computeModelMatrixForHeightReference = function (
   }
 
   const carto = ellipsoid.cartesianToCartographic(position, cartoScratch);
-  if (heightReference === HeightReference.CLAMP_TO_GROUND) {
+  if (isHeightReferenceClamp(heightReference)) {
     carto.height = heightOffset;
   } else {
     carto.height += heightOffset;

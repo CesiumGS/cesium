@@ -5,7 +5,9 @@ import {
   Color,
   defaultValue,
   DirectionalLight,
+  DynamicAtmosphereLightingType,
   Ellipsoid,
+  Fog,
   GeographicProjection,
   Matrix4,
   OrthographicFrustum,
@@ -1779,6 +1781,213 @@ describe(
         "}";
       expect({
         context: context,
+        fragmentShader: fs,
+      }).contextToRender();
+    });
+
+    it("has czm_fogDensity", function () {
+      const frameState = createFrameState(
+        context,
+        createMockCamera(
+          undefined,
+          undefined,
+          undefined,
+          // Provide position and direction because the default position of (0, 0, 0)
+          // will lead to a divide by zero when updating fog below.
+          new Cartesian3(1.0, 0.0, 0.0),
+          new Cartesian3(0.0, 1.0, 0.0)
+        )
+      );
+      const fog = new Fog();
+      fog.density = 0.1;
+      fog.update(frameState);
+
+      const us = context.uniformState;
+      us.update(frameState);
+
+      const fs =
+        "void main() {" +
+        "  out_FragColor = vec4(czm_fogDensity != 0.0);" +
+        "}";
+      expect({
+        context,
+        fragmentShader: fs,
+      }).contextToRender();
+    });
+
+    it("has czm_fogMinimumBrightness", function () {
+      const frameState = createFrameState(
+        context,
+        createMockCamera(
+          undefined,
+          undefined,
+          undefined,
+          // Provide position and direction because the default position of (0, 0, 0)
+          // will lead to a divide by zero when updating fog below
+          new Cartesian3(1.0, 0.0, 0.0),
+          new Cartesian3(0.0, 1.0, 0.0)
+        )
+      );
+      const fog = new Fog();
+      fog.minimumBrightness = 0.25;
+      fog.update(frameState);
+
+      const us = context.uniformState;
+      us.update(frameState);
+
+      const fs =
+        "void main() {" +
+        "  out_FragColor = vec4(czm_fogMinimumBrightness == 0.25);" +
+        "}";
+      expect({
+        context,
+        fragmentShader: fs,
+      }).contextToRender();
+    });
+
+    it("has czm_atmosphereHsbShift", function () {
+      const frameState = createFrameState(context, createMockCamera());
+      const atmosphere = frameState.atmosphere;
+      atmosphere.hueShift = 1.0;
+      atmosphere.saturationShift = 2.0;
+      atmosphere.brightnessShift = 3.0;
+
+      const us = context.uniformState;
+      us.update(frameState);
+
+      const fs =
+        "void main() {" +
+        "  out_FragColor = vec4(czm_atmosphereHsbShift == vec3(1.0, 2.0, 3.0));" +
+        "}";
+      expect({
+        context,
+        fragmentShader: fs,
+      }).contextToRender();
+    });
+
+    it("has czm_atmosphereLightIntensity", function () {
+      const frameState = createFrameState(context, createMockCamera());
+      const atmosphere = frameState.atmosphere;
+      atmosphere.lightIntensity = 2.0;
+
+      const us = context.uniformState;
+      us.update(frameState);
+
+      const fs =
+        "void main() {" +
+        "  out_FragColor = vec4(czm_atmosphereLightIntensity == 2.0);" +
+        "}";
+      expect({
+        context,
+        fragmentShader: fs,
+      }).contextToRender();
+    });
+
+    it("has czm_atmosphereRayleighCoefficient", function () {
+      const frameState = createFrameState(context, createMockCamera());
+      const atmosphere = frameState.atmosphere;
+      atmosphere.rayleighCoefficient = new Cartesian3(1.0, 2.0, 3.0);
+
+      const us = context.uniformState;
+      us.update(frameState);
+
+      const fs =
+        "void main() {" +
+        "  out_FragColor = vec4(czm_atmosphereRayleighCoefficient == vec3(1.0, 2.0, 3.0));" +
+        "}";
+      expect({
+        context,
+        fragmentShader: fs,
+      }).contextToRender();
+    });
+
+    it("has czm_atmosphereRayleighScaleHeight", function () {
+      const frameState = createFrameState(context, createMockCamera());
+      const atmosphere = frameState.atmosphere;
+      atmosphere.rayleighScaleHeight = 100.0;
+
+      const us = context.uniformState;
+      us.update(frameState);
+
+      const fs =
+        "void main() {" +
+        "  out_FragColor = vec4(czm_atmosphereRayleighScaleHeight == 100.0);" +
+        "}";
+      expect({
+        context,
+        fragmentShader: fs,
+      }).contextToRender();
+    });
+
+    it("has czm_atmosphereMieCoefficient", function () {
+      const frameState = createFrameState(context, createMockCamera());
+      const atmosphere = frameState.atmosphere;
+      atmosphere.mieCoefficient = new Cartesian3(1.0, 2.0, 3.0);
+
+      const us = context.uniformState;
+      us.update(frameState);
+
+      const fs =
+        "void main() {" +
+        "  out_FragColor = vec4(czm_atmosphereMieCoefficient == vec3(1.0, 2.0, 3.0));" +
+        "}";
+      expect({
+        context,
+        fragmentShader: fs,
+      }).contextToRender();
+    });
+
+    it("has czm_atmosphereMieScaleHeight", function () {
+      const frameState = createFrameState(context, createMockCamera());
+      const atmosphere = frameState.atmosphere;
+      atmosphere.mieScaleHeight = 100.0;
+
+      const us = context.uniformState;
+      us.update(frameState);
+
+      const fs =
+        "void main() {" +
+        "  out_FragColor = vec4(czm_atmosphereMieScaleHeight == 100.0);" +
+        "}";
+      expect({
+        context,
+        fragmentShader: fs,
+      }).contextToRender();
+    });
+
+    it("has czm_atmosphereMieAnisotropy", function () {
+      const frameState = createFrameState(context, createMockCamera());
+      const atmosphere = frameState.atmosphere;
+      atmosphere.mieAnisotropy = 100.0;
+
+      const us = context.uniformState;
+      us.update(frameState);
+
+      const fs =
+        "void main() {" +
+        "  out_FragColor = vec4(czm_atmosphereMieAnisotropy == 100.0);" +
+        "}";
+      expect({
+        context,
+        fragmentShader: fs,
+      }).contextToRender();
+    });
+
+    it("has czm_atmosphereDynamicLighting", function () {
+      const frameState = createFrameState(context, createMockCamera());
+      const atmosphere = frameState.atmosphere;
+      const enumValue = DynamicAtmosphereLightingType.SCENE_LIGHT;
+      atmosphere.dynamicLighting = enumValue;
+
+      const us = context.uniformState;
+      us.update(frameState);
+
+      const fs =
+        "void main() {" +
+        `  out_FragColor = vec4(czm_atmosphereDynamicLighting == float(${enumValue}));` +
+        "}";
+      expect({
+        context,
         fragmentShader: fs,
       }).contextToRender();
     });

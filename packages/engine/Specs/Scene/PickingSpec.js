@@ -1,9 +1,10 @@
 import {
+  Cartesian2,
   Cartesian3,
   Cartographic,
+  Cesium3DTilesVoxelProvider,
   Color,
   Ellipsoid,
-  FeatureDetection,
   GeometryInstance,
   Matrix4,
   OrthographicFrustum,
@@ -19,6 +20,7 @@ import {
   PointPrimitiveCollection,
   Primitive,
   SceneMode,
+  VoxelPrimitive,
 } from "../../index.js";
 
 import { Math as CesiumMath } from "../../index.js";
@@ -58,6 +60,8 @@ describe(
       "Data/Cesium3DTiles/Batched/BatchedWithTransformBox/tileset.json";
     const pointCloudTilesetUrl =
       "Data/Cesium3DTiles/PointCloud/PointCloudWithTransform/tileset.json";
+    const voxelTilesetUrl =
+      "Data/Cesium3DTiles/Voxel/VoxelEllipsoid3DTiles/tileset.json";
 
     beforeAll(function () {
       scene = createScene({
@@ -131,19 +135,27 @@ describe(
       return createRectangle(height, smallRectangle);
     }
 
-    function createTileset(url) {
+    async function createTileset(url) {
       const options = {
         maximumScreenSpaceError: 0,
+        // Dynamic screen space error seems to cause a race condition in
+        // waitForTilesLoaded.
+        // See https://github.com/CesiumGS/cesium/issues/11732
+        dynamicScreenSpaceError: false,
       };
-      return Cesium3DTilesTester.loadTileset(scene, url, options).then(
-        function (tileset) {
-          const cartographic = Rectangle.center(largeRectangle);
-          const cartesian = Cartographic.toCartesian(cartographic);
-          tileset.root.transform = Matrix4.IDENTITY;
-          tileset.modelMatrix = Transforms.eastNorthUpToFixedFrame(cartesian);
-          return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
-        }
+      const tileset = await Cesium3DTilesTester.loadTileset(
+        scene,
+        url,
+        options
       );
+      // The tilesets used in these tests have transforms that are not
+      // what we want for our camera setup. Re-position the tileset
+      // in view of the camera
+      const cartographic = Rectangle.center(largeRectangle);
+      const cartesian = Cartographic.toCartesian(cartographic);
+      tileset.root.transform = Matrix4.IDENTITY;
+      tileset.modelMatrix = Transforms.eastNorthUpToFixedFrame(cartesian);
+      return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
     }
 
     function createGlobe() {
@@ -157,28 +169,18 @@ describe(
     }
 
     describe("pick", function () {
-      it("does not pick undefined window positions", function () {
+      it("throws when window position is undefined", function () {
         expect(function () {
           scene.pick(undefined);
         }).toThrowDeveloperError();
       });
 
       it("picks a primitive", function () {
-        if (FeatureDetection.isInternetExplorer()) {
-          // Workaround IE 11.0.9.  This test fails when all tests are ran without a breakpoint here.
-          return;
-        }
-
         const rectangle = createLargeRectangle(0.0);
         expect(scene).toPickPrimitive(rectangle);
       });
 
       it("picks a primitive with a modified pick search area", function () {
-        if (FeatureDetection.isInternetExplorer()) {
-          // Workaround IE 11.0.9.  This test fails when all tests are ran without a breakpoint here.
-          return;
-        }
-
         camera.setView({
           destination: Rectangle.fromDegrees(-10.0, -10.0, 10.0, 10.0),
         });
@@ -234,13 +236,57 @@ describe(
       });
     });
 
+    describe("pickVoxelCoordinate", function () {
+      it("throws when window position is undefined", function () {
+        expect(function () {
+          scene._picking.pickVoxelCoordinate(undefined);
+        }).toThrowDeveloperError();
+      });
+
+      it("picks a voxel coordinate from a VoxelPrimitive", async function () {
+        const provider = await Cesium3DTilesVoxelProvider.fromUrl(
+          voxelTilesetUrl
+        );
+        const primitive = new VoxelPrimitive({ provider });
+        scene.primitives.add(primitive);
+        scene.renderForSpecs();
+        const voxelCoordinate = scene._picking.pickVoxelCoordinate(
+          scene,
+          new Cartesian2(0, 0)
+        );
+        expect(voxelCoordinate).toEqual(new Uint8Array(4));
+      });
+    });
+
+    describe("pickVoxel", function () {
+      it("does not pick undefined window positions", function () {
+        expect(function () {
+          scene.pickVoxel(undefined);
+        }).toThrowDeveloperError();
+      });
+
+      it("picks a voxel cell from a VoxelPrimitive", async function () {
+        const provider = await Cesium3DTilesVoxelProvider.fromUrl(
+          voxelTilesetUrl
+        );
+        const primitive = new VoxelPrimitive({ provider });
+        scene.primitives.add(primitive);
+        await pollToPromise(function () {
+          scene.renderForSpecs();
+          const traversal = primitive._traversal;
+          return traversal.isRenderable(traversal.rootNode);
+        });
+        expect(scene).toPickVoxelAndCall(function (voxelCell) {
+          expect(voxelCell.tileIndex).toBe(0);
+          expect(voxelCell.sampleIndex).toBe(0);
+          expect(voxelCell.hasProperty("a")).toBe(true);
+          expect(voxelCell.getProperty("a")).toEqual(new Float32Array(1));
+        });
+      });
+    });
+
     describe("drillPick", function () {
       it("drill picks a primitive with a modified pick search area", function () {
-        if (FeatureDetection.isInternetExplorer()) {
-          // Workaround IE 11.0.9.  This test fails when all tests are ran without a breakpoint here.
-          return;
-        }
-
         camera.setView({
           destination: Rectangle.fromDegrees(-10.0, -10.0, 10.0, 10.0),
         });
@@ -441,25 +487,24 @@ describe(
       });
     });
 
-    function picksFromRayTileset(style) {
-      return createTileset(batchedTilesetUrl).then(function (tileset) {
-        tileset.style = style;
-        expect(scene).toPickFromRayAndCall(function (result) {
-          const primitive = result.object.primitive;
-          const position = result.position;
+    async function picksFromRayTileset(style) {
+      const tileset = await createTileset(batchedTilesetUrl);
+      tileset.style = style;
+      expect(scene).toPickFromRayAndCall(function (result) {
+        const primitive = result.object.primitive;
+        const position = result.position;
 
-          expect(primitive).toBe(tileset);
+        expect(primitive).toBe(tileset);
 
-          if (scene.context.depthTexture) {
-            const minimumHeight = Cartesian3.fromRadians(0.0, 0.0).x;
-            const maximumHeight = minimumHeight + 20.0; // Rough height of tile
-            expect(position.x).toBeGreaterThan(minimumHeight);
-            expect(position.x).toBeLessThan(maximumHeight);
-            expect(position.y).toEqualEpsilon(0.0, CesiumMath.EPSILON5);
-            expect(position.z).toEqualEpsilon(0.0, CesiumMath.EPSILON5);
-          }
-        }, primitiveRay);
-      });
+        if (scene.context.depthTexture) {
+          const minimumHeight = Cartesian3.fromRadians(0.0, 0.0).x;
+          const maximumHeight = minimumHeight + 20.0; // Rough height of tile
+          expect(position.x).toBeGreaterThan(minimumHeight);
+          expect(position.x).toBeLessThan(maximumHeight);
+          expect(position.y).toEqualEpsilon(0.0, CesiumMath.EPSILON5);
+          expect(position.z).toEqualEpsilon(0.0, CesiumMath.EPSILON5);
+        }
+      }, primitiveRay);
     }
 
     describe("pickFromRay", function () {
@@ -474,21 +519,20 @@ describe(
         return picksFromRayTileset(style);
       });
 
-      it("picks the globe", function () {
+      it("picks the globe", async function () {
         if (!scene.context.depthTexture) {
           return;
         }
-        return createGlobe().then(function () {
-          expect(scene).toPickFromRayAndCall(function (result) {
-            expect(result.object).toBeUndefined();
-            expect(result.position).toBeDefined();
-            expect(result.position.x).toBeGreaterThan(
-              Ellipsoid.WGS84.minimumRadius
-            );
-            expect(result.position.y).toEqualEpsilon(0.0, CesiumMath.EPSILON5);
-            expect(result.position.z).toEqualEpsilon(0.0, CesiumMath.EPSILON5);
-          }, primitiveRay);
-        });
+        await createGlobe();
+        expect(scene).toPickFromRayAndCall(function (result) {
+          expect(result.object).toBeUndefined();
+          expect(result.position).toBeDefined();
+          expect(result.position.x).toBeGreaterThan(
+            Ellipsoid.WGS84.minimumRadius
+          );
+          expect(result.position.y).toEqualEpsilon(0.0, CesiumMath.EPSILON5);
+          expect(result.position.z).toEqualEpsilon(0.0, CesiumMath.EPSILON5);
+        }, primitiveRay);
       });
 
       it("picks a primitive", function () {
@@ -578,25 +622,24 @@ describe(
         );
       });
 
-      it("changes width", function () {
-        return createTileset(pointCloudTilesetUrl).then(function (tileset) {
-          expect(scene).toPickFromRayAndCall(
-            function (result) {
-              expect(result).toBeUndefined();
-            },
-            primitiveRay,
-            [],
-            0.1
-          );
-          expect(scene).toPickFromRayAndCall(
-            function (result) {
-              expect(result).toBeDefined();
-            },
-            primitiveRay,
-            [],
-            1.0
-          );
-        });
+      it("changes width", async function () {
+        await createTileset(pointCloudTilesetUrl);
+        expect(scene).toPickFromRayAndCall(
+          function (result) {
+            expect(result).toBeUndefined();
+          },
+          primitiveRay,
+          [],
+          0.1
+        );
+        expect(scene).toPickFromRayAndCall(
+          function (result) {
+            expect(result).toBeDefined();
+          },
+          primitiveRay,
+          [],
+          1.0
+        );
       });
 
       it("throws if ray is undefined", function () {
@@ -871,26 +914,25 @@ describe(
         );
       });
 
-      it("changes width", function () {
-        return createTileset(pointCloudTilesetUrl).then(function (tileset) {
-          expect(scene).toDrillPickFromRayAndCall(
-            function (result) {
-              expect(result.length).toBe(0);
-            },
-            primitiveRay,
-            [],
-            0.1
-          );
-          expect(scene).toDrillPickFromRayAndCall(
-            function (result) {
-              expect(result.length).toBe(1);
-            },
-            primitiveRay,
-            Number.POSITIVE_INFINITY,
-            [],
-            1.0
-          );
-        });
+      it("changes width", async function () {
+        await createTileset(pointCloudTilesetUrl);
+        expect(scene).toDrillPickFromRayAndCall(
+          function (result) {
+            expect(result.length).toBe(0);
+          },
+          primitiveRay,
+          [],
+          0.1
+        );
+        expect(scene).toDrillPickFromRayAndCall(
+          function (result) {
+            expect(result.length).toBe(1);
+          },
+          primitiveRay,
+          Number.POSITIVE_INFINITY,
+          [],
+          1.0
+        );
       });
 
       it("throws if ray is undefined", function () {
@@ -915,31 +957,29 @@ describe(
     });
 
     describe("sampleHeight", function () {
-      it("samples height from tileset", function () {
+      it("samples height from tileset", async function () {
         if (!scene.sampleHeightSupported) {
           return;
         }
 
         const cartographic = new Cartographic(0.0, 0.0);
-        return createTileset(batchedTilesetUrl).then(function (tileset) {
-          expect(scene).toSampleHeightAndCall(function (height) {
-            expect(height).toBeGreaterThan(0.0);
-            expect(height).toBeLessThan(20.0); // Rough height of tile
-          }, cartographic);
-        });
+        await createTileset(batchedTilesetUrl);
+        expect(scene).toSampleHeightAndCall(function (height) {
+          expect(height).toBeGreaterThan(0.0);
+          expect(height).toBeLessThan(20.0); // Rough height of tile
+        }, cartographic);
       });
 
-      it("samples height from the globe", function () {
+      it("samples height from the globe", async function () {
         if (!scene.sampleHeightSupported) {
           return;
         }
 
         const cartographic = new Cartographic(0.0, 0.0);
-        return createGlobe().then(function () {
-          expect(scene).toSampleHeightAndCall(function (height) {
-            expect(height).toBeDefined();
-          }, cartographic);
-        });
+        await createGlobe();
+        expect(scene).toSampleHeightAndCall(function (height) {
+          expect(height).toBeDefined();
+        }, cartographic);
       });
 
       it("samples height from primitive", function () {
@@ -1025,30 +1065,29 @@ describe(
         }, cartographic);
       });
 
-      it("changes width", function () {
+      it("changes width", async function () {
         if (!scene.sampleHeightSupported) {
           return;
         }
 
         const cartographic = new Cartographic(0.0, 0.0);
-        return createTileset(pointCloudTilesetUrl).then(function (tileset) {
-          expect(scene).toSampleHeightAndCall(
-            function (height) {
-              expect(height).toBeUndefined();
-            },
-            cartographic,
-            [],
-            0.1
-          );
-          expect(scene).toSampleHeightAndCall(
-            function (height) {
-              expect(height).toBeDefined();
-            },
-            cartographic,
-            [],
-            1.0
-          );
-        });
+        await createTileset(pointCloudTilesetUrl);
+        expect(scene).toSampleHeightAndCall(
+          function (height) {
+            expect(height).toBeUndefined();
+          },
+          cartographic,
+          [],
+          0.1
+        );
+        expect(scene).toSampleHeightAndCall(
+          function (height) {
+            expect(height).toBeDefined();
+          },
+          cartographic,
+          [],
+          1.0
+        );
       });
 
       it("throws if position is undefined", function () {
@@ -1104,35 +1143,33 @@ describe(
     });
 
     describe("clampToHeight", function () {
-      it("clamps to tileset", function () {
+      it("clamps to tileset", async function () {
         if (!scene.clampToHeightSupported) {
           return;
         }
 
         const cartesian = Cartesian3.fromRadians(0.0, 0.0, 100000.0);
-        return createTileset(batchedTilesetUrl).then(function (tileset) {
-          expect(scene).toClampToHeightAndCall(function (position) {
-            const minimumHeight = Cartesian3.fromRadians(0.0, 0.0).x;
-            const maximumHeight = minimumHeight + 20.0; // Rough height of tile
-            expect(position.x).toBeGreaterThan(minimumHeight);
-            expect(position.x).toBeLessThan(maximumHeight);
-            expect(position.y).toEqualEpsilon(0.0, CesiumMath.EPSILON5);
-            expect(position.z).toEqualEpsilon(0.0, CesiumMath.EPSILON5);
-          }, cartesian);
-        });
+        await createTileset(batchedTilesetUrl);
+        expect(scene).toClampToHeightAndCall(function (position) {
+          const minimumHeight = Cartesian3.fromRadians(0.0, 0.0).x;
+          const maximumHeight = minimumHeight + 20.0; // Rough height of tile
+          expect(position.x).toBeGreaterThan(minimumHeight);
+          expect(position.x).toBeLessThan(maximumHeight);
+          expect(position.y).toEqualEpsilon(0.0, CesiumMath.EPSILON5);
+          expect(position.z).toEqualEpsilon(0.0, CesiumMath.EPSILON5);
+        }, cartesian);
       });
 
-      it("clamps to the globe", function () {
+      it("clamps to the globe", async function () {
         if (!scene.clampToHeightSupported) {
           return;
         }
 
         const cartesian = Cartesian3.fromRadians(0.0, 0.0, 100000.0);
-        return createGlobe().then(function () {
-          expect(scene).toClampToHeightAndCall(function (position) {
-            expect(position).toBeDefined();
-          }, cartesian);
-        });
+        await createGlobe();
+        expect(scene).toClampToHeightAndCall(function (position) {
+          expect(position).toBeDefined();
+        }, cartesian);
       });
 
       it("clamps to primitive", function () {
@@ -1235,30 +1272,29 @@ describe(
         }, cartesian);
       });
 
-      it("changes width", function () {
+      it("changes width", async function () {
         if (!scene.clampToHeightSupported) {
           return;
         }
 
         const cartesian = Cartesian3.fromRadians(0.0, 0.0, 100.0);
-        return createTileset(pointCloudTilesetUrl).then(function (tileset) {
-          expect(scene).toClampToHeightAndCall(
-            function (clampedCartesian) {
-              expect(clampedCartesian).toBeUndefined();
-            },
-            cartesian,
-            [],
-            0.1
-          );
-          expect(scene).toClampToHeightAndCall(
-            function (clampedCartesian) {
-              expect(clampedCartesian).toBeDefined();
-            },
-            cartesian,
-            [],
-            1.0
-          );
-        });
+        await createTileset(pointCloudTilesetUrl);
+        expect(scene).toClampToHeightAndCall(
+          function (clampedCartesian) {
+            expect(clampedCartesian).toBeUndefined();
+          },
+          cartesian,
+          [],
+          0.1
+        );
+        expect(scene).toClampToHeightAndCall(
+          function (clampedCartesian) {
+            expect(clampedCartesian).toBeDefined();
+          },
+          cartesian,
+          [],
+          1.0
+        );
       });
 
       it("throws if cartesian is undefined", function () {
@@ -1386,104 +1422,96 @@ describe(
     }
 
     describe("pickFromRayMostDetailed", function () {
-      it("picks a tileset", function () {
+      it("picks a tileset", async function () {
         if (webglStub) {
           return;
         }
         scene.camera.setView({ destination: offscreenRectangle });
-        return createTileset(batchedTilesetUrl).then(function (tileset) {
-          return pickFromRayMostDetailed(primitiveRay).then(function (result) {
-            const primitive = result.object.primitive;
-            const position = result.position;
+        const tileset = await createTileset(batchedTilesetUrl);
+        const result = await pickFromRayMostDetailed(primitiveRay);
+        const primitive = result.object.primitive;
+        const position = result.position;
 
-            expect(primitive).toBe(tileset);
+        expect(primitive).toBe(tileset);
 
-            if (scene.context.depthTexture) {
-              const minimumHeight = Cartesian3.fromRadians(0.0, 0.0).x;
-              const maximumHeight = minimumHeight + 20.0; // Rough height of tile
-              expect(position.x).toBeGreaterThan(minimumHeight);
-              expect(position.x).toBeLessThan(maximumHeight);
-              expect(position.y).toEqualEpsilon(0.0, CesiumMath.EPSILON5);
-              expect(position.z).toEqualEpsilon(0.0, CesiumMath.EPSILON5);
-            }
-          });
-        });
+        if (scene.context.depthTexture) {
+          const minimumHeight = Cartesian3.fromRadians(0.0, 0.0).x;
+          const maximumHeight = minimumHeight + 20.0; // Rough height of tile
+          expect(position.x).toBeGreaterThan(minimumHeight);
+          expect(position.x).toBeLessThan(maximumHeight);
+          expect(position.y).toEqualEpsilon(0.0, CesiumMath.EPSILON5);
+          expect(position.z).toEqualEpsilon(0.0, CesiumMath.EPSILON5);
+        }
       });
 
-      it("excludes tileset in objectsToExclude list", function () {
+      it("excludes tileset in objectsToExclude list", async function () {
         if (webglStub) {
           return;
         }
         scene.camera.setView({ destination: offscreenRectangle });
-        return createTileset(batchedTilesetUrl).then(function (tileset) {
-          const objectsToExclude = [tileset];
-          return pickFromRayMostDetailed(primitiveRay, objectsToExclude).then(
-            function (result) {
-              expect(result).toBeUndefined();
-            }
-          );
-        });
+        const tileset = await createTileset(batchedTilesetUrl);
+        const objectsToExclude = [tileset];
+        const result = await pickFromRayMostDetailed(
+          primitiveRay,
+          objectsToExclude
+        );
+        expect(result).toBeUndefined();
       });
 
-      it("excludes tileset whose show is false", function () {
+      it("excludes tileset whose show is false", async function () {
         if (webglStub) {
           return;
         }
         scene.camera.setView({ destination: offscreenRectangle });
-        return createTileset(batchedTilesetUrl).then(function (tileset) {
-          tileset.show = false;
-          return pickFromRayMostDetailed(primitiveRay).then(function (result) {
-            expect(result).toBeUndefined();
-          });
-        });
+        const tileset = await createTileset(batchedTilesetUrl);
+        tileset.show = false;
+        const result = await pickFromRayMostDetailed(primitiveRay);
+        expect(result).toBeUndefined();
       });
 
-      it("picks a primitive", function () {
+      it("picks a primitive", async function () {
         if (webglStub) {
           return;
         }
         const rectangle = createSmallRectangle(0.0);
         scene.camera.setView({ destination: offscreenRectangle });
-        return pickFromRayMostDetailed(primitiveRay).then(function (result) {
-          const primitive = result.object.primitive;
-          const position = result.position;
+        const result = await pickFromRayMostDetailed(primitiveRay);
+        const primitive = result.object.primitive;
+        const position = result.position;
 
-          expect(primitive).toBe(rectangle);
+        expect(primitive).toBe(rectangle);
 
-          if (scene.context.depthTexture) {
-            const expectedPosition = Cartesian3.fromRadians(0.0, 0.0);
-            expect(position).toEqualEpsilon(
-              expectedPosition,
-              CesiumMath.EPSILON5
-            );
-          }
-        });
+        if (scene.context.depthTexture) {
+          const expectedPosition = Cartesian3.fromRadians(0.0, 0.0);
+          expect(position).toEqualEpsilon(
+            expectedPosition,
+            CesiumMath.EPSILON5
+          );
+        }
       });
 
-      it("returns undefined if no primitives are picked", function () {
+      it("returns undefined if no primitives are picked", async function () {
         if (webglStub) {
           return;
         }
         createLargeRectangle(0.0);
         scene.camera.setView({ destination: offscreenRectangle });
-        return pickFromRayMostDetailed(offscreenRay).then(function (result) {
-          expect(result).toBeUndefined();
-        });
+        const result = await pickFromRayMostDetailed(offscreenRay);
+        expect(result).toBeUndefined();
       });
 
-      it("picks the top primitive", function () {
+      it("picks the top primitive", async function () {
         if (webglStub) {
           return;
         }
         createLargeRectangle(0.0);
         const rectangle2 = createLargeRectangle(1.0);
         scene.camera.setView({ destination: offscreenRectangle });
-        return pickFromRayMostDetailed(primitiveRay).then(function (result) {
-          expect(result.object.primitive).toBe(rectangle2);
-        });
+        const result = await pickFromRayMostDetailed(primitiveRay);
+        expect(result.object.primitive).toBe(rectangle2);
       });
 
-      it("excludes objects", function () {
+      it("excludes objects", async function () {
         if (webglStub) {
           return;
         }
@@ -1494,24 +1522,17 @@ describe(
         rectangle4.show = false;
 
         scene.camera.setView({ destination: offscreenRectangle });
-        return pickFromRayMostDetailed(primitiveRay, [
+        const result1 = await pickFromRayMostDetailed(primitiveRay, [
           rectangle2,
           rectangle3,
           rectangle4,
-        ])
-          .then(function (result) {
-            expect(result.object.primitive).toBe(rectangle1);
-          })
-          .then(function () {
-            return pickFromRayMostDetailed(primitiveRay).then(function (
-              result
-            ) {
-              expect(result.object.primitive).toBe(rectangle3);
-            });
-          });
+        ]);
+        expect(result1.object.primitive).toBe(rectangle1);
+        const result2 = await pickFromRayMostDetailed(primitiveRay);
+        expect(result2.object.primitive).toBe(rectangle3);
       });
 
-      it("picks primitive that doesn't write depth", function () {
+      it("picks primitive that doesn't write depth", async function () {
         if (webglStub) {
           return;
         }
@@ -1522,31 +1543,20 @@ describe(
         });
 
         scene.camera.setView({ destination: offscreenRectangle });
-        return pickFromRayMostDetailed(primitiveRay, [], 0.01).then(function (
-          result
-        ) {
-          expect(result.object.primitive).toBe(point);
-          expect(result.position).toBeUndefined();
-        });
+        const result = await pickFromRayMostDetailed(primitiveRay, [], 0.01);
+        expect(result.object.primitive).toBe(point);
+        expect(result.position).toBeUndefined();
       });
 
-      it("changes width", function () {
+      it("changes width", async function () {
         if (webglStub) {
           return;
         }
-        return createTileset(pointCloudTilesetUrl).then(function (tileset) {
-          const promise1 = pickFromRayMostDetailed(primitiveRay, [], 0.1).then(
-            function (result) {
-              expect(result).toBeUndefined();
-            }
-          );
-          const promise2 = pickFromRayMostDetailed(primitiveRay, [], 1.0).then(
-            function (result) {
-              expect(result).toBeDefined();
-            }
-          );
-          return Promise.all([promise1, promise2]);
-        });
+        await createTileset(pointCloudTilesetUrl);
+        const result1 = await pickFromRayMostDetailed(primitiveRay, [], 0.1);
+        expect(result1).toBeUndefined();
+        const result2 = await pickFromRayMostDetailed(primitiveRay, [], 1.0);
+        expect(result2).toBeDefined();
       });
 
       it("throws if ray is undefined", function () {
@@ -1571,69 +1581,63 @@ describe(
     });
 
     describe("drillPickFromRayMostDetailed", function () {
-      it("drill picks a primitive", function () {
+      it("drill picks a primitive", async function () {
         if (webglStub) {
           return;
         }
         const rectangle = createSmallRectangle(0.0);
         scene.camera.setView({ destination: offscreenRectangle });
-        return drillPickFromRayMostDetailed(primitiveRay).then(function (
-          results
-        ) {
-          expect(results.length).toBe(1);
+        const results = await drillPickFromRayMostDetailed(primitiveRay);
+        expect(results.length).toBe(1);
 
-          const primitive = results[0].object.primitive;
-          const position = results[0].position;
+        const primitive = results[0].object.primitive;
+        const position = results[0].position;
 
-          expect(primitive).toBe(rectangle);
+        expect(primitive).toBe(rectangle);
 
-          if (scene.context.depthTexture) {
-            const expectedPosition = Cartesian3.fromRadians(0.0, 0.0);
-            expect(position).toEqualEpsilon(
-              expectedPosition,
-              CesiumMath.EPSILON5
-            );
-          } else {
-            expect(position).toBeUndefined();
-          }
-        });
+        if (scene.context.depthTexture) {
+          const expectedPosition = Cartesian3.fromRadians(0.0, 0.0);
+          expect(position).toEqualEpsilon(
+            expectedPosition,
+            CesiumMath.EPSILON5
+          );
+        } else {
+          expect(position).toBeUndefined();
+        }
       });
 
-      it("drill picks multiple primitives", function () {
+      it("drill picks multiple primitives", async function () {
         if (webglStub) {
           return;
         }
         const rectangle1 = createSmallRectangle(0.0);
         const rectangle2 = createSmallRectangle(1.0);
         scene.camera.setView({ destination: offscreenRectangle });
-        return drillPickFromRayMostDetailed(primitiveRay).then(function (
-          results
-        ) {
-          expect(results.length).toBe(2);
+        const results = await drillPickFromRayMostDetailed(primitiveRay);
+        expect(results.length).toBe(2);
 
-          // rectangle2 is picked before rectangle1
-          expect(results[0].object.primitive).toBe(rectangle2);
-          expect(results[1].object.primitive).toBe(rectangle1);
+        // rectangle2 is picked before rectangle1
+        expect(results[0].object.primitive).toBe(rectangle2);
+        expect(results[1].object.primitive).toBe(rectangle1);
 
-          if (scene.context.depthTexture) {
-            const rectangleCenter1 = Cartesian3.fromRadians(0.0, 0.0, 0.0);
-            const rectangleCenter2 = Cartesian3.fromRadians(0.0, 0.0, 1.0);
-            expect(results[0].position).toEqualEpsilon(
-              rectangleCenter2,
-              CesiumMath.EPSILON5
-            );
-            expect(results[1].position).toEqualEpsilon(
-              rectangleCenter1,
-              CesiumMath.EPSILON5
-            );
-          } else {
-            expect(results[0].position).toBeUndefined();
-            expect(results[1].position).toBeUndefined();
-          }
-        });
+        if (scene.context.depthTexture) {
+          const rectangleCenter1 = Cartesian3.fromRadians(0.0, 0.0, 0.0);
+          const rectangleCenter2 = Cartesian3.fromRadians(0.0, 0.0, 1.0);
+          expect(results[0].position).toEqualEpsilon(
+            rectangleCenter2,
+            CesiumMath.EPSILON5
+          );
+          expect(results[1].position).toEqualEpsilon(
+            rectangleCenter1,
+            CesiumMath.EPSILON5
+          );
+        } else {
+          expect(results[0].position).toBeUndefined();
+          expect(results[1].position).toBeUndefined();
+        }
       });
 
-      it("does not drill pick when show is false", function () {
+      it("does not drill pick when show is false", async function () {
         if (webglStub) {
           return;
         }
@@ -1641,15 +1645,12 @@ describe(
         const rectangle2 = createLargeRectangle(1.0);
         rectangle2.show = false;
         scene.camera.setView({ destination: offscreenRectangle });
-        return drillPickFromRayMostDetailed(primitiveRay).then(function (
-          results
-        ) {
-          expect(results.length).toEqual(1);
-          expect(results[0].object.primitive).toEqual(rectangle1);
-        });
+        const results = await drillPickFromRayMostDetailed(primitiveRay);
+        expect(results.length).toEqual(1);
+        expect(results[0].object.primitive).toEqual(rectangle1);
       });
 
-      it("does not drill pick when alpha is zero", function () {
+      it("does not drill pick when alpha is zero", async function () {
         if (webglStub) {
           return;
         }
@@ -1657,29 +1658,23 @@ describe(
         const rectangle2 = createLargeRectangle(1.0);
         rectangle2.appearance.material.uniforms.color.alpha = 0.0;
         scene.camera.setView({ destination: offscreenRectangle });
-        return drillPickFromRayMostDetailed(primitiveRay).then(function (
-          results
-        ) {
-          expect(results.length).toEqual(1);
-          expect(results[0].object.primitive).toEqual(rectangle1);
-        });
+        const results = await drillPickFromRayMostDetailed(primitiveRay);
+        expect(results.length).toEqual(1);
+        expect(results[0].object.primitive).toEqual(rectangle1);
       });
 
-      it("returns empty array if no primitives are picked", function () {
+      it("returns empty array if no primitives are picked", async function () {
         if (webglStub) {
           return;
         }
         createLargeRectangle(0.0);
         createLargeRectangle(1.0);
         scene.camera.setView({ destination: offscreenRectangle });
-        return drillPickFromRayMostDetailed(offscreenRay).then(function (
-          results
-        ) {
-          expect(results.length).toEqual(0);
-        });
+        const results = await drillPickFromRayMostDetailed(offscreenRay);
+        expect(results.length).toEqual(0);
       });
 
-      it("can drill pick batched Primitives with show attribute", function () {
+      it("can drill pick batched Primitives with show attribute", async function () {
         if (webglStub) {
           return;
         }
@@ -1730,18 +1725,15 @@ describe(
         );
 
         scene.camera.setView({ destination: offscreenRectangle });
-        return drillPickFromRayMostDetailed(primitiveRay).then(function (
-          results
-        ) {
-          expect(results.length).toEqual(2);
-          expect(results[0].object.primitive).toEqual(primitive);
-          expect(results[0].object.id).toEqual(3);
-          expect(results[1].object.primitive).toEqual(primitive);
-          expect(results[1].object.id).toEqual(1);
-        });
+        const results = await drillPickFromRayMostDetailed(primitiveRay);
+        expect(results.length).toEqual(2);
+        expect(results[0].object.primitive).toEqual(primitive);
+        expect(results[0].object.id).toEqual(3);
+        expect(results[1].object.primitive).toEqual(primitive);
+        expect(results[1].object.id).toEqual(1);
       });
 
-      it("can drill pick without ID", function () {
+      it("can drill pick without ID", async function () {
         if (webglStub) {
           return;
         }
@@ -1774,15 +1766,12 @@ describe(
         );
 
         scene.camera.setView({ destination: offscreenRectangle });
-        return drillPickFromRayMostDetailed(primitiveRay).then(function (
-          results
-        ) {
-          expect(results.length).toEqual(1);
-          expect(results[0].object.primitive).toEqual(primitive);
-        });
+        const results = await drillPickFromRayMostDetailed(primitiveRay);
+        expect(results.length).toEqual(1);
+        expect(results[0].object.primitive).toEqual(primitive);
       });
 
-      it("can drill pick batched Primitives without show attribute", function () {
+      it("can drill pick batched Primitives without show attribute", async function () {
         if (webglStub) {
           return;
         }
@@ -1824,16 +1813,13 @@ describe(
         );
 
         scene.camera.setView({ destination: offscreenRectangle });
-        return drillPickFromRayMostDetailed(primitiveRay).then(function (
-          results
-        ) {
-          expect(results.length).toEqual(1);
-          expect(results[0].object.primitive).toEqual(primitive);
-          expect(results[0].object.id).toEqual(3);
-        });
+        const results = await drillPickFromRayMostDetailed(primitiveRay);
+        expect(results.length).toEqual(1);
+        expect(results[0].object.primitive).toEqual(primitive);
+        expect(results[0].object.id).toEqual(3);
       });
 
-      it("stops drill picking when the limit is reached.", function () {
+      it("stops drill picking when the limit is reached.", async function () {
         if (webglStub) {
           return;
         }
@@ -1843,17 +1829,14 @@ describe(
         const rectangle4 = createLargeRectangle(3.0);
 
         scene.camera.setView({ destination: offscreenRectangle });
-        return drillPickFromRayMostDetailed(primitiveRay, 3).then(function (
-          results
-        ) {
-          expect(results.length).toEqual(3);
-          expect(results[0].object.primitive).toEqual(rectangle4);
-          expect(results[1].object.primitive).toEqual(rectangle3);
-          expect(results[2].object.primitive).toEqual(rectangle2);
-        });
+        const results = await drillPickFromRayMostDetailed(primitiveRay, 3);
+        expect(results.length).toEqual(3);
+        expect(results[0].object.primitive).toEqual(rectangle4);
+        expect(results[1].object.primitive).toEqual(rectangle3);
+        expect(results[2].object.primitive).toEqual(rectangle2);
       });
 
-      it("excludes objects", function () {
+      it("excludes objects", async function () {
         if (webglStub) {
           return;
         }
@@ -1863,39 +1846,34 @@ describe(
         const rectangle4 = createLargeRectangle(3.0);
         const rectangle5 = createLargeRectangle(4.0);
         scene.camera.setView({ destination: offscreenRectangle });
-        return drillPickFromRayMostDetailed(primitiveRay, 2, [
+        const results = await drillPickFromRayMostDetailed(primitiveRay, 2, [
           rectangle5,
           rectangle3,
-        ]).then(function (results) {
-          expect(results.length).toBe(2);
-          expect(results[0].object.primitive).toBe(rectangle4);
-          expect(results[1].object.primitive).toBe(rectangle2);
-        });
+        ]);
+        expect(results.length).toBe(2);
+        expect(results[0].object.primitive).toBe(rectangle4);
+        expect(results[1].object.primitive).toBe(rectangle2);
       });
 
-      it("changes width", function () {
+      it("changes width", async function () {
         if (webglStub) {
           return;
         }
-        return createTileset(pointCloudTilesetUrl).then(function (tileset) {
-          const promise1 = drillPickFromRayMostDetailed(
-            primitiveRay,
-            1,
-            [],
-            0.1
-          ).then(function (result) {
-            expect(result.length).toBe(0);
-          });
-          const promise2 = drillPickFromRayMostDetailed(
-            primitiveRay,
-            1,
-            [],
-            1.0
-          ).then(function (result) {
-            expect(result.length).toBe(1);
-          });
-          return Promise.all([promise1, promise2]);
-        });
+        await createTileset(pointCloudTilesetUrl);
+        const result1 = await drillPickFromRayMostDetailed(
+          primitiveRay,
+          1,
+          [],
+          0.1
+        );
+        expect(result1.length).toBe(0);
+        const result2 = await drillPickFromRayMostDetailed(
+          primitiveRay,
+          1,
+          [],
+          1.0
+        );
+        expect(result2.length).toBe(1);
       });
 
       it("throws if ray is undefined", function () {
@@ -1920,24 +1898,22 @@ describe(
     });
 
     describe("sampleHeightMostDetailed", function () {
-      it("samples height from tileset", function () {
+      it("samples height from tileset", async function () {
         if (!scene.sampleHeightSupported) {
           return;
         }
 
         const cartographics = [new Cartographic(0.0, 0.0)];
-        return createTileset(batchedTilesetUrl).then(function () {
-          return sampleHeightMostDetailed(cartographics).then(function (
-            updatedCartographics
-          ) {
-            const height = updatedCartographics[0].height;
-            expect(height).toBeGreaterThan(0.0);
-            expect(height).toBeLessThan(20.0); // Rough height of tile
-          });
-        });
+        await createTileset(batchedTilesetUrl);
+        const updatedCartographics = await sampleHeightMostDetailed(
+          cartographics
+        );
+        const height = updatedCartographics[0].height;
+        expect(height).toBeGreaterThan(0.0);
+        expect(height).toBeLessThan(20.0); // Rough height of tile
       });
 
-      it("samples height from the globe", function () {
+      it("samples height from the globe", async function () {
         if (!scene.sampleHeightSupported) {
           return;
         }
@@ -1952,44 +1928,40 @@ describe(
           new Cartographic(0.0001, 0.0001),
           new Cartographic(0.0002, 0.0002),
         ];
-        return createGlobe().then(function () {
-          return sampleHeightMostDetailed(cartographics).then(function (
-            updatedCartographics
-          ) {
-            expect(updatedCartographics).toBe(cartographics);
-            expect(updatedCartographics.length).toBe(3);
-            let previousHeight;
-            for (let i = 0; i < 3; ++i) {
-              const longitude = updatedCartographics[i].longitude;
-              const latitude = updatedCartographics[i].latitude;
-              const height = updatedCartographics[i].height;
-              expect(longitude).toBe(clonedCartographics[i].longitude);
-              expect(latitude).toBe(clonedCartographics[i].latitude);
-              expect(height).toBeDefined();
-              expect(height).not.toBe(previousHeight);
-              previousHeight = height;
-            }
-          });
-        });
+        await createGlobe();
+        const updatedCartographics = await sampleHeightMostDetailed(
+          cartographics
+        );
+        expect(updatedCartographics).toBe(cartographics);
+        expect(updatedCartographics.length).toBe(3);
+        let previousHeight;
+        for (let i = 0; i < 3; ++i) {
+          const longitude = updatedCartographics[i].longitude;
+          const latitude = updatedCartographics[i].latitude;
+          const height = updatedCartographics[i].height;
+          expect(longitude).toBe(clonedCartographics[i].longitude);
+          expect(latitude).toBe(clonedCartographics[i].latitude);
+          expect(height).toBeDefined();
+          expect(height).not.toBe(previousHeight);
+          previousHeight = height;
+        }
       });
 
-      it("does not sample offscreen globe tiles", function () {
+      it("does not sample offscreen globe tiles", async function () {
         if (!scene.sampleHeightSupported) {
           return;
         }
 
         const cartographics = [new Cartographic(0.0, 0.0)];
         scene.camera.setView({ destination: offscreenRectangle });
-        return createGlobe().then(function () {
-          return sampleHeightMostDetailed(cartographics).then(function (
-            updatedCartographics
-          ) {
-            expect(updatedCartographics[0].height).toBeUndefined();
-          });
-        });
+        await createGlobe();
+        const updatedCartographics = await sampleHeightMostDetailed(
+          cartographics
+        );
+        expect(updatedCartographics[0].height).toBeUndefined();
       });
 
-      it("samples height from multiple primitives", function () {
+      it("samples height from multiple primitives", async function () {
         if (!scene.sampleHeightSupported) {
           return;
         }
@@ -2003,16 +1975,15 @@ describe(
           new Cartographic(-2.0, -2.0),
         ];
         scene.camera.setView({ destination: offscreenRectangle });
-        return sampleHeightMostDetailed(cartographics).then(function (
-          updatedCartographics
-        ) {
-          expect(updatedCartographics[0].height).toBeDefined();
-          expect(updatedCartographics[1].height).toBeDefined();
-          expect(updatedCartographics[2].height).toBeUndefined(); // No primitive occupies this space
-        });
+        const updatedCartographics = await sampleHeightMostDetailed(
+          cartographics
+        );
+        expect(updatedCartographics[0].height).toBeDefined();
+        expect(updatedCartographics[1].height).toBeDefined();
+        expect(updatedCartographics[2].height).toBeUndefined(); // No primitive occupies this space
       });
 
-      it("samples multiple heights from primitive", function () {
+      it("samples multiple heights from primitive", async function () {
         if (!scene.sampleHeightSupported) {
           return;
         }
@@ -2024,20 +1995,19 @@ describe(
           new Cartographic(0.0000005, 0.0000005),
         ];
         scene.camera.setView({ destination: offscreenRectangle });
-        return sampleHeightMostDetailed(cartographics).then(function (
-          updatedCartographics
-        ) {
-          let previousHeight;
-          for (let i = 0; i < 3; ++i) {
-            const height = updatedCartographics[i].height;
-            expect(height).toEqualEpsilon(0.0, CesiumMath.EPSILON3);
-            expect(height).not.toBe(previousHeight);
-            previousHeight = height;
-          }
-        });
+        const updatedCartographics = await sampleHeightMostDetailed(
+          cartographics
+        );
+        let previousHeight;
+        for (let i = 0; i < 3; ++i) {
+          const height = updatedCartographics[i].height;
+          expect(height).toEqualEpsilon(0.0, CesiumMath.EPSILON3);
+          expect(height).not.toBe(previousHeight);
+          previousHeight = height;
+        }
       });
 
-      it("samples height from the top primitive", function () {
+      it("samples height from the top primitive", async function () {
         if (!scene.sampleHeightSupported) {
           return;
         }
@@ -2045,17 +2015,16 @@ describe(
         createSmallRectangle(1.0);
         const cartographics = [new Cartographic(0.0, 0.0)];
         scene.camera.setView({ destination: offscreenRectangle });
-        return sampleHeightMostDetailed(cartographics).then(function (
-          updatedCartographics
-        ) {
-          expect(updatedCartographics[0].height).toEqualEpsilon(
-            1.0,
-            CesiumMath.EPSILON3
-          );
-        });
+        const updatedCartographics = await sampleHeightMostDetailed(
+          cartographics
+        );
+        expect(updatedCartographics[0].height).toEqualEpsilon(
+          1.0,
+          CesiumMath.EPSILON3
+        );
       });
 
-      it("excludes objects", function () {
+      it("excludes objects", async function () {
         if (!scene.sampleHeightSupported) {
           return;
         }
@@ -2070,20 +2039,19 @@ describe(
           new Cartographic(-2.0, -2.0),
         ];
         scene.camera.setView({ destination: offscreenRectangle });
-        return sampleHeightMostDetailed(cartographics, [
-          rectangle1,
-          rectangle3,
-        ]).then(function (updatedCartographics) {
-          expect(updatedCartographics[0].height).toBeUndefined(); // This rectangle was excluded
-          expect(updatedCartographics[1].height).toEqualEpsilon(
-            0.0,
-            CesiumMath.EPSILON2
-          );
-          expect(updatedCartographics[2].height).toBeUndefined(); // No primitive occupies this space
-        });
+        const updatedCartographics = await sampleHeightMostDetailed(
+          cartographics,
+          [rectangle1, rectangle3]
+        );
+        expect(updatedCartographics[0].height).toBeUndefined(); // This rectangle was excluded
+        expect(updatedCartographics[1].height).toEqualEpsilon(
+          0.0,
+          CesiumMath.EPSILON2
+        );
+        expect(updatedCartographics[2].height).toBeUndefined(); // No primitive occupies this space
       });
 
-      it("excludes primitive that doesn't write depth", function () {
+      it("excludes primitive that doesn't write depth", async function () {
         if (!scene.sampleHeightSupported) {
           return;
         }
@@ -2098,71 +2066,56 @@ describe(
         });
 
         scene.camera.setView({ destination: offscreenRectangle });
-        return sampleHeightMostDetailed(cartographics)
-          .then(function (updatedCartographics) {
-            expect(updatedCartographics[0].height).toEqualEpsilon(
-              height,
-              CesiumMath.EPSILON3
-            );
-          })
-          .then(function () {
-            point.disableDepthTestDistance = Number.POSITIVE_INFINITY;
-            return sampleHeightMostDetailed(cartographics).then(function (
-              updatedCartographics
-            ) {
-              expect(updatedCartographics[0].height).toEqualEpsilon(
-                0.0,
-                CesiumMath.EPSILON3
-              );
-            });
-          })
-          .then(function () {
-            rectangle.show = false;
-            return sampleHeightMostDetailed(cartographics).then(function (
-              updatedCartographics
-            ) {
-              expect(updatedCartographics[0].height).toBeUndefined();
-            });
-          });
+        let updatedCartographics = await sampleHeightMostDetailed(
+          cartographics
+        );
+        expect(updatedCartographics[0].height).toEqualEpsilon(
+          height,
+          CesiumMath.EPSILON3
+        );
+        point.disableDepthTestDistance = Number.POSITIVE_INFINITY;
+        updatedCartographics = await sampleHeightMostDetailed(cartographics);
+        expect(updatedCartographics[0].height).toEqualEpsilon(
+          0.0,
+          CesiumMath.EPSILON3
+        );
+        rectangle.show = false;
+        updatedCartographics = await sampleHeightMostDetailed(cartographics);
+        expect(updatedCartographics[0].height).toBeUndefined();
       });
 
-      it("changes width", function () {
+      it("changes width", async function () {
         if (!scene.sampleHeightSupported) {
           return;
         }
 
         const cartographics1 = [new Cartographic(0.0, 0.0)];
         const cartographics2 = [new Cartographic(0.0, 0.0)];
-        return createTileset(pointCloudTilesetUrl).then(function (tileset) {
-          const promise1 = sampleHeightMostDetailed(
-            cartographics1,
-            [],
-            0.1
-          ).then(function (updatedCartographics1) {
-            expect(updatedCartographics1[0].height).toBeUndefined();
-          });
-          const promise2 = sampleHeightMostDetailed(
-            cartographics2,
-            [],
-            1.0
-          ).then(function (updatedCartographics2) {
-            expect(updatedCartographics2[0].height).toBeDefined();
-          });
-          return Promise.all([promise1, promise2]);
-        });
+        await createTileset(pointCloudTilesetUrl);
+        const updatedCartographics1 = await sampleHeightMostDetailed(
+          cartographics1,
+          [],
+          0.1
+        );
+        expect(updatedCartographics1[0].height).toBeUndefined();
+        const updatedCartographics2 = await sampleHeightMostDetailed(
+          cartographics2,
+          [],
+          1.0
+        );
+        expect(updatedCartographics2[0].height).toBeDefined();
       });
 
-      it("handles empty array", function () {
+      it("handles empty array", async function () {
         if (!scene.sampleHeightSupported) {
           return;
         }
 
         const cartographics = [];
-        return sampleHeightMostDetailed(cartographics).then(function (
-          updatedCartographics
-        ) {
-          expect(updatedCartographics.length).toBe(0);
-        });
+        const updatedCartographics = await sampleHeightMostDetailed(
+          cartographics
+        );
+        expect(updatedCartographics.length).toBe(0);
       });
 
       it("throws if positions is undefined", function () {
@@ -2218,28 +2171,24 @@ describe(
     });
 
     describe("clampToHeightMostDetailed", function () {
-      it("clamps to tileset", function () {
+      it("clamps to tileset", async function () {
         if (!scene.clampToHeightSupported) {
           return;
         }
 
         const cartesians = [Cartesian3.fromRadians(0.0, 0.0, 100000.0)];
-        return createTileset(batchedTilesetUrl).then(function () {
-          return clampToHeightMostDetailed(cartesians).then(function (
-            updatedCartesians
-          ) {
-            const minimumHeight = Cartesian3.fromRadians(0.0, 0.0).x;
-            const maximumHeight = minimumHeight + 20.0; // Rough height of tile
-            const position = updatedCartesians[0];
-            expect(position.x).toBeGreaterThan(minimumHeight);
-            expect(position.x).toBeLessThan(maximumHeight);
-            expect(position.y).toEqualEpsilon(0.0, CesiumMath.EPSILON5);
-            expect(position.z).toEqualEpsilon(0.0, CesiumMath.EPSILON5);
-          });
-        });
+        await createTileset(batchedTilesetUrl);
+        const updatedCartesians = await clampToHeightMostDetailed(cartesians);
+        const minimumHeight = Cartesian3.fromRadians(0.0, 0.0).x;
+        const maximumHeight = minimumHeight + 20.0; // Rough height of tile
+        const position = updatedCartesians[0];
+        expect(position.x).toBeGreaterThan(minimumHeight);
+        expect(position.x).toBeLessThan(maximumHeight);
+        expect(position.y).toEqualEpsilon(0.0, CesiumMath.EPSILON5);
+        expect(position.z).toEqualEpsilon(0.0, CesiumMath.EPSILON5);
       });
 
-      it("clamps to the globe", function () {
+      it("clamps to the globe", async function () {
         if (!scene.clampToHeightSupported) {
           return;
         }
@@ -2254,39 +2203,31 @@ describe(
           Cartesian3.fromRadians(0.0001, 0.0001, 100000.0),
           Cartesian3.fromRadians(0.0002, 0.0002, 100000.0),
         ];
-        return createGlobe().then(function () {
-          return clampToHeightMostDetailed(cartesians).then(function (
-            updatedCartesians
-          ) {
-            expect(updatedCartesians).toBe(cartesians);
-            expect(updatedCartesians.length).toBe(3);
-            let previousCartesian;
-            for (let i = 0; i < 3; ++i) {
-              expect(updatedCartesians[i]).not.toEqual(clonedCartesians[i]);
-              expect(updatedCartesians[i]).not.toEqual(previousCartesian);
-              previousCartesian = updatedCartesians[i];
-            }
-          });
-        });
+        await createGlobe();
+        const updatedCartesians = await clampToHeightMostDetailed(cartesians);
+        expect(updatedCartesians).toBe(cartesians);
+        expect(updatedCartesians.length).toBe(3);
+        let previousCartesian;
+        for (let i = 0; i < 3; ++i) {
+          expect(updatedCartesians[i]).not.toEqual(clonedCartesians[i]);
+          expect(updatedCartesians[i]).not.toEqual(previousCartesian);
+          previousCartesian = updatedCartesians[i];
+        }
       });
 
-      it("does not clamp to offscreen globe tiles", function () {
+      it("does not clamp to offscreen globe tiles", async function () {
         if (!scene.clampToHeightSupported) {
           return;
         }
 
         const cartesians = [Cartesian3.fromRadians(0.0, 0.0, 100000.0)];
         scene.camera.setView({ destination: offscreenRectangle });
-        return createGlobe().then(function () {
-          return clampToHeightMostDetailed(cartesians).then(function (
-            updatedCartesians
-          ) {
-            expect(updatedCartesians[0]).toBeUndefined();
-          });
-        });
+        await createGlobe();
+        const updatedCartesians = await clampToHeightMostDetailed(cartesians);
+        expect(updatedCartesians[0]).toBeUndefined();
       });
 
-      it("clamps to multiple primitives", function () {
+      it("clamps to multiple primitives", async function () {
         if (!scene.clampToHeightSupported) {
           return;
         }
@@ -2300,16 +2241,13 @@ describe(
           Cartesian3.fromRadians(-2.0, -2.0),
         ];
         scene.camera.setView({ destination: offscreenRectangle });
-        return clampToHeightMostDetailed(cartesians).then(function (
-          updatedCartesians
-        ) {
-          expect(updatedCartesians[0]).toBeDefined();
-          expect(updatedCartesians[1]).toBeDefined();
-          expect(updatedCartesians[2]).toBeUndefined(); // No primitive occupies this space
-        });
+        const updatedCartesians = await clampToHeightMostDetailed(cartesians);
+        expect(updatedCartesians[0]).toBeDefined();
+        expect(updatedCartesians[1]).toBeDefined();
+        expect(updatedCartesians[2]).toBeUndefined(); // No primitive occupies this space
       });
 
-      it("clamps to primitive", function () {
+      it("clamps to primitive", async function () {
         if (!scene.clampToHeightSupported) {
           return;
         }
@@ -2326,22 +2264,19 @@ describe(
           Cartesian3.fromRadians(0.0000005, 0.0000005, 0.0),
         ];
         scene.camera.setView({ destination: offscreenRectangle });
-        return clampToHeightMostDetailed(cartesians).then(function (
-          updatedCartesians
-        ) {
-          let previousCartesian;
-          for (let i = 0; i < 3; ++i) {
-            expect(updatedCartesians[i]).toEqualEpsilon(
-              expectedCartesians[i],
-              CesiumMath.EPSILON5
-            );
-            expect(updatedCartesians[i]).not.toEqual(previousCartesian);
-            previousCartesian = updatedCartesians[i];
-          }
-        });
+        const updatedCartesians = await clampToHeightMostDetailed(cartesians);
+        let previousCartesian;
+        for (let i = 0; i < 3; ++i) {
+          expect(updatedCartesians[i]).toEqualEpsilon(
+            expectedCartesians[i],
+            CesiumMath.EPSILON5
+          );
+          expect(updatedCartesians[i]).not.toEqual(previousCartesian);
+          previousCartesian = updatedCartesians[i];
+        }
       });
 
-      it("clamps to top primitive", function () {
+      it("clamps to top primitive", async function () {
         if (!scene.clampToHeightSupported) {
           return;
         }
@@ -2349,18 +2284,15 @@ describe(
         createSmallRectangle(1.0);
         const cartesians = [Cartesian3.fromRadians(0.0, 0.0)];
         scene.camera.setView({ destination: offscreenRectangle });
-        return clampToHeightMostDetailed(cartesians).then(function (
-          updatedCartesians
-        ) {
-          const expectedCartesian = Cartesian3.fromRadians(0.0, 0.0, 1.0);
-          expect(updatedCartesians[0]).toEqualEpsilon(
-            expectedCartesian,
-            CesiumMath.EPSILON5
-          );
-        });
+        const updatedCartesians = await clampToHeightMostDetailed(cartesians);
+        const expectedCartesian = Cartesian3.fromRadians(0.0, 0.0, 1.0);
+        expect(updatedCartesians[0]).toEqualEpsilon(
+          expectedCartesian,
+          CesiumMath.EPSILON5
+        );
       });
 
-      it("excludes objects", function () {
+      it("excludes objects", async function () {
         if (!scene.clampToHeightSupported) {
           return;
         }
@@ -2375,23 +2307,22 @@ describe(
           Cartesian3.fromRadians(-2.0, -2.0),
         ];
         scene.camera.setView({ destination: offscreenRectangle });
-        return clampToHeightMostDetailed(cartesians, [
+        const updatedCartesians = await clampToHeightMostDetailed(cartesians, [
           rectangle1,
           rectangle3,
-        ]).then(function (updatedCartesians) {
-          const expectedCartesian = Cartographic.toCartesian(
-            Rectangle.center(offscreenRectangle)
-          );
-          expect(updatedCartesians[0]).toBeUndefined(); // This rectangle was excluded
-          expect(updatedCartesians[1]).toEqualEpsilon(
-            expectedCartesian,
-            CesiumMath.EPSILON2
-          );
-          expect(updatedCartesians[2]).toBeUndefined(); // No primitive occupies this space
-        });
+        ]);
+        const expectedCartesian = Cartographic.toCartesian(
+          Rectangle.center(offscreenRectangle)
+        );
+        expect(updatedCartesians[0]).toBeUndefined(); // This rectangle was excluded
+        expect(updatedCartesians[1]).toEqualEpsilon(
+          expectedCartesian,
+          CesiumMath.EPSILON2
+        );
+        expect(updatedCartesians[2]).toBeUndefined(); // No primitive occupies this space
       });
 
-      it("excludes primitive that doesn't write depth", function () {
+      it("excludes primitive that doesn't write depth", async function () {
         if (!scene.clampToHeightSupported) {
           return;
         }
@@ -2409,35 +2340,23 @@ describe(
         });
 
         scene.camera.setView({ destination: offscreenRectangle });
-        return clampToHeightMostDetailed(cartesians1)
-          .then(function (updatedCartesians) {
-            expect(updatedCartesians[0]).toEqualEpsilon(
-              cartesian,
-              CesiumMath.EPSILON3
-            );
-          })
-          .then(function () {
-            point.disableDepthTestDistance = Number.POSITIVE_INFINITY;
-            return clampToHeightMostDetailed(cartesians2).then(function (
-              updatedCartesians
-            ) {
-              expect(updatedCartesians[0]).toEqualEpsilon(
-                cartesian,
-                CesiumMath.EPSILON3
-              );
-            });
-          })
-          .then(function () {
-            rectangle.show = false;
-            return clampToHeightMostDetailed(cartesians3).then(function (
-              updatedCartesians
-            ) {
-              expect(updatedCartesians[0]).toBeUndefined();
-            });
-          });
+        let updatedCartesians = await clampToHeightMostDetailed(cartesians1);
+        expect(updatedCartesians[0]).toEqualEpsilon(
+          cartesian,
+          CesiumMath.EPSILON3
+        );
+        point.disableDepthTestDistance = Number.POSITIVE_INFINITY;
+        updatedCartesians = await clampToHeightMostDetailed(cartesians2);
+        expect(updatedCartesians[0]).toEqualEpsilon(
+          cartesian,
+          CesiumMath.EPSILON3
+        );
+        rectangle.show = false;
+        updatedCartesians = await clampToHeightMostDetailed(cartesians3);
+        expect(updatedCartesians[0]).toBeUndefined();
       });
 
-      it("changes width", function () {
+      it("changes width", async function () {
         if (!scene.clampToHeightSupported) {
           return;
         }
@@ -2445,32 +2364,29 @@ describe(
         const cartesian = Cartesian3.fromRadians(0.0, 0.0, 100.0);
         const cartesians1 = [Cartesian3.clone(cartesian)];
         const cartesians2 = [Cartesian3.clone(cartesian)];
-        return createTileset(pointCloudTilesetUrl).then(function (tileset) {
-          const promise1 = clampToHeightMostDetailed(cartesians1, [], 0.1).then(
-            function (clampedCartesians1) {
-              expect(clampedCartesians1[0]).toBeUndefined();
-            }
-          );
-          const promise2 = clampToHeightMostDetailed(cartesians2, [], 1.0).then(
-            function (clampedCartesians2) {
-              expect(clampedCartesians2[0]).toBeDefined();
-            }
-          );
-          return Promise.all([promise1, promise2]);
-        });
+        await createTileset(pointCloudTilesetUrl);
+        const clampedCartesians1 = await clampToHeightMostDetailed(
+          cartesians1,
+          [],
+          0.1
+        );
+        expect(clampedCartesians1[0]).toBeUndefined();
+        const clampedCartesians2 = await clampToHeightMostDetailed(
+          cartesians2,
+          [],
+          1.0
+        );
+        expect(clampedCartesians2[0]).toBeDefined();
       });
 
-      it("handles empty array", function () {
+      it("handles empty array", async function () {
         if (!scene.clampToHeightSupported) {
           return;
         }
 
         const cartesians = [];
-        return sampleHeightMostDetailed(cartesians).then(function (
-          updatedCartesians
-        ) {
-          expect(updatedCartesians.length).toBe(0);
-        });
+        const updatedCartesians = await clampToHeightMostDetailed(cartesians);
+        expect(updatedCartesians.length).toBe(0);
       });
 
       it("throws if cartesians is undefined", function () {
@@ -2525,7 +2441,7 @@ describe(
       });
     });
 
-    it("calls multiple picking functions within the same frame", function () {
+    it("calls multiple picking functions within the same frame", async function () {
       if (!scene.clampToHeightSupported || !scene.pickPositionSupported) {
         return;
       }

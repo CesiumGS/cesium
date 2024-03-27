@@ -3,14 +3,18 @@ import {
   Cartographic,
   Cesium3DTileRefine,
   Cesium3DTileset,
+  clone,
   Math as CesiumMath,
   Ellipsoid,
+  Event,
   Matrix4,
-  I3SNode,
-  I3SLayer,
   I3SDataProvider,
   I3SDecoder,
+  I3SFeature,
+  I3SField,
   I3SGeometry,
+  I3SLayer,
+  I3SNode,
   Rectangle,
   Resource,
   WebMercatorProjection,
@@ -282,6 +286,7 @@ describe("Scene/I3SNode", function () {
 
   const layerData = {
     href: "mockLayerUrl",
+    layerType: "3DObject",
     nodePages: {
       lodSelectionMetricType: "maxScreenThresholdSQ",
       nodesPerPage: 64,
@@ -293,7 +298,9 @@ describe("Scene/I3SNode", function () {
         doubleSided: true,
         pbrMetallicRoughness: {
           metallicFactor: 0,
+          baseColorFactor: [1, 1, 1, 1],
         },
+        emissiveFactor: [0, 0, 0],
       },
       {
         doubleSided: true,
@@ -312,10 +319,27 @@ describe("Scene/I3SNode", function () {
       },
     ],
     spatialReference: { wkid: 4326 },
+    drawingInfo: {
+      renderer: {
+        type: "simple",
+        symbol: {
+          symbolLayers: [
+            {
+              type: "Fill",
+              edges: {
+                color: [255, 255, 255],
+                tranparency: 0,
+              },
+            },
+          ],
+        },
+      },
+    },
   };
 
   const layerDataWithoutNodePages = {
     href: "mockLayerUrl",
+    layerType: "3DObject",
     attributeStorageInfo: attrStorageInfo,
     store: { defaultGeometrySchema: {}, version: "1.6" },
     materialDefinitions: [
@@ -344,7 +368,7 @@ describe("Scene/I3SNode", function () {
     spatialReference: { wkid: 4326 },
   };
 
-  async function createMockProvider(url, layerData, geoidDataList) {
+  async function createMockProvider(url, layerData, geoidDataList, options) {
     spyOn(Resource.prototype, "fetchJson").and.returnValue(
       Promise.resolve(layerData)
     );
@@ -354,16 +378,22 @@ describe("Scene/I3SNode", function () {
       tileset._isI3STileSet = true;
       return tileset;
     });
-    const mockI3SProvider = await I3SDataProvider.fromUrl(url);
+    const mockI3SProvider = await I3SDataProvider.fromUrl(url, options);
     mockI3SProvider._geoidDataList = geoidDataList;
     return mockI3SProvider;
   }
 
-  async function createMockLayer(providerUrl, layerData, geoidDataList) {
+  async function createMockLayer(
+    providerUrl,
+    layerData,
+    geoidDataList,
+    options
+  ) {
     const provider = await createMockProvider(
       providerUrl,
       layerData,
-      geoidDataList
+      geoidDataList,
+      options
     );
     const mockI3SLayer = provider.layers[0];
     mockI3SLayer._geometryDefinitions = [
@@ -613,7 +643,7 @@ describe("Scene/I3SNode", function () {
     );
 
     return rootNode.load().then(function () {
-      expect(spy).toHaveBeenCalledWith(rootNode.resource, false);
+      expect(spy).toHaveBeenCalledWith(rootNode.resource);
       expect(rootNode.data.children.length).toEqual(2);
     });
   });
@@ -635,7 +665,7 @@ describe("Scene/I3SNode", function () {
         return childNode.load();
       })
       .then(function () {
-        expect(spy).toHaveBeenCalledWith(childNode.resource, false);
+        expect(spy).toHaveBeenCalledWith(childNode.resource);
         expect(childNode.data.children.length).toEqual(0);
         expect(childNode.tile).toBeDefined();
         expect(childNode.tile.i3sNode).toBe(childNode);
@@ -790,7 +820,7 @@ describe("Scene/I3SNode", function () {
       });
   });
 
-  it("loads fields", async function () {
+  it("loads not existing fields", async function () {
     spyOn(I3SLayer.prototype, "_loadNodePage").and.returnValue(
       Promise.resolve(nodeData)
     );
@@ -894,6 +924,121 @@ describe("Scene/I3SNode", function () {
       });
   });
 
+  it("loads existing fields", async function () {
+    spyOn(I3SLayer.prototype, "_loadNodePage").and.returnValue(
+      Promise.resolve(nodeData)
+    );
+
+    spyOn(I3SField.prototype, "load").and.returnValue(
+      Promise.resolve({ mockResult: "success" })
+    );
+
+    const mockLayerData = clone(layerData, true);
+    mockLayerData.attributeStorageInfo = [{ name: "testField" }];
+
+    const mockI3SLayerWithNodePages = await createMockLayer(
+      "mockProviderUrl?testQuery=test",
+      mockLayerData
+    );
+    const rootNode = new I3SNode(mockI3SLayerWithNodePages, 1, true);
+    rootNode._data = {
+      mesh: { attribute: { resource: new Resource({ url: "mockUrl" }) } },
+    };
+    rootNode._fields = {
+      testField: new I3SField(rootNode, { key: "mockKey" }),
+    };
+
+    return rootNode.loadFields().then(function (result) {
+      expect(result).toEqual([{ mockResult: "success" }]);
+    });
+  });
+
+  it("loads existing fields without storageInfo", async function () {
+    spyOn(I3SLayer.prototype, "_loadNodePage").and.returnValue(
+      Promise.resolve(nodeData)
+    );
+
+    const mockLayerData = clone(layerData, true);
+    delete mockLayerData.attributeStorageInfo;
+
+    const mockI3SLayerWithNodePages = await createMockLayer(
+      "mockProviderUrl?testQuery=test",
+      mockLayerData
+    );
+    const rootNode = new I3SNode(mockI3SLayerWithNodePages, 1, true);
+
+    return rootNode.loadFields().then(function (result) {
+      expect(result).toEqual([]);
+    });
+  });
+
+  it("loads existing field", async function () {
+    spyOn(I3SLayer.prototype, "_loadNodePage").and.returnValue(
+      Promise.resolve(nodeData)
+    );
+
+    spyOn(I3SField.prototype, "load").and.returnValue(
+      Promise.resolve({ mockResult: "success" })
+    );
+
+    const mockLayerData = clone(layerData, true);
+    mockLayerData.attributeStorageInfo = [{ name: "testField" }];
+
+    const mockI3SLayerWithNodePages = await createMockLayer(
+      "mockProviderUrl?testQuery=test",
+      mockLayerData
+    );
+    const rootNode = new I3SNode(mockI3SLayerWithNodePages, 1, true);
+    rootNode._data = {
+      mesh: { attribute: { resource: new Resource({ url: "mockUrl" }) } },
+    };
+    rootNode._fields = {
+      testField: new I3SField(rootNode, { key: "mockKey" }),
+    };
+
+    return rootNode.loadField("testField").then(function (result) {
+      expect(result).toEqual({ mockResult: "success" });
+    });
+  });
+
+  it("loads not existing field without storageInfo for the layer", async function () {
+    spyOn(I3SLayer.prototype, "_loadNodePage").and.returnValue(
+      Promise.resolve(nodeData)
+    );
+
+    const mockLayerData = clone(layerData, true);
+    delete mockLayerData.attributeStorageInfo;
+
+    const mockI3SLayerWithNodePages = await createMockLayer(
+      "mockProviderUrl?testQuery=test",
+      mockLayerData
+    );
+    const rootNode = new I3SNode(mockI3SLayerWithNodePages, 1, true);
+
+    return rootNode.loadField("test").then(function (result) {
+      expect(result).toBeUndefined();
+    });
+  });
+
+  it("loads not existing field without storageInfo for the field", async function () {
+    spyOn(I3SLayer.prototype, "_loadNodePage").and.returnValue(
+      Promise.resolve(nodeData)
+    );
+
+    const mockLayerData = clone(layerData, true);
+    mockLayerData.attributeStorageInfo = [{ name: "testField" }];
+
+    const mockI3SLayerWithNodePages = await createMockLayer(
+      "mockProviderUrl?testQuery=test",
+      mockLayerData
+    );
+    const rootNode = new I3SNode(mockI3SLayerWithNodePages, 1, true);
+
+    return rootNode.loadField("test").then(function (result) {
+      expect(result).toBeUndefined();
+    });
+  });
+
   it("loads geometry from node pages", async function () {
     spyOn(I3SLayer.prototype, "_loadNodePage").and.returnValue(
       Promise.resolve(nodeData)
@@ -976,6 +1121,23 @@ describe("Scene/I3SNode", function () {
       });
   });
 
+  it("loads not existing geometry", async function () {
+    spyOn(I3SLayer.prototype, "_loadNodePage").and.returnValue(
+      Promise.resolve(nodeData)
+    );
+
+    const mockI3SLayerWithNodePages = await createMockLayer(
+      "mockProviderUrl?testQuery=test",
+      layerData
+    );
+    const rootNode = new I3SNode(mockI3SLayerWithNodePages, 1, true);
+    rootNode._data = {};
+
+    return rootNode._loadGeometryData().then(function (result) {
+      expect(result).toEqual([]);
+    });
+  });
+
   it("generate geometry from node pages", async function () {
     spyOn(I3SLayer.prototype, "_loadNodePage").and.returnValue(
       Promise.resolve(nodeData)
@@ -1024,6 +1186,217 @@ describe("Scene/I3SNode", function () {
         expect(rawGltf.textures).toEqual([]);
         expect(rawGltf.samplers).toEqual([]);
         expect(rawGltf.images).toEqual([]);
+        expect(rawGltf.materials[0].alphaMode).toBeUndefined();
+      });
+  });
+
+  it("generate geometry from node pages with transparent material", async function () {
+    spyOn(I3SLayer.prototype, "_loadNodePage").and.returnValue(
+      Promise.resolve(nodeData)
+    );
+
+    const mockI3SLayerWithNodePages = await createMockLayer(
+      "mockProviderUrl?testQuery=test",
+      layerData
+    );
+    const nodeWithTexturedMesh = new I3SNode(
+      mockI3SLayerWithNodePages,
+      1,
+      true
+    );
+
+    spyOn(nodeWithTexturedMesh._dataProvider, "_loadBinary").and.returnValue(
+      Promise.resolve(new ArrayBuffer())
+    );
+
+    return nodeWithTexturedMesh
+      .load()
+      .then(function () {
+        return nodeWithTexturedMesh._loadGeometryData();
+      })
+      .then(function (result) {
+        const transparentI3sGeometryData = clone(i3sGeometryData, true);
+        transparentI3sGeometryData.meshData.meshes[0].primitives[0].extra = {
+          isTransparent: true,
+        };
+        transparentI3sGeometryData.meshData.meshes[0].primitives.push({
+          attributes: { POSITION: 0, NORMAL: 1, TEXCOORD_0: 2 },
+          indices: 4,
+          material: 1,
+          extra: {
+            isTransparent: false,
+          },
+        });
+
+        const rawGltf = nodeWithTexturedMesh.geometryData[0]._generateGltf(
+          transparentI3sGeometryData.meshData.nodesInScene,
+          transparentI3sGeometryData.meshData.nodes,
+          transparentI3sGeometryData.meshData.meshes,
+          transparentI3sGeometryData.meshData.buffers,
+          transparentI3sGeometryData.meshData.bufferViews,
+          transparentI3sGeometryData.meshData.accessors
+        );
+
+        expect(rawGltf.scene).toEqual(0);
+        expect(rawGltf.scenes.length).toEqual(1);
+
+        expect(rawGltf.nodes).toEqual(
+          transparentI3sGeometryData.meshData.nodes
+        );
+        expect(rawGltf.meshes).toEqual(
+          transparentI3sGeometryData.meshData.meshes
+        );
+        expect(rawGltf.buffers).toEqual(
+          transparentI3sGeometryData.meshData.buffers
+        );
+        expect(rawGltf.bufferViews).toEqual(
+          transparentI3sGeometryData.meshData.bufferViews
+        );
+        expect(rawGltf.accessors).toEqual(
+          transparentI3sGeometryData.meshData.accessors
+        );
+
+        expect(rawGltf.textures).toEqual([]);
+        expect(rawGltf.samplers).toEqual([]);
+        expect(rawGltf.images).toEqual([]);
+        expect(rawGltf.materials[0].alphaMode).toEqual("BLEND");
+        expect(rawGltf.materials[0].emissiveFactor).toEqual([0, 0, 0]);
+        expect(
+          rawGltf.materials[0].pbrMetallicRoughness.baseColorFactor
+        ).toEqual([1, 1, 1, 1]);
+        expect(rawGltf.materials[1].alphaMode).toBeUndefined();
+      });
+  });
+
+  it("generate geometry from node pages with transparent material when alpha mode is defined", async function () {
+    spyOn(I3SLayer.prototype, "_loadNodePage").and.returnValue(
+      Promise.resolve(nodeData)
+    );
+
+    const mockI3SLayerWithNodePages = await createMockLayer(
+      "mockProviderUrl?testQuery=test",
+      layerData
+    );
+    mockI3SLayerWithNodePages._data.materialDefinitions[0].alphaMode = "blend";
+    mockI3SLayerWithNodePages._data.materialDefinitions[1].alphaMode = "blend";
+    const nodeWithTexturedMesh = new I3SNode(
+      mockI3SLayerWithNodePages,
+      1,
+      true
+    );
+
+    spyOn(nodeWithTexturedMesh._dataProvider, "_loadBinary").and.returnValue(
+      Promise.resolve(new ArrayBuffer())
+    );
+
+    return nodeWithTexturedMesh
+      .load()
+      .then(function () {
+        return nodeWithTexturedMesh._loadGeometryData();
+      })
+      .then(function (result) {
+        const transparentI3sGeometryData = clone(i3sGeometryData, true);
+        transparentI3sGeometryData.meshData.meshes[0].primitives[0].extra = {
+          isTransparent: true,
+        };
+        transparentI3sGeometryData.meshData.meshes[0].primitives.push({
+          attributes: { POSITION: 0, NORMAL: 1, TEXCOORD_0: 2 },
+          indices: 4,
+          material: 1,
+          extra: {
+            isTransparent: false,
+          },
+        });
+
+        const rawGltf = nodeWithTexturedMesh.geometryData[0]._generateGltf(
+          transparentI3sGeometryData.meshData.nodesInScene,
+          transparentI3sGeometryData.meshData.nodes,
+          transparentI3sGeometryData.meshData.meshes,
+          transparentI3sGeometryData.meshData.buffers,
+          transparentI3sGeometryData.meshData.bufferViews,
+          transparentI3sGeometryData.meshData.accessors
+        );
+
+        expect(rawGltf.scene).toEqual(0);
+        expect(rawGltf.scenes.length).toEqual(1);
+
+        expect(rawGltf.nodes).toEqual(
+          transparentI3sGeometryData.meshData.nodes
+        );
+        expect(rawGltf.meshes).toEqual(
+          transparentI3sGeometryData.meshData.meshes
+        );
+        expect(rawGltf.buffers).toEqual(
+          transparentI3sGeometryData.meshData.buffers
+        );
+        expect(rawGltf.bufferViews).toEqual(
+          transparentI3sGeometryData.meshData.bufferViews
+        );
+        expect(rawGltf.accessors).toEqual(
+          transparentI3sGeometryData.meshData.accessors
+        );
+
+        expect(rawGltf.textures).toEqual([]);
+        expect(rawGltf.samplers).toEqual([]);
+        expect(rawGltf.images).toEqual([]);
+        expect(rawGltf.materials[0].alphaMode).toEqual("BLEND");
+        expect(rawGltf.materials[1].alphaMode).toEqual("OPAQUE");
+      });
+  });
+
+  it("generate geometry from node pages without material", async function () {
+    spyOn(I3SLayer.prototype, "_loadNodePage").and.returnValue(
+      Promise.resolve(nodeData)
+    );
+
+    const mockI3SLayerWithNodePages = await createMockLayer(
+      "mockProviderUrl?testQuery=test",
+      layerData
+    );
+    const nodeWithTexturedMesh = new I3SNode(
+      mockI3SLayerWithNodePages,
+      1,
+      true
+    );
+
+    spyOn(nodeWithTexturedMesh._dataProvider, "_loadBinary").and.returnValue(
+      Promise.resolve(new ArrayBuffer())
+    );
+
+    return nodeWithTexturedMesh
+      .load()
+      .then(function () {
+        return nodeWithTexturedMesh._loadGeometryData();
+      })
+      .then(function (result) {
+        const copyI3sGeometryData = clone(i3sGeometryData, true);
+        delete copyI3sGeometryData.meshData.meshes[0].primitives[0].material;
+        const rawGltf = nodeWithTexturedMesh.geometryData[0]._generateGltf(
+          copyI3sGeometryData.meshData.nodesInScene,
+          copyI3sGeometryData.meshData.nodes,
+          copyI3sGeometryData.meshData.meshes,
+          copyI3sGeometryData.meshData.buffers,
+          copyI3sGeometryData.meshData.bufferViews,
+          copyI3sGeometryData.meshData.accessors
+        );
+
+        expect(rawGltf.scene).toEqual(0);
+        expect(rawGltf.scenes.length).toEqual(1);
+
+        expect(rawGltf.nodes).toEqual(copyI3sGeometryData.meshData.nodes);
+        expect(rawGltf.meshes).toEqual(copyI3sGeometryData.meshData.meshes);
+        expect(rawGltf.buffers).toEqual(copyI3sGeometryData.meshData.buffers);
+        expect(rawGltf.bufferViews).toEqual(
+          copyI3sGeometryData.meshData.bufferViews
+        );
+        expect(rawGltf.accessors).toEqual(
+          copyI3sGeometryData.meshData.accessors
+        );
+
+        expect(rawGltf.textures).toEqual([]);
+        expect(rawGltf.samplers).toEqual([]);
+        expect(rawGltf.images).toEqual([]);
+        expect(rawGltf.materials).toEqual([]);
       });
   });
 
@@ -1197,10 +1570,7 @@ describe("Scene/I3SNode", function () {
         expect(nodeWithMesh.featureData[0].data.featureData).toEqual([]);
         expect(nodeWithMesh.featureData[0].data.geometryData).toEqual([]);
 
-        expect(spy).toHaveBeenCalledWith(
-          nodeWithMesh.featureData[0].resource,
-          false
-        );
+        expect(spy).toHaveBeenCalledWith(nodeWithMesh.featureData[0].resource);
       });
   });
 
@@ -1294,6 +1664,7 @@ describe("Scene/I3SNode", function () {
       ),
       jasmine.any(Object),
       jasmine.any(I3SGeometry),
+      undefined,
       undefined
     );
 
@@ -1461,5 +1832,493 @@ describe("Scene/I3SNode", function () {
       .then(function () {
         expect(childNode.tile._contentResource._url).toEqual("mockGlbUrl");
       });
+  });
+
+  it("requests content without url", async function () {
+    spyOn(I3SLayer.prototype, "_loadNodePage").and.returnValue(
+      Promise.resolve(nodeData)
+    );
+
+    const mockI3SLayerWithNodePages = await createMockLayer(
+      "mockProviderUrl?testQuery=test",
+      layerData
+    );
+    const rootNode = new I3SNode(mockI3SLayerWithNodePages, 0, true);
+    const childNode = new I3SNode(rootNode, 1, false);
+
+    return rootNode
+      .load()
+      .then(function () {
+        return childNode.load();
+      })
+      .then(function (result) {
+        spyOn(childNode, "_createContentURL").and.callFake(function () {
+          expect(childNode.tile._isLoading).toEqual(true);
+          return Promise.resolve(undefined);
+        });
+
+        return childNode.tile.requestContent();
+      })
+      .then(function () {
+        expect(childNode.tile._isLoading).toEqual(false);
+      });
+  });
+
+  it("can filter by attributes", async function () {
+    spyOn(I3SLayer.prototype, "_loadNodePage").and.returnValue(
+      Promise.resolve(nodeData)
+    );
+
+    spyOn(I3SField.prototype, "load").and.callFake(function () {
+      this["_values"] = { attributeValues: [1, 1, 2] };
+      return Promise.resolve();
+    });
+
+    const mockI3SLayerWithNodePages = await createMockLayer(
+      "mockProviderUrl?testQuery=test",
+      layerData
+    );
+    const rootNode = new I3SNode(mockI3SLayerWithNodePages, 0, true);
+    const childNode = new I3SNode(rootNode, 1, false);
+    const model = {
+      ready: false,
+      readyEvent: new Event(),
+    };
+    model.readyEvent.addEventListener(() => {
+      model.ready = true;
+    });
+    const content = {
+      _model: model,
+      batchTable: {
+        features: [true, true, true],
+        setAllShow: function (a) {},
+        setShow: function (a, b) {
+          this.features[a] = b;
+        },
+        featuresLength: 3,
+      },
+    };
+    const spy = spyOn(content.batchTable, "setAllShow");
+    return rootNode
+      .load()
+      .then(function () {
+        return childNode.load();
+      })
+      .then(function (result) {
+        childNode._geometryData = ["mocked geometry"];
+        childNode._layer._data.attributeStorageInfo = [{ name: "BldgLevel" }];
+        rootNode._children = [childNode];
+        mockI3SLayerWithNodePages._rootNode = rootNode;
+        return mockI3SLayerWithNodePages._parent.filterByAttributes();
+      })
+      .then(function () {
+        spyOn(childNode, "_createContentURL").and.callFake(function () {
+          return Promise.resolve("mockGlbUrl");
+        });
+        spyOn(childNode.tile, "_hookedRequestContent").and.callFake(
+          function () {
+            childNode._tile._content = content;
+            return Promise.resolve(content);
+          }
+        );
+        return childNode.tile.requestContent();
+      })
+      .then(function () {
+        expect(spy).not.toHaveBeenCalled();
+        content._model.readyEvent.raiseEvent(content._model);
+        expect(spy).toHaveBeenCalled();
+        return mockI3SLayerWithNodePages._parent.filterByAttributes([
+          { name: "BldgLevel", values: [2] },
+        ]);
+      })
+      .then(function () {
+        expect(content.batchTable.features).toEqual([false, false, true]);
+      });
+  });
+
+  it("can filter by not existing attributes", async function () {
+    spyOn(I3SLayer.prototype, "_loadNodePage").and.returnValue(
+      Promise.resolve(nodeData)
+    );
+
+    spyOn(I3SField.prototype, "load").and.callFake(function () {
+      this["_values"] = { attributeValues: [1, 1, 2] };
+      return Promise.resolve();
+    });
+
+    const mockI3SLayerWithNodePages = await createMockLayer(
+      "mockProviderUrl?testQuery=test",
+      layerData
+    );
+    const rootNode = new I3SNode(mockI3SLayerWithNodePages, 0, true);
+    const childNode = new I3SNode(rootNode, 1, false);
+    return rootNode
+      .load()
+      .then(function () {
+        return childNode.load();
+      })
+      .then(function (result) {
+        childNode._geometryData = ["mocked geometry"];
+        childNode._tile._content = { _model: { ready: true } };
+        childNode._tile._content["batchTable"] = {
+          features: [true, true, true],
+          setAllShow: function (a) {},
+          setShow: function (a, b) {
+            this.features[a] = b;
+          },
+          featuresLength: 3,
+        };
+
+        childNode._layer._data.attributeStorageInfo = [{ name: "BldgLevel" }];
+        rootNode._children = [childNode];
+        mockI3SLayerWithNodePages._rootNode = rootNode;
+        return mockI3SLayerWithNodePages._parent.filterByAttributes([
+          { name: "NotExistingAttr", values: [2] },
+        ]);
+      })
+      .then(function () {
+        spyOn(childNode, "_createContentURL").and.callFake(function () {
+          return Promise.resolve("mockGlbUrl");
+        });
+        spyOn(childNode.tile, "_hookedRequestContent");
+        return childNode.tile.requestContent();
+      })
+      .then(function () {
+        expect(childNode._tile.content.batchTable.features).toEqual([
+          false,
+          false,
+          false,
+        ]);
+      });
+  });
+
+  it("filtering by attributes can handle filters without values", async function () {
+    spyOn(I3SLayer.prototype, "_loadNodePage").and.returnValue(
+      Promise.resolve(nodeData)
+    );
+
+    spyOn(I3SField.prototype, "load").and.callFake(function () {
+      this["_values"] = { attributeValues: [1, 1, 2] };
+      return Promise.resolve();
+    });
+
+    const mockI3SLayerWithNodePages = await createMockLayer(
+      "mockProviderUrl?testQuery=test",
+      layerData
+    );
+    const rootNode = new I3SNode(mockI3SLayerWithNodePages, 0, true);
+    const childNode = new I3SNode(rootNode, 1, false);
+    return rootNode
+      .load()
+      .then(function () {
+        return childNode.load();
+      })
+      .then(function (result) {
+        childNode._geometryData = ["mocked geometry"];
+        childNode._tile._content = { _model: { ready: true } };
+        childNode._tile._content["batchTable"] = {
+          features: [true, true, true],
+          setAllShow: function (a) {},
+          setShow: function (a, b) {
+            this.features[a] = b;
+          },
+          featuresLength: 3,
+        };
+
+        childNode._layer._data.attributeStorageInfo = [{ name: "BldgLevel" }];
+        rootNode._children = [childNode];
+        mockI3SLayerWithNodePages._rootNode = rootNode;
+        return mockI3SLayerWithNodePages._parent.filterByAttributes([
+          { name: "BldgLevel" },
+        ]);
+      })
+      .then(function () {
+        spyOn(childNode, "_createContentURL").and.callFake(function () {
+          return Promise.resolve("mockGlbUrl");
+        });
+        spyOn(childNode.tile, "_hookedRequestContent");
+        return childNode.tile.requestContent();
+      })
+      .then(function () {
+        expect(childNode._tile.content.batchTable.features).toEqual([
+          false,
+          false,
+          false,
+        ]);
+      });
+  });
+
+  it("filtering by attributes can handle content with zero features length", async function () {
+    spyOn(I3SLayer.prototype, "_loadNodePage").and.returnValue(
+      Promise.resolve(nodeData)
+    );
+
+    const mockI3SLayerWithNodePages = await createMockLayer(
+      "mockProviderUrl?testQuery=test",
+      layerData
+    );
+    const rootNode = new I3SNode(mockI3SLayerWithNodePages, 0, true);
+    const childNode = new I3SNode(rootNode, 1, false);
+    return rootNode
+      .load()
+      .then(function () {
+        return childNode.load();
+      })
+      .then(function (result) {
+        childNode._geometryData = ["mocked geometry"];
+        childNode._tile._content = { _model: { ready: true } };
+        childNode._tile._content["batchTable"] = {
+          features: [true, true, true],
+          setShow: function (a, b) {
+            this.features[a] = b;
+          },
+          featuresLength: 0,
+        };
+
+        childNode._layer._data.attributeStorageInfo = [{ name: "BldgLevel" }];
+        rootNode._children = [childNode];
+        mockI3SLayerWithNodePages._rootNode = rootNode;
+        return mockI3SLayerWithNodePages._parent.filterByAttributes([
+          { name: "BldgLevel", values: [2] },
+        ]);
+      })
+      .then(function () {
+        spyOn(childNode, "_createContentURL").and.callFake(function () {
+          return Promise.resolve("mockGlbUrl");
+        });
+        spyOn(childNode.tile, "_hookedRequestContent");
+        return childNode.tile.requestContent();
+      })
+      .then(function () {
+        expect(childNode._tile.content.batchTable.features).toEqual([
+          true,
+          true,
+          true,
+        ]);
+      });
+  });
+
+  it("filtering by attributes without filters", async function () {
+    spyOn(I3SLayer.prototype, "_loadNodePage").and.returnValue(
+      Promise.resolve(nodeData)
+    );
+
+    spyOn(I3SField.prototype, "load").and.returnValue(Promise.resolve());
+
+    const mockI3SLayerWithNodePages = await createMockLayer(
+      "mockProviderUrl?testQuery=test",
+      layerData
+    );
+    const rootNode = new I3SNode(mockI3SLayerWithNodePages, 0, true);
+    const childNode = new I3SNode(rootNode, 1, false);
+    return rootNode
+      .load()
+      .then(function () {
+        return childNode.load();
+      })
+      .then(function (result) {
+        childNode._geometryData = ["mocked geometry"];
+        childNode._tile._content = { _model: { ready: true } };
+        childNode._tile._content["batchTable"] = {
+          features: [true, true, true],
+          setAllShow: function (a) {},
+          setShow: function (a, b) {
+            this.features[a] = b;
+          },
+          featuresLength: 3,
+        };
+
+        childNode._layer._data.attributeStorageInfo = [{ name: "BldgLevel" }];
+        rootNode._children = [childNode];
+        mockI3SLayerWithNodePages._rootNode = rootNode;
+        return mockI3SLayerWithNodePages._parent.filterByAttributes();
+      })
+      .then(function () {
+        spyOn(childNode, "_createContentURL").and.callFake(function () {
+          return Promise.resolve("mockGlbUrl");
+        });
+        spyOn(childNode.tile, "_hookedRequestContent");
+        return childNode.tile.requestContent();
+      })
+      .then(function () {
+        expect(childNode._tile.content.batchTable.features).toEqual([
+          true,
+          true,
+          true,
+        ]);
+      });
+  });
+
+  it("filtering by attributes can handle fields without values", async function () {
+    spyOn(I3SLayer.prototype, "_loadNodePage").and.returnValue(
+      Promise.resolve(nodeData)
+    );
+
+    spyOn(I3SField.prototype, "load").and.returnValue(Promise.resolve());
+
+    const mockI3SLayerWithNodePages = await createMockLayer(
+      "mockProviderUrl?testQuery=test",
+      layerData
+    );
+    const rootNode = new I3SNode(mockI3SLayerWithNodePages, 0, true);
+    const childNode = new I3SNode(rootNode, 1, false);
+    return rootNode
+      .load()
+      .then(function () {
+        return childNode.load();
+      })
+      .then(function (result) {
+        childNode._geometryData = ["mocked geometry"];
+        childNode._tile._content = { _model: { ready: true } };
+        childNode._tile._content["batchTable"] = {
+          features: [true, true, true],
+          setAllShow: function (a) {},
+          setShow: function (a, b) {
+            this.features[a] = b;
+          },
+          featuresLength: 3,
+        };
+
+        childNode._layer._data.attributeStorageInfo = [{ name: "BldgLevel" }];
+        rootNode._children = [childNode];
+        mockI3SLayerWithNodePages._rootNode = rootNode;
+        return mockI3SLayerWithNodePages._parent.filterByAttributes([
+          { name: "BldgLevel", values: [2] },
+        ]);
+      })
+      .then(function () {
+        spyOn(childNode, "_createContentURL").and.callFake(function () {
+          return Promise.resolve("mockGlbUrl");
+        });
+        spyOn(childNode.tile, "_hookedRequestContent");
+        return childNode.tile.requestContent();
+      })
+      .then(function () {
+        expect(childNode._tile.content.batchTable.features).toEqual([
+          false,
+          false,
+          false,
+        ]);
+      });
+  });
+
+  it("generate feature url for indexed nodes", async function () {
+    const layerResource = new Resource({ url: "testLayerUrl" });
+    const attributeResource = new Resource({ url: "testAttributeUrl" });
+    const i3sNode = {
+      _nodeIndex: 0,
+      _layer: { resource: layerResource },
+      _data: { mesh: { attribute: { resource: attributeResource } } },
+    };
+
+    const i3sFeature = new I3SFeature(i3sNode, "testNode");
+    expect(
+      i3sFeature._resource.url.endsWith(
+        `nodes/${attributeResource.url}/testNode`
+      )
+    ).toEqual(true);
+  });
+
+  it("can clear node geometry data", async function () {
+    spyOn(I3SLayer.prototype, "_loadNodePage").and.returnValue(
+      Promise.resolve(nodeData)
+    );
+
+    spyOn(I3SField.prototype, "load").and.callFake(function () {
+      this["_values"] = { attributeValues: [1, 1, 2] };
+      return Promise.resolve();
+    });
+
+    const mockI3SLayerWithNodePages = await createMockLayer(
+      "mockProviderUrl?testQuery=test",
+      layerData
+    );
+    const rootNode = new I3SNode(mockI3SLayerWithNodePages, 0, true);
+    return rootNode.load().then(function () {
+      rootNode._geometryData = ["mocked geometry"];
+      rootNode._clearGeometryData();
+      expect(rootNode.geometryData).toEqual([]);
+    });
+  });
+
+  it("creates 3d tile content with symbology", async function () {
+    spyOn(I3SLayer.prototype, "_loadNodePage").and.returnValue(
+      Promise.resolve(nodeData)
+    );
+
+    const mockI3SLayerWithNodePages = await createMockLayer(
+      "mockProviderUrl?testQuery=test",
+      layerData,
+      undefined,
+      {
+        applySymbology: true,
+      }
+    );
+    const rootNode = new I3SNode(mockI3SLayerWithNodePages, 0, true);
+    const nodeWithMesh = new I3SNode(rootNode, 1, false);
+
+    spyOn(nodeWithMesh._dataProvider, "_loadBinary").and.returnValue(
+      Promise.resolve(new ArrayBuffer())
+    );
+    spyOn(nodeWithMesh, "_loadFeatureData").and.returnValue(Promise.all([]));
+    spyOn(I3SDecoder, "decode").and.returnValue(
+      Promise.resolve(i3sGeometryData)
+    );
+
+    await rootNode.load();
+    await nodeWithMesh.load();
+    await nodeWithMesh._createContentURL();
+    await nodeWithMesh._createContentURL();
+
+    expect(I3SDecoder.decode).toHaveBeenCalledTimes(2);
+    expect(I3SDecoder.decode).toHaveBeenCalledWith(
+      jasmine.stringContaining(
+        "mockProviderUrl/mockLayerUrl/nodes/1/geometries/1/?testQuery=test"
+      ),
+      jasmine.any(Object),
+      jasmine.any(I3SGeometry),
+      undefined,
+      jasmine.any(Object)
+    );
+  });
+
+  it("creates 3d tile content without symbology", async function () {
+    const mockI3SLayerWithoutNodePages = await createMockLayer(
+      "mockProviderUrl?testQuery=test",
+      layerDataWithoutNodePages,
+      undefined,
+      {
+        applySymbology: true,
+      }
+    );
+    const nodeWithMesh = new I3SNode(
+      mockI3SLayerWithoutNodePages,
+      "mockNodeUrl",
+      true
+    );
+
+    spyOn(I3SDataProvider, "loadJson").and.returnValue(
+      Promise.resolve(nodeWithContent)
+    );
+    spyOn(nodeWithMesh._dataProvider, "_loadBinary").and.returnValue(
+      Promise.resolve(new ArrayBuffer())
+    );
+    spyOn(nodeWithMesh, "_loadFeatureData").and.returnValue(Promise.all([]));
+    spyOn(I3SDecoder, "decode").and.returnValue(
+      Promise.resolve(i3sGeometryData)
+    );
+
+    await nodeWithMesh.load();
+    await nodeWithMesh._createContentURL();
+
+    expect(I3SDecoder.decode).toHaveBeenCalledWith(
+      jasmine.stringContaining(
+        "mockProviderUrl/mockLayerUrl/mockNodeUrl/mockGeometryDataUrl?testQuery=test"
+      ),
+      jasmine.any(Object),
+      jasmine.any(I3SGeometry),
+      undefined,
+      jasmine.any(Object)
+    );
   });
 });

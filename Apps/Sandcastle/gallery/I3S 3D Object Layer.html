@@ -59,15 +59,9 @@
           const geoidService = await Cesium.ArcGISTiledElevationTerrainProvider.fromUrl(
             "https://tiles.arcgis.com/tiles/z2tnIkrLQ2BRzr6P/arcgis/rest/services/EGM2008/ImageServer"
           );
-          // Create i3s and Cesium3DTileset options to pass optional parameters useful for debugging and visualizing
-          const cesium3dTilesetOptions = {
-            skipLevelOfDetail: false,
-            debugShowBoundingVolume: false,
-          };
+          // Create i3s options to pass optional parameters useful for debugging and visualizing
           const i3sOptions = {
-            traceFetches: false, // for tracing I3S fetches
             geoidTiledTerrainProvider: geoidService, // pass the geoid service
-            cesium3dTilesetOptions: cesium3dTilesetOptions, // options for internal Cesium3dTileset
           };
 
           // Create I3S data provider
@@ -114,9 +108,6 @@
               i3sNode.loadFields().then(function () {
                 let description = "No attributes";
                 let name;
-                console.log(
-                  `pickedPosition(x,y,z) : ${pickedPosition.x}, ${pickedPosition.y}, ${pickedPosition.z}`
-                );
 
                 const fields = i3sNode.getFieldsForPickedPosition(
                   pickedPosition
@@ -128,7 +119,6 @@
                     if (i3sNode.fields.hasOwnProperty(fieldName)) {
                       description += `<tr><th>${fieldName}</th><td>`;
                       description += `${fields[fieldName]}</td></tr>`;
-                      console.log(`${fieldName}: ${fields[fieldName]}`);
                       if (!Cesium.defined(name) && isNameProperty(fieldName)) {
                         name = fields[fieldName];
                       }

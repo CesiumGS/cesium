@@ -361,7 +361,10 @@ export async function prepare() {
     "packages/engine/Source/ThirdParty/Workers/pako_deflate.min.js"
   );
   copyFileSync(
-    require.resolve("@zip.js/zip.js/dist/z-worker-pako.js"),
+    resolve(
+      require.resolve("@zip.js/zip.js/package.json"),
+      "../dist/z-worker-pako.js"
+    ),
     "packages/engine/Source/ThirdParty/Workers/z-worker-pako.js"
   );
 
@@ -800,7 +803,6 @@ export async function runCoverage(options) {
     sourcemap: true,
     format: "esm",
     target: "es2020",
-    external: ["https", "http", "url", "zlib"],
     outfile: karmaBundle,
     logLevel: "error", // print errors immediately, and collect warnings so we can filter out known ones
   });
@@ -814,7 +816,6 @@ export async function runCoverage(options) {
     sourcemap: true,
     format: "esm",
     target: "es2020",
-    external: ["https", "http", "url", "zlib"],
     outfile: specListBundle,
     plugins: [instrumentPlugin],
     logLevel: "error", // print errors immediately, and collect warnings so we can filter out known ones
@@ -1188,7 +1189,7 @@ function generateTypeScriptDefinitions(
     .replace(/<Boolean>/gm, "<boolean>")
     .replace(/<Object>/gm, "<object>")
     .replace(
-      /= "WebGLConstants\.(.+)"/gm,
+      /[=] "WebGLConstants\.(.+)"/gm,
       // eslint-disable-next-line no-unused-vars
       (match, p1) => `= WebGLConstants.${p1}`
     )
@@ -1381,7 +1382,7 @@ function createTypeScriptDefinitions() {
     .replace(/<Boolean>/gm, "<boolean>")
     .replace(/<Object>/gm, "<object>")
     .replace(
-      /= "WebGLConstants\.(.+)"/gm,
+      /[=] "WebGLConstants\.(.+)"/gm,
       // eslint-disable-next-line no-unused-vars
       (match, p1) => `= WebGLConstants.${p1}`
     )
@@ -1700,7 +1701,6 @@ async function buildCesiumViewer() {
   config.format = "iife";
   // Configure Cesium base path to use built
   config.define = { CESIUM_BASE_URL: `"."` };
-  config.external = ["https", "http", "url", "zlib"];
   config.outdir = cesiumViewerOutputDirectory;
   config.outbase = "Apps/CesiumViewer";
   config.logLevel = "error"; // print errors immediately, and collect warnings so we can filter out known ones

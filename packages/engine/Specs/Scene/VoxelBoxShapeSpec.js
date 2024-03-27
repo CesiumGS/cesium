@@ -6,10 +6,16 @@ import {
   Matrix4,
   OrientedBoundingBox,
   Quaternion,
+  SpatialNode,
+  VoxelShape,
   VoxelBoxShape,
 } from "../../index.js";
 
 describe("Scene/VoxelBoxShape", function () {
+  it("conforms to VoxelShape interface", function () {
+    expect(VoxelBoxShape).toConformToInterface(VoxelShape);
+  });
+
   it("constructs", function () {
     const shape = new VoxelBoxShape();
     expect(shape.shapeTransform).toEqual(new Matrix4());
@@ -710,6 +716,115 @@ describe("Scene/VoxelBoxShape", function () {
         tileX,
         tileY,
         tileZ,
+        undefined
+      );
+    }).toThrowDeveloperError();
+  });
+
+  it("computeOrientedBoundingBoxForSample gives expected result", function () {
+    const shape = new VoxelBoxShape();
+    const translation = Cartesian3.ZERO;
+    const rotation = Quaternion.IDENTITY;
+    const scale = Cartesian3.ONE;
+    const modelMatrix = Matrix4.fromTranslationQuaternionRotationScale(
+      translation,
+      rotation,
+      scale
+    );
+    const minBounds = VoxelBoxShape.DefaultMinBounds;
+    const maxBounds = VoxelBoxShape.DefaultMaxBounds;
+    shape.update(modelMatrix, minBounds, maxBounds);
+
+    const tileLevel = 0;
+    const tileX = 0;
+    const tileY = 0;
+    const tileZ = 0;
+    const tileDimensions = new Cartesian3(8, 8, 8);
+    const paddedDimensions = new Cartesian3(10, 10, 10);
+    const spatialNode = new SpatialNode(
+      tileLevel,
+      tileX,
+      tileY,
+      tileZ,
+      undefined,
+      shape,
+      paddedDimensions
+    );
+
+    const tileUv = new Cartesian3(0.5, 0.5, 0.5);
+    const sampleBoundingBox = shape.computeOrientedBoundingBoxForSample(
+      spatialNode,
+      tileDimensions,
+      tileUv,
+      new OrientedBoundingBox()
+    );
+    const expectedCenter = new Cartesian3(0.125, 0.125, 0.125);
+    expect(sampleBoundingBox.center).toEqual(expectedCenter);
+    expect(sampleBoundingBox.halfAxes).toEqual(
+      Matrix3.fromScale(new Cartesian3(0.125, 0.125, 0.125))
+    );
+  });
+
+  it("computeOrientedBoundingBoxForSample throws with missing parameters", function () {
+    const shape = new VoxelBoxShape();
+    const translation = Cartesian3.ZERO;
+    const rotation = Quaternion.IDENTITY;
+    const scale = Cartesian3.ONE;
+    const modelMatrix = Matrix4.fromTranslationQuaternionRotationScale(
+      translation,
+      rotation,
+      scale
+    );
+    const minBounds = VoxelBoxShape.DefaultMinBounds;
+    const maxBounds = VoxelBoxShape.DefaultMaxBounds;
+    shape.update(modelMatrix, minBounds, maxBounds);
+
+    const tileLevel = 0;
+    const tileX = 0;
+    const tileY = 0;
+    const tileZ = 0;
+    const tileDimensions = new Cartesian3(8, 8, 8);
+    const paddedDimensions = new Cartesian3(10, 10, 10);
+    const spatialNode = new SpatialNode(
+      tileLevel,
+      tileX,
+      tileY,
+      tileZ,
+      undefined,
+      shape,
+      paddedDimensions
+    );
+    const tileUv = new Cartesian3(0.5, 0.5, 0.5);
+
+    expect(function () {
+      shape.computeOrientedBoundingBoxForSample(
+        undefined,
+        tileDimensions,
+        tileUv,
+        new OrientedBoundingBox()
+      );
+    }).toThrowDeveloperError();
+    expect(function () {
+      shape.computeOrientedBoundingBoxForSample(
+        spatialNode,
+        undefined,
+        tileUv,
+        new OrientedBoundingBox()
+      );
+    }).toThrowDeveloperError();
+    expect(function () {
+      shape.computeOrientedBoundingBoxForSample(
+        spatialNode,
+        tileDimensions,
+        undefined,
+        new OrientedBoundingBox()
+      );
+    }).toThrowDeveloperError();
+    expect(function () {
+      shape.computeOrientedBoundingBoxForSample(
+        spatialNode,
+        tileDimensions,
+        tileUv,
         undefined
       );
     }).toThrowDeveloperError();

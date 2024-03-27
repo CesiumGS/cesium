@@ -27,10 +27,10 @@ function PickFramebuffer(context) {
   this._width = 0;
   this._height = 0;
 }
+
 PickFramebuffer.prototype.begin = function (screenSpaceRectangle, viewport) {
   const context = this._context;
-  const width = viewport.width;
-  const height = viewport.height;
+  const { width, height } = viewport;
 
   BoundingRectangle.clone(
     screenSpaceRectangle,
@@ -51,6 +51,12 @@ PickFramebuffer.prototype.begin = function (screenSpaceRectangle, viewport) {
 
 const colorScratch = new Color();
 
+/**
+ * Return the picked object rendered within a given rectangle.
+ *
+ * @param {BoundingRectangle} screenSpaceRectangle
+ * @returns {object|undefined} The object rendered in the middle of the rectangle, or undefined if nothing was rendered.
+ */
 PickFramebuffer.prototype.end = function (screenSpaceRectangle) {
   const width = defaultValue(screenSpaceRectangle.width, 1.0);
   const height = defaultValue(screenSpaceRectangle.height, 1.0);
@@ -114,6 +120,34 @@ PickFramebuffer.prototype.end = function (screenSpaceRectangle) {
   return undefined;
 };
 
+/**
+ * Return voxel tile and sample information as rendered by a pickVoxel pass,
+ * within a given rectangle.
+ *
+ * @param {BoundingRectangle} screenSpaceRectangle
+ * @returns {TypedArray}
+ */
+PickFramebuffer.prototype.readVoxelInfo = function (screenSpaceRectangle) {
+  const width = defaultValue(screenSpaceRectangle.width, 1.0);
+  const height = defaultValue(screenSpaceRectangle.height, 1.0);
+
+  const context = this._context;
+  const pixels = context.readPixels({
+    x: screenSpaceRectangle.x,
+    y: screenSpaceRectangle.y,
+    width: width,
+    height: height,
+    framebuffer: this._fb.framebuffer,
+  });
+
+  // Read the center pixel
+  const halfWidth = Math.floor(width * 0.5);
+  const halfHeight = Math.floor(height * 0.5);
+  const index = 4 * (halfHeight * width + halfWidth);
+
+  return pixels.slice(index, index + 4);
+};
+
 PickFramebuffer.prototype.isDestroyed = function () {
   return false;
 };
@@ -122,4 +156,5 @@ PickFramebuffer.prototype.destroy = function () {
   this._fb.destroy();
   return destroyObject(this);
 };
+
 export default PickFramebuffer;

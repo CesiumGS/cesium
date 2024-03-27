@@ -691,8 +691,8 @@ function makeShadersDirty(globe) {
 
   const requireNormals =
     defined(globe._material) &&
-    (globe._material.shaderSource.match(/slope/) ||
-      globe._material.shaderSource.match("normalEC"));
+    (defined(globe._material.shaderSource.match(/slope/)) ||
+      defined(globe._material.shaderSource.match("normalEC")));
 
   const fragmentSources = [AtmosphereCommon, GroundAtmosphere];
   if (
@@ -1106,6 +1106,7 @@ Globe.prototype.beginFrame = function (frameState) {
     tileProvider.undergroundColor = this._undergroundColor;
     tileProvider.undergroundColorAlphaByDistance = this._undergroundColorAlphaByDistance;
     tileProvider.lambertDiffuseMultiplier = this.lambertDiffuseMultiplier;
+
     surface.beginFrame(frameState);
   }
 };
