@@ -336,7 +336,7 @@ function VoxelPrimitive(options) {
    * @type {boolean}
    * @private
    */
-  this._jitter = true;
+  this._jitter = false;
 
   /**
    * @type {boolean}
