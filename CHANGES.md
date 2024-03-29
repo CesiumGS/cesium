@@ -22,6 +22,7 @@
 - Surface normals are now computed for clipping and shape bounds in VoxelEllipsoidShape and VoxelCylinderShape. [#11847](https://github.com/CesiumGS/cesium/pull/11847)
 - Implemented sharper rendering and lighting on voxels with CYLINDER and ELLIPSOID shape. [#11875](https://github.com/CesiumGS/cesium/pull/11875)
 - Implemented vertical exaggeration for voxels with BOX shape. [#11887](https://github.com/CesiumGS/cesium/pull/11887)
+- Added the `Check` object of validators to the public api and types. [#11901](https://github.com/CesiumGS/cesium/pull/11901)
 
 ### 1.115 - 2024-03-01
 

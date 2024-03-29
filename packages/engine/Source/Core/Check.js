@@ -4,7 +4,6 @@ import DeveloperError from "./DeveloperError.js";
 /**
  * Contains functions for checking that supplied arguments are of a specified type
  * or meet specified conditions
- * @private
  */
 const Check = {};
 
