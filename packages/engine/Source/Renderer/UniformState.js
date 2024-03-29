@@ -144,6 +144,10 @@ function UniformState() {
   this._frustum2DWidth = 0.0;
   this._eyeHeight = 0.0;
   this._eyeHeight2D = new Cartesian2();
+  this._eyeEllipsoidNormalEC = new Cartesian3();
+  this._eyeEllipsoidCurvature = new Cartesian2();
+  this._modelToEnu = new Matrix4();
+  this._enuToModel = new Matrix4();
   this._pixelRatio = 1.0;
   this._orthographicIn3D = false;
   this._backgroundColor = new Color();
@@ -157,6 +161,16 @@ function UniformState() {
   this._specularEnvironmentMapsMaximumLOD = undefined;
 
   this._fogDensity = undefined;
+  this._fogMinimumBrightness = undefined;
+
+  this._atmosphereHsbShift = undefined;
+  this._atmosphereLightIntensity = undefined;
+  this._atmosphereRayleighCoefficient = new Cartesian3();
+  this._atmosphereRayleighScaleHeight = new Cartesian3();
+  this._atmosphereMieCoefficient = new Cartesian3();
+  this._atmosphereMieScaleHeight = undefined;
+  this._atmosphereMieAnisotropy = undefined;
+  this._atmosphereDynamicLighting = undefined;
 
   this._invertClassificationColor = undefined;
 
@@ -697,6 +711,52 @@ Object.defineProperties(UniformState.prototype, {
   },
 
   /**
+   * The ellipsoid surface normal at the camera position, in model coordinates.
+   * @memberof UniformState.prototype
+   * @type {Cartesian3}
+   */
+  eyeEllipsoidNormalEC: {
+    get: function () {
+      return this._eyeEllipsoidNormalEC;
+    },
+  },
+
+  /**
+   * The ellipsoid radii of curvature at the camera position.
+   * The .x component is the prime vertical radius, .y is the meridional.
+   * @memberof UniformState.prototype
+   * @type {Cartesian2}
+   */
+  eyeEllipsoidCurvature: {
+    get: function () {
+      return this._eyeEllipsoidCurvature;
+    },
+  },
+
+  /**
+   * A transform from model coordinates to an east-north-up coordinate system
+   * centered at the position on the ellipsoid below the camera
+   * @memberof UniformState.prototype
+   * @type {Matrix4}
+   */
+  modelToEnu: {
+    get: function () {
+      return this._modelToEnu;
+    },
+  },
+
+  /**
+   * The inverse of {@link UniformState.prototype.modelToEnu}
+   * @memberof UniformState.prototype
+   * @type {Matrix4}
+   */
+  enuToModel: {
+    get: function () {
+      return this._enuToModel;
+    },
+  },
+
+  /**
    * The sun position in 3D world coordinates at the current scene time.
    * @memberof UniformState.prototype
    * @type {Cartesian3}
@@ -862,6 +922,99 @@ Object.defineProperties(UniformState.prototype, {
   fogDensity: {
     get: function () {
       return this._fogDensity;
+    },
+  },
+
+  /**
+   * A scalar used as a minimum value when brightening fog
+   * @memberof UniformState.prototype
+   * @type {number}
+   */
+  fogMinimumBrightness: {
+    get: function () {
+      return this._fogMinimumBrightness;
+    },
+  },
+
+  /**
+   * A color shift to apply to the atmosphere color in HSB.
+   * @memberof UniformState.prototype
+   * @type {Cartesian3}
+   */
+  atmosphereHsbShift: {
+    get: function () {
+      return this._atmosphereHsbShift;
+    },
+  },
+  /**
+   * The intensity of the light that is used for computing the atmosphere color
+   * @memberof UniformState.prototype
+   * @type {number}
+   */
+  atmosphereLightIntensity: {
+    get: function () {
+      return this._atmosphereLightIntensity;
+    },
+  },
+  /**
+   * The Rayleigh scattering coefficient used in the atmospheric scattering equations for the sky atmosphere.
+   * @memberof UniformState.prototype
+   * @type {Cartesian3}
+   */
+  atmosphereRayleighCoefficient: {
+    get: function () {
+      return this._atmosphereRayleighCoefficient;
+    },
+  },
+  /**
+   * The Rayleigh scale height used in the atmospheric scattering equations for the sky atmosphere, in meters.
+   * @memberof UniformState.prototype
+   * @type {number}
+   */
+  atmosphereRayleighScaleHeight: {
+    get: function () {
+      return this._atmosphereRayleighScaleHeight;
+    },
+  },
+  /**
+   * The Mie scattering coefficient used in the atmospheric scattering equations for the sky atmosphere.
+   * @memberof UniformState.prototype
+   * @type {Cartesian3}
+   */
+  atmosphereMieCoefficient: {
+    get: function () {
+      return this._atmosphereMieCoefficient;
+    },
+  },
+  /**
+   * The Mie scale height used in the atmospheric scattering equations for the sky atmosphere, in meters.
+   * @memberof UniformState.prototype
+   * @type {number}
+   */
+  atmosphereMieScaleHeight: {
+    get: function () {
+      return this._atmosphereMieScaleHeight;
+    },
+  },
+  /**
+   * The anisotropy of the medium to consider for Mie scattering.
+   * @memberof UniformState.prototype
+   * @type {number}
+   */
+  atmosphereMieAnisotropy: {
+    get: function () {
+      return this._atmosphereMieAnisotropy;
+    },
+  },
+  /**
+   * Which light source to use for dynamically lighting the atmosphere
+   *
+   * @memberof UniformState.prototype
+   * @type {DynamicAtmosphereLightingType}
+   */
+  atmosphereDynamicLighting: {
+    get: function () {
+      return this._atmosphereDynamicLighting;
     },
   },
 
@@ -1068,20 +1221,88 @@ function setInfiniteProjection(uniformState, matrix) {
   uniformState._modelViewInfiniteProjectionDirty = true;
 }
 
+const surfacePositionScratch = new Cartesian3();
+const enuTransformScratch = new Matrix4();
+
 function setCamera(uniformState, camera) {
   Cartesian3.clone(camera.positionWC, uniformState._cameraPosition);
   Cartesian3.clone(camera.directionWC, uniformState._cameraDirection);
   Cartesian3.clone(camera.rightWC, uniformState._cameraRight);
   Cartesian3.clone(camera.upWC, uniformState._cameraUp);
 
+  const ellipsoid = uniformState._ellipsoid;
+  let surfacePosition;
+
   const positionCartographic = camera.positionCartographic;
   if (!defined(positionCartographic)) {
-    uniformState._eyeHeight = -uniformState._ellipsoid.maximumRadius;
+    uniformState._eyeHeight = -ellipsoid.maximumRadius;
+    if (Cartesian3.magnitude(camera.positionWC) > 0.0) {
+      uniformState._eyeEllipsoidNormalEC = Cartesian3.normalize(
+        camera.positionWC,
+        uniformState._eyeEllipsoidNormalEC
+      );
+    }
+    surfacePosition = ellipsoid.scaleToGeodeticSurface(
+      camera.positionWC,
+      surfacePositionScratch
+    );
   } else {
     uniformState._eyeHeight = positionCartographic.height;
+    uniformState._eyeEllipsoidNormalEC = ellipsoid.geodeticSurfaceNormalCartographic(
+      positionCartographic,
+      uniformState._eyeEllipsoidNormalEC
+    );
+    surfacePosition = Cartesian3.fromRadians(
+      positionCartographic.longitude,
+      positionCartographic.latitude,
+      0.0,
+      ellipsoid,
+      surfacePositionScratch
+    );
   }
 
   uniformState._encodedCameraPositionMCDirty = true;
+
+  if (!defined(surfacePosition)) {
+    return;
+  }
+
+  uniformState._eyeEllipsoidNormalEC = Matrix3.multiplyByVector(
+    uniformState._viewRotation,
+    uniformState._eyeEllipsoidNormalEC,
+    uniformState._eyeEllipsoidNormalEC
+  );
+
+  const enuToWorld = Transforms.eastNorthUpToFixedFrame(
+    surfacePosition,
+    ellipsoid,
+    enuTransformScratch
+  );
+  uniformState._enuToModel = Matrix4.multiplyTransformation(
+    uniformState.inverseModel,
+    enuToWorld,
+    uniformState._enuToModel
+  );
+  uniformState._modelToEnu = Matrix4.inverseTransformation(
+    uniformState._enuToModel,
+    uniformState._modelToEnu
+  );
+
+  if (
+    !CesiumMath.equalsEpsilon(
+      ellipsoid._radii.x,
+      ellipsoid._radii.y,
+      CesiumMath.EPSILON15
+    )
+  ) {
+    // Ellipsoid curvature calculations assume radii.x === radii.y as is true for WGS84
+    return;
+  }
+
+  uniformState._eyeEllipsoidCurvature = ellipsoid.getLocalCurvature(
+    surfacePosition,
+    uniformState._eyeEllipsoidCurvature
+  );
 }
 
 let transformMatrix = new Matrix3();
@@ -1293,6 +1514,30 @@ UniformState.prototype.update = function (frameState) {
   }
 
   this._fogDensity = frameState.fog.density;
+  this._fogMinimumBrightness = frameState.fog.minimumBrightness;
+
+  const atmosphere = frameState.atmosphere;
+  if (defined(atmosphere)) {
+    this._atmosphereHsbShift = Cartesian3.fromElements(
+      atmosphere.hueShift,
+      atmosphere.saturationShift,
+      atmosphere.brightnessShift,
+      this._atmosphereHsbShift
+    );
+    this._atmosphereLightIntensity = atmosphere.lightIntensity;
+    this._atmosphereRayleighCoefficient = Cartesian3.clone(
+      atmosphere.rayleighCoefficient,
+      this._atmosphereRayleighCoefficient
+    );
+    this._atmosphereRayleighScaleHeight = atmosphere.rayleighScaleHeight;
+    this._atmosphereMieCoefficient = Cartesian3.clone(
+      atmosphere.mieCoefficient,
+      this._atmosphereMieCoefficient
+    );
+    this._atmosphereMieScaleHeight = atmosphere.mieScaleHeight;
+    this._atmosphereMieAnisotropy = atmosphere.mieAnisotropy;
+    this._atmosphereDynamicLighting = atmosphere.dynamicLighting;
+  }
 
   this._invertClassificationColor = frameState.invertClassificationColor;
 
@@ -1513,7 +1758,6 @@ function cleanNormal(uniformState) {
 
     const m = uniformState._normal;
     Matrix4.getMatrix3(uniformState.inverseModelView, m);
-    Matrix3.getRotation(m, m);
     Matrix3.transpose(m, m);
   }
 }
@@ -1524,7 +1768,6 @@ function cleanNormal3D(uniformState) {
 
     const m = uniformState._normal3D;
     Matrix4.getMatrix3(uniformState.inverseModelView3D, m);
-    Matrix3.getRotation(m, m);
     Matrix3.transpose(m, m);
   }
 }
@@ -1532,28 +1775,20 @@ function cleanNormal3D(uniformState) {
 function cleanInverseNormal(uniformState) {
   if (uniformState._inverseNormalDirty) {
     uniformState._inverseNormalDirty = false;
-    Matrix4.getMatrix3(
-      uniformState.inverseModelView,
-      uniformState._inverseNormal
-    );
-    Matrix3.getRotation(
-      uniformState._inverseNormal,
-      uniformState._inverseNormal
-    );
+
+    const m = uniformState._inverseNormal;
+    Matrix4.getMatrix3(uniformState.modelView, m);
+    Matrix3.transpose(m, m);
   }
 }
 
 function cleanInverseNormal3D(uniformState) {
   if (uniformState._inverseNormal3DDirty) {
     uniformState._inverseNormal3DDirty = false;
-    Matrix4.getMatrix3(
-      uniformState.inverseModelView3D,
-      uniformState._inverseNormal3D
-    );
-    Matrix3.getRotation(
-      uniformState._inverseNormal3D,
-      uniformState._inverseNormal3D
-    );
+
+    const m = uniformState._inverseNormal3D;
+    Matrix4.getMatrix3(uniformState.modelView3D, m);
+    Matrix3.transpose(m, m);
   }
 }
 

@@ -17,7 +17,7 @@ import OrthographicFrustum from "../Core/OrthographicFrustum.js";
 import Plane from "../Core/Plane.js";
 import Quaternion from "../Core/Quaternion.js";
 import Ray from "../Core/Ray.js";
-import TerrainExaggeration from "../Core/TerrainExaggeration.js";
+import VerticalExaggeration from "../Core/VerticalExaggeration.js";
 import Transforms from "../Core/Transforms.js";
 import CameraEventAggregator from "./CameraEventAggregator.js";
 import CameraEventType from "./CameraEventType.js";
@@ -254,6 +254,8 @@ function ScreenSpaceCameraController(scene) {
   this._scene = scene;
   this._globe = undefined;
   this._ellipsoid = undefined;
+
+  this._lastGlobeHeight = 0.0;
 
   this._aggregator = new CameraEventAggregator(scene.canvas);
 
@@ -1645,7 +1647,7 @@ function rotateCVOnTerrain(controller, startPosition, movement) {
   );
 
   if (controller.enableCollisionDetection) {
-    adjustHeightForTerrain(controller);
+    adjustHeightForTerrain(controller, true);
   }
 
   if (!Cartesian3.equals(camera.positionWC, originalPosition)) {
@@ -2651,7 +2653,7 @@ function tilt3DOnTerrain(controller, startPosition, movement) {
   );
 
   if (controller.enableCollisionDetection) {
-    adjustHeightForTerrain(controller);
+    adjustHeightForTerrain(controller, true);
   }
 
   if (!Cartesian3.equals(camera.positionWC, originalPosition)) {
@@ -2854,23 +2856,19 @@ function update3D(controller) {
 const scratchAdjustHeightTransform = new Matrix4();
 const scratchAdjustHeightCartographic = new Cartographic();
 
-function adjustHeightForTerrain(controller) {
+function adjustHeightForTerrain(controller, cameraChanged) {
   controller._adjustedHeightForTerrain = true;
 
   const scene = controller._scene;
   const mode = scene.mode;
   const globe = scene.globe;
 
-  if (
-    !defined(globe) ||
-    mode === SceneMode.SCENE2D ||
-    mode === SceneMode.MORPHING
-  ) {
+  if (mode === SceneMode.SCENE2D || mode === SceneMode.MORPHING) {
     return;
   }
 
   const camera = scene.camera;
-  const ellipsoid = globe.ellipsoid;
+  const ellipsoid = defaultValue(globe?.ellipsoid, Ellipsoid.WGS84);
   const projection = scene.mapProjection;
 
   let transform;
@@ -2893,7 +2891,15 @@ function adjustHeightForTerrain(controller) {
     const globeHeight = controller._scene.globeHeight;
     if (defined(globeHeight)) {
       const height = globeHeight + controller.minimumZoomDistance;
-      if (cartographic.height < height) {
+      const difference = globeHeight - controller._lastGlobeHeight;
+      const percentDifference = difference / controller._lastGlobeHeight;
+
+      // Unless the camera has been moved by user input, to avoid big jumps during tile loads
+      // only make height updates when the globe height has been fairly stable across several frames
+      if (
+        cartographic.height < height &&
+        (cameraChanged || Math.abs(percentDifference) <= 0.1)
+      ) {
         cartographic.height = height;
         if (mode === SceneMode.SCENE3D) {
           ellipsoid.cartographicToCartesian(cartographic, camera.position);
@@ -2901,6 +2907,12 @@ function adjustHeightForTerrain(controller) {
           projection.project(cartographic, camera.position);
         }
         heightUpdated = true;
+      }
+
+      if (cameraChanged || Math.abs(percentDifference) <= 0.1) {
+        controller._lastGlobeHeight = globeHeight;
+      } else {
+        controller._lastGlobeHeight += difference * 0.1;
       }
     }
   }
@@ -2948,9 +2960,7 @@ const scratchPreviousDirection = new Cartesian3();
  */
 ScreenSpaceCameraController.prototype.update = function () {
   const scene = this._scene;
-  const camera = scene.camera;
-  const globe = scene.globe;
-  const mode = scene.mode;
+  const { camera, globe, mode } = scene;
 
   if (!Matrix4.equals(camera.transform, Matrix4.IDENTITY)) {
     this._globe = undefined;
@@ -2962,26 +2972,21 @@ ScreenSpaceCameraController.prototype.update = function () {
       : scene.mapProjection.ellipsoid;
   }
 
-  const exaggeration = defined(this._globe)
-    ? this._globe.terrainExaggeration
-    : 1.0;
-  const exaggerationRelativeHeight = defined(this._globe)
-    ? this._globe.terrainExaggerationRelativeHeight
-    : 0.0;
-  this._minimumCollisionTerrainHeight = TerrainExaggeration.getHeight(
+  const { verticalExaggeration, verticalExaggerationRelativeHeight } = scene;
+  this._minimumCollisionTerrainHeight = VerticalExaggeration.getHeight(
     this.minimumCollisionTerrainHeight,
-    exaggeration,
-    exaggerationRelativeHeight
+    verticalExaggeration,
+    verticalExaggerationRelativeHeight
   );
-  this._minimumPickingTerrainHeight = TerrainExaggeration.getHeight(
+  this._minimumPickingTerrainHeight = VerticalExaggeration.getHeight(
     this.minimumPickingTerrainHeight,
-    exaggeration,
-    exaggerationRelativeHeight
+    verticalExaggeration,
+    verticalExaggerationRelativeHeight
   );
-  this._minimumTrackBallHeight = TerrainExaggeration.getHeight(
+  this._minimumTrackBallHeight = VerticalExaggeration.getHeight(
     this.minimumTrackBallHeight,
-    exaggeration,
-    exaggerationRelativeHeight
+    verticalExaggeration,
+    verticalExaggerationRelativeHeight
   );
 
   this._cameraUnderground = scene.cameraUnderground && defined(this._globe);
@@ -3015,9 +3020,7 @@ ScreenSpaceCameraController.prototype.update = function () {
     const cameraChanged =
       !Cartesian3.equals(previousPosition, camera.positionWC) ||
       !Cartesian3.equals(previousDirection, camera.directionWC);
-    if (cameraChanged) {
-      adjustHeightForTerrain(this);
-    }
+    adjustHeightForTerrain(this, cameraChanged);
   }
 
   this._aggregator.reset();

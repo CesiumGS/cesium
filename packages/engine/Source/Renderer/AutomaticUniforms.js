@@ -940,6 +940,60 @@ const AutomaticUniforms = {
   }),
 
   /**
+   * An automatic GLSL uniform containing the ellipsoid surface normal
+   * at the position below the eye (camera), in eye coordinates.
+   * This uniform is only valid when the {@link SceneMode} is <code>SCENE3D</code>.
+   */
+  czm_eyeEllipsoidNormalEC: new AutomaticUniform({
+    size: 1,
+    datatype: WebGLConstants.FLOAT_VEC3,
+    getValue: function (uniformState) {
+      return uniformState.eyeEllipsoidNormalEC;
+    },
+  }),
+
+  /**
+   * An automatic GLSL uniform containing the ellipsoid radii of curvature at the camera position.
+   * The .x component is the prime vertical radius of curvature (east-west direction)
+   * .y is the meridional radius of curvature (north-south direction)
+   * This uniform is only valid when the {@link SceneMode} is <code>SCENE3D</code>.
+   */
+  czm_eyeEllipsoidCurvature: new AutomaticUniform({
+    size: 1,
+    datatype: WebGLConstants.FLOAT_VEC2,
+    getValue: function (uniformState) {
+      return uniformState.eyeEllipsoidCurvature;
+    },
+  }),
+
+  /**
+   * An automatic GLSL uniform containing the transform from model coordinates
+   * to an east-north-up coordinate system centered at the position on the
+   * ellipsoid below the camera.
+   * This uniform is only valid when the {@link SceneMode} is <code>SCENE3D</code>.
+   */
+  czm_modelToEnu: new AutomaticUniform({
+    size: 1,
+    datatype: WebGLConstants.FLOAT_MAT4,
+    getValue: function (uniformState) {
+      return uniformState.modelToEnu;
+    },
+  }),
+
+  /**
+   * An automatic GLSL uniform containing the the inverse of
+   * {@link AutomaticUniforms.czm_modelToEnu}.
+   * This uniform is only valid when the {@link SceneMode} is <code>SCENE3D</code>.
+   */
+  czm_enuToModel: new AutomaticUniform({
+    size: 1,
+    datatype: WebGLConstants.FLOAT_MAT4,
+    getValue: function (uniformState) {
+      return uniformState.enuToModel;
+    },
+  }),
+
+  /**
    * An automatic GLSL uniform containing the near distance (<code>x</code>) and the far distance (<code>y</code>)
    * of the frustum defined by the camera.  This is the largest possible frustum, not an individual
    * frustum used for multi-frustum rendering.
@@ -1535,6 +1589,125 @@ const AutomaticUniforms = {
     datatype: WebGLConstants.FLOAT,
     getValue: function (uniformState) {
       return uniformState.fogDensity;
+    },
+  }),
+
+  /**
+   * An automatic GLSL uniform scalar used to set a minimum brightness when dynamic lighting is applied to fog.
+   *
+   * @see czm_fog
+   */
+  czm_fogMinimumBrightness: new AutomaticUniform({
+    size: 1,
+    datatype: WebGLConstants.FLOAT,
+    getValue: function (uniformState) {
+      return uniformState.fogMinimumBrightness;
+    },
+  }),
+
+  /**
+   * An automatic uniform representing the color shift for the atmosphere in HSB color space
+   *
+   * @example
+   * uniform vec3 czm_atmosphereHsbShift;
+   */
+  czm_atmosphereHsbShift: new AutomaticUniform({
+    size: 1,
+    datatype: WebGLConstants.FLOAT_VEC3,
+    getValue: function (uniformState) {
+      return uniformState.atmosphereHsbShift;
+    },
+  }),
+  /**
+   * An automatic uniform representing the intensity of the light that is used for computing the atmosphere color
+   *
+   * @example
+   * uniform float czm_atmosphereLightIntensity;
+   */
+  czm_atmosphereLightIntensity: new AutomaticUniform({
+    size: 1,
+    datatype: WebGLConstants.FLOAT,
+    getValue: function (uniformState) {
+      return uniformState.atmosphereLightIntensity;
+    },
+  }),
+  /**
+   * An automatic uniform representing the Rayleigh scattering coefficient used when computing the atmosphere scattering
+   *
+   * @example
+   * uniform vec3 czm_atmosphereRayleighCoefficient;
+   */
+  czm_atmosphereRayleighCoefficient: new AutomaticUniform({
+    size: 1,
+    datatype: WebGLConstants.FLOAT_VEC3,
+    getValue: function (uniformState) {
+      return uniformState.atmosphereRayleighCoefficient;
+    },
+  }),
+  /**
+   * An automatic uniform representing the Rayleigh scale height in meters used for computing atmosphere scattering.
+   *
+   * @example
+   * uniform vec3 czm_atmosphereRayleighScaleHeight;
+   */
+  czm_atmosphereRayleighScaleHeight: new AutomaticUniform({
+    size: 1,
+    datatype: WebGLConstants.FLOAT,
+    getValue: function (uniformState) {
+      return uniformState.atmosphereRayleighScaleHeight;
+    },
+  }),
+  /**
+   * An automatic uniform representing the Mie scattering coefficient used when computing atmosphere scattering.
+   *
+   * @example
+   * uniform vec3 czm_atmosphereMieCoefficient;
+   */
+  czm_atmosphereMieCoefficient: new AutomaticUniform({
+    size: 1,
+    datatype: WebGLConstants.FLOAT_VEC3,
+    getValue: function (uniformState) {
+      return uniformState.atmosphereMieCoefficient;
+    },
+  }),
+  /**
+   * An automatic uniform storign the Mie scale height used when computing atmosphere scattering.
+   *
+   * @example
+   * uniform float czm_atmosphereMieScaleHeight;
+   */
+  czm_atmosphereMieScaleHeight: new AutomaticUniform({
+    size: 1,
+    datatype: WebGLConstants.FLOAT,
+    getValue: function (uniformState) {
+      return uniformState.atmosphereMieScaleHeight;
+    },
+  }),
+  /**
+   * An automatic uniform representing the anisotropy of the medium to consider for Mie scattering.
+   *
+   * @example
+   * uniform float czm_atmosphereAnisotropy;
+   */
+  czm_atmosphereMieAnisotropy: new AutomaticUniform({
+    size: 1,
+    datatype: WebGLConstants.FLOAT,
+    getValue: function (uniformState) {
+      return uniformState.atmosphereMieAnisotropy;
+    },
+  }),
+
+  /**
+   * An automatic uniform representing which light source to use for dynamic lighting
+   *
+   * @example
+   * uniform float czm_atmosphereDynamicLighting
+   */
+  czm_atmosphereDynamicLighting: new AutomaticUniform({
+    size: 1,
+    datatype: WebGLConstants.FLOAT,
+    getValue: function (uniformState) {
+      return uniformState.atmosphereDynamicLighting;
     },
   }),
 

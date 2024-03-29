@@ -60,9 +60,9 @@ RequestScheduler.maximumRequests = 50;
  * The maximum number of simultaneous active requests per server. Un-throttled requests or servers specifically
  * listed in {@link requestsByServer} do not observe this limit.
  * @type {number}
- * @default 6
+ * @default 18
  */
-RequestScheduler.maximumRequestsPerServer = 6;
+RequestScheduler.maximumRequestsPerServer = 18;
 
 /**
  * A per server key list of overrides to use for throttling instead of <code>maximumRequestsPerServer</code>.
@@ -78,13 +78,7 @@ RequestScheduler.maximumRequestsPerServer = 6;
  *   "assets.cesium.com:443": 18,
  * };
  */
-RequestScheduler.requestsByServer = {
-  "api.cesium.com:443": 18,
-  "assets.ion.cesium.com:443": 18,
-  "ibasemaps-api.arcgis.com:443": 18,
-  "tile.googleapis.com:443": 18,
-  "tile.openstreetmap.org:443": 18,
-};
+RequestScheduler.requestsByServer = {};
 
 /**
  * Specifies if the request scheduler should throttle incoming requests, or let the browser queue requests under its control.

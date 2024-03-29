@@ -7,7 +7,7 @@ czm_modelVertexOutput defaultVertexOutput(vec3 positionMC) {
     return vsOutput;
 }
 
-void main() 
+void main()
 {
     // Initialize the attributes struct with all
     // attributes except quantized ones.
@@ -66,14 +66,14 @@ void main()
     // Update the position for this instance in place
     #ifdef HAS_INSTANCING
 
-        // The legacy instance stage is used when rendering i3dm models that 
+        // The legacy instance stage is used when rendering i3dm models that
         // encode instances transforms in world space, as opposed to glTF models
         // that use EXT_mesh_gpu_instancing, where instance transforms are encoded
         // in object space.
         #ifdef USE_LEGACY_INSTANCING
         mat4 instanceModelView;
         mat3 instanceModelViewInverseTranspose;
-        
+
         legacyInstancingStage(attributes, instanceModelView, instanceModelViewInverseTranspose);
 
         modelView = instanceModelView;
@@ -93,6 +93,10 @@ void main()
     MetadataStatistics metadataStatistics;
     metadataStage(metadata, metadataClass, metadataStatistics, attributes);
 
+    #ifdef HAS_VERTICAL_EXAGGERATION
+    verticalExaggerationStage(attributes);
+    #endif
+
     #ifdef HAS_CUSTOM_VERTEX_SHADER
     czm_modelVertexOutput vsOutput = defaultVertexOutput(attributes.positionMC);
     customShaderStage(vsOutput, attributes, featureIds, metadata, metadataClass, metadataStatistics);
@@ -100,7 +104,12 @@ void main()
 
     // Compute the final position in each coordinate system needed.
     // This returns the value that will be assigned to gl_Position.
-    vec4 positionClip = geometryStage(attributes, modelView, normal);    
+    vec4 positionClip = geometryStage(attributes, modelView, normal);
+
+    // This must go after the geometry stage as it needs v_positionWC
+    #ifdef HAS_ATMOSPHERE
+    atmosphereStage(attributes);
+    #endif
 
     #ifdef HAS_SILHOUETTE
     silhouetteStage(attributes, positionClip);

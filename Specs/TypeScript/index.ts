@@ -394,3 +394,10 @@ let pos: Cartesian3 | undefined | null;
 if (defined(pos)) {
   pos.clone();
 }
+function consumeDefined(pos: Cartesian3) {
+  pos.clone();
+}
+pos = undefined;
+if (defined(pos)) {
+  consumeDefined(pos);
+}

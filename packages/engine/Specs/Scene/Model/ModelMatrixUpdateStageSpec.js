@@ -131,68 +131,6 @@ describe(
       leafNode._transformDirty = true;
     }
 
-    it("updates leaf nodes using node transform setter", function () {
-      return loadAndZoomToModelAsync(
-        {
-          gltf: simpleSkin,
-        },
-        scene
-      ).then(function (model) {
-        const sceneGraph = model.sceneGraph;
-        const node = getStaticLeafNode(model);
-        const primitive = node.runtimePrimitives[0];
-        const drawCommand = primitive.drawCommand;
-
-        const expectedOriginalTransform = Matrix4.clone(node.transform);
-        expect(node._transformDirty).toEqual(false);
-
-        const translation = new Cartesian3(0, 5, 0);
-        node.transform = Matrix4.multiplyByTranslation(
-          node.transform,
-          translation,
-          new Matrix4()
-        );
-        expect(node._transformDirty).toEqual(true);
-        expect(
-          Matrix4.equals(node.originalTransform, expectedOriginalTransform)
-        ).toBe(true);
-
-        const expectedComputedTransform = Matrix4.multiplyTransformation(
-          sceneGraph.computedModelMatrix,
-          node.transform,
-          new Matrix4()
-        );
-
-        const expectedModelMatrix = Matrix4.multiplyByTranslation(
-          drawCommand.modelMatrix,
-          translation,
-          new Matrix4()
-        );
-
-        const expectedBoundingSphere = BoundingSphere.transform(
-          primitive.boundingSphere,
-          expectedComputedTransform,
-          new BoundingSphere()
-        );
-
-        scene.renderForSpecs();
-
-        expect(
-          Matrix4.equalsEpsilon(
-            drawCommand.modelMatrix,
-            expectedModelMatrix,
-            CesiumMath.EPSILON15
-          )
-        ).toBe(true);
-        expect(
-          BoundingSphere.equals(
-            drawCommand.boundingVolume,
-            expectedBoundingSphere
-          )
-        ).toBe(true);
-      });
-    });
-
     function applyTransform(node, transform) {
       const expectedOriginalTransform = Matrix4.clone(node.originalTransform);
       expect(node._transformDirty).toEqual(false);
@@ -209,207 +147,258 @@ describe(
       ).toBe(true);
     }
 
-    it("updates nodes with children using node transform setter", function () {
-      return loadAndZoomToModelAsync(
+    it("updates leaf nodes using node transform setter", async function () {
+      const model = await loadAndZoomToModelAsync(
         {
           gltf: simpleSkin,
         },
         scene
-      ).then(function (model) {
-        modifyModel(model);
-        scene.renderForSpecs();
+      );
+      scene.renderForSpecs();
 
-        const rootNode = getParentRootNode(model);
-        const staticLeafNode = getStaticLeafNode(model);
-        const transformedLeafNode = getChildLeafNode(model);
+      const sceneGraph = model.sceneGraph;
+      const node = getStaticLeafNode(model);
+      const primitive = node.runtimePrimitives[0];
 
-        let rootDrawCommand = getDrawCommand(rootNode);
-        let staticDrawCommand = getDrawCommand(staticLeafNode);
-        let transformedDrawCommand = getDrawCommand(transformedLeafNode);
+      let drawCommand = getDrawCommand(node);
 
-        const childTransformation = Matrix4.fromTranslation(
-          new Cartesian3(0, 5, 0)
-        );
-        applyTransform(transformedLeafNode, childTransformation);
+      const transform = Matrix4.fromTranslation(new Cartesian3(0, 5, 0));
+      applyTransform(node, transform);
 
-        const rootTransformation = Matrix4.fromTranslation(
-          new Cartesian3(12, 5, 0)
-        );
-        applyTransform(rootNode, rootTransformation);
+      const expectedComputedTransform = Matrix4.multiplyTransformation(
+        sceneGraph.computedModelMatrix,
+        node.transform,
+        new Matrix4()
+      );
 
-        const expectedRootModelMatrix = Matrix4.multiplyTransformation(
-          rootTransformation,
-          rootDrawCommand.modelMatrix,
-          new Matrix4()
-        );
-        const expectedStaticLeafModelMatrix = Matrix4.clone(
-          staticDrawCommand.modelMatrix,
-          new Matrix4()
-        );
+      const expectedModelMatrix = Matrix4.multiplyTransformation(
+        drawCommand.modelMatrix,
+        transform,
+        new Matrix4()
+      );
 
-        const finalTransform = new Matrix4();
-        Matrix4.multiply(
-          rootTransformation,
-          childTransformation,
-          finalTransform
-        );
-        const expectedTransformedLeafModelMatrix = Matrix4.multiplyTransformation(
-          finalTransform,
-          transformedDrawCommand.modelMatrix,
-          new Matrix4()
-        );
+      const expectedBoundingSphere = BoundingSphere.transform(
+        primitive.boundingSphere,
+        expectedComputedTransform,
+        new BoundingSphere()
+      );
 
-        scene.renderForSpecs();
-        rootDrawCommand = getDrawCommand(rootNode);
-        staticDrawCommand = getDrawCommand(staticLeafNode);
-        transformedDrawCommand = getDrawCommand(transformedLeafNode);
+      scene.renderForSpecs();
+      drawCommand = getDrawCommand(node);
 
-        expect(rootDrawCommand.modelMatrix).toEqual(expectedRootModelMatrix);
-        expect(staticDrawCommand.modelMatrix).toEqual(
-          expectedStaticLeafModelMatrix
-        );
-        expect(transformedDrawCommand.modelMatrix).toEqual(
-          expectedTransformedLeafModelMatrix
-        );
-      });
+      expect(
+        Matrix4.equalsEpsilon(
+          drawCommand.modelMatrix,
+          expectedModelMatrix,
+          CesiumMath.EPSILON15
+        )
+      ).toBe(true);
+      expect(
+        BoundingSphere.equals(
+          drawCommand.boundingVolume,
+          expectedBoundingSphere
+        )
+      ).toBe(true);
     });
 
-    it("updates with new model matrix", function () {
-      return loadAndZoomToModelAsync(
+    it("updates nodes with children using node transform setter", async function () {
+      const model = await loadAndZoomToModelAsync(
         {
           gltf: simpleSkin,
         },
         scene
-      ).then(function (model) {
-        modifyModel(model);
-        scene.renderForSpecs();
+      );
 
-        const rootNode = getParentRootNode(model);
-        const staticLeafNode = getStaticLeafNode(model);
-        const transformedLeafNode = getChildLeafNode(model);
+      modifyModel(model);
+      scene.renderForSpecs();
 
-        let rootDrawCommand = getDrawCommand(rootNode);
-        let staticDrawCommand = getDrawCommand(staticLeafNode);
-        let transformedDrawCommand = getDrawCommand(transformedLeafNode);
+      const rootNode = getParentRootNode(model);
+      const staticLeafNode = getStaticLeafNode(model);
+      const transformedLeafNode = getChildLeafNode(model);
 
-        const expectedRootModelMatrix = Matrix4.multiplyTransformation(
-          modelMatrix,
-          rootDrawCommand.modelMatrix,
-          new Matrix4()
-        );
-        const expectedStaticLeafModelMatrix = Matrix4.multiplyTransformation(
-          modelMatrix,
-          staticDrawCommand.modelMatrix,
-          new Matrix4()
-        );
-        const expectedTransformedLeafModelMatrix = Matrix4.multiplyTransformation(
-          modelMatrix,
-          transformedDrawCommand.modelMatrix,
-          new Matrix4()
-        );
+      let rootDrawCommand = getDrawCommand(rootNode);
+      let staticDrawCommand = getDrawCommand(staticLeafNode);
+      let transformedDrawCommand = getDrawCommand(transformedLeafNode);
 
-        model.modelMatrix = modelMatrix;
-        scene.renderForSpecs();
+      const childTransformation = Matrix4.fromTranslation(
+        new Cartesian3(0, 5, 0)
+      );
+      applyTransform(transformedLeafNode, childTransformation);
 
-        rootDrawCommand = getDrawCommand(rootNode);
-        staticDrawCommand = getDrawCommand(staticLeafNode);
-        transformedDrawCommand = getDrawCommand(transformedLeafNode);
+      const rootTransformation = Matrix4.fromTranslation(
+        new Cartesian3(12, 5, 0)
+      );
+      applyTransform(rootNode, rootTransformation);
 
-        expect(rootDrawCommand.modelMatrix).toEqual(expectedRootModelMatrix);
-        expect(staticDrawCommand.modelMatrix).toEqual(
-          expectedStaticLeafModelMatrix
-        );
-        expect(transformedDrawCommand.modelMatrix).toEqual(
-          expectedTransformedLeafModelMatrix
-        );
-      });
+      const expectedRootModelMatrix = Matrix4.multiplyTransformation(
+        rootTransformation,
+        rootDrawCommand.modelMatrix,
+        new Matrix4()
+      );
+      const expectedStaticLeafModelMatrix = Matrix4.clone(
+        staticDrawCommand.modelMatrix,
+        new Matrix4()
+      );
+
+      const finalTransform = new Matrix4();
+      Matrix4.multiply(rootTransformation, childTransformation, finalTransform);
+      const expectedTransformedLeafModelMatrix = Matrix4.multiplyTransformation(
+        finalTransform,
+        transformedDrawCommand.modelMatrix,
+        new Matrix4()
+      );
+
+      scene.renderForSpecs();
+      rootDrawCommand = getDrawCommand(rootNode);
+      staticDrawCommand = getDrawCommand(staticLeafNode);
+      transformedDrawCommand = getDrawCommand(transformedLeafNode);
+
+      expect(rootDrawCommand.modelMatrix).toEqual(expectedRootModelMatrix);
+      expect(staticDrawCommand.modelMatrix).toEqual(
+        expectedStaticLeafModelMatrix
+      );
+      expect(transformedDrawCommand.modelMatrix).toEqual(
+        expectedTransformedLeafModelMatrix
+      );
     });
 
-    it("updates with new model matrix and model scale", function () {
-      return loadAndZoomToModelAsync(
+    it("updates with new model matrix", async function () {
+      const model = await loadAndZoomToModelAsync(
         {
           gltf: simpleSkin,
         },
         scene
-      ).then(function (model) {
-        modifyModel(model);
-        scene.renderForSpecs();
+      );
 
-        const modelScale = 5.0;
-        const scaledModelMatrix = Matrix4.multiplyByUniformScale(
-          modelMatrix,
-          modelScale,
-          new Matrix4()
-        );
+      modifyModel(model);
+      scene.renderForSpecs();
 
-        const rootNode = getParentRootNode(model);
-        const staticLeafNode = getStaticLeafNode(model);
-        const transformedLeafNode = getChildLeafNode(model);
+      const rootNode = getParentRootNode(model);
+      const staticLeafNode = getStaticLeafNode(model);
+      const transformedLeafNode = getChildLeafNode(model);
 
-        let rootDrawCommand = getDrawCommand(rootNode);
-        let staticDrawCommand = getDrawCommand(staticLeafNode);
-        let transformedDrawCommand = getDrawCommand(transformedLeafNode);
+      let rootDrawCommand = getDrawCommand(rootNode);
+      let staticDrawCommand = getDrawCommand(staticLeafNode);
+      let transformedDrawCommand = getDrawCommand(transformedLeafNode);
 
-        const expectedRootModelMatrix = Matrix4.multiplyTransformation(
-          scaledModelMatrix,
-          rootDrawCommand.modelMatrix,
-          new Matrix4()
-        );
-        const expectedStaticLeafModelMatrix = Matrix4.multiplyTransformation(
-          scaledModelMatrix,
-          staticDrawCommand.modelMatrix,
-          new Matrix4()
-        );
-        const expectedTransformedLeafModelMatrix = Matrix4.multiplyTransformation(
-          scaledModelMatrix,
-          transformedDrawCommand.modelMatrix,
-          new Matrix4()
-        );
+      const expectedRootModelMatrix = Matrix4.multiplyTransformation(
+        modelMatrix,
+        rootDrawCommand.modelMatrix,
+        new Matrix4()
+      );
+      const expectedStaticLeafModelMatrix = Matrix4.multiplyTransformation(
+        modelMatrix,
+        staticDrawCommand.modelMatrix,
+        new Matrix4()
+      );
+      const expectedTransformedLeafModelMatrix = Matrix4.multiplyTransformation(
+        modelMatrix,
+        transformedDrawCommand.modelMatrix,
+        new Matrix4()
+      );
 
-        model.modelMatrix = modelMatrix;
-        model.scale = modelScale;
-        scene.renderForSpecs();
-        rootDrawCommand = getDrawCommand(rootNode);
-        staticDrawCommand = getDrawCommand(staticLeafNode);
-        transformedDrawCommand = getDrawCommand(transformedLeafNode);
+      model.modelMatrix = modelMatrix;
+      scene.renderForSpecs();
 
-        expect(rootDrawCommand.modelMatrix).toEqual(expectedRootModelMatrix);
-        expect(staticDrawCommand.modelMatrix).toEqual(
-          expectedStaticLeafModelMatrix
-        );
-        expect(transformedDrawCommand.modelMatrix).toEqual(
-          expectedTransformedLeafModelMatrix
-        );
-      });
+      rootDrawCommand = getDrawCommand(rootNode);
+      staticDrawCommand = getDrawCommand(staticLeafNode);
+      transformedDrawCommand = getDrawCommand(transformedLeafNode);
+
+      expect(rootDrawCommand.modelMatrix).toEqual(expectedRootModelMatrix);
+      expect(staticDrawCommand.modelMatrix).toEqual(
+        expectedStaticLeafModelMatrix
+      );
+      expect(transformedDrawCommand.modelMatrix).toEqual(
+        expectedTransformedLeafModelMatrix
+      );
     });
 
-    it("updates render state cull face when scale is negative", function () {
-      return loadAndZoomToModelAsync(
+    it("updates with new model matrix and model scale", async function () {
+      const model = await loadAndZoomToModelAsync(
         {
           gltf: simpleSkin,
         },
         scene
-      ).then(function (model) {
-        modifyModel(model);
+      );
 
-        const rootNode = getParentRootNode(model);
-        const childNode = getChildLeafNode(model);
+      modifyModel(model);
+      scene.renderForSpecs();
 
-        const rootPrimitive = rootNode.runtimePrimitives[0];
-        const childPrimitive = childNode.runtimePrimitives[0];
+      const modelScale = 5.0;
+      const scaledModelMatrix = Matrix4.multiplyByUniformScale(
+        modelMatrix,
+        modelScale,
+        new Matrix4()
+      );
 
-        const rootDrawCommand = rootPrimitive.drawCommand;
-        const childDrawCommand = childPrimitive.drawCommand;
+      const rootNode = getParentRootNode(model);
+      const staticLeafNode = getStaticLeafNode(model);
+      const transformedLeafNode = getChildLeafNode(model);
 
-        expect(rootDrawCommand.cullFace).toBe(CullFace.BACK);
-        expect(childDrawCommand.cullFace).toBe(CullFace.BACK);
+      let rootDrawCommand = getDrawCommand(rootNode);
+      let staticDrawCommand = getDrawCommand(staticLeafNode);
+      let transformedDrawCommand = getDrawCommand(transformedLeafNode);
 
-        model.modelMatrix = Matrix4.fromUniformScale(-1);
-        scene.renderForSpecs();
+      const expectedRootModelMatrix = Matrix4.multiplyTransformation(
+        scaledModelMatrix,
+        rootDrawCommand.modelMatrix,
+        new Matrix4()
+      );
+      const expectedStaticLeafModelMatrix = Matrix4.multiplyTransformation(
+        scaledModelMatrix,
+        staticDrawCommand.modelMatrix,
+        new Matrix4()
+      );
+      const expectedTransformedLeafModelMatrix = Matrix4.multiplyTransformation(
+        scaledModelMatrix,
+        transformedDrawCommand.modelMatrix,
+        new Matrix4()
+      );
 
-        expect(rootDrawCommand.cullFace).toBe(CullFace.FRONT);
-        expect(childDrawCommand.cullFace).toBe(CullFace.FRONT);
-      });
+      model.modelMatrix = modelMatrix;
+      model.scale = modelScale;
+      scene.renderForSpecs();
+      rootDrawCommand = getDrawCommand(rootNode);
+      staticDrawCommand = getDrawCommand(staticLeafNode);
+      transformedDrawCommand = getDrawCommand(transformedLeafNode);
+
+      expect(rootDrawCommand.modelMatrix).toEqual(expectedRootModelMatrix);
+      expect(staticDrawCommand.modelMatrix).toEqual(
+        expectedStaticLeafModelMatrix
+      );
+      expect(transformedDrawCommand.modelMatrix).toEqual(
+        expectedTransformedLeafModelMatrix
+      );
+    });
+
+    it("updates render state cull face when scale is negative", async function () {
+      const model = await loadAndZoomToModelAsync(
+        {
+          gltf: simpleSkin,
+        },
+        scene
+      );
+      modifyModel(model);
+
+      const rootNode = getParentRootNode(model);
+      const childNode = getChildLeafNode(model);
+
+      const rootPrimitive = rootNode.runtimePrimitives[0];
+      const childPrimitive = childNode.runtimePrimitives[0];
+
+      const rootDrawCommand = rootPrimitive.drawCommand;
+      const childDrawCommand = childPrimitive.drawCommand;
+
+      expect(rootDrawCommand.cullFace).toBe(CullFace.BACK);
+      expect(childDrawCommand.cullFace).toBe(CullFace.BACK);
+
+      model.modelMatrix = Matrix4.fromUniformScale(-1);
+      scene.renderForSpecs();
+
+      expect(rootPrimitive.drawCommand).toBe(rootDrawCommand);
+
+      expect(rootDrawCommand.cullFace).toBe(CullFace.FRONT);
+      expect(childDrawCommand.cullFace).toBe(CullFace.FRONT);
     });
   },
   "WebGL"

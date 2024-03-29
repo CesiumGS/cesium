@@ -1,4 +1,5 @@
 import {
+  Atmosphere,
   Axis,
   Cartesian2,
   Cartesian3,
@@ -10,13 +11,17 @@ import {
   Color,
   ColorBlendMode,
   Credit,
+  CustomShader,
   defaultValue,
   defined,
+  DirectionalLight,
   DistanceDisplayCondition,
+  DynamicAtmosphereLightingType,
   DracoLoader,
   Ellipsoid,
-  Event,
   FeatureDetection,
+  Globe,
+  Fog,
   HeadingPitchRange,
   HeadingPitchRoll,
   HeightReference,
@@ -39,6 +44,7 @@ import {
   ShadowMode,
   SplitDirection,
   StyleCommandsNeeded,
+  SunLight,
   Transforms,
   WireframeIndexGenerator,
 } from "../../../index.js";
@@ -105,6 +111,11 @@ describe(
     const boxCesiumRtcUrl =
       "./Data/Models/glTF-2.0/BoxCesiumRtc/glTF/BoxCesiumRtc.gltf";
 
+    const propertyTextureWithTextureTransformUrl =
+      "./Data/Models/glTF-2.0/PropertyTextureWithTextureTransform/glTF/PropertyTextureWithTextureTransform.gltf";
+    const featureIdTextureWithTextureTransformUrl =
+      "./Data/Models/glTF-2.0/FeatureIdTextureWithTextureTransform/glTF/FeatureIdTextureWithTextureTransform.gltf";
+
     const fixedFrameTransform = Transforms.localFrameToFixedFrameGenerator(
       "north",
       "west"
@@ -141,6 +152,7 @@ describe(
       scene.primitives.removeAll();
       scene2D.primitives.removeAll();
       sceneCV.primitives.removeAll();
+      scene.verticalExaggeration = 1.0;
       ResourceCache.clearForSpecs();
     });
 
@@ -714,6 +726,141 @@ describe(
       });
     });
 
+    it("transforms property textures with KHR_texture_transform", async function () {
+      const resource = Resource.createIfNeeded(
+        propertyTextureWithTextureTransformUrl
+      );
+      // The texture in the example model contains contains 8x8 pixels
+      // with increasing 'red' component values [0 to 64)*3, interpreted
+      // as a normalized `UINT8` property.
+      // It has a transform with an offset of [0.25, 0.25], and a scale
+      // of [0.5, 0.5].
+      // Create a custom shader that will render any value that is smaller
+      // than 16*3 or larger than 48*3 (i.e. the first two rows of pixels
+      // or the last two rows of pixels) as completely red.
+      // These pixels should NOT be visible when the transform is applied.
+      const customShader = new CustomShader({
+        fragmentShaderText: `
+          void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
+          {
+            float value = float(fsInput.metadata.exampleProperty);
+            float i = value * 255.0;
+            if (i < 16.0 * 3.0) {
+              material.diffuse = vec3(1.0, 0.0, 0.0);
+            } else if (i >= 48.0 * 3.0) {
+              material.diffuse = vec3(1.0, 0.0, 0.0);
+            } else {
+              material.diffuse = vec3(0.0, 0.0, 0.0);
+            }
+          }
+          `,
+      });
+
+      const gltf = await resource.fetchJson();
+      await loadAndZoomToModelAsync(
+        {
+          gltf: gltf,
+          basePath: propertyTextureWithTextureTransformUrl,
+          customShader: customShader,
+          // This is important to make sure that the property
+          // texture is fully loaded when the model is rendered!
+          incrementallyLoadTextures: false,
+        },
+        scene
+      );
+      const renderOptions = {
+        scene: scene,
+        time: defaultDate,
+      };
+      // Move the camera to look at the point (0.1, 0.1) of
+      // the plane at a distance of 0.15. (Note that the axes
+      // are swapped, apparently - 'x' is the distance)
+      scene.camera.position = new Cartesian3(0.15, 0.1, 0.1);
+      scene.camera.direction = Cartesian3.negate(
+        Cartesian3.UNIT_X,
+        new Cartesian3()
+      );
+      scene.camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
+      scene.camera.frustum.near = 0.01;
+      scene.camera.frustum.far = 5.0;
+
+      // When the texture transform was applied, then the
+      // resulting pixels should be nearly black (or at
+      // least not red)
+      expect(renderOptions).toRenderAndCall(function (rgba) {
+        expect(rgba[0]).toBeLessThan(50);
+        expect(rgba[1]).toBeLessThan(50);
+        expect(rgba[2]).toBeLessThan(50);
+      });
+    });
+
+    it("transforms feature ID textures with KHR_texture_transform", async function () {
+      const resource = Resource.createIfNeeded(
+        featureIdTextureWithTextureTransformUrl
+      );
+      // The texture in the example model contains contains 8x8 pixels
+      // with increasing 'red' component values [0 to 64)*3.
+      // It has a transform with an offset of [0.25, 0.25], and a scale
+      // of [0.5, 0.5].
+      // Create a custom shader that will render any value that is smaller
+      // than 16*3 or larger than 48*3 (i.e. the first two rows of pixels
+      // or the last two rows of pixels) as completely red.
+      // These pixels should NOT be visible when the transform is applied.
+      const customShader = new CustomShader({
+        fragmentShaderText: `
+        void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
+        {
+          int id = fsInput.featureIds.featureId_0;
+          if (id < 16 * 3) {
+            material.diffuse = vec3(1.0, 0.0, 0.0);
+          } else if (id >= 48 * 3) {
+            material.diffuse = vec3(1.0, 0.0, 0.0);
+          } else {
+            material.diffuse = vec3(0.0, 0.0, 0.0);
+          }
+        }
+      `,
+      });
+
+      const gltf = await resource.fetchJson();
+      await loadAndZoomToModelAsync(
+        {
+          gltf: gltf,
+          basePath: featureIdTextureWithTextureTransformUrl,
+          customShader: customShader,
+          // This is important to make sure that the feature ID
+          // texture is fully loaded when the model is rendered!
+          incrementallyLoadTextures: false,
+        },
+        scene
+      );
+      const renderOptions = {
+        scene: scene,
+        time: defaultDate,
+      };
+      // Move the camera to look at the point (0.1, 0.1) of
+      // the plane at a distance of 0.15. (Note that the axes
+      // are swapped, apparently - 'x' is the distance)
+      //scene.camera.position = new Cartesian3(0.15, 0.1, 0.1);
+      scene.camera.position = new Cartesian3(0.15, 0.1, 0.1);
+      scene.camera.direction = Cartesian3.negate(
+        Cartesian3.UNIT_X,
+        new Cartesian3()
+      );
+      scene.camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
+      scene.camera.frustum.near = 0.01;
+      scene.camera.frustum.far = 5.0;
+
+      // When the texture transform was applied, then the
+      // resulting pixels should be nearly black (or at
+      // least not red)
+      expect(renderOptions).toRenderAndCall(function (rgba) {
+        expect(rgba[0]).toBeLessThan(50);
+        expect(rgba[1]).toBeLessThan(50);
+        expect(rgba[2]).toBeLessThan(50);
+      });
+    });
+
     it("renders model with morph targets", function () {
       // This model gets clipped if log depth is disabled, so zoom out
       // the camera just a little
@@ -1135,6 +1282,7 @@ describe(
 
             // Renders without style.
             let original;
+            verifyRender(model, true);
             expect(renderOptions).toRenderAndCall(function (rgba) {
               original = rgba;
             });
@@ -1145,6 +1293,7 @@ describe(
             });
 
             model.style = style;
+            verifyRender(model, true);
             expect(renderOptions).toRenderAndCall(function (rgba) {
               expect(rgba[0]).toEqual(original[0]);
               expect(rgba[1]).toBeLessThan(original[1]);
@@ -1158,6 +1307,7 @@ describe(
             });
 
             model.style = style;
+            verifyRender(model, true);
             expect(renderOptions).toRenderAndCall(function (rgba) {
               expect(rgba[0]).toBeLessThan(original[0]);
               expect(rgba[1]).toBeLessThan(original[1]);
@@ -2105,288 +2255,299 @@ describe(
     });
 
     describe("height reference", function () {
-      let sceneWithMockGlobe;
-
-      function createMockGlobe() {
-        const globe = {
-          callback: undefined,
-          removedCallback: false,
-          ellipsoid: Ellipsoid.WGS84,
-          update: function () {},
-          render: function () {},
-          getHeight: function () {
-            return 0.0;
-          },
-          _surface: {
-            tileProvider: {},
-            _tileLoadQueueHigh: [],
-            _tileLoadQueueMedium: [],
-            _tileLoadQueueLow: [],
-            _debug: {
-              tilesWaitingForChildren: 0,
-            },
-          },
-          imageryLayersUpdatedEvent: new Event(),
-          destroy: function () {},
-        };
-
-        globe.beginFrame = function () {};
-
-        globe.endFrame = function () {};
-
-        globe.terrainProviderChanged = new Event();
-        Object.defineProperties(globe, {
-          terrainProvider: {
-            set: function (value) {
-              this.terrainProviderChanged.raiseEvent(value);
-            },
-          },
-        });
-
-        globe._surface.updateHeight = function (position, callback) {
-          globe.callback = callback;
-          return function () {
-            globe.removedCallback = true;
-            globe.callback = undefined;
-          };
-        };
-
-        return globe;
-      }
-
-      beforeAll(function () {
-        sceneWithMockGlobe = createScene();
+      beforeEach(() => {
+        scene.globe = new Globe();
       });
 
-      beforeEach(function () {
-        sceneWithMockGlobe.globe = createMockGlobe();
+      afterEach(() => {
+        scene.globe = undefined;
       });
 
-      afterEach(function () {
-        sceneWithMockGlobe.primitives.removeAll();
-      });
-
-      afterAll(function () {
-        sceneWithMockGlobe.destroyForSpecs();
-      });
-
-      it("initializes with height reference", function () {
-        return loadAndZoomToModelAsync(
+      it("initializes with height reference", async function () {
+        const position = Cartesian3.fromDegrees(-72.0, 40.0);
+        const model = await loadAndZoomToModelAsync(
           {
             gltf: boxTexturedGltfUrl,
             heightReference: HeightReference.CLAMP_TO_GROUND,
-            scene: sceneWithMockGlobe,
+            modelMatrix: Transforms.eastNorthUpToFixedFrame(position),
+            scene: scene,
           },
-          sceneWithMockGlobe
-        ).then(function (model) {
-          expect(model.heightReference).toEqual(
-            HeightReference.CLAMP_TO_GROUND
-          );
-          expect(model._scene).toBe(sceneWithMockGlobe);
-          expect(model._clampedModelMatrix).toBeDefined();
-        });
-      });
-
-      it("changing height reference works", function () {
-        return loadAndZoomToModelAsync(
-          {
-            gltf: boxTexturedGltfUrl,
-            heightReference: HeightReference.NONE,
-            scene: sceneWithMockGlobe,
-          },
-          sceneWithMockGlobe
-        ).then(function (model) {
-          expect(model.heightReference).toEqual(HeightReference.NONE);
-          expect(model._clampedModelMatrix).toBeUndefined();
-
-          model.heightReference = HeightReference.CLAMP_TO_GROUND;
-          expect(model._heightDirty).toBe(true);
-
-          sceneWithMockGlobe.renderForSpecs();
-          expect(model._heightDirty).toBe(false);
-          expect(model.heightReference).toEqual(
-            HeightReference.CLAMP_TO_GROUND
-          );
-          expect(model._clampedModelMatrix).toBeDefined();
-        });
-      });
-
-      it("creates height update callback when initializing with height reference", function () {
-        return loadAndZoomToModelAsync(
-          {
-            gltf: boxTexturedGltfUrl,
-            modelMatrix: Transforms.eastNorthUpToFixedFrame(
-              Cartesian3.fromDegrees(-72.0, 40.0)
-            ),
-            heightReference: HeightReference.CLAMP_TO_GROUND,
-            scene: sceneWithMockGlobe,
-          },
-          sceneWithMockGlobe
-        ).then(function (model) {
-          expect(model.heightReference).toEqual(
-            HeightReference.CLAMP_TO_GROUND
-          );
-          expect(sceneWithMockGlobe.globe.callback).toBeDefined();
-        });
-      });
-
-      it("creates height update callback after setting height reference", function () {
-        return loadAndZoomToModelAsync(
-          {
-            gltf: boxTexturedGltfUrl,
-            modelMatrix: Transforms.eastNorthUpToFixedFrame(
-              Cartesian3.fromDegrees(-72.0, 40.0)
-            ),
-            heightReference: HeightReference.NONE,
-            scene: sceneWithMockGlobe,
-          },
-          sceneWithMockGlobe
-        ).then(function (model) {
-          expect(model.heightReference).toEqual(HeightReference.NONE);
-          expect(sceneWithMockGlobe.globe.callback).toBeUndefined();
-
-          model.heightReference = HeightReference.CLAMP_TO_GROUND;
-          expect(model.heightReference).toEqual(
-            HeightReference.CLAMP_TO_GROUND
-          );
-          sceneWithMockGlobe.renderForSpecs();
-          expect(sceneWithMockGlobe.globe.callback).toBeDefined();
-        });
-      });
-
-      it("updates height reference callback when the height reference changes", function () {
-        return loadAndZoomToModelAsync(
-          {
-            gltf: boxTexturedGltfUrl,
-            modelMatrix: Transforms.eastNorthUpToFixedFrame(
-              Cartesian3.fromDegrees(-72.0, 40.0)
-            ),
-            heightReference: HeightReference.CLAMP_TO_GROUND,
-            scene: sceneWithMockGlobe,
-          },
-          sceneWithMockGlobe
-        ).then(function (model) {
-          expect(sceneWithMockGlobe.globe.callback).toBeDefined();
-
-          model.heightReference = HeightReference.RELATIVE_TO_GROUND;
-          sceneWithMockGlobe.renderForSpecs();
-          expect(sceneWithMockGlobe.globe.removedCallback).toEqual(true);
-          expect(sceneWithMockGlobe.globe.callback).toBeDefined();
-
-          sceneWithMockGlobe.globe.removedCallback = false;
-          model.heightReference = HeightReference.NONE;
-          sceneWithMockGlobe.renderForSpecs();
-          expect(sceneWithMockGlobe.globe.removedCallback).toEqual(true);
-          expect(sceneWithMockGlobe.globe.callback).toBeUndefined();
-        });
-      });
-
-      it("updates height reference callback when the model matrix changes", function () {
-        const modelMatrix = Transforms.eastNorthUpToFixedFrame(
-          Cartesian3.fromDegrees(-72.0, 40.0)
+          scene
         );
-        return loadAndZoomToModelAsync(
+        expect(model.heightReference).toEqual(HeightReference.CLAMP_TO_GROUND);
+        expect(model._scene).toBe(scene);
+        expect(model._clampedModelMatrix).toBeDefined();
+      });
+
+      it("changing height reference works", async function () {
+        const position = Cartesian3.fromDegrees(-72.0, 40.0);
+        const model = await loadAndZoomToModelAsync(
+          {
+            gltf: boxTexturedGltfUrl,
+            heightReference: HeightReference.NONE,
+            modelMatrix: Transforms.eastNorthUpToFixedFrame(position),
+            scene: scene,
+          },
+          scene
+        );
+        expect(model.heightReference).toEqual(HeightReference.NONE);
+        expect(model._clampedModelMatrix).toBeUndefined();
+
+        model.heightReference = HeightReference.CLAMP_TO_GROUND;
+        expect(model._heightDirty).toBe(true);
+
+        scene.renderForSpecs();
+        expect(model.heightReference).toEqual(HeightReference.CLAMP_TO_GROUND);
+        expect(model._clampedModelMatrix).toBeDefined();
+      });
+
+      it("creates height update callback when initializing with height reference", async function () {
+        spyOn(scene, "updateHeight");
+        const position = Cartesian3.fromDegrees(-72.0, 40.0);
+
+        const model = await loadAndZoomToModelAsync(
+          {
+            gltf: boxTexturedGltfUrl,
+            modelMatrix: Transforms.eastNorthUpToFixedFrame(position),
+            heightReference: HeightReference.CLAMP_TO_GROUND,
+            scene: scene,
+          },
+          scene
+        );
+
+        expect(model.heightReference).toEqual(HeightReference.CLAMP_TO_GROUND);
+        expect(scene.updateHeight).toHaveBeenCalledWith(
+          Ellipsoid.WGS84.cartesianToCartographic(position),
+          jasmine.any(Function),
+          HeightReference.CLAMP_TO_GROUND
+        );
+      });
+
+      it("creates height update callback after setting height reference", async function () {
+        const removeCallback = jasmine.createSpy();
+        spyOn(scene, "updateHeight").and.returnValue(removeCallback);
+        const position = Cartesian3.fromDegrees(-72.0, 40.0);
+
+        const model = await loadAndZoomToModelAsync(
+          {
+            gltf: boxTexturedGltfUrl,
+            modelMatrix: Transforms.eastNorthUpToFixedFrame(position),
+            heightReference: HeightReference.NONE,
+            scene: scene,
+          },
+          scene
+        );
+
+        model.heightReference = HeightReference.CLAMP_TO_GROUND;
+        expect(model.heightReference).toEqual(HeightReference.CLAMP_TO_GROUND);
+
+        scene.renderForSpecs();
+        expect(scene.updateHeight).toHaveBeenCalledWith(
+          Ellipsoid.WGS84.cartesianToCartographic(position),
+          jasmine.any(Function),
+          HeightReference.CLAMP_TO_GROUND
+        );
+      });
+
+      it("removes height update callback after changing height reference", async function () {
+        const removeCallback = jasmine.createSpy();
+        spyOn(scene, "updateHeight").and.returnValue(removeCallback);
+        const position = Cartesian3.fromDegrees(-72.0, 40.0);
+
+        const model = await loadAndZoomToModelAsync(
+          {
+            gltf: boxTexturedGltfUrl,
+            modelMatrix: Transforms.eastNorthUpToFixedFrame(position),
+            heightReference: HeightReference.CLAMP_TO_GROUND,
+            scene: scene,
+          },
+          scene
+        );
+
+        model.heightReference = HeightReference.NONE;
+        expect(model.heightReference).toEqual(HeightReference.NONE);
+
+        scene.renderForSpecs();
+        expect(removeCallback).toHaveBeenCalled();
+      });
+
+      it("updates height reference callback when the height reference changes", async function () {
+        const removeCallback = jasmine.createSpy();
+        spyOn(scene, "updateHeight").and.returnValue(removeCallback);
+        const position = Cartesian3.fromDegrees(-72.0, 40.0);
+
+        const model = await loadAndZoomToModelAsync(
+          {
+            gltf: boxTexturedGltfUrl,
+            modelMatrix: Transforms.eastNorthUpToFixedFrame(position),
+            heightReference: HeightReference.CLAMP_TO_GROUND,
+            scene: scene,
+          },
+          scene
+        );
+        expect(scene.updateHeight).toHaveBeenCalledWith(
+          Ellipsoid.WGS84.cartesianToCartographic(position),
+          jasmine.any(Function),
+          HeightReference.CLAMP_TO_GROUND
+        );
+
+        model.heightReference = HeightReference.RELATIVE_TO_GROUND;
+        scene.renderForSpecs();
+
+        expect(removeCallback).toHaveBeenCalled();
+        expect(scene.updateHeight).toHaveBeenCalledWith(
+          Ellipsoid.WGS84.cartesianToCartographic(position),
+          jasmine.any(Function),
+          HeightReference.RELATIVE_TO_GROUND
+        );
+      });
+
+      it("updates height reference callback when the model matrix changes", async function () {
+        const removeCallback = jasmine.createSpy();
+        spyOn(scene, "updateHeight").and.returnValue(removeCallback);
+
+        let position = Cartesian3.fromDegrees(-72.0, 40.0);
+        const modelMatrix = Transforms.eastNorthUpToFixedFrame(position);
+        const model = await loadAndZoomToModelAsync(
           {
             gltf: boxTexturedGltfUrl,
             modelMatrix: Matrix4.clone(modelMatrix),
             heightReference: HeightReference.CLAMP_TO_GROUND,
-            scene: sceneWithMockGlobe,
+            scene: scene,
           },
-          sceneWithMockGlobe
-        ).then(function (model) {
-          expect(sceneWithMockGlobe.globe.callback).toBeDefined();
+          scene
+        );
+        expect(scene.updateHeight).toHaveBeenCalledWith(
+          Ellipsoid.WGS84.cartesianToCartographic(position),
+          jasmine.any(Function),
+          HeightReference.CLAMP_TO_GROUND
+        );
 
-          // Modify the model matrix in place
-          const position = Cartesian3.fromDegrees(-73.0, 40.0);
-          model.modelMatrix[12] = position.x;
-          model.modelMatrix[13] = position.y;
-          model.modelMatrix[14] = position.z;
+        // Modify the model matrix in place
+        position = Cartesian3.fromDegrees(-73.0, 40.0);
+        model.modelMatrix[12] = position.x;
+        model.modelMatrix[13] = position.y;
+        model.modelMatrix[14] = position.z;
 
-          sceneWithMockGlobe.renderForSpecs();
-          expect(sceneWithMockGlobe.globe.removedCallback).toEqual(true);
-          expect(sceneWithMockGlobe.globe.callback).toBeDefined();
-
-          // Replace the model matrix entirely
-          model.modelMatrix = modelMatrix;
-
-          sceneWithMockGlobe.renderForSpecs();
-          expect(sceneWithMockGlobe.globe.removedCallback).toEqual(true);
-          expect(sceneWithMockGlobe.globe.callback).toBeDefined();
-        });
+        scene.renderForSpecs();
+        expect(removeCallback).toHaveBeenCalled();
+        expect(scene.updateHeight).toHaveBeenCalledWith(
+          Ellipsoid.WGS84.cartesianToCartographic(position),
+          jasmine.any(Function),
+          HeightReference.CLAMP_TO_GROUND
+        );
       });
 
-      it("height reference callback updates the position", function () {
-        return loadAndZoomToModelAsync(
+      it("updates height reference callback when the model matrix is set", async function () {
+        const removeCallback = jasmine.createSpy();
+        spyOn(scene, "updateHeight").and.returnValue(removeCallback);
+
+        let position = Cartesian3.fromDegrees(-72.0, 40.0);
+        const modelMatrix = Transforms.eastNorthUpToFixedFrame(position);
+        const model = await loadAndZoomToModelAsync(
+          {
+            gltf: boxTexturedGltfUrl,
+            modelMatrix: Matrix4.clone(modelMatrix),
+            heightReference: HeightReference.CLAMP_TO_GROUND,
+            scene: scene,
+          },
+          scene
+        );
+        expect(scene.updateHeight).toHaveBeenCalledWith(
+          Ellipsoid.WGS84.cartesianToCartographic(position),
+          jasmine.any(Function),
+          HeightReference.CLAMP_TO_GROUND
+        );
+
+        position = Cartesian3.fromDegrees(-73.0, 40.0);
+        modelMatrix[12] = position.x;
+        modelMatrix[13] = position.y;
+        modelMatrix[14] = position.z;
+        model.modelMatrix = modelMatrix;
+
+        scene.renderForSpecs();
+        expect(removeCallback).toHaveBeenCalled();
+        expect(scene.updateHeight).toHaveBeenCalledWith(
+          Ellipsoid.WGS84.cartesianToCartographic(position),
+          jasmine.any(Function),
+          HeightReference.CLAMP_TO_GROUND
+        );
+      });
+
+      it("height reference callback updates the position", async function () {
+        let invokeCallback;
+        spyOn(scene, "updateHeight").and.callFake(
+          (cartographic, updateCallback) => {
+            invokeCallback = (height) => {
+              cartographic.height = height;
+              updateCallback(cartographic);
+            };
+          }
+        );
+
+        const model = await loadAndZoomToModelAsync(
           {
             gltf: boxTexturedGltfUrl,
             modelMatrix: Transforms.eastNorthUpToFixedFrame(
               Cartesian3.fromDegrees(-72.0, 40.0)
             ),
             heightReference: HeightReference.CLAMP_TO_GROUND,
-            scene: sceneWithMockGlobe,
+            scene: scene,
           },
-          sceneWithMockGlobe
-        ).then(function (model) {
-          expect(sceneWithMockGlobe.globe.callback).toBeDefined();
+          scene
+        );
 
-          sceneWithMockGlobe.globe.callback(
-            Cartesian3.fromDegrees(-72.0, 40.0, 100.0)
-          );
-          const matrix = model._clampedModelMatrix;
-          const position = new Cartesian3(matrix[12], matrix[13], matrix[14]);
-          const ellipsoid = sceneWithMockGlobe.globe.ellipsoid;
-          const cartographic = ellipsoid.cartesianToCartographic(position);
-          expect(cartographic.height).toEqualEpsilon(
-            100.0,
-            CesiumMath.EPSILON9
-          );
-        });
+        invokeCallback(100.0);
+
+        const matrix = model._clampedModelMatrix;
+        const position = new Cartesian3(matrix[12], matrix[13], matrix[14]);
+        const cartographic = Ellipsoid.WGS84.cartesianToCartographic(position);
+        expect(cartographic.height).toEqualEpsilon(100.0, CesiumMath.EPSILON9);
       });
 
-      it("height reference accounts for change in terrain provider", function () {
-        return loadAndZoomToModelAsync(
+      it("height reference accounts for change in terrain provider", async function () {
+        const model = await loadAndZoomToModelAsync(
           {
             gltf: boxTexturedGltfUrl,
             modelMatrix: Transforms.eastNorthUpToFixedFrame(
               Cartesian3.fromDegrees(-72.0, 40.0)
             ),
             heightReference: HeightReference.CLAMP_TO_GROUND,
-            scene: sceneWithMockGlobe,
+            scene: scene,
           },
-          sceneWithMockGlobe
-        ).then(function (model) {
-          expect(model._heightDirty).toBe(false);
-          const terrainProvider = new CesiumTerrainProvider({
-            url: "made/up/url",
-            requestVertexNormals: true,
-          });
-          sceneWithMockGlobe.terrainProvider = terrainProvider;
-
-          expect(model._heightDirty).toBe(true);
-          sceneWithMockGlobe.terrainProvider = undefined;
+          scene
+        );
+        expect(model._heightDirty).toBe(false);
+        const terrainProvider = new CesiumTerrainProvider({
+          url: "made/up/url",
+          requestVertexNormals: true,
         });
+        scene.terrainProvider = terrainProvider;
+
+        expect(model._heightDirty).toBe(true);
+        scene.terrainProvider = undefined;
       });
 
-      it("throws when initializing height reference with no scene", function () {
-        return loadAndZoomToModelAsync(
-          {
-            gltf: boxTexturedGltfUrl,
-            modelMatrix: Transforms.eastNorthUpToFixedFrame(
-              Cartesian3.fromDegrees(-72.0, 40.0)
-            ),
-            heightReference: HeightReference.CLAMP_TO_GROUND,
-            scene: undefined,
-          },
-          sceneWithMockGlobe
-        ).catch(function (error) {
-          expect(error.message).toEqual(
-            "Height reference is not supported without a scene and globe."
-          );
-        });
+      it("throws when initializing height reference with no scene", async function () {
+        await expectAsync(
+          loadAndZoomToModelAsync(
+            {
+              gltf: boxTexturedGltfUrl,
+              modelMatrix: Transforms.eastNorthUpToFixedFrame(
+                Cartesian3.fromDegrees(-72.0, 40.0)
+              ),
+              heightReference: HeightReference.CLAMP_TO_GROUND,
+              scene: undefined,
+            },
+            scene
+          )
+        ).toBeRejectedWithDeveloperError(
+          "Height reference is not supported without a scene."
+        );
       });
 
-      it("throws when changing height reference with no scene", function () {
-        return loadAndZoomToModelAsync(
+      it("throws when changing height reference with no scene", async function () {
+        const model = await loadAndZoomToModelAsync(
           {
             gltf: boxTexturedGltfUrl,
             modelMatrix: Transforms.eastNorthUpToFixedFrame(
@@ -2394,69 +2555,50 @@ describe(
             ),
             heightReference: HeightReference.NONE,
           },
-          sceneWithMockGlobe
-        ).then(function (model) {
-          expect(function () {
-            model.heightReference = HeightReference.CLAMP_TO_GROUND;
-            sceneWithMockGlobe.renderForSpecs();
-          }).toThrowDeveloperError();
-        });
-      });
-
-      it("throws when initializing height reference with no globe", function () {
-        return loadAndZoomToModelAsync(
-          {
-            gltf: boxTexturedGltfUrl,
-            modelMatrix: Transforms.eastNorthUpToFixedFrame(
-              Cartesian3.fromDegrees(-72.0, 40.0)
-            ),
-            heightReference: HeightReference.CLAMP_TO_GROUND,
-            scene: scene,
-          },
           scene
-        ).catch(function (error) {
-          expect(error.message).toEqual(
-            "Height reference is not supported without a scene and globe."
-          );
-        });
+        );
+
+        expect(function () {
+          model.heightReference = HeightReference.CLAMP_TO_GROUND;
+          scene.renderForSpecs();
+        }).toThrowDeveloperError();
       });
 
-      it("throws when changing height reference with no globe", function () {
-        return loadAndZoomToModelAsync(
-          {
-            gltf: boxTexturedGltfUrl,
-            modelMatrix: Transforms.eastNorthUpToFixedFrame(
-              Cartesian3.fromDegrees(-72.0, 40.0)
-            ),
-            scene: scene,
-          },
-          scene
-        ).then(function (model) {
-          expect(function () {
-            model.heightReference = HeightReference.CLAMP_TO_GROUND;
-            scene.renderForSpecs();
-          }).toThrowDeveloperError();
-        });
+      it("works when initializing height reference with no globe", function () {
+        return expectAsync(
+          loadAndZoomToModelAsync(
+            {
+              gltf: boxTexturedGltfUrl,
+              modelMatrix: Transforms.eastNorthUpToFixedFrame(
+                Cartesian3.fromDegrees(-72.0, 40.0)
+              ),
+              heightReference: HeightReference.CLAMP_TO_GROUND,
+              scene: scene,
+            },
+            scene
+          )
+        ).toBeResolved();
       });
 
-      it("destroys height reference callback", function () {
-        return loadAndZoomToModelAsync(
+      it("destroys height reference callback", async function () {
+        const removeCallback = jasmine.createSpy();
+        spyOn(scene, "updateHeight").and.returnValue(removeCallback);
+
+        const model = await loadAndZoomToModelAsync(
           {
             gltf: boxTexturedGlbUrl,
             modelMatrix: Transforms.eastNorthUpToFixedFrame(
               Cartesian3.fromDegrees(-72.0, 40.0)
             ),
             heightReference: HeightReference.CLAMP_TO_GROUND,
-            scene: sceneWithMockGlobe,
+            scene: scene,
           },
-          sceneWithMockGlobe
-        ).then(function (model) {
-          expect(sceneWithMockGlobe.globe.callback).toBeDefined();
+          scene
+        );
 
-          sceneWithMockGlobe.primitives.remove(model);
-          expect(model.isDestroyed()).toBe(true);
-          expect(sceneWithMockGlobe.globe.callback).toBeUndefined();
-        });
+        scene.primitives.remove(model);
+        expect(model.isDestroyed()).toBe(true);
+        expect(removeCallback).toHaveBeenCalled();
       });
     });
 
@@ -3718,6 +3860,26 @@ describe(
       });
     });
 
+    it("resets draw commands when vertical exaggeration changes", function () {
+      return loadAndZoomToModelAsync(
+        {
+          gltf: boxTexturedGltfUrl,
+        },
+        scene
+      ).then(function (model) {
+        const resetDrawCommands = spyOn(
+          model,
+          "resetDrawCommands"
+        ).and.callThrough();
+        expect(model.ready).toBe(true);
+
+        scene.verticalExaggeration = 2.0;
+        scene.renderForSpecs();
+        expect(resetDrawCommands).toHaveBeenCalled();
+        scene.verticalExaggeration = 1.0;
+      });
+    });
+
     it("does not issue draw commands when ignoreCommands is true", function () {
       return loadAndZoomToModelAsync(
         {
@@ -4390,6 +4552,462 @@ describe(
           verifyRender(model, false);
         });
       });
+    });
+
+    describe("fog", function () {
+      const sunnyDate = JulianDate.fromIso8601("2024-01-11T15:00:00Z");
+      const darkDate = JulianDate.fromIso8601("2024-01-11T00:00:00Z");
+
+      afterEach(function () {
+        scene.atmosphere = new Atmosphere();
+        scene.fog = new Fog();
+        scene.light = new SunLight();
+        scene.camera.switchToPerspectiveFrustum();
+      });
+
+      function viewFog(scene, model) {
+        // In order for fog to create a visible change, the camera needs to be
+        // further away from the model. This would make the box sub-pixel
+        // so to make it fill the canvas, use an ortho camera the same
+        // width of the box to make the scene look 2D.
+        const center = model.boundingSphere.center;
+        scene.camera.lookAt(center, new Cartesian3(1000, 0, 0));
+        scene.camera.switchToOrthographicFrustum();
+        scene.camera.frustum.width = 1;
+      }
+
+      it("renders a model in fog", async function () {
+        // Move the fog very close to the camera;
+        scene.fog.density = 1.0;
+
+        // Increase the brightness to make the fog color
+        // stand out more for this test
+        scene.atmosphere.brightnessShift = 1.0;
+
+        const model = await loadAndZoomToModelAsync(
+          {
+            url: boxTexturedGltfUrl,
+            modelMatrix: Transforms.eastNorthUpToFixedFrame(
+              Cartesian3.fromDegrees(0, 0, 10.0)
+            ),
+          },
+          scene
+        );
+
+        viewFog(scene, model);
+
+        const renderOptions = {
+          scene,
+          time: sunnyDate,
+        };
+
+        // First, turn off the fog to capture the original color
+        let originalColor;
+        scene.fog.enabled = false;
+        expect(renderOptions).toRenderAndCall(function (rgba) {
+          originalColor = rgba;
+          expect(originalColor).not.toEqual([0, 0, 0, 255]);
+        });
+
+        // Now turn on fog. The result should be bluish
+        // than before due to scattering.
+        scene.fog.enabled = true;
+        expect(renderOptions).toRenderAndCall(function (rgba) {
+          expect(rgba).not.toEqual([0, 0, 0, 255]);
+          expect(rgba).not.toEqual(originalColor);
+
+          // The result should have a bluish tint
+          const [r, g, b, a] = rgba;
+          expect(b).toBeGreaterThan(r);
+          expect(b).toBeGreaterThan(g);
+          expect(a).toBe(255);
+        });
+      });
+
+      it("renders a model in fog (sunlight)", async function () {
+        // Move the fog very close to the camera;
+        scene.fog.density = 1.0;
+
+        // Increase the brightness to make the fog color
+        // stand out more for this test
+        scene.atmosphere.brightnessShift = 1.0;
+
+        const model = await loadAndZoomToModelAsync(
+          {
+            url: boxTexturedGltfUrl,
+            modelMatrix: Transforms.eastNorthUpToFixedFrame(
+              Cartesian3.fromDegrees(0, 0, 10.0)
+            ),
+          },
+          scene
+        );
+
+        // In order for fog to render, the camera needs to be
+        // further away from the model. This would make the box sub-pixel
+        // so to make it fill the canvas, use an ortho camera the same
+        // width of the box to make the scene look 2D.
+        const center = model.boundingSphere.center;
+        scene.camera.lookAt(center, new Cartesian3(1000, 0, 0));
+        scene.camera.switchToOrthographicFrustum();
+        scene.camera.frustum.width = 1;
+
+        // Grab the color when dynamic lighting is off for comparison
+        scene.atmosphere.dynamicLighting = DynamicAtmosphereLightingType.NONE;
+        const renderOptions = {
+          scene,
+          time: sunnyDate,
+        };
+        let originalColor;
+        expect(renderOptions).toRenderAndCall(function (rgba) {
+          originalColor = rgba;
+          expect(originalColor).not.toEqual([0, 0, 0, 255]);
+        });
+
+        // switch the lighting model to sunlight
+        scene.atmosphere.dynamicLighting =
+          DynamicAtmosphereLightingType.SUNLIGHT;
+
+        // Render in the sun, it should be a different color than the
+        // original
+        let sunnyColor;
+        expect(renderOptions).toRenderAndCall(function (rgba) {
+          sunnyColor = rgba;
+          expect(rgba).not.toEqual([0, 0, 0, 255]);
+          expect(rgba).not.toEqual(originalColor);
+        });
+
+        // Render in the dark, it should be a different color and
+        // darker than in sun
+        renderOptions.time = darkDate;
+        expect(renderOptions).toRenderAndCall(function (rgba) {
+          expect(rgba).not.toEqual(originalColor);
+          expect(rgba).not.toEqual(sunnyColor);
+
+          const [sunR, sunG, sunB, sunA] = sunnyColor;
+          const [r, g, b, a] = rgba;
+          expect(r).toBeLessThan(sunR);
+          expect(g).toBeLessThan(sunG);
+          expect(b).toBeLessThan(sunB);
+          expect(a).toBe(sunA);
+        });
+      });
+
+      it("renders a model in fog (scene light)", async function () {
+        // Move the fog very close to the camera;
+        scene.fog.density = 1.0;
+
+        // Increase the brightness to make the fog color
+        // stand out more for this test
+        scene.atmosphere.brightnessShift = 1.0;
+
+        const model = await loadAndZoomToModelAsync(
+          {
+            url: boxTexturedGltfUrl,
+            modelMatrix: Transforms.eastNorthUpToFixedFrame(
+              Cartesian3.fromDegrees(0, 0, 10.0)
+            ),
+          },
+          scene
+        );
+
+        viewFog(scene, model);
+
+        // Grab the color when dynamic lighting is off for comparison
+        scene.atmosphere.dynamicLighting = DynamicAtmosphereLightingType.NONE;
+        const renderOptions = {
+          scene,
+          time: sunnyDate,
+        };
+        let originalColor;
+        expect(renderOptions).toRenderAndCall(function (rgba) {
+          originalColor = rgba;
+          expect(originalColor).not.toEqual([0, 0, 0, 255]);
+        });
+
+        // Also grab the color in sunlight for comparison
+        scene.atmosphere.dynamicLighting =
+          DynamicAtmosphereLightingType.SUNLIGHT;
+        let sunnyColor;
+        expect(renderOptions).toRenderAndCall(function (rgba) {
+          sunnyColor = rgba;
+          expect(rgba).not.toEqual([0, 0, 0, 255]);
+          expect(rgba).not.toEqual(originalColor);
+        });
+
+        // Set a light on the scene, but since dynamicLighting is SUNLIGHT,
+        // it should have no effect yet
+        scene.light = new DirectionalLight({
+          direction: new Cartesian3(0, 1, 0),
+        });
+        expect(renderOptions).toRenderAndCall(function (rgba) {
+          expect(rgba).toEqual(sunnyColor);
+        });
+
+        // Set dynamic lighting to use the scene light, now it should
+        // render a different color from the other light sources
+        scene.atmosphere.dynamicLighting =
+          DynamicAtmosphereLightingType.SCENE_LIGHT;
+
+        expect(renderOptions).toRenderAndCall(function (rgba) {
+          expect(rgba).not.toEqual([0, 0, 0, 255]);
+          expect(rgba).not.toEqual(originalColor);
+          expect(rgba).not.toEqual(sunnyColor);
+        });
+      });
+
+      it("adjusts atmosphere light intensity", async function () {
+        // Move the fog very close to the camera;
+        scene.fog.density = 1.0;
+
+        // Increase the brightness to make the fog color
+        // stand out more. We'll use the light intensity to
+        // modulate this.
+        scene.atmosphere.brightnessShift = 1.0;
+
+        const model = await loadAndZoomToModelAsync(
+          {
+            url: boxTexturedGltfUrl,
+            modelMatrix: Transforms.eastNorthUpToFixedFrame(
+              Cartesian3.fromDegrees(0, 0, 10.0)
+            ),
+          },
+          scene
+        );
+
+        viewFog(scene, model);
+
+        const renderOptions = {
+          scene,
+          time: sunnyDate,
+        };
+
+        // Grab the original color.
+        let originalColor;
+        expect(renderOptions).toRenderAndCall(function (rgba) {
+          originalColor = rgba;
+          expect(rgba).not.toEqual([0, 0, 0, 255]);
+
+          // The result should have a bluish tint from the atmosphere
+          const [r, g, b, a] = rgba;
+          expect(b).toBeGreaterThan(r);
+          expect(b).toBeGreaterThan(g);
+          expect(a).toBe(255);
+        });
+
+        // Turn down the light intensity
+        scene.atmosphere.lightIntensity = 5.0;
+        expect(renderOptions).toRenderAndCall(function (rgba) {
+          expect(rgba).not.toEqual([0, 0, 0, 255]);
+          expect(rgba).not.toEqual(originalColor);
+
+          // Check that each component (except alpha) is darker than before
+          const [oldR, oldG, oldB, oldA] = originalColor;
+          const [r, g, b, a] = rgba;
+          expect(r).toBeLessThan(oldR);
+          expect(g).toBeLessThan(oldG);
+          expect(b).toBeLessThan(oldB);
+          expect(a).toBe(oldA);
+        });
+      });
+
+      it("applies a hue shift", async function () {
+        // Move the fog very close to the camera;
+        scene.fog.density = 1.0;
+
+        // Increase the brightness to make the fog color
+        // stand out more for this test
+        scene.atmosphere.brightnessShift = 1.0;
+
+        const model = await loadAndZoomToModelAsync(
+          {
+            url: boxTexturedGltfUrl,
+            modelMatrix: Transforms.eastNorthUpToFixedFrame(
+              Cartesian3.fromDegrees(0, 0, 10.0)
+            ),
+          },
+          scene
+        );
+
+        viewFog(scene, model);
+
+        const renderOptions = {
+          scene,
+          time: sunnyDate,
+        };
+
+        // Grab the original color.
+        let originalColor;
+        expect(renderOptions).toRenderAndCall(function (rgba) {
+          originalColor = rgba;
+          expect(rgba).not.toEqual([0, 0, 0, 255]);
+
+          // The result should have a bluish tint from the atmosphere
+          const [r, g, b, a] = rgba;
+          expect(b).toBeGreaterThan(r);
+          expect(b).toBeGreaterThan(g);
+          expect(a).toBe(255);
+        });
+
+        // Shift the fog color to be reddish
+        scene.atmosphere.hueShift = 0.4;
+        let redColor;
+        expect(renderOptions).toRenderAndCall(function (rgba) {
+          redColor = rgba;
+          expect(rgba).not.toEqual([0, 0, 0, 255]);
+          expect(redColor).not.toEqual(originalColor);
+
+          // Check for a reddish tint
+          const [r, g, b, a] = rgba;
+          expect(r).toBeGreaterThan(g);
+          expect(r).toBeGreaterThan(b);
+          expect(a).toBe(255);
+        });
+
+        // ...now greenish
+        scene.atmosphere.hueShift = 0.7;
+        let greenColor;
+        expect(renderOptions).toRenderAndCall(function (rgba) {
+          greenColor = rgba;
+          expect(rgba).not.toEqual([0, 0, 0, 255]);
+          expect(greenColor).not.toEqual(originalColor);
+          expect(greenColor).not.toEqual(redColor);
+
+          // Check for a greenish tint
+          const [r, g, b, a] = rgba;
+          expect(g).toBeGreaterThan(r);
+          expect(g).toBeGreaterThan(b);
+          expect(a).toBe(255);
+        });
+
+        // ...and all the way around the color wheel back to bluish
+        scene.atmosphere.hueShift = 1.0;
+        expect(renderOptions).toRenderAndCall(function (rgba) {
+          expect(rgba).not.toEqual([0, 0, 0, 255]);
+          expect(rgba).toEqual(originalColor);
+        });
+      });
+
+      it("applies a brightness shift", async function () {
+        // Move the fog very close to the camera;
+        scene.fog.density = 1.0;
+
+        const model = await loadAndZoomToModelAsync(
+          {
+            url: boxTexturedGltfUrl,
+            modelMatrix: Transforms.eastNorthUpToFixedFrame(
+              Cartesian3.fromDegrees(0, 0, 10.0)
+            ),
+          },
+          scene
+        );
+
+        viewFog(scene, model);
+
+        const renderOptions = {
+          scene,
+          time: sunnyDate,
+        };
+
+        // Grab the original color.
+        let originalColor;
+        scene.atmosphere.brightnessShift = 1.0;
+        expect(renderOptions).toRenderAndCall(function (rgba) {
+          originalColor = rgba;
+          expect(rgba).not.toEqual([0, 0, 0, 255]);
+
+          // The result should have a bluish tint from the atmosphere
+          const [r, g, b, a] = rgba;
+          expect(b).toBeGreaterThan(r);
+          expect(b).toBeGreaterThan(g);
+          expect(a).toBe(255);
+        });
+
+        // Turn down the brightness
+        scene.atmosphere.brightnessShift = 0.5;
+        expect(renderOptions).toRenderAndCall(function (rgba) {
+          expect(rgba).not.toEqual([0, 0, 0, 255]);
+          expect(rgba).not.toEqual(originalColor);
+
+          // Check that each component (except alpha) is darker than before
+          const [oldR, oldG, oldB, oldA] = originalColor;
+          const [r, g, b, a] = rgba;
+          expect(r).toBeLessThan(oldR);
+          expect(g).toBeLessThan(oldG);
+          expect(b).toBeLessThan(oldB);
+          expect(a).toBe(oldA);
+        });
+      });
+
+      it("applies a saturation shift", async function () {
+        // Move the fog very close to the camera;
+        scene.fog.density = 1.0;
+
+        const model = await loadAndZoomToModelAsync(
+          {
+            url: boxTexturedGltfUrl,
+            modelMatrix: Transforms.eastNorthUpToFixedFrame(
+              Cartesian3.fromDegrees(0, 0, 10.0)
+            ),
+          },
+          scene
+        );
+
+        viewFog(scene, model);
+
+        const renderOptions = {
+          scene,
+          time: sunnyDate,
+        };
+
+        // Grab the original color.
+        let originalColor;
+        expect(renderOptions).toRenderAndCall(function (rgba) {
+          originalColor = rgba;
+          expect(rgba).not.toEqual([0, 0, 0, 255]);
+
+          // The result should have a bluish tint from the atmosphere
+          const [r, g, b, a] = rgba;
+          expect(b).toBeGreaterThan(r);
+          expect(b).toBeGreaterThan(g);
+          expect(a).toBe(255);
+        });
+
+        // Turn down the saturation all the way
+        scene.atmosphere.saturationShift = -1.0;
+        expect(renderOptions).toRenderAndCall(function (rgba) {
+          expect(rgba).not.toEqual([0, 0, 0, 255]);
+          expect(rgba).not.toEqual(originalColor);
+
+          // Check that each component (except alpha) is the same
+          // as grey values have R = G = B
+          const [r, g, b, a] = rgba;
+          expect(g).toBe(r);
+          expect(b).toBe(g);
+          expect(a).toBe(255);
+        });
+      });
+    });
+
+    it("pick returns position of intersection between ray and model surface", async function () {
+      const model = await loadAndZoomToModelAsync(
+        {
+          url: boxTexturedGltfUrl,
+          enablePick: !scene.frameState.context.webgl2,
+        },
+        scene
+      );
+      const ray = scene.camera.getPickRay(
+        new Cartesian2(
+          scene.drawingBufferWidth / 2.0,
+          scene.drawingBufferHeight / 2.0
+        )
+      );
+
+      const expected = new Cartesian3(0.5, 0, 0.5);
+      expect(model.pick(ray, scene.frameState)).toEqualEpsilon(
+        expected,
+        CesiumMath.EPSILON12
+      );
     });
 
     it("destroy works", function () {

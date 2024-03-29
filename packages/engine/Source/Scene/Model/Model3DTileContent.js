@@ -3,6 +3,7 @@ import combine from "../../Core/combine.js";
 import defined from "../../Core/defined.js";
 import destroyObject from "../../Core/destroyObject.js";
 import DeveloperError from "../../Core/DeveloperError.js";
+import Ellipsoid from "../../Core/Ellipsoid.js";
 import Pass from "../../Renderer/Pass.js";
 import ModelAnimationLoop from "../ModelAnimationLoop.js";
 import Model from "./Model.js";
@@ -416,6 +417,35 @@ Model3DTileContent.fromGeoJson = async function (
   return content;
 };
 
+/**
+ * Find an intersection between a ray and the tile content surface that was rendered. The ray must be given in world coordinates.
+ *
+ * @param {Ray} ray The ray to test for intersection.
+ * @param {FrameState} frameState The frame state.
+ * @param {Cartesian3|undefined} [result] The intersection or <code>undefined</code> if none was found.
+ * @returns {Cartesian3|undefined} The intersection or <code>undefined</code> if none was found.
+ *
+ * @private
+ */
+Model3DTileContent.prototype.pick = function (ray, frameState, result) {
+  if (!defined(this._model) || !this._ready) {
+    return undefined;
+  }
+
+  const verticalExaggeration = frameState.verticalExaggeration;
+  const relativeHeight = frameState.verticalExaggerationRelativeHeight;
+
+  // All tilesets assume a WGS84 ellipsoid
+  return this._model.pick(
+    ray,
+    frameState,
+    verticalExaggeration,
+    relativeHeight,
+    Ellipsoid.WGS84,
+    result
+  );
+};
+
 function makeModelOptions(tileset, tile, content, additionalOptions) {
   const mainOptions = {
     cull: false, // The model is already culled by 3D Tiles
@@ -442,6 +472,7 @@ function makeModelOptions(tileset, tile, content, additionalOptions) {
     enableDebugWireframe: tileset._enableDebugWireframe,
     debugWireframe: tileset.debugWireframe,
     projectTo2D: tileset._projectTo2D,
+    enablePick: tileset._enablePick,
     enableShowOutline: tileset._enableShowOutline,
     showOutline: tileset.showOutline,
     outlineColor: tileset.outlineColor,

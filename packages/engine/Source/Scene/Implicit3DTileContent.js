@@ -536,8 +536,21 @@ function deriveChildTile(
   // user specified such as extras or extensions.
   const deep = true;
   const rootHeader = clone(implicitTileset.tileHeader, deep);
+  // The bounding volume was computed above since it may come from metadata
+  // in the subtree file.
   delete rootHeader.boundingVolume;
+  // Copying the transform to all the transcoded tiles would cause the transform
+  // to be applied multiple times. Removing it from the header avoids this issue.
   delete rootHeader.transform;
+  // The implicit tiling spec does not specify what should happen if explicit
+  // tile metadata is added to the placeholder tile. Since implicit tile
+  // metadata comes from the subtree file, ignore the explicit version.
+  //
+  // Also, when a property with the semantic TILE_BOUNDING_VOLUME is added to
+  // the placeholder tile to set a tight bounding volume (See Cesium3DTile.js)
+  // propagating it to transcoded tiles causes transcoded tiles to use the
+  // wrong bounding volume, this can lead to loading far too many tiles.
+  delete rootHeader.metadata;
   const combinedTileJson = combine(tileJson, rootHeader, deep);
 
   const childTile = makeTile(
@@ -1163,6 +1176,10 @@ Implicit3DTileContent.prototype.applyDebugSettings = function (
 Implicit3DTileContent.prototype.applyStyle = function (style) {};
 
 Implicit3DTileContent.prototype.update = function (tileset, frameState) {};
+
+Implicit3DTileContent.prototype.pick = function (ray, frameState, result) {
+  return undefined;
+};
 
 Implicit3DTileContent.prototype.isDestroyed = function () {
   return false;

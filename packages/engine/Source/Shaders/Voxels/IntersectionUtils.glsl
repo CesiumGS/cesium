@@ -4,21 +4,43 @@
 
 #define NO_HIT (-czm_infinity)
 #define INF_HIT (czm_infinity * 0.5)
-#define RAY_SHIFT (0.000003163)
-#define RAY_SCALE (1.003163)
-
-struct Ray {
-    vec3 pos;
-    vec3 dir;
-#if defined(SHAPE_BOX)
-    vec3 dInv;
-#endif
-};
 
 struct RayShapeIntersection {
     vec4 entry;
     vec4 exit;
 };
+
+vec4 intersectionMin(in vec4 intersect0, in vec4 intersect1)
+{
+    if (intersect0.w == NO_HIT) {
+        return intersect1;
+    } else if (intersect1.w == NO_HIT) {
+        return intersect0;
+    }
+    return (intersect0.w <= intersect1.w) ? intersect0 : intersect1;
+}
+
+vec4 intersectionMax(in vec4 intersect0, in vec4 intersect1)
+{
+    return (intersect0.w >= intersect1.w) ? intersect0 : intersect1;
+}
+
+RayShapeIntersection intersectIntersections(in Ray ray, in RayShapeIntersection intersect0, in RayShapeIntersection intersect1)
+{
+    bool missed = (intersect0.entry.w == NO_HIT) ||
+        (intersect1.entry.w == NO_HIT) ||
+        (intersect0.exit.w < intersect1.entry.w) ||
+        (intersect0.entry.w > intersect1.exit.w);
+    if (missed) {
+        vec4 miss = vec4(normalize(ray.dir), NO_HIT);
+        return RayShapeIntersection(miss, miss);
+    }
+
+    vec4 entry = intersectionMax(intersect0.entry, intersect1.entry);
+    vec4 exit = intersectionMin(intersect0.exit, intersect1.exit);
+
+    return RayShapeIntersection(entry, exit);
+}
 
 struct Intersections {
     // Don't access these member variables directly - call the functions instead.
@@ -57,7 +79,7 @@ vec4 encodeIntersectionType(vec4 intersection, int index, bool entry)
 // Use defines instead of real functions because WebGL1 cannot access array with non-constant index.
 #define setIntersection(/*inout Intersections*/ ix, /*int*/ index, /*float*/ t, /*bool*/ positive, /*bool*/ enter) (ix).intersections[(index)] = vec4(0.0, float(!positive) * 2.0 + float(!enter) + 1.0, 0.0, (t))
 #define setIntersectionPair(/*inout Intersections*/ ix, /*int*/ index, /*vec2*/ entryExit) (ix).intersections[(index) * 2 + 0] = vec4(0.0, float((index) > 0) * 2.0 + 1.0, 0.0, (entryExit).x); (ix).intersections[(index) * 2 + 1] = vec4(0.0, float((index) > 0) * 2.0 + 2.0, 0.0, (entryExit).y)
-#define setSurfaceIntersection(/*inout Intersections*/ ix, /*int*/ index, /*vec4*/ intersection) (ix).intersections[(index)] = intersection;
+#define setSurfaceIntersection(/*inout Intersections*/ ix, /*int*/ index, /*vec4*/ intersection, /*bool*/ positive, /*bool*/ enter) (ix).intersections[(index)] = encodeIntersectionType((intersection), int(!positive), (enter))
 #define setShapeIntersection(/*inout Intersections*/ ix, /*int*/ index, /*RayShapeIntersection*/ intersection) (ix).intersections[(index) * 2 + 0] = encodeIntersectionType((intersection).entry, (index), true); (ix).intersections[(index) * 2 + 1] = encodeIntersectionType((intersection).exit, (index), false)
 
 #if (INTERSECTION_COUNT > 1)

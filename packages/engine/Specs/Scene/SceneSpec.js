@@ -1,4 +1,5 @@
 import {
+  Atmosphere,
   BoundingSphere,
   Cartesian2,
   Cartesian3,
@@ -10,7 +11,6 @@ import {
   GeometryInstance,
   HeadingPitchRoll,
   JulianDate,
-  PerspectiveFrustum,
   PixelFormat,
   Rectangle,
   RectangleGeometry,
@@ -59,12 +59,21 @@ describe(
   "Scene/Scene",
   function () {
     let scene;
-    let simpleShaderProgram;
-    let simpleRenderState;
 
     beforeAll(function () {
+      return GroundPrimitive.initializeTerrainHeights();
+    });
+
+    beforeEach(function () {
       scene = createScene();
-      simpleShaderProgram = ShaderProgram.fromCache({
+    });
+
+    afterEach(function () {
+      scene.destroyForSpecs();
+    });
+
+    function getSimpleShaderProgram() {
+      return ShaderProgram.fromCache({
         context: scene.context,
         vertexShaderSource: new ShaderSource({
           sources: ["void main() { gl_Position = vec4(1.0); }"],
@@ -73,28 +82,7 @@ describe(
           sources: ["void main() { out_FragColor = vec4(1.0); }"],
         }),
       });
-      simpleRenderState = new RenderState();
-
-      return GroundPrimitive.initializeTerrainHeights();
-    });
-
-    afterEach(function () {
-      scene.backgroundColor = new Color(0.0, 0.0, 0.0, 0.0);
-      scene.debugCommandFilter = undefined;
-      scene.postProcessStages.fxaa.enabled = false;
-      scene.primitives.removeAll();
-      scene.morphTo3D(0.0);
-
-      const camera = scene.camera;
-      camera.frustum = new PerspectiveFrustum();
-      camera.frustum.aspectRatio =
-        scene.drawingBufferWidth / scene.drawingBufferHeight;
-      camera.frustum.fov = CesiumMath.toRadians(60.0);
-    });
-
-    afterAll(function () {
-      scene.destroyForSpecs();
-    });
+    }
 
     function returnTileJson(path) {
       Resource._Implementations.loadWithXhr = function (
@@ -139,79 +127,93 @@ describe(
       });
     }
 
-    it("constructor has expected defaults", function () {
-      expect(scene.canvas).toBeInstanceOf(HTMLCanvasElement);
-      expect(scene.primitives).toBeInstanceOf(PrimitiveCollection);
-      expect(scene.camera).toBeInstanceOf(Camera);
-      expect(scene.screenSpaceCameraController).toBeInstanceOf(
-        ScreenSpaceCameraController
-      );
-      expect(scene.mapProjection).toBeInstanceOf(GeographicProjection);
-      expect(scene.frameState).toBeInstanceOf(FrameState);
-      expect(scene.tweens).toBeInstanceOf(TweenCollection);
+    describe("constructor", () => {
+      it("has expected defaults", function () {
+        expect(scene.canvas).toBeInstanceOf(HTMLCanvasElement);
+        expect(scene.primitives).toBeInstanceOf(PrimitiveCollection);
+        expect(scene.camera).toBeInstanceOf(Camera);
+        expect(scene.screenSpaceCameraController).toBeInstanceOf(
+          ScreenSpaceCameraController
+        );
+        expect(scene.mapProjection).toBeInstanceOf(GeographicProjection);
+        expect(scene.frameState).toBeInstanceOf(FrameState);
+        expect(scene.tweens).toBeInstanceOf(TweenCollection);
 
-      const contextAttributes = scene.context._gl.getContextAttributes();
-      // Do not check depth and antialias since they are requests not requirements
-      expect(contextAttributes.alpha).toEqual(false);
-      expect(contextAttributes.stencil).toEqual(true);
-      expect(contextAttributes.premultipliedAlpha).toEqual(true);
-      expect(contextAttributes.preserveDrawingBuffer).toEqual(false);
-      expect(scene._depthPlane._ellipsoidOffset).toEqual(0);
-    });
-
-    it("constructor sets options", function () {
-      const webglOptions = {
-        alpha: true,
-        depth: true, //TODO Change to false when https://bugzilla.mozilla.org/show_bug.cgi?id=745912 is fixed.
-        stencil: true,
-        antialias: false,
-        premultipliedAlpha: true, // Workaround IE 11.0.8, which does not honor false.
-        preserveDrawingBuffer: true,
-      };
-      const mapProjection = new WebMercatorProjection();
-
-      const s = createScene({
-        contextOptions: {
-          webgl: webglOptions,
-        },
-        mapProjection: mapProjection,
-        depthPlaneEllipsoidOffset: Number.POSITIVE_INFINITY,
+        const contextAttributes = scene.context._gl.getContextAttributes();
+        // Do not check depth and antialias since they are requests not requirements
+        expect(contextAttributes.alpha).toEqual(false);
+        expect(contextAttributes.stencil).toEqual(true);
+        expect(contextAttributes.premultipliedAlpha).toEqual(true);
+        expect(contextAttributes.preserveDrawingBuffer).toEqual(false);
+        expect(scene._depthPlane._ellipsoidOffset).toEqual(0);
       });
 
-      const contextAttributes = s.context._gl.getContextAttributes();
-      expect(contextAttributes.alpha).toEqual(webglOptions.alpha);
-      expect(contextAttributes.depth).toEqual(webglOptions.depth);
-      expect(contextAttributes.stencil).toEqual(webglOptions.stencil);
-      expect(contextAttributes.antialias).toEqual(webglOptions.antialias);
-      expect(contextAttributes.premultipliedAlpha).toEqual(
-        webglOptions.premultipliedAlpha
-      );
-      expect(contextAttributes.preserveDrawingBuffer).toEqual(
-        webglOptions.preserveDrawingBuffer
-      );
-      expect(s.mapProjection).toEqual(mapProjection);
-      expect(s._depthPlane._ellipsoidOffset).toEqual(Number.POSITIVE_INFINITY);
+      it("respects default log depth buffer override", () => {
+        const previous = Scene.defaultLogDepthBuffer;
 
-      s.destroyForSpecs();
-    });
+        Scene.defaultLogDepthBuffer = false;
+        const newScene = createScene();
+        expect(newScene._logDepthBuffer).toEqual(false);
 
-    it("constructor throws without options", function () {
-      expect(function () {
-        return new Scene();
-      }).toThrowDeveloperError();
-    });
+        Scene.defaultLogDepthBuffer = previous;
+      });
 
-    it("constructor throws without options.canvas", function () {
-      expect(function () {
-        return new Scene({});
-      }).toThrowDeveloperError();
-    });
+      it("sets options", function () {
+        const webglOptions = {
+          alpha: true,
+          depth: false,
+          stencil: true,
+          antialias: false,
+          premultipliedAlpha: false,
+          preserveDrawingBuffer: true,
+        };
+        const mapProjection = new WebMercatorProjection();
 
-    it("draws background color", function () {
-      expect(scene).toRender([0, 0, 0, 255]);
+        const s = createScene({
+          contextOptions: {
+            webgl: webglOptions,
+          },
+          mapProjection: mapProjection,
+          depthPlaneEllipsoidOffset: Number.POSITIVE_INFINITY,
+        });
 
-      scene.backgroundColor = Color.BLUE;
-      expect(scene).toRender([0, 0, 255, 255]);
+        const contextAttributes = s.context._gl.getContextAttributes();
+        expect(contextAttributes.alpha).toEqual(webglOptions.alpha);
+        expect(contextAttributes.depth).toEqual(webglOptions.depth);
+        expect(contextAttributes.stencil).toEqual(webglOptions.stencil);
+        expect(contextAttributes.antialias).toEqual(webglOptions.antialias);
+        expect(contextAttributes.premultipliedAlpha).toEqual(
+          webglOptions.premultipliedAlpha
+        );
+        expect(contextAttributes.preserveDrawingBuffer).toEqual(
+          webglOptions.preserveDrawingBuffer
+        );
+        expect(s.mapProjection).toEqual(mapProjection);
+        expect(s._depthPlane._ellipsoidOffset).toEqual(
+          Number.POSITIVE_INFINITY
+        );
+
+        s.destroyForSpecs();
+      });
+
+      it("throws without options", function () {
+        expect(function () {
+          return new Scene();
+        }).toThrowDeveloperError();
+      });
+
+      it("throws without options.canvas", function () {
+        expect(function () {
+          return new Scene({});
+        }).toThrowDeveloperError();
+      });
+
+      it("draws background color", function () {
+        expect(scene).toRender([0, 0, 0, 255]);
+
+        scene.backgroundColor = Color.BLUE;
+        expect(scene).toRender([0, 0, 255, 255]);
+      });
     });
 
     it("calls afterRender functions", function () {
@@ -222,6 +224,7 @@ describe(
           frameState.afterRender.push(spyListener);
         },
         destroy: function () {},
+        isDestroyed: () => false,
       };
       scene.primitives.add(primitive);
 
@@ -234,12 +237,15 @@ describe(
         frameState.commandList.push(command);
       };
       this.destroy = function () {};
+      this.isDestroyed = function () {
+        return false;
+      };
     }
 
     it("debugCommandFilter filters commands", function () {
       const c = new DrawCommand({
-        shaderProgram: simpleShaderProgram,
-        renderState: simpleRenderState,
+        shaderProgram: getSimpleShaderProgram(),
+        renderState: new RenderState(),
         pass: Pass.OPAQUE,
       });
       c.execute = function () {};
@@ -260,8 +266,8 @@ describe(
       scene.logarithmicDepthBuffer = false;
 
       const c = new DrawCommand({
-        shaderProgram: simpleShaderProgram,
-        renderState: simpleRenderState,
+        shaderProgram: getSimpleShaderProgram(),
+        renderState: new RenderState(),
         pass: Pass.OPAQUE,
       });
       c.execute = function () {};
@@ -288,8 +294,8 @@ describe(
       );
 
       const c = new DrawCommand({
-        shaderProgram: simpleShaderProgram,
-        renderState: simpleRenderState,
+        shaderProgram: getSimpleShaderProgram(),
+        renderState: new RenderState(),
         pass: Pass.OPAQUE,
         debugShowBoundingVolume: true,
         boundingVolume: new BoundingSphere(center, radius),
@@ -311,8 +317,8 @@ describe(
       scene.logarithmicDepthBuffer = false;
 
       const c = new DrawCommand({
-        shaderProgram: simpleShaderProgram,
-        renderState: simpleRenderState,
+        shaderProgram: getSimpleShaderProgram(),
+        renderState: new RenderState(),
         pass: Pass.OPAQUE,
       });
       c.execute = function () {};
@@ -479,14 +485,12 @@ describe(
         }
       }
 
-      const s = createScene();
-
-      if (defined(s._oit)) {
-        s._oit._translucentMRTSupport = false;
-        s._oit._translucentMultipassSupport = false;
+      if (defined(scene._oit)) {
+        scene._oit._translucentMRTSupport = false;
+        scene._oit._translucentMultipassSupport = false;
       }
 
-      s.postProcessStages.fxaa.enabled = false;
+      scene.postProcessStages.fxaa.enabled = false;
 
       const rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
 
@@ -498,33 +502,38 @@ describe(
         1.0
       );
 
-      const primitives = s.primitives;
+      const primitives = scene.primitives;
       primitives.add(rectanglePrimitive);
 
-      s.camera.setView({ destination: rectangle });
+      scene.camera.setView({ destination: rectangle });
 
-      expect(s).toRenderAndCall(function (rgba) {
+      expect(scene).toRenderAndCall(function (rgba) {
         expect(rgba[0]).not.toEqual(0);
         expect(rgba[1]).toEqual(0);
         expect(rgba[2]).toEqual(0);
       });
-
-      s.destroyForSpecs();
     });
 
     it("setting a globe", function () {
-      const scene = createScene();
       const ellipsoid = Ellipsoid.UNIT_SPHERE;
       const globe = new Globe(ellipsoid);
       scene.globe = globe;
 
       expect(scene.globe).toBe(globe);
+    });
 
-      scene.destroyForSpecs();
+    it("sets verticalExaggeration and verticalExaggerationRelativeHeight", function () {
+      expect(scene.verticalExaggeration).toEqual(1.0);
+      expect(scene.verticalExaggerationRelativeHeight).toEqual(0.0);
+
+      scene.verticalExaggeration = 2.0;
+      scene.verticalExaggerationRelativeHeight = 100000.0;
+
+      expect(scene.verticalExaggeration).toEqual(2.0);
+      expect(scene.verticalExaggerationRelativeHeight).toEqual(100000.0);
     });
 
     it("destroys primitive on set globe", function () {
-      const scene = createScene();
       const globe = new Globe(Ellipsoid.UNIT_SPHERE);
 
       scene.globe = globe;
@@ -532,8 +541,6 @@ describe(
 
       scene.globe = undefined;
       expect(globe.isDestroyed()).toEqual(true);
-
-      scene.destroyForSpecs();
     });
 
     describe("render tests", function () {
@@ -549,6 +556,24 @@ describe(
 
       it("renders a globe", function () {
         s.globe = new Globe(Ellipsoid.UNIT_SPHERE);
+        s.camera.position = new Cartesian3(1.02, 0.0, 0.0);
+        s.camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
+        s.camera.direction = Cartesian3.negate(
+          Cartesian3.normalize(s.camera.position, new Cartesian3()),
+          new Cartesian3()
+        );
+
+        return expect(s).toRenderAndCall(function () {
+          render(s.frameState, s.globe);
+          const pixel = s._context.readPixels();
+          const blankPixel = [0, 0, 0, 0];
+          expect(pixel).not.toEqual(blankPixel);
+        });
+      });
+
+      it("renders sky atmosphere without a globe", function () {
+        s.globe = new Globe(Ellipsoid.UNIT_SPHERE);
+        s.globe.show = false;
         s.camera.position = new Cartesian3(1.02, 0.0, 0.0);
         s.camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
         s.camera.direction = Cartesian3.negate(
@@ -655,69 +680,61 @@ describe(
     });
 
     it("renders with multipass OIT if MRT is available", function () {
-      if (scene.context.drawBuffers) {
-        const s = createScene();
-        if (defined(s._oit)) {
-          s._oit._translucentMRTSupport = false;
-          s._oit._translucentMultipassSupport = true;
-
-          const rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
-
-          const rectanglePrimitive = createRectangle(rectangle, 1000.0);
-          rectanglePrimitive.appearance.material.uniforms.color = new Color(
-            1.0,
-            0.0,
-            0.0,
-            0.5
-          );
-
-          const primitives = s.primitives;
-          primitives.add(rectanglePrimitive);
-
-          s.camera.setView({ destination: rectangle });
-
-          expect(s).toRenderAndCall(function (rgba) {
-            expect(rgba[0]).not.toEqual(0);
-            expect(rgba[1]).toEqual(0);
-            expect(rgba[2]).toEqual(0);
-          });
-        }
-
-        s.destroyForSpecs();
+      if (!scene.context.drawBuffers || !defined(scene._oit)) {
+        return;
       }
+      scene._oit._translucentMRTSupport = false;
+      scene._oit._translucentMultipassSupport = true;
+
+      const rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
+
+      const rectanglePrimitive = createRectangle(rectangle, 1000.0);
+      rectanglePrimitive.appearance.material.uniforms.color = new Color(
+        1.0,
+        0.0,
+        0.0,
+        0.5
+      );
+
+      const primitives = scene.primitives;
+      primitives.add(rectanglePrimitive);
+
+      scene.camera.setView({ destination: rectangle });
+
+      expect(scene).toRenderAndCall(function (rgba) {
+        expect(rgba[0]).not.toEqual(0);
+        expect(rgba[1]).toEqual(0);
+        expect(rgba[2]).toEqual(0);
+      });
     });
 
     it("renders with alpha blending if floating point textures are available", function () {
-      if (!scene.context.floatingPointTexture) {
+      if (!scene.context.floatingPointTexture || !defined(scene._oit)) {
         return;
       }
-      const s = createScene();
-      if (defined(s._oit)) {
-        s._oit._translucentMRTSupport = false;
-        s._oit._translucentMultipassSupport = false;
+      scene._oit._translucentMRTSupport = false;
+      scene._oit._translucentMultipassSupport = false;
 
-        const rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
+      const rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
 
-        const rectanglePrimitive = createRectangle(rectangle, 1000.0);
-        rectanglePrimitive.appearance.material.uniforms.color = new Color(
-          1.0,
-          0.0,
-          0.0,
-          0.5
-        );
+      const rectanglePrimitive = createRectangle(rectangle, 1000.0);
+      rectanglePrimitive.appearance.material.uniforms.color = new Color(
+        1.0,
+        0.0,
+        0.0,
+        0.5
+      );
 
-        const primitives = s.primitives;
-        primitives.add(rectanglePrimitive);
+      const primitives = scene.primitives;
+      primitives.add(rectanglePrimitive);
 
-        s.camera.setView({ destination: rectangle });
+      scene.camera.setView({ destination: rectangle });
 
-        expect(s).toRenderAndCall(function (rgba) {
-          expect(rgba[0]).not.toEqual(0);
-          expect(rgba[1]).toEqual(0);
-          expect(rgba[2]).toEqual(0);
-        });
-      }
-      s.destroyForSpecs();
+      expect(scene).toRenderAndCall(function (rgba) {
+        expect(rgba[0]).not.toEqual(0);
+        expect(rgba[1]).toEqual(0);
+        expect(rgba[2]).toEqual(0);
+      });
     });
 
     it("renders map twice when in 2D", function () {
@@ -794,8 +811,7 @@ describe(
         return;
       }
 
-      const s = createScene();
-      s.highDynamicRange = true;
+      scene.highDynamicRange = true;
 
       const rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
 
@@ -807,47 +823,43 @@ describe(
         1.0
       );
 
-      const primitives = s.primitives;
+      const primitives = scene.primitives;
       primitives.add(rectanglePrimitive);
 
-      s.camera.setView({ destination: rectangle });
+      scene.camera.setView({ destination: rectangle });
 
-      expect(s).toRenderAndCall(function (rgba) {
+      expect(scene).toRenderAndCall(function (rgba) {
         expect(rgba[0]).toBeGreaterThan(0);
         expect(rgba[0]).toBeLessThanOrEqual(255);
         expect(rgba[1]).toEqual(0);
         expect(rgba[2]).toEqual(0);
       });
-
-      s.destroyForSpecs();
     });
 
     it("copies the globe depth", function () {
-      const scene = createScene();
-      if (scene.context.depthTexture) {
-        const rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
-
-        const rectanglePrimitive = createRectangle(rectangle, 1000.0);
-        rectanglePrimitive.appearance.material.uniforms.color = new Color(
-          1.0,
-          0.0,
-          0.0,
-          0.5
-        );
-
-        const primitives = scene.primitives;
-        primitives.add(rectanglePrimitive);
-
-        scene.camera.setView({ destination: rectangle });
-
-        const uniformState = scene.context.uniformState;
-
-        expect(scene).toRenderAndCall(function (rgba) {
-          expect(uniformState.globeDepthTexture).toBeDefined();
-        });
+      if (!scene.context.depthTexture) {
+        return;
       }
+      const rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
 
-      scene.destroyForSpecs();
+      const rectanglePrimitive = createRectangle(rectangle, 1000.0);
+      rectanglePrimitive.appearance.material.uniforms.color = new Color(
+        1.0,
+        0.0,
+        0.0,
+        0.5
+      );
+
+      const primitives = scene.primitives;
+      primitives.add(rectanglePrimitive);
+
+      scene.camera.setView({ destination: rectangle });
+
+      const uniformState = scene.context.uniformState;
+
+      expect(scene).toRenderAndCall(function (rgba) {
+        expect(uniformState.globeDepthTexture).toBeDefined();
+      });
     });
 
     it("pickPosition", function () {
@@ -1136,311 +1148,289 @@ describe(
     });
 
     it("a render error is rethrown if rethrowRenderErrors is true", function () {
-      const s = createScene();
-      s.rethrowRenderErrors = true;
+      scene.rethrowRenderErrors = true;
 
       const spyListener = jasmine.createSpy("listener");
-      s.renderError.addEventListener(spyListener);
+      scene.renderError.addEventListener(spyListener);
 
       const error = new RuntimeError("error");
-      s.primitives.update = function () {
+      scene.primitives.update = function () {
         throw error;
       };
 
       expect(function () {
-        s.render();
+        scene.render();
       }).toThrowError(RuntimeError);
 
-      expect(spyListener).toHaveBeenCalledWith(s, error);
-
-      s.destroyForSpecs();
+      expect(spyListener).toHaveBeenCalledWith(scene, error);
     });
 
-    it("alwayas raises preUpdate event prior to updating", function () {
-      const s = createScene();
-
+    it("always raises preUpdate event prior to updating", function () {
       const spyListener = jasmine.createSpy("listener");
-      s.preUpdate.addEventListener(spyListener);
+      scene.preUpdate.addEventListener(spyListener);
 
-      s.render();
+      scene.render();
 
       expect(spyListener.calls.count()).toBe(1);
 
-      s.requestRenderMode = true;
-      s.maximumRenderTimeChange = undefined;
+      scene.requestRenderMode = true;
+      scene.maximumRenderTimeChange = undefined;
 
-      s.render();
+      scene.render();
 
       expect(spyListener.calls.count()).toBe(2);
-
-      s.destroyForSpecs();
     });
 
-    it("always raises preUpdate event after updating", function () {
-      const s = createScene();
-
+    it("always raises postUpdate event after updating", function () {
       const spyListener = jasmine.createSpy("listener");
-      s.preUpdate.addEventListener(spyListener);
+      scene.postUpdate.addEventListener(spyListener);
 
-      s.render();
+      scene.render();
 
       expect(spyListener.calls.count()).toBe(1);
 
-      s.requestRenderMode = true;
-      s.maximumRenderTimeChange = undefined;
+      scene.requestRenderMode = true;
+      scene.maximumRenderTimeChange = undefined;
 
-      s.render();
+      scene.render();
 
       expect(spyListener.calls.count()).toBe(2);
-
-      s.destroyForSpecs();
     });
 
     it("raises the preRender event prior to rendering only if the scene renders", function () {
-      const s = createScene();
-
       const spyListener = jasmine.createSpy("listener");
-      s.preRender.addEventListener(spyListener);
+      scene.preRender.addEventListener(spyListener);
 
-      s.render();
-
-      expect(spyListener.calls.count()).toBe(1);
-
-      s.requestRenderMode = true;
-      s.maximumRenderTimeChange = undefined;
-
-      s.render();
+      scene.render();
 
       expect(spyListener.calls.count()).toBe(1);
 
-      s.destroyForSpecs();
+      scene.requestRenderMode = true;
+      scene.maximumRenderTimeChange = undefined;
+
+      scene.render();
+
+      expect(spyListener.calls.count()).toBe(1);
     });
 
     it("raises the postRender event after rendering if the scene rendered", function () {
-      const s = createScene();
-
       const spyListener = jasmine.createSpy("listener");
-      s.postRender.addEventListener(spyListener);
+      scene.postRender.addEventListener(spyListener);
 
-      s.render();
-
-      expect(spyListener.calls.count()).toBe(1);
-
-      s.requestRenderMode = true;
-      s.maximumRenderTimeChange = undefined;
-
-      s.render();
+      scene.render();
 
       expect(spyListener.calls.count()).toBe(1);
 
-      s.destroyForSpecs();
+      scene.requestRenderMode = true;
+      scene.maximumRenderTimeChange = undefined;
+
+      scene.render();
+
+      expect(spyListener.calls.count()).toBe(1);
     });
 
     it("raises the cameraMoveStart event after moving the camera", function () {
-      const s = createScene();
-      s.render();
+      scene.render();
 
       const spyListener = jasmine.createSpy("listener");
-      s.camera.moveStart.addEventListener(spyListener);
-      s._cameraStartFired = false; // reset this value after camera changes for initial render trigger the event
+      scene.camera.moveStart.addEventListener(spyListener);
+      scene._cameraStartFired = false; // reset this value after camera changes for initial render trigger the event
 
-      s.camera.moveLeft();
-      s.render();
+      scene.camera.moveLeft();
+      scene.render();
 
       expect(spyListener.calls.count()).toBe(1);
-
-      s.destroyForSpecs();
     });
 
     it("raises the cameraMoveEvent event when the camera stops moving", function () {
-      const s = createScene();
-      s.render();
+      scene.render();
 
       const spyListener = jasmine.createSpy("listener");
-      s.camera.moveEnd.addEventListener(spyListener);
+      scene.camera.moveEnd.addEventListener(spyListener);
 
       // We use negative time here to ensure the event runs on the next frame.
-      s.cameraEventWaitTime = -1.0;
-      s.camera.moveLeft();
+      scene.cameraEventWaitTime = -1.0;
+      scene.camera.moveLeft();
       // The first render will trigger the moveStart event.
-      s.render();
+      scene.render();
       // The second will trigger the moveEnd.
-      s.render();
+      scene.render();
 
       expect(spyListener.calls.count()).toBe(1);
-
-      s.destroyForSpecs();
     });
 
     it("raises the camera changed event on direction changed", function () {
-      const s = createScene();
-
       const spyListener = jasmine.createSpy("listener");
-      s.camera.changed.addEventListener(spyListener);
+      scene.camera.changed.addEventListener(spyListener);
 
-      s.initializeFrame();
-      s.render();
+      scene.initializeFrame();
+      scene.render();
 
-      s.camera.lookLeft(
-        s.camera.frustum.fov * (s.camera.percentageChanged + 0.1)
+      scene.camera.lookLeft(
+        scene.camera.frustum.fov * (scene.camera.percentageChanged + 0.1)
       );
 
-      s.initializeFrame();
-      s.render();
+      scene.initializeFrame();
+      scene.render();
 
       expect(spyListener.calls.count()).toBe(1);
 
       const args = spyListener.calls.allArgs();
       expect(args.length).toEqual(1);
       expect(args[0].length).toEqual(1);
-      expect(args[0][0]).toBeGreaterThan(s.camera.percentageChanged);
-
-      s.destroyForSpecs();
+      expect(args[0][0]).toBeGreaterThan(scene.camera.percentageChanged);
     });
 
-    it("raises the camera changed event on heading changed", function () {
-      const s = createScene();
-
+    it("raises the camera changed event on heading changed when looking up", function () {
       const spyListener = jasmine.createSpy("listener");
-      s.camera.changed.addEventListener(spyListener);
 
-      s.initializeFrame();
-      s.render();
+      scene.camera.lookUp(0.785398);
+      scene.camera.changed.addEventListener(spyListener);
 
-      s.camera.twistLeft(CesiumMath.PI * (s.camera.percentageChanged + 0.1));
+      scene.initializeFrame();
+      scene.render();
 
-      s.initializeFrame();
-      s.render();
+      scene.camera.twistLeft(
+        CesiumMath.PI * (scene.camera.percentageChanged + 0.1)
+      );
+
+      scene.initializeFrame();
+      scene.render();
 
       expect(spyListener.calls.count()).toBe(1);
 
       const args = spyListener.calls.allArgs();
       expect(args.length).toEqual(1);
       expect(args[0].length).toEqual(1);
-      expect(args[0][0]).toBeGreaterThan(s.camera.percentageChanged);
-
-      s.destroyForSpecs();
+      expect(args[0][0]).toBeGreaterThan(scene.camera.percentageChanged);
     });
+    it("raises the camera changed event on roll changed", function () {
+      const spyListener = jasmine.createSpy("listener");
+      scene.camera.changed.addEventListener(spyListener);
 
+      scene.initializeFrame();
+      scene.render();
+
+      scene.camera.twistLeft(
+        CesiumMath.PI * (scene.camera.percentageChanged + 0.1)
+      );
+
+      scene.initializeFrame();
+      scene.render();
+
+      expect(spyListener.calls.count()).toBe(1);
+
+      const args = spyListener.calls.allArgs();
+      expect(args.length).toEqual(1);
+      expect(args[0].length).toEqual(1);
+      expect(args[0][0]).toBeGreaterThan(scene.camera.percentageChanged);
+    });
     it("raises the camera changed event on position changed", function () {
-      const s = createScene();
-
       const spyListener = jasmine.createSpy("listener");
-      s.camera.changed.addEventListener(spyListener);
+      scene.camera.changed.addEventListener(spyListener);
 
-      s.initializeFrame();
-      s.render();
+      scene.initializeFrame();
+      scene.render();
 
-      s.camera.moveUp(
-        s.camera.positionCartographic.height *
-          (s.camera.percentageChanged + 0.1)
+      scene.camera.moveUp(
+        scene.camera.positionCartographic.height *
+          (scene.camera.percentageChanged + 0.1)
       );
 
-      s.initializeFrame();
-      s.render();
+      scene.initializeFrame();
+      scene.render();
 
       expect(spyListener.calls.count()).toBe(1);
 
       const args = spyListener.calls.allArgs();
       expect(args.length).toEqual(1);
       expect(args[0].length).toEqual(1);
-      expect(args[0][0]).toBeGreaterThan(s.camera.percentageChanged);
-
-      s.destroyForSpecs();
+      expect(args[0][0]).toBeGreaterThan(scene.camera.percentageChanged);
     });
 
     it("raises the camera changed event in 2D", function () {
-      const s = createScene();
-      s.morphTo2D(0);
+      scene.morphTo2D(0);
 
       const spyListener = jasmine.createSpy("listener");
-      s.camera.changed.addEventListener(spyListener);
+      scene.camera.changed.addEventListener(spyListener);
 
-      s.initializeFrame();
-      s.render();
+      scene.initializeFrame();
+      scene.render();
 
-      s.camera.moveLeft(
-        s.camera.positionCartographic.height *
-          (s.camera.percentageChanged + 0.1)
+      scene.camera.moveLeft(
+        scene.camera.positionCartographic.height *
+          (scene.camera.percentageChanged + 0.1)
       );
 
-      s.initializeFrame();
-      s.render();
+      scene.initializeFrame();
+      scene.render();
 
       expect(spyListener.calls.count()).toBe(1);
 
       const args = spyListener.calls.allArgs();
       expect(args.length).toEqual(1);
       expect(args[0].length).toEqual(1);
-      expect(args[0][0]).toBeGreaterThan(s.camera.percentageChanged);
-
-      s.destroyForSpecs();
+      expect(args[0][0]).toBeGreaterThan(scene.camera.percentageChanged);
     });
 
     it("get maximumAliasedLineWidth", function () {
-      const s = createScene();
-      expect(s.maximumAliasedLineWidth).toBeGreaterThanOrEqual(1);
-      s.destroyForSpecs();
+      expect(scene.maximumAliasedLineWidth).toBeGreaterThanOrEqual(1);
     });
 
     it("get maximumCubeMapSize", function () {
-      const s = createScene();
-      expect(s.maximumCubeMapSize).toBeGreaterThanOrEqual(16);
-      s.destroyForSpecs();
+      expect(scene.maximumCubeMapSize).toBeGreaterThanOrEqual(16);
     });
 
     it("does not throw with debugShowCommands", function () {
-      const s = createScene();
-      if (s.context.drawBuffers) {
-        s.debugShowCommands = true;
-
-        const rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
-
-        const rectanglePrimitive = createRectangle(rectangle, 1000.0);
-        rectanglePrimitive.appearance.material.uniforms.color = new Color(
-          1.0,
-          0.0,
-          0.0,
-          0.5
-        );
-
-        const primitives = s.primitives;
-        primitives.add(rectanglePrimitive);
-
-        s.camera.setView({ destination: rectangle });
-
-        expect(function () {
-          s.renderForSpecs();
-        }).not.toThrowError(RuntimeError);
+      if (!scene.context.drawBuffers) {
+        return;
       }
-      s.destroyForSpecs();
+      scene.debugShowCommands = true;
+
+      const rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
+
+      const rectanglePrimitive = createRectangle(rectangle, 1000.0);
+      rectanglePrimitive.appearance.material.uniforms.color = new Color(
+        1.0,
+        0.0,
+        0.0,
+        0.5
+      );
+
+      const primitives = scene.primitives;
+      primitives.add(rectanglePrimitive);
+
+      scene.camera.setView({ destination: rectangle });
+
+      expect(function () {
+        scene.renderForSpecs();
+      }).not.toThrowError(RuntimeError);
     });
 
     it("does not throw with debugShowFrustums", function () {
-      const s = createScene();
-      if (s.context.drawBuffers) {
-        s.debugShowFrustums = true;
-
-        const rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
-
-        const rectanglePrimitive = createRectangle(rectangle, 1000.0);
-        rectanglePrimitive.appearance.material.uniforms.color = new Color(
-          1.0,
-          0.0,
-          0.0,
-          0.5
-        );
-
-        const primitives = s.primitives;
-        primitives.add(rectanglePrimitive);
-
-        s.camera.setView({ destination: rectangle });
-
-        expect(function () {
-          s.renderForSpecs();
-        }).not.toThrowError(RuntimeError);
+      if (!scene.context.drawBuffers) {
+        return;
       }
-      s.destroyForSpecs();
+      scene.debugShowFrustums = true;
+
+      const rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
+
+      const rectanglePrimitive = createRectangle(rectangle, 1000.0);
+      rectanglePrimitive.appearance.material.uniforms.color = new Color(
+        1.0,
+        0.0,
+        0.0,
+        0.5
+      );
+
+      const primitives = scene.primitives;
+      primitives.add(rectanglePrimitive);
+
+      scene.camera.setView({ destination: rectangle });
+
+      expect(function () {
+        scene.renderForSpecs();
+      }).not.toThrowError(RuntimeError);
     });
 
     it("throws when minimumDisableDepthTestDistance is set less than 0.0", function () {
@@ -1475,31 +1465,24 @@ describe(
     });
 
     it("Gets imageryLayers", function () {
-      const scene = createScene();
       const globe = (scene.globe = new Globe(Ellipsoid.UNIT_SPHERE));
       expect(scene.imageryLayers).toBe(globe.imageryLayers);
 
       scene.globe = undefined;
       expect(scene.imageryLayers).toBeUndefined();
-
-      scene.destroyForSpecs();
     });
 
     it("Gets terrainProvider", function () {
-      const scene = createScene();
       const globe = (scene.globe = new Globe(Ellipsoid.UNIT_SPHERE));
       expect(scene.terrainProvider).toBe(globe.terrainProvider);
 
       scene.globe = undefined;
       expect(scene.terrainProvider).toBeUndefined();
-
-      scene.destroyForSpecs();
     });
 
     it("Sets terrainProvider", async function () {
       returnQuantizedMeshTileJson();
 
-      const scene = createScene();
       const globe = (scene.globe = new Globe(Ellipsoid.UNIT_SPHERE));
       scene.terrainProvider = await CesiumTerrainProvider.fromUrl(
         "//terrain/tiles"
@@ -1513,7 +1496,7 @@ describe(
       expect(function () {
         scene.terrainProvider = newProvider;
       }).not.toThrow();
-      scene.destroyForSpecs();
+
       Resource._Implementations.loadWithXhr =
         Resource._DefaultImplementations.loadWithXhr;
     });
@@ -1521,7 +1504,6 @@ describe(
     it("setTerrain updates terrain provider", async function () {
       returnQuantizedMeshTileJson();
 
-      const scene = createScene();
       const globe = (scene.globe = new Globe(Ellipsoid.UNIT_SPHERE));
       const promise = CesiumTerrainProvider.fromUrl("//terrain/tiles");
       scene.setTerrain(new Terrain(promise));
@@ -1539,15 +1521,14 @@ describe(
 
       expect(terrainWasChanged).toBeTrue();
 
-      scene.destroyForSpecs();
       Resource._Implementations.loadWithXhr =
         Resource._DefaultImplementations.loadWithXhr;
     });
 
     it("setTerrain handles destroy", async function () {
+      const scene = createScene();
       returnQuantizedMeshTileJson();
 
-      const scene = createScene();
       scene.globe = new Globe(Ellipsoid.UNIT_SPHERE);
 
       const promise = CesiumTerrainProvider.fromUrl("//newTerrain/tiles");
@@ -1562,18 +1543,14 @@ describe(
     });
 
     it("Gets terrainProviderChanged", function () {
-      const scene = createScene();
       const globe = (scene.globe = new Globe(Ellipsoid.UNIT_SPHERE));
       expect(scene.terrainProviderChanged).toBe(globe.terrainProviderChanged);
 
       scene.globe = undefined;
       expect(scene.terrainProviderChanged).toBeUndefined();
-
-      scene.destroyForSpecs();
     });
 
     it("Sets material", function () {
-      const scene = createScene();
       const globe = (scene.globe = new Globe(Ellipsoid.UNIT_SPHERE));
       const material = Material.fromType("ElevationContour");
       globe.material = material;
@@ -1581,15 +1558,11 @@ describe(
 
       globe.material = undefined;
       expect(globe.material).toBeUndefined();
-
-      scene.destroyForSpecs();
     });
 
     const scratchTime = new JulianDate();
 
     it("doesn't render scene if requestRenderMode is enabled", function () {
-      const scene = createScene();
-
       scene.renderForSpecs();
 
       const lastFrameNumber = scene.frameState.frameNumber;
@@ -1598,13 +1571,9 @@ describe(
       scene.maximumRenderTimeChange = undefined;
       scene.renderForSpecs();
       expect(scene.frameState.frameNumber).toEqual(lastFrameNumber);
-
-      scene.destroyForSpecs();
     });
 
     it("requestRender causes a new frame to be rendered in requestRenderMode", function () {
-      const scene = createScene();
-
       scene.renderForSpecs();
 
       const lastFrameNumber = scene.frameState.frameNumber;
@@ -1618,13 +1587,9 @@ describe(
 
       scene.renderForSpecs();
       expect(scene.frameState.frameNumber).not.toEqual(lastFrameNumber);
-
-      scene.destroyForSpecs();
     });
 
     it("moving the camera causes a new frame to be rendered in requestRenderMode", function () {
-      const scene = createScene();
-
       scene.renderForSpecs();
 
       const lastFrameNumber = scene.frameState.frameNumber;
@@ -1637,13 +1602,9 @@ describe(
 
       scene.renderForSpecs();
       expect(scene.frameState.frameNumber).not.toEqual(lastFrameNumber);
-
-      scene.destroyForSpecs();
     });
 
     it("changing the camera frustum does not cause continuous rendering in requestRenderMode", function () {
-      const scene = createScene();
-
       scene.renderForSpecs();
 
       let lastFrameNumber = scene.frameState.frameNumber;
@@ -1662,13 +1623,9 @@ describe(
       lastFrameNumber = scene.frameState.frameNumber;
       scene.renderForSpecs();
       expect(scene.frameState.frameNumber).toEqual(lastFrameNumber);
-
-      scene.destroyForSpecs();
     });
 
     it("successful completed requests causes a new frame to be rendered in requestRenderMode", function () {
-      const scene = createScene();
-
       scene.renderForSpecs();
 
       const lastFrameNumber = scene.frameState.frameNumber;
@@ -1685,13 +1642,9 @@ describe(
 
       scene.renderForSpecs();
       expect(scene.frameState.frameNumber).not.toEqual(lastFrameNumber);
-
-      scene.destroyForSpecs();
     });
 
     it("data returning from a web worker causes a new frame to be rendered in requestRenderMode", function () {
-      const scene = createScene();
-
       scene.renderForSpecs();
 
       const lastFrameNumber = scene.frameState.frameNumber;
@@ -1708,13 +1661,9 @@ describe(
 
       scene.renderForSpecs();
       expect(scene.frameState.frameNumber).not.toEqual(lastFrameNumber);
-
-      scene.destroyForSpecs();
     });
 
     it("Executing an after render function causes a new frame to be rendered in requestRenderMode", function () {
-      const scene = createScene();
-
       scene.renderForSpecs();
 
       const lastFrameNumber = scene.frameState.frameNumber;
@@ -1736,13 +1685,9 @@ describe(
 
       scene.renderForSpecs();
       expect(scene.frameState.frameNumber).not.toEqual(lastFrameNumber);
-
-      scene.destroyForSpecs();
     });
 
     it("Globe tile loading triggers a new frame to be rendered in requestRenderMode", function () {
-      const scene = createScene();
-
       scene.renderForSpecs();
 
       let lastFrameNumber = scene.frameState.frameNumber;
@@ -1763,13 +1708,9 @@ describe(
       expect(scene._renderRequested).toBe(true);
       scene.renderForSpecs();
       expect(scene.frameState.frameNumber).not.toEqual(lastFrameNumber);
-
-      scene.destroyForSpecs();
     });
 
     it("Globe imagery updates triggers a new frame to be rendered in requestRenderMode", function () {
-      const scene = createScene();
-
       scene.renderForSpecs();
 
       const lastFrameNumber = scene.frameState.frameNumber;
@@ -1789,13 +1730,9 @@ describe(
 
       scene.renderForSpecs();
       expect(scene.frameState.frameNumber).not.toEqual(lastFrameNumber);
-
-      scene.destroyForSpecs();
     });
 
     it("Globe changing terrain providers triggers a new frame to be rendered in requestRenderMode", function () {
-      const scene = createScene();
-
       scene.renderForSpecs();
 
       const lastFrameNumber = scene.frameState.frameNumber;
@@ -1815,12 +1752,9 @@ describe(
 
       scene.renderForSpecs();
       expect(scene.frameState.frameNumber).not.toEqual(lastFrameNumber);
-
-      scene.destroyForSpecs();
     });
 
     it("scene morphing causes a new frame to be rendered in requestRenderMode", function () {
-      const scene = createScene();
       scene.renderForSpecs();
 
       let lastFrameNumber = scene.frameState.frameNumber;
@@ -1873,13 +1807,9 @@ describe(
 
       scene.renderForSpecs();
       expect(scene.frameState.frameNumber).toEqual(lastFrameNumber);
-
-      scene.destroyForSpecs();
     });
 
     it("time change exceeding maximumRenderTimeChange causes a new frame to be rendered in requestRenderMode", function () {
-      const scene = createScene();
-
       scene.renderForSpecs();
 
       const lastFrameNumber = scene.frameState.frameNumber;
@@ -1906,13 +1836,9 @@ describe(
         JulianDate.addSeconds(lastRenderTime, 150.0, new JulianDate())
       );
       expect(scene.frameState.frameNumber).not.toEqual(lastFrameNumber);
-
-      scene.destroyForSpecs();
     });
 
     it("undefined maximumRenderTimeChange will not cause a new frame to be rendered in requestRenderMode", function () {
-      const scene = createScene();
-
       scene.renderForSpecs();
 
       const lastFrameNumber = scene.frameState.frameNumber;
@@ -1936,13 +1862,9 @@ describe(
       scene.renderForSpecs(farFuture);
 
       expect(scene.frameState.frameNumber).toEqual(lastFrameNumber);
-
-      scene.destroyForSpecs();
     });
 
     it("forceRender renders a scene regardless of whether a render was requested", function () {
-      const scene = createScene();
-
       scene.renderForSpecs();
 
       const lastFrameNumber = scene.frameState.frameNumber;
@@ -1953,8 +1875,6 @@ describe(
 
       scene.forceRender();
       expect(scene.frameState.frameNumber).not.toEqual(lastFrameNumber);
-
-      scene.destroyForSpecs();
     });
 
     function getFrustumCommandsLength(scene, pass) {
@@ -1973,7 +1893,6 @@ describe(
     }
 
     it("occludes primitive", function () {
-      const scene = createScene();
       scene.globe = new Globe(Ellipsoid.WGS84);
 
       const rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
@@ -2014,12 +1933,9 @@ describe(
       scene.globe.show = false;
       scene.renderForSpecs();
       expect(getFrustumCommandsLength(scene)).toBe(1);
-
-      scene.destroyForSpecs();
     });
 
     it("does not occlude if DrawCommand.occlude is false", function () {
-      const scene = createScene();
       scene.globe = new Globe(Ellipsoid.WGS84);
 
       const rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
@@ -2043,12 +1959,9 @@ describe(
       });
       scene.renderForSpecs();
       expect(getFrustumCommandsLength(scene)).toBe(1);
-
-      scene.destroyForSpecs();
     });
 
     it("sets light", function () {
-      const scene = createScene();
       const uniformState = scene.context.uniformState;
       const lightDirectionWC = uniformState._lightDirectionWC;
       const sunDirectionWC = uniformState._sunDirectionWC;
@@ -2088,8 +2001,6 @@ describe(
       expect(lightDirectionWC).toEqual(sunDirectionWC);
       expect(lightColor).toEqual(new Cartesian3(1.0, 1.0, 1.0));
       expect(lightColorHdr).toEqual(new Cartesian3(2.0, 2.0, 2.0));
-
-      scene.destroyForSpecs();
     });
 
     function updateGlobeUntilDone(scene) {
@@ -2099,67 +2010,53 @@ describe(
       });
     }
 
-    it("detects when camera is underground", function () {
-      const scene = createScene();
+    it("detects when camera is underground", async function () {
       const globe = new Globe();
       scene.globe = globe;
 
       scene.camera.setView({
         destination: new Rectangle(0.0001, 0.0001, 0.003, 0.003),
       });
+      await updateGlobeUntilDone(scene);
+      expect(scene.cameraUnderground).toBe(false);
 
-      return updateGlobeUntilDone(scene)
-        .then(function () {
-          expect(scene.cameraUnderground).toBe(false);
-
-          // Look underground
-          scene.camera.setView({
-            destination: new Cartesian3(
-              -746658.0557573901,
-              -5644191.0002196245,
-              2863585.099969967
-            ),
-            orientation: new HeadingPitchRoll(
-              0.3019699121236403,
-              0.07316306869231592,
-              0.0007089903642230055
-            ),
-          });
-          return updateGlobeUntilDone(scene);
-        })
-        .then(function () {
-          expect(scene.cameraUnderground).toBe(true);
-          scene.destroyForSpecs();
-        });
+      // Look underground
+      scene.camera.setView({
+        destination: new Cartesian3(
+          -746658.0557573901,
+          -5644191.0002196245,
+          2863585.099969967
+        ),
+        orientation: new HeadingPitchRoll(
+          0.3019699121236403,
+          0.07316306869231592,
+          0.0007089903642230055
+        ),
+      });
+      await updateGlobeUntilDone(scene);
+      expect(scene.cameraUnderground).toBe(true);
     });
 
     it("detects that camera is above ground if globe is undefined", function () {
-      const scene = createScene();
       scene.renderForSpecs();
       expect(scene.cameraUnderground).toBe(false);
-      scene.destroyForSpecs();
     });
 
     it("detects that camera is above ground if scene mode is 2D", function () {
-      const scene = createScene();
       const globe = new Globe();
       scene.globe = globe;
       scene.morphTo2D(0.0);
       expect(scene.cameraUnderground).toBe(false);
-      scene.destroyForSpecs();
     });
 
     it("detects that camera is above ground if scene mode is morphing", function () {
-      const scene = createScene();
       const globe = new Globe();
       scene.globe = globe;
       scene.morphTo2D(1.0);
       expect(scene.cameraUnderground).toBe(false);
-      scene.destroyForSpecs();
     });
 
-    it("detects that camera is underground in Columbus View", function () {
-      const scene = createScene();
+    it("detects that camera is underground in Columbus View", async function () {
       const globe = new Globe();
       scene.globe = globe;
 
@@ -2178,14 +2075,12 @@ describe(
       });
       scene.morphToColumbusView(0.0);
 
-      return updateGlobeUntilDone(scene).then(function () {
-        expect(scene.cameraUnderground).toBe(true);
-        scene.destroyForSpecs();
-      });
+      await updateGlobeUntilDone(scene);
+      scene.renderForSpecs();
+      expect(scene.cameraUnderground).toBe(true);
     });
 
-    it("does not occlude primitives when camera is underground", function () {
-      const scene = createScene();
+    it("does not occlude primitives when camera is underground", async function () {
       const globe = new Globe();
       scene.globe = globe;
 
@@ -2199,8 +2094,8 @@ describe(
       const radius = 10.0;
 
       const command = new DrawCommand({
-        shaderProgram: simpleShaderProgram,
-        renderState: simpleRenderState,
+        shaderProgram: getSimpleShaderProgram(),
+        renderState: new RenderState(),
         pass: Pass.OPAQUE,
         boundingVolume: new BoundingSphere(center, radius),
       });
@@ -2209,33 +2104,28 @@ describe(
 
       spyOn(DrawCommand.prototype, "execute"); // Don't execute any commands, just watch what gets added to the frustum commands list
 
-      return updateGlobeUntilDone(scene)
-        .then(function () {
-          expect(getFrustumCommandsLength(scene, Pass.OPAQUE)).toBe(0);
+      await updateGlobeUntilDone(scene);
+      expect(getFrustumCommandsLength(scene, Pass.OPAQUE)).toBe(0);
 
-          // Look underground at the primitive
-          scene.camera.setView({
-            destination: new Cartesian3(
-              -4643042.379120885,
-              4314056.579506199,
-              -451828.8968118975
-            ),
-            orientation: new HeadingPitchRoll(
-              6.283185307179586,
-              -0.7855491933100796,
-              6.283185307179586
-            ),
-          });
-          return updateGlobeUntilDone(scene);
-        })
-        .then(function () {
-          expect(getFrustumCommandsLength(scene, Pass.OPAQUE)).toBe(1);
-          scene.destroyForSpecs();
-        });
+      // Look underground at the primitive
+      scene.camera.setView({
+        destination: new Cartesian3(
+          -4643042.379120885,
+          4314056.579506199,
+          -451828.8968118975
+        ),
+        orientation: new HeadingPitchRoll(
+          6.283185307179586,
+          -0.7855491933100796,
+          6.283185307179586
+        ),
+      });
+      await updateGlobeUntilDone(scene);
+      scene.renderForSpecs();
+      expect(getFrustumCommandsLength(scene, Pass.OPAQUE)).toBe(1);
     });
 
     it("does not occlude primitives when the globe is translucent", function () {
-      const scene = createScene();
       const globe = new Globe();
       scene.globe = globe;
 
@@ -2249,8 +2139,8 @@ describe(
       const radius = 10.0;
 
       const command = new DrawCommand({
-        shaderProgram: simpleShaderProgram,
-        renderState: simpleRenderState,
+        shaderProgram: getSimpleShaderProgram(),
+        renderState: new RenderState(),
         pass: Pass.OPAQUE,
         boundingVolume: new BoundingSphere(center, radius),
       });
@@ -2267,12 +2157,9 @@ describe(
 
       scene.renderForSpecs();
       expect(getFrustumCommandsLength(scene, Pass.OPAQUE)).toBe(1);
-
-      scene.destroyForSpecs();
     });
 
-    it("does not render environment when camera is underground and translucency is disabled", function () {
-      const scene = createScene();
+    it("does not render environment when camera is underground and translucency is disabled", async function () {
       const globe = new Globe();
       scene.globe = globe;
       scene.sun = new Sun();
@@ -2291,24 +2178,21 @@ describe(
         ),
       });
 
-      return updateGlobeUntilDone(scene).then(function () {
-        const time = JulianDate.fromIso8601(
-          "2020-04-25T03:07:26.04924034334544558Z"
-        );
-        globe.translucency.enabled = true;
-        globe.translucency.frontFaceAlpha = 0.5;
-        scene.renderForSpecs(time);
+      await updateGlobeUntilDone(scene);
+      const time = JulianDate.fromIso8601(
+        "2020-04-25T03:07:26.04924034334544558Z"
+      );
+      globe.translucency.enabled = true;
+      globe.translucency.frontFaceAlpha = 0.5;
+      scene.renderForSpecs(time);
 
-        expect(scene.environmentState.isSunVisible).toBe(true);
-        globe.translucency.enabled = false;
-        scene.renderForSpecs(time);
-        expect(scene.environmentState.isSunVisible).toBe(false);
-        scene.destroyForSpecs(time);
-      });
+      expect(scene.environmentState.isSunVisible).toBe(true);
+      globe.translucency.enabled = false;
+      scene.renderForSpecs(time);
+      expect(scene.environmentState.isSunVisible).toBe(false);
     });
 
-    it("renders globe with translucency", function () {
-      const scene = createScene();
+    it("renders globe with translucency", async function () {
       const globe = new Globe();
       scene.globe = globe;
 
@@ -2325,24 +2209,21 @@ describe(
         ),
       });
 
-      return updateGlobeUntilDone(scene).then(function () {
-        let opaqueColor;
-        expect(scene).toRenderAndCall(function (rgba) {
-          opaqueColor = rgba;
-        });
+      await updateGlobeUntilDone(scene);
+      let opaqueColor;
+      expect(scene).toRenderAndCall(function (rgba) {
+        opaqueColor = rgba;
+      });
 
-        globe.translucency.enabled = true;
-        globe.translucency.frontFaceAlpha = 0.5;
+      globe.translucency.enabled = true;
+      globe.translucency.frontFaceAlpha = 0.5;
 
-        expect(scene).toRenderAndCall(function (rgba) {
-          expect(rgba).not.toEqual(opaqueColor);
-          scene.destroyForSpecs();
-        });
+      expect(scene).toRenderAndCall(function (rgba) {
+        expect(rgba).not.toEqual(opaqueColor);
       });
     });
 
-    it("renders ground primitive on translucent globe", function () {
-      const scene = createScene();
+    it("renders ground primitive on translucent globe", async function () {
       const globe = new Globe();
       scene.globe = globe;
       globe.baseColor = Color.BLACK;
@@ -2384,16 +2265,13 @@ describe(
         })
       );
 
-      return updateGlobeUntilDone(scene).then(function () {
-        expect(scene).toRenderAndCall(function (rgba) {
-          expect(rgba[0]).toBeGreaterThan(0);
-          scene.destroyForSpecs();
-        });
+      await updateGlobeUntilDone(scene);
+      expect(scene).toRenderAndCall(function (rgba) {
+        expect(rgba[0]).toBeGreaterThan(0);
       });
     });
 
-    it("picks ground primitive on translucent globe", function () {
-      const scene = createScene();
+    it("picks ground primitive on translucent globe", async function () {
       const globe = new Globe();
       scene.globe = globe;
       globe.baseColor = Color.BLACK;
@@ -2435,10 +2313,55 @@ describe(
         })
       );
 
-      return updateGlobeUntilDone(scene).then(function () {
-        expect(scene).toPickPrimitive(primitive);
-        scene.destroyForSpecs();
-      });
+      await updateGlobeUntilDone(scene);
+      expect(scene).toPickPrimitive(primitive);
+    });
+
+    it("updates frameState.atmosphere", function () {
+      const frameState = scene.frameState;
+
+      // Before the first render, the atmosphere has not yet been set
+      expect(frameState.atmosphere).toBeUndefined();
+
+      // On the first render, the atmosphere settings are propagated to the
+      // frame state
+      const originalAtmosphere = scene.atmosphere;
+      scene.renderForSpecs();
+      expect(frameState.atmosphere).toBe(originalAtmosphere);
+
+      // If we change the atmosphere to a new object
+      const anotherAtmosphere = new Atmosphere();
+      scene.atmosphere = anotherAtmosphere;
+      scene.renderForSpecs();
+      expect(frameState.atmosphere).toBe(anotherAtmosphere);
+    });
+
+    function TilesetMockPrimitive() {
+      this.update = function () {};
+      this.destroy = function () {};
+      this.show = true;
+      this.isDestroyed = function () {
+        return false;
+      };
+      this.isCesium3DTileset = true;
+      this.enableCollision = false;
+      this.getHeight = function () {
+        return undefined;
+      };
+      this.updateHeight = function () {
+        return function () {};
+      };
+    }
+
+    it("subscribes to globe height updates when tileset is added", function () {
+      const mockTileset = new TilesetMockPrimitive();
+      mockTileset.enableCollision = true;
+      spyOn(mockTileset, "updateHeight");
+
+      scene.primitives.add(mockTileset);
+      scene.renderForSpecs();
+
+      expect(mockTileset.updateHeight).toHaveBeenCalled();
     });
   },
 

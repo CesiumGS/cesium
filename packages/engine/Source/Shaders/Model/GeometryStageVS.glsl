@@ -1,4 +1,4 @@
-vec4 geometryStage(inout ProcessedAttributes attributes, mat4 modelView, mat3 normal) 
+vec4 geometryStage(inout ProcessedAttributes attributes, mat4 modelView, mat3 normal)
 {
     vec4 computedPosition;
 
@@ -16,7 +16,7 @@ vec4 geometryStage(inout ProcessedAttributes attributes, mat4 modelView, mat3 no
     #endif
 
     // Sometimes the custom shader and/or style needs this
-    #if defined(COMPUTE_POSITION_WC_CUSTOM_SHADER) || defined(COMPUTE_POSITION_WC_STYLE)
+    #if defined(COMPUTE_POSITION_WC_CUSTOM_SHADER) || defined(COMPUTE_POSITION_WC_STYLE) || defined(COMPUTE_POSITION_WC_ATMOSPHERE)
     // Note that this is a 32-bit position which may result in jitter on small
     // scales.
     v_positionWC = (czm_model * vec4(positionMC, 1.0)).xyz;
@@ -27,7 +27,7 @@ vec4 geometryStage(inout ProcessedAttributes attributes, mat4 modelView, mat3 no
     #endif
 
     #ifdef HAS_TANGENTS
-    v_tangentEC = normalize(normal * attributes.tangentMC);    
+    v_tangentEC = normalize(normal * attributes.tangentMC);
     #endif
 
     #ifdef HAS_BITANGENTS
@@ -37,6 +37,6 @@ vec4 geometryStage(inout ProcessedAttributes attributes, mat4 modelView, mat3 no
     // All other varyings need to be dynamically generated in
     // GeometryPipelineStage
     setDynamicVaryings(attributes);
-    
+
     return computedPosition;
 }

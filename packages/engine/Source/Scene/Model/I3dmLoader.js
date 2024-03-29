@@ -64,6 +64,7 @@ const Instances = ModelComponents.Instances;
  * @param {Axis} [options.upAxis=Axis.Y] The up-axis of the glTF model.
  * @param {Axis} [options.forwardAxis=Axis.X] The forward-axis of the glTF model.
  * @param {boolean} [options.loadAttributesAsTypedArray=false] Load all attributes as typed arrays instead of GPU buffers. If the attributes are interleaved in the glTF they will be de-interleaved in the typed array.
+ * @param {boolean} [options.enablePick=false]  If <code>true</code>, load the positions buffer, any instanced attribute buffers, and index buffer as typed arrays for CPU-enabled picking in WebGL1.
  * @param {boolean} [options.loadIndicesForWireframe=false] Load the index buffer as a typed array so wireframe indices can be created for WebGL1.
  * @param {boolean} [options.loadPrimitiveOutline=true] If true, load outlines from the {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension. This can be set false to avoid post-processing geometry at load time.
  */
@@ -91,6 +92,7 @@ function I3dmLoader(options) {
     false
   );
   const loadPrimitiveOutline = defaultValue(options.loadPrimitiveOutline, true);
+  const enablePick = defaultValue(options.enablePick, false);
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.i3dmResource", i3dmResource);
@@ -111,6 +113,7 @@ function I3dmLoader(options) {
   this._loadAttributesAsTypedArray = loadAttributesAsTypedArray;
   this._loadIndicesForWireframe = loadIndicesForWireframe;
   this._loadPrimitiveOutline = loadPrimitiveOutline;
+  this._enablePick = enablePick;
 
   this._state = I3dmLoaderState.NOT_LOADED;
   this._promise = undefined;
@@ -240,6 +243,7 @@ I3dmLoader.prototype.load = function () {
     releaseGltfJson: this._releaseGltfJson,
     incrementallyLoadTextures: this._incrementallyLoadTextures,
     loadAttributesAsTypedArray: this._loadAttributesAsTypedArray,
+    enablePick: this._enablePick,
     loadIndicesForWireframe: this._loadIndicesForWireframe,
     loadPrimitiveOutline: this._loadPrimitiveOutline,
   };
@@ -423,7 +427,11 @@ function createInstances(loader, components, frameState) {
   // For I3DMs that do not define an RTC center, we manually compute a BoundingSphere and store
   // positions relative to the center, to be uploaded to the GPU. This avoids jittering at higher
   // precisions.
-  if (!defined(rtcCenter)) {
+  // Also manually compute if RTC center equals Cartesian3.ZERO
+  if (
+    !defined(rtcCenter) ||
+    Cartesian3.equals(Cartesian3.unpack(rtcCenter), Cartesian3.ZERO)
+  ) {
     const positionBoundingSphere = BoundingSphere.fromPoints(instancePositions);
 
     for (i = 0; i < instancePositions.length; i++) {
