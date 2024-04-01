@@ -244,6 +244,8 @@
   {
       material.diffuse = fsInput.metadata.color.rgb;
       float transparency = 1.0 - fsInput.metadata.color.a;
+
+      // To mimic light scattering, use exponential decay
       float thickness = fsInput.voxel.travelDistance * 16.0;
       material.alpha = 1.0 - pow(transparency, thickness);
   }`,
