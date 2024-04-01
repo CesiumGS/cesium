@@ -426,7 +426,7 @@ function destroyBillboards(billboards) {
  * Creates and adds a billboard with the specified initial properties to the collection.
  * The added billboard is returned so it can be modified or removed from the collection later.
  *
- * @param {object}[options] A template describing the billboard's properties as shown in Example 1.
+ * @param {Billboard.ConstructorOptions}[options] A template describing the billboard's properties as shown in Example 1.
  * @returns {Billboard} The billboard that was added to the collection.
  *
  * @performance Calling <code>add</code> is expected constant time.  However, the collection's vertex buffer

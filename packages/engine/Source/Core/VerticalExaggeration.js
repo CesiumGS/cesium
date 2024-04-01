@@ -1,4 +1,5 @@
 import Cartesian3 from "./Cartesian3.js";
+import Cartographic from "./Cartographic.js";
 import DeveloperError from "./DeveloperError.js";
 import defined from "./defined.js";
 
@@ -26,7 +27,7 @@ VerticalExaggeration.getHeight = function (height, scale, relativeHeight) {
   return (height - relativeHeight) * scale + relativeHeight;
 };
 
-const scratchCartographic = new Cartesian3();
+const scratchCartographic = new Cartographic();
 
 /**
  * Scales a position by exaggeration.

@@ -8,8 +8,8 @@ There is no release manager; instead, our community shares the responsibility. A
 
 1. Check for any outdated dependencies with `npm outdated`.
 2. If one or more dependencies are outdated, checkout a new branch and run `npm install <packagename>@latest` for each package to increment the version.
-3. Verify each update. If an update can be resolved, open a PR with your changes. If an update is incompatable, open an issue.
-4. Check the [`priority - next release` issues](https://github.com/CesiumGS/cesium/issues?q=is%3Aopen+is%3Aissue+label%3A%22priority+-+next+release%22) and [`priority - next release` pull requests](https://github.com/CesiumGS/cesium/pulls?q=is%3Apr+is%3Aopen+label%3A"priority+-+next+release"). If there are any outstanding items, post a message to the `#cesiumjs` channel in Slack to figure out what needs to be addressed before we can release.
+3. Verify each update. If an update can be resolved, open a PR with your changes. If an update is incompatible, open an issue.
+4. Check the [`priority - next release` issues and PRs](https://github.com/CesiumGS/cesium/labels/priority%20-%20next%20release). If there are any outstanding items, post a message to the `#cesiumjs` channel in Slack to figure out what needs to be addressed before we can release.
 5. Merge [`cesium` to `cesium-analytics`](https://github.com/CesiumGS/cesium-analytics/wiki/Merging-between-Cesium-Analytics-and-CesiumJS) and address any conflicts. Doing this before the release helps detect problems sooner.
 6. Ensure you've generated valid [end to end testing snapshots](../TestingGuide/README.md) against a previous release tag with `npm run test-e2e-update`.
 
@@ -17,7 +17,7 @@ There is no release manager; instead, our community shares the responsibility. A
 
 **Follow these instructions exactly. Do not switch branches or otherwise manipulate your local clone at any point in the process unless instructed to do so. If you need to switch branches for whatever reason, you must start the entire process over again.**
 
-1. Verify there are no [`priority - next release` issues](https://github.com/CesiumGS/cesium/issues?q=is%3Aopen+is%3Aissue+label%3A%22priority+-+next+release%22) or [`priority - next release` pull requests](https://github.com/CesiumGS/cesium/pulls?q=is%3Apr+is%3Aopen+label%3A"priority+-+next+release").
+1. Verify there are no [`priority - next release` issues and PRs](https://github.com/CesiumGS/cesium/labels/priority%20-%20next%20release).
 2. Verify there are no [`remove in [this version number]` issues](https://github.com/CesiumGS/cesium/labels). Delete the label. Create a new label with the next highest `remove in [version]` relative to the existing labels.
 3. Make sure you are using the latest drivers for your video card.
 4. Ensure you've generated valid [end to end testing snapshots](../TestingGuide/README.md) against a previous release tag with `npm run test-e2e-update`.
@@ -26,8 +26,8 @@ There is no release manager; instead, our community shares the responsibility. A
 7. Update the ArcGIS Developer API key in `ArcGisMapService.js` with a new API key from the CesiumJS ArcGIS Developer account. These API keys are named like this: `1.85 Release - Delete on November 1st, 2021`. Delete the API key from the last release.
 8. Proofread [`CHANGES.md`](../../../CHANGES.md) with the date of the release. Adjust the order of changes so that prominent/popular changes come first. Ensure each change is in the section for the relevant workspace.
 9. Based on `CHANGES.md`, update each workspace version following the rules of [semantic versioning](https://semver.org/), e.g.,
-   - npm version minor -w @cesium/engine --no-git-tag-version
-10. Update the version in `package.json` to match, e.g. `1.14.0` -> `1.15.0`.
+   - `npm version minor -w @cesium/engine --no-git-tag-version`
+10. Update the version in `package.json` to match, e.g. `1.115.0` -> `1.116.0`.
 11. Commit these changes.
 12. Make sure the repository is clean `git clean -d -x -f --exclude="/Specs/e2e/*-snapshots/"`. **This will delete all files not already in the repository, excluding end to end testing snapshots.**
 13. Run `npm install`.

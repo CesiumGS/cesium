@@ -2515,9 +2515,6 @@ function setReady(primitive, frameState, state, error) {
     primitive._ready =
       primitive._state === PrimitiveState.COMPLETE ||
       primitive._state === PrimitiveState.FAILED;
-    if (!defined(error)) {
-      return true;
-    }
   });
 }
 export default Primitive;

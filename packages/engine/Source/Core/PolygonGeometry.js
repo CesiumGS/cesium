@@ -171,7 +171,7 @@ function computeAttributes(options) {
             scratchPosition
           );
           p = ellipsoid.scaleToGeodeticSurface(p, p);
-          const st = projectTo2d(p, appendTextureCoordinatesCartesian2);
+          const st = projectTo2d([p], appendTextureCoordinatesCartesian2)[0];
           Cartesian2.subtract(st, origin, st);
 
           const stx = CesiumMath.clamp(st.x / boundingRectangle.width, 0, 1);

@@ -71,9 +71,8 @@ vec2 index1DTo2DTexcoord(int index, ivec2 dimensions, vec2 uvScale)
 */
 
 Properties getPropertiesFromMegatexture(in SampleData sampleData) {
-    vec3 tileUv = clamp(sampleData.tileUv, vec3(0.0), vec3(1.0)); // TODO is the clamp necessary?
     int tileIndex = sampleData.megatextureIndex;
-    vec3 voxelCoord = tileUv * vec3(u_dimensions);
+    vec3 voxelCoord = sampleData.tileUv * vec3(u_dimensions);
     ivec3 voxelDimensions = u_dimensions;
 
     #if defined(PADDING)

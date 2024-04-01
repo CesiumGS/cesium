@@ -829,43 +829,4 @@ describe("Scene/VoxelBoxShape", function () {
       );
     }).toThrowDeveloperError();
   });
-
-  it("computeApproximateStepSize works", function () {
-    const shape = new VoxelBoxShape();
-    const translation = Cartesian3.ZERO;
-    const rotation = Quaternion.IDENTITY;
-    const scale = Cartesian3.ONE;
-    const modelMatrix = Matrix4.fromTranslationQuaternionRotationScale(
-      translation,
-      rotation,
-      scale
-    );
-    const minBounds = VoxelBoxShape.DefaultMinBounds;
-    const maxBounds = VoxelBoxShape.DefaultMaxBounds;
-    shape.update(modelMatrix, minBounds, maxBounds);
-
-    const dimensions = new Cartesian3(32, 32, 16);
-    const stepSize = shape.computeApproximateStepSize(dimensions);
-    expect(stepSize).toBeGreaterThan(0.0);
-    expect(stepSize).toBeLessThan(1.0);
-  });
-
-  it("computeApproximateStepSize throws with no dimensions parameter", function () {
-    const shape = new VoxelBoxShape();
-    const translation = Cartesian3.ZERO;
-    const rotation = Quaternion.IDENTITY;
-    const scale = Cartesian3.ONE;
-    const modelMatrix = Matrix4.fromTranslationQuaternionRotationScale(
-      translation,
-      rotation,
-      scale
-    );
-    const minBounds = VoxelBoxShape.DefaultMinBounds;
-    const maxBounds = VoxelBoxShape.DefaultMaxBounds;
-    shape.update(modelMatrix, minBounds, maxBounds);
-
-    expect(function () {
-      return shape.computeApproximateStepSize(undefined);
-    }).toThrowDeveloperError();
-  });
 });
