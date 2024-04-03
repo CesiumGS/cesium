@@ -158,7 +158,7 @@
         });
 
         Sandcastle.addToolbarButton("Remove last polygon", () => {
-          if (worldTileset.clippingPolygons.polygons.length > 0) {
+          if (worldTileset.clippingPolygons.length > 0) {
             worldTileset.clippingPolygons.remove(
               worldTileset.clippingPolygons.get(
                 worldTileset.clippingPolygons.length - 1
@@ -166,7 +166,7 @@
             );
           }
 
-          if (scene.globe.clippingPolygons.polygons.length > 0) {
+          if (scene.globe.clippingPolygons.length > 0) {
             scene.globe.clippingPolygons.remove(
               scene.globe.clippingPolygons.get(
                 scene.globe.clippingPolygons.length - 1

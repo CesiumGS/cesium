@@ -79,7 +79,7 @@ uniform vec4 u_clippingPlanesEdgeStyle;
 
 #ifdef ENABLE_CLIPPING_POLYGONS
 uniform highp sampler2D u_clippingDistance;
-uniform highp sampler2D u_clippingExtents;
+in vec3 v_clippingPositionAndRegionIndex;
 #endif
 
 #if defined(GROUND_ATMOSPHERE) || defined(FOG) && defined(DYNAMIC_ATMOSPHERE_LIGHTING) && (defined(ENABLE_VERTEX_LIGHTING) || defined(ENABLE_DAYNIGHT_SHADING))
@@ -418,12 +418,11 @@ void main()
     }
 #endif
 
-#ifdef ENABLE_CLIPPING_POLYGONS
-    vec2 sphericalLatLong = czm_approximateSphericalCoordinates(v_positionMC);
-    sphericalLatLong.y = czm_branchFreeTernary(sphericalLatLong.y < czm_pi, sphericalLatLong.y, sphericalLatLong.y - czm_twoPi);
-    
-    vec2 clippingPosition = vec2(sphericalLatLong.y, sphericalLatLong.x);
-    czm_clipPolygons(u_clippingExtents, u_clippingDistance, vec2(CLIPPING_EXTENTS_TEXTURE_WIDTH, CLIPPING_EXTENTS_TEXTURE_HEIGHT), vec2(CLIPPING_DISTANCE_TEXTURE_WIDTH, CLIPPING_DISTANCE_TEXTURE_HEIGHT), CLIPPING_POLYGONS_LENGTH, clippingPosition);
+#ifdef ENABLE_CLIPPING_POLYGONS    
+    vec2 clippingPosition = v_clippingPositionAndRegionIndex.xy;
+    int regionIndex = int(floor(v_clippingPositionAndRegionIndex.z));
+    vec2 clippingDistanceTextureDimensions = vec2(CLIPPING_DISTANCE_TEXTURE_WIDTH, CLIPPING_DISTANCE_TEXTURE_HEIGHT);
+    czm_clipPolygons(u_clippingDistance, clippingDistanceTextureDimensions, CLIPPING_POLYGON_REGIONS_LENGTH, clippingPosition, regionIndex);
 #endif
 
 #ifdef HIGHLIGHT_FILL_TILE

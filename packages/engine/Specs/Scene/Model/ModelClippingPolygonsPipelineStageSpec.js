@@ -70,24 +70,28 @@ describe("Scene/Model/ModelClippingPolygonsPipelineStage", function () {
 
     ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
       "HAS_CLIPPING_POLYGONS",
-    ]);
-
-    ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
-      "HAS_CLIPPING_POLYGONS",
-      "CLIPPING_POLYGONS_LENGTH 1",
-      "CLIPPING_DISTANCE_TEXTURE_WIDTH 64",
-      "CLIPPING_DISTANCE_TEXTURE_HEIGHT 64",
+      "CLIPPING_POLYGON_REGIONS_LENGTH 1",
       "CLIPPING_EXTENTS_TEXTURE_WIDTH 1",
       "CLIPPING_EXTENTS_TEXTURE_HEIGHT 2",
     ]);
 
-    ShaderBuilderTester.expectHasFragmentUniforms(shaderBuilder, [
-      "uniform sampler2D model_clippingDistance;",
+    ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
+      "HAS_CLIPPING_POLYGONS",
+      "CLIPPING_POLYGON_REGIONS_LENGTH 1",
+      "CLIPPING_DISTANCE_TEXTURE_WIDTH 64",
+      "CLIPPING_DISTANCE_TEXTURE_HEIGHT 64",
+    ]);
+
+    ShaderBuilderTester.expectHasVertexUniforms(shaderBuilder, [
       "uniform sampler2D model_clippingExtents;",
     ]);
 
+    ShaderBuilderTester.expectHasFragmentUniforms(shaderBuilder, [
+      "uniform sampler2D model_clippingDistance;",
+    ]);
+
     ShaderBuilderTester.expectHasVaryings(shaderBuilder, [
-      "vec2 v_clippingPosition;",
+      "vec3 v_clippingPositionAndRegionIndex;",
     ]);
 
     const uniformMap = renderResources.uniformMap;
@@ -128,25 +132,29 @@ describe("Scene/Model/ModelClippingPolygonsPipelineStage", function () {
 
     ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
       "HAS_CLIPPING_POLYGONS",
+      "CLIPPING_POLYGON_REGIONS_LENGTH 1",
+      "CLIPPING_EXTENTS_TEXTURE_WIDTH 1",
+      "CLIPPING_EXTENTS_TEXTURE_HEIGHT 2",
     ]);
 
     ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
       "HAS_CLIPPING_POLYGONS",
       "CLIPPING_INVERSE",
-      "CLIPPING_POLYGONS_LENGTH 1",
+      "CLIPPING_POLYGON_REGIONS_LENGTH 1",
       "CLIPPING_DISTANCE_TEXTURE_WIDTH 64",
       "CLIPPING_DISTANCE_TEXTURE_HEIGHT 64",
-      "CLIPPING_EXTENTS_TEXTURE_WIDTH 1",
-      "CLIPPING_EXTENTS_TEXTURE_HEIGHT 2",
+    ]);
+
+    ShaderBuilderTester.expectHasVertexUniforms(shaderBuilder, [
+      "uniform sampler2D model_clippingExtents;",
     ]);
 
     ShaderBuilderTester.expectHasFragmentUniforms(shaderBuilder, [
       "uniform sampler2D model_clippingDistance;",
-      "uniform sampler2D model_clippingExtents;",
     ]);
 
     ShaderBuilderTester.expectHasVaryings(shaderBuilder, [
-      "vec2 v_clippingPosition;",
+      "vec2 v_clippingPositionAndPolygon;",
     ]);
 
     const uniformMap = renderResources.uniformMap;

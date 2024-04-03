@@ -59,9 +59,9 @@ ModelClippingPolygonsPipelineStage.process = function (
   }
 
   shaderBuilder.addDefine(
-    "CLIPPING_POLYGONS_LENGTH",
-    clippingPolygons.length,
-    ShaderDestination.FRAGMENT
+    "CLIPPING_POLYGON_REGIONS_LENGTH",
+    clippingPolygons.extentsCount,
+    ShaderDestination.BOTH
   );
 
   const distanceTextureResolution = ClippingPolygonCollection.getClippingDistanceTextureResolution(
@@ -89,13 +89,13 @@ ModelClippingPolygonsPipelineStage.process = function (
   shaderBuilder.addDefine(
     "CLIPPING_EXTENTS_TEXTURE_WIDTH",
     extentsTextureResolution.x,
-    ShaderDestination.FRAGMENT
+    ShaderDestination.VERTEX
   );
 
   shaderBuilder.addDefine(
     "CLIPPING_EXTENTS_TEXTURE_HEIGHT",
     extentsTextureResolution.y,
-    ShaderDestination.FRAGMENT
+    ShaderDestination.VERTEX
   );
 
   shaderBuilder.addUniform(
@@ -107,10 +107,10 @@ ModelClippingPolygonsPipelineStage.process = function (
   shaderBuilder.addUniform(
     "sampler2D",
     "model_clippingExtents",
-    ShaderDestination.FRAGMENT
+    ShaderDestination.VERTEX
   );
 
-  shaderBuilder.addVarying("vec2", "v_clippingPosition");
+  shaderBuilder.addVarying("vec3", "v_clippingPositionAndRegionIndex");
   shaderBuilder.addVertexLines(ModelClippingPolygonsStageVS);
   shaderBuilder.addFragmentLines(ModelClippingPolygonsStageFS);
 

@@ -24,6 +24,8 @@ import PolygonSignedDistanceFS from "../Shaders/PolygonSignedDistanceFS.js";
  * Specifies a set of clipping polygons. Clipping polygons selectively disable rendering in a region on the
  * outside of the specified list of {@link ClippingPolygon} objects for a single glTF model, 3D Tileset, or the globe.
  *
+ * Clipping Polygons are only supported in WebGL 2 contexts.
+ *
  * @alias ClippingPolygonCollection
  * @constructor
  *
@@ -102,6 +104,7 @@ function ClippingPolygonCollection(options) {
 
   this._float32View = undefined;
   this._extentsFloat32View = undefined;
+  this._extentsCount = 0;
 
   this._polygonsTexture = undefined;
   this._extentsTexture = undefined;
@@ -164,6 +167,20 @@ Object.defineProperties(ClippingPolygonCollection.prototype, {
   extentsTexture: {
     get: function () {
       return this._extentsTexture;
+    },
+  },
+
+  /**
+   * Returns the number of packed extents, which can be fewer than the number fo polygons.
+   *
+   * @memberof ClippingPolygonCollection.prototype
+   * @type {number}
+   * @readonly
+   * @private
+   */
+  extentsCount: {
+    get: function () {
+      return this._extentsCount;
     },
   },
 
@@ -364,6 +381,20 @@ ClippingPolygonCollection.prototype.remove = function (polygon) {
   return true;
 };
 
+function combineExtents(extentsList, extents) {
+  // Combine with an existing extent if it overlaps
+  const index = extentsList.length;
+  for (const [i, e] of extentsList.entries()) {
+    if (defined(Rectangle.intersection(e, extents))) {
+      Rectangle.union(e, extents, e);
+      return i;
+    }
+  }
+
+  extentsList.push(extents);
+  return index;
+}
+
 /**
  * Removes all polygons from the collection.
  *
@@ -382,20 +413,23 @@ ClippingPolygonCollection.prototype.removeAll = function () {
   this._polygons = [];
 };
 
-const scratchRectangle = new Rectangle();
 function packPolygonsAsFloats(clippingPolygonCollection) {
   const float32View = clippingPolygonCollection._float32View;
   const extentsFloat32View = clippingPolygonCollection._extentsFloat32View;
   const polygons = clippingPolygonCollection._polygons;
 
   let floatIndex = 0;
-  let extentsFloatIndex = 0;
+
+  const extentsList = [];
   for (const polygon of polygons) {
     // Pack the length of the polygon into the polygon texture array buffer
     const length = polygon.length;
-    float32View[floatIndex] = length;
+    float32View[floatIndex++] = length;
 
-    floatIndex += 2;
+    // Map the polygon to the applicable extents-- Overlapping extents will be merged
+    // into a single encompassing extent
+    const extents = polygon.computeSphericalExtents();
+    float32View[floatIndex++] = combineExtents(extentsList, extents);
 
     // Pack the polygon positions into the polygon texture array buffer
     for (let i = 0; i < length; ++i) {
@@ -419,12 +453,27 @@ function packPolygonsAsFloats(clippingPolygonCollection) {
       float32View[floatIndex++] = latitudeApproximation;
       float32View[floatIndex++] = longitudeApproximation;
     }
-
-    // Pack the spherical extents into the extents texture array buffer
-    const extents = polygon.computeSphericalExtents(scratchRectangle);
-    Rectangle.pack(extents, extentsFloat32View, extentsFloatIndex);
-    extentsFloatIndex += 4;
   }
+
+  // Pack extents
+  let extentsFloatIndex = 0;
+  for (const extents of extentsList) {
+    // Slightly pad extents to avoid floating point error when fragment culling at edges.
+    extents.south -= CesiumMath.EPSILON5;
+    extents.west -= CesiumMath.EPSILON5;
+    extents.north += CesiumMath.EPSILON5;
+    extents.east += CesiumMath.EPSILON5;
+
+    const longitudeRangeInverse = 1.0 / (extents.east - extents.west);
+    const latitudeRangeInverse = 1.0 / (extents.north - extents.south);
+
+    extentsFloat32View[extentsFloatIndex++] = extents.south;
+    extentsFloat32View[extentsFloatIndex++] = extents.west;
+    extentsFloat32View[extentsFloatIndex++] = latitudeRangeInverse;
+    extentsFloat32View[extentsFloatIndex++] = longitudeRangeInverse;
+  }
+
+  clippingPolygonCollection._extentsCount = extentsList.length;
 }
 
 const textureResolutionScratch = new Cartesian2();
@@ -435,13 +484,14 @@ const textureResolutionScratch = new Cartesian2();
  * Do not call this function directly.
  * </p>
  * @private
+ * @throws {DeveloperError} ClippingPolygonCollections are only supported for WebGL 2
  */
 ClippingPolygonCollection.prototype.update = function (frameState) {
   const context = frameState.context;
 
-  if (!context.floatingPointTexture) {
+  if (!ClippingPolygonCollection.isSupported(frameState)) {
     throw new DeveloperError(
-      "ClippingPolygonCollections are not supported on this device."
+      "ClippingPolygonCollections are only supported for WebGL 2."
     );
   }
 
@@ -622,6 +672,9 @@ function createSignedDistanceTextureCommand(collection) {
       u_polygonsLength: function () {
         return collection.length;
       },
+      u_extentsLength: function () {
+        return collection.extentsCount;
+      },
       u_extentsTexture: function () {
         return extentsTexture;
       },
@@ -749,11 +802,11 @@ ClippingPolygonCollection.setOwner = function (
 /**
  * Function for checking if the context will allow clipping polygons, which require floating point textures.
  *
- * @param {Scene} scene The scene that will contain clipped objects and clipping textures.
- * @returns {boolean} <code>true</code> if floating point textures can be used for clipping polygons.
+ * @param {Scene|object} scene The scene that will contain clipped objects and clipping textures.
+ * @returns {boolean} <code>true</code> if the context supports clipping polygons.
  */
 ClippingPolygonCollection.isSupported = function (scene) {
-  return scene.context.floatingPointTexture;
+  return scene?.context.webgl2;
 };
 
 /**

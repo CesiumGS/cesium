@@ -316,6 +316,7 @@ GlobeSurfaceShaderSet.prototype.getShaderProgram = function (options) {
 
     if (enableClippingPolygons) {
       fs.defines.push("ENABLE_CLIPPING_POLYGONS");
+      vs.defines.push("ENABLE_CLIPPING_POLYGONS");
 
       if (clippingPolygons.inverse) {
         fs.defines.push("CLIPPING_INVERSE");
@@ -331,17 +332,22 @@ GlobeSurfaceShaderSet.prototype.getShaderProgram = function (options) {
         extentsResolutionScratch
       );
 
-      fs.defines.push(`CLIPPING_POLYGONS_LENGTH ${clippingPolygons.length}`);
+      fs.defines.push(
+        `CLIPPING_POLYGON_REGIONS_LENGTH ${clippingPolygons.extentsCount}`
+      );
+      vs.defines.push(
+        `CLIPPING_POLYGON_REGIONS_LENGTH ${clippingPolygons.extentsCount}`
+      );
       fs.defines.push(
         `CLIPPING_DISTANCE_TEXTURE_WIDTH ${distanceTextureResolution.x}`
       );
       fs.defines.push(
         `CLIPPING_DISTANCE_TEXTURE_HEIGHT ${distanceTextureResolution.y}`
       );
-      fs.defines.push(
+      vs.defines.push(
         `CLIPPING_EXTENTS_TEXTURE_WIDTH ${extentsTextureResolution.x}`
       );
-      fs.defines.push(
+      vs.defines.push(
         `CLIPPING_EXTENTS_TEXTURE_HEIGHT ${extentsTextureResolution.y}`
       );
     }

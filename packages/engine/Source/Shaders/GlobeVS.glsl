@@ -46,6 +46,11 @@ out vec3 v_atmosphereMieColor;
 out float v_atmosphereOpacity;
 #endif
 
+#ifdef ENABLE_CLIPPING_POLYGONS
+uniform highp sampler2D u_clippingExtents;
+out vec3 v_clippingPositionAndRegionIndex;
+#endif
+
 // These functions are generated at runtime.
 vec4 getPosition(vec3 position, float height, vec2 textureCoordinates);
 float get2DYPositionFraction(vec2 textureCoordinates);
@@ -205,6 +210,25 @@ void main()
 
     v_normalMC = normalMC;
     v_normalEC = czm_normal3D * v_normalMC;
+#endif
+
+#ifdef ENABLE_CLIPPING_POLYGONS
+    vec2 sphericalLatLong = czm_approximateSphericalCoordinates(position3DWC);
+    sphericalLatLong.y = czm_branchFreeTernary(sphericalLatLong.y < czm_pi, sphericalLatLong.y, sphericalLatLong.y - czm_twoPi);
+    
+    vec2 extentsTextureDimensions = vec2(CLIPPING_EXTENTS_TEXTURE_WIDTH, CLIPPING_EXTENTS_TEXTURE_HEIGHT);
+    v_clippingPositionAndRegionIndex = vec3(czm_infinity, czm_infinity, -1.0);
+
+    float padding = 0.005 / czm_geometricToleranceOverMeter;
+    for (int regionIndex = 0; regionIndex < CLIPPING_POLYGON_REGIONS_LENGTH; regionIndex++) {
+        vec4 extents = czm_unpackClippingExtents(u_clippingExtents, extentsTextureDimensions, regionIndex);
+    
+        vec2 rectUv = (sphericalLatLong.yx - extents.yx) * extents.wz;
+        if (rectUv.x > -padding && rectUv.y > -padding && rectUv.x < 1.0 + padding && rectUv.y < 1.0 + padding) {
+            v_clippingPositionAndRegionIndex = vec3(rectUv, regionIndex);
+            break;
+        }
+    }
 #endif
 
 #if defined(FOG) || (defined(GROUND_ATMOSPHERE) && !defined(PER_FRAGMENT_GROUND_ATMOSPHERE))

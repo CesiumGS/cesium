@@ -239,6 +239,7 @@ describe("Scene/ClippingPolygonCollection", function () {
     const arrayBufferView = args[8];
     expect(arrayBufferView).toBeDefined();
     expect(arrayBufferView[0]).toBe(5); // number of positions
+    expect(arrayBufferView[1]).toBe(0); // extents index
     expect(arrayBufferView[2]).toEqualEpsilon(
       0.6969271302223206,
       CesiumMath.EPSILON10
@@ -277,21 +278,68 @@ describe("Scene/ClippingPolygonCollection", function () {
     const arrayBufferView = args[8];
     expect(arrayBufferView).toBeDefined();
     expect(arrayBufferView[0]).toEqualEpsilon(
-      -1.3191630840301514,
-      CesiumMath.EPSILON10
-    ); // west
-    expect(arrayBufferView[1]).toEqualEpsilon(
-      0.696864128112793,
+      0.6968541145324707,
       CesiumMath.EPSILON10
     ); // south
+    expect(arrayBufferView[1]).toEqualEpsilon(
+      -1.3191730976104736,
+      CesiumMath.EPSILON10
+    ); // west
     expect(arrayBufferView[2]).toEqualEpsilon(
-      -1.3191198110580444,
+      11637.3271484375,
       CesiumMath.EPSILON10
-    ); // east
+    ); // north - south
     expect(arrayBufferView[3]).toEqualEpsilon(
-      0.6969300508499146,
+      15820.5234375,
       CesiumMath.EPSILON10
-    ); // north
+    ); // east - west
+    expect(arrayBufferView[4]).toBe(0); // padding
+    expect(arrayBufferView[5]).toBe(0); // padding
+    expect(arrayBufferView[6]).toBe(0); // padding
+    expect(arrayBufferView[7]).toBe(0); // padding
+
+    polygons.destroy();
+    scene.destroyForSpecs();
+  });
+
+  it("Combines overlapping extents", function () {
+    const polygonA = new ClippingPolygon({ positions });
+    const polygonB = new ClippingPolygon({ positions: positionsB });
+    const polygons = new ClippingPolygonCollection({
+      polygons: [polygonA, polygonB],
+    });
+    const scene = createScene();
+
+    const gl = scene.frameState.context._gl;
+    const spy = spyOn(gl, "texImage2D").and.callThrough();
+
+    polygons.update(scene.frameState);
+
+    let args = spy.calls.argsFor(spy.calls.count() - 2);
+    let arrayBufferView = args[8];
+    expect(arrayBufferView).toBeDefined();
+    expect(arrayBufferView[1]).toBe(0); // polygonA extents index
+    expect(arrayBufferView[13]).toBe(0); // polygonB extents index
+
+    args = spy.calls.argsFor(spy.calls.count() - 3); // extents are packed after polygon positions
+    arrayBufferView = args[8];
+    expect(arrayBufferView).toBeDefined();
+    expect(arrayBufferView[0]).toEqualEpsilon(
+      0.6968541145324707,
+      CesiumMath.EPSILON10
+    ); // south
+    expect(arrayBufferView[1]).toEqualEpsilon(
+      -1.3191730976104736,
+      CesiumMath.EPSILON10
+    ); // west
+    expect(arrayBufferView[2]).toEqualEpsilon(
+      11637.3271484375,
+      CesiumMath.EPSILON10
+    ); // north - south
+    expect(arrayBufferView[3]).toEqualEpsilon(
+      15820.5234375,
+      CesiumMath.EPSILON10
+    ); // east - west
     expect(arrayBufferView[4]).toBe(0); // padding
     expect(arrayBufferView[5]).toBe(0); // padding
     expect(arrayBufferView[6]).toBe(0); // padding

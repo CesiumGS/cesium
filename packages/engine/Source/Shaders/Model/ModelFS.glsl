@@ -1,3 +1,5 @@
+
+precision highp float;
 czm_modelMaterial defaultModelMaterial()
 {
     czm_modelMaterial material;

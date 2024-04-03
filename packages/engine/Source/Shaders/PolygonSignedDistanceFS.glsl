@@ -1,6 +1,7 @@
 in vec2 v_textureCoordinates;
 
 uniform int u_polygonsLength;
+uniform int u_extentsLength;
 uniform highp sampler2D u_polygonTexture;
 uniform vec2 u_polygonTextureDimensions;
 uniform highp sampler2D u_extentsTexture;
@@ -21,13 +22,14 @@ vec2 getLookupUv(vec2 dimensions, int i) {
     return vec2(u, v);
 }
 
-vec4 getRectangle(int i) {
+vec4 getExtents(int i) {
     return texture(u_extentsTexture, getLookupUv(u_extentsTextureDimensions, i));
 }
 
-int getPositionsLength(int i) {
+ivec2 getPositionsLengthAndExtentsIndex(int i) {
     vec2 uv = getLookupUv(u_polygonTextureDimensions, i);
-    return int(texture(u_polygonTexture, uv).x);
+    vec4 value = texture(u_polygonTexture, uv);
+    return ivec2(int(value.x), int(value.y));
 }
 
 vec2 getPolygonPosition(int i) {
@@ -35,30 +37,32 @@ vec2 getPolygonPosition(int i) {
     return texture(u_polygonTexture, uv).xy;
 }
 
-vec2 getCoordinates(vec2 textureCoordinates, vec4 rectangle) {
-    float latitude = mix(rectangle.y, rectangle.w, textureCoordinates.y);
-    float longitude = mix(rectangle.x, rectangle.z, textureCoordinates.x);
+vec2 getCoordinates(vec2 textureCoordinates, vec4 extents) {
+    float latitude = mix(extents.x, extents.x + 1.0 / extents.z, textureCoordinates.y);
+    float longitude = mix(extents.y, extents.y + 1.0 / extents.w, textureCoordinates.x);
     return vec2(latitude, longitude);
 }
 
 void main() {
     int lastPolygonIndex = 0;
-    float clipAmount = czm_infinity;
-    float dimension = max(ceil(log2(float(u_polygonsLength))), float(u_polygonsLength));
-    int polygonRegionIndex = getPolygonIndex(dimension, v_textureCoordinates);
+    out_FragColor = vec4(1.0);
 
-    // Only traverse up to the needed polygon
-    for (int polygonIndex = 0; polygonIndex < u_polygonsLength && polygonIndex <= polygonRegionIndex; polygonIndex++) {
-        vec4 rectangle = getRectangle(polygonIndex);
+    // Get the relevant region of the texture
+    float dimension = max(ceil(log2(float(u_extentsLength))), float(u_extentsLength));
+    int regionIndex = getPolygonIndex(dimension, v_textureCoordinates);
 
-        int positionsLength = getPositionsLength(lastPolygonIndex);
+    for (int polygonIndex = 0; polygonIndex < u_polygonsLength; polygonIndex++) {
+        ivec2 positionsLengthAndExtents = getPositionsLengthAndExtentsIndex(lastPolygonIndex);
+        int positionsLength = positionsLengthAndExtents.x;
+        int polygonExtentsIndex = positionsLengthAndExtents.y;
         lastPolygonIndex += 1;
 
-         // Only compute signed distance for the relevant polygon
-         if (polygonIndex == polygonRegionIndex) {
-            vec2 extents = abs(rectangle.zw - rectangle.xy);
-            vec2 textureOffset = vec2(mod(float(polygonIndex), dimension), floor(float(polygonIndex) / dimension));
-            vec2 p = getCoordinates(v_textureCoordinates * dimension - textureOffset, rectangle);
+         // Only compute signed distance for the relevant part of the atlas
+         if (polygonExtentsIndex == regionIndex) {
+            float clipAmount = czm_infinity;
+            vec4 extents = getExtents(polygonExtentsIndex);
+            vec2 textureOffset = vec2(mod(float(polygonExtentsIndex), dimension), floor(float(polygonExtentsIndex) / dimension));
+            vec2 p = getCoordinates(v_textureCoordinates * dimension - textureOffset, extents);
             float s = 1.0;
 
             // Check each edge for absolute distance
@@ -87,7 +91,9 @@ void main() {
             }
 
             // Normalize the range to [0,1]
-            out_FragColor = (s * vec4(clipAmount / length(extents))) / 2.0 + 0.5;
+            vec4 result = (s * vec4(clipAmount * length(extents.zw))) / 2.0 + 0.5;
+            // In the case where we've iterated through multiple polygons, take the minimum
+            out_FragColor = min(out_FragColor, result);
          }
 
         lastPolygonIndex += positionsLength;

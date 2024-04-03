@@ -814,10 +814,10 @@ GlobeSurfaceTileProvider.prototype.computeTileVisibility = function (
 
   const clippingPolygons = this._clippingPolygons;
   if (defined(clippingPolygons) && clippingPolygons.enabled) {
-    const planeIntersection = clippingPolygons.computeIntersectionWithBoundingVolume(
+    const polygonIntersection = clippingPolygons.computeIntersectionWithBoundingVolume(
       tileBoundingRegion
     );
-    tile.isClipped = planeIntersection !== Intersect.OUTSIDE;
+    tile.isClipped = polygonIntersection !== Intersect.OUTSIDE;
     // Polygon clipping intersections are determined by outer rectangles, therefore we cannot
     // preemptively determine if a tile is completely clipped or not here.
   }
