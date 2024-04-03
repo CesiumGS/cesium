@@ -325,7 +325,7 @@ function createVerticesFromQuantizedTerrainMesh(
 
   // Add skirts.
   // Note: create longer skirts for better light occlusion
-  const terrainHeight = fullHMin;
+  const terrainHeight = enableLongSkirt ? fullHMin : undefined;
   let vertexBufferIndex = quantizedVertexCount * vertexStride;
   addSkirt(
     vertexBuffer,
