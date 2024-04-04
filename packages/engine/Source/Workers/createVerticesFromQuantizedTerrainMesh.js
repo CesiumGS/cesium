@@ -27,8 +27,9 @@ function createVerticesFromQuantizedTerrainMesh(
   parameters,
   transferableObjects
 ) {
-  const enableLongSkirt = parameters.level >= 3;
-  const enableSkirtsBottomPlane = parameters.level >= 3;
+  const enableLongSkirt = parameters.extendedSkirts && parameters.level >= 3;
+  const enableSkirtsBottomPlane =
+    parameters.extendedSkirts && parameters.level >= 3;
   const quantizedVertices = parameters.quantizedVertices;
   const quantizedVertexCount = quantizedVertices.length / 3;
   const octEncodedNormals = parameters.octEncodedNormals;
@@ -255,7 +256,11 @@ function createVerticesFromQuantizedTerrainMesh(
       eastT += CesiumMath.TWO_PI;
     }
     const tileXSize = (eastT - westT) * ellipsoid.maximumRadius;
-    const longSkirtHeight = tileXSize * 2;
+    let longSkirtHeight = tileXSize * 2;
+    if (longSkirtHeight < 4000) {
+      // Note: force higher skirt size for better shadows rendering on smaller tiles
+      longSkirtHeight = 5000;
+    }
     fullHMin = Math.min(hMin, -longSkirtHeight);
   } else {
     fullHMin = hMin;

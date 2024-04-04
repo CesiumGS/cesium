@@ -115,6 +115,7 @@ Object.defineProperties(Terrain.prototype, {
  * @param {Object} [options] Object with the following properties:
  * @param {Boolean} [options.requestVertexNormals=false] Flag that indicates if the client should request additional lighting information from the server if available.
  * @param {Boolean} [options.requestWaterMask=false] Flag that indicates if the client should request per tile water masks from the server if available.
+ * @param {Boolean} [options.extendedSkirts=false] Flag that indicates if the tiles should have extended skirts for better light occlusion when shadows are enabled.
  * @returns {Terrain} An asynchronous helper object for a CesiumTerrainProvider
  *
  * @see Ion

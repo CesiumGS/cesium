@@ -9,6 +9,7 @@ import defaultValue from "./defaultValue.js";
  * @param {Object} [options] Object with the following properties:
  * @param {Boolean} [options.requestVertexNormals=false] Flag that indicates if the client should request additional lighting information from the server if available.
  * @param {Boolean} [options.requestWaterMask=false] Flag that indicates if the client should request per tile water masks from the server if available.
+ * @param {Boolean} [options.extendedSkirts=false] Flag that indicates if the tiles should have extended skirts for better light occlusion when shadows are enabled.
  * @returns {Promise<CesiumTerrainProvider>} A promise that resolves to the created CesiumTerrainProvider
  *
  * @see Ion
@@ -43,6 +44,7 @@ function createWorldTerrainAsync(options) {
   return CesiumTerrainProvider.fromIonAssetId(1, {
     requestVertexNormals: defaultValue(options.requestVertexNormals, false),
     requestWaterMask: defaultValue(options.requestWaterMask, false),
+    extendedSkirts: defaultValue(options.extendedSkirts, false),
   });
 }
 export default createWorldTerrainAsync;

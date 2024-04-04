@@ -45,6 +45,7 @@ function LayerInformation(layer) {
  * @property {boolean} [requestVertexNormals=false] Flag that indicates if the client should request additional lighting information from the server, in the form of per vertex normals if available.
  * @property {boolean} [requestWaterMask=false] Flag that indicates if the client should request per tile water masks from the server, if available.
  * @property {boolean} [requestMetadata=true] Flag that indicates if the client should request per tile metadata from the server, if available.
+ * @property {boolean} [extendedSkirts=false] Flag that indicates if the tile should have extended skirts for better light occlusion when shadows are enabled.
  * @property {Ellipsoid} [ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
  * @property {Credit|string} [credit] A credit for the data source, which is displayed on the canvas.
  */
@@ -504,6 +505,15 @@ function CesiumTerrainProvider(options) {
   this._requestWaterMask = defaultValue(options.requestWaterMask, false);
 
   /**
+   * Boolean flag that indicates if the tile should have extended skirts for better light occlusion
+   * when shadows are enabled.
+   * @type {boolean}
+   * @default false
+   * @private
+   */
+  this._extendedSkirts = defaultValue(options.extendedSkirts, false);
+
+  /**
    * Boolean flag that indicates if the client should request tile metadata from the server.
    * @type {boolean}
    * @default true
@@ -834,6 +844,7 @@ function createQuantizedMeshTerrainData(provider, buffer, level, x, y, layer) {
     childTileMask: provider.availability.computeChildMaskForTile(level, x, y),
     waterMask: waterMaskBuffer,
     credits: provider._tileCredits,
+    extendedSkirts: provider._extendedSkirts,
   });
 }
 
@@ -1138,6 +1149,19 @@ Object.defineProperties(CesiumTerrainProvider.prototype, {
   availability: {
     get: function () {
       return this._availability;
+    },
+  },
+
+  /**
+   * Gets a value indicating whether or not the requested tiles include extended skirts.
+   * Extended skirts are used for better light occlusion when shadows are enabled.
+   * @memberof CesiumTerrainProvider.prototype
+   * @type {boolean}
+   * @readonly
+   */
+  extendedSkirts: {
+    get: function () {
+      return this._extendedSkirts;
     },
   },
 });
