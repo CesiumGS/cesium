@@ -1188,7 +1188,16 @@ function generateTypeScriptDefinitions(
       (match, p1) => `= WebGLConstants.${p1}`
     )
     // Strip const enums which can cause errors - https://www.typescriptlang.org/docs/handbook/enums.html#const-enum-pitfalls
-    .replace(/^(\s*)(export )?const enum (\S+) {(\s*)$/gm, "$1$2enum $3 {$4");
+    .replace(/^(\s*)(export )?const enum (\S+) {(\s*)$/gm, "$1$2enum $3 {$4")
+    // Replace JSDoc generation version of defined with an improved version using TS type predicates
+    .replace(
+      /defined\(value: any\): boolean/gm,
+      "defined<Type>(value: Type): value is NonNullable<Type>"
+    )
+    .replace(
+      /\/\*\*[\*\s\w]*?\*\/\nexport const Check: any;/m,
+      `\n${readFileSync("./packages/engine/Source/Core/Check.d.ts").toString()}`
+    );
 
   // Wrap the source to actually be inside of a declared cesium module
   // and add any workaround and private utility types.
@@ -1386,6 +1395,10 @@ function createTypeScriptDefinitions() {
     .replace(
       /defined\(value: any\): boolean/gm,
       "defined<Type>(value: Type): value is NonNullable<Type>"
+    )
+    .replace(
+      /\/\*\*[\*\s\w]*?\*\/\nexport const Check: any;/m,
+      `\n${readFileSync("./packages/engine/Source/Core/Check.d.ts").toString()}`
     );
 
   // Wrap the source to actually be inside of a declared cesium module

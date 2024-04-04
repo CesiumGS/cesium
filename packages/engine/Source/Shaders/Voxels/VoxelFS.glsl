@@ -102,13 +102,19 @@ vec2 packFloatToVec2(float value) {
 
 int getSampleIndex(in vec3 tileUv) {
     ivec3 voxelDimensions = u_dimensions;
-    vec3 tileCoordinate = clamp(tileUv, 0.0, 1.0) * vec3(voxelDimensions);
-    ivec3 tileIndex = ivec3(floor(tileCoordinate));
+    vec3 sampleCoordinate = tileUv * vec3(voxelDimensions);
+    // tileUv = 1.0 is a valid coordinate but sampleIndex = voxelDimensions is not.
+    // (tileUv = 1.0 corresponds to the last sample, at index = voxelDimensions - 1).
+    // Clamp to [0, voxelDimensions - 0.5) to avoid numerical error before flooring
+    vec3 maxCoordinate = vec3(voxelDimensions) - vec3(0.5);
+    sampleCoordinate = clamp(sampleCoordinate, vec3(0.0), maxCoordinate);
+    ivec3 sampleIndex = ivec3(floor(sampleCoordinate));
     #if defined(PADDING)
         voxelDimensions += u_paddingBefore + u_paddingAfter;
-        tileIndex += u_paddingBefore;
+        sampleIndex += u_paddingBefore;
     #endif
-    return tileIndex.x + voxelDimensions.x * (tileIndex.y + voxelDimensions.y * tileIndex.z);
+    // Convert to a 1D index for lookup in a 1D data array
+    return sampleIndex.x + voxelDimensions.x * (sampleIndex.y + voxelDimensions.y * sampleIndex.z);
 }
 
 void main()
