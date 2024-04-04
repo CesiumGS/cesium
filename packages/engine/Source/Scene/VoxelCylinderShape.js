@@ -660,67 +660,6 @@ VoxelCylinderShape.prototype.computeOrientedBoundingBoxForSample = function (
   );
 };
 
-const scratchOrientedBoundingBox = new OrientedBoundingBox();
-const scratchVoxelScale = new Cartesian3();
-const scratchRootScale = new Cartesian3();
-const scratchScaleRatio = new Cartesian3();
-
-/**
- * Computes an approximate step size for raymarching the root tile of a voxel grid.
- * The update function must be called before calling this function.
- *
- * @param {Cartesian3} dimensions The voxel grid dimensions for a tile.
- * @returns {number} The step size.
- */
-VoxelCylinderShape.prototype.computeApproximateStepSize = function (
-  dimensions
-) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("dimensions", dimensions);
-  //>>includeEnd('debug');
-
-  const shapeTransform = this.shapeTransform;
-  const minRadius = this._minimumRadius;
-  const maxRadius = this._maximumRadius;
-  const minHeight = this._minimumHeight;
-  const maxHeight = this._maximumHeight;
-  const minAngle = this._minimumAngle;
-  const maxAngle = this._maximumAngle;
-
-  const lerpRadius = 1.0 - 1.0 / dimensions.x;
-  const lerpHeight = 1.0 - 1.0 / dimensions.y;
-  const lerpAngle = 1.0 - 1.0 / dimensions.z;
-
-  // Compare the size of an outermost cylinder voxel to the total cylinder
-  const voxelMinimumRadius = CesiumMath.lerp(minRadius, maxRadius, lerpRadius);
-  const voxelMinimumHeight = CesiumMath.lerp(minHeight, maxHeight, lerpHeight);
-  const voxelMinimumAngle = CesiumMath.lerp(minAngle, maxAngle, lerpAngle);
-  const voxelMaximumRadius = maxRadius;
-  const voxelMaximumHeight = maxHeight;
-  const voxelMaximumAngle = maxAngle;
-
-  const voxelObb = getCylinderChunkObb(
-    voxelMinimumRadius,
-    voxelMaximumRadius,
-    voxelMinimumHeight,
-    voxelMaximumHeight,
-    voxelMinimumAngle,
-    voxelMaximumAngle,
-    shapeTransform,
-    scratchOrientedBoundingBox
-  );
-
-  const voxelScale = Matrix3.getScale(voxelObb.halfAxes, scratchVoxelScale);
-  const rootScale = Matrix4.getScale(shapeTransform, scratchRootScale);
-  const scaleRatio = Cartesian3.divideComponents(
-    voxelScale,
-    rootScale,
-    scratchScaleRatio
-  );
-  const stepSize = Cartesian3.minimumComponent(scaleRatio);
-  return stepSize;
-};
-
 /**
  * Defines the minimum bounds of the shape. Corresponds to minimum radius, height, angle.
  *

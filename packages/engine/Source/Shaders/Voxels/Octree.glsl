@@ -79,7 +79,7 @@ int getOctreeParentIndex(in int octreeIndex) {
 */
 vec3 getTileUv(in vec3 shapePosition, in ivec4 octreeCoords) {
 	// PERFORMANCE_IDEA: use bit-shifting (only in WebGL2)
-    float dimAtLevel = pow(2.0, float(octreeCoords.w));
+    float dimAtLevel = exp2(float(octreeCoords.w));
     return shapePosition * dimAtLevel - vec3(octreeCoords.xyz);
 }
 
@@ -126,7 +126,7 @@ void getOctreeLeafSampleDatas(in OctreeNodeData data, in ivec4 octreeCoords, out
 #endif
 
 OctreeNodeData traverseOctreeDownwards(in vec3 shapePosition, inout TraversalData traversalData) {
-    float sizeAtLevel = 1.0 / pow(2.0, float(traversalData.octreeCoords.w));
+    float sizeAtLevel = exp2(-1.0 * float(traversalData.octreeCoords.w));
     vec3 start = vec3(traversalData.octreeCoords.xyz) * sizeAtLevel;
     vec3 end = start + vec3(sizeAtLevel);
     OctreeNodeData childData;
