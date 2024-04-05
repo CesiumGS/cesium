@@ -176,7 +176,9 @@ describe("Scene/ClippingPolygonCollection", function () {
 
     expect(() => {
       polygons.update(scene.frameState);
-    }).toThrowError("No");
+    }).toThrowError(
+      "ClippingPolygonCollections are only supported for WebGL 2."
+    );
 
     scene.destroyForSpecs();
   });
