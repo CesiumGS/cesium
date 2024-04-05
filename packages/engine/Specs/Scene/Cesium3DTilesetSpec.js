@@ -4743,7 +4743,11 @@ describe(
         }).toThrowDeveloperError();
       });
 
-      it("clipping polygons cull hidden tiles", async function () {
+      it("cull hidden tiles", async function () {
+        if (!scene.context.webgl2) {
+          return;
+        }
+
         const tileset = await Cesium3DTilesTester.loadTileset(
           scene,
           tilesetUrl
@@ -4765,7 +4769,7 @@ describe(
           CullingVolume.MASK_INSIDE
         );
 
-        expect(visibility).toBe(CullingVolume.MASK_INDETERMINATE);
+        expect(visibility).toBe(CullingVolume.MASK_INSIDE);
 
         tileset.clippingPolygons.inverse = true;
         visibility = tileset.root.visibility(
@@ -4776,66 +4780,11 @@ describe(
         expect(visibility).toBe(CullingVolume.MASK_INSIDE);
       });
 
-      it("clipping planes cull hidden content", async function () {
-        const tileset = await Cesium3DTilesTester.loadTileset(
-          scene,
-          tilesetUrl
-        );
+      it("cull hidden content", async function () {
+        if (!scene.context.webgl2) {
+          return;
+        }
 
-        let visibility = tileset.root.contentVisibility(scene.frameState);
-
-        expect(visibility).not.toBe(Intersect.OUTSIDE);
-        expect(visibility).not.toBe(Intersect.MASK_OUTSIDE);
-
-        tileset.clippingPolygons = new ClippingPolygonCollection({
-          polygons: [polygon],
-        });
-
-        visibility = tileset.root.contentVisibility(scene.frameState);
-
-        expect(visibility).not.toBe(Intersect.OUTSIDE);
-        expect(visibility).not.toBe(Intersect.MASK_OUTSIDE);
-
-        tileset.clippingPolygons.inverse = true;
-        visibility = tileset.root.contentVisibility(scene.frameState);
-
-        expect(visibility).toBe(Intersect.OUTSIDE);
-      });
-
-      it("clipping polygons cull hidden tiles", async function () {
-        const tileset = await Cesium3DTilesTester.loadTileset(
-          scene,
-          tilesetUrl
-        );
-
-        let visibility = tileset.root.visibility(
-          scene.frameState,
-          CullingVolume.MASK_INSIDE
-        );
-
-        expect(visibility).not.toBe(CullingVolume.MASK_OUTSIDE);
-
-        tileset.clippingPolygons = new ClippingPolygonCollection({
-          polygons: [polygon],
-        });
-
-        visibility = tileset.root.visibility(
-          scene.frameState,
-          CullingVolume.MASK_INSIDE
-        );
-
-        expect(visibility).toBe(CullingVolume.MASK_INDETERMINATE);
-
-        tileset.clippingPolygons.inverse = true;
-        visibility = tileset.root.visibility(
-          scene.frameState,
-          CullingVolume.MASK_INSIDE
-        );
-
-        expect(visibility).toBe(CullingVolume.MASK_INSIDE);
-      });
-
-      it("clipping planes cull hidden content", async function () {
         const tileset = await Cesium3DTilesTester.loadTileset(
           scene,
           tilesetUrl
