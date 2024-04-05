@@ -176,14 +176,19 @@ describe("Scene/ClippingPolygonCollection", function () {
 
     expect(() => {
       polygons.update(scene.frameState);
-    }).toThrowDeveloperError();
+    }).toThrowError("No");
 
     scene.destroyForSpecs();
   });
 
   it("only creates textures and compute commands when polygons are added", function () {
-    const polygons = new ClippingPolygonCollection();
     const scene = createScene();
+    if (!scene.context.webgl2) {
+      scene.destroyForSpecs();
+      return;
+    }
+
+    const polygons = new ClippingPolygonCollection();
 
     polygons.update(scene.frameState);
 
@@ -197,11 +202,16 @@ describe("Scene/ClippingPolygonCollection", function () {
   });
 
   it("creates textures and compute commands when polygons are added", function () {
+    const scene = createScene();
+    if (!scene.context.webgl2) {
+      scene.destroyForSpecs();
+      return;
+    }
+
     const polygon = new ClippingPolygon({ positions });
     const polygons = new ClippingPolygonCollection({
       polygons: [polygon],
     });
-    const scene = createScene();
 
     polygons.update(scene.frameState);
 
@@ -224,11 +234,16 @@ describe("Scene/ClippingPolygonCollection", function () {
   });
 
   it("fills texture with packed polygon positions", function () {
+    const scene = createScene();
+    if (!scene.context.webgl2) {
+      scene.destroyForSpecs();
+      return;
+    }
+
     const polygon = new ClippingPolygon({ positions });
     const polygons = new ClippingPolygonCollection({
       polygons: [polygon],
     });
-    const scene = createScene();
 
     const gl = scene.frameState.context._gl;
     const spy = spyOn(gl, "texImage2D").and.callThrough();
@@ -263,11 +278,16 @@ describe("Scene/ClippingPolygonCollection", function () {
   });
 
   it("fills texture with packed extents", function () {
+    const scene = createScene();
+    if (!scene.context.webgl2) {
+      scene.destroyForSpecs();
+      return;
+    }
+
     const polygon = new ClippingPolygon({ positions });
     const polygons = new ClippingPolygonCollection({
       polygons: [polygon],
     });
-    const scene = createScene();
 
     const gl = scene.frameState.context._gl;
     const spy = spyOn(gl, "texImage2D").and.callThrough();
@@ -303,12 +323,17 @@ describe("Scene/ClippingPolygonCollection", function () {
   });
 
   it("Combines overlapping extents", function () {
+    const scene = createScene();
+    if (!scene.context.webgl2) {
+      scene.destroyForSpecs();
+      return;
+    }
+
     const polygonA = new ClippingPolygon({ positions });
     const polygonB = new ClippingPolygon({ positions: positionsB });
     const polygons = new ClippingPolygonCollection({
       polygons: [polygonA, polygonB],
     });
-    const scene = createScene();
 
     const gl = scene.frameState.context._gl;
     const spy = spyOn(gl, "texImage2D").and.callThrough();
@@ -351,11 +376,16 @@ describe("Scene/ClippingPolygonCollection", function () {
 
   // TODO
   xit("executes compute command and writes output texture", function () {
+    const scene = createScene();
+    if (!scene.context.webgl2) {
+      scene.destroyForSpecs();
+      return;
+    }
+
     const polygon = new ClippingPolygon({ positions });
     const polygons = new ClippingPolygonCollection({
       polygons: [polygon],
     });
-    const scene = createScene();
 
     polygons.update(scene.frameState);
     polygons.queueCommands(scene.frameState);
@@ -490,11 +520,16 @@ describe("Scene/ClippingPolygonCollection", function () {
   // });
 
   it("does not perform texture updates if the polygons are unchanged", function () {
+    const scene = createScene();
+    if (!scene.context.webgl2) {
+      scene.destroyForSpecs();
+      return;
+    }
+
     const polygon = new ClippingPolygon({ positions });
     const polygons = new ClippingPolygonCollection({
       polygons: [polygon],
     });
-    const scene = createScene();
 
     const gl = scene.frameState.context._gl;
     const spy = spyOn(gl, "texImage2D").and.callThrough();

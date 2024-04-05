@@ -1,7 +1,11 @@
-import { Cartesian3, Cartographic, Ellipsoid, Rectangle } from "../../index.js";
-
-import { Math as CesiumMath } from "../../index.js";
-
+import {
+  BoundingSphere,
+  Cartesian3,
+  Cartographic,
+  Ellipsoid,
+  Math as CesiumMath,
+  Rectangle,
+} from "../../index.js";
 import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";
 
 describe("Core/Rectangle", function () {
@@ -1438,6 +1442,55 @@ describe("Core/Rectangle", function () {
     const rectangle = new Rectangle(west, south, east, north);
     expect(function () {
       Rectangle.contains(rectangle, undefined);
+    }).toThrowDeveloperError();
+  });
+
+  it("fromBoundingSphere works with zero values", function () {
+    const boundingSphere = new BoundingSphere();
+    const result = Rectangle.fromBoundingSphere(boundingSphere);
+    const expectedRectangle = Rectangle.MAX_VALUE;
+    expect(result).toEqualEpsilon(expectedRectangle, CesiumMath.EPSILON14);
+  });
+
+  it("fromBoundingSphere works with non-zero values", function () {
+    const boundingSphere = new BoundingSphere(
+      new Cartesian3(10000000.0, 0.0, 0.0),
+      1000.0
+    );
+    const result = Rectangle.fromBoundingSphere(boundingSphere);
+    const expectedRectangle = new Rectangle();
+    expectedRectangle.west = -1.5707963267948966;
+    expectedRectangle.south = -0.7887565820736098;
+    expectedRectangle.east = 1.5707963267948966;
+    expectedRectangle.north = 0.7887565820736098;
+    expect(result).toEqualEpsilon(expectedRectangle, CesiumMath.EPSILON14);
+  });
+
+  it("fromBoundingSphere uses result parameter", function () {
+    const boundingSphere = new BoundingSphere(
+      new Cartesian3(10000000.0, 0.0, 0.0),
+      1000.0
+    );
+    const result = new Rectangle();
+    const returned = Rectangle.fromBoundingSphere(
+      boundingSphere,
+      Ellipsoid.WGS84,
+      result
+    );
+
+    const expectedRectangle = new Rectangle();
+    expectedRectangle.west = -1.5707963267948966;
+    expectedRectangle.south = -0.7887565820736098;
+    expectedRectangle.east = 1.5707963267948966;
+    expectedRectangle.north = 0.7887565820736098;
+
+    expect(result).toEqualEpsilon(expectedRectangle, CesiumMath.EPSILON14);
+    expect(returned).toBe(result);
+  });
+
+  it("fromBoundingSphere throws with no bounding sphere", function () {
+    expect(function () {
+      Rectangle.fromBoundingSphere(undefined);
     }).toThrowDeveloperError();
   });
 

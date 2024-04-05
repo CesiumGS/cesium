@@ -11,6 +11,7 @@ import PixelFormat from "../Core/PixelFormat.js";
 import Rectangle from "../Core/Rectangle.js";
 import ContextLimits from "../Renderer/ContextLimits.js";
 import PixelDatatype from "../Renderer/PixelDatatype.js";
+import RuntimeError from "../Core/RuntimeError.js";
 import Sampler from "../Renderer/Sampler.js";
 import Texture from "../Renderer/Texture.js";
 import TextureMagnificationFilter from "../Renderer/TextureMagnificationFilter.js";
@@ -484,13 +485,13 @@ const textureResolutionScratch = new Cartesian2();
  * Do not call this function directly.
  * </p>
  * @private
- * @throws {DeveloperError} ClippingPolygonCollections are only supported for WebGL 2
+ * @throws {RuntimeError} ClippingPolygonCollections are only supported for WebGL 2
  */
 ClippingPolygonCollection.prototype.update = function (frameState) {
   const context = frameState.context;
 
   if (!ClippingPolygonCollection.isSupported(frameState)) {
-    throw new DeveloperError(
+    throw new RuntimeError(
       "ClippingPolygonCollections are only supported for WebGL 2."
     );
   }

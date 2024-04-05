@@ -48,6 +48,10 @@ describe("Scene/Model/ModelClippingPolygonsPipelineStage", function () {
   });
 
   it("configures the render resources for default clipping polygons", function () {
+    if (!context.webgl2) {
+      return;
+    }
+
     const mockFrameState = {
       context: context,
     };
@@ -109,6 +113,10 @@ describe("Scene/Model/ModelClippingPolygonsPipelineStage", function () {
   });
 
   it("configures the render resources for inverse clipping", function () {
+    if (!context.webgl2) {
+      return;
+    }
+
     const mockFrameState = {
       context: context,
     };
@@ -154,7 +162,7 @@ describe("Scene/Model/ModelClippingPolygonsPipelineStage", function () {
     ]);
 
     ShaderBuilderTester.expectHasVaryings(shaderBuilder, [
-      "vec2 v_clippingPositionAndPolygon;",
+      "vec3 v_clippingPositionAndRegionIndex;",
     ]);
 
     const uniformMap = renderResources.uniformMap;
