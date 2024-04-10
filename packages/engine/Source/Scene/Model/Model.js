@@ -146,7 +146,7 @@ import pickModel from "./pickModel.js";
  * @privateParam {number} [options.silhouetteSize=0.0] The size of the silhouette in pixels.
  * @privateParam {boolean} [options.enableShowOutline=true] Whether to enable outlines for models using the {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension. This can be set to false to avoid the additional processing of geometry at load time. When false, the showOutlines and outlineColor options are ignored.
  * @privateParam {boolean} [options.showOutline=true] Whether to display the outline for models using the {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension. When true, outlines are displayed. When false, outlines are not displayed.
- * @privateParam {Color} [options.outlineColor=Color.BLACK] The color to use when rxendering outlines.
+ * @privateParam {Color} [options.outlineColor=Color.BLACK] The color to use when rendering outlines.
  * @privateParam {ClippingPlaneCollection} [options.clippingPlanes] The {@link ClippingPlaneCollection} used to selectively disable rendering the model.
  * @privateParam {ClippingPolygonCollection} [options.clippingPolygons] The {@link ClippingPolygonCollection} used to selectively disable rendering the model.
  * @privateParam {Cartesian3} [options.lightColor] The light color when shading the model. When <code>undefined</code> the scene's light color is used instead.

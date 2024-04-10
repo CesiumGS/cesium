@@ -255,10 +255,10 @@ Model3DTileContent.prototype.update = function (tileset, frameState) {
     model._clippingPlanesState = 0;
   }
 
-  // Updating clipping planes requires more effort because of ownership checks
+  // Updating clipping polygons requires more effort because of ownership checks
   const tilesetClippingPolygons = tileset.clippingPolygons;
   if (defined(tilesetClippingPolygons) && tile.clippingPolygonsDirty) {
-    // Dereference the clipping planes from the model if they are irrelevant.
+    // Dereference the clipping polygons from the model if they are irrelevant.
     model._clippingPolygons =
       tilesetClippingPolygons.enabled && tile._isClippedByPolygon
         ? tilesetClippingPolygons

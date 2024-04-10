@@ -118,7 +118,6 @@ void main()
     #ifdef HAS_SILHOUETTE
     silhouetteStage(attributes, positionClip);
     #endif
-    
 
     #ifdef HAS_POINT_CLOUD_SHOW_STYLE
     float show = pointCloudShowStylingStage(attributes, metadata);
