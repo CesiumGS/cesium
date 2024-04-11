@@ -105,7 +105,7 @@ describe("Scene/ClippingPolygonCollection", function () {
     expect(polygons.contains(polygonB)).toBeFalse();
   });
 
-  it("remove removes and the first occurrence of a polygon", function () {
+  it("remove removes the first occurrence of a polygon", function () {
     const polygonA = new ClippingPolygon({ positions });
     const polygonB = new ClippingPolygon({ positions: positionsB });
     const polygons = new ClippingPolygonCollection({

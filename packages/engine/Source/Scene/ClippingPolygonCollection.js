@@ -172,7 +172,7 @@ Object.defineProperties(ClippingPolygonCollection.prototype, {
   },
 
   /**
-   * Returns the number of packed extents, which can be fewer than the number fo polygons.
+   * Returns the number of packed extents, which can be fewer than the number of polygons.
    *
    * @memberof ClippingPolygonCollection.prototype
    * @type {number}

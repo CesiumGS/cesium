@@ -30,7 +30,7 @@ describe("Scene/ClippingPolygon", function () {
     expect(polygon.ellipsoid).toEqual(Ellipsoid.WGS84);
   });
 
-  it("throws when constructing polygon with 3 or fewer positions", function () {
+  it("throws when constructing polygon with fewer than 3 positions", function () {
     expect(() => {
       // eslint-disable-next-line no-unused-vars
       const polygon = new ClippingPolygon();

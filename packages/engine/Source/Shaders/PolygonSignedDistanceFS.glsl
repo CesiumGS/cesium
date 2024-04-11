@@ -84,7 +84,7 @@ void main() {
                 bvec3 cond = bvec3(p.y >= a.y, 
                             p.y < b.y, 
                             ab.x * pa.y > ab.y * pa.x);
-                if( all(cond) || all(not(cond)) ) s=-s;   
+                if (all(cond) || all(not(cond))) s = -s;
                 if (abs(d) < abs(clipAmount)) {
                     clipAmount = d;
                 }
