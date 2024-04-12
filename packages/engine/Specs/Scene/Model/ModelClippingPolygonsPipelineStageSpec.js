@@ -73,17 +73,13 @@ describe("Scene/Model/ModelClippingPolygonsPipelineStage", function () {
     );
 
     ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
-      "HAS_CLIPPING_POLYGONS",
       "CLIPPING_POLYGON_REGIONS_LENGTH 1",
-      "CLIPPING_EXTENTS_TEXTURE_WIDTH 1",
-      "CLIPPING_EXTENTS_TEXTURE_HEIGHT 2",
+      "ENABLE_CLIPPING_POLYGONS",
     ]);
 
     ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
-      "HAS_CLIPPING_POLYGONS",
       "CLIPPING_POLYGON_REGIONS_LENGTH 1",
-      "CLIPPING_DISTANCE_TEXTURE_WIDTH 64",
-      "CLIPPING_DISTANCE_TEXTURE_HEIGHT 64",
+      "ENABLE_CLIPPING_POLYGONS",
     ]);
 
     ShaderBuilderTester.expectHasVertexUniforms(shaderBuilder, [
@@ -95,7 +91,8 @@ describe("Scene/Model/ModelClippingPolygonsPipelineStage", function () {
     ]);
 
     ShaderBuilderTester.expectHasVaryings(shaderBuilder, [
-      "vec3 v_clippingPositionAndRegionIndex;",
+      "vec2 v_clippingPosition;",
+      "int v_regionIndex;",
     ]);
 
     const uniformMap = renderResources.uniformMap;
@@ -139,18 +136,14 @@ describe("Scene/Model/ModelClippingPolygonsPipelineStage", function () {
     );
 
     ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
-      "HAS_CLIPPING_POLYGONS",
       "CLIPPING_POLYGON_REGIONS_LENGTH 1",
-      "CLIPPING_EXTENTS_TEXTURE_WIDTH 1",
-      "CLIPPING_EXTENTS_TEXTURE_HEIGHT 2",
+      "ENABLE_CLIPPING_POLYGONS",
     ]);
 
     ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
-      "HAS_CLIPPING_POLYGONS",
-      "CLIPPING_INVERSE",
       "CLIPPING_POLYGON_REGIONS_LENGTH 1",
-      "CLIPPING_DISTANCE_TEXTURE_WIDTH 64",
-      "CLIPPING_DISTANCE_TEXTURE_HEIGHT 64",
+      "ENABLE_CLIPPING_POLYGONS",
+      "CLIPPING_INVERSE",
     ]);
 
     ShaderBuilderTester.expectHasVertexUniforms(shaderBuilder, [
@@ -162,7 +155,8 @@ describe("Scene/Model/ModelClippingPolygonsPipelineStage", function () {
     ]);
 
     ShaderBuilderTester.expectHasVaryings(shaderBuilder, [
-      "vec3 v_clippingPositionAndRegionIndex;",
+      "vec2 v_clippingPosition;",
+      "int v_regionIndex;",
     ]);
 
     const uniformMap = renderResources.uniformMap;

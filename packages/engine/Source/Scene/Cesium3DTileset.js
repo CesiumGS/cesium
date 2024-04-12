@@ -802,10 +802,22 @@ function Cesium3DTileset(options) {
   this.loadSiblings = defaultValue(options.loadSiblings, false);
 
   this._clippingPlanes = undefined;
-  this.clippingPlanes = options.clippingPlanes;
+  if (defined(options.clippingPlanes)) {
+    ClippingPlaneCollection.setOwner(
+      options.clippingPlanes,
+      this,
+      "_clippingPlanes"
+    );
+  }
 
   this._clippingPolygons = undefined;
-  this.clippingPolygons = options.clippingPolygons;
+  if (defined(options.clippingPolygons)) {
+    ClippingPolygonCollection.setOwner(
+      options.clippingPolygons,
+      this,
+      "_clippingPolygons"
+    );
+  }
 
   if (defined(options.imageBasedLighting)) {
     this._imageBasedLighting = options.imageBasedLighting;

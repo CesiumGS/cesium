@@ -1,5 +1,3 @@
-import Cartesian2 from "../../Core/Cartesian2.js";
-import ClippingPolygonCollection from "../ClippingPolygonCollection.js";
 import combine from "../../Core/combine.js";
 import ModelClippingPolygonsStageVS from "../../Shaders/Model/ModelClippingPolygonsStageVS.js";
 import ModelClippingPolygonsStageFS from "../../Shaders/Model/ModelClippingPolygonsStageFS.js";
@@ -16,8 +14,6 @@ const ModelClippingPolygonsPipelineStage = {
   name: "ModelClippingPolygonsPipelineStage", // Helps with debugging
 };
 
-const distanceResolutionScratch = new Cartesian2();
-const extentsResolutionScratch = new Cartesian2();
 /**
  * Process a model for polygon clipping. This modifies the following parts of the render resources:
  *
@@ -45,7 +41,7 @@ ModelClippingPolygonsPipelineStage.process = function (
   const shaderBuilder = renderResources.shaderBuilder;
 
   shaderBuilder.addDefine(
-    "HAS_CLIPPING_POLYGONS",
+    "ENABLE_CLIPPING_POLYGONS",
     undefined,
     ShaderDestination.BOTH
   );
@@ -64,40 +60,6 @@ ModelClippingPolygonsPipelineStage.process = function (
     ShaderDestination.BOTH
   );
 
-  const distanceTextureResolution = ClippingPolygonCollection.getClippingDistanceTextureResolution(
-    clippingPolygons,
-    distanceResolutionScratch
-  );
-
-  const extentsTextureResolution = ClippingPolygonCollection.getClippingExtentsTextureResolution(
-    clippingPolygons,
-    extentsResolutionScratch
-  );
-
-  shaderBuilder.addDefine(
-    "CLIPPING_DISTANCE_TEXTURE_WIDTH",
-    distanceTextureResolution.x,
-    ShaderDestination.FRAGMENT
-  );
-
-  shaderBuilder.addDefine(
-    "CLIPPING_DISTANCE_TEXTURE_HEIGHT",
-    distanceTextureResolution.y,
-    ShaderDestination.FRAGMENT
-  );
-
-  shaderBuilder.addDefine(
-    "CLIPPING_EXTENTS_TEXTURE_WIDTH",
-    extentsTextureResolution.x,
-    ShaderDestination.VERTEX
-  );
-
-  shaderBuilder.addDefine(
-    "CLIPPING_EXTENTS_TEXTURE_HEIGHT",
-    extentsTextureResolution.y,
-    ShaderDestination.VERTEX
-  );
-
   shaderBuilder.addUniform(
     "sampler2D",
     "model_clippingDistance",
@@ -110,7 +72,8 @@ ModelClippingPolygonsPipelineStage.process = function (
     ShaderDestination.VERTEX
   );
 
-  shaderBuilder.addVarying("vec3", "v_clippingPositionAndRegionIndex");
+  shaderBuilder.addVarying("vec2", "v_clippingPosition");
+  shaderBuilder.addVarying("int", "v_regionIndex", "flat");
   shaderBuilder.addVertexLines(ModelClippingPolygonsStageVS);
   shaderBuilder.addFragmentLines(ModelClippingPolygonsStageFS);
 

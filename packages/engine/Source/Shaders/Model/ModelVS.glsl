@@ -111,7 +111,7 @@ void main()
     atmosphereStage(attributes);
     #endif
 
-    #ifdef HAS_CLIPPING_POLYGONS
+    #ifdef ENABLE_CLIPPING_POLYGONS
     modelClippingPolygonsStage(attributes);
     #endif
 

@@ -3,37 +3,35 @@ in vec2 v_textureCoordinates;
 uniform int u_polygonsLength;
 uniform int u_extentsLength;
 uniform highp sampler2D u_polygonTexture;
-uniform vec2 u_polygonTextureDimensions;
 uniform highp sampler2D u_extentsTexture;
-uniform vec2 u_extentsTextureDimensions;
 
 int getPolygonIndex(float dimension, vec2 coord) {
    vec2 uv = coord.xy * dimension;
    return int(floor(uv.y) * dimension + floor(uv.x));
 }
 
-vec2 getLookupUv(vec2 dimensions, int i) {
-    int pixY = i / int(dimensions.x);
-    int pixX = i - (pixY * int(dimensions.x));
-    float pixelWidth = 1.0 / dimensions.x;
-    float pixelHeight = 1.0 / dimensions.y;
+vec2 getLookupUv(ivec2 dimensions, int i) {
+    int pixY = i / dimensions.x;
+    int pixX = i - (pixY * dimensions.x);
+    float pixelWidth = 1.0 / float(dimensions.x);
+    float pixelHeight = 1.0 / float(dimensions.y);
     float u = (float(pixX) + 0.5) * pixelWidth; // sample from center of pixel
     float v = (float(pixY) + 0.5) * pixelHeight;
     return vec2(u, v);
 }
 
 vec4 getExtents(int i) {
-    return texture(u_extentsTexture, getLookupUv(u_extentsTextureDimensions, i));
+    return texture(u_extentsTexture, getLookupUv(textureSize(u_extentsTexture, 0), i));
 }
 
 ivec2 getPositionsLengthAndExtentsIndex(int i) {
-    vec2 uv = getLookupUv(u_polygonTextureDimensions, i);
+    vec2 uv = getLookupUv(textureSize(u_polygonTexture, 0), i);
     vec4 value = texture(u_polygonTexture, uv);
     return ivec2(int(value.x), int(value.y));
 }
 
 vec2 getPolygonPosition(int i) {
-    vec2 uv = getLookupUv(u_polygonTextureDimensions, i);
+    vec2 uv = getLookupUv(textureSize(u_polygonTexture, 0), i);
     return texture(u_polygonTexture, uv).xy;
 }
 
@@ -71,8 +69,6 @@ void main() {
                 vec2 b = getPolygonPosition(lastPolygonIndex + j);
  
                 vec2 ab = b - a;
-                vec2 abn = a + vec2(-ab.y, ab.x);
-
                 vec2 pa = p - a;
                 float t = dot(pa, ab) / dot(ab, ab);
                 t = clamp(t, 0.0, 1.0);

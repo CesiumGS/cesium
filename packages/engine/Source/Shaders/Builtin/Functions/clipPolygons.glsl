@@ -3,21 +3,22 @@ float getSignedDistance(vec2 uv, highp sampler2D clippingDistance) {
     return (signedDistance - 0.5) * 2.0;
 }
 
-void czm_clipPolygons(highp sampler2D clippingDistance, vec2 clippingDistanceTextureDimensions, int polygonsLength, highp vec2 clippingPosition, int polygonIndex) {
+void czm_clipPolygons(highp sampler2D clippingDistance, int polygonsLength, vec2 clippingPosition, int regionIndex) {
     // Position is completely outside of polygons bounds
     vec2 rectUv = clippingPosition;
-    if (rectUv.x <= 0.0 || rectUv.y <= 0.0 || rectUv.x >= 1.0 || rectUv.y >= 1.0) {
+    if (regionIndex < 0 || rectUv.x <= 0.0 || rectUv.y <= 0.0 || rectUv.x >= 1.0 || rectUv.y >= 1.0) {
         #ifdef CLIPPING_INVERSE 
             discard;
         #endif
         return;
     }
 
+    vec2 clippingDistanceTextureDimensions = vec2(textureSize(clippingDistance, 0));
     vec2 sampleOffset = max(1.0 / clippingDistanceTextureDimensions, vec2(0.005));
     float dimension = max(ceil(log2(float(polygonsLength))), float(polygonsLength));
     vec2 polygonTextureSize = clippingDistanceTextureDimensions / dimension;
 
-    vec2 textureOffset = vec2(mod(float(polygonIndex), dimension), floor(float(polygonIndex) / dimension)) / dimension;
+    vec2 textureOffset = vec2(mod(float(regionIndex), dimension), floor(float(regionIndex) / dimension)) / dimension;
     vec2 uv = textureOffset + rectUv / dimension;
 
     vec2 pixelAlignedUv = (floor(uv / sampleOffset)) * sampleOffset;

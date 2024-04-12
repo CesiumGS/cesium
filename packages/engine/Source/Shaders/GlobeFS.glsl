@@ -79,7 +79,8 @@ uniform vec4 u_clippingPlanesEdgeStyle;
 
 #ifdef ENABLE_CLIPPING_POLYGONS
 uniform highp sampler2D u_clippingDistance;
-in vec3 v_clippingPositionAndRegionIndex;
+in vec2 v_clippingPosition;
+flat in int v_regionIndex;
 #endif
 
 #if defined(GROUND_ATMOSPHERE) || defined(FOG) && defined(DYNAMIC_ATMOSPHERE_LIGHTING) && (defined(ENABLE_VERTEX_LIGHTING) || defined(ENABLE_DAYNIGHT_SHADING))
@@ -419,10 +420,9 @@ void main()
 #endif
 
 #ifdef ENABLE_CLIPPING_POLYGONS    
-    vec2 clippingPosition = v_clippingPositionAndRegionIndex.xy;
-    int regionIndex = int(floor(v_clippingPositionAndRegionIndex.z));
-    vec2 clippingDistanceTextureDimensions = vec2(CLIPPING_DISTANCE_TEXTURE_WIDTH, CLIPPING_DISTANCE_TEXTURE_HEIGHT);
-    czm_clipPolygons(u_clippingDistance, clippingDistanceTextureDimensions, CLIPPING_POLYGON_REGIONS_LENGTH, clippingPosition, regionIndex);
+    vec2 clippingPosition = v_clippingPosition;
+    int regionIndex = v_regionIndex;
+    clipPolygons(u_clippingDistance, CLIPPING_POLYGON_REGIONS_LENGTH, clippingPosition, regionIndex);
 #endif
 
 #ifdef HIGHLIGHT_FILL_TILE

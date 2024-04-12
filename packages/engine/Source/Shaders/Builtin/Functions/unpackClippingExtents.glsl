@@ -8,6 +8,7 @@ vec2 getLookupUv(vec2 dimensions, int i) {
     return vec2(u, v);
 }
 
-vec4 czm_unpackClippingExtents(highp sampler2D extentsTexture, vec2 textureDimensions, int index) {
+vec4 czm_unpackClippingExtents(highp sampler2D extentsTexture, int index) {
+    vec2 textureDimensions = vec2(textureSize(extentsTexture, 0));
     return texture(extentsTexture, getLookupUv(textureDimensions, index));
 }

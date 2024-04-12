@@ -22,8 +22,8 @@ import ComputeCommand from "../Renderer/ComputeCommand.js";
 import PolygonSignedDistanceFS from "../Shaders/PolygonSignedDistanceFS.js";
 
 /**
- * Specifies a set of clipping polygons. Clipping polygons selectively disable rendering in a region on the
- * outside of the specified list of {@link ClippingPolygon} objects for a single glTF model, 3D Tileset, or the globe.
+ * Specifies a set of clipping polygons. Clipping polygons selectively disable rendering in a region
+ * inside or outside the specified list of {@link ClippingPolygon} objects for a single glTF model, 3D Tileset, or the globe.
  *
  * Clipping Polygons are only supported in WebGL 2 contexts.
  *
@@ -33,7 +33,7 @@ import PolygonSignedDistanceFS from "../Shaders/PolygonSignedDistanceFS.js";
  * @param {object} [options] Object with the following properties:
  * @param {ClippingPolygon[]} [options.polygons=[]] An array of {@link ClippingPolygon} objects used to selectively disable rendering on the inside of each polygon.
  * @param {boolean} [options.enabled=true] Determines whether the clipping polygons are active.
- * @param {boolean} [options.inverse=false] If true, a region will be clipped if it is on the outside of any polygon in the collection. Otherwise, a region will only be clipped if it is on the inside of every polygon.
+ * @param {boolean} [options.inverse=false] If true, a region will be clipped if it is  outside of every polygon in the collection. Otherwise, a region will only be clipped if it is on the inside of any polygon.
  *
  * @example
  * const positions = Cesium.Cartesian3.fromRadiansArray([
@@ -73,9 +73,9 @@ function ClippingPolygonCollection(options) {
   this.enabled = defaultValue(options.enabled, true);
 
   /**
-   * If true, a region will be clipped if it is on the outside of any polygon in the
-   * collection. Otherwise, a region will only be clipped if it is on the
-   * outside of every polygon.
+   * If true, a region will be clipped if it is outside of every polygon in the
+   * collection. Otherwise, a region will only be clipped if it is
+   * outside of any polygon.
    *
    * @memberof ClippingPolygonCollection.prototype
    * @type {boolean}
@@ -459,12 +459,6 @@ function packPolygonsAsFloats(clippingPolygonCollection) {
   // Pack extents
   let extentsFloatIndex = 0;
   for (const extents of extentsList) {
-    // Slightly pad extents to avoid floating point error when fragment culling at edges.
-    extents.south -= CesiumMath.EPSILON5;
-    extents.west -= CesiumMath.EPSILON5;
-    extents.north += CesiumMath.EPSILON5;
-    extents.east += CesiumMath.EPSILON5;
-
     const longitudeRangeInverse = 1.0 / (extents.east - extents.west);
     const latitudeRangeInverse = 1.0 / (extents.north - extents.south);
 
@@ -505,7 +499,7 @@ ClippingPolygonCollection.prototype.update = function (frameState) {
   const dirty =
     this._dirty ||
     this._polygons.reduce(
-      (totalPositions, polygon) => (totalPositions += polygon.length),
+      (totalPositions, polygon) => totalPositions + polygon.length,
       0
     ) !== this.totalPositions;
   if (!dirty) {
@@ -660,8 +654,6 @@ ClippingPolygonCollection.prototype.queueCommands = function (frameState) {
   }
 };
 
-const scratchCartesian = new Cartesian2();
-const scratchExtentsDimensions = new Cartesian2();
 function createSignedDistanceTextureCommand(collection) {
   const polygonTexture = collection._polygonsTexture;
   const extentsTexture = collection._extentsTexture;
@@ -679,22 +671,8 @@ function createSignedDistanceTextureCommand(collection) {
       u_extentsTexture: function () {
         return extentsTexture;
       },
-      u_extentsTextureDimensions: function () {
-        return ClippingPolygonCollection.getTextureResolution(
-          extentsTexture,
-          collection.pixelsNeededForExtents,
-          scratchExtentsDimensions
-        );
-      },
       u_polygonTexture: function () {
         return polygonTexture;
-      },
-      u_polygonTextureDimensions: function () {
-        return ClippingPolygonCollection.getTextureResolution(
-          polygonTexture,
-          collection.pixelsNeededForPolygonPositions,
-          scratchCartesian
-        );
       },
     },
     persists: false,

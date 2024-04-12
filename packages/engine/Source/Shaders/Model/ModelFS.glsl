@@ -77,7 +77,7 @@ void main()
     modelClippingPlanesStage(color);
     #endif
 
-    #ifdef HAS_CLIPPING_POLYGONS
+    #ifdef ENABLE_CLIPPING_POLYGONS
     modelClippingPolygonsStage();
     #endif
 
