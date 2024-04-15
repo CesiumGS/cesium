@@ -219,11 +219,11 @@ void main()
     
     v_clippingPosition = vec2(czm_infinity);
 
-    float padding = 0.005 / czm_geometricToleranceOverMeter;
     for (int regionIndex = 0; regionIndex < CLIPPING_POLYGON_REGIONS_LENGTH; regionIndex++) {
         vec4 extents = unpackClippingExtents(u_clippingExtents, regionIndex);
     
         vec2 rectUv = (sphericalLatLong.yx - extents.yx) * extents.wz;
+        float padding = 5000.0 * czm_geometricToleranceOverMeter;
         if (rectUv.x > -padding && rectUv.y > -padding && rectUv.x < 1.0 + padding && rectUv.y < 1.0 + padding) {
             v_clippingPosition = rectUv;
             v_regionIndex = regionIndex;

@@ -113,16 +113,12 @@ function ClippingPolygonCollection(options) {
 
   this._signedDistanceComputeCommand = undefined;
 
-  this._dirty = false;
-
   // Add each ClippingPolygon object.
   const polygons = options.polygons;
   if (defined(polygons)) {
     const polygonsLength = polygons.length;
     for (let i = 0; i < polygonsLength; ++i) {
       this._polygons.push(polygons[i]);
-      this._totalPositions += polygons[i].positions.length;
-      this._dirty = true;
     }
   }
 }
@@ -255,9 +251,7 @@ Object.defineProperties(ClippingPolygonCollection.prototype, {
    */
   clippingPolygonsState: {
     get: function () {
-      return this.inverse
-        ? -this._totalPositions - this.length
-        : this._totalPositions + this.length;
+      return this.inverse ? -this.extentsCount : this.extentsCount;
     },
   },
 });
@@ -301,10 +295,7 @@ ClippingPolygonCollection.prototype.add = function (polygon) {
   //>>includeEnd('debug');
 
   const newPlaneIndex = this._polygons.length;
-
-  this._dirty = true;
   this._polygons.push(polygon);
-  this._totalPositions += polygon.positions.length;
   this.polygonAdded.raiseEvent(polygon, newPlaneIndex);
   return polygon;
 };
@@ -367,14 +358,7 @@ ClippingPolygonCollection.prototype.remove = function (polygon) {
     return false;
   }
 
-  // Shift and update indices
-  const length = polygons.length - 1;
-  for (let i = index; i < length; ++i) {
-    const polygonToKeep = polygons[i + 1];
-    polygons[i] = polygonToKeep;
-  }
-
-  polygons.length = length;
+  polygons.splice(index, 1);
 
   this.polygonRemoved.raiseEvent(polygon, index);
   this._dirty = true;
@@ -437,9 +421,7 @@ function packPolygonsAsFloats(clippingPolygonCollection) {
       const spherePoint = polygon.positions[i];
 
       // Project into plane with vertical for latitude
-      const magXY = Math.sqrt(
-        spherePoint.x * spherePoint.x + spherePoint.y * spherePoint.y
-      );
+      const magXY = Math.hypot(spherePoint.x, spherePoint.y);
 
       // Use fastApproximateAtan2 for alignment with shader
       const latitudeApproximation = CesiumMath.fastApproximateAtan2(
@@ -496,15 +478,16 @@ ClippingPolygonCollection.prototype.update = function (frameState) {
   }
 
   // It'd be expensive to validate any individual position has changed. Instead verify if the list of polygon positions has has elements added or removed, which should be good enough for most cases.
-  const dirty =
-    this._dirty ||
-    this._polygons.reduce(
-      (totalPositions, polygon) => totalPositions + polygon.length,
-      0
-    ) !== this.totalPositions;
-  if (!dirty) {
+  const totalPositions = this._polygons.reduce(
+    (totalPositions, polygon) => totalPositions + polygon.length,
+    0
+  );
+
+  if (totalPositions === this.totalPositions) {
     return;
   }
+
+  this._totalPositions = totalPositions;
 
   if (defined(this._signedDistanceComputeCommand)) {
     this._signedDistanceComputeCommand.canceled = true;
@@ -635,8 +618,6 @@ ClippingPolygonCollection.prototype.update = function (frameState) {
   }
 
   this._signedDistanceComputeCommand = createSignedDistanceTextureCommand(this);
-
-  this._dirty = false;
 };
 
 /**

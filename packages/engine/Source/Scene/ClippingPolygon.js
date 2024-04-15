@@ -206,11 +206,14 @@ ClippingPolygon.prototype.computeSphericalExtents = function (result) {
   result.north = sphereLatitude;
   result.east = sphereLongitude;
 
+  const height = result.height;
+  const width = result.width;
+
   // Slightly pad extents to avoid floating point error when fragment culling at edges.
-  result.south -= CesiumMath.EPSILON5;
-  result.west -= CesiumMath.EPSILON5;
-  result.north += CesiumMath.EPSILON5;
-  result.east += CesiumMath.EPSILON5;
+  result.south -= 0.25 * height;
+  result.west -= 0.25 * width;
+  result.north += 0.25 * height;
+  result.east += 0.25 * width;
 
   return result;
 };
