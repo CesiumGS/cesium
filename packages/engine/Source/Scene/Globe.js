@@ -341,26 +341,6 @@ function Globe(ellipsoid) {
   this.atmosphereBrightnessShift = 0.0;
 
   /**
-   * A scalar used to exaggerate the terrain. Defaults to <code>1.0</code> (no exaggeration).
-   * A value of <code>2.0</code> scales the terrain by 2x.
-   * A value of <code>0.0</code> makes the terrain completely flat.
-   * Note that terrain exaggeration will not modify any other primitive as they are positioned relative to the ellipsoid.
-   * @type {number}
-   * @default 1.0
-   */
-  this.terrainExaggeration = 1.0;
-
-  /**
-   * The height from which terrain is exaggerated. Defaults to <code>0.0</code> (scaled relative to ellipsoid surface).
-   * Terrain that is above this height will scale upwards and terrain that is below this height will scale downwards.
-   * Note that terrain exaggeration will not modify any other primitive as they are positioned relative to the ellipsoid.
-   * If {@link Globe#terrainExaggeration} is <code>1.0</code> this value will have no effect.
-   * @type {number}
-   * @default 0.0
-   */
-  this.terrainExaggerationRelativeHeight = 0.0;
-
-  /**
    * Whether to show terrain skirts. Terrain skirts are geometry extending downwards from a tile's edges used to hide seams between neighboring tiles.
    * Skirts are always hidden when the camera is underground or translucency is enabled.
    *
@@ -644,8 +624,8 @@ function makeShadersDirty(globe) {
 
   const requireNormals =
     defined(globe._material) &&
-    (globe._material.shaderSource.match(/slope/) ||
-      globe._material.shaderSource.match("normalEC"));
+    (defined(globe._material.shaderSource.match(/slope/)) ||
+      defined(globe._material.shaderSource.match("normalEC")));
 
   const fragmentSources = [AtmosphereCommon, GroundAtmosphere];
   if (
@@ -1059,6 +1039,7 @@ Globe.prototype.beginFrame = function (frameState) {
     tileProvider.undergroundColor = this._undergroundColor;
     tileProvider.undergroundColorAlphaByDistance = this._undergroundColorAlphaByDistance;
     tileProvider.lambertDiffuseMultiplier = this.lambertDiffuseMultiplier;
+
     surface.beginFrame(frameState);
   }
 };

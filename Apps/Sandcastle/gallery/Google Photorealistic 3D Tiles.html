@@ -35,11 +35,13 @@
           animation: false,
           sceneModePicker: false,
           baseLayerPicker: false,
+          // The globe does not need to be displayed,
+          // since the Photorealistic 3D Tiles include terrain
+          globe: false,
         });
 
-        // The globe does not need to be displayed,
-        // since the Photorealistic 3D Tiles include terrain
-        viewer.scene.globe.show = false;
+        // Enable rendering the sky
+        viewer.scene.skyAtmosphere.show = true;
 
         // Add Photorealistic 3D Tiles
         try {

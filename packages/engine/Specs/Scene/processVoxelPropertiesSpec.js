@@ -92,6 +92,9 @@ describe("Scene/processVoxelProperties", function () {
       "    vec3 viewDirUv;",
       "    vec3 viewDirWorld;",
       "    float travelDistance;",
+      "    int stepCount;",
+      "    int sampleIndex;",
+      "    int tileIndex;",
     ];
     ShaderBuilderTester.expectHasFragmentStruct(
       shaderBuilder,

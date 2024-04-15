@@ -13,8 +13,11 @@ import GeometryAttribute from "./GeometryAttribute.js";
 import GeometryAttributes from "./GeometryAttributes.js";
 import GeometryPipeline from "./GeometryPipeline.js";
 import IndexDatatype from "./IndexDatatype.js";
+import IntersectionTests from "./IntersectionTests.js";
 import CesiumMath from "./Math.js";
 import Matrix3 from "./Matrix3.js";
+import Plane from "./Plane.js";
+import PolygonHierarchy from "./PolygonHierarchy.js";
 import PolygonPipeline from "./PolygonPipeline.js";
 import PrimitiveType from "./PrimitiveType.js";
 import Quaternion from "./Quaternion.js";
@@ -466,12 +469,294 @@ PolygonGeometryLibrary.polygonOutlinesFromHierarchy = function (
   return polygons;
 };
 
+const scratchRhumbIntersection = new Cartographic();
+function computeEquatorIntersectionRhumb(start, end, ellipsoid) {
+  const c0 = ellipsoid.cartesianToCartographic(start, scratchCartographic0);
+  const c1 = ellipsoid.cartesianToCartographic(end, scratchCartographic1);
+
+  if (Math.sign(c0.latitude) === Math.sign(c1.latitude)) {
+    return;
+  }
+
+  scratchRhumbLine.setEndPoints(c0, c1);
+
+  const intersection = scratchRhumbLine.findIntersectionWithLatitude(
+    0,
+    scratchRhumbIntersection
+  );
+
+  if (!defined(intersection)) {
+    return;
+  }
+
+  let minLongitude = Math.min(c0.longitude, c1.longitude);
+  let maxLongitude = Math.max(c0.longitude, c1.longitude);
+
+  if (Math.abs(maxLongitude - minLongitude) > CesiumMath.PI) {
+    // Crosses IDL, flip min and max
+    const swap = minLongitude;
+    minLongitude = maxLongitude;
+    maxLongitude = swap;
+  }
+
+  if (
+    intersection.longitude < minLongitude ||
+    intersection.longitude > maxLongitude
+  ) {
+    return;
+  }
+
+  return ellipsoid.cartographicToCartesian(intersection);
+}
+
+function computeEquatorIntersection(start, end, ellipsoid, arcType) {
+  if (arcType === ArcType.RHUMB) {
+    return computeEquatorIntersectionRhumb(start, end, ellipsoid);
+  }
+
+  const intersection = IntersectionTests.lineSegmentPlane(
+    start,
+    end,
+    Plane.ORIGIN_XY_PLANE
+  );
+
+  if (!defined(intersection)) {
+    return;
+  }
+
+  return ellipsoid.scaleToGeodeticSurface(intersection, intersection);
+}
+
+const scratchCartographic = new Cartographic();
+function computeEdgesOnPlane(positions, ellipsoid, arcType) {
+  const edgesOnPlane = [];
+  let startPoint,
+    endPoint,
+    type,
+    next,
+    intersection,
+    i = 0;
+  while (i < positions.length) {
+    startPoint = positions[i];
+    endPoint = positions[(i + 1) % positions.length];
+
+    type = CesiumMath.sign(startPoint.z);
+    next = CesiumMath.sign(endPoint.z);
+
+    const getLongitude = (position) => {
+      const cartographic = ellipsoid.cartesianToCartographic(
+        position,
+        scratchCartographic
+      );
+      return cartographic.longitude;
+    };
+
+    if (type === 0) {
+      // The start position is on the split
+      edgesOnPlane.push({
+        position: i,
+        type: type,
+        visited: false,
+        next: next,
+        theta: getLongitude(startPoint),
+      });
+    } else if (next !== 0) {
+      intersection = computeEquatorIntersection(
+        startPoint,
+        endPoint,
+        ellipsoid,
+        arcType
+      );
+
+      ++i;
+      if (!defined(intersection)) {
+        // The line segment is entirely above or below
+        continue;
+      }
+
+      // The line segment passed through
+      positions.splice(i, 0, intersection);
+      edgesOnPlane.push({
+        position: i,
+        type: type,
+        visited: false,
+        next: next,
+        theta: getLongitude(intersection),
+      });
+    }
+
+    ++i;
+  }
+
+  return edgesOnPlane;
+}
+
+function wirePolygon(
+  polygons,
+  polygonIndex,
+  positions,
+  edgesOnPlane,
+  toDelete,
+  startIndex,
+  abovePlane
+) {
+  const polygon = [];
+  let i = startIndex;
+  const getMatchingEdge = (i) => (edge) => edge.position === i;
+  const polygonsToWire = [];
+  do {
+    const position = positions[i];
+    polygon.push(position);
+
+    const edgeIndex = edgesOnPlane.findIndex(getMatchingEdge(i));
+    const edge = edgesOnPlane[edgeIndex];
+    if (!defined(edge)) {
+      // The current segment does not intersect
+      ++i;
+      continue;
+    }
+
+    const { visited: hasBeenVisited, type, next } = edge;
+    edge.visited = true;
+
+    if (type === 0) {
+      if (next === 0) {
+        // Special case where we'll need to backtrack along the edge
+        const previousEdge = edgesOnPlane[edgeIndex - (abovePlane ? 1 : -1)];
+        if (previousEdge?.position === i + 1) {
+          previousEdge.visited = true;
+        } else {
+          ++i;
+          continue;
+        }
+      }
+
+      // Special case where 3 polygons meet
+      if (
+        (!hasBeenVisited && abovePlane && next > 0) ||
+        (startIndex === i && !abovePlane && next < 0)
+      ) {
+        ++i;
+        continue;
+      }
+    }
+
+    const followEdge = abovePlane ? type >= 0 : type <= 0;
+    if (!followEdge) {
+      ++i;
+      continue;
+    }
+
+    if (!hasBeenVisited) {
+      // Wire another polygon starting at this position on the other side of the edge
+      polygonsToWire.push(i);
+    }
+
+    // Continue counter-clockwise to the next edge
+    const nextEdgeIndex = edgeIndex + (abovePlane ? 1 : -1);
+    const nextEdge = edgesOnPlane[nextEdgeIndex];
+    if (!defined(nextEdge)) {
+      ++i;
+      continue;
+    }
+
+    i = nextEdge.position;
+  } while (
+    i < positions.length &&
+    i >= 0 &&
+    i !== startIndex &&
+    polygon.length < positions.length
+  );
+
+  polygons.splice(polygonIndex, toDelete, polygon);
+
+  for (const index of polygonsToWire) {
+    polygonIndex = wirePolygon(
+      polygons,
+      ++polygonIndex,
+      positions,
+      edgesOnPlane,
+      0,
+      index,
+      !abovePlane
+    );
+  }
+
+  return polygonIndex;
+}
+
+/**
+ * Splits an array of polygons, defined as a list of Cartesian3 positions in counter-clockwise winding order, along the equator.
+ *
+ * @param {Array<Cartesian3[]>} outerRings An array of polygons, defined as a list of Cartesian3 positions in counter-clockwise winding order.
+ * @param {Ellipsoid} ellipsoid The ellipsoid to be used as a reference.
+ * @param {ArcType} arcType The type of line the polygon edges must follow. Valid options are {@link ArcType.GEODESIC} and {@link ArcType.RHUMB}.
+ * @param {Array<Cartesian3[]>} [result] An array of split polygons.
+ *
+ * @returns {Array<Cartesian3[]>} An array of split polygons.
+ */
+PolygonGeometryLibrary.splitPolygonsOnEquator = function (
+  outerRings,
+  ellipsoid,
+  arcType,
+  result
+) {
+  if (!defined(result)) {
+    result = [];
+  }
+
+  result.splice(0, 0, ...outerRings);
+  result.length = outerRings.length;
+
+  let currentPolygon = 0;
+  while (currentPolygon < result.length) {
+    // Adapted from https://www.sciencedirect.com/science/article/abs/pii/B9780125434577500589#:~:text=If%20the%20plane%20intersects%20the,tree%20and%20polygon%20intersection%20libraries
+    const outerRing = result[currentPolygon];
+    const positions = outerRing.slice();
+
+    if (outerRing.length < 3) {
+      result[currentPolygon] = positions;
+      ++currentPolygon;
+      continue;
+    }
+
+    // Step 1: Get all edges which intersect the split line, splciing any found intersections points into the list of positions
+    const edgesOnPlane = computeEdgesOnPlane(positions, ellipsoid, arcType);
+    // If nothing intersected (no point were added), or there is only a single point on the plane, use the original polygon
+    if (positions.length === outerRing.length || edgesOnPlane.length <= 1) {
+      result[currentPolygon] = positions;
+      ++currentPolygon;
+      continue;
+    }
+
+    // Step 2: Sort the edges along the split line by the distance between their starting points and the starting point of the split line.
+    edgesOnPlane.sort((a, b) => {
+      return a.theta - b.theta;
+    });
+
+    // Step 3: Rewire polygons, splicing each polygon into the array of results
+    const north = positions[0].z >= 0.0;
+    currentPolygon = wirePolygon(
+      result,
+      currentPolygon,
+      positions,
+      edgesOnPlane,
+      1,
+      0,
+      north
+    );
+  }
+
+  return result;
+};
+
 PolygonGeometryLibrary.polygonsFromHierarchy = function (
   polygonHierarchy,
   keepDuplicates,
   projectPointsTo2D,
   scaleToEllipsoidSurface,
-  ellipsoid
+  ellipsoid,
+  splitPolygons
 ) {
   // create from a polygon hierarchy
   // Algorithm adapted from http://www.geometrictools.com/Documentation/TriangulationByEarClipping.pdf
@@ -480,6 +765,8 @@ PolygonGeometryLibrary.polygonsFromHierarchy = function (
 
   const queue = new Queue();
   queue.enqueue(polygonHierarchy);
+
+  let split = defined(splitPolygons);
 
   while (queue.length !== 0) {
     const outerNode = queue.dequeue();
@@ -518,6 +805,20 @@ PolygonGeometryLibrary.polygonsFromHierarchy = function (
     if (originalWindingOrder === WindingOrder.CLOCKWISE) {
       positions2D.reverse();
       outerRing = outerRing.slice().reverse();
+    }
+
+    if (split) {
+      split = false;
+      let polygons = [outerRing];
+      polygons = splitPolygons(polygons, polygons);
+
+      if (polygons.length > 1) {
+        for (const positions of polygons) {
+          queue.enqueue(new PolygonHierarchy(positions, holes));
+        }
+
+        continue;
+      }
     }
 
     let positions = outerRing.slice();

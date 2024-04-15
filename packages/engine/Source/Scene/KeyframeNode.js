@@ -20,7 +20,7 @@ function KeyframeNode(spatialNode, keyframe) {
   this.spatialNode = spatialNode;
   this.keyframe = keyframe;
   this.state = LoadState.UNLOADED;
-  this.metadatas = [];
+  this.metadata = [];
   this.megatextureIndex = -1;
   this.priority = -Number.MAX_VALUE;
   this.highPriorityFrameNumber = -1;

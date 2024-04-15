@@ -4,7 +4,7 @@ import Resource from "../Core/Resource.js";
 
 let defaultTokenCredit;
 const defaultAccessToken =
-  "AAPK8f33c81975d04fa5bc64d58baa922e4d8t7EX1YAV3MBqwKXAhJ1uohub5U5OCU0PyXE7kNEVf8hebc9ZA4kk17Y4FYDA_rV";
+  "AAPK3b7fccd1509046758d03c6641e404040gQG5edfR9eun2VcwtbXJKNbQjIZ7ma2vUd9ulqZK4lo3R_DJIAhwoGW9p86JNauB";
 /**
  * Default options for accessing the ArcGIS image tile service.
  *
@@ -76,7 +76,6 @@ ArcGisMapService.getDefaultTokenCredit = function (providedKey) {
             You can sign up for a free ArcGIS Developer account at <a href="https://developers.arcgis.com/">https://developers.arcgis.com/</a>.</b>';
 
     defaultTokenCredit = new Credit(defaultTokenMessage, true);
-    defaultTokenCredit._isDefaultToken = true;
   }
 
   return defaultTokenCredit;

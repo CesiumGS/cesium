@@ -43,8 +43,8 @@ const defaultCredit = new Credit(
  *     accessToken: 'thisIsMyAccessToken'
  * });
  *
- * @see {@link https://www.mapbox.com/developers/api/maps/#tiles}
- * @see {@link https://www.mapbox.com/developers/api/#access-tokens}
+ * @see {@link https://docs.mapbox.com/api/maps/raster-tiles/}
+ * @see {@link https://docs.mapbox.com/api/accounts/tokens/}
  */
 function MapboxImageryProvider(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);

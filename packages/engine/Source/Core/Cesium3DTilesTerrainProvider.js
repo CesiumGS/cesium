@@ -196,7 +196,7 @@ function isChildAvailable(implicitTileset, subtree, coord, x, y) {
  * @alias Cesium3DTilesTerrainProvider
  * @constructor
  *
- * @param {Cesium3DTilesTerrainProvider.ConstructorOptionst}[options] An object describing initialization options
+ * @param {Cesium3DTilesTerrainProvider.ConstructorOptions}[options] An object describing initialization options
  *
  * @see TerrainProvider
  * @see Cesium3DTilesTerrainProvider.fromUrl
@@ -712,8 +712,7 @@ Object.defineProperties(Cesium3DTilesTerrainProvider.prototype, {
 
   /**
    * Gets an object that can be used to determine availability of terrain from this provider, such as
-   * at points and in rectangles. This function should not be called before
-   * {@link Cesium3DTilesTerrainProvider#ready} returns true.
+   * at points and in rectangles.
    * @memberof Cesium3DTilesTerrainProvider.prototype
    * @type {TileAvailability|undefined}
    */

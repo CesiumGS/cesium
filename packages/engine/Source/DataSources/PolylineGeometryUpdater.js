@@ -249,8 +249,7 @@ Object.defineProperties(PolylineGeometryUpdater.prototype, {
   },
   /**
    * Gets a value indicating if the geometry is time-varying.
-   * If true, all visualization is delegated to the {@link DynamicGeometryUpdater}
-   * returned by GeometryUpdater#createDynamicUpdater.
+   *
    * @memberof PolylineGeometryUpdater.prototype
    *
    * @type {boolean}
@@ -661,12 +660,13 @@ function getLine(dynamicGeometryUpdater) {
     return dynamicGeometryUpdater._line;
   }
 
-  const sceneId = dynamicGeometryUpdater._geometryUpdater._scene.id;
-  let polylineCollection = polylineCollections[sceneId];
   const primitives = dynamicGeometryUpdater._primitives;
+  const polylineCollectionId =
+    dynamicGeometryUpdater._geometryUpdater._scene.id + primitives._guid;
+  let polylineCollection = polylineCollections[polylineCollectionId];
   if (!defined(polylineCollection) || polylineCollection.isDestroyed()) {
     polylineCollection = new PolylineCollection();
-    polylineCollections[sceneId] = polylineCollection;
+    polylineCollections[polylineCollectionId] = polylineCollection;
     primitives.add(polylineCollection);
   } else if (!primitives.contains(polylineCollection)) {
     primitives.add(polylineCollection);
@@ -869,13 +869,14 @@ DynamicGeometryUpdater.prototype.isDestroyed = function () {
 
 DynamicGeometryUpdater.prototype.destroy = function () {
   const geometryUpdater = this._geometryUpdater;
-  const sceneId = geometryUpdater._scene.id;
-  const polylineCollection = polylineCollections[sceneId];
+  const polylineCollectionId =
+    geometryUpdater._scene.id + this._primitives._guid;
+  const polylineCollection = polylineCollections[polylineCollectionId];
   if (defined(polylineCollection)) {
     polylineCollection.remove(this._line);
     if (polylineCollection.length === 0) {
       this._primitives.removeAndDestroy(polylineCollection);
-      delete polylineCollections[sceneId];
+      delete polylineCollections[polylineCollectionId];
     }
   }
   if (defined(this._groundPolylinePrimitive)) {

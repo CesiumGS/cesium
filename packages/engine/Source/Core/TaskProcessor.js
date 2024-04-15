@@ -1,7 +1,6 @@
 import Uri from "urijs";
 import buildModuleUrl from "./buildModuleUrl.js";
 import defaultValue from "./defaultValue.js";
-import defer from "./defer.js";
 import defined from "./defined.js";
 import destroyObject from "./destroyObject.js";
 import DeveloperError from "./DeveloperError.js";
@@ -13,9 +12,7 @@ import RuntimeError from "./RuntimeError.js";
 
 function canTransferArrayBuffer() {
   if (!defined(TaskProcessor._canTransferArrayBuffer)) {
-    const worker = new Worker(
-      getWorkerUrl("Workers/transferTypedArrayTest.js")
-    );
+    const worker = createWorker("transferTypedArrayTest");
     worker.postMessage = defaultValue(
       worker.webkitPostMessage,
       worker.postMessage
@@ -38,23 +35,21 @@ function canTransferArrayBuffer() {
       return TaskProcessor._canTransferArrayBuffer;
     }
 
-    const deferred = defer();
+    TaskProcessor._canTransferArrayBuffer = new Promise((resolve) => {
+      worker.onmessage = function (event) {
+        const array = event.data.array;
 
-    worker.onmessage = function (event) {
-      const array = event.data.array;
+        // some versions of Firefox silently fail to transfer typed arrays.
+        // https://bugzilla.mozilla.org/show_bug.cgi?id=841904
+        // Check to make sure the value round-trips successfully.
+        const result = defined(array) && array[0] === value;
+        resolve(result);
 
-      // some versions of Firefox silently fail to transfer typed arrays.
-      // https://bugzilla.mozilla.org/show_bug.cgi?id=841904
-      // Check to make sure the value round-trips successfully.
-      const result = defined(array) && array[0] === value;
-      deferred.resolve(result);
+        worker.terminate();
 
-      worker.terminate();
-
-      TaskProcessor._canTransferArrayBuffer = result;
-    };
-
-    TaskProcessor._canTransferArrayBuffer = deferred.promise;
+        TaskProcessor._canTransferArrayBuffer = result;
+      };
+    });
   }
 
   return TaskProcessor._canTransferArrayBuffer;
@@ -62,101 +57,73 @@ function canTransferArrayBuffer() {
 
 const taskCompletedEvent = new Event();
 
-function completeTask(processor, data) {
-  --processor._activeTasks;
-
-  const id = data.id;
-  if (!defined(id)) {
-    // This is not one of ours.
-    return;
+function urlFromScript(script) {
+  let blob;
+  try {
+    blob = new Blob([script], {
+      type: "application/javascript",
+    });
+  } catch (e) {
+    const BlobBuilder =
+      window.BlobBuilder ||
+      window.WebKitBlobBuilder ||
+      window.MozBlobBuilder ||
+      window.MSBlobBuilder;
+    const blobBuilder = new BlobBuilder();
+    blobBuilder.append(script);
+    blob = blobBuilder.getBlob("application/javascript");
   }
 
-  const deferreds = processor._deferreds;
-  const deferred = deferreds[id];
-
-  if (defined(data.error)) {
-    let error = data.error;
-    if (error.name === "RuntimeError") {
-      error = new RuntimeError(data.error.message);
-      error.stack = data.error.stack;
-    } else if (error.name === "DeveloperError") {
-      error = new DeveloperError(data.error.message);
-      error.stack = data.error.stack;
-    }
-    taskCompletedEvent.raiseEvent(error);
-    deferred.reject(error);
-  } else {
-    taskCompletedEvent.raiseEvent();
-    deferred.resolve(data.result);
-  }
-
-  delete deferreds[id];
+  const URL = window.URL || window.webkitURL;
+  return URL.createObjectURL(blob);
 }
 
-function getWorkerUrl(moduleID) {
-  let url = buildModuleUrl(moduleID);
+function createWorker(url) {
+  const uri = new Uri(url);
+  const isUri = uri.scheme().length !== 0 && uri.fragment().length === 0;
 
+  const options = {};
+  let workerPath;
   if (isCrossOriginUrl(url)) {
-    //to load cross-origin, create a shim worker from a blob URL
+    // To load cross-origin, create a shim worker from a blob URL
     const script = `importScripts("${url}");`;
-
-    let blob;
-    try {
-      blob = new Blob([script], {
-        type: "application/javascript",
-      });
-    } catch (e) {
-      const BlobBuilder =
-        window.BlobBuilder ||
-        window.WebKitBlobBuilder ||
-        window.MozBlobBuilder ||
-        window.MSBlobBuilder;
-      const blobBuilder = new BlobBuilder();
-      blobBuilder.append(script);
-      blob = blobBuilder.getBlob("application/javascript");
-    }
-
-    const URL = window.URL || window.webkitURL;
-    url = URL.createObjectURL(blob);
+    workerPath = urlFromScript(script);
+    return new Worker(workerPath, options);
   }
 
-  return url;
-}
+  const moduleID = url.replace(/\.js$/, "");
 
-let bootstrapperUrlResult;
-function getBootstrapperUrl() {
-  if (!defined(bootstrapperUrlResult)) {
-    bootstrapperUrlResult = getWorkerUrl("Workers/cesiumWorkerBootstrapper.js");
+  /* global CESIUM_WORKERS */
+  if (!isUri && typeof CESIUM_WORKERS !== "undefined") {
+    // If the workers are embedded, create a shim worker from the embedded script data
+    const script = `
+      importScripts("${urlFromScript(CESIUM_WORKERS)}");
+      CesiumWorkers["${moduleID}"]();
+    `;
+    workerPath = urlFromScript(script);
+    return new Worker(workerPath, options);
   }
-  return bootstrapperUrlResult;
+
+  workerPath = url;
+
+  if (!isUri) {
+    workerPath = buildModuleUrl(
+      `${TaskProcessor._workerModulePrefix + moduleID}.js`
+    );
+  }
+
+  if (!FeatureDetection.supportsEsmWebWorkers()) {
+    throw new RuntimeError(
+      "This browser is not supported. Please update your browser to continue."
+    );
+  }
+
+  options.type = "module";
+
+  return new Worker(workerPath, options);
 }
 
-function createWorker(processor) {
-  const worker = new Worker(getBootstrapperUrl());
-  worker.postMessage = defaultValue(
-    worker.webkitPostMessage,
-    worker.postMessage
-  );
-
-  const bootstrapMessage = {
-    loaderConfig: {
-      paths: {
-        Workers: buildModuleUrl("Workers"),
-      },
-      baseUrl: buildModuleUrl.getCesiumBaseUrl().url,
-    },
-    workerModule: processor._workerPath,
-  };
-
-  worker.postMessage(bootstrapMessage);
-  worker.onmessage = function (event) {
-    completeTask(processor, event.data);
-  };
-
-  return worker;
-}
-
-function getWebAssemblyLoaderConfig(processor, wasmOptions) {
+async function getWebAssemblyLoaderConfig(processor, wasmOptions) {
   const config = {
     modulePath: undefined,
     wasmBinaryFile: undefined,
@@ -172,18 +139,17 @@ function getWebAssemblyLoaderConfig(processor, wasmOptions) {
     }
 
     config.modulePath = buildModuleUrl(wasmOptions.fallbackModulePath);
-    return Promise.resolve(config);
+    return config;
   }
 
-  config.modulePath = buildModuleUrl(wasmOptions.modulePath);
   config.wasmBinaryFile = buildModuleUrl(wasmOptions.wasmBinaryFile);
 
-  return Resource.fetchArrayBuffer({
+  const arrayBuffer = await Resource.fetchArrayBuffer({
     url: config.wasmBinaryFile,
-  }).then(function (arrayBuffer) {
-    config.wasmBinary = arrayBuffer;
-    return config;
   });
+
+  config.wasmBinary = arrayBuffer;
+  return config;
 }
 
 /**
@@ -201,21 +167,89 @@ function getWebAssemblyLoaderConfig(processor, wasmOptions) {
  *                                        work to be rescheduled in future frames.
  */
 function TaskProcessor(workerPath, maximumActiveTasks) {
-  const uri = new Uri(workerPath);
-  this._workerPath =
-    uri.scheme().length !== 0 && uri.fragment().length === 0
-      ? workerPath
-      : TaskProcessor._workerModulePrefix + workerPath;
+  this._workerPath = workerPath;
   this._maximumActiveTasks = defaultValue(
     maximumActiveTasks,
     Number.POSITIVE_INFINITY
   );
   this._activeTasks = 0;
-  this._deferreds = {};
   this._nextID = 0;
+  this._webAssemblyPromise = undefined;
 }
 
+const createOnmessageHandler = (worker, id, resolve, reject) => {
+  const listener = ({ data }) => {
+    if (data.id !== id) {
+      return;
+    }
+
+    if (defined(data.error)) {
+      let error = data.error;
+      if (error.name === "RuntimeError") {
+        error = new RuntimeError(data.error.message);
+        error.stack = data.error.stack;
+      } else if (error.name === "DeveloperError") {
+        error = new DeveloperError(data.error.message);
+        error.stack = data.error.stack;
+      } else if (error.name === "Error") {
+        error = new Error(data.error.message);
+        error.stack = data.error.stack;
+      }
+      taskCompletedEvent.raiseEvent(error);
+      reject(error);
+    } else {
+      taskCompletedEvent.raiseEvent();
+      resolve(data.result);
+    }
+
+    worker.removeEventListener("message", listener);
+  };
+
+  return listener;
+};
+
 const emptyTransferableObjectArray = [];
+async function runTask(processor, parameters, transferableObjects) {
+  const canTransfer = await Promise.resolve(canTransferArrayBuffer());
+  if (!defined(transferableObjects)) {
+    transferableObjects = emptyTransferableObjectArray;
+  } else if (!canTransfer) {
+    transferableObjects.length = 0;
+  }
+
+  const id = processor._nextID++;
+  const promise = new Promise((resolve, reject) => {
+    processor._worker.addEventListener(
+      "message",
+      createOnmessageHandler(processor._worker, id, resolve, reject)
+    );
+  });
+
+  processor._worker.postMessage(
+    {
+      id: id,
+      baseUrl: buildModuleUrl.getCesiumBaseUrl().url,
+      parameters: parameters,
+      canTransferArrayBuffer: canTransfer,
+    },
+    transferableObjects
+  );
+
+  return promise;
+}
+
+async function scheduleTask(processor, parameters, transferableObjects) {
+  ++processor._activeTasks;
+
+  try {
+    const result = await runTask(processor, parameters, transferableObjects);
+    --processor._activeTasks;
+    return result;
+  } catch (error) {
+    --processor._activeTasks;
+    throw error;
+  }
+}
 
 /**
  * Schedule a task to be processed by the web worker asynchronously.  If there are currently more
@@ -248,89 +282,72 @@ TaskProcessor.prototype.scheduleTask = function (
   transferableObjects
 ) {
   if (!defined(this._worker)) {
-    this._worker = createWorker(this);
+    this._worker = createWorker(this._workerPath);
   }
 
   if (this._activeTasks >= this._maximumActiveTasks) {
     return undefined;
   }
 
-  ++this._activeTasks;
-
-  const processor = this;
-  return Promise.resolve(canTransferArrayBuffer()).then(function (
-    canTransferArrayBuffer
-  ) {
-    if (!defined(transferableObjects)) {
-      transferableObjects = emptyTransferableObjectArray;
-    } else if (!canTransferArrayBuffer) {
-      transferableObjects.length = 0;
-    }
-
-    const id = processor._nextID++;
-    const deferred = defer();
-    processor._deferreds[id] = deferred;
-
-    processor._worker.postMessage(
-      {
-        id: id,
-        parameters: parameters,
-        canTransferArrayBuffer: canTransferArrayBuffer,
-      },
-      transferableObjects
-    );
-
-    return deferred.promise;
-  });
+  return scheduleTask(this, parameters, transferableObjects);
 };
 
 /**
  * Posts a message to a web worker with configuration to initialize loading
- * and compiling a web assembly module asychronously, as well as an optional
+ * and compiling a web assembly module asynchronously, as well as an optional
  * fallback JavaScript module to use if Web Assembly is not supported.
  *
  * @param {object} [webAssemblyOptions] An object with the following properties:
  * @param {string} [webAssemblyOptions.modulePath] The path of the web assembly JavaScript wrapper module.
  * @param {string} [webAssemblyOptions.wasmBinaryFile] The path of the web assembly binary file.
  * @param {string} [webAssemblyOptions.fallbackModulePath] The path of the fallback JavaScript module to use if web assembly is not supported.
- * @returns {Promise<object>} A promise that resolves to the result when the web worker has loaded and compiled the web assembly module and is ready to process tasks.
+ * @returns {Promise<*>} A promise that resolves to the result when the web worker has loaded and compiled the web assembly module and is ready to process tasks.
+ *
+ * @exception {RuntimeError} This browser does not support Web Assembly, and no backup module was provided
  */
-TaskProcessor.prototype.initWebAssemblyModule = function (webAssemblyOptions) {
-  if (!defined(this._worker)) {
-    this._worker = createWorker(this);
+TaskProcessor.prototype.initWebAssemblyModule = async function (
+  webAssemblyOptions
+) {
+  if (defined(this._webAssemblyPromise)) {
+    return this._webAssemblyPromise;
   }
 
-  const deferred = defer();
-  const processor = this;
-  const worker = this._worker;
-  getWebAssemblyLoaderConfig(this, webAssemblyOptions).then(function (
-    wasmConfig
-  ) {
-    return Promise.resolve(canTransferArrayBuffer()).then(function (
-      canTransferArrayBuffer
-    ) {
-      let transferableObjects;
-      const binary = wasmConfig.wasmBinary;
-      if (defined(binary) && canTransferArrayBuffer) {
-        transferableObjects = [binary];
-      }
+  const init = async () => {
+    const worker = (this._worker = createWorker(this._workerPath));
+    const wasmConfig = await getWebAssemblyLoaderConfig(
+      this,
+      webAssemblyOptions
+    );
+    const canTransfer = await Promise.resolve(canTransferArrayBuffer());
+    let transferableObjects;
+    const binary = wasmConfig.wasmBinary;
+    if (defined(binary) && canTransfer) {
+      transferableObjects = [binary];
+    }
 
-      worker.onmessage = function (event) {
-        worker.onmessage = function (event) {
-          completeTask(processor, event.data);
-        };
-
-        deferred.resolve(event.data);
+    const promise = new Promise((resolve, reject) => {
+      worker.onmessage = function ({ data }) {
+        if (defined(data)) {
+          resolve(data.result);
+        } else {
+          reject(new RuntimeError("Could not configure wasm module"));
+        }
       };
-
-      worker.postMessage(
-        { webAssemblyConfig: wasmConfig },
-        transferableObjects
-      );
     });
-  });
 
-  return deferred.promise;
+    worker.postMessage(
+      {
+        canTransferArrayBuffer: canTransfer,
+        parameters: { webAssemblyConfig: wasmConfig },
+      },
+      transferableObjects
+    );
+
+    return promise;
+  };
+
+  this._webAssemblyPromise = init();
+  return this._webAssemblyPromise;
 };
 
 /**

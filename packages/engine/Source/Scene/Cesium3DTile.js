@@ -43,6 +43,7 @@ import TileBoundingS2Cell from "./TileBoundingS2Cell.js";
 import TileBoundingSphere from "./TileBoundingSphere.js";
 import TileOrientedBoundingBox from "./TileOrientedBoundingBox.js";
 import Pass from "../Renderer/Pass.js";
+import VerticalExaggeration from "../Core/VerticalExaggeration.js";
 
 /**
  * A tile in a {@link Cesium3DTileset}.  When a tile is first created, its content is not loaded;
@@ -118,6 +119,9 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
    * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   this.metadata = findTileMetadata(tileset, header);
+
+  this._verticalExaggeration = 1.0;
+  this._verticalExaggerationRelativeHeight = 0.0;
 
   // Important: tile metadata must be parsed before this line so that the
   // metadata semantics TILE_BOUNDING_BOX, TILE_BOUNDING_REGION, or TILE_BOUNDING_SPHERE
@@ -470,6 +474,7 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
   this._touchedFrame = 0;
   this._visitedFrame = 0;
   this._selectedFrame = 0;
+  this._wasSelectedLastFrame = false;
   this._requestedFrame = 0;
   this._ancestorWithContent = undefined;
   this._ancestorWithContentAvailable = undefined;
@@ -1018,7 +1023,7 @@ Cesium3DTile.prototype.updateVisibility = function (frameState) {
   const parentVisibilityPlaneMask = defined(parent)
     ? parent._visibilityPlaneMask
     : CullingVolume.MASK_INDETERMINATE;
-  this.updateTransform(parentTransform);
+  this.updateTransform(parentTransform, frameState);
   this._distanceToCamera = this.distanceToTile(frameState);
   this._centerZDepth = this.distanceToTileCenter(frameState);
   this._screenSpaceError = this.getScreenSpaceError(frameState, false);
@@ -1709,11 +1714,17 @@ function createRegion(region, transform, initialTransform, result) {
     );
   }
 
+  const rectangleRegion = Rectangle.unpack(region, 0, scratchRectangle);
+
   if (defined(result)) {
+    result.rectangle = Rectangle.clone(rectangleRegion, result.rectangle);
+    result.minimumHeight = region[4];
+    result.maximumHeight = region[5];
+    // The TileBoundingRegion was already constructed with the default
+    // WGS84 ellipsoid, so keep it consistent when updating.
+    result.computeBoundingVolumes(Ellipsoid.WGS84);
     return result;
   }
-
-  const rectangleRegion = Rectangle.unpack(region, 0, scratchRectangle);
 
   return new TileBoundingRegion({
     rectangle: rectangleRegion,
@@ -1793,26 +1804,117 @@ Cesium3DTile.prototype.createBoundingVolume = function (
 
   const { box, region, sphere } = boundingVolumeHeader;
   if (defined(box)) {
-    return createBox(box, transform, result);
+    const tileOrientedBoundingBox = createBox(box, transform, result);
+    if (this._verticalExaggeration !== 1.0) {
+      exaggerateBoundingBox(
+        tileOrientedBoundingBox,
+        this._verticalExaggeration,
+        this._verticalExaggerationRelativeHeight
+      );
+    }
+    return tileOrientedBoundingBox;
   }
   if (defined(region)) {
-    return createRegion(region, transform, this._initialTransform, result);
+    const tileBoundingVolume = createRegion(
+      region,
+      transform,
+      this._initialTransform,
+      result
+    );
+    if (this._verticalExaggeration === 1.0) {
+      return tileBoundingVolume;
+    }
+    if (tileBoundingVolume instanceof TileOrientedBoundingBox) {
+      exaggerateBoundingBox(
+        tileBoundingVolume,
+        this._verticalExaggeration,
+        this._verticalExaggerationRelativeHeight
+      );
+    } else {
+      tileBoundingVolume.minimumHeight = VerticalExaggeration.getHeight(
+        tileBoundingVolume.minimumHeight,
+        this._verticalExaggeration,
+        this._verticalExaggerationRelativeHeight
+      );
+      tileBoundingVolume.maximumHeight = VerticalExaggeration.getHeight(
+        tileBoundingVolume.maximumHeight,
+        this._verticalExaggeration,
+        this._verticalExaggerationRelativeHeight
+      );
+      tileBoundingVolume.computeBoundingVolumes(Ellipsoid.WGS84);
+    }
+    return tileBoundingVolume;
   }
   if (defined(sphere)) {
-    return createSphere(sphere, transform, result);
+    const tileBoundingSphere = createSphere(sphere, transform, result);
+    if (this._verticalExaggeration !== 1.0) {
+      const exaggeratedCenter = VerticalExaggeration.getPosition(
+        tileBoundingSphere.center,
+        Ellipsoid.WGS84,
+        this._verticalExaggeration,
+        this._verticalExaggerationRelativeHeight,
+        scratchCenter
+      );
+      const exaggeratedRadius =
+        tileBoundingSphere.radius * this._verticalExaggeration;
+      tileBoundingSphere.update(exaggeratedCenter, exaggeratedRadius);
+    }
+    return tileBoundingSphere;
   }
   throw new RuntimeError(
     "boundingVolume must contain a sphere, region, or box"
   );
 };
 
+const scratchExaggeratedCorners = Cartesian3.unpackArray(
+  new Array(8 * 3).fill(0)
+);
+
+/**
+ * Exaggerates the bounding box of a tile based on the provided exaggeration factors.
+ *
+ * @private
+ * @param {TileOrientedBoundingBox} tileOrientedBoundingBox - The oriented bounding box of the tile.
+ * @param {number} exaggeration - The exaggeration factor to apply to the tile's bounding box.
+ * @param {number} exaggerationRelativeHeight - The height relative to which exaggeration will be applied.
+ */
+function exaggerateBoundingBox(
+  tileOrientedBoundingBox,
+  exaggeration,
+  exaggerationRelativeHeight
+) {
+  const exaggeratedCorners = tileOrientedBoundingBox.boundingVolume
+    .computeCorners(scratchExaggeratedCorners)
+    .map((corner) =>
+      VerticalExaggeration.getPosition(
+        corner,
+        Ellipsoid.WGS84,
+        exaggeration,
+        exaggerationRelativeHeight,
+        corner
+      )
+    );
+  const exaggeratedBox = OrientedBoundingBox.fromPoints(
+    exaggeratedCorners,
+    scratchOrientedBoundingBox
+  );
+  tileOrientedBoundingBox.update(
+    exaggeratedBox.center,
+    exaggeratedBox.halfAxes
+  );
+}
+
 /**
  * Update the tile's transform. The transform is applied to the tile's bounding volumes.
  *
  * @private
  * @param {Matrix4} parentTransform
+ * @param {FrameState} [frameState]
  */
-Cesium3DTile.prototype.updateTransform = function (parentTransform) {
+Cesium3DTile.prototype.updateTransform = function (
+  parentTransform,
+  frameState
+) {
   parentTransform = defaultValue(parentTransform, Matrix4.IDENTITY);
   const computedTransform = Matrix4.multiplyTransformation(
     parentTransform,
@@ -1823,12 +1925,23 @@ Cesium3DTile.prototype.updateTransform = function (parentTransform) {
     computedTransform,
     this.computedTransform
   );
+  const exaggerationChanged =
+    defined(frameState) &&
+    (this._verticalExaggeration !== frameState.verticalExaggeration ||
+      this._verticalExaggerationRelativeHeight !==
+        frameState.verticalExaggerationRelativeHeight);
 
-  if (!transformChanged) {
+  if (!transformChanged && !exaggerationChanged) {
     return;
   }
-
-  Matrix4.clone(computedTransform, this.computedTransform);
+  if (transformChanged) {
+    Matrix4.clone(computedTransform, this.computedTransform);
+  }
+  if (exaggerationChanged) {
+    this._verticalExaggeration = frameState.verticalExaggeration;
+    this._verticalExaggerationRelativeHeight =
+      frameState.verticalExaggerationRelativeHeight;
+  }
 
   // Update the bounding volumes
   const header = this._header;

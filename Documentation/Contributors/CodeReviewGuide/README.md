@@ -16,7 +16,7 @@ This guide describes best practices for code reviewers.
 
 - It is ultimately the responsibility of the pull request opener to get their changes merged. They should champion their code being merged and should bump the PR or `@mention` a specific developer if it is not getting the necessary attention.
 - GitHub has great [tools for code reviews in pull requests](https://help.github.com/articles/using-pull-requests/#reviewing-proposed-changes) that you should become familiar with.
-- We need a CLA for any contribution. If we don't have a CLA for the contributor who opened the pull request (or, more precisely, any contributor to the branch), the Cesium Concierge will ask for one. If you receive no updates, politely ask for one before reviewing the pull request ([example](https://github.com/CesiumGS/cesium/pull/2918#issuecomment-127805425)).
+- We need a CLA for any contribution. If we don't have a CLA for the contributor who opened the pull request (or, more precisely, any contributor to the branch), we will ask for one. If you receive no updates, politely ask for one before reviewing the pull request ([example](https://github.com/CesiumGS/cesium/pull/2918#issuecomment-127805425)).
 - Most pull requests require additional work, minor or major, before being merged. Sometime pull requests are submitted incomplete for early feedback. Include a [task list](https://github.com/blog/1375%0A-task-lists-in-gfm-issues-pulls-comments) covering the steps that must be completed before merging.
 - Anyone is encouraged to review any pull request that interests them. However, someone familiar with the changed code should ultimately merge it.
 - It's OK to provide a few comments without taking responsibility for the final merge, for example commenting on the state of the public API or a Sandcastle example. However, be explicit that you will not be reviewing again. This sometimes happens when a reviewer wants to take a quick look at the public API or code examples but not all the implementation details.
@@ -51,9 +51,9 @@ This guide describes best practices for code reviewers.
 ## Merging
 
 - When a reviewer hits merge, the ideal is that they have enough knowledge of the new code that they could support it in the future. In practice, this isn't always realistic but we strive for it.
-- CesiumJS uses Travis CI for continuous integration. Travis automatically builds CesiumJS, runs ESLint, and generates the documentation for each branch pushed to GitHub. Before merging a pull request, verify that all Travis checks pass, indicated by the green check-mark and green "Merge pull request" button:
+- CesiumJS uses GitHub Actions for continuous integration. The workflows automatically build CesiumJS, run ESLint, generate the documentation, and perform other checks for each branch pushed to GitHub. Before merging a pull request, verify that all checks pass, indicated by the green check-mark and green "Merge pull request" button:
 
-![Travis CI checks](Travis.jpg)
+![GitHub Action CI checks](github_action_checks.png)
 
 - Delete the branch after merging the pull request.
 - Verify that the corresponding issue (if any) was closed.

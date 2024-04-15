@@ -1,5 +1,6 @@
 import {
   Cesium3DTilesTerrainProvider,
+  DeveloperError,
   Resource,
   TerrainProvider,
 } from "../../index.js";
@@ -9,113 +10,72 @@ describe("Core/Cesium3DTilesTerrainProvider", function () {
     expect(Cesium3DTilesTerrainProvider).toConformToInterface(TerrainProvider);
   });
 
-  it("constructor throws if url is not provided", function () {
-    expect(function () {
-      return new Cesium3DTilesTerrainProvider();
-    }).toThrowDeveloperError();
-
-    expect(function () {
-      return new Cesium3DTilesTerrainProvider({});
-    }).toThrowDeveloperError();
+  it("fromUrl throws if url is not provided", async function () {
+    await expectAsync(
+      Cesium3DTilesTerrainProvider.fromUrl()
+    ).toBeRejectedWithError(DeveloperError);
   });
 
-  it("rejects readyPromise when url rejects", function () {
+  it("fromUrl rejects when url rejects", async function () {
     const error = new Error();
-    const provider = new Cesium3DTilesTerrainProvider({
-      url: Promise.reject(error),
-    });
-    return provider.readyPromise
-      .then(function (result) {
-        fail("should not resolve");
-      })
-      .catch(function (result) {
-        expect(result).toBe(error);
-        expect(provider.ready).toBe(false);
-      });
+    await expectAsync(
+      Cesium3DTilesTerrainProvider.fromUrl(Promise.reject(error))
+    ).toBeRejectedWithError();
   });
 
-  it("rejects readyPromise when url is invalid", function () {
+  it("fromUrl rejects when url is invalid", async function () {
     const path = "made/up/url";
-    const provider = new Cesium3DTilesTerrainProvider({
-      url: path,
-    });
-    return provider.readyPromise
-      .then(function (result) {
-        fail("should not resolve");
-      })
-      .catch(function (error) {
-        expect(error.statusCode).toBe(404);
-        expect(provider.ready).toBe(false);
-      });
+    await expectAsync(
+      Cesium3DTilesTerrainProvider.fromUrl(path)
+    ).toBeRejectedWithError();
   });
 
-  it("resolves readyPromise", function () {
+  it("fromUrl works with path", async function () {
     const path = "Data/Cesium3DTiles/Terrain/Test/tileset.json";
 
-    const provider = new Cesium3DTilesTerrainProvider({
-      url: path,
-    });
+    const provider = await Cesium3DTilesTerrainProvider.fromUrl(path);
 
-    return provider.readyPromise.then(function (result) {
-      expect(result).toBe(true);
-      expect(provider.ready).toBe(true);
-    });
+    expect(provider).toBeInstanceOf(Cesium3DTilesTerrainProvider);
   });
 
-  it("resolves readyPromise when url promise is used", function () {
+  it("fromUrl when url promise is used", async function () {
     const path = "Data/Cesium3DTiles/Terrain/Test/tileset.json";
 
-    const provider = new Cesium3DTilesTerrainProvider({
-      url: Promise.resolve(path),
-    });
+    const provider = await Cesium3DTilesTerrainProvider.fromUrl(
+      Promise.resolve(path)
+    );
 
-    return provider.readyPromise.then(function (result) {
-      expect(result).toBe(true);
-      expect(provider.ready).toBe(true);
-    });
+    expect(provider).toBeInstanceOf(Cesium3DTilesTerrainProvider);
   });
 
-  it("resolves readyPromise with Resource", function () {
+  it("fromUrl works with Resource", async function () {
     const path = "Data/Cesium3DTiles/Terrain/Test/tileset.json";
 
-    const resource = new Resource({
-      url: path,
-    });
+    const resource = new Resource(path);
 
-    const provider = new Cesium3DTilesTerrainProvider({
-      url: resource,
-    });
+    const provider = await Cesium3DTilesTerrainProvider.fromUrl(resource);
 
-    return provider.readyPromise.then(function (result) {
-      expect(result).toBe(true);
-      expect(provider.ready).toBe(true);
-    });
+    expect(provider).toBeInstanceOf(Cesium3DTilesTerrainProvider);
   });
 
-  it("logo is undefined if credit is not provided", function () {
+  it("logo is undefined if credit is not provided", async function () {
     const path = "Data/Cesium3DTiles/Terrain/Test/tileset.json";
 
-    const provider = new Cesium3DTilesTerrainProvider({
-      url: path,
-    });
+    const provider = await Cesium3DTilesTerrainProvider.fromUrl(path);
 
-    return provider.readyPromise.then(function (result) {
-      expect(provider.credit).toBeUndefined();
-    });
+    expect(provider.credit).toBeUndefined();
   });
 
-  it("logo is defined if credit is provided", function () {
+  it("logo is defined if credit is provided", async function () {
     const path = "Data/Cesium3DTiles/Terrain/Test/tileset.json";
     const credit = "test";
 
-    const provider = new Cesium3DTilesTerrainProvider({
-      url: path,
+    const provider = await Cesium3DTilesTerrainProvider.fromUrl(path, {
       credit: credit,
     });
 
-    return provider.readyPromise.then(function (result) {
-      expect(provider.credit).toBeDefined();
-    });
+    expect(provider.credit).toBeDefined();
+    expect(provider.credit.html).toEqual("test");
   });
 });
 

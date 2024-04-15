@@ -307,6 +307,10 @@ describe(
         return destroyObject(this);
       };
 
+      Primitive.prototype.isDestroyed = () => {
+        return false;
+      };
+
       return new Primitive();
     }
 

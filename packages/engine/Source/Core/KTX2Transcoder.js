@@ -1,6 +1,7 @@
 import Check from "./Check.js";
 import CompressedTextureBuffer from "./CompressedTextureBuffer.js";
 import defined from "./defined.js";
+import RuntimeError from "./RuntimeError.js";
 import TaskProcessor from "./TaskProcessor.js";
 
 /**
@@ -20,11 +21,14 @@ KTX2Transcoder._readyPromise = undefined;
 function makeReadyPromise() {
   const readyPromise = KTX2Transcoder._transcodeTaskProcessor
     .initWebAssemblyModule({
-      modulePath: "ThirdParty/Workers/basis_transcoder.js",
       wasmBinaryFile: "ThirdParty/basis_transcoder.wasm",
     })
-    .then(function () {
-      return KTX2Transcoder._transcodeTaskProcessor;
+    .then(function (result) {
+      if (result) {
+        return KTX2Transcoder._transcodeTaskProcessor;
+      }
+
+      throw new RuntimeError("KTX2 transcoder could not be initialized.");
     });
   KTX2Transcoder._readyPromise = readyPromise;
 }

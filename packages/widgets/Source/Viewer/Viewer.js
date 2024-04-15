@@ -327,7 +327,7 @@ function enableVRUI(viewer, enabled) {
  * @property {ContextOptions} [contextOptions] Context and WebGL creation properties passed to {@link Scene}.
  * @property {SceneMode} [sceneMode=SceneMode.SCENE3D] The initial scene mode.
  * @property {MapProjection} [mapProjection=new GeographicProjection()] The map projection to use in 2D and Columbus View modes.
- * @property {Globe|false} [globe=new Globe(mapProjection.ellipsoid)] The globe to use in the scene.  If set to <code>false</code>, no globe will be added.
+ * @property {Globe|false} [globe=new Globe(mapProjection.ellipsoid)] The globe to use in the scene.  If set to <code>false</code>, no globe will be added and the sky atmosphere will be hidden by default.
  * @property {boolean} [orderIndependentTranslucency=true] If true and the configuration supports it, use order independent translucency.
  * @property {Element|string} [creditContainer] The DOM element or ID that will contain the {@link CreditDisplay}.  If not specified, the credits are added to the bottom of the widget itself.
  * @property {Element|string} [creditViewport] The DOM element or ID that will contain the credit pop up created by the {@link CreditDisplay}.  If not specified, it will appear over the widget itself.
@@ -1718,13 +1718,17 @@ Viewer.prototype.isDestroyed = function () {
  */
 Viewer.prototype.destroy = function () {
   let i;
-
-  this.screenSpaceEventHandler.removeInputAction(
-    ScreenSpaceEventType.LEFT_CLICK
-  );
-  this.screenSpaceEventHandler.removeInputAction(
-    ScreenSpaceEventType.LEFT_DOUBLE_CLICK
-  );
+  if (
+    defined(this.screenSpaceEventHandler) &&
+    !this.screenSpaceEventHandler.isDestroyed()
+  ) {
+    this.screenSpaceEventHandler.removeInputAction(
+      ScreenSpaceEventType.LEFT_CLICK
+    );
+    this.screenSpaceEventHandler.removeInputAction(
+      ScreenSpaceEventType.LEFT_DOUBLE_CLICK
+    );
+  }
 
   // Unsubscribe from data sources
   const dataSources = this.dataSources;

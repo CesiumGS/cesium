@@ -6,10 +6,16 @@ import {
   Matrix4,
   OrientedBoundingBox,
   Quaternion,
+  SpatialNode,
+  VoxelShape,
   VoxelCylinderShape,
 } from "../../index.js";
 
 describe("Scene/VoxelCylinderShape", function () {
+  it("conforms to VoxelShape interface", function () {
+    expect(VoxelCylinderShape).toConformToInterface(VoxelShape);
+  });
+
   it("constructs", function () {
     const shape = new VoxelCylinderShape();
     expect(shape.shapeTransform).toEqual(new Matrix4());
@@ -252,31 +258,165 @@ describe("Scene/VoxelCylinderShape", function () {
     );
   });
 
-  it("computeApproximateStepSize returns step size for the specified voxel grid dimension", () => {
+  it("computeOrientedBoundingBoxForTile throws with missing parameters", () => {
     const shape = new VoxelCylinderShape();
-    const translation = new Cartesian3(1.0, 2.0, 3.0);
-    const scale = new Cartesian3(2.0, 3.0, 4.0);
+    const translation = Cartesian3.ZERO;
+    const scale = Cartesian3.ONE;
     const rotation = Quaternion.IDENTITY;
     const modelMatrix = Matrix4.fromTranslationQuaternionRotationScale(
       translation,
       rotation,
-      scale,
-      new Matrix4()
+      scale
     );
-
-    // Half revolution
-    const minRadius = 0.25;
-    const maxRadius = 0.75;
-    const minHeight = -0.5;
-    const maxHeight = +0.5;
-    const minAngle = -CesiumMath.PI;
-    const maxAngle = 0.0;
-    const minBounds = new Cartesian3(minRadius, minHeight, minAngle);
-    const maxBounds = new Cartesian3(maxRadius, maxHeight, maxAngle);
+    const minBounds = VoxelCylinderShape.DefaultMinBounds;
+    const maxBounds = VoxelCylinderShape.DefaultMaxBounds;
     shape.update(modelMatrix, minBounds, maxBounds);
 
-    const dimensions = new Cartesian3(0.5, 1, CesiumMath.PI);
-    const result = shape.computeApproximateStepSize(dimensions);
-    expect(result).toEqualEpsilon(0.5, CesiumMath.EPSILON7);
+    const result = new OrientedBoundingBox();
+    expect(function () {
+      shape.computeOrientedBoundingBoxForTile(undefined, 0, 0, 0, result);
+    }).toThrowDeveloperError();
+    expect(function () {
+      shape.computeOrientedBoundingBoxForTile(0, undefined, 0, 0, result);
+    }).toThrowDeveloperError();
+    expect(function () {
+      shape.computeOrientedBoundingBoxForTile(0, 0, undefined, 0, result);
+    }).toThrowDeveloperError();
+    expect(function () {
+      shape.computeOrientedBoundingBoxForTile(0, 0, 0, undefined, result);
+    }).toThrowDeveloperError();
+    expect(function () {
+      shape.computeOrientedBoundingBoxForTile(0, 0, 0, 0, undefined);
+    }).toThrowDeveloperError();
+  });
+
+  it("computeOrientedBoundingBoxForSample gives expected result", function () {
+    const shape = new VoxelCylinderShape();
+    const translation = Cartesian3.ZERO;
+    const rotation = Quaternion.IDENTITY;
+    const scale = Cartesian3.ONE;
+    const modelMatrix = Matrix4.fromTranslationQuaternionRotationScale(
+      translation,
+      rotation,
+      scale
+    );
+    const minBounds = VoxelCylinderShape.DefaultMinBounds;
+    const maxBounds = VoxelCylinderShape.DefaultMaxBounds;
+    shape.update(modelMatrix, minBounds, maxBounds);
+
+    const tileLevel = 0;
+    const tileX = 0;
+    const tileY = 0;
+    const tileZ = 0;
+    const tileDimensions = new Cartesian3(8, 8, 8);
+    const paddedDimensions = new Cartesian3(10, 10, 10);
+    const spatialNode = new SpatialNode(
+      tileLevel,
+      tileX,
+      tileY,
+      tileZ,
+      undefined,
+      shape,
+      paddedDimensions
+    );
+
+    const tileUv = new Cartesian3(0.5, 0.5, 0.5);
+    const sampleBoundingBox = shape.computeOrientedBoundingBoxForSample(
+      spatialNode,
+      tileDimensions,
+      tileUv,
+      new OrientedBoundingBox()
+    );
+    const centerAngle = Math.PI / 8.0;
+    const centerRadius = 0.5434699;
+    const expectedCenter = new Cartesian3(
+      centerRadius * Math.cos(centerAngle),
+      centerRadius * Math.sin(centerAngle),
+      0.125
+    );
+    expect(sampleBoundingBox.center).toEqualEpsilon(
+      expectedCenter,
+      CesiumMath.EPSILON6
+    );
+    const expectedHalfAxes = new Matrix3(
+      0.075324,
+      -0.091529,
+      0.0,
+      0.0312,
+      0.22097,
+      0.0,
+      0.0,
+      0.0,
+      0.125
+    );
+    expect(sampleBoundingBox.halfAxes).toEqualEpsilon(
+      expectedHalfAxes,
+      CesiumMath.EPSILON6
+    );
+  });
+
+  it("computeOrientedBoundingBoxForSample throws with missing parameters", function () {
+    const shape = new VoxelCylinderShape();
+    const translation = Cartesian3.ZERO;
+    const rotation = Quaternion.IDENTITY;
+    const scale = Cartesian3.ONE;
+    const modelMatrix = Matrix4.fromTranslationQuaternionRotationScale(
+      translation,
+      rotation,
+      scale
+    );
+    const minBounds = VoxelCylinderShape.DefaultMinBounds;
+    const maxBounds = VoxelCylinderShape.DefaultMaxBounds;
+    shape.update(modelMatrix, minBounds, maxBounds);
+
+    const tileLevel = 0;
+    const tileX = 0;
+    const tileY = 0;
+    const tileZ = 0;
+    const tileDimensions = new Cartesian3(8, 8, 8);
+    const paddedDimensions = new Cartesian3(10, 10, 10);
+    const spatialNode = new SpatialNode(
+      tileLevel,
+      tileX,
+      tileY,
+      tileZ,
+      undefined,
+      shape,
+      paddedDimensions
+    );
+    const tileUv = new Cartesian3(0.5, 0.5, 0.5);
+
+    expect(function () {
+      shape.computeOrientedBoundingBoxForSample(
+        undefined,
+        tileDimensions,
+        tileUv,
+        new OrientedBoundingBox()
+      );
+    }).toThrowDeveloperError();
+    expect(function () {
+      shape.computeOrientedBoundingBoxForSample(
+        spatialNode,
+        undefined,
+        tileUv,
+        new OrientedBoundingBox()
+      );
+    }).toThrowDeveloperError();
+    expect(function () {
+      shape.computeOrientedBoundingBoxForSample(
+        spatialNode,
+        tileDimensions,
+        undefined,
+        new OrientedBoundingBox()
+      );
+    }).toThrowDeveloperError();
+    expect(function () {
+      shape.computeOrientedBoundingBoxForSample(
+        spatialNode,
+        tileDimensions,
+        tileUv,
+        undefined
+      );
+    }).toThrowDeveloperError();
   });
 });

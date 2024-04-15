@@ -394,6 +394,29 @@ function createDefaultMatchers(debug) {
       };
     },
 
+    toPickVoxelAndCall: function (util) {
+      return {
+        compare: function (actual, expected, args) {
+          const scene = actual;
+          const result = scene.pickVoxel(
+            defaultValue(args, new Cartesian2(0, 0))
+          );
+
+          const webglStub = !!window.webglStub;
+          if (!webglStub) {
+            // The callback may have expectations that fail, which still makes the
+            // spec fail, as we desired, even though this matcher sets pass to true.
+            const callback = expected;
+            callback(result);
+          }
+
+          return {
+            pass: true,
+          };
+        },
+      };
+    },
+
     toDrillPickAndCall: function (util) {
       return {
         compare: function (actual, expected, limit) {

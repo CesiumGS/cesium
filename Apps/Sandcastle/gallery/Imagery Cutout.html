@@ -111,15 +111,15 @@
           moveSouth: false,
         };
 
-        function getFlagForKeyCode(keyCode) {
-          switch (keyCode) {
-            case "W".charCodeAt(0):
+        function getFlagForKeyCode(code) {
+          switch (code) {
+            case "KeyW":
               return "moveNorth";
-            case "S".charCodeAt(0):
+            case "KeyS":
               return "moveSouth";
-            case "D".charCodeAt(0):
+            case "KeyD":
               return "moveEast";
-            case "A".charCodeAt(0):
+            case "KeyA":
               return "moveWest";
             default:
               return undefined;
@@ -129,7 +129,7 @@
         document.addEventListener(
           "keydown",
           function (e) {
-            const flagName = getFlagForKeyCode(e.keyCode);
+            const flagName = getFlagForKeyCode(e.code);
             if (typeof flagName !== "undefined") {
               flags[flagName] = true;
             }
@@ -140,7 +140,7 @@
         document.addEventListener(
           "keyup",
           function (e) {
-            const flagName = getFlagForKeyCode(e.keyCode);
+            const flagName = getFlagForKeyCode(e.code);
             if (typeof flagName !== "undefined") {
               flags[flagName] = false;
             }
