@@ -55,6 +55,7 @@
         const viewer = new Cesium.Viewer("cesiumContainer", {
           animation: false,
           timeline: false,
+          useBrowserRecommendedResolution: false,
         });
 
         const { scene, camera, clock } = viewer;
@@ -64,6 +65,8 @@
             "This browser does not support specular environment maps."
           );
         }
+
+        scene.msaaSamples = 4;
 
         const environmentMapURL =
           "https://cesium.com/public/SandcastleSampleData/kiara_6_afternoon_2k_ibl.ktx2";
@@ -292,12 +295,11 @@
 
             const center = model.boundingSphere.center;
             const heading = Cesium.Math.toRadians(270.0);
-            const pitch = 0.0; //Cesium.Math.toRadians(-20.0);
+            const pitch = 0.0;
             camera.lookAt(
               center,
               new Cesium.HeadingPitchRange(heading, pitch, r * 2.0)
             );
-            camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
 
             const ibl = model.imageBasedLighting;
             ibl.sphericalHarmonicCoefficients = coefficients;
