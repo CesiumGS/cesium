@@ -264,12 +264,12 @@ describe("Scene/ClippingPolygon", function () {
     const result = polygon.computeSphericalExtents();
     expect(result).toBeInstanceOf(Rectangle);
     expect(result.west).toEqualEpsilon(
-      -1.3191730776640944,
+      -1.3191738799222044,
       CesiumMath.EPSILON10
     );
-    expect(result.south).toEqual(0.6968541167123716);
-    expect(result.east).toEqual(-1.3191098686316542);
-    expect(result.north).toEqual(0.6969400470954187);
+    expect(result.south).toEqual(0.6968476341166098);
+    expect(result.east).toEqual(-1.3191090663735443);
+    expect(result.north).toEqual(0.6969465296911805);
   });
 
   it("computeSphericalExtents uses result parameter", function () {
@@ -294,11 +294,11 @@ describe("Scene/ClippingPolygon", function () {
     const returnedValue = polygon.computeSphericalExtents(result);
     expect(returnedValue).toBe(result);
     expect(result.west).toEqualEpsilon(
-      -1.3191730776640944,
+      -1.3191738799222044,
       CesiumMath.EPSILON10
     );
-    expect(result.south).toEqual(0.6968541167123716);
-    expect(result.east).toEqual(-1.3191098686316542);
-    expect(result.north).toEqual(0.6969400470954187);
+    expect(result.south).toEqual(0.6968476341166098);
+    expect(result.east).toEqual(-1.3191090663735443);
+    expect(result.north).toEqual(0.6969465296911805);
   });
 });

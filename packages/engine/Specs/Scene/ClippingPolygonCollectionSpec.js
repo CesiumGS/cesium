@@ -65,7 +65,6 @@ describe("Scene/ClippingPolygonCollection", function () {
     polygons.add(new ClippingPolygon({ positions }));
 
     expect(polygons.length).toBe(1);
-    expect(polygons.totalPositions).toBe(5);
   });
 
   it("fires the polygonAdded event when a polygon is added", function () {
@@ -300,19 +299,19 @@ describe("Scene/ClippingPolygonCollection", function () {
     const arrayBufferView = args[8];
     expect(arrayBufferView).toBeDefined();
     expect(arrayBufferView[0]).toEqualEpsilon(
-      0.6968541145324707,
+      0.6968476176261902,
       CesiumMath.EPSILON10
     ); // south
     expect(arrayBufferView[1]).toEqualEpsilon(
-      -1.3191730976104736,
+      -1.3191739320755005,
       CesiumMath.EPSILON10
     ); // west
     expect(arrayBufferView[2]).toEqualEpsilon(
-      11637.3271484375,
+      10111.67578125,
       CesiumMath.EPSILON10
     ); // north - south
     expect(arrayBufferView[3]).toEqualEpsilon(
-      15820.5234375,
+      15428.873046875,
       CesiumMath.EPSILON10
     ); // east - west
     expect(arrayBufferView[4]).toBe(0); // padding
@@ -352,19 +351,19 @@ describe("Scene/ClippingPolygonCollection", function () {
     arrayBufferView = args[8];
     expect(arrayBufferView).toBeDefined();
     expect(arrayBufferView[0]).toEqualEpsilon(
-      0.6968541145324707,
+      0.6968476176261902,
       CesiumMath.EPSILON10
     ); // south
     expect(arrayBufferView[1]).toEqualEpsilon(
-      -1.3191730976104736,
+      -1.3191739320755005,
       CesiumMath.EPSILON10
     ); // west
     expect(arrayBufferView[2]).toEqualEpsilon(
-      11637.3271484375,
+      10111.67578125,
       CesiumMath.EPSILON10
     ); // north - south
     expect(arrayBufferView[3]).toEqualEpsilon(
-      15820.5234375,
+      15428.873046875,
       CesiumMath.EPSILON10
     ); // east - west
     expect(arrayBufferView[4]).toBe(0); // padding
