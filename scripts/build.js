@@ -731,6 +731,7 @@ export async function copyEngineAssets(destination) {
   const engineStaticAssets = [
     "packages/engine/Source/**",
     "!packages/engine/Source/**/*.js",
+    "!packages/engine/Source/**/*.ts",
     "!packages/engine/Source/**/*.glsl",
     "!packages/engine/Source/**/*.css",
     "!packages/engine/Source/**/*.md",
@@ -758,6 +759,7 @@ export async function copyWidgetsAssets(destination) {
   const widgetsStaticAssets = [
     "packages/widgets/Source/**",
     "!packages/widgets/Source/**/*.js",
+    "!packages/widgets/Source/**/*.ts",
     "!packages/widgets/Source/**/*.css",
     "!packages/widgets/Source/**/*.glsl",
     "!packages/widgets/Source/**/*.md",
