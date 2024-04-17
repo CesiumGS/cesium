@@ -46,7 +46,10 @@ void main() {
     out_FragColor = vec4(1.0);
 
     // Get the relevant region of the texture
-    float dimension = max(ceil(log2(float(u_extentsLength))), float(u_extentsLength));
+    float dimension = float(u_extentsLength);
+    if (u_extentsLength > 2) {
+        dimension = ceil(log2(float(u_extentsLength)));
+    }
     int regionIndex = getPolygonIndex(dimension, v_textureCoordinates);
 
     for (int polygonIndex = 0; polygonIndex < u_polygonsLength; polygonIndex++) {
@@ -59,8 +62,8 @@ void main() {
          if (polygonExtentsIndex == regionIndex) {
             float clipAmount = czm_infinity;
             vec4 extents = getExtents(polygonExtentsIndex);
-            vec2 textureOffset = vec2(mod(float(polygonExtentsIndex), dimension), floor(float(polygonExtentsIndex) / dimension));
-            vec2 p = getCoordinates(v_textureCoordinates * dimension - textureOffset, extents);
+            vec2 textureOffset = vec2(mod(float(polygonExtentsIndex), dimension), floor(float(polygonExtentsIndex) / dimension)) / dimension;
+            vec2 p = getCoordinates((v_textureCoordinates - textureOffset) * dimension, extents);
             float s = 1.0;
 
             // Check each edge for absolute distance

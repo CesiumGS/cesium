@@ -361,8 +361,6 @@ ClippingPolygonCollection.prototype.remove = function (polygon) {
   polygons.splice(index, 1);
 
   this.polygonRemoved.raiseEvent(polygon, index);
-  this._dirty = true;
-
   return true;
 };
 
@@ -394,7 +392,6 @@ ClippingPolygonCollection.prototype.removeAll = function () {
     const polygon = polygons[i];
     this.polygonRemoved.raiseEvent(polygon, i);
   }
-  this._dirty = true;
   this._polygons = [];
 };
 

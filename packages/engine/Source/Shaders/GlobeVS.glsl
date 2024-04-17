@@ -223,7 +223,7 @@ void main()
         vec4 extents = unpackClippingExtents(u_clippingExtents, regionIndex);
     
         vec2 rectUv = (sphericalLatLong.yx - extents.yx) * extents.wz;
-        float padding = 5000.0 * czm_geometricToleranceOverMeter;
+        float padding = 0.1;
         if (rectUv.x > -padding && rectUv.y > -padding && rectUv.x < 1.0 + padding && rectUv.y < 1.0 + padding) {
             v_clippingPosition = rectUv;
             v_regionIndex = regionIndex;

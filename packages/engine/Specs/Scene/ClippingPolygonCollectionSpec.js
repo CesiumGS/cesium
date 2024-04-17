@@ -309,11 +309,11 @@ describe("Scene/ClippingPolygonCollection", function () {
     expect(arrayBufferView[2]).toEqualEpsilon(
       10111.67578125,
       CesiumMath.EPSILON10
-    ); // north - south
+    ); // 1 / (north - south)
     expect(arrayBufferView[3]).toEqualEpsilon(
       15428.873046875,
       CesiumMath.EPSILON10
-    ); // east - west
+    ); // 1 / (east - west)
     expect(arrayBufferView[4]).toBe(0); // padding
     expect(arrayBufferView[5]).toBe(0); // padding
     expect(arrayBufferView[6]).toBe(0); // padding
