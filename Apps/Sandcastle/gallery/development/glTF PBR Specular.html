@@ -68,11 +68,6 @@
 
         scene.msaaSamples = 4;
 
-        const environmentMapURL =
-          "https://cesium.com/public/SandcastleSampleData/kiara_6_afternoon_2k_ibl.ktx2";
-        const modelURL =
-          "../../SampleData/models/SpecularTest/glTF-Binary/SpecularTest.glb";
-
         // This environment map was processed using Khronos's glTF IBL Sampler. To process your own:
         // 1 - Download and build the Khronos glTF IBL Sampler (https://github.com/KhronosGroup/glTF-IBL-Sampler).
         // 2 - Run `cli -inputPath /path/to/image.hdr -outCubeMap /path/to/output.ktx2`. Run `cli -h` for all options.
@@ -129,7 +124,7 @@
         );
         const coefficients = [L00, L1_1, L10, L11, L2_2, L2_1, L20, L21, L22];
 
-        const height = 10.0;
+        const height = 20.0;
         const hpr = new Cesium.HeadingPitchRoll(0.0, 0.0, 0.0);
         const origin = Cesium.Cartesian3.fromDegrees(
           -123.0744619,
@@ -140,6 +135,7 @@
           origin,
           hpr
         );
+        Cesium.Matrix4.multiplyByUniformScale(modelMatrix, 5.0, modelMatrix);
 
         scene.globe.enableLighting = true;
 
@@ -275,73 +271,107 @@
 
         Sandcastle.addToolbarMenu(options);
 
-        try {
-          const model = scene.primitives.add(
-            await Cesium.Model.fromGltfAsync({
+        const environmentMapURL =
+          "https://cesium.com/public/SandcastleSampleData/kiara_6_afternoon_2k_ibl.ktx2";
+
+        const imageBasedLighting = new Cesium.ImageBasedLighting({
+          luminanceAtZenith: 0.1,
+          sphericalHarmonicCoefficients: coefficients,
+          specularEnvironmentMaps: environmentMapURL,
+        });
+
+        // The viewModel tracks the state of our mini application.
+        const viewModel = {
+          luminanceAtZenith: imageBasedLighting.luminanceAtZenith,
+        };
+        // Convert the viewModel members into knockout observables.
+        Cesium.knockout.track(viewModel);
+
+        // Bind the viewModel to the DOM elements of the UI that call for it.
+        const toolbar = document.getElementById("toolbar");
+        Cesium.knockout.applyBindings(viewModel, toolbar);
+
+        function subscribeParameter(name) {
+          Cesium.knockout
+            .getObservable(viewModel, name)
+            .subscribe(function (newValue) {
+              imageBasedLighting[name] = newValue;
+            });
+        }
+
+        subscribeParameter("luminanceAtZenith");
+
+        Sandcastle.addToggleButton(
+          "Use procedural environment lighting",
+          false,
+          function (checked) {
+            if (!checked) {
+              imageBasedLighting.sphericalHarmonicCoefficients = coefficients;
+              imageBasedLighting.specularEnvironmentMaps = environmentMapURL;
+            } else {
+              imageBasedLighting.sphericalHarmonicCoefficients = undefined;
+              imageBasedLighting.specularEnvironmentMaps = undefined;
+            }
+          }
+        );
+
+        const modelOptions = [
+          {
+            text: "Specular Test",
+            onselect: function () {
+              loadModel(
+                "../../SampleData/models/SpecularTest/glTF-Binary/SpecularTest.glb"
+              );
+            },
+          },
+          {
+            text: "Water Bottle",
+            onselect: function () {
+              loadModel(
+                "../../SampleData/models/SpecGlossVsMetalRough/glTF-Binary/SpecGlossVsMetalRough.glb"
+              );
+            },
+          },
+        ];
+        Sandcastle.addToolbarMenu(modelOptions);
+        loadModel(
+          "../../SampleData/models/SpecularTest/glTF-Binary/SpecularTest.glb"
+        );
+
+        async function loadModel(modelURL) {
+          try {
+            const model = await Cesium.Model.fromGltfAsync({
               url: modelURL,
               modelMatrix: modelMatrix,
-              minimumPixelSize: 128,
-            })
+              //minimumPixelSize: 128,
+              imageBasedLighting,
+            });
+
+            scene.primitives.removeAll();
+            scene.primitives.add(model);
+
+            model.readyEvent.addEventListener(() => {
+              zoomToModel(model);
+            });
+          } catch (error) {
+            window.alert(`Error loading model: ${error}`);
+          }
+        }
+
+        function zoomToModel(model) {
+          const controller = scene.screenSpaceCameraController;
+          const r = Math.max(
+            model.boundingSphere.radius * 0.25,
+            camera.frustum.near
           );
+          controller.minimumZoomDistance = r * 0.01;
 
-          model.readyEvent.addEventListener(() => {
-            // Zoom to model
-            const controller = scene.screenSpaceCameraController;
-            const r = Math.max(
-              model.boundingSphere.radius,
-              camera.frustum.near
-            );
-            controller.minimumZoomDistance = r * 0.25;
-
-            const center = model.boundingSphere.center;
-            const heading = Cesium.Math.toRadians(270.0);
-            const pitch = 0.0;
-            camera.lookAt(
-              center,
-              new Cesium.HeadingPitchRange(heading, pitch, r * 2.0)
-            );
-
-            const ibl = model.imageBasedLighting;
-            ibl.sphericalHarmonicCoefficients = coefficients;
-            ibl.specularEnvironmentMaps = environmentMapURL;
-
-            // The viewModel tracks the state of our mini application.
-            const viewModel = {
-              luminanceAtZenith: ibl.luminanceAtZenith,
-            };
-            // Convert the viewModel members into knockout observables.
-            Cesium.knockout.track(viewModel);
-
-            // Bind the viewModel to the DOM elements of the UI that call for it.
-            const toolbar = document.getElementById("toolbar");
-            Cesium.knockout.applyBindings(viewModel, toolbar);
-
-            function subscribeParameter(name) {
-              Cesium.knockout
-                .getObservable(viewModel, name)
-                .subscribe(function (newValue) {
-                  ibl[name] = newValue;
-                });
-            }
-
-            subscribeParameter("luminanceAtZenith");
-
-            Sandcastle.addToggleButton(
-              "Use procedural environment lighting",
-              false,
-              function (checked) {
-                if (!checked) {
-                  ibl.sphericalHarmonicCoefficients = coefficients;
-                  ibl.specularEnvironmentMaps = environmentMapURL;
-                } else {
-                  ibl.sphericalHarmonicCoefficients = undefined;
-                  ibl.specularEnvironmentMaps = undefined;
-                }
-              }
-            );
-          });
-        } catch (error) {
-          window.alert(`Error loading model: ${error}`);
+          const heading = Cesium.Math.toRadians(270.0);
+          const pitch = 0.0;
+          camera.lookAt(
+            model.boundingSphere.center,
+            new Cesium.HeadingPitchRange(heading, pitch, r * 2.0)
+          );
         }
         //Sandcastle_End
         Sandcastle.finishedLoading();
