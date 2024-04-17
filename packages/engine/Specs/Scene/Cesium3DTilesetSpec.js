@@ -4743,43 +4743,6 @@ describe(
         }).toThrowDeveloperError();
       });
 
-      it("cull hidden tiles", async function () {
-        if (!scene.context.webgl2) {
-          return;
-        }
-
-        const tileset = await Cesium3DTilesTester.loadTileset(
-          scene,
-          tilesetUrl
-        );
-
-        let visibility = tileset.root.visibility(
-          scene.frameState,
-          CullingVolume.MASK_INSIDE
-        );
-
-        expect(visibility).not.toBe(CullingVolume.MASK_OUTSIDE);
-
-        tileset.clippingPolygons = new ClippingPolygonCollection({
-          polygons: [polygon],
-        });
-
-        visibility = tileset.root.visibility(
-          scene.frameState,
-          CullingVolume.MASK_INSIDE
-        );
-
-        expect(visibility).toBe(CullingVolume.MASK_INSIDE);
-
-        tileset.clippingPolygons.inverse = true;
-        visibility = tileset.root.visibility(
-          scene.frameState,
-          CullingVolume.MASK_INSIDE
-        );
-
-        expect(visibility).toBe(CullingVolume.MASK_INSIDE);
-      });
-
       it("cull hidden content", async function () {
         if (!scene.context.webgl2) {
           return;

@@ -1360,7 +1360,7 @@ describe(
         scene.globe.clippingPolygons = undefined;
       });
 
-      it("Culls tiles when completely inside clipping region", async function () {
+      it("Clips tiles when completely inside clipping region", async function () {
         if (!scene.context.webgl2) {
           return;
         }

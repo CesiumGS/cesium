@@ -5,6 +5,8 @@ import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 import Ellipsoid from "./Ellipsoid.js";
 import CesiumMath from "./Math.js";
+import Transforms from "./Transforms.js";
+import Matrix4 from "./Matrix4.js";
 
 /**
  * A two dimensional region specified as longitude and latitude coordinates.
@@ -338,12 +340,12 @@ Rectangle.fromCartesianArray = function (cartesians, ellipsoid, result) {
   return result;
 };
 
-const fromBoundingSphereScratch = new Cartesian3();
+const fromBoundingSphereMatrixScratch = new Cartesian3();
 const fromBoundingSphereEastScratch = new Cartesian3();
 const fromBoundingSphereNorthScratch = new Cartesian3();
 const fromBoundingSphereWestScratch = new Cartesian3();
 const fromBoundingSphereSouthScratch = new Cartesian3();
-const fromBoundingSpherePositionsScratch = new Array(4);
+const fromBoundingSpherePositionsScratch = new Array(5);
 for (let n = 0; n < fromBoundingSpherePositionsScratch.length; ++n) {
   fromBoundingSpherePositionsScratch[n] = new Cartesian3();
 }
@@ -377,21 +379,24 @@ Rectangle.fromBoundingSphere = function (boundingSphere, ellipsoid, result) {
     return result;
   }
 
-  const normal = ellipsoid.geodeticSurfaceNormal(
+  const fromENU = Transforms.eastNorthUpToFixedFrame(
     center,
-    fromBoundingSphereScratch
+    ellipsoid,
+    fromBoundingSphereMatrixScratch
   );
-
-  const east = Cartesian3.cross(
-    Cartesian3.UNIT_Z,
-    normal,
+  const east = Matrix4.multiplyByPointAsVector(
+    fromENU,
+    Cartesian3.UNIT_X,
     fromBoundingSphereEastScratch
   );
   Cartesian3.normalize(east, east);
-  const north = Cartesian3.cross(normal, east, fromBoundingSphereNorthScratch);
+  const north = Matrix4.multiplyByPointAsVector(
+    fromENU,
+    Cartesian3.UNIT_Y,
+    fromBoundingSphereNorthScratch
+  );
   Cartesian3.normalize(north, north);
 
-  Cartesian3.multiplyByScalar(normal, radius, normal);
   Cartesian3.multiplyByScalar(north, radius, north);
   Cartesian3.multiplyByScalar(east, radius, east);
 
@@ -402,19 +407,21 @@ Rectangle.fromBoundingSphere = function (boundingSphere, ellipsoid, result) {
 
   // North
   let corner = positions[0];
-  Cartesian3.add(normal, north, corner);
+  Cartesian3.add(center, north, corner);
 
   // West
   corner = positions[1];
-  Cartesian3.add(corner, west, corner);
+  Cartesian3.add(center, west, corner);
 
   // South
   corner = positions[2];
-  Cartesian3.add(normal, south, corner);
+  Cartesian3.add(center, south, corner);
 
   // East
   corner = positions[3];
-  Cartesian3.add(corner, east, corner);
+  Cartesian3.add(center, east, corner);
+
+  positions[4] = center;
 
   return Rectangle.fromCartesianArray(positions, ellipsoid, result);
 };

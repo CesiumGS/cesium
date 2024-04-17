@@ -23,21 +23,9 @@ void czm_clipPolygons(highp sampler2D clippingDistance, int extentsLength, vec2 
     vec2 textureOffset = vec2(mod(float(regionIndex), dimension), floor(float(regionIndex) / dimension)) / dimension;
     vec2 uv = textureOffset + rectUv / dimension;
 
-    vec2 pixelAlignedUv = (floor(uv / sampleOffset)) * sampleOffset;
-    vec2 t = (uv - pixelAlignedUv) / sampleOffset;
+    float signedDistance = getSignedDistance(uv, clippingDistance);
 
-    float sample00 = getSignedDistance(pixelAlignedUv + vec2(0.0, 0.0) * sampleOffset, clippingDistance);
-    float sample01 = getSignedDistance(pixelAlignedUv + vec2(1.0, 0.0) * sampleOffset, clippingDistance);
-    float sample10 = getSignedDistance(pixelAlignedUv + vec2(0.0, 1.0) * sampleOffset, clippingDistance);
-    float sample11 = getSignedDistance(pixelAlignedUv + vec2(1.0, 1.0) * sampleOffset, clippingDistance);
-
-    // linearly interpolate the samples based on the actual position
-    vec2 d0 = vec2(sample00, sample01);
-    vec2 d1 = vec2(sample10, sample11);
-    vec2 d = mix(d0, d1, t.y);  
-    float signedDistance = mix(d.x, d.y, t.x);
-
-    #ifdef CLIPPING_INVERSE 
+    #ifdef CLIPPING_INVERSE
     if (signedDistance > 0.0)  {
         discard;
     }

@@ -1459,10 +1459,24 @@ describe("Core/Rectangle", function () {
     );
     const result = Rectangle.fromBoundingSphere(boundingSphere);
     const expectedRectangle = new Rectangle();
-    expectedRectangle.west = -1.5707963267948966;
-    expectedRectangle.south = -0.7887565820736098;
-    expectedRectangle.east = 1.5707963267948966;
-    expectedRectangle.north = 0.7887565820736098;
+    expectedRectangle.west = -0.00009999999966666667;
+    expectedRectangle.south = -0.00010042880729608389;
+    expectedRectangle.east = 0.00009999999966666667;
+    expectedRectangle.north = 0.00010042880729608389;
+    expect(result).toEqualEpsilon(expectedRectangle, CesiumMath.EPSILON14);
+  });
+
+  it("fromBoundingSphere works with bounding sphere centered at the poles", function () {
+    const boundingSphere = new BoundingSphere(
+      new Cartesian3(0.0, 0.0, Ellipsoid.WGS84.radii.z),
+      1000.0
+    );
+    const result = Rectangle.fromBoundingSphere(boundingSphere);
+    const expectedRectangle = new Rectangle();
+    expectedRectangle.west = -CesiumMath.PI_OVER_TWO;
+    expectedRectangle.south = 1.5706400668742968;
+    expectedRectangle.east = CesiumMath.PI;
+    expectedRectangle.north = CesiumMath.PI_OVER_TWO;
     expect(result).toEqualEpsilon(expectedRectangle, CesiumMath.EPSILON14);
   });
 
@@ -1479,10 +1493,10 @@ describe("Core/Rectangle", function () {
     );
 
     const expectedRectangle = new Rectangle();
-    expectedRectangle.west = -1.5707963267948966;
-    expectedRectangle.south = -0.7887565820736098;
-    expectedRectangle.east = 1.5707963267948966;
-    expectedRectangle.north = 0.7887565820736098;
+    expectedRectangle.west = -0.00009999999966666667;
+    expectedRectangle.south = -0.00010042880729608389;
+    expectedRectangle.east = 0.00009999999966666667;
+    expectedRectangle.north = 0.00010042880729608389;
 
     expect(result).toEqualEpsilon(expectedRectangle, CesiumMath.EPSILON14);
     expect(returned).toBe(result);
