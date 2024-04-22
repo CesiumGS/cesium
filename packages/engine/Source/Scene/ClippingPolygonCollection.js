@@ -33,7 +33,7 @@ import PolygonSignedDistanceFS from "../Shaders/PolygonSignedDistanceFS.js";
  * @param {object} [options] Object with the following properties:
  * @param {ClippingPolygon[]} [options.polygons=[]] An array of {@link ClippingPolygon} objects used to selectively disable rendering on the inside of each polygon.
  * @param {boolean} [options.enabled=true] Determines whether the clipping polygons are active.
- * @param {boolean} [options.inverse=false] If true, a region will be clipped if it is  outside of every polygon in the collection. Otherwise, a region will only be clipped if it is on the inside of any polygon.
+ * @param {boolean} [options.inverse=false] If true, a region will be clipped if it is outside of every polygon in the collection. Otherwise, a region will only be clipped if it is on the inside of any polygon.
  *
  * @example
  * const positions = Cesium.Cartesian3.fromRadiansArray([
@@ -75,7 +75,7 @@ function ClippingPolygonCollection(options) {
   /**
    * If true, a region will be clipped if it is outside of every polygon in the
    * collection. Otherwise, a region will only be clipped if it is
-   * outside of any polygon.
+   * inside of any polygon.
    *
    * @memberof ClippingPolygonCollection.prototype
    * @type {boolean}
@@ -474,7 +474,7 @@ ClippingPolygonCollection.prototype.update = function (frameState) {
     return;
   }
 
-  // It'd be expensive to validate any individual position has changed. Instead verify if the list of polygon positions has has elements added or removed, which should be good enough for most cases.
+  // It'd be expensive to validate any individual position has changed. Instead verify if the list of polygon positions has had elements added or removed, which should be good enough for most cases.
   const totalPositions = this._polygons.reduce(
     (totalPositions, polygon) => totalPositions + polygon.length,
     0
