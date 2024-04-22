@@ -7,6 +7,7 @@
 ##### Fixes :wrench:
 
 - Fixed a bug that Label position height may not be correctly updated when its HeightReference is relative. [#11929](https://github.com/CesiumGS/cesium/pull/11929)
+- Fixed a bug where a data source was not automatically rendered after is was added in request render mode. [#11934](https://github.com/CesiumGS/cesium/pull/11934)
 
 ### 1.116 - 2024-04-01
 
