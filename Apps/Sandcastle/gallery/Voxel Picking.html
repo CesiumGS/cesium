@@ -8,7 +8,7 @@
       content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
     />
     <meta name="description" content="For debugging voxel picking." />
-    <meta name="cesium-sandcastle-labels" content="Development" />
+    <meta name="cesium-sandcastle-labels" content="Showcases, 3D Tiles" />
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script type="module" src="../load-cesium-es6.js"></script>
@@ -102,27 +102,27 @@
           const dataColor = new Float32Array(voxelCount * channelCount);
 
           for (let z = 0; z < dimensions.z; z++) {
+            const indexZ = z * dimensions.y * dimensions.x;
             for (let y = 0; y < dimensions.y; y++) {
+              const indexZY = indexZ + y * dimensions.x;
               for (let x = 0; x < dimensions.x; x++) {
                 const lerperX = x / (dimensions.x - 1);
                 const lerperY = y / (dimensions.y - 1);
                 const lerperZ = z / (dimensions.z - 1);
 
-                //const h = hue + lerperX * 0.5 - lerperY * 0.3 + lerperZ * 0.2;
                 const h = Cesium.Math.nextRandomNumber();
                 const s = 1.0 - lerperY * 0.2;
                 const l = 0.5;
                 const color = Cesium.Color.fromHsl(h, s, l, 1.0, scratchColor);
 
-                const index =
-                  z * dimensions.y * dimensions.x + y * dimensions.x + x;
                 const random2 = Cesium.Math.nextRandomNumber();
                 const alphaRandom = Math.floor(random2 + 0.5);
 
-                dataColor[index * channelCount + 0] = color.red;
-                dataColor[index * channelCount + 1] = color.green;
-                dataColor[index * channelCount + 2] = color.blue;
-                dataColor[index * channelCount + 3] = alphaRandom;
+                const index = (indexZY + x) * channelCount;
+                dataColor[index + 0] = color.red;
+                dataColor[index + 1] = color.green;
+                dataColor[index + 2] = color.blue;
+                dataColor[index + 3] = alphaRandom;
               }
             }
           }
@@ -181,7 +181,6 @@
         );
 
         voxelPrimitive.nearestSampling = true;
-        voxelPrimitive.jitter = false;
 
         camera.flyToBoundingSphere(voxelPrimitive.boundingSphere, {
           duration: 0.0,
