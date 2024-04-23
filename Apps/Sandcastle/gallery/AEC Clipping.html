@@ -76,8 +76,8 @@
           // Zoom to data location, and set the home view
           const cameraOffset = new Cesium.HeadingPitchRange(
             Cesium.Math.toRadians(95.0),
-            Cesium.Math.toRadians(-18.0),
-            600.0
+            Cesium.Math.toRadians(-75.0),
+            800.0
           );
           viewer.zoomTo(footprint, cameraOffset);
           viewer.homeButton.viewModel.command.beforeExecute.addEventListener(

@@ -91,6 +91,7 @@ describe("Scene/Model/ModelClippingPolygonsPipelineStage", function () {
     ]);
 
     ShaderBuilderTester.expectHasVaryings(shaderBuilder, [
+      "vec2 v_minDistance;",
       "vec2 v_clippingPosition;",
       "int v_regionIndex;",
     ]);
@@ -155,6 +156,7 @@ describe("Scene/Model/ModelClippingPolygonsPipelineStage", function () {
     ]);
 
     ShaderBuilderTester.expectHasVaryings(shaderBuilder, [
+      "vec2 v_minDistance;",
       "vec2 v_clippingPosition;",
       "int v_regionIndex;",
     ]);

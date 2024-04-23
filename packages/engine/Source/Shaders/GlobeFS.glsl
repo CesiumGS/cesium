@@ -80,6 +80,7 @@ uniform vec4 u_clippingPlanesEdgeStyle;
 #ifdef ENABLE_CLIPPING_POLYGONS
 uniform highp sampler2D u_clippingDistance;
 in vec2 v_clippingPosition;
+in vec2 v_minDistance;
 flat in int v_regionIndex;
 #endif
 
@@ -419,10 +420,19 @@ void main()
     }
 #endif
 
-#ifdef ENABLE_CLIPPING_POLYGONS    
-    vec2 clippingPosition = v_clippingPosition;
-    int regionIndex = v_regionIndex;
-    clipPolygons(u_clippingDistance, CLIPPING_POLYGON_REGIONS_LENGTH, clippingPosition, regionIndex);
+#ifdef ENABLE_CLIPPING_POLYGONS
+    float threshold = 0.25;
+    if (v_minDistance.x <= threshold && v_minDistance.y <= threshold) {
+        vec2 clippingPosition = v_clippingPosition;
+        int regionIndex = v_regionIndex;
+        clipPolygons(u_clippingDistance, CLIPPING_POLYGON_REGIONS_LENGTH, clippingPosition, regionIndex);
+    } 
+    #ifdef CLIPPING_INVERSE 
+    else {
+        discard;
+    }
+    #endif
+    
 #endif
 
 #ifdef HIGHLIGHT_FILL_TILE

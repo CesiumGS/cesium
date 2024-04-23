@@ -72,6 +72,7 @@ ModelClippingPolygonsPipelineStage.process = function (
     ShaderDestination.VERTEX
   );
 
+  shaderBuilder.addVarying("vec2", "v_minDistance");
   shaderBuilder.addVarying("vec2", "v_clippingPosition");
   shaderBuilder.addVarying("int", "v_regionIndex", "flat");
   shaderBuilder.addVertexLines(ModelClippingPolygonsStageVS);

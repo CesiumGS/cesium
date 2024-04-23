@@ -49,6 +49,7 @@ out float v_atmosphereOpacity;
 #ifdef ENABLE_CLIPPING_POLYGONS
 uniform highp sampler2D u_clippingExtents;
 out vec2 v_clippingPosition;
+out vec2 v_minDistance;
 flat out int v_regionIndex;
 #endif
 
@@ -217,17 +218,23 @@ void main()
     vec2 sphericalLatLong = czm_approximateSphericalCoordinates(position3DWC);
     sphericalLatLong.y = czm_branchFreeTernary(sphericalLatLong.y < czm_pi, sphericalLatLong.y, sphericalLatLong.y - czm_twoPi);
     
+    float minDistanceSquared = czm_infinity;
     v_clippingPosition = vec2(czm_infinity);
+    v_regionIndex = -1;
 
     for (int regionIndex = 0; regionIndex < CLIPPING_POLYGON_REGIONS_LENGTH; regionIndex++) {
         vec4 extents = unpackClippingExtents(u_clippingExtents, regionIndex);
-    
         vec2 rectUv = (sphericalLatLong.yx - extents.yx) * extents.wz;
-        float padding = 0.1;
-        if (rectUv.x > -padding && rectUv.y > -padding && rectUv.x < 1.0 + padding && rectUv.y < 1.0 + padding) {
+
+        vec2 clamped = clamp(rectUv, vec2(0.0), vec2(1.0));
+        vec2 distance = abs(rectUv - clamped);
+        float distancedSquared = distance.x * distance.x + distance.y * distance.y;
+
+        if (distancedSquared < minDistanceSquared) {
+            minDistanceSquared = distancedSquared;
+            v_minDistance = distance;
             v_clippingPosition = rectUv;
             v_regionIndex = regionIndex;
-            break;
         }
     }
 #endif
