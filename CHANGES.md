@@ -1,5 +1,13 @@
 # Change Log
 
+### 1.117
+
+#### @cesium/engine
+
+##### Fixes :wrench:
+
+- Fixed a bug that Label position height may not be correctly updated when its HeightReference is relative. [#11929](https://github.com/CesiumGS/cesium/pull/11929)
+
 ### 1.116 - 2024-04-01
 
 #### @cesium/engine

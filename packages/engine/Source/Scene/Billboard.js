@@ -1139,7 +1139,7 @@ Billboard._updateClamping = function (collection, owner) {
   }
 
   function updateFunction(clampedPosition) {
-    owner._clampedPosition = ellipsoid.cartographicToCartesian(
+    const updatedClampedPosition = ellipsoid.cartographicToCartesian(
       clampedPosition,
       owner._clampedPosition
     );
@@ -1149,12 +1149,14 @@ Billboard._updateClamping = function (collection, owner) {
         clampedPosition.height += position.height;
         ellipsoid.cartographicToCartesian(
           clampedPosition,
-          owner._clampedPosition
+          updatedClampedPosition
         );
       } else {
-        owner._clampedPosition.x += position.height;
+        updatedClampedPosition.x += position.height;
       }
     }
+
+    owner._clampedPosition = updatedClampedPosition;
   }
 
   owner._removeCallbackFunc = scene.updateHeight(
