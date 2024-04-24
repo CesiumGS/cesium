@@ -355,6 +355,16 @@ describe(
       scene.requestRenderMode = true;
       scene.maximumRenderTimeChange = undefined;
 
+      // When the scene is constructed, then a listener that will be added via
+      // RequestScheduler.requestCompletedEvent.addEventListener
+      // that requests a single render (by putting a call to scene.requestRender()
+      // into the scene._frameState.afterRender list). The requestCompletedEvent
+      // is triggered when the request for the terrain heights completes that
+      // is initiated via GroundPolylinePrimitive.initializeTerrainHeights()
+      // in beforeAll of this suite.
+      // Consume this render request here
+      scene.renderForSpecs();
+
       const source = new MockDataSource();
       display = new DataSourceDisplay({
         scene: scene,
@@ -363,12 +373,20 @@ describe(
       });
       expect(display.ready).toBe(false);
 
-      return Promise.all([dataSourceCollection.add(source)]).then(function () {
+      return dataSourceCollection.add(source).then(function () {
         // When the source becomes ready, a render should
         // be requested
         display.update(Iso8601.MINIMUM_VALUE);
         expect(display.ready).toBe(true);
         expect(scene._renderRequested).toBe(true);
+
+        scene.renderForSpecs();
+
+        // The source should remain ready during subsequent updates,
+        // and no further renders should be requested
+        display.update(Iso8601.MINIMUM_VALUE);
+        expect(display.ready).toBe(true);
+        expect(scene._renderRequested).toBe(false);
       });
     });
 
