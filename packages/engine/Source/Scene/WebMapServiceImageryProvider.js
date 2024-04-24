@@ -69,6 +69,7 @@ const excludesReverseAxis = [
  * @property {Clock} [clock] A Clock instance that is used when determining the value for the time dimension. Required when `times` is specified.
  * @property {TimeIntervalCollection} [times] TimeIntervalCollection with its data property being an object containing time dynamic dimension and their values.
  * @property {Resource|string} [getFeatureInfoUrl] The getFeatureInfo URL of the WMS service. If the property is not defined then we use the property value of url.
+ * @property {Object} [customTags] Allow to replace custom keywords in the URL template. The object must have strings as keys and functions as values.
  */
 
 /**
@@ -264,6 +265,7 @@ function WebMapServiceImageryProvider(options) {
       WebMapServiceImageryProvider.DefaultGetFeatureInfoFormats
     ),
     enablePickFeatures: options.enablePickFeatures,
+    customTags: options.customTags
   });
 }
 
