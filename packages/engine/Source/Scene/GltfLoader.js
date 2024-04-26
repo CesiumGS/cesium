@@ -30,29 +30,31 @@ import ResourceLoader from "./ResourceLoader.js";
 import SupportedImageFormats from "./SupportedImageFormats.js";
 import VertexAttributeSemantic from "./VertexAttributeSemantic.js";
 
-const Attribute = ModelComponents.Attribute;
-const Indices = ModelComponents.Indices;
-const FeatureIdAttribute = ModelComponents.FeatureIdAttribute;
-const FeatureIdTexture = ModelComponents.FeatureIdTexture;
-const FeatureIdImplicitRange = ModelComponents.FeatureIdImplicitRange;
-const MorphTarget = ModelComponents.MorphTarget;
-const Primitive = ModelComponents.Primitive;
-const Instances = ModelComponents.Instances;
-const Skin = ModelComponents.Skin;
-const Node = ModelComponents.Node;
-const AnimatedPropertyType = ModelComponents.AnimatedPropertyType;
-const AnimationSampler = ModelComponents.AnimationSampler;
-const AnimationTarget = ModelComponents.AnimationTarget;
-const AnimationChannel = ModelComponents.AnimationChannel;
-const Animation = ModelComponents.Animation;
-const ArticulationStage = ModelComponents.ArticulationStage;
-const Articulation = ModelComponents.Articulation;
-const Asset = ModelComponents.Asset;
-const Scene = ModelComponents.Scene;
-const Components = ModelComponents.Components;
-const MetallicRoughness = ModelComponents.MetallicRoughness;
-const SpecularGlossiness = ModelComponents.SpecularGlossiness;
-const Material = ModelComponents.Material;
+const {
+  Attribute,
+  Indices,
+  FeatureIdAttribute,
+  FeatureIdTexture,
+  FeatureIdImplicitRange,
+  MorphTarget,
+  Primitive,
+  Instances,
+  Skin,
+  Node,
+  AnimatedPropertyType,
+  AnimationSampler,
+  AnimationTarget,
+  AnimationChannel,
+  Animation,
+  ArticulationStage,
+  Articulation,
+  Asset,
+  Scene,
+  Components,
+  MetallicRoughness,
+  SpecularGlossiness,
+  Material,
+} = ModelComponents;
 
 /**
  * States of the glTF loading process. These states also apply to
@@ -188,42 +190,28 @@ const GltfLoaderState = {
  */
 function GltfLoader(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  const gltfResource = options.gltfResource;
-  let baseResource = options.baseResource;
-  const typedArray = options.typedArray;
-  const releaseGltfJson = defaultValue(options.releaseGltfJson, false);
-  const asynchronous = defaultValue(options.asynchronous, true);
-  const incrementallyLoadTextures = defaultValue(
-    options.incrementallyLoadTextures,
-    true
-  );
-  const upAxis = defaultValue(options.upAxis, Axis.Y);
-  const forwardAxis = defaultValue(options.forwardAxis, Axis.Z);
-  const loadAttributesAsTypedArray = defaultValue(
-    options.loadAttributesAsTypedArray,
-    false
-  );
-  const loadAttributesFor2D = defaultValue(options.loadAttributesFor2D, false);
-  const enablePick = defaultValue(options.enablePick);
-  const loadIndicesForWireframe = defaultValue(
-    options.loadIndicesForWireframe,
-    false
-  );
-  const loadPrimitiveOutline = defaultValue(options.loadPrimitiveOutline, true);
-  const loadForClassification = defaultValue(
-    options.loadForClassification,
-    false
-  );
-  const renameBatchIdSemantic = defaultValue(
-    options.renameBatchIdSemantic,
-    false
-  );
+  const {
+    gltfResource,
+    typedArray,
+    releaseGltfJson,
+    asynchronous = true,
+    incrementallyLoadTextures = true,
+    upAxis = Axis.Y,
+    forwardAxis = Axis.Z,
+    loadAttributesAsTypedArray = false,
+    loadAttributesFor2D = false,
+    enablePick = false,
+    loadIndicesForWireframe = false,
+    loadPrimitiveOutline = true,
+    loadForClassification = false,
+    renameBatchIdSemantic = false,
+  } = options;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.gltfResource", gltfResource);
   //>>includeEnd('debug');
 
-  baseResource = defined(baseResource) ? baseResource : gltfResource.clone();
+  const { baseResource = gltfResource.clone() } = options;
 
   this._gltfJson = options.gltfJson;
   this._gltfResource = gltfResource;
@@ -413,15 +401,12 @@ async function loadResources(loader, frameState) {
     basis: frameState.context.supportsBasis,
   });
 
-  // Parse the glTF which populates the loaders arrays. Loading promises will be created, and will
-  // resolve once the loaders are ready (i.e. all external resources
-  // have been fetched and all GPU resources have been created). Loaders that
-  // create GPU resources need to be processed every frame until they become
+  // Loaders that create GPU resources need to be processed every frame until they become
   // ready since the JobScheduler is not able to execute all jobs in a single
-  // frame. Any promise failures are collected, and will be handled synchronously in process(). Also note that it's fine to call process before a loader is ready
-  // to process or after it has failed; nothing will happen.
-  const gltf = loader.gltfJson;
-  const promise = parse(loader, gltf, supportedImageFormats, frameState);
+  // frame. Any promise failures are collected, and will be handled synchronously in process().
+  // Also note that it's fine to call process before a loader is ready to process or
+  // after it has failed; nothing will happen.
+  const promise = parse(loader, supportedImageFormats, frameState);
 
   // All resource loaders have been created, so we can begin processing
   loader._state = GltfLoaderState.PROCESSING;
@@ -493,8 +478,7 @@ function postProcessGeometry(loader, context) {
   // Apply post-processing steps on geometry such as
   // updating attributes for rendering outlines.
   const loadPlans = loader._primitiveLoadPlans;
-  const length = loadPlans.length;
-  for (let i = 0; i < length; i++) {
+  for (let i = 0; i < loadPlans.length; i++) {
     const loadPlan = loadPlans[i];
     loadPlan.postProcess(context);
 
@@ -520,8 +504,7 @@ function gatherPostProcessBuffers(loader, primitiveLoadPlan) {
   // to do post-processing, all the attributes are loaded as typed arrays
   // so if a buffer exists, it was newly generated
   const attributes = primitive.attributes;
-  const length = attributes.length;
-  for (let i = 0; i < length; i++) {
+  for (let i = 0; i < attributes.length; i++) {
     const attribute = attributes[i];
     if (defined(attribute.buffer)) {
       buffers.push(attribute.buffer);
@@ -1491,6 +1474,16 @@ function loadTexture(
   return textureReader;
 }
 
+/**
+ *
+ * @param {GltfLoader} loader
+ * @param {object} gltf The parsed glTF JSON
+ * @param {object} gltfMaterial An entry from the <code>.materials</code> array in the glTF JSON
+ * @param {SupportedImageFormats} supportedImageFormats
+ * @param {FrameState} frameState
+ * @returns {ModelComponents.Material}
+ * @private
+ */
 function loadMaterial(
   loader,
   gltf,
@@ -1793,6 +1786,17 @@ function loadMorphTarget(
   return morphTarget;
 }
 
+/**
+ * Load resources associated with a mesh primitive for a glTF node
+ * @param {GltfLoader} loader
+ * @param {object} gltf The parsed glTF JSON
+ * @param {object} gltfPrimitive One of the primitives in a mesh
+ * @param {boolean} hasInstances True if the node using this mesh has instances
+ * @param {SupportedImageFormats} supportedImageFormats
+ * @param {FrameState} frameState
+ * @returns {ModelComponents.Primitive}
+ * @private
+ */
 function loadPrimitive(
   loader,
   gltf,
@@ -2231,6 +2235,16 @@ function loadInstanceFeaturesLegacy(
   }
 }
 
+/**
+ * Load resources associated with one node from a glTF JSON
+ * @param {GltfLoader} loader
+ * @param {object} gltf The parsed glTF JSON
+ * @param {object} gltfNode An entry from the <code>.nodes</code> array in the glTF JSON
+ * @param {SupportedImageFormats} supportedImageFormats
+ * @param {FrameState} frameState
+ * @returns {ModelComponents.Node}
+ * @private
+ */
 function loadNode(loader, gltf, gltfNode, supportedImageFormats, frameState) {
   const node = new Node();
 
@@ -2295,17 +2309,23 @@ function loadNode(loader, gltf, gltfNode, supportedImageFormats, frameState) {
   return node;
 }
 
-function loadNodes(loader, gltf, supportedImageFormats, frameState) {
+/**
+ * Load resources associated with the nodes in a glTF JSON
+ * @param {GltfLoader} loader
+ * @param {SupportedImageFormats} supportedImageFormats
+ * @param {FrameState} frameState
+ * @returns {ModelComponents.Node[]}
+ * @private
+ */
+function loadNodes(loader, supportedImageFormats, frameState) {
+  const gltf = loader.gltfJson;
   if (!defined(gltf.nodes)) {
     return [];
   }
 
-  let i;
-  let j;
-
   const nodesLength = gltf.nodes.length;
   const nodes = new Array(nodesLength);
-  for (i = 0; i < nodesLength; ++i) {
+  for (let i = 0; i < nodesLength; ++i) {
     const node = loadNode(
       loader,
       gltf,
@@ -2317,11 +2337,11 @@ function loadNodes(loader, gltf, supportedImageFormats, frameState) {
     nodes[i] = node;
   }
 
-  for (i = 0; i < nodesLength; ++i) {
+  for (let i = 0; i < nodesLength; ++i) {
     const childrenNodeIds = gltf.nodes[i].children;
     if (defined(childrenNodeIds)) {
       const childrenLength = childrenNodeIds.length;
-      for (j = 0; j < childrenLength; ++j) {
+      for (let j = 0; j < childrenLength; ++j) {
         nodes[i].children.push(nodes[childrenNodeIds[j]]);
       }
     }
@@ -2575,7 +2595,24 @@ function loadScene(gltf, nodes) {
 
 const scratchCenter = new Cartesian3();
 
-function parse(loader, gltf, supportedImageFormats, frameState) {
+/**
+ * Parse the glTF which populates the loaders arrays. Loading promises will be created, and will
+ * resolve once the loaders are ready (i.e. all external resources
+ * have been fetched and all GPU resources have been created). Loaders that
+ * create GPU resources need to be processed every frame until they become
+ * ready since the JobScheduler is not able to execute all jobs in a single
+ * frame. Any promise failures are collected, and will be handled synchronously in process().
+ * Also note that it's fine to call process before a loader is ready to process or
+ * after it has failed; nothing will happen.
+ *
+ * @param {GltfLoader} loader
+ * @param {SupportedImageFormats} supportedImageFormats
+ * @param {FrameState} frameState
+ * @returns {Promise} A Promise that resolves when all loaders are ready
+ * @private
+ */
+function parse(loader, supportedImageFormats, frameState) {
+  const gltf = loader.gltfJson;
   const extensions = defaultValue(gltf.extensions, defaultValue.EMPTY_OBJECT);
   const structuralMetadataExtension = extensions.EXT_structural_metadata;
   const featureMetadataExtensionLegacy = extensions.EXT_feature_metadata;
@@ -2598,7 +2635,7 @@ function parse(loader, gltf, supportedImageFormats, frameState) {
     loader._sortedFeatureTextureIds = Object.keys(allFeatureTextureIds).sort();
   }
 
-  const nodes = loadNodes(loader, gltf, supportedImageFormats, frameState);
+  const nodes = loadNodes(loader, supportedImageFormats, frameState);
   const skins = loadSkins(loader, gltf, nodes);
   const animations = loadAnimations(loader, gltf, nodes);
   const articulations = loadArticulations(gltf);
@@ -2702,8 +2739,7 @@ function unloadGeometry(loader) {
 
 function unloadGeneratedAttributes(loader) {
   const buffers = loader._postProcessBuffers;
-  const length = buffers.length;
-  for (let i = 0; i < length; i++) {
+  for (let i = 0; i < buffers.length; i++) {
     const buffer = buffers[i];
     if (!buffer.isDestroyed()) {
       buffer.destroy();
