@@ -16,7 +16,7 @@ vec2 computeTextureTransform(vec2 texCoord, mat3 textureTransform)
     return vec2(textureTransform * vec3(texCoord, 1.0));
 }
 
-#ifdef HAS_NORMALS
+#if defined(HAS_NORMAL_TEXTURE) && !defined(HAS_WIREFRAME)
 vec3 getNormalFromTexture(ProcessedAttributes attributes, vec3 geometryNormal)
 {
     vec2 normalTexCoords = TEXCOORD_NORMAL;
@@ -48,7 +48,9 @@ vec3 getNormalFromTexture(ProcessedAttributes attributes, vec3 geometryNormal)
 
     return textureNormal;
 }
+#endif
 
+#ifdef HAS_NORMALS
 vec3 computeNormal(ProcessedAttributes attributes)
 {
     // Geometry normal. This is already normalized 
