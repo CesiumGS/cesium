@@ -3,7 +3,7 @@ void modelClippingPolygonsStage(ProcessedAttributes attributes)
     vec2 sphericalLatLong = czm_approximateSphericalCoordinates(v_positionWC);
     sphericalLatLong.y = czm_branchFreeTernary(sphericalLatLong.y < czm_pi, sphericalLatLong.y, sphericalLatLong.y - czm_twoPi);
 
-    float minDistanceSquared = czm_infinity;
+    vec2 minDistance = vec2(czm_infinity);
     v_regionIndex = -1;
     v_clippingPosition = vec2(czm_infinity);
 
@@ -12,13 +12,15 @@ void modelClippingPolygonsStage(ProcessedAttributes attributes)
         vec2 rectUv = (sphericalLatLong.yx - extents.yx) * extents.wz;
 
         vec2 clamped = clamp(rectUv, vec2(0.0), vec2(1.0));
-        vec2 distance = abs(rectUv - clamped);
-        float distancedSquared = distance.x * distance.x + distance.y * distance.y;
-
-        if (distancedSquared < minDistanceSquared) {
-            minDistanceSquared = distancedSquared;
-            v_minDistance = distance;
+        vec2 distance = abs(rectUv - clamped) * extents.wz;
+        
+        if (minDistance.x > distance.x || minDistance.y > distance.y) {
+            minDistance = distance;
             v_clippingPosition = rectUv;
+        }
+
+        float threshold = 0.01;
+        if (rectUv.x > threshold && rectUv.y > threshold && rectUv.x < 1.0 - threshold && rectUv.y < 1.0 - threshold) {
             v_regionIndex = regionIndex;
         }
     }

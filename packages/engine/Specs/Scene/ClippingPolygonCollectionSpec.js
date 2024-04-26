@@ -299,19 +299,19 @@ describe("Scene/ClippingPolygonCollection", function () {
     const arrayBufferView = args[8];
     expect(arrayBufferView).toBeDefined();
     expect(arrayBufferView[0]).toEqualEpsilon(
-      0.6968311667442322,
+      0.6958641409873962,
       CesiumMath.EPSILON10
     ); // south
     expect(arrayBufferView[1]).toEqualEpsilon(
-      -1.31918466091156,
+      -1.3201631307601929,
       CesiumMath.EPSILON10
     ); // west
     expect(arrayBufferView[2]).toEqualEpsilon(
-      7583.7568359375,
+      484.0434265136719,
       CesiumMath.EPSILON10
     ); // 1 / (north - south)
     expect(arrayBufferView[3]).toEqualEpsilon(
-      11571.654296875,
+      489.4261779785156,
       CesiumMath.EPSILON10
     ); // 1 / (east - west)
     expect(arrayBufferView[4]).toBe(0); // padding
@@ -351,19 +351,19 @@ describe("Scene/ClippingPolygonCollection", function () {
     arrayBufferView = args[8];
     expect(arrayBufferView).toBeDefined();
     expect(arrayBufferView[0]).toEqualEpsilon(
-      0.6968311667442322,
+      0.6958641409873962,
       CesiumMath.EPSILON10
     ); // south
     expect(arrayBufferView[1]).toEqualEpsilon(
-      -1.31918466091156,
+      -1.3201631307601929,
       CesiumMath.EPSILON10
     ); // west
     expect(arrayBufferView[2]).toEqualEpsilon(
-      7583.7568359375,
+      484.0434265136719,
       CesiumMath.EPSILON10
     ); // north - south
     expect(arrayBufferView[3]).toEqualEpsilon(
-      11571.654296875,
+      489.4261779785156,
       CesiumMath.EPSILON10
     ); // east - west
     expect(arrayBufferView[4]).toBe(0); // padding

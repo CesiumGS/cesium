@@ -364,18 +364,91 @@ ClippingPolygonCollection.prototype.remove = function (polygon) {
   return true;
 };
 
-function combineExtents(extentsList, extents) {
-  // Combine with an existing extent if it overlaps
-  const index = extentsList.length;
-  for (const [i, e] of extentsList.entries()) {
-    if (defined(Rectangle.intersection(e, extents))) {
-      Rectangle.union(e, extents, e);
-      return i;
+const scratchRectangle = new Rectangle();
+
+// Map the polygons to a list of extents-- Overlapping extents will be merged
+// into a single encompassing extent
+function getExtents(polygons) {
+  const extentsList = [];
+  const polygonIndicesList = [];
+
+  const length = polygons.length;
+  for (let polygonIndex = 0; polygonIndex < length; ++polygonIndex) {
+    const polygon = polygons[polygonIndex];
+    const extents = polygon.computeSphericalExtents();
+
+    let height = Math.max(extents.height * 2.5, 0.001);
+    let width = Math.max(extents.width * 2.5, 0.001);
+
+    // Pad extents to avoid floating point error when fragment culling at edges.
+    let paddedExtents = Rectangle.clone(extents);
+    paddedExtents.south -= height;
+    paddedExtents.west -= width;
+    paddedExtents.north += height;
+    paddedExtents.east += width;
+
+    paddedExtents.south = Math.max(paddedExtents.south, -Math.PI);
+    paddedExtents.west = Math.max(paddedExtents.west, -Math.PI);
+    paddedExtents.north = Math.min(paddedExtents.north, Math.PI);
+    paddedExtents.east = Math.min(paddedExtents.east, Math.PI);
+
+    const polygonIndices = [polygonIndex];
+    for (let i = 0; i < extentsList.length; ++i) {
+      const e = extentsList[i];
+      if (
+        defined(e) &&
+        defined(Rectangle.simpleIntersection(e, paddedExtents)) &&
+        !Rectangle.equals(e, paddedExtents)
+      ) {
+        const intersectingPolygons = polygonIndicesList[i];
+        polygonIndices.push(...intersectingPolygons);
+        intersectingPolygons.reduce(
+          (extents, p) =>
+            Rectangle.union(
+              polygons[p].computeSphericalExtents(scratchRectangle),
+              extents,
+              extents
+            ),
+          extents
+        );
+
+        extentsList[i] = undefined;
+        polygonIndicesList[i] = undefined;
+
+        height = Math.max(extents.height * 2.5, 0.001);
+        width = Math.max(extents.width * 2.5, 0.001);
+
+        paddedExtents = Rectangle.clone(extents, paddedExtents);
+        paddedExtents.south -= height;
+        paddedExtents.west -= width;
+        paddedExtents.north += height;
+        paddedExtents.east += width;
+
+        paddedExtents.south = Math.max(paddedExtents.south, -Math.PI);
+        paddedExtents.west = Math.max(paddedExtents.west, -Math.PI);
+        paddedExtents.north = Math.min(paddedExtents.north, Math.PI);
+        paddedExtents.east = Math.min(paddedExtents.east, Math.PI);
+
+        // Reiterate through the extents list until there are no more intersections
+        i = -1;
+      }
     }
+
+    extentsList.push(paddedExtents);
+    polygonIndicesList.push(polygonIndices);
   }
 
-  extentsList.push(extents);
-  return index;
+  const extentsIndexByPolygon = new Map();
+  polygonIndicesList
+    .filter(defined)
+    .forEach((polygonIndices, e) =>
+      polygonIndices.forEach((p) => extentsIndexByPolygon.set(p, e))
+    );
+
+  return {
+    extentsList: extentsList.filter(defined),
+    extentsIndexByPolygon: extentsIndexByPolygon,
+  };
 }
 
 /**
@@ -396,22 +469,18 @@ ClippingPolygonCollection.prototype.removeAll = function () {
 };
 
 function packPolygonsAsFloats(clippingPolygonCollection) {
-  const float32View = clippingPolygonCollection._float32View;
+  const polygonsFloat32View = clippingPolygonCollection._float32View;
   const extentsFloat32View = clippingPolygonCollection._extentsFloat32View;
   const polygons = clippingPolygonCollection._polygons;
 
-  let floatIndex = 0;
+  const { extentsList, extentsIndexByPolygon } = getExtents(polygons);
 
-  const extentsList = [];
-  for (const polygon of polygons) {
+  let floatIndex = 0;
+  for (const [polygonIndex, polygon] of polygons.entries()) {
     // Pack the length of the polygon into the polygon texture array buffer
     const length = polygon.length;
-    float32View[floatIndex++] = length;
-
-    // Map the polygon to the applicable extents-- Overlapping extents will be merged
-    // into a single encompassing extent
-    const extents = polygon.computeSphericalExtents();
-    float32View[floatIndex++] = combineExtents(extentsList, extents);
+    polygonsFloat32View[floatIndex++] = length;
+    polygonsFloat32View[floatIndex++] = extentsIndexByPolygon.get(polygonIndex);
 
     // Pack the polygon positions into the polygon texture array buffer
     for (let i = 0; i < length; ++i) {
@@ -430,8 +499,8 @@ function packPolygonsAsFloats(clippingPolygonCollection) {
         spherePoint.y
       );
 
-      float32View[floatIndex++] = latitudeApproximation;
-      float32View[floatIndex++] = longitudeApproximation;
+      polygonsFloat32View[floatIndex++] = latitudeApproximation;
+      polygonsFloat32View[floatIndex++] = longitudeApproximation;
     }
   }
 
@@ -469,11 +538,6 @@ ClippingPolygonCollection.prototype.update = function (frameState) {
     );
   }
 
-  // If there are no clipping polygons, there's nothing to update.
-  if (this.length === 0) {
-    return;
-  }
-
   // It'd be expensive to validate any individual position has changed. Instead verify if the list of polygon positions has had elements added or removed, which should be good enough for most cases.
   const totalPositions = this._polygons.reduce(
     (totalPositions, polygon) => totalPositions + polygon.length,
@@ -485,6 +549,11 @@ ClippingPolygonCollection.prototype.update = function (frameState) {
   }
 
   this._totalPositions = totalPositions;
+
+  // If there are no clipping polygons, there's nothing to update.
+  if (this.length === 0) {
+    return;
+  }
 
   if (defined(this._signedDistanceComputeCommand)) {
     this._signedDistanceComputeCommand.canceled = true;
