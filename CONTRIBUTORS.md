@@ -386,3 +386,5 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [Taylor Huffman](https://github.com/huffmantayler)
 - [蒋宇梁](https://github.com/s3xysteak)
 - [dslming](https://github.com/dslming)
+- [Peter A. Jonsson](https://github.com/pjonsson)
+- [Zhongxiang Wang](https://github.com/plainheart)
