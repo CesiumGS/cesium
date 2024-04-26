@@ -20,8 +20,7 @@ function getExternalResourceCacheKey(resource) {
 }
 
 function getBufferViewCacheKey(bufferView) {
-  let byteOffset = bufferView.byteOffset;
-  let byteLength = bufferView.byteLength;
+  let { byteOffset, byteLength } = bufferView;
 
   if (hasExtension(bufferView, "EXT_meshopt_compression")) {
     const meshopt = bufferView.extensions.EXT_meshopt_compression;
@@ -34,14 +33,8 @@ function getBufferViewCacheKey(bufferView) {
 
 function getAccessorCacheKey(accessor, bufferView) {
   const byteOffset = bufferView.byteOffset + accessor.byteOffset;
-  const componentType = accessor.componentType;
-  const type = accessor.type;
-  const count = accessor.count;
+  const { componentType, type, count } = accessor;
   return `${byteOffset}-${componentType}-${type}-${count}`;
-}
-
-function getExternalBufferCacheKey(resource) {
-  return getExternalResourceCacheKey(resource);
 }
 
 function getEmbeddedBufferCacheKey(parentResource, bufferId) {
@@ -54,7 +47,7 @@ function getBufferCacheKey(buffer, bufferId, gltfResource, baseResource) {
     const resource = baseResource.getDerivedResource({
       url: buffer.uri,
     });
-    return getExternalBufferCacheKey(resource);
+    return getExternalResourceCacheKey(resource);
   }
 
   return getEmbeddedBufferCacheKey(gltfResource, bufferId);
@@ -128,8 +121,7 @@ function getSamplerCacheKey(gltf, textureInfo) {
  * @private
  */
 ResourceCacheKey.getSchemaCacheKey = function (options) {
-  const schema = options.schema;
-  const resource = options.resource;
+  const { schema, resource } = options;
 
   //>>includeStart('debug', pragmas.debug);
   if (defined(schema) === defined(resource)) {
@@ -157,13 +149,13 @@ ResourceCacheKey.getSchemaCacheKey = function (options) {
  */
 ResourceCacheKey.getExternalBufferCacheKey = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  const resource = options.resource;
+  const { resource } = options;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.resource", resource);
   //>>includeEnd('debug');
 
-  return `external-buffer:${getExternalBufferCacheKey(resource)}`;
+  return `external-buffer:${getExternalResourceCacheKey(resource)}`;
 };
 
 /**
@@ -178,8 +170,7 @@ ResourceCacheKey.getExternalBufferCacheKey = function (options) {
  */
 ResourceCacheKey.getEmbeddedBufferCacheKey = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  const parentResource = options.parentResource;
-  const bufferId = options.bufferId;
+  const { parentResource, bufferId } = options;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.parentResource", parentResource);
@@ -203,7 +194,7 @@ ResourceCacheKey.getEmbeddedBufferCacheKey = function (options) {
  */
 ResourceCacheKey.getGltfCacheKey = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  const gltfResource = options.gltfResource;
+  const { gltfResource } = options;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.gltfResource", gltfResource);
@@ -226,10 +217,7 @@ ResourceCacheKey.getGltfCacheKey = function (options) {
  */
 ResourceCacheKey.getBufferViewCacheKey = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  const gltf = options.gltf;
-  const bufferViewId = options.bufferViewId;
-  const gltfResource = options.gltfResource;
-  const baseResource = options.baseResource;
+  const { gltf, bufferViewId, gltfResource, baseResource } = options;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.gltf", gltf);
@@ -272,10 +260,7 @@ ResourceCacheKey.getBufferViewCacheKey = function (options) {
  */
 ResourceCacheKey.getDracoCacheKey = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  const gltf = options.gltf;
-  const draco = options.draco;
-  const gltfResource = options.gltfResource;
-  const baseResource = options.baseResource;
+  const { gltf, draco, gltfResource, baseResource } = options;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.gltf", gltf);
@@ -309,16 +294,18 @@ ResourceCacheKey.getDracoCacheKey = function (options) {
  */
 ResourceCacheKey.getVertexBufferCacheKey = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  const gltf = options.gltf;
-  const gltfResource = options.gltfResource;
-  const baseResource = options.baseResource;
-  const frameState = options.frameState;
-  const bufferViewId = options.bufferViewId;
-  const draco = options.draco;
-  const attributeSemantic = options.attributeSemantic;
-  const dequantize = defaultValue(options.dequantize, false);
-  const loadBuffer = defaultValue(options.loadBuffer, false);
-  const loadTypedArray = defaultValue(options.loadTypedArray, false);
+  const {
+    gltf,
+    gltfResource,
+    baseResource,
+    frameState,
+    bufferViewId,
+    draco,
+    attributeSemantic,
+    dequantize = false,
+    loadBuffer = false,
+    loadTypedArray = false,
+  } = options;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.gltf", gltf);
@@ -420,14 +407,16 @@ function hasDracoCompression(draco, semantic) {
  */
 ResourceCacheKey.getIndexBufferCacheKey = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  const gltf = options.gltf;
-  const accessorId = options.accessorId;
-  const gltfResource = options.gltfResource;
-  const baseResource = options.baseResource;
-  const frameState = options.frameState;
-  const draco = options.draco;
-  const loadBuffer = defaultValue(options.loadBuffer, false);
-  const loadTypedArray = defaultValue(options.loadTypedArray, false);
+  const {
+    gltf,
+    accessorId,
+    gltfResource,
+    baseResource,
+    frameState,
+    draco,
+    loadBuffer = false,
+    loadTypedArray = false,
+  } = options;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.gltf", gltf);
@@ -495,10 +484,7 @@ ResourceCacheKey.getIndexBufferCacheKey = function (options) {
  */
 ResourceCacheKey.getImageCacheKey = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  const gltf = options.gltf;
-  const imageId = options.imageId;
-  const gltfResource = options.gltfResource;
-  const baseResource = options.baseResource;
+  const { gltf, imageId, gltfResource, baseResource } = options;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.gltf", gltf);
@@ -533,12 +519,14 @@ ResourceCacheKey.getImageCacheKey = function (options) {
  */
 ResourceCacheKey.getTextureCacheKey = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  const gltf = options.gltf;
-  const textureInfo = options.textureInfo;
-  const gltfResource = options.gltfResource;
-  const baseResource = options.baseResource;
-  const supportedImageFormats = options.supportedImageFormats;
-  const frameState = options.frameState;
+  const {
+    gltf,
+    textureInfo,
+    gltfResource,
+    baseResource,
+    supportedImageFormats,
+    frameState,
+  } = options;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.gltf", gltf);

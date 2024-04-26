@@ -1340,7 +1340,7 @@ SpecularGlossiness.DEFAULT_GLOSSINESS_FACTOR = 1.0;
 /**
  * The material appearance of a primitive.
  *
- * @alias ModelComponent.Material
+ * @alias ModelComponents.Material
  * @constructor
  *
  * @private
