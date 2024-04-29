@@ -325,6 +325,11 @@ DataSourceDisplay.prototype.update = function (time) {
     result = visualizers[x].update(time) && result;
   }
 
+  // Request a rendering of the scene when the data source
+  // becomes 'ready' for the first time
+  if (!this._ready && result) {
+    this._scene.requestRender();
+  }
   this._ready = result;
 
   return result;
