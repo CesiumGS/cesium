@@ -53,6 +53,7 @@ const {
   Components,
   MetallicRoughness,
   SpecularGlossiness,
+  Specular,
   Material,
 } = ModelComponents;
 
@@ -1536,6 +1537,31 @@ function loadMetallicRoughness(loader, metallicRoughnessInfo, frameState) {
   return metallicRoughness;
 }
 
+function loadSpecular(loader, specularInfo, frameState) {
+  const {
+    specularFactor,
+    specularTexture,
+    specularColorFactor,
+    specularColorTexture,
+  } = specularInfo;
+
+  const specular = new Specular();
+  if (defined(specularTexture)) {
+    specular.specularTexture = loadTexture(loader, specularTexture, frameState);
+  }
+  if (defined(specularColorTexture)) {
+    specular.specularColorTexture = loadTexture(
+      loader,
+      specularColorTexture,
+      frameState
+    );
+  }
+  specular.specularTexture = specularFactor;
+  specular.specularColorTexture = fromArray(Cartesian3, specularColorFactor);
+
+  return specular;
+}
+
 /**
  * Load textures and parse factors and flags for a glTF material
  * @param {GltfLoader} loader
@@ -1552,6 +1578,7 @@ function loadMaterial(loader, gltfMaterial, frameState) {
     defaultValue.EMPTY_OBJECT
   );
   const pbrSpecularGlossiness = extensions.KHR_materials_pbrSpecularGlossiness;
+  const pbrSpecular = extensions.KHR_materials_specular;
   const pbrMetallicRoughness = gltfMaterial.pbrMetallicRoughness;
 
   material.unlit = defined(extensions.KHR_materials_unlit);
@@ -1562,12 +1589,17 @@ function loadMaterial(loader, gltfMaterial, frameState) {
       pbrSpecularGlossiness,
       frameState
     );
-  } else if (defined(pbrMetallicRoughness)) {
-    material.metallicRoughness = loadMetallicRoughness(
-      loader,
-      pbrMetallicRoughness,
-      frameState
-    );
+  } else {
+    if (defined(pbrMetallicRoughness)) {
+      material.metallicRoughness = loadMetallicRoughness(
+        loader,
+        pbrMetallicRoughness,
+        frameState
+      );
+    }
+    if (defined(pbrSpecular)) {
+      material.specular = loadSpecular(loader, pbrSpecular, frameState);
+    }
   }
 
   // Top level textures
