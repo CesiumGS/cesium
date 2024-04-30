@@ -240,6 +240,7 @@ PixelFormat.validate = function (pixelFormat) {
  */
 PixelFormat.isColorFormat = function (pixelFormat) {
   return (
+    pixelFormat === PixelFormat.RED ||
     pixelFormat === PixelFormat.ALPHA ||
     pixelFormat === PixelFormat.RGB ||
     pixelFormat === PixelFormat.RGBA ||
