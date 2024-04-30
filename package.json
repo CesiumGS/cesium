@@ -147,7 +147,7 @@
     "node": ">=14.0.0"
   },
   "lint-staged": {
-    "*.{js,cjs,html}": [
+    "*.{js,cjs,mjs,css,html}": [
       "eslint --cache --quiet",
       "prettier --write --no-config"
     ],

@@ -77,6 +77,12 @@ uniform mat4 u_clippingPlanesMatrix;
 uniform vec4 u_clippingPlanesEdgeStyle;
 #endif
 
+#ifdef ENABLE_CLIPPING_POLYGONS
+uniform highp sampler2D u_clippingDistance;
+in vec2 v_clippingPosition;
+flat in int v_regionIndex;
+#endif
+
 #if defined(GROUND_ATMOSPHERE) || defined(FOG) && defined(DYNAMIC_ATMOSPHERE_LIGHTING) && (defined(ENABLE_VERTEX_LIGHTING) || defined(ENABLE_DAYNIGHT_SHADING))
 uniform float u_minimumBrightness;
 #endif
@@ -411,6 +417,12 @@ void main()
     {
         finalColor = clippingPlanesEdgeColor;
     }
+#endif
+
+#ifdef ENABLE_CLIPPING_POLYGONS
+    vec2 clippingPosition = v_clippingPosition;
+    int regionIndex = v_regionIndex;
+    clipPolygons(u_clippingDistance, CLIPPING_POLYGON_REGIONS_LENGTH, clippingPosition, regionIndex);    
 #endif
 
 #ifdef HIGHLIGHT_FILL_TILE

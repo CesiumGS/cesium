@@ -369,21 +369,24 @@ ShaderBuilder.prototype.addAttribute = function (type, identifier) {
  *
  * @param {string} type The GLSL type of the varying
  * @param {string} identifier An identifier for the varying. Identifiers must begin with <code>v_</code> to be consistent with Cesium's style guide.
+ * @param {string} [qualifier] A qualifier for the varying, such as <code>flat</code>.
  *
  * @example
  * // creates the line "in vec3 v_color;" in the vertex shader
  * // creates the line "out vec3 v_color;" in the fragment shader
  * shaderBuilder.addVarying("vec3", "v_color");
  */
-ShaderBuilder.prototype.addVarying = function (type, identifier) {
+ShaderBuilder.prototype.addVarying = function (type, identifier, qualifier) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.string("type", type);
   Check.typeOf.string("identifier", identifier);
   //>>includeEnd('debug');
 
+  qualifier = defined(qualifier) ? `${qualifier} ` : "";
+
   const line = `${type} ${identifier};`;
-  this._vertexShaderParts.varyingLines.push(`out ${line}`);
-  this._fragmentShaderParts.varyingLines.push(`in ${line}`);
+  this._vertexShaderParts.varyingLines.push(`${qualifier}out ${line}`);
+  this._fragmentShaderParts.varyingLines.push(`${qualifier}in ${line}`);
 };
 
 /**
