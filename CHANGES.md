@@ -4,11 +4,21 @@
 
 #### @cesium/engine
 
+##### Additions :tada:
+
+- Added `ClippingPolygon` and `ClippingPolygonCollection` for applying multiple clipping regions, with support for concave regions and inverse clipping regions, to 3D Tiles and Terrain. [#11750](https://github.com/CesiumGS/cesium/pull/11750)
+- Added `Cesium3DTileset.clippingPolygons`, `Globe.clippingPolygons`, and `Model.clippingPolygons` properties for defining clipping regions from world positions. [#11750](https://github.com/CesiumGS/cesium/pull/11750)
+
+##### Fixes :wrench:
+
+- Fixed a bug where a data source was not automatically rendered after is was added in request render mode. [#11934](https://github.com/CesiumGS/cesium/pull/11934)
+- Fixes Typescript definition for `Event.raiseEvent`. [#10498](https://github.com/CesiumGS/cesium/issues/10498)
+
+#### @cesium/widgets
+
 ##### Fixes :wrench:
 
 - Fixed leaked CSS styling from `I3SBuildingSceneLayerExplorer` widget. [#11959](https://github.com/CesiumGS/cesium/pull/11959)
-- Fixed a bug where a data source was not automatically rendered after is was added in request render mode. [#11934](https://github.com/CesiumGS/cesium/pull/11934)
-- Fixes Typescript definition for `Event.raiseEvent`. [#10498](https://github.com/CesiumGS/cesium/issues/10498)
 
 ### 1.116 - 2024-04-01
 
@@ -21,8 +31,6 @@
 
 ##### Additions :tada:
 
-- Added `ClippingPolygon` and `ClippingPolygonCollection` for applying multiple clipping regions, with support for concave regions and inverse clipping regions, to 3D Tiles and Terrain. [#11750](https://github.com/CesiumGS/cesium/pull/11750)
-- Added `Cesium3DTileset.clippingPolygons`, `Globe.clippingPolygons`, and `Model.clippingPolygons` properties for defining clipping regions from world positions.
 - Surface normals are now computed for clipping and shape bounds in VoxelEllipsoidShape and VoxelCylinderShape. [#11847](https://github.com/CesiumGS/cesium/pull/11847)
 - Implemented sharper rendering and lighting on voxels with CYLINDER and ELLIPSOID shape. [#11875](https://github.com/CesiumGS/cesium/pull/11875)
 - Implemented vertical exaggeration for voxels with BOX shape. [#11887](https://github.com/CesiumGS/cesium/pull/11887)
