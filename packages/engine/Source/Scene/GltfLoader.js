@@ -399,7 +399,7 @@ async function loadResources(loader, frameState) {
     await FeatureDetection.supportsWebP.initialize();
   }
 
-  this._supportedImageFormats = new SupportedImageFormats({
+  loader._supportedImageFormats = new SupportedImageFormats({
     webp: FeatureDetection.supportsWebP(),
     basis: frameState.context.supportsBasis,
   });
