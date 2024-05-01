@@ -255,6 +255,27 @@ Model3DTileContent.prototype.update = function (tileset, frameState) {
     model._clippingPlanesState = 0;
   }
 
+  // Updating clipping polygons requires more effort because of ownership checks
+  const tilesetClippingPolygons = tileset.clippingPolygons;
+  if (defined(tilesetClippingPolygons) && tile.clippingPolygonsDirty) {
+    // Dereference the clipping polygons from the model if they are irrelevant.
+    model._clippingPolygons =
+      tilesetClippingPolygons.enabled && tile._isClippedByPolygon
+        ? tilesetClippingPolygons
+        : undefined;
+  }
+
+  // If the model references a different ClippingPolygonCollection from the tileset,
+  // update the model to use the new ClippingPolygonCollection.
+  if (
+    defined(tilesetClippingPolygons) &&
+    defined(model._clippingPolygons) &&
+    model._clippingPolygons !== tilesetClippingPolygons
+  ) {
+    model._clippingPolygons = tilesetClippingPolygons;
+    model._clippingPolygonsState = 0;
+  }
+
   model.update(frameState);
 
   if (!this._ready && model.ready) {

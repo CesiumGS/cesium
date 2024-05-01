@@ -16,6 +16,8 @@ import {
   ClearCommand,
   ClippingPlane,
   ClippingPlaneCollection,
+  ClippingPolygon,
+  ClippingPolygonCollection,
   Color,
   ContextLimits,
   Credit,
@@ -4677,6 +4679,99 @@ describe(
           );
         }
       );
+    });
+
+    describe("clippingPolygons", () => {
+      const positions = Cartesian3.fromRadiansArray([
+        -1.3194369277314022,
+        0.6988062530900625,
+        -1.31941,
+        0.69879,
+        -1.3193955980204217,
+        0.6988091578771254,
+        -1.3193931220959367,
+        0.698743632490865,
+        -1.3194358224045408,
+        0.6987471965556998,
+      ]);
+      let polygon;
+
+      beforeEach(() => {
+        polygon = new ClippingPolygon({ positions });
+      });
+
+      it("destroys attached ClippingPolygonCollections and ClippingPolygonCollections that have been detached", async function () {
+        const tileset = await Cesium3DTilesTester.loadTileset(
+          scene,
+          tilesetUrl
+        );
+        const collectionA = new ClippingPolygonCollection({
+          polygons: [polygon],
+        });
+        expect(collectionA.owner).not.toBeDefined();
+
+        tileset.clippingPolygons = collectionA;
+        const collectionB = new ClippingPolygonCollection({
+          polygons: [polygon],
+        });
+
+        tileset.clippingPolygons = collectionB;
+        expect(collectionA.isDestroyed()).toBe(true);
+
+        scene.primitives.remove(tileset);
+        expect(collectionB.isDestroyed()).toBe(true);
+      });
+
+      it("throws a DeveloperError when given a ClippingPolygonCollection attached to another tileset", async function () {
+        const tilesetA = await Cesium3DTilesTester.loadTileset(
+          scene,
+          tilesetUrl
+        );
+
+        const tilesetB = await Cesium3DTilesTester.loadTileset(
+          scene,
+          tilesetUrl
+        );
+
+        const collection = new ClippingPolygonCollection({
+          polygons: [polygon],
+        });
+        tilesetA.clippingPolygons = collection;
+
+        expect(function () {
+          tilesetB.clippingPolygons = collection;
+        }).toThrowDeveloperError();
+      });
+
+      it("cull hidden content", async function () {
+        if (!scene.context.webgl2) {
+          return;
+        }
+
+        const tileset = await Cesium3DTilesTester.loadTileset(
+          scene,
+          tilesetUrl
+        );
+
+        let visibility = tileset.root.contentVisibility(scene.frameState);
+
+        expect(visibility).not.toBe(Intersect.OUTSIDE);
+        expect(visibility).not.toBe(Intersect.MASK_OUTSIDE);
+
+        tileset.clippingPolygons = new ClippingPolygonCollection({
+          polygons: [polygon],
+        });
+
+        visibility = tileset.root.contentVisibility(scene.frameState);
+
+        expect(visibility).not.toBe(Intersect.OUTSIDE);
+        expect(visibility).not.toBe(Intersect.MASK_OUTSIDE);
+
+        tileset.clippingPolygons.inverse = true;
+        visibility = tileset.root.contentVisibility(scene.frameState);
+
+        expect(visibility).toBe(Intersect.OUTSIDE);
+      });
     });
 
     it("throws if pointCloudShading is set to undefined", function () {

@@ -111,6 +111,10 @@ void main()
     atmosphereStage(attributes);
     #endif
 
+    #ifdef ENABLE_CLIPPING_POLYGONS
+    modelClippingPolygonsStage(attributes);
+    #endif
+
     #ifdef HAS_SILHOUETTE
     silhouetteStage(attributes, positionClip);
     #endif
