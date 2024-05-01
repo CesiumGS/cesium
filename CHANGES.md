@@ -8,6 +8,7 @@
 
 - Fixed leaked CSS styling from `I3SBuildingSceneLayerExplorer` widget. [#11959](https://github.com/CesiumGS/cesium/pull/11959)
 - Fixed a bug where a data source was not automatically rendered after is was added in request render mode. [#11934](https://github.com/CesiumGS/cesium/pull/11934)
+- Fixes Typescript definition for `Event.raiseEvent`. [#10498](https://github.com/CesiumGS/cesium/issues/10498)
 
 ### 1.116 - 2024-04-01
 
