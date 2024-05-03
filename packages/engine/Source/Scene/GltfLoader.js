@@ -1556,8 +1556,8 @@ function loadSpecular(loader, specularInfo, frameState) {
       frameState
     );
   }
-  specular.specularTexture = specularFactor;
-  specular.specularColorTexture = fromArray(Cartesian3, specularColorFactor);
+  specular.specularFactor = specularFactor;
+  specular.specularColorFactor = fromArray(Cartesian3, specularColorFactor);
 
   return specular;
 }

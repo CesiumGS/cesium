@@ -28,6 +28,7 @@ vec3 proceduralIBL(
     float roughness = pbrParameters.roughness;
     vec3 specularColor = pbrParameters.f0;
 
+    // TODO: don't assume 0.04 reflectance? Use values from specular extension
     float inverseRoughness = 1.04 - roughness;
     inverseRoughness *= inverseRoughness;
     vec3 sceneSkyBox = czm_textureCube(czm_environmentMap, r).rgb * inverseRoughness;

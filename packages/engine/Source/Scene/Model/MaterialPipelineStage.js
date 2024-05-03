@@ -389,14 +389,14 @@ function processSpecularGlossinessUniforms(
   ) {
     shaderBuilder.addUniform(
       "vec3",
-      "u_specularFactor",
+      "u_legacySpecularFactor",
       ShaderDestination.FRAGMENT
     );
-    uniformMap.u_specularFactor = function () {
+    uniformMap.u_legacySpecularFactor = function () {
       return specularGlossiness.specularFactor;
     };
     shaderBuilder.addDefine(
-      "HAS_SPECULAR_FACTOR",
+      "HAS_LEGACY_SPECULAR_FACTOR",
       undefined,
       ShaderDestination.FRAGMENT
     );

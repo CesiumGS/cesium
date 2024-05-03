@@ -5,7 +5,11 @@ vec3 lambertianDiffuse(vec3 diffuseColor)
 
 vec3 fresnelSchlick2(vec3 f0, vec3 f90, float VdotH)
 {
+    // TODO: clamp not necessary? VdotH is already clamped to [0.0, 1.0]
+    // return f0 + (f90 - f0) * pow(1.0 - VdotH, 5.0)
     return f0 + (f90 - f0) * pow(clamp(1.0 - VdotH, 0.0, 1.0), 5.0);
+    // TODO: manually multiply instead of pow(). See
+    // https://stackoverflow.com/a/68793086/10082269
 }
 
 float smithVisibilityG1(float NdotV, float roughness)
@@ -77,13 +81,16 @@ vec3 czm_pbrLighting(
     float NdotL = clamp(dot(n, l), 0.001, 1.0);
     float NdotV = abs(dot(n, v)) + 0.001;
     float NdotH = clamp(dot(n, h), 0.0, 1.0);
-    float LdotH = clamp(dot(l, h), 0.0, 1.0);
     float VdotH = clamp(dot(v, h), 0.0, 1.0);
 
     vec3 f0 = pbrParameters.f0;
     float reflectance = max(max(f0.r, f0.g), f0.b);
-    vec3 f90 = vec3(clamp(reflectance * 25.0, 0.0, 1.0));
+    vec3 f90 = vec3(clamp(reflectance * 25.0, 0.0, 1.0)); // vec3(1.0) for dielectric.
     vec3 F = fresnelSchlick2(f0, f90, VdotH);
+
+    #if defined(USE_SPECULAR)
+    F *= pbrParameters.specularWeight;
+    #endif
 
     float alpha = pbrParameters.roughness;
     float G = smithVisibilityGGX(alpha, NdotL, NdotV);

@@ -391,7 +391,7 @@ describe(
           "uniform sampler2D u_occlusionTexture;",
           "uniform sampler2D u_specularGlossinessTexture;",
           "uniform vec3 u_emissiveFactor;",
-          "uniform vec3 u_specularFactor;",
+          "uniform vec3 u_legacySpecularFactor;",
           "uniform vec4 u_diffuseFactor;",
         ]);
 
@@ -404,7 +404,7 @@ describe(
           "HAS_GLOSSINESS_FACTOR",
           "HAS_NORMAL_TEXTURE",
           "HAS_OCCLUSION_TEXTURE",
-          "HAS_SPECULAR_FACTOR",
+          "HAS_LEGACY_SPECULAR_FACTOR",
           "HAS_SPECULAR_GLOSSINESS_TEXTURE",
           "TEXCOORD_DIFFUSE v_texCoord_0",
           "TEXCOORD_EMISSIVE v_texCoord_0",
@@ -419,7 +419,7 @@ describe(
           u_diffuseFactor: specularGlossiness.diffuseFactor,
           u_specularGlossinessTexture:
             specularGlossiness.specularGlossinessTexture.texture,
-          u_specularFactor: specularGlossiness.specularFactor,
+          u_legacySpecularFactor: specularGlossiness.specularFactor,
           u_glossinessFactor: specularGlossiness.glossinessFactor,
         };
         expectUniformMap(uniformMap, expectedUniforms);

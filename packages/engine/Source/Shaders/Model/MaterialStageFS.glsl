@@ -118,16 +118,16 @@ void setSpecularGlossiness(inout czm_modelMaterial material)
         vec4 specularGlossiness = czm_srgbToLinear(texture(u_specularGlossinessTexture, specularGlossinessTexCoords));
         vec3 specular = specularGlossiness.rgb;
         float glossiness = specularGlossiness.a;
-        #ifdef HAS_SPECULAR_FACTOR
-            specular *= u_specularFactor;
+        #ifdef HAS_LEGACY_SPECULAR_FACTOR
+            specular *= u_legacySpecularFactor;
         #endif
 
         #ifdef HAS_GLOSSINESS_FACTOR
             glossiness *= u_glossinessFactor;
         #endif
     #else
-        #ifdef HAS_SPECULAR_FACTOR
-            vec3 specular = clamp(u_specularFactor, vec3(0.0), vec3(1.0));
+        #ifdef HAS_LEGACY_SPECULAR_FACTOR
+            vec3 specular = clamp(u_legacySpecularFactor, vec3(0.0), vec3(1.0));
         #else
             vec3 specular = vec3(1.0);
         #endif
@@ -167,7 +167,7 @@ void setSpecularGlossiness(inout czm_modelMaterial material)
     material.roughness = parameters.roughness;
 }
 #elif defined(LIGHTING_PBR)
-void setMetallicRoughness(inout czm_modelMaterial material)
+float setMetallicRoughness(inout czm_modelMaterial material)
 {
     #ifdef HAS_METALLIC_ROUGHNESS_TEXTURE
         vec2 metallicRoughnessTexCoords = TEXCOORD_METALLIC_ROUGHNESS;
@@ -206,7 +206,51 @@ void setMetallicRoughness(inout czm_modelMaterial material)
     material.diffuse = parameters.diffuseColor;
     material.specular = parameters.f0;
     material.roughness = parameters.roughness;
+
+    return metalness;
 }
+#if defined(USE_SPECULAR)
+void setSpecular(inout czm_modelMaterial material, in float metalness)
+{
+    #ifdef HAS_SPECULAR_TEXTURE
+        vec2 specularTexCoords = TEXCOORD_SPECULAR;
+        #ifdef HAS_SPECULAR_TEXTURE_TRANSFORM
+            specularTexCoords = computeTextureTransform(specularTexCoords, u_specularTextureTransform);
+        #endif
+        float specularWeight = texture(u_specularTexture, specularTexCoords).a;
+        #ifdef HAS_SPECULAR_FACTOR
+            specularWeight *= u_specularFactor;
+        #endif
+    #else
+        #ifdef HAS_SPECULAR_FACTOR
+            float specularWeight = u_specularFactor;
+        #else
+            float specularWeight = 1.0;
+        #endif
+    #endif
+
+    #ifdef HAS_SPECULAR_COLOR_TEXTURE
+        vec2 specularColorTexCoords = TEXCOORD_SPECULAR_COLOR;
+        #ifdef HAS_SPECULAR_COLOR_TEXTURE_TRANSFORM
+            specularColorTexCoords = computeTextureTransform(specularColorTexCoords, u_specularColorTextureTransform);
+        #endif
+        vec3 specularColorFactor = texture(u_specularColorTexture, specularColorTexCoords).rgb;
+        #ifdef HAS_SPECULAR_COLOR_FACTOR
+            specularColorFactor *= u_specularColorFactor;
+        #endif
+    #else
+        #ifdef HAS_SPECULAR_COLOR_FACTOR
+            vec3 specularColorFactor = u_specularColorFactor;
+        #else
+            vec3 specularColorFactor = vec3(1.0);
+        #endif
+    #endif
+    material.specularWeight = specularWeight;
+    vec3 f0 = material.specular;
+    vec3 dielectricSpecularF0 = min(f0 * specularColorFactor, vec3(1.0));
+    material.specular = mix(dielectricSpecularF0, material.diffuse, metalness);
+}
+#endif
 #endif
 
 void materialStage(inout czm_modelMaterial material, ProcessedAttributes attributes, SelectedFeature feature)
@@ -258,6 +302,9 @@ void materialStage(inout czm_modelMaterial material, ProcessedAttributes attribu
     #if defined(LIGHTING_PBR) && defined(USE_SPECULAR_GLOSSINESS)
         setSpecularGlossiness(material);
     #elif defined(LIGHTING_PBR)
-        setMetallicRoughness(material);
+        float metalness = setMetallicRoughness(material);
+        #if defined(USE_SPECULAR)
+            setSpecular(material, metalness);
+        #endif
     #endif
 }
