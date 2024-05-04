@@ -8,6 +8,13 @@ const ImageBasedLightingPipelineStage = {
   name: "ImageBasedLightingPipelineStage", // Helps with debugging
 };
 
+/**
+ * Add shader code, uniforms, and defines related to image based lighting
+ * @param {ModelRenderResources} renderResources
+ * @param {Model} model
+ * @param {FrameState} frameState
+ * @private
+ */
 ImageBasedLightingPipelineStage.process = function (
   renderResources,
   model,
