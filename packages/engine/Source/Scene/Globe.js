@@ -450,6 +450,20 @@ Object.defineProperties(Globe.prototype, {
     },
   },
   /**
+   * A property specifying a {@link ClippingPolygonCollection} used to selectively disable rendering inside or outside a list of polygons.
+   *
+   * @memberof Globe.prototype
+   * @type {ClippingPolygonCollection}
+   */
+  clippingPolygons: {
+    get: function () {
+      return this._surface.tileProvider.clippingPolygons;
+    },
+    set: function (value) {
+      this._surface.tileProvider.clippingPolygons = value;
+    },
+  },
+  /**
    * A property specifying a {@link Rectangle} used to limit globe rendering to a cartographic area.
    * Defaults to the maximum extent of cartographic coordinates.
    *

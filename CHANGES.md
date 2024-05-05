@@ -1,6 +1,6 @@
 # Change Log
 
-### 1.117 - 2024-05-01
+### 1.118
 
 #### @cesium/engine
 
@@ -8,6 +8,26 @@
 
 - Fixed a bug where `TaskProcessor` worker loading would check the worker module ID rather than the absolute URL when determining if it is cross-origin. [#11833](https://github.com/CesiumGS/cesium/pull/11833)
 - Fixed a bug where cross-origin workers would error when loaded with the CommonJS `importScripts` shim instead of an ESM `import`. [#11833](https://github.com/CesiumGS/cesium/pull/11833)
+
+### 1.117
+
+#### @cesium/engine
+
+##### Additions :tada:
+
+- Added `ClippingPolygon` and `ClippingPolygonCollection` for applying multiple clipping regions, with support for concave regions and inverse clipping regions, to 3D Tiles and Terrain. [#11750](https://github.com/CesiumGS/cesium/pull/11750)
+- Added `Cesium3DTileset.clippingPolygons`, `Globe.clippingPolygons`, and `Model.clippingPolygons` properties for defining clipping regions from world positions. [#11750](https://github.com/CesiumGS/cesium/pull/11750)
+
+##### Fixes :wrench:
+
+- Fixed a bug where a data source was not automatically rendered after is was added in request render mode. [#11934](https://github.com/CesiumGS/cesium/pull/11934)
+- Fixes Typescript definition for `Event.raiseEvent`. [#10498](https://github.com/CesiumGS/cesium/issues/10498)
+
+#### @cesium/widgets
+
+##### Fixes :wrench:
+
+- Fixed leaked CSS styling from `I3SBuildingSceneLayerExplorer` widget. [#11959](https://github.com/CesiumGS/cesium/pull/11959)
 
 ### 1.116 - 2024-04-01
 
