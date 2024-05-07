@@ -28,7 +28,6 @@ vec3 proceduralIBL(
     float roughness = pbrParameters.roughness;
     vec3 f0 = pbrParameters.f0;
 
-    // TODO: don't assume 0.04 reflectance? Use values from specular extension
     float inverseRoughness = 1.04 - roughness;
     inverseRoughness *= inverseRoughness;
     vec3 sceneSkyBox = czm_textureCube(czm_environmentMap, r).rgb * inverseRoughness;
@@ -54,21 +53,17 @@ vec3 proceduralIBL(
     specularIrradiance = mix(specularIrradiance, belowHorizonColor, smoothstep(aroundHorizon, farBelowHorizon, reflectionDotNadir) * inverseRoughness);
     specularIrradiance = mix(specularIrradiance, nadirColor, smoothstep(farBelowHorizon, 1.0, reflectionDotNadir) * inverseRoughness);
 
-    // Luminance model from page 40 of http://silviojemma.com/public/papers/lighting/spherical-harmonic-lighting.pdf
-    // See the "CIE Clear Sky Model" referenced on page 40 of https://3dvar.com/Green2003Spherical.pdf
     #ifdef USE_SUN_LUMINANCE
+    // See the "CIE Clear Sky Model" referenced on page 40 of https://3dvar.com/Green2003Spherical.pdf
     // Angle between sun and zenith.
-    // TODO: perform dot product in eye coordinates (use positionEC) to avoid the matrix multiply
     float LdotZenith = clamp(dot(normalize(czm_inverseViewRotation * l), vWC), 0.001, 1.0);
     float S = acos(LdotZenith);
     // Angle between zenith and current pixel
-    // TODO: perform dot product in eye coordinates
     float NdotZenith = clamp(dot(normalize(czm_inverseViewRotation * n), vWC), 0.001, 1.0);
     // Angle between sun and current pixel
     float gamma = acos(NdotL);
-    // TODO: use multiplication instead of pow(x, 2.0)
-    float numerator = ((0.91 + 10.0 * exp(-3.0 * gamma) + 0.45 * pow(NdotL, 2.0)) * (1.0 - exp(-0.32 / NdotZenith)));
-    float denominator = (0.91 + 10.0 * exp(-3.0 * S) + 0.45 * pow(LdotZenith, 2.0)) * (1.0 - exp(-0.32));
+    float numerator = ((0.91 + 10.0 * exp(-3.0 * gamma) + 0.45 * NdotL * NdotL) * (1.0 - exp(-0.32 / NdotZenith)));
+    float denominator = (0.91 + 10.0 * exp(-3.0 * S) + 0.45 * LdotZenith * LdotZenith) * (1.0 - exp(-0.32));
     float luminance = model_luminanceAtZenith * (numerator / denominator);
     #endif
 
@@ -139,6 +134,7 @@ vec3 textureIBL(
 ) {
     vec3 v = -positionEC;
     vec3 n = normalEC;
+    vec3 l = normalize(lightDirectionEC);	
     vec3 h = normalize(v + l);
 
     float NdotV = abs(dot(n, v)) + 0.001;

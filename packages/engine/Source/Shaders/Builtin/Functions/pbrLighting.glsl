@@ -5,11 +5,10 @@ vec3 lambertianDiffuse(vec3 diffuseColor)
 
 vec3 fresnelSchlick2(vec3 f0, vec3 f90, float VdotH)
 {
-    // TODO: clamp not necessary? VdotH is already clamped to [0.0, 1.0]
-    // return f0 + (f90 - f0) * pow(1.0 - VdotH, 5.0)
-    return f0 + (f90 - f0) * pow(clamp(1.0 - VdotH, 0.0, 1.0), 5.0);
-    // TODO: manually multiply instead of pow(). See
-    // https://stackoverflow.com/a/68793086/10082269
+    float versine = 1.0 - VdotH;
+    // pow(versine, 5.0) is slow. See https://stackoverflow.com/a/68793086/10082269
+    float versineSquared = versine * versine;
+    return f0 + (f90 - f0) * versineSquared * versineSquared * versine;
 }
 
 float smithVisibilityG1(float NdotV, float roughness)
