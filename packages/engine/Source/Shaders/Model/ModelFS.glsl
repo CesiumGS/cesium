@@ -1,3 +1,5 @@
+
+precision highp float;
 czm_modelMaterial defaultModelMaterial()
 {
     czm_modelMaterial material;
@@ -73,6 +75,10 @@ void main()
 
     #ifdef HAS_CLIPPING_PLANES
     modelClippingPlanesStage(color);
+    #endif
+
+    #ifdef ENABLE_CLIPPING_POLYGONS
+    modelClippingPolygonsStage();
     #endif
 
     #if defined(HAS_SILHOUETTE) && defined(HAS_NORMALS)

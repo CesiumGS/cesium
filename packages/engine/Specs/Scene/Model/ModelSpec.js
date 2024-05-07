@@ -8,6 +8,8 @@ import {
   ClassificationType,
   ClippingPlane,
   ClippingPlaneCollection,
+  ClippingPolygon,
+  ClippingPolygonCollection,
   Color,
   ColorBlendMode,
   Credit,
@@ -4333,6 +4335,172 @@ describe(
           model.clippingPlanes = undefined;
           expect(clippingPlanes.isDestroyed()).toBe(true);
         });
+      });
+    });
+
+    describe("clipping polygons", () => {
+      let polygon;
+      beforeEach(() => {
+        const positions = Cartesian3.fromRadiansArray([
+          -CesiumMath.PI_OVER_TWO,
+          -CesiumMath.PI_OVER_TWO,
+          CesiumMath.PI_OVER_TWO,
+          -CesiumMath.PI_OVER_TWO,
+          CesiumMath.PI_OVER_TWO,
+          CesiumMath.PI_OVER_TWO,
+          -CesiumMath.PI_OVER_TWO,
+          CesiumMath.PI_OVER_TWO,
+        ]);
+        polygon = new ClippingPolygon({ positions });
+      });
+
+      it("throws when given clipping planes attached to another model", async function () {
+        if (!scene.context.webgl2) {
+          return;
+        }
+
+        const collection = new ClippingPolygonCollection({
+          polygons: [polygon],
+        });
+        const modelA = await loadAndZoomToModelAsync(
+          { gltf: boxTexturedGlbUrl },
+          scene
+        );
+        modelA.clippingPolygons = collection;
+
+        const modelB = await loadAndZoomToModelAsync(
+          { gltf: boxTexturedGlbUrl },
+          scene
+        );
+
+        expect(function () {
+          modelB.clippingPolygons = collection;
+        }).toThrowDeveloperError();
+      });
+
+      it("selectively hides model regions", async function () {
+        if (!scene.context.webgl2) {
+          return;
+        }
+
+        const collection = new ClippingPolygonCollection({
+          polygons: [polygon],
+        });
+        const model = await loadAndZoomToModelAsync(
+          { gltf: boxTexturedGlbUrl },
+          scene
+        );
+        model.clippingPolygons = collection;
+        verifyRender(model, false);
+
+        model.clippingPolygons = undefined;
+        verifyRender(model, true);
+      });
+
+      it("inverse works", async function () {
+        if (!scene.context.webgl2) {
+          return;
+        }
+
+        const collection = new ClippingPolygonCollection({
+          polygons: [polygon],
+        });
+        const model = await loadAndZoomToModelAsync(
+          { gltf: boxTexturedGlbUrl },
+          scene
+        );
+        let modelColor;
+        verifyRender(model, true);
+        expect(scene).toRenderAndCall(function (rgba) {
+          modelColor = rgba;
+        });
+
+        model.clippingPolygons = collection;
+        expect(scene).toRenderAndCall(function (rgba) {
+          expect(rgba).not.toEqual(modelColor);
+        });
+
+        model.clippingPolygons.inverse = true;
+        expect(scene).toRenderAndCall(function (rgba) {
+          expect(rgba).toEqual(modelColor);
+        });
+      });
+
+      it("adding polygon to collection works", async function () {
+        if (!scene.context.webgl2) {
+          return;
+        }
+
+        const collection = new ClippingPolygonCollection();
+        const model = await loadAndZoomToModelAsync(
+          {
+            gltf: boxTexturedGlbUrl,
+          },
+          scene
+        );
+        model.clippingPolygons = collection;
+        verifyRender(model, true);
+
+        collection.add(polygon);
+        verifyRender(model, false);
+      });
+
+      it("removing polygon from collection works", async function () {
+        if (!scene.context.webgl2) {
+          return;
+        }
+
+        const collection = new ClippingPolygonCollection({
+          polygons: [polygon],
+        });
+        const model = await loadAndZoomToModelAsync(
+          {
+            gltf: boxTexturedGlbUrl,
+          },
+          scene
+        );
+        model.clippingPolygons = collection;
+        verifyRender(model, false);
+
+        model.clippingPolygons.remove(polygon);
+        verifyRender(model, true);
+      });
+
+      it("destroys attached ClippingPolygonCollections", async function () {
+        const model = await loadAndZoomToModelAsync(
+          {
+            gltf: boxTexturedGlbUrl,
+          },
+          scene
+        );
+        const collection = new ClippingPolygonCollection({
+          polygons: [polygon],
+        });
+
+        model.clippingPolygons = collection;
+        expect(model.isDestroyed()).toEqual(false);
+        expect(collection.isDestroyed()).toEqual(false);
+
+        scene.primitives.remove(model);
+        expect(model.isDestroyed()).toEqual(true);
+        expect(collection.isDestroyed()).toEqual(true);
+      });
+
+      it("destroys ClippingPolygonCollections that are detached", async function () {
+        const model = await loadAndZoomToModelAsync(
+          {
+            gltf: boxTexturedGlbUrl,
+          },
+          scene
+        );
+        const collection = new ClippingPolygonCollection({
+          polygons: [polygon],
+        });
+        model.clippingPolygons = collection;
+        expect(collection.isDestroyed()).toBe(false);
+
+        model.clippingPolygons = undefined;
+        expect(collection.isDestroyed()).toBe(true);
       });
     });
 

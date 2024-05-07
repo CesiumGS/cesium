@@ -14,6 +14,7 @@ import ImageBasedLightingPipelineStage from "./ImageBasedLightingPipelineStage.j
 import ModelArticulation from "./ModelArticulation.js";
 import ModelColorPipelineStage from "./ModelColorPipelineStage.js";
 import ModelClippingPlanesPipelineStage from "./ModelClippingPlanesPipelineStage.js";
+import ModelClippingPolygonsPipelineStage from "./ModelClippingPolygonsPipelineStage.js";
 import ModelNode from "./ModelNode.js";
 import ModelRuntimeNode from "./ModelRuntimeNode.js";
 import ModelRuntimePrimitive from "./ModelRuntimePrimitive.js";
@@ -624,6 +625,10 @@ ModelSceneGraph.prototype.configurePipeline = function (frameState) {
 
   if (model.isClippingEnabled()) {
     modelPipelineStages.push(ModelClippingPlanesPipelineStage);
+  }
+
+  if (model.isClippingPolygonsEnabled()) {
+    modelPipelineStages.push(ModelClippingPolygonsPipelineStage);
   }
 
   if (model.hasSilhouette(frameState)) {
