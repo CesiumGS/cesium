@@ -813,13 +813,16 @@ async function loadAccessorBufferView(
   useQuaternion,
   values
 ) {
+  // Save a link to the gltfJson, which is removed after bufferViewLoader.load()
+  const { gltfJson } = loader;
+
   await bufferViewLoader.load();
   if (loader.isDestroyed()) {
     return;
   }
 
   const typedArray = getPackedTypedArray(
-    loader.gltfJson,
+    gltfJson,
     accessor,
     bufferViewLoader.typedArray
   );
@@ -1564,6 +1567,7 @@ function loadSpecular(loader, specularInfo, frameState) {
 
 /**
  * Load textures and parse factors and flags for a glTF material
+ *
  * @param {GltfLoader} loader
  * @param {object} gltfMaterial An entry from the <code>.materials</code> array in the glTF JSON
  * @param {FrameState} frameState
