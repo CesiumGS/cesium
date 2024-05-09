@@ -194,7 +194,7 @@ function GltfLoader(options) {
   const {
     gltfResource,
     typedArray,
-    releaseGltfJson,
+    releaseGltfJson = false,
     asynchronous = true,
     incrementallyLoadTextures = true,
     upAxis = Axis.Y,

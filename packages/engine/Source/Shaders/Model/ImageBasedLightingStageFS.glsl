@@ -134,7 +134,7 @@ vec3 textureIBL(
 ) {
     vec3 v = -positionEC;
     vec3 n = normalEC;
-    vec3 l = normalize(lightDirectionEC);	
+    vec3 l = normalize(lightDirectionEC);
     vec3 h = normalize(v + l);
 
     float NdotV = abs(dot(n, v)) + 0.001;

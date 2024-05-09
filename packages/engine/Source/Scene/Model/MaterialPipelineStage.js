@@ -24,6 +24,7 @@ const {
  * to render a primitive. This handles the following material types:
  * <ul>
  *   <li>Basic glTF materials (PBR metallic roughness model)</li>
+ *   <li>The `KHR_materials_specular` glTF extension</li>
  *   <li>The `KHR_materials_pbrSpecularGlossiness` glTF extension</li>
  *   <li>The `KHR_materials_unlit` glTF extension</li>
  * </ul>
@@ -96,7 +97,10 @@ MaterialPipelineStage.process = function (
       disableTextures
     );
   } else {
-    if (defined(material.specular)) {
+    if (
+      defined(material.specular) &&
+      ModelUtility.supportedExtensions.KHR_materials_specular === true
+    ) {
       processSpecularUniforms(
         material,
         uniformMap,

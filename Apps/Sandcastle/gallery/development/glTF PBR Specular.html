@@ -34,7 +34,7 @@
               <input
                 type="range"
                 min="0.0"
-                max="2.0"
+                max="10.0"
                 step="0.01"
                 data-bind="value: luminanceAtZenith, valueUpdate: 'input'"
               />
@@ -315,32 +315,23 @@
           }
         );
 
-        const modelOptions = [
-          {
-            text: "Specular Test",
-            onselect: function () {
-              loadModel(
-                "../../SampleData/models/SpecularTest/glTF-Binary/SpecularTest.glb"
-              );
-            },
-          },
-          {
-            text: "Water Bottle",
-            onselect: function () {
-              loadModel(
-                "../../SampleData/models/SpecGlossVsMetalRough/glTF-Binary/SpecGlossVsMetalRough.glb"
-              );
-            },
-          },
-        ];
-        Sandcastle.addToolbarMenu(modelOptions);
+        let model;
         loadModel(
           "../../SampleData/models/SpecularTest/glTF-Binary/SpecularTest.glb"
         );
 
+        Sandcastle.addToggleButton(
+          "Enable KHR_materials_specular",
+          true,
+          function (checked) {
+            Cesium.ModelUtility.supportedExtensions.KHR_materials_specular = checked;
+            model.resetDrawCommands();
+          }
+        );
+
         async function loadModel(modelURL) {
           try {
-            const model = await Cesium.Model.fromGltfAsync({
+            model = await Cesium.Model.fromGltfAsync({
               url: modelURL,
               modelMatrix: modelMatrix,
               //minimumPixelSize: 128,
