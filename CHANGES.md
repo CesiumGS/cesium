@@ -1,5 +1,13 @@
 # Change Log
 
+### 1.118
+
+#### @cesium/engine
+
+##### Additions :tada:
+
+- Added support for glTF models with the [KHR_materials_specular extension](https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Khronos/KHR_materials_specular). [#11970](https://github.com/CesiumGS/cesium/pull/11970)
+
 ### 1.117
 
 #### @cesium/engine
