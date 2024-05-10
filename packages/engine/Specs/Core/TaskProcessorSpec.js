@@ -69,13 +69,14 @@ describe("Core/TaskProcessor", function () {
     // Setup a cross origin BASE_URL
     const oldCESIUM_BASE_URL = window.CESIUM_BASE_URL;
     window.CESIUM_BASE_URL = "http://test.com/source/";
-    TaskProcessor._skipTaskRun = true;
     buildModuleUrl._clearBaseResource();
 
     const blobSpy = spyOn(window, "Blob").and.callThrough();
 
     // Provide just the module ID, as is prevalent in the codebase
     taskProcessor = new TaskProcessor("transferTypedArrayTest");
+    // Create the worker, but don't execute the task this frame
+    taskProcessor._activeTasks = taskProcessor._maximumActiveTasks;
 
     await taskProcessor.scheduleTask();
 
@@ -87,15 +88,14 @@ describe("Core/TaskProcessor", function () {
     // Reset old values for BASE_URL
     window.CESIUM_BASE_URL = oldCESIUM_BASE_URL;
     buildModuleUrl._clearBaseResource();
-    TaskProcessor._skipTaskRun = undefined;
   });
 
   it("when provided a cross-origin URI, loads worker with appropriate shim", async function () {
-    TaskProcessor._skipTaskRun = true;
-
     const blobSpy = spyOn(window, "Blob").and.callThrough();
 
     taskProcessor = new TaskProcessor("http://test.com/Workers/testing.js");
+    // Create the worker, but don't execute the task this frame
+    taskProcessor._activeTasks = taskProcessor._maximumActiveTasks;
 
     await taskProcessor.scheduleTask();
 
@@ -103,8 +103,6 @@ describe("Core/TaskProcessor", function () {
       [`import "http://test.com/Workers/testing.js";`],
       { type: "application/javascript" }
     );
-
-    TaskProcessor._skipTaskRun = undefined;
   });
 
   it("can be destroyed", function () {
