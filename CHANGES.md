@@ -1,5 +1,14 @@
 # Change Log
 
+### 1.118
+
+#### @cesium/engine
+
+##### Fixes :wrench:
+
+- Fixed a bug where `TaskProcessor` worker loading would check the worker module ID rather than the absolute URL when determining if it is cross-origin. [#11833](https://github.com/CesiumGS/cesium/pull/11833)
+- Fixed a bug where cross-origin workers would error when loaded with the CommonJS `importScripts` shim instead of an ESM `import`. [#11833](https://github.com/CesiumGS/cesium/pull/11833)
+
 ### 1.117
 
 #### @cesium/engine
