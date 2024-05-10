@@ -358,6 +358,7 @@ ModelUtility.supportedExtensions = {
   KHR_materials_common: true,
   KHR_materials_pbrSpecularGlossiness: true,
   KHR_materials_specular: true,
+  KHR_materials_anisotropy: true,
   KHR_materials_unlit: true,
   KHR_mesh_quantization: true,
   KHR_texture_basisu: true,

@@ -1,0 +1,25 @@
+{
+    "version": 2,
+    "legal": [
+        {
+            "year": "2023",
+            "owner": "Public",
+            "license": "Public Domain / CC0",
+            "artist": "Ed Mackey",
+            "what": "Everything",
+            "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/legalcode",
+            "text": "CC0 1.0 Universal",
+            "spdx": "CC0-1.0",
+            "icon": "https://licensebuttons.net/p/zero/1.0/88x31.png"
+        }
+    ],
+    "tags": [
+        "extension",
+        "testing"
+    ],
+    "screenshot": "screenshot/screenshot.png",
+    "name": "Anisotropy Strength Test",
+    "path": "./Models/AnisotropyStrengthTest",
+    "summary": "This model tests the strength parameter for KHR_materials_anisotropy.",
+    "createReadme": true
+}
