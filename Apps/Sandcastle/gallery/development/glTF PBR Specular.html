@@ -334,7 +334,6 @@
             model = await Cesium.Model.fromGltfAsync({
               url: modelURL,
               modelMatrix: modelMatrix,
-              //minimumPixelSize: 128,
               imageBasedLighting,
             });
 
@@ -361,7 +360,7 @@
           const pitch = 0.0;
           camera.lookAt(
             model.boundingSphere.center,
-            new Cesium.HeadingPitchRange(heading, pitch, r * 2.0)
+            new Cesium.HeadingPitchRange(heading, pitch, r * 1.414)
           );
         }
         //Sandcastle_End

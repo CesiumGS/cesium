@@ -1,0 +1,26 @@
+{
+    "version": 2,
+    "legal": [
+        {
+            "license": "CC-BY 4.0",
+            "licenseUrl": "https://creativecommons.org/licenses/by/4.0/legalcode",
+            "artist": "Ed Mackey",
+            "year": "2021",
+            "owner": "Analytical Graphics, Inc.",
+            "what": "Everything",
+            "text": "CC BY 4.0 International",
+            "spdx": "CC-BY-4.0",
+            "icon": "https://licensebuttons.net/l/by/3.0/88x31.png"
+        }
+    ],
+    "tags": [
+        "core",
+        "testing",
+        "extension"
+    ],
+    "screenshot": "screenshot/screenshot.jpg",
+    "name": "Specular Test",
+    "path": "./Models/SpecularTest",
+    "summary": "Tests if the KHR_materials_specular extension is supported correctly.",
+    "createReadme": true
+}
