@@ -54,6 +54,7 @@ const {
   MetallicRoughness,
   SpecularGlossiness,
   Specular,
+  Anisotropy,
   Material,
 } = ModelComponents;
 
@@ -1559,10 +1560,32 @@ function loadSpecular(loader, specularInfo, frameState) {
       frameState
     );
   }
+  // TODO: if not defined, should we leave the default values?
   specular.specularFactor = specularFactor;
   specular.specularColorFactor = fromArray(Cartesian3, specularColorFactor);
 
   return specular;
+}
+
+function loadAnisotropy(loader, anisotropyInfo, frameState) {
+  const {
+    anisotropyStrength = Anisotropy.DEFAULT_ANISOTROPY_STRENGTH,
+    anisotropyRotation = Anisotropy.DEFAULT_ANISOTROPY_ROTATION,
+    anisotropyTexture,
+  } = anisotropyInfo;
+
+  const anisotropy = new Anisotropy();
+  if (defined(anisotropyTexture)) {
+    anisotropy.anisotropyTexture = loadTexture(
+      loader,
+      anisotropyTexture,
+      frameState
+    );
+  }
+  anisotropy.anisotropyStrength = anisotropyStrength;
+  anisotropy.anisotropyRotation = anisotropyRotation;
+
+  return anisotropy;
 }
 
 /**
@@ -1583,6 +1606,7 @@ function loadMaterial(loader, gltfMaterial, frameState) {
   );
   const pbrSpecularGlossiness = extensions.KHR_materials_pbrSpecularGlossiness;
   const pbrSpecular = extensions.KHR_materials_specular;
+  const pbrAnisotropy = extensions.KHR_materials_anisotropy;
   const pbrMetallicRoughness = gltfMaterial.pbrMetallicRoughness;
 
   material.unlit = defined(extensions.KHR_materials_unlit);
@@ -1594,6 +1618,7 @@ function loadMaterial(loader, gltfMaterial, frameState) {
       frameState
     );
   } else {
+    // TODO: should this branch exclude materials.unlit?
     if (defined(pbrMetallicRoughness)) {
       material.metallicRoughness = loadMetallicRoughness(
         loader,
@@ -1602,7 +1627,12 @@ function loadMaterial(loader, gltfMaterial, frameState) {
       );
     }
     if (defined(pbrSpecular)) {
+      // TODO: not compatible with materials.unlit
       material.specular = loadSpecular(loader, pbrSpecular, frameState);
+    }
+    if (defined(pbrAnisotropy)) {
+      // TODO: not compatible with materials.unlit
+      material.anisotropy = loadAnisotropy(loader, pbrAnisotropy, frameState);
     }
   }
 

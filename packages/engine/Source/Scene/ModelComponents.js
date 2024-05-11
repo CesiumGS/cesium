@@ -1385,6 +1385,45 @@ Specular.DEFAULT_SPECULAR_FACTOR = 1.0;
  */
 Specular.DEFAULT_SPECULAR_COLOR_FACTOR = Cartesian3.ONE;
 
+function Anisotropy() {
+  /**
+   * The anisotropy strength.
+   *
+   * @type {number}
+   * @default 0.0
+   * @private
+   */
+  this.anisotropyStrength = Anisotropy.DEFAULT_ANISOTROPY_STRENGTH;
+
+  /**
+   * The rotation of the anisotropy in tangent, bitangent space,
+   * measured in radians counter-clockwise from the tangent.
+   *
+   * @type {number}
+   * @default 0.0
+   * @private
+   */
+  this.anisotropyRotation = Anisotropy.DEFAULT_ANISOTROPY_ROTATION;
+
+  /**
+   * The anisotropy texture reader
+   *
+   * @type {ModelComponents.TextureReader}
+   * @private
+   */
+  this.anisotropyTexture = undefined;
+}
+
+/**
+ * @private
+ */
+Anisotropy.DEFAULT_ANISOTROPY_STRENGTH = 0.0;
+
+/**
+ * @private
+ */
+Anisotropy.DEFAULT_ANISOTROPY_ROTATION = 0.0;
+
 /**
  * The material appearance of a primitive.
  *
@@ -1417,6 +1456,14 @@ function Material() {
    * @private
    */
   this.specular = undefined;
+
+  /**
+   * Material properties for the PBR anisotropy shading model
+   *
+   * @type {ModelComponents.anisotropy}
+   * @private
+   */
+  this.anisotropy = undefined;
 
   /**
    * The emissive texture reader.
@@ -1518,6 +1565,7 @@ ModelComponents.TextureReader = TextureReader;
 ModelComponents.MetallicRoughness = MetallicRoughness;
 ModelComponents.SpecularGlossiness = SpecularGlossiness;
 ModelComponents.Specular = Specular;
+ModelComponents.Anisotropy = Anisotropy;
 ModelComponents.Material = Material;
 
 export default ModelComponents;

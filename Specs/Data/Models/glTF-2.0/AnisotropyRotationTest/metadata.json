@@ -1,0 +1,25 @@
+{
+    "version": 2,
+    "legal": [
+        {
+            "year": "2023",
+            "owner": "Analytical Graphics, Inc.",
+            "license": "CC-BY International 4.0",
+            "artist": "Ed Mackey",
+            "what": "Everything",
+            "licenseUrl": "https://creativecommons.org/licenses/by/4.0/legalcode",
+            "text": "CC BY 4.0 International",
+            "spdx": "CC-BY-4.0",
+            "icon": "https://licensebuttons.net/l/by/3.0/88x31.png"
+        }
+    ],
+    "tags": [
+        "extension",
+        "testing"
+    ],
+    "screenshot": "screenshot/screenshot.png",
+    "name": "Anisotropy Rotation Test",
+    "path": "./Models/AnisotropyRotationTest",
+    "summary": "This model tests rotational offsets for KHR_materials_anisotropy.",
+    "createReadme": true
+}
