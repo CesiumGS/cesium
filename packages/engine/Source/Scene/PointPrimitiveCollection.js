@@ -38,6 +38,7 @@ const DISTANCE_DISPLAY_CONDITION_INDEX =
   PointPrimitive.DISTANCE_DISPLAY_CONDITION_INDEX;
 const DISABLE_DEPTH_DISTANCE_INDEX =
   PointPrimitive.DISABLE_DEPTH_DISTANCE_INDEX;
+const SPLIT_DIRECTION_INDEX = PointPrimitive.SPLIT_DIRECTION_INDEX;
 const NUMBER_OF_PROPERTIES = PointPrimitive.NUMBER_OF_PROPERTIES;
 
 const attributeLocations = {
@@ -47,6 +48,7 @@ const attributeLocations = {
   compressedAttribute1: 3, // show, translucency by distance, some free space
   scaleByDistance: 4,
   distanceDisplayConditionAndDisableDepth: 5,
+  splitDirection: 6,
 };
 
 /**
@@ -216,6 +218,7 @@ function PointPrimitiveCollection(options) {
     BufferUsage.STATIC_DRAW, // SCALE_BY_DISTANCE_INDEX
     BufferUsage.STATIC_DRAW, // TRANSLUCENCY_BY_DISTANCE_INDEX
     BufferUsage.STATIC_DRAW, // DISTANCE_DISPLAY_CONDITION_INDEX
+    BufferUsage.STATIC_DRAW, // SPLIT_DIRECTION_INDEX
   ];
 
   const that = this;
@@ -497,6 +500,12 @@ function createVAF(context, numberOfPointPrimitives, buffersUsage) {
         componentDatatype: ComponentDatatype.FLOAT,
         usage: buffersUsage[DISTANCE_DISPLAY_CONDITION_INDEX],
       },
+      {
+        index: attributeLocations.splitDirection,
+        componentsPerAttribute: 1,
+        componentDatatype: ComponentDatatype.FLOAT,
+        usage: buffersUsage[SPLIT_DIRECTION_INDEX],
+      },
     ],
     numberOfPointPrimitives
   ); // 1 vertex per pointPrimitive
@@ -700,6 +709,24 @@ function writeDistanceDisplayConditionAndDepthDisable(
   writer(i, near, far, disableDepthTestDistance);
 }
 
+function writeSplitDirection(
+  pointPrimitiveCollection,
+  context,
+  vafWriters,
+  pointPrimitive
+) {
+  const i = pointPrimitive._index;
+  const writer = vafWriters[attributeLocations.splitDirection];
+  let direction = 0.0;
+
+  const split = pointPrimitive.splitDirection;
+  if (defined(split)) {
+    direction = split;
+  }
+
+  writer(i, direction);
+}
+
 function writePointPrimitive(
   pointPrimitiveCollection,
   context,
@@ -731,6 +758,12 @@ function writePointPrimitive(
     pointPrimitive
   );
   writeDistanceDisplayConditionAndDepthDisable(
+    pointPrimitiveCollection,
+    context,
+    vafWriters,
+    pointPrimitive
+  );
+  writeSplitDirection(
     pointPrimitiveCollection,
     context,
     vafWriters,
@@ -928,6 +961,10 @@ PointPrimitiveCollection.prototype.update = function (frameState) {
       properties[DISABLE_DEPTH_DISTANCE_INDEX]
     ) {
       writers.push(writeDistanceDisplayConditionAndDepthDisable);
+    }
+
+    if (properties[SPLIT_DIRECTION_INDEX]) {
+      writers.push(writeSplitDirection);
     }
 
     const numWriters = writers.length;

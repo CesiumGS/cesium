@@ -6,12 +6,14 @@ in vec4 compressedAttribute0;                       // color, outlineColor, pick
 in vec4 compressedAttribute1;                       // show, translucency by distance, some free space
 in vec4 scaleByDistance;                            // near, nearScale, far, farScale
 in vec3 distanceDisplayConditionAndDisableDepth;    // near, far, disableDepthTestDistance
+in float splitDirection;                            // splitDirection
 
 out vec4 v_color;
 out vec4 v_outlineColor;
 out float v_innerPercent;
 out float v_pixelDistance;
 out vec4 v_pickColor;
+out float v_splitDirection;
 
 const float SHIFT_LEFT8 = 256.0;
 const float SHIFT_RIGHT8 = 1.0 / 256.0;
@@ -180,4 +182,5 @@ void main()
     gl_Position *= show;
 
     v_pickColor = pickColor;
+    v_splitDirection = splitDirection;
 }
