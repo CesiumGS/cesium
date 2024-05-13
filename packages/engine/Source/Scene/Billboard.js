@@ -28,7 +28,7 @@ import VerticalOrigin from "./VerticalOrigin.js";
  * Initialization options for the first param of Billboard constructor
  *
  * @property {Cartesian3} position The cartesian position of the billboard.
- * @property {string} [id] A user-defined object to return when the billboard is picked with {@link Scene#pick}.
+ * @property {any} [id] A user-defined object to return when the billboard is picked with {@link Scene#pick}.
  * @property {boolean} [show=true] Determines if this billboard will be shown.
  * @property {string | HTMLCanvasElement} [image] A loaded HTMLImageElement, ImageData, or a url to an image to use for the billboard.
  * @property {number} [scale=1.0] A number specifying the uniform scale that is multiplied with the billboard's image size in pixels.
