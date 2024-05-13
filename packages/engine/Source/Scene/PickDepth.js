@@ -3,6 +3,8 @@ import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import FramebufferManager from "../Renderer/FramebufferManager.js";
 import RenderState from "../Renderer/RenderState.js";
+import PassThrough from "../Shaders/PostProcessStages/PassThrough.js";
+import PassThroughDepth from "../Shaders/PostProcessStages/PassThroughDepth.js";
 
 /**
  * @private
@@ -30,17 +32,19 @@ function updateFramebuffers(pickDepth, context, depthTexture) {
 
 function updateCopyCommands(pickDepth, context, depthTexture) {
   if (!defined(pickDepth._copyDepthCommand)) {
-    const fs =
-      "uniform highp sampler2D u_texture;\n" +
-      "in vec2 v_textureCoordinates;\n" +
-      "void main()\n" +
-      "{\n" +
-      "    out_FragColor = czm_packDepth(texture(u_texture, v_textureCoordinates).r);\n" +
-      "}\n";
-    pickDepth._copyDepthCommand = context.createViewportQuadCommand(fs, {
+    // pickDepth._copyDepthCommand = context.createViewportQuadCommand(PassThroughDepth, {
+    //   renderState: RenderState.fromCache(),
+    //   uniformMap: {
+    //     u_depthTexture: function () {
+    //       return pickDepth._textureToCopy;
+    //     },
+    //   },
+    //   owner: pickDepth,
+    // });
+    pickDepth._copyDepthCommand = context.createViewportQuadCommand(PassThrough, {
       renderState: RenderState.fromCache(),
       uniformMap: {
-        u_texture: function () {
+        colorTexture: function () {
           return pickDepth._textureToCopy;
         },
       },
