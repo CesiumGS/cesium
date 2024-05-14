@@ -38,7 +38,7 @@ const scratchWindowCoord1 = new Cartesian2();
  * @example
  * // Output the window position of longitude/latitude (0, 0) every time the mouse moves.
  * const scene = widget.scene;
- * const ellipsoid = scene.globe.ellipsoid;
+ * const ellipsoid = scene.ellipsoid;
  * const position = Cesium.Cartesian3.fromDegrees(0.0, 0.0);
  * const handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
  * handler.setInputAction(function(movement) {
@@ -276,7 +276,7 @@ SceneTransforms.wgs84WithEyeOffsetToWindowCoordinates = function (
  * @example
  * // Output the window position of longitude/latitude (0, 0) every time the mouse moves.
  * const scene = widget.scene;
- * const ellipsoid = scene.globe.ellipsoid;
+ * const ellipsoid = scene.ellipsoid;
  * const position = Cesium.Cartesian3.fromDegrees(0.0, 0.0);
  * const handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
  * handler.setInputAction(function(movement) {

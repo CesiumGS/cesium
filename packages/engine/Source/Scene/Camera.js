@@ -2343,9 +2343,12 @@ Camera.prototype.lookAt = function (target, offset) {
   }
   //>>includeEnd('debug');
 
+  const scene = this._scene;
+  const ellipsoid = defaultValue(scene.ellipsoid, Ellipsoid.WGS84);
+
   const transform = Transforms.eastNorthUpToFixedFrame(
     target,
-    Ellipsoid.WGS84,
+    ellipsoid,
     scratchLookAtMatrix4
   );
   this.lookAtTransform(transform, offset);
@@ -2902,7 +2905,7 @@ function pickMapColumbusView(camera, windowPosition, projection, result) {
  * @example
  * const canvas = viewer.scene.canvas;
  * const center = new Cesium.Cartesian2(canvas.clientWidth / 2.0, canvas.clientHeight / 2.0);
- * const ellipsoid = viewer.scene.globe.ellipsoid;
+ * const ellipsoid = viewer.scene.ellipsoid;
  * const result = viewer.camera.pickEllipsoid(center, ellipsoid);
  */
 Camera.prototype.pickEllipsoid = function (windowPosition, ellipsoid, result) {
@@ -3632,9 +3635,12 @@ Camera.prototype.flyToBoundingSphere = function (boundingSphere, options) {
     );
   }
 
+  const scene = this._scene;
+  const ellipsoid = defaultValue(scene.ellipsoid, Ellipsoid.WGS84);
+
   const transform = Transforms.eastNorthUpToFixedFrame(
     boundingSphere.center,
-    Ellipsoid.WGS84,
+    ellipsoid,
     scratchflyToBoundingSphereTransform
   );
   Matrix4.multiplyByPoint(transform, position, position);

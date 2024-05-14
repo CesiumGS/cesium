@@ -191,9 +191,9 @@ function Globe(ellipsoid) {
    * Enable the ground atmosphere, which is drawn over the globe when viewed from a distance between <code>lightingFadeInDistance</code> and <code>lightingFadeOutDistance</code>.
    *
    * @type {boolean}
-   * @default true
+   * @default true when using an earth ellipsoid, false otherwise
    */
-  this.showGroundAtmosphere = true;
+  this.showGroundAtmosphere = Ellipsoid.WGS84.equals(ellipsoid);
 
   /**
    * The intensity of the light that is used for computing the ground atmosphere color.
@@ -809,7 +809,7 @@ Globe.prototype.pick = function (ray, scene, result) {
   if (defined(result) && scene.mode !== SceneMode.SCENE3D) {
     result = Cartesian3.fromElements(result.y, result.z, result.x, result);
     const carto = scene.mapProjection.unproject(result, cartoScratch);
-    result = scene.globe.ellipsoid.cartographicToCartesian(carto, result);
+    result = this._ellipsoid.cartographicToCartesian(carto, result);
   }
 
   return result;

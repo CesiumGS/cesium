@@ -924,7 +924,7 @@ function handleZoom(
       scene,
       object._zoomWorldPosition,
       scratchZoomOffset
-    );
+    ); // TODO: ellipsoids
     if (
       mode !== SceneMode.COLUMBUS_VIEW &&
       Cartesian2.equals(startPosition, object._zoomMouseStart) &&
@@ -2861,14 +2861,13 @@ function adjustHeightForTerrain(controller, cameraChanged) {
 
   const scene = controller._scene;
   const mode = scene.mode;
-  const globe = scene.globe;
 
   if (mode === SceneMode.SCENE2D || mode === SceneMode.MORPHING) {
     return;
   }
 
   const camera = scene.camera;
-  const ellipsoid = defaultValue(globe?.ellipsoid, Ellipsoid.WGS84);
+  const ellipsoid = defaultValue(scene.ellipsoid, Ellipsoid.WGS84);
   const projection = scene.mapProjection;
 
   let transform;
@@ -2967,9 +2966,7 @@ ScreenSpaceCameraController.prototype.update = function () {
     this._ellipsoid = Ellipsoid.UNIT_SPHERE;
   } else {
     this._globe = globe;
-    this._ellipsoid = defined(this._globe)
-      ? this._globe.ellipsoid
-      : scene.mapProjection.ellipsoid;
+    this._ellipsoid = scene.ellipsoid;
   }
 
   const { verticalExaggeration, verticalExaggerationRelativeHeight } = scene;

@@ -123,16 +123,17 @@ function configureCameraFrustum(widget) {
  * @param {Element|string} container The DOM element or ID that will contain the widget.
  * @param {object} [options] Object with the following properties:
  * @param {Clock} [options.clock=new Clock()] The clock to use to control current time.
+ * @param {Ellipsoid} [options.ellipsoid = Ellipsoid.WGS84] The default ellipsoid.
  * @param {ImageryLayer|false} [options.baseLayer=ImageryLayer.fromWorldImagery()] The bottommost imagery layer applied to the globe. If set to <code>false</code>, no imagery provider will be added.
- * @param {TerrainProvider} [options.terrainProvider=new EllipsoidTerrainProvider] The terrain provider.
+ * @param {TerrainProvider} [options.terrainProvider=new EllipsoidTerrainProvider(options.ellipsoid)] The terrain provider.
  * @param {Terrain} [options.terrain] A terrain object which handles asynchronous terrain provider. Can only specify if options.terrainProvider is undefined.
  * @param {SkyBox| false} [options.skyBox] The skybox used to render the stars.  When <code>undefined</code>, the default stars are used. If set to <code>false</code>, no skyBox, Sun, or Moon will be added.
  * @param {SkyAtmosphere | false} [options.skyAtmosphere] Blue sky, and the glow around the Earth's limb.  Set to <code>false</code> to turn it off.
  * @param {SceneMode} [options.sceneMode=SceneMode.SCENE3D] The initial scene mode.
  * @param {boolean} [options.scene3DOnly=false] When <code>true</code>, each geometry instance will only be rendered in 3D to save GPU memory.
  * @param {boolean} [options.orderIndependentTranslucency=true] If true and the configuration supports it, use order independent translucency.
- * @param {MapProjection} [options.mapProjection=new GeographicProjection()] The map projection to use in 2D and Columbus View modes.
- * @param {Globe | false} [options.globe=new Globe(mapProjection.ellipsoid)] The globe to use in the scene.  If set to <code>false</code>, no globe will be added and the sky atmosphere will be hidden by default.
+ * @param {MapProjection} [options.mapProjection=new GeographicProjection(options.ellipsoid)] The map projection to use in 2D and Columbus View modes.
+ * @param {Globe | false} [options.globe=new Globe(options.ellipsoid)] The globe to use in the scene.  If set to <code>false</code>, no globe will be added and the sky atmosphere will be hidden by default.
  * @param {boolean} [options.useDefaultRenderLoop=true] True if this widget should control the render loop, false otherwise.
  * @param {boolean} [options.useBrowserRecommendedResolution=true] If true, render at the browser's recommended resolution and ignore <code>window.devicePixelRatio</code>.
  * @param {number} [options.targetFrameRate] The target frame rate when using the default render loop.
@@ -274,11 +275,14 @@ function CesiumWidget(container, options) {
   configureCanvasSize(this);
 
   try {
+    const ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
+
     const scene = new Scene({
       canvas: canvas,
       contextOptions: options.contextOptions,
       creditContainer: innerCreditContainer,
       creditViewport: creditViewport,
+      ellipsoid: ellipsoid,
       mapProjection: options.mapProjection,
       orderIndependentTranslucency: options.orderIndependentTranslucency,
       scene3DOnly: defaultValue(options.scene3DOnly, false),
@@ -295,11 +299,6 @@ function CesiumWidget(container, options) {
 
     configurePixelRatio(this);
     configureCameraFrustum(this);
-
-    const ellipsoid = defaultValue(
-      scene.mapProjection.ellipsoid,
-      Ellipsoid.WGS84
-    );
 
     let globe = options.globe;
     if (!defined(globe)) {
@@ -334,7 +333,7 @@ function CesiumWidget(container, options) {
 
     // Blue sky, and the glow around the Earth's limb.
     let skyAtmosphere = options.skyAtmosphere;
-    if (!defined(skyAtmosphere)) {
+    if (!defined(skyAtmosphere) && Ellipsoid.WGS84.equals(ellipsoid)) {
       skyAtmosphere = new SkyAtmosphere(ellipsoid);
       skyAtmosphere.show = options.globe !== false && globe.show;
     }
@@ -526,6 +525,19 @@ Object.defineProperties(CesiumWidget.prototype, {
   camera: {
     get: function () {
       return this._scene.camera;
+    },
+  },
+
+  /**
+   * Gets the default ellipsoid for the scene.
+   * @memberof CesiumWidget.prototype
+   *
+   * @type {Ellipsoid}
+   * @readonly
+   */
+  ellipsoid: {
+    get: function () {
+      return this._scene.ellipsoid;
     },
   },
 

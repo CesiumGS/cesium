@@ -1104,8 +1104,7 @@ Billboard._updateClamping = function (collection, owner) {
     return;
   }
 
-  const globe = scene.globe;
-  const ellipsoid = defaultValue(globe?.ellipsoid, Ellipsoid.WGS84);
+  const ellipsoid = defaultValue(scene.ellipsoid, Ellipsoid.WGS84);
 
   const mode = scene.frameState.mode;
 

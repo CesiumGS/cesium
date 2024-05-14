@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <meta name="description" content="Moon TODO." />
+    <meta name="cesium-sandcastle-labels" content="Showcases" />
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script
+      type="text/javascript"
+      src="../../../Build/CesiumUnminified/Cesium.js"
+      nomodule
+    ></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
+  </head>
+  <body
+    class="sandcastle-loading"
+    data-sandcastle-bucket="bucket-requirejs.html"
+  >
+    <style>
+      @import url(../templates/bucket.css);
+    </style>
+    <div id="cesiumContainer" class="fullSize"></div>
+    <div id="loadingOverlay"><h1>Loading...</h1></div>
+    <div id="toolbar"></div>
+    <script id="cesium_sandcastle_script">
+      window.startup = async function (Cesium) {
+        "use strict";
+        //Sandcastle_Begin
+        Cesium.Ion.defaultServer = "https://api-staging.cesium.com";
+        // Grant CesiumJS access to your ion assets
+        Cesium.Ion.defaultAccessToken =
+          "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJhZDUyNTc2YS1hMmQyLTQ2NGUtYmE2Ny01ZmQ5MmRmNGEyOGQiLCJpZCI6MTQsInNjb3BlcyI6WyJhc3IiLCJnYyJdLCJpYXQiOjE1ODgxODAxNDB9.q3KJVaTTtaMs404afZYo2RQSbYglE09Xfrm7BkZP694";
+
+        const moonOptions = {
+          ellipsoid: Cesium.Ellipsoid.MOON,
+          terrainProvider: await Cesium.CesiumTerrainProvider.fromIonAssetId(
+            1238,
+            {
+              ellipsoid: Cesium.Ellipsoid.MOON,
+            }
+          ),
+          baseLayer: Cesium.ImageryLayer.fromProviderAsync(
+            Cesium.IonImageryProvider.fromAssetId(1208)
+          ),
+        };
+
+        const viewer = new Cesium.Viewer("cesiumContainer", {
+          ...moonOptions,
+          useBrowserRecommendedResolution: false,
+          timeline: false,
+          animation: false,
+          baseLayerPicker: false,
+          geocoder: false,
+        });
+        viewer.scene.msaaSamples = 4;
+
+        // Positions courtesy of https://www.sciencedirect.com/science/article/abs/pii/S0019103516301518?via%3Dihub
+        const pointsOfInterest = [
+          {
+            text: "Apollo 11",
+            latitude: 0.67416,
+            longitude: 23.47315,
+          },
+          {
+            text: "Apollo 14",
+            latitude: -3.64417,
+            longitude: 342.52135,
+          },
+          {
+            text: "Apollo 15",
+            latitude: 26.13341,
+            longitude: 3.6285,
+          },
+          {
+            text: "Lunokhod 1",
+            latitude: 38.31517,
+            longitude: 25.83232,
+          },
+          {
+            text: "Lunokhod 2",
+            latitude: 25.83232,
+            longitude: 30.92215,
+          },
+        ];
+
+        for (const poi of pointsOfInterest) {
+          viewer.entities.add({
+            position: Cesium.Cartesian3.fromRadians(
+              poi.longitude,
+              poi.latitude,
+              0,
+              Cesium.Ellipsoid.MOON
+            ),
+            label: {
+              text: poi.text,
+              font: "14pt open sans",
+              outlineColor: Cesium.Color.DARKSLATEGREY,
+              outlineWidth: 2,
+              style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+              pixelOffset: new Cesium.Cartesian2(0, -22),
+              scaleByDistance: new Cesium.NearFarScalar(1.5e2, 1.0, 1.5e7, 0.5),
+              translucencyByDistance: new Cesium.NearFarScalar(
+                2.5e7,
+                1.0,
+                4.0e7,
+                0.0
+              ),
+            },
+            point: {
+              pixelSize: 10,
+              color: Cesium.Color.fromBytes(243, 242, 99),
+              outlineColor: Cesium.Color.fromBytes(219, 218, 111),
+              outlineWidth: 2,
+              scaleByDistance: new Cesium.NearFarScalar(1.5e3, 1.0, 4.0e7, 0.1),
+            },
+          });
+        }
+        //Sandcastle_End
+      };
+      if (typeof Cesium !== "undefined") {
+        window.startupCalled = true;
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+        Sandcastle.finishedLoading();
+      }
+    </script>
+  </body>
+</html>

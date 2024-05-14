@@ -2123,8 +2123,7 @@ function updateClamping(model) {
     return;
   }
 
-  const globe = scene.globe;
-  const ellipsoid = defaultValue(globe?.ellipsoid, Ellipsoid.WGS84);
+  const ellipsoid = defaultValue(scene.ellipsoid, Ellipsoid.WGS84);
 
   // Compute cartographic position so we don't recompute every update
   const modelMatrix = model.modelMatrix;
