@@ -3,8 +3,6 @@ import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import FramebufferManager from "../Renderer/FramebufferManager.js";
 import RenderState from "../Renderer/RenderState.js";
-import PassThrough from "../Shaders/PostProcessStages/PassThrough.js";
-import PassThroughDepth from "../Shaders/PostProcessStages/PassThroughDepth.js";
 
 /**
  * @private
@@ -32,24 +30,30 @@ function updateFramebuffers(pickDepth, context, depthTexture) {
 
 function updateCopyCommands(pickDepth, context, depthTexture) {
   if (!defined(pickDepth._copyDepthCommand)) {
-    // pickDepth._copyDepthCommand = context.createViewportQuadCommand(PassThroughDepth, {
-    //   renderState: RenderState.fromCache(),
-    //   uniformMap: {
-    //     u_depthTexture: function () {
-    //       return pickDepth._textureToCopy;
-    //     },
-    //   },
-    //   owner: pickDepth,
-    // });
-    pickDepth._copyDepthCommand = context.createViewportQuadCommand(PassThrough, {
-      renderState: RenderState.fromCache(),
-      uniformMap: {
-        colorTexture: function () {
-          return pickDepth._textureToCopy;
+    pickDepth._copyDepthCommand = context.createViewportQuadCommand(
+      `uniform highp sampler2D colorTexture;
+
+in vec2 v_textureCoordinates;
+
+void main()
+{
+  vec4 globeDepthPacked = texture(czm_globeDepthTexture, v_textureCoordinates);
+  float globeDepth = czm_unpackDepth(globeDepthPacked);
+  float depth = texture(colorTexture, v_textureCoordinates).r;
+  out_FragColor = czm_branchFreeTernary(globeDepth <= 0.0 || globeDepth >= 1.0 || depth < globeDepth && depth > 0.0 && depth < 1.0,
+    czm_packDepth(depth), globeDepthPacked);
+}
+`,
+      {
+        renderState: RenderState.fromCache(),
+        uniformMap: {
+          colorTexture: function () {
+            return pickDepth._textureToCopy;
+          },
         },
-      },
-      owner: pickDepth,
-    });
+        owner: pickDepth,
+      }
+    );
   }
 
   pickDepth._textureToCopy = depthTexture;
