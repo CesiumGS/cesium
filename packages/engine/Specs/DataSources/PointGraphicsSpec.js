@@ -48,9 +48,7 @@ describe("DataSources/PointGraphics", function () {
     expect(point.disableDepthTestDistance.getValue()).toEqual(
       options.disableDepthTestDistance
     );
-    expect(point.splitDirection.getValue()).toEqual(
-      options.splitDirection
-    );
+    expect(point.splitDirection.getValue()).toEqual(options.splitDirection);
   });
 
   it("merge assigns unassigned properties", function () {
@@ -85,9 +83,7 @@ describe("DataSources/PointGraphics", function () {
     expect(target.disableDepthTestDistance).toBe(
       source.disableDepthTestDistance
     );
-    expect(target.splitDirection).toBe(
-      source.splitDirection
-    );
+    expect(target.splitDirection).toBe(source.splitDirection);
   });
 
   it("merge does not assign assigned properties", function () {
@@ -177,9 +173,7 @@ describe("DataSources/PointGraphics", function () {
     expect(result.disableDepthTestDistance).toBe(
       source.disableDepthTestDistance
     );
-    expect(result.splitDirection).toBe(
-      source.splitDirection
-    );
+    expect(result.splitDirection).toBe(source.splitDirection);
   });
 
   it("merge throws if source undefined", function () {

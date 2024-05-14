@@ -164,7 +164,7 @@ Object.defineProperties(PointGraphics.prototype, {
    * @type {Property|undefined}
    * @default SplitDirection.NONE
    */
-   splitDirection: createPropertyDescriptor("splitDirection"),
+  splitDirection: createPropertyDescriptor("splitDirection"),
 });
 
 /**

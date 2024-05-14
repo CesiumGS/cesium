@@ -11,7 +11,7 @@ import Matrix4 from "../Core/Matrix4.js";
 import NearFarScalar from "../Core/NearFarScalar.js";
 import SceneMode from "./SceneMode.js";
 import SceneTransforms from "./SceneTransforms.js";
-import SplitDirection from "./SplitDirection.js"
+import SplitDirection from "./SplitDirection.js";
 
 /**
  * <div class="notice">

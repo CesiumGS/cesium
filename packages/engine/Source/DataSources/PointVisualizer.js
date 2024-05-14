@@ -10,7 +10,7 @@ import createBillboardPointCallback from "../Scene/createBillboardPointCallback.
 import HeightReference from "../Scene/HeightReference.js";
 import BoundingSphereState from "./BoundingSphereState.js";
 import Property from "./Property.js";
-import SplitDirection from "../Scene/SplitDirection.js"
+import SplitDirection from "../Scene/SplitDirection.js";
 
 const defaultColor = Color.WHITE;
 const defaultOutlineColor = Color.BLACK;
