@@ -715,7 +715,7 @@ const has_new_gallery_demos = ${newDemos.length > 0 ? "true;" : "false;"}\n`;
  */
 export async function copyFiles(globs, destination, base) {
   const stream = gulp
-    .src(globs, { nodir: true, base: base ?? "" })
+    .src(globs, { nodir: true, base: base ?? "", encoding: false })
     .pipe(gulp.dest(destination));
 
   await finished(stream);

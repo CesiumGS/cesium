@@ -380,7 +380,11 @@ export async function prepare() {
     "!node_modules/jasmine-core/lib/jasmine-core/example",
   ]);
 
-  const stream = gulp.src(files).pipe(gulp.dest("Specs/jasmine"));
+  const stream = gulp
+    .src(files, {
+      encoding: false,
+    })
+    .pipe(gulp.dest("Specs/jasmine"));
   await finished(stream);
   return stream;
 }
@@ -403,7 +407,7 @@ export async function buildDocs() {
   );
 
   const stream = gulp
-    .src("Documentation/Images/**")
+    .src(["Documentation/Images/**"], { encoding: false })
     .pipe(gulp.dest("Build/Documentation/Images"));
 
   await finished(stream);
@@ -603,6 +607,7 @@ export const makeZip = gulp.series(release, async function createZipFile() {
           "!packages/widgets/Build/package.noprepare.json",
         ],
         {
+          encoding: false,
           base: ".",
         }
       )
@@ -648,6 +653,7 @@ export const makeZip = gulp.series(release, async function createZipFile() {
           "!Apps/Sandcastle/gallery/development/**",
         ],
         {
+          encoding: false,
           base: ".",
         }
       )
@@ -1591,12 +1597,17 @@ export async function buildThirdParty() {
 
 async function buildSandcastle() {
   const streams = [];
-  let appStream = gulp.src([
-    "Apps/Sandcastle/**",
-    "!Apps/Sandcastle/load-cesium-es6.js",
-    "!Apps/Sandcastle/images/**",
-    "!Apps/Sandcastle/gallery/**.jpg",
-  ]);
+  let appStream = gulp.src(
+    [
+      "Apps/Sandcastle/**",
+      "!Apps/Sandcastle/load-cesium-es6.js",
+      "!Apps/Sandcastle/images/**",
+      "!Apps/Sandcastle/gallery/**.jpg",
+    ],
+    {
+      encoding: false,
+    }
+  );
 
   if (isProduction) {
     // Remove swap out ESM modules for the IIFE build
@@ -1660,6 +1671,7 @@ async function buildSandcastle() {
     {
       base: "Apps/Sandcastle",
       buffer: false,
+      encoding: false,
     }
   );
   if (isProduction) {
@@ -1671,7 +1683,7 @@ async function buildSandcastle() {
 
   if (isProduction) {
     const fileStream = gulp
-      .src(["ThirdParty/**"])
+      .src(["ThirdParty/**"], { encoding: false })
       .pipe(gulp.dest("Build/Sandcastle/ThirdParty"));
     streams.push(fileStream);
 
@@ -1695,7 +1707,7 @@ async function buildSandcastle() {
     .pipe(gulp.dest("Build/Sandcastle"));
   streams.push(standaloneStream);
 
-  return Promise.all(streams.map(s => finished(s)));
+  return Promise.all(streams.map((s) => finished(s)));
 }
 
 async function buildCesiumViewer() {
@@ -1744,12 +1756,17 @@ async function buildCesiumViewer() {
   });
 
   const stream = gulp
-    .src([
-      "Apps/CesiumViewer/**",
-      "!Apps/CesiumViewer/Images",
-      "!Apps/CesiumViewer/**/*.js",
-      "!Apps/CesiumViewer/**/*.css",
-    ])
+    .src(
+      [
+        "Apps/CesiumViewer/**",
+        "!Apps/CesiumViewer/Images",
+        "!Apps/CesiumViewer/**/*.js",
+        "!Apps/CesiumViewer/**/*.css",
+      ],
+      {
+        encoding: false,
+      }
+    )
     .pipe(
       gulp.src(
         [
@@ -1762,6 +1779,7 @@ async function buildCesiumViewer() {
         {
           base: "Build/Cesium",
           nodir: true,
+          encoding: false,
         }
       )
     )
