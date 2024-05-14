@@ -380,11 +380,7 @@ export async function prepare() {
     "!node_modules/jasmine-core/lib/jasmine-core/example",
   ]);
 
-  const stream = gulp
-    .src(files, {
-      encoding: false,
-    })
-    .pipe(gulp.dest("Specs/jasmine"));
+  const stream = gulp.src(files).pipe(gulp.dest("Specs/jasmine"));
   await finished(stream);
   return stream;
 }
@@ -1683,7 +1679,7 @@ async function buildSandcastle() {
 
   if (isProduction) {
     const fileStream = gulp
-      .src(["ThirdParty/**"], { encoding: false })
+      .src(["ThirdParty/**"])
       .pipe(gulp.dest("Build/Sandcastle/ThirdParty"));
     streams.push(fileStream);
 
