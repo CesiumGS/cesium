@@ -29,6 +29,7 @@ import ResourceCache from "./ResourceCache.js";
 import ResourceLoader from "./ResourceLoader.js";
 import SupportedImageFormats from "./SupportedImageFormats.js";
 import VertexAttributeSemantic from "./VertexAttributeSemantic.js";
+import GltfGpmLoader from "./GltfGpmLoader.js";
 
 const Attribute = ModelComponents.Attribute;
 const Indices = ModelComponents.Indices;
@@ -269,6 +270,7 @@ function GltfLoader(options) {
   this._geometryLoaders = [];
   this._geometryCallbacks = [];
   this._structuralMetadataLoader = undefined;
+  this._gpmLoader = undefined;
   this._loadResourcesPromise = undefined;
   this._resourcesLoaded = false;
   this._texturesLoaded = false;
@@ -479,6 +481,17 @@ function processLoaders(loader, frameState) {
     if (metadataReady) {
       loader._components.structuralMetadata =
         structuralMetadataLoader.structuralMetadata;
+    }
+    ready = ready && metadataReady;
+  }
+
+  const gpmLoader = loader._gpmLoader;
+  if (defined(gpmLoader)) {
+    const metadataReady = gpmLoader.process(frameState);
+    if (metadataReady) {
+      // XXX
+      console.log("Overwriting structural metadata with GPM data");
+      loader._components.structuralMetadata = gpmLoader.structuralMetadata;
     }
     ready = ready && metadataReady;
   }
@@ -1951,6 +1964,12 @@ function loadPrimitive(
     loadPrimitiveMetadataLegacy(loader, primitive, featureMetadataLegacy);
   }
 
+  const gpmLocal = extensions.NGA_gpm_local;
+  console.log("gpmLocal is ", gpmLocal);
+  if (defined(gpmLocal)) {
+    console.log("Now do something with this...");
+  }
+
   const primitiveType = gltfPrimitive.mode;
   if (loadForClassification && primitiveType !== PrimitiveType.TRIANGLES) {
     throw new RuntimeError(
@@ -2404,6 +2423,26 @@ async function loadStructuralMetadata(
   return structuralMetadataLoader.load();
 }
 
+async function loadGpm(
+  loader,
+  gltf,
+  extension,
+  supportedImageFormats,
+  frameState
+) {
+  const gpmLoader = new GltfGpmLoader({
+    gltf: gltf,
+    extension: extension,
+    gltfResource: loader._gltfResource,
+    baseResource: loader._baseResource,
+    supportedImageFormats: supportedImageFormats,
+    frameState: frameState,
+    asynchronous: loader._asynchronous,
+  });
+  loader._gpmLoader = gpmLoader;
+  return gpmLoader.load();
+}
+
 function loadAnimationSampler(loader, gltf, gltfSampler) {
   const animationSampler = new AnimationSampler();
 
@@ -2643,6 +2682,8 @@ function parse(loader, gltf, supportedImageFormats, frameState) {
     defined(structuralMetadataExtension) ||
     defined(featureMetadataExtensionLegacy)
   ) {
+    // XXX
+    console.log("Loading structural metadata");
     const promise = loadStructuralMetadata(
       loader,
       gltf,
@@ -2652,6 +2693,32 @@ function parse(loader, gltf, supportedImageFormats, frameState) {
       frameState
     );
     loader._loaderPromises.push(promise);
+  }
+
+  // Load NGA_gpm_local
+  const meshes = gltf.meshes;
+  if (defined(meshes)) {
+    for (const mesh of meshes) {
+      const primitives = mesh.primitives;
+      if (defined(primitives)) {
+        for (const primitive of primitives) {
+          const primitiveExtensions = primitive.extensions;
+          const gpmExtension = primitiveExtensions.NGA_gpm_local;
+          if (defined(gpmExtension)) {
+            // XXX
+            console.log("Loading GPM");
+            const promise = loadGpm(
+              loader,
+              gltf,
+              gpmExtension,
+              supportedImageFormats,
+              frameState
+            );
+            loader._loaderPromises.push(promise);
+          }
+        }
+      }
+    }
   }
 
   // Gather promises and handle any errors
@@ -2722,6 +2789,13 @@ function unloadStructuralMetadata(loader) {
   }
 }
 
+function unloadGpm(loader) {
+  if (defined(loader._gpmLoader) && !loader._gpmLoader.isDestroyed()) {
+    loader._gpmLoader.destroy();
+    loader._gpmLoader = undefined;
+  }
+}
+
 /**
  * Returns whether the resource has been unloaded.
  * @private
@@ -2745,6 +2819,7 @@ GltfLoader.prototype.unload = function () {
   unloadGeometry(this);
   unloadGeneratedAttributes(this);
   unloadStructuralMetadata(this);
+  unloadGpm(this);
 
   this._components = undefined;
   this._typedArray = undefined;
