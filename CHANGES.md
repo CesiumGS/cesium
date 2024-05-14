@@ -1,5 +1,7 @@
 # Change Log
 
+- Added SplitDirection property for display PointPrimitive relative to the `Scene.splitPosition`.
+
 ### 1.118
 
 #### @cesium/engine
