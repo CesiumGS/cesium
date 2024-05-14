@@ -1,15 +1,16 @@
 # Change Log
 
-### 1.118
+### 1.118 - 2024-06-01
 
 #### @cesium/engine
 
 ##### Fixes :wrench:
 
+- Fixed a bug where `scene.pickPosition` returned incorrect results against the globe when `depthTestAgainstTerrain` is `false`. [#4368](https://github.com/CesiumGS/cesium/issues/4368)
 - Fixed a bug where `TaskProcessor` worker loading would check the worker module ID rather than the absolute URL when determining if it is cross-origin. [#11833](https://github.com/CesiumGS/cesium/pull/11833)
 - Fixed a bug where cross-origin workers would error when loaded with the CommonJS `importScripts` shim instead of an ESM `import`. [#11833](https://github.com/CesiumGS/cesium/pull/11833)
 
-### 1.117
+### 1.117 - 2024-05-01
 
 #### @cesium/engine
 
