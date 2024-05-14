@@ -389,3 +389,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [dslming](https://github.com/dslming)
 - [Peter A. Jonsson](https://github.com/pjonsson)
 - [Zhongxiang Wang](https://github.com/plainheart)
+- [Vladislav Yunev](https://github.com/YunVlad)
