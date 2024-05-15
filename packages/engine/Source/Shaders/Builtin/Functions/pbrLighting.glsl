@@ -11,6 +11,35 @@ vec3 fresnelSchlick2(vec3 f0, vec3 f90, float VdotH)
     return f0 + (f90 - f0) * versineSquared * versineSquared * versine;
 }
 
+// TODO: add ifdef for GGX anisotropy methods
+/**
+ * @param {float} roughness Material roughness (along the anisotropy bitangent)
+ * @param {float} tangentialRoughness Anisotropic roughness (along the anisotropy tangent)
+ * @param {vec3} lightDirection The direction from the fragment to the light source, transformed to tangent-bitangent-normal coordinates
+ * @param {vec3} viewDirection The direction from the fragment to the camera, transformed to tangent-bitangent-normal coordinates
+ */
+float smithVisibilityGGX_anisotropic(float roughness, float tangentialRoughness, vec3 lightDirection, vec3 viewDirection)
+{
+    vec3 roughnessScale = vec3(tangentialRoughness, roughness, 1.0);
+    float GGXV = lightDirection.z * length(roughnessScale * viewDirection);
+    float GGXL = viewDirection.z * length(roughnessScale * lightDirection);
+    float v = 0.5 / (GGXV + GGXL);
+    return clamp(v, 0.0, 1.0);
+}
+
+/**
+ * @param {float} roughness Material roughness (along the anisotropy bitangent)
+ * @param {float} tangentialRoughness Anisotropic roughness (along the anisotropy tangent)
+ * @param {vec3} halfwayDirection The unit vector halfway between light and view directions, transformed to tangent-bitangent-normal coordinates
+ */
+float GGX_anisotropic(float roughness, float tangentialRoughness, vec3 halfwayDirection)
+{
+    float roughnessSquared = roughness * tangentialRoughness;
+    vec3 f = halfwayDirection * vec3(roughness, tangentialRoughness, roughnessSquared);
+    float w2 = roughnessSquared / dot(f, f);
+    return roughnessSquared * w2 * w2 / czm_pi;
+}
+
 float smithVisibilityG1(float NdotV, float roughness)
 {
     // this is the k value for direct lighting.
@@ -24,7 +53,7 @@ float smithVisibilityGGX(float roughness, float NdotL, float NdotV)
     return (
         smithVisibilityG1(NdotL, roughness) *
         smithVisibilityG1(NdotV, roughness)
-    );
+    ) / (4.0 * NdotL * NdotV);
 }
 
 float GGX(float roughness, float NdotH)
@@ -82,6 +111,18 @@ vec3 czm_pbrLighting(
     float NdotH = clamp(dot(n, h), 0.0, 1.0);
     float VdotH = clamp(dot(v, h), 0.0, 1.0);
 
+    #ifdef USE_ANISOTROPY
+    vec3 anisotropicT = pbrParameters.anisotropicT;
+    vec3 anisotropicB = pbrParameters.anisotropicB;
+    // TODO: multiply with TBN matrix to get anisotropic view, light, and half directions
+    float TdotV = dot(anisotropicT, v);
+    float BdotV = dot(anisotropicB, v);
+    float TdotH = dot(anisotropicT, h);
+    float BdotH = dot(anisotropicB, h);
+    float TdotL = dot(anisotropicT, l);
+    float BdotL = dot(anisotropicB, l);
+    #endif
+
     vec3 f0 = pbrParameters.f0;
     float reflectance = max(max(f0.r, f0.g), f0.b);
     vec3 f90 = vec3(clamp(reflectance * 25.0, 0.0, 1.0)); // vec3(1.0) for dielectric.
@@ -92,9 +133,20 @@ vec3 czm_pbrLighting(
     #endif
 
     float alpha = pbrParameters.roughness;
-    float G = smithVisibilityGGX(alpha, NdotL, NdotV);
-    float D = GGX(alpha, NdotH);
-    vec3 specularContribution = F * G * D / (4.0 * NdotL * NdotV);
+    #ifdef USE_ANISOTROPY
+        float anisotropyStrength = pbrParameters.anisotropyStrength;
+        float tangentialRoughness = mix(alpha, 1.0, anisotropyStrength * anisotropyStrength);
+        vec3 lightDirection = vec3(TdotL, BdotL, NdotL);
+        vec3 viewDirection = vec3(TdotV, BdotV, NdotV);
+        float G = smithVisibilityGGX_anisotropic(alpha, tangentialRoughness, lightDirection, viewDirection);
+        vec3 halfwayDirection = vec3(TdotH, BdotH, NdotH);
+        float D = GGX_anisotropic(alpha, tangentialRoughness, halfwayDirection);
+    #else
+        float G = smithVisibilityGGX(alpha, NdotL, NdotV);
+        float D = GGX(alpha, NdotH);
+    #endif
+
+    vec3 specularContribution = F * G * D;
 
     vec3 diffuseColor = pbrParameters.diffuseColor;
     // F here represents the specular contribution

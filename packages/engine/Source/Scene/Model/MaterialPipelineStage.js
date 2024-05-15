@@ -584,15 +584,16 @@ function processAnisotropyUniforms(
 
   // Pre-compute cos and sin of rotation, since they are the same for all fragments.
   // Combine with strength as one vec3 uniform.
-  const anisotropyValues = Cartesian3.fromElements(
-    Math.cos(anisotropyRotation),
-    Math.sin(anisotropyRotation),
-    anisotropyStrength,
-    scratchAnisotropy
-  );
+  const cosRotation = Math.cos(anisotropyRotation);
+  const sinRotation = Math.sin(anisotropyRotation);
   shaderBuilder.addUniform("vec3", "u_anisotropy", ShaderDestination.FRAGMENT);
   uniformMap.u_anisotropy = function () {
-    return anisotropyValues;
+    return Cartesian3.fromElements(
+      cosRotation,
+      sinRotation,
+      anisotropyStrength,
+      scratchAnisotropy
+    );
   };
 }
 
