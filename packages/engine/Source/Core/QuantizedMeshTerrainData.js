@@ -522,6 +522,7 @@ QuantizedMeshTerrainData.prototype.upsample = function (
     ? this._northSkirtHeight
     : shortestSkirt * 0.5;
   const credits = this._credits;
+  const extendedSkirts = this._extendedSkirts;
 
   return Promise.resolve(upsamplePromise).then(function (result) {
     const quantizedVertices = new Uint16Array(result.vertices);
@@ -556,7 +557,7 @@ QuantizedMeshTerrainData.prototype.upsample = function (
       childTileMask: 0,
       credits: credits,
       createdByUpsampling: true,
-      extendedSkirts: this._extendedSkirts,
+      extendedSkirts: extendedSkirts,
     });
   });
 };
