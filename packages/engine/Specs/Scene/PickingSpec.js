@@ -61,7 +61,7 @@ describe(
     const pointCloudTilesetUrl =
       "Data/Cesium3DTiles/PointCloud/PointCloudWithTransform/tileset.json";
     const voxelTilesetUrl =
-      "Data/Cesium3DTiles/Voxel/VoxelEllipsoid3DTiles/tileset.json";
+      "Data/Cesium3DTiles/Voxel/VoxelBox3DTiles/tileset.json";
 
     beforeAll(function () {
       scene = createScene({
@@ -269,12 +269,18 @@ describe(
         const provider = await Cesium3DTilesVoxelProvider.fromUrl(
           voxelTilesetUrl
         );
-        const primitive = new VoxelPrimitive({ provider });
+        const modelMatrix = Matrix4.fromUniformScale(
+          Ellipsoid.WGS84.maximumRadius
+        );
+        const primitive = new VoxelPrimitive({ provider, modelMatrix });
         scene.primitives.add(primitive);
         await pollToPromise(function () {
           scene.renderForSpecs();
           const traversal = primitive._traversal;
           return traversal.isRenderable(traversal.rootNode);
+        });
+        expect(scene).toPickAndCall(function (result) {
+          expect(result.primitive).toBe(primitive);
         });
         expect(scene).toPickVoxelAndCall(function (voxelCell) {
           expect(voxelCell.tileIndex).toBe(0);

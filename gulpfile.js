@@ -1197,6 +1197,11 @@ function generateTypeScriptDefinitions(
     .replace(
       /\/\*\*[\*\s\w]*?\*\/\nexport const Check: any;/m,
       `\n${readFileSync("./packages/engine/Source/Core/Check.d.ts").toString()}`
+    )
+    // Fix https://github.com/CesiumGS/cesium/issues/10498 so we can use the rest parameter expand tuple
+    .replace(
+      "raiseEvent(...arguments: Parameters<Listener>[]): void;",
+      "raiseEvent(...arguments: Parameters<Listener>): void;"
     );
 
   // Wrap the source to actually be inside of a declared cesium module
@@ -1399,6 +1404,11 @@ function createTypeScriptDefinitions() {
     .replace(
       /\/\*\*[\*\s\w]*?\*\/\nexport const Check: any;/m,
       `\n${readFileSync("./packages/engine/Source/Core/Check.d.ts").toString()}`
+    )
+    // Fix https://github.com/CesiumGS/cesium/issues/10498 to have rest parameter expand tuple
+    .replace(
+      "raiseEvent(...arguments: Parameters<Listener>[]): void;",
+      "raiseEvent(...arguments: Parameters<Listener>): void;"
     );
 
   // Wrap the source to actually be inside of a declared cesium module
