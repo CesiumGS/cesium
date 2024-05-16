@@ -316,9 +316,20 @@
         );
 
         let model;
-        loadModel(
-          "../../SampleData/models/SpecularTest/glTF-Binary/SpecularTest.glb"
-        );
+        try {
+          const resource = await Cesium.IonResource.fromAssetId(2572779);
+          model = await Cesium.Model.fromGltfAsync({
+            url: resource,
+            modelMatrix: modelMatrix,
+            imageBasedLighting,
+          });
+
+          scene.primitives.add(model);
+
+          model.readyEvent.addEventListener(() => zoomToModel(model));
+        } catch (error) {
+          window.alert(`Error loading model: ${error}`);
+        }
 
         Sandcastle.addToggleButton(
           "Enable KHR_materials_specular",
@@ -328,25 +339,6 @@
             model.resetDrawCommands();
           }
         );
-
-        async function loadModel(modelURL) {
-          try {
-            model = await Cesium.Model.fromGltfAsync({
-              url: modelURL,
-              modelMatrix: modelMatrix,
-              imageBasedLighting,
-            });
-
-            scene.primitives.removeAll();
-            scene.primitives.add(model);
-
-            model.readyEvent.addEventListener(() => {
-              zoomToModel(model);
-            });
-          } catch (error) {
-            window.alert(`Error loading model: ${error}`);
-          }
-        }
 
         function zoomToModel(model) {
           const controller = scene.screenSpaceCameraController;
