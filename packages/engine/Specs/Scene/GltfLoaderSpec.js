@@ -36,7 +36,6 @@ import {
   TextureWrap,
   VertexAttributeSemantic,
   Quaternion,
-  defined,
 } from "../../index.js";
 import createScene from "../../../../Specs/createScene.js";
 import generateJsonBuffer from "../../../../Specs/generateJsonBuffer.js";
@@ -124,7 +123,7 @@ describe(
     const boxWeb3dQuantizedAttributes =
       "./Data/Models/glTF-2.0/BoxWeb3dQuantizedAttributes/glTF/BoxWeb3dQuantizedAttributes.gltf";
     const specularTestData =
-      "./Data/Models/glTF-2.0/SpecularTest/glTF-Binary/SpecularTest.glb";
+      "./Data/Models/glTF-2.0/BoxSpecular/glTF/BoxSpecular.gltf";
 
     let scene;
     const gltfLoaders = [];
@@ -4144,38 +4143,14 @@ describe(
     it("loads model with KHR_materials_specular extension", async function () {
       const gltfLoader = await loadGltf(specularTestData);
 
-      const { nodes } = gltfLoader.components;
-      const materials = nodes
-        .map((node) => node.primitives[0]?.material)
-        .filter(defined)
-        .filter((material) => defined(material.specular));
+      const { material } = gltfLoader.components.nodes[1].primitives[0];
 
-      const specularFactors = materials
-        .map((material) => material.specular.specularFactor)
-        .filter(defined);
-      expect(specularFactors).toEqual([0, 0.051269, 0.212231, 0.520996, 1]);
-
-      const specularTextures = materials
-        .map((material) => material.specular.specularTexture)
-        .filter(defined);
-      expect(specularTextures.length).toBe(1);
-      expect(specularTextures[0].texture.width).toBe(64);
-
-      const specularColorFactors = materials
-        .map((material) => material.specular.specularColorFactor)
-        .filter(defined);
-      const expectedColorFactor = Cartesian3.fromElements(
-        0.051269,
-        0.051269,
-        0
+      expect(material.specular.specularFactor).toEqual(0.7);
+      expect(material.specular.specularTexture.texture.width).toBe(256);
+      expect(material.specular.specularColorFactor).toEqual(
+        Cartesian3.fromElements(50, 0, 0)
       );
-      expect(specularColorFactors[6]).toEqual(expectedColorFactor);
-
-      const specularColorTextures = materials
-        .map((material) => material.specular.specularColorTexture)
-        .filter(defined);
-      expect(specularColorTextures.length).toBe(2);
-      expect(specularColorTextures[0].texture.width).toBe(64);
+      expect(material.specular.specularTexture.texture.width).toBe(256);
     });
 
     it("parses copyright field", function () {

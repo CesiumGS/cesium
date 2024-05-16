@@ -1,6 +1,5 @@
 import {
   _shadersMaterialStageFS,
-  defined,
   AlphaMode,
   Cartesian4,
   Cartesian3,
@@ -87,7 +86,7 @@ describe(
     const twoSidedPlane =
       "./Data/Models/glTF-2.0/TwoSidedPlane/glTF/TwoSidedPlane.gltf";
     const specularTestData =
-      "./Data/Models/glTF-2.0/SpecularTest/glTF-Binary/SpecularTest.glb";
+      "./Data/Models/glTF-2.0/BoxSpecular/glTF/BoxSpecular.gltf";
 
     function expectUniformMap(uniformMap, expected) {
       for (const key in expected) {
@@ -432,143 +431,48 @@ describe(
     it("adds uniforms and defines for KHR_materials_specular", async function () {
       const gltfLoader = await loadGltf(specularTestData);
 
-      const { nodes } = gltfLoader.components;
+      const primitive = gltfLoader.components.nodes[1].primitives[0];
 
-      // Check uniforms and defines for a node with a specularFactor
-      const nodeWithSpecularFactor = nodes.find((node) =>
-        defined(node.primitives[0]?.material.specular?.specularFactor)
-      );
-      let primitive = nodeWithSpecularFactor.primitives[0];
-
-      let renderResources = mockRenderResources();
-      let { shaderBuilder, uniformMap } = renderResources;
+      const renderResources = mockRenderResources();
+      const { shaderBuilder, uniformMap } = renderResources;
 
       MaterialPipelineStage.process(renderResources, primitive, mockFrameState);
       ShaderBuilderTester.expectHasVertexUniforms(shaderBuilder, []);
       ShaderBuilderTester.expectHasFragmentUniforms(shaderBuilder, [
         "uniform float u_metallicFactor;",
-        "uniform float u_roughnessFactor;",
         "uniform float u_specularFactor;",
-        "uniform vec4 u_baseColorFactor;",
-      ]);
-
-      ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, []);
-      ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
-        "HAS_BASE_COLOR_FACTOR",
-        "HAS_METALLIC_FACTOR",
-        "HAS_ROUGHNESS_FACTOR",
-        "HAS_SPECULAR_FACTOR",
-        "USE_METALLIC_ROUGHNESS",
-        "USE_SPECULAR",
-      ]);
-
-      let expectedUniforms = {
-        u_specularFactor: primitive.material.specular.specularFactor,
-      };
-      expectUniformMap(uniformMap, expectedUniforms);
-
-      // Check uniforms and defines for a node with a specularTexture
-      const nodeWithSpecularTexture = nodes.find((node) =>
-        defined(node.primitives[0]?.material.specular?.specularTexture)
-      );
-      primitive = nodeWithSpecularTexture.primitives[0];
-
-      renderResources = mockRenderResources();
-      shaderBuilder = renderResources.shaderBuilder;
-      uniformMap = renderResources.uniformMap;
-
-      MaterialPipelineStage.process(renderResources, primitive, mockFrameState);
-      ShaderBuilderTester.expectHasVertexUniforms(shaderBuilder, []);
-      ShaderBuilderTester.expectHasFragmentUniforms(shaderBuilder, [
-        "uniform float u_metallicFactor;",
-        "uniform float u_roughnessFactor;",
-        "uniform sampler2D u_specularTexture;",
-        "uniform vec4 u_baseColorFactor;",
-      ]);
-
-      ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, []);
-      ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
-        "HAS_BASE_COLOR_FACTOR",
-        "HAS_METALLIC_FACTOR",
-        "HAS_ROUGHNESS_FACTOR",
-        "HAS_SPECULAR_TEXTURE",
-        "TEXCOORD_SPECULAR v_texCoord_0",
-        "USE_METALLIC_ROUGHNESS",
-        "USE_SPECULAR",
-      ]);
-
-      expectedUniforms = {
-        u_specularTexture: primitive.material.specular.specularTexture.texture,
-      };
-      expectUniformMap(uniformMap, expectedUniforms);
-
-      // Check uniforms and defines for a node with a specularColorFactor
-      const nodeWithSpecularColorFactor = nodes.find((node) =>
-        defined(node.primitives[0]?.material.specular?.specularColorFactor)
-      );
-      primitive = nodeWithSpecularColorFactor.primitives[0];
-
-      renderResources = mockRenderResources();
-      shaderBuilder = renderResources.shaderBuilder;
-      uniformMap = renderResources.uniformMap;
-
-      MaterialPipelineStage.process(renderResources, primitive, mockFrameState);
-      ShaderBuilderTester.expectHasVertexUniforms(shaderBuilder, []);
-      ShaderBuilderTester.expectHasFragmentUniforms(shaderBuilder, [
-        "uniform float u_metallicFactor;",
-        "uniform float u_roughnessFactor;",
-        "uniform vec3 u_specularColorFactor;",
-        "uniform vec4 u_baseColorFactor;",
-      ]);
-
-      ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, []);
-      ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
-        "HAS_BASE_COLOR_FACTOR",
-        "HAS_METALLIC_FACTOR",
-        "HAS_ROUGHNESS_FACTOR",
-        "HAS_SPECULAR_COLOR_FACTOR",
-        "USE_METALLIC_ROUGHNESS",
-        "USE_SPECULAR",
-      ]);
-
-      expectedUniforms = {
-        u_specularColorFactor: primitive.material.specular.specularColorFactor,
-      };
-      expectUniformMap(uniformMap, expectedUniforms);
-
-      // Check uniforms and defines for a node with a specularColorTexture
-      const nodeWithSpecularColorTexture = nodes.find((node) =>
-        defined(node.primitives[0]?.material.specular?.specularColorTexture)
-      );
-      primitive = nodeWithSpecularColorTexture.primitives[0];
-
-      renderResources = mockRenderResources();
-      shaderBuilder = renderResources.shaderBuilder;
-      uniformMap = renderResources.uniformMap;
-
-      MaterialPipelineStage.process(renderResources, primitive, mockFrameState);
-      ShaderBuilderTester.expectHasVertexUniforms(shaderBuilder, []);
-      ShaderBuilderTester.expectHasFragmentUniforms(shaderBuilder, [
-        "uniform float u_metallicFactor;",
-        "uniform float u_roughnessFactor;",
+        "uniform sampler2D u_baseColorTexture;",
         "uniform sampler2D u_specularColorTexture;",
-        "uniform vec4 u_baseColorFactor;",
+        "uniform sampler2D u_specularTexture;",
+        "uniform vec3 u_specularColorFactor;",
       ]);
 
       ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, []);
       ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
-        "HAS_BASE_COLOR_FACTOR",
+        "HAS_BASE_COLOR_TEXTURE",
         "HAS_METALLIC_FACTOR",
-        "HAS_ROUGHNESS_FACTOR",
+        "HAS_SPECULAR_COLOR_FACTOR",
         "HAS_SPECULAR_COLOR_TEXTURE",
+        "HAS_SPECULAR_FACTOR",
+        "HAS_SPECULAR_TEXTURE",
+        "TEXCOORD_BASE_COLOR v_texCoord_0",
+        "TEXCOORD_SPECULAR v_texCoord_0",
         "TEXCOORD_SPECULAR_COLOR v_texCoord_0",
         "USE_METALLIC_ROUGHNESS",
         "USE_SPECULAR",
       ]);
 
-      expectedUniforms = {
-        u_specularColorTexture:
-          primitive.material.specular.specularColorTexture.texture,
+      const {
+        specularFactor,
+        specularTexture,
+        specularColorFactor,
+        specularColorTexture,
+      } = primitive.material.specular;
+      const expectedUniforms = {
+        u_specularFactor: specularFactor,
+        u_specularColorFactor: specularColorFactor,
+        u_specularTexture: specularTexture.texture,
+        u_specularColorTexture: specularColorTexture.texture,
       };
       expectUniformMap(uniformMap, expectedUniforms);
     });
