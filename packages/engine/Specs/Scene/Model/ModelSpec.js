@@ -106,6 +106,8 @@ describe(
       "./Data/Models/glTF-2.0/BoxEmissive/glTF/BoxEmissive.gltf";
     const boomBoxUrl =
       "./Data/Models/glTF-2.0/BoomBox/glTF-pbrSpecularGlossiness/BoomBox.gltf";
+    const boxSpecularUrl =
+      "./Data/Models/glTF-2.0/BoxSpecular/glTF/BoxSpecular.gltf";
     const riggedFigureUrl =
       "./Data/Models/glTF-2.0/RiggedFigureTest/glTF/RiggedFigureTest.gltf";
     const dracoCesiumManUrl =
@@ -700,6 +702,19 @@ describe(
           // This model is tiny, so scale it up so it's visible.
           scale: 10.0,
           offset: offset,
+        },
+        scene
+      );
+      verifyRender(model, true);
+    });
+
+    it("renders model with the KHR_materials_specular extension", async function () {
+      const resource = Resource.createIfNeeded(boxSpecularUrl);
+      const gltf = await resource.fetchJson();
+      const model = await loadAndZoomToModelAsync(
+        {
+          gltf: gltf,
+          basePath: boxSpecularUrl,
         },
         scene
       );
