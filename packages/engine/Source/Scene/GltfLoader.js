@@ -1543,9 +1543,9 @@ function loadMetallicRoughness(loader, metallicRoughnessInfo, frameState) {
 
 function loadSpecular(loader, specularInfo, frameState) {
   const {
-    specularFactor,
+    specularFactor = Specular.DEFAULT_SPECULAR_FACTOR,
     specularTexture,
-    specularColorFactor,
+    specularColorFactor = Specular.DEFAULT_SPECULAR_COLOR_FACTOR,
     specularColorTexture,
   } = specularInfo;
 
@@ -1560,7 +1560,6 @@ function loadSpecular(loader, specularInfo, frameState) {
       frameState
     );
   }
-  // TODO: if not defined, should we leave the default values?
   specular.specularFactor = specularFactor;
   specular.specularColorFactor = fromArray(Cartesian3, specularColorFactor);
 
@@ -1617,8 +1616,7 @@ function loadMaterial(loader, gltfMaterial, frameState) {
       pbrSpecularGlossiness,
       frameState
     );
-  } else {
-    // TODO: should this branch exclude materials.unlit?
+  } else if (material.unlit === false) {
     if (defined(pbrMetallicRoughness)) {
       material.metallicRoughness = loadMetallicRoughness(
         loader,
@@ -1626,12 +1624,10 @@ function loadMaterial(loader, gltfMaterial, frameState) {
         frameState
       );
     }
-    if (defined(pbrSpecular)) {
-      // TODO: not compatible with materials.unlit
+    if (defined(pbrSpecular && material.unlit === false)) {
       material.specular = loadSpecular(loader, pbrSpecular, frameState);
     }
-    if (defined(pbrAnisotropy)) {
-      // TODO: not compatible with materials.unlit
+    if (defined(pbrAnisotropy) && material.unlit === false) {
       material.anisotropy = loadAnisotropy(loader, pbrAnisotropy, frameState);
     }
   }

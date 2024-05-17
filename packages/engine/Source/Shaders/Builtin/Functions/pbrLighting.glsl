@@ -11,7 +11,7 @@ vec3 fresnelSchlick2(vec3 f0, vec3 f90, float VdotH)
     return f0 + (f90 - f0) * versineSquared * versineSquared * versine;
 }
 
-// TODO: add ifdef for GGX anisotropy methods
+#ifdef USE_ANISOTROPY
 /**
  * @param {float} roughness Material roughness (along the anisotropy bitangent)
  * @param {float} tangentialRoughness Anisotropic roughness (along the anisotropy tangent)
@@ -39,7 +39,7 @@ float GGX_anisotropic(float roughness, float tangentialRoughness, vec3 halfwayDi
     float w2 = roughnessSquared / dot(f, f);
     return roughnessSquared * w2 * w2 / czm_pi;
 }
-
+#else
 float smithVisibilityG1(float NdotV, float roughness)
 {
     // this is the k value for direct lighting.
@@ -62,6 +62,7 @@ float GGX(float roughness, float NdotH)
     float f = (NdotH * roughnessSquared - NdotH) * NdotH + 1.0;
     return roughnessSquared / (czm_pi * f * f);
 }
+#endif
 
 /**
  * Compute the diffuse and specular contributions using physically based
@@ -106,22 +107,7 @@ vec3 czm_pbrLighting(
     vec3 l = normalize(lightDirectionEC);
     vec3 h = normalize(v + l);
     vec3 n = normalEC;
-    float NdotL = clamp(dot(n, l), 0.001, 1.0);
-    float NdotV = abs(dot(n, v)) + 0.001;
-    float NdotH = clamp(dot(n, h), 0.0, 1.0);
     float VdotH = clamp(dot(v, h), 0.0, 1.0);
-
-    #ifdef USE_ANISOTROPY
-    vec3 anisotropicT = pbrParameters.anisotropicT;
-    vec3 anisotropicB = pbrParameters.anisotropicB;
-    // TODO: multiply with TBN matrix to get anisotropic view, light, and half directions
-    float TdotV = dot(anisotropicT, v);
-    float BdotV = dot(anisotropicB, v);
-    float TdotH = dot(anisotropicT, h);
-    float BdotH = dot(anisotropicB, h);
-    float TdotL = dot(anisotropicT, l);
-    float BdotL = dot(anisotropicB, l);
-    #endif
 
     vec3 f0 = pbrParameters.f0;
     float reflectance = max(max(f0.r, f0.g), f0.b);
@@ -131,19 +117,24 @@ vec3 czm_pbrLighting(
     vec3 F = fresnelSchlick2(f0, f90, VdotH);
 
     #if defined(USE_SPECULAR)
-    F *= pbrParameters.specularWeight;
+        F *= pbrParameters.specularWeight;
     #endif
 
     float alpha = pbrParameters.roughness;
     #ifdef USE_ANISOTROPY
+        mat3 tbn = mat3(pbrParameters.anisotropicT, pbrParameters.anisotropicB, n);
+        vec3 lightDirection = l * tbn;
+        vec3 viewDirection = v * tbn;
+        vec3 halfwayDirection = h * tbn;
         float anisotropyStrength = pbrParameters.anisotropyStrength;
         float tangentialRoughness = mix(alpha, 1.0, anisotropyStrength * anisotropyStrength);
-        vec3 lightDirection = vec3(TdotL, BdotL, NdotL);
-        vec3 viewDirection = vec3(TdotV, BdotV, NdotV);
         float G = smithVisibilityGGX_anisotropic(alpha, tangentialRoughness, lightDirection, viewDirection);
-        vec3 halfwayDirection = vec3(TdotH, BdotH, NdotH);
         float D = GGX_anisotropic(alpha, tangentialRoughness, halfwayDirection);
+        float NdotL = clamp(lightDirection.z, 0.001, 1.0);
     #else
+        float NdotL = clamp(dot(n, l), 0.001, 1.0);
+        float NdotV = abs(dot(n, v)) + 0.001;
+        float NdotH = clamp(dot(n, h), 0.0, 1.0);
         float G = smithVisibilityGGX(alpha, NdotL, NdotV);
         float D = GGX(alpha, NdotH);
     #endif
