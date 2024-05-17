@@ -125,7 +125,9 @@ vec3 czm_pbrLighting(
 
     vec3 f0 = pbrParameters.f0;
     float reflectance = max(max(f0.r, f0.g), f0.b);
-    vec3 f90 = vec3(clamp(reflectance * 25.0, 0.0, 1.0)); // vec3(1.0) for dielectric.
+    // Typical dielectrics will have reflectance 0.04, so f90 will be 1.0.
+    // In this case, at grazing angle, all incident energy is reflected.
+    vec3 f90 = vec3(clamp(reflectance * 25.0, 0.0, 1.0));
     vec3 F = fresnelSchlick2(f0, f90, VdotH);
 
     #if defined(USE_SPECULAR)
