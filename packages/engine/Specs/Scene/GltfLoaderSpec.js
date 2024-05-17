@@ -125,7 +125,7 @@ describe(
     const specularTestData =
       "./Data/Models/glTF-2.0/BoxSpecular/glTF/BoxSpecular.gltf";
     const anisotropyTestData =
-      "./Data/Models/glTF-2.0/AnisotropyRotationTest/glTF-Binary/AnisotropyRotationTest.glb";
+      "./Data/Models/glTF-2.0/BoxAnisotropy/glTF/BoxAnisotropy.gltf";
 
     let scene;
     const gltfLoaders = [];
@@ -4158,7 +4158,7 @@ describe(
     it("loads model with KHR_materials_anisotropy extension", async function () {
       const gltfLoader = await loadGltf(anisotropyTestData);
 
-      const { material } = gltfLoader.components.nodes[5].primitives[0];
+      const { material } = gltfLoader.components.nodes[1].primitives[0];
       const {
         anisotropyStrength,
         anisotropyRotation,
@@ -4167,7 +4167,7 @@ describe(
 
       expect(anisotropyStrength).toBe(0.5);
       expect(anisotropyRotation).toBe(0.349065850398866);
-      expect(anisotropyTexture.texture.width).toBe(4);
+      expect(anisotropyTexture.texture.width).toBe(256);
     });
 
     it("parses copyright field", function () {

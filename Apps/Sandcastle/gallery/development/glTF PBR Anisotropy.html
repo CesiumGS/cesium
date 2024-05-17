@@ -47,6 +47,8 @@
           </tr>
         </tbody>
       </table>
+      <div id="lightingToolbar"></div>
+      <div id="modelsToolbar"></div>
     </div>
     <script id="cesium_sandcastle_script">
       window.startup = async function (Cesium) {
@@ -229,7 +231,7 @@
           setTime("2020-01-09T23:00:39.018261982600961346Z");
         }
 
-        const options = [
+        const lightingOptions = [
           {
             text: "Flashlight",
             onselect: function () {
@@ -269,7 +271,7 @@
           },
         ];
 
-        Sandcastle.addToolbarMenu(options);
+        Sandcastle.addToolbarMenu(lightingOptions, "lightingToolbar");
 
         const environmentMapURL =
           "https://cesium.com/public/SandcastleSampleData/kiara_6_afternoon_2k_ibl.ktx2";
@@ -312,13 +314,31 @@
               imageBasedLighting.sphericalHarmonicCoefficients = undefined;
               imageBasedLighting.specularEnvironmentMaps = undefined;
             }
-          }
+          },
+          "lightingToolbar"
         );
 
         let model;
-        loadModel(
-          "../../SampleData/models/AnisotropyStrengthTest/glTF-Binary/AnisotropyStrengthTest.glb"
-        );
+        const modelOptions = [
+          {
+            text: "Strength Test",
+            onselect: () => loadModel(2583526),
+          },
+          {
+            text: "Disc Test",
+            onselect: () => loadModel(2583858),
+          },
+          {
+            text: "Rotation Test",
+            onselect: () => loadModel(2583859),
+          },
+          {
+            text: "Barn Lamp",
+            onselect: () => loadModel(2583726),
+          },
+        ];
+        Sandcastle.addToolbarMenu(modelOptions, "modelsToolbar");
+        loadModel(2583526);
 
         Sandcastle.addToggleButton(
           "Enable KHR_materials_anisotropy",
@@ -326,13 +346,15 @@
           function (checked) {
             Cesium.ModelUtility.supportedExtensions.KHR_materials_anisotropy = checked;
             model.resetDrawCommands();
-          }
+          },
+          "modelsToolbar"
         );
 
-        async function loadModel(modelURL) {
+        async function loadModel(ionAssetId) {
           try {
+            const resource = await Cesium.IonResource.fromAssetId(ionAssetId);
             model = await Cesium.Model.fromGltfAsync({
-              url: modelURL,
+              url: resource,
               modelMatrix: modelMatrix,
               imageBasedLighting,
             });

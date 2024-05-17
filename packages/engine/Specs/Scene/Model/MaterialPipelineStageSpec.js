@@ -88,7 +88,7 @@ describe(
     const specularTestData =
       "./Data/Models/glTF-2.0/BoxSpecular/glTF/BoxSpecular.gltf";
     const anisotropyTestData =
-      "./Data/Models/glTF-2.0/AnisotropyRotationTest/glTF-Binary/AnisotropyRotationTest.glb";
+      "./Data/Models/glTF-2.0/BoxAnisotropy/glTF/BoxAnisotropy.gltf";
 
     function expectUniformMap(uniformMap, expected) {
       for (const key in expected) {
@@ -482,27 +482,24 @@ describe(
     it("adds uniforms and defines for KHR_materials_anisotropy", async function () {
       const gltfLoader = await loadGltf(anisotropyTestData);
 
-      const primitive = gltfLoader.components.nodes[5].primitives[0];
+      const primitive = gltfLoader.components.nodes[1].primitives[0];
       const renderResources = mockRenderResources();
       MaterialPipelineStage.process(renderResources, primitive, mockFrameState);
       const { shaderBuilder, uniformMap } = renderResources;
 
       ShaderBuilderTester.expectHasVertexUniforms(shaderBuilder, []);
       ShaderBuilderTester.expectHasFragmentUniforms(shaderBuilder, [
-        "uniform vec3 u_anisotropy;",
-        "uniform float u_roughnessFactor;",
+        "uniform float u_metallicFactor;",
         "uniform sampler2D u_anisotropyTexture;",
         "uniform sampler2D u_baseColorTexture;",
+        "uniform vec3 u_anisotropy;",
       ]);
 
-      ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
-        "HAS_DOUBLE_SIDED_MATERIAL",
-      ]);
+      ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, []);
       ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
         "HAS_ANISOTROPY_TEXTURE",
         "HAS_BASE_COLOR_TEXTURE",
-        "HAS_DOUBLE_SIDED_MATERIAL",
-        "HAS_ROUGHNESS_FACTOR",
+        "HAS_METALLIC_FACTOR",
         "TEXCOORD_ANISOTROPY v_texCoord_0",
         "TEXCOORD_BASE_COLOR v_texCoord_0",
         "USE_ANISOTROPY",
