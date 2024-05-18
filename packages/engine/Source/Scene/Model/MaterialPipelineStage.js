@@ -17,6 +17,7 @@ const {
   MetallicRoughness,
   SpecularGlossiness,
   Specular,
+  Clearcoat,
 } = ModelComponents;
 
 /**
@@ -114,6 +115,18 @@ MaterialPipelineStage.process = function (
     ) {
       processAnisotropyUniforms(
         material.anisotropy,
+        uniformMap,
+        shaderBuilder,
+        defaultTexture,
+        disableTextures
+      );
+    }
+    if (
+      defined(material.clearcoat) &&
+      ModelUtility.supportedExtensions.KHR_materials_clearcoat === true
+    ) {
+      processClearcoatUniforms(
+        material.clearcoat,
         uniformMap,
         shaderBuilder,
         defaultTexture,
@@ -595,6 +608,109 @@ function processAnisotropyUniforms(
       scratchAnisotropy
     );
   };
+}
+
+/**
+ * Add uniforms and defines for the KHR_materials_clearcoat extension
+ *
+ * @param {ModelComponents.Clearcoat} clearcoat
+ * @param {Object<string, Function>} uniformMap The uniform map to modify.
+ * @param {ShaderBuilder} shaderBuilder
+ * @param {Texture} defaultTexture
+ * @param {boolean} disableTextures
+ * @private
+ */
+function processClearcoatUniforms(
+  clearcoat,
+  uniformMap,
+  shaderBuilder,
+  defaultTexture,
+  disableTextures
+) {
+  const {
+    clearcoatFactor,
+    clearcoatTexture,
+    clearcoatRoughnessFactor,
+    clearcoatRoughnessTexture,
+    clearcoatNormalTexture,
+  } = clearcoat;
+
+  shaderBuilder.addDefine(
+    "USE_CLEARCOAT",
+    undefined,
+    ShaderDestination.FRAGMENT
+  );
+
+  if (
+    defined(clearcoatFactor) &&
+    clearcoatFactor !== Clearcoat.DEFAULT_CLEARCOAT_FACTOR
+  ) {
+    shaderBuilder.addUniform(
+      "float",
+      "u_clearcoatFactor",
+      ShaderDestination.FRAGMENT
+    );
+    uniformMap.u_clearcoatFactor = function () {
+      return clearcoat.clearcoatFactor;
+    };
+    shaderBuilder.addDefine(
+      "HAS_CLEARCOAT_FACTOR",
+      undefined,
+      ShaderDestination.FRAGMENT
+    );
+  }
+
+  if (defined(clearcoatTexture) && !disableTextures) {
+    processTexture(
+      shaderBuilder,
+      uniformMap,
+      clearcoatTexture,
+      "u_clearcoatTexture",
+      "CLEARCOAT",
+      defaultTexture
+    );
+  }
+
+  if (
+    defined(clearcoatRoughnessFactor) &&
+    clearcoatFactor !== Clearcoat.DEFAULT_CLEARCOAT_ROUGHNESS_FACTOR
+  ) {
+    shaderBuilder.addUniform(
+      "float",
+      "u_clearcoatRoughnessFactor",
+      ShaderDestination.FRAGMENT
+    );
+    uniformMap.u_clearcoatRoughnessFactor = function () {
+      return clearcoat.clearcoatRoughnessFactor;
+    };
+    shaderBuilder.addDefine(
+      "HAS_CLEARCOAT_ROUGHNESS_FACTOR",
+      undefined,
+      ShaderDestination.FRAGMENT
+    );
+  }
+
+  if (defined(clearcoatRoughnessTexture) && !disableTextures) {
+    processTexture(
+      shaderBuilder,
+      uniformMap,
+      clearcoatRoughnessTexture,
+      "u_clearcoatRoughnessTexture",
+      "CLEARCOAT_ROUGHNESS",
+      defaultTexture
+    );
+  }
+
+  if (defined(clearcoatNormalTexture) && !disableTextures) {
+    processTexture(
+      shaderBuilder,
+      uniformMap,
+      clearcoatNormalTexture,
+      "u_clearcoatNormalTexture",
+      "CLEARCOAT_NORMAL",
+      defaultTexture
+    );
+  }
 }
 
 /**

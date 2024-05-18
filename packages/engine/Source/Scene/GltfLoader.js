@@ -55,6 +55,7 @@ const {
   SpecularGlossiness,
   Specular,
   Anisotropy,
+  Clearcoat,
   Material,
 } = ModelComponents;
 
@@ -1587,6 +1588,43 @@ function loadAnisotropy(loader, anisotropyInfo, frameState) {
   return anisotropy;
 }
 
+function loadClearcoat(loader, clearcoatInfo, frameState) {
+  const {
+    clearcoatFactor = Clearcoat.DEFAULT_CLEARCOAT_FACTOR,
+    clearcoatTexture,
+    clearcoatRoughnessFactor = Clearcoat.DEFAULT_CLEARCOAT_ROUGHNESS_FACTOR,
+    clearcoatRoughnessTexture,
+    clearcoatNormalTexture,
+  } = clearcoatInfo;
+
+  const clearcoat = new Clearcoat();
+  if (defined(clearcoatTexture)) {
+    clearcoat.clearcoatTexture = loadTexture(
+      loader,
+      clearcoatTexture,
+      frameState
+    );
+  }
+  if (defined(clearcoatRoughnessTexture)) {
+    clearcoat.clearcoatRoughnessTexture = loadTexture(
+      loader,
+      clearcoatRoughnessTexture,
+      frameState
+    );
+  }
+  if (defined(clearcoatNormalTexture)) {
+    clearcoat.clearcoatNormalTexture = loadTexture(
+      loader,
+      clearcoatNormalTexture,
+      frameState
+    );
+  }
+  clearcoat.clearcoatFactor = clearcoatFactor;
+  clearcoat.clearcoatRoughnessFactor = clearcoatRoughnessFactor;
+
+  return clearcoat;
+}
+
 /**
  * Load textures and parse factors and flags for a glTF material
  *
@@ -1606,6 +1644,7 @@ function loadMaterial(loader, gltfMaterial, frameState) {
   const pbrSpecularGlossiness = extensions.KHR_materials_pbrSpecularGlossiness;
   const pbrSpecular = extensions.KHR_materials_specular;
   const pbrAnisotropy = extensions.KHR_materials_anisotropy;
+  const pbrClearcoat = extensions.KHR_materials_clearcoat;
   const pbrMetallicRoughness = gltfMaterial.pbrMetallicRoughness;
 
   material.unlit = defined(extensions.KHR_materials_unlit);
@@ -1629,6 +1668,9 @@ function loadMaterial(loader, gltfMaterial, frameState) {
     }
     if (defined(pbrAnisotropy) && material.unlit === false) {
       material.anisotropy = loadAnisotropy(loader, pbrAnisotropy, frameState);
+    }
+    if (defined(pbrClearcoat) && material.unlit === false) {
+      material.clearcoat = loadClearcoat(loader, pbrClearcoat, frameState);
     }
   }
 

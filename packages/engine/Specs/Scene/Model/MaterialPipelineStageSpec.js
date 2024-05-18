@@ -89,6 +89,8 @@ describe(
       "./Data/Models/glTF-2.0/BoxSpecular/glTF/BoxSpecular.gltf";
     const anisotropyTestData =
       "./Data/Models/glTF-2.0/BoxAnisotropy/glTF/BoxAnisotropy.gltf";
+    const clearcoatTestData =
+      "./Data/Models/glTF-2.0/BoxClearcoat/glTF/BoxClearcoat.gltf";
 
     function expectUniformMap(uniformMap, expected) {
       for (const key in expected) {
@@ -519,6 +521,59 @@ describe(
       const expectedUniforms = {
         u_anisotropy: expectedAnisotropy,
         u_anisotropyTexture: anisotropyTexture.texture,
+      };
+      expectUniformMap(uniformMap, expectedUniforms);
+    });
+
+    it("adds uniforms and defines for KHR_materials_clearcoat", async function () {
+      const gltfLoader = await loadGltf(clearcoatTestData);
+
+      const primitive = gltfLoader.components.nodes[1].primitives[0];
+      const renderResources = mockRenderResources();
+      MaterialPipelineStage.process(renderResources, primitive, mockFrameState);
+      const { shaderBuilder, uniformMap } = renderResources;
+
+      ShaderBuilderTester.expectHasVertexUniforms(shaderBuilder, []);
+      ShaderBuilderTester.expectHasFragmentUniforms(shaderBuilder, [
+        "uniform float u_metallicFactor;",
+        "uniform float u_clearcoatFactor;",
+        "uniform float u_clearcoatRoughnessFactor;",
+        "uniform sampler2D u_baseColorTexture;",
+        "uniform sampler2D u_clearcoatTexture;",
+        "uniform sampler2D u_clearcoatRoughnessTexture;",
+        "uniform sampler2D u_clearcoatNormalTexture;",
+      ]);
+
+      ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, []);
+      ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
+        "HAS_BASE_COLOR_TEXTURE",
+        "HAS_CLEARCOAT_FACTOR",
+        "HAS_CLEARCOAT_NORMAL_TEXTURE",
+        "HAS_CLEARCOAT_ROUGHNESS_FACTOR",
+        "HAS_CLEARCOAT_ROUGHNESS_TEXTURE",
+        "HAS_CLEARCOAT_TEXTURE",
+        "HAS_METALLIC_FACTOR",
+        "TEXCOORD_CLEARCOAT v_texCoord_0",
+        "TEXCOORD_CLEARCOAT_ROUGHNESS v_texCoord_0",
+        "TEXCOORD_CLEARCOAT_NORMAL v_texCoord_0",
+        "TEXCOORD_BASE_COLOR v_texCoord_0",
+        "USE_CLEARCOAT",
+        "USE_METALLIC_ROUGHNESS",
+      ]);
+
+      const {
+        clearcoatFactor,
+        clearcoatRoughnessFactor,
+        clearcoatTexture,
+        clearcoatRoughnessTexture,
+        clearcoatNormalTexture,
+      } = primitive.material.clearcoat;
+      const expectedUniforms = {
+        u_clearcoatFactor: clearcoatFactor,
+        u_clearcoatRoughnessFactor: clearcoatRoughnessFactor,
+        u_clearcoatTexture: clearcoatTexture.texture,
+        u_clearcoatRoughnessTexture: clearcoatRoughnessTexture.texture,
+        u_clearcoatNormalTexture: clearcoatNormalTexture.texture,
       };
       expectUniformMap(uniformMap, expectedUniforms);
     });
