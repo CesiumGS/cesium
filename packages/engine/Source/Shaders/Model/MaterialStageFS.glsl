@@ -337,6 +337,50 @@ void setAnisotropy(inout czm_modelMaterial material, in NormalInfo normalInfo)
     material.anisotropyStrength = anisotropyStrength;
 }
 #endif
+#ifdef USE_CLEARCOAT
+void setClearcoat(inout czm_modelMaterial material)
+{
+    #ifdef HAS_CLEARCOAT_TEXTURE
+        vec2 clearcoatTexCoords = TEXCOORD_CLEARCOAT;
+        #ifdef HAS_CLEARCOAT_TEXTURE_TRANSFORM
+            clearcoatTexCoords = computeTextureTransform(clearcoatTexCoords, u_clearcoatTextureTransform);
+        #endif
+        float clearcoatFactor = texture(u_clearcoatTexture, clearcoatTexCoords).a;
+        #ifdef HAS_CLEARCOAT_FACTOR
+            clearcoatFactor *= u_clearcoatFactor;
+        #endif
+    #else
+        #ifdef HAS_CLEARCOAT_FACTOR
+            float clearcoatFactor = u_clearcoatFactor;
+        #else
+            // TODO: this case should turn the whole extension off
+            float clearcoatFactor = 0.0;
+        #endif
+    #endif
+
+    #ifdef HAS_CLEARCOAT_ROUGHNESS_TEXTURE
+        vec2 clearcoatRoughnessTexCoords = TEXCOORD_CLEARCOAT_ROUGHNESS;
+        #ifdef HAS_CLEARCOAT_ROUGHNESS_TEXTURE_TRANSFORM
+            clearcoatRoughnessTexCoords = computeTextureTransform(clearcoatRoughnessTexCoords, u_clearcoatRoughnessTextureTransform);
+        #endif
+        float clearcoatRoughness = texture(u_clearcoatRoughnessTexture, clearcoatRoughnessTexCoords).a;
+        #ifdef HAS_CLEARCOAT_ROUGHNESS_FACTOR
+            clearcoatRoughness *= u_clearcoatRoughnessFactor;
+        #endif
+    #else
+        #ifdef HAS_CLEARCOAT_ROUGHNESS_FACTOR
+            float clearcoatRoughness = u_clearcoatRoughnessFactor;
+        #else
+            float clearcoatRoughness = 0.0;
+        #endif
+    #endif
+
+    material.clearcoatFactor = clearcoatFactor;
+    material.clearcoatRoughness = clearcoatRoughness;
+    // TODO: read clear coat normals from a texture (if supplied)
+    material.clearcoatNormal = material.normalEC;
+}
+#endif
 #endif
 
 void materialStage(inout czm_modelMaterial material, ProcessedAttributes attributes, SelectedFeature feature)
@@ -397,6 +441,9 @@ void materialStage(inout czm_modelMaterial material, ProcessedAttributes attribu
         #endif
         #ifdef USE_ANISOTROPY
             setAnisotropy(material, normalInfo);
+        #endif
+        #ifdef USE_CLEARCOAT
+            setClearcoat(material);
         #endif
     #endif
 }
