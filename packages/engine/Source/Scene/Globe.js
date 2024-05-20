@@ -28,6 +28,7 @@ import ImageryLayerCollection from "./ImageryLayerCollection.js";
 import QuadtreePrimitive from "./QuadtreePrimitive.js";
 import SceneMode from "./SceneMode.js";
 import ShadowMode from "./ShadowMode.js";
+import CesiumMath from "../Core/Math.js";
 
 /**
  * The globe rendered in the scene, including its terrain ({@link Globe#terrainProvider})
@@ -36,11 +37,11 @@ import ShadowMode from "./ShadowMode.js";
  * @alias Globe
  * @constructor
  *
- * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] Determines the size and shape of the
+ * @param {Ellipsoid} [ellipsoid=Ellipsoid.default] Determines the size and shape of the
  * globe.
  */
 function Globe(ellipsoid) {
-  ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
+  ellipsoid = defaultValue(ellipsoid, Ellipsoid.default);
   const terrainProvider = new EllipsoidTerrainProvider({
     ellipsoid: ellipsoid,
   });
@@ -250,18 +251,19 @@ function Globe(ellipsoid) {
    * when <code>enableLighting</code> or <code>showGroundAtmosphere</code> is <code>true</code>.
    *
    * @type {number}
-   * @default 10000000.0
+   * @default 1/2 * pi * ellipsoid.minimumRadius
    */
-  this.lightingFadeOutDistance = 1.0e7;
+  this.lightingFadeOutDistance =
+    CesiumMath.PI_OVER_TWO * ellipsoid.minimumRadius;
 
   /**
    * The distance where lighting resumes. This only takes effect
    * when <code>enableLighting</code> or <code>showGroundAtmosphere</code> is <code>true</code>.
    *
    * @type {number}
-   * @default 20000000.0
+   * @default pi * ellipsoid.minimumRadius
    */
-  this.lightingFadeInDistance = 2.0e7;
+  this.lightingFadeInDistance = CesiumMath.PI * ellipsoid.minimumRadius;
 
   /**
    * The distance where the darkness of night from the ground atmosphere fades out to a lit ground atmosphere.
@@ -269,9 +271,9 @@ function Globe(ellipsoid) {
    * <code>dynamicAtmosphereLighting</code> are <code>true</code>.
    *
    * @type {number}
-   * @default 10000000.0
+   * @default 1/2 * pi * ellipsoid.minimumRadius
    */
-  this.nightFadeOutDistance = 1.0e7;
+  this.nightFadeOutDistance = CesiumMath.PI_OVER_TWO * ellipsoid.minimumRadius;
 
   /**
    * The distance where the darkness of night from the ground atmosphere fades in to an unlit ground atmosphere.
@@ -279,9 +281,10 @@ function Globe(ellipsoid) {
    * <code>dynamicAtmosphereLighting</code> are <code>true</code>.
    *
    * @type {number}
-   * @default 50000000.0
+   * @default 5/2 * pi * ellipsoid.minimumRadius
    */
-  this.nightFadeInDistance = 5.0e7;
+  this.nightFadeInDistance =
+    5.0 * CesiumMath.PI_OVER_TWO * ellipsoid.minimumRadius;
 
   /**
    * True if an animated wave effect should be shown in areas of the globe

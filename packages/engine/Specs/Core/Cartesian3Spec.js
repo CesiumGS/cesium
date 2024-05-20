@@ -1619,4 +1619,6 @@ describe("Core/Cartesian3", function () {
     [1, 2, 3, 4, 5, 6],
     3
   );
+
+  // TODO: ellipsoids default ellipsoid
 });

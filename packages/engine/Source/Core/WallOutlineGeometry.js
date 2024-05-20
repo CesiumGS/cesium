@@ -30,7 +30,7 @@ const scratchCartesian3Position2 = new Cartesian3();
  *        wall at <code>positions</code>. If undefined, the height of each position in used.
  * @param {number[]} [options.minimumHeights] An array parallel to <code>positions</code> that give the minimum height of the
  *        wall at <code>positions</code>. If undefined, the height at each position is 0.0.
- * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid for coordinate manipulation
+ * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.default] The ellipsoid for coordinate manipulation
  *
  * @exception {DeveloperError} positions length must be greater than or equal to 2.
  * @exception {DeveloperError} positions and maximumHeights must have the same length.
@@ -85,7 +85,7 @@ function WallOutlineGeometry(options) {
     options.granularity,
     CesiumMath.RADIANS_PER_DEGREE
   );
-  const ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
+  const ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.default);
 
   this._positions = wallPositions;
   this._minimumHeights = minimumHeights;
@@ -255,7 +255,7 @@ WallOutlineGeometry.unpack = function (array, startingIndex, result) {
  *        wall at <code>positions</code>. If undefined, the height of each position in used.
  * @param {number} [options.minimumHeight] A constant that defines the minimum height of the
  *        wall at <code>positions</code>. If undefined, the height at each position is 0.0.
- * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid for coordinate manipulation
+ * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.default] The ellipsoid for coordinate manipulation
  * @returns {WallOutlineGeometry}
  *
  *

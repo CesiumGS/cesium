@@ -99,12 +99,12 @@ const scratchCartesian = new Cartesian3();
 /**
  * Computes the latitude based on an ellipsoid.
  *
- * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid on which to compute the longitude.
+ * @param {Ellipsoid} [ellipsoid=Ellipsoid.default] The ellipsoid on which to compute the longitude.
  * @returns {number} The latitude
  */
 Stereographic.prototype.getLatitude = function (ellipsoid) {
   if (!defined(ellipsoid)) {
-    ellipsoid = Ellipsoid.WGS84;
+    ellipsoid = Ellipsoid.default;
   }
 
   scratchCartographic.latitude = this.conformalLatitude;

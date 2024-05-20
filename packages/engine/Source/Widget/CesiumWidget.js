@@ -123,7 +123,7 @@ function configureCameraFrustum(widget) {
  * @param {Element|string} container The DOM element or ID that will contain the widget.
  * @param {object} [options] Object with the following properties:
  * @param {Clock} [options.clock=new Clock()] The clock to use to control current time.
- * @param {Ellipsoid} [options.ellipsoid = Ellipsoid.WGS84] The default ellipsoid.
+ * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.default] The default ellipsoid.
  * @param {ImageryLayer|false} [options.baseLayer=ImageryLayer.fromWorldImagery()] The bottommost imagery layer applied to the globe. If set to <code>false</code>, no imagery provider will be added.
  * @param {TerrainProvider} [options.terrainProvider=new EllipsoidTerrainProvider(options.ellipsoid)] The terrain provider.
  * @param {Terrain} [options.terrain] A terrain object which handles asynchronous terrain provider. Can only specify if options.terrainProvider is undefined.
@@ -275,7 +275,7 @@ function CesiumWidget(container, options) {
   configureCanvasSize(this);
 
   try {
-    const ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
+    const ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.default);
 
     const scene = new Scene({
       canvas: canvas,
@@ -313,7 +313,7 @@ function CesiumWidget(container, options) {
     }
 
     let skyBox = options.skyBox;
-    if (!defined(skyBox)) {
+    if (!defined(skyBox) && Ellipsoid.WGS84.equals(ellipsoid)) {
       skyBox = new SkyBox({
         sources: {
           positiveX: getDefaultSkyBoxUrl("px"),
@@ -328,7 +328,10 @@ function CesiumWidget(container, options) {
     if (skyBox !== false) {
       scene.skyBox = skyBox;
       scene.sun = new Sun();
-      scene.moon = new Moon();
+
+      if (Ellipsoid.WGS84.equals(ellipsoid)) {
+        scene.moon = new Moon();
+      }
     }
 
     // Blue sky, and the glow around the Earth's limb.

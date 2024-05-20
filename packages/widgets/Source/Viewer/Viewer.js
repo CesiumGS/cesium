@@ -314,7 +314,7 @@ function enableVRUI(viewer, enabled) {
  * @property {ProviderViewModel} [selectedTerrainProviderViewModel] The view model for the current base terrain layer, if not supplied the first available base layer is used.  This value is only valid if `baseLayerPicker` is set to true.
  * @property {ProviderViewModel[]} [terrainProviderViewModels=createDefaultTerrainProviderViewModels()] The array of ProviderViewModels to be selectable from the BaseLayerPicker.  This value is only valid if `baseLayerPicker` is set to true.
  * @property {ImageryLayer|false} [baseLayer=ImageryLayer.fromWorldImagery()] The bottommost imagery layer applied to the globe. If set to <code>false</code>, no imagery provider will be added. This value is only valid if `baseLayerPicker` is set to false.
- *  * @param {Ellipsoid} [options.ellipsoid = Ellipsoid.WGS84] The default ellipsoid.
+ * @property {Ellipsoid} [ellipsoid = Ellipsoid.default] The default ellipsoid.
  * @property {TerrainProvider} [terrainProvider=new EllipsoidTerrainProvider()] The terrain provider to use
  * @property {Terrain} [terrain] A terrain object which handles asynchronous terrain provider. Can only specify if options.terrainProvider is undefined.
  * @property {SkyBox|false} [skyBox] The skybox used to render the stars.  When <code>undefined</code>, the default stars are used. If set to <code>false</code>, no skyBox, Sun, or Moon will be added.
@@ -1301,6 +1301,7 @@ Object.defineProperties(Viewer.prototype, {
    * @memberof Viewer.prototype
    *
    * @type {Ellipsoid}
+   * @default Ellipsoid.default
    * @readonly
    */
   ellipsoid: {

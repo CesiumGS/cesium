@@ -311,7 +311,7 @@ const fromRectangle3DScratch = [];
  * on the ellipsoid and contained in the rectangle. It may not be accurate for all rectangles on all types of ellipsoids.
  *
  * @param {Rectangle} [rectangle] The valid rectangle used to create a bounding sphere.
- * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid used to determine positions of the rectangle.
+ * @param {Ellipsoid} [ellipsoid=Ellipsoid.default] The ellipsoid used to determine positions of the rectangle.
  * @param {number} [surfaceHeight=0.0] The height above the surface of the ellipsoid.
  * @param {BoundingSphere} [result] The object onto which to store the result.
  * @returns {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
@@ -322,7 +322,7 @@ BoundingSphere.fromRectangle3D = function (
   surfaceHeight,
   result
 ) {
-  ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
+  ellipsoid = defaultValue(ellipsoid, Ellipsoid.default);
   surfaceHeight = defaultValue(surfaceHeight, 0.0);
 
   if (!defined(result)) {

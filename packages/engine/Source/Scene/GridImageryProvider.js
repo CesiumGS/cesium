@@ -14,9 +14,9 @@ const defaultBackgroundColor = new Color(0.0, 0.5, 0.0, 0.2);
  * Initialization options for the GridImageryProvider constructor
  *
  * @property {TilingScheme} [tilingScheme=new GeographicTilingScheme()] The tiling scheme for which to draw tiles.
- * @property {Ellipsoid} [ellipsoid] The ellipsoid.  If the tilingScheme is specified,
+ * @property {Ellipsoid} [ellipsoid=Ellipsoid.default] The ellipsoid.  If the tilingScheme is specified,
  *                    this parameter is ignored and the tiling scheme's ellipsoid is used instead. If neither
- *                    parameter is specified, the WGS84 ellipsoid is used.
+ *                    parameter is specified, the default ellipsoid is used.
  * @property {number} [cells=8] The number of grids cells.
  * @property {Color} [color=Color(1.0, 1.0, 1.0, 0.4)] The color to draw grid lines.
  * @property {Color} [glowColor=Color(0.0, 1.0, 0.0, 0.05)] The color to draw glow for grid lines.

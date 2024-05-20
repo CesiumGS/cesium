@@ -2966,7 +2966,7 @@ ScreenSpaceCameraController.prototype.update = function () {
     this._ellipsoid = Ellipsoid.UNIT_SPHERE;
   } else {
     this._globe = globe;
-    this._ellipsoid = scene.ellipsoid;
+    this._ellipsoid = defaultValue(scene.ellipsoid, Ellipsoid.default);
   }
 
   const { verticalExaggeration, verticalExaggerationRelativeHeight } = scene;

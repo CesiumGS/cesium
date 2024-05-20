@@ -166,7 +166,7 @@ function Scene(options) {
   this._context = context;
   this._computeEngine = new ComputeEngine(context);
 
-  this._ellipsoid = options.ellipsoid; // TODO: Ellipsoids does this need to be defined?
+  this._ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.default);
   this._globe = undefined;
   this._globeTranslucencyState = new GlobeTranslucencyState();
   this._primitives = new PrimitiveCollection();

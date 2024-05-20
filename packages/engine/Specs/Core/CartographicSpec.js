@@ -215,4 +215,6 @@ describe("Core/Cartographic", function () {
   it("clone returns undefined without cartographic parameter", function () {
     expect(Cartographic.clone(undefined)).toBeUndefined();
   });
+
+  // TODO: ellipsoids default ellipsoid
 });

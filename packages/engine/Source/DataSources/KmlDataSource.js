@@ -3545,7 +3545,7 @@ function load(dataSource, entityCollection, data, options) {
  *
  * @property {string} [sourceUri] Overrides the url to use for resolving relative links and other KML network features.
  * @property {boolean} [clampToGround=false] true if we want the geometry features (Polygons, LineStrings and LinearRings) clamped to the ground.
- * @property {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The global ellipsoid used for geographical calculations.
+ * @property {Ellipsoid} [ellipsoid=Ellipsoid.default] The global ellipsoid used for geographical calculations.
  * @property {Element|string} [screenOverlayContainer] A container for ScreenOverlay images.
  */
 
@@ -3560,7 +3560,7 @@ function load(dataSource, entityCollection, data, options) {
  *
  * @property {string} [sourceUri] Overrides the url to use for resolving relative links and other KML network features.
  * @property {boolean} [clampToGround=false] true if we want the geometry features (Polygons, LineStrings and LinearRings) clamped to the ground.
- * @property {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The global ellipsoid used for geographical calculations.
+ * @property {Ellipsoid} [ellipsoid=Ellipsoid.default] The global ellipsoid used for geographical calculations.
  * @property {Element|string} [screenOverlayContainer] A container for ScreenOverlay images.
 
 */
@@ -3647,7 +3647,7 @@ function KmlDataSource(options) {
       : Rectangle.clone(Rectangle.MAX_VALUE),
   };
 
-  this._ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
+  this._ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.default);
 
   // User specified credit
   let credit = options.credit;
@@ -4204,7 +4204,7 @@ KmlDataSource.prototype.update = function (time) {
         const href = networkLink.href.clone();
 
         href.setQueryParameters(networkLink.cookie);
-        const ellipsoid = defaultValue(that._ellipsoid, Ellipsoid.WGS84);
+        const ellipsoid = defaultValue(that._ellipsoid, Ellipsoid.default);
         processNetworkLinkQueryString(
           href,
           that.camera,

@@ -279,7 +279,7 @@ function convertCartographicRadiansToCartesian(cartographicRadians) {
     scratchCartographic.longitude = cartographicRadians[0];
     scratchCartographic.latitude = cartographicRadians[1];
     scratchCartographic.height = cartographicRadians[2];
-    Ellipsoid.WGS84.cartographicToCartesian(
+    Ellipsoid.default.cartographicToCartesian(
       scratchCartographic,
       scratchCartesian
     );
@@ -293,7 +293,7 @@ function convertCartographicRadiansToCartesian(cartographicRadians) {
     scratchCartographic.longitude = cartographicRadians[i + 1];
     scratchCartographic.latitude = cartographicRadians[i + 2];
     scratchCartographic.height = cartographicRadians[i + 3];
-    Ellipsoid.WGS84.cartographicToCartesian(
+    Ellipsoid.default.cartographicToCartesian(
       scratchCartographic,
       scratchCartesian
     );
@@ -313,7 +313,7 @@ function convertCartographicDegreesToCartesian(cartographicDegrees) {
     );
     scratchCartographic.latitude = CesiumMath.toRadians(cartographicDegrees[1]);
     scratchCartographic.height = cartographicDegrees[2];
-    Ellipsoid.WGS84.cartographicToCartesian(
+    Ellipsoid.default.cartographicToCartesian(
       scratchCartographic,
       scratchCartesian
     );
@@ -331,7 +331,7 @@ function convertCartographicDegreesToCartesian(cartographicDegrees) {
       cartographicDegrees[i + 2]
     );
     scratchCartographic.height = cartographicDegrees[i + 3];
-    Ellipsoid.WGS84.cartographicToCartesian(
+    Ellipsoid.default.cartographicToCartesian(
       scratchCartographic,
       scratchCartesian
     );
@@ -1828,12 +1828,12 @@ function processPositionArrayPacketData(
     } else if (defined(packetData.cartographicRadians)) {
       packetData.array = Cartesian3.fromRadiansArrayHeights(
         packetData.cartographicRadians,
-        Ellipsoid.WGS84
+        Ellipsoid.default
       );
     } else if (defined(packetData.cartographicDegrees)) {
       packetData.array = Cartesian3.fromDegreesArrayHeights(
         packetData.cartographicDegrees,
-        Ellipsoid.WGS84
+        Ellipsoid.default
       );
     }
 
@@ -1885,11 +1885,11 @@ function unpackCartesianArray(array) {
 }
 
 function unpackCartographicRadiansArray(array) {
-  return Cartesian3.fromRadiansArrayHeights(array, Ellipsoid.WGS84);
+  return Cartesian3.fromRadiansArrayHeights(array, Ellipsoid.default);
 }
 
 function unpackCartographicDegreesArray(array) {
-  return Cartesian3.fromDegreesArrayHeights(array, Ellipsoid.WGS84);
+  return Cartesian3.fromDegreesArrayHeights(array, Ellipsoid.default);
 }
 
 function processPositionArrayOfArraysPacketData(

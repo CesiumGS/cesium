@@ -585,7 +585,7 @@ function createGeometryFromPositionsExtruded(
  * @param {number} [options.extrudedHeight] The distance in meters between the polygon's extruded face and the ellipsoid surface.
  * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
  * @param {number} [options.stRotation=0.0] The rotation of the texture coordinates, in radians. A positive rotation is counter-clockwise.
- * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference.
+ * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.default] The ellipsoid to be used as a reference.
  * @param {number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
  * @param {boolean} [options.perPositionHeight=false] Use the height of options.positions for each position instead of using options.height to determine the height.
  * @param {boolean} [options.closeTop=true] When false, leaves off the top of an extruded polygon open.
@@ -691,7 +691,7 @@ function PolygonGeometry(options) {
 
   const polygonHierarchy = options.polygonHierarchy;
   const vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
-  const ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
+  const ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.default);
   const granularity = defaultValue(
     options.granularity,
     CesiumMath.RADIANS_PER_DEGREE
@@ -759,7 +759,7 @@ function PolygonGeometry(options) {
  * @param {number} [options.extrudedHeight] The height of the polygon extrusion.
  * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
  * @param {number} [options.stRotation=0.0] The rotation of the texture coordinates, in radians. A positive rotation is counter-clockwise.
- * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference.
+ * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.default] The ellipsoid to be used as a reference.
  * @param {number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
  * @param {boolean} [options.perPositionHeight=false] Use the height of options.positions for each position instead of using options.height to determine the height.
  * @param {boolean} [options.closeTop=true] When false, leaves off the top of an extruded polygon open.
@@ -1040,7 +1040,7 @@ const polygon = {
  * Computes a rectangle which encloses the polygon defined by the list of positions, including cases over the international date line and the poles.
  *
  * @param {Cartesian3[]} positions A linear ring defining the outer boundary of the polygon.
- * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference.
+ * @param {Ellipsoid} [ellipsoid=Ellipsoid.default] The ellipsoid to be used as a reference.
  * @param {ArcType} [arcType=ArcType.GEODESIC] The type of line the polygon edges must follow. Valid options are {@link ArcType.GEODESIC} and {@link ArcType.RHUMB}.
  * @param {Rectangle} [result] An object in which to store the result.
  *

@@ -613,7 +613,7 @@ function computeSimonEarth(date, result) {
 }
 
 // Values for the <code>axesTransformation</code> needed for the rotation were found using the STK Components
-// GreographicTransformer on the position of the sun center of mass point and the earth J2000 frame.
+// GeographicTransformer on the position of the sun center of mass point and the earth J2000 frame.
 
 const axesTransformation = new Matrix3(
   1.0000000000000002,
@@ -679,4 +679,37 @@ Simon1994PlanetaryPositions.computeMoonPositionInEarthInertialFrame = function (
 
   return result;
 };
+
+/**
+ * Computes the position of the Sun in the Moon-centered inertial frame
+ *
+ * @param {JulianDate} [julianDate] The time at which to compute the Sun's position, if not provided the current system time is used.
+ * @param {Cartesian3} [result] The object onto which to store the result.
+ * @returns {Cartesian3} Calculated sun position
+ */
+Simon1994PlanetaryPositions.computeSunPositionInMoonInertialFrame = function (
+  julianDate,
+  result
+) {
+  if (!defined(julianDate)) {
+    julianDate = JulianDate.now();
+  }
+
+  if (!defined(result)) {
+    result = new Cartesian3();
+  }
+
+  //first forward transformation
+  translation = computeSimonEarthMoonBarycenter(julianDate, translation);
+  result = Cartesian3.negate(translation, result);
+
+  //second forward transformation
+  computeSimonMoon(julianDate, translation);
+
+  Cartesian3.subtract(result, translation, result);
+  Matrix3.multiplyByVector(axesTransformation, result, result);
+
+  return result;
+};
+
 export default Simon1994PlanetaryPositions;

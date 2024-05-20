@@ -121,7 +121,7 @@ function GroundPolylineGeometry(options) {
    */
   this.arcType = defaultValue(options.arcType, ArcType.GEODESIC);
 
-  this._ellipsoid = Ellipsoid.WGS84;
+  this._ellipsoid = Ellipsoid.default;
 
   // MapProjections can't be packed, so store the index to a known MapProjection.
   this._projectionIndex = 0;

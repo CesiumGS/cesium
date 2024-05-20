@@ -824,4 +824,7 @@ describe("Core/Ellipsoid", function () {
     Ellipsoid.WGS84.radii.y,
     Ellipsoid.WGS84.radii.z,
   ]);
+
+  // TODO: ellipsoids default
+  // TODO: Ensure API defaults are adjusted, ie. atmopshere moon, etc...
 });

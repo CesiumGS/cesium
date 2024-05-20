@@ -1173,7 +1173,7 @@ Object.defineProperties(UniformState.prototype, {
    */
   ellipsoid: {
     get: function () {
-      return defaultValue(this._ellipsoid, Ellipsoid.WGS84);
+      return defaultValue(this._ellipsoid, Ellipsoid.default);
     },
   },
 });
@@ -1319,7 +1319,7 @@ function setSunAndMoonDirections(uniformState, frameState) {
     );
   }
 
-  let position = Simon1994PlanetaryPositions.computeSunPositionInEarthInertialFrame(
+  let position = Simon1994PlanetaryPositions.computeSunPositionInMoonInertialFrame(
     frameState.time,
     uniformState._sunPositionWC
   );

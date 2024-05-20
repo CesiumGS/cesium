@@ -15,7 +15,7 @@ import VertexFormat from "./VertexFormat.js";
  * @param {object} options Object with the following properties:
  * @param {Cartesian3} options.center The circle's center point in the fixed frame.
  * @param {number} options.radius The radius in meters.
- * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid the circle will be on.
+ * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.default] The ellipsoid the circle will be on.
  * @param {number} [options.height=0.0] The distance in meters between the circle and the ellipsoid surface.
  * @param {number} [options.granularity=0.02] The angular distance between points on the circle in radians.
  * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.

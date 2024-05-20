@@ -115,7 +115,7 @@ SceneTransforms.wgs84WithEyeOffsetToWindowCoordinates = function (
 
   // Transform for 3D, 2D, or Columbus view
   const frameState = scene.frameState;
-  const actualPosition = SceneTransforms.computeActualWgs84Position(
+  const actualPosition = SceneTransforms.computeActualEllipsoidPosition(
     frameState,
     position,
     actualPositionScratch
@@ -302,7 +302,7 @@ const positionInCartographic = new Cartographic();
 /**
  * @private
  */
-SceneTransforms.computeActualWgs84Position = function (
+SceneTransforms.computeActualEllipsoidPosition = function (
   frameState,
   position,
   result

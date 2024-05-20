@@ -69,7 +69,7 @@ TerrainCache.prototype.tidy = function () {
  *
  * Initialization options for GoogleEarthEnterpriseTerrainProvider constructor
  *
- * @property {Ellipsoid} [ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
+ * @property {Ellipsoid} [ellipsoid=Ellipsoid.default] The ellipsoid.  If not specified, the default ellipsoid is used.
  * @property {Credit|string} [credit] A credit for the data source, which is displayed on the canvas.
  */
 
