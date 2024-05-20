@@ -30,29 +30,32 @@ import ResourceLoader from "./ResourceLoader.js";
 import SupportedImageFormats from "./SupportedImageFormats.js";
 import VertexAttributeSemantic from "./VertexAttributeSemantic.js";
 
-const Attribute = ModelComponents.Attribute;
-const Indices = ModelComponents.Indices;
-const FeatureIdAttribute = ModelComponents.FeatureIdAttribute;
-const FeatureIdTexture = ModelComponents.FeatureIdTexture;
-const FeatureIdImplicitRange = ModelComponents.FeatureIdImplicitRange;
-const MorphTarget = ModelComponents.MorphTarget;
-const Primitive = ModelComponents.Primitive;
-const Instances = ModelComponents.Instances;
-const Skin = ModelComponents.Skin;
-const Node = ModelComponents.Node;
-const AnimatedPropertyType = ModelComponents.AnimatedPropertyType;
-const AnimationSampler = ModelComponents.AnimationSampler;
-const AnimationTarget = ModelComponents.AnimationTarget;
-const AnimationChannel = ModelComponents.AnimationChannel;
-const Animation = ModelComponents.Animation;
-const ArticulationStage = ModelComponents.ArticulationStage;
-const Articulation = ModelComponents.Articulation;
-const Asset = ModelComponents.Asset;
-const Scene = ModelComponents.Scene;
-const Components = ModelComponents.Components;
-const MetallicRoughness = ModelComponents.MetallicRoughness;
-const SpecularGlossiness = ModelComponents.SpecularGlossiness;
-const Material = ModelComponents.Material;
+const {
+  Attribute,
+  Indices,
+  FeatureIdAttribute,
+  FeatureIdTexture,
+  FeatureIdImplicitRange,
+  MorphTarget,
+  Primitive,
+  Instances,
+  Skin,
+  Node,
+  AnimatedPropertyType,
+  AnimationSampler,
+  AnimationTarget,
+  AnimationChannel,
+  Animation,
+  ArticulationStage,
+  Articulation,
+  Asset,
+  Scene,
+  Components,
+  MetallicRoughness,
+  SpecularGlossiness,
+  Specular,
+  Material,
+} = ModelComponents;
 
 /**
  * States of the glTF loading process. These states also apply to
@@ -188,42 +191,28 @@ const GltfLoaderState = {
  */
 function GltfLoader(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  const gltfResource = options.gltfResource;
-  let baseResource = options.baseResource;
-  const typedArray = options.typedArray;
-  const releaseGltfJson = defaultValue(options.releaseGltfJson, false);
-  const asynchronous = defaultValue(options.asynchronous, true);
-  const incrementallyLoadTextures = defaultValue(
-    options.incrementallyLoadTextures,
-    true
-  );
-  const upAxis = defaultValue(options.upAxis, Axis.Y);
-  const forwardAxis = defaultValue(options.forwardAxis, Axis.Z);
-  const loadAttributesAsTypedArray = defaultValue(
-    options.loadAttributesAsTypedArray,
-    false
-  );
-  const loadAttributesFor2D = defaultValue(options.loadAttributesFor2D, false);
-  const enablePick = defaultValue(options.enablePick);
-  const loadIndicesForWireframe = defaultValue(
-    options.loadIndicesForWireframe,
-    false
-  );
-  const loadPrimitiveOutline = defaultValue(options.loadPrimitiveOutline, true);
-  const loadForClassification = defaultValue(
-    options.loadForClassification,
-    false
-  );
-  const renameBatchIdSemantic = defaultValue(
-    options.renameBatchIdSemantic,
-    false
-  );
+  const {
+    gltfResource,
+    typedArray,
+    releaseGltfJson = false,
+    asynchronous = true,
+    incrementallyLoadTextures = true,
+    upAxis = Axis.Y,
+    forwardAxis = Axis.Z,
+    loadAttributesAsTypedArray = false,
+    loadAttributesFor2D = false,
+    enablePick = false,
+    loadIndicesForWireframe = false,
+    loadPrimitiveOutline = true,
+    loadForClassification = false,
+    renameBatchIdSemantic = false,
+  } = options;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.gltfResource", gltfResource);
   //>>includeEnd('debug');
 
-  baseResource = defined(baseResource) ? baseResource : gltfResource.clone();
+  const { baseResource = gltfResource.clone() } = options;
 
   this._gltfJson = options.gltfJson;
   this._gltfResource = gltfResource;
@@ -272,6 +261,8 @@ function GltfLoader(options) {
   this._loadResourcesPromise = undefined;
   this._resourcesLoaded = false;
   this._texturesLoaded = false;
+
+  this._supportedImageFormats = undefined;
 
   // In some cases where geometry post-processing is needed (like generating
   // outlines) new attributes are added that may have GPU resources attached.
@@ -408,20 +399,17 @@ async function loadResources(loader, frameState) {
     await FeatureDetection.supportsWebP.initialize();
   }
 
-  const supportedImageFormats = new SupportedImageFormats({
+  loader._supportedImageFormats = new SupportedImageFormats({
     webp: FeatureDetection.supportsWebP(),
     basis: frameState.context.supportsBasis,
   });
 
-  // Parse the glTF which populates the loaders arrays. Loading promises will be created, and will
-  // resolve once the loaders are ready (i.e. all external resources
-  // have been fetched and all GPU resources have been created). Loaders that
-  // create GPU resources need to be processed every frame until they become
+  // Loaders that create GPU resources need to be processed every frame until they become
   // ready since the JobScheduler is not able to execute all jobs in a single
-  // frame. Any promise failures are collected, and will be handled synchronously in process(). Also note that it's fine to call process before a loader is ready
-  // to process or after it has failed; nothing will happen.
-  const gltf = loader.gltfJson;
-  const promise = parse(loader, gltf, supportedImageFormats, frameState);
+  // frame. Any promise failures are collected, and will be handled synchronously in process().
+  // Also note that it's fine to call process before a loader is ready to process or
+  // after it has failed; nothing will happen.
+  const promise = parse(loader, frameState);
 
   // All resource loaders have been created, so we can begin processing
   loader._state = GltfLoaderState.PROCESSING;
@@ -460,11 +448,9 @@ function handleError(gltfLoader, error) {
 }
 
 function processLoaders(loader, frameState) {
-  let i;
   let ready = true;
   const geometryLoaders = loader._geometryLoaders;
-  const geometryLoadersLength = geometryLoaders.length;
-  for (i = 0; i < geometryLoadersLength; ++i) {
+  for (let i = 0; i < geometryLoaders.length; ++i) {
     const geometryReady = geometryLoaders[i].process(frameState);
     if (geometryReady && defined(loader._geometryCallbacks[i])) {
       loader._geometryCallbacks[i]();
@@ -493,8 +479,7 @@ function postProcessGeometry(loader, context) {
   // Apply post-processing steps on geometry such as
   // updating attributes for rendering outlines.
   const loadPlans = loader._primitiveLoadPlans;
-  const length = loadPlans.length;
-  for (let i = 0; i < length; i++) {
+  for (let i = 0; i < loadPlans.length; i++) {
     const loadPlan = loadPlans[i];
     loadPlan.postProcess(context);
 
@@ -520,8 +505,7 @@ function gatherPostProcessBuffers(loader, primitiveLoadPlan) {
   // to do post-processing, all the attributes are loaded as typed arrays
   // so if a buffer exists, it was newly generated
   const attributes = primitive.attributes;
-  const length = attributes.length;
-  for (let i = 0; i < length; i++) {
+  for (let i = 0; i < attributes.length; i++) {
     const attribute = attributes[i];
     if (defined(attribute.buffer)) {
       buffers.push(attribute.buffer);
@@ -583,11 +567,9 @@ GltfLoader.prototype._processTextures = function (frameState) {
     return false;
   }
 
-  let i;
   let ready = true;
   const textureLoaders = this._textureLoaders;
-  const textureLoadersLength = textureLoaders.length;
-  for (i = 0; i < textureLoadersLength; ++i) {
+  for (let i = 0; i < textureLoaders.length; ++i) {
     const textureReady = textureLoaders[i].process(frameState);
     if (textureReady && defined(this._textureCallbacks[i])) {
       this._textureCallbacks[i]();
@@ -676,7 +658,6 @@ GltfLoader.prototype.process = function (frameState) {
 
 function getVertexBufferLoader(
   loader,
-  gltf,
   accessorId,
   semantic,
   draco,
@@ -684,6 +665,7 @@ function getVertexBufferLoader(
   loadTypedArray,
   frameState
 ) {
+  const gltf = loader.gltfJson;
   const accessor = gltf.accessors[accessorId];
   const bufferViewId = accessor.bufferView;
 
@@ -706,7 +688,6 @@ function getVertexBufferLoader(
 
 function getIndexBufferLoader(
   loader,
-  gltf,
   accessorId,
   draco,
   loadBuffer,
@@ -714,7 +695,7 @@ function getIndexBufferLoader(
   frameState
 ) {
   const indexBufferLoader = ResourceCache.getIndexBufferLoader({
-    gltf: gltf,
+    gltf: loader.gltfJson,
     accessorId: accessorId,
     gltfResource: loader._gltfResource,
     baseResource: loader._baseResource,
@@ -728,9 +709,9 @@ function getIndexBufferLoader(
   return indexBufferLoader;
 }
 
-function getBufferViewLoader(loader, gltf, bufferViewId) {
+function getBufferViewLoader(loader, bufferViewId) {
   const bufferViewLoader = ResourceCache.getBufferViewLoader({
-    gltf: gltf,
+    gltf: loader.gltfJson,
     bufferViewId: bufferViewId,
     gltfResource: loader._gltfResource,
     baseResource: loader._baseResource,
@@ -828,35 +809,37 @@ function loadAccessorValues(accessor, typedArray, values, useQuaternion) {
 async function loadAccessorBufferView(
   loader,
   bufferViewLoader,
-  gltf,
   accessor,
   useQuaternion,
   values
 ) {
+  // Save a link to the gltfJson, which is removed after bufferViewLoader.load()
+  const { gltfJson } = loader;
+
   await bufferViewLoader.load();
   if (loader.isDestroyed()) {
     return;
   }
 
-  const bufferViewTypedArray = bufferViewLoader.typedArray;
-  const typedArray = getPackedTypedArray(gltf, accessor, bufferViewTypedArray);
+  const typedArray = getPackedTypedArray(
+    gltfJson,
+    accessor,
+    bufferViewLoader.typedArray
+  );
 
   useQuaternion = defaultValue(useQuaternion, false);
   loadAccessorValues(accessor, typedArray, values, useQuaternion);
 }
 
-function loadAccessor(loader, gltf, accessorId, useQuaternion) {
-  const accessor = gltf.accessors[accessorId];
-  const accessorCount = accessor.count;
-  const values = new Array(accessorCount);
+function loadAccessor(loader, accessor, useQuaternion) {
+  const values = new Array(accessor.count);
 
   const bufferViewId = accessor.bufferView;
   if (defined(bufferViewId)) {
-    const bufferViewLoader = getBufferViewLoader(loader, gltf, bufferViewId);
+    const bufferViewLoader = getBufferViewLoader(loader, bufferViewId);
     const promise = loadAccessorBufferView(
       loader,
       bufferViewLoader,
-      gltf,
       accessor,
       useQuaternion,
       values
@@ -1145,7 +1128,6 @@ function finalizeAttribute(
 
 function loadAttribute(
   loader,
-  gltf,
   accessorId,
   semanticInfo,
   draco,
@@ -1153,6 +1135,7 @@ function loadAttribute(
   loadTypedArray,
   frameState
 ) {
+  const gltf = loader.gltfJson;
   const accessor = gltf.accessors[accessorId];
   const bufferViewId = accessor.bufferView;
 
@@ -1179,7 +1162,6 @@ function loadAttribute(
 
   const vertexBufferLoader = getVertexBufferLoader(
     loader,
-    gltf,
     accessorId,
     gltfSemantic,
     draco,
@@ -1224,7 +1206,6 @@ function loadAttribute(
 
 function loadVertexAttribute(
   loader,
-  gltf,
   accessorId,
   semanticInfo,
   draco,
@@ -1271,7 +1252,6 @@ function loadVertexAttribute(
 
   const attribute = loadAttribute(
     loader,
-    gltf,
     accessorId,
     semanticInfo,
     draco,
@@ -1289,17 +1269,17 @@ function loadVertexAttribute(
 
 function loadInstancedAttribute(
   loader,
-  gltf,
   accessorId,
   attributes,
   gltfSemantic,
   frameState
 ) {
+  const accessors = loader.gltfJson.accessors;
   const hasRotation = defined(attributes.ROTATION);
   const hasTranslationMinMax =
     defined(attributes.TRANSLATION) &&
-    defined(gltf.accessors[attributes.TRANSLATION].min) &&
-    defined(gltf.accessors[attributes.TRANSLATION].max);
+    defined(accessors[attributes.TRANSLATION].min) &&
+    defined(accessors[attributes.TRANSLATION].max);
 
   const semanticInfo = getSemanticInfo(
     loader,
@@ -1344,7 +1324,6 @@ function loadInstancedAttribute(
   // Don't pass in draco object since instanced attributes can't be draco compressed
   return loadAttribute(
     loader,
-    gltf,
     accessorId,
     semanticInfo,
     undefined,
@@ -1356,14 +1335,13 @@ function loadInstancedAttribute(
 
 function loadIndices(
   loader,
-  gltf,
   accessorId,
   draco,
   hasFeatureIds,
   needsPostProcessing,
   frameState
 ) {
-  const accessor = gltf.accessors[accessorId];
+  const accessor = loader.gltfJson.accessors[accessorId];
   const bufferViewId = accessor.bufferView;
 
   if (!defined(draco) && !defined(bufferViewId)) {
@@ -1400,7 +1378,6 @@ function loadIndices(
 
   const indexBufferLoader = getIndexBufferLoader(
     loader,
-    gltf,
     accessorId,
     draco,
     loadBuffer,
@@ -1428,18 +1405,12 @@ function loadIndices(
   return indicesPlan;
 }
 
-function loadTexture(
-  loader,
-  gltf,
-  textureInfo,
-  supportedImageFormats,
-  frameState,
-  samplerOverride
-) {
+function loadTexture(loader, textureInfo, frameState, samplerOverride) {
+  const gltf = loader.gltfJson;
   const imageId = GltfLoaderUtil.getImageIdFromTexture({
     gltf: gltf,
     textureId: textureInfo.index,
-    supportedImageFormats: supportedImageFormats,
+    supportedImageFormats: loader._supportedImageFormats,
   });
 
   if (!defined(imageId)) {
@@ -1451,7 +1422,7 @@ function loadTexture(
     textureInfo: textureInfo,
     gltfResource: loader._gltfResource,
     baseResource: loader._baseResource,
-    supportedImageFormats: supportedImageFormats,
+    supportedImageFormats: loader._supportedImageFormats,
     frameState: frameState,
     asynchronous: loader._asynchronous,
   });
@@ -1491,13 +1462,119 @@ function loadTexture(
   return textureReader;
 }
 
-function loadMaterial(
-  loader,
-  gltf,
-  gltfMaterial,
-  supportedImageFormats,
-  frameState
-) {
+/**
+ * Load textures and parse factors for the KHR_materials_pbrSpecularGlossiness extension
+ * @param {GltfLoader} loader
+ * @param {object} specularGlossinessInfo The contents of the KHR_materials_pbrSpecularGlossiness extension in the parsed glTF JSON
+ * @param {FrameState} frameState
+ * @returns {ModelComponents.SpecularGlossiness}
+ * @private
+ */
+function loadSpecularGlossiness(loader, specularGlossinessInfo, frameState) {
+  const {
+    diffuseTexture,
+    specularGlossinessTexture,
+    diffuseFactor,
+    specularFactor,
+    glossinessFactor,
+  } = specularGlossinessInfo;
+
+  const specularGlossiness = new SpecularGlossiness();
+  if (defined(diffuseTexture)) {
+    specularGlossiness.diffuseTexture = loadTexture(
+      loader,
+      diffuseTexture,
+      frameState
+    );
+  }
+  if (defined(specularGlossinessTexture)) {
+    specularGlossiness.specularGlossinessTexture = loadTexture(
+      loader,
+      specularGlossinessTexture,
+      frameState
+    );
+  }
+  specularGlossiness.diffuseFactor = fromArray(Cartesian4, diffuseFactor);
+  specularGlossiness.specularFactor = fromArray(Cartesian3, specularFactor);
+  specularGlossiness.glossinessFactor = glossinessFactor;
+
+  return specularGlossiness;
+}
+
+/**
+ * Load textures and parse factors for a metallic-roughness PBR model in a glTF material
+ * @param {GltfLoader} loader
+ * @param {object} metallicRoughnessInfo The contents of a pbrMetallicRoughness property in the parsed glTF JSON
+ * @param {FrameState} frameState
+ * @returns {ModelComponents.MetallicRoughness}
+ * @private
+ */
+function loadMetallicRoughness(loader, metallicRoughnessInfo, frameState) {
+  const {
+    baseColorTexture,
+    metallicRoughnessTexture,
+    baseColorFactor,
+    metallicFactor,
+    roughnessFactor,
+  } = metallicRoughnessInfo;
+
+  const metallicRoughness = new MetallicRoughness();
+  if (defined(baseColorTexture)) {
+    metallicRoughness.baseColorTexture = loadTexture(
+      loader,
+      baseColorTexture,
+      frameState
+    );
+  }
+  if (defined(metallicRoughnessTexture)) {
+    metallicRoughness.metallicRoughnessTexture = loadTexture(
+      loader,
+      metallicRoughnessTexture,
+      frameState
+    );
+  }
+  metallicRoughness.baseColorFactor = fromArray(Cartesian4, baseColorFactor);
+  metallicRoughness.metallicFactor = metallicFactor;
+  metallicRoughness.roughnessFactor = roughnessFactor;
+
+  return metallicRoughness;
+}
+
+function loadSpecular(loader, specularInfo, frameState) {
+  const {
+    specularFactor,
+    specularTexture,
+    specularColorFactor,
+    specularColorTexture,
+  } = specularInfo;
+
+  const specular = new Specular();
+  if (defined(specularTexture)) {
+    specular.specularTexture = loadTexture(loader, specularTexture, frameState);
+  }
+  if (defined(specularColorTexture)) {
+    specular.specularColorTexture = loadTexture(
+      loader,
+      specularColorTexture,
+      frameState
+    );
+  }
+  specular.specularFactor = specularFactor;
+  specular.specularColorFactor = fromArray(Cartesian3, specularColorFactor);
+
+  return specular;
+}
+
+/**
+ * Load textures and parse factors and flags for a glTF material
+ *
+ * @param {GltfLoader} loader
+ * @param {object} gltfMaterial An entry from the <code>.materials</code> array in the glTF JSON
+ * @param {FrameState} frameState
+ * @returns {ModelComponents.Material}
+ * @private
+ */
+function loadMaterial(loader, gltfMaterial, frameState) {
   const material = new Material();
 
   const extensions = defaultValue(
@@ -1505,82 +1582,35 @@ function loadMaterial(
     defaultValue.EMPTY_OBJECT
   );
   const pbrSpecularGlossiness = extensions.KHR_materials_pbrSpecularGlossiness;
+  const pbrSpecular = extensions.KHR_materials_specular;
   const pbrMetallicRoughness = gltfMaterial.pbrMetallicRoughness;
 
   material.unlit = defined(extensions.KHR_materials_unlit);
 
   if (defined(pbrSpecularGlossiness)) {
-    const specularGlossiness = new SpecularGlossiness();
-    material.specularGlossiness = specularGlossiness;
-
-    if (defined(pbrSpecularGlossiness.diffuseTexture)) {
-      specularGlossiness.diffuseTexture = loadTexture(
+    material.specularGlossiness = loadSpecularGlossiness(
+      loader,
+      pbrSpecularGlossiness,
+      frameState
+    );
+  } else {
+    if (defined(pbrMetallicRoughness)) {
+      material.metallicRoughness = loadMetallicRoughness(
         loader,
-        gltf,
-        pbrSpecularGlossiness.diffuseTexture,
-        supportedImageFormats,
+        pbrMetallicRoughness,
         frameState
       );
     }
-    if (defined(pbrSpecularGlossiness.specularGlossinessTexture)) {
-      if (defined(pbrSpecularGlossiness.specularGlossinessTexture)) {
-        specularGlossiness.specularGlossinessTexture = loadTexture(
-          loader,
-          gltf,
-          pbrSpecularGlossiness.specularGlossinessTexture,
-          supportedImageFormats,
-          frameState
-        );
-      }
+    if (defined(pbrSpecular)) {
+      material.specular = loadSpecular(loader, pbrSpecular, frameState);
     }
-    specularGlossiness.diffuseFactor = fromArray(
-      Cartesian4,
-      pbrSpecularGlossiness.diffuseFactor
-    );
-    specularGlossiness.specularFactor = fromArray(
-      Cartesian3,
-      pbrSpecularGlossiness.specularFactor
-    );
-    specularGlossiness.glossinessFactor =
-      pbrSpecularGlossiness.glossinessFactor;
-    material.pbrSpecularGlossiness = pbrSpecularGlossiness;
-  } else if (defined(pbrMetallicRoughness)) {
-    const metallicRoughness = new MetallicRoughness();
-
-    if (defined(pbrMetallicRoughness.baseColorTexture)) {
-      metallicRoughness.baseColorTexture = loadTexture(
-        loader,
-        gltf,
-        pbrMetallicRoughness.baseColorTexture,
-        supportedImageFormats,
-        frameState
-      );
-    }
-    if (defined(pbrMetallicRoughness.metallicRoughnessTexture)) {
-      metallicRoughness.metallicRoughnessTexture = loadTexture(
-        loader,
-        gltf,
-        pbrMetallicRoughness.metallicRoughnessTexture,
-        supportedImageFormats,
-        frameState
-      );
-    }
-    metallicRoughness.baseColorFactor = fromArray(
-      Cartesian4,
-      pbrMetallicRoughness.baseColorFactor
-    );
-    metallicRoughness.metallicFactor = pbrMetallicRoughness.metallicFactor;
-    metallicRoughness.roughnessFactor = pbrMetallicRoughness.roughnessFactor;
-    material.metallicRoughness = metallicRoughness;
   }
 
   // Top level textures
   if (defined(gltfMaterial.emissiveTexture)) {
     material.emissiveTexture = loadTexture(
       loader,
-      gltf,
       gltfMaterial.emissiveTexture,
-      supportedImageFormats,
       frameState
     );
   }
@@ -1588,18 +1618,14 @@ function loadMaterial(
   if (defined(gltfMaterial.normalTexture) && !loader._loadForClassification) {
     material.normalTexture = loadTexture(
       loader,
-      gltf,
       gltfMaterial.normalTexture,
-      supportedImageFormats,
       frameState
     );
   }
   if (defined(gltfMaterial.occlusionTexture)) {
     material.occlusionTexture = loadTexture(
       loader,
-      gltf,
       gltfMaterial.occlusionTexture,
-      supportedImageFormats,
       frameState
     );
   }
@@ -1679,9 +1705,7 @@ function loadFeatureIdImplicitRangeLegacy(
 // for EXT_mesh_features
 function loadFeatureIdTexture(
   loader,
-  gltf,
   gltfFeatureIdTexture,
-  supportedImageFormats,
   frameState,
   positionalLabel
 ) {
@@ -1696,9 +1720,7 @@ function loadFeatureIdTexture(
   const textureInfo = gltfFeatureIdTexture.texture;
   featureIdTexture.textureReader = loadTexture(
     loader,
-    gltf,
     textureInfo,
-    supportedImageFormats,
     frameState,
     Sampler.NEAREST // Feature ID textures require nearest sampling
   );
@@ -1720,10 +1742,8 @@ function loadFeatureIdTexture(
 // for backwards compatibility with EXT_feature_metadata
 function loadFeatureIdTextureLegacy(
   loader,
-  gltf,
   gltfFeatureIdTexture,
   featureTableId,
-  supportedImageFormats,
   frameState,
   featureCount,
   positionalLabel
@@ -1735,9 +1755,7 @@ function loadFeatureIdTextureLegacy(
   featureIdTexture.propertyTableId = featureTableId;
   featureIdTexture.textureReader = loadTexture(
     loader,
-    gltf,
     textureInfo,
-    supportedImageFormats,
     frameState,
     Sampler.NEAREST // Feature ID textures require nearest sampling
   );
@@ -1750,7 +1768,6 @@ function loadFeatureIdTextureLegacy(
 
 function loadMorphTarget(
   loader,
-  gltf,
   target,
   needsPostProcessing,
   primitiveLoadPlan,
@@ -1763,44 +1780,46 @@ function loadMorphTarget(
   const hasInstances = false;
 
   for (const semantic in target) {
-    if (target.hasOwnProperty(semantic)) {
-      const accessorId = target[semantic];
-
-      const semanticInfo = getSemanticInfo(
-        loader,
-        VertexAttributeSemantic,
-        semantic
-      );
-
-      const attributePlan = loadVertexAttribute(
-        loader,
-        gltf,
-        accessorId,
-        semanticInfo,
-        draco,
-        hasInstances,
-        needsPostProcessing,
-        frameState
-      );
-      morphTarget.attributes.push(attributePlan.attribute);
-
-      // The load plan doesn't need to distinguish morph target attributes from
-      // regular attributes
-      primitiveLoadPlan.attributePlans.push(attributePlan);
+    if (!target.hasOwnProperty(semantic)) {
+      continue;
     }
+    const accessorId = target[semantic];
+
+    const semanticInfo = getSemanticInfo(
+      loader,
+      VertexAttributeSemantic,
+      semantic
+    );
+
+    const attributePlan = loadVertexAttribute(
+      loader,
+      accessorId,
+      semanticInfo,
+      draco,
+      hasInstances,
+      needsPostProcessing,
+      frameState
+    );
+    morphTarget.attributes.push(attributePlan.attribute);
+
+    // The load plan doesn't need to distinguish morph target attributes from
+    // regular attributes
+    primitiveLoadPlan.attributePlans.push(attributePlan);
   }
 
   return morphTarget;
 }
 
-function loadPrimitive(
-  loader,
-  gltf,
-  gltfPrimitive,
-  hasInstances,
-  supportedImageFormats,
-  frameState
-) {
+/**
+ * Load resources associated with a mesh primitive for a glTF node
+ * @param {GltfLoader} loader
+ * @param {object} gltfPrimitive One of the primitives in a mesh
+ * @param {boolean} hasInstances True if the node using this mesh has instances
+ * @param {FrameState} frameState
+ * @returns {ModelComponents.Primitive}
+ * @private
+ */
+function loadPrimitive(loader, gltfPrimitive, hasInstances, frameState) {
   const primitive = new Primitive();
   const primitivePlan = new PrimitiveLoadPlan(primitive);
   loader._primitiveLoadPlans.push(primitivePlan);
@@ -1809,9 +1828,7 @@ function loadPrimitive(
   if (defined(materialId)) {
     primitive.material = loadMaterial(
       loader,
-      gltf,
-      gltf.materials[materialId],
-      supportedImageFormats,
+      loader.gltfJson.materials[materialId],
       frameState
     );
   }
@@ -1828,7 +1845,6 @@ function loadPrimitive(
     primitivePlan.needsOutlines = true;
     primitivePlan.outlineIndices = loadPrimitiveOutline(
       loader,
-      gltf,
       outlineExtension,
       primitivePlan
     );
@@ -1841,52 +1857,47 @@ function loadPrimitive(
   const attributes = gltfPrimitive.attributes;
   if (defined(attributes)) {
     for (const semantic in attributes) {
-      if (attributes.hasOwnProperty(semantic)) {
-        const accessorId = attributes[semantic];
-        const semanticInfo = getSemanticInfo(
-          loader,
-          VertexAttributeSemantic,
-          semantic
-        );
-
-        const modelSemantic = semanticInfo.modelSemantic;
-        if (
-          loadForClassification &&
-          !isClassificationAttribute(modelSemantic)
-        ) {
-          continue;
-        }
-
-        if (modelSemantic === VertexAttributeSemantic.FEATURE_ID) {
-          hasFeatureIds = true;
-        }
-
-        const attributePlan = loadVertexAttribute(
-          loader,
-          gltf,
-          accessorId,
-          semanticInfo,
-          draco,
-          hasInstances,
-          needsPostProcessing,
-          frameState
-        );
-
-        primitivePlan.attributePlans.push(attributePlan);
-        primitive.attributes.push(attributePlan.attribute);
+      if (!attributes.hasOwnProperty(semantic)) {
+        continue;
       }
+      const accessorId = attributes[semantic];
+      const semanticInfo = getSemanticInfo(
+        loader,
+        VertexAttributeSemantic,
+        semantic
+      );
+
+      const modelSemantic = semanticInfo.modelSemantic;
+      if (loadForClassification && !isClassificationAttribute(modelSemantic)) {
+        continue;
+      }
+
+      if (modelSemantic === VertexAttributeSemantic.FEATURE_ID) {
+        hasFeatureIds = true;
+      }
+
+      const attributePlan = loadVertexAttribute(
+        loader,
+        accessorId,
+        semanticInfo,
+        draco,
+        hasInstances,
+        needsPostProcessing,
+        frameState
+      );
+
+      primitivePlan.attributePlans.push(attributePlan);
+      primitive.attributes.push(attributePlan.attribute);
     }
   }
 
   const targets = gltfPrimitive.targets;
   // Morph targets are disabled for classification models.
   if (defined(targets) && !loadForClassification) {
-    const targetsLength = targets.length;
-    for (let i = 0; i < targetsLength; ++i) {
+    for (let i = 0; i < targets.length; ++i) {
       primitive.morphTargets.push(
         loadMorphTarget(
           loader,
-          gltf,
           targets[i],
           needsPostProcessing,
           primitivePlan,
@@ -1900,7 +1911,6 @@ function loadPrimitive(
   if (defined(indices)) {
     const indicesPlan = loadIndices(
       loader,
-      gltf,
       indices,
       draco,
       hasFeatureIds,
@@ -1925,21 +1935,12 @@ function loadPrimitive(
 
   // Load feature Ids
   if (defined(meshFeatures)) {
-    loadPrimitiveFeatures(
-      loader,
-      gltf,
-      primitive,
-      meshFeatures,
-      supportedImageFormats,
-      frameState
-    );
+    loadPrimitiveFeatures(loader, primitive, meshFeatures, frameState);
   } else if (hasFeatureMetadataLegacy) {
     loadPrimitiveFeaturesLegacy(
       loader,
-      gltf,
       primitive,
       featureMetadataLegacy,
-      supportedImageFormats,
       frameState
     );
   }
@@ -1962,19 +1963,18 @@ function loadPrimitive(
   return primitive;
 }
 
-function loadPrimitiveOutline(loader, gltf, outlineExtension) {
+function loadPrimitiveOutline(loader, outlineExtension) {
   const accessorId = outlineExtension.indices;
+  const accessor = loader.gltfJson.accessors[accessorId];
   const useQuaternion = false;
-  return loadAccessor(loader, gltf, accessorId, useQuaternion);
+  return loadAccessor(loader, accessor, useQuaternion);
 }
 
 // For EXT_mesh_features
 function loadPrimitiveFeatures(
   loader,
-  gltf,
   primitive,
   meshFeaturesExtension,
-  supportedImageFormats,
   frameState
 ) {
   let featureIdsArray;
@@ -1995,9 +1995,7 @@ function loadPrimitiveFeatures(
     if (defined(featureIds.texture)) {
       featureIdComponent = loadFeatureIdTexture(
         loader,
-        gltf,
         featureIds,
-        supportedImageFormats,
         frameState,
         label
       );
@@ -2016,22 +2014,19 @@ function loadPrimitiveFeatures(
 // For EXT_feature_metadata
 function loadPrimitiveFeaturesLegacy(
   loader,
-  gltf,
   primitive,
   metadataExtension,
-  supportedImageFormats,
   frameState
 ) {
   // For looking up the featureCount for each set of feature IDs
-  const featureTables = gltf.extensions.EXT_feature_metadata.featureTables;
+  const { featureTables } = loader.gltfJson.extensions.EXT_feature_metadata;
 
   let nextFeatureIdIndex = 0;
 
   // Feature ID Attributes
   const featureIdAttributes = metadataExtension.featureIdAttributes;
   if (defined(featureIdAttributes)) {
-    const featureIdAttributesLength = featureIdAttributes.length;
-    for (let i = 0; i < featureIdAttributesLength; ++i) {
+    for (let i = 0; i < featureIdAttributes.length; ++i) {
       const featureIdAttribute = featureIdAttributes[i];
       const featureTableId = featureIdAttribute.featureTable;
       const propertyTableId = loader._sortedPropertyTableIds.indexOf(
@@ -2064,8 +2059,7 @@ function loadPrimitiveFeaturesLegacy(
   // Feature ID Textures
   const featureIdTextures = metadataExtension.featureIdTextures;
   if (defined(featureIdTextures)) {
-    const featureIdTexturesLength = featureIdTextures.length;
-    for (let i = 0; i < featureIdTexturesLength; ++i) {
+    for (let i = 0; i < featureIdTextures.length; ++i) {
       const featureIdTexture = featureIdTextures[i];
       const featureTableId = featureIdTexture.featureTable;
       const propertyTableId = loader._sortedPropertyTableIds.indexOf(
@@ -2077,10 +2071,8 @@ function loadPrimitiveFeaturesLegacy(
 
       const featureIdComponent = loadFeatureIdTextureLegacy(
         loader,
-        gltf,
         featureIdTexture,
         propertyTableId,
-        supportedImageFormats,
         frameState,
         featureCount,
         featureIdLabel
@@ -2124,26 +2116,26 @@ function loadPrimitiveMetadataLegacy(loader, primitive, metadataExtension) {
   }
 }
 
-function loadInstances(loader, gltf, nodeExtensions, frameState) {
+function loadInstances(loader, nodeExtensions, frameState) {
   const instancingExtension = nodeExtensions.EXT_mesh_gpu_instancing;
 
   const instances = new Instances();
   const attributes = instancingExtension.attributes;
   if (defined(attributes)) {
     for (const semantic in attributes) {
-      if (attributes.hasOwnProperty(semantic)) {
-        const accessorId = attributes[semantic];
-        instances.attributes.push(
-          loadInstancedAttribute(
-            loader,
-            gltf,
-            accessorId,
-            attributes,
-            semantic,
-            frameState
-          )
-        );
+      if (!attributes.hasOwnProperty(semantic)) {
+        continue;
       }
+      const accessorId = attributes[semantic];
+      instances.attributes.push(
+        loadInstancedAttribute(
+          loader,
+          accessorId,
+          attributes,
+          semantic,
+          frameState
+        )
+      );
     }
   }
 
@@ -2158,7 +2150,7 @@ function loadInstances(loader, gltf, nodeExtensions, frameState) {
     loadInstanceFeatures(instances, instanceFeatures);
   } else if (defined(featureMetadataLegacy)) {
     loadInstanceFeaturesLegacy(
-      gltf,
+      loader.gltfJson,
       instances,
       featureMetadataLegacy,
       loader._sortedPropertyTableIds
@@ -2202,8 +2194,7 @@ function loadInstanceFeaturesLegacy(
 
   const featureIdAttributes = metadataExtension.featureIdAttributes;
   if (defined(featureIdAttributes)) {
-    const featureIdAttributesLength = featureIdAttributes.length;
-    for (let i = 0; i < featureIdAttributesLength; ++i) {
+    for (let i = 0; i < featureIdAttributes.length; ++i) {
       const featureIdAttribute = featureIdAttributes[i];
       const featureTableId = featureIdAttribute.featureTable;
       const propertyTableId = sortedPropertyTableIds.indexOf(featureTableId);
@@ -2231,7 +2222,15 @@ function loadInstanceFeaturesLegacy(
   }
 }
 
-function loadNode(loader, gltf, gltfNode, supportedImageFormats, frameState) {
+/**
+ * Load resources associated with one node from a glTF JSON
+ * @param {GltfLoader} loader
+ * @param {object} gltfNode An entry from the <code>.nodes</code> array in the glTF JSON
+ * @param {FrameState} frameState
+ * @returns {ModelComponents.Node}
+ * @private
+ */
+function loadNode(loader, gltfNode, frameState) {
   const node = new Node();
 
   node.name = gltfNode.name;
@@ -2254,7 +2253,7 @@ function loadNode(loader, gltf, gltfNode, supportedImageFormats, frameState) {
         "Models with the EXT_mesh_gpu_instancing extension cannot be used for classification."
       );
     }
-    node.instances = loadInstances(loader, gltf, nodeExtensions, frameState);
+    node.instances = loadInstances(loader, nodeExtensions, frameState);
   }
 
   if (defined(articulationsExtension)) {
@@ -2263,17 +2262,14 @@ function loadNode(loader, gltf, gltfNode, supportedImageFormats, frameState) {
 
   const meshId = gltfNode.mesh;
   if (defined(meshId)) {
-    const mesh = gltf.meshes[meshId];
+    const mesh = loader.gltfJson.meshes[meshId];
     const primitives = mesh.primitives;
-    const primitivesLength = primitives.length;
-    for (let i = 0; i < primitivesLength; ++i) {
+    for (let i = 0; i < primitives.length; ++i) {
       node.primitives.push(
         loadPrimitive(
           loader,
-          gltf,
           primitives[i],
           defined(node.instances),
-          supportedImageFormats,
           frameState
         )
       );
@@ -2283,120 +2279,105 @@ function loadNode(loader, gltf, gltfNode, supportedImageFormats, frameState) {
     // by the mesh. If both are undefined, it will default to an array of zero weights.
     const morphWeights = defaultValue(gltfNode.weights, mesh.weights);
     const targets = node.primitives[0].morphTargets;
-    const targetsLength = targets.length;
 
     // Since meshes are not stored as separate components, the mesh weights will still
     // be stored at the node level.
     node.morphWeights = defined(morphWeights)
       ? morphWeights.slice()
-      : new Array(targetsLength).fill(0.0);
+      : new Array(targets.length).fill(0.0);
   }
 
   return node;
 }
 
-function loadNodes(loader, gltf, supportedImageFormats, frameState) {
-  if (!defined(gltf.nodes)) {
+/**
+ * Load resources associated with the nodes in a glTF JSON
+ * @param {GltfLoader} loader
+ * @param {FrameState} frameState
+ * @returns {ModelComponents.Node[]}
+ * @private
+ */
+function loadNodes(loader, frameState) {
+  const nodeJsons = loader.gltfJson.nodes;
+  if (!defined(nodeJsons)) {
     return [];
   }
 
-  let i;
-  let j;
-
-  const nodesLength = gltf.nodes.length;
-  const nodes = new Array(nodesLength);
-  for (i = 0; i < nodesLength; ++i) {
-    const node = loadNode(
-      loader,
-      gltf,
-      gltf.nodes[i],
-      supportedImageFormats,
-      frameState
-    );
+  const loadedNodes = nodeJsons.map(function (nodeJson, i) {
+    const node = loadNode(loader, nodeJson, frameState);
     node.index = i;
-    nodes[i] = node;
-  }
+    return node;
+  });
 
-  for (i = 0; i < nodesLength; ++i) {
-    const childrenNodeIds = gltf.nodes[i].children;
+  for (let i = 0; i < loadedNodes.length; ++i) {
+    const childrenNodeIds = nodeJsons[i].children;
     if (defined(childrenNodeIds)) {
-      const childrenLength = childrenNodeIds.length;
-      for (j = 0; j < childrenLength; ++j) {
-        nodes[i].children.push(nodes[childrenNodeIds[j]]);
+      for (let j = 0; j < childrenNodeIds.length; ++j) {
+        loadedNodes[i].children.push(loadedNodes[childrenNodeIds[j]]);
       }
     }
   }
 
-  return nodes;
+  return loadedNodes;
 }
 
-function loadSkin(loader, gltf, gltfSkin, nodes) {
+function loadSkin(loader, gltfSkin, nodes) {
   const skin = new Skin();
 
   const jointIds = gltfSkin.joints;
-  const jointsLength = jointIds.length;
-  const joints = new Array(jointsLength);
-  for (let i = 0; i < jointsLength; ++i) {
-    joints[i] = nodes[jointIds[i]];
-  }
-  skin.joints = joints;
+  skin.joints = jointIds.map((jointId) => nodes[jointId]);
 
   const inverseBindMatricesAccessorId = gltfSkin.inverseBindMatrices;
   if (defined(inverseBindMatricesAccessorId)) {
-    skin.inverseBindMatrices = loadAccessor(
-      loader,
-      gltf,
-      inverseBindMatricesAccessorId
-    );
+    const accessor = loader.gltfJson.accessors[inverseBindMatricesAccessorId];
+    skin.inverseBindMatrices = loadAccessor(loader, accessor);
   } else {
-    skin.inverseBindMatrices = new Array(jointsLength).fill(Matrix4.IDENTITY);
+    skin.inverseBindMatrices = new Array(jointIds.length).fill(
+      Matrix4.IDENTITY
+    );
   }
 
   return skin;
 }
 
-function loadSkins(loader, gltf, nodes) {
-  const gltfSkins = gltf.skins;
+function loadSkins(loader, nodes) {
+  const skinJsons = loader.gltfJson.skins;
 
   // Skins are disabled for classification models.
-  if (loader._loadForClassification || !defined(gltfSkins)) {
+  if (loader._loadForClassification || !defined(skinJsons)) {
     return [];
   }
 
-  const skinsLength = gltf.skins.length;
-  const skins = new Array(skinsLength);
-  for (let i = 0; i < skinsLength; ++i) {
-    const skin = loadSkin(loader, gltf, gltf.skins[i], nodes);
+  const loadedSkins = skinJsons.map(function (skinJson, i) {
+    const skin = loadSkin(loader, skinJson, nodes);
     skin.index = i;
-    skins[i] = skin;
-  }
+    return skin;
+  });
 
-  const nodesLength = nodes.length;
-  for (let i = 0; i < nodesLength; ++i) {
-    const skinId = gltf.nodes[i].skin;
+  const nodeJsons = loader.gltfJson.nodes;
+  for (let i = 0; i < nodes.length; ++i) {
+    const skinId = nodeJsons[i].skin;
     if (defined(skinId)) {
-      nodes[i].skin = skins[skinId];
+      nodes[i].skin = loadedSkins[skinId];
     }
   }
 
-  return skins;
+  return loadedSkins;
 }
 
 async function loadStructuralMetadata(
   loader,
-  gltf,
   extension,
   extensionLegacy,
-  supportedImageFormats,
   frameState
 ) {
   const structuralMetadataLoader = new GltfStructuralMetadataLoader({
-    gltf: gltf,
+    gltf: loader.gltfJson,
     extension: extension,
     extensionLegacy: extensionLegacy,
     gltfResource: loader._gltfResource,
     baseResource: loader._baseResource,
-    supportedImageFormats: supportedImageFormats,
+    supportedImageFormats: loader._supportedImageFormats,
     frameState: frameState,
     asynchronous: loader._asynchronous,
   });
@@ -2404,11 +2385,12 @@ async function loadStructuralMetadata(
   return structuralMetadataLoader.load();
 }
 
-function loadAnimationSampler(loader, gltf, gltfSampler) {
+function loadAnimationSampler(loader, gltfSampler) {
   const animationSampler = new AnimationSampler();
+  const accessors = loader.gltfJson.accessors;
 
-  const inputAccessorId = gltfSampler.input;
-  animationSampler.input = loadAccessor(loader, gltf, inputAccessorId);
+  const inputAccessor = accessors[gltfSampler.input];
+  animationSampler.input = loadAccessor(loader, inputAccessor);
 
   const gltfInterpolation = gltfSampler.interpolation;
   animationSampler.interpolation = defaultValue(
@@ -2416,8 +2398,8 @@ function loadAnimationSampler(loader, gltf, gltfSampler) {
     InterpolationType.LINEAR
   );
 
-  const outputAccessorId = gltfSampler.output;
-  animationSampler.output = loadAccessor(loader, gltf, outputAccessorId, true);
+  const outputAccessor = accessors[gltfSampler.output];
+  animationSampler.output = loadAccessor(loader, outputAccessor, true);
 
   return animationSampler;
 }
@@ -2450,29 +2432,19 @@ function loadAnimationChannel(gltfChannel, samplers, nodes) {
   return animationChannel;
 }
 
-function loadAnimation(loader, gltf, gltfAnimation, nodes) {
-  let i;
-
+function loadAnimation(loader, animationJson, nodes) {
   const animation = new Animation();
-  animation.name = gltfAnimation.name;
+  animation.name = animationJson.name;
 
-  const gltfSamplers = gltfAnimation.samplers;
-  const samplersLength = gltfSamplers.length;
-
-  const samplers = new Array(samplersLength);
-  for (i = 0; i < samplersLength; i++) {
-    const sampler = loadAnimationSampler(loader, gltf, gltfSamplers[i]);
+  const samplers = animationJson.samplers.map(function (samplerJson, i) {
+    const sampler = loadAnimationSampler(loader, samplerJson);
     sampler.index = i;
-    samplers[i] = sampler;
-  }
+    return sampler;
+  });
 
-  const gltfChannels = gltfAnimation.channels;
-  const channelsLength = gltfChannels.length;
-
-  const channels = new Array(channelsLength);
-  for (i = 0; i < channelsLength; i++) {
-    channels[i] = loadAnimationChannel(gltfChannels[i], samplers, nodes);
-  }
+  const channels = animationJson.channels.map(function (channelJson) {
+    return loadAnimationChannel(channelJson, samplers, nodes);
+  });
 
   animation.samplers = samplers;
   animation.channels = channels;
@@ -2480,21 +2452,19 @@ function loadAnimation(loader, gltf, gltfAnimation, nodes) {
   return animation;
 }
 
-function loadAnimations(loader, gltf, nodes) {
-  const gltfAnimations = gltf.animations;
+function loadAnimations(loader, nodes) {
+  const animationJsons = loader.gltfJson.animations;
 
   // Animations are disabled for classification models.
-  if (loader._loadForClassification || !defined(gltfAnimations)) {
+  if (loader._loadForClassification || !defined(animationJsons)) {
     return [];
   }
 
-  const animationsLength = gltf.animations.length;
-  const animations = new Array(animationsLength);
-  for (let i = 0; i < animationsLength; ++i) {
-    const animation = loadAnimation(loader, gltf, gltf.animations[i], nodes);
+  const animations = animationJsons.map(function (animationJson, i) {
+    const animation = loadAnimation(loader, animationJson, nodes);
     animation.index = i;
-    animations[i] = animation;
-  }
+    return animation;
+  });
 
   return animations;
 }
@@ -2513,45 +2483,20 @@ function loadArticulationStage(gltfStage) {
   return stage;
 }
 
-function loadArticulation(gltfArticulation) {
+function loadArticulation(articulationJson) {
   const articulation = new Articulation();
-  articulation.name = gltfArticulation.name;
-
-  const gltfStages = gltfArticulation.stages;
-  const gltfStagesLength = gltfStages.length;
-
-  const stages = new Array(gltfStagesLength);
-  for (let i = 0; i < gltfStagesLength; i++) {
-    const stage = loadArticulationStage(gltfStages[i]);
-    stages[i] = stage;
-  }
-
-  articulation.stages = stages;
-
+  articulation.name = articulationJson.name;
+  articulation.stages = articulationJson.stages.map(loadArticulationStage);
   return articulation;
 }
 
 function loadArticulations(gltf) {
   const extensions = defaultValue(gltf.extensions, defaultValue.EMPTY_OBJECT);
-  const articulationsExtension = extensions.AGI_articulations;
-
-  if (!defined(articulationsExtension)) {
+  const articulationJsons = extensions.AGI_articulations?.articulations;
+  if (!defined(articulationJsons)) {
     return [];
   }
-
-  const gltfArticulations = articulationsExtension.articulations;
-  if (!defined(gltfArticulations)) {
-    return [];
-  }
-
-  const gltfArticulationsLength = gltfArticulations.length;
-  const articulations = new Array(gltfArticulationsLength);
-  for (let i = 0; i < gltfArticulationsLength; i++) {
-    const articulation = loadArticulation(gltfArticulations[i]);
-    articulations[i] = articulation;
-  }
-
-  return articulations;
+  return articulationJsons.map(loadArticulation);
 }
 
 function getSceneNodeIds(gltf) {
@@ -2575,7 +2520,23 @@ function loadScene(gltf, nodes) {
 
 const scratchCenter = new Cartesian3();
 
-function parse(loader, gltf, supportedImageFormats, frameState) {
+/**
+ * Parse the glTF which populates the loaders arrays. Loading promises will be created, and will
+ * resolve once the loaders are ready (i.e. all external resources
+ * have been fetched and all GPU resources have been created). Loaders that
+ * create GPU resources need to be processed every frame until they become
+ * ready since the JobScheduler is not able to execute all jobs in a single
+ * frame. Any promise failures are collected, and will be handled synchronously in process().
+ * Also note that it's fine to call process before a loader is ready to process or
+ * after it has failed; nothing will happen.
+ *
+ * @param {GltfLoader} loader
+ * @param {FrameState} frameState
+ * @returns {Promise} A Promise that resolves when all loaders are ready
+ * @private
+ */
+function parse(loader, frameState) {
+  const gltf = loader.gltfJson;
   const extensions = defaultValue(gltf.extensions, defaultValue.EMPTY_OBJECT);
   const structuralMetadataExtension = extensions.EXT_structural_metadata;
   const featureMetadataExtensionLegacy = extensions.EXT_feature_metadata;
@@ -2598,9 +2559,9 @@ function parse(loader, gltf, supportedImageFormats, frameState) {
     loader._sortedFeatureTextureIds = Object.keys(allFeatureTextureIds).sort();
   }
 
-  const nodes = loadNodes(loader, gltf, supportedImageFormats, frameState);
-  const skins = loadSkins(loader, gltf, nodes);
-  const animations = loadAnimations(loader, gltf, nodes);
+  const nodes = loadNodes(loader, frameState);
+  const skins = loadSkins(loader, nodes);
+  const animations = loadAnimations(loader, nodes);
   const articulations = loadArticulations(gltf);
   const scene = loadScene(gltf, nodes);
 
@@ -2645,10 +2606,8 @@ function parse(loader, gltf, supportedImageFormats, frameState) {
   ) {
     const promise = loadStructuralMetadata(
       loader,
-      gltf,
       structuralMetadataExtension,
       featureMetadataExtensionLegacy,
-      supportedImageFormats,
       frameState
     );
     loader._loaderPromises.push(promise);
@@ -2669,8 +2628,7 @@ function parse(loader, gltf, supportedImageFormats, frameState) {
 
 function unloadTextures(loader) {
   const textureLoaders = loader._textureLoaders;
-  const textureLoadersLength = textureLoaders.length;
-  for (let i = 0; i < textureLoadersLength; ++i) {
+  for (let i = 0; i < textureLoaders.length; ++i) {
     textureLoaders[i] =
       !textureLoaders[i].isDestroyed() &&
       ResourceCache.unload(textureLoaders[i]);
@@ -2680,8 +2638,7 @@ function unloadTextures(loader) {
 
 function unloadBufferViewLoaders(loader) {
   const bufferViewLoaders = loader._bufferViewLoaders;
-  const bufferViewLoadersLength = bufferViewLoaders.length;
-  for (let i = 0; i < bufferViewLoadersLength; ++i) {
+  for (let i = 0; i < bufferViewLoaders.length; ++i) {
     bufferViewLoaders[i] =
       !bufferViewLoaders[i].isDestroyed() &&
       ResourceCache.unload(bufferViewLoaders[i]);
@@ -2691,8 +2648,7 @@ function unloadBufferViewLoaders(loader) {
 
 function unloadGeometry(loader) {
   const geometryLoaders = loader._geometryLoaders;
-  const geometryLoadersLength = geometryLoaders.length;
-  for (let i = 0; i < geometryLoadersLength; ++i) {
+  for (let i = 0; i < geometryLoaders.length; ++i) {
     geometryLoaders[i] =
       !geometryLoaders[i].isDestroyed() &&
       ResourceCache.unload(geometryLoaders[i]);
@@ -2702,8 +2658,7 @@ function unloadGeometry(loader) {
 
 function unloadGeneratedAttributes(loader) {
   const buffers = loader._postProcessBuffers;
-  const length = buffers.length;
-  for (let i = 0; i < length; i++) {
+  for (let i = 0; i < buffers.length; i++) {
     const buffer = buffers[i];
     if (!buffer.isDestroyed()) {
       buffer.destroy();

@@ -12,15 +12,19 @@ import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
 import LightingModel from "./LightingModel.js";
 import ModelUtility from "./ModelUtility.js";
 
-const Material = ModelComponents.Material;
-const MetallicRoughness = ModelComponents.MetallicRoughness;
-const SpecularGlossiness = ModelComponents.SpecularGlossiness;
+const {
+  Material,
+  MetallicRoughness,
+  SpecularGlossiness,
+  Specular,
+} = ModelComponents;
 
 /**
  * The material pipeline stage processes textures and other uniforms needed
  * to render a primitive. This handles the following material types:
  * <ul>
  *   <li>Basic glTF materials (PBR metallic roughness model)</li>
+ *   <li>The `KHR_materials_specular` glTF extension</li>
  *   <li>The `KHR_materials_pbrSpecularGlossiness` glTF extension</li>
  *   <li>The `KHR_materials_unlit` glTF extension</li>
  * </ul>
@@ -93,6 +97,18 @@ MaterialPipelineStage.process = function (
       disableTextures
     );
   } else {
+    if (
+      defined(material.specular) &&
+      ModelUtility.supportedExtensions.KHR_materials_specular
+    ) {
+      processSpecularUniforms(
+        material,
+        uniformMap,
+        shaderBuilder,
+        defaultTexture,
+        disableTextures
+      );
+    }
     processMetallicRoughnessUniforms(
       material,
       uniformMap,
@@ -245,7 +261,13 @@ function processMaterialUniforms(
   defaultEmissiveTexture,
   disableTextures
 ) {
-  const emissiveFactor = material.emissiveFactor;
+  const {
+    emissiveFactor,
+    emissiveTexture,
+    normalTexture,
+    occlusionTexture,
+  } = material;
+
   if (
     defined(emissiveFactor) &&
     !Cartesian3.equals(emissiveFactor, Material.DEFAULT_EMISSIVE_FACTOR)
@@ -264,7 +286,6 @@ function processMaterialUniforms(
       ShaderDestination.FRAGMENT
     );
 
-    const emissiveTexture = material.emissiveTexture;
     if (defined(emissiveTexture) && !disableTextures) {
       processTexture(
         shaderBuilder,
@@ -277,7 +298,6 @@ function processMaterialUniforms(
     }
   }
 
-  const normalTexture = material.normalTexture;
   if (defined(normalTexture) && !disableTextures) {
     processTexture(
       shaderBuilder,
@@ -289,7 +309,6 @@ function processMaterialUniforms(
     );
   }
 
-  const occlusionTexture = material.occlusionTexture;
   if (defined(occlusionTexture) && !disableTextures) {
     processTexture(
       shaderBuilder,
@@ -309,14 +328,21 @@ function processSpecularGlossinessUniforms(
   defaultTexture,
   disableTextures
 ) {
-  const specularGlossiness = material.specularGlossiness;
+  const { specularGlossiness } = material;
+  const {
+    diffuseTexture,
+    diffuseFactor,
+    specularGlossinessTexture,
+    specularFactor,
+    glossinessFactor,
+  } = specularGlossiness;
+
   shaderBuilder.addDefine(
     "USE_SPECULAR_GLOSSINESS",
     undefined,
     ShaderDestination.FRAGMENT
   );
 
-  const diffuseTexture = specularGlossiness.diffuseTexture;
   if (defined(diffuseTexture) && !disableTextures) {
     processTexture(
       shaderBuilder,
@@ -328,7 +354,6 @@ function processSpecularGlossinessUniforms(
     );
   }
 
-  const diffuseFactor = specularGlossiness.diffuseFactor;
   if (
     defined(diffuseFactor) &&
     !Cartesian4.equals(diffuseFactor, SpecularGlossiness.DEFAULT_DIFFUSE_FACTOR)
@@ -348,8 +373,6 @@ function processSpecularGlossinessUniforms(
     );
   }
 
-  const specularGlossinessTexture =
-    specularGlossiness.specularGlossinessTexture;
   if (defined(specularGlossinessTexture) && !disableTextures) {
     processTexture(
       shaderBuilder,
@@ -361,7 +384,6 @@ function processSpecularGlossinessUniforms(
     );
   }
 
-  const specularFactor = specularGlossiness.specularFactor;
   if (
     defined(specularFactor) &&
     !Cartesian3.equals(
@@ -371,20 +393,19 @@ function processSpecularGlossinessUniforms(
   ) {
     shaderBuilder.addUniform(
       "vec3",
-      "u_specularFactor",
+      "u_legacySpecularFactor",
       ShaderDestination.FRAGMENT
     );
-    uniformMap.u_specularFactor = function () {
+    uniformMap.u_legacySpecularFactor = function () {
       return specularGlossiness.specularFactor;
     };
     shaderBuilder.addDefine(
-      "HAS_SPECULAR_FACTOR",
+      "HAS_LEGACY_SPECULAR_FACTOR",
       undefined,
       ShaderDestination.FRAGMENT
     );
   }
 
-  const glossinessFactor = specularGlossiness.glossinessFactor;
   if (
     defined(glossinessFactor) &&
     glossinessFactor !== SpecularGlossiness.DEFAULT_GLOSSINESS_FACTOR
@@ -399,6 +420,91 @@ function processSpecularGlossinessUniforms(
     };
     shaderBuilder.addDefine(
       "HAS_GLOSSINESS_FACTOR",
+      undefined,
+      ShaderDestination.FRAGMENT
+    );
+  }
+}
+
+function processSpecularUniforms(
+  material,
+  uniformMap,
+  shaderBuilder,
+  defaultTexture,
+  disableTextures
+) {
+  const { specular } = material;
+  const {
+    specularTexture,
+    specularFactor,
+    specularColorTexture,
+    specularColorFactor,
+  } = specular;
+
+  shaderBuilder.addDefine(
+    "USE_SPECULAR",
+    undefined,
+    ShaderDestination.FRAGMENT
+  );
+
+  if (defined(specularTexture) && !disableTextures) {
+    processTexture(
+      shaderBuilder,
+      uniformMap,
+      specularTexture,
+      "u_specularTexture",
+      "SPECULAR",
+      defaultTexture
+    );
+  }
+
+  if (
+    defined(specularFactor) &&
+    specularFactor !== Specular.DEFAULT_SPECULAR_FACTOR
+  ) {
+    shaderBuilder.addUniform(
+      "float",
+      "u_specularFactor",
+      ShaderDestination.FRAGMENT
+    );
+    uniformMap.u_specularFactor = function () {
+      return specular.specularFactor;
+    };
+    shaderBuilder.addDefine(
+      "HAS_SPECULAR_FACTOR",
+      undefined,
+      ShaderDestination.FRAGMENT
+    );
+  }
+
+  if (defined(specularColorTexture) && !disableTextures) {
+    processTexture(
+      shaderBuilder,
+      uniformMap,
+      specularColorTexture,
+      "u_specularColorTexture",
+      "SPECULAR_COLOR",
+      defaultTexture
+    );
+  }
+
+  if (
+    defined(specularColorFactor) &&
+    !Cartesian3.equals(
+      specularColorFactor,
+      Specular.DEFAULT_SPECULAR_COLOR_FACTOR
+    )
+  ) {
+    shaderBuilder.addUniform(
+      "vec3",
+      "u_specularColorFactor",
+      ShaderDestination.FRAGMENT
+    );
+    uniformMap.u_specularColorFactor = function () {
+      return specular.specularColorFactor;
+    };
+    shaderBuilder.addDefine(
+      "HAS_SPECULAR_COLOR_FACTOR",
       undefined,
       ShaderDestination.FRAGMENT
     );
