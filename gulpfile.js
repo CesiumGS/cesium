@@ -142,7 +142,7 @@ export async function build() {
 }
 export default build;
 
-export const buildWatch = gulp.series(build, async function () {
+export const buildWatch = gulp.series(build, async function buildWatch() {
   const minify = argv.minify ? argv.minify : false;
   const removePragmas = argv.pragmas ? argv.pragmas : false;
   const sourcemap = argv.sourcemap ? argv.sourcemap : true;
@@ -430,7 +430,7 @@ function combineForSandcastle() {
 export const websiteRelease = gulp.series(
   buildEngine,
   buildWidgets,
-  function () {
+  function websiteReleaseBuild() {
     return buildCesium({
       development: false,
       minify: false,
@@ -446,7 +446,7 @@ export const buildRelease = gulp.series(
   buildEngine,
   buildWidgets,
   // Generate Build/CesiumUnminified
-  function () {
+  function buildCesiumForNode() {
     return buildCesium({
       minify: false,
       removePragmas: false,
@@ -455,7 +455,7 @@ export const buildRelease = gulp.series(
     });
   },
   // Generate Build/Cesium
-  function () {
+  function buildMinifiedCesiumForNode() {
     return buildCesium({
       development: false,
       minify: true,
@@ -470,6 +470,41 @@ export const release = gulp.series(
   buildRelease,
   gulp.parallel(buildTs, buildDocs)
 );
+
+export const postversion = async function () {
+  const workspace = argv.workspace;
+  if (!workspace) {
+    return;
+  }
+  const directory = workspace.replaceAll(`@${scope}/`, ``);
+  const workspacePackageJson = require(`./packages/${directory}/package.json`);
+  const version = workspacePackageJson.version;
+
+  // Iterate through all package JSONs that may depend on the updated package and
+  // update the version of the updated workspace.
+  const packageJsons = await globby([
+    "./package.json",
+    "./packages/*/package.json",
+  ]);
+  const promises = packageJsons.map(async (packageJsonPath) => {
+    // Ensure that we don't check the updated workspace itself.
+    if (basename(dirname(packageJsonPath)) === directory) {
+      return;
+    }
+    // Ensure that we only update workspaces where the dependency to the updated workspace already exists.
+    const packageJson = require(packageJsonPath);
+    if (!Object.hasOwn(packageJson.dependencies, workspace)) {
+      console.log(
+        `Skipping update for ${workspace} as it is not a dependency.`
+      );
+      return;
+    }
+    // Update the version for the updated workspace.
+    packageJson.dependencies[workspace] = `^${version}`;
+    await writeFile(packageJsonPath, JSON.stringify(packageJson, undefined, 2));
+  });
+  return Promise.all(promises);
+};
 
 /**
  * Removes scripts from package.json files to ensure that
@@ -523,47 +558,14 @@ async function pruneScriptsForZip(packageJsonPath) {
   // Write to a temporary package.json file.
   const noPreparePackageJson = join(
     dirname(packageJsonPath),
-    "Build/package.noprepare.json"
+    "package.noprepare.json"
   );
   await writeFile(noPreparePackageJson, JSON.stringify(contentsJson, null, 2));
 
-  return gulp.src(noPreparePackageJson).pipe(gulpRename(packageJsonPath));
-}
-
-export const postversion = async function () {
-  const workspace = argv.workspace;
-  if (!workspace) {
-    return;
-  }
-  const directory = workspace.replaceAll(`@${scope}/`, ``);
-  const workspacePackageJson = require(`./packages/${directory}/package.json`);
-  const version = workspacePackageJson.version;
-
-  // Iterate through all package JSONs that may depend on the updated package and
-  // update the version of the updated workspace.
-  const packageJsons = await globby([
-    "./package.json",
-    "./packages/*/package.json",
-  ]);
-  const promises = packageJsons.map(async (packageJsonPath) => {
-    // Ensure that we don't check the updated workspace itself.
-    if (basename(dirname(packageJsonPath)) === directory) {
-      return;
-    }
-    // Ensure that we only update workspaces where the dependency to the updated workspace already exists.
-    const packageJson = require(packageJsonPath);
-    if (!Object.hasOwn(packageJson.dependencies, workspace)) {
-      console.log(
-        `Skipping update for ${workspace} as it is not a dependency.`
-      );
-      return;
-    }
-    // Update the version for the updated workspace.
-    packageJson.dependencies[workspace] = `^${version}`;
-    await writeFile(packageJsonPath, JSON.stringify(packageJson, undefined, 2));
+  return gulp.src(noPreparePackageJson, {
+    base: ".",
   });
-  return Promise.all(promises);
-};
+}
 
 export const makeZip = gulp.series(release, async function createZipFile() {
   //For now we regenerate the JS glsl to force it to be unminified in the release zip
@@ -580,10 +582,23 @@ export const makeZip = gulp.series(release, async function createZipFile() {
 
   const src = gulp
     .src("index.release.html")
-    .pipe(gulpRename("index.html"))
-    .pipe(packageJsonSrc)
+    .pipe(
+      gulpRename((file) => {
+        if (file.basename === "index.release") {
+          file.basename = "index";
+        }
+      })
+    )
     .pipe(enginePackageJsonSrc)
     .pipe(widgetsPackageJsonSrc)
+    .pipe(packageJsonSrc)
+    .pipe(
+      gulpRename((file) => {
+        if (file.basename === "package.noprepare") {
+          file.basename = "package";
+        }
+      })
+    )
     .pipe(
       gulp.src(
         [
@@ -599,8 +614,6 @@ export const makeZip = gulp.series(release, async function createZipFile() {
           "!packages/engine/Build/Specs/**",
           "!packages/widgets/Build/Specs/**",
           "!packages/engine/Build/minifyShaders.state",
-          "!packages/engine/Build/package.noprepare.json",
-          "!packages/widgets/Build/package.noprepare.json",
         ],
         {
           encoding: false,
@@ -614,19 +627,16 @@ export const makeZip = gulp.series(release, async function createZipFile() {
           "Apps/**",
           "Apps/**/.eslintrc.json",
           "Apps/Sandcastle/.jshintrc",
-
           "packages/engine/index.js",
           "packages/engine/index.d.ts",
           "packages/engine/LICENSE.md",
           "packages/engine/README.md",
           "packages/engine/Source/**",
-          //"!packages/engine/.gitignore",
           "packages/widgets/index.js",
           "packages/widgets/index.d.ts",
           "packages/widgets/LICENSE.md",
           "packages/widgets/README.md",
           "packages/widgets/Source/**",
-          //"!packages/widgets/.gitignore",
           "Source/**",
           "Source/**/.eslintrc.json",
           "Specs/**",
@@ -669,9 +679,9 @@ export const makeZip = gulp.series(release, async function createZipFile() {
 
   await finished(src);
 
-  rimraf.sync("./Build/package.noprepare.json");
-  rimraf.sync("./packages/engine/Build/package.noprepare.json");
-  rimraf.sync("./packages/widgets/Build/package.noprepare.json");
+  rimraf.sync("./package.noprepare.json");
+  rimraf.sync("./packages/engine/package.noprepare.json");
+  rimraf.sync("./packages/widgets/package.noprepare.json");
 
   return src;
 });
@@ -1782,6 +1792,6 @@ async function buildCesiumViewer() {
     .pipe(gulp.src(["web.config"]))
     .pipe(gulp.dest(cesiumViewerOutputDirectory));
 
-  await stream;
+  await finished(stream);
   return stream;
 }
