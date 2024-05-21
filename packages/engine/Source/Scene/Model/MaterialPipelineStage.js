@@ -110,7 +110,7 @@ MaterialPipelineStage.process = function (
     }
     if (
       defined(material.anisotropy) &&
-      ModelUtility.supportedExtensions.KHR_materials_anisotropy === true
+      ModelUtility.supportedExtensions.KHR_materials_anisotropy
     ) {
       processAnisotropyUniforms(
         material.anisotropy,

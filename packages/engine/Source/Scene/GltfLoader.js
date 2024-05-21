@@ -1616,7 +1616,7 @@ function loadMaterial(loader, gltfMaterial, frameState) {
       pbrSpecularGlossiness,
       frameState
     );
-  } else if (material.unlit === false) {
+  } else if (!material.unlit) {
     if (defined(pbrMetallicRoughness)) {
       material.metallicRoughness = loadMetallicRoughness(
         loader,
@@ -1624,10 +1624,10 @@ function loadMaterial(loader, gltfMaterial, frameState) {
         frameState
       );
     }
-    if (defined(pbrSpecular && material.unlit === false)) {
+    if (defined(pbrSpecular) && !material.unlit) {
       material.specular = loadSpecular(loader, pbrSpecular, frameState);
     }
-    if (defined(pbrAnisotropy) && material.unlit === false) {
+    if (defined(pbrAnisotropy) && !material.unlit) {
       material.anisotropy = loadAnisotropy(loader, pbrAnisotropy, frameState);
     }
   }
