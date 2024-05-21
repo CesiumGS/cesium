@@ -10,6 +10,8 @@
  * @name czm_modelMaterial
  * @glslStruct
  *
+ * TODO: is this used externally? Can we rename diffuse and specular?
+ *
  * @property {vec3} diffuse Incoming light that scatters evenly in all directions.
  * @property {float} alpha Alpha of this material. 0.0 is completely transparent; 1.0 is completely opaque.
  * @property {vec3} specular Color of reflected light at normal incidence in PBR materials. This is sometimes referred to as f0 in the literature.

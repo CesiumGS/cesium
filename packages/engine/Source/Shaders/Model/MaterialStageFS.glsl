@@ -213,17 +213,17 @@ void setSpecularGlossiness(inout czm_modelMaterial material)
     #else
         vec4 diffuse = vec4(1.0);
     #endif
-    czm_pbrParameters parameters = czm_pbrSpecularGlossinessMaterial(
-        diffuse.rgb,
-        specular,
-        glossiness
-    );
-    material.diffuse = parameters.diffuseColor;
+
+    material.diffuse = diffuse.rgb * (1.0 - max(max(specular.r, specular.g), specular.b));
     // the specular glossiness extension's alpha overrides anything set
     // by the base material.
     material.alpha = diffuse.a;
-    material.specular = parameters.f0;
-    material.roughness = parameters.roughness;
+
+    material.specular = specular;
+
+    // glossiness is the opposite of roughness, but easier for artists to use.
+    float roughness = 1.0 - glossiness;
+    material.roughness = roughness * roughness;
 }
 #elif defined(LIGHTING_PBR)
 float setMetallicRoughness(inout czm_modelMaterial material)
@@ -236,13 +236,14 @@ float setMetallicRoughness(inout czm_modelMaterial material)
 
         vec3 metallicRoughness = texture(u_metallicRoughnessTexture, metallicRoughnessTexCoords).rgb;
         float metalness = clamp(metallicRoughness.b, 0.0, 1.0);
+        // TODO: WHY is roughness clamped to 0.04 ??
         float roughness = clamp(metallicRoughness.g, 0.04, 1.0);
         #ifdef HAS_METALLIC_FACTOR
-            metalness *= u_metallicFactor;
+            metalness = clamp(metalness * u_metallicFactor, 0.0, 1.0);
         #endif
 
         #ifdef HAS_ROUGHNESS_FACTOR
-            roughness *= u_roughnessFactor;
+            roughness = clamp(roughness * u_roughnessFactor, 0.0, 1.0);
         #endif
     #else
         #ifdef HAS_METALLIC_FACTOR
@@ -252,19 +253,25 @@ float setMetallicRoughness(inout czm_modelMaterial material)
         #endif
 
         #ifdef HAS_ROUGHNESS_FACTOR
+            // TODO: WHY is roughness clamped to 0.04 ??
             float roughness = clamp(u_roughnessFactor, 0.04, 1.0);
         #else
             float roughness = 1.0;
         #endif
     #endif
-    czm_pbrParameters parameters = czm_pbrMetallicRoughnessMaterial(
-        material.diffuse,
-        metalness,
-        roughness
-    );
-    material.diffuse = parameters.diffuseColor;
-    material.specular = parameters.f0;
-    material.roughness = parameters.roughness;
+
+    // dielectrics use f0 = 0.04, metals use albedo as f0
+    const vec3 REFLECTANCE_DIELECTRIC = vec3(0.04);
+    vec3 f0 = mix(REFLECTANCE_DIELECTRIC, material.diffuse, metalness);
+
+    material.specular = f0;
+
+    // diffuse only applies to dielectrics.
+    material.diffuse = material.diffuse * (1.0 - f0) * (1.0 - metalness);
+
+    // roughness is authored as perceptual roughness
+    // square it to get material roughness
+    material.roughness = roughness * roughness;
 
     return metalness;
 }

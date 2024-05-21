@@ -3,7 +3,7 @@ vec3 proceduralIBL(
     vec3 normalEC,
     vec3 lightDirectionEC,
     vec3 lightColorHdr,
-    czm_pbrParameters pbrParameters
+    czm_modelMaterial material
 ) {
     vec3 v = -normalize(positionEC);
     vec3 positionWC = vec3(czm_inverseView * vec4(positionEC, 1.0));
@@ -24,9 +24,9 @@ vec3 proceduralIBL(
     r = -normalize(czm_temeToPseudoFixed * r);
     r.x = -r.x;
 
-    vec3 diffuseColor = pbrParameters.diffuseColor;
-    float roughness = pbrParameters.roughness;
-    vec3 f0 = pbrParameters.f0;
+    vec3 diffuseColor = material.diffuse;
+    float roughness = material.roughness;
+    vec3 f0 = material.specular;
 
     float inverseRoughness = 1.04 - roughness;
     inverseRoughness *= inverseRoughness;
@@ -71,7 +71,7 @@ vec3 proceduralIBL(
     vec3 specularColor = czm_srgbToLinear(f0 * brdfLut.x + brdfLut.y);
     vec3 specularContribution = specularIrradiance * specularColor * model_iblFactor.y;
     #ifdef USE_SPECULAR
-        specularContribution *= pbrParameters.specularWeight;
+        specularContribution *= material.specularWeight;
     #endif
     vec3 diffuseContribution = diffuseIrradiance * diffuseColor * model_iblFactor.x;
     vec3 iblColor = specularContribution + diffuseContribution;
@@ -87,14 +87,14 @@ vec3 proceduralIBL(
 }
 
 #ifdef DIFFUSE_IBL
-vec3 computeDiffuseIBL(czm_pbrParameters pbrParameters, vec3 cubeDir)
+vec3 computeDiffuseIBL(czm_modelMaterial material, vec3 cubeDir)
 {
     #ifdef CUSTOM_SPHERICAL_HARMONICS
         vec3 diffuseIrradiance = czm_sphericalHarmonics(cubeDir, model_sphericalHarmonicCoefficients); 
     #else
         vec3 diffuseIrradiance = czm_sphericalHarmonics(cubeDir, czm_sphericalHarmonicCoefficients); 
     #endif 
-    return diffuseIrradiance * pbrParameters.diffuseColor;
+    return diffuseIrradiance * material.diffuse;
 }
 #endif
 
@@ -111,10 +111,10 @@ vec3 sampleSpecularEnvironment(vec3 cubeDir, float roughness)
         return czm_sampleOctahedralProjection(czm_specularEnvironmentMaps, czm_specularEnvironmentMapSize, cubeDir, lod, maxLod);
     #endif
 }
-vec3 computeSpecularIBL(czm_pbrParameters pbrParameters, vec3 cubeDir, float NdotV, float VdotH)
+vec3 computeSpecularIBL(czm_modelMaterial material, vec3 cubeDir, float NdotV, float VdotH)
 {
-    float roughness = pbrParameters.roughness;
-    vec3 f0 = pbrParameters.f0;
+    float roughness = material.roughness;
+    vec3 f0 = material.specular;
 
     float reflectance = max(max(f0.r, f0.g), f0.b);
     vec3 f90 = vec3(clamp(reflectance * 25.0, 0.0, 1.0));
@@ -125,7 +125,7 @@ vec3 computeSpecularIBL(czm_pbrParameters pbrParameters, vec3 cubeDir, float Ndo
     specularIBL *= F * brdfLut.x + brdfLut.y;
 
     #ifdef USE_SPECULAR
-        specularIBL *= pbrParameters.specularWeight;
+        specularIBL *= material.specularWeight;
     #endif
 
     return f0 * specularIBL;
@@ -137,7 +137,7 @@ vec3 textureIBL(
     vec3 positionEC,
     vec3 normalEC,
     vec3 lightDirectionEC,
-    czm_pbrParameters pbrParameters
+    czm_modelMaterial material
 ) {
     vec3 v = -normalize(positionEC);
     vec3 n = normalEC;
@@ -157,16 +157,16 @@ vec3 textureIBL(
     vec3 cubeDir = normalize(cubeDirTransform * normalize(reflect(-v, n)));
 
     #ifdef DIFFUSE_IBL
-        vec3 diffuseContribution = computeDiffuseIBL(pbrParameters, cubeDir);
+        vec3 diffuseContribution = computeDiffuseIBL(material, cubeDir);
     #else
         vec3 diffuseContribution = vec3(0.0); 
     #endif
 
     #ifdef USE_ANISOTROPY
         // Update environment map sampling direction to account for anisotropic distortion of specular reflection
-        float roughness = pbrParameters.roughness;
-        vec3 anisotropyDirection = pbrParameters.anisotropicB;
-        float anisotropyStrength = pbrParameters.anisotropyStrength;
+        float roughness = material.roughness;
+        vec3 anisotropyDirection = material.anisotropicB;
+        float anisotropyStrength = material.anisotropyStrength;
 
         vec3 anisotropicTangent = cross(anisotropyDirection, v);
         vec3 anisotropicNormal = cross(anisotropicTangent, anisotropyDirection);
@@ -177,7 +177,7 @@ vec3 textureIBL(
     #endif
 
     #ifdef SPECULAR_IBL
-        vec3 specularContribution = computeSpecularIBL(pbrParameters, cubeDir, NdotV, VdotH);
+        vec3 specularContribution = computeSpecularIBL(material, cubeDir, NdotV, VdotH);
     #else
         vec3 specularContribution = vec3(0.0); 
     #endif
@@ -191,7 +191,7 @@ vec3 imageBasedLightingStage(
     vec3 normalEC,
     vec3 lightDirectionEC,
     vec3 lightColorHdr,
-    czm_pbrParameters pbrParameters
+    czm_modelMaterial material
 ) {
     #if defined(DIFFUSE_IBL) || defined(SPECULAR_IBL)
     // Environment maps were provided, use them for IBL
@@ -199,7 +199,7 @@ vec3 imageBasedLightingStage(
         positionEC,
         normalEC,
         lightDirectionEC,
-        pbrParameters
+        material
     );
     #else
     // Use the procedural IBL if there are no environment maps
@@ -208,7 +208,7 @@ vec3 imageBasedLightingStage(
         normalEC,
         lightDirectionEC,
         lightColorHdr,
-        pbrParameters
+        material
     );
     #endif
 }

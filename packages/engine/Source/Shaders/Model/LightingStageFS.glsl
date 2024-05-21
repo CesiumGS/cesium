@@ -1,19 +1,6 @@
 #ifdef LIGHTING_PBR
 vec3 computePbrLighting(czm_modelMaterial inputMaterial, ProcessedAttributes attributes)
 {
-    czm_pbrParameters pbrParameters;
-    pbrParameters.diffuseColor = inputMaterial.diffuse;
-    pbrParameters.f0 = inputMaterial.specular;
-    pbrParameters.roughness = inputMaterial.roughness;
-    #ifdef USE_SPECULAR
-    pbrParameters.specularWeight = inputMaterial.specularWeight;
-    #endif
-    #ifdef USE_ANISOTROPY
-    pbrParameters.anisotropicT = inputMaterial.anisotropicT;
-    pbrParameters.anisotropicB = inputMaterial.anisotropicB;
-    pbrParameters.anisotropyStrength = inputMaterial.anisotropyStrength;
-    #endif
-
     #ifdef USE_CUSTOM_LIGHT_COLOR
     vec3 lightColorHdr = model_lightColorHdr;
     #else
@@ -27,7 +14,7 @@ vec3 computePbrLighting(czm_modelMaterial inputMaterial, ProcessedAttributes att
         inputMaterial.normalEC,
         czm_lightDirectionEC,
         lightColorHdr,
-        pbrParameters
+        inputMaterial
     );
 
     #ifdef USE_IBL_LIGHTING
@@ -36,7 +23,7 @@ vec3 computePbrLighting(czm_modelMaterial inputMaterial, ProcessedAttributes att
             inputMaterial.normalEC,
             czm_lightDirectionEC,
             lightColorHdr,
-            pbrParameters
+            inputMaterial
         );
     #endif
     #endif

@@ -48,6 +48,10 @@ float smithVisibilityG1(float NdotV, float roughness)
     return NdotV / (NdotV * (1.0 - k) + k);
 }
 
+/**
+ * geometric shadowing function
+ * TODO: explain
+ */
 float smithVisibilityGGX(float roughness, float NdotL, float NdotV)
 {
     return (
@@ -56,6 +60,10 @@ float smithVisibilityGGX(float roughness, float NdotL, float NdotV)
     ) / (4.0 * NdotL * NdotV);
 }
 
+/**
+ * microfacet distribution function
+ * TODO: explain
+ */
 float GGX(float roughness, float NdotH)
 {
     float roughnessSquared = roughness * roughness;
@@ -69,38 +77,25 @@ float GGX(float roughness, float NdotH)
  * rendering. This function only handles direct lighting.
  * <p>
  * This function only handles the lighting calculations. Metallic/roughness
- * and specular/glossy must be handled separately. See {@czm_pbrMetallicRoughnessMaterial}, {@czm_pbrSpecularGlossinessMaterial} and {@czm_defaultPbrMaterial}
+ * and specular/glossy must be handled separately. See {@MaterialStageFS}
  * </p>
  *
- * @name czm_pbrlighting
+ * @name czm_pbrLighting
  * @glslFunction
  *
  * @param {vec3} positionEC The position of the fragment in eye coordinates
  * @param {vec3} normalEC The surface normal in eye coordinates
  * @param {vec3} lightDirectionEC Unit vector pointing to the light source in eye coordinates.
  * @param {vec3} lightColorHdr radiance of the light source. This is a HDR value.
- * @param {czm_pbrParameters} The computed PBR parameters.
+ * @param {czm_modelMaterial} The material properties.
  * @return {vec3} The computed HDR color
- *
- * @example
- * czm_pbrParameters pbrParameters = czm_pbrMetallicRoughnessMaterial(
- *  baseColor,
- *  metallic,
- *  roughness
- * );
- * vec3 color = czm_pbrlighting(
- *  positionEC,
- *  normalEC,
- *  lightDirectionEC,
- *  lightColorHdr,
- *  pbrParameters);
  */
 vec3 czm_pbrLighting(
     vec3 positionEC,
     vec3 normalEC,
     vec3 lightDirectionEC,
     vec3 lightColorHdr,
-    czm_pbrParameters pbrParameters
+    czm_modelMaterial material
 )
 {
     vec3 v = -normalize(positionEC);
@@ -109,7 +104,7 @@ vec3 czm_pbrLighting(
     vec3 n = normalEC;
     float VdotH = clamp(dot(v, h), 0.0, 1.0);
 
-    vec3 f0 = pbrParameters.f0;
+    vec3 f0 = material.specular;
     float reflectance = max(max(f0.r, f0.g), f0.b);
     // Typical dielectrics will have reflectance 0.04, so f90 will be 1.0.
     // In this case, at grazing angle, all incident energy is reflected.
@@ -117,16 +112,16 @@ vec3 czm_pbrLighting(
     vec3 F = fresnelSchlick2(f0, f90, VdotH);
 
     #if defined(USE_SPECULAR)
-        F *= pbrParameters.specularWeight;
+        F *= material.specularWeight;
     #endif
 
-    float alpha = pbrParameters.roughness;
+    float alpha = material.roughness;
     #ifdef USE_ANISOTROPY
-        mat3 tbn = mat3(pbrParameters.anisotropicT, pbrParameters.anisotropicB, n);
+        mat3 tbn = mat3(material.anisotropicT, material.anisotropicB, n);
         vec3 lightDirection = l * tbn;
         vec3 viewDirection = v * tbn;
         vec3 halfwayDirection = h * tbn;
-        float anisotropyStrength = pbrParameters.anisotropyStrength;
+        float anisotropyStrength = material.anisotropyStrength;
         float tangentialRoughness = mix(alpha, 1.0, anisotropyStrength * anisotropyStrength);
         float G = smithVisibilityGGX_anisotropic(alpha, tangentialRoughness, lightDirection, viewDirection);
         float D = GGX_anisotropic(alpha, tangentialRoughness, halfwayDirection);
@@ -141,7 +136,7 @@ vec3 czm_pbrLighting(
 
     vec3 specularContribution = F * G * D;
 
-    vec3 diffuseColor = pbrParameters.diffuseColor;
+    vec3 diffuseColor = material.diffuse;
     // F here represents the specular contribution
     vec3 diffuseContribution = (1.0 - F) * lambertianDiffuse(diffuseColor);
 
