@@ -13,4 +13,7 @@ struct czm_pbrParameters
     vec3 diffuseColor;
     float roughness;
     vec3 f0;
+#if defined(USE_SPECULAR)
+    float specularWeight;
+#endif
 };

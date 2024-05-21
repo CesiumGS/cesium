@@ -26,4 +26,7 @@ struct czm_modelMaterial {
     vec3 normalEC;
     float occlusion;
     vec3 emissive;
+#if defined(USE_SPECULAR)
+    float specularWeight;
+#endif
 };

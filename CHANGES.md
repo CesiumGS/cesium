@@ -1,13 +1,40 @@
 # Change Log
 
-### 1.117
+### 1.118 - 2024-06-03
 
 #### @cesium/engine
 
+###### Additions :tada:
+
+- Added support for glTF models with the [KHR_materials_specular extension](https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Khronos/KHR_materials_specular). [#11970](https://github.com/CesiumGS/cesium/pull/11970)
+
+#### Fixes :wrench:
+
+- Fixed a bug where `scene.pickPosition` returned incorrect results against the globe when `depthTestAgainstTerrain` is `false`. [#4368](https://github.com/CesiumGS/cesium/issues/4368)
+- Fixed a bug where `TaskProcessor` worker loading would check the worker module ID rather than the absolute URL when determining if it is cross-origin. [#11833](https://github.com/CesiumGS/cesium/pull/11833)
+- Fixed a bug where cross-origin workers would error when loaded with the CommonJS `importScripts` shim instead of an ESM `import`. [#11833](https://github.com/CesiumGS/cesium/pull/11833)
+- Corrected the Typescript types for `Billboard.id` and `Label.id` to be `any` [#11973](https://github.com/CesiumGS/cesium/issues/11973)
+
+### 1.117 - 2024-05-01
+
+#### @cesium/engine
+
+##### Additions :tada:
+
+- Added `ClippingPolygon` and `ClippingPolygonCollection` for applying multiple clipping regions, with support for concave regions and inverse clipping regions, to 3D Tiles and Terrain. [#11750](https://github.com/CesiumGS/cesium/pull/11750)
+- Added `Cesium3DTileset.clippingPolygons`, `Globe.clippingPolygons`, and `Model.clippingPolygons` properties for defining clipping regions from world positions. [#11750](https://github.com/CesiumGS/cesium/pull/11750)
+
 ##### Fixes :wrench:
 
-- Fixed a bug that Label position height may not be correctly updated when its HeightReference is relative. [#11929](https://github.com/CesiumGS/cesium/pull/11929)
 - Fixed a bug where a data source was not automatically rendered after is was added in request render mode. [#11934](https://github.com/CesiumGS/cesium/pull/11934)
+- Fixes Typescript definition for `Event.raiseEvent`. [#10498](https://github.com/CesiumGS/cesium/issues/10498)
+- Fixed a bug that Label position height may not be correctly updated when its HeightReference is relative. [#11929](https://github.com/CesiumGS/cesium/pull/11929)
+
+#### @cesium/widgets
+
+##### Fixes :wrench:
+
+- Fixed leaked CSS styling from `I3SBuildingSceneLayerExplorer` widget. [#11959](https://github.com/CesiumGS/cesium/pull/11959)
 
 ### 1.116 - 2024-04-01
 

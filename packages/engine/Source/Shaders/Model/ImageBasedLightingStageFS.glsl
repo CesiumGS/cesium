@@ -26,7 +26,7 @@ vec3 proceduralIBL(
 
     vec3 diffuseColor = pbrParameters.diffuseColor;
     float roughness = pbrParameters.roughness;
-    vec3 specularColor = pbrParameters.f0;
+    vec3 f0 = pbrParameters.f0;
 
     float inverseRoughness = 1.04 - roughness;
     inverseRoughness *= inverseRoughness;
@@ -53,32 +53,77 @@ vec3 proceduralIBL(
     specularIrradiance = mix(specularIrradiance, belowHorizonColor, smoothstep(aroundHorizon, farBelowHorizon, reflectionDotNadir) * inverseRoughness);
     specularIrradiance = mix(specularIrradiance, nadirColor, smoothstep(farBelowHorizon, 1.0, reflectionDotNadir) * inverseRoughness);
 
-    // Luminance model from page 40 of http://silviojemma.com/public/papers/lighting/spherical-harmonic-lighting.pdf
-    #ifdef USE_SUN_LUMINANCE 
-    // Angle between sun and zenith
+    #ifdef USE_SUN_LUMINANCE
+    // See the "CIE Clear Sky Model" referenced on page 40 of https://3dvar.com/Green2003Spherical.pdf
+    // Angle between sun and zenith.
     float LdotZenith = clamp(dot(normalize(czm_inverseViewRotation * l), vWC), 0.001, 1.0);
     float S = acos(LdotZenith);
     // Angle between zenith and current pixel
     float NdotZenith = clamp(dot(normalize(czm_inverseViewRotation * n), vWC), 0.001, 1.0);
     // Angle between sun and current pixel
     float gamma = acos(NdotL);
-    float numerator = ((0.91 + 10.0 * exp(-3.0 * gamma) + 0.45 * pow(NdotL, 2.0)) * (1.0 - exp(-0.32 / NdotZenith)));
-    float denominator = (0.91 + 10.0 * exp(-3.0 * S) + 0.45 * pow(LdotZenith,2.0)) * (1.0 - exp(-0.32));
+    float numerator = ((0.91 + 10.0 * exp(-3.0 * gamma) + 0.45 * NdotL * NdotL) * (1.0 - exp(-0.32 / NdotZenith)));
+    float denominator = (0.91 + 10.0 * exp(-3.0 * S) + 0.45 * LdotZenith * LdotZenith) * (1.0 - exp(-0.32));
     float luminance = model_luminanceAtZenith * (numerator / denominator);
-    #endif 
+    #endif
 
     vec2 brdfLut = texture(czm_brdfLut, vec2(NdotV, roughness)).rg;
-    vec3 iblColor = (diffuseIrradiance * diffuseColor * model_iblFactor.x) + (specularIrradiance * czm_srgbToLinear(specularColor * brdfLut.x + brdfLut.y) * model_iblFactor.y);
+    vec3 specularColor = czm_srgbToLinear(f0 * brdfLut.x + brdfLut.y);
+    vec3 specularContribution = specularIrradiance * specularColor * model_iblFactor.y;
+    #ifdef USE_SPECULAR
+        specularContribution *= pbrParameters.specularWeight;
+    #endif
+    vec3 diffuseContribution = diffuseIrradiance * diffuseColor * model_iblFactor.x;
+    vec3 iblColor = specularContribution + diffuseContribution;
     float maximumComponent = max(max(lightColorHdr.x, lightColorHdr.y), lightColorHdr.z);
     vec3 lightColor = lightColorHdr / max(maximumComponent, 1.0);
     iblColor *= lightColor;
 
-    #ifdef USE_SUN_LUMINANCE 
+    #ifdef USE_SUN_LUMINANCE
     iblColor *= luminance;
     #endif
 
     return iblColor;
 }
+
+#ifdef DIFFUSE_IBL
+vec3 computeDiffuseIBL(czm_pbrParameters pbrParameters, vec3 cubeDir)
+{
+    #ifdef CUSTOM_SPHERICAL_HARMONICS
+        vec3 diffuseIrradiance = czm_sphericalHarmonics(cubeDir, model_sphericalHarmonicCoefficients); 
+    #else
+        vec3 diffuseIrradiance = czm_sphericalHarmonics(cubeDir, czm_sphericalHarmonicCoefficients); 
+    #endif 
+    return diffuseIrradiance * pbrParameters.diffuseColor;
+}
+#endif
+
+#ifdef SPECULAR_IBL
+vec3 computeSpecularIBL(czm_pbrParameters pbrParameters, vec3 cubeDir, float NdotV, float VdotH)
+{
+    float roughness = pbrParameters.roughness;
+    vec3 specularColor = pbrParameters.f0;
+
+    vec3 r0 = specularColor.rgb;
+    float reflectance = max(max(r0.r, r0.g), r0.b);
+    vec3 r90 = vec3(clamp(reflectance * 25.0, 0.0, 1.0));
+    vec3 F = fresnelSchlick2(r0, r90, VdotH);
+
+    vec2 brdfLut = texture(czm_brdfLut, vec2(NdotV, roughness)).rg;
+    #ifdef CUSTOM_SPECULAR_IBL
+        vec3 specularIBL = czm_sampleOctahedralProjection(model_specularEnvironmentMaps, model_specularEnvironmentMapsSize, cubeDir, roughness * model_specularEnvironmentMapsMaximumLOD, model_specularEnvironmentMapsMaximumLOD);
+    #else
+        vec3 specularIBL = czm_sampleOctahedralProjection(czm_specularEnvironmentMaps, czm_specularEnvironmentMapSize, cubeDir,  roughness * czm_specularEnvironmentMapsMaximumLOD, czm_specularEnvironmentMapsMaximumLOD);
+    #endif
+    specularIBL *= F * brdfLut.x + brdfLut.y;
+
+    #ifdef USE_SPECULAR
+        specularIBL *= pbrParameters.specularWeight;
+    #endif
+
+    return specularColor * specularIBL;
+}
+#endif
 
 #if defined(DIFFUSE_IBL) || defined(SPECULAR_IBL)
 vec3 textureIBL(
@@ -87,10 +132,6 @@ vec3 textureIBL(
     vec3 lightDirectionEC,
     czm_pbrParameters pbrParameters
 ) {
-    vec3 diffuseColor = pbrParameters.diffuseColor;
-    float roughness = pbrParameters.roughness;
-    vec3 specularColor = pbrParameters.f0;
-
     vec3 v = -positionEC;
     vec3 n = normalEC;
     vec3 l = normalize(lightDirectionEC);
@@ -106,34 +147,19 @@ vec3 textureIBL(
     ); 
     vec3 cubeDir = normalize(yUpToZUp * model_iblReferenceFrameMatrix * normalize(reflect(-v, n))); 
 
-    #ifdef DIFFUSE_IBL 
-        #ifdef CUSTOM_SPHERICAL_HARMONICS
-        vec3 diffuseIrradiance = czm_sphericalHarmonics(cubeDir, model_sphericalHarmonicCoefficients); 
-        #else
-        vec3 diffuseIrradiance = czm_sphericalHarmonics(cubeDir, czm_sphericalHarmonicCoefficients); 
-        #endif 
-    #else 
-    vec3 diffuseIrradiance = vec3(0.0); 
-    #endif 
-
-    #ifdef SPECULAR_IBL
-    vec3 r0 = specularColor.rgb;
-    float reflectance = max(max(r0.r, r0.g), r0.b);
-    vec3 r90 = vec3(clamp(reflectance * 25.0, 0.0, 1.0));
-    vec3 F = fresnelSchlick2(r0, r90, VdotH);
-    
-    vec2 brdfLut = texture(czm_brdfLut, vec2(NdotV, roughness)).rg;
-      #ifdef CUSTOM_SPECULAR_IBL 
-      vec3 specularIBL = czm_sampleOctahedralProjection(model_specularEnvironmentMaps, model_specularEnvironmentMapsSize, cubeDir, roughness * model_specularEnvironmentMapsMaximumLOD, model_specularEnvironmentMapsMaximumLOD);
-      #else 
-      vec3 specularIBL = czm_sampleOctahedralProjection(czm_specularEnvironmentMaps, czm_specularEnvironmentMapSize, cubeDir,  roughness * czm_specularEnvironmentMapsMaximumLOD, czm_specularEnvironmentMapsMaximumLOD);
-      #endif 
-    specularIBL *= F * brdfLut.x + brdfLut.y;
-    #else 
-    vec3 specularIBL = vec3(0.0); 
+    #ifdef DIFFUSE_IBL
+        vec3 diffuseContribution = computeDiffuseIBL(pbrParameters, cubeDir);
+    #else
+        vec3 diffuseContribution = vec3(0.0); 
     #endif
 
-    return diffuseColor * diffuseIrradiance + specularColor * specularIBL;
+    #ifdef SPECULAR_IBL
+        vec3 specularContribution = computeSpecularIBL(pbrParameters, cubeDir, NdotV, VdotH);
+    #else
+        vec3 specularContribution = vec3(0.0); 
+    #endif
+
+    return diffuseContribution + specularContribution;
 }
 #endif
 
@@ -144,22 +170,22 @@ vec3 imageBasedLightingStage(
     vec3 lightColorHdr,
     czm_pbrParameters pbrParameters
 ) {
-  #if defined(DIFFUSE_IBL) || defined(SPECULAR_IBL)
-  // Environment maps were provided, use them for IBL
-  return textureIBL(
-      positionEC,
-      normalEC,
-      lightDirectionEC,
-      pbrParameters
-  );
-  #else
-  // Use the procedural IBL if there are no environment maps
-  return proceduralIBL(
-      positionEC,
-      normalEC,
-      lightDirectionEC,
-      lightColorHdr,
-      pbrParameters
-  );
-  #endif
+    #if defined(DIFFUSE_IBL) || defined(SPECULAR_IBL)
+    // Environment maps were provided, use them for IBL
+    return textureIBL(
+        positionEC,
+        normalEC,
+        lightDirectionEC,
+        pbrParameters
+    );
+    #else
+    // Use the procedural IBL if there are no environment maps
+    return proceduralIBL(
+        positionEC,
+        normalEC,
+        lightDirectionEC,
+        lightColorHdr,
+        pbrParameters
+    );
+    #endif
 }

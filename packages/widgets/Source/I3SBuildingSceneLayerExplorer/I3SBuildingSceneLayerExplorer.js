@@ -22,6 +22,7 @@ function I3SBuildingSceneLayerExplorer(containerId, i3sProvider) {
   //>>includeEnd('debug');
 
   const htmlWrapper = document.createElement("div");
+  htmlWrapper.classList.add("cesium-viewer-i3s-explorer");
   htmlWrapper.innerHTML = `
         <h3>Building explorer</h3>
         <select

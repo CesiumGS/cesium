@@ -5,7 +5,10 @@ vec3 computePbrLighting(czm_modelMaterial inputMaterial, ProcessedAttributes att
     pbrParameters.diffuseColor = inputMaterial.diffuse;
     pbrParameters.f0 = inputMaterial.specular;
     pbrParameters.roughness = inputMaterial.roughness;
-    
+    #ifdef USE_SPECULAR
+    pbrParameters.specularWeight = inputMaterial.specularWeight;
+    #endif
+
     #ifdef USE_CUSTOM_LIGHT_COLOR
     vec3 lightColorHdr = model_lightColorHdr;
     #else
@@ -22,7 +25,7 @@ vec3 computePbrLighting(czm_modelMaterial inputMaterial, ProcessedAttributes att
         pbrParameters
     );
 
-        #ifdef USE_IBL_LIGHTING
+    #ifdef USE_IBL_LIGHTING
         color += imageBasedLightingStage(
             attributes.positionEC,
             inputMaterial.normalEC,
@@ -30,7 +33,7 @@ vec3 computePbrLighting(czm_modelMaterial inputMaterial, ProcessedAttributes att
             lightColorHdr,
             pbrParameters
         );
-        #endif
+    #endif
     #endif
 
     color *= inputMaterial.occlusion;

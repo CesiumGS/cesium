@@ -91,7 +91,7 @@ function parseFont(label) {
  * Initialization options for the Label constructor
  *
  * @property {Cartesian3} position The cartesian position of the label.
- * @property {string} [id] A user-defined object to return when the label is picked with {@link Scene#pick}.
+ * @property {*} [id] A user-defined object to return when the label is picked with {@link Scene#pick}.
  * @property {boolean} [show=true] Determines if this label will be shown.
  * @property {string} [text] A string specifying the text of the label.
  * @property {string} [font='30px sans-serif'] A string specifying the font used to draw this label. Fonts are specified using the same syntax as the CSS 'font' property.
