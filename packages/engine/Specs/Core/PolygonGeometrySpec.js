@@ -7,12 +7,11 @@ import {
   Ellipsoid,
   GeometryOffsetAttribute,
   GeometryPipeline,
+  Math as CesiumMath,
   PolygonGeometry,
   Rectangle,
   VertexFormat,
 } from "../../index.js";
-
-import { Math as CesiumMath } from "../../index.js";
 
 import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";
 

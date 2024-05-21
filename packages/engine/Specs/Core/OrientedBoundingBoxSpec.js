@@ -4,6 +4,7 @@ import {
   Cartesian4,
   Ellipsoid,
   Intersect,
+  Math as CesiumMath,
   Matrix3,
   Matrix4,
   Occluder,
@@ -12,8 +13,6 @@ import {
   Quaternion,
   Rectangle,
 } from "../../index.js";
-
-import { Math as CesiumMath } from "../../index.js";
 
 import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";
 

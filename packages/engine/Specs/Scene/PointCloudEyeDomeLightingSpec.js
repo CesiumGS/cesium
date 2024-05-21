@@ -2,11 +2,10 @@ import {
   Cartesian3,
   Cesium3DTileStyle,
   HeadingPitchRange,
+  Math as CesiumMath,
   PerspectiveFrustum,
   PointCloudEyeDomeLighting,
 } from "../../index.js";
-
-import { Math as CesiumMath } from "../../index.js";
 
 import Cesium3DTilesTester from "../../../../Specs/Cesium3DTilesTester.js";
 import createScene from "../../../../Specs/createScene.js";

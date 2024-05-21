@@ -5,14 +5,13 @@ import {
   Cartesian3,
   Color,
   DistanceDisplayCondition,
+  Math as CesiumMath,
   NearFarScalar,
   Rectangle,
   BlendOption,
   PointPrimitive,
   PointPrimitiveCollection,
 } from "../../index.js";
-
-import { Math as CesiumMath } from "../../index.js";
 
 import createScene from "../../../../Specs/createScene.js";
 

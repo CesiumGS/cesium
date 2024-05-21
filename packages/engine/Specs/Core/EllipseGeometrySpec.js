@@ -3,11 +3,10 @@ import {
   EllipseGeometry,
   Ellipsoid,
   GeometryOffsetAttribute,
+  Math as CesiumMath,
   Rectangle,
   VertexFormat,
 } from "../../index.js";
-
-import { Math as CesiumMath } from "../../index.js";
 
 import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";
 

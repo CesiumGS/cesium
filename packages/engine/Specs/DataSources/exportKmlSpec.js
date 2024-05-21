@@ -8,6 +8,7 @@ import {
   defined,
   Iso8601,
   JulianDate,
+  Math as CesiumMath,
   PolygonHierarchy,
   Rectangle,
   TimeInterval,
@@ -23,8 +24,6 @@ import {
   HorizontalOrigin,
   VerticalOrigin,
 } from "../../index.js";
-
-import { Math as CesiumMath } from "../../index.js";
 
 describe("DataSources/exportKml", function () {
   let kmlDoc;

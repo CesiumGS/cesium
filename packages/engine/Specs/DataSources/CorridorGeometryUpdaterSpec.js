@@ -3,6 +3,7 @@ import {
   Cartesian3,
   CornerType,
   JulianDate,
+  Math as CesiumMath,
   TimeInterval,
   TimeIntervalCollection,
   ConstantProperty,
@@ -15,8 +16,6 @@ import {
   TimeIntervalCollectionProperty,
   PrimitiveCollection,
 } from "../../index.js";
-
-import { Math as CesiumMath } from "../../index.js";
 
 import createDynamicGeometryUpdaterSpecs from "../../../../Specs/createDynamicGeometryUpdaterSpecs.js";
 import createDynamicProperty from "../../../../Specs/createDynamicProperty.js";

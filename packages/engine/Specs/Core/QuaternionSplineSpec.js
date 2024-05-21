@@ -1,6 +1,9 @@
-import { Cartesian3, Quaternion, QuaternionSpline } from "../../index.js";
-
-import { Math as CesiumMath } from "../../index.js";
+import {
+  Cartesian3,
+  Math as CesiumMath,
+  Quaternion,
+  QuaternionSpline,
+} from "../../index.js";
 
 describe("Core/QuaternionSpline", function () {
   let points;

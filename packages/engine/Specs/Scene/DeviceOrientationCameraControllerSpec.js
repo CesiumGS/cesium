@@ -1,6 +1,8 @@
-import { Cartesian3, DeviceOrientationCameraController } from "../../index.js";
-
-import { Math as CesiumMath } from "../../index.js";
+import {
+  Cartesian3,
+  DeviceOrientationCameraController,
+  Math as CesiumMath,
+} from "../../index.js";
 
 import createCamera from "../../../../Specs/createCamera.js";
 import createCanvas from "../../../../Specs/createCanvas.js";

@@ -3,24 +3,24 @@ import html from "eslint-plugin-html";
 import configCesium from "eslint-config-cesium";
 
 export default [
-{
+  {
     ignores: [
-        "**/Build/",
-        "Documentation/**/*",
-        "Source/*",
-        "**/ThirdParty/",
-        "Tools/**/*",
-        "index.html",
-        "index.release.html",
-        "Apps/HelloWorld.html",
-        "Apps/Sandcastle/jsHintOptions.js",
-        "Apps/Sandcastle/gallery/gallery-index.js",
-        "packages/engine/Source/Scene/GltfPipeline/**/*",
-        "packages/engine/Source/Shaders/**/*",
-        "Specs/jasmine/*",
-        "**/*/SpecList.js",
-        ],
-},
+      "**/Build/",
+      "Documentation/**/*",
+      "Source/*",
+      "**/ThirdParty/",
+      "Tools/**/*",
+      "index.html",
+      "index.release.html",
+      "Apps/HelloWorld.html",
+      "Apps/Sandcastle/jsHintOptions.js",
+      "Apps/Sandcastle/gallery/gallery-index.js",
+      "packages/engine/Source/Scene/GltfPipeline/**/*",
+      "packages/engine/Source/Shaders/**/*",
+      "Specs/jasmine/*",
+      "**/*/SpecList.js",
+    ],
+  },
   {
     ...configCesium.configs.recommended,
     languageOptions: {
@@ -35,9 +35,9 @@ export default [
     files: [".github/**/*.js", "scripts/**/*.js", "gulpfile.js", "server.js"],
     ...configCesium.configs.node,
     languageOptions: {
-        ...configCesium.configs.node.languageOptions,
-        sourceType: "module",
-    }
+      ...configCesium.configs.node.languageOptions,
+      sourceType: "module",
+    },
   },
   {
     files: ["packages/**/*.js", "Apps/**/*.js", "Specs/**/*.js", "**/*.html"],
@@ -45,7 +45,10 @@ export default [
     plugins: { html },
     rules: {
       ...configCesium.configs.browser.rules,
-      "no-unused-vars": ["error", { vars: "all", args: "none", caughtErrors: "none" }],
+      "no-unused-vars": [
+        "error",
+        { vars: "all", args: "none", caughtErrors: "none" },
+      ],
     },
   },
   {

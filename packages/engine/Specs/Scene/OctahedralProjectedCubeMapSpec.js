@@ -1,9 +1,10 @@
 import {
+  Cartesian3,
+  defined,
   ComputeEngine,
   Pass,
   OctahedralProjectedCubeMap,
 } from "../../index.js";
-import { Cartesian3, defined } from "../../index.js";
 
 import createContext from "../../../../Specs/createContext.js";
 import createFrameState from "../../../../Specs/createFrameState.js";

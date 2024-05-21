@@ -51,7 +51,8 @@
   ],
   "dependencies": {
     "@cesium/engine": "^9.1.0",
-    "@cesium/widgets": "^6.1.0"
+    "@cesium/widgets": "^6.1.0",
+    "eslint-config-cesium": "^11.0.1"
   },
   "devDependencies": {
     "@playwright/test": "^1.41.1",

@@ -13,6 +13,7 @@ import {
   GeometryInstance,
   GeometryInstanceAttribute,
   HeadingPitchRange,
+  Math as CesiumMath,
   Matrix4,
   PerspectiveFrustum,
   PolygonGeometry,
@@ -27,8 +28,6 @@ import {
   Primitive,
   SceneMode,
 } from "../../index.js";
-
-import { Math as CesiumMath } from "../../index.js";
 
 import BadGeometry from "../../../../Specs/BadGeometry.js";
 import createContext from "../../../../Specs/createContext.js";

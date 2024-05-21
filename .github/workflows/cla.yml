@@ -15,10 +15,11 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+      - run: cd .github/actions/check-for-CLA/
       - name: install npm packages
-        run: npm install googleapis @octokit/core handlebars fs-extra        
+        run: npm install
       - name: run script
-        run: node .github/actions/check-for-CLA/index.js
+        run: node index.js
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PULL_REQUEST_ID: ${{ github.event.number }}      

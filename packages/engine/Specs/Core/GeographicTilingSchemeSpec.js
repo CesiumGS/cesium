@@ -3,11 +3,10 @@ import {
   Cartographic,
   GeographicProjection,
   GeographicTilingScheme,
+  Math as CesiumMath,
   Rectangle,
   TilingScheme,
 } from "../../index.js";
-
-import { Math as CesiumMath } from "../../index.js";
 
 describe("Core/GeographicTilingScheme", function () {
   it("conforms to TilingScheme interface.", function () {
