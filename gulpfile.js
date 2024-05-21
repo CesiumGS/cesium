@@ -5,6 +5,7 @@ import { join, basename, resolve, dirname } from "path";
 import { exec, execSync } from "child_process";
 import fetch from "node-fetch";
 import { createRequire } from "module";
+import { finished } from "stream/promises";
 
 import gulp from "gulp";
 import gulpTap from "gulp-tap";
@@ -15,8 +16,6 @@ import { globby } from "globby";
 import open from "open";
 import { rimraf } from "rimraf";
 import { mkdirp } from "mkdirp";
-import mergeStream from "merge-stream";
-import streamToPromise from "stream-to-promise";
 import karma from "karma";
 import yargs from "yargs";
 import typeScript from "typescript";
@@ -143,7 +142,7 @@ export async function build() {
 }
 export default build;
 
-export const buildWatch = gulp.series(build, async function () {
+export const buildWatch = gulp.series(build, async function buildWatch() {
   const minify = argv.minify ? argv.minify : false;
   const removePragmas = argv.pragmas ? argv.pragmas : false;
   const sourcemap = argv.sourcemap ? argv.sourcemap : true;
@@ -382,13 +381,14 @@ export async function prepare() {
   ]);
 
   const stream = gulp.src(files).pipe(gulp.dest("Specs/jasmine"));
-  return streamToPromise(stream);
+  await finished(stream);
+  return stream;
 }
 
 export const cloc = gulp.series(clean, clocSource);
 
 //Builds the documentation
-export function buildDocs() {
+export async function buildDocs() {
   const generatePrivateDocumentation = argv.private ? "--private" : "";
 
   execSync(
@@ -403,10 +403,11 @@ export function buildDocs() {
   );
 
   const stream = gulp
-    .src("Documentation/Images/**")
+    .src(["Documentation/Images/**"], { encoding: false })
     .pipe(gulp.dest("Build/Documentation/Images"));
 
-  return streamToPromise(stream);
+  await finished(stream);
+  return stream;
 }
 
 export async function buildDocsWatch() {
@@ -429,7 +430,7 @@ function combineForSandcastle() {
 export const websiteRelease = gulp.series(
   buildEngine,
   buildWidgets,
-  function () {
+  function websiteReleaseBuild() {
     return buildCesium({
       development: false,
       minify: false,
@@ -445,7 +446,7 @@ export const buildRelease = gulp.series(
   buildEngine,
   buildWidgets,
   // Generate Build/CesiumUnminified
-  function () {
+  function buildCesiumForNode() {
     return buildCesium({
       minify: false,
       removePragmas: false,
@@ -454,7 +455,7 @@ export const buildRelease = gulp.series(
     });
   },
   // Generate Build/Cesium
-  function () {
+  function buildMinifiedCesiumForNode() {
     return buildCesium({
       development: false,
       minify: true,
@@ -469,6 +470,41 @@ export const release = gulp.series(
   buildRelease,
   gulp.parallel(buildTs, buildDocs)
 );
+
+export const postversion = async function () {
+  const workspace = argv.workspace;
+  if (!workspace) {
+    return;
+  }
+  const directory = workspace.replaceAll(`@${scope}/`, ``);
+  const workspacePackageJson = require(`./packages/${directory}/package.json`);
+  const version = workspacePackageJson.version;
+
+  // Iterate through all package JSONs that may depend on the updated package and
+  // update the version of the updated workspace.
+  const packageJsons = await globby([
+    "./package.json",
+    "./packages/*/package.json",
+  ]);
+  const promises = packageJsons.map(async (packageJsonPath) => {
+    // Ensure that we don't check the updated workspace itself.
+    if (basename(dirname(packageJsonPath)) === directory) {
+      return;
+    }
+    // Ensure that we only update workspaces where the dependency to the updated workspace already exists.
+    const packageJson = require(packageJsonPath);
+    if (!Object.hasOwn(packageJson.dependencies, workspace)) {
+      console.log(
+        `Skipping update for ${workspace} as it is not a dependency.`
+      );
+      return;
+    }
+    // Update the version for the updated workspace.
+    packageJson.dependencies[workspace] = `^${version}`;
+    await writeFile(packageJsonPath, JSON.stringify(packageJson, undefined, 2));
+  });
+  return Promise.all(promises);
+};
 
 /**
  * Removes scripts from package.json files to ensure that
@@ -522,49 +558,16 @@ async function pruneScriptsForZip(packageJsonPath) {
   // Write to a temporary package.json file.
   const noPreparePackageJson = join(
     dirname(packageJsonPath),
-    "Build/package.noprepare.json"
+    "package.noprepare.json"
   );
   await writeFile(noPreparePackageJson, JSON.stringify(contentsJson, null, 2));
 
-  return gulp.src(noPreparePackageJson).pipe(gulpRename(packageJsonPath));
+  return gulp.src(noPreparePackageJson, {
+    base: ".",
+  });
 }
 
-export const postversion = async function () {
-  const workspace = argv.workspace;
-  if (!workspace) {
-    return;
-  }
-  const directory = workspace.replaceAll(`@${scope}/`, ``);
-  const workspacePackageJson = require(`./packages/${directory}/package.json`);
-  const version = workspacePackageJson.version;
-
-  // Iterate through all package JSONs that may depend on the updated package and
-  // update the version of the updated workspace.
-  const packageJsons = await globby([
-    "./package.json",
-    "./packages/*/package.json",
-  ]);
-  const promises = packageJsons.map(async (packageJsonPath) => {
-    // Ensure that we don't check the updated workspace itself.
-    if (basename(dirname(packageJsonPath)) === directory) {
-      return;
-    }
-    // Ensure that we only update workspaces where the dependency to the updated workspace already exists.
-    const packageJson = require(packageJsonPath);
-    if (!Object.hasOwn(packageJson.dependencies, workspace)) {
-      console.log(
-        `Skipping update for ${workspace} as it is not a dependency.`
-      );
-      return;
-    }
-    // Update the version for the updated workspace.
-    packageJson.dependencies[workspace] = `^${version}`;
-    await writeFile(packageJsonPath, JSON.stringify(packageJson, undefined, 2));
-  });
-  return Promise.all(promises);
-};
-
-export const makeZip = gulp.series(release, async function () {
+export const makeZip = gulp.series(release, async function createZipFile() {
   //For now we regenerate the JS glsl to force it to be unminified in the release zip
   //See https://github.com/CesiumGS/cesium/pull/3106#discussion_r42793558 for discussion.
   await glslToJavaScript(false, "Build/minifyShaders.state", "engine");
@@ -577,101 +580,110 @@ export const makeZip = gulp.series(release, async function () {
     "packages/widgets/package.json"
   );
 
-  const builtSrc = gulp.src(
-    [
-      "Build/Cesium/**",
-      "Build/CesiumUnminified/**",
-      "Build/Documentation/**",
-      "Build/Specs/**",
-      "!Build/Specs/e2e/**",
-      "!Build/InlineWorkers.js",
-      "Build/package.json",
-      "packages/engine/Build/**",
-      "packages/widgets/Build/**",
-      "!packages/engine/Build/Specs/**",
-      "!packages/widgets/Build/Specs/**",
-      "!packages/engine/Build/minifyShaders.state",
-      "!packages/engine/Build/package.noprepare.json",
-      "!packages/widgets/Build/package.noprepare.json",
-    ],
-    {
-      base: ".",
-    }
-  );
-
-  const staticSrc = gulp.src(
-    [
-      "Apps/**",
-      "Apps/**/.eslintrc.json",
-      "Apps/Sandcastle/.jshintrc",
-      "!Apps/Sandcastle/gallery/development/**",
-      "packages/engine/index.js",
-      "packages/engine/index.d.ts",
-      "packages/engine/LICENSE.md",
-      "packages/engine/README.md",
-      "packages/engine/Source/**",
-      "!packages/engine/.gitignore",
-      "packages/widgets/index.js",
-      "packages/widgets/index.d.ts",
-      "packages/widgets/LICENSE.md",
-      "packages/widgets/README.md",
-      "packages/widgets/Source/**",
-      "!packages/widgets/.gitignore",
-      "Source/**",
-      "Source/**/.eslintrc.json",
-      "Specs/**",
-      "!Specs/e2e/*-snapshots/**",
-      "Specs/**/.eslintrc.json",
-      "ThirdParty/**",
-      "favicon.ico",
-      ".eslintignore",
-      ".eslintrc.json",
-      ".prettierignore",
-      "scripts/**",
-      "gulpfile.js",
-      "server.js",
-      "index.cjs",
-      "LICENSE.md",
-      "CHANGES.md",
-      "README.md",
-      "web.config",
-    ],
-    {
-      base: ".",
-    }
-  );
-
-  const indexSrc = gulp
+  const src = gulp
     .src("index.release.html")
-    .pipe(gulpRename("index.html"));
-
-  return streamToPromise(
-    mergeStream(
-      packageJsonSrc,
-      enginePackageJsonSrc,
-      widgetsPackageJsonSrc,
-      builtSrc,
-      staticSrc,
-      indexSrc
-    )
-      .pipe(
-        gulpTap(function (file) {
-          // Work around an issue with gulp-zip where archives generated on Windows do
-          // not properly have their directory executable mode set.
-          // see https://github.com/sindresorhus/gulp-zip/issues/64#issuecomment-205324031
-          if (file.isDirectory()) {
-            file.stat.mode = parseInt("40777", 8);
-          }
-        })
-      )
-      .pipe(gulpZip(`Cesium-${version}.zip`))
-      .pipe(gulp.dest("."))
-      .on("finish", function () {
-        rimraf.sync("./Build/package.noprepare.json");
-        rimraf.sync("./packages/engine/Build/package.noprepare.json");
-        rimraf.sync("./packages/widgets/Build/package.noprepare.json");
+    .pipe(
+      gulpRename((file) => {
+        if (file.basename === "index.release") {
+          file.basename = "index";
+        }
       })
-  );
+    )
+    .pipe(enginePackageJsonSrc)
+    .pipe(widgetsPackageJsonSrc)
+    .pipe(packageJsonSrc)
+    .pipe(
+      gulpRename((file) => {
+        if (file.basename === "package.noprepare") {
+          file.basename = "package";
+        }
+      })
+    )
+    .pipe(
+      gulp.src(
+        [
+          "Build/Cesium/**",
+          "Build/CesiumUnminified/**",
+          "Build/Documentation/**",
+          "Build/Specs/**",
+          "Build/package.json",
+          "packages/engine/Build/**",
+          "packages/widgets/Build/**",
+          "!Build/Specs/e2e/**",
+          "!Build/InlineWorkers.js",
+          "!packages/engine/Build/Specs/**",
+          "!packages/widgets/Build/Specs/**",
+          "!packages/engine/Build/minifyShaders.state",
+        ],
+        {
+          encoding: false,
+          base: ".",
+        }
+      )
+    )
+    .pipe(
+      gulp.src(
+        [
+          "Apps/**",
+          "Apps/**/.eslintrc.json",
+          "Apps/Sandcastle/.jshintrc",
+          "packages/engine/index.js",
+          "packages/engine/index.d.ts",
+          "packages/engine/LICENSE.md",
+          "packages/engine/README.md",
+          "packages/engine/Source/**",
+          "packages/widgets/index.js",
+          "packages/widgets/index.d.ts",
+          "packages/widgets/LICENSE.md",
+          "packages/widgets/README.md",
+          "packages/widgets/Source/**",
+          "Source/**",
+          "Source/**/.eslintrc.json",
+          "Specs/**",
+          "Specs/**/.eslintrc.json",
+          "ThirdParty/**",
+          "favicon.ico",
+          ".eslintignore",
+          ".eslintrc.json",
+          ".prettierignore",
+          "scripts/**",
+          "gulpfile.js",
+          "server.js",
+          "index.cjs",
+          "LICENSE.md",
+          "CHANGES.md",
+          "README.md",
+          "web.config",
+          "!**/*.gitignore",
+          "!Specs/e2e/*-snapshots/**",
+          "!Apps/Sandcastle/gallery/development/**",
+        ],
+        {
+          encoding: false,
+          base: ".",
+        }
+      )
+    )
+    .pipe(
+      gulpTap(function (file) {
+        // Work around an issue with gulp-zip where archives generated on Windows do
+        // not properly have their directory executable mode set.
+        // see https://github.com/sindresorhus/gulp-zip/issues/64#issuecomment-205324031
+        if (file.isDirectory()) {
+          file.stat.mode = parseInt("40777", 8);
+        }
+      })
+    )
+    .pipe(gulpZip(`Cesium-${version}.zip`))
+    .pipe(gulp.dest("."));
+
+  await finished(src);
+
+  rimraf.sync("./package.noprepare.json");
+  rimraf.sync("./packages/engine/package.noprepare.json");
+  rimraf.sync("./packages/widgets/package.noprepare.json");
+
+  return src;
 });
 
 export async function deploySetVersion() {
@@ -1589,14 +1601,19 @@ export async function buildThirdParty() {
   return writeFile("ThirdParty.json", JSON.stringify(licenseJson, null, 2));
 }
 
-function buildSandcastle() {
+async function buildSandcastle() {
   const streams = [];
-  let appStream = gulp.src([
-    "Apps/Sandcastle/**",
-    "!Apps/Sandcastle/load-cesium-es6.js",
-    "!Apps/Sandcastle/images/**",
-    "!Apps/Sandcastle/gallery/**.jpg",
-  ]);
+  let appStream = gulp.src(
+    [
+      "Apps/Sandcastle/**",
+      "!Apps/Sandcastle/load-cesium-es6.js",
+      "!Apps/Sandcastle/images/**",
+      "!Apps/Sandcastle/gallery/**.jpg",
+    ],
+    {
+      encoding: false,
+    }
+  );
 
   if (isProduction) {
     // Remove swap out ESM modules for the IIFE build
@@ -1660,6 +1677,7 @@ function buildSandcastle() {
     {
       base: "Apps/Sandcastle",
       buffer: false,
+      encoding: false,
     }
   );
   if (isProduction) {
@@ -1695,7 +1713,7 @@ function buildSandcastle() {
     .pipe(gulp.dest("Build/Sandcastle"));
   streams.push(standaloneStream);
 
-  return streamToPromise(mergeStream(...streams));
+  return Promise.all(streams.map((s) => finished(s)));
 }
 
 async function buildCesiumViewer() {
@@ -1743,30 +1761,37 @@ async function buildCesiumViewer() {
     path: cesiumViewerOutputDirectory,
   });
 
-  const stream = mergeStream(
-    gulp.src([
-      "Apps/CesiumViewer/**",
-      "!Apps/CesiumViewer/Images",
-      "!Apps/CesiumViewer/**/*.js",
-      "!Apps/CesiumViewer/**/*.css",
-    ]),
-
-    gulp.src(
+  const stream = gulp
+    .src(
       [
-        "Build/Cesium/Assets/**",
-        "Build/Cesium/Workers/**",
-        "Build/Cesium/ThirdParty/**",
-        "Build/Cesium/Widgets/**",
-        "!Build/Cesium/Widgets/**/*.css",
+        "Apps/CesiumViewer/**",
+        "!Apps/CesiumViewer/Images",
+        "!Apps/CesiumViewer/**/*.js",
+        "!Apps/CesiumViewer/**/*.css",
       ],
       {
-        base: "Build/Cesium",
-        nodir: true,
+        encoding: false,
       }
-    ),
+    )
+    .pipe(
+      gulp.src(
+        [
+          "Build/Cesium/Assets/**",
+          "Build/Cesium/Workers/**",
+          "Build/Cesium/ThirdParty/**",
+          "Build/Cesium/Widgets/**",
+          "!Build/Cesium/Widgets/**/*.css",
+        ],
+        {
+          base: "Build/Cesium",
+          nodir: true,
+          encoding: false,
+        }
+      )
+    )
+    .pipe(gulp.src(["web.config"]))
+    .pipe(gulp.dest(cesiumViewerOutputDirectory));
 
-    gulp.src(["web.config"])
-  );
-
-  return streamToPromise(stream.pipe(gulp.dest(cesiumViewerOutputDirectory)));
+  await finished(stream);
+  return stream;
 }

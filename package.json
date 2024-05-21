@@ -67,7 +67,7 @@
     "express": "^4.17.1",
     "globby": "^14.0.0",
     "glsl-strip-comments": "^1.0.0",
-    "gulp": "^4.0.2",
+    "gulp": "^5.0.0",
     "gulp-clean-css": "^4.3.0",
     "gulp-insert": "^0.5.0",
     "gulp-rename": "^2.0.0",
@@ -100,13 +100,12 @@
     "request": "^2.79.0",
     "rimraf": "^5.0.0",
     "sinon": "^17.0.0",
-    "stream-to-promise": "^3.0.0",
     "tsd-jsdoc": "^2.5.0",
     "typescript": "^5.3.2",
     "yargs": "^17.0.1"
   },
   "scripts": {
-    "prepare": "gulp prepare && husky install && playwright install --with-deps",
+    "prepare": "gulp prepare && husky && playwright install --with-deps",
     "start": "node server.js",
     "start-public": "node server.js --public",
     "build": "gulp build",

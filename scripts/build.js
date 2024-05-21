@@ -5,13 +5,13 @@ import { readFile, writeFile } from "fs/promises";
 import { EOL } from "os";
 import path from "path";
 import { createRequire } from "module";
+import { finished } from 'stream/promises';
 
 import esbuild from "esbuild";
 import { globby } from "globby";
 import glslStripComments from "glsl-strip-comments";
 import gulp from "gulp";
 import { rimraf } from "rimraf";
-import streamToPromise from "stream-to-promise";
 
 import { mkdirp } from "mkdirp";
 
@@ -715,10 +715,11 @@ const has_new_gallery_demos = ${newDemos.length > 0 ? "true;" : "false;"}\n`;
  */
 export async function copyFiles(globs, destination, base) {
   const stream = gulp
-    .src(globs, { nodir: true, base: base ?? "" })
+    .src(globs, { nodir: true, base: base ?? "", encoding: false })
     .pipe(gulp.dest(destination));
 
-  return streamToPromise(stream);
+  await finished(stream);
+  return stream;
 }
 
 /**
