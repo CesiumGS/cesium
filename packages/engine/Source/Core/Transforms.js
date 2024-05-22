@@ -726,6 +726,77 @@ Transforms.computeIcrfToFixedMatrix = function (date, result) {
   return Matrix3.transpose(fixedToIcrfMtx, result);
 };
 
+const TdtMinusTai = 32.184;
+const J2000d = 2451545;
+const scratchHpr = new HeadingPitchRoll();
+const scratchRotationMatrix = new Matrix3();
+const dateScratch = new JulianDate();
+Transforms.computeMoonFixedToIcrfMatrix = function (date, result) {
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(date)) {
+    throw new DeveloperError("date is required.");
+  }
+  //>>includeEnd('debug');
+
+  if (!defined(result)) {
+    result = new Matrix3();
+  }
+
+  // Converts TAI to TT
+  const secondsTT = JulianDate.addSeconds(date, TdtMinusTai, dateScratch);
+
+  // Converts TT to TDB, interval in days since the standard epoch
+  const d = JulianDate.totalDays(secondsTT) - J2000d;
+
+  // Compute the approximate rotation, using https://articles.adsabs.harvard.edu//full/1980CeMec..22..205D/0000209.000.html
+  const e1 = CesiumMath.toRadians(12.112) - CesiumMath.toRadians(0.052992) * d;
+  const e2 = CesiumMath.toRadians(24.224) - CesiumMath.toRadians(0.105984) * d;
+  const e3 = CesiumMath.toRadians(227.645) + CesiumMath.toRadians(13.012) * d;
+  const e4 =
+    CesiumMath.toRadians(261.105) + CesiumMath.toRadians(13.340716) * d;
+  const e5 = CesiumMath.toRadians(358.0) + CesiumMath.toRadians(0.9856) * d;
+
+  scratchHpr.heading =
+    CesiumMath.toRadians(270.0) -
+    CesiumMath.toRadians(3.878) * Math.sin(e1) -
+    CesiumMath.toRadians(0.12) * Math.sin(e2) +
+    CesiumMath.toRadians(0.07) * Math.sin(e3) -
+    CesiumMath.toRadians(0.017) * Math.sin(e4);
+  scratchHpr.pitch =
+    CesiumMath.toRadians(66.534) +
+    CesiumMath.toRadians(1.543) * Math.cos(e1) +
+    CesiumMath.toRadians(0.24) * Math.cos(e2) -
+    CesiumMath.toRadians(0.028) * Math.cos(e3) +
+    CesiumMath.toRadians(0.007) * Math.cos(e4);
+  scratchHpr.roll =
+    CesiumMath.toRadians(244.375) +
+    CesiumMath.toRadians(13.17635831) * d +
+    CesiumMath.toRadians(3.558) * Math.sin(e1) +
+    CesiumMath.toRadians(0.121) * Math.sin(e2) -
+    CesiumMath.toRadians(0.064) * Math.sin(e3) +
+    CesiumMath.toRadians(0.016) * Math.sin(e4) +
+    CesiumMath.toRadians(0.025) * Math.sin(e5);
+  return Matrix3.fromHeadingPitchRoll(scratchHpr, scratchRotationMatrix);
+};
+
+Transforms.computeIcrfToMoonFixedMatrix = function (date, result) {
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(date)) {
+    throw new DeveloperError("date is required.");
+  }
+  //>>includeEnd('debug');
+  if (!defined(result)) {
+    result = new Matrix3();
+  }
+
+  const fixedToIcrfMtx = Transforms.computeMoonFixedToIcrfMatrix(date, result);
+  if (!defined(fixedToIcrfMtx)) {
+    return undefined;
+  }
+
+  return Matrix3.transpose(fixedToIcrfMtx, result);
+};
+
 const xysScratch = new Iau2006XysSample(0.0, 0.0, 0.0);
 const eopScratch = new EarthOrientationParametersSample(
   0.0,

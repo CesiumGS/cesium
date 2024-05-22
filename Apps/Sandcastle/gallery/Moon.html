@@ -37,13 +37,10 @@
         Cesium.Ion.defaultAccessToken =
           "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJhZDUyNTc2YS1hMmQyLTQ2NGUtYmE2Ny01ZmQ5MmRmNGEyOGQiLCJpZCI6MTQsInNjb3BlcyI6WyJhc3IiLCJnYyJdLCJpYXQiOjE1ODgxODAxNDB9.q3KJVaTTtaMs404afZYo2RQSbYglE09Xfrm7BkZP694";
 
+        Cesium.Ellipsoid.default = Cesium.Ellipsoid.MOON;
         const moonOptions = {
-          ellipsoid: Cesium.Ellipsoid.MOON,
           terrainProvider: await Cesium.CesiumTerrainProvider.fromIonAssetId(
-            1238,
-            {
-              ellipsoid: Cesium.Ellipsoid.MOON,
-            }
+            1238
           ),
           baseLayer: Cesium.ImageryLayer.fromProviderAsync(
             Cesium.IonImageryProvider.fromAssetId(1208)
@@ -53,12 +50,17 @@
         const viewer = new Cesium.Viewer("cesiumContainer", {
           ...moonOptions,
           useBrowserRecommendedResolution: false,
-          timeline: false,
-          animation: false,
+          //timeline: false,
+          //animation: false,
           baseLayerPicker: false,
           geocoder: false,
         });
-        viewer.scene.msaaSamples = 4;
+        viewer.clock.multiplier = 3 * 60 * 60 * 24;
+        viewer.clock.shouldAnimate = true;
+
+        const scene = viewer.scene;
+        scene.msaaSamples = 4;
+        scene.globe.enableLighting = true;
 
         // Positions courtesy of https://www.sciencedirect.com/science/article/abs/pii/S0019103516301518?via%3Dihub
         const pointsOfInterest = [

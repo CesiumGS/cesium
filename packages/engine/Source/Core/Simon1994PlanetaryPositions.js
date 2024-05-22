@@ -627,6 +627,7 @@ const axesTransformation = new Matrix3(
   0.9174820620691819
 );
 let translation = new Cartesian3();
+
 /**
  * Computes the position of the Sun in the Earth-centered inertial frame
  *
@@ -662,7 +663,7 @@ Simon1994PlanetaryPositions.computeSunPositionInEarthInertialFrame = function (
 /**
  * Computes the position of the Moon in the Earth-centered inertial frame
  *
- * @param {JulianDate} [julianDate] The time at which to compute the Sun's position, if not provided the current system time is used.
+ * @param {JulianDate} [julianDate] The time at which to compute the Moon's position, if not provided the current system time is used.
  * @param {Cartesian3} [result] The object onto which to store the result.
  * @returns {Cartesian3} Calculated moon position
  */
@@ -681,11 +682,11 @@ Simon1994PlanetaryPositions.computeMoonPositionInEarthInertialFrame = function (
 };
 
 /**
- * Computes the position of the Sun in the Moon-centered inertial frame
+ * Computes the position of the Sun in the Moon-centered fixed frame
  *
  * @param {JulianDate} [julianDate] The time at which to compute the Sun's position, if not provided the current system time is used.
  * @param {Cartesian3} [result] The object onto which to store the result.
- * @returns {Cartesian3} Calculated sun position
+ * @returns {Cartesian3} Calculated Sun position
  */
 Simon1994PlanetaryPositions.computeSunPositionInMoonInertialFrame = function (
   julianDate,
@@ -707,7 +708,8 @@ Simon1994PlanetaryPositions.computeSunPositionInMoonInertialFrame = function (
   computeSimonMoon(julianDate, translation);
 
   Cartesian3.subtract(result, translation, result);
-  Matrix3.multiplyByVector(axesTransformation, result, result);
+
+  //Matrix3.multiplyByVector(rotation, result, result); TODO: ?
 
   return result;
 };
