@@ -57,7 +57,10 @@ const colorScratch = new Color();
  * @param {BoundingRectangle} screenSpaceRectangle
  * @returns {object|undefined} The object rendered in the middle of the rectangle, or undefined if nothing was rendered.
  */
-PickFramebuffer.prototype.end = function (screenSpaceRectangle) {
+PickFramebuffer.prototype.end = function (
+  screenSpaceRectangle,
+  pickPropertyTexture
+) {
   const width = defaultValue(screenSpaceRectangle.width, 1.0);
   const height = defaultValue(screenSpaceRectangle.height, 1.0);
 
@@ -93,6 +96,15 @@ PickFramebuffer.prototype.end = function (screenSpaceRectangle) {
       y <= halfHeight
     ) {
       const index = 4 * ((halfHeight - y) * width + x + halfWidth);
+
+      if (pickPropertyTexture) {
+        return {
+          r: pixels[index],
+          g: pixels[index + 1],
+          b: pixels[index + 2],
+          a: pixels[index + 3],
+        };
+      }
 
       colorScratch.red = Color.byteToFloat(pixels[index]);
       colorScratch.green = Color.byteToFloat(pixels[index + 1]);

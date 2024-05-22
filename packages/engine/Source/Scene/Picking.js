@@ -249,7 +249,13 @@ const scratchColorZero = new Color(0.0, 0.0, 0.0, 0.0);
  * @param {number} [height=3] Height of the pick rectangle.
  * @returns {object} Object containing the picked primitive.
  */
-Picking.prototype.pick = function (scene, windowPosition, width, height) {
+Picking.prototype.pick = function (
+  scene,
+  windowPosition,
+  width,
+  height,
+  pickPropertyTexture
+) {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("windowPosition", windowPosition);
   //>>includeEnd('debug');
@@ -307,7 +313,7 @@ Picking.prototype.pick = function (scene, windowPosition, width, height) {
   scene.updateAndExecuteCommands(passState, scratchColorZero);
   scene.resolveFramebuffers(passState);
 
-  const object = pickFramebuffer.end(scratchRectangle);
+  const object = pickFramebuffer.end(scratchRectangle, pickPropertyTexture);
   context.endFrame();
   return object;
 };

@@ -41,6 +41,15 @@ PickingPipelineStage.process = function (
   const model = renderResources.model;
   const instances = runtimeNode.node.instances;
 
+  // XXX_UNCERTAINTY WTF? This is actually arriving as pixel
+  // colors somehere?!
+  renderResources.pickId = `vec4(0.1, 0.3, 0.6, 0.9)`;
+  // XXX_UNCERTAINTY - Hard coded for demo (from internal PR)
+  if (defined(renderResources.pickId)) {
+    return;
+  }
+  //
+
   if (renderResources.hasPropertyTable) {
     processPickTexture(renderResources, primitive, instances, context);
   } else if (defined(instances)) {

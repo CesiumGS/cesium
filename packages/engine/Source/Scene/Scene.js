@@ -4171,6 +4171,12 @@ Scene.prototype.pick = function (windowPosition, width, height) {
   return this._picking.pick(this, windowPosition, width, height);
 };
 
+// XXX_UNCERTAINTY - Hard coded for demo (from internal PR)
+Scene.prototype.pickPropertyTexture = function (windowPosition) {
+  return this._picking.pick(this, windowPosition, 1, 1, true);
+};
+//
+
 /**
  * Returns a {@link VoxelCell} for the voxel sample rendered at a particular window coordinate,
  * or undefined if no voxel is rendered at that position.
