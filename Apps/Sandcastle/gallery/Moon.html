@@ -57,6 +57,13 @@
         });
         viewer.clock.multiplier = 3 * 60 * 60 * 24;
         viewer.clock.shouldAnimate = true;
+        viewer.camera.flyTo({
+          destination: new Cesium.Cartesian3.fromDegrees(
+            0,
+            0,
+            Cesium.Ellipsoid.default.minimumRadius * 2.6
+          ),
+        });
 
         const scene = viewer.scene;
         scene.msaaSamples = 4;

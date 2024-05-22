@@ -756,20 +756,20 @@ Transforms.computeMoonFixedToIcrfMatrix = function (date, result) {
     CesiumMath.toRadians(261.105) + CesiumMath.toRadians(13.340716) * d;
   const e5 = CesiumMath.toRadians(358.0) + CesiumMath.toRadians(0.9856) * d;
 
-  scratchHpr.heading =
-    CesiumMath.toRadians(270.0) -
+  scratchHpr.pitch =
+    CesiumMath.toRadians(270.0 - 90) -
     CesiumMath.toRadians(3.878) * Math.sin(e1) -
     CesiumMath.toRadians(0.12) * Math.sin(e2) +
     CesiumMath.toRadians(0.07) * Math.sin(e3) -
     CesiumMath.toRadians(0.017) * Math.sin(e4);
-  scratchHpr.pitch =
-    CesiumMath.toRadians(66.534) +
+  scratchHpr.roll =
+    CesiumMath.toRadians(66.53 - 90) +
     CesiumMath.toRadians(1.543) * Math.cos(e1) +
     CesiumMath.toRadians(0.24) * Math.cos(e2) -
     CesiumMath.toRadians(0.028) * Math.cos(e3) +
     CesiumMath.toRadians(0.007) * Math.cos(e4);
-  scratchHpr.roll =
-    CesiumMath.toRadians(244.375) +
+  scratchHpr.heading =
+    CesiumMath.toRadians(244.375 - 90) +
     CesiumMath.toRadians(13.17635831) * d +
     CesiumMath.toRadians(3.558) * Math.sin(e1) +
     CesiumMath.toRadians(0.121) * Math.sin(e2) -
