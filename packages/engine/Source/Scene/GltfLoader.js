@@ -489,8 +489,15 @@ function processLoaders(loader, frameState) {
   if (defined(gpmLoader)) {
     const metadataReady = gpmLoader.process(frameState);
     if (metadataReady) {
-      // XXX
-      console.log("Overwriting structural metadata with GPM data");
+      // XXX_UNCERTAINTY NOTE: One could check for the
+      // loader._components.structuralMetadata to be
+      // present here and try to augment the existing
+      // one with the data that is provided by the
+      // GpmLoader, but ... that would require an
+      // actual MERGING process.
+      if (defined(loader._components.structuralMetadata)) {
+        console.log("WARNING: Overwriting structural metadata with GPM data");
+      }
       loader._components.structuralMetadata = gpmLoader.structuralMetadata;
     }
     ready = ready && metadataReady;
@@ -1964,12 +1971,6 @@ function loadPrimitive(
     loadPrimitiveMetadataLegacy(loader, primitive, featureMetadataLegacy);
   }
 
-  const gpmLocal = extensions.NGA_gpm_local;
-  console.log("gpmLocal is ", gpmLocal);
-  if (defined(gpmLocal)) {
-    console.log("Now do something with this...");
-  }
-
   const primitiveType = gltfPrimitive.mode;
   if (loadForClassification && primitiveType !== PrimitiveType.TRIANGLES) {
     throw new RuntimeError(
@@ -2682,8 +2683,6 @@ function parse(loader, gltf, supportedImageFormats, frameState) {
     defined(structuralMetadataExtension) ||
     defined(featureMetadataExtensionLegacy)
   ) {
-    // XXX
-    console.log("Loading structural metadata");
     const promise = loadStructuralMetadata(
       loader,
       gltf,
@@ -2705,7 +2704,7 @@ function parse(loader, gltf, supportedImageFormats, frameState) {
           const primitiveExtensions = primitive.extensions;
           const gpmExtension = primitiveExtensions.NGA_gpm_local;
           if (defined(gpmExtension)) {
-            // XXX
+            // XXX_UNCERTAINTY Hooking in for the GPM loading here:
             console.log("Loading GPM");
             const promise = loadGpm(
               loader,
