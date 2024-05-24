@@ -41,10 +41,9 @@ PickingPipelineStage.process = function (
   const model = renderResources.model;
   const instances = runtimeNode.node.instances;
 
-  // XXX_UNCERTAINTY WTF? This is actually arriving as pixel
-  // colors somehere?!
-  renderResources.pickId = `vec4(0.1, 0.3, 0.6, 0.9)`;
   // XXX_UNCERTAINTY - Hard coded for demo (from internal PR)
+  // The pickId will be set in the MetadataPipelineStage, at
+  // the place marked with XXX_UNCERTAINTY...
   if (defined(renderResources.pickId)) {
     return;
   }

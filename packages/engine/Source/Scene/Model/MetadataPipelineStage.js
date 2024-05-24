@@ -114,7 +114,111 @@ MetadataPipelineStage.process = function (
     const info = propertyTexturesInfo[i];
     processPropertyTextureProperty(renderResources, info);
   }
+
+  // XXX_UNCERTAINTY That pickId shader stringy thingy....
+  const pickId = generatePropertyTexturePropertyPickId(propertyTexturesInfo, [
+    "SIGZ",
+    "SIGR",
+  ]);
+  console.log(`Setting pickId to ${pickId}`);
+  renderResources.pickId = pickId;
 };
+
+/**
+ * Returns the "info" object from the given array (which contains elements
+ * that have been created with `getPropertyTextureInfo`) that has the
+ * given metadata variable name as its `metadataVariable`, or `undefined`
+ * if the given array does not contain such an object.
+ *
+ * @param {Object[]} propertyTexturesInfo The property texture infos
+ * @param {string} metadataVariableName The metadata variable name
+ * @returns The property texture info, or `undefined`
+ */
+function findPropertyTextureInfo(propertyTexturesInfo, metadataVariableName) {
+  for (let i = 0; i < propertyTexturesInfo.length; i++) {
+    const info = propertyTexturesInfo[i];
+    const metadataVariable = info.metadataVariable;
+    if (metadataVariable === metadataVariableName) {
+      return info;
+    }
+  }
+  return undefined;
+}
+
+/**
+ * Creates the line of shader code for accessing the given property
+ * texture property via a texture lookup.
+ *
+ * The given object must be a property texture info object, as
+ * created by `getPropertyTextureInfo`
+ *
+ * @param {Object} propertyTextureInfo
+ * @returns The line of shader code for accessing the value
+ */
+function createPropertyTextureValueAccessLine(propertyTextureInfo) {
+  const propertyTextureProperty = propertyTextureInfo.property;
+  const textureReader = propertyTextureProperty.textureReader;
+  const texCoord = textureReader.texCoord;
+  const index = textureReader.index;
+  const channels = textureReader.channels;
+  const textureUniformName = `u_propertyTexture_${index}`;
+  // TODO `KHR_texture_transform` has to be taken into account here!
+  const texCoordName = `v_texCoord_${texCoord}`;
+  const valueAccessLine = `texture(${textureUniformName}, ${texCoordName}).${channels}`;
+  return valueAccessLine;
+}
+
+/**
+ * Returns the shader code that serves as a `pickId` in the render
+ * resources, for picking property texture values.
+ *
+ * This returns an expression of the form `vec4(r, g, b, a)`, with
+ * each of the RGBA values being a texture lookup for the property
+ * texture property with one of the given metadata variable names.
+ *
+ * If more than 4 variable names are given, then a warning will
+ * be printed and the first 4 variable names will be used.
+ *
+ * If no property texture property is found for one of the given
+ * metadata variable names, then a warning will be printed, and
+ * the respective vector component will be `0.0`.
+ *
+ * @param {Object[]} propertyTexturesInfo The property texture infos
+ * @param {string[]} metadataVariableNames The metadata variable names
+ * @returns The pick ID string
+ */
+function generatePropertyTexturePropertyPickId(
+  propertyTexturesInfo,
+  metadataVariableNames
+) {
+  let n = metadataVariableNames.length;
+  if (n > 4) {
+    console.log(
+      "WARNING: Only up to 4 property texture properties can be picked"
+    );
+    n = 4;
+  }
+  const vecComponents = ["0.0", "0.0", "0.0", "0.0"];
+  for (let i = 0; i < metadataVariableNames.length; i++) {
+    const metadataVariableName = metadataVariableNames[i];
+    const propertyTextureInfo = findPropertyTextureInfo(
+      propertyTexturesInfo,
+      metadataVariableName
+    );
+    if (!defined(propertyTextureInfo)) {
+      console.log(
+        "WARNING: Property texture property for variable name ${metadataVariableName} not found - skipping"
+      );
+      continue;
+    }
+    const valueAccessLine = createPropertyTextureValueAccessLine(
+      propertyTextureInfo
+    );
+    vecComponents[i] = valueAccessLine;
+  }
+  const pickId = `vec4(${vecComponents[0]}, ${vecComponents[1]}, ${vecComponents[2]}, ${vecComponents[3]})`;
+  return pickId;
+}
 
 /**
  * Collect info about all properties of all propertyAttributes, and
