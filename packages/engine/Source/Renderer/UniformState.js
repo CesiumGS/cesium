@@ -1319,7 +1319,7 @@ function setSunAndMoonDirections(uniformState, frameState) {
     );
   }
 
-  let position = Simon1994PlanetaryPositions.computeSunPositionInMoonInertialFrame(
+  let position = Simon1994PlanetaryPositions.computeSunPositionInEarthInertialFrame(
     frameState.time,
     uniformState._sunPositionWC
   );
