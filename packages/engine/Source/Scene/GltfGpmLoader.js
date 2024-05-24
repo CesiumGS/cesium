@@ -14,6 +14,12 @@ import MetadataClass from "./MetadataClass.js";
  * <p>
  * Implements the {@link ResourceLoader} interface.
  * </p>
+ * Implementation note: This is an experimental implementation. It is based
+ * on a GltfStructuralMetadataLoader, by removing everything that is not
+ * related to property textures, and translating the "ppeTextures" of
+ * the NGA_gpm_local extension into property textures. These will be
+ * returned as part of a `StructuralMetadata` object, which may override
+ * any `StructuralMetadata` that was read directly from the glTF.
  *
  * @alias GltfGpmLoader
  * @constructor
@@ -261,7 +267,11 @@ GltfGpmLoader.prototype.process = function (frameState) {
       // always be there. And it should be known by the user. And
       // it should be the same for all glTF. And there is no
       // reasonable way for "transporting" that to the user for now...
-      const ppePropertyName = ppeTexture.traits?.source ?? `ppe_${i}`;
+      let ppePropertyName = ppeTexture.traits?.source;
+      if (!defined(ppePropertyName)) {
+        console.log("WARNING: Per-point error texture traits source not found");
+        ppePropertyName = `ppe_${i}`;
+      }
       const classJson = {
         name: classId,
         properties: {
