@@ -457,10 +457,11 @@ ArcGISTiledElevationTerrainProvider.prototype.requestTileGeometry = function (
         // Otherwise it will think the request failed, but it didn't.
         try {
           await request.deferred?.promise;
-        } finally {
-          request.state = RequestState.CANCELLED;
+        } catch {
+          // Eat this error
         }
 
+        request.state = RequestState.CANCELLED;
         return Promise.reject(error);
       }
       return Promise.reject(error);
