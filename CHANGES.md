@@ -7,11 +7,17 @@
 ##### Additions :tada:
 
 - Added `Ellipsoid.default` to allow a central place to specify a default ellipsoid value to be used throughout the API where an ellipsoid is not otherwise specified.
+- Added `Scene.ellipsoid`, `CesiumWidget.ellipsoid`, and `Viewer.ellipsoid` to set the default ellipsoid used for rendering.
 
 ##### Fixes :wrench:
 
 - Fixed a bug where `TaskProcessor` worker loading would check the worker module ID rather than the absolute URL when determining if it is cross-origin. [#11833](https://github.com/CesiumGS/cesium/pull/11833)
 - Fixed a bug where cross-origin workers would error when loaded with the CommonJS `importScripts` shim instead of an ESM `import`. [#11833](https://github.com/CesiumGS/cesium/pull/11833)
+
+##### Deprecated :hourglass_flowing_sand:
+
+- `SceneTransforms.wgs84ToDrawingBufferCoordinates` has been deprecated. It will be removed in 1.121. Use `SceneTransforms.worldToDrawingBufferCoordinates` instead.
+- `SceneTransforms.wgs84ToWindowCoordinates` has been deprecated. It will be removed in 1.21. Use `SceneTransforms.worldToWindowCoordinates` instead.
 
 ### 1.117
 

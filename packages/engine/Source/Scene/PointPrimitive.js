@@ -547,7 +547,7 @@ PointPrimitive._computeScreenSpacePosition = function (
     ),
     scratchCartesian4
   );
-  const positionWC = SceneTransforms.wgs84ToWindowCoordinates(
+  const positionWC = SceneTransforms.worldToWindowCoordinates(
     scene,
     positionWorld,
     result

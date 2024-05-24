@@ -37,13 +37,10 @@
         Cesium.Ion.defaultAccessToken =
           "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJhZDUyNTc2YS1hMmQyLTQ2NGUtYmE2Ny01ZmQ5MmRmNGEyOGQiLCJpZCI6MTQsInNjb3BlcyI6WyJhc3IiLCJnYyJdLCJpYXQiOjE1ODgxODAxNDB9.q3KJVaTTtaMs404afZYo2RQSbYglE09Xfrm7BkZP694";
 
+        Cesium.Ellipsoid.default = Cesium.Ellipsoid.MOON;
         const moonOptions = {
-          ellipsoid: Cesium.Ellipsoid.MOON,
           terrainProvider: await Cesium.CesiumTerrainProvider.fromIonAssetId(
-            1238,
-            {
-              ellipsoid: Cesium.Ellipsoid.MOON,
-            }
+            1238
           ),
           baseLayer: Cesium.ImageryLayer.fromProviderAsync(
             Cesium.IonImageryProvider.fromAssetId(1208)
@@ -91,11 +88,9 @@
 
         for (const poi of pointsOfInterest) {
           viewer.entities.add({
-            position: Cesium.Cartesian3.fromRadians(
+            position: Cesium.Cartesian3.fromDegrees(
               poi.longitude,
-              poi.latitude,
-              0,
-              Cesium.Ellipsoid.MOON
+              poi.latitude
             ),
             label: {
               text: poi.text,

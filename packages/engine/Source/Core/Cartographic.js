@@ -83,6 +83,7 @@ Cartographic.fromDegrees = function (longitude, latitude, height, result) {
   Check.typeOf.number("longitude", longitude);
   Check.typeOf.number("latitude", latitude);
   //>>includeEnd('debug');
+
   longitude = CesiumMath.toRadians(longitude);
   latitude = CesiumMath.toRadians(latitude);
 

@@ -1399,7 +1399,7 @@ Billboard._computeScreenSpacePosition = function (
   );
 
   // World to window coordinates
-  const positionWC = SceneTransforms.wgs84WithEyeOffsetToWindowCoordinates(
+  const positionWC = SceneTransforms.worldWithEyeOffsetToWindowCoordinates(
     scene,
     positionWorld,
     eyeOffset,

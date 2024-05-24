@@ -275,7 +275,10 @@ Object.defineProperties(Ellipsoid, {
       return Ellipsoid._default;
     },
     set: function (value) {
-      // TODO: developer error?
+      //>>includeStart('debug', pragmas.debug);
+      Check.typeOf.object("value", value);
+      //>>includeEnd('debug');
+
       Ellipsoid._default = value;
       Cartesian3._ellipsoidRadiiSquared = value.radiiSquared;
       Cartographic._ellipsoidOneOverRadii = value.oneOverRadii;

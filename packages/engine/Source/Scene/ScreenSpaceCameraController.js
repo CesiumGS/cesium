@@ -920,11 +920,11 @@ function handleZoom(
 
   if ((!sameStartPosition && zoomOnVector) || zoomingOnVector) {
     let ray;
-    const zoomMouseStart = SceneTransforms.wgs84ToWindowCoordinates(
+    const zoomMouseStart = SceneTransforms.worldToWindowCoordinates(
       scene,
       object._zoomWorldPosition,
       scratchZoomOffset
-    ); // TODO: ellipsoids
+    );
     if (
       mode !== SceneMode.COLUMBUS_VIEW &&
       Cartesian2.equals(startPosition, object._zoomMouseStart) &&
