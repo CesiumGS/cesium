@@ -446,7 +446,7 @@ ArcGISTiledElevationTerrainProvider.prototype.requestTileGeometry = function (
         encoding: that._encoding,
       });
     })
-    .catch(function (error) {
+    .catch(async function (error) {
       if (
         defined(availabilityRequest) &&
         availabilityRequest.state === RequestState.CANCELLED
@@ -455,10 +455,13 @@ ArcGISTiledElevationTerrainProvider.prototype.requestTileGeometry = function (
 
         // Don't reject the promise till the request is actually cancelled
         // Otherwise it will think the request failed, but it didn't.
-        return request.deferred.promise.finally(function () {
+        try {
+          await request.deferred?.promise;
+        } finally {
           request.state = RequestState.CANCELLED;
-          return Promise.reject(error);
-        });
+        }
+
+        return Promise.reject(error);
       }
       return Promise.reject(error);
     });

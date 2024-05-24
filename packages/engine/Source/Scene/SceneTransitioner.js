@@ -627,7 +627,7 @@ function morphFromColumbusViewTo2D(transitioner, duration) {
 
   if (duration > 0.0) {
     Cartesian3.clone(Cartesian3.ZERO, scratchCVTo2DEndPos);
-    endPos.z = 5.0 * scene.mapProjection.ellipsoid.maximumRadius;
+    endPos.z = 5.0 * scene.ellipsoid.maximumRadius;
   } else {
     Cartesian3.clone(startPos, scratchCVTo2DEndPos);
 

@@ -208,6 +208,7 @@ describe("Widgets/BaseLayerPicker/BaseLayerPickerViewModel", function () {
     });
 
     viewModel.selectedImagery = testProviderViewModel;
+    viewModel.selectedTerrain = testProviderViewModel3;
     await testProviderViewModel.creationCommand();
     expect(viewModel.buttonTooltip).toEqual(
       `${testProviderViewModel.name}\n${testProviderViewModel3.name}`
@@ -233,7 +234,7 @@ describe("Widgets/BaseLayerPicker/BaseLayerPickerViewModel", function () {
       imageryProviderViewModels: imageryViewModels,
     });
 
-    expect(imageryLayers.length).toEqual(1);
+    expect(imageryLayers.length).toEqual(0);
 
     viewModel.selectedImagery = testProviderViewModel;
     expect(imageryLayers.length).toEqual(1);
@@ -334,7 +335,7 @@ describe("Widgets/BaseLayerPicker/BaseLayerPickerViewModel", function () {
       imageryProviderViewModels: imageryViewModels,
     });
 
-    expect(imageryLayers.length).toEqual(1);
+    expect(imageryLayers.length).toEqual(0);
 
     viewModel.selectedImagery = testProviderViewModel2;
     expect(imageryLayers.length).toEqual(2);

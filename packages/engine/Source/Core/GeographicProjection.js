@@ -102,4 +102,5 @@ GeographicProjection.prototype.unproject = function (cartesian, result) {
   result.height = height;
   return result;
 };
+
 export default GeographicProjection;

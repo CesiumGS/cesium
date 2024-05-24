@@ -303,14 +303,8 @@ function BaseLayerPickerViewModel(options) {
     that.dropDownVisible = !that.dropDownVisible;
   });
 
-  this.selectedImagery = defaultValue(
-    options.selectedImageryProviderViewModel,
-    imageryProviderViewModels[0]
-  );
-  this.selectedTerrain = defaultValue(
-    options.selectedTerrainProviderViewModel,
-    terrainProviderViewModels[0]
-  );
+  this.selectedImagery = options.selectedImageryProviderViewModel;
+  this.selectedTerrain = options.selectedTerrainProviderViewModel;
 }
 
 Object.defineProperties(BaseLayerPickerViewModel.prototype, {

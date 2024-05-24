@@ -216,25 +216,36 @@ function ScreenSpaceCameraController(scene) {
     eventType: CameraEventType.LEFT_DRAG,
     modifier: KeyboardEventModifier.SHIFT,
   };
+
+  const ellipsoid = defaultValue(scene.ellipsoid, Ellipsoid.default);
+
   /**
    * The minimum height the camera must be before picking the terrain or scene content instead of the ellipsoid.
    * @type {number}
    * @default 150000.0
    */
-  this.minimumPickingTerrainHeight = 150000.0;
+  this.minimumPickingTerrainHeight = Ellipsoid.WGS84.equals(ellipsoid)
+    ? 150000.0
+    : ellipsoid.minimumRadius * 0.025;
   this._minimumPickingTerrainHeight = this.minimumPickingTerrainHeight;
   /**
    * The minimum distance the camera must be before testing for collision with terrain when zoom with inertia.
    * @type {number}
    * @default 4000.0
    */
-  this.minimumPickingTerrainDistanceWithInertia = 4000.0;
+  this.minimumPickingTerrainDistanceWithInertia = Ellipsoid.WGS84.equals(
+    ellipsoid
+  )
+    ? 4000.0
+    : ellipsoid.minimumRadius * 0.00063;
   /**
    * The minimum height the camera must be before testing for collision with terrain.
    * @type {number}
    * @default 15000.0
    */
-  this.minimumCollisionTerrainHeight = 15000.0;
+  this.minimumCollisionTerrainHeight = Ellipsoid.WGS84.equals(ellipsoid)
+    ? 15000.0
+    : ellipsoid.minimumRadius * 0.0025;
   this._minimumCollisionTerrainHeight = this.minimumCollisionTerrainHeight;
   /**
    * The minimum height the camera must be before switching from rotating a track ball to
@@ -242,7 +253,9 @@ function ScreenSpaceCameraController(scene) {
    * @type {number}
    * @default 7500000.0
    */
-  this.minimumTrackBallHeight = 7500000.0;
+  this.minimumTrackBallHeight = Ellipsoid.WGS84.equals(ellipsoid)
+    ? 7500000.0
+    : ellipsoid.minimumRadius * 1.175;
   this._minimumTrackBallHeight = this.minimumTrackBallHeight;
   /**
    * When disabled, the values of <code>maximumZoomDistance</code> and <code>minimumZoomDistance</code> are ignored.
@@ -253,7 +266,7 @@ function ScreenSpaceCameraController(scene) {
 
   this._scene = scene;
   this._globe = undefined;
-  this._ellipsoid = undefined;
+  this._ellipsoid = ellipsoid;
 
   this._lastGlobeHeight = 0.0;
 

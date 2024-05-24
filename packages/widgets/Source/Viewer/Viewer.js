@@ -486,7 +486,8 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
   // Cesium widget
   const cesiumWidget = new CesiumWidget(cesiumWidgetContainer, {
     baseLayer:
-      createBaseLayerPicker ||
+      (createBaseLayerPicker &&
+        defined(options.selectedImageryProviderViewModel)) ||
       defined(options.baseLayer) ||
       defined(options.imageryProvider)
         ? false
@@ -706,7 +707,6 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
     //>>includeEnd('debug')
 
     if (createBaseLayerPicker) {
-      baseLayerPicker.viewModel.selectedTerrain = undefined;
       // Required as this is otherwise set by the baseLayerPicker
       scene.globe.depthTestAgainstTerrain = true;
     }
