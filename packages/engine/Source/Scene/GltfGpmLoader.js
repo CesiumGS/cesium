@@ -7,6 +7,7 @@ import ResourceLoaderState from "./ResourceLoaderState.js";
 import PropertyTexture from "./PropertyTexture.js";
 import StructuralMetadata from "./StructuralMetadata.js";
 import MetadataSchema from "./MetadataSchema.js";
+import MetadataClass from "./MetadataClass.js";
 
 /**
  * Loads glTF NGA_gpm_local
@@ -232,34 +233,59 @@ GltfGpmLoader.prototype.process = function (frameState) {
     }
   }
 
-  // XXX
-  console.log("Creating dummy schema");
-  const ppeClass = {
-    name: "PPE",
-    properties: {
-      ppe: {
-        name: "PPE",
-        type: "SCALAR",
-        componentType: "UINT8",
-      },
-    },
+  // XXX_UNCERTAINTY: It's certainly not ideal to re-create the schema for
+  // each and every loaded glTF.
+  // In practice, we could create it once, store it globally, and re-use it
+  // In theory, this might not work, because the set of textures in each
+  // glTF might be different
+  // Combining theory and practice, there could be some sort of (global)
+  // "cache", to store the metadata schemas for a set of property textures
+  // that are found, identified by the "traits" of the ppeTextures (like
+  // the two ones with SIGZ and SIGR traits in the sample data)
+  console.log("Creating dummy schema for GPM");
+  const metadataSchemaJson = {
+    id: "PPE_TEXTURE_SCHEMA",
+    classes: {},
   };
-  const ppeSchema = MetadataSchema.fromJson({
-    id: "PPE_SCHEMA",
-    classes: {
-      ppe: ppeClass,
-    },
-  });
 
   const extension = this._extension;
   const propertyTextures = [];
   if (defined(extension.ppeTextures)) {
     for (let i = 0; i < extension.ppeTextures.length; i++) {
       const ppeTexture = extension.ppeTextures[i];
-      const ppeTextureAsPropertyTexture = {
-        class: "ppe",
+
+      const classId = `PPE_${i}`;
+
+      // XXX_UNCERTAINTY: The property name will be required for the
+      // custom shader. So first of all, the traits.source should
+      // always be there. And it should be known by the user. And
+      // it should be the same for all glTF. And there is no
+      // reasonable way for "transporting" that to the user for now...
+      const ppePropertyName = ppeTexture.traits?.source ?? `ppe_${i}`;
+      const classJson = {
+        name: classId,
         properties: {
-          ppe: {
+          [ppePropertyName]: {
+            name: "PPE",
+            type: "SCALAR",
+            componentType: "UINT8",
+          },
+        },
+      };
+      metadataSchemaJson.classes[classId] = classJson;
+      const metadataClass = MetadataClass.fromJson({
+        id: classId,
+        class: classJson,
+      });
+
+      console.log(
+        `Creating property texture class ${classId} with property ${ppePropertyName}`
+      );
+
+      const ppeTextureAsPropertyTexture = {
+        class: classId,
+        properties: {
+          [ppePropertyName]: {
             index: ppeTexture.index,
             texCoord: ppeTexture.texCoord,
           },
@@ -270,16 +296,14 @@ GltfGpmLoader.prototype.process = function (frameState) {
           id: i,
           name: ppeTexture.name,
           propertyTexture: ppeTextureAsPropertyTexture,
-          class: ppeSchema.classes["ppe"],
+          class: metadataClass,
           textures: textures,
         })
       );
-
-      // XXX But really...
-      console.log("XXX ONLY HANDLING ONE PPE TEXTURE");
-      break;
     }
   }
+
+  const ppeSchema = MetadataSchema.fromJson(metadataSchemaJson);
 
   const structuralMetadata = new StructuralMetadata({
     schema: ppeSchema,
