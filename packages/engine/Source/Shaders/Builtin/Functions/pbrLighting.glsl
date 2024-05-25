@@ -83,7 +83,7 @@ float GGX(float roughness, float NdotH)
  * @name czm_pbrLighting
  * @glslFunction
  *
- * @param {vec3} positionEC The position of the fragment in eye coordinates
+ * @param {vec3} viewDirectionEC Unit vector pointing from the fragment to the eye position
  * @param {vec3} normalEC The surface normal in eye coordinates
  * @param {vec3} lightDirectionEC Unit vector pointing to the light source in eye coordinates.
  * @param {vec3} lightColorHdr radiance of the light source. This is a HDR value.
@@ -91,18 +91,15 @@ float GGX(float roughness, float NdotH)
  * @return {vec3} The computed HDR color
  */
 vec3 czm_pbrLighting(
-    vec3 positionEC,
+    vec3 viewDirectionEC,
     vec3 normalEC,
     vec3 lightDirectionEC,
     vec3 lightColorHdr,
     czm_modelMaterial material
 )
 {
-    vec3 v = -normalize(positionEC);
-    vec3 l = normalize(lightDirectionEC);
-    vec3 h = normalize(v + l);
-    vec3 n = normalEC;
-    float VdotH = clamp(dot(v, h), 0.0, 1.0);
+    vec3 halfwayDirectionEC = normalize(viewDirectionEC + lightDirectionEC);
+    float VdotH = clamp(dot(viewDirectionEC, halfwayDirectionEC), 0.0, 1.0);
 
     vec3 f0 = material.specular;
     float reflectance = max(max(f0.r, f0.g), f0.b);
@@ -117,19 +114,19 @@ vec3 czm_pbrLighting(
 
     float alpha = material.roughness;
     #ifdef USE_ANISOTROPY
-        mat3 tbn = mat3(material.anisotropicT, material.anisotropicB, n);
-        vec3 lightDirection = l * tbn;
-        vec3 viewDirection = v * tbn;
-        vec3 halfwayDirection = h * tbn;
+        mat3 tbn = mat3(material.anisotropicT, material.anisotropicB, normalEC);
+        vec3 lightDirection = lightDirectionEC * tbn;
+        vec3 viewDirection = viewDirectionEC * tbn;
+        vec3 halfwayDirection = halfwayDirectionEC * tbn;
         float anisotropyStrength = material.anisotropyStrength;
         float tangentialRoughness = mix(alpha, 1.0, anisotropyStrength * anisotropyStrength);
         float G = smithVisibilityGGX_anisotropic(alpha, tangentialRoughness, lightDirection, viewDirection);
         float D = GGX_anisotropic(alpha, tangentialRoughness, halfwayDirection);
         float NdotL = clamp(lightDirection.z, 0.001, 1.0);
     #else
-        float NdotL = clamp(dot(n, l), 0.001, 1.0);
-        float NdotV = abs(dot(n, v)) + 0.001;
-        float NdotH = clamp(dot(n, h), 0.0, 1.0);
+        float NdotL = clamp(dot(normalEC, lightDirectionEC), 0.001, 1.0);
+        float NdotV = abs(dot(normalEC, viewDirectionEC)) + 0.001;
+        float NdotH = clamp(dot(normalEC, halfwayDirectionEC), 0.0, 1.0);
         float G = smithVisibilityGGX(alpha, NdotL, NdotV);
         float D = GGX(alpha, NdotH);
     #endif

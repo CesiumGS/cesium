@@ -1,19 +1,27 @@
-vec3 proceduralIBL(
+/**
+ * Compute the light contribution from a procedural sky model
+ *
+ * @param {vec3} positionEC The position of the fragment in eye coordinates
+ * @param {vec3} normalEC The surface normal in eye coordinates
+ * @param {vec3} lightDirectionEC Unit vector pointing to the light source in eye coordinates.
+ * @param {vec3} lightColorHdr radiance of the light source. This is a HDR value.
+ * @param {czm_modelMaterial} The material properties.
+ * @return {vec3} The computed HDR color
+ */
+ vec3 proceduralIBL(
     vec3 positionEC,
     vec3 normalEC,
     vec3 lightDirectionEC,
     vec3 lightColorHdr,
     czm_modelMaterial material
 ) {
-    vec3 v = -normalize(positionEC);
+    vec3 viewDirectionEC = -normalize(positionEC);
     vec3 positionWC = vec3(czm_inverseView * vec4(positionEC, 1.0));
     vec3 vWC = -normalize(positionWC);
-    vec3 l = normalize(lightDirectionEC);
-    vec3 n = normalEC;
-    vec3 r = normalize(czm_inverseViewRotation * normalize(reflect(v, n)));
+    vec3 r = normalize(czm_inverseViewRotation * normalize(reflect(viewDirectionEC, normalEC)));
 
-    float NdotL = clamp(dot(n, l), 0.001, 1.0);
-    float NdotV = abs(dot(n, v)) + 0.001;
+    float NdotL = clamp(dot(normalEC, lightDirectionEC), 0.001, 1.0);
+    float NdotV = abs(dot(normalEC, viewDirectionEC)) + 0.001;
 
     // Figure out if the reflection vector hits the ellipsoid
     float vertexRadius = length(positionWC);
@@ -56,10 +64,10 @@ vec3 proceduralIBL(
     #ifdef USE_SUN_LUMINANCE
     // See the "CIE Clear Sky Model" referenced on page 40 of https://3dvar.com/Green2003Spherical.pdf
     // Angle between sun and zenith.
-    float LdotZenith = clamp(dot(normalize(czm_inverseViewRotation * l), vWC), 0.001, 1.0);
+    float LdotZenith = clamp(dot(normalize(czm_inverseViewRotation * lightDirectionEC), vWC), 0.001, 1.0);
     float S = acos(LdotZenith);
     // Angle between zenith and current pixel
-    float NdotZenith = clamp(dot(normalize(czm_inverseViewRotation * n), vWC), 0.001, 1.0);
+    float NdotZenith = clamp(dot(normalize(czm_inverseViewRotation * normalEC), vWC), 0.001, 1.0);
     // Angle between sun and current pixel
     float gamma = acos(NdotL);
     float numerator = ((0.91 + 10.0 * exp(-3.0 * gamma) + 0.45 * NdotL * NdotL) * (1.0 - exp(-0.32 / NdotZenith)));
@@ -133,19 +141,25 @@ vec3 computeSpecularIBL(czm_modelMaterial material, vec3 cubeDir, float NdotV, f
 #endif
 
 #if defined(DIFFUSE_IBL) || defined(SPECULAR_IBL)
+/**
+ * Compute the light contributions from environment maps and spherical harmonic coefficients
+ *
+ * @param {vec3} viewDirectionEC Unit vector pointing from the fragment to the eye position
+ * @param {vec3} normalEC The surface normal in eye coordinates
+ * @param {vec3} lightDirectionEC Unit vector pointing to the light source in eye coordinates.
+ * @param {czm_modelMaterial} The material properties.
+ * @return {vec3} The computed HDR color
+ */
 vec3 textureIBL(
-    vec3 positionEC,
+    vec3 viewDirectionEC,
     vec3 normalEC,
     vec3 lightDirectionEC,
     czm_modelMaterial material
 ) {
-    vec3 v = -normalize(positionEC);
-    vec3 n = normalEC;
-    vec3 l = normalize(lightDirectionEC);
-    vec3 h = normalize(v + l);
+    vec3 halfwayDirectionEC = normalize(viewDirectionEC + lightDirectionEC);
 
-    float NdotV = abs(dot(n, v)) + 0.001;
-    float VdotH = clamp(dot(v, h), 0.0, 1.0);
+    float NdotV = abs(dot(normalEC, viewDirectionEC)) + 0.001;
+    float VdotH = clamp(dot(viewDirectionEC, halfwayDirectionEC), 0.0, 1.0);
 
     // Find the direction in which to sample the environment map
     const mat3 yUpToZUp = mat3(
@@ -154,7 +168,7 @@ vec3 textureIBL(
         0.0, 1.0, 0.0
     );
     mat3 cubeDirTransform = yUpToZUp * model_iblReferenceFrameMatrix;
-    vec3 cubeDir = normalize(cubeDirTransform * normalize(reflect(-v, n)));
+    vec3 cubeDir = normalize(cubeDirTransform * normalize(reflect(-viewDirectionEC, normalEC)));
 
     #ifdef DIFFUSE_IBL
         vec3 diffuseContribution = computeDiffuseIBL(material, cubeDir);
@@ -168,12 +182,12 @@ vec3 textureIBL(
         vec3 anisotropyDirection = material.anisotropicB;
         float anisotropyStrength = material.anisotropyStrength;
 
-        vec3 anisotropicTangent = cross(anisotropyDirection, v);
+        vec3 anisotropicTangent = cross(anisotropyDirection, viewDirectionEC);
         vec3 anisotropicNormal = cross(anisotropicTangent, anisotropyDirection);
         float bendFactor = 1.0 - anisotropyStrength * (1.0 - roughness);
         float bendFactorPow4 = bendFactor * bendFactor * bendFactor * bendFactor;
-        vec3 bentNormal = normalize(mix(anisotropicNormal, n, bendFactorPow4));
-        cubeDir = normalize(cubeDirTransform * normalize(reflect(-v, bentNormal)));
+        vec3 bentNormal = normalize(mix(anisotropicNormal, normalEC, bendFactorPow4));
+        cubeDir = normalize(cubeDirTransform * normalize(reflect(-viewDirectionEC, bentNormal)));
     #endif
 
     #ifdef SPECULAR_IBL
@@ -185,30 +199,3 @@ vec3 textureIBL(
     return diffuseContribution + specularContribution;
 }
 #endif
-
-vec3 imageBasedLightingStage(
-    vec3 positionEC,
-    vec3 normalEC,
-    vec3 lightDirectionEC,
-    vec3 lightColorHdr,
-    czm_modelMaterial material
-) {
-    #if defined(DIFFUSE_IBL) || defined(SPECULAR_IBL)
-    // Environment maps were provided, use them for IBL
-    return textureIBL(
-        positionEC,
-        normalEC,
-        lightDirectionEC,
-        material
-    );
-    #else
-    // Use the procedural IBL if there are no environment maps
-    return proceduralIBL(
-        positionEC,
-        normalEC,
-        lightDirectionEC,
-        lightColorHdr,
-        material
-    );
-    #endif
-}
