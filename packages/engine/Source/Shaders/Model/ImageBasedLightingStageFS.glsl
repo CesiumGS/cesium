@@ -4,7 +4,6 @@
  * @param {vec3} positionEC The position of the fragment in eye coordinates
  * @param {vec3} normalEC The surface normal in eye coordinates
  * @param {vec3} lightDirectionEC Unit vector pointing to the light source in eye coordinates.
- * @param {vec3} lightColorHdr radiance of the light source. This is a HDR value.
  * @param {czm_modelMaterial} The material properties.
  * @return {vec3} The computed HDR color
  */
@@ -12,7 +11,6 @@
     vec3 positionEC,
     vec3 normalEC,
     vec3 lightDirectionEC,
-    vec3 lightColorHdr,
     czm_modelMaterial material
 ) {
     vec3 viewDirectionEC = -normalize(positionEC);
@@ -83,9 +81,6 @@
     #endif
     vec3 diffuseContribution = diffuseIrradiance * diffuseColor * model_iblFactor.x;
     vec3 iblColor = specularContribution + diffuseContribution;
-    float maximumComponent = max(max(lightColorHdr.x, lightColorHdr.y), lightColorHdr.z);
-    vec3 lightColor = lightColorHdr / max(maximumComponent, 1.0);
-    iblColor *= lightColor;
 
     #ifdef USE_SUN_LUMINANCE
     iblColor *= luminance;
@@ -124,7 +119,7 @@ vec3 computeSpecularIBL(czm_modelMaterial material, vec3 cubeDir, float NdotV, f
     float roughness = material.roughness;
     vec3 f0 = material.specular;
 
-    float reflectance = max(max(f0.r, f0.g), f0.b);
+    float reflectance = czm_maximumComponent(f0);
     vec3 f90 = vec3(clamp(reflectance * 25.0, 0.0, 1.0));
     vec3 F = fresnelSchlick2(f0, f90, VdotH);
 

@@ -214,7 +214,7 @@ void setSpecularGlossiness(inout czm_modelMaterial material)
         vec4 diffuse = vec4(1.0);
     #endif
 
-    material.diffuse = diffuse.rgb * (1.0 - max(max(specular.r, specular.g), specular.b));
+    material.diffuse = diffuse.rgb * (1.0 - czm_maximumComponent(specular));
     // the specular glossiness extension's alpha overrides anything set
     // by the base material.
     material.alpha = diffuse.a;

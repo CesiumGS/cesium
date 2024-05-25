@@ -1,5 +1,5 @@
 #ifdef LIGHTING_PBR
-vec3 computePbrLighting(czm_modelMaterial inputMaterial, ProcessedAttributes attributes)
+vec3 computePbrLighting(czm_modelMaterial material, ProcessedAttributes attributes)
 {
     #ifdef USE_CUSTOM_LIGHT_COLOR
         vec3 lightColorHdr = model_lightColorHdr;
@@ -7,43 +7,31 @@ vec3 computePbrLighting(czm_modelMaterial inputMaterial, ProcessedAttributes att
         vec3 lightColorHdr = czm_lightColorHdr;
     #endif
 
-    vec3 color = inputMaterial.diffuse;
+    vec3 color = material.diffuse;
 
     #ifdef HAS_NORMALS
-        vec3 viewDirection = -normalize(attributes.positionEC);
-        vec3 normal = inputMaterial.normalEC;
+        vec3 position = attributes.positionEC;
+        vec3 viewDirection = -normalize(position);
+        vec3 normal = material.normalEC;
         vec3 lightDirection = normalize(czm_lightDirectionEC);
 
-        color = czm_pbrLighting(
-            viewDirection,
-            normal,
-            lightDirection,
-            lightColorHdr,
-            inputMaterial
-        );
+        vec3 directLighting = czm_pbrLighting(viewDirection, normal, lightDirection, material);
+        color = lightColorHdr * directLighting;
 
         #if defined(DIFFUSE_IBL) || defined(SPECULAR_IBL)
             // Environment maps were provided, use them for IBL
-            color += textureIBL(
-                viewDirection,
-                normal,
-                lightDirection,
-                inputMaterial
-            );
+            color += textureIBL(viewDirection, normal, lightDirection, material);
         #elif defined(USE_IBL_LIGHTING)
             // Use procedural IBL if there are no environment maps
-            color += proceduralIBL(
-                attributes.positionEC,
-                normal,
-                lightDirection,
-                lightColorHdr,
-                inputMaterial
-            );
+            vec3 imageBasedLighting = proceduralIBL(position, normal, lightDirection, material);
+            float maximumComponent = czm_maximumComponent(lightColorHdr);
+            vec3 clampedLightColor = lightColorHdr / max(maximumComponent, 1.0);
+            color += clampedLightColor * imageBasedLighting;
         #endif
     #endif
 
-    color *= inputMaterial.occlusion;
-    color += inputMaterial.emissive;
+    color *= material.occlusion;
+    color += material.emissive;
 
     // In HDR mode, the frame buffer is in linear color space. The
     // post-processing stages (see PostProcessStageCollection) will handle

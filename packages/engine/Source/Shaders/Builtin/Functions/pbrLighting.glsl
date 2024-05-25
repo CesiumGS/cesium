@@ -86,23 +86,21 @@ float GGX(float roughness, float NdotH)
  * @param {vec3} viewDirectionEC Unit vector pointing from the fragment to the eye position
  * @param {vec3} normalEC The surface normal in eye coordinates
  * @param {vec3} lightDirectionEC Unit vector pointing to the light source in eye coordinates.
- * @param {vec3} lightColorHdr radiance of the light source. This is a HDR value.
  * @param {czm_modelMaterial} The material properties.
  * @return {vec3} The computed HDR color
  */
 vec3 czm_pbrLighting(
-    vec3 viewDirectionEC,
-    vec3 normalEC,
-    vec3 lightDirectionEC,
-    vec3 lightColorHdr,
-    czm_modelMaterial material
+    in vec3 viewDirectionEC,
+    in vec3 normalEC,
+    in vec3 lightDirectionEC,
+    in czm_modelMaterial material
 )
 {
     vec3 halfwayDirectionEC = normalize(viewDirectionEC + lightDirectionEC);
     float VdotH = clamp(dot(viewDirectionEC, halfwayDirectionEC), 0.0, 1.0);
 
     vec3 f0 = material.specular;
-    float reflectance = max(max(f0.r, f0.g), f0.b);
+    float reflectance = czm_maximumComponent(f0);
     // Typical dielectrics will have reflectance 0.04, so f90 will be 1.0.
     // In this case, at grazing angle, all incident energy is reflected.
     vec3 f90 = vec3(clamp(reflectance * 25.0, 0.0, 1.0));
@@ -138,5 +136,5 @@ vec3 czm_pbrLighting(
     vec3 diffuseContribution = (1.0 - F) * lambertianDiffuse(diffuseColor);
 
     // Lo = (diffuse + specular) * Li * NdotL
-    return (diffuseContribution + specularContribution) * NdotL * lightColorHdr;
+    return (diffuseContribution + specularContribution) * NdotL;
 }
