@@ -198,7 +198,11 @@ PropertyTextureProperty.prototype.isGpuCompatible = function () {
   }
 
   // For this initial implementation, only UINT8-based properties
-  // are supported.
+  // are supported. But it should NOT just silently fail.
+  // See https://github.com/CesiumGS/cesium/issues/10248
+  console.log(
+    `WARNING: Property Texture Property with type ${type} and component type ${componentType} is not supported`
+  );
   return false;
 };
 
