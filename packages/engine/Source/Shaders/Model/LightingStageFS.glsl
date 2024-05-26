@@ -1,5 +1,5 @@
-#ifdef LIGHTING_PBR
-vec3 computePbrLighting(czm_modelMaterial material, ProcessedAttributes attributes)
+#if defined(LIGHTING_PBR) && defined(HAS_NORMALS)
+vec3 computePbrLighting(in czm_modelMaterial material, in vec3 position)
 {
     #ifdef USE_CUSTOM_LIGHT_COLOR
         vec3 lightColorHdr = model_lightColorHdr;
@@ -7,54 +7,56 @@ vec3 computePbrLighting(czm_modelMaterial material, ProcessedAttributes attribut
         vec3 lightColorHdr = czm_lightColorHdr;
     #endif
 
-    vec3 color = material.diffuse;
+    vec3 viewDirection = -normalize(position);
+    vec3 normal = material.normalEC;
+    vec3 lightDirection = normalize(czm_lightDirectionEC);
 
-    #ifdef HAS_NORMALS
-        vec3 position = attributes.positionEC;
-        vec3 viewDirection = -normalize(position);
-        vec3 normal = material.normalEC;
-        vec3 lightDirection = normalize(czm_lightDirectionEC);
+    vec3 directLighting = czm_pbrLighting(viewDirection, normal, lightDirection, material);
+    vec3 color = lightColorHdr * directLighting;
 
-        vec3 directLighting = czm_pbrLighting(viewDirection, normal, lightDirection, material);
-        color = lightColorHdr * directLighting;
-
-        #if defined(DIFFUSE_IBL) || defined(SPECULAR_IBL)
-            // Environment maps were provided, use them for IBL
-            color += textureIBL(viewDirection, normal, lightDirection, material);
-        #elif defined(USE_IBL_LIGHTING)
-            // Use procedural IBL if there are no environment maps
-            vec3 imageBasedLighting = proceduralIBL(position, normal, lightDirection, material);
-            float maximumComponent = czm_maximumComponent(lightColorHdr);
-            vec3 clampedLightColor = lightColorHdr / max(maximumComponent, 1.0);
-            color += clampedLightColor * imageBasedLighting;
-        #endif
+    #if defined(DIFFUSE_IBL) || defined(SPECULAR_IBL)
+        // Environment maps were provided, use them for IBL
+        color += textureIBL(viewDirection, normal, lightDirection, material);
+    #elif defined(USE_IBL_LIGHTING)
+        // Use procedural IBL if there are no environment maps
+        vec3 imageBasedLighting = proceduralIBL(position, normal, lightDirection, material);
+        float maximumComponent = czm_maximumComponent(lightColorHdr);
+        vec3 clampedLightColor = lightColorHdr / max(maximumComponent, 1.0);
+        color += clampedLightColor * imageBasedLighting;
     #endif
 
     color *= material.occlusion;
     color += material.emissive;
 
-    // In HDR mode, the frame buffer is in linear color space. The
-    // post-processing stages (see PostProcessStageCollection) will handle
-    // tonemapping. However, if HDR is not enabled, we must tonemap else large
-    // values may be clamped to 1.0
-    #ifndef HDR 
-        color = czm_acesTonemapping(color);
-    #endif 
-
     return color;
 }
 #endif
 
+/**
+ * Compute the material color under the current lighting conditions.
+ * All other material properties are passed through so further stages
+ * have access to them.
+ *
+ * @param {czm_modelMaterial} material The material properties from {@MaterialStageFS}
+ * @param {ProcessedAttributes} attributes
+ */
 void lightingStage(inout czm_modelMaterial material, ProcessedAttributes attributes)
 {
-    // Even though the lighting will only set the diffuse color,
-    // pass all other properties so further stages have access to them.
-    vec3 color = vec3(0.0);
-
     #ifdef LIGHTING_PBR
-        color = computePbrLighting(material, attributes);
+        #ifdef HAS_NORMALS
+            vec3 color = computePbrLighting(material, attributes.positionEC);
+        #else
+            vec3 color = material.diffuse * material.occlusion + material.emissive;
+        #endif
+        // In HDR mode, the frame buffer is in linear color space. The
+        // post-processing stages (see PostProcessStageCollection) will handle
+        // tonemapping. However, if HDR is not enabled, we must tonemap else large
+        // values may be clamped to 1.0
+        #ifndef HDR
+            color = czm_acesTonemapping(color);
+        #endif
     #else // unlit
-        color = material.diffuse;
+        vec3 color = material.diffuse;
     #endif
 
     #ifdef HAS_POINT_CLOUD_COLOR_STYLE
