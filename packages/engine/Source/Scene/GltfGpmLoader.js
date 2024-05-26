@@ -263,15 +263,23 @@ GltfGpmLoader.prototype.process = function (frameState) {
       const classId = `PPE_${i}`;
 
       // XXX_UNCERTAINTY: The property name will be required for the
-      // custom shader. So first of all, the traits.source should
-      // always be there. And it should be known by the user. And
+      // custom shader. And it should be known by the user. And
       // it should be the same for all glTF. And there is no
-      // reasonable way for "transporting" that to the user for now...
-      let ppePropertyName = ppeTexture.traits?.source;
-      if (!defined(ppePropertyName)) {
-        console.log("WARNING: Per-point error texture traits source not found");
-        ppePropertyName = `ppe_${i}`;
-      }
+      // reasonable way for "transporting" that to the user for now.
+      const traits = ppeTexture.traits;
+      const ppePropertyName = traits.source;
+
+      // XXX_UNCERTAINTY: In GPM 1.2d, the min/max should be
+      // part of the texture, but in the actual data (GPM 1.2i),
+      // they are in the traits (ppeMetadata). And there, they
+      // seem to denote the min/max values that actually appear
+      // in the texture. So they are integrated into the 'scale'
+      // factor here:
+      const min = traits.min ?? 0;
+      const max = traits.max ?? 255;
+      const minMaxScale = 255.0 / (max - min);
+      const offset = ppeTexture.offset;
+      const scale = ppeTexture.scale * minMaxScale;
       const classJson = {
         name: classId,
         properties: {
@@ -279,6 +287,9 @@ GltfGpmLoader.prototype.process = function (frameState) {
             name: "PPE",
             type: "SCALAR",
             componentType: "UINT8",
+            normalized: true,
+            offset: offset,
+            scale: scale,
           },
         },
       };
