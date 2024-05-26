@@ -260,12 +260,13 @@ GltfGpmLoader.prototype.process = function (frameState) {
     for (let i = 0; i < extension.ppeTextures.length; i++) {
       const ppeTexture = extension.ppeTextures[i];
 
-      const classId = `PPE_${i}`;
-
-      // XXX_UNCERTAINTY: The property name will be required for the
+      // XXX_UNCERTAINTY: The class name will be required
+      // for selecting the proper property texture property.
+      // The property name will be required for the
       // custom shader. And it should be known by the user. And
       // it should be the same for all glTF. And there is no
       // reasonable way for "transporting" that to the user for now.
+      const classId = `PPE_${i}`;
       const traits = ppeTexture.traits;
       const ppePropertyName = traits.source;
 
