@@ -353,7 +353,7 @@ void setClearcoat(inout czm_modelMaterial material)
         #ifdef HAS_CLEARCOAT_TEXTURE_TRANSFORM
             clearcoatTexCoords = computeTextureTransform(clearcoatTexCoords, u_clearcoatTextureTransform);
         #endif
-        float clearcoatFactor = texture(u_clearcoatTexture, clearcoatTexCoords).a;
+        float clearcoatFactor = texture(u_clearcoatTexture, clearcoatTexCoords).r;
         #ifdef HAS_CLEARCOAT_FACTOR
             clearcoatFactor *= u_clearcoatFactor;
         #endif
@@ -371,7 +371,7 @@ void setClearcoat(inout czm_modelMaterial material)
         #ifdef HAS_CLEARCOAT_ROUGHNESS_TEXTURE_TRANSFORM
             clearcoatRoughnessTexCoords = computeTextureTransform(clearcoatRoughnessTexCoords, u_clearcoatRoughnessTextureTransform);
         #endif
-        float clearcoatRoughness = texture(u_clearcoatRoughnessTexture, clearcoatRoughnessTexCoords).a;
+        float clearcoatRoughness = texture(u_clearcoatRoughnessTexture, clearcoatRoughnessTexCoords).g;
         #ifdef HAS_CLEARCOAT_ROUGHNESS_FACTOR
             clearcoatRoughness *= u_clearcoatRoughnessFactor;
         #endif

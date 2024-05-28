@@ -1544,9 +1544,9 @@ function loadMetallicRoughness(loader, metallicRoughnessInfo, frameState) {
 
 function loadSpecular(loader, specularInfo, frameState) {
   const {
-    specularFactor = Specular.DEFAULT_SPECULAR_FACTOR,
+    specularFactor,
     specularTexture,
-    specularColorFactor = Specular.DEFAULT_SPECULAR_COLOR_FACTOR,
+    specularColorFactor,
     specularColorTexture,
   } = specularInfo;
 

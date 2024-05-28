@@ -35,19 +35,30 @@ vec3 addClearcoatReflection(vec3 baseLayerColor, vec3 position, vec3 lightDirect
     vec3 F = fresnelSchlick2(f0, f90, NdotV);
 
     // compute specular reflection from direct lighting
-    float directStrength = computeSpecularStrength(normal, lightDirection, viewDirection, halfwayDirection, material.clearcoatRoughness);
+    float roughness = material.clearcoatRoughness;
+    float directStrength = computeSpecularStrength(normal, lightDirection, viewDirection, halfwayDirection, roughness);
     vec3 directReflection = F * directStrength * NdotL;
-    vec3 directColor = lightColorHdr * directReflection;
+    vec3 color = lightColorHdr * directReflection;
 
-    #ifdef USE_IBL_LIGHTING
+    #ifdef SPECULAR_IBL
+        // Find the direction in which to sample the environment map
+        const mat3 yUpToZUp = mat3(
+            -1.0, 0.0, 0.0,
+            0.0, 0.0, -1.0, 
+            0.0, 1.0, 0.0
+        );
+        mat3 cubeDirTransform = yUpToZUp * model_iblReferenceFrameMatrix;
+        vec3 cubeDir = normalize(cubeDirTransform * normalize(reflect(-viewDirection, normal)));
+        vec3 iblColor = computeSpecularIBL(cubeDir, NdotV, NdotV, f0, roughness);
+        color += iblColor * material.occlusion;
+    #elif defined(USE_IBL_LIGHTING)
         // TODO: compute specular reflection from IBL
         // NOTE: can't use computeIBL (above) because we need to force isotropic reflection (even if base layer is anisotropic)
-        // Also if USE_IBL_LIGHTING but !SPECULAR_IBL then the clearcoat has no IBL
         // scale by occlusion
     #endif
 
     float clearcoatFactor = material.clearcoatFactor;
-    vec3 clearcoatColor = directColor * clearcoatFactor;
+    vec3 clearcoatColor = color * clearcoatFactor;
 
     // Dim base layer based on transmission loss through clearcoat
     return baseLayerColor * (1.0 - clearcoatFactor * F) + clearcoatColor;

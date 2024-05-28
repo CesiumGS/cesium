@@ -90,14 +90,13 @@
 }
 
 #ifdef DIFFUSE_IBL
-vec3 computeDiffuseIBL(czm_modelMaterial material, vec3 cubeDir)
+vec3 computeDiffuseIBL(vec3 cubeDir)
 {
     #ifdef CUSTOM_SPHERICAL_HARMONICS
-        vec3 diffuseIrradiance = czm_sphericalHarmonics(cubeDir, model_sphericalHarmonicCoefficients); 
+        return czm_sphericalHarmonics(cubeDir, model_sphericalHarmonicCoefficients); 
     #else
-        vec3 diffuseIrradiance = czm_sphericalHarmonics(cubeDir, czm_sphericalHarmonicCoefficients); 
-    #endif 
-    return diffuseIrradiance * material.diffuse;
+        return czm_sphericalHarmonics(cubeDir, czm_sphericalHarmonicCoefficients); 
+    #endif
 }
 #endif
 
@@ -114,24 +113,17 @@ vec3 sampleSpecularEnvironment(vec3 cubeDir, float roughness)
         return czm_sampleOctahedralProjection(czm_specularEnvironmentMaps, czm_specularEnvironmentMapSize, cubeDir, lod, maxLod);
     #endif
 }
-vec3 computeSpecularIBL(czm_modelMaterial material, vec3 cubeDir, float NdotV, float VdotH)
+vec3 computeSpecularIBL(vec3 cubeDir, float NdotV, float VdotH, vec3 f0, float roughness)
 {
-    float roughness = material.roughness;
-    vec3 f0 = material.specular;
-
     float reflectance = czm_maximumComponent(f0);
     vec3 f90 = vec3(clamp(reflectance * 25.0, 0.0, 1.0));
     vec3 F = fresnelSchlick2(f0, f90, VdotH);
 
+    // TODO: should this be using perceptual roughness instead of alpha roughness (which is squared)?
     vec2 brdfLut = texture(czm_brdfLut, vec2(NdotV, roughness)).rg;
-    vec3 specularIBL = sampleSpecularEnvironment(cubeDir, roughness);
-    specularIBL *= F * brdfLut.x + brdfLut.y;
+    vec3 specularSample = sampleSpecularEnvironment(cubeDir, roughness);
 
-    #ifdef USE_SPECULAR
-        specularIBL *= material.specularWeight;
-    #endif
-
-    return f0 * specularIBL;
+    return specularSample * (F * brdfLut.x + brdfLut.y);
 }
 #endif
 
@@ -151,11 +143,6 @@ vec3 textureIBL(
     vec3 lightDirectionEC,
     czm_modelMaterial material
 ) {
-    vec3 halfwayDirectionEC = normalize(viewDirectionEC + lightDirectionEC);
-
-    float NdotV = abs(dot(normalEC, viewDirectionEC)) + 0.001;
-    float VdotH = clamp(dot(viewDirectionEC, halfwayDirectionEC), 0.0, 1.0);
-
     // Find the direction in which to sample the environment map
     const mat3 yUpToZUp = mat3(
         -1.0, 0.0, 0.0,
@@ -166,29 +153,36 @@ vec3 textureIBL(
     vec3 cubeDir = normalize(cubeDirTransform * normalize(reflect(-viewDirectionEC, normalEC)));
 
     #ifdef DIFFUSE_IBL
-        vec3 diffuseContribution = computeDiffuseIBL(material, cubeDir);
+        vec3 diffuseContribution = computeDiffuseIBL(cubeDir) * material.diffuse;
     #else
         vec3 diffuseContribution = vec3(0.0); 
     #endif
 
+    float roughness = material.roughness;
+
     #ifdef USE_ANISOTROPY
         // Update environment map sampling direction to account for anisotropic distortion of specular reflection
-        float roughness = material.roughness;
         vec3 anisotropyDirection = material.anisotropicB;
-        float anisotropyStrength = material.anisotropyStrength;
-
         vec3 anisotropicTangent = cross(anisotropyDirection, viewDirectionEC);
         vec3 anisotropicNormal = cross(anisotropicTangent, anisotropyDirection);
-        float bendFactor = 1.0 - anisotropyStrength * (1.0 - roughness);
+        float bendFactor = 1.0 - material.anisotropyStrength * (1.0 - roughness);
         float bendFactorPow4 = bendFactor * bendFactor * bendFactor * bendFactor;
         vec3 bentNormal = normalize(mix(anisotropicNormal, normalEC, bendFactorPow4));
         cubeDir = normalize(cubeDirTransform * normalize(reflect(-viewDirectionEC, bentNormal)));
     #endif
 
     #ifdef SPECULAR_IBL
-        vec3 specularContribution = computeSpecularIBL(material, cubeDir, NdotV, VdotH);
+        float NdotV = abs(dot(normalEC, viewDirectionEC)) + 0.001;
+        vec3 halfwayDirectionEC = normalize(viewDirectionEC + lightDirectionEC);
+        float VdotH = clamp(dot(viewDirectionEC, halfwayDirectionEC), 0.0, 1.0);
+        vec3 f0 = material.specular;
+        vec3 specularContribution = computeSpecularIBL(cubeDir, NdotV, VdotH, f0, roughness);
     #else
         vec3 specularContribution = vec3(0.0); 
+    #endif
+
+    #ifdef USE_SPECULAR
+        specularContribution *= material.specularWeight;
     #endif
 
     return diffuseContribution + specularContribution;
