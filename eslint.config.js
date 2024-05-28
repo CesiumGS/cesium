@@ -97,4 +97,10 @@ export default [
       "no-unused-vars": "off",
     },
   },
+  {
+    files: [".github/**/*"],
+    rules: {
+      "n/no-missing-import": "off",
+    },
+  },
 ];
