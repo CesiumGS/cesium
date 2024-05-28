@@ -39,7 +39,8 @@ float GGX_anisotropic(float roughness, float tangentialRoughness, vec3 halfwayDi
     float w2 = roughnessSquared / dot(f, f);
     return roughnessSquared * w2 * w2 / czm_pi;
 }
-#else
+#endif
+
 float smithVisibilityG1(float NdotV, float roughness)
 {
     // this is the k value for direct lighting.
@@ -70,7 +71,19 @@ float GGX(float roughness, float NdotH)
     float f = (NdotH * roughnessSquared - NdotH) * NdotH + 1.0;
     return roughnessSquared / (czm_pi * f * f);
 }
-#endif
+
+// TODO: rename to emphasize this is for direct lighting only (not IBL)
+float computeSpecularStrength(vec3 normal, vec3 lightDirection, vec3 viewDirection, vec3 halfwayDirection, float roughness)
+{
+    // TODO: why 0.001 and not 0.0?
+    float NdotL = clamp(dot(normal, lightDirection), 0.001, 1.0);
+    // TODO: why abs here and clamp on the others? What does this do with backside reflections?
+    float NdotV = abs(dot(normal, viewDirection)) + 0.001;
+    float NdotH = clamp(dot(normal, halfwayDirection), 0.0, 1.0);
+    float G = smithVisibilityGGX(roughness, NdotL, NdotV);
+    float D = GGX(roughness, NdotH);
+    return G * D;
+}
 
 /**
  * Compute the diffuse and specular contributions using physically based
@@ -98,6 +111,7 @@ vec3 czm_pbrLighting(
 {
     vec3 halfwayDirectionEC = normalize(viewDirectionEC + lightDirectionEC);
     float VdotH = clamp(dot(viewDirectionEC, halfwayDirectionEC), 0.0, 1.0);
+    float NdotL = clamp(dot(normalEC, lightDirectionEC), 0.001, 1.0);
 
     vec3 f0 = material.specular;
     float reflectance = czm_maximumComponent(f0);
@@ -120,16 +134,11 @@ vec3 czm_pbrLighting(
         float tangentialRoughness = mix(alpha, 1.0, anisotropyStrength * anisotropyStrength);
         float G = smithVisibilityGGX_anisotropic(alpha, tangentialRoughness, lightDirection, viewDirection);
         float D = GGX_anisotropic(alpha, tangentialRoughness, halfwayDirection);
-        float NdotL = clamp(lightDirection.z, 0.001, 1.0);
+        vec3 specularContribution = F * G * D;
     #else
-        float NdotL = clamp(dot(normalEC, lightDirectionEC), 0.001, 1.0);
-        float NdotV = abs(dot(normalEC, viewDirectionEC)) + 0.001;
-        float NdotH = clamp(dot(normalEC, halfwayDirectionEC), 0.0, 1.0);
-        float G = smithVisibilityGGX(alpha, NdotL, NdotV);
-        float D = GGX(alpha, NdotH);
+        float specularStrength = computeSpecularStrength(normalEC, lightDirectionEC, viewDirectionEC, halfwayDirectionEC, alpha);
+        vec3 specularContribution = F * specularStrength;
     #endif
-
-    vec3 specularContribution = F * G * D;
 
     vec3 diffuseColor = material.diffuse;
     // F here represents the specular contribution

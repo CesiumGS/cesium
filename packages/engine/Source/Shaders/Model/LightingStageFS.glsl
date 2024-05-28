@@ -1,3 +1,59 @@
+#ifdef USE_IBL_LIGHTING
+vec3 computeIBL(vec3 position, vec3 normal, vec3 lightDirection, vec3 lightColorHdr, czm_modelMaterial material)
+{
+    #if defined(DIFFUSE_IBL) || defined(SPECULAR_IBL)
+        // Environment maps were provided, use them for IBL
+        vec3 viewDirection = -normalize(position);
+        vec3 iblColor = textureIBL(viewDirection, normal, lightDirection, material);
+    #else
+        // Use procedural IBL if there are no environment maps
+        vec3 imageBasedLighting = proceduralIBL(position, normal, lightDirection, material);
+        float maximumComponent = czm_maximumComponent(lightColorHdr);
+        vec3 clampedLightColor = lightColorHdr / max(maximumComponent, 1.0);
+        vec3 iblColor = clampedLightColor * imageBasedLighting;
+    #endif
+    return iblColor * material.occlusion;
+}
+#endif
+
+#ifdef USE_CLEARCOAT
+// TODO: make sure KHR_materials_specular properties are not being used in any functions called by this method.
+vec3 addClearcoatReflection(vec3 baseLayerColor, vec3 position, vec3 lightDirection, vec3 lightColorHdr, czm_modelMaterial material)
+{
+    vec3 viewDirection = -normalize(position);
+    vec3 halfwayDirection = normalize(viewDirection + lightDirection);
+    vec3 normal = material.clearcoatNormal;
+    // TODO: why clamp to 0.001??
+    float NdotL = clamp(dot(normal, lightDirection), 0.001, 1.0);
+
+    // clearcoatF0 = vec3(pow((ior - 1.0) / (ior + 1.0), 2.0)), but without KHR_materials_ior, ior is a constant 1.5.
+    vec3 f0 = vec3(0.04);
+    vec3 f90 = vec3(1.0);
+    // Note: clearcoat Fresnel computed with dot(n, v) instead of dot(v, h).
+    // This is to make it energy conserving with a simple layering function.
+    float NdotV = clamp(dot(normal, viewDirection), 0.0, 1.0);
+    vec3 F = fresnelSchlick2(f0, f90, NdotV);
+
+    // compute specular reflection from direct lighting
+    float directStrength = computeSpecularStrength(normal, lightDirection, viewDirection, halfwayDirection, material.clearcoatRoughness);
+    vec3 directReflection = F * directStrength * NdotL;
+    vec3 directColor = lightColorHdr * directReflection;
+
+    #ifdef USE_IBL_LIGHTING
+        // TODO: compute specular reflection from IBL
+        // NOTE: can't use computeIBL (above) because we need to force isotropic reflection (even if base layer is anisotropic)
+        // Also if USE_IBL_LIGHTING but !SPECULAR_IBL then the clearcoat has no IBL
+        // scale by occlusion
+    #endif
+
+    float clearcoatFactor = material.clearcoatFactor;
+    vec3 clearcoatColor = directColor * clearcoatFactor;
+
+    // Dim base layer based on transmission loss through clearcoat
+    return baseLayerColor * (1.0 - clearcoatFactor * F) + clearcoatColor;
+}
+#endif
+
 #if defined(LIGHTING_PBR) && defined(HAS_NORMALS)
 vec3 computePbrLighting(in czm_modelMaterial material, in vec3 position)
 {
@@ -12,21 +68,18 @@ vec3 computePbrLighting(in czm_modelMaterial material, in vec3 position)
     vec3 lightDirection = normalize(czm_lightDirectionEC);
 
     vec3 directLighting = czm_pbrLighting(viewDirection, normal, lightDirection, material);
-    vec3 color = lightColorHdr * directLighting;
+    vec3 directColor = lightColorHdr * directLighting;
 
-    #if defined(DIFFUSE_IBL) || defined(SPECULAR_IBL)
-        // Environment maps were provided, use them for IBL
-        color += textureIBL(viewDirection, normal, lightDirection, material);
-    #elif defined(USE_IBL_LIGHTING)
-        // Use procedural IBL if there are no environment maps
-        vec3 imageBasedLighting = proceduralIBL(position, normal, lightDirection, material);
-        float maximumComponent = czm_maximumComponent(lightColorHdr);
-        vec3 clampedLightColor = lightColorHdr / max(maximumComponent, 1.0);
-        color += clampedLightColor * imageBasedLighting;
+    #ifdef USE_IBL_LIGHTING
+        vec3 iblColor = computeIBL(position, normal, lightDirection, lightColorHdr, material);
     #endif
 
-    color *= material.occlusion;
-    color += material.emissive;
+    // Accumulate colors from base layer
+    vec3 color = directColor + iblColor + material.emissive;
+
+    #ifdef USE_CLEARCOAT
+        color = addClearcoatReflection(color, position, lightDirection, lightColorHdr, material);
+    #endif
 
     return color;
 }

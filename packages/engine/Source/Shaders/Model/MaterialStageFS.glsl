@@ -271,6 +271,7 @@ float setMetallicRoughness(inout czm_modelMaterial material)
 
     // roughness is authored as perceptual roughness
     // square it to get material roughness
+    // TODO: do we need perceptual roughness for IBL?
     material.roughness = roughness * roughness;
 
     return metalness;
@@ -383,7 +384,10 @@ void setClearcoat(inout czm_modelMaterial material)
     #endif
 
     material.clearcoatFactor = clearcoatFactor;
-    material.clearcoatRoughness = clearcoatRoughness;
+    // roughness is authored as perceptual roughness
+    // square it to get material roughness
+    // TODO: do we need perceptual roughness for IBL?
+    material.clearcoatRoughness = clearcoatRoughness * clearcoatRoughness;
     // TODO: read clear coat normals from a texture (if supplied)
     material.clearcoatNormal = material.normalEC;
 }
