@@ -147,10 +147,7 @@ const main = async () => {
     errorFoundOnCLACheck = error.toString();
   }
 
-  await postCommentOnPullRequest(
-    hasSignedCLA,
-    errorFoundOnCLACheck
-  );
+  await postCommentOnPullRequest(hasSignedCLA, errorFoundOnCLACheck);
 };
 
 main();

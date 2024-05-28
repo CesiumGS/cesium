@@ -1,4 +1,9 @@
-import { Cartesian3, Cartographic, Ellipsoid, Math as CesiumMath } from "../../index.js";
+import {
+  Cartesian3,
+  Cartographic,
+  Ellipsoid,
+  Math as CesiumMath,
+} from "../../index.js";
 
 describe("Core/Cartographic", function () {
   const surfaceCartesian = new Cartesian3(

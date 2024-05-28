@@ -1,4 +1,7 @@
-import { I3SBuildingSceneLayerExplorerViewModel, knockout } from "../../index.js";
+import {
+  I3SBuildingSceneLayerExplorerViewModel,
+  knockout,
+} from "../../index.js";
 
 describe("Widgets/I3SBuildingSceneLayerExplorer/I3SBuildingSceneLayerExplorerViewModel", function () {
   const i3sProvider = {
