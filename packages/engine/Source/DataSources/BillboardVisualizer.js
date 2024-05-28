@@ -13,6 +13,7 @@ import HorizontalOrigin from "../Scene/HorizontalOrigin.js";
 import VerticalOrigin from "../Scene/VerticalOrigin.js";
 import BoundingSphereState from "./BoundingSphereState.js";
 import Property from "./Property.js";
+import SplitDirection from "../Scene/SplitDirection.js";
 
 const defaultColor = Color.WHITE;
 const defaultEyeOffset = Cartesian3.ZERO;
@@ -24,6 +25,7 @@ const defaultAlignedAxis = Cartesian3.ZERO;
 const defaultHorizontalOrigin = HorizontalOrigin.CENTER;
 const defaultVerticalOrigin = VerticalOrigin.CENTER;
 const defaultSizeInMeters = false;
+const defaultSplitDirection = SplitDirection.NONE;
 
 const positionScratch = new Cartesian3();
 const colorScratch = new Color();
@@ -218,6 +220,11 @@ BillboardVisualizer.prototype.update = function (time) {
     billboard.disableDepthTestDistance = Property.getValueOrUndefined(
       billboardGraphics._disableDepthTestDistance,
       time
+    );
+    billboard.splitDirection = Property.getValueOrDefault(
+      billboardGraphics._splitDirection,
+      time,
+      defaultSplitDirection
     );
 
     const subRegion = Property.getValueOrUndefined(
