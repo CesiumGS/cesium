@@ -144,13 +144,7 @@ vec3 textureIBL(
     czm_modelMaterial material
 ) {
     // Find the direction in which to sample the environment map
-    const mat3 yUpToZUp = mat3(
-        -1.0, 0.0, 0.0,
-        0.0, 0.0, -1.0, 
-        0.0, 1.0, 0.0
-    );
-    mat3 cubeDirTransform = yUpToZUp * model_iblReferenceFrameMatrix;
-    vec3 cubeDir = normalize(cubeDirTransform * normalize(reflect(-viewDirectionEC, normalEC)));
+    vec3 cubeDir = normalize(model_iblReferenceFrameMatrix * normalize(reflect(-viewDirectionEC, normalEC)));
 
     #ifdef DIFFUSE_IBL
         vec3 diffuseContribution = computeDiffuseIBL(cubeDir) * material.diffuse;
@@ -168,7 +162,7 @@ vec3 textureIBL(
         float bendFactor = 1.0 - material.anisotropyStrength * (1.0 - roughness);
         float bendFactorPow4 = bendFactor * bendFactor * bendFactor * bendFactor;
         vec3 bentNormal = normalize(mix(anisotropicNormal, normalEC, bendFactorPow4));
-        cubeDir = normalize(cubeDirTransform * normalize(reflect(-viewDirectionEC, bentNormal)));
+        cubeDir = normalize(model_iblReferenceFrameMatrix * normalize(reflect(-viewDirectionEC, bentNormal)));
     #endif
 
     #ifdef SPECULAR_IBL
