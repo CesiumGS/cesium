@@ -15,10 +15,11 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - run: cd .github/actions/check-for-CLA/
       - name: install npm packages
+        working-directory: ./.github/actions/check-for-CLA
         run: npm install
       - name: run script
+        working-directory: ./.github/actions/check-for-CLA
         run: node index.js
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

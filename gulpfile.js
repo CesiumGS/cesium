@@ -620,7 +620,6 @@ export const makeZip = gulp.series(release, async function () {
       "!Specs/e2e/*-snapshots/**",
       "ThirdParty/**",
       "favicon.ico",
-      ".eslintignore",
       ".prettierignore",
       "scripts/**",
       "eslint.config.js",
