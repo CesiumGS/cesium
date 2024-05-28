@@ -59,12 +59,11 @@
     "cloc": "^2.8.0",
     "compression": "^1.7.4",
     "esbuild": "^0.20.0",
-    "eslint": "^8.56.0",
-    "eslint-config-cesium": "^10.0.1",
-    "eslint-plugin-es": "^4.1.0",
-    "eslint-plugin-html": "^8.0.0",
-    "eslint-plugin-node": "^11.1.0",
+    "eslint": "^9.1.1",
+    "eslint-config-cesium": "^11.0.1",
+    "eslint-plugin-html": "^8.1.1",
     "express": "^4.17.1",
+    "globals": "^15.1.0",
     "globby": "^14.0.0",
     "glsl-strip-comments": "^1.0.0",
     "gulp": "^5.0.0",
@@ -119,7 +118,7 @@
     "coverage": "gulp coverage",
     "build-docs": "gulp buildDocs",
     "build-docs-watch": "gulp buildDocsWatch",
-    "eslint": "eslint \"./**/*.js\" \"./**/*.cjs\" \"./**/*.html\" --cache --quiet",
+    "eslint": "eslint \"./**/*.*js\" \"./**/*.html\" --cache --quiet",
     "make-zip": "gulp makeZip",
     "markdownlint": "markdownlint \"**/*.md\"",
     "release": "gulp release",
@@ -143,7 +142,7 @@
     "prettier-check": "prettier --check --no-config \"**/*\""
   },
   "engines": {
-    "node": ">=14.0.0"
+    "node": ">=18.18.0"
   },
   "lint-staged": {
     "*.{js,cjs,mjs,css,html}": [

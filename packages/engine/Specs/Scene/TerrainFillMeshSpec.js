@@ -4,6 +4,7 @@ import {
   GeographicProjection,
   HeightmapTerrainData,
   Intersect,
+  Math as CesiumMath,
   Camera,
   GlobeSurfaceTileProvider,
   ImageryLayerCollection,
@@ -15,8 +16,6 @@ import {
 } from "../../index.js";
 import MockTerrainProvider from "../../../../Specs/MockTerrainProvider.js";
 import TerrainTileProcessor from "../../../../Specs/TerrainTileProcessor.js";
-
-import { Math as CesiumMath } from "../../index.js";
 
 describe("Scene/TerrainFillMesh", function () {
   let processor;

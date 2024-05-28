@@ -4,11 +4,10 @@ import {
   Ellipsoid,
   EllipsoidalOccluder,
   IntersectionTests,
+  Math as CesiumMath,
   Ray,
   Rectangle,
 } from "../../index.js";
-
-import { Math as CesiumMath } from "../../index.js";
 
 describe("Core/EllipsoidalOccluder", function () {
   it("uses ellipsoid", function () {

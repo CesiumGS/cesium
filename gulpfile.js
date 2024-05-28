@@ -1,4 +1,3 @@
-/*eslint-env node*/
 import { writeFileSync, copyFileSync, readFileSync, existsSync } from "fs";
 import { readFile, writeFile } from "fs/promises";
 import { join, basename, resolve, dirname } from "path";
@@ -330,7 +329,7 @@ async function clocSource() {
     cmdLine =
       "npx cloc" +
       " --quiet --progress-rate=0" +
-      " Specs/ packages/engine/Specs packages/widget/Specs --exclude-dir=Data --not-match-f=SpecList.js --not-match-f=.eslintrc.json";
+      " Specs/ packages/engine/Specs packages/widget/Specs --exclude-dir=Data --not-match-f=SpecList.js --not-match-f=eslint.config.js";
     exec(cmdLine, function (error, stdout, stderr) {
       if (error) {
         console.log(stderr);
@@ -625,7 +624,6 @@ export const makeZip = gulp.series(release, async function createZipFile() {
       gulp.src(
         [
           "Apps/**",
-          "Apps/**/.eslintrc.json",
           "Apps/Sandcastle/.jshintrc",
           "packages/engine/index.js",
           "packages/engine/index.d.ts",
@@ -638,15 +636,12 @@ export const makeZip = gulp.series(release, async function createZipFile() {
           "packages/widgets/README.md",
           "packages/widgets/Source/**",
           "Source/**",
-          "Source/**/.eslintrc.json",
           "Specs/**",
-          "Specs/**/.eslintrc.json",
           "ThirdParty/**",
-          "favicon.ico",
-          ".eslintignore",
-          ".eslintrc.json",
-          ".prettierignore",
           "scripts/**",
+          "favicon.ico",
+          ".prettierignore",
+          "eslint.config.js",
           "gulpfile.js",
           "server.js",
           "index.cjs",
