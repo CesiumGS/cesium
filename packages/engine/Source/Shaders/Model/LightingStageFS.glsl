@@ -48,16 +48,18 @@ vec3 addClearcoatReflection(vec3 baseLayerColor, vec3 position, vec3 lightDirect
     #elif defined(USE_IBL_LIGHTING)
         vec3 positionWC = vec3(czm_inverseView * vec4(position, 1.0));
         vec3 reflectionWC = normalize(czm_inverseViewRotation * normalize(reflect(viewDirection, normal)));
-        vec3 skyMetrics = getSkyMetrics(positionWC, reflectionWC);
+        vec3 skyMetrics = getProceduralSkyMetrics(positionWC, reflectionWC);
 
-        vec3 specularIrradiance = getSpecularIrradiance(reflectionWC, skyMetrics, roughness);
+        vec3 specularIrradiance = getProceduralSpecularIrradiance(reflectionWC, skyMetrics, roughness);
         vec2 brdfLut = texture(czm_brdfLut, vec2(NdotV, roughness)).rg;
         vec3 specularColor = czm_srgbToLinear(f0 * brdfLut.x + brdfLut.y);
         vec3 iblColor = specularIrradiance * specularColor * model_iblFactor.y;
         #ifdef USE_SUN_LUMINANCE
             iblColor *= getSunLuminance(positionWC, normal, lightDirection);
         #endif
-        color += iblColor * material.occlusion;
+        float maximumComponent = czm_maximumComponent(lightColorHdr);
+        vec3 clampedLightColor = lightColorHdr / max(maximumComponent, 1.0);
+        color += clampedLightColor* iblColor * material.occlusion;
     #endif
 
     float clearcoatFactor = material.clearcoatFactor;

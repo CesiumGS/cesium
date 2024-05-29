@@ -5,7 +5,7 @@
  * @param {vec3} reflectionWC A unit vector in the direction of the reflection, in world coordinates.
  * @return {vec3} The dot products of the horizon and reflection directions with the nadir, and an atmosphere boundary distance.
  */
-vec3 getSkyMetrics(vec3 positionWC, vec3 reflectionWC)
+vec3 getProceduralSkyMetrics(vec3 positionWC, vec3 reflectionWC)
 {
     // Figure out if the reflection vector hits the ellipsoid
     // TODO: use both ellipsoid radii, and the direction of positionWC?
@@ -22,7 +22,7 @@ vec3 getSkyMetrics(vec3 positionWC, vec3 reflectionWC)
  * @param {vec3} skyMetrics The dot products of the horizon and reflection directions with the nadir, and an atmosphere boundary distance.
  * @return {vec3} The computed diffuse irradiance
  */
-vec3 getDiffuseIrradiance(vec3 skyMetrics)
+vec3 getProceduralDiffuseIrradiance(vec3 skyMetrics)
 {
     vec3 blueSkyDiffuseColor = vec3(0.7, 0.85, 0.9); 
     float diffuseIrradianceFromEarth = (1.0 - skyMetrics.x) * (skyMetrics.y * 0.25 + 0.75) * skyMetrics.z;  
@@ -36,7 +36,7 @@ vec3 getDiffuseIrradiance(vec3 skyMetrics)
  * @param {vec3} skyMetrics The dot products of the horizon and reflection directions with the nadir, and an atmosphere boundary distance.
  * @return {vec3} The computed specular irradiance
  */
-vec3 getSpecularIrradiance(vec3 reflectionWC, vec3 skyMetrics, float roughness)
+vec3 getProceduralSpecularIrradiance(vec3 reflectionWC, vec3 skyMetrics, float roughness)
 {
     // Flipping the X vector is a cheap way to get the inverse of czm_temeToPseudoFixed, since that's a rotation about Z.
     reflectionWC.x = -reflectionWC.x;
@@ -123,12 +123,12 @@ float getSunLuminance(vec3 positionWC, vec3 normalEC, vec3 lightDirectionEC)
     vec3 viewDirectionEC = -normalize(positionEC);
     vec3 positionWC = vec3(czm_inverseView * vec4(positionEC, 1.0));
     vec3 reflectionWC = normalize(czm_inverseViewRotation * normalize(reflect(viewDirectionEC, normalEC)));
-    vec3 skyMetrics = getSkyMetrics(positionWC, reflectionWC);
+    vec3 skyMetrics = getProceduralSkyMetrics(positionWC, reflectionWC);
 
     float roughness = material.roughness;
     vec3 f0 = material.specular;
 
-    vec3 specularIrradiance = getSpecularIrradiance(reflectionWC, skyMetrics, roughness);
+    vec3 specularIrradiance = getProceduralSpecularIrradiance(reflectionWC, skyMetrics, roughness);
     float NdotV = abs(dot(normalEC, viewDirectionEC)) + 0.001;
     vec2 brdfLut = texture(czm_brdfLut, vec2(NdotV, roughness)).rg;
     vec3 specularColor = czm_srgbToLinear(f0 * brdfLut.x + brdfLut.y);
@@ -137,7 +137,7 @@ float getSunLuminance(vec3 positionWC, vec3 normalEC, vec3 lightDirectionEC)
         specularContribution *= material.specularWeight;
     #endif
 
-    vec3 diffuseIrradiance = getDiffuseIrradiance(skyMetrics);
+    vec3 diffuseIrradiance = getProceduralDiffuseIrradiance(skyMetrics);
     vec3 diffuseColor = material.diffuse;
     vec3 diffuseContribution = diffuseIrradiance * diffuseColor * model_iblFactor.x;
 
