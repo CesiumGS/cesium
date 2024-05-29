@@ -7,7 +7,6 @@ import ResourceLoaderState from "./ResourceLoaderState.js";
 import PropertyTexture from "./PropertyTexture.js";
 import StructuralMetadata from "./StructuralMetadata.js";
 import MetadataSchema from "./MetadataSchema.js";
-import MetadataClass from "./MetadataClass.js";
 
 /**
  * Loads glTF NGA_gpm_local
@@ -199,6 +198,155 @@ function loadTextures(gpmLoader) {
 }
 
 /**
+ * A static mapping from PPE texture property identifier keys
+ * to `MetadataSchema` instances. This is used to create each
+ * schema (with a certain structure) only ONCE in
+ * obtainPpeTexturesMetadataSchema
+ *
+ * @private
+ */
+GltfGpmLoader.ppeTexturesMetadataSchemaCache = new Map();
+
+/**
+ * Create the JSON description of a metadata class that treats
+ * the given PPE texture as a property texture property(!).
+ *
+ * @param {any} ppeTexture - The PPE texture
+ * @param {number} index - The index of the texture in the extension
+ * @returns The class JSON
+ */
+GltfGpmLoader.prototype.createPpeTextureClassJson = function (
+  ppeTexture,
+  index
+) {
+  const traits = ppeTexture.traits;
+  const ppePropertyName = traits.source;
+
+  // XXX_UNCERTAINTY: The ppeTexture will have a structure
+  // like this:
+  //
+  //"ppeTextures" : [
+  //  {
+  //    "traits" : {
+  //      "source" : "SIGZ",
+  //      "min" : 0.0,
+  //      "max" : 16.0
+  //    },
+  //    "index" : 2,
+  //    "noData" : 255,
+  //    "offset" : 0.0,
+  //    "scale" : 0.06274509803921569,
+  //    "texCoord" : 1
+  //  },
+  //
+  // Note that in GPM 1.2d, the min/max should be part of the
+  // texture, but in the actual data (GPM 1.2i), they are in
+  // the traits (ppeMetadata). And there, they/ seem to denote
+  // the min/max values that actually appear in the texture.
+  // So they are integrated into the 'scale' factor here:
+  const min = traits.min ?? 0;
+  const max = traits.max ?? 255;
+  const minMaxScale = 255.0 / (max - min);
+  const offset = ppeTexture.offset;
+  const scale = ppeTexture.scale * minMaxScale;
+  const classJson = {
+    name: `PPE texture class ${index}`,
+    properties: {
+      [ppePropertyName]: {
+        name: "PPE",
+        type: "SCALAR",
+        componentType: "UINT8",
+        normalized: true,
+        offset: offset,
+        scale: scale,
+      },
+    },
+  };
+  return classJson;
+};
+
+/**
+ * Returns the `MetadataSchema` for the PPE textures in this instance.
+ *
+ * This method will return a (statically/globally) cached metadata
+ * schema that reflects the structure of the PPE textures in this
+ * instance, creating and caching it if necessary.
+ *
+ * For details on the cache key, see `collectPpeTexturePropertyIdentifiers`
+ *
+ * @returns The `MetadataSchema`
+ */
+GltfGpmLoader.prototype.obtainPpeTexturesMetadataSchema = function () {
+  const ppeTexturePropertyIdentifiers = this.collectPpeTexturePropertyIdentifiers();
+  const key = ppeTexturePropertyIdentifiers.toString();
+  let ppeTexturesMetadataSchema = GltfGpmLoader.ppeTexturesMetadataSchemaCache.get(
+    key
+  );
+  if (defined(ppeTexturesMetadataSchema)) {
+    console.log(`Using cached schema for GPM PPE textures with key ${key}`);
+    return ppeTexturesMetadataSchema;
+  }
+
+  console.log(`Creating schema for GPM PPE textures with key ${key}`);
+  const schemaId = `PPE_TEXTURE_SCHEMA_${GltfGpmLoader.ppeTexturesMetadataSchemaCache.size}`;
+  const ppeTexturesMetadataSchemaJson = {
+    id: schemaId,
+    classes: {},
+  };
+
+  const extension = this._extension;
+  if (defined(extension.ppeTextures)) {
+    for (let i = 0; i < extension.ppeTextures.length; i++) {
+      const ppeTexture = extension.ppeTextures[i];
+      const classId = `ppeTexture_${i}`;
+      const classJson = this.createPpeTextureClassJson(ppeTexture, i);
+      ppeTexturesMetadataSchemaJson.classes[classId] = classJson;
+    }
+  }
+
+  ppeTexturesMetadataSchema = MetadataSchema.fromJson(
+    ppeTexturesMetadataSchemaJson
+  );
+  GltfGpmLoader.ppeTexturesMetadataSchemaCache.set(
+    key,
+    ppeTexturesMetadataSchema
+  );
+  return ppeTexturesMetadataSchema;
+};
+
+/**
+ * Creates an array of strings that serve as identifiers for PPE textures.
+ *
+ * Each glTF may define multiple `ppeTexture` objects within the
+ * `NGA_gpm_local` extensions. Each of these textures corresponds
+ * to one 'property texture property(!)' in a metadata schema.
+ *
+ * This method will create an array where each element is a (JSON)
+ * string representation of the parts of a GPM PPE texture definition
+ * that are relevant for distinguishing two PPE textures in terms
+ * of their structure within a `StructuralMetadata`.
+ *
+ * @returns The identifiers
+ */
+GltfGpmLoader.prototype.collectPpeTexturePropertyIdentifiers = function () {
+  const extension = this._extension;
+  const ppeTexturePropertyIdentifiers = [];
+  if (defined(extension.ppeTextures)) {
+    for (let i = 0; i < extension.ppeTextures.length; i++) {
+      const ppeTexture = extension.ppeTextures[i];
+      // The following will create an identifier that can be used
+      // to define two PPE textures as "representing the same
+      // property texture property" within a structural metadata
+      // schema.
+      const classJson = this.createPpeTextureClassJson(ppeTexture, i);
+      const ppeTexturePropertyIdentifier = JSON.stringify(classJson);
+      ppeTexturePropertyIdentifiers.push(ppeTexturePropertyIdentifier);
+    }
+  }
+  return ppeTexturePropertyIdentifiers;
+};
+
+/**
  * Processes the resource until it becomes ready.
  *
  * @param {FrameState} frameState The frame state.
@@ -239,69 +387,19 @@ GltfGpmLoader.prototype.process = function (frameState) {
     }
   }
 
-  // XXX_UNCERTAINTY: It's certainly not ideal to re-create the schema for
-  // each and every loaded glTF.
-  // In practice, we could create it once, store it globally, and re-use it
-  // In theory, this might not work, because the set of textures in each
-  // glTF might be different
-  // Combining theory and practice, there could be some sort of (global)
-  // "cache", to store the metadata schemas for a set of property textures
-  // that are found, identified by the "traits" of the ppeTextures (like
-  // the two ones with SIGZ and SIGR traits in the sample data)
-  console.log("Creating dummy schema for GPM");
-  const metadataSchemaJson = {
-    id: "PPE_TEXTURE_SCHEMA",
-    classes: {},
-  };
-
+  const ppeTexturesMetadataSchema = this.obtainPpeTexturesMetadataSchema();
   const extension = this._extension;
   const propertyTextures = [];
   if (defined(extension.ppeTextures)) {
     for (let i = 0; i < extension.ppeTextures.length; i++) {
       const ppeTexture = extension.ppeTextures[i];
-
-      // XXX_UNCERTAINTY: The class name will be required
-      // for selecting the proper property texture property.
-      // The property name will be required for the
-      // custom shader. And it should be known by the user. And
-      // it should be the same for all glTF. And there is no
-      // reasonable way for "transporting" that to the user for now.
-      const classId = `PPE_${i}`;
+      const classId = `ppeTexture_${i}`;
       const traits = ppeTexture.traits;
       const ppePropertyName = traits.source;
-
-      // XXX_UNCERTAINTY: In GPM 1.2d, the min/max should be
-      // part of the texture, but in the actual data (GPM 1.2i),
-      // they are in the traits (ppeMetadata). And there, they
-      // seem to denote the min/max values that actually appear
-      // in the texture. So they are integrated into the 'scale'
-      // factor here:
-      const min = traits.min ?? 0;
-      const max = traits.max ?? 255;
-      const minMaxScale = 255.0 / (max - min);
-      const offset = ppeTexture.offset;
-      const scale = ppeTexture.scale * minMaxScale;
-      const classJson = {
-        name: classId,
-        properties: {
-          [ppePropertyName]: {
-            name: "PPE",
-            type: "SCALAR",
-            componentType: "UINT8",
-            normalized: true,
-            offset: offset,
-            scale: scale,
-          },
-        },
-      };
-      metadataSchemaJson.classes[classId] = classJson;
-      const metadataClass = MetadataClass.fromJson({
-        id: classId,
-        class: classJson,
-      });
+      const metadataClass = ppeTexturesMetadataSchema.classes[classId];
 
       console.log(
-        `Creating property texture class ${classId} with property ${ppePropertyName}`
+        `Creating property texture with class ${classId} and property ${ppePropertyName}`
       );
 
       const ppeTextureAsPropertyTexture = {
@@ -325,10 +423,8 @@ GltfGpmLoader.prototype.process = function (frameState) {
     }
   }
 
-  const ppeSchema = MetadataSchema.fromJson(metadataSchemaJson);
-
   const structuralMetadata = new StructuralMetadata({
-    schema: ppeSchema,
+    schema: ppeTexturesMetadataSchema,
     propertyTables: [],
     propertyTextures: propertyTextures,
     propertyAttributes: [],
