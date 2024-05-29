@@ -293,7 +293,8 @@ void setSpecular(inout czm_modelMaterial material, in float metalness)
         #ifdef HAS_SPECULAR_COLOR_TEXTURE_TRANSFORM
             specularColorTexCoords = computeTextureTransform(specularColorTexCoords, u_specularColorTextureTransform);
         #endif
-        vec3 specularColorFactor = texture(u_specularColorTexture, specularColorTexCoords).rgb;
+        vec3 specularColorSample = texture(u_specularColorTexture, specularColorTexCoords).rgb;
+        vec3 specularColorFactor = czm_srgbToLinear(specularColorSample);
         #ifdef HAS_SPECULAR_COLOR_FACTOR
             specularColorFactor *= u_specularColorFactor;
         #endif
