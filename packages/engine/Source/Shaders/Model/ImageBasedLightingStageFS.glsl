@@ -5,7 +5,7 @@ vec3 proceduralIBL(
     vec3 lightColorHdr,
     czm_pbrParameters pbrParameters
 ) {
-    vec3 v = -positionEC;
+    vec3 v = -normalize(positionEC);
     vec3 positionWC = vec3(czm_inverseView * vec4(positionEC, 1.0));
     vec3 vWC = -normalize(positionWC);
     vec3 l = normalize(lightDirectionEC);
@@ -99,29 +99,36 @@ vec3 computeDiffuseIBL(czm_pbrParameters pbrParameters, vec3 cubeDir)
 #endif
 
 #ifdef SPECULAR_IBL
+vec3 sampleSpecularEnvironment(vec3 cubeDir, float roughness)
+{
+    #ifdef CUSTOM_SPECULAR_IBL
+        float maxLod = model_specularEnvironmentMapsMaximumLOD;
+        float lod = roughness * maxLod;
+        return czm_sampleOctahedralProjection(model_specularEnvironmentMaps, model_specularEnvironmentMapsSize, cubeDir, lod, maxLod);
+    #else
+        float maxLod = czm_specularEnvironmentMapsMaximumLOD;
+        float lod = roughness * maxLod;
+        return czm_sampleOctahedralProjection(czm_specularEnvironmentMaps, czm_specularEnvironmentMapSize, cubeDir, lod, maxLod);
+    #endif
+}
 vec3 computeSpecularIBL(czm_pbrParameters pbrParameters, vec3 cubeDir, float NdotV, float VdotH)
 {
     float roughness = pbrParameters.roughness;
-    vec3 specularColor = pbrParameters.f0;
+    vec3 f0 = pbrParameters.f0;
 
-    vec3 r0 = specularColor.rgb;
-    float reflectance = max(max(r0.r, r0.g), r0.b);
-    vec3 r90 = vec3(clamp(reflectance * 25.0, 0.0, 1.0));
-    vec3 F = fresnelSchlick2(r0, r90, VdotH);
+    float reflectance = max(max(f0.r, f0.g), f0.b);
+    vec3 f90 = vec3(clamp(reflectance * 25.0, 0.0, 1.0));
+    vec3 F = fresnelSchlick2(f0, f90, VdotH);
 
     vec2 brdfLut = texture(czm_brdfLut, vec2(NdotV, roughness)).rg;
-    #ifdef CUSTOM_SPECULAR_IBL
-        vec3 specularIBL = czm_sampleOctahedralProjection(model_specularEnvironmentMaps, model_specularEnvironmentMapsSize, cubeDir, roughness * model_specularEnvironmentMapsMaximumLOD, model_specularEnvironmentMapsMaximumLOD);
-    #else
-        vec3 specularIBL = czm_sampleOctahedralProjection(czm_specularEnvironmentMaps, czm_specularEnvironmentMapSize, cubeDir,  roughness * czm_specularEnvironmentMapsMaximumLOD, czm_specularEnvironmentMapsMaximumLOD);
-    #endif
+    vec3 specularIBL = sampleSpecularEnvironment(cubeDir, roughness);
     specularIBL *= F * brdfLut.x + brdfLut.y;
 
     #ifdef USE_SPECULAR
         specularIBL *= pbrParameters.specularWeight;
     #endif
 
-    return specularColor * specularIBL;
+    return f0 * specularIBL;
 }
 #endif
 
@@ -132,7 +139,7 @@ vec3 textureIBL(
     vec3 lightDirectionEC,
     czm_pbrParameters pbrParameters
 ) {
-    vec3 v = -positionEC;
+    vec3 v = -normalize(positionEC);
     vec3 n = normalEC;
     vec3 l = normalize(lightDirectionEC);
     vec3 h = normalize(v + l);
@@ -140,17 +147,33 @@ vec3 textureIBL(
     float NdotV = abs(dot(n, v)) + 0.001;
     float VdotH = clamp(dot(v, h), 0.0, 1.0);
 
+    // Find the direction in which to sample the environment map
     const mat3 yUpToZUp = mat3(
         -1.0, 0.0, 0.0,
         0.0, 0.0, -1.0, 
         0.0, 1.0, 0.0
-    ); 
-    vec3 cubeDir = normalize(yUpToZUp * model_iblReferenceFrameMatrix * normalize(reflect(-v, n))); 
+    );
+    mat3 cubeDirTransform = yUpToZUp * model_iblReferenceFrameMatrix;
+    vec3 cubeDir = normalize(cubeDirTransform * normalize(reflect(-v, n)));
 
     #ifdef DIFFUSE_IBL
         vec3 diffuseContribution = computeDiffuseIBL(pbrParameters, cubeDir);
     #else
         vec3 diffuseContribution = vec3(0.0); 
+    #endif
+
+    #ifdef USE_ANISOTROPY
+        // Update environment map sampling direction to account for anisotropic distortion of specular reflection
+        float roughness = pbrParameters.roughness;
+        vec3 anisotropyDirection = pbrParameters.anisotropicB;
+        float anisotropyStrength = pbrParameters.anisotropyStrength;
+
+        vec3 anisotropicTangent = cross(anisotropyDirection, v);
+        vec3 anisotropicNormal = cross(anisotropicTangent, anisotropyDirection);
+        float bendFactor = 1.0 - anisotropyStrength * (1.0 - roughness);
+        float bendFactorPow4 = bendFactor * bendFactor * bendFactor * bendFactor;
+        vec3 bentNormal = normalize(mix(anisotropicNormal, n, bendFactorPow4));
+        cubeDir = normalize(cubeDirTransform * normalize(reflect(-v, bentNormal)));
     #endif
 
     #ifdef SPECULAR_IBL
