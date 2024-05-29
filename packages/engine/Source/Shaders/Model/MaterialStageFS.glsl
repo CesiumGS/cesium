@@ -25,7 +25,9 @@ vec2 getNormalTexCoords()
     #endif
     return texCoord;
 }
+#endif
 
+#if defined(HAS_NORMAL_TEXTURE) || defined(HAS_CLEARCOAT_NORMAL_TEXTURE)
 vec3 computeTangent(in vec3 position, in vec2 normalTexCoords)
 {
     vec2 tex_dx = dFdx(normalTexCoords);
@@ -104,6 +106,32 @@ vec3 getNormalFromTexture(ProcessedAttributes attributes, vec3 geometryNormal)
 
     mat3 tbn = mat3(t, b, geometryNormal);
     vec3 n = texture(u_normalTexture, normalTexCoords).rgb;
+    vec3 textureNormal = normalize(tbn * (2.0 * n - 1.0));
+
+    return textureNormal;
+}
+#endif
+
+#ifdef HAS_CLEARCOAT_NORMAL_TEXTURE
+vec3 getClearcoatNormalFromTexture(ProcessedAttributes attributes, vec3 geometryNormal)
+{
+    vec2 normalTexCoords = TEXCOORD_CLEARCOAT_NORMAL;
+    #ifdef HAS_CLEARCOAT_NORMAL_TEXTURE_TRANSFORM
+        normalTexCoords = vec2(u_clearcoatNormalTextureTransform * vec3(normalTexCoords, 1.0));
+    #endif
+
+    // If HAS_BITANGENTS is set, then HAS_TANGENTS is also set
+    #ifdef HAS_BITANGENTS
+        vec3 t = attributes.tangentEC;
+        vec3 b = attributes.bitangentEC;
+    #else
+        vec3 t = computeTangent(attributes.positionEC, normalTexCoords);
+        t = normalize(t - geometryNormal * dot(geometryNormal, t));
+        vec3 b = normalize(cross(geometryNormal, t));
+    #endif
+
+    mat3 tbn = mat3(t, b, geometryNormal);
+    vec3 n = texture(u_clearcoatNormalTexture, normalTexCoords).rgb;
     vec3 textureNormal = normalize(tbn * (2.0 * n - 1.0));
 
     return textureNormal;
@@ -347,7 +375,7 @@ void setAnisotropy(inout czm_modelMaterial material, in NormalInfo normalInfo)
 }
 #endif
 #ifdef USE_CLEARCOAT
-void setClearcoat(inout czm_modelMaterial material)
+void setClearcoat(inout czm_modelMaterial material, in ProcessedAttributes attributes)
 {
     #ifdef HAS_CLEARCOAT_TEXTURE
         vec2 clearcoatTexCoords = TEXCOORD_CLEARCOAT;
@@ -389,8 +417,11 @@ void setClearcoat(inout czm_modelMaterial material)
     // square it to get material roughness
     // TODO: do we need perceptual roughness for IBL?
     material.clearcoatRoughness = clearcoatRoughness * clearcoatRoughness;
-    // TODO: read clear coat normals from a texture (if supplied)
-    material.clearcoatNormal = material.normalEC;
+    #ifdef HAS_CLEARCOAT_NORMAL_TEXTURE
+        material.clearcoatNormal = getClearcoatNormalFromTexture(attributes, attributes.normalEC);
+    #else
+        material.clearcoatNormal = attributes.normalEC;
+    #endif
 }
 #endif
 #endif
@@ -455,7 +486,7 @@ void materialStage(inout czm_modelMaterial material, ProcessedAttributes attribu
             setAnisotropy(material, normalInfo);
         #endif
         #ifdef USE_CLEARCOAT
-            setClearcoat(material);
+            setClearcoat(material, attributes);
         #endif
     #endif
 }
