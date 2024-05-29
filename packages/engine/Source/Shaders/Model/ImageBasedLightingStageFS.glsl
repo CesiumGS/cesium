@@ -1,12 +1,42 @@
-vec3 getDiffuseIrradiance(float horizonDotNadir, float reflectionDotNadir, float smoothstepHeight)
+/**
+ * Compute some metrics for a procedural sky lighting model
+ *
+ * @param {vec3} positionWC The position of the fragment in world coordinates.
+ * @param {vec3} reflectionWC A unit vector in the direction of the reflection, in world coordinates.
+ * @return {vec3} The dot products of the horizon and reflection directions with the nadir, and an atmosphere boundary distance.
+ */
+vec3 getSkyMetrics(vec3 positionWC, vec3 reflectionWC)
+{
+    // Figure out if the reflection vector hits the ellipsoid
+    // TODO: use both ellipsoid radii, and the direction of positionWC?
+    float horizonDotNadir = 1.0 - min(1.0, czm_ellipsoidRadii.x / length(positionWC));
+    float reflectionDotNadir = dot(reflectionWC, normalize(positionWC));
+    float atmosphereHeight = 0.05;
+    float smoothstepHeight = smoothstep(0.0, atmosphereHeight, horizonDotNadir);
+    return vec3(horizonDotNadir, reflectionDotNadir, smoothstepHeight);
+}
+
+/**
+ * Compute the diffuse irradiance for a procedural sky lighting model
+ *
+ * @param {vec3} skyMetrics The dot products of the horizon and reflection directions with the nadir, and an atmosphere boundary distance.
+ * @return {vec3} The computed diffuse irradiance
+ */
+vec3 getDiffuseIrradiance(vec3 skyMetrics)
 {
     vec3 blueSkyDiffuseColor = vec3(0.7, 0.85, 0.9); 
-    float diffuseIrradianceFromEarth = (1.0 - horizonDotNadir) * (reflectionDotNadir * 0.25 + 0.75) * smoothstepHeight;  
-    float diffuseIrradianceFromSky = (1.0 - smoothstepHeight) * (1.0 - (reflectionDotNadir * 0.25 + 0.25));
+    float diffuseIrradianceFromEarth = (1.0 - skyMetrics.x) * (skyMetrics.y * 0.25 + 0.75) * skyMetrics.z;  
+    float diffuseIrradianceFromSky = (1.0 - skyMetrics.z) * (1.0 - (skyMetrics.y * 0.25 + 0.25));
     return blueSkyDiffuseColor * clamp(diffuseIrradianceFromEarth + diffuseIrradianceFromSky, 0.0, 1.0);
 }
 
-vec3 getSpecularIrradiance(vec3 reflectionWC, float horizonDotNadir, float reflectionDotNadir, float smoothstepHeight, float roughness)
+/**
+ * Compute the specular irradiance for a procedural sky lighting model
+ *
+ * @param {vec3} skyMetrics The dot products of the horizon and reflection directions with the nadir, and an atmosphere boundary distance.
+ * @return {vec3} The computed specular irradiance
+ */
+vec3 getSpecularIrradiance(vec3 reflectionWC, vec3 skyMetrics, float roughness)
 {
     // Flipping the X vector is a cheap way to get the inverse of czm_temeToPseudoFixed, since that's a rotation about Z.
     reflectionWC.x = -reflectionWC.x;
@@ -18,24 +48,24 @@ vec3 getSpecularIrradiance(vec3 reflectionWC, float horizonDotNadir, float refle
     vec3 sceneSkyBox = czm_textureCube(czm_environmentMap, reflectionWC).rgb * inverseRoughness;
 
     // Compute colors at different angles relative to the horizon
-    vec3 belowHorizonColor = mix(vec3(0.1, 0.15, 0.25), vec3(0.4, 0.7, 0.9), smoothstepHeight);
+    vec3 belowHorizonColor = mix(vec3(0.1, 0.15, 0.25), vec3(0.4, 0.7, 0.9), skyMetrics.z);
     vec3 nadirColor = belowHorizonColor * 0.5;
     vec3 aboveHorizonColor = mix(vec3(0.9, 1.0, 1.2), belowHorizonColor, roughness * 0.5);
-    vec3 blueSkyColor = mix(vec3(0.18, 0.26, 0.48), aboveHorizonColor, reflectionDotNadir * inverseRoughness * 0.5 + 0.75);
-    vec3 zenithColor = mix(blueSkyColor, sceneSkyBox, smoothstepHeight);
+    vec3 blueSkyColor = mix(vec3(0.18, 0.26, 0.48), aboveHorizonColor, skyMetrics.y * inverseRoughness * 0.5 + 0.75);
+    vec3 zenithColor = mix(blueSkyColor, sceneSkyBox, skyMetrics.z);
 
     // Compute blend zones
-    float blendRegionSize = 0.1 * ((1.0 - inverseRoughness) * 8.0 + 1.1 - horizonDotNadir);
+    float blendRegionSize = 0.1 * ((1.0 - inverseRoughness) * 8.0 + 1.1 - skyMetrics.x);
     float blendRegionOffset = roughness * -1.0;
-    float farAboveHorizon = clamp(horizonDotNadir - blendRegionSize * 0.5 + blendRegionOffset, 1.0e-10 - blendRegionSize, 0.99999);
-    float aroundHorizon = clamp(horizonDotNadir + blendRegionSize * 0.5, 1.0e-10 - blendRegionSize, 0.99999);
-    float farBelowHorizon = clamp(horizonDotNadir + blendRegionSize * 1.5, 1.0e-10 - blendRegionSize, 0.99999);
+    float farAboveHorizon = clamp(skyMetrics.x - blendRegionSize * 0.5 + blendRegionOffset, 1.0e-10 - blendRegionSize, 0.99999);
+    float aroundHorizon = clamp(skyMetrics.x + blendRegionSize * 0.5, 1.0e-10 - blendRegionSize, 0.99999);
+    float farBelowHorizon = clamp(skyMetrics.x + blendRegionSize * 1.5, 1.0e-10 - blendRegionSize, 0.99999);
 
     // Blend colors
-    float notDistantRough = (1.0 - horizonDotNadir * roughness * 0.8);
-    vec3 specularIrradiance = mix(zenithColor, aboveHorizonColor, smoothstep(farAboveHorizon, aroundHorizon, reflectionDotNadir) * notDistantRough);
-    specularIrradiance = mix(specularIrradiance, belowHorizonColor, smoothstep(aroundHorizon, farBelowHorizon, reflectionDotNadir) * inverseRoughness);
-    specularIrradiance = mix(specularIrradiance, nadirColor, smoothstep(farBelowHorizon, 1.0, reflectionDotNadir) * inverseRoughness);
+    float notDistantRough = (1.0 - skyMetrics.x * roughness * 0.8);
+    vec3 specularIrradiance = mix(zenithColor, aboveHorizonColor, smoothstep(farAboveHorizon, aroundHorizon, skyMetrics.y) * notDistantRough);
+    specularIrradiance = mix(specularIrradiance, belowHorizonColor, smoothstep(aroundHorizon, farBelowHorizon, skyMetrics.y) * inverseRoughness);
+    specularIrradiance = mix(specularIrradiance, nadirColor, smoothstep(farBelowHorizon, 1.0, skyMetrics.y) * inverseRoughness);
 
     return specularIrradiance;
 }
@@ -93,18 +123,12 @@ float getSunLuminance(vec3 positionWC, vec3 normalEC, vec3 lightDirectionEC)
     vec3 viewDirectionEC = -normalize(positionEC);
     vec3 positionWC = vec3(czm_inverseView * vec4(positionEC, 1.0));
     vec3 reflectionWC = normalize(czm_inverseViewRotation * normalize(reflect(viewDirectionEC, normalEC)));
-
-    // Figure out if the reflection vector hits the ellipsoid
-    // TODO: use both ellipsoid radii, and the direction of positionWC?
-    float horizonDotNadir = 1.0 - min(1.0, czm_ellipsoidRadii.x / length(positionWC));
-    float reflectionDotNadir = dot(reflectionWC, normalize(positionWC));
-    float atmosphereHeight = 0.05;
-    float smoothstepHeight = smoothstep(0.0, atmosphereHeight, horizonDotNadir);
+    vec3 skyMetrics = getSkyMetrics(positionWC, reflectionWC);
 
     float roughness = material.roughness;
     vec3 f0 = material.specular;
 
-    vec3 specularIrradiance = getSpecularIrradiance(reflectionWC, horizonDotNadir, reflectionDotNadir, smoothstepHeight, roughness);
+    vec3 specularIrradiance = getSpecularIrradiance(reflectionWC, skyMetrics, roughness);
     float NdotV = abs(dot(normalEC, viewDirectionEC)) + 0.001;
     vec2 brdfLut = texture(czm_brdfLut, vec2(NdotV, roughness)).rg;
     vec3 specularColor = czm_srgbToLinear(f0 * brdfLut.x + brdfLut.y);
@@ -113,7 +137,7 @@ float getSunLuminance(vec3 positionWC, vec3 normalEC, vec3 lightDirectionEC)
         specularContribution *= material.specularWeight;
     #endif
 
-    vec3 diffuseIrradiance = getDiffuseIrradiance(horizonDotNadir, reflectionDotNadir, smoothstepHeight);
+    vec3 diffuseIrradiance = getDiffuseIrradiance(skyMetrics);
     vec3 diffuseColor = material.diffuse;
     vec3 diffuseContribution = diffuseIrradiance * diffuseColor * model_iblFactor.x;
 
