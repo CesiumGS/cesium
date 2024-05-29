@@ -99,7 +99,7 @@ MaterialPipelineStage.process = function (
   } else {
     if (
       defined(material.specular) &&
-      ModelUtility.supportedExtensions.KHR_materials_specular === true
+      ModelUtility.supportedExtensions.KHR_materials_specular
     ) {
       processSpecularUniforms(
         material.specular,
@@ -111,7 +111,7 @@ MaterialPipelineStage.process = function (
     }
     if (
       defined(material.anisotropy) &&
-      ModelUtility.supportedExtensions.KHR_materials_anisotropy === true
+      ModelUtility.supportedExtensions.KHR_materials_anisotropy
     ) {
       processAnisotropyUniforms(
         material.anisotropy,

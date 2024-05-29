@@ -494,6 +494,7 @@ describe(
         "uniform float u_metallicFactor;",
         "uniform sampler2D u_anisotropyTexture;",
         "uniform sampler2D u_baseColorTexture;",
+        "uniform sampler2D u_normalTexture;",
         "uniform vec3 u_anisotropy;",
       ]);
 
@@ -502,8 +503,10 @@ describe(
         "HAS_ANISOTROPY_TEXTURE",
         "HAS_BASE_COLOR_TEXTURE",
         "HAS_METALLIC_FACTOR",
+        "HAS_NORMAL_TEXTURE",
         "TEXCOORD_ANISOTROPY v_texCoord_0",
         "TEXCOORD_BASE_COLOR v_texCoord_0",
+        "TEXCOORD_NORMAL v_texCoord_0",
         "USE_ANISOTROPY",
         "USE_METALLIC_ROUGHNESS",
       ]);

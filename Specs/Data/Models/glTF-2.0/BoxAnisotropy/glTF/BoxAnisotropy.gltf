@@ -128,6 +128,9 @@
                 },
                 "metallicFactor": 0.0
             },
+            "normalTexture": {
+                "index": 0
+            },
             "name": "Texture",
             "extensions": {
                 "KHR_materials_anisotropy": {
