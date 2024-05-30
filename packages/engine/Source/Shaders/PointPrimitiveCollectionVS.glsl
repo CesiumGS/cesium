@@ -2,11 +2,10 @@ uniform float u_maxTotalPointSize;
 
 in vec4 positionHighAndSize;
 in vec4 positionLowAndOutline;
-in vec4 compressedAttribute0;                       // color, outlineColor, pick color
-in vec4 compressedAttribute1;                       // show, translucency by distance, some free space
-in vec4 scaleByDistance;                            // near, nearScale, far, farScale
-in vec3 distanceDisplayConditionAndDisableDepth;    // near, far, disableDepthTestDistance
-in float splitDirection;                            // splitDirection
+in vec4 compressedAttribute0;                                        // color, outlineColor, pick color
+in vec4 compressedAttribute1;                                        // show, translucency by distance, some free space
+in vec4 scaleByDistance;                                             // near, nearScale, far, farScale
+in vec4 distanceDisplayConditionAndDisableDepthAndSplitDirection;    // near, far, disableDepthTestDistance, splitDirection
 
 out vec4 v_color;
 out vec4 v_outlineColor;
@@ -137,8 +136,8 @@ void main()
 #endif
 
 #ifdef DISTANCE_DISPLAY_CONDITION
-    float nearSq = distanceDisplayConditionAndDisableDepth.x;
-    float farSq = distanceDisplayConditionAndDisableDepth.y;
+    float nearSq = distanceDisplayConditionAndDisableDepthAndSplitDirection.x;
+    float farSq = distanceDisplayConditionAndDisableDepthAndSplitDirection.y;
     if (lengthSq < nearSq || lengthSq > farSq) {
         // push vertex behind camera to force it to be clipped
         positionEC.xyz = vec3(0.0, 0.0, 1.0);
@@ -149,7 +148,7 @@ void main()
     czm_vertexLogDepth();
 
 #ifdef DISABLE_DEPTH_DISTANCE
-    float disableDepthTestDistance = distanceDisplayConditionAndDisableDepth.z;
+    float disableDepthTestDistance = distanceDisplayConditionAndDisableDepthAndSplitDirection.z;
     if (disableDepthTestDistance == 0.0 && czm_minimumDisableDepthTestDistance != 0.0)
     {
         disableDepthTestDistance = czm_minimumDisableDepthTestDistance;
@@ -182,5 +181,5 @@ void main()
     gl_Position *= show;
 
     v_pickColor = pickColor;
-    v_splitDirection = splitDirection;
+    v_splitDirection = distanceDisplayConditionAndDisableDepthAndSplitDirection.w;
 }
