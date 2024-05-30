@@ -123,7 +123,7 @@ MaterialPipelineStage.process = function (
     }
     if (
       defined(material.clearcoat) &&
-      ModelUtility.supportedExtensions.KHR_materials_clearcoat === true
+      ModelUtility.supportedExtensions.KHR_materials_clearcoat
     ) {
       processClearcoatUniforms(
         material.clearcoat,

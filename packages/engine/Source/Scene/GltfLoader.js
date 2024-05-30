@@ -1669,7 +1669,7 @@ function loadMaterial(loader, gltfMaterial, frameState) {
     if (defined(pbrAnisotropy) && !material.unlit) {
       material.anisotropy = loadAnisotropy(loader, pbrAnisotropy, frameState);
     }
-    if (defined(pbrClearcoat) && material.unlit === false) {
+    if (defined(pbrClearcoat) && !material.unlit) {
       material.clearcoat = loadClearcoat(loader, pbrClearcoat, frameState);
     }
   }
