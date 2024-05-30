@@ -3,10 +3,9 @@ import {
   FeatureDetection,
   Iso8601,
   JulianDate,
+  Math as CesiumMath,
   VideoSynchronizer,
 } from "../../index.js";
-
-import { Math as CesiumMath } from "../../index.js";
 
 import pollToPromise from "../../../../Specs/pollToPromise.js";
 

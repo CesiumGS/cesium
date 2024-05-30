@@ -4,10 +4,9 @@ import {
   Cartesian3,
   Ellipsoid,
   GeometryOffsetAttribute,
+  Math as CesiumMath,
   PolygonOutlineGeometry,
 } from "../../index.js";
-
-import { Math as CesiumMath } from "../../index.js";
 
 import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";
 

@@ -3,12 +3,11 @@ import {
   Color,
   Ellipsoid,
   Intersect,
+  Math as CesiumMath,
   Plane,
   S2Cell,
   TileBoundingS2Cell,
 } from "../../index.js";
-
-import { Math as CesiumMath } from "../../index.js";
 
 import createFrameState from "../../../../Specs/createFrameState.js";
 

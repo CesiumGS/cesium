@@ -1,6 +1,9 @@
-import { Cartesian3, SphereGeometry, VertexFormat } from "../../index.js";
-
-import { Math as CesiumMath } from "../../index.js";
+import {
+  Cartesian3,
+  Math as CesiumMath,
+  SphereGeometry,
+  VertexFormat,
+} from "../../index.js";
 
 import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";
 

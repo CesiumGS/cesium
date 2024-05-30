@@ -16,6 +16,7 @@ import {
   isDataUri,
   Iso8601,
   JulianDate,
+  Math as CesiumMath,
   NearFarScalar,
   PerspectiveFrustum,
   Rectangle,
@@ -37,8 +38,6 @@ import {
   LabelStyle,
   SceneMode,
 } from "../../index.js";
-
-import { Math as CesiumMath } from "../../index.js";
 
 import createCamera from "../../../../Specs/createCamera.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";

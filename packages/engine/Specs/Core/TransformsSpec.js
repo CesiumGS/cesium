@@ -9,6 +9,7 @@ import {
   HeadingPitchRoll,
   Iau2006XysData,
   JulianDate,
+  Math as CesiumMath,
   Matrix3,
   Matrix4,
   Quaternion,
@@ -17,8 +18,6 @@ import {
   TimeInterval,
   Transforms,
 } from "../../index.js";
-
-import { Math as CesiumMath } from "../../index.js";
 
 describe("Core/Transforms", function () {
   const negativeX = new Cartesian4(-1, 0, 0, 0);
