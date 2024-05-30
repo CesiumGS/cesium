@@ -87,6 +87,8 @@ describe(
       "./Data/Models/glTF-2.0/TwoSidedPlane/glTF/TwoSidedPlane.gltf";
     const specularTestData =
       "./Data/Models/glTF-2.0/BoxSpecular/glTF/BoxSpecular.gltf";
+    const anisotropyTestData =
+      "./Data/Models/glTF-2.0/BoxAnisotropy/glTF/BoxAnisotropy.gltf";
 
     function expectUniformMap(uniformMap, expected) {
       for (const key in expected) {
@@ -473,6 +475,53 @@ describe(
         u_specularColorFactor: specularColorFactor,
         u_specularTexture: specularTexture.texture,
         u_specularColorTexture: specularColorTexture.texture,
+      };
+      expectUniformMap(uniformMap, expectedUniforms);
+    });
+
+    it("adds uniforms and defines for KHR_materials_anisotropy", async function () {
+      const gltfLoader = await loadGltf(anisotropyTestData);
+
+      const primitive = gltfLoader.components.nodes[1].primitives[0];
+      const renderResources = mockRenderResources();
+      MaterialPipelineStage.process(renderResources, primitive, mockFrameState);
+      const { shaderBuilder, uniformMap } = renderResources;
+
+      ShaderBuilderTester.expectHasVertexUniforms(shaderBuilder, []);
+      ShaderBuilderTester.expectHasFragmentUniforms(shaderBuilder, [
+        "uniform float u_metallicFactor;",
+        "uniform sampler2D u_anisotropyTexture;",
+        "uniform sampler2D u_baseColorTexture;",
+        "uniform sampler2D u_normalTexture;",
+        "uniform vec3 u_anisotropy;",
+      ]);
+
+      ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, []);
+      ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
+        "HAS_ANISOTROPY_TEXTURE",
+        "HAS_BASE_COLOR_TEXTURE",
+        "HAS_METALLIC_FACTOR",
+        "HAS_NORMAL_TEXTURE",
+        "TEXCOORD_ANISOTROPY v_texCoord_0",
+        "TEXCOORD_BASE_COLOR v_texCoord_0",
+        "TEXCOORD_NORMAL v_texCoord_0",
+        "USE_ANISOTROPY",
+        "USE_METALLIC_ROUGHNESS",
+      ]);
+
+      const {
+        anisotropyStrength,
+        anisotropyRotation,
+        anisotropyTexture,
+      } = primitive.material.anisotropy;
+      const expectedAnisotropy = Cartesian3.fromElements(
+        Math.cos(anisotropyRotation),
+        Math.sin(anisotropyRotation),
+        anisotropyStrength
+      );
+      const expectedUniforms = {
+        u_anisotropy: expectedAnisotropy,
+        u_anisotropyTexture: anisotropyTexture.texture,
       };
       expectUniformMap(uniformMap, expectedUniforms);
     });

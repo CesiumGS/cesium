@@ -3,13 +3,12 @@ import {
   Event,
   ExtrapolationType,
   JulianDate,
+  Math as CesiumMath,
   CallbackProperty,
   ConstantPositionProperty,
   SampledPositionProperty,
   VelocityVectorProperty,
 } from "../../index.js";
-
-import { Math as CesiumMath } from "../../index.js";
 
 describe("DataSources/VelocityVectorProperty", function () {
   const time = JulianDate.now();

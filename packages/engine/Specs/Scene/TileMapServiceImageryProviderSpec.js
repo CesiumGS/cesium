@@ -4,6 +4,7 @@ import {
   GeographicProjection,
   GeographicTilingScheme,
   getAbsoluteUri,
+  Math as CesiumMath,
   Rectangle,
   Request,
   RequestErrorEvent,
@@ -18,8 +19,6 @@ import {
   ImageryState,
   UrlTemplateImageryProvider,
 } from "../../index.js";
-
-import { Math as CesiumMath } from "../../index.js";
 
 import pollToPromise from "../../../../Specs/pollToPromise.js";
 

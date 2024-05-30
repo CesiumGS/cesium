@@ -6,10 +6,9 @@ import {
   Ellipsoid,
   GeographicProjection,
   GroundPolylineGeometry,
+  Math as CesiumMath,
   WebMercatorProjection,
 } from "../../index.js";
-
-import { Math as CesiumMath } from "../../index.js";
 
 import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";
 

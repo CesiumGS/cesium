@@ -108,6 +108,8 @@ describe(
       "./Data/Models/glTF-2.0/BoomBox/glTF-pbrSpecularGlossiness/BoomBox.gltf";
     const boxSpecularUrl =
       "./Data/Models/glTF-2.0/BoxSpecular/glTF/BoxSpecular.gltf";
+    const boxAnisotropyUrl =
+      "./Data/Models/glTF-2.0/BoxAnisotropy/glTF/BoxAnisotropy.gltf";
     const riggedFigureUrl =
       "./Data/Models/glTF-2.0/RiggedFigureTest/glTF/RiggedFigureTest.gltf";
     const dracoCesiumManUrl =
@@ -715,6 +717,19 @@ describe(
         {
           gltf: gltf,
           basePath: boxSpecularUrl,
+        },
+        scene
+      );
+      verifyRender(model, true);
+    });
+
+    it("renders model with the KHR_materials_anisotropy extension", async function () {
+      const resource = Resource.createIfNeeded(boxAnisotropyUrl);
+      const gltf = await resource.fetchJson();
+      const model = await loadAndZoomToModelAsync(
+        {
+          gltf: gltf,
+          basePath: boxAnisotropyUrl,
         },
         scene
       );

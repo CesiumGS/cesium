@@ -1,7 +1,6 @@
-import { SphereOutlineGeometry } from "../../index.js";
+import { Math as CesiumMath, SphereOutlineGeometry } from "../../index.js";
 
 import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";
-import { Math as CesiumMath } from "../../index.js";
 
 describe("Core/SphereOutlineGeometry", function () {
   it("constructor throws if stackPartitions less than 1", function () {

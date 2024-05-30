@@ -20,30 +20,26 @@ const GOOGLE_SHEETS_INFO = {
 const CONTRIBUTORS_URL =
   "https://github.com/CesiumGS/cesium/blob/main/CONTRIBUTORS.md";
 
-const main = async () => {
-  let hasSignedCLA;
-  let errorFoundOnCLACheck;
+const getGoogleSheetsApiClient = async () => {
+  const googleConfigFilePath = "GoogleConfig.json";
+  fs.writeFileSync(googleConfigFilePath, GOOGLE_SHEETS_INFO.APIKeys);
 
-  try {
-    hasSignedCLA = await checkIfUserHasSignedAnyCLA();
-  } catch (error) {
-    errorFoundOnCLACheck = error.toString();
-  }
+  const auth = new google.auth.GoogleAuth({
+    keyFile: googleConfigFilePath,
+    scopes: ["https://www.googleapis.com/auth/spreadsheets"],
+  });
+  const googleAuthClient = await auth.getClient();
 
-  const response = await postCommentOnPullRequest(
-    hasSignedCLA,
-    errorFoundOnCLACheck
-  );
+  return google.sheets({ version: "v4", auth: googleAuthClient });
 };
 
-const checkIfUserHasSignedAnyCLA = async () => {
-  let foundIndividualCLA = await checkIfIndividualCLAFound();
-  if (foundIndividualCLA) {
-    return true;
-  }
+const getValuesFromGoogleSheet = async (sheetId, cellRanges) => {
+  const googleSheetsApi = await getGoogleSheetsApiClient();
 
-  let foundCorporateCLA = await checkIfCorporateCLAFound();
-  return foundCorporateCLA;
+  return googleSheetsApi.spreadsheets.values.get({
+    spreadsheetId: sheetId,
+    range: cellRanges,
+  });
 };
 
 const checkIfIndividualCLAFound = async () => {
@@ -95,26 +91,31 @@ const checkIfCorporateCLAFound = async () => {
   return false;
 };
 
-const getValuesFromGoogleSheet = async (sheetId, cellRanges) => {
-  const googleSheetsApi = await getGoogleSheetsApiClient();
+const checkIfUserHasSignedAnyCLA = async () => {
+  const foundIndividualCLA = await checkIfIndividualCLAFound();
+  if (foundIndividualCLA) {
+    return true;
+  }
 
-  return googleSheetsApi.spreadsheets.values.get({
-    spreadsheetId: sheetId,
-    range: cellRanges,
-  });
+  const foundCorporateCLA = await checkIfCorporateCLAFound();
+  return foundCorporateCLA;
 };
 
-const getGoogleSheetsApiClient = async () => {
-  const googleConfigFilePath = "GoogleConfig.json";
-  fs.writeFileSync(googleConfigFilePath, GOOGLE_SHEETS_INFO.APIKeys);
+const getCommentBody = (hasSignedCLA, errorFoundOnCLACheck) => {
+  const commentTemplate = fs.readFileSync(
+    "./.github/actions/check-for-CLA/templates/pullRequestComment.hbs",
+    "utf-8"
+  );
 
-  const auth = new google.auth.GoogleAuth({
-    keyFile: googleConfigFilePath,
-    scopes: ["https://www.googleapis.com/auth/spreadsheets"],
+  const getCommentFromTemplate = Handlebars.compile(commentTemplate);
+  const commentBody = getCommentFromTemplate({
+    errorCla: errorFoundOnCLACheck,
+    hasCla: hasSignedCLA,
+    username: PULL_REQUST_INFO.username,
+    contributorsUrl: CONTRIBUTORS_URL,
   });
-  const googleAuthClient = await auth.getClient();
 
-  return google.sheets({ version: "v4", auth: googleAuthClient });
+  return commentBody;
 };
 
 const postCommentOnPullRequest = async (hasSignedCLA, errorFoundOnCLACheck) => {
@@ -136,21 +137,17 @@ const postCommentOnPullRequest = async (hasSignedCLA, errorFoundOnCLACheck) => {
   );
 };
 
-const getCommentBody = (hasSignedCLA, errorFoundOnCLACheck) => {
-  const commentTemplate = fs.readFileSync(
-    "./.github/actions/check-for-CLA/templates/pullRequestComment.hbs",
-    "utf-8"
-  );
+const main = async () => {
+  let hasSignedCLA;
+  let errorFoundOnCLACheck;
 
-  const getCommentFromTemplate = Handlebars.compile(commentTemplate);
-  const commentBody = getCommentFromTemplate({
-    errorCla: errorFoundOnCLACheck,
-    hasCla: hasSignedCLA,
-    username: PULL_REQUST_INFO.username,
-    contributorsUrl: CONTRIBUTORS_URL,
-  });
+  try {
+    hasSignedCLA = await checkIfUserHasSignedAnyCLA();
+  } catch (error) {
+    errorFoundOnCLACheck = error.toString();
+  }
 
-  return commentBody;
+  await postCommentOnPullRequest(hasSignedCLA, errorFoundOnCLACheck);
 };
 
 main();

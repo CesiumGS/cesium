@@ -3,11 +3,10 @@ import {
   Cartesian3,
   Ellipsoid,
   IntersectionTests,
+  Math as CesiumMath,
   Plane,
   Ray,
 } from "../../index.js";
-
-import { Math as CesiumMath } from "../../index.js";
 
 describe("Core/IntersectionTests", function () {
   it("rayPlane intersects", function () {

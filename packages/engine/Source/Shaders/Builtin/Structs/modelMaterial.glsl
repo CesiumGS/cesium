@@ -26,7 +26,12 @@ struct czm_modelMaterial {
     vec3 normalEC;
     float occlusion;
     vec3 emissive;
-#if defined(USE_SPECULAR)
+#ifdef USE_SPECULAR
     float specularWeight;
+#endif
+#ifdef USE_ANISOTROPY
+    vec3 anisotropicT;
+    vec3 anisotropicB;
+    float anisotropyStrength;
 #endif
 };

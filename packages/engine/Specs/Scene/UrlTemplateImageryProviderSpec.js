@@ -1,6 +1,7 @@
 import {
   Ellipsoid,
   GeographicTilingScheme,
+  Math as CesiumMath,
   Rectangle,
   Request,
   RequestScheduler,
@@ -14,8 +15,6 @@ import {
   ImageryState,
   UrlTemplateImageryProvider,
 } from "../../index.js";
-
-import { Math as CesiumMath } from "../../index.js";
 
 import pollToPromise from "../../../../Specs/pollToPromise.js";
 

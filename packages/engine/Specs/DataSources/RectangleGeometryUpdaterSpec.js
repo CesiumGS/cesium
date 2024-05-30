@@ -2,6 +2,7 @@ import {
   ApproximateTerrainHeights,
   Cartesian3,
   JulianDate,
+  Math as CesiumMath,
   Rectangle,
   TimeIntervalCollection,
   ConstantProperty,
@@ -11,8 +12,6 @@ import {
   SampledProperty,
   PrimitiveCollection,
 } from "../../index.js";
-
-import { Math as CesiumMath } from "../../index.js";
 
 import createDynamicGeometryUpdaterSpecs from "../../../../Specs/createDynamicGeometryUpdaterSpecs.js";
 import createDynamicProperty from "../../../../Specs/createDynamicProperty.js";
