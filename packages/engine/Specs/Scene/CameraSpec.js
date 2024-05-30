@@ -8,6 +8,7 @@ import {
   Ellipsoid,
   GeographicProjection,
   HeadingPitchRange,
+  Math as CesiumMath,
   Matrix3,
   Matrix4,
   OrthographicFrustum,
@@ -22,8 +23,6 @@ import {
   SceneMode,
   TweenCollection,
 } from "../../index.js";
-
-import { Math as CesiumMath } from "../../index.js";
 
 describe("Scene/Camera", function () {
   let scene;

@@ -1,4 +1,3 @@
-/*eslint-env node*/
 import child_process from "child_process";
 import { existsSync, readFileSync, statSync } from "fs";
 import { readFile, writeFile } from "fs/promises";
@@ -640,7 +639,7 @@ export async function createGalleryList(noDevelopmentGallery) {
       .toString()
       .trim()
       .split("\n");
-  } catch (e) {
+  } catch {
     // On a Cesium fork, tags don't exist so we can't generate the list.
   }
 

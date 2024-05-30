@@ -12,6 +12,7 @@ import {
   HeadingPitchRoll,
   HeightmapTerrainData,
   JulianDate,
+  Math as CesiumMath,
   Matrix4,
   OrthographicOffCenterFrustum,
   PixelFormat,
@@ -30,8 +31,6 @@ import {
   ShadowMap,
   ShadowMode,
 } from "../../index.js";
-
-import { Math as CesiumMath } from "../../index.js";
 
 import createScene from "../../../../Specs/createScene.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";

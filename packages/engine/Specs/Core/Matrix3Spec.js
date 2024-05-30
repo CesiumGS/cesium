@@ -1,11 +1,10 @@
 import {
   Cartesian3,
   HeadingPitchRoll,
+  Math as CesiumMath,
   Matrix3,
   Quaternion,
 } from "../../index.js";
-
-import { Math as CesiumMath } from "../../index.js";
 
 import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";
 import createPackableArraySpecs from "../../../../Specs/createPackableArraySpecs.js";

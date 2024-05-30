@@ -11,6 +11,35 @@ vec3 fresnelSchlick2(vec3 f0, vec3 f90, float VdotH)
     return f0 + (f90 - f0) * versineSquared * versineSquared * versine;
 }
 
+#ifdef USE_ANISOTROPY
+/**
+ * @param {float} roughness Material roughness (along the anisotropy bitangent)
+ * @param {float} tangentialRoughness Anisotropic roughness (along the anisotropy tangent)
+ * @param {vec3} lightDirection The direction from the fragment to the light source, transformed to tangent-bitangent-normal coordinates
+ * @param {vec3} viewDirection The direction from the fragment to the camera, transformed to tangent-bitangent-normal coordinates
+ */
+float smithVisibilityGGX_anisotropic(float roughness, float tangentialRoughness, vec3 lightDirection, vec3 viewDirection)
+{
+    vec3 roughnessScale = vec3(tangentialRoughness, roughness, 1.0);
+    float GGXV = lightDirection.z * length(roughnessScale * viewDirection);
+    float GGXL = viewDirection.z * length(roughnessScale * lightDirection);
+    float v = 0.5 / (GGXV + GGXL);
+    return clamp(v, 0.0, 1.0);
+}
+
+/**
+ * @param {float} roughness Material roughness (along the anisotropy bitangent)
+ * @param {float} tangentialRoughness Anisotropic roughness (along the anisotropy tangent)
+ * @param {vec3} halfwayDirection The unit vector halfway between light and view directions, transformed to tangent-bitangent-normal coordinates
+ */
+float GGX_anisotropic(float roughness, float tangentialRoughness, vec3 halfwayDirection)
+{
+    float roughnessSquared = roughness * tangentialRoughness;
+    vec3 f = halfwayDirection * vec3(roughness, tangentialRoughness, roughnessSquared);
+    float w2 = roughnessSquared / dot(f, f);
+    return roughnessSquared * w2 * w2 / czm_pi;
+}
+#else
 float smithVisibilityG1(float NdotV, float roughness)
 {
     // this is the k value for direct lighting.
@@ -24,7 +53,7 @@ float smithVisibilityGGX(float roughness, float NdotL, float NdotV)
     return (
         smithVisibilityG1(NdotL, roughness) *
         smithVisibilityG1(NdotV, roughness)
-    );
+    ) / (4.0 * NdotL * NdotV);
 }
 
 float GGX(float roughness, float NdotH)
@@ -33,6 +62,7 @@ float GGX(float roughness, float NdotH)
     float f = (NdotH * roughnessSquared - NdotH) * NdotH + 1.0;
     return roughnessSquared / (czm_pi * f * f);
 }
+#endif
 
 /**
  * Compute the diffuse and specular contributions using physically based
@@ -77,9 +107,6 @@ vec3 czm_pbrLighting(
     vec3 l = normalize(lightDirectionEC);
     vec3 h = normalize(v + l);
     vec3 n = normalEC;
-    float NdotL = clamp(dot(n, l), 0.001, 1.0);
-    float NdotV = abs(dot(n, v)) + 0.001;
-    float NdotH = clamp(dot(n, h), 0.0, 1.0);
     float VdotH = clamp(dot(v, h), 0.0, 1.0);
 
     vec3 f0 = pbrParameters.f0;
@@ -90,13 +117,29 @@ vec3 czm_pbrLighting(
     vec3 F = fresnelSchlick2(f0, f90, VdotH);
 
     #if defined(USE_SPECULAR)
-    F *= pbrParameters.specularWeight;
+        F *= pbrParameters.specularWeight;
     #endif
 
     float alpha = pbrParameters.roughness;
-    float G = smithVisibilityGGX(alpha, NdotL, NdotV);
-    float D = GGX(alpha, NdotH);
-    vec3 specularContribution = F * G * D / (4.0 * NdotL * NdotV);
+    #ifdef USE_ANISOTROPY
+        mat3 tbn = mat3(pbrParameters.anisotropicT, pbrParameters.anisotropicB, n);
+        vec3 lightDirection = l * tbn;
+        vec3 viewDirection = v * tbn;
+        vec3 halfwayDirection = h * tbn;
+        float anisotropyStrength = pbrParameters.anisotropyStrength;
+        float tangentialRoughness = mix(alpha, 1.0, anisotropyStrength * anisotropyStrength);
+        float G = smithVisibilityGGX_anisotropic(alpha, tangentialRoughness, lightDirection, viewDirection);
+        float D = GGX_anisotropic(alpha, tangentialRoughness, halfwayDirection);
+        float NdotL = clamp(lightDirection.z, 0.001, 1.0);
+    #else
+        float NdotL = clamp(dot(n, l), 0.001, 1.0);
+        float NdotV = abs(dot(n, v)) + 0.001;
+        float NdotH = clamp(dot(n, h), 0.0, 1.0);
+        float G = smithVisibilityGGX(alpha, NdotL, NdotV);
+        float D = GGX(alpha, NdotH);
+    #endif
+
+    vec3 specularContribution = F * G * D;
 
     vec3 diffuseColor = pbrParameters.diffuseColor;
     // F here represents the specular contribution

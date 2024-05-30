@@ -1,6 +1,4 @@
-import { IndexDatatype } from "../../index.js";
-
-import { Math as CesiumMath } from "../../index.js";
+import { IndexDatatype, Math as CesiumMath } from "../../index.js";
 
 describe("Core/IndexDatatype", function () {
   it("validate validates input", function () {

@@ -63,20 +63,19 @@ MaterialPipelineStage.process = function (
   // gltf-pipeline automatically creates a default material so this will always
   // be defined.
   const material = primitive.material;
-  const model = renderResources.model;
+  const { model, uniformMap, shaderBuilder } = renderResources;
 
   // Classification models only use position and feature ID attributes,
   // so textures should be disabled to avoid compile errors.
   const hasClassification = defined(model.classificationType);
   const disableTextures = hasClassification;
 
-  const uniformMap = renderResources.uniformMap;
-  const shaderBuilder = renderResources.shaderBuilder;
-
   // When textures are loaded incrementally, fall back to a default 1x1 texture
-  const defaultTexture = frameState.context.defaultTexture;
-  const defaultNormalTexture = frameState.context.defaultNormalTexture;
-  const defaultEmissiveTexture = frameState.context.defaultEmissiveTexture;
+  const {
+    defaultTexture,
+    defaultNormalTexture,
+    defaultEmissiveTexture,
+  } = frameState.context;
 
   processMaterialUniforms(
     material,
@@ -90,7 +89,7 @@ MaterialPipelineStage.process = function (
 
   if (defined(material.specularGlossiness)) {
     processSpecularGlossinessUniforms(
-      material,
+      material.specularGlossiness,
       uniformMap,
       shaderBuilder,
       defaultTexture,
@@ -102,7 +101,19 @@ MaterialPipelineStage.process = function (
       ModelUtility.supportedExtensions.KHR_materials_specular
     ) {
       processSpecularUniforms(
-        material,
+        material.specular,
+        uniformMap,
+        shaderBuilder,
+        defaultTexture,
+        disableTextures
+      );
+    }
+    if (
+      defined(material.anisotropy) &&
+      ModelUtility.supportedExtensions.KHR_materials_anisotropy
+    ) {
+      processAnisotropyUniforms(
+        material.anisotropy,
         uniformMap,
         shaderBuilder,
         defaultTexture,
@@ -110,7 +121,7 @@ MaterialPipelineStage.process = function (
       );
     }
     processMetallicRoughnessUniforms(
-      material,
+      material.metallicRoughness,
       uniformMap,
       shaderBuilder,
       defaultTexture,
@@ -321,14 +332,23 @@ function processMaterialUniforms(
   }
 }
 
+/**
+ * Add uniforms and defines for the KHR_materials_pbrSpecularGlossiness extension
+ *
+ * @param {ModelComponents.SpecularGlossiness} specularGlossiness
+ * @param {Object<string, Function>} uniformMap The uniform map to modify.
+ * @param {ShaderBuilder} shaderBuilder
+ * @param {Texture} defaultTexture
+ * @param {boolean} disableTextures
+ * @private
+ */
 function processSpecularGlossinessUniforms(
-  material,
+  specularGlossiness,
   uniformMap,
   shaderBuilder,
   defaultTexture,
   disableTextures
 ) {
-  const { specularGlossiness } = material;
   const {
     diffuseTexture,
     diffuseFactor,
@@ -426,14 +446,23 @@ function processSpecularGlossinessUniforms(
   }
 }
 
+/**
+ * Add uniforms and defines for the KHR_materials_specular extension
+ *
+ * @param {ModelComponents.Specular} specular
+ * @param {Object<string, Function>} uniformMap The uniform map to modify.
+ * @param {ShaderBuilder} shaderBuilder
+ * @param {Texture} defaultTexture
+ * @param {boolean} disableTextures
+ * @private
+ */
 function processSpecularUniforms(
-  material,
+  specular,
   uniformMap,
   shaderBuilder,
   defaultTexture,
   disableTextures
 ) {
-  const { specular } = material;
   const {
     specularTexture,
     specularFactor,
@@ -511,14 +540,80 @@ function processSpecularUniforms(
   }
 }
 
-function processMetallicRoughnessUniforms(
-  material,
+const scratchAnisotropy = new Cartesian3();
+
+/**
+ * Add uniforms and defines for the KHR_materials_anisotropy extension
+ *
+ * @param {ModelComponents.Anisotropy} anisotropy
+ * @param {Object<string, Function>} uniformMap The uniform map to modify.
+ * @param {ShaderBuilder} shaderBuilder
+ * @param {Texture} defaultTexture
+ * @param {boolean} disableTextures
+ * @private
+ */
+function processAnisotropyUniforms(
+  anisotropy,
   uniformMap,
   shaderBuilder,
   defaultTexture,
   disableTextures
 ) {
-  const metallicRoughness = material.metallicRoughness;
+  const {
+    anisotropyStrength,
+    anisotropyRotation,
+    anisotropyTexture,
+  } = anisotropy;
+
+  shaderBuilder.addDefine(
+    "USE_ANISOTROPY",
+    undefined,
+    ShaderDestination.FRAGMENT
+  );
+
+  if (defined(anisotropyTexture) && !disableTextures) {
+    processTexture(
+      shaderBuilder,
+      uniformMap,
+      anisotropyTexture,
+      "u_anisotropyTexture",
+      "ANISOTROPY",
+      defaultTexture
+    );
+  }
+
+  // Pre-compute cos and sin of rotation, since they are the same for all fragments.
+  // Combine with strength as one vec3 uniform.
+  const cosRotation = Math.cos(anisotropyRotation);
+  const sinRotation = Math.sin(anisotropyRotation);
+  shaderBuilder.addUniform("vec3", "u_anisotropy", ShaderDestination.FRAGMENT);
+  uniformMap.u_anisotropy = function () {
+    return Cartesian3.fromElements(
+      cosRotation,
+      sinRotation,
+      anisotropyStrength,
+      scratchAnisotropy
+    );
+  };
+}
+
+/**
+ * Add uniforms and defines for the PBR metallic roughness model
+ *
+ * @param {ModelComponents.MetallicRoughness} metallicRoughness
+ * @param {Object<string, Function>} uniformMap The uniform map to modify.
+ * @param {ShaderBuilder} shaderBuilder
+ * @param {Texture} defaultTexture
+ * @param {boolean} disableTextures
+ * @private
+ */
+function processMetallicRoughnessUniforms(
+  metallicRoughness,
+  uniformMap,
+  shaderBuilder,
+  defaultTexture,
+  disableTextures
+) {
   shaderBuilder.addDefine(
     "USE_METALLIC_ROUGHNESS",
     undefined,

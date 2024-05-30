@@ -8,6 +8,11 @@ vec3 computePbrLighting(czm_modelMaterial inputMaterial, ProcessedAttributes att
     #ifdef USE_SPECULAR
     pbrParameters.specularWeight = inputMaterial.specularWeight;
     #endif
+    #ifdef USE_ANISOTROPY
+    pbrParameters.anisotropicT = inputMaterial.anisotropicT;
+    pbrParameters.anisotropicB = inputMaterial.anisotropicB;
+    pbrParameters.anisotropyStrength = inputMaterial.anisotropyStrength;
+    #endif
 
     #ifdef USE_CUSTOM_LIGHT_COLOR
     vec3 lightColorHdr = model_lightColorHdr;

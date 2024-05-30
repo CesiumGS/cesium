@@ -9,6 +9,7 @@ import {
   createGuid,
   DistanceDisplayCondition,
   Globe,
+  Math as CesiumMath,
   NearFarScalar,
   OrthographicOffCenterFrustum,
   PerspectiveFrustum,
@@ -22,8 +23,6 @@ import {
   TextureAtlas,
   VerticalOrigin,
 } from "../../index.js";
-
-import { Math as CesiumMath } from "../../index.js";
 
 import createScene from "../../../../Specs/createScene.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";

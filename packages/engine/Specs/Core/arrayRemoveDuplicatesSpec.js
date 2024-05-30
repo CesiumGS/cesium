@@ -1,6 +1,9 @@
-import { arrayRemoveDuplicates, Cartesian3, Spherical } from "../../index.js";
-
-import { Math as CesiumMath } from "../../index.js";
+import {
+  arrayRemoveDuplicates,
+  Cartesian3,
+  Math as CesiumMath,
+  Spherical,
+} from "../../index.js";
 
 describe("Core/arrayRemoveDuplicates", function () {
   it("removeDuplicates returns positions if none removed - length === 1", function () {

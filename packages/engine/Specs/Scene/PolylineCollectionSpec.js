@@ -4,14 +4,13 @@ import {
   Color,
   DistanceDisplayCondition,
   HeadingPitchRange,
+  Math as CesiumMath,
   Matrix4,
   Camera,
   Material,
   PolylineCollection,
   SceneMode,
 } from "../../index.js";
-
-import { Math as CesiumMath } from "../../index.js";
 
 import createScene from "../../../../Specs/createScene.js";
 
