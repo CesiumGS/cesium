@@ -20,7 +20,7 @@ import defined from "./defined.js";
  * @param {TerrainProvider} terrainProvider The terrain provider from which to query heights.
  * @param {number} level The terrain level-of-detail from which to query terrain heights.
  * @param {Cartographic[]} positions The positions to update with terrain heights.
- * @param {boolean} [rejectOnTileFail=false] If true, for a failed terrain tile request the promise will be rejected. If false, returned heights will be undefined.
+ * @param {boolean} [rejectOnTileFail=false] If true, for any failed terrain tile requests, the promise will be rejected. If false, returned heights will be undefined.
  * @returns {Promise<Cartographic[]>} A promise that resolves to the provided list of positions when terrain the query has completed.
  *
  * @see sampleTerrainMostDetailed
@@ -139,12 +139,12 @@ function drainTileRequestQueue(tileRequests, results, rejectOnTileFail) {
     rejectOnTileFail
   );
   if (success) {
-    return drainTileRequestQueue(tileRequests, results);
+    return drainTileRequestQueue(tileRequests, results, rejectOnTileFail);
   }
 
   // wait a small fixed amount of time first, before retrying the same request again
   return delay(100).then(() => {
-    return drainTileRequestQueue(tileRequests, results);
+    return drainTileRequestQueue(tileRequests, results, rejectOnTileFail);
   });
 }
 

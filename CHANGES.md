@@ -18,6 +18,7 @@
 - Corrected the Typescript types for `Billboard.id` and `Label.id` to be `any` [#11973](https://github.com/CesiumGS/cesium/issues/11973)
 - Fixed a normalization error in image-based lighting. [#11994](https://github.com/CesiumGS/cesium/issues/11994)
 - Fixed an error in the specular reflection calculations for image-based lighting from supplied environment maps. [#12008](https://github.com/CesiumGS/cesium/issues/12008)
+- Fixes a bug where `sampleTerrain` did not respect the `rejectOnTileFail` flag for failed requests other than the first. [#11998](https://github.com/CesiumGS/cesium/pull/11998)
 
 ### 1.117 - 2024-05-01
 
