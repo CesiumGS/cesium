@@ -14,14 +14,13 @@ import {
   GeometryInstance,
   GeometryPipeline,
   GeometryType,
+  Math as CesiumMath,
   Matrix4,
   PolygonGeometry,
   PrimitiveType,
   Tipsify,
   VertexFormat,
 } from "../../index.js";
-
-import { Math as CesiumMath } from "../../index.js";
 
 describe("Core/GeometryPipeline", function () {
   it("converts triangles to wireframe in place", function () {

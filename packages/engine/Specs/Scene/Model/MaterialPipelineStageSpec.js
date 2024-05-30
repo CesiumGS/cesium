@@ -85,6 +85,10 @@ describe(
     const triangle = "./Data/Models/glTF-2.0/Triangle/glTF/Triangle.gltf";
     const twoSidedPlane =
       "./Data/Models/glTF-2.0/TwoSidedPlane/glTF/TwoSidedPlane.gltf";
+    const specularTestData =
+      "./Data/Models/glTF-2.0/BoxSpecular/glTF/BoxSpecular.gltf";
+    const anisotropyTestData =
+      "./Data/Models/glTF-2.0/BoxAnisotropy/glTF/BoxAnisotropy.gltf";
 
     function expectUniformMap(uniformMap, expected) {
       for (const key in expected) {
@@ -391,7 +395,7 @@ describe(
           "uniform sampler2D u_occlusionTexture;",
           "uniform sampler2D u_specularGlossinessTexture;",
           "uniform vec3 u_emissiveFactor;",
-          "uniform vec3 u_specularFactor;",
+          "uniform vec3 u_legacySpecularFactor;",
           "uniform vec4 u_diffuseFactor;",
         ]);
 
@@ -404,7 +408,7 @@ describe(
           "HAS_GLOSSINESS_FACTOR",
           "HAS_NORMAL_TEXTURE",
           "HAS_OCCLUSION_TEXTURE",
-          "HAS_SPECULAR_FACTOR",
+          "HAS_LEGACY_SPECULAR_FACTOR",
           "HAS_SPECULAR_GLOSSINESS_TEXTURE",
           "TEXCOORD_DIFFUSE v_texCoord_0",
           "TEXCOORD_EMISSIVE v_texCoord_0",
@@ -419,11 +423,107 @@ describe(
           u_diffuseFactor: specularGlossiness.diffuseFactor,
           u_specularGlossinessTexture:
             specularGlossiness.specularGlossinessTexture.texture,
-          u_specularFactor: specularGlossiness.specularFactor,
+          u_legacySpecularFactor: specularGlossiness.specularFactor,
           u_glossinessFactor: specularGlossiness.glossinessFactor,
         };
         expectUniformMap(uniformMap, expectedUniforms);
       });
+    });
+
+    it("adds uniforms and defines for KHR_materials_specular", async function () {
+      const gltfLoader = await loadGltf(specularTestData);
+
+      const primitive = gltfLoader.components.nodes[1].primitives[0];
+
+      const renderResources = mockRenderResources();
+      const { shaderBuilder, uniformMap } = renderResources;
+
+      MaterialPipelineStage.process(renderResources, primitive, mockFrameState);
+      ShaderBuilderTester.expectHasVertexUniforms(shaderBuilder, []);
+      ShaderBuilderTester.expectHasFragmentUniforms(shaderBuilder, [
+        "uniform float u_metallicFactor;",
+        "uniform float u_specularFactor;",
+        "uniform sampler2D u_baseColorTexture;",
+        "uniform sampler2D u_specularColorTexture;",
+        "uniform sampler2D u_specularTexture;",
+        "uniform vec3 u_specularColorFactor;",
+      ]);
+
+      ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, []);
+      ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
+        "HAS_BASE_COLOR_TEXTURE",
+        "HAS_METALLIC_FACTOR",
+        "HAS_SPECULAR_COLOR_FACTOR",
+        "HAS_SPECULAR_COLOR_TEXTURE",
+        "HAS_SPECULAR_FACTOR",
+        "HAS_SPECULAR_TEXTURE",
+        "TEXCOORD_BASE_COLOR v_texCoord_0",
+        "TEXCOORD_SPECULAR v_texCoord_0",
+        "TEXCOORD_SPECULAR_COLOR v_texCoord_0",
+        "USE_METALLIC_ROUGHNESS",
+        "USE_SPECULAR",
+      ]);
+
+      const {
+        specularFactor,
+        specularTexture,
+        specularColorFactor,
+        specularColorTexture,
+      } = primitive.material.specular;
+      const expectedUniforms = {
+        u_specularFactor: specularFactor,
+        u_specularColorFactor: specularColorFactor,
+        u_specularTexture: specularTexture.texture,
+        u_specularColorTexture: specularColorTexture.texture,
+      };
+      expectUniformMap(uniformMap, expectedUniforms);
+    });
+
+    it("adds uniforms and defines for KHR_materials_anisotropy", async function () {
+      const gltfLoader = await loadGltf(anisotropyTestData);
+
+      const primitive = gltfLoader.components.nodes[1].primitives[0];
+      const renderResources = mockRenderResources();
+      MaterialPipelineStage.process(renderResources, primitive, mockFrameState);
+      const { shaderBuilder, uniformMap } = renderResources;
+
+      ShaderBuilderTester.expectHasVertexUniforms(shaderBuilder, []);
+      ShaderBuilderTester.expectHasFragmentUniforms(shaderBuilder, [
+        "uniform float u_metallicFactor;",
+        "uniform sampler2D u_anisotropyTexture;",
+        "uniform sampler2D u_baseColorTexture;",
+        "uniform sampler2D u_normalTexture;",
+        "uniform vec3 u_anisotropy;",
+      ]);
+
+      ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, []);
+      ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
+        "HAS_ANISOTROPY_TEXTURE",
+        "HAS_BASE_COLOR_TEXTURE",
+        "HAS_METALLIC_FACTOR",
+        "HAS_NORMAL_TEXTURE",
+        "TEXCOORD_ANISOTROPY v_texCoord_0",
+        "TEXCOORD_BASE_COLOR v_texCoord_0",
+        "TEXCOORD_NORMAL v_texCoord_0",
+        "USE_ANISOTROPY",
+        "USE_METALLIC_ROUGHNESS",
+      ]);
+
+      const {
+        anisotropyStrength,
+        anisotropyRotation,
+        anisotropyTexture,
+      } = primitive.material.anisotropy;
+      const expectedAnisotropy = Cartesian3.fromElements(
+        Math.cos(anisotropyRotation),
+        Math.sin(anisotropyRotation),
+        anisotropyStrength
+      );
+      const expectedUniforms = {
+        u_anisotropy: expectedAnisotropy,
+        u_anisotropyTexture: anisotropyTexture.texture,
+      };
+      expectUniformMap(uniformMap, expectedUniforms);
     });
 
     it("doesn't add texture uniforms for classification models", function () {

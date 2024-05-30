@@ -2,11 +2,10 @@ import {
   Cartesian3,
   Cartesian2,
   CoplanarPolygonGeometry,
+  Math as CesiumMath,
   Ellipsoid,
   VertexFormat,
 } from "../../index.js";
-
-import { Math as CesiumMath } from "../../index.js";
 
 import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";
 

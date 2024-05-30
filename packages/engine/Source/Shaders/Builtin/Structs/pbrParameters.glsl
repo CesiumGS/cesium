@@ -13,4 +13,12 @@ struct czm_pbrParameters
     vec3 diffuseColor;
     float roughness;
     vec3 f0;
+#ifdef USE_SPECULAR
+    float specularWeight;
+#endif
+#ifdef USE_ANISOTROPY
+    vec3 anisotropicT;
+    vec3 anisotropicB;
+    float anisotropyStrength;
+#endif
 };

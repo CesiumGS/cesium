@@ -10,6 +10,7 @@ import {
   GeometryInstance,
   GroundPolylineGeometry,
   HeadingPitchRange,
+  Math as CesiumMath,
   Rectangle,
   RectangleGeometry,
   ShowGeometryInstanceAttribute,
@@ -20,8 +21,6 @@ import {
   PolylineMaterialAppearance,
   Primitive,
 } from "../../index.js";
-
-import { Math as CesiumMath } from "../../index.js";
 
 import createCanvas from "../../../../Specs/createCanvas.js";
 import createScene from "../../../../Specs/createScene.js";

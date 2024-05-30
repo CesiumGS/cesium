@@ -3,13 +3,12 @@ import {
   Cartesian3,
   Cartographic,
   Ellipsoid,
+  Math as CesiumMath,
   Rectangle,
   Cesium3DTileBatchTable,
   ColorBlendMode,
   Vector3DTilePolylines,
 } from "../../index.js";
-
-import { Math as CesiumMath } from "../../index.js";
 
 import createScene from "../../../../Specs/createScene.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";

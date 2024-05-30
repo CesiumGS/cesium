@@ -9,7 +9,9 @@ czm_pbrParameters czm_defaultPbrMaterial()
     czm_pbrParameters results;
     results.diffuseColor = vec3(1.0);
     results.roughness = 1.0;
-
+#if defined(USE_SPECULAR)
+    results.specularWeight = 1.0;
+#endif
     const vec3 REFLECTANCE_DIELECTRIC = vec3(0.04);
     results.f0 = REFLECTANCE_DIELECTRIC;
     return results;

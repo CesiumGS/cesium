@@ -1,16 +1,23 @@
 # Change Log
 
-- Added SplitDirection property for display PointPrimitive relative to the `Scene.splitPosition`.
+- Added SplitDirection property for display PointPrimitive relative to the `Scene.splitPosition`. [#11982](https://github.com/CesiumGS/cesium/pull/11982)
 
-### 1.118 - 2024-06-01
+### 1.118 - 2024-06-03
 
 #### @cesium/engine
 
-##### Fixes :wrench:
+###### Additions :tada:
+
+- Added support for glTF models with the [KHR_materials_specular extension](https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Khronos/KHR_materials_specular). [#11970](https://github.com/CesiumGS/cesium/pull/11970)
+- Added support for glTF models with the [KHR_materials_anisotropy extension](https://github.com/KhronosGroup/glTF/blob/main/extensions/2.0/Khronos/KHR_materials_anisotropy/README.md). [#11988](https://github.com/CesiumGS/cesium/pull/11988)
+
+#### Fixes :wrench:
 
 - Fixed a bug where `scene.pickPosition` returned incorrect results against the globe when `depthTestAgainstTerrain` is `false`. [#4368](https://github.com/CesiumGS/cesium/issues/4368)
 - Fixed a bug where `TaskProcessor` worker loading would check the worker module ID rather than the absolute URL when determining if it is cross-origin. [#11833](https://github.com/CesiumGS/cesium/pull/11833)
 - Fixed a bug where cross-origin workers would error when loaded with the CommonJS `importScripts` shim instead of an ESM `import`. [#11833](https://github.com/CesiumGS/cesium/pull/11833)
+- Corrected the Typescript types for `Billboard.id` and `Label.id` to be `any` [#11973](https://github.com/CesiumGS/cesium/issues/11973)
+- Fixed a normalization error in image-based lighting [#11994](https://github.com/CesiumGS/cesium/issues/11994)
 
 ### 1.117 - 2024-05-01
 

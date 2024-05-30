@@ -6,6 +6,7 @@ import {
   Color,
   Ellipsoid,
   GeometryInstance,
+  Math as CesiumMath,
   Matrix4,
   OrthographicFrustum,
   PerspectiveFrustum,
@@ -22,8 +23,6 @@ import {
   SceneMode,
   VoxelPrimitive,
 } from "../../index.js";
-
-import { Math as CesiumMath } from "../../index.js";
 
 import Cesium3DTilesTester from "../../../../Specs/Cesium3DTilesTester.js";
 import createCanvas from "../../../../Specs/createCanvas.js";
