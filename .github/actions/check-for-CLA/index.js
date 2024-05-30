@@ -103,7 +103,7 @@ const checkIfUserHasSignedAnyCLA = async () => {
 
 const getCommentBody = (hasSignedCLA, errorFoundOnCLACheck) => {
   const commentTemplate = fs.readFileSync(
-    "./.github/actions/check-for-CLA/templates/pullRequestComment.hbs",
+    "./templates/pullRequestComment.hbs",
     "utf-8"
   );
 
