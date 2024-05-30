@@ -264,7 +264,6 @@ float setMetallicRoughness(inout czm_modelMaterial material)
 
         vec3 metallicRoughness = texture(u_metallicRoughnessTexture, metallicRoughnessTexCoords).rgb;
         float metalness = clamp(metallicRoughness.b, 0.0, 1.0);
-        // TODO: WHY is roughness clamped to 0.04 ??
         float roughness = clamp(metallicRoughness.g, 0.04, 1.0);
         #ifdef HAS_METALLIC_FACTOR
             metalness = clamp(metalness * u_metallicFactor, 0.0, 1.0);
@@ -281,7 +280,6 @@ float setMetallicRoughness(inout czm_modelMaterial material)
         #endif
 
         #ifdef HAS_ROUGHNESS_FACTOR
-            // TODO: WHY is roughness clamped to 0.04 ??
             float roughness = clamp(u_roughnessFactor, 0.04, 1.0);
         #else
             float roughness = 1.0;
@@ -299,7 +297,6 @@ float setMetallicRoughness(inout czm_modelMaterial material)
 
     // roughness is authored as perceptual roughness
     // square it to get material roughness
-    // TODO: do we need perceptual roughness for IBL?
     material.roughness = roughness * roughness;
 
     return metalness;
@@ -390,7 +387,7 @@ void setClearcoat(inout czm_modelMaterial material, in ProcessedAttributes attri
         #ifdef HAS_CLEARCOAT_FACTOR
             float clearcoatFactor = u_clearcoatFactor;
         #else
-            // TODO: this case should turn the whole extension off
+            // PERFORMANCE_IDEA: this case should turn the whole extension off
             float clearcoatFactor = 0.0;
         #endif
     #endif
@@ -415,7 +412,6 @@ void setClearcoat(inout czm_modelMaterial material, in ProcessedAttributes attri
     material.clearcoatFactor = clearcoatFactor;
     // roughness is authored as perceptual roughness
     // square it to get material roughness
-    // TODO: do we need perceptual roughness for IBL?
     material.clearcoatRoughness = clearcoatRoughness * clearcoatRoughness;
     #ifdef HAS_CLEARCOAT_NORMAL_TEXTURE
         material.clearcoatNormal = getClearcoatNormalFromTexture(attributes, attributes.normalEC);

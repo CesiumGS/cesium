@@ -50,8 +50,11 @@ float smithVisibilityG1(float NdotV, float roughness)
 }
 
 /**
- * geometric shadowing function
- * TODO: explain
+ * Estimate the self-shadowing of the microfacets in a surface
+ *
+ * @param {float} roughness The roughness of the material.
+ * @param {float} NdotL The cosine of the angle between the surface normal and the direction to the light source.
+ * @param {float} NdotV The cosine of the angle between the surface normal and the direction to the camera.
  */
 float smithVisibilityGGX(float roughness, float NdotL, float NdotV)
 {
@@ -62,8 +65,13 @@ float smithVisibilityGGX(float roughness, float NdotL, float NdotV)
 }
 
 /**
- * microfacet distribution function
- * TODO: explain
+ * Estimate the fraction of the microfacets in a surface that are aligned with 
+ * the halfway vector, which is aligned halfway between the directions from
+ * the fragment to the camera and from the fragment to the light source.
+ *
+ * @param {float} roughness The roughness of the material.
+ * @param {float} NdotH The cosine of the angle between the surface normal and the halfway vector.
+ * @return {float} The fraction of microfacets aligned to the halfway vector.
  */
 float GGX(float roughness, float NdotH)
 {
@@ -72,12 +80,19 @@ float GGX(float roughness, float NdotH)
     return roughnessSquared / (czm_pi * f * f);
 }
 
-// TODO: rename to emphasize this is for direct lighting only (not IBL)
-float computeSpecularStrength(vec3 normal, vec3 lightDirection, vec3 viewDirection, vec3 halfwayDirection, float roughness)
+/**
+ * Compute the strength of the specular reflection due to direct lighting.
+ *
+ * @param {vec3} normal The surface normal.
+ * @param {vec3} lightDirection The unit vector pointing from the fragment to the light source.
+ * @param {vec3} viewDirection The unit vector pointing from the fragment to the camera.
+ * @param {vec3} halfwayDirection The unit vector pointing from the fragment to halfway between the light source and the camera.
+ * @param {float} roughness The roughness of the material.
+ * @return {float} The strength of the specular reflection.
+ */
+float computeDirectSpecularStrength(vec3 normal, vec3 lightDirection, vec3 viewDirection, vec3 halfwayDirection, float roughness)
 {
-    // TODO: why 0.001 and not 0.0?
     float NdotL = clamp(dot(normal, lightDirection), 0.001, 1.0);
-    // TODO: why abs here and clamp on the others? What does this do with backside reflections?
     float NdotV = abs(dot(normal, viewDirection)) + 0.001;
     float NdotH = clamp(dot(normal, halfwayDirection), 0.0, 1.0);
     float G = smithVisibilityGGX(roughness, NdotL, NdotV);
@@ -136,7 +151,7 @@ vec3 czm_pbrLighting(
         float D = GGX_anisotropic(alpha, tangentialRoughness, halfwayDirection);
         vec3 specularContribution = F * G * D;
     #else
-        float specularStrength = computeSpecularStrength(normalEC, lightDirectionEC, viewDirectionEC, halfwayDirectionEC, alpha);
+        float specularStrength = computeDirectSpecularStrength(normalEC, lightDirectionEC, viewDirectionEC, halfwayDirectionEC, alpha);
         vec3 specularContribution = F * specularStrength;
     #endif
 

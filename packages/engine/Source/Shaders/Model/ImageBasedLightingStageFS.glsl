@@ -8,7 +8,6 @@
 vec3 getProceduralSkyMetrics(vec3 positionWC, vec3 reflectionWC)
 {
     // Figure out if the reflection vector hits the ellipsoid
-    // TODO: use both ellipsoid radii, and the direction of positionWC?
     float horizonDotNadir = 1.0 - min(1.0, czm_ellipsoidRadii.x / length(positionWC));
     float reflectionDotNadir = dot(reflectionWC, normalize(positionWC));
     float atmosphereHeight = 0.05;
@@ -180,7 +179,6 @@ vec3 computeSpecularIBL(vec3 cubeDir, float NdotV, float VdotH, vec3 f0, float r
     vec3 f90 = vec3(clamp(reflectance * 25.0, 0.0, 1.0));
     vec3 F = fresnelSchlick2(f0, f90, VdotH);
 
-    // TODO: should this be using perceptual roughness instead of alpha roughness (which is squared)?
     vec2 brdfLut = texture(czm_brdfLut, vec2(NdotV, roughness)).rg;
     vec3 specularSample = sampleSpecularEnvironment(cubeDir, roughness);
 

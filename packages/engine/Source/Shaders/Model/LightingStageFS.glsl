@@ -17,13 +17,11 @@ vec3 computeIBL(vec3 position, vec3 normal, vec3 lightDirection, vec3 lightColor
 #endif
 
 #ifdef USE_CLEARCOAT
-// TODO: make sure KHR_materials_specular properties are not being used in any functions called by this method.
 vec3 addClearcoatReflection(vec3 baseLayerColor, vec3 position, vec3 lightDirection, vec3 lightColorHdr, czm_modelMaterial material)
 {
     vec3 viewDirection = -normalize(position);
     vec3 halfwayDirection = normalize(viewDirection + lightDirection);
     vec3 normal = material.clearcoatNormal;
-    // TODO: why clamp to 0.001??
     float NdotL = clamp(dot(normal, lightDirection), 0.001, 1.0);
 
     // clearcoatF0 = vec3(pow((ior - 1.0) / (ior + 1.0), 2.0)), but without KHR_materials_ior, ior is a constant 1.5.
@@ -36,7 +34,7 @@ vec3 addClearcoatReflection(vec3 baseLayerColor, vec3 position, vec3 lightDirect
 
     // compute specular reflection from direct lighting
     float roughness = material.clearcoatRoughness;
-    float directStrength = computeSpecularStrength(normal, lightDirection, viewDirection, halfwayDirection, roughness);
+    float directStrength = computeDirectSpecularStrength(normal, lightDirection, viewDirection, halfwayDirection, roughness);
     vec3 directReflection = F * directStrength * NdotL;
     vec3 color = lightColorHdr * directReflection;
 
