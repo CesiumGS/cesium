@@ -110,6 +110,8 @@ describe(
       "./Data/Models/glTF-2.0/BoxSpecular/glTF/BoxSpecular.gltf";
     const boxAnisotropyUrl =
       "./Data/Models/glTF-2.0/BoxAnisotropy/glTF/BoxAnisotropy.gltf";
+    const boxClearcoatUrl =
+      "./Data/Models/glTF-2.0/BoxClearcoat/glTF/BoxClearcoat.gltf";
     const riggedFigureUrl =
       "./Data/Models/glTF-2.0/RiggedFigureTest/glTF/RiggedFigureTest.gltf";
     const dracoCesiumManUrl =
@@ -730,6 +732,19 @@ describe(
         {
           gltf: gltf,
           basePath: boxAnisotropyUrl,
+        },
+        scene
+      );
+      verifyRender(model, true);
+    });
+
+    it("renders model with the KHR_materials_clearcoat extension", async function () {
+      const resource = Resource.createIfNeeded(boxClearcoatUrl);
+      const gltf = await resource.fetchJson();
+      const model = await loadAndZoomToModelAsync(
+        {
+          gltf: gltf,
+          basePath: boxClearcoatUrl,
         },
         scene
       );

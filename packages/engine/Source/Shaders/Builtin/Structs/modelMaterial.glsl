@@ -34,4 +34,10 @@ struct czm_modelMaterial {
     vec3 anisotropicB;
     float anisotropyStrength;
 #endif
+#ifdef USE_CLEARCOAT
+    float clearcoatFactor;
+    float clearcoatRoughness;
+    vec3 clearcoatNormal;
+    // Add clearcoatF0 when KHR_materials_ior is implemented
+#endif
 };
