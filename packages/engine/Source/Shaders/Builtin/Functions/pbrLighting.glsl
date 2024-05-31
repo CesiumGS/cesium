@@ -50,7 +50,8 @@ float smithVisibilityG1(float NdotV, float roughness)
 }
 
 /**
- * Estimate the self-shadowing of the microfacets in a surface
+ * Estimate the geometric self-shadowing of the microfacets in a surface,
+ * using the Schlick GGX approximation of a Smith visibility function.
  *
  * @param {float} roughness The roughness of the material.
  * @param {float} NdotL The cosine of the angle between the surface normal and the direction to the light source.
@@ -58,6 +59,9 @@ float smithVisibilityG1(float NdotV, float roughness)
  */
 float smithVisibilityGGX(float roughness, float NdotL, float NdotV)
 {
+    // Avoid divide-by-zero errors
+    NdotL = clamp(NdotL, 0.001, 1.0);
+    NdotV += 0.001;
     return (
         smithVisibilityG1(NdotL, roughness) *
         smithVisibilityG1(NdotV, roughness)
@@ -92,10 +96,10 @@ float GGX(float roughness, float NdotH)
  */
 float computeDirectSpecularStrength(vec3 normal, vec3 lightDirection, vec3 viewDirection, vec3 halfwayDirection, float roughness)
 {
-    float NdotL = clamp(dot(normal, lightDirection), 0.001, 1.0);
-    float NdotV = abs(dot(normal, viewDirection)) + 0.001;
-    float NdotH = clamp(dot(normal, halfwayDirection), 0.0, 1.0);
+    float NdotL = dot(normal, lightDirection);
+    float NdotV = abs(dot(normal, viewDirection));
     float G = smithVisibilityGGX(roughness, NdotL, NdotV);
+    float NdotH = clamp(dot(normal, halfwayDirection), 0.0, 1.0);
     float D = GGX(roughness, NdotH);
     return G * D;
 }
