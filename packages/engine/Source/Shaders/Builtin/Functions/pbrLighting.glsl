@@ -121,12 +121,7 @@ float computeDirectSpecularStrength(vec3 normal, vec3 lightDirection, vec3 viewD
  * @param {czm_modelMaterial} The material properties.
  * @return {vec3} The computed HDR color
  */
-vec3 czm_pbrLighting(
-    in vec3 viewDirectionEC,
-    in vec3 normalEC,
-    in vec3 lightDirectionEC,
-    in czm_modelMaterial material
-)
+vec3 czm_pbrLighting(vec3 viewDirectionEC, vec3 normalEC, vec3 lightDirectionEC, czm_modelMaterial material)
 {
     vec3 halfwayDirectionEC = normalize(viewDirectionEC + lightDirectionEC);
     float VdotH = clamp(dot(viewDirectionEC, halfwayDirectionEC), 0.0, 1.0);
