@@ -84,12 +84,11 @@ vec3 computePbrLighting(in czm_modelMaterial material, in vec3 position)
     vec3 directLighting = czm_pbrLighting(viewDirection, normal, lightDirection, material);
     vec3 directColor = lightColorHdr * directLighting;
 
-    #ifdef USE_IBL_LIGHTING
-        vec3 iblColor = computeIBL(position, normal, lightDirection, lightColorHdr, material);
-    #endif
-
     // Accumulate colors from base layer
-    vec3 color = directColor + iblColor + material.emissive;
+    vec3 color = directColor + material.emissive;
+    #ifdef USE_IBL_LIGHTING
+        color += computeIBL(position, normal, lightDirection, lightColorHdr, material);
+    #endif
 
     #ifdef USE_CLEARCOAT
         color = addClearcoatReflection(color, position, lightDirection, lightColorHdr, material);
