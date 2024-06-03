@@ -56,6 +56,24 @@
 
         scene.msaaSamples = 4;
 
+        const height = 20.0;
+        const hpr = new Cesium.HeadingPitchRoll(0.0, 0.0, 0.0);
+        const origin = Cartesian3.fromDegrees(-123.0744619, 44.0503706, height);
+        const modelMatrix = Transforms.headingPitchRollToFixedFrame(
+          origin,
+          hpr
+        );
+
+        scene.globe.enableLighting = true;
+
+        scene.light = new DirectionalLight({
+          direction: new Cartesian3(
+            0.2454278300540191,
+            0.8842635425193919,
+            0.39729481195458805
+          ),
+        });
+
         // This environment map was processed using Khronos's glTF IBL Sampler. To process your own:
         // 1 - Download and build the Khronos glTF IBL Sampler (https://github.com/KhronosGroup/glTF-IBL-Sampler).
         // 2 - Run `cli -inputPath /path/to/image.hdr -outCubeMap /path/to/output.ktx2`. Run `cli -h` for all options.
@@ -113,50 +131,11 @@
         );
         const coefficients = [L00, L1_1, L10, L11, L2_2, L2_1, L20, L21, L22];
 
-        const height = 20.0;
-        const hpr = new Cesium.HeadingPitchRoll(0.0, 0.0, 0.0);
-        const origin = Cartesian3.fromDegrees(-123.0744619, 44.0503706, height);
-        const modelMatrix = Transforms.headingPitchRollToFixedFrame(
-          origin,
-          hpr
-        );
-
-        scene.globe.enableLighting = true;
-
-        scene.light = new DirectionalLight({
-          direction: new Cartesian3(
-            0.2454278300540191,
-            0.8842635425193919,
-            0.39729481195458805
-          ),
-        });
-
         const imageBasedLighting = new Cesium.ImageBasedLighting({
           luminanceAtZenith: 0.7,
           sphericalHarmonicCoefficients: coefficients,
           specularEnvironmentMaps: environmentMapURL,
         });
-
-        // The viewModel tracks the state of our mini application.
-        const viewModel = {
-          luminanceAtZenith: imageBasedLighting.luminanceAtZenith,
-        };
-        // Convert the viewModel members into knockout observables.
-        Cesium.knockout.track(viewModel);
-
-        // Bind the viewModel to the DOM elements of the UI that call for it.
-        const toolbar = document.getElementById("toolbar");
-        Cesium.knockout.applyBindings(viewModel, toolbar);
-
-        function subscribeParameter(name) {
-          Cesium.knockout
-            .getObservable(viewModel, name)
-            .subscribe(function (newValue) {
-              imageBasedLighting[name] = newValue;
-            });
-        }
-
-        subscribeParameter("luminanceAtZenith");
 
         const lightingOptions = [
           {
