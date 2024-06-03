@@ -1,5 +1,9 @@
 # Change Log
 
+### 1.118.2 - 2024-06-03
+
+This is an npm-only release to fix a dependency issue published in 1.118.1
+
 ### 1.118.1 - 2024-06-03
 
 This is an npm-only release to fix a dependency issue published in 1.118
