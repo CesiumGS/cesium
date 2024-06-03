@@ -235,7 +235,7 @@ export const buildWatch = gulp.series(build, async function buildWatch() {
     }
 
     specs.dispose();
-    // eslint-disable-next-line n/no-process-exit
+
     process.exit(0);
   });
 });
@@ -1170,7 +1170,7 @@ function generateTypeScriptDefinitions(
   const regex = /^declare[ const ]*(function|class|namespace|enum) (.+)/gm;
   let matches;
   let publicModules = new Set();
-  //eslint-disable-next-line no-cond-assign
+
   while ((matches = regex.exec(source))) {
     const moduleName = matches[2].match(/([^<\s|\(]+)/);
     publicModules.add(moduleName[1]);
@@ -1377,7 +1377,7 @@ function createTypeScriptDefinitions() {
   const regex = /^declare (function|class|namespace|enum) (.+)/gm;
   let matches;
   const publicModules = new Set();
-  //eslint-disable-next-line no-cond-assign
+
   while ((matches = regex.exec(source))) {
     const moduleName = matches[2].match(/([^<\s|\(]+)/);
     publicModules.add(moduleName[1]);
@@ -1678,7 +1678,6 @@ async function buildSandcastle() {
     ["Apps/Sandcastle/gallery/**.jpg", "Apps/Sandcastle/images/**"],
     {
       base: "Apps/Sandcastle",
-      buffer: false,
       encoding: false,
     }
   );
