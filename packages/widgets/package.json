@@ -28,7 +28,7 @@
     "node": ">=14.0.0"
   },
   "dependencies": {
-    "@cesium/engine": "^9.1.0",
+    "@cesium/engine": "^9.2.0",
     "nosleep.js": "^0.12.0"
   },
   "type": "module",
