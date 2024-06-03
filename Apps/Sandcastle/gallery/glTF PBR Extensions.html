@@ -9,7 +9,7 @@
     />
     <meta
       name="description"
-      content="Use Viewer to start building new applications or easily embed Cesium into existing applications."
+      content="Use the glTF extensions to physically-based rendering."
     />
     <meta name="cesium-sandcastle-labels" content="Showcases" />
     <title>Cesium Demo</title>
@@ -40,13 +40,6 @@
         });
 
         const { scene, camera, clock } = viewer;
-        const {
-          Cartesian3,
-          DirectionalLight,
-          Matrix3,
-          Matrix4,
-          Transforms,
-        } = Cesium;
 
         if (!scene.specularEnvironmentMapsSupported) {
           window.alert(
@@ -58,16 +51,20 @@
 
         const height = 20.0;
         const hpr = new Cesium.HeadingPitchRoll(0.0, 0.0, 0.0);
-        const origin = Cartesian3.fromDegrees(-123.0744619, 44.0503706, height);
-        const modelMatrix = Transforms.headingPitchRollToFixedFrame(
+        const origin = Cesium.Cartesian3.fromDegrees(
+          -123.0744619,
+          44.0503706,
+          height
+        );
+        const modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(
           origin,
           hpr
         );
 
         scene.globe.enableLighting = true;
 
-        scene.light = new DirectionalLight({
-          direction: new Cartesian3(
+        scene.light = new Cesium.DirectionalLight({
+          direction: new Cesium.Cartesian3(
             0.2454278300540191,
             0.8842635425193919,
             0.39729481195458805
@@ -84,47 +81,47 @@
         // 1 - Download the Filament release (https://github.com/google/filament/releases).
         // 2 - Run `cmgen --type=ktx --deploy=/path/to/output /path/to/image.hdr`. Other formats are also supported. Run `cmgen --help` for all options.
         // 3 - Take the generated coefficients and load them in CesiumJS as shown below.
-        const L00 = new Cartesian3(
+        const L00 = new Cesium.Cartesian3(
           1.234709620475769,
           1.221461296081543,
           1.273156881332397
         );
-        const L1_1 = new Cartesian3(
+        const L1_1 = new Cesium.Cartesian3(
           1.135921120643616,
           1.171217799186707,
           1.287644743919373
         );
-        const L10 = new Cartesian3(
+        const L10 = new Cesium.Cartesian3(
           1.245193719863892,
           1.245591878890991,
           1.282818794250488
         );
-        const L11 = new Cartesian3(
+        const L11 = new Cesium.Cartesian3(
           -1.106930732727051,
           -1.112522482872009,
           -1.153198838233948
         );
-        const L2_2 = new Cartesian3(
+        const L2_2 = new Cesium.Cartesian3(
           -1.086226940155029,
           -1.079731941223145,
           -1.101912498474121
         );
-        const L2_1 = new Cartesian3(
+        const L2_1 = new Cesium.Cartesian3(
           1.189834713935852,
           1.185906887054443,
           1.214385271072388
         );
-        const L20 = new Cartesian3(
+        const L20 = new Cesium.Cartesian3(
           0.01778045296669,
           0.02013735473156,
           0.025313569232821
         );
-        const L21 = new Cartesian3(
+        const L21 = new Cesium.Cartesian3(
           -1.086826920509338,
           -1.084611177444458,
           -1.111204028129578
         );
-        const L22 = new Cartesian3(
+        const L22 = new Cesium.Cartesian3(
           -0.05241484940052,
           -0.048303380608559,
           -0.041960217058659
@@ -158,6 +155,10 @@
         let model;
         const modelOptions = [
           {
+            text: "Clear Coat Wicker",
+            onselect: () => loadModel(2584329),
+          },
+          {
             text: "Specular Test",
             onselect: () => loadModel(2572779),
           },
@@ -182,10 +183,6 @@
             onselect: () => loadModel(2584328),
           },
           {
-            text: "Clear Coat Wicker",
-            onselect: () => loadModel(2584329),
-          },
-          {
             text: "Toy Car",
             onselect: () => loadModel(2584331),
           },
@@ -199,7 +196,7 @@
           },
         ];
         Sandcastle.addToolbarMenu(modelOptions, "modelsToolbar");
-        loadModel(2572779);
+        loadModel(2584329);
 
         async function loadModel(ionAssetId) {
           try {
@@ -230,7 +227,7 @@
           if (radius < 10.0) {
             // ScreenSpaceCameraController doesn't handle small models well
             const scale = 10.0 / radius;
-            Matrix4.multiplyByUniformScale(
+            Cesium.Matrix4.multiplyByUniformScale(
               model.modelMatrix,
               scale,
               model.modelMatrix
