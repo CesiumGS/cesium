@@ -4,6 +4,7 @@ import {
   ColorGeometryInstanceAttribute,
   GeometryOffsetAttribute,
   JulianDate,
+  Math as CesiumMath,
   Quaternion,
   TimeIntervalCollection,
   ColorMaterialProperty,
@@ -17,8 +18,6 @@ import {
   HeightReference,
   PrimitiveCollection,
 } from "../../index.js";
-
-import { Math as CesiumMath } from "../../index.js";
 
 import createDynamicGeometryUpdaterSpecs from "../../../../Specs/createDynamicGeometryUpdaterSpecs.js";
 import createDynamicProperty from "../../../../Specs/createDynamicProperty.js";

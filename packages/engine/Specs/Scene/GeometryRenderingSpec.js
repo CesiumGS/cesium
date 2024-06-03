@@ -19,6 +19,7 @@ import {
   Geometry,
   GeometryAttribute,
   GeometryInstance,
+  Math as CesiumMath,
   Matrix4,
   PerspectiveFrustum,
   PlaneGeometry,
@@ -39,8 +40,6 @@ import {
   Primitive,
   SceneMode,
 } from "../../index.js";
-
-import { Math as CesiumMath } from "../../index.js";
 
 import createScene from "../../../../Specs/createScene.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";

@@ -26,4 +26,18 @@ struct czm_modelMaterial {
     vec3 normalEC;
     float occlusion;
     vec3 emissive;
+#ifdef USE_SPECULAR
+    float specularWeight;
+#endif
+#ifdef USE_ANISOTROPY
+    vec3 anisotropicT;
+    vec3 anisotropicB;
+    float anisotropyStrength;
+#endif
+#ifdef USE_CLEARCOAT
+    float clearcoatFactor;
+    float clearcoatRoughness;
+    vec3 clearcoatNormal;
+    // Add clearcoatF0 when KHR_materials_ior is implemented
+#endif
 };

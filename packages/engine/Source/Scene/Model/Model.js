@@ -2250,6 +2250,10 @@ function updatePickIds(model) {
   }
 }
 
+// Matrix3 is a row-major constructor.
+// The same constructor in GLSL will produce the transpose of this.
+const yUpToZUp = new Matrix3(-1, 0, 0, 0, 0, 1, 0, -1, 0);
+
 function updateReferenceMatrices(model, frameState) {
   const modelMatrix = defined(model._clampedModelMatrix)
     ? model._clampedModelMatrix
@@ -2267,15 +2271,16 @@ function updateReferenceMatrices(model, frameState) {
       referenceMatrix,
       iblReferenceFrameMatrix4
     );
-    iblReferenceFrameMatrix3 = Matrix4.getMatrix3(
+    iblReferenceFrameMatrix3 = Matrix4.getRotation(
       iblReferenceFrameMatrix4,
       iblReferenceFrameMatrix3
     );
-    iblReferenceFrameMatrix3 = Matrix3.getRotation(
+    iblReferenceFrameMatrix3 = Matrix3.transpose(
       iblReferenceFrameMatrix3,
       iblReferenceFrameMatrix3
     );
-    model._iblReferenceFrameMatrix = Matrix3.transpose(
+    model._iblReferenceFrameMatrix = Matrix3.multiply(
+      yUpToZUp,
       iblReferenceFrameMatrix3,
       model._iblReferenceFrameMatrix
     );

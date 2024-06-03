@@ -30,22 +30,30 @@ function updateFramebuffers(pickDepth, context, depthTexture) {
 
 function updateCopyCommands(pickDepth, context, depthTexture) {
   if (!defined(pickDepth._copyDepthCommand)) {
-    const fs =
-      "uniform highp sampler2D u_texture;\n" +
-      "in vec2 v_textureCoordinates;\n" +
-      "void main()\n" +
-      "{\n" +
-      "    out_FragColor = czm_packDepth(texture(u_texture, v_textureCoordinates).r);\n" +
-      "}\n";
-    pickDepth._copyDepthCommand = context.createViewportQuadCommand(fs, {
-      renderState: RenderState.fromCache(),
-      uniformMap: {
-        u_texture: function () {
-          return pickDepth._textureToCopy;
+    pickDepth._copyDepthCommand = context.createViewportQuadCommand(
+      `uniform highp sampler2D colorTexture;
+
+in vec2 v_textureCoordinates;
+
+void main()
+{
+  vec4 globeDepthPacked = texture(czm_globeDepthTexture, v_textureCoordinates);
+  float globeDepth = czm_unpackDepth(globeDepthPacked);
+  float depth = texture(colorTexture, v_textureCoordinates).r;
+  out_FragColor = czm_branchFreeTernary(globeDepth <= 0.0 || globeDepth >= 1.0 || depth < globeDepth && depth > 0.0 && depth < 1.0,
+    czm_packDepth(depth), globeDepthPacked);
+}
+`,
+      {
+        renderState: RenderState.fromCache(),
+        uniformMap: {
+          colorTexture: function () {
+            return pickDepth._textureToCopy;
+          },
         },
-      },
-      owner: pickDepth,
-    });
+        owner: pickDepth,
+      }
+    );
   }
 
   pickDepth._textureToCopy = depthTexture;

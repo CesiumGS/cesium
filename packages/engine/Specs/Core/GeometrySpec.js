@@ -6,11 +6,10 @@ import {
   Geometry,
   GeometryAttribute,
   GeometryType,
+  Math as CesiumMath,
   PrimitiveType,
   Rectangle,
 } from "../../index.js";
-
-import { Math as CesiumMath } from "../../index.js";
 
 describe("Core/Geometry", function () {
   it("constructor", function () {

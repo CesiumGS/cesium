@@ -1,6 +1,9 @@
-import { Cartesian3, HermiteSpline, Quaternion } from "../../index.js";
-
-import { Math as CesiumMath } from "../../index.js";
+import {
+  Cartesian3,
+  HermiteSpline,
+  Math as CesiumMath,
+  Quaternion,
+} from "../../index.js";
 
 describe("Core/HermiteSpline", function () {
   let points;
