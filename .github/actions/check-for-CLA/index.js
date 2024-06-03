@@ -2,6 +2,8 @@ import { Octokit } from "@octokit/core";
 import { google } from "googleapis";
 import Handlebars from "handlebars";
 import fs from "fs-extra";
+import { dirname, join } from "path";
+import { fileURLToPath } from "url";
 
 const PULL_REQUST_INFO = {
   id: process.env.PULL_REQUEST_ID,
@@ -103,7 +105,10 @@ const checkIfUserHasSignedAnyCLA = async () => {
 
 const getCommentBody = (hasSignedCLA, errorFoundOnCLACheck) => {
   const commentTemplate = fs.readFileSync(
-    "./.github/actions/check-for-CLA/templates/pullRequestComment.hbs",
+    join(
+      dirname(fileURLToPath(import.meta.url)),
+      "templates/pullRequestComment.hbs"
+    ),
     "utf-8"
   );
 

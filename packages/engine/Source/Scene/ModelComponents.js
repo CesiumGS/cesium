@@ -1406,7 +1406,7 @@ function Anisotropy() {
   this.anisotropyRotation = Anisotropy.DEFAULT_ANISOTROPY_ROTATION;
 
   /**
-   * The anisotropy texture reader
+   * The anisotropy texture reader.
    *
    * @type {ModelComponents.TextureReader}
    * @private
@@ -1423,6 +1423,60 @@ Anisotropy.DEFAULT_ANISOTROPY_STRENGTH = 0.0;
  * @private
  */
 Anisotropy.DEFAULT_ANISOTROPY_ROTATION = 0.0;
+
+function Clearcoat() {
+  /**
+   * The clearcoat layer intensity.
+   *
+   * @type {number}
+   * @default 0.0
+   * @private
+   */
+  this.clearcoatFactor = Clearcoat.DEFAULT_CLEARCOAT_FACTOR;
+
+  /**
+   * The clearcoat layer intensity texture reader.
+   *
+   * @type {ModelComponents.TextureReader}
+   * @private
+   */
+  this.clearcoatTexture = undefined;
+
+  /**
+   * The clearcoat layer roughness.
+   *
+   * @type {number}
+   * @default 0.0
+   * @private
+   */
+  this.clearcoatRoughnessFactor = Clearcoat.DEFAULT_CLEARCOAT_ROUGHNESS_FACTOR;
+
+  /**
+   * The clearcoat layer roughness texture.
+   *
+   * @type {ModelComponents.TextureReader}
+   * @private
+   */
+  this.clearcoatRoughnessTexture = undefined;
+
+  /**
+   * The clearcoat normal map texture.
+   *
+   * @type {ModelComponents.TextureReader}
+   * @private
+   */
+  this.clearcoatNormalTexture = undefined;
+}
+
+/**
+ * @private
+ */
+Clearcoat.DEFAULT_CLEARCOAT_FACTOR = 0.0;
+
+/**
+ * @private
+ */
+Clearcoat.DEFAULT_CLEARCOAT_ROUGHNESS_FACTOR = 0.0;
 
 /**
  * The material appearance of a primitive.
@@ -1458,12 +1512,20 @@ function Material() {
   this.specular = undefined;
 
   /**
-   * Material properties for the PBR anisotropy shading model
+   * Material properties for the PBR anisotropy shading model.
    *
-   * @type {ModelComponents.anisotropy}
+   * @type {ModelComponents.Anisotropy}
    * @private
    */
   this.anisotropy = undefined;
+
+  /**
+   * Material properties for the PBR clearcoat shading model.
+   *
+   * @type {ModelComponents.Clearcoat}
+   * @private
+   */
+  this.clearcoat = undefined;
 
   /**
    * The emissive texture reader.
@@ -1566,6 +1628,7 @@ ModelComponents.MetallicRoughness = MetallicRoughness;
 ModelComponents.SpecularGlossiness = SpecularGlossiness;
 ModelComponents.Specular = Specular;
 ModelComponents.Anisotropy = Anisotropy;
+ModelComponents.Clearcoat = Clearcoat;
 ModelComponents.Material = Material;
 
 export default ModelComponents;

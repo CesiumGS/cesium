@@ -8,6 +8,7 @@
 
 - Added support for glTF models with the [KHR_materials_specular extension](https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Khronos/KHR_materials_specular). [#11970](https://github.com/CesiumGS/cesium/pull/11970)
 - Added support for glTF models with the [KHR_materials_anisotropy extension](https://github.com/KhronosGroup/glTF/blob/main/extensions/2.0/Khronos/KHR_materials_anisotropy/README.md). [#11988](https://github.com/CesiumGS/cesium/pull/11988)
+- Added support for glTF models with the [KHR_materials_clearcoat extension](https://github.com/KhronosGroup/glTF/blob/main/extensions/2.0/Khronos/KHR_materials_clearcoat/README.md). [#12006](https://github.com/CesiumGS/cesium/pull/12006)
 
 #### Fixes :wrench:
 
@@ -15,7 +16,9 @@
 - Fixed a bug where `TaskProcessor` worker loading would check the worker module ID rather than the absolute URL when determining if it is cross-origin. [#11833](https://github.com/CesiumGS/cesium/pull/11833)
 - Fixed a bug where cross-origin workers would error when loaded with the CommonJS `importScripts` shim instead of an ESM `import`. [#11833](https://github.com/CesiumGS/cesium/pull/11833)
 - Corrected the Typescript types for `Billboard.id` and `Label.id` to be `any` [#11973](https://github.com/CesiumGS/cesium/issues/11973)
-- Fixed a normalization error in image-based lighting [#11994](https://github.com/CesiumGS/cesium/issues/11994)
+- Fixed a normalization error in image-based lighting. [#11994](https://github.com/CesiumGS/cesium/issues/11994)
+- Fixed an error in the specular reflection calculations for image-based lighting from supplied environment maps. [#12008](https://github.com/CesiumGS/cesium/issues/12008)
+- Fixes a bug where `sampleTerrain` did not respect the `rejectOnTileFail` flag for failed requests other than the first. [#11998](https://github.com/CesiumGS/cesium/pull/11998)
 
 ### 1.117 - 2024-05-01
 
