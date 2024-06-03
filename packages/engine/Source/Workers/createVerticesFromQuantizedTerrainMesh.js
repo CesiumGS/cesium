@@ -27,6 +27,9 @@ function createVerticesFromQuantizedTerrainMesh(
   parameters,
   transferableObjects
 ) {
+  const enableLongSkirt = parameters.extendedSkirts && parameters.level >= 3;
+  const enableSkirtsBottomPlane =
+    parameters.extendedSkirts && parameters.level >= 3;
   const quantizedVertices = parameters.quantizedVertices;
   const quantizedVertexCount = quantizedVertices.length / 3;
   const octEncodedNormals = parameters.octEncodedNormals;
@@ -245,11 +248,29 @@ function createVerticesFromQuantizedTerrainMesh(
     )
   );
 
+  let fullHMin;
+  if (enableLongSkirt) {
+    let eastT = rectangle.east;
+    const westT = rectangle.west;
+    if (eastT < westT) {
+      eastT += CesiumMath.TWO_PI;
+    }
+    const tileXSize = (eastT - westT) * ellipsoid.maximumRadius;
+    let longSkirtHeight = tileXSize * 2;
+    if (longSkirtHeight < 4000) {
+      // Note: force higher skirt size for better shadows rendering on smaller tiles
+      longSkirtHeight = 5000;
+    }
+    fullHMin = Math.min(hMin, -longSkirtHeight);
+  } else {
+    fullHMin = hMin;
+  }
+
   const aaBox = new AxisAlignedBoundingBox(minimum, maximum, center);
   const encoding = new TerrainEncoding(
     center,
     aaBox,
-    hMin,
+    fullHMin,
     maximumHeight,
     fromENU,
     hasVertexNormals,
@@ -284,7 +305,11 @@ function createVerticesFromQuantizedTerrainMesh(
   }
 
   const edgeTriangleCount = Math.max(0, (edgeVertexCount - 4) * 2);
-  const indexBufferLength = parameters.indices.length + edgeTriangleCount * 3;
+  let indexBufferLength = parameters.indices.length + edgeTriangleCount * 3;
+  if (enableSkirtsBottomPlane) {
+    // 2 more triangles for bottom skirts plane
+    indexBufferLength += 2 * 3;
+  }
   const indexBuffer = IndexDatatype.createTypedArray(
     quantizedVertexCount + edgeVertexCount,
     indexBufferLength
@@ -304,6 +329,8 @@ function createVerticesFromQuantizedTerrainMesh(
   const southLatitudeOffset = -latOffset;
 
   // Add skirts.
+  // Note: create longer skirts for better light occlusion
+  const terrainHeight = enableLongSkirt ? fullHMin : undefined;
   let vertexBufferIndex = quantizedVertexCount * vertexStride;
   addSkirt(
     vertexBuffer,
@@ -319,7 +346,8 @@ function createVerticesFromQuantizedTerrainMesh(
     southMercatorY,
     oneOverMercatorHeight,
     westLongitudeOffset,
-    westLatitudeOffset
+    westLatitudeOffset,
+    terrainHeight
   );
   vertexBufferIndex += parameters.westIndices.length * vertexStride;
   addSkirt(
@@ -336,7 +364,8 @@ function createVerticesFromQuantizedTerrainMesh(
     southMercatorY,
     oneOverMercatorHeight,
     southLongitudeOffset,
-    southLatitudeOffset
+    southLatitudeOffset,
+    terrainHeight
   );
   vertexBufferIndex += parameters.southIndices.length * vertexStride;
   addSkirt(
@@ -353,7 +382,8 @@ function createVerticesFromQuantizedTerrainMesh(
     southMercatorY,
     oneOverMercatorHeight,
     eastLongitudeOffset,
-    eastLatitudeOffset
+    eastLatitudeOffset,
+    terrainHeight
   );
   vertexBufferIndex += parameters.eastIndices.length * vertexStride;
   addSkirt(
@@ -370,10 +400,11 @@ function createVerticesFromQuantizedTerrainMesh(
     southMercatorY,
     oneOverMercatorHeight,
     northLongitudeOffset,
-    northLatitudeOffset
+    northLatitudeOffset,
+    terrainHeight
   );
 
-  TerrainProvider.addSkirtIndices(
+  const offset = TerrainProvider.addSkirtIndices(
     westIndicesSouthToNorth,
     southIndicesEastToWest,
     eastIndicesNorthToSouth,
@@ -382,6 +413,27 @@ function createVerticesFromQuantizedTerrainMesh(
     indexBuffer,
     parameters.indices.length
   );
+
+  if (enableSkirtsBottomPlane) {
+    // add the bottom plane to skirts
+    // this is needed for occluding light source coming from the bottom of the tile
+    let vertexIndex = quantizedVertexCount;
+    const WSVertexIndex = vertexIndex;
+    const WNVertexIndex = vertexIndex + westIndicesSouthToNorth.length - 1;
+    vertexIndex += westIndicesSouthToNorth.length;
+    vertexIndex += southIndicesEastToWest.length;
+    const ENVertexIndex = vertexIndex;
+    const ESVertexIndex = vertexIndex + eastIndicesNorthToSouth.length - 1;
+
+    TerrainProvider.addSkirtsBottomPlane(
+      WSVertexIndex,
+      WNVertexIndex,
+      ENVertexIndex,
+      ESVertexIndex,
+      indexBuffer,
+      offset
+    );
+  }
 
   transferableObjects.push(vertexBuffer.buffer, indexBuffer.buffer);
 
@@ -448,6 +500,72 @@ function findMinMaxSkirts(
   return hMin;
 }
 
+function addSkirtVertex(
+  vertexBuffer,
+  vertexBufferIndex,
+  encoding,
+  index,
+  height,
+  uv,
+  octEncodedNormals,
+  ellipsoid,
+  north,
+  south,
+  east,
+  west,
+  southMercatorY,
+  oneOverMercatorHeight,
+  longitudeOffset,
+  latitudeOffset
+) {
+  const hasVertexNormals = defined(octEncodedNormals);
+
+  cartographicScratch.longitude =
+    CesiumMath.lerp(west, east, uv.x) + longitudeOffset;
+  cartographicScratch.latitude =
+    CesiumMath.lerp(south, north, uv.y) + latitudeOffset;
+  cartographicScratch.height = height;
+
+  const position = ellipsoid.cartographicToCartesian(
+    cartographicScratch,
+    cartesian3Scratch
+  );
+
+  if (hasVertexNormals) {
+    const n = index * 2.0;
+    toPack.x = octEncodedNormals[n];
+    toPack.y = octEncodedNormals[n + 1];
+  }
+
+  let webMercatorT;
+  if (encoding.hasWebMercatorT) {
+    webMercatorT =
+      (WebMercatorProjection.geodeticLatitudeToMercatorAngle(
+        cartographicScratch.latitude
+      ) -
+        southMercatorY) *
+      oneOverMercatorHeight;
+  }
+
+  let geodeticSurfaceNormal;
+  if (encoding.hasGeodeticSurfaceNormals) {
+    geodeticSurfaceNormal = ellipsoid.geodeticSurfaceNormal(position);
+  }
+
+  vertexBufferIndex = encoding.encode(
+    vertexBuffer,
+    vertexBufferIndex,
+    position,
+    uv,
+    cartographicScratch.height,
+    toPack,
+    webMercatorT,
+    geodeticSurfaceNormal
+  );
+
+  return vertexBufferIndex;
+}
+
 function addSkirt(
   vertexBuffer,
   vertexBufferIndex,
@@ -462,10 +580,9 @@ function addSkirt(
   southMercatorY,
   oneOverMercatorHeight,
   longitudeOffset,
-  latitudeOffset
+  latitudeOffset,
+  terrainHeight
 ) {
-  const hasVertexNormals = defined(octEncodedNormals);
-
   const north = rectangle.north;
   const south = rectangle.south;
   let east = rectangle.east;
@@ -475,53 +592,38 @@ function addSkirt(
     east += CesiumMath.TWO_PI;
   }
 
+  let index;
+  let uv;
+  let height;
+  if (terrainHeight) {
+    height = terrainHeight;
+  }
   const length = edgeVertices.length;
   for (let i = 0; i < length; ++i) {
-    const index = edgeVertices[i];
-    const h = heights[index];
-    const uv = uvs[index];
+    index = edgeVertices[i];
+    uv = uvs[index];
 
-    cartographicScratch.longitude =
-      CesiumMath.lerp(west, east, uv.x) + longitudeOffset;
-    cartographicScratch.latitude =
-      CesiumMath.lerp(south, north, uv.y) + latitudeOffset;
-    cartographicScratch.height = h - skirtLength;
-
-    const position = ellipsoid.cartographicToCartesian(
-      cartographicScratch,
-      cartesian3Scratch
-    );
-
-    if (hasVertexNormals) {
-      const n = index * 2.0;
-      toPack.x = octEncodedNormals[n];
-      toPack.y = octEncodedNormals[n + 1];
+    if (!terrainHeight) {
+      const h = heights[index];
+      height = h - skirtLength;
     }
-
-    let webMercatorT;
-    if (encoding.hasWebMercatorT) {
-      webMercatorT =
-        (WebMercatorProjection.geodeticLatitudeToMercatorAngle(
-          cartographicScratch.latitude
-        ) -
-          southMercatorY) *
-        oneOverMercatorHeight;
-    }
-
-    let geodeticSurfaceNormal;
-    if (encoding.hasGeodeticSurfaceNormals) {
-      geodeticSurfaceNormal = ellipsoid.geodeticSurfaceNormal(position);
-    }
-
-    vertexBufferIndex = encoding.encode(
+    vertexBufferIndex = addSkirtVertex(
       vertexBuffer,
       vertexBufferIndex,
-      position,
+      encoding,
+      index,
+      height,
       uv,
-      cartographicScratch.height,
-      toPack,
-      webMercatorT,
-      geodeticSurfaceNormal
+      octEncodedNormals,
+      ellipsoid,
+      north,
+      south,
+      east,
+      west,
+      southMercatorY,
+      oneOverMercatorHeight,
+      longitudeOffset,
+      latitudeOffset
     );
   }
 }

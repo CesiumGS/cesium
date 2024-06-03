@@ -59,6 +59,7 @@ import TerrainMesh from "./TerrainMesh.js";
  * @param {Uint8Array} [options.encodedNormals] The buffer containing per vertex normals, encoded using 'oct' encoding
  * @param {Uint8Array} [options.waterMask] The buffer containing the watermask.
  * @param {Credit[]} [options.credits] Array of credits for this tile.
+ * @param {boolean} [options.extendedSkirts=false] True if the tile has extended skirts for better light occlusion when shadows are enabled.
  *
  *
  * @example
@@ -203,6 +204,7 @@ function QuantizedMeshTerrainData(options) {
 
   this._createdByUpsampling = defaultValue(options.createdByUpsampling, false);
   this._waterMask = options.waterMask;
+  this._extendedSkirts = defaultValue(options.extendedSkirts, false);
 
   this._mesh = undefined;
 }
@@ -335,6 +337,8 @@ QuantizedMeshTerrainData.prototype.createMesh = function (options) {
     ellipsoid: ellipsoid,
     exaggeration: exaggeration,
     exaggerationRelativeHeight: exaggerationRelativeHeight,
+    level: level,
+    extendedSkirts: this._extendedSkirts,
   });
 
   if (!defined(verticesPromise)) {
@@ -518,6 +522,7 @@ QuantizedMeshTerrainData.prototype.upsample = function (
     ? this._northSkirtHeight
     : shortestSkirt * 0.5;
   const credits = this._credits;
+  const extendedSkirts = this._extendedSkirts;
 
   return Promise.resolve(upsamplePromise).then(function (result) {
     const quantizedVertices = new Uint16Array(result.vertices);
@@ -552,6 +557,7 @@ QuantizedMeshTerrainData.prototype.upsample = function (
       childTileMask: 0,
       credits: credits,
       createdByUpsampling: true,
+      extendedSkirts: extendedSkirts,
     });
   });
 };

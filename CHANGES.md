@@ -56,6 +56,7 @@
 - Implemented sharper rendering and lighting on voxels with CYLINDER and ELLIPSOID shape. [#11875](https://github.com/CesiumGS/cesium/pull/11875)
 - Implemented vertical exaggeration for voxels with BOX shape. [#11887](https://github.com/CesiumGS/cesium/pull/11887)
 - Added the `Check` object of validators to the public api and types. [#11901](https://github.com/CesiumGS/cesium/pull/11901)
+- Added an optional property 'extendedSkirts' to `CesiumTerrainProvider`to enable extended skirts on tiles, improving light occlusion when shadows are enabled. [#11459][https://github.com/cesiumgs/cesium/issues/11459]
 
 ##### Fixes :wrench:
 
