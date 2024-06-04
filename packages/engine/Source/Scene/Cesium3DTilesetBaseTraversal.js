@@ -7,8 +7,10 @@ import Cesium3DTilesetTraversal from "./Cesium3DTilesetTraversal.js";
  * Depth-first traversal that traverses all visible tiles and marks tiles for selection.
  * A tile does not refine until all children are loaded.
  * This is the traditional replacement refinement approach and is called the base traversal.
+ *
  * @alias Cesium3DTilesetBaseTraversal
- * @class
+ * @constructor
+ *
  * @private
  */
 function Cesium3DTilesetBaseTraversal() {}
@@ -25,6 +27,7 @@ const emptyTraversal = {
 
 /**
  * Traverses a {@link Cesium3DTileset} to determine which tiles to load and render.
+ *
  * @private
  * @param {Cesium3DTileset} tileset
  * @param {FrameState} frameState
@@ -70,6 +73,7 @@ Cesium3DTilesetBaseTraversal.selectTiles = function (tileset, frameState) {
 
 /**
  * Mark a tile as selected if it has content available.
+ *
  * @private
  * @param {Cesium3DTile} tile
  * @param {FrameState} frameState
@@ -177,6 +181,7 @@ function updateAndPushChildren(tile, stack, frameState) {
  * Depth-first traversal that traverses all visible tiles and marks tiles for selection.
  * A tile does not refine until all children are loaded.
  * This is the traditional replacement refinement approach and is called the base traversal.
+ *
  * @private
  * @param {Cesium3DTile} root
  * @param {FrameState} frameState
@@ -237,6 +242,7 @@ function executeTraversal(root, frameState) {
 /**
  * Depth-first traversal that checks if all nearest descendants with content are loaded.
  * Ignores visibility.
+ *
  * @private
  * @param {Cesium3DTile} root
  * @param {FrameState} frameState

@@ -7,7 +7,6 @@ import FramebufferManager from "../Renderer/FramebufferManager.js";
 import PassState from "../Renderer/PassState.js";
 
 /**
- * @param context
  * @private
  */
 function PickFramebuffer(context) {
@@ -54,6 +53,7 @@ const colorScratch = new Color();
 
 /**
  * Return the picked object rendered within a given rectangle.
+ *
  * @param {BoundingRectangle} screenSpaceRectangle
  * @returns {object|undefined} The object rendered in the middle of the rectangle, or undefined if nothing was rendered.
  */
@@ -123,6 +123,7 @@ PickFramebuffer.prototype.end = function (screenSpaceRectangle) {
 /**
  * Return voxel tile and sample information as rendered by a pickVoxel pass,
  * within a given rectangle.
+ *
  * @param {BoundingRectangle} screenSpaceRectangle
  * @returns {TypedArray}
  */

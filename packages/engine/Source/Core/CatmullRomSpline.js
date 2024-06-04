@@ -107,8 +107,10 @@ const lastTangentScratch = new Cartesian3();
  * A Catmull-Rom spline is a cubic spline where the tangent at control points,
  * except the first and last, are computed using the previous and next control points.
  * Catmull-Rom splines are in the class C<sup>1</sup>.
+ *
  * @alias CatmullRomSpline
- * @class
+ * @constructor
+ *
  * @param {object} options Object with the following properties:
  * @param {number[]} options.times An array of strictly increasing, unit-less, floating-point times at each point.
  *                The values are in no way connected to the clock time. They are the parameterization for the curve.
@@ -117,8 +119,11 @@ const lastTangentScratch = new Cartesian3();
  *                     If the tangent is not given, it will be estimated.
  * @param {Cartesian3} [options.lastTangent] The tangent of the curve at the last control point.
  *                     If the tangent is not given, it will be estimated.
- * @throws {DeveloperError} points.length must be greater than or equal to 2.
- * @throws {DeveloperError} times.length must be equal to points.length.
+ *
+ * @exception {DeveloperError} points.length must be greater than or equal to 2.
+ * @exception {DeveloperError} times.length must be equal to points.length.
+ *
+ *
  * @example
  * // spline above the earth from Philadelphia to Los Angeles
  * const spline = new Cesium.CatmullRomSpline({
@@ -134,6 +139,7 @@ const lastTangentScratch = new Cartesian3();
  *
  * const p0 = spline.evaluate(times[i]);         // equal to positions[i]
  * const p1 = spline.evaluate(times[i] + delta); // interpolated value when delta < times[i + 1] - times[i]
+ *
  * @see ConstantSpline
  * @see SteppedSpline
  * @see HermiteSpline
@@ -192,7 +198,9 @@ function CatmullRomSpline(options) {
 Object.defineProperties(CatmullRomSpline.prototype, {
   /**
    * An array of times for the control points.
+   *
    * @memberof CatmullRomSpline.prototype
+   *
    * @type {number[]}
    * @readonly
    */
@@ -204,7 +212,9 @@ Object.defineProperties(CatmullRomSpline.prototype, {
 
   /**
    * An array of {@link Cartesian3} control points.
+   *
    * @memberof CatmullRomSpline.prototype
+   *
    * @type {Cartesian3[]}
    * @readonly
    */
@@ -216,7 +226,9 @@ Object.defineProperties(CatmullRomSpline.prototype, {
 
   /**
    * The tangent at the first control point.
+   *
    * @memberof CatmullRomSpline.prototype
+   *
    * @type {Cartesian3}
    * @readonly
    */
@@ -228,7 +240,9 @@ Object.defineProperties(CatmullRomSpline.prototype, {
 
   /**
    * The tangent at the last control point.
+   *
    * @memberof CatmullRomSpline.prototype
+   *
    * @type {Cartesian3}
    * @readonly
    */
@@ -265,9 +279,11 @@ CatmullRomSpline.catmullRomCoefficientMatrix = new Matrix4(
  * Finds an index <code>i</code> in <code>times</code> such that the parameter
  * <code>time</code> is in the interval <code>[times[i], times[i + 1]]</code>.
  * @function
+ *
  * @param {number} time The time.
  * @returns {number} The index for the element at the start of the interval.
- * @throws {DeveloperError} time must be in the range <code>[t<sub>0</sub>, t<sub>n</sub>]</code>, where <code>t<sub>0</sub></code>
+ *
+ * @exception {DeveloperError} time must be in the range <code>[t<sub>0</sub>, t<sub>n</sub>]</code>, where <code>t<sub>0</sub></code>
  *                             is the first element in the array <code>times</code> and <code>t<sub>n</sub></code> is the last element
  *                             in the array <code>times</code>.
  */
@@ -276,25 +292,29 @@ CatmullRomSpline.prototype.findTimeInterval = Spline.prototype.findTimeInterval;
 /**
  * Wraps the given time to the period covered by the spline.
  * @function
+ *
  * @param {number} time The time.
- * @returns {number} The time, wrapped around to the updated animation.
+ * @return {number} The time, wrapped around to the updated animation.
  */
 CatmullRomSpline.prototype.wrapTime = Spline.prototype.wrapTime;
 
 /**
  * Clamps the given time to the period covered by the spline.
  * @function
+ *
  * @param {number} time The time.
- * @returns {number} The time, clamped to the animation period.
+ * @return {number} The time, clamped to the animation period.
  */
 CatmullRomSpline.prototype.clampTime = Spline.prototype.clampTime;
 
 /**
  * Evaluates the curve at a given time.
+ *
  * @param {number} time The time at which to evaluate the curve.
  * @param {Cartesian3} [result] The object onto which to store the result.
  * @returns {Cartesian3} The modified result parameter or a new instance of the point on the curve at the given time.
- * @throws {DeveloperError} time must be in the range <code>[t<sub>0</sub>, t<sub>n</sub>]</code>, where <code>t<sub>0</sub></code>
+ *
+ * @exception {DeveloperError} time must be in the range <code>[t<sub>0</sub>, t<sub>n</sub>]</code>, where <code>t<sub>0</sub></code>
  *                             is the first element in the array <code>times</code> and <code>t<sub>n</sub></code> is the last element
  *                             in the array <code>times</code>.
  */

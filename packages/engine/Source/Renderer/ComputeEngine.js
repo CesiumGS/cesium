@@ -13,7 +13,6 @@ import RenderState from "./RenderState.js";
 import ShaderProgram from "./ShaderProgram.js";
 
 /**
- * @param context
  * @private
  */
 function ComputeEngine(context) {

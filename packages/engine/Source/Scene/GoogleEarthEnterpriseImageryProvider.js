@@ -30,6 +30,7 @@ GoogleEarthEnterpriseDiscardPolicy.prototype.isReady = function () {
 
 /**
  * Given a tile image, decide whether to discard that image.
+ *
  * @param {HTMLImageElement} image An image to test.
  * @returns {boolean} True if the image should be discarded; otherwise, false.
  */
@@ -43,6 +44,7 @@ GoogleEarthEnterpriseDiscardPolicy.prototype.shouldDiscardImage = function (
  * @typedef {object} GoogleEarthEnterpriseImageryProvider.ConstructorOptions
  *
  * Initialization options for the GoogleEarthEnterpriseImageryProvider constructor
+ *
  * @property {Ellipsoid} [ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
  * @property {TileDiscardPolicy} [tileDiscardPolicy] The policy that determines if a tile
  *        is invalid and should be discarded. If this value is not specified, a default
@@ -58,10 +60,13 @@ GoogleEarthEnterpriseDiscardPolicy.prototype.shouldDiscardImage = function (
  * Provides tiled imagery using the Google Earth Enterprise REST API.
  *
  * Notes: This provider is for use with the 3D Earth API of Google Earth Enterprise,
- * {@link GoogleEarthEnterpriseMapsProvider} should be used with 2D Maps API.
+ *        {@link GoogleEarthEnterpriseMapsProvider} should be used with 2D Maps API.
+ *
  * @alias GoogleEarthEnterpriseImageryProvider
- * @class
+ * @constructor
+ *
  * @param {GoogleEarthEnterpriseImageryProvider.ConstructorOptions} [options] Object describing initialization options
+ *
  * @see GoogleEarthEnterpriseImageryProvider.fromMetadata
  * @see GoogleEarthEnterpriseTerrainProvider
  * @see ArcGisMapServerImageryProvider
@@ -72,9 +77,12 @@ GoogleEarthEnterpriseDiscardPolicy.prototype.shouldDiscardImage = function (
  * @see WebMapServiceImageryProvider
  * @see WebMapTileServiceImageryProvider
  * @see UrlTemplateImageryProvider
+ *
+ *
  * @example
  * const geeMetadata = await GoogleEarthEnterpriseMetadata.fromUrl("http://www.example.com");
  * const gee = Cesium.GoogleEarthEnterpriseImageryProvider.fromMetadata(geeMetadata);
+ *
  * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
  */
 function GoogleEarthEnterpriseImageryProvider(options) {
@@ -282,7 +290,9 @@ Object.defineProperties(GoogleEarthEnterpriseImageryProvider.prototype, {
  * @param {GoogleEarthEnterpriseMetadata} metadata A metadata object that can be used to share metadata requests with a GoogleEarthEnterpriseTerrainProvider.
  * @param {GoogleEarthEnterpriseImageryProvider.ConstructorOptions} options Object describing initialization options.
  * @returns {GoogleEarthEnterpriseImageryProvider}
- * @throws {RuntimeError} The metadata url does not have imagery
+ *
+ * @exception {RuntimeError} The metadata url does not have imagery
+ *
  * @example
  * const geeMetadata = await GoogleEarthEnterpriseMetadata.fromUrl("http://www.example.com");
  * const gee = Cesium.GoogleEarthEnterpriseImageryProvider.fromMetadata(geeMetadata);
@@ -306,6 +316,7 @@ GoogleEarthEnterpriseImageryProvider.fromMetadata = function (
 
 /**
  * Gets the credits to be displayed when a given tile is displayed.
+ *
  * @param {number} x The tile X coordinate.
  * @param {number} y The tile Y coordinate.
  * @param {number} level The tile level;
@@ -330,6 +341,7 @@ GoogleEarthEnterpriseImageryProvider.prototype.getTileCredits = function (
 
 /**
  * Requests the image for a given tile.
+ *
  * @param {number} x The tile X coordinate.
  * @param {number} y The tile Y coordinate.
  * @param {number} level The tile level.
@@ -408,12 +420,13 @@ GoogleEarthEnterpriseImageryProvider.prototype.requestImage = function (
 /**
  * Picking features is not currently supported by this imagery provider, so this function simply returns
  * undefined.
+ *
  * @param {number} x The tile X coordinate.
  * @param {number} y The tile Y coordinate.
  * @param {number} level The tile level.
  * @param {number} longitude The longitude at which to pick features.
  * @param {number} latitude  The latitude at which to pick features.
- * @returns {undefined} Undefined since picking is not supported.
+ * @return {undefined} Undefined since picking is not supported.
  */
 GoogleEarthEnterpriseImageryProvider.prototype.pickFeatures = function (
   x,

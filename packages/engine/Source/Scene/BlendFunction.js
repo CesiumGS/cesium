@@ -2,11 +2,13 @@ import WebGLConstants from "../Core/WebGLConstants.js";
 
 /**
  * Determines how blending factors are computed.
+ *
  * @enum {number}
  */
 const BlendFunction = {
   /**
    * The blend factor is zero.
+   *
    * @type {number}
    * @constant
    */
@@ -14,6 +16,7 @@ const BlendFunction = {
 
   /**
    * The blend factor is one.
+   *
    * @type {number}
    * @constant
    */
@@ -21,6 +24,7 @@ const BlendFunction = {
 
   /**
    * The blend factor is the source color.
+   *
    * @type {number}
    * @constant
    */
@@ -28,6 +32,7 @@ const BlendFunction = {
 
   /**
    * The blend factor is one minus the source color.
+   *
    * @type {number}
    * @constant
    */
@@ -35,6 +40,7 @@ const BlendFunction = {
 
   /**
    * The blend factor is the destination color.
+   *
    * @type {number}
    * @constant
    */
@@ -42,6 +48,7 @@ const BlendFunction = {
 
   /**
    * The blend factor is one minus the destination color.
+   *
    * @type {number}
    * @constant
    */
@@ -49,6 +56,7 @@ const BlendFunction = {
 
   /**
    * The blend factor is the source alpha.
+   *
    * @type {number}
    * @constant
    */
@@ -56,6 +64,7 @@ const BlendFunction = {
 
   /**
    * The blend factor is one minus the source alpha.
+   *
    * @type {number}
    * @constant
    */
@@ -63,6 +72,7 @@ const BlendFunction = {
 
   /**
    * The blend factor is the destination alpha.
+   *
    * @type {number}
    * @constant
    */
@@ -70,6 +80,7 @@ const BlendFunction = {
 
   /**
    * The blend factor is one minus the destination alpha.
+   *
    * @type {number}
    * @constant
    */
@@ -77,6 +88,7 @@ const BlendFunction = {
 
   /**
    * The blend factor is the constant color.
+   *
    * @type {number}
    * @constant
    */
@@ -84,6 +96,7 @@ const BlendFunction = {
 
   /**
    * The blend factor is one minus the constant color.
+   *
    * @type {number}
    * @constant
    */
@@ -91,6 +104,7 @@ const BlendFunction = {
 
   /**
    * The blend factor is the constant alpha.
+   *
    * @type {number}
    * @constant
    */
@@ -98,6 +112,7 @@ const BlendFunction = {
 
   /**
    * The blend factor is one minus the constant alpha.
+   *
    * @type {number}
    * @constant
    */
@@ -105,6 +120,7 @@ const BlendFunction = {
 
   /**
    * The blend factor is the saturated source alpha.
+   *
    * @type {number}
    * @constant
    */

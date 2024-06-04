@@ -3,9 +3,10 @@ import defaultValue from "./defaultValue.js";
 /**
  * Represents the closed interval [start, stop].
  * @alias Interval
- * @class
- * @param {number} [start] The beginning of the interval.
- * @param {number} [stop] The end of the interval.
+ * @constructor
+ *
+ * @param {number} [start=0.0] The beginning of the interval.
+ * @param {number} [stop=0.0] The end of the interval.
  */
 function Interval(start, stop) {
   /**

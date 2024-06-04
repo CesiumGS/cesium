@@ -15,7 +15,7 @@ const Flags = {
 
 /**
  * Represents a command to the renderer for drawing.
- * @param options
+ *
  * @private
  */
 function DrawCommand(options) {
@@ -91,9 +91,11 @@ Object.defineProperties(DrawCommand.prototype, {
    * allow the tightest possible near and far planes to be computed for the scene, and
    * minimize the number of frustums needed.
    * </p>
+   *
    * @memberof DrawCommand.prototype
    * @type {object}
    * @default undefined
+   *
    * @see DrawCommand#debugShowBoundingVolume
    */
   boundingVolume: {
@@ -111,9 +113,11 @@ Object.defineProperties(DrawCommand.prototype, {
   /**
    * The oriented bounding box of the geometry in world space. If this is defined, it is used instead of
    * {@link DrawCommand#boundingVolume} for plane intersection testing.
+   *
    * @memberof DrawCommand.prototype
    * @type {OrientedBoundingBox}
    * @default undefined
+   *
    * @see DrawCommand#debugShowBoundingVolume
    */
   orientedBoundingBox: {
@@ -131,6 +135,7 @@ Object.defineProperties(DrawCommand.prototype, {
   /**
    * When <code>true</code>, the renderer frustum and horizon culls the command based on its {@link DrawCommand#boundingVolume}.
    * If the command was already culled, set this to <code>false</code> for a performance improvement.
+   *
    * @memberof DrawCommand.prototype
    * @type {boolean}
    * @default true
@@ -150,6 +155,7 @@ Object.defineProperties(DrawCommand.prototype, {
   /**
    * When <code>true</code>, the horizon culls the command based on its {@link DrawCommand#boundingVolume}.
    * {@link DrawCommand#cull} must also be <code>true</code> in order for the command to be culled.
+   *
    * @memberof DrawCommand.prototype
    * @type {boolean}
    * @default true
@@ -171,6 +177,7 @@ Object.defineProperties(DrawCommand.prototype, {
    * <p>
    * When <code>undefined</code>, the geometry is assumed to be defined in world space.
    * </p>
+   *
    * @memberof DrawCommand.prototype
    * @type {Matrix4}
    * @default undefined
@@ -189,6 +196,7 @@ Object.defineProperties(DrawCommand.prototype, {
 
   /**
    * The type of geometry in the vertex array.
+   *
    * @memberof DrawCommand.prototype
    * @type {PrimitiveType}
    * @default PrimitiveType.TRIANGLES
@@ -207,6 +215,7 @@ Object.defineProperties(DrawCommand.prototype, {
 
   /**
    * The vertex array.
+   *
    * @memberof DrawCommand.prototype
    * @type {VertexArray}
    * @default undefined
@@ -225,6 +234,7 @@ Object.defineProperties(DrawCommand.prototype, {
 
   /**
    * The number of vertices to draw in the vertex array.
+   *
    * @memberof DrawCommand.prototype
    * @type {number}
    * @default undefined
@@ -243,6 +253,7 @@ Object.defineProperties(DrawCommand.prototype, {
 
   /**
    * The offset to start drawing in the vertex array.
+   *
    * @memberof DrawCommand.prototype
    * @type {number}
    * @default 0
@@ -261,6 +272,7 @@ Object.defineProperties(DrawCommand.prototype, {
 
   /**
    * The number of instances to draw.
+   *
    * @memberof DrawCommand.prototype
    * @type {number}
    * @default 0
@@ -279,6 +291,7 @@ Object.defineProperties(DrawCommand.prototype, {
 
   /**
    * The shader program to apply.
+   *
    * @memberof DrawCommand.prototype
    * @type {ShaderProgram}
    * @default undefined
@@ -297,6 +310,7 @@ Object.defineProperties(DrawCommand.prototype, {
 
   /**
    * Whether this command should cast shadows when shadowing is enabled.
+   *
    * @memberof DrawCommand.prototype
    * @type {boolean}
    * @default false
@@ -315,6 +329,7 @@ Object.defineProperties(DrawCommand.prototype, {
 
   /**
    * Whether this command should receive shadows when shadowing is enabled.
+   *
    * @memberof DrawCommand.prototype
    * @type {boolean}
    * @default false
@@ -334,6 +349,7 @@ Object.defineProperties(DrawCommand.prototype, {
   /**
    * An object with functions whose names match the uniforms in the shader program
    * and return values to set those uniforms.
+   *
    * @memberof DrawCommand.prototype
    * @type {object}
    * @default undefined
@@ -352,6 +368,7 @@ Object.defineProperties(DrawCommand.prototype, {
 
   /**
    * The render state.
+   *
    * @memberof DrawCommand.prototype
    * @type {RenderState}
    * @default undefined
@@ -370,6 +387,7 @@ Object.defineProperties(DrawCommand.prototype, {
 
   /**
    * The framebuffer to draw to.
+   *
    * @memberof DrawCommand.prototype
    * @type {Framebuffer}
    * @default undefined
@@ -388,6 +406,7 @@ Object.defineProperties(DrawCommand.prototype, {
 
   /**
    * The pass when to render.
+   *
    * @memberof DrawCommand.prototype
    * @type {Pass}
    * @default undefined
@@ -407,6 +426,7 @@ Object.defineProperties(DrawCommand.prototype, {
   /**
    * Specifies if this command is only to be executed in the frustum closest
    * to the eye containing the bounding volume. Defaults to <code>false</code>.
+   *
    * @memberof DrawCommand.prototype
    * @type {boolean}
    * @default false
@@ -428,9 +448,11 @@ Object.defineProperties(DrawCommand.prototype, {
    * execution; it allows us to see who created a command when we only have a
    * reference to the command, and can be used to selectively execute commands
    * with {@link Scene#debugCommandFilter}.
+   *
    * @memberof DrawCommand.prototype
    * @type {object}
    * @default undefined
+   *
    * @see Scene#debugCommandFilter
    */
   owner: {
@@ -450,9 +472,11 @@ Object.defineProperties(DrawCommand.prototype, {
    * <p>
    * Draws the {@link DrawCommand#boundingVolume} for this command, assuming it is a sphere, when the command executes.
    * </p>
+   *
    * @memberof DrawCommand.prototype
    * @type {boolean}
    * @default false
+   *
    * @see DrawCommand#boundingVolume
    */
   debugShowBoundingVolume: {
@@ -485,6 +509,7 @@ Object.defineProperties(DrawCommand.prototype, {
   /**
    * A GLSL string that will evaluate to a pick id. When <code>undefined</code>, the command will only draw depth
    * during the pick pass.
+   *
    * @memberof DrawCommand.prototype
    * @type {string}
    * @default undefined
@@ -502,6 +527,7 @@ Object.defineProperties(DrawCommand.prototype, {
   },
   /**
    * Whether this command should be executed in the pick pass only.
+   *
    * @memberof DrawCommand.prototype
    * @type {boolean}
    * @default false
@@ -519,6 +545,7 @@ Object.defineProperties(DrawCommand.prototype, {
   },
   /**
    * Whether this command should be derived to draw depth for classification of translucent primitives.
+   *
    * @memberof DrawCommand.prototype
    * @type {boolean}
    * @default false
@@ -537,8 +564,6 @@ Object.defineProperties(DrawCommand.prototype, {
 });
 
 /**
- * @param command
- * @param result
  * @private
  */
 DrawCommand.shallowClone = function (command, result) {
@@ -575,6 +600,7 @@ DrawCommand.shallowClone = function (command, result) {
 
 /**
  * Executes the draw command.
+ *
  * @param {Context} context The renderer context in which to draw.
  * @param {PassState} [passState] The state for the current render pass.
  */

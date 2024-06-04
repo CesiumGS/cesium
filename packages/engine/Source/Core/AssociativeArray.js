@@ -5,7 +5,7 @@ import DeveloperError from "./DeveloperError.js";
  * A collection of key-value pairs that is stored as a hash for easy
  * lookup but also provides an array for fast iteration.
  * @alias AssociativeArray
- * @class
+ * @constructor
  */
 function AssociativeArray() {
   this._array = [];
@@ -16,6 +16,7 @@ Object.defineProperties(AssociativeArray.prototype, {
   /**
    * Gets the number of items in the collection.
    * @memberof AssociativeArray.prototype
+   *
    * @type {number}
    */
   length: {
@@ -28,6 +29,7 @@ Object.defineProperties(AssociativeArray.prototype, {
    * This is a live array that will automatically reflect the values in the collection,
    * it should not be modified directly.
    * @memberof AssociativeArray.prototype
+   *
    * @type {Array}
    */
   values: {
@@ -39,6 +41,7 @@ Object.defineProperties(AssociativeArray.prototype, {
 
 /**
  * Determines if the provided key is in the array.
+ *
  * @param {string|number} key The key to check.
  * @returns {boolean} <code>true</code> if the key is in the array, <code>false</code> otherwise.
  */
@@ -54,6 +57,7 @@ AssociativeArray.prototype.contains = function (key) {
 /**
  * Associates the provided key with the provided value.  If the key already
  * exists, it is overwritten with the new value.
+ *
  * @param {string|number} key A unique identifier.
  * @param {*} value The value to associate with the provided key.
  */
@@ -74,6 +78,7 @@ AssociativeArray.prototype.set = function (key, value) {
 
 /**
  * Retrieves the value associated with the provided key.
+ *
  * @param {string|number} key The key whose value is to be retrieved.
  * @returns {*} The associated value, or undefined if the key does not exist in the collection.
  */
@@ -88,6 +93,7 @@ AssociativeArray.prototype.get = function (key) {
 
 /**
  * Removes a key-value pair from the collection.
+ *
  * @param {string|number} key The key to be removed.
  * @returns {boolean} True if it was removed, false if the key was not in the collection.
  */

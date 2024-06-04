@@ -16,6 +16,7 @@ import ImageryProvider from "./ImageryProvider.js";
  * @typedef {object} GoogleEarthEnterpriseMapsProvider.ConstructorOptions
  *
  * Initialization options for the GoogleEarthEnterpriseMapsProvider constructor
+ *
  * @property {number} channel The channel (id) to be used when requesting data from the server.
  *        The channel number can be found by looking at the json file located at:
  *        earth.localdomain/default_map/query?request=Json&vars=geeServerDefs The /default_map path may
@@ -45,8 +46,10 @@ import ImageryProvider from "./ImageryProvider.js";
 
 /**
  * Used to track creation details while fetching initial metadata
- * @class
+ *
+ * @constructor
  * @private
+ *
  * @param {GoogleEarthEnterpriseMapsProvider.ConstructorOptions} options An object describing initialization options
  */
 function ImageryProviderBuilder(options) {
@@ -58,7 +61,9 @@ function ImageryProviderBuilder(options) {
 
 /**
  * Complete GoogleEarthEnterpriseMapsProvider creation based on builder values.
+ *
  * @private
+ *
  * @param {GoogleEarthEnterpriseMapsProvider} provider
  */
 ImageryProviderBuilder.prototype.build = function (provider) {
@@ -160,22 +165,26 @@ async function requestMetadata(
  * Provides tiled imagery using the Google Earth Imagery API.
  *
  * Notes: This imagery provider does not work with the public Google Earth servers. It works with the
- * Google Earth Enterprise Server.
+ *        Google Earth Enterprise Server.
  *
- * By default the Google Earth Enterprise server does not set the
- * {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing} headers. You can either
- * use a proxy server which adds these headers, or in the /opt/google/gehttpd/conf/gehttpd.conf
- * and add the 'Header set Access-Control-Allow-Origin "*"' option to the '&lt;Directory /&gt;' and
- * '&lt;Directory "/opt/google/gehttpd/htdocs"&gt;' directives.
+ *        By default the Google Earth Enterprise server does not set the
+ *        {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing} headers. You can either
+ *        use a proxy server which adds these headers, or in the /opt/google/gehttpd/conf/gehttpd.conf
+ *        and add the 'Header set Access-Control-Allow-Origin "*"' option to the '&lt;Directory /&gt;' and
+ *        '&lt;Directory "/opt/google/gehttpd/htdocs"&gt;' directives.
  *
- * This provider is for use with 2D Maps API as part of Google Earth Enterprise. For 3D Earth API uses, it
- * is necessary to use {@link GoogleEarthEnterpriseImageryProvider}
+ *        This provider is for use with 2D Maps API as part of Google Earth Enterprise. For 3D Earth API uses, it
+ *        is necessary to use {@link GoogleEarthEnterpriseImageryProvider}
+ *
  * @alias GoogleEarthEnterpriseMapsProvider
- * @class
+ * @constructor
+ *
  * @param {GoogleEarthEnterpriseMapsProvider.ConstructorOptions} options Object describing initialization options
- * @throws {RuntimeError} Could not find layer with channel (id) of <code>options.channel</code>.
- * @throws {RuntimeError} Could not find a version in channel (id) <code>options.channel</code>.
- * @throws {RuntimeError} Unsupported projection <code>data.projection</code>.
+ *
+ * @exception {RuntimeError} Could not find layer with channel (id) of <code>options.channel</code>.
+ * @exception {RuntimeError} Could not find a version in channel (id) <code>options.channel</code>.
+ * @exception {RuntimeError} Unsupported projection <code>data.projection</code>.
+ *
  * @see ArcGisMapServerImageryProvider
  * @see BingMapsImageryProvider
  * @see OpenStreetMapImageryProvider
@@ -184,8 +193,11 @@ async function requestMetadata(
  * @see WebMapServiceImageryProvider
  * @see WebMapTileServiceImageryProvider
  * @see UrlTemplateImageryProvider
+ *
+ *
  * @example
  * const google = await Cesium.GoogleEarthEnterpriseMapsProvider.fromUrl("https://earth.localdomain", 1008);
+ *
  * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
  */
 function GoogleEarthEnterpriseMapsProvider(options) {
@@ -424,13 +436,15 @@ Object.defineProperties(GoogleEarthEnterpriseMapsProvider.prototype, {
 
 /**
  * Creates a tiled imagery provider using the Google Earth Imagery API.
- * @param {Resource | string} url The url of the Google Earth server hosting the imagery.
- * @param channel
+ *
+ * @param {Resource|String} url The url of the Google Earth server hosting the imagery.
  * @param {GoogleEarthEnterpriseMapsProvider.ConstructorOptions} [options] Object describing initialization options
  * @returns {Promise<GoogleEarthEnterpriseMapsProvider>} The created GoogleEarthEnterpriseMapsProvider.
- * @throws {RuntimeError} Could not find layer with channel (id) of <code>options.channel</code>.
- * @throws {RuntimeError} Could not find a version in channel (id) <code>options.channel</code>.
- * @throws {RuntimeError} Unsupported projection <code>data.projection</code>.
+ *
+ * @exception {RuntimeError} Could not find layer with channel (id) of <code>options.channel</code>.
+ * @exception {RuntimeError} Could not find a version in channel (id) <code>options.channel</code>.
+ * @exception {RuntimeError} Unsupported projection <code>data.projection</code>.
+ *
  * @example
  * const google = await Cesium.GoogleEarthEnterpriseMapsProvider.fromUrl("https://earth.localdomain", 1008);
  */
@@ -480,6 +494,7 @@ GoogleEarthEnterpriseMapsProvider.fromUrl = async function (
 
 /**
  * Gets the credits to be displayed when a given tile is displayed.
+ *
  * @param {number} x The tile X coordinate.
  * @param {number} y The tile Y coordinate.
  * @param {number} level The tile level;
@@ -495,6 +510,7 @@ GoogleEarthEnterpriseMapsProvider.prototype.getTileCredits = function (
 
 /**
  * Requests the image for a given tile.
+ *
  * @param {number} x The tile X coordinate.
  * @param {number} y The tile Y coordinate.
  * @param {number} level The tile level.
@@ -527,12 +543,13 @@ GoogleEarthEnterpriseMapsProvider.prototype.requestImage = function (
 /**
  * Picking features is not currently supported by this imagery provider, so this function simply returns
  * undefined.
+ *
  * @param {number} x The tile X coordinate.
  * @param {number} y The tile Y coordinate.
  * @param {number} level The tile level.
  * @param {number} longitude The longitude at which to pick features.
  * @param {number} latitude  The latitude at which to pick features.
- * @returns {undefined} Undefined since picking is not supported.
+ * @return {undefined} Undefined since picking is not supported.
  */
 GoogleEarthEnterpriseMapsProvider.prototype.pickFeatures = function (
   x,

@@ -1,6 +1,4 @@
 /**
- * @param bits
- * @param mask
  * @private
  */
 function isBitSet(bits, mask) {

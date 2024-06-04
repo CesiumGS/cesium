@@ -16,15 +16,17 @@ const stopSearchPath =
 /**
  * A widget for finding addresses and landmarks, and flying the camera to them.  Geocoding is
  * performed using {@link https://cesium.com/cesium-ion/|Cesium ion}.
+ *
  * @alias Geocoder
- * @class
+ * @constructor
+ *
  * @param {object} options Object with the following properties:
  * @param {Element|string} options.container The DOM element or ID that will contain the widget.
  * @param {Scene} options.scene The Scene instance to use.
  * @param {GeocoderService[]} [options.geocoderServices] The geocoder services to be used
- * @param {boolean} [options.autoComplete] True if the geocoder should query as the user types to autocomplete
- * @param {number} [options.flightDuration] The duration of the camera flight to an entered location, in seconds.
- * @param {Geocoder.DestinationFoundFunction} [options.destinationFound] A callback function that is called after a successful geocode.  If not supplied, the default behavior is to fly the camera to the result destination.
+ * @param {boolean} [options.autoComplete = true] True if the geocoder should query as the user types to autocomplete
+ * @param {number} [options.flightDuration=1.5] The duration of the camera flight to an entered location, in seconds.
+ * @param {Geocoder.DestinationFoundFunction} [options.destinationFound=GeocoderViewModel.flyToDestination] A callback function that is called after a successful geocode.  If not supplied, the default behavior is to fly the camera to the result destination.
  */
 function Geocoder(options) {
   //>>includeStart('debug', pragmas.debug);
@@ -156,6 +158,7 @@ Object.defineProperties(Geocoder.prototype, {
   /**
    * Gets the parent container.
    * @memberof Geocoder.prototype
+   *
    * @type {Element}
    */
   container: {
@@ -167,6 +170,7 @@ Object.defineProperties(Geocoder.prototype, {
   /**
    * Gets the parent container.
    * @memberof Geocoder.prototype
+   *
    * @type {Element}
    */
   searchSuggestionsContainer: {
@@ -178,6 +182,7 @@ Object.defineProperties(Geocoder.prototype, {
   /**
    * Gets the view model.
    * @memberof Geocoder.prototype
+   *
    * @type {GeocoderViewModel}
    */
   viewModel: {

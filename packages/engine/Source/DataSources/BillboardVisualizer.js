@@ -44,7 +44,8 @@ function EntityData(entity) {
 /**
  * A {@link Visualizer} which maps {@link Entity#billboard} to a {@link Billboard}.
  * @alias BillboardVisualizer
- * @class
+ * @constructor
+ *
  * @param {EntityCluster} entityCluster The entity cluster to manage the collection of billboards and optionally cluster with other entities.
  * @param {EntityCollection} entityCollection The entityCollection to visualize.
  */
@@ -72,6 +73,7 @@ function BillboardVisualizer(entityCluster, entityCollection) {
 /**
  * Updates the primitives created by this visualizer to match their
  * Entity counterpart at the given time.
+ *
  * @param {JulianDate} time The time to update to.
  * @returns {boolean} This function always returns true.
  */
@@ -233,6 +235,7 @@ BillboardVisualizer.prototype.update = function (time) {
 /**
  * Computes a bounding sphere which encloses the visualization produced for the specified entity.
  * The bounding sphere is in the fixed frame of the scene's globe.
+ *
  * @param {Entity} entity The entity whose bounding sphere to compute.
  * @param {BoundingSphere} result The bounding sphere onto which to store the result.
  * @returns {BoundingSphereState} BoundingSphereState.DONE if the result contains the bounding sphere,
@@ -270,6 +273,7 @@ BillboardVisualizer.prototype.getBoundingSphere = function (entity, result) {
 
 /**
  * Returns true if this object was destroyed; otherwise, false.
+ *
  * @returns {boolean} True if this object was destroyed; otherwise, false.
  */
 BillboardVisualizer.prototype.isDestroyed = function () {

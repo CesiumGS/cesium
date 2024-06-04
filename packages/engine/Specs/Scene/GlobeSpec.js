@@ -82,7 +82,6 @@ describe(
     /**
      * Repeatedly calls render until the load queue is empty. Returns a promise that resolves
      * when the load queue is empty.
-     * @param globe
      */
     function updateUntilDone(globe) {
       // update until the load queue is empty.

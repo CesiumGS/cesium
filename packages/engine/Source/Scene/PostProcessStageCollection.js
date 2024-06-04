@@ -28,8 +28,9 @@ const stackScratch = [];
  * <p>
  * If the FXAA stage is enabled, it will execute after all other stages.
  * </p>
+ *
  * @alias PostProcessStageCollection
- * @class
+ * @constructor
  */
 function PostProcessStageCollection() {
   const fxaa = PostProcessStageLibrary.createFXAAStage();
@@ -102,6 +103,7 @@ function PostProcessStageCollection() {
 Object.defineProperties(PostProcessStageCollection.prototype, {
   /**
    * Determines if all of the post-process stages in the collection are ready to be executed.
+   *
    * @memberof PostProcessStageCollection.prototype
    * @type {boolean}
    * @readonly
@@ -135,6 +137,7 @@ Object.defineProperties(PostProcessStageCollection.prototype, {
    * <p>
    * When enabled, this stage will execute after all others.
    * </p>
+   *
    * @memberof PostProcessStageCollection.prototype
    * @type {PostProcessStage}
    * @readonly
@@ -179,6 +182,7 @@ Object.defineProperties(PostProcessStageCollection.prototype, {
    * <p>
    * When enabled, this stage will execute before all others.
    * </p>
+   *
    * @memberof PostProcessStageCollection.prototype
    * @type {PostProcessStageComposite}
    * @readonly
@@ -213,7 +217,8 @@ Object.defineProperties(PostProcessStageCollection.prototype, {
    * <p>
    * When enabled, this stage will execute before all others.
    * </p>
-   * @memberof PostProcessStageCollection.prototype
+   *
+   * @memberOf PostProcessStageCollection.prototype
    * @type {PostProcessStageComposite}
    * @readonly
    */
@@ -224,6 +229,7 @@ Object.defineProperties(PostProcessStageCollection.prototype, {
   },
   /**
    * The number of post-process stages in this collection.
+   *
    * @memberof PostProcessStageCollection.prototype
    * @type {number}
    * @readonly
@@ -236,6 +242,7 @@ Object.defineProperties(PostProcessStageCollection.prototype, {
   },
   /**
    * A reference to the last texture written to when executing the post-process stages in this collection.
+   *
    * @memberof PostProcessStageCollection.prototype
    * @type {Texture}
    * @readonly
@@ -277,6 +284,7 @@ Object.defineProperties(PostProcessStageCollection.prototype, {
   },
   /**
    * Whether the collection has a stage that has selected features.
+   *
    * @memberof PostProcessStageCollection.prototype
    * @type {boolean}
    * @readonly
@@ -306,6 +314,7 @@ Object.defineProperties(PostProcessStageCollection.prototype, {
 
   /**
    * Gets and sets the tonemapping algorithm used when rendering with high dynamic range.
+   *
    * @memberof PostProcessStageCollection.prototype
    * @type {Tonemapper}
    * @private
@@ -398,9 +407,11 @@ function removeStages(collection) {
 
 /**
  * Adds the post-process stage to the collection.
+ *
  * @param {PostProcessStage|PostProcessStageComposite} stage The post-process stage to add to the collection.
- * @returns {PostProcessStage|PostProcessStageComposite} The post-process stage that was added to the collection.
- * @throws {DeveloperError} The post-process stage has already been added to the collection or does not have a unique name.
+ * @return {PostProcessStage|PostProcessStageComposite} The post-process stage that was added to the collection.
+ *
+ * @exception {DeveloperError} The post-process stage has already been added to the collection or does not have a unique name.
  */
 PostProcessStageCollection.prototype.add = function (stage) {
   //>>includeStart('debug', pragmas.debug);
@@ -440,8 +451,9 @@ PostProcessStageCollection.prototype.add = function (stage) {
 
 /**
  * Removes a post-process stage from the collection and destroys it.
+ *
  * @param {PostProcessStage|PostProcessStageComposite} stage The post-process stage to remove from the collection.
- * @returns {boolean} Whether the post-process stage was removed.
+ * @return {boolean} Whether the post-process stage was removed.
  */
 PostProcessStageCollection.prototype.remove = function (stage) {
   if (!this.contains(stage)) {
@@ -475,8 +487,9 @@ PostProcessStageCollection.prototype.remove = function (stage) {
 
 /**
  * Returns whether the collection contains a post-process stage.
+ *
  * @param {PostProcessStage|PostProcessStageComposite} stage The post-process stage.
- * @returns {boolean} Whether the collection contains the post-process stage.
+ * @return {boolean} Whether the collection contains the post-process stage.
  */
 PostProcessStageCollection.prototype.contains = function (stage) {
   return (
@@ -488,8 +501,9 @@ PostProcessStageCollection.prototype.contains = function (stage) {
 
 /**
  * Gets the post-process stage at <code>index</code>.
+ *
  * @param {number} index The index of the post-process stage.
- * @returns {PostProcessStage|PostProcessStageComposite} The post-process stage at index.
+ * @return {PostProcessStage|PostProcessStageComposite} The post-process stage at index.
  */
 PostProcessStageCollection.prototype.get = function (index) {
   removeStages(this);
@@ -517,8 +531,10 @@ PostProcessStageCollection.prototype.removeAll = function () {
 
 /**
  * Gets a post-process stage in the collection by its name.
+ *
  * @param {string} name The name of the post-process stage.
- * @returns {PostProcessStage|PostProcessStageComposite} The post-process stage.
+ * @return {PostProcessStage|PostProcessStageComposite} The post-process stage.
+ *
  * @private
  */
 PostProcessStageCollection.prototype.getStageByName = function (name) {
@@ -527,9 +543,10 @@ PostProcessStageCollection.prototype.getStageByName = function (name) {
 
 /**
  * Called before the post-process stages in the collection are executed. Calls update for each stage and creates WebGL resources.
+ *
  * @param {Context} context The context.
  * @param {boolean} useLogDepth Whether the scene uses a logarithmic depth buffer.
- * @param useHdr
+ *
  * @private
  */
 PostProcessStageCollection.prototype.update = function (
@@ -663,7 +680,9 @@ PostProcessStageCollection.prototype.update = function (
 
 /**
  * Clears all of the framebuffers used by the stages.
+ *
  * @param {Context} context The context.
+ *
  * @private
  */
 PostProcessStageCollection.prototype.clear = function (context) {
@@ -683,8 +702,10 @@ function getOutputTexture(stage) {
 
 /**
  * Gets the output texture of a stage with the given name.
+ *
  * @param {string} stageName The name of the stage.
- * @returns {Texture|undefined} The texture rendered to by the stage with the given name.
+ * @return {Texture|undefined} The texture rendered to by the stage with the given name.
+ *
  * @private
  */
 PostProcessStageCollection.prototype.getOutputTexture = function (stageName) {
@@ -724,10 +745,12 @@ function execute(stage, context, colorTexture, depthTexture, idTexture) {
 
 /**
  * Executes all ready and enabled stages in the collection.
+ *
  * @param {Context} context The context.
  * @param {Texture} colorTexture The color texture rendered to by the scene.
  * @param {Texture} depthTexture The depth texture written to by the scene.
  * @param {Texture} idTexture The id texture written to by the scene.
+ *
  * @private
  */
 PostProcessStageCollection.prototype.execute = function (
@@ -801,8 +824,10 @@ PostProcessStageCollection.prototype.execute = function (
 
 /**
  * Copies the output of all executed stages to the color texture of a framebuffer.
+ *
  * @param {Context} context The context.
  * @param {Framebuffer} framebuffer The framebuffer to copy to.
+ *
  * @private
  */
 PostProcessStageCollection.prototype.copy = function (context, framebuffer) {
@@ -828,7 +853,9 @@ PostProcessStageCollection.prototype.copy = function (context, framebuffer) {
  * If this object was destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
  * </p>
+ *
  * @returns {boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+ *
  * @see PostProcessStageCollection#destroy
  */
 PostProcessStageCollection.prototype.isDestroyed = function () {
@@ -843,7 +870,9 @@ PostProcessStageCollection.prototype.isDestroyed = function () {
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
  * assign the return value (<code>undefined</code>) to the object as done in the example.
  * </p>
- * @throws {DeveloperError} This object was destroyed, i.e., destroy() was called.
+ *
+ * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+ *
  * @see PostProcessStageCollection#isDestroyed
  */
 PostProcessStageCollection.prototype.destroy = function () {

@@ -5,14 +5,18 @@ import Spline from "./Spline.js";
 /**
  * A spline that evaluates to a constant value. Although this follows the {@link Spline} interface,
  * it does not maintain an internal array of times since its value never changes.
+ *
  * @alias ConstantSpline
- * @class
+ * @constructor
+ *
  * @param {number|Cartesian3|Quaternion} value The constant value that the spline evaluates to.
+ *
  * @example
  * const position = new Cesium.Cartesian3(1.0, 2.0, 3.0);
  * const spline = new Cesium.ConstantSpline(position);
  *
  * const p0 = spline.evaluate(0.0);
+ *
  * @see LinearSpline
  * @see HermiteSpline
  * @see CatmullRomSpline
@@ -27,7 +31,9 @@ function ConstantSpline(value) {
 Object.defineProperties(ConstantSpline.prototype, {
   /**
    * The constant value that the spline evaluates to.
+   *
    * @memberof ConstantSpline.prototype
+   *
    * @type {number|Cartesian3|Quaternion}
    * @readonly
    */
@@ -44,8 +50,10 @@ Object.defineProperties(ConstantSpline.prototype, {
  *
  * Since a constant spline has no internal times array, this will throw an error.
  * @function
+ *
  * @param {number} time The time.
- * @throws {DeveloperError} findTimeInterval cannot be called on a ConstantSpline.
+ *
+ * @exception {DeveloperError} findTimeInterval cannot be called on a ConstantSpline.
  */
 ConstantSpline.prototype.findTimeInterval = function (time) {
   //>>includeStart('debug', pragmas.debug);
@@ -58,8 +66,9 @@ ConstantSpline.prototype.findTimeInterval = function (time) {
 /**
  * Wraps the given time to the period covered by the spline.
  * @function
+ *
  * @param {number} time The time.
- * @returns {number} The time, wrapped around to the updated animation.
+ * @return {number} The time, wrapped around to the updated animation.
  */
 ConstantSpline.prototype.wrapTime = function (time) {
   //>>includeStart('debug', pragmas.debug);
@@ -72,8 +81,9 @@ ConstantSpline.prototype.wrapTime = function (time) {
 /**
  * Clamps the given time to the period covered by the spline.
  * @function
+ *
  * @param {number} time The time.
- * @returns {number} The time, clamped to the animation period.
+ * @return {number} The time, clamped to the animation period.
  */
 ConstantSpline.prototype.clampTime = function (time) {
   //>>includeStart('debug', pragmas.debug);
@@ -86,6 +96,7 @@ ConstantSpline.prototype.clampTime = function (time) {
 /**
  * Evaluates the curve at a given time.
  * @function
+ *
  * @param {number} time The time at which to evaluate the curve.
  * @param {Cartesian3|Quaternion} [result] The object onto which to store the result.
  * @returns {number|Cartesian3|Quaternion} The modified result parameter or the value that the constant spline represents.

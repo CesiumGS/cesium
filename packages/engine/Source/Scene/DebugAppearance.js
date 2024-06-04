@@ -10,16 +10,20 @@ import Appearance from "./Appearance.js";
  * <code>tangent</code>, and <code>bitangent</code>, are scaled and biased
  * from [-1.0, 1.0] to (-1.0, 1.0).
  * </p>
+ *
  * @alias DebugAppearance
- * @class
+ * @constructor
+ *
  * @param {object} options Object with the following properties:
  * @param {string} options.attributeName The name of the attribute to visualize.
- * @param {boolean} [options.perInstanceAttribute] Boolean that determines whether this attribute is a per-instance geometry attribute.
- * @param {string} [options.glslDatatype] The GLSL datatype of the attribute.  Supported datatypes are <code>float</code>, <code>vec2</code>, <code>vec3</code>, and <code>vec4</code>.
+ * @param {boolean} [options.perInstanceAttribute=false] Boolean that determines whether this attribute is a per-instance geometry attribute.
+ * @param {string} [options.glslDatatype='vec3'] The GLSL datatype of the attribute.  Supported datatypes are <code>float</code>, <code>vec2</code>, <code>vec3</code>, and <code>vec4</code>.
  * @param {string} [options.vertexShaderSource] Optional GLSL vertex shader source to override the default vertex shader.
  * @param {string} [options.fragmentShaderSource] Optional GLSL fragment shader source to override the default fragment shader.
  * @param {object} [options.renderState] Optional render state to override the default render state.
- * @throws {DeveloperError} options.glslDatatype must be float, vec2, vec3, or vec4.
+ *
+ * @exception {DeveloperError} options.glslDatatype must be float, vec2, vec3, or vec4.
+ *
  * @example
  * const primitive = new Cesium.Primitive({
  *   geometryInstances : // ...
@@ -108,14 +112,18 @@ function DebugAppearance(options) {
   /**
    * This property is part of the {@link Appearance} interface, but is not
    * used by {@link DebugAppearance} since a fully custom fragment shader is used.
+   *
    * @type Material
+   *
    * @default undefined
    */
   this.material = undefined;
 
   /**
    * When <code>true</code>, the geometry is expected to appear translucent.
+   *
    * @type {boolean}
+   *
    * @default false
    */
   this.translucent = defaultValue(options.translucent, false);
@@ -138,7 +146,9 @@ function DebugAppearance(options) {
 Object.defineProperties(DebugAppearance.prototype, {
   /**
    * The GLSL source code for the vertex shader.
+   *
    * @memberof DebugAppearance.prototype
+   *
    * @type {string}
    * @readonly
    */
@@ -152,7 +162,9 @@ Object.defineProperties(DebugAppearance.prototype, {
    * The GLSL source code for the fragment shader.  The full fragment shader
    * source is built procedurally taking into account the {@link DebugAppearance#material}.
    * Use {@link DebugAppearance#getFragmentShaderSource} to get the full source.
+   *
    * @memberof DebugAppearance.prototype
+   *
    * @type {string}
    * @readonly
    */
@@ -164,7 +176,9 @@ Object.defineProperties(DebugAppearance.prototype, {
 
   /**
    * The WebGL fixed-function state to use when rendering the geometry.
+   *
    * @memberof DebugAppearance.prototype
+   *
    * @type {object}
    * @readonly
    */
@@ -176,9 +190,12 @@ Object.defineProperties(DebugAppearance.prototype, {
 
   /**
    * When <code>true</code>, the geometry is expected to be closed.
+   *
    * @memberof DebugAppearance.prototype
+   *
    * @type {boolean}
    * @readonly
+   *
    * @default false
    */
   closed: {
@@ -189,7 +206,9 @@ Object.defineProperties(DebugAppearance.prototype, {
 
   /**
    * The name of the attribute being visualized.
+   *
    * @memberof DebugAppearance.prototype
+   *
    * @type {string}
    * @readonly
    */
@@ -201,7 +220,9 @@ Object.defineProperties(DebugAppearance.prototype, {
 
   /**
    * The GLSL datatype of the attribute being visualized.
+   *
    * @memberof DebugAppearance.prototype
+   *
    * @type {string}
    * @readonly
    */
@@ -215,7 +236,9 @@ Object.defineProperties(DebugAppearance.prototype, {
 /**
  * Returns the full GLSL fragment shader source, which for {@link DebugAppearance} is just
  * {@link DebugAppearance#fragmentShaderSource}.
+ *
  * @function
+ *
  * @returns {string} The full GLSL fragment shader source.
  */
 DebugAppearance.prototype.getFragmentShaderSource =
@@ -223,7 +246,9 @@ DebugAppearance.prototype.getFragmentShaderSource =
 
 /**
  * Determines if the geometry is translucent based on {@link DebugAppearance#translucent}.
+ *
  * @function
+ *
  * @returns {boolean} <code>true</code> if the appearance is translucent.
  */
 DebugAppearance.prototype.isTranslucent = Appearance.prototype.isTranslucent;
@@ -232,7 +257,9 @@ DebugAppearance.prototype.isTranslucent = Appearance.prototype.isTranslucent;
  * Creates a render state.  This is not the final render state instance; instead,
  * it can contain a subset of render state properties identical to the render state
  * created in the context.
+ *
  * @function
+ *
  * @returns {object} The render state.
  */
 DebugAppearance.prototype.getRenderState = Appearance.prototype.getRenderState;

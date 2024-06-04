@@ -95,8 +95,10 @@ function multiplierToAngle(multiplier, shuttleRingTicks, clockViewModel) {
 /**
  * The view model for the {@link Animation} widget.
  * @alias AnimationViewModel
- * @class
+ * @constructor
+ *
  * @param {ClockViewModel} clockViewModel The ClockViewModel instance to use.
+ *
  * @see Animation
  */
 function AnimationViewModel(clockViewModel) {
@@ -378,6 +380,7 @@ function AnimationViewModel(clockViewModel) {
 
 /**
  * Gets or sets the default date formatter used by new instances.
+ *
  * @member
  * @type {AnimationViewModel.DateFormatter}
  */
@@ -428,6 +431,7 @@ AnimationViewModel.defaultTicks = [
 
 /**
  * Gets or sets the default time formatter used by new instances.
+ *
  * @member
  * @type {AnimationViewModel.TimeFormatter}
  */
@@ -452,6 +456,7 @@ AnimationViewModel.defaultTimeFormatter = function (date, viewModel) {
 
 /**
  * Gets a copy of the array of positive known clock multipliers to associate with the shuttle ring.
+ *
  * @returns {number[]} The array of known clock multipliers associated with the shuttle ring.
  */
 AnimationViewModel.prototype.getShuttleRingTicks = function () {
@@ -464,6 +469,7 @@ AnimationViewModel.prototype.getShuttleRingTicks = function () {
  * and maximum range of values for the shuttle ring as well as the values that are snapped
  * to when a single click is made.  The values need not be in order, as they will be sorted
  * automatically, and duplicate values will be removed.
+ *
  * @param {number[]} positiveTicks The list of known positive clock multipliers to associate with the shuttle ring.
  */
 AnimationViewModel.prototype.setShuttleRingTicks = function (positiveTicks) {
@@ -528,6 +534,7 @@ Object.defineProperties(AnimationViewModel.prototype, {
   /**
    * Gets the clock view model.
    * @memberof AnimationViewModel.prototype
+   *
    * @type {ClockViewModel}
    */
   clockViewModel: {
@@ -539,6 +546,7 @@ Object.defineProperties(AnimationViewModel.prototype, {
   /**
    * Gets the pause toggle button view model.
    * @memberof AnimationViewModel.prototype
+   *
    * @type {ToggleButtonViewModel}
    */
   pauseViewModel: {
@@ -550,6 +558,7 @@ Object.defineProperties(AnimationViewModel.prototype, {
   /**
    * Gets the reverse toggle button view model.
    * @memberof AnimationViewModel.prototype
+   *
    * @type {ToggleButtonViewModel}
    */
   playReverseViewModel: {
@@ -561,6 +570,7 @@ Object.defineProperties(AnimationViewModel.prototype, {
   /**
    * Gets the play toggle button view model.
    * @memberof AnimationViewModel.prototype
+   *
    * @type {ToggleButtonViewModel}
    */
   playForwardViewModel: {
@@ -572,6 +582,7 @@ Object.defineProperties(AnimationViewModel.prototype, {
   /**
    * Gets the realtime toggle button view model.
    * @memberof AnimationViewModel.prototype
+   *
    * @type {ToggleButtonViewModel}
    */
   playRealtimeViewModel: {
@@ -583,6 +594,7 @@ Object.defineProperties(AnimationViewModel.prototype, {
   /**
    * Gets or sets the function which formats a date for display.
    * @memberof AnimationViewModel.prototype
+   *
    * @type {AnimationViewModel.DateFormatter}
    * @default AnimationViewModel.defaultDateFormatter
    */
@@ -605,6 +617,7 @@ Object.defineProperties(AnimationViewModel.prototype, {
   /**
    * Gets or sets the function which formats a time for display.
    * @memberof AnimationViewModel.prototype
+   *
    * @type {AnimationViewModel.TimeFormatter}
    * @default AnimationViewModel.defaultTimeFormatter
    */
@@ -632,6 +645,7 @@ AnimationViewModel._realtimeShuttleRingAngle = realtimeShuttleRingAngle;
 /**
  * A function that formats a date for display.
  * @callback AnimationViewModel.DateFormatter
+ *
  * @param {JulianDate} date The date to be formatted
  * @param {AnimationViewModel} viewModel The AnimationViewModel instance requesting formatting.
  * @returns {string} The string representation of the calendar date portion of the provided date.
@@ -640,6 +654,7 @@ AnimationViewModel._realtimeShuttleRingAngle = realtimeShuttleRingAngle;
 /**
  * A function that formats a time for display.
  * @callback AnimationViewModel.TimeFormatter
+ *
  * @param {JulianDate} date The date to be formatted
  * @param {AnimationViewModel} viewModel The AnimationViewModel instance requesting formatting.
  * @returns {string} The string representation of the time portion of the provided date.

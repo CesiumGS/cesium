@@ -12,10 +12,13 @@ import VelocityVectorProperty from "./VelocityVectorProperty.js";
 /**
  * A {@link Property} which evaluates to a {@link Quaternion} rotation
  * based on the velocity of the provided {@link PositionProperty}.
+ *
  * @alias VelocityOrientationProperty
- * @class
+ * @constructor
+ *
  * @param {PositionProperty} [position] The position property used to compute the orientation.
- * @param {Ellipsoid} [ellipsoid] The ellipsoid used to determine which way is up.
+ * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid used to determine which way is up.
+ *
  * @example
  * //Create an entity with position and orientation.
  * const position = new Cesium.SampledProperty();
@@ -43,6 +46,7 @@ Object.defineProperties(VelocityOrientationProperty.prototype, {
   /**
    * Gets a value indicating if this property is constant.
    * @memberof VelocityOrientationProperty.prototype
+   *
    * @type {boolean}
    * @readonly
    */
@@ -54,6 +58,7 @@ Object.defineProperties(VelocityOrientationProperty.prototype, {
   /**
    * Gets the event that is raised whenever the definition of this property changes.
    * @memberof VelocityOrientationProperty.prototype
+   *
    * @type {Event}
    * @readonly
    */
@@ -65,6 +70,7 @@ Object.defineProperties(VelocityOrientationProperty.prototype, {
   /**
    * Gets or sets the position property used to compute orientation.
    * @memberof VelocityOrientationProperty.prototype
+   *
    * @type {Property|undefined}
    */
   position: {
@@ -78,6 +84,7 @@ Object.defineProperties(VelocityOrientationProperty.prototype, {
   /**
    * Gets or sets the ellipsoid used to determine which way is up.
    * @memberof VelocityOrientationProperty.prototype
+   *
    * @type {Property|undefined}
    */
   ellipsoid: {
@@ -100,6 +107,7 @@ const rotationScratch = new Matrix3();
 
 /**
  * Gets the value of the property at the provided time.
+ *
  * @param {JulianDate} [time] The time for which to retrieve the value.
  * @param {Quaternion} [result] The object to store the value into, if omitted, a new instance is created and returned.
  * @returns {Quaternion} The modified result parameter or a new instance if the result parameter was not supplied.
@@ -127,6 +135,7 @@ VelocityOrientationProperty.prototype.getValue = function (time, result) {
 /**
  * Compares this property to the provided property and returns
  * <code>true</code> if they are equal, <code>false</code> otherwise.
+ *
  * @param {Property} [other] The other property.
  * @returns {boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
  */

@@ -18,6 +18,7 @@ import ImageryProvider from "./ImageryProvider.js";
  * @typedef {object} BingMapsImageryProvider.ConstructorOptions
  *
  * Initialization options for the BingMapsImageryProvider constructor
+ *
  * @property {string} [key] The Bing Maps key for your application, which can be
  *        created at {@link https://www.bingmapsportal.com/}.
  * @property {string} [tileProtocol] The protocol to use when loading tiles, e.g. 'http' or 'https'.
@@ -36,8 +37,10 @@ import ImageryProvider from "./ImageryProvider.js";
 
 /**
  * Used to track creation details while fetching initial metadata
- * @class
+ *
+ * @constructor
  * @private
+ *
  * @param {BingMapsImageryProvider.ConstructorOptions} options An object describing initialization options
  */
 function ImageryProviderBuilder(options) {
@@ -52,7 +55,9 @@ function ImageryProviderBuilder(options) {
 
 /**
  * Complete BingMapsImageryProvider creation based on builder values.
+ *
  * @private
+ *
  * @param {BingMapsImageryProvider} provider
  */
 ImageryProviderBuilder.prototype.build = function (provider) {
@@ -164,9 +169,12 @@ async function requestMetadata(
  * </div>
  *
  * Provides tiled imagery using the Bing Maps Imagery REST API.
+ *
  * @alias BingMapsImageryProvider
- * @class
+ * @constructor
+ *
  * @param {BingMapsImageryProvider.ConstructorOptions} options Object describing initialization options
+ *
  * @see BingMapsImageryProvider.fromUrl
  * @see ArcGisMapServerImageryProvider
  * @see GoogleEarthEnterpriseMapsProvider
@@ -176,12 +184,14 @@ async function requestMetadata(
  * @see WebMapServiceImageryProvider
  * @see WebMapTileServiceImageryProvider
  * @see UrlTemplateImageryProvider
+ *
  * @example
  * const bing = await Cesium.BingMapsImageryProvider.fromUrl(
  *   "https://dev.virtualearth.net", {
  *     key: "get-yours-at-https://www.bingmapsportal.com/",
  *     mapStyle: Cesium.BingMapsStyle.AERIAL
  * });
+ *
  * @see {@link http://msdn.microsoft.com/en-us/library/ff701713.aspx|Bing Maps REST Services}
  * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
  */
@@ -437,16 +447,19 @@ Object.defineProperties(BingMapsImageryProvider.prototype, {
 
 /**
  * Creates an {@link ImageryProvider} which provides tiled imagery using the Bing Maps Imagery REST API.
- * @param {Resource | string} url The url of the Bing Maps server hosting the imagery.
+ *
+ * @param {Resource|String} url The url of the Bing Maps server hosting the imagery.
  * @param {BingMapsImageryProvider.ConstructorOptions} options Object describing initialization options
  * @returns {Promise<BingMapsImageryProvider>} A promise that resolves to the created BingMapsImageryProvider
+ *
  * @example
  * const bing = await Cesium.BingMapsImageryProvider.fromUrl(
  *   "https://dev.virtualearth.net", {
  *     key: "get-yours-at-https://www.bingmapsportal.com/",
  *     mapStyle: Cesium.BingMapsStyle.AERIAL
  * });
- * @throws {RuntimeError} metadata does not specify one resource in resourceSets
+ *
+ * @exception {RuntimeError} metadata does not specify one resource in resourceSets
  */
 BingMapsImageryProvider.fromUrl = async function (url, options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -508,6 +521,7 @@ const rectangleScratch = new Rectangle();
 
 /**
  * Gets the credits to be displayed when a given tile is displayed.
+ *
  * @param {number} x The tile X coordinate.
  * @param {number} y The tile Y coordinate.
  * @param {number} level The tile level;
@@ -531,6 +545,7 @@ BingMapsImageryProvider.prototype.getTileCredits = function (x, y, level) {
 
 /**
  * Requests the image for a given tile.
+ *
  * @param {number} x The tile X coordinate.
  * @param {number} y The tile Y coordinate.
  * @param {number} level The tile level.
@@ -567,12 +582,13 @@ BingMapsImageryProvider.prototype.requestImage = function (
 /**
  * Picking features is not currently supported by this imagery provider, so this function simply returns
  * undefined.
+ *
  * @param {number} x The tile X coordinate.
  * @param {number} y The tile Y coordinate.
  * @param {number} level The tile level.
  * @param {number} longitude The longitude at which to pick features.
  * @param {number} latitude  The latitude at which to pick features.
- * @returns {undefined} Undefined since picking is not supported.
+ * @return {undefined} Undefined since picking is not supported.
  */
 BingMapsImageryProvider.prototype.pickFeatures = function (
   x,
@@ -587,9 +603,11 @@ BingMapsImageryProvider.prototype.pickFeatures = function (
 /**
  * Converts a tiles (x, y, level) position into a quadkey used to request an image
  * from a Bing Maps server.
+ *
  * @param {number} x The tile's x coordinate.
  * @param {number} y The tile's y coordinate.
  * @param {number} level The tile's zoom level.
+ *
  * @see {@link http://msdn.microsoft.com/en-us/library/bb259689.aspx|Bing Maps Tile System}
  * @see BingMapsImageryProvider#quadKeyToTileXY
  */
@@ -615,7 +633,9 @@ BingMapsImageryProvider.tileXYToQuadKey = function (x, y, level) {
 /**
  * Converts a tile's quadkey used to request an image from a Bing Maps server into the
  * (x, y, level) position.
+ *
  * @param {string} quadkey The tile's quad key
+ *
  * @see {@link http://msdn.microsoft.com/en-us/library/bb259689.aspx|Bing Maps Tile System}
  * @see BingMapsImageryProvider#tileXYToQuadKey
  */

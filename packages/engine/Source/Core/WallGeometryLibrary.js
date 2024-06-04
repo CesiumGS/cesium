@@ -109,12 +109,6 @@ const generateArcOptionsScratch = {
 };
 
 /**
- * @param ellipsoid
- * @param wallPositions
- * @param maximumHeights
- * @param minimumHeights
- * @param granularity
- * @param duplicateCorners
  * @private
  */
 WallGeometryLibrary.computePositions = function (

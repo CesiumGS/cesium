@@ -20,8 +20,10 @@ import TerrainMesh from "./TerrainMesh.js";
  * as 16-bit values in the range 0 to 32767.  Longitude and latitude are zero at the southwest corner
  * of the tile and 32767 at the northeast corner.  Height is zero at the minimum height in the tile
  * and 32767 at the maximum height in the tile.
+ *
  * @alias QuantizedMeshTerrainData
- * @class
+ * @constructor
+ *
  * @param {object} options Object with the following properties:
  * @param {Uint16Array} options.quantizedVertices The buffer containing the quantized mesh.
  * @param {Uint16Array|Uint32Array} options.indices The indices specifying how the quantized vertices are linked
@@ -41,7 +43,7 @@ import TerrainMesh from "./TerrainMesh.js";
  * @param {number} options.southSkirtHeight The height of the skirt to add on the southern edge of the tile.
  * @param {number} options.eastSkirtHeight The height of the skirt to add on the eastern edge of the tile.
  * @param {number} options.northSkirtHeight The height of the skirt to add on the northern edge of the tile.
- * @param {number} [options.childTileMask] A bit mask indicating which of this tile's four children exist.
+ * @param {number} [options.childTileMask=15] A bit mask indicating which of this tile's four children exist.
  *                 If a child's bit is set, geometry will be requested for that tile as well when it
  *                 is needed.  If the bit is cleared, the child tile is not requested and geometry is
  *                 instead upsampled from the parent.  The bit values are as follows:
@@ -52,11 +54,13 @@ import TerrainMesh from "./TerrainMesh.js";
  *                  <tr><td>2</td><td>4</td><td>Northwest</td></tr>
  *                  <tr><td>3</td><td>8</td><td>Northeast</td></tr>
  *                 </table>
- * @param {boolean} [options.createdByUpsampling] True if this instance was created by upsampling another instance;
+ * @param {boolean} [options.createdByUpsampling=false] True if this instance was created by upsampling another instance;
  *                  otherwise, false.
  * @param {Uint8Array} [options.encodedNormals] The buffer containing per vertex normals, encoded using 'oct' encoding
  * @param {Uint8Array} [options.waterMask] The buffer containing the watermask.
  * @param {Credit[]} [options.credits] Array of credits for this tile.
+ *
+ *
  * @example
  * const data = new Cesium.QuantizedMeshTerrainData({
  *     minimumHeight : -100,
@@ -82,6 +86,7 @@ import TerrainMesh from "./TerrainMesh.js";
  *     eastSkirtHeight : 1.0,
  *     northSkirtHeight : 1.0
  * });
+ *
  * @see TerrainData
  * @see HeightmapTerrainData
  * @see GoogleEarthEnterpriseTerrainData
@@ -267,15 +272,17 @@ const createMeshTaskProcessorThrottle = new TaskProcessor(
 
 /**
  * Creates a {@link TerrainMesh} from this terrain data.
+ *
  * @private
+ *
  * @param {object} options Object with the following properties:
  * @param {TilingScheme} options.tilingScheme The tiling scheme to which this tile belongs.
  * @param {number} options.x The X coordinate of the tile for which to create the terrain data.
  * @param {number} options.y The Y coordinate of the tile for which to create the terrain data.
  * @param {number} options.level The level of the tile for which to create the terrain data.
- * @param {number} [options.exaggeration] The scale used to exaggerate the terrain.
- * @param {number} [options.exaggerationRelativeHeight] The height relative to which terrain is exaggerated.
- * @param {boolean} [options.throttle] If true, indicates that this operation will need to be retried if too many asynchronous mesh creations are already in progress.
+ * @param {number} [options.exaggeration=1.0] The scale used to exaggerate the terrain.
+ * @param {number} [options.exaggerationRelativeHeight=0.0] The height relative to which terrain is exaggerated.
+ * @param {boolean} [options.throttle=true] If true, indicates that this operation will need to be retried if too many asynchronous mesh creations are already in progress.
  * @returns {Promise<TerrainMesh>|undefined} A promise for the terrain mesh, or undefined if too many
  *          asynchronous mesh creations are already in progress and the operation should
  *          be retried later.
@@ -409,6 +416,7 @@ const upsampleTaskProcessor = new TaskProcessor(
 /**
  * Upsamples this terrain data for use by a descendant tile.  The resulting instance will contain a subset of the
  * vertices in this instance, interpolated if necessary.
+ *
  * @param {TilingScheme} tilingScheme The tiling scheme of this terrain data.
  * @param {number} thisX The X coordinate of this tile in the tiling scheme.
  * @param {number} thisY The Y coordinate of this tile in the tiling scheme.
@@ -553,6 +561,7 @@ const barycentricCoordinateScratch = new Cartesian3();
 
 /**
  * Computes the terrain height at a specified longitude and latitude.
+ *
  * @param {Rectangle} rectangle The rectangle covered by this terrain data.
  * @param {number} longitude The longitude in radians.
  * @param {number} latitude The latitude in radians.
@@ -710,6 +719,7 @@ function interpolateHeight(terrainData, u, v) {
  * {@link HeightmapTerrainData.childTileMask}.  The given child tile coordinates are assumed
  * to be one of the four children of this tile.  If non-child tile coordinates are
  * given, the availability of the southeast child tile is returned.
+ *
  * @param {number} thisX The tile X coordinate of this (the parent) tile.
  * @param {number} thisY The tile Y coordinate of this (the parent) tile.
  * @param {number} childX The tile X coordinate of the child tile to check for availability.
@@ -753,6 +763,7 @@ QuantizedMeshTerrainData.prototype.isChildAvailable = function (
  * terrain data.  If this value is false, the data was obtained from some other source, such
  * as by downloading it from a remote server.  This method should return true for instances
  * returned from a call to {@link HeightmapTerrainData#upsample}.
+ *
  * @returns {boolean} True if this instance was created by upsampling; otherwise, false.
  */
 QuantizedMeshTerrainData.prototype.wasCreatedByUpsampling = function () {

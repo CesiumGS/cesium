@@ -12,13 +12,16 @@ import MetadataTableProperty from "./MetadataTableProperty.js";
  * <p>
  * For 3D Tiles Next details, see the {@link https://github.com/CesiumGS/3d-tiles/tree/main/extensions/3DTILES_metadata|3DTILES_metadata Extension} for 3D Tiles, as well as the {@link https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_feature_metadata|EXT_feature_metadata Extension} for glTF.
  * </p>
+ *
  * @param {object} options Object with the following properties:
  * @param {number} options.count The number of entities in the table.
  * @param {object} [options.properties] A dictionary containing properties.
  * @param {MetadataClass} options.class The class that properties conform to.
  * @param {Object<string, Uint8Array>} [options.bufferViews] An object mapping bufferView IDs to Uint8Array objects.
+ *
  * @alias MetadataTable
- * @class
+ * @constructor
+ *
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
@@ -58,6 +61,7 @@ function MetadataTable(options) {
 Object.defineProperties(MetadataTable.prototype, {
   /**
    * The number of entities in the table.
+   *
    * @memberof MetadataTable.prototype
    * @type {number}
    * @readonly
@@ -71,6 +75,7 @@ Object.defineProperties(MetadataTable.prototype, {
 
   /**
    * The class that properties conform to.
+   *
    * @memberof MetadataTable.prototype
    * @type {MetadataClass}
    * @readonly
@@ -84,6 +89,7 @@ Object.defineProperties(MetadataTable.prototype, {
 
   /**
    * The size of all typed arrays used in this table.
+   *
    * @memberof MetadataTable.prototype
    * @type {number}
    * @readonly
@@ -98,6 +104,7 @@ Object.defineProperties(MetadataTable.prototype, {
 
 /**
  * Returns whether the table has this property.
+ *
  * @param {string} propertyId The case-sensitive ID of the property.
  * @returns {boolean} Whether the table has this property.
  * @private
@@ -108,6 +115,7 @@ MetadataTable.prototype.hasProperty = function (propertyId) {
 
 /**
  * Returns whether the table has a property with the given semantic.
+ *
  * @param {string} semantic The case-sensitive semantic of the property.
  * @returns {boolean} Whether the table has a property with the given semantic.
  * @private
@@ -122,6 +130,7 @@ MetadataTable.prototype.hasPropertyBySemantic = function (semantic) {
 
 /**
  * Returns an array of property IDs.
+ *
  * @param {string[]} [results] An array into which to store the results.
  * @returns {string[]} The property IDs.
  * @private
@@ -147,10 +156,12 @@ MetadataTable.prototype.getPropertyIds = function (results) {
  * of integer precision. Values greater than 2^53 - 1 or less than -(2^53 - 1)
  * may lose precision when read.
  * </p>
+ *
  * @param {number} index The index of the entity.
  * @param {string} propertyId The case-sensitive ID of the property.
  * @returns {*} The value of the property or <code>undefined</code> if the entity does not have this property.
- * @throws {DeveloperError} index is required and between zero and count - 1
+ *
+ * @exception {DeveloperError} index is required and between zero and count - 1
  * @private
  */
 MetadataTable.prototype.getProperty = function (index, propertyId) {
@@ -188,14 +199,16 @@ MetadataTable.prototype.getProperty = function (index, propertyId) {
  * of integer precision. Values greater than 2^53 - 1 or less than -(2^53 - 1)
  * may lose precision when set."
  * </p>
+ *
  * @param {number} index The index of the entity.
  * @param {string} propertyId The case-sensitive ID of the property.
  * @param {*} value The value of the property that will be copied.
  * @returns {boolean} <code>true</code> if the property was set, <code>false</code> otherwise.
- * @throws {DeveloperError} index is required and between zero and count - 1
- * @throws {DeveloperError} value does not match type
- * @throws {DeveloperError} value is out of range for type
- * @throws {DeveloperError} Array length does not match componentCount
+ *
+ * @exception {DeveloperError} index is required and between zero and count - 1
+ * @exception {DeveloperError} value does not match type
+ * @exception {DeveloperError} value is out of range for type
+ * @exception {DeveloperError} Array length does not match componentCount
  * @private
  */
 MetadataTable.prototype.setProperty = function (index, propertyId, value) {
@@ -214,10 +227,12 @@ MetadataTable.prototype.setProperty = function (index, propertyId, value) {
 
 /**
  * Returns a copy of the value of the property with the given semantic.
+ *
  * @param {number} index The index of the entity.
  * @param {string} semantic The case-sensitive semantic of the property.
  * @returns {*} The value of the property or <code>undefined</code> if the entity does not have this semantic.
- * @throws {DeveloperError} index is required and between zero and count - 1
+ *
+ * @exception {DeveloperError} index is required and between zero and count - 1
  * @private
  */
 MetadataTable.prototype.getPropertyBySemantic = function (index, semantic) {
@@ -240,14 +255,16 @@ MetadataTable.prototype.getPropertyBySemantic = function (index, semantic) {
 
 /**
  * Sets the value of the property with the given semantic.
+ *
  * @param {number} index The index of the entity.
  * @param {string} semantic The case-sensitive semantic of the property.
  * @param {*} value The value of the property that will be copied.
  * @returns {boolean} <code>true</code> if the property was set, <code>false</code> otherwise.
- * @throws {DeveloperError} index is required and between zero and count - 1
- * @throws {DeveloperError} value does not match type
- * @throws {DeveloperError} value is out of range for type
- * @throws {DeveloperError} Array length does not match componentCount
+ *
+ * @exception {DeveloperError} index is required and between zero and count - 1
+ * @exception {DeveloperError} value does not match type
+ * @exception {DeveloperError} value is out of range for type
+ * @exception {DeveloperError} Array length does not match componentCount
  * @private
  */
 MetadataTable.prototype.setPropertyBySemantic = function (
@@ -274,8 +291,10 @@ MetadataTable.prototype.setPropertyBySemantic = function (
 
 /**
  * Returns a typed array containing the property values for a given propertyId.
+ *
  * @param {string} propertyId The case-sensitive ID of the property.
  * @returns {*} The typed array containing the property values or <code>undefined</code> if the property values are not stored in a typed array.
+ *
  * @private
  */
 MetadataTable.prototype.getPropertyTypedArray = function (propertyId) {
@@ -294,8 +313,10 @@ MetadataTable.prototype.getPropertyTypedArray = function (propertyId) {
 
 /**
  * Returns a typed array containing the property values for the property with the given semantic.
+ *
  * @param {string} semantic The case-sensitive semantic of the property.
  * @returns {*} The typed array containing the property values or <code>undefined</code> if the property values are not stored in a typed array.
+ *
  * @private
  */
 MetadataTable.prototype.getPropertyTypedArrayBySemantic = function (semantic) {

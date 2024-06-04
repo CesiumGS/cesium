@@ -5,12 +5,15 @@ import VoxelEllipsoidShape from "./VoxelEllipsoidShape.js";
 
 /**
  * An enum of voxel shapes. The shape controls how the voxel grid is mapped to 3D space.
+ *
  * @enum {string}
+ *
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
 const VoxelShapeType = {
   /**
    * A box shape.
+   *
    * @type {string}
    * @constant
    * @private
@@ -18,6 +21,7 @@ const VoxelShapeType = {
   BOX: "BOX",
   /**
    * An ellipsoid shape.
+   *
    * @type {string}
    * @constant
    * @private
@@ -25,6 +29,7 @@ const VoxelShapeType = {
   ELLIPSOID: "ELLIPSOID",
   /**
    * A cylinder shape.
+   *
    * @type {string}
    * @constant
    * @private
@@ -76,8 +81,10 @@ VoxelShapeType.getMaxBounds = function (shapeType) {
  * Converts a shape type to a constructor that can be used to create a shape
  * object or get per-shape properties like DefaultMinBounds and
  * DefaultMaxBounds.
+ *
  * @param {VoxelShapeType} shapeType The shape type.
  * @returns {Function} The shape's constructor.
+ *
  * @private
  */
 VoxelShapeType.getShapeConstructor = function (shapeType) {

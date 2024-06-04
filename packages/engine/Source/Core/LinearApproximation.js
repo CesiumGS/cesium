@@ -3,6 +3,7 @@ import DeveloperError from "./DeveloperError.js";
 
 /**
  * An {@link InterpolationAlgorithm} for performing linear interpolation.
+ *
  * @namespace LinearApproximation
  */
 const LinearApproximation = {
@@ -15,6 +16,7 @@ const LinearApproximation = {
  * always returns 2.
  * @param {number} degree The desired degree of interpolation.
  * @returns {number} This function always returns 2.
+ *
  */
 LinearApproximation.getRequiredDataPoints = function (degree) {
   return 2;
@@ -22,6 +24,7 @@ LinearApproximation.getRequiredDataPoints = function (degree) {
 
 /**
  * Interpolates values using linear approximation.
+ *
  * @param {number} x The independent variable for which the dependent variables will be interpolated.
  * @param {number[]} xTable The array of independent variables to use to interpolate.  The values
  * in this array must be in increasing order and the same value must not occur twice in the array.

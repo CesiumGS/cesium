@@ -3,11 +3,15 @@ import defaultValue from "./defaultValue.js";
 
 /**
  * Creates a {@link CesiumTerrainProvider} instance for the {@link https://cesium.com/content/#cesium-world-bathymetry|Cesium World Bathymetry}.
+ *
  * @function
- * @param {object} [options] Object with the following properties:
- * @param {boolean} [options.requestVertexNormals] Flag that indicates if the client should request additional lighting information from the server if available.
+ *
+ * @param {Object} [options] Object with the following properties:
+ * @param {Boolean} [options.requestVertexNormals=false] Flag that indicates if the client should request additional lighting information from the server if available.
  * @returns {Promise<CesiumTerrainProvider>} A promise that resolves to the created CesiumTerrainProvider
+ *
  * @see Ion
+ *
  * @example
  * // Create Cesium World Bathymetry with default settings
  * try {
@@ -17,6 +21,7 @@ import defaultValue from "./defaultValue.js";
  * } catch (error) {
  *   console.log(error);
  * }
+ *
  * @example
  * // Create Cesium World Bathymetry with normals.
  * try {
@@ -28,6 +33,7 @@ import defaultValue from "./defaultValue.js";
  * } catch (error) {
  *   console.log(error);
  * }
+ *
  */
 function createWorldBathymetryAsync(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);

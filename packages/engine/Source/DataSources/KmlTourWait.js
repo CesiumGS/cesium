@@ -1,9 +1,12 @@
 import defined from "../Core/defined.js";
 /**
  * Pauses the KmlTour for a given number of seconds.
+ *
  * @alias KmlTourWait
- * @class
+ * @constructor
+ *
  * @param {number} duration entry duration
+ *
  * @see KmlTour
  * @see KmlTourFlyTo
  */
@@ -17,6 +20,7 @@ function KmlTourWait(duration) {
 
 /**
  * Play this playlist entry
+ *
  * @param {KmlTourWait.DoneCallback} done function which will be called when playback ends
  */
 KmlTourWait.prototype.play = function (done) {
@@ -40,6 +44,7 @@ KmlTourWait.prototype.stop = function () {
 
 /**
  * A function which will be called when playback ends.
+ *
  * @callback KmlTourWait.DoneCallback
  * @param {boolean} terminated true if {@link KmlTourWait#stop} was
  * called before entry done playback.

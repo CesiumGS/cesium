@@ -7,10 +7,11 @@ import defined from "./defined.js";
  * Pitch is the rotation from the local xy-plane. Positive pitch angles are above the plane. Negative pitch
  * angles are below the plane. Range is the distance from the center of the frame.
  * @alias HeadingPitchRange
- * @class
- * @param {number} [heading] The heading angle in radians.
- * @param {number} [pitch] The pitch angle in radians.
- * @param {number} [range] The distance from the center in meters.
+ * @constructor
+ *
+ * @param {number} [heading=0.0] The heading angle in radians.
+ * @param {number} [pitch=0.0] The pitch angle in radians.
+ * @param {number} [range=0.0] The distance from the center in meters.
  */
 function HeadingPitchRange(heading, pitch, range) {
   /**
@@ -38,6 +39,7 @@ function HeadingPitchRange(heading, pitch, range) {
 
 /**
  * Duplicates a HeadingPitchRange instance.
+ *
  * @param {HeadingPitchRange} hpr The HeadingPitchRange to duplicate.
  * @param {HeadingPitchRange} [result] The object onto which to store the result.
  * @returns {HeadingPitchRange} The modified result parameter or a new HeadingPitchRange instance if one was not provided. (Returns undefined if hpr is undefined)

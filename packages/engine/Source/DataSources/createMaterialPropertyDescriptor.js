@@ -27,8 +27,6 @@ function createMaterialProperty(value) {
 }
 
 /**
- * @param name
- * @param configurable
  * @private
  */
 function createMaterialPropertyDescriptor(name, configurable) {

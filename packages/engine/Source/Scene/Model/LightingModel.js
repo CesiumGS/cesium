@@ -1,6 +1,8 @@
 /**
  * The lighting model to use for lighting a {@link Model}.
+ *
  * @enum {number}
+ *
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 const LightingModel = {
@@ -9,6 +11,7 @@ const LightingModel = {
    * diffuse color (assumed to be linear RGB, not sRGB) is used directly
    * when computing <code>out_FragColor</code>. The alpha mode is still
    * applied.
+   *
    * @type {number}
    * @constant
    */
@@ -17,6 +20,7 @@ const LightingModel = {
    * Use physically-based rendering lighting calculations. This includes
    * both PBR metallic roughness and PBR specular glossiness. Image-based
    * lighting is also applied when possible.
+   *
    * @type {number}
    * @constant
    */

@@ -3,7 +3,9 @@ import defined from "./defined.js";
 /**
  * Formats an error object into a String.  If available, uses name, message, and stack
  * properties, otherwise, falls back on toString().
+ *
  * @function
+ *
  * @param {*} object The item to find in the array.
  * @returns {string} A string containing the formatted error.
  */

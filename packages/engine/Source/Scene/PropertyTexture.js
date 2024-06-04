@@ -9,14 +9,17 @@ import PropertyTextureProperty from "./PropertyTextureProperty.js";
  * See the {@link https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_structural_metadata|EXT_structural_metadata Extension} as well as the
  * previous {@link https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_feature_metadata|EXT_feature_metadata Extension} for glTF.
  * </p>
+ *
  * @param {object} options Object with the following properties:
  * @param {string} [options.name] Optional human-readable name to describe the texture
  * @param {string|number} [options.id] A unique id to identify the property texture, useful for debugging. For <code>EXT_structural_metadata</code>, this is the array index in the property textures array, for <code>EXT_feature_metadata</code> this is the dictionary key in the property textures dictionary.
  * @param {object} options.propertyTexture The property texture JSON, following the EXT_structural_metadata schema.
  * @param {MetadataClass} options.class The class that properties conform to.
  * @param {Object<string, Texture>} options.textures An object mapping texture IDs to {@link Texture} objects.
+ *
  * @alias PropertyTexture
- * @class
+ * @constructor
+ *
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
@@ -59,6 +62,7 @@ function PropertyTexture(options) {
 Object.defineProperties(PropertyTexture.prototype, {
   /**
    * A human-readable name for this texture
+   *
    * @memberof PropertyTexture.prototype
    * @type {string}
    * @readonly
@@ -71,6 +75,7 @@ Object.defineProperties(PropertyTexture.prototype, {
   },
   /**
    * An identifier for this texture. Useful for debugging.
+   *
    * @memberof PropertyTexture.prototype
    * @type {string|number}
    * @readonly
@@ -83,6 +88,7 @@ Object.defineProperties(PropertyTexture.prototype, {
   },
   /**
    * The class that properties conform to.
+   *
    * @memberof PropertyTexture.prototype
    * @type {MetadataClass}
    * @readonly
@@ -96,7 +102,9 @@ Object.defineProperties(PropertyTexture.prototype, {
 
   /**
    * The properties in this property texture.
+   *
    * @memberof PropertyTexture.prototype
+   *
    * @type {PropertyTextureProperty}
    * @readonly
    * @private
@@ -109,6 +117,7 @@ Object.defineProperties(PropertyTexture.prototype, {
 
   /**
    * Extra user-defined properties.
+   *
    * @memberof PropertyTexture.prototype
    * @type {*}
    * @readonly
@@ -122,6 +131,7 @@ Object.defineProperties(PropertyTexture.prototype, {
 
   /**
    * An object containing extensions.
+   *
    * @memberof PropertyTexture.prototype
    * @type {object}
    * @readonly
@@ -136,6 +146,7 @@ Object.defineProperties(PropertyTexture.prototype, {
 
 /**
  * Gets the property with the given property ID.
+ *
  * @param {string} propertyId The case-sensitive ID of the property.
  * @returns {PropertyTextureProperty|undefined} The property, or <code>undefined</code> if the property does not exist.
  * @private

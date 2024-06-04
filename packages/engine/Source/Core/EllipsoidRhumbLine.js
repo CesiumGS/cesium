@@ -379,12 +379,15 @@ function interpolateUsingSurfaceDistance(
 
 /**
  * Initializes a rhumb line on the ellipsoid connecting the two provided planetodetic points.
+ *
  * @alias EllipsoidRhumbLine
- * @class
+ * @constructor
+ *
  * @param {Cartographic} [start] The initial planetodetic point on the path.
  * @param {Cartographic} [end] The final planetodetic point on the path.
- * @param {Ellipsoid} [ellipsoid] The ellipsoid on which the rhumb line lies.
- * @throws {DeveloperError} angle between start and end must be at least 0.0125 radians.
+ * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the rhumb line lies.
+ *
+ * @exception {DeveloperError} angle between start and end must be at least 0.0125 radians.
  */
 function EllipsoidRhumbLine(start, end, ellipsoid) {
   const e = defaultValue(ellipsoid, Ellipsoid.WGS84);
@@ -474,10 +477,11 @@ Object.defineProperties(EllipsoidRhumbLine.prototype, {
 
 /**
  * Create a rhumb line using an initial position with a heading and distance.
+ *
  * @param {Cartographic} start The initial planetodetic point on the path.
  * @param {number} heading The heading in radians.
  * @param {number} distance The rhumb line distance between the start and end point.
- * @param {Ellipsoid} [ellipsoid] The ellipsoid on which the rhumb line lies.
+ * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the rhumb line lies.
  * @param {EllipsoidRhumbLine} [result] The object in which to store the result.
  * @returns {EllipsoidRhumbLine} The EllipsoidRhumbLine object.
  */
@@ -524,6 +528,7 @@ EllipsoidRhumbLine.fromStartHeadingDistance = function (
 
 /**
  * Sets the start and end points of the rhumb line.
+ *
  * @param {Cartographic} start The initial planetodetic point on the path.
  * @param {Cartographic} end The final planetodetic point on the path.
  */
@@ -538,6 +543,7 @@ EllipsoidRhumbLine.prototype.setEndPoints = function (start, end) {
 
 /**
  * Provides the location of a point at the indicated portion along the rhumb line.
+ *
  * @param {number} fraction The portion of the distance between the initial and final points.
  * @param {Cartographic} [result] The object in which to store the result.
  * @returns {Cartographic} The location of the point along the rhumb line.
@@ -554,10 +560,12 @@ EllipsoidRhumbLine.prototype.interpolateUsingFraction = function (
 
 /**
  * Provides the location of a point at the indicated distance along the rhumb line.
+ *
  * @param {number} distance The distance from the inital point to the point of interest along the rhumbLine.
  * @param {Cartographic} [result] The object in which to store the result.
  * @returns {Cartographic} The location of the point along the rhumb line.
- * @throws {DeveloperError} start and end must be set before calling function interpolateUsingSurfaceDistance
+ *
+ * @exception {DeveloperError} start and end must be set before calling function interpolateUsingSurfaceDistance
  */
 EllipsoidRhumbLine.prototype.interpolateUsingSurfaceDistance = function (
   distance,
@@ -585,10 +593,12 @@ EllipsoidRhumbLine.prototype.interpolateUsingSurfaceDistance = function (
 /**
  * Provides the location of a point at the indicated longitude along the rhumb line.
  * If the longitude is outside the range of start and end points, the first intersection with the longitude from the start point in the direction of the heading is returned. This follows the spiral property of a rhumb line.
+ *
  * @param {number} intersectionLongitude The longitude, in radians, at which to find the intersection point from the starting point using the heading.
  * @param {Cartographic} [result] The object in which to store the result.
  * @returns {Cartographic} The location of the intersection point along the rhumb line, undefined if there is no intersection or infinite intersections.
- * @throws {DeveloperError} start and end must be set before calling function findIntersectionWithLongitude.
+ *
+ * @exception {DeveloperError} start and end must be set before calling function findIntersectionWithLongitude.
  */
 EllipsoidRhumbLine.prototype.findIntersectionWithLongitude = function (
   intersectionLongitude,
@@ -687,10 +697,12 @@ EllipsoidRhumbLine.prototype.findIntersectionWithLongitude = function (
 /**
  * Provides the location of a point at the indicated latitude along the rhumb line.
  * If the latitude is outside the range of start and end points, the first intersection with the latitude from that start point in the direction of the heading is returned. This follows the spiral property of a rhumb line.
+ *
  * @param {number} intersectionLatitude The latitude, in radians, at which to find the intersection point from the starting point using the heading.
  * @param {Cartographic} [result] The object in which to store the result.
  * @returns {Cartographic} The location of the intersection point along the rhumb line, undefined if there is no intersection or infinite intersections.
- * @throws {DeveloperError} start and end must be set before calling function findIntersectionWithLongitude.
+ *
+ * @exception {DeveloperError} start and end must be set before calling function findIntersectionWithLongitude.
  */
 EllipsoidRhumbLine.prototype.findIntersectionWithLatitude = function (
   intersectionLatitude,

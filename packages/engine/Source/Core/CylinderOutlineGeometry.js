@@ -18,20 +18,25 @@ const radiusScratch = new Cartesian2();
 
 /**
  * A description of the outline of a cylinder.
+ *
  * @alias CylinderOutlineGeometry
- * @class
+ * @constructor
+ *
  * @param {object} options Object with the following properties:
  * @param {number} options.length The length of the cylinder.
  * @param {number} options.topRadius The radius of the top of the cylinder.
  * @param {number} options.bottomRadius The radius of the bottom of the cylinder.
- * @param {number} [options.slices] The number of edges around the perimeter of the cylinder.
- * @param {number} [options.numberOfVerticalLines] Number of lines to draw between the top and bottom surfaces of the cylinder.
- * @throws {DeveloperError} options.length must be greater than 0.
- * @throws {DeveloperError} options.topRadius must be greater than 0.
- * @throws {DeveloperError} options.bottomRadius must be greater than 0.
- * @throws {DeveloperError} bottomRadius and topRadius cannot both equal 0.
- * @throws {DeveloperError} options.slices must be greater than or equal to 3.
+ * @param {number} [options.slices=128] The number of edges around the perimeter of the cylinder.
+ * @param {number} [options.numberOfVerticalLines=16] Number of lines to draw between the top and bottom surfaces of the cylinder.
+ *
+ * @exception {DeveloperError} options.length must be greater than 0.
+ * @exception {DeveloperError} options.topRadius must be greater than 0.
+ * @exception {DeveloperError} options.bottomRadius must be greater than 0.
+ * @exception {DeveloperError} bottomRadius and topRadius cannot both equal 0.
+ * @exception {DeveloperError} options.slices must be greater than or equal to 3.
+ *
  * @see CylinderOutlineGeometry.createGeometry
+ *
  * @example
  * // create cylinder geometry
  * const cylinder = new Cesium.CylinderOutlineGeometry({
@@ -85,9 +90,11 @@ CylinderOutlineGeometry.packedLength = 6;
 
 /**
  * Stores the provided instance into the provided array.
+ *
  * @param {CylinderOutlineGeometry} value The value to pack.
  * @param {number[]} array The array to pack into.
- * @param {number} [startingIndex] The index into the array at which to start packing the elements.
+ * @param {number} [startingIndex=0] The index into the array at which to start packing the elements.
+ *
  * @returns {number[]} The array that was packed into
  */
 CylinderOutlineGeometry.pack = function (value, array, startingIndex) {
@@ -119,8 +126,9 @@ const scratchOptions = {
 
 /**
  * Retrieves an instance from a packed array.
+ *
  * @param {number[]} array The packed array.
- * @param {number} [startingIndex] The starting index of the element to be unpacked.
+ * @param {number} [startingIndex=0] The starting index of the element to be unpacked.
  * @param {CylinderOutlineGeometry} [result] The object into which to store the result.
  * @returns {CylinderOutlineGeometry} The modified result parameter or a new CylinderOutlineGeometry instance if one was not provided.
  */
@@ -162,6 +170,7 @@ CylinderOutlineGeometry.unpack = function (array, startingIndex, result) {
 
 /**
  * Computes the geometric representation of an outline of a cylinder, including its vertices, indices, and a bounding sphere.
+ *
  * @param {CylinderOutlineGeometry} cylinderGeometry A description of the cylinder outline.
  * @returns {Geometry|undefined} The computed vertices and indices.
  */

@@ -6,7 +6,6 @@ import Matrix3 from "../Core/Matrix3.js";
 import Quaternion from "../Core/Quaternion.js";
 
 /**
- * @param scene
  * @private
  */
 function DeviceOrientationCameraController(scene) {
@@ -97,6 +96,7 @@ DeviceOrientationCameraController.prototype.update = function () {
 /**
  * Returns true if this object was destroyed; otherwise, false.
  * <br /><br />
+ *
  * @returns {boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
  */
 DeviceOrientationCameraController.prototype.isDestroyed = function () {
@@ -110,7 +110,8 @@ DeviceOrientationCameraController.prototype.isDestroyed = function () {
  * Once an object is destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
  * assign the return value (<code>undefined</code>) to the object as done in the example.
- * @throws {DeveloperError} This object was destroyed, i.e., destroy() was called.
+ *
+ * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
  */
 DeviceOrientationCameraController.prototype.destroy = function () {
   this._removeListener();

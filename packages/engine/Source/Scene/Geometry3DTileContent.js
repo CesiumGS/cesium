@@ -13,13 +13,10 @@ import Vector3DTileGeometry from "./Vector3DTileGeometry.js";
  * <p>
  * Implements the {@link Cesium3DTileContent} interface.
  * </p>
- * @param tileset
- * @param tile
- * @param resource
- * @param arrayBuffer
- * @param byteOffset
+ *
  * @alias Geometry3DTileContent
- * @class
+ * @constructor
+ *
  * @private
  */
 function Geometry3DTileContent(
@@ -103,7 +100,9 @@ Object.defineProperties(Geometry3DTileContent.prototype, {
 
   /**
    * Returns true when the tile's content is ready to render; otherwise false
+   *
    * @memberof Geometry3DTileContent.prototype
+   *
    * @type {boolean}
    * @readonly
    * @private

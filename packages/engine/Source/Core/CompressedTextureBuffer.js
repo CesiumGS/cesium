@@ -3,7 +3,8 @@ import defined from "./defined.js";
 /**
  * Describes a compressed texture and contains a compressed texture buffer.
  * @alias CompressedTextureBuffer
- * @class
+ * @constructor
+ *
  * @param {PixelFormat} internalFormat The pixel format of the compressed texture.
  * @param {PixelDatatype} pixelDatatype The pixel datatype of the compressed texture.
  * @param {number} width The width of the texture.
@@ -84,8 +85,9 @@ Object.defineProperties(CompressedTextureBuffer.prototype, {
 
 /**
  * Creates a shallow clone of a compressed texture buffer.
+ *
  * @param {CompressedTextureBuffer} object The compressed texture buffer to be cloned.
- * @returns {CompressedTextureBuffer} A shallow clone of the compressed texture buffer.
+ * @return {CompressedTextureBuffer} A shallow clone of the compressed texture buffer.
  */
 CompressedTextureBuffer.clone = function (object) {
   if (!defined(object)) {
@@ -103,7 +105,8 @@ CompressedTextureBuffer.clone = function (object) {
 
 /**
  * Creates a shallow clone of this compressed texture buffer.
- * @returns {CompressedTextureBuffer} A shallow clone of the compressed texture buffer.
+ *
+ * @return {CompressedTextureBuffer} A shallow clone of the compressed texture buffer.
  */
 CompressedTextureBuffer.prototype.clone = function () {
   return CompressedTextureBuffer.clone(this);

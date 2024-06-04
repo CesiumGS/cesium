@@ -12,9 +12,11 @@ import ResourceLoaderState from "./ResourceLoaderState.js";
  * <p>
  * Implements the {@link ResourceLoader} interface.
  * </p>
+ *
  * @alias GltfImageLoader
- * @class
+ * @constructor
  * @augments ResourceLoader
+ *
  * @param {object} options Object with the following properties:
  * @param {ResourceCache} options.resourceCache The {@link ResourceCache} (to avoid circular dependencies).
  * @param {object} options.gltf The glTF JSON.
@@ -22,6 +24,7 @@ import ResourceLoaderState from "./ResourceLoaderState.js";
  * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
  * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
  * @param {string} [options.cacheKey] The cache key of the resource.
+ *
  * @private
  */
 function GltfImageLoader(options) {
@@ -67,7 +70,9 @@ if (defined(Object.create)) {
 Object.defineProperties(GltfImageLoader.prototype, {
   /**
    * The cache key of the resource.
+   *
    * @memberof GltfImageLoader.prototype
+   *
    * @type {string}
    * @readonly
    * @private
@@ -79,7 +84,9 @@ Object.defineProperties(GltfImageLoader.prototype, {
   },
   /**
    * The image.
+   *
    * @memberof GltfImageLoader.prototype
+   *
    * @type {Image|ImageBitmap|CompressedTextureBuffer}
    * @readonly
    * @private
@@ -91,7 +98,9 @@ Object.defineProperties(GltfImageLoader.prototype, {
   },
   /**
    * The mip levels. Only defined for KTX2 files containing mip levels.
+   *
    * @memberof GltfImageLoader.prototype
+   *
    * @type {Uint8Array[]}
    * @readonly
    * @private

@@ -19,7 +19,7 @@ import SunLight from "../Scene/SunLight.js";
 
 /**
  * @private
- * @class
+ * @constructor
  */
 function UniformState() {
   /**
@@ -455,6 +455,7 @@ Object.defineProperties(UniformState.prototype, {
 
   /**
    * Model-view relative to eye matrix.
+   *
    * @memberof UniformState.prototype
    * @type {Matrix4}
    */
@@ -535,6 +536,7 @@ Object.defineProperties(UniformState.prototype, {
 
   /**
    * Model-view-projection relative to eye matrix.
+   *
    * @memberof UniformState.prototype
    * @type {Matrix4}
    */
@@ -650,6 +652,7 @@ Object.defineProperties(UniformState.prototype, {
 
   /**
    * The far plane's distance from the near plane, plus 1.0.
+   *
    * @memberof UniformState.prototype
    * @type {number}
    */
@@ -661,6 +664,7 @@ Object.defineProperties(UniformState.prototype, {
 
   /**
    * The log2 of {@link UniformState#farDepthFromNearPlusOne}.
+   *
    * @memberof UniformState.prototype
    * @type {number}
    */
@@ -672,6 +676,7 @@ Object.defineProperties(UniformState.prototype, {
 
   /**
    * 1.0 divided by {@link UniformState#log2FarDepthFromNearPlusOne}.
+   *
    * @memberof UniformState.prototype
    * @type {number}
    */
@@ -1003,6 +1008,7 @@ Object.defineProperties(UniformState.prototype, {
   },
   /**
    * Which light source to use for dynamically lighting the atmosphere
+   *
    * @memberof UniformState.prototype
    * @type {DynamicAtmosphereLightingType}
    */
@@ -1125,6 +1131,7 @@ Object.defineProperties(UniformState.prototype, {
    * The distance from the camera at which to disable the depth test of billboards, labels and points
    * to, for example, prevent clipping against terrain. When set to zero, the depth test should always
    * be applied. When less than zero, the depth test should never be applied.
+   *
    * @memberof UniformState.prototype
    * @type {number}
    */
@@ -1136,6 +1143,7 @@ Object.defineProperties(UniformState.prototype, {
 
   /**
    * The highlight color of unclassified 3D Tiles.
+   *
    * @memberof UniformState.prototype
    * @type {Color}
    */
@@ -1147,7 +1155,8 @@ Object.defineProperties(UniformState.prototype, {
 
   /**
    * Whether or not the current projection is orthographic in 3D.
-   * @memberof UniformState.prototype
+   *
+   * @memberOf UniformState.prototype
    * @type {boolean}
    */
   orthographicIn3D: {
@@ -1158,7 +1167,8 @@ Object.defineProperties(UniformState.prototype, {
 
   /**
    * The current ellipsoid.
-   * @memberof UniformState.prototype
+   *
+   * @memberOf UniformState.prototype
    * @type {Ellipsoid}
    */
   ellipsoid: {
@@ -1345,6 +1355,7 @@ function setSunAndMoonDirections(uniformState, frameState) {
  * Synchronizes the frustum's state with the camera state.  This is called
  * by the {@link Scene} when rendering to ensure that automatic GLSL uniforms
  * are set to the right value.
+ *
  * @param {object} camera The camera to synchronize with.
  */
 UniformState.prototype.updateCamera = function (camera) {
@@ -1365,6 +1376,7 @@ UniformState.prototype.updateCamera = function (camera) {
  * Synchronizes the frustum's state with the uniform state.  This is called
  * by the {@link Scene} when rendering to ensure that automatic GLSL uniforms
  * are set to the right value.
+ *
  * @param {object} frustum The frustum to synchronize with.
  */
 UniformState.prototype.updateFrustum = function (frustum) {
@@ -1404,6 +1416,7 @@ const defaultLight = new SunLight();
  * Synchronizes frame state with the uniform state.  This is called
  * by the {@link Scene} when rendering to ensure that automatic GLSL uniforms
  * are set to the right value.
+ *
  * @param {FrameState} frameState The frameState to synchronize with.
  */
 UniformState.prototype.update = function (frameState) {

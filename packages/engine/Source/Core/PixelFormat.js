@@ -3,11 +3,13 @@ import WebGLConstants from "./WebGLConstants.js";
 
 /**
  * The format of a pixel, i.e., the number of components it has and what they represent.
+ *
  * @enum {number}
  */
 const PixelFormat = {
   /**
    * A pixel format containing a depth value.
+   *
    * @type {number}
    * @constant
    */
@@ -15,6 +17,7 @@ const PixelFormat = {
 
   /**
    * A pixel format containing a depth and stencil value, most often used with {@link PixelDatatype.UNSIGNED_INT_24_8}.
+   *
    * @type {number}
    * @constant
    */
@@ -22,6 +25,7 @@ const PixelFormat = {
 
   /**
    * A pixel format containing an alpha channel.
+   *
    * @type {number}
    * @constant
    */
@@ -29,6 +33,7 @@ const PixelFormat = {
 
   /**
    * A pixel format containing a red channel
+   *
    * @type {number}
    * @constant
    */
@@ -36,6 +41,7 @@ const PixelFormat = {
 
   /**
    * A pixel format containing red and green channels.
+   *
    * @type {number}
    * @constant
    */
@@ -43,6 +49,7 @@ const PixelFormat = {
 
   /**
    * A pixel format containing red, green, and blue channels.
+   *
    * @type {number}
    * @constant
    */
@@ -50,6 +57,7 @@ const PixelFormat = {
 
   /**
    * A pixel format containing red, green, blue, and alpha channels.
+   *
    * @type {number}
    * @constant
    */
@@ -57,6 +65,7 @@ const PixelFormat = {
 
   /**
    * A pixel format containing a luminance (intensity) channel.
+   *
    * @type {number}
    * @constant
    */
@@ -64,6 +73,7 @@ const PixelFormat = {
 
   /**
    * A pixel format containing luminance (intensity) and alpha channels.
+   *
    * @type {number}
    * @constant
    */
@@ -71,6 +81,7 @@ const PixelFormat = {
 
   /**
    * A pixel format containing red, green, and blue channels that is DXT1 compressed.
+   *
    * @type {number}
    * @constant
    */
@@ -78,6 +89,7 @@ const PixelFormat = {
 
   /**
    * A pixel format containing red, green, blue, and alpha channels that is DXT1 compressed.
+   *
    * @type {number}
    * @constant
    */
@@ -85,6 +97,7 @@ const PixelFormat = {
 
   /**
    * A pixel format containing red, green, blue, and alpha channels that is DXT3 compressed.
+   *
    * @type {number}
    * @constant
    */
@@ -92,6 +105,7 @@ const PixelFormat = {
 
   /**
    * A pixel format containing red, green, blue, and alpha channels that is DXT5 compressed.
+   *
    * @type {number}
    * @constant
    */
@@ -99,6 +113,7 @@ const PixelFormat = {
 
   /**
    * A pixel format containing red, green, and blue channels that is PVR 4bpp compressed.
+   *
    * @type {number}
    * @constant
    */
@@ -106,6 +121,7 @@ const PixelFormat = {
 
   /**
    * A pixel format containing red, green, and blue channels that is PVR 2bpp compressed.
+   *
    * @type {number}
    * @constant
    */
@@ -113,6 +129,7 @@ const PixelFormat = {
 
   /**
    * A pixel format containing red, green, blue, and alpha channels that is PVR 4bpp compressed.
+   *
    * @type {number}
    * @constant
    */
@@ -120,6 +137,7 @@ const PixelFormat = {
 
   /**
    * A pixel format containing red, green, blue, and alpha channels that is PVR 2bpp compressed.
+   *
    * @type {number}
    * @constant
    */
@@ -127,6 +145,7 @@ const PixelFormat = {
 
   /**
    * A pixel format containing red, green, blue, and alpha channels that is ASTC compressed.
+   *
    * @type {number}
    * @constant
    */
@@ -134,6 +153,7 @@ const PixelFormat = {
 
   /**
    * A pixel format containing red, green, and blue channels that is ETC1 compressed.
+   *
    * @type {number}
    * @constant
    */
@@ -141,6 +161,7 @@ const PixelFormat = {
 
   /**
    * A pixel format containing red, green, and blue channels that is ETC2 compressed.
+   *
    * @type {number}
    * @constant
    */
@@ -148,6 +169,7 @@ const PixelFormat = {
 
   /**
    * A pixel format containing red, green, blue, and alpha channels that is ETC2 compressed.
+   *
    * @type {number}
    * @constant
    */
@@ -155,6 +177,7 @@ const PixelFormat = {
 
   /**
    * A pixel format containing red, green, blue, and alpha channels that is BC7 compressed.
+   *
    * @type {number}
    * @constant
    */
@@ -162,7 +185,6 @@ const PixelFormat = {
 };
 
 /**
- * @param pixelFormat
  * @private
  */
 PixelFormat.componentsLength = function (pixelFormat) {
@@ -184,7 +206,6 @@ PixelFormat.componentsLength = function (pixelFormat) {
 };
 
 /**
- * @param pixelFormat
  * @private
  */
 PixelFormat.validate = function (pixelFormat) {
@@ -215,7 +236,6 @@ PixelFormat.validate = function (pixelFormat) {
 };
 
 /**
- * @param pixelFormat
  * @private
  */
 PixelFormat.isColorFormat = function (pixelFormat) {
@@ -230,7 +250,6 @@ PixelFormat.isColorFormat = function (pixelFormat) {
 };
 
 /**
- * @param pixelFormat
  * @private
  */
 PixelFormat.isDepthFormat = function (pixelFormat) {
@@ -241,7 +260,6 @@ PixelFormat.isDepthFormat = function (pixelFormat) {
 };
 
 /**
- * @param pixelFormat
  * @private
  */
 PixelFormat.isCompressedFormat = function (pixelFormat) {
@@ -263,7 +281,6 @@ PixelFormat.isCompressedFormat = function (pixelFormat) {
 };
 
 /**
- * @param pixelFormat
  * @private
  */
 PixelFormat.isDXTFormat = function (pixelFormat) {
@@ -276,7 +293,6 @@ PixelFormat.isDXTFormat = function (pixelFormat) {
 };
 
 /**
- * @param pixelFormat
  * @private
  */
 PixelFormat.isPVRTCFormat = function (pixelFormat) {
@@ -289,7 +305,6 @@ PixelFormat.isPVRTCFormat = function (pixelFormat) {
 };
 
 /**
- * @param pixelFormat
  * @private
  */
 PixelFormat.isASTCFormat = function (pixelFormat) {
@@ -297,7 +312,6 @@ PixelFormat.isASTCFormat = function (pixelFormat) {
 };
 
 /**
- * @param pixelFormat
  * @private
  */
 PixelFormat.isETC1Format = function (pixelFormat) {
@@ -305,7 +319,6 @@ PixelFormat.isETC1Format = function (pixelFormat) {
 };
 
 /**
- * @param pixelFormat
  * @private
  */
 PixelFormat.isETC2Format = function (pixelFormat) {
@@ -316,7 +329,6 @@ PixelFormat.isETC2Format = function (pixelFormat) {
 };
 
 /**
- * @param pixelFormat
  * @private
  */
 PixelFormat.isBC7Format = function (pixelFormat) {
@@ -324,9 +336,6 @@ PixelFormat.isBC7Format = function (pixelFormat) {
 };
 
 /**
- * @param pixelFormat
- * @param width
- * @param height
  * @private
  */
 PixelFormat.compressedTextureSizeInBytes = function (
@@ -366,10 +375,6 @@ PixelFormat.compressedTextureSizeInBytes = function (
 };
 
 /**
- * @param pixelFormat
- * @param pixelDatatype
- * @param width
- * @param height
  * @private
  */
 PixelFormat.textureSizeInBytes = function (
@@ -388,9 +393,6 @@ PixelFormat.textureSizeInBytes = function (
 };
 
 /**
- * @param pixelFormat
- * @param pixelDatatype
- * @param width
  * @private
  */
 PixelFormat.alignmentInBytes = function (pixelFormat, pixelDatatype, width) {
@@ -403,8 +405,8 @@ PixelFormat.alignmentInBytes = function (pixelFormat, pixelDatatype, width) {
  * @private
  * @param {PixelFormat} pixelFormat The pixel format.
  * @param {PixelDatatype} pixelDatatype The pixel datatype.
- * @param {number} width The width of the texture.
- * @param {number} height The height of the texture.
+ * @param {Number} width The width of the texture.
+ * @param {Number} height The height of the texture.
  * @returns {TypedArray} The typed array.
  */
 PixelFormat.createTypedArray = function (
@@ -433,11 +435,6 @@ PixelFormat.createTypedArray = function (
 };
 
 /**
- * @param bufferView
- * @param pixelFormat
- * @param pixelDatatype
- * @param width
- * @param height
  * @private
  */
 PixelFormat.flipY = function (
@@ -469,9 +466,6 @@ PixelFormat.flipY = function (
 };
 
 /**
- * @param pixelFormat
- * @param pixelDatatype
- * @param context
  * @private
  */
 PixelFormat.toInternalFormat = function (pixelFormat, pixelDatatype, context) {

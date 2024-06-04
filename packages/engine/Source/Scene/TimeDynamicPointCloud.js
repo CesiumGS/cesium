@@ -23,15 +23,17 @@ import ShadowMode from "./ShadowMode.js";
  * If intermediate frames cannot be loaded in time to meet playback speed, they will be skipped. If frames are sufficiently
  * small or the clock is sufficiently slow then no frames will be skipped.
  * </p>
+ *
  * @alias TimeDynamicPointCloud
- * @class
+ * @constructor
+ *
  * @param {object} options Object with the following properties:
  * @param {Clock} options.clock A {@link Clock} instance that is used when determining the value for the time dimension.
  * @param {TimeIntervalCollection} options.intervals A {@link TimeIntervalCollection} with its data property being an object containing a <code>uri</code> to a 3D Tiles Point Cloud tile and an optional <code>transform</code>.
- * @param {boolean} [options.show] Determines if the point cloud will be shown.
- * @param {Matrix4} [options.modelMatrix] A 4x4 transformation matrix that transforms the point cloud.
- * @param {ShadowMode} [options.shadows] Determines whether the point cloud casts or receives shadows from light sources.
- * @param {number} [options.maximumMemoryUsage] The maximum amount of memory in MB that can be used by the point cloud.
+ * @param {boolean} [options.show=true] Determines if the point cloud will be shown.
+ * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] A 4x4 transformation matrix that transforms the point cloud.
+ * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the point cloud casts or receives shadows from light sources.
+ * @param {number} [options.maximumMemoryUsage=256] The maximum amount of memory in MB that can be used by the point cloud.
  * @param {object} [options.shading] Options for constructing a {@link PointCloudShading} object to control point attenuation and eye dome lighting.
  * @param {Cesium3DTileStyle} [options.style] The style, defined using the {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification/Styling|3D Tiles Styling language}, applied to each point in the point cloud.
  * @param {ClippingPlaneCollection} [options.clippingPlanes] The {@link ClippingPlaneCollection} used to selectively disable rendering the point cloud.
@@ -46,6 +48,7 @@ function TimeDynamicPointCloud(options) {
 
   /**
    * Determines if the point cloud will be shown.
+   *
    * @type {boolean}
    * @default true
    */
@@ -53,6 +56,7 @@ function TimeDynamicPointCloud(options) {
 
   /**
    * A 4x4 transformation matrix that transforms the point cloud.
+   *
    * @type {Matrix4}
    * @default Matrix4.IDENTITY
    */
@@ -68,6 +72,7 @@ function TimeDynamicPointCloud(options) {
    * <p>
    * Shadows are rendered only when {@link Viewer#shadows} is <code>true</code>.
    * </p>
+   *
    * @type {ShadowMode}
    * @default ShadowMode.ENABLED
    */
@@ -81,8 +86,10 @@ function TimeDynamicPointCloud(options) {
    * <p>
    * If decreasing this value results in unloading tiles, the tiles are unloaded the next frame.
    * </p>
+   *
    * @type {number}
    * @default 256
+   *
    * @see TimeDynamicPointCloud#totalMemoryUsageInBytes
    */
   this.maximumMemoryUsage = defaultValue(options.maximumMemoryUsage, 256);
@@ -101,7 +108,9 @@ function TimeDynamicPointCloud(options) {
    * Assign <code>undefined</code> to remove the style, which will restore the visual
    * appearance of the point cloud to its default when no style was applied.
    * </p>
+   *
    * @type {Cesium3DTileStyle}
+   *
    * @example
    * pointCloud.style = new Cesium.Cesium3DTileStyle({
    *    color : {
@@ -113,6 +122,7 @@ function TimeDynamicPointCloud(options) {
    *    },
    *    show : '${Classification} !== 2'
    * });
+   *
    * @see {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification/Styling|3D Tiles Styling language}
    */
   this.style = options.style;
@@ -129,8 +139,10 @@ function TimeDynamicPointCloud(options) {
    * <li><code>uri</code>: the uri of the failed frame.</li>
    * <li><code>message</code>: the error message.</li>
    * </ul>
+   *
    * @type {Event}
    * @default new Event()
+   *
    * @example
    * pointCloud.frameFailed.addEventListener(function(error) {
    *     console.log(`An error occurred loading frame: ${error.uri}`);
@@ -146,6 +158,7 @@ function TimeDynamicPointCloud(options) {
    * </p>
    * @type {Event}
    * @default new Event()
+   *
    * @example
    * pointCloud.frameChanged.addEventListener(function(timeDynamicPointCloud) {
    *     viewer.camera.viewBoundingSphere(timeDynamicPointCloud.boundingSphere);
@@ -180,7 +193,9 @@ function TimeDynamicPointCloud(options) {
 Object.defineProperties(TimeDynamicPointCloud.prototype, {
   /**
    * The {@link ClippingPlaneCollection} used to selectively disable rendering the point cloud.
+   *
    * @memberof TimeDynamicPointCloud.prototype
+   *
    * @type {ClippingPlaneCollection}
    */
   clippingPlanes: {
@@ -194,9 +209,12 @@ Object.defineProperties(TimeDynamicPointCloud.prototype, {
 
   /**
    * The total amount of GPU memory in bytes used by the point cloud.
+   *
    * @memberof TimeDynamicPointCloud.prototype
+   *
    * @type {number}
    * @readonly
+   *
    * @see TimeDynamicPointCloud#maximumMemoryUsage
    */
   totalMemoryUsageInBytes: {
@@ -207,7 +225,9 @@ Object.defineProperties(TimeDynamicPointCloud.prototype, {
 
   /**
    * The bounding sphere of the frame being rendered. Returns <code>undefined</code> if no frame is being rendered.
+   *
    * @memberof TimeDynamicPointCloud.prototype
+   *
    * @type {BoundingSphere}
    * @readonly
    */
@@ -249,6 +269,7 @@ TimeDynamicPointCloud.prototype.makeStyleDirty = function () {
 
 /**
  * Exposed for testing.
+ *
  * @private
  */
 TimeDynamicPointCloud.prototype._getAverageLoadTime = function () {
@@ -588,7 +609,6 @@ const updateState = {
 };
 
 /**
- * @param frameState
  * @private
  */
 TimeDynamicPointCloud.prototype.update = function (frameState) {
@@ -751,7 +771,9 @@ TimeDynamicPointCloud.prototype.update = function (frameState) {
  * <br /><br />
  * If this object was destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
+ *
  * @returns {boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+ *
  * @see TimeDynamicPointCloud#destroy
  */
 TimeDynamicPointCloud.prototype.isDestroyed = function () {
@@ -765,9 +787,12 @@ TimeDynamicPointCloud.prototype.isDestroyed = function () {
  * Once an object is destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
  * assign the return value (<code>undefined</code>) to the object as done in the example.
- * @throws {DeveloperError} This object was destroyed, i.e., destroy() was called.
+ *
+ * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+ *
  * @example
  * pointCloud = pointCloud && pointCloud.destroy();
+ *
  * @see TimeDynamicPointCloud#isDestroyed
  */
 TimeDynamicPointCloud.prototype.destroy = function () {

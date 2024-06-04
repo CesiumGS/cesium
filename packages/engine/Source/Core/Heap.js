@@ -4,9 +4,11 @@ import defined from "./defined.js";
 
 /**
  * Array implementation of a heap.
+ *
  * @alias Heap
- * @class
+ * @constructor
  * @private
+ *
  * @param {object} options Object with the following properties:
  * @param {Heap.ComparatorCallback} options.comparator The comparator to use for the heap. If comparator(a, b) is less than 0, sort a to a lower index than b, otherwise sort to a higher index.
  */
@@ -25,7 +27,9 @@ function Heap(options) {
 Object.defineProperties(Heap.prototype, {
   /**
    * Gets the length of the heap.
+   *
    * @memberof Heap.prototype
+   *
    * @type {number}
    * @readonly
    */
@@ -37,7 +41,9 @@ Object.defineProperties(Heap.prototype, {
 
   /**
    * Gets the internal array.
+   *
    * @memberof Heap.prototype
+   *
    * @type {Array}
    * @readonly
    */
@@ -49,7 +55,9 @@ Object.defineProperties(Heap.prototype, {
 
   /**
    * Gets and sets the maximum length of the heap.
+   *
    * @memberof Heap.prototype
+   *
    * @type {number}
    */
   maximumLength: {
@@ -76,7 +84,9 @@ Object.defineProperties(Heap.prototype, {
 
   /**
    * The comparator to use for the heap. If comparator(a, b) is less than 0, sort a to a lower index than b, otherwise sort to a higher index.
+   *
    * @memberof Heap.prototype
+   *
    * @type {Heap.ComparatorCallback}
    */
   comparator: {
@@ -94,6 +104,7 @@ function swap(array, a, b) {
 
 /**
  * Resizes the internal array of the heap.
+ *
  * @param {number} [length] The length to resize internal array to. Defaults to the current length of the heap.
  */
 Heap.prototype.reserve = function (length) {
@@ -103,7 +114,8 @@ Heap.prototype.reserve = function (length) {
 
 /**
  * Update the heap so that index and all descendants satisfy the heap property.
- * @param {number} [index] The starting index to heapify from.
+ *
+ * @param {number} [index=0] The starting index to heapify from.
  */
 Heap.prototype.heapify = function (index) {
   index = defaultValue(index, 0);
@@ -148,8 +160,10 @@ Heap.prototype.resort = function () {
 /**
  * Insert an element into the heap. If the length would grow greater than maximumLength
  * of the heap, extra elements are removed.
+ *
  * @param {*} element The element to insert
- * @returns {*} The element that was removed from the heap if the heap is at full capacity.
+ *
+ * @return {*} The element that was removed from the heap if the heap is at full capacity.
  */
 Heap.prototype.insert = function (element) {
   //>>includeStart('debug', pragmas.debug);
@@ -189,7 +203,8 @@ Heap.prototype.insert = function (element) {
 
 /**
  * Remove the element specified by index from the heap and return it.
- * @param {number} [index] The index to remove.
+ *
+ * @param {number} [index=0] The index to remove.
  * @returns {*} The specified element of the heap.
  */
 Heap.prototype.pop = function (index) {

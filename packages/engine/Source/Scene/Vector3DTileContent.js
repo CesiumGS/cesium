@@ -25,13 +25,10 @@ import decodeVectorPolylinePositions from "../Core/decodeVectorPolylinePositions
  * <p>
  * Implements the {@link Cesium3DTileContent} interface.
  * </p>
- * @param tileset
- * @param tile
- * @param resource
- * @param arrayBuffer
- * @param byteOffset
+ *
  * @alias Vector3DTileContent
- * @class
+ * @constructor
+ *
  * @private
  */
 function Vector3DTileContent(tileset, tile, resource, arrayBuffer, byteOffset) {
@@ -126,7 +123,9 @@ Object.defineProperties(Vector3DTileContent.prototype, {
 
   /**
    * Returns true when the tile's content is ready to render; otherwise false
+   *
    * @memberof Vector3DTileContent.prototype
+   *
    * @type {boolean}
    * @readonly
    * @private

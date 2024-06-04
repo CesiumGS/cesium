@@ -4,7 +4,6 @@ import defined from "./defined.js";
 import Resource from "./Resource.js";
 
 /**
- * @param options
  * @private
  */
 function loadImageFromTypedArray(options) {

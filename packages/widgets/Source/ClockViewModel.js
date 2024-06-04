@@ -10,8 +10,10 @@ import knockout from "./ThirdParty/knockout.js";
 /**
  * A view model which exposes a {@link Clock} for user interfaces.
  * @alias ClockViewModel
- * @class
+ * @constructor
+ *
  * @param {Clock} [clock] The clock object wrapped by this view model, if undefined a new instance will be created.
+ *
  * @see Clock
  */
 function ClockViewModel(clock) {

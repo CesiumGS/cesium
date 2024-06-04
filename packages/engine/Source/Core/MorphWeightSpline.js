@@ -6,8 +6,10 @@ import Spline from "./Spline.js";
 
 /**
  * A spline that linearly interpolates over an array of weight values used by morph targets.
+ *
  * @alias MorphWeightSpline
- * @class
+ * @constructor
+ *
  * @param {object} options Object with the following properties:
  * @param {number[]} options.times An array of strictly increasing, unit-less, floating-point times at each point.
  *                The values are in no way connected to the clock time. They are the parameterization for the curve.
@@ -15,8 +17,11 @@ import Spline from "./Spline.js";
  *                that all weights for the targets are given in chronological order and order in which they appear in
  *                the glTF from which the morph targets come. This means for 2 targets, weights = [w(0,0), w(0,1), w(1,0), w(1,1) ...]
  *                where i and j in w(i,j) are the time indices and target indices, respectively.
- * @throws {DeveloperError} weights.length must be greater than or equal to 2.
- * @throws {DeveloperError} times.length must be a factor of weights.length.
+ *
+ * @exception {DeveloperError} weights.length must be greater than or equal to 2.
+ * @exception {DeveloperError} times.length must be a factor of weights.length.
+ *
+ *
  * @example
  * const times = [ 0.0, 1.5, 3.0, 4.5, 6.0 ];
  * const weights = [0.0, 1.0, 0.25, 0.75, 0.5, 0.5, 0.75, 0.25, 1.0, 0.0]; //Two targets
@@ -26,6 +31,7 @@ import Spline from "./Spline.js";
  * });
  *
  * const p0 = spline.evaluate(times[0]);
+ *
  * @see ConstantSpline
  * @see SteppedSpline
  * @see LinearSpline
@@ -60,7 +66,9 @@ function MorphWeightSpline(options) {
 Object.defineProperties(MorphWeightSpline.prototype, {
   /**
    * An array of times for the control weights.
+   *
    * @memberof WeightSpline.prototype
+   *
    * @type {number[]}
    * @readonly
    */
@@ -72,7 +80,9 @@ Object.defineProperties(MorphWeightSpline.prototype, {
 
   /**
    * An array of floating-point array control weights.
+   *
    * @memberof WeightSpline.prototype
+   *
    * @type {number[]}
    * @readonly
    */
@@ -87,9 +97,11 @@ Object.defineProperties(MorphWeightSpline.prototype, {
  * Finds an index <code>i</code> in <code>times</code> such that the parameter
  * <code>time</code> is in the interval <code>[times[i], times[i + 1]]</code>.
  * @function
+ *
  * @param {number} time The time.
  * @returns {number} The index for the element at the start of the interval.
- * @throws {DeveloperError} time must be in the range <code>[t<sub>0</sub>, t<sub>n</sub>]</code>, where <code>t<sub>0</sub></code>
+ *
+ * @exception {DeveloperError} time must be in the range <code>[t<sub>0</sub>, t<sub>n</sub>]</code>, where <code>t<sub>0</sub></code>
  *                             is the first element in the array <code>times</code> and <code>t<sub>n</sub></code> is the last element
  *                             in the array <code>times</code>.
  */
@@ -99,25 +111,29 @@ MorphWeightSpline.prototype.findTimeInterval =
 /**
  * Wraps the given time to the period covered by the spline.
  * @function
+ *
  * @param {number} time The time.
- * @returns {number} The time, wrapped around to the updated animation.
+ * @return {number} The time, wrapped around to the updated animation.
  */
 MorphWeightSpline.prototype.wrapTime = Spline.prototype.wrapTime;
 
 /**
  * Clamps the given time to the period covered by the spline.
  * @function
+ *
  * @param {number} time The time.
- * @returns {number} The time, clamped to the animation period.
+ * @return {number} The time, clamped to the animation period.
  */
 MorphWeightSpline.prototype.clampTime = Spline.prototype.clampTime;
 
 /**
  * Evaluates the curve at a given time.
+ *
  * @param {number} time The time at which to evaluate the curve.
  * @param {number[]} [result] The object onto which to store the result.
  * @returns {number[]} The modified result parameter or a new instance of the point on the curve at the given time.
- * @throws {DeveloperError} time must be in the range <code>[t<sub>0</sub>, t<sub>n</sub>]</code>, where <code>t<sub>0</sub></code>
+ *
+ * @exception {DeveloperError} time must be in the range <code>[t<sub>0</sub>, t<sub>n</sub>]</code>, where <code>t<sub>0</sub></code>
  *                             is the first element in the array <code>times</code> and <code>t<sub>n</sub></code> is the last element
  *                             in the array <code>times</code>.
  */

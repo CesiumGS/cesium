@@ -9,11 +9,13 @@ import Matrix3 from "./Matrix3.js";
 /**
  * A set of 4-dimensional coordinates used to represent rotation in 3-dimensional space.
  * @alias Quaternion
- * @class
- * @param {number} [x] The X component.
- * @param {number} [y] The Y component.
- * @param {number} [z] The Z component.
- * @param {number} [w] The W component.
+ * @constructor
+ *
+ * @param {number} [x=0.0] The X component.
+ * @param {number} [y=0.0] The Y component.
+ * @param {number} [z=0.0] The Z component.
+ * @param {number} [w=0.0] The W component.
+ *
  * @see PackableForInterpolation
  */
 function Quaternion(x, y, z, w) {
@@ -50,6 +52,7 @@ let fromAxisAngleScratch = new Cartesian3();
 
 /**
  * Computes a quaternion representing a rotation around an axis.
+ *
  * @param {Cartesian3} axis The axis of rotation.
  * @param {number} angle The angle in radians to rotate around the axis.
  * @param {Quaternion} [result] The object onto which to store the result.
@@ -83,9 +86,11 @@ const fromRotationMatrixNext = [1, 2, 0];
 const fromRotationMatrixQuat = new Array(3);
 /**
  * Computes a Quaternion from the provided Matrix3 instance.
+ *
  * @param {Matrix3} matrix The rotation matrix.
  * @param {Quaternion} [result] The object onto which to store the result.
  * @returns {Quaternion} The modified result parameter or a new Quaternion instance if one was not provided.
+ *
  * @see Matrix3.fromQuaternion
  */
 Quaternion.fromRotationMatrix = function (matrix, result) {
@@ -174,6 +179,7 @@ let scratchRollQuaternion = new Quaternion();
  * Computes a rotation from the given heading, pitch and roll angles. Heading is the rotation about the
  * negative z axis. Pitch is the rotation about the negative y axis. Roll is the rotation about
  * the positive x axis.
+ *
  * @param {HeadingPitchRoll} headingPitchRoll The rotation expressed as a heading, pitch and roll.
  * @param {Quaternion} [result] The object onto which to store the result.
  * @returns {Quaternion} The modified result parameter or a new Quaternion instance if none was provided.
@@ -220,9 +226,11 @@ Quaternion.packedLength = 4;
 
 /**
  * Stores the provided instance into the provided array.
+ *
  * @param {Quaternion} value The value to pack.
  * @param {number[]} array The array to pack into.
- * @param {number} [startingIndex] The index into the array at which to start packing the elements.
+ * @param {number} [startingIndex=0] The index into the array at which to start packing the elements.
+ *
  * @returns {number[]} The array that was packed into
  */
 Quaternion.pack = function (value, array, startingIndex) {
@@ -243,8 +251,9 @@ Quaternion.pack = function (value, array, startingIndex) {
 
 /**
  * Retrieves an instance from a packed array.
+ *
  * @param {number[]} array The packed array.
- * @param {number} [startingIndex] The starting index of the element to be unpacked.
+ * @param {number} [startingIndex=0] The starting index of the element to be unpacked.
  * @param {Quaternion} [result] The object into which to store the result.
  * @returns {Quaternion} The modified result parameter or a new Quaternion instance if one was not provided.
  */
@@ -273,9 +282,10 @@ Quaternion.packedInterpolationLength = 3;
 
 /**
  * Converts a packed array into a form suitable for interpolation.
+ *
  * @param {number[]} packedArray The packed array.
- * @param {number} [startingIndex] The index of the first element to be converted.
- * @param {number} [lastIndex] The index of the last element to be converted.
+ * @param {number} [startingIndex=0] The index of the first element to be converted.
+ * @param {number} [lastIndex=packedArray.length] The index of the last element to be converted.
  * @param {number[]} [result] The object into which to store the result.
  */
 Quaternion.convertPackedArrayForInterpolation = function (
@@ -331,10 +341,11 @@ Quaternion.convertPackedArrayForInterpolation = function (
 
 /**
  * Retrieves an instance from a packed array converted with {@link convertPackedArrayForInterpolation}.
+ *
  * @param {number[]} array The array previously packed for interpolation.
  * @param {number[]} sourceArray The original packed array.
- * @param {number} [firstIndex] The firstIndex used to convert the array.
- * @param {number} [lastIndex] The lastIndex used to convert the array.
+ * @param {number} [firstIndex=0] The firstIndex used to convert the array.
+ * @param {number} [lastIndex=packedArray.length] The lastIndex used to convert the array.
  * @param {Quaternion} [result] The object into which to store the result.
  * @returns {Quaternion} The modified result parameter or a new Quaternion instance if one was not provided.
  */
@@ -372,6 +383,7 @@ Quaternion.unpackInterpolationResult = function (
 
 /**
  * Duplicates a Quaternion instance.
+ *
  * @param {Quaternion} quaternion The quaternion to duplicate.
  * @param {Quaternion} [result] The object onto which to store the result.
  * @returns {Quaternion} The modified result parameter or a new Quaternion instance if one was not provided. (Returns undefined if quaternion is undefined)
@@ -399,6 +411,7 @@ Quaternion.clone = function (quaternion, result) {
 
 /**
  * Computes the conjugate of the provided quaternion.
+ *
  * @param {Quaternion} quaternion The quaternion to conjugate.
  * @param {Quaternion} result The object onto which to store the result.
  * @returns {Quaternion} The modified result parameter.
@@ -418,6 +431,7 @@ Quaternion.conjugate = function (quaternion, result) {
 
 /**
  * Computes magnitude squared for the provided quaternion.
+ *
  * @param {Quaternion} quaternion The quaternion to conjugate.
  * @returns {number} The magnitude squared.
  */
@@ -436,6 +450,7 @@ Quaternion.magnitudeSquared = function (quaternion) {
 
 /**
  * Computes magnitude for the provided quaternion.
+ *
  * @param {Quaternion} quaternion The quaternion to conjugate.
  * @returns {number} The magnitude.
  */
@@ -445,6 +460,7 @@ Quaternion.magnitude = function (quaternion) {
 
 /**
  * Computes the normalized form of the provided quaternion.
+ *
  * @param {Quaternion} quaternion The quaternion to normalize.
  * @param {Quaternion} result The object onto which to store the result.
  * @returns {Quaternion} The modified result parameter.
@@ -469,6 +485,7 @@ Quaternion.normalize = function (quaternion, result) {
 
 /**
  * Computes the inverse of the provided quaternion.
+ *
  * @param {Quaternion} quaternion The quaternion to normalize.
  * @param {Quaternion} result The object onto which to store the result.
  * @returns {Quaternion} The modified result parameter.
@@ -485,6 +502,7 @@ Quaternion.inverse = function (quaternion, result) {
 
 /**
  * Computes the componentwise sum of two quaternions.
+ *
  * @param {Quaternion} left The first quaternion.
  * @param {Quaternion} right The second quaternion.
  * @param {Quaternion} result The object onto which to store the result.
@@ -506,6 +524,7 @@ Quaternion.add = function (left, right, result) {
 
 /**
  * Computes the componentwise difference of two quaternions.
+ *
  * @param {Quaternion} left The first quaternion.
  * @param {Quaternion} right The second quaternion.
  * @param {Quaternion} result The object onto which to store the result.
@@ -527,6 +546,7 @@ Quaternion.subtract = function (left, right, result) {
 
 /**
  * Negates the provided quaternion.
+ *
  * @param {Quaternion} quaternion The quaternion to be negated.
  * @param {Quaternion} result The object onto which to store the result.
  * @returns {Quaternion} The modified result parameter.
@@ -546,6 +566,7 @@ Quaternion.negate = function (quaternion, result) {
 
 /**
  * Computes the dot (scalar) product of two quaternions.
+ *
  * @param {Quaternion} left The first quaternion.
  * @param {Quaternion} right The second quaternion.
  * @returns {number} The dot product.
@@ -563,6 +584,7 @@ Quaternion.dot = function (left, right) {
 
 /**
  * Computes the product of two quaternions.
+ *
  * @param {Quaternion} left The first quaternion.
  * @param {Quaternion} right The second quaternion.
  * @param {Quaternion} result The object onto which to store the result.
@@ -599,6 +621,7 @@ Quaternion.multiply = function (left, right, result) {
 
 /**
  * Multiplies the provided quaternion componentwise by the provided scalar.
+ *
  * @param {Quaternion} quaternion The quaternion to be scaled.
  * @param {number} scalar The scalar to multiply with.
  * @param {Quaternion} result The object onto which to store the result.
@@ -620,6 +643,7 @@ Quaternion.multiplyByScalar = function (quaternion, scalar, result) {
 
 /**
  * Divides the provided quaternion componentwise by the provided scalar.
+ *
  * @param {Quaternion} quaternion The quaternion to be divided.
  * @param {number} scalar The scalar to divide by.
  * @param {Quaternion} result The object onto which to store the result.
@@ -641,6 +665,7 @@ Quaternion.divideByScalar = function (quaternion, scalar, result) {
 
 /**
  * Computes the axis of rotation of the provided quaternion.
+ *
  * @param {Quaternion} quaternion The quaternion to use.
  * @param {Cartesian3} result The object onto which to store the result.
  * @returns {Cartesian3} The modified result parameter.
@@ -671,6 +696,7 @@ Quaternion.computeAxis = function (quaternion, result) {
 
 /**
  * Computes the angle of rotation of the provided quaternion.
+ *
  * @param {Quaternion} quaternion The quaternion to use.
  * @returns {number} The angle of rotation.
  */
@@ -688,6 +714,7 @@ Quaternion.computeAngle = function (quaternion) {
 let lerpScratch = new Quaternion();
 /**
  * Computes the linear interpolation or extrapolation at t using the provided quaternions.
+ *
  * @param {Quaternion} start The value corresponding to t at 0.0.
  * @param {Quaternion} end The value corresponding to t at 1.0.
  * @param {number} t The point along t at which to interpolate.
@@ -712,11 +739,13 @@ let slerpScaledP = new Quaternion();
 let slerpScaledR = new Quaternion();
 /**
  * Computes the spherical linear interpolation or extrapolation at t using the provided quaternions.
+ *
  * @param {Quaternion} start The value corresponding to t at 0.0.
  * @param {Quaternion} end The value corresponding to t at 1.0.
  * @param {number} t The point along t at which to interpolate.
  * @param {Quaternion} result The object onto which to store the result.
  * @returns {Quaternion} The modified result parameter.
+ *
  * @see Quaternion#fastSlerp
  */
 Quaternion.slerp = function (start, end, t, result) {
@@ -760,6 +789,7 @@ Quaternion.slerp = function (start, end, t, result) {
 
 /**
  * The logarithmic quaternion function.
+ *
  * @param {Quaternion} quaternion The unit quaternion.
  * @param {Cartesian3} result The object onto which to store the result.
  * @returns {Cartesian3} The modified result parameter.
@@ -782,6 +812,7 @@ Quaternion.log = function (quaternion, result) {
 
 /**
  * The exponential quaternion function.
+ *
  * @param {Cartesian3} cartesian The cartesian.
  * @param {Quaternion} result The object onto which to store the result.
  * @returns {Quaternion} The modified result parameter.
@@ -815,11 +846,13 @@ const squadScratchQuaternion1 = new Quaternion();
 /**
  * Computes an inner quadrangle point.
  * <p>This will compute quaternions that ensure a squad curve is C<sup>1</sup>.</p>
+ *
  * @param {Quaternion} q0 The first quaternion.
  * @param {Quaternion} q1 The second quaternion.
  * @param {Quaternion} q2 The third quaternion.
  * @param {Quaternion} result The object onto which to store the result.
  * @returns {Quaternion} The modified result parameter.
+ *
  * @see Quaternion#squad
  */
 Quaternion.computeInnerQuadrangle = function (q0, q1, q2, result) {
@@ -847,6 +880,7 @@ Quaternion.computeInnerQuadrangle = function (q0, q1, q2, result) {
 
 /**
  * Computes the spherical quadrangle interpolation between quaternions.
+ *
  * @param {Quaternion} q0 The first quaternion.
  * @param {Quaternion} q1 The second quaternion.
  * @param {Quaternion} s0 The first inner quadrangle.
@@ -854,6 +888,8 @@ Quaternion.computeInnerQuadrangle = function (q0, q1, q2, result) {
  * @param {number} t The time in [0,1] used to interpolate.
  * @param {Quaternion} result The object onto which to store the result.
  * @returns {Quaternion} The modified result parameter.
+ *
+ *
  * @example
  * // 1. compute the squad interpolation between two quaternions on a curve
  * const s0 = Cesium.Quaternion.computeInnerQuadrangle(quaternions[i - 1], quaternions[i], quaternions[i + 1], new Cesium.Quaternion());
@@ -863,6 +899,7 @@ Quaternion.computeInnerQuadrangle = function (q0, q1, q2, result) {
  * // 2. compute the squad interpolation as above but where the first quaternion is a end point.
  * const s1 = Cesium.Quaternion.computeInnerQuadrangle(quaternions[0], quaternions[1], quaternions[2], new Cesium.Quaternion());
  * const q = Cesium.Quaternion.squad(quaternions[0], quaternions[1], quaternions[0], s1, t, new Cesium.Quaternion());
+ *
  * @see Quaternion#computeInnerQuadrangle
  */
 Quaternion.squad = function (q0, q1, s0, s1, t, result) {
@@ -901,11 +938,13 @@ v[7] = (opmu * 8.0) / 17.0;
 /**
  * Computes the spherical linear interpolation or extrapolation at t using the provided quaternions.
  * This implementation is faster than {@link Quaternion#slerp}, but is only accurate up to 10<sup>-6</sup>.
+ *
  * @param {Quaternion} start The value corresponding to t at 0.0.
  * @param {Quaternion} end The value corresponding to t at 1.0.
  * @param {number} t The point along t at which to interpolate.
  * @param {Quaternion} result The object onto which to store the result.
  * @returns {Quaternion} The modified result parameter.
+ *
  * @see Quaternion#slerp
  */
 Quaternion.fastSlerp = function (start, end, t, result) {
@@ -976,6 +1015,7 @@ Quaternion.fastSlerp = function (start, end, t, result) {
 /**
  * Computes the spherical quadrangle interpolation between quaternions.
  * An implementation that is faster than {@link Quaternion#squad}, but less accurate.
+ *
  * @param {Quaternion} q0 The first quaternion.
  * @param {Quaternion} q1 The second quaternion.
  * @param {Quaternion} s0 The first inner quadrangle.
@@ -983,6 +1023,7 @@ Quaternion.fastSlerp = function (start, end, t, result) {
  * @param {number} t The time in [0,1] used to interpolate.
  * @param {Quaternion} result The object onto which to store the result.
  * @returns {Quaternion} The modified result parameter or a new instance if none was provided.
+ *
  * @see Quaternion#squad
  */
 Quaternion.fastSquad = function (q0, q1, s0, s1, t, result) {
@@ -1003,6 +1044,7 @@ Quaternion.fastSquad = function (q0, q1, s0, s1, t, result) {
 /**
  * Compares the provided quaternions componentwise and returns
  * <code>true</code> if they are equal, <code>false</code> otherwise.
+ *
  * @param {Quaternion} [left] The first quaternion.
  * @param {Quaternion} [right] The second quaternion.
  * @returns {boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
@@ -1023,9 +1065,10 @@ Quaternion.equals = function (left, right) {
  * Compares the provided quaternions componentwise and returns
  * <code>true</code> if they are within the provided epsilon,
  * <code>false</code> otherwise.
+ *
  * @param {Quaternion} [left] The first quaternion.
  * @param {Quaternion} [right] The second quaternion.
- * @param {number} [epsilon] The epsilon to use for equality testing.
+ * @param {number} [epsilon=0] The epsilon to use for equality testing.
  * @returns {boolean} <code>true</code> if left and right are within the provided epsilon, <code>false</code> otherwise.
  */
 Quaternion.equalsEpsilon = function (left, right, epsilon) {
@@ -1044,6 +1087,7 @@ Quaternion.equalsEpsilon = function (left, right, epsilon) {
 
 /**
  * An immutable Quaternion instance initialized to (0.0, 0.0, 0.0, 0.0).
+ *
  * @type {Quaternion}
  * @constant
  */
@@ -1051,6 +1095,7 @@ Quaternion.ZERO = Object.freeze(new Quaternion(0.0, 0.0, 0.0, 0.0));
 
 /**
  * An immutable Quaternion instance initialized to (0.0, 0.0, 0.0, 1.0).
+ *
  * @type {Quaternion}
  * @constant
  */
@@ -1058,6 +1103,7 @@ Quaternion.IDENTITY = Object.freeze(new Quaternion(0.0, 0.0, 0.0, 1.0));
 
 /**
  * Duplicates this Quaternion instance.
+ *
  * @param {Quaternion} [result] The object onto which to store the result.
  * @returns {Quaternion} The modified result parameter or a new Quaternion instance if one was not provided.
  */
@@ -1068,6 +1114,7 @@ Quaternion.prototype.clone = function (result) {
 /**
  * Compares this and the provided quaternion componentwise and returns
  * <code>true</code> if they are equal, <code>false</code> otherwise.
+ *
  * @param {Quaternion} [right] The right hand side quaternion.
  * @returns {boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
  */
@@ -1079,8 +1126,9 @@ Quaternion.prototype.equals = function (right) {
  * Compares this and the provided quaternion componentwise and returns
  * <code>true</code> if they are within the provided epsilon,
  * <code>false</code> otherwise.
+ *
  * @param {Quaternion} [right] The right hand side quaternion.
- * @param {number} [epsilon] The epsilon to use for equality testing.
+ * @param {number} [epsilon=0] The epsilon to use for equality testing.
  * @returns {boolean} <code>true</code> if left and right are within the provided epsilon, <code>false</code> otherwise.
  */
 Quaternion.prototype.equalsEpsilon = function (right, epsilon) {
@@ -1089,6 +1137,7 @@ Quaternion.prototype.equalsEpsilon = function (right, epsilon) {
 
 /**
  * Returns a string representing this quaternion in the format (x, y, z, w).
+ *
  * @returns {string} A string representing this Quaternion.
  */
 Quaternion.prototype.toString = function () {

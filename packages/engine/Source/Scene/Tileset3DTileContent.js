@@ -7,11 +7,10 @@ import destroyObject from "../Core/destroyObject.js";
  * <p>
  * Implements the {@link Cesium3DTileContent} interface.
  * </p>
- * @param tileset
- * @param tile
- * @param resource
+ *
  * @alias Tileset3DTileContent
- * @class
+ * @constructor
+ *
  * @private
  */
 function Tileset3DTileContent(tileset, tile, resource) {
@@ -72,7 +71,9 @@ Object.defineProperties(Tileset3DTileContent.prototype, {
 
   /**
    * Returns true when the tile's content is ready to render; otherwise false
+   *
    * @memberof Tileset3DTileContent.prototype
+   *
    * @type {boolean}
    * @readonly
    * @private
@@ -145,8 +146,6 @@ Tileset3DTileContent.fromJson = function (tileset, tile, resource, json) {
 /**
  * Part of the {@link Cesium3DTileContent} interface.  <code>Tileset3DTileContent</code>
  * always returns <code>false</code> since a tile of this type does not have any features.
- * @param batchId
- * @param name
  */
 Tileset3DTileContent.prototype.hasProperty = function (batchId, name) {
   return false;
@@ -155,7 +154,6 @@ Tileset3DTileContent.prototype.hasProperty = function (batchId, name) {
 /**
  * Part of the {@link Cesium3DTileContent} interface.  <code>Tileset3DTileContent</code>
  * always returns <code>undefined</code> since a tile of this type does not have any features.
- * @param batchId
  */
 Tileset3DTileContent.prototype.getFeature = function (batchId) {
   return undefined;

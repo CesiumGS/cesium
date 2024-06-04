@@ -1,7 +1,8 @@
 /**
  * Representation of <Camera> from KML
  * @alias KmlCamera
- * @class
+ * @constructor
+ *
  * @param {Cartesian3} position camera position
  * @param {HeadingPitchRoll} headingPitchRoll camera orientation
  */

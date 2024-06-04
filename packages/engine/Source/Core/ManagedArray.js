@@ -3,10 +3,12 @@ import defaultValue from "./defaultValue.js";
 
 /**
  * A wrapper around arrays so that the internal length of the array can be manually managed.
+ *
  * @alias ManagedArray
- * @class
+ * @constructor
  * @private
- * @param {number} [length] The initial length of the array.
+ *
+ * @param {number} [length=0] The initial length of the array.
  */
 function ManagedArray(length) {
   length = defaultValue(length, 0);
@@ -18,6 +20,7 @@ Object.defineProperties(ManagedArray.prototype, {
   /**
    * Gets or sets the length of the array.
    * If the set length is greater than the length of the internal array, the internal array is resized.
+   *
    * @memberof ManagedArray.prototype
    * @type {number}
    */
@@ -45,6 +48,7 @@ Object.defineProperties(ManagedArray.prototype, {
 
   /**
    * Gets the internal array.
+   *
    * @memberof ManagedArray.prototype
    * @type {Array}
    * @readonly
@@ -58,6 +62,7 @@ Object.defineProperties(ManagedArray.prototype, {
 
 /**
  * Gets the element at an index.
+ *
  * @param {number} index The index to get.
  */
 ManagedArray.prototype.get = function (index) {
@@ -70,6 +75,7 @@ ManagedArray.prototype.get = function (index) {
 
 /**
  * Sets the element at an index. Resizes the array if index is greater than the length of the array.
+ *
  * @param {number} index The index to set.
  * @param {*} element The element to set at index.
  */
@@ -86,6 +92,7 @@ ManagedArray.prototype.set = function (index, element) {
 
 /**
  * Returns the last element in the array without modifying the array.
+ *
  * @returns {*} The last element in the array.
  */
 ManagedArray.prototype.peek = function () {
@@ -94,6 +101,7 @@ ManagedArray.prototype.peek = function () {
 
 /**
  * Push an element into the array.
+ *
  * @param {*} element The element to push.
  */
 ManagedArray.prototype.push = function (element) {
@@ -103,6 +111,7 @@ ManagedArray.prototype.push = function (element) {
 
 /**
  * Pop an element from the array.
+ *
  * @returns {*} The last element in the array.
  */
 ManagedArray.prototype.pop = function () {
@@ -116,6 +125,7 @@ ManagedArray.prototype.pop = function () {
 
 /**
  * Resize the internal array if length > _array.length.
+ *
  * @param {number} length The length.
  */
 ManagedArray.prototype.reserve = function (length) {
@@ -130,6 +140,7 @@ ManagedArray.prototype.reserve = function (length) {
 
 /**
  * Resize the array.
+ *
  * @param {number} length The length.
  */
 ManagedArray.prototype.resize = function (length) {
@@ -142,6 +153,7 @@ ManagedArray.prototype.resize = function (length) {
 
 /**
  * Trim the internal array to the specified length. Defaults to the current length.
+ *
  * @param {number} [length] The length.
  */
 ManagedArray.prototype.trim = function (length) {

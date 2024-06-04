@@ -12,7 +12,6 @@ import createUniformArray from "./createUniformArray.js";
 let nextShaderProgramId = 0;
 
 /**
- * @param options
  * @private
  */
 function ShaderProgram(options) {
@@ -87,6 +86,7 @@ Object.defineProperties(ShaderProgram.prototype, {
   /**
    * GLSL source for the shader program's vertex shader.
    * @memberof ShaderProgram.prototype
+   *
    * @type {ShaderSource}
    * @readonly
    */
@@ -98,6 +98,7 @@ Object.defineProperties(ShaderProgram.prototype, {
   /**
    * GLSL source for the shader program's fragment shader.
    * @memberof ShaderProgram.prototype
+   *
    * @type {ShaderSource}
    * @readonly
    */

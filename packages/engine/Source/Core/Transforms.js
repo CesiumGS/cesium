@@ -21,6 +21,7 @@ import TimeConstants from "./TimeConstants.js";
 
 /**
  * Contains functions for transforming positions to various reference frames.
+ *
  * @namespace Transforms
  */
 const Transforms = {};
@@ -93,7 +94,7 @@ let scratchThirdCartesian = new Cartesian3();
  *  'east', 'north', 'up', 'west', 'south' or 'down'.
  * @param  {string} secondAxis  name of the second axis of the local reference frame. Must be
  *  'east', 'north', 'up', 'west', 'south' or 'down'.
- * @returns {Transforms.LocalFrameToFixedFrame} The function that will computes a
+ * @return {Transforms.LocalFrameToFixedFrame} The function that will computes a
  * 4x4 transformation matrix from a reference frame, with first axis and second axis compliant with the parameters,
  */
 Transforms.localFrameToFixedFrameGenerator = function (firstAxis, secondAxis) {
@@ -261,11 +262,13 @@ Transforms.localFrameToFixedFrameGenerator = function (firstAxis, secondAxis) {
  * <li>The <code>y</code> axis points in the local north direction.</li>
  * <li>The <code>z</code> axis points in the direction of the ellipsoid surface normal which passes through the position.</li>
  * </ul>
+ *
  * @function
  * @param {Cartesian3} origin The center point of the local reference frame.
  * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid whose fixed frame is used in the transformation.
  * @param {Matrix4} [result] The object onto which to store the result.
  * @returns {Matrix4} The modified result parameter or a new Matrix4 instance if none was provided.
+ *
  * @example
  * // Get the transform from local east-north-up at cartographic (0.0, 0.0) to Earth's fixed frame.
  * const center = Cesium.Cartesian3.fromDegrees(0.0, 0.0);
@@ -285,11 +288,13 @@ Transforms.eastNorthUpToFixedFrame = Transforms.localFrameToFixedFrameGenerator(
  * <li>The <code>y</code> axis points in the local east direction.</li>
  * <li>The <code>z</code> axis points in the opposite direction of the ellipsoid surface normal which passes through the position.</li>
  * </ul>
+ *
  * @function
  * @param {Cartesian3} origin The center point of the local reference frame.
  * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid whose fixed frame is used in the transformation.
  * @param {Matrix4} [result] The object onto which to store the result.
  * @returns {Matrix4} The modified result parameter or a new Matrix4 instance if none was provided.
+ *
  * @example
  * // Get the transform from local north-east-down at cartographic (0.0, 0.0) to Earth's fixed frame.
  * const center = Cesium.Cartesian3.fromDegrees(0.0, 0.0);
@@ -309,11 +314,13 @@ Transforms.northEastDownToFixedFrame = Transforms.localFrameToFixedFrameGenerato
  * <li>The <code>y</code> axis points in the direction of the ellipsoid surface normal which passes through the position.</li>
  * <li>The <code>z</code> axis points in the local east direction.</li>
  * </ul>
+ *
  * @function
  * @param {Cartesian3} origin The center point of the local reference frame.
  * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid whose fixed frame is used in the transformation.
  * @param {Matrix4} [result] The object onto which to store the result.
  * @returns {Matrix4} The modified result parameter or a new Matrix4 instance if none was provided.
+ *
  * @example
  * // Get the transform from local north-up-east at cartographic (0.0, 0.0) to Earth's fixed frame.
  * const center = Cesium.Cartesian3.fromDegrees(0.0, 0.0);
@@ -333,11 +340,13 @@ Transforms.northUpEastToFixedFrame = Transforms.localFrameToFixedFrameGenerator(
  * <li>The <code>y</code> axis points in the local west direction.</li>
  * <li>The <code>z</code> axis points in the direction of the ellipsoid surface normal which passes through the position.</li>
  * </ul>
+ *
  * @function
  * @param {Cartesian3} origin The center point of the local reference frame.
  * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid whose fixed frame is used in the transformation.
  * @param {Matrix4} [result] The object onto which to store the result.
  * @returns {Matrix4} The modified result parameter or a new Matrix4 instance if none was provided.
+ *
  * @example
  * // Get the transform from local north-West-Up at cartographic (0.0, 0.0) to Earth's fixed frame.
  * const center = Cesium.Cartesian3.fromDegrees(0.0, 0.0);
@@ -357,13 +366,15 @@ const scratchHPRMatrix4 = new Matrix4();
  * centered at the provided origin to the provided ellipsoid's fixed reference frame. Heading is the rotation from the local east
  * direction where a positive angle is increasing eastward. Pitch is the rotation from the local east-north plane. Positive pitch angles
  * are above the plane. Negative pitch angles are below the plane. Roll is the first rotation applied about the local east axis.
+ *
  * @param {Cartesian3} origin The center point of the local reference frame.
  * @param {HeadingPitchRoll} headingPitchRoll The heading, pitch, and roll.
- * @param {Ellipsoid} [ellipsoid] The ellipsoid whose fixed frame is used in the transformation.
- * @param {Transforms.LocalFrameToFixedFrame} [fixedFrameTransform] A 4x4 transformation
+ * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid whose fixed frame is used in the transformation.
+ * @param {Transforms.LocalFrameToFixedFrame} [fixedFrameTransform=Transforms.eastNorthUpToFixedFrame] A 4x4 transformation
  *  matrix from a reference frame to the provided ellipsoid's fixed reference frame
  * @param {Matrix4} [result] The object onto which to store the result.
  * @returns {Matrix4} The modified result parameter or a new Matrix4 instance if none was provided.
+ *
  * @example
  * // Get the transform from local heading-pitch-roll at cartographic (0.0, 0.0) to Earth's fixed frame.
  * const center = Cesium.Cartesian3.fromDegrees(0.0, 0.0);
@@ -410,13 +421,15 @@ const scratchHPRMatrix3 = new Matrix3();
  * centered at the provided origin. Heading is the rotation from the local east
  * direction where a positive angle is increasing eastward. Pitch is the rotation from the local east-north plane. Positive pitch angles
  * are above the plane. Negative pitch angles are below the plane. Roll is the first rotation applied about the local east axis.
+ *
  * @param {Cartesian3} origin The center point of the local reference frame.
  * @param {HeadingPitchRoll} headingPitchRoll The heading, pitch, and roll.
- * @param {Ellipsoid} [ellipsoid] The ellipsoid whose fixed frame is used in the transformation.
- * @param {Transforms.LocalFrameToFixedFrame} [fixedFrameTransform] A 4x4 transformation
+ * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid whose fixed frame is used in the transformation.
+ * @param {Transforms.LocalFrameToFixedFrame} [fixedFrameTransform=Transforms.eastNorthUpToFixedFrame] A 4x4 transformation
  *  matrix from a reference frame to the provided ellipsoid's fixed reference frame
  * @param {Quaternion} [result] The object onto which to store the result.
  * @returns {Quaternion} The modified result parameter or a new Quaternion instance if none was provided.
+ *
  * @example
  * // Get the quaternion from local heading-pitch-roll at cartographic (0.0, 0.0) to Earth's fixed frame.
  * const center = Cesium.Cartesian3.fromDegrees(0.0, 0.0);
@@ -458,9 +471,10 @@ const hprQuaternionScratch = new Quaternion();
  * Computes heading-pitch-roll angles from a transform in a particular reference frame. Heading is the rotation from the local east
  * direction where a positive angle is increasing eastward. Pitch is the rotation from the local east-north plane. Positive pitch angles
  * are above the plane. Negative pitch angles are below the plane. Roll is the first rotation applied about the local east axis.
+ *
  * @param {Matrix4} transform The transform
- * @param {Ellipsoid} [ellipsoid] The ellipsoid whose fixed frame is used in the transformation.
- * @param {Transforms.LocalFrameToFixedFrame} [fixedFrameTransform] A 4x4 transformation
+ * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid whose fixed frame is used in the transformation.
+ * @param {Transforms.LocalFrameToFixedFrame} [fixedFrameTransform=Transforms.eastNorthUpToFixedFrame] A 4x4 transformation
  *  matrix from a reference frame to the provided ellipsoid's fixed reference frame
  * @param {HeadingPitchRoll} [result] The object onto which to store the result.
  * @returns {HeadingPitchRoll} The modified result parameter or a new HeadingPitchRoll instance if none was provided.
@@ -527,9 +541,11 @@ let dateInUtc = new JulianDate();
 /**
  * Computes a rotation matrix to transform a point or vector from True Equator Mean Equinox (TEME) axes to the
  * pseudo-fixed axes at a given time.  This method treats the UT1 time standard as equivalent to UTC.
+ *
  * @param {JulianDate} date The time at which to compute the rotation matrix.
  * @param {Matrix3} [result] The object onto which to store the result.
  * @returns {Matrix3} The modified result parameter or a new Matrix3 instance if none was provided.
+ *
  * @example
  * //Set the view to the inertial frame.
  * scene.postUpdate.addEventListener(function(scene, time) {
@@ -609,8 +625,10 @@ Transforms.computeTemeToPseudoFixedMatrix = function (date, result) {
  * The source of IAU 2006 XYS data, used for computing the transformation between the
  * Fixed and ICRF axes.
  * @type {Iau2006XysData}
+ *
  * @see Transforms.computeIcrfToFixedMatrix
  * @see Transforms.computeFixedToIcrfMatrix
+ *
  * @private
  */
 Transforms.iau2006XysData = new Iau2006XysData();
@@ -620,8 +638,10 @@ Transforms.iau2006XysData = new Iau2006XysData();
  * between the Fixed and ICRF axes.  By default, zero values are used for all EOP values,
  * yielding a reasonable but not completely accurate representation of the ICRF axes.
  * @type {EarthOrientationParameters}
+ *
  * @see Transforms.computeIcrfToFixedMatrix
  * @see Transforms.computeFixedToIcrfMatrix
+ *
  * @private
  */
 Transforms.earthOrientationParameters = EarthOrientationParameters.NONE;
@@ -633,14 +653,18 @@ const j2000ttDays = 2451545.0;
  * Preloads the data necessary to transform between the ICRF and Fixed axes, in either
  * direction, over a given interval.  This function returns a promise that, when resolved,
  * indicates that the preload has completed.
+ *
  * @param {TimeInterval} timeInterval The interval to preload.
  * @returns {Promise<void>} A promise that, when resolved, indicates that the preload has completed
  *          and evaluation of the transformation between the fixed and ICRF axes will
  *          no longer return undefined for a time inside the interval.
+ *
+ *
  * @example
  * const interval = new Cesium.TimeInterval(...);
  * await Cesium.Transforms.preloadIcrfFixed(interval));
  * // the data is now loaded
+ *
  * @see Transforms.computeIcrfToFixedMatrix
  * @see Transforms.computeFixedToIcrfMatrix
  */
@@ -663,11 +687,14 @@ Transforms.preloadIcrfFixed = function (timeInterval) {
  * Reference Frame (GCRF/ICRF) inertial frame axes to the Earth-Fixed frame axes (ITRF)
  * at a given time.  This function may return undefined if the data necessary to
  * do the transformation is not yet loaded.
+ *
  * @param {JulianDate} date The time at which to compute the rotation matrix.
  * @param {Matrix3} [result] The object onto which to store the result.  If this parameter is
  *                  not specified, a new instance is created and returned.
  * @returns {Matrix3} The rotation matrix, or undefined if the data necessary to do the
  *                   transformation is not yet loaded.
+ *
+ *
  * @example
  * scene.postUpdate.addEventListener(function(scene, time) {
  *   // View in ICRF.
@@ -678,6 +705,7 @@ Transforms.preloadIcrfFixed = function (timeInterval) {
  *     camera.lookAtTransform(transform, offset);
  *   }
  * });
+ *
  * @see Transforms.preloadIcrfFixed
  */
 Transforms.computeIcrfToFixedMatrix = function (date, result) {
@@ -715,11 +743,14 @@ const rotation2Scratch = new Matrix3();
  * to the International Celestial Reference Frame (GCRF/ICRF) inertial frame axes
  * at a given time.  This function may return undefined if the data necessary to
  * do the transformation is not yet loaded.
+ *
  * @param {JulianDate} date The time at which to compute the rotation matrix.
  * @param {Matrix3} [result] The object onto which to store the result.  If this parameter is
  *                  not specified, a new instance is created and returned.
  * @returns {Matrix3} The rotation matrix, or undefined if the data necessary to do the
  *                   transformation is not yet loaded.
+ *
+ *
  * @example
  * // Transform a point from the Fixed axes to the ICRF axes.
  * const now = Cesium.JulianDate.now();
@@ -729,6 +760,7 @@ const rotation2Scratch = new Matrix3();
  * if (Cesium.defined(fixedToIcrf)) {
  *     pointInInertial = Cesium.Matrix3.multiplyByVector(fixedToIcrf, pointInFixed, pointInInertial);
  * }
+ *
  * @see Transforms.preloadIcrfFixed
  */
 Transforms.computeFixedToIcrfMatrix = function (date, result) {
@@ -847,6 +879,7 @@ const pointToWindowCoordinatesTemp = new Cartesian4();
 
 /**
  * Transform a point from model coordinates to window coordinates.
+ *
  * @param {Matrix4} modelViewProjectionMatrix The 4x4 model-view-projection matrix.
  * @param {Matrix4} viewportTransformation The 4x4 viewport transformation.
  * @param {Cartesian3} point The point to transform.
@@ -870,10 +903,6 @@ Transforms.pointToWindowCoordinates = function (
 };
 
 /**
- * @param modelViewProjectionMatrix
- * @param viewportTransformation
- * @param point
- * @param result
  * @private
  */
 Transforms.pointToGLWindowCoordinates = function (
@@ -918,9 +947,10 @@ const upScratch = new Cartesian3();
 
 /**
  * Transform a position and velocity to a rotation matrix.
+ *
  * @param {Cartesian3} position The position to transform.
  * @param {Cartesian3} velocity The velocity vector to transform.
- * @param {Ellipsoid} [ellipsoid] The ellipsoid whose fixed frame is used in the transformation.
+ * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid whose fixed frame is used in the transformation.
  * @param {Matrix3} [result] The object onto which to store the result.
  * @returns {Matrix3} The modified result parameter or a new Matrix3 instance if none was provided.
  */
@@ -1000,9 +1030,6 @@ const scratchFromENU = new Matrix4();
 const scratchToENU = new Matrix4();
 
 /**
- * @param projection
- * @param matrix
- * @param result
  * @private
  */
 Transforms.basisTo2D = function (projection, matrix, result) {
@@ -1062,9 +1089,6 @@ Transforms.basisTo2D = function (projection, matrix, result) {
 };
 
 /**
- * @param projection
- * @param center
- * @param result
  * @private
  */
 Transforms.wgs84To2DModelMatrix = function (projection, center, result) {

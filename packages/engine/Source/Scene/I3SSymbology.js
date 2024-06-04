@@ -8,7 +8,6 @@ import srgbToLinear from "../Core/srgbToLinear.js";
  * <p>
  * Do not construct this directly, instead access symbology through {@link I3SLayer}.
  * </p>
- * @param layer
  * @alias I3SSymbology
  * @internalConstructor
  */
@@ -280,7 +279,6 @@ function findHashForClassBreaks(hash, values, valueIndex) {
 }
 
 /**
- * @param node
  * @private
  */
 I3SSymbology.prototype._getSymbology = async function (node) {

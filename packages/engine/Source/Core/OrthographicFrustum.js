@@ -10,13 +10,16 @@ import OrthographicOffCenterFrustum from "./OrthographicOffCenterFrustum.js";
  * Each plane is represented by a {@link Cartesian4} object, where the x, y, and z components
  * define the unit vector normal to the plane, and the w component is the distance of the
  * plane from the origin/camera position.
+ *
  * @alias OrthographicFrustum
- * @class
+ * @constructor
+ *
  * @param {object} [options] An object with the following properties:
  * @param {number} [options.width] The width of the frustum in meters.
  * @param {number} [options.aspectRatio] The aspect ratio of the frustum's width to it's height.
- * @param {number} [options.near] The distance of the near plane.
- * @param {number} [options.far] The distance of the far plane.
+ * @param {number} [options.near=1.0] The distance of the near plane.
+ * @param {number} [options.far=500000000.0] The distance of the far plane.
+ *
  * @example
  * const maxRadii = ellipsoid.maximumRadius;
  *
@@ -70,9 +73,11 @@ OrthographicFrustum.packedLength = 4;
 
 /**
  * Stores the provided instance into the provided array.
+ *
  * @param {OrthographicFrustum} value The value to pack.
  * @param {number[]} array The array to pack into.
- * @param {number} [startingIndex] The index into the array at which to start packing the elements.
+ * @param {number} [startingIndex=0] The index into the array at which to start packing the elements.
+ *
  * @returns {number[]} The array that was packed into
  */
 OrthographicFrustum.pack = function (value, array, startingIndex) {
@@ -93,8 +98,9 @@ OrthographicFrustum.pack = function (value, array, startingIndex) {
 
 /**
  * Retrieves an instance from a packed array.
+ *
  * @param {number[]} array The packed array.
- * @param {number} [startingIndex] The starting index of the element to be unpacked.
+ * @param {number} [startingIndex=0] The starting index of the element to be unpacked.
  * @param {OrthographicFrustum} [result] The object into which to store the result.
  * @returns {OrthographicFrustum} The modified result parameter or a new OrthographicFrustum instance if one was not provided.
  */
@@ -195,10 +201,12 @@ Object.defineProperties(OrthographicFrustum.prototype, {
 
 /**
  * Creates a culling volume for this frustum.
+ *
  * @param {Cartesian3} position The eye position.
  * @param {Cartesian3} direction The view direction.
  * @param {Cartesian3} up The up direction.
  * @returns {CullingVolume} A culling volume at the given position and orientation.
+ *
  * @example
  * // Check if a bounding volume intersects the frustum.
  * const cullingVolume = frustum.computeCullingVolume(cameraPosition, cameraDirection, cameraUp);
@@ -215,15 +223,18 @@ OrthographicFrustum.prototype.computeCullingVolume = function (
 
 /**
  * Returns the pixel's width and height in meters.
+ *
  * @param {number} drawingBufferWidth The width of the drawing buffer.
  * @param {number} drawingBufferHeight The height of the drawing buffer.
  * @param {number} distance The distance to the near plane in meters.
  * @param {number} pixelRatio The scaling factor from pixel space to coordinate space.
  * @param {Cartesian2} result The object onto which to store the result.
  * @returns {Cartesian2} The modified result parameter or a new instance of {@link Cartesian2} with the pixel's width and height in the x and y properties, respectively.
- * @throws {DeveloperError} drawingBufferWidth must be greater than zero.
- * @throws {DeveloperError} drawingBufferHeight must be greater than zero.
- * @throws {DeveloperError} pixelRatio must be greater than zero.
+ *
+ * @exception {DeveloperError} drawingBufferWidth must be greater than zero.
+ * @exception {DeveloperError} drawingBufferHeight must be greater than zero.
+ * @exception {DeveloperError} pixelRatio must be greater than zero.
+ *
  * @example
  * // Example 1
  * // Get the width and height of a pixel.
@@ -248,6 +259,7 @@ OrthographicFrustum.prototype.getPixelDimensions = function (
 
 /**
  * Returns a duplicate of a OrthographicFrustum instance.
+ *
  * @param {OrthographicFrustum} [result] The object onto which to store the result.
  * @returns {OrthographicFrustum} The modified result parameter or a new OrthographicFrustum instance if one was not provided.
  */
@@ -275,6 +287,7 @@ OrthographicFrustum.prototype.clone = function (result) {
 /**
  * Compares the provided OrthographicFrustum componentwise and returns
  * <code>true</code> if they are equal, <code>false</code> otherwise.
+ *
  * @param {OrthographicFrustum} [other] The right hand side OrthographicFrustum.
  * @returns {boolean} <code>true</code> if they are equal, <code>false</code> otherwise.
  */
@@ -297,9 +310,10 @@ OrthographicFrustum.prototype.equals = function (other) {
  * Compares the provided OrthographicFrustum componentwise and returns
  * <code>true</code> if they pass an absolute or relative tolerance test,
  * <code>false</code> otherwise.
+ *
  * @param {OrthographicFrustum} other The right hand side OrthographicFrustum.
  * @param {number} relativeEpsilon The relative epsilon tolerance to use for equality testing.
- * @param {number} [absoluteEpsilon] The absolute epsilon tolerance to use for equality testing.
+ * @param {number} [absoluteEpsilon=relativeEpsilon] The absolute epsilon tolerance to use for equality testing.
  * @returns {boolean} <code>true</code> if this and other are within the provided epsilon, <code>false</code> otherwise.
  */
 OrthographicFrustum.prototype.equalsEpsilon = function (

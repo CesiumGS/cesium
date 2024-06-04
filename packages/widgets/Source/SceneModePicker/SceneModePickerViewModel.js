@@ -12,9 +12,10 @@ import createCommand from "../createCommand.js";
 /**
  * The view model for {@link SceneModePicker}.
  * @alias SceneModePickerViewModel
- * @class
+ * @constructor
+ *
  * @param {Scene} scene The Scene to morph
- * @param {number} [duration] The duration of scene morph animations, in seconds
+ * @param {number} [duration=2.0] The duration of scene morph animations, in seconds
  */
 function SceneModePickerViewModel(scene, duration) {
   //>>includeStart('debug', pragmas.debug);
@@ -151,6 +152,7 @@ Object.defineProperties(SceneModePickerViewModel.prototype, {
   /**
    * Gets the command to toggle the drop down box.
    * @memberof SceneModePickerViewModel.prototype
+   *
    * @type {Command}
    */
   toggleDropDown: {
@@ -162,6 +164,7 @@ Object.defineProperties(SceneModePickerViewModel.prototype, {
   /**
    * Gets the command to morph to 2D.
    * @memberof SceneModePickerViewModel.prototype
+   *
    * @type {Command}
    */
   morphTo2D: {
@@ -173,6 +176,7 @@ Object.defineProperties(SceneModePickerViewModel.prototype, {
   /**
    * Gets the command to morph to 3D.
    * @memberof SceneModePickerViewModel.prototype
+   *
    * @type {Command}
    */
   morphTo3D: {
@@ -184,6 +188,7 @@ Object.defineProperties(SceneModePickerViewModel.prototype, {
   /**
    * Gets the command to morph to Columbus View.
    * @memberof SceneModePickerViewModel.prototype
+   *
    * @type {Command}
    */
   morphToColumbusView: {

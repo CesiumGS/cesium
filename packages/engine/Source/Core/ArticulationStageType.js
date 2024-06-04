@@ -1,8 +1,10 @@
 /**
  * An enum describing the type of motion that is defined by an articulation stage
  * in the AGI_articulations extension.
+ *
  * @alias {ArticulationStageType}
  * @enum {string}
+ *
  * @private
  */
 const ArticulationStageType = {

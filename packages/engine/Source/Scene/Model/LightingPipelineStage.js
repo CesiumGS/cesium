@@ -7,7 +7,9 @@ import LightingModel from "./LightingModel.js";
  * The lighting pipeline stage is responsible for taking a material and rendering
  * it with a lighting model such as physically based rendering (PBR) or unlit
  * shading
+ *
  * @namespace LightingPipelineStage
+ *
  * @private
  */
 const LightingPipelineStage = {
@@ -22,6 +24,7 @@ const LightingPipelineStage = {
  * </ul>
  * @param {PrimitiveRenderResources} renderResources The render resources for the primitive
  * @param {ModelComponents.Primitive} primitive The primitive to be rendered
+ *
  * @private
  */
 LightingPipelineStage.process = function (renderResources, primitive) {

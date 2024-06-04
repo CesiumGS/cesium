@@ -2,9 +2,12 @@ import Check from "./Check.js";
 
 /**
  * Converts the value from sRGB color space to linear color space.
+ *
  * @function
+ *
  * @param {number} value The color value in sRGB color space.
  * @returns {number} Returns the color value in linear color space.
+ *
  * @example
  * const srgbColor = [0.5, 0.5, 0.5];
  * const linearColor = srgbColor.map(function (c) {

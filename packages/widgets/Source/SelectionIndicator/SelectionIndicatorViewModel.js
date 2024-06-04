@@ -14,7 +14,8 @@ const offScreen = "-1000px";
 /**
  * The view model for {@link SelectionIndicator}.
  * @alias SelectionIndicatorViewModel
- * @class
+ * @constructor
+ *
  * @param {Scene} scene The scene instance to use for screen-space coordinate conversion.
  * @param {Element} selectionIndicatorElement The element containing all elements that make up the selection indicator.
  * @param {Element} container The DOM element that contains the widget.
@@ -86,9 +87,11 @@ function SelectionIndicatorViewModel(
 
   /**
    * Gets or sets the function for converting the world position of the object to the screen space position.
+   *
    * @member
    * @type {SelectionIndicatorViewModel.ComputeScreenSpacePosition}
-   * @default
+   * @default SceneTransforms.wgs84ToWindowCoordinates
+   *
    * @example
    * selectionIndicatorViewModel.computeScreenSpacePosition = function(position, result) {
    *     return Cesium.SceneTransforms.wgs84ToWindowCoordinates(scene, position, result);
@@ -168,6 +171,7 @@ Object.defineProperties(SelectionIndicatorViewModel.prototype, {
   /**
    * Gets the HTML element containing the selection indicator.
    * @memberof SelectionIndicatorViewModel.prototype
+   *
    * @type {Element}
    */
   container: {
@@ -179,6 +183,7 @@ Object.defineProperties(SelectionIndicatorViewModel.prototype, {
   /**
    * Gets the HTML element that holds the selection indicator.
    * @memberof SelectionIndicatorViewModel.prototype
+   *
    * @type {Element}
    */
   selectionIndicatorElement: {
@@ -190,6 +195,7 @@ Object.defineProperties(SelectionIndicatorViewModel.prototype, {
   /**
    * Gets the scene being used.
    * @memberof SelectionIndicatorViewModel.prototype
+   *
    * @type {Scene}
    */
   scene: {

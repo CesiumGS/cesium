@@ -17,11 +17,14 @@ import StencilOperation from "../StencilOperation.js";
  * i.e. a {@link Model} that classifies another asset. This manages the
  * derived commands and returns only the necessary commands depending on the
  * given frame state.
+ *
  * @param {object} options An object containing the following options:
  * @param {DrawCommand} options.command The draw command from which to derive other commands from.
  * @param {PrimitiveRenderResources} options.primitiveRenderResources The render resources of the primitive associated with the command.
+ *
  * @alias ClassificationModelDrawCommand
- * @class
+ * @constructor
+ *
  * @private
  */
 function ClassificationModelDrawCommand(options) {
@@ -313,8 +316,10 @@ function createPickCommands(drawCommand, derivedCommands, commandList) {
 Object.defineProperties(ClassificationModelDrawCommand.prototype, {
   /**
    * The main draw command that the other commands are derived from.
+   *
    * @memberof ClassificationModelDrawCommand.prototype
    * @type {DrawCommand}
+   *
    * @readonly
    * @private
    */
@@ -326,8 +331,10 @@ Object.defineProperties(ClassificationModelDrawCommand.prototype, {
 
   /**
    * The runtime primitive that the draw command belongs to.
+   *
    * @memberof ClassificationModelDrawCommand.prototype
    * @type {ModelRuntimePrimitive}
+   *
    * @readonly
    * @private
    */
@@ -339,8 +346,10 @@ Object.defineProperties(ClassificationModelDrawCommand.prototype, {
 
   /**
    * The batch lengths used to generate multiple draw commands.
+   *
    * @memberof ClassificationModelDrawCommand.prototype
    * @type {number[]}
+   *
    * @readonly
    * @private
    */
@@ -352,8 +361,10 @@ Object.defineProperties(ClassificationModelDrawCommand.prototype, {
 
   /**
    * The batch offsets used to generate multiple draw commands.
+   *
    * @memberof ClassificationModelDrawCommand.prototype
    * @type {number[]}
+   *
    * @readonly
    * @private
    */
@@ -365,8 +376,10 @@ Object.defineProperties(ClassificationModelDrawCommand.prototype, {
 
   /**
    * The model that the draw command belongs to.
+   *
    * @memberof ClassificationModelDrawCommand.prototype
    * @type {Model}
+   *
    * @readonly
    * @private
    */
@@ -378,8 +391,10 @@ Object.defineProperties(ClassificationModelDrawCommand.prototype, {
 
   /**
    * The classification type of the model that this draw command belongs to.
+   *
    * @memberof ClassificationModelDrawCommand.prototype
    * @type {ClassificationType}
+   *
    * @readonly
    * @private
    */
@@ -391,8 +406,10 @@ Object.defineProperties(ClassificationModelDrawCommand.prototype, {
 
   /**
    * The current model matrix applied to the draw commands.
+   *
    * @memberof ClassificationModelDrawCommand.prototype
    * @type {Matrix4}
+   *
    * @readonly
    * @private
    */
@@ -415,8 +432,10 @@ Object.defineProperties(ClassificationModelDrawCommand.prototype, {
    * The bounding volume of the main draw command. This is equivalent
    * to the primitive's bounding sphere transformed by the draw
    * command's model matrix.
+   *
    * @memberof ClassificationModelDrawCommand.prototype
    * @type {BoundingSphere}
+   *
    * @readonly
    * @private
    */
@@ -430,8 +449,10 @@ Object.defineProperties(ClassificationModelDrawCommand.prototype, {
    * Culling is disabled for classification models, so this has no effect on
    * how the model renders. This only exists to match the interface of
    * {@link ModelDrawCommand}.
+   *
    * @memberof ClassificationModelDrawCommand.prototype
    * @type {CullFace}
+   *
    * @private
    */
   cullFace: {
@@ -446,9 +467,12 @@ Object.defineProperties(ClassificationModelDrawCommand.prototype, {
 
 /**
  * Pushes the draw commands necessary to render the primitive.
+ *
  * @param {FrameState} frameState The frame state.
  * @param {DrawCommand[]} result The array to push the draw commands to.
+ *
  * @returns {DrawCommand[]} The modified result parameter.
+ *
  * @private
  */
 ClassificationModelDrawCommand.prototype.pushCommands = function (

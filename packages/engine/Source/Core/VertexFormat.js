@@ -6,15 +6,19 @@ import DeveloperError from "./DeveloperError.js";
  * A vertex format defines what attributes make up a vertex.  A VertexFormat can be provided
  * to a {@link Geometry} to request that certain properties be computed, e.g., just position,
  * position and normal, etc.
+ *
  * @param {object} [options] An object with boolean properties corresponding to VertexFormat properties as shown in the code example.
+ *
  * @alias VertexFormat
- * @class
+ * @constructor
+ *
  * @example
  * // Create a vertex format with position and 2D texture coordinate attributes.
  * const format = new Cesium.VertexFormat({
  *   position : true,
  *   st : true
  * });
+ *
  * @see Geometry#attributes
  * @see Packable
  */
@@ -26,7 +30,9 @@ function VertexFormat(options) {
    * <p>
    * 64-bit floating-point (for precision).  3 components per attribute.
    * </p>
+   *
    * @type {boolean}
+   *
    * @default false
    */
   this.position = defaultValue(options.position, false);
@@ -36,7 +42,9 @@ function VertexFormat(options) {
    * <p>
    * 32-bit floating-point.  3 components per attribute.
    * </p>
+   *
    * @type {boolean}
+   *
    * @default false
    */
   this.normal = defaultValue(options.normal, false);
@@ -46,7 +54,9 @@ function VertexFormat(options) {
    * <p>
    * 32-bit floating-point.  2 components per attribute
    * </p>
+   *
    * @type {boolean}
+   *
    * @default false
    */
   this.st = defaultValue(options.st, false);
@@ -56,7 +66,9 @@ function VertexFormat(options) {
    * <p>
    * 32-bit floating-point.  3 components per attribute.
    * </p>
+   *
    * @type {boolean}
+   *
    * @default false
    */
   this.bitangent = defaultValue(options.bitangent, false);
@@ -66,7 +78,9 @@ function VertexFormat(options) {
    * <p>
    * 32-bit floating-point.  3 components per attribute.
    * </p>
+   *
    * @type {boolean}
+   *
    * @default false
    */
   this.tangent = defaultValue(options.tangent, false);
@@ -76,7 +90,9 @@ function VertexFormat(options) {
    * <p>
    * 8-bit unsigned byte.  3 components per attribute.
    * </p>
+   *
    * @type {boolean}
+   *
    * @default false
    */
   this.color = defaultValue(options.color, false);
@@ -84,8 +100,10 @@ function VertexFormat(options) {
 
 /**
  * An immutable vertex format with only a position attribute.
+ *
  * @type {VertexFormat}
  * @constant
+ *
  * @see VertexFormat#position
  */
 VertexFormat.POSITION_ONLY = Object.freeze(
@@ -97,8 +115,10 @@ VertexFormat.POSITION_ONLY = Object.freeze(
 /**
  * An immutable vertex format with position and normal attributes.
  * This is compatible with per-instance color appearances like {@link PerInstanceColorAppearance}.
+ *
  * @type {VertexFormat}
  * @constant
+ *
  * @see VertexFormat#position
  * @see VertexFormat#normal
  */
@@ -113,8 +133,10 @@ VertexFormat.POSITION_AND_NORMAL = Object.freeze(
  * An immutable vertex format with position, normal, and st attributes.
  * This is compatible with {@link MaterialAppearance} when {@link MaterialAppearance#materialSupport}
  * is <code>TEXTURED/code>.
+ *
  * @type {VertexFormat}
  * @constant
+ *
  * @see VertexFormat#position
  * @see VertexFormat#normal
  * @see VertexFormat#st
@@ -130,8 +152,10 @@ VertexFormat.POSITION_NORMAL_AND_ST = Object.freeze(
 /**
  * An immutable vertex format with position and st attributes.
  * This is compatible with {@link EllipsoidSurfaceAppearance}.
+ *
  * @type {VertexFormat}
  * @constant
+ *
  * @see VertexFormat#position
  * @see VertexFormat#st
  */
@@ -144,8 +168,10 @@ VertexFormat.POSITION_AND_ST = Object.freeze(
 
 /**
  * An immutable vertex format with position and color attributes.
+ *
  * @type {VertexFormat}
  * @constant
+ *
  * @see VertexFormat#position
  * @see VertexFormat#color
  */
@@ -158,8 +184,10 @@ VertexFormat.POSITION_AND_COLOR = Object.freeze(
 
 /**
  * An immutable vertex format with well-known attributes: position, normal, st, tangent, and bitangent.
+ *
  * @type {VertexFormat}
  * @constant
+ *
  * @see VertexFormat#position
  * @see VertexFormat#normal
  * @see VertexFormat#st
@@ -181,8 +209,10 @@ VertexFormat.ALL = Object.freeze(
  * This is compatible with most appearances and materials; however
  * normal and st attributes are not always required.  When this is
  * known in advance, another <code>VertexFormat</code> should be used.
+ *
  * @type {VertexFormat}
  * @constant
+ *
  * @see VertexFormat#position
  * @see VertexFormat#normal
  */
@@ -196,9 +226,11 @@ VertexFormat.packedLength = 6;
 
 /**
  * Stores the provided instance into the provided array.
+ *
  * @param {VertexFormat} value The value to pack.
  * @param {number[]} array The array to pack into.
- * @param {number} [startingIndex] The index into the array at which to start packing the elements.
+ * @param {number} [startingIndex=0] The index into the array at which to start packing the elements.
+ *
  * @returns {number[]} The array that was packed into
  */
 VertexFormat.pack = function (value, array, startingIndex) {
@@ -225,8 +257,9 @@ VertexFormat.pack = function (value, array, startingIndex) {
 
 /**
  * Retrieves an instance from a packed array.
+ *
  * @param {number[]} array The packed array.
- * @param {number} [startingIndex] The starting index of the element to be unpacked.
+ * @param {number} [startingIndex=0] The starting index of the element to be unpacked.
  * @param {VertexFormat} [result] The object into which to store the result.
  * @returns {VertexFormat} The modified result parameter or a new VertexFormat instance if one was not provided.
  */
@@ -254,6 +287,7 @@ VertexFormat.unpack = function (array, startingIndex, result) {
 
 /**
  * Duplicates a VertexFormat instance.
+ *
  * @param {VertexFormat} vertexFormat The vertex format to duplicate.
  * @param {VertexFormat} [result] The object onto which to store the result.
  * @returns {VertexFormat} The modified result parameter or a new VertexFormat instance if one was not provided. (Returns undefined if vertexFormat is undefined)

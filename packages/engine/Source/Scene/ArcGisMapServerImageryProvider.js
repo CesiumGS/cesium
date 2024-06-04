@@ -25,6 +25,7 @@ import DeveloperError from "../Core/DeveloperError.js";
  * @typedef {object} ArcGisMapServerImageryProvider.ConstructorOptions
  *
  * Initialization options for the ArcGisMapServerImageryProvider constructor
+ *
  * @property {TileDiscardPolicy} [tileDiscardPolicy] The policy that determines if a tile
  *        is invalid and should be discarded.  If this value is not specified, a default
  *        {@link DiscardMissingTileImagePolicy} is used for tiled map servers, and a
@@ -56,12 +57,16 @@ import DeveloperError from "../Core/DeveloperError.js";
  * @property {number} [tileHeight=256] The height of each tile in pixels.  This parameter is ignored when accessing a tiled server.
  * @property {number} [maximumLevel] The maximum tile level to request, or undefined if there is no maximum.  This parameter is ignored when accessing
  *                                        a tiled server.
+ *
+ *
  */
 
 /**
  * Used to track creation details while fetching initial metadata
- * @class
+ *
+ * @constructor
  * @private
+ *
  * @param {ArcGisMapServerImageryProvider.ConstructorOptions} options An object describing initialization options
  */
 function ImageryProviderBuilder(options) {
@@ -90,7 +95,9 @@ function ImageryProviderBuilder(options) {
 
 /**
  * Complete ArcGisMapServerImageryProvider creation based on builder values.
+ *
  * @private
+ *
  * @param {ArcGisMapServerImageryProvider} provider
  */
 ImageryProviderBuilder.prototype.build = function (provider) {
@@ -253,21 +260,25 @@ async function requestMetadata(resource, imageryProviderBuilder) {
  *
  * Provides tiled imagery hosted by an ArcGIS MapServer.  By default, the server's pre-cached tiles are
  * used, if available.
- *
+ * 
  * <br/>
- *
+ * 
  * An {@link https://developers.arcgis.com/documentation/mapping-apis-and-services/security| ArcGIS Access Token } is required to authenticate requests to an ArcGIS Image Tile service.
  * To access secure ArcGIS resources, it's required to create an ArcGIS developer
  * account or an ArcGIS online account, then implement an authentication method to obtain an access token.
+ *
  * @alias ArcGisMapServerImageryProvider
- * @class
+ * @constructor
+ *
  * @param {ArcGisMapServerImageryProvider.ConstructorOptions} [options] Object describing initialization options
+ *
  * @see ArcGisMapServerImageryProvider.fromBasemapType
  * @see ArcGisMapServerImageryProvider.fromUrl
+ *
  * @example
  * // Set the default access token for accessing ArcGIS Image Tile service
  * Cesium.ArcGisMapService.defaultAccessToken = "<ArcGIS Access Token>";
- *
+ * 
  * // Add a base layer from a default ArcGIS basemap
  * const viewer = new Cesium.Viewer("cesiumContainer", {
  *   baseLayer: Cesium.ImageryLayer.fromProviderAsync(
@@ -276,14 +287,17 @@ async function requestMetadata(resource, imageryProviderBuilder) {
  *     )
  *   ),
  * });
+ *
  * @example
  * // Create an imagery provider from the url directly
  * const esri = await Cesium.ArcGisMapServerImageryProvider.fromUrl(
  *   "https://ibasemaps-api.arcgis.com/arcgis/rest/services/World_Imagery/MapServer", {
  *     token: "<ArcGIS Access Token>"
  * });
+ *
  * @see {@link https://developers.arcgis.com/rest/|ArcGIS Server REST API}
  * @see {@link https://developers.arcgis.com/documentation/mapping-apis-and-services/security| ArcGIS Access Token }
+
  */
 function ArcGisMapServerImageryProvider(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -339,6 +353,7 @@ function ArcGisMapServerImageryProvider(options) {
  * @param {ArcGisBaseMapType} style The style of the ArcGIS base map imagery. Valid options are {@link ArcGisBaseMapType.SATELLITE}, {@link ArcGisBaseMapType.OCEANS}, and {@link ArcGisBaseMapType.HILLSHADE}.
  * @param {ArcGisMapServerImageryProvider.ConstructorOptions} [options] Object describing initialization options.
  * @returns {Promise<ArcGisMapServerImageryProvider>} A promise that resolves to the created ArcGisMapServerImageryProvider.
+ *
  * @example
  * // Set the default access token for accessing ArcGIS Image Tile service
  * Cesium.ArcGisMapService.defaultAccessToken = "<ArcGIS Access Token>";
@@ -346,6 +361,7 @@ function ArcGisMapServerImageryProvider(options) {
  * // Add a base layer from a default ArcGIS basemap
  * const provider = await Cesium.ArcGisMapServerImageryProvider.fromBasemapType(
  *   Cesium.ArcGisBaseMapType.SATELLITE);
+ *
  * @example
  * // Add a base layer from a default ArcGIS Basemap
  * const viewer = new Cesium.Viewer("cesiumContainer", {
@@ -639,6 +655,7 @@ Object.defineProperties(ArcGisMapServerImageryProvider.prototype, {
    * Gets a value indicating whether this imagery provider is using pre-cached tiles from the
    * ArcGIS MapServer.
    * @memberof ArcGisMapServerImageryProvider.prototype
+   *
    * @type {boolean}
    * @readonly
    * @default true
@@ -656,6 +673,7 @@ Object.defineProperties(ArcGisMapServerImageryProvider.prototype, {
    * as if their alpha is 1.0 everywhere.  When this property is false, memory usage
    * and texture upload time are reduced.
    * @memberof ArcGisMapServerImageryProvider.prototype
+   *
    * @type {boolean}
    * @readonly
    * @default true
@@ -669,6 +687,7 @@ Object.defineProperties(ArcGisMapServerImageryProvider.prototype, {
   /**
    * Gets the comma-separated list of layer IDs to show.
    * @memberof ArcGisMapServerImageryProvider.prototype
+   *
    * @type {string}
    */
   layers: {
@@ -681,15 +700,18 @@ Object.defineProperties(ArcGisMapServerImageryProvider.prototype, {
 /**
  * Creates an {@link ImageryProvider} which provides tiled imagery hosted by an ArcGIS MapServer.  By default, the server's pre-cached tiles are
  * used, if available.
- * @param {Resource | string} url The URL of the ArcGIS MapServer service.
+ *
+ * @param {Resource|String} url The URL of the ArcGIS MapServer service.
  * @param {ArcGisMapServerImageryProvider.ConstructorOptions} [options] Object describing initialization options.
  * @returns {Promise<ArcGisMapServerImageryProvider>} A promise that resolves to the created ArcGisMapServerImageryProvider.
+ *
  * @example
  * const esri = await Cesium.ArcGisMapServerImageryProvider.fromUrl(
  *     "https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer"
  * );
- * @throws {RuntimeError} metadata spatial reference specifies an unknown WKID
- * @throws {RuntimeError} metadata fullExtent.spatialReference specifies an unknown WKID
+ *
+ * @exception {RuntimeError} metadata spatial reference specifies an unknown WKID
+ * @exception {RuntimeError} metadata fullExtent.spatialReference specifies an unknown WKID
  */
 ArcGisMapServerImageryProvider.fromUrl = async function (url, options) {
   //>>includeStart('debug', pragmas.debug);
@@ -721,6 +743,7 @@ ArcGisMapServerImageryProvider.fromUrl = async function (url, options) {
 
 /**
  * Gets the credits to be displayed when a given tile is displayed.
+ *
  * @param {number} x The tile X coordinate.
  * @param {number} y The tile Y coordinate.
  * @param {number} level The tile level;
@@ -736,6 +759,7 @@ ArcGisMapServerImageryProvider.prototype.getTileCredits = function (
 
 /**
  * Requests the image for a given tile.
+ *
  * @param {number} x The tile X coordinate.
  * @param {number} y The tile Y coordinate.
  * @param {number} level The tile level.
@@ -757,17 +781,18 @@ ArcGisMapServerImageryProvider.prototype.requestImage = function (
 
 /**
     /**
-    Asynchronously determines what features, if any, are located at a given longitude and latitude within
-    a tile.
- * @param {number} x The tile X coordinate.
- * @param {number} y The tile Y coordinate.
- * @param {number} level The tile level.
- * @param {number} longitude The longitude at which to pick features.
- * @param {number} latitude  The latitude at which to pick features.
- * @returns {Promise<ImageryLayerFeatureInfo[]>|undefined} A promise for the picked features that will resolve when the asynchronous
- *                   picking completes.  The resolved value is an array of {@link ImageryLayerFeatureInfo}
- *                   instances.  The array may be empty if no features are found at the given location.
- */
+     * Asynchronously determines what features, if any, are located at a given longitude and latitude within
+     * a tile.
+     *
+     * @param {number} x The tile X coordinate.
+     * @param {number} y The tile Y coordinate.
+     * @param {number} level The tile level.
+     * @param {number} longitude The longitude at which to pick features.
+     * @param {number} latitude  The latitude at which to pick features.
+     * @return {Promise<ImageryLayerFeatureInfo[]>|undefined} A promise for the picked features that will resolve when the asynchronous
+     *                   picking completes.  The resolved value is an array of {@link ImageryLayerFeatureInfo}
+     *                   instances.  The array may be empty if no features are found at the given location.
+     */
 ArcGisMapServerImageryProvider.prototype.pickFeatures = function (
   x,
   y,

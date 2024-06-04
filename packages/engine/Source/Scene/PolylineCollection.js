@@ -73,21 +73,26 @@ const attributeLocations = {
  * <br /><br />
  * Polylines are added and removed from the collection using {@link PolylineCollection#add}
  * and {@link PolylineCollection#remove}.
+ *
  * @alias PolylineCollection
- * @class
+ * @constructor
+ *
  * @param {object} [options] Object with the following properties:
- * @param {Matrix4} [options.modelMatrix] The 4x4 transformation matrix that transforms each polyline from model to world coordinates.
- * @param {boolean} [options.debugShowBoundingVolume] For debugging only. Determines if this primitive's commands' bounding spheres are shown.
- * @param {boolean} [options.show] Determines if the polylines in the collection will be shown.
+ * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms each polyline from model to world coordinates.
+ * @param {boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if this primitive's commands' bounding spheres are shown.
+ * @param {boolean} [options.show=true] Determines if the polylines in the collection will be shown.
+ *
  * @performance For best performance, prefer a few collections, each with many polylines, to
  * many collections with only a few polylines each.  Organize collections so that polylines
  * with the same update frequency are in the same collection, i.e., polylines that do not
  * change should be in one collection; polylines that change every frame should be in another
  * collection; and so on.
+ *
  * @see PolylineCollection#add
  * @see PolylineCollection#remove
  * @see Polyline
  * @see LabelCollection
+ *
  * @example
  * // Create a polyline collection with two polylines
  * const polylines = new Cesium.PolylineCollection();
@@ -114,6 +119,7 @@ function PolylineCollection(options) {
 
   /**
    * Determines if polylines in this collection will be shown.
+   *
    * @type {boolean}
    * @default true
    */
@@ -124,6 +130,7 @@ function PolylineCollection(options) {
    * When this is the identity matrix, the polylines are drawn in world coordinates, i.e., Earth's WGS84 coordinates.
    * Local reference frames can be used by providing a different transformation matrix, like that returned
    * by {@link Transforms.eastNorthUpToFixedFrame}.
+   *
    * @type {Matrix4}
    * @default {@link Matrix4.IDENTITY}
    */
@@ -137,7 +144,9 @@ function PolylineCollection(options) {
    * <p>
    * Draws the bounding sphere for each draw command in the primitive.
    * </p>
+   *
    * @type {boolean}
+   *
    * @default false
    */
   this.debugShowBoundingVolume = defaultValue(
@@ -202,27 +211,33 @@ Object.defineProperties(PolylineCollection.prototype, {
 });
 
 /**
- * Creates and adds a polyline with the specified initial properties to the collection.
- * The added polyline is returned so it can be modified or removed from the collection later.
- * @param {object}[options] A template describing the polyline's properties as shown in Example 1.
- * @returns {Polyline} The polyline that was added to the collection.
- * @performance After calling <code>add</code>, {@link PolylineCollection#update} is called and
- * the collection's vertex buffer is rewritten - an <code>O(n)</code> operation that also incurs CPU to GPU overhead.
- * For best performance, add as many polylines as possible before calling <code>update</code>.
- * @throws {DeveloperError} This object was destroyed, i.e., destroy() was called.
- * @example
- * // Example 1:  Add a polyline, specifying all the default values.
- * const p = polylines.add({
- *   show : true,
- *   positions : ellipsoid.cartographicArrayToCartesianArray([
+     * Creates and adds a polyline with the specified initial properties to the collection.
+     * The added polyline is returned so it can be modified or removed from the collection later.
+     *
+     * @param {object}[options] A template describing the polyline's properties as shown in Example 1.
+     * @returns {Polyline} The polyline that was added to the collection.
+     *
+     * @performance After calling <code>add</code>, {@link PolylineCollection#update} is called and
+     * the collection's vertex buffer is rewritten - an <code>O(n)</code> operation that also incurs CPU to GPU overhead.
+     * For best performance, add as many polylines as possible before calling <code>update</code>.
+     *
+     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+     *
+     *
+     * @example
+     * // Example 1:  Add a polyline, specifying all the default values.
+     * const p = polylines.add({
+     *   show : true,
+     *   positions : ellipsoid.cartographicArrayToCartesianArray([
            Cesium.Cartographic.fromDegrees(-75.10, 39.57),
            Cesium.Cartographic.fromDegrees(-77.02, 38.53)]),
- *   width : 1
- * });
- * @see PolylineCollection#remove
- * @see PolylineCollection#removeAll
- * @see PolylineCollection#update
- */
+     *   width : 1
+     * });
+     *
+     * @see PolylineCollection#remove
+     * @see PolylineCollection#removeAll
+     * @see PolylineCollection#update
+     */
 PolylineCollection.prototype.add = function (options) {
   const p = new Polyline(options, this);
   p._index = this._polylines.length;
@@ -234,17 +249,23 @@ PolylineCollection.prototype.add = function (options) {
 
 /**
  * Removes a polyline from the collection.
+ *
  * @param {Polyline} polyline The polyline to remove.
  * @returns {boolean} <code>true</code> if the polyline was removed; <code>false</code> if the polyline was not found in the collection.
+ *
  * @performance After calling <code>remove</code>, {@link PolylineCollection#update} is called and
  * the collection's vertex buffer is rewritten - an <code>O(n)</code> operation that also incurs CPU to GPU overhead.
  * For best performance, remove as many polylines as possible before calling <code>update</code>.
  * If you intend to temporarily hide a polyline, it is usually more efficient to call
  * {@link Polyline#show} instead of removing and re-adding the polyline.
- * @throws {DeveloperError} This object was destroyed, i.e., destroy() was called.
+ *
+ * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+ *
+ *
  * @example
  * const p = polylines.add(...);
  * polylines.remove(p);  // Returns true
+ *
  * @see PolylineCollection#add
  * @see PolylineCollection#removeAll
  * @see PolylineCollection#update
@@ -269,13 +290,18 @@ PolylineCollection.prototype.remove = function (polyline) {
 
 /**
  * Removes all polylines from the collection.
+ *
  * @performance <code>O(n)</code>.  It is more efficient to remove all the polylines
  * from a collection and then add new ones than to create a new collection entirely.
- * @throws {DeveloperError} This object was destroyed, i.e., destroy() was called.
+ *
+ * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+ *
+ *
  * @example
  * polylines.add(...);
  * polylines.add(...);
  * polylines.removeAll();
+ *
  * @see PolylineCollection#add
  * @see PolylineCollection#remove
  * @see PolylineCollection#update
@@ -292,8 +318,10 @@ PolylineCollection.prototype.removeAll = function () {
 
 /**
  * Determines if this collection contains the specified polyline.
+ *
  * @param {Polyline} polyline The polyline to check for.
  * @returns {boolean} true if this collection contains the polyline, false otherwise.
+ *
  * @see PolylineCollection#get
  */
 PolylineCollection.prototype.contains = function (polyline) {
@@ -306,12 +334,16 @@ PolylineCollection.prototype.contains = function (polyline) {
  * it to the left, changing their indices.  This function is commonly used with
  * {@link PolylineCollection#length} to iterate over all the polylines
  * in the collection.
+ *
  * @param {number} index The zero-based index of the polyline.
  * @returns {Polyline} The polyline at the specified index.
+ *
  * @performance If polylines were removed from the collection and
  * {@link PolylineCollection#update} was not called, an implicit <code>O(n)</code>
  * operation is performed.
- * @throws {DeveloperError} This object was destroyed, i.e., destroy() was called.
+ *
+ * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+ *
  * @example
  * // Toggle the show property of every polyline in the collection
  * const len = polylines.length;
@@ -319,6 +351,7 @@ PolylineCollection.prototype.contains = function (polyline) {
  *   const p = polylines.get(i);
  *   p.show = !p.show;
  * }
+ *
  * @see PolylineCollection#length
  */
 PolylineCollection.prototype.get = function (index) {
@@ -384,8 +417,8 @@ const scratchNearFarCartesian2 = new Cartesian2();
  * Do not call this function directly.  This is documented just to
  * list the exceptions that may be propagated when the scene is rendered:
  * </p>
- * @param frameState
- * @throws {RuntimeError} Vertex texture fetch support is required to render primitives with per-instance attributes. The maximum number of vertex texture image units must be greater than zero.
+ *
+ * @exception {RuntimeError} Vertex texture fetch support is required to render primitives with per-instance attributes. The maximum number of vertex texture image units must be greater than zero.
  */
 PolylineCollection.prototype.update = function (frameState) {
   removePolylines(this);
@@ -752,7 +785,9 @@ function createCommandLists(
  * <br /><br />
  * If this object was destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
+ *
  * @returns {boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+ *
  * @see PolylineCollection#destroy
  */
 PolylineCollection.prototype.isDestroyed = function () {
@@ -766,9 +801,13 @@ PolylineCollection.prototype.isDestroyed = function () {
  * Once an object is destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
  * assign the return value (<code>undefined</code>) to the object as done in the example.
- * @throws {DeveloperError} This object was destroyed, i.e., destroy() was called.
+ *
+ * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+ *
+ *
  * @example
  * polylines = polylines && polylines.destroy();
+ *
  * @see PolylineCollection#isDestroyed
  */
 PolylineCollection.prototype.destroy = function () {

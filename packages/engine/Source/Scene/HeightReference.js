@@ -1,5 +1,6 @@
 /**
  * Represents the position relative to the terrain.
+ *
  * @enum {number}
  */
 const HeightReference = {

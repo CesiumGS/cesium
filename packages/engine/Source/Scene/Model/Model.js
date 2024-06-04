@@ -51,60 +51,60 @@ import pickModel from "./pickModel.js";
  * <p>
  * Cesium supports glTF assets with the following extensions:
  * <ul>
- * <li>
- * {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/AGI_articulations/README.md|AGI_articulations}
- * </li>
- * <li>
- * {@link https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline}
- * </li>
- * <li>
- * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/1.0/Vendor/CESIUM_RTC/README.md|CESIUM_RTC}
- * </li>
- * <li>
- * {@link https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_instance_features|EXT_instance_features}
- * </li>
- * <li>
- * {@link https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_mesh_features|EXT_mesh_features}
- * </li>
- * <li>
- * {@link https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Vendor/EXT_mesh_gpu_instancing|EXT_mesh_gpu_instancing}
- * </li>
- * <li>
- * {@link https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Vendor/EXT_meshopt_compression|EXT_meshopt_compression}
- * </li>
- * <li>
- * {@link https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_structural_metadata|EXT_structural_metadata}
- * </li>
- * <li>
- * {@link https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Vendor/EXT_texture_webp|EXT_texture_webp}
- * </li>
- * <li>
- * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_draco_mesh_compression/README.md|KHR_draco_mesh_compression}
- * </li>
- * <li>
- * {@link https://github.com/KhronosGroup/glTF/blob/main/extensions/2.0/Archived/KHR_techniques_webgl/README.md|KHR_techniques_webgl}
- * </li>
- * <li>
- * {@link https://github.com/KhronosGroup/glTF/blob/main/extensions/1.0/Khronos/KHR_materials_common/README.md|KHR_materials_common}
- * </li>
- * <li>
- * {@link https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Archived/KHR_materials_pbrSpecularGlossiness|KHR_materials_pbrSpecularGlossiness}
- * </li>
- * <li>
- * {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_materials_unlit/README.md|KHR_materials_unlit}
- * </li>
- * <li>
- * {@link https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Khronos/KHR_mesh_quantization|KHR_mesh_quantization}
- * </li>
- * <li>
- * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_texture_basisu|KHR_texture_basisu}
- * </li>
- * <li>
- * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_texture_transform/README.md|KHR_texture_transform}
- * </li>
- * <li>
- * {@link https://github.com/KhronosGroup/glTF/blob/main/extensions/1.0/Vendor/WEB3D_quantized_attributes/README.md|WEB3D_quantized_attributes}
- * </li>
+ *  <li>
+ *  {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/AGI_articulations/README.md|AGI_articulations}
+ *  </li>
+ *  <li>
+ *  {@link https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline}
+ *  </li>
+ *  <li>
+ *  {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/1.0/Vendor/CESIUM_RTC/README.md|CESIUM_RTC}
+ *  </li>
+ *  <li>
+ *  {@link https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_instance_features|EXT_instance_features}
+ *  </li>
+ *  <li>
+ *  {@link https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_mesh_features|EXT_mesh_features}
+ *  </li>
+ *  <li>
+ *  {@link https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Vendor/EXT_mesh_gpu_instancing|EXT_mesh_gpu_instancing}
+ *  </li>
+ *  <li>
+ *  {@link https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Vendor/EXT_meshopt_compression|EXT_meshopt_compression}
+ *  </li>
+ *  <li>
+ *  {@link https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_structural_metadata|EXT_structural_metadata}
+ *  </li>
+ *  <li>
+ *  {@link https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Vendor/EXT_texture_webp|EXT_texture_webp}
+ *  </li>
+ *  <li>
+ *  {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_draco_mesh_compression/README.md|KHR_draco_mesh_compression}
+ *  </li>
+ *  <li>
+ *  {@link https://github.com/KhronosGroup/glTF/blob/main/extensions/2.0/Archived/KHR_techniques_webgl/README.md|KHR_techniques_webgl}
+ *  </li>
+ *  <li>
+ *  {@link https://github.com/KhronosGroup/glTF/blob/main/extensions/1.0/Khronos/KHR_materials_common/README.md|KHR_materials_common}
+ *  </li>
+ *  <li>
+ *  {@link https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Archived/KHR_materials_pbrSpecularGlossiness|KHR_materials_pbrSpecularGlossiness}
+ *  </li>
+ *  <li>
+ *  {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_materials_unlit/README.md|KHR_materials_unlit}
+ *  </li>
+ *  <li>
+ *  {@link https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Khronos/KHR_mesh_quantization|KHR_mesh_quantization}
+ *  </li>
+ *  <li>
+ *  {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_texture_basisu|KHR_texture_basisu}
+ *  </li>
+ *  <li>
+ *  {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_texture_transform/README.md|KHR_texture_transform}
+ *  </li>
+ *  <li>
+ *  {@link https://github.com/KhronosGroup/glTF/blob/main/extensions/1.0/Vendor/WEB3D_quantized_attributes/README.md|WEB3D_quantized_attributes}
+ *  </li>
  * </ul>
  * </p>
  * <p>
@@ -112,11 +112,12 @@ import pickModel from "./pickModel.js";
  * for maximum compatibility. This is because some samplers require power of 2 textures ({@link https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/Tutorial/Using_textures_in_WebGL|Using textures in WebGL})
  * and KHR_texture_basisu requires multiple of 4 dimensions ({@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_texture_basisu/README.md#additional-requirements|KHR_texture_basisu additional requirements}).
  * </p>
+ *
  * @alias Model
  * @internalConstructor
+ *
  * @privateParam {ResourceLoader} options.loader The loader used to load resources for this model.
  * @privateParam {ModelType} options.type Type of this model, to distinguish individual glTF files from 3D Tiles internally.
- * @param options
  * @privateParam {object} options Object with the following properties:
  * @privateParam {Resource} options.resource The Resource to the 3D model.
  * @privateParam {boolean} [options.show=true] Whether or not to render the model.
@@ -160,7 +161,10 @@ import pickModel from "./pickModel.js";
  * @privateParam {string|number} [options.instanceFeatureIdLabel="instanceFeatureId_0"] Label of the instance feature ID set used for picking and styling. If instanceFeatureIdLabel is set to an integer N, it is converted to the string "instanceFeatureId_N" automatically. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
  * @privateParam {object} [options.pointCloudShading] Options for constructing a {@link PointCloudShading} object to control point attenuation based on geometric error and lighting.
  * @privateParam {ClassificationType} [options.classificationType] Determines whether terrain, 3D Tiles or both will be classified by this model. This cannot be set after the model has loaded.
+
+ *
  * @see Model.fromGltfAsync
+ *
  * @demo {@link https://sandcastle.cesium.com/index.html?src=3D%20Models.html|Cesium Sandcastle Models Demo}
  */
 function Model(options) {
@@ -172,6 +176,7 @@ function Model(options) {
 
   /**
    * The loader used to load resources for this model.
+   *
    * @type {ResourceLoader}
    * @private
    */
@@ -181,8 +186,10 @@ function Model(options) {
   /**
    * Type of this model, to distinguish individual glTF files from 3D Tiles
    * internally.
+   *
    * @type {ModelType}
    * @readonly
+   *
    * @private
    */
   this.type = defaultValue(options.type, ModelType.GLTF);
@@ -192,8 +199,11 @@ function Model(options) {
    * When this is the identity matrix, the model is drawn in world coordinates, i.e., Earth's Cartesian WGS84 coordinates.
    * Local reference frames can be used by providing a different transformation matrix, like that returned
    * by {@link Transforms.eastNorthUpToFixedFrame}.
+   *
    * @type {Matrix4}
+
    * @default {@link Matrix4.IDENTITY}
+   *
    * @example
    * const origin = Cesium.Cartesian3.fromDegrees(-95.0, 40.0, 200000.0);
    * m.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(origin);
@@ -211,6 +221,7 @@ function Model(options) {
   /**
    * The scale value after being clamped by the maximum scale parameter.
    * Used to adjust bounding spheres without repeated calculation.
+   *
    * @type {number}
    * @private
    */
@@ -223,6 +234,7 @@ function Model(options) {
   /**
    * Whether or not the ModelSceneGraph should call updateModelMatrix.
    * This will be true if any of the model matrix, scale, minimum pixel size, or maximum scale are dirty.
+   *
    * @type {number}
    * @private
    */
@@ -233,6 +245,7 @@ function Model(options) {
    * clipping planes and image-based lighting instead of the modelMatrix. This is
    * so that when models are part of a tileset, these properties get transformed
    * relative to a common reference (such as the root).
+   *
    * @type {Matrix4}
    * @private
    */
@@ -440,14 +453,18 @@ function Model(options) {
    * Whether to display the outline for models using the
    * {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension.
    * When true, outlines are displayed. When false, outlines are not displayed.
+   *
    * @type {boolean}
+   *
    * @default true
    */
   this.showOutline = defaultValue(options.showOutline, true);
 
   /**
    * The color to use when rendering outlines.
+   *
    * @type {Color}
+   *
    * @default Color.BLACK
    */
   this.outlineColor = defaultValue(options.outlineColor, Color.BLACK);
@@ -474,6 +491,7 @@ function Model(options) {
 
   /**
    * Used for picking primitives that wrap a model.
+   *
    * @private
    */
   this.pickObject = options.pickObject;
@@ -559,8 +577,7 @@ function selectFeatureTableId(components, model) {
 /**
  *  Returns whether the alpha state has changed between invisible,
  *  translucent, or opaque.
- * @param currentColor
- * @param previousColor
+ *
  *  @private
  */
 function isColorAlphaDirty(currentColor, previousColor) {
@@ -584,9 +601,12 @@ Object.defineProperties(Model.prototype, {
   /**
    * When <code>true</code>, this model is ready to render, i.e., the external binary, image,
    * and shader files were downloaded and the WebGL resources were created.
+   *
    * @memberof Model.prototype
+   *
    * @type {boolean}
    * @readonly
+   *
    * @default false
    */
   ready: {
@@ -617,6 +637,7 @@ Object.defineProperties(Model.prototype, {
    * <p>
    * If {@link Model.incrementallyLoadTextures} is true, this event will be raised before all textures are loaded and ready for rendering. Subscribe to {@link Model.texturesReadyEvent} to be notified when the textures are ready.
    * </p>
+   *
    * @memberof Model.prototype
    * @type {Event}
    * @readonly
@@ -629,7 +650,9 @@ Object.defineProperties(Model.prototype, {
 
   /**
    * Returns true if textures are loaded separately from the other glTF resources.
+   *
    * @memberof Model.prototype
+   *
    * @type {boolean}
    * @readonly
    * @private
@@ -644,6 +667,7 @@ Object.defineProperties(Model.prototype, {
    * Gets an event that, if {@link Model.incrementallyLoadTextures} is true, is raised when the model textures are loaded and ready for rendering, i.e. when the external resources
    * have been downloaded and the WebGL resources are created. Event listeners
    * are passed an instance of the {@link Model}.
+   *
    * @memberof Model.prototype
    * @type {Event}
    * @readonly
@@ -665,9 +689,12 @@ Object.defineProperties(Model.prototype, {
 
   /**
    * Get the estimated memory usage statistics for this model.
+   *
    * @memberof Model.prototype
+   *
    * @type {ModelStatistics}
    * @readonly
+   *
    * @private
    */
   statistics: {
@@ -678,7 +705,9 @@ Object.defineProperties(Model.prototype, {
 
   /**
    * The currently playing glTF animations.
+   *
    * @memberof Model.prototype
+   *
    * @type {ModelAnimationCollection}
    * @readonly
    */
@@ -690,8 +719,10 @@ Object.defineProperties(Model.prototype, {
 
   /**
    * Determines if the model's animations should hold a pose over frames where no keyframes are specified.
+   *
    * @memberof Model.prototype
    * @type {boolean}
+   *
    * @default true
    */
   clampAnimations: {
@@ -706,9 +737,12 @@ Object.defineProperties(Model.prototype, {
   /**
    * Whether or not to cull the model using frustum/horizon culling. If the model is part of a 3D Tiles tileset, this property
    * will always be false, since the 3D Tiles culling system is used.
+   *
    * @memberof Model.prototype
+   *
    * @type {boolean}
    * @readonly
+   *
    * @private
    */
   cull: {
@@ -719,9 +753,12 @@ Object.defineProperties(Model.prototype, {
 
   /**
    * The pass to use in the {@link DrawCommand} for the opaque portions of the model.
+   *
    * @memberof Model.prototype
+   *
    * @type {Pass}
    * @readonly
+   *
    * @private
    */
   opaquePass: {
@@ -734,7 +771,9 @@ Object.defineProperties(Model.prototype, {
    * Point cloud shading settings for controlling point cloud attenuation
    * and lighting. For 3D Tiles, this is inherited from the
    * {@link Cesium3DTileset}.
+   *
    * @memberof Model.prototype
+   *
    * @type {PointCloudShading}
    */
   pointCloudShading: {
@@ -755,7 +794,9 @@ Object.defineProperties(Model.prototype, {
   /**
    * The model's custom shader, if it exists. Using custom shaders with a {@link Cesium3DTileStyle}
    * may lead to undefined behavior.
+   *
    * @memberof Model.prototype
+   *
    * @type {CustomShader}
    * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
@@ -773,7 +814,9 @@ Object.defineProperties(Model.prototype, {
 
   /**
    * The scene graph of this model.
+   *
    * @memberof Model.prototype
+   *
    * @type {ModelSceneGraph}
    * @private
    */
@@ -785,9 +828,12 @@ Object.defineProperties(Model.prototype, {
 
   /**
    * The tile content this model belongs to, if it is loaded as part of a {@link Cesium3DTileset}.
+   *
    * @memberof Model.prototype
+   *
    * @type {Cesium3DTileContent}
    * @readonly
+   *
    * @private
    */
   content: {
@@ -799,9 +845,12 @@ Object.defineProperties(Model.prototype, {
   /**
    * The height reference of the model, which determines how the model is drawn
    * relative to terrain.
+   *
    * @memberof Model.prototype
+   *
    * @type {HeightReference}
    * @default {HeightReference.NONE}
+   *
    */
   heightReference: {
     get: function () {
@@ -818,9 +867,13 @@ Object.defineProperties(Model.prototype, {
   /**
    * Gets or sets the distance display condition, which specifies at what distance
    * from the camera this model will be displayed.
+   *
    * @memberof Model.prototype
+   *
    * @type {DistanceDisplayCondition}
+   *
    * @default undefined
+   *
    */
   distanceDisplayCondition: {
     get: function () {
@@ -841,9 +894,12 @@ Object.defineProperties(Model.prototype, {
 
   /**
    * The structural metadata from the EXT_structural_metadata extension
+   *
    * @memberof Model.prototype
+   *
    * @type {StructuralMetadata}
    * @readonly
+   *
    * @private
    */
   structuralMetadata: {
@@ -854,8 +910,11 @@ Object.defineProperties(Model.prototype, {
 
   /**
    * The ID for the feature table to use for picking and styling in this model.
+   *
    * @memberof Model.prototype
+   *
    * @type {number}
+   *
    * @private
    */
   featureTableId: {
@@ -869,9 +928,12 @@ Object.defineProperties(Model.prototype, {
 
   /**
    * The feature tables for this model.
+   *
    * @memberof Model.prototype
+   *
    * @type {Array}
    * @readonly
+   *
    * @private
    */
   featureTables: {
@@ -885,9 +947,13 @@ Object.defineProperties(Model.prototype, {
 
   /**
    * A user-defined object that is returned when the model is picked.
+   *
    * @memberof Model.prototype
+   *
    * @type {object}
+   *
    * @default undefined
+   *
    * @see Scene#pick
    */
   id: {
@@ -905,9 +971,12 @@ Object.defineProperties(Model.prototype, {
 
   /**
    * When <code>true</code>, each primitive is pickable with {@link Scene#pick}.  When <code>false</code>, GPU memory is saved.
+   *
    * @memberof Model.prototype
+   *
    * @type {boolean}
    * @readonly
+   *
    * @private
    */
   allowPicking: {
@@ -918,7 +987,9 @@ Object.defineProperties(Model.prototype, {
 
   /**
    * The style to apply to the features in the model. Cannot be applied if a {@link CustomShader} is also applied.
+   *
    * @memberof Model.prototype
+   *
    * @type {Cesium3DTileStyle}
    */
   style: {
@@ -933,8 +1004,11 @@ Object.defineProperties(Model.prototype, {
 
   /**
    * The color to blend with the model's rendered color.
+   *
    * @memberof Model.prototype
+   *
    * @type {Color}
+   *
    * @default undefined
    */
   color: {
@@ -951,8 +1025,11 @@ Object.defineProperties(Model.prototype, {
 
   /**
    * Defines how the color blends with the model.
+   *
    * @memberof Model.prototype
+   *
    * @type {Cesium3DTileColorBlendMode|ColorBlendMode}
+   *
    * @default ColorBlendMode.HIGHLIGHT
    */
   colorBlendMode: {
@@ -966,8 +1043,11 @@ Object.defineProperties(Model.prototype, {
 
   /**
    * Value used to determine the color strength when the <code>colorBlendMode</code> is <code>MIX</code>. A value of 0.0 results in the model's rendered color while a value of 1.0 results in a solid color, with any value in-between resulting in a mix of the two.
+   *
    * @memberof Model.prototype
+   *
    * @type {number}
+   *
    * @default 0.5
    */
   colorBlendAmount: {
@@ -981,8 +1061,11 @@ Object.defineProperties(Model.prototype, {
 
   /**
    * The silhouette color.
+   *
    * @memberof Model.prototype
+   *
    * @type {Color}
+   *
    * @default Color.RED
    */
   silhouetteColor: {
@@ -1001,8 +1084,11 @@ Object.defineProperties(Model.prototype, {
 
   /**
    * The size of the silhouette in pixels.
+   *
    * @memberof Model.prototype
+   *
    * @type {number}
+   *
    * @default 0.0
    */
   silhouetteSize: {
@@ -1030,7 +1116,9 @@ Object.defineProperties(Model.prototype, {
    * Gets the model's bounding sphere in world space. This does not take into account
    * glTF animations, skins, or morph targets. It also does not account for
    * {@link Model#minimumPixelSize}.
+   *
    * @memberof Model.prototype
+   *
    * @type {BoundingSphere}
    * @readonly
    */
@@ -1058,8 +1146,11 @@ Object.defineProperties(Model.prototype, {
    * <p>
    * Draws the bounding sphere for each draw command in the model.
    * </p>
+   *
    * @memberof Model.prototype
+   *
    * @type {boolean}
+   *
    * @default false
    */
   debugShowBoundingVolume: {
@@ -1079,8 +1170,11 @@ Object.defineProperties(Model.prototype, {
    * <p>
    * Draws the model in wireframe.
    * </p>
+   *
    * @memberof Model.prototype
+   *
    * @type {boolean}
+   *
    * @default false
    */
   debugWireframe: {
@@ -1109,8 +1203,11 @@ Object.defineProperties(Model.prototype, {
 
   /**
    * Whether or not to render the model.
+   *
    * @memberof Model.prototype
+   *
    * @type {boolean}
+   *
    * @default true
    */
   show: {
@@ -1138,7 +1235,9 @@ Object.defineProperties(Model.prototype, {
    * per-instance feature IDs are present, the instance feature IDs take
    * priority.
    * </p>
+   *
    * @memberof Model.prototype
+   *
    * @type {string}
    * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
@@ -1172,7 +1271,9 @@ Object.defineProperties(Model.prototype, {
    * If both per-primitive and per-instance feature IDs are present, the
    * instance feature IDs take priority.
    * </p>
+   *
    * @memberof Model.prototype
+   *
    * @type {string}
    * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
@@ -1200,7 +1301,9 @@ Object.defineProperties(Model.prototype, {
 
   /**
    * The {@link ClippingPlaneCollection} used to selectively disable rendering the model.
+   *
    * @memberof Model.prototype
+   *
    * @type {ClippingPlaneCollection}
    */
   clippingPlanes: {
@@ -1218,7 +1321,9 @@ Object.defineProperties(Model.prototype, {
 
   /**
    * The {@link ClippingPolygonCollection} used to selectively disable rendering the model.
+   *
    * @memberof Model.prototype
+   *
    * @type {ClippingPolygonCollection}
    */
   clippingPolygons: {
@@ -1242,7 +1347,9 @@ Object.defineProperties(Model.prototype, {
    * will make the model much darker. Here, increasing the intensity of the light source will make the model brighter.
    * </p>
    * @memberof Model.prototype
+   *
    * @type {Cartesian3}
+   *
    * @default undefined
    */
   lightColor: {
@@ -1260,7 +1367,9 @@ Object.defineProperties(Model.prototype, {
 
   /**
    * The properties for managing image-based lighting on this model.
+   *
    * @memberof Model.prototype
+   *
    * @type {ImageBasedLighting}
    */
   imageBasedLighting: {
@@ -1291,8 +1400,11 @@ Object.defineProperties(Model.prototype, {
    * determined by the material's doubleSided property; when false, back face
    * culling is disabled. Back faces are not culled if {@link Model#color}
    * is translucent or {@link Model#silhouetteSize} is greater than 0.0.
+   *
    * @memberof Model.prototype
+   *
    * @type {boolean}
+   *
    * @default true
    */
   backFaceCulling: {
@@ -1312,8 +1424,11 @@ Object.defineProperties(Model.prototype, {
    * A uniform scale applied to this model before the {@link Model#modelMatrix}.
    * Values greater than <code>1.0</code> increase the size of the model; values
    * less than <code>1.0</code> decrease.
+   *
    * @memberof Model.prototype
+   *
    * @type {number}
+   *
    * @default 1.0
    */
   scale: {
@@ -1331,9 +1446,12 @@ Object.defineProperties(Model.prototype, {
   /**
    * The true scale of the model after being affected by the model's scale,
    * minimum pixel size, and maximum scale parameters.
+   *
    * @memberof Model.prototype
+   *
    * @type {number}
    * @readonly
+   *
    * @private
    */
   computedScale: {
@@ -1346,8 +1464,11 @@ Object.defineProperties(Model.prototype, {
    * The approximate minimum pixel size of the model regardless of zoom.
    * This can be used to ensure that a model is visible even when the viewer
    * zooms out.  When <code>0.0</code>, no minimum size is enforced.
+   *
    * @memberof Model.prototype
+   *
    * @type {number}
+   *
    * @default 0.0
    */
   minimumPixelSize: {
@@ -1366,7 +1487,9 @@ Object.defineProperties(Model.prototype, {
    * The maximum scale size for a model. This can be used to give
    * an upper limit to the {@link Model#minimumPixelSize}, ensuring that the model
    * is never an unreasonable scale.
+   *
    * @memberof Model.prototype
+   *
    * @type {number}
    */
   maximumScale: {
@@ -1383,8 +1506,11 @@ Object.defineProperties(Model.prototype, {
 
   /**
    * Determines whether the model casts or receives shadows from light sources.
+
    * @memberof Model.prototype
+   *
    * @type {ShadowMode}
+   *
    * @default ShadowMode.ENABLED
    */
   shadows: {
@@ -1402,7 +1528,9 @@ Object.defineProperties(Model.prototype, {
 
   /**
    * Gets the credit that will be displayed for the model.
+   *
    * @memberof Model.prototype
+   *
    * @type {Credit}
    * @readonly
    */
@@ -1415,8 +1543,11 @@ Object.defineProperties(Model.prototype, {
   /**
    * Gets or sets whether the credits of the model will be displayed
    * on the screen.
+   *
    * @memberof Model.prototype
+   *
    * @type {boolean}
+   *
    * @default false
    */
   showCreditsOnScreen: {
@@ -1434,8 +1565,11 @@ Object.defineProperties(Model.prototype, {
 
   /**
    * The {@link SplitDirection} to apply to this model.
+   *
    * @memberof Model.prototype
+   *
    * @type {SplitDirection}
+   *
    * @default {@link SplitDirection.NONE}
    */
   splitDirection: {
@@ -1456,21 +1590,24 @@ Object.defineProperties(Model.prototype, {
    * <p>
    * Additionally, there are a few requirements/limitations:
    * <ul>
-   * <li>The glTF cannot contain morph targets, skins, or animations.</li>
-   * <li>The glTF cannot contain the <code>EXT_mesh_gpu_instancing</code> extension.</li>
-   * <li>Only meshes with TRIANGLES can be used to classify other assets.</li>
-   * <li>The meshes must be watertight.</li>
-   * <li>The POSITION attribute is required.</li>
-   * <li>If feature IDs and an index buffer are both present, all indices with the same feature id must occupy contiguous sections of the index buffer.</li>
-   * <li>If feature IDs are present without an index buffer, all positions with the same feature id must occupy contiguous sections of the position buffer.</li>
+   *     <li>The glTF cannot contain morph targets, skins, or animations.</li>
+   *     <li>The glTF cannot contain the <code>EXT_mesh_gpu_instancing</code> extension.</li>
+   *     <li>Only meshes with TRIANGLES can be used to classify other assets.</li>
+   *     <li>The meshes must be watertight.</li>
+   *     <li>The POSITION attribute is required.</li>
+   *     <li>If feature IDs and an index buffer are both present, all indices with the same feature id must occupy contiguous sections of the index buffer.</li>
+   *     <li>If feature IDs are present without an index buffer, all positions with the same feature id must occupy contiguous sections of the position buffer.</li>
    * </ul>
    * </p>
    * <p>
    * The 3D Tiles or terrain receiving the classification must be opaque.
    * </p>
+   *
    * @memberof Model.prototype
+   *
    * @type {ClassificationType}
    * @default undefined
+   *
    * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    * @readonly
    */
@@ -1483,9 +1620,12 @@ Object.defineProperties(Model.prototype, {
   /**
    * Reference to the pick IDs. This is only used internally, e.g. for
    * per-feature post-processing in {@link PostProcessStage}.
+   *
    * @memberof Model.prototype
+   *
    * @type {PickId[]}
    * @readonly
+   *
    * @private
    */
   pickIds: {
@@ -1498,9 +1638,12 @@ Object.defineProperties(Model.prototype, {
    * The {@link StyleCommandsNeeded} for the style currently applied to
    * the features in the model. This is used internally by the {@link ModelDrawCommand}
    * when determining which commands to submit in an update.
+   *
    * @memberof Model.prototype
+   *
    * @type {StyleCommandsNeeded}
    * @readonly
+   *
    * @private
    */
   styleCommandsNeeded: {
@@ -1513,9 +1656,12 @@ Object.defineProperties(Model.prototype, {
 /**
  * Returns the node with the given <code>name</code> in the glTF. This is used to
  * modify a node's transform for user-defined animation.
+ *
  * @param {string} name The name of the node in the glTF.
  * @returns {ModelNode} The node, or <code>undefined</code> if no node with the <code>name</code> exists.
- * @throws {DeveloperError} The model is not loaded.  Use Model.readyEvent or wait for Model.ready to be true.
+ *
+ * @exception {DeveloperError} The model is not loaded.  Use Model.readyEvent or wait for Model.ready to be true.
+ *
  * @example
  * // Apply non-uniform scale to node "Hand"
  * const node = model.getNode("Hand");
@@ -1538,10 +1684,14 @@ Model.prototype.getNode = function (name) {
  * Sets the current value of an articulation stage.  After setting one or
  * multiple stage values, call Model.applyArticulations() to
  * cause the node matrices to be recalculated.
+ *
  * @param {string} articulationStageKey The name of the articulation, a space, and the name of the stage.
  * @param {number} value The numeric value of this stage of the articulation.
- * @throws {DeveloperError} The model is not loaded. Use Model.readyEvent or wait for Model.ready to be true.
+ *
+ * @exception {DeveloperError} The model is not loaded. Use Model.readyEvent or wait for Model.ready to be true.
+ *
  * @see Model#applyArticulations
+ *
  * @example
  * // Sets the value of the stage named "MoveX" belonging to the articulation named "SampleArticulation"
  * model.setArticulationStage("SampleArticulation MoveX", 50.0);
@@ -1563,7 +1713,8 @@ Model.prototype.setArticulationStage = function (articulationStageKey, value) {
  * Applies any modified articulation stages to the matrix of each node that
  * participates in any articulation. Note that this will overwrite any node
  * transformations on participating nodes.
- * @throws {DeveloperError} The model is not loaded. Use Model.readyEvent or wait for Model.ready to be true.
+ *
+ * @exception {DeveloperError} The model is not loaded. Use Model.readyEvent or wait for Model.ready to be true.
  */
 Model.prototype.applyArticulations = function () {
   //>>includeStart('debug', pragmas.debug);
@@ -1587,6 +1738,7 @@ Model.prototype.makeStyleDirty = function () {
 
 /**
  * Resets the draw commands for this model.
+ *
  * @private
  */
 Model.prototype.resetDrawCommands = function () {
@@ -1604,8 +1756,8 @@ const scratchClippingPlanesMatrix = new Matrix4();
  * Do not call this function directly.  This is documented just to
  * list the exceptions that may be propagated when the scene is rendered:
  * </p>
- * @param frameState
- * @throws {RuntimeError} Failed to load external reference.
+ *
+ * @exception {RuntimeError} Failed to load external reference.
  */
 Model.prototype.update = function (frameState) {
   let finishedProcessing = false;
@@ -2337,6 +2489,7 @@ function addCreditsToCreditDisplay(model, frameState) {
  * Gets whether or not the model is translucent based on its assigned model color.
  * If the model color's alpha is equal to zero, then it is considered invisible,
  * not translucent.
+ *
  * @returns {boolean} <code>true</code> if the model is translucent, otherwise <code>false</code>.
  * @private
  */
@@ -2348,6 +2501,7 @@ Model.prototype.isTranslucent = function () {
 /**
  * Gets whether or not the model is invisible, i.e. if the model color's alpha
  * is equal to zero.
+ *
  * @returns {boolean} <code>true</code> if the model is invisible, otherwise <code>false</code>.
  * @private
  */
@@ -2366,8 +2520,8 @@ function supportsSilhouettes(frameState) {
  * <p>
  * If the model classifies another model, its silhouette will be disabled.
  * </p>
+ *
  * @param {FrameState} The frame state.
- * @param frameState
  * @returns {boolean} <code>true</code> if the model has silhouettes, otherwise <code>false</code>.
  * @private
  */
@@ -2384,6 +2538,7 @@ Model.prototype.hasSilhouette = function (frameState) {
  * Gets whether or not the model is part of a tileset that uses the
  * skipLevelOfDetail optimization. This accounts for whether skipLevelOfDetail
  * is supported (i.e. the context supports stencil buffers).
+ *
  * @param {FrameState} frameState The frame state.
  * @returns {boolean} <code>true</code> if the model is part of a tileset that uses the skipLevelOfDetail optimization, <code>false</code> otherwise.
  * @private
@@ -2400,6 +2555,7 @@ Model.prototype.hasSkipLevelOfDetail = function (frameState) {
 
 /**
  * Gets whether or not clipping planes are enabled for this model.
+ *
  * @returns {boolean} <code>true</code> if clipping planes are enabled for this model, <code>false</code>.
  * @private
  */
@@ -2414,12 +2570,14 @@ Model.prototype.isClippingEnabled = function () {
 
 /**
  * Find an intersection between a ray and the model surface that was rendered. The ray must be given in world coordinates.
+ *
  * @param {Ray} ray The ray to test for intersection.
  * @param {FrameState} frameState The frame state.
- * @param {number} [verticalExaggeration] A scalar used to exaggerate the height of a position relative to the ellipsoid. If the value is 1.0 there will be no effect.
- * @param {number} [relativeHeight] The height above the ellipsoid relative to which a position is exaggerated. If the value is 0.0 the position will be exaggerated relative to the ellipsoid surface.
+ * @param {number} [verticalExaggeration=1.0] A scalar used to exaggerate the height of a position relative to the ellipsoid. If the value is 1.0 there will be no effect.
+ * @param {number} [relativeHeight=0.0] The height above the ellipsoid relative to which a position is exaggerated. If the value is 0.0 the position will be exaggerated relative to the ellipsoid surface.
  * @param {Cartesian3|undefined} [result] The intersection or <code>undefined</code> if none was found.
  * @returns {Cartesian3|undefined} The intersection or <code>undefined</code> if none was found.
+ *
  * @private
  */
 Model.prototype.pick = function (
@@ -2441,6 +2599,7 @@ Model.prototype.pick = function (
 
 /**
  * Gets whether or not clipping polygons are enabled for this model.
+ *
  * @returns {boolean} <code>true</code> if clipping polygons are enabled for this model, <code>false</code>.
  * @private
  */
@@ -2458,7 +2617,9 @@ Model.prototype.isClippingPolygonsEnabled = function () {
  * <br /><br />
  * If this object was destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
+ *
  * @returns {boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+ *
  * @see Model#destroy
  */
 Model.prototype.isDestroyed = function () {
@@ -2472,9 +2633,13 @@ Model.prototype.isDestroyed = function () {
  * Once an object is destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
  * assign the return value (<code>undefined</code>) to the object as done in the example.
- * @throws {DeveloperError} This object was destroyed, i.e., destroy() was called.
+ *
+ * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+ *
+ *
  * @example
  * model = model && model.destroy();
+ *
  * @see Model#isDestroyed
  */
 Model.prototype.destroy = function () {
@@ -2573,19 +2738,20 @@ Model.prototype.destroyModelResources = function () {
  * </p>
  * <p>
  * The model can be a traditional glTF asset with a .gltf extension or a Binary glTF using the .glb extension.
+ *
  * @param {object} options Object with the following properties:
  * @param {string|Resource} options.url The url to the .gltf or .glb file.
- * @param {string|Resource} [options.basePath] The base path that paths in the glTF JSON are relative to.
- * @param {boolean} [options.show] Whether or not to render the model.
- * @param {Matrix4} [options.modelMatrix] The 4x4 transformation matrix that transforms the model from model to world coordinates.
- * @param {number} [options.scale] A uniform scale applied to this model.
- * @param {number} [options.minimumPixelSize] The approximate minimum pixel size of the model regardless of zoom.
+ * @param {string|Resource} [options.basePath=''] The base path that paths in the glTF JSON are relative to.
+ * @param {boolean} [options.show=true] Whether or not to render the model.
+ * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the model from model to world coordinates.
+ * @param {number} [options.scale=1.0] A uniform scale applied to this model.
+ * @param {number} [options.minimumPixelSize=0.0] The approximate minimum pixel size of the model regardless of zoom.
  * @param {number} [options.maximumScale] The maximum scale size of a model. An upper limit for minimumPixelSize.
  * @param {object} [options.id] A user-defined object to return when the model is picked with {@link Scene#pick}.
- * @param {boolean} [options.allowPicking] When <code>true</code>, each primitive is pickable with {@link Scene#pick}.
- * @param {boolean} [options.incrementallyLoadTextures] Determine if textures may continue to stream in after the model is loaded.
- * @param {boolean} [options.asynchronous] Determines if model WebGL resource creation will be spread out over several frames or block until completion once all glTF files are loaded.
- * @param {boolean} [options.clampAnimations] Determines if the model's animations should hold a pose over frames where no keyframes are specified.
+ * @param {boolean} [options.allowPicking=true] When <code>true</code>, each primitive is pickable with {@link Scene#pick}.
+ * @param {boolean} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the model is loaded.
+ * @param {boolean} [options.asynchronous=true] Determines if model WebGL resource creation will be spread out over several frames or block until completion once all glTF files are loaded.
+ * @param {boolean} [options.clampAnimations=true] Determines if the model's animations should hold a pose over frames where no keyframes are specified.
  * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the model casts or receives shadows from light sources.
  * @param {boolean} [options.releaseGltfJson=false] When true, the glTF JSON is released once the glTF is loaded. This is is especially useful for cases like 3D Tiles, where each .gltf model is unique and caching the glTF JSON is not effective.
  * @param {boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each draw command in the model.
@@ -2623,10 +2789,13 @@ Model.prototype.destroyModelResources = function () {
  * @param {object} [options.pointCloudShading] Options for constructing a {@link PointCloudShading} object to control point attenuation and lighting.
  * @param {ClassificationType} [options.classificationType] Determines whether terrain, 3D Tiles or both will be classified by this model. This cannot be set after the model has loaded.
  * @param {Model.GltfCallback} [options.gltfCallback] A function that is called with the loaded gltf object once loaded.
+ *
  * @returns {Promise<Model>} A promise that resolves to the created model when it is ready to render.
- * @throws {RuntimeError} The model failed to load.
- * @throws {RuntimeError} Unsupported glTF version.
- * @throws {RuntimeError} Unsupported glTF Extension
+ *
+ * @exception {RuntimeError} The model failed to load.
+ * @exception {RuntimeError} Unsupported glTF version.
+ * @exception {RuntimeError} Unsupported glTF Extension
+ *
  * @example
  * // Load a model and add it to the scene
  * try {
@@ -2637,6 +2806,7 @@ Model.prototype.destroyModelResources = function () {
  * } catch (error) {
  *  console.log(`Failed to load model. ${error}`);
  * }
+ *
  * @example
  * // Position a model with modelMatrix and display it with a minimum size of 128 pixels
  * const position = Cesium.Cartesian3.fromDegrees(
@@ -2664,6 +2834,7 @@ Model.prototype.destroyModelResources = function () {
  * } catch (error) {
  *  console.log(`Failed to load model. ${error}`);
  * }
+ *
  * @example
  * // Load a model and play the last animation at half speed
  * let animations;
@@ -2805,7 +2976,6 @@ Model.fromB3dm = async function (options) {
 };
 
 /**
- * @param options
  * @private
  */
 Model.fromPnts = async function (options) {
@@ -2879,7 +3049,6 @@ Model.fromGeoJson = async function (options) {
 const scratchColor = new Color();
 
 /**
- * @param style
  * @private
  */
 Model.prototype.applyColorAndShow = function (style) {
@@ -2898,7 +3067,6 @@ Model.prototype.applyColorAndShow = function (style) {
 };
 
 /**
- * @param style
  * @private
  */
 Model.prototype.applyStyle = function (style) {
@@ -2990,6 +3158,7 @@ function makeModelOptions(loader, modelType, options) {
 /**
  * Interface for the function that is called with the loaded gltf object once loaded.
  * @callback Model.GltfCallback
+ *
  * @param {object} gltf The gltf object
  */
 

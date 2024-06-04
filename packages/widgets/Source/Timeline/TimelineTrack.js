@@ -1,10 +1,6 @@
 import { Color, defined, JulianDate } from "@cesium/engine";
 
 /**
- * @param interval
- * @param pixelHeight
- * @param color
- * @param backgroundColor
  * @private
  */
 function TimelineTrack(interval, pixelHeight, color, backgroundColor) {

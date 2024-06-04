@@ -6,9 +6,7 @@ import RuntimeError from "../Core/RuntimeError.js";
  * to nodes
  * @alias I3SField
  * @internalConstructor
- * @param parent
  * @privateParam {I3SNode} parent The parent of that geometry
- * @param storageInfo
  * @privateParam {object} storageInfo The structure containing the storage info of the field
  */
 function I3SField(parent, storageInfo) {
@@ -137,9 +135,6 @@ I3SField.prototype.load = function () {
 };
 
 /**
- * @param dataView
- * @param type
- * @param offset
  * @private
  */
 I3SField.prototype._parseValue = function (dataView, type, offset) {
@@ -200,7 +195,6 @@ I3SField.prototype._parseValue = function (dataView, type, offset) {
 };
 
 /**
- * @param dataView
  * @private
  */
 I3SField.prototype._parseHeader = function (dataView) {
@@ -220,8 +214,6 @@ I3SField.prototype._parseHeader = function (dataView) {
 };
 
 /**
- * @param dataView
- * @param offset
  * @private
  */
 I3SField.prototype._parseBody = function (dataView, offset) {
@@ -269,7 +261,6 @@ I3SField.prototype._parseBody = function (dataView, offset) {
 };
 
 /**
- * @param headerSize
  * @private
  */
 I3SField.prototype._getBodyOffset = function (headerSize) {
@@ -287,7 +278,6 @@ I3SField.prototype._getBodyOffset = function (headerSize) {
 };
 
 /**
- * @param dataView
  * @private
  */
 I3SField.prototype._validateHeader = function (dataView) {
@@ -308,8 +298,6 @@ I3SField.prototype._validateHeader = function (dataView) {
 };
 
 /**
- * @param dataView
- * @param offset
  * @private
  */
 I3SField.prototype._validateBody = function (dataView, offset) {

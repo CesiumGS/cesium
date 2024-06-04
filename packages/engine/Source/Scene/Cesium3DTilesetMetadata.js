@@ -13,11 +13,13 @@ import TilesetMetadata from "./TilesetMetadata.js";
  * This object represents the tileset JSON (3D Tiles 1.1) or the <code>3DTILES_metadata</code> object that contains
  * the schema ({@link MetadataSchema}), tileset metadata ({@link TilesetMetadata}), group metadata (dictionary of {@link GroupMetadata}), and metadata statistics (dictionary)
  * </p>
+ *
  * @param {object} options Object with the following properties:
  * @param {object} options.metadataJson Either the tileset JSON (3D Tiles 1.1) or the <code>3DTILES_metadata</code> extension object that contains the tileset metadata.
  * @param {MetadataSchema} options.schema The parsed schema.
+ *
  * @alias Cesium3DTilesetMetadata
- * @class
+ * @constructor
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
@@ -92,6 +94,7 @@ function Cesium3DTilesetMetadata(options) {
 Object.defineProperties(Cesium3DTilesetMetadata.prototype, {
   /**
    * Schema containing classes and enums.
+   *
    * @memberof Cesium3DTilesetMetadata.prototype
    * @type {MetadataSchema}
    * @readonly
@@ -105,6 +108,7 @@ Object.defineProperties(Cesium3DTilesetMetadata.prototype, {
 
   /**
    * Metadata about groups of content.
+   *
    * @memberof Cesium3DTilesetMetadata.prototype
    * @type {GroupMetadata[]}
    * @readonly
@@ -119,6 +123,7 @@ Object.defineProperties(Cesium3DTilesetMetadata.prototype, {
   /**
    * The IDs of the group metadata in the corresponding groups dictionary.
    * Only populated if using the legacy schema.
+   *
    * @memberof Cesium3DTilesetMetadata.prototype
    * @type {}
    * @readonly
@@ -132,6 +137,7 @@ Object.defineProperties(Cesium3DTilesetMetadata.prototype, {
 
   /**
    * Metadata about the tileset as a whole.
+   *
    * @memberof Cesium3DTilesetMetadata.prototype
    * @type {TilesetMetadata}
    * @readonly
@@ -149,6 +155,7 @@ Object.defineProperties(Cesium3DTilesetMetadata.prototype, {
    * See the {@link https://github.com/CesiumGS/3d-tiles/blob/main/extensions/3DTILES_metadata/schema/statistics.schema.json|statistics schema reference}
    * in the 3D Tiles spec for the full set of properties.
    * </p>
+   *
    * @memberof Cesium3DTilesetMetadata.prototype
    * @type {object}
    * @readonly
@@ -162,6 +169,7 @@ Object.defineProperties(Cesium3DTilesetMetadata.prototype, {
 
   /**
    * Extra user-defined properties.
+   *
    * @memberof Cesium3DTilesetMetadata.prototype
    * @type {*}
    * @readonly
@@ -175,6 +183,7 @@ Object.defineProperties(Cesium3DTilesetMetadata.prototype, {
 
   /**
    * An object containing extensions.
+   *
    * @memberof Cesium3DTilesetMetadata.prototype
    * @type {object}
    * @readonly

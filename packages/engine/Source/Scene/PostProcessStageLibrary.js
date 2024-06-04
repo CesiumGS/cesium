@@ -29,6 +29,7 @@ import PostProcessStageSampleMode from "./PostProcessStageSampleMode.js";
 
 /**
  * Contains functions for creating common post-process stages.
+ *
  * @namespace PostProcessStageLibrary
  */
 const PostProcessStageLibrary = {};
@@ -112,7 +113,7 @@ function createBlur(name) {
  * The default value for <code>delta</code> is <code>1.0</code>. The default value for <code>sigma</code> is <code>2.0</code>.
  * <code>stepSize</code> is the distance to the next texel. The default is <code>1.0</code>.
  * </p>
- * @returns {PostProcessStageComposite} A post-process stage that applies a Gaussian blur to the input texture.
+ * @return {PostProcessStageComposite} A post-process stage that applies a Gaussian blur to the input texture.
  */
 PostProcessStageLibrary.createBlurStage = function () {
   return createBlur("czm_blur");
@@ -134,7 +135,7 @@ PostProcessStageLibrary.createBlurStage = function () {
  * <code>delta</code>, <code>sigma</code>, and <code>stepSize</code> are the same properties as {@link PostProcessStageLibrary#createBlurStage}.
  * The blur is applied to the areas out of focus.
  * </p>
- * @returns {PostProcessStageComposite} A post-process stage that applies a depth of field effect.
+ * @return {PostProcessStageComposite} A post-process stage that applies a depth of field effect.
  */
 PostProcessStageLibrary.createDepthOfFieldStage = function () {
   const blur = createBlur("czm_depth_of_field_blur");
@@ -195,8 +196,10 @@ PostProcessStageLibrary.createDepthOfFieldStage = function () {
  * <p>
  * This stage requires the WEBGL_depth_texture extension.
  * </p>
+ *
  * @param {Scene} scene The scene.
- * @returns {boolean} Whether this post process stage is supported.
+ * @return {boolean} Whether this post process stage is supported.
+ *
  * @see {Context#depthTexture}
  * @see {@link http://www.khronos.org/registry/webgl/extensions/WEBGL_depth_texture/|WEBGL_depth_texture}
  */
@@ -219,7 +222,8 @@ PostProcessStageLibrary.isDepthOfFieldSupported = function (scene) {
  * <p>
  * This stage is not supported in 2D.
  * </p>
- * @returns {PostProcessStage} A post-process stage that applies an edge detection effect.
+ * @return {PostProcessStage} A post-process stage that applies an edge detection effect.
+ *
  * @example
  * // multiple silhouette effects
  * const yellowEdge = Cesium.PostProcessStageLibrary.createEdgeDetectionStage();
@@ -251,8 +255,10 @@ PostProcessStageLibrary.createEdgeDetectionStage = function () {
  * <p>
  * This stage requires the WEBGL_depth_texture extension.
  * </p>
+ *
  * @param {Scene} scene The scene.
- * @returns {boolean} Whether this post process stage is supported.
+ * @return {boolean} Whether this post process stage is supported.
+ *
  * @see {Context#depthTexture}
  * @see {@link http://www.khronos.org/registry/webgl/extensions/WEBGL_depth_texture/|WEBGL_depth_texture}
  */
@@ -319,7 +325,7 @@ function getSilhouetteEdgeDetection(edgeDetectionStages) {
  * <code>length</code> is the length of the edges in pixels. The default is <code>0.5</code>.
  * </p>
  * @param {PostProcessStage[]} [edgeDetectionStages] An array of edge detection post process stages.
- * @returns {PostProcessStageComposite} A post-process stage that applies a silhouette effect.
+ * @return {PostProcessStageComposite} A post-process stage that applies a silhouette effect.
  */
 PostProcessStageLibrary.createSilhouetteStage = function (edgeDetectionStages) {
   const edgeDetection = getSilhouetteEdgeDetection(edgeDetectionStages);
@@ -344,8 +350,10 @@ PostProcessStageLibrary.createSilhouetteStage = function (edgeDetectionStages) {
  * <p>
  * This stage requires the WEBGL_depth_texture extension.
  * </p>
+ *
  * @param {Scene} scene The scene.
- * @returns {boolean} Whether this post process stage is supported.
+ * @return {boolean} Whether this post process stage is supported.
+ *
  * @see {Context#depthTexture}
  * @see {@link http://www.khronos.org/registry/webgl/extensions/WEBGL_depth_texture/|WEBGL_depth_texture}
  */
@@ -372,7 +380,8 @@ PostProcessStageLibrary.isSilhouetteSupported = function (scene) {
  * <p>
  * <code>delta</code>, <code>sigma</code>, and <code>stepSize</code> are the same properties as {@link PostProcessStageLibrary#createBlurStage}.
  * </p>
- * @returns {PostProcessStageComposite} A post-process stage to applies a bloom effect.
+ * @return {PostProcessStageComposite} A post-process stage to applies a bloom effect.
+ *
  * @private
  */
 PostProcessStageLibrary.createBloomStage = function () {
@@ -487,7 +496,8 @@ PostProcessStageLibrary.createBloomStage = function () {
  * <code>delta</code>, <code>sigma</code>, and <code>blurStepSize</code> are the same properties as {@link PostProcessStageLibrary#createBlurStage}.
  * The blur is applied to the shadows generated from the image to make them smoother.
  * </p>
- * @returns {PostProcessStageComposite} A post-process stage that applies an ambient occlusion effect.
+ * @return {PostProcessStageComposite} A post-process stage that applies an ambient occlusion effect.
+ *
  * @private
  */
 PostProcessStageLibrary.createAmbientOcclusionStage = function () {
@@ -616,8 +626,10 @@ PostProcessStageLibrary.createAmbientOcclusionStage = function () {
  * <p>
  * This stage requires the WEBGL_depth_texture extension.
  * </p>
+ *
  * @param {Scene} scene The scene.
- * @returns {boolean} Whether this post process stage is supported.
+ * @return {boolean} Whether this post process stage is supported.
+ *
  * @see {Context#depthTexture}
  * @see {@link http://www.khronos.org/registry/webgl/extensions/WEBGL_depth_texture/|WEBGL_depth_texture}
  */
@@ -629,7 +641,8 @@ const fxaaFS = `#define FXAA_QUALITY_PRESET 39 \n${FXAA3_11}\n${FXAA}`;
 
 /**
  * Creates a post-process stage that applies Fast Approximate Anti-aliasing (FXAA) to the input texture.
- * @returns {PostProcessStage} A post-process stage that applies Fast Approximate Anti-aliasing to the input texture.
+ * @return {PostProcessStage} A post-process stage that applies Fast Approximate Anti-aliasing to the input texture.
+ *
  * @private
  */
 PostProcessStageLibrary.createFXAAStage = function () {
@@ -643,7 +656,7 @@ PostProcessStageLibrary.createFXAAStage = function () {
 /**
  * Creates a post-process stage that applies ACES tonemapping operator.
  * @param {boolean} useAutoExposure Whether or not to use auto-exposure.
- * @returns {PostProcessStage} A post-process stage that applies ACES tonemapping operator.
+ * @return {PostProcessStage} A post-process stage that applies ACES tonemapping operator.
  * @private
  */
 PostProcessStageLibrary.createAcesTonemappingStage = function (
@@ -663,7 +676,7 @@ PostProcessStageLibrary.createAcesTonemappingStage = function (
 /**
  * Creates a post-process stage that applies filmic tonemapping operator.
  * @param {boolean} useAutoExposure Whether or not to use auto-exposure.
- * @returns {PostProcessStage} A post-process stage that applies filmic tonemapping operator.
+ * @return {PostProcessStage} A post-process stage that applies filmic tonemapping operator.
  * @private
  */
 PostProcessStageLibrary.createFilmicTonemappingStage = function (
@@ -683,7 +696,7 @@ PostProcessStageLibrary.createFilmicTonemappingStage = function (
 /**
  * Creates a post-process stage that applies Reinhard tonemapping operator.
  * @param {boolean} useAutoExposure Whether or not to use auto-exposure.
- * @returns {PostProcessStage} A post-process stage that applies Reinhard tonemapping operator.
+ * @return {PostProcessStage} A post-process stage that applies Reinhard tonemapping operator.
  * @private
  */
 PostProcessStageLibrary.createReinhardTonemappingStage = function (
@@ -703,7 +716,7 @@ PostProcessStageLibrary.createReinhardTonemappingStage = function (
 /**
  * Creates a post-process stage that applies modified Reinhard tonemapping operator.
  * @param {boolean} useAutoExposure Whether or not to use auto-exposure.
- * @returns {PostProcessStage} A post-process stage that applies modified Reinhard tonemapping operator.
+ * @return {PostProcessStage} A post-process stage that applies modified Reinhard tonemapping operator.
  * @private
  */
 PostProcessStageLibrary.createModifiedReinhardTonemappingStage = function (
@@ -723,7 +736,7 @@ PostProcessStageLibrary.createModifiedReinhardTonemappingStage = function (
 
 /**
  * Creates a post-process stage that finds the average luminance of the input texture.
- * @returns {PostProcessStage} A post-process stage that finds the average luminance of the input texture.
+ * @return {PostProcessStage} A post-process stage that finds the average luminance of the input texture.
  * @private
  */
 PostProcessStageLibrary.createAutoExposureStage = function () {
@@ -735,7 +748,7 @@ PostProcessStageLibrary.createAutoExposureStage = function () {
  * <p>
  * This stage has one uniform value, <code>gradations</code>, which scales the luminance of each pixel.
  * </p>
- * @returns {PostProcessStage} A post-process stage that renders the input texture with black and white gradations.
+ * @return {PostProcessStage} A post-process stage that renders the input texture with black and white gradations.
  */
 PostProcessStageLibrary.createBlackAndWhiteStage = function () {
   return new PostProcessStage({
@@ -752,7 +765,7 @@ PostProcessStageLibrary.createBlackAndWhiteStage = function () {
  * <p>
  * This stage has one uniform value, <code>brightness</code>, which scales the saturation of each pixel.
  * </p>
- * @returns {PostProcessStage} A post-process stage that saturates the input texture.
+ * @return {PostProcessStage} A post-process stage that saturates the input texture.
  */
 PostProcessStageLibrary.createBrightnessStage = function () {
   return new PostProcessStage({
@@ -766,7 +779,7 @@ PostProcessStageLibrary.createBrightnessStage = function () {
 
 /**
  * Creates a post-process stage that adds a night vision effect to the input texture.
- * @returns {PostProcessStage} A post-process stage that adds a night vision effect to the input texture.
+ * @return {PostProcessStage} A post-process stage that adds a night vision effect to the input texture.
  */
 PostProcessStageLibrary.createNightVisionStage = function () {
   return new PostProcessStage({
@@ -777,7 +790,8 @@ PostProcessStageLibrary.createNightVisionStage = function () {
 
 /**
  * Creates a post-process stage that replaces the input color texture with a black and white texture representing the fragment depth at each pixel.
- * @returns {PostProcessStage} A post-process stage that replaces the input color texture with a black and white texture representing the fragment depth at each pixel.
+ * @return {PostProcessStage} A post-process stage that replaces the input color texture with a black and white texture representing the fragment depth at each pixel.
+ *
  * @private
  */
 PostProcessStageLibrary.createDepthViewStage = function () {
@@ -803,7 +817,7 @@ PostProcessStageLibrary.createDepthViewStage = function () {
  * <li><code>earthRadius</code> is the maximum radius of the earth. The default value is <code>Ellipsoid.WGS84.maximumRadius</code>.</li>
  * </ul>
  * </p>
- * @returns {PostProcessStage} A post-process stage for applying a lens flare effect.
+ * @return {PostProcessStage} A post-process stage for applying a lens flare effect.
  */
 PostProcessStageLibrary.createLensFlareStage = function () {
   return new PostProcessStage({

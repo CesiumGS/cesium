@@ -116,21 +116,23 @@ function configureCameraFrustum(widget) {
 
 /**
  * A widget containing a Cesium scene.
+ *
  * @alias CesiumWidget
- * @class
+ * @constructor
+ *
  * @param {Element|string} container The DOM element or ID that will contain the widget.
  * @param {object} [options] Object with the following properties:
- * @param {Clock} [options.clock] The clock to use to control current time.
- * @param {ImageryLayer|false} [options.baseLayer] The bottommost imagery layer applied to the globe. If set to <code>false</code>, no imagery provider will be added.
- * @param {TerrainProvider} [options.terrainProvider] The terrain provider.
+ * @param {Clock} [options.clock=new Clock()] The clock to use to control current time.
+ * @param {ImageryLayer|false} [options.baseLayer=ImageryLayer.fromWorldImagery()] The bottommost imagery layer applied to the globe. If set to <code>false</code>, no imagery provider will be added.
+ * @param {TerrainProvider} [options.terrainProvider=new EllipsoidTerrainProvider] The terrain provider.
  * @param {Terrain} [options.terrain] A terrain object which handles asynchronous terrain provider. Can only specify if options.terrainProvider is undefined.
  * @param {SkyBox| false} [options.skyBox] The skybox used to render the stars.  When <code>undefined</code>, the default stars are used. If set to <code>false</code>, no skyBox, Sun, or Moon will be added.
  * @param {SkyAtmosphere | false} [options.skyAtmosphere] Blue sky, and the glow around the Earth's limb.  Set to <code>false</code> to turn it off.
- * @param {SceneMode} [options.sceneMode] The initial scene mode.
- * @param {boolean} [options.scene3DOnly] When <code>true</code>, each geometry instance will only be rendered in 3D to save GPU memory.
- * @param {boolean} [options.orderIndependentTranslucency] If true and the configuration supports it, use order independent translucency.
- * @param {MapProjection} [options.mapProjection] The map projection to use in 2D and Columbus View modes.
- * @param {Globe | false} [options.globe] The globe to use in the scene.  If set to <code>false</code>, no globe will be added and the sky atmosphere will be hidden by default.
+ * @param {SceneMode} [options.sceneMode=SceneMode.SCENE3D] The initial scene mode.
+ * @param {boolean} [options.scene3DOnly=false] When <code>true</code>, each geometry instance will only be rendered in 3D to save GPU memory.
+ * @param {boolean} [options.orderIndependentTranslucency=true] If true and the configuration supports it, use order independent translucency.
+ * @param {MapProjection} [options.mapProjection=new GeographicProjection()] The map projection to use in 2D and Columbus View modes.
+ * @param {Globe | false} [options.globe=new Globe(mapProjection.ellipsoid)] The globe to use in the scene.  If set to <code>false</code>, no globe will be added and the sky atmosphere will be hidden by default.
  * @param {boolean} [options.useDefaultRenderLoop=true] True if this widget should control the render loop, false otherwise.
  * @param {boolean} [options.useBrowserRecommendedResolution=true] If true, render at the browser's recommended resolution and ignore <code>window.devicePixelRatio</code>.
  * @param {number} [options.targetFrameRate] The target frame rate when using the default render loop.
@@ -146,8 +148,11 @@ function configureCameraFrustum(widget) {
  * @param {boolean} [options.requestRenderMode=false] If true, rendering a frame will only occur when needed as determined by changes within the scene. Enabling improves performance of the application, but requires using {@link Scene#requestRender} to render a new frame explicitly in this mode. This will be necessary in many cases after making changes to the scene in other parts of the API. See {@link https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/|Improving Performance with Explicit Rendering}.
  * @param {number} [options.maximumRenderTimeChange=0.0] If requestRenderMode is true, this value defines the maximum change in simulation time allowed before a render is requested. See {@link https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/|Improving Performance with Explicit Rendering}.
  * @param {number} [options.msaaSamples=1] If provided, this value controls the rate of multisample antialiasing. Typical multisampling rates are 2, 4, and sometimes 8 samples per pixel. Higher sampling rates of MSAA may impact performance in exchange for improved visual quality. This value only applies to WebGL2 contexts that support multisample render targets.
- * @throws {DeveloperError} Element with id "container" does not exist in the document.
+ *
+ * @exception {DeveloperError} Element with id "container" does not exist in the document.
+ *
  * @demo {@link https://sandcastle.cesium.com/index.html?src=Cesium%20Widget.html|Cesium Sandcastle Cesium Widget Demo}
+ *
  * @example
  * // For each example, include a link to CesiumWidget.css stylesheet in HTML head,
  * // and in the body, include: <div id="cesiumContainer"></div>
@@ -409,6 +414,7 @@ Object.defineProperties(CesiumWidget.prototype, {
   /**
    * Gets the parent container.
    * @memberof CesiumWidget.prototype
+   *
    * @type {Element}
    * @readonly
    */
@@ -421,6 +427,7 @@ Object.defineProperties(CesiumWidget.prototype, {
   /**
    * Gets the canvas.
    * @memberof CesiumWidget.prototype
+   *
    * @type {HTMLCanvasElement}
    * @readonly
    */
@@ -433,6 +440,7 @@ Object.defineProperties(CesiumWidget.prototype, {
   /**
    * Gets the credit container.
    * @memberof CesiumWidget.prototype
+   *
    * @type {Element}
    * @readonly
    */
@@ -445,6 +453,7 @@ Object.defineProperties(CesiumWidget.prototype, {
   /**
    * Gets the credit viewport
    * @memberof CesiumWidget.prototype
+   *
    * @type {Element}
    * @readonly
    */
@@ -457,6 +466,7 @@ Object.defineProperties(CesiumWidget.prototype, {
   /**
    * Gets the scene.
    * @memberof CesiumWidget.prototype
+   *
    * @type {Scene}
    * @readonly
    */
@@ -469,6 +479,7 @@ Object.defineProperties(CesiumWidget.prototype, {
   /**
    * Gets the collection of image layers that will be rendered on the globe.
    * @memberof CesiumWidget.prototype
+   *
    * @type {ImageryLayerCollection}
    * @readonly
    */
@@ -481,6 +492,7 @@ Object.defineProperties(CesiumWidget.prototype, {
   /**
    * The terrain provider providing surface geometry for the globe.
    * @memberof CesiumWidget.prototype
+   *
    * @type {TerrainProvider}
    */
   terrainProvider: {
@@ -495,6 +507,7 @@ Object.defineProperties(CesiumWidget.prototype, {
   /**
    * Manages the list of credits to display on screen and in the lightbox.
    * @memberof CesiumWidget.prototype
+   *
    * @type {CreditDisplay}
    */
   creditDisplay: {
@@ -506,6 +519,7 @@ Object.defineProperties(CesiumWidget.prototype, {
   /**
    * Gets the camera.
    * @memberof CesiumWidget.prototype
+   *
    * @type {Camera}
    * @readonly
    */
@@ -518,6 +532,7 @@ Object.defineProperties(CesiumWidget.prototype, {
   /**
    * Gets the clock.
    * @memberof CesiumWidget.prototype
+   *
    * @type {Clock}
    * @readonly
    */
@@ -530,6 +545,7 @@ Object.defineProperties(CesiumWidget.prototype, {
   /**
    * Gets the screen space event handler.
    * @memberof CesiumWidget.prototype
+   *
    * @type {ScreenSpaceEventHandler}
    * @readonly
    */
@@ -545,6 +561,7 @@ Object.defineProperties(CesiumWidget.prototype, {
    * determines the frame rate.  If defined, this value must be greater than 0.  A value higher
    * than the underlying requestAnimationFrame implementation will have no effect.
    * @memberof CesiumWidget.prototype
+   *
    * @type {number}
    */
   targetFrameRate: {
@@ -574,6 +591,7 @@ Object.defineProperties(CesiumWidget.prototype, {
    * will be set to false.  It must be set back to true to continue rendering
    * after the error.
    * @memberof CesiumWidget.prototype
+   *
    * @type {boolean}
    */
   useDefaultRenderLoop: {
@@ -598,6 +616,7 @@ Object.defineProperties(CesiumWidget.prototype, {
    * will cause the scene to be rendered at 320x240 and then scaled up while setting
    * it to 2.0 will cause the scene to be rendered at 1280x960 and then scaled down.
    * @memberof CesiumWidget.prototype
+   *
    * @type {number}
    * @default 1.0
    */
@@ -626,6 +645,7 @@ Object.defineProperties(CesiumWidget.prototype, {
    * will be in device pixels. {@link CesiumWidget#resolutionScale} will still take effect whether
    * this flag is true or false.
    * @memberof CesiumWidget.prototype
+   *
    * @type {boolean}
    * @default true
    */
@@ -647,6 +667,7 @@ Object.defineProperties(CesiumWidget.prototype, {
  * which can be dismissed using an OK button.  This panel is displayed automatically
  * when a render loop error occurs, if showRenderLoopErrors was not false when the
  * widget was constructed.
+ *
  * @param {string} title The title to be displayed on the error panel.  This string is interpreted as text.
  * @param {string} [message] A helpful, user-facing message to display prior to the detailed error information.  This string is interpreted as HTML.
  * @param {string} [error] The error to be displayed on the error panel.  This string is formatted using {@link formatError} and then displayed as text.

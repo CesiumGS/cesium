@@ -13,12 +13,16 @@ import NavigationHelpButtonViewModel from "./NavigationHelpButtonViewModel.js";
 /**
  * <p>The NavigationHelpButton is a single button widget for displaying instructions for
  * navigating the globe with the mouse.</p><p style="clear: both;"></p><br/>
+ *
  * @alias NavigationHelpButton
- * @class
+ * @constructor
+ *
  * @param {object} options Object with the following properties:
  * @param {Element|string} options.container The DOM element or ID that will contain the widget.
- * @param {boolean} [options.instructionsInitiallyVisible] True if the navigation instructions should initially be visible; otherwise, false.
- * @throws {DeveloperError} Element with id "container" does not exist in the document.
+ * @param {boolean} [options.instructionsInitiallyVisible=false] True if the navigation instructions should initially be visible; otherwise, false.
+ *
+ * @exception {DeveloperError} Element with id "container" does not exist in the document.
+ *
  * @example
  * // In HTML head, include a link to the NavigationHelpButton.css stylesheet,
  * // and in the body, include: <div id="navigationHelpButtonContainer"></div>
@@ -222,6 +226,7 @@ Object.defineProperties(NavigationHelpButton.prototype, {
   /**
    * Gets the parent container.
    * @memberof NavigationHelpButton.prototype
+   *
    * @type {Element}
    */
   container: {
@@ -233,6 +238,7 @@ Object.defineProperties(NavigationHelpButton.prototype, {
   /**
    * Gets the view model.
    * @memberof NavigationHelpButton.prototype
+   *
    * @type {NavigationHelpButtonViewModel}
    */
   viewModel: {

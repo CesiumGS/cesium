@@ -13,11 +13,12 @@ const defaultRepeat = new Cartesian2(2.0, 2.0);
 /**
  * A {@link MaterialProperty} that maps to checkerboard {@link Material} uniforms.
  * @alias CheckerboardMaterialProperty
- * @class
+ * @constructor
+ *
  * @param {object} [options] Object with the following properties:
- * @param {Property|Color} [options.evenColor] A Property specifying the first {@link Color}.
- * @param {Property|Color} [options.oddColor] A Property specifying the second {@link Color}.
- * @param {Property|Cartesian2} [options.repeat] A {@link Cartesian2} Property specifying how many times the tiles repeat in each direction.
+ * @param {Property|Color} [options.evenColor=Color.WHITE] A Property specifying the first {@link Color}.
+ * @param {Property|Color} [options.oddColor=Color.BLACK] A Property specifying the second {@link Color}.
+ * @param {Property|Cartesian2} [options.repeat=new Cartesian2(2.0, 2.0)] A {@link Cartesian2} Property specifying how many times the tiles repeat in each direction.
  */
 function CheckerboardMaterialProperty(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -40,6 +41,7 @@ Object.defineProperties(CheckerboardMaterialProperty.prototype, {
    * Gets a value indicating if this property is constant.  A property is considered
    * constant if getValue always returns the same result for the current definition.
    * @memberof CheckerboardMaterialProperty.prototype
+   *
    * @type {boolean}
    * @readonly
    */
@@ -58,6 +60,7 @@ Object.defineProperties(CheckerboardMaterialProperty.prototype, {
    * The definition is considered to have changed if a call to getValue would return
    * a different result for the same time.
    * @memberof CheckerboardMaterialProperty.prototype
+   *
    * @type {Event}
    * @readonly
    */
@@ -94,6 +97,7 @@ Object.defineProperties(CheckerboardMaterialProperty.prototype, {
 
 /**
  * Gets the {@link Material} type at the provided time.
+ *
  * @param {JulianDate} time The time for which to retrieve the type.
  * @returns {string} The type of material.
  */
@@ -103,6 +107,7 @@ CheckerboardMaterialProperty.prototype.getType = function (time) {
 
 /**
  * Gets the value of the property at the provided time.
+ *
  * @param {JulianDate} time The time for which to retrieve the value.
  * @param {object} [result] The object to store the value into, if omitted, a new instance is created and returned.
  * @returns {object} The modified result parameter or a new instance if the result parameter was not supplied.
@@ -130,6 +135,7 @@ CheckerboardMaterialProperty.prototype.getValue = function (time, result) {
 /**
  * Compares this property to the provided property and returns
  * <code>true</code> if they are equal, <code>false</code> otherwise.
+ *
  * @param {Property} [other] The other property.
  * @returns {boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
  */

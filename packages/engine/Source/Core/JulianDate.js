@@ -197,10 +197,11 @@ const iso8601ErrorMessage = "Invalid ISO 8601 date.";
  * leap seconds, the date is always stored in the International Atomic Time standard
  * {@link TimeStandard.TAI}.
  * @alias JulianDate
- * @class
- * @param {number} [julianDayNumber] The Julian Day Number representing the number of whole days.  Fractional days will also be handled correctly.
- * @param {number} [secondsOfDay] The number of seconds into the current Julian Day Number.  Fractional seconds, negative seconds and seconds greater than a day will be handled correctly.
- * @param {TimeStandard} [timeStandard] The time standard in which the first two parameters are defined.
+ * @constructor
+ *
+ * @param {number} [julianDayNumber=0.0] The Julian Day Number representing the number of whole days.  Fractional days will also be handled correctly.
+ * @param {number} [secondsOfDay=0.0] The number of seconds into the current Julian Day Number.  Fractional seconds, negative seconds and seconds greater than a day will be handled correctly.
+ * @param {TimeStandard} [timeStandard=TimeStandard.UTC] The time standard in which the first two parameters are defined.
  */
 function JulianDate(julianDayNumber, secondsOfDay, timeStandard) {
   /**
@@ -234,10 +235,12 @@ function JulianDate(julianDayNumber, secondsOfDay, timeStandard) {
 
 /**
  * Creates a new instance from a GregorianDate.
+ *
  * @param {GregorianDate} date A GregorianDate.
  * @param {JulianDate} [result] An existing instance to use for the result.
  * @returns {JulianDate} The modified result parameter or a new instance if none was provided.
- * @throws {DeveloperError} date must be a valid GregorianDate.
+ *
+ * @exception {DeveloperError} date must be a valid GregorianDate.
  */
 JulianDate.fromGregorianDate = function (date, result) {
   //>>includeStart('debug', pragmas.debug);
@@ -265,10 +268,12 @@ JulianDate.fromGregorianDate = function (date, result) {
 
 /**
  * Creates a new instance from a JavaScript Date.
+ *
  * @param {Date} date A JavaScript Date.
  * @param {JulianDate} [result] An existing instance to use for the result.
  * @returns {JulianDate} The modified result parameter or a new instance if none was provided.
- * @throws {DeveloperError} date must be a valid JavaScript Date.
+ *
+ * @exception {DeveloperError} date must be a valid JavaScript Date.
  */
 JulianDate.fromDate = function (date, result) {
   //>>includeStart('debug', pragmas.debug);
@@ -298,10 +303,12 @@ JulianDate.fromDate = function (date, result) {
  * Creates a new instance from a from an {@link http://en.wikipedia.org/wiki/ISO_8601|ISO 8601} date.
  * This method is superior to <code>Date.parse</code> because it will handle all valid formats defined by the ISO 8601
  * specification, including leap seconds and sub-millisecond times, which discarded by most JavaScript implementations.
+ *
  * @param {string} iso8601String An ISO 8601 date.
  * @param {JulianDate} [result] An existing instance to use for the result.
  * @returns {JulianDate} The modified result parameter or a new instance if none was provided.
- * @throws {DeveloperError} Invalid ISO 8601 date.
+ *
+ * @exception {DeveloperError} Invalid ISO 8601 date.
  */
 JulianDate.fromIso8601 = function (iso8601String, result) {
   //>>includeStart('debug', pragmas.debug);
@@ -601,6 +608,7 @@ JulianDate.fromIso8601 = function (iso8601String, result) {
 /**
  * Creates a new instance that represents the current system time.
  * This is equivalent to calling <code>JulianDate.fromDate(new Date());</code>.
+ *
  * @param {JulianDate} [result] An existing instance to use for the result.
  * @returns {JulianDate} The modified result parameter or a new instance if none was provided.
  */
@@ -612,6 +620,7 @@ const toGregorianDateScratch = new JulianDate(0, 0, TimeStandard.TAI);
 
 /**
  * Creates a {@link GregorianDate} from the provided instance.
+ *
  * @param {JulianDate} julianDate The date to be converted.
  * @param {GregorianDate} [result] An existing instance to use for the result.
  * @returns {GregorianDate} The modified result parameter or a new instance if none was provided.
@@ -703,6 +712,7 @@ JulianDate.toGregorianDate = function (julianDate, result) {
  * Since JavaScript dates are only accurate to the nearest millisecond and
  * cannot represent a leap second, consider using {@link JulianDate.toGregorianDate} instead.
  * If the provided JulianDate is during a leap second, the previous second is used.
+ *
  * @param {JulianDate} julianDate The date to be converted.
  * @returns {Date} A new instance representing the provided date.
  */
@@ -733,6 +743,7 @@ JulianDate.toDate = function (julianDate) {
 
 /**
  * Creates an ISO8601 representation of the provided date.
+ *
  * @param {JulianDate} julianDate The date to be converted.
  * @param {number} [precision] The number of fractional digits used to represent the seconds component.  By default, the most precise representation is used.
  * @returns {string} The ISO8601 representation of the provided date.
@@ -821,6 +832,7 @@ JulianDate.toIso8601 = function (julianDate, precision) {
 
 /**
  * Duplicates a JulianDate instance.
+ *
  * @param {JulianDate} julianDate The date to duplicate.
  * @param {JulianDate} [result] An existing instance to use for the result.
  * @returns {JulianDate} The modified result parameter or a new instance if none was provided. Returns undefined if julianDate is undefined.
@@ -843,6 +855,7 @@ JulianDate.clone = function (julianDate, result) {
 
 /**
  * Compares two instances.
+ *
  * @param {JulianDate} left The first instance.
  * @param {JulianDate} right The second instance.
  * @returns {number} A negative value if left is less than right, a positive value if left is greater than right, or zero if left and right are equal.
@@ -866,6 +879,7 @@ JulianDate.compare = function (left, right) {
 
 /**
  * Compares two instances and returns <code>true</code> if they are equal, <code>false</code> otherwise.
+ *
  * @param {JulianDate} [left] The first instance.
  * @param {JulianDate} [right] The second instance.
  * @returns {boolean} <code>true</code> if the dates are equal; otherwise, <code>false</code>.
@@ -885,9 +899,10 @@ JulianDate.equals = function (left, right) {
  * each other.  That is, in order for the dates to be considered equal (and for
  * this function to return <code>true</code>), the absolute value of the difference between them, in
  * seconds, must be less than <code>epsilon</code>.
+ *
  * @param {JulianDate} [left] The first instance.
  * @param {JulianDate} [right] The second instance.
- * @param {number} [epsilon] The maximum number of seconds that should separate the two instances.
+ * @param {number} [epsilon=0] The maximum number of seconds that should separate the two instances.
  * @returns {boolean} <code>true</code> if the two dates are within <code>epsilon</code> seconds of each other; otherwise <code>false</code>.
  */
 JulianDate.equalsEpsilon = function (left, right, epsilon) {
@@ -903,6 +918,7 @@ JulianDate.equalsEpsilon = function (left, right, epsilon) {
 
 /**
  * Computes the total number of whole and fractional days represented by the provided instance.
+ *
  * @param {JulianDate} julianDate The date.
  * @returns {number} The Julian date as single floating point number.
  */
@@ -920,6 +936,7 @@ JulianDate.totalDays = function (julianDate) {
 
 /**
  * Computes the difference in seconds between the provided instance.
+ *
  * @param {JulianDate} left The first instance.
  * @param {JulianDate} right The second instance.
  * @returns {number} The difference, in seconds, when subtracting <code>right</code> from <code>left</code>.
@@ -941,6 +958,7 @@ JulianDate.secondsDifference = function (left, right) {
 
 /**
  * Computes the difference in days between the provided instance.
+ *
  * @param {JulianDate} left The first instance.
  * @param {JulianDate} right The second instance.
  * @returns {number} The difference, in days, when subtracting <code>right</code> from <code>left</code>.
@@ -963,6 +981,7 @@ JulianDate.daysDifference = function (left, right) {
 
 /**
  * Computes the number of seconds the provided instance is ahead of UTC.
+ *
  * @param {JulianDate} julianDate The date.
  * @returns {number} The number of seconds the provided instance is ahead of UTC
  */
@@ -986,6 +1005,7 @@ JulianDate.computeTaiMinusUtc = function (julianDate) {
 
 /**
  * Adds the provided number of seconds to the provided date instance.
+ *
  * @param {JulianDate} julianDate The date.
  * @param {number} seconds The number of seconds to add or subtract.
  * @param {JulianDate} result An existing instance to use for the result.
@@ -1013,6 +1033,7 @@ JulianDate.addSeconds = function (julianDate, seconds, result) {
 
 /**
  * Adds the provided number of minutes to the provided date instance.
+ *
  * @param {JulianDate} julianDate The date.
  * @param {number} minutes The number of minutes to add or subtract.
  * @param {JulianDate} result An existing instance to use for the result.
@@ -1038,6 +1059,7 @@ JulianDate.addMinutes = function (julianDate, minutes, result) {
 
 /**
  * Adds the provided number of hours to the provided date instance.
+ *
  * @param {JulianDate} julianDate The date.
  * @param {number} hours The number of hours to add or subtract.
  * @param {JulianDate} result An existing instance to use for the result.
@@ -1063,6 +1085,7 @@ JulianDate.addHours = function (julianDate, hours, result) {
 
 /**
  * Adds the provided number of days to the provided date instance.
+ *
  * @param {JulianDate} julianDate The date.
  * @param {number} days The number of days to add or subtract.
  * @param {JulianDate} result An existing instance to use for the result.
@@ -1087,6 +1110,7 @@ JulianDate.addDays = function (julianDate, days, result) {
 
 /**
  * Compares the provided instances and returns <code>true</code> if <code>left</code> is earlier than <code>right</code>, <code>false</code> otherwise.
+ *
  * @param {JulianDate} left The first instance.
  * @param {JulianDate} right The second instance.
  * @returns {boolean} <code>true</code> if <code>left</code> is earlier than <code>right</code>, <code>false</code> otherwise.
@@ -1097,6 +1121,7 @@ JulianDate.lessThan = function (left, right) {
 
 /**
  * Compares the provided instances and returns <code>true</code> if <code>left</code> is earlier than or equal to <code>right</code>, <code>false</code> otherwise.
+ *
  * @param {JulianDate} left The first instance.
  * @param {JulianDate} right The second instance.
  * @returns {boolean} <code>true</code> if <code>left</code> is earlier than or equal to <code>right</code>, <code>false</code> otherwise.
@@ -1107,6 +1132,7 @@ JulianDate.lessThanOrEquals = function (left, right) {
 
 /**
  * Compares the provided instances and returns <code>true</code> if <code>left</code> is later than <code>right</code>, <code>false</code> otherwise.
+ *
  * @param {JulianDate} left The first instance.
  * @param {JulianDate} right The second instance.
  * @returns {boolean} <code>true</code> if <code>left</code> is later than <code>right</code>, <code>false</code> otherwise.
@@ -1117,6 +1143,7 @@ JulianDate.greaterThan = function (left, right) {
 
 /**
  * Compares the provided instances and returns <code>true</code> if <code>left</code> is later than or equal to <code>right</code>, <code>false</code> otherwise.
+ *
  * @param {JulianDate} left The first instance.
  * @param {JulianDate} right The second instance.
  * @returns {boolean} <code>true</code> if <code>left</code> is later than or equal to <code>right</code>, <code>false</code> otherwise.
@@ -1127,6 +1154,7 @@ JulianDate.greaterThanOrEquals = function (left, right) {
 
 /**
  * Duplicates this instance.
+ *
  * @param {JulianDate} [result] An existing instance to use for the result.
  * @returns {JulianDate} The modified result parameter or a new instance if none was provided.
  */
@@ -1136,6 +1164,7 @@ JulianDate.prototype.clone = function (result) {
 
 /**
  * Compares this and the provided instance and returns <code>true</code> if they are equal, <code>false</code> otherwise.
+ *
  * @param {JulianDate} [right] The second instance.
  * @returns {boolean} <code>true</code> if the dates are equal; otherwise, <code>false</code>.
  */
@@ -1148,8 +1177,9 @@ JulianDate.prototype.equals = function (right) {
  * each other.  That is, in order for the dates to be considered equal (and for
  * this function to return <code>true</code>), the absolute value of the difference between them, in
  * seconds, must be less than <code>epsilon</code>.
+ *
  * @param {JulianDate} [right] The second instance.
- * @param {number} [epsilon] The maximum number of seconds that should separate the two instances.
+ * @param {number} [epsilon=0] The maximum number of seconds that should separate the two instances.
  * @returns {boolean} <code>true</code> if the two dates are within <code>epsilon</code> seconds of each other; otherwise <code>false</code>.
  */
 JulianDate.prototype.equalsEpsilon = function (right, epsilon) {
@@ -1158,6 +1188,7 @@ JulianDate.prototype.equalsEpsilon = function (right, epsilon) {
 
 /**
  * Creates a string representing this date in ISO8601 format.
+ *
  * @returns {string} A string representing this date in ISO8601 format.
  */
 JulianDate.prototype.toString = function () {

@@ -27,12 +27,16 @@ const columbusViewPath =
  * shown to the left in its expanded state. Programatic switching of scene modes will
  * be automatically reflected in the widget as long as the specified Scene
  * is used to perform the change.</p><p style="clear: both;"></p><br/>
+ *
  * @alias SceneModePicker
- * @class
+ * @constructor
+ *
  * @param {Element|string} container The DOM element or ID that will contain the widget.
  * @param {Scene} scene The Scene instance to use.
- * @param {number} [duration] The time, in seconds, it takes for the scene to transition.
- * @throws {DeveloperError} Element with id "container" does not exist in the document.
+ * @param {number} [duration=2.0] The time, in seconds, it takes for the scene to transition.
+ *
+ * @exception {DeveloperError} Element with id "container" does not exist in the document.
+ *
  * @example
  * // In HTML head, include a link to the SceneModePicker.css stylesheet,
  * // and in the body, include: <div id="sceneModePickerContainer"></div>
@@ -153,6 +157,7 @@ Object.defineProperties(SceneModePicker.prototype, {
   /**
    * Gets the parent container.
    * @memberof SceneModePicker.prototype
+   *
    * @type {Element}
    */
   container: {
@@ -164,6 +169,7 @@ Object.defineProperties(SceneModePicker.prototype, {
   /**
    * Gets the view model.
    * @memberof SceneModePicker.prototype
+   *
    * @type {SceneModePickerViewModel}
    */
   viewModel: {

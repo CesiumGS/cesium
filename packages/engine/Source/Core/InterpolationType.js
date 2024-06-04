@@ -1,6 +1,8 @@
 /**
  * An enum describing the type of interpolation used in a glTF animation.
+ *
  * @enum {number}
+ *
  * @private
  */
 const InterpolationType = {

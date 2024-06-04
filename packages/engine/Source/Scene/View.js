@@ -28,9 +28,6 @@ function CommandExtent() {
 }
 
 /**
- * @param scene
- * @param camera
- * @param viewport
  * @private
  */
 function View(scene, camera, viewport) {

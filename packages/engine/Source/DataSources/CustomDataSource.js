@@ -7,9 +7,12 @@ import EntityCollection from "./EntityCollection.js";
 
 /**
  * A {@link DataSource} implementation which can be used to manually manage a group of entities.
+ *
  * @alias CustomDataSource
- * @class
+ * @constructor
+ *
  * @param {string} [name] A human-readable name for this instance.
+ *
  * @example
  * const dataSource = new Cesium.CustomDataSource('myData');
  *
@@ -135,6 +138,7 @@ Object.defineProperties(CustomDataSource.prototype, {
 
   /**
    * Gets or sets the clustering options for this data source. This object can be shared between multiple data sources.
+   *
    * @memberof CustomDataSource.prototype
    * @type {EntityCluster}
    */
@@ -158,6 +162,7 @@ Object.defineProperties(CustomDataSource.prototype, {
  * is not required to be implemented.  It is provided for data sources which
  * retrieve data based on the current animation time or scene state.
  * If implemented, update will be called by {@link DataSourceDisplay} once a frame.
+ *
  * @param {JulianDate} time The simulation time.
  * @returns {boolean} True if this data source is ready to be displayed at the provided time, false otherwise.
  */

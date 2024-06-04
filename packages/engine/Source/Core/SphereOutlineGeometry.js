@@ -6,16 +6,20 @@ import EllipsoidOutlineGeometry from "./EllipsoidOutlineGeometry.js";
 
 /**
  * A description of the outline of a sphere.
+ *
  * @alias SphereOutlineGeometry
- * @class
+ * @constructor
+ *
  * @param {object} [options] Object with the following properties:
- * @param {number} [options.radius] The radius of the sphere.
- * @param {number} [options.stackPartitions] The count of stacks for the sphere (1 greater than the number of parallel lines).
- * @param {number} [options.slicePartitions] The count of slices for the sphere (Equal to the number of radial lines).
- * @param {number} [options.subdivisions] The number of points per line, determining the granularity of the curvature .
- * @throws {DeveloperError} options.stackPartitions must be greater than or equal to one.
- * @throws {DeveloperError} options.slicePartitions must be greater than or equal to zero.
- * @throws {DeveloperError} options.subdivisions must be greater than or equal to zero.
+ * @param {number} [options.radius=1.0] The radius of the sphere.
+ * @param {number} [options.stackPartitions=10] The count of stacks for the sphere (1 greater than the number of parallel lines).
+ * @param {number} [options.slicePartitions=8] The count of slices for the sphere (Equal to the number of radial lines).
+ * @param {number} [options.subdivisions=200] The number of points per line, determining the granularity of the curvature .
+ *
+ * @exception {DeveloperError} options.stackPartitions must be greater than or equal to one.
+ * @exception {DeveloperError} options.slicePartitions must be greater than or equal to zero.
+ * @exception {DeveloperError} options.subdivisions must be greater than or equal to zero.
+ *
  * @example
  * const sphere = new Cesium.SphereOutlineGeometry({
  *   radius : 100.0,
@@ -46,9 +50,11 @@ SphereOutlineGeometry.packedLength = EllipsoidOutlineGeometry.packedLength;
 
 /**
  * Stores the provided instance into the provided array.
+ *
  * @param {SphereOutlineGeometry} value The value to pack.
  * @param {number[]} array The array to pack into.
- * @param {number} [startingIndex] The index into the array at which to start packing the elements.
+ * @param {number} [startingIndex=0] The index into the array at which to start packing the elements.
+ *
  * @returns {number[]} The array that was packed into
  */
 SphereOutlineGeometry.pack = function (value, array, startingIndex) {
@@ -74,8 +80,9 @@ const scratchOptions = {
 
 /**
  * Retrieves an instance from a packed array.
+ *
  * @param {number[]} array The packed array.
- * @param {number} [startingIndex] The starting index of the element to be unpacked.
+ * @param {number} [startingIndex=0] The starting index of the element to be unpacked.
  * @param {SphereOutlineGeometry} [result] The object into which to store the result.
  * @returns {SphereOutlineGeometry} The modified result parameter or a new SphereOutlineGeometry instance if one was not provided.
  */
@@ -101,6 +108,7 @@ SphereOutlineGeometry.unpack = function (array, startingIndex, result) {
 
 /**
  * Computes the geometric representation of an outline of a sphere, including its vertices, indices, and a bounding sphere.
+ *
  * @param {SphereOutlineGeometry} sphereGeometry A description of the sphere outline.
  * @returns {Geometry|undefined} The computed vertices and indices.
  */

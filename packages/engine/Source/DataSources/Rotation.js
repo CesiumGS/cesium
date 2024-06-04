@@ -8,7 +8,10 @@ import CesiumMath from "../Core/Math.js";
  * towards the shortest angle of rotation. This object is never used directly
  * but is instead passed to the constructor of {@link SampledProperty}
  * in order to represent a two-dimensional angle of rotation.
+ *
  * @interface Rotation
+ *
+ *
  * @example
  * const time1 = Cesium.JulianDate.fromIso8601('2010-05-07T00:00:00');
  * const time2 = Cesium.JulianDate.fromIso8601('2010-05-07T00:01:00');
@@ -23,6 +26,7 @@ import CesiumMath from "../Core/Math.js";
  * //a SampledProperty(Number) instead.  Note, the actual
  * //return value is in radians, not degrees.
  * property.getValue(time2);
+ *
  * @see PackableForInterpolation
  */
 const Rotation = {
@@ -34,9 +38,11 @@ const Rotation = {
 
   /**
    * Stores the provided instance into the provided array.
+   *
    * @param {Rotation} value The value to pack.
    * @param {number[]} array The array to pack into.
-   * @param {number} [startingIndex] The index into the array at which to start packing the elements.
+   * @param {number} [startingIndex=0] The index into the array at which to start packing the elements.
+   *
    * @returns {number[]} The array that was packed into
    */
   pack: function (value, array, startingIndex) {
@@ -58,8 +64,9 @@ const Rotation = {
 
   /**
    * Retrieves an instance from a packed array.
+   *
    * @param {number[]} array The packed array.
-   * @param {number} [startingIndex] The starting index of the element to be unpacked.
+   * @param {number} [startingIndex=0] The starting index of the element to be unpacked.
    * @param {Rotation} [result] The object into which to store the result.
    * @returns {Rotation} The modified result parameter or a new Rotation instance if one was not provided.
    */
@@ -76,9 +83,10 @@ const Rotation = {
 
   /**
    * Converts a packed array into a form suitable for interpolation.
+   *
    * @param {number[]} packedArray The packed array.
-   * @param {number} [startingIndex] The index of the first element to be converted.
-   * @param {number} [lastIndex] The index of the last element to be converted.
+   * @param {number} [startingIndex=0] The index of the first element to be converted.
+   * @param {number} [lastIndex=packedArray.length] The index of the last element to be converted.
    * @param {number[]} [result] The object into which to store the result.
    */
   convertPackedArrayForInterpolation: function (
@@ -114,10 +122,11 @@ const Rotation = {
 
   /**
    * Retrieves an instance from a packed array converted with {@link Rotation.convertPackedArrayForInterpolation}.
+   *
    * @param {number[]} array The array previously packed for interpolation.
    * @param {number[]} sourceArray The original packed array.
-   * @param {number} [firstIndex] The firstIndex used to convert the array.
-   * @param {number} [lastIndex] The lastIndex used to convert the array.
+   * @param {number} [firstIndex=0] The firstIndex used to convert the array.
+   * @param {number} [lastIndex=packedArray.length] The lastIndex used to convert the array.
    * @param {Rotation} [result] The object into which to store the result.
    * @returns {Rotation} The modified result parameter or a new Rotation instance if one was not provided.
    */

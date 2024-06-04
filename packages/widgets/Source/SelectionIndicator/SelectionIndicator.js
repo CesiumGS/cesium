@@ -9,11 +9,14 @@ import SelectionIndicatorViewModel from "./SelectionIndicatorViewModel.js";
 
 /**
  * A widget for displaying an indicator on a selected object.
+ *
  * @alias SelectionIndicator
- * @class
+ * @constructor
+ *
  * @param {Element|string} container The DOM element or ID that will contain the widget.
  * @param {Scene} scene The Scene instance to use.
- * @throws {DeveloperError} Element with id "container" does not exist in the document.
+ *
+ * @exception {DeveloperError} Element with id "container" does not exist in the document.
  */
 function SelectionIndicator(container, scene) {
   //>>includeStart('debug', pragmas.debug);
@@ -71,6 +74,7 @@ Object.defineProperties(SelectionIndicator.prototype, {
   /**
    * Gets the parent container.
    * @memberof SelectionIndicator.prototype
+   *
    * @type {Element}
    */
   container: {
@@ -82,6 +86,7 @@ Object.defineProperties(SelectionIndicator.prototype, {
   /**
    * Gets the view model.
    * @memberof SelectionIndicator.prototype
+   *
    * @type {SelectionIndicatorViewModel}
    */
   viewModel: {

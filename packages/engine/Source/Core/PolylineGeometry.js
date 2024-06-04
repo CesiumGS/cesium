@@ -63,22 +63,28 @@ function interpolateColors(p0, p1, color0, color1, numPoints) {
  * A description of a polyline modeled as a line strip; the first two positions define a line segment,
  * and each additional position defines a line segment from the previous position. The polyline is capable of
  * displaying with a material.
+ *
  * @alias PolylineGeometry
- * @class
+ * @constructor
+ *
  * @param {object} options Object with the following properties:
  * @param {Cartesian3[]} options.positions An array of {@link Cartesian3} defining the positions in the polyline as a line strip.
- * @param {number} [options.width] The width in pixels.
+ * @param {number} [options.width=1.0] The width in pixels.
  * @param {Color[]} [options.colors] An Array of {@link Color} defining the per vertex or per segment colors.
- * @param {boolean} [options.colorsPerVertex] A boolean that determines whether the colors will be flat across each segment of the line or interpolated across the vertices.
- * @param {ArcType} [options.arcType] The type of line the polyline segments must follow.
- * @param {number} [options.granularity] The distance, in radians, between each latitude and longitude if options.arcType is not ArcType.NONE. Determines the number of positions in the buffer.
- * @param {VertexFormat} [options.vertexFormat] The vertex attributes to be computed.
- * @param {Ellipsoid} [options.ellipsoid] The ellipsoid to be used as a reference.
- * @throws {DeveloperError} At least two positions are required.
- * @throws {DeveloperError} width must be greater than or equal to one.
- * @throws {DeveloperError} colors has an invalid length.
+ * @param {boolean} [options.colorsPerVertex=false] A boolean that determines whether the colors will be flat across each segment of the line or interpolated across the vertices.
+ * @param {ArcType} [options.arcType=ArcType.GEODESIC] The type of line the polyline segments must follow.
+ * @param {number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude if options.arcType is not ArcType.NONE. Determines the number of positions in the buffer.
+ * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
+ * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference.
+ *
+ * @exception {DeveloperError} At least two positions are required.
+ * @exception {DeveloperError} width must be greater than or equal to one.
+ * @exception {DeveloperError} colors has an invalid length.
+ *
  * @see PolylineGeometry#createGeometry
+ *
  * @demo {@link https://sandcastle.cesium.com/index.html?src=Polyline.html|Cesium Sandcastle Polyline Demo}
+ *
  * @example
  * // A polyline with two connected line segments
  * const polyline = new Cesium.PolylineGeometry({
@@ -145,9 +151,11 @@ function PolylineGeometry(options) {
 
 /**
  * Stores the provided instance into the provided array.
+ *
  * @param {PolylineGeometry} value The value to pack.
  * @param {number[]} array The array to pack into.
- * @param {number} [startingIndex] The index into the array at which to start packing the elements.
+ * @param {number} [startingIndex=0] The index into the array at which to start packing the elements.
+ *
  * @returns {number[]} The array that was packed into
  */
 PolylineGeometry.pack = function (value, array, startingIndex) {
@@ -209,8 +217,9 @@ const scratchOptions = {
 
 /**
  * Retrieves an instance from a packed array.
+ *
  * @param {number[]} array The packed array.
- * @param {number} [startingIndex] The starting index of the element to be unpacked.
+ * @param {number} [startingIndex=0] The starting index of the element to be unpacked.
  * @param {PolylineGeometry} [result] The object into which to store the result.
  * @returns {PolylineGeometry} The modified result parameter or a new PolylineGeometry instance if one was not provided.
  */
@@ -283,6 +292,7 @@ const scratchNextPosition = new Cartesian3();
 
 /**
  * Computes the geometric representation of a polyline, including its vertices, indices, and a bounding sphere.
+ *
  * @param {PolylineGeometry} polylineGeometry A description of the polyline.
  * @returns {Geometry|undefined} The computed vertices and indices.
  */

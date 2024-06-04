@@ -9,16 +9,18 @@ import MetadataComponentType from "./MetadataComponentType.js";
  * <p>
  * See the {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification/Metadata|3D Metadata Specification} for 3D Tiles
  * </p>
+ *
  * @param {object} options Object with the following properties:
  * @param {string} options.id The ID of the enum.
  * @param {MetadataEnumValue[]} options.values The enum values.
- * @param {MetadataComponentType} [options.valueType] The enum value type.
+ * @param {MetadataComponentType} [options.valueType=MetadataComponentType.UINT16] The enum value type.
  * @param {string} [options.name] The name of the enum.
  * @param {string} [options.description] The description of the enum.
  * @param {*} [options.extras] Extra user-defined properties.
  * @param {object} [options.extensions] An object containing extensions.
+ *
  * @alias MetadataEnum
- * @class
+ * @constructor
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 function MetadataEnum(options) {
@@ -59,10 +61,13 @@ function MetadataEnum(options) {
 
 /**
  * Creates a {@link MetadataEnum} from either 3D Tiles 1.1, 3DTILES_metadata, EXT_structural_metadata, or EXT_feature_metadata.
+ *
  * @param {object} options Object with the following properties:
  * @param {string} options.id The ID of the enum.
  * @param {object} options.enum The enum JSON object.
+ *
  * @returns {MetadataEnum} The newly created metadata enum.
+ *
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
@@ -94,6 +99,7 @@ MetadataEnum.fromJson = function (options) {
 Object.defineProperties(MetadataEnum.prototype, {
   /**
    * The enum values.
+   *
    * @memberof MetadataEnum.prototype
    * @type {MetadataEnumValue[]}
    * @readonly
@@ -106,9 +112,11 @@ Object.defineProperties(MetadataEnum.prototype, {
 
   /**
    * A dictionary mapping enum integer values to names.
+   *
    * @memberof MetadataEnum.prototype
    * @type {Object<number, string>}
    * @readonly
+   *
    * @private
    */
   namesByValue: {
@@ -119,9 +127,11 @@ Object.defineProperties(MetadataEnum.prototype, {
 
   /**
    * A dictionary mapping enum names to integer values.
+   *
    * @memberof MetadataEnum.prototype
    * @type {Object<string, number>}
    * @readonly
+   *
    * @private
    */
   valuesByName: {
@@ -132,6 +142,7 @@ Object.defineProperties(MetadataEnum.prototype, {
 
   /**
    * The enum value type.
+   *
    * @memberof MetadataEnum.prototype
    * @type {MetadataComponentType}
    * @readonly
@@ -144,6 +155,7 @@ Object.defineProperties(MetadataEnum.prototype, {
 
   /**
    * The ID of the enum.
+   *
    * @memberof MetadataEnum.prototype
    * @type {string}
    * @readonly
@@ -156,6 +168,7 @@ Object.defineProperties(MetadataEnum.prototype, {
 
   /**
    * The name of the enum.
+   *
    * @memberof MetadataEnum.prototype
    * @type {string}
    * @readonly
@@ -168,6 +181,7 @@ Object.defineProperties(MetadataEnum.prototype, {
 
   /**
    * The description of the enum.
+   *
    * @memberof MetadataEnum.prototype
    * @type {string}
    * @readonly
@@ -180,6 +194,7 @@ Object.defineProperties(MetadataEnum.prototype, {
 
   /**
    * Extra user-defined properties.
+   *
    * @memberof MetadataEnum.prototype
    * @type {*}
    * @readonly
@@ -192,6 +207,7 @@ Object.defineProperties(MetadataEnum.prototype, {
 
   /**
    * An object containing extensions.
+   *
    * @memberof MetadataEnum.prototype
    * @type {object}
    * @readonly

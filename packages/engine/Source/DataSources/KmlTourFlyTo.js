@@ -5,11 +5,14 @@ import EasingFunction from "../Core/EasingFunction.js";
 /**
  * Transitions the KmlTour to the next destination. This transition is facilitated
  * using a specified flyToMode over a given number of seconds.
+ *
  * @alias KmlTourFlyTo
- * @class
+ * @constructor
+ *
  * @param {number} duration entry duration
  * @param {string} flyToMode KML fly to mode: bounce, smooth, etc
  * @param {KmlCamera|KmlLookAt} view KmlCamera or KmlLookAt
+ *
  * @see KmlTour
  * @see KmlTourWait
  */
@@ -26,6 +29,7 @@ function KmlTourFlyTo(duration, flyToMode, view) {
 
 /**
  * Play this playlist entry
+ *
  * @param {KmlTourFlyTo.DoneCallback} done function which will be called when playback ends
  * @param {Camera} camera Cesium camera
  * @param {object} [cameraOptions] which will be merged with camera flyTo options. See {@link Camera#flyTo}
@@ -65,6 +69,7 @@ KmlTourFlyTo.prototype.stop = function () {
 /**
  * Returns options for {@link Camera#flyTo} or {@link Camera#flyToBoundingSphere}
  * depends on this.view type.
+ *
  * @param {object} cameraOptions options to merge with generated. See {@link Camera#flyTo}
  * @returns {object} {@link Camera#flyTo} or {@link Camera#flyToBoundingSphere} options
  */
@@ -97,6 +102,7 @@ KmlTourFlyTo.prototype.getCameraOptions = function (cameraOptions) {
 /**
  * A function that will be executed when the flight completes.
  * @callback KmlTourFlyTo.DoneCallback
+ *
  * @param {boolean} terminated true if {@link KmlTourFlyTo#stop} was
  * called before entry done playback.
  */

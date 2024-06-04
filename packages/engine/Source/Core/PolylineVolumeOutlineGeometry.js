@@ -76,15 +76,19 @@ function computeAttributes(positions, shape) {
 
 /**
  * A description of a polyline with a volume (a 2D shape extruded along a polyline).
+ *
  * @alias PolylineVolumeOutlineGeometry
- * @class
+ * @constructor
+ *
  * @param {object} options Object with the following properties:
  * @param {Cartesian3[]} options.polylinePositions An array of positions that define the center of the polyline volume.
  * @param {Cartesian2[]} options.shapePositions An array of positions that define the shape to be extruded along the polyline
- * @param {Ellipsoid} [options.ellipsoid] The ellipsoid to be used as a reference.
- * @param {number} [options.granularity] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
- * @param {CornerType} [options.cornerType] Determines the style of the corners.
+ * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference.
+ * @param {number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
+ * @param {CornerType} [options.cornerType=CornerType.ROUNDED] Determines the style of the corners.
+ *
  * @see PolylineVolumeOutlineGeometry#createGeometry
+ *
  * @example
  * function computeCircle(radius) {
  *   const positions = [];
@@ -141,9 +145,11 @@ function PolylineVolumeOutlineGeometry(options) {
 
 /**
  * Stores the provided instance into the provided array.
+ *
  * @param {PolylineVolumeOutlineGeometry} value The value to pack.
  * @param {number[]} array The array to pack into.
- * @param {number} [startingIndex] The index into the array at which to start packing the elements.
+ * @param {number} [startingIndex=0] The index into the array at which to start packing the elements.
+ *
  * @returns {number[]} The array that was packed into
  */
 PolylineVolumeOutlineGeometry.pack = function (value, array, startingIndex) {
@@ -197,8 +203,9 @@ const scratchOptions = {
 
 /**
  * Retrieves an instance from a packed array.
+ *
  * @param {number[]} array The packed array.
- * @param {number} [startingIndex] The starting index of the element to be unpacked.
+ * @param {number} [startingIndex=0] The starting index of the element to be unpacked.
  * @param {PolylineVolumeOutlineGeometry} [result] The object into which to store the result.
  * @returns {PolylineVolumeOutlineGeometry} The modified result parameter or a new PolylineVolumeOutlineGeometry instance if one was not provided.
  */
@@ -254,6 +261,7 @@ const brScratch = new BoundingRectangle();
 
 /**
  * Computes the geometric representation of the outline of a polyline with a volume, including its vertices, indices, and a bounding sphere.
+ *
  * @param {PolylineVolumeOutlineGeometry} polylineVolumeOutlineGeometry A description of the polyline volume outline.
  * @returns {Geometry|undefined} The computed vertices and indices.
  */

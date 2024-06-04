@@ -61,11 +61,14 @@ function initialize(ellipsoid, x, y, z) {
  * Rather than constructing this object directly, one of the provided
  * constants is normally used.
  * @alias Ellipsoid
- * @class
- * @param {number} [x] The radius in the x direction.
- * @param {number} [y] The radius in the y direction.
- * @param {number} [z] The radius in the z direction.
- * @throws {DeveloperError} All radii components must be greater than or equal to zero.
+ * @constructor
+ *
+ * @param {number} [x=0] The radius in the x direction.
+ * @param {number} [y=0] The radius in the y direction.
+ * @param {number} [z=0] The radius in the z direction.
+ *
+ * @exception {DeveloperError} All radii components must be greater than or equal to zero.
+ *
  * @see Ellipsoid.fromCartesian3
  * @see Ellipsoid.WGS84
  * @see Ellipsoid.UNIT_SPHERE
@@ -166,6 +169,7 @@ Object.defineProperties(Ellipsoid.prototype, {
 
 /**
  * Duplicates an Ellipsoid instance.
+ *
  * @param {Ellipsoid} ellipsoid The ellipsoid to duplicate.
  * @param {Ellipsoid} [result] The object onto which to store the result, or undefined if a new
  *                    instance should be created.
@@ -195,11 +199,14 @@ Ellipsoid.clone = function (ellipsoid, result) {
 
 /**
  * Computes an Ellipsoid from a Cartesian specifying the radii in x, y, and z directions.
- * @param {Cartesian3} [cartesian] The ellipsoid's radius in the x, y, and z directions.
+ *
+ * @param {Cartesian3} [cartesian=Cartesian3.ZERO] The ellipsoid's radius in the x, y, and z directions.
  * @param {Ellipsoid} [result] The object onto which to store the result, or undefined if a new
  *                    instance should be created.
  * @returns {Ellipsoid} A new Ellipsoid instance.
- * @throws {DeveloperError} All radii components must be greater than or equal to zero.
+ *
+ * @exception {DeveloperError} All radii components must be greater than or equal to zero.
+ *
  * @see Ellipsoid.WGS84
  * @see Ellipsoid.UNIT_SPHERE
  */
@@ -218,6 +225,7 @@ Ellipsoid.fromCartesian3 = function (cartesian, result) {
 
 /**
  * An Ellipsoid instance initialized to the WGS84 standard.
+ *
  * @type {Ellipsoid}
  * @constant
  */
@@ -227,6 +235,7 @@ Ellipsoid.WGS84 = Object.freeze(
 
 /**
  * An Ellipsoid instance initialized to radii of (1.0, 1.0, 1.0).
+ *
  * @type {Ellipsoid}
  * @constant
  */
@@ -234,6 +243,7 @@ Ellipsoid.UNIT_SPHERE = Object.freeze(new Ellipsoid(1.0, 1.0, 1.0));
 
 /**
  * An Ellipsoid instance initialized to a sphere with the lunar radius.
+ *
  * @type {Ellipsoid}
  * @constant
  */
@@ -247,6 +257,7 @@ Ellipsoid.MOON = Object.freeze(
 
 /**
  * Duplicates an Ellipsoid instance.
+ *
  * @param {Ellipsoid} [result] The object onto which to store the result, or undefined if a new
  *                    instance should be created.
  * @returns {Ellipsoid} The cloned Ellipsoid.
@@ -263,9 +274,11 @@ Ellipsoid.packedLength = Cartesian3.packedLength;
 
 /**
  * Stores the provided instance into the provided array.
+ *
  * @param {Ellipsoid} value The value to pack.
  * @param {number[]} array The array to pack into.
- * @param {number} [startingIndex] The index into the array at which to start packing the elements.
+ * @param {number} [startingIndex=0] The index into the array at which to start packing the elements.
+ *
  * @returns {number[]} The array that was packed into
  */
 Ellipsoid.pack = function (value, array, startingIndex) {
@@ -283,8 +296,9 @@ Ellipsoid.pack = function (value, array, startingIndex) {
 
 /**
  * Retrieves an instance from a packed array.
+ *
  * @param {number[]} array The packed array.
- * @param {number} [startingIndex] The starting index of the element to be unpacked.
+ * @param {number} [startingIndex=0] The starting index of the element to be unpacked.
  * @param {Ellipsoid} [result] The object into which to store the result.
  * @returns {Ellipsoid} The modified result parameter or a new Ellipsoid instance if one was not provided.
  */
@@ -302,6 +316,7 @@ Ellipsoid.unpack = function (array, startingIndex, result) {
 /**
  * Computes the unit vector directed from the center of this ellipsoid toward the provided Cartesian position.
  * @function
+ *
  * @param {Cartesian3} cartesian The Cartesian for which to to determine the geocentric normal.
  * @param {Cartesian3} [result] The object onto which to store the result.
  * @returns {Cartesian3} The modified result parameter or a new Cartesian3 instance if none was provided.
@@ -310,6 +325,7 @@ Ellipsoid.prototype.geocentricSurfaceNormal = Cartesian3.normalize;
 
 /**
  * Computes the normal of the plane tangent to the surface of the ellipsoid at the provided position.
+ *
  * @param {Cartographic} cartographic The cartographic position for which to to determine the geodetic normal.
  * @param {Cartesian3} [result] The object onto which to store the result.
  * @returns {Cartesian3} The modified result parameter or a new Cartesian3 instance if none was provided.
@@ -341,6 +357,7 @@ Ellipsoid.prototype.geodeticSurfaceNormalCartographic = function (
 
 /**
  * Computes the normal of the plane tangent to the surface of the ellipsoid at the provided position.
+ *
  * @param {Cartesian3} cartesian The Cartesian position for which to to determine the surface normal.
  * @param {Cartesian3} [result] The object onto which to store the result.
  * @returns {Cartesian3} The modified result parameter or a new Cartesian3 instance if none was provided, or undefined if a normal cannot be found.
@@ -373,9 +390,11 @@ const cartographicToCartesianK = new Cartesian3();
 
 /**
  * Converts the provided cartographic to Cartesian representation.
+ *
  * @param {Cartographic} cartographic The cartographic position.
  * @param {Cartesian3} [result] The object onto which to store the result.
  * @returns {Cartesian3} The modified result parameter or a new Cartesian3 instance if none was provided.
+ *
  * @example
  * //Create a Cartographic and determine it's Cartesian representation on a WGS84 ellipsoid.
  * const position = new Cesium.Cartographic(Cesium.Math.toRadians(21), Cesium.Math.toRadians(78), 5000);
@@ -399,9 +418,11 @@ Ellipsoid.prototype.cartographicToCartesian = function (cartographic, result) {
 
 /**
  * Converts the provided array of cartographics to an array of Cartesians.
+ *
  * @param {Cartographic[]} cartographics An array of cartographic positions.
  * @param {Cartesian3[]} [result] The object onto which to store the result.
  * @returns {Cartesian3[]} The modified result parameter or a new Array instance if none was provided.
+ *
  * @example
  * //Convert an array of Cartographics and determine their Cartesian representation on a WGS84 ellipsoid.
  * const positions = [new Cesium.Cartographic(Cesium.Math.toRadians(21), Cesium.Math.toRadians(78), 0),
@@ -436,9 +457,11 @@ const cartesianToCartographicH = new Cartesian3();
 /**
  * Converts the provided cartesian to cartographic representation.
  * The cartesian is undefined at the center of the ellipsoid.
+ *
  * @param {Cartesian3} cartesian The Cartesian position to convert to cartographic representation.
  * @param {Cartographic} [result] The object onto which to store the result.
  * @returns {Cartographic} The modified result parameter, new Cartographic instance if none was provided, or undefined if the cartesian is at the center of the ellipsoid.
+ *
  * @example
  * //Create a Cartesian and determine it's Cartographic representation on a WGS84 ellipsoid.
  * const position = new Cesium.Cartesian3(17832.12, 83234.52, 952313.73);
@@ -471,9 +494,11 @@ Ellipsoid.prototype.cartesianToCartographic = function (cartesian, result) {
 
 /**
  * Converts the provided array of cartesians to an array of cartographics.
+ *
  * @param {Cartesian3[]} cartesians An array of Cartesian positions.
  * @param {Cartographic[]} [result] The object onto which to store the result.
  * @returns {Cartographic[]} The modified result parameter or a new Array instance if none was provided.
+ *
  * @example
  * //Create an array of Cartesians and determine their Cartographic representation on a WGS84 ellipsoid.
  * const positions = [new Cesium.Cartesian3(17832.12, 83234.52, 952313.73),
@@ -505,6 +530,7 @@ Ellipsoid.prototype.cartesianArrayToCartographicArray = function (
  * Scales the provided Cartesian position along the geodetic surface normal
  * so that it is on the surface of this ellipsoid.  If the position is
  * at the center of the ellipsoid, this function returns undefined.
+ *
  * @param {Cartesian3} cartesian The Cartesian position to scale.
  * @param {Cartesian3} [result] The object onto which to store the result.
  * @returns {Cartesian3} The modified result parameter, a new Cartesian3 instance if none was provided, or undefined if the position is at the center.
@@ -522,6 +548,7 @@ Ellipsoid.prototype.scaleToGeodeticSurface = function (cartesian, result) {
 /**
  * Scales the provided Cartesian position along the geocentric surface normal
  * so that it is on the surface of this ellipsoid.
+ *
  * @param {Cartesian3} cartesian The Cartesian position to scale.
  * @param {Cartesian3} [result] The object onto which to store the result.
  * @returns {Cartesian3} The modified result parameter or a new Cartesian3 instance if none was provided.
@@ -554,6 +581,7 @@ Ellipsoid.prototype.scaleToGeocentricSurface = function (cartesian, result) {
 /**
  * Transforms a Cartesian X, Y, Z position to the ellipsoid-scaled space by multiplying
  * its components by the result of {@link Ellipsoid#oneOverRadii}.
+ *
  * @param {Cartesian3} position The position to transform.
  * @param {Cartesian3} [result] The position to which to copy the result, or undefined to create and
  *        return a new instance.
@@ -574,6 +602,7 @@ Ellipsoid.prototype.transformPositionToScaledSpace = function (
 /**
  * Transforms a Cartesian X, Y, Z position from the ellipsoid-scaled space by multiplying
  * its components by the result of {@link Ellipsoid#radii}.
+ *
  * @param {Cartesian3} position The position to transform.
  * @param {Cartesian3} [result] The position to which to copy the result, or undefined to create and
  *        return a new instance.
@@ -594,6 +623,7 @@ Ellipsoid.prototype.transformPositionFromScaledSpace = function (
 /**
  * Compares this Ellipsoid against the provided Ellipsoid componentwise and returns
  * <code>true</code> if they are equal, <code>false</code> otherwise.
+ *
  * @param {Ellipsoid} [right] The other Ellipsoid.
  * @returns {boolean} <code>true</code> if they are equal, <code>false</code> otherwise.
  */
@@ -606,6 +636,7 @@ Ellipsoid.prototype.equals = function (right) {
 
 /**
  * Creates a string representing this Ellipsoid in the format '(radii.x, radii.y, radii.z)'.
+ *
  * @returns {string} A string representing this ellipsoid in the format '(radii.x, radii.y, radii.z)'.
  */
 Ellipsoid.prototype.toString = function () {
@@ -614,17 +645,19 @@ Ellipsoid.prototype.toString = function () {
 
 /**
  * Computes a point which is the intersection of the surface normal with the z-axis.
+ *
  * @param {Cartesian3} position the position. must be on the surface of the ellipsoid.
- * @param {number} [buffer] A buffer to subtract from the ellipsoid size when checking if the point is inside the ellipsoid.
+ * @param {number} [buffer = 0.0] A buffer to subtract from the ellipsoid size when checking if the point is inside the ellipsoid.
  *                                In earth case, with common earth datums, there is no need for this buffer since the intersection point is always (relatively) very close to the center.
  *                                In WGS84 datum, intersection point is at max z = +-42841.31151331382 (0.673% of z-axis).
  *                                Intersection point could be outside the ellipsoid if the ratio of MajorAxis / AxisOfRotation is bigger than the square root of 2
  * @param {Cartesian3} [result] The cartesian to which to copy the result, or undefined to create and
  *        return a new instance.
  * @returns {Cartesian3 | undefined} the intersection point if it's inside the ellipsoid, undefined otherwise
- * @throws {DeveloperError} position is required.
- * @throws {DeveloperError} Ellipsoid must be an ellipsoid of revolution (radii.x == radii.y).
- * @throws {DeveloperError} Ellipsoid.radii.z must be greater than 0.
+ *
+ * @exception {DeveloperError} position is required.
+ * @exception {DeveloperError} Ellipsoid must be an ellipsoid of revolution (radii.x == radii.y).
+ * @exception {DeveloperError} Ellipsoid.radii.z must be greater than 0.
  */
 Ellipsoid.prototype.getSurfaceNormalIntersectionWithZAxis = function (
   position,
@@ -672,10 +705,12 @@ const scratchEndpoint = new Cartesian3();
 
 /**
  * Computes the ellipsoid curvatures at a given position on the surface.
+ *
  * @param {Cartesian3} surfacePosition The position on the ellipsoid surface where curvatures will be calculated.
  * @param {Cartesian2} [result] The cartesian to which to copy the result, or undefined to create and return a new instance.
  * @returns {Cartesian2} The local curvature of the ellipsoid surface at the provided position, in east and north directions.
- * @throws {DeveloperError} position is required.
+ *
+ * @exception {DeveloperError} position is required.
  */
 Ellipsoid.prototype.getLocalCurvature = function (surfacePosition, result) {
   //>>includeStart('debug', pragmas.debug);
@@ -729,10 +764,12 @@ const weights = [
 
 /**
  * Compute the 10th order Gauss-Legendre Quadrature of the given definite integral.
+ *
  * @param {number} a The lower bound for the integration.
  * @param {number} b The upper bound for the integration.
  * @param {Ellipsoid~RealValuedScalarFunction} func The function to integrate.
  * @returns {number} The value of the integral of the given function over the given domain.
+ *
  * @private
  */
 function gaussLegendreQuadrature(a, b, func) {
@@ -761,14 +798,17 @@ function gaussLegendreQuadrature(a, b, func) {
 /**
  * A real valued scalar function.
  * @callback Ellipsoid~RealValuedScalarFunction
+ *
  * @param {number} x The value used to evaluate the function.
  * @returns {number} The value of the function at x.
+ *
  * @private
  */
 
 /**
  * Computes an approximation of the surface area of a rectangle on the surface of an ellipsoid using
  * Gauss-Legendre 10th order quadrature.
+ *
  * @param {Rectangle} rectangle The rectangle used for computing the surface area.
  * @returns {number} The approximate area of the rectangle on the surface of this ellipsoid.
  */

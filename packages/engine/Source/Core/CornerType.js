@@ -1,7 +1,9 @@
 /**
  * Style options for corners.
+ *
  * @demo The {@link https://sandcastle.cesium.com/index.html?src=Corridor.html&label=Geometries|Corridor Demo}
  * demonstrates the three corner types, as used by {@link CorridorGraphics}.
+ *
  * @enum {number}
  */
 const CornerType = {

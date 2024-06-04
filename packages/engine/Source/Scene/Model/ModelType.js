@@ -5,6 +5,7 @@ import DeveloperError from "../../Core/DeveloperError.js";
  * An enum to distinguish the different uses for {@link Model},
  * which include individual glTF models, and various 3D Tiles formats
  * (including glTF via <code>3DTILES_content_gltf</code>).
+ *
  * @enum {string}
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
@@ -16,6 +17,7 @@ const ModelType = {
    * Not to be confused with {@link ModelType.TILE_GLTF}
    * which is for 3D Tiles
    * </p>
+   *
    * @type {string}
    * @constant
    */
@@ -27,24 +29,28 @@ const ModelType = {
    * Not to be confused with {@link ModelType.GLTF}
    * which is for individual models
    * </p>
+   *
    * @type {string}
    * @constant
    */
   TILE_GLTF: "TILE_GLTF",
   /**
    * A 3D Tiles 1.0 Batched 3D Model
+   *
    * @type {string}
    * @constant
    */
   TILE_B3DM: "B3DM",
   /**
    * A 3D Tiles 1.0 Instanced 3D Model
+   *
    * @type {string}
    * @constant
    */
   TILE_I3DM: "I3DM",
   /**
    * A 3D Tiles 1.0 Point Cloud
+   *
    * @type {string}
    * @constant
    */
@@ -52,6 +58,7 @@ const ModelType = {
 
   /**
    * GeoJSON content for <code>MAXAR_content_geojson</code> extension
+   *
    * @type {string}
    * @constant
    */

@@ -62,38 +62,48 @@ const {
 /**
  * States of the glTF loading process. These states also apply to
  * asynchronous texture loading unless otherwise noted
+ *
  * @enum {number}
+ *
  * @private
  */
 const GltfLoaderState = {
   /**
    * The initial state of the glTF loader before load() is called.
+   *
    * @type {number}
    * @constant
+   *
    * @private
    */
   NOT_LOADED: 0,
   /**
    * The state of the loader while waiting for the glTF JSON loader promise
    * to resolve.
+   *
    * @type {number}
    * @constant
+   *
    * @private
    */
   LOADING: 1,
   /**
    * The state of the loader once the glTF JSON is loaded but before
    * process() is called.
+   *
    * @type {number}
    * @constant
+   *
    * @private
    */
   LOADED: 2,
   /**
    * The state of the loader while parsing the glTF and creating GPU resources
    * as needed.
+   *
    * @type {number}
    * @constant
+   *
    * @private
    */
   PROCESSING: 3,
@@ -104,8 +114,10 @@ const GltfLoaderState = {
    * <p>
    * This state is not used for asynchronous texture loading.
    * </p>
+   *
    * @type {number}
    * @constant
+   *
    * @private
    */
   POST_PROCESSING: 4,
@@ -113,30 +125,38 @@ const GltfLoaderState = {
    * Once the processing/post-processing states are finished, the loader
    * enters the processed state (sometimes from a promise chain). The next
    * call to process() will advance to the ready state.
+   *
    * @type {number}
    * @constant
+   *
    * @private
    */
   PROCESSED: 5,
   /**
    * When the loader reaches the ready state, the loaders' promise will be
    * resolved.
+   *
    * @type {number}
    * @constant
+   *
    * @private
    */
   READY: 6,
   /**
    * If an error occurs at any point, the loader switches to the failed state.
+   *
    * @type {number}
    * @constant
+   *
    * @private
    */
   FAILED: 7,
   /**
    * If unload() is called, the loader switches to the unloaded state.
+   *
    * @type {number}
    * @constant
+   *
    * @private
    */
   UNLOADED: 8,
@@ -147,22 +167,24 @@ const GltfLoaderState = {
  * <p>
  * Implements the {@link ResourceLoader} interface.
  * </p>
+ *
  * @alias GltfLoader
- * @class
+ * @constructor
  * @augments ResourceLoader
+ *
  * @param {object} options Object with the following properties:
  * @param {Resource} options.gltfResource The {@link Resource} containing the glTF. This is often the path of the .gltf or .glb file, but may also be the path of the .b3dm, .i3dm, or .cmpt file containing the embedded glb. .cmpt resources should have a URI fragment indicating the index of the inner content to which the glb belongs in order to individually identify the glb in the cache, e.g. http://example.com/tile.cmpt#index=2.
  * @param {Resource} [options.baseResource] The {@link Resource} that paths in the glTF JSON are relative to.
  * @param {Uint8Array} [options.typedArray] The typed array containing the glTF contents, e.g. from a .b3dm, .i3dm, or .cmpt file.
  * @param {object} [options.gltfJson] A parsed glTF JSON file instead of passing it in as a typed array.
- * @param {boolean} [options.releaseGltfJson] When true, the glTF JSON is released once the glTF is loaded. This is especially useful for cases like 3D Tiles, where each .gltf model is unique and caching the glTF JSON is not effective.
- * @param {boolean} [options.asynchronous] Determines if WebGL resource creation will be spread out over several frames or block until all WebGL resources are created.
- * @param {boolean} [options.incrementallyLoadTextures] Determine if textures may continue to stream in after the glTF is loaded.
- * @param {Axis} [options.upAxis] The up-axis of the glTF model.
- * @param {Axis} [options.forwardAxis] The forward-axis of the glTF model.
- * @param {boolean} [options.loadAttributesAsTypedArray] Load all attributes and indices as typed arrays instead of GPU buffers. If the attributes are interleaved in the glTF they will be de-interleaved in the typed array.
- * @param {boolean} [options.loadAttributesFor2D] If <code>true</code>, load the positions buffer and any instanced attribute buffers as typed arrays for accurately projecting models to 2D.
- * @param {boolean} [options.enablePick]  If <code>true</code>, load the positions buffer, any instanced attribute buffers, and index buffer as typed arrays for CPU-enabled picking in WebGL1.
+ * @param {boolean} [options.releaseGltfJson=false] When true, the glTF JSON is released once the glTF is loaded. This is especially useful for cases like 3D Tiles, where each .gltf model is unique and caching the glTF JSON is not effective.
+ * @param {boolean} [options.asynchronous=true] Determines if WebGL resource creation will be spread out over several frames or block until all WebGL resources are created.
+ * @param {boolean} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the glTF is loaded.
+ * @param {Axis} [options.upAxis=Axis.Y] The up-axis of the glTF model.
+ * @param {Axis} [options.forwardAxis=Axis.Z] The forward-axis of the glTF model.
+ * @param {boolean} [options.loadAttributesAsTypedArray=false] Load all attributes and indices as typed arrays instead of GPU buffers. If the attributes are interleaved in the glTF they will be de-interleaved in the typed array.
+ * @param {boolean} [options.loadAttributesFor2D=false] If <code>true</code>, load the positions buffer and any instanced attribute buffers as typed arrays for accurately projecting models to 2D.
+ * @param {boolean} [options.enablePick=false]  If <code>true</code>, load the positions buffer, any instanced attribute buffers, and index buffer as typed arrays for CPU-enabled picking in WebGL1.
  * @param {boolean} [options.loadIndicesForWireframe=false] If <code>true</code>, load the index buffer as both a buffer and typed array. The latter is useful for creating wireframe indices in WebGL1.
  * @param {boolean} [options.loadPrimitiveOutline=true] If <code>true</code>, load outlines from the {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension. This can be set false to avoid post-processing geometry at load time.
  * @param {boolean} [options.loadForClassification=false] If <code>true</code> and if the model has feature IDs, load the feature IDs and indices as typed arrays. This is useful for batching features for classification.
@@ -261,7 +283,9 @@ if (defined(Object.create)) {
 Object.defineProperties(GltfLoader.prototype, {
   /**
    * The cache key of the resource.
+   *
    * @memberof GltfLoader.prototype
+   *
    * @type {string}
    * @readonly
    * @private
@@ -273,7 +297,9 @@ Object.defineProperties(GltfLoader.prototype, {
   },
   /**
    * The loaded components.
+   *
    * @memberof GltfLoader.prototype
+   *
    * @type {ModelComponents.Components}
    * @readonly
    * @private
@@ -285,7 +311,9 @@ Object.defineProperties(GltfLoader.prototype, {
   },
   /**
    * The loaded glTF json.
+   *
    * @memberof GltfLoader.prototype
+   *
    * @type {object}
    * @readonly
    * @private
@@ -300,7 +328,9 @@ Object.defineProperties(GltfLoader.prototype, {
   },
   /**
    * Returns true if textures are loaded separately from the other glTF resources.
+   *
    * @memberof GltfLoader.prototype
+   *
    * @type {boolean}
    * @readonly
    * @private
@@ -312,7 +342,9 @@ Object.defineProperties(GltfLoader.prototype, {
   },
   /**
    * true if textures are loaded, useful when incrementallyLoadTextures is true
+   *
    * @memberof GltfLoader.prototype
+   *
    * @type {boolean}
    * @readonly
    * @private
@@ -326,7 +358,6 @@ Object.defineProperties(GltfLoader.prototype, {
 
 /**
  * Loads the gltf object
- * @param loader
  */
 async function loadGltfJson(loader) {
   loader._state = GltfLoaderState.LOADING;
@@ -399,8 +430,8 @@ async function loadResources(loader, frameState) {
 /**
  * Loads the resource.
  * @returns {Promise.<GltfLoader>} A promise which resolves to the loader when the resource loading is completed.
- * @throws {RuntimeError} Unsupported glTF version
- * @throws {RuntimeError} Unsupported glTF Extension
+ * @exception {RuntimeError} Unsupported glTF version
+ * @exception {RuntimeError} Unsupported glTF Extension
  * @private
  */
 GltfLoader.prototype.load = async function () {
@@ -492,7 +523,6 @@ function gatherPostProcessBuffers(loader, primitiveLoadPlan) {
 
 /**
  * Process loaders other than textures
- * @param frameState
  * @private
  */
 GltfLoader.prototype._process = function (frameState) {
@@ -528,7 +558,6 @@ GltfLoader.prototype._process = function (frameState) {
 
 /**
  * Process textures other than textures
- * @param frameState
  * @private
  */
 GltfLoader.prototype._processTextures = function (frameState) {
@@ -563,6 +592,7 @@ GltfLoader.prototype._processTextures = function (frameState) {
 
 /**
  * Processes the resource until it becomes ready.
+ *
  * @param {FrameState} frameState The frame state.
  * @private
  */
@@ -1597,6 +1627,7 @@ function loadClearcoat(loader, clearcoatInfo, frameState) {
 
 /**
  * Load textures and parse factors and flags for a glTF material
+ *
  * @param {GltfLoader} loader
  * @param {object} gltfMaterial An entry from the <code>.materials</code> array in the glTF JSON
  * @param {FrameState} frameState
@@ -2566,6 +2597,7 @@ const scratchCenter = new Cartesian3();
  * frame. Any promise failures are collected, and will be handled synchronously in process().
  * Also note that it's fine to call process before a loader is ready to process or
  * after it has failed; nothing will happen.
+ *
  * @param {GltfLoader} loader
  * @param {FrameState} frameState
  * @returns {Promise} A Promise that resolves when all loaders are ready

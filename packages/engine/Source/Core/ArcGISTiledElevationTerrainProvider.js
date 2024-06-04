@@ -22,9 +22,10 @@ import WebMercatorTilingScheme from "./WebMercatorTilingScheme.js";
 const ALL_CHILDREN = 15;
 
 /**
- * @typedef {object} ArcGISTiledElevationTerrainProvider.ConstructorOptions
+ * @typedef {Object} ArcGISTiledElevationTerrainProvider.ConstructorOptions
  *
  * Initialization options for the ArcGISTiledElevationTerrainProvider constructor
+ *
  * @property {string} [token] The authorization token to use to connect to the service.
  * @property {Ellipsoid} [ellipsoid] The ellipsoid.  If the tilingScheme is specified,
  *                    this parameter is ignored and the tiling scheme's ellipsoid is used instead.
@@ -33,8 +34,10 @@ const ALL_CHILDREN = 15;
 
 /**
  * Used to track creation details while fetching initial metadata
- * @class
+ *
+ * @constructor
  * @private
+ *
  * @param {ArcGISTiledElevationTerrainProvider.ConstructorOptions} [options] An object describing initialization options.
  */
 function TerrainProviderBuilder(options) {
@@ -55,7 +58,9 @@ function TerrainProviderBuilder(options) {
 
 /**
  * Complete ArcGISTiledElevationTerrainProvider creation based on builder values.
+ *
  * @private
+ *
  * @param {ArcGISTiledElevationTerrainProvider} provider
  */
 TerrainProviderBuilder.prototype.build = function (provider) {
@@ -212,14 +217,18 @@ async function requestMetadata(
  *
  * A {@link TerrainProvider} that produces terrain geometry by tessellating height maps
  * retrieved from Elevation Tiles of an an ArcGIS ImageService.
+ *
  * @alias ArcGISTiledElevationTerrainProvider
- * @class
+ * @constructor
+ *
  * @param {CesiumTerrainProvider.ConstructorOptions} [options] A url or an object describing initialization options
+ *
  * @example
  * const terrainProvider = await Cesium.ArcGISTiledElevationTerrainProvider.fromUrl("https://elevation3d.arcgis.com/arcgis/rest/services/WorldElevation3D/Terrain3D/ImageServer", {
  *   token: "KED1aF_I4UzXOHy3BnhwyBHU4l5oY6rO6walkmHoYqGp4XyIWUd5YZUC1ZrLAzvV40pR6gBXQayh0eFA8m6vPg.."
  * });
  * viewer.terrainProvider = terrainProvider;
+ *
  * @see TerrainProvider
  */
 function ArcGISTiledElevationTerrainProvider(options) {
@@ -327,16 +336,19 @@ Object.defineProperties(ArcGISTiledElevationTerrainProvider.prototype, {
 /**
  * Creates a {@link TerrainProvider} that produces terrain geometry by tessellating height maps
  * retrieved from Elevation Tiles of an an ArcGIS ImageService.
- * @param {Resource | string | Promise<Resource> | Promise<string>} url The URL of the ArcGIS ImageServer service.
+ *
+ * @param {Resource|String|Promise<Resource>|Promise<String>} url The URL of the ArcGIS ImageServer service.
  * @param {ArcGISTiledElevationTerrainProvider.ConstructorOptions} [options] A url or an object describing initialization options.
  * @returns {Promise<ArcGISTiledElevationTerrainProvider>}
+ *
  * @example
  * const terrainProvider = await Cesium.ArcGISTiledElevationTerrainProvider.fromUrl("https://elevation3d.arcgis.com/arcgis/rest/services/WorldElevation3D/Terrain3D/ImageServer", {
  *   token: "KED1aF_I4UzXOHy3BnhwyBHU4l5oY6rO6walkmHoYqGp4XyIWUd5YZUC1ZrLAzvV40pR6gBXQayh0eFA8m6vPg.."
  * });
  * viewer.terrainProvider = terrainProvider;
- * @throws {RuntimeError} metadata specifies invalid spatial reference
- * @throws {RuntimeError} metadata does not specify tileInfo
+ *
+ * @exception {RuntimeError} metadata specifies invalid spatial reference
+ * @exception {RuntimeError} metadata does not specify tileInfo
  */
 ArcGISTiledElevationTerrainProvider.fromUrl = async function (url, options) {
   //>>includeStart('debug', pragmas.debug);
@@ -375,6 +387,7 @@ ArcGISTiledElevationTerrainProvider.fromUrl = async function (url, options) {
 /**
  * Requests the geometry for a given tile. The result includes terrain
  * data and indicates that all child tiles are available.
+ *
  * @param {number} x The X coordinate of the tile for which to request geometry.
  * @param {number} y The Y coordinate of the tile for which to request geometry.
  * @param {number} level The level of the tile for which to request geometry.
@@ -478,6 +491,7 @@ function isTileAvailable(that, level, x, y) {
 
 /**
  * Gets the maximum geometric error allowed in a tile at a given level.
+ *
  * @param {number} level The tile level for which to get the maximum geometric error.
  * @returns {number} The maximum geometric error.
  */
@@ -489,6 +503,7 @@ ArcGISTiledElevationTerrainProvider.prototype.getLevelMaximumGeometricError = fu
 
 /**
  * Determines whether data for a tile is available to be loaded.
+ *
  * @param {number} x The X coordinate of the tile for which to request geometry.
  * @param {number} y The Y coordinate of the tile for which to request geometry.
  * @param {number} level The level of the tile for which to request geometry.
@@ -515,6 +530,7 @@ ArcGISTiledElevationTerrainProvider.prototype.getTileDataAvailable = function (
 
 /**
  * Makes sure we load availability data for a tile
+ *
  * @param {number} x The X coordinate of the tile for which to request geometry.
  * @param {number} y The Y coordinate of the tile for which to request geometry.
  * @param {number} level The level of the tile for which to request geometry.

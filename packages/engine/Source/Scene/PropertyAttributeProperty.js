@@ -8,11 +8,14 @@ import defined from "../Core/defined.js";
  * <p>
  * See the {@link https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_structural_metadata|EXT_structural_metadata Extension}
  * </p>
+ *
  * @param {object} options Object with the following properties:
  * @param {object} options.property The property JSON object.
  * @param {MetadataClassProperty} options.classProperty The class property.
+ *
  * @alias PropertyAttributeProperty
- * @class
+ * @constructor
+ *
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
@@ -61,6 +64,7 @@ function PropertyAttributeProperty(options) {
 Object.defineProperties(PropertyAttributeProperty.prototype, {
   /**
    * The attribute semantic
+   *
    * @memberof PropertyAttributeProperty.prototype
    * @type {string}
    * @readonly
@@ -75,6 +79,7 @@ Object.defineProperties(PropertyAttributeProperty.prototype, {
   /**
    * True if offset/scale should be applied. If both offset/scale were
    * undefined, they default to identity so this property is set false
+   *
    * @memberof MetadataClassProperty.prototype
    * @type {boolean}
    * @readonly
@@ -88,6 +93,7 @@ Object.defineProperties(PropertyAttributeProperty.prototype, {
 
   /**
    * The offset to be added to property values as part of the value transform.
+   *
    * @memberof MetadataClassProperty.prototype
    * @type {number|Cartesian2|Cartesian3|Cartesian4|Matrix2|Matrix3|Matrix4}
    * @readonly
@@ -101,6 +107,7 @@ Object.defineProperties(PropertyAttributeProperty.prototype, {
 
   /**
    * The scale to be multiplied to property values as part of the value transform.
+   *
    * @memberof MetadataClassProperty.prototype
    * @type {number|Cartesian2|Cartesian3|Cartesian4|Matrix2|Matrix3|Matrix4}
    * @readonly
@@ -114,6 +121,7 @@ Object.defineProperties(PropertyAttributeProperty.prototype, {
 
   /**
    * The properties inherited from this property's class
+   *
    * @memberof PropertyAttributeProperty.prototype
    * @type {MetadataClassProperty}
    * @readonly
@@ -127,6 +135,7 @@ Object.defineProperties(PropertyAttributeProperty.prototype, {
 
   /**
    * Extra user-defined properties.
+   *
    * @memberof PropertyAttributeProperty.prototype
    * @type {*}
    * @readonly
@@ -140,6 +149,7 @@ Object.defineProperties(PropertyAttributeProperty.prototype, {
 
   /**
    * An object containing extensions.
+   *
    * @memberof PropertyAttributeProperty.prototype
    * @type {*}
    * @readonly

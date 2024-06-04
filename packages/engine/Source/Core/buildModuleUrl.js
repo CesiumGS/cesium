@@ -93,8 +93,10 @@ let implementation;
 /**
  * Given a relative URL under the Cesium base URL, returns an absolute URL.
  * @function
+ *
  * @param {string} relativeUrl The relative path.
  * @returns {string} The absolutely URL representation of the provided path.
+ *
  * @example
  * const viewer = new Cesium.Viewer("cesiumContainer", {
  *   baseLayer: Cesium.ImageryLayer.fromProviderAsync(
@@ -142,6 +144,7 @@ buildModuleUrl.setBaseUrl = function (value) {
 
 /**
  * Gets the base URL for resolving modules.
+ *
  * @function
  * @returns {string} The configured base URL
  */

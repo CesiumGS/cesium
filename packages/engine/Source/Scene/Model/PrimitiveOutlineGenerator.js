@@ -26,9 +26,12 @@ const MAX_GLTF_UINT8_INDEX = 255;
  * copied and indices are updated until valid outline coordinates can be
  * defined.
  * </p>
+ *
  * @see {@link https://www.researchgate.net/publication/220067637_Fast_and_versatile_texture-based_wireframe_rendering|Fast and versatile texture-based wireframe rendering}
+ *
  * @alias PrimitiveOutlineGenerator
- * @class
+ * @constructor
+ *
  * @param {number} options Object with the following properties:
  * @param {Uint8Array|Uint16Array|Uint32Array} options.triangleIndices The original triangle indices of the primitive. The constructor takes ownership of this typed array as it will be modified internally. Use the updatedTriangleIndices getter to get the final result.
  * @param {number[]} options.outlineIndices The indices of edges in the triangle from the CESIUM_primitive_outline extension
@@ -58,6 +61,7 @@ const MAX_GLTF_UINT8_INDEX = 255;
  * attribute.typedArray = outlineGenerator.updateAttribute(
  *   attribute.typedArray
  * );
+ *
  * @private
  */
 function PrimitiveOutlineGenerator(options) {
@@ -74,14 +78,18 @@ function PrimitiveOutlineGenerator(options) {
 
   /**
    * The triangle indices. It will be modified in place.
+   *
    * @type {Uint8Array|Uint16Array|Uint32Array}
+   *
    * @private
    */
   this._triangleIndices = triangleIndices;
 
   /**
    * How many vertices were originally in the primitive
+   *
    * @type {number}
+   *
    * @private
    */
   this._originalVertexCount = originalVertexCount;
@@ -90,7 +98,9 @@ function PrimitiveOutlineGenerator(options) {
    * The outline indices represent edges of the primitive's triangle mesh where
    * outlines must be drawn. This is stored as a hash set for efficient
    * checks of whether an edge is present.
+   *
    * @type {EdgeSet}
+   *
    * @private
    */
   this._edges = new EdgeSet(outlineIndices, originalVertexCount);
@@ -99,7 +109,9 @@ function PrimitiveOutlineGenerator(options) {
    * The typed array that will store the outline texture coordinates
    * once computed. This typed array should be turned into a vertex attribute
    * when rendering outlines.
+   *
    * @type {Float32Array}
+   *
    * @private
    */
   this._outlineCoordinatesTypedArray = undefined;
@@ -107,7 +119,9 @@ function PrimitiveOutlineGenerator(options) {
   /**
    * Array containing the indices of any vertices that must be copied and
    * appended to the list.
+   *
    * @type {number[]}
+   *
    * @private
    */
   this._extraVertices = [];
@@ -119,9 +133,12 @@ Object.defineProperties(PrimitiveOutlineGenerator.prototype, {
   /**
    * The updated triangle indices after generating outlines. The caller is for
    * responsible for updating the primitive's indices to use this array.
+   *
    * @memberof PrimitiveOutlineGenerator.prototype
+   *
    * @type {Uint8Array|Uint16Array|Uint32Array}
    * @readonly
+   *
    * @private
    */
   updatedTriangleIndices: {
@@ -133,9 +150,12 @@ Object.defineProperties(PrimitiveOutlineGenerator.prototype, {
   /**
    * The computed outline coordinates. The caller is responsible for
    * turning this into a vec3 attribute for rendering.
+   *
    * @memberof PrimitiveOutlineGenerator.prototype
+   *
    * @type {Float32Array}
    * @readonly
+   *
    * @private
    */
   outlineCoordinates: {
@@ -150,7 +170,9 @@ Object.defineProperties(PrimitiveOutlineGenerator.prototype, {
  * extension data. This updates the triangle indices and generates outline
  * coordinates, but does not update other attributes (see
  * {@link PrimitiveOutlineGenerator#updateAttribute})
+ *
  * @param {PrimitiveOutlineGenerator} outlineGenerator The outline generator
+ *
  * @private
  */
 function initialize(outlineGenerator) {
@@ -271,6 +293,7 @@ function initialize(outlineGenerator) {
  * This function attempts to compute a valid ordering of edges for this triangle
  * and if found, computes outline coordinates for the three vertices. If not
  * possible, one of the vertices is returned so it can be copied.
+ *
  * @param {number[]} outlineCoordinates An array to store the computed outline coordinates. There are 3 components per vertex. This will be modified in place.
  * @param {number} i0 The index of the first vertex of the triangle.
  * @param {number} i1 The index of the second vertex of the triangle.
@@ -279,6 +302,7 @@ function initialize(outlineGenerator) {
  * @param {boolean} hasEdge12 Whether there is an outline edge between vertices 1 and 2 of the triangle
  * @param {boolean} hasEdge20 Whether there is an outline edge between vertices 2 and 0 of the triangle
  * @returns {number} If it's not possible to compute consistent outline coordinates for this triangle, the index of the most constrained vertex of i0, i1 and i2 is returned. Otherwise, this function returns undefined to indicate a successful match.
+ *
  * @private
  */
 function matchAndStoreCoordinates(
@@ -397,14 +421,14 @@ function matchAndStoreCoordinates(
  *
  * A single triangle with all edges highlighted:
  *
- * | a | b | c |
- * | 1 | 1 | 0 |
- * 0
- * / \
- * /   \
- * edge 0-1 /     \ edge 2-0
- * /       \
- * /         \
+ *                 | a | b | c |
+ *                 | 1 | 1 | 0 |
+ *                       0
+ *                      / \
+ *                     /   \
+ *           edge 0-1 /     \ edge 2-0
+ *                   /       \
+ *                  /         \
  * | a | b | c |   1-----------2   | a | b | c |
  * | 0 | 1 | 1 |     edge 1-2      | 1 | 0 | 1 |
  *
@@ -423,12 +447,14 @@ function matchAndStoreCoordinates(
  *
  * Then we can find an ordering that works for all three vertices with a
  * bitwise AND.
+ *
  * @param {number[]} outlineCoordinates The array of outline coordinates
  * @param {number} vertexIndex The index of the vertex to compute the mask for
  * @param {number} a The outline coordinate for edge 2-0
  * @param {number} b The outline coordinate for edge 0-1
  * @param {number} c The outline coordinate for edge 1-2
  * @returns {number} A bitmask with 6 bits where a 1 indicates the corresponding ordering is valid.
+ *
  * @private
  */
 function computeOrderMask(outlineCoordinates, vertexIndex, a, b, c) {
@@ -456,8 +482,10 @@ function computeOrderMask(outlineCoordinates, vertexIndex, a, b, c) {
 /**
  * Compute the popcount for 6-bit integers (values 0-63). This is the
  * number of 1s in the binary representation of the value.
+ *
  * @param {number} value The value to compute the popcount for
  * @returns {number} The number of 1s in the binary representation of value
+ *
  * @private
  */
 function popcount6Bit(value) {
@@ -475,8 +503,10 @@ function popcount6Bit(value) {
  * After computing the outline coordinates, some vertices may need to be
  * copied and appended to the end of the list of vertices. This function updates
  * a typed array for a single attribute (e.g. POSITION or NORMAL).
+ *
  * @param {Uint8Array|Int8Array|Uint16Array|Int16Array|Uint32Array|Int32Array|Float32Array} attributeTypedArray The attribute values to update. This function takes ownership of this typed array
  * @returns {Uint8Array|Int8Array|Uint16Array|Int16Array|Uint32Array|Int32Array|Float32Array} A new typed array that contains the existing attribute values, plus any copied values at the end.
+ *
  * @private
  */
 PrimitiveOutlineGenerator.prototype.updateAttribute = function (
@@ -516,8 +546,10 @@ PrimitiveOutlineGenerator.prototype.updateAttribute = function (
 /**
  * Create a mip-mapped lookup texture for rendering outlines. The texture is
  * constant, so it is cached on the context.
+ *
  * @param {Context} context The context to use for creating the texture
  * @returns {Texture} The outline lookup texture.
+ *
  * @private
  */
 PrimitiveOutlineGenerator.createTexture = function (context) {
@@ -568,8 +600,10 @@ PrimitiveOutlineGenerator.createTexture = function (context) {
  * Create an outline lookup texture for a single mip level. This is a texture of
  * mostly 0 values, except for the last value which is brighter to indicate
  * the outline.
+ *
  * @param {number} size The width of the texture for this mip level
  * @returns {Uint8Array} A typed array containing the texels of the mip level
+ *
  * @private
  */
 function createMipLevel(size) {
@@ -596,17 +630,22 @@ function createMipLevel(size) {
 /**
  * A hash set that provides quick lookups of whether an edge exists between
  * two vertices.
+ *
  * @alias EdgeSet
- * @class
+ * @constructor
+ *
  * @param {number[]} edgeIndices An array of vertex indices with an even number of elements where each pair of indices defines an edge.
  * @param {number} originalVertexCount The original number of vertices. This is used for computing a hash function.
+ *
  * @private
  */
 function EdgeSet(edgeIndices, originalVertexCount) {
   /**
    * Original number of vertices in the primitive. This is used for computing
    * the hash key
+   *
    * @type {number}
+   *
    * @private
    */
   this._originalVertexCount = originalVertexCount;
@@ -617,6 +656,7 @@ function EdgeSet(edgeIndices, originalVertexCount) {
    * smallerVertexIndex * originalVertexCount + biggerVertexIndex
    * <p>
    * @type {Set}
+   *
    * @private
    */
   this._edges = new Set();
@@ -636,6 +676,7 @@ function EdgeSet(edgeIndices, originalVertexCount) {
  * @param {number} a The first index
  * @param {number} b The second index
  * @returns {boolean} true if there is an edge between a and b
+ *
  * @private
  */
 EdgeSet.prototype.hasEdge = function (a, b) {

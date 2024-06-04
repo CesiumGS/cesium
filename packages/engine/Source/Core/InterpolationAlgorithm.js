@@ -2,7 +2,9 @@ import DeveloperError from "./DeveloperError.js";
 
 /**
  * The interface for interpolation algorithms.
+ *
  * @interface InterpolationAlgorithm
+ *
  * @see LagrangePolynomialApproximation
  * @see LinearApproximation
  * @see HermitePolynomialApproximation
@@ -18,6 +20,7 @@ InterpolationAlgorithm.type = undefined;
 /**
  * Given the desired degree, returns the number of data points required for interpolation.
  * @function
+ *
  * @param {number} degree The desired degree of interpolation.
  * @returns {number} The number of required data points needed for the desired degree of interpolation.
  */
@@ -27,6 +30,7 @@ InterpolationAlgorithm.getRequiredDataPoints =
 /**
  * Performs zero order interpolation.
  * @function
+ *
  * @param {number} x The independent variable for which the dependent variables will be interpolated.
  * @param {number[]} xTable The array of independent variables to use to interpolate.  The values
  * in this array must be in increasing order and the same value must not occur twice in the array.
@@ -35,6 +39,7 @@ InterpolationAlgorithm.getRequiredDataPoints =
  * @param {number} yStride The number of dependent variable values in yTable corresponding to
  * each independent variable value in xTable.
  * @param {number[]} [result] An existing array into which to store the result.
+ *
  * @returns {number[]} The array of interpolated values, or the result parameter if one was provided.
  */
 InterpolationAlgorithm.interpolateOrderZero =

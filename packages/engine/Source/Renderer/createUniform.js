@@ -10,12 +10,8 @@ import Matrix4 from "../Core/Matrix4.js";
 import RuntimeError from "../Core/RuntimeError.js";
 
 /**
- * @param gl
- * @param activeUniform
- * @param uniformName
- * @param location
  * @private
- * @class
+ * @constructor
  */
 function createUniform(gl, activeUniform, uniformName, location) {
   switch (activeUniform.type) {
@@ -56,12 +52,8 @@ function createUniform(gl, activeUniform, uniformName, location) {
 }
 
 /**
- * @param gl
- * @param activeUniform
- * @param uniformName
- * @param location
  * @private
- * @class
+ * @constructor
  */
 function UniformFloat(gl, activeUniform, uniformName, location) {
   /**
@@ -87,12 +79,8 @@ UniformFloat.prototype.set = function () {
 ///////////////////////////////////////////////////////////////////////////
 
 /**
- * @param gl
- * @param activeUniform
- * @param uniformName
- * @param location
  * @private
- * @class
+ * @constructor
  */
 function UniformFloatVec2(gl, activeUniform, uniformName, location) {
   /**
@@ -119,12 +107,8 @@ UniformFloatVec2.prototype.set = function () {
 ///////////////////////////////////////////////////////////////////////////
 
 /**
- * @param gl
- * @param activeUniform
- * @param uniformName
- * @param location
  * @private
- * @class
+ * @constructor
  */
 function UniformFloatVec3(gl, activeUniform, uniformName, location) {
   /**
@@ -163,12 +147,8 @@ UniformFloatVec3.prototype.set = function () {
 ///////////////////////////////////////////////////////////////////////////
 
 /**
- * @param gl
- * @param activeUniform
- * @param uniformName
- * @param location
  * @private
- * @class
+ * @constructor
  */
 function UniformFloatVec4(gl, activeUniform, uniformName, location) {
   /**
@@ -207,12 +187,8 @@ UniformFloatVec4.prototype.set = function () {
 ///////////////////////////////////////////////////////////////////////////
 
 /**
- * @param gl
- * @param activeUniform
- * @param uniformName
- * @param location
  * @private
- * @class
+ * @constructor
  */
 function UniformSampler(gl, activeUniform, uniformName, location) {
   /**
@@ -246,12 +222,8 @@ UniformSampler.prototype._setSampler = function (textureUnitIndex) {
 ///////////////////////////////////////////////////////////////////////////
 
 /**
- * @param gl
- * @param activeUniform
- * @param uniformName
- * @param location
  * @private
- * @class
+ * @constructor
  */
 function UniformInt(gl, activeUniform, uniformName, location) {
   /**
@@ -276,12 +248,8 @@ UniformInt.prototype.set = function () {
 
 ///////////////////////////////////////////////////////////////////////////
 /**
- * @param gl
- * @param activeUniform
- * @param uniformName
- * @param location
  * @private
- * @class
+ * @constructor
  */
 function UniformIntVec2(gl, activeUniform, uniformName, location) {
   /**
@@ -307,12 +275,8 @@ UniformIntVec2.prototype.set = function () {
 
 ///////////////////////////////////////////////////////////////////////////
 /**
- * @param gl
- * @param activeUniform
- * @param uniformName
- * @param location
  * @private
- * @class
+ * @constructor
  */
 function UniformIntVec3(gl, activeUniform, uniformName, location) {
   /**
@@ -338,12 +302,8 @@ UniformIntVec3.prototype.set = function () {
 
 ///////////////////////////////////////////////////////////////////////////
 /**
- * @param gl
- * @param activeUniform
- * @param uniformName
- * @param location
  * @private
- * @class
+ * @constructor
  */
 function UniformIntVec4(gl, activeUniform, uniformName, location) {
   /**
@@ -371,12 +331,8 @@ UniformIntVec4.prototype.set = function () {
 
 const scratchUniformArray = new Float32Array(4);
 /**
- * @param gl
- * @param activeUniform
- * @param uniformName
- * @param location
  * @private
- * @class
+ * @constructor
  */
 function UniformMat2(gl, activeUniform, uniformName, location) {
   /**
@@ -405,12 +361,8 @@ UniformMat2.prototype.set = function () {
 
 const scratchMat3Array = new Float32Array(9);
 /**
- * @param gl
- * @param activeUniform
- * @param uniformName
- * @param location
  * @private
- * @class
+ * @constructor
  */
 function UniformMat3(gl, activeUniform, uniformName, location) {
   /**
@@ -439,12 +391,8 @@ UniformMat3.prototype.set = function () {
 
 const scratchMat4Array = new Float32Array(16);
 /**
- * @param gl
- * @param activeUniform
- * @param uniformName
- * @param location
  * @private
- * @class
+ * @constructor
  */
 function UniformMat4(gl, activeUniform, uniformName, location) {
   /**

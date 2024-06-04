@@ -1,10 +1,12 @@
 /**
  * An enum identifying the type of request. Used for finer grained logging and priority sorting.
+ *
  * @enum {number}
  */
 const RequestType = {
   /**
    * Terrain request.
+   *
    * @type {number}
    * @constant
    */
@@ -12,6 +14,7 @@ const RequestType = {
 
   /**
    * Imagery request.
+   *
    * @type {number}
    * @constant
    */
@@ -19,6 +22,7 @@ const RequestType = {
 
   /**
    * 3D Tiles request.
+   *
    * @type {number}
    * @constant
    */
@@ -26,6 +30,7 @@ const RequestType = {
 
   /**
    * Other request.
+   *
    * @type {number}
    * @constant
    */

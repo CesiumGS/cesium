@@ -35,12 +35,14 @@ const defaultKey = stringToBuffer(
  * </div>
  *
  * Provides metadata using the Google Earth Enterprise REST API. This is used by the GoogleEarthEnterpriseImageryProvider
- * and GoogleEarthEnterpriseTerrainProvider to share metadata requests.
- * @param resourceOrUrl
+ *  and GoogleEarthEnterpriseTerrainProvider to share metadata requests.
+ *
  * @alias GoogleEarthEnterpriseMetadata
- * @class
+ * @constructor
+ *
  * @see GoogleEarthEnterpriseImageryProvider
  * @see GoogleEarthEnterpriseTerrainProvider
+ *
  */
 function GoogleEarthEnterpriseMetadata(resourceOrUrl) {
   /**
@@ -138,7 +140,9 @@ Object.defineProperties(GoogleEarthEnterpriseMetadata.prototype, {
 /**
  * Creates a metadata object using the Google Earth Enterprise REST API. This is used by the GoogleEarthEnterpriseImageryProvider
  * and GoogleEarthEnterpriseTerrainProvider to share metadata requests.
- * @param {Resource | string} resourceOrUrl The url of the Google Earth Enterprise server hosting the imagery.
+ *
+ * @param {Resource|String} resourceOrUrl The url of the Google Earth Enterprise server hosting the imagery.
+ *
  * @returns {Promise<GoogleEarthEnterpriseMetadata>} A promise which resolves to the created GoogleEarthEnterpriseMetadata instance/
  */
 GoogleEarthEnterpriseMetadata.fromUrl = async function (resourceOrUrl) {
@@ -178,9 +182,11 @@ GoogleEarthEnterpriseMetadata.fromUrl = async function (resourceOrUrl) {
 /**
  * Converts a tiles (x, y, level) position into a quadkey used to request an image
  * from a Google Earth Enterprise server.
+ *
  * @param {number} x The tile's x coordinate.
  * @param {number} y The tile's y coordinate.
  * @param {number} level The tile's zoom level.
+ *
  * @see GoogleEarthEnterpriseMetadata#quadKeyToTileXY
  */
 GoogleEarthEnterpriseMetadata.tileXYToQuadKey = function (x, y, level) {
@@ -218,7 +224,9 @@ GoogleEarthEnterpriseMetadata.tileXYToQuadKey = function (x, y, level) {
 /**
  * Converts a tile's quadkey used to request an image from a Google Earth Enterprise server into the
  * (x, y, level) position.
+ *
  * @param {string} quadkey The tile's quad key
+ *
  * @see GoogleEarthEnterpriseMetadata#tileXYToQuadKey
  */
 GoogleEarthEnterpriseMetadata.quadKeyToTileXY = function (quadkey) {
@@ -284,9 +292,11 @@ const taskProcessor = new TaskProcessor("decodeGoogleEarthEnterprisePacket");
 
 /**
  * Retrieves a Google Earth Enterprise quadtree packet.
- * @param {string} [quadKey] The quadkey to retrieve the packet for.
- * @param {number} [version] The cnode version to be used in the request.
+ *
+ * @param {string} [quadKey=''] The quadkey to retrieve the packet for.
+ * @param {number} [version=1] The cnode version to be used in the request.
  * @param {Request} [request] The request object. Intended for internal use only.
+ *
  * @private
  */
 GoogleEarthEnterpriseMetadata.prototype.getQuadTreePacket = function (
@@ -361,11 +371,14 @@ GoogleEarthEnterpriseMetadata.prototype.getQuadTreePacket = function (
 
 /**
  * Populates the metadata subtree down to the specified tile.
+ *
  * @param {number} x The tile X coordinate.
  * @param {number} y The tile Y coordinate.
  * @param {number} level The tile level.
  * @param {Request} [request] The request object. Intended for internal use only.
+ *
  * @returns {Promise<GoogleEarthEnterpriseTileInformation>} A promise that resolves to the tile info for the requested quad key
+ *
  * @private
  */
 GoogleEarthEnterpriseMetadata.prototype.populateSubtree = function (
@@ -445,10 +458,12 @@ function populateSubtree(that, quadKey, request) {
 
 /**
  * Gets information about a tile
+ *
  * @param {number} x The tile X coordinate.
  * @param {number} y The tile Y coordinate.
  * @param {number} level The tile level.
  * @returns {GoogleEarthEnterpriseTileInformation|undefined} Information about the tile or undefined if it isn't loaded.
+ *
  * @private
  */
 GoogleEarthEnterpriseMetadata.prototype.getTileInformation = function (
@@ -462,8 +477,10 @@ GoogleEarthEnterpriseMetadata.prototype.getTileInformation = function (
 
 /**
  * Gets information about a tile from a quadKey
+ *
  * @param {string} quadkey The quadkey for the tile
  * @returns {GoogleEarthEnterpriseTileInformation|undefined} Information about the tile or undefined if it isn't loaded.
+ *
  * @private
  */
 GoogleEarthEnterpriseMetadata.prototype.getTileInformationFromQuadKey = function (

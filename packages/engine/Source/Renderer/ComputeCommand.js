@@ -3,15 +3,16 @@ import Pass from "./Pass.js";
 
 /**
  * Represents a command to the renderer for GPU Compute (using old-school GPGPU).
- * @param options
+ *
  * @private
- * @class
+ * @constructor
  */
 function ComputeCommand(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
   /**
    * The vertex array. If none is provided, a viewport quad will be used.
+   *
    * @type {VertexArray}
    * @default undefined
    */
@@ -19,6 +20,7 @@ function ComputeCommand(options) {
 
   /**
    * The fragment shader source. The default vertex shader is ViewportQuadVS.
+   *
    * @type {ShaderSource}
    * @default undefined
    */
@@ -26,6 +28,7 @@ function ComputeCommand(options) {
 
   /**
    * The shader program to apply.
+   *
    * @type {ShaderProgram}
    * @default undefined
    */
@@ -34,6 +37,7 @@ function ComputeCommand(options) {
   /**
    * An object with functions whose names match the uniforms in the shader program
    * and return values to set those uniforms.
+   *
    * @type {object}
    * @default undefined
    */
@@ -41,6 +45,7 @@ function ComputeCommand(options) {
 
   /**
    * Texture to use for offscreen rendering.
+   *
    * @type {Texture}
    * @default undefined
    */
@@ -49,6 +54,7 @@ function ComputeCommand(options) {
   /**
    * Function that is called immediately before the ComputeCommand is executed. Used to
    * update any renderer resources. Takes the ComputeCommand as its single argument.
+   *
    * @type {Function}
    * @default undefined
    */
@@ -57,6 +63,7 @@ function ComputeCommand(options) {
   /**
    * Function that is called after the ComputeCommand is executed. Takes the output
    * texture as its single argument.
+   *
    * @type {Function}
    * @default undefined
    */
@@ -64,6 +71,7 @@ function ComputeCommand(options) {
 
   /**
    * Function that is called when the command is canceled
+   *
    * @type {Function}
    * @default undefined
    */
@@ -72,6 +80,7 @@ function ComputeCommand(options) {
   /**
    * Whether the renderer resources will persist beyond this call. If not, they
    * will be destroyed after completion.
+   *
    * @type {boolean}
    * @default false
    */
@@ -79,6 +88,7 @@ function ComputeCommand(options) {
 
   /**
    * The pass when to render. Always compute pass.
+   *
    * @type {Pass}
    * @default Pass.COMPUTE;
    */
@@ -89,8 +99,10 @@ function ComputeCommand(options) {
    * execution; it allows us to see who created a command when we only have a
    * reference to the command, and can be used to selectively execute commands
    * with {@link Scene#debugCommandFilter}.
+   *
    * @type {object}
    * @default undefined
+   *
    * @see Scene#debugCommandFilter
    */
   this.owner = options.owner;
@@ -98,6 +110,7 @@ function ComputeCommand(options) {
 
 /**
  * Executes the compute command.
+ *
  * @param {ComputeEngine} computeEngine The context that processes the compute command.
  */
 ComputeCommand.prototype.execute = function (computeEngine) {

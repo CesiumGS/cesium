@@ -8,8 +8,10 @@ import Plane from "./Plane.js";
 
 /**
  * The culling volume defined by planes.
+ *
  * @alias CullingVolume
- * @class
+ * @constructor
+ *
  * @param {Cartesian4[]} [planes] An array of clipping planes.
  */
 function CullingVolume(planes) {
@@ -35,6 +37,7 @@ const scratchPlane = new Plane(new Cartesian3(1.0, 0.0, 0.0), 0.0);
 /**
  * Constructs a culling volume from a bounding sphere. Creates six planes that create a box containing the sphere.
  * The planes are aligned to the x, y, and z axes in world coordinates.
+ *
  * @param {BoundingSphere} boundingSphere The bounding sphere used to create the culling volume.
  * @param {CullingVolume} [result] The object onto which to store the result.
  * @returns {CullingVolume} The culling volume created from the bounding sphere.
@@ -99,6 +102,7 @@ CullingVolume.fromBoundingSphere = function (boundingSphere, result) {
 
 /**
  * Determines whether a bounding volume intersects the culling volume.
+ *
  * @param {object} boundingVolume The bounding volume whose intersection with the culling volume is to be tested.
  * @returns {Intersect}  Intersect.OUTSIDE, Intersect.INTERSECTING, or Intersect.INSIDE.
  */
@@ -127,12 +131,14 @@ CullingVolume.prototype.computeVisibility = function (boundingVolume) {
 
 /**
  * Determines whether a bounding volume intersects the culling volume.
+ *
  * @param {object} boundingVolume The bounding volume whose intersection with the culling volume is to be tested.
  * @param {number} parentPlaneMask A bit mask from the boundingVolume's parent's check against the same culling
  *                                 volume, such that if (planeMask & (1 << planeIndex) === 0), for k < 31, then
  *                                 the parent (and therefore this) volume is completely inside plane[planeIndex]
  *                                 and that plane check can be skipped.
  * @returns {number} A plane mask as described above (which can be applied to this boundingVolume's children).
+ *
  * @private
  */
 CullingVolume.prototype.computeVisibilityWithPlaneMask = function (
@@ -185,6 +191,7 @@ CullingVolume.prototype.computeVisibilityWithPlaneMask = function (
 /**
  * For plane masks (as used in {@link CullingVolume#computeVisibilityWithPlaneMask}), this special value
  * represents the case where the object bounding volume is entirely outside the culling volume.
+ *
  * @type {number}
  * @private
  */
@@ -193,6 +200,7 @@ CullingVolume.MASK_OUTSIDE = 0xffffffff;
 /**
  * For plane masks (as used in {@link CullingVolume.prototype.computeVisibilityWithPlaneMask}), this value
  * represents the case where the object bounding volume is entirely inside the culling volume.
+ *
  * @type {number}
  * @private
  */
@@ -201,6 +209,7 @@ CullingVolume.MASK_INSIDE = 0x00000000;
 /**
  * For plane masks (as used in {@link CullingVolume.prototype.computeVisibilityWithPlaneMask}), this value
  * represents the case where the object bounding volume (may) intersect all planes of the culling volume.
+ *
  * @type {number}
  * @private
  */

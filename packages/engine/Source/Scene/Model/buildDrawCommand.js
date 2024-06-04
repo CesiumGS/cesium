@@ -18,9 +18,12 @@ import ModelDrawCommand from "./ModelDrawCommand.js";
  * Builds the {@link ModelDrawCommand} for a {@link ModelRuntimePrimitive}
  * using its render resources. If the model classifies another asset, it
  * builds a {@link ClassificationModelDrawCommand} instead.
+ *
  * @param {PrimitiveRenderResources} primitiveRenderResources The render resources for a primitive.
  * @param {FrameState} frameState The frame state for creating GPU resources.
+ *
  * @returns {ModelDrawCommand|ClassificationModelDrawCommand} The generated ModelDrawCommand or ClassificationModelDrawCommand.
+ *
  * @private
  */
 function buildDrawCommand(primitiveRenderResources, frameState) {
@@ -133,7 +136,6 @@ function buildDrawCommand(primitiveRenderResources, frameState) {
 }
 
 /**
- * @param primitiveRenderResources
  * @private
  */
 function getIndexBuffer(primitiveRenderResources) {

@@ -12,9 +12,7 @@ import srgbToLinear from "../Core/srgbToLinear.js";
  * </p>
  * @alias I3SGeometry
  * @internalConstructor
- * @param parent
  * @privateParam {I3SNode} parent The parent of that geometry
- * @param uri
  * @privateParam {string} uri The uri to load the data from
  */
 function I3SGeometry(parent, uri) {
@@ -285,14 +283,6 @@ function convertColorFactor(factor) {
 }
 
 /**
- * @param nodesInScene
- * @param nodes
- * @param meshes
- * @param buffers
- * @param bufferViews
- * @param accessors
- * @param extensions
- * @param extensionsUsed
  * @private
  */
 I3SGeometry.prototype._generateGltf = function (

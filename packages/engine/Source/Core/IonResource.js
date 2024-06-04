@@ -10,11 +10,14 @@ import RuntimeError from "./RuntimeError.js";
 /**
  * A {@link Resource} instance that encapsulates Cesium ion asset access.
  * This object is normally not instantiated directly, use {@link IonResource.fromAssetId}.
+ *
  * @alias IonResource
- * @class
+ * @constructor
  * @augments Resource
+ *
  * @param {object} endpoint The result of the Cesium ion asset endpoint service.
  * @param {Resource} endpointResource The resource used to retrieve the endpoint.
+ *
  * @see Ion
  * @see IonImageryProvider
  * @see createWorldTerrain
@@ -76,11 +79,13 @@ if (defined(Object.create)) {
 
 /**
  * Asynchronously creates an instance.
+ *
  * @param {number} assetId The Cesium ion asset id.
  * @param {object} [options] An object with the following properties:
- * @param {string} [options.accessToken] The access token to use.
- * @param {string|Resource} [options.server] The resource to the Cesium ion API server.
+ * @param {string} [options.accessToken=Ion.defaultAccessToken] The access token to use.
+ * @param {string|Resource} [options.server=Ion.defaultServer] The resource to the Cesium ion API server.
  * @returns {Promise<IonResource>} A Promise to am instance representing the Cesium ion Asset.
+ *
  * @example
  * // Load a Cesium3DTileset with asset ID of 124624234
  * try {
@@ -90,6 +95,7 @@ if (defined(Object.create)) {
  * } catch (error) {
  *   console.error(`Error creating tileset: ${error}`);
  * }
+ *
  * @example
  * //Load a CZML file with asset ID of 10890
  * Cesium.IonResource.fromAssetId(10890)
@@ -111,6 +117,7 @@ IonResource.fromAssetId = function (assetId, options) {
 Object.defineProperties(IonResource.prototype, {
   /**
    * Gets the credits required for attribution of the asset.
+   *
    * @memberof IonResource.prototype
    * @type {Credit[]}
    * @readonly
@@ -137,11 +144,7 @@ Object.defineProperties(IonResource.prototype, {
   },
 });
 
-/**
- * @param endpoint
- * @param endpointResource
- * @private
- */
+/** @private */
 IonResource.getCreditsFromEndpoint = function (endpoint, endpointResource) {
   const credits = endpoint.attributions.map(Credit.getIonCredit);
   const defaultTokenCredit = Ion.getDefaultTokenCredit(
@@ -210,8 +213,6 @@ IonResource.prototype._makeRequest = function (options) {
 };
 
 /**
- * @param assetId
- * @param options
  * @private
  */
 IonResource._createEndpointResource = function (assetId, options) {

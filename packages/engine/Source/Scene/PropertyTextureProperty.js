@@ -12,12 +12,15 @@ import MetadataComponentType from "./MetadataComponentType.js";
  * See the {@link https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_structural_metadata|EXT_structural_metadata Extension} as well as the
  * previous {@link https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_feature_metadata|EXT_feature_metadata Extension} for glTF.
  * </p>
+ *
  * @param {object} options Object with the following properties:
  * @param {object} options.property The property JSON object.
  * @param {MetadataClassProperty} options.classProperty The class property.
  * @param {Object<number, Texture>} options.textures An object mapping texture IDs to {@link Texture} objects.
+ *
  * @alias PropertyTextureProperty
- * @class
+ * @constructor
+ *
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
@@ -77,6 +80,7 @@ function PropertyTextureProperty(options) {
 Object.defineProperties(PropertyTextureProperty.prototype, {
   /**
    * The texture reader.
+   *
    * @memberof PropertyTextureProperty.prototype
    * @type {ModelComponents.TextureReader}
    * @readonly
@@ -91,6 +95,7 @@ Object.defineProperties(PropertyTextureProperty.prototype, {
   /**
    * True if offset/scale should be applied. If both offset/scale were
    * undefined, they default to identity so this property is set false
+   *
    * @memberof PropertyTextureProperty.prototype
    * @type {boolean}
    * @readonly
@@ -104,6 +109,7 @@ Object.defineProperties(PropertyTextureProperty.prototype, {
 
   /**
    * The offset to be added to property values as part of the value transform.
+   *
    * @memberof PropertyTextureProperty.prototype
    * @type {number|Cartesian2|Cartesian3|Cartesian4|Matrix2|Matrix3|Matrix4}
    * @readonly
@@ -117,6 +123,7 @@ Object.defineProperties(PropertyTextureProperty.prototype, {
 
   /**
    * The scale to be multiplied to property values as part of the value transform.
+   *
    * @memberof PropertyTextureProperty.prototype
    * @type {number|Cartesian2|Cartesian3|Cartesian4|Matrix2|Matrix3|Matrix4}
    * @readonly
@@ -130,6 +137,7 @@ Object.defineProperties(PropertyTextureProperty.prototype, {
 
   /**
    * The properties inherited from this property's class
+   *
    * @memberof PropertyTextureProperty.prototype
    * @type {MetadataClassProperty}
    * @readonly
@@ -143,6 +151,7 @@ Object.defineProperties(PropertyTextureProperty.prototype, {
 
   /**
    * Extra user-defined properties.
+   *
    * @memberof PropertyTextureProperty.prototype
    * @type {*}
    * @readonly
@@ -156,6 +165,7 @@ Object.defineProperties(PropertyTextureProperty.prototype, {
 
   /**
    * An object containing extensions.
+   *
    * @memberof PropertyTextureProperty.prototype
    * @type {*}
    * @readonly
@@ -237,8 +247,9 @@ PropertyTextureProperty.prototype.unpackInShader = function (packedValueGlsl) {
 /**
  * Reformat from an array of channel indices like <code>[0, 1]</code> to a
  * string of channels as would be used in GLSL swizzling (e.g. "rg")
+ *
  * @param {number[]} channels the channel indices
- * @returns {string} The channels as a string of "r", "g", "b" or "a" characters.
+ * @return {string} The channels as a string of "r", "g", "b" or "a" characters.
  * @private
  */
 function reformatChannels(channels) {

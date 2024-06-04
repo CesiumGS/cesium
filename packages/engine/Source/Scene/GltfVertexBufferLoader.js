@@ -15,9 +15,11 @@ import ResourceLoaderState from "./ResourceLoaderState.js";
  * <p>
  * Implements the {@link ResourceLoader} interface.
  * </p>
+ *
  * @alias GltfVertexBufferLoader
- * @class
+ * @constructor
  * @augments ResourceLoader
+ *
  * @param {object} options Object with the following properties:
  * @param {ResourceCache} options.resourceCache The {@link ResourceCache} (to avoid circular dependencies).
  * @param {object} options.gltf The glTF JSON.
@@ -28,12 +30,14 @@ import ResourceLoaderState from "./ResourceLoaderState.js";
  * @param {string} [options.attributeSemantic] The attribute semantic, e.g. POSITION or NORMAL.
  * @param {number} [options.accessorId] The accessor id.
  * @param {string} [options.cacheKey] The cache key of the resource.
- * @param {boolean} [options.asynchronous] Determines if WebGL resource creation will be spread out over several frames or block until all WebGL resources are created.
- * @param {boolean} [options.loadBuffer] Load vertex buffer as a GPU vertex buffer.
- * @param {boolean} [options.loadTypedArray] Load vertex buffer as a typed array.
- * @throws {DeveloperError} One of options.bufferViewId and options.draco must be defined.
- * @throws {DeveloperError} When options.draco is defined options.attributeSemantic must also be defined.
- * @throws {DeveloperError} When options.draco is defined options.accessorId must also be defined.
+ * @param {boolean} [options.asynchronous=true] Determines if WebGL resource creation will be spread out over several frames or block until all WebGL resources are created.
+ * @param {boolean} [options.loadBuffer=false] Load vertex buffer as a GPU vertex buffer.
+ * @param {boolean} [options.loadTypedArray=false] Load vertex buffer as a typed array.
+ *
+ * @exception {DeveloperError} One of options.bufferViewId and options.draco must be defined.
+ * @exception {DeveloperError} When options.draco is defined options.attributeSemantic must also be defined.
+ * @exception {DeveloperError} When options.draco is defined options.accessorId must also be defined.
+ *
  * @private
  */
 function GltfVertexBufferLoader(options) {
@@ -121,7 +125,9 @@ if (defined(Object.create)) {
 Object.defineProperties(GltfVertexBufferLoader.prototype, {
   /**
    * The cache key of the resource.
+   *
    * @memberof GltfVertexBufferLoader.prototype
+   *
    * @type {string}
    * @readonly
    * @private
@@ -133,7 +139,9 @@ Object.defineProperties(GltfVertexBufferLoader.prototype, {
   },
   /**
    * The vertex buffer. This is only defined when <code>loadAsTypedArray</code> is false.
+   *
    * @memberof GltfVertexBufferLoader.prototype
+   *
    * @type {Buffer}
    * @readonly
    * @private
@@ -145,7 +153,9 @@ Object.defineProperties(GltfVertexBufferLoader.prototype, {
   },
   /**
    * The typed array containing vertex buffer data. This is only defined when <code>loadAsTypedArray</code> is true.
+   *
    * @memberof GltfVertexBufferLoader.prototype
+   *
    * @type {Uint8Array}
    * @readonly
    * @private
@@ -157,7 +167,9 @@ Object.defineProperties(GltfVertexBufferLoader.prototype, {
   },
   /**
    * Information about the quantized vertex attribute after Draco decode.
+   *
    * @memberof GltfVertexBufferLoader.prototype
+   *
    * @type {ModelComponents.Quantization}
    * @readonly
    * @private
@@ -371,6 +383,7 @@ const scratchVertexBufferJob = new CreateVertexBufferJob();
 
 /**
  * Processes the resource until it becomes ready.
+ *
  * @param {FrameState} frameState The frame state.
  * @private
  */

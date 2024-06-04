@@ -10,7 +10,9 @@ import ModelUtility from "./ModelUtility.js";
  * loaded by GltfLoader). It does not count resources that are created
  * every time the pipeline is run. The individual pipeline stages are
  * responsible for tracking the additional memory they allocate.
+ *
  * @namespace PrimitiveStatisticsPipelineStage
+ *
  * @private
  */
 const PrimitiveStatisticsPipelineStage = {

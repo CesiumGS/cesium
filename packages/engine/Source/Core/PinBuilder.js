@@ -12,8 +12,10 @@ import writeTextToCanvas from "./writeTextToCanvas.js";
  * <img src='Images/PinBuilder.png' width='500'/><br />
  * Example pins generated using both the maki icon set, which ships with Cesium, and single character text.
  * </div>
+ *
  * @alias PinBuilder
- * @class
+ * @constructor
+ *
  * @demo {@link https://sandcastle.cesium.com/index.html?src=Map%20Pins.html|Cesium Sandcastle PinBuilder Demo}
  */
 function PinBuilder() {
@@ -22,6 +24,7 @@ function PinBuilder() {
 
 /**
  * Creates an empty pin of the specified color and size.
+ *
  * @param {Color} color The color of the pin.
  * @param {number} size The size of the pin, in pixels.
  * @returns {HTMLCanvasElement} The canvas element that represents the generated pin.
@@ -40,6 +43,7 @@ PinBuilder.prototype.fromColor = function (color, size) {
 
 /**
  * Creates a pin with the specified icon, color, and size.
+ *
  * @param {Resource|string} url The url of the image to be stamped onto the pin.
  * @param {Color} color The color of the pin.
  * @param {number} size The size of the pin, in pixels.
@@ -62,6 +66,7 @@ PinBuilder.prototype.fromUrl = function (url, color, size) {
 
 /**
  * Creates a pin with the specified {@link https://www.mapbox.com/maki/|maki} icon identifier, color, and size.
+ *
  * @param {string} id The id of the maki icon to be stamped onto the pin.
  * @param {Color} color The color of the pin.
  * @param {number} size The size of the pin, in pixels.
@@ -91,6 +96,7 @@ PinBuilder.prototype.fromMakiIconId = function (id, color, size) {
 /**
  * Creates a pin with the specified text, color, and size.  The text will be sized to be as large as possible
  * while still being contained completely within the pin.
+ *
  * @param {string} text The text to be stamped onto the pin.
  * @param {Color} color The color of the pin.
  * @param {number} size The size of the pin, in pixels.

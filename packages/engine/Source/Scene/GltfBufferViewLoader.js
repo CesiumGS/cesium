@@ -11,9 +11,11 @@ import ResourceLoaderState from "./ResourceLoaderState.js";
  * <p>
  * Implements the {@link ResourceLoader} interface.
  * </p>
+ *
  * @alias GltfBufferViewLoader
- * @class
+ * @constructor
  * @augments ResourceLoader
+ *
  * @param {object} options Object with the following properties:
  * @param {ResourceCache} options.resourceCache The {@link ResourceCache} (to avoid circular dependencies).
  * @param {object} options.gltf The glTF JSON.
@@ -21,6 +23,7 @@ import ResourceLoaderState from "./ResourceLoaderState.js";
  * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
  * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
  * @param {string} [options.cacheKey] The cache key of the resource.
+ *
  * @private
  */
 function GltfBufferViewLoader(options) {
@@ -94,7 +97,9 @@ if (defined(Object.create)) {
 Object.defineProperties(GltfBufferViewLoader.prototype, {
   /**
    * The cache key of the resource.
+   *
    * @memberof GltfBufferViewLoader.prototype
+   *
    * @type {string}
    * @readonly
    * @private
@@ -106,7 +111,9 @@ Object.defineProperties(GltfBufferViewLoader.prototype, {
   },
   /**
    * The typed array containing buffer view data.
+   *
    * @memberof GltfBufferViewLoader.prototype
+   *
    * @type {Uint8Array}
    * @readonly
    * @private

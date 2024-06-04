@@ -8,11 +8,13 @@ import BlendFunction from "./BlendFunction.js";
  * <p>
  * This is a helper when using custom render states with {@link Appearance#renderState}.
  * </p>
+ *
  * @namespace
  */
 const BlendingState = {
   /**
    * Blending is disabled.
+   *
    * @type {object}
    * @constant
    */
@@ -22,6 +24,7 @@ const BlendingState = {
 
   /**
    * Blending is enabled using alpha blending, <code>source(source.alpha) + destination(1 - source.alpha)</code>.
+   *
    * @type {object}
    * @constant
    */
@@ -37,6 +40,7 @@ const BlendingState = {
 
   /**
    * Blending is enabled using alpha blending with premultiplied alpha, <code>source + destination(1 - source.alpha)</code>.
+   *
    * @type {object}
    * @constant
    */
@@ -52,6 +56,7 @@ const BlendingState = {
 
   /**
    * Blending is enabled using additive blending, <code>source(source.alpha) + destination</code>.
+   *
    * @type {object}
    * @constant
    */

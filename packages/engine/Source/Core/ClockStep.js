@@ -1,7 +1,9 @@
 /**
  * Constants to determine how much time advances with each call
  * to {@link Clock#tick}.
+ *
  * @enum {number}
+ *
  * @see Clock
  * @see ClockRange
  */
@@ -9,6 +11,7 @@ const ClockStep = {
   /**
    * {@link Clock#tick} advances the current time by a fixed step,
    * which is the number of seconds specified by {@link Clock#multiplier}.
+   *
    * @type {number}
    * @constant
    */
@@ -17,6 +20,7 @@ const ClockStep = {
   /**
    * {@link Clock#tick} advances the current time by the amount of system
    * time elapsed since the previous call multiplied by {@link Clock#multiplier}.
+   *
    * @type {number}
    * @constant
    */
@@ -25,6 +29,7 @@ const ClockStep = {
   /**
    * {@link Clock#tick} sets the clock to the current system time;
    * ignoring all other settings.
+   *
    * @type {number}
    * @constant
    */

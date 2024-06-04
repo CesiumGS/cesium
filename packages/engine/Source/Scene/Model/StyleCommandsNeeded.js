@@ -1,6 +1,7 @@
 /**
  * An enum describing what commands (opaque or translucent) are required by
  * a {@link Cesium3DTileStyle}.
+ *
  * @enum {number}
  * @private
  */
@@ -11,8 +12,6 @@ const StyleCommandsNeeded = {
 };
 
 /**
- * @param featuresLength
- * @param translucentFeaturesLength
  * @private
  */
 StyleCommandsNeeded.getStyleCommandsNeeded = function (

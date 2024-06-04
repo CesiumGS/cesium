@@ -2,9 +2,10 @@ import DeveloperError from "../Core/DeveloperError.js";
 
 /**
  * If element is a string, look up the element in the DOM by ID.  Otherwise return element.
- * @param element
+ *
  * @private
- * @throws {DeveloperError} Element with id "id" does not exist in the document.
+ *
+ * @exception {DeveloperError} Element with id "id" does not exist in the document.
  */
 function getElement(element) {
   if (typeof element === "string") {

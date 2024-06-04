@@ -6,9 +6,11 @@ import CesiumMath from "../Core/Math.js";
 /**
  * A ParticleEmitter that emits particles within a sphere.
  * Particles will be positioned randomly within the sphere and have initial velocities emanating from the center of the sphere.
+ *
  * @alias SphereEmitter
- * @class
- * @param {number} [radius] The radius of the sphere in meters.
+ * @constructor
+ *
+ * @param {number} [radius=1.0] The radius of the sphere in meters.
  */
 function SphereEmitter(radius) {
   radius = defaultValue(radius, 1.0);
@@ -42,6 +44,7 @@ Object.defineProperties(SphereEmitter.prototype, {
 
 /**
  * Initializes the given {Particle} by setting it's position and velocity.
+ *
  * @private
  * @param {Particle} particle The particle to initialize
  */

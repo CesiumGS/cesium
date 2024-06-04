@@ -6,6 +6,7 @@ import PrimitiveCollection from "./PrimitiveCollection.js";
 
 /**
  * A primitive collection for helping maintain the order or ground primitives based on a z-index
+ *
  * @private
  */
 function OrderedGroundPrimitiveCollection() {
@@ -19,7 +20,9 @@ function OrderedGroundPrimitiveCollection() {
 Object.defineProperties(OrderedGroundPrimitiveCollection.prototype, {
   /**
    * Gets the number of primitives in the collection.
+   *
    * @memberof OrderedGroundPrimitiveCollection.prototype
+   *
    * @type {number}
    * @readonly
    */
@@ -32,8 +35,9 @@ Object.defineProperties(OrderedGroundPrimitiveCollection.prototype, {
 
 /**
  * Adds a primitive to the collection.
+ *
  * @param {GroundPrimitive} primitive The primitive to add.
- * @param {number} [zIndex] The index of the primitive
+ * @param {number} [zIndex = 0] The index of the primitive
  * @returns {GroundPrimitive} The primitive added to the collection.
  */
 OrderedGroundPrimitiveCollection.prototype.add = function (primitive, zIndex) {
@@ -88,8 +92,9 @@ OrderedGroundPrimitiveCollection.prototype.set = function (primitive, zIndex) {
 
 /**
  * Removes a primitive from the collection.
+ *
  * @param {object} primitive The primitive to remove.
- * @param {boolean} [doNotDestroy]
+ * @param {boolean} [doNotDestroy = false]
  * @returns {boolean} <code>true</code> if the primitive was removed; <code>false</code> if the primitive is <code>undefined</code> or was not found in the collection.
  */
 OrderedGroundPrimitiveCollection.prototype.remove = function (
@@ -127,7 +132,9 @@ OrderedGroundPrimitiveCollection.prototype.remove = function (
 
 /**
  * Removes all primitives in the collection.
- * @throws {DeveloperError} This object was destroyed, i.e., destroy() was called.
+ *
+ * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+ *
  * @see OrderedGroundPrimitiveCollection#destroyPrimitives
  */
 OrderedGroundPrimitiveCollection.prototype.removeAll = function () {
@@ -145,6 +152,7 @@ OrderedGroundPrimitiveCollection.prototype.removeAll = function () {
 
 /**
  * Determines if this collection contains a primitive.
+ *
  * @param {object} primitive The primitive to check for.
  * @returns {boolean} <code>true</code> if the primitive is in the collection; <code>false</code> if the primitive is <code>undefined</code> or was not found in the collection.
  */
@@ -157,7 +165,6 @@ OrderedGroundPrimitiveCollection.prototype.contains = function (primitive) {
 };
 
 /**
- * @param frameState
  * @private
  */
 OrderedGroundPrimitiveCollection.prototype.update = function (frameState) {
@@ -176,7 +183,9 @@ OrderedGroundPrimitiveCollection.prototype.update = function (frameState) {
  * <br /><br />
  * If this object was destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
+ *
  * @returns {boolean} True if this object was destroyed; otherwise, false.
+ *
  * @see OrderedGroundPrimitiveCollection#destroy
  */
 OrderedGroundPrimitiveCollection.prototype.isDestroyed = function () {
@@ -194,9 +203,13 @@ OrderedGroundPrimitiveCollection.prototype.isDestroyed = function () {
  * Once this collection is destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
  * assign the return value (<code>undefined</code>) to the object as done in the example.
- * @throws {DeveloperError} This object was destroyed, i.e., destroy() was called.
+ *
+ * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+ *
+ *
  * @example
  * primitives = primitives && primitives.destroy();
+ *
  * @see OrderedGroundPrimitiveCollection#isDestroyed
  */
 OrderedGroundPrimitiveCollection.prototype.destroy = function () {

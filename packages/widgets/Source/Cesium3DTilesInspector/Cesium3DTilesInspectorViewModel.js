@@ -162,7 +162,8 @@ const oldColor = new Color();
 /**
  * The view model for {@link Cesium3DTilesInspector}.
  * @alias Cesium3DTilesInspectorViewModel
- * @class
+ * @constructor
+ *
  * @param {Scene} scene The scene instance to use.
  * @param {HTMLElement} performanceContainer The container for the performance display
  */
@@ -190,6 +191,7 @@ function Cesium3DTilesInspectorViewModel(scene, performanceContainer) {
 
   /**
    * Gets or sets the flag to enable performance display.  This property is observable.
+   *
    * @type {boolean}
    * @default false
    */
@@ -197,6 +199,7 @@ function Cesium3DTilesInspectorViewModel(scene, performanceContainer) {
 
   /**
    * Gets or sets the flag to show statistics.  This property is observable.
+   *
    * @type {boolean}
    * @default true
    */
@@ -204,6 +207,7 @@ function Cesium3DTilesInspectorViewModel(scene, performanceContainer) {
 
   /**
    * Gets or sets the flag to show pick statistics.  This property is observable.
+   *
    * @type {boolean}
    * @default true
    */
@@ -212,6 +216,7 @@ function Cesium3DTilesInspectorViewModel(scene, performanceContainer) {
   /**
    * Gets or sets the flag to show resource cache statistics. This property is
    * observable.
+   *
    * @type {boolean}
    * @default false
    */
@@ -219,6 +224,7 @@ function Cesium3DTilesInspectorViewModel(scene, performanceContainer) {
 
   /**
    * Gets or sets the flag to show the inspector.  This property is observable.
+   *
    * @type {boolean}
    * @default true
    */
@@ -226,6 +232,7 @@ function Cesium3DTilesInspectorViewModel(scene, performanceContainer) {
 
   /**
    * Gets or sets the flag to show the tileset section.  This property is observable.
+   *
    * @type {boolean}
    * @default false
    */
@@ -233,6 +240,7 @@ function Cesium3DTilesInspectorViewModel(scene, performanceContainer) {
 
   /**
    * Gets or sets the flag to show the display section.  This property is observable.
+   *
    * @type {boolean}
    * @default false
    */
@@ -240,6 +248,7 @@ function Cesium3DTilesInspectorViewModel(scene, performanceContainer) {
 
   /**
    * Gets or sets the flag to show the update section.  This property is observable.
+   *
    * @type {boolean}
    * @default false
    */
@@ -247,6 +256,7 @@ function Cesium3DTilesInspectorViewModel(scene, performanceContainer) {
 
   /**
    * Gets or sets the flag to show the logging section.  This property is observable.
+   *
    * @type {boolean}
    * @default false
    */
@@ -254,6 +264,7 @@ function Cesium3DTilesInspectorViewModel(scene, performanceContainer) {
 
   /**
    * Gets or sets the flag to show the style section.  This property is observable.
+   *
    * @type {boolean}
    * @default false
    */
@@ -261,6 +272,7 @@ function Cesium3DTilesInspectorViewModel(scene, performanceContainer) {
 
   /**
    * Gets or sets the flag to show the tile info section.  This property is observable.
+   *
    * @type {boolean}
    * @default false
    */
@@ -268,6 +280,7 @@ function Cesium3DTilesInspectorViewModel(scene, performanceContainer) {
 
   /**
    * Gets or sets the flag to show the optimization info section. This property is observable.
+   *
    * @type {boolean}
    * @default false;
    */
@@ -275,6 +288,7 @@ function Cesium3DTilesInspectorViewModel(scene, performanceContainer) {
 
   /**
    * Gets or sets the JSON for the tileset style.  This property is observable.
+   *
    * @type {string}
    * @default '{}'
    */
@@ -282,6 +296,7 @@ function Cesium3DTilesInspectorViewModel(scene, performanceContainer) {
 
   /**
    * Gets or sets the JSON for the tileset enableDebugWireframe attribute.  This property is observable.
+   *
    * @type {boolean}
    * @default false
    */
@@ -347,6 +362,7 @@ function Cesium3DTilesInspectorViewModel(scene, performanceContainer) {
   });
   /**
    * Gets or sets the flag to enable dynamic screen space error.  This property is observable.
+   *
    * @type {boolean}
    * @default false
    */
@@ -367,6 +383,7 @@ function Cesium3DTilesInspectorViewModel(scene, performanceContainer) {
   });
   /**
    * Gets or sets the color blend mode.  This property is observable.
+   *
    * @type {Cesium3DTileColorBlendMode}
    * @default Cesium3DTileColorBlendMode.HIGHLIGHT
    */
@@ -426,6 +443,7 @@ function Cesium3DTilesInspectorViewModel(scene, performanceContainer) {
   });
   /**
    * Gets or sets the flag to enable picking.  This property is observable.
+   *
    * @type {boolean}
    * @default true
    */
@@ -446,6 +464,7 @@ function Cesium3DTilesInspectorViewModel(scene, performanceContainer) {
   });
   /**
    * Gets or sets the flag to colorize tiles.  This property is observable.
+   *
    * @type {boolean}
    * @default false
    */
@@ -466,6 +485,7 @@ function Cesium3DTilesInspectorViewModel(scene, performanceContainer) {
   });
   /**
    * Gets or sets the flag to draw with wireframe.  This property is observable.
+   *
    * @type {boolean}
    * @default false
    */
@@ -486,6 +506,7 @@ function Cesium3DTilesInspectorViewModel(scene, performanceContainer) {
   });
   /**
    * Gets or sets the flag to show bounding volumes.  This property is observable.
+   *
    * @type {boolean}
    * @default false
    */
@@ -506,6 +527,7 @@ function Cesium3DTilesInspectorViewModel(scene, performanceContainer) {
   });
   /**
    * Gets or sets the flag to show content volumes.  This property is observable.
+   *
    * @type {boolean}
    * @default false
    */
@@ -526,6 +548,7 @@ function Cesium3DTilesInspectorViewModel(scene, performanceContainer) {
   });
   /**
    * Gets or sets the flag to show request volumes.  This property is observable.
+   *
    * @type {boolean}
    * @default false
    */
@@ -547,6 +570,7 @@ function Cesium3DTilesInspectorViewModel(scene, performanceContainer) {
   });
   /**
    * Gets or sets the flag to suspend updates.  This property is observable.
+   *
    * @type {boolean}
    * @default false
    */
@@ -566,6 +590,7 @@ function Cesium3DTilesInspectorViewModel(scene, performanceContainer) {
   });
   /**
    * Gets or sets the flag to show debug labels only for the currently picked tile.  This property is observable.
+   *
    * @type {boolean}
    * @default false
    */
@@ -586,6 +611,7 @@ function Cesium3DTilesInspectorViewModel(scene, performanceContainer) {
   });
   /**
    * Gets or sets the flag to show tile geometric error.  This property is observable.
+   *
    * @type {boolean}
    * @default false
    */
@@ -606,6 +632,7 @@ function Cesium3DTilesInspectorViewModel(scene, performanceContainer) {
   });
   /**
    * Displays the number of commands, points, triangles and features used per tile.  This property is observable.
+   *
    * @type {boolean}
    * @default false
    */
@@ -626,6 +653,7 @@ function Cesium3DTilesInspectorViewModel(scene, performanceContainer) {
   });
   /**
    * Displays the memory used per tile.  This property is observable.
+   *
    * @type {boolean}
    * @default false
    */
@@ -646,6 +674,7 @@ function Cesium3DTilesInspectorViewModel(scene, performanceContainer) {
   });
   /**
    * Gets or sets the flag to show the tile url.  This property is observable.
+   *
    * @type {boolean}
    * @default false
    */
@@ -668,6 +697,7 @@ function Cesium3DTilesInspectorViewModel(scene, performanceContainer) {
   });
   /**
    * Gets or sets the maximum screen space error.  This property is observable.
+   *
    * @type {number}
    * @default 16
    */
@@ -690,6 +720,7 @@ function Cesium3DTilesInspectorViewModel(scene, performanceContainer) {
   });
   /**
    * Gets or sets the dynamic screen space error density.  This property is observable.
+   *
    * @type {number}
    * @default 2.0e-4
    */
@@ -699,6 +730,7 @@ function Cesium3DTilesInspectorViewModel(scene, performanceContainer) {
    * Gets or sets the dynamic screen space error density slider value.
    * This allows the slider to be exponential because values tend to be closer to 0 than 1.
    * This property is observable.
+   *
    * @type {number}
    * @default 2.0e-4
    */
@@ -733,6 +765,7 @@ function Cesium3DTilesInspectorViewModel(scene, performanceContainer) {
   });
   /**
    * Gets or sets the dynamic screen space error factor.  This property is observable.
+   *
    * @type {number}
    * @default 24.0
    */
@@ -771,6 +804,7 @@ function Cesium3DTilesInspectorViewModel(scene, performanceContainer) {
   });
   /**
    * Gets or sets the flag to enable point cloud shading. This property is observable.
+   *
    * @type {boolean}
    * @default false
    */
@@ -793,6 +827,7 @@ function Cesium3DTilesInspectorViewModel(scene, performanceContainer) {
   });
   /**
    * Gets or sets the geometric error scale.  This property is observable.
+   *
    * @type {number}
    * @default 1.0
    */
@@ -816,6 +851,7 @@ function Cesium3DTilesInspectorViewModel(scene, performanceContainer) {
   });
   /**
    * Gets or sets the maximum attenuation.  This property is observable.
+   *
    * @type {number}
    * @default 0
    */
@@ -839,6 +875,7 @@ function Cesium3DTilesInspectorViewModel(scene, performanceContainer) {
   });
   /**
    * Gets or sets the base resolution.  This property is observable.
+   *
    * @type {number}
    * @default 0
    */
@@ -858,6 +895,7 @@ function Cesium3DTilesInspectorViewModel(scene, performanceContainer) {
   });
   /**
    * Gets or sets the flag to enable eye dome lighting. This property is observable.
+   *
    * @type {boolean}
    * @default false
    */
@@ -880,6 +918,7 @@ function Cesium3DTilesInspectorViewModel(scene, performanceContainer) {
   });
   /**
    * Gets or sets the eye dome lighting strength.  This property is observable.
+   *
    * @type {number}
    * @default 1.0
    */
@@ -902,6 +941,7 @@ function Cesium3DTilesInspectorViewModel(scene, performanceContainer) {
   });
   /**
    * Gets or sets the eye dome lighting radius.  This property is observable.
+   *
    * @type {number}
    * @default 1.0
    */
@@ -909,6 +949,7 @@ function Cesium3DTilesInspectorViewModel(scene, performanceContainer) {
 
   /**
    * Gets or sets the pick state
+   *
    * @type {boolean}
    * @default false
    */
@@ -1148,7 +1189,7 @@ Object.defineProperties(Cesium3DTilesInspectorViewModel.prototype, {
   /**
    * Gets the available blend modes
    * @memberof Cesium3DTilesInspectorViewModel.prototype
-   * @type {object[]}
+   * @type {Object[]}
    * @readonly
    */
   colorBlendModes: {
@@ -1443,8 +1484,6 @@ Cesium3DTilesInspectorViewModel.prototype.compileStyle = function () {
 
 /**
  * Handles key press events on the style editor.
- * @param sender
- * @param event
  */
 Cesium3DTilesInspectorViewModel.prototype.styleEditorKeyPress = function (
   sender,
@@ -1553,6 +1592,7 @@ Cesium3DTilesInspectorViewModel.prototype.destroy = function () {
 
 /**
  * Generates an HTML string of the statistics
+ *
  * @function
  * @param {Cesium3DTileset} tileset The tileset
  * @param {boolean} isPick Whether this is getting the statistics for the pick pass

@@ -9,12 +9,15 @@ import Matrix4 from "../Core/Matrix4.js";
 
 /**
  * An enum describing the attribute type for glTF and 3D Tiles.
+ *
  * @enum {string}
+ *
  * @private
  */
 const AttributeType = {
   /**
    * The attribute is a single component.
+   *
    * @type {string}
    * @constant
    */
@@ -22,6 +25,7 @@ const AttributeType = {
 
   /**
    * The attribute is a two-component vector.
+   *
    * @type {string}
    * @constant
    */
@@ -29,6 +33,7 @@ const AttributeType = {
 
   /**
    * The attribute is a three-component vector.
+   *
    * @type {string}
    * @constant
    */
@@ -36,6 +41,7 @@ const AttributeType = {
 
   /**
    * The attribute is a four-component vector.
+   *
    * @type {string}
    * @constant
    */
@@ -43,6 +49,7 @@ const AttributeType = {
 
   /**
    * The attribute is a 2x2 matrix.
+   *
    * @type {string}
    * @constant
    */
@@ -50,6 +57,7 @@ const AttributeType = {
 
   /**
    * The attribute is a 3x3 matrix.
+   *
    * @type {string}
    * @constant
    */
@@ -57,6 +65,7 @@ const AttributeType = {
 
   /**
    * The attribute is a 4x4 matrix.
+   *
    * @type {string}
    * @constant
    */
@@ -65,8 +74,10 @@ const AttributeType = {
 
 /**
  * Gets the scalar, vector, or matrix type for the attribute type.
+ *
  * @param {AttributeType} attributeType The attribute type.
  * @returns {*} The math type.
+ *
  * @private
  */
 AttributeType.getMathType = function (attributeType) {
@@ -94,8 +105,10 @@ AttributeType.getMathType = function (attributeType) {
 
 /**
  * Gets the number of components per attribute.
+ *
  * @param {AttributeType} attributeType The attribute type.
  * @returns {number} The number of components.
+ *
  * @private
  */
 AttributeType.getNumberOfComponents = function (attributeType) {
@@ -123,8 +136,10 @@ AttributeType.getNumberOfComponents = function (attributeType) {
 /**
  * Get the number of attribute locations needed to fit this attribute. Most
  * types require one, but matrices require multiple attribute locations.
+ *
  * @param {AttributeType} attributeType The attribute type.
  * @returns {number} The number of attribute locations needed in the shader
+ *
  * @private
  */
 AttributeType.getAttributeLocationCount = function (attributeType) {
@@ -149,8 +164,10 @@ AttributeType.getAttributeLocationCount = function (attributeType) {
 
 /**
  * Gets the GLSL type for the attribute type.
+ *
  * @param {AttributeType} attributeType The attribute type.
  * @returns {string} The GLSL type for the attribute type.
+ *
  * @private
  */
 AttributeType.getGlslType = function (attributeType) {

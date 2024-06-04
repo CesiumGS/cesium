@@ -89,6 +89,7 @@ function parseFont(label) {
  * @typedef {object} Label.ConstructorOptions
  *
  * Initialization options for the Label constructor
+ *
  * @property {Cartesian3} position The cartesian position of the label.
  * @property {*} [id] A user-defined object to return when the label is picked with {@link Scene#pick}.
  * @property {boolean} [show=true] Determines if this label will be shown.
@@ -118,16 +119,21 @@ function parseFont(label) {
  * <div class="notice">
  * Create labels by calling {@link LabelCollection#add}. Do not call the constructor directly.
  * </div>
+ *
  * @alias Label
  * @internalConstructor
  * @class
+ *
  * @param {Label.ConstructorOptions} options Object describing initialization options
  * @param {LabelCollection} labelCollection Instance of LabelCollection
- * @throws {DeveloperError} translucencyByDistance.far must be greater than translucencyByDistance.near
- * @throws {DeveloperError} pixelOffsetScaleByDistance.far must be greater than pixelOffsetScaleByDistance.near
- * @throws {DeveloperError} distanceDisplayCondition.far must be greater than distanceDisplayCondition.near
+ *
+ * @exception {DeveloperError} translucencyByDistance.far must be greater than translucencyByDistance.near
+ * @exception {DeveloperError} pixelOffsetScaleByDistance.far must be greater than pixelOffsetScaleByDistance.near
+ * @exception {DeveloperError} distanceDisplayCondition.far must be greater than distanceDisplayCondition.near
+ *
  * @see LabelCollection
  * @see LabelCollection#add
+ *
  * @demo {@link https://sandcastle.cesium.com/index.html?src=Labels.html|Cesium Sandcastle Labels Demo}
  */
 function Label(options, labelCollection) {
@@ -666,12 +672,14 @@ Object.defineProperties(Label.prototype, {
    * translucencyByDistance will be disabled.
    * @memberof Label.prototype
    * @type {NearFarScalar}
+   *
    * @example
    * // Example 1.
    * // Set a label's translucencyByDistance to 1.0 when the
    * // camera is 1500 meters from the label and disappear as
    * // the camera distance approaches 8.0e6 meters.
    * text.translucencyByDistance = new Cesium.NearFarScalar(1.5e2, 1.0, 8.0e6, 0.0);
+   *
    * @example
    * // Example 2.
    * // disable translucency by distance
@@ -721,6 +729,7 @@ Object.defineProperties(Label.prototype, {
    * pixelOffsetScaleByDistance will be disabled.
    * @memberof Label.prototype
    * @type {NearFarScalar}
+   *
    * @example
    * // Example 1.
    * // Set a label's pixel offset scale to 0.0 when the
@@ -728,6 +737,7 @@ Object.defineProperties(Label.prototype, {
    * // in the y direction the camera distance approaches 8.0e6 meters.
    * text.pixelOffset = new Cesium.Cartesian2(0.0, 1.0);
    * text.pixelOffsetScaleByDistance = new Cesium.NearFarScalar(1.5e2, 0.0, 8.0e6, 10.0);
+   *
    * @example
    * // Example 2.
    * // disable pixel offset by distance
@@ -777,12 +787,14 @@ Object.defineProperties(Label.prototype, {
    * scaleByDistance will be disabled.
    * @memberof Label.prototype
    * @type {NearFarScalar}
+   *
    * @example
    * // Example 1.
    * // Set a label's scaleByDistance to scale by 1.5 when the
    * // camera is 1500 meters from the label and disappear as
    * // the camera distance approaches 8.0e6 meters.
    * label.scaleByDistance = new Cesium.NearFarScalar(1.5e2, 1.5, 8.0e6, 0.0);
+   *
    * @example
    * // Example 2.
    * // disable scaling by distance
@@ -1200,11 +1212,15 @@ Label.prototype._updateClamping = function () {
  * Computes the screen-space position of the label's origin, taking into account eye and pixel offsets.
  * The screen space origin is the top, left corner of the canvas; <code>x</code> increases from
  * left to right, and <code>y</code> increases from top to bottom.
+ *
  * @param {Scene} scene The scene the label is in.
  * @param {Cartesian2} [result] The object onto which to store the result.
  * @returns {Cartesian2} The screen-space position of the label.
+ *
+ *
  * @example
  * console.log(l.computeScreenSpacePosition(scene).toString());
+ *
  * @see Label#eyeOffset
  * @see Label#pixelOffset
  */
@@ -1242,6 +1258,7 @@ Label.prototype.computeScreenSpacePosition = function (scene, result) {
  * @param {Cartesian2} screenSpacePosition The screen space center of the label.
  * @param {BoundingRectangle} [result] The object onto which to store the result.
  * @returns {BoundingRectangle} The screen space bounding box.
+ *
  * @private
  */
 Label.getScreenSpaceBoundingBox = function (
@@ -1332,6 +1349,7 @@ Label.getScreenSpaceBoundingBox = function (
 /**
  * Determines if this label equals another label.  Labels are equal if all their properties
  * are equal.  Labels in different collections can be equal.
+ *
  * @param {Label} other The label to compare for equality.
  * @returns {boolean} <code>true</code> if the labels are equal; otherwise, <code>false</code>.
  */
@@ -1379,6 +1397,7 @@ Label.prototype.equals = function (other) {
  * <br /><br />
  * If this object was destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
+ *
  * @returns {boolean} True if this object was destroyed; otherwise, false.
  */
 Label.prototype.isDestroyed = function () {
@@ -1390,6 +1409,7 @@ Label.prototype.isDestroyed = function () {
  * @memberof Label
  * @type {boolean}
  * @default false
+ *
  * @example
  * // Example 1.
  * // Set a label's rightToLeft before init
@@ -1400,6 +1420,7 @@ Label.prototype.isDestroyed = function () {
  *     text: 'זה טקסט בעברית \n ועכשיו יורדים שורה',
  *   }
  * });
+ *
  * @example
  * // Example 2.
  * const myLabelEntity = viewer.entities.add({

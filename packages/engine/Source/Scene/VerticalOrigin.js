@@ -7,13 +7,16 @@
  * <div align='center'>
  * <img src='Images/Billboard.setVerticalOrigin.png' width='695' height='175' /><br />
  * </div>
+ *
  * @enum {number}
+ *
  * @see Billboard#verticalOrigin
  * @see Label#verticalOrigin
  */
 const VerticalOrigin = {
   /**
    * The origin is at the vertical center between <code>BASELINE</code> and <code>TOP</code>.
+   *
    * @type {number}
    * @constant
    */
@@ -21,6 +24,7 @@ const VerticalOrigin = {
 
   /**
    * The origin is at the bottom of the object.
+   *
    * @type {number}
    * @constant
    */
@@ -28,6 +32,7 @@ const VerticalOrigin = {
 
   /**
    * If the object contains text, the origin is at the baseline of the text, else the origin is at the bottom of the object.
+   *
    * @type {number}
    * @constant
    */
@@ -35,6 +40,7 @@ const VerticalOrigin = {
 
   /**
    * The origin is at the top of the object.
+   *
    * @type {number}
    * @constant
    */

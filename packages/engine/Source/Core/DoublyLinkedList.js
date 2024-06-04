@@ -18,9 +18,6 @@ Object.defineProperties(DoublyLinkedList.prototype, {
 });
 
 /**
- * @param item
- * @param previous
- * @param next
  * @private
  */
 function DoublyLinkedListNode(item, previous, next) {
@@ -32,7 +29,7 @@ function DoublyLinkedListNode(item, previous, next) {
 /**
  * Adds the item to the end of the list
  * @param {*} [item]
- * @returns {DoublyLinkedListNode}
+ * @return {DoublyLinkedListNode}
  */
 DoublyLinkedList.prototype.add = function (item) {
   const node = new DoublyLinkedListNode(item, this.tail, undefined);

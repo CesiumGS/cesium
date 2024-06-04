@@ -311,7 +311,6 @@ function createInstancePickOffsets(instances, geometries) {
 const PrimitivePipeline = {};
 
 /**
- * @param parameters
  * @private
  */
 PrimitivePipeline.combineGeometry = function (parameters) {
@@ -448,8 +447,6 @@ function countCreateGeometryResults(items) {
 }
 
 /**
- * @param items
- * @param transferableObjects
  * @private
  */
 PrimitivePipeline.packCreateGeometryResults = function (
@@ -543,7 +540,6 @@ PrimitivePipeline.packCreateGeometryResults = function (
 };
 
 /**
- * @param createGeometryResult
  * @private
  */
 PrimitivePipeline.unpackCreateGeometryResults = function (
@@ -697,8 +693,6 @@ function unpackInstancesForCombine(data) {
 }
 
 /**
- * @param parameters
- * @param transferableObjects
  * @private
  */
 PrimitivePipeline.packCombineGeometryParameters = function (
@@ -730,7 +724,6 @@ PrimitivePipeline.packCombineGeometryParameters = function (
 };
 
 /**
- * @param packedParameters
  * @private
  */
 PrimitivePipeline.unpackCombineGeometryParameters = function (
@@ -815,8 +808,6 @@ function unpackBoundingSpheres(buffer) {
 }
 
 /**
- * @param results
- * @param transferableObjects
  * @private
  */
 PrimitivePipeline.packCombineGeometryResults = function (
@@ -848,7 +839,6 @@ PrimitivePipeline.packCombineGeometryResults = function (
 };
 
 /**
- * @param packedResult
  * @private
  */
 PrimitivePipeline.unpackCombineGeometryResults = function (packedResult) {

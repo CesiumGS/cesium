@@ -302,9 +302,12 @@ function listenMouseMove(aggregator, modifier) {
  * Aggregates input events. For example, suppose the following inputs are received between frames:
  * left mouse button down, mouse move, mouse move, left mouse button up. These events will be aggregated into
  * one event with a start and end position of the mouse.
+ *
  * @alias CameraEventAggregator
- * @class
- * @param {HTMLCanvasElement} [canvas] The element to handle events for.
+ * @constructor
+ *
+ * @param {HTMLCanvasElement} [canvas=document] The element to handle events for.
+ *
  * @see ScreenSpaceEventHandler
  */
 function CameraEventAggregator(canvas) {
@@ -385,6 +388,7 @@ Object.defineProperties(CameraEventAggregator.prototype, {
 
 /**
  * Gets if a mouse button down or touch has started and has been moved.
+ *
  * @param {CameraEventType} type The camera event type.
  * @param {KeyboardEventModifier} [modifier] The keyboard modifier.
  * @returns {boolean} Returns <code>true</code> if a mouse button down or touch has started and has been moved; otherwise, <code>false</code>
@@ -402,6 +406,7 @@ CameraEventAggregator.prototype.isMoving = function (type, modifier) {
 
 /**
  * Gets the aggregated start and end position of the current event.
+ *
  * @param {CameraEventType} type The camera event type.
  * @param {KeyboardEventModifier} [modifier] The keyboard modifier.
  * @returns {object} An object with two {@link Cartesian2} properties: <code>startPosition</code> and <code>endPosition</code>.
@@ -420,6 +425,7 @@ CameraEventAggregator.prototype.getMovement = function (type, modifier) {
 
 /**
  * Gets the start and end position of the last move event (not the aggregated event).
+ *
  * @param {CameraEventType} type The camera event type.
  * @param {KeyboardEventModifier} [modifier] The keyboard modifier.
  * @returns {object|undefined} An object with two {@link Cartesian2} properties: <code>startPosition</code> and <code>endPosition</code> or <code>undefined</code>.
@@ -442,6 +448,7 @@ CameraEventAggregator.prototype.getLastMovement = function (type, modifier) {
 
 /**
  * Gets whether the mouse button is down or a touch has started.
+ *
  * @param {CameraEventType} type The camera event type.
  * @param {KeyboardEventModifier} [modifier] The keyboard modifier.
  * @returns {boolean} Whether the mouse button is down or a touch has started.
@@ -459,6 +466,7 @@ CameraEventAggregator.prototype.isButtonDown = function (type, modifier) {
 
 /**
  * Gets the mouse position that started the aggregation.
+ *
  * @param {CameraEventType} type The camera event type.
  * @param {KeyboardEventModifier} [modifier] The keyboard modifier.
  * @returns {Cartesian2} The mouse position.
@@ -483,6 +491,7 @@ CameraEventAggregator.prototype.getStartMousePosition = function (
 
 /**
  * Gets the time the button was pressed or the touch was started.
+ *
  * @param {CameraEventType} type The camera event type.
  * @param {KeyboardEventModifier} [modifier] The keyboard modifier.
  * @returns {Date} The time the button was pressed or the touch was started.
@@ -500,6 +509,7 @@ CameraEventAggregator.prototype.getButtonPressTime = function (type, modifier) {
 
 /**
  * Gets the time the button was released or the touch was ended.
+ *
  * @param {CameraEventType} type The camera event type.
  * @param {KeyboardEventModifier} [modifier] The keyboard modifier.
  * @returns {Date} The time the button was released or the touch was ended.
@@ -534,7 +544,9 @@ CameraEventAggregator.prototype.reset = function () {
  * <br /><br />
  * If this object was destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
+ *
  * @returns {boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+ *
  * @see CameraEventAggregator#destroy
  */
 CameraEventAggregator.prototype.isDestroyed = function () {
@@ -547,9 +559,13 @@ CameraEventAggregator.prototype.isDestroyed = function () {
  * Once an object is destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
  * assign the return value (<code>undefined</code>) to the object as done in the example.
- * @throws {DeveloperError} This object was destroyed, i.e., destroy() was called.
+ *
+ * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+ *
+ *
  * @example
  * handler = handler && handler.destroy();
+ *
  * @see CameraEventAggregator#isDestroyed
  */
 CameraEventAggregator.prototype.destroy = function () {

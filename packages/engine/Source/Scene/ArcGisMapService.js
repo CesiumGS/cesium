@@ -12,6 +12,7 @@ const defaultAccessToken =
  * A default token is provided for evaluation purposes only.
  * To obtain an access token, go to {@link https://developers.arcgis.com} and create a free account.
  * More info can be found in the {@link https://developers.arcgis.com/documentation/mapping-apis-and-services/security/ | ArcGIS developer guide}.
+ *
  * @see ArcGisMapServerImageryProvider
  * @namespace ArcGisMapService
  */
@@ -19,12 +20,14 @@ const defaultAccessToken =
 const ArcGisMapService = {};
 /**
  * Gets or sets the default ArcGIS access token.
+ *
  * @type {string}
  */
 ArcGisMapService.defaultAccessToken = defaultAccessToken;
 
 /**
  * Gets or sets the URL of the ArcGIS World Imagery tile service.
+ *
  * @type {string|Resource}
  * @default https://ibasemaps-api.arcgis.com/arcgis/rest/services/World_Imagery/MapServer
  */
@@ -35,6 +38,7 @@ ArcGisMapService.defaultWorldImageryServer = new Resource({
 
 /**
  * Gets or sets the URL of the ArcGIS World Hillshade tile service.
+ *
  * @type {string|Resource}
  * @default https://ibasemaps-api.arcgis.com/arcgis/rest/services/Elevation/World_Hillshade/MapServer
  */
@@ -45,6 +49,7 @@ ArcGisMapService.defaultWorldHillshadeServer = new Resource({
 
 /**
  * Gets or sets the URL of the ArcGIS World Oceans tile service.
+ *
  * @type {string|Resource}
  * @default https://ibasemaps-api.arcgis.com/arcgis/rest/services/Ocean/World_Ocean_Base/MapServer
  */
@@ -56,7 +61,7 @@ ArcGisMapService.defaultWorldOceanServer = new Resource({
 /**
  *
  * @param {string} providedKey
- * @returns {string|undefined}
+ * @return {string|undefined}
  */
 ArcGisMapService.getDefaultTokenCredit = function (providedKey) {
   if (providedKey !== defaultAccessToken) {

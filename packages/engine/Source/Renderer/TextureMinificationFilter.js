@@ -2,18 +2,22 @@ import WebGLConstants from "../Core/WebGLConstants.js";
 
 /**
  * Enumerates all possible filters used when minifying WebGL textures.
+ *
  * @enum {number}
+ *
  * @see TextureMagnificationFilter
  */
 const TextureMinificationFilter = {
   /**
    * Samples the texture by returning the closest pixel.
+   *
    * @type {number}
    * @constant
    */
   NEAREST: WebGLConstants.NEAREST,
   /**
    * Samples the texture through bi-linear interpolation of the four nearest pixels. This produces smoother results than <code>NEAREST</code> filtering.
+   *
    * @type {number}
    * @constant
    */
@@ -23,6 +27,7 @@ const TextureMinificationFilter = {
    * <p>
    * Requires that the texture has a mipmap. The mip level is chosen by the view angle and screen-space size of the texture.
    * </p>
+   *
    * @type {number}
    * @constant
    */
@@ -32,6 +37,7 @@ const TextureMinificationFilter = {
    * <p>
    * Requires that the texture has a mipmap. The mip level is chosen by the view angle and screen-space size of the texture.
    * </p>
+   *
    * @type {number}
    * @constant
    */
@@ -44,6 +50,7 @@ const TextureMinificationFilter = {
    * <p>
    * Requires that the texture has a mipmap. The mip level is chosen by the view angle and screen-space size of the texture.
    * </p>
+   *
    * @type {number}
    * @constant
    */
@@ -64,7 +71,9 @@ const TextureMinificationFilter = {
 
 /**
  * Validates the given <code>textureMinificationFilter</code> with respect to the possible enum values.
+ *
  * @private
+ *
  * @param textureMinificationFilter
  * @returns {boolean} <code>true</code> if <code>textureMinificationFilter</code> is valid.
  */

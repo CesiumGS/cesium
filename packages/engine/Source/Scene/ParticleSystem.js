@@ -17,21 +17,23 @@ const defaultImageSize = new Cartesian2(1.0, 1.0);
 
 /**
  * A ParticleSystem manages the updating and display of a collection of particles.
+ *
  * @alias ParticleSystem
- * @class
+ * @constructor
+ *
  * @param {object} [options] Object with the following properties:
- * @param {boolean} [options.show] Whether to display the particle system.
+ * @param {boolean} [options.show=true] Whether to display the particle system.
  * @param {ParticleSystem.updateCallback} [options.updateCallback] The callback function to be called each frame to update a particle.
- * @param {ParticleEmitter} [options.emitter] The particle emitter for this system.
- * @param {Matrix4} [options.modelMatrix] The 4x4 transformation matrix that transforms the particle system from model to world coordinates.
- * @param {Matrix4} [options.emitterModelMatrix] The 4x4 transformation matrix that transforms the particle system emitter within the particle systems local coordinate system.
- * @param {number} [options.emissionRate] The number of particles to emit per second.
+ * @param {ParticleEmitter} [options.emitter=new CircleEmitter(0.5)] The particle emitter for this system.
+ * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the particle system from model to world coordinates.
+ * @param {Matrix4} [options.emitterModelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the particle system emitter within the particle systems local coordinate system.
+ * @param {number} [options.emissionRate=5] The number of particles to emit per second.
  * @param {ParticleBurst[]} [options.bursts] An array of {@link ParticleBurst}, emitting bursts of particles at periodic times.
- * @param {boolean} [options.loop] Whether the particle system should loop its bursts when it is complete.
- * @param {number} [options.scale] Sets the scale to apply to the image of the particle for the duration of its particleLife.
+ * @param {boolean} [options.loop=true] Whether the particle system should loop its bursts when it is complete.
+ * @param {number} [options.scale=1.0] Sets the scale to apply to the image of the particle for the duration of its particleLife.
  * @param {number} [options.startScale] The initial scale to apply to the image of the particle at the beginning of its life.
  * @param {number} [options.endScale] The final scale to apply to the image of the particle at the end of its life.
- * @param {Color} [options.color] Sets the color of a particle for the duration of its particleLife.
+ * @param {Color} [options.color=Color.WHITE] Sets the color of a particle for the duration of its particleLife.
  * @param {Color} [options.startColor] The color of the particle at the beginning of its life.
  * @param {Color} [options.endColor] The color of the particle at the end of its life.
  * @param {object} [options.image] The URI, HTMLImageElement, or HTMLCanvasElement to use for the billboard.
@@ -727,7 +729,6 @@ function calculateNumberToEmit(system, dt) {
 const rotatedVelocityScratch = new Cartesian3();
 
 /**
- * @param frameState
  * @private
  */
 ParticleSystem.prototype.update = function (frameState) {
@@ -867,7 +868,9 @@ ParticleSystem.prototype.update = function (frameState) {
  * <br /><br />
  * If this object was destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
+ *
  * @returns {boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+ *
  * @see ParticleSystem#destroy
  */
 ParticleSystem.prototype.isDestroyed = function () {
@@ -881,7 +884,9 @@ ParticleSystem.prototype.isDestroyed = function () {
  * Once an object is destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
  * assign the return value (<code>undefined</code>) to the object as done in the example.
- * @throws {DeveloperError} This object was destroyed, i.e., destroy() was called.
+ *
+ * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+ *
  * @see ParticleSystem#isDestroyed
  */
 ParticleSystem.prototype.destroy = function () {
@@ -893,9 +898,12 @@ ParticleSystem.prototype.destroy = function () {
 /**
  * A function used to modify attributes of the particle at each time step. This can include force modifications,
  * color, sizing, etc.
+ *
  * @callback ParticleSystem.updateCallback
+ *
  * @param {Particle} particle The particle being updated.
  * @param {number} dt The time in seconds since the last update.
+ *
  * @example
  * function applyGravity(particle, dt) {
  *    const position = particle.position;

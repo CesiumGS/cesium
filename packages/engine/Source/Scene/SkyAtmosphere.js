@@ -29,11 +29,15 @@ import SceneMode from "./SceneMode.js";
  * <p>
  * This is only supported in 3D. Atmosphere is faded out when morphing to 2D or Columbus view.
  * </p>
+ *
  * @alias SkyAtmosphere
- * @class
- * @param {Ellipsoid} [ellipsoid] The ellipsoid that the atmosphere is drawn around.
+ * @constructor
+ *
+ * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid that the atmosphere is drawn around.
+ *
  * @example
  * scene.skyAtmosphere = new Cesium.SkyAtmosphere();
+ *
  * @see Scene.skyAtmosphere
  */
 function SkyAtmosphere(ellipsoid) {
@@ -41,6 +45,7 @@ function SkyAtmosphere(ellipsoid) {
 
   /**
    * Determines if the atmosphere is shown.
+   *
    * @type {boolean}
    * @default true
    */
@@ -49,6 +54,7 @@ function SkyAtmosphere(ellipsoid) {
   /**
    * Compute atmosphere per-fragment instead of per-vertex.
    * This produces better looking atmosphere with a slight performance penalty.
+   *
    * @type {boolean}
    * @default false
    */
@@ -76,6 +82,7 @@ function SkyAtmosphere(ellipsoid) {
 
   /**
    * The intensity of the light that is used for computing the sky atmosphere color.
+   *
    * @type {number}
    * @default 50.0
    */
@@ -83,6 +90,7 @@ function SkyAtmosphere(ellipsoid) {
 
   /**
    * The Rayleigh scattering coefficient used in the atmospheric scattering equations for the sky atmosphere.
+   *
    * @type {Cartesian3}
    * @default Cartesian3(5.5e-6, 13.0e-6, 28.4e-6)
    */
@@ -90,6 +98,7 @@ function SkyAtmosphere(ellipsoid) {
 
   /**
    * The Mie scattering coefficient used in the atmospheric scattering equations for the sky atmosphere.
+   *
    * @type {Cartesian3}
    * @default Cartesian3(21e-6, 21e-6, 21e-6)
    */
@@ -97,6 +106,7 @@ function SkyAtmosphere(ellipsoid) {
 
   /**
    * The Rayleigh scale height used in the atmospheric scattering equations for the sky atmosphere, in meters.
+   *
    * @type {number}
    * @default 10000.0
    */
@@ -104,6 +114,7 @@ function SkyAtmosphere(ellipsoid) {
 
   /**
    * The Mie scale height used in the atmospheric scattering equations for the sky atmosphere, in meters.
+   *
    * @type {number}
    * @default 3200.0
    */
@@ -194,6 +205,7 @@ Object.defineProperties(SkyAtmosphere.prototype, {
   /**
    * Gets the ellipsoid the atmosphere is drawn around.
    * @memberof SkyAtmosphere.prototype
+   *
    * @type {Ellipsoid}
    * @readonly
    */
@@ -207,6 +219,7 @@ Object.defineProperties(SkyAtmosphere.prototype, {
 /**
  * Set the dynamic lighting enum value for the shader
  * @param {DynamicAtmosphereLightingType} lightingEnum The enum that determines the dynamic atmosphere light source
+ *
  * @private
  */
 SkyAtmosphere.prototype.setDynamicLighting = function (lightingEnum) {
@@ -216,8 +229,6 @@ SkyAtmosphere.prototype.setDynamicLighting = function (lightingEnum) {
 const scratchModelMatrix = new Matrix4();
 
 /**
- * @param frameState
- * @param globe
  * @private
  */
 SkyAtmosphere.prototype.update = function (frameState, globe) {
@@ -355,7 +366,9 @@ function hasColorCorrection(skyAtmosphere) {
  * <br /><br />
  * If this object was destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
+ *
  * @returns {boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+ *
  * @see SkyAtmosphere#destroy
  */
 SkyAtmosphere.prototype.isDestroyed = function () {
@@ -369,9 +382,13 @@ SkyAtmosphere.prototype.isDestroyed = function () {
  * Once an object is destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
  * assign the return value (<code>undefined</code>) to the object as done in the example.
- * @throws {DeveloperError} This object was destroyed, i.e., destroy() was called.
+ *
+ * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+ *
+ *
  * @example
  * skyAtmosphere = skyAtmosphere && skyAtmosphere.destroy();
+ *
  * @see SkyAtmosphere#isDestroyed
  */
 SkyAtmosphere.prototype.destroy = function () {

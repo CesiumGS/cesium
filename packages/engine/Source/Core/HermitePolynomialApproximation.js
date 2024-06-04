@@ -63,6 +63,7 @@ function calculateCoefficientTerm(
 
 /**
  * An {@link InterpolationAlgorithm} for performing Hermite interpolation.
+ *
  * @namespace HermitePolynomialApproximation
  */
 const HermitePolynomialApproximation = {
@@ -71,11 +72,12 @@ const HermitePolynomialApproximation = {
 
 /**
  * Given the desired degree, returns the number of data points required for interpolation.
+ *
  * @param {number} degree The desired degree of interpolation.
- * @param {number} [inputOrder]  The order of the inputs (0 means just the data, 1 means the data and its derivative, etc).
+ * @param {number} [inputOrder=0]  The order of the inputs (0 means just the data, 1 means the data and its derivative, etc).
  * @returns {number} The number of required data points needed for the desired degree of interpolation.
- * @throws {DeveloperError} degree must be 0 or greater.
- * @throws {DeveloperError} inputOrder must be 0 or greater.
+ * @exception {DeveloperError} degree must be 0 or greater.
+ * @exception {DeveloperError} inputOrder must be 0 or greater.
  */
 HermitePolynomialApproximation.getRequiredDataPoints = function (
   degree,
@@ -100,6 +102,7 @@ HermitePolynomialApproximation.getRequiredDataPoints = function (
 
 /**
  * Interpolates values using Hermite Polynomial Approximation.
+ *
  * @param {number} x The independent variable for which the dependent variables will be interpolated.
  * @param {number[]} xTable The array of independent variables to use to interpolate.  The values
  * in this array must be in increasing order and the same value must not occur twice in the array.
@@ -195,6 +198,7 @@ const arrayScratch = [];
 
 /**
  * Interpolates values using Hermite Polynomial Approximation.
+ *
  * @param {number} x The independent variable for which the dependent variables will be interpolated.
  * @param {number[]} xTable The array of independent variables to use to interpolate.  The values
  * in this array must be in increasing order and the same value must not occur twice in the array.
@@ -205,6 +209,7 @@ const arrayScratch = [];
  * @param {number} inputOrder The number of derivatives supplied for input.
  * @param {number} outputOrder The number of derivatives desired for output.
  * @param {number[]} [result] An existing array into which to store the result.
+ *
  * @returns {number[]} The array of interpolated values, or the result parameter if one was provided.
  */
 HermitePolynomialApproximation.interpolate = function (

@@ -3,8 +3,6 @@ import defined from "../Core/defined.js";
 import BoundingSphereState from "./BoundingSphereState.js";
 
 /**
- * @param primitives
- * @param orderedGroundPrimitives
  * @private
  */
 function DynamicGeometryBatch(primitives, orderedGroundPrimitives) {

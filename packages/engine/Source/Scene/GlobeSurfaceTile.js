@@ -29,7 +29,8 @@ import TerrainState from "./TerrainState.js";
 /**
  * Contains additional information about a {@link QuadtreeTile} of the globe's surface, and
  * encapsulates state transition logic for loading tiles.
- * @class
+ *
+ * @constructor
  * @alias GlobeSurfaceTile
  * @private
  */
@@ -109,6 +110,7 @@ Object.defineProperties(GlobeSurfaceTile.prototype, {
    * {@link GlobeSurfaceTile#vertexArray} is defined. Otherwise, It returns the
    * {@link TerrainFillMesh#mesh} property of the {@link GlobeSurfaceTile#fill}.
    * If there is no fill, it returns undefined.
+   *
    * @memberof GlobeSurfaceTile.prototype
    * @type {TerrainMesh}
    */

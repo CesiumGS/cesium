@@ -6,9 +6,13 @@ import CesiumInspector from "../CesiumInspector/CesiumInspector.js";
  * Rather than being called directly, this function is normally passed as
  * a parameter to {@link Viewer#extend}, as shown in the example below.
  * @function
+ *
  * @param {Viewer} viewer The viewer instance.
- * @throws {DeveloperError} viewer is required.
+ *
+ * @exception {DeveloperError} viewer is required.
+ *
  * @demo {@link https://sandcastle.cesium.com/index.html?src=Cesium%20Inspector.html|Cesium Sandcastle Cesium Inspector Demo}
+ *
  * @example
  * const viewer = new Cesium.Viewer('cesiumContainer');
  * viewer.extend(Cesium.viewerCesiumInspectorMixin);

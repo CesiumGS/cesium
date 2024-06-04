@@ -6,7 +6,9 @@ import VerticalExaggerationStageVS from "../../Shaders/Model/VerticalExaggeratio
  * The vertical exaggeration pipeline stage transforms the vertex
  * positions based on the values of {@link Scene#verticalExaggeration} and
  * {@link Scene#verticalExaggerationRelativeHeight}
+ *
  * @namespace VerticalExaggerationPipelineStage
+ *
  * @private
  */
 const VerticalExaggerationPipelineStage = {
@@ -17,6 +19,7 @@ const scratchExaggerationUniform = new Cartesian2();
 
 /**
  * Add defines and uniforms for vertical exaggeration calculations in the vertex shader
+ *
  * @param {PrimitiveRenderResources} renderResources The render resources for the primitive
  * @param {ModelComponents.Primitive} primitive The primitive to be rendered
  * @param {FrameState} frameState The frame state.

@@ -2,6 +2,7 @@ import WebGLConstants from "../Core/WebGLConstants.js";
 
 /**
  * The data type of a pixel.
+ *
  * @enum {number}
  * @see PostProcessStage
  */
@@ -18,10 +19,8 @@ const PixelDatatype = {
 };
 
 /**
- * @param pixelDatatype
- * @param context
   @private
- */
+*/
 PixelDatatype.toWebGLConstant = function (pixelDatatype, context) {
   switch (pixelDatatype) {
     case PixelDatatype.UNSIGNED_BYTE:
@@ -48,9 +47,8 @@ PixelDatatype.toWebGLConstant = function (pixelDatatype, context) {
 };
 
 /**
- * @param pixelDatatype
   @private
- */
+*/
 PixelDatatype.isPacked = function (pixelDatatype) {
   return (
     pixelDatatype === PixelDatatype.UNSIGNED_INT_24_8 ||
@@ -61,9 +59,8 @@ PixelDatatype.isPacked = function (pixelDatatype) {
 };
 
 /**
- * @param pixelDatatype
   @private
- */
+*/
 PixelDatatype.sizeInBytes = function (pixelDatatype) {
   switch (pixelDatatype) {
     case PixelDatatype.UNSIGNED_BYTE:
@@ -82,9 +79,8 @@ PixelDatatype.sizeInBytes = function (pixelDatatype) {
 };
 
 /**
- * @param pixelDatatype
   @private
- */
+*/
 PixelDatatype.validate = function (pixelDatatype) {
   return (
     pixelDatatype === PixelDatatype.UNSIGNED_BYTE ||

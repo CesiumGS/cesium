@@ -280,8 +280,6 @@ Batch.prototype.removeAllPrimitives = function () {
 };
 
 /**
- * @param primitives
- * @param classificationType
  * @private
  */
 function StaticGroundGeometryColorBatch(primitives, classificationType) {

@@ -7,8 +7,6 @@ import Resource from "../Core/Resource.js";
  * <p>
  * Do not construct this directly, instead access statistics through {@link I3SDataProvider}.
  * </p>
- * @param dataProvider
- * @param uri
  * @alias I3SStatistics
  * @internalConstructor
  */
@@ -76,7 +74,6 @@ I3SStatistics.prototype.load = async function () {
 };
 
 /**
- * @param attributeName
  * @private
  */
 I3SStatistics.prototype._getValues = function (attributeName) {

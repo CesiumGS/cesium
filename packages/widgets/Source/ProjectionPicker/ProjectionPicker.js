@@ -15,11 +15,15 @@ const orthographicPath =
 
 /**
  * The ProjectionPicker is a single button widget for switching between perspective and orthographic projections.
+ *
  * @alias ProjectionPicker
- * @class
+ * @constructor
+ *
  * @param {Element|string} container The DOM element or ID that will contain the widget.
  * @param {Scene} scene The Scene instance to use.
- * @throws {DeveloperError} Element with id "container" does not exist in the document.
+ *
+ * @exception {DeveloperError} Element with id "container" does not exist in the document.
+ *
  * @example
  * // In HTML head, include a link to the ProjectionPicker.css stylesheet,
  * // and in the body, include: <div id="projectionPickerContainer"></div>
@@ -122,6 +126,7 @@ Object.defineProperties(ProjectionPicker.prototype, {
   /**
    * Gets the parent container.
    * @memberof ProjectionPicker.prototype
+   *
    * @type {Element}
    */
   container: {
@@ -133,6 +138,7 @@ Object.defineProperties(ProjectionPicker.prototype, {
   /**
    * Gets the view model.
    * @memberof ProjectionPicker.prototype
+   *
    * @type {ProjectionPickerViewModel}
    */
   viewModel: {

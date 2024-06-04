@@ -4,7 +4,7 @@ import findAccessorMinMax from "../../Source/Scene/GltfPipeline/findAccessorMinM
 /**
  * A fluent interface for programmatically building a glTF.
  * @alias GltfBuilder
- * @class
+ * @constructor
  * @private
  */
 function GltfBuilder() {

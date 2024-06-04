@@ -17,7 +17,9 @@ const scratchModelView2D = new Matrix4();
 
 /**
  * The scene mode 2D stage generates resources for rendering a primitive in 2D / CV mode.
+ *
  * @namespace SceneMode2DPipelineStage
+ *
  * @private
  */
 const SceneMode2DPipelineStage = {
@@ -34,14 +36,16 @@ const SceneMode2DPipelineStage = {
  *
  * Processes a primitive. This stage modifies the following parts of the render resources:
  * <ul>
- * <li> creates a vertex buffer for the positions of the primitive projected to 2D
- * <li> creates the bounding sphere for the primitive in 2D
- * <li> adds a flag to the shader to use 2D positions
- * <li> adds a uniform for the view model matrix in 2D
+ *  <li> creates a vertex buffer for the positions of the primitive projected to 2D
+ *  <li> creates the bounding sphere for the primitive in 2D
+ *  <li> adds a flag to the shader to use 2D positions
+ *  <li> adds a uniform for the view model matrix in 2D
  * </ul>
+ *
  * @param {PrimitiveRenderResources} renderResources The render resources for this primitive.
  * @param {ModelComponents.Primitive} primitive The primitive.
  * @param {FrameState} frameState The frame state.
+ *
  * @private
  */
 

@@ -8,7 +8,7 @@ import CesiumMath from "../Core/Math.js";
 /**
  * A collection of {@link DataSource} instances.
  * @alias DataSourceCollection
- * @class
+ * @constructor
  */
 function DataSourceCollection() {
   this._dataSources = [];
@@ -72,6 +72,7 @@ Object.defineProperties(DataSourceCollection.prototype, {
 
 /**
  * Adds a data source to the collection.
+ *
  * @param {DataSource|Promise<DataSource>} dataSource A data source or a promise to a data source to add to the collection.
  *                                        When passing a promise, the data source will not actually be added
  *                                        to the collection until the promise resolves successfully.
@@ -99,8 +100,9 @@ DataSourceCollection.prototype.add = function (dataSource) {
 
 /**
  * Removes a data source from this collection, if present.
+ *
  * @param {DataSource} dataSource The data source to remove.
- * @param {boolean} [destroy] Whether to destroy the data source in addition to removing it.
+ * @param {boolean} [destroy=false] Whether to destroy the data source in addition to removing it.
  * @returns {boolean} true if the data source was in the collection and was removed,
  *                    false if the data source was not in the collection.
  */
@@ -124,7 +126,8 @@ DataSourceCollection.prototype.remove = function (dataSource, destroy) {
 
 /**
  * Removes all data sources from this collection.
- * @param {boolean} [destroy] whether to destroy the data sources in addition to removing them.
+ *
+ * @param {boolean} [destroy=false] whether to destroy the data sources in addition to removing them.
  */
 DataSourceCollection.prototype.removeAll = function (destroy) {
   destroy = defaultValue(destroy, false);
@@ -143,6 +146,7 @@ DataSourceCollection.prototype.removeAll = function (destroy) {
 
 /**
  * Checks to see if the collection contains a given data source.
+ *
  * @param {DataSource} dataSource The data source to check for.
  * @returns {boolean} true if the collection contains the data source, false otherwise.
  */
@@ -152,6 +156,7 @@ DataSourceCollection.prototype.contains = function (dataSource) {
 
 /**
  * Determines the index of a given data source in the collection.
+ *
  * @param {DataSource} dataSource The data source to find the index of.
  * @returns {number} The index of the data source in the collection, or -1 if the data source does not exist in the collection.
  */
@@ -161,6 +166,7 @@ DataSourceCollection.prototype.indexOf = function (dataSource) {
 
 /**
  * Gets a data source by index from the collection.
+ *
  * @param {number} index the index to retrieve.
  * @returns {DataSource} The data source at the specified index.
  */
@@ -176,6 +182,7 @@ DataSourceCollection.prototype.get = function (index) {
 
 /**
  * Gets a data source by name from the collection.
+ *
  * @param {string} name The name to retrieve.
  * @returns {DataSource[]} A list of all data sources matching the provided name.
  */
@@ -228,9 +235,11 @@ function swapDataSources(collection, i, j) {
 
 /**
  * Raises a data source up one position in the collection.
+ *
  * @param {DataSource} dataSource The data source to move.
- * @throws {DeveloperError} dataSource is not in this collection.
- * @throws {DeveloperError} This object was destroyed, i.e., destroy() was called.
+ *
+ * @exception {DeveloperError} dataSource is not in this collection.
+ * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
  */
 DataSourceCollection.prototype.raise = function (dataSource) {
   const index = getIndex(this._dataSources, dataSource);
@@ -239,9 +248,11 @@ DataSourceCollection.prototype.raise = function (dataSource) {
 
 /**
  * Lowers a data source down one position in the collection.
+ *
  * @param {DataSource} dataSource The data source to move.
- * @throws {DeveloperError} dataSource is not in this collection.
- * @throws {DeveloperError} This object was destroyed, i.e., destroy() was called.
+ *
+ * @exception {DeveloperError} dataSource is not in this collection.
+ * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
  */
 DataSourceCollection.prototype.lower = function (dataSource) {
   const index = getIndex(this._dataSources, dataSource);
@@ -250,9 +261,11 @@ DataSourceCollection.prototype.lower = function (dataSource) {
 
 /**
  * Raises a data source to the top of the collection.
+ *
  * @param {DataSource} dataSource The data source to move.
- * @throws {DeveloperError} dataSource is not in this collection.
- * @throws {DeveloperError} This object was destroyed, i.e., destroy() was called.
+ *
+ * @exception {DeveloperError} dataSource is not in this collection.
+ * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
  */
 DataSourceCollection.prototype.raiseToTop = function (dataSource) {
   const index = getIndex(this._dataSources, dataSource);
@@ -271,9 +284,11 @@ DataSourceCollection.prototype.raiseToTop = function (dataSource) {
 
 /**
  * Lowers a data source to the bottom of the collection.
+ *
  * @param {DataSource} dataSource The data source to move.
- * @throws {DeveloperError} dataSource is not in this collection.
- * @throws {DeveloperError} This object was destroyed, i.e., destroy() was called.
+ *
+ * @exception {DeveloperError} dataSource is not in this collection.
+ * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
  */
 DataSourceCollection.prototype.lowerToBottom = function (dataSource) {
   const index = getIndex(this._dataSources, dataSource);
@@ -290,7 +305,9 @@ DataSourceCollection.prototype.lowerToBottom = function (dataSource) {
  * Returns true if this object was destroyed; otherwise, false.
  * If this object was destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
+ *
  * @returns {boolean} true if this object was destroyed; otherwise, false.
+ *
  * @see DataSourceCollection#destroy
  */
 DataSourceCollection.prototype.isDestroyed = function () {
@@ -303,9 +320,13 @@ DataSourceCollection.prototype.isDestroyed = function () {
  * collector. Once this object is destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
  * assign the return value (<code>undefined</code>) to the object as done in the example.
- * @throws {DeveloperError} This object was destroyed, i.e., destroy() was called.
+ *
+ * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+ *
+ *
  * @example
  * dataSourceCollection = dataSourceCollection && dataSourceCollection.destroy();
+ *
  * @see DataSourceCollection#isDestroyed
  */
 DataSourceCollection.prototype.destroy = function () {

@@ -8,6 +8,7 @@ import createPropertyDescriptor from "./createPropertyDescriptor.js";
  * @typedef {object} PointGraphics.ConstructorOptions
  *
  * Initialization options for the PointGraphics constructor
+ *
  * @property {Property | boolean} [show=true] A boolean Property specifying the visibility of the point.
  * @property {Property | number} [pixelSize=1] A numeric Property specifying the size in pixels.
  * @property {Property | HeightReference} [heightReference=HeightReference.NONE] A Property specifying what the height is relative to.
@@ -22,8 +23,10 @@ import createPropertyDescriptor from "./createPropertyDescriptor.js";
 
 /**
  * Describes a graphical point located at the position of the containing {@link Entity}.
+ *
  * @alias PointGraphics
- * @class
+ * @constructor
+ *
  * @param {PointGraphics.ConstructorOptions} [options] Object describing initialization options
  */
 function PointGraphics(options) {
@@ -56,6 +59,7 @@ Object.defineProperties(PointGraphics.prototype, {
   /**
    * Gets the event that is raised whenever a property or sub-property is changed or modified.
    * @memberof PointGraphics.prototype
+   *
    * @type {Event}
    * @readonly
    */
@@ -154,6 +158,7 @@ Object.defineProperties(PointGraphics.prototype, {
 
 /**
  * Duplicates this instance.
+ *
  * @param {PointGraphics} [result] The object onto which to store the result.
  * @returns {PointGraphics} The modified result parameter or a new instance if one was not provided.
  */
@@ -177,6 +182,7 @@ PointGraphics.prototype.clone = function (result) {
 /**
  * Assigns each unassigned property on this object to the value
  * of the same property on the provided source object.
+ *
  * @param {PointGraphics} source The object to be merged into this object.
  */
 PointGraphics.prototype.merge = function (source) {

@@ -29,7 +29,8 @@ import TweenCollection from "./TweenCollection.js";
 /**
  * Modifies the camera position and orientation based on mouse input to a canvas.
  * @alias ScreenSpaceCameraController
- * @class
+ * @constructor
+ *
  * @param {Scene} scene The scene.
  */
 function ScreenSpaceCameraController(scene) {
@@ -3030,7 +3031,9 @@ ScreenSpaceCameraController.prototype.update = function () {
  * <br /><br />
  * If this object was destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
+ *
  * @returns {boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+ *
  * @see ScreenSpaceCameraController#destroy
  */
 ScreenSpaceCameraController.prototype.isDestroyed = function () {
@@ -3043,9 +3046,13 @@ ScreenSpaceCameraController.prototype.isDestroyed = function () {
  * Once an object is destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
  * assign the return value (<code>undefined</code>) to the object as done in the example.
- * @throws {DeveloperError} This object was destroyed, i.e., destroy() was called.
+ *
+ * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+ *
+ *
  * @example
  * controller = controller && controller.destroy();
+ *
  * @see ScreenSpaceCameraController#isDestroyed
  */
 ScreenSpaceCameraController.prototype.destroy = function () {

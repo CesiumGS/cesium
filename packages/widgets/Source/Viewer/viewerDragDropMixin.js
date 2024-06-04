@@ -15,18 +15,21 @@ import {
  * Rather than being called directly, this function is normally passed as
  * a parameter to {@link Viewer#extend}, as shown in the example below.
  * @function viewerDragDropMixin
+
  * @param {Viewer} viewer The viewer instance.
  * @param {object} [options] Object with the following properties:
- * @param {Element|string} [options.dropTarget] The DOM element which will serve as the drop target.
- * @param {boolean} [options.clearOnDrop] When true, dropping files will clear all existing data sources first, when false, new data sources will be loaded after the existing ones.
- * @param {boolean} [options.flyToOnDrop] When true, dropping files will fly to the data source once it is loaded.
- * @param {boolean} [options.clampToGround] When true, datasources are clamped to the ground.
+ * @param {Element|string} [options.dropTarget=viewer.container] The DOM element which will serve as the drop target.
+ * @param {boolean} [options.clearOnDrop=true] When true, dropping files will clear all existing data sources first, when false, new data sources will be loaded after the existing ones.
+ * @param {boolean} [options.flyToOnDrop=true] When true, dropping files will fly to the data source once it is loaded.
+ * @param {boolean} [options.clampToGround=true] When true, datasources are clamped to the ground.
  * @param {Proxy} [options.proxy] The proxy to be used for KML network links.
- * @throws {DeveloperError} Element with id <options.dropTarget> does not exist in the document.
- * @throws {DeveloperError} dropTarget is already defined by another mixin.
- * @throws {DeveloperError} dropEnabled is already defined by another mixin.
- * @throws {DeveloperError} dropError is already defined by another mixin.
- * @throws {DeveloperError} clearOnDrop is already defined by another mixin.
+ *
+ * @exception {DeveloperError} Element with id <options.dropTarget> does not exist in the document.
+ * @exception {DeveloperError} dropTarget is already defined by another mixin.
+ * @exception {DeveloperError} dropEnabled is already defined by another mixin.
+ * @exception {DeveloperError} dropError is already defined by another mixin.
+ * @exception {DeveloperError} clearOnDrop is already defined by another mixin.
+ *
  * @example
  * // Add basic drag and drop support and pop up an alert window on error.
  * const viewer = new Cesium.Viewer('cesiumContainer');

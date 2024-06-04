@@ -47,7 +47,8 @@ function formatShaderString(str) {
 /**
  * The view model for {@link VoxelInspector}.
  * @alias VoxelInspectorViewModel
- * @class
+ * @constructor
+ *
  * @param {Scene} scene The scene instance to use.
  */
 function VoxelInspectorViewModel(scene) {
@@ -802,8 +803,6 @@ VoxelInspectorViewModel.prototype.compileShader = function () {
 
 /**
  * Handles key press events on the shader editor.
- * @param sender
- * @param event
  */
 VoxelInspectorViewModel.prototype.shaderEditorKeyPress = function (
   sender,

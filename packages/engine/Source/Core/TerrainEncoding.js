@@ -20,18 +20,21 @@ const SHIFT_LEFT_12 = Math.pow(2.0, 12.0);
 /**
  * Data used to quantize and pack the terrain mesh. The position can be unpacked for picking and all attributes
  * are unpacked in the vertex shader.
+ *
  * @alias TerrainEncoding
- * @class
+ * @constructor
+ *
  * @param {Cartesian3} center The center point of the vertices.
  * @param {AxisAlignedBoundingBox} axisAlignedBoundingBox The bounds of the tile in the east-north-up coordinates at the tiles center.
  * @param {number} minimumHeight The minimum height.
  * @param {number} maximumHeight The maximum height.
  * @param {Matrix4} fromENU The east-north-up to fixed frame matrix at the center of the terrain mesh.
  * @param {boolean} hasVertexNormals If the mesh has vertex normals.
- * @param {boolean} [hasWebMercatorT] true if the terrain data includes a Web Mercator texture coordinate; otherwise, false.
- * @param {boolean} [hasGeodeticSurfaceNormals] true if the terrain data includes geodetic surface normals; otherwise, false.
- * @param {number} [exaggeration] A scalar used to exaggerate terrain.
- * @param {number} [exaggerationRelativeHeight] The relative height from which terrain is exaggerated.
+ * @param {boolean} [hasWebMercatorT=false] true if the terrain data includes a Web Mercator texture coordinate; otherwise, false.
+ * @param {boolean} [hasGeodeticSurfaceNormals=false] true if the terrain data includes geodetic surface normals; otherwise, false.
+ * @param {number} [exaggeration=1.0] A scalar used to exaggerate terrain.
+ * @param {number} [exaggerationRelativeHeight=0.0] The relative height from which terrain is exaggerated.
+ *
  * @private
  */
 function TerrainEncoding(

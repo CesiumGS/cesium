@@ -5,7 +5,9 @@ import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
 
 /**
  * The skinning pipeline stage processes the joint matrices of a skinned primitive.
+ *
  * @namespace SkinningPipelineStage
+ *
  * @private
  */
 
@@ -23,9 +25,10 @@ const SkinningPipelineStage = {
  *
  * Processes a primitive. This stage modifies the following parts of the render resources:
  * <ul>
- * <li> adds the uniform declaration for the joint matrices in the vertex shader</li>
- * <li> adds the function to compute the skinning matrix in the vertex shader</li>
+ *  <li> adds the uniform declaration for the joint matrices in the vertex shader</li>
+ *  <li> adds the function to compute the skinning matrix in the vertex shader</li>
  * </ul>
+ *
  * @param {PrimitiveRenderResources} renderResources The render resources for this primitive.
  * @param {ModelComponents.Primitive} primitive The primitive.
  * @private

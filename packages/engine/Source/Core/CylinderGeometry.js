@@ -23,16 +23,21 @@ const positionScratch = new Cartesian3();
 
 /**
  * A description of a cylinder.
+ *
  * @alias CylinderGeometry
- * @class
+ * @constructor
+ *
  * @param {object} options Object with the following properties:
  * @param {number} options.length The length of the cylinder.
  * @param {number} options.topRadius The radius of the top of the cylinder.
  * @param {number} options.bottomRadius The radius of the bottom of the cylinder.
- * @param {number} [options.slices] The number of edges around the perimeter of the cylinder.
- * @param {VertexFormat} [options.vertexFormat] The vertex attributes to be computed.
- * @throws {DeveloperError} options.slices must be greater than or equal to 3.
+ * @param {number} [options.slices=128] The number of edges around the perimeter of the cylinder.
+ * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
+ *
+ * @exception {DeveloperError} options.slices must be greater than or equal to 3.
+ *
  * @see CylinderGeometry.createGeometry
+ *
  * @example
  * // create cylinder geometry
  * const cylinder = new Cesium.CylinderGeometry({
@@ -93,9 +98,11 @@ CylinderGeometry.packedLength = VertexFormat.packedLength + 5;
 
 /**
  * Stores the provided instance into the provided array.
+ *
  * @param {CylinderGeometry} value The value to pack.
  * @param {number[]} array The array to pack into.
- * @param {number} [startingIndex] The index into the array at which to start packing the elements.
+ * @param {number} [startingIndex=0] The index into the array at which to start packing the elements.
+ *
  * @returns {number[]} The array that was packed into
  */
 CylinderGeometry.pack = function (value, array, startingIndex) {
@@ -134,8 +141,9 @@ const scratchOptions = {
 
 /**
  * Retrieves an instance from a packed array.
+ *
  * @param {number[]} array The packed array.
- * @param {number} [startingIndex] The starting index of the element to be unpacked.
+ * @param {number} [startingIndex=0] The starting index of the element to be unpacked.
  * @param {CylinderGeometry} [result] The object into which to store the result.
  * @returns {CylinderGeometry} The modified result parameter or a new CylinderGeometry instance if one was not provided.
  */
@@ -184,6 +192,7 @@ CylinderGeometry.unpack = function (array, startingIndex, result) {
 
 /**
  * Computes the geometric representation of a cylinder, including its vertices, indices, and a bounding sphere.
+ *
  * @param {CylinderGeometry} cylinderGeometry A description of the cylinder.
  * @returns {Geometry|undefined} The computed vertices and indices.
  */
@@ -451,6 +460,7 @@ let unitCylinderGeometry;
 /**
  * Returns the geometric representation of a unit cylinder, including its vertices, indices, and a bounding sphere.
  * @returns {Geometry} The computed vertices and indices.
+ *
  * @private
  */
 CylinderGeometry.getUnitCylinder = function () {

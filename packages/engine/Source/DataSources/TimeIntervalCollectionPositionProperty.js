@@ -9,9 +9,11 @@ import Property from "./Property.js";
 
 /**
  * A {@link TimeIntervalCollectionProperty} which is also a {@link PositionProperty}.
+ *
  * @alias TimeIntervalCollectionPositionProperty
- * @class
- * @param {ReferenceFrame} [referenceFrame] The reference frame in which the position is defined.
+ * @constructor
+ *
+ * @param {ReferenceFrame} [referenceFrame=ReferenceFrame.FIXED] The reference frame in which the position is defined.
  */
 function TimeIntervalCollectionPositionProperty(referenceFrame) {
   this._definitionChanged = new Event();
@@ -28,6 +30,7 @@ Object.defineProperties(TimeIntervalCollectionPositionProperty.prototype, {
    * Gets a value indicating if this property is constant.  A property is considered
    * constant if getValue always returns the same result for the current definition.
    * @memberof TimeIntervalCollectionPositionProperty.prototype
+   *
    * @type {boolean}
    * @readonly
    */
@@ -41,6 +44,7 @@ Object.defineProperties(TimeIntervalCollectionPositionProperty.prototype, {
    * The definition is considered to have changed if a call to getValue would return
    * a different result for the same time.
    * @memberof TimeIntervalCollectionPositionProperty.prototype
+   *
    * @type {Event}
    * @readonly
    */
@@ -76,6 +80,7 @@ Object.defineProperties(TimeIntervalCollectionPositionProperty.prototype, {
 
 /**
  * Gets the value of the property at the provided time in the fixed frame.
+ *
  * @param {JulianDate} time The time for which to retrieve the value.
  * @param {object} [result] The object to store the value into, if omitted, a new instance is created and returned.
  * @returns {Cartesian3 | undefined} The modified result parameter or a new instance if the result parameter was not supplied.
@@ -89,6 +94,7 @@ TimeIntervalCollectionPositionProperty.prototype.getValue = function (
 
 /**
  * Gets the value of the property at the provided time and in the provided reference frame.
+ *
  * @param {JulianDate} time The time for which to retrieve the value.
  * @param {ReferenceFrame} referenceFrame The desired referenceFrame of the result.
  * @param {Cartesian3} [result] The object to store the value into, if omitted, a new instance is created and returned.
@@ -124,6 +130,7 @@ TimeIntervalCollectionPositionProperty.prototype.getValueInReferenceFrame = func
 /**
  * Compares this property to the provided property and returns
  * <code>true</code> if they are equal, <code>false</code> otherwise.
+ *
  * @param {Property} [other] The other property.
  * @returns {boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
  */

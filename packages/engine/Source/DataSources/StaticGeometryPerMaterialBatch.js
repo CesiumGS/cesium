@@ -382,11 +382,6 @@ Batch.prototype.destroy = function () {
 };
 
 /**
- * @param primitives
- * @param appearanceType
- * @param depthFailAppearanceType
- * @param closed
- * @param shadows
  * @private
  */
 function StaticGeometryPerMaterialBatch(

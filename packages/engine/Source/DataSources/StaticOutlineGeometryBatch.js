@@ -312,9 +312,6 @@ Batch.prototype.removeAllPrimitives = function () {
 };
 
 /**
- * @param primitives
- * @param scene
- * @param shadows
  * @private
  */
 function StaticOutlineGeometryBatch(primitives, scene, shadows) {

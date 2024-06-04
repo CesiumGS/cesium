@@ -31,16 +31,19 @@ const attributeLocations = {
  * <p>
  * This is only supported in 3D.  The ellipsoid is not shown in 2D or Columbus view.
  * </p>
+ *
  * @alias EllipsoidPrimitive
- * @class
+ * @constructor
+ *
  * @param {object} [options] Object with the following properties:
- * @param {Cartesian3} [options.center] The center of the ellipsoid in the ellipsoid's model coordinates.
+ * @param {Cartesian3} [options.center=Cartesian3.ZERO] The center of the ellipsoid in the ellipsoid's model coordinates.
  * @param {Cartesian3} [options.radii] The radius of the ellipsoid along the <code>x</code>, <code>y</code>, and <code>z</code> axes in the ellipsoid's model coordinates.
- * @param {Matrix4} [options.modelMatrix] The 4x4 transformation matrix that transforms the ellipsoid from model to world coordinates.
- * @param {boolean} [options.show] Determines if this primitive will be shown.
- * @param {Material} [options.material] The surface appearance of the primitive.
+ * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the ellipsoid from model to world coordinates.
+ * @param {boolean} [options.show=true] Determines if this primitive will be shown.
+ * @param {Material} [options.material=Material.ColorType] The surface appearance of the primitive.
  * @param {object} [options.id] A user-defined object to return when the instance is picked with {@link Scene#pick}
- * @param {boolean} [options.debugShowBoundingVolume] For debugging only. Determines if this primitive's commands' bounding spheres are shown.
+ * @param {boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if this primitive's commands' bounding spheres are shown.
+ *
  * @private
  */
 function EllipsoidPrimitive(options) {
@@ -51,8 +54,10 @@ function EllipsoidPrimitive(options) {
    * <p>
    * The default is {@link Cartesian3.ZERO}.
    * </p>
+   *
    * @type {Cartesian3}
    * @default {@link Cartesian3.ZERO}
+   *
    * @see EllipsoidPrimitive#modelMatrix
    */
   this.center = Cartesian3.clone(defaultValue(options.center, Cartesian3.ZERO));
@@ -64,11 +69,15 @@ function EllipsoidPrimitive(options) {
    * <p>
    * The default is <code>undefined</code>.  The ellipsoid is not drawn until a radii is provided.
    * </p>
+   *
    * @type {Cartesian3}
    * @default undefined
+   *
+   *
    * @example
    * // A sphere with a radius of 2.0
    * e.radii = new Cesium.Cartesian3(2.0, 2.0, 2.0);
+   *
    * @see EllipsoidPrimitive#modelMatrix
    */
   this.radii = Cartesian3.clone(options.radii);
@@ -82,8 +91,10 @@ function EllipsoidPrimitive(options) {
    * When this is the identity matrix, the ellipsoid is drawn in world coordinates, i.e., Earth's WGS84 coordinates.
    * Local reference frames can be used by providing a different transformation matrix, like that returned
    * by {@link Transforms.eastNorthUpToFixedFrame}.
+   *
    * @type {Matrix4}
    * @default {@link Matrix4.IDENTITY}
+   *
    * @example
    * const origin = Cesium.Cartesian3.fromDegrees(-95.0, 40.0, 200000.0);
    * e.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(origin);
@@ -96,6 +107,7 @@ function EllipsoidPrimitive(options) {
 
   /**
    * Determines if the ellipsoid primitive will be shown.
+   *
    * @type {boolean}
    * @default true
    */
@@ -107,14 +119,18 @@ function EllipsoidPrimitive(options) {
    * <p>
    * The default material is <code>Material.ColorType</code>.
    * </p>
+   *
    * @type {Material}
    * @default Material.fromType(Material.ColorType)
+   *
+   *
    * @example
    * // 1. Change the color of the default material to yellow
    * e.material.uniforms.color = new Cesium.Color(1.0, 1.0, 0.0, 1.0);
    *
    * // 2. Change material to horizontal stripes
    * e.material = Cesium.Material.fromType(Cesium.Material.StripeType);
+   *
    * @see {@link https://github.com/CesiumGS/cesium/wiki/Fabric|Fabric}
    */
   this.material = defaultValue(
@@ -126,8 +142,11 @@ function EllipsoidPrimitive(options) {
 
   /**
    * User-defined object returned when the ellipsoid is picked.
+   *
    * @type {object}
+   *
    * @default undefined
+   *
    * @see Scene#pick
    */
   this.id = options.id;
@@ -138,7 +157,9 @@ function EllipsoidPrimitive(options) {
    * <p>
    * Draws the bounding sphere for each draw command in the primitive.
    * </p>
+   *
    * @type {boolean}
+   *
    * @default false
    */
   this.debugShowBoundingVolume = defaultValue(
@@ -224,8 +245,8 @@ function getVertexArray(context) {
  * Do not call this function directly.  This is documented just to
  * list the exceptions that may be propagated when the scene is rendered:
  * </p>
- * @param frameState
- * @throws {DeveloperError} this.material must be defined.
+ *
+ * @exception {DeveloperError} this.material must be defined.
  */
 EllipsoidPrimitive.prototype.update = function (frameState) {
   if (
@@ -449,7 +470,9 @@ EllipsoidPrimitive.prototype.update = function (frameState) {
  * <br /><br />
  * If this object was destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
+ *
  * @returns {boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+ *
  * @see EllipsoidPrimitive#destroy
  */
 EllipsoidPrimitive.prototype.isDestroyed = function () {
@@ -463,9 +486,13 @@ EllipsoidPrimitive.prototype.isDestroyed = function () {
  * Once an object is destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
  * assign the return value (<code>undefined</code>) to the object as done in the example.
- * @throws {DeveloperError} This object was destroyed, i.e., destroy() was called.
+ *
+ * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+ *
+ *
  * @example
  * e = e && e.destroy();
+ *
  * @see EllipsoidPrimitive#isDestroyed
  */
 EllipsoidPrimitive.prototype.destroy = function () {

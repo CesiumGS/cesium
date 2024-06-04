@@ -1,12 +1,15 @@
 /**
  * A set of Earth Orientation Parameters (EOP) sampled at a time.
+ *
  * @alias EarthOrientationParametersSample
- * @class
+ * @constructor
+ *
  * @param {number} xPoleWander The pole wander about the X axis, in radians.
  * @param {number} yPoleWander The pole wander about the Y axis, in radians.
  * @param {number} xPoleOffset The offset to the Celestial Intermediate Pole (CIP) about the X axis, in radians.
  * @param {number} yPoleOffset The offset to the Celestial Intermediate Pole (CIP) about the Y axis, in radians.
  * @param {number} ut1MinusUtc The difference in time standards, UT1 - UTC, in seconds.
+ *
  * @private
  */
 function EarthOrientationParametersSample(

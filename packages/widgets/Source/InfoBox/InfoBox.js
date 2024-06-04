@@ -12,10 +12,13 @@ import InfoBoxViewModel from "./InfoBoxViewModel.js";
 
 /**
  * A widget for displaying information or a description.
+ *
  * @alias InfoBox
- * @class
+ * @constructor
+ *
  * @param {Element|string} container The DOM element or ID that will contain the widget.
- * @throws {DeveloperError} Element with id "container" does not exist in the document.
+ *
+ * @exception {DeveloperError} Element with id "container" does not exist in the document.
  */
 function InfoBox(container) {
   //>>includeStart('debug', pragmas.debug);
@@ -147,6 +150,7 @@ Object.defineProperties(InfoBox.prototype, {
   /**
    * Gets the parent container.
    * @memberof InfoBox.prototype
+   *
    * @type {Element}
    */
   container: {
@@ -158,6 +162,7 @@ Object.defineProperties(InfoBox.prototype, {
   /**
    * Gets the view model.
    * @memberof InfoBox.prototype
+   *
    * @type {InfoBoxViewModel}
    */
   viewModel: {
@@ -169,6 +174,7 @@ Object.defineProperties(InfoBox.prototype, {
   /**
    * Gets the iframe used to display the description.
    * @memberof InfoBox.prototype
+   *
    * @type {HTMLIFrameElement}
    */
   frame: {

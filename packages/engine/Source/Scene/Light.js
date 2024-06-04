@@ -2,8 +2,10 @@ import DeveloperError from "../Core/DeveloperError.js";
 
 /**
  * A light source. This type describes an interface and is not intended to be instantiated directly. Together, <code>color</code> and <code>intensity</code> produce a high-dynamic-range light color. <code>intensity</code> can also be used individually to dim or brighten the light without changing the hue.
+ *
  * @alias Light
- * @class
+ * @constructor
+ *
  * @see DirectionalLight
  * @see SunLight
  */

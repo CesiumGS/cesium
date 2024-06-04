@@ -10,8 +10,10 @@ import TextureWrap from "../../Renderer/TextureWrap.js";
 
 /**
  * An object to manage loading textures
+ *
  * @alias TextureManager
- * @class
+ * @constructor
+ *
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
@@ -28,7 +30,7 @@ function TextureManager() {
 /**
  * Get one of the loaded textures
  * @param {string} textureId The unique ID of the texture loaded by {@link TextureManager#loadTexture2D}
- * @returns {Texture} The texture or <code>undefined</code> if no texture exists
+ * @return {Texture} The texture or <code>undefined</code> if no texture exists
  */
 TextureManager.prototype.getTexture = function (textureId) {
   return this._textures[textureId];
@@ -57,8 +59,10 @@ function fetchTexture2D(textureManager, textureId, textureUniform) {
 /**
  * Load a texture 2D asynchronously. Note that {@link TextureManager#update}
  * must be called in the render loop to finish processing the textures.
+ *
  * @param {string} textureId A unique ID to identify this texture.
  * @param {TextureUniform} textureUniform A description of the texture
+ *
  * @private
  */
 TextureManager.prototype.loadTexture2D = function (textureId, textureUniform) {
@@ -198,7 +202,9 @@ TextureManager.prototype.update = function (frameState) {
  * <br /><br />
  * If this object was destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
+ *
  * @returns {boolean} True if this object was destroyed; otherwise, false.
+ *
  * @see TextureManager#destroy
  * @private
  */
@@ -213,9 +219,12 @@ TextureManager.prototype.isDestroyed = function () {
  * Once an object is destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
  * assign the return value (<code>undefined</code>) to the object as done in the example.
- * @throws {DeveloperError} This object was destroyed, i.e., destroy() was called.
+ *
+ * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+ *
  * @example
  * textureManager = textureManager && textureManager.destroy();
+ *
  * @see TextureManager#isDestroyed
  * @private
  */

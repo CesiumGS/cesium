@@ -12,14 +12,15 @@ import JsonMetadataTable from "./JsonMetadataTable.js";
  * For batch tables, properties are resolved in the following order:
  * </p>
  * <ol>
- * <li>binary properties from options.metadataTable</li>
- * <li>JSON properties from options.jsonMetadataTable</li>
- * <li>batch table hierarchy properties from options.batchTableHierarchy</li>
+ *   <li>binary properties from options.metadataTable</li>
+ *   <li>JSON properties from options.jsonMetadataTable</li>
+ *   <li>batch table hierarchy properties from options.batchTableHierarchy</li>
  * </ol>
  * <p>
  * See the {@link https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_structural_metadata|EXT_structural_metadata Extension} as well as the
  * previous {@link https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_feature_metadata|EXT_feature_metadata Extension} for glTF.
  * </p>
+ *
  * @param {object} options Object with the following properties:
  * @param {string} [options.name] Human-readable name to describe the table
  * @param {string|number} [options.id] A unique id to identify the property table, useful for debugging. For <code>EXT_structural_metadata</code>, this is the array index in the property tables array, for <code>EXT_feature_metadata</code> this is the dictionary key in the property tables dictionary.
@@ -29,8 +30,10 @@ import JsonMetadataTable from "./JsonMetadataTable.js";
  * @param {BatchTableHierarchy} [options.batchTableHierarchy] For compatibility with the <code>3DTILES_batch_table_hierarchy</code> extension, a hierarchy can be provided.
  * @param {object} [options.extras] Extra user-defined properties
  * @param {object} [options.extensions] An object containing extensions
+ *
  * @alias PropertyTable
- * @class
+ * @constructor
+ *
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
@@ -54,6 +57,7 @@ function PropertyTable(options) {
 Object.defineProperties(PropertyTable.prototype, {
   /**
    * A human-readable name for this table
+   *
    * @memberof PropertyTable.prototype
    * @type {string}
    * @readonly
@@ -66,6 +70,7 @@ Object.defineProperties(PropertyTable.prototype, {
   },
   /**
    * An identifier for this table. Useful for debugging.
+   *
    * @memberof PropertyTable.prototype
    * @type {string|number}
    * @readonly
@@ -78,6 +83,7 @@ Object.defineProperties(PropertyTable.prototype, {
   },
   /**
    * The number of features in the table.
+   *
    * @memberof PropertyTable.prototype
    * @type {number}
    * @readonly
@@ -91,6 +97,7 @@ Object.defineProperties(PropertyTable.prototype, {
 
   /**
    * The class that properties conform to.
+   *
    * @memberof PropertyTable.prototype
    * @type {MetadataClass}
    * @readonly
@@ -107,6 +114,7 @@ Object.defineProperties(PropertyTable.prototype, {
 
   /**
    * Extra user-defined properties.
+   *
    * @memberof PropertyTable.prototype
    * @type {*}
    * @readonly
@@ -120,6 +128,7 @@ Object.defineProperties(PropertyTable.prototype, {
 
   /**
    * An object containing extensions.
+   *
    * @memberof PropertyTable.prototype
    * @type {object}
    * @readonly
@@ -134,6 +143,7 @@ Object.defineProperties(PropertyTable.prototype, {
   /**
    * Get the total amount of binary metadata stored in memory. This does
    * not include JSON metadata
+   *
    * @memberof PropertyTable.prototype
    * @type {number}
    * @readonly
@@ -157,6 +167,7 @@ Object.defineProperties(PropertyTable.prototype, {
 
 /**
  * Returns whether the feature has this property. For compatibility with the <code>3DTILES_batch_table_hierarchy</code> extension, this is computed for a specific feature.
+ *
  * @param {number} index The index of the feature.
  * @param {string} propertyId The case-sensitive ID of the property.
  * @returns {boolean} Whether the feature has this property.
@@ -194,7 +205,7 @@ PropertyTable.prototype.hasProperty = function (index, propertyId) {
 
 /**
  * Returns whether the feature has a property with the given semantic.
- * @param index
+ *
  * @param {string} semantic The case-sensitive semantic of the property.
  * @returns {boolean} Whether the feature has a property with the given semantic.
  * @private
@@ -216,6 +227,7 @@ PropertyTable.prototype.hasPropertyBySemantic = function (index, semantic) {
  * Returns whether any feature has this property.
  * This is mainly useful for checking whether a property exists in the class
  * hierarchy when using the <code>3DTILES_batch_table_hierarchy</code> extension.
+ *
  * @param {string} propertyId The case-sensitive ID of the property.
  * @returns {boolean} Whether any feature has this property.
  * @private
@@ -251,6 +263,7 @@ PropertyTable.prototype.propertyExists = function (propertyId) {
 
 /**
  * Returns whether any feature has a property with the given semantic.
+ *
  * @param {string} semantic The case-sensitive semantic of the property.
  * @returns {boolean} Whether any feature has a property with the given semantic.
  * @private
@@ -271,6 +284,7 @@ const scratchResults = [];
 
 /**
  * Returns an array of property IDs. For compatibility with the <code>3DTILES_batch_table_hierarchy</code> extension, this is computed for a specific feature.
+ *
  * @param {number} index The index of the feature.
  * @param {string[]} [results] An array into which to store the results.
  * @returns {string[]} The property IDs.
@@ -310,6 +324,7 @@ PropertyTable.prototype.getPropertyIds = function (index, results) {
  * <p>
  * If the property is normalized the normalized value is returned.
  * </p>
+ *
  * @param {number} index The index of the feature.
  * @param {string} propertyId The case-sensitive ID of the property.
  * @returns {*} The value of the property or <code>undefined</code> if the feature does not have this property.
@@ -348,6 +363,7 @@ PropertyTable.prototype.getProperty = function (index, propertyId) {
  * <p>
  * If the property is normalized a normalized value must be provided to this function.
  * </p>
+ *
  * @param {number} index The index of the feature.
  * @param {string} propertyId The case-sensitive ID of the property.
  * @param {*} value The value of the property that will be copied.
@@ -387,6 +403,7 @@ PropertyTable.prototype.setProperty = function (index, propertyId, value) {
  * {@link JsonMetadataTable} and {@link BatchTableHierarchy} do not have
  * semantics.
  * </p>
+ *
  * @param {number} index The index of the feature.
  * @param {string} semantic The case-sensitive semantic of the property.
  * @returns {*} The value of the property or <code>undefined</code> if the feature does not have this semantic.
@@ -407,6 +424,7 @@ PropertyTable.prototype.getPropertyBySemantic = function (index, semantic) {
  * {@link JsonMetadataTable} and {@link BatchTableHierarchy} do not have
  * semantics.
  * </p>
+ *
  * @param {number} index The index of the feature.
  * @param {string} semantic The case-sensitive semantic of the property.
  * @param {*} value The value of the property that will be copied.
@@ -432,8 +450,10 @@ PropertyTable.prototype.setPropertyBySemantic = function (
  * {@link JsonMetadataTable} and {@link BatchTableHierarchy} do not store
  * values in typed arrays.
  * </p>
+ *
  * @param {string} propertyId The case-sensitive ID of the property.
  * @returns {*} The typed array containing the property values or <code>undefined</code> if the property values are not stored in a typed array.
+ *
  * @private
  */
 PropertyTable.prototype.getPropertyTypedArray = function (propertyId) {
@@ -455,8 +475,10 @@ PropertyTable.prototype.getPropertyTypedArray = function (propertyId) {
  * {@link JsonMetadataTable} and {@link BatchTableHierarchy} do not have
  * semantics.
  * </p>
+ *
  * @param {string} semantic The case-sensitive semantic of the property.
  * @returns {*} The typed array containing the property values or <code>undefined</code> if the property values are not stored in a typed array.
+ *
  * @private
  */
 PropertyTable.prototype.getPropertyTypedArrayBySemantic = function (semantic) {

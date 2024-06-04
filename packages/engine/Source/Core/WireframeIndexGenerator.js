@@ -5,6 +5,7 @@ import PrimitiveType from "./PrimitiveType.js";
 /**
  * Functions for generating indices for model wireframes. The indices are
  * outputted as typed arrays, which can then be put into buffers for rendering.
+ *
  * @namespace WireframeIndexGenerator
  * @private
  */
@@ -161,10 +162,13 @@ function createWireframeFromTriangleFanIndices(vertexCount, originalIndices) {
 /**
  * Generates a wireframe index buffer for a primitive, either by reindexing the existing indices
  * or creating them from scratch if the model had none.
+ *
  * @param {PrimitiveType} primitiveType The primitive type.
  * @param {number} vertexCount The number of vertices in the primitive.
  * @param {Uint8Array|Uint16Array|Uint32Array} [originalIndices] A typed array containing the original indices of the primitive.
- * @returns {Uint16Array|Uint32Array} A typed array with the wireframe indices, or undefined if the primitive type does not use triangles.
+ *
+ * @return {Uint16Array|Uint32Array} A typed array with the wireframe indices, or undefined if the primitive type does not use triangles.
+ *
  * @private
  */
 WireframeIndexGenerator.createWireframeIndices = function (
@@ -196,9 +200,11 @@ WireframeIndexGenerator.createWireframeIndices = function (
 
 /**
  * Gets the number of indices in the wireframe index buffer of a primitive type.
+ *
  * @param {PrimitiveType} primitiveType The primitive type.
  * @param {number} originalCount The original number of vertices or indices in the primitive.
- * @returns {number} The number of indices in the primitive's wireframe.
+ * @return {number} The number of indices in the primitive's wireframe.
+ *
  * @private
  */
 WireframeIndexGenerator.getWireframeIndicesCount = function (

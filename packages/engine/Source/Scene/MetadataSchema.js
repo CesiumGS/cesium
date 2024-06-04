@@ -10,6 +10,7 @@ import MetadataEnum from "./MetadataEnum.js";
  * <p>
  * See the {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification/Metadata|3D Metadata Specification} for 3D Tiles
  * </p>
+ *
  * @param {object} options Object with the following properties:
  * @param {string} [options.id] The ID of the schema
  * @param {string} [options.name] The name of the schema.
@@ -19,8 +20,9 @@ import MetadataEnum from "./MetadataEnum.js";
  * @param {Object<string, MetadataEnum>} [options.enums] Enums defined in the schema, where each key is the enum ID.
  * @param {*} [options.extras] Extra user-defined properties.
  * @param {object} [options.extensions] An object containing extensions.
+ *
  * @alias MetadataSchema
- * @class
+ * @constructor
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 function MetadataSchema(options) {
@@ -41,8 +43,11 @@ function MetadataSchema(options) {
 
 /**
  * Creates a {@link MetadataSchema} from either 3D Tiles 1.1, 3DTILES_metadata, EXT_structural_metadata, or EXT_feature_metadata.
+ *
  * @param {object} schema The schema JSON object.
+ *
  * @returns {MetadataSchema} The newly created metadata schema
+ *
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
@@ -91,6 +96,7 @@ MetadataSchema.fromJson = function (schema) {
 Object.defineProperties(MetadataSchema.prototype, {
   /**
    * Classes defined in the schema.
+   *
    * @memberof MetadataSchema.prototype
    * @type {Object<string, MetadataClass>}
    * @readonly
@@ -103,6 +109,7 @@ Object.defineProperties(MetadataSchema.prototype, {
 
   /**
    * Enums defined in the schema.
+   *
    * @memberof MetadataSchema.prototype
    * @type {Object<string, MetadataEnum>}
    * @readonly
@@ -115,6 +122,7 @@ Object.defineProperties(MetadataSchema.prototype, {
 
   /**
    * The ID of the schema.
+   *
    * @memberof MetadataSchema.prototype
    * @type {string}
    * @readonly
@@ -127,6 +135,7 @@ Object.defineProperties(MetadataSchema.prototype, {
 
   /**
    * The name of the schema.
+   *
    * @memberof MetadataSchema.prototype
    * @type {string}
    * @readonly
@@ -139,6 +148,7 @@ Object.defineProperties(MetadataSchema.prototype, {
 
   /**
    * The description of the schema.
+   *
    * @memberof MetadataSchema.prototype
    * @type {string}
    * @readonly
@@ -151,6 +161,7 @@ Object.defineProperties(MetadataSchema.prototype, {
 
   /**
    * The application-specific version of the schema.
+   *
    * @memberof MetadataSchema.prototype
    * @type {string}
    * @readonly
@@ -163,6 +174,7 @@ Object.defineProperties(MetadataSchema.prototype, {
 
   /**
    * Extra user-defined properties.
+   *
    * @memberof MetadataSchema.prototype
    * @type {*}
    * @readonly
@@ -175,6 +187,7 @@ Object.defineProperties(MetadataSchema.prototype, {
 
   /**
    * An object containing extensions.
+   *
    * @memberof MetadataSchema.prototype
    * @type {object}
    * @readonly

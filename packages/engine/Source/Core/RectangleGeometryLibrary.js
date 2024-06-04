@@ -17,13 +17,6 @@ const sqrt = Math.sqrt;
 const RectangleGeometryLibrary = {};
 
 /**
- * @param computedOptions
- * @param ellipsoid
- * @param computeST
- * @param row
- * @param col
- * @param position
- * @param st
  * @private
  */
 RectangleGeometryLibrary.computePosition = function (
@@ -152,13 +145,6 @@ function getRotationOptions(
 }
 
 /**
- * @param rectangle
- * @param granularity
- * @param rotation
- * @param stRotation
- * @param boundingRectangleScratch
- * @param nwCornerResult
- * @param stNwCornerResult
  * @private
  */
 RectangleGeometryLibrary.computeOptions = function (

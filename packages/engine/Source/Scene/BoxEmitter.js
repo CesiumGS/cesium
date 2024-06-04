@@ -8,8 +8,10 @@ const defaultDimensions = new Cartesian3(1.0, 1.0, 1.0);
 /**
  * A ParticleEmitter that emits particles within a box.
  * Particles will be positioned randomly within the box and have initial velocities emanating from the center of the box.
+ *
  * @alias BoxEmitter
- * @class
+ * @constructor
+ *
  * @param {Cartesian3} dimensions The width, height and depth dimensions of the box.
  */
 function BoxEmitter(dimensions) {
@@ -52,6 +54,7 @@ const scratchHalfDim = new Cartesian3();
 
 /**
  * Initializes the given {Particle} by setting it's position and velocity.
+ *
  * @private
  * @param {Particle} particle The particle to initialize.
  */

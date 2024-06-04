@@ -11,8 +11,10 @@ import DeveloperError from "../Core/DeveloperError.js";
  * <p>
  * See the {@link https://github.com/CesiumGS/3d-tiles/tree/main/extensions/3DTILES_metadata|3DTILES_metadata Extension} for 3D Tiles
  * </p>
+ *
  * @alias MetadataEntity
- * @class
+ * @constructor
+ *
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
@@ -21,6 +23,7 @@ function MetadataEntity() {}
 Object.defineProperties(MetadataEntity.prototype, {
   /**
    * The class that properties conform to.
+   *
    * @memberof MetadataEntity.prototype
    * @type {MetadataClass}
    * @readonly
@@ -36,6 +39,7 @@ Object.defineProperties(MetadataEntity.prototype, {
 
 /**
  * Returns whether the entity has this property.
+ *
  * @param {string} propertyId The case-sensitive ID of the property.
  * @returns {boolean} Whether the entity has this property.
  * @private
@@ -46,6 +50,7 @@ MetadataEntity.prototype.hasProperty = function (propertyId) {
 
 /**
  * Returns whether the entity has a property with the given semantic.
+ *
  * @param {string} semantic The case-sensitive semantic of the property.
  * @returns {boolean} Whether the entity has a property with the given semantic.
  * @private
@@ -56,6 +61,7 @@ MetadataEntity.prototype.hasPropertyBySemantic = function (semantic) {
 
 /**
  * Returns an array of property IDs.
+ *
  * @param {string[]} [results] An array into which to store the results.
  * @returns {string[]} The property IDs.
  * @private
@@ -69,6 +75,7 @@ MetadataEntity.prototype.getPropertyIds = function (results) {
  * <p>
  * If the property is normalized the normalized value is returned.
  * </p>
+ *
  * @param {string} propertyId The case-sensitive ID of the property.
  * @returns {*} The value of the property or <code>undefined</code> if the entity does not have this property.
  * @private
@@ -82,6 +89,7 @@ MetadataEntity.prototype.getProperty = function (propertyId) {
  * <p>
  * If the property is normalized a normalized value must be provided to this function.
  * </p>
+ *
  * @param {string} propertyId The case-sensitive ID of the property.
  * @param {*} value The value of the property that will be copied.
  * @returns {boolean} <code>true</code> if the property was set, <code>false</code> otherwise.
@@ -93,6 +101,7 @@ MetadataEntity.prototype.setProperty = function (propertyId, value) {
 
 /**
  * Returns a copy of the value of the property with the given semantic.
+ *
  * @param {string} semantic The case-sensitive semantic of the property.
  * @returns {*} The value of the property or <code>undefined</code> if the entity does not have this property.
  * @private
@@ -103,6 +112,7 @@ MetadataEntity.prototype.getPropertyBySemantic = function (semantic) {
 
 /**
  * Sets the value of the property with the given semantic.
+ *
  * @param {string} semantic The case-sensitive semantic of the property.
  * @param {*} value The value of the property that will be copied.
  * @returns {boolean} <code>true</code> if the property was set, <code>false</code> otherwise.
@@ -114,10 +124,12 @@ MetadataEntity.prototype.setPropertyBySemantic = function (semantic, value) {
 
 /**
  * Returns whether the entity has this property.
+ *
  * @param {string} propertyId The case-sensitive ID of the property.
  * @param {object} properties The dictionary containing properties.
  * @param {MetadataClass} classDefinition The class.
  * @returns {boolean} Whether the entity has this property.
+ *
  * @private
  */
 MetadataEntity.hasProperty = function (
@@ -150,10 +162,12 @@ MetadataEntity.hasProperty = function (
 
 /**
  * Returns whether the entity has a property with the given semantic.
+ *
  * @param {string} semantic The case-sensitive semantic of the property.
  * @param {object} properties The dictionary containing properties.
  * @param {MetadataClass} classDefinition The class.
  * @returns {boolean} Whether the entity has a property with the given semantic.
+ *
  * @private
  */
 MetadataEntity.hasPropertyBySemantic = function (
@@ -178,10 +192,12 @@ MetadataEntity.hasPropertyBySemantic = function (
 
 /**
  * Returns an array of property IDs.
+ *
  * @param {object} properties The dictionary containing properties.
  * @param {MetadataClass} classDefinition The class.
  * @param {string[]} [results] An array into which to store the results.
  * @returns {string[]} The property IDs.
+ *
  * @private
  */
 MetadataEntity.getPropertyIds = function (
@@ -229,10 +245,12 @@ MetadataEntity.getPropertyIds = function (
  * <p>
  * If the property is normalized the normalized value is returned.
  * </p>
+ *
  * @param {string} propertyId The case-sensitive ID of the property.
  * @param {object} properties The dictionary containing properties.
  * @param {MetadataClass} classDefinition The class.
  * @returns {*} The value of the property or <code>undefined</code> if the entity does not have this property.
+ *
  * @private
  */
 MetadataEntity.getProperty = function (
@@ -282,11 +300,13 @@ MetadataEntity.getProperty = function (
  * <p>
  * If the property is normalized a normalized value must be provided to this function.
  * </p>
+ *
  * @param {string} propertyId The case-sensitive ID of the property.
  * @param {*} value The value of the property that will be copied.
  * @param {object} properties The dictionary containing properties.
  * @param {MetadataClass} classDefinition The class.
  * @returns {boolean} <code>true</code> if the property was set, <code>false</code> otherwise.
+ *
  * @private
  */
 MetadataEntity.setProperty = function (
@@ -330,10 +350,12 @@ MetadataEntity.setProperty = function (
 
 /**
  * Returns a copy of the value of the property with the given semantic.
+ *
  * @param {string} semantic The case-sensitive semantic of the property.
  * @param {object} properties The dictionary containing properties.
  * @param {MetadataClass} classDefinition The class.
  * @returns {*} The value of the property or <code>undefined</code> if the entity does not have this property.
+ *
  * @private
  */
 MetadataEntity.getPropertyBySemantic = function (
@@ -361,6 +383,7 @@ MetadataEntity.getPropertyBySemantic = function (
 
 /**
  * Sets the value of the property with the given semantic.
+ *
  * @param {string} semantic The case-sensitive semantic of the property.
  * @param {*} value The value of the property that will be copied.
  * @param {object} properties The dictionary containing properties.

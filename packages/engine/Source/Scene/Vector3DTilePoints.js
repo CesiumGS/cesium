@@ -18,8 +18,10 @@ import VerticalOrigin from "./VerticalOrigin.js";
 
 /**
  * Creates a batch of points or billboards and labels.
+ *
  * @alias Vector3DTilePoints
- * @class
+ * @constructor
+ *
  * @param {object} options An object with following properties:
  * @param {Uint16Array} options.positions The positions of the polygons.
  * @param {number} options.minimumHeight The minimum height of the terrain covered by the tile.
@@ -27,6 +29,7 @@ import VerticalOrigin from "./VerticalOrigin.js";
  * @param {Rectangle} options.rectangle The rectangle containing the tile.
  * @param {Cesium3DTileBatchTable} options.batchTable The batch table for the tile containing the batched polygons.
  * @param {Uint16Array} options.batchIds The batch ids for each polygon.
+ *
  * @private
  */
 function Vector3DTilePoints(options) {
@@ -59,7 +62,9 @@ function Vector3DTilePoints(options) {
 Object.defineProperties(Vector3DTilePoints.prototype, {
   /**
    * Returns true if the points are ready to render
+   *
    * @memberof Vector3DTilePoints.prototype
+   *
    * @type {boolean}
    * @readonly
    * @private
@@ -72,7 +77,9 @@ Object.defineProperties(Vector3DTilePoints.prototype, {
 
   /**
    * Gets the number of points.
+   *
    * @memberof Vector3DTilePoints.prototype
+   *
    * @type {number}
    * @readonly
    * @private
@@ -85,7 +92,9 @@ Object.defineProperties(Vector3DTilePoints.prototype, {
 
   /**
    * Gets the texture atlas memory in bytes.
+   *
    * @memberof Vector3DTilePoints.prototype
+   *
    * @type {number}
    * @readonly
    * @private
@@ -201,6 +210,7 @@ function createPoints(points, ellipsoid) {
 
 /**
  * Creates features for each point and places it at the batch id index of features.
+ *
  * @param {Vector3DTileContent} content The vector tile content.
  * @param {Cesium3DTileFeature[]} features An array of features where the point features will be placed.
  */
@@ -230,6 +240,7 @@ Vector3DTilePoints.prototype.createFeatures = function (content, features) {
 
 /**
  * Colors the entire tile when enabled is true. The resulting color will be (batch table color * color).
+ *
  * @param {boolean} enabled Whether to enable debug coloring.
  * @param {Color} color The debug color.
  */
@@ -295,6 +306,7 @@ const scratchDistanceDisplayCondition = new DistanceDisplayCondition();
 
 /**
  * Apply a style to the content.
+ *
  * @param {Cesium3DTileStyle} style The style.
  * @param {Cesium3DTileFeature[]} features The array of features.
  */
@@ -475,7 +487,6 @@ Vector3DTilePoints.prototype.applyStyle = function (style, features) {
 };
 
 /**
- * @param frameState
  * @private
  */
 Vector3DTilePoints.prototype.update = function (frameState) {
@@ -504,6 +515,7 @@ Vector3DTilePoints.prototype.update = function (frameState) {
  * If this object was destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
  * </p>
+ *
  * @returns {boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
  */
 Vector3DTilePoints.prototype.isDestroyed = function () {
@@ -518,7 +530,8 @@ Vector3DTilePoints.prototype.isDestroyed = function () {
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
  * assign the return value (<code>undefined</code>) to the object as done in the example.
  * </p>
- * @throws {DeveloperError} This object was destroyed, i.e., destroy() was called.
+ *
+ * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
  */
 Vector3DTilePoints.prototype.destroy = function () {
   this._billboardCollection =

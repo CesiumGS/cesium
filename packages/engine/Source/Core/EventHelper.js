@@ -5,8 +5,11 @@ import DeveloperError from "./DeveloperError.js";
  * A convenience object that simplifies the common pattern of attaching event listeners
  * to several events, then removing all those listeners at once later, for example, in
  * a destroy method.
+ *
  * @alias EventHelper
- * @class
+ * @constructor
+ *
+ *
  * @example
  * const helper = new Cesium.EventHelper();
  *
@@ -15,6 +18,7 @@ import DeveloperError from "./DeveloperError.js";
  *
  * // later...
  * helper.removeAll();
+ *
  * @see Event
  */
 function EventHelper() {
@@ -23,11 +27,13 @@ function EventHelper() {
 
 /**
  * Adds a listener to an event, and records the registration to be cleaned up later.
+ *
  * @param {Event} event The event to attach to.
  * @param {Function} listener The function to be executed when the event is raised.
  * @param {object} [scope] An optional object scope to serve as the <code>this</code>
  *        pointer in which the listener function will execute.
  * @returns {EventHelper.RemoveCallback} A function that will remove this event listener when invoked.
+ *
  * @see Event#addEventListener
  */
 EventHelper.prototype.add = function (event, listener, scope) {
@@ -50,6 +56,7 @@ EventHelper.prototype.add = function (event, listener, scope) {
 
 /**
  * Unregisters all previously added listeners.
+ *
  * @see Event#removeEventListener
  */
 EventHelper.prototype.removeAll = function () {

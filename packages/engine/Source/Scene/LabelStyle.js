@@ -1,11 +1,14 @@
 /**
  * Describes how to draw a label.
+ *
  * @enum {number}
+ *
  * @see Label#style
  */
 const LabelStyle = {
   /**
    * Fill the text of the label, but do not outline.
+   *
    * @type {number}
    * @constant
    */
@@ -13,6 +16,7 @@ const LabelStyle = {
 
   /**
    * Outline the text of the label, but do not fill.
+   *
    * @type {number}
    * @constant
    */
@@ -20,6 +24,7 @@ const LabelStyle = {
 
   /**
    * Fill and outline the text of the label.
+   *
    * @type {number}
    * @constant
    */

@@ -63,7 +63,8 @@ function GroundGeometryOptions() {
  * A {@link GeometryUpdater} for polylines.
  * Clients do not normally create this class directly, but instead rely on {@link DataSourceDisplay}.
  * @alias PolylineGeometryUpdater
- * @class
+ * @constructor
+ *
  * @param {Entity} entity The entity containing the geometry to be visualized.
  * @param {Scene} scene The scene where visualization is taking place.
  */
@@ -118,6 +119,7 @@ Object.defineProperties(PolylineGeometryUpdater.prototype, {
   /**
    * Gets the entity associated with this geometry.
    * @memberof PolylineGeometryUpdater.prototype
+   *
    * @type {Entity}
    * @readonly
    */
@@ -129,6 +131,7 @@ Object.defineProperties(PolylineGeometryUpdater.prototype, {
   /**
    * Gets a value indicating if the geometry has a fill component.
    * @memberof PolylineGeometryUpdater.prototype
+   *
    * @type {boolean}
    * @readonly
    */
@@ -140,6 +143,7 @@ Object.defineProperties(PolylineGeometryUpdater.prototype, {
   /**
    * Gets a value indicating if fill visibility varies with simulation time.
    * @memberof PolylineGeometryUpdater.prototype
+   *
    * @type {boolean}
    * @readonly
    */
@@ -155,6 +159,7 @@ Object.defineProperties(PolylineGeometryUpdater.prototype, {
   /**
    * Gets the material property used to fill the geometry.
    * @memberof PolylineGeometryUpdater.prototype
+   *
    * @type {MaterialProperty}
    * @readonly
    */
@@ -166,6 +171,7 @@ Object.defineProperties(PolylineGeometryUpdater.prototype, {
   /**
    * Gets the material property used to fill the geometry when it fails the depth test.
    * @memberof PolylineGeometryUpdater.prototype
+   *
    * @type {MaterialProperty}
    * @readonly
    */
@@ -177,6 +183,7 @@ Object.defineProperties(PolylineGeometryUpdater.prototype, {
   /**
    * Gets a value indicating if the geometry has an outline component.
    * @memberof PolylineGeometryUpdater.prototype
+   *
    * @type {boolean}
    * @readonly
    */
@@ -186,6 +193,7 @@ Object.defineProperties(PolylineGeometryUpdater.prototype, {
   /**
    * Gets a value indicating if outline visibility varies with simulation time.
    * @memberof PolylineGeometryUpdater.prototype
+   *
    * @type {boolean}
    * @readonly
    */
@@ -195,6 +203,7 @@ Object.defineProperties(PolylineGeometryUpdater.prototype, {
   /**
    * Gets the {@link Color} property for the geometry outline.
    * @memberof PolylineGeometryUpdater.prototype
+   *
    * @type {Property}
    * @readonly
    */
@@ -205,6 +214,7 @@ Object.defineProperties(PolylineGeometryUpdater.prototype, {
    * Gets the property specifying whether the geometry
    * casts or receives shadows from light sources.
    * @memberof PolylineGeometryUpdater.prototype
+   *
    * @type {Property}
    * @readonly
    */
@@ -216,6 +226,7 @@ Object.defineProperties(PolylineGeometryUpdater.prototype, {
   /**
    * Gets or sets the {@link DistanceDisplayCondition} Property specifying at what distance from the camera that this geometry will be displayed.
    * @memberof PolylineGeometryUpdater.prototype
+   *
    * @type {Property}
    * @readonly
    */
@@ -227,6 +238,7 @@ Object.defineProperties(PolylineGeometryUpdater.prototype, {
   /**
    * Gets or sets the {@link ClassificationType} Property specifying if this geometry will classify terrain, 3D Tiles, or both when on the ground.
    * @memberof PolylineGeometryUpdater.prototype
+   *
    * @type {Property}
    * @readonly
    */
@@ -237,7 +249,9 @@ Object.defineProperties(PolylineGeometryUpdater.prototype, {
   },
   /**
    * Gets a value indicating if the geometry is time-varying.
+   *
    * @memberof PolylineGeometryUpdater.prototype
+   *
    * @type {boolean}
    * @readonly
    */
@@ -250,6 +264,7 @@ Object.defineProperties(PolylineGeometryUpdater.prototype, {
    * Gets a value indicating if the geometry is closed.
    * This property is only valid for static geometry.
    * @memberof PolylineGeometryUpdater.prototype
+   *
    * @type {boolean}
    * @readonly
    */
@@ -260,6 +275,7 @@ Object.defineProperties(PolylineGeometryUpdater.prototype, {
    * Gets an event that is raised whenever the public properties
    * of this updater change.
    * @memberof PolylineGeometryUpdater.prototype
+   *
    * @type {boolean}
    * @readonly
    */
@@ -272,6 +288,7 @@ Object.defineProperties(PolylineGeometryUpdater.prototype, {
   /**
    * Gets a value indicating if the path of the line.
    * @memberof PolylineGeometryUpdater.prototype
+   *
    * @type {ArcType}
    * @readonly
    */
@@ -285,6 +302,7 @@ Object.defineProperties(PolylineGeometryUpdater.prototype, {
    * Gets a value indicating if the geometry is clamped to the ground.
    * Returns false if polylines on terrain is not supported.
    * @memberof PolylineGeometryUpdater.prototype
+   *
    * @type {boolean}
    * @readonly
    */
@@ -309,6 +327,7 @@ Object.defineProperties(PolylineGeometryUpdater.prototype, {
 
 /**
  * Checks if the geometry is outlined at the provided time.
+ *
  * @param {JulianDate} time The time for which to retrieve visibility.
  * @returns {boolean} true if geometry is outlined at the provided time, false otherwise.
  */
@@ -318,6 +337,7 @@ PolylineGeometryUpdater.prototype.isOutlineVisible = function (time) {
 
 /**
  * Checks if the geometry is filled at the provided time.
+ *
  * @param {JulianDate} time The time for which to retrieve visibility.
  * @returns {boolean} true if geometry is filled at the provided time, false otherwise.
  */
@@ -332,9 +352,11 @@ PolylineGeometryUpdater.prototype.isFilled = function (time) {
 
 /**
  * Creates the geometry instance which represents the fill of the geometry.
+ *
  * @param {JulianDate} time The time to use when retrieving initial attribute values.
  * @returns {GeometryInstance} The geometry instance representing the filled portion of the geometry.
- * @throws {DeveloperError} This instance does not represent a filled geometry.
+ *
+ * @exception {DeveloperError} This instance does not represent a filled geometry.
  */
 PolylineGeometryUpdater.prototype.createFillGeometryInstance = function (time) {
   //>>includeStart('debug', pragmas.debug);
@@ -418,9 +440,11 @@ PolylineGeometryUpdater.prototype.createFillGeometryInstance = function (time) {
 
 /**
  * Creates the geometry instance which represents the outline of the geometry.
+ *
  * @param {JulianDate} time The time to use when retrieving initial attribute values.
  * @returns {GeometryInstance} The geometry instance representing the outline portion of the geometry.
- * @throws {DeveloperError} This instance does not represent an outlined geometry.
+ *
+ * @exception {DeveloperError} This instance does not represent an outlined geometry.
  */
 PolylineGeometryUpdater.prototype.createOutlineGeometryInstance = function (
   time
@@ -434,6 +458,7 @@ PolylineGeometryUpdater.prototype.createOutlineGeometryInstance = function (
 
 /**
  * Returns true if this object was destroyed; otherwise, false.
+ *
  * @returns {boolean} True if this object was destroyed; otherwise, false.
  */
 PolylineGeometryUpdater.prototype.isDestroyed = function () {
@@ -442,7 +467,8 @@ PolylineGeometryUpdater.prototype.isDestroyed = function () {
 
 /**
  * Destroys and resources used by the object.  Once an object is destroyed, it should not be used.
- * @throws {DeveloperError} This object was destroyed, i.e., destroy() was called.
+ *
+ * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
  */
 PolylineGeometryUpdater.prototype.destroy = function () {
   this._entitySubscription();
@@ -583,10 +609,12 @@ PolylineGeometryUpdater.prototype._onEntityPropertyChanged = function (
 
 /**
  * Creates the dynamic updater to be used when GeometryUpdater#isDynamic is true.
+ *
  * @param {PrimitiveCollection} primitives The primitive collection to use.
  * @param {PrimitiveCollection|OrderedGroundPrimitiveCollection} groundPrimitives The primitive collection to use for ordered ground primitives.
  * @returns {DynamicGeometryUpdater} The dynamic updater used to update the geometry each frame.
- * @throws {DeveloperError} This instance does not represent dynamic geometry.
+ *
+ * @exception {DeveloperError} This instance does not represent dynamic geometry.
  * @private
  */
 PolylineGeometryUpdater.prototype.createDynamicUpdater = function (

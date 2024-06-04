@@ -4,18 +4,20 @@ import PointCloudEyeDomeLighting from "./PointCloudEyeDomeLighting.js";
 /**
  * Options for performing point attenuation based on geometric error when rendering
  * point clouds using 3D Tiles.
+ *
  * @param {object} [options] Object with the following properties:
- * @param {boolean} [options.attenuation] Perform point attenuation based on geometric error.
- * @param {number} [options.geometricErrorScale] Scale to be applied to each tile's geometric error.
+ * @param {boolean} [options.attenuation=false] Perform point attenuation based on geometric error.
+ * @param {number} [options.geometricErrorScale=1.0] Scale to be applied to each tile's geometric error.
  * @param {number} [options.maximumAttenuation] Maximum attenuation in pixels. Defaults to the Cesium3DTileset's maximumScreenSpaceError.
  * @param {number} [options.baseResolution] Average base resolution for the dataset in meters. Substitute for Geometric Error when not available.
- * @param {boolean} [options.eyeDomeLighting] When true, use eye dome lighting when drawing with point attenuation.
- * @param {number} [options.eyeDomeLightingStrength] Increasing this value increases contrast on slopes and edges.
- * @param {number} [options.eyeDomeLightingRadius] Increase the thickness of contours from eye dome lighting.
- * @param {boolean} [options.backFaceCulling] Determines whether back-facing points are hidden. This option works only if data has normals included.
- * @param {boolean} [options.normalShading] Determines whether a point cloud that contains normals is shaded by the scene's light source.
+ * @param {boolean} [options.eyeDomeLighting=true] When true, use eye dome lighting when drawing with point attenuation.
+ * @param {number} [options.eyeDomeLightingStrength=1.0] Increasing this value increases contrast on slopes and edges.
+ * @param {number} [options.eyeDomeLightingRadius=1.0] Increase the thickness of contours from eye dome lighting.
+ * @param {boolean} [options.backFaceCulling=false] Determines whether back-facing points are hidden. This option works only if data has normals included.
+ * @param {boolean} [options.normalShading=true] Determines whether a point cloud that contains normals is shaded by the scene's light source.
+ *
  * @alias PointCloudShading
- * @class
+ * @constructor
  */
 function PointCloudShading(options) {
   const pointCloudShading = defaultValue(options, {});
@@ -55,6 +57,7 @@ function PointCloudShading(options) {
    * Use eye dome lighting when drawing with point attenuation
    * Requires support for EXT_frag_depth, OES_texture_float, and WEBGL_draw_buffers extensions in WebGL 1.0,
    * otherwise eye dome lighting is ignored.
+   *
    * @type {boolean}
    * @default true
    */
@@ -83,6 +86,7 @@ function PointCloudShading(options) {
   /**
    * Determines whether back-facing points are hidden.
    * This option works only if data has normals included.
+   *
    * @type {boolean}
    * @default false
    */
@@ -90,6 +94,7 @@ function PointCloudShading(options) {
 
   /**
    * Determines whether a point cloud that contains normals is shaded by the scene's light source.
+   *
    * @type {boolean}
    * @default true
    */
@@ -98,6 +103,7 @@ function PointCloudShading(options) {
 
 /**
  * Determines if point cloud shading is supported.
+ *
  * @param {Scene} scene The scene.
  * @returns {boolean} <code>true</code> if point cloud shading is supported; otherwise, returns <code>false</code>
  */

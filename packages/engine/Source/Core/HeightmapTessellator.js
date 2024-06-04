@@ -17,13 +17,16 @@ import WebMercatorProjection from "./WebMercatorProjection.js";
 
 /**
  * Contains functions to create a mesh from a heightmap image.
+ *
  * @namespace HeightmapTessellator
+ *
  * @private
  */
 const HeightmapTessellator = {};
 
 /**
  * The default structure of a heightmap, as given to {@link HeightmapTessellator.computeVertices}.
+ *
  * @constant
  */
 HeightmapTessellator.DEFAULT_STRUCTURE = Object.freeze({
@@ -42,6 +45,7 @@ const maximumScratch = new Cartesian3();
 
 /**
  * Fills an array of vertices from a heightmap image.
+ *
  * @param {object} options Object with the following properties:
  * @param {Int8Array|Uint8Array|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array|Float64Array} options.heightmap The heightmap to tessellate.
  * @param {number} options.width The width of the heightmap, in height samples.
@@ -50,27 +54,27 @@ const maximumScratch = new Cartesian3();
  * @param {Rectangle} options.nativeRectangle A rectangle in the native coordinates of the heightmap's projection.  For
  *                 a heightmap with a geographic projection, this is degrees.  For the web mercator
  *                 projection, this is meters.
- * @param {number} [options.exaggeration] The scale used to exaggerate the terrain.
- * @param {number} [options.exaggerationRelativeHeight] The height from which terrain is exaggerated.
+ * @param {number} [options.exaggeration=1.0] The scale used to exaggerate the terrain.
+ * @param {number} [options.exaggerationRelativeHeight=0.0] The height from which terrain is exaggerated.
  * @param {Rectangle} [options.rectangle] The rectangle covered by the heightmap, in geodetic coordinates with north, south, east and
  *                 west properties in radians.  Either rectangle or nativeRectangle must be provided.  If both
  *                 are provided, they're assumed to be consistent.
- * @param {boolean} [options.isGeographic] True if the heightmap uses a {@link GeographicProjection}, or false if it uses
+ * @param {boolean} [options.isGeographic=true] True if the heightmap uses a {@link GeographicProjection}, or false if it uses
  *                  a {@link WebMercatorProjection}.
- * @param {Cartesian3} [options.relativeToCenter] The positions will be computed as <code>Cartesian3.subtract(worldPosition, relativeToCenter)</code>.
- * @param {Ellipsoid} [options.ellipsoid] The ellipsoid to which the heightmap applies.
+ * @param {Cartesian3} [options.relativeToCenter=Cartesian3.ZERO] The positions will be computed as <code>Cartesian3.subtract(worldPosition, relativeToCenter)</code>.
+ * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to which the heightmap applies.
  * @param {object} [options.structure] An object describing the structure of the height data.
- * @param {number} [options.structure.heightScale] The factor by which to multiply height samples in order to obtain
+ * @param {number} [options.structure.heightScale=1.0] The factor by which to multiply height samples in order to obtain
  *                 the height above the heightOffset, in meters.  The heightOffset is added to the resulting
  *                 height after multiplying by the scale.
- * @param {number} [options.structure.heightOffset] The offset to add to the scaled height to obtain the final
+ * @param {number} [options.structure.heightOffset=0.0] The offset to add to the scaled height to obtain the final
  *                 height in meters.  The offset is added after the height sample is multiplied by the
  *                 heightScale.
- * @param {number} [options.structure.elementsPerHeight] The number of elements in the buffer that make up a single height
+ * @param {number} [options.structure.elementsPerHeight=1] The number of elements in the buffer that make up a single height
  *                 sample.  This is usually 1, indicating that each element is a separate height sample.  If
  *                 it is greater than 1, that number of elements together form the height sample, which is
  *                 computed according to the structure.elementMultiplier and structure.isBigEndian properties.
- * @param {number} [options.structure.stride] The number of elements to skip to get from the first element of
+ * @param {number} [options.structure.stride=1] The number of elements to skip to get from the first element of
  *                 one height to the first element of the next height.
  * @param {number} [options.structure.elementMultiplier=256.0] The multiplier used to compute the height value when the
  *                 stride property is greater than 1.  For example, if the stride is 4 and the strideMultiplier
@@ -89,6 +93,7 @@ const maximumScratch = new Cartesian3();
  * @param {boolean} [options.structure.isBigEndian=false] Indicates endianness of the elements in the buffer when the
  *                  stride property is greater than 1.  If this property is false, the first element is the
  *                  low-order element.  If it is true, the first element is the high-order element.
+ *
  * @example
  * const width = 5;
  * const height = 5;

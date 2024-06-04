@@ -7,9 +7,10 @@ import DeveloperError from "../Core/DeveloperError.js";
  * <p>
  * This type describes an interface and is not intended to be instantiated directly.
  * </p>
- * @param options
+ *
  * @alias ParticleEmitter
- * @class
+ * @constructor
+ *
  * @see BoxEmitter
  * @see CircleEmitter
  * @see ConeEmitter
@@ -25,8 +26,8 @@ function ParticleEmitter(options) {
 
 /**
  * Initializes the given {Particle} by setting it's position and velocity.
+ *
  * @private
- * @param particle
  * @param {Particle} The particle to initialize
  */
 ParticleEmitter.prototype.emit = function (particle) {

@@ -9,6 +9,7 @@ import createPropertyDescriptor from "./createPropertyDescriptor.js";
  * @typedef {object} PathGraphics.ConstructorOptions
  *
  * Initialization options for the PathGraphics constructor
+ *
  * @property {Property | boolean} [show=true] A boolean Property specifying the visibility of the path.
  * @property {Property | number} [leadTime] A Property specifying the number of seconds in front the object to show.
  * @property {Property | number} [trailTime] A Property specifying the number of seconds behind of the object to show.
@@ -20,8 +21,10 @@ import createPropertyDescriptor from "./createPropertyDescriptor.js";
 
 /**
  * Describes a polyline defined as the path made by an {@link Entity} as it moves over time.
+ *
  * @alias PathGraphics
- * @class
+ * @constructor
+ *
  * @param {PathGraphics.ConstructorOptions} [options] Object describing initialization options
  */
 function PathGraphics(options) {
@@ -115,6 +118,7 @@ Object.defineProperties(PathGraphics.prototype, {
 
 /**
  * Duplicates this instance.
+ *
  * @param {PathGraphics} [result] The object onto which to store the result.
  * @returns {PathGraphics} The modified result parameter or a new instance if one was not provided.
  */
@@ -135,6 +139,7 @@ PathGraphics.prototype.clone = function (result) {
 /**
  * Assigns each unassigned property on this object to the value
  * of the same property on the provided source object.
+ *
  * @param {PathGraphics} source The object to be merged into this object.
  */
 PathGraphics.prototype.merge = function (source) {

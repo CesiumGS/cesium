@@ -43,7 +43,9 @@ const requestCompletedEvent = new Event();
  * to retain control over the number of requests in CesiumJS is important because due to events such as changes in the camera position,
  * a lot of new requests may be generated and a lot of in-flight requests may become redundant. The request scheduler manually constrains the
  * number of requests so that newer requests wait in a shorter queue and don't have to compete for bandwidth with requests that have expired.
+ *
  * @namespace RequestScheduler
+ *
  */
 function RequestScheduler() {}
 
@@ -66,8 +68,10 @@ RequestScheduler.maximumRequestsPerServer = 18;
  * A per server key list of overrides to use for throttling instead of <code>maximumRequestsPerServer</code>.
  * Useful when streaming data from a known HTTP/2 or HTTP/3 server.
  * @type {object}
+ *
  * @example
  * RequestScheduler.requestsByServer["myserver.com:443"] = 18;
+ *
  * @example
  * RequestScheduler.requestsByServer = {
  *   "api.cesium.com:443": 18,
@@ -94,6 +98,7 @@ RequestScheduler.debugShowStatistics = false;
 /**
  * An event that's raised when a request is completed.  Event handlers are passed
  * the error object if the request fails.
+ *
  * @type {Event}
  * @default Event()
  * @private
@@ -103,7 +108,9 @@ RequestScheduler.requestCompletedEvent = requestCompletedEvent;
 Object.defineProperties(RequestScheduler, {
   /**
    * Returns the statistics used by the request scheduler.
+   *
    * @memberof RequestScheduler
+   *
    * @type {object}
    * @readonly
    * @private
@@ -116,7 +123,9 @@ Object.defineProperties(RequestScheduler, {
 
   /**
    * The maximum size of the priority heap. This limits the number of requests that are sorted by priority. Only applies to requests that are not yet active.
+   *
    * @memberof RequestScheduler
+   *
    * @type {number}
    * @default 20
    * @private
@@ -150,8 +159,8 @@ function updatePriority(request) {
 /**
  * Check if there are open slots for a particular server key. If desiredRequests is greater than 1, this checks if the queue has room for scheduling multiple requests.
  * @param {string} serverKey The server key returned by {@link RequestScheduler.getServerKey}.
- * @param {number} [desiredRequests] How many requests the caller plans to request
- * @returns {boolean} True if there are enough open slots for <code>desiredRequests</code> more requests.
+ * @param {number} [desiredRequests=1] How many requests the caller plans to request
+ * @return {boolean} True if there are enough open slots for <code>desiredRequests</code> more requests.
  * @private
  */
 RequestScheduler.serverHasOpenSlots = function (serverKey, desiredRequests) {
@@ -172,7 +181,8 @@ RequestScheduler.serverHasOpenSlots = function (serverKey, desiredRequests) {
  * are from. This is used in {@link Multiple3DTileContent} for determining when
  * all requests can be scheduled
  * @param {number} desiredRequests The number of requests the caller intends to make
- * @returns {boolean} <code>true</code> if the heap has enough available slots to meet the desiredRequests. <code>false</code> otherwise.
+ * @return {boolean} <code>true</code> if the heap has enough available slots to meet the desiredRequests. <code>false</code> otherwise.
+ *
  * @private
  */
 RequestScheduler.heapHasOpenSlots = function (desiredRequests) {
@@ -331,6 +341,7 @@ RequestScheduler.update = function () {
 
 /**
  * Get the server key from a given url.
+ *
  * @param {string} url The url.
  * @returns {string} The server key.
  * @private
@@ -363,8 +374,11 @@ RequestScheduler.getServerKey = function (url) {
 /**
  * Issue a request. If request.throttle is false, the request is sent immediately. Otherwise the request will be
  * queued and sorted by priority before being sent.
+ *
  * @param {Request} request The request object.
+ *
  * @returns {Promise|undefined} A Promise for the requested data, or undefined if this request does not have high enough priority to be issued.
+ *
  * @private
  */
 RequestScheduler.request = function (request) {
@@ -464,6 +478,7 @@ function updateStatistics() {
 
 /**
  * For testing only. Clears any requests that may not have completed from previous tests.
+ *
  * @private
  */
 RequestScheduler.clearForSpecs = function () {
@@ -490,7 +505,7 @@ RequestScheduler.clearForSpecs = function () {
 
 /**
  * For testing only.
- * @param serverKey
+ *
  * @private
  */
 RequestScheduler.numberOfActiveRequestsByServer = function (serverKey) {
@@ -499,6 +514,7 @@ RequestScheduler.numberOfActiveRequestsByServer = function (serverKey) {
 
 /**
  * For testing only.
+ *
  * @private
  */
 RequestScheduler.requestHeap = requestHeap;

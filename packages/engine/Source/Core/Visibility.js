@@ -3,11 +3,13 @@
  * is visible during horizon culling. An occluder may fully block an occludee, in which case
  * it has no visibility, may partially block an occludee from view, or may not block it at all,
  * leading to full visibility.
+ *
  * @enum {number}
  */
 const Visibility = {
   /**
    * Represents that no part of an object is visible.
+   *
    * @type {number}
    * @constant
    */
@@ -15,6 +17,7 @@ const Visibility = {
 
   /**
    * Represents that part, but not all, of an object is visible
+   *
    * @type {number}
    * @constant
    */
@@ -22,6 +25,7 @@ const Visibility = {
 
   /**
    * Represents that an object is visible in its entirety.
+   *
    * @type {number}
    * @constant
    */

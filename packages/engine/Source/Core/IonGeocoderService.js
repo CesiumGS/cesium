@@ -9,11 +9,13 @@ import Resource from "./Resource.js";
 /**
  * Provides geocoding through Cesium ion.
  * @alias IonGeocoderService
- * @class
+ * @constructor
+ *
  * @param {object} options Object with the following properties:
  * @param {Scene} options.scene The scene
- * @param {string} [options.accessToken] The access token to use.
- * @param {string|Resource} [options.server] The resource to the Cesium ion API server.
+ * @param {string} [options.accessToken=Ion.defaultAccessToken] The access token to use.
+ * @param {string|Resource} [options.server=Ion.defaultServer] The resource to the Cesium ion API server.
+ *
  * @see Ion
  */
 function IonGeocoderService(options) {
@@ -66,9 +68,9 @@ Object.defineProperties(IonGeocoderService.prototype, {
 
 /**
  * @function
- * @param geocodeType
+ *
  * @param {string} query The query to be sent to the geocoder service
- * @param {GeocodeType} [type] The type of geocode to perform.
+ * @param {GeocodeType} [type=GeocodeType.SEARCH] The type of geocode to perform.
  * @returns {Promise<GeocoderService.Result[]>}
  */
 IonGeocoderService.prototype.geocode = async function (query, geocodeType) {

@@ -29,7 +29,8 @@ const defaultClassificationType = new ConstantProperty(ClassificationType.BOTH);
 /**
  * An abstract class for updating geometry entities.
  * @alias GeometryUpdater
- * @class
+ * @constructor
+ *
  * @param {object} options An object with the following properties:
  * @param {Entity} options.entity The entity containing the geometry to be visualized.
  * @param {Scene} options.scene The scene where visualization is taking place.
@@ -89,6 +90,7 @@ Object.defineProperties(GeometryUpdater.prototype, {
   /**
    * Gets the entity associated with this geometry.
    * @memberof GeometryUpdater.prototype
+   *
    * @type {Entity}
    * @readonly
    */
@@ -100,6 +102,7 @@ Object.defineProperties(GeometryUpdater.prototype, {
   /**
    * Gets a value indicating if the geometry has a fill component.
    * @memberof GeometryUpdater.prototype
+   *
    * @type {boolean}
    * @readonly
    */
@@ -111,6 +114,7 @@ Object.defineProperties(GeometryUpdater.prototype, {
   /**
    * Gets a value indicating if fill visibility varies with simulation time.
    * @memberof GeometryUpdater.prototype
+   *
    * @type {boolean}
    * @readonly
    */
@@ -127,6 +131,7 @@ Object.defineProperties(GeometryUpdater.prototype, {
   /**
    * Gets the material property used to fill the geometry.
    * @memberof GeometryUpdater.prototype
+   *
    * @type {MaterialProperty}
    * @readonly
    */
@@ -138,6 +143,7 @@ Object.defineProperties(GeometryUpdater.prototype, {
   /**
    * Gets a value indicating if the geometry has an outline component.
    * @memberof GeometryUpdater.prototype
+   *
    * @type {boolean}
    * @readonly
    */
@@ -149,6 +155,7 @@ Object.defineProperties(GeometryUpdater.prototype, {
   /**
    * Gets a value indicating if the geometry has an outline component.
    * @memberof GeometryUpdater.prototype
+   *
    * @type {boolean}
    * @readonly
    */
@@ -165,6 +172,7 @@ Object.defineProperties(GeometryUpdater.prototype, {
   /**
    * Gets the {@link Color} property for the geometry outline.
    * @memberof GeometryUpdater.prototype
+   *
    * @type {Property}
    * @readonly
    */
@@ -177,6 +185,7 @@ Object.defineProperties(GeometryUpdater.prototype, {
    * Gets the constant with of the geometry outline, in pixels.
    * This value is only valid if isDynamic is false.
    * @memberof GeometryUpdater.prototype
+   *
    * @type {number}
    * @readonly
    */
@@ -189,6 +198,7 @@ Object.defineProperties(GeometryUpdater.prototype, {
    * Gets the property specifying whether the geometry
    * casts or receives shadows from light sources.
    * @memberof GeometryUpdater.prototype
+   *
    * @type {Property}
    * @readonly
    */
@@ -200,6 +210,7 @@ Object.defineProperties(GeometryUpdater.prototype, {
   /**
    * Gets or sets the {@link DistanceDisplayCondition} Property specifying at what distance from the camera that this geometry will be displayed.
    * @memberof GeometryUpdater.prototype
+   *
    * @type {Property}
    * @readonly
    */
@@ -211,6 +222,7 @@ Object.defineProperties(GeometryUpdater.prototype, {
   /**
    * Gets or sets the {@link ClassificationType} Property specifying if this geometry will classify terrain, 3D Tiles, or both when on the ground.
    * @memberof GeometryUpdater.prototype
+   *
    * @type {Property}
    * @readonly
    */
@@ -221,7 +233,9 @@ Object.defineProperties(GeometryUpdater.prototype, {
   },
   /**
    * Gets a value indicating if the geometry is time-varying.
+   *
    * @memberof GeometryUpdater.prototype
+   *
    * @type {boolean}
    * @readonly
    */
@@ -234,6 +248,7 @@ Object.defineProperties(GeometryUpdater.prototype, {
    * Gets a value indicating if the geometry is closed.
    * This property is only valid for static geometry.
    * @memberof GeometryUpdater.prototype
+   *
    * @type {boolean}
    * @readonly
    */
@@ -245,6 +260,7 @@ Object.defineProperties(GeometryUpdater.prototype, {
   /**
    * Gets a value indicating if the geometry should be drawn on terrain.
    * @memberof EllipseGeometryUpdater.prototype
+   *
    * @type {boolean}
    * @readonly
    */
@@ -257,6 +273,7 @@ Object.defineProperties(GeometryUpdater.prototype, {
    * Gets an event that is raised whenever the public properties
    * of this updater change.
    * @memberof GeometryUpdater.prototype
+   *
    * @type {boolean}
    * @readonly
    */
@@ -269,6 +286,7 @@ Object.defineProperties(GeometryUpdater.prototype, {
 
 /**
  * Checks if the geometry is outlined at the provided time.
+ *
  * @param {JulianDate} time The time for which to retrieve visibility.
  * @returns {boolean} true if geometry is outlined at the provided time, false otherwise.
  */
@@ -284,6 +302,7 @@ GeometryUpdater.prototype.isOutlineVisible = function (time) {
 
 /**
  * Checks if the geometry is filled at the provided time.
+ *
  * @param {JulianDate} time The time for which to retrieve visibility.
  * @returns {boolean} true if geometry is filled at the provided time, false otherwise.
  */
@@ -299,26 +318,31 @@ GeometryUpdater.prototype.isFilled = function (time) {
 
 /**
  * Creates the geometry instance which represents the fill of the geometry.
+ *
  * @function
  * @param {JulianDate} time The time to use when retrieving initial attribute values.
  * @returns {GeometryInstance} The geometry instance representing the filled portion of the geometry.
- * @throws {DeveloperError} This instance does not represent a filled geometry.
+ *
+ * @exception {DeveloperError} This instance does not represent a filled geometry.
  */
 GeometryUpdater.prototype.createFillGeometryInstance =
   DeveloperError.throwInstantiationError;
 
 /**
  * Creates the geometry instance which represents the outline of the geometry.
+ *
  * @function
  * @param {JulianDate} time The time to use when retrieving initial attribute values.
  * @returns {GeometryInstance} The geometry instance representing the outline portion of the geometry.
- * @throws {DeveloperError} This instance does not represent an outlined geometry.
+ *
+ * @exception {DeveloperError} This instance does not represent an outlined geometry.
  */
 GeometryUpdater.prototype.createOutlineGeometryInstance =
   DeveloperError.throwInstantiationError;
 
 /**
  * Returns true if this object was destroyed; otherwise, false.
+ *
  * @returns {boolean} True if this object was destroyed; otherwise, false.
  */
 GeometryUpdater.prototype.isDestroyed = function () {
@@ -327,7 +351,8 @@ GeometryUpdater.prototype.isDestroyed = function () {
 
 /**
  * Destroys and resources used by the object.  Once an object is destroyed, it should not be used.
- * @throws {DeveloperError} This object was destroyed, i.e., destroy() was called.
+ *
+ * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
  */
 GeometryUpdater.prototype.destroy = function () {
   destroyObject(this);
@@ -486,10 +511,13 @@ GeometryUpdater.prototype._onEntityPropertyChanged = function (
 
 /**
  * Creates the dynamic updater to be used when GeometryUpdater#isDynamic is true.
+ *
  * @param {PrimitiveCollection} primitives The primitive collection to use.
  * @param {PrimitiveCollection} [groundPrimitives] The primitive collection to use for ground primitives.
+ *
  * @returns {DynamicGeometryUpdater} The dynamic updater used to update the geometry each frame.
- * @throws {DeveloperError} This instance does not represent dynamic geometry.
+ *
+ * @exception {DeveloperError} This instance does not represent dynamic geometry.
  * @private
  */
 GeometryUpdater.prototype.createDynamicUpdater = function (

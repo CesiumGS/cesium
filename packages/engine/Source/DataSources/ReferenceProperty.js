@@ -46,11 +46,14 @@ function resolve(that) {
 
 /**
  * A {@link Property} which transparently links to another property on a provided object.
+ *
  * @alias ReferenceProperty
- * @class
+ * @constructor
+ *
  * @param {EntityCollection} targetCollection The entity collection which will be used to resolve the reference.
  * @param {string} targetId The id of the entity which is being referenced.
  * @param {string[]} targetPropertyNames The names of the property on the target entity which we will use.
+ *
  * @example
  * const collection = new Cesium.EntityCollection();
  *
@@ -204,10 +207,12 @@ Object.defineProperties(ReferenceProperty.prototype, {
  * The format of the string is "objectId#foo.bar", where # separates the id from
  * property path and . separates sub-properties.  If the reference identifier or
  * or any sub-properties contains a # . or \ they must be escaped.
+ *
  * @param {EntityCollection} targetCollection
  * @param {string} referenceString
  * @returns {ReferenceProperty} A new instance of ReferenceProperty.
- * @throws {DeveloperError} invalid referenceString.
+ *
+ * @exception {DeveloperError} invalid referenceString.
  */
 ReferenceProperty.fromString = function (targetCollection, referenceString) {
   //>>includeStart('debug', pragmas.debug);
@@ -251,6 +256,7 @@ ReferenceProperty.fromString = function (targetCollection, referenceString) {
 
 /**
  * Gets the value of the property at the provided time.
+ *
  * @param {JulianDate} time The time for which to retrieve the value.
  * @param {object} [result] The object to store the value into, if omitted, a new instance is created and returned.
  * @returns {object} The modified result parameter or a new instance if the result parameter was not supplied.
@@ -263,6 +269,7 @@ ReferenceProperty.prototype.getValue = function (time, result) {
 /**
  * Gets the value of the property at the provided time and in the provided reference frame.
  * This method is only valid if the property being referenced is a {@link PositionProperty}.
+ *
  * @param {JulianDate} time The time for which to retrieve the value.
  * @param {ReferenceFrame} referenceFrame The desired referenceFrame of the result.
  * @param {Cartesian3} [result] The object to store the value into, if omitted, a new instance is created and returned.
@@ -282,6 +289,7 @@ ReferenceProperty.prototype.getValueInReferenceFrame = function (
 /**
  * Gets the {@link Material} type at the provided time.
  * This method is only valid if the property being referenced is a {@link MaterialProperty}.
+ *
  * @param {JulianDate} time The time for which to retrieve the type.
  * @returns {string} The type of material.
  */
@@ -293,6 +301,7 @@ ReferenceProperty.prototype.getType = function (time) {
 /**
  * Compares this property to the provided property and returns
  * <code>true</code> if they are equal, <code>false</code> otherwise.
+ *
  * @param {Property} [other] The other property.
  * @returns {boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
  */

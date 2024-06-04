@@ -2,11 +2,13 @@ import WebGLConstants from "./WebGLConstants.js";
 
 /**
  * The type of a geometric primitive, i.e., points, lines, and triangles.
+ *
  * @enum {number}
  */
 const PrimitiveType = {
   /**
    * Points primitive where each vertex (or index) is a separate point.
+   *
    * @type {number}
    * @constant
    */
@@ -14,6 +16,7 @@ const PrimitiveType = {
 
   /**
    * Lines primitive where each two vertices (or indices) is a line segment.  Line segments are not necessarily connected.
+   *
    * @type {number}
    * @constant
    */
@@ -22,6 +25,7 @@ const PrimitiveType = {
   /**
    * Line loop primitive where each vertex (or index) after the first connects a line to
    * the previous vertex, and the last vertex implicitly connects to the first.
+   *
    * @type {number}
    * @constant
    */
@@ -29,6 +33,7 @@ const PrimitiveType = {
 
   /**
    * Line strip primitive where each vertex (or index) after the first connects a line to the previous vertex.
+   *
    * @type {number}
    * @constant
    */
@@ -36,6 +41,7 @@ const PrimitiveType = {
 
   /**
    * Triangles primitive where each three vertices (or indices) is a triangle.  Triangles do not necessarily share edges.
+   *
    * @type {number}
    * @constant
    */
@@ -44,6 +50,7 @@ const PrimitiveType = {
   /**
    * Triangle strip primitive where each vertex (or index) after the first two connect to
    * the previous two vertices forming a triangle.  For example, this can be used to model a wall.
+   *
    * @type {number}
    * @constant
    */
@@ -53,6 +60,7 @@ const PrimitiveType = {
    * Triangle fan primitive where each vertex (or index) after the first two connect to
    * the previous vertex and the first vertex forming a triangle.  For example, this can be used
    * to model a cone or circle.
+   *
    * @type {number}
    * @constant
    */
@@ -60,7 +68,6 @@ const PrimitiveType = {
 };
 
 /**
- * @param primitiveType
  * @private
  */
 PrimitiveType.isLines = function (primitiveType) {
@@ -72,7 +79,6 @@ PrimitiveType.isLines = function (primitiveType) {
 };
 
 /**
- * @param primitiveType
  * @private
  */
 PrimitiveType.isTriangles = function (primitiveType) {
@@ -84,7 +90,6 @@ PrimitiveType.isTriangles = function (primitiveType) {
 };
 
 /**
- * @param primitiveType
  * @private
  */
 PrimitiveType.validate = function (primitiveType) {

@@ -15,10 +15,10 @@ const highlightColor = "#48b";
 /**
  * Used to sort the credits by frequency of appearance
  * when they are later displayed.
- * @param credit
- * @param count
+ *
  * @alias CreditDisplay.CreditDisplayElement
- * @class
+ * @constructor
+ *
  * @private
  */
 function CreditDisplayElement(credit, count) {
@@ -294,15 +294,19 @@ function appendCss(container) {
 
 /**
  * The credit display is responsible for displaying credits on screen.
+ *
  * @param {HTMLElement} container The HTML element where credits will be displayed
- * @param {string} [delimiter] The string to separate text credits
- * @param {HTMLElement} [viewport] The HTML element that will contain the credits popup
+ * @param {string} [delimiter= ' • '] The string to separate text credits
+ * @param {HTMLElement} [viewport=document.body] The HTML element that will contain the credits popup
+ *
  * @alias CreditDisplay
- * @class
+ * @constructor
+ *
  * @example
  * // Add a credit with a tooltip, image and link to display onscreen
  * const credit = new Cesium.Credit(`<a href="https://cesium.com/" target="_blank"><img src="/images/cesium_logo.png" title="Cesium"/></a>`, true);
  * viewer.creditDisplay.addStaticCredit(credit);
+ *
  * @example
  * // Add a credit with a plaintext link to display in the lightbox
  * const credit = new Cesium.Credit('<a href="https://cesium.com/" target="_blank">Cesium</a>');
@@ -423,7 +427,9 @@ function setCredit(creditDisplay, credits, credit, count) {
 /**
  * Adds a {@link Credit} that will show on screen or in the lightbox until
  * the next frame. This is mostly for internal use. Use {@link CreditDisplay.addStaticCredit} to add a persistent credit to the screen.
+ *
  * @see CreditDisplay.addStaticCredit
+ *
  * @param {Credit} credit The credit to display in the next frame.
  */
 CreditDisplay.prototype.addCreditToNextFrame = function (credit) {
@@ -453,11 +459,14 @@ CreditDisplay.prototype.addCreditToNextFrame = function (credit) {
 
 /**
  * Adds a {@link Credit} that will show on screen or in the lightbox until removed with {@link CreditDisplay.removeStaticCredit}.
+ *
  * @param {Credit} credit The credit to added
+ *
  * @example
  * // Add a credit with a tooltip, image and link to display onscreen
  * const credit = new Cesium.Credit(`<a href="https://cesium.com/" target="_blank"><img src="/images/cesium_logo.png" title="Cesium"/></a>`, true);
  * viewer.creditDisplay.addStaticCredit(credit);
+ *
  * @example
  * // Add a credit with a plaintext link to display in the lightbox
  * const credit = new Cesium.Credit('<a href="https://cesium.com/" target="_blank">Cesium</a>');
@@ -476,6 +485,7 @@ CreditDisplay.prototype.addStaticCredit = function (credit) {
 
 /**
  * Removes a static credit shown on screen or in the lightbox.
+ *
  * @param {Credit} credit The credit to be removed.
  */
 CreditDisplay.prototype.removeStaticCredit = function (credit) {
@@ -580,7 +590,8 @@ CreditDisplay.prototype.endFrame = function () {
  * Once an object is destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
  * assign the return value (<code>undefined</code>) to the object as done in the example.
- * @throws {DeveloperError} This object was destroyed, i.e., destroy() was called.
+ *
+ * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
  */
 CreditDisplay.prototype.destroy = function () {
   this._lightbox.removeEventListener("click", this._hideLightbox, false);
@@ -596,6 +607,7 @@ CreditDisplay.prototype.destroy = function () {
 /**
  * Returns true if this object was destroyed; otherwise, false.
  * <br /><br />
+ *
  * @returns {boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
  */
 CreditDisplay.prototype.isDestroyed = function () {

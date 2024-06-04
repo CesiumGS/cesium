@@ -20,14 +20,17 @@ import Primitive from "./Primitive.js";
  * <p>
  * This is for debugging only; it is not optimized for production use.
  * </p>
+ *
  * @alias DebugModelMatrixPrimitive
- * @class
+ * @constructor
+ *
  * @param {object} [options] Object with the following properties:
- * @param {number} [options.length] The length of the axes in meters.
- * @param {number} [options.width] The width of the axes in pixels.
- * @param {Matrix4} [options.modelMatrix] The 4x4 matrix that defines the reference frame, i.e., origin plus axes, to visualize.
- * @param {boolean} [options.show] Determines if this primitive will be shown.
+ * @param {number} [options.length=10000000.0] The length of the axes in meters.
+ * @param {number} [options.width=2.0] The width of the axes in pixels.
+ * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 matrix that defines the reference frame, i.e., origin plus axes, to visualize.
+ * @param {boolean} [options.show=true] Determines if this primitive will be shown.
  * @param {object} [options.id] A user-defined object to return when the instance is picked with {@link Scene#pick}
+ *
  * @example
  * primitives.add(new Cesium.DebugModelMatrixPrimitive({
  *   modelMatrix : primitive.modelMatrix,  // primitive to debug
@@ -40,6 +43,7 @@ function DebugModelMatrixPrimitive(options) {
 
   /**
    * The length of the axes in meters.
+   *
    * @type {number}
    * @default 10000000.0
    */
@@ -48,6 +52,7 @@ function DebugModelMatrixPrimitive(options) {
 
   /**
    * The width of the axes in pixels.
+   *
    * @type {number}
    * @default 2.0
    */
@@ -56,6 +61,7 @@ function DebugModelMatrixPrimitive(options) {
 
   /**
    * Determines if this primitive will be shown.
+   *
    * @type {boolean}
    * @default true
    */
@@ -63,6 +69,7 @@ function DebugModelMatrixPrimitive(options) {
 
   /**
    * The 4x4 matrix that defines the reference frame, i.e., origin plus axes, to visualize.
+   *
    * @type {Matrix4}
    * @default {@link Matrix4.IDENTITY}
    */
@@ -73,8 +80,10 @@ function DebugModelMatrixPrimitive(options) {
 
   /**
    * User-defined value returned when the primitive is picked.
+   *
    * @type {*}
    * @default undefined
+   *
    * @see Scene#pick
    */
   this.id = options.id;
@@ -84,7 +93,6 @@ function DebugModelMatrixPrimitive(options) {
 }
 
 /**
- * @param frameState
  * @private
  */
 DebugModelMatrixPrimitive.prototype.update = function (frameState) {
@@ -182,7 +190,9 @@ DebugModelMatrixPrimitive.prototype.update = function (frameState) {
  * If this object was destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
  * </p>
+ *
  * @returns {boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+ *
  * @see DebugModelMatrixPrimitive#destroy
  */
 DebugModelMatrixPrimitive.prototype.isDestroyed = function () {
@@ -197,9 +207,12 @@ DebugModelMatrixPrimitive.prototype.isDestroyed = function () {
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
  * assign the return value (<code>undefined</code>) to the object as done in the example.
  * </p>
- * @throws {DeveloperError} This object was destroyed, i.e., destroy() was called.
+ *
+ * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+ *
  * @example
  * p = p && p.destroy();
+ *
  * @see DebugModelMatrixPrimitive#isDestroyed
  */
 DebugModelMatrixPrimitive.prototype.destroy = function () {

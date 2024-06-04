@@ -8,10 +8,13 @@ import defined from "./defined.js";
  * On the other hand, a {@link DeveloperError} indicates an exception due
  * to a developer error, e.g., invalid argument, that usually indicates a bug in the
  * calling code.
+ *
  * @alias RuntimeError
- * @class
- * @augments Error
+ * @constructor
+ * @extends Error
+ *
  * @param {string} [message] The error message for this exception.
+ *
  * @see DeveloperError
  */
 function RuntimeError(message) {

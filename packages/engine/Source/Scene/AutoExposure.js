@@ -10,7 +10,8 @@ import PixelDatatype from "../Renderer/PixelDatatype.js";
  * A post process stage that will get the luminance value at each pixel and
  * uses parallel reduction to compute the average luminance in a 1x1 texture.
  * This texture can be used as input for tone mapping.
- * @class
+ *
+ * @constructor
  * @private
  */
 function AutoExposure() {
@@ -37,6 +38,7 @@ function AutoExposure() {
 
   /**
    * Whether or not to execute this post-process stage when ready.
+   *
    * @type {boolean}
    */
   this.enabled = true;
@@ -44,6 +46,7 @@ function AutoExposure() {
 
   /**
    * The minimum value used to clamp the luminance.
+   *
    * @type {number}
    * @default 0.1
    */
@@ -51,6 +54,7 @@ function AutoExposure() {
 
   /**
    * The maximum value used to clamp the luminance.
+   *
    * @type {number}
    * @default 10.0
    */
@@ -62,6 +66,7 @@ Object.defineProperties(AutoExposure.prototype, {
    * Determines if this post-process stage is ready to be executed. A stage is only executed when both <code>ready</code>
    * and {@link AutoExposure#enabled} are <code>true</code>. A stage will not be ready while it is waiting on textures
    * to load.
+   *
    * @memberof AutoExposure.prototype
    * @type {boolean}
    * @readonly
@@ -73,6 +78,7 @@ Object.defineProperties(AutoExposure.prototype, {
   },
   /**
    * The unique name of this post-process stage for reference by other stages.
+   *
    * @memberof AutoExposure.prototype
    * @type {string}
    * @readonly
@@ -85,6 +91,7 @@ Object.defineProperties(AutoExposure.prototype, {
 
   /**
    * A reference to the texture written to when executing this post process stage.
+   *
    * @memberof AutoExposure.prototype
    * @type {Texture}
    * @readonly
@@ -350,7 +357,9 @@ AutoExposure.prototype.execute = function (context, colorTexture) {
  * If this object was destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
  * </p>
+ *
  * @returns {boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+ *
  * @see AutoExposure#destroy
  */
 AutoExposure.prototype.isDestroyed = function () {
@@ -365,7 +374,9 @@ AutoExposure.prototype.isDestroyed = function () {
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
  * assign the return value (<code>undefined</code>) to the object as done in the example.
  * </p>
- * @throws {DeveloperError} This object was destroyed, i.e., destroy() was called.
+ *
+ * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+ *
  * @see AutoExposure#isDestroyed
  */
 AutoExposure.prototype.destroy = function () {

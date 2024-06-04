@@ -9,10 +9,13 @@ const creditToId = {};
 /**
  * A credit contains data pertaining to how to display attributions/credits for certain content on the screen.
  * @param {string} html An string representing an html code snippet
- * @param {boolean} [showOnScreen] If true, the credit will be visible in the main credit container.  Otherwise, it will appear in a popover
+ * @param {boolean} [showOnScreen=false] If true, the credit will be visible in the main credit container.  Otherwise, it will appear in a popover
+ *
  * @alias Credit
- * @class
- * @throws {DeveloperError} html is required.
+ * @constructor
+ *
+ * @exception {DeveloperError} html is required.
+ *
  * @example
  * // Create a credit with a tooltip, image and link
  * const credit = new Cesium.Credit('<a href="https://cesium.com/" target="_blank"><img src="/images/cesium_logo.png" title="Cesium"/></a>');
@@ -57,6 +60,7 @@ Object.defineProperties(Credit.prototype, {
    * @memberof Credit.prototype
    * @type {number}
    * @readonly
+   *
    * @private
    */
   id: {
@@ -109,6 +113,7 @@ Object.defineProperties(Credit.prototype, {
 
 /**
  * Returns true if the credits are equal
+ *
  * @param {Credit} left The first credit
  * @param {Credit} right The second credit
  * @returns {boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
@@ -125,6 +130,7 @@ Credit.equals = function (left, right) {
 
 /**
  * Returns true if the credits are equal
+ *
  * @param {Credit} credit The credit to compare to.
  * @returns {boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
  */
@@ -142,7 +148,7 @@ Credit.prototype.isIon = function () {
 /**
  * @private
  * @param attribution
- * @returns {Credit}
+ * @return {Credit}
  */
 Credit.getIonCredit = function (attribution) {
   const showOnScreen =
@@ -154,6 +160,7 @@ Credit.getIonCredit = function (attribution) {
 
 /**
  * Duplicates a Credit instance.
+ *
  * @param {Credit} [credit] The Credit to duplicate.
  * @returns {Credit} A new Credit instance that is a duplicate of the one provided. (Returns undefined if the credit is undefined)
  */

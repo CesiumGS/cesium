@@ -7,8 +7,9 @@ import { DeveloperError } from "@cesium/engine";
  *
  * This type describes an interface and is not intended to be instantiated directly.
  * See {@link createCommand} to create a command from a function.
+ *
  * @alias Command
- * @class
+ * @constructor
  */
 function Command() {
   /**

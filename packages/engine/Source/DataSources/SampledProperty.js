@@ -116,9 +116,12 @@ function mergeNewSamples(epoch, times, values, newData, packedLength) {
  * A {@link Property} whose value is interpolated for a given time from the
  * provided set of samples and specified interpolation algorithm and degree.
  * @alias SampledProperty
- * @class
+ * @constructor
+ *
  * @param {number|Packable} type The type of property.
  * @param {Packable[]} [derivativeTypes] When supplied, indicates that samples will contain derivative information of the specified types.
+ *
+ *
  * @example
  * //Create a linearly interpolated Cartesian2
  * const property = new Cesium.SampledProperty(Cesium.Cartesian2);
@@ -129,6 +132,7 @@ function mergeNewSamples(epoch, times, values, newData, packedLength) {
  *
  * //Retrieve an interpolated value
  * const result = property.getValue(Cesium.JulianDate.fromIso8601('2012-08-01T12:00:00.00Z'));
+ *
  * @example
  * //Create a simple numeric SampledProperty that uses third degree Hermite Polynomial Approximation
  * const property = new Cesium.SampledProperty(Number);
@@ -149,6 +153,7 @@ function mergeNewSamples(epoch, times, values, newData, packedLength) {
  *
  * //Retrieve an interpolated value
  * const result = property.getValue(Cesium.JulianDate.fromIso8601('2012-08-01T00:02:34.00Z'));
+ *
  * @see SampledPositionProperty
  */
 function SampledProperty(type, derivativeTypes) {
@@ -215,6 +220,7 @@ Object.defineProperties(SampledProperty.prototype, {
    * Gets a value indicating if this property is constant.  A property is considered
    * constant if getValue always returns the same result for the current definition.
    * @memberof SampledProperty.prototype
+   *
    * @type {boolean}
    * @readonly
    */
@@ -228,6 +234,7 @@ Object.defineProperties(SampledProperty.prototype, {
    * The definition is considered to have changed if a call to getValue would return
    * a different result for the same time.
    * @memberof SampledProperty.prototype
+   *
    * @type {Event}
    * @readonly
    */
@@ -354,6 +361,7 @@ Object.defineProperties(SampledProperty.prototype, {
 
 /**
  * Gets the value of the property at the provided time.
+ *
  * @param {JulianDate} time The time for which to retrieve the value.
  * @param {object} [result] The object to store the value into, if omitted, a new instance is created and returned.
  * @returns {object} The modified result parameter or a new instance if the result parameter was not supplied.
@@ -526,6 +534,7 @@ SampledProperty.prototype.getValue = function (time, result) {
 
 /**
  * Sets the algorithm and degree to use when interpolating a value.
+ *
  * @param {object} [options] Object with the following properties:
  * @param {InterpolationAlgorithm} [options.interpolationAlgorithm] The new interpolation algorithm.  If undefined, the existing property will be unchanged.
  * @param {number} [options.interpolationDegree] The new interpolation degree.  If undefined, the existing property will be unchanged.
@@ -564,6 +573,7 @@ SampledProperty.prototype.setInterpolationOptions = function (options) {
 
 /**
  * Adds a new sample.
+ *
  * @param {JulianDate} time The sample time.
  * @param {Packable} value The value at the provided time.
  * @param {Packable[]} [derivatives] The array of derivatives at the provided time.
@@ -604,11 +614,13 @@ SampledProperty.prototype.addSample = function (time, value, derivatives) {
 
 /**
  * Adds an array of samples.
+ *
  * @param {JulianDate[]} times An array of JulianDate instances where each index is a sample time.
  * @param {Packable[]} values The array of values, where each value corresponds to the provided times index.
  * @param {Array[]} [derivativeValues] An array where each item is the array of derivatives at the equivalent time index.
- * @throws {DeveloperError} times and values must be the same length.
- * @throws {DeveloperError} times and derivativeValues must be the same length.
+ *
+ * @exception {DeveloperError} times and values must be the same length.
+ * @exception {DeveloperError} times and derivativeValues must be the same length.
  */
 SampledProperty.prototype.addSamples = function (
   times,
@@ -663,6 +675,7 @@ SampledProperty.prototype.addSamples = function (
 /**
  * Adds samples as a single packed array where each new sample is represented as a date,
  * followed by the packed representation of the corresponding value and derivatives.
+ *
  * @param {number[]} packedSamples The array of packed samples.
  * @param {JulianDate} [epoch] If any of the dates in packedSamples are numbers, they are considered an offset from this epoch, in seconds.
  */
@@ -687,6 +700,7 @@ SampledProperty.prototype.addSamplesPackedArray = function (
 
 /**
  * Removes a sample at the given time, if present.
+ *
  * @param {JulianDate} time The sample time.
  * @returns {boolean} <code>true</code> if a sample at time was removed, <code>false</code> otherwise.
  */
@@ -716,8 +730,8 @@ function removeSamples(property, startIndex, numberToRemove) {
 
 /**
  * Removes all samples for the given time interval.
+ *
  * @param {TimeInterval} time The time interval for which to remove all samples.
- * @param timeInterval
  */
 SampledProperty.prototype.removeSamples = function (timeInterval) {
   //>>includeStart('debug', pragmas.debug);
@@ -744,6 +758,7 @@ SampledProperty.prototype.removeSamples = function (timeInterval) {
 /**
  * Compares this property to the provided property and returns
  * <code>true</code> if they are equal, <code>false</code> otherwise.
+ *
  * @param {Property} [other] The other property.
  * @returns {boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
  */

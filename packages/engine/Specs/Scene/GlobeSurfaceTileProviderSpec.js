@@ -67,7 +67,6 @@ describe(
     /**
      * Repeatedly calls update until the load queue is empty.  You must wrap any code to follow
      * this in a "runs" function.
-     * @param globe
      */
     function updateUntilDone(globe) {
       // update until the load queue is empty.

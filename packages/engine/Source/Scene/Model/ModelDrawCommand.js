@@ -23,11 +23,14 @@ import StyleCommandsNeeded from "./StyleCommandsNeeded.js";
  * A wrapper around the draw commands used to render a {@link ModelRuntimePrimitive}.
  * This manages the derived commands and pushes only the necessary commands depending
  * on the given frame state.
+ *
  * @param {object} options An object containing the following options:
  * @param {DrawCommand} options.command The draw command from which to derive other commands from.
  * @param {PrimitiveRenderResources} options.primitiveRenderResources The render resources of the primitive associated with the command.
+ *
  * @alias ModelDrawCommand
- * @class
+ * @constructor
+ *
  * @private
  */
 function ModelDrawCommand(options) {
@@ -217,8 +220,10 @@ function initialize(drawCommand) {
 Object.defineProperties(ModelDrawCommand.prototype, {
   /**
    * The main draw command that the other commands are derived from.
+   *
    * @memberof ModelDrawCommand.prototype
    * @type {DrawCommand}
+   *
    * @readonly
    * @private
    */
@@ -230,8 +235,10 @@ Object.defineProperties(ModelDrawCommand.prototype, {
 
   /**
    * The runtime primitive that the draw command belongs to.
+   *
    * @memberof ModelDrawCommand.prototype
    * @type {ModelRuntimePrimitive}
+   *
    * @readonly
    * @private
    */
@@ -243,8 +250,10 @@ Object.defineProperties(ModelDrawCommand.prototype, {
 
   /**
    * The model that the draw command belongs to.
+   *
    * @memberof ModelDrawCommand.prototype
    * @type {Model}
+   *
    * @readonly
    * @private
    */
@@ -256,8 +265,10 @@ Object.defineProperties(ModelDrawCommand.prototype, {
 
   /**
    * The primitive type of the draw command.
+   *
    * @memberof ModelDrawCommand.prototype
    * @type {PrimitiveType}
+   *
    * @readonly
    * @private
    */
@@ -270,8 +281,10 @@ Object.defineProperties(ModelDrawCommand.prototype, {
   /**
    * The current model matrix applied to the draw commands. If there are
    * 2D draw commands, their model matrix will be derived from the 3D one.
+   *
    * @memberof ModelDrawCommand.prototype
    * @type {Matrix4}
+   *
    * @readonly
    * @private
    */
@@ -295,8 +308,10 @@ Object.defineProperties(ModelDrawCommand.prototype, {
    * The bounding volume of the main draw command. This is equivalent
    * to the primitive's bounding sphere transformed by the draw
    * command's model matrix.
+   *
    * @memberof ModelDrawCommand.prototype
    * @type {BoundingSphere}
+   *
    * @readonly
    * @private
    */
@@ -308,8 +323,10 @@ Object.defineProperties(ModelDrawCommand.prototype, {
 
   /**
    * Whether the geometry casts or receives shadows from light sources.
+   *
    * @memberof ModelDrawCommand.prototype
    * @type {ShadowMode}
+   *
    * @private
    */
   shadows: {
@@ -327,8 +344,10 @@ Object.defineProperties(ModelDrawCommand.prototype, {
    * determined by the material's doubleSided property; when false, back face
    * culling is disabled. Back faces are not culled if the command is
    * translucent.
+   *
    * @memberof ModelDrawCommand.prototype
    * @type {boolean}
+   *
    * @private
    */
   backFaceCulling: {
@@ -347,8 +366,10 @@ Object.defineProperties(ModelDrawCommand.prototype, {
 
   /**
    * Determines which faces to cull, if culling is enabled.
+   *
    * @memberof ModelDrawCommand.prototype
    * @type {CullFace}
+   *
    * @private
    */
   cullFace: {
@@ -367,8 +388,10 @@ Object.defineProperties(ModelDrawCommand.prototype, {
 
   /**
    * Whether to draw the bounding sphere associated with this draw command.
+   *
    * @memberof ModelDrawCommand.prototype
    * @type {boolean}
+   *
    * @private
    */
   debugShowBoundingVolume: {
@@ -471,9 +494,12 @@ function updateDebugShowBoundingVolume(drawCommand) {
 /**
  * Pushes the draw commands necessary to render the primitive.
  * This does not include the draw commands that render its silhouette.
+ *
  * @param {FrameState} frameState The frame state.
  * @param {DrawCommand[]} result The array to push the draw commands to.
+ *
  * @returns {DrawCommand[]} The modified result parameter.
+ *
  * @private
  */
 ModelDrawCommand.prototype.pushCommands = function (frameState, result) {
@@ -542,9 +568,12 @@ ModelDrawCommand.prototype.pushCommands = function (frameState, result) {
  * not have been derived for 2D. The model matrix will also not have been
  * updated for 2D commands.
  * </p>
+ *
  * @param {FrameState} frameState The frame state.
  * @param {DrawCommand[]} result The array to push the silhouette commands to.
+ *
  * @returns {DrawCommand[]} The modified result parameter.
+ *
  * @private
  */
 ModelDrawCommand.prototype.pushSilhouetteCommands = function (

@@ -7,14 +7,17 @@ import JulianDate from "./JulianDate.js";
 /**
  * An interval defined by a start and a stop time; optionally including those times as part of the interval.
  * Arbitrary data can optionally be associated with each instance for used with {@link TimeIntervalCollection}.
+ *
  * @alias TimeInterval
- * @class
+ * @constructor
+ *
  * @param {object} [options] Object with the following properties:
- * @param {JulianDate} [options.start] The start time of the interval.
- * @param {JulianDate} [options.stop] The stop time of the interval.
- * @param {boolean} [options.isStartIncluded] <code>true</code> if <code>options.start</code> is included in the interval, <code>false</code> otherwise.
- * @param {boolean} [options.isStopIncluded] <code>true</code> if <code>options.stop</code> is included in the interval, <code>false</code> otherwise.
+ * @param {JulianDate} [options.start=new JulianDate()] The start time of the interval.
+ * @param {JulianDate} [options.stop=new JulianDate()] The stop time of the interval.
+ * @param {boolean} [options.isStartIncluded=true] <code>true</code> if <code>options.start</code> is included in the interval, <code>false</code> otherwise.
+ * @param {boolean} [options.isStopIncluded=true] <code>true</code> if <code>options.stop</code> is included in the interval, <code>false</code> otherwise.
  * @param {object} [options.data] Arbitrary data associated with this interval.
+ *
  * @example
  * // Create an instance that spans August 1st, 1980 and is associated
  * // with a Cartesian position.
@@ -25,6 +28,7 @@ import JulianDate from "./JulianDate.js";
  *     isStopIncluded : false,
  *     data : Cesium.Cartesian3.fromDegrees(39.921037, -75.170082)
  * });
+ *
  * @example
  * // Create two instances from ISO 8601 intervals with associated numeric data
  * // then compute their intersection, summing the data they contain.
@@ -47,6 +51,7 @@ import JulianDate from "./JulianDate.js";
  * Cesium.TimeInterval.intersect(left, right, intersection, function(leftData, rightData) {
  *     return leftData + rightData;
  * });
+ *
  * @example
  * // Check if an interval contains a specific time.
  * const dateToCheck = Cesium.JulianDate.fromIso8601('1982-09-08T11:30:00Z');
@@ -120,11 +125,13 @@ const scratchInterval = {
 
 /**
  * Creates a new instance from a {@link http://en.wikipedia.org/wiki/ISO_8601|ISO 8601} interval.
+ *
  * @throws DeveloperError if options.iso8601 does not match proper formatting.
+ *
  * @param {object} options Object with the following properties:
  * @param {string} options.iso8601 An ISO 8601 interval.
- * @param {boolean} [options.isStartIncluded] <code>true</code> if <code>options.start</code> is included in the interval, <code>false</code> otherwise.
- * @param {boolean} [options.isStopIncluded] <code>true</code> if <code>options.stop</code> is included in the interval, <code>false</code> otherwise.
+ * @param {boolean} [options.isStartIncluded=true] <code>true</code> if <code>options.start</code> is included in the interval, <code>false</code> otherwise.
+ * @param {boolean} [options.isStopIncluded=true] <code>true</code> if <code>options.stop</code> is included in the interval, <code>false</code> otherwise.
  * @param {object} [options.data] Arbitrary data associated with this interval.
  * @param {TimeInterval} [result] An existing instance to use for the result.
  * @returns {TimeInterval} The modified result parameter or a new instance if none was provided.
@@ -166,6 +173,7 @@ TimeInterval.fromIso8601 = function (options, result) {
 
 /**
  * Creates an ISO8601 representation of the provided interval.
+ *
  * @param {TimeInterval} timeInterval The interval to be converted.
  * @param {number} [precision] The number of fractional digits used to represent the seconds component.  By default, the most precise representation is used.
  * @returns {string} The ISO8601 representation of the provided interval.
@@ -183,6 +191,7 @@ TimeInterval.toIso8601 = function (timeInterval, precision) {
 
 /**
  * Duplicates the provided instance.
+ *
  * @param {TimeInterval} [timeInterval] The instance to clone.
  * @param {TimeInterval} [result] An existing instance to use for the result.
  * @returns {TimeInterval} The modified result parameter or a new instance if none was provided.
@@ -204,6 +213,7 @@ TimeInterval.clone = function (timeInterval, result) {
 
 /**
  * Compares two instances and returns <code>true</code> if they are equal, <code>false</code> otherwise.
+ *
  * @param {TimeInterval} [left] The first instance.
  * @param {TimeInterval} [right] The second instance.
  * @param {TimeInterval.DataComparer} [dataComparer] A function which compares the data of the two intervals.  If omitted, reference equality is used.
@@ -229,9 +239,10 @@ TimeInterval.equals = function (left, right, dataComparer) {
  * each other.  That is, in order for the dates to be considered equal (and for
  * this function to return <code>true</code>), the absolute value of the difference between them, in
  * seconds, must be less than <code>epsilon</code>.
+ *
  * @param {TimeInterval} [left] The first instance.
  * @param {TimeInterval} [right] The second instance.
- * @param {number} [epsilon] The maximum number of seconds that should separate the two instances.
+ * @param {number} [epsilon=0] The maximum number of seconds that should separate the two instances.
  * @param {TimeInterval.DataComparer} [dataComparer] A function which compares the data of the two intervals.  If omitted, reference equality is used.
  * @returns {boolean} <code>true</code> if the two dates are within <code>epsilon</code> seconds of each other; otherwise <code>false</code>.
  */
@@ -254,6 +265,7 @@ TimeInterval.equalsEpsilon = function (left, right, epsilon, dataComparer) {
 
 /**
  * Computes the intersection of two intervals, optionally merging their data.
+ *
  * @param {TimeInterval} left The first interval.
  * @param {TimeInterval} [right] The second interval.
  * @param {TimeInterval} [result] An existing instance to use for the result.
@@ -316,6 +328,7 @@ TimeInterval.intersect = function (left, right, result, mergeCallback) {
 
 /**
  * Checks if the specified date is inside the provided interval.
+ *
  * @param {TimeInterval} timeInterval The interval.
  * @param {JulianDate} julianDate The date to check.
  * @returns {boolean} <code>true</code> if the interval contains the specified date, <code>false</code> otherwise.
@@ -348,6 +361,7 @@ TimeInterval.contains = function (timeInterval, julianDate) {
 
 /**
  * Duplicates this instance.
+ *
  * @param {TimeInterval} [result] An existing instance to use for the result.
  * @returns {TimeInterval} The modified result parameter or a new instance if none was provided.
  */
@@ -358,6 +372,7 @@ TimeInterval.prototype.clone = function (result) {
 /**
  * Compares this instance against the provided instance componentwise and returns
  * <code>true</code> if they are equal, <code>false</code> otherwise.
+ *
  * @param {TimeInterval} [right] The right hand side interval.
  * @param {TimeInterval.DataComparer} [dataComparer] A function which compares the data of the two intervals.  If omitted, reference equality is used.
  * @returns {boolean} <code>true</code> if they are equal, <code>false</code> otherwise.
@@ -370,8 +385,9 @@ TimeInterval.prototype.equals = function (right, dataComparer) {
  * Compares this instance against the provided instance componentwise and returns
  * <code>true</code> if they are within the provided epsilon,
  * <code>false</code> otherwise.
+ *
  * @param {TimeInterval} [right] The right hand side interval.
- * @param {number} [epsilon] The epsilon to use for equality testing.
+ * @param {number} [epsilon=0] The epsilon to use for equality testing.
  * @param {TimeInterval.DataComparer} [dataComparer] A function which compares the data of the two intervals.  If omitted, reference equality is used.
  * @returns {boolean} <code>true</code> if they are within the provided epsilon, <code>false</code> otherwise.
  */
@@ -381,6 +397,7 @@ TimeInterval.prototype.equalsEpsilon = function (right, epsilon, dataComparer) {
 
 /**
  * Creates a string representing this TimeInterval in ISO8601 format.
+ *
  * @returns {string} A string representing this TimeInterval in ISO8601 format.
  */
 TimeInterval.prototype.toString = function () {
@@ -389,6 +406,7 @@ TimeInterval.prototype.toString = function () {
 
 /**
  * An immutable empty interval.
+ *
  * @type {TimeInterval}
  * @constant
  */
@@ -404,6 +422,7 @@ TimeInterval.EMPTY = Object.freeze(
 /**
  * Function interface for merging interval data.
  * @callback TimeInterval.MergeCallback
+ *
  * @param {*} leftData The first data instance.
  * @param {*} rightData The second data instance.
  * @returns {*} The result of merging the two data instances.

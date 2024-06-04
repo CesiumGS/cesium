@@ -6,8 +6,9 @@ import Property from "./Property.js";
 
 /**
  * A {@link CompositeProperty} which is also a {@link MaterialProperty}.
+ *
  * @alias CompositeMaterialProperty
- * @class
+ * @constructor
  */
 function CompositeMaterialProperty() {
   this._definitionChanged = new Event();
@@ -23,6 +24,7 @@ Object.defineProperties(CompositeMaterialProperty.prototype, {
    * Gets a value indicating if this property is constant.  A property is considered
    * constant if getValue always returns the same result for the current definition.
    * @memberof CompositeMaterialProperty.prototype
+   *
    * @type {boolean}
    * @readonly
    */
@@ -36,6 +38,7 @@ Object.defineProperties(CompositeMaterialProperty.prototype, {
    * The definition is changed whenever setValue is called with data different
    * than the current value.
    * @memberof CompositeMaterialProperty.prototype
+   *
    * @type {Event}
    * @readonly
    */
@@ -47,6 +50,7 @@ Object.defineProperties(CompositeMaterialProperty.prototype, {
   /**
    * Gets the interval collection.
    * @memberof CompositeMaterialProperty.prototype
+   *
    * @type {TimeIntervalCollection}
    */
   intervals: {
@@ -58,6 +62,7 @@ Object.defineProperties(CompositeMaterialProperty.prototype, {
 
 /**
  * Gets the {@link Material} type at the provided time.
+ *
  * @param {JulianDate} time The time for which to retrieve the type.
  * @returns {string} The type of material.
  */
@@ -79,6 +84,7 @@ CompositeMaterialProperty.prototype.getType = function (time) {
 
 /**
  * Gets the value of the property at the provided time.
+ *
  * @param {JulianDate} time The time for which to retrieve the value.
  * @param {object} [result] The object to store the value into, if omitted, a new instance is created and returned.
  * @returns {object} The modified result parameter or a new instance if the result parameter was not supplied.
@@ -102,6 +108,7 @@ CompositeMaterialProperty.prototype.getValue = function (time, result) {
 /**
  * Compares this property to the provided property and returns
  * <code>true</code> if they are equal, <code>false</code> otherwise.
+ *
  * @param {Property} [other] The other property.
  * @returns {boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
  */

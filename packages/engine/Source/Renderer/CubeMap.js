@@ -14,7 +14,6 @@ import TextureMagnificationFilter from "./TextureMagnificationFilter.js";
 import TextureMinificationFilter from "./TextureMinificationFilter.js";
 
 /**
- * @param options
  * @private
  */
 function CubeMap(options) {
@@ -574,11 +573,14 @@ Object.defineProperties(CubeMap.prototype, {
 
 /**
  * Generates a complete mipmap chain for each cubemap face.
- * @param {MipmapHint} [hint] A performance vs. quality hint.
- * @throws {DeveloperError} hint is invalid.
- * @throws {DeveloperError} This CubeMap's width must be a power of two to call generateMipmap().
- * @throws {DeveloperError} This CubeMap's height must be a power of two to call generateMipmap().
- * @throws {DeveloperError} This CubeMap was destroyed, i.e., destroy() was called.
+ *
+ * @param {MipmapHint} [hint=MipmapHint.DONT_CARE] A performance vs. quality hint.
+ *
+ * @exception {DeveloperError} hint is invalid.
+ * @exception {DeveloperError} This CubeMap's width must be a power of two to call generateMipmap().
+ * @exception {DeveloperError} This CubeMap's height must be a power of two to call generateMipmap().
+ * @exception {DeveloperError} This CubeMap was destroyed, i.e., destroy() was called.
+ *
  * @example
  * // Generate mipmaps, and then set the sampler so mipmaps are used for
  * // minification when the cube map is sampled.

@@ -6,17 +6,6 @@ import PixelFormat from "../Core/PixelFormat.js";
 import PixelDatatype from "./PixelDatatype.js";
 
 /**
- * @param context
- * @param texture
- * @param textureTarget
- * @param targetFace
- * @param internalFormat
- * @param pixelFormat
- * @param pixelDatatype
- * @param size
- * @param preMultiplyAlpha
- * @param flipY
- * @param initialized
  * @private
  */
 function CubeMapFace(
@@ -68,14 +57,15 @@ Object.defineProperties(CubeMapFace.prototype, {
  * @param {object} options Object with the following properties:
  * @param {object} options.source The source {@link ImageData}, {@link HTMLImageElement}, {@link HTMLCanvasElement}, {@link HTMLVideoElement},
  *                              or an object with a width, height, and arrayBufferView properties.
- * @param {number} [options.xOffset] An offset in the x direction in the cubemap where copying begins.
- * @param {number} [options.yOffset] An offset in the y direction in the cubemap where copying begins.
- * @param {boolean} [options.skipColorSpaceConversion] If true, any custom gamma or color profiles in the texture will be ignored.
- * @throws {DeveloperError} xOffset must be greater than or equal to zero.
- * @throws {DeveloperError} yOffset must be greater than or equal to zero.
- * @throws {DeveloperError} xOffset + source.width must be less than or equal to width.
- * @throws {DeveloperError} yOffset + source.height must be less than or equal to height.
- * @throws {DeveloperError} This CubeMap was destroyed, i.e., destroy() was called.
+ * @param {number} [options.xOffset=0] An offset in the x direction in the cubemap where copying begins.
+ * @param {number} [options.yOffset=0] An offset in the y direction in the cubemap where copying begins.
+ * @param {boolean} [options.skipColorSpaceConversion=false] If true, any custom gamma or color profiles in the texture will be ignored.
+ * @exception {DeveloperError} xOffset must be greater than or equal to zero.
+ * @exception {DeveloperError} yOffset must be greater than or equal to zero.
+ * @exception {DeveloperError} xOffset + source.width must be less than or equal to width.
+ * @exception {DeveloperError} yOffset + source.height must be less than or equal to height.
+ * @exception {DeveloperError} This CubeMap was destroyed, i.e., destroy() was called.
+ *
  * @example
  * // Create a cubemap with 1x1 faces, and make the +x face red.
  * const cubeMap = new CubeMap({
@@ -277,22 +267,25 @@ CubeMapFace.prototype.copyFrom = function (options) {
 
 /**
  * Copies texels from the framebuffer to the cubemap's face.
- * @param {number} [xOffset] An offset in the x direction in the cubemap where copying begins.
- * @param {number} [yOffset] An offset in the y direction in the cubemap where copying begins.
- * @param {number} [framebufferXOffset] An offset in the x direction in the framebuffer where copying begins from.
- * @param {number} [framebufferYOffset] An offset in the y direction in the framebuffer where copying begins from.
- * @param {number} [width] The width of the subimage to copy.
- * @param {number} [height] The height of the subimage to copy.
- * @throws {DeveloperError} Cannot call copyFromFramebuffer when the texture pixel data type is FLOAT.
- * @throws {DeveloperError} Cannot call copyFromFramebuffer when the texture pixel data type is HALF_FLOAT.
- * @throws {DeveloperError} This CubeMap was destroyed, i.e., destroy() was called.
- * @throws {DeveloperError} xOffset must be greater than or equal to zero.
- * @throws {DeveloperError} yOffset must be greater than or equal to zero.
- * @throws {DeveloperError} framebufferXOffset must be greater than or equal to zero.
- * @throws {DeveloperError} framebufferYOffset must be greater than or equal to zero.
- * @throws {DeveloperError} xOffset + source.width must be less than or equal to width.
- * @throws {DeveloperError} yOffset + source.height must be less than or equal to height.
- * @throws {DeveloperError} This CubeMap was destroyed, i.e., destroy() was called.
+ *
+ * @param {number} [xOffset=0] An offset in the x direction in the cubemap where copying begins.
+ * @param {number} [yOffset=0] An offset in the y direction in the cubemap where copying begins.
+ * @param {number} [framebufferXOffset=0] An offset in the x direction in the framebuffer where copying begins from.
+ * @param {number} [framebufferYOffset=0] An offset in the y direction in the framebuffer where copying begins from.
+ * @param {number} [width=CubeMap's width] The width of the subimage to copy.
+ * @param {number} [height=CubeMap's height] The height of the subimage to copy.
+ *
+ * @exception {DeveloperError} Cannot call copyFromFramebuffer when the texture pixel data type is FLOAT.
+ * @exception {DeveloperError} Cannot call copyFromFramebuffer when the texture pixel data type is HALF_FLOAT.
+ * @exception {DeveloperError} This CubeMap was destroyed, i.e., destroy() was called.
+ * @exception {DeveloperError} xOffset must be greater than or equal to zero.
+ * @exception {DeveloperError} yOffset must be greater than or equal to zero.
+ * @exception {DeveloperError} framebufferXOffset must be greater than or equal to zero.
+ * @exception {DeveloperError} framebufferYOffset must be greater than or equal to zero.
+ * @exception {DeveloperError} xOffset + source.width must be less than or equal to width.
+ * @exception {DeveloperError} yOffset + source.height must be less than or equal to height.
+ * @exception {DeveloperError} This CubeMap was destroyed, i.e., destroy() was called.
+ *
  * @example
  * // Copy the framebuffer contents to the +x cube map face.
  * cubeMap.positiveX.copyFromFramebuffer();

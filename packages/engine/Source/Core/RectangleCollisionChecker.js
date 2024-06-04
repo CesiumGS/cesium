@@ -28,6 +28,7 @@ RectangleWithId.fromRectangleAndId = function (id, rectangle, result) {
 
 /**
  * Insert a rectangle into the collision checker.
+ *
  * @param {string} id Unique string ID for the rectangle being inserted.
  * @param {Rectangle} rectangle A Rectangle
  * @private
@@ -53,6 +54,7 @@ function idCompare(a, b) {
 const removalScratch = new RectangleWithId();
 /**
  * Remove a rectangle from the collision checker.
+ *
  * @param {string} id Unique string ID for the rectangle being removed.
  * @param {Rectangle} rectangle A Rectangle
  * @private
@@ -74,6 +76,7 @@ RectangleCollisionChecker.prototype.remove = function (id, rectangle) {
 const collisionScratch = new RectangleWithId();
 /**
  * Checks if a given rectangle collides with any of the rectangles in the collection.
+ *
  * @param {Rectangle} rectangle A Rectangle that should be checked against the rectangles in the collision checker.
  * @returns {boolean} Whether the rectangle collides with any of the rectangles in the collision checker.
  */

@@ -15,14 +15,18 @@ import Material from "./Material.js";
 /**
  * Draws the Moon in 3D.
  * @alias Moon
- * @class
+ * @constructor
+ *
  * @param {object} [options] Object with the following properties:
- * @param {boolean} [options.show] Determines whether the moon will be rendered.
- * @param {string} [options.textureUrl] The moon texture.
- * @param {Ellipsoid} [options.ellipsoid] The moon ellipsoid.
- * @param {boolean} [options.onlySunLighting] Use the sun as the only light source.
+ * @param {boolean} [options.show=true] Determines whether the moon will be rendered.
+ * @param {string} [options.textureUrl=buildModuleUrl('Assets/Textures/moonSmall.jpg')] The moon texture.
+ * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.MOON] The moon ellipsoid.
+ * @param {boolean} [options.onlySunLighting=true] Use the sun as the only light source.
+ *
+ *
  * @example
  * scene.moon = new Cesium.Moon();
+ *
  * @see Scene#moon
  */
 function Moon(options) {
@@ -35,6 +39,7 @@ function Moon(options) {
 
   /**
    * Determines if the moon will be shown.
+   *
    * @type {boolean}
    * @default true
    */
@@ -70,9 +75,12 @@ function Moon(options) {
 Object.defineProperties(Moon.prototype, {
   /**
    * Get the ellipsoid that defines the shape of the moon.
+   *
    * @memberof Moon.prototype
+   *
    * @type {Ellipsoid}
    * @readonly
+   *
    * @default {@link Ellipsoid.MOON}
    */
   ellipsoid: {
@@ -88,7 +96,6 @@ const translationScratch = new Cartesian3();
 const scratchCommandList = [];
 
 /**
- * @param frameState
  * @private
  */
 Moon.prototype.update = function (frameState) {
@@ -134,7 +141,9 @@ Moon.prototype.update = function (frameState) {
  * <br /><br />
  * If this object was destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
+ *
  * @returns {boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+ *
  * @see Moon#destroy
  */
 Moon.prototype.isDestroyed = function () {
@@ -148,9 +157,13 @@ Moon.prototype.isDestroyed = function () {
  * Once an object is destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
  * assign the return value (<code>undefined</code>) to the object as done in the example.
- * @throws {DeveloperError} This object was destroyed, i.e., destroy() was called.
+ *
+ * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+ *
+ *
  * @example
  * moon = moon && moon.destroy();
+ *
  * @see Moon#isDestroyed
  */
 Moon.prototype.destroy = function () {

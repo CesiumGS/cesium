@@ -6,8 +6,10 @@ import ImageryLayerFeatureInfo from "./ImageryLayerFeatureInfo.js";
 
 /**
  * Describes the format in which to request GetFeatureInfo from a Web Map Service (WMS) server.
+ *
  * @alias GetFeatureInfoFormat
- * @class
+ * @constructor
+ *
  * @param {string} type The type of response to expect from a GetFeatureInfo request.  Valid
  *        values are 'json', 'xml', 'html', or 'text'.
  * @param {string} [format] The info format to request from the WMS server.  This is usually a

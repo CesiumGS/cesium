@@ -1,9 +1,6 @@
 import { defaultValue, JulianDate } from "@cesium/engine";
 
 /**
- * @param color
- * @param heightInPx
- * @param base
  * @private
  */
 function TimelineHighlightRange(color, heightInPx, base) {

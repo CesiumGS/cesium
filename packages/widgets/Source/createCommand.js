@@ -8,9 +8,11 @@ import knockout from "./ThirdParty/knockout.js";
  * whether the command can be executed.  When executed, a Command function will check the
  * value of <code>canExecute</code> and throw if false.  It also provides events for when
  * a command has been or is about to be executed.
+ *
  * @function
+ *
  * @param {Function} func The function to execute.
- * @param {boolean} [canExecute] A boolean indicating whether the function can currently be executed.
+ * @param {boolean} [canExecute=true] A boolean indicating whether the function can currently be executed.
  */
 function createCommand(func, canExecute) {
   //>>includeStart('debug', pragmas.debug);

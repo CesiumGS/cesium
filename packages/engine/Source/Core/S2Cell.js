@@ -32,13 +32,13 @@ import RuntimeError from "./RuntimeError.js";
  * of the cell along the Hilbert curve. After the positions bits is the sentinel bit, which is always set to 1, and it indicates the level of the
  * cell. Again, the level can be between 0 and 30 in S2.
  *
- * Note: In the illustration below, the face bits are marked with 'f', the position bits are marked with 'p', the zero bits are marked with '-'.
+ *   Note: In the illustration below, the face bits are marked with 'f', the position bits are marked with 'p', the zero bits are marked with '-'.
  *
- * Cell ID (base 10): 3170534137668829184
- * Cell ID (base 2) : 0010110000000000000000000000000000000000000000000000000000000000
+ *   Cell ID (base 10): 3170534137668829184
+ *   Cell ID (base 2) : 0010110000000000000000000000000000000000000000000000000000000000
  *
- * 001 0110000000000000000000000000000000000000000000000000000000000
- * fff pps----------------------------------------------------------
+ *   001 0110000000000000000000000000000000000000000000000000000000000
+ *   fff pps----------------------------------------------------------
  *
  * For the cell above, we can see that it lies on face 1 (01), with a Hilbert index of 1 (1).
  *
@@ -48,43 +48,43 @@ import RuntimeError from "./RuntimeError.js";
  * Cells in S2 subdivide recursively using quadtree subdivision. For each cell, you can get a child of index [0-3]. To compute the child at index i,
  * insert the base 2 representation of i to the right of the parent's position bits. Ensure that the sentinel bit is also shifted two places to the right.
  *
- * Parent Cell ID (base 10) : 3170534137668829184
- * Parent Cell ID (base 2)  : 0010110000000000000000000000000000000000000000000000000000000000
+ *   Parent Cell ID (base 10) : 3170534137668829184
+ *   Parent Cell ID (base 2)  : 0010110000000000000000000000000000000000000000000000000000000000
  *
- * 001 0110000000000000000000000000000000000000000000000000000000000
- * fff pps----------------------------------------------------------
+ *   001 0110000000000000000000000000000000000000000000000000000000000
+ *   fff pps----------------------------------------------------------
  *
- * To get the 3rd child of the cell above, we insert the binary representation of 3 to the right of the parent's position bits:
+ *   To get the 3rd child of the cell above, we insert the binary representation of 3 to the right of the parent's position bits:
  *
- * Note: In the illustration below, the bits to be added are highlighted with '^'.
+ *   Note: In the illustration below, the bits to be added are highlighted with '^'.
  *
- * 001 0111100000000000000000000000000000000000000000000000000000000
- * fff pppps--------------------------------------------------------
- * ^^
+ *   001 0111100000000000000000000000000000000000000000000000000000000
+ *   fff pppps--------------------------------------------------------
+ *         ^^
  *
- * Child(3) Cell ID (base 10) : 3386706919782612992
- * Child(3) Cell ID (base 2)  : 0010111100000000000000000000000000000000000000000000000000000000
+ *   Child(3) Cell ID (base 10) : 3386706919782612992
+ *   Child(3) Cell ID (base 2)  : 0010111100000000000000000000000000000000000000000000000000000000
  *
  * Cell Token:
  * -----------
  * To provide a more concise representation of the S2 cell ID, we can use their hexadecimal representation.
  *
- * Cell ID (base 10): 3170534137668829184
- * Cell ID (base 2) : 0010110000000000000000000000000000000000000000000000000000000000
+ *   Cell ID (base 10): 3170534137668829184
+ *   Cell ID (base 2) : 0010110000000000000000000000000000000000000000000000000000000000
  *
- * We remove all trailing zero bits, until we reach the nybble (4 bits) that contains the sentinel bit.
+ *   We remove all trailing zero bits, until we reach the nybble (4 bits) that contains the sentinel bit.
  *
- * Note: In the illustration below, the bits to be removed are highlighted with 'X'.
+ *   Note: In the illustration below, the bits to be removed are highlighted with 'X'.
  *
- * 0010110000000000000000000000000000000000000000000000000000000000
- * fffpps--XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+ *   0010110000000000000000000000000000000000000000000000000000000000
+ *   fffpps--XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
  *
- * We convert the remaining bits to their hexadecimal representation.
+ *   We convert the remaining bits to their hexadecimal representation.
  *
- * Base 2: 0010 1100
- * Base 16: "2"  "c"
+ *   Base 2: 0010 1100
+ *   Base 16: "2"  "c"
  *
- * Cell Token: "2c"
+ *   Cell Token: "2c"
  *
  * To compute the cell ID from the token, we simply add enough zeros to the right to make the ID span 64 bits.
  *
@@ -93,13 +93,14 @@ import RuntimeError from "./RuntimeError.js";
  *
  * To go from a cell in S2 to a point on the ellipsoid, the following order of transforms is applied:
  *
- * 1. (Cell ID): S2 cell ID
- * 2. (Face, I, J): Leaf cell coordinates, where i and j are in range [0, 2^30 - 1]
- * 3. (Face, S, T): Cell space coordinates, where s and t are in range [0, 1].
- * 4. (Face, Si, Ti): Discrete cell space coordinates, where si and ti are in range [0, 2^31]
- * 5. (Face, U, V): Cube space coordinates, where u and v are in range [-1, 1]. We apply the non-linear quadratic transform here.
- * 6. (X, Y, Z): Direction vector, where vector may not be unit length. Can be normalized to obtain point on unit sphere
- * 7. (Latitude, Longitude): Direction vector, where latitude is in range [-90, 90] and longitude is in range [-180, 180]
+ *   1. (Cell ID): S2 cell ID
+ *   2. (Face, I, J): Leaf cell coordinates, where i and j are in range [0, 2^30 - 1]
+ *   3. (Face, S, T): Cell space coordinates, where s and t are in range [0, 1].
+ *   4. (Face, Si, Ti): Discrete cell space coordinates, where si and ti are in range [0, 2^31]
+ *   5. (Face, U, V): Cube space coordinates, where u and v are in range [-1, 1]. We apply the non-linear quadratic transform here.
+ *   6. (X, Y, Z): Direction vector, where vector may not be unit length. Can be normalized to obtain point on unit sphere
+ *   7. (Latitude, Longitude): Direction vector, where latitude is in range [-90, 90] and longitude is in range [-180, 180]
+ *
  * @ignore
  */
 
@@ -149,8 +150,10 @@ const S2_POSITION_TO_ORIENTATION_MASK = [
 
 /**
  * Represents a cell in the S2 geometry library.
+ *
  * @alias S2Cell
- * @class
+ * @constructor
+ *
  * @param {bigint} [cellId] The 64-bit S2CellId.
  * @private
  */
@@ -173,6 +176,7 @@ function S2Cell(cellId) {
 
 /**
  * Creates a new S2Cell from a token. A token is a hexadecimal representation of the 64-bit S2CellId.
+ *
  * @param {string} token The token for the S2 Cell.
  * @returns {S2Cell} Returns a new S2Cell.
  * @private
@@ -190,6 +194,7 @@ S2Cell.fromToken = function (token) {
 
 /**
  * Validates an S2 cell ID.
+ *
  * @param {bigint} [cellId] The S2CellId.
  * @returns {boolean} Returns true if the cell ID is valid, returns false otherwise.
  * @private
@@ -223,6 +228,7 @@ S2Cell.isValidId = function (cellId) {
 
 /**
  * Validates an S2 cell token.
+ *
  * @param {string} [token] The hexadecimal representation of an S2CellId.
  * @returns {boolean} Returns true if the token is valid, returns false otherwise.
  * @private
@@ -241,6 +247,7 @@ S2Cell.isValidToken = function (token) {
 
 /**
  * Converts an S2 cell token to a 64-bit S2 cell ID.
+ *
  * @param {string} [token] The hexadecimal representation of an S2CellId. Expected to be a valid S2 token.
  * @returns {bigint} Returns the S2 cell ID.
  * @private
@@ -255,6 +262,7 @@ S2Cell.getIdFromToken = function (token) {
 
 /**
  * Converts a 64-bit S2 cell ID to an S2 cell token.
+ *
  * @param {bigint} [cellId] The S2 cell ID.
  * @returns {string} Returns hexadecimal representation of an S2CellId.
  * @private
@@ -275,6 +283,7 @@ S2Cell.getTokenFromId = function (cellId) {
 
 /**
  * Gets the level of the cell from the cell ID.
+ *
  * @param {bigint} [cellId] The S2 cell ID.
  * @returns {number} Returns the level of the cell.
  * @private
@@ -304,6 +313,7 @@ S2Cell.getLevel = function (cellId) {
 
 /**
  * Gets the child cell of the cell at the given index.
+ *
  * @param {number} index An integer index of the child.
  * @returns {S2Cell} The child of the S2Cell.
  * @private
@@ -330,6 +340,7 @@ S2Cell.prototype.getChild = function (index) {
 
 /**
  * Gets the parent cell of an S2Cell.
+ *
  * @returns {S2Cell} Returns the parent of the S2Cell.
  * @private
  */
@@ -349,7 +360,7 @@ S2Cell.prototype.getParent = function () {
 
 /**
  * Gets the parent cell at the given level.
- * @param level
+ *
  * @returns {S2Cell} Returns the parent of the S2Cell.
  * @private
  */
@@ -365,8 +376,8 @@ S2Cell.prototype.getParentAtLevel = function (level) {
 
 /**
  * Get center of the S2 cell.
- * @param {Ellipsoid} [options.ellipsoid] The ellipsoid.
- * @param ellipsoid
+ *
+ * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid.
  * @returns {Cartesian3} The position of center of the S2 cell.
  * @private
  */
@@ -386,9 +397,9 @@ S2Cell.prototype.getCenter = function (ellipsoid) {
 
 /**
  * Get vertex of the S2 cell. Vertices are indexed in CCW order.
+ *
  * @param {number} index An integer index of the vertex. Must be in the range [0-3].
- * @param {Ellipsoid} [options.ellipsoid] The ellipsoid.
- * @param ellipsoid
+ * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid.
  * @returns {Cartesian3} The position of the vertex of the S2 cell.
  * @private
  */
@@ -415,6 +426,7 @@ S2Cell.prototype.getVertex = function (index, ellipsoid) {
 
 /**
  * Creates an S2Cell from its face, position along the Hilbert curve for a given level.
+ *
  * @param {number} face The root face of S2 this cell is on. Must be in the range [0-5].
  * @param {bigint} position The position along the Hilbert curve. Must be in the range [0-4**level).
  * @param {number} level The level of the S2 curve. Must be in the range [0-30].
@@ -455,8 +467,6 @@ S2Cell.fromFacePositionLevel = function (face, position, level) {
 };
 
 /**
- * @param cellId
- * @param level
  * @private
  */
 function getS2Center(cellId, level) {
@@ -464,9 +474,6 @@ function getS2Center(cellId, level) {
   return convertFaceSiTitoXYZ(faceSiTi[0], faceSiTi[1], faceSiTi[2]);
 }
 /**
- * @param cellId
- * @param level
- * @param index
  * @private
  */
 function getS2Vertex(cellId, level, index) {
@@ -480,8 +487,6 @@ function getS2Vertex(cellId, level, index) {
 // S2 Coordinate Conversions
 
 /**
- * @param cellId
- * @param level
  * @private
  */
 function convertCellIdToFaceSiTi(cellId, level) {
@@ -504,7 +509,6 @@ function convertCellIdToFaceSiTi(cellId, level) {
 }
 
 /**
- * @param cellId
  * @private
  */
 function convertCellIdToFaceIJ(cellId) {
@@ -542,9 +546,6 @@ function convertCellIdToFaceIJ(cellId) {
 }
 
 /**
- * @param face
- * @param si
- * @param ti
  * @private
  */
 function convertFaceSiTitoXYZ(face, si, ti) {
@@ -557,9 +558,6 @@ function convertFaceSiTitoXYZ(face, si, ti) {
 }
 
 /**
- * @param face
- * @param u
- * @param v
  * @private
  */
 function convertFaceUVtoXYZ(face, u, v) {
@@ -586,7 +584,6 @@ function convertFaceUVtoXYZ(face, u, v) {
  *
  * For a more detailed comparison of these transform methods, see
  * {@link https://github.com/google/s2geometry/blob/0c4c460bdfe696da303641771f9def900b3e440f/src/s2/s2metrics.cc}
- * @param s
  * @private
  */
 function convertSTtoUV(s) {
@@ -597,7 +594,6 @@ function convertSTtoUV(s) {
 }
 
 /**
- * @param si
  * @private
  */
 function convertSiTitoST(si) {
@@ -605,8 +601,6 @@ function convertSiTitoST(si) {
 }
 
 /**
- * @param ij
- * @param level
  * @private
  */
 function convertIJLeveltoBoundUV(ij, level) {
@@ -622,7 +616,6 @@ function convertIJLeveltoBoundUV(ij, level) {
 }
 
 /**
- * @param level
  * @private
  */
 function getSizeIJ(level) {
@@ -630,7 +623,6 @@ function getSizeIJ(level) {
 }
 
 /**
- * @param i
  * @private
  */
 function convertIJtoSTMinimum(i) {
@@ -645,12 +637,6 @@ function convertIJtoSTMinimum(i) {
  * recursively.
  *
  * See {@link https://github.com/google/s2geometry/blob/c59d0ca01ae3976db7f8abdc83fcc871a3a95186/src/s2/s2cell_id.cc#L75-L109}
- * @param level
- * @param i
- * @param j
- * @param originalOrientation
- * @param position
- * @param orientation
  * @private
  */
 function generateLookupCell(
@@ -727,7 +713,6 @@ function generateLookupTable() {
 
 /**
  * Return the lowest-numbered bit that is on for this cell id
- * @param cellId
  * @private
  */
 function lsb(cellId) {
@@ -736,7 +721,6 @@ function lsb(cellId) {
 
 /**
  * Return the lowest-numbered bit that is on for cells at the given level.
- * @param level
  * @private
  */
 function lsbForLevel(level) {
@@ -818,7 +802,6 @@ const Mod67BitPosition = [
 
 /**
  * Return the number of trailing zeros in number.
- * @param x
  * @private
  */
 function countTrailingZeroBits(x) {

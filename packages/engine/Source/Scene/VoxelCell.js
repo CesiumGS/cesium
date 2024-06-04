@@ -12,11 +12,14 @@ import OrientedBoundingBox from "../Core/OrientedBoundingBox.js";
  * <p>
  * Do not construct this directly.  Access it through picking using {@link Scene#pickVoxel}.
  * </p>
+ *
  * @alias VoxelCell
- * @class
+ * @constructor
+ *
  * @param {VoxelPrimitive} primitive The voxel primitive containing the cell
  * @param {number} tileIndex The index of the tile
  * @param {number} sampleIndex The index of the sample within the tile, containing metadata for this cell
+ *
  * @example
  * // On left click, display all the properties for a voxel cell in the console log.
  * handler.setInputAction(function(movement) {
@@ -30,6 +33,7 @@ import OrientedBoundingBox from "../Core/OrientedBoundingBox.js";
  *     }
  *   }
  * }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+ *
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
 function VoxelCell(primitive, tileIndex, sampleIndex) {
@@ -43,12 +47,14 @@ function VoxelCell(primitive, tileIndex, sampleIndex) {
 /**
  * Construct a VoxelCell, and update the metadata and bounding box using the properties
  * of a supplied keyframe node.
+ *
  * @private
  * @param {VoxelPrimitive} primitive The voxel primitive containing the cell.
  * @param {number} tileIndex The index of the tile.
  * @param {number} sampleIndex The index of the sample within the tile, containing metadata for this cell.
  * @param {KeyframeNode} keyframeNode The keyframe node containing information about the tile.
  * @returns {VoxelCell}
+ *
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
 VoxelCell.fromKeyframeNode = function (
@@ -108,7 +114,6 @@ const tileUvScratch = new Cartesian3();
  * @private
  * @param {VoxelPrimitive} primitive
  * @param {SpatialNode} spatialNode
- * @param sampleIndex
  * @param {OrientedBoundingBox} result
  * @returns {OrientedBoundingBox}
  */
@@ -152,8 +157,11 @@ function getOrientedBoundingBox(primitive, spatialNode, sampleIndex, result) {
 Object.defineProperties(VoxelCell.prototype, {
   /**
    * Gets an object of the metadata values for this cell. The object's keys are the metadata names.
+   *
    * @memberof VoxelCell.prototype
+   *
    * @type {object}
+   *
    * @readonly
    * @private
    */
@@ -166,8 +174,11 @@ Object.defineProperties(VoxelCell.prototype, {
   /**
    * All objects returned by {@link Scene#pick} have a <code>primitive</code> property. This returns
    * the VoxelPrimitive containing the cell.
+   *
    * @memberof VoxelCell.prototype
+   *
    * @type {VoxelPrimitive}
+   *
    * @readonly
    */
   primitive: {
@@ -178,8 +189,11 @@ Object.defineProperties(VoxelCell.prototype, {
 
   /**
    * Get the sample index of the cell.
+   *
    * @memberof VoxelCell.prototype
+   *
    * @type {number}
+   *
    * @readonly
    */
   sampleIndex: {
@@ -190,8 +204,11 @@ Object.defineProperties(VoxelCell.prototype, {
 
   /**
    * Get the index of the tile containing the cell.
+   *
    * @memberof VoxelCell.prototype
+   *
    * @type {number}
+   *
    * @readonly
    */
   tileIndex: {
@@ -202,8 +219,11 @@ Object.defineProperties(VoxelCell.prototype, {
 
   /**
    * Get a copy of the oriented bounding box containing the cell.
+   *
    * @memberof VoxelCell.prototype
+   *
    * @type {OrientedBoundingBox}
+   *
    * @readonly
    */
   orientedBoundingBox: {
@@ -215,6 +235,7 @@ Object.defineProperties(VoxelCell.prototype, {
 
 /**
  * Returns <code>true</code> if the feature contains this property.
+ *
  * @param {string} name The case-sensitive name of the property.
  * @returns {boolean} Whether the feature contains this property.
  */
@@ -224,6 +245,7 @@ VoxelCell.prototype.hasProperty = function (name) {
 
 /**
  * Returns an array of metadata property names for the feature.
+ *
  * @returns {string[]} The IDs of the feature's properties.
  */
 VoxelCell.prototype.getNames = function () {
@@ -232,8 +254,10 @@ VoxelCell.prototype.getNames = function () {
 
 /**
  * Returns a copy of the value of the metadata in the cell with the given name.
+ *
  * @param {string} name The case-sensitive name of the property.
  * @returns {*} The value of the property or <code>undefined</code> if the feature does not have this property.
+ *
  * @example
  * // Display all the properties for a voxel cell in the console log.
  * const names = voxelCell.getNames();

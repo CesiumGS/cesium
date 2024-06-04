@@ -5,7 +5,9 @@ import DeveloperError from "./DeveloperError.js";
 /**
  * A singleton that contains all of the servers that are trusted. Credentials will be sent with
  * any requests to these servers.
+ *
  * @namespace TrustedServers
+ *
  * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
  */
 const TrustedServers = {};
@@ -13,8 +15,10 @@ let _servers = {};
 
 /**
  * Adds a trusted server to the registry
+ *
  * @param {string} host The host to be added.
  * @param {number} port The port used to access the host.
+ *
  * @example
  * // Add a trusted server
  * TrustedServers.add('my.server.com', 80);
@@ -37,8 +41,10 @@ TrustedServers.add = function (host, port) {
 
 /**
  * Removes a trusted server from the registry
+ *
  * @param {string} host The host to be removed.
  * @param {number} port The port used to access the host.
+ *
  * @example
  * // Remove a trusted server
  * TrustedServers.remove('my.server.com', 80);
@@ -96,8 +102,11 @@ function getAuthority(url) {
 
 /**
  * Tests whether a server is trusted or not. The server must have been added with the port if it is included in the url.
+ *
  * @param {string} url The url to be tested against the trusted list
+ *
  * @returns {boolean} Returns true if url is trusted, false otherwise.
+ *
  * @example
  * // Add server
  * TrustedServers.add('my.server.com', 81);
@@ -126,6 +135,7 @@ TrustedServers.contains = function (url) {
 
 /**
  * Clears the registry
+ *
  * @example
  * // Remove a trusted server
  * TrustedServers.clear();

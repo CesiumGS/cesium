@@ -16,11 +16,8 @@ import I3SSymbology from "./I3SSymbology.js";
  * </p>
  * @alias I3SLayer
  * @internalConstructor
- * @param dataProvider
  * @privateParam {I3SDataProvider} dataProvider The i3s data provider
- * @param layerData
  * @privateParam {object} layerData The layer data that is loaded from the scene layer
- * @param parent
  * @privateParam {I3SDataProvider|I3SSublayer} parent The parent of that layer
  */
 function I3SLayer(dataProvider, layerData, parent) {
@@ -201,7 +198,6 @@ I3SLayer.prototype.load = async function (cesium3dTilesetOptions) {
 };
 
 /**
- * @param useCompression
  * @private
  */
 I3SLayer.prototype._computeGeometryDefinitions = function (useCompression) {
@@ -264,8 +260,6 @@ I3SLayer.prototype._computeGeometryDefinitions = function (useCompression) {
 };
 
 /**
- * @param definition
- * @param attributes
  * @private
  */
 I3SLayer.prototype._findBestGeometryBuffers = function (
@@ -303,7 +297,6 @@ I3SLayer.prototype._findBestGeometryBuffers = function (
 };
 
 /**
- * @param cesium3dTilesetOptions
  * @private
  */
 I3SLayer.prototype._loadRootNode = function (cesium3dTilesetOptions) {
@@ -321,7 +314,6 @@ I3SLayer.prototype._loadRootNode = function (cesium3dTilesetOptions) {
 };
 
 /**
- * @param nodeIndex
  * @private
  */
 I3SLayer.prototype._getNodeInNodePages = function (nodeIndex) {
@@ -333,7 +325,6 @@ I3SLayer.prototype._getNodeInNodePages = function (nodeIndex) {
 };
 
 /**
- * @param resource
  * @private
  */
 I3SLayer._fetchJson = function (resource) {
@@ -341,7 +332,6 @@ I3SLayer._fetchJson = function (resource) {
 };
 
 /**
- * @param page
  * @private
  */
 I3SLayer.prototype._loadNodePage = function (page) {
@@ -391,7 +381,6 @@ I3SLayer.prototype._computeExtent = function () {
 };
 
 /**
- * @param cesium3dTilesetOptions
  * @private
  */
 I3SLayer.prototype._create3DTileset = async function (cesium3dTilesetOptions) {
@@ -447,7 +436,7 @@ I3SLayer.prototype._updateVisibility = function () {
 
 /**
  * Filters the drawn elements of a layer to specific attribute names and values
- * @param {I3SNode.AttributeFilter[]} [filters] The collection of attribute filters
+ * @param {I3SNode.AttributeFilter[]} [filters=[]] The collection of attribute filters
  * @returns {Promise<void>} A promise that is resolved when the filter is applied
  */
 I3SLayer.prototype.filterByAttributes = function (filters) {

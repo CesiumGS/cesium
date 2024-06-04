@@ -2,8 +2,10 @@ import DeveloperError from "./DeveloperError.js";
 
 /**
  * Base class for proxying requested made by {@link Resource}.
+ *
  * @alias Proxy
- * @class
+ * @constructor
+ *
  * @see DefaultProxy
  */
 function Proxy() {
@@ -12,6 +14,7 @@ function Proxy() {
 
 /**
  * Get the final URL to use to request a given resource.
+ *
  * @param {string} resource The resource to request.
  * @returns {string} proxied resource
  * @function

@@ -23,8 +23,7 @@ const scaleToGeodeticHeightP = new Cartesian3();
 const PolygonPipeline = {};
 
 /**
- * @param positions
- * @throws {DeveloperError} At least three positions are required.
+ * @exception {DeveloperError} At least three positions are required.
  */
 PolygonPipeline.computeArea2D = function (positions) {
   //>>includeStart('debug', pragmas.debug);
@@ -50,9 +49,9 @@ PolygonPipeline.computeArea2D = function (positions) {
 };
 
 /**
- * @param positions
  * @returns {WindingOrder} The winding order.
- * @throws {DeveloperError} At least three positions are required.
+ *
+ * @exception {DeveloperError} At least three positions are required.
  */
 PolygonPipeline.computeWindingOrder2D = function (positions) {
   const area = PolygonPipeline.computeArea2D(positions);
@@ -61,6 +60,7 @@ PolygonPipeline.computeWindingOrder2D = function (positions) {
 
 /**
  * Triangulate a polygon.
+ *
  * @param {Cartesian2[]} positions Cartesian2 array containing the vertices of the polygon
  * @param {number[]} [holes] An array of the staring indices of the holes.
  * @returns {number[]} Index array representing triangles that fill the polygon
@@ -88,14 +88,16 @@ const subdivisionTexcoordMidScratch = new Cartesian2();
 
 /**
  * Subdivides positions and raises points to the surface of the ellipsoid.
+ *
  * @param {Ellipsoid} ellipsoid The ellipsoid the polygon in on.
  * @param {Cartesian3[]} positions An array of {@link Cartesian3} positions of the polygon.
  * @param {number[]} indices An array of indices that determines the triangles in the polygon.
  * @param {Cartesian2[]} texcoords An optional array of {@link Cartesian2} texture coordinates of the polygon.
- * @param {number} [granularity] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
- * @throws {DeveloperError} At least three indices are required.
- * @throws {DeveloperError} The number of indices must be divisable by three.
- * @throws {DeveloperError} Granularity must be greater than zero.
+ * @param {number} [granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
+ *
+ * @exception {DeveloperError} At least three indices are required.
+ * @exception {DeveloperError} The number of indices must be divisable by three.
+ * @exception {DeveloperError} Granularity must be greater than zero.
  */
 PolygonPipeline.computeSubdivision = function (
   ellipsoid,
@@ -321,14 +323,16 @@ const subdivisionCartographicScratch = new Cartographic();
 
 /**
  * Subdivides positions on rhumb lines and raises points to the surface of the ellipsoid.
+ *
  * @param {Ellipsoid} ellipsoid The ellipsoid the polygon in on.
  * @param {Cartesian3[]} positions An array of {@link Cartesian3} positions of the polygon.
  * @param {number[]} indices An array of indices that determines the triangles in the polygon.
  * @param {Cartesian2[]} texcoords An optional array of {@link Cartesian2} texture coordinates of the polygon.
- * @param {number} [granularity] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
- * @throws {DeveloperError} At least three indices are required.
- * @throws {DeveloperError} The number of indices must be divisable by three.
- * @throws {DeveloperError} Granularity must be greater than zero.
+ * @param {number} [granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
+ *
+ * @exception {DeveloperError} At least three indices are required.
+ * @exception {DeveloperError} The number of indices must be divisable by three.
+ * @exception {DeveloperError} Granularity must be greater than zero.
  */
 PolygonPipeline.computeRhumbLineSubdivision = function (
   ellipsoid,
@@ -580,10 +584,11 @@ PolygonPipeline.computeRhumbLineSubdivision = function (
 
 /**
  * Scales each position of a geometry's position attribute to a height, in place.
+ *
  * @param {number[]} positions The array of numbers representing the positions to be scaled
- * @param {number} [height] The desired height to add to the positions
- * @param {Ellipsoid} [ellipsoid] The ellipsoid on which the positions lie.
- * @param {boolean} [scaleToSurface] <code>true</code> if the positions need to be scaled to the surface before the height is added.
+ * @param {number} [height=0.0] The desired height to add to the positions
+ * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the positions lie.
+ * @param {boolean} [scaleToSurface=true] <code>true</code> if the positions need to be scaled to the surface before the height is added.
  * @returns {number[]} The input array of positions, scaled to height
  */
 PolygonPipeline.scaleToGeodeticHeight = function (

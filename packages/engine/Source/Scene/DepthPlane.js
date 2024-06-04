@@ -21,7 +21,6 @@ import defaultValue from "../Core/defaultValue.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
 
 /**
- * @param depthPlaneEllipsoidOffset
  * @private
  */
 function DepthPlane(depthPlaneEllipsoidOffset) {

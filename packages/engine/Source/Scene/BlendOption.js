@@ -1,5 +1,6 @@
 /**
  * Determines how opaque and translucent parts of billboards, points, and labels are blended with the scene.
+ *
  * @enum {number}
  */
 const BlendOption = {

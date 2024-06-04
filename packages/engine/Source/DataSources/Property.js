@@ -5,9 +5,11 @@ import DeveloperError from "../Core/DeveloperError.js";
 /**
  * The interface for all properties, which represent a value that can optionally vary over time.
  * This type defines an interface and cannot be instantiated directly.
+ *
  * @alias Property
- * @class
+ * @constructor
  * @abstract
+ *
  * @see CompositeProperty
  * @see ConstantProperty
  * @see SampledProperty
@@ -25,6 +27,7 @@ Object.defineProperties(Property.prototype, {
    * Gets a value indicating if this property is constant.  A property is considered
    * constant if getValue always returns the same result for the current definition.
    * @memberof Property.prototype
+   *
    * @type {boolean}
    * @readonly
    */
@@ -36,6 +39,7 @@ Object.defineProperties(Property.prototype, {
    * The definition is considered to have changed if a call to getValue would return
    * a different result for the same time.
    * @memberof Property.prototype
+   *
    * @type {Event}
    * @readonly
    */
@@ -47,6 +51,7 @@ Object.defineProperties(Property.prototype, {
 /**
  * Gets the value of the property at the provided time.
  * @function
+ *
  * @param {JulianDate} time The time for which to retrieve the value.
  * @param {object} [result] The object to store the value into, if omitted, a new instance is created and returned.
  * @returns {object} The modified result parameter or a new instance if the result parameter was not supplied.
@@ -57,14 +62,13 @@ Property.prototype.getValue = DeveloperError.throwInstantiationError;
  * Compares this property to the provided property and returns
  * <code>true</code> if they are equal, <code>false</code> otherwise.
  * @function
+ *
  * @param {Property} [other] The other property.
  * @returns {boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
  */
 Property.prototype.equals = DeveloperError.throwInstantiationError;
 
 /**
- * @param left
- * @param right
  * @private
  */
 Property.equals = function (left, right) {
@@ -72,8 +76,6 @@ Property.equals = function (left, right) {
 };
 
 /**
- * @param left
- * @param right
  * @private
  */
 Property.arrayEquals = function (left, right) {
@@ -93,7 +95,6 @@ Property.arrayEquals = function (left, right) {
 };
 
 /**
- * @param property
  * @private
  */
 Property.isConstant = function (property) {
@@ -101,9 +102,6 @@ Property.isConstant = function (property) {
 };
 
 /**
- * @param property
- * @param time
- * @param result
  * @private
  */
 Property.getValueOrUndefined = function (property, time, result) {
@@ -111,10 +109,6 @@ Property.getValueOrUndefined = function (property, time, result) {
 };
 
 /**
- * @param property
- * @param time
- * @param valueDefault
- * @param result
  * @private
  */
 Property.getValueOrDefault = function (property, time, valueDefault, result) {
@@ -124,10 +118,6 @@ Property.getValueOrDefault = function (property, time, valueDefault, result) {
 };
 
 /**
- * @param property
- * @param time
- * @param valueDefault
- * @param result
  * @private
  */
 Property.getValueOrClonedDefault = function (

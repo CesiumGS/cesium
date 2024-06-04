@@ -6,7 +6,9 @@ import VoxelInspector from "../VoxelInspector/VoxelInspector.js";
  * Rather than being called directly, this function is normally passed as
  * a parameter to {@link Viewer#extend}, as shown in the example below.
  * @function
+ *
  * @param {Viewer} viewer The viewer instance.
+ *
  * @example
  * var viewer = new Cesium.Viewer('cesiumContainer');
  * viewer.extend(Cesium.viewerVoxelInspectorMixin);

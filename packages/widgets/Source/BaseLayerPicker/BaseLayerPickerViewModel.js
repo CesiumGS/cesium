@@ -12,15 +12,17 @@ import createCommand from "../createCommand.js";
 /**
  * The view model for {@link BaseLayerPicker}.
  * @alias BaseLayerPickerViewModel
- * @class
+ * @constructor
+ *
  * @param {object} options Object with the following properties:
  * @param {Globe} options.globe The Globe to use.
- * @param {ProviderViewModel[]} [options.imageryProviderViewModels] The array of ProviderViewModel instances to use for imagery.
+ * @param {ProviderViewModel[]} [options.imageryProviderViewModels=[]] The array of ProviderViewModel instances to use for imagery.
  * @param {ProviderViewModel} [options.selectedImageryProviderViewModel] The view model for the current base imagery layer, if not supplied the first available imagery layer is used.
- * @param {ProviderViewModel[]} [options.terrainProviderViewModels] The array of ProviderViewModel instances to use for terrain.
+ * @param {ProviderViewModel[]} [options.terrainProviderViewModels=[]] The array of ProviderViewModel instances to use for terrain.
  * @param {ProviderViewModel} [options.selectedTerrainProviderViewModel] The view model for the current base terrain layer, if not supplied the first available terrain layer is used.
- * @throws {DeveloperError} imageryProviderViewModels must be an array.
- * @throws {DeveloperError} terrainProviderViewModels must be an array.
+ *
+ * @exception {DeveloperError} imageryProviderViewModels must be an array.
+ * @exception {DeveloperError} terrainProviderViewModels must be an array.
  */
 function BaseLayerPickerViewModel(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -315,6 +317,7 @@ Object.defineProperties(BaseLayerPickerViewModel.prototype, {
   /**
    * Gets the command to toggle the visibility of the drop down.
    * @memberof BaseLayerPickerViewModel.prototype
+   *
    * @type {Command}
    */
   toggleDropDown: {
@@ -326,6 +329,7 @@ Object.defineProperties(BaseLayerPickerViewModel.prototype, {
   /**
    * Gets the globe.
    * @memberof BaseLayerPickerViewModel.prototype
+   *
    * @type {Globe}
    */
   globe: {

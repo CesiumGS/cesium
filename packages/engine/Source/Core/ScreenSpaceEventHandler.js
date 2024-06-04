@@ -896,6 +896,7 @@ function handlePointerMove(screenSpaceEventHandler, event) {
  * @typedef {object} ScreenSpaceEventHandler.PositionedEvent
  *
  * An Event that occurs at a single position on screen.
+ *
  * @property {Cartesian2} position
  */
 
@@ -903,6 +904,7 @@ function handlePointerMove(screenSpaceEventHandler, event) {
  * @callback ScreenSpaceEventHandler.PositionedEventCallback
  *
  * The callback invoked when a positioned event triggers an event listener.
+ *
  * @param {ScreenSpaceEventHandler.PositionedEvent} event The event which triggered the listener
  */
 
@@ -910,6 +912,7 @@ function handlePointerMove(screenSpaceEventHandler, event) {
  * @typedef {object} ScreenSpaceEventHandler.MotionEvent
  *
  * An Event that starts at one position and ends at another.
+ *
  * @property {Cartesian2} startPosition
  * @property {Cartesian2} endPosition
  */
@@ -918,6 +921,7 @@ function handlePointerMove(screenSpaceEventHandler, event) {
  * @callback ScreenSpaceEventHandler.MotionEventCallback
  *
  * The callback invoked when a motion event triggers an event listener.
+ *
  * @param {ScreenSpaceEventHandler.MotionEvent} event The event which triggered the listener
  */
 
@@ -925,6 +929,7 @@ function handlePointerMove(screenSpaceEventHandler, event) {
  * @typedef {object} ScreenSpaceEventHandler.TwoPointEvent
  *
  * An Event that occurs at a two positions on screen.
+ *
  * @property {Cartesian2} position1
  * @property {Cartesian2} position2
  */
@@ -933,6 +938,7 @@ function handlePointerMove(screenSpaceEventHandler, event) {
  * @callback ScreenSpaceEventHandler.TwoPointEventCallback
  *
  * The callback invoked when a two-point event triggers an event listener.
+ *
  * @param {ScreenSpaceEventHandler.TwoPointEvent} event The event which triggered the listener
  */
 
@@ -940,6 +946,7 @@ function handlePointerMove(screenSpaceEventHandler, event) {
  * @typedef {object} ScreenSpaceEventHandler.TwoPointMotionEvent
  *
  * An Event that starts at a two positions on screen and moves to two other positions.
+ *
  * @property {Cartesian2} position1
  * @property {Cartesian2} position2
  * @property {Cartesian2} previousPosition1
@@ -950,6 +957,7 @@ function handlePointerMove(screenSpaceEventHandler, event) {
  * @callback ScreenSpaceEventHandler.TwoPointMotionEventCallback
  *
  * The callback invoked when a two-point motion event triggers an event listener.
+ *
  * @param {ScreenSpaceEventHandler.TwoPointMotionEvent} event The event which triggered the listener
  */
 
@@ -957,15 +965,19 @@ function handlePointerMove(screenSpaceEventHandler, event) {
  * @callback ScreenSpaceEventHandler.WheelEventCallback
  *
  * The callback invoked when a mouse-wheel event triggers an event listener.
+ *
  * @param {number} delta The amount that the mouse wheel moved
  */
 
 /**
  * Handles user input events. Custom functions can be added to be executed on
  * when the user enters input.
+ *
  * @alias ScreenSpaceEventHandler
- * @param {HTMLCanvasElement} [element] The element to add events to.
- * @class
+ *
+ * @param {HTMLCanvasElement} [element=document] The element to add events to.
+ *
+ * @constructor
  */
 function ScreenSpaceEventHandler(element) {
   this._inputEvents = {};
@@ -1001,10 +1013,12 @@ function ScreenSpaceEventHandler(element) {
 
 /**
  * Set a function to be executed on an input event.
+ *
  * @param {ScreenSpaceEventHandler.PositionedEventCallback|ScreenSpaceEventHandler.MotionEventCallback|ScreenSpaceEventHandler.WheelEventCallback|ScreenSpaceEventHandler.TwoPointEventCallback|ScreenSpaceEventHandler.TwoPointMotionEventCallback} action Function to be executed when the input event occurs.
  * @param {ScreenSpaceEventType} type The ScreenSpaceEventType of input event.
  * @param {KeyboardEventModifier} [modifier] A KeyboardEventModifier key that is held when a <code>type</code>
  * event occurs.
+ *
  * @see ScreenSpaceEventHandler#getInputAction
  * @see ScreenSpaceEventHandler#removeInputAction
  */
@@ -1028,10 +1042,13 @@ ScreenSpaceEventHandler.prototype.setInputAction = function (
 
 /**
  * Returns the function to be executed on an input event.
+ *
  * @param {ScreenSpaceEventType} type The ScreenSpaceEventType of input event.
  * @param {KeyboardEventModifier} [modifier] A KeyboardEventModifier key that is held when a <code>type</code>
  * event occurs.
+ *
  * @returns {ScreenSpaceEventHandler.PositionedEventCallback|ScreenSpaceEventHandler.MotionEventCallback|ScreenSpaceEventHandler.WheelEventCallback|ScreenSpaceEventHandler.TwoPointEventCallback|ScreenSpaceEventHandler.TwoPointMotionEventCallback} The function to be executed on an input event.
+ *
  * @see ScreenSpaceEventHandler#setInputAction
  * @see ScreenSpaceEventHandler#removeInputAction
  */
@@ -1048,9 +1065,11 @@ ScreenSpaceEventHandler.prototype.getInputAction = function (type, modifier) {
 
 /**
  * Removes the function to be executed on an input event.
+ *
  * @param {ScreenSpaceEventType} type The ScreenSpaceEventType of input event.
  * @param {KeyboardEventModifier} [modifier] A KeyboardEventModifier key that is held when a <code>type</code>
  * event occurs.
+ *
  * @see ScreenSpaceEventHandler#getInputAction
  * @see ScreenSpaceEventHandler#setInputAction
  */
@@ -1073,7 +1092,9 @@ ScreenSpaceEventHandler.prototype.removeInputAction = function (
  * <br /><br />
  * If this object was destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
+ *
  * @returns {boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+ *
  * @see ScreenSpaceEventHandler#destroy
  */
 ScreenSpaceEventHandler.prototype.isDestroyed = function () {
@@ -1086,9 +1107,13 @@ ScreenSpaceEventHandler.prototype.isDestroyed = function () {
  * Once an object is destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
  * assign the return value (<code>undefined</code>) to the object as done in the example.
- * @throws {DeveloperError} This object was destroyed, i.e., destroy() was called.
+ *
+ * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+ *
+ *
  * @example
  * handler = handler && handler.destroy();
+ *
  * @see ScreenSpaceEventHandler#isDestroyed
  */
 ScreenSpaceEventHandler.prototype.destroy = function () {

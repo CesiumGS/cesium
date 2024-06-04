@@ -1,5 +1,4 @@
 /**
- * @param url
  * @private
  */
 function loadAndExecuteScript(url) {

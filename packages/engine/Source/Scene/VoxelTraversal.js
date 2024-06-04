@@ -19,8 +19,10 @@ import TextureMinificationFilter from "../Renderer/TextureMinificationFilter.js"
 /**
  * Handles tileset traversal, tile requests, and GPU resources. Intended to be
  * private and paired with a {@link VoxelPrimitive}, which has a user-facing API.
+ *
  * @alias VoxelTraversal
- * @class
+ * @constructor
+ *
  * @param {VoxelPrimitive} primitive
  * @param {Context} context
  * @param {Cartesian3} dimensions
@@ -28,6 +30,7 @@ import TextureMinificationFilter from "../Renderer/TextureMinificationFilter.js"
  * @param {MetadataComponentType[]} componentTypes
  * @param {number} keyframeCount
  * @param {number} [maximumTextureMemoryByteLength]
+ *
  * @private
  */
 function VoxelTraversal(
@@ -215,6 +218,7 @@ function VoxelTraversal(
 
 /**
  * Finds a keyframe node in the traversal
+ *
  * @param {number} megatextureIndex
  * @returns {KeyframeNode}
  */
@@ -340,7 +344,9 @@ VoxelTraversal.prototype.isRenderable = function (tile) {
  * <br /><br />
  * If this object was destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
+ *
  * @returns {boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+ *
  * @see VoxelTraversal#destroy
  */
 VoxelTraversal.prototype.isDestroyed = function () {
@@ -354,8 +360,11 @@ VoxelTraversal.prototype.isDestroyed = function () {
  * Once an object is destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
  * assign the return value (<code>undefined</code>) to the object as done in the example.
- * @throws {DeveloperError} This object was destroyed, i.e., destroy() was called.
+ *
+ * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+ *
  * @see VoxelTraversal#isDestroyed
+ *
  * @example
  * voxelTraversal = voxelTraversal && voxelTraversal.destroy();
  */
@@ -376,8 +385,10 @@ VoxelTraversal.prototype.destroy = function () {
 
 /**
  * @function
+ *
  * @param {VoxelTraversal} that
  * @param {SpatialNode} node
+ *
  * @private
  */
 function recomputeBoundingVolumesRecursive(that, node) {
@@ -392,8 +403,10 @@ function recomputeBoundingVolumesRecursive(that, node) {
 
 /**
  * @function
+ *
  * @param {VoxelTraversal} that
  * @param {KeyframeNode} keyframeNode
+ *
  * @private
  */
 function requestData(that, keyframeNode) {
@@ -463,8 +476,10 @@ function requestData(that, keyframeNode) {
 
 /**
  * @function
+ *
  * @param {number} x
  * @returns {number}
+ *
  * @private
  */
 function mapInfiniteRangeToZeroOne(x) {
@@ -473,8 +488,10 @@ function mapInfiniteRangeToZeroOne(x) {
 
 /**
  * @function
+ *
  * @param {VoxelTraversal} that
  * @param {FrameState} frameState
+ *
  * @private
  */
 function loadAndUnload(that, frameState) {
@@ -648,6 +665,7 @@ function loadAndUnload(that, frameState) {
 
 /**
  * Compute a priority for a keyframe node.
+ *
  * @private
  * @param {number} previousKeyframe
  * @param {number} keyframe
@@ -681,10 +699,9 @@ function keyframePriority(previousKeyframe, keyframe, nextKeyframe, traversal) {
 
 /**
  * @function
- * @param loadAndUnloadTimeMs
- * @param generateOctreeTimeMs
- * @param totalTimeMs
+ *
  * @param {VoxelTraversal} that
+ *
  * @private
  */
 function printDebugInformation(
@@ -807,6 +824,7 @@ const GpuOctreeFlag = {
 
 /**
  * @function
+ *
  * @param {VoxelTraversal} that
  * @param {FrameState} frameState
  * @param {number} sampleCount

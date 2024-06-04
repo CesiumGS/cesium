@@ -971,24 +971,30 @@ function computeRectangle(rectangle, granularity, rotation, ellipsoid, result) {
 
 /**
  * A description of a cartographic rectangle on an ellipsoid centered at the origin. Rectangle geometry can be rendered with both {@link Primitive} and {@link GroundPrimitive}.
+ *
  * @alias RectangleGeometry
- * @class
+ * @constructor
+ *
  * @param {object} options Object with the following properties:
  * @param {Rectangle} options.rectangle A cartographic rectangle with north, south, east and west properties in radians.
- * @param {VertexFormat} [options.vertexFormat] The vertex attributes to be computed.
- * @param {Ellipsoid} [options.ellipsoid] The ellipsoid on which the rectangle lies.
- * @param {number} [options.granularity] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
- * @param {number} [options.height] The distance in meters between the rectangle and the ellipsoid surface.
- * @param {number} [options.rotation] The rotation of the rectangle, in radians. A positive rotation is counter-clockwise.
- * @param {number} [options.stRotation] The rotation of the texture coordinates, in radians. A positive rotation is counter-clockwise.
+ * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
+ * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the rectangle lies.
+ * @param {number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
+ * @param {number} [options.height=0.0] The distance in meters between the rectangle and the ellipsoid surface.
+ * @param {number} [options.rotation=0.0] The rotation of the rectangle, in radians. A positive rotation is counter-clockwise.
+ * @param {number} [options.stRotation=0.0] The rotation of the texture coordinates, in radians. A positive rotation is counter-clockwise.
  * @param {number} [options.extrudedHeight] The distance in meters between the rectangle's extruded face and the ellipsoid surface.
- * @throws {DeveloperError} <code>options.rectangle.north</code> must be in the interval [<code>-Pi/2</code>, <code>Pi/2</code>].
- * @throws {DeveloperError} <code>options.rectangle.south</code> must be in the interval [<code>-Pi/2</code>, <code>Pi/2</code>].
- * @throws {DeveloperError} <code>options.rectangle.east</code> must be in the interval [<code>-Pi</code>, <code>Pi</code>].
- * @throws {DeveloperError} <code>options.rectangle.west</code> must be in the interval [<code>-Pi</code>, <code>Pi</code>].
- * @throws {DeveloperError} <code>options.rectangle.north</code> must be greater than <code>options.rectangle.south</code>.
+ *
+ * @exception {DeveloperError} <code>options.rectangle.north</code> must be in the interval [<code>-Pi/2</code>, <code>Pi/2</code>].
+ * @exception {DeveloperError} <code>options.rectangle.south</code> must be in the interval [<code>-Pi/2</code>, <code>Pi/2</code>].
+ * @exception {DeveloperError} <code>options.rectangle.east</code> must be in the interval [<code>-Pi</code>, <code>Pi</code>].
+ * @exception {DeveloperError} <code>options.rectangle.west</code> must be in the interval [<code>-Pi</code>, <code>Pi</code>].
+ * @exception {DeveloperError} <code>options.rectangle.north</code> must be greater than <code>options.rectangle.south</code>.
+ *
  * @see RectangleGeometry#createGeometry
+ *
  * @demo {@link https://sandcastle.cesium.com/index.html?src=Rectangle.html|Cesium Sandcastle Rectangle Demo}
+ *
  * @example
  * // 1. create a rectangle
  * const rectangle = new Cesium.RectangleGeometry({
@@ -1060,9 +1066,11 @@ RectangleGeometry.packedLength =
 
 /**
  * Stores the provided instance into the provided array.
+ *
  * @param {RectangleGeometry} value The value to pack.
  * @param {number[]} array The array to pack into.
- * @param {number} [startingIndex] The index into the array at which to start packing the elements.
+ * @param {number} [startingIndex=0] The index into the array at which to start packing the elements.
+ *
  * @returns {number[]} The array that was packed into
  */
 RectangleGeometry.pack = function (value, array, startingIndex) {
@@ -1110,8 +1118,9 @@ const scratchOptions = {
 
 /**
  * Retrieves an instance from a packed array.
+ *
  * @param {number[]} array The packed array.
- * @param {number} [startingIndex] The starting index of the element to be unpacked.
+ * @param {number} [startingIndex=0] The starting index of the element to be unpacked.
  * @param {RectangleGeometry} [result] The object into which to store the result.
  * @returns {RectangleGeometry} The modified result parameter or a new RectangleGeometry instance if one was not provided.
  */
@@ -1173,12 +1182,14 @@ RectangleGeometry.unpack = function (array, startingIndex, result) {
 
 /**
  * Computes the bounding rectangle based on the provided options
+ *
  * @param {object} options Object with the following properties:
  * @param {Rectangle} options.rectangle A cartographic rectangle with north, south, east and west properties in radians.
- * @param {Ellipsoid} [options.ellipsoid] The ellipsoid on which the rectangle lies.
- * @param {number} [options.granularity] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
- * @param {number} [options.rotation] The rotation of the rectangle, in radians. A positive rotation is counter-clockwise.
+ * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the rectangle lies.
+ * @param {number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
+ * @param {number} [options.rotation=0.0] The rotation of the rectangle, in radians. A positive rotation is counter-clockwise.
  * @param {Rectangle} [result] An object in which to store the result.
+ *
  * @returns {Rectangle} The result rectangle
  */
 RectangleGeometry.computeRectangle = function (options, result) {
@@ -1211,9 +1222,11 @@ const quaternionScratch = new Quaternion();
 const centerScratch = new Cartographic();
 /**
  * Computes the geometric representation of a rectangle, including its vertices, indices, and a bounding sphere.
+ *
  * @param {RectangleGeometry} rectangleGeometry A description of the rectangle.
  * @returns {Geometry|undefined} The computed vertices and indices.
- * @throws {DeveloperError} Rotated rectangle is invalid.
+ *
+ * @exception {DeveloperError} Rotated rectangle is invalid.
  */
 RectangleGeometry.createGeometry = function (rectangleGeometry) {
   if (
@@ -1332,9 +1345,6 @@ RectangleGeometry.createGeometry = function (rectangleGeometry) {
 };
 
 /**
- * @param rectangleGeometry
- * @param minHeightFunc
- * @param maxHeightFunc
  * @private
  */
 RectangleGeometry.createShadowVolume = function (

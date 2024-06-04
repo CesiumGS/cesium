@@ -4,8 +4,10 @@ import createCommand from "../createCommand.js";
 
 /**
  * A view model that represents each item in the {@link BaseLayerPicker}.
+ *
  * @alias ProviderViewModel
- * @class
+ * @constructor
+ *
  * @param {object} options The object containing all parameters.
  * @param {string} options.name The name of the layer.
  * @param {string} options.tooltip The tooltip to show when the item is moused over.
@@ -13,6 +15,7 @@ import createCommand from "../createCommand.js";
  * @param {string} [options.category] A category for the layer.
  * @param {ProviderViewModel.CreationFunction|Command} options.creationFunction A function or Command
  *        that creates one or more providers which will be added to the globe when this item is selected.
+ *
  * @see BaseLayerPicker
  * @see ImageryProvider
  * @see TerrainProvider

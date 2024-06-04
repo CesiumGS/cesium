@@ -1,9 +1,11 @@
 /**
  * A simple proxy that appends the desired resource as the sole query parameter
  * to the given proxy URL.
+ *
  * @alias DefaultProxy
- * @class
- * @augments {Proxy}
+ * @constructor
+ * @extends {Proxy}
+ *
  * @param {string} proxy The proxy URL that will be used to requests all resources.
  */
 function DefaultProxy(proxy) {
@@ -12,6 +14,7 @@ function DefaultProxy(proxy) {
 
 /**
  * Get the final URL to use to request a given resource.
+ *
  * @param {string} resource The resource to request.
  * @returns {string} proxied resource
  */

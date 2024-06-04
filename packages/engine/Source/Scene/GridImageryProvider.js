@@ -12,6 +12,7 @@ const defaultBackgroundColor = new Color(0.0, 0.5, 0.0, 0.2);
  * @typedef {object} GridImageryProvider.ConstructorOptions
  *
  * Initialization options for the GridImageryProvider constructor
+ *
  * @property {TilingScheme} [tilingScheme=new GeographicTilingScheme()] The tiling scheme for which to draw tiles.
  * @property {Ellipsoid} [ellipsoid] The ellipsoid.  If the tilingScheme is specified,
  *                    this parameter is ignored and the tiling scheme's ellipsoid is used instead. If neither
@@ -29,9 +30,11 @@ const defaultBackgroundColor = new Color(0.0, 0.5, 0.0, 0.2);
 /**
  * An {@link ImageryProvider} that draws a wireframe grid on every tile with controllable background and glow.
  * May be useful for custom rendering effects or debugging terrain.
+ *
  * @alias GridImageryProvider
- * @class
+ * @constructor
  * @param {GridImageryProvider.ConstructorOptions} options Object describing initialization options
+ *
  */
 function GridImageryProvider(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -216,7 +219,6 @@ Object.defineProperties(GridImageryProvider.prototype, {
 
 /**
  * Draws a grid of lines into a canvas.
- * @param context
  */
 GridImageryProvider.prototype._drawGrid = function (context) {
   const minPixel = 0;
@@ -277,6 +279,7 @@ GridImageryProvider.prototype._createGridCanvas = function () {
 
 /**
  * Gets the credits to be displayed when a given tile is displayed.
+ *
  * @param {number} x The tile X coordinate.
  * @param {number} y The tile Y coordinate.
  * @param {number} level The tile level;
@@ -288,6 +291,7 @@ GridImageryProvider.prototype.getTileCredits = function (x, y, level) {
 
 /**
  * Requests the image for a given tile.
+ *
  * @param {number} x The tile X coordinate.
  * @param {number} y The tile Y coordinate.
  * @param {number} level The tile level.
@@ -301,12 +305,13 @@ GridImageryProvider.prototype.requestImage = function (x, y, level, request) {
 /**
  * Picking features is not currently supported by this imagery provider, so this function simply returns
  * undefined.
+ *
  * @param {number} x The tile X coordinate.
  * @param {number} y The tile Y coordinate.
  * @param {number} level The tile level.
  * @param {number} longitude The longitude at which to pick features.
  * @param {number} latitude  The latitude at which to pick features.
- * @returns {undefined} Undefined since picking is not supported.
+ * @return {undefined} Undefined since picking is not supported.
  */
 GridImageryProvider.prototype.pickFeatures = function (
   x,

@@ -1,11 +1,13 @@
 /**
  * A tonemapping algorithm when rendering with high dynamic range.
+ *
  * @enum {number}
  * @private
  */
 const Tonemapper = {
   /**
    * Use the Reinhard tonemapping operator.
+   *
    * @type {number}
    * @constant
    */
@@ -13,6 +15,7 @@ const Tonemapper = {
 
   /**
    * Use the modified Reinhard tonemapping operator.
+   *
    * @type {number}
    * @constant
    */
@@ -20,6 +23,7 @@ const Tonemapper = {
 
   /**
    * Use the Filmic tonemapping operator.
+   *
    * @type {number}
    * @constant
    */
@@ -27,13 +31,13 @@ const Tonemapper = {
 
   /**
    * Use the ACES tonemapping operator.
+   *
    * @type {number}
    * @constant
    */
   ACES: 3,
 
   /**
-   * @param tonemapper
    * @private
    */
   validate: function (tonemapper) {

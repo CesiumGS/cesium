@@ -11,14 +11,15 @@ import defined from "../../Core/defined.js";
  * a node's transform, this class allows users to change a node's transform
  * externally. In this way, animation can be driven by another source, not
  * just by the model's asset.
- * @param model
- * @param runtimeNode
+ *
  * @alias ModelNode
  * @internalConstructor
  * @class
+ *
  * @example
  * const node = model.getNode("Hand");
  * node.matrix = Cesium.Matrix4.fromScale(new Cesium.Cartesian3(5.0, 1.0, 1.0), node.matrix);
+ *
  * @see Model#getNode
  */
 function ModelNode(model, runtimeNode) {
@@ -34,7 +35,9 @@ function ModelNode(model, runtimeNode) {
 Object.defineProperties(ModelNode.prototype, {
   /**
    * The value of the <code>name</code> property of this node.
+   *
    * @memberof ModelNode.prototype
+   *
    * @type {string}
    * @readonly
    */
@@ -46,7 +49,9 @@ Object.defineProperties(ModelNode.prototype, {
 
   /**
    * The index of the node in the glTF.
+   *
    * @memberof ModelNode.prototype
+   *
    * @type {number}
    * @readonly
    */
@@ -58,8 +63,10 @@ Object.defineProperties(ModelNode.prototype, {
 
   /**
    * Determines if this node and its children will be shown.
+   *
    * @memberof ModelNode.prototype
    * @type {boolean}
+   *
    * @default true
    */
   show: {
@@ -80,6 +87,7 @@ Object.defineProperties(ModelNode.prototype, {
    * For changes to take effect, this property must be assigned to;
    * setting individual elements of the matrix will not work.
    * </p>
+   *
    * @memberof ModelNode.prototype
    * @type {Matrix4}
    */
@@ -103,6 +111,7 @@ Object.defineProperties(ModelNode.prototype, {
    * Gets the node's original 4x4 matrix transform from its local
    * coordinates to its parent's, without any node transformations
    * or articulations applied.
+   *
    * @memberof ModelNode.prototype
    * @type {Matrix4}
    */

@@ -21,6 +21,7 @@ import I3SGeometry from "./I3SGeometry.js";
  *
  * A filter given by an attribute name and values.
  * The 3D feature object should be hidden if its value for the attribute name is not specified in the collection of values.
+ *
  * @property {string} name The name of the attribute
  * @property {string[]|number[]} values The collection of values
  */
@@ -30,9 +31,6 @@ import I3SGeometry from "./I3SGeometry.js";
  * <p>
  * Do not construct this directly, instead access tiles through {@link I3SLayer}.
  * </p>
- * @param parent
- * @param ref
- * @param isRoot
  * @alias I3SNode
  * @internalConstructor
  */
@@ -834,7 +832,8 @@ Cesium3DTile.prototype._hookedRequestContent =
  * <p>
  * The request may not be made if the Cesium Request Scheduler can't prioritize it.
  * </p>
- * @returns {Promise<Cesium3DTileContent>|undefined} A promise that resolves when the request completes, or undefined if there is no request needed, or the request cannot be scheduled.
+ *
+ * @return {Promise<Cesium3DTileContent>|undefined} A promise that resolves when the request completes, or undefined if there is no request needed, or the request cannot be scheduled.
  * @private
  */
 Cesium3DTile.prototype.requestContent = function () {

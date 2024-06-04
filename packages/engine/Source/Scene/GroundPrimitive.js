@@ -46,22 +46,25 @@ const GroundPrimitiveUniformMap = {
  * <p>
  * Valid geometries are {@link CircleGeometry}, {@link CorridorGeometry}, {@link EllipseGeometry}, {@link PolygonGeometry}, and {@link RectangleGeometry}.
  * </p>
+ *
  * @alias GroundPrimitive
- * @class
+ * @constructor
+ *
  * @param {object} [options] Object with the following properties:
  * @param {Array|GeometryInstance} [options.geometryInstances] The geometry instances to render.
  * @param {Appearance} [options.appearance] The appearance used to render the primitive. Defaults to a flat PerInstanceColorAppearance when GeometryInstances have a color attribute.
- * @param {boolean} [options.show] Determines if this primitive will be shown.
- * @param {boolean} [options.vertexCacheOptimize] When <code>true</code>, geometry vertices are optimized for the pre and post-vertex-shader caches.
- * @param {boolean} [options.interleave] When <code>true</code>, geometry vertex attributes are interleaved, which can slightly improve rendering performance but increases load time.
- * @param {boolean} [options.compressVertices] When <code>true</code>, the geometry vertices are compressed, which will save memory.
- * @param {boolean} [options.releaseGeometryInstances] When <code>true</code>, the primitive does not keep a reference to the input <code>geometryInstances</code> to save memory.
- * @param {boolean} [options.allowPicking] When <code>true</code>, each geometry instance will only be pickable with {@link Scene#pick}.  When <code>false</code>, GPU memory is saved.
- * @param {boolean} [options.asynchronous] Determines if the primitive will be created asynchronously or block until ready. If false initializeTerrainHeights() must be called first.
- * @param {ClassificationType} [options.classificationType] Determines whether terrain, 3D Tiles or both will be classified.
+ * @param {boolean} [options.show=true] Determines if this primitive will be shown.
+ * @param {boolean} [options.vertexCacheOptimize=false] When <code>true</code>, geometry vertices are optimized for the pre and post-vertex-shader caches.
+ * @param {boolean} [options.interleave=false] When <code>true</code>, geometry vertex attributes are interleaved, which can slightly improve rendering performance but increases load time.
+ * @param {boolean} [options.compressVertices=true] When <code>true</code>, the geometry vertices are compressed, which will save memory.
+ * @param {boolean} [options.releaseGeometryInstances=true] When <code>true</code>, the primitive does not keep a reference to the input <code>geometryInstances</code> to save memory.
+ * @param {boolean} [options.allowPicking=true] When <code>true</code>, each geometry instance will only be pickable with {@link Scene#pick}.  When <code>false</code>, GPU memory is saved.
+ * @param {boolean} [options.asynchronous=true] Determines if the primitive will be created asynchronously or block until ready. If false initializeTerrainHeights() must be called first.
+ * @param {ClassificationType} [options.classificationType=ClassificationType.BOTH] Determines whether terrain, 3D Tiles or both will be classified.
  * @param {boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if this primitive's commands' bounding spheres are shown.
  * @param {boolean} [options.debugShowShadowVolume=false] For debugging only. Determines if the shadow volume for each geometry in the primitive is drawn. Must be <code>true</code> on
  *                  creation for the volumes to be created before the geometry is released or options.releaseGeometryInstance must be <code>false</code>.
+ *
  * @example
  * // Example 1: Create primitive with a single instance
  * const rectangleInstance = new Cesium.GeometryInstance({
@@ -102,6 +105,7 @@ const GroundPrimitiveUniformMap = {
  * scene.primitives.add(new Cesium.GroundPrimitive({
  *   geometryInstances : [rectangleInstance, ellipseInstance]
  * }));
+ *
  * @see Primitive
  * @see ClassificationPrimitive
  * @see GeometryInstance
@@ -132,7 +136,9 @@ function GroundPrimitive(options) {
    * instance is shaded with the same appearance.  Some appearances, like
    * {@link PerInstanceColorAppearance} allow giving each instance unique
    * properties.
+   *
    * @type Appearance
+   *
    * @default undefined
    */
   this.appearance = appearance;
@@ -144,21 +150,27 @@ function GroundPrimitive(options) {
    * <p>
    * Changing this property after the primitive is rendered has no effect.
    * </p>
+   *
    * @readonly
    * @type {Array|GeometryInstance}
+   *
    * @default undefined
    */
   this.geometryInstances = options.geometryInstances;
   /**
    * Determines if the primitive will be shown.  This affects all geometry
    * instances in the primitive.
+   *
    * @type {boolean}
+   *
    * @default true
    */
   this.show = defaultValue(options.show, true);
   /**
    * Determines whether terrain, 3D Tiles or both will be classified.
+   *
    * @type {ClassificationType}
+   *
    * @default ClassificationType.BOTH
    */
   this.classificationType = defaultValue(
@@ -170,7 +182,9 @@ function GroundPrimitive(options) {
    * <p>
    * Draws the bounding sphere for each draw command in the primitive.
    * </p>
+   *
    * @type {boolean}
+   *
    * @default false
    */
   this.debugShowBoundingVolume = defaultValue(
@@ -183,7 +197,9 @@ function GroundPrimitive(options) {
    * <p>
    * Draws the shadow volume for each geometry in the primitive.
    * </p>
+   *
    * @type {boolean}
+   *
    * @default false
    */
   this.debugShowShadowVolume = defaultValue(
@@ -234,9 +250,12 @@ function GroundPrimitive(options) {
 Object.defineProperties(GroundPrimitive.prototype, {
   /**
    * When <code>true</code>, geometry vertices are optimized for the pre and post-vertex-shader caches.
+   *
    * @memberof GroundPrimitive.prototype
+   *
    * @type {boolean}
    * @readonly
+   *
    * @default true
    */
   vertexCacheOptimize: {
@@ -247,9 +266,12 @@ Object.defineProperties(GroundPrimitive.prototype, {
 
   /**
    * Determines if geometry vertex attributes are interleaved, which can slightly improve rendering performance.
+   *
    * @memberof GroundPrimitive.prototype
+   *
    * @type {boolean}
    * @readonly
+   *
    * @default false
    */
   interleave: {
@@ -260,9 +282,12 @@ Object.defineProperties(GroundPrimitive.prototype, {
 
   /**
    * When <code>true</code>, the primitive does not keep a reference to the input <code>geometryInstances</code> to save memory.
+   *
    * @memberof GroundPrimitive.prototype
+   *
    * @type {boolean}
    * @readonly
+   *
    * @default true
    */
   releaseGeometryInstances: {
@@ -273,9 +298,12 @@ Object.defineProperties(GroundPrimitive.prototype, {
 
   /**
    * When <code>true</code>, each geometry instance will only be pickable with {@link Scene#pick}.  When <code>false</code>, GPU memory is saved.
+   *
    * @memberof GroundPrimitive.prototype
+   *
    * @type {boolean}
    * @readonly
+   *
    * @default true
    */
   allowPicking: {
@@ -286,9 +314,12 @@ Object.defineProperties(GroundPrimitive.prototype, {
 
   /**
    * Determines if the geometry instances will be created and batched on a web worker.
+   *
    * @memberof GroundPrimitive.prototype
+   *
    * @type {boolean}
    * @readonly
+   *
    * @default true
    */
   asynchronous: {
@@ -299,9 +330,12 @@ Object.defineProperties(GroundPrimitive.prototype, {
 
   /**
    * When <code>true</code>, geometry vertices are compressed, which will save memory.
+   *
    * @memberof GroundPrimitive.prototype
+   *
    * @type {boolean}
    * @readonly
+   *
    * @default true
    */
   compressVertices: {
@@ -314,7 +348,9 @@ Object.defineProperties(GroundPrimitive.prototype, {
    * Determines if the primitive is complete and ready to render.  If this property is
    * true, the primitive will be rendered the next time that {@link GroundPrimitive#update}
    * is called.
+   *
    * @memberof GroundPrimitive.prototype
+   *
    * @type {boolean}
    * @readonly
    */
@@ -327,6 +363,7 @@ Object.defineProperties(GroundPrimitive.prototype, {
 
 /**
  * Determines if GroundPrimitive rendering is supported.
+ *
  * @function
  * @param {Scene} scene The scene.
  * @returns {boolean} <code>true</code> if GroundPrimitives are supported; otherwise, returns <code>false</code>
@@ -638,7 +675,9 @@ function updateAndQueueCommands(
 /**
  * Initializes the minimum and maximum terrain heights. This only needs to be called if you are creating the
  * GroundPrimitive synchronously.
+ *
  * @returns {Promise<void>} A promise that will resolve once the terrain heights have been loaded.
+ *
  */
 GroundPrimitive.initializeTerrainHeights = function () {
   return ApproximateTerrainHeights.initialize();
@@ -651,10 +690,10 @@ GroundPrimitive.initializeTerrainHeights = function () {
  * Do not call this function directly.  This is documented just to
  * list the exceptions that may be propagated when the scene is rendered:
  * </p>
- * @param frameState
- * @throws {DeveloperError} For synchronous GroundPrimitive, you must call GroundPrimitive.initializeTerrainHeights() and wait for the returned promise to resolve.
- * @throws {DeveloperError} All instance geometries must have the same primitiveType.
- * @throws {DeveloperError} Appearance and material have a uniform with the same name.
+ *
+ * @exception {DeveloperError} For synchronous GroundPrimitive, you must call GroundPrimitive.initializeTerrainHeights() and wait for the returned promise to resolve.
+ * @exception {DeveloperError} All instance geometries must have the same primitiveType.
+ * @exception {DeveloperError} Appearance and material have a uniform with the same name.
  */
 GroundPrimitive.prototype.update = function (frameState) {
   if (!defined(this._primitive) && !defined(this.geometryInstances)) {
@@ -871,7 +910,6 @@ GroundPrimitive.prototype.update = function (frameState) {
 };
 
 /**
- * @param id
  * @private
  */
 GroundPrimitive.prototype.getBoundingSphere = function (id) {
@@ -885,9 +923,12 @@ GroundPrimitive.prototype.getBoundingSphere = function (id) {
 
 /**
  * Returns the modifiable per-instance attributes for a {@link GeometryInstance}.
+ *
  * @param {*} id The id of the {@link GeometryInstance}.
  * @returns {object} The typed array in the attribute's format or undefined if the is no instance with id.
- * @throws {DeveloperError} must call update before calling getGeometryInstanceAttributes.
+ *
+ * @exception {DeveloperError} must call update before calling getGeometryInstanceAttributes.
+ *
  * @example
  * const attributes = primitive.getGeometryInstanceAttributes('an id');
  * attributes.color = Cesium.ColorGeometryInstanceAttribute.toValue(Cesium.Color.AQUA);
@@ -910,7 +951,9 @@ GroundPrimitive.prototype.getGeometryInstanceAttributes = function (id) {
  * If this object was destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
  * </p>
+ *
  * @returns {boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+ *
  * @see GroundPrimitive#destroy
  */
 GroundPrimitive.prototype.isDestroyed = function () {
@@ -925,9 +968,12 @@ GroundPrimitive.prototype.isDestroyed = function () {
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
  * assign the return value (<code>undefined</code>) to the object as done in the example.
  * </p>
- * @throws {DeveloperError} This object was destroyed, i.e., destroy() was called.
+ *
+ * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+ *
  * @example
  * e = e && e.destroy();
+ *
  * @see GroundPrimitive#isDestroyed
  */
 GroundPrimitive.prototype.destroy = function () {
@@ -937,6 +983,7 @@ GroundPrimitive.prototype.destroy = function () {
 
 /**
  * Exposed for testing.
+ *
  * @param {Context} context Rendering context
  * @returns {boolean} Whether or not the current context supports materials on GroundPrimitives.
  * @private
@@ -948,6 +995,7 @@ GroundPrimitive._supportsMaterials = function (context) {
 /**
  * Checks if the given Scene supports materials on GroundPrimitives.
  * Materials on GroundPrimitives require support for the WEBGL_depth_texture extension.
+ *
  * @param {Scene} scene The current scene.
  * @returns {boolean} Whether or not the current scene supports materials on GroundPrimitives.
  */

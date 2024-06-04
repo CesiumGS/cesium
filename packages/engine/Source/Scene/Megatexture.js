@@ -19,12 +19,14 @@ import TextureWrap from "../Renderer/TextureWrap.js";
 
 /**
  * @alias Megatexture
- * @class
+ * @constructor
+ *
  * @param {Context} context
  * @param {Cartesian3} dimensions
  * @param {number} channelCount
  * @param {MetadataComponentType} componentType
  * @param {number} [textureMemoryByteLength]
+ *
  * @private
  */
 function Megatexture(
@@ -251,8 +253,10 @@ function Megatexture(
 
 /**
  * @alias MegatextureNode
- * @class
+ * @constructor
+ *
  * @param {number} index
+ *
  * @private
  */
 function MegatextureNode(index) {
@@ -454,7 +458,9 @@ Megatexture.prototype.writeDataToTexture = function (index, data) {
  * <br /><br />
  * If this object was destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
+ *
  * @returns {boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+ *
  * @see Megatexture#destroy
  */
 Megatexture.prototype.isDestroyed = function () {
@@ -468,8 +474,11 @@ Megatexture.prototype.isDestroyed = function () {
  * Once an object is destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
  * assign the return value (<code>undefined</code>) to the object as done in the example.
- * @throws {DeveloperError} This object was destroyed, i.e., destroy() was called.
+ *
+ * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+ *
  * @see Megatexture#isDestroyed
+ *
  * @example
  * megatexture = megatexture && megatexture.destroy();
  */

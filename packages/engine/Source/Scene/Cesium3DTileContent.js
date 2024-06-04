@@ -9,8 +9,9 @@ import DeveloperError from "../Core/DeveloperError.js";
  * <p>
  * This type describes an interface and is not intended to be instantiated directly.
  * </p>
+ *
  * @alias Cesium3DTileContent
- * @class
+ * @constructor
  */
 function Cesium3DTileContent() {
   /**
@@ -20,7 +21,9 @@ function Cesium3DTileContent() {
    * This is used to implement the <code>Cesium3DTileContent</code> interface, but is
    * not part of the public Cesium API.
    * </p>
+   *
    * @type {boolean}
+   *
    * @private
    */
   this.featurePropertiesDirty = false;
@@ -29,7 +32,9 @@ function Cesium3DTileContent() {
 Object.defineProperties(Cesium3DTileContent.prototype, {
   /**
    * Gets the number of features in the tile.
+   *
    * @memberof Cesium3DTileContent.prototype
+   *
    * @type {number}
    * @readonly
    */
@@ -46,8 +51,11 @@ Object.defineProperties(Cesium3DTileContent.prototype, {
    * Only applicable for tiles with Point Cloud content. This is different than {@link Cesium3DTileContent#featuresLength} which
    * equals the number of groups of points as distinguished by the <code>BATCH_ID</code> feature table semantic.
    * </p>
+   *
    * @see {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification/TileFormats/PointCloud#batched-points}
+   *
    * @memberof Cesium3DTileContent.prototype
+   *
    * @type {number}
    * @readonly
    */
@@ -60,7 +68,9 @@ Object.defineProperties(Cesium3DTileContent.prototype, {
 
   /**
    * Gets the number of triangles in the tile.
+   *
    * @memberof Cesium3DTileContent.prototype
+   *
    * @type {number}
    * @readonly
    */
@@ -73,7 +83,9 @@ Object.defineProperties(Cesium3DTileContent.prototype, {
 
   /**
    * Gets the tile's geometry memory in bytes.
+   *
    * @memberof Cesium3DTileContent.prototype
+   *
    * @type {number}
    * @readonly
    */
@@ -86,7 +98,9 @@ Object.defineProperties(Cesium3DTileContent.prototype, {
 
   /**
    * Gets the tile's texture memory in bytes.
+   *
    * @memberof Cesium3DTileContent.prototype
+   *
    * @type {number}
    * @readonly
    */
@@ -101,7 +115,9 @@ Object.defineProperties(Cesium3DTileContent.prototype, {
    * Gets the amount of memory used by the batch table textures and any binary
    * metadata properties not accounted for in geometryByteLength or
    * texturesByteLength
+   *
    * @memberof Cesium3DTileContent.prototype
+   *
    * @type {number}
    * @readonly
    */
@@ -114,8 +130,11 @@ Object.defineProperties(Cesium3DTileContent.prototype, {
 
   /**
    * Gets the array of {@link Cesium3DTileContent} objects for contents that contain other contents, such as composite tiles. The inner contents may in turn have inner contents, such as a composite tile that contains a composite tile.
+   *
    * @see {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification/TileFormats/Composite|Composite specification}
+   *
    * @memberof Cesium3DTileContent.prototype
+   *
    * @type {Array}
    * @readonly
    */
@@ -128,7 +147,9 @@ Object.defineProperties(Cesium3DTileContent.prototype, {
 
   /**
    * Returns true when the tile's content is ready to render; otherwise false
+   *
    * @memberof Cesium3DTileContent.prototype
+   *
    * @type {boolean}
    * @readonly
    */
@@ -141,7 +162,9 @@ Object.defineProperties(Cesium3DTileContent.prototype, {
 
   /**
    * Gets the tileset for this tile.
+   *
    * @memberof Cesium3DTileContent.prototype
+   *
    * @type {Cesium3DTileset}
    * @readonly
    */
@@ -154,7 +177,9 @@ Object.defineProperties(Cesium3DTileContent.prototype, {
 
   /**
    * Gets the tile containing this content.
+   *
    * @memberof Cesium3DTileContent.prototype
+   *
    * @type {Cesium3DTile}
    * @readonly
    */
@@ -168,6 +193,7 @@ Object.defineProperties(Cesium3DTileContent.prototype, {
   /**
    * Gets the url of the tile's content.
    * @memberof Cesium3DTileContent.prototype
+   *
    * @type {string}
    * @readonly
    */
@@ -184,8 +210,10 @@ Object.defineProperties(Cesium3DTileContent.prototype, {
    * This is used to implement the <code>Cesium3DTileContent</code> interface, but is
    * not part of the public Cesium API.
    * </p>
+   *
    * @type {Cesium3DTileBatchTable}
    * @readonly
+   *
    * @private
    */
   batchTable: {
@@ -202,7 +230,9 @@ Object.defineProperties(Cesium3DTileContent.prototype, {
    * This is used to implement the <code>Cesium3DTileContent</code> interface, but is
    * not part of the public Cesium API.
    * </p>
+   *
    * @type {ImplicitMetadataView|undefined}
+   *
    * @private
    * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
@@ -224,7 +254,9 @@ Object.defineProperties(Cesium3DTileContent.prototype, {
    * This is used to implement the <code>Cesium3DTileContent</code> interface, but is
    * not part of the public Cesium API.
    * </p>
+   *
    * @type {Cesium3DTileContentGroup|undefined}
+   *
    * @private
    * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
@@ -241,6 +273,7 @@ Object.defineProperties(Cesium3DTileContent.prototype, {
 
 /**
  * Returns whether the feature has this property.
+ *
  * @param {number} batchId The batchId for the feature.
  * @param {string} name The case-sensitive name of the property.
  * @returns {boolean} <code>true</code> if the feature has this property; otherwise, <code>false</code>.
@@ -256,26 +289,30 @@ Cesium3DTileContent.prototype.hasProperty = function (batchId, name) {
  * <p>
  * Features in a tile are ordered by <code>batchId</code>, an index used to retrieve their metadata from the batch table.
  * </p>
+ *
  * @see {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification/TileFormats/BatchTable}.
+ *
  * @param {number} batchId The batchId for the feature.
  * @returns {Cesium3DTileFeature} The corresponding {@link Cesium3DTileFeature} object.
- * @throws {DeveloperError} batchId must be between zero and {@link Cesium3DTileContent#featuresLength} - 1.
+ *
+ * @exception {DeveloperError} batchId must be between zero and {@link Cesium3DTileContent#featuresLength} - 1.
  */
 Cesium3DTileContent.prototype.getFeature = function (batchId) {
   DeveloperError.throwInstantiationError();
 };
 
 /**
- * Called when {@link Cesium3DTileset#debugColorizeTiles} changes.
- * <p>
- * This is used to implement the <code>Cesium3DTileContent</code> interface, but is
- * not part of the public Cesium API.
- * </p>
- * @param {boolean} enabled Whether to enable or disable debug settings.
- * @param color
- * @returns {Cesium3DTileFeature} The corresponding {@link Cesium3DTileFeature} object.
- * @private
- */
+     * Called when {@link Cesium3DTileset#debugColorizeTiles} changes.
+     * <p>
+     * This is used to implement the <code>Cesium3DTileContent</code> interface, but is
+     * not part of the public Cesium API.
+     * </p>
+     *
+     * @param {boolean} enabled Whether to enable or disable debug settings.
+     * @returns {Cesium3DTileFeature} The corresponding {@link Cesium3DTileFeature} object.
+
+     * @private
+     */
 Cesium3DTileContent.prototype.applyDebugSettings = function (enabled, color) {
   DeveloperError.throwInstantiationError();
 };
@@ -286,7 +323,9 @@ Cesium3DTileContent.prototype.applyDebugSettings = function (enabled, color) {
  * This is used to implement the <code>Cesium3DTileContent</code> interface, but is
  * not part of the public Cesium API.
  * </p>
+ *
  * @param {Cesium3DTileStyle} style The style.
+ *
  * @private
  */
 Cesium3DTileContent.prototype.applyStyle = function (style) {
@@ -301,8 +340,10 @@ Cesium3DTileContent.prototype.applyStyle = function (style) {
  * This is used to implement the <code>Cesium3DTileContent</code> interface, but is
  * not part of the public Cesium API.
  * </p>
+ *
  * @param {Cesium3DTileset} tileset The tileset containing this tile.
  * @param {FrameState} frameState The frame state.
+ *
  * @private
  */
 Cesium3DTileContent.prototype.update = function (tileset, frameState) {
@@ -311,10 +352,12 @@ Cesium3DTileContent.prototype.update = function (tileset, frameState) {
 
 /**
  * Find an intersection between a ray and the tile content surface that was rendered. The ray must be given in world coordinates.
+ *
  * @param {Ray} ray The ray to test for intersection.
  * @param {FrameState} frameState The frame state.
  * @param {Cartesian3|undefined} [result] The intersection or <code>undefined</code> if none was found.
  * @returns {Cartesian3|undefined} The intersection or <code>undefined</code> if none was found.
+ *
  * @private
  */
 Cesium3DTileContent.prototype.pick = function (ray, frameState, result) {
@@ -330,8 +373,11 @@ Cesium3DTileContent.prototype.pick = function (ray, frameState, result) {
  * This is used to implement the <code>Cesium3DTileContent</code> interface, but is
  * not part of the public Cesium API.
  * </p>
+ *
  * @returns {boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+ *
  * @see Cesium3DTileContent#destroy
+ *
  * @private
  */
 Cesium3DTileContent.prototype.isDestroyed = function () {
@@ -349,10 +395,14 @@ Cesium3DTileContent.prototype.isDestroyed = function () {
  * This is used to implement the <code>Cesium3DTileContent</code> interface, but is
  * not part of the public Cesium API.
  * </p>
- * @throws {DeveloperError} This object was destroyed, i.e., destroy() was called.
+ *
+ * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+ *
  * @example
  * content = content && content.destroy();
+ *
  * @see Cesium3DTileContent#isDestroyed
+ *
  * @private
  */
 Cesium3DTileContent.prototype.destroy = function () {

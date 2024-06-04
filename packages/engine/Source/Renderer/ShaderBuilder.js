@@ -20,8 +20,10 @@ import ShaderFunction from "./ShaderFunction.js";
  * For fragment shaders, the shader builder tracks a list of <code>#defines</code>,
  * a list of attributes, a list of uniforms, and a list of shader lines.
  * </p>
+ *
  * @alias ShaderBuilder
- * @class
+ * @constructor
+ *
  * @example
  * const shaderBuilder = new ShaderBuilder();
  * shaderBuilder.addDefine("SOLID_COLOR", undefined, ShaderDestination.FRAGMENT);
@@ -48,6 +50,7 @@ import ShaderFunction from "./ShaderFunction.js";
  *  "}"
  * ]);
  * const shaderProgram = shaderBuilder.build(context);
+ *
  * @private
  */
 function ShaderBuilder() {
@@ -87,6 +90,7 @@ Object.defineProperties(ShaderBuilder.prototype, {
   /**
    * Get a dictionary of attribute names to the integer location in
    * the vertex shader.
+   *
    * @memberof ShaderBuilder.prototype
    * @type {Object<string, number>}
    * @readonly
@@ -102,9 +106,11 @@ Object.defineProperties(ShaderBuilder.prototype, {
 /**
  * Add a <code>#define</code> macro to one or both of the shaders. These lines
  * will appear at the top of the final shader source.
+ *
  * @param {string} identifier An identifier for the macro. Identifiers must use uppercase letters with underscores to be consistent with Cesium's style guide.
  * @param {string} [value] The value of the macro. If undefined, the define will not include a value. The value will be converted to GLSL code via <code>toString()</code>
- * @param {ShaderDestination} [destination] Whether the define appears in the vertex shader, the fragment shader, or both.
+ * @param {ShaderDestination} [destination=ShaderDestination.BOTH] Whether the define appears in the vertex shader, the fragment shader, or both.
+ *
  * @example
  * // creates the line "#define ENABLE_LIGHTING" in both shaders
  * shaderBuilder.addDefine("ENABLE_LIGHTING");
@@ -138,6 +144,7 @@ ShaderBuilder.prototype.addDefine = function (identifier, value, destination) {
  * @param {string} structId A unique ID to identify this struct in {@link ShaderBuilder#addStructField}
  * @param {string} structName The name of the struct as it will appear in the shader.
  * @param {ShaderDestination} destination Whether the struct will appear in the vertex shader, the fragment shader, or both.
+ *
  * @example
  * // generates the following struct in the fragment shader
  * // struct TestStruct
@@ -170,6 +177,7 @@ ShaderBuilder.prototype.addStruct = function (
  * @param {string} structId The ID of the struct. This must be created first with {@link ShaderBuilder#addStruct}
  * @param {string} type The GLSL type of the field
  * @param {string} identifier The identifier of the field.
+ *
  * @example
  * // generates the following struct in the fragment shader
  * // struct TestStruct
@@ -227,6 +235,7 @@ ShaderBuilder.prototype.addFunction = function (
  * Add lines to a dynamically-generated function
  * @param {string} functionName The name of the function. This must be created beforehand using {@link ShaderBuilder#addFunction}
  * @param {string|string[]} lines One or more lines of GLSL code to add to the function body. Do not include any preceding or ending whitespace, but do include the semicolon for each line.
+ *
  * @example
  * // generates the following function in the vertex shader
  * // vec3 testFunction(float parameter)
@@ -255,9 +264,11 @@ ShaderBuilder.prototype.addFunctionLines = function (functionName, lines) {
 /**
  * Add a uniform declaration to one or both of the shaders. These lines
  * will appear grouped near the top of the final shader source.
+ *
  * @param {string} type The GLSL type of the uniform.
  * @param {string} identifier An identifier for the uniform. Identifiers must begin with <code>u_</code> to be consistent with Cesium's style guide.
- * @param {ShaderDestination} [destination] Whether the uniform appears in the vertex shader, the fragment shader, or both.
+ * @param {ShaderDestination} [destination=ShaderDestination.BOTH] Whether the uniform appears in the vertex shader, the fragment shader, or both.
+ *
  * @example
  * // creates the line "uniform vec3 u_resolution;"
  * shaderBuilder.addUniform("vec3", "u_resolution", ShaderDestination.FRAGMENT);
@@ -290,9 +301,11 @@ ShaderBuilder.prototype.addUniform = function (type, identifier, destination) {
  * reserved for the position attribute. For all other attributes, see
  * {@link ShaderBuilder#addAttribute}
  * </p>
+ *
  * @param {string} type The GLSL type of the attribute
  * @param {string} identifier An identifier for the attribute. Identifiers must begin with <code>a_</code> to be consistent with Cesium's style guide.
- * @returns {number} The integer location of the attribute. This location can be used when creating attributes for a {@link VertexArray}. This will always be 0.
+ * @return {number} The integer location of the attribute. This location can be used when creating attributes for a {@link VertexArray}. This will always be 0.
+ *
  * @example
  * // creates the line "in vec3 a_position;"
  * shaderBuilder.setPositionAttribute("vec3", "a_position");
@@ -324,9 +337,11 @@ ShaderBuilder.prototype.setPositionAttribute = function (type, identifier) {
  * Some WebGL implementations require attribute 0 to be enabled, so this is
  * reserved for the position attribute. See {@link ShaderBuilder#setPositionAttribute}
  * </p>
+ *
  * @param {string} type The GLSL type of the attribute
  * @param {string} identifier An identifier for the attribute. Identifiers must begin with <code>a_</code> to be consistent with Cesium's style guide.
- * @returns {number} The integer location of the attribute. This location can be used when creating attributes for a {@link VertexArray}
+ * @return {number} The integer location of the attribute. This location can be used when creating attributes for a {@link VertexArray}
+ *
  * @example
  * // creates the line "in vec2 a_texCoord0;" in the vertex shader
  * shaderBuilder.addAttribute("vec2", "a_texCoord0");
@@ -351,9 +366,11 @@ ShaderBuilder.prototype.addAttribute = function (type, identifier) {
 
 /**
  * Add a varying declaration to both the vertex and fragment shaders.
+ *
  * @param {string} type The GLSL type of the varying
  * @param {string} identifier An identifier for the varying. Identifiers must begin with <code>v_</code> to be consistent with Cesium's style guide.
  * @param {string} [qualifier] A qualifier for the varying, such as <code>flat</code>.
+ *
  * @example
  * // creates the line "in vec3 v_color;" in the vertex shader
  * // creates the line "out vec3 v_color;" in the fragment shader
@@ -374,7 +391,9 @@ ShaderBuilder.prototype.addVarying = function (type, identifier, qualifier) {
 
 /**
  * Appends lines of GLSL code to the vertex shader
+ *
  * @param {string|string[]} lines One or more lines to add to the end of the vertex shader source
+ *
  * @example
  * shaderBuilder.addVertexLines([
  *  "void main()",
@@ -404,7 +423,9 @@ ShaderBuilder.prototype.addVertexLines = function (lines) {
 
 /**
  * Appends lines of GLSL code to the fragment shader
+ *
  * @param {string[]} lines The lines to add to the end of the fragment shader source
+ *
  * @example
  * shaderBuilder.addFragmentLines([
  *  "void main()",
@@ -439,8 +460,10 @@ ShaderBuilder.prototype.addFragmentLines = function (lines) {
  * Builds the {@link ShaderProgram} from the pieces added by the other methods.
  * Call this one time at the end of modifying the shader through the other
  * methods in this class.
+ *
  * @param {Context} context The context to use for creating the shader.
- * @returns {ShaderProgram} A shader program to use for rendering.
+ * @return {ShaderProgram} A shader program to use for rendering.
+ *
  * @example
  * const shaderProgram = shaderBuilder.buildShaderProgram(context);
  */
