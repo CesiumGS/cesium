@@ -240,7 +240,7 @@ CesiumMath.EPSILON1 = 0.1;
  * interface and is not intended to be instantiated directly.
  *
  * @alias TerrainProvider
- * @constructor
+ * @class
  *
  * @see EllipsoidTerrainProvider
  * @see CesiumTerrainProvider
@@ -264,14 +264,14 @@ function TerrainProvider() {
 
 ## Classes
 
-Define a class with `@alias` and `@constructor` tags on the constructor function, e.g.,
+Define a class with `@alias` and `@class` tags on the constructor function, e.g.,
 
 ```javascript
 /**
  * A 3D Cartesian point.
  *
  * @alias Cartesian3
- * @constructor
+ * @class
  *
  * ...
  */
@@ -423,7 +423,7 @@ If a member or function doesn't start with `_`, but is intended to be private, u
  * one using {@link Scene#tweens} and {@link TweenCollection#add} and related add functions.
  *
  * @alias Tween
- * @constructor
+ * @class
  *
  * @private
  */
@@ -459,7 +459,7 @@ There's a general flow to each documentation block that makes it easy to read. T
 DESCRIPTION.
 
 @alias NAME
-@constructor
+@class
 
 @param {TYPE} NAME DESCRIPTION.
 @param {TYPE|OTHER_TYPE} NAME DESCRIPTION WITH LONG

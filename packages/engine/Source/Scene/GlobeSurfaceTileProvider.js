@@ -58,8 +58,8 @@ import TileSelectionResult from "./TileSelectionResult.js";
  * with {@link QuadtreePrimitive}.
  * @alias GlobeSurfaceTileProvider
  * @class
+ * @param {Object} [options] Object with the following properties:
  * @param {TerrainProvider} options.terrainProvider The terrain provider that describes the surface geometry.
- * @param options
  * @param {ImageryLayerCollection} option.imageryLayers The collection of imagery layers describing the shading of the surface.
  * @param {GlobeSurfaceShaderSet} options.surfaceShaderSet The set of shaders used to render the surface.
  * @private

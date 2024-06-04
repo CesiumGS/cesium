@@ -6,7 +6,7 @@ import defaultValue from "./defaultValue.js";
  * <p>
  * Attributes are always stored non-interleaved in a Geometry.
  * </p>
- * @param options
+ * @param {Object} [options]
  * @alias GeometryAttributes
  * @class
  */

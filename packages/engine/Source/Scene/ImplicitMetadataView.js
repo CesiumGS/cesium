@@ -6,11 +6,11 @@ import defaultValue from "../Core/defaultValue.js";
  * <p>
  * See the {@link https://github.com/CesiumGS/3d-tiles/tree/main/extensions/3DTILES_metadata|3DTILES_metadata Extension} for 3D Tiles
  * </p>
+ * @param {Object} [options] Object with the following properties:
  * @param {MetadataTable} options.metadataTable The metadata table.
  * @param {MetadataClass} options.class The class that the metadata conforms to.
  * @param {number} options.entityId The ID of the entity the metadata belongs to.
  * @param {object} options.propertyTableJson The JSON that contains the property table of the entity.
- * @param options
  * @alias ImplicitMetadataView
  * @class
  * @private
