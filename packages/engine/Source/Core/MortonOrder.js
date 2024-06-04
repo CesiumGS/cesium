@@ -23,7 +23,6 @@ const MortonOrder = {};
  * @param {number} v A 16-bit unsigned integer.
  * @returns {number} A 32-bit unsigned integer.
  * @see {@link https://fgiesen.wordpress.com/2009/12/13/decoding-morton-codes/}
- * @private
  */
 function insertOneSpacing(v) {
   v = (v ^ (v << 8)) & 0x00ff00ff;
