@@ -62,7 +62,6 @@ const GroundPrimitiveUniformMap = {
  * @param {boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if this primitive's commands' bounding spheres are shown.
  * @param {boolean} [options.debugShowShadowVolume=false] For debugging only. Determines if the shadow volume for each geometry in the primitive is drawn. Must be <code>true</code> on
  *                  creation for the volumes to be created before the geometry is released or options.releaseGeometryInstance must be <code>false</code>.
- *
  * @example
  * // Example 1: Create primitive with a single instance
  * const rectangleInstance = new Cesium.GeometryInstance({
@@ -103,7 +102,6 @@ const GroundPrimitiveUniformMap = {
  * scene.primitives.add(new Cesium.GroundPrimitive({
  *   geometryInstances : [rectangleInstance, ellipseInstance]
  * }));
- *
  * @see Primitive
  * @see ClassificationPrimitive
  * @see GeometryInstance

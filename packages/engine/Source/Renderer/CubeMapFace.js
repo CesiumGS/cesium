@@ -293,7 +293,6 @@ CubeMapFace.prototype.copyFrom = function (options) {
  * @throws {DeveloperError} xOffset + source.width must be less than or equal to width.
  * @throws {DeveloperError} yOffset + source.height must be less than or equal to height.
  * @throws {DeveloperError} This CubeMap was destroyed, i.e., destroy() was called.
- *
  * @example
  * // Copy the framebuffer contents to the +x cube map face.
  * cubeMap.positiveX.copyFromFramebuffer();

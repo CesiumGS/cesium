@@ -16,7 +16,6 @@ import EllipsoidOutlineGeometry from "./EllipsoidOutlineGeometry.js";
  * @throws {DeveloperError} options.stackPartitions must be greater than or equal to one.
  * @throws {DeveloperError} options.slicePartitions must be greater than or equal to zero.
  * @throws {DeveloperError} options.subdivisions must be greater than or equal to zero.
- *
  * @example
  * const sphere = new Cesium.SphereOutlineGeometry({
  *   radius : 100.0,

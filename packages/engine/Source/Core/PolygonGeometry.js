@@ -590,12 +590,9 @@ function createGeometryFromPositionsExtruded(
  * @param {boolean} [options.closeBottom] When false, leaves off the bottom of an extruded polygon open.
  * @param {ArcType} [options.arcType=ArcType.GEODESIC] The type of line the polygon edges must follow. Valid options are {@link ArcType.GEODESIC} and {@link ArcType.RHUMB}.
  * @param {PolygonHierarchy} [options.textureCoordinates] Texture coordinates as a {@link PolygonHierarchy} of {@link Cartesian2} points. Has no effect for ground primitives.
- *
  * @see PolygonGeometry#createGeometry
  * @see PolygonGeometry#fromPositions
- *
  * @demo {@link https://sandcastle.cesium.com/index.html?src=Polygon.html|Cesium Sandcastle Polygon Demo}
- *
  * @example
  * // 1. create a polygon from points
  * const polygon = new Cesium.PolygonGeometry({
@@ -776,7 +773,6 @@ function PolygonGeometry(options) {
  *   ])
  * });
  * const geometry = Cesium.PolygonGeometry.createGeometry(polygon);
- *
  * @see PolygonGeometry#createGeometry
  */
 PolygonGeometry.fromPositions = function (options) {

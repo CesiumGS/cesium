@@ -45,7 +45,6 @@ import StencilOperation from "./StencilOperation.js";
  * @param {ClassificationType} [options.classificationType] Determines whether terrain, 3D Tiles or both will be classified.
  * @param {boolean} [options.debugShowBoundingVolume] For debugging only. Determines if this primitive's commands' bounding spheres are shown.
  * @param {boolean} [options.debugShowShadowVolume] For debugging only. Determines if the shadow volume for each geometry in the primitive is drawn. Must be <code>true</code> on creation to have effect.
- *
  * @example
  * // 1. Draw a polyline on terrain with a basic color material
  *

@@ -25,7 +25,6 @@ import PixelFormat from "../Core/PixelFormat.js";
  * @param {PixelFormat} [options.pixelFormat=undefined] The default pixel format to use when creating color attachments.
  * @throws {DeveloperError} Must enable at least one type of framebuffer attachment.
  * @throws {DeveloperError} Cannot have both a depth and depth-stencil attachment.
- *
  * @private
  * @class
  */

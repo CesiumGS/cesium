@@ -19,10 +19,8 @@ import Ellipsoid from "./Ellipsoid.js";
  * @param {number} [options.numberOfVerticalLines] Number of lines to draw between the top and bottom of an extruded circle.
  * @throws {DeveloperError} radius must be greater than zero.
  * @throws {DeveloperError} granularity must be greater than zero.
- *
  * @see CircleOutlineGeometry.createGeometry
  * @see Packable
- *
  * @example
  * // Create a circle.
  * const circle = new Cesium.CircleOutlineGeometry({

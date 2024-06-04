@@ -61,7 +61,6 @@ import StencilOperation from "./StencilOperation.js";
  * @param {boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if this primitive's commands' bounding spheres are shown.
  * @param {boolean} [options.debugShowShadowVolume=false] For debugging only. Determines if the shadow volume for each geometry in the primitive is drawn. Must be <code>true</code> on
  *                  creation for the volumes to be created before the geometry is released or options.releaseGeometryInstance must be <code>false</code>.
- *
  * @see Primitive
  * @see GroundPrimitive
  * @see GeometryInstance

@@ -39,12 +39,9 @@ const sin = Math.sin;
  * @param {number} [options.stackPartitions] The number of times to partition the ellipsoid into stacks.
  * @param {number} [options.slicePartitions] The number of times to partition the ellipsoid into radial slices.
  * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
- *
  * @throws {DeveloperError} options.slicePartitions cannot be less than three.
  * @throws {DeveloperError} options.stackPartitions cannot be less than three.
- *
  * @see EllipsoidGeometry#createGeometry
- *
  * @example
  * const ellipsoid = new Cesium.EllipsoidGeometry({
  *   vertexFormat : Cesium.VertexFormat.POSITION_ONLY,

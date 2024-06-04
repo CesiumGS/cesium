@@ -31,11 +31,9 @@ const sin = Math.sin;
  * @param {number} [options.stackPartitions] The count of stacks for the ellipsoid (1 greater than the number of parallel lines).
  * @param {number} [options.slicePartitions] The count of slices for the ellipsoid (Equal to the number of radial lines).
  * @param {number} [options.subdivisions=128] The number of points per line, determining the granularity of the curvature.
- *
  * @throws {DeveloperError} options.stackPartitions must be greater than or equal to one.
  * @throws {DeveloperError} options.slicePartitions must be greater than or equal to zero.
  * @throws {DeveloperError} options.subdivisions must be greater than or equal to zero.
- *
  * @example
  * const ellipsoid = new Cesium.EllipsoidOutlineGeometry({
  *   radii : new Cesium.Cartesian3(1000000.0, 500000.0, 500000.0),

@@ -72,8 +72,6 @@ import TerrainProvider from "./TerrainProvider.js";
  * @param {HeightmapEncoding} [options.encoding] The encoding that is used on the buffer.
  * @param {boolean} [options.createdByUpsampling=false] True if this instance was created by upsampling another instance;
  *                  otherwise, false.
- *
- *
  * @example
  * const buffer = ...
  * const heightBuffer = new Uint16Array(buffer, 0, that._heightmapWidth * that._heightmapWidth);
@@ -86,7 +84,6 @@ import TerrainProvider from "./TerrainProvider.js";
  *   childTileMask : childTileMask,
  *   waterMask : waterMask
  * });
- *
  * @see TerrainData
  * @see QuantizedMeshTerrainData
  * @see GoogleEarthEnterpriseTerrainData

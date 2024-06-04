@@ -17,7 +17,6 @@ import VertexFormat from "./VertexFormat.js";
  * @throws {DeveloperError} options.slicePartitions cannot be less than three.
  * @throws {DeveloperError} options.stackPartitions cannot be less than three.
  * @see SphereGeometry#createGeometry
- *
  * @example
  * const sphere = new Cesium.SphereGeometry({
  *   radius : 100.0,

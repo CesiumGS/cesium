@@ -195,9 +195,7 @@ function computeExtrudedEllipse(options) {
  * @throws {DeveloperError} semiMajorAxis and semiMinorAxis must be greater than zero.
  * @throws {DeveloperError} semiMajorAxis must be greater than or equal to the semiMinorAxis.
  * @throws {DeveloperError} granularity must be greater than zero.
- *
  * @see EllipseOutlineGeometry.createGeometry
- *
  * @example
  * const ellipse = new Cesium.EllipseOutlineGeometry({
  *   center : Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),

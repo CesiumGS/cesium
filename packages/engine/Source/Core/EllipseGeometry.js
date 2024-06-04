@@ -900,8 +900,6 @@ function computeRectangle(
  * @throws {DeveloperError} semiMajorAxis and semiMinorAxis must be greater than zero.
  * @throws {DeveloperError} semiMajorAxis must be greater than or equal to the semiMinorAxis.
  * @throws {DeveloperError} granularity must be greater than zero.
- *
- *
  * @example
  * // Create an ellipse.
  * const ellipse = new Cesium.EllipseGeometry({
@@ -911,7 +909,6 @@ function computeRectangle(
  *   rotation : Cesium.Math.toRadians(60.0)
  * });
  * const geometry = Cesium.EllipseGeometry.createGeometry(ellipse);
- *
  * @see EllipseGeometry.createGeometry
  */
 function EllipseGeometry(options) {

@@ -30,7 +30,6 @@ import RuntimeError from "./RuntimeError.js";
  * @param {number} [column1Row3=0.0] The value for column 1, row 3.
  * @param {number} [column2Row3=0.0] The value for column 2, row 3.
  * @param {number} [column3Row3=0.0] The value for column 3, row 3.
- *
  * @see Matrix4.fromArray
  * @see Matrix4.fromColumnMajorArray
  * @see Matrix4.fromRowMajorArray

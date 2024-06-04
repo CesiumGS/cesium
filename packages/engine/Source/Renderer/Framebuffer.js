@@ -45,7 +45,6 @@ function attachRenderbuffer(framebuffer, attachment, renderbuffer) {
  * @throws {DeveloperError} The number of color attachments exceeds the number supported.
  * @throws {DeveloperError} The color-texture pixel datatype is HALF_FLOAT and the WebGL implementation does not support the EXT_color_buffer_half_float extension.
  * @throws {DeveloperError} The color-texture pixel datatype is FLOAT and the WebGL implementation does not support the EXT_color_buffer_float or WEBGL_color_buffer_float extensions.
- *
  * @example
  * // Create a framebuffer with color and depth texture attachments.
  * const width = context.canvas.clientWidth;
@@ -66,7 +65,6 @@ function attachRenderbuffer(framebuffer, attachment, renderbuffer) {
  *     pixelDatatype : PixelDatatype.UNSIGNED_SHORT
  *   })
  * });
- *
  * @private
  * @class
  */

@@ -21,7 +21,6 @@ import JulianDate from "./JulianDate.js";
  * @param {boolean} [options.canAnimate] Indicates whether {@link Clock#tick} can advance time.  This could be false if data is being buffered, for example.  The clock will only tick when both {@link Clock#canAnimate} and {@link Clock#shouldAnimate} are true.
  * @param {boolean} [options.shouldAnimate] Indicates whether {@link Clock#tick} should attempt to advance time.  The clock will only tick when both {@link Clock#canAnimate} and {@link Clock#shouldAnimate} are true.
  * @throws {DeveloperError} startTime must come before stopTime.
- *
  * @example
  * // Create a clock that loops on Christmas day 2013 and runs in real-time.
  * const clock = new Cesium.Clock({
@@ -31,7 +30,6 @@ import JulianDate from "./JulianDate.js";
  *    clockRange : Cesium.ClockRange.LOOP_STOP,
  *    clockStep : Cesium.ClockStep.SYSTEM_CLOCK_MULTIPLIER
  * });
- *
  * @see ClockStep
  * @see ClockRange
  * @see JulianDate

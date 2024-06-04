@@ -70,7 +70,6 @@ function interpolateColors(p0, p1, color0, color1, minDistance, array, offset) {
  * @throws {DeveloperError} At least two positions are required.
  * @throws {DeveloperError} colors has an invalid length.
  * @see SimplePolylineGeometry#createGeometry
- *
  * @example
  * // A polyline with two connected line segments
  * const polyline = new Cesium.SimplePolylineGeometry({

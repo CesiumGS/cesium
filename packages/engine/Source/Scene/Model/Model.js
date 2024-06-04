@@ -2624,11 +2624,9 @@ Model.prototype.destroyModelResources = function () {
  * @param {ClassificationType} [options.classificationType] Determines whether terrain, 3D Tiles or both will be classified by this model. This cannot be set after the model has loaded.
  * @param {Model.GltfCallback} [options.gltfCallback] A function that is called with the loaded gltf object once loaded.
  * @returns {Promise<Model>} A promise that resolves to the created model when it is ready to render.
- *
  * @throws {RuntimeError} The model failed to load.
  * @throws {RuntimeError} Unsupported glTF version.
  * @throws {RuntimeError} Unsupported glTF Extension
- *
  * @example
  * // Load a model and add it to the scene
  * try {
@@ -2639,7 +2637,6 @@ Model.prototype.destroyModelResources = function () {
  * } catch (error) {
  *  console.log(`Failed to load model. ${error}`);
  * }
- *
  * @example
  * // Position a model with modelMatrix and display it with a minimum size of 128 pixels
  * const position = Cesium.Cartesian3.fromDegrees(
@@ -2667,7 +2664,6 @@ Model.prototype.destroyModelResources = function () {
  * } catch (error) {
  *  console.log(`Failed to load model. ${error}`);
  * }
- *
  * @example
  * // Load a model and play the last animation at half speed
  * let animations;

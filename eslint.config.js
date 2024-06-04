@@ -77,7 +77,6 @@ export default [
       "jsdoc/check-property-names": "off",
       "jsdoc/check-types": "off",
       "jsdoc/valid-types": "off",
-      "jsdoc/tag-lines": "off",
       "jsdoc/no-defaults": "off", // We use default parameters instead of enforcing with ES6 for now
     },
   },

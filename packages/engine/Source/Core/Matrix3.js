@@ -20,7 +20,6 @@ import CesiumMath from "./Math.js";
  * @param {number} [column0Row2] The value for column 0, row 2.
  * @param {number} [column1Row2] The value for column 1, row 2.
  * @param {number} [column2Row2=0.0] The value for column 2, row 2.
- *
  * @see Matrix3.fromArray
  * @see Matrix3.fromColumnMajorArray
  * @see Matrix3.fromRowMajorArray

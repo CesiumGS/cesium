@@ -76,7 +76,6 @@ import ShadowMode from "./ShadowMode.js";
  * @param {boolean} [options.asynchronous=true] Determines if the primitive will be created asynchronously or block until ready.
  * @param {boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if this primitive's commands' bounding spheres are shown.
  * @param {ShadowMode} [options.shadows=ShadowMode.DISABLED] Determines whether this primitive casts or receives shadows from light sources.
- *
  * @example
  * // 1. Draw a translucent ellipse on the surface with a checkerboard pattern
  * const instance = new Cesium.GeometryInstance({
@@ -95,7 +94,6 @@ import ShadowMode from "./ShadowMode.js";
  *     material : Cesium.Material.fromType('Checkerboard')
  *   })
  * }));
- *
  * @example
  * // 2. Draw different instances each with a unique color
  * const rectangleInstance = new Cesium.GeometryInstance({
@@ -124,7 +122,6 @@ import ShadowMode from "./ShadowMode.js";
  *   geometryInstances : [rectangleInstance, ellipsoidInstance],
  *   appearance : new Cesium.PerInstanceColorAppearance()
  * }));
- *
  * @example
  * // 3. Create the geometry on the main thread.
  * scene.primitives.add(new Cesium.Primitive({
@@ -143,7 +140,6 @@ import ShadowMode from "./ShadowMode.js";
  *   appearance : new Cesium.PerInstanceColorAppearance(),
  *   asynchronous : false
  * }));
- *
  * @see GeometryInstance
  * @see Appearance
  * @see ClassificationPrimitive

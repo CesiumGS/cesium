@@ -212,7 +212,6 @@ function bind(gl, attributes, indexBuffer) {
  *     context : context,
  *     attributes : attributes
  * });
- *
  * @example
  * // Example 2. Create a vertex array with vertices from two different vertex buffers.
  * // Each vertex has a three-component position and three-component normal.
@@ -244,7 +243,6 @@ function bind(gl, attributes, indexBuffer) {
  *     context : context,
  *     attributes : attributes
  * });
- *
  * @example
  * // Example 3. Creates the same vertex layout as Example 2 using a single
  * // vertex buffer, instead of two.
@@ -274,11 +272,9 @@ function bind(gl, attributes, indexBuffer) {
  *     context : context,
  *     attributes : attributes
  * });
- *
  * @see Buffer#createVertexBuffer
  * @see Buffer#createIndexBuffer
  * @see Context#draw
- *
  * @private
  */
 function VertexArray(options) {

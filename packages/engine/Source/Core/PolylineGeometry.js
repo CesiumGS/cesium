@@ -77,11 +77,8 @@ function interpolateColors(p0, p1, color0, color1, numPoints) {
  * @throws {DeveloperError} At least two positions are required.
  * @throws {DeveloperError} width must be greater than or equal to one.
  * @throws {DeveloperError} colors has an invalid length.
- *
  * @see PolylineGeometry#createGeometry
- *
  * @demo {@link https://sandcastle.cesium.com/index.html?src=Polyline.html|Cesium Sandcastle Polyline Demo}
- *
  * @example
  * // A polyline with two connected line segments
  * const polyline = new Cesium.PolylineGeometry({

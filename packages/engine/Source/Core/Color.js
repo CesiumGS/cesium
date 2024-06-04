@@ -235,7 +235,6 @@ Color.fromHsl = function (hue, saturation, lightness, alpha, result) {
  * @throws {DeveloperError} minimumGreen must be less than or equal to maximumGreen.
  * @throws {DeveloperError} minimumBlue must be less than or equal to maximumBlue.
  * @throws {DeveloperError} minimumAlpha must be less than or equal to maximumAlpha.
- *
  * @example
  * //Create a completely random color
  * const color = Cesium.Color.fromRandom();

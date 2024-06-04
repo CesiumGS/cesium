@@ -987,11 +987,8 @@ function computeRectangle(rectangle, granularity, rotation, ellipsoid, result) {
  * @throws {DeveloperError} <code>options.rectangle.east</code> must be in the interval [<code>-Pi</code>, <code>Pi</code>].
  * @throws {DeveloperError} <code>options.rectangle.west</code> must be in the interval [<code>-Pi</code>, <code>Pi</code>].
  * @throws {DeveloperError} <code>options.rectangle.north</code> must be greater than <code>options.rectangle.south</code>.
- *
  * @see RectangleGeometry#createGeometry
- *
  * @demo {@link https://sandcastle.cesium.com/index.html?src=Rectangle.html|Cesium Sandcastle Rectangle Demo}
- *
  * @example
  * // 1. create a rectangle
  * const rectangle = new Cesium.RectangleGeometry({

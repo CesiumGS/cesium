@@ -428,16 +428,12 @@ Texture.create = function (options) {
  * @throws {DeveloperError} framebufferYOffset must be greater than or equal to zero.
  * @throws {DeveloperError} framebufferXOffset + width must be less than or equal to canvas.clientWidth.
  * @throws {DeveloperError} framebufferYOffset + height must be less than or equal to canvas.clientHeight.
- *
- *
  * @example
  * // Create a texture with the contents of the framebuffer.
  * const t = Texture.fromFramebuffer({
  *     context : context
  * });
- *
  * @see Sampler
- *
  * @private
  */
 Texture.fromFramebuffer = function (options) {
@@ -661,7 +657,6 @@ Object.defineProperties(Texture.prototype, {
  * @throws {DeveloperError} xOffset + source.width must be less than or equal to width.
  * @throws {DeveloperError} yOffset + source.height must be less than or equal to height.
  * @throws {DeveloperError} This texture was destroyed, i.e., destroy() was called.
- *
  * @example
  * texture.copyFrom({
  *  source: {

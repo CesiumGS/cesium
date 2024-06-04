@@ -31,9 +31,7 @@ const radiusScratch = new Cartesian2();
  * @throws {DeveloperError} options.bottomRadius must be greater than 0.
  * @throws {DeveloperError} bottomRadius and topRadius cannot both equal 0.
  * @throws {DeveloperError} options.slices must be greater than or equal to 3.
- *
  * @see CylinderOutlineGeometry.createGeometry
- *
  * @example
  * // create cylinder geometry
  * const cylinder = new Cesium.CylinderOutlineGeometry({

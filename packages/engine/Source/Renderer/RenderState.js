@@ -400,8 +400,6 @@ let renderStateCache = {};
  * @throws {DeveloperError} renderState.viewport.width must be less than or equal to the maximum viewport width.
  * @throws {DeveloperError} renderState.viewport.height must be greater than or equal to zero.
  * @throws {DeveloperError} renderState.viewport.height must be less than or equal to the maximum viewport height.
- *
- *
  * @example
  * const defaults = {
  *     frontFace : WindingOrder.COUNTER_CLOCKWISE,
@@ -480,10 +478,8 @@ let renderStateCache = {};
  * };
  *
  * const rs = RenderState.fromCache(defaults);
- *
  * @see DrawCommand
  * @see ClearCommand
- *
  * @private
  */
 RenderState.fromCache = function (renderState) {

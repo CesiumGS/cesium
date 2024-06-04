@@ -38,9 +38,7 @@ import PostProcessStageSampleMode from "./PostProcessStageSampleMode.js";
  * @throws {DeveloperError} options.textureScale must be greater than 0.0 and less than or equal to 1.0.
  * @throws {DeveloperError} options.pixelFormat must be a color format.
  * @throws {DeveloperError} When options.pixelDatatype is FLOAT, this WebGL implementation must support floating point textures. Check context.floatingPointTexture.
- *
  * @see PostProcessStageComposite
- *
  * @example
  * // Simple stage to change the color
  * const fs =`
@@ -61,7 +59,6 @@ import PostProcessStageSampleMode from "./PostProcessStageSampleMode.js";
  *         }
  *     }
  * }));
- *
  * @example
  * // Simple stage to change the color of what is selected.
  * // If czm_selected returns true, the current fragment belongs to geometry in the selected array.

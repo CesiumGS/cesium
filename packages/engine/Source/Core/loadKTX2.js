@@ -68,7 +68,6 @@ loadKTX2.setKTX2SupportedFormats = function (
  * }).catch(function (error) {
  *     // an error occurred.
  * });
- *
  * @see {@link https://github.com/KhronosGroup/KTX-Specification|KTX file format}
  * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
  * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}

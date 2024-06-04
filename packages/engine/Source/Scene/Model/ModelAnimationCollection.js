@@ -116,19 +116,16 @@ function addAnimation(collection, animation, options) {
  * @throws {DeveloperError} options.index must be a valid animation index.
  * @throws {DeveloperError} Either options.name or options.index must be defined.
  * @throws {DeveloperError} options.multiplier must be greater than zero.
- *
  * @example
  * // Example 1. Add an animation by name
  * model.activeAnimations.add({
  *   name : 'animation name'
  * });
- *
  * @example
  * // Example 2. Add an animation by index
  * model.activeAnimations.add({
  *   index : 0
  * });
- *
  * @example
  * // Example 3. Add an animation and provide all properties and events
  * const startTime = Cesium.JulianDate.now();
