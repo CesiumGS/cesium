@@ -52,7 +52,7 @@ const FeatureIdAttribute = ModelComponents.FeatureIdAttribute;
  * @param {boolean} [options.loadIndicesForWireframe=false] If <code>true</code>, load the index buffer as a typed array. This is useful for creating wireframe indices in WebGL1.
  * @param {boolean} [options.loadPrimitiveOutline=true] If <code>true</code>, load outlines from the {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension. This can be set false to avoid post-processing geometry at load time.
  * @param {boolean} [options.loadForClassification=false] If <code>true</code> and if the model has feature IDs, load the feature IDs and indices as typed arrays. This is useful for batching features for classification.
- * */
+ */
 function B3dmLoader(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 

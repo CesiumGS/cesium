@@ -68,7 +68,6 @@ export default [
       "jsdoc/tag-lines": "off",
       "jsdoc/check-tag-names": "off",
       "jsdoc/no-defaults": "off",
-      "jsdoc/no-multi-asterisks": "off",
     },
   },
   {
