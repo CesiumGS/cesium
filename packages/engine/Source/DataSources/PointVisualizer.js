@@ -222,6 +222,11 @@ PointVisualizer.prototype.update = function (time) {
         time,
         defaultDisableDepthTestDistance
       );
+      billboard.splitDirection = Property.getValueOrDefault(
+        pointGraphics._splitDirection,
+        time,
+        defaultSplitDirection
+      );
       billboard.heightReference = heightReference;
 
       const newColor = Property.getValueOrDefault(
