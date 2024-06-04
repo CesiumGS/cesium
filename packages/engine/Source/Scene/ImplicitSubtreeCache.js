@@ -4,11 +4,9 @@ import DoubleEndedPriorityQueue from "../Core/DoubleEndedPriorityQueue.js";
 
 /**
  * @alias ImplicitSubtreeCache
- * @constructor
- *
+ * @class
  * @param {object} [options] Object with the following properties
  * @param {number} [options.maximumSubtreeCount=0] The total number of subtrees this cache can store. If adding a new subtree would exceed this limit, the lowest priority subtrees will be removed until there is room, unless the subtree that is going to be removed is the parent of the new subtree, in which case it will not be removed and the new subtree will still be added, exceeding the memory limit.
- *
  * @private
  */
 function ImplicitSubtreeCache(options) {
@@ -112,11 +110,9 @@ ImplicitSubtreeCache.comparator = function (a, b) {
 
 /**
  * @alias ImplicitSubtreeCacheNode
- * @constructor
- *
+ * @class
  * @param {ImplicitSubtree} subtree
  * @param {number} stamp
- *
  * @private
  */
 function ImplicitSubtreeCacheNode(subtree, stamp) {

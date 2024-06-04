@@ -14,7 +14,6 @@ import ImageryProvider from "./ImageryProvider.js";
  * @typedef {object} SingleTileImageryProvider.ConstructorOptions
  *
  * Initialization options for the SingleTileImageryProvider constructor
- *
  * @property {Resource|string} url The url for the tile.
  * @property {number} [tileWidth] The width of the tile, in pixels.
  * @property {number} [tileHeight] The height of the tile, in pixels.
@@ -27,12 +26,9 @@ import ImageryProvider from "./ImageryProvider.js";
  * Provides a single, top-level imagery tile.  The single image is assumed to be in
  * the Geographic projection (i.e. WGS84 / EPSG:4326),
  * and will be rendered using a {@link GeographicTilingScheme}.
- *
  * @alias SingleTileImageryProvider
- * @constructor
- *
+ * @class
  * @param {SingleTileImageryProvider.ConstructorOptions} options Object describing initialization options
- *
  * @see ArcGisMapServerImageryProvider
  * @see BingMapsImageryProvider
  * @see GoogleEarthEnterpriseMapsProvider
@@ -286,7 +282,6 @@ async function doRequest(resource, provider, previousError) {
  * @typedef {Object} SingleTileImageryProvider.fromUrlOptions
  *
  * Initialization options for the SingleTileImageryProvider constructor when using SingleTileImageryProvider.fromUrl
- *
  * @property {Rectangle} [rectangle=Rectangle.MAX_VALUE] The rectangle, in radians, covered by the image.
  * @property {Credit|String} [credit] A credit for the data source, which is displayed on the canvas.
  * @property {Ellipsoid} [ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
@@ -297,7 +292,6 @@ async function doRequest(resource, provider, previousError) {
  * @param {Resource|String} url The url for the tile
  * @param {SingleTileImageryProvider.fromUrlOptions} [options] Object describing initialization options.
  * @returns {Promise.<SingleTileImageryProvider>} The resolved SingleTileImageryProvider.
- *
  * @example
  * const provider = await SingleTileImageryProvider.fromUrl("https://yoururl.com/image.png");
  */
@@ -322,7 +316,6 @@ SingleTileImageryProvider.fromUrl = async function (url, options) {
 
 /**
  * Gets the credits to be displayed when a given tile is displayed.
- *
  * @param {number} x The tile X coordinate.
  * @param {number} y The tile Y coordinate.
  * @param {number} level The tile level;
@@ -334,7 +327,6 @@ SingleTileImageryProvider.prototype.getTileCredits = function (x, y, level) {
 
 /**
  * Requests the image for a given tile.
- *
  * @param {number} x The tile X coordinate.
  * @param {number} y The tile Y coordinate.
  * @param {number} level The tile level.
@@ -360,13 +352,12 @@ SingleTileImageryProvider.prototype.requestImage = async function (
 /**
  * Picking features is not currently supported by this imagery provider, so this function simply returns
  * undefined.
- *
  * @param {number} x The tile X coordinate.
  * @param {number} y The tile Y coordinate.
  * @param {number} level The tile level.
  * @param {number} longitude The longitude at which to pick features.
  * @param {number} latitude  The latitude at which to pick features.
- * @return {undefined} Undefined since picking is not supported.
+ * @returns {undefined} Undefined since picking is not supported.
  */
 SingleTileImageryProvider.prototype.pickFeatures = function (
   x,

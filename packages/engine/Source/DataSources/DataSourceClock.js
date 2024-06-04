@@ -9,9 +9,8 @@ import createRawPropertyDescriptor from "./createRawPropertyDescriptor.js";
 /**
  * Represents desired clock settings for a particular {@link DataSource}.  These settings may be applied
  * to the {@link Clock} when the DataSource is loaded.
- *
  * @alias DataSourceClock
- * @constructor
+ * @class
  */
 function DataSourceClock() {
   this._definitionChanged = new Event();
@@ -27,7 +26,6 @@ Object.defineProperties(DataSourceClock.prototype, {
   /**
    * Gets the event that is raised whenever a new property is assigned.
    * @memberof DataSourceClock.prototype
-   *
    * @type {Event}
    * @readonly
    */
@@ -88,7 +86,6 @@ Object.defineProperties(DataSourceClock.prototype, {
 
 /**
  * Duplicates a DataSourceClock instance.
- *
  * @param {DataSourceClock} [result] The object onto which to store the result.
  * @returns {DataSourceClock} The modified result parameter or a new instance if one was not provided.
  */
@@ -107,7 +104,6 @@ DataSourceClock.prototype.clone = function (result) {
 
 /**
  * Returns true if this DataSourceClock is equivalent to the other
- *
  * @param {DataSourceClock} other The other DataSourceClock to compare to.
  * @returns {boolean} <code>true</code> if the DataSourceClocks are equal; otherwise, <code>false</code>.
  */
@@ -127,7 +123,6 @@ DataSourceClock.prototype.equals = function (other) {
 /**
  * Assigns each unassigned property on this object to the value
  * of the same property on the provided source object.
- *
  * @param {DataSourceClock} source The object to be merged into this object.
  */
 DataSourceClock.prototype.merge = function (source) {
@@ -147,7 +142,7 @@ DataSourceClock.prototype.merge = function (source) {
 
 /**
  * Gets the value of this clock instance as a {@link Clock} object.
- *
+ * @param result
  * @returns {Clock} The modified result parameter or a new instance if one was not provided.
  */
 DataSourceClock.prototype.getValue = function (result) {

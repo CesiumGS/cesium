@@ -26,15 +26,11 @@ import SceneMode from "./SceneMode.js";
  * This is only supported in 3D.  The sky box is faded out when morphing to 2D or Columbus view.  The size of
  * the sky box must not exceed {@link Scene#maximumCubeMapSize}.
  * </p>
- *
  * @alias SkyBox
- * @constructor
- *
+ * @class
  * @param {object} options Object with the following properties:
  * @param {object} [options.sources] The source URL or <code>Image</code> object for each of the six cube map faces.  See the example below.
  * @param {boolean} [options.show=true] Determines if this primitive will be shown.
- *
- *
  * @example
  * scene.skyBox = new Cesium.SkyBox({
  *   sources : {
@@ -46,7 +42,6 @@ import SceneMode from "./SceneMode.js";
  *     negativeZ : 'skybox_nz.png'
  *   }
  * });
- *
  * @see Scene#skyBox
  * @see Transforms.computeTemeToPseudoFixedMatrix
  */
@@ -56,7 +51,6 @@ function SkyBox(options) {
    * with <code>positiveX</code>, <code>negativeX</code>, <code>positiveY</code>,
    * <code>negativeY</code>, <code>positiveZ</code>, and <code>negativeZ</code> properties.
    * These can be either URLs or <code>Image</code> objects.
-   *
    * @type {object}
    * @default undefined
    */
@@ -65,7 +59,6 @@ function SkyBox(options) {
 
   /**
    * Determines if the sky box will be shown.
-   *
    * @type {boolean}
    * @default true
    */
@@ -88,9 +81,10 @@ function SkyBox(options) {
  * Do not call this function directly.  This is documented just to
  * list the exceptions that may be propagated when the scene is rendered:
  * </p>
- *
- * @exception {DeveloperError} this.sources is required and must have positiveX, negativeX, positiveY, negativeY, positiveZ, and negativeZ properties.
- * @exception {DeveloperError} this.sources properties must all be the same type.
+ * @param frameState
+ * @param useHdr
+ * @throws {DeveloperError} this.sources is required and must have positiveX, negativeX, positiveY, negativeY, positiveZ, and negativeZ properties.
+ * @throws {DeveloperError} this.sources properties must all be the same type.
  */
 SkyBox.prototype.update = function (frameState, useHdr) {
   const that = this;
@@ -216,9 +210,7 @@ SkyBox.prototype.update = function (frameState, useHdr) {
  * <br /><br />
  * If this object was destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
- *
  * @returns {boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
- *
  * @see SkyBox#destroy
  */
 SkyBox.prototype.isDestroyed = function () {
@@ -232,13 +224,9 @@ SkyBox.prototype.isDestroyed = function () {
  * Once an object is destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
  * assign the return value (<code>undefined</code>) to the object as done in the example.
- *
- * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
- *
- *
+ * @throws {DeveloperError} This object was destroyed, i.e., destroy() was called.
  * @example
  * skyBox = skyBox && skyBox.destroy();
- *
  * @see SkyBox#isDestroyed
  */
 SkyBox.prototype.destroy = function () {

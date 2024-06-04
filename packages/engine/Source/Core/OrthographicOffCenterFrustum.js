@@ -12,10 +12,8 @@ import Matrix4 from "./Matrix4.js";
  * Each plane is represented by a {@link Cartesian4} object, where the x, y, and z components
  * define the unit vector normal to the plane, and the w component is the distance of the
  * plane from the origin/camera position.
- *
  * @alias OrthographicOffCenterFrustum
- * @constructor
- *
+ * @class
  * @param {object} [options] An object with the following properties:
  * @param {number} [options.left] The left clipping plane distance.
  * @param {number} [options.right] The right clipping plane distance.
@@ -23,7 +21,6 @@ import Matrix4 from "./Matrix4.js";
  * @param {number} [options.bottom] The bottom clipping plane distance.
  * @param {number} [options.near=1.0] The near clipping plane distance.
  * @param {number} [options.far=500000000.0] The far clipping plane distance.
- *
  * @example
  * const maxRadii = ellipsoid.maximumRadius;
  *
@@ -168,12 +165,10 @@ const negateScratch = new Cartesian3();
 
 /**
  * Creates a culling volume for this frustum.
- *
  * @param {Cartesian3} position The eye position.
  * @param {Cartesian3} direction The view direction.
  * @param {Cartesian3} up The up direction.
  * @returns {CullingVolume} A culling volume at the given position and orientation.
- *
  * @example
  * // Check if a bounding volume intersects the frustum.
  * const cullingVolume = frustum.computeCullingVolume(cameraPosition, cameraDirection, cameraUp);
@@ -292,18 +287,15 @@ OrthographicOffCenterFrustum.prototype.computeCullingVolume = function (
 
 /**
  * Returns the pixel's width and height in meters.
- *
  * @param {number} drawingBufferWidth The width of the drawing buffer.
  * @param {number} drawingBufferHeight The height of the drawing buffer.
  * @param {number} distance The distance to the near plane in meters.
  * @param {number} pixelRatio The scaling factor from pixel space to coordinate space.
  * @param {Cartesian2} result The object onto which to store the result.
  * @returns {Cartesian2} The modified result parameter or a new instance of {@link Cartesian2} with the pixel's width and height in the x and y properties, respectively.
- *
- * @exception {DeveloperError} drawingBufferWidth must be greater than zero.
- * @exception {DeveloperError} drawingBufferHeight must be greater than zero.
- * @exception {DeveloperError} pixelRatio must be greater than zero.
- *
+ * @throws {DeveloperError} drawingBufferWidth must be greater than zero.
+ * @throws {DeveloperError} drawingBufferHeight must be greater than zero.
+ * @throws {DeveloperError} pixelRatio must be greater than zero.
  * @example
  * // Example 1
  * // Get the width and height of a pixel.
@@ -356,7 +348,6 @@ OrthographicOffCenterFrustum.prototype.getPixelDimensions = function (
 
 /**
  * Returns a duplicate of a OrthographicOffCenterFrustum instance.
- *
  * @param {OrthographicOffCenterFrustum} [result] The object onto which to store the result.
  * @returns {OrthographicOffCenterFrustum} The modified result parameter or a new OrthographicOffCenterFrustum instance if one was not provided.
  */
@@ -386,7 +377,6 @@ OrthographicOffCenterFrustum.prototype.clone = function (result) {
 /**
  * Compares the provided OrthographicOffCenterFrustum componentwise and returns
  * <code>true</code> if they are equal, <code>false</code> otherwise.
- *
  * @param {OrthographicOffCenterFrustum} [other] The right hand side OrthographicOffCenterFrustum.
  * @returns {boolean} <code>true</code> if they are equal, <code>false</code> otherwise.
  */
@@ -407,7 +397,6 @@ OrthographicOffCenterFrustum.prototype.equals = function (other) {
  * Compares the provided OrthographicOffCenterFrustum componentwise and returns
  * <code>true</code> if they pass an absolute or relative tolerance test,
  * <code>false</code> otherwise.
- *
  * @param {OrthographicOffCenterFrustum} other The right hand side OrthographicOffCenterFrustum.
  * @param {number} relativeEpsilon The relative epsilon tolerance to use for equality testing.
  * @param {number} [absoluteEpsilon=relativeEpsilon] The absolute epsilon tolerance to use for equality testing.

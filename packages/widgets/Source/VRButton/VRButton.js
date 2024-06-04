@@ -14,15 +14,12 @@ const exitVRPath =
 
 /**
  * A single button widget for toggling vr mode.
- *
  * @alias VRButton
- * @constructor
- *
+ * @class
  * @param {Element|string} container The DOM element or ID that will contain the widget.
  * @param {Scene} scene The scene.
  * @param {Element|string} [vrElement=document.body] The element or id to be placed into vr mode.
- *
- * @exception {DeveloperError} Element with id "container" does not exist in the document.
+ * @throws {DeveloperError} Element with id "container" does not exist in the document.
  */
 function VRButton(container, scene, vrElement) {
   //>>includeStart('debug', pragmas.debug);
@@ -67,7 +64,6 @@ Object.defineProperties(VRButton.prototype, {
   /**
    * Gets the parent container.
    * @memberof VRButton.prototype
-   *
    * @type {Element}
    */
   container: {
@@ -79,7 +75,6 @@ Object.defineProperties(VRButton.prototype, {
   /**
    * Gets the view model.
    * @memberof VRButton.prototype
-   *
    * @type {VRButtonViewModel}
    */
   viewModel: {

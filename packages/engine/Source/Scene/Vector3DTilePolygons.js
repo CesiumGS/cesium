@@ -14,10 +14,8 @@ import Vector3DTilePrimitive from "./Vector3DTilePrimitive.js";
 
 /**
  * Creates a batch of pre-triangulated polygons draped on terrain and/or 3D Tiles.
- *
  * @alias Vector3DTilePolygons
- * @constructor
- *
+ * @class
  * @param {object} options An object with following properties:
  * @param {Float32Array|Uint16Array} options.positions The positions of the polygons. The positions must be contiguous
  * so that the positions for polygon n are in [c, c + counts[n]] where c = sum{counts[0], counts[n - 1]} and they are the outer ring of
@@ -36,7 +34,6 @@ import Vector3DTilePrimitive from "./Vector3DTilePrimitive.js";
  * @param {Cesium3DTileBatchTable} options.batchTable The batch table for the tile containing the batched polygons.
  * @param {Uint16Array} options.batchIds The batch ids for each polygon.
  * @param {BoundingSphere} options.boundingVolume The bounding volume for the entire batch of polygons.
- *
  * @private
  */
 function Vector3DTilePolygons(options) {
@@ -103,9 +100,7 @@ function Vector3DTilePolygons(options) {
 Object.defineProperties(Vector3DTilePolygons.prototype, {
   /**
    * Gets the number of triangles.
-   *
    * @memberof Vector3DTilePolygons.prototype
-   *
    * @type {number}
    * @readonly
    * @private
@@ -121,9 +116,7 @@ Object.defineProperties(Vector3DTilePolygons.prototype, {
 
   /**
    * Gets the geometry memory in bytes.
-   *
    * @memberof Vector3DTilePolygons.prototype
-   *
    * @type {number}
    * @readonly
    * @private
@@ -384,7 +377,6 @@ function finishPrimitive(polygons) {
 
 /**
  * Creates features for each polygon and places it at the batch id index of features.
- *
  * @param {Vector3DTileContent} content The vector tile content.
  * @param {Cesium3DTileFeature[]} features An array of features where the polygon features will be placed.
  */
@@ -394,7 +386,6 @@ Vector3DTilePolygons.prototype.createFeatures = function (content, features) {
 
 /**
  * Colors the entire tile when enabled is true. The resulting color will be (polygon batch table color * color).
- *
  * @param {boolean} enabled Whether to enable debug coloring.
  * @param {Color} color The debug color.
  */
@@ -404,7 +395,6 @@ Vector3DTilePolygons.prototype.applyDebugSettings = function (enabled, color) {
 
 /**
  * Apply a style to the content.
- *
  * @param {Cesium3DTileStyle} style The style.
  * @param {Cesium3DTileFeature[]} features The array of features.
  */
@@ -415,7 +405,6 @@ Vector3DTilePolygons.prototype.applyStyle = function (style, features) {
 /**
  * Call when updating the color of a polygon with batchId changes color. The polygons will need to be re-batched
  * on the next update.
- *
  * @param {number} batchId The batch id of the polygon whose color has changed.
  * @param {Color} color The new polygon color.
  */
@@ -425,7 +414,6 @@ Vector3DTilePolygons.prototype.updateCommands = function (batchId, color) {
 
 /**
  * Updates the batches and queues the commands for rendering.
- *
  * @param {FrameState} frameState The current frame state.
  */
 Vector3DTilePolygons.prototype.update = function (frameState) {
@@ -455,7 +443,6 @@ Vector3DTilePolygons.prototype.update = function (frameState) {
  * If this object was destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
  * </p>
- *
  * @returns {boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
  */
 Vector3DTilePolygons.prototype.isDestroyed = function () {
@@ -470,8 +457,7 @@ Vector3DTilePolygons.prototype.isDestroyed = function () {
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
  * assign the return value (<code>undefined</code>) to the object as done in the example.
  * </p>
- *
- * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+ * @throws {DeveloperError} This object was destroyed, i.e., destroy() was called.
  */
 Vector3DTilePolygons.prototype.destroy = function () {
   this._primitive = this._primitive && this._primitive.destroy();

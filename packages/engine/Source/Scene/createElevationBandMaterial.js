@@ -410,13 +410,11 @@ function createLayeredEntries(layers) {
 
 /**
  * @typedef createElevationBandMaterialEntry
- *
  * @property {number} height The height.
  * @property {Color} color The color at this height.
  */
 /**
  * @typedef createElevationBandMaterialBand
- *
  * @property {createElevationBandMaterialEntry[]} entries A list of elevation entries. They will automatically be sorted from lowest to highest. If there is only one entry and <code>extendsDownards</code> and <code>extendUpwards</code> are both <code>false</code>, they will both be set to <code>true</code>.
  * @property {boolean} [extendDownwards=false] If <code>true</code>, the band's minimum elevation color will extend infinitely downwards.
  * @property {boolean} [extendUpwards=false] If <code>true</code>, the band's maximum elevation color will extend infinitely upwards.
@@ -427,16 +425,12 @@ function createLayeredEntries(layers) {
  *
  * The shader does a binary search over all the heights to find out which colors are above and below a given height, and
  * interpolates between them for the final color. This material supports hundreds of entries relatively cheaply.
- *
  * @function createElevationBandMaterial
- *
  * @param {object} options Object with the following properties:
  * @param {Scene} options.scene The scene where the visualization is taking place.
  * @param {createElevationBandMaterialBand[]} options.layers A list of bands ordered from lowest to highest precedence.
  * @returns {Material} A new {@link Material} instance.
- *
  * @demo {@link https://sandcastle.cesium.com/index.html?src=Elevation%20Band%20Material.html|Cesium Sandcastle Elevation Band Demo}
- *
  * @example
  * scene.globe.material = Cesium.createElevationBandMaterial({
  *     scene : scene,
@@ -548,7 +542,6 @@ function createElevationBandMaterial(options) {
 
 /**
  * Function for checking if the context will allow floating point textures for heights.
- *
  * @param {Context} context The {@link Context}.
  * @returns {boolean} <code>true</code> if floating point textures can be used for heights.
  * @private

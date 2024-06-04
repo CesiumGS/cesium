@@ -6,9 +6,7 @@ import StencilConstants from "../StencilConstants.js";
 /**
  * The tileset pipeline stage is responsible for updating the model with behavior
  * specific to 3D Tiles.
- *
  * @namespace TilesetPipelineStage
- *
  * @private
  */
 const TilesetPipelineStage = {
@@ -19,19 +17,17 @@ const TilesetPipelineStage = {
  * Process a model. This modifies the following parts of the render resources:
  *
  * <ul>
- *  <li>adds a define to the fragment shader to indicate that the model uses polygon offset for the skipLevelOfDetail optimization</li>
- *  <li>adds a function to the uniform map to supply polygon offset values for the skipLevelOfDetail optimization</li>
- *  <li>sets stencil values that enable classification on 3D Tiles</li>
+ * <li>adds a define to the fragment shader to indicate that the model uses polygon offset for the skipLevelOfDetail optimization</li>
+ * <li>adds a function to the uniform map to supply polygon offset values for the skipLevelOfDetail optimization</li>
+ * <li>sets stencil values that enable classification on 3D Tiles</li>
  * </ul>
  *
  * <p>
  * See {@link ModelDrawCommand} for the corresponding skipLevelOfDetail derived commands.
  * </p>
- *
  * @param {ModelRenderResources} renderResources The render resources for this model.
  * @param {ModelExperimental} model The model.
  * @param {FrameState} frameState The frameState.
- *
  * @private
  */
 TilesetPipelineStage.process = function (renderResources, model, frameState) {

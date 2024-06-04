@@ -14,9 +14,7 @@ import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
 
 /**
  * The geometry pipeline stage processes the vertex attributes of a primitive.
- *
  * @namespace GeometryPipelineStage
- *
  * @private
  */
 const GeometryPipelineStage = {
@@ -41,21 +39,19 @@ const GeometryPipelineStage = {
  *
  * Processes a primitive. This stage modifies the following parts of the render resources:
  * <ul>
- *  <li> adds attribute and varying declarations for the vertex attributes in the vertex and fragment shaders
- *  <li> creates the objects required to create VertexArrays
- *  <li> sets the flag for point primitive types
+ * <li> adds attribute and varying declarations for the vertex attributes in the vertex and fragment shaders
+ * <li> creates the objects required to create VertexArrays
+ * <li> sets the flag for point primitive types
  * </ul>
  *
  * If the scene is in either 2D or CV mode, this stage also:
  * <ul>
- *  <li> adds a struct field for the 2D positions
- *  <li> adds an additional attribute object and declaration if the node containing this primitive is not instanced
+ * <li> adds a struct field for the 2D positions
+ * <li> adds an additional attribute object and declaration if the node containing this primitive is not instanced
  * </ul>
- *
  * @param {PrimitiveRenderResources} renderResources The render resources for this primitive.
  * @param {ModelComponents.Primitive} primitive The primitive.
  * @param {FrameState} frameState The frame state.
- *
  * @private
  */
 GeometryPipelineStage.process = function (

@@ -5,14 +5,12 @@ import QuadraticRealPolynomial from "./QuadraticRealPolynomial.js";
 
 /**
  * Defines functions for 4th order polynomial functions of one variable with only real coefficients.
- *
  * @namespace QuarticRealPolynomial
  */
 const QuarticRealPolynomial = {};
 
 /**
  * Provides the discriminant of the quartic equation from the supplied coefficients.
- *
  * @param {number} a The coefficient of the 4th order monomial.
  * @param {number} b The coefficient of the 3rd order monomial.
  * @param {number} c The coefficient of the 2nd order monomial.
@@ -262,7 +260,6 @@ function neumark(a3, a2, a1, a0) {
 
 /**
  * Provides the real valued roots of the quartic polynomial with the provided coefficients.
- *
  * @param {number} a The coefficient of the 4th order monomial.
  * @param {number} b The coefficient of the 3rd order monomial.
  * @param {number} c The coefficient of the 2nd order monomial.

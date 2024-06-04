@@ -59,10 +59,8 @@ import ShadowMode from "./ShadowMode.js";
  * show geometry that will be created on a web worker by using the descriptions of the geometry. The third example
  * shows how to create the geometry on the main thread by explicitly calling the <code>createGeometry</code> method.
  * </p>
- *
  * @alias Primitive
- * @constructor
- *
+ * @class
  * @param {object} [options] Object with the following properties:
  * @param {GeometryInstance[]|GeometryInstance} [options.geometryInstances] The geometry instances - or a single geometry instance - to render.
  * @param {Appearance} [options.appearance] The appearance used to render the primitive.
@@ -78,7 +76,6 @@ import ShadowMode from "./ShadowMode.js";
  * @param {boolean} [options.asynchronous=true] Determines if the primitive will be created asynchronously or block until ready.
  * @param {boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if this primitive's commands' bounding spheres are shown.
  * @param {ShadowMode} [options.shadows=ShadowMode.DISABLED] Determines whether this primitive casts or receives shadows from light sources.
- *
  * @example
  * // 1. Draw a translucent ellipse on the surface with a checkerboard pattern
  * const instance = new Cesium.GeometryInstance({
@@ -97,7 +94,6 @@ import ShadowMode from "./ShadowMode.js";
  *     material : Cesium.Material.fromType('Checkerboard')
  *   })
  * }));
- *
  * @example
  * // 2. Draw different instances each with a unique color
  * const rectangleInstance = new Cesium.GeometryInstance({
@@ -126,7 +122,6 @@ import ShadowMode from "./ShadowMode.js";
  *   geometryInstances : [rectangleInstance, ellipsoidInstance],
  *   appearance : new Cesium.PerInstanceColorAppearance()
  * }));
- *
  * @example
  * // 3. Create the geometry on the main thread.
  * scene.primitives.add(new Cesium.Primitive({
@@ -145,7 +140,6 @@ import ShadowMode from "./ShadowMode.js";
  *   appearance : new Cesium.PerInstanceColorAppearance(),
  *   asynchronous : false
  * }));
- *
  * @see GeometryInstance
  * @see Appearance
  * @see ClassificationPrimitive
@@ -161,10 +155,8 @@ function Primitive(options) {
    * <p>
    * Changing this property after the primitive is rendered has no effect.
    * </p>
-   *
    * @readonly
    * @type GeometryInstance[]|GeometryInstance
-   *
    * @default undefined
    */
   this.geometryInstances = options.geometryInstances;
@@ -174,9 +166,7 @@ function Primitive(options) {
    * instance is shaded with the same appearance.  Some appearances, like
    * {@link PerInstanceColorAppearance} allow giving each instance unique
    * properties.
-   *
    * @type Appearance
-   *
    * @default undefined
    */
   this.appearance = options.appearance;
@@ -199,7 +189,6 @@ function Primitive(options) {
    * there may be artifacts.
    * </p>
    * @type Appearance
-   *
    * @default undefined
    */
   this.depthFailAppearance = options.depthFailAppearance;
@@ -215,11 +204,8 @@ function Primitive(options) {
    * <p>
    * This property is only supported in 3D mode.
    * </p>
-   *
    * @type Matrix4
-   *
    * @default Matrix4.IDENTITY
-   *
    * @example
    * const origin = Cesium.Cartesian3.fromDegrees(-95.0, 40.0, 200000.0);
    * p.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(origin);
@@ -232,9 +218,7 @@ function Primitive(options) {
   /**
    * Determines if the primitive will be shown.  This affects all geometry
    * instances in the primitive.
-   *
    * @type {boolean}
-   *
    * @default true
    */
   this.show = defaultValue(options.show, true);
@@ -253,9 +237,7 @@ function Primitive(options) {
    * When <code>true</code>, the renderer frustum culls and horizon culls the primitive's commands
    * based on their bounding volume.  Set this to <code>false</code> for a small performance gain
    * if you are manually culling the primitive.
-   *
    * @type {boolean}
-   *
    * @default true
    */
   this.cull = defaultValue(options.cull, true);
@@ -265,9 +247,7 @@ function Primitive(options) {
    * <p>
    * Draws the bounding sphere for each draw command in the primitive.
    * </p>
-   *
    * @type {boolean}
-   *
    * @default false
    */
   this.debugShowBoundingVolume = defaultValue(
@@ -295,9 +275,7 @@ function Primitive(options) {
 
   /**
    * Determines whether this primitive casts or receives shadows from light sources.
-   *
    * @type {ShadowMode}
-   *
    * @default ShadowMode.DISABLED
    */
   this.shadows = defaultValue(options.shadows, ShadowMode.DISABLED);
@@ -365,12 +343,9 @@ function Primitive(options) {
 Object.defineProperties(Primitive.prototype, {
   /**
    * When <code>true</code>, geometry vertices are optimized for the pre and post-vertex-shader caches.
-   *
    * @memberof Primitive.prototype
-   *
    * @type {boolean}
    * @readonly
-   *
    * @default true
    */
   vertexCacheOptimize: {
@@ -381,12 +356,9 @@ Object.defineProperties(Primitive.prototype, {
 
   /**
    * Determines if geometry vertex attributes are interleaved, which can slightly improve rendering performance.
-   *
    * @memberof Primitive.prototype
-   *
    * @type {boolean}
    * @readonly
-   *
    * @default false
    */
   interleave: {
@@ -397,12 +369,9 @@ Object.defineProperties(Primitive.prototype, {
 
   /**
    * When <code>true</code>, the primitive does not keep a reference to the input <code>geometryInstances</code> to save memory.
-   *
    * @memberof Primitive.prototype
-   *
    * @type {boolean}
    * @readonly
-   *
    * @default true
    */
   releaseGeometryInstances: {
@@ -413,12 +382,9 @@ Object.defineProperties(Primitive.prototype, {
 
   /**
    * When <code>true</code>, each geometry instance will only be pickable with {@link Scene#pick}.  When <code>false</code>, GPU memory is saved.         *
-   *
    * @memberof Primitive.prototype
-   *
    * @type {boolean}
    * @readonly
-   *
    * @default true
    */
   allowPicking: {
@@ -429,12 +395,9 @@ Object.defineProperties(Primitive.prototype, {
 
   /**
    * Determines if the geometry instances will be created and batched on a web worker.
-   *
    * @memberof Primitive.prototype
-   *
    * @type {boolean}
    * @readonly
-   *
    * @default true
    */
   asynchronous: {
@@ -445,12 +408,9 @@ Object.defineProperties(Primitive.prototype, {
 
   /**
    * When <code>true</code>, geometry vertices are compressed, which will save memory.
-   *
    * @memberof Primitive.prototype
-   *
    * @type {boolean}
    * @readonly
-   *
    * @default true
    */
   compressVertices: {
@@ -463,12 +423,9 @@ Object.defineProperties(Primitive.prototype, {
    * Determines if the primitive is complete and ready to render.  If this property is
    * true, the primitive will be rendered the next time that {@link Primitive#update}
    * is called.
-   *
    * @memberof Primitive.prototype
-   *
    * @type {boolean}
    * @readonly
-   *
    * @example
    * // Wait for a primitive to become ready before accessing attributes
    * const removeListener = scene.postRender.addEventListener(() => {
@@ -2081,11 +2038,11 @@ function updateAndQueueCommands(
  * Do not call this function directly.  This is documented just to
  * list the exceptions that may be propagated when the scene is rendered:
  * </p>
- *
- * @exception {DeveloperError} All instance geometries must have the same primitiveType.
- * @exception {DeveloperError} Appearance and material have a uniform with the same name.
- * @exception {DeveloperError} Primitive.modelMatrix is only supported in 3D mode.
- * @exception {RuntimeError} Vertex texture fetch support is required to render primitives with per-instance attributes. The maximum number of vertex texture image units must be greater than zero.
+ * @param frameState
+ * @throws {DeveloperError} All instance geometries must have the same primitiveType.
+ * @throws {DeveloperError} Appearance and material have a uniform with the same name.
+ * @throws {DeveloperError} Primitive.modelMatrix is only supported in 3D mode.
+ * @throws {RuntimeError} Vertex texture fetch support is required to render primitives with per-instance attributes. The maximum number of vertex texture image units must be greater than zero.
  */
 Primitive.prototype.update = function (frameState) {
   if (
@@ -2373,12 +2330,9 @@ function createPickIdProperty(primitive, properties, index) {
 
 /**
  * Returns the modifiable per-instance attributes for a {@link GeometryInstance}.
- *
  * @param {*} id The id of the {@link GeometryInstance}.
  * @returns {object} The typed array in the attribute's format or undefined if the is no instance with id.
- *
- * @exception {DeveloperError} must call update before calling getGeometryInstanceAttributes.
- *
+ * @throws {DeveloperError} must call update before calling getGeometryInstanceAttributes.
  * @example
  * const attributes = primitive.getGeometryInstanceAttributes('an id');
  * attributes.color = Cesium.ColorGeometryInstanceAttribute.toValue(Cesium.Color.AQUA);
@@ -2449,9 +2403,7 @@ Primitive.prototype.getGeometryInstanceAttributes = function (id) {
  * If this object was destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
  * </p>
- *
  * @returns {boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
- *
  * @see Primitive#destroy
  */
 Primitive.prototype.isDestroyed = function () {
@@ -2466,13 +2418,9 @@ Primitive.prototype.isDestroyed = function () {
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
  * assign the return value (<code>undefined</code>) to the object as done in the example.
  * </p>
- *
- * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
- *
- *
+ * @throws {DeveloperError} This object was destroyed, i.e., destroy() was called.
  * @example
  * e = e && e.destroy();
- *
  * @see Primitive#isDestroyed
  */
 Primitive.prototype.destroy = function () {

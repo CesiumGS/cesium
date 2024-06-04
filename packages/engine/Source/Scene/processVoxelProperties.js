@@ -6,10 +6,8 @@ import ShaderDestination from "../Renderer/ShaderDestination.js";
  * Update the shader with defines, structs, and functions to handle
  * voxel properties and statistics
  * @function
- *
  * @param {VoxelRenderResources} renderResources
  * @param {VoxelPrimitive} primitive
- *
  * @private
  */
 function processVoxelProperties(renderResources, primitive) {
@@ -355,12 +353,9 @@ function processVoxelProperties(renderResources, primitive) {
 
 /**
  * Converts a {@link MetadataType} to a GLSL type.
- *
  * @function
- *
  * @param {MetadataType} type The {@link MetadataType}.
  * @returns {string} The GLSL type.
- *
  * @private
  */
 function getGlslType(type) {
@@ -377,12 +372,9 @@ function getGlslType(type) {
 
 /**
  * Gets the GLSL swizzle when reading data from a texture.
- *
  * @function
- *
  * @param {MetadataType} type The {@link MetadataType}.
  * @returns {string} The GLSL swizzle.
- *
  * @private
  */
 function getGlslTextureSwizzle(type) {
@@ -399,12 +391,9 @@ function getGlslTextureSwizzle(type) {
 
 /**
  * Gets the GLSL type of the partial derivative of {@link MetadataType}.
- *
  * @function
- *
  * @param {MetadataType} type The {@link MetadataType}.
  * @returns {string} The GLSL type.
- *
  * @private
  */
 function getGlslPartialDerivativeType(type) {
@@ -422,12 +411,9 @@ function getGlslPartialDerivativeType(type) {
 /**
  * GLSL needs to have `.0` at the end of whole number floats or else it's
  * treated like an integer.
- *
  * @function
- *
  * @param {number} number The number to convert.
  * @returns {string} The number as floating point in GLSL.
- *
  * @private
  */
 function getGlslNumberAsFloat(number) {
@@ -440,13 +426,10 @@ function getGlslNumberAsFloat(number) {
 
 /**
  * Gets the GLSL field
- *
  * @function
- *
  * @param {MetadataType} type
  * @param {number} index
  * @returns {string}
- *
  * @private
  */
 function getGlslField(type, index) {

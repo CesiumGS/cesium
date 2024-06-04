@@ -20,7 +20,6 @@ const defaultParameters = Object.freeze({
  * @typedef {object} WebMapTileServiceImageryProvider.ConstructorOptions
  *
  * Initialization options for the WebMapTileServiceImageryProvider constructor
- *
  * @property {Resource|string} url The base URL for the WMTS GetTile operation (for KVP-encoded requests) or the tile-URL template (for RESTful requests). The tile-URL template should contain the following variables: &#123;style&#125;, &#123;TileMatrixSet&#125;, &#123;TileMatrix&#125;, &#123;TileRow&#125;, &#123;TileCol&#125;. The first two are optional if actual values are hardcoded or not required by the server. The &#123;s&#125; keyword may be used to specify subdomains.
  * @property {string} [format='image/jpeg'] The MIME type for images to retrieve from the server.
  * @property {string} layer The layer name for WMTS requests.
@@ -46,14 +45,10 @@ const defaultParameters = Object.freeze({
 /**
  * Provides tiled imagery served by {@link http://www.opengeospatial.org/standards/wmts|WMTS 1.0.0} compliant servers.
  * This provider supports HTTP KVP-encoded and RESTful GetTile requests, but does not yet support the SOAP encoding.
- *
  * @alias WebMapTileServiceImageryProvider
- * @constructor
- *
+ * @class
  * @param {WebMapTileServiceImageryProvider.ConstructorOptions} options Object describing initialization options
- *
  * @demo {@link https://sandcastle.cesium.com/index.html?src=Web%20Map%20Tile%20Service%20with%20Time.html|Cesium Sandcastle Web Map Tile Service with Time Demo}
- *
  * @example
  * // Example 1. USGS shaded relief tiles (KVP)
  * const shadedRelief1 = new Cesium.WebMapTileServiceImageryProvider({
@@ -67,7 +62,6 @@ const defaultParameters = Object.freeze({
  *     credit : new Cesium.Credit('U. S. Geological Survey')
  * });
  * viewer.imageryLayers.addImageryProvider(shadedRelief1);
- *
  * @example
  * // Example 2. USGS shaded relief tiles (RESTful)
  * const shadedRelief2 = new Cesium.WebMapTileServiceImageryProvider({
@@ -80,7 +74,6 @@ const defaultParameters = Object.freeze({
  *     credit : new Cesium.Credit('U. S. Geological Survey')
  * });
  * viewer.imageryLayers.addImageryProvider(shadedRelief2);
- *
  * @example
  * // Example 3. NASA time dynamic weather data (RESTful)
  * const times = Cesium.TimeIntervalCollection.fromIso8601({
@@ -103,7 +96,6 @@ const defaultParameters = Object.freeze({
  *     credit : new Cesium.Credit('NASA Global Imagery Browse Services for EOSDIS')
  * });
  * viewer.imageryLayers.addImageryProvider(weather);
- *
  * @see ArcGisMapServerImageryProvider
  * @see BingMapsImageryProvider
  * @see GoogleEarthEnterpriseMapsProvider
@@ -524,7 +516,6 @@ Object.defineProperties(WebMapTileServiceImageryProvider.prototype, {
 
 /**
  * Gets the credits to be displayed when a given tile is displayed.
- *
  * @param {number} x The tile X coordinate.
  * @param {number} y The tile Y coordinate.
  * @param {number} level The tile level;
@@ -540,7 +531,6 @@ WebMapTileServiceImageryProvider.prototype.getTileCredits = function (
 
 /**
  * Requests the image for a given tile.
- *
  * @param {number} x The tile X coordinate.
  * @param {number} y The tile Y coordinate.
  * @param {number} level The tile level.
@@ -580,13 +570,12 @@ WebMapTileServiceImageryProvider.prototype.requestImage = function (
 /**
  * Picking features is not currently supported by this imagery provider, so this function simply returns
  * undefined.
- *
  * @param {number} x The tile X coordinate.
  * @param {number} y The tile Y coordinate.
  * @param {number} level The tile level.
  * @param {number} longitude The longitude at which to pick features.
  * @param {number} latitude  The latitude at which to pick features.
- * @return {undefined} Undefined since picking is not supported.
+ * @returns {undefined} Undefined since picking is not supported.
  */
 WebMapTileServiceImageryProvider.prototype.pickFeatures = function (
   x,

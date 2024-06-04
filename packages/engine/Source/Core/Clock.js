@@ -9,10 +9,8 @@ import JulianDate from "./JulianDate.js";
 
 /**
  * A simple clock for keeping track of simulated time.
- *
  * @alias Clock
- * @constructor
- *
+ * @class
  * @param {object} [options] Object with the following properties:
  * @param {JulianDate} [options.startTime] The start time of the clock.
  * @param {JulianDate} [options.stopTime] The stop time of the clock.
@@ -22,10 +20,7 @@ import JulianDate from "./JulianDate.js";
  * @param {ClockRange} [options.clockRange=ClockRange.UNBOUNDED] Determines how the clock should behave when {@link Clock#startTime} or {@link Clock#stopTime} is reached.
  * @param {boolean} [options.canAnimate=true] Indicates whether {@link Clock#tick} can advance time.  This could be false if data is being buffered, for example.  The clock will only tick when both {@link Clock#canAnimate} and {@link Clock#shouldAnimate} are true.
  * @param {boolean} [options.shouldAnimate=false] Indicates whether {@link Clock#tick} should attempt to advance time.  The clock will only tick when both {@link Clock#canAnimate} and {@link Clock#shouldAnimate} are true.
- *
- * @exception {DeveloperError} startTime must come before stopTime.
- *
- *
+ * @throws {DeveloperError} startTime must come before stopTime.
  * @example
  * // Create a clock that loops on Christmas day 2013 and runs in real-time.
  * const clock = new Cesium.Clock({
@@ -35,7 +30,6 @@ import JulianDate from "./JulianDate.js";
  *    clockRange : Cesium.ClockRange.LOOP_STOP,
  *    clockStep : Cesium.ClockStep.SYSTEM_CLOCK_MULTIPLIER
  * });
- *
  * @see ClockStep
  * @see ClockRange
  * @see JulianDate
@@ -255,7 +249,6 @@ Object.defineProperties(Clock.prototype, {
  * Advances the clock from the current time based on the current configuration options.
  * tick should be called every frame, regardless of whether animation is taking place
  * or not.  To control animation, use the {@link Clock#shouldAnimate} property.
- *
  * @returns {JulianDate} The new value of the {@link Clock#currentTime} property.
  */
 Clock.prototype.tick = function () {

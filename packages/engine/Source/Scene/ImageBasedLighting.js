@@ -14,12 +14,11 @@ import OctahedralProjectedCubeMap from "./OctahedralProjectedCubeMap.js";
  * when the image-based lighting is no longer needed to clean up GPU resources properly.
  * If a model or tileset creates an instance of ImageBasedLighting, it will handle this.
  * Otherwise, the application is responsible for calling destroy().
- *</p>
- *
+ * </p>
  * @alias ImageBasedLighting
- * @constructor
- *
+ * @class
  * @param {Cartesian2} [options.imageBasedLightingFactor=Cartesian2(1.0, 1.0)] Scales diffuse and specular image-based lighting from the earth, sky, atmosphere and star skybox.
+ * @param options
  * @param {number} [options.luminanceAtZenith=0.2] The sun's luminance at the zenith in kilo candela per meter squared to use for this model's procedural environment map.
  * @param {Cartesian3[]} [options.sphericalHarmonicCoefficients] The third order spherical harmonic coefficients used for the diffuse color of image-based lighting.
  * @param {string} [options.specularEnvironmentMaps] A URL to a KTX2 file that contains a cube map of the specular lighting and the convoluted specular mipmaps.
@@ -111,9 +110,7 @@ Object.defineProperties(ImageBasedLighting.prototype, {
    * This cartesian is used to scale the final diffuse and specular lighting
    * contribution from those sources to the final color. A value of 0.0 will
    * disable those light sources.
-   *
    * @memberof ImageBasedLighting.prototype
-   *
    * @type {Cartesian2}
    * @default Cartesian2(1.0, 1.0)
    */
@@ -161,9 +158,7 @@ Object.defineProperties(ImageBasedLighting.prototype, {
    * to use for this model's procedural environment map. This is used when
    * {@link ImageBasedLighting#specularEnvironmentMaps} and {@link ImageBasedLighting#sphericalHarmonicCoefficients}
    * are not defined.
-   *
    * @memberof ImageBasedLighting.prototype
-   *
    * @type {number}
    * @default 0.2
    */
@@ -188,9 +183,7 @@ Object.defineProperties(ImageBasedLighting.prototype, {
    * These values can be obtained by preprocessing the environment map using the <code>cmgen</code> tool of
    * {@link https://github.com/google/filament/releases|Google's Filament project}. This will also generate a KTX file that can be
    * supplied to {@link Model#specularEnvironmentMaps}.
-   *
    * @memberof ImageBasedLighting.prototype
-   *
    * @type {Cartesian3[]}
    * @demo {@link https://sandcastle.cesium.com/index.html?src=Image-Based Lighting.html|Sandcastle Image Based Lighting Demo}
    * @see {@link https://graphics.stanford.edu/papers/envmap/envmap.pdf|An Efficient Representation for Irradiance Environment Maps}
@@ -214,7 +207,6 @@ Object.defineProperties(ImageBasedLighting.prototype, {
 
   /**
    * A URL to a KTX2 file that contains a cube map of the specular lighting and the convoluted specular mipmaps.
-   *
    * @memberof ImageBasedLighting.prototype
    * @demo {@link https://sandcastle.cesium.com/index.html?src=Image-Based Lighting.html|Sandcastle Image Based Lighting Demo}
    * @type {string}
@@ -237,10 +229,8 @@ Object.defineProperties(ImageBasedLighting.prototype, {
 
   /**
    * Whether or not image-based lighting is enabled.
-   *
    * @memberof ImageBasedLighting.prototype
    * @type {boolean}
-   *
    * @private
    */
   enabled: {
@@ -255,10 +245,8 @@ Object.defineProperties(ImageBasedLighting.prototype, {
   /**
    * Whether or not the models that use this lighting should regenerate their shaders,
    * based on the properties and resources have changed.
-   *
    * @memberof ImageBasedLighting.prototype
    * @type {boolean}
-   *
    * @private
    */
   shouldRegenerateShaders: {
@@ -269,10 +257,8 @@ Object.defineProperties(ImageBasedLighting.prototype, {
 
   /**
    * Whether or not to use the default spherical harmonic coefficients.
-   *
    * @memberof ImageBasedLighting.prototype
    * @type {boolean}
-   *
    * @private
    */
   useDefaultSphericalHarmonics: {
@@ -283,10 +269,8 @@ Object.defineProperties(ImageBasedLighting.prototype, {
 
   /**
    * Whether or not the image-based lighting settings use spherical harmonic coefficients.
-   *
    * @memberof ImageBasedLighting.prototype
    * @type {boolean}
-   *
    * @private
    */
   useSphericalHarmonicCoefficients: {
@@ -300,10 +284,8 @@ Object.defineProperties(ImageBasedLighting.prototype, {
 
   /**
    * The texture atlas for the specular environment maps.
-   *
    * @memberof ImageBasedLighting.prototype
    * @type {OctahedralProjectedCubeMap}
-   *
    * @private
    */
   specularEnvironmentMapAtlas: {
@@ -314,10 +296,8 @@ Object.defineProperties(ImageBasedLighting.prototype, {
 
   /**
    * Whether or not to use the default specular environment maps.
-   *
    * @memberof ImageBasedLighting.prototype
    * @type {boolean}
-   *
    * @private
    */
   useDefaultSpecularMaps: {
@@ -328,10 +308,8 @@ Object.defineProperties(ImageBasedLighting.prototype, {
 
   /**
    * Whether or not the image-based lighting settings use specular environment maps.
-   *
    * @memberof ImageBasedLighting.prototype
    * @type {boolean}
-   *
    * @private
    */
   useSpecularEnvironmentMaps: {
@@ -476,9 +454,7 @@ ImageBasedLighting.prototype.update = function (frameState) {
  * <br /><br />
  * If this object was destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
- *
  * @returns {boolean} True if this object was destroyed; otherwise, false.
- *
  * @see ImageBasedLighting#destroy
  * @private
  */
@@ -493,12 +469,9 @@ ImageBasedLighting.prototype.isDestroyed = function () {
  * Once an object is destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
  * assign the return value (<code>undefined</code>) to the object as done in the example.
- *
- * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
- *
+ * @throws {DeveloperError} This object was destroyed, i.e., destroy() was called.
  * @example
  * imageBasedLighting = imageBasedLighting && imageBasedLighting.destroy();
- *
  * @see ImageBasedLighting#isDestroyed
  * @private
  */

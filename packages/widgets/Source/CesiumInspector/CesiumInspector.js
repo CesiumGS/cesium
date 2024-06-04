@@ -10,13 +10,10 @@ import CesiumInspectorViewModel from "./CesiumInspectorViewModel.js";
 
 /**
  * Inspector widget to aid in debugging
- *
  * @alias CesiumInspector
- * @constructor
- *
+ * @class
  * @param {Element|string} container The DOM element or ID that will contain the widget.
  * @param {Scene} scene The Scene instance to use.
- *
  * @demo {@link https://sandcastle.cesium.com/index.html?src=Cesium%20Inspector.html|Cesium Sandcastle Cesium Inspector Demo}
  */
 function CesiumInspector(container, scene) {
@@ -280,7 +277,6 @@ Object.defineProperties(CesiumInspector.prototype, {
   /**
    * Gets the parent container.
    * @memberof CesiumInspector.prototype
-   *
    * @type {Element}
    */
   container: {
@@ -292,7 +288,6 @@ Object.defineProperties(CesiumInspector.prototype, {
   /**
    * Gets the view model.
    * @memberof CesiumInspector.prototype
-   *
    * @type {CesiumInspectorViewModel}
    */
   viewModel: {

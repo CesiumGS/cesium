@@ -7,9 +7,7 @@ import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
 
 /**
  * The morph targets pipeline stage processes the morph targets and weights of a primitive.
- *
  * @namespace MorphTargetsPipelineStage
- *
  * @private
  */
 const MorphTargetsPipelineStage = {
@@ -32,14 +30,12 @@ const MorphTargetsPipelineStage = {
  *
  * Processes a primitive. This stage modifies the following parts of the render resources:
  * <ul>
- *  <li> adds attribute declarations for the morph targets in the vertex shader
- *  <li> adds the uniform declaration for the morph weights in the vertex shader
- *  <li> adds functions to apply the morphs in the vertex shader
+ * <li> adds attribute declarations for the morph targets in the vertex shader
+ * <li> adds the uniform declaration for the morph weights in the vertex shader
+ * <li> adds functions to apply the morphs in the vertex shader
  * </ul>
- *
  * @param {PrimitiveRenderResources} renderResources The render resources for this primitive.
  * @param {ModelComponents.Primitive} primitive The primitive.
- *
  * @private
  */
 MorphTargetsPipelineStage.process = function (renderResources, primitive) {

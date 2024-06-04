@@ -23,8 +23,7 @@ import PolylineVisualizer from "./PolylineVisualizer.js";
 /**
  * Visualizes a collection of {@link DataSource} instances.
  * @alias DataSourceDisplay
- * @constructor
- *
+ * @class
  * @param {object} options Object with the following properties:
  * @param {Scene} options.scene The scene in which to display the data.
  * @param {DataSourceCollection} options.dataSourceCollection The data sources to display.
@@ -147,7 +146,6 @@ DataSourceDisplay.unregisterVisualizer = function (visualizer) {
 /**
  * Gets or sets the default function which creates an array of visualizers used for visualization.
  * By default, this function uses all standard visualizers.
- *
  * @type {DataSourceDisplay.VisualizersCallback}
  */
 DataSourceDisplay.defaultVisualizersCallback = function (
@@ -234,9 +232,7 @@ Object.defineProperties(DataSourceDisplay.prototype, {
  * <br /><br />
  * If this object was destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
- *
  * @returns {boolean} True if this object was destroyed; otherwise, false.
- *
  * @see DataSourceDisplay#destroy
  */
 DataSourceDisplay.prototype.isDestroyed = function () {
@@ -250,13 +246,9 @@ DataSourceDisplay.prototype.isDestroyed = function () {
  * Once an object is destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
  * assign the return value (<code>undefined</code>) to the object as done in the example.
- *
- * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
- *
- *
+ * @throws {DeveloperError} This object was destroyed, i.e., destroy() was called.
  * @example
  * dataSourceDisplay = dataSourceDisplay.destroy();
- *
  * @see DataSourceDisplay#isDestroyed
  */
 DataSourceDisplay.prototype.destroy = function () {
@@ -284,7 +276,6 @@ DataSourceDisplay.prototype.destroy = function () {
 
 /**
  * Updates the display to the provided time.
- *
  * @param {JulianDate} time The simulation time.
  * @returns {boolean} True if all data sources are ready to be displayed, false otherwise.
  */
@@ -365,7 +356,6 @@ const getBoundingSphereBoundingSphereScratch = new BoundingSphere();
 /**
  * Computes a bounding sphere which encloses the visualization produced for the specified entity.
  * The bounding sphere is in the fixed frame of the scene's globe.
- *
  * @param {Entity} entity The entity whose bounding sphere to compute.
  * @param {boolean} allowPartial If true, pending bounding spheres are ignored and an answer will be returned from the currently available data.
  *                               If false, the the function will halt and return pending if any of the bounding spheres are pending.
@@ -529,12 +519,10 @@ DataSourceDisplay.prototype._onDataSourceMoved = function (
 /**
  * A function which creates an array of visualizers used for visualization.
  * @callback DataSourceDisplay.VisualizersCallback
- *
  * @param {Scene} scene The scene to create visualizers for.
  * @param {EntityCluster} entityCluster The entity cluster to create visualizers for.
  * @param {DataSource} dataSource The data source to create visualizers for.
  * @returns {Visualizer[]} An array of visualizers used for visualization.
- *
  * @example
  * function createVisualizers(scene, entityCluster, dataSource) {
  *     return [new Cesium.BillboardVisualizer(entityCluster, dataSource.entities)];

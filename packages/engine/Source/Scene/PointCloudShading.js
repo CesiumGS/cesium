@@ -4,7 +4,6 @@ import PointCloudEyeDomeLighting from "./PointCloudEyeDomeLighting.js";
 /**
  * Options for performing point attenuation based on geometric error when rendering
  * point clouds using 3D Tiles.
- *
  * @param {object} [options] Object with the following properties:
  * @param {boolean} [options.attenuation=false] Perform point attenuation based on geometric error.
  * @param {number} [options.geometricErrorScale=1.0] Scale to be applied to each tile's geometric error.
@@ -15,9 +14,8 @@ import PointCloudEyeDomeLighting from "./PointCloudEyeDomeLighting.js";
  * @param {number} [options.eyeDomeLightingRadius=1.0] Increase the thickness of contours from eye dome lighting.
  * @param {boolean} [options.backFaceCulling=false] Determines whether back-facing points are hidden. This option works only if data has normals included.
  * @param {boolean} [options.normalShading=true] Determines whether a point cloud that contains normals is shaded by the scene's light source.
- *
  * @alias PointCloudShading
- * @constructor
+ * @class
  */
 function PointCloudShading(options) {
   const pointCloudShading = defaultValue(options, {});
@@ -57,7 +55,6 @@ function PointCloudShading(options) {
    * Use eye dome lighting when drawing with point attenuation
    * Requires support for EXT_frag_depth, OES_texture_float, and WEBGL_draw_buffers extensions in WebGL 1.0,
    * otherwise eye dome lighting is ignored.
-   *
    * @type {boolean}
    * @default true
    */
@@ -86,7 +83,6 @@ function PointCloudShading(options) {
   /**
    * Determines whether back-facing points are hidden.
    * This option works only if data has normals included.
-   *
    * @type {boolean}
    * @default false
    */
@@ -94,7 +90,6 @@ function PointCloudShading(options) {
 
   /**
    * Determines whether a point cloud that contains normals is shaded by the scene's light source.
-   *
    * @type {boolean}
    * @default true
    */
@@ -103,7 +98,6 @@ function PointCloudShading(options) {
 
 /**
  * Determines if point cloud shading is supported.
- *
  * @param {Scene} scene The scene.
  * @returns {boolean} <code>true</code> if point cloud shading is supported; otherwise, returns <code>false</code>
  */

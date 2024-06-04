@@ -7,9 +7,7 @@ import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
 /**
  * The dequantization stage generates shader code to dequantize attributes
  * in the vertex shader
- *
  * @namespace DequantizationPipelineStage
- *
  * @private
  */
 const DequantizationPipelineStage = {
@@ -24,14 +22,12 @@ const DequantizationPipelineStage = {
  * Process a primitive with quantized attributes. This stage modifies the
  * following parts of the render resources:
  * <ul>
- *  <li>generates dequantization function and adds it to the shader</li>
- *  <li>adds any uniforms needed for dequantization to the shader and uniform map</li>
+ * <li>generates dequantization function and adds it to the shader</li>
+ * <li>adds any uniforms needed for dequantization to the shader and uniform map</li>
  * </ul>
- *
  * @param {PrimitiveRenderResources} renderResources The render resources for this primitive.
  * @param {ModelComponents.Primitive} primitive The primitive
  * @param {FrameState} frameState The frame state.
- *
  * @private
  */
 DequantizationPipelineStage.process = function (

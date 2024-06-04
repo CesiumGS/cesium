@@ -10,10 +10,18 @@ import { Tween as TweenJS } from "@tweenjs/tween.js";
 /**
  * A tween is an animation that interpolates the properties of two objects using an {@link EasingFunction}.  Create
  * one using {@link Scene#tweens} and {@link TweenCollection#add} and related add functions.
- *
+ * @param tweens
+ * @param tweenjs
+ * @param startObject
+ * @param stopObject
+ * @param duration
+ * @param delay
+ * @param easingFunction
+ * @param update
+ * @param complete
+ * @param cancel
  * @alias Tween
- * @constructor
- *
+ * @class
  * @private
  */
 function Tween(
@@ -44,7 +52,6 @@ function Tween(
   /**
    * The callback to call if the tween is canceled either because {@link Tween#cancelTween}
    * was called or because the tween was removed from the collection.
-   *
    * @type {TweenCollection.TweenCancelledCallback}
    */
   this.cancel = cancel;
@@ -59,7 +66,6 @@ Object.defineProperties(Tween.prototype, {
   /**
    * An object with properties for initial values of the tween.  The properties of this object are changed during the tween's animation.
    * @memberof Tween.prototype
-   *
    * @type {object}
    * @readonly
    */
@@ -72,7 +78,6 @@ Object.defineProperties(Tween.prototype, {
   /**
    * An object with properties for the final values of the tween.
    * @memberof Tween.prototype
-   *
    * @type {object}
    * @readonly
    */
@@ -85,7 +90,6 @@ Object.defineProperties(Tween.prototype, {
   /**
    * The duration, in seconds, for the tween.  The tween is automatically removed from the collection when it stops.
    * @memberof Tween.prototype
-   *
    * @type {number}
    * @readonly
    */
@@ -98,7 +102,6 @@ Object.defineProperties(Tween.prototype, {
   /**
    * The delay, in seconds, before the tween starts animating.
    * @memberof Tween.prototype
-   *
    * @type {number}
    * @readonly
    */
@@ -111,7 +114,6 @@ Object.defineProperties(Tween.prototype, {
   /**
    * Determines the curve for animtion.
    * @memberof Tween.prototype
-   *
    * @type {EasingFunction}
    * @readonly
    */
@@ -124,7 +126,6 @@ Object.defineProperties(Tween.prototype, {
   /**
    * The callback to call at each animation update (usually tied to the a rendered frame).
    * @memberof Tween.prototype
-   *
    * @type {TweenCollection.TweenUpdateCallback}
    * @readonly
    */
@@ -137,7 +138,6 @@ Object.defineProperties(Tween.prototype, {
   /**
    * The callback to call when the tween finishes animating.
    * @memberof Tween.prototype
-   *
    * @type {TweenCollection.TweenCompleteCallback}
    * @readonly
    */
@@ -149,7 +149,6 @@ Object.defineProperties(Tween.prototype, {
 
   /**
    * @memberof Tween.prototype
-   *
    * @private
    */
   tweenjs: {
@@ -169,10 +168,8 @@ Tween.prototype.cancelTween = function () {
 
 /**
  * A collection of tweens for animating properties.  Commonly accessed using {@link Scene#tweens}.
- *
  * @alias TweenCollection
- * @constructor
- *
+ * @class
  * @private
  */
 function TweenCollection() {
@@ -183,7 +180,6 @@ Object.defineProperties(TweenCollection.prototype, {
   /**
    * The number of tweens in the collection.
    * @memberof TweenCollection.prototype
-   *
    * @type {number}
    * @readonly
    */
@@ -197,7 +193,6 @@ Object.defineProperties(TweenCollection.prototype, {
 /**
  * Creates a tween for animating between two sets of properties.  The tween starts animating at the next call to {@link TweenCollection#update}, which
  * is implicit when {@link Viewer} or {@link CesiumWidget} render the scene.
- *
  * @param {object} [options] Object with the following properties:
  * @param {object} options.startObject An object with properties for initial values of the tween.  The properties of this object are changed during the tween's animation.
  * @param {object} options.stopObject An object with properties for the final values of the tween.
@@ -208,8 +203,7 @@ Object.defineProperties(TweenCollection.prototype, {
  * @param {TweenCollection.TweenCompleteCallback} [options.complete] The callback to call when the tween finishes animating.
  * @param {TweenCollection.TweenCancelledCallback} [options.cancel] The callback to call if the tween is canceled either because {@link Tween#cancelTween} was called or because the tween was removed from the collection.
  * @returns {Tween} The tween.
- *
- * @exception {DeveloperError} options.duration must be positive.
+ * @throws {DeveloperError} options.duration must be positive.
  */
 TweenCollection.prototype.add = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -275,7 +269,6 @@ TweenCollection.prototype.add = function (options) {
 /**
  * Creates a tween for animating a scalar property on the given object.  The tween starts animating at the next call to {@link TweenCollection#update}, which
  * is implicit when {@link Viewer} or {@link CesiumWidget} render the scene.
- *
  * @param {object} [options] Object with the following properties:
  * @param {object} options.object The object containing the property to animate.
  * @param {string} options.property The name of the property to animate.
@@ -288,9 +281,8 @@ TweenCollection.prototype.add = function (options) {
  * @param {TweenCollection.TweenCompleteCallback} [options.complete] The callback to call when the tween finishes animating.
  * @param {TweenCollection.TweenCancelledCallback} [options.cancel] The callback to call if the tween is canceled either because {@link Tween#cancelTween} was called or because the tween was removed from the collection.
  * @returns {Tween} The tween.
- *
- * @exception {DeveloperError} options.object must have the specified property.
- * @exception {DeveloperError} options.duration must be positive.
+ * @throws {DeveloperError} options.object must have the specified property.
+ * @throws {DeveloperError} options.duration must be positive.
  */
 TweenCollection.prototype.addProperty = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -342,7 +334,6 @@ TweenCollection.prototype.addProperty = function (options) {
 /**
  * Creates a tween for animating the alpha of all color uniforms on a {@link Material}.  The tween starts animating at the next call to {@link TweenCollection#update}, which
  * is implicit when {@link Viewer} or {@link CesiumWidget} render the scene.
- *
  * @param {object} [options] Object with the following properties:
  * @param {Material} options.material The material to animate.
  * @param {number} [options.startValue=0.0] The initial alpha value.
@@ -354,9 +345,8 @@ TweenCollection.prototype.addProperty = function (options) {
  * @param {TweenCollection.TweenCompleteCallback} [options.complete] The callback to call when the tween finishes animating.
  * @param {TweenCollection.TweenCancelledCallback} [options.cancel] The callback to call if the tween is canceled either because {@link Tween#cancelTween} was called or because the tween was removed from the collection.
  * @returns {Tween} The tween.
- *
- * @exception {DeveloperError} material has no properties with alpha components.
- * @exception {DeveloperError} options.duration must be positive.
+ * @throws {DeveloperError} material has no properties with alpha components.
+ * @throws {DeveloperError} options.duration must be positive.
  */
 TweenCollection.prototype.addAlpha = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -415,7 +405,6 @@ TweenCollection.prototype.addAlpha = function (options) {
 /**
  * Creates a tween for animating the offset uniform of a {@link Material}.  The tween starts animating at the next call to {@link TweenCollection#update}, which
  * is implicit when {@link Viewer} or {@link CesiumWidget} render the scene.
- *
  * @param {object} [options] Object with the following properties:
  * @param {Material} options.material The material to animate.
  * @param {number} options.startValue The initial alpha value.
@@ -426,9 +415,8 @@ TweenCollection.prototype.addAlpha = function (options) {
  * @param {TweenCollection.TweenUpdateCallback} [options.update] The callback to call at each animation update (usually tied to the a rendered frame).
  * @param {TweenCollection.TweenCancelledCallback} [options.cancel] The callback to call if the tween is canceled either because {@link Tween#cancelTween} was called or because the tween was removed from the collection.
  * @returns {Tween} The tween.
- *
- * @exception {DeveloperError} material.uniforms must have an offset property.
- * @exception {DeveloperError} options.duration must be positive.
+ * @throws {DeveloperError} material.uniforms must have an offset property.
+ * @throws {DeveloperError} options.duration must be positive.
  */
 TweenCollection.prototype.addOffsetIncrement = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -464,7 +452,6 @@ TweenCollection.prototype.addOffsetIncrement = function (options) {
  * <p>
  * This calls the {@link Tween#cancel} callback if the tween has one.
  * </p>
- *
  * @param {Tween} tween The tween to remove.
  * @returns {boolean} <code>true</code> if the tween was removed; <code>false</code> if the tween was not found in the collection.
  */
@@ -507,7 +494,6 @@ TweenCollection.prototype.removeAll = function () {
 
 /**
  * Determines whether this collection contains a given tween.
- *
  * @param {Tween} tween The tween to check for.
  * @returns {boolean} <code>true</code> if this collection contains the tween, <code>false</code> otherwise.
  */
@@ -520,10 +506,8 @@ TweenCollection.prototype.contains = function (tween) {
  * and increase as tweens are added.  Removing a tween shifts all tweens after
  * it to the left, changing their indices.  This function is commonly used to iterate over
  * all the tween in the collection.
- *
  * @param {number} index The zero-based index of the tween.
  * @returns {Tween} The tween at the specified index.
- *
  * @example
  * // Output the duration of all the tweens in the collection.
  * const tweens = scene.tweens;
@@ -545,7 +529,6 @@ TweenCollection.prototype.get = function (index) {
 /**
  * Updates the tweens in the collection to be at the provide time.  When a tween finishes, it is removed
  * from the collection.
- *
  * @param {number} [time=getTimestamp()] The time in seconds.  By default tweens are synced to the system clock.
  */
 TweenCollection.prototype.update = function (time) {

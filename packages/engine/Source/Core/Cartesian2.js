@@ -7,11 +7,9 @@ import CesiumMath from "./Math.js";
 /**
  * A 2D Cartesian point.
  * @alias Cartesian2
- * @constructor
- *
+ * @class
  * @param {number} [x=0.0] The X component.
  * @param {number} [y=0.0] The Y component.
- *
  * @see Cartesian3
  * @see Cartesian4
  * @see Packable
@@ -34,7 +32,6 @@ function Cartesian2(x, y) {
 
 /**
  * Creates a Cartesian2 instance from x and y coordinates.
- *
  * @param {number} x The x coordinate.
  * @param {number} y The y coordinate.
  * @param {Cartesian2} [result] The object onto which to store the result.
@@ -52,7 +49,6 @@ Cartesian2.fromElements = function (x, y, result) {
 
 /**
  * Duplicates a Cartesian2 instance.
- *
  * @param {Cartesian2} cartesian The Cartesian to duplicate.
  * @param {Cartesian2} [result] The object onto which to store the result.
  * @returns {Cartesian2} The modified result parameter or a new Cartesian2 instance if one was not provided. (Returns undefined if cartesian is undefined)
@@ -74,7 +70,6 @@ Cartesian2.clone = function (cartesian, result) {
  * Creates a Cartesian2 instance from an existing Cartesian3.  This simply takes the
  * x and y properties of the Cartesian3 and drops z.
  * @function
- *
  * @param {Cartesian3} cartesian The Cartesian3 instance to create a Cartesian2 instance from.
  * @param {Cartesian2} [result] The object onto which to store the result.
  * @returns {Cartesian2} The modified result parameter or a new Cartesian2 instance if one was not provided.
@@ -85,7 +80,6 @@ Cartesian2.fromCartesian3 = Cartesian2.clone;
  * Creates a Cartesian2 instance from an existing Cartesian4.  This simply takes the
  * x and y properties of the Cartesian4 and drops z and w.
  * @function
- *
  * @param {Cartesian4} cartesian The Cartesian4 instance to create a Cartesian2 instance from.
  * @param {Cartesian2} [result] The object onto which to store the result.
  * @returns {Cartesian2} The modified result parameter or a new Cartesian2 instance if one was not provided.
@@ -100,11 +94,9 @@ Cartesian2.packedLength = 2;
 
 /**
  * Stores the provided instance into the provided array.
- *
  * @param {Cartesian2} value The value to pack.
  * @param {number[]} array The array to pack into.
  * @param {number} [startingIndex=0] The index into the array at which to start packing the elements.
- *
  * @returns {number[]} The array that was packed into
  */
 Cartesian2.pack = function (value, array, startingIndex) {
@@ -123,7 +115,6 @@ Cartesian2.pack = function (value, array, startingIndex) {
 
 /**
  * Retrieves an instance from a packed array.
- *
  * @param {number[]} array The packed array.
  * @param {number} [startingIndex=0] The starting index of the element to be unpacked.
  * @param {Cartesian2} [result] The object into which to store the result.
@@ -146,7 +137,6 @@ Cartesian2.unpack = function (array, startingIndex, result) {
 
 /**
  * Flattens an array of Cartesian2s into an array of components.
- *
  * @param {Cartesian2[]} array The array of cartesians to pack.
  * @param {number[]} [result] The array onto which to store the result. If this is a typed array, it must have array.length * 2 components, else a {@link DeveloperError} will be thrown. If it is a regular array, it will be resized to have (array.length * 2) elements.
  * @returns {number[]} The packed array.
@@ -178,7 +168,6 @@ Cartesian2.packArray = function (array, result) {
 
 /**
  * Unpacks an array of cartesian components into an array of Cartesian2s.
- *
  * @param {number[]} array The array of components to unpack.
  * @param {Cartesian2[]} [result] The array onto which to store the result.
  * @returns {Cartesian2[]} The unpacked array.
@@ -209,12 +198,10 @@ Cartesian2.unpackArray = function (array, result) {
 /**
  * Creates a Cartesian2 from two consecutive elements in an array.
  * @function
- *
  * @param {number[]} array The array whose two consecutive elements correspond to the x and y components, respectively.
  * @param {number} [startingIndex=0] The offset into the array of the first element, which corresponds to the x component.
  * @param {Cartesian2} [result] The object onto which to store the result.
  * @returns {Cartesian2} The modified result parameter or a new Cartesian2 instance if one was not provided.
- *
  * @example
  * // Create a Cartesian2 with (1.0, 2.0)
  * const v = [1.0, 2.0];
@@ -228,7 +215,6 @@ Cartesian2.fromArray = Cartesian2.unpack;
 
 /**
  * Computes the value of the maximum component for the supplied Cartesian.
- *
  * @param {Cartesian2} cartesian The cartesian to use.
  * @returns {number} The value of the maximum component.
  */
@@ -242,7 +228,6 @@ Cartesian2.maximumComponent = function (cartesian) {
 
 /**
  * Computes the value of the minimum component for the supplied Cartesian.
- *
  * @param {Cartesian2} cartesian The cartesian to use.
  * @returns {number} The value of the minimum component.
  */
@@ -256,7 +241,6 @@ Cartesian2.minimumComponent = function (cartesian) {
 
 /**
  * Compares two Cartesians and computes a Cartesian which contains the minimum components of the supplied Cartesians.
- *
  * @param {Cartesian2} first A cartesian to compare.
  * @param {Cartesian2} second A cartesian to compare.
  * @param {Cartesian2} result The object into which to store the result.
@@ -277,7 +261,6 @@ Cartesian2.minimumByComponent = function (first, second, result) {
 
 /**
  * Compares two Cartesians and computes a Cartesian which contains the maximum components of the supplied Cartesians.
- *
  * @param {Cartesian2} first A cartesian to compare.
  * @param {Cartesian2} second A cartesian to compare.
  * @param {Cartesian2} result The object into which to store the result.
@@ -297,7 +280,6 @@ Cartesian2.maximumByComponent = function (first, second, result) {
 
 /**
  * Constrain a value to lie between two values.
- *
  * @param {Cartesian2} value The value to clamp.
  * @param {Cartesian2} min The minimum bound.
  * @param {Cartesian2} max The maximum bound.
@@ -323,7 +305,6 @@ Cartesian2.clamp = function (value, min, max, result) {
 
 /**
  * Computes the provided Cartesian's squared magnitude.
- *
  * @param {Cartesian2} cartesian The Cartesian instance whose squared magnitude is to be computed.
  * @returns {number} The squared magnitude.
  */
@@ -337,7 +318,6 @@ Cartesian2.magnitudeSquared = function (cartesian) {
 
 /**
  * Computes the Cartesian's magnitude (length).
- *
  * @param {Cartesian2} cartesian The Cartesian instance whose magnitude is to be computed.
  * @returns {number} The magnitude.
  */
@@ -349,11 +329,9 @@ const distanceScratch = new Cartesian2();
 
 /**
  * Computes the distance between two points.
- *
  * @param {Cartesian2} left The first point to compute the distance from.
  * @param {Cartesian2} right The second point to compute the distance to.
  * @returns {number} The distance between two points.
- *
  * @example
  * // Returns 1.0
  * const d = Cesium.Cartesian2.distance(new Cesium.Cartesian2(1.0, 0.0), new Cesium.Cartesian2(2.0, 0.0));
@@ -371,11 +349,9 @@ Cartesian2.distance = function (left, right) {
 /**
  * Computes the squared distance between two points.  Comparing squared distances
  * using this function is more efficient than comparing distances using {@link Cartesian2#distance}.
- *
  * @param {Cartesian2} left The first point to compute the distance from.
  * @param {Cartesian2} right The second point to compute the distance to.
  * @returns {number} The distance between two points.
- *
  * @example
  * // Returns 4.0, not 2.0
  * const d = Cesium.Cartesian2.distance(new Cesium.Cartesian2(1.0, 0.0), new Cesium.Cartesian2(3.0, 0.0));
@@ -392,7 +368,6 @@ Cartesian2.distanceSquared = function (left, right) {
 
 /**
  * Computes the normalized form of the supplied Cartesian.
- *
  * @param {Cartesian2} cartesian The Cartesian to be normalized.
  * @param {Cartesian2} result The object onto which to store the result.
  * @returns {Cartesian2} The modified result parameter.
@@ -419,7 +394,6 @@ Cartesian2.normalize = function (cartesian, result) {
 
 /**
  * Computes the dot (scalar) product of two Cartesians.
- *
  * @param {Cartesian2} left The first Cartesian.
  * @param {Cartesian2} right The second Cartesian.
  * @returns {number} The dot product.
@@ -435,7 +409,6 @@ Cartesian2.dot = function (left, right) {
 
 /**
  * Computes the magnitude of the cross product that would result from implicitly setting the Z coordinate of the input vectors to 0
- *
  * @param {Cartesian2} left The first Cartesian.
  * @param {Cartesian2} right The second Cartesian.
  * @returns {number} The cross product.
@@ -451,7 +424,6 @@ Cartesian2.cross = function (left, right) {
 
 /**
  * Computes the componentwise product of two Cartesians.
- *
  * @param {Cartesian2} left The first Cartesian.
  * @param {Cartesian2} right The second Cartesian.
  * @param {Cartesian2} result The object onto which to store the result.
@@ -471,7 +443,6 @@ Cartesian2.multiplyComponents = function (left, right, result) {
 
 /**
  * Computes the componentwise quotient of two Cartesians.
- *
  * @param {Cartesian2} left The first Cartesian.
  * @param {Cartesian2} right The second Cartesian.
  * @param {Cartesian2} result The object onto which to store the result.
@@ -491,7 +462,6 @@ Cartesian2.divideComponents = function (left, right, result) {
 
 /**
  * Computes the componentwise sum of two Cartesians.
- *
  * @param {Cartesian2} left The first Cartesian.
  * @param {Cartesian2} right The second Cartesian.
  * @param {Cartesian2} result The object onto which to store the result.
@@ -511,7 +481,6 @@ Cartesian2.add = function (left, right, result) {
 
 /**
  * Computes the componentwise difference of two Cartesians.
- *
  * @param {Cartesian2} left The first Cartesian.
  * @param {Cartesian2} right The second Cartesian.
  * @param {Cartesian2} result The object onto which to store the result.
@@ -531,7 +500,6 @@ Cartesian2.subtract = function (left, right, result) {
 
 /**
  * Multiplies the provided Cartesian componentwise by the provided scalar.
- *
  * @param {Cartesian2} cartesian The Cartesian to be scaled.
  * @param {number} scalar The scalar to multiply with.
  * @param {Cartesian2} result The object onto which to store the result.
@@ -551,7 +519,6 @@ Cartesian2.multiplyByScalar = function (cartesian, scalar, result) {
 
 /**
  * Divides the provided Cartesian componentwise by the provided scalar.
- *
  * @param {Cartesian2} cartesian The Cartesian to be divided.
  * @param {number} scalar The scalar to divide by.
  * @param {Cartesian2} result The object onto which to store the result.
@@ -571,7 +538,6 @@ Cartesian2.divideByScalar = function (cartesian, scalar, result) {
 
 /**
  * Negates the provided Cartesian.
- *
  * @param {Cartesian2} cartesian The Cartesian to be negated.
  * @param {Cartesian2} result The object onto which to store the result.
  * @returns {Cartesian2} The modified result parameter.
@@ -589,7 +555,6 @@ Cartesian2.negate = function (cartesian, result) {
 
 /**
  * Computes the absolute value of the provided Cartesian.
- *
  * @param {Cartesian2} cartesian The Cartesian whose absolute value is to be computed.
  * @param {Cartesian2} result The object onto which to store the result.
  * @returns {Cartesian2} The modified result parameter.
@@ -608,7 +573,6 @@ Cartesian2.abs = function (cartesian, result) {
 const lerpScratch = new Cartesian2();
 /**
  * Computes the linear interpolation or extrapolation at t using the provided cartesians.
- *
  * @param {Cartesian2} start The value corresponding to t at 0.0.
  * @param {Cartesian2} end The value corresponding to t at 1.0.
  * @param {number} t The point along t at which to interpolate.
@@ -632,7 +596,6 @@ const angleBetweenScratch = new Cartesian2();
 const angleBetweenScratch2 = new Cartesian2();
 /**
  * Returns the angle, in radians, between the provided Cartesians.
- *
  * @param {Cartesian2} left The first Cartesian.
  * @param {Cartesian2} right The second Cartesian.
  * @returns {number} The angle between the Cartesians.
@@ -653,7 +616,6 @@ Cartesian2.angleBetween = function (left, right) {
 const mostOrthogonalAxisScratch = new Cartesian2();
 /**
  * Returns the axis that is most orthogonal to the provided Cartesian.
- *
  * @param {Cartesian2} cartesian The Cartesian on which to find the most orthogonal axis.
  * @param {Cartesian2} result The object onto which to store the result.
  * @returns {Cartesian2} The most orthogonal axis.
@@ -679,7 +641,6 @@ Cartesian2.mostOrthogonalAxis = function (cartesian, result) {
 /**
  * Compares the provided Cartesians componentwise and returns
  * <code>true</code> if they are equal, <code>false</code> otherwise.
- *
  * @param {Cartesian2} [left] The first Cartesian.
  * @param {Cartesian2} [right] The second Cartesian.
  * @returns {boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
@@ -695,6 +656,9 @@ Cartesian2.equals = function (left, right) {
 };
 
 /**
+ * @param cartesian
+ * @param array
+ * @param offset
  * @private
  */
 Cartesian2.equalsArray = function (cartesian, array, offset) {
@@ -705,7 +669,6 @@ Cartesian2.equalsArray = function (cartesian, array, offset) {
  * Compares the provided Cartesians componentwise and returns
  * <code>true</code> if they pass an absolute or relative tolerance test,
  * <code>false</code> otherwise.
- *
  * @param {Cartesian2} [left] The first Cartesian.
  * @param {Cartesian2} [right] The second Cartesian.
  * @param {number} [relativeEpsilon=0] The relative epsilon tolerance to use for equality testing.
@@ -739,7 +702,6 @@ Cartesian2.equalsEpsilon = function (
 
 /**
  * An immutable Cartesian2 instance initialized to (0.0, 0.0).
- *
  * @type {Cartesian2}
  * @constant
  */
@@ -747,7 +709,6 @@ Cartesian2.ZERO = Object.freeze(new Cartesian2(0.0, 0.0));
 
 /**
  * An immutable Cartesian2 instance initialized to (1.0, 1.0).
- *
  * @type {Cartesian2}
  * @constant
  */
@@ -755,7 +716,6 @@ Cartesian2.ONE = Object.freeze(new Cartesian2(1.0, 1.0));
 
 /**
  * An immutable Cartesian2 instance initialized to (1.0, 0.0).
- *
  * @type {Cartesian2}
  * @constant
  */
@@ -763,7 +723,6 @@ Cartesian2.UNIT_X = Object.freeze(new Cartesian2(1.0, 0.0));
 
 /**
  * An immutable Cartesian2 instance initialized to (0.0, 1.0).
- *
  * @type {Cartesian2}
  * @constant
  */
@@ -771,7 +730,6 @@ Cartesian2.UNIT_Y = Object.freeze(new Cartesian2(0.0, 1.0));
 
 /**
  * Duplicates this Cartesian2 instance.
- *
  * @param {Cartesian2} [result] The object onto which to store the result.
  * @returns {Cartesian2} The modified result parameter or a new Cartesian2 instance if one was not provided.
  */
@@ -782,7 +740,6 @@ Cartesian2.prototype.clone = function (result) {
 /**
  * Compares this Cartesian against the provided Cartesian componentwise and returns
  * <code>true</code> if they are equal, <code>false</code> otherwise.
- *
  * @param {Cartesian2} [right] The right hand side Cartesian.
  * @returns {boolean} <code>true</code> if they are equal, <code>false</code> otherwise.
  */
@@ -794,7 +751,6 @@ Cartesian2.prototype.equals = function (right) {
  * Compares this Cartesian against the provided Cartesian componentwise and returns
  * <code>true</code> if they pass an absolute or relative tolerance test,
  * <code>false</code> otherwise.
- *
  * @param {Cartesian2} [right] The right hand side Cartesian.
  * @param {number} [relativeEpsilon=0] The relative epsilon tolerance to use for equality testing.
  * @param {number} [absoluteEpsilon=relativeEpsilon] The absolute epsilon tolerance to use for equality testing.
@@ -815,7 +771,6 @@ Cartesian2.prototype.equalsEpsilon = function (
 
 /**
  * Creates a string representing this Cartesian in the format '(x, y)'.
- *
  * @returns {string} A string representing the provided Cartesian in the format '(x, y)'.
  */
 Cartesian2.prototype.toString = function () {

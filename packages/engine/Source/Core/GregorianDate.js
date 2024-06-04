@@ -9,8 +9,7 @@ const daysInYear = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
  * Represents a Gregorian date in a more precise format than the JavaScript Date object.
  * In addition to submillisecond precision, this object can also represent leap seconds.
  * @alias GregorianDate
- * @constructor
- *
+ * @class
  * @param {number} [year] The year as a whole number.
  * @param {number} [month] The month as a whole number with range [1, 12].
  * @param {number} [day] The day of the month as a whole number starting at 1.
@@ -19,7 +18,6 @@ const daysInYear = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
  * @param {number} [second] The second of the minute as a whole number with range [0, 60], with 60 representing a leap second.
  * @param {number} [millisecond] The millisecond of the second as a floating point number with range [0.0, 1000.0).
  * @param {boolean} [isLeapSecond] Whether this time is during a leap second.
- *
  * @see JulianDate#toGregorianDate
  */
 function GregorianDate(

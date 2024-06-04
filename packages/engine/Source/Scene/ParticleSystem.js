@@ -17,10 +17,8 @@ const defaultImageSize = new Cartesian2(1.0, 1.0);
 
 /**
  * A ParticleSystem manages the updating and display of a collection of particles.
- *
  * @alias ParticleSystem
- * @constructor
- *
+ * @class
  * @param {object} [options] Object with the following properties:
  * @param {boolean} [options.show=true] Whether to display the particle system.
  * @param {ParticleSystem.updateCallback} [options.updateCallback] The callback function to be called each frame to update a particle.
@@ -729,6 +727,7 @@ function calculateNumberToEmit(system, dt) {
 const rotatedVelocityScratch = new Cartesian3();
 
 /**
+ * @param frameState
  * @private
  */
 ParticleSystem.prototype.update = function (frameState) {
@@ -868,9 +867,7 @@ ParticleSystem.prototype.update = function (frameState) {
  * <br /><br />
  * If this object was destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
- *
  * @returns {boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
- *
  * @see ParticleSystem#destroy
  */
 ParticleSystem.prototype.isDestroyed = function () {
@@ -884,9 +881,7 @@ ParticleSystem.prototype.isDestroyed = function () {
  * Once an object is destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
  * assign the return value (<code>undefined</code>) to the object as done in the example.
- *
- * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
- *
+ * @throws {DeveloperError} This object was destroyed, i.e., destroy() was called.
  * @see ParticleSystem#isDestroyed
  */
 ParticleSystem.prototype.destroy = function () {
@@ -898,12 +893,9 @@ ParticleSystem.prototype.destroy = function () {
 /**
  * A function used to modify attributes of the particle at each time step. This can include force modifications,
  * color, sizing, etc.
- *
  * @callback ParticleSystem.updateCallback
- *
  * @param {Particle} particle The particle being updated.
  * @param {number} dt The time in seconds since the last update.
- *
  * @example
  * function applyGravity(particle, dt) {
  *    const position = particle.position;

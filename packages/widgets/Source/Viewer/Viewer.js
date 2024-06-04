@@ -293,7 +293,6 @@ function enableVRUI(viewer, enabled) {
  * @typedef {object} Viewer.ConstructorOptions
  *
  * Initialization options for the Viewer constructor
- *
  * @property {boolean} [animation=true] If set to false, the Animation widget will not be created.
  * @property {boolean} [baseLayerPicker=true] If set to false, the BaseLayerPicker widget will not be created.
  * @property {boolean} [fullscreenButton=true] If set to false, the FullscreenButton widget will not be created.
@@ -347,17 +346,13 @@ function enableVRUI(viewer, enabled) {
 /**
  * A base widget for building applications.  It composites all of the standard Cesium widgets into one reusable package.
  * The widget can always be extended by using mixins, which add functionality useful for a variety of applications.
- *
  * @alias Viewer
- * @constructor
- *
+ * @class
  * @param {Element|string} container The DOM element or ID that will contain the widget.
  * @param {Viewer.ConstructorOptions} [options] Object describing initialization options
- *
- * @exception {DeveloperError} Element with id "container" does not exist in the document.
- * @exception {DeveloperError} options.selectedImageryProviderViewModel is not available when not using the BaseLayerPicker widget, specify options.baseLayer instead.
- * @exception {DeveloperError} options.selectedTerrainProviderViewModel is not available when not using the BaseLayerPicker widget, specify options.terrainProvider instead.
- *
+ * @throws {DeveloperError} Element with id "container" does not exist in the document.
+ * @throws {DeveloperError} options.selectedImageryProviderViewModel is not available when not using the BaseLayerPicker widget, specify options.baseLayer instead.
+ * @throws {DeveloperError} options.selectedTerrainProviderViewModel is not available when not using the BaseLayerPicker widget, specify options.terrainProvider instead.
  * @see Animation
  * @see BaseLayerPicker
  * @see CesiumWidget
@@ -366,9 +361,7 @@ function enableVRUI(viewer, enabled) {
  * @see SceneModePicker
  * @see Timeline
  * @see viewerDragDropMixin
- *
  * @demo {@link https://sandcastle.cesium.com/index.html?src=Hello%20World.html|Cesium Sandcastle Hello World Demo}
- *
  * @example
  * // Initialize the viewer widget with several custom options and mixins.
  * try {
@@ -974,7 +967,6 @@ Object.defineProperties(Viewer.prototype, {
   /**
    * Manages the list of credits to display on screen and in the lightbox.
    * @memberof Viewer.prototype
-   *
    * @type {CreditDisplay}
    */
   creditDisplay: {
@@ -1256,7 +1248,6 @@ Object.defineProperties(Viewer.prototype, {
   /**
    * Gets the collection of image layers that will be rendered on the globe.
    * @memberof Viewer.prototype
-   *
    * @type {ImageryLayerCollection}
    * @readonly
    */
@@ -1269,7 +1260,6 @@ Object.defineProperties(Viewer.prototype, {
   /**
    * The terrain provider providing surface geometry for the globe.
    * @memberof Viewer.prototype
-   *
    * @type {TerrainProvider}
    */
   terrainProvider: {
@@ -1284,7 +1274,6 @@ Object.defineProperties(Viewer.prototype, {
   /**
    * Gets the camera.
    * @memberof Viewer.prototype
-   *
    * @type {Camera}
    * @readonly
    */
@@ -1297,7 +1286,6 @@ Object.defineProperties(Viewer.prototype, {
   /**
    * Gets the post-process stages.
    * @memberof Viewer.prototype
-   *
    * @type {PostProcessStageCollection}
    * @readonly
    */
@@ -1349,7 +1337,6 @@ Object.defineProperties(Viewer.prototype, {
    * determines the frame rate.  If defined, this value must be greater than 0.  A value higher
    * than the underlying requestAnimationFrame implementation will have no effect.
    * @memberof Viewer.prototype
-   *
    * @type {number}
    */
   targetFrameRate: {
@@ -1372,7 +1359,6 @@ Object.defineProperties(Viewer.prototype, {
    * will be set to false.  It must be set back to true to continue rendering
    * after the error.
    * @memberof Viewer.prototype
-   *
    * @type {boolean}
    */
   useDefaultRenderLoop: {
@@ -1392,7 +1378,6 @@ Object.defineProperties(Viewer.prototype, {
    * will cause the scene to be rendered at 320x240 and then scaled up while setting
    * it to 2.0 will cause the scene to be rendered at 1280x960 and then scaled down.
    * @memberof Viewer.prototype
-   *
    * @type {number}
    * @default 1.0
    */
@@ -1413,7 +1398,6 @@ Object.defineProperties(Viewer.prototype, {
    * will be in device pixels. {@link Viewer#resolutionScale} will still take effect whether
    * this flag is true or false.
    * @memberof Viewer.prototype
-   *
    * @type {boolean}
    * @default true
    */
@@ -1431,9 +1415,7 @@ Object.defineProperties(Viewer.prototype, {
    * animation in order to avoid showing an incomplete picture to the user.
    * For example, if asynchronous primitives are being processed in the
    * background, the clock will not advance until the geometry is ready.
-   *
    * @memberof Viewer.prototype
-   *
    * @type {boolean}
    */
   allowDataSourcesToSuspendAnimation: {
@@ -1569,10 +1551,8 @@ Object.defineProperties(Viewer.prototype, {
  * Extends the base viewer functionality with the provided mixin.
  * A mixin may add additional properties, functions, or other behavior
  * to the provided viewer instance.
- *
  * @param {Viewer.ViewerMixin} mixin The Viewer mixin to add to this instance.
  * @param {object} [options] The options object to be passed to the mixin function.
- *
  * @see viewerDragDropMixin
  */
 Viewer.prototype.extend = function (mixin, options) {
@@ -1815,6 +1795,8 @@ Viewer.prototype.destroy = function () {
 };
 
 /**
+ * @param dataSourceCollection
+ * @param dataSource
  * @private
  */
 Viewer.prototype._dataSourceAdded = function (
@@ -1829,6 +1811,8 @@ Viewer.prototype._dataSourceAdded = function (
 };
 
 /**
+ * @param dataSourceCollection
+ * @param dataSource
  * @private
  */
 Viewer.prototype._dataSourceRemoved = function (
@@ -1859,6 +1843,7 @@ Viewer.prototype._dataSourceRemoved = function (
 };
 
 /**
+ * @param clock
  * @private
  */
 Viewer.prototype._onTick = function (clock) {
@@ -1944,6 +1929,9 @@ Viewer.prototype._onTick = function (clock) {
 };
 
 /**
+ * @param collection
+ * @param added
+ * @param removed
  * @private
  */
 Viewer.prototype._onEntityCollectionChanged = function (
@@ -1964,6 +1952,7 @@ Viewer.prototype._onEntityCollectionChanged = function (
 };
 
 /**
+ * @param infoBoxViewModel
  * @private
  */
 Viewer.prototype._onInfoBoxCameraClicked = function (infoBoxViewModel) {
@@ -1991,6 +1980,7 @@ Viewer.prototype._clearTrackedObject = function () {
 };
 
 /**
+ * @param infoBoxViewModel
  * @private
  */
 Viewer.prototype._onInfoBoxClockClicked = function (infoBoxViewModel) {
@@ -2006,6 +1996,7 @@ Viewer.prototype._clearObjects = function () {
 };
 
 /**
+ * @param dataSource
  * @private
  */
 Viewer.prototype._onDataSourceChanged = function (dataSource) {
@@ -2015,6 +2006,8 @@ Viewer.prototype._onDataSourceChanged = function (dataSource) {
 };
 
 /**
+ * @param dataSourceCollection
+ * @param dataSource
  * @private
  */
 Viewer.prototype._onDataSourceAdded = function (
@@ -2034,6 +2027,8 @@ Viewer.prototype._onDataSourceAdded = function (
 };
 
 /**
+ * @param dataSourceCollection
+ * @param dataSource
  * @private
  */
 Viewer.prototype._onDataSourceRemoved = function (
@@ -2070,7 +2065,6 @@ Viewer.prototype._onDataSourceRemoved = function (
  * <p>In 2D, there must be a top down view. The camera will be placed above the target looking down. The height above the
  * target will be the range. The heading will be determined from the offset. If the heading cannot be
  * determined from the offset, the heading will be north.</p>
- *
  * @param {Entity|Entity[]|EntityCollection|DataSource|ImageryLayer|Cesium3DTileset|TimeDynamicPointCloud|Promise<Entity|Entity[]|EntityCollection|DataSource|ImageryLayer|Cesium3DTileset|TimeDynamicPointCloud|VoxelPrimitive>} target The entity, array of entities, entity collection, data source, Cesium3DTileset, point cloud, or imagery layer to view. You can also pass a promise that resolves to one of the previously mentioned types.
  * @param {HeadingPitchRange} [offset] The offset from the center of the entity in the local east-north-up reference frame.
  * @returns {Promise<boolean>} A Promise that resolves to true if the zoom was successful or false if the target is not currently visualized in the scene or the zoom was cancelled.
@@ -2096,7 +2090,6 @@ Viewer.prototype.zoomTo = function (target, offset) {
  * <p>In 2D, there must be a top down view. The camera will be placed above the target looking down. The height above the
  * target will be the range. The heading will be determined from the offset. If the heading cannot be
  * determined from the offset, the heading will be north.</p>
- *
  * @param {Entity|Entity[]|EntityCollection|DataSource|ImageryLayer|Cesium3DTileset|TimeDynamicPointCloud|Promise<Entity|Entity[]|EntityCollection|DataSource|ImageryLayer|Cesium3DTileset|TimeDynamicPointCloud|VoxelPrimitive>} target The entity, array of entities, entity collection, data source, Cesium3DTileset, point cloud, or imagery layer to view. You can also pass a promise that resolves to one of the previously mentioned types.
  * @param {object} [options] Object with the following properties:
  * @param {number} [options.duration=3.0] The duration of the flight in seconds.
@@ -2436,7 +2429,6 @@ function updateTrackedEntity(viewer) {
  * @callback Viewer.ViewerMixin
  * @param {Viewer} viewer The viewer instance.
  * @param {object} options Options object to be passed to the mixin function.
- *
  * @see Viewer#extend
  */
 export default Viewer;

@@ -6,14 +6,11 @@ import defaultValue from "../../Core/defaultValue.js";
  * An in-memory representation of a skin that affects nodes in the {@link ModelSceneGraph}.
  * Skins should only be initialized after all of the {@link ModelRuntimeNode}s have been instantiated
  * by the scene graph.
- *
  * @param {object} options An object containing the following options:
  * @param {ModelComponents.Skin} options.skin The corresponding skin components from the 3D model
  * @param {ModelSceneGraph} options.sceneGraph The scene graph this skin belongs to.
- *
  * @alias ModelSkin
- * @constructor
- *
+ * @class
  * @private
  */
 function ModelSkin(options) {
@@ -38,11 +35,9 @@ function ModelSkin(options) {
 Object.defineProperties(ModelSkin.prototype, {
   /**
    * The internal skin this runtime skin represents.
-   *
    * @memberof ModelSkin.prototype
    * @type {ModelComponents.Skin}
    * @readonly
-   *
    * @private
    */
   skin: {
@@ -53,11 +48,9 @@ Object.defineProperties(ModelSkin.prototype, {
 
   /**
    * The scene graph this skin belongs to.
-   *
    * @memberof ModelSkin.prototype
    * @type {ModelSceneGraph}
    * @readonly
-   *
    * @private
    */
   sceneGraph: {
@@ -68,11 +61,9 @@ Object.defineProperties(ModelSkin.prototype, {
 
   /**
    * The inverse bind matrices of the skin.
-   *
    * @memberof ModelSkin.prototype
    * @type {Matrix4[]}
    * @readonly
-   *
    * @private
    */
   inverseBindMatrices: {
@@ -83,11 +74,9 @@ Object.defineProperties(ModelSkin.prototype, {
 
   /**
    * The joints of the skin.
-   *
    * @memberof ModelSkin.prototype
    * @type {ModelRuntimeNode[]}
    * @readonly
-   *
    * @private
    */
   joints: {
@@ -102,11 +91,9 @@ Object.defineProperties(ModelSkin.prototype, {
    *
    * Each node that references this skin is responsible for pre-multiplying its inverse
    * world transform to the joint matrices for its own use.
-   *
    * @memberof ModelSkin.prototype
    * @type {Matrix4[]}
    * @readonly
-   *
    * @private
    */
   jointMatrices: {
@@ -160,7 +147,6 @@ function computeJointMatrix(joint, inverseBindMatrix, result) {
 
 /**
  * Updates the joint matrices for the skin.
- *
  * @private
  */
 ModelSkin.prototype.updateJointMatrices = function () {

@@ -16,10 +16,8 @@ import TimeStandard from "./TimeStandard.js";
  * the International Celestial Reference Frame (ICRF) to the International Terrestrial
  * Reference Frame (ITRF).
  * This object is normally not instantiated directly, use {@link EarthOrientationParameters.fromUrl}.
- *
  * @alias EarthOrientationParameters
- * @constructor
- *
+ * @class
  * @param {object} [options] Object with the following properties:
  * @param {object} [options.data] The actual EOP data.  If neither this
  *                 parameter nor options.data is specified, all EOP values are assumed
@@ -29,7 +27,6 @@ import TimeStandard from "./TimeStandard.js";
  *                  should be added to {@link JulianDate.leapSeconds}.  False if
  *                  new leap seconds should be handled correctly in the context
  *                  of the EOP data but otherwise ignored.
- *
  * @private
  */
 function EarthOrientationParameters(options) {
@@ -85,7 +82,6 @@ function EarthOrientationParameters(options) {
  *                  should be added to {@link JulianDate.leapSeconds}.  False if
  *                  new leap seconds should be handled correctly in the context
  *                  of the EOP data but otherwise ignored.
- *
  * @example
  * // An example EOP data file, EOP.json:
  * {
@@ -96,7 +92,6 @@ function EarthOrientationParameters(options) {
  *      "2011-07-03T00:00:00Z",55745.0,2.262286080161428e-7,2.1191157519929706e-6,-0.2905572,1.9e-6,-3.490658503988659e-10,6.981317007977318e-10,34.0
  *   ]
  * }
- *
  * @example
  * // Loading the EOP data
  * const eop = await Cesium.EarthOrientationParameters.fromUrl('Data/EOP.json');
@@ -148,16 +143,13 @@ EarthOrientationParameters.NONE = Object.freeze({
 /**
  * Computes the Earth Orientation Parameters (EOP) for a given date by interpolating.
  * If the EOP data has not yet been download, this method returns undefined.
- *
  * @param {JulianDate} date The date for each to evaluate the EOP.
  * @param {EarthOrientationParametersSample} [result] The instance to which to copy the result.
  *        If this parameter is undefined, a new instance is created and returned.
  * @returns {EarthOrientationParametersSample} The EOP evaluated at the given date, or
  *          undefined if the data necessary to evaluate EOP at the date has not yet been
  *          downloaded.
- *
- * @exception {RuntimeError} The loaded EOP data has an error and cannot be used.
- *
+ * @throws {RuntimeError} The loaded EOP data has an error and cannot be used.
  * @see EarthOrientationParameters#fromUrl
  */
 EarthOrientationParameters.prototype.compute = function (date, result) {

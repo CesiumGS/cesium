@@ -6,7 +6,6 @@ import RuntimeError from "../Core/RuntimeError.js";
 
 /**
  * Handles parsing of an Instanced 3D Model.
- *
  * @namespace I3dmParser
  * @private
  */
@@ -17,9 +16,7 @@ const sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
 
 /**
  * Parses the contents of a {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification/TileFormats/Instanced3DModel|Instanced 3D Model}.
- *
  * @private
- *
  * @param {ArrayBuffer} arrayBuffer The array buffer containing the i3dm.
  * @param {number} [byteOffset=0] The byte offset of the beginning of the i3dm in the array buffer.
  * @returns {object} Returns an object with the glTF format, feature table (binary and json), batch table (binary and json) and glTF parts of the i3dm.

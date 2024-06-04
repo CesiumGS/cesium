@@ -83,13 +83,11 @@ function checkHalfAxes(halfAxes) {
 /**
  * A tile bounding volume specified as an oriented bounding box.
  * @alias TileOrientedBoundingBox
- * @constructor
- *
+ * @class
  * @param {Cartesian3} [center=Cartesian3.ZERO] The center of the box.
  * @param {Matrix3} [halfAxes=Matrix3.ZERO] The three orthogonal half-axes of the bounding box.
  *                                          Equivalently, the transformation matrix, to rotate and scale a 2x2x2
  *                                          cube centered at the origin.
- *
  * @private
  */
 function TileOrientedBoundingBox(center, halfAxes) {
@@ -103,9 +101,7 @@ function TileOrientedBoundingBox(center, halfAxes) {
 Object.defineProperties(TileOrientedBoundingBox.prototype, {
   /**
    * The underlying bounding volume.
-   *
    * @memberof TileOrientedBoundingBox.prototype
-   *
    * @type {OrientedBoundingBox}
    * @readonly
    */
@@ -116,9 +112,7 @@ Object.defineProperties(TileOrientedBoundingBox.prototype, {
   },
   /**
    * The underlying bounding sphere.
-   *
    * @memberof TileOrientedBoundingBox.prototype
-   *
    * @type {BoundingSphere}
    * @readonly
    */
@@ -131,7 +125,6 @@ Object.defineProperties(TileOrientedBoundingBox.prototype, {
 
 /**
  * Computes the distance between this bounding box and the camera attached to frameState.
- *
  * @param {FrameState} frameState The frameState to which the camera is attached.
  * @returns {number} The distance between the camera and the bounding box in meters. Returns 0 if the camera is inside the bounding volume.
  */
@@ -146,7 +139,6 @@ TileOrientedBoundingBox.prototype.distanceToCamera = function (frameState) {
 
 /**
  * Determines which side of a plane this box is located.
- *
  * @param {Plane} plane The plane to test against.
  * @returns {Intersect} {@link Intersect.INSIDE} if the entire box is on the side of the plane
  *                      the normal is pointing, {@link Intersect.OUTSIDE} if the entire box is
@@ -162,7 +154,6 @@ TileOrientedBoundingBox.prototype.intersectPlane = function (plane) {
 
 /**
  * Update the bounding box after the tile is transformed.
- *
  * @param {Cartesian3} center The center of the box.
  * @param {Matrix3} halfAxes The three orthogonal half-axes of the bounding box.
  *                           Equivalently, the transformation matrix, to rotate and scale a 2x2x2
@@ -180,9 +171,8 @@ TileOrientedBoundingBox.prototype.update = function (center, halfAxes) {
 
 /**
  * Creates a debug primitive that shows the outline of the box.
- *
  * @param {Color} color The desired color of the primitive's mesh
- * @return {Primitive}
+ * @returns {Primitive}
  */
 TileOrientedBoundingBox.prototype.createDebugVolume = function (color) {
   //>>includeStart('debug', pragmas.debug);

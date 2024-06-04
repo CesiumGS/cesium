@@ -7,12 +7,10 @@ import Intersect from "./Intersect.js";
 /**
  * Creates an instance of an AxisAlignedBoundingBox from the minimum and maximum points along the x, y, and z axes.
  * @alias AxisAlignedBoundingBox
- * @constructor
- *
+ * @class
  * @param {Cartesian3} [minimum=Cartesian3.ZERO] The minimum point along the x, y, and z axes.
  * @param {Cartesian3} [maximum=Cartesian3.ZERO] The maximum point along the x, y, and z axes.
  * @param {Cartesian3} [center] The center of the box; automatically computed if not supplied.
- *
  * @see BoundingSphere
  * @see BoundingRectangle
  */
@@ -47,12 +45,10 @@ function AxisAlignedBoundingBox(minimum, maximum, center) {
 
 /**
  * Creates an instance of an AxisAlignedBoundingBox from its corners.
- *
  * @param {Cartesian3} minimum The minimum point along the x, y, and z axes.
  * @param {Cartesian3} maximum The maximum point along the x, y, and z axes.
  * @param {AxisAlignedBoundingBox} [result] The object onto which to store the result.
  * @returns {AxisAlignedBoundingBox} The modified result parameter or a new AxisAlignedBoundingBox instance if one was not provided.
- *
  * @example
  * // Compute an axis aligned bounding box from the two corners.
  * const box = Cesium.AxisAlignedBoundingBox.fromCorners(new Cesium.Cartesian3(-1, -1, -1), new Cesium.Cartesian3(1, 1, 1));
@@ -77,11 +73,9 @@ AxisAlignedBoundingBox.fromCorners = function (minimum, maximum, result) {
 /**
  * Computes an instance of an AxisAlignedBoundingBox. The box is determined by
  * finding the points spaced the farthest apart on the x, y, and z axes.
- *
  * @param {Cartesian3[]} positions List of points that the bounding box will enclose.  Each point must have a <code>x</code>, <code>y</code>, and <code>z</code> properties.
  * @param {AxisAlignedBoundingBox} [result] The object onto which to store the result.
  * @returns {AxisAlignedBoundingBox} The modified result parameter or a new AxisAlignedBoundingBox instance if one was not provided.
- *
  * @example
  * // Compute an axis aligned bounding box enclosing two points.
  * const box = Cesium.AxisAlignedBoundingBox.fromPoints([new Cesium.Cartesian3(2, 0, 0), new Cesium.Cartesian3(-2, 0, 0)]);
@@ -138,7 +132,6 @@ AxisAlignedBoundingBox.fromPoints = function (positions, result) {
 
 /**
  * Duplicates a AxisAlignedBoundingBox instance.
- *
  * @param {AxisAlignedBoundingBox} box The bounding box to duplicate.
  * @param {AxisAlignedBoundingBox} [result] The object onto which to store the result.
  * @returns {AxisAlignedBoundingBox} The modified result parameter or a new AxisAlignedBoundingBox instance if none was provided. (Returns undefined if box is undefined)
@@ -161,7 +154,6 @@ AxisAlignedBoundingBox.clone = function (box, result) {
 /**
  * Compares the provided AxisAlignedBoundingBox componentwise and returns
  * <code>true</code> if they are equal, <code>false</code> otherwise.
- *
  * @param {AxisAlignedBoundingBox} [left] The first AxisAlignedBoundingBox.
  * @param {AxisAlignedBoundingBox} [right] The second AxisAlignedBoundingBox.
  * @returns {boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
@@ -180,7 +172,6 @@ AxisAlignedBoundingBox.equals = function (left, right) {
 let intersectScratch = new Cartesian3();
 /**
  * Determines which side of a plane a box is located.
- *
  * @param {AxisAlignedBoundingBox} box The bounding box to test.
  * @param {Plane} plane The plane to test against.
  * @returns {Intersect} {@link Intersect.INSIDE} if the entire box is on the side of the plane
@@ -225,7 +216,6 @@ AxisAlignedBoundingBox.intersectPlane = function (box, plane) {
 
 /**
  * Duplicates this AxisAlignedBoundingBox instance.
- *
  * @param {AxisAlignedBoundingBox} [result] The object onto which to store the result.
  * @returns {AxisAlignedBoundingBox} The modified result parameter or a new AxisAlignedBoundingBox instance if one was not provided.
  */
@@ -235,7 +225,6 @@ AxisAlignedBoundingBox.prototype.clone = function (result) {
 
 /**
  * Determines which side of a plane this box is located.
- *
  * @param {Plane} plane The plane to test against.
  * @returns {Intersect} {@link Intersect.INSIDE} if the entire box is on the side of the plane
  *                      the normal is pointing, {@link Intersect.OUTSIDE} if the entire box is
@@ -249,7 +238,6 @@ AxisAlignedBoundingBox.prototype.intersectPlane = function (plane) {
 /**
  * Compares this AxisAlignedBoundingBox against the provided AxisAlignedBoundingBox componentwise and returns
  * <code>true</code> if they are equal, <code>false</code> otherwise.
- *
  * @param {AxisAlignedBoundingBox} [right] The right hand side AxisAlignedBoundingBox.
  * @returns {boolean} <code>true</code> if they are equal, <code>false</code> otherwise.
  */

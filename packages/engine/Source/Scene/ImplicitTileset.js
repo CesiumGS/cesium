@@ -12,10 +12,8 @@ import ImplicitSubdivisionScheme from "./ImplicitSubdivisionScheme.js";
  * locating resources, details from the implicit root tile (bounding volume,
  * geometricError, etc.), and details about the subtrees (e.g. subtreeLevels,
  * subdivisionScheme).
- *
  * @alias ImplicitTileset
- * @constructor
- *
+ * @class
  * @param {Resource} baseResource The base resource for the tileset
  * @param {object} tileJson The JSON header of the tile with either implicit tiling (3D Tiles 1.1) or the 3DTILES_implicit_tiling extension.
  * @param {MetadataSchema} [metadataSchema] The metadata schema containing the implicit tile metadata class.
@@ -35,7 +33,6 @@ function ImplicitTileset(baseResource, tileJson, metadataSchema) {
    * The base resource for the tileset. This is stored here as it is needed
    * later when expanding Implicit3DTileContents so tile URLs are relative
    * to the tileset, not the subtree file.
-   *
    * @type {Resource}
    * @readonly
    * @private
@@ -44,7 +41,6 @@ function ImplicitTileset(baseResource, tileJson, metadataSchema) {
 
   /**
    * The geometric error of the root tile
-   *
    * @type {number}
    * @readonly
    * @private
@@ -53,7 +49,6 @@ function ImplicitTileset(baseResource, tileJson, metadataSchema) {
 
   /**
    * The metadata schema containing the implicit tile metadata class.
-   *
    * @type {MetadataSchema|undefined}
    * @readonly
    * @private
@@ -80,7 +75,6 @@ function ImplicitTileset(baseResource, tileJson, metadataSchema) {
   /**
    * The JSON representation of a bounding volume. This is either a box or a
    * region.
-   *
    * @type {object}
    * @readonly
    * @private
@@ -89,7 +83,6 @@ function ImplicitTileset(baseResource, tileJson, metadataSchema) {
 
   /**
    * The refine strategy as a string, either 'ADD' or 'REPLACE'
-   *
    * @type {string}
    * @readonly
    * @private
@@ -99,7 +92,6 @@ function ImplicitTileset(baseResource, tileJson, metadataSchema) {
   /**
    * Template URI for the subtree resources, e.g.
    * <code>https://example.com/{level}/{x}/{y}.subtree</code>
-   *
    * @type {Resource}
    * @readonly
    * @private
@@ -113,7 +105,6 @@ function ImplicitTileset(baseResource, tileJson, metadataSchema) {
    * <p>
    * This is an array to support multiple contents.
    * </p>
-   *
    * @type {Resource[]}
    * @readonly
    * @private
@@ -127,7 +118,6 @@ function ImplicitTileset(baseResource, tileJson, metadataSchema) {
    * <p>
    * This is an array to support multiple contents.
    * </p>
-   *
    * @type {Object[]}
    * @readonly
    * @private
@@ -145,7 +135,6 @@ function ImplicitTileset(baseResource, tileJson, metadataSchema) {
   /**
    * The maximum number of contents as well as content availability bitstreams.
    * This is used for loop bounds when checking content availability.
-   *
    * @type {number}
    * @readonly
    * @private
@@ -164,7 +153,6 @@ function ImplicitTileset(baseResource, tileJson, metadataSchema) {
    * <li><code>tile.content</code>, if used instead of tile.contents</li>
    * <li><code>tile.extensions["3DTILES_multiple_contents"]</code>, if used instead of tile.contents or tile.content</li>
    * </ul>
-   *
    * @type {object}
    * @readonly
    * @private
@@ -173,7 +161,6 @@ function ImplicitTileset(baseResource, tileJson, metadataSchema) {
 
   /**
    * The subdivision scheme for this implicit tileset; either OCTREE or QUADTREE
-   *
    * @type {ImplicitSubdivisionScheme}
    * @readonly
    * @private
@@ -184,7 +171,6 @@ function ImplicitTileset(baseResource, tileJson, metadataSchema) {
   /**
    * The branching factor for this tileset. Either 4 for quadtrees or 8 for
    * octrees.
-   *
    * @type {number}
    * @readonly
    * @private
@@ -196,7 +182,6 @@ function ImplicitTileset(baseResource, tileJson, metadataSchema) {
   /**
    * How many distinct levels within each subtree. For example, a quadtree
    * with subtreeLevels = 2 will have 5 nodes per quadtree (1 root + 4 children)
-   *
    * @type {number}
    * @readonly
    * @private
@@ -205,7 +190,6 @@ function ImplicitTileset(baseResource, tileJson, metadataSchema) {
 
   /**
    * The number of levels containing available tiles in the tileset.
-   *
    * @type {number}
    * @readonly
    * @private
@@ -221,9 +205,8 @@ function ImplicitTileset(baseResource, tileJson, metadataSchema) {
  * Gather JSON headers for all contents in the tile.
  * This handles both regular tiles and tiles with multiple contents, either
  * in the contents array (3D Tiles 1.1) or the `3DTILES_multiple_contents` extension
- *
  * @param {object} tileJson The JSON header of the tile with either implicit tiling (3D Tiles 1.1) or the 3DTILES_implicit_tiling extension.
- * @return {Object[]} An array of JSON headers for the contents of each tile
+ * @returns {Object[]} An array of JSON headers for the contents of each tile
  * @private
  */
 function gatherContentHeaders(tileJson) {

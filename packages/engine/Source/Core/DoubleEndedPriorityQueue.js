@@ -5,11 +5,9 @@ import defined from "./defined.js";
 /**
  * Array-backed min-max heap implementation of a double-ended priority queue.
  * This data structure allows for efficient removal of minimum and maximum elements.
- *
  * @alias DoubleEndedPriorityQueue
- * @constructor
+ * @class
  * @private
- *
  * @param {object} options Object with the following properties:
  * @param {DoubleEndedPriorityQueue.ComparatorCallback} options.comparator The comparator to use for the queue. If comparator(a, b) is less than 0, a is lower priority than b.
  * @param {number} [options.maximumLength] The maximum length of the queue. If an element is inserted when the queue is at full capacity, the minimum element is removed. By default, the size of the queue is unlimited.
@@ -38,9 +36,7 @@ function DoubleEndedPriorityQueue(options) {
 Object.defineProperties(DoubleEndedPriorityQueue.prototype, {
   /**
    * Gets the number of elements in the queue.
-   *
    * @memberof DoubleEndedPriorityQueue.prototype
-   *
    * @type {number}
    * @readonly
    */
@@ -55,9 +51,7 @@ Object.defineProperties(DoubleEndedPriorityQueue.prototype, {
    * If set to a smaller value than the current length of the queue, the lowest priority elements are removed.
    * If an element is inserted when the queue is at full capacity, the minimum element is removed.
    * If set to undefined, the size of the queue is unlimited.
-   *
    * @memberof DoubleEndedPriorityQueue.prototype
-   *
    * @type {number}
    * @readonly
    */
@@ -85,9 +79,7 @@ Object.defineProperties(DoubleEndedPriorityQueue.prototype, {
 
   /**
    * Gets the internal array.
-   *
    * @memberof DoubleEndedPriorityQueue.prototype
-   *
    * @type {Array}
    * @readonly
    */
@@ -100,9 +92,7 @@ Object.defineProperties(DoubleEndedPriorityQueue.prototype, {
   /**
    * The comparator used by the queue.
    * If comparator(a, b) is less than 0, a is lower priority than b.
-   *
    * @memberof DoubleEndedPriorityQueue.prototype
-   *
    * @type {DoubleEndedPriorityQueue.ComparatorCallback}
    * @readonly
    */
@@ -115,7 +105,6 @@ Object.defineProperties(DoubleEndedPriorityQueue.prototype, {
 
 /**
  * Clones the double ended priority queue.
- *
  * @returns {DoubleEndedPriorityQueue} The cloned double ended priority queue.
  */
 DoubleEndedPriorityQueue.prototype.clone = function () {
@@ -172,7 +161,6 @@ DoubleEndedPriorityQueue.prototype.resort = function () {
  * Inserts an element into the queue.
  * If the queue is at full capacity, the minimum element is removed.
  * The new element is returned (and not added) if it is less than or equal priority to the minimum element.
- *
  * @param {*} element
  * @returns {*|undefined} The minimum element if the queue is at full capacity. Returns undefined if there is no maximum length.
  */
@@ -207,7 +195,6 @@ DoubleEndedPriorityQueue.prototype.insert = function (element) {
 /**
  * Removes the minimum element from the queue and returns it.
  * If the queue is empty, the return value is undefined.
- *
  * @returns {*|undefined} The minimum element, or undefined if the queue is empty.
  */
 DoubleEndedPriorityQueue.prototype.removeMinimum = function () {
@@ -235,7 +222,6 @@ DoubleEndedPriorityQueue.prototype.removeMinimum = function () {
 /**
  * Removes the maximum element from the queue and returns it.
  * If the queue is empty, the return value is undefined.
- *
  * @returns {*|undefined} The maximum element, or undefined if the queue is empty.
  */
 DoubleEndedPriorityQueue.prototype.removeMaximum = function () {
@@ -272,7 +258,6 @@ DoubleEndedPriorityQueue.prototype.removeMaximum = function () {
 /**
  * Gets the minimum element in the queue.
  * If the queue is empty, the result is undefined.
- *
  * @returns {*|undefined} element
  */
 
@@ -289,7 +274,6 @@ DoubleEndedPriorityQueue.prototype.getMinimum = function () {
 /**
  * Gets the maximum element in the queue.
  * If the queue is empty, the result is undefined.
- *
  * @returns {*|undefined} element
  */
 DoubleEndedPriorityQueue.prototype.getMaximum = function () {

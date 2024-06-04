@@ -54,8 +54,7 @@ function EllipsoidGeometryOptions(entity) {
  * A {@link GeometryUpdater} for ellipsoids.
  * Clients do not normally create this class directly, but instead rely on {@link DataSourceDisplay}.
  * @alias EllipsoidGeometryUpdater
- * @constructor
- *
+ * @class
  * @param {Entity} entity The entity containing the geometry to be visualized.
  * @param {Scene} scene The scene where visualization is taking place.
  */
@@ -103,13 +102,11 @@ Object.defineProperties(EllipsoidGeometryUpdater.prototype, {
 
 /**
  * Creates the geometry instance which represents the fill of the geometry.
- *
  * @param {JulianDate} time The time to use when retrieving initial attribute values.
  * @param {boolean} [skipModelMatrix=false] Whether to compute a model matrix for the geometry instance
  * @param {Matrix4} [modelMatrixResult] Used to store the result of the model matrix calculation
  * @returns {GeometryInstance} The geometry instance representing the filled portion of the geometry.
- *
- * @exception {DeveloperError} This instance does not represent a filled geometry.
+ * @throws {DeveloperError} This instance does not represent a filled geometry.
  */
 EllipsoidGeometryUpdater.prototype.createFillGeometryInstance = function (
   time,
@@ -187,13 +184,11 @@ EllipsoidGeometryUpdater.prototype.createFillGeometryInstance = function (
 
 /**
  * Creates the geometry instance which represents the outline of the geometry.
- *
  * @param {JulianDate} time The time to use when retrieving initial attribute values.
  * @param {boolean} [skipModelMatrix=false] Whether to compute a model matrix for the geometry instance
  * @param {Matrix4} [modelMatrixResult] Used to store the result of the model matrix calculation
  * @returns {GeometryInstance} The geometry instance representing the outline portion of the geometry.
- *
- * @exception {DeveloperError} This instance does not represent an outlined geometry.
+ * @throws {DeveloperError} This instance does not represent an outlined geometry.
  */
 EllipsoidGeometryUpdater.prototype.createOutlineGeometryInstance = function (
   time,
@@ -347,6 +342,9 @@ EllipsoidGeometryUpdater.prototype._onEntityPropertyChanged = heightReferenceOnE
 EllipsoidGeometryUpdater.DynamicGeometryUpdater = DynamicEllipsoidGeometryUpdater;
 
 /**
+ * @param geometryUpdater
+ * @param primitives
+ * @param groundPrimitives
  * @private
  */
 function DynamicEllipsoidGeometryUpdater(

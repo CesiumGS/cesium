@@ -14,16 +14,13 @@ import Texture from "../Renderer/Texture.js";
 
 /**
  * Creates a texture to look up per instance attributes for batched primitives. For example, store each primitive's pick color in the texture.
- *
  * @alias BatchTable
- * @constructor
+ * @class
  * @private
- *
  * @param {Context} context The context in which the batch table is created.
  * @param {Object[]} attributes An array of objects describing a per instance attribute. Each object contains a datatype, components per attributes, whether it is normalized and a function name
  *     to retrieve the value in the vertex shader.
  * @param {number} numberOfInstances The number of instances in a batch table.
- *
  * @example
  * // create the batch table
  * const attributes = [{
@@ -130,7 +127,7 @@ function BatchTable(context, attributes, numberOfInstances) {
 Object.defineProperties(BatchTable.prototype, {
   /**
    * The attribute descriptions.
-   * @memberOf BatchTable.prototype
+   * @memberof BatchTable.prototype
    * @type {Object[]}
    * @readonly
    */
@@ -141,7 +138,7 @@ Object.defineProperties(BatchTable.prototype, {
   },
   /**
    * The number of instances.
-   * @memberOf BatchTable.prototype
+   * @memberof BatchTable.prototype
    * @type {number}
    * @readonly
    */
@@ -246,14 +243,12 @@ const scratchGetAttributeCartesian4 = new Cartesian4();
 
 /**
  * Gets the value of an attribute in the table.
- *
  * @param {number} instanceIndex The index of the instance.
  * @param {number} attributeIndex The index of the attribute.
  * @param {undefined|Cartesian2|Cartesian3|Cartesian4} [result] The object onto which to store the result. The type is dependent on the attribute's number of components.
  * @returns {number|Cartesian2|Cartesian3|Cartesian4} The attribute value stored for the instance.
- *
- * @exception {DeveloperError} instanceIndex is out of range.
- * @exception {DeveloperError} attributeIndex is out of range.
+ * @throws {DeveloperError} instanceIndex is out of range.
+ * @throws {DeveloperError} attributeIndex is out of range.
  */
 BatchTable.prototype.getBatchedAttribute = function (
   instanceIndex,
@@ -314,13 +309,11 @@ const setAttributeScratchCartesian4 = new Cartesian4();
 
 /**
  * Sets the value of an attribute in the table.
- *
  * @param {number} instanceIndex The index of the instance.
  * @param {number} attributeIndex The index of the attribute.
  * @param {number|Cartesian2|Cartesian3|Cartesian4} value The value to be stored in the table. The type of value will depend on the number of components of the attribute.
- *
- * @exception {DeveloperError} instanceIndex is out of range.
- * @exception {DeveloperError} attributeIndex is out of range.
+ * @throws {DeveloperError} instanceIndex is out of range.
+ * @throws {DeveloperError} attributeIndex is out of range.
  */
 BatchTable.prototype.setBatchedAttribute = function (
   instanceIndex,
@@ -406,8 +399,7 @@ function updateTexture(batchTable) {
 /**
  * Creates/updates the batch table texture.
  * @param {FrameState} frameState The frame state.
- *
- * @exception {RuntimeError} The floating point texture extension is required but not supported.
+ * @throws {RuntimeError} The floating point texture extension is required but not supported.
  */
 BatchTable.prototype.update = function (frameState) {
   if (
@@ -427,7 +419,6 @@ BatchTable.prototype.update = function (frameState) {
 
 /**
  * Gets a function that will update a uniform map to contain values for looking up values in the batch table.
- *
  * @returns {BatchTable.updateUniformMapCallback} A callback for updating uniform maps.
  */
 BatchTable.prototype.getUniformMapCallback = function () {
@@ -560,7 +551,6 @@ function getGlslAttributeFunction(batchTable, attributeIndex) {
 
 /**
  * Gets a function that will update a vertex shader to contain functions for looking up values in the batch table.
- *
  * @returns {BatchTable.updateVertexShaderSourceCallback} A callback for updating a vertex shader source.
  */
 BatchTable.prototype.getVertexShaderCallback = function () {
@@ -592,9 +582,7 @@ BatchTable.prototype.getVertexShaderCallback = function () {
  * <br /><br />
  * If this object was destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
- *
  * @returns {boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
- *
  * @see BatchTable#destroy
  */
 BatchTable.prototype.isDestroyed = function () {
@@ -608,9 +596,7 @@ BatchTable.prototype.isDestroyed = function () {
  * Once an object is destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
  * assign the return value (<code>undefined</code>) to the object as done in the example.
- *
- * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
- *
+ * @throws {DeveloperError} This object was destroyed, i.e., destroy() was called.
  * @see BatchTable#isDestroyed
  */
 BatchTable.prototype.destroy = function () {
@@ -621,7 +607,6 @@ BatchTable.prototype.destroy = function () {
 /**
  * A callback for updating uniform maps.
  * @callback BatchTable.updateUniformMapCallback
- *
  * @param {object} uniformMap The uniform map.
  * @returns {object} The new uniform map with properties for retrieving values from the batch table.
  */
@@ -629,7 +614,6 @@ BatchTable.prototype.destroy = function () {
 /**
  * A callback for updating a vertex shader source.
  * @callback BatchTable.updateVertexShaderSourceCallback
- *
  * @param {string} vertexShaderSource The vertex shader source.
  * @returns {string} The new vertex shader source with the functions for retrieving batch table values injected.
  */

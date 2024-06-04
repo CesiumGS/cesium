@@ -17,7 +17,6 @@ import KDBush from "kdbush";
 
 /**
  * Defines how screen space objects (billboards, points, labels) are clustered.
- *
  * @param {object} [options] An object with the following properties:
  * @param {boolean} [options.enabled=false] Whether or not to enable clustering.
  * @param {number} [options.pixelRange=80] The pixel range to extend the screen space bounding box.
@@ -26,10 +25,8 @@ import KDBush from "kdbush";
  * @param {boolean} [options.clusterLabels=true] Whether or not to cluster the labels of an entity.
  * @param {boolean} [options.clusterPoints=true] Whether or not to cluster the points of an entity.
  * @param {boolean} [options.show=true] Determines if the entities in the cluster will be shown.
- *
  * @alias EntityCluster
- * @constructor
- *
+ * @class
  * @demo {@link https://sandcastle.cesium.com/index.html?src=Clustering.html|Cesium Sandcastle Clustering Demo}
  */
 function EntityCluster(options) {
@@ -69,7 +66,6 @@ function EntityCluster(options) {
 
   /**
    * Determines if entities in this collection will be shown.
-   *
    * @type {boolean}
    * @default true
    */
@@ -682,7 +678,6 @@ function removeEntityIndicesIfUnused(entityCluster, entityId) {
  * Returns a new {@link Label}.
  * @param {Entity} entity The entity that will use the returned {@link Label} for visualization.
  * @returns {Label} The label that will be used to visualize an entity.
- *
  * @private
  */
 EntityCluster.prototype.getLabel = createGetEntity(
@@ -695,7 +690,6 @@ EntityCluster.prototype.getLabel = createGetEntity(
 /**
  * Removes the {@link Label} associated with an entity so it can be reused by another entity.
  * @param {Entity} entity The entity that will uses the returned {@link Label} for visualization.
- *
  * @private
  */
 EntityCluster.prototype.removeLabel = function (entity) {
@@ -728,7 +722,6 @@ EntityCluster.prototype.removeLabel = function (entity) {
  * Returns a new {@link Billboard}.
  * @param {Entity} entity The entity that will use the returned {@link Billboard} for visualization.
  * @returns {Billboard} The label that will be used to visualize an entity.
- *
  * @private
  */
 EntityCluster.prototype.getBillboard = createGetEntity(
@@ -741,7 +734,6 @@ EntityCluster.prototype.getBillboard = createGetEntity(
 /**
  * Removes the {@link Billboard} associated with an entity so it can be reused by another entity.
  * @param {Entity} entity The entity that will uses the returned {@link Billboard} for visualization.
- *
  * @private
  */
 EntityCluster.prototype.removeBillboard = function (entity) {
@@ -774,7 +766,6 @@ EntityCluster.prototype.removeBillboard = function (entity) {
  * Returns a new {@link Point}.
  * @param {Entity} entity The entity that will use the returned {@link Point} for visualization.
  * @returns {Point} The label that will be used to visualize an entity.
- *
  * @private
  */
 EntityCluster.prototype.getPoint = createGetEntity(
@@ -787,7 +778,6 @@ EntityCluster.prototype.getPoint = createGetEntity(
 /**
  * Removes the {@link Point} associated with an entity so it can be reused by another entity.
  * @param {Entity} entity The entity that will uses the returned {@link Point} for visualization.
- *
  * @private
  */
 EntityCluster.prototype.removePoint = function (entity) {
@@ -853,6 +843,7 @@ function updateEnable(entityCluster) {
 /**
  * Gets the draw commands for the clustered billboards/points/labels if enabled, otherwise,
  * queues the draw commands for billboards/points/labels created for entities.
+ * @param frameState
  * @private
  */
 EntityCluster.prototype.update = function (frameState) {
@@ -977,14 +968,12 @@ EntityCluster.prototype.destroy = function () {
 /**
  * A event listener function used to style clusters.
  * @callback EntityCluster.newClusterCallback
- *
  * @param {Entity[]} clusteredEntities An array of the entities contained in the cluster.
  * @param {object} cluster An object containing the Billboard, Label, and Point
  * primitives that represent this cluster of entities.
  * @param {Billboard} cluster.billboard
  * @param {Label} cluster.label
  * @param {PointPrimitive} cluster.point
- *
  * @example
  * // The default cluster values.
  * dataSource.clustering.clusterEvent.addEventListener(function(entities, cluster) {

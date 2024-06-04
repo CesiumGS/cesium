@@ -33,8 +33,7 @@ import VertexArray from "./VertexArray.js";
 
 /**
  * @private
- * @constructor
- *
+ * @class
  * @param {HTMLCanvasElement} canvas The canvas element to which the context will be associated
  * @param {ContextOptions} [options] Options to control WebGL settings for the context
  */
@@ -362,7 +361,6 @@ function Context(canvas, options) {
 
   /**
    * The options used to construct this context
-   *
    * @type {ContextOptions}
    */
   this.options = {
@@ -378,7 +376,6 @@ function Context(canvas, options) {
    * such a method.  This is useful for caching any objects that might otherwise
    * be stored globally, except they're tied to a particular context, and to manage
    * their lifetime.
-   *
    * @type {object}
    */
   this.cache = {};
@@ -396,7 +393,6 @@ function Context(canvas, options) {
  * Setting this to false will improve performance, but hurt visual quality,
  * especially for horizon views.
  * </p>
- *
  * @property {boolean} [requestWebgl1=false] If true and the browser supports it, use a WebGL 1 rendering context
  * @property {boolean} [allowTextureFilterAnisotropic=true] If true, use anisotropic filtering during texture sampling
  * @property {WebGLOptions} [webgl] WebGL options to be passed on to canvas.getContext
@@ -448,7 +444,6 @@ function getWebGLContext(canvas, webglOptions, requestWebgl1) {
  * to composite Cesium above other HTML elements using alpha-blending, set
  * <code>alpha</code> to true.
  * </p>
- *
  * @property {boolean} [alpha=false]
  * @property {boolean} [depth=true]
  * @property {boolean} [stencil=false]
@@ -1144,6 +1139,7 @@ Object.defineProperties(Context.prototype, {
 /**
  * Validates a framebuffer.
  * Available in debug builds only.
+ * @param context
  * @private
  */
 function validateFramebuffer(context) {
@@ -1552,13 +1548,10 @@ Context.prototype.createViewportQuadCommand = function (
 
 /**
  * Gets the object associated with a pick color.
- *
  * @param {Color} pickColor The pick color.
  * @returns {object} The object associated with the pick color, or undefined if no object is associated with that color.
- *
  * @example
  * const object = context.getObjectByPickColor(pickColor);
- *
  * @see Context#createPickId
  */
 Context.prototype.getObjectByPickColor = function (pickColor) {
@@ -1595,19 +1588,14 @@ PickId.prototype.destroy = function () {
  * Creates a unique ID associated with the input object for use with color-buffer picking.
  * The ID has an RGBA color value unique to this context.  You must call destroy()
  * on the pick ID when destroying the input object.
- *
  * @param {object} object The object to associate with the pick ID.
  * @returns {object} A PickId object with a <code>color</code> property.
- *
- * @exception {RuntimeError} Out of unique Pick IDs.
- *
- *
+ * @throws {RuntimeError} Out of unique Pick IDs.
  * @example
  * this._pickId = context.createPickId({
  *   primitive : this,
  *   id : this.id
  * });
- *
  * @see Context#getObjectByPickColor
  */
 Context.prototype.createPickId = function (object) {

@@ -10,7 +10,6 @@ import TextureWrap from "../../Renderer/TextureWrap.js";
 /**
  * A simple struct that serves as a value of a <code>sampler2D</code>-valued
  * uniform. This is used with {@link CustomShader} and {@link TextureManager}
- *
  * @param {object} options An object with the following properties:
  * @param {Uint8Array} [options.typedArray] A typed array storing the contents of a texture. Values are stored in row-major order. Since WebGL uses a y-up convention for textures, rows are listed from bottom to top.
  * @param {number} [options.width] The width of the image. Required when options.typedArray is present
@@ -22,10 +21,8 @@ import TextureWrap from "../../Renderer/TextureWrap.js";
  * @param {TextureMinificationFilter} [options.minificationFilter=TextureMinificationFilter.LINEAR] The minification filter of the texture sampler.
  * @param {TextureMagnificationFilter} [options.magnificationFilter=TextureMagnificationFilter.LINEAR] The magnification filter of the texture sampler.
  * @param {number} [options.maximumAnisotropy=1.0] The maximum anisotropy of the texture sampler
- *
  * @alias TextureUniform
- * @constructor
- *
+ * @class
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 function TextureUniform(options) {

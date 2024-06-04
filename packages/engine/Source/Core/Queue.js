@@ -1,8 +1,7 @@
 /**
  * A queue that can enqueue items at the end, and dequeue items from the front.
- *
  * @alias Queue
- * @constructor
+ * @class
  */
 function Queue() {
   this._array = [];
@@ -13,9 +12,7 @@ function Queue() {
 Object.defineProperties(Queue.prototype, {
   /**
    * The length of the queue.
-   *
    * @memberof Queue.prototype
-   *
    * @type {number}
    * @readonly
    */
@@ -28,7 +25,6 @@ Object.defineProperties(Queue.prototype, {
 
 /**
  * Enqueues the specified item.
- *
  * @param {*} item The item to enqueue.
  */
 Queue.prototype.enqueue = function (item) {
@@ -38,7 +34,6 @@ Queue.prototype.enqueue = function (item) {
 
 /**
  * Dequeues an item.  Returns undefined if the queue is empty.
- *
  * @returns {*} The the dequeued item.
  */
 Queue.prototype.dequeue = function () {
@@ -66,7 +61,6 @@ Queue.prototype.dequeue = function () {
 
 /**
  * Returns the item at the front of the queue.  Returns undefined if the queue is empty.
- *
  * @returns {*} The item at the front of the queue.
  */
 Queue.prototype.peek = function () {
@@ -79,7 +73,6 @@ Queue.prototype.peek = function () {
 
 /**
  * Check whether this queue contains the specified item.
- *
  * @param {*} item The item to search for.
  */
 Queue.prototype.contains = function (item) {
@@ -95,7 +88,6 @@ Queue.prototype.clear = function () {
 
 /**
  * Sort the items in the queue in-place.
- *
  * @param {Queue.Comparator} compareFunction A function that defines the sort order.
  */
 Queue.prototype.sort = function (compareFunction) {
@@ -111,13 +103,11 @@ Queue.prototype.sort = function (compareFunction) {
 /**
  * A function used to compare two items while sorting a queue.
  * @callback Queue.Comparator
- *
  * @param {*} a An item in the array.
  * @param {*} b An item in the array.
  * @returns {number} Returns a negative value if <code>a</code> is less than <code>b</code>,
  *          a positive value if <code>a</code> is greater than <code>b</code>, or
  *          0 if <code>a</code> is equal to <code>b</code>.
- *
  * @example
  * function compareNumbers(a, b) {
  *     return a - b;

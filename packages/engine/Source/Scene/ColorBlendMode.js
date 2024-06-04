@@ -6,9 +6,7 @@ import CesiumMath from "../Core/Math.js";
  * HIGHLIGHT multiplies the source color by the target color
  * REPLACE replaces the source color with the target color
  * MIX blends the source color and target color together
- *
  * @enum {number}
- *
  * @see Model.colorBlendMode
  */
 const ColorBlendMode = {
@@ -18,6 +16,8 @@ const ColorBlendMode = {
 };
 
 /**
+ * @param colorBlendMode
+ * @param colorBlendAmount
  * @private
  */
 ColorBlendMode.getColorBlend = function (colorBlendMode, colorBlendAmount) {

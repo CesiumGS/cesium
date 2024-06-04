@@ -23,7 +23,6 @@ function GlobeSurfaceShader(
 
 /**
  * Manages the shaders used to shade the surface of a {@link Globe}.
- *
  * @alias GlobeSurfaceShaderSet
  * @private
  */

@@ -12,10 +12,8 @@ import processVoxelProperties from "./processVoxelProperties.js";
 
 /**
  * @function
- *
  * @param {VoxelPrimitive} primitive
  * @param {Context} context
- *
  * @private
  */
 function buildVoxelDrawCommands(primitive, context) {

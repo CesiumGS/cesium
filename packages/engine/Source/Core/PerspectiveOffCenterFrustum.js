@@ -12,10 +12,8 @@ import Matrix4 from "./Matrix4.js";
  * Each plane is represented by a {@link Cartesian4} object, where the x, y, and z components
  * define the unit vector normal to the plane, and the w component is the distance of the
  * plane from the origin/camera position.
- *
  * @alias PerspectiveOffCenterFrustum
- * @constructor
- *
+ * @class
  * @param {object} [options] An object with the following properties:
  * @param {number} [options.left] The left clipping plane distance.
  * @param {number} [options.right] The right clipping plane distance.
@@ -23,7 +21,6 @@ import Matrix4 from "./Matrix4.js";
  * @param {number} [options.bottom] The bottom clipping plane distance.
  * @param {number} [options.near=1.0] The near clipping plane distance.
  * @param {number} [options.far=500000000.0] The far clipping plane distance.
- *
  * @example
  * const frustum = new Cesium.PerspectiveOffCenterFrustum({
  *     left : -1.0,
@@ -33,7 +30,6 @@ import Matrix4 from "./Matrix4.js";
  *     near : 1.0,
  *     far : 100.0
  * });
- *
  * @see PerspectiveFrustum
  */
 function PerspectiveOffCenterFrustum(options) {
@@ -163,7 +159,6 @@ Object.defineProperties(PerspectiveOffCenterFrustum.prototype, {
    * @memberof PerspectiveOffCenterFrustum.prototype
    * @type {Matrix4}
    * @readonly
-   *
    * @see PerspectiveOffCenterFrustum#infiniteProjectionMatrix
    */
   projectionMatrix: {
@@ -178,7 +173,6 @@ Object.defineProperties(PerspectiveOffCenterFrustum.prototype, {
    * @memberof PerspectiveOffCenterFrustum.prototype
    * @type {Matrix4}
    * @readonly
-   *
    * @see PerspectiveOffCenterFrustum#projectionMatrix
    */
   infiniteProjectionMatrix: {
@@ -195,12 +189,10 @@ const getPlanesFarCenter = new Cartesian3();
 const getPlanesNormal = new Cartesian3();
 /**
  * Creates a culling volume for this frustum.
- *
  * @param {Cartesian3} position The eye position.
  * @param {Cartesian3} direction The view direction.
  * @param {Cartesian3} up The up direction.
  * @returns {CullingVolume} A culling volume at the given position and orientation.
- *
  * @example
  * // Check if a bounding volume intersects the frustum.
  * const cullingVolume = frustum.computeCullingVolume(cameraPosition, cameraDirection, cameraUp);
@@ -338,23 +330,19 @@ PerspectiveOffCenterFrustum.prototype.computeCullingVolume = function (
 
 /**
  * Returns the pixel's width and height in meters.
- *
  * @param {number} drawingBufferWidth The width of the drawing buffer.
  * @param {number} drawingBufferHeight The height of the drawing buffer.
  * @param {number} distance The distance to the near plane in meters.
  * @param {number} pixelRatio The scaling factor from pixel space to coordinate space.
  * @param {Cartesian2} result The object onto which to store the result.
  * @returns {Cartesian2} The modified result parameter or a new instance of {@link Cartesian2} with the pixel's width and height in the x and y properties, respectively.
- *
- * @exception {DeveloperError} drawingBufferWidth must be greater than zero.
- * @exception {DeveloperError} drawingBufferHeight must be greater than zero.
- * @exception {DeveloperError} pixelRatio must be greater than zero.
- *
+ * @throws {DeveloperError} drawingBufferWidth must be greater than zero.
+ * @throws {DeveloperError} drawingBufferHeight must be greater than zero.
+ * @throws {DeveloperError} pixelRatio must be greater than zero.
  * @example
  * // Example 1
  * // Get the width and height of a pixel.
  * const pixelSize = camera.frustum.getPixelDimensions(scene.drawingBufferWidth, scene.drawingBufferHeight, 1.0, scene.pixelRatio, new Cesium.Cartesian2());
- *
  * @example
  * // Example 2
  * // Get the width and height of a pixel if the near plane was set to 'distance'.
@@ -416,7 +404,6 @@ PerspectiveOffCenterFrustum.prototype.getPixelDimensions = function (
 
 /**
  * Returns a duplicate of a PerspectiveOffCenterFrustum instance.
- *
  * @param {PerspectiveOffCenterFrustum} [result] The object onto which to store the result.
  * @returns {PerspectiveOffCenterFrustum} The modified result parameter or a new PerspectiveFrustum instance if one was not provided.
  */
@@ -446,7 +433,6 @@ PerspectiveOffCenterFrustum.prototype.clone = function (result) {
 /**
  * Compares the provided PerspectiveOffCenterFrustum componentwise and returns
  * <code>true</code> if they are equal, <code>false</code> otherwise.
- *
  * @param {PerspectiveOffCenterFrustum} [other] The right hand side PerspectiveOffCenterFrustum.
  * @returns {boolean} <code>true</code> if they are equal, <code>false</code> otherwise.
  */
@@ -467,7 +453,6 @@ PerspectiveOffCenterFrustum.prototype.equals = function (other) {
  * Compares the provided PerspectiveOffCenterFrustum componentwise and returns
  * <code>true</code> if they pass an absolute or relative tolerance test,
  * <code>false</code> otherwise.
- *
  * @param {PerspectiveOffCenterFrustum} other The right hand side PerspectiveOffCenterFrustum.
  * @param {number} relativeEpsilon The relative epsilon tolerance to use for equality testing.
  * @param {number} [absoluteEpsilon=relativeEpsilon] The absolute epsilon tolerance to use for equality testing.

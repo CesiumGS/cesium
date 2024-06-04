@@ -9,18 +9,14 @@ import ResourceLoaderState from "./ResourceLoaderState.js";
  * <p>
  * Implements the {@link ResourceLoader} interface.
  * </p>
- *
  * @alias BufferLoader
- * @constructor
+ * @class
  * @augments ResourceLoader
- *
  * @param {object} options Object with the following properties:
  * @param {Uint8Array} [options.typedArray] The typed array containing the embedded buffer contents. Mutually exclusive with options.resource.
  * @param {Resource} [options.resource] The {@link Resource} pointing to the external buffer. Mutually exclusive with options.typedArray.
  * @param {string} [options.cacheKey] The cache key of the resource.
- *
- * @exception {DeveloperError} One of options.typedArray and options.resource must be defined.
- *
+ * @throws {DeveloperError} One of options.typedArray and options.resource must be defined.
  * @private
  */
 function BufferLoader(options) {
@@ -52,9 +48,7 @@ if (defined(Object.create)) {
 Object.defineProperties(BufferLoader.prototype, {
   /**
    * The cache key of the resource.
-   *
    * @memberof BufferLoader.prototype
-   *
    * @type {string}
    * @readonly
    * @private
@@ -66,9 +60,7 @@ Object.defineProperties(BufferLoader.prototype, {
   },
   /**
    * The typed array containing the embedded buffer contents.
-   *
    * @memberof BufferLoader.prototype
-   *
    * @type {Uint8Array}
    * @readonly
    * @private
@@ -124,6 +116,7 @@ async function loadExternalBuffer(bufferLoader) {
 
 /**
  * Exposed for testing
+ * @param resource
  * @private
  */
 BufferLoader._fetchArrayBuffer = function (resource) {

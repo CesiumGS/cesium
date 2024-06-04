@@ -23,10 +23,8 @@ import BaseLayerPickerViewModel from "./BaseLayerPickerViewModel.js";
  * <br /><br />
  * By default, the BaseLayerPicker uses a default list of example providers for demonstration purposes.
  * Notably some of these providers, such as <a href="https://developers.arcgis.com" target="_blank">Esri ArcGIS</a> and <a href="https://docs.stadiamaps.com/ target="_blank">Stadia Maps</a>, have seperate terms of service and require authentication for production use.
- *
  * @alias BaseLayerPicker
- * @constructor
- *
+ * @class
  * @param {Element|string} container The parent HTML container node or ID for this widget.
  * @param {object} options Object with the following properties:
  * @param {Globe} options.globe The Globe to use.
@@ -34,10 +32,7 @@ import BaseLayerPickerViewModel from "./BaseLayerPickerViewModel.js";
  * @param {ProviderViewModel} [options.selectedImageryProviderViewModel] The view model for the current base imagery layer, if not supplied the first available imagery layer is used.
  * @param {ProviderViewModel[]} [options.terrainProviderViewModels=[]] The array of ProviderViewModel instances to use for terrain.
  * @param {ProviderViewModel} [options.selectedTerrainProviderViewModel] The view model for the current base terrain layer, if not supplied the first available terrain layer is used.
- *
- * @exception {DeveloperError} Element with id "container" does not exist in the document.
- *
- *
+ * @throws {DeveloperError} Element with id "container" does not exist in the document.
  * @example
  * // In HTML head, include a link to the BaseLayerPicker.css stylesheet,
  * // and in the body, include: <div id="baseLayerPickerContainer"
@@ -88,7 +83,6 @@ import BaseLayerPickerViewModel from "./BaseLayerPickerViewModel.js";
  *     globe: cesiumWidget.scene.globe,
  *     imageryProviderViewModels: imageryViewModels
  * });
- *
  * @see TerrainProvider
  * @see ImageryProvider
  * @see ImageryLayerCollection
@@ -262,7 +256,6 @@ Object.defineProperties(BaseLayerPicker.prototype, {
   /**
    * Gets the parent container.
    * @memberof BaseLayerPicker.prototype
-   *
    * @type {Element}
    */
   container: {
@@ -274,7 +267,6 @@ Object.defineProperties(BaseLayerPicker.prototype, {
   /**
    * Gets the view model.
    * @memberof BaseLayerPicker.prototype
-   *
    * @type {BaseLayerPickerViewModel}
    */
   viewModel: {

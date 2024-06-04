@@ -244,9 +244,7 @@ IdManager.prototype.get = function (id) {
  * the options.sampleDuration. Point, Billboard, Model and Path geometries with time-dynamic positions will be exported
  * as gx:Track Features. Not all Materials are representable in KML, so for more advanced Materials just the primary
  * color is used. Canvas objects are exported as PNG images.
- *
  * @function exportKml
- *
  * @param {object} options An object with the following properties:
  * @param {EntityCollection} options.entities The EntityCollection to export as KML.
  * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid for the output file.
@@ -255,7 +253,6 @@ IdManager.prototype.get = function (id) {
  * @param {TimeInterval} [options.defaultAvailability=entities.computeAvailability()] The interval that will be sampled if an entity doesn't have an availability.
  * @param {number} [options.sampleDuration=60] The number of seconds to sample properties that are varying in KML.
  * @param {boolean} [options.kmz=false] If true KML and external files will be compressed into a kmz file.
- *
  * @returns {Promise<exportKmlResultKml|exportKmlResultKmz>} A promise that resolved to an object containing the KML string and a dictionary of external file blobs, or a kmz file as a blob if options.kmz is true.
  * @demo {@link https://sandcastle.cesium.com/index.html?src=Export%20KML.html|Cesium Sandcastle KML Export Demo}
  * @example
@@ -271,7 +268,6 @@ IdManager.prototype.get = function (id) {
  *       // externalFiles[file] is a blob with the contents of the file
  *     }
  *   });
- *
  */
 function exportKml(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -1508,9 +1504,7 @@ function colorToString(color) {
  * Since KML does not support glTF models, this callback is required to specify what URL to use for the model in the KML document.
  * It can also be used to add additional files to the <code>externalFiles</code> object, which is the list of files embedded in the exported KMZ,
  * or otherwise returned with the KML string when exporting.
- *
  * @callback exportKmlModelCallback
- *
  * @param {ModelGraphics} model The ModelGraphics instance for an Entity.
  * @param {JulianDate} time The time that any properties should use to get the value.
  * @param {object} externalFiles An object that maps a filename to a Blob or a Promise that resolves to a Blob.

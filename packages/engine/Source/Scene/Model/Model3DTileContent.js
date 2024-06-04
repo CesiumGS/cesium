@@ -16,9 +16,11 @@ import Model from "./Model.js";
  * Implements the {@link Cesium3DTileContent} interface.
  * </p>
  * This object is normally not instantiated directly, use {@link Model3DTileContent.fromGltf}, {@link Model3DTileContent.fromB3dm}, {@link Model3DTileContent.fromI3dm}, {@link Model3DTileContent.fromPnts}, or {@link Model3DTileContent.fromGeoJson}.
- *
+ * @param tileset
+ * @param tile
+ * @param resource
  * @alias Model3DTileContent
- * @constructor
+ * @class
  * @private
  */
 function Model3DTileContent(tileset, tile, resource) {
@@ -88,9 +90,7 @@ Object.defineProperties(Model3DTileContent.prototype, {
 
   /**
    * Returns true when the tile's content is ready to render; otherwise false
-   *
    * @memberof Model3DTileContent.prototype
-   *
    * @type {boolean}
    * @readonly
    * @private
@@ -440,12 +440,10 @@ Model3DTileContent.fromGeoJson = async function (
 
 /**
  * Find an intersection between a ray and the tile content surface that was rendered. The ray must be given in world coordinates.
- *
  * @param {Ray} ray The ray to test for intersection.
  * @param {FrameState} frameState The frame state.
  * @param {Cartesian3|undefined} [result] The intersection or <code>undefined</code> if none was found.
  * @returns {Cartesian3|undefined} The intersection or <code>undefined</code> if none was found.
- *
  * @private
  */
 Model3DTileContent.prototype.pick = function (ray, frameState, result) {

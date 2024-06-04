@@ -8,14 +8,11 @@ import ModelArticulationStage from "./ModelArticulationStage.js";
  * An in-memory representation of an articulation that affects nodes in the
  * {@link ModelSceneGraph}. This is defined in a model by the
  * <code>AGI_articulations</code> extension.
- *
  * @param {object} options An object containing the following options:
  * @param {ModelComponents.Articulation} options.articulation The articulation components from the 3D model.
  * @param {ModelSceneGraph} options.sceneGraph The scene graph this articulation belongs to.
- *
  * @alias ModelArticulation
- * @constructor
- *
+ * @class
  * @private
  */
 function ModelArticulation(options) {
@@ -48,11 +45,9 @@ function ModelArticulation(options) {
 Object.defineProperties(ModelArticulation.prototype, {
   /**
    * The internal articulation that this runtime articulation represents.
-   *
    * @memberof ModelArticulation.prototype
    * @type {ModelComponents.Articulation}
    * @readonly
-   *
    * @private
    */
   articulation: {
@@ -63,11 +58,9 @@ Object.defineProperties(ModelArticulation.prototype, {
 
   /**
    * The scene graph that this articulation belongs to.
-   *
    * @memberof ModelArticulation.prototype
    * @type {ModelSceneGraph}
    * @readonly
-   *
    * @private
    */
   sceneGraph: {
@@ -78,11 +71,9 @@ Object.defineProperties(ModelArticulation.prototype, {
 
   /**
    * The name of this articulation.
-   *
    * @memberof ModelArticulation.prototype
    * @type {string}
    * @readonly
-   *
    * @private
    */
   name: {
@@ -93,11 +84,9 @@ Object.defineProperties(ModelArticulation.prototype, {
 
   /**
    * The runtime stages that belong to this articulation.
-   *
    * @memberof ModelArticulation.prototype
    * @type {ModelArticulationStage[]}
    * @readonly
-   *
    * @private
    */
   runtimeStages: {
@@ -108,11 +97,9 @@ Object.defineProperties(ModelArticulation.prototype, {
 
   /**
    * The runtime nodes that are affected by this articulation.
-   *
    * @memberof ModelArticulation.prototype
    * @type {ModelRuntimeNode[]}
    * @readonly
-   *
    * @private
    */
   runtimeNodes: {
@@ -149,10 +136,8 @@ function initialize(runtimeArticulation) {
 
 /**
  * Sets the current value of an articulation stage.
- *
  * @param {string} stageName The name of the articulation stage.
  * @param {number} value The numeric value of this stage of the articulation.
- *
  * @private
  */
 ModelArticulation.prototype.setArticulationStage = function (stageName, value) {
@@ -173,7 +158,6 @@ const scratchNodeMatrix = new Matrix4();
  * Note that this will overwrite any existing transformations on participating
  * nodes.
  * </p>
- *
  * @private
  */
 ModelArticulation.prototype.apply = function () {

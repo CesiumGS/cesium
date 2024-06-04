@@ -12,19 +12,16 @@ import Matrix3 from "../../Core/Matrix3.js";
 
 /**
  * Utility functions for {@link Model}.
- *
  * @private
  */
 function ModelUtility() {}
 
 /**
  * Create a function for reporting when a model fails to load
- *
  * @param {string} type The type of object to report about
  * @param {string} path The URI of the model file
  * @param {Error} [error] The error which caused the failure
  * @returns {RuntimeError} An error for the failed model
- *
  * @private
  */
 ModelUtility.getError = function (type, path, error) {
@@ -45,10 +42,8 @@ ModelUtility.getError = function (type, path, error) {
 
 /**
  * Get a transformation matrix from a node in the model.
- *
  * @param {ModelComponents.Node} node The node components
  * @returns {Matrix4} The computed transformation matrix. If no transformation matrix or parameters are specified, this will be the identity matrix.
- *
  * @private
  */
 ModelUtility.getNodeTransform = function (node) {
@@ -65,12 +60,10 @@ ModelUtility.getNodeTransform = function (node) {
 
 /**
  * Find an attribute by semantic such as POSITION or TANGENT.
- *
  * @param {ModelComponents.Primitive|ModelComponents.Instances} object The primitive components or instances object
  * @param {VertexAttributeSemantic|InstanceAttributeSemantic} semantic The semantic to search for
  * @param {number} [setIndex] The set index of the semantic. May be undefined for some semantics (POSITION, NORMAL, TRANSLATION, ROTATION, for example)
- * @return {ModelComponents.Attribute} The selected attribute, or undefined if not found.
- *
+ * @returns {ModelComponents.Attribute} The selected attribute, or undefined if not found.
  * @private
  */
 ModelUtility.getAttributeBySemantic = function (object, semantic, setIndex) {
@@ -92,11 +85,9 @@ ModelUtility.getAttributeBySemantic = function (object, semantic, setIndex) {
 /**
  * Similar to getAttributeBySemantic, but search using the name field only,
  * as custom attributes do not have a semantic.
- *
  * @param {ModelComponents.Primitive|ModelComponents.Instances} object The primitive components or instances object
  * @param {string} name The name of the attribute as it appears in the model file.
- * @return {ModelComponents.Attribute} The selected attribute, or undefined if not found.
- *
+ * @returns {ModelComponents.Attribute} The selected attribute, or undefined if not found.
  * @private
  */
 ModelUtility.getAttributeByName = function (object, name) {
@@ -118,7 +109,6 @@ ModelUtility.getAttributeByName = function (object, name) {
  * @param {ModelComponents.FeatureIdAttribute[]|ModelComponents.FeatureIdImplicitRange[]|ModelComponents.FeatureIdTexture[]} featureIds
  * @param {string} label the label to search for
  * @returns {ModelComponents.FeatureIdAttribute|ModelComponents.FeatureIdImplicitRange|ModelComponents.FeatureIdTexture} The feature ID set if found, otherwise <code>undefined</code>
- *
  * @private
  */
 ModelUtility.getFeatureIdsByLabel = function (featureIds, label) {
@@ -151,7 +141,6 @@ ModelUtility.hasQuantizedAttributes = function (attributes) {
 
 /**
  * @param {ModelComponents.Attribute} attribute
- *
  * @private
  */
 ModelUtility.getAttributeInfo = function (attribute) {
@@ -208,13 +197,10 @@ const cartesianMinScratch = new Cartesian3();
  * Get the minimum and maximum values for a primitive's POSITION attribute.
  * This is used to compute the bounding sphere of the primitive, as well as
  * the bounding sphere of the whole model.
- *
  * @param {ModelComponents.Primitive} primitive The primitive components.
  * @param {Cartesian3} [instancingTranslationMin] The component-wise minimum value of the instancing translation attribute.
  * @param {Cartesian3} [instancingTranslationMax] The component-wise maximum value of the instancing translation attribute.
- *
  * @returns {object} An object containing the minimum and maximum position values.
- *
  * @private
  */
 ModelUtility.getPositionMinMax = function (
@@ -254,12 +240,10 @@ ModelUtility.getPositionMinMax = function (
  * coordinate system, such as with y-up instead of z-up in 3D Tiles.
  * This function returns a matrix that will correct this such that z is up,
  * and x is forward.
- *
  * @param {Axis} upAxis The original up direction
  * @param {Axis} forwardAxis The original forward direction
  * @param {Matrix4} result The matrix in which to store the result.
  * @returns {Matrix4} The axis correction matrix
- *
  * @private
  */
 ModelUtility.getAxisCorrectionMatrix = function (upAxis, forwardAxis, result) {
@@ -291,11 +275,9 @@ const scratchMatrix3 = new Matrix3();
  * is a positive value, the winding order triangle faces is counterclockwise;
  * in the opposite case, the winding order is clockwise.
  * </p>
- *
  * @param {Matrix4} modelMatrix The model matrix
  * @param {PrimitiveType} primitiveType The primitive type
  * @returns {CullFace} The cull face
- *
  * @private
  */
 ModelUtility.getCullFace = function (modelMatrix, primitiveType) {
@@ -313,17 +295,13 @@ ModelUtility.getCullFace = function (modelMatrix, primitiveType) {
  * - Replace all sequences of non-alphanumeric characters with a single `_`.
  * - If the gl_ prefix is present, remove it. The prefix is reserved in GLSL.
  * - If the identifier starts with a digit, prefix it with an underscore.
- *
  * @example
  * // Returns "customProperty"
  * ModelUtility.sanitizeGlslIdentifier("gl_customProperty");
- *
  * @example
  * // Returns "_1234"
  * ModelUtility.sanitizeGlslIdentifier("1234");
- *
  * @param {string} identifier The original identifier.
- *
  * @returns {string} The sanitized version of the identifier.
  */
 ModelUtility.sanitizeGlslIdentifier = function (identifier) {
@@ -371,10 +349,8 @@ ModelUtility.supportedExtensions = {
  * Checks whether or not the extensions required by the glTF are
  * supported. If an unsupported extension is found, this throws
  * a {@link RuntimeError} with the extension name.
- *
  * @param {string[]} extensionsRequired The extensionsRequired array in the glTF.
- *
- * @exception {RuntimeError} Unsupported glTF Extension
+ * @throws {RuntimeError} Unsupported glTF Extension
  */
 ModelUtility.checkSupportedExtensions = function (extensionsRequired) {
   const length = extensionsRequired.length;

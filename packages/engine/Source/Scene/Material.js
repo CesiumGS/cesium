@@ -44,188 +44,186 @@ import WaterMaterial from "../Shaders/Materials/Water.js";
  * for more details on Fabric.
  * <br /><br />
  * <style type="text/css">
- *  #materialDescriptions code {
- *      font-weight: normal;
- *      font-family: Consolas, 'Lucida Console', Monaco, monospace;
- *      color: #A35A00;
- *  }
- *  #materialDescriptions ul, #materialDescriptions ul ul {
- *      list-style-type: none;
- *  }
- *  #materialDescriptions ul ul {
- *      margin-bottom: 10px;
- *  }
- *  #materialDescriptions ul ul li {
- *      font-weight: normal;
- *      color: #000000;
- *      text-indent: -2em;
- *      margin-left: 2em;
- *  }
- *  #materialDescriptions ul li {
- *      font-weight: bold;
- *      color: #0053CF;
- *  }
+ * #materialDescriptions code {
+ * font-weight: normal;
+ * font-family: Consolas, 'Lucida Console', Monaco, monospace;
+ * color: #A35A00;
+ * }
+ * #materialDescriptions ul, #materialDescriptions ul ul {
+ * list-style-type: none;
+ * }
+ * #materialDescriptions ul ul {
+ * margin-bottom: 10px;
+ * }
+ * #materialDescriptions ul ul li {
+ * font-weight: normal;
+ * color: #000000;
+ * text-indent: -2em;
+ * margin-left: 2em;
+ * }
+ * #materialDescriptions ul li {
+ * font-weight: bold;
+ * color: #0053CF;
+ * }
  * </style>
  *
  * Base material types and their uniforms:
  * <div id='materialDescriptions'>
  * <ul>
- *  <li>Color</li>
- *  <ul>
- *      <li><code>color</code>:  rgba color object.</li>
- *  </ul>
- *  <li>Image</li>
- *  <ul>
- *      <li><code>image</code>:  path to image.</li>
- *      <li><code>repeat</code>:  Object with x and y values specifying the number of times to repeat the image.</li>
- *  </ul>
- *  <li>DiffuseMap</li>
- *  <ul>
- *      <li><code>image</code>:  path to image.</li>
- *      <li><code>channels</code>:  Three character string containing any combination of r, g, b, and a for selecting the desired image channels.</li>
- *      <li><code>repeat</code>:  Object with x and y values specifying the number of times to repeat the image.</li>
- *  </ul>
- *  <li>AlphaMap</li>
- *  <ul>
- *      <li><code>image</code>:  path to image.</li>
- *      <li><code>channel</code>:  One character string containing r, g, b, or a for selecting the desired image channel. </li>
- *      <li><code>repeat</code>:  Object with x and y values specifying the number of times to repeat the image.</li>
- *  </ul>
- *  <li>SpecularMap</li>
- *  <ul>
- *      <li><code>image</code>: path to image.</li>
- *      <li><code>channel</code>: One character string containing r, g, b, or a for selecting the desired image channel. </li>
- *      <li><code>repeat</code>: Object with x and y values specifying the number of times to repeat the image.</li>
- *  </ul>
- *  <li>EmissionMap</li>
- *  <ul>
- *      <li><code>image</code>:  path to image.</li>
- *      <li><code>channels</code>:  Three character string containing any combination of r, g, b, and a for selecting the desired image channels. </li>
- *      <li><code>repeat</code>:  Object with x and y values specifying the number of times to repeat the image.</li>
- *  </ul>
- *  <li>BumpMap</li>
- *  <ul>
- *      <li><code>image</code>:  path to image.</li>
- *      <li><code>channel</code>:  One character string containing r, g, b, or a for selecting the desired image channel. </li>
- *      <li><code>repeat</code>:  Object with x and y values specifying the number of times to repeat the image.</li>
- *      <li><code>strength</code>:  Bump strength value between 0.0 and 1.0 where 0.0 is small bumps and 1.0 is large bumps.</li>
- *  </ul>
- *  <li>NormalMap</li>
- *  <ul>
- *      <li><code>image</code>:  path to image.</li>
- *      <li><code>channels</code>:  Three character string containing any combination of r, g, b, and a for selecting the desired image channels. </li>
- *      <li><code>repeat</code>:  Object with x and y values specifying the number of times to repeat the image.</li>
- *      <li><code>strength</code>:  Bump strength value between 0.0 and 1.0 where 0.0 is small bumps and 1.0 is large bumps.</li>
- *  </ul>
- *  <li>Grid</li>
- *  <ul>
- *      <li><code>color</code>:  rgba color object for the whole material.</li>
- *      <li><code>cellAlpha</code>: Alpha value for the cells between grid lines.  This will be combined with color.alpha.</li>
- *      <li><code>lineCount</code>:  Object with x and y values specifying the number of columns and rows respectively.</li>
- *      <li><code>lineThickness</code>:  Object with x and y values specifying the thickness of grid lines (in pixels where available).</li>
- *      <li><code>lineOffset</code>:  Object with x and y values specifying the offset of grid lines (range is 0 to 1).</li>
- *  </ul>
- *  <li>Stripe</li>
- *  <ul>
- *      <li><code>horizontal</code>:  Boolean that determines if the stripes are horizontal or vertical.</li>
- *      <li><code>evenColor</code>:  rgba color object for the stripe's first color.</li>
- *      <li><code>oddColor</code>:  rgba color object for the stripe's second color.</li>
- *      <li><code>offset</code>:  Number that controls at which point into the pattern to begin drawing; with 0.0 being the beginning of the even color, 1.0 the beginning of the odd color, 2.0 being the even color again, and any multiple or fractional values being in between.</li>
- *      <li><code>repeat</code>:  Number that controls the total number of stripes, half light and half dark.</li>
- *  </ul>
- *  <li>Checkerboard</li>
- *  <ul>
- *      <li><code>lightColor</code>:  rgba color object for the checkerboard's light alternating color.</li>
- *      <li><code>darkColor</code>: rgba color object for the checkerboard's dark alternating color.</li>
- *      <li><code>repeat</code>:  Object with x and y values specifying the number of columns and rows respectively.</li>
- *  </ul>
- *  <li>Dot</li>
- *  <ul>
- *      <li><code>lightColor</code>:  rgba color object for the dot color.</li>
- *      <li><code>darkColor</code>:  rgba color object for the background color.</li>
- *      <li><code>repeat</code>:  Object with x and y values specifying the number of columns and rows of dots respectively.</li>
- *  </ul>
- *  <li>Water</li>
- *  <ul>
- *      <li><code>baseWaterColor</code>:  rgba color object base color of the water.</li>
- *      <li><code>blendColor</code>:  rgba color object used when blending from water to non-water areas.</li>
- *      <li><code>specularMap</code>:  Single channel texture used to indicate areas of water.</li>
- *      <li><code>normalMap</code>:  Normal map for water normal perturbation.</li>
- *      <li><code>frequency</code>:  Number that controls the number of waves.</li>
- *      <li><code>animationSpeed</code>:  Number that controls the animations speed of the water.</li>
- *      <li><code>amplitude</code>:  Number that controls the amplitude of water waves.</li>
- *      <li><code>specularIntensity</code>:  Number that controls the intensity of specular reflections.</li>
- *  </ul>
- *  <li>RimLighting</li>
- *  <ul>
- *      <li><code>color</code>:  diffuse color and alpha.</li>
- *      <li><code>rimColor</code>:  diffuse color and alpha of the rim.</li>
- *      <li><code>width</code>:  Number that determines the rim's width.</li>
- *  </ul>
- *  <li>Fade</li>
- *  <ul>
- *      <li><code>fadeInColor</code>: diffuse color and alpha at <code>time</code></li>
- *      <li><code>fadeOutColor</code>: diffuse color and alpha at <code>maximumDistance</code> from <code>time</code></li>
- *      <li><code>maximumDistance</code>: Number between 0.0 and 1.0 where the <code>fadeInColor</code> becomes the <code>fadeOutColor</code>. A value of 0.0 gives the entire material a color of <code>fadeOutColor</code> and a value of 1.0 gives the the entire material a color of <code>fadeInColor</code></li>
- *      <li><code>repeat</code>: true if the fade should wrap around the texture coodinates.</li>
- *      <li><code>fadeDirection</code>: Object with x and y values specifying if the fade should be in the x and y directions.</li>
- *      <li><code>time</code>: Object with x and y values between 0.0 and 1.0 of the <code>fadeInColor</code> position</li>
- *  </ul>
- *  <li>PolylineArrow</li>
- *  <ul>
- *      <li><code>color</code>: diffuse color and alpha.</li>
- *  </ul>
- *  <li>PolylineDash</li>
- *  <ul>
- *      <li><code>color</code>: color for the line.</li>
- *      <li><code>gapColor</code>: color for the gaps in the line.</li>
- *      <li><code>dashLength</code>: Dash length in pixels.</li>
- *      <li><code>dashPattern</code>: The 16 bit stipple pattern for the line..</li>
- *  </ul>
- *  <li>PolylineGlow</li>
- *  <ul>
- *      <li><code>color</code>: color and maximum alpha for the glow on the line.</li>
- *      <li><code>glowPower</code>: strength of the glow, as a percentage of the total line width (less than 1.0).</li>
- *      <li><code>taperPower</code>: strength of the tapering effect, as a percentage of the total line length.  If 1.0 or higher, no taper effect is used.</li>
- *  </ul>
- *  <li>PolylineOutline</li>
- *  <ul>
- *      <li><code>color</code>: diffuse color and alpha for the interior of the line.</li>
- *      <li><code>outlineColor</code>: diffuse color and alpha for the outline.</li>
- *      <li><code>outlineWidth</code>: width of the outline in pixels.</li>
- *  </ul>
- *  <li>ElevationContour</li>
- *  <ul>
- *      <li><code>color</code>: color and alpha for the contour line.</li>
- *      <li><code>spacing</code>: spacing for contour lines in meters.</li>
- *      <li><code>width</code>: Number specifying the width of the grid lines in pixels.</li>
- *  </ul>
- *  <li>ElevationRamp</li>
- *  <ul>
- *      <li><code>image</code>: color ramp image to use for coloring the terrain.</li>
- *      <li><code>minimumHeight</code>: minimum height for the ramp.</li>
- *      <li><code>maximumHeight</code>: maximum height for the ramp.</li>
- *  </ul>
- *  <li>SlopeRamp</li>
- *  <ul>
- *      <li><code>image</code>: color ramp image to use for coloring the terrain by slope.</li>
- *  </ul>
- *  <li>AspectRamp</li>
- *  <ul>
- *      <li><code>image</code>: color ramp image to use for color the terrain by aspect.</li>
- *  </ul>
- *  <li>ElevationBand</li>
- *  <ul>
- *      <li><code>heights</code>: image of heights sorted from lowest to highest.</li>
- *      <li><code>colors</code>: image of colors at the corresponding heights.</li>
+ * <li>Color</li>
+ * <ul>
+ * <li><code>color</code>:  rgba color object.</li>
+ * </ul>
+ * <li>Image</li>
+ * <ul>
+ * <li><code>image</code>:  path to image.</li>
+ * <li><code>repeat</code>:  Object with x and y values specifying the number of times to repeat the image.</li>
+ * </ul>
+ * <li>DiffuseMap</li>
+ * <ul>
+ * <li><code>image</code>:  path to image.</li>
+ * <li><code>channels</code>:  Three character string containing any combination of r, g, b, and a for selecting the desired image channels.</li>
+ * <li><code>repeat</code>:  Object with x and y values specifying the number of times to repeat the image.</li>
+ * </ul>
+ * <li>AlphaMap</li>
+ * <ul>
+ * <li><code>image</code>:  path to image.</li>
+ * <li><code>channel</code>:  One character string containing r, g, b, or a for selecting the desired image channel. </li>
+ * <li><code>repeat</code>:  Object with x and y values specifying the number of times to repeat the image.</li>
+ * </ul>
+ * <li>SpecularMap</li>
+ * <ul>
+ * <li><code>image</code>: path to image.</li>
+ * <li><code>channel</code>: One character string containing r, g, b, or a for selecting the desired image channel. </li>
+ * <li><code>repeat</code>: Object with x and y values specifying the number of times to repeat the image.</li>
+ * </ul>
+ * <li>EmissionMap</li>
+ * <ul>
+ * <li><code>image</code>:  path to image.</li>
+ * <li><code>channels</code>:  Three character string containing any combination of r, g, b, and a for selecting the desired image channels. </li>
+ * <li><code>repeat</code>:  Object with x and y values specifying the number of times to repeat the image.</li>
+ * </ul>
+ * <li>BumpMap</li>
+ * <ul>
+ * <li><code>image</code>:  path to image.</li>
+ * <li><code>channel</code>:  One character string containing r, g, b, or a for selecting the desired image channel. </li>
+ * <li><code>repeat</code>:  Object with x and y values specifying the number of times to repeat the image.</li>
+ * <li><code>strength</code>:  Bump strength value between 0.0 and 1.0 where 0.0 is small bumps and 1.0 is large bumps.</li>
+ * </ul>
+ * <li>NormalMap</li>
+ * <ul>
+ * <li><code>image</code>:  path to image.</li>
+ * <li><code>channels</code>:  Three character string containing any combination of r, g, b, and a for selecting the desired image channels. </li>
+ * <li><code>repeat</code>:  Object with x and y values specifying the number of times to repeat the image.</li>
+ * <li><code>strength</code>:  Bump strength value between 0.0 and 1.0 where 0.0 is small bumps and 1.0 is large bumps.</li>
+ * </ul>
+ * <li>Grid</li>
+ * <ul>
+ * <li><code>color</code>:  rgba color object for the whole material.</li>
+ * <li><code>cellAlpha</code>: Alpha value for the cells between grid lines.  This will be combined with color.alpha.</li>
+ * <li><code>lineCount</code>:  Object with x and y values specifying the number of columns and rows respectively.</li>
+ * <li><code>lineThickness</code>:  Object with x and y values specifying the thickness of grid lines (in pixels where available).</li>
+ * <li><code>lineOffset</code>:  Object with x and y values specifying the offset of grid lines (range is 0 to 1).</li>
+ * </ul>
+ * <li>Stripe</li>
+ * <ul>
+ * <li><code>horizontal</code>:  Boolean that determines if the stripes are horizontal or vertical.</li>
+ * <li><code>evenColor</code>:  rgba color object for the stripe's first color.</li>
+ * <li><code>oddColor</code>:  rgba color object for the stripe's second color.</li>
+ * <li><code>offset</code>:  Number that controls at which point into the pattern to begin drawing; with 0.0 being the beginning of the even color, 1.0 the beginning of the odd color, 2.0 being the even color again, and any multiple or fractional values being in between.</li>
+ * <li><code>repeat</code>:  Number that controls the total number of stripes, half light and half dark.</li>
+ * </ul>
+ * <li>Checkerboard</li>
+ * <ul>
+ * <li><code>lightColor</code>:  rgba color object for the checkerboard's light alternating color.</li>
+ * <li><code>darkColor</code>: rgba color object for the checkerboard's dark alternating color.</li>
+ * <li><code>repeat</code>:  Object with x and y values specifying the number of columns and rows respectively.</li>
+ * </ul>
+ * <li>Dot</li>
+ * <ul>
+ * <li><code>lightColor</code>:  rgba color object for the dot color.</li>
+ * <li><code>darkColor</code>:  rgba color object for the background color.</li>
+ * <li><code>repeat</code>:  Object with x and y values specifying the number of columns and rows of dots respectively.</li>
+ * </ul>
+ * <li>Water</li>
+ * <ul>
+ * <li><code>baseWaterColor</code>:  rgba color object base color of the water.</li>
+ * <li><code>blendColor</code>:  rgba color object used when blending from water to non-water areas.</li>
+ * <li><code>specularMap</code>:  Single channel texture used to indicate areas of water.</li>
+ * <li><code>normalMap</code>:  Normal map for water normal perturbation.</li>
+ * <li><code>frequency</code>:  Number that controls the number of waves.</li>
+ * <li><code>animationSpeed</code>:  Number that controls the animations speed of the water.</li>
+ * <li><code>amplitude</code>:  Number that controls the amplitude of water waves.</li>
+ * <li><code>specularIntensity</code>:  Number that controls the intensity of specular reflections.</li>
+ * </ul>
+ * <li>RimLighting</li>
+ * <ul>
+ * <li><code>color</code>:  diffuse color and alpha.</li>
+ * <li><code>rimColor</code>:  diffuse color and alpha of the rim.</li>
+ * <li><code>width</code>:  Number that determines the rim's width.</li>
+ * </ul>
+ * <li>Fade</li>
+ * <ul>
+ * <li><code>fadeInColor</code>: diffuse color and alpha at <code>time</code></li>
+ * <li><code>fadeOutColor</code>: diffuse color and alpha at <code>maximumDistance</code> from <code>time</code></li>
+ * <li><code>maximumDistance</code>: Number between 0.0 and 1.0 where the <code>fadeInColor</code> becomes the <code>fadeOutColor</code>. A value of 0.0 gives the entire material a color of <code>fadeOutColor</code> and a value of 1.0 gives the the entire material a color of <code>fadeInColor</code></li>
+ * <li><code>repeat</code>: true if the fade should wrap around the texture coodinates.</li>
+ * <li><code>fadeDirection</code>: Object with x and y values specifying if the fade should be in the x and y directions.</li>
+ * <li><code>time</code>: Object with x and y values between 0.0 and 1.0 of the <code>fadeInColor</code> position</li>
+ * </ul>
+ * <li>PolylineArrow</li>
+ * <ul>
+ * <li><code>color</code>: diffuse color and alpha.</li>
+ * </ul>
+ * <li>PolylineDash</li>
+ * <ul>
+ * <li><code>color</code>: color for the line.</li>
+ * <li><code>gapColor</code>: color for the gaps in the line.</li>
+ * <li><code>dashLength</code>: Dash length in pixels.</li>
+ * <li><code>dashPattern</code>: The 16 bit stipple pattern for the line..</li>
+ * </ul>
+ * <li>PolylineGlow</li>
+ * <ul>
+ * <li><code>color</code>: color and maximum alpha for the glow on the line.</li>
+ * <li><code>glowPower</code>: strength of the glow, as a percentage of the total line width (less than 1.0).</li>
+ * <li><code>taperPower</code>: strength of the tapering effect, as a percentage of the total line length.  If 1.0 or higher, no taper effect is used.</li>
+ * </ul>
+ * <li>PolylineOutline</li>
+ * <ul>
+ * <li><code>color</code>: diffuse color and alpha for the interior of the line.</li>
+ * <li><code>outlineColor</code>: diffuse color and alpha for the outline.</li>
+ * <li><code>outlineWidth</code>: width of the outline in pixels.</li>
+ * </ul>
+ * <li>ElevationContour</li>
+ * <ul>
+ * <li><code>color</code>: color and alpha for the contour line.</li>
+ * <li><code>spacing</code>: spacing for contour lines in meters.</li>
+ * <li><code>width</code>: Number specifying the width of the grid lines in pixels.</li>
+ * </ul>
+ * <li>ElevationRamp</li>
+ * <ul>
+ * <li><code>image</code>: color ramp image to use for coloring the terrain.</li>
+ * <li><code>minimumHeight</code>: minimum height for the ramp.</li>
+ * <li><code>maximumHeight</code>: maximum height for the ramp.</li>
+ * </ul>
+ * <li>SlopeRamp</li>
+ * <ul>
+ * <li><code>image</code>: color ramp image to use for coloring the terrain by slope.</li>
+ * </ul>
+ * <li>AspectRamp</li>
+ * <ul>
+ * <li><code>image</code>: color ramp image to use for color the terrain by aspect.</li>
+ * </ul>
+ * <li>ElevationBand</li>
+ * <ul>
+ * <li><code>heights</code>: image of heights sorted from lowest to highest.</li>
+ * <li><code>colors</code>: image of colors at the corresponding heights.</li>
  * </ul>
  * </ul>
  * </ul>
  * </div>
- *
  * @alias Material
- * @constructor
- *
+ * @class
  * @param {object} [options] Object with the following properties:
  * @param {boolean} [options.strict=false] Throws errors for issues that would normally be ignored, including unused uniforms or materials.
  * @param {boolean|Function} [options.translucent=true] When <code>true</code> or a function that returns <code>true</code>, the geometry
@@ -234,20 +232,16 @@ import WaterMaterial from "../Shaders/Materials/Water.js";
  * @param {TextureMagnificationFilter} [options.magnificationFilter=TextureMagnificationFilter.LINEAR] The {@link TextureMagnificationFilter} to apply to this material's textures.
  * @param {object} options.fabric The fabric JSON used to generate the material.
  *ructor
- *
- * @exception {DeveloperError} fabric: uniform has invalid type.
- * @exception {DeveloperError} fabric: uniforms and materials cannot share the same property.
- * @exception {DeveloperError} fabric: cannot have source and components in the same section.
- * @exception {DeveloperError} fabric: property name is not valid. It should be 'type', 'materials', 'uniforms', 'components', or 'source'.
- * @exception {DeveloperError} fabric: property name is not valid. It should be 'diffuse', 'specular', 'shininess', 'normal', 'emission', or 'alpha'.
- * @exception {DeveloperError} strict: shader source does not use string.
- * @exception {DeveloperError} strict: shader source does not use uniform.
- * @exception {DeveloperError} strict: shader source does not use material.
- *
+ * @throws {DeveloperError} fabric: uniform has invalid type.
+ * @throws {DeveloperError} fabric: uniforms and materials cannot share the same property.
+ * @throws {DeveloperError} fabric: cannot have source and components in the same section.
+ * @throws {DeveloperError} fabric: property name is not valid. It should be 'type', 'materials', 'uniforms', 'components', or 'source'.
+ * @throws {DeveloperError} fabric: property name is not valid. It should be 'diffuse', 'specular', 'shininess', 'normal', 'emission', or 'alpha'.
+ * @throws {DeveloperError} strict: shader source does not use string.
+ * @throws {DeveloperError} strict: shader source does not use uniform.
+ * @throws {DeveloperError} strict: shader source does not use material.
  * @see {@link https://github.com/CesiumGS/cesium/wiki/Fabric|Fabric wiki page} for a more detailed options of Fabric.
- *
  * @demo {@link https://sandcastle.cesium.com/index.html?src=Materials.html|Cesium Sandcastle Materials Demo}
- *
  * @example
  * // Create a color material with fromType:
  * polygon.material = Cesium.Material.fromType('Color');
@@ -348,13 +342,10 @@ Material._uniformList = {};
  * Creates a new material using an existing material type.
  * <br /><br />
  * Shorthand for: new Material({fabric : {type : type}});
- *
  * @param {string} type The base material type.
  * @param {object} [uniforms] Overrides for the default uniforms.
  * @returns {Material} New material object.
- *
- * @exception {DeveloperError} material with that type does not exist.
- *
+ * @throws {DeveloperError} material with that type does not exist.
  * @example
  * const material = Cesium.Material.fromType('Color', {
  *   color: new Cesium.Color(1.0, 0.0, 0.0, 1.0)
@@ -416,6 +407,7 @@ Material.prototype.isTranslucent = function () {
 };
 
 /**
+ * @param context
  * @private
  */
 Material.prototype.update = function (context) {
@@ -536,9 +528,7 @@ Material.prototype.update = function (context) {
  * <br /><br />
  * If this object was destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
- *
  * @returns {boolean} True if this object was destroyed; otherwise, false.
- *
  * @see Material#destroy
  */
 Material.prototype.isDestroyed = function () {
@@ -552,13 +542,9 @@ Material.prototype.isDestroyed = function () {
  * Once an object is destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
  * assign the return value (<code>undefined</code>) to the object as done in the example.
- *
- * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
- *
- *
+ * @throws {DeveloperError} This object was destroyed, i.e., destroy() was called.
  * @example
  * material = material && material.destroy();
- *
  * @see Material#isDestroyed
  */
 Material.prototype.destroy = function () {

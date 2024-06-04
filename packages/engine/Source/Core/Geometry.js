@@ -22,16 +22,13 @@ import Transforms from "./Transforms.js";
  * <p>
  * Geometries can be transformed and optimized using functions in {@link GeometryPipeline}.
  * </p>
- *
  * @alias Geometry
- * @constructor
- *
+ * @class
  * @param {object} options Object with the following properties:
  * @param {GeometryAttributes} options.attributes Attributes, which make up the geometry's vertices.
  * @param {PrimitiveType} [options.primitiveType=PrimitiveType.TRIANGLES] The type of primitives in the geometry.
  * @param {Uint16Array|Uint32Array} [options.indices] Optional index data that determines the primitives in the geometry.
  * @param {BoundingSphere} [options.boundingSphere] An optional bounding sphere that fully enclosed the geometry.
- *
  * @see PolygonGeometry
  * @see RectangleGeometry
  * @see EllipseGeometry
@@ -40,9 +37,7 @@ import Transforms from "./Transforms.js";
  * @see SimplePolylineGeometry
  * @see BoxGeometry
  * @see EllipsoidGeometry
- *
  * @demo {@link https://sandcastle.cesium.com/index.html?src=Geometry%20and%20Appearances.html|Geometry and Appearances Demo}
- *
  * @example
  * // Create geometry with a position attribute and indexed lines.
  * const positions = new Float64Array([
@@ -81,11 +76,11 @@ function Geometry(options) {
    * There are reserved attribute names with well-known semantics.  The following attributes
    * are created by a Geometry (depending on the provided {@link VertexFormat}.
    * <ul>
-   *    <li><code>position</code> - 3D vertex position.  64-bit floating-point (for precision).  3 components per attribute.  See {@link VertexFormat#position}.</li>
-   *    <li><code>normal</code> - Normal (normalized), commonly used for lighting.  32-bit floating-point.  3 components per attribute.  See {@link VertexFormat#normal}.</li>
-   *    <li><code>st</code> - 2D texture coordinate.  32-bit floating-point.  2 components per attribute.  See {@link VertexFormat#st}.</li>
-   *    <li><code>bitangent</code> - Bitangent (normalized), used for tangent-space effects like bump mapping.  32-bit floating-point.  3 components per attribute.  See {@link VertexFormat#bitangent}.</li>
-   *    <li><code>tangent</code> - Tangent (normalized), used for tangent-space effects like bump mapping.  32-bit floating-point.  3 components per attribute.  See {@link VertexFormat#tangent}.</li>
+   * <li><code>position</code> - 3D vertex position.  64-bit floating-point (for precision).  3 components per attribute.  See {@link VertexFormat#position}.</li>
+   * <li><code>normal</code> - Normal (normalized), commonly used for lighting.  32-bit floating-point.  3 components per attribute.  See {@link VertexFormat#normal}.</li>
+   * <li><code>st</code> - 2D texture coordinate.  32-bit floating-point.  2 components per attribute.  See {@link VertexFormat#st}.</li>
+   * <li><code>bitangent</code> - Bitangent (normalized), used for tangent-space effects like bump mapping.  32-bit floating-point.  3 components per attribute.  See {@link VertexFormat#bitangent}.</li>
+   * <li><code>tangent</code> - Tangent (normalized), used for tangent-space effects like bump mapping.  32-bit floating-point.  3 components per attribute.  See {@link VertexFormat#tangent}.</li>
    * </ul>
    * </p>
    * <p>
@@ -93,27 +88,22 @@ function Geometry(options) {
    * to a Geometry by a {@link Primitive} or {@link GeometryPipeline} functions to prepare
    * the geometry for rendering.
    * <ul>
-   *    <li><code>position3DHigh</code> - High 32 bits for encoded 64-bit position computed with {@link GeometryPipeline.encodeAttribute}.  32-bit floating-point.  4 components per attribute.</li>
-   *    <li><code>position3DLow</code> - Low 32 bits for encoded 64-bit position computed with {@link GeometryPipeline.encodeAttribute}.  32-bit floating-point.  4 components per attribute.</li>
-   *    <li><code>position2DHigh</code> - High 32 bits for encoded 64-bit 2D (Columbus view) position computed with {@link GeometryPipeline.encodeAttribute}.  32-bit floating-point.  4 components per attribute.</li>
-   *    <li><code>position2DLow</code> - Low 32 bits for encoded 64-bit 2D (Columbus view) position computed with {@link GeometryPipeline.encodeAttribute}.  32-bit floating-point.  4 components per attribute.</li>
-   *    <li><code>color</code> - RGBA color (normalized) usually from {@link GeometryInstance#color}.  32-bit floating-point.  4 components per attribute.</li>
-   *    <li><code>pickColor</code> - RGBA color used for picking.  32-bit floating-point.  4 components per attribute.</li>
+   * <li><code>position3DHigh</code> - High 32 bits for encoded 64-bit position computed with {@link GeometryPipeline.encodeAttribute}.  32-bit floating-point.  4 components per attribute.</li>
+   * <li><code>position3DLow</code> - Low 32 bits for encoded 64-bit position computed with {@link GeometryPipeline.encodeAttribute}.  32-bit floating-point.  4 components per attribute.</li>
+   * <li><code>position2DHigh</code> - High 32 bits for encoded 64-bit 2D (Columbus view) position computed with {@link GeometryPipeline.encodeAttribute}.  32-bit floating-point.  4 components per attribute.</li>
+   * <li><code>position2DLow</code> - Low 32 bits for encoded 64-bit 2D (Columbus view) position computed with {@link GeometryPipeline.encodeAttribute}.  32-bit floating-point.  4 components per attribute.</li>
+   * <li><code>color</code> - RGBA color (normalized) usually from {@link GeometryInstance#color}.  32-bit floating-point.  4 components per attribute.</li>
+   * <li><code>pickColor</code> - RGBA color used for picking.  32-bit floating-point.  4 components per attribute.</li>
    * </ul>
    * </p>
-   *
    * @type GeometryAttributes
-   *
    * @default undefined
-   *
-   *
    * @example
    * geometry.attributes.position = new Cesium.GeometryAttribute({
    *   componentDatatype : Cesium.ComponentDatatype.FLOAT,
    *   componentsPerAttribute : 3,
    *   values : new Float32Array(0)
    * });
-   *
    * @see GeometryAttribute
    * @see VertexFormat
    */
@@ -122,9 +112,7 @@ function Geometry(options) {
   /**
    * Optional index data that - along with {@link Geometry#primitiveType} -
    * determines the primitives in the geometry.
-   *
    * @type {Array}
-   *
    * @default undefined
    */
   this.indices = options.indices;
@@ -132,9 +120,7 @@ function Geometry(options) {
   /**
    * The type of primitives in the geometry.  This is most often {@link PrimitiveType.TRIANGLES},
    * but can varying based on the specific geometry.
-   *
    * @type PrimitiveType
-   *
    * @default undefined
    */
   this.primitiveType = defaultValue(
@@ -145,9 +131,7 @@ function Geometry(options) {
   /**
    * An optional bounding sphere that fully encloses the geometry.  This is
    * commonly used for culling.
-   *
    * @type BoundingSphere
-   *
    * @default undefined
    */
   this.boundingSphere = options.boundingSphere;
@@ -172,10 +156,8 @@ function Geometry(options) {
 /**
  * Computes the number of vertices in a geometry.  The runtime is linear with
  * respect to the number of attributes in a vertex, not the number of vertices.
- *
  * @param {Geometry} geometry The geometry.
  * @returns {number} The number of vertices in the geometry.
- *
  * @example
  * const numVertices = Cesium.Geometry.computeNumberOfVertices(geometry);
  */
@@ -242,7 +224,6 @@ const rotation2DScratch = new Matrix2();
  *
  * RectangleGeometry has its own version of this method that computes remapping coordinates using cartographic space
  * as an intermediary instead of local ENU, which is more accurate for large-area rectangles.
- *
  * @param {Cartesian3[]} positions Array of positions outlining the geometry
  * @param {number} stRotation Texture coordinate rotation.
  * @param {Ellipsoid} ellipsoid Ellipsoid for projecting and generating local vectors.

@@ -14,21 +14,18 @@ import ModelAnimationState from ".././ModelAnimationState.js";
  * </div>
  *
  * A collection of active model animations.
- *
+ * @param model
  * @alias ModelAnimationCollection
  * @internalConstructor
  * @class
- *
  * @see Model#activeAnimations
  */
 function ModelAnimationCollection(model) {
   /**
    * The event fired when an animation is added to the collection.  This can be used, for
    * example, to keep a UI in sync.
-   *
    * @type {Event}
    * @default new Event()
-   *
    * @example
    * model.activeAnimations.animationAdded.addEventListener(function(model, animation) {
    *   console.log(`Animation added: ${animation.name}`);
@@ -39,10 +36,8 @@ function ModelAnimationCollection(model) {
   /**
    * The event fired when an animation is removed from the collection.  This can be used, for
    * example, to keep a UI in sync.
-   *
    * @type {Event}
    * @default new Event()
-   *
    * @example
    * model.activeAnimations.animationRemoved.addEventListener(function(model, animation) {
    *   console.log(`Animation removed: ${animation.name}`);
@@ -55,7 +50,6 @@ function ModelAnimationCollection(model) {
    * whether animation takes place will depend on the animationTime functions assigned
    * to the model's animations. By default, this is based on scene time, so models using
    * the default will not animate regardless of this setting.
-   *
    * @type {boolean}
    * @default false
    */
@@ -69,9 +63,7 @@ function ModelAnimationCollection(model) {
 Object.defineProperties(ModelAnimationCollection.prototype, {
   /**
    * The number of animations in the collection.
-   *
    * @memberof ModelAnimationCollection.prototype
-   *
    * @type {number}
    * @readonly
    */
@@ -83,9 +75,7 @@ Object.defineProperties(ModelAnimationCollection.prototype, {
 
   /**
    * The model that owns this animation collection.
-   *
    * @memberof ModelAnimationCollection.prototype
-   *
    * @type {Model}
    * @readonly
    */
@@ -109,7 +99,6 @@ function addAnimation(collection, animation, options) {
  * <p>
  * This raises the {@link ModelAnimationCollection#animationAdded} event so, for example, a UI can stay in sync.
  * </p>
- *
  * @param {object} options Object with the following properties:
  * @param {string} [options.name] The glTF animation name that identifies the animation. Must be defined if <code>options.index</code> is <code>undefined</code>.
  * @param {number} [options.index] The glTF animation index that identifies the animation. Must be defined if <code>options.name</code> is <code>undefined</code>.
@@ -122,25 +111,21 @@ function addAnimation(collection, animation, options) {
  * @param {ModelAnimationLoop} [options.loop=ModelAnimationLoop.NONE] Determines if and how the animation is looped.
  * @param {ModelAnimation.AnimationTimeCallback} [options.animationTime=undefined] If defined, computes the local animation time for this animation.
  * @returns {ModelAnimation} The animation that was added to the collection.
- *
- * @exception {DeveloperError} Animations are not loaded.  Wait for the {@link Model#ready} to return trues.
- * @exception {DeveloperError} options.name must be a valid animation name.
- * @exception {DeveloperError} options.index must be a valid animation index.
- * @exception {DeveloperError} Either options.name or options.index must be defined.
- * @exception {DeveloperError} options.multiplier must be greater than zero.
- *
+ * @throws {DeveloperError} Animations are not loaded.  Wait for the {@link Model#ready} to return trues.
+ * @throws {DeveloperError} options.name must be a valid animation name.
+ * @throws {DeveloperError} options.index must be a valid animation index.
+ * @throws {DeveloperError} Either options.name or options.index must be defined.
+ * @throws {DeveloperError} options.multiplier must be greater than zero.
  * @example
  * // Example 1. Add an animation by name
  * model.activeAnimations.add({
  *   name : 'animation name'
  * });
- *
  * @example
  * // Example 2. Add an animation by index
  * model.activeAnimations.add({
  *   index : 0
  * });
- *
  * @example
  * // Example 3. Add an animation and provide all properties and events
  * const startTime = Cesium.JulianDate.now();
@@ -229,7 +214,6 @@ ModelAnimationCollection.prototype.add = function (options) {
  * <p>
  * This raises the {@link ModelAnimationCollection#animationAdded} event for each model so, for example, a UI can stay in sync.
  * </p>
- *
  * @param {object} [options] Object with the following properties:
  * @param {JulianDate} [options.startTime] The scene time to start playing the animations. When this is <code>undefined</code>, the animations starts at the next frame.
  * @param {number} [options.delay=0.0] The delay, in seconds, from <code>startTime</code> to start playing. This will only affect the animation if <code>options.loop</code> is ModelAnimationLoop.NONE.
@@ -240,10 +224,8 @@ ModelAnimationCollection.prototype.add = function (options) {
  * @param {ModelAnimationLoop} [options.loop=ModelAnimationLoop.NONE] Determines if and how the animations are looped.
  * @param {ModelAnimation.AnimationTimeCallback} [options.animationTime=undefined] If defined, computes the local animation time for all of the animations.
  * @returns {ModelAnimation[]} An array of {@link ModelAnimation} objects, one for each animation added to the collection.  If there are no glTF animations, the array is empty.
- *
- * @exception {DeveloperError} Animations are not loaded. Wait for the {@link Model#ready} to return true.
- * @exception {DeveloperError} options.multiplier must be greater than zero.
- *
+ * @throws {DeveloperError} Animations are not loaded. Wait for the {@link Model#ready} to return true.
+ * @throws {DeveloperError} options.multiplier must be greater than zero.
  * @example
  * model.activeAnimations.addAll({
  *   multiplier : 0.5,                            // Play at half-speed
@@ -287,10 +269,8 @@ ModelAnimationCollection.prototype.addAll = function (options) {
  * An animation can also be implicitly removed from the collection by setting {@link ModelAnimationCollection#removeOnStop} to
  * <code>true</code>.  The {@link ModelAnimationCollection#animationRemoved} event is still fired when the animation is removed.
  * </p>
- *
  * @param {ModelAnimation} runtimeAnimation The runtime animation to remove.
  * @returns {boolean} <code>true</code> if the animation was removed; <code>false</code> if the animation was not found in the collection.
- *
  * @example
  * const a = model.activeAnimations.add({
  *   name : 'animation name'
@@ -334,7 +314,6 @@ ModelAnimationCollection.prototype.removeAll = function () {
 
 /**
  * Determines whether this collection contains a given animation.
- *
  * @param {ModelAnimation} runtimeAnimation The runtime animation to check for.
  * @returns {boolean} <code>true</code> if this collection contains the animation, <code>false</code> otherwise.
  */
@@ -351,10 +330,8 @@ ModelAnimationCollection.prototype.contains = function (runtimeAnimation) {
  * and increase as animations are added.  Removing an animation shifts all animations after
  * it to the left, changing their indices.  This function is commonly used to iterate over
  * all the animations in the collection.
- *
  * @param {number} index The zero-based index of the animation.
  * @returns {ModelAnimation} The runtime animation at the specified index.
- *
  * @example
  * // Output the names of all the animations in the collection.
  * const animations = model.activeAnimations;
@@ -394,10 +371,8 @@ function createAnimationRemovedFunction(
 /**
  * Updates the runtime animations in this collection, removing any animations
  * that have stopped.
- *
  * @param {FrameState} frameState The current frame state.
  * @returns {boolean} <code>true</code> if an animation played during this update, <code>false</code> otherwise.
- *
  * @private
  */
 ModelAnimationCollection.prototype.update = function (frameState) {

@@ -7,9 +7,7 @@ import ModelUtility from "./ModelUtility.js";
 /**
  * The classification pipeline stage is responsible for batching features
  * together to be rendered by the {@link ClassificationModelDrawCommand}.
- *
  * @namespace ClassificationPipelineStage
- *
  * @private
  */
 const ClassificationPipelineStage = {
@@ -20,18 +18,16 @@ const ClassificationPipelineStage = {
  * Process a primitive. This modifies the following parts of the render resources:
  *
  * <ul>
- *  <li>adds a define to the shader to indicate that the primitive classifies other assets</li>
- *  <li>adds arrays containing batch lengths and offsets to the primitive's resources
+ * <li>adds a define to the shader to indicate that the primitive classifies other assets</li>
+ * <li>adds arrays containing batch lengths and offsets to the primitive's resources
  * </ul>
  *
  * <p>
  * See {@link ClassificationModelDrawCommand} for the use of the batch offsets and lengths.
  * </p>
- *
  * @param {PrimitiveRenderResources} renderResources The render resources for this primitive.
  * @param {ModelComponents.Primitive} primitive The primitive.
  * @param {FrameState} frameState The frame state.
- *
  * @private
  */
 ClassificationPipelineStage.process = function (

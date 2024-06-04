@@ -273,8 +273,7 @@ function updateTransform(
 /**
  * A utility object for tracking an entity with the camera.
  * @alias EntityView
- * @constructor
- *
+ * @class
  * @param {Entity} entity The entity to track with the camera.
  * @param {Scene} scene The scene to use.
  * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid to use for orienting the camera.

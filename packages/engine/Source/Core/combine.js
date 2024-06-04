@@ -5,7 +5,6 @@ import defined from "./defined.js";
  * Merges two objects, copying their properties onto a new combined object. When two objects have the same
  * property, the value of the property on the first object is used.  If either object is undefined,
  * it will be treated as an empty object.
- *
  * @example
  * const object1 = {
  *     propOne : 1,
@@ -24,12 +23,10 @@ import defined from "./defined.js";
  * //         value1 : 10
  * //     }
  * // }
- *
  * @param {object} [object1] The first object to merge.
  * @param {object} [object2] The second object to merge.
  * @param {boolean} [deep=false] Perform a recursive merge.
  * @returns {object} The combined object containing all properties from both objects.
- *
  * @function
  */
 function combine(object1, object2, deep) {

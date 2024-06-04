@@ -11,10 +11,8 @@ import SampledProperty from "./SampledProperty.js";
 
 /**
  * A {@link SampledProperty} which is also a {@link PositionProperty}.
- *
  * @alias SampledPositionProperty
- * @constructor
- *
+ * @class
  * @param {ReferenceFrame} [referenceFrame=ReferenceFrame.FIXED] The reference frame in which the position is defined.
  * @param {number} [numberOfDerivatives=0] The number of derivatives that accompany each position; i.e. velocity, acceleration, etc...
  */
@@ -44,7 +42,6 @@ Object.defineProperties(SampledPositionProperty.prototype, {
    * Gets a value indicating if this property is constant.  A property is considered
    * constant if getValue always returns the same result for the current definition.
    * @memberof SampledPositionProperty.prototype
-   *
    * @type {boolean}
    * @readonly
    */
@@ -58,7 +55,6 @@ Object.defineProperties(SampledPositionProperty.prototype, {
    * The definition is considered to have changed if a call to getValue would return
    * a different result for the same time.
    * @memberof SampledPositionProperty.prototype
-   *
    * @type {Event}
    * @readonly
    */
@@ -81,7 +77,6 @@ Object.defineProperties(SampledPositionProperty.prototype, {
   /**
    * Gets the degree of interpolation to perform when retrieving a value. Call <code>setInterpolationOptions</code> to set this.
    * @memberof SampledPositionProperty.prototype
-   *
    * @type {number}
    * @default 1
    * @readonly
@@ -94,7 +89,6 @@ Object.defineProperties(SampledPositionProperty.prototype, {
   /**
    * Gets the interpolation algorithm to use when retrieving a value. Call <code>setInterpolationOptions</code> to set this.
    * @memberof SampledPositionProperty.prototype
-   *
    * @type {InterpolationAlgorithm}
    * @default LinearApproximation
    * @readonly
@@ -107,7 +101,6 @@ Object.defineProperties(SampledPositionProperty.prototype, {
   /**
    * The number of derivatives contained by this property; i.e. 0 for just position, 1 for velocity, etc.
    * @memberof SampledPositionProperty.prototype
-   *
    * @type {number}
    * @default 0
    */
@@ -180,7 +173,6 @@ Object.defineProperties(SampledPositionProperty.prototype, {
 
 /**
  * Gets the position at the provided time.
- *
  * @param {JulianDate} time The time for which to retrieve the value.
  * @param {Cartesian3} [result] The object to store the value into, if omitted, a new instance is created and returned.
  * @returns {Cartesian3 | undefined} The modified result parameter or a new instance if the result parameter was not supplied.
@@ -191,7 +183,6 @@ SampledPositionProperty.prototype.getValue = function (time, result) {
 
 /**
  * Gets the position at the provided time and in the provided reference frame.
- *
  * @param {JulianDate} time The time for which to retrieve the value.
  * @param {ReferenceFrame} referenceFrame The desired referenceFrame of the result.
  * @param {Cartesian3} [result] The object to store the value into, if omitted, a new instance is created and returned.
@@ -222,7 +213,6 @@ SampledPositionProperty.prototype.getValueInReferenceFrame = function (
 
 /**
  * Sets the algorithm and degree to use when interpolating a position.
- *
  * @param {object} [options] Object with the following properties:
  * @param {InterpolationAlgorithm} [options.interpolationAlgorithm] The new interpolation algorithm.  If undefined, the existing property will be unchanged.
  * @param {number} [options.interpolationDegree] The new interpolation degree.  If undefined, the existing property will be unchanged.
@@ -233,7 +223,6 @@ SampledPositionProperty.prototype.setInterpolationOptions = function (options) {
 
 /**
  * Adds a new sample.
- *
  * @param {JulianDate} time The sample time.
  * @param {Cartesian3} position The position at the provided time.
  * @param {Cartesian3[]} [derivatives] The array of derivative values at the provided time.
@@ -259,12 +248,10 @@ SampledPositionProperty.prototype.addSample = function (
 
 /**
  * Adds multiple samples via parallel arrays.
- *
  * @param {JulianDate[]} times An array of JulianDate instances where each index is a sample time.
  * @param {Cartesian3[]} positions An array of Cartesian3 position instances, where each value corresponds to the provided time index.
  * @param {Array[]} [derivatives] An array where each value is another array containing derivatives for the corresponding time index.
- *
- * @exception {DeveloperError} All arrays must be the same length.
+ * @throws {DeveloperError} All arrays must be the same length.
  */
 SampledPositionProperty.prototype.addSamples = function (
   times,
@@ -277,7 +264,6 @@ SampledPositionProperty.prototype.addSamples = function (
 /**
  * Adds samples as a single packed array where each new sample is represented as a date,
  * followed by the packed representation of the corresponding value and derivatives.
- *
  * @param {number[]} packedSamples The array of packed samples.
  * @param {JulianDate} [epoch] If any of the dates in packedSamples are numbers, they are considered an offset from this epoch, in seconds.
  */
@@ -290,7 +276,6 @@ SampledPositionProperty.prototype.addSamplesPackedArray = function (
 
 /**
  * Removes a sample at the given time, if present.
- *
  * @param {JulianDate} time The sample time.
  * @returns {boolean} <code>true</code> if a sample at time was removed, <code>false</code> otherwise.
  */
@@ -300,8 +285,8 @@ SampledPositionProperty.prototype.removeSample = function (time) {
 
 /**
  * Removes all samples for the given time interval.
- *
  * @param {TimeInterval} time The time interval for which to remove all samples.
+ * @param timeInterval
  */
 SampledPositionProperty.prototype.removeSamples = function (timeInterval) {
   this._property.removeSamples(timeInterval);
@@ -310,7 +295,6 @@ SampledPositionProperty.prototype.removeSamples = function (timeInterval) {
 /**
  * Compares this property to the provided property and returns
  * <code>true</code> if they are equal, <code>false</code> otherwise.
- *
  * @param {Property} [other] The other property.
  * @returns {boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
  */

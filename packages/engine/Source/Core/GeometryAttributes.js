@@ -6,9 +6,9 @@ import defaultValue from "./defaultValue.js";
  * <p>
  * Attributes are always stored non-interleaved in a Geometry.
  * </p>
- *
+ * @param options
  * @alias GeometryAttributes
- * @constructor
+ * @class
  */
 function GeometryAttributes(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -18,9 +18,7 @@ function GeometryAttributes(options) {
    * <p>
    * 64-bit floating-point (for precision).  3 components per attribute.
    * </p>
-   *
    * @type GeometryAttribute
-   *
    * @default undefined
    */
   this.position = options.position;
@@ -30,9 +28,7 @@ function GeometryAttributes(options) {
    * <p>
    * 32-bit floating-point.  3 components per attribute.
    * </p>
-   *
    * @type GeometryAttribute
-   *
    * @default undefined
    */
   this.normal = options.normal;
@@ -42,9 +38,7 @@ function GeometryAttributes(options) {
    * <p>
    * 32-bit floating-point.  2 components per attribute
    * </p>
-   *
    * @type GeometryAttribute
-   *
    * @default undefined
    */
   this.st = options.st;
@@ -54,9 +48,7 @@ function GeometryAttributes(options) {
    * <p>
    * 32-bit floating-point.  3 components per attribute.
    * </p>
-   *
    * @type GeometryAttribute
-   *
    * @default undefined
    */
   this.bitangent = options.bitangent;
@@ -66,9 +58,7 @@ function GeometryAttributes(options) {
    * <p>
    * 32-bit floating-point.  3 components per attribute.
    * </p>
-   *
    * @type GeometryAttribute
-   *
    * @default undefined
    */
   this.tangent = options.tangent;
@@ -78,9 +68,7 @@ function GeometryAttributes(options) {
    * <p>
    * 8-bit unsigned integer. 4 components per attribute.
    * </p>
-   *
    * @type GeometryAttribute
-   *
    * @default undefined
    */
   this.color = options.color;

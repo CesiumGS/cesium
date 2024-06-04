@@ -8,7 +8,6 @@ import createPropertyDescriptor from "./createPropertyDescriptor.js";
  * @typedef {object} LabelGraphics.ConstructorOptions
  *
  * Initialization options for the LabelGraphics constructor
- *
  * @property {Property | boolean} [show=true] A boolean Property specifying the visibility of the label.
  * @property {Property | string} [text] A Property specifying the text. Explicit newlines '\n' are supported.
  * @property {Property | string} [font='30px sans-serif'] A Property specifying the CSS font.
@@ -40,12 +39,9 @@ import createPropertyDescriptor from "./createPropertyDescriptor.js";
  * Example labels
  * </div>
  * </p>
- *
  * @alias LabelGraphics
- * @constructor
- *
+ * @class
  * @param {LabelGraphics.ConstructorOptions} [options] Object describing initialization options
- *
  * @demo {@link https://sandcastle.cesium.com/index.html?src=Labels.html|Cesium Sandcastle Labels Demo}
  */
 function LabelGraphics(options) {
@@ -100,7 +96,6 @@ Object.defineProperties(LabelGraphics.prototype, {
   /**
    * Gets the event that is raised whenever a property or sub-property is changed or modified.
    * @memberof LabelGraphics.prototype
-   *
    * @type {Event}
    * @readonly
    */
@@ -327,7 +322,6 @@ Object.defineProperties(LabelGraphics.prototype, {
 
 /**
  * Duplicates this instance.
- *
  * @param {LabelGraphics} [result] The object onto which to store the result.
  * @returns {LabelGraphics} The modified result parameter or a new instance if one was not provided.
  */
@@ -362,7 +356,6 @@ LabelGraphics.prototype.clone = function (result) {
 /**
  * Assigns each unassigned property on this object to the value
  * of the same property on the provided source object.
- *
  * @param {LabelGraphics} source The object to be merged into this object.
  */
 LabelGraphics.prototype.merge = function (source) {

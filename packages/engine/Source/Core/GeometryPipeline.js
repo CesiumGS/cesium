@@ -26,9 +26,7 @@ import Tipsify from "./Tipsify.js";
 
 /**
  * Content pipeline functions for geometries.
- *
  * @namespace GeometryPipeline
- *
  * @see Geometry
  */
 const GeometryPipeline = {};
@@ -107,12 +105,9 @@ function triangleFanToLines(triangles) {
  * <p>
  * This is commonly used to create a wireframe geometry for visual debugging.
  * </p>
- *
  * @param {Geometry} geometry The geometry to modify.
  * @returns {Geometry} The modified <code>geometry</code> argument, with its triangle indices converted to lines.
- *
- * @exception {DeveloperError} geometry.primitiveType must be TRIANGLES, TRIANGLE_STRIP, or TRIANGLE_FAN.
- *
+ * @throws {DeveloperError} geometry.primitiveType must be TRIANGLES, TRIANGLE_STRIP, or TRIANGLE_FAN.
  * @example
  * geometry = Cesium.GeometryPipeline.toWireframe(geometry);
  */
@@ -153,14 +148,11 @@ GeometryPipeline.toWireframe = function (geometry) {
  * Creates a new {@link Geometry} with <code>LINES</code> representing the provided
  * attribute (<code>attributeName</code>) for the provided geometry.  This is used to
  * visualize vector attributes like normals, tangents, and bitangents.
- *
  * @param {Geometry} geometry The <code>Geometry</code> instance with the attribute.
  * @param {string} [attributeName='normal'] The name of the attribute.
  * @param {number} [length=10000.0] The length of each line segment in meters.  This can be negative to point the vector in the opposite direction.
  * @returns {Geometry} A new <code>Geometry</code> instance with line segments for the vector.
- *
- * @exception {DeveloperError} geometry.attributes must have an attribute with the same name as the attributeName parameter.
- *
+ * @throws {DeveloperError} geometry.attributes must have an attribute with the same name as the attributeName parameter.
  * @example
  * const geometry = Cesium.GeometryPipeline.createLineSegmentsForVectors(instance.geometry, 'bitangent', 100000.0);
  */
@@ -226,10 +218,8 @@ GeometryPipeline.createLineSegmentsForVectors = function (
 /**
  * Creates an object that maps attribute names to unique locations (indices)
  * for matching vertex attributes and shader programs.
- *
  * @param {Geometry} geometry The geometry, which is not modified, to create the object for.
  * @returns {object} An object with attribute name / index pairs.
- *
  * @example
  * const attributeLocations = Cesium.GeometryPipeline.createAttributeLocations(geometry);
  * // Example output
@@ -301,16 +291,11 @@ GeometryPipeline.createAttributeLocations = function (geometry) {
 
 /**
  * Reorders a geometry's attributes and <code>indices</code> to achieve better performance from the GPU's pre-vertex-shader cache.
- *
  * @param {Geometry} geometry The geometry to modify.
  * @returns {Geometry} The modified <code>geometry</code> argument, with its attributes and indices reordered for the GPU's pre-vertex-shader cache.
- *
- * @exception {DeveloperError} Each attribute array in geometry.attributes must have the same number of attributes.
- *
- *
+ * @throws {DeveloperError} Each attribute array in geometry.attributes must have the same number of attributes.
  * @example
  * geometry = Cesium.GeometryPipeline.reorderForPreVertexCache(geometry);
- *
  * @see GeometryPipeline.reorderForPostVertexCache
  */
 GeometryPipeline.reorderForPreVertexCache = function (geometry) {
@@ -392,17 +377,12 @@ GeometryPipeline.reorderForPreVertexCache = function (geometry) {
  * Reorders a geometry's <code>indices</code> to achieve better performance from the GPU's
  * post vertex-shader cache by using the Tipsify algorithm.  If the geometry <code>primitiveType</code>
  * is not <code>TRIANGLES</code> or the geometry does not have an <code>indices</code>, this function has no effect.
- *
  * @param {Geometry} geometry The geometry to modify.
  * @param {number} [cacheCapacity=24] The number of vertices that can be held in the GPU's vertex cache.
  * @returns {Geometry} The modified <code>geometry</code> argument, with its indices reordered for the post-vertex-shader cache.
- *
- * @exception {DeveloperError} cacheCapacity must be greater than two.
- *
- *
+ * @throws {DeveloperError} cacheCapacity must be greater than two.
  * @example
  * geometry = Cesium.GeometryPipeline.reorderForPostVertexCache(geometry);
- *
  * @see GeometryPipeline.reorderForPreVertexCache
  * @see {@link http://gfx.cs.princ0eton.edu/pubs/Sander_2007_%3ETR/tipsy.pdf|Fast Triangle Reordering for Vertex Locality and Reduced Overdraw}
  * by Sander, Nehab, and Barczak
@@ -483,13 +463,10 @@ function copyVertex(destinationAttributes, sourceAttributes, index) {
  * <p>
  * If the geometry does not have any <code>indices</code>, this function has no effect.
  * </p>
- *
  * @param {Geometry} geometry The geometry to be split into multiple geometries.
  * @returns {Geometry[]} An array of geometries, each with indices that fit into unsigned shorts.
- *
- * @exception {DeveloperError} geometry.primitiveType must equal to PrimitiveType.TRIANGLES, PrimitiveType.LINES, or PrimitiveType.POINTS
- * @exception {DeveloperError} All geometry attribute lists must have the same number of attributes.
- *
+ * @throws {DeveloperError} geometry.primitiveType must equal to PrimitiveType.TRIANGLES, PrimitiveType.LINES, or PrimitiveType.POINTS
+ * @throws {DeveloperError} All geometry attribute lists must have the same number of attributes.
  * @example
  * const geometries = Cesium.GeometryPipeline.fitToUnsignedShortIndices(geometry);
  */
@@ -599,18 +576,15 @@ const scratchProjectTo2DCartographic = new Cartographic();
  * <p>
  * If the geometry does not have a <code>position</code>, this function has no effect.
  * </p>
- *
  * @param {Geometry} geometry The geometry to modify.
  * @param {string} attributeName The name of the attribute.
  * @param {string} attributeName3D The name of the attribute in 3D.
  * @param {string} attributeName2D The name of the attribute in 2D.
  * @param {object} [projection=new GeographicProjection()] The projection to use.
  * @returns {Geometry} The modified <code>geometry</code> argument with <code>position3D</code> and <code>position2D</code> attributes.
- *
- * @exception {DeveloperError} geometry must have attribute matching the attributeName argument.
- * @exception {DeveloperError} The attribute componentDatatype must be ComponentDatatype.DOUBLE.
- * @exception {DeveloperError} Could not project a point to 2D.
- *
+ * @throws {DeveloperError} geometry must have attribute matching the attributeName argument.
+ * @throws {DeveloperError} The attribute componentDatatype must be ComponentDatatype.DOUBLE.
+ * @throws {DeveloperError} Could not project a point to 2D.
  * @example
  * geometry = Cesium.GeometryPipeline.projectTo2D(geometry, 'position', 'position3D', 'position2D');
  */
@@ -712,16 +686,13 @@ const encodedResult = {
  * <p>
  * This is commonly used to create high-precision position vertex attributes.
  * </p>
- *
  * @param {Geometry} geometry The geometry to modify.
  * @param {string} attributeName The name of the attribute.
  * @param {string} attributeHighName The name of the attribute for the encoded high bits.
  * @param {string} attributeLowName The name of the attribute for the encoded low bits.
  * @returns {Geometry} The modified <code>geometry</code> argument, with its encoded attribute.
- *
- * @exception {DeveloperError} geometry must have attribute matching the attributeName argument.
- * @exception {DeveloperError} The attribute componentDatatype must be ComponentDatatype.DOUBLE.
- *
+ * @throws {DeveloperError} geometry must have attribute matching the attributeName argument.
+ * @throws {DeveloperError} The attribute componentDatatype must be ComponentDatatype.DOUBLE.
  * @example
  * geometry = Cesium.GeometryPipeline.encodeAttribute(geometry, 'position3D', 'position3DHigh', 'position3DLow');
  */
@@ -826,10 +797,8 @@ const normalMatrix = new Matrix3();
  * the instance's <code>modelMatrix</code> to {@link Matrix4.IDENTITY} and transforms the
  * following attributes if they are present: <code>position</code>, <code>normal</code>,
  * <code>tangent</code>, and <code>bitangent</code>.
- *
  * @param {GeometryInstance} instance The geometry instance to modify.
  * @returns {GeometryInstance} The modified <code>instance</code> argument, with its attributes transforms to world coordinates.
- *
  * @example
  * Cesium.GeometryPipeline.transformToWorldCoordinates(instance);
  */
@@ -1080,23 +1049,17 @@ function combineGeometries(instances, propertyName) {
  * <p>
  * This is used by {@link Primitive} to efficiently render a large amount of static data.
  * </p>
- *
  * @private
- *
  * @param {GeometryInstance[]} [instances] The array of {@link GeometryInstance} objects whose geometry will be combined.
  * @returns {Geometry} A single geometry created from the provided geometry instances.
- *
- * @exception {DeveloperError} All instances must have the same modelMatrix.
- * @exception {DeveloperError} All instance geometries must have an indices or not have one.
- * @exception {DeveloperError} All instance geometries must have the same primitiveType.
- *
- *
+ * @throws {DeveloperError} All instances must have the same modelMatrix.
+ * @throws {DeveloperError} All instance geometries must have an indices or not have one.
+ * @throws {DeveloperError} All instance geometries must have the same primitiveType.
  * @example
  * for (let i = 0; i < instances.length; ++i) {
  *   Cesium.GeometryPipeline.transformToWorldCoordinates(instances[i]);
  * }
  * const geometries = Cesium.GeometryPipeline.combineInstances(instances);
- *
  * @see GeometryPipeline.transformToWorldCoordinates
  */
 GeometryPipeline.combineInstances = function (instances) {
@@ -1150,13 +1113,10 @@ const v2 = new Cartesian3();
  * Computes per-vertex normals for a geometry containing <code>TRIANGLES</code> by averaging the normals of
  * all triangles incident to the vertex.  The result is a new <code>normal</code> attribute added to the geometry.
  * This assumes a counter-clockwise winding order.
- *
  * @param {Geometry} geometry The geometry to modify.
  * @returns {Geometry} The modified <code>geometry</code> argument with the computed <code>normal</code> attribute.
- *
- * @exception {DeveloperError} geometry.indices length must be greater than 0 and be a multiple of 3.
- * @exception {DeveloperError} geometry.primitiveType must be {@link PrimitiveType.TRIANGLES}.
- *
+ * @throws {DeveloperError} geometry.indices length must be greater than 0 and be a multiple of 3.
+ * @throws {DeveloperError} geometry.primitiveType must be {@link PrimitiveType.TRIANGLES}.
  * @example
  * Cesium.GeometryPipeline.computeNormal(geometry);
  */
@@ -1321,13 +1281,10 @@ const tScratch = new Cartesian3();
  * Based on <a href="http://www.terathon.com/code/tangent.html">Computing Tangent Space Basis Vectors
  * for an Arbitrary Mesh</a> by Eric Lengyel.
  * </p>
- *
  * @param {Geometry} geometry The geometry to modify.
  * @returns {Geometry} The modified <code>geometry</code> argument with the computed <code>tangent</code> and <code>bitangent</code> attributes.
- *
- * @exception {DeveloperError} geometry.indices length must be greater than 0 and be a multiple of 3.
- * @exception {DeveloperError} geometry.primitiveType must be {@link PrimitiveType.TRIANGLES}.
- *
+ * @throws {DeveloperError} geometry.indices length must be greater than 0 and be a multiple of 3.
+ * @throws {DeveloperError} geometry.primitiveType must be {@link PrimitiveType.TRIANGLES}.
  * @example
  * Cesium.GeometryPipeline.computeTangentAndBiTangent(geometry);
  */
@@ -1471,10 +1428,8 @@ const toEncode3 = new Cartesian3();
 let encodeResult2 = new Cartesian2();
 /**
  * Compresses and packs geometry normal attribute values to save memory.
- *
  * @param {Geometry} geometry The geometry to modify.
  * @returns {Geometry} The modified <code>geometry</code> argument, with its normals compressed and packed.
- *
  * @example
  * geometry = Cesium.GeometryPipeline.compressVertices(geometry);
  */
@@ -3241,12 +3196,9 @@ function splitLongitudePolyline(instance) {
  * intersect the International Date Line and Prime Meridian so that no primitives cross longitude
  * -180/180 degrees.  This is not required for 3D drawing, but is required for
  * correcting drawing in 2D and Columbus view.
- *
  * @private
- *
  * @param {GeometryInstance} instance The instance to modify.
  * @returns {GeometryInstance} The modified <code>instance</code> argument, with it's geometry split at the International Date Line.
- *
  * @example
  * instance = Cesium.GeometryPipeline.splitLongitude(instance);
  */

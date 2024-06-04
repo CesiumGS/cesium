@@ -7,22 +7,18 @@ import Cesium3DTileRefine from "./Cesium3DTileRefine.js";
 /**
  * Traverses a {@link Cesium3DTileset} to determine which tiles to load and render.
  * This type describes an interface and is not intended to be instantiated directly.
- *
  * @alias Cesium3DTilesetTraversal
- * @constructor
+ * @class
  * @abstract
- *
  * @see Cesium3DTilesetBaseTraversal
  * @see Cesium3DTilesetSkipTraversal
  * @see Cesium3DTilesetMostDetailedTraversal
- *
  * @private
  */
 function Cesium3DTilesetTraversal() {}
 
 /**
  * Traverses a {@link Cesium3DTileset} to determine which tiles to load and render.
- *
  * @private
  * @param {Cesium3DTileset} tileset
  * @param {FrameState} frameState
@@ -33,7 +29,6 @@ Cesium3DTilesetTraversal.selectTiles = function (tileset, frameState) {
 
 /**
  * Sort by farthest child first since this is going on a stack
- *
  * @private
  * @param {Cesium3DTile} a
  * @param {Cesium3DTile} b
@@ -50,7 +45,6 @@ Cesium3DTilesetTraversal.sortChildrenByDistanceToCamera = function (a, b) {
 /**
  * Determine if a tile can and should be traversed for children tiles that
  * would contribute to rendering the current view
- *
  * @private
  * @param {Cesium3DTile} tile
  * @returns {boolean}
@@ -69,7 +63,6 @@ Cesium3DTilesetTraversal.canTraverse = function (tile) {
 
 /**
  * Mark a tile as selected, and add it to the tileset's list of selected tiles
- *
  * @private
  * @param {Cesium3DTile} tile
  * @param {FrameState} frameState
@@ -123,7 +116,6 @@ Cesium3DTilesetTraversal.touchTile = function (tile, frameState) {
 
 /**
  * Add a tile to the list of requested tiles, if appropriate
- *
  * @private
  * @param {Cesium3DTile} tile
  * @param {FrameState} frameState
@@ -153,7 +145,6 @@ Cesium3DTilesetTraversal.loadTile = function (tile, frameState) {
 
 /**
  * Prevent unnecessary loads while camera is moving by getting the ratio of travel distance to tile size.
- *
  * @private
  * @param {Cesium3DTile} tile
  * @param {FrameState} frameState
@@ -184,7 +175,6 @@ function isOnScreenLongEnough(tile, frameState) {
 
 /**
  * Reset some of the tile's flags and re-evaluate visibility and priority
- *
  * @private
  * @param {Cesium3DTile} tile
  * @param {FrameState} frameState

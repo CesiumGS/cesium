@@ -11,23 +11,21 @@
  * </p>
  * <pre><code>
  * "techniques": {
- *   "technique0": {
- *     "parameters": {
- *       "diffuse": {
- *         "semantic": "_3DTILESDIFFUSE",
- *         "type": 35666
- *       }
- *     }
- *   }
+ * "technique0": {
+ * "parameters": {
+ * "diffuse": {
+ * "semantic": "_3DTILESDIFFUSE",
+ * "type": 35666
+ * }
+ * }
+ * }
  * }
  * </code></pre>
- *
  * @enum {number}
  */
 const Cesium3DTileColorBlendMode = {
   /**
    * Multiplies the source color by the feature color.
-   *
    * @type {number}
    * @constant
    */
@@ -35,7 +33,6 @@ const Cesium3DTileColorBlendMode = {
 
   /**
    * Replaces the source color with the feature color.
-   *
    * @type {number}
    * @constant
    */
@@ -43,7 +40,6 @@ const Cesium3DTileColorBlendMode = {
 
   /**
    * Blends the source color and feature color together.
-   *
    * @type {number}
    * @constant
    */

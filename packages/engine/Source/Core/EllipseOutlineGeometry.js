@@ -180,10 +180,8 @@ function computeExtrudedEllipse(options) {
 
 /**
  * A description of the outline of an ellipse on an ellipsoid.
- *
  * @alias EllipseOutlineGeometry
- * @constructor
- *
+ * @class
  * @param {object} options Object with the following properties:
  * @param {Cartesian3} options.center The ellipse's center point in the fixed frame.
  * @param {number} options.semiMajorAxis The length of the ellipse's semi-major axis in meters.
@@ -194,13 +192,10 @@ function computeExtrudedEllipse(options) {
  * @param {number} [options.rotation=0.0] The angle from north (counter-clockwise) in radians.
  * @param {number} [options.granularity=0.02] The angular distance between points on the ellipse in radians.
  * @param {number} [options.numberOfVerticalLines=16] Number of lines to draw between the top and bottom surface of an extruded ellipse.
- *
- * @exception {DeveloperError} semiMajorAxis and semiMinorAxis must be greater than zero.
- * @exception {DeveloperError} semiMajorAxis must be greater than or equal to the semiMinorAxis.
- * @exception {DeveloperError} granularity must be greater than zero.
- *
+ * @throws {DeveloperError} semiMajorAxis and semiMinorAxis must be greater than zero.
+ * @throws {DeveloperError} semiMajorAxis must be greater than or equal to the semiMinorAxis.
+ * @throws {DeveloperError} granularity must be greater than zero.
  * @see EllipseOutlineGeometry.createGeometry
- *
  * @example
  * const ellipse = new Cesium.EllipseOutlineGeometry({
  *   center : Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
@@ -270,11 +265,9 @@ EllipseOutlineGeometry.packedLength =
 
 /**
  * Stores the provided instance into the provided array.
- *
  * @param {EllipseOutlineGeometry} value The value to pack.
  * @param {number[]} array The array to pack into.
  * @param {number} [startingIndex=0] The index into the array at which to start packing the elements.
- *
  * @returns {number[]} The array that was packed into
  */
 EllipseOutlineGeometry.pack = function (value, array, startingIndex) {
@@ -324,7 +317,6 @@ const scratchOptions = {
 
 /**
  * Retrieves an instance from a packed array.
- *
  * @param {number[]} array The packed array.
  * @param {number} [startingIndex=0] The starting index of the element to be unpacked.
  * @param {EllipseOutlineGeometry} [result] The object into which to store the result.
@@ -385,7 +377,6 @@ EllipseOutlineGeometry.unpack = function (array, startingIndex, result) {
 
 /**
  * Computes the geometric representation of an outline of an ellipse on an ellipsoid, including its vertices, indices, and a bounding sphere.
- *
  * @param {EllipseOutlineGeometry} ellipseGeometry A description of the ellipse.
  * @returns {Geometry|undefined} The computed vertices and indices.
  */

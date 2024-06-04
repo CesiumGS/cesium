@@ -6,12 +6,9 @@ import MetadataTable from "./MetadataTable.js";
 
 /**
  * An object representing voxel content for a {@link Cesium3DTilesVoxelProvider}.
- *
  * @alias VoxelContent
- * @constructor
- *
+ * @class
  * @param {Resource} resource The resource for this voxel content. This is used for fetching external buffers as needed.
- *
  * @private
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
@@ -27,7 +24,6 @@ function VoxelContent(resource) {
 Object.defineProperties(VoxelContent.prototype, {
   /**
    * The {@link MetadataTable} storing voxel property values.
-   *
    * @type {MetadataTable}
    * @readonly
    * @private
@@ -41,14 +37,12 @@ Object.defineProperties(VoxelContent.prototype, {
 
 /**
  * Creates an object representing voxel content for a {@link Cesium3DTilesVoxelProvider}.
- *
  * @param {Resource} resource The resource for this voxel content. This is used for fetching external buffers as needed.
  * @param {object} [json] Voxel JSON contents. Mutually exclusive with binary.
  * @param {Uint8Array} [binary] Voxel binary contents. Mutually exclusive with json.
  * @param {MetadataSchema} metadataSchema The metadata schema used by property tables in the voxel content
  * @returns {Promise<VoxelContent>}
- *
- * @exception {DeveloperError} One of json and binary must be defined.
+ * @throws {DeveloperError} One of json and binary must be defined.
  */
 VoxelContent.fromJson = async function (
   resource,
@@ -125,7 +119,6 @@ function requestBuffers(resource, json, binary) {
 
 /**
  * A helper object for storing the two parts of the binary voxel content
- *
  * @typedef {object} VoxelChunks
  * @property {object} json The json chunk of the binary voxel content
  * @property {Uint8Array} binary The binary chunk of the binary voxel content. This represents the internal buffer.
@@ -134,7 +127,6 @@ function requestBuffers(resource, json, binary) {
 
 /**
  * Given binary voxel content, split into JSON and binary chunks
- *
  * @param {Uint8Array} binaryView The binary voxel content
  * @returns {VoxelChunks} An object containing the JSON and binary chunks
  * @private

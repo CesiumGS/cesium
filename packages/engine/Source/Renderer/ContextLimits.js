@@ -1,6 +1,5 @@
 /**
  * These are set in the constructor for {@link Context}
- *
  * @private
  */
 const ContextLimits = {

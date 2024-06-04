@@ -7,12 +7,9 @@ import FramebufferManager from "../Renderer/FramebufferManager.js";
 
 /**
  * Creates a minimal amount of textures and framebuffers.
- *
  * @alias PostProcessStageTextureCache
- * @constructor
- *
+ * @class
  * @param {PostProcessStageCollection} postProcessStageCollection The post process collection.
- *
  * @private
  */
 function PostProcessStageTextureCache(postProcessStageCollection) {
@@ -313,7 +310,6 @@ PostProcessStageTextureCache.prototype.updateDependencies = function () {
 
 /**
  * Called before the stages in the collection are executed. Creates the minimum amount of framebuffers for a post-process collection.
- *
  * @param {Context} context The context.
  */
 PostProcessStageTextureCache.prototype.update = function (context) {
@@ -377,7 +373,6 @@ PostProcessStageTextureCache.prototype.update = function (context) {
 
 /**
  * Clears all of the framebuffers.
- *
  * @param {Context} context The context.
  */
 PostProcessStageTextureCache.prototype.clear = function (context) {
@@ -390,7 +385,7 @@ PostProcessStageTextureCache.prototype.clear = function (context) {
 /**
  * Gets the stage with the given name.
  * @param {string} name The name of the stage.
- * @return {PostProcessStage|PostProcessStageComposite}
+ * @returns {PostProcessStage|PostProcessStageComposite}
  */
 PostProcessStageTextureCache.prototype.getStageByName = function (name) {
   return this._collection.getStageByName(name);
@@ -399,7 +394,7 @@ PostProcessStageTextureCache.prototype.getStageByName = function (name) {
 /**
  * Gets the output texture for a stage with the given name.
  * @param {string} name The name of the stage.
- * @return {Texture|undefined} The output texture of the stage with the given name.
+ * @returns {Texture|undefined} The output texture of the stage with the given name.
  */
 PostProcessStageTextureCache.prototype.getOutputTexture = function (name) {
   return this._collection.getOutputTexture(name);
@@ -407,9 +402,8 @@ PostProcessStageTextureCache.prototype.getOutputTexture = function (name) {
 
 /**
  * Gets the framebuffer for a stage with the given name.
- *
  * @param {string} name The name of the stage.
- * @return {Framebuffer|undefined} The framebuffer for the stage with the given name.
+ * @returns {Framebuffer|undefined} The framebuffer for the stage with the given name.
  */
 PostProcessStageTextureCache.prototype.getFramebuffer = function (name) {
   const framebuffer = this._stageNameToFramebuffer[name];
@@ -425,9 +419,7 @@ PostProcessStageTextureCache.prototype.getFramebuffer = function (name) {
  * If this object was destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
  * </p>
- *
  * @returns {boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
- *
  * @see PostProcessStageTextureCache#destroy
  */
 PostProcessStageTextureCache.prototype.isDestroyed = function () {
@@ -442,9 +434,7 @@ PostProcessStageTextureCache.prototype.isDestroyed = function () {
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
  * assign the return value (<code>undefined</code>) to the object as done in the example.
  * </p>
- *
- * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
- *
+ * @throws {DeveloperError} This object was destroyed, i.e., destroy() was called.
  * @see PostProcessStageTextureCache#isDestroyed
  */
 PostProcessStageTextureCache.prototype.destroy = function () {

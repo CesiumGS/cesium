@@ -10,11 +10,9 @@ import CustomShaderTranslucencyMode from "./CustomShaderTranslucencyMode.js";
 
 /**
  * An object describing a uniform, its type, and an initial value
- *
  * @typedef {object} UniformSpecifier
  * @property {UniformType} type The Glsl type of the uniform.
  * @property {boolean|number|Cartesian2|Cartesian3|Cartesian4|Matrix2|Matrix3|Matrix4|TextureUniform} value The initial value of the uniform
- *
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 
@@ -59,21 +57,20 @@ import CustomShaderTranslucencyMode from "./CustomShaderTranslucencyMode.js";
  * If texture uniforms are used, additional resource management must be done:
  * </p>
  * <ul>
- *   <li>
- *      The <code>update</code> function must be called each frame. When a
- *      custom shader is passed to a {@link Model} or a
- *      {@link Cesium3DTileset}, this step is handled automaticaly
- *   </li>
- *   <li>
- *      {@link CustomShader#destroy} must be called when the custom shader is
- *      no longer needed to clean up GPU resources properly. The application
- *      is responsible for calling this method.
- *   </li>
+ * <li>
+ * The <code>update</code> function must be called each frame. When a
+ * custom shader is passed to a {@link Model} or a
+ * {@link Cesium3DTileset}, this step is handled automaticaly
+ * </li>
+ * <li>
+ * {@link CustomShader#destroy} must be called when the custom shader is
+ * no longer needed to clean up GPU resources properly. The application
+ * is responsible for calling this method.
+ * </li>
  * </ul>
  * <p>
  * See the {@link https://github.com/CesiumGS/cesium/tree/main/Documentation/CustomShaderGuide|Custom Shader Guide} for more detailed documentation.
  * </p>
- *
  * @param {object} options An object with the following options
  * @param {CustomShaderMode} [options.mode=CustomShaderMode.MODIFY_MATERIAL] The custom shader mode, which determines how the custom shader code is inserted into the fragment shader.
  * @param {LightingModel} [options.lightingModel] The lighting model (e.g. PBR or unlit). If present, this overrides the default lighting for the model.
@@ -82,12 +79,9 @@ import CustomShaderTranslucencyMode from "./CustomShaderTranslucencyMode.js";
  * @param {Object<string, VaryingType>} [options.varyings] A dictionary for declaring additional GLSL varyings used in the shader. The key is the varying name that will appear in the GLSL code. The value is the data type of the varying. For each varying, the declaration will be added to the top of the shader automatically. The caller is responsible for assigning a value in the vertex shader and using the value in the fragment shader.
  * @param {string} [options.vertexShaderText] The custom vertex shader as a string of GLSL code. It must include a GLSL function called vertexMain. See the example for the expected signature. If not specified, the custom vertex shader step will be skipped in the computed vertex shader.
  * @param {string} [options.fragmentShaderText] The custom fragment shader as a string of GLSL code. It must include a GLSL function called fragmentMain. See the example for the expected signature. If not specified, the custom fragment shader step will be skipped in the computed fragment shader.
- *
  * @alias CustomShader
- * @constructor
- *
+ * @class
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
- *
  * @example
  * const customShader = new CustomShader({
  *   uniforms: {
@@ -125,7 +119,6 @@ function CustomShader(options) {
   /**
    * A value determining how the custom shader interacts with the overall
    * fragment shader. This is used by {@link CustomShaderPipelineStage}
-   *
    * @type {CustomShaderMode}
    * @readonly
    */
@@ -133,14 +126,12 @@ function CustomShader(options) {
   /**
    * The lighting model to use when using the custom shader.
    * This is used by {@link CustomShaderPipelineStage}
-   *
    * @type {LightingModel}
    * @readonly
    */
   this.lightingModel = options.lightingModel;
   /**
    * Additional uniforms as declared by the user.
-   *
    * @type {Object<string, UniformSpecifier>}
    * @readonly
    */
@@ -148,21 +139,18 @@ function CustomShader(options) {
   /**
    * Additional varyings as declared by the user.
    * This is used by {@link CustomShaderPipelineStage}
-   *
    * @type {Object<string, VaryingType>}
    * @readonly
    */
   this.varyings = defaultValue(options.varyings, defaultValue.EMPTY_OBJECT);
   /**
    * The user-defined GLSL code for the vertex shader
-   *
    * @type {string}
    * @readonly
    */
   this.vertexShaderText = options.vertexShaderText;
   /**
    * The user-defined GLSL code for the fragment shader
-   *
    * @type {string}
    * @readonly
    */
@@ -173,7 +161,6 @@ function CustomShader(options) {
    * CustomShaderTransulcencyMode.OPAQUE or CustomShaderTransulcencyMode.TRANSLUCENT, the custom shader
    * will override settings from the model's material. If the value isCustomShaderTransulcencyMode.INHERIT,
    * the custom shader will render as either opaque or translucent depending on the primitive's material settings.
-   *
    * @type {CustomShaderTranslucencyMode}
    * @default CustomShaderTranslucencyMode.INHERIT
    * @readonly
@@ -186,7 +173,6 @@ function CustomShader(options) {
   /**
    * texture uniforms require some asynchronous processing. This is delegated
    * to a texture manager.
-   *
    * @type {TextureManager}
    * @readonly
    * @private
@@ -195,7 +181,6 @@ function CustomShader(options) {
   /**
    * The default texture (from the {@link Context}) to use while textures
    * are loading
-   *
    * @type {Texture}
    * @readonly
    * @private
@@ -204,7 +189,6 @@ function CustomShader(options) {
   /**
    * The map of uniform names to a function that returns a value. This map
    * is combined with the overall uniform map used by the {@link DrawCommand}
-   *
    * @type {Object<string, Function>}
    * @readonly
    * @private
@@ -439,9 +423,7 @@ CustomShader.prototype.update = function (frameState) {
  * <br /><br />
  * If this object was destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
- *
  * @returns {boolean} True if this object was destroyed; otherwise, false.
- *
  * @see CustomShader#destroy
  * @private
  */
@@ -456,12 +438,9 @@ CustomShader.prototype.isDestroyed = function () {
  * Once an object is destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
  * assign the return value (<code>undefined</code>) to the object as done in the example.
- *
- * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
- *
+ * @throws {DeveloperError} This object was destroyed, i.e., destroy() was called.
  * @example
  * customShader = customShader && customShader.destroy();
- *
  * @see CustomShader#isDestroyed
  * @private
  */

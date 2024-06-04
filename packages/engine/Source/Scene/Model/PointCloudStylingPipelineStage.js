@@ -24,9 +24,7 @@ const scratchUniform = new Cartesian4();
  * point cloud shading provided by either the model or the tileset that
  * owns it. Point cloud shading is only applied if no point size style
  * is provided.
- *
  * @namespace PointCloudStylingPipelineStage
- *
  * @private
  */
 const PointCloudStylingPipelineStage = {
@@ -37,22 +35,20 @@ const PointCloudStylingPipelineStage = {
  * Processes a primitive. If the model that owns it has a style, then
  * this stage modifies the following parts of the render resources:
  * <ul>
- *  <li>adds the styling functions to the vertex shaders</li>
- *  <li>adds a define to compute the position in world coordinates</li>
- *  <li>adds a varying to compute point cloud color</li>
+ * <li>adds the styling functions to the vertex shaders</li>
+ * <li>adds a define to compute the position in world coordinates</li>
+ * <li>adds a varying to compute point cloud color</li>
  * </ul>
  *
  * If the model has point cloud shading, then this stage modifies the following
  * part of the render resources:
  * <ul>
- *  <li>adds vertex shader code to compute attenuation and update gl_PointSize</li>
- *  <li>updates the uniform map to pass in point cloud parameters</li>
+ * <li>adds vertex shader code to compute attenuation and update gl_PointSize</li>
+ * <li>updates the uniform map to pass in point cloud parameters</li>
  * </ul>
- *
  * @param {PrimitiveRenderResources} renderResources The render resources for this primitive.
  * @param {ModelComponents.Primitive} primitive The primitive.
  * @param {FrameState} frameState The frame state.
- *
  * @private
  */
 PointCloudStylingPipelineStage.process = function (
@@ -353,10 +349,8 @@ function addShaderFunctionsAndDefines(shaderBuilder, shaderFunctionInfo) {
 /**
  * Gets all the built-in property names used by the given style
  * function.
- *
  * @param {Function} source The style function.
  * @param {string[]} propertyNames The array of property names to add to.
- *
  * @private
  */
 function getBuiltinPropertyNames(source, propertyNames) {

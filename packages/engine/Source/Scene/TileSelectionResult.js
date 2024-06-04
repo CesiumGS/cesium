@@ -50,7 +50,6 @@ const TileSelectionResult = {
    * Determines if a selection result indicates that this tile or its descendants were
    * kicked from the render list. In other words, if it is <code>RENDERED_AND_KICKED</code>
    * or <code>REFINED_AND_KICKED</code>.
-   *
    * @param {TileSelectionResult} value The selection result to test.
    * @returns {boolean} true if the tile was kicked, no matter if it was originally rendered or refined.
    */

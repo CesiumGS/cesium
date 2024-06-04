@@ -18,16 +18,13 @@ if (!FeatureDetection.isInternetExplorer()) {
  * {@link PolylineGeometry} or {@link GroundPolylineGeometry}.
  * This allows several geometry instances, each with a different color, to
  * be drawn with the same {@link Primitive}.
- *
  * @alias PolylineColorAppearance
- * @constructor
- *
+ * @class
  * @param {object} [options] Object with the following properties:
  * @param {boolean} [options.translucent=true] When <code>true</code>, the geometry is expected to appear translucent so {@link PolylineColorAppearance#renderState} has alpha blending enabled.
  * @param {string} [options.vertexShaderSource] Optional GLSL vertex shader source to override the default vertex shader.
  * @param {string} [options.fragmentShaderSource] Optional GLSL fragment shader source to override the default fragment shader.
  * @param {object} [options.renderState] Optional render state to override the default render state.
- *
  * @example
  * // A solid white line segment
  * const primitive = new Cesium.Primitive({
@@ -59,9 +56,7 @@ function PolylineColorAppearance(options) {
   /**
    * This property is part of the {@link Appearance} interface, but is not
    * used by {@link PolylineColorAppearance} since a fully custom fragment shader is used.
-   *
    * @type Material
-   *
    * @default undefined
    */
   this.material = undefined;
@@ -69,9 +64,7 @@ function PolylineColorAppearance(options) {
   /**
    * When <code>true</code>, the geometry is expected to appear translucent so
    * {@link PolylineColorAppearance#renderState} has alpha blending enabled.
-   *
    * @type {boolean}
-   *
    * @default true
    */
   this.translucent = translucent;
@@ -99,9 +92,7 @@ function PolylineColorAppearance(options) {
 Object.defineProperties(PolylineColorAppearance.prototype, {
   /**
    * The GLSL source code for the vertex shader.
-   *
    * @memberof PolylineColorAppearance.prototype
-   *
    * @type {string}
    * @readonly
    */
@@ -113,9 +104,7 @@ Object.defineProperties(PolylineColorAppearance.prototype, {
 
   /**
    * The GLSL source code for the fragment shader.
-   *
    * @memberof PolylineColorAppearance.prototype
-   *
    * @type {string}
    * @readonly
    */
@@ -131,9 +120,7 @@ Object.defineProperties(PolylineColorAppearance.prototype, {
    * The render state can be explicitly defined when constructing a {@link PolylineColorAppearance}
    * instance, or it is set implicitly via {@link PolylineColorAppearance#translucent}.
    * </p>
-   *
    * @memberof PolylineColorAppearance.prototype
-   *
    * @type {object}
    * @readonly
    */
@@ -147,12 +134,9 @@ Object.defineProperties(PolylineColorAppearance.prototype, {
    * When <code>true</code>, the geometry is expected to be closed so
    * {@link PolylineColorAppearance#renderState} has backface culling enabled.
    * This is always <code>false</code> for <code>PolylineColorAppearance</code>.
-   *
    * @memberof PolylineColorAppearance.prototype
-   *
    * @type {boolean}
    * @readonly
-   *
    * @default false
    */
   closed: {
@@ -165,12 +149,9 @@ Object.defineProperties(PolylineColorAppearance.prototype, {
    * The {@link VertexFormat} that this appearance instance is compatible with.
    * A geometry can have more vertex attributes and still be compatible - at a
    * potential performance cost - but it can't have less.
-   *
    * @memberof PolylineColorAppearance.prototype
-   *
    * @type VertexFormat
    * @readonly
-   *
    * @default {@link PolylineColorAppearance.VERTEX_FORMAT}
    */
   vertexFormat: {
@@ -183,18 +164,14 @@ Object.defineProperties(PolylineColorAppearance.prototype, {
 /**
  * The {@link VertexFormat} that all {@link PolylineColorAppearance} instances
  * are compatible with. This requires only a <code>position</code> attribute.
- *
  * @type VertexFormat
- *
  * @constant
  */
 PolylineColorAppearance.VERTEX_FORMAT = VertexFormat.POSITION_ONLY;
 
 /**
  * Procedurally creates the full GLSL fragment shader source.
- *
  * @function
- *
  * @returns {string} The full GLSL fragment shader source.
  */
 PolylineColorAppearance.prototype.getFragmentShaderSource =
@@ -202,9 +179,7 @@ PolylineColorAppearance.prototype.getFragmentShaderSource =
 
 /**
  * Determines if the geometry is translucent based on {@link PolylineColorAppearance#translucent}.
- *
  * @function
- *
  * @returns {boolean} <code>true</code> if the appearance is translucent.
  */
 PolylineColorAppearance.prototype.isTranslucent =
@@ -214,9 +189,7 @@ PolylineColorAppearance.prototype.isTranslucent =
  * Creates a render state.  This is not the final render state instance; instead,
  * it can contain a subset of render state properties identical to the render state
  * created in the context.
- *
  * @function
- *
  * @returns {object} The render state.
  */
 PolylineColorAppearance.prototype.getRenderState =

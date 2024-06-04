@@ -17,7 +17,7 @@ const defaultZIndex = new ConstantProperty(0);
 
 /**
  * An abstract class for updating ground geometry entities.
- * @constructor
+ * @class
  * @alias GroundGeometryUpdater
  * @param {object} options An object with the following properties:
  * @param {Entity} options.entity The entity containing the geometry to be visualized.
@@ -140,8 +140,7 @@ GroundGeometryUpdater.prototype._onEntityPropertyChanged = function (
 
 /**
  * Destroys and resources used by the object.  Once an object is destroyed, it should not be used.
- *
- * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+ * @throws {DeveloperError} This object was destroyed, i.e., destroy() was called.
  */
 GroundGeometryUpdater.prototype.destroy = function () {
   if (defined(this._terrainOffsetProperty)) {
@@ -153,6 +152,8 @@ GroundGeometryUpdater.prototype.destroy = function () {
 };
 
 /**
+ * @param height
+ * @param heightReference
  * @private
  */
 GroundGeometryUpdater.getGeometryHeight = function (height, heightReference) {
@@ -174,6 +175,8 @@ GroundGeometryUpdater.getGeometryHeight = function (height, heightReference) {
 };
 
 /**
+ * @param extrudedHeight
+ * @param extrudedHeightReference
  * @private
  */
 GroundGeometryUpdater.getGeometryExtrudedHeight = function (
@@ -202,6 +205,10 @@ GroundGeometryUpdater.getGeometryExtrudedHeight = function (
 GroundGeometryUpdater.CLAMP_TO_GROUND = "clamp";
 
 /**
+ * @param height
+ * @param heightReference
+ * @param extrudedHeight
+ * @param extrudedHeightReference
  * @private
  */
 GroundGeometryUpdater.computeGeometryOffsetAttribute = function (

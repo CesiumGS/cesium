@@ -12,10 +12,12 @@ import RuntimeError from "../Core/RuntimeError.js";
  * <p>
  * Implements the {@link Cesium3DTileContent} interface.
  * </p>
- *
+ * @param tileset
+ * @param tile
+ * @param resource
+ * @param contents
  * @alias Composite3DTileContent
- * @constructor
- *
+ * @class
  * @private
  */
 function Composite3DTileContent(tileset, tile, resource, contents) {
@@ -129,9 +131,7 @@ Object.defineProperties(Composite3DTileContent.prototype, {
 
   /**
    * Returns true when the tile's content is ready to render; otherwise false
-   *
    * @memberof Composite3DTileContent.prototype
-   *
    * @type {boolean}
    * @readonly
    * @private
@@ -302,6 +302,8 @@ Composite3DTileContent.fromTileType = async function (
 /**
  * Part of the {@link Cesium3DTileContent} interface.  <code>Composite3DTileContent</code>
  * always returns <code>false</code>.  Instead call <code>hasProperty</code> for a tile in the composite.
+ * @param batchId
+ * @param name
  */
 Composite3DTileContent.prototype.hasProperty = function (batchId, name) {
   return false;
@@ -310,6 +312,7 @@ Composite3DTileContent.prototype.hasProperty = function (batchId, name) {
 /**
  * Part of the {@link Cesium3DTileContent} interface.  <code>Composite3DTileContent</code>
  * always returns <code>undefined</code>.  Instead call <code>getFeature</code> for a tile in the composite.
+ * @param batchId
  */
 Composite3DTileContent.prototype.getFeature = function (batchId) {
   return undefined;
@@ -350,12 +353,10 @@ Composite3DTileContent.prototype.update = function (tileset, frameState) {
 
 /**
  * Find an intersection between a ray and the tile content surface that was rendered. The ray must be given in world coordinates.
- *
  * @param {Ray} ray The ray to test for intersection.
  * @param {FrameState} frameState The frame state.
  * @param {Cartesian3|undefined} [result] The intersection or <code>undefined</code> if none was found.
  * @returns {Cartesian3|undefined} The intersection or <code>undefined</code> if none was found.
- *
  * @private
  */
 Composite3DTileContent.prototype.pick = function (ray, frameState, result) {

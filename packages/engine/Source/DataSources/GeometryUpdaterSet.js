@@ -28,7 +28,6 @@ const geometryUpdaters = [
 
 /**
  * Manages a set of "updater" classes for the {@link GeometryVisualizer} for each entity
- *
  * @private
  * @param {Entity} entity
  * @param {Scene} scene

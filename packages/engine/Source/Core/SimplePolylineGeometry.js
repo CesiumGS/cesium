@@ -58,10 +58,8 @@ function interpolateColors(p0, p1, color0, color1, minDistance, array, offset) {
 /**
  * A description of a polyline modeled as a line strip; the first two positions define a line segment,
  * and each additional position defines a line segment from the previous position.
- *
  * @alias SimplePolylineGeometry
- * @constructor
- *
+ * @class
  * @param {object} options Object with the following properties:
  * @param {Cartesian3[]} options.positions An array of {@link Cartesian3} defining the positions in the polyline as a line strip.
  * @param {Color[]} [options.colors] An Array of {@link Color} defining the per vertex or per segment colors.
@@ -69,12 +67,9 @@ function interpolateColors(p0, p1, color0, color1, minDistance, array, offset) {
  * @param {ArcType} [options.arcType=ArcType.GEODESIC] The type of line the polyline segments must follow.
  * @param {number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude if options.arcType is not ArcType.NONE. Determines the number of positions in the buffer.
  * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference.
- *
- * @exception {DeveloperError} At least two positions are required.
- * @exception {DeveloperError} colors has an invalid length.
- *
+ * @throws {DeveloperError} At least two positions are required.
+ * @throws {DeveloperError} colors has an invalid length.
  * @see SimplePolylineGeometry#createGeometry
- *
  * @example
  * // A polyline with two connected line segments
  * const polyline = new Cesium.SimplePolylineGeometry({
@@ -129,11 +124,9 @@ function SimplePolylineGeometry(options) {
 
 /**
  * Stores the provided instance into the provided array.
- *
  * @param {SimplePolylineGeometry} value The value to pack.
  * @param {number[]} array The array to pack into.
  * @param {number} [startingIndex=0] The index into the array at which to start packing the elements.
- *
  * @returns {number[]} The array that was packed into
  */
 SimplePolylineGeometry.pack = function (value, array, startingIndex) {
@@ -178,7 +171,6 @@ SimplePolylineGeometry.pack = function (value, array, startingIndex) {
 
 /**
  * Retrieves an instance from a packed array.
- *
  * @param {number[]} array The packed array.
  * @param {number} [startingIndex=0] The starting index of the element to be unpacked.
  * @param {SimplePolylineGeometry} [result] The object into which to store the result.
@@ -249,7 +241,6 @@ const generateArcOptionsScratch = {
 
 /**
  * Computes the geometric representation of a simple polyline, including its vertices, indices, and a bounding sphere.
- *
  * @param {SimplePolylineGeometry} simplePolylineGeometry A description of the polyline.
  * @returns {Geometry|undefined} The computed vertices and indices.
  */

@@ -12,13 +12,10 @@ import VertexFormat from "./VertexFormat.js";
 
 /**
  * Describes geometry representing a plane centered at the origin, with a unit width and length.
- *
  * @alias PlaneGeometry
- * @constructor
- *
+ * @class
  * @param {object} [options] Object with the following properties:
  * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
- *
  * @example
  * const planeGeometry = new Cesium.PlaneGeometry({
  *   vertexFormat : Cesium.VertexFormat.POSITION_ONLY
@@ -41,11 +38,9 @@ PlaneGeometry.packedLength = VertexFormat.packedLength;
 
 /**
  * Stores the provided instance into the provided array.
- *
  * @param {PlaneGeometry} value The value to pack.
  * @param {number[]} array The array to pack into.
  * @param {number} [startingIndex=0] The index into the array at which to start packing the elements.
- *
  * @returns {number[]} The array that was packed into
  */
 PlaneGeometry.pack = function (value, array, startingIndex) {
@@ -68,7 +63,6 @@ const scratchOptions = {
 
 /**
  * Retrieves an instance from a packed array.
- *
  * @param {number[]} array The packed array.
  * @param {number} [startingIndex=0] The starting index of the element to be unpacked.
  * @param {PlaneGeometry} [result] The object into which to store the result.
@@ -101,7 +95,6 @@ const max = new Cartesian3(0.5, 0.5, 0.0);
 
 /**
  * Computes the geometric representation of a plane, including its vertices, indices, and a bounding sphere.
- *
  * @param {PlaneGeometry} planeGeometry A description of the plane.
  * @returns {Geometry|undefined} The computed vertices and indices.
  */

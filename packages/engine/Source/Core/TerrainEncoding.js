@@ -20,10 +20,8 @@ const SHIFT_LEFT_12 = Math.pow(2.0, 12.0);
 /**
  * Data used to quantize and pack the terrain mesh. The position can be unpacked for picking and all attributes
  * are unpacked in the vertex shader.
- *
  * @alias TerrainEncoding
- * @constructor
- *
+ * @class
  * @param {Cartesian3} center The center point of the vertices.
  * @param {AxisAlignedBoundingBox} axisAlignedBoundingBox The bounds of the tile in the east-north-up coordinates at the tiles center.
  * @param {number} minimumHeight The minimum height.
@@ -34,7 +32,6 @@ const SHIFT_LEFT_12 = Math.pow(2.0, 12.0);
  * @param {boolean} [hasGeodeticSurfaceNormals=false] true if the terrain data includes geodetic surface normals; otherwise, false.
  * @param {number} [exaggeration=1.0] A scalar used to exaggerate terrain.
  * @param {number} [exaggerationRelativeHeight=0.0] The relative height from which terrain is exaggerated.
- *
  * @private
  */
 function TerrainEncoding(

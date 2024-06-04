@@ -5,10 +5,8 @@ import Cesium3DTilesInspectorViewModel from "./Cesium3DTilesInspectorViewModel.j
 
 /**
  * Inspector widget to aid in debugging 3D Tiles
- *
  * @alias Cesium3DTilesInspector
- * @constructor
- *
+ * @class
  * @param {Element|string} container The DOM element or ID that will contain the widget.
  * @param {Scene} scene the Scene instance to use.
  */
@@ -337,7 +335,6 @@ Object.defineProperties(Cesium3DTilesInspector.prototype, {
   /**
    * Gets the parent container.
    * @memberof Cesium3DTilesInspector.prototype
-   *
    * @type {Element}
    */
   container: {
@@ -349,7 +346,6 @@ Object.defineProperties(Cesium3DTilesInspector.prototype, {
   /**
    * Gets the view model.
    * @memberof Cesium3DTilesInspector.prototype
-   *
    * @type {Cesium3DTilesInspectorViewModel}
    */
   viewModel: {

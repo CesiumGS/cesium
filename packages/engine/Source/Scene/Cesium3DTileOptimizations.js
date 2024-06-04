@@ -6,9 +6,7 @@ import TileOrientedBoundingBox from "./TileOrientedBoundingBox.js";
 
 /**
  * Utility functions for computing optimization hints for a {@link Cesium3DTileset}.
- *
  * @namespace Cesium3DTileOptimizations
- *
  * @private
  */
 const Cesium3DTileOptimizations = {};
@@ -23,7 +21,6 @@ const scratchAxis = new Cartesian3();
  * bounds exceed those of the parent. If the child bounds are greater, it is more likely that the optimization will
  * waste CPU cycles. Bounding spheres are not supported for the reason that the child bounds can very often be
  * partially outside of the parent bounds.
- *
  * @param {Cesium3DTile} tile The tile to check.
  * @returns {boolean} Whether the childrenWithinParent optimization is supported.
  */

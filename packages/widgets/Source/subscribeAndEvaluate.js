@@ -3,11 +3,8 @@ import knockout from "./ThirdParty/knockout.js";
 /**
  * Subscribe to a Knockout observable ES5 property, and immediately fire
  * the callback with the current value of the property.
- *
  * @private
- *
  * @function subscribeAndEvaluate
- *
  * @param {object} owner The object containing the observable property.
  * @param {string} observablePropertyName The name of the observable property.
  * @param {Function} callback The callback function.

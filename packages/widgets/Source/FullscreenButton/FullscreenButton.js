@@ -14,15 +14,11 @@ const exitFullScreenPath =
 
 /**
  * A single button widget for toggling fullscreen mode.
- *
  * @alias FullscreenButton
- * @constructor
- *
+ * @class
  * @param {Element|string} container The DOM element or ID that will contain the widget.
  * @param {Element|string} [fullscreenElement=document.body] The element or id to be placed into fullscreen mode.
- *
- * @exception {DeveloperError} Element with id "container" does not exist in the document.
- *
+ * @throws {DeveloperError} Element with id "container" does not exist in the document.
  * @see Fullscreen
  */
 function FullscreenButton(container, fullscreenElement) {
@@ -64,7 +60,6 @@ Object.defineProperties(FullscreenButton.prototype, {
   /**
    * Gets the parent container.
    * @memberof FullscreenButton.prototype
-   *
    * @type {Element}
    */
   container: {
@@ -76,7 +71,6 @@ Object.defineProperties(FullscreenButton.prototype, {
   /**
    * Gets the view model.
    * @memberof FullscreenButton.prototype
-   *
    * @type {FullscreenButtonViewModel}
    */
   viewModel: {

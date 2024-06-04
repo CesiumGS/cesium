@@ -6,10 +6,9 @@ import DeveloperError from "./DeveloperError.js";
  * At level of detail one, each of the level zero tiles has four children, two in each direction.
  * At level of detail two, each of the level one tiles has four children, two in each direction.
  * This continues for as many levels as are present in the geometry or imagery source.
- *
+ * @param options
  * @alias TilingScheme
- * @constructor
- *
+ * @class
  * @see WebMercatorTilingScheme
  * @see GeographicTilingScheme
  */
@@ -53,7 +52,6 @@ Object.defineProperties(TilingScheme.prototype, {
 /**
  * Gets the total number of tiles in the X direction at a specified level-of-detail.
  * @function
- *
  * @param {number} level The level-of-detail.
  * @returns {number} The number of tiles in the X direction at the given level.
  */
@@ -63,7 +61,6 @@ TilingScheme.prototype.getNumberOfXTilesAtLevel =
 /**
  * Gets the total number of tiles in the Y direction at a specified level-of-detail.
  * @function
- *
  * @param {number} level The level-of-detail.
  * @returns {number} The number of tiles in the Y direction at the given level.
  */
@@ -74,7 +71,6 @@ TilingScheme.prototype.getNumberOfYTilesAtLevel =
  * Transforms a rectangle specified in geodetic radians to the native coordinate system
  * of this tiling scheme.
  * @function
- *
  * @param {Rectangle} rectangle The rectangle to transform.
  * @param {Rectangle} [result] The instance to which to copy the result, or undefined if a new instance
  *        should be created.
@@ -88,7 +84,6 @@ TilingScheme.prototype.rectangleToNativeRectangle =
  * Converts tile x, y coordinates and level to a rectangle expressed in the native coordinates
  * of the tiling scheme.
  * @function
- *
  * @param {number} x The integer x coordinate of the tile.
  * @param {number} y The integer y coordinate of the tile.
  * @param {number} level The tile level-of-detail.  Zero is the least detailed.
@@ -103,7 +98,6 @@ TilingScheme.prototype.tileXYToNativeRectangle =
 /**
  * Converts tile x, y coordinates and level to a cartographic rectangle in radians.
  * @function
- *
  * @param {number} x The integer x coordinate of the tile.
  * @param {number} y The integer y coordinate of the tile.
  * @param {number} level The tile level-of-detail.  Zero is the least detailed.
@@ -119,7 +113,6 @@ TilingScheme.prototype.tileXYToRectangle =
  * Calculates the tile x, y coordinates of the tile containing
  * a given cartographic position.
  * @function
- *
  * @param {Cartographic} position The position.
  * @param {number} level The tile level-of-detail.  Zero is the least detailed.
  * @param {Cartesian2} [result] The instance to which to copy the result, or undefined if a new instance

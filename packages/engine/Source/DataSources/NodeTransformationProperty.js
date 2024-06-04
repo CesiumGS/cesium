@@ -10,8 +10,7 @@ const defaultNodeTransformation = new TranslationRotationScale();
 /**
  * A {@link Property} that produces {@link TranslationRotationScale} data.
  * @alias NodeTransformationProperty
- * @constructor
- *
+ * @class
  * @param {object} [options] Object with the following properties:
  * @param {Property|Cartesian3} [options.translation=Cartesian3.ZERO] A {@link Cartesian3} Property specifying the (x, y, z) translation to apply to the node.
  * @param {Property|Quaternion} [options.rotation=Quaternion.IDENTITY] A {@link Quaternion} Property specifying the (x, y, z, w) rotation to apply to the node.
@@ -38,7 +37,6 @@ Object.defineProperties(NodeTransformationProperty.prototype, {
    * Gets a value indicating if this property is constant.  A property is considered
    * constant if getValue always returns the same result for the current definition.
    * @memberof NodeTransformationProperty.prototype
-   *
    * @type {boolean}
    * @readonly
    */
@@ -57,7 +55,6 @@ Object.defineProperties(NodeTransformationProperty.prototype, {
    * The definition is considered to have changed if a call to getValue would return
    * a different result for the same time.
    * @memberof NodeTransformationProperty.prototype
-   *
    * @type {Event}
    * @readonly
    */
@@ -94,7 +91,6 @@ Object.defineProperties(NodeTransformationProperty.prototype, {
 
 /**
  * Gets the value of the property at the provided time.
- *
  * @param {JulianDate} time The time for which to retrieve the value.
  * @param {TranslationRotationScale} [result] The object to store the value into, if omitted, a new instance is created and returned.
  * @returns {TranslationRotationScale} The modified result parameter or a new instance if the result parameter was not supplied.
@@ -128,7 +124,6 @@ NodeTransformationProperty.prototype.getValue = function (time, result) {
 /**
  * Compares this property to the provided property and returns
  * <code>true</code> if they are equal, <code>false</code> otherwise.
- *
  * @param {Property} [other] The other property.
  * @returns {boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
  */

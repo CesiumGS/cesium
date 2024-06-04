@@ -579,8 +579,7 @@ PolylineUpdater.prototype.destroy = function () {
 /**
  * A {@link Visualizer} which maps {@link Entity#path} to a {@link Polyline}.
  * @alias PathVisualizer
- * @constructor
- *
+ * @class
  * @param {Scene} scene The scene the primitives will be rendered in.
  * @param {EntityCollection} entityCollection The entityCollection to visualize.
  */
@@ -610,7 +609,6 @@ function PathVisualizer(scene, entityCollection) {
 /**
  * Updates all of the primitives created by this visualizer to match their
  * Entity counterpart at the given time.
- *
  * @param {JulianDate} time The time to update to.
  * @returns {boolean} This function always returns true.
  */
@@ -681,7 +679,6 @@ PathVisualizer.prototype.update = function (time) {
 
 /**
  * Returns true if this object was destroyed; otherwise, false.
- *
  * @returns {boolean} True if this object was destroyed; otherwise, false.
  */
 PathVisualizer.prototype.isDestroyed = function () {

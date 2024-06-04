@@ -4,7 +4,6 @@ import DeveloperError from "../Core/DeveloperError.js";
 
 /**
  * Utilities for parsing bounding volume semantics from 3D Tiles 1.1 metadata.
- *
  * @namespace BoundingVolumeSemantics
  * @private
  */
@@ -19,12 +18,9 @@ const BoundingVolumeSemantics = {};
  * Bounding volumes are checked in the order box, region, then sphere. Only
  * the first valid bounding volume is returned.
  * </p>
- *
  * @see {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification/Metadata/Semantics|3D Metadata Semantic Reference} for the various bounding volumes and minimum/maximum heights.
- *
  * @param {TileMetadata} tileMetadata The metadata object for looking up values by semantic. In practice, this will typically be a {@link ImplicitMetadataView}
- * @return {object} An object containing a <code>tile</code> property and a <code>content</code> property. These contain the bounding volume, and any minimum or maximum height.
- *
+ * @returns {object} An object containing a <code>tile</code> property and a <code>content</code> property. These contain the bounding volume, and any minimum or maximum height.
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
@@ -75,10 +71,9 @@ BoundingVolumeSemantics.parseAllBoundingVolumeSemantics = function (
  * This handles both tile and content bounding volumes, as the only difference
  * is the prefix. e.g. <code>TILE_BOUNDING_BOX</code> and
  * <code>CONTENT_BOUNDING_BOX</code> have the same memory layout.
- *
  * @param {string} prefix Either "TILE" or "CONTENT"
  * @param {TileMetadata} tileMetadata The tileMetadata for looking up values
- * @return {object} An object representing the JSON description of the tile metadata
+ * @returns {object} An object representing the JSON description of the tile metadata
  * @private
  */
 BoundingVolumeSemantics.parseBoundingVolumeSemantic = function (
@@ -132,10 +127,9 @@ BoundingVolumeSemantics.parseBoundingVolumeSemantic = function (
  * Parse the minimum height from tile metadata. This is used for making tighter
  * quadtree bounds for implicit tiling. This works for both
  * <code>TILE_MINIMUM_HEIGHT</code> and <code>CONTENT_MINIMUM_HEIGHT</code>
- *
  * @param {string} prefix Either "TILE" or "CONTENT"
  * @param {TileMetadata} tileMetadata The tileMetadata for looking up values
- * @return {number} The minimum height
+ * @returns {number} The minimum height
  * @private
  */
 BoundingVolumeSemantics._parseMinimumHeight = function (prefix, tileMetadata) {
@@ -155,10 +149,9 @@ BoundingVolumeSemantics._parseMinimumHeight = function (prefix, tileMetadata) {
  * Parse the maximum height from tile metadata. This is used for making tighter
  * quadtree bounds for implicit tiling. This works for both
  * <code>TILE_MAXIMUM_HEIGHT</code> and <code>CONTENT_MAXIMUM_HEIGHT</code>
- *
  * @param {string} prefix Either "TILE" or "CONTENT"
  * @param {TileMetadata} tileMetadata The tileMetadata for looking up values
- * @return {number} The maximum height
+ * @returns {number} The maximum height
  * @private
  */
 BoundingVolumeSemantics._parseMaximumHeight = function (prefix, tileMetadata) {

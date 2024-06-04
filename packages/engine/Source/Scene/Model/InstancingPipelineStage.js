@@ -26,7 +26,6 @@ const modelView2DScratch = new Matrix4();
 /**
  * The instancing pipeline stage is responsible for handling GPU mesh instancing at the node
  * level.
- *
  * @namespace InstancingPipelineStage
  * @private
  */
@@ -41,18 +40,17 @@ const InstancingPipelineStage = {
 /**
  * Process a node. This modifies the following parts of the render resources:
  * <ul>
- *  <li> creates buffers for the typed arrays of each attribute, if they do not yet exist
- *  <li> adds attribute declarations for the instancing vertex attributes in the vertex shader</li>
- *  <li> sets the instancing translation min and max to compute an accurate bounding volume</li>
+ * <li> creates buffers for the typed arrays of each attribute, if they do not yet exist
+ * <li> adds attribute declarations for the instancing vertex attributes in the vertex shader</li>
+ * <li> sets the instancing translation min and max to compute an accurate bounding volume</li>
  * </ul>
  *
  * If the scene is in either 2D or CV mode, this stage also:
  * <ul>
- *  <li> adds additional attributes for the transformation attributes projected to 2D
- *  <li> adds a flag to the shader to use the 2D instanced attributes
- *  <li> adds a uniform for the view model matrix in 2D
+ * <li> adds additional attributes for the transformation attributes projected to 2D
+ * <li> adds a flag to the shader to use the 2D instanced attributes
+ * <li> adds a uniform for the view model matrix in 2D
  * </ul>
- *
  * @param {NodeRenderResources} renderResources The render resources for this node.
  * @param {ModelComponents.Node} node The node.
  * @param {FrameState} frameState The frame state.

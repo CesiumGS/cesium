@@ -3,14 +3,12 @@ import DeveloperError from "./DeveloperError.js";
 
 /**
  * Hilbert Order helper functions.
- *
  * @namespace HilbertOrder
  */
 const HilbertOrder = {};
 
 /**
  * Computes the Hilbert index at the given level from 2D coordinates.
- *
  * @param {number} level The level of the curve
  * @param {number} x The X coordinate
  * @param {number} y The Y coordinate
@@ -54,7 +52,6 @@ HilbertOrder.encode2D = function (level, x, y) {
 
 /**
  * Computes the 2D coordinates from the Hilbert index at the given level.
- *
  * @param {number} level The level of the curve
  * @param {bigint} index The Hilbert index
  * @returns {number[]} An array containing the 2D coordinates ([x, y]) corresponding to the Morton index.
@@ -98,6 +95,10 @@ HilbertOrder.decode2D = function (level, index) {
 };
 
 /**
+ * @param n
+ * @param p
+ * @param rx
+ * @param ry
  * @private
  */
 function rotate(n, p, rx, ry) {

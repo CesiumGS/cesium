@@ -15,16 +15,13 @@ import Texture from "../Renderer/Texture.js";
 /**
  * An object that manages color, show/hide and picking textures for a batch
  * table or feature table.
- *
  * @param {object} options Object with the following properties:
  * @param {number} featuresLength The number of features in the batch table or feature table
  * @param {Cesium3DTileContent|ModelFeatureTable} owner The owner of this batch texture. For 3D Tiles, this will be a {@link Cesium3DTileContent}. For glTF models, this will be a {@link ModelFeatureTable}.
  * @param {object} [statistics] The statistics object to update with information about the batch texture.
  * @param {Function} [colorChangedCallback] A callback function that is called whenever the color of a feature changes.
- *
  * @alias BatchTexture
- * @constructor
- *
+ * @class
  * @private
  */
 function BatchTexture(options) {
@@ -79,7 +76,6 @@ function BatchTexture(options) {
 Object.defineProperties(BatchTexture.prototype, {
   /**
    * Number of features that are translucent
-   *
    * @memberof BatchTexture.prototype
    * @type {number}
    * @readonly
@@ -93,7 +89,6 @@ Object.defineProperties(BatchTexture.prototype, {
 
   /**
    * Total size of all GPU resources used by this batch texture.
-   *
    * @memberof BatchTexture.prototype
    * @type {number}
    * @readonly
@@ -114,7 +109,6 @@ Object.defineProperties(BatchTexture.prototype, {
 
   /**
    * Dimensions of the underlying batch texture.
-   *
    * @memberof BatchTexture.prototype
    * @type {Cartesian2}
    * @readonly
@@ -129,7 +123,6 @@ Object.defineProperties(BatchTexture.prototype, {
   /**
    * Size of each texture and distance from side to center of a texel in
    * each direction. Stored as (stepX, centerX, stepY, centerY)
-   *
    * @memberof BatchTexture.prototype
    * @type {Cartesian4}
    * @readonly
@@ -145,7 +138,6 @@ Object.defineProperties(BatchTexture.prototype, {
    * The underlying texture used for styling. The texels are accessed
    * by batch ID, and the value is the color of this feature after accounting
    * for show/hide settings.
-   *
    * @memberof BatchTexture.prototype
    * @type {Texture}
    * @readonly
@@ -159,7 +151,6 @@ Object.defineProperties(BatchTexture.prototype, {
 
   /**
    * The default texture to use when there are no batch values
-   *
    * @memberof BatchTexture.prototype
    * @type {Texture}
    * @readonly
@@ -174,7 +165,6 @@ Object.defineProperties(BatchTexture.prototype, {
   /**
    * The underlying texture used for picking. The texels are accessed by
    * batch ID, and the value is the pick color.
-   *
    * @memberof BatchTexture.prototype
    * @type {Texture}
    * @readonly
@@ -227,7 +217,6 @@ function checkBatchId(batchId, featuresLength) {
 
 /**
  * Set whether a feature is visible.
- *
  * @param {number} batchId the ID of the feature
  * @param {boolean} show <code>true</code> if the feature should be shown, <code>false</code> otherwise
  * @private
@@ -262,7 +251,6 @@ BatchTexture.prototype.setShow = function (batchId, show) {
 
 /**
  * Set the show for all features at once.
- *
  * @param {boolean} show <code>true</code> if the feature should be shown, <code>false</code> otherwise
  * @private
  */
@@ -279,9 +267,8 @@ BatchTexture.prototype.setAllShow = function (show) {
 
 /**
  * Check the current show value for a feature
- *
  * @param {number} batchId the ID of the feature
- * @return {boolean} <code>true</code> if the feature is shown, or <code>false</code> otherwise
+ * @returns {boolean} <code>true</code> if the feature is shown, or <code>false</code> otherwise
  * @private
  */
 BatchTexture.prototype.getShow = function (batchId) {
@@ -302,10 +289,8 @@ const scratchColorBytes = new Array(4);
 
 /**
  * Set the styling color of a feature
- *
  * @param {number} batchId the ID of the feature
  * @param {Color} color the color to assign to this feature.
- *
  * @private
  */
 BatchTexture.prototype.setColor = function (batchId, color) {
@@ -367,9 +352,7 @@ BatchTexture.prototype.setColor = function (batchId, color) {
 
 /**
  * Set the styling color for all features at once
- *
  * @param {Color} color the color to assign to all features.
- *
  * @private
  */
 BatchTexture.prototype.setAllColor = function (color) {
@@ -385,11 +368,9 @@ BatchTexture.prototype.setAllColor = function (color) {
 
 /**
  * Get the current color of a feature
- *
  * @param {number} batchId The ID of the feature
  * @param {Color} result A color object where the result will be stored.
- * @return {Color} The color assigned to the selected feature
- *
+ * @returns {Color} The color assigned to the selected feature
  * @private
  */
 BatchTexture.prototype.getColor = function (batchId, result) {
@@ -420,10 +401,8 @@ BatchTexture.prototype.getColor = function (batchId, result) {
 /**
  * Get the pick color of a feature. This feature is an RGBA encoding of the
  * pick ID.
- *
  * @param {number} batchId The ID of the feature
- * @return {PickId} The picking color assigned to this feature
- *
+ * @returns {PickId} The picking color assigned to this feature
  * @private
  */
 BatchTexture.prototype.getPickColor = function (batchId) {
@@ -531,9 +510,7 @@ BatchTexture.prototype.update = function (tileset, frameState) {
  * If this object was destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
  * </p>
- *
  * @returns {boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
- *
  * @see BatchTexture#destroy
  * @private
  */
@@ -549,12 +526,9 @@ BatchTexture.prototype.isDestroyed = function () {
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
  * assign the return value (<code>undefined</code>) to the object as done in the example.
  * </p>
- *
- * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
- *
+ * @throws {DeveloperError} This object was destroyed, i.e., destroy() was called.
  * @example
  * e = e && e.destroy();
- *
  * @see BatchTexture#isDestroyed
  * @private
  */

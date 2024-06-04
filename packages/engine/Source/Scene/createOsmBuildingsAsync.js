@@ -8,9 +8,7 @@ import Cesium3DTileStyle from "./Cesium3DTileStyle.js";
  * Creates a {@link Cesium3DTileset} instance for the
  * {@link https://cesium.com/content/cesium-osm-buildings/|Cesium OSM Buildings}
  * tileset.
- *
  * @function
- *
  * @param {object} [options] Construction options. Any options allowed by the {@link Cesium3DTileset} constructor
  *        may be specified here. In addition to those, the following properties are supported:
  * @param {Color} [options.defaultColor=Color.WHITE] The default color to use for buildings
@@ -23,9 +21,7 @@ import Cesium3DTileStyle from "./Cesium3DTileStyle.js";
  * @param {boolean} [options.showOutline=true] Whether to show outlines around buildings. When true,
  *        outlines are displayed. When false, outlines are not displayed.
  * @returns {Promise<Cesium3DTileset>}
- *
  * @see Ion
- *
  * @example
  * // Create Cesium OSM Buildings with default styling
  * const viewer = new Cesium.Viewer("cesiumContainer");
@@ -35,7 +31,6 @@ import Cesium3DTileStyle from "./Cesium3DTileStyle.js";
  * } catch (error) {
  *   console.log(`Error creating tileset: ${error}`);
  * }
- *
  * @example
  * // Create Cesium OSM Buildings with a custom style highlighting
  * // schools and hospitals.

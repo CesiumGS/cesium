@@ -13,10 +13,8 @@ import VoxelInspectorViewModel from "./VoxelInspectorViewModel.js";
 
 /**
  * Inspector widget to aid in debugging voxels
- *
  * @alias VoxelInspector
- * @constructor
- *
+ * @class
  * @param {Element|string} container The DOM element or ID that will contain the widget.
  * @param {Scene} scene the Scene instance to use.
  */
@@ -314,7 +312,6 @@ Object.defineProperties(VoxelInspector.prototype, {
   /**
    * Gets the parent container.
    * @memberof VoxelInspector.prototype
-   *
    * @type {Element}
    */
   container: {
@@ -326,7 +323,6 @@ Object.defineProperties(VoxelInspector.prototype, {
   /**
    * Gets the view model.
    * @memberof VoxelInspector.prototype
-   *
    * @type {VoxelInspectorViewModel}
    */
   viewModel: {

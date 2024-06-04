@@ -6,8 +6,7 @@ import defined from "./defined.js";
 /**
  * Represents a ray that extends infinitely from the provided origin in the provided direction.
  * @alias Ray
- * @constructor
- *
+ * @class
  * @param {Cartesian3} [origin=Cartesian3.ZERO] The origin of the ray.
  * @param {Cartesian3} [direction=Cartesian3.ZERO] The direction of the ray.
  */
@@ -33,7 +32,6 @@ function Ray(origin, direction) {
 
 /**
  * Duplicates a Ray instance.
- *
  * @param {Ray} ray The ray to duplicate.
  * @param {Ray} [result] The object onto which to store the result.
  * @returns {Ray} The modified result parameter or a new Ray instance if one was not provided. (Returns undefined if ray is undefined)
@@ -53,12 +51,10 @@ Ray.clone = function (ray, result) {
 /**
  * Computes the point along the ray given by r(t) = o + t*d,
  * where o is the origin of the ray and d is the direction.
- *
  * @param {Ray} ray The ray.
  * @param {number} t A scalar value.
  * @param {Cartesian3} [result] The object in which the result will be stored.
  * @returns {Cartesian3} The modified result parameter, or a new instance if none was provided.
- *
  * @example
  * //Get the first intersection point of a ray and an ellipsoid.
  * const intersection = Cesium.IntersectionTests.rayEllipsoid(ray, ellipsoid);

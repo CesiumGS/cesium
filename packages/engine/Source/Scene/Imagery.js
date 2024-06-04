@@ -4,7 +4,11 @@ import ImageryState from "./ImageryState.js";
 
 /**
  * Stores details about a tile of imagery.
- *
+ * @param imageryLayer
+ * @param x
+ * @param y
+ * @param level
+ * @param rectangle
  * @alias Imagery
  * @private
  */

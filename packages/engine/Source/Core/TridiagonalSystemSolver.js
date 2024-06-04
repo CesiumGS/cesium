@@ -5,25 +5,20 @@ import DeveloperError from "./DeveloperError.js";
 /**
  * Uses the Tridiagonal Matrix Algorithm, also known as the Thomas Algorithm, to solve
  * a system of linear equations where the coefficient matrix is a tridiagonal matrix.
- *
  * @namespace TridiagonalSystemSolver
  */
 const TridiagonalSystemSolver = {};
 
 /**
  * Solves a tridiagonal system of linear equations.
- *
  * @param {number[]} diagonal An array with length <code>n</code> that contains the diagonal of the coefficient matrix.
  * @param {number[]} lower An array with length <code>n - 1</code> that contains the lower diagonal of the coefficient matrix.
  * @param {number[]} upper An array with length <code>n - 1</code> that contains the upper diagonal of the coefficient matrix.
  * @param {Cartesian3[]} right An array of Cartesians with length <code>n</code> that is the right side of the system of equations.
- *
- * @exception {DeveloperError} diagonal and right must have the same lengths.
- * @exception {DeveloperError} lower and upper must have the same lengths.
- * @exception {DeveloperError} lower and upper must be one less than the length of diagonal.
- *
+ * @throws {DeveloperError} diagonal and right must have the same lengths.
+ * @throws {DeveloperError} lower and upper must have the same lengths.
+ * @throws {DeveloperError} lower and upper must be one less than the length of diagonal.
  * @performance Linear time.
- *
  * @example
  * const lowerDiagonal = [1.0, 1.0, 1.0, 1.0];
  * const diagonal = [2.0, 4.0, 4.0, 4.0, 2.0];
@@ -37,7 +32,6 @@ const TridiagonalSystemSolver = {};
  * ];
  *
  * const solution = Cesium.TridiagonalSystemSolver.solve(lowerDiagonal, diagonal, upperDiagonal, rightHandSide);
- *
  * @returns {Cartesian3[]} An array of Cartesians with length <code>n</code> that is the solution to the tridiagonal system of equations.
  */
 TridiagonalSystemSolver.solve = function (lower, diagonal, upper, right) {

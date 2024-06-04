@@ -9,10 +9,8 @@ import ImageryLayer from "./ImageryLayer.js";
 
 /**
  * An ordered collection of imagery layers.
- *
  * @alias ImageryLayerCollection
- * @constructor
- *
+ * @class
  * @demo {@link https://sandcastle.cesium.com/index.html?src=Imagery%20Adjustment.html|Cesium Sandcastle Imagery Adjustment Demo}
  * @demo {@link https://sandcastle.cesium.com/index.html?src=Imagery%20Layers%20Manipulation.html|Cesium Sandcastle Imagery Manipulation Demo}
  */
@@ -48,7 +46,6 @@ function ImageryLayerCollection() {
    * {@link ImageryLayer#show} property.  Event handlers are passed a reference to this layer,
    * the index of the layer in the collection, and a flag that is true if the layer is now
    * shown or false if it is now hidden.
-   *
    * @type {Event}
    * @default Event()
    */
@@ -70,17 +67,13 @@ Object.defineProperties(ImageryLayerCollection.prototype, {
 
 /**
  * Adds a layer to the collection.
- *
  * @param {ImageryLayer} layer the layer to add.
  * @param {number} [index] the index to add the layer at.  If omitted, the layer will
  *                         be added on top of all existing layers.
- *
- * @exception {DeveloperError} index, if supplied, must be greater than or equal to zero and less than or equal to the number of the layers.
- *
+ * @throws {DeveloperError} index, if supplied, must be greater than or equal to zero and less than or equal to the number of the layers.
  * @example
  * const imageryLayer = Cesium.ImageryLayer.fromWorldImagery();
  * scene.imageryLayers.add(imageryLayer);
- *
  * @example
  * const imageryLayer = Cesium.ImageryLayer.fromProviderAsync(Cesium.IonImageryProvider.fromAssetId(3812));
  * scene.imageryLayers.add(imageryLayer);
@@ -120,12 +113,10 @@ ImageryLayerCollection.prototype.add = function (layer, index) {
 
 /**
  * Creates a new layer using the given ImageryProvider and adds it to the collection.
- *
  * @param {ImageryProvider} imageryProvider the imagery provider to create a new layer for.
  * @param {number} [index] the index to add the layer at.  If omitted, the layer will
  *                         added on top of all existing layers.
  * @returns {ImageryLayer} The newly created layer.
- *
  * @example
  * try {
  *    const provider = await Cesium.IonImageryProvider.fromAssetId(3812);
@@ -151,7 +142,6 @@ ImageryLayerCollection.prototype.addImageryProvider = function (
 
 /**
  * Removes a layer from this collection, if present.
- *
  * @param {ImageryLayer} layer The layer to remove.
  * @param {boolean} [destroy=true] whether to destroy the layers in addition to removing them.
  * @returns {boolean} true if the layer was in the collection and was removed,
@@ -180,7 +170,6 @@ ImageryLayerCollection.prototype.remove = function (layer, destroy) {
 
 /**
  * Removes all layers from this collection.
- *
  * @param {boolean} [destroy=true] whether to destroy the layers in addition to removing them.
  */
 ImageryLayerCollection.prototype.removeAll = function (destroy) {
@@ -201,9 +190,7 @@ ImageryLayerCollection.prototype.removeAll = function (destroy) {
 
 /**
  * Checks to see if the collection contains a given layer.
- *
  * @param {ImageryLayer} layer the layer to check for.
- *
  * @returns {boolean} true if the collection contains the layer, false otherwise.
  */
 ImageryLayerCollection.prototype.contains = function (layer) {
@@ -212,9 +199,7 @@ ImageryLayerCollection.prototype.contains = function (layer) {
 
 /**
  * Determines the index of a given layer in the collection.
- *
  * @param {ImageryLayer} layer The layer to find the index of.
- *
  * @returns {number} The index of the layer in the collection, or -1 if the layer does not exist in the collection.
  */
 ImageryLayerCollection.prototype.indexOf = function (layer) {
@@ -223,9 +208,7 @@ ImageryLayerCollection.prototype.indexOf = function (layer) {
 
 /**
  * Gets a layer by index from the collection.
- *
  * @param {number} index the index to retrieve.
- *
  * @returns {ImageryLayer} The imagery layer at the given index.
  */
 ImageryLayerCollection.prototype.get = function (index) {
@@ -276,11 +259,9 @@ function swapLayers(collection, i, j) {
 
 /**
  * Raises a layer up one position in the collection.
- *
  * @param {ImageryLayer} layer the layer to move.
- *
- * @exception {DeveloperError} layer is not in this collection.
- * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+ * @throws {DeveloperError} layer is not in this collection.
+ * @throws {DeveloperError} This object was destroyed, i.e., destroy() was called.
  */
 ImageryLayerCollection.prototype.raise = function (layer) {
   const index = getLayerIndex(this._layers, layer);
@@ -289,11 +270,9 @@ ImageryLayerCollection.prototype.raise = function (layer) {
 
 /**
  * Lowers a layer down one position in the collection.
- *
  * @param {ImageryLayer} layer the layer to move.
- *
- * @exception {DeveloperError} layer is not in this collection.
- * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+ * @throws {DeveloperError} layer is not in this collection.
+ * @throws {DeveloperError} This object was destroyed, i.e., destroy() was called.
  */
 ImageryLayerCollection.prototype.lower = function (layer) {
   const index = getLayerIndex(this._layers, layer);
@@ -302,11 +281,9 @@ ImageryLayerCollection.prototype.lower = function (layer) {
 
 /**
  * Raises a layer to the top of the collection.
- *
  * @param {ImageryLayer} layer the layer to move.
- *
- * @exception {DeveloperError} layer is not in this collection.
- * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+ * @throws {DeveloperError} layer is not in this collection.
+ * @throws {DeveloperError} This object was destroyed, i.e., destroy() was called.
  */
 ImageryLayerCollection.prototype.raiseToTop = function (layer) {
   const index = getLayerIndex(this._layers, layer);
@@ -323,11 +300,9 @@ ImageryLayerCollection.prototype.raiseToTop = function (layer) {
 
 /**
  * Lowers a layer to the bottom of the collection.
- *
  * @param {ImageryLayer} layer the layer to move.
- *
- * @exception {DeveloperError} layer is not in this collection.
- * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+ * @throws {DeveloperError} layer is not in this collection.
+ * @throws {DeveloperError} This object was destroyed, i.e., destroy() was called.
  */
 ImageryLayerCollection.prototype.lowerToBottom = function (layer) {
   const index = getLayerIndex(this._layers, layer);
@@ -421,13 +396,11 @@ function pickImageryHelper(scene, pickedLocation, pickFeatures, callback) {
 /**
  * Determines the imagery layers that are intersected by a pick ray. To compute a pick ray from a
  * location on the screen, use {@link Camera.getPickRay}.
- *
  * @param {Ray} ray The ray to test for intersection.
  * @param {Scene} scene The scene.
- * @return {ImageryLayer[]|undefined} An array that includes all of
+ * @returns {ImageryLayer[]|undefined} An array that includes all of
  *                                 the layers that are intersected by a given pick ray. Undefined if
  *                                 no layers are selected.
- *
  */
 ImageryLayerCollection.prototype.pickImageryLayers = function (ray, scene) {
   // Find the picked location on the globe.
@@ -457,15 +430,13 @@ ImageryLayerCollection.prototype.pickImageryLayers = function (ray, scene) {
  * Asynchronously determines the imagery layer features that are intersected by a pick ray.  The intersected imagery
  * layer features are found by invoking {@link ImageryProvider#pickFeatures} for each imagery layer tile intersected
  * by the pick ray.  To compute a pick ray from a location on the screen, use {@link Camera.getPickRay}.
- *
  * @param {Ray} ray The ray to test for intersection.
  * @param {Scene} scene The scene.
- * @return {Promise<ImageryLayerFeatureInfo[]>|undefined} A promise that resolves to an array of features intersected by the pick ray.
+ * @returns {Promise<ImageryLayerFeatureInfo[]>|undefined} A promise that resolves to an array of features intersected by the pick ray.
  *                                             If it can be quickly determined that no features are intersected (for example,
  *                                             because no active imagery providers support {@link ImageryProvider#pickFeatures}
  *                                             or because the pick ray does not intersect the surface), this function will
  *                                             return undefined.
- *
  * @example
  * const pickRay = viewer.camera.getPickRay(windowPosition);
  * const featuresPromise = viewer.imageryLayers.pickImageryLayerFeatures(pickRay, viewer.scene);
@@ -546,9 +517,7 @@ ImageryLayerCollection.prototype.pickImageryLayerFeatures = function (
 
 /**
  * Updates frame state to execute any queued texture re-projections.
- *
  * @private
- *
  * @param {FrameState} frameState The frameState.
  */
 ImageryLayerCollection.prototype.queueReprojectionCommands = function (
@@ -562,7 +531,6 @@ ImageryLayerCollection.prototype.queueReprojectionCommands = function (
 
 /**
  * Cancels re-projection commands queued for the next frame.
- *
  * @private
  */
 ImageryLayerCollection.prototype.cancelReprojections = function () {
@@ -577,9 +545,7 @@ ImageryLayerCollection.prototype.cancelReprojections = function () {
  * <br /><br />
  * If this object was destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
- *
  * @returns {boolean} true if this object was destroyed; otherwise, false.
- *
  * @see ImageryLayerCollection#destroy
  */
 ImageryLayerCollection.prototype.isDestroyed = function () {
@@ -594,13 +560,9 @@ ImageryLayerCollection.prototype.isDestroyed = function () {
  * Once this object is destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
  * assign the return value (<code>undefined</code>) to the object as done in the example.
- *
- * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
- *
- *
+ * @throws {DeveloperError} This object was destroyed, i.e., destroy() was called.
  * @example
  * layerCollection = layerCollection && layerCollection.destroy();
- *
  * @see ImageryLayerCollection#isDestroyed
  */
 ImageryLayerCollection.prototype.destroy = function () {

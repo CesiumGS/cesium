@@ -15,21 +15,16 @@ function returnTrue() {
  * need to be explicitly released.  Client code calls an object's <code>destroy</code> function,
  * which then releases the native resource and calls <code>destroyObject</code> to put itself
  * in a destroyed state.
- *
  * @function
- *
  * @param {object} object The object to destroy.
  * @param {string} [message] The message to include in the exception that is thrown if
  *                           a destroyed object's function is called.
- *
- *
  * @example
  * // How a texture would destroy itself.
  * this.destroy = function () {
  *     _gl.deleteTexture(_texture);
  *     return Cesium.destroyObject(this);
  * };
- *
  * @see DeveloperError
  */
 function destroyObject(object, message) {

@@ -6,11 +6,8 @@ import DeveloperError from "./DeveloperError.js";
  * name/value pairs from the query string, decoded. If a name appears multiple times,
  * the value in the object will be an array of values.
  * @function queryToObject
- *
  * @param {string} queryString The query string.
  * @returns {object} An object containing the parameters parsed from the query string.
- *
- *
  * @example
  * const obj = Cesium.queryToObject('key1=some%20value&key2=a%2Fb&key3=x&key3=y');
  * // obj will be:
@@ -19,7 +16,6 @@ import DeveloperError from "./DeveloperError.js";
  * //   key2 : 'a/b',
  * //   key3 : ['x', 'y']
  * // }
- *
  * @see objectToQuery
  */
 function queryToObject(queryString) {

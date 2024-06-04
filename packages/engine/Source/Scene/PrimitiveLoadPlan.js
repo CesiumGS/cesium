@@ -11,12 +11,9 @@ import PrimitiveOutlineGenerator from "./Model/PrimitiveOutlineGenerator.js";
 /**
  * Simple struct for tracking whether an attribute will be loaded as a buffer
  * or typed array after post-processing.
- *
  * @alias PrimitiveLoadPlan.AttributeLoadPlan
- * @constructor
- *
+ * @class
  * @param {ModelComponents.Attribute} attribute The attribute to be updated
- *
  * @private
  */
 function AttributeLoadPlan(attribute) {
@@ -26,7 +23,6 @@ function AttributeLoadPlan(attribute) {
 
   /**
    * The attribute to track.
-   *
    * @type {ModelComponents.Attribute}
    * @readonly
    * @private
@@ -36,7 +32,6 @@ function AttributeLoadPlan(attribute) {
   /**
    * Whether the attribute will be loaded as a GPU buffer by the time
    * {@link PrimitiveLoadPlan#postProcess} is finished.
-   *
    * @type {boolean}
    * @private
    */
@@ -45,7 +40,6 @@ function AttributeLoadPlan(attribute) {
   /**
    * Whether the attribute will be loaded as a packed typed array by the time
    * {@link PrimitiveLoadPlan#postProcess} is finished.
-   *
    * @type {boolean}
    * @private
    */
@@ -55,12 +49,9 @@ function AttributeLoadPlan(attribute) {
 /**
  * Simple struct for tracking whether an index buffer will be loaded as a buffer
  * or typed array after post-processing.
- *
  * @alias PrimitiveLoadPlan.IndicesLoadPlan
- * @constructor
- *
+ * @class
  * @param {ModelComponents.Indices} indices The indices to be updated
- *
  * @private
  */
 function IndicesLoadPlan(indices) {
@@ -70,7 +61,6 @@ function IndicesLoadPlan(indices) {
 
   /**
    * The indices to track.
-   *
    * @type {ModelComponents.Indices}
    * @readonly
    * @private
@@ -80,7 +70,6 @@ function IndicesLoadPlan(indices) {
   /**
    * Whether the indices will be loaded as a GPU buffer by the time
    * {@link PrimitiveLoadPlan#postProcess} is finished.
-   *
    * @type {boolean}
    * @private
    */
@@ -89,7 +78,6 @@ function IndicesLoadPlan(indices) {
   /**
    * Whether the indices will be loaded as a typed array copy of the GPU
    * buffer by the time {@link PrimitiveLoadPlan#postProcess} is finished.
-   *
    * @type {boolean}
    * @private
    */
@@ -101,12 +89,9 @@ function IndicesLoadPlan(indices) {
  * have loaded, such as generating outlines for the CESIUM_primitive_outline glTF
  * extension. This object tracks what indices and attributes need to be
  * post-processed.
- *
  * @alias PrimitiveLoadPlan
- * @constructor
- *
+ * @class
  * @param {ModelComponents.Primitive} primitive The primitive to track
- *
  * @private
  */
 function PrimitiveLoadPlan(primitive) {
@@ -116,7 +101,6 @@ function PrimitiveLoadPlan(primitive) {
 
   /**
    * The primitive to track.
-   *
    * @type {ModelComponents.Primitive}
    * @readonly
    * @private
@@ -126,7 +110,6 @@ function PrimitiveLoadPlan(primitive) {
   /**
    * A flat list of attributes that need to be post-processed. This includes
    * both regular attributes and morph target attributes.
-   *
    * @type {PrimitiveLoadPlan.AttributeLoadPlan[]}
    * @private
    */
@@ -135,7 +118,6 @@ function PrimitiveLoadPlan(primitive) {
   /**
    * Information about the triangle indices that need to be post-processed,
    * if they exist.
-   *
    * @type {PrimitiveLoadPlan.IndicesLoadPlan}
    * @private
    */
@@ -144,7 +126,6 @@ function PrimitiveLoadPlan(primitive) {
   /**
    * Set this true to indicate that the primitive has the
    * CESIUM_primitive_outline extension and needs to be post-processed
-   *
    * @type {boolean}
    * @private
    */
@@ -152,7 +133,6 @@ function PrimitiveLoadPlan(primitive) {
 
   /**
    * The outline edge indices from the CESIUM_primitive_outline extension
-   *
    * @type {number[]}
    * @private
    */
@@ -163,7 +143,6 @@ function PrimitiveLoadPlan(primitive) {
  * Apply post-processing steps that may modify geometry such as generating
  * outline coordinates. If no post-processing steps are needed, this function
  * is a no-op.
- *
  * @param {Context} context The context for generating buffers on the GPU
  */
 PrimitiveLoadPlan.prototype.postProcess = function (context) {

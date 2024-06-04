@@ -5,21 +5,17 @@ import createWorldTerrainAsync from "../Core/createWorldTerrainAsync.js";
 
 /**
  * A helper to manage async operations of a terrain provider.
- *
  * @alias Terrain
- * @constructor
- *
+ * @class
  * @see Terrain.fromWorldTerrain
  * @see CesiumTerrainProvider
  * @see VRTheWorldTerrainProvider
  * @see GoogleEarthEnterpriseTerrainProvider
- *
  * @example
  * // Create
  * const viewer = new Cesium.Viewer("cesiumContainer", {
  *   terrain: new Cesium.Terrain(Cesium.CesiumTerrainProvider.fromUrl("https://myTestTerrain.com"));
  * });
- *
  * @example
  * // Handle loading events
  * const terrain = new Cesium.Terrain(Cesium.CesiumTerrainProvider.fromUrl("https://myTestTerrain.com"));
@@ -37,7 +33,6 @@ import createWorldTerrainAsync from "../Core/createWorldTerrainAsync.js";
  * terrain.errorEvent.addEventListener(error => {
  *   alert(`Encountered an error while creating terrain! ${error}`);
  * });
- *
  * @param {Promise<TerrainProvider>} terrainProviderPromise A promise which resolves to a terrain provider
  */
 function Terrain(terrainProviderPromise) {
@@ -84,7 +79,6 @@ Object.defineProperties(Terrain.prototype, {
   /**
    * Returns true when the terrain provider has been successfully created. Otherwise, returns false.
    * @memberof Terrain.prototype
-   *
    * @type {boolean}
    * @readonly
    */
@@ -97,7 +91,6 @@ Object.defineProperties(Terrain.prototype, {
   /**
    * The terrain provider providing surface geometry to a globe. Do not use until {@link Terrain.readyEvent} is raised.
    * @memberof Terrain.prototype
-   *
    * @type {TerrainProvider}
    * @readonly
    */
@@ -109,23 +102,18 @@ Object.defineProperties(Terrain.prototype, {
 });
 /**
  * Creates a {@link Terrain} instance for {@link https://cesium.com/content/#cesium-world-terrain|Cesium World Terrain}.
- *
  * @function
- *
  * @param {Object} [options] Object with the following properties:
  * @param {Boolean} [options.requestVertexNormals=false] Flag that indicates if the client should request additional lighting information from the server if available.
  * @param {Boolean} [options.requestWaterMask=false] Flag that indicates if the client should request per tile water masks from the server if available.
  * @returns {Terrain} An asynchronous helper object for a CesiumTerrainProvider
- *
  * @see Ion
  * @see createWorldTerrainAsync
- *
  * @example
  * // Create Cesium World Terrain with default settings
  * const viewer = new Cesium.Viewer("cesiumContainer", {
  *   terrain: Cesium.Terrain.fromWorldTerrain()
  * });
- *
  * @example
  * // Create Cesium World Terrain with water and normals.
  * const viewer1 = new Cesium.Viewer("cesiumContainer", {
@@ -134,7 +122,6 @@ Object.defineProperties(Terrain.prototype, {
  *      requestVertexNormals: true
  *    });
  * });
- *
  * @example
  * // Handle loading events
  * const terrain = Cesium.Terrain.fromWorldTerrain();
@@ -159,22 +146,17 @@ Terrain.fromWorldTerrain = function (options) {
 
 /**
  * Creates a {@link Terrain} instance for {@link https://cesium.com/content/#cesium-world-bathymetry|Cesium World Bathymetry}.
- *
  * @function
- *
  * @param {Object} [options] Object with the following properties:
  * @param {Boolean} [options.requestVertexNormals=false] Flag that indicates if the client should request additional lighting information from the server if available.
  * @returns {Terrain} An asynchronous helper object for a CesiumTerrainProvider
- *
  * @see Ion
  * @see createWorldBathymetryAsync
- *
  * @example
  * // Create Cesium World Bathymetry with default settings
  * const viewer = new Cesium.Viewer("cesiumContainer", {
  *   terrain: Cesium.Terrain.fromWorldBathymetry)
  * });
- *
  * @example
  * // Create Cesium World Terrain with normals.
  * const viewer1 = new Cesium.Viewer("cesiumContainer", {
@@ -182,7 +164,6 @@ Terrain.fromWorldTerrain = function (options) {
  *      requestVertexNormals: true
  *    });
  * });
- *
  * @example
  * // Handle loading events
  * const bathymetry = Cesium.Terrain.fromWorldBathymetry();
@@ -231,7 +212,6 @@ export default Terrain;
 /**
  * A function that is called when an error occurs.
  * @callback Terrain.ErrorEventCallback
- *
  * @this Terrain
  * @param {Error} err An object holding details about the error that occurred.
  */
@@ -239,7 +219,6 @@ export default Terrain;
 /**
  * A function that is called when the provider has been created
  * @callback Terrain.ReadyEventCallback
- *
  * @this Terrain
  * @param {TerrainProvider} provider The created terrain provider.
  */

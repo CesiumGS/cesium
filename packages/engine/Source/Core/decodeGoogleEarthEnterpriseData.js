@@ -6,10 +6,8 @@ const compressedMagicSwap = 0xadde6874;
 
 /**
  * Decodes data that is received from the Google Earth Enterprise server.
- *
  * @param {ArrayBuffer} key The key used during decoding.
  * @param {ArrayBuffer} data The data to be decoded.
- *
  * @private
  */
 function decodeGoogleEarthEnterpriseData(key, data) {

@@ -9,10 +9,8 @@ import PositionProperty from "./PositionProperty.js";
 /**
  * A {@link PositionProperty} whose value does not change in respect to the
  * {@link ReferenceFrame} in which is it defined.
- *
  * @alias ConstantPositionProperty
- * @constructor
- *
+ * @class
  * @param {Cartesian3} [value] The property value.
  * @param {ReferenceFrame} [referenceFrame=ReferenceFrame.FIXED] The reference frame in which the position is defined.
  */
@@ -27,7 +25,6 @@ Object.defineProperties(ConstantPositionProperty.prototype, {
    * Gets a value indicating if this property is constant.  A property is considered
    * constant if getValue always returns the same result for the current definition.
    * @memberof ConstantPositionProperty.prototype
-   *
    * @type {boolean}
    * @readonly
    */
@@ -43,7 +40,6 @@ Object.defineProperties(ConstantPositionProperty.prototype, {
    * The definition is considered to have changed if a call to getValue would return
    * a different result for the same time.
    * @memberof ConstantPositionProperty.prototype
-   *
    * @type {Event}
    * @readonly
    */
@@ -67,7 +63,6 @@ Object.defineProperties(ConstantPositionProperty.prototype, {
 
 /**
  * Gets the value of the property at the provided time in the fixed frame.
- *
  * @param {JulianDate} time The time for which to retrieve the value.
  * @param {object} [result] The object to store the value into, if omitted, a new instance is created and returned.
  * @returns {object} The modified result parameter or a new instance if the result parameter was not supplied.
@@ -78,7 +73,6 @@ ConstantPositionProperty.prototype.getValue = function (time, result) {
 
 /**
  * Sets the value of the property.
- *
  * @param {Cartesian3} value The property value.
  * @param {ReferenceFrame} [referenceFrame=this.referenceFrame] The reference frame in which the position is defined.
  */
@@ -99,7 +93,6 @@ ConstantPositionProperty.prototype.setValue = function (value, referenceFrame) {
 
 /**
  * Gets the value of the property at the provided time and in the provided reference frame.
- *
  * @param {JulianDate} time The time for which to retrieve the value.
  * @param {ReferenceFrame} referenceFrame The desired referenceFrame of the result.
  * @param {Cartesian3} [result] The object to store the value into, if omitted, a new instance is created and returned.
@@ -131,7 +124,6 @@ ConstantPositionProperty.prototype.getValueInReferenceFrame = function (
 /**
  * Compares this property to the provided property and returns
  * <code>true</code> if they are equal, <code>false</code> otherwise.
- *
  * @param {Property} [other] The other property.
  * @returns {boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
  */

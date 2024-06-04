@@ -16,9 +16,7 @@ import ResourceCacheStatistics from "./ResourceCacheStatistics.js";
 
 /**
  * Cache for resources shared across 3D Tiles and glTF.
- *
  * @namespace ResourceCache
- *
  * @private
  */
 function ResourceCache() {}
@@ -30,12 +28,9 @@ ResourceCache.statistics = new ResourceCacheStatistics();
 
 /**
  * A reference-counted cache entry.
- *
  * @param {ResourceLoader} resourceLoader The resource.
- *
  * @alias CacheEntry
- * @constructor
- *
+ * @class
  * @private
  */
 function CacheEntry(resourceLoader) {
@@ -49,9 +44,7 @@ function CacheEntry(resourceLoader) {
 /**
  * Gets a resource from the cache. If the resource exists its reference count is
  * incremented. Otherwise, if no resource loader exists, undefined is returned.
- *
  * @param {string} cacheKey The cache key of the resource.
- *
  * @returns {ResourceLoader|undefined} The resource.
  * @private
  */
@@ -70,11 +63,9 @@ ResourceCache.get = function (cacheKey) {
 
 /**
  * Adds it to the cache.
- *
  * @param {ResourceLoader} resourceLoader The resource.
  * @returns {ResourceLoader} The resource.
- *
- * @exception {DeveloperError} Resource with this cacheKey is already in the cache
+ * @throws {DeveloperError} Resource with this cacheKey is already in the cache
  * @private
  */
 ResourceCache.add = function (resourceLoader) {
@@ -102,11 +93,9 @@ ResourceCache.add = function (resourceLoader) {
 /**
  * Unloads a resource from the cache. When the reference count hits zero the
  * resource is destroyed.
- *
  * @param {ResourceLoader} resourceLoader The resource.
- *
- * @exception {DeveloperError} Resource is not in the cache.
- * @exception {DeveloperError} Cannot unload resource that has no references.
+ * @throws {DeveloperError} Resource is not in the cache.
+ * @throws {DeveloperError} Cannot unload resource that has no references.
  * @private
  */
 ResourceCache.unload = function (resourceLoader) {
@@ -134,14 +123,11 @@ ResourceCache.unload = function (resourceLoader) {
 
 /**
  * Gets an existing schema loader from the cache, or creates a new loader if one does not already exist.
- *
  * @param {object} options Object with the following properties:
  * @param {object} [options.schema] An object that explicitly defines a schema JSON. Mutually exclusive with options.resource.
  * @param {Resource} [options.resource] The {@link Resource} pointing to the schema JSON. Mutually exclusive with options.schema.
- *
  * @returns {MetadataSchemaLoader} The cached schema resource.
- *
- * @exception {DeveloperError} One of options.schema and options.resource must be defined.
+ * @throws {DeveloperError} One of options.schema and options.resource must be defined.
  * @private
  */
 ResourceCache.getSchemaLoader = function (options) {
@@ -177,12 +163,10 @@ ResourceCache.getSchemaLoader = function (options) {
 
 /**
  * Gets an existing embedded buffer loader from the cache, or creates a new loader if one does not already exist.
- *
  * @param {object} options Object with the following properties:
  * @param {Resource} options.parentResource The {@link Resource} containing the embedded buffer.
  * @param {number} options.bufferId A unique identifier of the embedded buffer within the parent resource.
  * @param {Uint8Array} [options.typedArray] The typed array containing the embedded buffer contents.
- *
  * @returns {BufferLoader} The cached buffer loader.
  * @private
  */
@@ -219,10 +203,8 @@ ResourceCache.getEmbeddedBufferLoader = function (options) {
 
 /**
  * Gets an existing external buffer from loader the cache, or creates a new loader if one does not already exist.
- *
  * @param {object} options Object with the following properties:
  * @param {Resource} options.resource The {@link Resource} pointing to the external buffer.
- *
  * @returns {BufferLoader} The cached buffer loader.
  * @private
  */
@@ -253,13 +235,11 @@ ResourceCache.getExternalBufferLoader = function (options) {
 
 /**
  * Gets an existing glTF JSON loader from the cache, or creates a new loader if one does not already exist.
- *
  * @param {object} options Object with the following properties:
  * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
  * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
  * @param {Uint8Array} [options.typedArray] The typed array containing the glTF contents.
  * @param {object} [options.gltfJson] The parsed glTF JSON contents.
- *
  * @returns {GltfJsonLoader} The cached glTF JSON loader.
  * @private
  */
@@ -295,13 +275,11 @@ ResourceCache.getGltfJsonLoader = function (options) {
 
 /**
  * Gets an existing glTF buffer view from the cache, or creates a new loader if one does not already exist.
- *
  * @param {object} options Object with the following properties:
  * @param {object} options.gltf The glTF JSON.
  * @param {number} options.bufferViewId The bufferView ID.
  * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
  * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
- *
  * @returns {GltfBufferViewLoader} The cached buffer view loader.
  * @private
  */
@@ -342,13 +320,11 @@ ResourceCache.getBufferViewLoader = function (options) {
 
 /**
  * Gets an existing Draco data from the cache, or creates a new loader if one does not already exist.
- *
  * @param {object} options Object with the following properties:
  * @param {object} options.gltf The glTF JSON.
  * @param {object} options.draco The Draco extension object.
  * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
  * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
- *
  * @returns {GltfDracoLoader} The cached Draco loader.
  * @private
  */
@@ -389,7 +365,6 @@ ResourceCache.getDracoLoader = function (options) {
 
 /**
  * Gets an existing glTF vertex buffer from the cache, or creates a new loader if one does not already exist.
- *
  * @param {object} options Object with the following properties:
  * @param {object} options.gltf The glTF JSON.
  * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
@@ -403,10 +378,9 @@ ResourceCache.getDracoLoader = function (options) {
  * @param {boolean} [options.dequantize=false] Determines whether or not the vertex buffer will be dequantized on the CPU.
  * @param {boolean} [options.loadBuffer=false] Load vertex buffer as a GPU vertex buffer.
  * @param {boolean} [options.loadTypedArray=false] Load vertex buffer as a typed array.
- * @exception {DeveloperError} One of options.bufferViewId and options.draco must be defined.
- * @exception {DeveloperError} When options.draco is defined options.attributeSemantic must also be defined.
- * @exception {DeveloperError} When options.draco is defined options.accessorId must also be defined.
- *
+ * @throws {DeveloperError} One of options.bufferViewId and options.draco must be defined.
+ * @throws {DeveloperError} When options.draco is defined options.attributeSemantic must also be defined.
+ * @throws {DeveloperError} When options.draco is defined options.accessorId must also be defined.
  * @returns {GltfVertexBufferLoader} The cached vertex buffer loader.
  * @private
  */
@@ -515,7 +489,6 @@ function hasDracoCompression(draco, semantic) {
 
 /**
  * Gets an existing glTF index buffer from the cache, or creates a new loader if one does not already exist.
- *
  * @param {object} options Object with the following properties:
  * @param {object} options.gltf The glTF JSON.
  * @param {number} options.accessorId The accessor ID corresponding to the index buffer.
@@ -590,13 +563,11 @@ ResourceCache.getIndexBufferLoader = function (options) {
 
 /**
  * Gets an existing glTF image from the cache, or creates a new loader if one does not already exist.
- *
  * @param {object} options Object with the following properties:
  * @param {object} options.gltf The glTF JSON.
  * @param {number} options.imageId The image ID.
  * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
  * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
- *
  * @returns {GltfImageLoader} The cached image loader.
  * @private
  */
@@ -637,7 +608,6 @@ ResourceCache.getImageLoader = function (options) {
 
 /**
  * Gets an existing glTF texture from the cache, or creates a new loader if one does not already exist.
- *
  * @param {object} options Object with the following properties:
  * @param {object} options.gltf The glTF JSON.
  * @param {object} options.textureInfo The texture info object.
@@ -646,7 +616,6 @@ ResourceCache.getImageLoader = function (options) {
  * @param {SupportedImageFormats} options.supportedImageFormats The supported image formats.
  * @param {FrameState} options.frameState The frame state.
  * @param {boolean} [options.asynchronous=true] Determines if WebGL resource creation will be spread out over several frames or block until all WebGL resources are created.
- *
  * @returns {GltfTextureLoader} The cached texture loader.
  * @private
  */
@@ -701,7 +670,6 @@ ResourceCache.getTextureLoader = function (options) {
 
 /**
  * Unload everything from the cache. This is used for unit testing.
- *
  * @private
  */
 ResourceCache.clearForSpecs = function () {

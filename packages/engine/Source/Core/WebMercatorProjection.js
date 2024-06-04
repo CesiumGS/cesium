@@ -10,12 +10,9 @@ import CesiumMath from "./Math.js";
  * The map projection used by Google Maps, Bing Maps, and most of ArcGIS Online, EPSG:3857.  This
  * projection use longitude and latitude expressed with the WGS84 and transforms them to Mercator using
  * the spherical (rather than ellipsoidal) equations.
- *
  * @alias WebMercatorProjection
- * @constructor
- *
+ * @class
  * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid.
- *
  * @see GeographicProjection
  */
 function WebMercatorProjection(ellipsoid) {
@@ -27,9 +24,7 @@ function WebMercatorProjection(ellipsoid) {
 Object.defineProperties(WebMercatorProjection.prototype, {
   /**
    * Gets the {@link Ellipsoid}.
-   *
    * @memberof WebMercatorProjection.prototype
-   *
    * @type {Ellipsoid}
    * @readonly
    */
@@ -43,7 +38,6 @@ Object.defineProperties(WebMercatorProjection.prototype, {
 /**
  * Converts a Mercator angle, in the range -PI to PI, to a geodetic latitude
  * in the range -PI/2 to PI/2.
- *
  * @param {number} mercatorAngle The angle to convert.
  * @returns {number} The geodetic latitude in radians.
  */
@@ -56,7 +50,6 @@ WebMercatorProjection.mercatorAngleToGeodeticLatitude = function (
 /**
  * Converts a geodetic latitude in radians, in the range -PI/2 to PI/2, to a Mercator
  * angle in the range -PI to PI.
- *
  * @param {number} latitude The geodetic latitude in radians.
  * @returns {number} The Mercator angle.
  */
@@ -81,8 +74,7 @@ WebMercatorProjection.geodeticLatitudeToMercatorAngle = function (latitude) {
  * square.  That is, the rectangle is equal in the X and Y directions.
  *
  * The constant value is computed by calling:
- *    WebMercatorProjection.mercatorAngleToGeodeticLatitude(Math.PI)
- *
+ * WebMercatorProjection.mercatorAngleToGeodeticLatitude(Math.PI)
  * @type {number}
  */
 WebMercatorProjection.MaximumLatitude = WebMercatorProjection.mercatorAngleToGeodeticLatitude(
@@ -93,7 +85,6 @@ WebMercatorProjection.MaximumLatitude = WebMercatorProjection.mercatorAngleToGeo
  * Converts geodetic ellipsoid coordinates, in radians, to the equivalent Web Mercator
  * X, Y, Z coordinates expressed in meters and returned in a {@link Cartesian3}.  The height
  * is copied unmodified to the Z coordinate.
- *
  * @param {Cartographic} cartographic The cartographic coordinates in radians.
  * @param {Cartesian3} [result] The instance to which to copy the result, or undefined if a
  *        new instance should be created.
@@ -122,7 +113,6 @@ WebMercatorProjection.prototype.project = function (cartographic, result) {
  * Converts Web Mercator X, Y coordinates, expressed in meters, to a {@link Cartographic}
  * containing geodetic ellipsoid coordinates.  The Z coordinate is copied unmodified to the
  * height.
- *
  * @param {Cartesian3} cartesian The web mercator Cartesian position to unrproject with height (z) in meters.
  * @param {Cartographic} [result] The instance to which to copy the result, or undefined if a
  *        new instance should be created.

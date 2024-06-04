@@ -4,16 +4,13 @@ import defined from "../Core/defined.js";
 /**
  * Statistics for the GPU and CPU memory used by the models loaded through the
  * {@link ResourceCache}.
- *
  * @alias ResourceCacheStatistics
- * @constructor
- *
+ * @class
  * @private
  */
 function ResourceCacheStatistics() {
   /**
    * The size of vertex buffers and index buffers loaded in the cache in bytes.
-   *
    * @type {number}
    * @private
    */
@@ -21,7 +18,6 @@ function ResourceCacheStatistics() {
 
   /**
    * The size of all textures loaded in the cache in bytes
-   *
    * @type {number}
    * @private
    */
@@ -35,7 +31,6 @@ function ResourceCacheStatistics() {
 
 /**
  * Reset the memory counts
- *
  * @private
  */
 ResourceCacheStatistics.prototype.clear = function () {
@@ -55,7 +50,6 @@ ResourceCacheStatistics.prototype.clear = function () {
  *   <li>If the geometry has a CPU copy of the GPU buffer, it will be added to the count</li>
  * </ul>
  * @param {GltfVertexBufferLoader|GltfIndexBufferLoader} loader The geometry buffer with resources to track
- *
  * @private
  */
 ResourceCacheStatistics.prototype.addGeometryLoader = function (loader) {
@@ -93,9 +87,7 @@ ResourceCacheStatistics.prototype.addGeometryLoader = function (loader) {
  * Track the resources for a texture loader. This should be called after a loader is ready; that
  * is it has been loaded and processed.
  * If the loader is added twice, its resources will not be double-counted.
- *
  * @param {GltfTextureLoader} loader The texture loader with resources to track
- *
  * @private
  */
 ResourceCacheStatistics.prototype.addTextureLoader = function (loader) {
@@ -122,7 +114,6 @@ ResourceCacheStatistics.prototype.addTextureLoader = function (loader) {
  * be used both for geometry and textures. If the loader does not have any
  * tracked resources, this is a no-op.
  * @param {ResourceLoader} loader The resource loader to remove from the cache
- *
  * @private
  */
 ResourceCacheStatistics.prototype.removeLoader = function (loader) {

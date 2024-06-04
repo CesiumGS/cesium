@@ -177,21 +177,16 @@ function bind(gl, attributes, indexBuffer) {
 /**
  * Creates a vertex array, which defines the attributes making up a vertex, and contains an optional index buffer
  * to select vertices for rendering.  Attributes are defined using object literals as shown in Example 1 below.
- *
  * @param {object} options Object with the following properties:
  * @param {Context} options.context The context in which the VertexArray gets created.
  * @param {Object[]} options.attributes An array of attributes.
  * @param {IndexBuffer} [options.indexBuffer] An optional index buffer.
- *
  * @returns {VertexArray} The vertex array, ready for use with drawing.
- *
- * @exception {DeveloperError} Attribute must have a <code>vertexBuffer</code>.
- * @exception {DeveloperError} Attribute must have a <code>componentsPerAttribute</code>.
- * @exception {DeveloperError} Attribute must have a valid <code>componentDatatype</code> or not specify it.
- * @exception {DeveloperError} Attribute must have a <code>strideInBytes</code> less than or equal to 255 or not specify it.
- * @exception {DeveloperError} Index n is used by more than one attribute.
- *
- *
+ * @throws {DeveloperError} Attribute must have a <code>vertexBuffer</code>.
+ * @throws {DeveloperError} Attribute must have a <code>componentsPerAttribute</code>.
+ * @throws {DeveloperError} Attribute must have a valid <code>componentDatatype</code> or not specify it.
+ * @throws {DeveloperError} Attribute must have a <code>strideInBytes</code> less than or equal to 255 or not specify it.
+ * @throws {DeveloperError} Index n is used by more than one attribute.
  * @example
  * // Example 1. Create a vertex array with vertices made up of three floating point
  * // values, e.g., a position, from a single vertex buffer.  No index buffer is used.
@@ -217,7 +212,6 @@ function bind(gl, attributes, indexBuffer) {
  *     context : context,
  *     attributes : attributes
  * });
- *
  * @example
  * // Example 2. Create a vertex array with vertices from two different vertex buffers.
  * // Each vertex has a three-component position and three-component normal.
@@ -249,7 +243,6 @@ function bind(gl, attributes, indexBuffer) {
  *     context : context,
  *     attributes : attributes
  * });
- *
  * @example
  * // Example 3. Creates the same vertex layout as Example 2 using a single
  * // vertex buffer, instead of two.
@@ -279,11 +272,9 @@ function bind(gl, attributes, indexBuffer) {
  *     context : context,
  *     attributes : attributes
  * });
- *
  * @see Buffer#createVertexBuffer
  * @see Buffer#createIndexBuffer
  * @see Context#draw
- *
  * @private
  */
 function VertexArray(options) {
@@ -523,21 +514,17 @@ function interleaveAttributes(attributes) {
  * <br /><br />
  * <code>options</code> can have four properties:
  * <ul>
- *   <li><code>geometry</code>:  The source geometry containing data used to create the vertex array.</li>
- *   <li><code>attributeLocations</code>:  An object that maps geometry attribute names to vertex shader attribute locations.</li>
- *   <li><code>bufferUsage</code>:  The expected usage pattern of the vertex array's buffers.  On some WebGL implementations, this can significantly affect performance.  See {@link BufferUsage}.  Default: <code>BufferUsage.DYNAMIC_DRAW</code>.</li>
- *   <li><code>interleave</code>:  Determines if all attributes are interleaved in a single vertex buffer or if each attribute is stored in a separate vertex buffer.  Default: <code>false</code>.</li>
+ * <li><code>geometry</code>:  The source geometry containing data used to create the vertex array.</li>
+ * <li><code>attributeLocations</code>:  An object that maps geometry attribute names to vertex shader attribute locations.</li>
+ * <li><code>bufferUsage</code>:  The expected usage pattern of the vertex array's buffers.  On some WebGL implementations, this can significantly affect performance.  See {@link BufferUsage}.  Default: <code>BufferUsage.DYNAMIC_DRAW</code>.</li>
+ * <li><code>interleave</code>:  Determines if all attributes are interleaved in a single vertex buffer or if each attribute is stored in a separate vertex buffer.  Default: <code>false</code>.</li>
  * </ul>
  * <br />
  * If <code>options</code> is not specified or the <code>geometry</code> contains no data, the returned vertex array is empty.
- *
  * @param {object} options An object defining the geometry, attribute indices, buffer usage, and vertex layout used to create the vertex array.
- *
- * @exception {RuntimeError} Each attribute list must have the same number of vertices.
- * @exception {DeveloperError} The geometry must have zero or one index lists.
- * @exception {DeveloperError} Index n is used by more than one attribute.
- *
- *
+ * @throws {RuntimeError} Each attribute list must have the same number of vertices.
+ * @throws {DeveloperError} The geometry must have zero or one index lists.
+ * @throws {DeveloperError} Index n is used by more than one attribute.
  * @example
  * // Example 1. Creates a vertex array for rendering a box.  The default dynamic draw
  * // usage is used for the created vertex and index buffer.  The attributes are not
@@ -548,7 +535,6 @@ function interleaveAttributes(attributes) {
  *     geometry           : geometry,
  *     attributeLocations : GeometryPipeline.createAttributeLocations(geometry),
  * });
- *
  * @example
  * // Example 2. Creates a vertex array with interleaved attributes in a
  * // single vertex buffer.  The vertex and index buffer have static draw usage.
@@ -559,12 +545,10 @@ function interleaveAttributes(attributes) {
  *     bufferUsage        : BufferUsage.STATIC_DRAW,
  *     interleave         : true
  * });
- *
  * @example
  * // Example 3.  When the caller destroys the vertex array, it also destroys the
  * // attached vertex buffer(s) and index buffer.
  * va = va.destroy();
- *
  * @see Buffer#createVertexBuffer
  * @see Buffer#createIndexBuffer
  * @see GeometryPipeline.createAttributeLocations
@@ -723,6 +707,7 @@ Object.defineProperties(VertexArray.prototype, {
 
 /**
  * index is the location in the array of attributes, not the index property of an attribute.
+ * @param index
  */
 VertexArray.prototype.getAttribute = function (index) {
   //>>includeStart('debug', pragmas.debug);

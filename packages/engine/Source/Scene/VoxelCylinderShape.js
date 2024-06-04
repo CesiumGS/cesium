@@ -11,15 +11,12 @@ import Cartesian4 from "../Core/Cartesian4.js";
 
 /**
  * A cylinder {@link VoxelShape}.
- *
  * @alias VoxelCylinderShape
- * @constructor
- *
+ * @class
  * @see VoxelShape
  * @see VoxelBoxShape
  * @see VoxelEllipsoidShape
  * @see VoxelShapeType
- *
  * @private
  */
 function VoxelCylinderShape() {
@@ -142,7 +139,6 @@ const scratchScale = new Cartesian3();
 
 /**
  * Update the shape's state.
- *
  * @param {Matrix4} modelMatrix The model matrix.
  * @param {Cartesian3} minBounds The minimum bounds.
  * @param {Cartesian3} maxBounds The maximum bounds.
@@ -504,7 +500,6 @@ VoxelCylinderShape.prototype.update = function (
 /**
  * Computes an oriented bounding box for a specified tile.
  * The update function must be called before calling this function.
- *
  * @param {number} tileLevel The tile's level.
  * @param {number} tileX The tile's x coordinate.
  * @param {number} tileY The tile's y coordinate.
@@ -586,7 +581,6 @@ const scratchTileMaxBounds = new Cartesian3();
 /**
  * Computes an oriented bounding box for a specified sample within a specified tile.
  * The update function must be called before calling this function.
- *
  * @param {SpatialNode} spatialNode The spatial node containing the sample
  * @param {Cartesian3} tileDimensions The size of the tile in number of samples, before padding
  * @param {Cartesian3} tileUv The sample coordinate within the tile
@@ -662,11 +656,9 @@ VoxelCylinderShape.prototype.computeOrientedBoundingBoxForSample = function (
 
 /**
  * Defines the minimum bounds of the shape. Corresponds to minimum radius, height, angle.
- *
  * @type {Cartesian3}
  * @constant
  * @readonly
- *
  * @private
  */
 VoxelCylinderShape.DefaultMinBounds = Object.freeze(
@@ -675,11 +667,9 @@ VoxelCylinderShape.DefaultMinBounds = Object.freeze(
 
 /**
  * Defines the maximum bounds of the shape. Corresponds to maximum radius, height, angle.
- *
  * @type {Cartesian3}
  * @constant
  * @readonly
- *
  * @private
  */
 VoxelCylinderShape.DefaultMaxBounds = Object.freeze(
@@ -739,9 +729,7 @@ function computeLooseOrientedBoundingBox(matrix, result) {
 
 /**
  * Computes an {@link OrientedBoundingBox} for a subregion of the shape.
- *
  * @function
- *
  * @param {number} radiusStart The radiusStart.
  * @param {number} radiusEnd The radiusEnd.
  * @param {number} heightStart The heightStart.
@@ -751,7 +739,6 @@ function computeLooseOrientedBoundingBox(matrix, result) {
  * @param {Matrix4} matrix The matrix to transform the points.
  * @param {OrientedBoundingBox} result The object onto which to store the result.
  * @returns {OrientedBoundingBox} The oriented bounding box that contains this subregion.
- *
  * @private
  */
 function getCylinderChunkObb(

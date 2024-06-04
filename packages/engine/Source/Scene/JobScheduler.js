@@ -5,8 +5,9 @@ import JobType from "./JobType.js";
 
 /**
  *
+ * @param total
  * @private
- * @constructor
+ * @class
  */
 function JobTypeBudget(total) {
   /**
@@ -48,20 +49,20 @@ Object.defineProperties(JobTypeBudget.prototype, {
 /**
  * Engine for time slicing jobs during a frame to amortize work over multiple frames.  This supports:
  * <ul>
- *   <li>
- *     Separate budgets for different job types, e.g., texture, shader program, and buffer creation.  This
- *     allows all job types to make progress each frame.
- *   </li>
- *   <li>
- *     Stealing from other jobs type budgets if they were not exhausted in the previous frame.  This allows
- *     using the entire budget for all job types each frame even if, for example, all the jobs are the same type.
- *   </li>
- *   <li>
- *     Guaranteed progress on all job types each frame, even if it means exceeding the total budget for the frame.
- *     This prevents, for example, several expensive texture uploads over many frames from prevent a shader compile.
- *   </li>
+ * <li>
+ * Separate budgets for different job types, e.g., texture, shader program, and buffer creation.  This
+ * allows all job types to make progress each frame.
+ * </li>
+ * <li>
+ * Stealing from other jobs type budgets if they were not exhausted in the previous frame.  This allows
+ * using the entire budget for all job types each frame even if, for example, all the jobs are the same type.
+ * </li>
+ * <li>
+ * Guaranteed progress on all job types each frame, even if it means exceeding the total budget for the frame.
+ * This prevents, for example, several expensive texture uploads over many frames from prevent a shader compile.
+ * </li>
  * </ul>
- *
+ * @param budgets
  * @private
  */
 function JobScheduler(budgets) {

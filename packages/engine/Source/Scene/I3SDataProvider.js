@@ -66,7 +66,6 @@ import Rectangle from "../Core/Rectangle.js";
  * @typedef {Object} I3SDataProvider.ConstructorOptions
  *
  * Initialization options for the I3SDataProvider constructor
- *
  * @property {string} [name] The name of the I3S dataset.
  * @property {boolean} [show=true] Determines if the dataset will be shown.
  * @property {ArcGISTiledElevationTerrainProvider|Promise<ArcGISTiledElevationTerrainProvider>} [geoidTiledTerrainProvider] Tiled elevation provider describing an Earth Gravitational Model. If defined, geometry will be shifted based on the offsets given by this provider. Required to position I3S data sets with gravity-related height at the correct location.
@@ -75,7 +74,6 @@ import Rectangle from "../Core/Rectangle.js";
  * @property {boolean} [adjustMaterialAlphaMode=false] The option to adjust the alpha mode of the material based on the transparency of the vertex color. When <code>true</code>, the alpha mode of the material (if not defined) will be set to BLEND for geometry with any transparency in the color vertex attribute.
  * @property {boolean} [applySymbology=false] Determines if the I3S symbology will be parsed and applied for the layers.
  * @property {boolean} [calculateNormals=false] Determines if the flat normals will be generated for I3S geometry without normals.
- *
  * @example
  * // Increase LOD by reducing SSE
  * const cesium3dTilesetOptions = {
@@ -84,7 +82,6 @@ import Rectangle from "../Core/Rectangle.js";
  * const i3sOptions = {
  *   cesium3dTilesetOptions: cesium3dTilesetOptions,
  * };
- *
  * @example
  * // Set a custom outline color to replace the color defined in I3S symbology
  * const cesium3dTilesetOptions = {
@@ -105,15 +102,11 @@ import Rectangle from "../Core/Rectangle.js";
  * <div class="notice">
  * This object is normally not instantiated directly, use {@link I3SDataProvider.fromUrl}.
  * </div>
- *
  * @alias I3SDataProvider
- * @constructor
- *
+ * @class
  * @param {I3SDataProvider.ConstructorOptions} options An object describing initialization options
- *
  * @see I3SDataProvider.fromUrl
  * @see ArcGISTiledElevationTerrainProvider
- *
  * @example
  * try {
  *   const i3sData = await I3SDataProvider.fromUrl(
@@ -123,7 +116,6 @@ import Rectangle from "../Core/Rectangle.js";
  * } catch (error) {
  *   console.log(`There was an error creating the I3S Data Provider: ${error}`);
  * }
- *
  * @example
  * try {
  *   const geoidService = await Cesium.ArcGISTiledElevationTerrainProvider.fromUrl(
@@ -336,9 +328,7 @@ Object.defineProperties(I3SDataProvider.prototype, {
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception. Therefore,
  * assign the return value (<code>undefined</code>) to the object as done in the example.
  * </p>
- *
- * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
- *
+ * @throws {DeveloperError} This object was destroyed, i.e., destroy() was called.
  * @see I3SDataProvider#isDestroyed
  */
 I3SDataProvider.prototype.destroy = function () {
@@ -357,9 +347,7 @@ I3SDataProvider.prototype.destroy = function () {
  * If this object was destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
  * </p>
- *
  * @returns {boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
- *
  * @see I3SDataProvider#destroy
  */
 I3SDataProvider.prototype.isDestroyed = function () {
@@ -367,6 +355,7 @@ I3SDataProvider.prototype.isDestroyed = function () {
 };
 
 /**
+ * @param frameState
  * @private
  */
 I3SDataProvider.prototype.update = function (frameState) {
@@ -378,6 +367,7 @@ I3SDataProvider.prototype.update = function (frameState) {
 };
 
 /**
+ * @param frameState
  * @private
  */
 I3SDataProvider.prototype.prePassesUpdate = function (frameState) {
@@ -389,6 +379,7 @@ I3SDataProvider.prototype.prePassesUpdate = function (frameState) {
 };
 
 /**
+ * @param frameState
  * @private
  */
 I3SDataProvider.prototype.postPassesUpdate = function (frameState) {
@@ -400,6 +391,8 @@ I3SDataProvider.prototype.postPassesUpdate = function (frameState) {
 };
 
 /**
+ * @param frameState
+ * @param passState
  * @private
  */
 I3SDataProvider.prototype.updateForPass = function (frameState, passState) {
@@ -508,11 +501,9 @@ async function addLayers(provider, data, options) {
 /**
  * Creates an I3SDataProvider. Currently supported I3S versions are 1.6 and
  * 1.7/1.8 (OGC I3S 1.2).
- *
  * @param {string|Resource} url The url of the I3S dataset, which should return an I3S scene object
  * @param {I3SDataProvider.ConstructorOptions} options An object describing initialization options
  * @returns {Promise<I3SDataProvider>}
- *
  * @example
  * try {
  *   const i3sData = await I3SDataProvider.fromUrl(
@@ -522,7 +513,6 @@ async function addLayers(provider, data, options) {
  * } catch (error) {
  *   console.log(`There was an error creating the I3S Data Provider: ${error}`);
  * }
- *
  * @example
  * try {
  *   const geoidService = await Cesium.ArcGISTiledElevationTerrainProvider.fromUrl(
@@ -580,6 +570,7 @@ I3SDataProvider.fromUrl = async function (url, options) {
 };
 
 /**
+ * @param resource
  * @private
  */
 I3SDataProvider._fetchJson = function (resource) {
@@ -588,7 +579,6 @@ I3SDataProvider._fetchJson = function (resource) {
 
 /**
  * @private
- *
  * @param {Resource} resource The JSON resource to request
  * @returns {Promise<object>} The fetched data
  */
@@ -612,6 +602,7 @@ I3SDataProvider.loadJson = async function (resource) {
 };
 
 /**
+ * @param resource
  * @private
  */
 I3SDataProvider.prototype._loadBinary = async function (resource) {
@@ -631,6 +622,7 @@ I3SDataProvider.prototype._loadBinary = async function (resource) {
 };
 
 /**
+ * @param rawGltf
  * @private
  */
 I3SDataProvider.prototype._binarizeGltf = function (rawGltf) {

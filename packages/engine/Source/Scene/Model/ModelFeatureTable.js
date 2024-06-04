@@ -12,14 +12,11 @@ import ModelType from "./ModelType.js";
 /**
  * Manages the {@link ModelFeature}s in a {@link Model}.
  * Extracts the properties from a {@link PropertyTable}.
- *
  * @param {object} options An object containing the following options:
  * @param {Model} options.model The model that owns this feature table.
  * @param {PropertyTable} options.propertyTable The property table from the model used to initialize the model.
- *
  * @alias ModelFeatureTable
- * @constructor
- *
+ * @class
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
@@ -49,12 +46,9 @@ function ModelFeatureTable(options) {
 Object.defineProperties(ModelFeatureTable.prototype, {
   /**
    * The batch texture created for the features in this table.
-   *
    * @memberof ModelFeatureTable.prototype
-   *
    * @type {BatchTexture}
    * @readonly
-   *
    * @private
    */
   batchTexture: {
@@ -65,12 +59,9 @@ Object.defineProperties(ModelFeatureTable.prototype, {
 
   /**
    * The number of features in this table.
-   *
    * @memberof ModelFeatureTable.prototype
-   *
    * @type {number}
    * @readonly
-   *
    * @private
    */
   featuresLength: {
@@ -82,12 +73,9 @@ Object.defineProperties(ModelFeatureTable.prototype, {
   /**
    * Size of the batch texture. This does not count the property table size
    * as that is counted separately through StructuralMetadata.
-   *
    * @memberof ModelFeatureTable.prototype
-   *
    * @type {number}
    * @readonly
-   *
    * @private
    */
   batchTextureByteLength: {
@@ -102,12 +90,9 @@ Object.defineProperties(ModelFeatureTable.prototype, {
 
   /**
    * A flag to indicate whether or not the types of style commands needed by this feature table have changed.
-   *
    * @memberof ModelFeatureTable.prototype
-   *
    * @type {boolean}
    * @readonly
-   *
    * @private
    */
   styleCommandsNeededDirty: {
@@ -155,9 +140,7 @@ function initialize(modelFeatureTable) {
 
 /**
  * Creates/updates the batch texture.
- *
  * @param {FrameState} frameState The frame state.
- *
  * @private
  */
 ModelFeatureTable.prototype.update = function (frameState) {
@@ -252,6 +235,7 @@ ModelFeatureTable.prototype.getExactClassName = function (featureId) {
 
 const scratchColor = new Color();
 /**
+ * @param style
  * @private
  */
 ModelFeatureTable.prototype.applyStyle = function (style) {
@@ -287,9 +271,7 @@ ModelFeatureTable.prototype.applyStyle = function (style) {
  * If this object was destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
  * </p>
- *
  * @returns {boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
- *
  * @see ModelFeatureTable#destroy
  * @private
  */
@@ -305,12 +287,10 @@ ModelFeatureTable.prototype.isDestroyed = function () {
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
  * assign the return value (<code>undefined</code>) to the object as done in the example.
  * </p>
- *
- * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
- *
+ * @param frameState
+ * @throws {DeveloperError} This object was destroyed, i.e., destroy() was called.
  * @example
  * e = e && e.destroy();
- *
  * @see ModelFeatureTable#isDestroyed
  * @private
  */

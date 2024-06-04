@@ -19,12 +19,10 @@ const scratchCart4 = new Cartesian4();
  * If origin is not on the surface of the ellipsoid, it's surface projection will be used.
  * If origin is at the center of the ellipsoid, an exception will be thrown.
  * @alias EllipsoidTangentPlane
- * @constructor
- *
+ * @class
  * @param {Cartesian3} origin The point on the surface of the ellipsoid where the tangent plane touches.
  * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid to use.
- *
- * @exception {DeveloperError} origin must not be at the center of the ellipsoid.
+ * @throws {DeveloperError} origin must not be at the center of the ellipsoid.
  */
 function EllipsoidTangentPlane(origin, ellipsoid) {
   //>>includeStart('debug', pragmas.debug);
@@ -134,7 +132,6 @@ const tmp = new AxisAlignedBoundingBox();
 /**
  * Creates a new instance from the provided ellipsoid and the center
  * point of the provided Cartesians.
- *
  * @param {Cartesian3[]} cartesians The list of positions surrounding the center point.
  * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid to use.
  * @returns {EllipsoidTangentPlane} The new instance of EllipsoidTangentPlane.
@@ -153,7 +150,6 @@ const scratchProjectPointOntoPlaneCartesian3 = new Cartesian3();
 
 /**
  * Computes the projection of the provided 3D position onto the 2D plane, radially outward from the {@link EllipsoidTangentPlane.ellipsoid} coordinate system origin.
- *
  * @param {Cartesian3} cartesian The point to project.
  * @param {Cartesian2} [result] The object onto which to store the result.
  * @returns {Cartesian2} The modified result parameter or a new Cartesian2 instance if none was provided. Undefined if there is no intersection point
@@ -206,9 +202,7 @@ EllipsoidTangentPlane.prototype.projectPointOntoPlane = function (
 /**
  * Computes the projection of the provided 3D positions onto the 2D plane (where possible), radially outward from the global origin.
  * The resulting array may be shorter than the input array - if a single projection is impossible it will not be included.
- *
  * @see EllipsoidTangentPlane.projectPointOntoPlane
- *
  * @param {Cartesian3[]} cartesians The array of points to project.
  * @param {Cartesian2[]} [result] The array of Cartesian2 instances onto which to store results.
  * @returns {Cartesian2[]} The modified result parameter or a new array of Cartesian2 instances if none was provided.
@@ -240,7 +234,6 @@ EllipsoidTangentPlane.prototype.projectPointsOntoPlane = function (
 
 /**
  * Computes the projection of the provided 3D position onto the 2D plane, along the plane normal.
- *
  * @param {Cartesian3} cartesian The point to project.
  * @param {Cartesian2} [result] The object onto which to store the result.
  * @returns {Cartesian2} The modified result parameter or a new Cartesian2 instance if none was provided.
@@ -290,9 +283,7 @@ EllipsoidTangentPlane.prototype.projectPointToNearestOnPlane = function (
 
 /**
  * Computes the projection of the provided 3D positions onto the 2D plane, along the plane normal.
- *
  * @see EllipsoidTangentPlane.projectPointToNearestOnPlane
- *
  * @param {Cartesian3[]} cartesians The array of points to project.
  * @param {Cartesian2[]} [result] The array of Cartesian2 instances onto which to store results.
  * @returns {Cartesian2[]} The modified result parameter or a new array of Cartesian2 instances if none was provided. This will have the same length as <code>cartesians</code>.
@@ -320,7 +311,6 @@ EllipsoidTangentPlane.prototype.projectPointsToNearestOnPlane = function (
 const projectPointsOntoEllipsoidScratch = new Cartesian3();
 /**
  * Computes the projection of the provided 2D position onto the 3D ellipsoid.
- *
  * @param {Cartesian2} cartesian The points to project.
  * @param {Cartesian3} [result] The Cartesian3 instance to store result.
  * @returns {Cartesian3} The modified result parameter or a new Cartesian3 instance if none was provided.
@@ -354,7 +344,6 @@ EllipsoidTangentPlane.prototype.projectPointOntoEllipsoid = function (
 
 /**
  * Computes the projection of the provided 2D positions onto the 3D ellipsoid.
- *
  * @param {Cartesian2[]} cartesians The array of points to project.
  * @param {Cartesian3[]} [result] The array of Cartesian3 instances onto which to store results.
  * @returns {Cartesian3[]} The modified result parameter or a new array of Cartesian3 instances if none was provided.

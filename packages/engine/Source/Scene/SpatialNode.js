@@ -9,8 +9,7 @@ import OrientedBoundingBox from "../Core/OrientedBoundingBox.js";
 
 /**
  * @alias SpatialNode
- * @constructor
- *
+ * @class
  * @param {number} level
  * @param {number} x
  * @param {number} y
@@ -18,7 +17,6 @@ import OrientedBoundingBox from "../Core/OrientedBoundingBox.js";
  * @param {SpatialNode} parent
  * @param {VoxelShape} shape
  * @param {Cartesian3} voxelDimensions
- *
  * @private
  */
 function SpatialNode(level, x, y, z, parent, shape, voxelDimensions) {
@@ -170,7 +168,6 @@ function findKeyframeIndex(keyframe, keyframeNodes) {
 
 /**
  * Computes the most suitable keyframes for rendering, balancing between temporal and visual quality.
- *
  * @param {number} keyframeLocation
  */
 SpatialNode.prototype.computeSurroundingRenderableKeyframeNodes = function (

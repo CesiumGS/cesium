@@ -9,7 +9,6 @@ import createPropertyDescriptor from "./createPropertyDescriptor.js";
  * @typedef {object} PlaneGraphics.ConstructorOptions
  *
  * Initialization options for the PlaneGraphics constructor
- *
  * @property {Property | boolean} [show=true] A boolean Property specifying the visibility of the plane.
  * @property {Property | Plane} [plane] A {@link Plane} Property specifying the normal and distance for the plane.
  * @property {Property | Cartesian2} [dimensions] A {@link Cartesian2} Property specifying the width and height of the plane.
@@ -24,12 +23,9 @@ import createPropertyDescriptor from "./createPropertyDescriptor.js";
 
 /**
  * Describes a plane. The center position and orientation are determined by the containing {@link Entity}.
- *
  * @alias PlaneGraphics
- * @constructor
- *
+ * @class
  * @param {PlaneGraphics.ConstructorOptions} [options] Object describing initialization options
- *
  * @demo {@link https://sandcastle.cesium.com/index.html?src=Plane.html|Cesium Sandcastle Plane Demo}
  */
 function PlaneGraphics(options) {
@@ -81,7 +77,6 @@ Object.defineProperties(PlaneGraphics.prototype, {
 
   /**
    * Gets or sets the {@link Plane} Property specifying the normal and distance of the plane.
-   *
    * @memberof PlaneGraphics.prototype
    * @type {Property|undefined}
    */
@@ -89,7 +84,6 @@ Object.defineProperties(PlaneGraphics.prototype, {
 
   /**
    * Gets or sets the {@link Cartesian2} Property specifying the width and height of the plane.
-   *
    * @memberof PlaneGraphics.prototype
    * @type {Property|undefined}
    */
@@ -159,7 +153,6 @@ Object.defineProperties(PlaneGraphics.prototype, {
 
 /**
  * Duplicates this instance.
- *
  * @param {PlaneGraphics} [result] The object onto which to store the result.
  * @returns {PlaneGraphics} The modified result parameter or a new instance if one was not provided.
  */
@@ -183,7 +176,6 @@ PlaneGraphics.prototype.clone = function (result) {
 /**
  * Assigns each unassigned property on this object to the value
  * of the same property on the provided source object.
- *
  * @param {PlaneGraphics} source The object to be merged into this object.
  */
 PlaneGraphics.prototype.merge = function (source) {

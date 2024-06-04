@@ -7,15 +7,11 @@ import Resource from "../Core/Resource.js";
 
 /**
  * Creates a {@link Cesium3DTileset} instance for the Google Photorealistic 3D Tiles tileset.
- *
  * @function
- *
  * @param {string} [key=GoogleMaps.defaultApiKey] Your API key to access Google Photorealistic 3D Tiles. See {@link https://developers.google.com/maps/documentation/javascript/get-api-key} for instructions on how to create your own key.
  * @param {Cesium3DTileset.ConstructorOptions} [options] An object describing initialization options.
  * @returns {Promise<Cesium3DTileset>}
- *
  * @see GoogleMaps
- *
  * @example
  * const viewer = new Cesium.Viewer("cesiumContainer");
  *
@@ -25,7 +21,6 @@ import Resource from "../Core/Resource.js";
  * } catch (error) {
  *   console.log(`Error creating tileset: ${error}`);
  * }
- *
  * @example
  * // Use your own Google Maps API key
  * Cesium.GoogleMaps.defaultApiKey = "your-api-key";

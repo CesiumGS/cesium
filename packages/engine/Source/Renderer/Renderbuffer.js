@@ -7,6 +7,7 @@ import ContextLimits from "./ContextLimits.js";
 import RenderbufferFormat from "./RenderbufferFormat.js";
 
 /**
+ * @param options
  * @private
  */
 function Renderbuffer(options) {

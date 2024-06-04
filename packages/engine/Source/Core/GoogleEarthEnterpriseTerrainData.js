@@ -18,10 +18,8 @@ import TerrainMesh from "./TerrainMesh.js";
 
 /**
  * Terrain data for a single tile from a Google Earth Enterprise server.
- *
  * @alias GoogleEarthEnterpriseTerrainData
- * @constructor
- *
+ * @class
  * @param {object} options Object with the following properties:
  * @param {ArrayBuffer} options.buffer The buffer containing terrain data.
  * @param {number} options.negativeAltitudeExponentBias Multiplier for negative terrain heights that are encoded as very small positive values.
@@ -40,8 +38,6 @@ import TerrainMesh from "./TerrainMesh.js";
  * @param {boolean} [options.createdByUpsampling=false] True if this instance was created by upsampling another instance;
  *                  otherwise, false.
  * @param {Credit[]} [options.credits] Array of credits for this tile.
- *
- *
  * @example
  * const buffer = ...
  * const childTileMask = ...
@@ -49,7 +45,6 @@ import TerrainMesh from "./TerrainMesh.js";
  *   buffer : heightBuffer,
  *   childTileMask : childTileMask
  * });
- *
  * @see TerrainData
  * @see HeightmapTerrainData
  * @see QuantizedMeshTerrainData
@@ -129,9 +124,7 @@ const rectangleScratch = new Rectangle();
 
 /**
  * Creates a {@link TerrainMesh} from this terrain data.
- *
  * @private
- *
  * @param {object} options Object with the following properties:
  * @param {TilingScheme} options.tilingScheme The tiling scheme to which this tile belongs.
  * @param {number} options.x The X coordinate of the tile for which to create the terrain data.
@@ -235,7 +228,6 @@ GoogleEarthEnterpriseTerrainData.prototype.createMesh = function (options) {
 
 /**
  * Computes the terrain height at a specified longitude and latitude.
- *
  * @param {Rectangle} rectangle The rectangle covered by this terrain data.
  * @param {number} longitude The longitude in radians.
  * @param {number} latitude The latitude in radians.
@@ -274,7 +266,6 @@ const upsampleTaskProcessor = new TaskProcessor(
 /**
  * Upsamples this terrain data for use by a descendant tile.  The resulting instance will contain a subset of the
  * height samples in this instance, interpolated if necessary.
- *
  * @param {TilingScheme} tilingScheme The tiling scheme of this terrain data.
  * @param {number} thisX The X coordinate of this tile in the tiling scheme.
  * @param {number} thisY The Y coordinate of this tile in the tiling scheme.
@@ -386,7 +377,6 @@ GoogleEarthEnterpriseTerrainData.prototype.upsample = function (
  * {@link HeightmapTerrainData.childTileMask}.  The given child tile coordinates are assumed
  * to be one of the four children of this tile.  If non-child tile coordinates are
  * given, the availability of the southeast child tile is returned.
- *
  * @param {number} thisX The tile X coordinate of this (the parent) tile.
  * @param {number} thisY The tile Y coordinate of this (the parent) tile.
  * @param {number} childX The tile X coordinate of the child tile to check for availability.
@@ -422,7 +412,6 @@ GoogleEarthEnterpriseTerrainData.prototype.isChildAvailable = function (
  * terrain data.  If this value is false, the data was obtained from some other source, such
  * as by downloading it from a remote server.  This method should return true for instances
  * returned from a call to {@link HeightmapTerrainData#upsample}.
- *
  * @returns {boolean} True if this instance was created by upsampling; otherwise, false.
  */
 GoogleEarthEnterpriseTerrainData.prototype.wasCreatedByUpsampling = function () {

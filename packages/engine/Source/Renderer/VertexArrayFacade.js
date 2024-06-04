@@ -10,6 +10,10 @@ import BufferUsage from "./BufferUsage.js";
 import VertexArray from "./VertexArray.js";
 
 /**
+ * @param context
+ * @param attributes
+ * @param sizeInVertices
+ * @param instanced
  * @private
  */
 function VertexArrayFacade(context, attributes, sizeInVertices, instanced) {
@@ -220,6 +224,7 @@ VertexArrayFacade._createArrayViews = function (attributes, vertexSizeInBytes) {
 
 /**
  * Invalidates writers.  Can't render again until commit is called.
+ * @param sizeInVertices
  */
 VertexArrayFacade.prototype.resize = function (sizeInVertices) {
   this._size = sizeInVertices;

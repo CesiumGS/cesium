@@ -4,7 +4,7 @@ let a;
 
 /**
  * Given a URL, determine whether that URL is considered cross-origin to the current page.
- *
+ * @param url
  * @private
  */
 function isCrossOriginUrl(url) {

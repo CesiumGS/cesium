@@ -12,20 +12,15 @@ import destroyObject from "../Core/destroyObject.js";
  * If <code>inputPreviousStageTexture</code> is <code>false</code>, the input texture is the same for each stage in the composite. The input texture is the texture rendered to by the scene
  * or the output texture of the previous stage.
  * </p>
- *
  * @alias PostProcessStageComposite
- * @constructor
- *
+ * @class
  * @param {object} options An object with the following properties:
  * @param {Array} options.stages An array of {@link PostProcessStage}s or composites to be executed in order.
  * @param {boolean} [options.inputPreviousStageTexture=true] Whether to execute each post-process stage where the input to one stage is the output of the previous. Otherwise, the input to each contained stage is the output of the stage that executed before the composite.
  * @param {string} [options.name=createGuid()] The unique name of this post-process stage for reference by other composites. If a name is not supplied, a GUID will be generated.
  * @param {object} [options.uniforms] An alias to the uniforms of post-process stages.
- *
- * @exception {DeveloperError} options.stages.length must be greater than 0.0.
- *
+ * @throws {DeveloperError} options.stages.length must be greater than 0.0.
  * @see PostProcessStage
- *
  * @example
  * // Example 1: separable blur filter
  * // The input to blurXDirection is the texture rendered to by the scene or the output of the previous stage.
@@ -33,7 +28,6 @@ import destroyObject from "../Core/destroyObject.js";
  * scene.postProcessStages.add(new Cesium.PostProcessStageComposite({
  *     stages : [blurXDirection, blurYDirection]
  * }));
- *
  * @example
  * // Example 2: referencing the output of another post-process stage
  * scene.postProcessStages.add(new Cesium.PostProcessStageComposite({
@@ -54,7 +48,6 @@ import destroyObject from "../Core/destroyObject.js";
  *         })
  *     ]
  * });
- *
  * @example
  * // Example 3: create a uniform alias
  * const uniforms = {};
@@ -117,7 +110,6 @@ function PostProcessStageComposite(options) {
 Object.defineProperties(PostProcessStageComposite.prototype, {
   /**
    * Determines if this post-process stage is ready to be executed.
-   *
    * @memberof PostProcessStageComposite.prototype
    * @type {boolean}
    * @readonly
@@ -136,7 +128,6 @@ Object.defineProperties(PostProcessStageComposite.prototype, {
   },
   /**
    * The unique name of this post-process stage for reference by other stages in a PostProcessStageComposite.
-   *
    * @memberof PostProcessStageComposite.prototype
    * @type {string}
    * @readonly
@@ -148,7 +139,6 @@ Object.defineProperties(PostProcessStageComposite.prototype, {
   },
   /**
    * Whether or not to execute this post-process stage when ready.
-   *
    * @memberof PostProcessStageComposite.prototype
    * @type {boolean}
    */
@@ -179,7 +169,6 @@ Object.defineProperties(PostProcessStageComposite.prototype, {
    * If <code>inputPreviousStageTexture</code> is <code>true</code>, the input to each stage is the output texture rendered to by the scene or of the stage that executed before it.
    * If <code>inputPreviousStageTexture</code> is <code>false</code>, the input texture is the same for each stage in the composite. The input texture is the texture rendered to by the scene
    * or the output texture of the previous stage.
-   *
    * @memberof PostProcessStageComposite.prototype
    * @type {boolean}
    * @readonly
@@ -191,7 +180,6 @@ Object.defineProperties(PostProcessStageComposite.prototype, {
   },
   /**
    * The number of post-process stages in this composite.
-   *
    * @memberof PostProcessStageComposite.prototype
    * @type {number}
    * @readonly
@@ -203,7 +191,6 @@ Object.defineProperties(PostProcessStageComposite.prototype, {
   },
   /**
    * The features selected for applying the post-process.
-   *
    * @memberof PostProcessStageComposite.prototype
    * @type {Array}
    */
@@ -229,6 +216,7 @@ Object.defineProperties(PostProcessStageComposite.prototype, {
 });
 
 /**
+ * @param context
  * @private
  */
 PostProcessStageComposite.prototype._isSupported = function (context) {
@@ -244,12 +232,10 @@ PostProcessStageComposite.prototype._isSupported = function (context) {
 
 /**
  * Gets the post-process stage at <code>index</code>
- *
  * @param {number} index The index of the post-process stage or composite.
- * @return {PostProcessStage|PostProcessStageComposite} The post-process stage or composite at index.
- *
- * @exception {DeveloperError} index must be greater than or equal to 0.
- * @exception {DeveloperError} index must be less than {@link PostProcessStageComposite#length}.
+ * @returns {PostProcessStage|PostProcessStageComposite} The post-process stage or composite at index.
+ * @throws {DeveloperError} index must be greater than or equal to 0.
+ * @throws {DeveloperError} index must be less than {@link PostProcessStageComposite#length}.
  */
 PostProcessStageComposite.prototype.get = function (index) {
   //>>includeStart('debug', pragmas.debug);
@@ -329,9 +315,7 @@ PostProcessStageComposite.prototype.update = function (context, useLogDepth) {
  * If this object was destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
  * </p>
- *
  * @returns {boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
- *
  * @see PostProcessStageComposite#destroy
  */
 PostProcessStageComposite.prototype.isDestroyed = function () {
@@ -346,9 +330,7 @@ PostProcessStageComposite.prototype.isDestroyed = function () {
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
  * assign the return value (<code>undefined</code>) to the object as done in the example.
  * </p>
- *
- * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
- *
+ * @throws {DeveloperError} This object was destroyed, i.e., destroy() was called.
  * @see PostProcessStageComposite#isDestroyed
  */
 PostProcessStageComposite.prototype.destroy = function () {

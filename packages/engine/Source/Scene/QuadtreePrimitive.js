@@ -25,16 +25,15 @@ import TileSelectionResult from "./TileSelectionResult.js";
  * The set of tiles to render is selected by projecting an estimate of the geometric error in a tile onto
  * the screen to estimate screen-space error, in pixels, which must be below a user-specified threshold.
  * The actual content of the tiles is arbitrary and is specified using a {@link QuadtreeTileProvider}.
- *
  * @alias QuadtreePrimitive
- * @constructor
+ * @class
  * @private
- *
  * @param {QuadtreeTileProvider} options.tileProvider The tile provider that loads, renders, and estimates
  *        the distance to individual tiles.
  * @param {number} [options.maximumScreenSpaceError=2] The maximum screen-space error, in pixels, that is allowed.
  *        A higher maximum error will render fewer tiles and improve performance, while a lower
  *        value will improve visual quality.
+ * @param options
  * @param {number} [options.tileCacheSize=100] The maximum number of tiles that will be retained in the tile cache.
  *        Note that tiles will never be unloaded if they were used for rendering the last
  *        frame, so the actual number of resident tiles may be higher.  The value of
@@ -179,7 +178,6 @@ Object.defineProperties(QuadtreePrimitive.prototype, {
   /**
    * Gets an event that's raised when the length of the tile load queue has changed since the last render frame.  When the load queue is empty,
    * all terrain and imagery for the current view have been loaded.  The event passes the new length of the tile load queue.
-   *
    * @memberof QuadtreePrimitive.prototype
    * @type {Event}
    */
@@ -199,7 +197,6 @@ Object.defineProperties(QuadtreePrimitive.prototype, {
 /**
  * Invalidates and frees all the tiles in the quadtree.  The tiles must be reloaded
  * before they can be displayed.
- *
  * @memberof QuadtreePrimitive
  */
 QuadtreePrimitive.prototype.invalidateAllTiles = function () {
@@ -241,7 +238,6 @@ function invalidateAllTiles(primitive) {
 /**
  * Invokes a specified function for each {@link QuadtreeTile} that is partially
  * or completely loaded.
- *
  * @param {Function} tileFunction The function to invoke for each loaded tile.  The
  *        function is passed a reference to the tile as its only parameter.
  */
@@ -258,7 +254,6 @@ QuadtreePrimitive.prototype.forEachLoadedTile = function (tileFunction) {
 /**
  * Invokes a specified function for each {@link QuadtreeTile} that was rendered
  * in the most recent frame.
- *
  * @param {Function} tileFunction The function to invoke for each rendered tile.  The
  *        function is passed a reference to the tile as its only parameter.
  */
@@ -272,7 +267,6 @@ QuadtreePrimitive.prototype.forEachRenderedTile = function (tileFunction) {
 /**
  * Calls the callback when a new tile is rendered that contains the given cartographic. The only parameter
  * is the cartesian position on the tile.
- *
  * @param {Cartographic} cartographic The cartographic position.
  * @param {Function} callback The function to be called when a new tile is loaded containing the updated cartographic.
  * @returns {Function} The function to remove this callback from the quadtree.
@@ -307,6 +301,7 @@ QuadtreePrimitive.prototype.updateHeight = function (cartographic, callback) {
 
 /**
  * Updates the tile provider imagery and continues to process the tile load queue.
+ * @param frameState
  * @private
  */
 QuadtreePrimitive.prototype.update = function (frameState) {
@@ -331,6 +326,7 @@ function clearTileLoadQueue(primitive) {
 
 /**
  * Initializes values for a new render frame and prepare the tile load queue.
+ * @param frameState
  * @private
  */
 QuadtreePrimitive.prototype.beginFrame = function (frameState) {
@@ -358,6 +354,7 @@ QuadtreePrimitive.prototype.beginFrame = function (frameState) {
 
 /**
  * Selects new tiles to load based on the frame state and creates render commands.
+ * @param frameState
  * @private
  */
 QuadtreePrimitive.prototype.render = function (frameState) {
@@ -381,6 +378,8 @@ QuadtreePrimitive.prototype.render = function (frameState) {
 /**
  * Checks if the load queue length has changed since the last time we raised a queue change event - if so, raises
  * a new change event at the end of the render cycle.
+ * @param primitive
+ * @param frameState
  * @private
  */
 function updateTileLoadProgress(primitive, frameState) {
@@ -435,6 +434,7 @@ function updateTileLoadProgress(primitive, frameState) {
 
 /**
  * Updates terrain heights.
+ * @param frameState
  * @private
  */
 QuadtreePrimitive.prototype.endFrame = function (frameState) {
@@ -456,11 +456,8 @@ QuadtreePrimitive.prototype.endFrame = function (frameState) {
  * <br /><br />
  * If this object was destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
- *
  * @memberof QuadtreePrimitive
- *
  * @returns {boolean} True if this object was destroyed; otherwise, false.
- *
  * @see QuadtreePrimitive#destroy
  */
 QuadtreePrimitive.prototype.isDestroyed = function () {
@@ -474,15 +471,10 @@ QuadtreePrimitive.prototype.isDestroyed = function () {
  * Once an object is destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
  * assign the return value (<code>undefined</code>) to the object as done in the example.
- *
  * @memberof QuadtreePrimitive
- *
- * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
- *
- *
+ * @throws {DeveloperError} This object was destroyed, i.e., destroy() was called.
  * @example
  * primitive = primitive && primitive.destroy();
- *
  * @see QuadtreePrimitive#isDestroyed
  */
 QuadtreePrimitive.prototype.destroy = function () {
@@ -620,7 +612,7 @@ function queueTileLoad(primitive, queue, tile, frameState) {
 /**
  * Tracks details of traversing a tile while selecting tiles for rendering.
  * @alias TraversalDetails
- * @constructor
+ * @class
  * @private
  */
 function TraversalDetails() {
@@ -695,16 +687,15 @@ for (let i = 0; i < traversalQuadsByLevel.length; ++i) {
 /**
  * Visits a tile for possible rendering. When we call this function with a tile:
  *
- *    * the tile has been determined to be visible (possibly based on a bounding volume that is not very tight-fitting)
- *    * its parent tile does _not_ meet the SSE (unless ancestorMeetsSse=true, see comments below)
- *    * the tile may or may not be renderable
- *
+ * the tile has been determined to be visible (possibly based on a bounding volume that is not very tight-fitting)
+ * its parent tile does _not_ meet the SSE (unless ancestorMeetsSse=true, see comments below)
+ * the tile may or may not be renderable
  * @private
- *
  * @param {Primitive} primitive The QuadtreePrimitive.
  * @param {FrameState} frameState The frame state.
  * @param {QuadtreeTile} tile The tile to visit
  * @param {boolean} ancestorMeetsSse True if a tile higher in the tile tree already met the SSE and we're refining further only
+ * @param traversalDetails
  *                  to maintain detail while that higher tile loads.
  * @param {TraversalDetails} traveralDetails On return, populated with details of how the traversal of this tile went.
  */

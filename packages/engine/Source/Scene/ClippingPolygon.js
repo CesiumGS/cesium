@@ -11,12 +11,10 @@ import Rectangle from "../Core/Rectangle.js";
 /**
  * A geodesic polygon to be used with {@link ClippingPlaneCollection} for selectively hiding regions in a model, a 3D tileset, or the globe.
  * @alias ClippingPolygon
- * @constructor
- *
+ * @class
  * @param {object} options Object with the following properties:
  * @param {Cartesian3[]} options.positions A list of three or more Cartesian coordinates defining the outer ring of the clipping polygon.
  * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84]
- *
  * @example
  * const positions = Cesium.Cartesian3.fromRadiansArray([
  *     -1.3194369277314022,
@@ -53,7 +51,6 @@ function ClippingPolygon(options) {
 Object.defineProperties(ClippingPolygon.prototype, {
   /**
    * Returns the total number of positions in the polygon, include any holes.
-   *
    * @memberof ClippingPolygon.prototype
    * @type {number}
    * @readonly
@@ -65,7 +62,6 @@ Object.defineProperties(ClippingPolygon.prototype, {
   },
   /**
    * Returns the outer ring of positions.
-   *
    * @memberof ClippingPolygon.prototype
    * @type {Cartesian3[]}
    * @readonly
@@ -77,7 +73,6 @@ Object.defineProperties(ClippingPolygon.prototype, {
   },
   /**
    * Returns the ellipsoid used to project the polygon onto surfaces when clipping.
-   *
    * @memberof ClippingPolygon.prototype
    * @type {Ellipsoid}
    * @readonly
@@ -116,7 +111,6 @@ ClippingPolygon.clone = function (polygon, result) {
 /**
  * Compares the provided ClippingPolygons and returns
  * <code>true</code> if they are equal, <code>false</code> otherwise.
- *
  * @param {Plane} left The first polygon.
  * @param {Plane} right The second polygon.
  * @returns {boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
@@ -134,7 +128,6 @@ ClippingPolygon.equals = function (left, right) {
 
 /**
  * Computes a cartographic rectangle which encloses the polygon defined by the list of positions, including cases over the international date line and the poles.
- *
  * @param {Rectangle} [result] An object in which to store the result.
  * @returns {Rectangle} The result rectangle
  */
@@ -151,9 +144,7 @@ const scratchRectangle = new Rectangle();
 const spherePointScratch = new Cartesian3();
 /**
  * Computes a rectangle with the spherical extents that encloses the polygon defined by the list of positions, including cases over the international date line and the poles.
- *
  * @private
- *
  * @param {Rectangle} [result] An object in which to store the result.
  * @returns {Rectangle} The result rectangle with spherical extents.
  */

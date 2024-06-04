@@ -11,7 +11,6 @@ const defaultAccessToken =
  * An ion access token is only required if you are using any ion related APIs.
  * A default access token is provided for evaluation purposes only.
  * Sign up for a free ion account and get your own access token at {@link https://cesium.com}
- *
  * @see IonResource
  * @see IonImageryProvider
  * @see IonGeocoderService
@@ -23,14 +22,12 @@ const Ion = {};
 
 /**
  * Gets or sets the default Cesium ion access token.
- *
  * @type {string}
  */
 Ion.defaultAccessToken = defaultAccessToken;
 
 /**
  * Gets or sets the default Cesium ion server.
- *
  * @type {string|Resource}
  * @default https://api.cesium.com
  */

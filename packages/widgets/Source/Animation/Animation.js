@@ -405,16 +405,11 @@ SvgButton.prototype.setTooltip = function (tooltip) {
  * animation time in sync with the end user's system clock, typically displaying
  * "today" or "right now."  This mode is not available in {@link ClockRange.CLAMPED} or
  * {@link ClockRange.LOOP_STOP} mode if the current time is outside of {@link Clock}'s startTime and endTime.
- *
  * @alias Animation
- * @constructor
- *
+ * @class
  * @param {Element|string} container The DOM element or ID that will contain the widget.
  * @param {AnimationViewModel} viewModel The view model used by this widget.
- *
- * @exception {DeveloperError} Element with id "container" does not exist in the document.
- *
- *
+ * @throws {DeveloperError} Element with id "container" does not exist in the document.
  * @example
  * // In HTML head, include a link to Animation.css stylesheet,
  * // and in the body, include: <div id="animationContainer"></div>
@@ -429,7 +424,6 @@ SvgButton.prototype.setTooltip = function (tooltip) {
  *     requestAnimationFrame(tick);
  * }
  * requestAnimationFrame(tick);
- *
  * @see AnimationViewModel
  * @see Clock
  */
@@ -710,7 +704,6 @@ function Animation(container, viewModel) {
 Object.defineProperties(Animation.prototype, {
   /**
    * Gets the parent container.
-   *
    * @memberof Animation.prototype
    * @type {Element}
    * @readonly
@@ -723,7 +716,6 @@ Object.defineProperties(Animation.prototype, {
 
   /**
    * Gets the view model.
-   *
    * @memberof Animation.prototype
    * @type {AnimationViewModel}
    * @readonly
@@ -858,7 +850,6 @@ Animation.prototype.resize = function () {
 
 /**
  * Updates the widget to reflect any modified CSS rules for theming.
- *
  * @example
  * //Switch to the cesium-lighter theme.
  * document.body.className = 'cesium-lighter';

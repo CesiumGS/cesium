@@ -47,12 +47,10 @@ const DecodingState = {
  * Represents the contents of a
  * {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification/TileFormats/PointCloud|Point Cloud}
  * tile. Used internally by {@link TimeDynamicPointCloud}.
- *
+ * @param options
  * @alias PointCloud
- * @constructor
- *
+ * @class
  * @see TimeDynamicPointCloud
- *
  * @private
  */
 function PointCloud(options) {
@@ -146,7 +144,6 @@ function PointCloud(options) {
 
   /**
    * The {@link SplitDirection} to apply to this point cloud.
-   *
    * @type {SplitDirection}
    * @default {@link SplitDirection.NONE}
    */

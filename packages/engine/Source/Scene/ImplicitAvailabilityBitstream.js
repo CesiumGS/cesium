@@ -7,10 +7,8 @@ import RuntimeError from "../Core/RuntimeError.js";
 /**
  * An availability bitstream for use in an {@link ImplicitSubtree}. This handles
  * both Uint8Array bitstreams and constant values.
- *
  * @alias ImplicitAvailabilityBitstream
- * @constructor
- *
+ * @class
  * @param {object} options An object with the following properties:
  * @param {number} options.lengthBits The length of the bitstream in bits
  * @param {boolean} [options.constant] A single boolean value indicating the value of all the bits in the bitstream if they are all the same
@@ -62,7 +60,6 @@ function ImplicitAvailabilityBitstream(options) {
 /**
  * Count the number of bits with value 1 in the bitstream. This is used for
  * computing availableCount if not precomputed
- *
  * @param {Uint8Array} bitstream The bitstream typed array
  * @param {number} lengthBits How many bits are in the bitstream
  * @private
@@ -80,9 +77,7 @@ function count1Bits(bitstream, lengthBits) {
 Object.defineProperties(ImplicitAvailabilityBitstream.prototype, {
   /**
    * The length of the bitstream in bits.
-   *
    * @memberof ImplicitAvailabilityBitstream.prototype
-   *
    * @type {number}
    * @readonly
    * @private
@@ -94,9 +89,7 @@ Object.defineProperties(ImplicitAvailabilityBitstream.prototype, {
   },
   /**
    * The number of bits in the bitstream with value <code>1</code>.
-   *
    * @memberof ImplicitAvailabilityBitstream.prototype
-   *
    * @type {number}
    * @readonly
    * @private
@@ -111,7 +104,6 @@ Object.defineProperties(ImplicitAvailabilityBitstream.prototype, {
 /**
  * Get a bit from the availability bitstream as a Boolean. If the bitstream
  * is a constant, the constant value is returned instead.
- *
  * @param {number} index The integer index of the bit.
  * @returns {boolean} The value of the bit
  * @private

@@ -2,7 +2,6 @@ import defined from "./defined.js";
 
 /**
  * An {@link InterpolationAlgorithm} for performing Lagrange interpolation.
- *
  * @namespace LagrangePolynomialApproximation
  */
 const LagrangePolynomialApproximation = {
@@ -11,7 +10,6 @@ const LagrangePolynomialApproximation = {
 
 /**
  * Given the desired degree, returns the number of data points required for interpolation.
- *
  * @param {number} degree The desired degree of interpolation.
  * @returns {number} The number of required data points needed for the desired degree of interpolation.
  */
@@ -21,7 +19,6 @@ LagrangePolynomialApproximation.getRequiredDataPoints = function (degree) {
 
 /**
  * Interpolates values using Lagrange Polynomial Approximation.
- *
  * @param {number} x The independent variable for which the dependent variables will be interpolated.
  * @param {number[]} xTable The array of independent variables to use to interpolate.  The values
  * in this array must be in increasing order and the same value must not occur twice in the array.

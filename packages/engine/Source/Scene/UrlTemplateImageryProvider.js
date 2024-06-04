@@ -52,7 +52,6 @@ const pickFeaturesTags = combine(tags, {
  * @typedef {object} UrlTemplateImageryProvider.ConstructorOptions
  *
  * Initialization options for the UrlTemplateImageryProvider constructor
- *
  * @property {Resource|string} url  The URL template to use to request tiles.  It has the following keywords:
  * <ul>
  *     <li><code>{z}</code>: The level of the tile in the tiling scheme.  Level zero is the root of the quadtree pyramid.</li>
@@ -139,12 +138,9 @@ const pickFeaturesTags = combine(tags, {
 
 /**
  * Provides imagery by requesting tiles using a specified URL template.
- *
  * @alias UrlTemplateImageryProvider
- * @constructor
- *
+ * @class
  * @param {UrlTemplateImageryProvider.ConstructorOptions} options Object describing initialization options
- *
  * @example
  * // Access Natural Earth II imagery, which uses a TMS tiling scheme and Geographic (EPSG:4326) project
  * const tms = new Cesium.UrlTemplateImageryProvider({
@@ -176,7 +172,6 @@ const pickFeaturesTags = combine(tags, {
  *        }
  *    }
  * });
- *
  * @see ArcGisMapServerImageryProvider
  * @see BingMapsImageryProvider
  * @see GoogleEarthEnterpriseMapsProvider
@@ -505,7 +500,6 @@ Object.defineProperties(UrlTemplateImageryProvider.prototype, {
 
 /**
  * Gets the credits to be displayed when a given tile is displayed.
- *
  * @param {number} x The tile X coordinate.
  * @param {number} y The tile Y coordinate.
  * @param {number} level The tile level;
@@ -538,13 +532,12 @@ UrlTemplateImageryProvider.prototype.requestImage = function (
 /**
  * Asynchronously determines what features, if any, are located at a given longitude and latitude within
  * a tile.
- *
  * @param {number} x The tile X coordinate.
  * @param {number} y The tile Y coordinate.
  * @param {number} level The tile level.
  * @param {number} longitude The longitude at which to pick features.
  * @param {number} latitude  The latitude at which to pick features.
- * @return {Promise<ImageryLayerFeatureInfo[]>|undefined} A promise for the picked features that will resolve when the asynchronous
+ * @returns {Promise<ImageryLayerFeatureInfo[]>|undefined} A promise for the picked features that will resolve when the asynchronous
  *                   picking completes.  The resolved value is an array of {@link ImageryLayerFeatureInfo}
  *                   instances.  The array may be empty if no features are found at the given location.
  *                   It may also be undefined if picking is not supported.

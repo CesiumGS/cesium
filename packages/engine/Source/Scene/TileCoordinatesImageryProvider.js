@@ -8,7 +8,6 @@ import GeographicTilingScheme from "../Core/GeographicTilingScheme.js";
  * @typedef {object} TileCoordinatesImageryProvider.ConstructorOptions
  *
  * Initialization options for the TileCoordinatesImageryProvider constructor
- *
  * @property {TilingScheme} [tilingScheme=new GeographicTilingScheme()] The tiling scheme for which to draw tiles.
  * @property {Ellipsoid} [ellipsoid] The ellipsoid.  If the tilingScheme is specified,
  *                    this parameter is ignored and the tiling scheme's ellipsoid is used instead. If neither
@@ -22,10 +21,8 @@ import GeographicTilingScheme from "../Core/GeographicTilingScheme.js";
  * An {@link ImageryProvider} that draws a box around every rendered tile in the tiling scheme, and draws
  * a label inside it indicating the X, Y, Level coordinates of the tile.  This is mostly useful for
  * debugging terrain and imagery rendering problems.
- *
  * @alias TileCoordinatesImageryProvider
- * @constructor
- *
+ * @class
  * @param {TileCoordinatesImageryProvider.ConstructorOptions} [options] Object describing initialization options
  */
 function TileCoordinatesImageryProvider(options) {
@@ -196,7 +193,6 @@ Object.defineProperties(TileCoordinatesImageryProvider.prototype, {
 
 /**
  * Gets the credits to be displayed when a given tile is displayed.
- *
  * @param {number} x The tile X coordinate.
  * @param {number} y The tile Y coordinate.
  * @param {number} level The tile level;
@@ -212,7 +208,6 @@ TileCoordinatesImageryProvider.prototype.getTileCredits = function (
 
 /**
  * Requests the image for a given tile.
- *
  * @param {number} x The tile X coordinate.
  * @param {number} y The tile Y coordinate.
  * @param {number} level The tile level.
@@ -249,13 +244,12 @@ TileCoordinatesImageryProvider.prototype.requestImage = function (
 /**
  * Picking features is not currently supported by this imagery provider, so this function simply returns
  * undefined.
- *
  * @param {number} x The tile X coordinate.
  * @param {number} y The tile Y coordinate.
  * @param {number} level The tile level.
  * @param {number} longitude The longitude at which to pick features.
  * @param {number} latitude  The latitude at which to pick features.
- * @return {undefined} Undefined since picking is not supported.
+ * @returns {undefined} Undefined since picking is not supported.
  */
 TileCoordinatesImageryProvider.prototype.pickFeatures = function (
   x,

@@ -74,8 +74,7 @@ function toggleVR(viewModel, scene, isVRMode, isOrthographic) {
 /**
  * The view model for {@link VRButton}.
  * @alias VRButtonViewModel
- * @constructor
- *
+ * @class
  * @param {Scene} scene The scene.
  * @param {Element|string} [vrElement=document.body] The element or id to be placed into VR mode.
  */
@@ -93,7 +92,6 @@ function VRButtonViewModel(scene, vrElement) {
 
   /**
    * Gets whether or not VR mode is active.
-   *
    * @type {boolean}
    */
   this.isVRMode = undefined;
@@ -105,7 +103,6 @@ function VRButtonViewModel(scene, vrElement) {
 
   /**
    * Gets or sets whether or not VR functionality should be enabled.
-   *
    * @type {boolean}
    * @see Fullscreen.enabled
    */
@@ -121,7 +118,6 @@ function VRButtonViewModel(scene, vrElement) {
 
   /**
    * Gets the tooltip.  This property is observable.
-   *
    * @type {string}
    */
   this.tooltip = undefined;
@@ -174,7 +170,6 @@ Object.defineProperties(VRButtonViewModel.prototype, {
    * Gets or sets the HTML element to place into VR mode when the
    * corresponding button is pressed.
    * @memberof VRButtonViewModel.prototype
-   *
    * @type {Element}
    */
   vrElement: {
@@ -196,7 +191,6 @@ Object.defineProperties(VRButtonViewModel.prototype, {
   /**
    * Gets the Command to toggle VR mode.
    * @memberof VRButtonViewModel.prototype
-   *
    * @type {Command}
    */
   command: {

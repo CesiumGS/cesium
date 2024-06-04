@@ -34,19 +34,15 @@ const defaultInitialSize = new Cartesian2(16.0, 16.0);
  * meaning new images can be added at any point in time.
  * Texture coordinates are subject to change if the texture atlas resizes, so it is
  * important to check {@link TextureAtlas#getGUID} before using old values.
- *
  * @alias TextureAtlas
- * @constructor
- *
+ * @class
  * @param {object} options Object with the following properties:
  * @param {Scene} options.context The context in which the texture gets created.
  * @param {PixelFormat} [options.pixelFormat=PixelFormat.RGBA] The pixel format of the texture.
  * @param {number} [options.borderWidthInPixels=1] The amount of spacing between adjacent images in pixels.
  * @param {Cartesian2} [options.initialSize=new Cartesian2(16.0, 16.0)] The initial side lengths of the texture.
- *
- * @exception {DeveloperError} borderWidthInPixels must be greater than or equal to zero.
- * @exception {DeveloperError} initialSize must be greater than zero.
- *
+ * @throws {DeveloperError} borderWidthInPixels must be greater than or equal to zero.
+ * @throws {DeveloperError} initialSize must be greater than zero.
  * @private
  */
 function TextureAtlas(options) {
@@ -367,7 +363,6 @@ function getIndex(atlas, image) {
 
 /**
  * If the image is already in the atlas, the existing index is returned. Otherwise, the result is undefined.
- *
  * @param {string} id An identifier to detect whether the image already exists in the atlas.
  * @returns {number|undefined} The image index, or undefined if the image does not exist in the atlas.
  */
@@ -384,7 +379,6 @@ TextureAtlas.prototype.getImageIndex = function (id) {
 /**
  * Adds an image to the atlas synchronously.  If the image is already in the atlas, the atlas is unchanged and
  * the existing index is used.
- *
  * @param {string} id An identifier to detect whether the image already exists in the atlas.
  * @param {HTMLImageElement|HTMLCanvasElement} image An image or canvas to add to the texture atlas.
  * @returns {number} The image index.
@@ -416,7 +410,6 @@ TextureAtlas.prototype.addImageSync = function (id, image) {
 /**
  * Adds an image to the atlas.  If the image is already in the atlas, the atlas is unchanged and
  * the existing index is used.
- *
  * @param {string} id An identifier to detect whether the image already exists in the atlas.
  * @param {HTMLImageElement|HTMLCanvasElement|string|Resource|Promise|TextureAtlas.CreateImageCallback} image An image or canvas to add to the texture atlas,
  *        or a URL to an Image, or a Promise for an image, or a function that creates an image.
@@ -469,10 +462,8 @@ TextureAtlas.prototype.addImage = function (id, image) {
 
 /**
  * Add a sub-region of an existing atlas image as additional image indices.
- *
  * @param {string} id The identifier of the existing image.
  * @param {BoundingRectangle} subRegion An {@link BoundingRectangle} sub-region measured in pixels from the bottom-left.
- *
  * @returns {Promise<number>} A Promise for the image index.
  */
 TextureAtlas.prototype.addSubRegion = function (id, subRegion) {
@@ -519,9 +510,7 @@ TextureAtlas.prototype.addSubRegion = function (id, subRegion) {
  * <br /><br />
  * If this object was destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
- *
  * @returns {boolean} True if this object was destroyed; otherwise, false.
- *
  * @see TextureAtlas#destroy
  */
 TextureAtlas.prototype.isDestroyed = function () {
@@ -535,13 +524,9 @@ TextureAtlas.prototype.isDestroyed = function () {
  * Once an object is destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
  * assign the return value (<code>undefined</code>) to the object as done in the example.
- *
- * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
- *
- *
+ * @throws {DeveloperError} This object was destroyed, i.e., destroy() was called.
  * @example
  * atlas = atlas && atlas.destroy();
- *
  * @see TextureAtlas#isDestroyed
  */
 TextureAtlas.prototype.destroy = function () {

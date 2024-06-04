@@ -41,7 +41,6 @@ function LayerInformation(layer) {
  * @typedef {Object} CesiumTerrainProvider.ConstructorOptions
  *
  * Initialization options for the CesiumTerrainProvider constructor
- *
  * @property {boolean} [requestVertexNormals=false] Flag that indicates if the client should request additional lighting information from the server, in the form of per vertex normals if available.
  * @property {boolean} [requestWaterMask=false] Flag that indicates if the client should request per tile water masks from the server, if available.
  * @property {boolean} [requestMetadata=true] Flag that indicates if the client should request per tile metadata from the server, if available.
@@ -51,10 +50,8 @@ function LayerInformation(layer) {
 
 /**
  * Used to track creation details while fetching initial metadata
- *
- * @constructor
+ * @class
  * @private
- *
  * @param {CesiumTerrainProvider.ConstructorOptions} options An object describing initialization options
  */
 function TerrainProviderBuilder(options) {
@@ -86,9 +83,7 @@ function TerrainProviderBuilder(options) {
 
 /**
  * Complete CesiumTerrainProvider creation based on builder values.
- *
  * @private
- *
  * @param {CesiumTerrainProvider} provider
  */
 TerrainProviderBuilder.prototype.build = function (provider) {
@@ -450,12 +445,9 @@ async function requestLayerJson(terrainProviderBuilder, provider) {
  * <li> {@link https://github.com/AnalyticalGraphicsInc/quantized-mesh Quantized Mesh} </li>
  * <li> {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/heightmap-1.0 Height Map} </li>
  * </ul>
- *
  * @alias CesiumTerrainProvider
- * @constructor
- *
+ * @class
  * @param {CesiumTerrainProvider.ConstructorOptions} [options] An object describing initialization options
- *
  * @example
  * // Create Arctic DEM terrain with normals.
  * try {
@@ -467,7 +459,6 @@ async function requestLayerJson(terrainProviderBuilder, provider) {
  * } catch (error) {
  *   console.log(error);
  * }
- *
  * @see createWorldTerrain
  * @see CesiumTerrainProvider.fromUrl
  * @see CesiumTerrainProvider.fromIonAssetId
@@ -529,7 +520,6 @@ function CesiumTerrainProvider(options) {
 /**
  * When using the Quantized-Mesh format, a tile may be returned that includes additional extensions, such as PerVertexNormals, watermask, etc.
  * This enumeration defines the unique identifiers for each type of extension data that has been appended to the standard mesh data.
- *
  * @namespace QuantizedMeshExtensionIds
  * @see CesiumTerrainProvider
  * @private
@@ -537,7 +527,6 @@ function CesiumTerrainProvider(options) {
 const QuantizedMeshExtensionIds = {
   /**
    * Oct-Encoded Per-Vertex Normals are included as an extension to the tile mesh
-   *
    * @type {number}
    * @constant
    * @default 1
@@ -545,7 +534,6 @@ const QuantizedMeshExtensionIds = {
   OCT_VERTEX_NORMALS: 1,
   /**
    * A watermask is included as an extension to the tile mesh
-   *
    * @type {number}
    * @constant
    * @default 2
@@ -553,7 +541,6 @@ const QuantizedMeshExtensionIds = {
   WATER_MASK: 2,
   /**
    * A json object contain metadata about the tile
-   *
    * @type {number}
    * @constant
    * @default 4
@@ -840,16 +827,13 @@ function createQuantizedMeshTerrainData(provider, buffer, level, x, y, layer) {
 /**
  * Requests the geometry for a given tile. The result must include terrain data and
  * may optionally include a water mask and an indication of which child tiles are available.
- *
  * @param {number} x The X coordinate of the tile for which to request geometry.
  * @param {number} y The Y coordinate of the tile for which to request geometry.
  * @param {number} level The level of the tile for which to request geometry.
  * @param {Request} [request] The request object. Intended for internal use only.
- *
  * @returns {Promise<TerrainData>|undefined} A promise for the requested geometry.  If this method
  *          returns undefined instead of a promise, it is an indication that too many requests are already
  *          pending and the request will be retried later.
- *
  */
 CesiumTerrainProvider.prototype.requestTileGeometry = function (
   x,
@@ -1144,7 +1128,6 @@ Object.defineProperties(CesiumTerrainProvider.prototype, {
 
 /**
  * Gets the maximum geometric error allowed in a tile at a given level.
- *
  * @param {number} level The tile level for which to get the maximum geometric error.
  * @returns {number} The maximum geometric error.
  */
@@ -1161,11 +1144,9 @@ CesiumTerrainProvider.prototype.getLevelMaximumGeometricError = function (
  * <li> {@link https://github.com/AnalyticalGraphicsInc/quantized-mesh Quantized Mesh} </li>
  * <li> {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/heightmap-1.0 Height Map} </li>
  * </ul>
- *
  * @param {number} assetId The Cesium ion asset id.
  * @param {CesiumTerrainProvider.ConstructorOptions} [options] An object describing initialization options.
  * @returns {Promise<CesiumTerrainProvider>}
- *
  * @example
  * // Create Arctic DEM terrain with normals.
  * try {
@@ -1177,12 +1158,11 @@ CesiumTerrainProvider.prototype.getLevelMaximumGeometricError = function (
  * } catch (error) {
  *   console.log(error);
  * }
- *
- * @exception {RuntimeError} layer.json does not specify a format
- * @exception {RuntimeError} layer.json specifies an unknown format
- * @exception {RuntimeError} layer.json specifies an unsupported quantized-mesh version
- * @exception {RuntimeError} layer.json does not specify a tiles property, or specifies an empty array
- * @exception {RuntimeError} layer.json does not specify any tile URL templates
+ * @throws {RuntimeError} layer.json does not specify a format
+ * @throws {RuntimeError} layer.json specifies an unknown format
+ * @throws {RuntimeError} layer.json specifies an unsupported quantized-mesh version
+ * @throws {RuntimeError} layer.json does not specify a tiles property, or specifies an empty array
+ * @throws {RuntimeError} layer.json does not specify any tile URL templates
  */
 CesiumTerrainProvider.fromIonAssetId = async function (assetId, options) {
   //>>includeStart('debug', pragmas.debug);
@@ -1200,11 +1180,9 @@ CesiumTerrainProvider.fromIonAssetId = async function (assetId, options) {
  * <li> {@link https://github.com/AnalyticalGraphicsInc/quantized-mesh Quantized Mesh} </li>
  * <li> {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/heightmap-1.0 Height Map} </li>
  * </ul>
- *
  * @param {Resource|String|Promise<Resource>|Promise<String>} url The URL of the Cesium terrain server.
  * @param {CesiumTerrainProvider.ConstructorOptions} [options] An object describing initialization options.
  * @returns {Promise<CesiumTerrainProvider>}
- *
  * @example
  * // Create Arctic DEM terrain with normals.
  * try {
@@ -1217,12 +1195,11 @@ CesiumTerrainProvider.fromIonAssetId = async function (assetId, options) {
  * } catch (error) {
  *   console.log(error);
  * }
- *
- * @exception {RuntimeError} layer.json does not specify a format
- * @exception {RuntimeError} layer.json specifies an unknown format
- * @exception {RuntimeError} layer.json specifies an unsupported quantized-mesh version
- * @exception {RuntimeError} layer.json does not specify a tiles property, or specifies an empty array
- * @exception {RuntimeError} layer.json does not specify any tile URL templates
+ * @throws {RuntimeError} layer.json does not specify a format
+ * @throws {RuntimeError} layer.json specifies an unknown format
+ * @throws {RuntimeError} layer.json specifies an unsupported quantized-mesh version
+ * @throws {RuntimeError} layer.json does not specify a tiles property, or specifies an empty array
+ * @throws {RuntimeError} layer.json does not specify any tile URL templates
  */
 CesiumTerrainProvider.fromUrl = async function (url, options) {
   //>>includeStart('debug', pragmas.debug);
@@ -1253,7 +1230,6 @@ CesiumTerrainProvider.fromUrl = async function (url, options) {
 
 /**
  * Determines whether data for a tile is available to be loaded.
- *
  * @param {number} x The X coordinate of the tile for which to request geometry.
  * @param {number} y The Y coordinate of the tile for which to request geometry.
  * @param {number} level The level of the tile for which to request geometry.
@@ -1291,7 +1267,6 @@ CesiumTerrainProvider.prototype.getTileDataAvailable = function (x, y, level) {
 
 /**
  * Makes sure we load availability data for a tile
- *
  * @param {number} x The X coordinate of the tile for which to request geometry.
  * @param {number} y The Y coordinate of the tile for which to request geometry.
  * @param {number} level The level of the tile for which to request geometry.

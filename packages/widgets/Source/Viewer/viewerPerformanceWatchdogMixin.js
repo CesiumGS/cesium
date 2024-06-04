@@ -6,15 +6,12 @@ import PerformanceWatchdog from "../PerformanceWatchdog/PerformanceWatchdog.js";
  * Rather than being called directly, this function is normally passed as
  * a parameter to {@link Viewer#extend}, as shown in the example below.
  * @function
- *
  * @param {Viewer} viewer The viewer instance.
  * @param {object} [options] An object with properties.
  * @param {string} [options.lowFrameRateMessage='This application appears to be performing poorly on your system.  Please try using a different web browser or updating your video drivers.'] The
  *        message to display when a low frame rate is detected.  The message is interpeted as HTML, so make sure
  *        it comes from a trusted source so that your application is not vulnerable to cross-site scripting attacks.
- *
- * @exception {DeveloperError} viewer is required.
- *
+ * @throws {DeveloperError} viewer is required.
  * @example
  * const viewer = new Cesium.Viewer('cesiumContainer');
  * viewer.extend(Cesium.viewerPerformanceWatchdogMixin, {

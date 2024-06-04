@@ -8,7 +8,6 @@ import defined from "../Core/defined.js";
  * See the {@link https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_structural_metadata|EXT_structural_metadata Extension} as well as the
  * previous {@link https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_feature_metadata|EXT_feature_metadata Extension} for glTF.
  * </p>
- *
  * @param {object} options Object with the following properties:
  * @param {MetadataSchema} options.schema The parsed schema.
  * @param {PropertyTable[]} [options.propertyTables] An array of property table objects. For the legacy <code>EXT_feature_metadata</code> extension, this is sorted by the key in the propertyTables dictionary
@@ -17,10 +16,8 @@ import defined from "../Core/defined.js";
  * @param {object} [options.statistics] Statistics about metadata
  * @param {object} [options.extras] Extra user-defined properties
  * @param {object} [options.extensions] An object containing extensions
- *
  * @alias StructuralMetadata
- * @constructor
- *
+ * @class
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
@@ -46,7 +43,6 @@ function StructuralMetadata(options) {
 Object.defineProperties(StructuralMetadata.prototype, {
   /**
    * Schema containing classes and enums.
-   *
    * @memberof StructuralMetadata.prototype
    * @type {MetadataSchema}
    * @readonly
@@ -63,7 +59,6 @@ Object.defineProperties(StructuralMetadata.prototype, {
    * <p>
    * See the {@link https://github.com/CesiumGS/glTF/blob/3d-tiles-next/extensions/2.0/Vendor/EXT_feature_metadata/schema/statistics.schema.json|statistics schema reference} for the full set of properties.
    * </p>
-   *
    * @memberof StructuralMetadata.prototype
    * @type {object}
    * @readonly
@@ -77,7 +72,6 @@ Object.defineProperties(StructuralMetadata.prototype, {
 
   /**
    * Extra user-defined properties.
-   *
    * @memberof StructuralMetadata.prototype
    * @type {*}
    * @readonly
@@ -91,7 +85,6 @@ Object.defineProperties(StructuralMetadata.prototype, {
 
   /**
    * An object containing extensions.
-   *
    * @memberof StructuralMetadata.prototype
    * @type {object}
    * @readonly
@@ -105,7 +98,6 @@ Object.defineProperties(StructuralMetadata.prototype, {
 
   /**
    * Number of property tables in the metadata.
-   *
    * @memberof StructuralMetadata.prototype
    * @type {number}
    * @readonly
@@ -119,7 +111,6 @@ Object.defineProperties(StructuralMetadata.prototype, {
 
   /**
    * The property tables in the metadata.
-   *
    * @memberof StructuralMetadata.prototype
    * @type {PropertyTable[]}
    * @readonly
@@ -133,7 +124,6 @@ Object.defineProperties(StructuralMetadata.prototype, {
 
   /**
    * The property textures in the metadata.
-   *
    * @memberof StructuralMetadata.prototype
    * @type {PropertyTexture[]}
    * @readonly
@@ -147,7 +137,6 @@ Object.defineProperties(StructuralMetadata.prototype, {
 
   /**
    * The property attributes from the structural metadata extension
-   *
    * @memberof StructuralMetadata.prototype
    * @type {PropertyAttribute[]}
    * @readonly
@@ -161,7 +150,6 @@ Object.defineProperties(StructuralMetadata.prototype, {
 
   /**
    * Total size in bytes across all property tables
-   *
    * @memberof StructuralMetadata.prototype
    * @type {number}
    * @readonly
@@ -190,7 +178,6 @@ Object.defineProperties(StructuralMetadata.prototype, {
  * For the legacy <code>EXT_feature_metadata</code>, textures are stored in an array sorted
  * by the key in the propertyTables dictionary.
  * </p>
- *
  * @param {number} propertyTableId The property table ID.
  * @returns {PropertyTable} The property table.
  * @private
@@ -209,7 +196,6 @@ StructuralMetadata.prototype.getPropertyTable = function (propertyTableId) {
  * For the legacy <code>EXT_feature_metadata</code>, textures are stored in an array sorted
  * by the key in the propertyTextures dictionary.
  * </p>
- *
  * @param {number} propertyTextureId The index into the property textures array.
  * @returns {PropertyTexture} The property texture
  * @private
@@ -225,7 +211,6 @@ StructuralMetadata.prototype.getPropertyTexture = function (propertyTextureId) {
 /**
  * Gets the property attribute with the given ID. This concept is new in
  * EXT_structural_metadata
- *
  * @param {number} propertyAttributeId The index into the property attributes array.
  * @returns {PropertyAttribute} The property attribute
  * @private

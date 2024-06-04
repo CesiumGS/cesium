@@ -11,14 +11,11 @@ const articulationEpsilon = CesiumMath.EPSILON16;
 /**
  * An in-memory representation of an articulation stage belonging to a
  * {@link ModelArticulation}.
- *
  * @param {object} options An object containing the following options:
  * @param {ModelComponents.ArticulationStage} options.stage The articulation stage components from the 3D model.
  * @param {ModelArticulation} options.runtimeArticulation The runtime articulation that this stage belongs to.
- *
  * @alias ModelArticulationStage
- * @constructor
- *
+ * @class
  * @private
  */
 function ModelArticulationStage(options) {
@@ -44,11 +41,9 @@ function ModelArticulationStage(options) {
 Object.defineProperties(ModelArticulationStage.prototype, {
   /**
    * The internal articulation stage that this runtime stage represents.
-   *
    * @memberof ModelArticulationStage.prototype
    * @type {ModelComponents.ArticulationStage}
    * @readonly
-   *
    * @private
    */
   stage: {
@@ -59,11 +54,9 @@ Object.defineProperties(ModelArticulationStage.prototype, {
 
   /**
    * The runtime articulation that this stage belongs to.
-   *
    * @memberof ModelArticulationStage.prototype
    * @type {ModelArticulation}
    * @readonly
-   *
    * @private
    */
   runtimeArticulation: {
@@ -74,11 +67,9 @@ Object.defineProperties(ModelArticulationStage.prototype, {
 
   /**
    * The name of this articulation stage.
-   *
    * @memberof ModelArticulationStage.prototype
    * @type {string}
    * @readonly
-   *
    * @private
    */
   name: {
@@ -90,11 +81,9 @@ Object.defineProperties(ModelArticulationStage.prototype, {
   /**
    * The type of this articulation stage. This specifies which of the
    * node's properties is modified by the stage's value.
-   *
    * @memberof ModelArticulationStage.prototype
    * @type {ArticulationStageType}
    * @readonly
-   *
    * @private
    */
   type: {
@@ -105,11 +94,9 @@ Object.defineProperties(ModelArticulationStage.prototype, {
 
   /**
    * The minimum value of this articulation stage.
-   *
    * @memberof ModelArticulationStage.prototype
    * @type {number}
    * @readonly
-   *
    * @private
    */
   minimumValue: {
@@ -120,11 +107,9 @@ Object.defineProperties(ModelArticulationStage.prototype, {
 
   /**
    * The maximum value of this articulation stage.
-   *
    * @memberof ModelArticulationStage.prototype
    * @type {number}
    * @readonly
-   *
    * @private
    */
   maximumValue: {
@@ -135,10 +120,8 @@ Object.defineProperties(ModelArticulationStage.prototype, {
 
   /**
    * The current value of this articulation stage.
-   *
    * @memberof ModelArticulationStage.prototype
    * @type {number}
-   *
    * @private
    */
   currentValue: {
@@ -175,10 +158,8 @@ const scratchArticulationRotation = new Matrix3();
  * computation itself. Various stages of an articulation can be multiplied
  * together, so their transformations are all merged into a composite Matrix4
  * representing them all.
- *
  * @param {Matrix4} result The matrix to be modified.
  * @returns {Matrix4} The transformed matrix as requested by the articulation stage.
- *
  * @private
  */
 ModelArticulationStage.prototype.applyStageToMatrix = function (result) {

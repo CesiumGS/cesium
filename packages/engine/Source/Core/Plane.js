@@ -14,22 +14,18 @@ import Matrix4 from "./Matrix4.js";
  * where (a, b, c) is the plane's <code>normal</code>, d is the signed
  * <code>distance</code> to the plane, and (x, y, z) is any point on
  * the plane.
- *
  * @alias Plane
- * @constructor
- *
+ * @class
  * @param {Cartesian3} normal The plane's normal (normalized).
  * @param {number} distance The shortest distance from the origin to the plane.  The sign of
  * <code>distance</code> determines which side of the plane the origin
  * is on.  If <code>distance</code> is positive, the origin is in the half-space
  * in the direction of the normal; if negative, the origin is in the half-space
  * opposite to the normal; if zero, the plane passes through the origin.
- *
  * @example
  * // The plane x=0
  * const plane = new Cesium.Plane(Cesium.Cartesian3.UNIT_X, 0.0);
- *
- * @exception {DeveloperError} Normal must be normalized
+ * @throws {DeveloperError} Normal must be normalized
  */
 function Plane(normal, distance) {
   //>>includeStart('debug', pragmas.debug);
@@ -48,7 +44,6 @@ function Plane(normal, distance) {
 
   /**
    * The plane's normal.
-   *
    * @type {Cartesian3}
    */
   this.normal = Cartesian3.clone(normal);
@@ -59,7 +54,6 @@ function Plane(normal, distance) {
    * is on.  If <code>distance</code> is positive, the origin is in the half-space
    * in the direction of the normal; if negative, the origin is in the half-space
    * opposite to the normal; if zero, the plane passes through the origin.
-   *
    * @type {number}
    */
   this.distance = distance;
@@ -67,18 +61,15 @@ function Plane(normal, distance) {
 
 /**
  * Creates a plane from a normal and a point on the plane.
- *
  * @param {Cartesian3} point The point on the plane.
  * @param {Cartesian3} normal The plane's normal (normalized).
  * @param {Plane} [result] The object onto which to store the result.
  * @returns {Plane} A new plane instance or the modified result parameter.
- *
  * @example
  * const point = Cesium.Cartesian3.fromDegrees(-72.0, 40.0);
  * const normal = ellipsoid.geodeticSurfaceNormal(point);
  * const tangentPlane = Cesium.Plane.fromPointNormal(point, normal);
- *
- * @exception {DeveloperError} Normal must be normalized
+ * @throws {DeveloperError} Normal must be normalized
  */
 Plane.fromPointNormal = function (point, normal, result) {
   //>>includeStart('debug', pragmas.debug);
@@ -109,12 +100,10 @@ Plane.fromPointNormal = function (point, normal, result) {
 const scratchNormal = new Cartesian3();
 /**
  * Creates a plane from the general equation
- *
  * @param {Cartesian4} coefficients The plane's normal (normalized).
  * @param {Plane} [result] The object onto which to store the result.
  * @returns {Plane} A new plane instance or the modified result parameter.
- *
- * @exception {DeveloperError} Normal must be normalized
+ * @throws {DeveloperError} Normal must be normalized
  */
 Plane.fromCartesian4 = function (coefficients, result) {
   //>>includeStart('debug', pragmas.debug);
@@ -150,7 +139,6 @@ Plane.fromCartesian4 = function (coefficients, result) {
  * is on.  If the distance is positive, the point is in the half-space
  * in the direction of the normal; if negative, the point is in the half-space
  * opposite to the normal; if zero, the plane passes through the point.
- *
  * @param {Plane} plane The plane.
  * @param {Cartesian3} point The point.
  * @returns {number} The signed shortest distance of the point to the plane.
@@ -198,7 +186,6 @@ const scratchPlaneCartesian4 = new Cartesian4();
 const scratchTransformNormal = new Cartesian3();
 /**
  * Transforms the plane by the given transformation matrix.
- *
  * @param {Plane} plane The plane.
  * @param {Matrix4} transform The transformation matrix.
  * @param {Plane} [result] The object into which to store the result.
@@ -246,7 +233,6 @@ Plane.transform = function (plane, transform, result) {
 
 /**
  * Duplicates a Plane instance.
- *
  * @param {Plane} plane The plane to duplicate.
  * @param {Plane} [result] The object onto which to store the result.
  * @returns {Plane} The modified result parameter or a new Plane instance if one was not provided.
@@ -269,7 +255,6 @@ Plane.clone = function (plane, result) {
 /**
  * Compares the provided Planes by normal and distance and returns
  * <code>true</code> if they are equal, <code>false</code> otherwise.
- *
  * @param {Plane} left The first plane.
  * @param {Plane} right The second plane.
  * @returns {boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
@@ -288,7 +273,6 @@ Plane.equals = function (left, right) {
 
 /**
  * A constant initialized to the XY plane passing through the origin, with normal in positive Z.
- *
  * @type {Plane}
  * @constant
  */
@@ -296,7 +280,6 @@ Plane.ORIGIN_XY_PLANE = Object.freeze(new Plane(Cartesian3.UNIT_Z, 0.0));
 
 /**
  * A constant initialized to the YZ plane passing through the origin, with normal in positive X.
- *
  * @type {Plane}
  * @constant
  */
@@ -304,7 +287,6 @@ Plane.ORIGIN_YZ_PLANE = Object.freeze(new Plane(Cartesian3.UNIT_X, 0.0));
 
 /**
  * A constant initialized to the ZX plane passing through the origin, with normal in positive Y.
- *
  * @type {Plane}
  * @constant
  */

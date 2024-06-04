@@ -3,10 +3,8 @@ import ImageryState from "./ImageryState.js";
 
 /**
  * The assocation between a terrain tile and an imagery tile.
- *
  * @alias TileImagery
  * @private
- *
  * @param {Imagery} imagery The imagery tile.
  * @param {Cartesian4} textureCoordinateRectangle The texture rectangle of the tile that is covered
  *        by the imagery, where X=west, Y=south, Z=east, W=north.
@@ -35,7 +33,6 @@ TileImagery.prototype.freeResources = function () {
 
 /**
  * Processes the load state machine for this instance.
- *
  * @param {Tile} tile The tile to which this instance belongs.
  * @param {FrameState} frameState The frameState.
  * @param {boolean} skipLoading True to skip loading, e.g. new requests, creating textures. This function will

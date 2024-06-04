@@ -8,10 +8,8 @@ import Quaternion from "./Quaternion.js";
 /**
  * Creates a curve parameterized and evaluated by time. This type describes an interface
  * and is not intended to be instantiated directly.
- *
  * @alias Spline
- * @constructor
- *
+ * @class
  * @see CatmullRomSpline
  * @see LinearSpline
  * @see HermiteSpline
@@ -39,12 +37,9 @@ function Spline() {
 /**
  * Gets the type of the point. This helps a spline determine how to interpolate
  * and return its values.
- *
  * @param {number|Cartesian3|Quaternion} point
  * @returns {*} The type of the point.
- *
- * @exception {DeveloperError} value must be a Cartesian3, Quaternion, or number.
- *
+ * @throws {DeveloperError} value must be a Cartesian3, Quaternion, or number.
  * @private
  */
 Spline.getPointType = function (point) {
@@ -68,12 +63,10 @@ Spline.getPointType = function (point) {
 /**
  * Evaluates the curve at a given time.
  * @function
- *
  * @param {number} time The time at which to evaluate the curve.
  * @param {Cartesian3|Quaternion|number[]} [result] The object onto which to store the result.
  * @returns {Cartesian3|Quaternion|number[]} The modified result parameter or a new instance of the point on the curve at the given time.
- *
- * @exception {DeveloperError} time must be in the range <code>[t<sub>0</sub>, t<sub>n</sub>]</code>, where <code>t<sub>0</sub></code>
+ * @throws {DeveloperError} time must be in the range <code>[t<sub>0</sub>, t<sub>n</sub>]</code>, where <code>t<sub>0</sub></code>
  *                             is the first element in the array <code>times</code> and <code>t<sub>n</sub></code> is the last element
  *                             in the array <code>times</code>.
  */
@@ -82,12 +75,10 @@ Spline.prototype.evaluate = DeveloperError.throwInstantiationError;
 /**
  * Finds an index <code>i</code> in <code>times</code> such that the parameter
  * <code>time</code> is in the interval <code>[times[i], times[i + 1]]</code>.
- *
  * @param {number} time The time.
  * @param {number} startIndex The index from which to start the search.
  * @returns {number} The index for the element at the start of the interval.
- *
- * @exception {DeveloperError} time must be in the range <code>[t<sub>0</sub>, t<sub>n</sub>]</code>, where <code>t<sub>0</sub></code>
+ * @throws {DeveloperError} time must be in the range <code>[t<sub>0</sub>, t<sub>n</sub>]</code>, where <code>t<sub>0</sub></code>
  *                             is the first element in the array <code>times</code> and <code>t<sub>n</sub></code> is the last element
  *                             in the array <code>times</code>.
  */
@@ -145,9 +136,8 @@ Spline.prototype.findTimeInterval = function (time, startIndex) {
 /**
  * Wraps the given time to the period covered by the spline.
  * @function
- *
  * @param {number} time The time.
- * @return {number} The time, wrapped around the animation period.
+ * @returns {number} The time, wrapped around the animation period.
  */
 Spline.prototype.wrapTime = function (time) {
   //>>includeStart('debug', pragmas.debug);
@@ -173,9 +163,8 @@ Spline.prototype.wrapTime = function (time) {
 /**
  * Clamps the given time to the period covered by the spline.
  * @function
- *
  * @param {number} time The time.
- * @return {number} The time, clamped to the animation period.
+ * @returns {number} The time, clamped to the animation period.
  */
 Spline.prototype.clampTime = function (time) {
   //>>includeStart('debug', pragmas.debug);

@@ -18,10 +18,8 @@ const ORTHOGRAPHIC = 1;
 
 /**
  * A description of the outline of a frustum with the given the origin and orientation.
- *
  * @alias FrustumOutlineGeometry
- * @constructor
- *
+ * @class
  * @param {object} options Object with the following properties:
  * @param {PerspectiveFrustum|OrthographicFrustum} options.frustum The frustum.
  * @param {Cartesian3} options.origin The origin of the frustum.
@@ -71,11 +69,9 @@ function FrustumOutlineGeometry(options) {
 
 /**
  * Stores the provided instance into the provided array.
- *
  * @param {FrustumOutlineGeometry} value The value to pack.
  * @param {number[]} array The array to pack into.
  * @param {number} [startingIndex=0] The index into the array at which to start packing the elements.
- *
  * @returns {number[]} The array that was packed into
  */
 FrustumOutlineGeometry.pack = function (value, array, startingIndex) {
@@ -115,7 +111,6 @@ const scratchPackorigin = new Cartesian3();
 
 /**
  * Retrieves an instance from a packed array.
- *
  * @param {number[]} array The packed array.
  * @param {number} [startingIndex=0] The starting index of the element to be unpacked.
  * @param {FrustumOutlineGeometry} [result] The object into which to store the result.
@@ -179,7 +174,6 @@ FrustumOutlineGeometry.unpack = function (array, startingIndex, result) {
 
 /**
  * Computes the geometric representation of a frustum outline, including its vertices, indices, and a bounding sphere.
- *
  * @param {FrustumOutlineGeometry} frustumGeometry A description of the frustum.
  * @returns {Geometry|undefined} The computed vertices and indices.
  */

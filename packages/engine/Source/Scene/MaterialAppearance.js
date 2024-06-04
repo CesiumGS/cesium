@@ -11,41 +11,37 @@ import Appearance from "./Appearance.js";
 import Material from "./Material.js";
 
 /**
-     * An appearance for arbitrary geometry (as opposed to {@link EllipsoidSurfaceAppearance}, for example)
-     * that supports shading with materials.
-     *
-     * @alias MaterialAppearance
-     * @constructor
-     *
-     * @param {object} [options] Object with the following properties:
-     * @param {boolean} [options.flat=false] When <code>true</code>, flat shading is used in the fragment shader, which means lighting is not taking into account.
-     * @param {boolean} [options.faceForward=!options.closed] When <code>true</code>, the fragment shader flips the surface normal as needed to ensure that the normal faces the viewer to avoid dark spots.  This is useful when both sides of a geometry should be shaded like {@link WallGeometry}.
-     * @param {boolean} [options.translucent=true] When <code>true</code>, the geometry is expected to appear translucent so {@link MaterialAppearance#renderState} has alpha blending enabled.
-     * @param {boolean} [options.closed=false] When <code>true</code>, the geometry is expected to be closed so {@link MaterialAppearance#renderState} has backface culling enabled.
-     * @param {MaterialAppearance.MaterialSupportType} [options.materialSupport=MaterialAppearance.MaterialSupport.TEXTURED] The type of materials that will be supported.
-     * @param {Material} [options.material=Material.ColorType] The material used to determine the fragment color.
-     * @param {string} [options.vertexShaderSource] Optional GLSL vertex shader source to override the default vertex shader.
-     * @param {string} [options.fragmentShaderSource] Optional GLSL fragment shader source to override the default fragment shader.
-     * @param {object} [options.renderState] Optional render state to override the default render state.
-     *
-     * @see {@link https://github.com/CesiumGS/cesium/wiki/Fabric|Fabric}
-     * @demo {@link https://sandcastle.cesium.com/index.html?src=Materials.html|Cesium Sandcastle Material Appearance Demo}
-     *
-     * @example
-     * const primitive = new Cesium.Primitive({
-     *   geometryInstances : new Cesium.GeometryInstance({
-     *     geometry : new Cesium.WallGeometry({
+ * An appearance for arbitrary geometry (as opposed to {@link EllipsoidSurfaceAppearance}, for example)
+ * that supports shading with materials.
+ * @alias MaterialAppearance
+ * @class
+ * @param {object} [options] Object with the following properties:
+ * @param {boolean} [options.flat=false] When <code>true</code>, flat shading is used in the fragment shader, which means lighting is not taking into account.
+ * @param {boolean} [options.faceForward=!options.closed] When <code>true</code>, the fragment shader flips the surface normal as needed to ensure that the normal faces the viewer to avoid dark spots.  This is useful when both sides of a geometry should be shaded like {@link WallGeometry}.
+ * @param {boolean} [options.translucent=true] When <code>true</code>, the geometry is expected to appear translucent so {@link MaterialAppearance#renderState} has alpha blending enabled.
+ * @param {boolean} [options.closed=false] When <code>true</code>, the geometry is expected to be closed so {@link MaterialAppearance#renderState} has backface culling enabled.
+ * @param {MaterialAppearance.MaterialSupportType} [options.materialSupport=MaterialAppearance.MaterialSupport.TEXTURED] The type of materials that will be supported.
+ * @param {Material} [options.material=Material.ColorType] The material used to determine the fragment color.
+ * @param {string} [options.vertexShaderSource] Optional GLSL vertex shader source to override the default vertex shader.
+ * @param {string} [options.fragmentShaderSource] Optional GLSL fragment shader source to override the default fragment shader.
+ * @param {object} [options.renderState] Optional render state to override the default render state.
+ * @see {@link https://github.com/CesiumGS/cesium/wiki/Fabric|Fabric}
+ * @demo {@link https://sandcastle.cesium.com/index.html?src=Materials.html|Cesium Sandcastle Material Appearance Demo}
+ * @example
+ * const primitive = new Cesium.Primitive({
+ *   geometryInstances : new Cesium.GeometryInstance({
+ *     geometry : new Cesium.WallGeometry({
             materialSupport :  Cesium.MaterialAppearance.MaterialSupport.BASIC.vertexFormat,
-     *       // ...
-     *     })
-     *   }),
-     *   appearance : new Cesium.MaterialAppearance({
-     *     material : Cesium.Material.fromType('Color'),
-     *     faceForward : true
-     *   })
-     *
-     * });
-     */
+ *       // ...
+ *     })
+ *   }),
+ *   appearance : new Cesium.MaterialAppearance({
+ *     material : Cesium.Material.fromType('Color'),
+ *     faceForward : true
+ *   })
+ *
+ * });
+ */
 function MaterialAppearance(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
@@ -59,11 +55,8 @@ function MaterialAppearance(options) {
   /**
    * The material used to determine the fragment color.  Unlike other {@link MaterialAppearance}
    * properties, this is not read-only, so an appearance's material can change on the fly.
-   *
    * @type Material
-   *
    * @default {@link Material.ColorType}
-   *
    * @see {@link https://github.com/CesiumGS/cesium/wiki/Fabric|Fabric}
    */
   this.material = defined(options.material)
@@ -72,9 +65,7 @@ function MaterialAppearance(options) {
 
   /**
    * When <code>true</code>, the geometry is expected to appear translucent.
-   *
    * @type {boolean}
-   *
    * @default true
    */
   this.translucent = translucent;
@@ -105,9 +96,7 @@ function MaterialAppearance(options) {
 Object.defineProperties(MaterialAppearance.prototype, {
   /**
    * The GLSL source code for the vertex shader.
-   *
    * @memberof MaterialAppearance.prototype
-   *
    * @type {string}
    * @readonly
    */
@@ -122,9 +111,7 @@ Object.defineProperties(MaterialAppearance.prototype, {
    * source is built procedurally taking into account {@link MaterialAppearance#material},
    * {@link MaterialAppearance#flat}, and {@link MaterialAppearance#faceForward}.
    * Use {@link MaterialAppearance#getFragmentShaderSource} to get the full source.
-   *
    * @memberof MaterialAppearance.prototype
-   *
    * @type {string}
    * @readonly
    */
@@ -141,9 +128,7 @@ Object.defineProperties(MaterialAppearance.prototype, {
    * instance, or it is set implicitly via {@link MaterialAppearance#translucent}
    * and {@link MaterialAppearance#closed}.
    * </p>
-   *
    * @memberof MaterialAppearance.prototype
-   *
    * @type {object}
    * @readonly
    */
@@ -157,12 +142,9 @@ Object.defineProperties(MaterialAppearance.prototype, {
    * When <code>true</code>, the geometry is expected to be closed so
    * {@link MaterialAppearance#renderState} has backface culling enabled.
    * If the viewer enters the geometry, it will not be visible.
-   *
    * @memberof MaterialAppearance.prototype
-   *
    * @type {boolean}
    * @readonly
-   *
    * @default false
    */
   closed: {
@@ -174,12 +156,9 @@ Object.defineProperties(MaterialAppearance.prototype, {
   /**
    * The type of materials supported by this instance.  This impacts the required
    * {@link VertexFormat} and the complexity of the vertex and fragment shaders.
-   *
    * @memberof MaterialAppearance.prototype
-   *
    * @type {MaterialAppearance.MaterialSupportType}
    * @readonly
-   *
    * @default {@link MaterialAppearance.MaterialSupport.TEXTURED}
    */
   materialSupport: {
@@ -192,12 +171,9 @@ Object.defineProperties(MaterialAppearance.prototype, {
    * The {@link VertexFormat} that this appearance instance is compatible with.
    * A geometry can have more vertex attributes and still be compatible - at a
    * potential performance cost - but it can't have less.
-   *
    * @memberof MaterialAppearance.prototype
-   *
    * @type VertexFormat
    * @readonly
-   *
    * @default {@link MaterialAppearance.MaterialSupport.TEXTURED.vertexFormat}
    */
   vertexFormat: {
@@ -209,12 +185,9 @@ Object.defineProperties(MaterialAppearance.prototype, {
   /**
    * When <code>true</code>, flat shading is used in the fragment shader,
    * which means lighting is not taking into account.
-   *
    * @memberof MaterialAppearance.prototype
-   *
    * @type {boolean}
    * @readonly
-   *
    * @default false
    */
   flat: {
@@ -228,12 +201,9 @@ Object.defineProperties(MaterialAppearance.prototype, {
    * as needed to ensure that the normal faces the viewer to avoid
    * dark spots.  This is useful when both sides of a geometry should be
    * shaded like {@link WallGeometry}.
-   *
    * @memberof MaterialAppearance.prototype
-   *
    * @type {boolean}
    * @readonly
-   *
    * @default true
    */
   faceForward: {
@@ -247,9 +217,7 @@ Object.defineProperties(MaterialAppearance.prototype, {
  * Procedurally creates the full GLSL fragment shader source.  For {@link MaterialAppearance},
  * this is derived from {@link MaterialAppearance#fragmentShaderSource}, {@link MaterialAppearance#material},
  * {@link MaterialAppearance#flat}, and {@link MaterialAppearance#faceForward}.
- *
  * @function
- *
  * @returns {string} The full GLSL fragment shader source.
  */
 MaterialAppearance.prototype.getFragmentShaderSource =
@@ -257,9 +225,7 @@ MaterialAppearance.prototype.getFragmentShaderSource =
 
 /**
  * Determines if the geometry is translucent based on {@link MaterialAppearance#translucent} and {@link Material#isTranslucent}.
- *
  * @function
- *
  * @returns {boolean} <code>true</code> if the appearance is translucent.
  */
 MaterialAppearance.prototype.isTranslucent = Appearance.prototype.isTranslucent;
@@ -268,9 +234,7 @@ MaterialAppearance.prototype.isTranslucent = Appearance.prototype.isTranslucent;
  * Creates a render state.  This is not the final render state instance; instead,
  * it can contain a subset of render state properties identical to the render state
  * created in the context.
- *
  * @function
- *
  * @returns {object} The render state.
  */
 MaterialAppearance.prototype.getRenderState =
@@ -295,7 +259,6 @@ MaterialAppearance.MaterialSupport = {
   /**
    * Only basic materials, which require just <code>position</code> and
    * <code>normal</code> vertex attributes, are supported.
-   *
    * @type {MaterialAppearance.MaterialSupportType}
    * @constant
    */
@@ -308,7 +271,6 @@ MaterialAppearance.MaterialSupport = {
    * Materials with textures, which require <code>position</code>,
    * <code>normal</code>, and <code>st</code> vertex attributes,
    * are supported.  The vast majority of materials fall into this category.
-   *
    * @type {MaterialAppearance.MaterialSupportType}
    * @constant
    */
@@ -321,7 +283,6 @@ MaterialAppearance.MaterialSupport = {
    * All materials, including those that work in tangent space, are supported.
    * This requires <code>position</code>, <code>normal</code>, <code>st</code>,
    * <code>tangent</code>, and <code>bitangent</code> vertex attributes.
-   *
    * @type {MaterialAppearance.MaterialSupportType}
    * @constant
    */

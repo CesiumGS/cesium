@@ -12,14 +12,12 @@ import Ray from "./Ray.js";
 
 /**
  * Functions for computing the intersection between geometries such as rays, planes, triangles, and ellipsoids.
- *
  * @namespace IntersectionTests
  */
 const IntersectionTests = {};
 
 /**
  * Computes the intersection of a ray and a plane.
- *
  * @param {Ray} ray The ray.
  * @param {Plane} plane The plane.
  * @param {Cartesian3} [result] The object onto which to store the result.
@@ -70,9 +68,7 @@ const scratchQVec = new Cartesian3();
  *
  * Implements {@link https://cadxfem.org/inf/Fast%20MinimumStorage%20RayTriangle%20Intersection.pdf|
  * Fast Minimum Storage Ray/Triangle Intersection} by Tomas Moller and Ben Trumbore.
- *
  * @memberof IntersectionTests
- *
  * @param {Ray} ray The ray.
  * @param {Cartesian3} p0 The first vertex of the triangle.
  * @param {Cartesian3} p1 The second vertex of the triangle.
@@ -170,9 +166,7 @@ IntersectionTests.rayTriangleParametric = function (
  *
  * Implements {@link https://cadxfem.org/inf/Fast%20MinimumStorage%20RayTriangle%20Intersection.pdf|
  * Fast Minimum Storage Ray/Triangle Intersection} by Tomas Moller and Ben Trumbore.
- *
  * @memberof IntersectionTests
- *
  * @param {Ray} ray The ray.
  * @param {Cartesian3} p0 The first vertex of the triangle.
  * @param {Cartesian3} p1 The second vertex of the triangle.
@@ -214,7 +208,6 @@ const scratchLineSegmentTriangleRay = new Ray();
 /**
  * Computes the intersection of a line segment and a triangle.
  * @memberof IntersectionTests
- *
  * @param {Cartesian3} v0 The an end point of the line segment.
  * @param {Cartesian3} v1 The other end point of the line segment.
  * @param {Cartesian3} p0 The first vertex of the triangle.
@@ -341,7 +334,6 @@ function raySphere(ray, sphere, result) {
 /**
  * Computes the intersection points of a ray with a sphere.
  * @memberof IntersectionTests
- *
  * @param {Ray} ray The ray.
  * @param {BoundingSphere} sphere The sphere.
  * @param {Interval} [result] The result onto which to store the result.
@@ -371,7 +363,6 @@ const scratchLineSegmentRay = new Ray();
 /**
  * Computes the intersection points of a line segment with a sphere.
  * @memberof IntersectionTests
- *
  * @param {Cartesian3} p0 An end point of the line segment.
  * @param {Cartesian3} p1 The other end point of the line segment.
  * @param {BoundingSphere} sphere The sphere.
@@ -413,7 +404,6 @@ const scratchW = new Cartesian3();
 
 /**
  * Computes the intersection points of a ray with an ellipsoid.
- *
  * @param {Ray} ray The ray.
  * @param {Ellipsoid} ellipsoid The ellipsoid.
  * @returns {Interval} The interval containing scalar points along the ray or undefined if there are no intersections.
@@ -509,6 +499,11 @@ function addWithCancellationCheck(left, right, tolerance) {
 }
 
 /**
+ * @param A
+ * @param b
+ * @param c
+ * @param x
+ * @param w
  * @private
  */
 IntersectionTests.quadraticVectorExpression = function (A, b, c, x, w) {
@@ -657,7 +652,6 @@ const surfPointScratch = new Cartographic();
 
 /**
  * Provides the point along the ray which is nearest to the ellipsoid.
- *
  * @param {Ray} ray The ray.
  * @param {Ellipsoid} ellipsoid The ellipsoid.
  * @returns {Cartesian3} The nearest planetodetic point on the ray.
@@ -797,13 +791,11 @@ const lineSegmentPlaneDifference = new Cartesian3();
 
 /**
  * Computes the intersection of a line segment and a plane.
- *
  * @param {Cartesian3} endPoint0 An end point of the line segment.
  * @param {Cartesian3} endPoint1 The other end point of the line segment.
  * @param {Plane} plane The plane.
  * @param {Cartesian3} [result] The object onto which to store the result.
  * @returns {Cartesian3} The intersection point or undefined if there is no intersection.
- *
  * @example
  * const origin = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883);
  * const normal = ellipsoid.geodeticSurfaceNormal(origin);
@@ -866,13 +858,11 @@ IntersectionTests.lineSegmentPlane = function (
 
 /**
  * Computes the intersection of a triangle and a plane
- *
  * @param {Cartesian3} p0 First point of the triangle
  * @param {Cartesian3} p1 Second point of the triangle
  * @param {Cartesian3} p2 Third point of the triangle
  * @param {Plane} plane Intersection plane
  * @returns {object} An object with properties <code>positions</code> and <code>indices</code>, which are arrays that represent three triangles that do not cross the plane. (Undefined if no intersection exists)
- *
  * @example
  * const origin = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883);
  * const normal = ellipsoid.geodeticSurfaceNormal(origin);

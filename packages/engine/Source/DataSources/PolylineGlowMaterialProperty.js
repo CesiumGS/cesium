@@ -12,8 +12,7 @@ const defaultTaperPower = 1.0;
 /**
  * A {@link MaterialProperty} that maps to polyline glow {@link Material} uniforms.
  * @alias PolylineGlowMaterialProperty
- * @constructor
- *
+ * @class
  * @param {object} [options] Object with the following properties:
  * @param {Property|Color} [options.color=Color.WHITE] A Property specifying the {@link Color} of the line.
  * @param {Property|number} [options.glowPower=0.25] A numeric Property specifying the strength of the glow, as a percentage of the total line width.
@@ -87,7 +86,6 @@ Object.defineProperties(PolylineGlowMaterialProperty.prototype, {
 
 /**
  * Gets the {@link Material} type at the provided time.
- *
  * @param {JulianDate} time The time for which to retrieve the type.
  * @returns {string} The type of material.
  */
@@ -97,7 +95,6 @@ PolylineGlowMaterialProperty.prototype.getType = function (time) {
 
 /**
  * Gets the value of the property at the provided time.
- *
  * @param {JulianDate} time The time for which to retrieve the value.
  * @param {object} [result] The object to store the value into, if omitted, a new instance is created and returned.
  * @returns {object} The modified result parameter or a new instance if the result parameter was not supplied.
@@ -130,7 +127,6 @@ PolylineGlowMaterialProperty.prototype.getValue = function (time, result) {
 /**
  * Compares this property to the provided property and returns
  * <code>true</code> if they are equal, <code>false</code> otherwise.
- *
  * @param {Property} [other] The other property.
  * @returns {boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
  */

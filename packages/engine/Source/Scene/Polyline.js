@@ -16,11 +16,10 @@ import Material from "./Material.js";
  * </div>
  *
  * A renderable polyline.
- *
  * @alias Polyline
  * @internalConstructor
  * @class
- *
+ * @param options
  * @privateParam {object} options Object with the following properties:
  * @privateParam {boolean} [options.show=true] <code>true</code> if this polyline will be shown; otherwise, <code>false</code>.
  * @privateParam {number} [options.width=1.0] The width of the polyline in pixels.
@@ -29,10 +28,9 @@ import Material from "./Material.js";
  * @privateParam {Cartesian3[]} [options.positions] The positions.
  * @privateParam {object} [options.id] The user-defined object to be returned when this polyline is picked.
  * @privateParam {DistanceDisplayCondition} [options.distanceDisplayCondition] The condition specifying at what distance from the camera that this polyline will be displayed.
+ * @param polylineCollection
  * @privateParam {PolylineCollection} polylineCollection The renderable polyline collection.
- *
  * @see PolylineCollection
- *
  */
 function Polyline(options, polylineCollection) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -402,6 +400,7 @@ Polyline.prototype.update = function () {
 };
 
 /**
+ * @param context
  * @private
  */
 Polyline.prototype.getPickId = function (context) {

@@ -19,10 +19,8 @@ let centerCartographicScratch = new Cartographic();
 /**
  * A tile bounding volume specified as an S2 cell token with minimum and maximum heights.
  * The bounding volume is a k DOP. A k-DOP is the Boolean intersection of extents along k directions.
- *
  * @alias TileBoundingS2Cell
- * @constructor
- *
+ * @class
  * @param {object} options Object with the following properties:
  * @param {string} options.token The token of the S2 cell.
  * @param {number} [options.minimumHeight=0.0] The minimum height of the bounding volume.
@@ -30,7 +28,6 @@ let centerCartographicScratch = new Cartographic();
  * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid.
  * @param {boolean} [options.computeBoundingVolumes=true] True to compute the {@link TileBoundingS2Cell#boundingVolume} and
  *                  {@link TileBoundingS2Cell#boundingSphere}. If false, these properties will be undefined.
- *
  * @private
  */
 function TileBoundingS2Cell(options) {
@@ -130,6 +127,10 @@ const sideNormalScratch = new Cartesian3();
 const sideScratch = new Cartesian3();
 /**
  * Computes bounding planes of the kDOP.
+ * @param s2Cell
+ * @param minimumHeight
+ * @param maximumHeight
+ * @param ellipsoid
  * @private
  */
 function computeBoundingPlanes(
@@ -230,6 +231,9 @@ let sScratch = new Cartesian3();
 const matrixScratch = new Matrix3();
 /**
  * Computes intersection of 3 planes.
+ * @param p0
+ * @param p1
+ * @param p2
  * @private
  */
 function computeIntersection(p0, p1, p2) {
@@ -277,6 +281,7 @@ function computeIntersection(p0, p1, p2) {
 }
 /**
  * Compute the vertices of the kDOP.
+ * @param boundingPlanes
  * @private
  */
 function computeVertices(boundingPlanes) {
@@ -302,6 +307,8 @@ let edgeScratch = new Cartesian3();
 let edgeNormalScratch = new Cartesian3();
 /**
  * Compute edge normals on a plane.
+ * @param plane
+ * @param vertices
  * @private
  */
 function computeEdgeNormals(plane, vertices) {
@@ -329,9 +336,7 @@ function computeEdgeNormals(plane, vertices) {
 Object.defineProperties(TileBoundingS2Cell.prototype, {
   /**
    * The underlying bounding volume.
-   *
    * @memberof TileBoundingS2Cell.prototype
-   *
    * @type {object}
    * @readonly
    */
@@ -342,9 +347,7 @@ Object.defineProperties(TileBoundingS2Cell.prototype, {
   },
   /**
    * The underlying bounding sphere.
-   *
    * @memberof TileBoundingS2Cell.prototype
-   *
    * @type {BoundingSphere}
    * @readonly
    */
@@ -387,6 +390,7 @@ const facePointScratch = new Cartesian3();
  *
  * Case IV: There are more than three planes selected.
  * Since we are on an ellipsoid, this will only happen in the bottom plane, which is what we will use for the distance test.
+ * @param frameState
  */
 TileBoundingS2Cell.prototype.distanceToCamera = function (frameState) {
   //>>includeStart('debug', pragmas.debug);
@@ -513,6 +517,9 @@ const dScratch = new Cartesian3();
 const pL0Scratch = new Cartesian3();
 /**
  * Finds point on a line segment closest to a given point.
+ * @param p
+ * @param l0
+ * @param l1
  * @private
  */
 function closestPointLineSegment(p, l0, l1) {
@@ -541,6 +548,10 @@ const edgePlaneScratch = new Plane(Cartesian3.UNIT_X, 0.0);
 /**
  * Finds closes point on the polygon, created by the given vertices, from
  * a point. The test point and the polygon are all on the same plane.
+ * @param p
+ * @param vertices
+ * @param plane
+ * @param edgeNormals
  * @private
  */
 function closestPointPolygon(p, vertices, plane, edgeNormals) {
@@ -584,7 +595,6 @@ function closestPointPolygon(p, vertices, plane, edgeNormals) {
 
 /**
  * Determines which side of a plane this volume is located.
- *
  * @param {Plane} plane The plane to test against.
  * @returns {Intersect} {@link Intersect.INSIDE} if the entire volume is on the side of the plane
  *                      the normal is pointing, {@link Intersect.OUTSIDE} if the entire volume is
@@ -619,9 +629,8 @@ TileBoundingS2Cell.prototype.intersectPlane = function (plane) {
 /**
  * Creates a debug primitive that shows the outline of the tile bounding
  * volume.
- *
  * @param {Color} color The desired color of the primitive's mesh
- * @return {Primitive}
+ * @returns {Primitive}
  */
 TileBoundingS2Cell.prototype.createDebugVolume = function (color) {
   //>>includeStart('debug', pragmas.debug);

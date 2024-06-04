@@ -4,7 +4,7 @@ import createCommand from "../createCommand.js";
 /**
  * The view model for {@link NavigationHelpButton}.
  * @alias NavigationHelpButtonViewModel
- * @constructor
+ * @class
  */
 function NavigationHelpButtonViewModel() {
   /**
@@ -29,7 +29,6 @@ function NavigationHelpButtonViewModel() {
 
   /**
    * Gets or sets the tooltip.  This property is observable.
-   *
    * @type {string}
    */
   this.tooltip = "Navigation Instructions";
@@ -41,7 +40,6 @@ Object.defineProperties(NavigationHelpButtonViewModel.prototype, {
   /**
    * Gets the Command that is executed when the button is clicked.
    * @memberof NavigationHelpButtonViewModel.prototype
-   *
    * @type {Command}
    */
   command: {
@@ -53,7 +51,6 @@ Object.defineProperties(NavigationHelpButtonViewModel.prototype, {
   /**
    * Gets the Command that is executed when the mouse instructions should be shown.
    * @memberof NavigationHelpButtonViewModel.prototype
-   *
    * @type {Command}
    */
   showClick: {
@@ -65,7 +62,6 @@ Object.defineProperties(NavigationHelpButtonViewModel.prototype, {
   /**
    * Gets the Command that is executed when the touch instructions should be shown.
    * @memberof NavigationHelpButtonViewModel.prototype
-   *
    * @type {Command}
    */
   showTouch: {

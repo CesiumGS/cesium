@@ -9,6 +9,7 @@ import WebGLConstants from "../Core/WebGLConstants.js";
 import BufferUsage from "./BufferUsage.js";
 
 /**
+ * @param options
  * @private
  */
 function Buffer(options) {
@@ -77,19 +78,15 @@ function Buffer(options) {
  * <br /><br />
  * A vertex array defines the actual makeup of a vertex, e.g., positions, normals, texture coordinates,
  * etc., by interpreting the raw data in one or more vertex buffers.
- *
  * @param {object} options An object containing the following properties:
  * @param {Context} options.context The context in which to create the buffer
  * @param {ArrayBufferView} [options.typedArray] A typed array containing the data to copy to the buffer.
  * @param {number} [options.sizeInBytes] A <code>Number</code> defining the size of the buffer in bytes. Required if options.typedArray is not given.
  * @param {BufferUsage} options.usage Specifies the expected usage pattern of the buffer. On some GL implementations, this can significantly affect performance. See {@link BufferUsage}.
  * @returns {VertexBuffer} The vertex buffer, ready to be attached to a vertex array.
- *
- * @exception {DeveloperError} Must specify either <options.typedArray> or <options.sizeInBytes>, but not both.
- * @exception {DeveloperError} The buffer size must be greater than zero.
- * @exception {DeveloperError} Invalid <code>usage</code>.
- *
- *
+ * @throws {DeveloperError} Must specify either <options.typedArray> or <options.sizeInBytes>, but not both.
+ * @throws {DeveloperError} The buffer size must be greater than zero.
+ * @throws {DeveloperError} Invalid <code>usage</code>.
  * @example
  * // Example 1. Create a dynamic vertex buffer 16 bytes in size.
  * const buffer = Buffer.createVertexBuffer({
@@ -97,7 +94,6 @@ function Buffer(options) {
  *     sizeInBytes : 16,
  *     usage : BufferUsage.DYNAMIC_DRAW
  * });
- *
  * @example
  * // Example 2. Create a dynamic vertex buffer from three floating-point values.
  * // The data copied to the vertex buffer is considered raw bytes until it is
@@ -107,7 +103,6 @@ function Buffer(options) {
  *     typedArray : new Float32Array([0, 0, 0]),
  *     usage : BufferUsage.STATIC_DRAW
  * });
- *
  * @see {@link https://www.khronos.org/opengles/sdk/docs/man/xhtml/glGenBuffer.xml|glGenBuffer}
  * @see {@link https://www.khronos.org/opengles/sdk/docs/man/xhtml/glBindBuffer.xml|glBindBuffer} with <code>ARRAY_BUFFER</code>
  * @see {@link https://www.khronos.org/opengles/sdk/docs/man/xhtml/glBufferData.xml|glBufferData} with <code>ARRAY_BUFFER</code>
@@ -132,7 +127,6 @@ Buffer.createVertexBuffer = function (options) {
  * An index buffer can be attached to a vertex array to select vertices for rendering.
  * <code>Context.draw</code> can render using the entire index buffer or a subset
  * of the index buffer defined by an offset and count.
- *
  * @param {object} options An object containing the following properties:
  * @param {Context} options.context The context in which to create the buffer
  * @param {ArrayBufferView} [options.typedArray] A typed array containing the data to copy to the buffer.
@@ -140,14 +134,11 @@ Buffer.createVertexBuffer = function (options) {
  * @param {BufferUsage} options.usage Specifies the expected usage pattern of the buffer. On some GL implementations, this can significantly affect performance. See {@link BufferUsage}.
  * @param {IndexDatatype} options.indexDatatype The datatype of indices in the buffer.
  * @returns {IndexBuffer} The index buffer, ready to be attached to a vertex array.
- *
- * @exception {DeveloperError} Must specify either <options.typedArray> or <options.sizeInBytes>, but not both.
- * @exception {DeveloperError} IndexDatatype.UNSIGNED_INT requires OES_element_index_uint, which is not supported on this system. Check context.elementIndexUint.
- * @exception {DeveloperError} The size in bytes must be greater than zero.
- * @exception {DeveloperError} Invalid <code>usage</code>.
- * @exception {DeveloperError} Invalid <code>indexDatatype</code>.
- *
- *
+ * @throws {DeveloperError} Must specify either <options.typedArray> or <options.sizeInBytes>, but not both.
+ * @throws {DeveloperError} IndexDatatype.UNSIGNED_INT requires OES_element_index_uint, which is not supported on this system. Check context.elementIndexUint.
+ * @throws {DeveloperError} The size in bytes must be greater than zero.
+ * @throws {DeveloperError} Invalid <code>usage</code>.
+ * @throws {DeveloperError} Invalid <code>indexDatatype</code>.
  * @example
  * // Example 1. Create a stream index buffer of unsigned shorts that is
  * // 16 bytes in size.
@@ -157,7 +148,6 @@ Buffer.createVertexBuffer = function (options) {
  *     usage : BufferUsage.STREAM_DRAW,
  *     indexDatatype : IndexDatatype.UNSIGNED_SHORT
  * });
- *
  * @example
  * // Example 2. Create a static index buffer containing three unsigned shorts.
  * const buffer = Buffer.createIndexBuffer({
@@ -166,7 +156,6 @@ Buffer.createVertexBuffer = function (options) {
  *     usage : BufferUsage.STATIC_DRAW,
  *     indexDatatype : IndexDatatype.UNSIGNED_SHORT
  * });
- *
  * @see {@link https://www.khronos.org/opengles/sdk/docs/man/xhtml/glGenBuffer.xml|glGenBuffer}
  * @see {@link https://www.khronos.org/opengles/sdk/docs/man/xhtml/glBindBuffer.xml|glBindBuffer} with <code>ELEMENT_ARRAY_BUFFER</code>
  * @see {@link https://www.khronos.org/opengles/sdk/docs/man/xhtml/glBufferData.xml|glBufferData} with <code>ELEMENT_ARRAY_BUFFER</code>

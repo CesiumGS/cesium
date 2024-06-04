@@ -57,8 +57,7 @@ const scratchPickCartesian = new Cartesian3();
 /**
  * The view model for {@link CesiumInspector}.
  * @alias CesiumInspectorViewModel
- * @constructor
- *
+ * @class
  * @param {Scene} scene The scene instance to use.
  * @param {Element} performanceContainer The instance to use for performance container.
  */
@@ -584,7 +583,6 @@ Object.defineProperties(CesiumInspectorViewModel.prototype, {
   /**
    * Gets the scene to control.
    * @memberof CesiumInspectorViewModel.prototype
-   *
    * @type {Scene}
    */
   scene: {
@@ -596,7 +594,6 @@ Object.defineProperties(CesiumInspectorViewModel.prototype, {
   /**
    * Gets the container of the PerformanceDisplay
    * @memberof CesiumInspectorViewModel.prototype
-   *
    * @type {Element}
    */
   performanceContainer: {
@@ -608,7 +605,6 @@ Object.defineProperties(CesiumInspectorViewModel.prototype, {
   /**
    * Gets the command to toggle the visibility of the drop down.
    * @memberof CesiumInspectorViewModel.prototype
-   *
    * @type {Command}
    */
   toggleDropDown: {
@@ -620,7 +616,6 @@ Object.defineProperties(CesiumInspectorViewModel.prototype, {
   /**
    * Gets the command to toggle the visibility of a BoundingSphere for a primitive
    * @memberof CesiumInspectorViewModel.prototype
-   *
    * @type {Command}
    */
   showPrimitiveBoundingSphere: {
@@ -632,7 +627,6 @@ Object.defineProperties(CesiumInspectorViewModel.prototype, {
   /**
    * Gets the command to toggle the visibility of a {@link DebugModelMatrixPrimitive} for the model matrix of a primitive
    * @memberof CesiumInspectorViewModel.prototype
-   *
    * @type {Command}
    */
   showPrimitiveReferenceFrame: {
@@ -644,7 +638,6 @@ Object.defineProperties(CesiumInspectorViewModel.prototype, {
   /**
    * Gets the command to toggle a filter that renders only a selected primitive
    * @memberof CesiumInspectorViewModel.prototype
-   *
    * @type {Command}
    */
   doFilterPrimitive: {
@@ -656,7 +649,6 @@ Object.defineProperties(CesiumInspectorViewModel.prototype, {
   /**
    * Gets the command to increment the depth frustum index to be shown
    * @memberof CesiumInspectorViewModel.prototype
-   *
    * @type {Command}
    */
   incrementDepthFrustum: {
@@ -668,7 +660,6 @@ Object.defineProperties(CesiumInspectorViewModel.prototype, {
   /**
    * Gets the command to decrement the depth frustum index to be shown
    * @memberof CesiumInspectorViewModel.prototype
-   *
    * @type {Command}
    */
   decrementDepthFrustum: {
@@ -680,7 +671,6 @@ Object.defineProperties(CesiumInspectorViewModel.prototype, {
   /**
    * Gets the command to toggle the visibility of tile coordinates
    * @memberof CesiumInspectorViewModel.prototype
-   *
    * @type {Command}
    */
   showTileCoordinates: {
@@ -692,7 +682,6 @@ Object.defineProperties(CesiumInspectorViewModel.prototype, {
   /**
    * Gets the command to toggle the visibility of a BoundingSphere for a selected tile
    * @memberof CesiumInspectorViewModel.prototype
-   *
    * @type {Command}
    */
   showTileBoundingSphere: {
@@ -704,7 +693,6 @@ Object.defineProperties(CesiumInspectorViewModel.prototype, {
   /**
    * Gets the command to toggle a filter that renders only a selected tile
    * @memberof CesiumInspectorViewModel.prototype
-   *
    * @type {Command}
    */
   doFilterTile: {
@@ -716,7 +704,6 @@ Object.defineProperties(CesiumInspectorViewModel.prototype, {
   /**
    * Gets the command to expand and collapse the general section
    * @memberof CesiumInspectorViewModel.prototype
-   *
    * @type {Command}
    */
   toggleGeneral: {
@@ -728,7 +715,6 @@ Object.defineProperties(CesiumInspectorViewModel.prototype, {
   /**
    * Gets the command to expand and collapse the primitives section
    * @memberof CesiumInspectorViewModel.prototype
-   *
    * @type {Command}
    */
   togglePrimitives: {
@@ -740,7 +726,6 @@ Object.defineProperties(CesiumInspectorViewModel.prototype, {
   /**
    * Gets the command to expand and collapse the terrain section
    * @memberof CesiumInspectorViewModel.prototype
-   *
    * @type {Command}
    */
   toggleTerrain: {
@@ -752,7 +737,6 @@ Object.defineProperties(CesiumInspectorViewModel.prototype, {
   /**
    * Gets the command to pick a primitive
    * @memberof CesiumInspectorViewModel.prototype
-   *
    * @type {Command}
    */
   pickPrimitive: {
@@ -764,7 +748,6 @@ Object.defineProperties(CesiumInspectorViewModel.prototype, {
   /**
    * Gets the command to pick a tile
    * @memberof CesiumInspectorViewModel.prototype
-   *
    * @type {Command}
    */
   pickTile: {
@@ -776,7 +759,6 @@ Object.defineProperties(CesiumInspectorViewModel.prototype, {
   /**
    * Gets the command to pick a tile
    * @memberof CesiumInspectorViewModel.prototype
-   *
    * @type {Command}
    */
   selectParent: {
@@ -791,7 +773,6 @@ Object.defineProperties(CesiumInspectorViewModel.prototype, {
   /**
    * Gets the command to pick a tile
    * @memberof CesiumInspectorViewModel.prototype
-   *
    * @type {Command}
    */
   selectNW: {
@@ -806,7 +787,6 @@ Object.defineProperties(CesiumInspectorViewModel.prototype, {
   /**
    * Gets the command to pick a tile
    * @memberof CesiumInspectorViewModel.prototype
-   *
    * @type {Command}
    */
   selectNE: {
@@ -821,7 +801,6 @@ Object.defineProperties(CesiumInspectorViewModel.prototype, {
   /**
    * Gets the command to pick a tile
    * @memberof CesiumInspectorViewModel.prototype
-   *
    * @type {Command}
    */
   selectSW: {
@@ -836,7 +815,6 @@ Object.defineProperties(CesiumInspectorViewModel.prototype, {
   /**
    * Gets the command to pick a tile
    * @memberof CesiumInspectorViewModel.prototype
-   *
    * @type {Command}
    */
   selectSE: {
@@ -851,7 +829,6 @@ Object.defineProperties(CesiumInspectorViewModel.prototype, {
   /**
    * Gets or sets the current selected primitive
    * @memberof CesiumInspectorViewModel.prototype
-   *
    * @type {Command}
    */
   primitive: {
@@ -885,7 +862,6 @@ Object.defineProperties(CesiumInspectorViewModel.prototype, {
   /**
    * Gets or sets the current selected tile
    * @memberof CesiumInspectorViewModel.prototype
-   *
    * @type {Command}
    */
   tile: {

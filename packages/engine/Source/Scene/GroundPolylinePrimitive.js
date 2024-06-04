@@ -32,10 +32,8 @@ import StencilOperation from "./StencilOperation.js";
  * <p>
  * Only to be used with GeometryInstances containing {@link GroundPolylineGeometry}.
  * </p>
- *
  * @alias GroundPolylinePrimitive
- * @constructor
- *
+ * @class
  * @param {object} [options] Object with the following properties:
  * @param {Array|GeometryInstance} [options.geometryInstances] GeometryInstances containing GroundPolylineGeometry
  * @param {Appearance} [options.appearance] The Appearance used to render the polyline. Defaults to a white color {@link Material} on a {@link PolylineMaterialAppearance}.
@@ -47,7 +45,6 @@ import StencilOperation from "./StencilOperation.js";
  * @param {ClassificationType} [options.classificationType=ClassificationType.BOTH] Determines whether terrain, 3D Tiles or both will be classified.
  * @param {boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if this primitive's commands' bounding spheres are shown.
  * @param {boolean} [options.debugShowShadowVolume=false] For debugging only. Determines if the shadow volume for each geometry in the primitive is drawn. Must be <code>true</code> on creation to have effect.
- *
  * @example
  * // 1. Draw a polyline on terrain with a basic color material
  *
@@ -103,10 +100,8 @@ function GroundPolylinePrimitive(options) {
    * <p>
    * Changing this property after the primitive is rendered has no effect.
    * </p>
-   *
    * @readonly
    * @type {Array|GeometryInstance}
-   *
    * @default undefined
    */
   this.geometryInstances = options.geometryInstances;
@@ -121,9 +116,7 @@ function GroundPolylinePrimitive(options) {
    * instance is shaded with the same appearance.  Some appearances, like
    * {@link PolylineColorAppearance} allow giving each instance unique
    * properties.
-   *
    * @type Appearance
-   *
    * @default undefined
    */
   this.appearance = appearance;
@@ -131,18 +124,14 @@ function GroundPolylinePrimitive(options) {
   /**
    * Determines if the primitive will be shown.  This affects all geometry
    * instances in the primitive.
-   *
    * @type {boolean}
-   *
    * @default true
    */
   this.show = defaultValue(options.show, true);
 
   /**
    * Determines whether terrain, 3D Tiles or both will be classified.
-   *
    * @type {ClassificationType}
-   *
    * @default ClassificationType.BOTH
    */
   this.classificationType = defaultValue(
@@ -155,9 +144,7 @@ function GroundPolylinePrimitive(options) {
    * <p>
    * Draws the bounding sphere for each draw command in the primitive.
    * </p>
-   *
    * @type {boolean}
-   *
    * @default false
    */
   this.debugShowBoundingVolume = defaultValue(
@@ -217,12 +204,9 @@ function GroundPolylinePrimitive(options) {
 Object.defineProperties(GroundPolylinePrimitive.prototype, {
   /**
    * Determines if geometry vertex attributes are interleaved, which can slightly improve rendering performance.
-   *
    * @memberof GroundPolylinePrimitive.prototype
-   *
    * @type {boolean}
    * @readonly
-   *
    * @default false
    */
   interleave: {
@@ -233,12 +217,9 @@ Object.defineProperties(GroundPolylinePrimitive.prototype, {
 
   /**
    * When <code>true</code>, the primitive does not keep a reference to the input <code>geometryInstances</code> to save memory.
-   *
    * @memberof GroundPolylinePrimitive.prototype
-   *
    * @type {boolean}
    * @readonly
-   *
    * @default true
    */
   releaseGeometryInstances: {
@@ -249,12 +230,9 @@ Object.defineProperties(GroundPolylinePrimitive.prototype, {
 
   /**
    * When <code>true</code>, each geometry instance will only be pickable with {@link Scene#pick}.  When <code>false</code>, GPU memory is saved.
-   *
    * @memberof GroundPolylinePrimitive.prototype
-   *
    * @type {boolean}
    * @readonly
-   *
    * @default true
    */
   allowPicking: {
@@ -265,12 +243,9 @@ Object.defineProperties(GroundPolylinePrimitive.prototype, {
 
   /**
    * Determines if the geometry instances will be created and batched on a web worker.
-   *
    * @memberof GroundPolylinePrimitive.prototype
-   *
    * @type {boolean}
    * @readonly
-   *
    * @default true
    */
   asynchronous: {
@@ -283,9 +258,7 @@ Object.defineProperties(GroundPolylinePrimitive.prototype, {
    * Determines if the primitive is complete and ready to render.  If this property is
    * true, the primitive will be rendered the next time that {@link GroundPolylinePrimitive#update}
    * is called.
-   *
    * @memberof GroundPolylinePrimitive.prototype
-   *
    * @type {boolean}
    * @readonly
    */
@@ -300,12 +273,9 @@ Object.defineProperties(GroundPolylinePrimitive.prototype, {
    * <p>
    * If true, draws the shadow volume for each geometry in the primitive.
    * </p>
-   *
    * @memberof GroundPolylinePrimitive.prototype
-   *
    * @type {boolean}
    * @readonly
-   *
    * @default false
    */
   debugShowShadowVolume: {
@@ -318,7 +288,6 @@ Object.defineProperties(GroundPolylinePrimitive.prototype, {
 /**
  * Initializes the minimum and maximum terrain heights. This only needs to be called if you are creating the
  * GroundPolylinePrimitive synchronously.
- *
  * @returns {Promise<void>} A promise that will resolve once the terrain heights have been loaded.
  */
 GroundPolylinePrimitive.initializeTerrainHeights = function () {
@@ -667,9 +636,9 @@ function updateAndQueueCommands(
  * Do not call this function directly.  This is documented just to
  * list the exceptions that may be propagated when the scene is rendered:
  * </p>
- *
- * @exception {DeveloperError} For synchronous GroundPolylinePrimitives, you must call GroundPolylinePrimitives.initializeTerrainHeights() and wait for the returned promise to resolve.
- * @exception {DeveloperError} All GeometryInstances must have color attributes to use PolylineColorAppearance with GroundPolylinePrimitive.
+ * @param frameState
+ * @throws {DeveloperError} For synchronous GroundPolylinePrimitives, you must call GroundPolylinePrimitives.initializeTerrainHeights() and wait for the returned promise to resolve.
+ * @throws {DeveloperError} All GeometryInstances must have color attributes to use PolylineColorAppearance with GroundPolylinePrimitive.
  */
 GroundPolylinePrimitive.prototype.update = function (frameState) {
   if (!defined(this._primitive) && !defined(this.geometryInstances)) {
@@ -823,12 +792,9 @@ GroundPolylinePrimitive.prototype.update = function (frameState) {
 
 /**
  * Returns the modifiable per-instance attributes for a {@link GeometryInstance}.
- *
  * @param {*} id The id of the {@link GeometryInstance}.
  * @returns {object} The typed array in the attribute's format or undefined if the is no instance with id.
- *
- * @exception {DeveloperError} must call update before calling getGeometryInstanceAttributes.
- *
+ * @throws {DeveloperError} must call update before calling getGeometryInstanceAttributes.
  * @example
  * const attributes = primitive.getGeometryInstanceAttributes('an id');
  * attributes.color = Cesium.ColorGeometryInstanceAttribute.toValue(Cesium.Color.AQUA);
@@ -850,7 +816,6 @@ GroundPolylinePrimitive.prototype.getGeometryInstanceAttributes = function (
 /**
  * Checks if the given Scene supports GroundPolylinePrimitives.
  * GroundPolylinePrimitives require support for the WEBGL_depth_texture extension.
- *
  * @param {Scene} scene The current scene.
  * @returns {boolean} Whether or not the current scene supports GroundPolylinePrimitives.
  */
@@ -864,9 +829,7 @@ GroundPolylinePrimitive.isSupported = function (scene) {
  * If this object was destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
  * </p>
- *
  * @returns {boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
- *
  * @see GroundPolylinePrimitive#destroy
  */
 GroundPolylinePrimitive.prototype.isDestroyed = function () {
@@ -881,12 +844,9 @@ GroundPolylinePrimitive.prototype.isDestroyed = function () {
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
  * assign the return value (<code>undefined</code>) to the object as done in the example.
  * </p>
- *
- * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
- *
+ * @throws {DeveloperError} This object was destroyed, i.e., destroy() was called.
  * @example
  * e = e && e.destroy();
- *
  * @see GroundPolylinePrimitive#isDestroyed
  */
 GroundPolylinePrimitive.prototype.destroy = function () {

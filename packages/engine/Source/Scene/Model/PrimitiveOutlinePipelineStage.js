@@ -7,9 +7,7 @@ import PrimitiveOutlineStageFS from "../../Shaders/Model/PrimitiveOutlineStageFS
 /**
  * The primitive outline pipeline stage configures the shader to render outlines
  * from the CESIUM_primitive_outline extension.
- *
  * @namespace PrimitiveOutlinePipelineStage
- *
  * @private
  */
 const PrimitiveOutlinePipelineStage = {

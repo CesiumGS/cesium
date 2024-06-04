@@ -8,9 +8,7 @@ import TimeConstants from "./TimeConstants.js";
  * This is a collection of the orientation information available for central bodies.
  * The data comes from the Report of the IAU/IAG Working Group on Cartographic
  * Coordinates and Rotational Elements: 2000.
- *
  * @namespace Iau2000Orientation
- *
  * @private
  */
 const Iau2000Orientation = {};
@@ -35,7 +33,6 @@ let dateTT = new JulianDate();
 
 /**
  * Compute the orientation parameters for the Moon.
- *
  * @param {JulianDate} [date=JulianDate.now()] The date to evaluate the parameters.
  * @param {IauOrientationParameters} [result] The object onto which to store the result.
  * @returns {IauOrientationParameters} The modified result parameter or a new instance representing the orientation of the Earth's Moon.

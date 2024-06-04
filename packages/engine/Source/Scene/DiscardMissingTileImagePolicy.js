@@ -7,10 +7,8 @@ import Resource from "../Core/Resource.js";
 /**
  * A policy for discarding tile images that match a known image containing a
  * "missing" image.
- *
  * @alias DiscardMissingTileImagePolicy
- * @constructor
- *
+ * @class
  * @param {object} options Object with the following properties:
  * @param {Resource|string} options.missingImageUrl The URL of the known missing image.
  * @param {Cartesian2[]} options.pixelsToCheck An array of {@link Cartesian2} pixel positions to
@@ -103,11 +101,9 @@ DiscardMissingTileImagePolicy.prototype.isReady = function () {
 
 /**
  * Given a tile image, decide whether to discard that image.
- *
  * @param {HTMLImageElement} image An image to test.
  * @returns {boolean} True if the image should be discarded; otherwise, false.
- *
- * @exception {DeveloperError} <code>shouldDiscardImage</code> must not be called before the discard policy is ready.
+ * @throws {DeveloperError} <code>shouldDiscardImage</code> must not be called before the discard policy is ready.
  */
 DiscardMissingTileImagePolicy.prototype.shouldDiscardImage = function (image) {
   //>>includeStart('debug', pragmas.debug);

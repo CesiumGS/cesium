@@ -12,9 +12,8 @@ import RuntimeError from "./RuntimeError.js";
  * A 4x4 matrix, indexable as a column-major order array.
  * Constructor parameters are in row-major order for code readability.
  * @alias Matrix4
- * @constructor
+ * @class
  * @implements {ArrayLike<number>}
- *
  * @param {number} [column0Row0=0.0] The value for column 0, row 0.
  * @param {number} [column1Row0=0.0] The value for column 1, row 0.
  * @param {number} [column2Row0=0.0] The value for column 2, row 0.
@@ -31,7 +30,6 @@ import RuntimeError from "./RuntimeError.js";
  * @param {number} [column1Row3=0.0] The value for column 1, row 3.
  * @param {number} [column2Row3=0.0] The value for column 2, row 3.
  * @param {number} [column3Row3=0.0] The value for column 3, row 3.
- *
  * @see Matrix4.fromArray
  * @see Matrix4.fromColumnMajorArray
  * @see Matrix4.fromRowMajorArray
@@ -97,11 +95,9 @@ Matrix4.packedLength = 16;
 
 /**
  * Stores the provided instance into the provided array.
- *
  * @param {Matrix4} value The value to pack.
  * @param {number[]} array The array to pack into.
  * @param {number} [startingIndex=0] The index into the array at which to start packing the elements.
- *
  * @returns {number[]} The array that was packed into
  */
 Matrix4.pack = function (value, array, startingIndex) {
@@ -134,7 +130,6 @@ Matrix4.pack = function (value, array, startingIndex) {
 
 /**
  * Retrieves an instance from a packed array.
- *
  * @param {number[]} array The packed array.
  * @param {number} [startingIndex=0] The starting index of the element to be unpacked.
  * @param {Matrix4} [result] The object into which to store the result.
@@ -173,7 +168,6 @@ Matrix4.unpack = function (array, startingIndex, result) {
 /**
  * Flattens an array of Matrix4s into an array of components. The components
  * are stored in column-major order.
- *
  * @param {Matrix4[]} array The array of matrices to pack.
  * @param {number[]} [result] The array onto which to store the result. If this is a typed array, it must have array.length * 16 components, else a {@link DeveloperError} will be thrown. If it is a regular array, it will be resized to have (array.length * 16) elements.
  * @returns {number[]} The packed array.
@@ -205,7 +199,6 @@ Matrix4.packArray = function (array, result) {
 
 /**
  * Unpacks an array of column-major matrix components into an array of Matrix4s.
- *
  * @param {number[]} array The array of components to unpack.
  * @param {Matrix4[]} [result] The array onto which to store the result.
  * @returns {Matrix4[]} The unpacked array.
@@ -235,7 +228,6 @@ Matrix4.unpackArray = function (array, result) {
 
 /**
  * Duplicates a Matrix4 instance.
- *
  * @param {Matrix4} matrix The matrix to duplicate.
  * @param {Matrix4} [result] The object onto which to store the result.
  * @returns {Matrix4} The modified result parameter or a new Matrix4 instance if one was not provided. (Returns undefined if matrix is undefined)
@@ -286,12 +278,10 @@ Matrix4.clone = function (matrix, result) {
 /**
  * Creates a Matrix4 from 16 consecutive elements in an array.
  * @function
- *
  * @param {number[]} array The array whose 16 consecutive elements correspond to the positions of the matrix.  Assumes column-major order.
  * @param {number} [startingIndex=0] The offset into the array of the first element, which corresponds to first column first row position in the matrix.
  * @param {Matrix4} [result] The object onto which to store the result.
  * @returns {Matrix4} The modified result parameter or a new Matrix4 instance if one was not provided.
- *
  * @example
  * // Create the Matrix4:
  * // [1.0, 2.0, 3.0, 4.0]
@@ -310,7 +300,6 @@ Matrix4.fromArray = Matrix4.unpack;
 
 /**
  * Computes a Matrix4 instance from a column-major order array.
- *
  * @param {number[]} values The column-major order array.
  * @param {Matrix4} [result] The object in which the result will be stored, if undefined a new instance will be created.
  * @returns {Matrix4} The modified result parameter, or a new Matrix4 instance if one was not provided.
@@ -326,7 +315,6 @@ Matrix4.fromColumnMajorArray = function (values, result) {
 /**
  * Computes a Matrix4 instance from a row-major order array.
  * The resulting matrix will be in column-major order.
- *
  * @param {number[]} values The row-major order array.
  * @param {Matrix4} [result] The object in which the result will be stored, if undefined a new instance will be created.
  * @returns {Matrix4} The modified result parameter, or a new Matrix4 instance if one was not provided.
@@ -378,7 +366,6 @@ Matrix4.fromRowMajorArray = function (values, result) {
 /**
  * Computes a Matrix4 instance from a Matrix3 representing the rotation
  * and a Cartesian3 representing the translation.
- *
  * @param {Matrix3} rotation The upper left portion of the matrix representing the rotation.
  * @param {Cartesian3} [translation=Cartesian3.ZERO] The upper right portion of the matrix representing the translation.
  * @param {Matrix4} [result] The object in which the result will be stored, if undefined a new instance will be created.
@@ -434,13 +421,11 @@ Matrix4.fromRotationTranslation = function (rotation, translation, result) {
 /**
  * Computes a Matrix4 instance from a translation, rotation, and scale (TRS)
  * representation with the rotation represented as a quaternion.
- *
  * @param {Cartesian3} translation The translation transformation.
  * @param {Quaternion} rotation The rotation transformation.
  * @param {Cartesian3} scale The non-uniform scale transformation.
  * @param {Matrix4} [result] The object in which the result will be stored, if undefined a new instance will be created.
  * @returns {Matrix4} The modified result parameter, or a new Matrix4 instance if one was not provided.
- *
  * @example
  * const result = Cesium.Matrix4.fromTranslationQuaternionRotationScale(
  *   new Cesium.Cartesian3(1.0, 2.0, 3.0), // translation
@@ -513,7 +498,6 @@ Matrix4.fromTranslationQuaternionRotationScale = function (
 
 /**
  * Creates a Matrix4 instance from a {@link TranslationRotationScale} instance.
- *
  * @param {TranslationRotationScale} translationRotationScale The instance.
  * @param {Matrix4} [result] The object in which the result will be stored, if undefined a new instance will be created.
  * @returns {Matrix4} The modified result parameter, or a new Matrix4 instance if one was not provided.
@@ -536,11 +520,9 @@ Matrix4.fromTranslationRotationScale = function (
 
 /**
  * Creates a Matrix4 instance from a Cartesian3 representing the translation.
- *
  * @param {Cartesian3} translation The upper right portion of the matrix representing the translation.
  * @param {Matrix4} [result] The object in which the result will be stored, if undefined a new instance will be created.
  * @returns {Matrix4} The modified result parameter, or a new Matrix4 instance if one was not provided.
- *
  * @see Matrix4.multiplyByTranslation
  */
 Matrix4.fromTranslation = function (translation, result) {
@@ -553,11 +535,9 @@ Matrix4.fromTranslation = function (translation, result) {
 
 /**
  * Computes a Matrix4 instance representing a non-uniform scale.
- *
  * @param {Cartesian3} scale The x, y, and z scale factors.
  * @param {Matrix4} [result] The object in which the result will be stored, if undefined a new instance will be created.
  * @returns {Matrix4} The modified result parameter, or a new Matrix4 instance if one was not provided.
- *
  * @example
  * // Creates
  * //   [7.0, 0.0, 0.0, 0.0]
@@ -613,11 +593,9 @@ Matrix4.fromScale = function (scale, result) {
 
 /**
  * Computes a Matrix4 instance representing a uniform scale.
- *
  * @param {number} scale The uniform scale factor.
  * @param {Matrix4} [result] The object in which the result will be stored, if undefined a new instance will be created.
  * @returns {Matrix4} The modified result parameter, or a new Matrix4 instance if one was not provided.
- *
  * @example
  * // Creates
  * //   [2.0, 0.0, 0.0, 0.0]
@@ -673,7 +651,6 @@ Matrix4.fromUniformScale = function (scale, result) {
 
 /**
  * Creates a rotation matrix.
- *
  * @param {Matrix3} rotation The rotation matrix.
  * @param {Matrix4} [result] The object in which the result will be stored, if undefined a new instance will be created.
  * @returns {Matrix4} The modified result parameter, or a new Matrix4 instance if one was not provided.
@@ -715,7 +692,6 @@ const fromCameraU = new Cartesian3();
 
 /**
  * Computes a Matrix4 instance from a Camera.
- *
  * @param {Camera} camera The camera to use.
  * @param {Matrix4} [result] The object in which the result will be stored, if undefined a new instance will be created.
  * @returns {Matrix4} The modified result parameter, or a new Matrix4 instance if one was not provided.
@@ -817,18 +793,16 @@ Matrix4.fromCamera = function (camera, result) {
 
 /**
  * Computes a Matrix4 instance representing a perspective transformation matrix.
- *
  * @param {number} fovY The field of view along the Y axis in radians.
  * @param {number} aspectRatio The aspect ratio.
  * @param {number} near The distance to the near plane in meters.
  * @param {number} far The distance to the far plane in meters.
  * @param {Matrix4} result The object in which the result will be stored.
  * @returns {Matrix4} The modified result parameter.
- *
- * @exception {DeveloperError} fovY must be in (0, PI].
- * @exception {DeveloperError} aspectRatio must be greater than zero.
- * @exception {DeveloperError} near must be greater than zero.
- * @exception {DeveloperError} far must be greater than zero.
+ * @throws {DeveloperError} fovY must be in (0, PI].
+ * @throws {DeveloperError} aspectRatio must be greater than zero.
+ * @throws {DeveloperError} near must be greater than zero.
+ * @throws {DeveloperError} far must be greater than zero.
  */
 Matrix4.computePerspectiveFieldOfView = function (
   fovY,
@@ -873,7 +847,6 @@ Matrix4.computePerspectiveFieldOfView = function (
 
 /**
  * Computes a Matrix4 instance representing an orthographic transformation matrix.
- *
  * @param {number} left The number of meters to the left of the camera that will be in view.
  * @param {number} right The number of meters to the right of the camera that will be in view.
  * @param {number} bottom The number of meters below of the camera that will be in view.
@@ -934,7 +907,6 @@ Matrix4.computeOrthographicOffCenter = function (
 
 /**
  * Computes a Matrix4 instance representing an off center perspective transformation.
- *
  * @param {number} left The number of meters to the left of the camera that will be in view.
  * @param {number} right The number of meters to the right of the camera that will be in view.
  * @param {number} bottom The number of meters below of the camera that will be in view.
@@ -992,7 +964,6 @@ Matrix4.computePerspectiveOffCenter = function (
 
 /**
  * Computes a Matrix4 instance representing an infinite off center perspective transformation.
- *
  * @param {number} left The number of meters to the left of the camera that will be in view.
  * @param {number} right The number of meters to the right of the camera that will be in view.
  * @param {number} bottom The number of meters below of the camera that will be in view.
@@ -1047,13 +1018,11 @@ Matrix4.computeInfinitePerspectiveOffCenter = function (
 
 /**
  * Computes a Matrix4 instance that transforms from normalized device coordinates to window coordinates.
- *
  * @param {object} [viewport = { x : 0.0, y : 0.0, width : 0.0, height : 0.0 }] The viewport's corners as shown in Example 1.
  * @param {number} [nearDepthRange=0.0] The near plane distance in window coordinates.
  * @param {number} [farDepthRange=1.0] The far plane distance in window coordinates.
  * @param {Matrix4} [result] The object in which the result will be stored.
  * @returns {Matrix4} The modified result parameter.
- *
  * @example
  * // Create viewport transformation using an explicit viewport and depth range.
  * const m = Cesium.Matrix4.computeViewportTransformation({
@@ -1115,7 +1084,6 @@ Matrix4.computeViewportTransformation = function (
 
 /**
  * Computes a Matrix4 instance that transforms from world space to view space.
- *
  * @param {Cartesian3} position The position of the camera.
  * @param {Cartesian3} direction The forward direction.
  * @param {Cartesian3} up The up direction.
@@ -1154,11 +1122,9 @@ Matrix4.computeView = function (position, direction, up, right, result) {
 /**
  * Computes an Array from the provided Matrix4 instance.
  * The array will be in column-major order.
- *
  * @param {Matrix4} matrix The matrix to use..
  * @param {number[]} [result] The Array onto which to store the result.
  * @returns {number[]} The modified Array parameter or a new Array instance if one was not provided.
- *
  * @example
  * //create an array from an instance of Matrix4
  * // m = [10.0, 14.0, 18.0, 22.0]
@@ -1216,14 +1182,11 @@ Matrix4.toArray = function (matrix, result) {
 
 /**
  * Computes the array index of the element at the provided row and column.
- *
  * @param {number} row The zero-based index of the row.
  * @param {number} column The zero-based index of the column.
  * @returns {number} The index of the element at the provided row and column.
- *
- * @exception {DeveloperError} row must be 0, 1, 2, or 3.
- * @exception {DeveloperError} column must be 0, 1, 2, or 3.
- *
+ * @throws {DeveloperError} row must be 0, 1, 2, or 3.
+ * @throws {DeveloperError} column must be 0, 1, 2, or 3.
  * @example
  * const myMatrix = new Cesium.Matrix4();
  * const column1Row0Index = Cesium.Matrix4.getElementIndex(1, 0);
@@ -1244,14 +1207,11 @@ Matrix4.getElementIndex = function (column, row) {
 
 /**
  * Retrieves a copy of the matrix column at the provided index as a Cartesian4 instance.
- *
  * @param {Matrix4} matrix The matrix to use.
  * @param {number} index The zero-based index of the column to retrieve.
  * @param {Cartesian4} result The object onto which to store the result.
  * @returns {Cartesian4} The modified result parameter.
- *
- * @exception {DeveloperError} index must be 0, 1, 2, or 3.
- *
+ * @throws {DeveloperError} index must be 0, 1, 2, or 3.
  * @example
  * //returns a Cartesian4 instance with values from the specified column
  * // m = [10.0, 11.0, 12.0, 13.0]
@@ -1261,7 +1221,6 @@ Matrix4.getElementIndex = function (column, row) {
  *
  * //Example 1: Creates an instance of Cartesian
  * const a = Cesium.Matrix4.getColumn(m, 2, new Cesium.Cartesian4());
- *
  * @example
  * //Example 2: Sets values for Cartesian instance
  * const a = new Cesium.Cartesian4();
@@ -1294,15 +1253,12 @@ Matrix4.getColumn = function (matrix, index, result) {
 
 /**
  * Computes a new matrix that replaces the specified column in the provided matrix with the provided Cartesian4 instance.
- *
  * @param {Matrix4} matrix The matrix to use.
  * @param {number} index The zero-based index of the column to set.
  * @param {Cartesian4} cartesian The Cartesian whose values will be assigned to the specified column.
  * @param {Matrix4} result The object onto which to store the result.
  * @returns {Matrix4} The modified result parameter.
- *
- * @exception {DeveloperError} index must be 0, 1, 2, or 3.
- *
+ * @throws {DeveloperError} index must be 0, 1, 2, or 3.
  * @example
  * //creates a new Matrix4 instance with new column values from the Cartesian4 instance
  * // m = [10.0, 11.0, 12.0, 13.0]
@@ -1340,14 +1296,11 @@ Matrix4.setColumn = function (matrix, index, cartesian, result) {
 
 /**
  * Retrieves a copy of the matrix row at the provided index as a Cartesian4 instance.
- *
  * @param {Matrix4} matrix The matrix to use.
  * @param {number} index The zero-based index of the row to retrieve.
  * @param {Cartesian4} result The object onto which to store the result.
  * @returns {Cartesian4} The modified result parameter.
- *
- * @exception {DeveloperError} index must be 0, 1, 2, or 3.
- *
+ * @throws {DeveloperError} index must be 0, 1, 2, or 3.
  * @example
  * //returns a Cartesian4 instance with values from the specified column
  * // m = [10.0, 11.0, 12.0, 13.0]
@@ -1357,7 +1310,6 @@ Matrix4.setColumn = function (matrix, index, cartesian, result) {
  *
  * //Example 1: Returns an instance of Cartesian
  * const a = Cesium.Matrix4.getRow(m, 2, new Cesium.Cartesian4());
- *
  * @example
  * //Example 2: Sets values for a Cartesian instance
  * const a = new Cesium.Cartesian4();
@@ -1389,15 +1341,12 @@ Matrix4.getRow = function (matrix, index, result) {
 
 /**
  * Computes a new matrix that replaces the specified row in the provided matrix with the provided Cartesian4 instance.
- *
  * @param {Matrix4} matrix The matrix to use.
  * @param {number} index The zero-based index of the row to set.
  * @param {Cartesian4} cartesian The Cartesian whose values will be assigned to the specified row.
  * @param {Matrix4} result The object onto which to store the result.
  * @returns {Matrix4} The modified result parameter.
- *
- * @exception {DeveloperError} index must be 0, 1, 2, or 3.
- *
+ * @throws {DeveloperError} index must be 0, 1, 2, or 3.
  * @example
  * //create a new Matrix4 instance with new row values from the Cartesian4 instance
  * // m = [10.0, 11.0, 12.0, 13.0]
@@ -1435,7 +1384,6 @@ Matrix4.setRow = function (matrix, index, cartesian, result) {
 /**
  * Computes a new matrix that replaces the translation in the rightmost column of the provided
  * matrix with the provided translation. This assumes the matrix is an affine transformation.
- *
  * @param {Matrix4} matrix The matrix to use.
  * @param {Cartesian3} translation The translation that replaces the translation of the provided matrix.
  * @param {Matrix4} result The object onto which to store the result.
@@ -1476,12 +1424,10 @@ const scaleScratch1 = new Cartesian3();
 /**
  * Computes a new matrix that replaces the scale with the provided scale.
  * This assumes the matrix is an affine transformation.
- *
  * @param {Matrix4} matrix The matrix to use.
  * @param {Cartesian3} scale The scale that replaces the scale of the provided matrix.
  * @param {Matrix4} result The object onto which to store the result.
  * @returns {Matrix4} The modified result parameter.
- *
  * @see Matrix4.setUniformScale
  * @see Matrix4.fromScale
  * @see Matrix4.fromUniformScale
@@ -1529,12 +1475,10 @@ const scaleScratch2 = new Cartesian3();
 /**
  * Computes a new matrix that replaces the scale with the provided uniform scale.
  * This assumes the matrix is an affine transformation.
- *
  * @param {Matrix4} matrix The matrix to use.
  * @param {number} scale The uniform scale that replaces the scale of the provided matrix.
  * @param {Matrix4} result The object onto which to store the result.
  * @returns {Matrix4} The modified result parameter.
- *
  * @see Matrix4.setScale
  * @see Matrix4.fromScale
  * @see Matrix4.fromUniformScale
@@ -1581,11 +1525,9 @@ const scratchColumn = new Cartesian3();
 
 /**
  * Extracts the non-uniform scale assuming the matrix is an affine transformation.
- *
  * @param {Matrix4} matrix The matrix.
  * @param {Cartesian3} result The object onto which to store the result.
  * @returns {Cartesian3} The modified result parameter
- *
  * @see Matrix4.multiplyByScale
  * @see Matrix4.multiplyByUniformScale
  * @see Matrix4.fromScale
@@ -1617,7 +1559,6 @@ const scaleScratch3 = new Cartesian3();
  * Computes the maximum scale assuming the matrix is an affine transformation.
  * The maximum scale is the maximum length of the column vectors in the upper-left
  * 3x3 matrix.
- *
  * @param {Matrix4} matrix The matrix.
  * @returns {number} The maximum scale.
  */
@@ -1630,12 +1571,10 @@ const scaleScratch4 = new Cartesian3();
 
 /**
  * Sets the rotation assuming the matrix is an affine transformation.
- *
  * @param {Matrix4} matrix The matrix.
  * @param {Matrix3} rotation The rotation matrix.
  * @param {Matrix4} result The object onto which to store the result.
  * @returns {Matrix4} The modified result parameter.
- *
  * @see Matrix4.fromRotation
  * @see Matrix4.getRotation
  */
@@ -1674,11 +1613,9 @@ const scaleScratch5 = new Cartesian3();
 
 /**
  * Extracts the rotation matrix assuming the matrix is an affine transformation.
- *
  * @param {Matrix4} matrix The matrix.
  * @param {Matrix3} result The object onto which to store the result.
  * @returns {Matrix3} The modified result parameter.
- *
  * @see Matrix4.setRotation
  * @see Matrix4.fromRotation
  */
@@ -1707,7 +1644,6 @@ Matrix4.getRotation = function (matrix, result) {
 
 /**
  * Computes the product of two matrices.
- *
  * @param {Matrix4} left The first matrix.
  * @param {Matrix4} right The second matrix.
  * @param {Matrix4} result The object onto which to store the result.
@@ -1811,7 +1747,6 @@ Matrix4.multiply = function (left, right, result) {
 
 /**
  * Computes the sum of two matrices.
- *
  * @param {Matrix4} left The first matrix.
  * @param {Matrix4} right The second matrix.
  * @param {Matrix4} result The object onto which to store the result.
@@ -1845,7 +1780,6 @@ Matrix4.add = function (left, right, result) {
 
 /**
  * Computes the difference of two matrices.
- *
  * @param {Matrix4} left The first matrix.
  * @param {Matrix4} right The second matrix.
  * @param {Matrix4} result The object onto which to store the result.
@@ -1885,12 +1819,10 @@ Matrix4.subtract = function (left, right, result) {
  * The matrix is not verified to be in the proper form.
  * This method is faster than computing the product for general 4x4
  * matrices using {@link Matrix4.multiply}.
- *
  * @param {Matrix4} left The first matrix.
  * @param {Matrix4} right The second matrix.
  * @param {Matrix4} result The object onto which to store the result.
  * @returns {Matrix4} The modified result parameter.
- *
  * @example
  * const m1 = new Cesium.Matrix4(1.0, 6.0, 7.0, 0.0, 2.0, 5.0, 8.0, 0.0, 3.0, 4.0, 9.0, 0.0, 0.0, 0.0, 0.0, 1.0);
  * const m2 = Cesium.Transforms.eastNorthUpToFixedFrame(new Cesium.Cartesian3(1.0, 1.0, 1.0));
@@ -1971,12 +1903,10 @@ Matrix4.multiplyTransformation = function (left, right, result) {
  * Multiplies a transformation matrix (with a bottom row of <code>[0.0, 0.0, 0.0, 1.0]</code>)
  * by a 3x3 rotation matrix.  This is an optimization
  * for <code>Matrix4.multiply(m, Matrix4.fromRotationTranslation(rotation), m);</code> with less allocations and arithmetic operations.
- *
  * @param {Matrix4} matrix The matrix on the left-hand side.
  * @param {Matrix3} rotation The 3x3 rotation matrix on the right-hand side.
  * @param {Matrix4} result The object onto which to store the result.
  * @returns {Matrix4} The modified result parameter.
- *
  * @example
  * // Instead of Cesium.Matrix4.multiply(m, Cesium.Matrix4.fromRotationTranslation(rotation), m);
  * Cesium.Matrix4.multiplyByMatrix3(m, rotation, m);
@@ -2043,12 +1973,10 @@ Matrix4.multiplyByMatrix3 = function (matrix, rotation, result) {
  * Multiplies a transformation matrix (with a bottom row of <code>[0.0, 0.0, 0.0, 1.0]</code>)
  * by an implicit translation matrix defined by a {@link Cartesian3}.  This is an optimization
  * for <code>Matrix4.multiply(m, Matrix4.fromTranslation(position), m);</code> with less allocations and arithmetic operations.
- *
  * @param {Matrix4} matrix The matrix on the left-hand side.
  * @param {Cartesian3} translation The translation on the right-hand side.
  * @param {Matrix4} result The object onto which to store the result.
  * @returns {Matrix4} The modified result parameter.
- *
  * @example
  * // Instead of Cesium.Matrix4.multiply(m, Cesium.Matrix4.fromTranslation(position), m);
  * Cesium.Matrix4.multiplyByTranslation(m, position, m);
@@ -2093,17 +2021,13 @@ Matrix4.multiplyByTranslation = function (matrix, translation, result) {
  * for <code>Matrix4.multiply(m, Matrix4.fromUniformScale(scale), m);</code>, where
  * <code>m</code> must be an affine matrix.
  * This function performs fewer allocations and arithmetic operations.
- *
  * @param {Matrix4} matrix The affine matrix on the left-hand side.
  * @param {Cartesian3} scale The non-uniform scale on the right-hand side.
  * @param {Matrix4} result The object onto which to store the result.
  * @returns {Matrix4} The modified result parameter.
- *
- *
  * @example
  * // Instead of Cesium.Matrix4.multiply(m, Cesium.Matrix4.fromScale(scale), m);
  * Cesium.Matrix4.multiplyByScale(m, scale, m);
- *
  * @see Matrix4.multiplyByUniformScale
  * @see Matrix4.fromScale
  * @see Matrix4.fromUniformScale
@@ -2152,16 +2076,13 @@ Matrix4.multiplyByScale = function (matrix, scale, result) {
 
 /**
  * Computes the product of a matrix times a uniform scale, as if the scale were a scale matrix.
- *
  * @param {Matrix4} matrix The matrix on the left-hand side.
  * @param {number} scale The uniform scale on the right-hand side.
  * @param {Matrix4} result The object onto which to store the result.
  * @returns {Matrix4} The modified result parameter.
- *
  * @example
  * // Instead of Cesium.Matrix4.multiply(m, Cesium.Matrix4.fromUniformScale(scale), m);
  * Cesium.Matrix4.multiplyByUniformScale(m, scale, m);
- *
  * @see Matrix4.multiplyByScale
  * @see Matrix4.fromScale
  * @see Matrix4.fromUniformScale
@@ -2201,7 +2122,6 @@ Matrix4.multiplyByUniformScale = function (matrix, scale, result) {
 
 /**
  * Computes the product of a matrix and a column vector.
- *
  * @param {Matrix4} matrix The matrix.
  * @param {Cartesian4} cartesian The vector.
  * @param {Cartesian4} result The object onto which to store the result.
@@ -2234,12 +2154,10 @@ Matrix4.multiplyByVector = function (matrix, cartesian, result) {
 /**
  * Computes the product of a matrix and a {@link Cartesian3}.  This is equivalent to calling {@link Matrix4.multiplyByVector}
  * with a {@link Cartesian4} with a <code>w</code> component of zero.
- *
  * @param {Matrix4} matrix The matrix.
  * @param {Cartesian3} cartesian The point.
  * @param {Cartesian3} result The object onto which to store the result.
  * @returns {Cartesian3} The modified result parameter.
- *
  * @example
  * const p = new Cesium.Cartesian3(1.0, 2.0, 3.0);
  * const result = Cesium.Matrix4.multiplyByPointAsVector(matrix, p, new Cesium.Cartesian3());
@@ -2271,12 +2189,10 @@ Matrix4.multiplyByPointAsVector = function (matrix, cartesian, result) {
 /**
  * Computes the product of a matrix and a {@link Cartesian3}. This is equivalent to calling {@link Matrix4.multiplyByVector}
  * with a {@link Cartesian4} with a <code>w</code> component of 1, but returns a {@link Cartesian3} instead of a {@link Cartesian4}.
- *
  * @param {Matrix4} matrix The matrix.
  * @param {Cartesian3} cartesian The point.
  * @param {Cartesian3} result The object onto which to store the result.
  * @returns {Cartesian3} The modified result parameter.
- *
  * @example
  * const p = new Cesium.Cartesian3(1.0, 2.0, 3.0);
  * const result = Cesium.Matrix4.multiplyByPoint(matrix, p, new Cesium.Cartesian3());
@@ -2304,12 +2220,10 @@ Matrix4.multiplyByPoint = function (matrix, cartesian, result) {
 
 /**
  * Computes the product of a matrix and a scalar.
- *
  * @param {Matrix4} matrix The matrix.
  * @param {number} scalar The number to multiply by.
  * @param {Matrix4} result The object onto which to store the result.
  * @returns {Matrix4} The modified result parameter.
- *
  * @example
  * //create a Matrix4 instance which is a scaled version of the supplied Matrix4
  * // m = [10.0, 11.0, 12.0, 13.0]
@@ -2353,11 +2267,9 @@ Matrix4.multiplyByScalar = function (matrix, scalar, result) {
 
 /**
  * Computes a negated copy of the provided matrix.
- *
  * @param {Matrix4} matrix The matrix to negate.
  * @param {Matrix4} result The object onto which to store the result.
  * @returns {Matrix4} The modified result parameter.
- *
  * @example
  * //create a new Matrix4 instance which is a negation of a Matrix4
  * // m = [10.0, 11.0, 12.0, 13.0]
@@ -2400,11 +2312,9 @@ Matrix4.negate = function (matrix, result) {
 
 /**
  * Computes the transpose of the provided matrix.
- *
  * @param {Matrix4} matrix The matrix to transpose.
  * @param {Matrix4} result The object onto which to store the result.
  * @returns {Matrix4} The modified result parameter.
- *
  * @example
  * //returns transpose of a Matrix4
  * // m = [10.0, 11.0, 12.0, 13.0]
@@ -2454,7 +2364,6 @@ Matrix4.transpose = function (matrix, result) {
 
 /**
  * Computes a matrix, which contains the absolute (unsigned) values of the provided matrix's elements.
- *
  * @param {Matrix4} matrix The matrix with signed elements.
  * @param {Matrix4} result The object onto which to store the result.
  * @returns {Matrix4} The modified result parameter.
@@ -2488,11 +2397,9 @@ Matrix4.abs = function (matrix, result) {
 /**
  * Compares the provided matrices componentwise and returns
  * <code>true</code> if they are equal, <code>false</code> otherwise.
- *
  * @param {Matrix4} [left] The first matrix.
  * @param {Matrix4} [right] The second matrix.
  * @returns {boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
- *
  * @example
  * //compares two Matrix4 instances
  *
@@ -2549,12 +2456,10 @@ Matrix4.equals = function (left, right) {
  * Compares the provided matrices componentwise and returns
  * <code>true</code> if they are within the provided epsilon,
  * <code>false</code> otherwise.
- *
  * @param {Matrix4} [left] The first matrix.
  * @param {Matrix4} [right] The second matrix.
  * @param {number} [epsilon=0] The epsilon to use for equality testing.
  * @returns {boolean} <code>true</code> if left and right are within the provided epsilon, <code>false</code> otherwise.
- *
  * @example
  * //compares two Matrix4 instances
  *
@@ -2604,7 +2509,6 @@ Matrix4.equalsEpsilon = function (left, right, epsilon) {
 
 /**
  * Gets the translation portion of the provided matrix, assuming the matrix is an affine transformation matrix.
- *
  * @param {Matrix4} matrix The matrix to use.
  * @param {Cartesian3} result The object onto which to store the result.
  * @returns {Cartesian3} The modified result parameter.
@@ -2623,11 +2527,9 @@ Matrix4.getTranslation = function (matrix, result) {
 
 /**
  * Gets the upper left 3x3 matrix of the provided matrix.
- *
  * @param {Matrix4} matrix The matrix to use.
  * @param {Matrix3} result The object onto which to store the result.
  * @returns {Matrix3} The modified result parameter.
- *
  * @example
  * // returns a Matrix3 instance from a Matrix4 instance
  *
@@ -2671,12 +2573,10 @@ const scratchExpectedBottomRow = new Cartesian4(0.0, 0.0, 0.0, 1.0);
  * If the determinant is zero, the matrix can not be inverted, and an exception is thrown.
  * If the matrix is a proper rigid transformation, it is more efficient
  * to invert it with {@link Matrix4.inverseTransformation}.
- *
  * @param {Matrix4} matrix The matrix to invert.
  * @param {Matrix4} result The object onto which to store the result.
  * @returns {Matrix4} The modified result parameter.
- *
- * @exception {RuntimeError} matrix is not invertible because its determinate is zero.
+ * @throws {RuntimeError} matrix is not invertible because its determinate is zero.
  */
 Matrix4.inverse = function (matrix, result) {
   //>>includeStart('debug', pragmas.debug);
@@ -2887,7 +2787,6 @@ Matrix4.inverse = function (matrix, result) {
  * The matrix is not verified to be in the proper form.
  * This method is faster than computing the inverse for a general 4x4
  * matrix using {@link Matrix4.inverse}.
- *
  * @param {Matrix4} matrix The matrix to invert.
  * @param {Matrix4} result The object onto which to store the result.
  * @returns {Matrix4} The modified result parameter.
@@ -2945,7 +2844,6 @@ const scratchTransposeMatrix = new Matrix4();
 
 /**
  * Computes the inverse transpose of a matrix.
- *
  * @param {Matrix4} matrix The matrix to transpose and invert.
  * @param {Matrix4} result The object onto which to store the result.
  * @returns {Matrix4} The modified result parameter.
@@ -2964,7 +2862,6 @@ Matrix4.inverseTranspose = function (matrix, result) {
 
 /**
  * An immutable Matrix4 instance initialized to the identity matrix.
- *
  * @type {Matrix4}
  * @constant
  */
@@ -2991,7 +2888,6 @@ Matrix4.IDENTITY = Object.freeze(
 
 /**
  * An immutable Matrix4 instance initialized to the zero matrix.
- *
  * @type {Matrix4}
  * @constant
  */
@@ -3018,7 +2914,6 @@ Matrix4.ZERO = Object.freeze(
 
 /**
  * The index into Matrix4 for column 0, row 0.
- *
  * @type {number}
  * @constant
  */
@@ -3026,7 +2921,6 @@ Matrix4.COLUMN0ROW0 = 0;
 
 /**
  * The index into Matrix4 for column 0, row 1.
- *
  * @type {number}
  * @constant
  */
@@ -3034,7 +2928,6 @@ Matrix4.COLUMN0ROW1 = 1;
 
 /**
  * The index into Matrix4 for column 0, row 2.
- *
  * @type {number}
  * @constant
  */
@@ -3042,7 +2935,6 @@ Matrix4.COLUMN0ROW2 = 2;
 
 /**
  * The index into Matrix4 for column 0, row 3.
- *
  * @type {number}
  * @constant
  */
@@ -3050,7 +2942,6 @@ Matrix4.COLUMN0ROW3 = 3;
 
 /**
  * The index into Matrix4 for column 1, row 0.
- *
  * @type {number}
  * @constant
  */
@@ -3058,7 +2949,6 @@ Matrix4.COLUMN1ROW0 = 4;
 
 /**
  * The index into Matrix4 for column 1, row 1.
- *
  * @type {number}
  * @constant
  */
@@ -3066,7 +2956,6 @@ Matrix4.COLUMN1ROW1 = 5;
 
 /**
  * The index into Matrix4 for column 1, row 2.
- *
  * @type {number}
  * @constant
  */
@@ -3074,7 +2963,6 @@ Matrix4.COLUMN1ROW2 = 6;
 
 /**
  * The index into Matrix4 for column 1, row 3.
- *
  * @type {number}
  * @constant
  */
@@ -3082,7 +2970,6 @@ Matrix4.COLUMN1ROW3 = 7;
 
 /**
  * The index into Matrix4 for column 2, row 0.
- *
  * @type {number}
  * @constant
  */
@@ -3090,7 +2977,6 @@ Matrix4.COLUMN2ROW0 = 8;
 
 /**
  * The index into Matrix4 for column 2, row 1.
- *
  * @type {number}
  * @constant
  */
@@ -3098,7 +2984,6 @@ Matrix4.COLUMN2ROW1 = 9;
 
 /**
  * The index into Matrix4 for column 2, row 2.
- *
  * @type {number}
  * @constant
  */
@@ -3106,7 +2991,6 @@ Matrix4.COLUMN2ROW2 = 10;
 
 /**
  * The index into Matrix4 for column 2, row 3.
- *
  * @type {number}
  * @constant
  */
@@ -3114,7 +2998,6 @@ Matrix4.COLUMN2ROW3 = 11;
 
 /**
  * The index into Matrix4 for column 3, row 0.
- *
  * @type {number}
  * @constant
  */
@@ -3122,7 +3005,6 @@ Matrix4.COLUMN3ROW0 = 12;
 
 /**
  * The index into Matrix4 for column 3, row 1.
- *
  * @type {number}
  * @constant
  */
@@ -3130,7 +3012,6 @@ Matrix4.COLUMN3ROW1 = 13;
 
 /**
  * The index into Matrix4 for column 3, row 2.
- *
  * @type {number}
  * @constant
  */
@@ -3138,7 +3019,6 @@ Matrix4.COLUMN3ROW2 = 14;
 
 /**
  * The index into Matrix4 for column 3, row 3.
- *
  * @type {number}
  * @constant
  */
@@ -3148,7 +3028,6 @@ Object.defineProperties(Matrix4.prototype, {
   /**
    * Gets the number of items in the collection.
    * @memberof Matrix4.prototype
-   *
    * @type {number}
    */
   length: {
@@ -3160,7 +3039,6 @@ Object.defineProperties(Matrix4.prototype, {
 
 /**
  * Duplicates the provided Matrix4 instance.
- *
  * @param {Matrix4} [result] The object onto which to store the result.
  * @returns {Matrix4} The modified result parameter or a new Matrix4 instance if one was not provided.
  */
@@ -3171,7 +3049,6 @@ Matrix4.prototype.clone = function (result) {
 /**
  * Compares this matrix to the provided matrix componentwise and returns
  * <code>true</code> if they are equal, <code>false</code> otherwise.
- *
  * @param {Matrix4} [right] The right hand side matrix.
  * @returns {boolean} <code>true</code> if they are equal, <code>false</code> otherwise.
  */
@@ -3180,6 +3057,9 @@ Matrix4.prototype.equals = function (right) {
 };
 
 /**
+ * @param matrix
+ * @param array
+ * @param offset
  * @private
  */
 Matrix4.equalsArray = function (matrix, array, offset) {
@@ -3207,7 +3087,6 @@ Matrix4.equalsArray = function (matrix, array, offset) {
  * Compares this matrix to the provided matrix componentwise and returns
  * <code>true</code> if they are within the provided epsilon,
  * <code>false</code> otherwise.
- *
  * @param {Matrix4} [right] The right hand side matrix.
  * @param {number} [epsilon=0] The epsilon to use for equality testing.
  * @returns {boolean} <code>true</code> if they are within the provided epsilon, <code>false</code> otherwise.
@@ -3219,7 +3098,6 @@ Matrix4.prototype.equalsEpsilon = function (right, epsilon) {
 /**
  * Computes a string representing this Matrix with each row being
  * on a separate line and in the format '(column0, column1, column2, column3)'.
- *
  * @returns {string} A string representing the provided Matrix with each row being on a separate line and in the format '(column0, column1, column2, column3)'.
  */
 Matrix4.prototype.toString = function () {

@@ -5,13 +5,9 @@ import DeveloperError from "./DeveloperError.js";
 
 /**
  * Value and type information for per-instance geometry attribute that determines if the geometry instance will be shown.
- *
  * @alias ShowGeometryInstanceAttribute
- * @constructor
- *
+ * @class
  * @param {boolean} [show=true] Determines if the geometry instance will be shown.
- *
- *
  * @example
  * const instance = new Cesium.GeometryInstance({
  *   geometry : new Cesium.BoxGeometry({
@@ -26,7 +22,6 @@ import DeveloperError from "./DeveloperError.js";
  *     show : new Cesium.ShowGeometryInstanceAttribute(false)
  *   }
  * });
- *
  * @see GeometryInstance
  * @see GeometryInstanceAttribute
  */
@@ -35,9 +30,7 @@ function ShowGeometryInstanceAttribute(show) {
 
   /**
    * The values for the attributes stored in a typed array.
-   *
    * @type Uint8Array
-   *
    * @default [1.0]
    */
   this.value = ShowGeometryInstanceAttribute.toValue(show);
@@ -47,12 +40,9 @@ Object.defineProperties(ShowGeometryInstanceAttribute.prototype, {
   /**
    * The datatype of each component in the attribute, e.g., individual elements in
    * {@link ColorGeometryInstanceAttribute#value}.
-   *
    * @memberof ShowGeometryInstanceAttribute.prototype
-   *
    * @type {ComponentDatatype}
    * @readonly
-   *
    * @default {@link ComponentDatatype.UNSIGNED_BYTE}
    */
   componentDatatype: {
@@ -63,12 +53,9 @@ Object.defineProperties(ShowGeometryInstanceAttribute.prototype, {
 
   /**
    * The number of components in the attributes, i.e., {@link ColorGeometryInstanceAttribute#value}.
-   *
    * @memberof ShowGeometryInstanceAttribute.prototype
-   *
    * @type {number}
    * @readonly
-   *
    * @default 1
    */
   componentsPerAttribute: {
@@ -81,12 +68,9 @@ Object.defineProperties(ShowGeometryInstanceAttribute.prototype, {
    * When <code>true</code> and <code>componentDatatype</code> is an integer format,
    * indicate that the components should be mapped to the range [0, 1] (unsigned)
    * or [-1, 1] (signed) when they are accessed as floating-point for rendering.
-   *
    * @memberof ShowGeometryInstanceAttribute.prototype
-   *
    * @type {boolean}
    * @readonly
-   *
    * @default true
    */
   normalize: {
@@ -98,11 +82,9 @@ Object.defineProperties(ShowGeometryInstanceAttribute.prototype, {
 
 /**
  * Converts a boolean show to a typed array that can be used to assign a show attribute.
- *
  * @param {boolean} show The show value.
  * @param {Uint8Array} [result] The array to store the result in, if undefined a new instance will be created.
  * @returns {Uint8Array} The modified result parameter or a new instance if result was undefined.
- *
  * @example
  * const attributes = primitive.getGeometryInstanceAttributes('an id');
  * attributes.show = Cesium.ShowGeometryInstanceAttribute.toValue(true, attributes.show);

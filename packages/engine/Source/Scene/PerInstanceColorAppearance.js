@@ -10,10 +10,8 @@ import Appearance from "./Appearance.js";
  * An appearance for {@link GeometryInstance} instances with color attributes.
  * This allows several geometry instances, each with a different color, to
  * be drawn with the same {@link Primitive} as shown in the second example below.
- *
  * @alias PerInstanceColorAppearance
- * @constructor
- *
+ * @class
  * @param {object} [options] Object with the following properties:
  * @param {boolean} [options.flat=false] When <code>true</code>, flat shading is used in the fragment shader, which means lighting is not taking into account.
  * @param {boolean} [options.faceForward=!options.closed] When <code>true</code>, the fragment shader flips the surface normal as needed to ensure that the normal faces the viewer to avoid dark spots.  This is useful when both sides of a geometry should be shaded like {@link WallGeometry}.
@@ -22,7 +20,6 @@ import Appearance from "./Appearance.js";
  * @param {string} [options.vertexShaderSource] Optional GLSL vertex shader source to override the default vertex shader.
  * @param {string} [options.fragmentShaderSource] Optional GLSL fragment shader source to override the default fragment shader.
  * @param {object} [options.renderState] Optional render state to override the default render state.
- *
  * @example
  * // A solid white line segment
  * const primitive = new Cesium.Primitive({
@@ -86,9 +83,7 @@ function PerInstanceColorAppearance(options) {
   /**
    * This property is part of the {@link Appearance} interface, but is not
    * used by {@link PerInstanceColorAppearance} since a fully custom fragment shader is used.
-   *
    * @type Material
-   *
    * @default undefined
    */
   this.material = undefined;
@@ -96,9 +91,7 @@ function PerInstanceColorAppearance(options) {
   /**
    * When <code>true</code>, the geometry is expected to appear translucent so
    * {@link PerInstanceColorAppearance#renderState} has alpha blending enabled.
-   *
    * @type {boolean}
-   *
    * @default true
    */
   this.translucent = translucent;
@@ -122,9 +115,7 @@ function PerInstanceColorAppearance(options) {
 Object.defineProperties(PerInstanceColorAppearance.prototype, {
   /**
    * The GLSL source code for the vertex shader.
-   *
    * @memberof PerInstanceColorAppearance.prototype
-   *
    * @type {string}
    * @readonly
    */
@@ -136,9 +127,7 @@ Object.defineProperties(PerInstanceColorAppearance.prototype, {
 
   /**
    * The GLSL source code for the fragment shader.
-   *
    * @memberof PerInstanceColorAppearance.prototype
-   *
    * @type {string}
    * @readonly
    */
@@ -155,9 +144,7 @@ Object.defineProperties(PerInstanceColorAppearance.prototype, {
    * instance, or it is set implicitly via {@link PerInstanceColorAppearance#translucent}
    * and {@link PerInstanceColorAppearance#closed}.
    * </p>
-   *
    * @memberof PerInstanceColorAppearance.prototype
-   *
    * @type {object}
    * @readonly
    */
@@ -171,12 +158,9 @@ Object.defineProperties(PerInstanceColorAppearance.prototype, {
    * When <code>true</code>, the geometry is expected to be closed so
    * {@link PerInstanceColorAppearance#renderState} has backface culling enabled.
    * If the viewer enters the geometry, it will not be visible.
-   *
    * @memberof PerInstanceColorAppearance.prototype
-   *
    * @type {boolean}
    * @readonly
-   *
    * @default false
    */
   closed: {
@@ -189,9 +173,7 @@ Object.defineProperties(PerInstanceColorAppearance.prototype, {
    * The {@link VertexFormat} that this appearance instance is compatible with.
    * A geometry can have more vertex attributes and still be compatible - at a
    * potential performance cost - but it can't have less.
-   *
    * @memberof PerInstanceColorAppearance.prototype
-   *
    * @type VertexFormat
    * @readonly
    */
@@ -204,12 +186,9 @@ Object.defineProperties(PerInstanceColorAppearance.prototype, {
   /**
    * When <code>true</code>, flat shading is used in the fragment shader,
    * which means lighting is not taking into account.
-   *
    * @memberof PerInstanceColorAppearance.prototype
-   *
    * @type {boolean}
    * @readonly
-   *
    * @default false
    */
   flat: {
@@ -223,12 +202,9 @@ Object.defineProperties(PerInstanceColorAppearance.prototype, {
    * as needed to ensure that the normal faces the viewer to avoid
    * dark spots.  This is useful when both sides of a geometry should be
    * shaded like {@link WallGeometry}.
-   *
    * @memberof PerInstanceColorAppearance.prototype
-   *
    * @type {boolean}
    * @readonly
-   *
    * @default true
    */
   faceForward: {
@@ -242,9 +218,7 @@ Object.defineProperties(PerInstanceColorAppearance.prototype, {
  * The {@link VertexFormat} that all {@link PerInstanceColorAppearance} instances
  * are compatible with.  This requires only <code>position</code> and <code>normal</code>
  * attributes.
- *
  * @type VertexFormat
- *
  * @constant
  */
 PerInstanceColorAppearance.VERTEX_FORMAT = VertexFormat.POSITION_AND_NORMAL;
@@ -253,9 +227,7 @@ PerInstanceColorAppearance.VERTEX_FORMAT = VertexFormat.POSITION_AND_NORMAL;
  * The {@link VertexFormat} that all {@link PerInstanceColorAppearance} instances
  * are compatible with when {@link PerInstanceColorAppearance#flat} is <code>true</code>.
  * This requires only a <code>position</code> attribute.
- *
  * @type VertexFormat
- *
  * @constant
  */
 PerInstanceColorAppearance.FLAT_VERTEX_FORMAT = VertexFormat.POSITION_ONLY;
@@ -264,9 +236,7 @@ PerInstanceColorAppearance.FLAT_VERTEX_FORMAT = VertexFormat.POSITION_ONLY;
  * Procedurally creates the full GLSL fragment shader source.  For {@link PerInstanceColorAppearance},
  * this is derived from {@link PerInstanceColorAppearance#fragmentShaderSource}, {@link PerInstanceColorAppearance#flat},
  * and {@link PerInstanceColorAppearance#faceForward}.
- *
  * @function
- *
  * @returns {string} The full GLSL fragment shader source.
  */
 PerInstanceColorAppearance.prototype.getFragmentShaderSource =
@@ -274,9 +244,7 @@ PerInstanceColorAppearance.prototype.getFragmentShaderSource =
 
 /**
  * Determines if the geometry is translucent based on {@link PerInstanceColorAppearance#translucent}.
- *
  * @function
- *
  * @returns {boolean} <code>true</code> if the appearance is translucent.
  */
 PerInstanceColorAppearance.prototype.isTranslucent =
@@ -286,9 +254,7 @@ PerInstanceColorAppearance.prototype.isTranslucent =
  * Creates a render state.  This is not the final render state instance; instead,
  * it can contain a subset of render state properties identical to the render state
  * created in the context.
- *
  * @function
- *
  * @returns {object} The render state.
  */
 PerInstanceColorAppearance.prototype.getRenderState =

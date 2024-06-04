@@ -14,17 +14,13 @@ import defined from "./defined.js";
  * words, it will not necessarily be 0.0 if sampled in the ocean. This function needs the
  * terrain level of detail as input, if you need to get the altitude of the terrain as precisely
  * as possible (i.e. with maximum level of detail) use {@link sampleTerrainMostDetailed}.
- *
  * @function sampleTerrain
- *
  * @param {TerrainProvider} terrainProvider The terrain provider from which to query heights.
  * @param {number} level The terrain level-of-detail from which to query terrain heights.
  * @param {Cartographic[]} positions The positions to update with terrain heights.
  * @param {boolean} [rejectOnTileFail=false] If true, for any failed terrain tile requests, the promise will be rejected. If false, returned heights will be undefined.
  * @returns {Promise<Cartographic[]>} A promise that resolves to the provided list of positions when terrain the query has completed.
- *
  * @see sampleTerrainMostDetailed
- *
  * @example
  * // Query the terrain height of two Cartographic positions
  * const terrainProvider = await Cesium.createWorldTerrainAsync();
@@ -68,7 +64,6 @@ async function sampleTerrain(
  * @param {boolean} rejectOnTileFail If true, the promise will be rejected.  If false, returned heights will be undefined.
  * @returns {boolean} true if the request was made, and we are okay to attempt the next item immediately,
  *  or false if we were throttled and should wait awhile before retrying.
- *
  * @private
  */
 function attemptConsumeNextQueueItem(tileRequests, results, rejectOnTileFail) {
@@ -121,7 +116,6 @@ function delay(ms) {
  * @param {Array<Promise<void>>} results The list to put all the result promises into
  * @param {boolean} rejectOnTileFail If true, the promise will be rejected.  If false, returned heights will be undefined.
  * @returns {Promise<void>} A promise which resolves once all requests have been started
- *
  * @private
  */
 function drainTileRequestQueue(tileRequests, results, rejectOnTileFail) {

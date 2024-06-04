@@ -9,7 +9,7 @@ const cameraDisabledPath =
 /**
  * The view model for {@link InfoBox}.
  * @alias InfoBoxViewModel
- * @constructor
+ * @class
  */
 function InfoBoxViewModel() {
   this._cameraClicked = new Event();

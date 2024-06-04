@@ -101,10 +101,8 @@ const attributeLocationsInstanced = {
  * Billboards are added and removed from the collection using {@link BillboardCollection#add}
  * and {@link BillboardCollection#remove}.  Billboards in a collection automatically share textures
  * for images with the same identifier.
- *
  * @alias BillboardCollection
- * @constructor
- *
+ * @class
  * @param {object} [options] Object with the following properties:
  * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms each billboard from model to world coordinates.
  * @param {boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if this primitive's commands' bounding spheres are shown.
@@ -113,20 +111,16 @@ const attributeLocationsInstanced = {
  * is used for rendering both opaque and translucent billboards. However, if either all of the billboards are completely opaque or all are completely translucent,
  * setting the technique to BlendOption.OPAQUE or BlendOption.TRANSLUCENT can improve performance by up to 2x.
  * @param {boolean} [options.show=true] Determines if the billboards in the collection will be shown.
- *
  * @performance For best performance, prefer a few collections, each with many billboards, to
  * many collections with only a few billboards each.  Organize collections so that billboards
  * with the same update frequency are in the same collection, i.e., billboards that do not
  * change should be in one collection; billboards that change every frame should be in another
  * collection; and so on.
- *
  * @see BillboardCollection#add
  * @see BillboardCollection#remove
  * @see Billboard
  * @see LabelCollection
- *
  * @demo {@link https://sandcastle.cesium.com/index.html?src=Billboards.html|Cesium Sandcastle Billboard Demo}
- *
  * @example
  * // Create a billboard collection with two billboards
  * const billboards = scene.primitives.add(new Cesium.BillboardCollection());
@@ -204,7 +198,6 @@ function BillboardCollection(options) {
 
   /**
    * Determines if billboards in this collection will be shown.
-   *
    * @type {boolean}
    * @default true
    */
@@ -215,11 +208,8 @@ function BillboardCollection(options) {
    * When this is the identity matrix, the billboards are drawn in world coordinates, i.e., Earth's WGS84 coordinates.
    * Local reference frames can be used by providing a different transformation matrix, like that returned
    * by {@link Transforms.eastNorthUpToFixedFrame}.
-   *
    * @type {Matrix4}
    * @default {@link Matrix4.IDENTITY}
-   *
-   *
    * @example
    * const center = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883);
    * billboards.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(center);
@@ -239,7 +229,6 @@ function BillboardCollection(options) {
    *   image : 'url/to/image',
    *   position : new Cesium.Cartesian3(0.0, 0.0, 1000000.0) // up
    * });
-   *
    * @see Transforms.eastNorthUpToFixedFrame
    */
   this.modelMatrix = Matrix4.clone(
@@ -252,9 +241,7 @@ function BillboardCollection(options) {
    * <p>
    * Draws the bounding sphere for each draw command in the primitive.
    * </p>
-   *
    * @type {boolean}
-   *
    * @default false
    */
   this.debugShowBoundingVolume = defaultValue(
@@ -267,9 +254,7 @@ function BillboardCollection(options) {
    * <p>
    * Draws the texture atlas for this BillboardCollection as a fullscreen quad.
    * </p>
-   *
    * @type {boolean}
-   *
    * @default false
    */
   this.debugShowTextureAtlas = defaultValue(
@@ -385,11 +370,9 @@ Object.defineProperties(BillboardCollection.prototype, {
    *
    * If the texture atlas is used by more than one collection, set this to <code>false</code>,
    * and explicitly destroy the atlas to avoid attempting to destroy it multiple times.
-   *
    * @memberof BillboardCollection.prototype
    * @type {boolean}
    * @private
-   *
    * @example
    * // Set destroyTextureAtlas
    * // Destroy a billboard collection but not its texture atlas.
@@ -425,17 +408,12 @@ function destroyBillboards(billboards) {
 /**
  * Creates and adds a billboard with the specified initial properties to the collection.
  * The added billboard is returned so it can be modified or removed from the collection later.
- *
  * @param {Billboard.ConstructorOptions}[options] A template describing the billboard's properties as shown in Example 1.
  * @returns {Billboard} The billboard that was added to the collection.
- *
  * @performance Calling <code>add</code> is expected constant time.  However, the collection's vertex buffer
  * is rewritten - an <code>O(n)</code> operation that also incurs CPU to GPU overhead.  For
  * best performance, add as many billboards as possible before calling <code>update</code>.
- *
- * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
- *
- *
+ * @throws {DeveloperError} This object was destroyed, i.e., destroy() was called.
  * @example
  * // Example 1:  Add a billboard, specifying all the default values.
  * const b = billboards.add({
@@ -461,13 +439,11 @@ function destroyBillboards(billboards) {
  *   sizeInMeters : false,
  *   distanceDisplayCondition : undefined
  * });
- *
  * @example
  * // Example 2:  Specify only the billboard's cartographic position.
  * const b = billboards.add({
  *   position : Cesium.Cartesian3.fromDegrees(longitude, latitude, height)
  * });
- *
  * @see BillboardCollection#remove
  * @see BillboardCollection#removeAll
  */
@@ -483,23 +459,17 @@ BillboardCollection.prototype.add = function (options) {
 
 /**
  * Removes a billboard from the collection.
- *
  * @param {Billboard} billboard The billboard to remove.
  * @returns {boolean} <code>true</code> if the billboard was removed; <code>false</code> if the billboard was not found in the collection.
- *
  * @performance Calling <code>remove</code> is expected constant time.  However, the collection's vertex buffer
  * is rewritten - an <code>O(n)</code> operation that also incurs CPU to GPU overhead.  For
  * best performance, remove as many billboards as possible before calling <code>update</code>.
  * If you intend to temporarily hide a billboard, it is usually more efficient to call
  * {@link Billboard#show} instead of removing and re-adding the billboard.
- *
- * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
- *
- *
+ * @throws {DeveloperError} This object was destroyed, i.e., destroy() was called.
  * @example
  * const b = billboards.add(...);
  * billboards.remove(b);  // Returns true
- *
  * @see BillboardCollection#add
  * @see BillboardCollection#removeAll
  * @see Billboard#show
@@ -518,18 +488,13 @@ BillboardCollection.prototype.remove = function (billboard) {
 
 /**
  * Removes all billboards from the collection.
- *
  * @performance <code>O(n)</code>.  It is more efficient to remove all the billboards
  * from a collection and then add new ones than to create a new collection entirely.
- *
- * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
- *
- *
+ * @throws {DeveloperError} This object was destroyed, i.e., destroy() was called.
  * @example
  * billboards.add(...);
  * billboards.add(...);
  * billboards.removeAll();
- *
  * @see BillboardCollection#add
  * @see BillboardCollection#remove
  */
@@ -575,10 +540,8 @@ BillboardCollection.prototype._updateBillboard = function (
 
 /**
  * Check whether this collection contains a given billboard.
- *
  * @param {Billboard} [billboard] The billboard to check for.
  * @returns {boolean} true if this collection contains the billboard, false otherwise.
- *
  * @see BillboardCollection#get
  */
 BillboardCollection.prototype.contains = function (billboard) {
@@ -591,17 +554,12 @@ BillboardCollection.prototype.contains = function (billboard) {
  * it to the left, changing their indices.  This function is commonly used with
  * {@link BillboardCollection#length} to iterate over all the billboards
  * in the collection.
- *
  * @param {number} index The zero-based index of the billboard.
  * @returns {Billboard} The billboard at the specified index.
- *
  * @performance Expected constant time.  If billboards were removed from the collection and
  * {@link BillboardCollection#update} was not called, an implicit <code>O(n)</code>
  * operation is performed.
- *
- * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
- *
- *
+ * @throws {DeveloperError} This object was destroyed, i.e., destroy() was called.
  * @example
  * // Toggle the show property of every billboard in the collection
  * const len = billboards.length;
@@ -609,7 +567,6 @@ BillboardCollection.prototype.contains = function (billboard) {
  *   const b = billboards.get(i);
  *   b.show = !b.show;
  * }
- *
  * @see BillboardCollection#length
  */
 BillboardCollection.prototype.get = function (index) {
@@ -1815,8 +1772,8 @@ const scratchWriterArray = [];
  * Do not call this function directly.  This is documented just to
  * list the exceptions that may be propagated when the scene is rendered:
  * </p>
- *
- * @exception {RuntimeError} image with id must be in the atlas.
+ * @param frameState
+ * @throws {RuntimeError} image with id must be in the atlas.
  */
 BillboardCollection.prototype.update = function (frameState) {
   removeBillboards(this);
@@ -2372,9 +2329,7 @@ BillboardCollection.prototype.update = function (frameState) {
  * <br /><br />
  * If this object was destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
- *
  * @returns {boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
- *
  * @see BillboardCollection#destroy
  */
 BillboardCollection.prototype.isDestroyed = function () {
@@ -2388,13 +2343,9 @@ BillboardCollection.prototype.isDestroyed = function () {
  * Once an object is destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
  * assign the return value (<code>undefined</code>) to the object as done in the example.
- *
- * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
- *
- *
+ * @throws {DeveloperError} This object was destroyed, i.e., destroy() was called.
  * @example
  * billboards = billboards && billboards.destroy();
- *
  * @see BillboardCollection#isDestroyed
  */
 BillboardCollection.prototype.destroy = function () {

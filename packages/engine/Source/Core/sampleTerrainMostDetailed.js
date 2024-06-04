@@ -7,15 +7,12 @@ const scratchCartesian2 = new Cartesian2();
 
 /**
  * Initiates a sampleTerrain() request at the maximum available tile level for a terrain dataset.
- *
  * @function sampleTerrainMostDetailed
- *
  * @param {TerrainProvider} terrainProvider The terrain provider from which to query heights.
  * @param {Cartographic[]} positions The positions to update with terrain heights.
  * @param {boolean} [rejectOnTileFail=false] If true, for a failed terrain tile request the promise will be rejected. If false, returned heights will be undefined.
  * @returns {Promise<Cartographic[]>} A promise that resolves to the provided list of positions when terrain the query has completed.  This
  *                                     promise will reject if the terrain provider's `availability` property is undefined.
- *
  * @example
  * // Query the terrain height of two Cartographic positions
  * const terrainProvider = await Cesium.createWorldTerrainAsync();

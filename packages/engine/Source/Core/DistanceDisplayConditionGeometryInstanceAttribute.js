@@ -5,15 +5,11 @@ import DeveloperError from "./DeveloperError.js";
 
 /**
  * Value and type information for per-instance geometry attribute that determines if the geometry instance has a distance display condition.
- *
  * @alias DistanceDisplayConditionGeometryInstanceAttribute
- * @constructor
- *
+ * @class
  * @param {number} [near=0.0] The near distance.
  * @param {number} [far=Number.MAX_VALUE] The far distance.
- *
- * @exception {DeveloperError} far must be greater than near.
- *
+ * @throws {DeveloperError} far must be greater than near.
  * @example
  * const instance = new Cesium.GeometryInstance({
  *   geometry : new Cesium.BoxGeometry({
@@ -28,7 +24,6 @@ import DeveloperError from "./DeveloperError.js";
  *     distanceDisplayCondition : new Cesium.DistanceDisplayConditionGeometryInstanceAttribute(100.0, 10000.0)
  *   }
  * });
- *
  * @see GeometryInstance
  * @see GeometryInstanceAttribute
  */
@@ -46,9 +41,7 @@ function DistanceDisplayConditionGeometryInstanceAttribute(near, far) {
 
   /**
    * The values for the attributes stored in a typed array.
-   *
    * @type {Float32Array}
-   *
    * @default [0.0, 0.0, Number.MAX_VALUE]
    */
   this.value = new Float32Array([near, far]);
@@ -60,12 +53,9 @@ Object.defineProperties(
     /**
      * The datatype of each component in the attribute, e.g., individual elements in
      * {@link DistanceDisplayConditionGeometryInstanceAttribute#value}.
-     *
      * @memberof DistanceDisplayConditionGeometryInstanceAttribute.prototype
-     *
      * @type {ComponentDatatype}
      * @readonly
-     *
      * @default {@link ComponentDatatype.FLOAT}
      */
     componentDatatype: {
@@ -76,12 +66,9 @@ Object.defineProperties(
 
     /**
      * The number of components in the attributes, i.e., {@link DistanceDisplayConditionGeometryInstanceAttribute#value}.
-     *
      * @memberof DistanceDisplayConditionGeometryInstanceAttribute.prototype
-     *
      * @type {number}
      * @readonly
-     *
      * @default 3
      */
     componentsPerAttribute: {
@@ -94,12 +81,9 @@ Object.defineProperties(
      * When <code>true</code> and <code>componentDatatype</code> is an integer format,
      * indicate that the components should be mapped to the range [0, 1] (unsigned)
      * or [-1, 1] (signed) when they are accessed as floating-point for rendering.
-     *
      * @memberof DistanceDisplayConditionGeometryInstanceAttribute.prototype
-     *
      * @type {boolean}
      * @readonly
-     *
      * @default false
      */
     normalize: {
@@ -112,12 +96,9 @@ Object.defineProperties(
 
 /**
  * Creates a new {@link DistanceDisplayConditionGeometryInstanceAttribute} instance given the provided an enabled flag and {@link DistanceDisplayCondition}.
- *
  * @param {DistanceDisplayCondition} distanceDisplayCondition The distance display condition.
  * @returns {DistanceDisplayConditionGeometryInstanceAttribute} The new {@link DistanceDisplayConditionGeometryInstanceAttribute} instance.
- *
- * @exception {DeveloperError} distanceDisplayCondition.far must be greater than distanceDisplayCondition.near
- *
+ * @throws {DeveloperError} distanceDisplayCondition.far must be greater than distanceDisplayCondition.near
  * @example
  * const distanceDisplayCondition = new Cesium.DistanceDisplayCondition(100.0, 10000.0);
  * const instance = new Cesium.GeometryInstance({
@@ -149,11 +130,9 @@ DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition =
 
 /**
  * Converts a distance display condition to a typed array that can be used to assign a distance display condition attribute.
- *
  * @param {DistanceDisplayCondition} distanceDisplayCondition The distance display condition value.
  * @param {Float32Array} [result] The array to store the result in, if undefined a new instance will be created.
  * @returns {Float32Array} The modified result parameter or a new instance if result was undefined.
- *
  * @example
  * const attributes = primitive.getGeometryInstanceAttributes('an id');
  * attributes.distanceDisplayCondition = Cesium.DistanceDisplayConditionGeometryInstanceAttribute.toValue(distanceDisplayCondition, attributes.distanceDisplayCondition);

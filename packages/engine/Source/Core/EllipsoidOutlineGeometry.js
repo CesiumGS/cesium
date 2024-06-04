@@ -19,10 +19,8 @@ const sin = Math.sin;
 
 /**
  * A description of the outline of an ellipsoid centered at the origin.
- *
  * @alias EllipsoidOutlineGeometry
- * @constructor
- *
+ * @class
  * @param {object} [options] Object with the following properties:
  * @param {Cartesian3} [options.radii=Cartesian3(1.0, 1.0, 1.0)] The radii of the ellipsoid in the x, y, and z directions.
  * @param {Cartesian3} [options.innerRadii=options.radii] The inner radii of the ellipsoid in the x, y, and z directions.
@@ -33,11 +31,9 @@ const sin = Math.sin;
  * @param {number} [options.stackPartitions=10] The count of stacks for the ellipsoid (1 greater than the number of parallel lines).
  * @param {number} [options.slicePartitions=8] The count of slices for the ellipsoid (Equal to the number of radial lines).
  * @param {number} [options.subdivisions=128] The number of points per line, determining the granularity of the curvature.
- *
- * @exception {DeveloperError} options.stackPartitions must be greater than or equal to one.
- * @exception {DeveloperError} options.slicePartitions must be greater than or equal to zero.
- * @exception {DeveloperError} options.subdivisions must be greater than or equal to zero.
- *
+ * @throws {DeveloperError} options.stackPartitions must be greater than or equal to one.
+ * @throws {DeveloperError} options.slicePartitions must be greater than or equal to zero.
+ * @throws {DeveloperError} options.subdivisions must be greater than or equal to zero.
  * @example
  * const ellipsoid = new Cesium.EllipsoidOutlineGeometry({
  *   radii : new Cesium.Cartesian3(1000000.0, 500000.0, 500000.0),
@@ -102,11 +98,9 @@ EllipsoidOutlineGeometry.packedLength = 2 * Cartesian3.packedLength + 8;
 
 /**
  * Stores the provided instance into the provided array.
- *
  * @param {EllipsoidOutlineGeometry} value The value to pack.
  * @param {number[]} array The array to pack into.
  * @param {number} [startingIndex=0] The index into the array at which to start packing the elements.
- *
  * @returns {number[]} The array that was packed into
  */
 EllipsoidOutlineGeometry.pack = function (value, array, startingIndex) {
@@ -156,7 +150,6 @@ const scratchOptions = {
 
 /**
  * Retrieves an instance from a packed array.
- *
  * @param {number[]} array The packed array.
  * @param {number} [startingIndex=0] The starting index of the element to be unpacked.
  * @param {EllipsoidOutlineGeometry} [result] The object into which to store the result.
@@ -216,7 +209,6 @@ EllipsoidOutlineGeometry.unpack = function (array, startingIndex, result) {
 
 /**
  * Computes the geometric representation of an outline of an ellipsoid, including its vertices, indices, and a bounding sphere.
- *
  * @param {EllipsoidOutlineGeometry} ellipsoidGeometry A description of the ellipsoid outline.
  * @returns {Geometry|undefined} The computed vertices and indices.
  */

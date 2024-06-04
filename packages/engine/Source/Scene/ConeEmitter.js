@@ -8,10 +8,8 @@ const defaultAngle = CesiumMath.toRadians(30.0);
 /**
  * A ParticleEmitter that emits particles within a cone.
  * Particles will be positioned at the tip of the cone and have initial velocities going towards the base.
- *
  * @alias ConeEmitter
- * @constructor
- *
+ * @class
  * @param {number} [angle=Cesium.Math.toRadians(30.0)] The angle of the cone in radians.
  */
 function ConeEmitter(angle) {
@@ -40,7 +38,6 @@ Object.defineProperties(ConeEmitter.prototype, {
 
 /**
  * Initializes the given {Particle} by setting it's position and velocity.
- *
  * @private
  * @param {Particle} particle The particle to initialize
  */

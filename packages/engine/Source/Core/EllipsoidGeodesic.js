@@ -274,10 +274,8 @@ function computeProperties(ellipsoidGeodesic, start, end, ellipsoid) {
 
 /**
  * Initializes a geodesic on the ellipsoid connecting the two provided planetodetic points.
- *
  * @alias EllipsoidGeodesic
- * @constructor
- *
+ * @class
  * @param {Cartographic} [start] The initial planetodetic point on the path.
  * @param {Cartographic} [end] The final planetodetic point on the path.
  * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the geodesic lies.
@@ -387,7 +385,6 @@ Object.defineProperties(EllipsoidGeodesic.prototype, {
 
 /**
  * Sets the start and end points of the geodesic
- *
  * @param {Cartographic} start The initial planetodetic point on the path.
  * @param {Cartographic} end The final planetodetic point on the path.
  */
@@ -402,7 +399,6 @@ EllipsoidGeodesic.prototype.setEndPoints = function (start, end) {
 
 /**
  * Provides the location of a point at the indicated portion along the geodesic.
- *
  * @param {number} fraction The portion of the distance between the initial and final points.
  * @param {Cartographic} [result] The object in which to store the result.
  * @returns {Cartographic} The location of the point along the geodesic.
@@ -419,12 +415,10 @@ EllipsoidGeodesic.prototype.interpolateUsingFraction = function (
 
 /**
  * Provides the location of a point at the indicated distance along the geodesic.
- *
  * @param {number} distance The distance from the inital point to the point of interest along the geodesic
  * @param {Cartographic} [result] The object in which to store the result.
  * @returns {Cartographic} The location of the point along the geodesic.
- *
- * @exception {DeveloperError} start and end must be set before calling function interpolateUsingSurfaceDistance
+ * @throws {DeveloperError} start and end must be set before calling function interpolateUsingSurfaceDistance
  */
 EllipsoidGeodesic.prototype.interpolateUsingSurfaceDistance = function (
   distance,

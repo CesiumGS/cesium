@@ -12,15 +12,12 @@ import defaultValue from "../Core/defaultValue.js";
 
 /**
  * An ellipsoid {@link VoxelShape}.
- *
  * @alias VoxelEllipsoidShape
- * @constructor
- *
+ * @class
  * @see VoxelShape
  * @see VoxelBoxShape
  * @see VoxelCylinderShape
  * @see VoxelShapeType
- *
  * @private
  */
 function VoxelEllipsoidShape() {
@@ -157,7 +154,6 @@ const scratchRenderRectangle = new Rectangle();
 
 /**
  * Update the shape's state.
- *
  * @param {Matrix4} modelMatrix The model matrix.
  * @param {Cartesian3} minBounds The minimum bounds.
  * @param {Cartesian3} maxBounds The maximum bounds.
@@ -674,7 +670,6 @@ const scratchRectangle = new Rectangle();
 /**
  * Computes an oriented bounding box for a specified tile.
  * The update function must be called before calling this function.
- *
  * @param {number} tileLevel The tile's level.
  * @param {number} tileX The tile's x coordinate.
  * @param {number} tileY The tile's y coordinate.
@@ -744,7 +739,6 @@ const scratchTileMaxBounds = new Cartesian3();
 /**
  * Computes an oriented bounding box for a specified sample within a specified tile.
  * The update function must be called before calling this function.
- *
  * @param {SpatialNode} spatialNode The spatial node containing the sample
  * @param {Cartesian3} tileDimensions The size of the tile in number of samples, before padding
  * @param {Cartesian3} tileUv The sample coordinate within the tile
@@ -824,9 +818,7 @@ VoxelEllipsoidShape.prototype.computeOrientedBoundingBoxForSample = function (
 
 /**
  * Computes an {@link OrientedBoundingBox} for a subregion of the shape.
- *
  * @function
- *
  * @param {Rectangle} rectangle The rectangle.
  * @param {number} minHeight The minimumZ.
  * @param {number} maxHeight The maximumZ.
@@ -835,7 +827,6 @@ VoxelEllipsoidShape.prototype.computeOrientedBoundingBoxForSample = function (
  * @param {Matrix3} rotation The rotation applied to the shape
  * @param {OrientedBoundingBox} result The object onto which to store the result.
  * @returns {OrientedBoundingBox} The oriented bounding box that contains this subregion.
- *
  * @private
  */
 function getEllipsoidChunkObb(
@@ -865,7 +856,6 @@ function getEllipsoidChunkObb(
 
 /**
  * Defines the minimum bounds of the shape. Corresponds to minimum longitude, latitude, height.
- *
  * @type {Cartesian3}
  * @constant
  * @readonly
@@ -880,7 +870,6 @@ VoxelEllipsoidShape.DefaultMinBounds = Object.freeze(
 
 /**
  * Defines the maximum bounds of the shape. Corresponds to maximum longitude, latitude, height.
- *
  * @type {Cartesian3}
  * @constant
  * @readonly

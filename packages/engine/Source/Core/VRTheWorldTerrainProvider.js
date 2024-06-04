@@ -23,17 +23,14 @@ function DataRectangle(rectangle, maxLevel) {
  * @typedef {Object} VRTheWorldTerrainProvider.ConstructorOptions
  *
  * Initialization options for the VRTheWorldTerrainProvider constructor
- *
  * @property {Ellipsoid} [ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
  * @property {Credit|string} [credit] A credit for the data source, which is displayed on the canvas.
  */
 
 /**
  * Used to track creation details while fetching initial metadata
- *
- * @constructor
+ * @class
  * @private
- *
  * @param {VRTheWorldTerrainProvider.ConstructorOptions} options An object describing initialization options
  */
 function TerrainProviderBuilder(options) {
@@ -139,18 +136,14 @@ async function requestMetadata(terrainProviderBuilder, resource, provider) {
  *
  * A {@link TerrainProvider} that produces terrain geometry by tessellating height maps
  * retrieved from a {@link http://vr-theworld.com/|VT MÄK VR-TheWorld server}.
- *
  * @alias VRTheWorldTerrainProvider
- * @constructor
- *
+ * @class
  * @param {VRTheWorldTerrainProvider.ConstructorOptions} [options] An object describing initialization options.
- *
  * @example
  * const terrainProvider = await Cesium.VRTheWorldTerrainProvider.fromUrl(
  *   "https://www.vr-theworld.com/vr-theworld/tiles1.0.0/73/"
  * );
  * viewer.terrainProvider = terrainProvider;
- *
  * @see TerrainProvider
  */
 function VRTheWorldTerrainProvider(options) {
@@ -262,18 +255,15 @@ Object.defineProperties(VRTheWorldTerrainProvider.prototype, {
 /**
  * Creates a {@link TerrainProvider} that produces terrain geometry by tessellating height maps
  * retrieved from a {@link http://vr-theworld.com/|VT MÄK VR-TheWorld server}.
- *
  * @param {Resource|String} url The URL of the VR-TheWorld TileMap.
  * @param {VRTheWorldTerrainProvider.ConstructorOptions} [options] An object describing initialization options.
  * @returns {Promise<VRTheWorldTerrainProvider>}
- *
  * @example
  * const terrainProvider = await Cesium.VRTheWorldTerrainProvider.fromUrl(
  *   "https://www.vr-theworld.com/vr-theworld/tiles1.0.0/73/"
  * );
  * viewer.terrainProvider = terrainProvider;
- *
- * @exception {RuntimeError} metadata specifies and unknown SRS
+ * @throws {RuntimeError} metadata specifies and unknown SRS
  */
 VRTheWorldTerrainProvider.fromUrl = async function (url, options) {
   //>>includeStart('debug', pragmas.debug);
@@ -297,7 +287,6 @@ VRTheWorldTerrainProvider.fromUrl = async function (url, options) {
 /**
  * Requests the geometry for a given tile. The result includes terrain
  * data and indicates that all child tiles are available.
- *
  * @param {number} x The X coordinate of the tile for which to request geometry.
  * @param {number} y The Y coordinate of the tile for which to request geometry.
  * @param {number} level The level of the tile for which to request geometry.
@@ -341,7 +330,6 @@ VRTheWorldTerrainProvider.prototype.requestTileGeometry = function (
 
 /**
  * Gets the maximum geometric error allowed in a tile at a given level.
- *
  * @param {number} level The tile level for which to get the maximum geometric error.
  * @returns {number} The maximum geometric error.
  */
@@ -428,7 +416,6 @@ function isTileInRectangle(tilingScheme, rectangle, x, y, level) {
 
 /**
  * Determines whether data for a tile is available to be loaded.
- *
  * @param {number} x The X coordinate of the tile for which to request geometry.
  * @param {number} y The Y coordinate of the tile for which to request geometry.
  * @param {number} level The level of the tile for which to request geometry.
@@ -444,7 +431,6 @@ VRTheWorldTerrainProvider.prototype.getTileDataAvailable = function (
 
 /**
  * Makes sure we load availability data for a tile
- *
  * @param {number} x The X coordinate of the tile for which to request geometry.
  * @param {number} y The Y coordinate of the tile for which to request geometry.
  * @param {number} level The level of the tile for which to request geometry.

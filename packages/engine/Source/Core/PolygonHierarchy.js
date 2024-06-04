@@ -4,8 +4,7 @@ import defined from "./defined.js";
  * An hierarchy of linear rings which define a polygon and its holes.
  * The holes themselves may also have holes which nest inner polygons.
  * @alias PolygonHierarchy
- * @constructor
- *
+ * @class
  * @param {Cartesian3[]} [positions] A linear ring defining the outer boundary of the polygon or hole.
  * @param {PolygonHierarchy[]} [holes] An array of polygon hierarchies defining holes in the polygon.
  */

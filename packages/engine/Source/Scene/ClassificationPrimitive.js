@@ -45,10 +45,8 @@ import StencilOperation from "./StencilOperation.js";
  * Geometries that follow the surface of the ellipsoid, such as {@link CircleGeometry}, {@link CorridorGeometry}, {@link EllipseGeometry}, {@link PolygonGeometry}, and {@link RectangleGeometry},
  * are also valid if they are extruded volumes; otherwise, they will not be rendered.
  * </p>
- *
  * @alias ClassificationPrimitive
- * @constructor
- *
+ * @class
  * @param {object} [options] Object with the following properties:
  * @param {Array|GeometryInstance} [options.geometryInstances] The geometry instances to render. This can either be a single instance or an array of length one.
  * @param {Appearance} [options.appearance] The appearance used to render the primitive. Defaults to PerInstanceColorAppearance when GeometryInstances have a color attribute.
@@ -63,7 +61,6 @@ import StencilOperation from "./StencilOperation.js";
  * @param {boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if this primitive's commands' bounding spheres are shown.
  * @param {boolean} [options.debugShowShadowVolume=false] For debugging only. Determines if the shadow volume for each geometry in the primitive is drawn. Must be <code>true</code> on
  *                  creation for the volumes to be created before the geometry is released or options.releaseGeometryInstance must be <code>false</code>.
- *
  * @see Primitive
  * @see GroundPrimitive
  * @see GeometryInstance
@@ -85,27 +82,21 @@ function ClassificationPrimitive(options) {
    * If there is an instance with a differing color, a <code>DeveloperError</code> will be thrown
    * on the first attempt to render.
    * </p>
-   *
    * @readonly
    * @type {Array|GeometryInstance}
-   *
    * @default undefined
    */
   this.geometryInstances = geometryInstances;
   /**
    * Determines if the primitive will be shown.  This affects all geometry
    * instances in the primitive.
-   *
    * @type {boolean}
-   *
    * @default true
    */
   this.show = defaultValue(options.show, true);
   /**
    * Determines whether terrain, 3D Tiles or both will be classified.
-   *
    * @type {ClassificationType}
-   *
    * @default ClassificationType.BOTH
    */
   this.classificationType = defaultValue(
@@ -117,9 +108,7 @@ function ClassificationPrimitive(options) {
    * <p>
    * Draws the bounding sphere for each draw command in the primitive.
    * </p>
-   *
    * @type {boolean}
-   *
    * @default false
    */
   this.debugShowBoundingVolume = defaultValue(
@@ -131,9 +120,7 @@ function ClassificationPrimitive(options) {
    * <p>
    * Draws the shadow volume for each geometry in the primitive.
    * </p>
-   *
    * @type {boolean}
-   *
    * @default false
    */
   this.debugShowShadowVolume = defaultValue(
@@ -202,12 +189,9 @@ function ClassificationPrimitive(options) {
 Object.defineProperties(ClassificationPrimitive.prototype, {
   /**
    * When <code>true</code>, geometry vertices are optimized for the pre and post-vertex-shader caches.
-   *
    * @memberof ClassificationPrimitive.prototype
-   *
    * @type {boolean}
    * @readonly
-   *
    * @default true
    */
   vertexCacheOptimize: {
@@ -218,12 +202,9 @@ Object.defineProperties(ClassificationPrimitive.prototype, {
 
   /**
    * Determines if geometry vertex attributes are interleaved, which can slightly improve rendering performance.
-   *
    * @memberof ClassificationPrimitive.prototype
-   *
    * @type {boolean}
    * @readonly
-   *
    * @default false
    */
   interleave: {
@@ -234,12 +215,9 @@ Object.defineProperties(ClassificationPrimitive.prototype, {
 
   /**
    * When <code>true</code>, the primitive does not keep a reference to the input <code>geometryInstances</code> to save memory.
-   *
    * @memberof ClassificationPrimitive.prototype
-   *
    * @type {boolean}
    * @readonly
-   *
    * @default true
    */
   releaseGeometryInstances: {
@@ -250,12 +228,9 @@ Object.defineProperties(ClassificationPrimitive.prototype, {
 
   /**
    * When <code>true</code>, each geometry instance will only be pickable with {@link Scene#pick}.  When <code>false</code>, GPU memory is saved.
-   *
    * @memberof ClassificationPrimitive.prototype
-   *
    * @type {boolean}
    * @readonly
-   *
    * @default true
    */
   allowPicking: {
@@ -266,12 +241,9 @@ Object.defineProperties(ClassificationPrimitive.prototype, {
 
   /**
    * Determines if the geometry instances will be created and batched on a web worker.
-   *
    * @memberof ClassificationPrimitive.prototype
-   *
    * @type {boolean}
    * @readonly
-   *
    * @default true
    */
   asynchronous: {
@@ -282,12 +254,9 @@ Object.defineProperties(ClassificationPrimitive.prototype, {
 
   /**
    * When <code>true</code>, geometry vertices are compressed, which will save memory.
-   *
    * @memberof ClassificationPrimitive.prototype
-   *
    * @type {boolean}
    * @readonly
-   *
    * @default true
    */
   compressVertices: {
@@ -300,9 +269,7 @@ Object.defineProperties(ClassificationPrimitive.prototype, {
    * Determines if the primitive is complete and ready to render.  If this property is
    * true, the primitive will be rendered the next time that {@link ClassificationPrimitive#update}
    * is called.
-   *
    * @memberof ClassificationPrimitive.prototype
-   *
    * @type {boolean}
    * @readonly
    */
@@ -332,7 +299,6 @@ Object.defineProperties(ClassificationPrimitive.prototype, {
 
 /**
  * Determines if ClassificationPrimitive rendering is supported.
- *
  * @param {Scene} scene The scene.
  * @returns {boolean} <code>true</code> if ClassificationPrimitives are supported; otherwise, returns <code>false</code>
  */
@@ -1042,10 +1008,10 @@ function updateAndQueueCommands(
  * Do not call this function directly.  This is documented just to
  * list the exceptions that may be propagated when the scene is rendered:
  * </p>
- *
- * @exception {DeveloperError} All instance geometries must have the same primitiveType.
- * @exception {DeveloperError} Appearance and material have a uniform with the same name.
- * @exception {DeveloperError} Not all of the geometry instances have the same color attribute.
+ * @param frameState
+ * @throws {DeveloperError} All instance geometries must have the same primitiveType.
+ * @throws {DeveloperError} Appearance and material have a uniform with the same name.
+ * @throws {DeveloperError} Not all of the geometry instances have the same color attribute.
  */
 ClassificationPrimitive.prototype.update = function (frameState) {
   if (!defined(this._primitive) && !defined(this.geometryInstances)) {
@@ -1328,12 +1294,9 @@ ClassificationPrimitive.prototype.update = function (frameState) {
 
 /**
  * Returns the modifiable per-instance attributes for a {@link GeometryInstance}.
- *
  * @param {*} id The id of the {@link GeometryInstance}.
  * @returns {object} The typed array in the attribute's format or undefined if the is no instance with id.
- *
- * @exception {DeveloperError} must call update before calling getGeometryInstanceAttributes.
- *
+ * @throws {DeveloperError} must call update before calling getGeometryInstanceAttributes.
  * @example
  * const attributes = primitive.getGeometryInstanceAttributes('an id');
  * attributes.color = Cesium.ColorGeometryInstanceAttribute.toValue(Cesium.Color.AQUA);
@@ -1358,9 +1321,7 @@ ClassificationPrimitive.prototype.getGeometryInstanceAttributes = function (
  * If this object was destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
  * </p>
- *
  * @returns {boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
- *
  * @see ClassificationPrimitive#destroy
  */
 ClassificationPrimitive.prototype.isDestroyed = function () {
@@ -1375,12 +1336,9 @@ ClassificationPrimitive.prototype.isDestroyed = function () {
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
  * assign the return value (<code>undefined</code>) to the object as done in the example.
  * </p>
- *
- * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
- *
+ * @throws {DeveloperError} This object was destroyed, i.e., destroy() was called.
  * @example
  * e = e && e.destroy();
- *
  * @see ClassificationPrimitive#isDestroyed
  */
 ClassificationPrimitive.prototype.destroy = function () {

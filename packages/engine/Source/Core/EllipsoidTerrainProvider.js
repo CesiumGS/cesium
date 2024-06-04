@@ -9,10 +9,8 @@ import TerrainProvider from "./TerrainProvider.js";
 /**
  * A very simple {@link TerrainProvider} that produces geometry by tessellating an ellipsoidal
  * surface.
- *
  * @alias EllipsoidTerrainProvider
- * @constructor
- *
+ * @class
  * @param {object} [options] Object with the following properties:
  * @param {TilingScheme} [options.tilingScheme] The tiling scheme specifying how the ellipsoidal
  * surface is broken into tiles.  If this parameter is not provided, a {@link GeographicTilingScheme}
@@ -20,7 +18,6 @@ import TerrainProvider from "./TerrainProvider.js";
  * @param {Ellipsoid} [options.ellipsoid] The ellipsoid.  If the tilingScheme is specified,
  * this parameter is ignored and the tiling scheme's ellipsoid is used instead. If neither
  * parameter is specified, the WGS84 ellipsoid is used.
- *
  * @see TerrainProvider
  */
 function EllipsoidTerrainProvider(options) {
@@ -127,12 +124,10 @@ Object.defineProperties(EllipsoidTerrainProvider.prototype, {
 /**
  * Requests the geometry for a given tile. The result includes terrain
  * data and indicates that all child tiles are available.
- *
  * @param {number} x The X coordinate of the tile for which to request geometry.
  * @param {number} y The Y coordinate of the tile for which to request geometry.
  * @param {number} level The level of the tile for which to request geometry.
  * @param {Request} [request] The request object. Intended for internal use only.
- *
  * @returns {Promise<TerrainData>|undefined} A promise for the requested geometry.  If this method
  *          returns undefined instead of a promise, it is an indication that too many requests are already
  *          pending and the request will be retried later.
@@ -156,7 +151,6 @@ EllipsoidTerrainProvider.prototype.requestTileGeometry = function (
 
 /**
  * Gets the maximum geometric error allowed in a tile at a given level.
- *
  * @param {number} level The tile level for which to get the maximum geometric error.
  * @returns {number} The maximum geometric error.
  */
@@ -168,7 +162,6 @@ EllipsoidTerrainProvider.prototype.getLevelMaximumGeometricError = function (
 
 /**
  * Determines whether data for a tile is available to be loaded.
- *
  * @param {number} x The X coordinate of the tile for which to request geometry.
  * @param {number} y The Y coordinate of the tile for which to request geometry.
  * @param {number} level The level of the tile for which to request geometry.
@@ -184,7 +177,6 @@ EllipsoidTerrainProvider.prototype.getTileDataAvailable = function (
 
 /**
  * Makes sure we load availability data for a tile
- *
  * @param {number} x The X coordinate of the tile for which to request geometry.
  * @param {number} y The Y coordinate of the tile for which to request geometry.
  * @param {number} level The level of the tile for which to request geometry.

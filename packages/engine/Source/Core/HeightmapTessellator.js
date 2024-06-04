@@ -17,16 +17,13 @@ import WebMercatorProjection from "./WebMercatorProjection.js";
 
 /**
  * Contains functions to create a mesh from a heightmap image.
- *
  * @namespace HeightmapTessellator
- *
  * @private
  */
 const HeightmapTessellator = {};
 
 /**
  * The default structure of a heightmap, as given to {@link HeightmapTessellator.computeVertices}.
- *
  * @constant
  */
 HeightmapTessellator.DEFAULT_STRUCTURE = Object.freeze({
@@ -45,7 +42,6 @@ const maximumScratch = new Cartesian3();
 
 /**
  * Fills an array of vertices from a heightmap image.
- *
  * @param {object} options Object with the following properties:
  * @param {Int8Array|Uint8Array|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array|Float64Array} options.heightmap The heightmap to tessellate.
  * @param {number} options.width The width of the heightmap, in height samples.
@@ -93,7 +89,6 @@ const maximumScratch = new Cartesian3();
  * @param {boolean} [options.structure.isBigEndian=false] Indicates endianness of the elements in the buffer when the
  *                  stride property is greater than 1.  If this property is false, the first element is the
  *                  low-order element.  If it is true, the first element is the high-order element.
- *
  * @example
  * const width = 5;
  * const height = 5;

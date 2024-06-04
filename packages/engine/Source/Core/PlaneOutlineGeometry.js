@@ -10,10 +10,8 @@ import PrimitiveType from "./PrimitiveType.js";
 
 /**
  * Describes geometry representing the outline of a plane centered at the origin, with a unit width and length.
- *
  * @alias PlaneOutlineGeometry
- * @constructor
- *
+ * @class
  */
 function PlaneOutlineGeometry() {
   this._workerName = "createPlaneOutlineGeometry";
@@ -27,10 +25,8 @@ PlaneOutlineGeometry.packedLength = 0;
 
 /**
  * Stores the provided instance into the provided array.
- *
  * @param {PlaneOutlineGeometry} value The value to pack.
  * @param {number[]} array The array to pack into.
- *
  * @returns {number[]} The array that was packed into
  */
 PlaneOutlineGeometry.pack = function (value, array) {
@@ -44,7 +40,6 @@ PlaneOutlineGeometry.pack = function (value, array) {
 
 /**
  * Retrieves an instance from a packed array.
- *
  * @param {number[]} array The packed array.
  * @param {number} [startingIndex=0] The starting index of the element to be unpacked.
  * @param {PlaneOutlineGeometry} [result] The object into which to store the result.
@@ -67,7 +62,6 @@ const max = new Cartesian3(0.5, 0.5, 0.0);
 
 /**
  * Computes the geometric representation of an outline of a plane, including its vertices, indices, and a bounding sphere.
- *
  * @returns {Geometry|undefined} The computed vertices and indices.
  */
 PlaneOutlineGeometry.createGeometry = function () {

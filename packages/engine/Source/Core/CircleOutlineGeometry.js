@@ -7,10 +7,8 @@ import Ellipsoid from "./Ellipsoid.js";
 
 /**
  * A description of the outline of a circle on the ellipsoid.
- *
  * @alias CircleOutlineGeometry
- * @constructor
- *
+ * @class
  * @param {object} options Object with the following properties:
  * @param {Cartesian3} options.center The circle's center point in the fixed frame.
  * @param {number} options.radius The radius in meters.
@@ -19,13 +17,10 @@ import Ellipsoid from "./Ellipsoid.js";
  * @param {number} [options.granularity=0.02] The angular distance between points on the circle in radians.
  * @param {number} [options.extrudedHeight=0.0] The distance in meters between the circle's extruded face and the ellipsoid surface.
  * @param {number} [options.numberOfVerticalLines=16] Number of lines to draw between the top and bottom of an extruded circle.
- *
- * @exception {DeveloperError} radius must be greater than zero.
- * @exception {DeveloperError} granularity must be greater than zero.
- *
+ * @throws {DeveloperError} radius must be greater than zero.
+ * @throws {DeveloperError} granularity must be greater than zero.
  * @see CircleOutlineGeometry.createGeometry
  * @see Packable
- *
  * @example
  * // Create a circle.
  * const circle = new Cesium.CircleOutlineGeometry({
@@ -64,11 +59,9 @@ CircleOutlineGeometry.packedLength = EllipseOutlineGeometry.packedLength;
 
 /**
  * Stores the provided instance into the provided array.
- *
  * @param {CircleOutlineGeometry} value The value to pack.
  * @param {number[]} array The array to pack into.
  * @param {number} [startingIndex=0] The index into the array at which to start packing the elements.
- *
  * @returns {number[]} The array that was packed into
  */
 CircleOutlineGeometry.pack = function (value, array, startingIndex) {
@@ -101,7 +94,6 @@ const scratchOptions = {
 
 /**
  * Retrieves an instance from a packed array.
- *
  * @param {number[]} array The packed array.
  * @param {number} [startingIndex=0] The starting index of the element to be unpacked.
  * @param {CircleOutlineGeometry} [result] The object into which to store the result.
@@ -139,7 +131,6 @@ CircleOutlineGeometry.unpack = function (array, startingIndex, result) {
 
 /**
  * Computes the geometric representation of an outline of a circle on an ellipsoid, including its vertices, indices, and a bounding sphere.
- *
  * @param {CircleOutlineGeometry} circleGeometry A description of the circle.
  * @returns {Geometry|undefined} The computed vertices and indices.
  */

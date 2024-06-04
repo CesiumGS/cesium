@@ -32,22 +32,19 @@ function attachRenderbuffer(framebuffer, attachment, renderbuffer) {
  * Creates a framebuffer with optional initial color, depth, and stencil attachments.
  * Framebuffers are used for render-to-texture effects; they allow us to render to
  * textures in one pass, and read from it in a later pass.
- *
  * @param {object} options The initial framebuffer attachments as shown in the example below. <code>context</code> is required. The possible properties are <code>colorTextures</code>, <code>colorRenderbuffers</code>, <code>depthTexture</code>, <code>depthRenderbuffer</code>, <code>stencilRenderbuffer</code>, <code>depthStencilTexture</code>, <code>depthStencilRenderbuffer</code>, and <code>destroyAttachments</code>.
- *
- * @exception {DeveloperError} Cannot have both color texture and color renderbuffer attachments.
- * @exception {DeveloperError} Cannot have both a depth texture and depth renderbuffer attachment.
- * @exception {DeveloperError} Cannot have both a depth-stencil texture and depth-stencil renderbuffer attachment.
- * @exception {DeveloperError} Cannot have both a depth and depth-stencil renderbuffer.
- * @exception {DeveloperError} Cannot have both a stencil and depth-stencil renderbuffer.
- * @exception {DeveloperError} Cannot have both a depth and stencil renderbuffer.
- * @exception {DeveloperError} The color-texture pixel-format must be a color format.
- * @exception {DeveloperError} The depth-texture pixel-format must be DEPTH_COMPONENT.
- * @exception {DeveloperError} The depth-stencil-texture pixel-format must be DEPTH_STENCIL.
- * @exception {DeveloperError} The number of color attachments exceeds the number supported.
- * @exception {DeveloperError} The color-texture pixel datatype is HALF_FLOAT and the WebGL implementation does not support the EXT_color_buffer_half_float extension.
- * @exception {DeveloperError} The color-texture pixel datatype is FLOAT and the WebGL implementation does not support the EXT_color_buffer_float or WEBGL_color_buffer_float extensions.
- *
+ * @throws {DeveloperError} Cannot have both color texture and color renderbuffer attachments.
+ * @throws {DeveloperError} Cannot have both a depth texture and depth renderbuffer attachment.
+ * @throws {DeveloperError} Cannot have both a depth-stencil texture and depth-stencil renderbuffer attachment.
+ * @throws {DeveloperError} Cannot have both a depth and depth-stencil renderbuffer.
+ * @throws {DeveloperError} Cannot have both a stencil and depth-stencil renderbuffer.
+ * @throws {DeveloperError} Cannot have both a depth and stencil renderbuffer.
+ * @throws {DeveloperError} The color-texture pixel-format must be a color format.
+ * @throws {DeveloperError} The depth-texture pixel-format must be DEPTH_COMPONENT.
+ * @throws {DeveloperError} The depth-stencil-texture pixel-format must be DEPTH_STENCIL.
+ * @throws {DeveloperError} The number of color attachments exceeds the number supported.
+ * @throws {DeveloperError} The color-texture pixel datatype is HALF_FLOAT and the WebGL implementation does not support the EXT_color_buffer_half_float extension.
+ * @throws {DeveloperError} The color-texture pixel datatype is FLOAT and the WebGL implementation does not support the EXT_color_buffer_float or WEBGL_color_buffer_float extensions.
  * @example
  * // Create a framebuffer with color and depth texture attachments.
  * const width = context.canvas.clientWidth;
@@ -68,9 +65,8 @@ function attachRenderbuffer(framebuffer, attachment, renderbuffer) {
  *     pixelDatatype : PixelDatatype.UNSIGNED_SHORT
  *   })
  * });
- *
  * @private
- * @constructor
+ * @class
  */
 function Framebuffer(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -100,10 +96,8 @@ function Framebuffer(options) {
    * When true, the framebuffer owns its attachments so they will be destroyed when
    * {@link Framebuffer#destroy} is called or when a new attachment is assigned
    * to an attachment point.
-   *
    * @type {boolean}
    * @default true
-   *
    * @see Framebuffer#destroy
    */
   this.destroyAttachments = defaultValue(options.destroyAttachments, true);

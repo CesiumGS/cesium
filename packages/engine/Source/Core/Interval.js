@@ -3,8 +3,7 @@ import defaultValue from "./defaultValue.js";
 /**
  * Represents the closed interval [start, stop].
  * @alias Interval
- * @constructor
- *
+ * @class
  * @param {number} [start=0.0] The beginning of the interval.
  * @param {number} [stop=0.0] The end of the interval.
  */

@@ -19,10 +19,8 @@ const scratchCartesian3Position2 = new Cartesian3();
 /**
  * A description of a wall outline. A wall is defined by a series of points,
  * which extrude down to the ground. Optionally, they can extrude downwards to a specified height.
- *
  * @alias WallOutlineGeometry
- * @constructor
- *
+ * @class
  * @param {object} options Object with the following properties:
  * @param {Cartesian3[]} options.positions An array of Cartesian objects, which are the points of the wall.
  * @param {number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
@@ -31,14 +29,11 @@ const scratchCartesian3Position2 = new Cartesian3();
  * @param {number[]} [options.minimumHeights] An array parallel to <code>positions</code> that give the minimum height of the
  *        wall at <code>positions</code>. If undefined, the height at each position is 0.0.
  * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid for coordinate manipulation
- *
- * @exception {DeveloperError} positions length must be greater than or equal to 2.
- * @exception {DeveloperError} positions and maximumHeights must have the same length.
- * @exception {DeveloperError} positions and minimumHeights must have the same length.
- *
+ * @throws {DeveloperError} positions length must be greater than or equal to 2.
+ * @throws {DeveloperError} positions and maximumHeights must have the same length.
+ * @throws {DeveloperError} positions and minimumHeights must have the same length.
  * @see WallGeometry#createGeometry
  * @see WallGeometry#fromConstantHeight
- *
  * @example
  * // create a wall outline that spans from ground level to 10000 meters
  * const wall = new Cesium.WallOutlineGeometry({
@@ -111,11 +106,9 @@ function WallOutlineGeometry(options) {
 
 /**
  * Stores the provided instance into the provided array.
- *
  * @param {WallOutlineGeometry} value The value to pack.
  * @param {number[]} array The array to pack into.
  * @param {number} [startingIndex=0] The index into the array at which to start packing the elements.
- *
  * @returns {number[]} The array that was packed into
  */
 WallOutlineGeometry.pack = function (value, array, startingIndex) {
@@ -179,7 +172,6 @@ const scratchOptions = {
 
 /**
  * Retrieves an instance from a packed array.
- *
  * @param {number[]} array The packed array.
  * @param {number} [startingIndex=0] The starting index of the element to be unpacked.
  * @param {WallOutlineGeometry} [result] The object into which to store the result.
@@ -248,7 +240,6 @@ WallOutlineGeometry.unpack = function (array, startingIndex, result) {
 /**
  * A description of a walloutline. A wall is defined by a series of points,
  * which extrude down to the ground. Optionally, they can extrude downwards to a specified height.
- *
  * @param {object} options Object with the following properties:
  * @param {Cartesian3[]} options.positions An array of Cartesian objects, which are the points of the wall.
  * @param {number} [options.maximumHeight] A constant that defines the maximum height of the
@@ -257,8 +248,6 @@ WallOutlineGeometry.unpack = function (array, startingIndex, result) {
  *        wall at <code>positions</code>. If undefined, the height at each position is 0.0.
  * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid for coordinate manipulation
  * @returns {WallOutlineGeometry}
- *
- *
  * @example
  * // create a wall that spans from 10000 meters to 20000 meters
  * const wall = Cesium.WallOutlineGeometry.fromConstantHeights({
@@ -273,7 +262,6 @@ WallOutlineGeometry.unpack = function (array, startingIndex, result) {
  *   maximumHeight : 10000.0
  * });
  * const geometry = Cesium.WallOutlineGeometry.createGeometry(wall);
- *
  * @see WallOutlineGeometry#createGeometry
  */
 WallOutlineGeometry.fromConstantHeights = function (options) {
@@ -321,7 +309,6 @@ WallOutlineGeometry.fromConstantHeights = function (options) {
 
 /**
  * Computes the geometric representation of a wall outline, including its vertices, indices, and a bounding sphere.
- *
  * @param {WallOutlineGeometry} wallGeometry A description of the wall outline.
  * @returns {Geometry|undefined} The computed vertices and indices.
  */

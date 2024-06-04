@@ -6,12 +6,9 @@ import SceneMode from "./SceneMode.js";
 /**
  * Computes the final camera location to view a rectangle adjusted for the current terrain.
  * If the terrain does not support availability, the height above the ellipsoid is used.
- *
  * @param {Rectangle} rectangle The rectangle being zoomed to.
  * @param {Scene} scene The scene being used.
- *
  * @returns {Promise<Cartographic>} The optimal location to place the camera so that the entire rectangle is in view.
- *
  * @private
  */
 async function computeFlyToLocationForRectangle(rectangle, scene) {

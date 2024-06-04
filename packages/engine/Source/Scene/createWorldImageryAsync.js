@@ -4,15 +4,11 @@ import IonWorldImageryStyle from "./IonWorldImageryStyle.js";
 
 /**
  * Creates an {@link IonImageryProvider} instance for ion's default global base imagery layer, currently Bing Maps.
- *
  * @function
- *
  * @param {Object} [options] Object with the following properties:
  * @param {IonWorldImageryStyle} [options.style=IonWorldImageryStyle] The style of base imagery, only AERIAL, AERIAL_WITH_LABELS, and ROAD are currently supported.
  * @returns {Promise<IonImageryProvider>}
- *
  * @see Ion
- *
  * @example
  * // Create a Cesium World Imagery base layer with default settings
  * try {
@@ -20,7 +16,6 @@ import IonWorldImageryStyle from "./IonWorldImageryStyle.js";
  * } catch (error) {
  *   console.log(`There was an error creating world imagery: ${error}`);
  * }
- *
  * @example
  * // Create Cesium World Imagery with different style
  * try {

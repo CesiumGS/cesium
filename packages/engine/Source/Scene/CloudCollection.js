@@ -74,8 +74,7 @@ const COLOR_INDEX = CumulusCloud.COLOR_INDEX;
  * Clouds are added and removed from the collection using {@link CloudCollection#add}
  * and {@link CloudCollection#remove}.
  * @alias CloudCollection
- * @constructor
- *
+ * @class
  * @param {object} [options] Object with the following properties:
  * @param {boolean} [options.show=true] Whether to display the clouds.
  * @param {number} [options.noiseDetail=16.0] Desired amount of detail in the noise texture.
@@ -85,10 +84,8 @@ const COLOR_INDEX = CumulusCloud.COLOR_INDEX;
  * @see CloudCollection#add
  * @see CloudCollection#remove
  * @see CumulusCloud
- *
  * @demo {@link https://sandcastle.cesium.com/index.html?src=Clouds.html|Cesium Sandcastle Clouds Demo}
  * @demo {@link https://sandcastle.cesium.com/index.html?src=Cloud%20Parameters.html|Cesium Sandcastle Cloud Parameters Demo}
- *
  * @example
  * // Create a cloud collection with two cumulus clouds
  * const clouds = scene.primitives.add(new Cesium.CloudCollection());
@@ -101,7 +98,6 @@ const COLOR_INDEX = CumulusCloud.COLOR_INDEX;
  *   maximumSize: new Cesium.Cartesian3(15.0, 9.0, 9.0),
  *   slice: 0.5
  * });
- *
  */
 function CloudCollection(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -129,18 +125,16 @@ function CloudCollection(options) {
    * <div align='center'>
    * <table border='0' cellpadding='5'><tr>
    * <td align='center'>
-   *   <code>clouds.noiseDetail = 8.0;</code><br/>
-   *   <img src='Images/CloudCollection.noiseDetail8.png' width='250' height='158' />
+   * <code>clouds.noiseDetail = 8.0;</code><br/>
+   * <img src='Images/CloudCollection.noiseDetail8.png' width='250' height='158' />
    * </td>
    * <td align='center'>
-   *   <code>clouds.noiseDetail = 32.0;</code><br/>
-   *   <img src='Images/CloudCollection.noiseDetail32.png' width='250' height='158' />
+   * <code>clouds.noiseDetail = 32.0;</code><br/>
+   * <img src='Images/CloudCollection.noiseDetail32.png' width='250' height='158' />
    * </td>
    * </tr></table>
    * </div>
-   *
    * @type {number}
-   *
    * @default 16.0
    */
   this.noiseDetail = defaultValue(options.noiseDetail, 16.0);
@@ -164,7 +158,6 @@ function CloudCollection(options) {
    * </tr></table>
    * </div>
    * @type {Cartesian3}
-   *
    * @default Cartesian3.ZERO
    */
   this.noiseOffset = Cartesian3.clone(
@@ -194,7 +187,6 @@ function CloudCollection(options) {
 
   /**
    * Determines if billboards in this collection will be shown.
-   *
    * @type {boolean}
    * @default true
    */
@@ -207,9 +199,7 @@ function CloudCollection(options) {
    * <p>
    * Renders the billboards with one opaque color for the sake of debugging.
    * </p>
-   *
    * @type {boolean}
-   *
    * @default false
    */
   this.debugBillboards = defaultValue(options.debugBillboards, false);
@@ -221,9 +211,7 @@ function CloudCollection(options) {
    * Draws the clouds as opaque, monochrome ellipsoids for the sake of debugging.
    * If <code>debugBillboards</code> is also true, then the ellipsoids will draw on top of the billboards.
    * </p>
-   *
    * @type {boolean}
-   *
    * @default false
    */
   this.debugEllipsoids = defaultValue(options.debugEllipsoids, false);
@@ -266,17 +254,12 @@ function destroyClouds(clouds) {
 /**
  * Creates and adds a cloud with the specified initial properties to the collection.
  * The added cloud is returned so it can be modified or removed from the collection later.
- *
  * @param {object}[options] A template describing the cloud's properties as shown in Example 1.
  * @returns {CumulusCloud} The cloud that was added to the collection.
- *
  * @performance Calling <code>add</code> is expected constant time.  However, the collection's vertex buffer
  * is rewritten - an <code>O(n)</code> operation that also incurs CPU to GPU overhead.  For
  * best performance, add as many clouds as possible before calling <code>update</code>.
- *
- * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
- *
- *
+ * @throws {DeveloperError} This object was destroyed, i.e., destroy() was called.
  * @example
  * // Example 1:  Add a cumulus cloud, specifying all the default values.
  * const c = clouds.add({
@@ -287,13 +270,11 @@ function destroyClouds(clouds) {
  *   slice: -1.0,
  *   cloudType : CloudType.CUMULUS
  * });
- *
  * @example
  * // Example 2:  Specify only the cloud's cartographic position.
  * const c = clouds.add({
  *   position : Cesium.Cartesian3.fromDegrees(longitude, latitude, height)
  * });
- *
  * @see CloudCollection#remove
  * @see CloudCollection#removeAll
  */
@@ -319,17 +300,12 @@ CloudCollection.prototype.add = function (options) {
 
 /**
  * Removes a cloud from the collection.
- *
  * @param {CumulusCloud} cloud The cloud to remove.
  * @returns {boolean} <code>true</code> if the cloud was removed; <code>false</code> if the cloud was not found in the collection.
- *
- * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
- *
- *
+ * @throws {DeveloperError} This object was destroyed, i.e., destroy() was called.
  * @example
  * const c = clouds.add(...);
  * clouds.remove(c);  // Returns true
- *
  * @see CloudCollection#add
  * @see CloudCollection#removeAll
  * @see CumulusCloud#show
@@ -348,17 +324,13 @@ CloudCollection.prototype.remove = function (cloud) {
 
 /**
  * Removes all clouds from the collection.
- *
  * @performance <code>O(n)</code>.  It is more efficient to remove all the clouds
  * from a collection and then add new ones than to create a new collection entirely.
- *
- * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
- *
+ * @throws {DeveloperError} This object was destroyed, i.e., destroy() was called.
  * @example
  * clouds.add(...);
  * clouds.add(...);
  * clouds.removeAll();
- *
  * @see CloudCollection#add
  * @see CloudCollection#remove
  */
@@ -401,10 +373,8 @@ CloudCollection.prototype._updateCloud = function (cloud, propertyChanged) {
 
 /**
  * Check whether this collection contains a given cloud.
- *
  * @param {CumulusCloud} [cloud] The cloud to check for.
  * @returns {boolean} true if this collection contains the cloud, false otherwise.
- *
  * @see CloudCollection#get
  */
 CloudCollection.prototype.contains = function (cloud) {
@@ -416,17 +386,12 @@ CloudCollection.prototype.contains = function (cloud) {
  * and increase as clouds are added. Removing a cloud shifts all clouds after
  * it to the left, changing their indices. This function is commonly used with
  * {@link CloudCollection#length} to iterate over all the clouds in the collection.
- *
  * @param {number} index The zero-based index of the cloud.
  * @returns {CumulusCloud} The cloud at the specified index.
- *
  * @performance Expected constant time. If clouds were removed from the collection and
  * {@link CloudCollection#update} was not called, an implicit <code>O(n)</code>
  * operation is performed.
- *
- * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
- *
- *
+ * @throws {DeveloperError} This object was destroyed, i.e., destroy() was called.
  * @example
  * // Toggle the show property of every cloud in the collection
  * const len = clouds.length;
@@ -434,7 +399,6 @@ CloudCollection.prototype.contains = function (cloud) {
  *   const c = clouds.get(i);
  *   c.show = !c.show;
  * }
- *
  * @see CloudCollection#length
  */
 CloudCollection.prototype.get = function (index) {
@@ -946,6 +910,7 @@ function createDrawCommands(cloudCollection, frameState) {
 }
 
 /**
+ * @param frameState
  * @private
  */
 CloudCollection.prototype.update = function (frameState) {
@@ -1012,9 +977,7 @@ CloudCollection.prototype.update = function (frameState) {
  * <br /><br />
  * If this object was destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
- *
  * @returns {boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
- *
  * @see CloudCollection#destroy
  */
 CloudCollection.prototype.isDestroyed = function () {
@@ -1028,13 +991,9 @@ CloudCollection.prototype.isDestroyed = function () {
  * Once an object is destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
  * assign the return value (<code>undefined</code>) to the object as done in the example.
- *
- * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
- *
- *
+ * @throws {DeveloperError} This object was destroyed, i.e., destroy() was called.
  * @example
  * clouds = clouds && clouds.destroy();
- *
  * @see CloudCollection#isDestroyed
  */
 CloudCollection.prototype.destroy = function () {

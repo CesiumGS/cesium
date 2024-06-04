@@ -12,8 +12,7 @@ import createCommand from "../createCommand.js";
 /**
  * The view model for {@link FullscreenButton}.
  * @alias FullscreenButtonViewModel
- * @constructor
- *
+ * @class
  * @param {Element|string} [fullscreenElement=document.body] The element or id to be placed into fullscreen mode.
  * @param {Element|string} [container] The DOM element or ID that will contain the widget.
  */
@@ -32,7 +31,6 @@ function FullscreenButtonViewModel(fullscreenElement, container) {
 
   /**
    * Gets whether or not fullscreen mode is active.  This property is observable.
-   *
    * @type {boolean}
    */
   this.isFullscreen = undefined;
@@ -44,7 +42,6 @@ function FullscreenButtonViewModel(fullscreenElement, container) {
 
   /**
    * Gets or sets whether or not fullscreen functionality should be enabled.  This property is observable.
-   *
    * @type {boolean}
    * @see Fullscreen.enabled
    */
@@ -60,7 +57,6 @@ function FullscreenButtonViewModel(fullscreenElement, container) {
 
   /**
    * Gets the tooltip.  This property is observable.
-   *
    * @type {string}
    */
   this.tooltip = undefined;
@@ -95,7 +91,6 @@ Object.defineProperties(FullscreenButtonViewModel.prototype, {
    * Gets or sets the HTML element to place into fullscreen mode when the
    * corresponding button is pressed.
    * @memberof FullscreenButtonViewModel.prototype
-   *
    * @type {Element}
    */
   fullscreenElement: {
@@ -117,7 +112,6 @@ Object.defineProperties(FullscreenButtonViewModel.prototype, {
   /**
    * Gets the Command to toggle fullscreen mode.
    * @memberof FullscreenButtonViewModel.prototype
-   *
    * @type {Command}
    */
   command: {

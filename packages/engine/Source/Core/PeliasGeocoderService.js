@@ -8,10 +8,8 @@ import Resource from "./Resource.js";
 /**
  * Provides geocoding via a {@link https://pelias.io/|Pelias} server.
  * @alias PeliasGeocoderService
- * @constructor
- *
+ * @class
  * @param {Resource|string} url The endpoint to the Pelias server.
- *
  * @example
  * // Configure a Viewer to use the Pelias server hosted by https://geocode.earth/
  * const viewer = new Cesium.Viewer('cesiumContainer', {
@@ -60,7 +58,6 @@ Object.defineProperties(PeliasGeocoderService.prototype, {
 
 /**
  * @function
- *
  * @param {string} query The query to be sent to the geocoder service
  * @param {GeocodeType} [type=GeocodeType.SEARCH] The type of geocode to perform.
  * @returns {Promise<GeocoderService.Result[]>}

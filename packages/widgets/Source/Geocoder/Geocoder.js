@@ -16,10 +16,8 @@ const stopSearchPath =
 /**
  * A widget for finding addresses and landmarks, and flying the camera to them.  Geocoding is
  * performed using {@link https://cesium.com/cesium-ion/|Cesium ion}.
- *
  * @alias Geocoder
- * @constructor
- *
+ * @class
  * @param {object} options Object with the following properties:
  * @param {Element|string} options.container The DOM element or ID that will contain the widget.
  * @param {Scene} options.scene The Scene instance to use.
@@ -158,7 +156,6 @@ Object.defineProperties(Geocoder.prototype, {
   /**
    * Gets the parent container.
    * @memberof Geocoder.prototype
-   *
    * @type {Element}
    */
   container: {
@@ -170,7 +167,6 @@ Object.defineProperties(Geocoder.prototype, {
   /**
    * Gets the parent container.
    * @memberof Geocoder.prototype
-   *
    * @type {Element}
    */
   searchSuggestionsContainer: {
@@ -182,7 +178,6 @@ Object.defineProperties(Geocoder.prototype, {
   /**
    * Gets the view model.
    * @memberof Geocoder.prototype
-   *
    * @type {GeocoderViewModel}
    */
   viewModel: {

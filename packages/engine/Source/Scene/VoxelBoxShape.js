@@ -9,15 +9,12 @@ import defaultValue from "../Core/defaultValue.js";
 
 /**
  * A box {@link VoxelShape}.
- *
  * @alias VoxelBoxShape
- * @constructor
- *
+ * @class
  * @see VoxelShape
  * @see VoxelEllipsoidShape
  * @see VoxelCylinderShape
  * @see VoxelShapeType
- *
  * @private
  */
 function VoxelBoxShape() {
@@ -115,7 +112,6 @@ const transformLocalToUv = Matrix4.fromRotationTranslation(
 
 /**
  * Update the shape's state.
- *
  * @param {Matrix4} modelMatrix The model matrix.
  * @param {Cartesian3} minBounds The minimum bounds.
  * @param {Cartesian3} maxBounds The maximum bounds.
@@ -302,7 +298,6 @@ const scratchTileMaxBounds = new Cartesian3();
 /**
  * Computes an oriented bounding box for a specified tile.
  * The update function must be called before calling this function.
- *
  * @param {number} tileLevel The tile's level.
  * @param {number} tileX The tile's x coordinate.
  * @param {number} tileY The tile's y coordinate.
@@ -356,7 +351,6 @@ const sampleSizeScratch = new Cartesian3();
 /**
  * Computes an oriented bounding box for a specified sample within a specified tile.
  * The update function must be called before calling this function.
- *
  * @param {SpatialNode} spatialNode The spatial node containing the sample
  * @param {Cartesian3} tileDimensions The size of the tile in number of samples, before padding
  * @param {Cartesian3} tileUv The sample coordinate within the tile
@@ -429,7 +423,6 @@ VoxelBoxShape.prototype.computeOrientedBoundingBoxForSample = function (
 
 /**
  * Defines the minimum bounds of the shape. Corresponds to minimum X, Y, Z.
- *
  * @type {Cartesian3}
  * @constant
  * @readonly
@@ -440,7 +433,6 @@ VoxelBoxShape.DefaultMinBounds = Object.freeze(
 
 /**
  * Defines the maximum bounds of the shape. Corresponds to maximum X, Y, Z.
- *
  * @type {Cartesian3}
  * @constant
  * @readonly
@@ -451,15 +443,12 @@ VoxelBoxShape.DefaultMaxBounds = Object.freeze(
 
 /**
  * Computes an {@link OrientedBoundingBox} for a subregion of the shape.
- *
  * @function
- *
  * @param {Cartesian3} minimumBounds The minimum bounds, in the local coordinates of the shape.
  * @param {Cartesian3} maximumBounds The maximum bounds, in the local coordinates of the shape.
  * @param {Matrix4} matrix The matrix to transform the points.
  * @param {OrientedBoundingBox} result The object onto which to store the result.
  * @returns {OrientedBoundingBox} The oriented bounding box that contains this subregion.
- *
  * @private
  */
 function getBoxChunkObb(minimumBounds, maximumBounds, matrix, result) {

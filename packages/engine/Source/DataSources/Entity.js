@@ -68,7 +68,6 @@ function createPropertyTypeDescriptor(name, Type) {
  * @typedef {object} Entity.ConstructorOptions
  *
  * Initialization options for the Entity constructor
- *
  * @property {string} [id] A unique identifier for this object. If none is provided, a GUID is generated.
  * @property {string} [name] A human readable name to display to users. It does not have to be unique.
  * @property {TimeIntervalCollection} [availability] The availability, if any, associated with this object.
@@ -103,10 +102,8 @@ function createPropertyTypeDescriptor(name, Type) {
  * They can be created manually and added to {@link Viewer#entities} or be produced by
  * data sources, such as {@link CzmlDataSource} and {@link GeoJsonDataSource}.
  * @alias Entity
- * @constructor
- *
+ * @class
  * @param {Entity.ConstructorOptions} [options] Object describing initialization options
- *
  * @see {@link https://cesium.com/learn/cesiumjs-learn/cesiumjs-creating-entities/|Creating Entities}
  */
 function Entity(options) {
@@ -248,7 +245,6 @@ Object.defineProperties(Entity.prototype, {
   /**
    * Gets the event that is raised whenever a property or sub-property is changed or modified.
    * @memberof Entity.prototype
-   *
    * @type {Event}
    * @readonly
    */
@@ -514,7 +510,6 @@ Entity.registerEntityType = function (propertyName, Type) {
 
 /**
  * Given a time, returns true if this object should have data during that time.
- *
  * @param {JulianDate} time The time to check availability for.
  * @returns {boolean} true if the object should have data during the provided time, false otherwise.
  */
@@ -533,11 +528,9 @@ Entity.prototype.isAvailable = function (time) {
  * Adds a property to this object.  Once a property is added, it can be
  * observed with {@link Entity#definitionChanged} and composited
  * with {@link CompositeEntityCollection}
- *
  * @param {string} propertyName The name of the property to add.
- *
- * @exception {DeveloperError} "propertyName" is a reserved property name.
- * @exception {DeveloperError} "propertyName" is already a registered property.
+ * @throws {DeveloperError} "propertyName" is a reserved property name.
+ * @throws {DeveloperError} "propertyName" is already a registered property.
  */
 Entity.prototype.addProperty = function (propertyName) {
   const propertyNames = this._propertyNames;
@@ -566,11 +559,9 @@ Entity.prototype.addProperty = function (propertyName) {
 
 /**
  * Removed a property previously added with addProperty.
- *
  * @param {string} propertyName The name of the property to remove.
- *
- * @exception {DeveloperError} "propertyName" is a reserved property name.
- * @exception {DeveloperError} "propertyName" is not a registered property.
+ * @throws {DeveloperError} "propertyName" is a reserved property name.
+ * @throws {DeveloperError} "propertyName" is not a registered property.
  */
 Entity.prototype.removeProperty = function (propertyName) {
   const propertyNames = this._propertyNames;
@@ -592,7 +583,6 @@ Entity.prototype.removeProperty = function (propertyName) {
 /**
  * Assigns each unassigned property on this object to the value
  * of the same property on the provided source object.
- *
  * @param {Entity} source The object to be merged into this object.
  */
 Entity.prototype.merge = function (source) {
@@ -659,10 +649,8 @@ const orientationScratch = new Quaternion();
 
 /**
  * Computes the model matrix for the entity's transform at specified time. Returns undefined if position is undefined
- *
  * @param {JulianDate} time The time to retrieve model matrix for.
  * @param {Matrix4} [result] The object onto which to store the result.
- *
  * @returns {Matrix4} The modified result parameter or a new Matrix4 instance if one was not provided. Result is undefined if position is undefined.
  */
 Entity.prototype.computeModelMatrix = function (time, result) {
@@ -696,6 +684,11 @@ Entity.prototype.computeModelMatrix = function (time, result) {
 };
 
 /**
+ * @param time
+ * @param heightReferenceProperty
+ * @param heightOffset
+ * @param ellipsoid
+ * @param result
  * @private
  */
 Entity.prototype.computeModelMatrixForHeightReference = function (
@@ -755,7 +748,6 @@ Entity.prototype.computeModelMatrixForHeightReference = function (
  * Checks if the given Scene supports materials besides Color on Entities draped on terrain or 3D Tiles.
  * If this feature is not supported, Entities with non-color materials but no `height` will
  * instead be rendered as if height is 0.
- *
  * @param {Scene} scene The current scene.
  * @returns {boolean} Whether or not the current scene supports materials for entities on terrain.
  */
@@ -767,7 +759,6 @@ Entity.supportsMaterialsforEntitiesOnTerrain = function (scene) {
  * Checks if the given Scene supports polylines clamped to terrain or 3D Tiles.
  * If this feature is not supported, Entities with PolylineGraphics will be rendered with vertices at
  * the provided heights and using the `arcType` parameter instead of clamped to the ground.
- *
  * @param {Scene} scene The current scene.
  * @returns {boolean} Whether or not the current scene supports polylines on terrain or 3D TIles.
  */

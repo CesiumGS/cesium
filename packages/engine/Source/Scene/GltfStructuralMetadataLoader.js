@@ -13,11 +13,9 @@ import ResourceLoaderState from "./ResourceLoaderState.js";
  * <p>
  * Implements the {@link ResourceLoader} interface.
  * </p>
- *
  * @alias GltfStructuralMetadataLoader
- * @constructor
+ * @class
  * @augments ResourceLoader
- *
  * @param {object} options Object with the following properties:
  * @param {object} options.gltf The glTF JSON.
  * @param {string} [options.extension] The <code>EXT_structural_metadata</code> extension object. If this is undefined, then extensionLegacy must be defined.
@@ -28,7 +26,6 @@ import ResourceLoaderState from "./ResourceLoaderState.js";
  * @param {FrameState} options.frameState The frame state.
  * @param {string} [options.cacheKey] The cache key of the resource.
  * @param {boolean} [options.asynchronous=true] Determines if WebGL resource creation will be spread out over several frames or block until all WebGL resources are created.
- *
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
@@ -89,9 +86,7 @@ if (defined(Object.create)) {
 Object.defineProperties(GltfStructuralMetadataLoader.prototype, {
   /**
    * The cache key of the resource.
-   *
    * @memberof GltfStructuralMetadataLoader.prototype
-   *
    * @type {string}
    * @readonly
    * @private
@@ -103,9 +98,7 @@ Object.defineProperties(GltfStructuralMetadataLoader.prototype, {
   },
   /**
    * The parsed structural metadata
-   *
    * @memberof GltfStructuralMetadataLoader.prototype
-   *
    * @type {StructuralMetadata}
    * @readonly
    * @private
@@ -393,7 +386,6 @@ async function loadSchema(structuralMetadataLoader) {
 
 /**
  * Processes the resource until it becomes ready.
- *
  * @param {FrameState} frameState The frame state.
  * @private
  */

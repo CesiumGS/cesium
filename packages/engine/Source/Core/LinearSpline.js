@@ -6,19 +6,14 @@ import Spline from "./Spline.js";
 
 /**
  * A spline that uses piecewise linear interpolation to create a curve.
- *
  * @alias LinearSpline
- * @constructor
- *
+ * @class
  * @param {object} options Object with the following properties:
  * @param {number[]} options.times An array of strictly increasing, unit-less, floating-point times at each point.
  *                The values are in no way connected to the clock time. They are the parameterization for the curve.
  * @param {number[]|Cartesian3[]} options.points The array of control points.
- *
- * @exception {DeveloperError} points.length must be greater than or equal to 2.
- * @exception {DeveloperError} times.length must be equal to points.length.
- *
- *
+ * @throws {DeveloperError} points.length must be greater than or equal to 2.
+ * @throws {DeveloperError} times.length must be equal to points.length.
  * @example
  * const times = [ 0.0, 1.5, 3.0, 4.5, 6.0 ];
  * const spline = new Cesium.LinearSpline({
@@ -33,7 +28,6 @@ import Spline from "./Spline.js";
  * });
  *
  * const p0 = spline.evaluate(times[0]);
- *
  * @see ConstantSpline
  * @see SteppedSpline
  * @see HermiteSpline
@@ -71,9 +65,7 @@ function LinearSpline(options) {
 Object.defineProperties(LinearSpline.prototype, {
   /**
    * An array of times for the control points.
-   *
    * @memberof LinearSpline.prototype
-   *
    * @type {number[]}
    * @readonly
    */
@@ -85,9 +77,7 @@ Object.defineProperties(LinearSpline.prototype, {
 
   /**
    * An array of {@link Cartesian3} control points.
-   *
    * @memberof LinearSpline.prototype
-   *
    * @type {number[]|Cartesian3[]}
    * @readonly
    */
@@ -102,11 +92,9 @@ Object.defineProperties(LinearSpline.prototype, {
  * Finds an index <code>i</code> in <code>times</code> such that the parameter
  * <code>time</code> is in the interval <code>[times[i], times[i + 1]]</code>.
  * @function
- *
  * @param {number} time The time.
  * @returns {number} The index for the element at the start of the interval.
- *
- * @exception {DeveloperError} time must be in the range <code>[t<sub>0</sub>, t<sub>n</sub>]</code>, where <code>t<sub>0</sub></code>
+ * @throws {DeveloperError} time must be in the range <code>[t<sub>0</sub>, t<sub>n</sub>]</code>, where <code>t<sub>0</sub></code>
  *                             is the first element in the array <code>times</code> and <code>t<sub>n</sub></code> is the last element
  *                             in the array <code>times</code>.
  */
@@ -115,29 +103,25 @@ LinearSpline.prototype.findTimeInterval = Spline.prototype.findTimeInterval;
 /**
  * Wraps the given time to the period covered by the spline.
  * @function
- *
  * @param {number} time The time.
- * @return {number} The time, wrapped around to the updated animation.
+ * @returns {number} The time, wrapped around to the updated animation.
  */
 LinearSpline.prototype.wrapTime = Spline.prototype.wrapTime;
 
 /**
  * Clamps the given time to the period covered by the spline.
  * @function
- *
  * @param {number} time The time.
- * @return {number} The time, clamped to the animation period.
+ * @returns {number} The time, clamped to the animation period.
  */
 LinearSpline.prototype.clampTime = Spline.prototype.clampTime;
 
 /**
  * Evaluates the curve at a given time.
- *
  * @param {number} time The time at which to evaluate the curve.
  * @param {Cartesian3} [result] The object onto which to store the result.
  * @returns {number|Cartesian3} The modified result parameter or a new instance of the point on the curve at the given time.
- *
- * @exception {DeveloperError} time must be in the range <code>[t<sub>0</sub>, t<sub>n</sub>]</code>, where <code>t<sub>0</sub></code>
+ * @throws {DeveloperError} time must be in the range <code>[t<sub>0</sub>, t<sub>n</sub>]</code>, where <code>t<sub>0</sub></code>
  *                             is the first element in the array <code>times</code> and <code>t<sub>n</sub></code> is the last element
  *                             in the array <code>times</code>.
  */

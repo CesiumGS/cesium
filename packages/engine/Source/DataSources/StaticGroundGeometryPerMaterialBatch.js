@@ -309,6 +309,9 @@ Batch.prototype.destroy = function () {
 };
 
 /**
+ * @param primitives
+ * @param classificationType
+ * @param appearanceType
  * @private
  */
 function StaticGroundGeometryPerMaterialBatch(

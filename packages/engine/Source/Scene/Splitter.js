@@ -2,7 +2,6 @@ import ShaderSource from "../Renderer/ShaderSource.js";
 
 /**
  * Support for rendering things on only one side of the screen.
- *
  * @private
  */
 const Splitter = {
@@ -13,6 +12,7 @@ const Splitter = {
    * `czm_splitDirection`, which can be added by calling
    * {@link Splitter#addUniforms}, and the split position is given by an
    * automatic uniform called `czm_splitPosition`.
+   * @param shader
    */
   modifyFragmentShader: function modifyFragmentShader(shader) {
     shader = ShaderSource.replaceMain(shader, "czm_splitter_main");
@@ -35,7 +35,6 @@ const Splitter = {
 
   /**
    * Add `czm_splitDirection` to the given uniform map.
-   *
    * @param {object} object The object on which the `splitDirection` property may be found.
    * @param {object} uniformMap The uniform map.
    */

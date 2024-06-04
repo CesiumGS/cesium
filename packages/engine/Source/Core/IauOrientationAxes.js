@@ -10,12 +10,9 @@ import Quaternion from "./Quaternion.js";
  * The Axes representing the orientation of a Globe as represented by the data
  * from the IAU/IAG Working Group reports on rotational elements.
  * @alias IauOrientationAxes
- * @constructor
- *
+ * @class
  * @param {IauOrientationAxes.ComputeFunction} [computeFunction] The function that computes the {@link IauOrientationParameters} given a {@link JulianDate}.
- *
  * @see Iau2000Orientation
- *
  * @private
  */
 function IauOrientationAxes(computeFunction) {
@@ -67,7 +64,6 @@ const quatScratch = new Quaternion();
 
 /**
  * Computes a rotation from ICRF to a Globe's Fixed axes.
- *
  * @param {JulianDate} date The date to evaluate the matrix.
  * @param {Matrix3} result The object onto which to store the result.
  * @returns {Matrix3} The modified result parameter or a new instance of the rotation from ICRF to Fixed.

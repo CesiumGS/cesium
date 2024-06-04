@@ -18,7 +18,7 @@ import BlendFunction from "./BlendFunction.js";
 
 /**
  * @private
- * @constructor
+ * @class
  * @param {Context} context
  */
 function OIT(context) {

@@ -12,8 +12,7 @@ import createCommand from "../createCommand.js";
 /**
  * The view model for {@link ProjectionPicker}.
  * @alias ProjectionPickerViewModel
- * @constructor
- *
+ * @class
  * @param {Scene} scene The Scene to switch projections.
  */
 function ProjectionPickerViewModel(scene) {
@@ -140,7 +139,6 @@ Object.defineProperties(ProjectionPickerViewModel.prototype, {
   /**
    * Gets the command to toggle the drop down box.
    * @memberof ProjectionPickerViewModel.prototype
-   *
    * @type {Command}
    */
   toggleDropDown: {
@@ -152,7 +150,6 @@ Object.defineProperties(ProjectionPickerViewModel.prototype, {
   /**
    * Gets the command to switch to a perspective projection.
    * @memberof ProjectionPickerViewModel.prototype
-   *
    * @type {Command}
    */
   switchToPerspective: {
@@ -164,7 +161,6 @@ Object.defineProperties(ProjectionPickerViewModel.prototype, {
   /**
    * Gets the command to switch to orthographic projection.
    * @memberof ProjectionPickerViewModel.prototype
-   *
    * @type {Command}
    */
   switchToOrthographic: {
@@ -176,7 +172,6 @@ Object.defineProperties(ProjectionPickerViewModel.prototype, {
   /**
    * Gets whether the scene is currently using an orthographic projection.
    * @memberof ProjectionPickerViewModel.prototype
-   *
    * @type {Command}
    */
   isOrthographicProjection: {

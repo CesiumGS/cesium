@@ -8,10 +8,8 @@ import VertexFormat from "./VertexFormat.js";
 
 /**
  * A description of a circle on the ellipsoid. Circle geometry can be rendered with both {@link Primitive} and {@link GroundPrimitive}.
- *
  * @alias CircleGeometry
- * @constructor
- *
+ * @class
  * @param {object} options Object with the following properties:
  * @param {Cartesian3} options.center The circle's center point in the fixed frame.
  * @param {number} options.radius The radius in meters.
@@ -21,13 +19,10 @@ import VertexFormat from "./VertexFormat.js";
  * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
  * @param {number} [options.extrudedHeight=0.0] The distance in meters between the circle's extruded face and the ellipsoid surface.
  * @param {number} [options.stRotation=0.0] The rotation of the texture coordinates, in radians. A positive rotation is counter-clockwise.
- *
- * @exception {DeveloperError} radius must be greater than zero.
- * @exception {DeveloperError} granularity must be greater than zero.
- *
+ * @throws {DeveloperError} radius must be greater than zero.
+ * @throws {DeveloperError} granularity must be greater than zero.
  * @see CircleGeometry.createGeometry
  * @see Packable
- *
  * @example
  * // Create a circle.
  * const circle = new Cesium.CircleGeometry({
@@ -68,11 +63,9 @@ CircleGeometry.packedLength = EllipseGeometry.packedLength;
 
 /**
  * Stores the provided instance into the provided array.
- *
  * @param {CircleGeometry} value The value to pack.
  * @param {number[]} array The array to pack into.
  * @param {number} [startingIndex=0] The index into the array at which to start packing the elements.
- *
  * @returns {number[]} The array that was packed into
  */
 CircleGeometry.pack = function (value, array, startingIndex) {
@@ -103,7 +96,6 @@ const scratchOptions = {
 
 /**
  * Retrieves an instance from a packed array.
- *
  * @param {number[]} array The packed array.
  * @param {number} [startingIndex=0] The starting index of the element to be unpacked.
  * @param {CircleGeometry} [result] The object into which to store the result.
@@ -146,7 +138,6 @@ CircleGeometry.unpack = function (array, startingIndex, result) {
 
 /**
  * Computes the geometric representation of a circle on an ellipsoid, including its vertices, indices, and a bounding sphere.
- *
  * @param {CircleGeometry} circleGeometry A description of the circle.
  * @returns {Geometry|undefined} The computed vertices and indices.
  */
@@ -155,6 +146,9 @@ CircleGeometry.createGeometry = function (circleGeometry) {
 };
 
 /**
+ * @param circleGeometry
+ * @param minHeightFunc
+ * @param maxHeightFunc
  * @private
  */
 CircleGeometry.createShadowVolume = function (

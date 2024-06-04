@@ -18,26 +18,22 @@ import SceneTransforms from "./SceneTransforms.js";
  * </div>
  * A graphical point positioned in the 3D scene, that is created
  * and rendered using a {@link PointPrimitiveCollection}.
- *
+ * @param options
+ * @param pointPrimitiveCollection
  * @alias PointPrimitive
- *
  * @performance Reading a property, e.g., {@link PointPrimitive#show}, is constant time.
  * Assigning to a property is constant time but results in
  * CPU to GPU traffic when {@link PointPrimitiveCollection#update} is called.  The per-pointPrimitive traffic is
  * the same regardless of how many properties were updated.  If most pointPrimitives in a collection need to be
  * updated, it may be more efficient to clear the collection with {@link PointPrimitiveCollection#removeAll}
  * and add new pointPrimitives instead of modifying each one.
- *
- * @exception {DeveloperError} scaleByDistance.far must be greater than scaleByDistance.near
- * @exception {DeveloperError} translucencyByDistance.far must be greater than translucencyByDistance.near
- * @exception {DeveloperError} distanceDisplayCondition.far must be greater than distanceDisplayCondition.near
- *
+ * @throws {DeveloperError} scaleByDistance.far must be greater than scaleByDistance.near
+ * @throws {DeveloperError} translucencyByDistance.far must be greater than translucencyByDistance.near
+ * @throws {DeveloperError} distanceDisplayCondition.far must be greater than distanceDisplayCondition.near
  * @see PointPrimitiveCollection
  * @see PointPrimitiveCollection#add
- *
  * @internalConstructor
  * @class
- *
  * @demo {@link https://sandcastle.cesium.com/index.html?src=Points.html|Cesium Sandcastle Points Demo}
  */
 function PointPrimitive(options, pointPrimitiveCollection) {
@@ -203,14 +199,12 @@ Object.defineProperties(PointPrimitive.prototype, {
    * scaleByDistance will be disabled.
    * @memberof PointPrimitive.prototype
    * @type {NearFarScalar}
-   *
    * @example
    * // Example 1.
    * // Set a pointPrimitive's scaleByDistance to scale to 15 when the
    * // camera is 1500 meters from the pointPrimitive and disappear as
    * // the camera distance approaches 8.0e6 meters.
    * p.scaleByDistance = new Cesium.NearFarScalar(1.5e2, 15, 8.0e6, 0.0);
-   *
    * @example
    * // Example 2.
    * // disable scaling by distance
@@ -246,14 +240,12 @@ Object.defineProperties(PointPrimitive.prototype, {
    * translucencyByDistance will be disabled.
    * @memberof PointPrimitive.prototype
    * @type {NearFarScalar}
-   *
    * @example
    * // Example 1.
    * // Set a point's translucency to 1.0 when the
    * // camera is 1500 meters from the point and disappear as
    * // the camera distance approaches 8.0e6 meters.
    * p.translucencyByDistance = new Cesium.NearFarScalar(1.5e2, 1.0, 8.0e6, 0.0);
-   *
    * @example
    * // Example 2.
    * // disable translucency by distance
@@ -313,11 +305,9 @@ Object.defineProperties(PointPrimitive.prototype, {
    * (no intensity) to <code>1.0</code> (full intensity).
    * @memberof PointPrimitive.prototype
    * @type {Color}
-   *
    * @example
    * // Example 1. Assign yellow.
    * p.color = Cesium.Color.YELLOW;
-   *
    * @example
    * // Example 2. Make a pointPrimitive 50% translucent.
    * p.color = new Cesium.Color(1.0, 1.0, 1.0, 0.5);
@@ -556,13 +546,10 @@ PointPrimitive._computeScreenSpacePosition = function (
  * Computes the screen-space position of the point's origin.
  * The screen space origin is the top, left corner of the canvas; <code>x</code> increases from
  * left to right, and <code>y</code> increases from top to bottom.
- *
  * @param {Scene} scene The scene.
  * @param {Cartesian2} [result] The object onto which to store the result.
  * @returns {Cartesian2} The screen-space position of the point.
- *
- * @exception {DeveloperError} PointPrimitive must be in a collection.
- *
+ * @throws {DeveloperError} PointPrimitive must be in a collection.
  * @example
  * console.log(p.computeScreenSpacePosition(scene).toString());
  */
@@ -602,7 +589,6 @@ PointPrimitive.prototype.computeScreenSpacePosition = function (scene, result) {
  * @param {Cartesian2} screenSpacePosition The screen space center of the label.
  * @param {BoundingRectangle} [result] The object onto which to store the result.
  * @returns {BoundingRectangle} The screen space bounding box.
- *
  * @private
  */
 PointPrimitive.getScreenSpaceBoundingBox = function (
@@ -633,7 +619,6 @@ PointPrimitive.getScreenSpaceBoundingBox = function (
 /**
  * Determines if this point equals another point.  Points are equal if all their properties
  * are equal.  Points in different collections can be equal.
- *
  * @param {PointPrimitive} other The point to compare for equality.
  * @returns {boolean} <code>true</code> if the points are equal; otherwise, <code>false</code>.
  */

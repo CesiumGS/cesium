@@ -26,7 +26,7 @@ import OctahedralProjectionVS from "../Shaders/OctahedralProjectionVS.js";
  * with minimal distortion and easy look up.
  * See Chapter 16 of WebGL Insights "HDR Image-Based Lighting on the Web" by Jeff Russell
  * and "Octahedron Environment Maps" for reference.
- *
+ * @param url
  * @private
  */
 function OctahedralProjectedCubeMap(url) {
@@ -84,7 +84,7 @@ Object.defineProperties(OctahedralProjectedCubeMap.prototype, {
   },
   /**
    * The maximum number of mip levels.
-   * @memberOf OctahedralProjectedCubeMap.prototype
+   * @memberof OctahedralProjectedCubeMap.prototype
    * @type {number}
    * @readonly
    */
@@ -259,9 +259,7 @@ function cleanupResources(map) {
  * Only needs to be called twice. The first call queues the compute commands to generate the atlas.
  * The second call cleans up unused resources. Every call afterwards is a no-op.
  * </p>
- *
  * @param {FrameState} frameState The frame state.
- *
  * @private
  */
 OctahedralProjectedCubeMap.prototype.update = function (frameState) {
@@ -415,9 +413,7 @@ OctahedralProjectedCubeMap.prototype.update = function (frameState) {
  * If this object was destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
  * </p>
- *
  * @returns {boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
- *
  * @see OctahedralProjectedCubeMap#destroy
  */
 OctahedralProjectedCubeMap.prototype.isDestroyed = function () {
@@ -432,9 +428,7 @@ OctahedralProjectedCubeMap.prototype.isDestroyed = function () {
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
  * assign the return value (<code>undefined</code>) to the object as done in the example.
  * </p>
- *
- * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
- *
+ * @throws {DeveloperError} This object was destroyed, i.e., destroy() was called.
  * @see OctahedralProjectedCubeMap#isDestroyed
  */
 OctahedralProjectedCubeMap.prototype.destroy = function () {

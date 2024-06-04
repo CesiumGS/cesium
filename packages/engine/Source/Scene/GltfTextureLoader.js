@@ -17,11 +17,9 @@ import resizeImageToNextPowerOfTwo from "../Core/resizeImageToNextPowerOfTwo.js"
  * <p>
  * Implements the {@link ResourceLoader} interface.
  * </p>
- *
  * @alias GltfTextureLoader
- * @constructor
+ * @class
  * @augments ResourceLoader
- *
  * @param {object} options Object with the following properties:
  * @param {ResourceCache} options.resourceCache The {@link ResourceCache} (to avoid circular dependencies).
  * @param {object} options.gltf The glTF JSON.
@@ -31,7 +29,6 @@ import resizeImageToNextPowerOfTwo from "../Core/resizeImageToNextPowerOfTwo.js"
  * @param {SupportedImageFormats} options.supportedImageFormats The supported image formats.
  * @param {string} [options.cacheKey] The cache key of the resource.
  * @param {boolean} [options.asynchronous=true] Determines if WebGL resource creation will be spread out over several frames or block until all WebGL resources are created.
- *
  * @private
  */
 function GltfTextureLoader(options) {
@@ -88,9 +85,7 @@ if (defined(Object.create)) {
 Object.defineProperties(GltfTextureLoader.prototype, {
   /**
    * The cache key of the resource.
-   *
    * @memberof GltfTextureLoader.prototype
-   *
    * @type {string}
    * @readonly
    * @private
@@ -102,9 +97,7 @@ Object.defineProperties(GltfTextureLoader.prototype, {
   },
   /**
    * The texture.
-   *
    * @memberof GltfTextureLoader.prototype
-   *
    * @type {Texture}
    * @readonly
    * @private
@@ -293,7 +286,6 @@ function createTexture(gltf, textureInfo, image, mipLevels, context) {
 
 /**
  * Processes the resource until it becomes ready.
- *
  * @param {FrameState} frameState The frame state.
  * @returns {boolean} true once all resourced are ready.
  * @private

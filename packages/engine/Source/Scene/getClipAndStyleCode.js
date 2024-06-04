@@ -2,7 +2,6 @@ import Check from "../Core/Check.js";
 
 /**
  * Gets a GLSL snippet that clips a fragment using the `clip` function from {@link getClippingFunction} and styles it.
- *
  * @param {string} samplerUniformName Name of the uniform for the clipping planes texture sampler.
  * @param {string} matrixUniformName Name of the uniform for the clipping planes matrix.
  * @param {string} styleUniformName Name of the uniform for the clipping planes style, a vec4.

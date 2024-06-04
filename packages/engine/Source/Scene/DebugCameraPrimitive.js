@@ -19,10 +19,8 @@ import Primitive from "./Primitive.js";
 
 /**
  * Draws the outline of the camera's view frustum.
- *
  * @alias DebugCameraPrimitive
- * @constructor
- *
+ * @class
  * @param {object} options Object with the following properties:
  * @param {Camera} options.camera The camera.
  * @param {number[]} [options.frustumSplits] Distances to the near and far planes of the camera frustums. This overrides the camera's frustum near and far values.
@@ -30,7 +28,6 @@ import Primitive from "./Primitive.js";
  * @param {boolean} [options.updateOnChange=true] Whether the primitive updates when the underlying camera changes.
  * @param {boolean} [options.show=true] Determines if this primitive will be shown.
  * @param {object} [options.id] A user-defined object to return when the instance is picked with {@link Scene#pick}.
- *
  * @example
  * primitives.add(new Cesium.DebugCameraPrimitive({
  *   camera : camera,
@@ -53,7 +50,6 @@ function DebugCameraPrimitive(options) {
 
   /**
    * Determines if this primitive will be shown.
-   *
    * @type {boolean}
    * @default true
    */
@@ -61,10 +57,8 @@ function DebugCameraPrimitive(options) {
 
   /**
    * User-defined value returned when the primitive is picked.
-   *
    * @type {*}
    * @default undefined
-   *
    * @see Scene#pick
    */
   this.id = options.id;
@@ -86,6 +80,7 @@ const scratchColor = new Color();
 const scratchSplits = [1.0, 100000.0];
 
 /**
+ * @param frameState
  * @private
  */
 DebugCameraPrimitive.prototype.update = function (frameState) {
@@ -219,9 +214,7 @@ DebugCameraPrimitive.prototype.update = function (frameState) {
  * If this object was destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
  * </p>
- *
  * @returns {boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
- *
  * @see DebugCameraPrimitive#destroy
  */
 DebugCameraPrimitive.prototype.isDestroyed = function () {
@@ -236,12 +229,9 @@ DebugCameraPrimitive.prototype.isDestroyed = function () {
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
  * assign the return value (<code>undefined</code>) to the object as done in the example.
  * </p>
- *
- * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
- *
+ * @throws {DeveloperError} This object was destroyed, i.e., destroy() was called.
  * @example
  * p = p && p.destroy();
- *
  * @see DebugCameraPrimitive#isDestroyed
  */
 DebugCameraPrimitive.prototype.destroy = function () {

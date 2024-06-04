@@ -264,10 +264,8 @@ function createGeometryFromPositionsExtruded(
 
 /**
  * A description of the outline of a polygon on the ellipsoid. The polygon is defined by a polygon hierarchy.
- *
  * @alias PolygonOutlineGeometry
- * @constructor
- *
+ * @class
  * @param {object} options Object with the following properties:
  * @param {PolygonHierarchy} options.polygonHierarchy A polygon hierarchy that can include holes.
  * @param {number} [options.height=0.0] The distance in meters between the polygon and the ellipsoid surface.
@@ -277,10 +275,8 @@ function createGeometryFromPositionsExtruded(
  * @param {number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
  * @param {boolean} [options.perPositionHeight=false] Use the height of options.positions for each position instead of using options.height to determine the height.
  * @param {ArcType} [options.arcType=ArcType.GEODESIC] The type of path the outline must follow. Valid options are {@link ArcType.GEODESIC} and {@link ArcType.RHUMB}.
- *
  * @see PolygonOutlineGeometry#createGeometry
  * @see PolygonOutlineGeometry#fromPositions
- *
  * @example
  * // 1. create a polygon outline from points
  * const polygon = new Cesium.PolygonOutlineGeometry({
@@ -415,11 +411,9 @@ function PolygonOutlineGeometry(options) {
 
 /**
  * Stores the provided instance into the provided array.
- *
  * @param {PolygonOutlineGeometry} value The value to pack.
  * @param {number[]} array The array to pack into.
  * @param {number} [startingIndex=0] The index into the array at which to start packing the elements.
- *
  * @returns {number[]} The array that was packed into
  */
 PolygonOutlineGeometry.pack = function (value, array, startingIndex) {
@@ -459,7 +453,6 @@ const dummyOptions = {
 
 /**
  * Retrieves an instance from a packed array.
- *
  * @param {number[]} array The packed array.
  * @param {number} [startingIndex=0] The starting index of the element to be unpacked.
  * @param {PolygonOutlineGeometry} [result] The object into which to store the result.
@@ -513,7 +506,6 @@ PolygonOutlineGeometry.unpack = function (array, startingIndex, result) {
 
 /**
  * A description of a polygon outline from an array of positions.
- *
  * @param {object} options Object with the following properties:
  * @param {Cartesian3[]} options.positions An array of positions that defined the corner points of the polygon.
  * @param {number} [options.height=0.0] The height of the polygon.
@@ -523,8 +515,6 @@ PolygonOutlineGeometry.unpack = function (array, startingIndex, result) {
  * @param {boolean} [options.perPositionHeight=false] Use the height of options.positions for each position instead of using options.height to determine the height.
  * @param {ArcType} [options.arcType=ArcType.GEODESIC] The type of path the outline must follow. Valid options are {@link LinkType.GEODESIC} and {@link ArcType.RHUMB}.
  * @returns {PolygonOutlineGeometry}
- *
- *
  * @example
  * // create a polygon from points
  * const polygon = Cesium.PolygonOutlineGeometry.fromPositions({
@@ -537,7 +527,6 @@ PolygonOutlineGeometry.unpack = function (array, startingIndex, result) {
  *   ])
  * });
  * const geometry = Cesium.PolygonOutlineGeometry.createGeometry(polygon);
- *
  * @see PolygonOutlineGeometry#createGeometry
  */
 PolygonOutlineGeometry.fromPositions = function (options) {
@@ -564,7 +553,6 @@ PolygonOutlineGeometry.fromPositions = function (options) {
 
 /**
  * Computes the geometric representation of a polygon outline, including its vertices, indices, and a bounding sphere.
- *
  * @param {PolygonOutlineGeometry} polygonGeometry A description of the polygon outline.
  * @returns {Geometry|undefined} The computed vertices and indices.
  */

@@ -182,7 +182,6 @@ function generateCartesianRhumbArc(
 
 /**
  * Breaks a {@link Polyline} into segments such that it does not cross the &plusmn;180 degree meridian of an ellipsoid.
- *
  * @param {Cartesian3[]} positions The polyline's Cartesian positions.
  * @param {Matrix4} [modelMatrix=Matrix4.IDENTITY] The polyline's model matrix. Assumed to be an affine
  * transformation matrix, where the upper left 3x3 elements are a rotation matrix, and
@@ -190,15 +189,12 @@ function generateCartesianRhumbArc(
  * The matrix is not verified to be in the proper form.
  * @returns {object} An object with a <code>positions</code> property that is an array of positions and a
  * <code>segments</code> property.
- *
- *
  * @example
  * const polylines = new Cesium.PolylineCollection();
  * const polyline = polylines.add(...);
  * const positions = polyline.positions;
  * const modelMatrix = polylines.modelMatrix;
  * const segments = Cesium.PolylinePipeline.wrapLongitude(positions, modelMatrix);
- *
  * @see PolygonPipeline.wrapLongitude
  * @see Polyline
  * @see PolylineCollection
@@ -313,7 +309,6 @@ PolylinePipeline.wrapLongitude = function (positions, modelMatrix) {
  * @param {number} [options.granularity = CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
  * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the positions lie.
  * @returns {number[]} A new array of positions of type {number} that have been subdivided and raised to the surface of the ellipsoid.
- *
  * @example
  * const positions = Cesium.Cartesian3.fromDegreesArray([
  *   -105.0, 40.0,
@@ -420,7 +415,6 @@ const scratchCartographic1 = new Cartographic();
  * @param {number} [options.granularity = CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
  * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the positions lie.
  * @returns {number[]} A new array of positions of type {number} that have been subdivided and raised to the surface of the ellipsoid.
- *
  * @example
  * const positions = Cesium.Cartesian3.fromDegreesArray([
  *   -105.0, 40.0,
@@ -526,7 +520,6 @@ PolylinePipeline.generateRhumbArc = function (options) {
  * @param {number} [options.granularity = CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
  * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the positions lie.
  * @returns {Cartesian3[]} A new array of cartesian3 positions that have been subdivided and raised to the surface of the ellipsoid.
- *
  * @example
  * const positions = Cesium.Cartesian3.fromDegreesArray([
  *   -105.0, 40.0,
@@ -556,7 +549,6 @@ PolylinePipeline.generateCartesianArc = function (options) {
  * @param {number} [options.granularity = CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
  * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the positions lie.
  * @returns {Cartesian3[]} A new array of cartesian3 positions that have been subdivided and raised to the surface of the ellipsoid.
- *
  * @example
  * const positions = Cesium.Cartesian3.fromDegreesArray([
  *   -105.0, 40.0,

@@ -29,20 +29,15 @@ import SceneTransforms from "./SceneTransforms.js";
 /**
  * Draws a sun billboard.
  * <p>This is only supported in 3D and Columbus view.</p>
- *
  * @alias Sun
- * @constructor
- *
- *
+ * @class
  * @example
  * scene.sun = new Cesium.Sun();
- *
  * @see Scene#sun
  */
 function Sun() {
   /**
    * Determines if the sun will be shown.
-   *
    * @type {boolean}
    * @default true
    */
@@ -87,7 +82,6 @@ Object.defineProperties(Sun.prototype, {
    * Gets or sets a number that controls how "bright" the Sun's lens flare appears
    * to be.  Zero shows just the Sun's disc without any flare.
    * Use larger values for a more pronounced flare around the Sun.
-   *
    * @memberof Sun.prototype
    * @type {number}
    * @default 1.0
@@ -110,6 +104,9 @@ const scratchPositionEC = new Cartesian4();
 const scratchCartesian4 = new Cartesian4();
 
 /**
+ * @param frameState
+ * @param passState
+ * @param useHdr
  * @private
  */
 Sun.prototype.update = function (frameState, passState, useHdr) {
@@ -321,9 +318,7 @@ Sun.prototype.update = function (frameState, passState, useHdr) {
  * <br /><br />
  * If this object was destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
- *
  * @returns {boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
- *
  * @see Sun#destroy
  */
 Sun.prototype.isDestroyed = function () {
@@ -337,13 +332,9 @@ Sun.prototype.isDestroyed = function () {
  * Once an object is destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
  * assign the return value (<code>undefined</code>) to the object as done in the example.
- *
- * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
- *
- *
+ * @throws {DeveloperError} This object was destroyed, i.e., destroy() was called.
  * @example
  * sun = sun && sun.destroy();
- *
  *  @see Sun#isDestroyed
  */
 Sun.prototype.destroy = function () {

@@ -5,10 +5,9 @@ import defined from "./defined.js";
  * A generic utility class for managing subscribers for a particular event.
  * This class is usually instantiated inside of a container class and
  * exposed as a property for others to subscribe to.
- *
  * @alias Event
  * @template Listener extends (...args: any[]) => void = (...args: any[]) => void
- * @constructor
+ * @class
  * @example
  * MyObject.prototype.myListener = function(arg1, arg2) {
  *     this.myArg1Copy = arg1;
@@ -46,12 +45,10 @@ Object.defineProperties(Event.prototype, {
  * Registers a callback function to be executed whenever the event is raised.
  * An optional scope can be provided to serve as the <code>this</code> pointer
  * in which the function will execute.
- *
  * @param {Listener} listener The function to be executed when the event is raised.
  * @param {object} [scope] An optional object scope to serve as the <code>this</code>
  *        pointer in which the listener function will execute.
  * @returns {Event.RemoveCallback} A function that will remove this event listener when invoked.
- *
  * @see Event#raiseEvent
  * @see Event#removeEventListener
  */
@@ -71,11 +68,9 @@ Event.prototype.addEventListener = function (listener, scope) {
 
 /**
  * Unregisters a previously registered callback.
- *
  * @param {Listener} listener The function to be unregistered.
  * @param {object} [scope] The scope that was originally passed to addEventListener.
  * @returns {boolean} <code>true</code> if the listener was removed; <code>false</code> if the listener and scope are not registered with the event.
- *
  * @see Event#addEventListener
  * @see Event#raiseEvent
  */
@@ -119,9 +114,7 @@ function compareNumber(a, b) {
 
 /**
  * Raises the event by calling each registered listener with all supplied arguments.
- *
  * @param {...Parameters<Listener>} arguments This method takes any number of parameters and passes them through to the listener functions.
- *
  * @see Event#addEventListener
  * @see Event#removeEventListener
  */

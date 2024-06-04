@@ -45,8 +45,7 @@ const scratchCartesian = new Cartesian3();
 /**
  * A {@link Visualizer} which maps {@link Entity#model} to a {@link Model}.
  * @alias ModelVisualizer
- * @constructor
- *
+ * @class
  * @param {Scene} scene The scene the primitives will be rendered in.
  * @param {EntityCollection} entityCollection The entityCollection to visualize.
  */
@@ -119,7 +118,6 @@ async function createModelPrimitive(
 /**
  * Updates models created this visualizer to match their
  * Entity counterpart at the given time.
- *
  * @param {JulianDate} time The time to update to.
  * @returns {boolean} This function always returns true.
  */
@@ -375,7 +373,6 @@ ModelVisualizer.prototype.update = function (time) {
 
 /**
  * Returns true if this object was destroyed; otherwise, false.
- *
  * @returns {boolean} True if this object was destroyed; otherwise, false.
  */
 ModelVisualizer.prototype.isDestroyed = function () {
@@ -404,7 +401,6 @@ const scratchCartographic = new Cartographic();
 /**
  * Computes a bounding sphere which encloses the visualization produced for the specified entity.
  * The bounding sphere is in the fixed frame of the scene's globe.
- *
  * @param {Entity} entity The entity whose bounding sphere to compute.
  * @param {BoundingSphere} result The bounding sphere onto which to store the result.
  * @returns {BoundingSphereState} BoundingSphereState.DONE if the result contains the bounding sphere,
@@ -474,6 +470,10 @@ ModelVisualizer.prototype.getBoundingSphere = function (entity, result) {
 };
 
 /**
+ * @param entityCollection
+ * @param added
+ * @param removed
+ * @param changed
  * @private
  */
 ModelVisualizer.prototype._onCollectionChanged = function (

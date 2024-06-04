@@ -20,21 +20,17 @@ import Rectangle from "./Rectangle.js";
  * Creates an instance of an OrientedBoundingBox.
  * An OrientedBoundingBox of some object is a closed and convex rectangular cuboid. It can provide a tighter bounding volume than {@link BoundingSphere} or {@link AxisAlignedBoundingBox} in many cases.
  * @alias OrientedBoundingBox
- * @constructor
- *
+ * @class
  * @param {Cartesian3} [center=Cartesian3.ZERO] The center of the box.
  * @param {Matrix3} [halfAxes=Matrix3.ZERO] The three orthogonal half-axes of the bounding box.
  *                                          Equivalently, the transformation matrix, to rotate and scale a 2x2x2
  *                                          cube centered at the origin.
- *
- *
  * @example
  * // Create an OrientedBoundingBox using a transformation matrix, a position where the box will be translated, and a scale.
  * const center = new Cesium.Cartesian3(1.0, 0.0, 0.0);
  * const halfAxes = Cesium.Matrix3.fromScale(new Cesium.Cartesian3(1.0, 3.0, 2.0), new Cesium.Matrix3());
  *
  * const obb = new Cesium.OrientedBoundingBox(center, halfAxes);
- *
  * @see BoundingSphere
  * @see BoundingRectangle
  */
@@ -64,11 +60,9 @@ OrientedBoundingBox.packedLength =
 
 /**
  * Stores the provided instance into the provided array.
- *
  * @param {OrientedBoundingBox} value The value to pack.
  * @param {number[]} array The array to pack into.
  * @param {number} [startingIndex=0] The index into the array at which to start packing the elements.
- *
  * @returns {number[]} The array that was packed into
  */
 OrientedBoundingBox.pack = function (value, array, startingIndex) {
@@ -87,7 +81,6 @@ OrientedBoundingBox.pack = function (value, array, startingIndex) {
 
 /**
  * Retrieves an instance from a packed array.
- *
  * @param {number[]} array The packed array.
  * @param {number} [startingIndex=0] The starting index of the element to be unpacked.
  * @param {OrientedBoundingBox} [result] The object into which to store the result.
@@ -129,11 +122,9 @@ const scratchEigenResult = {
  * Computes an instance of an OrientedBoundingBox of the given positions.
  * This is an implementation of Stefan Gottschalk's Collision Queries using Oriented Bounding Boxes solution (PHD thesis).
  * Reference: http://gamma.cs.unc.edu/users/gottschalk/main.pdf
- *
  * @param {Cartesian3[]} [positions] List of {@link Cartesian3} points that the bounding box will enclose.
  * @param {OrientedBoundingBox} [result] The object onto which to store the result.
  * @returns {OrientedBoundingBox} The modified result parameter or a new OrientedBoundingBox instance if one was not provided.
- *
  * @example
  * // Compute an object oriented bounding box enclosing two points.
  * const box = Cesium.OrientedBoundingBox.fromPoints([new Cesium.Cartesian3(2, 0, 0), new Cesium.Cartesian3(-2, 0, 0)]);
@@ -328,17 +319,15 @@ const scratchPlane = new Plane(Cartesian3.UNIT_X, 0.0);
 /**
  * Computes an OrientedBoundingBox that bounds a {@link Rectangle} on the surface of an {@link Ellipsoid}.
  * There are no guarantees about the orientation of the bounding box.
- *
  * @param {Rectangle} rectangle The cartographic rectangle on the surface of the ellipsoid.
  * @param {number} [minimumHeight=0.0] The minimum height (elevation) within the tile.
  * @param {number} [maximumHeight=0.0] The maximum height (elevation) within the tile.
  * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the rectangle is defined.
  * @param {OrientedBoundingBox} [result] The object onto which to store the result.
  * @returns {OrientedBoundingBox} The modified result parameter or a new OrientedBoundingBox instance if none was provided.
- *
- * @exception {DeveloperError} rectangle.width must be between 0 and 2 * pi.
- * @exception {DeveloperError} rectangle.height must be between 0 and pi.
- * @exception {DeveloperError} ellipsoid must be an ellipsoid of revolution (<code>radii.x == radii.y</code>)
+ * @throws {DeveloperError} rectangle.width must be between 0 and 2 * pi.
+ * @throws {DeveloperError} rectangle.height must be between 0 and pi.
+ * @throws {DeveloperError} ellipsoid must be an ellipsoid of revolution (<code>radii.x == radii.y</code>)
  */
 OrientedBoundingBox.fromRectangle = function (
   rectangle,
@@ -612,7 +601,6 @@ OrientedBoundingBox.fromRectangle = function (
 
 /**
  * Computes an OrientedBoundingBox that bounds an affine transformation.
- *
  * @param {Matrix4} transformation The affine transformation.
  * @param {OrientedBoundingBox} [result] The object onto which to store the result.
  * @returns {OrientedBoundingBox} The modified result parameter or a new OrientedBoundingBox instance if none was provided.
@@ -638,7 +626,6 @@ OrientedBoundingBox.fromTransformation = function (transformation, result) {
 
 /**
  * Duplicates a OrientedBoundingBox instance.
- *
  * @param {OrientedBoundingBox} box The bounding box to duplicate.
  * @param {OrientedBoundingBox} [result] The object onto which to store the result.
  * @returns {OrientedBoundingBox} The modified result parameter or a new OrientedBoundingBox instance if none was provided. (Returns undefined if box is undefined)
@@ -660,7 +647,6 @@ OrientedBoundingBox.clone = function (box, result) {
 
 /**
  * Determines which side of a plane the oriented bounding box is located.
- *
  * @param {OrientedBoundingBox} box The oriented bounding box to test.
  * @param {Plane} plane The plane to test against.
  * @returns {Intersect} {@link Intersect.INSIDE} if the entire box is on the side of the plane
@@ -723,11 +709,9 @@ const scratchPPrime = new Cartesian3();
 
 /**
  * Computes the estimated distance squared from the closest point on a bounding box to a point.
- *
  * @param {OrientedBoundingBox} box The box.
  * @param {Cartesian3} cartesian The point
  * @returns {number} The distance squared from the oriented bounding box to the point. Returns 0 if the point is inside the box.
- *
  * @example
  * // Sort bounding boxes from back to front
  * boxes.sort(function(a, b) {
@@ -882,7 +866,6 @@ const scratchToCenter = new Cartesian3();
  * <br>
  * If you imagine the infinite number of planes with normal direction, this computes the smallest distance to the
  * closest and farthest planes from position that intersect the bounding box.
- *
  * @param {OrientedBoundingBox} box The bounding box to calculate the distance to.
  * @param {Cartesian3} position The position to calculate the distance from.
  * @param {Cartesian3} direction The direction from position.
@@ -1022,7 +1005,6 @@ const scratchZAxis = new Cartesian3();
 
 /**
  * Computes the eight corners of an oriented bounding box. The corners are ordered by (-X, -Y, -Z), (-X, -Y, +Z), (-X, +Y, -Z), (-X, +Y, +Z), (+X, -Y, -Z), (+X, -Y, +Z), (+X, +Y, -Z), (+X, +Y, +Z).
- *
  * @param {OrientedBoundingBox} box The oriented bounding box.
  * @param {Cartesian3[]} [result] An array of eight {@link Cartesian3} instances onto which to store the corners.
  * @returns {Cartesian3[]} The modified result parameter or a new array if none was provided.
@@ -1098,7 +1080,6 @@ const scratchRotationScale = new Matrix3();
 
 /**
  * Computes a transformation matrix from an oriented bounding box.
- *
  * @param {OrientedBoundingBox} box The oriented bounding box.
  * @param {Matrix4} result The object onto which to store the result.
  * @returns {Matrix4} The modified result parameter or a new {@link Matrix4} instance if none was provided.
@@ -1125,7 +1106,6 @@ const scratchBoundingSphere = new BoundingSphere();
 
 /**
  * Determines whether or not a bounding box is hidden from view by the occluder.
- *
  * @param {OrientedBoundingBox} box The bounding box surrounding the occludee object.
  * @param {Occluder} occluder The occluder.
  * @returns {boolean} <code>true</code> if the box is not visible; otherwise <code>false</code>.
@@ -1150,7 +1130,6 @@ OrientedBoundingBox.isOccluded = function (box, occluder) {
 
 /**
  * Determines which side of a plane the oriented bounding box is located.
- *
  * @param {Plane} plane The plane to test against.
  * @returns {Intersect} {@link Intersect.INSIDE} if the entire box is on the side of the plane
  *                      the normal is pointing, {@link Intersect.OUTSIDE} if the entire box is
@@ -1163,10 +1142,8 @@ OrientedBoundingBox.prototype.intersectPlane = function (plane) {
 
 /**
  * Computes the estimated distance squared from the closest point on a bounding box to a point.
- *
  * @param {Cartesian3} cartesian The point
  * @returns {number} The estimated distance squared from the bounding sphere to the point.
- *
  * @example
  * // Sort bounding boxes from back to front
  * boxes.sort(function(a, b) {
@@ -1182,7 +1159,6 @@ OrientedBoundingBox.prototype.distanceSquaredTo = function (cartesian) {
  * <br>
  * If you imagine the infinite number of planes with normal direction, this computes the smallest distance to the
  * closest and farthest planes from position that intersect the bounding box.
- *
  * @param {Cartesian3} position The position to calculate the distance from.
  * @param {Cartesian3} direction The direction from position.
  * @param {Interval} [result] A Interval to store the nearest and farthest distances.
@@ -1203,7 +1179,6 @@ OrientedBoundingBox.prototype.computePlaneDistances = function (
 
 /**
  * Computes the eight corners of an oriented bounding box. The corners are ordered by (-X, -Y, -Z), (-X, -Y, +Z), (-X, +Y, -Z), (-X, +Y, +Z), (+X, -Y, -Z), (+X, -Y, +Z), (+X, +Y, -Z), (+X, +Y, +Z).
- *
  * @param {Cartesian3[]} [result] An array of eight {@link Cartesian3} instances onto which to store the corners.
  * @returns {Cartesian3[]} The modified result parameter or a new array if none was provided.
  */
@@ -1213,7 +1188,6 @@ OrientedBoundingBox.prototype.computeCorners = function (result) {
 
 /**
  * Computes a transformation matrix from an oriented bounding box.
- *
  * @param {Matrix4} result The object onto which to store the result.
  * @returns {Matrix4} The modified result parameter or a new {@link Matrix4} instance if none was provided.
  */
@@ -1223,7 +1197,6 @@ OrientedBoundingBox.prototype.computeTransformation = function (result) {
 
 /**
  * Determines whether or not a bounding box is hidden from view by the occluder.
- *
  * @param {Occluder} occluder The occluder.
  * @returns {boolean} <code>true</code> if the sphere is not visible; otherwise <code>false</code>.
  */
@@ -1234,7 +1207,6 @@ OrientedBoundingBox.prototype.isOccluded = function (occluder) {
 /**
  * Compares the provided OrientedBoundingBox componentwise and returns
  * <code>true</code> if they are equal, <code>false</code> otherwise.
- *
  * @param {OrientedBoundingBox} left The first OrientedBoundingBox.
  * @param {OrientedBoundingBox} right The second OrientedBoundingBox.
  * @returns {boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
@@ -1251,7 +1223,6 @@ OrientedBoundingBox.equals = function (left, right) {
 
 /**
  * Duplicates this OrientedBoundingBox instance.
- *
  * @param {OrientedBoundingBox} [result] The object onto which to store the result.
  * @returns {OrientedBoundingBox} The modified result parameter or a new OrientedBoundingBox instance if one was not provided.
  */
@@ -1262,7 +1233,6 @@ OrientedBoundingBox.prototype.clone = function (result) {
 /**
  * Compares this OrientedBoundingBox against the provided OrientedBoundingBox componentwise and returns
  * <code>true</code> if they are equal, <code>false</code> otherwise.
- *
  * @param {OrientedBoundingBox} [right] The right hand side OrientedBoundingBox.
  * @returns {boolean} <code>true</code> if they are equal, <code>false</code> otherwise.
  */

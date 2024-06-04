@@ -3,17 +3,14 @@
  * For binary files, the enum value is the magic number of the binary file
  * unless otherwise noted. For JSON files, the enum value is a unique name
  * for internal use.
- *
  * @enum {string}
  * @see Cesium3DTileContent
- *
  * @private
  */
 const Cesium3DTileContentType = {
   /**
    * A Batched 3D Model. This is a binary format with
    * magic number <code>b3dm</code>
-   *
    * @type {string}
    * @constant
    * @private
@@ -22,7 +19,6 @@ const Cesium3DTileContentType = {
   /**
    * An Instanced 3D Model. This is a binary format with magic number
    * <code>i3dm</code>
-   *
    * @type {string}
    * @constant
    * @private
@@ -31,7 +27,6 @@ const Cesium3DTileContentType = {
   /**
    * A Composite model. This is a binary format with magic number
    * <code>cmpt</code>
-   *
    * @type {string}
    * @constant
    * @private
@@ -40,7 +35,6 @@ const Cesium3DTileContentType = {
   /**
    * A Point Cloud model. This is a binary format with magic number
    * <code>pnts</code>
-   *
    * @type {string}
    * @constant
    * @private
@@ -49,7 +43,6 @@ const Cesium3DTileContentType = {
   /**
    * Vector tiles. This is a binary format with magic number
    * <code>vctr</code>
-   *
    * @type {string}
    * @constant
    * @private
@@ -58,7 +51,6 @@ const Cesium3DTileContentType = {
   /**
    * Geometry tiles. This is a binary format with magic number
    * <code>geom</code>
-   *
    * @type {string}
    * @constant
    * @private
@@ -67,7 +59,6 @@ const Cesium3DTileContentType = {
   /**
    * A glTF model in JSON + external BIN form. This is treated
    * as a JSON format.
-   *
    * @type {string}
    * @constant
    * @private
@@ -78,7 +69,6 @@ const Cesium3DTileContentType = {
    * The binary form of a glTF file. Internally, the magic number is
    * changed from <code>glTF</code> to <code>glb</code> to distinguish it from
    * the JSON glTF format.
-   *
    * @type {string}
    * @constant
    * @private
@@ -88,7 +78,6 @@ const Cesium3DTileContentType = {
   /**
    * For implicit tiling, availability bitstreams are stored in binary subtree files.
    * The magic number is <code>subt</code>
-   *
    * @type {string}
    * @constant
    * @private
@@ -97,7 +86,6 @@ const Cesium3DTileContentType = {
   IMPLICIT_SUBTREE: "subt",
   /**
    * For implicit tiling. Subtrees can also be represented as JSON files.
-   *
    * @type {string}
    * @constant
    * @private
@@ -107,7 +95,6 @@ const Cesium3DTileContentType = {
   /**
    * Contents can reference another tileset.json to use
    * as an external tileset. This is a JSON-based format.
-   *
    * @type {string}
    * @constant
    * @private
@@ -116,7 +103,6 @@ const Cesium3DTileContentType = {
   /**
    * Multiple contents are handled separately from the other content types
    * due to differences in request scheduling.
-   *
    * @type {string}
    * @constant
    * @private
@@ -125,7 +111,6 @@ const Cesium3DTileContentType = {
   MULTIPLE_CONTENT: "multipleContent",
   /**
    * GeoJSON content for <code>MAXAR_content_geojson</code> extension.
-   *
    * @type {string}
    * @constant
    * @private
@@ -134,7 +119,6 @@ const Cesium3DTileContentType = {
   GEOJSON: "geoJson",
   /**
    * Binary voxel content for <code>3DTILES_content_voxels</code> extension.
-   *
    * @type {string}
    * @constant
    * @private
@@ -143,7 +127,6 @@ const Cesium3DTileContentType = {
   VOXEL_BINARY: "voxl",
   /**
    * Binary voxel content for <code>3DTILES_content_voxels</code> extension.
-   *
    * @type {string}
    * @constant
    * @private
@@ -156,7 +139,7 @@ const Cesium3DTileContentType = {
  * Check if a content is one of the supported binary formats. Otherwise,
  * the caller can assume a JSON format.
  * @param {Cesium3DTileContentType} contentType The content type of the content payload.
- * @return {boolean} <code>true</code> if the content type is a binary format, or <code>false</code> if the content type is a JSON format.
+ * @returns {boolean} <code>true</code> if the content type is a binary format, or <code>false</code> if the content type is a JSON format.
  * @private
  */
 Cesium3DTileContentType.isBinaryFormat = function (contentType) {

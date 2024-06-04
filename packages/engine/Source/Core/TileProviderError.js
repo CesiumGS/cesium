@@ -4,10 +4,8 @@ import formatError from "./formatError.js";
 
 /**
  * Provides details about an error that occurred in an {@link ImageryProvider} or a {@link TerrainProvider}.
- *
  * @alias TileProviderError
- * @constructor
- *
+ * @class
  * @param {ImageryProvider|TerrainProvider} provider The imagery or terrain provider that experienced the error.
  * @param {string} message A message describing the error.
  * @param {number} [x] The X coordinate of the tile that experienced the error, or undefined if the error
@@ -88,7 +86,6 @@ function TileProviderError(
  * Reports an error in an {@link ImageryProvider} or {@link TerrainProvider} by raising an event if it has any listeners, or by
  * logging the error to the console if the event has no listeners.  This method also tracks the number
  * of times the operation has been retried.
- *
  * @param {TileProviderError} previousError The error instance returned by this function the last
  *        time it was called for this error, or undefined if this is the first time this error has
  *        occurred.
@@ -154,7 +151,6 @@ TileProviderError.reportError = function (
 /**
  * Reports success of an operation by resetting the retry count of a previous error, if any.  This way,
  * if the error occurs again in the future, the listeners will be informed that it has not yet been retried.
- *
  * @param {TileProviderError} previousError The previous error, or undefined if this operation has
  *        not previously resulted in an error.
  */

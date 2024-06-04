@@ -9,10 +9,8 @@ import PerformanceWatchdogViewModel from "./PerformanceWatchdogViewModel.js";
 
 /**
  * Monitors performance of the application and displays a message if poor performance is detected.
- *
  * @alias PerformanceWatchdog
- * @constructor
- *
+ * @class
  * @param {object} [options] Object with the following properties:
  * @param {Element|string} options.container The DOM element or ID that will contain the widget.
  * @param {Scene} options.scene The {@link Scene} for which to monitor performance.
@@ -63,7 +61,6 @@ Object.defineProperties(PerformanceWatchdog.prototype, {
   /**
    * Gets the parent container.
    * @memberof PerformanceWatchdog.prototype
-   *
    * @type {Element}
    */
   container: {
@@ -75,7 +72,6 @@ Object.defineProperties(PerformanceWatchdog.prototype, {
   /**
    * Gets the view model.
    * @memberof PerformanceWatchdog.prototype
-   *
    * @type {PerformanceWatchdogViewModel}
    */
   viewModel: {

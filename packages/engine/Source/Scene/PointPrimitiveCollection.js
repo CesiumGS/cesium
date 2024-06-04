@@ -54,10 +54,8 @@ const attributeLocations = {
  * <br /><br />
  * Points are added and removed from the collection using {@link PointPrimitiveCollection#add}
  * and {@link PointPrimitiveCollection#remove}.
- *
  * @alias PointPrimitiveCollection
- * @constructor
- *
+ * @class
  * @param {object} [options] Object with the following properties:
  * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms each point from model to world coordinates.
  * @param {boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if this primitive's commands' bounding spheres are shown.
@@ -65,14 +63,11 @@ const attributeLocations = {
  * is used for rendering both opaque and translucent points. However, if either all of the points are completely opaque or all are completely translucent,
  * setting the technique to BlendOption.OPAQUE or BlendOption.TRANSLUCENT can improve performance by up to 2x.
  * @param {boolean} [options.show=true] Determines if the primitives in the collection will be shown.
- *
  * @performance For best performance, prefer a few collections, each with many points, to
  * many collections with only a few points each.  Organize collections so that points
  * with the same update frequency are in the same collection, i.e., points that do not
  * change should be in one collection; points that change every frame should be in another
  * collection; and so on.
- *
- *
  * @example
  * // Create a pointPrimitive collection with two points
  * const points = scene.primitives.add(new Cesium.PointPrimitiveCollection());
@@ -84,7 +79,6 @@ const attributeLocations = {
  *   position : new Cesium.Cartesian3(4.0, 5.0, 6.0),
  *   color : Cesium.Color.CYAN
  * });
- *
  * @see PointPrimitiveCollection#add
  * @see PointPrimitiveCollection#remove
  * @see PointPrimitive
@@ -130,7 +124,6 @@ function PointPrimitiveCollection(options) {
 
   /**
    * Determines if primitives in this collection will be shown.
-   *
    * @type {boolean}
    * @default true
    */
@@ -141,11 +134,8 @@ function PointPrimitiveCollection(options) {
    * When this is the identity matrix, the pointPrimitives are drawn in world coordinates, i.e., Earth's WGS84 coordinates.
    * Local reference frames can be used by providing a different transformation matrix, like that returned
    * by {@link Transforms.eastNorthUpToFixedFrame}.
-   *
    * @type {Matrix4}
    * @default {@link Matrix4.IDENTITY}
-   *
-   *
    * @example
    * const center = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883);
    * pointPrimitives.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(center);
@@ -165,7 +155,6 @@ function PointPrimitiveCollection(options) {
    *   color : Cesium.Color.CYAN,
    *   position : new Cesium.Cartesian3(0.0, 0.0, 1000000.0) // up
    * });
-   *
    * @see Transforms.eastNorthUpToFixedFrame
    */
   this.modelMatrix = Matrix4.clone(
@@ -178,9 +167,7 @@ function PointPrimitiveCollection(options) {
    * <p>
    * Draws the bounding sphere for each draw command in the primitive.
    * </p>
-   *
    * @type {boolean}
-   *
    * @default false
    */
   this.debugShowBoundingVolume = defaultValue(
@@ -254,17 +241,12 @@ function destroyPointPrimitives(pointPrimitives) {
 /**
  * Creates and adds a point with the specified initial properties to the collection.
  * The added point is returned so it can be modified or removed from the collection later.
- *
  * @param {object}[options] A template describing the point's properties as shown in Example 1.
  * @returns {PointPrimitive} The point that was added to the collection.
- *
  * @performance Calling <code>add</code> is expected constant time.  However, the collection's vertex buffer
  * is rewritten - an <code>O(n)</code> operation that also incurs CPU to GPU overhead.  For
  * best performance, add as many pointPrimitives as possible before calling <code>update</code>.
- *
- * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
- *
- *
+ * @throws {DeveloperError} This object was destroyed, i.e., destroy() was called.
  * @example
  * // Example 1:  Add a point, specifying all the default values.
  * const p = pointPrimitives.add({
@@ -276,13 +258,11 @@ function destroyPointPrimitives(pointPrimitives) {
  *   outlineWidth : 0.0,
  *   id : undefined
  * });
- *
  * @example
  * // Example 2:  Specify only the point's cartographic position.
  * const p = pointPrimitives.add({
  *   position : Cesium.Cartesian3.fromDegrees(longitude, latitude, height)
  * });
- *
  * @see PointPrimitiveCollection#remove
  * @see PointPrimitiveCollection#removeAll
  */
@@ -298,23 +278,17 @@ PointPrimitiveCollection.prototype.add = function (options) {
 
 /**
  * Removes a point from the collection.
- *
  * @param {PointPrimitive} pointPrimitive The point to remove.
  * @returns {boolean} <code>true</code> if the point was removed; <code>false</code> if the point was not found in the collection.
- *
  * @performance Calling <code>remove</code> is expected constant time.  However, the collection's vertex buffer
  * is rewritten - an <code>O(n)</code> operation that also incurs CPU to GPU overhead.  For
  * best performance, remove as many points as possible before calling <code>update</code>.
  * If you intend to temporarily hide a point, it is usually more efficient to call
  * {@link PointPrimitive#show} instead of removing and re-adding the point.
- *
- * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
- *
- *
+ * @throws {DeveloperError} This object was destroyed, i.e., destroy() was called.
  * @example
  * const p = pointPrimitives.add(...);
  * pointPrimitives.remove(p);  // Returns true
- *
  * @see PointPrimitiveCollection#add
  * @see PointPrimitiveCollection#removeAll
  * @see PointPrimitive#show
@@ -333,18 +307,13 @@ PointPrimitiveCollection.prototype.remove = function (pointPrimitive) {
 
 /**
  * Removes all points from the collection.
- *
  * @performance <code>O(n)</code>.  It is more efficient to remove all the points
  * from a collection and then add new ones than to create a new collection entirely.
- *
- * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
- *
- *
+ * @throws {DeveloperError} This object was destroyed, i.e., destroy() was called.
  * @example
  * pointPrimitives.add(...);
  * pointPrimitives.add(...);
  * pointPrimitives.removeAll();
- *
  * @see PointPrimitiveCollection#add
  * @see PointPrimitiveCollection#remove
  */
@@ -392,10 +361,8 @@ PointPrimitiveCollection.prototype._updatePointPrimitive = function (
 
 /**
  * Check whether this collection contains a given point.
- *
  * @param {PointPrimitive} [pointPrimitive] The point to check for.
  * @returns {boolean} true if this collection contains the point, false otherwise.
- *
  * @see PointPrimitiveCollection#get
  */
 PointPrimitiveCollection.prototype.contains = function (pointPrimitive) {
@@ -410,17 +377,12 @@ PointPrimitiveCollection.prototype.contains = function (pointPrimitive) {
  * it to the left, changing their indices.  This function is commonly used with
  * {@link PointPrimitiveCollection#length} to iterate over all the points
  * in the collection.
- *
  * @param {number} index The zero-based index of the point.
  * @returns {PointPrimitive} The point at the specified index.
- *
  * @performance Expected constant time.  If points were removed from the collection and
  * {@link PointPrimitiveCollection#update} was not called, an implicit <code>O(n)</code>
  * operation is performed.
- *
- * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
- *
- *
+ * @throws {DeveloperError} This object was destroyed, i.e., destroy() was called.
  * @example
  * // Toggle the show property of every point in the collection
  * const len = pointPrimitives.length;
@@ -428,7 +390,6 @@ PointPrimitiveCollection.prototype.contains = function (pointPrimitive) {
  *   const p = pointPrimitives.get(i);
  *   p.show = !p.show;
  * }
- *
  * @see PointPrimitiveCollection#length
  */
 PointPrimitiveCollection.prototype.get = function (index) {
@@ -845,6 +806,7 @@ function updateBoundingVolume(collection, frameState, boundingVolume) {
 const scratchWriterArray = [];
 
 /**
+ * @param frameState
  * @private
  */
 PointPrimitiveCollection.prototype.update = function (frameState) {
@@ -1180,9 +1142,7 @@ PointPrimitiveCollection.prototype.update = function (frameState) {
  * <br /><br />
  * If this object was destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
- *
  * @returns {boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
- *
  * @see PointPrimitiveCollection#destroy
  */
 PointPrimitiveCollection.prototype.isDestroyed = function () {
@@ -1196,13 +1156,9 @@ PointPrimitiveCollection.prototype.isDestroyed = function () {
  * Once an object is destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
  * assign the return value (<code>undefined</code>) to the object as done in the example.
- *
- * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
- *
- *
+ * @throws {DeveloperError} This object was destroyed, i.e., destroy() was called.
  * @example
  * pointPrimitives = pointPrimitives && pointPrimitives.destroy();
- *
  * @see PointPrimitiveCollection#isDestroyed
  */
 PointPrimitiveCollection.prototype.destroy = function () {

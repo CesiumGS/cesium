@@ -29,10 +29,8 @@ import Vector3DTileBatch from "./Vector3DTileBatch.js";
 
 /**
  * Creates a batch of classification meshes.
- *
  * @alias Vector3DTilePrimitive
- * @constructor
- *
+ * @class
  * @param {object} options An object with following properties:
  * @param {Float32Array} options.positions The positions of the meshes.
  * @param {Uint16Array|Uint32Array} options.indices The indices of the triangulated meshes. The indices must be contiguous so that
@@ -47,7 +45,6 @@ import Vector3DTileBatch from "./Vector3DTileBatch.js";
  * @param {BoundingSphere} options.boundingVolume The bounding volume for the entire batch of meshes.
  * @param {BoundingSphere[]} options.boundingVolumes The bounding volume for each mesh.
  * @param {ClassificationType} [options.classificationType] What this tile will classify.
- *
  * @private
  */
 function Vector3DTilePrimitive(options) {
@@ -153,9 +150,7 @@ function Vector3DTilePrimitive(options) {
 Object.defineProperties(Vector3DTilePrimitive.prototype, {
   /**
    * Gets the number of triangles.
-   *
    * @memberof Vector3DTilePrimitive.prototype
-   *
    * @type {number}
    * @readonly
    */
@@ -167,9 +162,7 @@ Object.defineProperties(Vector3DTilePrimitive.prototype, {
 
   /**
    * Gets the geometry memory in bytes.
-   *
    * @memberof Vector3DTilePrimitive.prototype
-   *
    * @type {number}
    * @readonly
    */
@@ -945,7 +938,6 @@ function createPickCommands(primitive) {
 
 /**
  * Creates features for each mesh and places it at the batch id index of features.
- *
  * @param {Vector3DTileContent} content The vector tile content.
  * @param {Cesium3DTileFeature[]} features An array of features where the polygon features will be placed.
  */
@@ -960,7 +952,6 @@ Vector3DTilePrimitive.prototype.createFeatures = function (content, features) {
 
 /**
  * Colors the entire tile when enabled is true. The resulting color will be (mesh batch table color * color).
- *
  * @param {boolean} enabled Whether to enable debug coloring.
  * @param {Color} color The debug color.
  */
@@ -1003,7 +994,6 @@ const complexExpressionReg = /\$/;
 
 /**
  * Apply a style to the content.
- *
  * @param {Cesium3DTileStyle} style The style.
  * @param {Cesium3DTileFeature[]} features The array of features.
  */
@@ -1051,7 +1041,6 @@ Vector3DTilePrimitive.prototype.applyStyle = function (style, features) {
 /**
  * Call when updating the color of a mesh with batchId changes color. The meshes will need to be re-batched
  * on the next update.
- *
  * @param {number} batchId The batch id of the meshes whose color has changed.
  * @param {Color} color The new polygon color.
  */
@@ -1217,7 +1206,6 @@ function updateWireframe(primitive) {
 
 /**
  * Updates the batches and queues the commands for rendering.
- *
  * @param {FrameState} frameState The current frame state.
  */
 Vector3DTilePrimitive.prototype.update = function (frameState) {
@@ -1253,7 +1241,6 @@ Vector3DTilePrimitive.prototype.update = function (frameState) {
  * If this object was destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
  * </p>
- *
  * @returns {boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
  */
 Vector3DTilePrimitive.prototype.isDestroyed = function () {
@@ -1268,8 +1255,7 @@ Vector3DTilePrimitive.prototype.isDestroyed = function () {
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
  * assign the return value (<code>undefined</code>) to the object as done in the example.
  * </p>
- *
- * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+ * @throws {DeveloperError} This object was destroyed, i.e., destroy() was called.
  */
 Vector3DTilePrimitive.prototype.destroy = function () {
   this._va = this._va && this._va.destroy();

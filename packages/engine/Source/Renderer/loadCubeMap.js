@@ -7,18 +7,13 @@ import CubeMap from "./CubeMap.js";
 /**
  * Asynchronously loads six images and creates a cube map.  Returns a promise that
  * will resolve to a {@link CubeMap} once loaded, or reject if any image fails to load.
- *
  * @function loadCubeMap
- *
  * @param {Context} context The context to use to create the cube map.
  * @param {object} urls The source URL of each image.  See the example below.
  * @param {boolean} [skipColorSpaceConversion=false] If true, any custom gamma or color profiles in the images will be ignored.
  * @returns {Promise<CubeMap>} a promise that will resolve to the requested {@link CubeMap} when loaded.
- *
- * @exception {DeveloperError} context is required.
- * @exception {DeveloperError} urls is required and must have positiveX, negativeX, positiveY, negativeY, positiveZ, and negativeZ properties.
- *
- *
+ * @throws {DeveloperError} context is required.
+ * @throws {DeveloperError} urls is required and must have positiveX, negativeX, positiveY, negativeY, positiveZ, and negativeZ properties.
  * @example
  * Cesium.loadCubeMap(context, {
  *     positiveX : 'skybox_px.png',
@@ -32,10 +27,8 @@ import CubeMap from "./CubeMap.js";
  * }).catch(function(error) {
  *     // an error occurred
  * });
- *
  * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
  * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
- *
  * @private
  */
 function loadCubeMap(context, urls, skipColorSpaceConversion) {

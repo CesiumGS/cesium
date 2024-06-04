@@ -68,7 +68,6 @@ TerrainCache.prototype.tidy = function () {
  * @typedef {Object} GoogleEarthEnterpriseTerrainProvider.ConstructorOptions
  *
  * Initialization options for GoogleEarthEnterpriseTerrainProvider constructor
- *
  * @property {Ellipsoid} [ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
  * @property {Credit|string} [credit] A credit for the data source, which is displayed on the canvas.
  */
@@ -79,21 +78,16 @@ TerrainCache.prototype.tidy = function () {
  * </div>
  *
  * Provides tiled terrain using the Google Earth Enterprise REST API.
- *
  * @alias GoogleEarthEnterpriseTerrainProvider
- * @constructor
- *
+ * @class
  * @param {GoogleEarthEnterpriseTerrainProvider.ConstructorOptions} [options] An object describing initialization options
- *
  * @see GoogleEarthEnterpriseTerrainProvider.fromMetadata
  * @see GoogleEarthEnterpriseMetadata.fromUrl
  * @see GoogleEarthEnterpriseImageryProvider
  * @see CesiumTerrainProvider
- *
  * @example
  * const geeMetadata = await GoogleEarthEnterpriseMetadata.fromUrl("http://www.example.com");
  * const gee = Cesium.GoogleEarthEnterpriseTerrainProvider.fromMetadata(geeMetadata);
- *
  * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
  */
 function GoogleEarthEnterpriseTerrainProvider(options) {
@@ -234,15 +228,11 @@ Object.defineProperties(GoogleEarthEnterpriseTerrainProvider.prototype, {
 
 /**
  * Creates a GoogleEarthTerrainProvider from GoogleEarthEnterpriseMetadata
- *
  * @param {GoogleEarthEnterpriseMetadata} metadata A metadata object that can be used to share metadata requests with a GoogleEarthEnterpriseImageryProvider.
  * @param {GoogleEarthEnterpriseTerrainProvider.ConstructorOptions} options An object describing initialization options
  * @returns {GoogleEarthEnterpriseTerrainProvider}
- *
  * @see GoogleEarthEnterpriseMetadata.fromUrl
- *
- * @exception {RuntimeError} metadata does not specify terrain
- *
+ * @throws {RuntimeError} metadata does not specify terrain
  * @example
  * const geeMetadata = await GoogleEarthEnterpriseMetadata.fromUrl("http://www.example.com");
  * const gee = Cesium.GoogleEarthEnterpriseTerrainProvider.fromMetadata(geeMetadata);
@@ -289,7 +279,6 @@ function computeChildMask(quadKey, info, metadata) {
 /**
  * Requests the geometry for a given tile.   The result must include terrain data and
  * may optionally include a water mask and an indication of which child tiles are available.
- *
  * @param {number} x The X coordinate of the tile for which to request geometry.
  * @param {number} y The Y coordinate of the tile for which to request geometry.
  * @param {number} level The level of the tile for which to request geometry.
@@ -482,7 +471,6 @@ GoogleEarthEnterpriseTerrainProvider.prototype.requestTileGeometry = function (
 
 /**
  * Gets the maximum geometric error allowed in a tile at a given level.
- *
  * @param {number} level The tile level for which to get the maximum geometric error.
  * @returns {number} The maximum geometric error.
  */
@@ -494,7 +482,6 @@ GoogleEarthEnterpriseTerrainProvider.prototype.getLevelMaximumGeometricError = f
 
 /**
  * Determines whether data for a tile is available to be loaded.
- *
  * @param {number} x The X coordinate of the tile for which to request geometry.
  * @param {number} y The Y coordinate of the tile for which to request geometry.
  * @param {number} level The level of the tile for which to request geometry.
@@ -551,7 +538,6 @@ GoogleEarthEnterpriseTerrainProvider.prototype.getTileDataAvailable = function (
 
 /**
  * Makes sure we load availability data for a tile
- *
  * @param {number} x The X coordinate of the tile for which to request geometry.
  * @param {number} y The Y coordinate of the tile for which to request geometry.
  * @param {number} level The level of the tile for which to request geometry.

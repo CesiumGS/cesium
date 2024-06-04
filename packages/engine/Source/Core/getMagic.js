@@ -2,6 +2,8 @@ import defaultValue from "./defaultValue.js";
 import getStringFromTypedArray from "./getStringFromTypedArray.js";
 
 /**
+ * @param uint8Array
+ * @param byteOffset
  * @private
  */
 function getMagic(uint8Array, byteOffset) {

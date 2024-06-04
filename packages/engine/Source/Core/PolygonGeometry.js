@@ -575,10 +575,8 @@ function createGeometryFromPositionsExtruded(
 
 /**
  * A description of a polygon on the ellipsoid. The polygon is defined by a polygon hierarchy. Polygon geometry can be rendered with both {@link Primitive} and {@link GroundPrimitive}.
- *
  * @alias PolygonGeometry
- * @constructor
- *
+ * @class
  * @param {object} options Object with the following properties:
  * @param {PolygonHierarchy} options.polygonHierarchy A polygon hierarchy that can include holes.
  * @param {number} [options.height=0.0] The distance in meters between the polygon and the ellipsoid surface.
@@ -592,12 +590,9 @@ function createGeometryFromPositionsExtruded(
  * @param {boolean} [options.closeBottom=true] When false, leaves off the bottom of an extruded polygon open.
  * @param {ArcType} [options.arcType=ArcType.GEODESIC] The type of line the polygon edges must follow. Valid options are {@link ArcType.GEODESIC} and {@link ArcType.RHUMB}.
  * @param {PolygonHierarchy} [options.textureCoordinates] Texture coordinates as a {@link PolygonHierarchy} of {@link Cartesian2} points. Has no effect for ground primitives.
- *
  * @see PolygonGeometry#createGeometry
  * @see PolygonGeometry#fromPositions
- *
  * @demo {@link https://sandcastle.cesium.com/index.html?src=Polygon.html|Cesium Sandcastle Polygon Demo}
- *
  * @example
  * // 1. create a polygon from points
  * const polygon = new Cesium.PolygonGeometry({
@@ -752,7 +747,6 @@ function PolygonGeometry(options) {
 
 /**
  * A description of a polygon from an array of positions. Polygon geometry can be rendered with both {@link Primitive} and {@link GroundPrimitive}.
- *
  * @param {object} options Object with the following properties:
  * @param {Cartesian3[]} options.positions An array of positions that defined the corner points of the polygon.
  * @param {number} [options.height=0.0] The height of the polygon.
@@ -767,7 +761,6 @@ function PolygonGeometry(options) {
  * @param {ArcType} [options.arcType=ArcType.GEODESIC] The type of line the polygon edges must follow. Valid options are {@link ArcType.GEODESIC} and {@link ArcType.RHUMB}.
  * @param {PolygonHierarchy} [options.textureCoordinates] Texture coordinates as a {@link PolygonHierarchy} of {@link Cartesian2} points. Has no effect for ground primitives.
  * @returns {PolygonGeometry}
- *
  * @example
  * // create a polygon from points
  * const polygon = Cesium.PolygonGeometry.fromPositions({
@@ -780,7 +773,6 @@ function PolygonGeometry(options) {
  *   ])
  * });
  * const geometry = Cesium.PolygonGeometry.createGeometry(polygon);
- *
  * @see PolygonGeometry#createGeometry
  */
 PolygonGeometry.fromPositions = function (options) {
@@ -812,11 +804,9 @@ PolygonGeometry.fromPositions = function (options) {
 
 /**
  * Stores the provided instance into the provided array.
- *
  * @param {PolygonGeometry} value The value to pack.
  * @param {number[]} array The array to pack into.
  * @param {number} [startingIndex=0] The index into the array at which to start packing the elements.
- *
  * @returns {number[]} The array that was packed into
  */
 PolygonGeometry.pack = function (value, array, startingIndex) {
@@ -875,7 +865,6 @@ const dummyOptions = {
 
 /**
  * Retrieves an instance from a packed array.
- *
  * @param {number[]} array The packed array.
  * @param {number} [startingIndex=0] The starting index of the element to be unpacked.
  * @param {PolygonGeometry} [result] The object into which to store the result.
@@ -1038,12 +1027,10 @@ const polygon = {
 
 /**
  * Computes a rectangle which encloses the polygon defined by the list of positions, including cases over the international date line and the poles.
- *
  * @param {Cartesian3[]} positions A linear ring defining the outer boundary of the polygon.
  * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference.
  * @param {ArcType} [arcType=ArcType.GEODESIC] The type of line the polygon edges must follow. Valid options are {@link ArcType.GEODESIC} and {@link ArcType.RHUMB}.
  * @param {Rectangle} [result] An object in which to store the result.
- *
  * @returns {Rectangle} The result rectangle
  */
 PolygonGeometry.computeRectangleFromPositions = function (
@@ -1271,7 +1258,6 @@ function computeBoundingRectangle(outerRing, rectangle, ellipsoid, stRotation) {
 
 /**
  * Computes the geometric representation of a polygon, including its vertices, indices, and a bounding sphere.
- *
  * @param {PolygonGeometry} polygonGeometry A description of the polygon.
  * @returns {Geometry|undefined} The computed vertices and indices.
  */
@@ -1502,6 +1488,9 @@ PolygonGeometry.createGeometry = function (polygonGeometry) {
 };
 
 /**
+ * @param polygonGeometry
+ * @param minHeightFunc
+ * @param maxHeightFunc
  * @private
  */
 PolygonGeometry.createShadowVolume = function (

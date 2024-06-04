@@ -3,15 +3,11 @@ import formatError from "../Core/formatError.js";
 /**
  * Creates an adapter function to allow a calculation function to operate as a Web Worker,
  * paired with TaskProcessor, to receive tasks and return results.
- *
  * @function createTaskProcessorWorker
- *
  * @param {createTaskProcessorWorker.WorkerFunction} workerFunction The calculation function,
  *        which takes parameters and returns a result.
  * @returns {createTaskProcessorWorker.TaskProcessorWorkerFunction} A function that adapts the
  *          calculation function to work as a Web Worker onmessage listener with TaskProcessor.
- *
- *
  * @example
  * function doCalculation(parameters, transferableObjects) {
  *   // calculate some result using the inputs in parameters
@@ -20,7 +16,6 @@ import formatError from "../Core/formatError.js";
  *
  * return Cesium.createTaskProcessorWorker(doCalculation);
  * // the resulting function is compatible with TaskProcessor
- *
  * @see TaskProcessor
  * @see {@link http://www.w3.org/TR/workers/|Web Workers}
  * @see {@link http://www.w3.org/TR/html5/common-dom-interfaces.html#transferable-objects|Transferable objects}
@@ -83,12 +78,10 @@ function createTaskProcessorWorker(workerFunction) {
 /**
  * A function that performs a calculation in a Web Worker.
  * @callback createTaskProcessorWorker.WorkerFunction
- *
  * @param {object} parameters Parameters to the calculation.
  * @param {Array} transferableObjects An array that should be filled with references to objects inside
  *        the result that should be transferred back to the main document instead of copied.
  * @returns {object} The result of the calculation.
- *
  * @example
  * function calculate(parameters, transferableObjects) {
  *   // perform whatever calculation is necessary.
@@ -107,7 +100,6 @@ function createTaskProcessorWorker(workerFunction) {
  * A Web Worker message event handler function that handles the interaction with TaskProcessor,
  * specifically, task ID management and posting a response message containing the result.
  * @callback createTaskProcessorWorker.TaskProcessorWorkerFunction
- *
  * @param {object} event The onmessage event object.
  */
 export default createTaskProcessorWorker;

@@ -10,8 +10,7 @@ const defaultRotation = Quaternion.IDENTITY;
 /**
  * An affine transformation defined by a translation, rotation, and scale.
  * @alias TranslationRotationScale
- * @constructor
- *
+ * @class
  * @param {Cartesian3} [translation=Cartesian3.ZERO] A {@link Cartesian3} specifying the (x, y, z) translation to apply to the node.
  * @param {Quaternion} [rotation=Quaternion.IDENTITY] A {@link Quaternion} specifying the (x, y, z, w) rotation to apply to the node.
  * @param {Cartesian3} [scale=new Cartesian3(1.0, 1.0, 1.0)] A {@link Cartesian3} specifying the (x, y, z) scaling to apply to the node.
@@ -44,7 +43,6 @@ function TranslationRotationScale(translation, rotation, scale) {
 /**
  * Compares this instance against the provided instance and returns
  * <code>true</code> if they are equal, <code>false</code> otherwise.
- *
  * @param {TranslationRotationScale} [right] The right hand side TranslationRotationScale.
  * @returns {boolean} <code>true</code> if they are equal, <code>false</code> otherwise.
  */

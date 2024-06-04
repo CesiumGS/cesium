@@ -5,16 +5,15 @@ import CesiumMath from "../Core/Math.js";
 
 /**
  * A heatmap colorizer in a {@link Cesium3DTileset}. A tileset can colorize its visible tiles in a heatmap style.
- *
+ * @param tilePropertyName
  * @alias Cesium3DTilesetHeatmap
- * @constructor
+ * @class
  * @private
  */
 function Cesium3DTilesetHeatmap(tilePropertyName) {
   /**
    * The tile variable to track for heatmap colorization.
    * Tile's will be colorized relative to the other visible tile's values for this variable.
-   *
    * @type {string}
    */
   this.tilePropertyName = tilePropertyName;
@@ -35,6 +34,8 @@ function Cesium3DTilesetHeatmap(tilePropertyName) {
 
 /**
  * Convert to a usable heatmap value (i.e. a number). Ensures that tile values that aren't stored as numbers can be used for colorization.
+ * @param tileValue
+ * @param tilePropertyName
  * @private
  */
 function getHeatmapValue(tileValue, tilePropertyName) {
@@ -49,7 +50,6 @@ function getHeatmapValue(tileValue, tilePropertyName) {
 
 /**
  * Sets the reference minimum and maximum for the variable name. Converted to numbers before they are stored.
- *
  * @param {object} minimum The minimum reference value.
  * @param {object} maximum The maximum reference value.
  * @param {string} tilePropertyName The tile variable that will use these reference values when it is colorized.

@@ -28,20 +28,16 @@ import VerticalExaggeration from "../Core/VerticalExaggeration.js";
 
 /**
  * A primitive that renders voxel data from a {@link VoxelProvider}.
- *
  * @alias VoxelPrimitive
- * @constructor
- *
+ * @class
  * @param {object} [options] Object with the following properties:
  * @param {VoxelProvider} [options.provider] The voxel provider that supplies the primitive with tile data.
  * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The model matrix used to transform the primitive.
  * @param {CustomShader} [options.customShader] The custom shader used to style the primitive.
  * @param {Clock} [options.clock] The clock used to control time dynamic behavior.
- *
  * @see VoxelProvider
  * @see Cesium3DTilesVoxelProvider
  * @see VoxelShapeType
- *
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
 function VoxelPrimitive(options) {
@@ -64,7 +60,6 @@ function VoxelPrimitive(options) {
 
   /**
    * This member is not created until the provider and shape are ready.
-   *
    * @type {VoxelTraversal}
    * @private
    */
@@ -72,7 +67,6 @@ function VoxelPrimitive(options) {
 
   /**
    * This member is not created until the provider is ready.
-   *
    * @type {VoxelShape}
    * @private
    */
@@ -86,7 +80,6 @@ function VoxelPrimitive(options) {
 
   /**
    * This member is not created until the provider is ready.
-   *
    * @type {Cartesian3}
    * @private
    */
@@ -94,7 +87,6 @@ function VoxelPrimitive(options) {
 
   /**
    * This member is not created until the provider is ready.
-   *
    * @type {Cartesian3}
    * @private
    */
@@ -102,7 +94,6 @@ function VoxelPrimitive(options) {
 
   /**
    * This member is not known until the provider is ready.
-   *
    * @type {Cartesian3}
    * @private
    */
@@ -111,7 +102,6 @@ function VoxelPrimitive(options) {
   /**
    * Used to detect if the shape is dirty.
    * This member is not known until the provider is ready.
-   *
    * @type {Cartesian3}
    * @private
    */
@@ -119,7 +109,6 @@ function VoxelPrimitive(options) {
 
   /**
    * This member is not known until the provider is ready.
-   *
    * @type {Cartesian3}
    * @private
    */
@@ -128,7 +117,6 @@ function VoxelPrimitive(options) {
   /**
    * Used to detect if the shape is dirty.
    * This member is not known until the provider is ready.
-   *
    * @type {Cartesian3}
    * @private
    */
@@ -136,7 +124,6 @@ function VoxelPrimitive(options) {
 
   /**
    * Minimum bounds with vertical exaggeration applied
-   *
    * @type {Cartesian3}
    * @private
    */
@@ -144,7 +131,6 @@ function VoxelPrimitive(options) {
 
   /**
    * Used to detect if the shape is dirty.
-   *
    * @type {Cartesian3}
    * @private
    */
@@ -152,7 +138,6 @@ function VoxelPrimitive(options) {
 
   /**
    * Maximum bounds with vertical exaggeration applied
-   *
    * @type {Cartesian3}
    * @private
    */
@@ -160,7 +145,6 @@ function VoxelPrimitive(options) {
 
   /**
    * Used to detect if the shape is dirty.
-   *
    * @type {Cartesian3}
    * @private
    */
@@ -168,7 +152,6 @@ function VoxelPrimitive(options) {
 
   /**
    * This member is not known until the provider is ready.
-   *
    * @type {Cartesian3}
    * @private
    */
@@ -177,7 +160,6 @@ function VoxelPrimitive(options) {
   /**
    * Used to detect if the clipping is dirty.
    * This member is not known until the provider is ready.
-   *
    * @type {Cartesian3}
    * @private
    */
@@ -185,7 +167,6 @@ function VoxelPrimitive(options) {
 
   /**
    * This member is not known until the provider is ready.
-   *
    * @type {Cartesian3}
    * @private
    */
@@ -194,7 +175,6 @@ function VoxelPrimitive(options) {
   /**
    * Used to detect if the clipping is dirty.
    * This member is not known until the provider is ready.
-   *
    * @type {Cartesian3}
    * @private
    */
@@ -202,7 +182,6 @@ function VoxelPrimitive(options) {
 
   /**
    * Clipping planes on the primitive
-   *
    * @type {ClippingPlaneCollection}
    * @private
    */
@@ -210,7 +189,6 @@ function VoxelPrimitive(options) {
 
   /**
    * Keeps track of when the clipping planes change
-   *
    * @type {number}
    * @private
    */
@@ -218,7 +196,6 @@ function VoxelPrimitive(options) {
 
   /**
    * Keeps track of when the clipping planes are enabled / disabled
-   *
    * @type {boolean}
    * @private
    */
@@ -226,7 +203,6 @@ function VoxelPrimitive(options) {
 
   /**
    * The primitive's model matrix.
-   *
    * @type {Matrix4}
    * @private
    */
@@ -236,7 +212,6 @@ function VoxelPrimitive(options) {
 
   /**
    * Model matrix with vertical exaggeration applied. Only used for BOX shape type.
-   *
    * @type {Matrix4}
    * @private
    */
@@ -245,7 +220,6 @@ function VoxelPrimitive(options) {
   /**
    * The primitive's model matrix multiplied by the provider's model matrix.
    * This member is not known until the provider is ready.
-   *
    * @type {Matrix4}
    * @private
    */
@@ -254,7 +228,6 @@ function VoxelPrimitive(options) {
   /**
    * Used to detect if the shape is dirty.
    * This member is not known until the provider is ready.
-   *
    * @type {Matrix4}
    * @private
    */
@@ -503,7 +476,6 @@ function initialize(primitive, provider) {
 Object.defineProperties(VoxelPrimitive.prototype, {
   /**
    * Gets a value indicating whether or not the primitive is ready for use.
-   *
    * @memberof VoxelPrimitive.prototype
    * @type {boolean}
    * @readonly
@@ -516,7 +488,6 @@ Object.defineProperties(VoxelPrimitive.prototype, {
 
   /**
    * Gets the {@link VoxelProvider} associated with this primitive.
-   *
    * @memberof VoxelPrimitive.prototype
    * @type {VoxelProvider}
    * @readonly
@@ -529,7 +500,6 @@ Object.defineProperties(VoxelPrimitive.prototype, {
 
   /**
    * Gets the bounding sphere.
-   *
    * @memberof VoxelPrimitive.prototype
    * @type {BoundingSphere}
    * @readonly
@@ -542,7 +512,6 @@ Object.defineProperties(VoxelPrimitive.prototype, {
 
   /**
    * Gets the oriented bounding box.
-   *
    * @memberof VoxelPrimitive.prototype
    * @type {OrientedBoundingBox}
    * @readonly
@@ -555,7 +524,6 @@ Object.defineProperties(VoxelPrimitive.prototype, {
 
   /**
    * Gets the model matrix.
-   *
    * @memberof VoxelPrimitive.prototype
    * @type {Matrix4}
    * @readonly
@@ -575,7 +543,6 @@ Object.defineProperties(VoxelPrimitive.prototype, {
 
   /**
    * Gets the shape type.
-   *
    * @memberof VoxelPrimitive.prototype
    * @type {VoxelShapeType}
    * @readonly
@@ -588,7 +555,6 @@ Object.defineProperties(VoxelPrimitive.prototype, {
 
   /**
    * Gets the voxel dimensions.
-   *
    * @memberof VoxelPrimitive.prototype
    * @type {Cartesian3}
    * @readonly
@@ -601,7 +567,6 @@ Object.defineProperties(VoxelPrimitive.prototype, {
 
   /**
    * Gets the minimum value per channel of the voxel data.
-   *
    * @memberof VoxelPrimitive.prototype
    * @type {number[][]}
    * @readonly
@@ -614,7 +579,6 @@ Object.defineProperties(VoxelPrimitive.prototype, {
 
   /**
    * Gets the maximum value per channel of the voxel data.
-   *
    * @memberof VoxelPrimitive.prototype
    * @type {number[][]}
    * @readonly
@@ -627,7 +591,6 @@ Object.defineProperties(VoxelPrimitive.prototype, {
 
   /**
    * Gets or sets whether or not this primitive should be displayed.
-   *
    * @memberof VoxelPrimitive.prototype
    * @type {boolean}
    */
@@ -646,7 +609,6 @@ Object.defineProperties(VoxelPrimitive.prototype, {
 
   /**
    * Gets or sets whether or not the primitive should update when the view changes.
-   *
    * @memberof VoxelPrimitive.prototype
    * @type {boolean}
    */
@@ -665,7 +627,6 @@ Object.defineProperties(VoxelPrimitive.prototype, {
 
   /**
    * Gets or sets whether or not to render debug visualizations.
-   *
    * @memberof VoxelPrimitive.prototype
    * @type {boolean}
    */
@@ -684,7 +645,6 @@ Object.defineProperties(VoxelPrimitive.prototype, {
 
   /**
    * Gets or sets whether or not to test against depth when rendering.
-   *
    * @memberof VoxelPrimitive.prototype
    * @type {boolean}
    */
@@ -707,7 +667,6 @@ Object.defineProperties(VoxelPrimitive.prototype, {
   /**
    * Gets or sets whether or not to jitter the view ray during the raymarch.
    * This reduces stair-step artifacts but introduces noise.
-   *
    * @memberof VoxelPrimitive.prototype
    * @type {boolean}
    */
@@ -729,7 +688,6 @@ Object.defineProperties(VoxelPrimitive.prototype, {
 
   /**
    * Gets or sets the nearest sampling.
-   *
    * @memberof VoxelPrimitive.prototype
    * @type {boolean}
    */
@@ -753,7 +711,6 @@ Object.defineProperties(VoxelPrimitive.prototype, {
    * Controls how quickly to blend between different levels of the tree.
    * 0.0 means an instantaneous pop.
    * 1.0 means a full linear blend.
-   *
    * @memberof VoxelPrimitive.prototype
    * @type {number}
    * @private
@@ -776,7 +733,6 @@ Object.defineProperties(VoxelPrimitive.prototype, {
    * of a voxel is greater than the screen space error, the tile is subdivided.
    * Lower screen space error corresponds with higher detail rendering, but could
    * result in worse performance and higher memory consumption.
-   *
    * @memberof VoxelPrimitive.prototype
    * @type {number}
    */
@@ -797,7 +753,6 @@ Object.defineProperties(VoxelPrimitive.prototype, {
    * Gets or sets the step size multiplier used during raymarching.
    * The lower the value, the higher the rendering quality, but
    * also the worse the performance.
-   *
    * @memberof VoxelPrimitive.prototype
    * @type {number}
    */
@@ -817,7 +772,6 @@ Object.defineProperties(VoxelPrimitive.prototype, {
   /**
    * Gets or sets the minimum bounds in the shape's local coordinate system.
    * Voxel data is stretched or squashed to fit the bounds.
-   *
    * @memberof VoxelPrimitive.prototype
    * @type {Cartesian3}
    */
@@ -837,7 +791,6 @@ Object.defineProperties(VoxelPrimitive.prototype, {
   /**
    * Gets or sets the maximum bounds in the shape's local coordinate system.
    * Voxel data is stretched or squashed to fit the bounds.
-   *
    * @memberof VoxelPrimitive.prototype
    * @type {Cartesian3}
    */
@@ -857,7 +810,6 @@ Object.defineProperties(VoxelPrimitive.prototype, {
   /**
    * Gets or sets the minimum clipping location in the shape's local coordinate system.
    * Any voxel content outside the range is clipped.
-   *
    * @memberof VoxelPrimitive.prototype
    * @type {Cartesian3}
    */
@@ -880,7 +832,6 @@ Object.defineProperties(VoxelPrimitive.prototype, {
   /**
    * Gets or sets the maximum clipping location in the shape's local coordinate system.
    * Any voxel content outside the range is clipped.
-   *
    * @memberof VoxelPrimitive.prototype
    * @type {Cartesian3}
    */
@@ -902,7 +853,6 @@ Object.defineProperties(VoxelPrimitive.prototype, {
 
   /**
    * The {@link ClippingPlaneCollection} used to selectively disable rendering the primitive.
-   *
    * @memberof VoxelPrimitive.prototype
    * @type {ClippingPlaneCollection}
    */
@@ -918,7 +868,6 @@ Object.defineProperties(VoxelPrimitive.prototype, {
 
   /**
    * Gets or sets the custom shader. If undefined, {@link VoxelPrimitive.DefaultCustomShader} is set.
-   *
    * @memberof VoxelPrimitive.prototype
    * @type {CustomShader}
    */
@@ -954,7 +903,6 @@ Object.defineProperties(VoxelPrimitive.prototype, {
 
   /**
    * Gets an event that is raised whenever a custom shader is compiled.
-   *
    * @memberof VoxelPrimitive.prototype
    * @type {Event}
    * @readonly
@@ -990,7 +938,6 @@ const transformPositionUvToLocal = Matrix4.fromRotationTranslation(
 
 /**
  * Updates the voxel primitive.
- *
  * @param {FrameState} frameState
  * @private
  */
@@ -1381,7 +1328,6 @@ function checkTransformAndBounds(primitive, provider) {
  * @param {string} newBoundKey A key pointing to a bounds property of type Cartesian3 or Matrix4
  * @param {string} oldBoundKey A key pointing to a bounds property of the same type as the property at newBoundKey
  * @returns {number} 1 if the bound value changed, 0 otherwise
- *
  * @private
  */
 function updateBound(primitive, newBoundKey, oldBoundKey) {
@@ -1566,7 +1512,6 @@ function checkShapeDefines(primitive, shape) {
  * @param {TimeIntervalCollection} timeIntervalCollection
  * @param {Clock} clock
  * @returns {number}
- *
  * @private
  */
 function getKeyframeLocation(timeIntervalCollection, clock) {
@@ -1608,7 +1553,6 @@ function getKeyframeLocation(timeIntervalCollection, clock) {
 
 /**
  * Update the clipping planes state and associated uniforms
- *
  * @param {VoxelPrimitive} primitive
  * @param {FrameState} frameState
  * @returns {boolean} Whether the clipping planes changed, requiring a shader rebuild
@@ -1665,9 +1609,7 @@ function updateClippingPlanes(primitive, frameState) {
  * <br /><br />
  * If this object was destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
- *
  * @returns {boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
- *
  * @see VoxelPrimitive#destroy
  */
 VoxelPrimitive.prototype.isDestroyed = function () {
@@ -1681,11 +1623,8 @@ VoxelPrimitive.prototype.isDestroyed = function () {
  * Once an object is destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
  * assign the return value (<code>undefined</code>) to the object as done in the example.
- *
- * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
- *
+ * @throws {DeveloperError} This object was destroyed, i.e., destroy() was called.
  * @see VoxelPrimitive#isDestroyed
- *
  * @example
  * voxelPrimitive = voxelPrimitive && voxelPrimitive.destroy();
  */
@@ -1762,14 +1701,11 @@ const scratchCornersClipSpace = new Array(
  * behind the near plane, it uses the intersection point of each of the vertex's
  * edges against the near plane as part of the AABB calculation. This is done in
  * clip space prior to perspective division.
- *
  * @function
- *
  * @param {OrientedBoundingBox} orientedBoundingBox
  * @param {Matrix4} worldToProjection
  * @param {Cartesian4} result
  * @returns {Cartesian4}
- *
  * @private
  */
 function orientedBoundingBoxToNdcAabb(
@@ -1863,12 +1799,9 @@ const polylineZAxis = new Cartesian3(0.0, 0.0, polylineAxisDistance);
 
 /**
  * Draws the tile bounding boxes and axes.
- *
  * @function
- *
  * @param {VoxelPrimitive} that
  * @param {FrameState} frameState
- *
  * @private
  */
 function debugDraw(that, frameState) {
@@ -1953,11 +1886,9 @@ function debugDraw(that, frameState) {
 
 /**
  * The default custom shader used by the primitive.
- *
  * @type {CustomShader}
  * @constant
  * @readonly
- *
  * @private
  */
 VoxelPrimitive.DefaultCustomShader = new CustomShader({

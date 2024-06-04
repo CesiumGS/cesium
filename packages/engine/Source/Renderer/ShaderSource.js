@@ -303,15 +303,12 @@ function combineShader(shaderSource, isFragmentShader, context) {
 
 /**
  * An object containing various inputs that will be combined to form a final GLSL shader string.
- *
  * @param {object} [options] Object with the following properties:
  * @param {string[]} [options.sources] An array of strings to combine containing GLSL code for the shader.
  * @param {string[]} [options.defines] An array of strings containing GLSL identifiers to <code>#define</code>.
  * @param {string} [options.pickColorQualifier] The GLSL qualifier, <code>uniform</code> or <code>in</code>, for the input <code>czm_pickColor</code>.  When defined, a pick fragment shader is generated.
  * @param {boolean} [options.includeBuiltIns=true] If true, referenced built-in functions will be included with the combined shader.  Set to false if this shader will become a source in another shader, to avoid duplicating functions.
- *
- * @exception {DeveloperError} options.pickColorQualifier must be 'uniform' or 'in'.
- *
+ * @throws {DeveloperError} options.pickColorQualifier must be 'uniform' or 'in'.
  * @example
  * // 1. Prepend #defines to a shader
  * const source = new Cesium.ShaderSource({
@@ -324,7 +321,6 @@ function combineShader(shaderSource, isFragmentShader, context) {
  *   sources : ['void main() { out_FragColor = vec4(1.0); }'],
  *   pickColorQualifier : 'uniform'
  * });
- *
  * @private
  */
 function ShaderSource(options) {
@@ -367,9 +363,7 @@ ShaderSource.replaceMain = function (source, renamedMain) {
  * Since {@link ShaderSource#createCombinedVertexShader} and
  * {@link ShaderSource#createCombinedFragmentShader} are both expensive to
  * compute, create a simpler string key for lookups in the {@link ShaderCache}.
- *
  * @returns {string} A key for identifying this shader
- *
  * @private
  */
 ShaderSource.prototype.getCacheKey = function () {
@@ -385,9 +379,7 @@ ShaderSource.prototype.getCacheKey = function () {
 
 /**
  * Create a single string containing the full, combined vertex shader with all dependencies and defines.
- *
  * @param {Context} context The current rendering context
- *
  * @returns {string} The combined shader string.
  */
 ShaderSource.prototype.createCombinedVertexShader = function (context) {
@@ -396,9 +388,7 @@ ShaderSource.prototype.createCombinedVertexShader = function (context) {
 
 /**
  * Create a single string containing the full, combined fragment shader with all dependencies and defines.
- *
  * @param {Context} context The current rendering context
- *
  * @returns {string} The combined shader string.
  */
 ShaderSource.prototype.createCombinedFragmentShader = function (context) {

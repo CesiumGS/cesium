@@ -11,7 +11,6 @@ import WireframeIndexGenerator from "../../Core/WireframeIndexGenerator.js";
 /**
  * The wireframe pipeline stage generates a new index buffer for rendering the
  * structure of the mesh with gl.LINES.
- *
  * @namespace WireframePipelineStage
  * @private
  */
@@ -22,11 +21,10 @@ const WireframePipelineStage = {
 /**
  * Process a primitive. This modifies the render resources as follows:
  * <ul>
- *   <li>Adds a define to the fragment shader to prevent extra shading of the lines.</li>
- *   <li>Adds a separate index buffer for wireframe indices</li>
- *   <li>Updates the primitive type and count for rendering with gl.LINES</li>
+ * <li>Adds a define to the fragment shader to prevent extra shading of the lines.</li>
+ * <li>Adds a separate index buffer for wireframe indices</li>
+ * <li>Updates the primitive type and count for rendering with gl.LINES</li>
  * </ul>
- *
  * @param {PrimitiveRenderResources} renderResources The render resources for this node
  * @param {ModelComponents.primitive} primitive The primitive
  * @param {FrameState} frameState The frame state

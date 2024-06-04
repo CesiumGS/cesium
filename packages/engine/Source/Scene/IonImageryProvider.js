@@ -58,7 +58,6 @@ const ImageryProviderAsyncMapping = {
  * @typedef {object} IonImageryProvider.ConstructorOptions
  *
  * Initialization options for the TileMapServiceImageryProvider constructor
- *
  * @property {string} [accessToken=Ion.defaultAccessToken] The access token to use.
  * @property {string|Resource} [server=Ion.defaultServer] The resource to the Cesium ion API server.
  */
@@ -69,16 +68,12 @@ const ImageryProviderAsyncMapping = {
  * </div>
  *
  * Provides tiled imagery using the Cesium ion REST API.
- *
  * @alias IonImageryProvider
- * @constructor
- *
+ * @class
  * @param {IonImageryProvider.ConstructorOptions} [options] Object describing initialization options
- *
  * @example
  * const imageryLayer = Cesium.ImageryLayer.fromProviderAsync(Cesium.IonImageryProvider.fromAssetId(3812));
  * viewer.imageryLayers.add(imageryLayer);
- *
  * @see IonImageryProvider.fromAssetId
  */
 function IonImageryProvider(options) {
@@ -249,17 +244,14 @@ Object.defineProperties(IonImageryProvider.prototype, {
 
 /**
  * Creates a provider for tiled imagery using the Cesium ion REST API.
- *
  * @param {Number} assetId  An ion imagery asset ID.
  * @param {IonImageryProvider.ConstructorOptions} [options] Object describing initialization options.
  * @returns {Promise<IonImageryProvider>} A promise which resolves to the created IonImageryProvider.
- *
  * @example
  * const imageryLayer = Cesium.ImageryLayer.fromProviderAsync(Cesium.IonImageryProvider.fromAssetId(3812));
  * viewer.imageryLayers.add(imageryLayer);
- *
- * @exception {RuntimeError} Cesium ion assetId is not an imagery asset
- * @exception {RuntimeError} Unrecognized Cesium ion imagery type
+ * @throws {RuntimeError} Cesium ion assetId is not an imagery asset
+ * @throws {RuntimeError} Unrecognized Cesium ion imagery type
  */
 IonImageryProvider.fromAssetId = async function (assetId, options) {
   //>>includeStart('debug', pragmas.debug);
@@ -333,7 +325,6 @@ IonImageryProvider.fromAssetId = async function (assetId, options) {
 /**
  * Gets the credits to be displayed when a given tile is displayed.
  * @function
- *
  * @param {number} x The tile X coordinate.
  * @param {number} y The tile Y coordinate.
  * @param {number} level The tile level;
@@ -351,7 +342,6 @@ IonImageryProvider.prototype.getTileCredits = function (x, y, level) {
 /**
  * Requests the image for a given tile.
  * @function
- *
  * @param {number} x The tile X coordinate.
  * @param {number} y The tile Y coordinate.
  * @param {number} level The tile level.
@@ -366,15 +356,13 @@ IonImageryProvider.prototype.requestImage = function (x, y, level, request) {
 /**
  * Asynchronously determines what features, if any, are located at a given longitude and latitude within
  * a tile. This function is optional, so it may not exist on all ImageryProviders.
- *
  * @function
- *
  * @param {number} x The tile X coordinate.
  * @param {number} y The tile Y coordinate.
  * @param {number} level The tile level.
  * @param {number} longitude The longitude at which to pick features.
  * @param {number} latitude  The latitude at which to pick features.
- * @return {Promise<ImageryLayerFeatureInfo[]>|undefined} A promise for the picked features that will resolve when the asynchronous
+ * @returns {Promise<ImageryLayerFeatureInfo[]>|undefined} A promise for the picked features that will resolve when the asynchronous
  *                   picking completes.  The resolved value is an array of {@link ImageryLayerFeatureInfo}
  *                   instances.  The array may be empty if no features are found at the given location.
  *                   It may also be undefined if picking is not supported.

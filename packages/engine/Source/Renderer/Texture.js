@@ -15,6 +15,7 @@ import TextureMagnificationFilter from "./TextureMagnificationFilter.js";
 import TextureMinificationFilter from "./TextureMinificationFilter.js";
 
 /**
+ * @param options
  * @private
  */
 function Texture(options) {
@@ -401,6 +402,7 @@ function Texture(options) {
 /**
  * This function is identical to using the Texture constructor except that it can be
  * replaced with a mock/spy in tests.
+ * @param options
  * @private
  */
 Texture.create = function (options) {
@@ -410,7 +412,6 @@ Texture.create = function (options) {
 /**
  * Creates a texture, and copies a subimage of the framebuffer to it.  When called without arguments,
  * the texture is the same width and height as the framebuffer and contains its contents.
- *
  * @param {object} options Object with the following properties:
  * @param {Context} options.context The context in which the Texture gets created.
  * @param {PixelFormat} [options.pixelFormat=PixelFormat.RGB] The texture's internal pixel format.
@@ -421,23 +422,18 @@ Texture.create = function (options) {
  * @param {Framebuffer} [options.framebuffer=defaultFramebuffer] The framebuffer from which to create the texture.  If this
  *        parameter is not specified, the default framebuffer is used.
  * @returns {Texture} A texture with contents from the framebuffer.
- *
- * @exception {DeveloperError} Invalid pixelFormat.
- * @exception {DeveloperError} pixelFormat cannot be DEPTH_COMPONENT, DEPTH_STENCIL or a compressed format.
- * @exception {DeveloperError} framebufferXOffset must be greater than or equal to zero.
- * @exception {DeveloperError} framebufferYOffset must be greater than or equal to zero.
- * @exception {DeveloperError} framebufferXOffset + width must be less than or equal to canvas.clientWidth.
- * @exception {DeveloperError} framebufferYOffset + height must be less than or equal to canvas.clientHeight.
- *
- *
+ * @throws {DeveloperError} Invalid pixelFormat.
+ * @throws {DeveloperError} pixelFormat cannot be DEPTH_COMPONENT, DEPTH_STENCIL or a compressed format.
+ * @throws {DeveloperError} framebufferXOffset must be greater than or equal to zero.
+ * @throws {DeveloperError} framebufferYOffset must be greater than or equal to zero.
+ * @throws {DeveloperError} framebufferXOffset + width must be less than or equal to canvas.clientWidth.
+ * @throws {DeveloperError} framebufferYOffset + height must be less than or equal to canvas.clientHeight.
  * @example
  * // Create a texture with the contents of the framebuffer.
  * const t = Texture.fromFramebuffer({
  *     context : context
  * });
- *
  * @see Sampler
- *
  * @private
  */
 Texture.fromFramebuffer = function (options) {
@@ -654,15 +650,13 @@ Object.defineProperties(Texture.prototype, {
  * @param {number} [options.xOffset=0] The offset in the x direction within the texture to copy into.
  * @param {number} [options.yOffset=0] The offset in the y direction within the texture to copy into.
  * @param {boolean} [options.skipColorSpaceConversion=false] If true, any custom gamma or color profiles in the texture will be ignored.
- *
- * @exception {DeveloperError} Cannot call copyFrom when the texture pixel format is DEPTH_COMPONENT or DEPTH_STENCIL.
- * @exception {DeveloperError} Cannot call copyFrom with a compressed texture pixel format.
- * @exception {DeveloperError} xOffset must be greater than or equal to zero.
- * @exception {DeveloperError} yOffset must be greater than or equal to zero.
- * @exception {DeveloperError} xOffset + source.width must be less than or equal to width.
- * @exception {DeveloperError} yOffset + source.height must be less than or equal to height.
- * @exception {DeveloperError} This texture was destroyed, i.e., destroy() was called.
- *
+ * @throws {DeveloperError} Cannot call copyFrom when the texture pixel format is DEPTH_COMPONENT or DEPTH_STENCIL.
+ * @throws {DeveloperError} Cannot call copyFrom with a compressed texture pixel format.
+ * @throws {DeveloperError} xOffset must be greater than or equal to zero.
+ * @throws {DeveloperError} yOffset must be greater than or equal to zero.
+ * @throws {DeveloperError} xOffset + source.width must be less than or equal to width.
+ * @throws {DeveloperError} yOffset + source.height must be less than or equal to height.
+ * @throws {DeveloperError} This texture was destroyed, i.e., destroy() was called.
  * @example
  * texture.copyFrom({
  *  source: {
@@ -878,18 +872,17 @@ Texture.prototype.copyFrom = function (options) {
  * @param {number} [framebufferYOffset=0] optional
  * @param {number} [width=width] optional
  * @param {number} [height=height] optional
- *
- * @exception {DeveloperError} Cannot call copyFromFramebuffer when the texture pixel format is DEPTH_COMPONENT or DEPTH_STENCIL.
- * @exception {DeveloperError} Cannot call copyFromFramebuffer when the texture pixel data type is FLOAT.
- * @exception {DeveloperError} Cannot call copyFromFramebuffer when the texture pixel data type is HALF_FLOAT.
- * @exception {DeveloperError} Cannot call copyFrom with a compressed texture pixel format.
- * @exception {DeveloperError} This texture was destroyed, i.e., destroy() was called.
- * @exception {DeveloperError} xOffset must be greater than or equal to zero.
- * @exception {DeveloperError} yOffset must be greater than or equal to zero.
- * @exception {DeveloperError} framebufferXOffset must be greater than or equal to zero.
- * @exception {DeveloperError} framebufferYOffset must be greater than or equal to zero.
- * @exception {DeveloperError} xOffset + width must be less than or equal to width.
- * @exception {DeveloperError} yOffset + height must be less than or equal to height.
+ * @throws {DeveloperError} Cannot call copyFromFramebuffer when the texture pixel format is DEPTH_COMPONENT or DEPTH_STENCIL.
+ * @throws {DeveloperError} Cannot call copyFromFramebuffer when the texture pixel data type is FLOAT.
+ * @throws {DeveloperError} Cannot call copyFromFramebuffer when the texture pixel data type is HALF_FLOAT.
+ * @throws {DeveloperError} Cannot call copyFrom with a compressed texture pixel format.
+ * @throws {DeveloperError} This texture was destroyed, i.e., destroy() was called.
+ * @throws {DeveloperError} xOffset must be greater than or equal to zero.
+ * @throws {DeveloperError} yOffset must be greater than or equal to zero.
+ * @throws {DeveloperError} framebufferXOffset must be greater than or equal to zero.
+ * @throws {DeveloperError} framebufferYOffset must be greater than or equal to zero.
+ * @throws {DeveloperError} xOffset + width must be less than or equal to width.
+ * @throws {DeveloperError} yOffset + height must be less than or equal to height.
  */
 Texture.prototype.copyFromFramebuffer = function (
   xOffset,
@@ -973,13 +966,12 @@ Texture.prototype.copyFromFramebuffer = function (
 
 /**
  * @param {MipmapHint} [hint=MipmapHint.DONT_CARE] optional.
- *
- * @exception {DeveloperError} Cannot call generateMipmap when the texture pixel format is DEPTH_COMPONENT or DEPTH_STENCIL.
- * @exception {DeveloperError} Cannot call generateMipmap when the texture pixel format is a compressed format.
- * @exception {DeveloperError} hint is invalid.
- * @exception {DeveloperError} This texture's width must be a power of two to call generateMipmap() in a WebGL1 context.
- * @exception {DeveloperError} This texture's height must be a power of two to call generateMipmap() in a WebGL1 context.
- * @exception {DeveloperError} This texture was destroyed, i.e., destroy() was called.
+ * @throws {DeveloperError} Cannot call generateMipmap when the texture pixel format is DEPTH_COMPONENT or DEPTH_STENCIL.
+ * @throws {DeveloperError} Cannot call generateMipmap when the texture pixel format is a compressed format.
+ * @throws {DeveloperError} hint is invalid.
+ * @throws {DeveloperError} This texture's width must be a power of two to call generateMipmap() in a WebGL1 context.
+ * @throws {DeveloperError} This texture's height must be a power of two to call generateMipmap() in a WebGL1 context.
+ * @throws {DeveloperError} This texture was destroyed, i.e., destroy() was called.
  */
 Texture.prototype.generateMipmap = function (hint) {
   hint = defaultValue(hint, MipmapHint.DONT_CARE);

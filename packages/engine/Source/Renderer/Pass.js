@@ -1,6 +1,5 @@
 /**
  * The render pass for a command.
- *
  * @private
  */
 const Pass = {

@@ -87,10 +87,8 @@ const requestRenderAfterFrame = function (scene) {
 /**
  * The container for all 3D graphical objects and state in a Cesium virtual scene.  Generally,
  * a scene is not created directly; instead, it is implicitly created by {@link CesiumWidget}.
- *
  * @alias Scene
- * @constructor
- *
+ * @class
  * @param {object} options Object with the following properties:
  * @param {HTMLCanvasElement} options.canvas The HTML canvas element to create the scene for.
  * @param {ContextOptions} [options.contextOptions] Context and WebGL creation properties.
@@ -105,12 +103,9 @@ const requestRenderAfterFrame = function (scene) {
  * @param {number} [options.maximumRenderTimeChange=0.0] If requestRenderMode is true, this value defines the maximum change in simulation time allowed before a render is requested. See {@link https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/|Improving Performance with Explicit Rendering}.
  * @param {number} [options.depthPlaneEllipsoidOffset=0.0] Adjust the DepthPlane to address rendering artefacts below ellipsoid zero elevation.
  * @param {number} [options.msaaSamples=1] If provided, this value controls the rate of multisample antialiasing. Typical multisampling rates are 2, 4, and sometimes 8 samples per pixel. Higher sampling rates of MSAA may impact performance in exchange for improved visual quality. This value only applies to WebGL2 contexts that support multisample render targets.
- *
  * @see CesiumWidget
  * @see {@link http://www.khronos.org/registry/webgl/specs/latest/#5.2|WebGLContextAttributes}
- *
- * @exception {DeveloperError} options and options.canvas are required.
- *
+ * @throws {DeveloperError} options and options.canvas are required.
  * @example
  * // Create scene without anisotropic texture filtering
  * const scene = new Cesium.Scene({
@@ -230,7 +225,6 @@ function Scene(options) {
    * <code>renderError</code> event.  If this property is true, the error is rethrown
    * after the event is raised.  If this property is false, the <code>render</code> function
    * returns normally after raising the event.
-   *
    * @type {boolean}
    * @default false
    */
@@ -239,7 +233,6 @@ function Scene(options) {
   /**
    * Determines whether or not to instantly complete the
    * scene transition animation on user input.
-   *
    * @type {boolean}
    * @default true
    */
@@ -261,17 +254,14 @@ function Scene(options) {
 
   /**
    * The {@link SkyBox} used to draw the stars.
-   *
    * @type {SkyBox}
    * @default undefined
-   *
    * @see Scene#backgroundColor
    */
   this.skyBox = undefined;
 
   /**
    * The sky atmosphere drawn around the globe.
-   *
    * @type {SkyAtmosphere}
    * @default undefined
    */
@@ -279,7 +269,6 @@ function Scene(options) {
 
   /**
    * The {@link Sun}.
-   *
    * @type {Sun}
    * @default undefined
    */
@@ -287,7 +276,6 @@ function Scene(options) {
 
   /**
    * Uses a bloom filter on the sun when enabled.
-   *
    * @type {boolean}
    * @default true
    */
@@ -296,7 +284,6 @@ function Scene(options) {
 
   /**
    * The {@link Moon}
-   *
    * @type Moon
    * @default undefined
    */
@@ -304,10 +291,8 @@ function Scene(options) {
 
   /**
    * The background color, which is only visible if there is no sky box, i.e., {@link Scene#skyBox} is undefined.
-   *
    * @type {Color}
    * @default {@link Color.BLACK}
-   *
    * @see Scene#skyBox
    */
   this.backgroundColor = Color.clone(Color.BLACK);
@@ -321,7 +306,6 @@ function Scene(options) {
   /**
    * The current morph transition time between 2D/Columbus View and 3D,
    * with 0.0 being 2D or Columbus View and 1.0 being 3D.
-   *
    * @type {number}
    * @default 1.0
    */
@@ -334,7 +318,6 @@ function Scene(options) {
    * when {@link Scene#logarithmicDepthBuffer} is <code>false</code>. When <code>logarithmicDepthBuffer</code> is
    * <code>true</code>, use {@link Scene#logarithmicDepthFarToNearRatio}.
    * </p>
-   *
    * @type {number}
    * @default 1000.0
    */
@@ -347,7 +330,6 @@ function Scene(options) {
    * when {@link Scene#logarithmicDepthBuffer} is <code>true</code>. When <code>logarithmicDepthBuffer</code> is
    * <code>false</code>, use {@link Scene#farToNearRatio}.
    * </p>
-   *
    * @type {number}
    * @default 1e9
    */
@@ -357,7 +339,6 @@ function Scene(options) {
    * Determines the uniform depth size in meters of each frustum of the multifrustum in 2D. If a primitive or model close
    * to the surface shows z-fighting, decreasing this will eliminate the artifact, but decrease performance. On the
    * other hand, increasing this will increase performance but may cause z-fighting among primitives close to the surface.
-   *
    * @type {number}
    * @default 1.75e6
    */
@@ -366,7 +347,6 @@ function Scene(options) {
   /**
    * The vertical exaggeration of the scene.
    * When set to 1.0, no exaggeration is applied.
-   *
    * @type {number}
    * @default 1.0
    */
@@ -375,7 +355,6 @@ function Scene(options) {
   /**
    * The reference height for vertical exaggeration of the scene.
    * When set to 0.0, the exaggeration is applied relative to the ellipsoid surface.
-   *
    * @type {number}
    * @default 0.0
    */
@@ -391,11 +370,8 @@ function Scene(options) {
    * <p>
    * The default is <code>undefined</code>, indicating that all commands are executed.
    * </p>
-   *
    * @type Function
-   *
    * @default undefined
-   *
    * @example
    * // Do not execute any commands.
    * scene.debugCommandFilter = function(command) {
@@ -417,9 +393,7 @@ function Scene(options) {
    * for performance analysis to see what parts of a scene or model are
    * command-dense and could benefit from batching.
    * </p>
-   *
    * @type {boolean}
-   *
    * @default false
    */
   this.debugShowCommands = false;
@@ -434,9 +408,7 @@ function Scene(options) {
    * are combined, e.g., a command overlapping the first two frustums is tinted
    * yellow.
    * </p>
-   *
    * @type {boolean}
-   *
    * @default false
    */
   this.debugShowFrustums = false;
@@ -446,9 +418,7 @@ function Scene(options) {
    * <p>
    * Displays frames per second and time between frames.
    * </p>
-   *
    * @type {boolean}
-   *
    * @default false
    */
   this.debugShowFramesPerSecond = false;
@@ -458,9 +428,7 @@ function Scene(options) {
    * <p>
    * Indicates which frustum will have depth information displayed.
    * </p>
-   *
    * @type {number}
-   *
    * @default 1
    */
   this.debugShowDepthFrustum = 1;
@@ -470,9 +438,7 @@ function Scene(options) {
    * <p>
    * When <code>true</code>, draws outlines to show the boundaries of the camera frustums
    * </p>
-   *
    * @type {boolean}
-   *
    * @default false
    */
   this.debugShowFrustumPlanes = false;
@@ -481,7 +447,6 @@ function Scene(options) {
 
   /**
    * When <code>true</code>, enables picking using the depth buffer.
-   *
    * @type {boolean}
    * @default true
    */
@@ -494,7 +459,6 @@ function Scene(options) {
    * There is a decrease in performance when enabled. There are extra draw calls to write depth for
    * translucent geometry.
    * </p>
-   *
    * @example
    * // picking the position of a translucent primitive
    * viewer.screenSpaceEventHandler.setInputAction(function onLeftClick(movement) {
@@ -505,7 +469,6 @@ function Scene(options) {
    *      }
    *      const worldPosition = viewer.scene.pickPosition(movement.position);
    * }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
-   *
    * @type {boolean}
    * @default false
    */
@@ -522,7 +485,6 @@ function Scene(options) {
   /**
    * Settings for atmosphere lighting effects affecting 3D Tiles and model rendering. This is not to be confused with
    * {@link Scene#skyAtmosphere} which is responsible for rendering the sky.
-   *
    * @type {Atmosphere}
    */
   this.atmosphere = new Atmosphere();
@@ -633,11 +595,9 @@ function Scene(options) {
    * Enabling improves performance of the application, but requires using {@link Scene#requestRender}
    * to render a new frame explicitly in this mode. This will be necessary in many cases after making changes
    * to the scene in other parts of the API.
-   *
    * @see {@link https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/|Improving Performance with Explicit Rendering}
    * @see Scene#maximumRenderTimeChange
    * @see Scene#requestRender
-   *
    * @type {boolean}
    * @default false
    */
@@ -651,10 +611,8 @@ function Scene(options) {
    * the simulation time will never request a render.
    * This value impacts the rate of rendering for changes in the scene like lighting, entity property updates,
    * and animations.
-   *
    * @see {@link https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/|Improving Performance with Explicit Rendering}
    * @see Scene#requestRenderMode
-   *
    * @type {number}
    * @default 0.0
    */
@@ -767,7 +725,6 @@ Object.defineProperties(Scene.prototype, {
   /**
    * Gets the canvas element to which this scene is bound.
    * @memberof Scene.prototype
-   *
    * @type {HTMLCanvasElement}
    * @readonly
    */
@@ -780,10 +737,8 @@ Object.defineProperties(Scene.prototype, {
   /**
    * The drawingBufferHeight of the underlying GL context.
    * @memberof Scene.prototype
-   *
    * @type {number}
    * @readonly
-   *
    * @see {@link https://www.khronos.org/registry/webgl/specs/1.0/#DOM-WebGLRenderingContext-drawingBufferHeight|drawingBufferHeight}
    */
   drawingBufferHeight: {
@@ -795,10 +750,8 @@ Object.defineProperties(Scene.prototype, {
   /**
    * The drawingBufferWidth of the underlying GL context.
    * @memberof Scene.prototype
-   *
    * @type {number}
    * @readonly
-   *
    * @see {@link https://www.khronos.org/registry/webgl/specs/1.0/#DOM-WebGLRenderingContext-drawingBufferWidth|drawingBufferWidth}
    */
   drawingBufferWidth: {
@@ -810,10 +763,8 @@ Object.defineProperties(Scene.prototype, {
   /**
    * The maximum aliased line width, in pixels, supported by this WebGL implementation.  It will be at least one.
    * @memberof Scene.prototype
-   *
    * @type {number}
    * @readonly
-   *
    * @see {@link https://www.khronos.org/opengles/sdk/docs/man/xhtml/glGet.xml|glGet} with <code>ALIASED_LINE_WIDTH_RANGE</code>.
    */
   maximumAliasedLineWidth: {
@@ -825,10 +776,8 @@ Object.defineProperties(Scene.prototype, {
   /**
    * The maximum length in pixels of one edge of a cube map, supported by this WebGL implementation.  It will be at least 16.
    * @memberof Scene.prototype
-   *
    * @type {number}
    * @readonly
-   *
    * @see {@link https://www.khronos.org/opengles/sdk/docs/man/xhtml/glGet.xml|glGet} with <code>GL_MAX_CUBE_MAP_TEXTURE_SIZE</code>.
    */
   maximumCubeMapSize: {
@@ -840,10 +789,8 @@ Object.defineProperties(Scene.prototype, {
   /**
    * Returns <code>true</code> if the {@link Scene#pickPosition} function is supported.
    * @memberof Scene.prototype
-   *
    * @type {boolean}
    * @readonly
-   *
    * @see Scene#pickPosition
    */
   pickPositionSupported: {
@@ -855,10 +802,8 @@ Object.defineProperties(Scene.prototype, {
   /**
    * Returns <code>true</code> if the {@link Scene#sampleHeight} and {@link Scene#sampleHeightMostDetailed} functions are supported.
    * @memberof Scene.prototype
-   *
    * @type {boolean}
    * @readonly
-   *
    * @see Scene#sampleHeight
    * @see Scene#sampleHeightMostDetailed
    */
@@ -871,10 +816,8 @@ Object.defineProperties(Scene.prototype, {
   /**
    * Returns <code>true</code> if the {@link Scene#clampToHeight} and {@link Scene#clampToHeightMostDetailed} functions are supported.
    * @memberof Scene.prototype
-   *
    * @type {boolean}
    * @readonly
-   *
    * @see Scene#clampToHeight
    * @see Scene#clampToHeightMostDetailed
    */
@@ -887,10 +830,8 @@ Object.defineProperties(Scene.prototype, {
   /**
    * Returns <code>true</code> if the {@link Scene#invertClassification} is supported.
    * @memberof Scene.prototype
-   *
    * @type {boolean}
    * @readonly
-   *
    * @see Scene#invertClassification
    */
   invertClassificationSupported: {
@@ -902,10 +843,8 @@ Object.defineProperties(Scene.prototype, {
   /**
    * Returns <code>true</code> if specular environment maps are supported.
    * @memberof Scene.prototype
-   *
    * @type {boolean}
    * @readonly
-   *
    * @see Scene#specularEnvironmentMaps
    */
   specularEnvironmentMapsSupported: {
@@ -917,7 +856,6 @@ Object.defineProperties(Scene.prototype, {
   /**
    * Gets or sets the depth-test ellipsoid.
    * @memberof Scene.prototype
-   *
    * @type {Globe}
    */
   globe: {
@@ -936,7 +874,6 @@ Object.defineProperties(Scene.prototype, {
   /**
    * Gets the collection of primitives.
    * @memberof Scene.prototype
-   *
    * @type {PrimitiveCollection}
    * @readonly
    */
@@ -949,7 +886,6 @@ Object.defineProperties(Scene.prototype, {
   /**
    * Gets the collection of ground primitives.
    * @memberof Scene.prototype
-   *
    * @type {PrimitiveCollection}
    * @readonly
    */
@@ -962,7 +898,6 @@ Object.defineProperties(Scene.prototype, {
   /**
    * Gets or sets the camera.
    * @memberof Scene.prototype
-   *
    * @type {Camera}
    * @readonly
    */
@@ -979,10 +914,8 @@ Object.defineProperties(Scene.prototype, {
   /**
    * Gets or sets the view.
    * @memberof Scene.prototype
-   *
    * @type {View}
    * @readonly
-   *
    * @private
    */
   view: {
@@ -998,10 +931,8 @@ Object.defineProperties(Scene.prototype, {
   /**
    * Gets the default view.
    * @memberof Scene.prototype
-   *
    * @type {View}
    * @readonly
-   *
    * @private
    */
   defaultView: {
@@ -1013,10 +944,8 @@ Object.defineProperties(Scene.prototype, {
   /**
    * Gets picking functions and state
    * @memberof Scene.prototype
-   *
    * @type {Picking}
    * @readonly
-   *
    * @private
    */
   picking: {
@@ -1028,7 +957,6 @@ Object.defineProperties(Scene.prototype, {
   /**
    * Gets the controller for camera input handling.
    * @memberof Scene.prototype
-   *
    * @type {ScreenSpaceCameraController}
    * @readonly
    */
@@ -1041,10 +969,8 @@ Object.defineProperties(Scene.prototype, {
   /**
    * Get the map projection to use in 2D and Columbus View modes.
    * @memberof Scene.prototype
-   *
    * @type {MapProjection}
    * @readonly
-   *
    * @default new GeographicProjection()
    */
   mapProjection: {
@@ -1058,7 +984,6 @@ Object.defineProperties(Scene.prototype, {
    * @memberof Scene.prototype
    * @type {JobScheduler}
    * @readonly
-   *
    * @private
    */
   jobScheduler: {
@@ -1071,10 +996,8 @@ Object.defineProperties(Scene.prototype, {
    * Gets state information about the current scene. If called outside of a primitive's <code>update</code>
    * function, the previous frame's state is returned.
    * @memberof Scene.prototype
-   *
    * @type {FrameState}
    * @readonly
-   *
    * @private
    */
   frameState: {
@@ -1086,10 +1009,8 @@ Object.defineProperties(Scene.prototype, {
   /**
    * Gets the environment state.
    * @memberof Scene.prototype
-   *
    * @type {EnvironmentState}
    * @readonly
-   *
    * @private
    */
   environmentState: {
@@ -1101,10 +1022,8 @@ Object.defineProperties(Scene.prototype, {
   /**
    * Gets the collection of tweens taking place in the scene.
    * @memberof Scene.prototype
-   *
    * @type {TweenCollection}
    * @readonly
-   *
    * @private
    */
   tweens: {
@@ -1116,7 +1035,6 @@ Object.defineProperties(Scene.prototype, {
   /**
    * Gets the collection of image layers that will be rendered on the globe.
    * @memberof Scene.prototype
-   *
    * @type {ImageryLayerCollection}
    * @readonly
    */
@@ -1133,7 +1051,6 @@ Object.defineProperties(Scene.prototype, {
   /**
    * The terrain provider providing surface geometry for the globe.
    * @memberof Scene.prototype
-   *
    * @type {TerrainProvider}
    */
   terrainProvider: {
@@ -1159,7 +1076,6 @@ Object.defineProperties(Scene.prototype, {
   /**
    * Gets an event that's raised when the terrain provider is changed
    * @memberof Scene.prototype
-   *
    * @type {Event}
    * @readonly
    */
@@ -1177,12 +1093,10 @@ Object.defineProperties(Scene.prototype, {
    * Gets the event that will be raised before the scene is updated or rendered.  Subscribers to the event
    * receive the Scene instance as the first parameter and the current time as the second parameter.
    * @memberof Scene.prototype
-   *
    * @see {@link https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/|Improving Performance with Explicit Rendering}
    * @see Scene#postUpdate
    * @see Scene#preRender
    * @see Scene#postRender
-   *
    * @type {Event}
    * @readonly
    */
@@ -1197,12 +1111,10 @@ Object.defineProperties(Scene.prototype, {
    * Subscribers to the event receive the Scene instance as the first parameter and the current time as the second
    * parameter.
    * @memberof Scene.prototype
-   *
    * @see {@link https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/|Improving Performance with Explicit Rendering}
    * @see Scene#preUpdate
    * @see Scene#preRender
    * @see Scene#postRender
-   *
    * @type {Event}
    * @readonly
    */
@@ -1218,7 +1130,6 @@ Object.defineProperties(Scene.prototype, {
    * By default, errors are not rethrown after this event is raised, but that can be changed by setting
    * the <code>rethrowRenderErrors</code> property.
    * @memberof Scene.prototype
-   *
    * @type {Event}
    * @readonly
    */
@@ -1233,12 +1144,10 @@ Object.defineProperties(Scene.prototype, {
    * Subscribers to the event receive the Scene instance as the first parameter and the current time as the second
    * parameter.
    * @memberof Scene.prototype
-   *
    * @see {@link https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/|Improving Performance with Explicit Rendering}
    * @see Scene#preUpdate
    * @see Scene#postUpdate
    * @see Scene#postRender
-   *
    * @type {Event}
    * @readonly
    */
@@ -1252,12 +1161,10 @@ Object.defineProperties(Scene.prototype, {
    * Gets the event that will be raised immediately after the scene is rendered.  Subscribers to the event
    * receive the Scene instance as the first parameter and the current time as the second parameter.
    * @memberof Scene.prototype
-   *
    * @see {@link https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/|Improving Performance with Explicit Rendering}
    * @see Scene#preUpdate
    * @see Scene#postUpdate
    * @see Scene#postRender
-   *
    * @type {Event}
    * @readonly
    */
@@ -1271,7 +1178,6 @@ Object.defineProperties(Scene.prototype, {
    * Gets the simulation time when the scene was last rendered. Returns undefined if the scene has not yet been
    * rendered.
    * @memberof Scene.prototype
-   *
    * @type {JulianDate}
    * @readonly
    */
@@ -1302,12 +1208,9 @@ Object.defineProperties(Scene.prototype, {
    * commands are executed redundantly, e.g., how many commands overlap two or
    * three frustums.
    * </p>
-   *
    * @memberof Scene.prototype
-   *
    * @type {object}
    * @readonly
-   *
    * @default undefined
    */
   debugFrustumStatistics: {
@@ -1393,7 +1296,6 @@ Object.defineProperties(Scene.prototype, {
    * Gets the number of frustums used in the last frame.
    * @memberof Scene.prototype
    * @type {FrustumCommands[]}
-   *
    * @private
    */
   frustumCommandsList: {
@@ -1406,7 +1308,6 @@ Object.defineProperties(Scene.prototype, {
    * Gets the number of frustums used in the last frame.
    * @memberof Scene.prototype
    * @type {number}
-   *
    * @private
    */
   numberOfFrustums: {
@@ -1474,7 +1375,6 @@ Object.defineProperties(Scene.prototype, {
   /**
    * Gets or sets the position of the splitter within the viewport.  Valid values are between 0.0 and 1.0.
    * @memberof Scene.prototype
-   *
    * @type {number}
    */
   splitPosition: {
@@ -1627,7 +1527,6 @@ Object.defineProperties(Scene.prototype, {
   /**
    * Ratio between a pixel and a density-independent pixel. Provides a standard unit of
    * measure for real pixel measurements appropriate to a particular device.
-   *
    * @memberof Scene.prototype
    * @type {number}
    * @default 1.0
@@ -1664,7 +1563,7 @@ Object.defineProperties(Scene.prototype, {
 /**
  * Determines if a compressed texture format is supported.
  * @param {string} format The texture format. May be the name of the format or the WebGL extension name, e.g. s3tc or WEBGL_compressed_texture_s3tc.
- * @return {boolean} Whether or not the format is supported.
+ * @returns {boolean} Whether or not the format is supported.
  */
 Scene.prototype.getCompressedTextureFormatSupported = function (format) {
   const context = this.context;
@@ -1754,6 +1653,7 @@ function updateDerivedCommands(scene, command, shadowsDirty) {
 }
 
 /**
+ * @param command
  * @private
  */
 Scene.prototype.updateDerivedCommands = function (command) {
@@ -1968,6 +1868,9 @@ Scene.prototype.updateFrameState = function () {
 };
 
 /**
+ * @param command
+ * @param cullingVolume
+ * @param occluder
  * @private
  */
 Scene.prototype.isVisible = function (command, cullingVolume, occluder) {
@@ -2888,6 +2791,8 @@ function executeShadowMapCastCommands(scene) {
 const scratchEyeTranslation = new Cartesian3();
 
 /**
+ * @param passState
+ * @param backgroundColor
  * @private
  */
 Scene.prototype.updateAndExecuteCommands = function (
@@ -3553,6 +3458,7 @@ function updateAndClearFramebuffers(scene, passState, clearColor) {
 }
 
 /**
+ * @param passState
  * @private
  */
 Scene.prototype.resolveFramebuffers = function (passState) {
@@ -3701,9 +3607,7 @@ const updateHeightScratchCartographic = new Cartographic();
 /**
  * Calls the callback when a new tile is rendered that contains the given cartographic. The only parameter
  * is the cartesian position on the tile.
- *
  * @private
- *
  * @param {Cartographic} cartographic The cartographic position.
  * @param {Function} callback The function to be called when a new tile is loaded containing the updated cartographic.
  * @param {HeightReference} [heightReference=CLAMP_TO_GROUND] Based on the height reference value, determines whether to ignore heights from 3D Tiles or terrain.
@@ -4117,7 +4021,6 @@ Scene.prototype.render = function (time) {
  * Update and render the scene. Always forces a new render frame regardless of whether a render was
  * previously requested.
  * @param {JulianDate} [time] The simulation time at which to render.
- *
  * @private
  */
 Scene.prototype.forceRender = function (time) {
@@ -4128,7 +4031,6 @@ Scene.prototype.forceRender = function (time) {
 /**
  * Requests a new rendered frame when {@link Scene#requestRenderMode} is set to <code>true</code>.
  * The render rate will not exceed the {@link CesiumWidget#targetFrameRate}.
- *
  * @see Scene#requestRenderMode
  */
 Scene.prototype.requestRender = function () {
@@ -4136,6 +4038,7 @@ Scene.prototype.requestRender = function () {
 };
 
 /**
+ * @param width
  * @private
  */
 Scene.prototype.clampLineWidth = function (width) {
@@ -4152,7 +4055,6 @@ Scene.prototype.clampLineWidth = function (width) {
  * <p>
  * When a feature of a 3D Tiles tileset is picked, <code>pick</code> returns a {@link Cesium3DTileFeature} object.
  * </p>
- *
  * @example
  * // On mouse over, color the feature yellow.
  * handler.setInputAction(function(movement) {
@@ -4161,7 +4063,6 @@ Scene.prototype.clampLineWidth = function (width) {
  *         feature.color = Cesium.Color.YELLOW;
  *     }
  * }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
- *
  * @param {Cartesian2} windowPosition Window coordinates to perform picking on.
  * @param {number} [width=3] Width of the pick rectangle.
  * @param {number} [height=3] Height of the pick rectangle.
@@ -4174,7 +4075,6 @@ Scene.prototype.pick = function (windowPosition, width, height) {
 /**
  * Returns a {@link VoxelCell} for the voxel sample rendered at a particular window coordinate,
  * or undefined if no voxel is rendered at that position.
- *
  * @example
  * On left click, report the value of the "color" property at that voxel sample.
  * handler.setInputAction(function(movement) {
@@ -4183,12 +4083,10 @@ Scene.prototype.pick = function (windowPosition, width, height) {
  *     console.log(voxelCell.getProperty("color"));
  *   }
  * }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
- *
  * @param {Cartesian2} windowPosition Window coordinates to perform picking on.
  * @param {number} [width=3] Width of the pick rectangle.
  * @param {number} [height=3] Height of the pick rectangle.
  * @returns {VoxelCell|undefined} Information about the voxel cell rendered at the picked position.
- *
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
 Scene.prototype.pickVoxel = function (windowPosition, width, height) {
@@ -4232,14 +4130,11 @@ Scene.prototype.pickVoxel = function (windowPosition, width, height) {
  * Set {@link Scene#pickTranslucentDepth} to <code>true</code> to include the depth of
  * translucent primitives; otherwise, this essentially picks through translucent primitives.
  * </p>
- *
  * @private
- *
  * @param {Cartesian2} windowPosition Window coordinates to perform picking on.
  * @param {Cartesian3} [result] The object on which to restore the result.
  * @returns {Cartesian3} The cartesian position in world coordinates.
- *
- * @exception {DeveloperError} Picking from the depth buffer is not supported. Check pickPositionSupported.
+ * @throws {DeveloperError} Picking from the depth buffer is not supported. Check pickPositionSupported.
  */
 Scene.prototype.pickPositionWorldCoordinates = function (
   windowPosition,
@@ -4263,12 +4158,10 @@ Scene.prototype.pickPositionWorldCoordinates = function (
  * Set {@link Scene#pickTranslucentDepth} to <code>true</code> to include the depth of
  * translucent primitives; otherwise, this essentially picks through translucent primitives.
  * </p>
- *
  * @param {Cartesian2} windowPosition Window coordinates to perform picking on.
  * @param {Cartesian3} [result] The object on which to restore the result.
  * @returns {Cartesian3} The cartesian position.
- *
- * @exception {DeveloperError} Picking from the depth buffer is not supported. Check pickPositionSupported.
+ * @throws {DeveloperError} Picking from the depth buffer is not supported. Check pickPositionSupported.
  */
 Scene.prototype.pickPosition = function (windowPosition, result) {
   return this._picking.pickPosition(this, windowPosition, result);
@@ -4279,18 +4172,14 @@ Scene.prototype.pickPosition = function (windowPosition, result) {
  * a particular window coordinate position. Other properties may also be set depending on the
  * type of primitive and may be used to further identify the picked object. The primitives in
  * the list are ordered by their visual order in the scene (front to back).
- *
  * @param {Cartesian2} windowPosition Window coordinates to perform picking on.
  * @param {number} [limit] If supplied, stop drilling after collecting this many picks.
  * @param {number} [width=3] Width of the pick rectangle.
  * @param {number} [height=3] Height of the pick rectangle.
  * @returns {any[]} Array of objects, each containing 1 picked primitives.
- *
- * @exception {DeveloperError} windowPosition is undefined.
- *
+ * @throws {DeveloperError} windowPosition is undefined.
  * @example
  * const pickedObjects = scene.drillPick(new Cesium.Cartesian2(100.0, 200.0));
- *
  * @see Scene#pick
  */
 Scene.prototype.drillPick = function (windowPosition, limit, width, height) {
@@ -4338,15 +4227,12 @@ function updateRequestRenderModeDeferCheckPass(scene) {
  * This function only picks globe tiles and 3D Tiles that are rendered in the current view. Picks all other
  * primitives regardless of their visibility.
  * </p>
- *
  * @private
- *
  * @param {Ray} ray The ray.
  * @param {Object[]} [objectsToExclude] A list of primitives, entities, or 3D Tiles features to exclude from the ray intersection.
  * @param {number} [width=0.1] Width of the intersection volume in meters.
  * @returns {object} An object containing the object and position of the first intersection.
- *
- * @exception {DeveloperError} Ray intersections are only supported in 3D mode.
+ * @throws {DeveloperError} Ray intersections are only supported in 3D mode.
  */
 Scene.prototype.pickFromRay = function (ray, objectsToExclude, width) {
   return this._picking.pickFromRay(this, ray, objectsToExclude, width);
@@ -4362,16 +4248,13 @@ Scene.prototype.pickFromRay = function (ray, objectsToExclude, width) {
  * This function only picks globe tiles and 3D Tiles that are rendered in the current view. Picks all other
  * primitives regardless of their visibility.
  * </p>
- *
  * @private
- *
  * @param {Ray} ray The ray.
  * @param {number} [limit=Number.MAX_VALUE] If supplied, stop finding intersections after this many intersections.
  * @param {Object[]} [objectsToExclude] A list of primitives, entities, or 3D Tiles features to exclude from the ray intersection.
  * @param {number} [width=0.1] Width of the intersection volume in meters.
  * @returns {Object[]} List of objects containing the object and position of each intersection.
- *
- * @exception {DeveloperError} Ray intersections are only supported in 3D mode.
+ * @throws {DeveloperError} Ray intersections are only supported in 3D mode.
  */
 Scene.prototype.drillPickFromRay = function (
   ray,
@@ -4391,15 +4274,12 @@ Scene.prototype.drillPickFromRay = function (
 /**
  * Initiates an asynchronous {@link Scene#pickFromRay} request using the maximum level of detail for 3D Tilesets
  * regardless of visibility.
- *
  * @private
- *
  * @param {Ray} ray The ray.
  * @param {Object[]} [objectsToExclude] A list of primitives, entities, or 3D Tiles features to exclude from the ray intersection.
  * @param {number} [width=0.1] Width of the intersection volume in meters.
  * @returns {Promise<object>} A promise that resolves to an object containing the object and position of the first intersection.
- *
- * @exception {DeveloperError} Ray intersections are only supported in 3D mode.
+ * @throws {DeveloperError} Ray intersections are only supported in 3D mode.
  */
 Scene.prototype.pickFromRayMostDetailed = function (
   ray,
@@ -4417,16 +4297,13 @@ Scene.prototype.pickFromRayMostDetailed = function (
 /**
  * Initiates an asynchronous {@link Scene#drillPickFromRay} request using the maximum level of detail for 3D Tilesets
  * regardless of visibility.
- *
  * @private
- *
  * @param {Ray} ray The ray.
  * @param {number} [limit=Number.MAX_VALUE] If supplied, stop finding intersections after this many intersections.
  * @param {Object[]} [objectsToExclude] A list of primitives, entities, or 3D Tiles features to exclude from the ray intersection.
  * @param {number} [width=0.1] Width of the intersection volume in meters.
  * @returns {Promise<Object[]>} A promise that resolves to a list of objects containing the object and position of each intersection.
- *
- * @exception {DeveloperError} Ray intersections are only supported in 3D mode.
+ * @throws {DeveloperError} Ray intersections are only supported in 3D mode.
  */
 Scene.prototype.drillPickFromRayMostDetailed = function (
   ray,
@@ -4451,23 +4328,19 @@ Scene.prototype.drillPickFromRayMostDetailed = function (
  * This function only samples height from globe tiles and 3D Tiles that are rendered in the current view. Samples height
  * from all other primitives regardless of their visibility.
  * </p>
- *
  * @param {Cartographic} position The cartographic position to sample height from.
  * @param {Object[]} [objectsToExclude] A list of primitives, entities, or 3D Tiles features to not sample height from.
  * @param {number} [width=0.1] Width of the intersection volume in meters.
  * @returns {number} The height. This may be <code>undefined</code> if there was no scene geometry to sample height from.
- *
  * @example
  * const position = new Cesium.Cartographic(-1.31968, 0.698874);
  * const height = viewer.scene.sampleHeight(position);
  * console.log(height);
- *
  * @see Scene#clampToHeight
  * @see Scene#clampToHeightMostDetailed
  * @see Scene#sampleHeightMostDetailed
- *
- * @exception {DeveloperError} sampleHeight is only supported in 3D mode.
- * @exception {DeveloperError} sampleHeight requires depth texture support. Check sampleHeightSupported.
+ * @throws {DeveloperError} sampleHeight is only supported in 3D mode.
+ * @throws {DeveloperError} sampleHeight requires depth texture support. Check sampleHeightSupported.
  */
 Scene.prototype.sampleHeight = function (position, objectsToExclude, width) {
   return this._picking.sampleHeight(this, position, objectsToExclude, width);
@@ -4481,24 +4354,20 @@ Scene.prototype.sampleHeight = function (position, objectsToExclude, width) {
  * This function only clamps to globe tiles and 3D Tiles that are rendered in the current view. Clamps to
  * all other primitives regardless of their visibility.
  * </p>
- *
  * @param {Cartesian3} cartesian The cartesian position.
  * @param {Object[]} [objectsToExclude] A list of primitives, entities, or 3D Tiles features to not clamp to.
  * @param {number} [width=0.1] Width of the intersection volume in meters.
  * @param {Cartesian3} [result] An optional object to return the clamped position.
  * @returns {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided. This may be <code>undefined</code> if there was no scene geometry to clamp to.
- *
  * @example
  * // Clamp an entity to the underlying scene geometry
  * const position = entity.position.getValue(Cesium.JulianDate.now());
  * entity.position = viewer.scene.clampToHeight(position);
- *
  * @see Scene#sampleHeight
  * @see Scene#sampleHeightMostDetailed
  * @see Scene#clampToHeightMostDetailed
- *
- * @exception {DeveloperError} clampToHeight is only supported in 3D mode.
- * @exception {DeveloperError} clampToHeight requires depth texture support. Check clampToHeightSupported.
+ * @throws {DeveloperError} clampToHeight is only supported in 3D mode.
+ * @throws {DeveloperError} clampToHeight requires depth texture support. Check clampToHeightSupported.
  */
 Scene.prototype.clampToHeight = function (
   cartesian,
@@ -4521,12 +4390,10 @@ Scene.prototype.clampToHeight = function (
  * Returns a promise that is resolved when the query completes. Each point height is modified in place.
  * If a height cannot be determined because no geometry can be sampled at that location, or another error occurs,
  * the height is set to undefined.
- *
  * @param {Cartographic[]} positions The cartographic positions to update with sampled heights.
  * @param {Object[]} [objectsToExclude] A list of primitives, entities, or 3D Tiles features to not sample height from.
  * @param {number} [width=0.1] Width of the intersection volume in meters.
  * @returns {Promise<Cartographic[]>} A promise that resolves to the provided list of positions when the query has completed.
- *
  * @example
  * const positions = [
  *     new Cesium.Cartographic(-1.31968, 0.69887),
@@ -4537,11 +4404,9 @@ Scene.prototype.clampToHeight = function (
  *     // positions[0].height and positions[1].height have been updated.
  *     // updatedPositions is just a reference to positions.
  * }
- *
  * @see Scene#sampleHeight
- *
- * @exception {DeveloperError} sampleHeightMostDetailed is only supported in 3D mode.
- * @exception {DeveloperError} sampleHeightMostDetailed requires depth texture support. Check sampleHeightSupported.
+ * @throws {DeveloperError} sampleHeightMostDetailed is only supported in 3D mode.
+ * @throws {DeveloperError} sampleHeightMostDetailed requires depth texture support. Check sampleHeightSupported.
  */
 Scene.prototype.sampleHeightMostDetailed = function (
   positions,
@@ -4561,12 +4426,10 @@ Scene.prototype.sampleHeightMostDetailed = function (
  * using the maximum level of detail for 3D Tilesets in the scene. Returns a promise that is resolved when
  * the query completes. Each position is modified in place. If a position cannot be clamped because no geometry
  * can be sampled at that location, or another error occurs, the element in the array is set to undefined.
- *
  * @param {Cartesian3[]} cartesians The cartesian positions to update with clamped positions.
  * @param {Object[]} [objectsToExclude] A list of primitives, entities, or 3D Tiles features to not clamp to.
  * @param {number} [width=0.1] Width of the intersection volume in meters.
  * @returns {Promise<Cartesian3[]>} A promise that resolves to the provided list of positions when the query has completed.
- *
  * @example
  * const cartesians = [
  *     entities[0].position.getValue(Cesium.JulianDate.now()),
@@ -4577,11 +4440,9 @@ Scene.prototype.sampleHeightMostDetailed = function (
  *     entities[0].position = updatedCartesians[0];
  *     entities[1].position = updatedCartesians[1];
  * }
- *
  * @see Scene#clampToHeight
- *
- * @exception {DeveloperError} clampToHeightMostDetailed is only supported in 3D mode.
- * @exception {DeveloperError} clampToHeightMostDetailed requires depth texture support. Check clampToHeightSupported.
+ * @throws {DeveloperError} clampToHeightMostDetailed is only supported in 3D mode.
+ * @throws {DeveloperError} clampToHeightMostDetailed requires depth texture support. Check clampToHeightSupported.
  */
 Scene.prototype.clampToHeightMostDetailed = function (
   cartesians,
@@ -4599,11 +4460,9 @@ Scene.prototype.clampToHeightMostDetailed = function (
 /**
  * Transforms a position in cartesian coordinates to canvas coordinates.  This is commonly used to place an
  * HTML element at the same screen position as an object in the scene.
- *
  * @param {Cartesian3} position The position in cartesian coordinates.
  * @param {Cartesian2} [result] An optional object to return the input position transformed to canvas coordinates.
  * @returns {Cartesian2} The modified result parameter or a new Cartesian2 instance if one was not provided.  This may be <code>undefined</code> if the input position is near the center of the ellipsoid.
- *
  * @example
  * // Output the canvas position of longitude/latitude (0, 0) every time the mouse moves.
  * const scene = widget.scene;
@@ -4701,14 +4560,11 @@ function setTerrain(scene, terrain) {
 
 /**
  * Update the terrain providing surface geometry for the globe.
- *
  * @param {Terrain} terrain The terrain provider async helper
  * @returns {Terrain} terrain The terrain provider async helper
- *
  * @example
  * // Use Cesium World Terrain
  * scene.setTerrain(Cesium.Terrain.fromWorldTerrain());
- *
  * @example
  * // Use a custom terrain provider
  * const terrain = new Cesium.Terrain(Cesium.CesiumTerrainProvider.fromUrl("https://myTestTerrain.com"));
@@ -4733,9 +4589,7 @@ Scene.prototype.setTerrain = function (terrain) {
  * <br /><br />
  * If this object was destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
- *
  * @returns {boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
- *
  * @see Scene#destroy
  */
 Scene.prototype.isDestroyed = function () {
@@ -4749,13 +4603,9 @@ Scene.prototype.isDestroyed = function () {
  * Once an object is destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
  * assign the return value (<code>undefined</code>) to the object as done in the example.
- *
- * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
- *
- *
+ * @throws {DeveloperError} This object was destroyed, i.e., destroy() was called.
  * @example
  * scene = scene && scene.destroy();
- *
  * @see Scene#isDestroyed
  */
 Scene.prototype.destroy = function () {

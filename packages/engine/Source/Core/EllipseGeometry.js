@@ -884,10 +884,8 @@ function computeRectangle(
 
 /**
  * A description of an ellipse on an ellipsoid. Ellipse geometry can be rendered with both {@link Primitive} and {@link GroundPrimitive}.
- *
  * @alias EllipseGeometry
- * @constructor
- *
+ * @class
  * @param {object} options Object with the following properties:
  * @param {Cartesian3} options.center The ellipse's center point in the fixed frame.
  * @param {number} options.semiMajorAxis The length of the ellipse's semi-major axis in meters.
@@ -899,12 +897,9 @@ function computeRectangle(
  * @param {number} [options.stRotation=0.0] The rotation of the texture coordinates counter-clockwise from north.
  * @param {number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The angular distance between points on the ellipse in radians.
  * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
- *
- * @exception {DeveloperError} semiMajorAxis and semiMinorAxis must be greater than zero.
- * @exception {DeveloperError} semiMajorAxis must be greater than or equal to the semiMinorAxis.
- * @exception {DeveloperError} granularity must be greater than zero.
- *
- *
+ * @throws {DeveloperError} semiMajorAxis and semiMinorAxis must be greater than zero.
+ * @throws {DeveloperError} semiMajorAxis must be greater than or equal to the semiMinorAxis.
+ * @throws {DeveloperError} granularity must be greater than zero.
  * @example
  * // Create an ellipse.
  * const ellipse = new Cesium.EllipseGeometry({
@@ -914,7 +909,6 @@ function computeRectangle(
  *   rotation : Cesium.Math.toRadians(60.0)
  * });
  * const geometry = Cesium.EllipseGeometry.createGeometry(ellipse);
- *
  * @see EllipseGeometry.createGeometry
  */
 function EllipseGeometry(options) {
@@ -977,11 +971,9 @@ EllipseGeometry.packedLength =
 
 /**
  * Stores the provided instance into the provided array.
- *
  * @param {EllipseGeometry} value The value to pack.
  * @param {number[]} array The array to pack into.
  * @param {number} [startingIndex=0] The index into the array at which to start packing the elements.
- *
  * @returns {number[]} The array that was packed into
  */
 EllipseGeometry.pack = function (value, array, startingIndex) {
@@ -1034,7 +1026,6 @@ const scratchOptions = {
 
 /**
  * Retrieves an instance from a packed array.
- *
  * @param {number[]} array The packed array.
  * @param {number} [startingIndex=0] The starting index of the element to be unpacked.
  * @param {EllipseGeometry} [result] The object into which to store the result.
@@ -1104,7 +1095,6 @@ EllipseGeometry.unpack = function (array, startingIndex, result) {
 
 /**
  * Computes the bounding rectangle based on the provided options
- *
  * @param {object} options Object with the following properties:
  * @param {Cartesian3} options.center The ellipse's center point in the fixed frame.
  * @param {number} options.semiMajorAxis The length of the ellipse's semi-major axis in meters.
@@ -1113,7 +1103,6 @@ EllipseGeometry.unpack = function (array, startingIndex, result) {
  * @param {number} [options.rotation=0.0] The angle of rotation counter-clockwise from north.
  * @param {number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The angular distance between points on the ellipse in radians.
  * @param {Rectangle} [result] An object in which to store the result
- *
  * @returns {Rectangle} The result rectangle
  */
 EllipseGeometry.computeRectangle = function (options, result) {
@@ -1156,7 +1145,6 @@ EllipseGeometry.computeRectangle = function (options, result) {
 
 /**
  * Computes the geometric representation of a ellipse on an ellipsoid, including its vertices, indices, and a bounding sphere.
- *
  * @param {EllipseGeometry} ellipseGeometry A description of the ellipse.
  * @returns {Geometry|undefined} The computed vertices and indices.
  */
@@ -1226,6 +1214,9 @@ EllipseGeometry.createGeometry = function (ellipseGeometry) {
 };
 
 /**
+ * @param ellipseGeometry
+ * @param minHeightFunc
+ * @param maxHeightFunc
  * @private
  */
 EllipseGeometry.createShadowVolume = function (

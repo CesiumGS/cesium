@@ -10,7 +10,6 @@ const VerticalExaggeration = {};
 
 /**
  * Scales a height relative to an offset.
- *
  * @param {number} height The height.
  * @param {number} scale A scalar used to exaggerate the terrain. If the value is 1.0 there will be no effect.
  * @param {number} relativeHeight The height relative to which terrain is exaggerated. If the value is 0.0 terrain will be exaggerated relative to the ellipsoid surface.
@@ -31,7 +30,6 @@ const scratchCartographic = new Cartographic();
 
 /**
  * Scales a position by exaggeration.
- *
  * @param {Cartesian3} position The position.
  * @param {Ellipsoid} ellipsoid The ellipsoid.
  * @param {number} verticalExaggeration A scalar used to exaggerate the terrain. If the value is 1.0 there will be no effect.

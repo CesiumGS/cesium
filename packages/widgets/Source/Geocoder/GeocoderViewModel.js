@@ -23,8 +23,7 @@ const DEFAULT_HEIGHT = 1000;
 /**
  * The view model for the {@link Geocoder} widget.
  * @alias GeocoderViewModel
- * @constructor
- *
+ * @class
  * @param {object} options Object with the following properties:
  * @param {Scene} options.scene The Scene instance to use.
  * @param {GeocoderService[]} [options.geocoderServices] Geocoder services to use for geocoding queries.
@@ -142,7 +141,6 @@ function GeocoderViewModel(options) {
 
   /**
    * Gets or sets a value indicating if this instance should always show its text input field.
-   *
    * @type {boolean}
    * @default false
    */
@@ -183,7 +181,6 @@ function GeocoderViewModel(options) {
   });
   /**
    * Gets a value indicating whether a search is currently in progress.  This property is observable.
-   *
    * @type {boolean}
    */
   this.isSearchInProgress = undefined;
@@ -196,7 +193,6 @@ function GeocoderViewModel(options) {
   /**
    * Gets or sets the text to search for.  The text can be an address, or longitude, latitude,
    * and optional height, where longitude and latitude are in degrees and height is in meters.
-   *
    * @type {string}
    */
   this.searchText = undefined;
@@ -222,7 +218,6 @@ function GeocoderViewModel(options) {
    * Gets or sets the the duration of the camera flight in seconds.
    * A value of zero causes the camera to instantly switch to the geocoding location.
    * The duration will be computed based on the distance when undefined.
-   *
    * @type {number|undefined}
    * @default undefined
    */
@@ -247,7 +242,6 @@ Object.defineProperties(GeocoderViewModel.prototype, {
   /**
    * Gets the event triggered on flight completion.
    * @memberof GeocoderViewModel.prototype
-   *
    * @type {Event}
    */
   complete: {
@@ -259,7 +253,6 @@ Object.defineProperties(GeocoderViewModel.prototype, {
   /**
    * Gets the scene to control.
    * @memberof GeocoderViewModel.prototype
-   *
    * @type {Scene}
    */
   scene: {
@@ -271,7 +264,6 @@ Object.defineProperties(GeocoderViewModel.prototype, {
   /**
    * Gets the Command that is executed when the button is clicked.
    * @memberof GeocoderViewModel.prototype
-   *
    * @type {Command}
    */
   search: {
@@ -283,7 +275,6 @@ Object.defineProperties(GeocoderViewModel.prototype, {
   /**
    * Gets the currently selected geocoder search suggestion
    * @memberof GeocoderViewModel.prototype
-   *
    * @type {object}
    */
   selectedSuggestion: {
@@ -295,7 +286,6 @@ Object.defineProperties(GeocoderViewModel.prototype, {
   /**
    * Gets the list of geocoder search suggestions
    * @memberof GeocoderViewModel.prototype
-   *
    * @type {Object[]}
    */
   suggestions: {

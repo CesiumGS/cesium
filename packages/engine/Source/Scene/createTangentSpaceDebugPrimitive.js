@@ -13,15 +13,12 @@ import Primitive from "./Primitive.js";
  * <code>normal</code>, <code>tangent</code>, and <code>bitangent</code>.  Normal
  * is red; tangent is green; and bitangent is blue.  If an attribute is not
  * present, it is not drawn.
- *
  * @function
- *
  * @param {object} options Object with the following properties:
  * @param {Geometry} options.geometry The <code>Geometry</code> instance with the attribute.
  * @param {number} [options.length=10000.0] The length of each line segment in meters.  This can be negative to point the vector in the opposite direction.
  * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The model matrix that transforms to transform the geometry from model to world coordinates.
  * @returns {Primitive} A new <code>Primitive</code> instance with geometry for the vectors.
- *
  * @example
  * scene.primitives.add(Cesium.createTangentSpaceDebugPrimitive({
  *    geometry : instance.geometry,

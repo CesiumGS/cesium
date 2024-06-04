@@ -11,10 +11,8 @@ import TimeConstants from "../Core/TimeConstants.js";
  * lower than a threshold.  Later, if the frame rate returns to the required level, a separate event is raised.
  * To avoid creating multiple FrameRateMonitors for a single {@link Scene}, use {@link FrameRateMonitor.fromScene}
  * instead of constructing an instance explicitly.
- *
  * @alias FrameRateMonitor
- * @constructor
- *
+ * @class
  * @param {object} [options] Object with the following properties:
  * @param {Scene} options.scene The Scene instance for which to monitor performance.
  * @param {number} [options.samplingWindow=5.0] The length of the sliding window over which to compute the average frame rate, in seconds.
@@ -155,7 +153,6 @@ function FrameRateMonitor(options) {
  * The default frame rate monitoring settings.  These settings are used when {@link FrameRateMonitor.fromScene}
  * needs to create a new frame rate monitor, and for any settings that are not passed to the
  * {@link FrameRateMonitor} constructor.
- *
  * @memberof FrameRateMonitor
  * @type {object}
  */
@@ -170,7 +167,6 @@ FrameRateMonitor.defaultSettings = {
 /**
  * Gets the {@link FrameRateMonitor} for a given scene.  If the scene does not yet have
  * a {@link FrameRateMonitor}, one is created with the {@link FrameRateMonitor.defaultSettings}.
- *
  * @param {Scene} scene The scene for which to get the {@link FrameRateMonitor}.
  * @returns {FrameRateMonitor} The scene's {@link FrameRateMonitor}.
  */
@@ -276,11 +272,8 @@ FrameRateMonitor.prototype.unpause = function () {
  * <br /><br />
  * If this object was destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
- *
  * @memberof FrameRateMonitor
- *
  * @returns {boolean} True if this object was destroyed; otherwise, false.
- *
  * @see FrameRateMonitor#destroy
  */
 FrameRateMonitor.prototype.isDestroyed = function () {
@@ -292,11 +285,8 @@ FrameRateMonitor.prototype.isDestroyed = function () {
  * Once an object is destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
  * assign the return value (<code>undefined</code>) to the object as done in the example.
- *
  * @memberof FrameRateMonitor
- *
- * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
- *
+ * @throws {DeveloperError} This object was destroyed, i.e., destroy() was called.
  * @see FrameRateMonitor#isDestroyed
  */
 FrameRateMonitor.prototype.destroy = function () {

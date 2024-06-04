@@ -9,10 +9,8 @@ import TimeStandard from "./TimeStandard.js";
 /**
  * A set of IAU2006 XYS data that is used to evaluate the transformation between the International
  * Celestial Reference Frame (ICRF) and the International Terrestrial Reference Frame (ITRF).
- *
  * @alias Iau2006XysData
- * @constructor
- *
+ * @class
  * @param {object} [options] Object with the following properties:
  * @param {Resource|string} [options.xysFileUrlTemplate='Assets/IAU2006_XYS/IAU2006_XYS_{0}.json'] A template URL for obtaining the XYS data.  In the template,
  *                 `{0}` will be replaced with the file index.
@@ -22,7 +20,6 @@ import TimeStandard from "./TimeStandard.js";
  * @param {number} [options.stepSizeDays=1.0] The step size, in days, between successive XYS samples.
  * @param {number} [options.samplesPerXysFile=1000] The number of samples in each XYS file.
  * @param {number} [options.totalSamples=27426] The total number of samples in all XYS files.
- *
  * @private
  */
 function Iau2006XysData(options) {
@@ -84,7 +81,6 @@ function getDaysSinceEpoch(xys, dayTT, secondTT) {
 
 /**
  * Preloads XYS data for a specified date range.
- *
  * @param {number} startDayTT The Julian day number of the beginning of the interval to preload, expressed in
  *                 the Terrestrial Time (TT) time standard.
  * @param {number} startSecondTT The seconds past noon of the beginning of the interval to preload, expressed in
@@ -137,7 +133,6 @@ Iau2006XysData.prototype.preload = function (
 /**
  * Computes the XYS values for a given date by interpolating.  If the required data is not yet downloaded,
  * this method will return undefined.
- *
  * @param {number} dayTT The Julian day number for which to compute the XYS value, expressed in
  *                 the Terrestrial Time (TT) time standard.
  * @param {number} secondTT The seconds past noon of the date for which to compute the XYS value, expressed in
@@ -146,7 +141,6 @@ Iau2006XysData.prototype.preload = function (
  *                           is undefined, a new instance is allocated and returned.
  * @returns {Iau2006XysSample} The interpolated XYS values, or undefined if the required data for this
  *                             computation has not yet been downloaded.
- *
  * @see Iau2006XysData#preload
  */
 Iau2006XysData.prototype.computeXysRadians = function (

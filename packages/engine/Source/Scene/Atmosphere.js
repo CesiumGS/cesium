@@ -10,27 +10,22 @@ import DynamicAtmosphereLightingType from "./DynamicAtmosphereLightingType.js";
  * <p>
  * While the atmosphere settings affect the color of fog, see {@link Fog} to control how fog is rendered.
  * </p>
- *
  * @alias Atmosphere
- * @constructor
- *
+ * @class
  * @example
  * // Turn on dynamic atmosphere lighting using the sun direction
  * scene.atmosphere.dynamicLighting = Cesium.DynamicAtmosphereLightingType.SUNLIGHT;
- *
  * @example
  * // Turn on dynamic lighting using whatever light source is in the scene
  * scene.light = new Cesium.DirectionalLight({
  *   direction: new Cesium.Cartesian3(1, 0, 0)
  * });
  * scene.atmosphere.dynamicLighting = Cesium.DynamicAtmosphereLightingType.SCENE_LIGHT;
- *
  * @example
  * // Adjust the color of the atmosphere effects.
  * scene.atmosphere.hueShift = 0.4; // Cycle 40% around the color wheel
  * scene.atmosphere.brightnessShift = 0.25; // Increase the brightness
  * scene.atmosphere.saturationShift = -0.1; // Desaturate the colors
- *
  * @see SkyAtmosphere
  * @see Globe
  * @see Fog
@@ -38,7 +33,6 @@ import DynamicAtmosphereLightingType from "./DynamicAtmosphereLightingType.js";
 function Atmosphere() {
   /**
    * The intensity of the light that is used for computing the ground atmosphere color.
-   *
    * @type {number}
    * @default 10.0
    */
@@ -46,7 +40,6 @@ function Atmosphere() {
 
   /**
    * The Rayleigh scattering coefficient used in the atmospheric scattering equations for the ground atmosphere.
-   *
    * @type {Cartesian3}
    * @default Cartesian3(5.5e-6, 13.0e-6, 28.4e-6)
    */
@@ -54,7 +47,6 @@ function Atmosphere() {
 
   /**
    * The Mie scattering coefficient used in the atmospheric scattering equations for the ground atmosphere.
-   *
    * @type {Cartesian3}
    * @default Cartesian3(21e-6, 21e-6, 21e-6)
    */
@@ -62,7 +54,6 @@ function Atmosphere() {
 
   /**
    * The Rayleigh scale height used in the atmospheric scattering equations for the ground atmosphere, in meters.
-   *
    * @type {number}
    * @default 10000.0
    */
@@ -70,7 +61,6 @@ function Atmosphere() {
 
   /**
    * The Mie scale height used in the atmospheric scattering equations for the ground atmosphere, in meters.
-   *
    * @type {number}
    * @default 3200.0
    */
@@ -81,7 +71,6 @@ function Atmosphere() {
    * <p>
    * Valid values are between -1.0 and 1.0.
    * </p>
-   *
    * @type {number}
    * @default 0.9
    */
@@ -90,7 +79,6 @@ function Atmosphere() {
   /**
    * The hue shift to apply to the atmosphere. Defaults to 0.0 (no shift).
    * A hue shift of 1.0 indicates a complete rotation of the hues available.
-   *
    * @type {number}
    * @default 0.0
    */
@@ -99,7 +87,6 @@ function Atmosphere() {
   /**
    * The saturation shift to apply to the atmosphere. Defaults to 0.0 (no shift).
    * A saturation shift of -1.0 is monochrome.
-   *
    * @type {number}
    * @default 0.0
    */
@@ -108,7 +95,6 @@ function Atmosphere() {
   /**
    * The brightness shift to apply to the atmosphere. Defaults to 0.0 (no shift).
    * A brightness shift of -1.0 is complete darkness, which will let space show through.
-   *
    * @type {number}
    * @default 0.0
    */
@@ -117,7 +103,6 @@ function Atmosphere() {
   /**
    * When not DynamicAtmosphereLightingType.NONE, the selected light source will
    * be used for dynamically lighting all atmosphere-related rendering effects.
-   *
    * @type {DynamicAtmosphereLightingType}
    * @default DynamicAtmosphereLightingType.NONE
    */

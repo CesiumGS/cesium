@@ -9,13 +9,10 @@ import defined from "./defined.js";
  * On the other hand, a {@link RuntimeError} indicates an exception that may
  * be thrown at runtime, e.g., out of memory, that the calling code should be prepared
  * to catch.
- *
  * @alias DeveloperError
- * @constructor
- * @extends Error
- *
+ * @class
+ * @augments Error
  * @param {string} [message] The error message for this exception.
- *
  * @see RuntimeError
  */
 function DeveloperError(message) {

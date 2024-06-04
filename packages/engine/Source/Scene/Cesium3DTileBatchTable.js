@@ -29,8 +29,13 @@ const DEFAULT_COLOR_VALUE = BatchTexture.DEFAULT_COLOR_VALUE;
 const DEFAULT_SHOW_VALUE = BatchTexture.DEFAULT_SHOW_VALUE;
 
 /**
+ * @param content
+ * @param featuresLength
+ * @param batchTableJson
+ * @param batchTableBinary
+ * @param colorChangedCallback
  * @private
- * @constructor
+ * @class
  */
 function Cesium3DTileBatchTable(
   content,
@@ -86,7 +91,6 @@ Object.defineProperties(Cesium3DTileBatchTable.prototype, {
   /**
    * Size of the batch table, including the batch table hierarchy's binary
    * buffers and any binary properties. JSON data is not counted.
-   *
    * @memberof Cesium3DTileBatchTable.prototype
    * @type {number}
    * @readonly
@@ -386,6 +390,8 @@ Cesium3DTileBatchTable.prototype.getPropertyIds = function (batchId, results) {
 };
 
 /**
+ * @param batchId
+ * @param name
  * @private
  */
 Cesium3DTileBatchTable.prototype.getPropertyBySemantic = function (

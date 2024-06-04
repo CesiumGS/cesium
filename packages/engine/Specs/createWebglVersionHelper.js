@@ -19,7 +19,5 @@ export default function createWebglVersionHelper(createSpecs) {
 
 /**
  * @callback createSpecCallback
- *
  * @param {ContextOptions} [contextOptions] options used to initialize context
- *
  */

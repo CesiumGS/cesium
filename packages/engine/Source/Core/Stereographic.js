@@ -98,7 +98,6 @@ const scratchCartesian = new Cartesian3();
 
 /**
  * Computes the latitude based on an ellipsoid.
- *
  * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid on which to compute the longitude.
  * @returns {number} The latitude
  */
@@ -124,7 +123,6 @@ const scratchProjectPointOntoPlaneCartesian3 = new Cartesian3();
 
 /**
  * Computes the projection of the provided 3D position onto the 2D polar plane, radially outward from the provided origin.
- *
  * @param {Cartesian3} cartesian The point to project.
  * @param {Stereographic} [result] The object onto which to store the result.
  * @returns {Sterographic} The modified result parameter or a new Sterographic instance if none was provided.
@@ -174,7 +172,6 @@ Stereographic.fromCartesian = function (cartesian, result) {
 
 /**
  * Computes the projection of the provided 3D positions onto the 2D polar plane, radially outward from the provided origin.
- *
  * @param {Cartesian3[]} cartesians The points to project.
  * @param {Stereographic[]} [result] The object onto which to store the result.
  * @returns {Sterographic[]} The modified result parameter or a new Sterographic instance if none was provided.
@@ -198,7 +195,6 @@ Stereographic.fromCartesianArray = function (cartesians, result) {
 
 /**
  * Duplicates a Stereographic instance.
- *
  * @param {Stereographic} stereographic The Stereographic to duplicate.
  * @param {Stereographic} [result] The object onto which to store the result.
  * @returns {Stereographic} The modified result parameter or a new Stereographic instance if one was not provided. (Returns undefined if stereographic is undefined)
@@ -222,7 +218,6 @@ Stereographic.clone = function (stereographic, result) {
 
 /**
  * An Ellipsoid instance initialized to radii of (0.5, 0.5, 0.5).
- *
  * @type {Stereographic}
  * @constant
  */

@@ -1,12 +1,10 @@
 /**
  * Constants for identifying well-known reference frames.
- *
  * @enum {number}
  */
 const ReferenceFrame = {
   /**
    * The fixed frame.
-   *
    * @type {number}
    * @constant
    */
@@ -14,7 +12,6 @@ const ReferenceFrame = {
 
   /**
    * The inertial frame.
-   *
    * @type {number}
    * @constant
    */

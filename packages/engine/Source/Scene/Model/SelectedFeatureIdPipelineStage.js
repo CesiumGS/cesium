@@ -8,7 +8,6 @@ import ModelUtility from "./ModelUtility.js";
 /**
  * The selected feature ID pipeline stage is responsible for handling the
  * set of feature IDs selected for styling/picking.
- *
  * @namespace SelectedFeatureIdPipelineStage
  * @private
  */
@@ -26,10 +25,9 @@ const SelectedFeatureIdPipelineStage = {
 /**
  * Process a primitive. This modifies the following parts of the render resources:
  * <ul>
- *  <li>sets the defines for the feature ID attribute to use for styling/picking</li>
- *  <li>adds fields to the SelectedFeature struct in the shader</li>
+ * <li>sets the defines for the feature ID attribute to use for styling/picking</li>
+ * <li>adds fields to the SelectedFeature struct in the shader</li>
  * </ul>
- *
  * @param {PrimitiveRenderResources} renderResources The render resources for this primitive.
  * @param {ModelComponents.Primitive} primitive The primitive.
  * @param {FrameState} frameState The frame state.
@@ -155,11 +153,11 @@ function getSelectedFeatureIds(model, node, primitive) {
  * as follows:
  *
  * struct SelectedFeature {
- *   int id;
- *   vec2 st;
- *   vec4 color;
+ * int id;
+ * vec2 st;
+ * vec4 color;
  * }
- *
+ * @param shaderBuilder
  * @private
  */
 function updateFeatureStruct(shaderBuilder) {

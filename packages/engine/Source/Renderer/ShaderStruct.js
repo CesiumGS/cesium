@@ -1,9 +1,7 @@
 /**
  * A utility for dynamically-generating a GLSL struct.
- *
  * @alias ShaderStruct
- * @constructor
- *
+ * @class
  * @see {@link ShaderBuilder}
  * @param {string} name The name of the struct as it will appear in the shader.
  * @example
@@ -20,7 +18,6 @@
  * struct.addField("vec3", "normal");
  * struct.addField("vec2", "texCoord");
  * const generatedLines = struct.generateGlslLines();
- *
  * @private
  */
 function ShaderStruct(name) {
@@ -40,7 +37,7 @@ ShaderStruct.prototype.addField = function (type, identifier) {
 
 /**
  * Generate a list of lines of GLSL code for use with {@link ShaderBuilder}
- * @return {string[]} The generated GLSL code.
+ * @returns {string[]} The generated GLSL code.
  */
 ShaderStruct.prototype.generateGlslLines = function () {
   let fields = this.fields;

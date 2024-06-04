@@ -8,12 +8,9 @@ const warnings = {};
  * Logs a one time message to the console.  Use this function instead of
  * <code>console.log</code> directly since this does not log duplicate messages
  * unless it is called from multiple workers.
- *
  * @function oneTimeWarning
- *
  * @param {string} identifier The unique identifier for this warning.
  * @param {string} [message=identifier] The message to log to the console.
- *
  * @example
  * for(let i=0;i<foo.length;++i) {
  *    if (!defined(foo[i].bar)) {
@@ -23,7 +20,6 @@ const warnings = {};
  *       // ...
  *    }
  * }
- *
  * @private
  */
 function oneTimeWarning(identifier, message) {

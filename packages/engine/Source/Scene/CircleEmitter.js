@@ -6,10 +6,8 @@ import CesiumMath from "../Core/Math.js";
 /**
  * A ParticleEmitter that emits particles from a circle.
  * Particles will be positioned within a circle and have initial velocities going along the z vector.
- *
  * @alias CircleEmitter
- * @constructor
- *
+ * @class
  * @param {number} [radius=1.0] The radius of the circle in meters.
  */
 function CircleEmitter(radius) {
@@ -44,7 +42,6 @@ Object.defineProperties(CircleEmitter.prototype, {
 
 /**
  * Initializes the given {@link Particle} by setting it's position and velocity.
- *
  * @private
  * @param {Particle} particle The particle to initialize.
  */

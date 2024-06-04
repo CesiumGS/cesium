@@ -11,14 +11,11 @@ import RuntimeError from "../Core/RuntimeError.js";
 
 /**
  * Object for handling the <code>3DTILES_batch_table_hierarchy</code> extension
- *
  * @param {object} options Object with the following properties:
  * @param {object} options.extension The <code>3DTILES_batch_table_hierarchy</code> extension object.
  * @param {Uint8Array} [options.binaryBody] The binary body of the batch table
- *
  * @alias BatchTableHierarchy
- * @constructor
- *
+ * @class
  * @private
  */
 function BatchTableHierarchy(options) {
@@ -54,7 +51,6 @@ Object.defineProperties(BatchTableHierarchy.prototype, {
 /**
  * Parse the batch table hierarchy from the
  * <code>3DTILES_batch_table_hierarchy</code> extension.
- *
  * @param {BatchTableHierarchy} hierarchy The hierarchy instance
  * @param {object} hierarchyJson The JSON of the extension
  * @param {Uint8Array} [binaryBody] The binary body of the batch table for accessing binary properties
@@ -364,7 +360,6 @@ function traverseHierarchy(hierarchy, instanceIndex, endConditionCallback) {
 
 /**
  * Returns whether the feature has this property.
- *
  * @param {number} batchId the batch ID of the feature
  * @param {string} propertyId The case-sensitive ID of the property.
  * @returns {boolean} Whether the feature has this property.
@@ -386,7 +381,6 @@ BatchTableHierarchy.prototype.hasProperty = function (batchId, propertyId) {
 
 /**
  * Returns whether any feature has this property.
- *
  * @param {string} propertyId The case-sensitive ID of the property.
  * @returns {boolean} Whether any feature has this property.
  * @private
@@ -405,7 +399,6 @@ BatchTableHierarchy.prototype.propertyExists = function (propertyId) {
 
 /**
  * Returns an array of property IDs.
- *
  * @param {number} batchId the batch ID of the feature
  * @param {number} index The index of the entity.
  * @param {string[]} [results] An array into which to store the results.
@@ -433,7 +426,6 @@ BatchTableHierarchy.prototype.getPropertyIds = function (batchId, results) {
 
 /**
  * Returns a copy of the value of the property with the given ID.
- *
  * @param {number} batchId the batch ID of the feature
  * @param {string} propertyId The case-sensitive ID of the property.
  * @returns {*} The value of the property or <code>undefined</code> if the feature does not have this property.
@@ -466,13 +458,11 @@ function getBinaryProperty(binaryProperty, index) {
 /**
  * Sets the value of the property with the given ID. Only properties of the
  * instance may be set; parent properties may not be set.
- *
  * @param {number} batchId The batchId of the feature
  * @param {string} propertyId The case-sensitive ID of the property.
  * @param {*} value The value of the property that will be copied.
  * @returns {boolean} <code>true</code> if the property was set, <code>false</code> otherwise.
- *
- * @exception {DeveloperError} when setting an inherited property
+ * @throws {DeveloperError} when setting an inherited property
  * @private
  */
 BatchTableHierarchy.prototype.setProperty = function (
@@ -519,10 +509,9 @@ function setBinaryProperty(binaryProperty, index, value) {
 
 /**
  * Check if a feature belongs to a class with the given name
- *
  * @param {number} batchId The batch ID of the feature
  * @param {string} className The name of the class
- * @return {boolean} <code>true</code> if the feature belongs to the class given by className, or <code>false</code> otherwise
+ * @returns {boolean} <code>true</code> if the feature belongs to the class given by className, or <code>false</code> otherwise
  * @private
  */
 BatchTableHierarchy.prototype.isClass = function (batchId, className) {
@@ -543,9 +532,8 @@ BatchTableHierarchy.prototype.isClass = function (batchId, className) {
 
 /**
  * Get the name of the class a given feature belongs to
- *
  * @param {number} batchId The batch ID of the feature
- * @return {string} The name of the class this feature belongs to
+ * @returns {string} The name of the class this feature belongs to
  */
 BatchTableHierarchy.prototype.getClassName = function (batchId) {
   const classId = this._classIds[batchId];

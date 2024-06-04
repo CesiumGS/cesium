@@ -11,9 +11,7 @@ import ModelUtility from "./ModelUtility.js";
  * EXT_structural_metadata and inserts them into a struct in the shader.
  * This struct will be used by {@link CustomShaderPipelineStage} to allow the
  * user to access metadata using {@link CustomShader}
- *
  * @namespace MetadataPipelineStage
- *
  * @private
  */
 const MetadataPipelineStage = {
@@ -628,7 +626,6 @@ function getStructAssignments(fieldNames, values, struct, type) {
 /**
  * Handle offset/scale transform for a property value
  * This wraps the GLSL value expression with a czm_valueTransform() call
- *
  * @param {object} options Object with the following properties:
  * @param {string} options.valueExpression The GLSL value expression without the transform
  * @param {string} options.metadataVariable The name of the GLSL variable that will contain the property value

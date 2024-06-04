@@ -16,11 +16,9 @@ import ResourceLoaderState from "./ResourceLoaderState.js";
  * <p>
  * Implements the {@link ResourceLoader} interface.
  * </p>
- *
  * @alias GltfIndexBufferLoader
- * @constructor
+ * @class
  * @augments ResourceLoader
- *
  * @param {object} options Object with the following properties:
  * @param {ResourceCache} options.resourceCache The {@link ResourceCache} (to avoid circular dependencies).
  * @param {object} options.gltf The glTF JSON.
@@ -89,9 +87,7 @@ if (defined(Object.create)) {
 Object.defineProperties(GltfIndexBufferLoader.prototype, {
   /**
    * The cache key of the resource.
-   *
    * @memberof GltfIndexBufferLoader.prototype
-   *
    * @type {string}
    * @readonly
    * @private
@@ -103,9 +99,7 @@ Object.defineProperties(GltfIndexBufferLoader.prototype, {
   },
   /**
    * The index buffer. This is only defined when <code>loadBuffer</code> is true.
-   *
    * @memberof GltfIndexBufferLoader.prototype
-   *
    * @type {Buffer}
    * @readonly
    * @private
@@ -117,9 +111,7 @@ Object.defineProperties(GltfIndexBufferLoader.prototype, {
   },
   /**
    * The typed array containing indices. This is only defined when <code>loadTypedArray</code> is true.
-   *
    * @memberof GltfIndexBufferLoader.prototype
-   *
    * @type {Uint8Array|Uint16Array|Uint32Array}
    * @readonly
    * @private
@@ -132,9 +124,7 @@ Object.defineProperties(GltfIndexBufferLoader.prototype, {
 
   /**
    * The index datatype after decode.
-   *
    * @memberof GltfIndexBufferLoader.prototype
-   *
    * @type {IndexDatatype}
    * @readonly
    * @private
@@ -315,7 +305,6 @@ function createIndexBuffer(typedArray, indexDatatype, context) {
 
 /**
  * Processes the resource until it becomes ready.
- *
  * @param {FrameState} frameState The frame state.
  * @private
  */

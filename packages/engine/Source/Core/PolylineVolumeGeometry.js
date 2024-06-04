@@ -171,10 +171,8 @@ function computeAttributes(
 
 /**
  * A description of a polyline with a volume (a 2D shape extruded along a polyline).
- *
  * @alias PolylineVolumeGeometry
- * @constructor
- *
+ * @class
  * @param {object} options Object with the following properties:
  * @param {Cartesian3[]} options.polylinePositions An array of {@link Cartesian3} positions that define the center of the polyline volume.
  * @param {Cartesian2[]} options.shapePositions An array of {@link Cartesian2} positions that define the shape to be extruded along the polyline
@@ -182,11 +180,8 @@ function computeAttributes(
  * @param {number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
  * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
  * @param {CornerType} [options.cornerType=CornerType.ROUNDED] Determines the style of the corners.
- *
  * @see PolylineVolumeGeometry#createGeometry
- *
  * @demo {@link https://sandcastle.cesium.com/index.html?src=Polyline%20Volume.html|Cesium Sandcastle Polyline Volume Demo}
- *
  * @example
  * function computeCircle(radius) {
  *   const positions = [];
@@ -248,11 +243,9 @@ function PolylineVolumeGeometry(options) {
 
 /**
  * Stores the provided instance into the provided array.
- *
  * @param {PolylineVolumeGeometry} value The value to pack.
  * @param {number[]} array The array to pack into.
  * @param {number} [startingIndex=0] The index into the array at which to start packing the elements.
- *
  * @returns {number[]} The array that was packed into
  */
 PolylineVolumeGeometry.pack = function (value, array, startingIndex) {
@@ -310,7 +303,6 @@ const scratchOptions = {
 
 /**
  * Retrieves an instance from a packed array.
- *
  * @param {number[]} array The packed array.
  * @param {number} [startingIndex=0] The starting index of the element to be unpacked.
  * @param {PolylineVolumeGeometry} [result] The object into which to store the result.
@@ -376,7 +368,6 @@ const brScratch = new BoundingRectangle();
 
 /**
  * Computes the geometric representation of a polyline with a volume, including its vertices, indices, and a bounding sphere.
- *
  * @param {PolylineVolumeGeometry} polylineVolumeGeometry A description of the polyline volume.
  * @returns {Geometry|undefined} The computed vertices and indices.
  */

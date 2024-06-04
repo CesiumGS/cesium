@@ -8,9 +8,7 @@ import hasExtension from "./hasExtension.js";
 
 /**
  * Compute cache keys for resources in {@link ResourceCache}.
- *
  * @namespace ResourceCacheKey
- *
  * @private
  */
 const ResourceCacheKey = {};
@@ -110,14 +108,11 @@ function getSamplerCacheKey(gltf, textureInfo) {
 
 /**
  * Gets the schema cache key.
- *
  * @param {object} options Object with the following properties:
  * @param {object} [options.schema] An object that explicitly defines a schema JSON. Mutually exclusive with options.resource.
  * @param {Resource} [options.resource] The {@link Resource} pointing to the schema JSON. Mutually exclusive with options.schema.
- *
  * @returns {string} The schema cache key.
- *
- * @exception {DeveloperError} One of options.schema and options.resource must be defined.
+ * @throws {DeveloperError} One of options.schema and options.resource must be defined.
  * @private
  */
 ResourceCacheKey.getSchemaCacheKey = function (options) {
@@ -140,10 +135,8 @@ ResourceCacheKey.getSchemaCacheKey = function (options) {
 
 /**
  * Gets the external buffer cache key.
- *
  * @param {object} options Object with the following properties:
  * @param {Resource} options.resource The {@link Resource} pointing to the external buffer.
- *
  * @returns {string} The external buffer cache key.
  * @private
  */
@@ -160,11 +153,9 @@ ResourceCacheKey.getExternalBufferCacheKey = function (options) {
 
 /**
  * Gets the embedded buffer cache key.
- *
  * @param {object} options Object with the following properties:
  * @param {Resource} options.parentResource The {@link Resource} containing the embedded buffer.
  * @param {number} options.bufferId A unique identifier of the embedded buffer within the parent resource.
- *
  * @returns {string} The embedded buffer cache key.
  * @private
  */
@@ -185,10 +176,8 @@ ResourceCacheKey.getEmbeddedBufferCacheKey = function (options) {
 
 /**
  * Gets the glTF cache key.
- *
  * @param {object} options Object with the following properties:
  * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
- *
  * @returns {string} The glTF cache key.
  * @private
  */
@@ -205,13 +194,11 @@ ResourceCacheKey.getGltfCacheKey = function (options) {
 
 /**
  * Gets the buffer view cache key.
- *
  * @param {object} options Object with the following properties:
  * @param {object} options.gltf The glTF JSON.
  * @param {number} options.bufferViewId The bufferView ID.
  * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
  * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
- *
  * @returns {string} The buffer view cache key.
  * @private
  */
@@ -248,13 +235,11 @@ ResourceCacheKey.getBufferViewCacheKey = function (options) {
 
 /**
  * Gets the Draco cache key.
- *
  * @param {object} options Object with the following properties:
  * @param {object} options.gltf The glTF JSON.
  * @param {object} options.draco The Draco extension object.
  * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
  * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
- *
  * @returns {string} The Draco cache key.
  * @private
  */
@@ -274,7 +259,6 @@ ResourceCacheKey.getDracoCacheKey = function (options) {
 
 /**
  * Gets the vertex buffer cache key.
- *
  * @param {object} options Object with the following properties:
  * @param {object} options.gltf The glTF JSON.
  * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
@@ -286,9 +270,8 @@ ResourceCacheKey.getDracoCacheKey = function (options) {
  * @param {boolean} [options.dequantize=false] Determines whether or not the vertex buffer will be dequantized on the CPU.
  * @param {boolean} [options.loadBuffer=false] Load vertex buffer as a GPU vertex buffer.
  * @param {boolean} [options.loadTypedArray=false] Load vertex buffer as a typed array.
- * @exception {DeveloperError} One of options.bufferViewId and options.draco must be defined.
- * @exception {DeveloperError} When options.draco is defined options.attributeSemantic must also be defined.
- *
+ * @throws {DeveloperError} One of options.bufferViewId and options.draco must be defined.
+ * @throws {DeveloperError} When options.draco is defined options.attributeSemantic must also be defined.
  * @returns {string} The vertex buffer cache key.
  * @private
  */
@@ -391,7 +374,6 @@ function hasDracoCompression(draco, semantic) {
 
 /**
  * Gets the index buffer cache key.
- *
  * @param {object} options Object with the following properties:
  * @param {object} options.gltf The glTF JSON.
  * @param {number} options.accessorId The accessor ID corresponding to the index buffer.
@@ -401,7 +383,6 @@ function hasDracoCompression(draco, semantic) {
  * @param {object} [options.draco] The Draco extension object.
  * @param {boolean} [options.loadBuffer=false] Load index buffer as a GPU index buffer.
  * @param {boolean} [options.loadTypedArray=false] Load index buffer as a typed array.
- *
  * @returns {string} The index buffer cache key.
  * @private
  */
@@ -472,13 +453,11 @@ ResourceCacheKey.getIndexBufferCacheKey = function (options) {
 
 /**
  * Gets the image cache key.
- *
  * @param {object} options Object with the following properties:
  * @param {object} options.gltf The glTF JSON.
  * @param {number} options.imageId The image ID.
  * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
  * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
- *
  * @returns {string} The image cache key.
  * @private
  */
@@ -505,7 +484,6 @@ ResourceCacheKey.getImageCacheKey = function (options) {
 
 /**
  * Gets the texture cache key.
- *
  * @param {object} options Object with the following properties:
  * @param {object} options.gltf The glTF JSON.
  * @param {object} options.textureInfo The texture info object.
@@ -513,7 +491,6 @@ ResourceCacheKey.getImageCacheKey = function (options) {
  * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
  * @param {SupportedImageFormats} options.supportedImageFormats The supported image formats.
  * @param {FrameState} options.frameState The frame state.
- *
  * @returns {string} The texture cache key.
  * @private
  */

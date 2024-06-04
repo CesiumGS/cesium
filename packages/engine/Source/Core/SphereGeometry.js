@@ -7,21 +7,16 @@ import VertexFormat from "./VertexFormat.js";
 
 /**
  * A description of a sphere centered at the origin.
- *
  * @alias SphereGeometry
- * @constructor
- *
+ * @class
  * @param {object} [options] Object with the following properties:
  * @param {number} [options.radius=1.0] The radius of the sphere.
  * @param {number} [options.stackPartitions=64] The number of times to partition the ellipsoid into stacks.
  * @param {number} [options.slicePartitions=64] The number of times to partition the ellipsoid into radial slices.
  * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
- *
- * @exception {DeveloperError} options.slicePartitions cannot be less than three.
- * @exception {DeveloperError} options.stackPartitions cannot be less than three.
- *
+ * @throws {DeveloperError} options.slicePartitions cannot be less than three.
+ * @throws {DeveloperError} options.stackPartitions cannot be less than three.
  * @see SphereGeometry#createGeometry
- *
  * @example
  * const sphere = new Cesium.SphereGeometry({
  *   radius : 100.0,
@@ -51,11 +46,9 @@ SphereGeometry.packedLength = EllipsoidGeometry.packedLength;
 
 /**
  * Stores the provided instance into the provided array.
- *
  * @param {SphereGeometry} value The value to pack.
  * @param {number[]} array The array to pack into.
  * @param {number} [startingIndex=0] The index into the array at which to start packing the elements.
- *
  * @returns {number[]} The array that was packed into
  */
 SphereGeometry.pack = function (value, array, startingIndex) {
@@ -77,7 +70,6 @@ const scratchOptions = {
 
 /**
  * Retrieves an instance from a packed array.
- *
  * @param {number[]} array The packed array.
  * @param {number} [startingIndex=0] The starting index of the element to be unpacked.
  * @param {SphereGeometry} [result] The object into which to store the result.
@@ -108,7 +100,6 @@ SphereGeometry.unpack = function (array, startingIndex, result) {
 
 /**
  * Computes the geometric representation of a sphere, including its vertices, indices, and a bounding sphere.
- *
  * @param {SphereGeometry} sphereGeometry A description of the sphere.
  * @returns {Geometry|undefined} The computed vertices and indices.
  */

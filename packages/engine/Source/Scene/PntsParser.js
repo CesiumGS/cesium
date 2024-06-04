@@ -13,7 +13,6 @@ import VertexAttributeSemantic from "./VertexAttributeSemantic.js";
 
 /**
  * Handles parsing of a Point Cloud
- *
  * @namespace PntsParser
  * @private
  */
@@ -23,9 +22,7 @@ const sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
 
 /**
  * Parses the contents of a {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification/TileFormats/PointCloud|Point Cloud}.
- *
  * @private
- *
  * @param {*} arrayBuffer The array buffer containing the pnts
  * @param {*} [byteOffset=0] The byte offset of the beginning of the pnts in the array buffer
  * @returns {object} An object containing a parsed representation of the point cloud

@@ -10,10 +10,8 @@ import PerspectiveOffCenterFrustum from "./PerspectiveOffCenterFrustum.js";
  * Each plane is represented by a {@link Cartesian4} object, where the x, y, and z components
  * define the unit vector normal to the plane, and the w component is the distance of the
  * plane from the origin/camera position.
- *
  * @alias PerspectiveFrustum
- * @constructor
- *
+ * @class
  * @param {object} [options] An object with the following properties:
  * @param {number} [options.fov] The angle of the field of view (FOV), in radians.
  * @param {number} [options.aspectRatio] The aspect ratio of the frustum's width to it's height.
@@ -21,7 +19,6 @@ import PerspectiveOffCenterFrustum from "./PerspectiveOffCenterFrustum.js";
  * @param {number} [options.far=500000000.0] The distance of the far plane.
  * @param {number} [options.xOffset=0.0] The offset in the x direction.
  * @param {number} [options.yOffset=0.0] The offset in the y direction.
- *
  * @example
  * const frustum = new Cesium.PerspectiveFrustum({
  *     fov : Cesium.Math.PI_OVER_THREE,
@@ -29,7 +26,6 @@ import PerspectiveOffCenterFrustum from "./PerspectiveOffCenterFrustum.js";
  *     near : 1.0,
  *     far : 1000.0
  * });
- *
  * @see PerspectiveOffCenterFrustum
  */
 function PerspectiveFrustum(options) {
@@ -99,11 +95,9 @@ PerspectiveFrustum.packedLength = 6;
 
 /**
  * Stores the provided instance into the provided array.
- *
  * @param {PerspectiveFrustum} value The value to pack.
  * @param {number[]} array The array to pack into.
  * @param {number} [startingIndex=0] The index into the array at which to start packing the elements.
- *
  * @returns {number[]} The array that was packed into
  */
 PerspectiveFrustum.pack = function (value, array, startingIndex) {
@@ -126,7 +120,6 @@ PerspectiveFrustum.pack = function (value, array, startingIndex) {
 
 /**
  * Retrieves an instance from a packed array.
- *
  * @param {number[]} array The packed array.
  * @param {number} [startingIndex=0] The starting index of the element to be unpacked.
  * @param {PerspectiveFrustum} [result] The object into which to store the result.
@@ -225,7 +218,6 @@ Object.defineProperties(PerspectiveFrustum.prototype, {
    * @memberof PerspectiveFrustum.prototype
    * @type {Matrix4}
    * @readonly
-   *
    * @see PerspectiveFrustum#infiniteProjectionMatrix
    */
   projectionMatrix: {
@@ -240,7 +232,6 @@ Object.defineProperties(PerspectiveFrustum.prototype, {
    * @memberof PerspectiveFrustum.prototype
    * @type {Matrix4}
    * @readonly
-   *
    * @see PerspectiveFrustum#projectionMatrix
    */
   infiniteProjectionMatrix: {
@@ -292,12 +283,10 @@ Object.defineProperties(PerspectiveFrustum.prototype, {
 
 /**
  * Creates a culling volume for this frustum.
- *
  * @param {Cartesian3} position The eye position.
  * @param {Cartesian3} direction The view direction.
  * @param {Cartesian3} up The up direction.
  * @returns {CullingVolume} A culling volume at the given position and orientation.
- *
  * @example
  * // Check if a bounding volume intersects the frustum.
  * const cullingVolume = frustum.computeCullingVolume(cameraPosition, cameraDirection, cameraUp);
@@ -314,23 +303,19 @@ PerspectiveFrustum.prototype.computeCullingVolume = function (
 
 /**
  * Returns the pixel's width and height in meters.
- *
  * @param {number} drawingBufferWidth The width of the drawing buffer.
  * @param {number} drawingBufferHeight The height of the drawing buffer.
  * @param {number} distance The distance to the near plane in meters.
  * @param {number} pixelRatio The scaling factor from pixel space to coordinate space.
  * @param {Cartesian2} result The object onto which to store the result.
  * @returns {Cartesian2} The modified result parameter or a new instance of {@link Cartesian2} with the pixel's width and height in the x and y properties, respectively.
- *
- * @exception {DeveloperError} drawingBufferWidth must be greater than zero.
- * @exception {DeveloperError} drawingBufferHeight must be greater than zero.
- * @exception {DeveloperError} pixelRatio must be greater than zero.
- *
+ * @throws {DeveloperError} drawingBufferWidth must be greater than zero.
+ * @throws {DeveloperError} drawingBufferHeight must be greater than zero.
+ * @throws {DeveloperError} pixelRatio must be greater than zero.
  * @example
  * // Example 1
  * // Get the width and height of a pixel.
  * const pixelSize = camera.frustum.getPixelDimensions(scene.drawingBufferWidth, scene.drawingBufferHeight, 1.0, scene.pixelRatio, new Cesium.Cartesian2());
- *
  * @example
  * // Example 2
  * // Get the width and height of a pixel if the near plane was set to 'distance'.
@@ -361,7 +346,6 @@ PerspectiveFrustum.prototype.getPixelDimensions = function (
 
 /**
  * Returns a duplicate of a PerspectiveFrustum instance.
- *
  * @param {PerspectiveFrustum} [result] The object onto which to store the result.
  * @returns {PerspectiveFrustum} The modified result parameter or a new PerspectiveFrustum instance if one was not provided.
  */
@@ -389,7 +373,6 @@ PerspectiveFrustum.prototype.clone = function (result) {
 /**
  * Compares the provided PerspectiveFrustum componentwise and returns
  * <code>true</code> if they are equal, <code>false</code> otherwise.
- *
  * @param {PerspectiveFrustum} [other] The right hand side PerspectiveFrustum.
  * @returns {boolean} <code>true</code> if they are equal, <code>false</code> otherwise.
  */
@@ -412,7 +395,6 @@ PerspectiveFrustum.prototype.equals = function (other) {
  * Compares the provided PerspectiveFrustum componentwise and returns
  * <code>true</code> if they pass an absolute or relative tolerance test,
  * <code>false</code> otherwise.
- *
  * @param {PerspectiveFrustum} other The right hand side PerspectiveFrustum.
  * @param {number} relativeEpsilon The relative epsilon tolerance to use for equality testing.
  * @param {number} [absoluteEpsilon=relativeEpsilon] The absolute epsilon tolerance to use for equality testing.

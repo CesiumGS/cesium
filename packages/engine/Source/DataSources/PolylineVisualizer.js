@@ -72,8 +72,7 @@ function insertUpdaterIntoBatch(that, time, updater) {
 /**
  * A visualizer for polylines represented by {@link Primitive} instances.
  * @alias PolylineVisualizer
- * @constructor
- *
+ * @class
  * @param {Scene} scene The scene the primitives will be rendered in.
  * @param {EntityCollection} entityCollection The entityCollection to visualize.
  * @param {PrimitiveCollection} [primitives=scene.primitives] A collection to add primitives related to the entities
@@ -195,7 +194,6 @@ function PolylineVisualizer(
 /**
  * Updates all of the primitives created by this visualizer to match their
  * Entity counterpart at the given time.
- *
  * @param {JulianDate} time The time to update to.
  * @returns {boolean} True if the visualizer successfully updated to the provided time,
  * false if the visualizer is waiting for asynchronous primitives to be created.
@@ -282,7 +280,6 @@ const getBoundingSphereBoundingSphereScratch = new BoundingSphere();
 /**
  * Computes a bounding sphere which encloses the visualization produced for the specified entity.
  * The bounding sphere is in the fixed frame of the scene's globe.
- *
  * @param {Entity} entity The entity whose bounding sphere to compute.
  * @param {BoundingSphere} result The bounding sphere onto which to store the result.
  * @returns {BoundingSphereState} BoundingSphereState.DONE if the result contains the bounding sphere,
@@ -328,7 +325,6 @@ PolylineVisualizer.prototype.getBoundingSphere = function (entity, result) {
 
 /**
  * Returns true if this object was destroyed; otherwise, false.
- *
  * @returns {boolean} True if this object was destroyed; otherwise, false.
  */
 PolylineVisualizer.prototype.isDestroyed = function () {
@@ -363,6 +359,7 @@ PolylineVisualizer.prototype.destroy = function () {
 };
 
 /**
+ * @param updater
  * @private
  */
 PolylineVisualizer._onGeometryChanged = function (updater) {
@@ -378,6 +375,9 @@ PolylineVisualizer._onGeometryChanged = function (updater) {
 };
 
 /**
+ * @param entityCollection
+ * @param added
+ * @param removed
  * @private
  */
 PolylineVisualizer.prototype._onCollectionChanged = function (

@@ -1043,10 +1043,8 @@ function computeRectangle(positions, ellipsoid, width, cornerType, result) {
 
 /**
  * A description of a corridor. Corridor geometry can be rendered with both {@link Primitive} and {@link GroundPrimitive}.
- *
  * @alias CorridorGeometry
- * @constructor
- *
+ * @class
  * @param {object} options Object with the following properties:
  * @param {Cartesian3[]} options.positions An array of positions that define the center of the corridor.
  * @param {number} options.width The distance between the edges of the corridor in meters.
@@ -1056,12 +1054,9 @@ function computeRectangle(positions, ellipsoid, width, cornerType, result) {
  * @param {number} [options.extrudedHeight] The distance in meters between the ellipsoid surface and the extruded face.
  * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
  * @param {CornerType} [options.cornerType=CornerType.ROUNDED] Determines the style of the corners.
- *
  * @see CorridorGeometry.createGeometry
  * @see Packable
- *
  * @demo {@link https://sandcastle.cesium.com/index.html?src=Corridor.html|Cesium Sandcastle Corridor Demo}
- *
  * @example
  * const corridor = new Cesium.CorridorGeometry({
  *   vertexFormat : Cesium.VertexFormat.POSITION_ONLY,
@@ -1116,11 +1111,9 @@ function CorridorGeometry(options) {
 
 /**
  * Stores the provided instance into the provided array.
- *
  * @param {CorridorGeometry} value The value to pack.
  * @param {number[]} array The array to pack into.
  * @param {number} [startingIndex=0] The index into the array at which to start packing the elements.
- *
  * @returns {number[]} The array that was packed into
  */
 CorridorGeometry.pack = function (value, array, startingIndex) {
@@ -1173,7 +1166,6 @@ const scratchOptions = {
 
 /**
  * Retrieves an instance from a packed array.
- *
  * @param {number[]} array The packed array.
  * @param {number} [startingIndex=0] The starting index of the element to be unpacked.
  * @param {CorridorGeometry} [result] The object into which to store the result.
@@ -1242,14 +1234,12 @@ CorridorGeometry.unpack = function (array, startingIndex, result) {
 
 /**
  * Computes the bounding rectangle given the provided options
- *
  * @param {object} options Object with the following properties:
  * @param {Cartesian3[]} options.positions An array of positions that define the center of the corridor.
  * @param {number} options.width The distance between the edges of the corridor in meters.
  * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference.
  * @param {CornerType} [options.cornerType=CornerType.ROUNDED] Determines the style of the corners.
  * @param {Rectangle} [result] An object in which to store the result.
- *
  * @returns {Rectangle} The result rectangle.
  */
 CorridorGeometry.computeRectangle = function (options, result) {
@@ -1270,7 +1260,6 @@ CorridorGeometry.computeRectangle = function (options, result) {
 
 /**
  * Computes the geometric representation of a corridor, including its vertices, indices, and a bounding sphere.
- *
  * @param {CorridorGeometry} corridorGeometry A description of the corridor.
  * @returns {Geometry|undefined} The computed vertices and indices.
  */
@@ -1357,6 +1346,9 @@ CorridorGeometry.createGeometry = function (corridorGeometry) {
 };
 
 /**
+ * @param corridorGeometry
+ * @param minHeightFunc
+ * @param maxHeightFunc
  * @private
  */
 CorridorGeometry.createShadowVolume = function (

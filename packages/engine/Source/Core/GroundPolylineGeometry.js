@@ -45,21 +45,16 @@ const WALL_INITIAL_MAX_HEIGHT = 1000.0;
 
 /**
  * A description of a polyline on terrain or 3D Tiles. Only to be used with {@link GroundPolylinePrimitive}.
- *
  * @alias GroundPolylineGeometry
- * @constructor
- *
+ * @class
  * @param {object} options Options with the following properties:
  * @param {Cartesian3[]} options.positions An array of {@link Cartesian3} defining the polyline's points. Heights above the ellipsoid will be ignored.
  * @param {number} [options.width=1.0] The screen space width in pixels.
  * @param {number} [options.granularity=9999.0] The distance interval in meters used for interpolating options.points. Defaults to 9999.0 meters. Zero indicates no interpolation.
  * @param {boolean} [options.loop=false] Whether during geometry creation a line segment will be added between the last and first line positions to make this Polyline a loop.
  * @param {ArcType} [options.arcType=ArcType.GEODESIC] The type of line the polyline segments must follow. Valid options are {@link ArcType.GEODESIC} and {@link ArcType.RHUMB}.
- *
- * @exception {DeveloperError} At least two positions are required.
- *
+ * @throws {DeveloperError} At least two positions are required.
  * @see GroundPolylinePrimitive
- *
  * @example
  * const positions = Cesium.Cartesian3.fromDegreesArray([
  *   -112.1340164450331, 36.05494287836128,
@@ -158,7 +153,6 @@ Object.defineProperties(GroundPolylineGeometry.prototype, {
 /**
  * Set the GroundPolylineGeometry's projection and ellipsoid.
  * Used by GroundPolylinePrimitive to signal scene information to the geometry for generating 2D attributes.
- *
  * @param {GroundPolylineGeometry} groundPolylineGeometry GroundPolylinGeometry describing a polyline on terrain or 3D Tiles.
  * @param {Projection} mapProjection A MapProjection used for projecting cartographic coordinates to 2D.
  * @private
@@ -283,11 +277,9 @@ function getPosition(ellipsoid, cartographic, height, result) {
 
 /**
  * Stores the provided instance into the provided array.
- *
  * @param {PolygonGeometry} value The value to pack.
  * @param {number[]} array The array to pack into.
  * @param {number} [startingIndex=0] The index into the array at which to start packing the elements.
- *
  * @returns {number[]} The array that was packed into
  */
 GroundPolylineGeometry.pack = function (value, array, startingIndex) {
@@ -324,7 +316,6 @@ GroundPolylineGeometry.pack = function (value, array, startingIndex) {
 
 /**
  * Retrieves an instance from a packed array.
- *
  * @param {number[]} array The packed array.
  * @param {number} [startingIndex=0] The starting index of the element to be unpacked.
  * @param {PolygonGeometry} [result] The object into which to store the result.
@@ -451,7 +442,6 @@ const cartographicIntersectionScratch = new Cartographic();
  * Computes shadow volumes for the ground polyline, consisting of its vertices, indices, and a bounding sphere.
  * Vertices are "fat," packing all the data needed in each volume to describe a line on terrain or 3D Tiles.
  * Should not be called independent of {@link GroundPolylinePrimitive}.
- *
  * @param {GroundPolylineGeometry} groundPolylineGeometry
  * @private
  */
@@ -1384,7 +1374,7 @@ function generateGeometryAttributes(
       texcoordNormalization2DX = segmentLength2D / length2D;
       texcoordNormalization2DY = lengthSoFar2D / length2D;
     }
-    /** Pack **/
+    /** Pack */
     for (j = 0; j < 8; j++) {
       const vec4Index = vec4sWriteIndex + j * 4;
       const vec2Index = vec2sWriteIndex + j * 2;
@@ -1646,7 +1636,6 @@ function getVec4GeometryAttribute(typedArray) {
 /**
  * Approximates an ellipsoid-tangent vector in 2D by projecting the end point into 2D.
  * Exposed for testing.
- *
  * @param {MapProjection} projection Map Projection for projecting coordinates to 2D.
  * @param {Cartographic} cartographic The cartographic origin point of the normal.
  *   Used to check if the normal crosses the IDL during projection.

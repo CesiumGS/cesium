@@ -555,10 +555,8 @@ function destroyLabel(labelCollection, label) {
  * <br /><br />
  * Labels are added and removed from the collection using {@link LabelCollection#add}
  * and {@link LabelCollection#remove}.
- *
  * @alias LabelCollection
- * @constructor
- *
+ * @class
  * @param {object} [options] Object with the following properties:
  * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms each label from model to world coordinates.
  * @param {boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if this primitive's commands' bounding spheres are shown.
@@ -567,19 +565,15 @@ function destroyLabel(labelCollection, label) {
  * is used for rendering both opaque and translucent labels. However, if either all of the labels are completely opaque or all are completely translucent,
  * setting the technique to BlendOption.OPAQUE or BlendOption.TRANSLUCENT can improve performance by up to 2x.
  * @param {boolean} [options.show=true] Determines if the labels in the collection will be shown.
- *
  * @performance For best performance, prefer a few collections, each with many labels, to
  * many collections with only a few labels each.  Avoid having collections where some
  * labels change every frame and others do not; instead, create one or more collections
  * for static labels, and one or more collections for dynamic labels.
- *
  * @see LabelCollection#add
  * @see LabelCollection#remove
  * @see Label
  * @see BillboardCollection
- *
  * @demo {@link https://sandcastle.cesium.com/index.html?src=Labels.html|Cesium Sandcastle Labels Demo}
- *
  * @example
  * // Create a label collection with two labels
  * const labels = scene.primitives.add(new Cesium.LabelCollection());
@@ -623,7 +617,6 @@ function LabelCollection(options) {
 
   /**
    * Determines if labels in this collection will be shown.
-   *
    * @type {boolean}
    * @default true
    */
@@ -634,10 +627,8 @@ function LabelCollection(options) {
    * When this is the identity matrix, the labels are drawn in world coordinates, i.e., Earth's WGS84 coordinates.
    * Local reference frames can be used by providing a different transformation matrix, like that returned
    * by {@link Transforms.eastNorthUpToFixedFrame}.
-   *
    * @type Matrix4
    * @default {@link Matrix4.IDENTITY}
-   *
    * @example
    * const center = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883);
    * labels.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(center);
@@ -667,9 +658,7 @@ function LabelCollection(options) {
    * <p>
    * Draws the bounding sphere for each draw command in the primitive.
    * </p>
-   *
    * @type {boolean}
-   *
    * @default false
    */
   this.debugShowBoundingVolume = defaultValue(
@@ -709,18 +698,13 @@ Object.defineProperties(LabelCollection.prototype, {
 /**
  * Creates and adds a label with the specified initial properties to the collection.
  * The added label is returned so it can be modified or removed from the collection later.
- *
  * @param {Label.ConstructorOptions} [options] A template describing the label's properties as shown in Example 1.
  * @returns {Label} The label that was added to the collection.
- *
  * @performance Calling <code>add</code> is expected constant time.  However, the collection's vertex buffer
  * is rewritten; this operations is <code>O(n)</code> and also incurs
  * CPU to GPU overhead.  For best performance, add as many billboards as possible before
  * calling <code>update</code>.
- *
- * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
- *
- *
+ * @throws {DeveloperError} This object was destroyed, i.e., destroy() was called.
  * @example
  * // Example 1:  Add a label, specifying all the default values.
  * const l = labels.add({
@@ -745,7 +729,6 @@ Object.defineProperties(LabelCollection.prototype, {
  *   heightReference : HeightReference.NONE,
  *   distanceDisplayCondition : undefined
  * });
- *
  * @example
  * // Example 2:  Specify only the label's cartographic position,
  * // text, and font.
@@ -754,8 +737,6 @@ Object.defineProperties(LabelCollection.prototype, {
  *   text : 'Hello World',
  *   font : '24px Helvetica',
  * });
- *
- *
  * @see LabelCollection#remove
  * @see LabelCollection#removeAll
  */
@@ -770,23 +751,17 @@ LabelCollection.prototype.add = function (options) {
 
 /**
  * Removes a label from the collection.  Once removed, a label is no longer usable.
- *
  * @param {Label} label The label to remove.
  * @returns {boolean} <code>true</code> if the label was removed; <code>false</code> if the label was not found in the collection.
- *
  * @performance Calling <code>remove</code> is expected constant time.  However, the collection's vertex buffer
  * is rewritten - an <code>O(n)</code> operation that also incurs CPU to GPU overhead.  For
  * best performance, remove as many labels as possible before calling <code>update</code>.
  * If you intend to temporarily hide a label, it is usually more efficient to call
  * {@link Label#show} instead of removing and re-adding the label.
- *
- * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
- *
- *
+ * @throws {DeveloperError} This object was destroyed, i.e., destroy() was called.
  * @example
  * const l = labels.add(...);
  * labels.remove(l);  // Returns true
- *
  * @see LabelCollection#add
  * @see LabelCollection#removeAll
  * @see Label#show
@@ -805,18 +780,13 @@ LabelCollection.prototype.remove = function (label) {
 
 /**
  * Removes all labels from the collection.
- *
  * @performance <code>O(n)</code>.  It is more efficient to remove all the labels
  * from a collection and then add new ones than to create a new collection entirely.
- *
- * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
- *
- *
+ * @throws {DeveloperError} This object was destroyed, i.e., destroy() was called.
  * @example
  * labels.add(...);
  * labels.add(...);
  * labels.removeAll();
- *
  * @see LabelCollection#add
  * @see LabelCollection#remove
  */
@@ -832,12 +802,9 @@ LabelCollection.prototype.removeAll = function () {
 
 /**
  * Check whether this collection contains a given label.
- *
  * @param {Label} label The label to check for.
  * @returns {boolean} true if this collection contains the label, false otherwise.
- *
  * @see LabelCollection#get
- *
  */
 LabelCollection.prototype.contains = function (label) {
   return defined(label) && label._labelCollection === this;
@@ -849,18 +816,12 @@ LabelCollection.prototype.contains = function (label) {
  * it to the left, changing their indices.  This function is commonly used with
  * {@link LabelCollection#length} to iterate over all the labels
  * in the collection.
- *
  * @param {number} index The zero-based index of the billboard.
- *
  * @returns {Label} The label at the specified index.
- *
  * @performance Expected constant time.  If labels were removed from the collection and
  * {@link Scene#render} was not called, an implicit <code>O(n)</code>
  * operation is performed.
- *
- * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
- *
- *
+ * @throws {DeveloperError} This object was destroyed, i.e., destroy() was called.
  * @example
  * // Toggle the show property of every label in the collection
  * const len = labels.length;
@@ -868,7 +829,6 @@ LabelCollection.prototype.contains = function (label) {
  *   const l = billboards.get(i);
  *   l.show = !l.show;
  * }
- *
  * @see LabelCollection#length
  */
 LabelCollection.prototype.get = function (index) {
@@ -882,8 +842,8 @@ LabelCollection.prototype.get = function (index) {
 };
 
 /**
+ * @param frameState
  * @private
- *
  */
 LabelCollection.prototype.update = function (frameState) {
   if (!this.show) {
@@ -961,9 +921,7 @@ LabelCollection.prototype.update = function (frameState) {
  * <br /><br />
  * If this object was destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
- *
  * @returns {boolean} True if this object was destroyed; otherwise, false.
- *
  * @see LabelCollection#destroy
  */
 LabelCollection.prototype.isDestroyed = function () {
@@ -977,13 +935,9 @@ LabelCollection.prototype.isDestroyed = function () {
  * Once an object is destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
  * assign the return value (<code>undefined</code>) to the object as done in the example.
- *
- * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
- *
- *
+ * @throws {DeveloperError} This object was destroyed, i.e., destroy() was called.
  * @example
  * labels = labels && labels.destroy();
- *
  * @see LabelCollection#isDestroyed
  */
 LabelCollection.prototype.destroy = function () {

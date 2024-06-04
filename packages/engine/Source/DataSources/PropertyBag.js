@@ -8,11 +8,9 @@ import Property from "./Property.js";
 
 /**
  * A {@link Property} whose value is a key-value mapping of property names to the computed value of other properties.
- *
  * @alias PropertyBag
  * @implements Record<string, any>
- * @constructor
- *
+ * @class
  * @param {object} [value] An object, containing key-value mapping of property names to properties.
  * @param {Function} [createPropertyCallback] A function that will be called when the value of any of the properties in value are not a Property.
  */
@@ -40,7 +38,6 @@ Object.defineProperties(PropertyBag.prototype, {
    * Gets a value indicating if this property is constant.  This property
    * is considered constant if all property items in this object are constant.
    * @memberof PropertyBag.prototype
-   *
    * @type {boolean}
    * @readonly
    */
@@ -58,9 +55,7 @@ Object.defineProperties(PropertyBag.prototype, {
   /**
    * Gets the event that is raised whenever the set of properties contained in this
    * object changes, or one of the properties itself changes.
-   *
    * @memberof PropertyBag.prototype
-   *
    * @type {Event}
    * @readonly
    */
@@ -73,9 +68,7 @@ Object.defineProperties(PropertyBag.prototype, {
 
 /**
  * Determines if this object has defined a property with the given name.
- *
  * @param {string} propertyName The name of the property to check for.
- *
  * @returns {boolean} True if this object has defined a property with the given name, false otherwise.
  */
 PropertyBag.prototype.hasProperty = function (propertyName) {
@@ -88,12 +81,10 @@ function createConstantProperty(value) {
 
 /**
  * Adds a property to this object.
- *
  * @param {string} propertyName The name of the property to add.
  * @param {*} [value] The value of the new property, if provided.
  * @param {Function} [createPropertyCallback] A function that will be called when the value of this new property is set to a value that is not a Property.
- *
- * @exception {DeveloperError} "propertyName" is already a registered property.
+ * @throws {DeveloperError} "propertyName" is already a registered property.
  */
 PropertyBag.prototype.addProperty = function (
   propertyName,
@@ -133,10 +124,8 @@ PropertyBag.prototype.addProperty = function (
 
 /**
  * Removed a property previously added with addProperty.
- *
  * @param {string} propertyName The name of the property to remove.
- *
- * @exception {DeveloperError} "propertyName" is not a registered property.
+ * @throws {DeveloperError} "propertyName" is not a registered property.
  */
 PropertyBag.prototype.removeProperty = function (propertyName) {
   const propertyNames = this._propertyNames;
@@ -160,7 +149,6 @@ PropertyBag.prototype.removeProperty = function (propertyName) {
 /**
  * Gets the value of this property.  Each contained property will be evaluated at the given time, and the overall
  * result will be an object, mapping property names to those values.
- *
  * @param {JulianDate} time The time for which to retrieve the value.
  * @param {object} [result] The object to store the value into, if omitted, a new instance is created and returned.
  * Note that any properties in result which are not part of this PropertyBag will be left as-is.
@@ -192,7 +180,6 @@ PropertyBag.prototype.getValue = function (time, result) {
 /**
  * Assigns each unassigned property on this object to the value
  * of the same property on the provided source object.
- *
  * @param {object} source The object to be merged into this object.
  * @param {Function} [createPropertyCallback] A function that will be called when the value of any of the properties in value are not a Property.
  */
@@ -261,7 +248,6 @@ function propertiesEqual(a, b) {
 /**
  * Compares this property to the provided property and returns
  * <code>true</code> if they are equal, <code>false</code> otherwise.
- *
  * @param {Property} [other] The other property.
  * @returns {boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
  */

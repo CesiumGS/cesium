@@ -17,19 +17,15 @@ if (!FeatureDetection.isInternetExplorer()) {
 
 /**
  * An appearance for {@link PolylineGeometry} that supports shading with materials.
- *
  * @alias PolylineMaterialAppearance
- * @constructor
- *
+ * @class
  * @param {object} [options] Object with the following properties:
  * @param {boolean} [options.translucent=true] When <code>true</code>, the geometry is expected to appear translucent so {@link PolylineMaterialAppearance#renderState} has alpha blending enabled.
  * @param {Material} [options.material=Material.ColorType] The material used to determine the fragment color.
  * @param {string} [options.vertexShaderSource] Optional GLSL vertex shader source to override the default vertex shader.
  * @param {string} [options.fragmentShaderSource] Optional GLSL fragment shader source to override the default fragment shader.
  * @param {object} [options.renderState] Optional render state to override the default render state.
- *
  * @see {@link https://github.com/CesiumGS/cesium/wiki/Fabric|Fabric}
- *
  * @example
  * const primitive = new Cesium.Primitive({
  *   geometryInstances : new Cesium.GeometryInstance({
@@ -57,11 +53,8 @@ function PolylineMaterialAppearance(options) {
   /**
    * The material used to determine the fragment color.  Unlike other {@link PolylineMaterialAppearance}
    * properties, this is not read-only, so an appearance's material can change on the fly.
-   *
    * @type Material
-   *
    * @default {@link Material.ColorType}
-   *
    * @see {@link https://github.com/CesiumGS/cesium/wiki/Fabric|Fabric}
    */
   this.material = defined(options.material)
@@ -71,9 +64,7 @@ function PolylineMaterialAppearance(options) {
   /**
    * When <code>true</code>, the geometry is expected to appear translucent so
    * {@link PolylineMaterialAppearance#renderState} has alpha blending enabled.
-   *
    * @type {boolean}
-   *
    * @default true
    */
   this.translucent = translucent;
@@ -101,9 +92,7 @@ function PolylineMaterialAppearance(options) {
 Object.defineProperties(PolylineMaterialAppearance.prototype, {
   /**
    * The GLSL source code for the vertex shader.
-   *
    * @memberof PolylineMaterialAppearance.prototype
-   *
    * @type {string}
    * @readonly
    */
@@ -122,9 +111,7 @@ Object.defineProperties(PolylineMaterialAppearance.prototype, {
 
   /**
    * The GLSL source code for the fragment shader.
-   *
    * @memberof PolylineMaterialAppearance.prototype
-   *
    * @type {string}
    * @readonly
    */
@@ -141,9 +128,7 @@ Object.defineProperties(PolylineMaterialAppearance.prototype, {
    * instance, or it is set implicitly via {@link PolylineMaterialAppearance#translucent}
    * and {@link PolylineMaterialAppearance#closed}.
    * </p>
-   *
    * @memberof PolylineMaterialAppearance.prototype
-   *
    * @type {object}
    * @readonly
    */
@@ -157,12 +142,9 @@ Object.defineProperties(PolylineMaterialAppearance.prototype, {
    * When <code>true</code>, the geometry is expected to be closed so
    * {@link PolylineMaterialAppearance#renderState} has backface culling enabled.
    * This is always <code>false</code> for <code>PolylineMaterialAppearance</code>.
-   *
    * @memberof PolylineMaterialAppearance.prototype
-   *
    * @type {boolean}
    * @readonly
-   *
    * @default false
    */
   closed: {
@@ -175,12 +157,9 @@ Object.defineProperties(PolylineMaterialAppearance.prototype, {
    * The {@link VertexFormat} that this appearance instance is compatible with.
    * A geometry can have more vertex attributes and still be compatible - at a
    * potential performance cost - but it can't have less.
-   *
    * @memberof PolylineMaterialAppearance.prototype
-   *
    * @type VertexFormat
    * @readonly
-   *
    * @default {@link PolylineMaterialAppearance.VERTEX_FORMAT}
    */
   vertexFormat: {
@@ -193,9 +172,7 @@ Object.defineProperties(PolylineMaterialAppearance.prototype, {
 /**
  * The {@link VertexFormat} that all {@link PolylineMaterialAppearance} instances
  * are compatible with. This requires <code>position</code> and <code>st</code> attributes.
- *
  * @type VertexFormat
- *
  * @constant
  */
 PolylineMaterialAppearance.VERTEX_FORMAT = VertexFormat.POSITION_AND_ST;
@@ -203,9 +180,7 @@ PolylineMaterialAppearance.VERTEX_FORMAT = VertexFormat.POSITION_AND_ST;
 /**
  * Procedurally creates the full GLSL fragment shader source.  For {@link PolylineMaterialAppearance},
  * this is derived from {@link PolylineMaterialAppearance#fragmentShaderSource} and {@link PolylineMaterialAppearance#material}.
- *
  * @function
- *
  * @returns {string} The full GLSL fragment shader source.
  */
 PolylineMaterialAppearance.prototype.getFragmentShaderSource =
@@ -213,9 +188,7 @@ PolylineMaterialAppearance.prototype.getFragmentShaderSource =
 
 /**
  * Determines if the geometry is translucent based on {@link PolylineMaterialAppearance#translucent} and {@link Material#isTranslucent}.
- *
  * @function
- *
  * @returns {boolean} <code>true</code> if the appearance is translucent.
  */
 PolylineMaterialAppearance.prototype.isTranslucent =
@@ -225,9 +198,7 @@ PolylineMaterialAppearance.prototype.isTranslucent =
  * Creates a render state.  This is not the final render state instance; instead,
  * it can contain a subset of render state properties identical to the render state
  * created in the context.
- *
  * @function
- *
  * @returns {object} The render state.
  */
 PolylineMaterialAppearance.prototype.getRenderState =

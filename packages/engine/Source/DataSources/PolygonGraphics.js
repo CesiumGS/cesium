@@ -19,7 +19,6 @@ function createPolygonHierarchyProperty(value) {
  * @typedef {object} PolygonGraphics.ConstructorOptions
  *
  * Initialization options for the PolygonGraphics constructor
- *
  * @property {Property | boolean} [show=true] A boolean Property specifying the visibility of the polygon.
  * @property {Property | PolygonHierarchy | Cartesian3[]} [hierarchy] A Property specifying the {@link PolygonHierarchy}.
  * @property {Property | number} [height=0] A numeric Property specifying the altitude of the polygon relative to the ellipsoid surface.
@@ -48,12 +47,9 @@ function createPolygonHierarchyProperty(value) {
  * Describes a polygon defined by an hierarchy of linear rings which make up the outer shape and any nested holes.
  * The polygon conforms to the curvature of the globe and can be placed on the surface or
  * at altitude and can optionally be extruded into a volume.
- *
  * @alias PolygonGraphics
- * @constructor
- *
+ * @class
  * @param {PolygonGraphics.ConstructorOptions} [options] Object describing initialization options
- *
  * @see Entity
  * @demo {@link https://sandcastle.cesium.com/index.html?src=Polygon.html|Cesium Sandcastle Polygon Demo}
  */
@@ -111,7 +107,6 @@ Object.defineProperties(PolygonGraphics.prototype, {
   /**
    * Gets the event that is raised whenever a property or sub-property is changed or modified.
    * @memberof PolygonGraphics.prototype
-   *
    * @type {Event}
    * @readonly
    */
@@ -307,7 +302,6 @@ Object.defineProperties(PolygonGraphics.prototype, {
 
 /**
  * Duplicates this instance.
- *
  * @param {PolygonGraphics} [result] The object onto which to store the result.
  * @returns {PolygonGraphics} The modified result parameter or a new instance if one was not provided.
  */
@@ -343,7 +337,6 @@ PolygonGraphics.prototype.clone = function (result) {
 /**
  * Assigns each unassigned property on this object to the value
  * of the same property on the provided source object.
- *
  * @param {PolygonGraphics} source The object to be merged into this object.
  */
 PolygonGraphics.prototype.merge = function (source) {

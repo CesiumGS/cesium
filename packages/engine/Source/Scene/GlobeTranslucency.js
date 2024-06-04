@@ -6,9 +6,8 @@ import Rectangle from "../Core/Rectangle.js";
 
 /**
  * Properties for controlling globe translucency.
- *
  * @alias GlobeTranslucency
- * @constructor
+ * @class
  */
 function GlobeTranslucency() {
   this._enabled = false;
@@ -31,12 +30,9 @@ Object.defineProperties(GlobeTranslucency.prototype, {
    * is considered front facing.
    * <br /><br />
    * Translucency is disabled by default.
-   *
    * @memberof GlobeTranslucency.prototype
-   *
    * @type {boolean}
    * @default false
-   *
    * @see GlobeTranslucency#frontFaceAlpha
    * @see GlobeTranslucency#frontFaceAlphaByDistance
    * @see GlobeTranslucency#backFaceAlpha
@@ -58,15 +54,11 @@ Object.defineProperties(GlobeTranslucency.prototype, {
    * A constant translucency to apply to front faces of the globe.
    * <br /><br />
    * {@link GlobeTranslucency#enabled} must be set to true for this option to take effect.
-   *
    * @memberof GlobeTranslucency.prototype
-   *
    * @type {number}
    * @default 1.0
-   *
    * @see GlobeTranslucency#enabled
    * @see GlobeTranslucency#frontFaceAlphaByDistance
-   *
    * @example
    * // Set front face translucency to 0.5.
    * globe.translucency.frontFaceAlpha = 0.5;
@@ -93,15 +85,11 @@ Object.defineProperties(GlobeTranslucency.prototype, {
    * frontFaceAlphaByDistance will be disabled.
    * <br /><br />
    * {@link GlobeTranslucency#enabled} must be set to true for this option to take effect.
-   *
    * @memberof GlobeTranslucency.prototype
-   *
    * @type {NearFarScalar}
    * @default undefined
-   *
    * @see GlobeTranslucency#enabled
    * @see GlobeTranslucency#frontFaceAlpha
-   *
    * @example
    * // Example 1.
    * // Set front face translucency to 0.5 when the
@@ -109,7 +97,6 @@ Object.defineProperties(GlobeTranslucency.prototype, {
    * // as the camera distance approaches 8.0e6 meters.
    * globe.translucency.frontFaceAlphaByDistance = new Cesium.NearFarScalar(1.5e2, 0.5, 8.0e6, 1.0);
    * globe.translucency.enabled = true;
-   *
    * @example
    * // Example 2.
    * // Disable front face translucency by distance
@@ -138,15 +125,11 @@ Object.defineProperties(GlobeTranslucency.prototype, {
    * A constant translucency to apply to back faces of the globe.
    * <br /><br />
    * {@link GlobeTranslucency#enabled} must be set to true for this option to take effect.
-   *
    * @memberof GlobeTranslucency.prototype
-   *
    * @type {number}
    * @default 1.0
-   *
    * @see GlobeTranslucency#enabled
    * @see GlobeTranslucency#backFaceAlphaByDistance
-   *
    * @example
    * // Set back face translucency to 0.5.
    * globe.translucency.backFaceAlpha = 0.5;
@@ -173,15 +156,11 @@ Object.defineProperties(GlobeTranslucency.prototype, {
    * backFaceAlphaByDistance will be disabled.
    * <br /><br />
    * {@link GlobeTranslucency#enabled} must be set to true for this option to take effect.
-   *
    * @memberof GlobeTranslucency.prototype
-   *
    * @type {NearFarScalar}
    * @default undefined
-   *
    * @see GlobeTranslucency#enabled
    * @see GlobeTranslucency#backFaceAlpha
-   *
    * @example
    * // Example 1.
    * // Set back face translucency to 0.5 when the
@@ -189,7 +168,6 @@ Object.defineProperties(GlobeTranslucency.prototype, {
    * // as the camera distance approaches 8.0e6 meters.
    * globe.translucency.backFaceAlphaByDistance = new Cesium.NearFarScalar(1.5e2, 0.5, 8.0e6, 1.0);
    * globe.translucency.enabled = true;
-   *
    * @example
    * // Example 2.
    * // Disable back face translucency by distance
@@ -217,9 +195,7 @@ Object.defineProperties(GlobeTranslucency.prototype, {
   /**
    * A property specifying a {@link Rectangle} used to limit translucency to a cartographic area.
    * Defaults to the maximum extent of cartographic coordinates.
-   *
    * @memberof GlobeTranslucency.prototype
-   *
    * @type {Rectangle}
    * @default {@link Rectangle.MAX_VALUE}
    */

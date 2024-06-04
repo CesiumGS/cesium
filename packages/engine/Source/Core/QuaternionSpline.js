@@ -29,19 +29,15 @@ function createEvaluateFunction(spline) {
 /**
  * A spline that uses spherical linear (slerp) interpolation to create a quaternion curve.
  * The generated curve is in the class C<sup>1</sup>.
- *
  * @alias QuaternionSpline
- * @constructor
- *
+ * @class
  * @param {object} options Object with the following properties:
  * @param {number[]} options.times An array of strictly increasing, unit-less, floating-point times at each point.
  *                The values are in no way connected to the clock time. They are the parameterization for the curve.
  * @param {Quaternion[]} options.points The array of {@link Quaternion} control points.
- *
- * @exception {DeveloperError} points and times are required
- * @exception {DeveloperError} points.length must be greater than or equal to 2.
- * @exception {DeveloperError} times.length must be equal to points.length.
-
+ * @throws {DeveloperError} points and times are required
+ * @throws {DeveloperError} points.length must be greater than or equal to 2.
+ * @throws {DeveloperError} times.length must be equal to points.length.
  * @see ConstantSpline
  * @see SteppedSpline
  * @see HermiteSpline
@@ -79,9 +75,7 @@ function QuaternionSpline(options) {
 Object.defineProperties(QuaternionSpline.prototype, {
   /**
    * An array of times for the control points.
-   *
    * @memberof QuaternionSpline.prototype
-   *
    * @type {number[]}
    * @readonly
    */
@@ -93,9 +87,7 @@ Object.defineProperties(QuaternionSpline.prototype, {
 
   /**
    * An array of {@link Quaternion} control points.
-   *
    * @memberof QuaternionSpline.prototype
-   *
    * @type {Quaternion[]}
    * @readonly
    */
@@ -110,11 +102,9 @@ Object.defineProperties(QuaternionSpline.prototype, {
  * Finds an index <code>i</code> in <code>times</code> such that the parameter
  * <code>time</code> is in the interval <code>[times[i], times[i + 1]]</code>.
  * @function
- *
  * @param {number} time The time.
  * @returns {number} The index for the element at the start of the interval.
- *
- * @exception {DeveloperError} time must be in the range <code>[t<sub>0</sub>, t<sub>n</sub>]</code>, where <code>t<sub>0</sub></code>
+ * @throws {DeveloperError} time must be in the range <code>[t<sub>0</sub>, t<sub>n</sub>]</code>, where <code>t<sub>0</sub></code>
  *                             is the first element in the array <code>times</code> and <code>t<sub>n</sub></code> is the last element
  *                             in the array <code>times</code>.
  */
@@ -123,29 +113,25 @@ QuaternionSpline.prototype.findTimeInterval = Spline.prototype.findTimeInterval;
 /**
  * Wraps the given time to the period covered by the spline.
  * @function
- *
  * @param {number} time The time.
- * @return {number} The time, wrapped around to the updated animation.
+ * @returns {number} The time, wrapped around to the updated animation.
  */
 QuaternionSpline.prototype.wrapTime = Spline.prototype.wrapTime;
 
 /**
  * Clamps the given time to the period covered by the spline.
  * @function
- *
  * @param {number} time The time.
- * @return {number} The time, clamped to the animation period.
+ * @returns {number} The time, clamped to the animation period.
  */
 QuaternionSpline.prototype.clampTime = Spline.prototype.clampTime;
 
 /**
  * Evaluates the curve at a given time.
- *
  * @param {number} time The time at which to evaluate the curve.
  * @param {Quaternion} [result] The object onto which to store the result.
  * @returns {Quaternion} The modified result parameter or a new instance of the point on the curve at the given time.
- *
- * @exception {DeveloperError} time must be in the range <code>[t<sub>0</sub>, t<sub>n</sub>]</code>, where <code>t<sub>0</sub></code>
+ * @throws {DeveloperError} time must be in the range <code>[t<sub>0</sub>, t<sub>n</sub>]</code>, where <code>t<sub>0</sub></code>
  *                             is the first element in the array <code>times</code> and <code>t<sub>n</sub></code> is the last element
  *                             in the array <code>times</code>.
  */

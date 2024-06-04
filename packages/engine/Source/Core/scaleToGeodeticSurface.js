@@ -10,16 +10,13 @@ const scaleToGeodeticSurfaceGradient = new Cartesian3();
  * Scales the provided Cartesian position along the geodetic surface normal
  * so that it is on the surface of this ellipsoid.  If the position is
  * at the center of the ellipsoid, this function returns undefined.
- *
  * @param {Cartesian3} cartesian The Cartesian position to scale.
  * @param {Cartesian3} oneOverRadii One over radii of the ellipsoid.
  * @param {Cartesian3} oneOverRadiiSquared One over radii squared of the ellipsoid.
  * @param {number} centerToleranceSquared Tolerance for closeness to the center.
  * @param {Cartesian3} [result] The object onto which to store the result.
  * @returns {Cartesian3} The modified result parameter, a new Cartesian3 instance if none was provided, or undefined if the position is at the center.
- *
  * @function scaleToGeodeticSurface
- *
  * @private
  */
 function scaleToGeodeticSurface(

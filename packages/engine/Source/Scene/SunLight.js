@@ -3,13 +3,11 @@ import defaultValue from "../Core/defaultValue.js";
 
 /**
  * A directional light source that originates from the Sun.
- *
  * @param {object} [options] Object with the following properties:
  * @param {Color} [options.color=Color.WHITE] The light's color.
  * @param {number} [options.intensity=2.0] The light's intensity.
- *
  * @alias SunLight
- * @constructor
+ * @class
  */
 function SunLight(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);

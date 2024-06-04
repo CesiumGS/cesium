@@ -47,12 +47,10 @@ const Instances = ModelComponents.Instances;
  * <p>
  * Implements the {@link ResourceLoader} interface.
  * </p>
- *
  * @alias I3dmLoader
- * @constructor
+ * @class
  * @augments ResourceLoader
  * @private
- *
  * @param {object} options Object with the following properties:
  * @param {Resource} options.i3dmResource The {@link Resource} containing the i3dm.
  * @param {ArrayBuffer} options.arrayBuffer The array buffer of the i3dm contents.
@@ -141,9 +139,7 @@ if (defined(Object.create)) {
 Object.defineProperties(I3dmLoader.prototype, {
   /**
    * true if textures are loaded, useful when incrementallyLoadTextures is true
-   *
    * @memberof  I3dmLoader.prototype
-   *
    * @type {boolean}
    * @readonly
    * @private
@@ -155,9 +151,7 @@ Object.defineProperties(I3dmLoader.prototype, {
   },
   /**
    * The cache key of the resource
-   *
    * @memberof I3dmLoader.prototype
-   *
    * @type {string}
    * @readonly
    * @private
@@ -170,9 +164,7 @@ Object.defineProperties(I3dmLoader.prototype, {
 
   /**
    * The loaded components.
-   *
    * @memberof I3dmLoader.prototype
-   *
    * @type {ModelComponents.Components}
    * @default {@link Matrix4.IDENTITY}
    * @readonly
@@ -642,9 +634,8 @@ function createInstances(loader, components, frameState) {
  * but they will point to the same buffers and typed arrays. This is so each
  * node can manage memory separately, such that unloading memory for one
  * node does not unload it for another.
- *
+ * @param instances
  * @returns {ModelComponents.Instances}
- *
  * @private
  */
 function createInstancesCopy(instances) {
@@ -667,7 +658,8 @@ function createInstancesCopy(instances) {
 /**
  * Returns a typed array of positions from the i3dm's feature table. The positions
  * returned are dequantized, if dequantization is applied.
- *
+ * @param featureTable
+ * @param instancesLength
  * @private
  */
 function getPositions(featureTable, instancesLength) {

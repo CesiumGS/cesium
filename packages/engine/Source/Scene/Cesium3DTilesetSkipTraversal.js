@@ -6,10 +6,8 @@ import Cesium3DTilesetTraversal from "./Cesium3DTilesetTraversal.js";
 /**
  * Depth-first traversal that traverses all visible tiles and marks tiles for selection.
  * Allows for skipping levels of the tree and rendering children and parent tiles simultaneously.
- *
  * @alias Cesium3DTilesetSkipTraversal
- * @constructor
- *
+ * @class
  * @private
  */
 function Cesium3DTilesetSkipTraversal() {}
@@ -35,7 +33,6 @@ const descendantSelectionDepth = 2;
 
 /**
  * Traverses a {@link Cesium3DTileset} to determine which tiles to load and render.
- *
  * @private
  * @param {Cesium3DTileset} tileset
  * @param {FrameState} frameState
@@ -86,7 +83,6 @@ Cesium3DTilesetSkipTraversal.selectTiles = function (tileset, frameState) {
 
 /**
  * Mark descendant tiles for rendering, and update as needed
- *
  * @private
  * @param {Cesium3DTile} root
  * @param {FrameState} frameState
@@ -122,7 +118,6 @@ function selectDescendants(root, frameState) {
  * Mark a tile as selected if it has content available.
  * If its content is not available, and we are skipping levels of detail,
  * select an ancestor or descendant tile instead
- *
  * @private
  * @param {Cesium3DTile} tile
  * @param {FrameState} frameState
@@ -144,7 +139,6 @@ function selectDesiredTile(tile, frameState) {
 
 /**
  * Update links to the ancestor tiles that have content
- *
  * @private
  * @param {Cesium3DTile} tile
  * @param {FrameState} frameState
@@ -176,7 +170,6 @@ function updateTileAncestorContentLinks(tile, frameState) {
 /**
  * Determine if a tile has reached the limit of level of detail skipping.
  * If so, it should _not_ be skipped: it should be loaded and rendered
- *
  * @private
  * @param {Cesium3DTileset} tileset
  * @param {Cesium3DTile} tile
@@ -231,7 +224,6 @@ function updateAndPushChildren(tile, stack, frameState) {
 /**
  * Determine if a tile is part of the base traversal.
  * If not, this tile could be considered for level of detail skipping
- *
  * @private
  * @param {Cesium3DTile} tile
  * @param {number} baseScreenSpaceError
@@ -258,7 +250,6 @@ function inBaseTraversal(tile, baseScreenSpaceError) {
  * Tiles that have a greater screen space error than the base screen space error are part of the base traversal,
  * all other tiles are part of the skip traversal. The skip traversal allows for skipping levels of the tree
  * and rendering children and parent tiles simultaneously.
- *
  * @private
  * @param {Cesium3DTile} root
  * @param {FrameState} frameState
@@ -349,7 +340,6 @@ function executeTraversal(root, frameState) {
  *
  * NOTE: 3D Tiles uses 3 bits from the stencil buffer meaning this will not work when there is a chain of
  * selected tiles that is deeper than 7. This is not very likely.
- *
  * @private
  * @param {Cesium3DTile} root
  * @param {FrameState} frameState

@@ -9,13 +9,10 @@ import Property from "./Property.js";
 /**
  * A {@link Property} which evaluates to a {@link Cartesian3} vector
  * based on the velocity of the provided {@link PositionProperty}.
- *
  * @alias VelocityVectorProperty
- * @constructor
- *
+ * @class
  * @param {PositionProperty} [position] The position property used to compute the velocity.
  * @param {boolean} [normalize=true] Whether to normalize the computed velocity vector.
- *
  * @example
  * //Create an entity with a billboard rotated to match its velocity.
  * const position = new Cesium.SampledProperty();
@@ -41,7 +38,6 @@ Object.defineProperties(VelocityVectorProperty.prototype, {
   /**
    * Gets a value indicating if this property is constant.
    * @memberof VelocityVectorProperty.prototype
-   *
    * @type {boolean}
    * @readonly
    */
@@ -53,7 +49,6 @@ Object.defineProperties(VelocityVectorProperty.prototype, {
   /**
    * Gets the event that is raised whenever the definition of this property changes.
    * @memberof VelocityVectorProperty.prototype
-   *
    * @type {Event}
    * @readonly
    */
@@ -65,7 +60,6 @@ Object.defineProperties(VelocityVectorProperty.prototype, {
   /**
    * Gets or sets the position property used to compute the velocity vector.
    * @memberof VelocityVectorProperty.prototype
-   *
    * @type {Property|undefined}
    */
   position: {
@@ -98,7 +92,6 @@ Object.defineProperties(VelocityVectorProperty.prototype, {
    * Gets or sets whether the vector produced by this property
    * will be normalized or not.
    * @memberof VelocityVectorProperty.prototype
-   *
    * @type {boolean}
    */
   normalize: {
@@ -123,7 +116,6 @@ const step = 1.0 / 60.0;
 
 /**
  * Gets the value of the property at the provided time.
- *
  * @param {JulianDate} [time] The time for which to retrieve the value.
  * @param {Cartesian3} [result] The object to store the value into, if omitted, a new instance is created and returned.
  * @returns {Cartesian3} The modified result parameter or a new instance if the result parameter was not supplied.
@@ -133,6 +125,9 @@ VelocityVectorProperty.prototype.getValue = function (time, result) {
 };
 
 /**
+ * @param time
+ * @param velocityResult
+ * @param positionResult
  * @private
  */
 VelocityVectorProperty.prototype._getValue = function (
@@ -202,7 +197,6 @@ VelocityVectorProperty.prototype._getValue = function (
 /**
  * Compares this property to the provided property and returns
  * <code>true</code> if they are equal, <code>false</code> otherwise.
- *
  * @param {Property} [other] The other property.
  * @returns {boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
  */

@@ -6,7 +6,6 @@ import DeveloperError from "./DeveloperError.js";
 
 /**
  * Math functions.
- *
  * @exports CesiumMath
  * @alias Math
  */
@@ -200,7 +199,6 @@ CesiumMath.FOUR_GIGABYTES = 4 * 1024 * 1024 * 1024;
 /**
  * Returns the sign of the value; 1 if the value is positive, -1 if the value is
  * negative, or 0 if the value is 0.
- *
  * @function
  * @param {number} value The value to return the sign of.
  * @returns {number} The sign of value.
@@ -230,7 +228,6 @@ CesiumMath.signNotZero = function (value) {
  * @param {number} value The scalar value in the range [-1.0, 1.0]
  * @param {number} [rangeMaximum=255] The maximum value in the mapped range, 255 by default.
  * @returns {number} A SNORM value, where 0 maps to -1.0 and rangeMaximum maps to 1.0.
- *
  * @see CesiumMath.fromSNorm
  */
 CesiumMath.toSNorm = function (value, rangeMaximum) {
@@ -245,7 +242,6 @@ CesiumMath.toSNorm = function (value, rangeMaximum) {
  * @param {number} value SNORM value in the range [0, rangeMaximum]
  * @param {number} [rangeMaximum=255] The maximum value in the SNORM range, 255 by default.
  * @returns {number} Scalar in the range [-1.0, 1.0].
- *
  * @see CesiumMath.toSNorm
  */
 CesiumMath.fromSNorm = function (value, rangeMaximum) {
@@ -276,17 +272,16 @@ CesiumMath.normalize = function (value, rangeMinimum, rangeMaximum) {
  * where <i>e</i> is Euler's number, approximately 2.71828183.
  *
  * <p>Special cases:
- *   <ul>
- *     <li>If the argument is NaN, then the result is NaN.</li>
+ * <ul>
+ * <li>If the argument is NaN, then the result is NaN.</li>
  *
- *     <li>If the argument is infinite, then the result is an infinity
- *     with the same sign as the argument.</li>
+ * <li>If the argument is infinite, then the result is an infinity
+ * with the same sign as the argument.</li>
  *
- *     <li>If the argument is zero, then the result is a zero with the
- *     same sign as the argument.</li>
- *   </ul>
- *</p>
- *
+ * <li>If the argument is zero, then the result is a zero with the
+ * same sign as the argument.</li>
+ * </ul>
+ * </p>
  * @function
  * @param {number} value The number whose hyperbolic sine is to be returned.
  * @returns {number} The hyperbolic sine of <code>value</code>.
@@ -302,15 +297,14 @@ CesiumMath.sinh = defaultValue(Math.sinh, function sinh(value) {
  * where <i>e</i> is Euler's number, approximately 2.71828183.
  *
  * <p>Special cases:
- *   <ul>
- *     <li>If the argument is NaN, then the result is NaN.</li>
+ * <ul>
+ * <li>If the argument is NaN, then the result is NaN.</li>
  *
- *     <li>If the argument is infinite, then the result is positive infinity.</li>
+ * <li>If the argument is infinite, then the result is positive infinity.</li>
  *
- *     <li>If the argument is zero, then the result is 1.0.</li>
- *   </ul>
- *</p>
- *
+ * <li>If the argument is zero, then the result is 1.0.</li>
+ * </ul>
+ * </p>
  * @function
  * @param {number} value The number whose hyperbolic cosine is to be returned.
  * @returns {number} The hyperbolic cosine of <code>value</code>.
@@ -321,12 +315,10 @@ CesiumMath.cosh = defaultValue(Math.cosh, function cosh(value) {
 
 /**
  * Computes the linear interpolation of two values.
- *
  * @param {number} p The start value to interpolate.
  * @param {number} q The end value to interpolate.
  * @param {number} time The time of interpolation generally in the range <code>[0.0, 1.0]</code>.
  * @returns {number} The linearly interpolated value.
- *
  * @example
  * const n = Cesium.Math.lerp(0.0, 2.0, 0.5); // returns 1.0
  */
@@ -336,7 +328,6 @@ CesiumMath.lerp = function (p, q, time) {
 
 /**
  * pi
- *
  * @type {number}
  * @constant
  */
@@ -344,7 +335,6 @@ CesiumMath.PI = Math.PI;
 
 /**
  * 1/pi
- *
  * @type {number}
  * @constant
  */
@@ -352,7 +342,6 @@ CesiumMath.ONE_OVER_PI = 1.0 / Math.PI;
 
 /**
  * pi/2
- *
  * @type {number}
  * @constant
  */
@@ -360,7 +349,6 @@ CesiumMath.PI_OVER_TWO = Math.PI / 2.0;
 
 /**
  * pi/3
- *
  * @type {number}
  * @constant
  */
@@ -368,7 +356,6 @@ CesiumMath.PI_OVER_THREE = Math.PI / 3.0;
 
 /**
  * pi/4
- *
  * @type {number}
  * @constant
  */
@@ -376,7 +363,6 @@ CesiumMath.PI_OVER_FOUR = Math.PI / 4.0;
 
 /**
  * pi/6
- *
  * @type {number}
  * @constant
  */
@@ -384,7 +370,6 @@ CesiumMath.PI_OVER_SIX = Math.PI / 6.0;
 
 /**
  * 3pi/2
- *
  * @type {number}
  * @constant
  */
@@ -392,7 +377,6 @@ CesiumMath.THREE_PI_OVER_TWO = (3.0 * Math.PI) / 2.0;
 
 /**
  * 2pi
- *
  * @type {number}
  * @constant
  */
@@ -400,7 +384,6 @@ CesiumMath.TWO_PI = 2.0 * Math.PI;
 
 /**
  * 1/2pi
- *
  * @type {number}
  * @constant
  */
@@ -408,7 +391,6 @@ CesiumMath.ONE_OVER_TWO_PI = 1.0 / (2.0 * Math.PI);
 
 /**
  * The number of radians in a degree.
- *
  * @type {number}
  * @constant
  */
@@ -416,7 +398,6 @@ CesiumMath.RADIANS_PER_DEGREE = Math.PI / 180.0;
 
 /**
  * The number of degrees in a radian.
- *
  * @type {number}
  * @constant
  */
@@ -424,7 +405,6 @@ CesiumMath.DEGREES_PER_RADIAN = 180.0 / Math.PI;
 
 /**
  * The number of radians in an arc second.
- *
  * @type {number}
  * @constant
  */
@@ -460,10 +440,8 @@ CesiumMath.toDegrees = function (radians) {
 
 /**
  * Converts a longitude value, in radians, to the range [<code>-Math.PI</code>, <code>Math.PI</code>).
- *
  * @param {number} angle The longitude value, in radians, to convert to the range [<code>-Math.PI</code>, <code>Math.PI</code>).
  * @returns {number} The equivalent longitude value in the range [<code>-Math.PI</code>, <code>Math.PI</code>).
- *
  * @example
  * // Convert 270 degrees to -90 degrees longitude
  * const longitude = Cesium.Math.convertLongitudeRange(Cesium.Math.toRadians(270.0));
@@ -491,10 +469,8 @@ CesiumMath.convertLongitudeRange = function (angle) {
 /**
  * Convenience function that clamps a latitude value, in radians, to the range [<code>-Math.PI/2</code>, <code>Math.PI/2</code>).
  * Useful for sanitizing data before use in objects requiring correct range.
- *
  * @param {number} angle The latitude value, in radians, to clamp to the range [<code>-Math.PI/2</code>, <code>Math.PI/2</code>).
  * @returns {number} The latitude value clamped to the range [<code>-Math.PI/2</code>, <code>Math.PI/2</code>).
- *
  * @example
  * // Clamp 108 degrees latitude to 90 degrees latitude
  * const latitude = Cesium.Math.clampToLatitudeRange(Cesium.Math.toRadians(108.0));
@@ -515,7 +491,6 @@ CesiumMath.clampToLatitudeRange = function (angle) {
 
 /**
  * Produces an angle in the range -Pi <= angle <= Pi which is equivalent to the provided angle.
- *
  * @param {number} angle in radians
  * @returns {number} The angle in the range [<code>-CesiumMath.PI</code>, <code>CesiumMath.PI</code>].
  */
@@ -535,7 +510,6 @@ CesiumMath.negativePiToPi = function (angle) {
 
 /**
  * Produces an angle in the range 0 <= angle <= 2Pi which is equivalent to the provided angle.
- *
  * @param {number} angle in radians
  * @returns {number} The angle in the range [0, <code>CesiumMath.TWO_PI</code>].
  */
@@ -562,7 +536,6 @@ CesiumMath.zeroToTwoPi = function (angle) {
 
 /**
  * The modulo operation that also works for negative dividends.
- *
  * @param {number} m The dividend.
  * @param {number} n The divisor.
  * @returns {number} The remainder.
@@ -593,13 +566,11 @@ CesiumMath.mod = function (m, n) {
  * to avoid problems due to roundoff error when comparing floating-point values directly. The values are
  * first compared using an absolute tolerance test. If that fails, a relative tolerance test is performed.
  * Use this test if you are unsure of the magnitudes of left and right.
- *
  * @param {number} left The first value to compare.
  * @param {number} right The other value to compare.
  * @param {number} [relativeEpsilon=0] The maximum inclusive delta between <code>left</code> and <code>right</code> for the relative tolerance test.
  * @param {number} [absoluteEpsilon=relativeEpsilon] The maximum inclusive delta between <code>left</code> and <code>right</code> for the absolute tolerance test.
  * @returns {boolean} <code>true</code> if the values are equal within the epsilon; otherwise, <code>false</code>.
- *
  * @example
  * const a = Cesium.Math.equalsEpsilon(0.0, 0.01, Cesium.Math.EPSILON2); // true
  * const b = Cesium.Math.equalsEpsilon(0.0, 0.1, Cesium.Math.EPSILON2);  // false
@@ -633,7 +604,6 @@ CesiumMath.equalsEpsilon = function (
 /**
  * Determines if the left value is less than the right value. If the two values are within
  * <code>absoluteEpsilon</code> of each other, they are considered equal and this function returns false.
- *
  * @param {number} left The first number to compare.
  * @param {number} right The second number to compare.
  * @param {number} absoluteEpsilon The absolute epsilon to use in comparison.
@@ -659,7 +629,6 @@ CesiumMath.lessThan = function (left, right, absoluteEpsilon) {
 /**
  * Determines if the left value is less than or equal to the right value. If the two values are within
  * <code>absoluteEpsilon</code> of each other, they are considered equal and this function returns true.
- *
  * @param {number} left The first number to compare.
  * @param {number} right The second number to compare.
  * @param {number} absoluteEpsilon The absolute epsilon to use in comparison.
@@ -684,7 +653,6 @@ CesiumMath.lessThanOrEquals = function (left, right, absoluteEpsilon) {
 /**
  * Determines if the left value is greater the right value. If the two values are within
  * <code>absoluteEpsilon</code> of each other, they are considered equal and this function returns false.
- *
  * @param {number} left The first number to compare.
  * @param {number} right The second number to compare.
  * @param {number} absoluteEpsilon The absolute epsilon to use in comparison.
@@ -710,7 +678,6 @@ CesiumMath.greaterThan = function (left, right, absoluteEpsilon) {
 /**
  * Determines if the left value is greater than or equal to the right value. If the two values are within
  * <code>absoluteEpsilon</code> of each other, they are considered equal and this function returns true.
- *
  * @param {number} left The first number to compare.
  * @param {number} right The second number to compare.
  * @param {number} absoluteEpsilon The absolute epsilon to use in comparison.
@@ -736,17 +703,12 @@ const factorials = [1];
 
 /**
  * Computes the factorial of the provided number.
- *
  * @param {number} n The number whose factorial is to be computed.
  * @returns {number} The factorial of the provided number or undefined if the number is less than 0.
- *
- * @exception {DeveloperError} A number greater than or equal to 0 is required.
- *
- *
+ * @throws {DeveloperError} A number greater than or equal to 0 is required.
  * @example
  * //Compute 7!, which is equal to 5040
  * const computedFactorial = Cesium.Math.factorial(7);
- *
  * @see {@link http://en.wikipedia.org/wiki/Factorial|Factorial on Wikipedia}
  */
 CesiumMath.factorial = function (n) {
@@ -772,14 +734,11 @@ CesiumMath.factorial = function (n) {
 
 /**
  * Increments a number with a wrapping to a minimum value if the number exceeds the maximum value.
- *
  * @param {number} [n] The number to be incremented.
  * @param {number} [maximumValue] The maximum incremented value before rolling over to the minimum value.
  * @param {number} [minimumValue=0.0] The number reset to after the maximum value has been exceeded.
  * @returns {number} The incremented number.
- *
- * @exception {DeveloperError} Maximum value must be greater than minimum value.
- *
+ * @throws {DeveloperError} Maximum value must be greater than minimum value.
  * @example
  * const n = Cesium.Math.incrementWrap(5, 10, 0); // returns 6
  * const m = Cesium.Math.incrementWrap(10, 10, 0); // returns 0
@@ -806,12 +765,9 @@ CesiumMath.incrementWrap = function (n, maximumValue, minimumValue) {
 /**
  * Determines if a non-negative integer is a power of two.
  * The maximum allowed input is (2^32)-1 due to 32-bit bitwise operator limitation in Javascript.
- *
  * @param {number} n The integer to test in the range [0, (2^32)-1].
  * @returns {boolean} <code>true</code> if the number if a power of two; otherwise, <code>false</code>.
- *
- * @exception {DeveloperError} A number between 0 and (2^32)-1 is required.
- *
+ * @throws {DeveloperError} A number between 0 and (2^32)-1 is required.
  * @example
  * const t = Cesium.Math.isPowerOfTwo(16); // true
  * const f = Cesium.Math.isPowerOfTwo(20); // false
@@ -829,12 +785,9 @@ CesiumMath.isPowerOfTwo = function (n) {
 /**
  * Computes the next power-of-two integer greater than or equal to the provided non-negative integer.
  * The maximum allowed input is 2^31 due to 32-bit bitwise operator limitation in Javascript.
- *
  * @param {number} n The integer to test in the range [0, 2^31].
  * @returns {number} The next power-of-two integer.
- *
- * @exception {DeveloperError} A number between 0 and 2^31 is required.
- *
+ * @throws {DeveloperError} A number between 0 and 2^31 is required.
  * @example
  * const n = Cesium.Math.nextPowerOfTwo(29); // 32
  * const m = Cesium.Math.nextPowerOfTwo(32); // 32
@@ -861,12 +814,9 @@ CesiumMath.nextPowerOfTwo = function (n) {
 /**
  * Computes the previous power-of-two integer less than or equal to the provided non-negative integer.
  * The maximum allowed input is (2^32)-1 due to 32-bit bitwise operator limitation in Javascript.
- *
  * @param {number} n The integer to test in the range [0, (2^32)-1].
  * @returns {number} The previous power-of-two integer.
- *
- * @exception {DeveloperError} A number between 0 and (2^32)-1 is required.
- *
+ * @throws {DeveloperError} A number between 0 and (2^32)-1 is required.
  * @example
  * const n = Cesium.Math.previousPowerOfTwo(29); // 16
  * const m = Cesium.Math.previousPowerOfTwo(32); // 32
@@ -893,7 +843,6 @@ CesiumMath.previousPowerOfTwo = function (n) {
 
 /**
  * Constraint a value to lie between two values.
- *
  * @param {number} value The value to clamp.
  * @param {number} min The minimum value.
  * @param {number} max The maximum value.
@@ -914,7 +863,6 @@ let randomNumberGenerator = new MersenneTwister();
 /**
  * Sets the seed used by the random number generator
  * in {@link CesiumMath#nextRandomNumber}.
- *
  * @param {number} seed An integer used as the seed.
  */
 CesiumMath.setRandomNumberSeed = function (seed) {
@@ -930,9 +878,7 @@ CesiumMath.setRandomNumberSeed = function (seed) {
 /**
  * Generates a random floating point number in the range of [0.0, 1.0)
  * using a Mersenne twister.
- *
  * @returns {number} A random number in the range of [0.0, 1.0).
- *
  * @see CesiumMath.setRandomNumberSeed
  * @see {@link http://en.wikipedia.org/wiki/Mersenne_twister|Mersenne twister on Wikipedia}
  */
@@ -942,7 +888,6 @@ CesiumMath.nextRandomNumber = function () {
 
 /**
  * Generates a random number between two numbers.
- *
  * @param {number} min The minimum value.
  * @param {number} max The maximum value.
  * @returns {number} A random number between the min and max.
@@ -954,7 +899,6 @@ CesiumMath.randomBetween = function (min, max) {
 /**
  * Computes <code>Math.acos(value)</code>, but first clamps <code>value</code> to the range [-1.0, 1.0]
  * so that the function will never return NaN.
- *
  * @param {number} value The value for which to compute acos.
  * @returns {number} The acos of the value if the value is in the range [-1.0, 1.0], or the acos of -1.0 or 1.0,
  *          whichever is closer, if the value is outside the range.
@@ -971,7 +915,6 @@ CesiumMath.acosClamped = function (value) {
 /**
  * Computes <code>Math.asin(value)</code>, but first clamps <code>value</code> to the range [-1.0, 1.0]
  * so that the function will never return NaN.
- *
  * @param {number} value The value for which to compute asin.
  * @returns {number} The asin of the value if the value is in the range [-1.0, 1.0], or the asin of -1.0 or 1.0,
  *          whichever is closer, if the value is outside the range.
@@ -987,7 +930,6 @@ CesiumMath.asinClamped = function (value) {
 
 /**
  * Finds the chord length between two points given the circle's radius and the angle between the points.
- *
  * @param {number} angle The angle between the two points.
  * @param {number} radius The radius of the circle.
  * @returns {number} The chord length.
@@ -1006,7 +948,6 @@ CesiumMath.chordLength = function (angle, radius) {
 
 /**
  * Finds the logarithm of a number to a base.
- *
  * @param {number} number The number.
  * @param {number} base The base.
  * @returns {number} The result.
@@ -1026,7 +967,6 @@ CesiumMath.logBase = function (number, base) {
 /**
  * Finds the cube root of a number.
  * Returns NaN if <code>number</code> is not provided.
- *
  * @function
  * @param {number} [number] The number.
  * @returns {number} The result.
@@ -1038,7 +978,6 @@ CesiumMath.cbrt = defaultValue(Math.cbrt, function cbrt(number) {
 
 /**
  * Finds the base 2 logarithm of a number.
- *
  * @function
  * @param {number} number The number.
  * @returns {number} The result.
@@ -1048,6 +987,8 @@ CesiumMath.log2 = defaultValue(Math.log2, function log2(number) {
 });
 
 /**
+ * @param distanceToCamera
+ * @param density
  * @private
  */
 CesiumMath.fog = function (distanceToCamera, density) {
@@ -1062,7 +1003,6 @@ CesiumMath.fog = function (distanceToCamera, density) {
  * which in turn is based on "Efficient approximations for the arctangent function,"
  * Rajan, S. Sichun Wang Inkol, R. Joyal, A., May 2006.
  * Adapted from ShaderFastLibs under MIT License.
- *
  * @param {number} x An input number in the range [-1, 1]
  * @returns {number} An approximation of atan(x)
  */
@@ -1078,7 +1018,6 @@ CesiumMath.fastApproximateAtan = function (x) {
  * Computes a fast approximation of Atan2(x, y) for arbitrary input scalars.
  *
  * Range reduction math based on nvidia's cg reference implementation: http://developer.download.nvidia.com/cg/atan2.html
- *
  * @param {number} x An input number that isn't zero if y is zero.
  * @param {number} y An input number that isn't zero if x is zero.
  * @returns {number} An approximation of atan2(x, y)

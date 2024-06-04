@@ -2,7 +2,6 @@
  * Enum containing Vulkan Constant values by name.
  *
  * These match the constants from the {@link https://www.khronos.org/registry/vulkan/specs/1.2-extensions/html/vkspec.html#formats-definition|Vulkan 1.2 specification}.
- *
  * @enum {number}
  * @private
  */

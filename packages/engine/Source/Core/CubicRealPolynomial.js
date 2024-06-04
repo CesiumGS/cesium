@@ -3,14 +3,12 @@ import QuadraticRealPolynomial from "./QuadraticRealPolynomial.js";
 
 /**
  * Defines functions for 3rd order polynomial functions of one variable with only real coefficients.
- *
  * @namespace CubicRealPolynomial
  */
 const CubicRealPolynomial = {};
 
 /**
  * Provides the discriminant of the cubic equation from the supplied coefficients.
- *
  * @param {number} a The coefficient of the 3rd order monomial.
  * @param {number} b The coefficient of the 2nd order monomial.
  * @param {number} c The coefficient of the 1st order monomial.
@@ -154,7 +152,6 @@ function computeRealRoots(a, b, c, d) {
 
 /**
  * Provides the real valued roots of the cubic polynomial with the provided coefficients.
- *
  * @param {number} a The coefficient of the 3rd order monomial.
  * @param {number} b The coefficient of the 2nd order monomial.
  * @param {number} c The coefficient of the 1st order monomial.

@@ -15,18 +15,14 @@ const diffScratch = new Cartesian3();
 
 /**
  * A description of the outline of a cube centered at the origin.
- *
  * @alias BoxOutlineGeometry
- * @constructor
- *
+ * @class
  * @param {object} options Object with the following properties:
  * @param {Cartesian3} options.minimum The minimum x, y, and z coordinates of the box.
  * @param {Cartesian3} options.maximum The maximum x, y, and z coordinates of the box.
- *
  * @see BoxOutlineGeometry.fromDimensions
  * @see BoxOutlineGeometry.createGeometry
  * @see Packable
- *
  * @example
  * const box = new Cesium.BoxOutlineGeometry({
  *   maximum : new Cesium.Cartesian3(250000.0, 250000.0, 250000.0),
@@ -61,20 +57,15 @@ function BoxOutlineGeometry(options) {
 
 /**
  * Creates an outline of a cube centered at the origin given its dimensions.
- *
  * @param {object} options Object with the following properties:
  * @param {Cartesian3} options.dimensions The width, depth, and height of the box stored in the x, y, and z coordinates of the <code>Cartesian3</code>, respectively.
  * @returns {BoxOutlineGeometry}
- *
- * @exception {DeveloperError} All dimensions components must be greater than or equal to zero.
- *
- *
+ * @throws {DeveloperError} All dimensions components must be greater than or equal to zero.
  * @example
  * const box = Cesium.BoxOutlineGeometry.fromDimensions({
  *   dimensions : new Cesium.Cartesian3(500000.0, 500000.0, 500000.0)
  * });
  * const geometry = Cesium.BoxOutlineGeometry.createGeometry(box);
- *
  * @see BoxOutlineGeometry.createGeometry
  */
 BoxOutlineGeometry.fromDimensions = function (options) {
@@ -99,12 +90,8 @@ BoxOutlineGeometry.fromDimensions = function (options) {
 
 /**
  * Creates an outline of a cube from the dimensions of an AxisAlignedBoundingBox.
- *
  * @param {AxisAlignedBoundingBox} boundingBox A description of the AxisAlignedBoundingBox.
  * @returns {BoxOutlineGeometry}
- *
- *
- *
  * @example
  * const aabb = Cesium.AxisAlignedBoundingBox.fromPoints(Cesium.Cartesian3.fromDegreesArray([
  *      -72.0, 40.0,
@@ -114,7 +101,6 @@ BoxOutlineGeometry.fromDimensions = function (options) {
  *      -68.0, 40.0
  * ]));
  * const box = Cesium.BoxOutlineGeometry.fromAxisAlignedBoundingBox(aabb);
- *
  *  @see BoxOutlineGeometry.createGeometry
  */
 BoxOutlineGeometry.fromAxisAlignedBoundingBox = function (boundingBox) {
@@ -136,11 +122,9 @@ BoxOutlineGeometry.packedLength = 2 * Cartesian3.packedLength + 1;
 
 /**
  * Stores the provided instance into the provided array.
- *
  * @param {BoxOutlineGeometry} value The value to pack.
  * @param {number[]} array The array to pack into.
  * @param {number} [startingIndex=0] The index into the array at which to start packing the elements.
- *
  * @returns {number[]} The array that was packed into
  */
 BoxOutlineGeometry.pack = function (value, array, startingIndex) {
@@ -171,7 +155,6 @@ const scratchOptions = {
 
 /**
  * Retrieves an instance from a packed array.
- *
  * @param {number[]} array The packed array.
  * @param {number} [startingIndex=0] The starting index of the element to be unpacked.
  * @param {BoxOutlineGeometry} [result] The object into which to store the result.
@@ -208,7 +191,6 @@ BoxOutlineGeometry.unpack = function (array, startingIndex, result) {
 
 /**
  * Computes the geometric representation of an outline of a box, including its vertices, indices, and a bounding sphere.
- *
  * @param {BoxOutlineGeometry} boxGeometry A description of the box outline.
  * @returns {Geometry|undefined} The computed vertices and indices.
  */

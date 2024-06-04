@@ -7,9 +7,7 @@ import AtmosphereStageVS from "../../Shaders/Model/AtmosphereStageVS.js";
 /**
  * The atmosphere pipeline stage applies all earth atmosphere effects that apply
  * to models, including fog.
- *
  * @namespace AtmospherePipelineStage
- *
  * @private
  */
 const AtmospherePipelineStage = {

@@ -16,11 +16,12 @@ import ModelAnimationChannel from "./ModelAnimationChannel.js";
  * being added to a model's {@link ModelAnimationCollection}. An active animation
  * is an instance of an animation; for example, there can be multiple active
  * animations for the same glTF animation, each with a different start time.
- *
+ * @param model
+ * @param animation
+ * @param options
  * @alias ModelAnimation
  * @internalConstructor
  * @class
- *
  * @see ModelAnimationCollection#add
  */
 function ModelAnimation(model, animation, options) {
@@ -36,7 +37,6 @@ function ModelAnimation(model, animation, options) {
    * When <code>true</code>, the animation is removed after it stops playing.
    * This is slightly more efficient that not removing it, but if, for example,
    * time is reversed, the animation is not played again.
-   *
    * @type {boolean}
    * @default false
    */
@@ -53,10 +53,8 @@ function ModelAnimation(model, animation, options) {
    * <p>
    * This event is fired at the end of the frame after the scene is rendered.
    * </p>
-   *
    * @type {Event}
    * @default new Event()
-   *
    * @example
    * animation.start.addEventListener(function(model, animation) {
    *   console.log(`Animation started: ${animation.name}`);
@@ -72,10 +70,8 @@ function ModelAnimation(model, animation, options) {
    * <p>
    * This event is fired at the end of the frame after the scene is rendered.
    * </p>
-   *
    * @type {Event}
    * @default new Event()
-   *
    * @example
    * animation.update.addEventListener(function(model, animation, time) {
    *   console.log(`Animation updated: ${animation.name}. glTF animation time: ${time}`);
@@ -89,10 +85,8 @@ function ModelAnimation(model, animation, options) {
    * <p>
    * This event is fired at the end of the frame after the scene is rendered.
    * </p>
-   *
    * @type {Event}
    * @default new Event()
-   *
    * @example
    * animation.stop.addEventListener(function(model, animation) {
    *   console.log(`Animation stopped: ${animation.name}`);
@@ -130,12 +124,9 @@ function ModelAnimation(model, animation, options) {
 Object.defineProperties(ModelAnimation.prototype, {
   /**
    * The glTF animation.
-   *
    * @memberof ModelAnimation.prototype
-   *
    * @type {ModelComponents.Animation}
    * @readonly
-   *
    * @private
    */
   animation: {
@@ -146,9 +137,7 @@ Object.defineProperties(ModelAnimation.prototype, {
 
   /**
    * The name that identifies this animation in the model, if it exists.
-   *
    * @memberof ModelAnimation.prototype
-   *
    * @type {string}
    * @readonly
    */
@@ -160,12 +149,9 @@ Object.defineProperties(ModelAnimation.prototype, {
 
   /**
    * The runtime animation channels for this animation.
-   *
    * @memberof ModelAnimation.prototype
-   *
    * @type {ModelAnimationChannel[]}
    * @readonly
-   *
    * @private
    */
   runtimeChannels: {
@@ -176,12 +162,9 @@ Object.defineProperties(ModelAnimation.prototype, {
 
   /**
    * The {@link Model} that owns this animation.
-   *
    * @memberof ModelAnimation.prototype
-   *
    * @type {Model}
    * @readonly
-   *
    * @private
    */
   model: {
@@ -193,12 +176,9 @@ Object.defineProperties(ModelAnimation.prototype, {
   /**
    * The starting point of the animation in local animation time. This is the minimum
    * time value across all of the keyframes belonging to this animation.
-   *
    * @memberof ModelAnimation.prototype
-   *
    * @type {number}
    * @readonly
-   *
    * @private
    */
   localStartTime: {
@@ -210,12 +190,9 @@ Object.defineProperties(ModelAnimation.prototype, {
   /**
    * The stopping point of the animation in local animation time. This is the maximum
    * time value across all of the keyframes belonging to this animation.
-   *
    * @memberof ModelAnimation.prototype
-   *
    * @type {number}
    * @readonly
-   *
    * @private
    */
   localStopTime: {
@@ -227,12 +204,9 @@ Object.defineProperties(ModelAnimation.prototype, {
   /**
    * The scene time to start playing this animation. When this is <code>undefined</code>,
    * the animation starts at the next frame.
-   *
    * @memberof ModelAnimation.prototype
-   *
    * @type {JulianDate}
    * @readonly
-   *
    * @default undefined
    */
   startTime: {
@@ -243,12 +217,9 @@ Object.defineProperties(ModelAnimation.prototype, {
 
   /**
    * The delay, in seconds, from {@link ModelAnimation#startTime} to start playing.
-   *
    * @memberof ModelAnimation.prototype
-   *
    * @type {number}
    * @readonly
-   *
    * @default undefined
    */
   delay: {
@@ -261,12 +232,9 @@ Object.defineProperties(ModelAnimation.prototype, {
    * The scene time to stop playing this animation. When this is <code>undefined</code>,
    * the animation is played for its full duration and perhaps repeated depending on
    * {@link ModelAnimation#loop}.
-   *
    * @memberof ModelAnimation.prototype
-   *
    * @type {JulianDate}
    * @readonly
-   *
    * @default undefined
    */
   stopTime: {
@@ -281,12 +249,9 @@ Object.defineProperties(ModelAnimation.prototype, {
    * <code>1.0</code> plays the animation at the speed in the glTF animation mapped to the scene
    * clock speed.  For example, if the scene is played at 2x real-time, a two-second glTF animation
    * will play in one second even if <code>multiplier</code> is <code>1.0</code>.
-   *
    * @memberof ModelAnimation.prototype
-   *
    * @type {number}
    * @readonly
-   *
    * @default 1.0
    */
   multiplier: {
@@ -297,12 +262,9 @@ Object.defineProperties(ModelAnimation.prototype, {
 
   /**
    * When <code>true</code>, the animation is played in reverse.
-   *
    * @memberof ModelAnimation.prototype
-   *
    * @type {boolean}
    * @readonly
-   *
    * @default false
    */
   reverse: {
@@ -313,12 +275,9 @@ Object.defineProperties(ModelAnimation.prototype, {
 
   /**
    * Determines if and how the animation is looped.
-   *
    * @memberof ModelAnimation.prototype
-   *
    * @type {ModelAnimationLoop}
    * @readonly
-   *
    * @default {@link ModelAnimationLoop.NONE}
    */
   loop: {
@@ -330,9 +289,7 @@ Object.defineProperties(ModelAnimation.prototype, {
   /**
    * If this is defined, it will be used to compute the local animation time
    * instead of the scene's time.
-   *
    * @memberof ModelAnimation.prototype
-   *
    * @type {ModelAnimation.AnimationTimeCallback}
    * @default undefined
    */
@@ -386,9 +343,7 @@ function initialize(runtimeAnimation) {
 
 /**
  * Evaluate all animation channels to advance this animation.
- *
  * @param {number} time The local animation time.
- *
  * @private
  */
 ModelAnimation.prototype.animate = function (time) {
@@ -402,17 +357,14 @@ ModelAnimation.prototype.animate = function (time) {
 /**
  * A function used to compute the local animation time for a ModelAnimation.
  * @callback ModelAnimation.AnimationTimeCallback
- *
  * @param {number} duration The animation's original duration in seconds.
  * @param {number} seconds The seconds since the animation started, in scene time.
  * @returns {number} Returns the local animation time.
- *
  * @example
  * // Use real time for model animation (assuming animateWhilePaused was set to true)
  * function animationTime(duration) {
  *     return Date.now() / 1000 / duration;
  * }
- *
  * @example
  * // Offset the phase of the animation, so it starts halfway through its cycle.
  * function animationTime(duration, seconds) {

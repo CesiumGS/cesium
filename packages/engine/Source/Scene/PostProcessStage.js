@@ -22,10 +22,8 @@ import PostProcessStageSampleMode from "./PostProcessStageSampleMode.js";
 
 /**
  * Runs a post-process stage on either the texture rendered by the scene or the output of a previous post-process stage.
- *
  * @alias PostProcessStage
- * @constructor
- *
+ * @class
  * @param {object} options An object with the following properties:
  * @param {string} options.fragmentShader The fragment shader to use. The default <code>sampler2D</code> uniforms are <code>colorTexture</code> and <code>depthTexture</code>. The color texture is the output of rendering the scene or the previous stage. The depth texture is the output from rendering the scene. The shader should contain one or both uniforms. There is also a <code>vec2</code> varying named <code>v_textureCoordinates</code> that can be used to sample the textures.
  * @param {object} [options.uniforms] An object whose properties will be used to set the shaders uniforms. The properties can be constant values or a function. A constant value can also be a URI, data URI, or HTML element to use as a texture.
@@ -37,13 +35,10 @@ import PostProcessStageSampleMode from "./PostProcessStageSampleMode.js";
  * @param {Color} [options.clearColor=Color.BLACK] The color to clear the output texture to.
  * @param {BoundingRectangle} [options.scissorRectangle] The rectangle to use for the scissor test.
  * @param {string} [options.name=createGuid()] The unique name of this post-process stage for reference by other stages in a composite. If a name is not supplied, a GUID will be generated.
- *
- * @exception {DeveloperError} options.textureScale must be greater than 0.0 and less than or equal to 1.0.
- * @exception {DeveloperError} options.pixelFormat must be a color format.
- * @exception {DeveloperError} When options.pixelDatatype is FLOAT, this WebGL implementation must support floating point textures. Check context.floatingPointTexture.
- *
+ * @throws {DeveloperError} options.textureScale must be greater than 0.0 and less than or equal to 1.0.
+ * @throws {DeveloperError} options.pixelFormat must be a color format.
+ * @throws {DeveloperError} When options.pixelDatatype is FLOAT, this WebGL implementation must support floating point textures. Check context.floatingPointTexture.
  * @see PostProcessStageComposite
- *
  * @example
  * // Simple stage to change the color
  * const fs =`
@@ -64,7 +59,6 @@ import PostProcessStageSampleMode from "./PostProcessStageSampleMode.js";
  *         }
  *     }
  * }));
- *
  * @example
  * // Simple stage to change the color of what is selected.
  * // If czm_selected returns true, the current fragment belongs to geometry in the selected array.
@@ -175,7 +169,6 @@ function PostProcessStage(options) {
 
   /**
    * Whether or not to execute this post-process stage when ready.
-   *
    * @type {boolean}
    */
   this.enabled = true;
@@ -187,7 +180,6 @@ Object.defineProperties(PostProcessStage.prototype, {
    * Determines if this post-process stage is ready to be executed. A stage is only executed when both <code>ready</code>
    * and {@link PostProcessStage#enabled} are <code>true</code>. A stage will not be ready while it is waiting on textures
    * to load.
-   *
    * @memberof PostProcessStage.prototype
    * @type {boolean}
    * @readonly
@@ -199,7 +191,6 @@ Object.defineProperties(PostProcessStage.prototype, {
   },
   /**
    * The unique name of this post-process stage for reference by other stages in a {@link PostProcessStageComposite}.
-   *
    * @memberof PostProcessStage.prototype
    * @type {string}
    * @readonly
@@ -219,7 +210,6 @@ Object.defineProperties(PostProcessStage.prototype, {
    * The shader must contain a <code>vec2</code> varying declaration for <code>v_textureCoordinates</code> for sampling
    * the texture uniforms.
    * </p>
-   *
    * @memberof PostProcessStage.prototype
    * @type {string}
    * @readonly
@@ -242,7 +232,6 @@ Object.defineProperties(PostProcessStage.prototype, {
    * If this post-process stage is part of a {@link PostProcessStageComposite} that does not execute in series, the constant value can also be
    * the name of another stage in a composite. This will set the uniform to the output texture the stage with that name.
    * </p>
-   *
    * @memberof PostProcessStage.prototype
    * @type {object}
    * @readonly
@@ -254,7 +243,6 @@ Object.defineProperties(PostProcessStage.prototype, {
   },
   /**
    * A number in the range (0.0, 1.0] used to scale the output texture dimensions. A scale of 1.0 will render this post-process stage to a texture the size of the viewport.
-   *
    * @memberof PostProcessStage.prototype
    * @type {number}
    * @readonly
@@ -266,7 +254,6 @@ Object.defineProperties(PostProcessStage.prototype, {
   },
   /**
    * Whether or not to force the output texture dimensions to be both equal powers of two. The power of two will be the next power of two of the minimum of the dimensions.
-   *
    * @memberof PostProcessStage.prototype
    * @type {number}
    * @readonly
@@ -278,7 +265,6 @@ Object.defineProperties(PostProcessStage.prototype, {
   },
   /**
    * How to sample the input color texture.
-   *
    * @memberof PostProcessStage.prototype
    * @type {PostProcessStageSampleMode}
    * @readonly
@@ -290,7 +276,6 @@ Object.defineProperties(PostProcessStage.prototype, {
   },
   /**
    * The color pixel format of the output texture.
-   *
    * @memberof PostProcessStage.prototype
    * @type {PixelFormat}
    * @readonly
@@ -302,7 +287,6 @@ Object.defineProperties(PostProcessStage.prototype, {
   },
   /**
    * The pixel data type of the output texture.
-   *
    * @memberof PostProcessStage.prototype
    * @type {PixelDatatype}
    * @readonly
@@ -314,7 +298,6 @@ Object.defineProperties(PostProcessStage.prototype, {
   },
   /**
    * The color to clear the output texture to.
-   *
    * @memberof PostProcessStage.prototype
    * @type {Color}
    * @readonly
@@ -326,7 +309,6 @@ Object.defineProperties(PostProcessStage.prototype, {
   },
   /**
    * The {@link BoundingRectangle} to use for the scissor test. A default bounding rectangle will disable the scissor test.
-   *
    * @memberof PostProcessStage.prototype
    * @type {BoundingRectangle}
    * @readonly
@@ -338,7 +320,6 @@ Object.defineProperties(PostProcessStage.prototype, {
   },
   /**
    * A reference to the texture written to when executing this post process stage.
-   *
    * @memberof PostProcessStage.prototype
    * @type {Texture}
    * @readonly
@@ -362,13 +343,12 @@ Object.defineProperties(PostProcessStage.prototype, {
    * stage to that fragment. For example:
    * <code>
    * if (czm_selected(v_textureCoordinates)) {
-   *     // apply post-process stage
+   * // apply post-process stage
    * } else {
-   *     out_FragColor = texture(colorTexture, v_textureCoordinates);
+   * out_FragColor = texture(colorTexture, v_textureCoordinates);
    * }
    * </code>
    * </p>
-   *
    * @memberof PostProcessStage.prototype
    * @type {Array}
    */
@@ -396,6 +376,7 @@ Object.defineProperties(PostProcessStage.prototype, {
 const depthTextureRegex = /uniform\s+sampler2D\s+depthTexture/g;
 
 /**
+ * @param context
  * @private
  */
 PostProcessStage.prototype._isSupported = function (context) {
@@ -994,9 +975,7 @@ PostProcessStage.prototype.execute = function (
  * If this object was destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
  * </p>
- *
  * @returns {boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
- *
  * @see PostProcessStage#destroy
  */
 PostProcessStage.prototype.isDestroyed = function () {
@@ -1011,9 +990,7 @@ PostProcessStage.prototype.isDestroyed = function () {
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
  * assign the return value (<code>undefined</code>) to the object as done in the example.
  * </p>
- *
- * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
- *
+ * @throws {DeveloperError} This object was destroyed, i.e., destroy() was called.
  * @see PostProcessStage#isDestroyed
  */
 PostProcessStage.prototype.destroy = function () {

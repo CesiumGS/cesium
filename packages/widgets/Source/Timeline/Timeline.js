@@ -95,8 +95,7 @@ const timelineMonthNames = [
 /**
  * The Timeline is a widget for displaying and controlling the current scene time.
  * @alias Timeline
- * @constructor
- *
+ * @class
  * @param {Element} container The parent HTML container node for this widget.
  * @param {Clock} clock The clock to use.
  */
@@ -190,6 +189,9 @@ function Timeline(container, clock) {
 }
 
 /**
+ * @param type
+ * @param listener
+ * @param useCapture
  * @private
  */
 Timeline.prototype.addEventListener = function (type, listener, useCapture) {
@@ -197,6 +199,9 @@ Timeline.prototype.addEventListener = function (type, listener, useCapture) {
 };
 
 /**
+ * @param type
+ * @param listener
+ * @param useCapture
  * @private
  */
 Timeline.prototype.removeEventListener = function (type, listener, useCapture) {
@@ -234,6 +239,9 @@ Timeline.prototype.destroy = function () {
 };
 
 /**
+ * @param color
+ * @param heightInPx
+ * @param base
  * @private
  */
 Timeline.prototype.addHighlightRange = function (color, heightInPx, base) {
@@ -244,6 +252,10 @@ Timeline.prototype.addHighlightRange = function (color, heightInPx, base) {
 };
 
 /**
+ * @param interval
+ * @param heightInPx
+ * @param color
+ * @param backgroundColor
  * @private
  */
 Timeline.prototype.addTrack = function (
@@ -266,7 +278,6 @@ Timeline.prototype.addTrack = function (
 
 /**
  * Sets the view to the provided times.
- *
  * @param {JulianDate} startTime The start time.
  * @param {JulianDate} stopTime The stop time.
  */
@@ -343,6 +354,7 @@ Timeline.prototype.zoomTo = function (startTime, stopTime) {
 };
 
 /**
+ * @param amount
  * @private
  */
 Timeline.prototype.zoomFrom = function (amount) {
@@ -375,6 +387,7 @@ function twoDigits(num) {
 }
 
 /**
+ * @param time
  * @private
  */
 Timeline.prototype.makeLabel = function (time) {
@@ -739,6 +752,8 @@ Timeline.prototype.updateFromClock = function () {
 };
 
 /**
+ * @param xPos
+ * @param seconds
  * @private
  */
 Timeline.prototype._setTimeBarTime = function (xPos, seconds) {

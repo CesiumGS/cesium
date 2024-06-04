@@ -26,15 +26,12 @@ import PolygonSignedDistanceFS from "../Shaders/PolygonSignedDistanceFS.js";
  * inside or outside the specified list of {@link ClippingPolygon} objects for a single glTF model, 3D Tileset, or the globe.
  *
  * Clipping Polygons are only supported in WebGL 2 contexts.
- *
  * @alias ClippingPolygonCollection
- * @constructor
- *
+ * @class
  * @param {object} [options] Object with the following properties:
  * @param {ClippingPolygon[]} [options.polygons=[]] An array of {@link ClippingPolygon} objects used to selectively disable rendering on the inside of each polygon.
  * @param {boolean} [options.enabled=true] Determines whether the clipping polygons are active.
  * @param {boolean} [options.inverse=false] If true, a region will be clipped if it is outside of every polygon in the collection. Otherwise, a region will only be clipped if it is on the inside of any polygon.
- *
  * @example
  * const positions = Cesium.Cartesian3.fromRadiansArray([
  *     -1.3194369277314022,
@@ -65,7 +62,6 @@ function ClippingPolygonCollection(options) {
 
   /**
    * If true, clipping will be enabled.
-   *
    * @memberof ClippingPolygonCollection.prototype
    * @type {boolean}
    * @default true
@@ -76,7 +72,6 @@ function ClippingPolygonCollection(options) {
    * If true, a region will be clipped if it is outside of every polygon in the
    * collection. Otherwise, a region will only be clipped if it is
    * inside of any polygon.
-   *
    * @memberof ClippingPolygonCollection.prototype
    * @type {boolean}
    * @default false
@@ -128,7 +123,6 @@ Object.defineProperties(ClippingPolygonCollection.prototype, {
    * Returns the number of polygons in this collection.  This is commonly used with
    * {@link ClippingPolygonCollection#get} to iterate over all the polygons
    * in the collection.
-   *
    * @memberof ClippingPolygonCollection.prototype
    * @type {number}
    * @readonly
@@ -141,7 +135,6 @@ Object.defineProperties(ClippingPolygonCollection.prototype, {
 
   /**
    * Returns the total number of positions in all polygons in the collection.
-   *
    * @memberof ClippingPolygonCollection.prototype
    * @type {number}
    * @readonly
@@ -155,7 +148,6 @@ Object.defineProperties(ClippingPolygonCollection.prototype, {
 
   /**
    * Returns a texture containing the packed computed spherical extents for each polygon
-   *
    * @memberof ClippingPolygonCollection.prototype
    * @type {Texture}
    * @readonly
@@ -169,7 +161,6 @@ Object.defineProperties(ClippingPolygonCollection.prototype, {
 
   /**
    * Returns the number of packed extents, which can be fewer than the number of polygons.
-   *
    * @memberof ClippingPolygonCollection.prototype
    * @type {number}
    * @readonly
@@ -183,7 +174,6 @@ Object.defineProperties(ClippingPolygonCollection.prototype, {
 
   /**
    * Returns the number of pixels needed in the texture containing the packed computed spherical extents for each polygon.
-   *
    * @memberof ClippingPolygonCollection.prototype
    * @type {number}
    * @readonly
@@ -197,7 +187,6 @@ Object.defineProperties(ClippingPolygonCollection.prototype, {
 
   /**
    * Returns the number of pixels needed in the texture containing the packed polygon positions.
-   *
    * @memberof ClippingPolygonCollection.prototype
    * @type {number}
    * @readonly
@@ -213,7 +202,6 @@ Object.defineProperties(ClippingPolygonCollection.prototype, {
 
   /**
    * Returns a texture containing the computed signed distance of each polygon.
-   *
    * @memberof ClippingPolygonCollection.prototype
    * @type {Texture}
    * @readonly
@@ -227,7 +215,6 @@ Object.defineProperties(ClippingPolygonCollection.prototype, {
 
   /**
    * A reference to the ClippingPolygonCollection's owner, if any.
-   *
    * @memberof ClippingPolygonCollection.prototype
    * @readonly
    * @private
@@ -243,7 +230,6 @@ Object.defineProperties(ClippingPolygonCollection.prototype, {
    *
    * Clipping mode is encoded in the sign of the number, which is just the total position count.
    * If this value changes, then shader regeneration is necessary.
-   *
    * @memberof ClippingPolygonCollection.prototype
    * @returns {number} A Number that describes the ClippingPolygonCollection's state.
    * @readonly
@@ -260,10 +246,8 @@ Object.defineProperties(ClippingPolygonCollection.prototype, {
  * Adds the specified {@link ClippingPolygon} to the collection to be used to selectively disable rendering
  * on the inside of each polygon. Use {@link ClippingPolygonCollection#unionClippingRegions} to modify
  * how modify the clipping behavior of multiple polygons.
- *
  * @param {ClippingPolygon} polygon The ClippingPolygon to add to the collection.
  * @returns {ClippingPolygon} The added ClippingPolygon.
- *
  * @example
  * const polygons = new Cesium.ClippingPolygonCollection();
  *
@@ -283,9 +267,6 @@ Object.defineProperties(ClippingPolygonCollection.prototype, {
  * polygons.add(new Cesium.ClippingPolygon({
  *     positions: positions
  * }));
- *
- *
- *
  * @see ClippingPolygonCollection#remove
  * @see ClippingPolygonCollection#removeAll
  */
@@ -306,10 +287,8 @@ ClippingPolygonCollection.prototype.add = function (polygon) {
  * it to the left, changing their indices.  This function is commonly used with
  * {@link ClippingPolygonCollection#length} to iterate over all the polygons
  * in the collection.
- *
  * @param {number} index The zero-based index of the polygon.
  * @returns {ClippingPolygon} The ClippingPolygon at the specified index.
- *
  * @see ClippingPolygonCollection#length
  */
 ClippingPolygonCollection.prototype.get = function (index) {
@@ -322,10 +301,8 @@ ClippingPolygonCollection.prototype.get = function (index) {
 
 /**
  * Checks whether this collection contains a ClippingPolygon equal to the given ClippingPolygon.
- *
  * @param {ClippingPolygon} polygon The ClippingPolygon to check for.
  * @returns {boolean} true if this collection contains the ClippingPolygon, false otherwise.
- *
  * @see ClippingPolygonCollection#get
  */
 ClippingPolygonCollection.prototype.contains = function (polygon) {
@@ -338,10 +315,8 @@ ClippingPolygonCollection.prototype.contains = function (polygon) {
 
 /**
  * Removes the first occurrence of the given ClippingPolygon from the collection.
- *
  * @param {ClippingPolygon} polygon
  * @returns {boolean} <code>true</code> if the polygon was removed; <code>false</code> if the polygon was not found in the collection.
- *
  * @see ClippingPolygonCollection#add
  * @see ClippingPolygonCollection#contains
  * @see ClippingPolygonCollection#removeAll
@@ -453,7 +428,6 @@ function getExtents(polygons) {
 
 /**
  * Removes all polygons from the collection.
- *
  * @see ClippingPolygonCollection#add
  * @see ClippingPolygonCollection#remove
  */
@@ -526,6 +500,7 @@ const textureResolutionScratch = new Cartesian2();
  * <p>
  * Do not call this function directly.
  * </p>
+ * @param frameState
  * @private
  * @throws {RuntimeError} ClippingPolygonCollections are only supported for WebGL 2
  */
@@ -735,7 +710,6 @@ const scratchRectangleIntersection = new Rectangle();
 /**
  * Determines the type intersection with the polygons of this ClippingPolygonCollection instance and the specified {@link TileBoundingVolume}.
  * @private
- *
  * @param {object} tileBoundingVolume The volume to determine the intersection with the polygons.
  * @param {Ellipsoid} [ellipsoid=WGS84] The ellipsoid on which the bounding volumes are defined.
  * @returns {Intersect} The intersection type: {@link Intersect.OUTSIDE} if the entire volume is not clipped, {@link Intersect.INSIDE}
@@ -795,7 +769,6 @@ ClippingPolygonCollection.prototype.computeIntersectionWithBoundingVolume = func
 /**
  * Sets the owner for the input ClippingPolygonCollection if there wasn't another owner.
  * Destroys the owner's previous ClippingPolygonCollection if setting is successful.
- *
  * @param {ClippingPolygonCollection} [clippingPolygonsCollection] A ClippingPolygonCollection (or undefined) being attached to an object
  * @param {object} owner An Object that should receive the new ClippingPolygonCollection
  * @param {string} key The Key for the Object to reference the ClippingPolygonCollection
@@ -827,7 +800,6 @@ ClippingPolygonCollection.setOwner = function (
 
 /**
  * Function for checking if the context will allow clipping polygons, which require floating point textures.
- *
  * @param {Scene|object} scene The scene that will contain clipped objects and clipping textures.
  * @returns {boolean} <code>true</code> if the context supports clipping polygons.
  */
@@ -839,7 +811,6 @@ ClippingPolygonCollection.isSupported = function (scene) {
  * Function for getting packed texture resolution.
  * If the ClippingPolygonCollection hasn't been updated, returns the resolution that will be
  * allocated based on the provided needed pixels.
- *
  * @param {Texture} texture The texture to be packed.
  * @param {number} pixelsNeeded The number of pixels needed based on the current polygon count.
  * @param {Cartesian2} result A Cartesian2 for the result.
@@ -871,7 +842,6 @@ ClippingPolygonCollection.getTextureResolution = function (
  * Function for getting the clipping collection's signed distance texture resolution.
  * If the ClippingPolygonCollection hasn't been updated, returns the resolution that will be
  * allocated based on the current settings
- *
  * @param {ClippingPolygonCollection} clippingPolygonCollection The clipping polygon collection
  * @param {Cartesian2} result A Cartesian2 for the result.
  * @returns {Cartesian2} The required resolution.
@@ -898,7 +868,6 @@ ClippingPolygonCollection.getClippingDistanceTextureResolution = function (
  * Function for getting the clipping collection's extents texture resolution.
  * If the ClippingPolygonCollection hasn't been updated, returns the resolution that will be
  * allocated based on the current polygon count.
- *
  * @param {ClippingPolygonCollection} clippingPolygonCollection The clipping polygon collection
  * @param {Cartesian2} result A Cartesian2 for the result.
  * @returns {Cartesian2} The required resolution.
@@ -927,9 +896,7 @@ ClippingPolygonCollection.getClippingExtentsTextureResolution = function (
  * <br /><br />
  * If this object was destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
- *
  * @returns {boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
- *
  * @see ClippingPolygonCollection#destroy
  */
 ClippingPolygonCollection.prototype.isDestroyed = function () {
@@ -943,13 +910,9 @@ ClippingPolygonCollection.prototype.isDestroyed = function () {
  * Once an object is destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
  * assign the return value (<code>undefined</code>) to the object as done in the example.
- *
- * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
- *
- *
+ * @throws {DeveloperError} This object was destroyed, i.e., destroy() was called.
  * @example
  * clippingPolygons = clippingPolygons && clippingPolygons.destroy();
- *
  * @see ClippingPolygonCollection#isDestroyed
  */
 ClippingPolygonCollection.prototype.destroy = function () {

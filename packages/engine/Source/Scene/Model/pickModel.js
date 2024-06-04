@@ -29,7 +29,6 @@ const scratchBoundingSphere = new BoundingSphere();
 
 /**
  * Find an intersection between a ray and the model surface that was rendered. The ray must be given in world coordinates.
- *
  * @param {Model} model The model to pick.
  * @param {Ray} ray The ray to test for intersection.
  * @param {FrameState} frameState The frame state.
@@ -38,7 +37,6 @@ const scratchBoundingSphere = new BoundingSphere();
  * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid to which the exaggerated position is relative.
  * @param {Cartesian3|undefined} [result] The intersection or <code>undefined</code> if none was found.
  * @returns {Cartesian3|undefined} The intersection or <code>undefined</code> if none was found.
- *
  * @private
  */
 export default function pickModel(

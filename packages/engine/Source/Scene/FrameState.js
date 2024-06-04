@@ -3,27 +3,22 @@ import SceneMode from "./SceneMode.js";
 /**
  * State information about the current frame.  An instance of this class
  * is provided to update functions.
- *
  * @param {Context} context The rendering context
  * @param {CreditDisplay} creditDisplay Handles adding and removing credits from an HTML element
  * @param {JobScheduler} jobScheduler The job scheduler
- *
  * @alias FrameState
- * @constructor
- *
+ * @class
  * @private
  */
 function FrameState(context, creditDisplay, jobScheduler) {
   /**
    * The rendering context.
-   *
    * @type {Context}
    */
   this.context = context;
 
   /**
    * An array of rendering commands.
-   *
    * @type {DrawCommand[]}
    */
   this.commandList = [];
@@ -66,7 +61,6 @@ function FrameState(context, creditDisplay, jobScheduler) {
 
   /**
    * The current mode of the scene.
-   *
    * @type {SceneMode}
    * @default {@link SceneMode.SCENE3D}
    */
@@ -75,14 +69,12 @@ function FrameState(context, creditDisplay, jobScheduler) {
   /**
    * The current morph transition time between 2D/Columbus View and 3D,
    * with 0.0 being 2D or Columbus View and 1.0 being 3D.
-   *
    * @type {number}
    */
   this.morphTime = SceneMode.getMorphTime(SceneMode.SCENE3D);
 
   /**
    * The current frame number.
-   *
    * @type {number}
    * @default 0
    */
@@ -90,7 +82,6 @@ function FrameState(context, creditDisplay, jobScheduler) {
 
   /**
    * <code>true</code> if a new frame has been issued and the frame number has been updated.
-   *
    * @type {boolean}
    * @default false
    */
@@ -98,7 +89,6 @@ function FrameState(context, creditDisplay, jobScheduler) {
 
   /**
    * The scene's current time.
-   *
    * @type {JulianDate}
    * @default undefined
    */
@@ -106,14 +96,12 @@ function FrameState(context, creditDisplay, jobScheduler) {
 
   /**
    * The job scheduler.
-   *
    * @type {JobScheduler}
    */
   this.jobScheduler = jobScheduler;
 
   /**
    * The map projection to use in 2D and Columbus View modes.
-   *
    * @type {MapProjection}
    * @default undefined
    */
@@ -121,7 +109,6 @@ function FrameState(context, creditDisplay, jobScheduler) {
 
   /**
    * The current camera.
-   *
    * @type {Camera}
    * @default undefined
    */
@@ -129,7 +116,6 @@ function FrameState(context, creditDisplay, jobScheduler) {
 
   /**
    * Whether the camera is underground.
-   *
    * @type {boolean}
    * @default false
    */
@@ -137,7 +123,6 @@ function FrameState(context, creditDisplay, jobScheduler) {
 
   /**
    * The {@link GlobeTranslucencyState} object used by the scene.
-   *
    * @type {GlobeTranslucencyState}
    * @default undefined
    */
@@ -145,7 +130,6 @@ function FrameState(context, creditDisplay, jobScheduler) {
 
   /**
    * The culling volume.
-   *
    * @type {CullingVolume}
    * @default undefined
    */
@@ -153,7 +137,6 @@ function FrameState(context, creditDisplay, jobScheduler) {
 
   /**
    * The current occluder.
-   *
    * @type {Occluder}
    * @default undefined
    */
@@ -162,7 +145,6 @@ function FrameState(context, creditDisplay, jobScheduler) {
   /**
    * The maximum screen-space error used to drive level-of-detail refinement.  Higher
    * values will provide better performance but lower visual quality.
-   *
    * @type {number}
    * @default 2
    */
@@ -171,7 +153,6 @@ function FrameState(context, creditDisplay, jobScheduler) {
   /**
    * Ratio between a pixel and a density-independent pixel. Provides a standard unit of
    * measure for real pixel measurements appropriate to a particular device.
-   *
    * @type {number}
    * @default 1.0
    */
@@ -220,7 +201,6 @@ function FrameState(context, creditDisplay, jobScheduler) {
 
   /**
    * The credit display.
-   *
    * @type {CreditDisplay}
    */
   this.creditDisplay = creditDisplay;
@@ -238,9 +218,7 @@ function FrameState(context, creditDisplay, jobScheduler) {
    * If any function in the array returns <code>true</code>, in request render mode
    * another frame will be rendered.
    * </p>
-   *
    * @type {FrameState.AfterRenderCallback[]}
-   *
    * @example
    * frameState.afterRender.push(function() {
    *   // take some action, raise an event, etc.
@@ -250,7 +228,6 @@ function FrameState(context, creditDisplay, jobScheduler) {
 
   /**
    * Gets whether or not to optimize for 3D only.
-   *
    * @type {boolean}
    * @default false
    */
@@ -365,14 +342,12 @@ function FrameState(context, creditDisplay, jobScheduler) {
 
   /**
    * The current scene background color
-   *
    * @type {Color}
    */
   this.backgroundColor = undefined;
 
   /**
    * The light used to shade the scene.
-   *
    * @type {Light}
    */
   this.light = undefined;
@@ -401,7 +376,6 @@ function FrameState(context, creditDisplay, jobScheduler) {
 
   /**
    * Whether or not the scene uses a logarithmic depth buffer.
-   *
    * @type {boolean}
    * @default false
    */
@@ -409,14 +383,12 @@ function FrameState(context, creditDisplay, jobScheduler) {
 
   /**
    * Additional state used to update 3D Tilesets.
-   *
    * @type {Cesium3DTilePassState}
    */
   this.tilesetPassState = undefined;
 
   /**
    * The minimum terrain height out of all rendered terrain tiles. Used to improve culling for objects underneath the ellipsoid but above terrain.
-   *
    * @type {number}
    * @default 0.0
    */
@@ -425,7 +397,6 @@ function FrameState(context, creditDisplay, jobScheduler) {
 
 /**
  * A function that will be called at the end of the frame.
- *
  * @callback FrameState.AfterRenderCallback
  * @returns {boolean} true if another render should be requested in request render mode
  */

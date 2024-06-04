@@ -4,13 +4,10 @@
  *
  * This function does not aim to provide a comprehensive transpilation from GLSL 3.00 to GLSL 1.00; only the functionality
  * used within the CesiumJS shaders is supported.
- *
  * @private
- *
  * @param {string} input The GLSL 3.00 shader.
  * @param {boolean} isFragmentShader True if the shader is a fragment shader.
- *
- * @return {string}
+ * @returns {string}
  */
 function demodernizeShader(input, isFragmentShader) {
   let output = input;

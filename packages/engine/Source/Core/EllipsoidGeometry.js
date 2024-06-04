@@ -27,10 +27,8 @@ const sin = Math.sin;
 
 /**
  * A description of an ellipsoid centered at the origin.
- *
  * @alias EllipsoidGeometry
- * @constructor
- *
+ * @class
  * @param {object} [options] Object with the following properties:
  * @param {Cartesian3} [options.radii=Cartesian3(1.0, 1.0, 1.0)] The radii of the ellipsoid in the x, y, and z directions.
  * @param {Cartesian3} [options.innerRadii=options.radii] The inner radii of the ellipsoid in the x, y, and z directions.
@@ -41,12 +39,9 @@ const sin = Math.sin;
  * @param {number} [options.stackPartitions=64] The number of times to partition the ellipsoid into stacks.
  * @param {number} [options.slicePartitions=64] The number of times to partition the ellipsoid into radial slices.
  * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
- *
- * @exception {DeveloperError} options.slicePartitions cannot be less than three.
- * @exception {DeveloperError} options.stackPartitions cannot be less than three.
- *
+ * @throws {DeveloperError} options.slicePartitions cannot be less than three.
+ * @throws {DeveloperError} options.stackPartitions cannot be less than three.
  * @see EllipsoidGeometry#createGeometry
- *
  * @example
  * const ellipsoid = new Cesium.EllipsoidGeometry({
  *   vertexFormat : Cesium.VertexFormat.POSITION_ONLY,
@@ -102,11 +97,9 @@ EllipsoidGeometry.packedLength =
 
 /**
  * Stores the provided instance into the provided array.
- *
  * @param {EllipsoidGeometry} value The value to pack.
  * @param {number[]} array The array to pack into.
  * @param {number} [startingIndex=0] The index into the array at which to start packing the elements.
- *
  * @returns {number[]} The array that was packed into
  */
 EllipsoidGeometry.pack = function (value, array, startingIndex) {
@@ -159,7 +152,6 @@ const scratchOptions = {
 
 /**
  * Retrieves an instance from a packed array.
- *
  * @param {number[]} array The packed array.
  * @param {number} [startingIndex=0] The starting index of the element to be unpacked.
  * @param {EllipsoidGeometry} [result] The object into which to store the result.
@@ -224,7 +216,6 @@ EllipsoidGeometry.unpack = function (array, startingIndex, result) {
 
 /**
  * Computes the geometric representation of an ellipsoid, including its vertices, indices, and a bounding sphere.
- *
  * @param {EllipsoidGeometry} ellipsoidGeometry A description of the ellipsoid.
  * @returns {Geometry|undefined} The computed vertices and indices.
  */
@@ -632,7 +623,6 @@ let unitEllipsoidGeometry;
 /**
  * Returns the geometric representation of a unit ellipsoid, including its vertices, indices, and a bounding sphere.
  * @returns {Geometry} The computed vertices and indices.
- *
  * @private
  */
 EllipsoidGeometry.getUnitEllipsoid = function () {

@@ -4,10 +4,9 @@ import defined from "../Core/defined.js";
  * A policy for discarding tile images that contain no data (and so aren't actually images).
  * This policy discards {@link DiscardEmptyTileImagePolicy.EMPTY_IMAGE}, which is
  * expected to be used in place of any empty tile images by the image loading code.
- *
+ * @param options
  * @alias DiscardEmptyTileImagePolicy
- * @constructor
- *
+ * @class
  * @see DiscardMissingTileImagePolicy
  */
 function DiscardEmptyTileImagePolicy(options) {}
@@ -22,7 +21,6 @@ DiscardEmptyTileImagePolicy.prototype.isReady = function () {
 
 /**
  * Given a tile image, decide whether to discard that image.
- *
  * @param {HTMLImageElement} image An image to test.
  * @returns {boolean} True if the image should be discarded; otherwise, false.
  */

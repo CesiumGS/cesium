@@ -2,9 +2,8 @@ import defined from "../Core/defined.js";
 
 /**
  * Describes a rasterized feature, such as a point, polygon, polyline, etc., in an imagery layer.
- *
  * @alias ImageryLayerFeatureInfo
- * @constructor
+ * @class
  */
 function ImageryLayerFeatureInfo() {
   /**
@@ -22,7 +21,6 @@ function ImageryLayerFeatureInfo() {
 
   /**
    * Gets or sets the position of the feature, or undefined if the position is not known.
-   *
    * @type {Cartographic|undefined}
    */
   this.position = undefined;
@@ -46,7 +44,6 @@ function ImageryLayerFeatureInfo() {
  * one of the following sources, in this order: 1) the property with the name 'name', 2) the property with the name 'title',
  * 3) the first property containing the word 'name', 4) the first property containing the word 'title'.  If
  * the name cannot be obtained from any of these sources, the existing name will be left unchanged.
- *
  * @param {object} properties An object literal containing the properties of the feature.
  */
 ImageryLayerFeatureInfo.prototype.configureNameFromProperties = function (
@@ -82,7 +79,6 @@ ImageryLayerFeatureInfo.prototype.configureNameFromProperties = function (
 
 /**
  * Configures the description of this feature by creating an HTML table of properties and their values.
- *
  * @param {object} properties An object literal containing the properties of the feature.
  */
 ImageryLayerFeatureInfo.prototype.configureDescriptionFromProperties = function (

@@ -2,9 +2,7 @@ import defaultValue from "./defaultValue.js";
 
 /**
  * Clones an object, returning a new object containing the same properties.
- *
  * @function
- *
  * @param {object} object The object to clone.
  * @param {boolean} [deep=false] If true, all properties will be deep cloned recursively.
  * @returns {object} The cloned object.

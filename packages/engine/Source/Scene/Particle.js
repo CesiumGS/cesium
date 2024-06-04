@@ -8,10 +8,8 @@ const defaultSize = new Cartesian2(1.0, 1.0);
 
 /**
  * A particle emitted by a {@link ParticleSystem}.
- *
  * @alias Particle
- * @constructor
- *
+ * @class
  * @param {object} options An object with the following properties:
  * @param {number} [options.mass=1.0] The mass of the particle in kilograms.
  * @param {Cartesian3} [options.position=Cartesian3.ZERO] The initial position of the particle in world coordinates.
@@ -127,6 +125,8 @@ Object.defineProperties(Particle.prototype, {
 const deltaScratch = new Cartesian3();
 
 /**
+ * @param dt
+ * @param particleUpdateFunction
  * @private
  */
 Particle.prototype.update = function (dt, particleUpdateFunction) {

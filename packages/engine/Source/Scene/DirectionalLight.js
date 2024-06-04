@@ -6,16 +6,13 @@ import DeveloperError from "../Core/DeveloperError.js";
 
 /**
  * A light that gets emitted in a single direction from infinitely far away.
- *
  * @param {object} options Object with the following properties:
  * @param {Cartesian3} options.direction The direction in which light gets emitted.
  * @param {Color} [options.color=Color.WHITE] The color of the light.
  * @param {number} [options.intensity=1.0] The intensity of the light.
- *
- * @exception {DeveloperError} options.direction cannot be zero-length
- *
+ * @throws {DeveloperError} options.direction cannot be zero-length
  * @alias DirectionalLight
- * @constructor
+ * @class
  */
 function DirectionalLight(options) {
   //>>includeStart('debug', pragmas.debug);

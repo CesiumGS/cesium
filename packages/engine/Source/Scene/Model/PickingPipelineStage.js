@@ -10,7 +10,6 @@ import ModelUtility from "./ModelUtility.js";
 
 /**
  * The picking pipeline stage is responsible for handling picking of primitives.
- *
  * @namespace PickingPipelineStage
  * @private
  */
@@ -70,6 +69,8 @@ PickingPipelineStage.process = function (
 };
 
 /**
+ * @param renderResources
+ * @param instanceId
  * @private
  */
 function buildPickObject(renderResources, instanceId) {

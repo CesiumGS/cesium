@@ -3,11 +3,10 @@ import EllipsoidalOccluder from "../Core/EllipsoidalOccluder.js";
 
 /**
  * A set of occluders that can be used to test quadtree tiles for occlusion.
- *
  * @alias QuadtreeOccluders
- * @constructor
+ * @param options
+ * @class
  * @private
- *
  * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid that potentially occludes tiles.
  */
 function QuadtreeOccluders(options) {

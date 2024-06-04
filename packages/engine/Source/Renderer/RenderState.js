@@ -86,6 +86,7 @@ function validateStencilOperation(stencilOperation) {
 }
 
 /**
+ * @param renderState
  * @private
  */
 function RenderState(renderState) {
@@ -371,38 +372,34 @@ let renderStateCache = {};
  * Validates and then finds or creates an immutable render state, which defines the pipeline
  * state for a {@link DrawCommand} or {@link ClearCommand}.  All inputs states are optional.  Omitted states
  * use the defaults shown in the example below.
- *
  * @param {object} [renderState] The states defining the render state as shown in the example below.
- *
- * @exception {RuntimeError} renderState.lineWidth is out of range.
- * @exception {DeveloperError} Invalid renderState.frontFace.
- * @exception {DeveloperError} Invalid renderState.cull.face.
- * @exception {DeveloperError} scissorTest.rectangle.width and scissorTest.rectangle.height must be greater than or equal to zero.
- * @exception {DeveloperError} renderState.depthRange.near can't be greater than renderState.depthRange.far.
- * @exception {DeveloperError} renderState.depthRange.near must be greater than or equal to zero.
- * @exception {DeveloperError} renderState.depthRange.far must be less than or equal to zero.
- * @exception {DeveloperError} Invalid renderState.depthTest.func.
- * @exception {DeveloperError} renderState.blending.color components must be greater than or equal to zero and less than or equal to one
- * @exception {DeveloperError} Invalid renderState.blending.equationRgb.
- * @exception {DeveloperError} Invalid renderState.blending.equationAlpha.
- * @exception {DeveloperError} Invalid renderState.blending.functionSourceRgb.
- * @exception {DeveloperError} Invalid renderState.blending.functionSourceAlpha.
- * @exception {DeveloperError} Invalid renderState.blending.functionDestinationRgb.
- * @exception {DeveloperError} Invalid renderState.blending.functionDestinationAlpha.
- * @exception {DeveloperError} Invalid renderState.stencilTest.frontFunction.
- * @exception {DeveloperError} Invalid renderState.stencilTest.backFunction.
- * @exception {DeveloperError} Invalid renderState.stencilTest.frontOperation.fail.
- * @exception {DeveloperError} Invalid renderState.stencilTest.frontOperation.zFail.
- * @exception {DeveloperError} Invalid renderState.stencilTest.frontOperation.zPass.
- * @exception {DeveloperError} Invalid renderState.stencilTest.backOperation.fail.
- * @exception {DeveloperError} Invalid renderState.stencilTest.backOperation.zFail.
- * @exception {DeveloperError} Invalid renderState.stencilTest.backOperation.zPass.
- * @exception {DeveloperError} renderState.viewport.width must be greater than or equal to zero.
- * @exception {DeveloperError} renderState.viewport.width must be less than or equal to the maximum viewport width.
- * @exception {DeveloperError} renderState.viewport.height must be greater than or equal to zero.
- * @exception {DeveloperError} renderState.viewport.height must be less than or equal to the maximum viewport height.
- *
- *
+ * @throws {RuntimeError} renderState.lineWidth is out of range.
+ * @throws {DeveloperError} Invalid renderState.frontFace.
+ * @throws {DeveloperError} Invalid renderState.cull.face.
+ * @throws {DeveloperError} scissorTest.rectangle.width and scissorTest.rectangle.height must be greater than or equal to zero.
+ * @throws {DeveloperError} renderState.depthRange.near can't be greater than renderState.depthRange.far.
+ * @throws {DeveloperError} renderState.depthRange.near must be greater than or equal to zero.
+ * @throws {DeveloperError} renderState.depthRange.far must be less than or equal to zero.
+ * @throws {DeveloperError} Invalid renderState.depthTest.func.
+ * @throws {DeveloperError} renderState.blending.color components must be greater than or equal to zero and less than or equal to one
+ * @throws {DeveloperError} Invalid renderState.blending.equationRgb.
+ * @throws {DeveloperError} Invalid renderState.blending.equationAlpha.
+ * @throws {DeveloperError} Invalid renderState.blending.functionSourceRgb.
+ * @throws {DeveloperError} Invalid renderState.blending.functionSourceAlpha.
+ * @throws {DeveloperError} Invalid renderState.blending.functionDestinationRgb.
+ * @throws {DeveloperError} Invalid renderState.blending.functionDestinationAlpha.
+ * @throws {DeveloperError} Invalid renderState.stencilTest.frontFunction.
+ * @throws {DeveloperError} Invalid renderState.stencilTest.backFunction.
+ * @throws {DeveloperError} Invalid renderState.stencilTest.frontOperation.fail.
+ * @throws {DeveloperError} Invalid renderState.stencilTest.frontOperation.zFail.
+ * @throws {DeveloperError} Invalid renderState.stencilTest.frontOperation.zPass.
+ * @throws {DeveloperError} Invalid renderState.stencilTest.backOperation.fail.
+ * @throws {DeveloperError} Invalid renderState.stencilTest.backOperation.zFail.
+ * @throws {DeveloperError} Invalid renderState.stencilTest.backOperation.zPass.
+ * @throws {DeveloperError} renderState.viewport.width must be greater than or equal to zero.
+ * @throws {DeveloperError} renderState.viewport.width must be less than or equal to the maximum viewport width.
+ * @throws {DeveloperError} renderState.viewport.height must be greater than or equal to zero.
+ * @throws {DeveloperError} renderState.viewport.height must be less than or equal to the maximum viewport height.
  * @example
  * const defaults = {
  *     frontFace : WindingOrder.COUNTER_CLOCKWISE,
@@ -481,10 +478,8 @@ let renderStateCache = {};
  * };
  *
  * const rs = RenderState.fromCache(defaults);
- *
  * @see DrawCommand
  * @see ClearCommand
- *
  * @private
  */
 RenderState.fromCache = function (renderState) {
@@ -525,6 +520,7 @@ RenderState.fromCache = function (renderState) {
 };
 
 /**
+ * @param renderState
  * @private
  */
 RenderState.removeFromCache = function (renderState) {

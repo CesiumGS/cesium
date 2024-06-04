@@ -6,19 +6,14 @@ import DeveloperError from "./DeveloperError.js";
  * Values and type information for geometry attributes.  A {@link Geometry}
  * generally contains one or more attributes.  All attributes together form
  * the geometry's vertices.
- *
  * @alias GeometryAttribute
- * @constructor
- *
+ * @class
  * @param {object} [options] Object with the following properties:
  * @param {ComponentDatatype} [options.componentDatatype] The datatype of each component in the attribute, e.g., individual elements in values.
  * @param {number} [options.componentsPerAttribute] A number between 1 and 4 that defines the number of components in an attributes.
  * @param {boolean} [options.normalize=false] When <code>true</code> and <code>componentDatatype</code> is an integer format, indicate that the components should be mapped to the range [0, 1] (unsigned) or [-1, 1] (signed) when they are accessed as floating-point for rendering.
  * @param {number[]|Int8Array|Uint8Array|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array|Float64Array} [options.values] The values for the attributes stored in a typed array.
- *
- * @exception {DeveloperError} options.componentsPerAttribute must be between 1 and 4.
- *
- *
+ * @throws {DeveloperError} options.componentsPerAttribute must be between 1 and 4.
  * @example
  * const geometry = new Cesium.Geometry({
  *   attributes : {
@@ -34,7 +29,6 @@ import DeveloperError from "./DeveloperError.js";
  *   },
  *   primitiveType : Cesium.PrimitiveType.LINE_LOOP
  * });
- *
  * @see Geometry
  */
 function GeometryAttribute(options) {
@@ -63,9 +57,7 @@ function GeometryAttribute(options) {
   /**
    * The datatype of each component in the attribute, e.g., individual elements in
    * {@link GeometryAttribute#values}.
-   *
    * @type {ComponentDatatype}
-   *
    * @default undefined
    */
   this.componentDatatype = options.componentDatatype;
@@ -74,11 +66,8 @@ function GeometryAttribute(options) {
    * A number between 1 and 4 that defines the number of components in an attributes.
    * For example, a position attribute with x, y, and z components would have 3 as
    * shown in the code example.
-   *
    * @type {number}
-   *
    * @default undefined
-   *
    * @example
    * attribute.componentDatatype = Cesium.ComponentDatatype.FLOAT;
    * attribute.componentsPerAttribute = 3;
@@ -97,11 +86,8 @@ function GeometryAttribute(options) {
    * <p>
    * This is commonly used when storing colors using {@link ComponentDatatype.UNSIGNED_BYTE}.
    * </p>
-   *
    * @type {boolean}
-   *
    * @default false
-   *
    * @example
    * attribute.componentDatatype = Cesium.ComponentDatatype.UNSIGNED_BYTE;
    * attribute.componentsPerAttribute = 4;
@@ -119,11 +105,8 @@ function GeometryAttribute(options) {
    * The values for the attributes stored in a typed array.  In the code example,
    * every three elements in <code>values</code> defines one attributes since
    * <code>componentsPerAttribute</code> is 3.
-   *
    * @type {number[]|Int8Array|Uint8Array|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array|Float64Array}
-   *
    * @default undefined
-   *
    * @example
    * attribute.componentDatatype = Cesium.ComponentDatatype.FLOAT;
    * attribute.componentsPerAttribute = 3;

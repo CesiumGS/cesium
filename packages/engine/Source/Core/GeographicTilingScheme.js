@@ -11,10 +11,8 @@ import Rectangle from "./Rectangle.js";
  * A tiling scheme for geometry referenced to a simple {@link GeographicProjection} where
  * longitude and latitude are directly mapped to X and Y.  This projection is commonly
  * known as geographic, equirectangular, equidistant cylindrical, or plate carrée.
- *
  * @alias GeographicTilingScheme
- * @constructor
- *
+ * @class
  * @param {object} [options] Object with the following properties:
  * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid whose surface is being tiled. Defaults to
  * the WGS84 ellipsoid.
@@ -77,7 +75,6 @@ Object.defineProperties(GeographicTilingScheme.prototype, {
 
 /**
  * Gets the total number of tiles in the X direction at a specified level-of-detail.
- *
  * @param {number} level The level-of-detail.
  * @returns {number} The number of tiles in the X direction at the given level.
  */
@@ -87,7 +84,6 @@ GeographicTilingScheme.prototype.getNumberOfXTilesAtLevel = function (level) {
 
 /**
  * Gets the total number of tiles in the Y direction at a specified level-of-detail.
- *
  * @param {number} level The level-of-detail.
  * @returns {number} The number of tiles in the Y direction at the given level.
  */
@@ -98,7 +94,6 @@ GeographicTilingScheme.prototype.getNumberOfYTilesAtLevel = function (level) {
 /**
  * Transforms a rectangle specified in geodetic radians to the native coordinate system
  * of this tiling scheme.
- *
  * @param {Rectangle} rectangle The rectangle to transform.
  * @param {Rectangle} [result] The instance to which to copy the result, or undefined if a new instance
  *        should be created.
@@ -132,7 +127,6 @@ GeographicTilingScheme.prototype.rectangleToNativeRectangle = function (
 /**
  * Converts tile x, y coordinates and level to a rectangle expressed in the native coordinates
  * of the tiling scheme.
- *
  * @param {number} x The integer x coordinate of the tile.
  * @param {number} y The integer y coordinate of the tile.
  * @param {number} level The tile level-of-detail.  Zero is the least detailed.
@@ -157,7 +151,6 @@ GeographicTilingScheme.prototype.tileXYToNativeRectangle = function (
 
 /**
  * Converts tile x, y coordinates and level to a cartographic rectangle in radians.
- *
  * @param {number} x The integer x coordinate of the tile.
  * @param {number} y The integer y coordinate of the tile.
  * @param {number} level The tile level-of-detail.  Zero is the least detailed.
@@ -199,7 +192,6 @@ GeographicTilingScheme.prototype.tileXYToRectangle = function (
 /**
  * Calculates the tile x, y coordinates of the tile containing
  * a given cartographic position.
- *
  * @param {Cartographic} position The position.
  * @param {number} level The tile level-of-detail.  Zero is the least detailed.
  * @param {Cartesian2} [result] The instance to which to copy the result, or undefined if a new instance

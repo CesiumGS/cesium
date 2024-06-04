@@ -8,7 +8,6 @@ import createPropertyDescriptor from "./createPropertyDescriptor.js";
  * @typedef {object} Cesium3DTilesetGraphics.ConstructorOptions
  *
  * Initialization options for the Cesium3DTilesetGraphics constructor
- *
  * @property {Property | boolean} [show=true] A boolean Property specifying the visibility of the tileset.
  * @property {Property | string | Resource} [uri] A string or Resource Property specifying the URI of the tileset.
  * @property {Property | number} [maximumScreenSpaceError] A number or Property specifying the maximum screen space error used to drive level of detail refinement.
@@ -18,10 +17,8 @@ import createPropertyDescriptor from "./createPropertyDescriptor.js";
  * A 3D Tiles tileset represented by an {@link Entity}.
  * The tileset modelMatrix is determined by the containing Entity position and orientation
  * or is left unset if position is undefined.
- *
  * @alias Cesium3DTilesetGraphics
- * @constructor
- *
+ * @class
  * @param {Cesium3DTilesetGraphics.ConstructorOptions} [options] Object describing initialization options
  */
 function Cesium3DTilesetGraphics(options) {
@@ -74,7 +71,6 @@ Object.defineProperties(Cesium3DTilesetGraphics.prototype, {
 
 /**
  * Duplicates this instance.
- *
  * @param {Cesium3DTilesetGraphics} [result] The object onto which to store the result.
  * @returns {Cesium3DTilesetGraphics} The modified result parameter or a new instance if one was not provided.
  */
@@ -92,7 +88,6 @@ Cesium3DTilesetGraphics.prototype.clone = function (result) {
 /**
  * Assigns each unassigned property on this object to the value
  * of the same property on the provided source object.
- *
  * @param {Cesium3DTilesetGraphics} source The object to be merged into this object.
  */
 Cesium3DTilesetGraphics.prototype.merge = function (source) {

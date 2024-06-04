@@ -1,11 +1,9 @@
 /**
  * Constructs an image from a TypedArray of pixel values
- *
  * @param {Uint8Array} typedArray The array of pixel values
  * @param {number} width The width of the image to create
  * @param {number} height The height of the image to create
  * @returns {HTMLCanvasElement} A new canvas containing the constructed image
- *
  * @private
  */
 function getImageFromTypedArray(typedArray, width, height) {

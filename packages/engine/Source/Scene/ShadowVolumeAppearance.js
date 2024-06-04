@@ -17,7 +17,6 @@ import ShadowVolumeAppearanceFS from "../Shaders/ShadowVolumeAppearanceFS.js";
 
 /**
  * Creates shaders for a ClassificationPrimitive to use a given Appearance, as well as for picking.
- *
  * @param {boolean} extentsCulling Discard fragments outside the instance's texture coordinate extents.
  * @param {boolean} planarExtents If true, texture coordinates will be computed using planes instead of spherical coordinates.
  * @param {Appearance} appearance An Appearance to be used with a ClassificationPrimitive via GroundPrimitive.
@@ -72,7 +71,6 @@ function ShadowVolumeAppearance(extentsCulling, planarExtents, appearance) {
 
 /**
  * Create the fragment shader for a ClassificationPrimitive's color pass when rendering for color.
- *
  * @param {boolean} columbusView2D Whether the shader will be used for Columbus View or 2D.
  * @returns {ShaderSource} Shader source for the fragment shader.
  */
@@ -174,7 +172,6 @@ ShadowVolumeAppearance.prototype.createPickFragmentShader = function (
 
 /**
  * Create the vertex shader for a ClassificationPrimitive's color pass on the final of 3 shadow volume passes
- *
  * @param {string[]} defines External defines to pass to the vertex shader.
  * @param {string} vertexShaderSource ShadowVolumeAppearanceVS with any required modifications for computing position.
  * @param {boolean} columbusView2D Whether the shader will be used for Columbus View or 2D.
@@ -207,7 +204,6 @@ ShadowVolumeAppearance.prototype.createVertexShader = function (
 
 /**
  * Create the vertex shader for a ClassificationPrimitive's pick pass on the final of 3 shadow volume passes
- *
  * @param {string[]} defines External defines to pass to the vertex shader.
  * @param {string} vertexShaderSource ShadowVolumeAppearanceVS with any required modifications for computing position and picking.
  * @param {boolean} columbusView2D Whether the shader will be used for Columbus View or 2D.
@@ -561,7 +557,12 @@ const pointsCartographicScratch = [
  * Flatten the ellipsoid-centered corners and edge-centers of the rectangle
  * into the plane of the local ENU system, compute bounds in 2D, and
  * project back to ellipsoid-centered.
- *
+ * @param rectangle
+ * @param ellipsoid
+ * @param height
+ * @param southWestCornerResult
+ * @param eastVectorResult
+ * @param northVectorResult
  * @private
  */
 function computeRectangleBounds(
@@ -667,13 +668,11 @@ const encodeScratch = new EncodedCartesian3();
  * - 3 high-precision points as 6 GeometryInstanceAttributes. These points are used to compute eye-space planes.
  * - 1 texture coordinate rotation GeometryInstanceAttributes
  * - 2 GeometryInstanceAttributes used to compute high-precision points in 2D and Columbus View.
- *   These points are used to compute eye-space planes like above.
+ * These points are used to compute eye-space planes like above.
  *
  * Used to compute texture coordinates for small-area ClassificationPrimitives with materials or multiple non-overlapping instances.
- *
  * @see ShadowVolumeAppearance
  * @private
- *
  * @param {Rectangle} boundingRectangle Rectangle object that the points will approximately bound
  * @param {number[]} textureCoordinateRotationPoints Points in the computed texture coordinate system for remapping texture coordinates
  * @param {Ellipsoid} ellipsoid Ellipsoid for converting Rectangle points to world coordinates
@@ -791,7 +790,6 @@ const sphericalScratch = new Cartesian2();
  * multiple non-overlapping instances.
  * @see ShadowVolumeAppearance
  * @private
- *
  * @param {Rectangle} boundingRectangle Rectangle object that the spherical extents will approximately bound
  * @param {number[]} textureCoordinateRotationPoints Points in the computed texture coordinate system for remapping texture coordinates
  * @param {Ellipsoid} ellipsoid Ellipsoid for converting Rectangle points to world coordinates
@@ -913,7 +911,6 @@ function shouldUseSpherical(rectangle) {
 /**
  * Computes whether the given rectangle is wide enough that texture coordinates
  * over its area should be computed using spherical extents instead of distance to planes.
- *
  * @param {Rectangle} rectangle A rectangle
  * @private
  */
@@ -928,7 +925,6 @@ ShadowVolumeAppearance.shouldUseSphericalCoordinates = function (rectangle) {
 /**
  * Texture coordinates for ground primitives are computed either using spherical coordinates for large areas or
  * using distance from planes for small areas.
- *
  * @type {number}
  * @constant
  * @private

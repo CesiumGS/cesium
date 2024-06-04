@@ -50,15 +50,11 @@ function createGeometryFromPositions(positions) {
 
 /**
  * A description of the outline of a polygon composed of arbitrary coplanar positions.
- *
  * @alias CoplanarPolygonOutlineGeometry
- * @constructor
- *
+ * @class
  * @param {object} options Object with the following properties:
  * @param {PolygonHierarchy} options.polygonHierarchy A polygon hierarchy that can include holes.
- *
  * @see CoplanarPolygonOutlineGeometry.createGeometry
- *
  * @example
  * const polygonOutline = new Cesium.CoplanarPolygonOutlineGeometry({
  *   positions : Cesium.Cartesian3.fromDegreesArrayHeights([
@@ -93,7 +89,6 @@ function CoplanarPolygonOutlineGeometry(options) {
 
 /**
  * A description of a coplanar polygon outline from an array of positions.
- *
  * @param {object} options Object with the following properties:
  * @param {Cartesian3[]} options.positions An array of positions that defined the corner points of the polygon.
  * @returns {CoplanarPolygonOutlineGeometry}
@@ -115,11 +110,9 @@ CoplanarPolygonOutlineGeometry.fromPositions = function (options) {
 
 /**
  * Stores the provided instance into the provided array.
- *
  * @param {CoplanarPolygonOutlineGeometry} value The value to pack.
  * @param {number[]} array The array to pack into.
  * @param {number} [startingIndex=0] The index into the array at which to start packing the elements.
- *
  * @returns {number[]} The array that was packed into
  */
 CoplanarPolygonOutlineGeometry.pack = function (value, array, startingIndex) {
@@ -147,7 +140,6 @@ const scratchOptions = {
 };
 /**
  * Retrieves an instance from a packed array.
- *
  * @param {number[]} array The packed array.
  * @param {number} [startingIndex=0] The starting index of the element to be unpacked.
  * @param {CoplanarPolygonOutlineGeometry} [result] The object into which to store the result.
@@ -185,7 +177,6 @@ CoplanarPolygonOutlineGeometry.unpack = function (
 
 /**
  * Computes the geometric representation of an arbitrary coplanar polygon, including its vertices, indices, and a bounding sphere.
- *
  * @param {CoplanarPolygonOutlineGeometry} polygonGeometry A description of the polygon.
  * @returns {Geometry|undefined} The computed vertices and indices.
  */

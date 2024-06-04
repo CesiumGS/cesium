@@ -62,48 +62,38 @@ const {
 /**
  * States of the glTF loading process. These states also apply to
  * asynchronous texture loading unless otherwise noted
- *
  * @enum {number}
- *
  * @private
  */
 const GltfLoaderState = {
   /**
    * The initial state of the glTF loader before load() is called.
-   *
    * @type {number}
    * @constant
-   *
    * @private
    */
   NOT_LOADED: 0,
   /**
    * The state of the loader while waiting for the glTF JSON loader promise
    * to resolve.
-   *
    * @type {number}
    * @constant
-   *
    * @private
    */
   LOADING: 1,
   /**
    * The state of the loader once the glTF JSON is loaded but before
    * process() is called.
-   *
    * @type {number}
    * @constant
-   *
    * @private
    */
   LOADED: 2,
   /**
    * The state of the loader while parsing the glTF and creating GPU resources
    * as needed.
-   *
    * @type {number}
    * @constant
-   *
    * @private
    */
   PROCESSING: 3,
@@ -114,10 +104,8 @@ const GltfLoaderState = {
    * <p>
    * This state is not used for asynchronous texture loading.
    * </p>
-   *
    * @type {number}
    * @constant
-   *
    * @private
    */
   POST_PROCESSING: 4,
@@ -125,38 +113,30 @@ const GltfLoaderState = {
    * Once the processing/post-processing states are finished, the loader
    * enters the processed state (sometimes from a promise chain). The next
    * call to process() will advance to the ready state.
-   *
    * @type {number}
    * @constant
-   *
    * @private
    */
   PROCESSED: 5,
   /**
    * When the loader reaches the ready state, the loaders' promise will be
    * resolved.
-   *
    * @type {number}
    * @constant
-   *
    * @private
    */
   READY: 6,
   /**
    * If an error occurs at any point, the loader switches to the failed state.
-   *
    * @type {number}
    * @constant
-   *
    * @private
    */
   FAILED: 7,
   /**
    * If unload() is called, the loader switches to the unloaded state.
-   *
    * @type {number}
    * @constant
-   *
    * @private
    */
   UNLOADED: 8,
@@ -167,11 +147,9 @@ const GltfLoaderState = {
  * <p>
  * Implements the {@link ResourceLoader} interface.
  * </p>
- *
  * @alias GltfLoader
- * @constructor
+ * @class
  * @augments ResourceLoader
- *
  * @param {object} options Object with the following properties:
  * @param {Resource} options.gltfResource The {@link Resource} containing the glTF. This is often the path of the .gltf or .glb file, but may also be the path of the .b3dm, .i3dm, or .cmpt file containing the embedded glb. .cmpt resources should have a URI fragment indicating the index of the inner content to which the glb belongs in order to individually identify the glb in the cache, e.g. http://example.com/tile.cmpt#index=2.
  * @param {Resource} [options.baseResource] The {@link Resource} that paths in the glTF JSON are relative to.
@@ -283,9 +261,7 @@ if (defined(Object.create)) {
 Object.defineProperties(GltfLoader.prototype, {
   /**
    * The cache key of the resource.
-   *
    * @memberof GltfLoader.prototype
-   *
    * @type {string}
    * @readonly
    * @private
@@ -297,9 +273,7 @@ Object.defineProperties(GltfLoader.prototype, {
   },
   /**
    * The loaded components.
-   *
    * @memberof GltfLoader.prototype
-   *
    * @type {ModelComponents.Components}
    * @readonly
    * @private
@@ -311,9 +285,7 @@ Object.defineProperties(GltfLoader.prototype, {
   },
   /**
    * The loaded glTF json.
-   *
    * @memberof GltfLoader.prototype
-   *
    * @type {object}
    * @readonly
    * @private
@@ -328,9 +300,7 @@ Object.defineProperties(GltfLoader.prototype, {
   },
   /**
    * Returns true if textures are loaded separately from the other glTF resources.
-   *
    * @memberof GltfLoader.prototype
-   *
    * @type {boolean}
    * @readonly
    * @private
@@ -342,9 +312,7 @@ Object.defineProperties(GltfLoader.prototype, {
   },
   /**
    * true if textures are loaded, useful when incrementallyLoadTextures is true
-   *
    * @memberof GltfLoader.prototype
-   *
    * @type {boolean}
    * @readonly
    * @private
@@ -358,6 +326,7 @@ Object.defineProperties(GltfLoader.prototype, {
 
 /**
  * Loads the gltf object
+ * @param loader
  */
 async function loadGltfJson(loader) {
   loader._state = GltfLoaderState.LOADING;
@@ -430,8 +399,8 @@ async function loadResources(loader, frameState) {
 /**
  * Loads the resource.
  * @returns {Promise.<GltfLoader>} A promise which resolves to the loader when the resource loading is completed.
- * @exception {RuntimeError} Unsupported glTF version
- * @exception {RuntimeError} Unsupported glTF Extension
+ * @throws {RuntimeError} Unsupported glTF version
+ * @throws {RuntimeError} Unsupported glTF Extension
  * @private
  */
 GltfLoader.prototype.load = async function () {
@@ -523,6 +492,7 @@ function gatherPostProcessBuffers(loader, primitiveLoadPlan) {
 
 /**
  * Process loaders other than textures
+ * @param frameState
  * @private
  */
 GltfLoader.prototype._process = function (frameState) {
@@ -558,6 +528,7 @@ GltfLoader.prototype._process = function (frameState) {
 
 /**
  * Process textures other than textures
+ * @param frameState
  * @private
  */
 GltfLoader.prototype._processTextures = function (frameState) {
@@ -592,7 +563,6 @@ GltfLoader.prototype._processTextures = function (frameState) {
 
 /**
  * Processes the resource until it becomes ready.
- *
  * @param {FrameState} frameState The frame state.
  * @private
  */
@@ -1627,7 +1597,6 @@ function loadClearcoat(loader, clearcoatInfo, frameState) {
 
 /**
  * Load textures and parse factors and flags for a glTF material
- *
  * @param {GltfLoader} loader
  * @param {object} gltfMaterial An entry from the <code>.materials</code> array in the glTF JSON
  * @param {FrameState} frameState
@@ -2597,7 +2566,6 @@ const scratchCenter = new Cartesian3();
  * frame. Any promise failures are collected, and will be handled synchronously in process().
  * Also note that it's fine to call process before a loader is ready to process or
  * after it has failed; nothing will happen.
- *
  * @param {GltfLoader} loader
  * @param {FrameState} frameState
  * @returns {Promise} A Promise that resolves when all loaders are ready

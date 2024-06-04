@@ -5,8 +5,7 @@ import DeveloperError from "../Core/DeveloperError.js";
  * {@link EntityCollection} for generic consumption. This object is an interface
  * for documentation purposes and is not intended to be instantiated directly.
  * @alias DataSource
- * @constructor
- *
+ * @class
  * @see Entity
  * @see DataSourceDisplay
  */
@@ -82,7 +81,6 @@ Object.defineProperties(DataSource.prototype, {
 
   /**
    * Gets or sets the clustering options for this data source. This object can be shared between multiple data sources.
-   *
    * @memberof DataSource.prototype
    * @type {EntityCluster}
    */
@@ -96,7 +94,6 @@ Object.defineProperties(DataSource.prototype, {
  * is not required to be implemented.  It is provided for data sources which
  * retrieve data based on the current animation time or scene state.
  * If implemented, update will be called by {@link DataSourceDisplay} once a frame.
- *
  * @param {JulianDate} time The simulation time.
  * @returns {boolean} True if this data source is ready to be displayed at the provided time, false otherwise.
  */
@@ -105,6 +102,8 @@ DataSource.prototype.update = function (time) {
 };
 
 /**
+ * @param dataSource
+ * @param isLoading
  * @private
  */
 DataSource.setLoading = function (dataSource, isLoading) {

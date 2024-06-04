@@ -2,10 +2,8 @@ import defaultValue from "../Core/defaultValue.js";
 
 /**
  * Represents a burst of {@link Particle}s from a {@link ParticleSystem} at a given time in the systems lifetime.
- *
  * @alias ParticleBurst
- * @constructor
- *
+ * @class
  * @param {object} [options] An object with the following properties:
  * @param {number} [options.time=0.0] The time in seconds after the beginning of the particle system's lifetime that the burst will occur.
  * @param {number} [options.minimum=0.0] The minimum number of particles emmitted in the burst.

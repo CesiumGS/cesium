@@ -32,10 +32,8 @@ import ShadowMode from "./ShadowMode.js";
 /**
  * The globe rendered in the scene, including its terrain ({@link Globe#terrainProvider})
  * and imagery layers ({@link Globe#imageryLayers}).  Access the globe using {@link Scene#globe}.
- *
  * @alias Globe
- * @constructor
- *
+ * @class
  * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] Determines the size and shape of the
  * globe.
  */
@@ -77,7 +75,6 @@ function Globe(ellipsoid) {
 
   /**
    * Determines if the globe will be shown.
-   *
    * @type {boolean}
    * @default true
    */
@@ -91,7 +88,6 @@ function Globe(ellipsoid) {
   /**
    * The maximum screen-space error used to drive level-of-detail refinement.  Higher
    * values will provide better performance but lower visual quality.
-   *
    * @type {number}
    * @default 2
    */
@@ -102,7 +98,6 @@ function Globe(ellipsoid) {
    * tiles beyond this number will be freed, as long as they aren't needed for rendering
    * this frame.  A larger number will consume more memory but will show detail faster
    * when, for example, zooming out and then back in.
-   *
    * @type {number}
    * @default 100
    */
@@ -152,7 +147,6 @@ function Globe(ellipsoid) {
 
   /**
    * Enable lighting the globe with the scene's light source.
-   *
    * @type {boolean}
    * @default false
    */
@@ -162,7 +156,6 @@ function Globe(ellipsoid) {
    * A multiplier to adjust terrain lambert lighting.
    * This number is multiplied by the result of <code>czm_getLambertDiffuse</code> in GlobeFS.glsl.
    * This only takes effect when <code>enableLighting</code> is <code>true</code>.
-   *
    * @type {number}
    * @default 0.9
    */
@@ -171,7 +164,6 @@ function Globe(ellipsoid) {
   /**
    * Enable dynamic lighting effects on atmosphere and fog. This only takes effect
    * when <code>enableLighting</code> is <code>true</code>.
-   *
    * @type {boolean}
    * @default true
    */
@@ -181,7 +173,6 @@ function Globe(ellipsoid) {
    * Whether dynamic atmosphere lighting uses the sun direction instead of the scene's
    * light direction. This only takes effect when <code>enableLighting</code> and
    * <code>dynamicAtmosphereLighting</code> are <code>true</code>.
-   *
    * @type {boolean}
    * @default false
    */
@@ -189,7 +180,6 @@ function Globe(ellipsoid) {
 
   /**
    * Enable the ground atmosphere, which is drawn over the globe when viewed from a distance between <code>lightingFadeInDistance</code> and <code>lightingFadeOutDistance</code>.
-   *
    * @type {boolean}
    * @default true
    */
@@ -197,7 +187,6 @@ function Globe(ellipsoid) {
 
   /**
    * The intensity of the light that is used for computing the ground atmosphere color.
-   *
    * @type {number}
    * @default 10.0
    */
@@ -205,7 +194,6 @@ function Globe(ellipsoid) {
 
   /**
    * The Rayleigh scattering coefficient used in the atmospheric scattering equations for the ground atmosphere.
-   *
    * @type {Cartesian3}
    * @default Cartesian3(5.5e-6, 13.0e-6, 28.4e-6)
    */
@@ -213,7 +201,6 @@ function Globe(ellipsoid) {
 
   /**
    * The Mie scattering coefficient used in the atmospheric scattering equations for the ground atmosphere.
-   *
    * @type {Cartesian3}
    * @default Cartesian3(21e-6, 21e-6, 21e-6)
    */
@@ -221,7 +208,6 @@ function Globe(ellipsoid) {
 
   /**
    * The Rayleigh scale height used in the atmospheric scattering equations for the ground atmosphere, in meters.
-   *
    * @type {number}
    * @default 10000.0
    */
@@ -229,7 +215,6 @@ function Globe(ellipsoid) {
 
   /**
    * The Mie scale height used in the atmospheric scattering equations for the ground atmosphere, in meters.
-   *
    * @type {number}
    * @default 3200.0
    */
@@ -248,7 +233,6 @@ function Globe(ellipsoid) {
   /**
    * The distance where everything becomes lit. This only takes effect
    * when <code>enableLighting</code> or <code>showGroundAtmosphere</code> is <code>true</code>.
-   *
    * @type {number}
    * @default 10000000.0
    */
@@ -257,7 +241,6 @@ function Globe(ellipsoid) {
   /**
    * The distance where lighting resumes. This only takes effect
    * when <code>enableLighting</code> or <code>showGroundAtmosphere</code> is <code>true</code>.
-   *
    * @type {number}
    * @default 20000000.0
    */
@@ -267,7 +250,6 @@ function Globe(ellipsoid) {
    * The distance where the darkness of night from the ground atmosphere fades out to a lit ground atmosphere.
    * This only takes effect when <code>showGroundAtmosphere</code>, <code>enableLighting</code>, and
    * <code>dynamicAtmosphereLighting</code> are <code>true</code>.
-   *
    * @type {number}
    * @default 10000000.0
    */
@@ -277,7 +259,6 @@ function Globe(ellipsoid) {
    * The distance where the darkness of night from the ground atmosphere fades in to an unlit ground atmosphere.
    * This only takes effect when <code>showGroundAtmosphere</code>, <code>enableLighting</code>, and
    * <code>dynamicAtmosphereLighting</code> are <code>true</code>.
-   *
    * @type {number}
    * @default 50000000.0
    */
@@ -287,7 +268,6 @@ function Globe(ellipsoid) {
    * True if an animated wave effect should be shown in areas of the globe
    * covered by water; otherwise, false.  This property is ignored if the
    * <code>terrainProvider</code> does not provide a water mask.
-   *
    * @type {boolean}
    * @default true
    */
@@ -299,10 +279,8 @@ function Globe(ellipsoid) {
    * of terrain unless they're on the opposite side of the globe.  The disadvantage of depth
    * testing primitives against terrain is that slight numerical noise or terrain level-of-detail
    * switched can sometimes make a primitive that should be on the surface disappear underneath it.
-   *
    * @type {boolean}
    * @default false
-   *
    */
   this.depthTestAgainstTerrain = false;
 
@@ -310,7 +288,6 @@ function Globe(ellipsoid) {
    * Determines whether the globe casts or receives shadows from light sources. Setting the globe
    * to cast shadows may impact performance since the terrain is rendered again from the light's perspective.
    * Currently only terrain that is in view casts shadows. By default the globe does not cast shadows.
-   *
    * @type {ShadowMode}
    * @default ShadowMode.RECEIVE_ONLY
    */
@@ -343,7 +320,6 @@ function Globe(ellipsoid) {
   /**
    * Whether to show terrain skirts. Terrain skirts are geometry extending downwards from a tile's edges used to hide seams between neighboring tiles.
    * Skirts are always hidden when the camera is underground or translucency is enabled.
-   *
    * @type {boolean}
    * @default true
    */
@@ -351,7 +327,6 @@ function Globe(ellipsoid) {
 
   /**
    * Whether to cull back-facing terrain. Back faces are not culled when the camera is underground or translucency is enabled.
-   *
    * @type {boolean}
    * @default true
    */
@@ -363,7 +338,6 @@ function Globe(ellipsoid) {
   /**
    * Determines the darkness of the vertex shadow.
    * This only takes effect when <code>enableLighting</code> is <code>true</code>.
-   *
    * @type {number}
    * @default 0.3
    */
@@ -393,7 +367,6 @@ Object.defineProperties(Globe.prototype, {
   },
   /**
    * Gets an event that's raised when an imagery layer is added, shown, hidden, moved, or removed.
-   *
    * @memberof Globe.prototype
    * @type {Event}
    * @readonly
@@ -437,7 +410,6 @@ Object.defineProperties(Globe.prototype, {
   },
   /**
    * A property specifying a {@link ClippingPlaneCollection} used to selectively disable rendering on the outside of each plane.
-   *
    * @memberof Globe.prototype
    * @type {ClippingPlaneCollection}
    */
@@ -451,7 +423,6 @@ Object.defineProperties(Globe.prototype, {
   },
   /**
    * A property specifying a {@link ClippingPolygonCollection} used to selectively disable rendering inside or outside a list of polygons.
-   *
    * @memberof Globe.prototype
    * @type {ClippingPolygonCollection}
    */
@@ -466,7 +437,6 @@ Object.defineProperties(Globe.prototype, {
   /**
    * A property specifying a {@link Rectangle} used to limit globe rendering to a cartographic area.
    * Defaults to the maximum extent of cartographic coordinates.
-   *
    * @memberof Globe.prototype
    * @type {Rectangle}
    * @default {@link Rectangle.MAX_VALUE}
@@ -501,10 +471,8 @@ Object.defineProperties(Globe.prototype, {
   /**
    * The terrain provider providing surface geometry for this globe.
    * @type {TerrainProvider}
-   *
    * @memberof Globe.prototype
    * @type {TerrainProvider}
-   *
    */
   terrainProvider: {
     get: function () {
@@ -522,7 +490,6 @@ Object.defineProperties(Globe.prototype, {
   },
   /**
    * Gets an event that's raised when the terrain provider is changed
-   *
    * @memberof Globe.prototype
    * @type {Event}
    * @readonly
@@ -535,7 +502,6 @@ Object.defineProperties(Globe.prototype, {
   /**
    * Gets an event that's raised when the length of the tile load queue has changed since the last render frame.  When the load queue is empty,
    * all terrain and imagery for the current view have been loaded.  The event passes the new length of the tile load queue.
-   *
    * @memberof Globe.prototype
    * @type {Event}
    */
@@ -568,11 +534,9 @@ Object.defineProperties(Globe.prototype, {
    * blended with the globe color based on the camera's distance.
    * <br /><br />
    * To disable underground coloring, set <code>undergroundColor</code> to <code>undefined</code>.
-   *
    * @memberof Globe.prototype
    * @type {Color}
    * @default {@link Color.BLACK}
-   *
    * @see Globe#undergroundColorAlphaByDistance
    */
   undergroundColor: {
@@ -594,12 +558,9 @@ Object.defineProperties(Globe.prototype, {
    * <br /> <br />
    * When the camera is above the ellipsoid the distance is computed from the nearest
    * point on the ellipsoid instead of the camera's position.
-   *
    * @memberof Globe.prototype
    * @type {NearFarScalar}
-   *
    * @see Globe#undergroundColor
-   *
    */
   undergroundColorAlphaByDistance: {
     get: function () {
@@ -622,7 +583,6 @@ Object.defineProperties(Globe.prototype, {
 
   /**
    * Properties for controlling globe translucency.
-   *
    * @memberof Globe.prototype
    * @type {GlobeTranslucency}
    */
@@ -689,13 +649,11 @@ const scratchSphereIntersectionResult = {
 
 /**
  * Find an intersection between a ray and the globe surface that was rendered. The ray must be given in world coordinates.
- *
  * @param {Ray} ray The ray to test for intersection.
  * @param {Scene} scene The scene.
  * @param {boolean} [cullBackFaces=true] Set to true to not pick back faces.
  * @param {Cartesian3} [result] The object onto which to store the result.
  * @returns {Cartesian3|undefined} The intersection or <code>undefined</code> if none was found.  The returned position is in projected coordinates for 2D and Columbus View.
- *
  * @private
  */
 Globe.prototype.pickWorldCoordinates = function (
@@ -793,12 +751,10 @@ Globe.prototype.pickWorldCoordinates = function (
 const cartoScratch = new Cartographic();
 /**
  * Find an intersection between a ray and the globe surface that was rendered. The ray must be given in world coordinates.
- *
  * @param {Ray} ray The ray to test for intersection.
  * @param {Scene} scene The scene.
  * @param {Cartesian3} [result] The object onto which to store the result.
  * @returns {Cartesian3|undefined} The intersection or <code>undefined</code> if none was found.
- *
  * @example
  * // find intersection of ray through a pixel and the globe
  * const ray = viewer.camera.getPickRay(windowCoordinates);
@@ -828,7 +784,6 @@ function tileIfContainsCartographic(tile, cartographic) {
 
 /**
  * Get the height of the surface at a given cartographic.
- *
  * @param {Cartographic} cartographic The cartographic for which to find the height.
  * @returns {number|undefined} The height of the cartographic or undefined if it could not be found.
  */
@@ -956,6 +911,7 @@ Globe.prototype.getHeight = function (cartographic) {
 };
 
 /**
+ * @param frameState
  * @private
  */
 Globe.prototype.update = function (frameState) {
@@ -969,6 +925,7 @@ Globe.prototype.update = function (frameState) {
 };
 
 /**
+ * @param frameState
  * @private
  */
 Globe.prototype.beginFrame = function (frameState) {
@@ -1059,6 +1016,7 @@ Globe.prototype.beginFrame = function (frameState) {
 };
 
 /**
+ * @param frameState
  * @private
  */
 Globe.prototype.render = function (frameState) {
@@ -1074,6 +1032,7 @@ Globe.prototype.render = function (frameState) {
 };
 
 /**
+ * @param frameState
  * @private
  */
 Globe.prototype.endFrame = function (frameState) {
@@ -1091,9 +1050,7 @@ Globe.prototype.endFrame = function (frameState) {
  * <br /><br />
  * If this object was destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
- *
  * @returns {boolean} True if this object was destroyed; otherwise, false.
- *
  * @see Globe#destroy
  */
 Globe.prototype.isDestroyed = function () {
@@ -1107,13 +1064,9 @@ Globe.prototype.isDestroyed = function () {
  * Once an object is destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
  * assign the return value (<code>undefined</code>) to the object as done in the example.
- *
- * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
- *
- *
+ * @throws {DeveloperError} This object was destroyed, i.e., destroy() was called.
  * @example
  * globe = globe && globe.destroy();
- *
  * @see Globe#isDestroyed
  */
 Globe.prototype.destroy = function () {

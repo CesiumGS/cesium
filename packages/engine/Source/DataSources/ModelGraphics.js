@@ -22,7 +22,6 @@ function createArticulationStagePropertyBag(value) {
  * @typedef {object} ModelGraphics.ConstructorOptions
  *
  * Initialization options for the ModelGraphics constructor
- *
  * @property {Property | boolean} [show=true] A boolean Property specifying the visibility of the model.
  * @property {Property | string | Resource} [uri] A string or Resource Property specifying the URI of the glTF asset.
  * @property {Property | number} [scale=1.0] A numeric Property specifying a uniform linear scale.
@@ -54,12 +53,9 @@ function createArticulationStagePropertyBag(value) {
  * Cesium includes support for glTF geometry, materials, animations, and skinning.
  * Cameras and lights are not currently supported.
  * </p>
- *
  * @alias ModelGraphics
- * @constructor
- *
+ * @class
  * @param {ModelGraphics.ConstructorOptions} [options] Object describing initialization options
- *
  * @demo {@link https://sandcastle.cesium.com/index.html?src=3D%20Models.html|Cesium Sandcastle 3D Models Demo}
  */
 function ModelGraphics(options) {
@@ -266,7 +262,7 @@ Object.defineProperties(ModelGraphics.prototype, {
 
   /**
    * A property specifying the {@link Cartesian3} light color when shading the model. When <code>undefined</code> the scene's light color is used instead.
-   * @memberOf ModelGraphics.prototype
+   * @memberof ModelGraphics.prototype
    * @type {Property|undefined}
    */
   lightColor: createPropertyDescriptor("lightColor"),
@@ -322,7 +318,6 @@ Object.defineProperties(ModelGraphics.prototype, {
 
 /**
  * Duplicates this instance.
- *
  * @param {ModelGraphics} [result] The object onto which to store the result.
  * @returns {ModelGraphics} The modified result parameter or a new instance if one was not provided.
  */
@@ -357,7 +352,6 @@ ModelGraphics.prototype.clone = function (result) {
 /**
  * Assigns each unassigned property on this object to the value
  * of the same property on the provided source object.
- *
  * @param {ModelGraphics} source The object to be merged into this object.
  */
 ModelGraphics.prototype.merge = function (source) {

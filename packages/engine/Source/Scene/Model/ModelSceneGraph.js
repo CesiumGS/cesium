@@ -29,14 +29,11 @@ import PrimitiveRenderResources from "./PrimitiveRenderResources.js";
 
 /**
  * An in memory representation of the scene graph for a {@link Model}
- *
  * @param {object} options An object containing the following options
  * @param {Model} options.model The model this scene graph belongs to
  * @param {ModelComponents} options.modelComponents The model components describing the model
- *
  * @alias ModelSceneGraph
- * @constructor
- *
+ * @class
  * @private
  */
 function ModelSceneGraph(options) {
@@ -50,60 +47,48 @@ function ModelSceneGraph(options) {
 
   /**
    * A reference to the {@link Model} that owns this scene graph.
-   *
    * @type {Model}
    * @readonly
-   *
    * @private
    */
   this._model = options.model;
 
   /**
    * The model components that represent the contents of the 3D model file.
-   *
    * @type {ModelComponents}
    * @readonly
-   *
    * @private
    */
   this._components = components;
 
   /**
    * Pipeline stages to apply across the model.
-   *
    * @type {Object[]}
    * @readonly
-   *
    * @private
    */
   this._pipelineStages = [];
 
   /**
    * Update stages to apply across the model.
-   *
    * @type {Object[]}
    * @readonly
-   *
    * @private
    */
   this._updateStages = [];
 
   /**
    * The runtime nodes that make up the scene graph
-   *
    * @type {ModelRuntimeNode[]}
    * @readonly
-   *
    * @private
    */
   this._runtimeNodes = [];
 
   /**
    * The indices of the root nodes in the runtime nodes array.
-   *
    * @type {number[]}
    * @readonly
-   *
    * @private
    */
   this._rootNodes = [];
@@ -112,20 +97,16 @@ function ModelSceneGraph(options) {
    * The indices of the skinned nodes in the runtime nodes array. These refer
    * to the nodes that will be manipulated by their skin, as opposed to the nodes
    * acting as joints for the skin.
-   *
    * @type {number[]}
    * @readonly
-   *
    * @private
    */
   this._skinnedNodes = [];
 
   /**
    * The runtime skins that affect nodes in the scene graph.
-   *
    * @type {ModelSkin[]}
    * @readonly
-   *
    * @private
    */
   this._runtimeSkins = [];
@@ -134,10 +115,8 @@ function ModelSceneGraph(options) {
    * Pipeline stages to apply to this model. This
    * is an array of classes, each with a static method called
    * <code>process()</code>
-   *
    * @type {Object[]}
    * @readonly
-   *
    * @private
    */
   this.modelPipelineStages = [];
@@ -171,10 +150,8 @@ function ModelSceneGraph(options) {
 Object.defineProperties(ModelSceneGraph.prototype, {
   /**
    * The model components this scene graph represents.
-   *
    * @type {ModelComponents}
    * @readonly
-   *
    * @private
    */
   components: {
@@ -185,10 +162,8 @@ Object.defineProperties(ModelSceneGraph.prototype, {
 
   /**
    * The axis-corrected model matrix.
-   *
    * @type {Matrix4}
    * @readonly
-   *
    * @private
    */
   computedModelMatrix: {
@@ -200,10 +175,8 @@ Object.defineProperties(ModelSceneGraph.prototype, {
   /**
    * A matrix to correct from y-up in some model formats (e.g. glTF) to the
    * z-up coordinate system Cesium uses.
-   *
    * @type {Matrix4}
    * @readonly
-   *
    * @private
    */
   axisCorrectionMatrix: {
@@ -215,10 +188,8 @@ Object.defineProperties(ModelSceneGraph.prototype, {
   /**
    * The bounding sphere containing all the primitives in the scene graph
    * in model space.
-   *
    * @type {BoundingSphere}
    * @readonly
-   *
    * @private
    */
   boundingSphere: {
@@ -373,12 +344,10 @@ function computeModelMatrix2D(sceneGraph, frameState) {
 /**
  * Recursively traverse through the nodes in the scene graph to create
  * their runtime versions, using a post-order depth-first traversal.
- *
  * @param {ModelSceneGraph} sceneGraph The scene graph
  * @param {ModelComponents.Node} node The current node
  * @param {Matrix4} transformToRoot The transforms of this node's ancestors.
  * @returns {number} The index of this node in the runtimeNodes array.
- *
  * @private
  */
 function traverseAndCreateSceneGraph(sceneGraph, node, transformToRoot) {
@@ -449,10 +418,8 @@ const scratchPrimitivePositionMax = new Cartesian3();
  * Generates the {@link ModelDrawCommand} for each primitive in the model.
  * If the model is used for classification, a {@link ClassificationModelDrawCommand}
  * is generated for each primitive instead.
- *
  * @param {FrameState} frameState The current frame state. This is needed to
  * allocate GPU resources as needed.
- *
  * @private
  */
 ModelSceneGraph.prototype.buildDrawCommands = function (frameState) {
@@ -600,7 +567,7 @@ ModelSceneGraph.prototype.buildDrawCommands = function (frameState) {
  * Configure the model pipeline stages. If the pipeline needs to be re-run, call
  * this method again to ensure the correct sequence of pipeline stages are
  * used.
- *
+ * @param frameState
  * @private
  */
 ModelSceneGraph.prototype.configurePipeline = function (frameState) {
@@ -704,7 +671,6 @@ ModelSceneGraph.prototype.updateModelMatrix = function (
 
 /**
  * Updates the joint matrices for the skins and nodes of the model.
- *
  * @private
  */
 ModelSceneGraph.prototype.updateJointMatrices = function () {
@@ -722,10 +688,8 @@ ModelSceneGraph.prototype.updateJointMatrices = function () {
  * A callback to be applied once at each runtime primitive in the
  * scene graph
  * @callback traverseSceneGraphCallback
- *
  * @param {ModelRuntimePrimitive} runtimePrimitive The runtime primitive for the current step of the traversal
  * @param {object} [options] A dictionary of additional options to be passed to the callback, or undefined if the callback does not need any additional information.
- *
  * @private
  */
 
@@ -733,13 +697,11 @@ ModelSceneGraph.prototype.updateJointMatrices = function () {
  * Recursively traverse through the runtime nodes in the scene graph
  * using a post-order depth-first traversal to perform a callback on
  * their runtime primitives.
- *
  * @param {ModelSceneGraph} sceneGraph The scene graph.
  * @param {ModelRuntimeNode} runtimeNode The current runtime node.
  * @param {boolean} visibleNodesOnly Whether to only traverse nodes that are visible.
  * @param {traverseSceneGraphCallback} callback The callback to perform on the runtime primitives of the node.
  * @param {object} [callbackOptions] A dictionary of additional options to be passed to the callback, if needed.
- *
  * @private
  */
 function traverseSceneGraph(
@@ -800,9 +762,7 @@ const scratchBackFaceCullingOptions = {
 
 /**
  * Traverses through all draw commands and changes the back-face culling setting.
- *
  * @param {boolean} backFaceCulling The new value for the back-face culling setting.
- *
  * @private
  */
 ModelSceneGraph.prototype.updateBackFaceCulling = function (backFaceCulling) {
@@ -828,9 +788,7 @@ const scratchShadowOptions = {
 
 /**
  * Traverses through all draw commands and changes the shadow settings.
- *
  * @param {ShadowMode} shadowMode The new shadow settings.
- *
  * @private
  */
 ModelSceneGraph.prototype.updateShadows = function (shadowMode) {
@@ -851,9 +809,7 @@ const scratchShowBoundingVolumeOptions = {
 
 /**
  * Traverses through all draw commands and changes whether to show the debug bounding volume.
- *
  * @param {boolean} debugShowBoundingVolume The new value for showing the debug bounding volume.
- *
  * @private
  */
 ModelSceneGraph.prototype.updateShowBoundingVolume = function (
@@ -885,9 +841,7 @@ const scratchPushDrawCommandOptions = {
 /**
  * Traverses through the scene graph and pushes the draw commands associated
  * with each primitive to the frame state's command list.
- *
  * @param {FrameState} frameState The frame state.
- *
  * @private
  */
 ModelSceneGraph.prototype.pushDrawCommands = function (frameState) {
@@ -936,10 +890,8 @@ function pushPrimitiveDrawCommands(runtimePrimitive, options) {
 
 /**
  * Sets the current value of an articulation stage.
- *
  * @param {string} articulationStageKey The name of the articulation, a space, and the name of the stage.
  * @param {number} value The numeric value of this stage of the articulation.
- *
  * @private
  */
 ModelSceneGraph.prototype.setArticulationStage = function (
@@ -963,7 +915,6 @@ ModelSceneGraph.prototype.setArticulationStage = function (
 /**
  * Applies any modified articulation stages to the matrix of each node that participates
  * in any articulation.  Note that this will overwrite any nodeTransformations on participating nodes.
- *
  * @private
  */
 ModelSceneGraph.prototype.applyArticulations = function () {

@@ -1,12 +1,10 @@
 /**
  * This enumerated type is for classifying mouse events: down, up, click, double click, move and move while a button is held down.
- *
  * @enum {number}
  */
 const ScreenSpaceEventType = {
   /**
    * Represents a mouse left button down event.
-   *
    * @type {number}
    * @constant
    */
@@ -14,7 +12,6 @@ const ScreenSpaceEventType = {
 
   /**
    * Represents a mouse left button up event.
-   *
    * @type {number}
    * @constant
    */
@@ -22,7 +19,6 @@ const ScreenSpaceEventType = {
 
   /**
    * Represents a mouse left click event.
-   *
    * @type {number}
    * @constant
    */
@@ -30,7 +26,6 @@ const ScreenSpaceEventType = {
 
   /**
    * Represents a mouse left double click event.
-   *
    * @type {number}
    * @constant
    */
@@ -38,7 +33,6 @@ const ScreenSpaceEventType = {
 
   /**
    * Represents a mouse left button down event.
-   *
    * @type {number}
    * @constant
    */
@@ -46,7 +40,6 @@ const ScreenSpaceEventType = {
 
   /**
    * Represents a mouse right button up event.
-   *
    * @type {number}
    * @constant
    */
@@ -54,7 +47,6 @@ const ScreenSpaceEventType = {
 
   /**
    * Represents a mouse right click event.
-   *
    * @type {number}
    * @constant
    */
@@ -62,7 +54,6 @@ const ScreenSpaceEventType = {
 
   /**
    * Represents a mouse middle button down event.
-   *
    * @type {number}
    * @constant
    */
@@ -70,7 +61,6 @@ const ScreenSpaceEventType = {
 
   /**
    * Represents a mouse middle button up event.
-   *
    * @type {number}
    * @constant
    */
@@ -78,7 +68,6 @@ const ScreenSpaceEventType = {
 
   /**
    * Represents a mouse middle click event.
-   *
    * @type {number}
    * @constant
    */
@@ -86,7 +75,6 @@ const ScreenSpaceEventType = {
 
   /**
    * Represents a mouse move event.
-   *
    * @type {number}
    * @constant
    */
@@ -94,7 +82,6 @@ const ScreenSpaceEventType = {
 
   /**
    * Represents a mouse wheel event.
-   *
    * @type {number}
    * @constant
    */
@@ -102,7 +89,6 @@ const ScreenSpaceEventType = {
 
   /**
    * Represents the start of a two-finger event on a touch surface.
-   *
    * @type {number}
    * @constant
    */
@@ -110,7 +96,6 @@ const ScreenSpaceEventType = {
 
   /**
    * Represents the end of a two-finger event on a touch surface.
-   *
    * @type {number}
    * @constant
    */
@@ -118,7 +103,6 @@ const ScreenSpaceEventType = {
 
   /**
    * Represents a change of a two-finger event on a touch surface.
-   *
    * @type {number}
    * @constant
    */

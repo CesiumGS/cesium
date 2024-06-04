@@ -10,7 +10,6 @@ import TaskProcessor from "../Core/TaskProcessor.js";
 
 /**
  * Decode I3S using web workers.
- *
  * @private
  */
 function I3SDecoder() {}
@@ -47,8 +46,7 @@ async function initializeDecoder() {
  * @param {Array} [featureData] The draco encoded feature data
  * @param {Object} [symbologyData] The rendering symbology to apply
  * @returns Promise<undefined|object> Returns a promise which resolves to the glTF result, or undefined if the task cannot be scheduled this frame.
- *
- * @exception {RuntimeError} I3S decoder could not be initialized.
+ * @throws {RuntimeError} I3S decoder could not be initialized.
  */
 I3SDecoder.decode = async function (
   url,

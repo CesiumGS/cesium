@@ -100,7 +100,6 @@ let imageSmoothingEnabledName;
 /**
  * Writes the given text into a new canvas.  The canvas will be sized to fit the text.
  * If text is blank, returns undefined.
- *
  * @param {string} text The text to write.
  * @param {object} [options] Object with the following properties:
  * @param {string} [options.font='10px sans-serif'] The CSS font to use.

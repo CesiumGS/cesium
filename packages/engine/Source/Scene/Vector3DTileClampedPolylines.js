@@ -35,10 +35,8 @@ import Vector3DTilePolylines from "./Vector3DTilePolylines.js";
 
 /**
  * Creates a batch of polylines as volumes with shader-adjustable width.
- *
  * @alias Vector3DTileClampedPolylines
- * @constructor
- *
+ * @class
  * @param {object} options An object with following properties:
  * @param {Uint16Array} options.positions The positions of the polylines
  * @param {Uint32Array} options.counts The number or positions in the each polyline.
@@ -51,7 +49,6 @@ import Vector3DTilePolylines from "./Vector3DTilePolylines.js";
  * @param {Uint16Array} options.batchIds The batch ids for each polyline.
  * @param {ClassificationType} options.classificationType The classification type.
  * @param {boolean} options.keepDecodedPositions Whether to keep decoded positions in memory.
- *
  * @private
  */
 function Vector3DTileClampedPolylines(options) {
@@ -119,9 +116,7 @@ function Vector3DTileClampedPolylines(options) {
 Object.defineProperties(Vector3DTileClampedPolylines.prototype, {
   /**
    * Gets the number of triangles.
-   *
    * @memberof Vector3DTileClampedPolylines.prototype
-   *
    * @type {number}
    * @readonly
    */
@@ -133,9 +128,7 @@ Object.defineProperties(Vector3DTileClampedPolylines.prototype, {
 
   /**
    * Gets the geometry memory in bytes.
-   *
    * @memberof Vector3DTileClampedPolylines.prototype
-   *
    * @type {number}
    * @readonly
    */
@@ -620,7 +613,6 @@ function queueCommands(primitive, frameState) {
 
 /**
  * Get the polyline positions for the given feature.
- *
  * @param {number} batchId The batch ID of the feature.
  */
 Vector3DTileClampedPolylines.prototype.getPositions = function (batchId) {
@@ -629,7 +621,6 @@ Vector3DTileClampedPolylines.prototype.getPositions = function (batchId) {
 
 /**
  * Creates features for each polyline and places it at the batch id index of features.
- *
  * @param {Vector3DTileContent} content The vector tile content.
  * @param {Cesium3DTileFeature[]} features An array of features where the polygon features will be placed.
  */
@@ -647,7 +638,6 @@ Vector3DTileClampedPolylines.prototype.createFeatures = function (
 
 /**
  * Colors the entire tile when enabled is true. The resulting color will be (polyline batch table color * color).
- *
  * @param {boolean} enabled Whether to enable debug coloring.
  * @param {Color} color The debug color.
  */
@@ -677,7 +667,6 @@ const DEFAULT_SHOW_VALUE = true;
 
 /**
  * Apply a style to the content.
- *
  * @param {Cesium3DTileStyle} style The style.
  * @param {Cesium3DTileFeature[]} features The dictionary of features.
  */
@@ -723,7 +712,6 @@ function initialize(polylines) {
 
 /**
  * Updates the batches and queues the commands for rendering.
- *
  * @param {FrameState} frameState The current frame state.
  */
 Vector3DTileClampedPolylines.prototype.update = function (frameState) {
@@ -758,7 +746,6 @@ Vector3DTileClampedPolylines.prototype.update = function (frameState) {
  * If this object was destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
  * </p>
- *
  * @returns {boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
  */
 Vector3DTileClampedPolylines.prototype.isDestroyed = function () {
@@ -773,8 +760,7 @@ Vector3DTileClampedPolylines.prototype.isDestroyed = function () {
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
  * assign the return value (<code>undefined</code>) to the object as done in the example.
  * </p>
- *
- * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+ * @throws {DeveloperError} This object was destroyed, i.e., destroy() was called.
  */
 Vector3DTileClampedPolylines.prototype.destroy = function () {
   this._va = this._va && this._va.destroy();

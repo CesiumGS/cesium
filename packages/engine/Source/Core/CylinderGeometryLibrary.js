@@ -6,6 +6,11 @@ import CesiumMath from "./Math.js";
 const CylinderGeometryLibrary = {};
 
 /**
+ * @param length
+ * @param topRadius
+ * @param bottomRadius
+ * @param slices
+ * @param fill
  * @private
  */
 CylinderGeometryLibrary.computePositions = function (

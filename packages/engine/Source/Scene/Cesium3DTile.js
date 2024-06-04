@@ -51,9 +51,8 @@ import VerticalExaggeration from "../Core/VerticalExaggeration.js";
  * <p>
  * Do not construct this directly, instead access tiles through {@link Cesium3DTileset#tileVisible}.
  * </p>
- *
  * @alias Cesium3DTile
- * @constructor
+ * @class
  * @param {Cesium3DTileset} tileset The tileset
  * @param {Resource} baseResource The base resource for the tileset
  * @param {object} header The JSON header for the tile
@@ -112,7 +111,6 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
   /**
    * When tile metadata is present (3D Tiles 1.1) or the <code>3DTILES_metadata</code> extension is used,
    * this stores a {@link TileMetadata} object for accessing tile metadata.
-   *
    * @type {TileMetadata}
    * @readonly
    * @private
@@ -160,7 +158,6 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
   /**
    * The error, in meters, introduced if this tile is rendered and its children are not.
    * This is used to compute screen space error, i.e., the error measured in pixels.
-   *
    * @type {number}
    * @readonly
    */
@@ -202,7 +199,6 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
 
   /**
    * Specifies the type of refinement that is used when traversing this tile for rendering.
-   *
    * @type {Cesium3DTileRefine}
    * @readonly
    * @private
@@ -211,7 +207,6 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
 
   /**
    * Gets the tile's children.
-   *
    * @type {Cesium3DTile[]}
    * @readonly
    */
@@ -224,7 +219,6 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
    * root tile's parent is not <code>undefined</code>; instead, the parent references
    * the tile (with its content pointing to an external tileset JSON file) as if the two tilesets were merged.
    * </p>
-   *
    * @type {Cesium3DTile}
    * @readonly
    */
@@ -284,10 +278,8 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
 
   /**
    * When <code>true</code>, the tile has no content.
-   *
    * @type {boolean}
    * @readonly
-   *
    * @private
    */
   this.hasEmptyContent = hasEmptyContent;
@@ -297,10 +289,8 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
    * <p>
    * This is <code>false</code> until the tile's content is loaded.
    * </p>
-   *
    * @type {boolean}
    * @readonly
-   *
    * @private
    */
   this.hasTilesetContent = false;
@@ -310,10 +300,8 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
    * <p>
    * This is <code>false</code> until the tile's implicit content is loaded.
    * </p>
-   *
    * @type {boolean}
    * @readonly
-   *
    * @private
    * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
@@ -325,10 +313,8 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
    * <p>
    * This is <code>false</code> until the tile's content is loaded.
    * </p>
-   *
    * @type {boolean}
    * @readonly
-   *
    * @private
    * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
@@ -337,12 +323,9 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
   /**
    * When <code>true</code>, the tile has multiple contents, either in the tile JSON (3D Tiles 1.1)
    * or via the <code>3DTILES_multiple_contents</code> extension.
-   *
    * @see {@link https://github.com/CesiumGS/3d-tiles/tree/main/extensions/3DTILES_multiple_contents|3DTILES_multiple_contents extension}
-   *
    * @type {boolean}
    * @readonly
-   *
    * @private
    */
   this.hasMultipleContents = hasMultipleContents;
@@ -351,10 +334,8 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
    * The node in the tileset's LRU cache, used to determine when to unload a tile's content.
    *
    * See {@link Cesium3DTilesetCache}
-   *
    * @type {DoublyLinkedListNode}
    * @readonly
-   *
    * @private
    */
   this.cacheNode = undefined;
@@ -371,32 +352,26 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
 
   /**
    * The time in seconds after the tile's content is ready when the content expires and new content is requested.
-   *
    * @type {number}
    */
   this.expireDuration = expireDuration;
 
   /**
    * The date when the content expires and new content is requested.
-   *
    * @type {JulianDate}
    */
   this.expireDate = expireDate;
 
   /**
    * The time when a style was last applied to this tile.
-   *
    * @type {number}
-   *
    * @private
    */
   this.lastStyleTime = 0.0;
 
   /**
    * Marks whether the tile's children bounds are fully contained within the tile's bounds
-   *
    * @type {Cesium3DTileOptimizationHint}
-   *
    * @private
    */
   this._optimChildrenWithinParent = Cesium3DTileOptimizationHint.NOT_COMPUTED;
@@ -404,9 +379,7 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
   /**
    * Tracks if the tile's relationship with a ClippingPlaneCollection has changed with regards
    * to the ClippingPlaneCollection's state.
-   *
    * @type {boolean}
-   *
    * @private
    */
   this.clippingPlanesDirty = false;
@@ -414,9 +387,7 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
   /**
    * Tracks if the tile's relationship with a ClippingPolygonCollection has changed with regards
    * to the ClippingPolygonCollection's state.
-   *
    * @type {boolean}
-   *
    * @private
    */
   this.clippingPolygonsDirty = false;
@@ -424,9 +395,7 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
   /**
    * Tracks if the tile's request should be deferred until all non-deferred
    * tiles load.
-   *
    * @type {boolean}
-   *
    * @private
    */
   this.priorityDeferred = false;
@@ -436,9 +405,7 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
    * placeholder tile with either implicit tiling in the JSON (3D Tiles 1.1)
    * or the <code>3DTILES_implicit_tiling</code> extension.
    * This way the {@link Implicit3DTileContent} can access the tile later once the content is fetched.
-   *
    * @type {ImplicitTileset|undefined}
-   *
    * @private
    * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
@@ -447,9 +414,7 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
   /**
    * For implicit tiling, the (level, x, y, [z]) coordinates within the
    * implicit tileset are stored in the tile.
-   *
    * @type {ImplicitTileCoordinates|undefined}
-   *
    * @private
    * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
@@ -458,9 +423,7 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
   /**
    * For implicit tiling, each transcoded tile will hold a weak reference to
    * the {@link ImplicitSubtree}.
-   *
    * @type {ImplicitSubtree|undefined}
-   *
    * @private
    * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
@@ -524,9 +487,7 @@ Cesium3DTile._deprecationWarning = deprecationWarning;
 Object.defineProperties(Cesium3DTile.prototype, {
   /**
    * The tileset containing this tile.
-   *
    * @memberof Cesium3DTile.prototype
-   *
    * @type {Cesium3DTileset}
    * @readonly
    */
@@ -539,9 +500,7 @@ Object.defineProperties(Cesium3DTile.prototype, {
   /**
    * The tile's content.  This represents the actual tile's payload,
    * not the content's metadata in the tileset JSON file.
-   *
    * @memberof Cesium3DTile.prototype
-   *
    * @type {Cesium3DTileContent}
    * @readonly
    */
@@ -553,9 +512,7 @@ Object.defineProperties(Cesium3DTile.prototype, {
 
   /**
    * Get the tile's bounding volume.
-   *
    * @memberof Cesium3DTile.prototype
-   *
    * @type {TileBoundingVolume}
    * @readonly
    * @private
@@ -570,9 +527,7 @@ Object.defineProperties(Cesium3DTile.prototype, {
    * Get the bounding volume of the tile's contents.  This defaults to the
    * tile's bounding volume when the content's bounding volume is
    * <code>undefined</code>.
-   *
    * @memberof Cesium3DTile.prototype
-   *
    * @type {TileBoundingVolume}
    * @readonly
    * @private
@@ -585,9 +540,7 @@ Object.defineProperties(Cesium3DTile.prototype, {
 
   /**
    * Get the bounding sphere derived from the tile's bounding volume.
-   *
    * @memberof Cesium3DTile.prototype
-   *
    * @type {BoundingSphere}
    * @readonly
    */
@@ -599,12 +552,9 @@ Object.defineProperties(Cesium3DTile.prototype, {
 
   /**
    * Determines if the tile is visible within the current field of view
-   *
    * @memberof Cesium3DTile.prototype
-   *
    * @type {boolean}
    * @readonly
-   *
    * @private
    */
   isVisible: {
@@ -616,9 +566,7 @@ Object.defineProperties(Cesium3DTile.prototype, {
   /**
    * Returns the <code>extras</code> property in the tileset JSON for this tile, which contains application specific metadata.
    * Returns <code>undefined</code> if <code>extras</code> does not exist.
-   *
    * @memberof Cesium3DTile.prototype
-   *
    * @type {object}
    * @readonly
    * @see {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification#specifying-extensions-and-application-specific-extras|Extras in the 3D Tiles specification.}
@@ -631,13 +579,9 @@ Object.defineProperties(Cesium3DTile.prototype, {
 
   /**
    * Gets or sets the tile's highlight color.
-   *
    * @memberof Cesium3DTile.prototype
-   *
    * @type {Color}
-   *
    * @default {@link Color.WHITE}
-   *
    * @private
    */
   color: {
@@ -656,12 +600,9 @@ Object.defineProperties(Cesium3DTile.prototype, {
   /**
    * Determines if the tile's content is renderable. <code>false</code> if the
    * tile has empty content or if it points to an external tileset or implicit content
-   *
    * @memberof Cesium3DTile.prototype
-   *
    * @type {boolean}
    * @readonly
-   *
    * @private
    */
   hasRenderableContent: {
@@ -678,12 +619,9 @@ Object.defineProperties(Cesium3DTile.prototype, {
    * Determines if the tile has available content to render.  <code>true</code> if the tile's
    * content is ready or if it has expired content that renders while new content loads; otherwise,
    * <code>false</code>.
-   *
    * @memberof Cesium3DTile.prototype
-   *
    * @type {boolean}
    * @readonly
-   *
    * @private
    */
   contentAvailable: {
@@ -698,12 +636,9 @@ Object.defineProperties(Cesium3DTile.prototype, {
   /**
    * Determines if the tile's content is ready. This is automatically <code>true</code> for
    * tile's with empty content.
-   *
    * @memberof Cesium3DTile.prototype
-   *
    * @type {boolean}
    * @readonly
-   *
    * @private
    */
   contentReady: {
@@ -715,12 +650,9 @@ Object.defineProperties(Cesium3DTile.prototype, {
   /**
    * Determines if the tile's content has not be requested. <code>true</code> if tile's
    * content has not be requested; otherwise, <code>false</code>.
-   *
    * @memberof Cesium3DTile.prototype
-   *
    * @type {boolean}
    * @readonly
-   *
    * @private
    */
   contentUnloaded: {
@@ -731,12 +663,9 @@ Object.defineProperties(Cesium3DTile.prototype, {
 
   /**
    * Determines if the tile has renderable content which is unloaded
-   *
    * @memberof Cesium3DTile.prototype
-   *
    * @type {boolean}
    * @readonly
-   *
    * @private
    */
   hasUnloadedRenderableContent: {
@@ -748,12 +677,9 @@ Object.defineProperties(Cesium3DTile.prototype, {
   /**
    * Determines if the tile's content is expired. <code>true</code> if tile's
    * content is expired; otherwise, <code>false</code>.
-   *
    * @memberof Cesium3DTile.prototype
-   *
    * @type {boolean}
    * @readonly
-   *
    * @private
    */
   contentExpired: {
@@ -765,12 +691,9 @@ Object.defineProperties(Cesium3DTile.prototype, {
   /**
    * Determines if the tile's content failed to load.  <code>true</code> if the tile's
    * content failed to load; otherwise, <code>false</code>.
-   *
    * @memberof Cesium3DTile.prototype
-   *
    * @type {boolean}
    * @readonly
-   *
    * @private
    */
   contentFailed: {
@@ -781,9 +704,7 @@ Object.defineProperties(Cesium3DTile.prototype, {
 
   /**
    * Returns the number of draw commands used by this tile.
-   *
    * @readonly
-   *
    * @private
    */
   commandsLength: {
@@ -906,7 +827,6 @@ const scratchJulianDate = new JulianDate();
 
 /**
  * Get the tile's screen space error.
- *
  * @private
  * @param {FrameState} frameState
  * @param {Boolean} useParentGeometricError
@@ -1018,7 +938,6 @@ function getPriorityReverseScreenSpaceError(tileset, tile) {
 
 /**
  * Update the tile's visibility.
- *
  * @private
  * @param {FrameState} frameState
  */
@@ -1065,7 +984,6 @@ Cesium3DTile.prototype.updateVisibility = function (frameState) {
 
 /**
  * Update whether the tile has expired.
- *
  * @private
  */
 Cesium3DTile.prototype.updateExpiration = function () {
@@ -1123,8 +1041,7 @@ function createPriorityFunction(tile) {
  * <p>
  * The request may not be made if the Cesium Request Scheduler can't prioritize it.
  * </p>
- *
- * @return {Promise<Cesium3DTileContent>|undefined} A promise that resolves when the request completes, or undefined if there is no request needed, or the request cannot be scheduled.
+ * @returns {Promise<Cesium3DTileContent>|undefined} A promise that resolves when the request completes, or undefined if there is no request needed, or the request cannot be scheduled.
  * @private
  */
 Cesium3DTile.prototype.requestContent = function () {
@@ -1149,7 +1066,6 @@ Cesium3DTile.prototype.requestContent = function () {
  * support tile expiry like requestSingleContent does. If this changes,
  * note that the resource.setQueryParameters() details must go inside {@link Multiple3DTileContent} since that is per-request.
  * </p>
- *
  * @private
  * @param {Cesium3DTile} tile
  * @returns {Promise<Cesium3DTileContent>|Promise<undefined>|undefined} A promise that resolves to the tile content once loaded, or a promise that resolves to undefined if the request was cancelled mid-flight, or undefined if the request cannot be scheduled this frame
@@ -1325,10 +1241,9 @@ function requestSingleContent(tile) {
  * <p>
  * This is only used for single contents.
  * </p>
- *
  * @param {Cesium3DTile} tile The tile
  * @param {ArrayBuffer} arrayBuffer The downloaded payload containing data for the content
- * @return {Promise<Cesium3DTileContent>} A content object
+ * @returns {Promise<Cesium3DTileContent>} A content object
  * @private
  */
 async function makeContent(tile, arrayBuffer) {
@@ -1403,7 +1318,6 @@ async function makeContent(tile, arrayBuffer) {
 /**
  * Cancel requests for the tile's contents. This is called when the tile
  * goes out of view.
- *
  * @private
  */
 Cesium3DTile.prototype.cancelRequests = function () {
@@ -1416,7 +1330,6 @@ Cesium3DTile.prototype.cancelRequests = function () {
 
 /**
  * Unloads the tile's content.
- *
  * @private
  */
 Cesium3DTile.prototype.unloadContent = function () {
@@ -1503,11 +1416,9 @@ function getContentBoundingVolume(tile, frameState) {
 
 /**
  * Determines whether the tile's bounding volume intersects the culling volume.
- *
  * @param {FrameState} frameState The frame state.
  * @param {number} parentVisibilityPlaneMask The parent's plane mask to speed up the visibility check.
  * @returns {number} A plane mask as described above in {@link CullingVolume#computeVisibilityWithPlaneMask}.
- *
  * @private
  */
 Cesium3DTile.prototype.visibility = function (
@@ -1550,10 +1461,8 @@ Cesium3DTile.prototype.visibility = function (
 /**
  * Assuming the tile's bounding volume intersects the culling volume, determines
  * whether the tile's content's bounding volume intersects the culling volume.
- *
  * @param {FrameState} frameState The frame state.
  * @returns {Intersect} The result of the intersection: the tile's content is completely outside, completely inside, or intersecting the culling volume.
- *
  * @private
  */
 Cesium3DTile.prototype.contentVisibility = function (frameState) {
@@ -1603,10 +1512,8 @@ Cesium3DTile.prototype.contentVisibility = function (frameState) {
 
 /**
  * Computes the (potentially approximate) distance from the closest point of the tile's bounding volume to the camera.
- *
  * @param {FrameState} frameState The frame state.
  * @returns {number} The distance, in meters, or zero if the camera is inside the bounding volume.
- *
  * @private
  */
 Cesium3DTile.prototype.distanceToTile = function (frameState) {
@@ -1618,10 +1525,8 @@ const scratchToTileCenter = new Cartesian3();
 
 /**
  * Computes the distance from the center of the tile's bounding volume to the camera's plane defined by its position and view direction.
- *
  * @param {FrameState} frameState The frame state.
  * @returns {number} The distance, in meters.
- *
  * @private
  */
 Cesium3DTile.prototype.distanceToTileCenter = function (frameState) {
@@ -1637,10 +1542,8 @@ Cesium3DTile.prototype.distanceToTileCenter = function (frameState) {
 
 /**
  * Checks if the camera is inside the viewer request volume.
- *
  * @param {FrameState} frameState The frame state.
  * @returns {boolean} Whether the camera is inside the volume.
- *
  * @private
  */
 Cesium3DTile.prototype.insideViewerRequestVolume = function (frameState) {
@@ -1800,13 +1703,10 @@ function createSphere(sphere, transform, result) {
 
 /**
  * Create a bounding volume from the tile's bounding volume header.
- *
  * @param {object} boundingVolumeHeader The tile's bounding volume header.
  * @param {Matrix4} transform The transform to apply to the bounding volume.
  * @param {TileBoundingVolume} [result] The object onto which to store the result.
- *
  * @returns {TileBoundingVolume} The modified result parameter or a new TileBoundingVolume instance if none was provided.
- *
  * @private
  */
 Cesium3DTile.prototype.createBoundingVolume = function (
@@ -1908,7 +1808,6 @@ const scratchExaggeratedCorners = Cartesian3.unpackArray(
 
 /**
  * Exaggerates the bounding box of a tile based on the provided exaggeration factors.
- *
  * @private
  * @param {TileOrientedBoundingBox} tileOrientedBoundingBox - The oriented bounding box of the tile.
  * @param {number} exaggeration - The exaggeration factor to apply to the tile's bounding box.
@@ -1942,7 +1841,6 @@ function exaggerateBoundingBox(
 
 /**
  * Update the tile's transform. The transform is applied to the tile's bounding volumes.
- *
  * @private
  * @param {Matrix4} parentTransform
  * @param {FrameState} [frameState]
@@ -2165,10 +2063,9 @@ function updateContent(tile, tileset, frameState) {
 
 /**
  * Compute and compare ClippingPlanes state:
- *  - enabled-ness - are clipping planes enabled? is this tile clipped?
- *  - clipping plane count
- *  - clipping function (union v. intersection)
-
+ * - enabled-ness - are clipping planes enabled? is this tile clipped?
+ * - clipping plane count
+ * - clipping function (union v. intersection)
  * @private
  * @param {Cesium3DTile} tile
  * @param {Cesium3DTileset} tileset
@@ -2188,10 +2085,9 @@ function updateClippingPlanes(tile, tileset) {
 
 /**
  * Compute and compare ClippingPolygons state:
- *  - enabled-ness - are clipping polygons enabled? is this tile clipped?
- *  - clipping polygon count & position count
- *  - clipping function (inverse)
-
+ * - enabled-ness - are clipping polygons enabled? is this tile clipped?
+ * - clipping polygon count & position count
+ * - clipping function (inverse)
  * @private
  * @param {Cesium3DTile} tile
  * @param {Cesium3DTileset} tileset
@@ -2215,7 +2111,6 @@ function updateClippingPolygons(tile, tileset) {
 
 /**
  * Get the draw commands needed to render this tile.
- *
  * @private
  * @param {Cesium3DTileset} tileset
  * @param {FrameState} frameState
@@ -2247,10 +2142,8 @@ const scratchCommandList = [];
 
 /**
  * Processes the tile's content, e.g., create WebGL resources, to move from the PROCESSING to READY state.
- *
  * @param {Cesium3DTileset} tileset The tileset containing this tile.
  * @param {FrameState} frameState The frame state.
- *
  * @private
  */
 Cesium3DTile.prototype.process = function (tileset, frameState) {

@@ -4,7 +4,6 @@ import KTX2Transcoder from "./KTX2Transcoder.js";
 
 /**
  * Stores the supported formats that KTX2 can transcode to. Called during context creation.
- *
  * @param {boolean} s3tc Whether or not S3TC is supported
  * @param {boolean} pvrtc Whether or not PVRTC is supported
  * @param {boolean} astc Whether or not ASTC is supported
@@ -42,26 +41,22 @@ loadKTX2.setKTX2SupportedFormats = function (
  * <p>
  * The following are part of the KTX2 format specification but are not supported:
  * <ul>
- *     <li>Metadata</li>
- *     <li>3D textures</li>
- *     <li>Texture Arrays</li>
- *     <li>Video</li>
+ * <li>Metadata</li>
+ * <li>3D textures</li>
+ * <li>Texture Arrays</li>
+ * <li>Video</li>
  * </ul>
  * </p>
- *
  * @function loadKTX2
- *
  * @param {Resource|string|ArrayBuffer} resourceOrUrlOrBuffer The URL of the binary data or an ArrayBuffer.
  * @returns {Promise<CompressedTextureBuffer>|undefined} A promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
- *
- * @exception {RuntimeError} Invalid KTX2 file.
- * @exception {RuntimeError} KTX2 texture arrays are not supported.
- * @exception {RuntimeError} KTX2 3D textures are unsupported.
- * @exception {RuntimeError} No transcoding format target available for ETC1S compressed ktx2s.
- * @exception {RuntimeError} No transcoding format target available for UASTC compressed ktx2s.
- * @exception {RuntimeError} startTranscoding() failed.
- * @exception {RuntimeError} transcodeImage() failed.
- *
+ * @throws {RuntimeError} Invalid KTX2 file.
+ * @throws {RuntimeError} KTX2 texture arrays are not supported.
+ * @throws {RuntimeError} KTX2 3D textures are unsupported.
+ * @throws {RuntimeError} No transcoding format target available for ETC1S compressed ktx2s.
+ * @throws {RuntimeError} No transcoding format target available for UASTC compressed ktx2s.
+ * @throws {RuntimeError} startTranscoding() failed.
+ * @throws {RuntimeError} transcodeImage() failed.
  * @example
  * // load a single URL asynchronously
  * Cesium.loadKTX2('some/url').then(function (ktx2Data) {
@@ -73,7 +68,6 @@ loadKTX2.setKTX2SupportedFormats = function (
  * }).catch(function (error) {
  *     // an error occurred.
  * });
- *
  * @see {@link https://github.com/KhronosGroup/KTX-Specification|KTX file format}
  * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
  * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}

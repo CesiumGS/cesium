@@ -32,12 +32,10 @@ const FeatureIdAttribute = ModelComponents.FeatureIdAttribute;
  * <p>
  * Implements the {@link ResourceLoader} interface.
  * </p>
- *
  * @alias B3dmLoader
- * @constructor
+ * @class
  * @augments ResourceLoader
  * @private
- *
  * @param {object} options Object with the following properties:
  * @param {Resource} options.b3dmResource The {@link Resource} containing the b3dm.
  * @param {ArrayBuffer} options.arrayBuffer The array buffer of the b3dm contents.
@@ -54,7 +52,7 @@ const FeatureIdAttribute = ModelComponents.FeatureIdAttribute;
  * @param {boolean} [options.loadIndicesForWireframe=false] If <code>true</code>, load the index buffer as a typed array. This is useful for creating wireframe indices in WebGL1.
  * @param {boolean} [options.loadPrimitiveOutline=true] If <code>true</code>, load outlines from the {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension. This can be set false to avoid post-processing geometry at load time.
  * @param {boolean} [options.loadForClassification=false] If <code>true</code> and if the model has feature IDs, load the feature IDs and indices as typed arrays. This is useful for batching features for classification.
- * */
+ */
 function B3dmLoader(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
@@ -133,9 +131,7 @@ if (defined(Object.create)) {
 Object.defineProperties(B3dmLoader.prototype, {
   /**
    * true if textures are loaded, useful when incrementallyLoadTextures is true
-   *
    * @memberof B3dmLoader.prototype
-   *
    * @type {boolean}
    * @readonly
    * @private
@@ -147,9 +143,7 @@ Object.defineProperties(B3dmLoader.prototype, {
   },
   /**
    * The cache key of the resource
-   *
    * @memberof B3dmLoader.prototype
-   *
    * @type {string}
    * @readonly
    * @private
@@ -162,9 +156,7 @@ Object.defineProperties(B3dmLoader.prototype, {
 
   /**
    * The loaded components.
-   *
    * @memberof B3dmLoader.prototype
-   *
    * @type {ModelComponents.Components}
    * @readonly
    * @private

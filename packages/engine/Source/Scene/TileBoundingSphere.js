@@ -12,11 +12,9 @@ import Primitive from "./Primitive.js";
 /**
  * A tile bounding volume specified as a sphere.
  * @alias TileBoundingSphere
- * @constructor
- *
+ * @class
  * @param {Cartesian3} [center=Cartesian3.ZERO] The center of the bounding sphere.
  * @param {number} [radius=0.0] The radius of the bounding sphere.
- *
  * @private
  */
 function TileBoundingSphere(center, radius) {
@@ -29,9 +27,7 @@ function TileBoundingSphere(center, radius) {
 Object.defineProperties(TileBoundingSphere.prototype, {
   /**
    * The center of the bounding sphere
-   *
    * @memberof TileBoundingSphere.prototype
-   *
    * @type {Cartesian3}
    * @readonly
    */
@@ -43,9 +39,7 @@ Object.defineProperties(TileBoundingSphere.prototype, {
 
   /**
    * The radius of the bounding sphere
-   *
    * @memberof TileBoundingSphere.prototype
-   *
    * @type {number}
    * @readonly
    */
@@ -57,9 +51,7 @@ Object.defineProperties(TileBoundingSphere.prototype, {
 
   /**
    * The underlying bounding volume
-   *
    * @memberof TileBoundingSphere.prototype
-   *
    * @type {object}
    * @readonly
    */
@@ -70,9 +62,7 @@ Object.defineProperties(TileBoundingSphere.prototype, {
   },
   /**
    * The underlying bounding sphere
-   *
    * @memberof TileBoundingSphere.prototype
-   *
    * @type {BoundingSphere}
    * @readonly
    */
@@ -85,10 +75,8 @@ Object.defineProperties(TileBoundingSphere.prototype, {
 
 /**
  * Computes the distance between this bounding sphere and the camera attached to frameState.
- *
  * @param {FrameState} frameState The frameState to which the camera is attached.
  * @returns {number} The distance between the camera and the bounding sphere in meters. Returns 0 if the camera is inside the bounding volume.
- *
  */
 TileBoundingSphere.prototype.distanceToCamera = function (frameState) {
   //>>includeStart('debug', pragmas.debug);
@@ -104,7 +92,6 @@ TileBoundingSphere.prototype.distanceToCamera = function (frameState) {
 
 /**
  * Determines which side of a plane this sphere is located.
- *
  * @param {Plane} plane The plane to test against.
  * @returns {Intersect} {@link Intersect.INSIDE} if the entire sphere is on the side of the plane
  *                      the normal is pointing, {@link Intersect.OUTSIDE} if the entire sphere is
@@ -120,7 +107,6 @@ TileBoundingSphere.prototype.intersectPlane = function (plane) {
 
 /**
  * Update the bounding sphere after the tile is transformed.
- *
  * @param {Cartesian3} center The center of the bounding sphere.
  * @param {number} radius The radius of the bounding sphere.
  */
@@ -131,9 +117,8 @@ TileBoundingSphere.prototype.update = function (center, radius) {
 
 /**
  * Creates a debug primitive that shows the outline of the sphere.
- *
  * @param {Color} color The desired color of the primitive's mesh
- * @return {Primitive}
+ * @returns {Primitive}
  */
 TileBoundingSphere.prototype.createDebugVolume = function (color) {
   //>>includeStart('debug', pragmas.debug);

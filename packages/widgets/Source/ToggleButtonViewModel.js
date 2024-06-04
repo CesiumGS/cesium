@@ -4,8 +4,7 @@ import knockout from "./ThirdParty/knockout.js";
 /**
  * A view model which exposes the properties of a toggle button.
  * @alias ToggleButtonViewModel
- * @constructor
- *
+ * @class
  * @param {Command} command The command which will be executed when the button is toggled.
  * @param {object} [options] Object with the following properties:
  * @param {boolean} [options.toggled=false] A boolean indicating whether the button should be initially toggled.

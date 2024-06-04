@@ -27,6 +27,7 @@ const ClassPerType = {
 };
 
 /**
+ * @param accessor
  * @private
  */
 function getBinaryAccessor(accessor) {

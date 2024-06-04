@@ -13,8 +13,7 @@ const defaultColor = Color.WHITE;
 /**
  * A {@link MaterialProperty} that maps to image {@link Material} uniforms.
  * @alias ImageMaterialProperty
- * @constructor
- *
+ * @class
  * @param {object} [options] Object with the following properties:
  * @param {Property|string|HTMLImageElement|HTMLCanvasElement|HTMLVideoElement} [options.image] A Property specifying the Image, URL, Canvas, or Video.
  * @param {Property|Cartesian2} [options.repeat=new Cartesian2(1.0, 1.0)] A {@link Cartesian2} Property specifying the number of times the image repeats in each direction.
@@ -45,7 +44,6 @@ Object.defineProperties(ImageMaterialProperty.prototype, {
    * Gets a value indicating if this property is constant.  A property is considered
    * constant if getValue always returns the same result for the current definition.
    * @memberof ImageMaterialProperty.prototype
-   *
    * @type {boolean}
    * @readonly
    */
@@ -62,7 +60,6 @@ Object.defineProperties(ImageMaterialProperty.prototype, {
    * The definition is considered to have changed if a call to getValue would return
    * a different result for the same time.
    * @memberof ImageMaterialProperty.prototype
-   *
    * @type {Event}
    * @readonly
    */
@@ -106,7 +103,6 @@ Object.defineProperties(ImageMaterialProperty.prototype, {
 
 /**
  * Gets the {@link Material} type at the provided time.
- *
  * @param {JulianDate} time The time for which to retrieve the type.
  * @returns {string} The type of material.
  */
@@ -116,7 +112,6 @@ ImageMaterialProperty.prototype.getType = function (time) {
 
 /**
  * Gets the value of the property at the provided time.
- *
  * @param {JulianDate} time The time for which to retrieve the value.
  * @param {object} [result] The object to store the value into, if omitted, a new instance is created and returned.
  * @returns {object} The modified result parameter or a new instance if the result parameter was not supplied.
@@ -149,7 +144,6 @@ ImageMaterialProperty.prototype.getValue = function (time, result) {
 /**
  * Compares this property to the provided property and returns
  * <code>true</code> if they are equal, <code>false</code> otherwise.
- *
  * @param {Property} [other] The other property.
  * @returns {boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
  */
