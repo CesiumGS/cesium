@@ -17,6 +17,7 @@ import {
   HeightReference,
   HorizontalOrigin,
   VerticalOrigin,
+  SplitDirection,
 } from "../../index.js";
 
 import createGlobe from "../../../../Specs/createGlobe.js";
@@ -167,6 +168,7 @@ describe(
         new DistanceDisplayCondition(10.0, 100.0)
       );
       billboard.disableDepthTestDistance = new ConstantProperty(10.0);
+      billboard.splitDirection = new ConstantProperty(SplitDirection.LEFT);
 
       visualizer.update(time);
 
@@ -219,6 +221,9 @@ describe(
         );
         expect(bb.disableDepthTestDistance).toEqual(
           testObject.billboard.disableDepthTestDistance.getValue(time)
+        );
+        expect(bb.splitDirection).toEqual(
+          testObject.billboard.splitDirection.getValue(time)
         );
         expect(bb._imageSubRegion).toEqual(
           testObject.billboard.imageSubRegion.getValue(time)
@@ -275,6 +280,7 @@ describe(
         new DistanceDisplayCondition(10.0, 100.0)
       );
       billboard.disableDepthTestDistance = new ConstantProperty(10.0);
+      billboard.splitDirection = new ConstantProperty(SplitDirection.LEFT);
 
       visualizer.update(time);
 
@@ -341,6 +347,9 @@ describe(
             );
             expect(bb.disableDepthTestDistance).toEqual(
               testObject.billboard.disableDepthTestDistance.getValue(time)
+            );
+            expect(bb.splitDirection).toEqual(
+              testObject.billboard.splitDirection.getValue(time)
             );
             expect(bb.image).toBeDefined();
             expect(bb._imageSubRegion).toEqual(

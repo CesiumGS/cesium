@@ -245,6 +245,7 @@ describe(
           distanceDisplayCondition: new DistanceDisplayCondition(10.0, 100.0),
           disableDepthTestDistance: 10.0,
           heightReference: HeightReference.CLAMP_TO_GROUND,
+          splitDirection: SplitDirection.LEFT,
         },
       });
       const point = entity.point;
@@ -266,6 +267,9 @@ describe(
       );
       expect(billboard.disableDepthTestDistance).toEqual(
         point.disableDepthTestDistance.getValue(time)
+      );
+      expect(billboard.splitDirection).toEqual(
+        point.splitDirection.getValue(time)
       );
       //expect(billboard.color).toEqual(point.color.getValue(time));
       //expect(billboard.outlineColor).toEqual(point.outlineColor.getValue(time));
