@@ -128,23 +128,11 @@
                 },
                 "metallicFactor": 0.0
             },
-            "name": "Texture",
-            "extensions": {
-                "KHR_materials_clearcoat": {
-                    "clearcoatFactor": 0.5,
-                    "clearcoatRoughnessFactor": 0.2,
-                    "clearcoatTexture": {
-                        "index": 0
-                    },
-                    "clearcoatRoughnessTexture": {
-                        "index": 0
-                    },
-                    "clearcoatNormalTexture": {
-                        "index": 0,
-                        "scale": 0.5
-                    }
-                }
-            }
+            "normalTexture": {
+                "index": 0,
+                "scale": 0.5
+            },
+            "name": "Texture"
         }
     ],
     "textures": [
@@ -191,15 +179,13 @@
     "buffers": [
         {
             "byteLength": 840,
-            "uri": "BoxClearcoat.bin"
+            "uri": "BoxScaledNormalTexture.bin"
         }
     ],
     "extensionsRequired": [
-      "KHR_draco_mesh_compression",
-      "KHR_materials_clearcoat"
+      "KHR_draco_mesh_compression"
     ],
     "extensionsUsed": [
-      "KHR_draco_mesh_compression",
-      "KHR_materials_clearcoat"
+      "KHR_draco_mesh_compression"
     ]
 }
