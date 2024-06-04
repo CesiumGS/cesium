@@ -213,7 +213,7 @@ Object.defineProperties(PostProcessStageCollection.prototype, {
    * <p>
    * When enabled, this stage will execute before all others.
    * </p>
-   * @memberOf PostProcessStageCollection.prototype
+   * @memberof PostProcessStageCollection.prototype
    * @type {PostProcessStageComposite}
    * @readonly
    */

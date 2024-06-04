@@ -425,9 +425,9 @@ Texture.create = function (options) {
  * @throws {DeveloperError} Invalid pixelFormat.
  * @throws {DeveloperError} pixelFormat cannot be DEPTH_COMPONENT, DEPTH_STENCIL or a compressed format.
  * @throws {DeveloperError} framebufferXOffset must be greater than or equal to zero.
- * @exception {DeveloperError} framebufferYOffset must be greater than or equal to zero.
- * @exception {DeveloperError} framebufferXOffset + width must be less than or equal to canvas.clientWidth.
- * @exception {DeveloperError} framebufferYOffset + height must be less than or equal to canvas.clientHeight.
+ * @throws {DeveloperError} framebufferYOffset must be greater than or equal to zero.
+ * @throws {DeveloperError} framebufferXOffset + width must be less than or equal to canvas.clientWidth.
+ * @throws {DeveloperError} framebufferYOffset + height must be less than or equal to canvas.clientHeight.
  *
  *
  * @example
@@ -660,7 +660,7 @@ Object.defineProperties(Texture.prototype, {
  * @throws {DeveloperError} yOffset must be greater than or equal to zero.
  * @throws {DeveloperError} xOffset + source.width must be less than or equal to width.
  * @throws {DeveloperError} yOffset + source.height must be less than or equal to height.
- * @exception {DeveloperError} This texture was destroyed, i.e., destroy() was called.
+ * @throws {DeveloperError} This texture was destroyed, i.e., destroy() was called.
  *
  * @example
  * texture.copyFrom({
@@ -880,14 +880,14 @@ Texture.prototype.copyFrom = function (options) {
  * @throws {DeveloperError} Cannot call copyFromFramebuffer when the texture pixel format is DEPTH_COMPONENT or DEPTH_STENCIL.
  * @throws {DeveloperError} Cannot call copyFromFramebuffer when the texture pixel data type is FLOAT.
  * @throws {DeveloperError} Cannot call copyFromFramebuffer when the texture pixel data type is HALF_FLOAT.
- * @exception {DeveloperError} Cannot call copyFrom with a compressed texture pixel format.
- * @exception {DeveloperError} This texture was destroyed, i.e., destroy() was called.
- * @exception {DeveloperError} xOffset must be greater than or equal to zero.
- * @exception {DeveloperError} yOffset must be greater than or equal to zero.
- * @exception {DeveloperError} framebufferXOffset must be greater than or equal to zero.
- * @exception {DeveloperError} framebufferYOffset must be greater than or equal to zero.
- * @exception {DeveloperError} xOffset + width must be less than or equal to width.
- * @exception {DeveloperError} yOffset + height must be less than or equal to height.
+ * @throws {DeveloperError} Cannot call copyFrom with a compressed texture pixel format.
+ * @throws {DeveloperError} This texture was destroyed, i.e., destroy() was called.
+ * @throws {DeveloperError} xOffset must be greater than or equal to zero.
+ * @throws {DeveloperError} yOffset must be greater than or equal to zero.
+ * @throws {DeveloperError} framebufferXOffset must be greater than or equal to zero.
+ * @throws {DeveloperError} framebufferYOffset must be greater than or equal to zero.
+ * @throws {DeveloperError} xOffset + width must be less than or equal to width.
+ * @throws {DeveloperError} yOffset + height must be less than or equal to height.
  */
 Texture.prototype.copyFromFramebuffer = function (
   xOffset,

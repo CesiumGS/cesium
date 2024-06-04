@@ -235,11 +235,11 @@ import WaterMaterial from "../Shaders/Materials/Water.js";
  * @throws {DeveloperError} fabric: uniform has invalid type.
  * @throws {DeveloperError} fabric: uniforms and materials cannot share the same property.
  * @throws {DeveloperError} fabric: cannot have source and components in the same section.
- * @exception {DeveloperError} fabric: property name is not valid. It should be 'type', 'materials', 'uniforms', 'components', or 'source'.
- * @exception {DeveloperError} fabric: property name is not valid. It should be 'diffuse', 'specular', 'shininess', 'normal', 'emission', or 'alpha'.
- * @exception {DeveloperError} strict: shader source does not use string.
- * @exception {DeveloperError} strict: shader source does not use uniform.
- * @exception {DeveloperError} strict: shader source does not use material.
+ * @throws {DeveloperError} fabric: property name is not valid. It should be 'type', 'materials', 'uniforms', 'components', or 'source'.
+ * @throws {DeveloperError} fabric: property name is not valid. It should be 'diffuse', 'specular', 'shininess', 'normal', 'emission', or 'alpha'.
+ * @throws {DeveloperError} strict: shader source does not use string.
+ * @throws {DeveloperError} strict: shader source does not use uniform.
+ * @throws {DeveloperError} strict: shader source does not use material.
  *
  * @see {@link https://github.com/CesiumGS/cesium/wiki/Fabric|Fabric wiki page} for a more detailed options of Fabric.
  *

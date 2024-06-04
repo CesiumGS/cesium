@@ -107,7 +107,7 @@ const requestRenderAfterFrame = function (scene) {
  * @see CesiumWidget
  * @see {@link http://www.khronos.org/registry/webgl/specs/latest/#5.2|WebGLContextAttributes}
  *
- * @exception {DeveloperError} options and options.canvas are required.
+ * @throws {DeveloperError} options and options.canvas are required.
  *
  * @example
  * // Create scene without anisotropic texture filtering

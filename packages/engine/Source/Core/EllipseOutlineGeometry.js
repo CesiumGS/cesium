@@ -194,7 +194,7 @@ function computeExtrudedEllipse(options) {
  * @param {number} [options.numberOfVerticalLines] Number of lines to draw between the top and bottom surface of an extruded ellipse.
  * @throws {DeveloperError} semiMajorAxis and semiMinorAxis must be greater than zero.
  * @throws {DeveloperError} semiMajorAxis must be greater than or equal to the semiMinorAxis.
- * @exception {DeveloperError} granularity must be greater than zero.
+ * @throws {DeveloperError} granularity must be greater than zero.
  *
  * @see EllipseOutlineGeometry.createGeometry
  *

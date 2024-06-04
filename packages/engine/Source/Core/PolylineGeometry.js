@@ -75,8 +75,8 @@ function interpolateColors(p0, p1, color0, color1, numPoints) {
  * @param {VertexFormat} [options.vertexFormat] The vertex attributes to be computed.
  * @param {Ellipsoid} [options.ellipsoid] The ellipsoid to be used as a reference.
  * @throws {DeveloperError} At least two positions are required.
- * @exception {DeveloperError} width must be greater than or equal to one.
- * @exception {DeveloperError} colors has an invalid length.
+ * @throws {DeveloperError} width must be greater than or equal to one.
+ * @throws {DeveloperError} colors has an invalid length.
  *
  * @see PolylineGeometry#createGeometry
  *

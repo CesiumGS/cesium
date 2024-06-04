@@ -35,9 +35,9 @@ import PostProcessStageSampleMode from "./PostProcessStageSampleMode.js";
  * @param {Color} [options.clearColor] The color to clear the output texture to.
  * @param {BoundingRectangle} [options.scissorRectangle] The rectangle to use for the scissor test.
  * @param {string} [options.name] The unique name of this post-process stage for reference by other stages in a composite. If a name is not supplied, a GUID will be generated.
- * @exception {DeveloperError} options.textureScale must be greater than 0.0 and less than or equal to 1.0.
- * @exception {DeveloperError} options.pixelFormat must be a color format.
- * @exception {DeveloperError} When options.pixelDatatype is FLOAT, this WebGL implementation must support floating point textures. Check context.floatingPointTexture.
+ * @throws {DeveloperError} options.textureScale must be greater than 0.0 and less than or equal to 1.0.
+ * @throws {DeveloperError} options.pixelFormat must be a color format.
+ * @throws {DeveloperError} When options.pixelDatatype is FLOAT, this WebGL implementation must support floating point textures. Check context.floatingPointTexture.
  *
  * @see PostProcessStageComposite
  *

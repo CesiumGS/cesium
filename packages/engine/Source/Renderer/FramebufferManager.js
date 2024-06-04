@@ -23,11 +23,11 @@ import PixelFormat from "../Core/PixelFormat.js";
  * @param {boolean} [options.createDepthAttachments] Whether the FramebufferManager will construct its own depth attachments.
  * @param {PixelDatatype} [options.pixelDatatype] The default pixel datatype to use when creating color attachments.
  * @param {PixelFormat} [options.pixelFormat=undefined] The default pixel format to use when creating color attachments.
- * @exception {DeveloperError} Must enable at least one type of framebuffer attachment.
- * @exception {DeveloperError} Cannot have both a depth and depth-stencil attachment.
+ * @throws {DeveloperError} Must enable at least one type of framebuffer attachment.
+ * @throws {DeveloperError} Cannot have both a depth and depth-stencil attachment.
  *
  * @private
- * @constructor
+ * @class
  */
 function FramebufferManager(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);

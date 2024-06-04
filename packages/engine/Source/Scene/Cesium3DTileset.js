@@ -1441,7 +1441,7 @@ Object.defineProperties(Cesium3DTileset.prototype, {
 
   /**
    * The root tile.
-   * @memberOf Cesium3DTileset.prototype
+   * @memberof Cesium3DTileset.prototype
    * @type {Cesium3DTile}
    * @readonly
    */

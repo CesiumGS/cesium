@@ -253,8 +253,8 @@ function constructExtrudedRectangle(rectangleGeometry, computedOptions) {
  * @throws {DeveloperError} <code>options.rectangle.north</code> must be in the interval [<code>-Pi/2</code>, <code>Pi/2</code>].
  * @throws {DeveloperError} <code>options.rectangle.south</code> must be in the interval [<code>-Pi/2</code>, <code>Pi/2</code>].
  * @throws {DeveloperError} <code>options.rectangle.east</code> must be in the interval [<code>-Pi</code>, <code>Pi</code>].
- * @exception {DeveloperError} <code>options.rectangle.west</code> must be in the interval [<code>-Pi</code>, <code>Pi</code>].
- * @exception {DeveloperError} <code>options.rectangle.north</code> must be greater than <code>rectangle.south</code>.
+ * @throws {DeveloperError} <code>options.rectangle.west</code> must be in the interval [<code>-Pi</code>, <code>Pi</code>].
+ * @throws {DeveloperError} <code>options.rectangle.north</code> must be greater than <code>rectangle.south</code>.
  *
  * @see RectangleOutlineGeometry#createGeometry
  *

@@ -127,7 +127,7 @@ function BatchTable(context, attributes, numberOfInstances) {
 Object.defineProperties(BatchTable.prototype, {
   /**
    * The attribute descriptions.
-   * @memberOf BatchTable.prototype
+   * @memberof BatchTable.prototype
    * @type {object[]}
    * @readonly
    */
@@ -138,7 +138,7 @@ Object.defineProperties(BatchTable.prototype, {
   },
   /**
    * The number of instances.
-   * @memberOf BatchTable.prototype
+   * @memberof BatchTable.prototype
    * @type {number}
    * @readonly
    */

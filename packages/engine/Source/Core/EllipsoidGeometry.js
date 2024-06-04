@@ -40,8 +40,8 @@ const sin = Math.sin;
  * @param {number} [options.slicePartitions] The number of times to partition the ellipsoid into radial slices.
  * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
  *
- * @exception {DeveloperError} options.slicePartitions cannot be less than three.
- * @exception {DeveloperError} options.stackPartitions cannot be less than three.
+ * @throws {DeveloperError} options.slicePartitions cannot be less than three.
+ * @throws {DeveloperError} options.stackPartitions cannot be less than three.
  *
  * @see EllipsoidGeometry#createGeometry
  *

@@ -42,9 +42,9 @@ function attachRenderbuffer(framebuffer, attachment, renderbuffer) {
  * @throws {DeveloperError} The color-texture pixel-format must be a color format.
  * @throws {DeveloperError} The depth-texture pixel-format must be DEPTH_COMPONENT.
  * @throws {DeveloperError} The depth-stencil-texture pixel-format must be DEPTH_STENCIL.
- * @exception {DeveloperError} The number of color attachments exceeds the number supported.
- * @exception {DeveloperError} The color-texture pixel datatype is HALF_FLOAT and the WebGL implementation does not support the EXT_color_buffer_half_float extension.
- * @exception {DeveloperError} The color-texture pixel datatype is FLOAT and the WebGL implementation does not support the EXT_color_buffer_float or WEBGL_color_buffer_float extensions.
+ * @throws {DeveloperError} The number of color attachments exceeds the number supported.
+ * @throws {DeveloperError} The color-texture pixel datatype is HALF_FLOAT and the WebGL implementation does not support the EXT_color_buffer_half_float extension.
+ * @throws {DeveloperError} The color-texture pixel datatype is FLOAT and the WebGL implementation does not support the EXT_color_buffer_float or WEBGL_color_buffer_float extensions.
  *
  * @example
  * // Create a framebuffer with color and depth texture attachments.
@@ -68,7 +68,7 @@ function attachRenderbuffer(framebuffer, attachment, renderbuffer) {
  * });
  *
  * @private
- * @constructor
+ * @class
  */
 function Framebuffer(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);

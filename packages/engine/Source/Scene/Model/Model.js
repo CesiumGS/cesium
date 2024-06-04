@@ -2625,9 +2625,9 @@ Model.prototype.destroyModelResources = function () {
  * @param {Model.GltfCallback} [options.gltfCallback] A function that is called with the loaded gltf object once loaded.
  * @returns {Promise<Model>} A promise that resolves to the created model when it is ready to render.
  *
- * @exception {RuntimeError} The model failed to load.
- * @exception {RuntimeError} Unsupported glTF version.
- * @exception {RuntimeError} Unsupported glTF Extension
+ * @throws {RuntimeError} The model failed to load.
+ * @throws {RuntimeError} Unsupported glTF version.
+ * @throws {RuntimeError} Unsupported glTF Extension
  *
  * @example
  * // Load a model and add it to the scene

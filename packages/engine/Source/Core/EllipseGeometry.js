@@ -898,8 +898,8 @@ function computeRectangle(
  * @param {number} [options.granularity] The angular distance between points on the ellipse in radians.
  * @param {VertexFormat} [options.vertexFormat] The vertex attributes to be computed.
  * @throws {DeveloperError} semiMajorAxis and semiMinorAxis must be greater than zero.
- * @exception {DeveloperError} semiMajorAxis must be greater than or equal to the semiMinorAxis.
- * @exception {DeveloperError} granularity must be greater than zero.
+ * @throws {DeveloperError} semiMajorAxis must be greater than or equal to the semiMinorAxis.
+ * @throws {DeveloperError} granularity must be greater than zero.
  *
  *
  * @example

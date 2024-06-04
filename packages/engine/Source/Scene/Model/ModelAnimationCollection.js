@@ -114,8 +114,8 @@ function addAnimation(collection, animation, options) {
  * @throws {DeveloperError} Animations are not loaded.  Wait for the {@link Model#ready} to return trues.
  * @throws {DeveloperError} options.name must be a valid animation name.
  * @throws {DeveloperError} options.index must be a valid animation index.
- * @exception {DeveloperError} Either options.name or options.index must be defined.
- * @exception {DeveloperError} options.multiplier must be greater than zero.
+ * @throws {DeveloperError} Either options.name or options.index must be defined.
+ * @throws {DeveloperError} options.multiplier must be greater than zero.
  *
  * @example
  * // Example 1. Add an animation by name

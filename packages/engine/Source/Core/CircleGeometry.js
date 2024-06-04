@@ -20,7 +20,7 @@ import VertexFormat from "./VertexFormat.js";
  * @param {number} [options.extrudedHeight] The distance in meters between the circle's extruded face and the ellipsoid surface.
  * @param {number} [options.stRotation] The rotation of the texture coordinates, in radians. A positive rotation is counter-clockwise.
  * @throws {DeveloperError} radius must be greater than zero.
- * @exception {DeveloperError} granularity must be greater than zero.
+ * @throws {DeveloperError} granularity must be greater than zero.
  *
  * @see CircleGeometry.createGeometry
  * @see Packable

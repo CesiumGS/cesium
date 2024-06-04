@@ -1147,7 +1147,7 @@ Object.defineProperties(UniformState.prototype, {
 
   /**
    * Whether or not the current projection is orthographic in 3D.
-   * @memberOf UniformState.prototype
+   * @memberof UniformState.prototype
    * @type {boolean}
    */
   orthographicIn3D: {
@@ -1158,7 +1158,7 @@ Object.defineProperties(UniformState.prototype, {
 
   /**
    * The current ellipsoid.
-   * @memberOf UniformState.prototype
+   * @memberof UniformState.prototype
    * @type {Ellipsoid}
    */
   ellipsoid: {

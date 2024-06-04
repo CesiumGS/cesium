@@ -44,7 +44,7 @@ const ComponentDatatype = {
   /**
    * 32-bit signed int corresponding to <code>INT</code> and the type
    * of an element in <code>Int32Array</code>.
-   * @memberOf ComponentDatatype
+   * @memberof ComponentDatatype
    * @type {number}
    * @constant
    */
@@ -53,7 +53,7 @@ const ComponentDatatype = {
   /**
    * 32-bit unsigned int corresponding to <code>UNSIGNED_INT</code> and the type
    * of an element in <code>Uint32Array</code>.
-   * @memberOf ComponentDatatype
+   * @memberof ComponentDatatype
    * @type {number}
    * @constant
    */
@@ -71,7 +71,7 @@ const ComponentDatatype = {
    * 64-bit floating-point corresponding to <code>gl.DOUBLE</code> (in Desktop OpenGL;
    * this is not supported in WebGL, and is emulated in Cesium via {@link GeometryPipeline.encodeAttribute})
    * and the type of an element in <code>Float64Array</code>.
-   * @memberOf ComponentDatatype
+   * @memberof ComponentDatatype
    * @type {number}
    * @constant
    * @default 0x140A

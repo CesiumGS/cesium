@@ -382,24 +382,24 @@ let renderStateCache = {};
  * @throws {DeveloperError} renderState.depthRange.far must be less than or equal to zero.
  * @throws {DeveloperError} Invalid renderState.depthTest.func.
  * @throws {DeveloperError} renderState.blending.color components must be greater than or equal to zero and less than or equal to one
- * @exception {DeveloperError} Invalid renderState.blending.equationRgb.
- * @exception {DeveloperError} Invalid renderState.blending.equationAlpha.
- * @exception {DeveloperError} Invalid renderState.blending.functionSourceRgb.
- * @exception {DeveloperError} Invalid renderState.blending.functionSourceAlpha.
- * @exception {DeveloperError} Invalid renderState.blending.functionDestinationRgb.
- * @exception {DeveloperError} Invalid renderState.blending.functionDestinationAlpha.
- * @exception {DeveloperError} Invalid renderState.stencilTest.frontFunction.
- * @exception {DeveloperError} Invalid renderState.stencilTest.backFunction.
- * @exception {DeveloperError} Invalid renderState.stencilTest.frontOperation.fail.
- * @exception {DeveloperError} Invalid renderState.stencilTest.frontOperation.zFail.
- * @exception {DeveloperError} Invalid renderState.stencilTest.frontOperation.zPass.
- * @exception {DeveloperError} Invalid renderState.stencilTest.backOperation.fail.
- * @exception {DeveloperError} Invalid renderState.stencilTest.backOperation.zFail.
- * @exception {DeveloperError} Invalid renderState.stencilTest.backOperation.zPass.
- * @exception {DeveloperError} renderState.viewport.width must be greater than or equal to zero.
- * @exception {DeveloperError} renderState.viewport.width must be less than or equal to the maximum viewport width.
- * @exception {DeveloperError} renderState.viewport.height must be greater than or equal to zero.
- * @exception {DeveloperError} renderState.viewport.height must be less than or equal to the maximum viewport height.
+ * @throws {DeveloperError} Invalid renderState.blending.equationRgb.
+ * @throws {DeveloperError} Invalid renderState.blending.equationAlpha.
+ * @throws {DeveloperError} Invalid renderState.blending.functionSourceRgb.
+ * @throws {DeveloperError} Invalid renderState.blending.functionSourceAlpha.
+ * @throws {DeveloperError} Invalid renderState.blending.functionDestinationRgb.
+ * @throws {DeveloperError} Invalid renderState.blending.functionDestinationAlpha.
+ * @throws {DeveloperError} Invalid renderState.stencilTest.frontFunction.
+ * @throws {DeveloperError} Invalid renderState.stencilTest.backFunction.
+ * @throws {DeveloperError} Invalid renderState.stencilTest.frontOperation.fail.
+ * @throws {DeveloperError} Invalid renderState.stencilTest.frontOperation.zFail.
+ * @throws {DeveloperError} Invalid renderState.stencilTest.frontOperation.zPass.
+ * @throws {DeveloperError} Invalid renderState.stencilTest.backOperation.fail.
+ * @throws {DeveloperError} Invalid renderState.stencilTest.backOperation.zFail.
+ * @throws {DeveloperError} Invalid renderState.stencilTest.backOperation.zPass.
+ * @throws {DeveloperError} renderState.viewport.width must be greater than or equal to zero.
+ * @throws {DeveloperError} renderState.viewport.width must be less than or equal to the maximum viewport width.
+ * @throws {DeveloperError} renderState.viewport.height must be greater than or equal to zero.
+ * @throws {DeveloperError} renderState.viewport.height must be less than or equal to the maximum viewport height.
  *
  *
  * @example

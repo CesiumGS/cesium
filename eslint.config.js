@@ -44,6 +44,18 @@ export default [
     files: ["packages/**/*.js", "Apps/**/*.js", "Specs/**/*.js", "**/*.html"],
     ...configCesium.configs.browser,
     plugins: { html, jsdoc },
+    settings: {
+      jsdoc: {
+        tagNamePreference: {
+          demo: "demo",
+          experimental: "experimental",
+          internalConstructor: "internalConstructor",
+          performance: "performance",
+          privateparam: "privateparam",
+          privateParam: "privateParam",
+        },
+      },
+    },
     rules: {
       ...configCesium.configs.browser.rules,
       ...jsdoc.configs["flat/recommended-error"].rules,
@@ -66,8 +78,7 @@ export default [
       "jsdoc/check-types": "off",
       "jsdoc/valid-types": "off",
       "jsdoc/tag-lines": "off",
-      "jsdoc/check-tag-names": "off",
-      "jsdoc/no-defaults": "off",
+      "jsdoc/no-defaults": "off", // We use default parameters instead of enforcing with ES6 for now
     },
   },
   {

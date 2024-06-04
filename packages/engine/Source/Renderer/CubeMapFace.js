@@ -286,13 +286,13 @@ CubeMapFace.prototype.copyFrom = function (options) {
  * @throws {DeveloperError} Cannot call copyFromFramebuffer when the texture pixel data type is FLOAT.
  * @throws {DeveloperError} Cannot call copyFromFramebuffer when the texture pixel data type is HALF_FLOAT.
  * @throws {DeveloperError} This CubeMap was destroyed, i.e., destroy() was called.
- * @exception {DeveloperError} xOffset must be greater than or equal to zero.
- * @exception {DeveloperError} yOffset must be greater than or equal to zero.
- * @exception {DeveloperError} framebufferXOffset must be greater than or equal to zero.
- * @exception {DeveloperError} framebufferYOffset must be greater than or equal to zero.
- * @exception {DeveloperError} xOffset + source.width must be less than or equal to width.
- * @exception {DeveloperError} yOffset + source.height must be less than or equal to height.
- * @exception {DeveloperError} This CubeMap was destroyed, i.e., destroy() was called.
+ * @throws {DeveloperError} xOffset must be greater than or equal to zero.
+ * @throws {DeveloperError} yOffset must be greater than or equal to zero.
+ * @throws {DeveloperError} framebufferXOffset must be greater than or equal to zero.
+ * @throws {DeveloperError} framebufferYOffset must be greater than or equal to zero.
+ * @throws {DeveloperError} xOffset + source.width must be less than or equal to width.
+ * @throws {DeveloperError} yOffset + source.height must be less than or equal to height.
+ * @throws {DeveloperError} This CubeMap was destroyed, i.e., destroy() was called.
  *
  * @example
  * // Copy the framebuffer contents to the +x cube map face.

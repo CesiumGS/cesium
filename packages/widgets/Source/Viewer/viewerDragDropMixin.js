@@ -25,8 +25,8 @@ import {
  * @throws {DeveloperError} Element with id <options.dropTarget> does not exist in the document.
  * @throws {DeveloperError} dropTarget is already defined by another mixin.
  * @throws {DeveloperError} dropEnabled is already defined by another mixin.
- * @exception {DeveloperError} dropError is already defined by another mixin.
- * @exception {DeveloperError} clearOnDrop is already defined by another mixin.
+ * @throws {DeveloperError} dropError is already defined by another mixin.
+ * @throws {DeveloperError} clearOnDrop is already defined by another mixin.
  *
  * @example
  * // Add basic drag and drop support and pop up an alert window on error.

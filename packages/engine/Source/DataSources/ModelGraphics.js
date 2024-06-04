@@ -262,7 +262,7 @@ Object.defineProperties(ModelGraphics.prototype, {
 
   /**
    * A property specifying the {@link Cartesian3} light color when shading the model. When <code>undefined</code> the scene's light color is used instead.
-   * @memberOf ModelGraphics.prototype
+   * @memberof ModelGraphics.prototype
    * @type {Property|undefined}
    */
   lightColor: createPropertyDescriptor("lightColor"),

@@ -232,9 +232,9 @@ Color.fromHsl = function (hue, saturation, lightness, alpha, result) {
  * @param {Color} [result] The object to store the result in, if undefined a new instance will be created.
  * @returns {Color} The modified result parameter or a new instance if result was undefined.
  * @throws {DeveloperError} minimumRed must be less than or equal to maximumRed.
- * @exception {DeveloperError} minimumGreen must be less than or equal to maximumGreen.
- * @exception {DeveloperError} minimumBlue must be less than or equal to maximumBlue.
- * @exception {DeveloperError} minimumAlpha must be less than or equal to maximumAlpha.
+ * @throws {DeveloperError} minimumGreen must be less than or equal to maximumGreen.
+ * @throws {DeveloperError} minimumBlue must be less than or equal to maximumBlue.
+ * @throws {DeveloperError} minimumAlpha must be less than or equal to maximumAlpha.
  *
  * @example
  * //Create a completely random color
