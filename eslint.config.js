@@ -65,6 +65,8 @@ export default [
       ],
       "jsdoc/require-jsdoc": "off", // Only lint existing jsdoc
       "jsdoc/no-undefined-types": "off", // Ignore types for now
+      "jsdoc/valid-types": "off", // Our link tags are structured differently
+      "jsdoc/no-defaults": "off", // We use default parameters instead of enforcing with ES6 for now
       "jsdoc/require-returns": "off",
       "jsdoc/require-returns-description": "off",
       "jsdoc/require-returns-type": "off",
@@ -76,8 +78,6 @@ export default [
       "jsdoc/check-param-names": "off",
       "jsdoc/check-property-names": "off",
       "jsdoc/check-types": "off",
-      "jsdoc/valid-types": "off",
-      "jsdoc/no-defaults": "off", // We use default parameters instead of enforcing with ES6 for now
     },
   },
   {
