@@ -45,15 +45,13 @@ function ImplicitTilingTester() {}
  * @property {Uint8Array} [subtreeJson] The JSON portion of the subtree file. Mutually exclusive with subtreeBuffer.
  * @property {Uint8Array} [subtreeBuffer] A typed array storing the contents of the subtree file (including the internal buffer). Mutually exclusive with subtreeJson.
  * @property {Uint8Array} externalBuffer A typed array representing an external .bin file. This is always returned, but it may be an empty typed array.
-
  */
 
 /**
  * Generate a subtree buffer
  * @param {SubtreeDescription} subtreeDescription A JSON description of the subtree's structure and values
  * @param {boolean} constantOnly true if all the bitstreams are constant, i.e. no buffers/bufferViews are needed.
- * @return {GeneratedSubtree} The procedurally generated subtree and an external buffer.
- *
+ * @returns {GeneratedSubtree} The procedurally generated subtree and an external buffer.
  * @example
  *  const subtreeDescription = {
  *    tileAvailability: {
@@ -80,7 +78,6 @@ function ImplicitTilingTester() {}
  *  const results = ImplicitTilingTester.generateSubtreeBuffers(
  *    subtreeDescription
  *  );
- *
  * @private
  */
 ImplicitTilingTester.generateSubtreeBuffers = function (

@@ -12,10 +12,8 @@ import Vector3DTilePrimitive from "./Vector3DTilePrimitive.js";
 
 /**
  * Creates a batch of box, cylinder, ellipsoid and/or sphere geometries intersecting terrain or 3D Tiles.
- *
  * @alias Vector3DTileGeometry
- * @constructor
- *
+ * @class
  * @param {object} options An object with following properties:
  * @param {Float32Array} [options.boxes] The boxes in the tile.
  * @param {Uint16Array} [options.boxBatchIds] The batch ids for each box.
@@ -29,7 +27,6 @@ import Vector3DTilePrimitive from "./Vector3DTilePrimitive.js";
  * @param {Matrix4} options.modelMatrix The model matrix of all geometries. Applied after the individual geometry model matrices.
  * @param {Cesium3DTileBatchTable} options.batchTable The batch table.
  * @param {BoundingSphere} options.boundingVolume The bounding volume containing all of the geometry in the tile.
- *
  * @private
  */
 function Vector3DTileGeometry(options) {
@@ -103,9 +100,7 @@ function Vector3DTileGeometry(options) {
 Object.defineProperties(Vector3DTileGeometry.prototype, {
   /**
    * Gets the number of triangles.
-   *
    * @memberof Vector3DTileGeometry.prototype
-   *
    * @type {number}
    * @readonly
    * @private
@@ -121,9 +116,7 @@ Object.defineProperties(Vector3DTileGeometry.prototype, {
 
   /**
    * Gets the geometry memory in bytes.
-   *
    * @memberof Vector3DTileGeometry.prototype
-   *
    * @type {number}
    * @readonly
    * @private
@@ -399,7 +392,6 @@ function finishPrimitive(geometries) {
 
 /**
  * Creates features for each geometry and places it at the batch id index of features.
- *
  * @param {Vector3DTileContent} content The vector tile content.
  * @param {Cesium3DTileFeature[]} features An array of features where the polygon features will be placed.
  */
@@ -409,7 +401,6 @@ Vector3DTileGeometry.prototype.createFeatures = function (content, features) {
 
 /**
  * Colors the entire tile when enabled is true. The resulting color will be (geometry batch table color * color).
- *
  * @param {boolean} enabled Whether to enable debug coloring.
  * @param {Color} color The debug color.
  */
@@ -419,7 +410,6 @@ Vector3DTileGeometry.prototype.applyDebugSettings = function (enabled, color) {
 
 /**
  * Apply a style to the content.
- *
  * @param {Cesium3DTileStyle} style The style.
  * @param {Cesium3DTileFeature[]} features The array of features.
  */
@@ -430,7 +420,6 @@ Vector3DTileGeometry.prototype.applyStyle = function (style, features) {
 /**
  * Call when updating the color of a geometry with batchId changes color. The geometries will need to be re-batched
  * on the next update.
- *
  * @param {number} batchId The batch id of the geometries whose color has changed.
  * @param {Color} color The new polygon color.
  */
@@ -440,7 +429,6 @@ Vector3DTileGeometry.prototype.updateCommands = function (batchId, color) {
 
 /**
  * Updates the batches and queues the commands for rendering.
- *
  * @param {FrameState} frameState The current frame state.
  */
 Vector3DTileGeometry.prototype.update = function (frameState) {
@@ -470,7 +458,6 @@ Vector3DTileGeometry.prototype.update = function (frameState) {
  * If this object was destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
  * </p>
- *
  * @returns {boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
  */
 Vector3DTileGeometry.prototype.isDestroyed = function () {
@@ -485,8 +472,7 @@ Vector3DTileGeometry.prototype.isDestroyed = function () {
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
  * assign the return value (<code>undefined</code>) to the object as done in the example.
  * </p>
- *
- * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+ * @throws {DeveloperError} This object was destroyed, i.e., destroy() was called.
  */
 Vector3DTileGeometry.prototype.destroy = function () {
   this._primitive = this._primitive && this._primitive.destroy();

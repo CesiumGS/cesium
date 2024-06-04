@@ -3,17 +3,13 @@ import Event from "../Core/Event.js";
 /**
  * Describes a KmlTour, which uses KmlTourFlyTo, and KmlTourWait to
  * guide the camera to a specified destinations on given time intervals.
- *
  * @alias KmlTour
- * @constructor
- *
+ * @class
  * @param {string} name name parsed from KML
  * @param {string} id id parsed from KML
  * @param {Array} playlist array with KmlTourFlyTos and KmlTourWaits
- *
  * @see KmlTourFlyTo
  * @see KmlTourWait
- *
  * @demo {@link https://sandcastle.cesium.com/?src=KML%20Tours.html|KML Tours}
  */
 function KmlTour(name, id) {
@@ -74,7 +70,6 @@ function KmlTour(name, id) {
 
 /**
  * Add entry to this tour playlist.
- *
  * @param {KmlTourFlyTo|KmlTourWait} entry an entry to add to the playlist.
  */
 KmlTour.prototype.addPlaylistEntry = function (entry) {
@@ -83,7 +78,6 @@ KmlTour.prototype.addPlaylistEntry = function (entry) {
 
 /**
  * Play this tour.
- *
  * @param {CesiumWidget} widget The widget.
  * @param {object} [cameraOptions] these options will be merged with {@link Camera#flyTo}
  * options for FlyTo playlist entries.

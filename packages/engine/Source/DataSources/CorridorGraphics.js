@@ -9,7 +9,6 @@ import createPropertyDescriptor from "./createPropertyDescriptor.js";
  * @typedef {object} CorridorGraphics.ConstructorOptions
  *
  * Initialization options for the CorridorGraphics constructor
- *
  * @property {Property | boolean} [show=true] A boolean Property specifying the visibility of the corridor.
  * @property {Property | Cartesian3[]} [positions] A Property specifying the array of {@link Cartesian3} positions that define the centerline of the corridor.
  * @property {Property | number} [width] A numeric Property specifying the distance between the edges of the corridor.
@@ -34,12 +33,9 @@ import createPropertyDescriptor from "./createPropertyDescriptor.js";
  * Describes a corridor, which is a shape defined by a centerline and width that
  * conforms to the curvature of the globe. It can be placed on the surface or at altitude
  * and can optionally be extruded into a volume.
- *
  * @alias CorridorGraphics
- * @constructor
- *
+ * @class
  * @param {CorridorGraphics.ConstructorOptions} [options] Object describing initialization options
- *
  * @see Entity
  * @demo {@link https://sandcastle.cesium.com/index.html?src=Corridor.html|Cesium Sandcastle Corridor Demo}
  */
@@ -249,7 +245,6 @@ Object.defineProperties(CorridorGraphics.prototype, {
 
 /**
  * Duplicates this instance.
- *
  * @param {CorridorGraphics} [result] The object onto which to store the result.
  * @returns {CorridorGraphics} The modified result parameter or a new instance if one was not provided.
  */
@@ -281,7 +276,6 @@ CorridorGraphics.prototype.clone = function (result) {
 /**
  * Assigns each unassigned property on this object to the value
  * of the same property on the provided source object.
- *
  * @param {CorridorGraphics} source The object to be merged into this object.
  */
 CorridorGraphics.prototype.merge = function (source) {

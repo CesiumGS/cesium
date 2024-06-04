@@ -2,15 +2,12 @@ import Check from "../Core/Check.js";
 
 /**
  * An enum describing the built-in instance attribute semantics.
- *
  * @enum {string}
- *
  * @private
  */
 const InstanceAttributeSemantic = {
   /**
    * Per-instance translation.
-   *
    * @type {string}
    * @constant
    */
@@ -18,7 +15,6 @@ const InstanceAttributeSemantic = {
 
   /**
    * Per-instance rotation.
-   *
    * @type {string}
    * @constant
    */
@@ -26,7 +22,6 @@ const InstanceAttributeSemantic = {
 
   /**
    * Per-instance scale.
-   *
    * @type {string}
    * @constant
    */
@@ -34,7 +29,6 @@ const InstanceAttributeSemantic = {
 
   /**
    * Per-instance feature ID.
-   *
    * @type {string}
    * @constant
    */
@@ -43,9 +37,8 @@ const InstanceAttributeSemantic = {
 
 /**
  * Gets the instance attribute semantic matching the glTF attribute semantic.
- *
+ * @param gltfSemantic
  * @returns {InstanceAttributeSemantic} The instance attribute semantic, or undefined if there is no match.
- *
  * @private
  */
 InstanceAttributeSemantic.fromGltfSemantic = function (gltfSemantic) {

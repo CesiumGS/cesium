@@ -20,9 +20,11 @@ import Property from "./Property.js";
  * {@link GeometryUpdater} implementations which contain dynamic geometry.
  *
  * This type defines an interface and cannot be instantiated directly.
- *
+ * @param geometryUpdater
+ * @param primitives
+ * @param orderedGroundPrimitives
  * @alias DynamicGeometryUpdater
- * @constructor
+ * @class
  * @private
  * @abstract
  */
@@ -62,7 +64,6 @@ DynamicGeometryUpdater.prototype._setOptions =
  * Updates the geometry to the specified time.
  * @memberof DynamicGeometryUpdater
  * @function
- *
  * @param {JulianDate} time The current time.
  */
 DynamicGeometryUpdater.prototype.update = function (time) {
@@ -192,7 +193,6 @@ DynamicGeometryUpdater.prototype.update = function (time) {
  * Computes a bounding sphere which encloses the visualization produced for the specified entity.
  * The bounding sphere is in the fixed frame of the scene's globe.
  * @function
- *
  * @param {BoundingSphere} result The bounding sphere onto which to store the result.
  * @returns {BoundingSphereState} BoundingSphereState.DONE if the result contains the bounding sphere,
  *                       BoundingSphereState.PENDING if the result is still being computed, or
@@ -246,7 +246,6 @@ DynamicGeometryUpdater.prototype.getBoundingSphere = function (result) {
  * Returns true if this object was destroyed; otherwise, false.
  * @memberof DynamicGeometryUpdater
  * @function
- *
  * @returns {boolean} True if this object was destroyed; otherwise, false.
  */
 DynamicGeometryUpdater.prototype.isDestroyed = function () {
@@ -257,8 +256,7 @@ DynamicGeometryUpdater.prototype.isDestroyed = function () {
  * Destroys and resources used by the object.  Once an object is destroyed, it should not be used.
  * @memberof DynamicGeometryUpdater
  * @function
- *
- * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+ * @throws {DeveloperError} This object was destroyed, i.e., destroy() was called.
  */
 DynamicGeometryUpdater.prototype.destroy = function () {
   const primitives = this._primitives;

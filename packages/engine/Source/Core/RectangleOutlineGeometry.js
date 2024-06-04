@@ -241,21 +241,18 @@ function constructExtrudedRectangle(rectangleGeometry, computedOptions) {
 
 /**
  * A description of the outline of a a cartographic rectangle on an ellipsoid centered at the origin.
- *
  * @alias RectangleOutlineGeometry
- * @constructor
- *
+ * @class
  * @param {object} options Object with the following properties:
  * @param {Rectangle} options.rectangle A cartographic rectangle with north, south, east and west properties in radians.
- * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the rectangle lies.
- * @param {number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
- * @param {number} [options.height=0.0] The distance in meters between the rectangle and the ellipsoid surface.
- * @param {number} [options.rotation=0.0] The rotation of the rectangle, in radians. A positive rotation is counter-clockwise.
+ * @param {Ellipsoid} [options.ellipsoid] The ellipsoid on which the rectangle lies.
+ * @param {number} [options.granularity] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
+ * @param {number} [options.height] The distance in meters between the rectangle and the ellipsoid surface.
+ * @param {number} [options.rotation] The rotation of the rectangle, in radians. A positive rotation is counter-clockwise.
  * @param {number} [options.extrudedHeight] The distance in meters between the rectangle's extruded face and the ellipsoid surface.
- *
- * @exception {DeveloperError} <code>options.rectangle.north</code> must be in the interval [<code>-Pi/2</code>, <code>Pi/2</code>].
- * @exception {DeveloperError} <code>options.rectangle.south</code> must be in the interval [<code>-Pi/2</code>, <code>Pi/2</code>].
- * @exception {DeveloperError} <code>options.rectangle.east</code> must be in the interval [<code>-Pi</code>, <code>Pi</code>].
+ * @throws {DeveloperError} <code>options.rectangle.north</code> must be in the interval [<code>-Pi/2</code>, <code>Pi/2</code>].
+ * @throws {DeveloperError} <code>options.rectangle.south</code> must be in the interval [<code>-Pi/2</code>, <code>Pi/2</code>].
+ * @throws {DeveloperError} <code>options.rectangle.east</code> must be in the interval [<code>-Pi</code>, <code>Pi</code>].
  * @exception {DeveloperError} <code>options.rectangle.west</code> must be in the interval [<code>-Pi</code>, <code>Pi</code>].
  * @exception {DeveloperError} <code>options.rectangle.north</code> must be greater than <code>rectangle.south</code>.
  *
@@ -314,11 +311,9 @@ RectangleOutlineGeometry.packedLength =
 
 /**
  * Stores the provided instance into the provided array.
- *
  * @param {RectangleOutlineGeometry} value The value to pack.
  * @param {number[]} array The array to pack into.
- * @param {number} [startingIndex=0] The index into the array at which to start packing the elements.
- *
+ * @param {number} [startingIndex] The index into the array at which to start packing the elements.
  * @returns {number[]} The array that was packed into
  */
 RectangleOutlineGeometry.pack = function (value, array, startingIndex) {
@@ -363,9 +358,8 @@ const scratchOptions = {
 
 /**
  * Retrieves an instance from a packed array.
- *
  * @param {number[]} array The packed array.
- * @param {number} [startingIndex=0] The starting index of the element to be unpacked.
+ * @param {number} [startingIndex] The starting index of the element to be unpacked.
  * @param {RectangleOutlineGeometry} [result] The object into which to store the result.
  * @returns {RectangleOutlineGeometry} The modified result parameter or a new Quaternion instance if one was not provided.
  */
@@ -415,11 +409,9 @@ RectangleOutlineGeometry.unpack = function (array, startingIndex, result) {
 const nwScratch = new Cartographic();
 /**
  * Computes the geometric representation of an outline of a rectangle, including its vertices, indices, and a bounding sphere.
- *
  * @param {RectangleOutlineGeometry} rectangleGeometry A description of the rectangle outline.
  * @returns {Geometry|undefined} The computed vertices and indices.
- *
- * @exception {DeveloperError} Rotated rectangle is invalid.
+ * @throws {DeveloperError} Rotated rectangle is invalid.
  */
 RectangleOutlineGeometry.createGeometry = function (rectangleGeometry) {
   const rectangle = rectangleGeometry._rectangle;

@@ -10,14 +10,12 @@ const terrainBitmask = 0x80;
 
 /**
  * Contains information about each tile from a Google Earth Enterprise server
- *
  * @param {number} bits Bitmask that contains the type of data and available children for each tile.
  * @param {number} cnodeVersion Version of the request for subtree metadata.
  * @param {number} imageryVersion Version of the request for imagery tile.
  * @param {number} terrainVersion Version of the request for terrain tile.
  * @param {number} imageryProvider Id of imagery provider.
  * @param {number} terrainProvider Id of terrain provider.
- *
  * @private
  */
 function GoogleEarthEnterpriseTileInformation(
@@ -40,7 +38,6 @@ function GoogleEarthEnterpriseTileInformation(
 
 /**
  * Creates GoogleEarthEnterpriseTileInformation from an object
- *
  * @param {object} info Object to be cloned
  * @param {GoogleEarthEnterpriseTileInformation} [result] The object onto which to store the result.
  * @returns {GoogleEarthEnterpriseTileInformation} The modified result parameter or a new GoogleEarthEnterpriseTileInformation instance if none was provided.
@@ -71,7 +68,6 @@ GoogleEarthEnterpriseTileInformation.clone = function (info, result) {
 
 /**
  * Sets the parent for the tile
- *
  * @param {GoogleEarthEnterpriseTileInformation} parent Parent tile
  */
 GoogleEarthEnterpriseTileInformation.prototype.setParent = function (parent) {
@@ -80,7 +76,6 @@ GoogleEarthEnterpriseTileInformation.prototype.setParent = function (parent) {
 
 /**
  * Gets whether a subtree is available
- *
  * @returns {boolean} true if subtree is available, false otherwise.
  */
 GoogleEarthEnterpriseTileInformation.prototype.hasSubtree = function () {
@@ -89,7 +84,6 @@ GoogleEarthEnterpriseTileInformation.prototype.hasSubtree = function () {
 
 /**
  * Gets whether imagery is available
- *
  * @returns {boolean} true if imagery is available, false otherwise.
  */
 GoogleEarthEnterpriseTileInformation.prototype.hasImagery = function () {
@@ -98,7 +92,6 @@ GoogleEarthEnterpriseTileInformation.prototype.hasImagery = function () {
 
 /**
  * Gets whether terrain is available
- *
  * @returns {boolean} true if terrain is available, false otherwise.
  */
 GoogleEarthEnterpriseTileInformation.prototype.hasTerrain = function () {
@@ -107,7 +100,6 @@ GoogleEarthEnterpriseTileInformation.prototype.hasTerrain = function () {
 
 /**
  * Gets whether any children are present
- *
  * @returns {boolean} true if any children are available, false otherwise.
  */
 GoogleEarthEnterpriseTileInformation.prototype.hasChildren = function () {
@@ -116,9 +108,7 @@ GoogleEarthEnterpriseTileInformation.prototype.hasChildren = function () {
 
 /**
  * Gets whether a specified child is available
- *
  * @param {number} index Index of child tile
- *
  * @returns {boolean} true if child is available, false otherwise
  */
 GoogleEarthEnterpriseTileInformation.prototype.hasChild = function (index) {
@@ -127,7 +117,6 @@ GoogleEarthEnterpriseTileInformation.prototype.hasChild = function (index) {
 
 /**
  * Gets bitmask containing children
- *
  * @returns {number} Children bitmask
  */
 GoogleEarthEnterpriseTileInformation.prototype.getChildBitmask = function () {

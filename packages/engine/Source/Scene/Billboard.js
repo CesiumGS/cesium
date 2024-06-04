@@ -26,7 +26,6 @@ import VerticalOrigin from "./VerticalOrigin.js";
  * @typedef {object} Billboard.ConstructorOptions
  *
  * Initialization options for the first param of Billboard constructor
- *
  * @property {Cartesian3} position The cartesian position of the billboard.
  * @property {*} [id] A user-defined object to return when the billboard is picked with {@link Scene#pick}.
  * @property {boolean} [show=true] Determines if this billboard will be shown.
@@ -63,31 +62,24 @@ import VerticalOrigin from "./VerticalOrigin.js";
  * <img src='Images/Billboard.png' width='400' height='300' /><br />
  * Example billboards
  * </div>
- *
  * @alias Billboard
- *
  * @performance Reading a property, e.g., {@link Billboard#show}, is constant time.
  * Assigning to a property is constant time but results in
  * CPU to GPU traffic when {@link BillboardCollection#update} is called.  The per-billboard traffic is
  * the same regardless of how many properties were updated.  If most billboards in a collection need to be
  * updated, it may be more efficient to clear the collection with {@link BillboardCollection#removeAll}
  * and add new billboards instead of modifying each one.
- *
- * @exception {DeveloperError} scaleByDistance.far must be greater than scaleByDistance.near
- * @exception {DeveloperError} translucencyByDistance.far must be greater than translucencyByDistance.near
- * @exception {DeveloperError} pixelOffsetScaleByDistance.far must be greater than pixelOffsetScaleByDistance.near
- * @exception {DeveloperError} distanceDisplayCondition.far must be greater than distanceDisplayCondition.near
- *
+ * @throws {DeveloperError} scaleByDistance.far must be greater than scaleByDistance.near
+ * @throws {DeveloperError} translucencyByDistance.far must be greater than translucencyByDistance.near
+ * @throws {DeveloperError} pixelOffsetScaleByDistance.far must be greater than pixelOffsetScaleByDistance.near
+ * @throws {DeveloperError} distanceDisplayCondition.far must be greater than distanceDisplayCondition.near
  * @see BillboardCollection
  * @see BillboardCollection#add
  * @see Label
- *
  * @internalConstructor
  * @class
- *
  * @param {Billboard.ConstructorOptions} options Object describing initialization options
  * @param {BillboardCollection} billboardCollection Instance of BillboardCollection
- *
  * @demo {@link https://sandcastle.cesium.com/index.html?src=Billboards.html|Cesium Sandcastle Billboard Demo}
  */
 function Billboard(options, billboardCollection) {
@@ -394,14 +386,12 @@ Object.defineProperties(Billboard.prototype, {
    * scaleByDistance will be disabled.
    * @memberof Billboard.prototype
    * @type {NearFarScalar}
-   *
    * @example
    * // Example 1.
    * // Set a billboard's scaleByDistance to scale by 1.5 when the
    * // camera is 1500 meters from the billboard and disappear as
    * // the camera distance approaches 8.0e6 meters.
    * b.scaleByDistance = new Cesium.NearFarScalar(1.5e2, 1.5, 8.0e6, 0.0);
-   *
    * @example
    * // Example 2.
    * // disable scaling by distance
@@ -440,14 +430,12 @@ Object.defineProperties(Billboard.prototype, {
    * translucencyByDistance will be disabled.
    * @memberof Billboard.prototype
    * @type {NearFarScalar}
-   *
    * @example
    * // Example 1.
    * // Set a billboard's translucency to 1.0 when the
    * // camera is 1500 meters from the billboard and disappear as
    * // the camera distance approaches 8.0e6 meters.
    * b.translucencyByDistance = new Cesium.NearFarScalar(1.5e2, 1.0, 8.0e6, 0.0);
-   *
    * @example
    * // Example 2.
    * // disable translucency by distance
@@ -489,7 +477,6 @@ Object.defineProperties(Billboard.prototype, {
    * pixelOffsetScaleByDistance will be disabled.
    * @memberof Billboard.prototype
    * @type {NearFarScalar}
-   *
    * @example
    * // Example 1.
    * // Set a billboard's pixel offset scale to 0.0 when the
@@ -497,7 +484,6 @@ Object.defineProperties(Billboard.prototype, {
    * // in the y direction the camera distance approaches 8.0e6 meters.
    * b.pixelOffset = new Cesium.Cartesian2(0.0, 1.0);
    * b.pixelOffsetScaleByDistance = new Cesium.NearFarScalar(1.5e2, 0.0, 8.0e6, 10.0);
-   *
    * @example
    * // Example 2.
    * // disable pixel offset by distance
@@ -677,11 +663,9 @@ Object.defineProperties(Billboard.prototype, {
    * (no intensity) to <code>1.0</code> (full intensity).
    * @memberof Billboard.prototype
    * @type {Color}
-   *
    * @example
    * // Example 1. Assign yellow.
    * b.color = Cesium.Color.YELLOW;
-   *
    * @example
    * // Example 2. Make a billboard 50% translucent.
    * b.color = new Cesium.Color(1.0, 1.0, 1.0, 0.5);
@@ -733,13 +717,11 @@ Object.defineProperties(Billboard.prototype, {
    * // Example 1.
    * // Have the billboard up vector point north
    * billboard.alignedAxis = Cesium.Cartesian3.UNIT_Z;
-   *
    * @example
    * // Example 2.
    * // Have the billboard point east.
    * billboard.alignedAxis = Cesium.Cartesian3.UNIT_Z;
    * billboard.rotation = -Cesium.Math.PI_OVER_TWO;
-   *
    * @example
    * // Example 3.
    * // Reset the aligned axis
@@ -941,7 +923,6 @@ Object.defineProperties(Billboard.prototype, {
    * This property can be set to a loaded Image, a URL which will be loaded as an Image automatically,
    * a canvas, or another billboard's image property (from the same billboard collection).
    * </p>
-   *
    * @memberof Billboard.prototype
    * @type {string}
    * @example
@@ -979,12 +960,9 @@ Object.defineProperties(Billboard.prototype, {
   /**
    * When <code>true</code>, this billboard is ready to render, i.e., the image
    * has been downloaded and the WebGL resources are created.
-   *
    * @memberof Billboard.prototype
-   *
    * @type {boolean}
    * @readonly
-   *
    * @default false
    */
   ready: {
@@ -1251,7 +1229,6 @@ Billboard.prototype._loadImage = function () {
  * <p>
  * To load an image from a URL, setting the {@link Billboard#image} property is more convenient.
  * </p>
- *
  * @param {string} id The id of the image.  This can be any string that uniquely identifies the image.
  * @param {HTMLImageElement|HTMLCanvasElement|string|Resource|Billboard.CreateImageCallback} image The image to load.  This parameter
  *        can either be a loaded Image or Canvas, a URL which will be loaded as an Image automatically,
@@ -1299,11 +1276,9 @@ Billboard.prototype.setImage = function (id, image) {
 /**
  * Uses a sub-region of the image with the given id as the image for this billboard,
  * measured in pixels from the bottom-left.
- *
  * @param {string} id The id of the image to use.
  * @param {BoundingRectangle} subRegion The sub-region of the image.
- *
- * @exception {RuntimeError} image with id must be in the atlas
+ * @throws {RuntimeError} image with id must be in the atlas
  */
 Billboard.prototype.setImageSubRegion = function (id, subRegion) {
   //>>includeStart('debug', pragmas.debug);
@@ -1419,16 +1394,12 @@ const scratchPixelOffset = new Cartesian2(0.0, 0.0);
  * Computes the screen-space position of the billboard's origin, taking into account eye and pixel offsets.
  * The screen space origin is the top, left corner of the canvas; <code>x</code> increases from
  * left to right, and <code>y</code> increases from top to bottom.
- *
  * @param {Scene} scene The scene.
  * @param {Cartesian2} [result] The object onto which to store the result.
  * @returns {Cartesian2} The screen-space position of the billboard.
- *
- * @exception {DeveloperError} Billboard must be in a collection.
- *
+ * @throws {DeveloperError} Billboard must be in a collection.
  * @example
  * console.log(b.computeScreenSpacePosition(scene).toString());
- *
  * @see Billboard#eyeOffset
  * @see Billboard#pixelOffset
  */
@@ -1484,7 +1455,6 @@ Billboard.prototype.computeScreenSpacePosition = function (scene, result) {
  * @param {Cartesian2} screenSpacePosition The screen space center of the label.
  * @param {BoundingRectangle} [result] The object onto which to store the result.
  * @returns {BoundingRectangle} The screen space bounding box.
- *
  * @private
  */
 Billboard.getScreenSpaceBoundingBox = function (
@@ -1531,7 +1501,6 @@ Billboard.getScreenSpaceBoundingBox = function (
 /**
  * Determines if this billboard equals another billboard.  Billboards are equal if all their properties
  * are equal.  Billboards in different collections can be equal.
- *
  * @param {Billboard} other The billboard to compare for equality.
  * @returns {boolean} <code>true</code> if the billboards are equal; otherwise, <code>false</code>.
  */

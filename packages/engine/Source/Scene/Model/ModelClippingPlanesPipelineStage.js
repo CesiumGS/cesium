@@ -7,9 +7,7 @@ import ShaderDestination from "../../Renderer/ShaderDestination.js";
 
 /**
  * The model clipping planes stage is responsible for applying clipping planes to the model.
- *
  * @namespace ModelClippingPlanesPipelineStage
- *
  * @private
  */
 const ModelClippingPlanesPipelineStage = {
@@ -21,16 +19,14 @@ const textureResolutionScratch = new Cartesian2();
  * Process a model. This modifies the following parts of the render resources:
  *
  * <ul>
- *  <li>adds a define to the fragment shader to indicate that the model has clipping planes</li>
- *  <li>adds the defines to the fragment shader for parameters related to clipping planes, such as the number of planes</li>
- *  <li>adds a function to the fragment shader to apply the clipping planes to the model's base color</li>
- *  <li>adds the uniforms for the fragment shader for the clipping plane texture and matrix</li>
- *</ul>
- *
+ * <li>adds a define to the fragment shader to indicate that the model has clipping planes</li>
+ * <li>adds the defines to the fragment shader for parameters related to clipping planes, such as the number of planes</li>
+ * <li>adds a function to the fragment shader to apply the clipping planes to the model's base color</li>
+ * <li>adds the uniforms for the fragment shader for the clipping plane texture and matrix</li>
+ * </ul>
  * @param {ModelRenderResources} renderResources The render resources for this model.
  * @param {Model} model The model.
  * @param {FrameState} frameState The frameState.
- *
  * @private
  */
 ModelClippingPlanesPipelineStage.process = function (

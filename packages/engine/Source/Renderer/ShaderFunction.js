@@ -2,10 +2,8 @@ import DeveloperError from "../Core/DeveloperError.js";
 
 /**
  * A utility for dynamically-generating a GLSL function
- *
  * @alias ShaderFunction
- * @constructor
- *
+ * @class
  * @see {@link ShaderBuilder}
  * @param {string} signature The full signature of the function as it will appear in the shader. Do not include the curly braces.
  * @example
@@ -21,7 +19,6 @@ import DeveloperError from "../Core/DeveloperError.js";
  * func.addLine("v_positionEC = (czm_modelView * vec4(a_position, 1.0)).xyz;");
  * func.addLine("v_texCoord = a_texCoord;");
  * const generatedLines = func.generateGlslLines();
- *
  * @private
  */
 function ShaderFunction(signature) {
@@ -57,7 +54,7 @@ ShaderFunction.prototype.addLines = function (lines) {
 
 /**
  * Generate lines of GLSL code for use with {@link ShaderBuilder}
- * @return {string[]}
+ * @returns {string[]}
  */
 ShaderFunction.prototype.generateGlslLines = function () {
   return [].concat(this.signature, "{", this.body, "}");

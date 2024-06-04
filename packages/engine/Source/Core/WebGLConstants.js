@@ -6,7 +6,6 @@
  * These match the constants from the [WebGL 1.0]{@link https://www.khronos.org/registry/webgl/specs/latest/1.0/}
  * and [WebGL 2.0]{@link https://www.khronos.org/registry/webgl/specs/latest/2.0/}
  * specifications.
- *
  * @enum {number}
  */
 const WebGLConstants = {

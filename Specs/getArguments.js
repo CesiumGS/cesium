@@ -11,7 +11,7 @@
  * constructor, so it never compares Jasmine-equal to an array.  This function lets
  * us create an arguments array.
  * @alias getArguments
- * @return {Array} The arguments passed to the function.
+ * @returns {Array} The arguments passed to the function.
  */
 function getArguments() {
   return arguments;

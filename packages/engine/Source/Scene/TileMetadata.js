@@ -8,13 +8,11 @@ import MetadataEntity from "./MetadataEntity.js";
  * <p>
  * See the {@link https://github.com/CesiumGS/3d-tiles/tree/main/extensions/3DTILES_metadata|3DTILES_metadata Extension} for 3D Tiles
  * </p>
- *
  * @param {object} options Object with the following properties:
  * @param {object} options.tile Either the tile metadata JSON (3D Tiles 1.1), or the extension JSON attached to the tile.
  * @param {MetadataClass} options.class The class that the tile metadata conforms to.
- *
  * @alias TileMetadata
- * @constructor
+ * @class
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
@@ -37,7 +35,6 @@ function TileMetadata(options) {
 Object.defineProperties(TileMetadata.prototype, {
   /**
    * The class that properties conform to.
-   *
    * @memberof TileMetadata.prototype
    * @type {MetadataClass}
    * @readonly
@@ -51,7 +48,6 @@ Object.defineProperties(TileMetadata.prototype, {
 
   /**
    * Extra user-defined properties.
-   *
    * @memberof TileMetadata.prototype
    * @type {object}
    * @readonly
@@ -65,7 +61,6 @@ Object.defineProperties(TileMetadata.prototype, {
 
   /**
    * An object containing extensions.
-   *
    * @memberof TileMetadata.prototype
    * @type {object}
    * @readonly
@@ -80,7 +75,6 @@ Object.defineProperties(TileMetadata.prototype, {
 
 /**
  * Returns whether the tile has this property.
- *
  * @param {string} propertyId The case-sensitive ID of the property.
  * @returns {boolean} Whether the tile has this property.
  * @private
@@ -91,7 +85,6 @@ TileMetadata.prototype.hasProperty = function (propertyId) {
 
 /**
  * Returns whether the tile has a property with the given semantic.
- *
  * @param {string} semantic The case-sensitive semantic of the property.
  * @returns {boolean} Whether the tile has a property with the given semantic.
  * @private
@@ -106,7 +99,6 @@ TileMetadata.prototype.hasPropertyBySemantic = function (semantic) {
 
 /**
  * Returns an array of property IDs.
- *
  * @param {string[]} [results] An array into which to store the results.
  * @returns {string[]} The property IDs.
  * @private
@@ -120,7 +112,6 @@ TileMetadata.prototype.getPropertyIds = function (results) {
  * <p>
  * If the property is normalized the normalized value is returned.
  * </p>
- *
  * @param {string} propertyId The case-sensitive ID of the property.
  * @returns {*} The value of the property or <code>undefined</code> if the tile does not have this property.
  * @private
@@ -134,7 +125,6 @@ TileMetadata.prototype.getProperty = function (propertyId) {
  * <p>
  * If the property is normalized a normalized value must be provided to this function.
  * </p>
- *
  * @param {string} propertyId The case-sensitive ID of the property.
  * @param {*} value The value of the property that will be copied.
  * @returns {boolean} <code>true</code> if the property was set, <code>false</code> otherwise.
@@ -151,7 +141,6 @@ TileMetadata.prototype.setProperty = function (propertyId, value) {
 
 /**
  * Returns a copy of the value of the property with the given semantic.
- *
  * @param {string} semantic The case-sensitive semantic of the property.
  * @returns {*} The value of the property or <code>undefined</code> if the tile does not have this semantic.
  * @private
@@ -166,7 +155,6 @@ TileMetadata.prototype.getPropertyBySemantic = function (semantic) {
 
 /**
  * Sets the value of the property with the given semantic.
- *
  * @param {string} semantic The case-sensitive semantic of the property.
  * @param {*} value The value of the property that will be copied.
  * @returns {boolean} <code>true</code> if the property was set, <code>false</code> otherwise.

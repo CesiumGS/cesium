@@ -9,10 +9,8 @@ import HomeButtonViewModel from "./HomeButtonViewModel.js";
 
 /**
  * A single button widget for returning to the default camera view of the current scene.
- *
  * @alias HomeButton
- * @constructor
- *
+ * @class
  * @param {Element|string} container The DOM element or ID that will contain the widget.
  * @param {Scene} scene The Scene instance to use.
  * @param {number} [duration] The time, in seconds, it takes to complete the camera flight home.
@@ -55,7 +53,6 @@ Object.defineProperties(HomeButton.prototype, {
   /**
    * Gets the parent container.
    * @memberof HomeButton.prototype
-   *
    * @type {Element}
    */
   container: {
@@ -67,7 +64,6 @@ Object.defineProperties(HomeButton.prototype, {
   /**
    * Gets the view model.
    * @memberof HomeButton.prototype
-   *
    * @type {HomeButtonViewModel}
    */
   viewModel: {

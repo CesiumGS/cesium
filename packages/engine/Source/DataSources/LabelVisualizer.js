@@ -52,8 +52,7 @@ function EntityData(entity) {
  * A {@link Visualizer} which maps the {@link LabelGraphics} instance
  * in {@link Entity#label} to a {@link Label}.
  * @alias LabelVisualizer
- * @constructor
- *
+ * @class
  * @param {EntityCluster} entityCluster The entity cluster to manage the collection of billboards and optionally cluster with other entities.
  * @param {EntityCollection} entityCollection The entityCollection to visualize.
  */
@@ -82,7 +81,6 @@ function LabelVisualizer(entityCluster, entityCollection) {
 /**
  * Updates the primitives created by this visualizer to match their
  * Entity counterpart at the given time.
- *
  * @param {JulianDate} time The time to update to.
  * @returns {boolean} This function always returns true.
  */
@@ -258,7 +256,6 @@ LabelVisualizer.prototype.update = function (time) {
 /**
  * Computes a bounding sphere which encloses the visualization produced for the specified entity.
  * The bounding sphere is in the fixed frame of the scene's globe.
- *
  * @param {Entity} entity The entity whose bounding sphere to compute.
  * @param {BoundingSphere} result The bounding sphere onto which to store the result.
  * @returns {BoundingSphereState} BoundingSphereState.DONE if the result contains the bounding sphere,
@@ -292,7 +289,6 @@ LabelVisualizer.prototype.getBoundingSphere = function (entity, result) {
 
 /**
  * Returns true if this object was destroyed; otherwise, false.
- *
  * @returns {boolean} True if this object was destroyed; otherwise, false.
  */
 LabelVisualizer.prototype.isDestroyed = function () {

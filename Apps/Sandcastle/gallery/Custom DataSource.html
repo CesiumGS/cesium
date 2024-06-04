@@ -39,11 +39,9 @@
          * This class is an example of a custom DataSource.  It loads JSON data as
          * defined by Google's WebGL Globe, https://github.com/dataarts/webgl-globe.
          * @alias WebGLGlobeDataSource
-         * @constructor
-         *
+         * @class
          * @param {string} [name] The name of this data source.  If undefined, a name
          *                        will be derived from the url.
-         *
          * @example
          * const dataSource = new Cesium.WebGLGlobeDataSource();
          * dataSource.loadUrl('sample.json');
@@ -70,7 +68,7 @@
           /**
            * Gets a human-readable name for this instance.
            * @memberof WebGLGlobeDataSource.prototype
-           * @type {String}
+           * @type {string}
            */
           name: {
             get: function () {
@@ -99,7 +97,7 @@
           /**
            * Gets a value indicating if the data source is currently loading data.
            * @memberof WebGLGlobeDataSource.prototype
-           * @type {Boolean}
+           * @type {boolean}
            */
           isLoading: {
             get: function () {
@@ -156,7 +154,7 @@
            * so that only one series is viewed at a time.  Valid values are defined
            * in the seriesNames property.
            * @memberof WebGLGlobeDataSource.prototype
-           * @type {String}
+           * @type {string}
            */
           seriesToDisplay: {
             get: function () {
@@ -180,7 +178,7 @@
           /**
            * Gets or sets the scale factor applied to the height of each line.
            * @memberof WebGLGlobeDataSource.prototype
-           * @type {Number}
+           * @type {number}
            */
           heightScale: {
             get: function () {
@@ -196,7 +194,7 @@
           /**
            * Gets whether or not this data source should be displayed.
            * @memberof WebGLGlobeDataSource.prototype
-           * @type {Boolean}
+           * @type {boolean}
            */
           show: {
             get: function () {

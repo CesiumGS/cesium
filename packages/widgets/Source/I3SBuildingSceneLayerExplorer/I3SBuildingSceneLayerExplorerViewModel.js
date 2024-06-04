@@ -87,8 +87,7 @@ async function setLevels(i3sProvider, levels) {
 /**
  * The view model for {@link I3SBuildingSceneLayerExplorer}.
  * @alias I3sBslExplorerViewModel
- * @constructor
- *
+ * @class
  * @param {I3SDataProvider} i3sProvider I3S Data provider instance.
  */
 function I3SBuildingSceneLayerExplorerViewModel(i3sProvider) {

@@ -11,7 +11,7 @@ const InspectorShared = {};
  * @param {string} labelText The text to display in the checkbox label
  * @param {string} checkedBinding The name of the variable used for checked binding
  * @param {string} [enableBinding] The name of the variable used for enable binding
- * @return {Element}
+ * @returns {Element}
  */
 InspectorShared.createCheckbox = function (
   labelText,
@@ -44,7 +44,7 @@ InspectorShared.createCheckbox = function (
  * @param {string} headerText The text to display at the top of the section
  * @param {string} sectionVisibleBinding The name of the variable used for visible binding
  * @param {string} toggleSectionVisibilityBinding The name of the function used to toggle visibility
- * @return {Element}
+ * @returns {Element}
  */
 InspectorShared.createSection = function (
   panel,
@@ -92,7 +92,7 @@ InspectorShared.createSection = function (
  * @param {number} max The maximum value
  * @param {number} [step] The step size. Defaults to "any".
  * @param {string} [inputValueBinding] The name of the variable used for input value binding
- * @return {Element}
+ * @returns {Element}
  */
 InspectorShared.createRangeInput = function (
   rangeText,
@@ -141,7 +141,7 @@ InspectorShared.createRangeInput = function (
  * @param {string} buttonText The button text
  * @param {string} clickedBinding The name of the variable used for clicked binding
  * @param {string} [activeBinding] The name of the variable used for active binding
- * @return {Element}
+ * @returns {Element}
  */
 InspectorShared.createButton = function (
   buttonText,

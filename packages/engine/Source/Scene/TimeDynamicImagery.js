@@ -8,10 +8,8 @@ import RequestType from "../Core/RequestType.js";
 
 /**
  * Provides functionality for ImageryProviders that have time dynamic imagery
- *
  * @alias TimeDynamicImagery
- * @constructor
- *
+ * @class
  * @param {object} options Object with the following properties:
  * @param {Clock} options.clock A Clock instance that is used when determining the value for the time dimension. Required when <code>options.times</code> is specified.
  * @param {TimeIntervalCollection} options.times TimeIntervalCollection with its <code>data</code> property being an object containing time dynamic dimension and their values.
@@ -105,12 +103,10 @@ Object.defineProperties(TimeDynamicImagery.prototype, {
 
 /**
  * Gets the tile from the cache if its available.
- *
  * @param {number} x The tile X coordinate.
  * @param {number} y The tile Y coordinate.
  * @param {number} level The tile level.
  * @param {Request} [request] The request object. Intended for internal use only.
- *
  * @returns {Promise<HTMLImageElement>|undefined} A promise for the image that will resolve when the image is available, or
  *          undefined if the tile is not in the cache.
  */
@@ -134,7 +130,6 @@ TimeDynamicImagery.prototype.getFromCache = function (x, y, level, request) {
 /**
  * Checks if the next interval is approaching and will start preload the tile if necessary. Otherwise it will
  * just add the tile to a list to preload when we approach the next interval.
- *
  * @param {number} x The tile X coordinate.
  * @param {number} y The tile Y coordinate.
  * @param {number} level The tile level.

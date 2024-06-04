@@ -6,9 +6,7 @@ import ModelSilhouetteStageVS from "../../Shaders/Model/ModelSilhouetteStageVS.j
 
 /**
  * The model silhouette pipeline stage is responsible applying silhouettes to the model.
- *
  * @namespace ModelSilhouettePipelineStage
- *
  * @private
  */
 const ModelSilhouettePipelineStage = {
@@ -18,7 +16,6 @@ const ModelSilhouettePipelineStage = {
 /**
  * Tracks how many silhouettes have been created. This value is used to
  * assign a reference number to the stencil.
- *
  * @type {number}
  * @private
  */
@@ -28,24 +25,22 @@ ModelSilhouettePipelineStage.silhouettesLength = 0;
  * Process a model. This modifies the following parts of the render resources:
  *
  * <ul>
- *  <li>defines the silhouette ID for the model, if it doesn't yet exist
- *  <li>adds a define to the shaders to indicate that the model uses silhouettes</li>
- *  <li>adds a function to the vertex shader to create the silhouette around the model</li>
- *  <li>adds a function to the fragment shader to apply color to the silhouette</li>
- *  <li>adds the uniforms to the shaders for the corresponding silhouette properties</li>
- *  <li>adds a uniform to distinguish which draw command is used to render the silhouette</li>
- *  <li>sets a variable in the render resources denoting whether the model has a silhouette</li>
+ * <li>defines the silhouette ID for the model, if it doesn't yet exist
+ * <li>adds a define to the shaders to indicate that the model uses silhouettes</li>
+ * <li>adds a function to the vertex shader to create the silhouette around the model</li>
+ * <li>adds a function to the fragment shader to apply color to the silhouette</li>
+ * <li>adds the uniforms to the shaders for the corresponding silhouette properties</li>
+ * <li>adds a uniform to distinguish which draw command is used to render the silhouette</li>
+ * <li>sets a variable in the render resources denoting whether the model has a silhouette</li>
  * </ul>
  *
  * <p>
  * Note that the model must have a normal attribute in order to use silhouettes. The flag for this is
  * added to the shader in GeometryPipelineStage.
  * </p>
- *
  * @param {ModelRenderResources} renderResources The render resources for this model.
  * @param {Model} model The model.
  * @param {FrameState} frameState The frameState.
- *
  * @private
  */
 ModelSilhouettePipelineStage.process = function (

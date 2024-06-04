@@ -3,7 +3,6 @@ import Check from "../Core/Check.js";
 /**
  * An enum describing whether a variable should be added to the
  * vertex shader, the fragment shader, or both.
- *
  * @private
  */
 const ShaderDestination = {
@@ -14,9 +13,8 @@ const ShaderDestination = {
 
 /**
  * Check if a variable should be included in the vertex shader.
- *
  * @param {ShaderDestination} destination The ShaderDestination to check
- * @return {boolean} <code>true</code> if the variable appears in the vertex shader, or <code>false</code> otherwise
+ * @returns {boolean} <code>true</code> if the variable appears in the vertex shader, or <code>false</code> otherwise
  * @private
  */
 ShaderDestination.includesVertexShader = function (destination) {
@@ -32,9 +30,8 @@ ShaderDestination.includesVertexShader = function (destination) {
 
 /**
  * Check if a variable should be included in the vertex shader.
- *
  * @param {ShaderDestination} destination The ShaderDestination to check
- * @return {boolean} <code>true</code> if the variable appears in the vertex shader, or <code>false</code> otherwise
+ * @returns {boolean} <code>true</code> if the variable appears in the vertex shader, or <code>false</code> otherwise
  * @private
  */
 ShaderDestination.includesFragmentShader = function (destination) {

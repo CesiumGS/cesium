@@ -10,7 +10,6 @@ import MetadataClassProperty from "./MetadataClassProperty.js";
  * <p>
  * See the {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification/Metadata|3D Metadata Specification} for 3D Tiles
  * </p>
- *
  * @param {object} options Object with the following properties:
  * @param {string} options.id The ID of the class.
  * @param {string} [options.name] The name of the class.
@@ -18,9 +17,8 @@ import MetadataClassProperty from "./MetadataClassProperty.js";
  * @param {Object<string, MetadataClassProperty>} [options.properties] The class properties, where each key is the property ID.
  * @param {*} [options.extras] Extra user-defined properties.
  * @param {object} [options.extensions] An object containing extensions.
- *
  * @alias MetadataClass
- * @constructor
+ * @class
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 function MetadataClass(options) {
@@ -53,14 +51,11 @@ function MetadataClass(options) {
 
 /**
  * Creates a {@link MetadataClass} from either 3D Tiles 1.1, 3DTILES_metadata, EXT_structural_metadata, or EXT_feature_metadata.
- *
  * @param {object} options Object with the following properties:
  * @param {string} options.id The ID of the class.
  * @param {object} options.class The class JSON object.
  * @param {Object<string, MetadataEnum>} [options.enums] A dictionary of enums.
- *
  * @returns {MetadataClass} The newly created metadata class.
- *
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
@@ -99,7 +94,6 @@ MetadataClass.fromJson = function (options) {
 Object.defineProperties(MetadataClass.prototype, {
   /**
    * The class properties.
-   *
    * @memberof MetadataClass.prototype
    * @type {Object<string, MetadataClassProperty>}
    * @readonly
@@ -112,11 +106,9 @@ Object.defineProperties(MetadataClass.prototype, {
 
   /**
    * A dictionary mapping semantics to class properties.
-   *
    * @memberof MetadataClass.prototype
    * @type {Object<string, MetadataClassProperty>}
    * @readonly
-   *
    * @private
    */
   propertiesBySemantic: {
@@ -127,7 +119,6 @@ Object.defineProperties(MetadataClass.prototype, {
 
   /**
    * The ID of the class.
-   *
    * @memberof MetadataClass.prototype
    * @type {string}
    * @readonly
@@ -140,7 +131,6 @@ Object.defineProperties(MetadataClass.prototype, {
 
   /**
    * The name of the class.
-   *
    * @memberof MetadataClass.prototype
    * @type {string}
    * @readonly
@@ -153,7 +143,6 @@ Object.defineProperties(MetadataClass.prototype, {
 
   /**
    * The description of the class.
-   *
    * @memberof MetadataClass.prototype
    * @type {string}
    * @readonly
@@ -166,7 +155,6 @@ Object.defineProperties(MetadataClass.prototype, {
 
   /**
    * Extra user-defined properties.
-   *
    * @memberof MetadataClass.prototype
    * @type {*}
    * @readonly
@@ -179,7 +167,6 @@ Object.defineProperties(MetadataClass.prototype, {
 
   /**
    * An object containing extensions.
-   *
    * @memberof MetadataClass.prototype
    * @type {object}
    * @readonly
@@ -194,7 +181,6 @@ Object.defineProperties(MetadataClass.prototype, {
 /**
  * The class name given to the metadata class when a batch
  * table is loaded from 3D Tiles 1.0 formats.
- *
  * @private
  */
 MetadataClass.BATCH_TABLE_CLASS_NAME = "_batchTable";

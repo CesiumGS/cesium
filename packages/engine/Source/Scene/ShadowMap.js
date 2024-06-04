@@ -54,11 +54,10 @@ import ShadowMapShader from "./ShadowMapShader.js";
  * The normalOffset bias pushes the shadows forward slightly, and may be disabled
  * for applications that require ultra precise shadows.
  * </p>
- *
  * @alias ShadowMap
  * @internalConstructor
  * @class
- *
+ * @param options
  * @privateParam {object} options An object containing the following properties:
  * @privateParam {Context} options.context The context
  * @privateParam {Camera} options.lightCamera A camera representing the light source.
@@ -73,9 +72,7 @@ import ShadowMapShader from "./ShadowMapShader.js";
  * @privateParam {number} [options.darkness=0.3] The shadow darkness.
  * @privateParam {boolean} [options.normalOffset=true] Whether a normal bias is applied to shadows.
  * @privateParam {boolean} [options.fadingEnabled=true] Whether shadows start to fade out once the light gets closer to the horizon.
- *
- * @exception {DeveloperError} Only one or four cascades are supported.
- *
+ * @throws {DeveloperError} Only one or four cascades are supported.
  * @demo {@link https://sandcastle.cesium.com/index.html?src=Shadows.html|Cesium Sandcastle Shadows Demo}
  */
 function ShadowMap(options) {
@@ -106,14 +103,12 @@ function ShadowMap(options) {
   /**
    * Specifies whether the shadow map originates from a light source. Shadow maps that are used for analytical
    * purposes should set this to false so as not to affect scene rendering.
-   *
    * @private
    */
   this.fromLightSource = defaultValue(options.fromLightSource, true);
 
   /**
    * Determines the darkness of the shadows.
-   *
    * @type {number}
    * @default 0.3
    */
@@ -122,7 +117,6 @@ function ShadowMap(options) {
 
   /**
    * Determines whether shadows start to fade out once the light gets closer to the horizon.
-   *
    * @type {boolean}
    * @default true
    */
@@ -130,7 +124,6 @@ function ShadowMap(options) {
 
   /**
    * Determines the maximum distance of the shadow map. Only applicable for cascaded shadows. Larger distances may result in lower quality shadows.
-   *
    * @type {number}
    * @default 5000.0
    */
@@ -288,7 +281,6 @@ function ShadowMap(options) {
 /**
  * Global maximum shadow distance used to prevent far off receivers from extending
  * the shadow far plane. This helps set a tighter near/far when viewing objects from space.
- *
  * @private
  */
 ShadowMap.MAXIMUM_DISTANCE = 20000.0;
@@ -353,7 +345,6 @@ ShadowMap.prototype.debugCreateRenderStates = function () {
 Object.defineProperties(ShadowMap.prototype, {
   /**
    * Determines if the shadow map will be shown.
-   *
    * @memberof ShadowMap.prototype
    * @type {boolean}
    * @default true
@@ -370,7 +361,6 @@ Object.defineProperties(ShadowMap.prototype, {
 
   /**
    * Determines if a normal bias will be applied to shadows.
-   *
    * @memberof ShadowMap.prototype
    * @type {boolean}
    * @default true
@@ -390,7 +380,6 @@ Object.defineProperties(ShadowMap.prototype, {
 
   /**
    * Determines if soft shadows are enabled. Uses pcf filtering which requires more texture reads and may hurt performance.
-   *
    * @memberof ShadowMap.prototype
    * @type {boolean}
    * @default false
@@ -407,7 +396,6 @@ Object.defineProperties(ShadowMap.prototype, {
 
   /**
    * The width and height, in pixels, of each shadow map.
-   *
    * @memberof ShadowMap.prototype
    * @type {number}
    * @default 2048
@@ -423,7 +411,6 @@ Object.defineProperties(ShadowMap.prototype, {
 
   /**
    * Whether the shadow map is out of view of the scene camera.
-   *
    * @memberof ShadowMap.prototype
    * @type {boolean}
    * @readonly
@@ -437,7 +424,6 @@ Object.defineProperties(ShadowMap.prototype, {
 
   /**
    * The culling volume of the shadow frustum.
-   *
    * @memberof ShadowMap.prototype
    * @type {CullingVolume}
    * @readonly
@@ -451,7 +437,6 @@ Object.defineProperties(ShadowMap.prototype, {
 
   /**
    * The passes used for rendering shadows. Each face of a point light or each cascade for a cascaded shadow map is a separate pass.
-   *
    * @memberof ShadowMap.prototype
    * @type {ShadowPass[]}
    * @readonly
@@ -465,7 +450,6 @@ Object.defineProperties(ShadowMap.prototype, {
 
   /**
    * Whether the light source is a point light.
-   *
    * @memberof ShadowMap.prototype
    * @type {boolean}
    * @readonly
@@ -479,7 +463,6 @@ Object.defineProperties(ShadowMap.prototype, {
 
   /**
    * Debug option for visualizing the cascades by color.
-   *
    * @memberof ShadowMap.prototype
    * @type {boolean}
    * @default false
@@ -1558,6 +1541,7 @@ function updateCameras(shadowMap, frameState) {
 }
 
 /**
+ * @param frameState
  * @private
  */
 ShadowMap.prototype.update = function (frameState) {
@@ -1618,6 +1602,8 @@ ShadowMap.prototype.update = function (frameState) {
 };
 
 /**
+ * @param context
+ * @param shadowPass
  * @private
  */
 ShadowMap.prototype.updatePass = function (context, shadowPass) {

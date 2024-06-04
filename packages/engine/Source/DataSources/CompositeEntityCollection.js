@@ -121,10 +121,8 @@ function recomposite(that) {
  * collections, the property of the Entity in the last collection of the list it
  * belongs to is used.  CompositeEntityCollection can be used almost anywhere that a
  * EntityCollection is used.
- *
  * @alias CompositeEntityCollection
- * @constructor
- *
+ * @class
  * @param {EntityCollection[]} [collections] The initial list of EntityCollection instances to merge.
  * @param {DataSource|CompositeEntityCollection} [owner] The data source (or composite entity collection) which created this collection.
  */
@@ -191,12 +189,10 @@ Object.defineProperties(CompositeEntityCollection.prototype, {
 
 /**
  * Adds a collection to the composite.
- *
  * @param {EntityCollection} collection the collection to add.
  * @param {number} [index] the index to add the collection at.  If omitted, the collection will
  *                         added on top of all existing collections.
- *
- * @exception {DeveloperError} index, if supplied, must be greater than or equal to zero and less than or equal to the number of collections.
+ * @throws {DeveloperError} index, if supplied, must be greater than or equal to zero and less than or equal to the number of collections.
  */
 CompositeEntityCollection.prototype.addCollection = function (
   collection,
@@ -230,7 +226,6 @@ CompositeEntityCollection.prototype.addCollection = function (
 
 /**
  * Removes a collection from this composite, if present.
- *
  * @param {EntityCollection} collection The collection to remove.
  * @returns {boolean} true if the collection was in the composite and was removed,
  *                    false if the collection was not in the composite.
@@ -255,7 +250,6 @@ CompositeEntityCollection.prototype.removeAllCollections = function () {
 
 /**
  * Checks to see if the composite contains a given collection.
- *
  * @param {EntityCollection} collection the collection to check for.
  * @returns {boolean} true if the composite contains the collection, false otherwise.
  */
@@ -265,7 +259,6 @@ CompositeEntityCollection.prototype.containsCollection = function (collection) {
 
 /**
  * Returns true if the provided entity is in this collection, false otherwise.
- *
  * @param {Entity} entity The entity.
  * @returns {boolean} true if the provided entity is in this collection, false otherwise.
  */
@@ -275,7 +268,6 @@ CompositeEntityCollection.prototype.contains = function (entity) {
 
 /**
  * Determines the index of a given collection in the composite.
- *
  * @param {EntityCollection} collection The collection to find the index of.
  * @returns {number} The index of the collection in the composite, or -1 if the collection does not exist in the composite.
  */
@@ -285,7 +277,6 @@ CompositeEntityCollection.prototype.indexOfCollection = function (collection) {
 
 /**
  * Gets a collection by index from the composite.
- *
  * @param {number} index the index to retrieve.
  */
 CompositeEntityCollection.prototype.getCollection = function (index) {
@@ -341,10 +332,8 @@ function swapCollections(composite, i, j) {
 
 /**
  * Raises a collection up one position in the composite.
- *
  * @param {EntityCollection} collection the collection to move.
- *
- * @exception {DeveloperError} collection is not in this composite.
+ * @throws {DeveloperError} collection is not in this composite.
  */
 CompositeEntityCollection.prototype.raiseCollection = function (collection) {
   const index = getCollectionIndex(this._collections, collection);
@@ -353,10 +342,8 @@ CompositeEntityCollection.prototype.raiseCollection = function (collection) {
 
 /**
  * Lowers a collection down one position in the composite.
- *
  * @param {EntityCollection} collection the collection to move.
- *
- * @exception {DeveloperError} collection is not in this composite.
+ * @throws {DeveloperError} collection is not in this composite.
  */
 CompositeEntityCollection.prototype.lowerCollection = function (collection) {
   const index = getCollectionIndex(this._collections, collection);
@@ -365,10 +352,8 @@ CompositeEntityCollection.prototype.lowerCollection = function (collection) {
 
 /**
  * Raises a collection to the top of the composite.
- *
  * @param {EntityCollection} collection the collection to move.
- *
- * @exception {DeveloperError} collection is not in this composite.
+ * @throws {DeveloperError} collection is not in this composite.
  */
 CompositeEntityCollection.prototype.raiseCollectionToTop = function (
   collection
@@ -385,10 +370,8 @@ CompositeEntityCollection.prototype.raiseCollectionToTop = function (
 
 /**
  * Lowers a collection to the bottom of the composite.
- *
  * @param {EntityCollection} collection the collection to move.
- *
- * @exception {DeveloperError} collection is not in this composite.
+ * @throws {DeveloperError} collection is not in this composite.
  */
 CompositeEntityCollection.prototype.lowerCollectionToBottom = function (
   collection
@@ -425,8 +408,7 @@ CompositeEntityCollection.prototype.suspendEvents = function () {
  * the collection is recomposited if events are also resumed.
  * This function is reference counted and can safely be called multiple times as long as there
  * are corresponding calls to {@link EntityCollection#resumeEvents}.
- *
- * @exception {DeveloperError} resumeEvents can not be called before suspendEvents.
+ * @throws {DeveloperError} resumeEvents can not be called before suspendEvents.
  */
 CompositeEntityCollection.prototype.resumeEvents = function () {
   //>>includeStart('debug', pragmas.debug);
@@ -452,7 +434,6 @@ CompositeEntityCollection.prototype.resumeEvents = function () {
  * If the collection contains a mix of infinitely available data and non-infinite data,
  * It will return the interval pertaining to the non-infinite data only.  If all
  * data is infinite, an infinite interval will be returned.
- *
  * @returns {TimeInterval} The availability of entities in the collection.
  */
 CompositeEntityCollection.prototype.computeAvailability = function () {
@@ -461,7 +442,6 @@ CompositeEntityCollection.prototype.computeAvailability = function () {
 
 /**
  * Gets an entity with the specified id.
- *
  * @param {string} id The id of the entity to retrieve.
  * @returns {Entity|undefined} The entity with the provided id or undefined if the id did not exist in the collection.
  */

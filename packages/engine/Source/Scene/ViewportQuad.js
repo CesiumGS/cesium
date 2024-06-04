@@ -12,13 +12,10 @@ import Material from "./Material.js";
 
 /**
  * A viewport aligned quad.
- *
  * @alias ViewportQuad
- * @constructor
- *
+ * @class
  * @param {BoundingRectangle} [rectangle] The {@link BoundingRectangle} defining the quad's position within the viewport.
  * @param {Material} [material] The {@link Material} defining the surface appearance of the viewport quad.
- *
  * @example
  * const viewportQuad = new Cesium.ViewportQuad(new Cesium.BoundingRectangle(0, 0, 80, 40));
  * viewportQuad.material.uniforms.color = new Cesium.Color(1.0, 0.0, 0.0, 1.0);
@@ -26,7 +23,6 @@ import Material from "./Material.js";
 function ViewportQuad(rectangle, material) {
   /**
    * Determines if the viewport quad primitive will be shown.
-   *
    * @type {boolean}
    * @default true
    */
@@ -38,9 +34,7 @@ function ViewportQuad(rectangle, material) {
 
   /**
    * The BoundingRectangle defining the quad's position within the viewport.
-   *
    * @type {BoundingRectangle}
-   *
    * @example
    * viewportQuad.rectangle = new Cesium.BoundingRectangle(0, 0, 80, 40);
    */
@@ -58,16 +52,13 @@ function ViewportQuad(rectangle, material) {
    * <p>
    * The default material is <code>Material.ColorType</code>.
    * </p>
-   *
    * @type Material
-   *
    * @example
    * // 1. Change the color of the default material to yellow
    * viewportQuad.material.uniforms.color = new Cesium.Color(1.0, 1.0, 0.0, 1.0);
    *
    * // 2. Change material to horizontal stripes
    * viewportQuad.material = Cesium.Material.fromType(Cesium.Material.StripeType);
-   *
    * @see {@link https://github.com/CesiumGS/cesium/wiki/Fabric|Fabric}
    */
   this.material = material;
@@ -84,9 +75,9 @@ function ViewportQuad(rectangle, material) {
  * Do not call this function directly.  This is documented just to
  * list the exceptions that may be propagated when the scene is rendered:
  * </p>
- *
- * @exception {DeveloperError} this.material must be defined.
- * @exception {DeveloperError} this.rectangle must be defined.
+ * @param frameState
+ * @throws {DeveloperError} this.material must be defined.
+ * @throws {DeveloperError} this.rectangle must be defined.
  */
 ViewportQuad.prototype.update = function (frameState) {
   if (!this.show) {
@@ -146,9 +137,7 @@ ViewportQuad.prototype.update = function (frameState) {
  * <br /><br />
  * If this object was destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
- *
  * @returns {boolean} True if this object was destroyed; otherwise, false.
- *
  * @see ViewportQuad#destroy
  */
 ViewportQuad.prototype.isDestroyed = function () {
@@ -162,13 +151,9 @@ ViewportQuad.prototype.isDestroyed = function () {
  * Once an object is destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
  * assign the return value (<code>undefined</code>) to the object as done in the example.
- *
- * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
- *
- *
+ * @throws {DeveloperError} This object was destroyed, i.e., destroy() was called.
  * @example
  * quad = quad && quad.destroy();
- *
  * @see ViewportQuad#isDestroyed
  */
 ViewportQuad.prototype.destroy = function () {

@@ -330,6 +330,9 @@ Batch.prototype.destroy = function () {
 };
 
 /**
+ * @param orderedGroundPrimitives
+ * @param classificationType
+ * @param asynchronous
  * @private
  */
 function StaticGroundPolylinePerMaterialBatch(

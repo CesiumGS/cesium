@@ -7,6 +7,7 @@ import TextureMinificationFilter from "./TextureMinificationFilter.js";
 import TextureWrap from "./TextureWrap.js";
 
 /**
+ * @param options
  * @private
  */
 function Sampler(options) {

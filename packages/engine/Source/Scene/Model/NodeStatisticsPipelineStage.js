@@ -7,9 +7,7 @@ import defined from "../../Core/defined.js";
  * count resources that are created every time the pipeline is run.
  * The individual pipeline stages are responsible for keeping track of any
  * additional memory they allocate.
- *
  * @namespace NodeStatisticsPipelineStage
- *
  * @private
  */
 const NodeStatisticsPipelineStage = {

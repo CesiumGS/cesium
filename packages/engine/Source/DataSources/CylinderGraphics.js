@@ -9,7 +9,6 @@ import createPropertyDescriptor from "./createPropertyDescriptor.js";
  * @typedef {object} CylinderGraphics.ConstructorOptions
  *
  * Initialization options for the CylinderGraphics constructor
- *
  * @property {Property | boolean} [show=true] A boolean Property specifying the visibility of the cylinder.
  * @property {Property | number} [length] A numeric Property specifying the length of the cylinder.
  * @property {Property | number} [topRadius] A numeric Property specifying the radius of the top of the cylinder.
@@ -29,10 +28,8 @@ import createPropertyDescriptor from "./createPropertyDescriptor.js";
 /**
  * Describes a cylinder, truncated cone, or cone defined by a length, top radius, and bottom radius.
  * The center position and orientation are determined by the containing {@link Entity}.
- *
  * @alias CylinderGraphics
- * @constructor
- *
+ * @class
  * @param {CylinderGraphics.ConstructorOptions} [options] Object describing initialization options
  */
 function CylinderGraphics(options) {
@@ -73,7 +70,6 @@ Object.defineProperties(CylinderGraphics.prototype, {
   /**
    * Gets the event that is raised whenever a property or sub-property is changed or modified.
    * @memberof CylinderGraphics.prototype
-   *
    * @type {Event}
    * @readonly
    */
@@ -200,7 +196,6 @@ Object.defineProperties(CylinderGraphics.prototype, {
 
 /**
  * Duplicates this instance.
- *
  * @param {CylinderGraphics} [result] The object onto which to store the result.
  * @returns {CylinderGraphics} The modified result parameter or a new instance if one was not provided.
  */
@@ -228,7 +223,6 @@ CylinderGraphics.prototype.clone = function (result) {
 /**
  * Assigns each unassigned property on this object to the value
  * of the same property on the provided source object.
- *
  * @param {CylinderGraphics} source The object to be merged into this object.
  */
 CylinderGraphics.prototype.merge = function (source) {

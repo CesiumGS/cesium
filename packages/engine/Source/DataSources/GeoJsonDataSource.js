@@ -553,7 +553,6 @@ function processTopology(dataSource, geoJson, geometry, crsFunction, options) {
  * @typedef {object} GeoJsonDataSource.LoadOptions
  *
  * Initialization options for the <code>load</code> method.
- *
  * @property {string} [sourceUri] Overrides the url to use for resolving relative links.
  * @property {GeoJsonDataSource.describe} [describe=GeoJsonDataSource.defaultDescribeProperty] A function which returns a Property object (or just a string).
  * @property {number} [markerSize=GeoJsonDataSource.markerSize] The default size of the map pin created for each point, in pixels.
@@ -571,16 +570,12 @@ function processTopology(dataSource, geoJson, geometry, crsFunction, options) {
  * {@link http://www.geojson.org/|GeoJSON} and {@link https://github.com/mbostock/topojson|TopoJSON} data.
  * {@link https://github.com/mapbox/simplestyle-spec|simplestyle-spec} properties will also be used if they
  * are present.
- *
  * @alias GeoJsonDataSource
- * @constructor
- *
+ * @class
  * @param {string} [name] The name of this data source.  If undefined, a name will be taken from
  *                        the name of the GeoJSON file.
- *
  * @demo {@link https://sandcastle.cesium.com/index.html?src=GeoJSON%20and%20TopoJSON.html|Cesium Sandcastle GeoJSON and TopoJSON Demo}
  * @demo {@link https://sandcastle.cesium.com/index.html?src=GeoJSON%20simplestyle.html|Cesium Sandcastle GeoJSON simplestyle Demo}
- *
  * @example
  * const viewer = new Cesium.Viewer('cesiumContainer');
  * viewer.dataSources.add(Cesium.GeoJsonDataSource.load('../../SampleData/ne_10m_us_states.topojson', {
@@ -606,10 +601,8 @@ function GeoJsonDataSource(name) {
 
 /**
  * Creates a Promise to a new instance loaded with the provided GeoJSON or TopoJSON data.
- *
  * @param {Resource|string|object} data A url, GeoJSON object, or TopoJSON object to be loaded.
  * @param {GeoJsonDataSource.LoadOptions} [options] An object specifying configuration options
- *
  * @returns {Promise<GeoJsonDataSource>} A promise that will resolve when the data is loaded.
  */
 GeoJsonDataSource.load = function (data, options) {
@@ -853,7 +846,6 @@ Object.defineProperties(GeoJsonDataSource.prototype, {
 
   /**
    * Gets or sets the clustering options for this data source. This object can be shared between multiple data sources.
-   *
    * @memberof GeoJsonDataSource.prototype
    * @type {EntityCluster}
    */
@@ -884,10 +876,8 @@ Object.defineProperties(GeoJsonDataSource.prototype, {
 
 /**
  * Asynchronously loads the provided GeoJSON or TopoJSON data, replacing any existing data.
- *
  * @param {Resource|string|object} data A url, GeoJSON object, or TopoJSON object to be loaded.
  * @param {GeoJsonDataSource.LoadOptions} [options] An object specifying configuration options
- *
  * @returns {Promise<GeoJsonDataSource>} a promise that will resolve when the GeoJSON is loaded.
  */
 GeoJsonDataSource.prototype.load = function (data, options) {
@@ -896,10 +886,8 @@ GeoJsonDataSource.prototype.load = function (data, options) {
 
 /**
  * Asynchronously loads the provided GeoJSON or TopoJSON data, without replacing any existing data.
- *
  * @param {Resource|string|object} data A url, GeoJSON object, or TopoJSON object to be loaded.
  * @param {GeoJsonDataSource.LoadOptions} [options] An object specifying configuration options
- *
  * @returns {Promise<GeoJsonDataSource>} a promise that will resolve when the GeoJSON is loaded.
  */
 GeoJsonDataSource.prototype.process = function (data, options) {
@@ -974,7 +962,6 @@ function preload(that, data, options, clear) {
  * is not required to be implemented.  It is provided for data sources which
  * retrieve data based on the current animation time or scene state.
  * If implemented, update will be called by {@link DataSourceDisplay} once a frame.
- *
  * @param {JulianDate} time The simulation time.
  * @returns {boolean} True if this data source is ready to be displayed at the provided time, false otherwise.
  */

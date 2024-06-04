@@ -54,6 +54,9 @@ const scratchCartesian3 = new Cartesian3();
 const scratchNormal = new Cartesian3();
 /**
  * Returns the positions raised to the given heights
+ * @param positions
+ * @param options
+ * @param extrude
  * @private
  */
 EllipseGeometryLibrary.raisePositionsToHeight = function (
@@ -108,6 +111,9 @@ const eastVecScratch = new Cartesian3();
 const northVecScratch = new Cartesian3();
 /**
  * Returns an array of positions that make up the ellipse.
+ * @param options
+ * @param addFillPositions
+ * @param addEdgePositions
  * @private
  */
 EllipseGeometryLibrary.computeEllipsePositions = function (

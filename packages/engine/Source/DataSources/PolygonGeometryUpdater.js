@@ -60,8 +60,7 @@ function PolygonGeometryOptions(entity) {
  * A {@link GeometryUpdater} for polygons.
  * Clients do not normally create this class directly, but instead rely on {@link DataSourceDisplay}.
  * @alias PolygonGeometryUpdater
- * @constructor
- *
+ * @class
  * @param {Entity} entity The entity containing the geometry to be visualized.
  * @param {Scene} scene The scene where visualization is taking place.
  */
@@ -86,11 +85,9 @@ if (defined(Object.create)) {
 
 /**
  * Creates the geometry instance which represents the fill of the geometry.
- *
  * @param {JulianDate} time The time to use when retrieving initial attribute values.
  * @returns {GeometryInstance} The geometry instance representing the filled portion of the geometry.
- *
- * @exception {DeveloperError} This instance does not represent a filled geometry.
+ * @throws {DeveloperError} This instance does not represent a filled geometry.
  */
 PolygonGeometryUpdater.prototype.createFillGeometryInstance = function (time) {
   //>>includeStart('debug', pragmas.debug);
@@ -161,11 +158,9 @@ PolygonGeometryUpdater.prototype.createFillGeometryInstance = function (time) {
 
 /**
  * Creates the geometry instance which represents the outline of the geometry.
- *
  * @param {JulianDate} time The time to use when retrieving initial attribute values.
  * @returns {GeometryInstance} The geometry instance representing the outline portion of the geometry.
- *
- * @exception {DeveloperError} This instance does not represent an outlined geometry.
+ * @throws {DeveloperError} This instance does not represent an outlined geometry.
  */
 PolygonGeometryUpdater.prototype.createOutlineGeometryInstance = function (
   time
@@ -446,6 +441,9 @@ PolygonGeometryUpdater.prototype._getIsClosed = function (options) {
 PolygonGeometryUpdater.DynamicGeometryUpdater = DyanmicPolygonGeometryUpdater;
 
 /**
+ * @param geometryUpdater
+ * @param primitives
+ * @param groundPrimitives
  * @private
  */
 function DyanmicPolygonGeometryUpdater(

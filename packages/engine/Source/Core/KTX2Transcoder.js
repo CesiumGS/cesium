@@ -6,7 +6,6 @@ import TaskProcessor from "./TaskProcessor.js";
 
 /**
  * Transcodes KTX2 textures using web workers.
- *
  * @private
  */
 function KTX2Transcoder() {}

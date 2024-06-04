@@ -6,15 +6,12 @@ const scratchBarycentricCoords = new Cartesian3();
 
 /**
  * Determines if a point is inside a triangle.
- *
  * @function pointInsideTriangle
- *
  * @param {Cartesian2|Cartesian3} point The point to test.
  * @param {Cartesian2|Cartesian3} p0 The first point of the triangle.
  * @param {Cartesian2|Cartesian3} p1 The second point of the triangle.
  * @param {Cartesian2|Cartesian3} p2 The third point of the triangle.
  * @returns {boolean} <code>true</code> if the point is inside the triangle; otherwise, <code>false</code>.
- *
  * @example
  * // Returns true
  * const p = new Cesium.Cartesian2(0.25, 0.25);

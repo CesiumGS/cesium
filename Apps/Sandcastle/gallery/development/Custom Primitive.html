@@ -47,6 +47,7 @@
          * Simple example of writing a Primitive from scratch. This
          * primitive displays a procedurally-generated surface at a given
          * position on the globe.
+         * @param cartographicPosition
          */
         function CustomPrimitive(cartographicPosition) {
           this.show = true;
@@ -84,6 +85,8 @@
         /**
          * generate a quad that's subdivided into faceResolution x faceResolution quads.
          * The vertices will be adjusted in the vertex shader.
+         * @param faceResolution
+         * @param halfWidthMeters
          */
         function generateVertices(faceResolution, halfWidthMeters) {
           const vertexResolution = faceResolution + 1;
@@ -109,6 +112,7 @@
 
         /**
          * Tessellate a big square region into faceResolution x faceResolution quads
+         * @param faceResolution
          */
         function generateIndices(faceResolution) {
           const indicesPerQuad = 6;
@@ -141,6 +145,7 @@
         const scratchColor = new Cesium.Color();
         /**
          * Generate a 1D texture for the color palette
+         * @param context
          */
         function generateTexture(context) {
           const width = 256;

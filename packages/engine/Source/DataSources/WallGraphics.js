@@ -9,7 +9,6 @@ import createPropertyDescriptor from "./createPropertyDescriptor.js";
  * @typedef {object} WallGraphics.ConstructorOptions
  *
  * Initialization options for the WallGraphics constructor
- *
  * @property {Property | boolean} [show=true] A boolean Property specifying the visibility of the wall.
  * @property {Property | Cartesian3[]} [positions] A Property specifying the array of {@link Cartesian3} positions which define the top of the wall.
  * @property {Property | number[]} [minimumHeights] A Property specifying an array of heights to be used for the bottom of the wall instead of the globe surface.
@@ -27,12 +26,9 @@ import createPropertyDescriptor from "./createPropertyDescriptor.js";
 /**
  * Describes a two dimensional wall defined as a line strip and optional maximum and minimum heights.
  * The wall conforms to the curvature of the globe and can be placed along the surface or at altitude.
- *
  * @alias WallGraphics
- * @constructor
- *
+ * @class
  * @param {WallGraphics.ConstructorOptions} [options] Object describing initialization options
- *
  * @see Entity
  * @demo {@link https://sandcastle.cesium.com/index.html?src=Wall.html|Cesium Sandcastle Wall Demo}
  */
@@ -70,7 +66,6 @@ Object.defineProperties(WallGraphics.prototype, {
   /**
    * Gets the event that is raised whenever a property or sub-property is changed or modified.
    * @memberof WallGraphics.prototype
-   *
    * @type {Event}
    * @readonly
    */
@@ -183,7 +178,6 @@ Object.defineProperties(WallGraphics.prototype, {
 
 /**
  * Duplicates this instance.
- *
  * @param {WallGraphics} [result] The object onto which to store the result.
  * @returns {WallGraphics} The modified result parameter or a new instance if one was not provided.
  */
@@ -209,7 +203,6 @@ WallGraphics.prototype.clone = function (result) {
 /**
  * Assigns each unassigned property on this object to the value
  * of the same property on the provided source object.
- *
  * @param {WallGraphics} source The object to be merged into this object.
  */
 WallGraphics.prototype.merge = function (source) {

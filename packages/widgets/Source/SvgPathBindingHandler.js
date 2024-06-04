@@ -15,9 +15,7 @@ const svgClassName = "cesium-svgPath-svg";
  * <li>height: The height of the SVG path with no transformations applied.</li>
  * <li>css: Optional. A string containing additional CSS classes to apply to the SVG. 'cesium-svgPath-svg' is always applied.</li>
  * </ul>
- *
  * @namespace SvgPathBindingHandler
- *
  * @example
  * // Create an SVG as a child of a div
  * <div data-bind="cesiumSvgPath: { path: 'M 100 100 L 300 100 L 200 300 z', width: 28, height: 28 }"></div>
@@ -30,6 +28,7 @@ const svgClassName = "cesium-svgPath-svg";
  */
 const SvgPathBindingHandler = {
   /**
+   * @param knockout
    * @function
    */
   register: function (knockout) {

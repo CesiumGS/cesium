@@ -1,7 +1,6 @@
 /**
  * @alias KmlLookAt
- * @constructor
- *
+ * @class
  * @param {Cartesian3} position camera position
  * @param {HeadingPitchRange} headingPitchRange camera orientation
  */

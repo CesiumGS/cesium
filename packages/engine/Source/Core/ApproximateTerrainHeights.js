@@ -36,7 +36,7 @@ const ApproximateTerrainHeights = {};
 
 /**
  * Initializes the minimum and maximum terrain heights
- * @return {Promise<void>}
+ * @returns {Promise<void>}
  */
 ApproximateTerrainHeights.initialize = function () {
   let initPromise = ApproximateTerrainHeights._initPromise;
@@ -56,8 +56,8 @@ ApproximateTerrainHeights.initialize = function () {
 /**
  * Computes the minimum and maximum terrain heights for a given rectangle
  * @param {Rectangle} rectangle The bounding rectangle
- * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid
- * @return {{minimumTerrainHeight: number, maximumTerrainHeight: number}}
+ * @param {Ellipsoid} [ellipsoid] The ellipsoid
+ * @returns {{minimumTerrainHeight: number, maximumTerrainHeight: number}}
  */
 ApproximateTerrainHeights.getMinimumMaximumHeights = function (
   rectangle,
@@ -130,8 +130,8 @@ ApproximateTerrainHeights.getMinimumMaximumHeights = function (
 /**
  * Computes the bounding sphere based on the tile heights in the rectangle
  * @param {Rectangle} rectangle The bounding rectangle
- * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid
- * @return {BoundingSphere} The result bounding sphere
+ * @param {Ellipsoid} [ellipsoid] The ellipsoid
+ * @returns {BoundingSphere} The result bounding sphere
  */
 ApproximateTerrainHeights.getBoundingSphere = function (rectangle, ellipsoid) {
   //>>includeStart('debug', pragmas.debug);

@@ -40,6 +40,7 @@ const pickTilesetPassState = new Cesium3DTilePassState({
 });
 
 /**
+ * @param scene
  * @private
  */
 function Picking(scene) {
@@ -245,8 +246,8 @@ const scratchColorZero = new Color(0.0, 0.0, 0.0, 0.0);
  * </p>
  * @param {Scene} scene
  * @param {Cartesian2} windowPosition Window coordinates to perform picking on.
- * @param {number} [width=3] Width of the pick rectangle.
- * @param {number} [height=3] Height of the pick rectangle.
+ * @param {number} [width] Width of the pick rectangle.
+ * @param {number} [height] Height of the pick rectangle.
  * @returns {object} Object containing the picked primitive.
  */
 Picking.prototype.pick = function (scene, windowPosition, width, height) {
@@ -316,11 +317,10 @@ Picking.prototype.pick = function (scene, windowPosition, width, height) {
  * Returns an object with information about the voxel sample rendered at
  * a particular window coordinate. Returns <code>undefined</code> if there is no
  * voxel at that position.
- *
  * @param {Scene} scene
  * @param {Cartesian2} windowPosition Window coordinates to perform picking on.
- * @param {number} [width=3] Width of the pick rectangle.
- * @param {number} [height=3] Height of the pick rectangle.
+ * @param {number} [width] Width of the pick rectangle.
+ * @param {number} [height] Height of the pick rectangle.
  * @returns {object|undefined} Object containing the picked primitive.
  */
 Picking.prototype.pickVoxelCoordinate = function (

@@ -8,10 +8,10 @@ import DeveloperError from "../Core/DeveloperError.js";
  * <p>
  * Implements the {@link Cesium3DTileContent} interface.
  * </p>
- *
+ * @param tileset
+ * @param tile
  * @alias Empty3DTileContent
- * @constructor
- *
+ * @class
  * @private
  */
 function Empty3DTileContent(tileset, tile) {
@@ -66,9 +66,7 @@ Object.defineProperties(Empty3DTileContent.prototype, {
 
   /**
    * Returns true when the tile's content is ready to render; otherwise false
-   *
    * @memberof Empty3DTileContent.prototype
-   *
    * @type {boolean}
    * @readonly
    * @private
@@ -131,6 +129,8 @@ Object.defineProperties(Empty3DTileContent.prototype, {
 /**
  * Part of the {@link Cesium3DTileContent} interface.  <code>Empty3DTileContent</code>
  * always returns <code>false</code> since a tile of this type does not have any features.
+ * @param batchId
+ * @param name
  */
 Empty3DTileContent.prototype.hasProperty = function (batchId, name) {
   return false;
@@ -139,6 +139,7 @@ Empty3DTileContent.prototype.hasProperty = function (batchId, name) {
 /**
  * Part of the {@link Cesium3DTileContent} interface.  <code>Empty3DTileContent</code>
  * always returns <code>undefined</code> since a tile of this type does not have any features.
+ * @param batchId
  */
 Empty3DTileContent.prototype.getFeature = function (batchId) {
   return undefined;

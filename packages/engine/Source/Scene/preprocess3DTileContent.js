@@ -8,7 +8,6 @@ import Cesium3DTileContentType from "./Cesium3DTileContentType.js";
  * Results of the preprocess3DTileContent() function. This includes the
  * {@link Cesium3DTileContentType} and the payload. The payload is either
  * binary or JSON depending on the content type.
- *
  * @typedef {object} PreprocessedContent
  * @property {Cesium3DTileContentType} contentType The type of the content
  * @property {Uint8Array} [binaryPayload] For binary files, the payload is returned as a typed array with byteOffset of 0
@@ -19,9 +18,8 @@ import Cesium3DTileContentType from "./Cesium3DTileContentType.js";
 /**
  * Preprocess a {@link Cesium3DTileContent}, to determine the type of content
  * and to parse JSON files into objects.
- *
  * @param {ArrayBuffer} arrayBuffer The raw binary payload
- * @return {PreprocessedContent}
+ * @returns {PreprocessedContent}
  * @private
  */
 function preprocess3DTileContent(arrayBuffer) {

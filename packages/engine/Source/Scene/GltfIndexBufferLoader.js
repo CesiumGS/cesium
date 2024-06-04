@@ -16,11 +16,9 @@ import ResourceLoaderState from "./ResourceLoaderState.js";
  * <p>
  * Implements the {@link ResourceLoader} interface.
  * </p>
- *
  * @alias GltfIndexBufferLoader
- * @constructor
+ * @class
  * @augments ResourceLoader
- *
  * @param {object} options Object with the following properties:
  * @param {ResourceCache} options.resourceCache The {@link ResourceCache} (to avoid circular dependencies).
  * @param {object} options.gltf The glTF JSON.
@@ -29,9 +27,9 @@ import ResourceLoaderState from "./ResourceLoaderState.js";
  * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
  * @param {object} [options.draco] The Draco extension object.
  * @param {string} [options.cacheKey] The cache key of the resource.
- * @param {boolean} [options.asynchronous=true] Determines if WebGL resource creation will be spread out over several frames or block until all WebGL resources are created.
- * @param {boolean} [options.loadBuffer=false] Load the index buffer as a GPU index buffer.
- * @param {boolean} [options.loadTypedArray=false] Load the index buffer as a typed array.
+ * @param {boolean} [options.asynchronous] Determines if WebGL resource creation will be spread out over several frames or block until all WebGL resources are created.
+ * @param {boolean} [options.loadBuffer] Load the index buffer as a GPU index buffer.
+ * @param {boolean} [options.loadTypedArray] Load the index buffer as a typed array.
  * @private
  */
 function GltfIndexBufferLoader(options) {
@@ -89,9 +87,7 @@ if (defined(Object.create)) {
 Object.defineProperties(GltfIndexBufferLoader.prototype, {
   /**
    * The cache key of the resource.
-   *
    * @memberof GltfIndexBufferLoader.prototype
-   *
    * @type {string}
    * @readonly
    * @private
@@ -103,9 +99,7 @@ Object.defineProperties(GltfIndexBufferLoader.prototype, {
   },
   /**
    * The index buffer. This is only defined when <code>loadBuffer</code> is true.
-   *
    * @memberof GltfIndexBufferLoader.prototype
-   *
    * @type {Buffer}
    * @readonly
    * @private
@@ -117,9 +111,7 @@ Object.defineProperties(GltfIndexBufferLoader.prototype, {
   },
   /**
    * The typed array containing indices. This is only defined when <code>loadTypedArray</code> is true.
-   *
    * @memberof GltfIndexBufferLoader.prototype
-   *
    * @type {Uint8Array|Uint16Array|Uint32Array}
    * @readonly
    * @private
@@ -132,9 +124,7 @@ Object.defineProperties(GltfIndexBufferLoader.prototype, {
 
   /**
    * The index datatype after decode.
-   *
    * @memberof GltfIndexBufferLoader.prototype
-   *
    * @type {IndexDatatype}
    * @readonly
    * @private
@@ -315,7 +305,6 @@ function createIndexBuffer(typedArray, indexDatatype, context) {
 
 /**
  * Processes the resource until it becomes ready.
- *
  * @param {FrameState} frameState The frame state.
  * @private
  */

@@ -3,12 +3,9 @@ import Event from "../Core/Event.js";
 
 /**
  * A {@link Property} whose value does not change with respect to simulation time.
- *
  * @alias ConstantProperty
- * @constructor
- *
+ * @class
  * @param {*} [value] The property value.
- *
  * @see ConstantPositionProperty
  */
 function ConstantProperty(value) {
@@ -24,7 +21,6 @@ Object.defineProperties(ConstantProperty.prototype, {
    * Gets a value indicating if this property is constant.
    * This property always returns <code>true</code>.
    * @memberof ConstantProperty.prototype
-   *
    * @type {boolean}
    * @readonly
    */
@@ -36,7 +32,6 @@ Object.defineProperties(ConstantProperty.prototype, {
    * The definition is changed whenever setValue is called with data different
    * than the current value.
    * @memberof ConstantProperty.prototype
-   *
    * @type {Event}
    * @readonly
    */
@@ -49,7 +44,6 @@ Object.defineProperties(ConstantProperty.prototype, {
 
 /**
  * Gets the value of the property.
- *
  * @param {JulianDate} [time] The time for which to retrieve the value.  This parameter is unused since the value does not change with respect to time.
  * @param {object} [result] The object to store the value into, if omitted, a new instance is created and returned.
  * @returns {object} The modified result parameter or a new instance if the result parameter was not supplied.
@@ -60,7 +54,6 @@ ConstantProperty.prototype.getValue = function (time, result) {
 
 /**
  * Sets the value of the property.
- *
  * @param {*} value The property value.
  */
 ConstantProperty.prototype.setValue = function (value) {
@@ -83,7 +76,6 @@ ConstantProperty.prototype.setValue = function (value) {
 /**
  * Compares this property to the provided property and returns
  * <code>true</code> if they are equal, <code>false</code> otherwise.
- *
  * @param {Property} [other] The other property.
  * @returns {boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
  */
@@ -98,7 +90,6 @@ ConstantProperty.prototype.equals = function (other) {
 
 /**
  * Gets this property's value.
- *
  * @returns {*} This property's value.
  */
 ConstantProperty.prototype.valueOf = function () {
@@ -107,7 +98,6 @@ ConstantProperty.prototype.valueOf = function () {
 
 /**
  * Creates a string representing this property's value.
- *
  * @returns {string} A string representing the property's value.
  */
 ConstantProperty.prototype.toString = function () {

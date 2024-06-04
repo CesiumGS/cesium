@@ -10,7 +10,6 @@ import UrlTemplateImageryProvider from "./UrlTemplateImageryProvider.js";
 
 /**
  * EPSG codes known to include reverse axis orders, but are not within 4000-5000.
- *
  * @type {number[]}
  */
 const includesReverseAxis = [
@@ -23,7 +22,6 @@ const includesReverseAxis = [
 
 /**
  * EPSG codes known to not include reverse axis orders, and are within 4000-5000.
- *
  * @type {number[]}
  */
 const excludesReverseAxis = [
@@ -35,7 +33,6 @@ const excludesReverseAxis = [
  * @typedef {object} WebMapServiceImageryProvider.ConstructorOptions
  *
  * Initialization options for the WebMapServiceImageryProvider constructor
- *
  * @property {Resource|string} url The URL of the WMS service. The URL supports the same keywords as the {@link UrlTemplateImageryProvider}.
  * @property {string} layers The layers to include, separated by commas.
  * @property {object} [parameters=WebMapServiceImageryProvider.DefaultParameters] Additional parameters to pass to the WMS server in the GetMap URL.
@@ -73,12 +70,9 @@ const excludesReverseAxis = [
 
 /**
  * Provides tiled imagery hosted by a Web Map Service (WMS) server.
- *
  * @alias WebMapServiceImageryProvider
- * @constructor
- *
+ * @class
  * @param {WebMapServiceImageryProvider.ConstructorOptions} options Object describing initialization options
- *
  * @see ArcGisMapServerImageryProvider
  * @see BingMapsImageryProvider
  * @see GoogleEarthEnterpriseMapsProvider
@@ -87,10 +81,8 @@ const excludesReverseAxis = [
  * @see TileMapServiceImageryProvider
  * @see WebMapTileServiceImageryProvider
  * @see UrlTemplateImageryProvider
- *
  * @see {@link http://resources.esri.com/help/9.3/arcgisserver/apis/rest/|ArcGIS Server REST API}
  * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
- *
  * @example
  * const provider = new Cesium.WebMapServiceImageryProvider({
  *     url : 'https://sampleserver1.arcgisonline.com/ArcGIS/services/Specialty/ESRI_StatesCitiesRivers_USA/MapServer/WMSServer',
@@ -526,7 +518,6 @@ Object.defineProperties(WebMapServiceImageryProvider.prototype, {
 
 /**
  * Gets the credits to be displayed when a given tile is displayed.
- *
  * @param {number} x The tile X coordinate.
  * @param {number} y The tile Y coordinate.
  * @param {number} level The tile level;
@@ -538,7 +529,6 @@ WebMapServiceImageryProvider.prototype.getTileCredits = function (x, y, level) {
 
 /**
  * Requests the image for a given tile.
- *
  * @param {number} x The tile X coordinate.
  * @param {number} y The tile Y coordinate.
  * @param {number} level The tile level.
@@ -578,13 +568,12 @@ WebMapServiceImageryProvider.prototype.requestImage = function (
 /**
  * Asynchronously determines what features, if any, are located at a given longitude and latitude within
  * a tile.
- *
  * @param {number} x The tile X coordinate.
  * @param {number} y The tile Y coordinate.
  * @param {number} level The tile level.
  * @param {number} longitude The longitude at which to pick features.
  * @param {number} latitude  The latitude at which to pick features.
- * @return {Promise<ImageryLayerFeatureInfo[]>|undefined} A promise for the picked features that will resolve when the asynchronous
+ * @returns {Promise<ImageryLayerFeatureInfo[]>|undefined} A promise for the picked features that will resolve when the asynchronous
  *                   picking completes.  The resolved value is an array of {@link ImageryLayerFeatureInfo}
  *                   instances.  The array may be empty if no features are found at the given location.
  */
@@ -605,12 +594,11 @@ WebMapServiceImageryProvider.prototype.pickFeatures = function (
 
 /**
  * The default parameters to include in the WMS URL to obtain images.  The values are as follows:
- *    service=WMS
- *    version=1.1.1
- *    request=GetMap
- *    styles=
- *    format=image/jpeg
- *
+ * service=WMS
+ * version=1.1.1
+ * request=GetMap
+ * styles=
+ * format=image/jpeg
  * @constant
  * @type {object}
  */
@@ -624,10 +612,9 @@ WebMapServiceImageryProvider.DefaultParameters = Object.freeze({
 
 /**
  * The default parameters to include in the WMS URL to get feature information.  The values are as follows:
- *     service=WMS
- *     version=1.1.1
- *     request=GetFeatureInfo
- *
+ * service=WMS
+ * version=1.1.1
+ * request=GetFeatureInfo
  * @constant
  * @type {object}
  */

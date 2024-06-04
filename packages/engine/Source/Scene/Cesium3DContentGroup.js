@@ -6,12 +6,10 @@ import defaultValue from "../Core/defaultValue.js";
  * more consistent, i.e. metadata can be accessed via
  * <code>content.group.metadata</code> much like tile metadata is accessed as
  * <code>tile.metadata</code>.
- *
  * @param {object} options Object with the following properties:
  * @param {GroupMetadata} options.metadata The metadata associated with this group.
- *
  * @alias Cesium3DContentGroup
- * @constructor
+ * @class
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
@@ -27,11 +25,8 @@ function Cesium3DContentGroup(options) {
 Object.defineProperties(Cesium3DContentGroup.prototype, {
   /**
    * Get the metadata for this group
-   *
    * @memberof Cesium3DContentGroup.prototype
-   *
    * @type {GroupMetadata}
-   *
    * @readonly
    */
   metadata: {

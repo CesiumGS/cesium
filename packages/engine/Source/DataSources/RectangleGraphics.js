@@ -9,7 +9,6 @@ import createPropertyDescriptor from "./createPropertyDescriptor.js";
  * @typedef {object} RectangleGraphics.ConstructorOptions
  *
  * Initialization options for the RectangleGraphics constructor
- *
  * @property {Property | boolean} [show=true] A boolean Property specifying the visibility of the rectangle.
  * @property {Property | Rectangle} [coordinates] The Property specifying the {@link Rectangle}.
  * @property {Property | number} [height=0] A numeric Property specifying the altitude of the rectangle relative to the ellipsoid surface.
@@ -34,12 +33,9 @@ import createPropertyDescriptor from "./createPropertyDescriptor.js";
  * Describes graphics for a {@link Rectangle}.
  * The rectangle conforms to the curvature of the globe and can be placed on the surface or
  * at altitude and can optionally be extruded into a volume.
- *
  * @alias RectangleGraphics
- * @constructor
- *
+ * @class
  * @param {RectangleGraphics.ConstructorOptions} [options] Object describing initialization options
- *
  * @see Entity
  * @demo {@link https://sandcastle.cesium.com/index.html?src=Rectangle.html|Cesium Sandcastle Rectangle Demo}
  */
@@ -89,7 +85,6 @@ Object.defineProperties(RectangleGraphics.prototype, {
   /**
    * Gets the event that is raised whenever a property or sub-property is changed or modified.
    * @memberof RectangleGraphics.prototype
-   *
    * @type {Event}
    * @readonly
    */
@@ -250,7 +245,6 @@ Object.defineProperties(RectangleGraphics.prototype, {
 
 /**
  * Duplicates this instance.
- *
  * @param {RectangleGraphics} [result] The object onto which to store the result.
  * @returns {RectangleGraphics} The modified result parameter or a new instance if one was not provided.
  */
@@ -282,7 +276,6 @@ RectangleGraphics.prototype.clone = function (result) {
 /**
  * Assigns each unassigned property on this object to the value
  * of the same property on the provided source object.
- *
  * @param {RectangleGraphics} source The object to be merged into this object.
  */
 RectangleGraphics.prototype.merge = function (source) {

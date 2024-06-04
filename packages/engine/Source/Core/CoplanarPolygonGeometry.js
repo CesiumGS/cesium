@@ -223,17 +223,14 @@ function createGeometryFromPolygon(
 
 /**
  * A description of a polygon composed of arbitrary coplanar positions.
- *
  * @alias CoplanarPolygonGeometry
- * @constructor
- *
+ * @class
  * @param {object} options Object with the following properties:
  * @param {PolygonHierarchy} options.polygonHierarchy A polygon hierarchy that can include holes.
- * @param {number} [options.stRotation=0.0] The rotation of the texture coordinates, in radians. A positive rotation is counter-clockwise.
- * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
- * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference.
+ * @param {number} [options.stRotation] The rotation of the texture coordinates, in radians. A positive rotation is counter-clockwise.
+ * @param {VertexFormat} [options.vertexFormat] The vertex attributes to be computed.
+ * @param {Ellipsoid} [options.ellipsoid] The ellipsoid to be used as a reference.
  * @param {PolygonHierarchy} [options.textureCoordinates] Texture coordinates as a {@link PolygonHierarchy} of {@link Cartesian2} points.
- *
  * @example
  * const polygonGeometry = new Cesium.CoplanarPolygonGeometry({
  *  polygonHierarchy: new Cesium.PolygonHierarchy(
@@ -244,7 +241,6 @@ function createGeometryFromPolygon(
  *      -80.0, 30.0, 0.0
  *   ]))
  * });
- *
  */
 function CoplanarPolygonGeometry(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -286,15 +282,13 @@ function CoplanarPolygonGeometry(options) {
 
 /**
  * A description of a coplanar polygon from an array of positions.
- *
  * @param {object} options Object with the following properties:
  * @param {Cartesian3[]} options.positions An array of positions that defined the corner points of the polygon.
- * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
- * @param {number} [options.stRotation=0.0] The rotation of the texture coordinates, in radians. A positive rotation is counter-clockwise.
- * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference.
+ * @param {VertexFormat} [options.vertexFormat] The vertex attributes to be computed.
+ * @param {number} [options.stRotation] The rotation of the texture coordinates, in radians. A positive rotation is counter-clockwise.
+ * @param {Ellipsoid} [options.ellipsoid] The ellipsoid to be used as a reference.
  * @param {PolygonHierarchy} [options.textureCoordinates] Texture coordinates as a {@link PolygonHierarchy} of {@link Cartesian2} points.
  * @returns {CoplanarPolygonGeometry}
- *
  * @example
  * // create a polygon from points
  * const polygon = Cesium.CoplanarPolygonGeometry.fromPositions({
@@ -307,7 +301,6 @@ function CoplanarPolygonGeometry(options) {
  *   ])
  * });
  * const geometry = Cesium.PolygonGeometry.createGeometry(polygon);
- *
  * @see PolygonGeometry#createGeometry
  */
 CoplanarPolygonGeometry.fromPositions = function (options) {
@@ -331,11 +324,9 @@ CoplanarPolygonGeometry.fromPositions = function (options) {
 
 /**
  * Stores the provided instance into the provided array.
- *
  * @param {CoplanarPolygonGeometry} value The value to pack.
  * @param {number[]} array The array to pack into.
- * @param {number} [startingIndex=0] The index into the array at which to start packing the elements.
- *
+ * @param {number} [startingIndex] The index into the array at which to start packing the elements.
  * @returns {number[]} The array that was packed into
  */
 CoplanarPolygonGeometry.pack = function (value, array, startingIndex) {
@@ -382,9 +373,8 @@ const scratchOptions = {
 };
 /**
  * Retrieves an instance from a packed array.
- *
  * @param {number[]} array The packed array.
- * @param {number} [startingIndex=0] The starting index of the element to be unpacked.
+ * @param {number} [startingIndex] The starting index of the element to be unpacked.
  * @param {CoplanarPolygonGeometry} [result] The object into which to store the result.
  * @returns {CoplanarPolygonGeometry} The modified result parameter or a new CoplanarPolygonGeometry instance if one was not provided.
  */
@@ -446,7 +436,6 @@ CoplanarPolygonGeometry.unpack = function (array, startingIndex, result) {
 
 /**
  * Computes the geometric representation of an arbitrary coplanar polygon, including its vertices, indices, and a bounding sphere.
- *
  * @param {CoplanarPolygonGeometry} polygonGeometry A description of the polygon.
  * @returns {Geometry|undefined} The computed vertices and indices.
  */

@@ -5,7 +5,6 @@ import StencilOperation from "./StencilOperation.js";
  * The most significant bit is used to identify whether the pixel is 3D Tiles.
  * The next three bits store selection depth for the skip LODs optimization.
  * The last four bits are for increment/decrement shadow volume operations for classification.
- *
  * @private
  */
 const StencilConstants = {

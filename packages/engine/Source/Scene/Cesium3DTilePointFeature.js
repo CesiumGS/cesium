@@ -21,12 +21,14 @@ import createBillboardPointCallback from "./createBillboardPointCallback.js";
  * Do not construct this directly.  Access it through {@link Cesium3DTileContent#getFeature}
  * or picking using {@link Scene#pick} and {@link Scene#pickPosition}.
  * </p>
- *
+ * @param content
+ * @param batchId
+ * @param billboard
+ * @param label
+ * @param polyline
  * @alias Cesium3DTilePointFeature
- * @constructor
- *
+ * @class
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
- *
  * @example
  * // On mouse over, display all the properties for a feature in the console log.
  * handler.setInputAction(function(movement) {
@@ -77,11 +79,8 @@ Object.defineProperties(Cesium3DTilePointFeature.prototype, {
   /**
    * Gets or sets if the feature will be shown. This is set for all features
    * when a style's show is evaluated.
-   *
    * @memberof Cesium3DTilePointFeature.prototype
-   *
    * @type {boolean}
-   *
    * @default true
    */
   show: {
@@ -100,9 +99,7 @@ Object.defineProperties(Cesium3DTilePointFeature.prototype, {
    * <p>
    * Only applied when <code>image</code> is <code>undefined</code>.
    * </p>
-   *
    * @memberof Cesium3DTilePointFeature.prototype
-   *
    * @type {Color}
    */
   color: {
@@ -120,9 +117,7 @@ Object.defineProperties(Cesium3DTilePointFeature.prototype, {
    * <p>
    * Only applied when <code>image</code> is <code>undefined</code>.
    * </p>
-   *
    * @memberof Cesium3DTilePointFeature.prototype
-   *
    * @type {number}
    */
   pointSize: {
@@ -140,9 +135,7 @@ Object.defineProperties(Cesium3DTilePointFeature.prototype, {
    * <p>
    * Only applied when <code>image</code> is <code>undefined</code>.
    * </p>
-   *
    * @memberof Cesium3DTilePointFeature.prototype
-   *
    * @type {Color}
    */
   pointOutlineColor: {
@@ -160,9 +153,7 @@ Object.defineProperties(Cesium3DTilePointFeature.prototype, {
    * <p>
    * Only applied when <code>image</code> is <code>undefined</code>.
    * </p>
-   *
    * @memberof Cesium3DTilePointFeature.prototype
-   *
    * @type {number}
    */
   pointOutlineWidth: {
@@ -180,9 +171,7 @@ Object.defineProperties(Cesium3DTilePointFeature.prototype, {
    * <p>
    * The color will be applied to the label if <code>labelText</code> is defined.
    * </p>
-   *
    * @memberof Cesium3DTilePointFeature.prototype
-   *
    * @type {Color}
    */
   labelColor: {
@@ -200,9 +189,7 @@ Object.defineProperties(Cesium3DTilePointFeature.prototype, {
    * <p>
    * The outline color will be applied to the label if <code>labelText</code> is defined.
    * </p>
-   *
    * @memberof Cesium3DTilePointFeature.prototype
-   *
    * @type {Color}
    */
   labelOutlineColor: {
@@ -219,9 +206,7 @@ Object.defineProperties(Cesium3DTilePointFeature.prototype, {
    * <p>
    * The outline width will be applied to the point if <code>labelText</code> is defined.
    * </p>
-   *
    * @memberof Cesium3DTilePointFeature.prototype
-   *
    * @type {number}
    */
   labelOutlineWidth: {
@@ -238,9 +223,7 @@ Object.defineProperties(Cesium3DTilePointFeature.prototype, {
    * <p>
    * Only applied when the <code>labelText</code> is defined.
    * </p>
-   *
    * @memberof Cesium3DTilePointFeature.prototype
-   *
    * @type {string}
    */
   font: {
@@ -257,9 +240,7 @@ Object.defineProperties(Cesium3DTilePointFeature.prototype, {
    * <p>
    * Only applied when <code>labelText</code> is defined.
    * </p>
-   *
    * @memberof Cesium3DTilePointFeature.prototype
-   *
    * @type {LabelStyle}
    */
   labelStyle: {
@@ -273,9 +254,7 @@ Object.defineProperties(Cesium3DTilePointFeature.prototype, {
 
   /**
    * Gets or sets the text for this feature.
-   *
    * @memberof Cesium3DTilePointFeature.prototype
-   *
    * @type {string}
    */
   labelText: {
@@ -295,9 +274,7 @@ Object.defineProperties(Cesium3DTilePointFeature.prototype, {
    * <p>
    * Only applied when <code>labelText</code> is defined.
    * </p>
-   *
    * @memberof Cesium3DTilePointFeature.prototype
-   *
    * @type {Color}
    */
   backgroundColor: {
@@ -314,9 +291,7 @@ Object.defineProperties(Cesium3DTilePointFeature.prototype, {
    * <p>
    * Only applied when <code>labelText</code> is defined.
    * </p>
-   *
    * @memberof Cesium3DTilePointFeature.prototype
-   *
    * @type {Cartesian2}
    */
   backgroundPadding: {
@@ -333,9 +308,7 @@ Object.defineProperties(Cesium3DTilePointFeature.prototype, {
    * <p>
    * Only applied when <code>labelText</code> is defined.
    * </p>
-   *
    * @memberof Cesium3DTilePointFeature.prototype
-   *
    * @type {boolean}
    */
   backgroundEnabled: {
@@ -349,9 +322,7 @@ Object.defineProperties(Cesium3DTilePointFeature.prototype, {
 
   /**
    * Gets or sets the near and far scaling properties for this feature.
-   *
    * @memberof Cesium3DTilePointFeature.prototype
-   *
    * @type {NearFarScalar}
    */
   scaleByDistance: {
@@ -366,9 +337,7 @@ Object.defineProperties(Cesium3DTilePointFeature.prototype, {
 
   /**
    * Gets or sets the near and far translucency properties for this feature.
-   *
    * @memberof Cesium3DTilePointFeature.prototype
-   *
    * @type {NearFarScalar}
    */
   translucencyByDistance: {
@@ -383,9 +352,7 @@ Object.defineProperties(Cesium3DTilePointFeature.prototype, {
 
   /**
    * Gets or sets the condition specifying at what distance from the camera that this feature will be displayed.
-   *
    * @memberof Cesium3DTilePointFeature.prototype
-   *
    * @type {DistanceDisplayCondition}
    */
   distanceDisplayCondition: {
@@ -401,9 +368,7 @@ Object.defineProperties(Cesium3DTilePointFeature.prototype, {
 
   /**
    * Gets or sets the height offset in meters of this feature.
-   *
    * @memberof Cesium3DTilePointFeature.prototype
-   *
    * @type {number}
    */
   heightOffset: {
@@ -434,9 +399,7 @@ Object.defineProperties(Cesium3DTilePointFeature.prototype, {
    * <p>
    * Only applied when <code>heightOffset</code> is defined.
    * </p>
-   *
    * @memberof Cesium3DTilePointFeature.prototype
-   *
    * @type {boolean}
    */
   anchorLineEnabled: {
@@ -453,9 +416,7 @@ Object.defineProperties(Cesium3DTilePointFeature.prototype, {
    * <p>
    * Only applied when <code>heightOffset</code> is defined.
    * </p>
-   *
    * @memberof Cesium3DTilePointFeature.prototype
-   *
    * @type {Color}
    */
   anchorLineColor: {
@@ -472,9 +433,7 @@ Object.defineProperties(Cesium3DTilePointFeature.prototype, {
 
   /**
    * Gets or sets the image of this feature.
-   *
    * @memberof Cesium3DTilePointFeature.prototype
-   *
    * @type {string}
    */
   image: {
@@ -492,9 +451,7 @@ Object.defineProperties(Cesium3DTilePointFeature.prototype, {
 
   /**
    * Gets or sets the distance where depth testing will be disabled.
-   *
    * @memberof Cesium3DTilePointFeature.prototype
-   *
    * @type {number}
    */
   disableDepthTestDistance: {
@@ -510,9 +467,7 @@ Object.defineProperties(Cesium3DTilePointFeature.prototype, {
   /**
    * Gets or sets the horizontal origin of this point, which determines if the point is
    * to the left, center, or right of its anchor position.
-   *
    * @memberof Cesium3DTilePointFeature.prototype
-   *
    * @type {HorizontalOrigin}
    */
   horizontalOrigin: {
@@ -527,9 +482,7 @@ Object.defineProperties(Cesium3DTilePointFeature.prototype, {
   /**
    * Gets or sets the vertical origin of this point, which determines if the point is
    * to the bottom, center, or top of its anchor position.
-   *
    * @memberof Cesium3DTilePointFeature.prototype
-   *
    * @type {VerticalOrigin}
    */
   verticalOrigin: {
@@ -544,9 +497,7 @@ Object.defineProperties(Cesium3DTilePointFeature.prototype, {
   /**
    * Gets or sets the horizontal origin of this point's text, which determines if the point's text is
    * to the left, center, or right of its anchor position.
-   *
    * @memberof Cesium3DTilePointFeature.prototype
-   *
    * @type {HorizontalOrigin}
    */
   labelHorizontalOrigin: {
@@ -561,9 +512,7 @@ Object.defineProperties(Cesium3DTilePointFeature.prototype, {
   /**
    * Get or sets the vertical origin of this point's text, which determines if the point's text is
    * to the bottom, center, top, or baseline of it's anchor point.
-   *
    * @memberof Cesium3DTilePointFeature.prototype
-   *
    * @type {VerticalOrigin}
    */
   labelVerticalOrigin: {
@@ -577,11 +526,8 @@ Object.defineProperties(Cesium3DTilePointFeature.prototype, {
 
   /**
    * Gets the content of the tile containing the feature.
-   *
    * @memberof Cesium3DTilePointFeature.prototype
-   *
    * @type {Cesium3DTileContent}
-   *
    * @readonly
    * @private
    */
@@ -593,11 +539,8 @@ Object.defineProperties(Cesium3DTilePointFeature.prototype, {
 
   /**
    * Gets the tileset containing the feature.
-   *
    * @memberof Cesium3DTilePointFeature.prototype
-   *
    * @type {Cesium3DTileset}
-   *
    * @readonly
    */
   tileset: {
@@ -609,11 +552,8 @@ Object.defineProperties(Cesium3DTilePointFeature.prototype, {
   /**
    * All objects returned by {@link Scene#pick} have a <code>primitive</code> property. This returns
    * the tileset containing the feature.
-   *
    * @memberof Cesium3DTilePointFeature.prototype
-   *
    * @type {Cesium3DTileset}
-   *
    * @readonly
    */
   primitive: {
@@ -716,9 +656,7 @@ function setBillboardImage(feature) {
 /**
  * Returns whether the feature contains this property. This includes properties from this feature's
  * class and inherited classes when using a batch table hierarchy.
- *
  * @see {@link https://github.com/CesiumGS/3d-tiles/tree/main/extensions/3DTILES_batch_table_hierarchy}
- *
  * @param {string} name The case-sensitive name of the property.
  * @returns {boolean} Whether the feature contains this property.
  */
@@ -729,9 +667,7 @@ Cesium3DTilePointFeature.prototype.hasProperty = function (name) {
 /**
  * Returns an array of property IDs for the feature. This includes properties from this feature's
  * class and inherited classes when using a batch table hierarchy.
- *
  * @see {@link https://github.com/CesiumGS/3d-tiles/tree/main/extensions/3DTILES_batch_table_hierarchy}
- *
  * @param {string[]} [results] An array into which to store the results.
  * @returns {string[]} The IDs of the feature's properties.
  */
@@ -742,12 +678,9 @@ Cesium3DTilePointFeature.prototype.getPropertyIds = function (results) {
 /**
  * Returns a copy of the value of the feature's property with the given name. This includes properties from this feature's
  * class and inherited classes when using a batch table hierarchy.
- *
  * @see {@link https://github.com/CesiumGS/3d-tiles/tree/main/extensions/3DTILES_batch_table_hierarchy}
- *
  * @param {string} name The case-sensitive name of the property.
  * @returns {*} The value of the property or <code>undefined</code> if the feature does not have this property.
- *
  * @example
  * // Display all the properties for a feature in the console log.
  * const propertyIds = feature.getPropertyIds();
@@ -790,15 +723,11 @@ Cesium3DTilePointFeature.prototype.getPropertyInherited = function (name) {
  * <p>
  * If a property with the given name doesn't exist, it is created.
  * </p>
- *
  * @param {string} name The case-sensitive name of the property.
  * @param {*} value The value of the property that will be copied.
- *
- * @exception {DeveloperError} Inherited batch table hierarchy property is read only.
- *
+ * @throws {DeveloperError} Inherited batch table hierarchy property is read only.
  * @example
  * const height = feature.getProperty('Height'); // e.g., the height of a building
- *
  * @example
  * const name = 'clicked';
  * if (feature.getProperty(name)) {
@@ -823,10 +752,8 @@ Cesium3DTilePointFeature.prototype.setProperty = function (name, value) {
  * <p>
  * This function returns <code>false</code> if no batch table hierarchy is present.
  * </p>
- *
  * @param {string} className The name to check against.
  * @returns {boolean} Whether the feature's class name equals <code>className</code>
- *
  * @private
  */
 Cesium3DTilePointFeature.prototype.isExactClass = function (className) {
@@ -838,10 +765,8 @@ Cesium3DTilePointFeature.prototype.isExactClass = function (className) {
  * <p>
  * This function returns <code>false</code> if no batch table hierarchy is present.
  * </p>
- *
  * @param {string} className The name to check against.
  * @returns {boolean} Whether the feature's class or inherited classes are named <code>className</code>
- *
  * @private
  */
 Cesium3DTilePointFeature.prototype.isClass = function (className) {
@@ -853,9 +778,7 @@ Cesium3DTilePointFeature.prototype.isClass = function (className) {
  * <p>
  * This function returns <code>undefined</code> if no batch table hierarchy is present.
  * </p>
- *
  * @returns {string} The feature's class name.
- *
  * @private
  */
 Cesium3DTilePointFeature.prototype.getExactClassName = function () {

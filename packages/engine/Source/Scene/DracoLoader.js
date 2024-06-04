@@ -48,9 +48,9 @@ DracoLoader._getDecoderTaskProcessor = function () {
 
 /**
  * Decodes a compressed point cloud. Returns undefined if the task cannot be scheduled.
+ * @param parameters
  * @private
- *
- * @exception {RuntimeError} Draco decoder could not be initialized.
+ * @throws {RuntimeError} Draco decoder could not be initialized.
  */
 DracoLoader.decodePointCloud = function (parameters) {
   const decoderTaskProcessor = DracoLoader._getDecoderTaskProcessor();
@@ -69,17 +69,14 @@ DracoLoader.decodePointCloud = function (parameters) {
 
 /**
  * Decodes a buffer view. Returns undefined if the task cannot be scheduled.
- *
  * @param {object} options Object with the following properties:
  * @param {Uint8Array} options.array The typed array containing the buffer view data.
  * @param {object} options.bufferView The glTF buffer view object.
  * @param {Object<string, number>} options.compressedAttributes The compressed attributes.
  * @param {boolean} options.dequantizeInShader Whether POSITION and NORMAL attributes should be dequantized on the GPU.
- *
  * @returns {Promise} A promise that resolves to the decoded indices and attributes.
  * @private
- *
- * @exception {RuntimeError} Draco decoder could not be initialized.
+ * @throws {RuntimeError} Draco decoder could not be initialized.
  */
 DracoLoader.decodeBufferView = function (options) {
   const decoderTaskProcessor = DracoLoader._getDecoderTaskProcessor();

@@ -3,6 +3,8 @@ import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 
 /**
+ * @param featureTableJson
+ * @param featureTableBinary
  * @private
  */
 function Cesium3DTileFeatureTable(featureTableJson, featureTableBinary) {

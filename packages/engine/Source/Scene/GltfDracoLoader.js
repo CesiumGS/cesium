@@ -10,11 +10,9 @@ import ResourceLoaderState from "./ResourceLoaderState.js";
  * <p>
  * Implements the {@link ResourceLoader} interface.
  * </p>
- *
  * @alias GltfDracoLoader
- * @constructor
+ * @class
  * @augments ResourceLoader
- *
  * @param {object} options Object with the following properties:
  * @param {ResourceCache} options.resourceCache The {@link ResourceCache} (to avoid circular dependencies).
  * @param {object} options.gltf The glTF JSON.
@@ -22,7 +20,6 @@ import ResourceLoaderState from "./ResourceLoaderState.js";
  * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
  * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
  * @param {string} [options.cacheKey] The cache key of the resource.
- *
  * @private
  */
 function GltfDracoLoader(options) {
@@ -65,9 +62,7 @@ if (defined(Object.create)) {
 Object.defineProperties(GltfDracoLoader.prototype, {
   /**
    * The cache key of the resource.
-   *
    * @memberof GltfDracoLoader.prototype
-   *
    * @type {string}
    * @readonly
    * @private
@@ -79,9 +74,7 @@ Object.defineProperties(GltfDracoLoader.prototype, {
   },
   /**
    * The decoded data.
-   *
    * @memberof GltfDracoLoader.prototype
-   *
    * @type {object}
    * @readonly
    * @private
@@ -171,7 +164,6 @@ async function processDecode(loader, decodePromise) {
 
 /**
  * Processes the resource until it becomes ready.
- *
  * @param {FrameState} frameState The frame state.
  * @private
  */

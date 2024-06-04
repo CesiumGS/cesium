@@ -7,31 +7,25 @@ import DeveloperError from "./DeveloperError.js";
  * vertex-shader cache.  This is based on the 2007 SIGGRAPH paper
  * 'Fast Triangle Reordering for Vertex Locality and Reduced Overdraw.'
  * The runtime is linear but several passes are made.
- *
  * @namespace Tipsify
- *
  * @see <a href='http://gfx.cs.princeton.edu/pubs/Sander_2007_%3ETR/tipsy.pdf'>
  * Fast Triangle Reordering for Vertex Locality and Reduced Overdraw</a>
  * by Sander, Nehab, and Barczak
- *
  * @private
  */
 const Tipsify = {};
 
 /**
  * Calculates the average cache miss ratio (ACMR) for a given set of indices.
- *
  * @param {object} options Object with the following properties:
  * @param {number[]} options.indices Lists triads of numbers corresponding to the indices of the vertices
  *                        in the vertex buffer that define the geometry's triangles.
  * @param {number} [options.maximumIndex] The maximum value of the elements in <code>args.indices</code>.
  *                                     If not supplied, this value will be computed.
- * @param {number} [options.cacheSize=24] The number of vertices that can be stored in the cache at any one time.
+ * @param {number} [options.cacheSize] The number of vertices that can be stored in the cache at any one time.
  * @returns {number} The average cache miss ratio (ACMR).
- *
- * @exception {DeveloperError} indices length must be a multiple of three.
- * @exception {DeveloperError} cacheSize must be greater than two.
- *
+ * @throws {DeveloperError} indices length must be a multiple of three.
+ * @throws {DeveloperError} cacheSize must be greater than two.
  * @example
  * const indices = [0, 1, 2, 3, 4, 5];
  * const maxIndex = 5;
@@ -98,18 +92,15 @@ Tipsify.calculateACMR = function (options) {
 
 /**
  * Optimizes triangles for the post-vertex shader cache.
- *
  * @param {object} options Object with the following properties:
  * @param {number[]} options.indices Lists triads of numbers corresponding to the indices of the vertices
  *                        in the vertex buffer that define the geometry's triangles.
  * @param {number} [options.maximumIndex] The maximum value of the elements in <code>args.indices</code>.
  *                                     If not supplied, this value will be computed.
- * @param {number} [options.cacheSize=24] The number of vertices that can be stored in the cache at any one time.
+ * @param {number} [options.cacheSize] The number of vertices that can be stored in the cache at any one time.
  * @returns {number[]} A list of the input indices in an optimized order.
- *
- * @exception {DeveloperError} indices length must be a multiple of three.
- * @exception {DeveloperError} cacheSize must be greater than two.
- *
+ * @throws {DeveloperError} indices length must be a multiple of three.
+ * @throws {DeveloperError} cacheSize must be greater than two.
  * @example
  * const indices = [0, 1, 2, 3, 4, 5];
  * const maxIndex = 5;

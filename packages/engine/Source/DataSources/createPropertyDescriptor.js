@@ -56,6 +56,9 @@ function createConstantProperty(value) {
  * Used to consistently define all DataSources graphics objects.
  * This is broken into two functions because the Chrome profiler does a better
  * job of optimizing lookups if it notices that the string is constant throughout the function.
+ * @param name
+ * @param configurable
+ * @param createPropertyCallback
  * @private
  */
 function createPropertyDescriptor(name, configurable, createPropertyCallback) {

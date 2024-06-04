@@ -6,25 +6,20 @@ import Matrix4 from "../Core/Matrix4.js";
 
 /**
  * Components for building models.
- *
  * @namespace ModelComponents
- *
  * @private
  */
 const ModelComponents = {};
 
 /**
  * Information about the quantized attribute.
- *
  * @alias ModelComponents.Quantization
- * @constructor
- *
+ * @class
  * @private
  */
 function Quantization() {
   /**
    * Whether the quantized attribute is oct-encoded.
-   *
    * @type {boolean}
    * @private
    */
@@ -32,7 +27,6 @@ function Quantization() {
 
   /**
    * Whether the oct-encoded values are stored as ZXY instead of XYZ. This is true when decoding from Draco.
-   *
    * @type {boolean}
    * @private
    */
@@ -42,7 +36,6 @@ function Quantization() {
    * The range used to convert buffer values to normalized values [0.0, 1.0]
    * This is typically computed as (1 << quantizationBits) - 1.
    * For oct-encoded values this value is a single Number.
-   *
    * @type {number|Cartesian2|Cartesian3|Cartesian4|Matrix2|Matrix3|Matrix4}
    * @private
    */
@@ -52,7 +45,6 @@ function Quantization() {
    * The bottom-left corner of the quantization volume. Not applicable for oct encoded attributes.
    * The type should match the attribute type - e.g. if the attribute type
    * is AttributeType.VEC4 the offset should be a Cartesian4.
-   *
    * @type {number|Cartesian2|Cartesian3|Cartesian4|Matrix2|Matrix3|Matrix4}
    * @private
    */
@@ -62,7 +54,6 @@ function Quantization() {
    * The dimensions of the quantization volume. Not applicable for oct encoded attributes.
    * The type should match the attribute type - e.g. if the attribute type
    * is AttributeType.VEC4 the dimensions should be a Cartesian4.
-   *
    * @type {number|Cartesian2|Cartesian3|Cartesian4|Matrix2|Matrix3|Matrix4}
    * @private
    */
@@ -74,7 +65,6 @@ function Quantization() {
    * Not applicable for oct encoded attributes.
    * The type should match the attribute type - e.g. if the attribute type
    * is AttributeType.VEC4 the dimensions should be a Cartesian4.
-   *
    * @type {number|Cartesian2|Cartesian3|Cartesian4|Matrix2|Matrix3|Matrix4}
    * @private
    */
@@ -86,12 +76,11 @@ function Quantization() {
    * <p>
    * The following component datatypes are not supported:
    * <ul>
-   *   <li>ComponentDatatype.INT</li>
-   *   <li>ComponentDatatype.UNSIGNED_INT</li>
-   *   <li>ComponentDatatype.DOUBLE</li>
+   * <li>ComponentDatatype.INT</li>
+   * <li>ComponentDatatype.UNSIGNED_INT</li>
+   * <li>ComponentDatatype.DOUBLE</li>
    * </ul>
    * </p>
-   *
    * @type {ComponentDatatype}
    * @private
    */
@@ -99,7 +88,6 @@ function Quantization() {
 
   /**
    * The type of the quantized attribute, e.g. AttributeType.VEC2 for oct-encoded normals.
-   *
    * @type {AttributeType}
    * @private
    */
@@ -108,16 +96,13 @@ function Quantization() {
 
 /**
  * A per-vertex or per-instance attribute.
- *
  * @alias ModelComponents.Attribute
- * @constructor
- *
+ * @class
  * @private
  */
 function Attribute() {
   /**
    * The attribute name. Must be unique within the attributes array.
-   *
    * @type {string}
    * @private
    */
@@ -126,7 +111,6 @@ function Attribute() {
   /**
    * The attribute semantic. The combination of semantic and setIndex must be
    * unique within the attributes array.
-   *
    * @type {VertexAttributeSemantic|InstanceAttributeSemantic}
    * @private
    */
@@ -156,12 +140,11 @@ function Attribute() {
    * <p>
    * The following component datatypes are not supported:
    * <ul>
-   *   <li>ComponentDatatype.INT</li>
-   *   <li>ComponentDatatype.UNSIGNED_INT</li>
-   *   <li>ComponentDatatype.DOUBLE</li>
+   * <li>ComponentDatatype.INT</li>
+   * <li>ComponentDatatype.UNSIGNED_INT</li>
+   * <li>ComponentDatatype.DOUBLE</li>
    * </ul>
    * </p>
-   *
    * @type {ComponentDatatype}
    * @private
    */
@@ -173,7 +156,6 @@ function Attribute() {
    * When the data is oct-encoded the type should match the decoded data, which
    * is typically AttributeType.VEC3.
    * </p>
-   *
    * @type {AttributeType}
    * @private
    */
@@ -181,7 +163,6 @@ function Attribute() {
 
   /**
    * Whether the attribute is normalized.
-   *
    * @type {boolean}
    * @default false
    * @private
@@ -190,7 +171,6 @@ function Attribute() {
 
   /**
    * The number of elements.
-   *
    * @type {number}
    * @private
    */
@@ -205,7 +185,6 @@ function Attribute() {
    * <p>
    * Must be defined for POSITION attributes.
    * </p>
-   *
    * @type {number|Cartesian2|Cartesian3|Cartesian4|Matrix2|Matrix3|Matrix4}
    * @private
    */
@@ -220,7 +199,6 @@ function Attribute() {
    * <p>
    * Must be defined for POSITION attributes.
    * </p>
-   *
    * @type {number|Cartesian2|Cartesian3|Cartesian4|Matrix2|Matrix3|Matrix4}
    * @private
    */
@@ -228,7 +206,6 @@ function Attribute() {
 
   /**
    * A constant value used for all elements when typed array and buffer are undefined.
-   *
    * @type {number|Cartesian2|Cartesian3|Cartesian4|Matrix2|Matrix3|Matrix4}
    * @private
    */
@@ -236,7 +213,6 @@ function Attribute() {
 
   /**
    * Information about the quantized attribute.
-   *
    * @type {ModelComponents.Quantization}
    * @private
    */
@@ -245,7 +221,6 @@ function Attribute() {
   /**
    * A typed array containing tightly-packed attribute values, as they appear
    * in the model file.
-   *
    * @type {Uint8Array|Int8Array|Uint16Array|Int16Array|Uint32Array|Int32Array|Float32Array}
    * @private
    */
@@ -253,7 +228,6 @@ function Attribute() {
 
   /**
    * A vertex buffer. Attribute values are accessed using byteOffset and byteStride.
-   *
    * @type {Buffer}
    * @private
    */
@@ -261,7 +235,6 @@ function Attribute() {
 
   /**
    * The byte offset of elements in the buffer.
-   *
    * @type {number}
    * @default 0
    * @private
@@ -270,7 +243,6 @@ function Attribute() {
 
   /**
    * The byte stride of elements in the buffer. When undefined the elements are tightly packed.
-   *
    * @type {number}
    * @private
    */
@@ -279,16 +251,13 @@ function Attribute() {
 
 /**
  * Indices used to select vertices for rendering.
- *
  * @alias ModelComponents.Indices
- * @constructor
- *
+ * @class
  * @private
  */
 function Indices() {
   /**
    * The index data type of the attribute, e.g. IndexDatatype.UNSIGNED_SHORT.
-   *
    * @type {IndexDatatype}
    * @private
    */
@@ -296,7 +265,6 @@ function Indices() {
 
   /**
    * The number of indices.
-   *
    * @type {number}
    * @private
    */
@@ -304,7 +272,6 @@ function Indices() {
 
   /**
    * An index buffer containing indices.
-   *
    * @type {Buffer}
    * @private
    */
@@ -312,7 +279,6 @@ function Indices() {
 
   /**
    * A typed array containing indices.
-   *
    * @type {Uint8Array|Uint16Array|Uint32Array}
    * @private
    */
@@ -322,16 +288,13 @@ function Indices() {
 /**
  * Maps per-vertex or per-instance feature IDs to a property table. Feature
  * IDs are stored in an accessor.
- *
  * @alias ModelComponents.FeatureIdAttribute
- * @constructor
- *
+ * @class
  * @private
  */
 function FeatureIdAttribute() {
   /**
    * How many unique features are defined in this set of feature IDs
-   *
    * @type {number}
    * @private
    */
@@ -339,7 +302,6 @@ function FeatureIdAttribute() {
 
   /**
    * This value indicates that no feature is indicated with this vertex
-   *
    * @type {number}
    * @private
    */
@@ -348,8 +310,6 @@ function FeatureIdAttribute() {
   /**
    * The ID of the property table that feature IDs index into. If undefined,
    * feature IDs are used for classification, but no metadata is associated.
-   *
-   *
    * @type {number}
    * @private
    */
@@ -357,7 +317,6 @@ function FeatureIdAttribute() {
 
   /**
    * The set index of feature ID attribute containing feature IDs.
-   *
    * @type {number}
    * @private
    */
@@ -366,7 +325,6 @@ function FeatureIdAttribute() {
   /**
    * The label to identify this set of feature IDs. This is used in picking,
    * styling and shaders.
-   *
    * @type {string}
    * @private
    */
@@ -376,7 +334,6 @@ function FeatureIdAttribute() {
    * Label to identify this set of feature IDs by its position in the array.
    * This will always be either "featureId_N" for primitives or
    * "instanceFeatureId_N" for instances.
-   *
    * @type {string}
    * @private
    */
@@ -387,16 +344,13 @@ function FeatureIdAttribute() {
  * Defines a range of implicitly-defined feature IDs, one for each vertex or
  * instance. Such feature IDs may optionally be associated with a property table
  * storing metadata
- *
  * @alias ModelComponents.FeatureIdImplicitRange
- * @constructor
- *
+ * @class
  * @private
  */
 function FeatureIdImplicitRange() {
   /**
    * How many unique features are defined in this set of feature IDs
-   *
    * @type {number}
    * @private
    */
@@ -404,7 +358,6 @@ function FeatureIdImplicitRange() {
 
   /**
    * This value indicates that no feature is indicated with this vertex
-   *
    * @type {number}
    * @private
    */
@@ -413,7 +366,6 @@ function FeatureIdImplicitRange() {
   /**
    * The ID of the property table that feature IDs index into. If undefined,
    * feature IDs are used for classification, but no metadata is associated.
-   *
    * @type {number}
    * @private
    */
@@ -421,7 +373,6 @@ function FeatureIdImplicitRange() {
 
   /**
    * The first feature ID to use when setIndex is undefined
-   *
    * @type {number}
    * @default 0
    * @private
@@ -430,7 +381,6 @@ function FeatureIdImplicitRange() {
 
   /**
    * Number of times each feature ID is repeated before being incremented.
-   *
    * @type {number}
    * @private
    */
@@ -439,7 +389,6 @@ function FeatureIdImplicitRange() {
   /**
    * The label to identify this set of feature IDs. This is used in picking,
    * styling and shaders.
-   *
    * @type {string}
    * @private
    */
@@ -449,7 +398,6 @@ function FeatureIdImplicitRange() {
    * Label to identify this set of feature IDs by its position in the array.
    * This will always be either "featureId_N" for primitives or
    * "instanceFeatureId_N" for instances.
-   *
    * @type {string}
    * @private
    */
@@ -458,16 +406,13 @@ function FeatureIdImplicitRange() {
 
 /**
  * A texture that contains per-texel feature IDs that index into a property table.
- *
  * @alias ModelComponents.FeatureIdTexture
- * @constructor
- *
+ * @class
  * @private
  */
 function FeatureIdTexture() {
   /**
    * How many unique features are defined in this set of feature IDs
-   *
    * @type {number}
    * @private
    */
@@ -475,7 +420,6 @@ function FeatureIdTexture() {
 
   /**
    * This value indicates that no feature is indicated with this texel
-   *
    * @type {number}
    * @private
    */
@@ -484,7 +428,6 @@ function FeatureIdTexture() {
   /**
    * The ID of the property table that feature IDs index into. If undefined,
    * feature IDs are used for classification, but no metadata is associated.
-   *
    * @type {string}
    * @private
    */
@@ -492,7 +435,6 @@ function FeatureIdTexture() {
 
   /**
    * The texture reader containing feature IDs.
-   *
    * @type {ModelComponents.TextureReader}
    * @private
    */
@@ -501,7 +443,6 @@ function FeatureIdTexture() {
   /**
    * The label to identify this set of feature IDs. This is used in picking,
    * styling and shaders.
-   *
    * @type {string}
    * @private
    */
@@ -511,7 +452,6 @@ function FeatureIdTexture() {
    * Label to identify this set of feature IDs by its position in the array.
    * This will always be either "featureId_N" for primitives or
    * "instanceFeatureId_N" for instances.
-   *
    * @type {string}
    * @private
    */
@@ -520,16 +460,13 @@ function FeatureIdTexture() {
 
 /**
  * A morph target where each attribute contains attribute displacement data.
- *
  * @alias ModelComponents.MorphTarget
- * @constructor
- *
+ * @class
  * @private
  */
 function MorphTarget() {
   /**
    * Attributes that are part of the morph target, e.g. positions, normals, and tangents.
-   *
    * @type {ModelComponents.Attribute[]}
    * @private
    */
@@ -538,16 +475,13 @@ function MorphTarget() {
 
 /**
  * Geometry to be rendered with a material.
- *
  * @alias ModelComponents.Primitive
- * @constructor
- *
+ * @class
  * @private
  */
 function Primitive() {
   /**
    * The vertex attributes, e.g. positions, normals, etc.
-   *
    * @type {ModelComponents.Attribute[]}
    * @private
    */
@@ -555,7 +489,6 @@ function Primitive() {
 
   /**
    * The morph targets.
-   *
    * @type {ModelComponents.MorphTarget[]}
    * @private
    */
@@ -563,7 +496,6 @@ function Primitive() {
 
   /**
    * The indices.
-   *
    * @type {ModelComponents.Indices}
    * @private
    */
@@ -571,7 +503,6 @@ function Primitive() {
 
   /**
    * The material.
-   *
    * @type {ModelComponents.Material}
    * @private
    */
@@ -579,7 +510,6 @@ function Primitive() {
 
   /**
    * The primitive type, e.g. PrimitiveType.TRIANGLES.
-   *
    * @type {PrimitiveType}
    * @private
    */
@@ -588,7 +518,6 @@ function Primitive() {
   /**
    * The feature IDs associated with this primitive. Feature ID types may
    * be interleaved
-   *
    * @type {Array<ModelComponents.FeatureIdAttribute|ModelComponents.FeatureIdImplicitRange|ModelComponents.FeatureIdTexture>}
    * @private
    */
@@ -597,7 +526,6 @@ function Primitive() {
   /**
    * The property texture IDs. These indices correspond to the array of
    * property textures.
-   *
    * @type {number[]}
    * @private
    */
@@ -606,7 +534,6 @@ function Primitive() {
   /**
    * The property attribute IDs. These indices correspond to the array of
    * property attributes in the EXT_structural_metadata extension.
-   *
    * @type {number[]}
    * @private
    */
@@ -615,7 +542,6 @@ function Primitive() {
   /**
    * If the CESIUM_primitive_outline glTF extension is used, this property
    * stores an additional attribute storing outline coordinates.
-   *
    * @type {Attribute}
    * @private
    */
@@ -624,16 +550,13 @@ function Primitive() {
 
 /**
  * Position and metadata information for instances of a node.
- *
  * @alias ModelComponents.Instances
- * @constructor
- *
+ * @class
  * @private
  */
 function Instances() {
   /**
    * The instance attributes, e.g. translation, rotation, scale, feature id, etc.
-   *
    * @type {ModelComponents.Attribute[]}
    * @private
    */
@@ -642,7 +565,6 @@ function Instances() {
   /**
    * The feature ID attributes associated with this set of instances.
    * Feature ID attribute types may be interleaved.
-   *
    * @type {Array<ModelComponents.FeatureIdAttribute|ModelComponents.FeatureIdImplicitRange>}
    * @private
    */
@@ -652,7 +574,6 @@ function Instances() {
    * Whether the instancing transforms are applied in world space. For glTF models that
    * use EXT_mesh_gpu_instancing, the transform is applied in object space. For i3dm files,
    * the instance transform is in world space.
-   *
    * @type {boolean}
    * @private
    */
@@ -661,17 +582,14 @@ function Instances() {
 
 /**
  * Joints and matrices defining a skin.
- *
  * @alias ModelComponents.Skin
- * @constructor
- *
+ * @class
  * @private
  */
 function Skin() {
   /**
    * The index of the skin in the glTF. This is useful for finding the skin
    * that applies to a node after the skin is instantiated at runtime.
-   *
    * @type {number}
    * @private
    */
@@ -679,7 +597,6 @@ function Skin() {
 
   /**
    * The joints.
-   *
    * @type {ModelComponents.Node[]}
    * @private
    */
@@ -687,7 +604,6 @@ function Skin() {
 
   /**
    * The inverse bind matrices of the joints.
-   *
    * @type {Matrix4[]}
    * @private
    */
@@ -696,16 +612,13 @@ function Skin() {
 
 /**
  * A node in the node hierarchy.
- *
  * @alias ModelComponents.Node
- * @constructor
- *
+ * @class
  * @private
  */
 function Node() {
   /**
    * The name of the node.
-   *
    * @type {string}
    * @private
    */
@@ -714,7 +627,6 @@ function Node() {
   /**
    * The index of the node in the glTF. This is useful for finding the nodes
    * that belong to a skin after they have been instantiated at runtime.
-   *
    * @type {number}
    * @private
    */
@@ -722,7 +634,6 @@ function Node() {
 
   /**
    * The children nodes.
-   *
    * @type {ModelComponents.Node[]}
    * @private
    */
@@ -730,7 +641,6 @@ function Node() {
 
   /**
    * The mesh primitives.
-   *
    * @type {ModelComponents.Primitive[]}
    * @private
    */
@@ -738,7 +648,6 @@ function Node() {
 
   /**
    * Instances of this node.
-   *
    * @type {ModelComponents.Instances}
    * @private
    */
@@ -746,7 +655,6 @@ function Node() {
 
   /**
    * The skin.
-   *
    * @type {ModelComponents.Skin}
    * @private
    */
@@ -756,7 +664,6 @@ function Node() {
    * The local transformation matrix. When matrix is defined translation,
    * rotation, and scale must be undefined. When matrix is undefined
    * translation, rotation, and scale must all be defined.
-   *
    * @type {Matrix4}
    * @private
    */
@@ -764,7 +671,6 @@ function Node() {
 
   /**
    * The local translation.
-   *
    * @type {Cartesian3}
    * @private
    */
@@ -772,7 +678,6 @@ function Node() {
 
   /**
    * The local rotation.
-   *
    * @type {Quaternion}
    * @private
    */
@@ -780,7 +685,6 @@ function Node() {
 
   /**
    * The local scale.
-   *
    * @type {Cartesian3}
    * @private
    */
@@ -789,7 +693,6 @@ function Node() {
   /**
    * An array of weights to be applied to the primitives' morph targets.
    * These are supplied by either the node or its mesh.
-   *
    * @type {number[]}
    * @private
    */
@@ -798,7 +701,6 @@ function Node() {
   /**
    * The name of the articulation affecting this node, as defined by the
    * AGI_articulations extension.
-   *
    * @type {string}
    * @private
    */
@@ -807,16 +709,13 @@ function Node() {
 
 /**
  * A scene containing nodes.
- *
  * @alias ModelComponents.Scene
- * @constructor
- *
+ * @class
  * @private
  */
 function Scene() {
   /**
    * The nodes belonging to the scene.
-   *
    * @type {ModelComponents.Node[]}
    * @private
    */
@@ -826,10 +725,8 @@ function Scene() {
 /**
  * The property of the node that is targeted by an animation. The values of
  * this enum are used to look up the appropriate property on the runtime node.
- *
  * @alias {ModelComponents.AnimatedPropertyType}
  * @enum {string}
- *
  * @private
  */
 const AnimatedPropertyType = {
@@ -842,16 +739,13 @@ const AnimatedPropertyType = {
 /**
  * An animation sampler that describes the sources of animated keyframe data
  * and their interpolation.
- *
  * @alias {ModelComponents.AnimationSampler}
- * @constructor
- *
+ * @class
  * @private
  */
 function AnimationSampler() {
   /**
    * The timesteps of the animation.
-   *
    * @type {number[]}
    * @private
    */
@@ -859,7 +753,6 @@ function AnimationSampler() {
 
   /**
    * The method used to interpolate between the animation's keyframe data.
-   *
    * @type {InterpolationType}
    * @private
    */
@@ -867,7 +760,6 @@ function AnimationSampler() {
 
   /**
    * The keyframe data of the animation.
-   *
    * @type {number[]|Cartesian3[]|Quaternion[]}
    * @private
    */
@@ -876,16 +768,13 @@ function AnimationSampler() {
 
 /**
  * An animation target, which specifies the node and property to animate.
- *
  * @alias {ModelComponents.AnimationTarget}
- * @constructor
- *
+ * @class
  * @private
  */
 function AnimationTarget() {
   /**
    * The node that will be affected by the animation.
-   *
    * @type {ModelComponents.Node}
    * @private
    */
@@ -893,7 +782,6 @@ function AnimationTarget() {
 
   /**
    * The property of the node to be animated.
-   *
    * @type {ModelComponents.AnimatedPropertyType}
    * @private
    */
@@ -902,16 +790,13 @@ function AnimationTarget() {
 
 /**
  * An animation channel linking an animation sampler and the target it animates.
- *
  * @alias {ModelComponents.AnimationChannel}
- * @constructor
- *
+ * @class
  * @private
  */
 function AnimationChannel() {
   /**
    * The sampler used as the source of the animation data.
-   *
    * @type {ModelComponents.AnimationSampler}
    * @private
    */
@@ -919,7 +804,6 @@ function AnimationChannel() {
 
   /**
    * The target of the animation.
-   *
    * @type {ModelComponents.AnimationTarget}
    * @private
    */
@@ -928,16 +812,13 @@ function AnimationChannel() {
 
 /**
  * An animation in the model.
- *
  * @alias {ModelComponents.Animation}
- * @constructor
- *
+ * @class
  * @private
  */
 function Animation() {
   /**
    * The name of the animation.
-   *
    * @type {string}
    * @private
    */
@@ -945,7 +826,6 @@ function Animation() {
 
   /**
    * The samplers used in this animation.
-   *
    * @type {ModelComponents.AnimationSampler[]}
    * @private
    */
@@ -953,7 +833,6 @@ function Animation() {
 
   /**
    * The channels used in this animation.
-   *
    * @type {ModelComponents.AnimationChannel[]}
    * @private
    */
@@ -963,16 +842,13 @@ function Animation() {
 /**
  * An articulation stage belonging to an articulation from the
  * AGI_articulations extension.
- *
  * @alias {ModelComponents.ArticulationStage}
- * @constructor
- *
+ * @class
  * @private
  */
 function ArticulationStage() {
   /**
    * The name of the articulation stage.
-   *
    * @type {string}
    * @private
    */
@@ -980,7 +856,6 @@ function ArticulationStage() {
 
   /**
    * The type of the articulation stage, defined by the type of motion it modifies.
-   *
    * @type {ArticulationStageType}
    * @private
    */
@@ -988,7 +863,6 @@ function ArticulationStage() {
 
   /**
    * The minimum value for the range of motion of this articulation stage.
-   *
    * @type {number}
    * @private
    */
@@ -996,7 +870,6 @@ function ArticulationStage() {
 
   /**
    * The maximum value for the range of motion of this articulation stage.
-   *
    * @type {number}
    * @private
    */
@@ -1004,7 +877,6 @@ function ArticulationStage() {
 
   /**
    * The initial value for this articulation stage.
-   *
    * @type {number}
    * @private
    */
@@ -1013,16 +885,13 @@ function ArticulationStage() {
 
 /**
  * An articulation for the model, as defined by the AGI_articulations extension.
- *
  * @alias {ModelComponents.Articulation}
- * @constructor
- *
+ * @class
  * @private
  */
 function Articulation() {
   /**
    * The name of the articulation.
-   *
    * @type {string}
    * @private
    */
@@ -1031,7 +900,6 @@ function Articulation() {
   /**
    * The stages belonging to this articulation. The stages are applied to
    * the model in order of appearance.
-   *
    * @type {ModelComponents.ArticulationStage[]}
    * @private
    */
@@ -1040,16 +908,13 @@ function Articulation() {
 
 /**
  * The asset of the model.
- *
  * @alias {ModelComponents.Asset}
- * @constructor
- *
+ * @class
  * @private
  */
 function Asset() {
   /**
    * The credits of the model.
-   *
    * @type {Credit[]}
    * @private
    */
@@ -1058,16 +923,13 @@ function Asset() {
 
 /**
  * The components that make up a model.
- *
  * @alias ModelComponents.Components
- * @constructor
- *
+ * @class
  * @private
  */
 function Components() {
   /**
    * The asset of the model.
-   *
    * @type {ModelComponents.Asset}
    * @private
    */
@@ -1075,7 +937,6 @@ function Components() {
 
   /**
    * The default scene.
-   *
    * @type {ModelComponents.Scene}
    * @private
    */
@@ -1083,28 +944,24 @@ function Components() {
 
   /**
    * All nodes in the model.
-   *
    * @type {ModelComponents.Node[]}
    */
   this.nodes = [];
 
   /**
    * All skins in the model.
-   *
    * @type {ModelComponents.Skin[]}
    */
   this.skins = [];
 
   /**
    * All animations in the model.
-   *
    * @type {ModelComponents.Animation[]}
    */
   this.animations = [];
 
   /**
    * All articulations in the model as defined by the AGI_articulations extension.
-   *
    * @type {ModelComponents.Articulation[]}
    */
   this.articulations = [];
@@ -1112,7 +969,6 @@ function Components() {
   /**
    * Structural metadata containing the schema, property tables, property
    * textures and property mappings
-   *
    * @type {StructuralMetadata}
    * @private
    */
@@ -1120,7 +976,6 @@ function Components() {
 
   /**
    * The model's up axis.
-   *
    * @type {Axis}
    * @private
    */
@@ -1128,7 +983,6 @@ function Components() {
 
   /**
    * The model's forward axis.
-   *
    * @type {Axis}
    * @private
    */
@@ -1136,7 +990,6 @@ function Components() {
 
   /**
    * A world-space transform to apply to the primitives.
-   *
    * @type {Matrix4}
    * @private
    */
@@ -1145,16 +998,13 @@ function Components() {
 
 /**
  * Information about a GPU texture, including the texture itself
- *
  * @alias ModelComponents.TextureReader
- * @constructor
- *
+ * @class
  * @private
  */
 function TextureReader() {
   /**
    * The underlying GPU texture. The {@link Texture} contains the sampler.
-   *
    * @type {Texture}
    * @private
    */
@@ -1164,7 +1014,6 @@ function TextureReader() {
    * The index of the texture in the glTF. This is useful for determining
    * when textures are shared to avoid attaching a texture in multiple uniform
    * slots in the shader.
-   *
    * @type {number}
    * @private
    */
@@ -1172,7 +1021,6 @@ function TextureReader() {
 
   /**
    * The texture coordinate set.
-   *
    * @type {number}
    * @default 0
    * @private
@@ -1181,7 +1029,6 @@ function TextureReader() {
 
   /**
    * Transformation matrix to apply to texture coordinates.
-   *
    * @type {Matrix3}
    * @default Matrix3.IDENTITY
    */
@@ -1189,7 +1036,6 @@ function TextureReader() {
 
   /**
    * The texture channels to read from. When undefined all channels are read.
-   *
    * @type {string}
    */
   this.channels = undefined;
@@ -1197,16 +1043,13 @@ function TextureReader() {
 
 /**
  * Material properties for the PBR metallic roughness shading model.
- *
  * @alias ModelComponents.MetallicRoughness
- * @constructor
- *
+ * @class
  * @private
  */
 function MetallicRoughness() {
   /**
    * The base color texture reader.
-   *
    * @type {ModelComponents.TextureReader}
    * @private
    */
@@ -1214,7 +1057,6 @@ function MetallicRoughness() {
 
   /**
    * The metallic roughness texture reader.
-   *
    * @type {ModelComponents.TextureReader}
    * @private
    */
@@ -1222,7 +1064,6 @@ function MetallicRoughness() {
 
   /**
    * The base color factor.
-   *
    * @type {Cartesian4}
    * @default new Cartesian4(1.0, 1.0, 1.0, 1.0)
    * @private
@@ -1233,7 +1074,6 @@ function MetallicRoughness() {
 
   /**
    * The metallic factor.
-   *
    * @type {number}
    * @default 1.0
    * @private
@@ -1242,7 +1082,6 @@ function MetallicRoughness() {
 
   /**
    * The roughness factor.
-   *
    * @type {number}
    * @default 1.0
    * @private
@@ -1267,16 +1106,13 @@ MetallicRoughness.DEFAULT_ROUGHNESS_FACTOR = 1.0;
 
 /**
  * Material properties for the PBR specular glossiness shading model.
- *
  * @alias ModelComponents.SpecularGlossiness
- * @constructor
- *
+ * @class
  * @private
  */
 function SpecularGlossiness() {
   /**
    * The diffuse texture reader.
-   *
    * @type {ModelComponents.TextureReader}
    * @private
    */
@@ -1284,7 +1120,6 @@ function SpecularGlossiness() {
 
   /**
    * The specular glossiness texture reader.
-   *
    * @type {ModelComponents.TextureReader}
    * @private
    */
@@ -1292,7 +1127,6 @@ function SpecularGlossiness() {
 
   /**
    * The diffuse factor.
-   *
    * @type {Cartesian4}
    * @default new Cartesian4(1.0, 1.0, 1.0, 1.0)
    * @private
@@ -1303,7 +1137,6 @@ function SpecularGlossiness() {
 
   /**
    * The specular factor.
-   *
    * @type {Cartesian3}
    * @default new Cartesian3(1.0, 1.0, 1.0)
    * @private
@@ -1314,7 +1147,6 @@ function SpecularGlossiness() {
 
   /**
    * The glossiness factor.
-   *
    * @type {number}
    * @default 1.0
    * @private
@@ -1340,7 +1172,6 @@ SpecularGlossiness.DEFAULT_GLOSSINESS_FACTOR = 1.0;
 function Specular() {
   /**
    * The specular factor.
-   *
    * @type {number}
    * @default 1.0
    * @private
@@ -1349,7 +1180,6 @@ function Specular() {
 
   /**
    * The specular texture reader.
-   *
    * @type {ModelComponents.TextureReader}
    * @private
    */
@@ -1357,7 +1187,6 @@ function Specular() {
 
   /**
    * The specular color factor.
-   *
    * @type {Cartesian3}
    * @default new Cartesian3(1.0, 1.0, 1.0)
    * @private
@@ -1368,7 +1197,6 @@ function Specular() {
 
   /**
    * The specular color texture reader.
-   *
    * @type {ModelComponents.TextureReader}
    * @private
    */
@@ -1388,7 +1216,6 @@ Specular.DEFAULT_SPECULAR_COLOR_FACTOR = Cartesian3.ONE;
 function Anisotropy() {
   /**
    * The anisotropy strength.
-   *
    * @type {number}
    * @default 0.0
    * @private
@@ -1398,7 +1225,6 @@ function Anisotropy() {
   /**
    * The rotation of the anisotropy in tangent, bitangent space,
    * measured in radians counter-clockwise from the tangent.
-   *
    * @type {number}
    * @default 0.0
    * @private
@@ -1407,7 +1233,6 @@ function Anisotropy() {
 
   /**
    * The anisotropy texture reader.
-   *
    * @type {ModelComponents.TextureReader}
    * @private
    */
@@ -1427,7 +1252,6 @@ Anisotropy.DEFAULT_ANISOTROPY_ROTATION = 0.0;
 function Clearcoat() {
   /**
    * The clearcoat layer intensity.
-   *
    * @type {number}
    * @default 0.0
    * @private
@@ -1436,7 +1260,6 @@ function Clearcoat() {
 
   /**
    * The clearcoat layer intensity texture reader.
-   *
    * @type {ModelComponents.TextureReader}
    * @private
    */
@@ -1444,7 +1267,6 @@ function Clearcoat() {
 
   /**
    * The clearcoat layer roughness.
-   *
    * @type {number}
    * @default 0.0
    * @private
@@ -1453,7 +1275,6 @@ function Clearcoat() {
 
   /**
    * The clearcoat layer roughness texture.
-   *
    * @type {ModelComponents.TextureReader}
    * @private
    */
@@ -1461,7 +1282,6 @@ function Clearcoat() {
 
   /**
    * The clearcoat normal map texture.
-   *
    * @type {ModelComponents.TextureReader}
    * @private
    */
@@ -1480,16 +1300,13 @@ Clearcoat.DEFAULT_CLEARCOAT_ROUGHNESS_FACTOR = 0.0;
 
 /**
  * The material appearance of a primitive.
- *
  * @alias ModelComponents.Material
- * @constructor
- *
+ * @class
  * @private
  */
 function Material() {
   /**
    * Material properties for the PBR metallic roughness shading model.
-   *
    * @type {ModelComponents.MetallicRoughness}
    * @private
    */
@@ -1497,7 +1314,6 @@ function Material() {
 
   /**
    * Material properties for the PBR specular glossiness shading model.
-   *
    * @type {ModelComponents.SpecularGlossiness}
    * @private
    */
@@ -1505,7 +1321,6 @@ function Material() {
 
   /**
    * Material properties for the PBR specular shading model.
-   *
    * @type {ModelComponents.Specular}
    * @private
    */
@@ -1513,7 +1328,6 @@ function Material() {
 
   /**
    * Material properties for the PBR anisotropy shading model.
-   *
    * @type {ModelComponents.Anisotropy}
    * @private
    */
@@ -1521,7 +1335,6 @@ function Material() {
 
   /**
    * Material properties for the PBR clearcoat shading model.
-   *
    * @type {ModelComponents.Clearcoat}
    * @private
    */
@@ -1529,7 +1342,6 @@ function Material() {
 
   /**
    * The emissive texture reader.
-   *
    * @type {ModelComponents.TextureReader}
    * @private
    */
@@ -1537,7 +1349,6 @@ function Material() {
 
   /**
    * The normal texture reader.
-   *
    * @type {ModelComponents.TextureReader}
    * @private
    */
@@ -1545,7 +1356,6 @@ function Material() {
 
   /**
    * The occlusion texture reader.
-   *
    * @type {ModelComponents.TextureReader}
    * @private
    */
@@ -1553,7 +1363,6 @@ function Material() {
 
   /**
    * The emissive factor.
-   *
    * @type {Cartesian3}
    * @default Cartesian3.ZERO
    * @private
@@ -1562,7 +1371,6 @@ function Material() {
 
   /**
    * The alpha mode.
-   *
    * @type {AlphaMode}
    * @default AlphaMode.OPAQUE
    * @private
@@ -1571,7 +1379,6 @@ function Material() {
 
   /**
    * The alpha cutoff value of the material for the MASK alpha mode.
-   *
    * @type {number}
    * @default 0.5
    * @private
@@ -1580,7 +1387,6 @@ function Material() {
 
   /**
    * Specifies whether the material is double sided.
-   *
    * @type {boolean}
    * @default false
    * @private
@@ -1589,7 +1395,6 @@ function Material() {
 
   /**
    * Specifies whether the material is unlit.
-   *
    * @type {boolean}
    * @default false
    * @private

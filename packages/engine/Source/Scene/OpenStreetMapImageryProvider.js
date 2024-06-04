@@ -15,7 +15,6 @@ const defaultCredit = new Credit(
  * @typedef {object} OpenStreetMapImageryProvider.ConstructorOptions
  *
  * Initialization options for the OpenStreetMapImageryProvider constructor
- *
  * @property {string} [url='https://tile.openstreetmap.org'] The OpenStreetMap server url.
  * @property {string} [fileExtension='png'] The file extension for images on the server.
  * @property {boolean} [retinaTiles=false] When true, request tiles at the 2x resolution for retina displays.
@@ -31,14 +30,11 @@ const defaultCredit = new Credit(
  * or another provider of Slippy tiles.  The default url connects to OpenStreetMap's volunteer-run
  * servers, so you must conform to their
  * {@link http://wiki.openstreetmap.org/wiki/Tile_usage_policy|Tile Usage Policy}.
- *
  * @alias OpenStreetMapImageryProvider
- * @constructor
- * @extends UrlTemplateImageryProvider
- *
+ * @class
+ * @augments UrlTemplateImageryProvider
  * @param {OpenStreetMapImageryProvider.ConstructorOptions} options Object describing initialization options
- * @exception {DeveloperError} The rectangle and minimumLevel indicate that there are more than four tiles at the minimum level. Imagery providers with more than four tiles at the minimum level are not supported.
- *
+ * @throws {DeveloperError} The rectangle and minimumLevel indicate that there are more than four tiles at the minimum level. Imagery providers with more than four tiles at the minimum level are not supported.
  * @see ArcGisMapServerImageryProvider
  * @see BingMapsImageryProvider
  * @see GoogleEarthEnterpriseMapsProvider
@@ -47,12 +43,10 @@ const defaultCredit = new Credit(
  * @see WebMapServiceImageryProvider
  * @see WebMapTileServiceImageryProvider
  * @see UrlTemplateImageryProvider
- *
  * @example
  * const osm = new Cesium.OpenStreetMapImageryProvider({
  *     url : 'https://tile.openstreetmap.org/'
  * });
- *
  * @see {@link http://wiki.openstreetmap.org/wiki/Main_Page|OpenStreetMap Wiki}
  * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
  */

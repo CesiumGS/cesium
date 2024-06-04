@@ -734,15 +734,11 @@ function load(dataSource, entityCollection, data, options) {
 
 /**
  * A {@link DataSource} which processes the GPS Exchange Format (GPX).
- *
  * @alias GpxDataSource
- * @constructor
- *
+ * @class
  * @see {@link http://www.topografix.com/gpx.asp|Topografix GPX Standard}
  * @see {@link http://www.topografix.com/gpx/1/1/|Topografix GPX Documentation}
- *
  * @demo {@link http://sandcastle.cesium.com/index.html?src=GPX.html}
- *
  * @example
  * const viewer = new Cesium.Viewer('cesiumContainer');
  * viewer.dataSources.add(Cesium.GpxDataSource.load('../../SampleData/track.gpx'));
@@ -764,7 +760,6 @@ function GpxDataSource() {
 
 /**
  * Creates a Promise to a new instance loaded with the provided GPX data.
- *
  * @param {string|Document|Blob} data A url, parsed GPX document, or Blob containing binary GPX data.
  * @param {object} [options] An object with the following properties:
  * @param {boolean} [options.clampToGround] True if the symbols should be rendered at the same height as the terrain
@@ -898,7 +893,6 @@ Object.defineProperties(GpxDataSource.prototype, {
 
   /**
    * Gets or sets the clustering options for this data source. This object can be shared between multiple data sources.
-   *
    * @memberof GpxDataSource.prototype
    * @type {EntityCluster}
    */
@@ -922,7 +916,6 @@ Object.defineProperties(GpxDataSource.prototype, {
  * is not required to be implemented.  It is provided for data sources which
  * retrieve data based on the current animation time or scene state.
  * If implemented, update will be called by {@link DataSourceDisplay} once a frame.
- *
  * @param {JulianDate} time The simulation time.
  * @returns {boolean} True if this data source is ready to be displayed at the provided time, false otherwise.
  */
@@ -932,7 +925,6 @@ GpxDataSource.prototype.update = function (time) {
 
 /**
  * Asynchronously loads the provided GPX data, replacing any existing data.
- *
  * @param {string|Document|Blob} data A url, parsed GPX document, or Blob containing binary GPX data or a parsed GPX document.
  * @param {object} [options] An object with the following properties:
  * @param {boolean} [options.clampToGround] True if the symbols should be rendered at the same height as the terrain

@@ -6,12 +6,11 @@ import TileSelectionResult from "./TileSelectionResult.js";
 
 /**
  * A single tile in a {@link QuadtreePrimitive}.
- *
  * @alias QuadtreeTile
- * @constructor
+ * @class
  * @private
- *
  * @param {number} options.level The level of the tile in the quadtree.
+ * @param options
  * @param {number} options.x The X coordinate of the tile in the quadtree.  0 is the westernmost tile.
  * @param {number} options.y The Y coordinate of the tile in the quadtree.  0 is the northernmost tile.
  * @param {TilingScheme} options.tilingScheme The tiling scheme in which this tile exists.
@@ -109,9 +108,7 @@ function QuadtreeTile(options) {
 
 /**
  * Creates a rectangular set of tiles for level of detail zero, the coarsest, least detailed level.
- *
  * @memberof QuadtreeTile
- *
  * @param {TilingScheme} tilingScheme The tiling scheme for which the tiles are to be created.
  * @returns {QuadtreeTile[]} An array containing the tiles at level of detail zero, starting with the
  * tile in the northwest corner and followed by the tile (if any) to its east.
@@ -509,7 +506,6 @@ QuadtreeTile.prototype.findTileToNorth = function (levelZeroTiles) {
  * Frees the resources associated with this tile and returns it to the <code>START</code>
  * {@link QuadtreeTileLoadState}.  If the {@link QuadtreeTile#data} property is defined and it
  * has a <code>freeResources</code> method, the method will be invoked.
- *
  * @memberof QuadtreeTile
  */
 QuadtreeTile.prototype.freeResources = function () {

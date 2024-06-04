@@ -22,11 +22,9 @@ import ModelUtility from "./Model/ModelUtility.js";
  * <p>
  * Implements the {@link ResourceLoader} interface.
  * </p>
- *
  * @alias GltfJsonLoader
- * @constructor
+ * @class
  * @augments ResourceLoader
- *
  * @param {object} options Object with the following properties:
  * @param {ResourceCache} options.resourceCache The {@link ResourceCache} (to avoid circular dependencies).
  * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
@@ -34,7 +32,6 @@ import ModelUtility from "./Model/ModelUtility.js";
  * @param {Uint8Array} [options.typedArray] The typed array containing the glTF contents.
  * @param {object} [options.gltfJson] The parsed glTF JSON contents.
  * @param {string} [options.cacheKey] The cache key of the resource.
- *
  * @private
  */
 function GltfJsonLoader(options) {
@@ -72,9 +69,7 @@ if (defined(Object.create)) {
 Object.defineProperties(GltfJsonLoader.prototype, {
   /**
    * The cache key of the resource.
-   *
    * @memberof GltfJsonLoader.prototype
-   *
    * @type {string}
    * @readonly
    * @private
@@ -86,9 +81,7 @@ Object.defineProperties(GltfJsonLoader.prototype, {
   },
   /**
    * The glTF JSON.
-   *
    * @memberof GltfJsonLoader.prototype
-   *
    * @type {object}
    * @readonly
    * @private
@@ -304,7 +297,6 @@ GltfJsonLoader.prototype.unload = function () {
 
 /**
  * Exposed for testing
- *
  * @private
  */
 GltfJsonLoader.prototype._fetchGltf = function () {

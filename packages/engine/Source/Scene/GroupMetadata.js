@@ -8,14 +8,12 @@ import MetadataEntity from "./MetadataEntity.js";
  * <p>
  * See the {@link https://github.com/CesiumGS/3d-tiles/tree/main/extensions/3DTILES_metadata|3DTILES_metadata Extension} for 3D Tiles
  * </p>
- *
  * @param {object} options Object with the following properties:
  * @param {string} options.id The ID of the group.
  * @param {object} options.group The group JSON object.
  * @param {MetadataClass} options.class The class that group metadata conforms to.
- *
  * @alias GroupMetadata
- * @constructor
+ * @class
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
@@ -42,7 +40,6 @@ function GroupMetadata(options) {
 Object.defineProperties(GroupMetadata.prototype, {
   /**
    * The class that properties conform to.
-   *
    * @memberof GroupMetadata.prototype
    * @type {MetadataClass}
    * @readonly
@@ -56,7 +53,6 @@ Object.defineProperties(GroupMetadata.prototype, {
 
   /**
    * The ID of the group.
-   *
    * @memberof GroupMetadata.prototype
    * @type {string}
    * @readonly
@@ -70,7 +66,6 @@ Object.defineProperties(GroupMetadata.prototype, {
 
   /**
    * Extra user-defined properties.
-   *
    * @memberof GroupMetadata.prototype
    * @type {*}
    * @readonly
@@ -84,7 +79,6 @@ Object.defineProperties(GroupMetadata.prototype, {
 
   /**
    * An object containing extensions.
-   *
    * @memberof GroupMetadata.prototype
    * @type {object}
    * @readonly
@@ -99,7 +93,6 @@ Object.defineProperties(GroupMetadata.prototype, {
 
 /**
  * Returns whether the group has this property.
- *
  * @param {string} propertyId The case-sensitive ID of the property.
  * @returns {boolean} Whether the group has this property.
  * @private
@@ -110,7 +103,6 @@ GroupMetadata.prototype.hasProperty = function (propertyId) {
 
 /**
  * Returns whether the group has a property with the given semantic.
- *
  * @param {string} semantic The case-sensitive semantic of the property.
  * @returns {boolean} Whether the group has a property with the given semantic.
  * @private
@@ -125,7 +117,6 @@ GroupMetadata.prototype.hasPropertyBySemantic = function (semantic) {
 
 /**
  * Returns an array of property IDs.
- *
  * @param {string[]} [results] An array into which to store the results.
  * @returns {string[]} The property IDs.
  * @private
@@ -139,7 +130,6 @@ GroupMetadata.prototype.getPropertyIds = function (results) {
  * <p>
  * If the property is normalized the normalized value is returned.
  * </p>
- *
  * @param {string} propertyId The case-sensitive ID of the property.
  * @returns {*} The value of the property or <code>undefined</code> if the group does not have this property.
  * @private
@@ -153,7 +143,6 @@ GroupMetadata.prototype.getProperty = function (propertyId) {
  * <p>
  * If the property is normalized a normalized value must be provided to this function.
  * </p>
- *
  * @param {string} propertyId The case-sensitive ID of the property.
  * @param {*} value The value of the property that will be copied.
  * @returns {boolean} <code>true</code> if the property was set, <code>false</code> otherwise.
@@ -170,7 +159,6 @@ GroupMetadata.prototype.setProperty = function (propertyId, value) {
 
 /**
  * Returns a copy of the value of the property with the given semantic.
- *
  * @param {string} semantic The case-sensitive semantic of the property.
  * @returns {*} The value of the property or <code>undefined</code> if the group does not have this semantic.
  * @private
@@ -185,7 +173,6 @@ GroupMetadata.prototype.getPropertyBySemantic = function (semantic) {
 
 /**
  * Sets the value of the property with the given semantic.
- *
  * @param {string} semantic The case-sensitive semantic of the property.
  * @param {*} value The value of the property that will be copied.
  * @returns {boolean} <code>true</code> if the property was set, <code>false</code> otherwise.

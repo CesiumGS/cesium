@@ -261,13 +261,11 @@ describe(
     /**
      * Repeatedly calls update until the load queue is empty.  Returns a promise that resolves
      * once the load queue is empty.
-     *
      * @param {Ray} ray The ray to test for intersection.
+     * @param globe
      * @param {Scene} scene The scene.
-     * @return {Promise<boolean>}
-     *
+     * @returns {Promise<boolean>}
      * @private
-     *
      */
     function updateUntilDone(globe, scene) {
       // update until the load queue is empty.

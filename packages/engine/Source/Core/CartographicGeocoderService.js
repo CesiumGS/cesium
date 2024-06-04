@@ -4,9 +4,8 @@ import Check from "./Check.js";
 /**
  * Geocodes queries containing longitude and latitude coordinates and an optional height.
  * Query format: `longitude latitude (height)` with longitude/latitude in degrees and height in meters.
- *
  * @alias CartographicGeocoderService
- * @constructor
+ * @class
  */
 function CartographicGeocoderService() {}
 
@@ -27,7 +26,6 @@ Object.defineProperties(CartographicGeocoderService.prototype, {
 
 /**
  * @function
- *
  * @param {string} query The query to be sent to the geocoder service
  * @returns {Promise<GeocoderService.Result[]>}
  */

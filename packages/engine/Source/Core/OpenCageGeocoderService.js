@@ -10,8 +10,7 @@ import Resource from "./Resource.js";
 /**
  * Provides geocoding via a {@link https://opencagedata.com/|OpenCage} server.
  * @alias OpenCageGeocoderService
- * @constructor
- *
+ * @class
  * @param {Resource|string} url The endpoint to the OpenCage server.
  * @param {string} apiKey The OpenCage API Key.
  * @param {object} [params] An object with the following properties (See https://opencagedata.com/api#forward-opt):
@@ -28,7 +27,6 @@ import Resource from "./Resource.js";
  * @param {number} [options.no_record] When set to 1 the query contents are not logged.
  * @param {number} [options.pretty] When set to 1 results are 'pretty' printed for easier reading. Useful for debugging.
  * @param {string} [options.proximity] Provides the geocoder with a hint to bias results in favour of those closer to the specified location (For example: 41.40139,2.12870).
- *
  * @example
  * // Configure a Viewer to use the OpenCage Geocoder
  * const viewer = new Cesium.Viewer('cesiumContainer', {
@@ -94,7 +92,6 @@ Object.defineProperties(OpenCageGeocoderService.prototype, {
 
 /**
  * @function
- *
  * @param {string} query The query to be sent to the geocoder service
  * @returns {Promise<GeocoderService.Result[]>}
  */

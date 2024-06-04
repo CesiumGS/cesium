@@ -18,16 +18,13 @@ import MetadataType from "./MetadataType.js";
  * for 3D Tiles, as well as the {@link https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_structural_metadata|EXT_structural_metadata Extension}
  * for glTF. For the legacy glTF extension, see {@link https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_feature_metadata|EXT_feature_metadata Extension}
  * </p>
- *
  * @param {object} options Object with the following properties:
  * @param {number} options.count The number of elements in each property array.
  * @param {object} options.property The property JSON object.
  * @param {MetadataClassProperty} options.classProperty The class property.
  * @param {Object<string, Uint8Array>} options.bufferViews An object mapping bufferView IDs to Uint8Array objects.
- *
  * @alias MetadataTableProperty
- * @constructor
- *
+ * @class
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
@@ -224,7 +221,6 @@ Object.defineProperties(MetadataTableProperty.prototype, {
   /**
    * True if offset/scale should be applied. If both offset/scale were
    * undefined, they default to identity so this property is set false
-   *
    * @memberof MetadataClassProperty.prototype
    * @type {boolean}
    * @readonly
@@ -238,7 +234,6 @@ Object.defineProperties(MetadataTableProperty.prototype, {
 
   /**
    * The offset to be added to property values as part of the value transform.
-   *
    * @memberof MetadataClassProperty.prototype
    * @type {number|number[]|number[][]}
    * @readonly
@@ -252,7 +247,6 @@ Object.defineProperties(MetadataTableProperty.prototype, {
 
   /**
    * The scale to be multiplied to property values as part of the value transform.
-   *
    * @memberof MetadataClassProperty.prototype
    * @type {number|number[]|number[][]}
    * @readonly
@@ -266,7 +260,6 @@ Object.defineProperties(MetadataTableProperty.prototype, {
 
   /**
    * Extra user-defined properties.
-   *
    * @memberof MetadataTableProperty.prototype
    * @type {*}
    * @readonly
@@ -280,7 +273,6 @@ Object.defineProperties(MetadataTableProperty.prototype, {
 
   /**
    * An object containing extensions.
-   *
    * @memberof MetadataTableProperty.prototype
    * @type {*}
    * @readonly
@@ -294,7 +286,6 @@ Object.defineProperties(MetadataTableProperty.prototype, {
 
   /**
    * Size of all typed arrays used by this table property
-   *
    * @memberof MetadataTableProperty.prototype
    * @type {Normal}
    * @readonly
@@ -309,10 +300,8 @@ Object.defineProperties(MetadataTableProperty.prototype, {
 
 /**
  * Returns a copy of the value at the given index.
- *
  * @param {number} index The index.
  * @returns {*} The value of the property.
- *
  * @private
  */
 MetadataTableProperty.prototype.get = function (index) {
@@ -336,10 +325,8 @@ MetadataTableProperty.prototype.get = function (index) {
 
 /**
  * Sets the value at the given index.
- *
  * @param {number} index The index.
  * @param {*} value The value of the property.
- *
  * @private
  */
 MetadataTableProperty.prototype.set = function (index, value) {
@@ -363,9 +350,7 @@ MetadataTableProperty.prototype.set = function (index, value) {
 
 /**
  * Returns a typed array containing the property values.
- *
  * @returns {*} The typed array containing the property values or <code>undefined</code> if the property values are not stored in a typed array.
- *
  * @private
  */
 MetadataTableProperty.prototype.getTypedArray = function () {

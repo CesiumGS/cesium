@@ -6,18 +6,14 @@ import DeveloperError from "./DeveloperError.js";
  * with names and values encoded properly for use in a URL.  Values that are arrays
  * will produce multiple values with the same name.
  * @function objectToQuery
- *
  * @param {object} obj The object containing data to encode.
  * @returns {string} An encoded query string.
- *
- *
  * @example
  * const str = Cesium.objectToQuery({
  *     key1 : 'some value',
  *     key2 : 'a/b',
  *     key3 : ['x', 'y']
  * });
- *
  * @see queryToObject
  * // str will be:
  * // 'key1=some%20value&key2=a%2Fb&key3=x&key3=y'

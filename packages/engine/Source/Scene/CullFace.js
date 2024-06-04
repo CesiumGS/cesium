@@ -2,13 +2,11 @@ import WebGLConstants from "../Core/WebGLConstants.js";
 
 /**
  * Determines which triangles, if any, are culled.
- *
  * @enum {number}
  */
 const CullFace = {
   /**
    * Front-facing triangles are culled.
-   *
    * @type {number}
    * @constant
    */
@@ -16,7 +14,6 @@ const CullFace = {
 
   /**
    * Back-facing triangles are culled.
-   *
    * @type {number}
    * @constant
    */
@@ -24,7 +21,6 @@ const CullFace = {
 
   /**
    * Both front-facing and back-facing triangles are culled.
-   *
    * @type {number}
    * @constant
    */

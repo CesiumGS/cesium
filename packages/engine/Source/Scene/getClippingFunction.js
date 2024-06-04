@@ -5,7 +5,6 @@ import ClippingPlaneCollection from "./ClippingPlaneCollection.js";
 const textureResolutionScratch = new Cartesian2();
 /**
  * Gets the GLSL functions needed to retrieve clipping planes from a ClippingPlaneCollection's texture.
- *
  * @param {ClippingPlaneCollection} clippingPlaneCollection ClippingPlaneCollection with a defined texture.
  * @param {Context} context The current rendering context.
  * @returns {string} A string containing GLSL functions for retrieving clipping planes.

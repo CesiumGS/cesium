@@ -30,18 +30,14 @@ import VoxelShapeType from "./VoxelShapeType.js";
  * <div class="notice">
  * This object is normally not instantiated directly, use {@link Cesium3DTilesVoxelProvider.fromUrl}.
  * </div>
- *
  * @alias Cesium3DTilesVoxelProvider
- * @constructor
+ * @class
  * @augments VoxelProvider
- *
  * @param {object} options Object with the following properties:
- *
  * @see Cesium3DTilesVoxelProvider.fromUrl
  * @see VoxelProvider
  * @see VoxelPrimitive
  * @see VoxelShapeType
- *
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
 function Cesium3DTilesVoxelProvider(options) {
@@ -95,15 +91,13 @@ function Cesium3DTilesVoxelProvider(options) {
 
 /**
  * Creates a {@link VoxelProvider} that fetches voxel data from a 3D Tiles tileset.
- *
  * @param {Resource|string} url The URL to a tileset JSON file
  * @returns {Promise<Cesium3DTilesVoxelProvider>} The created provider
- *
- * @exception {RuntimeException} Root must have content
- * @exception {RuntimeException} Root tile content must have 3DTILES_content_voxels extension
- * @exception {RuntimeException} Root tile must have implicit tiling
- * @exception {RuntimeException} Tileset must have a metadata schema
- * @exception {RuntimeException} Only box, region and 3DTILES_bounding_volume_cylinder are supported in Cesium3DTilesVoxelProvider
+ * @throws {RuntimeException} Root must have content
+ * @throws {RuntimeException} Root tile content must have 3DTILES_content_voxels extension
+ * @throws {RuntimeException} Root tile must have implicit tiling
+ * @throws {RuntimeException} Tileset must have a metadata schema
+ * @throws {RuntimeException} Only box, region and 3DTILES_bounding_volume_cylinder are supported in Cesium3DTilesVoxelProvider
  */
 Cesium3DTilesVoxelProvider.fromUrl = async function (url) {
   //>>includeStart('debug', pragmas.debug);

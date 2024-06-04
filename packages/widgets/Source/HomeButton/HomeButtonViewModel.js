@@ -5,8 +5,7 @@ import createCommand from "../createCommand.js";
 /**
  * The view model for {@link HomeButton}.
  * @alias HomeButtonViewModel
- * @constructor
- *
+ * @class
  * @param {Scene} scene The scene instance to use.
  * @param {number} [duration] The duration of the camera flight in seconds.
  */
@@ -27,7 +26,6 @@ function HomeButtonViewModel(scene, duration) {
 
   /**
    * Gets or sets the tooltip.  This property is observable.
-   *
    * @type {string}
    */
   this.tooltip = "View Home";
@@ -39,7 +37,6 @@ Object.defineProperties(HomeButtonViewModel.prototype, {
   /**
    * Gets the scene to control.
    * @memberof HomeButtonViewModel.prototype
-   *
    * @type {Scene}
    */
   scene: {
@@ -51,7 +48,6 @@ Object.defineProperties(HomeButtonViewModel.prototype, {
   /**
    * Gets the Command that is executed when the button is clicked.
    * @memberof HomeButtonViewModel.prototype
-   *
    * @type {Command}
    */
   command: {
@@ -65,7 +61,6 @@ Object.defineProperties(HomeButtonViewModel.prototype, {
    * A value of zero causes the camera to instantly switch to home view.
    * The duration will be computed based on the distance when undefined.
    * @memberof HomeButtonViewModel.prototype
-   *
    * @type {number|undefined}
    */
   duration: {

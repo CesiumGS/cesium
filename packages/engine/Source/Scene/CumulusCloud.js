@@ -16,21 +16,19 @@ import defined from "../Core/defined.js";
  * <img src='Images/CumulusCloud.png' width='400' height='300' /><br />
  * Example cumulus clouds
  * </div>
+ * @param options
+ * @param cloudCollection
  * @alias CumulusCloud
- *
  * @performance Similar to {@link Billboard}, reading a property, e.g., {@link CumulusCloud#show},
  * takes constant time. Assigning to a property is constant time but results in
  * CPU to GPU traffic when {@link CloudCollection#update} is called.  The per-cloud traffic is
  * the same regardless of how many properties were updated.  If most clouds in a collection need to be
  * updated, it may be more efficient to clear the collection with {@link CloudCollection#removeAll}
  * and add new clouds instead of modifying each one.
- *
  * @see CloudCollection
  * @see CloudCollection#add
- *
  * @internalConstructor
  * @class
- *
  * @demo {@link https://sandcastle.cesium.com/index.html?src=Cloud%20Parameters.html|Cesium Sandcastle Cloud Parameters Demo}
  */
 function CumulusCloud(options, cloudCollection) {
@@ -150,7 +148,6 @@ Object.defineProperties(CumulusCloud.prototype, {
    * and <code>slice</code> properties.</p>
    * @memberof CumulusCloud.prototype
    * @type {Cartesian2}
-   *
    * @see CumulusCloud#maximumSize
    * @see CumulusCloud#slice
    */
@@ -207,7 +204,6 @@ Object.defineProperties(CumulusCloud.prototype, {
    * <p>To modify the billboard's actual size, modify the cloud's <code>scale</code> property.</p>
    * @memberof CumulusCloud.prototype
    * @type {Cartesian3}
-   *
    * @see CumulusCloud#scale
    */
   maximumSize: {
@@ -283,15 +279,14 @@ Object.defineProperties(CumulusCloud.prototype, {
    * <div align='center'>
    * <table border='0' cellpadding='5'><tr>
    * <td align='center'>
-   *  <code>cloud.slice = -1.0;<br/>cloud.maximumSize.z = 18;</code><br/>
-   *  <img src='Images/CumulusCloud.slice-1z18.png' width='250' height='158' />
+   * <code>cloud.slice = -1.0;<br/>cloud.maximumSize.z = 18;</code><br/>
+   * <img src='Images/CumulusCloud.slice-1z18.png' width='250' height='158' />
    * </td>
    * <td align='center'>
-   *   <code>cloud.slice = -1.0;<br/>cloud.maximumSize.z = 30;</code><br/>
-   *   <img src='Images/CumulusCloud.slice-1z30.png' width='250' height='158' /></td>
+   * <code>cloud.slice = -1.0;<br/>cloud.maximumSize.z = 30;</code><br/>
+   * <img src='Images/CumulusCloud.slice-1z30.png' width='250' height='158' /></td>
    * </tr></table>
    * </div>
-   *
    * @memberof CumulusCloud.prototype
    * @type {number}
    * @default -1.0

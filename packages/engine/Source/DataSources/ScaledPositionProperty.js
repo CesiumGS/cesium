@@ -8,6 +8,7 @@ import Property from "./Property.js";
 /**
  * This is a temporary class for scaling position properties to the WGS84 surface.
  * It will go away or be refactored to support data with arbitrary height references.
+ * @param value
  * @private
  */
 function ScaledPositionProperty(value) {

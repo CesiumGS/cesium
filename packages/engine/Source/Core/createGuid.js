@@ -1,14 +1,9 @@
 /**
  * Creates a Globally unique identifier (GUID) string.  A GUID is 128 bits long, and can guarantee uniqueness across space and time.
- *
  * @function
- *
  * @returns {string}
- *
- *
  * @example
  * this.guid = Cesium.createGuid();
- *
  * @see {@link http://www.ietf.org/rfc/rfc4122.txt|RFC 4122 A Universally Unique IDentifier (UUID) URN Namespace}
  */
 function createGuid() {

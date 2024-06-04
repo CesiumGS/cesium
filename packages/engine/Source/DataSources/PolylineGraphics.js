@@ -9,7 +9,6 @@ import createPropertyDescriptor from "./createPropertyDescriptor.js";
  * @typedef {object} PolylineGraphics.ConstructorOptions
  *
  * Initialization options for the PolylineGraphics constructor
- *
  * @property {Property | boolean} [show=true] A boolean Property specifying the visibility of the polyline.
  * @property {Property | Cartesian3[]} [positions] A Property specifying the array of {@link Cartesian3} positions that define the line strip.
  * @property {Property | number} [width=1.0] A numeric Property specifying the width in pixels.
@@ -28,12 +27,9 @@ import createPropertyDescriptor from "./createPropertyDescriptor.js";
  * Describes a polyline. The first two positions define a line segment,
  * and each additional position defines a line segment from the previous position. The segments
  * can be linear connected points, great arcs, or clamped to terrain.
- *
  * @alias PolylineGraphics
- * @constructor
- *
+ * @class
  * @param {PolylineGraphics.ConstructorOptions} [options] Object describing initialization options
- *
  * @see Entity
  * @demo {@link https://sandcastle.cesium.com/index.html?src=Polyline.html|Cesium Sandcastle Polyline Demo}
  */
@@ -71,7 +67,6 @@ Object.defineProperties(PolylineGraphics.prototype, {
   /**
    * Gets the event that is raised whenever a property or sub-property is changed or modified.
    * @memberof PolylineGraphics.prototype
-   *
    * @type {Event}
    * @readonly
    */
@@ -187,7 +182,6 @@ Object.defineProperties(PolylineGraphics.prototype, {
 
 /**
  * Duplicates this instance.
- *
  * @param {PolylineGraphics} [result] The object onto which to store the result.
  * @returns {PolylineGraphics} The modified result parameter or a new instance if one was not provided.
  */
@@ -213,7 +207,6 @@ PolylineGraphics.prototype.clone = function (result) {
 /**
  * Assigns each unassigned property on this object to the value
  * of the same property on the provided source object.
- *
  * @param {PolylineGraphics} source The object to be merged into this object.
  */
 PolylineGraphics.prototype.merge = function (source) {

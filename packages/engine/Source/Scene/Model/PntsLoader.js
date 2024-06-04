@@ -36,16 +36,14 @@ const MetallicRoughness = ModelComponents.MetallicRoughness;
 
 /**
  * Loads a .pnts point cloud and transcodes it into a {@link ModelComponents}
- *
  * @alias PntsLoader
- * @constructor
+ * @class
  * @augments ResourceLoader
  * @private
- *
  * @param {object} options An object containing the following properties
  * @param {ArrayBuffer} options.arrayBuffer The array buffer of the pnts contents
  * @param {number} [options.byteOffset] The byte offset to the beginning of the pnts contents in the array buffer
- * @param {boolean} [options.loadAttributesFor2D=false] If true, load the positions buffer as a typed array for accurately projecting models to 2D.
+ * @param {boolean} [options.loadAttributesFor2D] If true, load the positions buffer as a typed array for accurately projecting models to 2D.
  */
 function PntsLoader(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -83,9 +81,7 @@ if (defined(Object.create)) {
 Object.defineProperties(PntsLoader.prototype, {
   /**
    * The cache key of the resource
-   *
    * @memberof PntsLoader.prototype
-   *
    * @type {string}
    * @readonly
    * @private
@@ -98,9 +94,7 @@ Object.defineProperties(PntsLoader.prototype, {
 
   /**
    * The loaded components.
-   *
    * @memberof PntsLoader.prototype
-   *
    * @type {ModelComponents.Components}
    * @readonly
    * @private
@@ -114,9 +108,7 @@ Object.defineProperties(PntsLoader.prototype, {
   /**
    * A world-space transform to apply to the primitives.
    * See {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification/TileFormats/PointCloud#global-semantics}
-   *
    * @memberof PntsLoader.prototype
-   *
    * @type {Matrix4}
    * @readonly
    * @private

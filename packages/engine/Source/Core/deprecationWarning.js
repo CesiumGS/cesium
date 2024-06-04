@@ -6,12 +6,9 @@ import oneTimeWarning from "./oneTimeWarning.js";
  * Logs a deprecation message to the console.  Use this function instead of
  * <code>console.log</code> directly since this does not log duplicate messages
  * unless it is called from multiple workers.
- *
  * @function deprecationWarning
- *
  * @param {string} identifier The unique identifier for this deprecated API.
  * @param {string} message The message to log to the console.
- *
  * @example
  * // Deprecated function or class
  * function Foo() {
@@ -38,7 +35,6 @@ import oneTimeWarning from "./oneTimeWarning.js";
  *         }
  *     }
  * });
- *
  * @private
  */
 function deprecationWarning(identifier, message) {

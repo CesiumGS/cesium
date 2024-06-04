@@ -2,13 +2,11 @@ import WebGLConstants from "../Core/WebGLConstants.js";
 
 /**
  * Determines the action taken based on the result of the stencil test.
- *
  * @enum {number}
  */
 const StencilOperation = {
   /**
    * Sets the stencil buffer value to zero.
-   *
    * @type {number}
    * @constant
    */
@@ -16,7 +14,6 @@ const StencilOperation = {
 
   /**
    * Does not change the stencil buffer.
-   *
    * @type {number}
    * @constant
    */
@@ -24,7 +21,6 @@ const StencilOperation = {
 
   /**
    * Replaces the stencil buffer value with the reference value.
-   *
    * @type {number}
    * @constant
    */
@@ -32,7 +28,6 @@ const StencilOperation = {
 
   /**
    * Increments the stencil buffer value, clamping to unsigned byte.
-   *
    * @type {number}
    * @constant
    */
@@ -40,7 +35,6 @@ const StencilOperation = {
 
   /**
    * Decrements the stencil buffer value, clamping to zero.
-   *
    * @type {number}
    * @constant
    */
@@ -48,7 +42,6 @@ const StencilOperation = {
 
   /**
    * Bitwise inverts the existing stencil buffer value.
-   *
    * @type {number}
    * @constant
    */
@@ -56,7 +49,6 @@ const StencilOperation = {
 
   /**
    * Increments the stencil buffer value, wrapping to zero when exceeding the unsigned byte range.
-   *
    * @type {number}
    * @constant
    */
@@ -64,7 +56,6 @@ const StencilOperation = {
 
   /**
    * Decrements the stencil buffer value, wrapping to the maximum unsigned byte instead of going below zero.
-   *
    * @type {number}
    * @constant
    */

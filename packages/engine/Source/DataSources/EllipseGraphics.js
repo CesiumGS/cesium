@@ -9,7 +9,6 @@ import createPropertyDescriptor from "./createPropertyDescriptor.js";
  * @typedef {object} EllipseGraphics.ConstructorOptions
  *
  * Initialization options for the EllipseGraphics constructor
- *
  * @property {Property | boolean} [show=true] A boolean Property specifying the visibility of the ellipse.
  * @property {Property | number} [semiMajorAxis] The numeric Property specifying the semi-major axis.
  * @property {Property | number} [semiMinorAxis] The numeric Property specifying the semi-minor axis.
@@ -37,12 +36,9 @@ import createPropertyDescriptor from "./createPropertyDescriptor.js";
  * The ellipse conforms to the curvature of the globe and can be placed on the surface or
  * at altitude and can optionally be extruded into a volume.
  * The center point is determined by the containing {@link Entity}.
- *
  * @alias EllipseGraphics
- * @constructor
- *
+ * @class
  * @param {EllipseGraphics.ConstructorOptions} [options] Object describing initialization options
- *
  * @demo {@link https://sandcastle.cesium.com/index.html?src=Circles and Ellipses.html|Cesium Sandcastle Circles and Ellipses Demo}
  */
 function EllipseGraphics(options) {
@@ -95,7 +91,6 @@ Object.defineProperties(EllipseGraphics.prototype, {
   /**
    * Gets the event that is raised whenever a property or sub-property is changed or modified.
    * @memberof EllipseGraphics.prototype
-   *
    * @type {Event}
    * @readonly
    */
@@ -271,7 +266,6 @@ Object.defineProperties(EllipseGraphics.prototype, {
 
 /**
  * Duplicates this instance.
- *
  * @param {EllipseGraphics} [result] The object onto which to store the result.
  * @returns {EllipseGraphics} The modified result parameter or a new instance if one was not provided.
  */
@@ -305,7 +299,6 @@ EllipseGraphics.prototype.clone = function (result) {
 /**
  * Assigns each unassigned property on this object to the value
  * of the same property on the provided source object.
- *
  * @param {EllipseGraphics} source The object to be merged into this object.
  */
 EllipseGraphics.prototype.merge = function (source) {

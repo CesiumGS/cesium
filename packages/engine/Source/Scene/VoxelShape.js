@@ -3,15 +3,12 @@ import DeveloperError from "../Core/DeveloperError.js";
 /**
  * Controls per-shape behavior for culling and rendering voxel grids.
  * This type describes an interface and is not intended to be instantiated directly.
- *
  * @alias VoxelShape
- * @constructor
- *
+ * @class
  * @see VoxelBoxShape
  * @see VoxelEllipsoidShape
  * @see VoxelCylinderShape
  * @see VoxelShapeType
- *
  * @private
  */
 function VoxelShape() {
@@ -22,7 +19,6 @@ Object.defineProperties(VoxelShape.prototype, {
   /**
    * An oriented bounding box containing the bounded shape.
    * The update function must be called before accessing this value.
-   *
    * @memberof VoxelShape.prototype
    * @type {OrientedBoundingBox}
    * @readonly
@@ -34,7 +30,6 @@ Object.defineProperties(VoxelShape.prototype, {
   /**
    * A bounding sphere containing the bounded shape.
    * The update function must be called before accessing this value.
-   *
    * @memberof VoxelShape.prototype
    * @type {BoundingSphere}
    * @readonly
@@ -46,7 +41,6 @@ Object.defineProperties(VoxelShape.prototype, {
   /**
    * A transformation matrix containing the bounded shape.
    * The update function must be called before accessing this value.
-   *
    * @memberof VoxelShape.prototype
    * @type {Matrix4}
    * @readonly
@@ -58,7 +52,6 @@ Object.defineProperties(VoxelShape.prototype, {
   /**
    * A transformation matrix containing the shape, ignoring the bounds.
    * The update function must be called before accessing this value.
-   *
    * @memberof VoxelShape.prototype
    * @type {Matrix4}
    * @readonly
@@ -95,7 +88,6 @@ Object.defineProperties(VoxelShape.prototype, {
 
 /**
  * Update the shape's state.
- *
  * @param {Matrix4} modelMatrix The model matrix.
  * @param {Cartesian3} minBounds The minimum bounds.
  * @param {Cartesian3} maxBounds The maximum bounds.
@@ -106,7 +98,6 @@ VoxelShape.prototype.update = DeveloperError.throwInstantiationError;
 /**
  * Computes an oriented bounding box for a specified tile.
  * The update function must be called before calling this function.
- *
  * @param {number} tileLevel The tile's level.
  * @param {number} tileX The tile's x coordinate.
  * @param {number} tileY The tile's y coordinate.
@@ -120,7 +111,6 @@ VoxelShape.prototype.computeOrientedBoundingBoxForTile =
 /**
  * Computes an oriented bounding box for a specified sample within a specified tile.
  * The update function must be called before calling this function.
- *
  * @param {SpatialNode} spatialNode The spatial node containing the sample
  * @param {Cartesian3} tileDimensions The size of the tile in number of samples, before padding
  * @param {Cartesian3} tileUv The sample coordinate within the tile
@@ -132,22 +122,18 @@ VoxelShape.prototype.computeOrientedBoundingBoxForSample =
 
 /**
  * Defines the minimum bounds of the shape. The meaning can vary per-shape.
- *
  * @type {Cartesian3}
  * @constant
  * @readonly
- *
  * @private
  */
 VoxelShape.DefaultMinBounds = DeveloperError.throwInstantiationError;
 
 /**
  * Defines the maximum bounds of the shape. The meaning can vary per-shape.
- *
  * @type {Cartesian3}
  * @constant
  * @readonly
- *
  * @private
  */
 VoxelShape.DefaultMaxBounds = DeveloperError.throwInstantiationError;

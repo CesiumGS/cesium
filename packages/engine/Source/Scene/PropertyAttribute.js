@@ -9,16 +9,13 @@ import PropertyAttributeProperty from "./PropertyAttributeProperty.js";
  * <p>
  * See the {@link https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_structural_metadata|EXT_structural_metadata Extension}
  * </p>
- *
  * @param {object} options Object with the following properties:
  * @param {string} [options.name] Optional human-readable name to describe the attribute
  * @param {number} [options.id] A unique id to identify the property attribute, useful for debugging. This is the array index in the property attributes array
  * @param {object} options.propertyAttribute The property attribute JSON, following the EXT_structural_metadata schema.
  * @param {MetadataClass} options.class The class that properties conform to.
- *
  * @alias PropertyAttribute
- * @constructor
- *
+ * @class
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
@@ -55,9 +52,7 @@ function PropertyAttribute(options) {
 Object.defineProperties(PropertyAttribute.prototype, {
   /**
    * A human-readable name for this attribute
-   *
    * @memberof PropertyAttribute.prototype
-   *
    * @type {string}
    * @readonly
    * @private
@@ -69,9 +64,7 @@ Object.defineProperties(PropertyAttribute.prototype, {
   },
   /**
    * An identifier for this attribute. Useful for debugging.
-   *
    * @memberof PropertyAttribute.prototype
-   *
    * @type {string|number}
    * @readonly
    * @private
@@ -83,9 +76,7 @@ Object.defineProperties(PropertyAttribute.prototype, {
   },
   /**
    * The class that properties conform to.
-   *
    * @memberof PropertyAttribute.prototype
-   *
    * @type {MetadataClass}
    * @readonly
    * @private
@@ -98,9 +89,7 @@ Object.defineProperties(PropertyAttribute.prototype, {
 
   /**
    * The properties in this property attribute.
-   *
    * @memberof PropertyAttribute.prototype
-   *
    * @type {Object<string, PropertyAttributeProperty>}
    * @readonly
    * @private
@@ -113,9 +102,7 @@ Object.defineProperties(PropertyAttribute.prototype, {
 
   /**
    * Extra user-defined properties.
-   *
    * @memberof PropertyAttribute.prototype
-   *
    * @type {*}
    * @readonly
    * @private
@@ -128,9 +115,7 @@ Object.defineProperties(PropertyAttribute.prototype, {
 
   /**
    * An object containing extensions.
-   *
    * @memberof PropertyAttribute.prototype
-   *
    * @type {object}
    * @readonly
    * @private
@@ -144,7 +129,6 @@ Object.defineProperties(PropertyAttribute.prototype, {
 
 /**
  * Gets the property with the given property ID.
- *
  * @param {string} propertyId The case-sensitive ID of the property.
  * @returns {PropertyAttributeProperty|undefined} The property, or <code>undefined</code> if the property does not exist.
  * @private

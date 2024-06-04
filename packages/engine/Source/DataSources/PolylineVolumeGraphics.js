@@ -9,7 +9,6 @@ import createPropertyDescriptor from "./createPropertyDescriptor.js";
  * @typedef {object} PolylineVolumeGraphics.ConstructorOptions
  *
  * Initialization options for the PolylineVolumeGraphics constructor
- *
  * @property {Property | boolean} [show=true] A boolean Property specifying the visibility of the volume.
  * @property {Property | Cartesian3[]} [positions] A Property specifying the array of {@link Cartesian3} positions which define the line strip.
  * @property {Property | Cartesian2[]} [shape] A Property specifying the array of {@link Cartesian2} positions which define the shape to be extruded.
@@ -27,12 +26,9 @@ import createPropertyDescriptor from "./createPropertyDescriptor.js";
 /**
  * Describes a polyline volume defined as a line strip and corresponding two dimensional shape which is extruded along it.
  * The resulting volume conforms to the curvature of the globe.
- *
  * @alias PolylineVolumeGraphics
- * @constructor
- *
+ * @class
  * @param {PolylineVolumeGraphics.ConstructorOptions} [options] Object describing initialization options
- *
  * @see Entity
  * @demo {@link https://sandcastle.cesium.com/index.html?src=Polyline%20Volume.html|Cesium Sandcastle Polyline Volume Demo}
  */
@@ -70,7 +66,6 @@ Object.defineProperties(PolylineVolumeGraphics.prototype, {
   /**
    * Gets the event that is raised whenever a property or sub-property is changed or modified.
    * @memberof PolylineVolumeGraphics.prototype
-   *
    * @type {Event}
    * @readonly
    */
@@ -182,7 +177,6 @@ Object.defineProperties(PolylineVolumeGraphics.prototype, {
 
 /**
  * Duplicates this instance.
- *
  * @param {PolylineVolumeGraphics} [result] The object onto which to store the result.
  * @returns {PolylineVolumeGraphics} The modified result parameter or a new instance if one was not provided.
  */
@@ -208,7 +202,6 @@ PolylineVolumeGraphics.prototype.clone = function (result) {
 /**
  * Assigns each unassigned property on this object to the value
  * of the same property on the provided source object.
- *
  * @param {PolylineVolumeGraphics} source The object to be merged into this object.
  */
 PolylineVolumeGraphics.prototype.merge = function (source) {

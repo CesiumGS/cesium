@@ -16,9 +16,7 @@ const MAXIMUM_INTERVAL = Object.freeze(
 
 /**
  * Constants related to ISO8601 support.
- *
  * @namespace
- *
  * @see {@link http://en.wikipedia.org/wiki/ISO_8601|ISO 8601 on Wikipedia}
  * @see JulianDate
  * @see TimeInterval
@@ -27,7 +25,6 @@ const Iso8601 = {
   /**
    * A {@link JulianDate} representing the earliest time representable by an ISO8601 date.
    * This is equivalent to the date string '0000-01-01T00:00:00Z'
-   *
    * @type {JulianDate}
    * @constant
    */
@@ -36,7 +33,6 @@ const Iso8601 = {
   /**
    * A {@link JulianDate} representing the latest time representable by an ISO8601 date.
    * This is equivalent to the date string '9999-12-31T24:00:00Z'
-   *
    * @type {JulianDate}
    * @constant
    */
@@ -45,7 +41,6 @@ const Iso8601 = {
   /**
    * A {@link TimeInterval} representing the largest interval representable by an ISO8601 interval.
    * This is equivalent to the interval string '0000-01-01T00:00:00Z/9999-12-31T24:00:00Z'
-   *
    * @type {TimeInterval}
    * @constant
    */

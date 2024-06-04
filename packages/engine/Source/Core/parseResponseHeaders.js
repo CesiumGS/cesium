@@ -1,14 +1,11 @@
 /**
  * Parses the result of XMLHttpRequest's getAllResponseHeaders() method into
  * a dictionary.
- *
  * @function parseResponseHeaders
- *
  * @param {string} headerString The header string returned by getAllResponseHeaders().  The format is
  *                 described here: http://www.w3.org/TR/XMLHttpRequest/#the-getallresponseheaders()-method
  * @returns {object} A dictionary of key/value pairs, where each key is the name of a header and the corresponding value
  *                   is that header's value.
- *
  * @private
  */
 function parseResponseHeaders(headerString) {

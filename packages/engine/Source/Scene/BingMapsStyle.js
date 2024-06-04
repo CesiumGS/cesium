@@ -1,14 +1,11 @@
 /**
  * The types of imagery provided by Bing Maps.
- *
  * @enum {number}
- *
  * @see BingMapsImageryProvider
  */
 const BingMapsStyle = {
   /**
    * Aerial imagery.
-   *
    * @type {string}
    * @constant
    */
@@ -16,7 +13,6 @@ const BingMapsStyle = {
 
   /**
    * Aerial imagery with a road overlay.
-   *
    * @type {string}
    * @constant
    * @deprecated See https://github.com/CesiumGS/cesium/issues/7128.
@@ -26,7 +22,6 @@ const BingMapsStyle = {
 
   /**
    * Aerial imagery with a road overlay.
-   *
    * @type {string}
    * @constant
    */
@@ -34,7 +29,6 @@ const BingMapsStyle = {
 
   /**
    * Roads without additional imagery.
-   *
    * @type {string}
    * @constant
    * @deprecated See https://github.com/CesiumGS/cesium/issues/7128.
@@ -44,7 +38,6 @@ const BingMapsStyle = {
 
   /**
    * Roads without additional imagery.
-   *
    * @type {string}
    * @constant
    */
@@ -52,7 +45,6 @@ const BingMapsStyle = {
 
   /**
    * A dark version of the road maps.
-   *
    * @type {string}
    * @constant
    */
@@ -60,7 +52,6 @@ const BingMapsStyle = {
 
   /**
    * A lighter version of the road maps.
-   *
    * @type {string}
    * @constant
    */
@@ -68,7 +59,6 @@ const BingMapsStyle = {
 
   /**
    * A grayscale version of the road maps.
-   *
    * @type {string}
    * @constant
    */
@@ -76,7 +66,6 @@ const BingMapsStyle = {
 
   /**
    * Ordnance Survey imagery. This imagery is visible only for the London, UK area.
-   *
    * @type {string}
    * @constant
    */
@@ -84,7 +73,6 @@ const BingMapsStyle = {
 
   /**
    * Collins Bart imagery.
-   *
    * @type {string}
    * @constant
    */

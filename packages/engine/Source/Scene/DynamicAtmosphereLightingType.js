@@ -2,21 +2,18 @@
  * Atmosphere lighting effects (sky atmosphere, ground atmosphere, fog) can be
  * further modified with dynamic lighting from the sun or other light source
  * that changes over time. This enum determines which light source to use.
- *
  * @enum {number}
  */
 const DynamicAtmosphereLightingType = {
   /**
    * Do not use dynamic atmosphere lighting. Atmosphere lighting effects will
    * be lit from directly above rather than using the scene's light source.
-   *
    * @type {number}
    * @constant
    */
   NONE: 0,
   /**
    * Use the scene's current light source for dynamic atmosphere lighting.
-   *
    * @type {number}
    * @constant
    */
@@ -24,7 +21,6 @@ const DynamicAtmosphereLightingType = {
   /**
    * Force the dynamic atmosphere lighting to always use the sunlight direction,
    * even if the scene uses a different light source.
-   *
    * @type {number}
    * @constant
    */
@@ -33,10 +29,8 @@ const DynamicAtmosphereLightingType = {
 
 /**
  * Get the lighting enum from the older globe flags
- *
  * @param {Globe} globe The globe
- * @return {DynamicAtmosphereLightingType} The corresponding enum value
- *
+ * @returns {DynamicAtmosphereLightingType} The corresponding enum value
  * @private
  */
 DynamicAtmosphereLightingType.fromGlobeFlags = function (globe) {

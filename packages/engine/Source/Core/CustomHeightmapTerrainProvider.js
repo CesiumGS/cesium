@@ -24,10 +24,8 @@ import TerrainProvider from "./TerrainProvider.js";
  * There are some limitations such as no water mask, no vertex normals, and no
  * availability, so a full-fledged {@link TerrainProvider} subclass is better suited
  * for these more sophisticated use cases.
- *
  * @alias CustomHeightmapTerrainProvider
- * @constructor
- *
+ * @class
  * @param {object} options Object with the following properties:
  * @param {CustomHeightmapTerrainProvider.GeometryCallback} options.callback The callback function for requesting tile geometry.
  * @param {number} options.width The number of columns per heightmap tile.
@@ -39,7 +37,6 @@ import TerrainProvider from "./TerrainProvider.js";
  * this parameter is ignored and the tiling scheme's ellipsoid is used instead. If neither
  * parameter is specified, the WGS84 ellipsoid is used.
  * @param {Credit|string} [options.credit] A credit for the data source, which is displayed on the canvas.
- *
  * @example
  * const viewer = new Cesium.Viewer("cesiumContainer", {
  *   terrainProvider: new Cesium.CustomHeightmapTerrainProvider({
@@ -50,7 +47,6 @@ import TerrainProvider from "./TerrainProvider.js";
  *     },
  *   }),
  * });
- *
  * @see TerrainProvider
  */
 function CustomHeightmapTerrainProvider(options) {
@@ -188,12 +184,10 @@ Object.defineProperties(CustomHeightmapTerrainProvider.prototype, {
 /**
  * Requests the geometry for a given tile. The result includes terrain
  * data and indicates that all child tiles are available.
- *
  * @param {number} x The X coordinate of the tile for which to request geometry.
  * @param {number} y The Y coordinate of the tile for which to request geometry.
  * @param {number} level The level of the tile for which to request geometry.
  * @param {Request} [request] The request object. Intended for internal use only.
- *
  * @returns {Promise<TerrainData>|undefined} A promise for the requested geometry. If this method
  *          returns undefined instead of a promise, it is an indication that too many requests are already
  *          pending and the request will be retried later.
@@ -229,7 +223,6 @@ CustomHeightmapTerrainProvider.prototype.requestTileGeometry = function (
 
 /**
  * Gets the maximum geometric error allowed in a tile at a given level.
- *
  * @param {number} level The tile level for which to get the maximum geometric error.
  * @returns {number} The maximum geometric error.
  */
@@ -241,7 +234,6 @@ CustomHeightmapTerrainProvider.prototype.getLevelMaximumGeometricError = functio
 
 /**
  * Determines whether data for a tile is available to be loaded.
- *
  * @param {number} x The X coordinate of the tile for which to request geometry.
  * @param {number} y The Y coordinate of the tile for which to request geometry.
  * @param {number} level The level of the tile for which to request geometry.
@@ -257,7 +249,6 @@ CustomHeightmapTerrainProvider.prototype.getTileDataAvailable = function (
 
 /**
  * Makes sure we load availability data for a tile
- *
  * @param {number} x The X coordinate of the tile for which to request geometry.
  * @param {number} y The Y coordinate of the tile for which to request geometry.
  * @param {number} level The level of the tile for which to request geometry.

@@ -4,9 +4,7 @@ import ShaderDestination from "../../Renderer/ShaderDestination.js";
 
 /**
  * The model splitting pipeline stage is responsible for discarding fragments on the wrong side of the splitter.
- *
  * @namespace ModelSplitterPipelineStage
- *
  * @private
  */
 const ModelSplitterPipelineStage = {
@@ -19,15 +17,13 @@ const ModelSplitterPipelineStage = {
  * Process a model. This modifies the following parts of the render resources:
  *
  * <ul>
- *  <li>adds a define to the fragment shader to indicate that the model is split</li>
- *  <li>adds a function to the fragment shader to discard the fragment if it's on the wrong side of the splitter.</li>
- *  <li>adds a uniform indicating the "splitDirection" (side of the screen on which to show the model)
- *</ul>
- *
+ * <li>adds a define to the fragment shader to indicate that the model is split</li>
+ * <li>adds a function to the fragment shader to discard the fragment if it's on the wrong side of the splitter.</li>
+ * <li>adds a uniform indicating the "splitDirection" (side of the screen on which to show the model)
+ * </ul>
  * @param {ModelRenderResources} renderResources The render resources for this model.
  * @param {Model} model The model.
  * @param {FrameState} frameState The frameState.
- *
  * @private
  */
 ModelSplitterPipelineStage.process = function (

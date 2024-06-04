@@ -19,17 +19,13 @@ import ExpressionNodeType from "./ExpressionNodeType.js";
  * <p>
  * Implements the {@link StyleExpression} interface.
  * </p>
- *
  * @alias Expression
- * @constructor
- *
+ * @class
  * @param {string} [expression] The expression defined using the 3D Tiles Styling language.
  * @param {object} [defines] Defines in the style.
- *
  * @example
  * const expression = new Cesium.Expression('(regExp("^Chest").test(${County})) && (${YearBuilt} >= 1970)');
  * expression.evaluate(feature); // returns true or false depending on the feature's properties
- *
  * @example
  * const expression = new Cesium.Expression('(${Temperature} > 90) ? color("red") : color("white")');
  * expression.evaluateColor(feature, result); // returns a Cesium.Color object
@@ -60,12 +56,9 @@ function Expression(expression, defines) {
 Object.defineProperties(Expression.prototype, {
   /**
    * Gets the expression defined in the 3D Tiles Styling language.
-   *
    * @memberof Expression.prototype
-   *
    * @type {string}
    * @readonly
-   *
    * @default undefined
    */
   expression: {
@@ -129,7 +122,6 @@ const scratchStorage = {
  * object will be returned. If the result is a <code>Cartesian2</code>, <code>Cartesian3</code>, or <code>Cartesian4</code>,
  * a {@link Cartesian2}, {@link Cartesian3}, or {@link Cartesian4} object will be returned. If the <code>result</code> argument is
  * a {@link Color}, the {@link Cartesian4} value is converted to a {@link Color} and then returned.
- *
  * @param {Cesium3DTileFeature} feature The feature whose properties may be used as variables in the expression.
  * @param {object} [result] The object onto which to store the result.
  * @returns {boolean|number|string|RegExp|Cartesian2|Cartesian3|Cartesian4|Color} The result of evaluating the expression.
@@ -155,7 +147,6 @@ Expression.prototype.evaluate = function (feature, result) {
  * <p>
  * This is equivalent to {@link Expression#evaluate} but always returns a {@link Color} object.
  * </p>
- *
  * @param {Cesium3DTileFeature} feature The feature whose properties may be used as variables in the expression.
  * @param {Color} [result] The object in which to store the result
  * @returns {Color} The modified result parameter or a new Color instance if one was not provided.
@@ -169,14 +160,11 @@ Expression.prototype.evaluateColor = function (feature, result) {
 /**
  * Gets the shader function for this expression.
  * Returns undefined if the shader function can't be generated from this expression.
- *
  * @param {string} functionSignature Signature of the generated function.
  * @param {object} variableSubstitutionMap Maps variable names to shader variable names.
  * @param {object} shaderState Stores information about the generated shader function, including whether it is translucent.
  * @param {string} returnType The return type of the generated function.
- *
  * @returns {string} The shader function.
- *
  * @private
  */
 Expression.prototype.getShaderFunction = function (
@@ -202,12 +190,9 @@ Expression.prototype.getShaderFunction = function (
 /**
  * Gets the shader expression for this expression.
  * Returns undefined if the shader expression can't be generated from this expression.
- *
  * @param {object} variableSubstitutionMap Maps variable names to shader variable names.
  * @param {object} shaderState Stores information about the generated shader function, including whether it is translucent.
- *
  * @returns {string} The shader expression.
- *
  * @private
  */
 Expression.prototype.getShaderExpression = function (
@@ -222,9 +207,7 @@ Expression.prototype.getShaderExpression = function (
 
 /**
  * Gets the variables used by the expression.
- *
  * @returns {string[]} The variables used by the expression.
- *
  * @private
  */
 Expression.prototype.getVariables = function () {

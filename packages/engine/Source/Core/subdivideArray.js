@@ -3,13 +3,10 @@ import DeveloperError from "./DeveloperError.js";
 
 /**
  * Subdivides an array into a number of smaller, equal sized arrays.
- *
  * @function subdivideArray
- *
  * @param {Array} array The array to divide.
  * @param {number} numberOfArrays The number of arrays to divide the provided array into.
- *
- * @exception {DeveloperError} numberOfArrays must be greater than 0.
+ * @throws {DeveloperError} numberOfArrays must be greater than 0.
  */
 function subdivideArray(array, numberOfArrays) {
   //>>includeStart('debug', pragmas.debug);

@@ -6,9 +6,7 @@ import ShaderDestination from "../../Renderer/ShaderDestination.js";
 
 /**
  * The model color pipeline stage is responsible for handling the application of a static color to the model.
- *
  * @namespace ModelColorPipelineStage
- *
  * @private
  */
 const ModelColorPipelineStage = {
@@ -22,16 +20,14 @@ const ModelColorPipelineStage = {
  * Process a model. This modifies the following parts of the render resources:
  *
  * <ul>
- *  <li>adds a define to the fragment shader to indicate that the model has a color</li>
- *  <li>adds a function to the fragment shader to apply the color to the model's base color</li>
- *  <li>adds the uniforms for the fragment shader for the model's color and blending properties</li>
- *  <li>updates the pass type in the render resources based on translucency of the model's color</li>
- *</ul>
- *
+ * <li>adds a define to the fragment shader to indicate that the model has a color</li>
+ * <li>adds a function to the fragment shader to apply the color to the model's base color</li>
+ * <li>adds the uniforms for the fragment shader for the model's color and blending properties</li>
+ * <li>updates the pass type in the render resources based on translucency of the model's color</li>
+ * </ul>
  * @param {ModelRenderResources} renderResources The render resources for this model.
  * @param {Model} model The model.
  * @param {FrameState} frameState The frameState.
- *
  * @private
  */
 ModelColorPipelineStage.process = function (

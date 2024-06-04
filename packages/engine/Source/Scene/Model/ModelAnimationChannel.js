@@ -17,15 +17,12 @@ const AnimatedPropertyType = ModelComponents.AnimatedPropertyType;
  * A runtime animation channel for a {@link ModelAnimation}. An animation
  * channel is responsible for interpolating between the keyframe values of an animated
  * property, then applying the change to the target node.
- *
  * @param {object} options An object containing the following options:
  * @param {ModelComponents.AnimationChannel} options.channel The corresponding animation channel components from the 3D model.
  * @param {ModelAnimation} options.runtimeAnimation The runtime animation containing this channel.
  * @param {ModelRuntimeNode} options.runtimeNode The runtime node that this channel will animate.
- *
  * @alias ModelAnimationChannel
- * @constructor
- *
+ * @class
  * @private
  */
 function ModelAnimationChannel(options) {
@@ -55,12 +52,9 @@ function ModelAnimationChannel(options) {
 Object.defineProperties(ModelAnimationChannel.prototype, {
   /**
    * The glTF animation channel.
-   *
    * @memberof ModelAnimationChannel.prototype
-   *
    * @type {ModelComponents.AnimationChannel}
    * @readonly
-   *
    * @private
    */
   channel: {
@@ -71,12 +65,9 @@ Object.defineProperties(ModelAnimationChannel.prototype, {
 
   /**
    * The runtime animation that owns this channel.
-   *
    * @memberof ModelAnimationChannel.prototype
-   *
    * @type {ModelAnimation}
    * @readonly
-   *
    * @private
    */
   runtimeAnimation: {
@@ -87,12 +78,9 @@ Object.defineProperties(ModelAnimationChannel.prototype, {
 
   /**
    * The runtime node that this channel animates.
-   *
    * @memberof ModelAnimationChannel.prototype
-   *
    * @type {ModelRuntimeNode}
    * @readonly
-   *
    * @private
    */
   runtimeNode: {
@@ -103,12 +91,9 @@ Object.defineProperties(ModelAnimationChannel.prototype, {
 
   /**
    * The splines used to evaluate this animation channel.
-   *
    * @memberof ModelAnimationChannel.prototype
-   *
    * @type {Spline[]}
    * @readonly
-   *
    * @private
    */
   splines: {
@@ -241,9 +226,7 @@ function initialize(runtimeChannel) {
 
 /**
  * Animates the target node property based on its spline.
- *
  * @param {number} time The local animation time.
- *
  * @private
  */
 ModelAnimationChannel.prototype.animate = function (time) {

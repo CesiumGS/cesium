@@ -1,6 +1,5 @@
 /**
  * Defined the orientation of stripes in {@link StripeMaterialProperty}.
- *
  * @enum {number}
  */
 const StripeOrientation = {

@@ -14,7 +14,6 @@ import SceneMode from "./SceneMode.js";
  * Creates tweens for camera flights.
  * <br /><br />
  * Mouse interaction is disabled during flights.
- *
  * @private
  */
 const CameraFlightPath = {};

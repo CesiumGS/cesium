@@ -23,20 +23,18 @@ import BufferUsage from "../../Renderer/BufferUsage.js";
 /**
  * Loads a GeoJson model as part of the <code>MAXAR_content_geojson</code> extension with the following constraints:
  * <ul>
- *   <li>The top level GeoJSON type must be FeatureCollection or Feature.</li>
- *   <li>The geometry types must be LineString, MultiLineString, MultiPolygon, Polygon, MultiPoint, or Point.</li>
- *   <li>Polygon and polyline geometries are converted to geodesic lines.</li>
- *   <li>Only WGS84 geographic coordinates are supported.</li>
+ * <li>The top level GeoJSON type must be FeatureCollection or Feature.</li>
+ * <li>The geometry types must be LineString, MultiLineString, MultiPolygon, Polygon, MultiPoint, or Point.</li>
+ * <li>Polygon and polyline geometries are converted to geodesic lines.</li>
+ * <li>Only WGS84 geographic coordinates are supported.</li>
  * </ul>
  * <p>
  * Implements the {@link ResourceLoader} interface.
  * </p>
- *
  * @alias GeoJsonLoader
- * @constructor
+ * @class
  * @augments ResourceLoader
  * @private
- *
  * @param {object} options Object with the following properties:
  * @param {object} options.geoJson The GeoJson object.
  */
@@ -59,9 +57,7 @@ if (defined(Object.create)) {
 Object.defineProperties(GeoJsonLoader.prototype, {
   /**
    * The cache key of the resource.
-   *
    * @memberof GeoJsonLoader.prototype
-   *
    * @type {string}
    * @readonly
    * @private
@@ -73,9 +69,7 @@ Object.defineProperties(GeoJsonLoader.prototype, {
   },
   /**
    * The loaded components.
-   *
    * @memberof GeoJsonLoader.prototype
-   *
    * @type {ModelComponents.Components}
    * @readonly
    * @private
@@ -98,7 +92,6 @@ GeoJsonLoader.prototype.load = function () {
 
 /**
  * Processes the resource until it becomes ready.
- *
  * @param {FrameState} frameState The frame state.
  * @private
  */

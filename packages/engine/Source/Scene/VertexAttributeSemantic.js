@@ -4,15 +4,12 @@ import DeveloperError from "../Core/DeveloperError.js";
 
 /**
  * An enum describing the built-in vertex attribute semantics.
- *
  * @enum {string}
- *
  * @private
  */
 const VertexAttributeSemantic = {
   /**
    * Per-vertex position.
-   *
    * @type {string}
    * @constant
    */
@@ -20,7 +17,6 @@ const VertexAttributeSemantic = {
 
   /**
    * Per-vertex normal.
-   *
    * @type {string}
    * @constant
    */
@@ -28,7 +24,6 @@ const VertexAttributeSemantic = {
 
   /**
    * Per-vertex tangent.
-   *
    * @type {string}
    * @constant
    */
@@ -36,7 +31,6 @@ const VertexAttributeSemantic = {
 
   /**
    * Per-vertex texture coordinates.
-   *
    * @type {string}
    * @constant
    */
@@ -44,7 +38,6 @@ const VertexAttributeSemantic = {
 
   /**
    * Per-vertex color.
-   *
    * @type {string}
    * @constant
    */
@@ -52,7 +45,6 @@ const VertexAttributeSemantic = {
 
   /**
    * Per-vertex joint IDs for skinning.
-   *
    * @type {string}
    * @constant
    */
@@ -60,7 +52,6 @@ const VertexAttributeSemantic = {
 
   /**
    * Per-vertex joint weights for skinning.
-   *
    * @type {string}
    * @constant
    */
@@ -68,7 +59,6 @@ const VertexAttributeSemantic = {
 
   /**
    * Per-vertex feature ID.
-   *
    * @type {string}
    * @constant
    */
@@ -102,11 +92,8 @@ function semanticToVariableName(semantic) {
 
 /**
  * Returns whether the vertex attribute semantic can have a set index.
- *
  * @param {VertexAttributeSemantic} semantic The semantic.
- *
  * @returns {boolean} Whether the semantic can have a set index.
- *
  * @private
  */
 VertexAttributeSemantic.hasSetIndex = function (semantic) {
@@ -134,11 +121,8 @@ VertexAttributeSemantic.hasSetIndex = function (semantic) {
 
 /**
  * Gets the vertex attribute semantic matching the glTF semantic.
- *
  * @param {string} gltfSemantic The glTF semantic.
- *
  * @returns {VertexAttributeSemantic|undefined} The vertex attribute semantic, or undefined if there is no match.
- *
  * @private
  */
 VertexAttributeSemantic.fromGltfSemantic = function (gltfSemantic) {
@@ -179,11 +163,8 @@ VertexAttributeSemantic.fromGltfSemantic = function (gltfSemantic) {
 
 /**
  * Gets the vertex attribute semantic matching the pnts semantic.
- *
  * @param {string} pntsSemantic The pnts semantic.
- *
  * @returns {VertexAttributeSemantic|undefined} The vertex attribute semantic, or undefined if there is no match.
- *
  * @private
  */
 VertexAttributeSemantic.fromPntsSemantic = function (pntsSemantic) {
@@ -214,11 +195,8 @@ VertexAttributeSemantic.fromPntsSemantic = function (pntsSemantic) {
 /**
  * Gets the GLSL type (such as <code>vec3</code> or <code>int</code>) for the
  * given vertex attribute.
- *
  * @param {VertexAttributeSemantic} semantic The semantic.
- *
  * @returns {string} The shader type.
- *
  * @private
  */
 VertexAttributeSemantic.getGlslType = function (semantic) {
@@ -250,12 +228,9 @@ VertexAttributeSemantic.getGlslType = function (semantic) {
 
 /**
  * Gets the variable name for the given semantic and set index.
- *
  * @param {VertexAttributeSemantic} semantic The semantic.
  * @param {number} [setIndex] The set index.
- *
  * @returns {string} The variable name.
- *
  * @private
  */
 VertexAttributeSemantic.getVariableName = function (semantic, setIndex) {

@@ -4,13 +4,11 @@ import Matrix4 from "../Core/Matrix4.js";
 
 /**
  * An enum describing the x, y, and z axes and helper conversion functions.
- *
  * @enum {number}
  */
 const Axis = {
   /**
    * Denotes the x-axis.
-   *
    * @type {number}
    * @constant
    */
@@ -18,7 +16,6 @@ const Axis = {
 
   /**
    * Denotes the y-axis.
-   *
    * @type {number}
    * @constant
    */
@@ -26,7 +23,6 @@ const Axis = {
 
   /**
    * Denotes the z-axis.
-   *
    * @type {number}
    * @constant
    */
@@ -35,7 +31,6 @@ const Axis = {
 
 /**
  * Matrix used to convert from y-up to z-up
- *
  * @type {Matrix4}
  * @constant
  */
@@ -46,7 +41,6 @@ Axis.Y_UP_TO_Z_UP = Matrix4.fromRotationTranslation(
 
 /**
  * Matrix used to convert from z-up to y-up
- *
  * @type {Matrix4}
  * @constant
  */
@@ -57,7 +51,6 @@ Axis.Z_UP_TO_Y_UP = Matrix4.fromRotationTranslation(
 
 /**
  * Matrix used to convert from x-up to z-up
- *
  * @type {Matrix4}
  * @constant
  */
@@ -68,7 +61,6 @@ Axis.X_UP_TO_Z_UP = Matrix4.fromRotationTranslation(
 
 /**
  * Matrix used to convert from z-up to x-up
- *
  * @type {Matrix4}
  * @constant
  */
@@ -79,7 +71,6 @@ Axis.Z_UP_TO_X_UP = Matrix4.fromRotationTranslation(
 
 /**
  * Matrix used to convert from x-up to y-up
- *
  * @type {Matrix4}
  * @constant
  */
@@ -90,7 +81,6 @@ Axis.X_UP_TO_Y_UP = Matrix4.fromRotationTranslation(
 
 /**
  * Matrix used to convert from y-up to x-up
- *
  * @type {Matrix4}
  * @constant
  */
@@ -101,7 +91,6 @@ Axis.Y_UP_TO_X_UP = Matrix4.fromRotationTranslation(
 
 /**
  * Gets the axis by name
- *
  * @param {string} name The name of the axis.
  * @returns {number} The axis enum.
  */

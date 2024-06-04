@@ -50,7 +50,6 @@ const AutomaticUniforms = {
    * An automatic GLSL uniform containing the viewport's <code>x</code>, <code>y</code>, <code>width</code>,
    * and <code>height</code> properties in an <code>vec4</code>'s <code>x</code>, <code>y</code>, <code>z</code>,
    * and <code>w</code> components, respectively.
-   *
    * @example
    * // GLSL declaration
    * uniform vec4 czm_viewport;
@@ -58,7 +57,6 @@ const AutomaticUniforms = {
    * // Scale the window coordinate components to [0, 1] by dividing
    * // by the viewport's width and height.
    * vec2 v = gl_FragCoord.xy / czm_viewport.zw;
-   *
    * @see Context#getViewport
    */
   czm_viewport: new AutomaticUniform({
@@ -80,14 +78,12 @@ const AutomaticUniforms = {
    * Do not confuse {@link czm_viewportTransformation} with <code>czm_viewportOrthographic</code>.
    * The former transforms from normalized device coordinates to window coordinates; the later transforms
    * from window coordinates to clip coordinates, and is often used to assign to <code>gl_Position</code>.
-   *
    * @example
    * // GLSL declaration
    * uniform mat4 czm_viewportOrthographic;
    *
    * // Example
    * gl_Position = czm_viewportOrthographic * vec4(windowPosition, 0.0, 1.0);
-   *
    * @see UniformState#viewportOrthographic
    * @see czm_viewport
    * @see czm_viewportTransformation
@@ -115,7 +111,6 @@ const AutomaticUniforms = {
    * Do not confuse <code>czm_viewportTransformation</code> with {@link czm_viewportOrthographic}.
    * The former transforms from normalized device coordinates to window coordinates; the later transforms
    * from window coordinates to clip coordinates, and is often used to assign to <code>gl_Position</code>.
-   *
    * @example
    * // GLSL declaration
    * uniform mat4 czm_viewportTransformation;
@@ -125,7 +120,6 @@ const AutomaticUniforms = {
    * vec4 q = czm_modelViewProjection * positionMC;               // model to clip coordinates
    * q.xyz /= q.w;                                                // clip to normalized device coordinates (ndc)
    * q.xyz = (czm_viewportTransformation * vec4(q.xyz, 1.0)).xyz; // ndc to window coordinates
-   *
    * @see UniformState#viewportTransformation
    * @see czm_viewport
    * @see czm_viewportOrthographic
@@ -144,7 +138,6 @@ const AutomaticUniforms = {
    * An automatic GLSL uniform representing the depth of the scene
    * after the globe pass and then updated after the 3D Tiles pass.
    * The depth is packed into an RGBA texture.
-   *
    * @example
    * // GLSL declaration
    * uniform sampler2D czm_globeDepthTexture;
@@ -164,14 +157,12 @@ const AutomaticUniforms = {
   /**
    * An automatic GLSL uniform representing a 4x4 model transformation matrix that
    * transforms model coordinates to world coordinates.
-   *
    * @example
    * // GLSL declaration
    * uniform mat4 czm_model;
    *
    * // Example
    * vec4 worldPosition = czm_model * modelPosition;
-   *
    * @see UniformState#model
    * @see czm_inverseModel
    * @see czm_modelView
@@ -188,14 +179,12 @@ const AutomaticUniforms = {
   /**
    * An automatic GLSL uniform representing a 4x4 model transformation matrix that
    * transforms world coordinates to model coordinates.
-   *
    * @example
    * // GLSL declaration
    * uniform mat4 czm_inverseModel;
    *
    * // Example
    * vec4 modelPosition = czm_inverseModel * worldPosition;
-   *
    * @see UniformState#inverseModel
    * @see czm_model
    * @see czm_inverseModelView
@@ -211,14 +200,12 @@ const AutomaticUniforms = {
   /**
    * An automatic GLSL uniform representing a 4x4 view transformation matrix that
    * transforms world coordinates to eye coordinates.
-   *
    * @example
    * // GLSL declaration
    * uniform mat4 czm_view;
    *
    * // Example
    * vec4 eyePosition = czm_view * worldPosition;
-   *
    * @see UniformState#view
    * @see czm_viewRotation
    * @see czm_modelView
@@ -240,14 +227,12 @@ const AutomaticUniforms = {
    * {@link czm_view}, but in 2D and Columbus View it represents the view matrix
    * as if the camera were at an equivalent location in 3D mode.  This is useful for lighting
    * 2D and Columbus View in the same way that 3D is lit.
-   *
    * @example
    * // GLSL declaration
    * uniform mat4 czm_view3D;
    *
    * // Example
    * vec4 eyePosition3D = czm_view3D * worldPosition3D;
-   *
    * @see UniformState#view3D
    * @see czm_view
    */
@@ -262,14 +247,12 @@ const AutomaticUniforms = {
   /**
    * An automatic GLSL uniform representing a 3x3 view rotation matrix that
    * transforms vectors in world coordinates to eye coordinates.
-   *
    * @example
    * // GLSL declaration
    * uniform mat3 czm_viewRotation;
    *
    * // Example
    * vec3 eyeVector = czm_viewRotation * worldVector;
-   *
    * @see UniformState#viewRotation
    * @see czm_view
    * @see czm_inverseView
@@ -289,14 +272,12 @@ const AutomaticUniforms = {
    * {@link czm_viewRotation}, but in 2D and Columbus View it represents the view matrix
    * as if the camera were at an equivalent location in 3D mode.  This is useful for lighting
    * 2D and Columbus View in the same way that 3D is lit.
-   *
    * @example
    * // GLSL declaration
    * uniform mat3 czm_viewRotation3D;
    *
    * // Example
    * vec3 eyeVector = czm_viewRotation3D * worldVector;
-   *
    * @see UniformState#viewRotation3D
    * @see czm_viewRotation
    */
@@ -311,14 +292,12 @@ const AutomaticUniforms = {
   /**
    * An automatic GLSL uniform representing a 4x4 transformation matrix that
    * transforms from eye coordinates to world coordinates.
-   *
    * @example
    * // GLSL declaration
    * uniform mat4 czm_inverseView;
    *
    * // Example
    * vec4 worldPosition = czm_inverseView * eyePosition;
-   *
    * @see UniformState#inverseView
    * @see czm_view
    * @see czm_inverseNormal
@@ -337,14 +316,12 @@ const AutomaticUniforms = {
    * {@link czm_inverseView}, but in 2D and Columbus View it represents the inverse view matrix
    * as if the camera were at an equivalent location in 3D mode.  This is useful for lighting
    * 2D and Columbus View in the same way that 3D is lit.
-   *
    * @example
    * // GLSL declaration
    * uniform mat4 czm_inverseView3D;
    *
    * // Example
    * vec4 worldPosition = czm_inverseView3D * eyePosition;
-   *
    * @see UniformState#inverseView3D
    * @see czm_inverseView
    */
@@ -359,14 +336,12 @@ const AutomaticUniforms = {
   /**
    * An automatic GLSL uniform representing a 3x3 rotation matrix that
    * transforms vectors from eye coordinates to world coordinates.
-   *
    * @example
    * // GLSL declaration
    * uniform mat3 czm_inverseViewRotation;
    *
    * // Example
    * vec4 worldVector = czm_inverseViewRotation * eyeVector;
-   *
    * @see UniformState#inverseView
    * @see czm_view
    * @see czm_viewRotation
@@ -386,14 +361,12 @@ const AutomaticUniforms = {
    * {@link czm_inverseViewRotation}, but in 2D and Columbus View it represents the inverse view matrix
    * as if the camera were at an equivalent location in 3D mode.  This is useful for lighting
    * 2D and Columbus View in the same way that 3D is lit.
-   *
    * @example
    * // GLSL declaration
    * uniform mat3 czm_inverseViewRotation3D;
    *
    * // Example
    * vec4 worldVector = czm_inverseViewRotation3D * eyeVector;
-   *
    * @see UniformState#inverseView3D
    * @see czm_inverseViewRotation
    */
@@ -409,14 +382,12 @@ const AutomaticUniforms = {
    * An automatic GLSL uniform representing a 4x4 projection transformation matrix that
    * transforms eye coordinates to clip coordinates.  Clip coordinates is the
    * coordinate system for a vertex shader's <code>gl_Position</code> output.
-   *
    * @example
    * // GLSL declaration
    * uniform mat4 czm_projection;
    *
    * // Example
    * gl_Position = czm_projection * eyePosition;
-   *
    * @see UniformState#projection
    * @see czm_viewProjection
    * @see czm_modelViewProjection
@@ -434,14 +405,12 @@ const AutomaticUniforms = {
    * An automatic GLSL uniform representing a 4x4 inverse projection transformation matrix that
    * transforms from clip coordinates to eye coordinates. Clip coordinates is the
    * coordinate system for a vertex shader's <code>gl_Position</code> output.
-   *
    * @example
    * // GLSL declaration
    * uniform mat4 czm_inverseProjection;
    *
    * // Example
    * vec4 eyePosition = czm_inverseProjection * clipPosition;
-   *
    * @see UniformState#inverseProjection
    * @see czm_projection
    */
@@ -459,14 +428,12 @@ const AutomaticUniforms = {
    * coordinate system for a vertex shader's <code>gl_Position</code> output.  An infinite far plane is used
    * in algorithms like shadow volumes and GPU ray casting with proxy geometry to ensure that triangles
    * are not clipped by the far plane.
-   *
    * @example
    * // GLSL declaration
    * uniform mat4 czm_infiniteProjection;
    *
    * // Example
    * gl_Position = czm_infiniteProjection * eyePosition;
-   *
    * @see UniformState#infiniteProjection
    * @see czm_projection
    * @see czm_modelViewInfiniteProjection
@@ -485,7 +452,6 @@ const AutomaticUniforms = {
    * <br /><br />
    * Positions should be transformed to eye coordinates using <code>czm_modelView</code> and
    * normals should be transformed using {@link czm_normal}.
-   *
    * @example
    * // GLSL declaration
    * uniform mat4 czm_modelView;
@@ -495,7 +461,6 @@ const AutomaticUniforms = {
    *
    * // The above is equivalent to, but more efficient than:
    * vec4 eyePosition = czm_view * czm_model * modelPosition;
-   *
    * @see UniformState#modelView
    * @see czm_model
    * @see czm_view
@@ -519,7 +484,6 @@ const AutomaticUniforms = {
    * <br /><br />
    * Positions should be transformed to eye coordinates using <code>czm_modelView3D</code> and
    * normals should be transformed using {@link czm_normal3D}.
-   *
    * @example
    * // GLSL declaration
    * uniform mat4 czm_modelView3D;
@@ -529,7 +493,6 @@ const AutomaticUniforms = {
    *
    * // The above is equivalent to, but more efficient than:
    * vec4 eyePosition = czm_view3D * czm_model * modelPosition;
-   *
    * @see UniformState#modelView3D
    * @see czm_modelView
    */
@@ -545,7 +508,6 @@ const AutomaticUniforms = {
    * An automatic GLSL uniform representing a 4x4 model-view transformation matrix that
    * transforms model coordinates, relative to the eye, to eye coordinates.  This is used
    * in conjunction with {@link czm_translateRelativeToEye}.
-   *
    * @example
    * // GLSL declaration
    * uniform mat4 czm_modelViewRelativeToEye;
@@ -559,7 +521,6 @@ const AutomaticUniforms = {
    *   vec4 p = czm_translateRelativeToEye(positionHigh, positionLow);
    *   gl_Position = czm_projection * (czm_modelViewRelativeToEye * p);
    * }
-   *
    * @see czm_modelViewProjectionRelativeToEye
    * @see czm_translateRelativeToEye
    * @see EncodedCartesian3
@@ -575,14 +536,12 @@ const AutomaticUniforms = {
   /**
    * An automatic GLSL uniform representing a 4x4 transformation matrix that
    * transforms from eye coordinates to model coordinates.
-   *
    * @example
    * // GLSL declaration
    * uniform mat4 czm_inverseModelView;
    *
    * // Example
    * vec4 modelPosition = czm_inverseModelView * eyePosition;
-   *
    * @see UniformState#inverseModelView
    * @see czm_modelView
    */
@@ -600,14 +559,12 @@ const AutomaticUniforms = {
    * {@link czm_inverseModelView}, but in 2D and Columbus View it represents the inverse model-view matrix
    * as if the camera were at an equivalent location in 3D mode.  This is useful for lighting
    * 2D and Columbus View in the same way that 3D is lit.
-   *
    * @example
    * // GLSL declaration
    * uniform mat4 czm_inverseModelView3D;
    *
    * // Example
    * vec4 modelPosition = czm_inverseModelView3D * eyePosition;
-   *
    * @see UniformState#inverseModelView
    * @see czm_inverseModelView
    * @see czm_modelView3D
@@ -624,7 +581,6 @@ const AutomaticUniforms = {
    * An automatic GLSL uniform representing a 4x4 view-projection transformation matrix that
    * transforms world coordinates to clip coordinates.  Clip coordinates is the
    * coordinate system for a vertex shader's <code>gl_Position</code> output.
-   *
    * @example
    * // GLSL declaration
    * uniform mat4 czm_viewProjection;
@@ -634,7 +590,6 @@ const AutomaticUniforms = {
    *
    * // The above is equivalent to, but more efficient than:
    * gl_Position = czm_projection * czm_view * czm_model * modelPosition;
-   *
    * @see UniformState#viewProjection
    * @see czm_view
    * @see czm_projection
@@ -653,14 +608,12 @@ const AutomaticUniforms = {
    * An automatic GLSL uniform representing a 4x4 view-projection transformation matrix that
    * transforms clip coordinates to world coordinates.  Clip coordinates is the
    * coordinate system for a vertex shader's <code>gl_Position</code> output.
-   *
    * @example
    * // GLSL declaration
    * uniform mat4 czm_inverseViewProjection;
    *
    * // Example
    * vec4 worldPosition = czm_inverseViewProjection * clipPosition;
-   *
    * @see UniformState#inverseViewProjection
    * @see czm_viewProjection
    */
@@ -676,7 +629,6 @@ const AutomaticUniforms = {
    * An automatic GLSL uniform representing a 4x4 model-view-projection transformation matrix that
    * transforms model coordinates to clip coordinates.  Clip coordinates is the
    * coordinate system for a vertex shader's <code>gl_Position</code> output.
-   *
    * @example
    * // GLSL declaration
    * uniform mat4 czm_modelViewProjection;
@@ -686,7 +638,6 @@ const AutomaticUniforms = {
    *
    * // The above is equivalent to, but more efficient than:
    * gl_Position = czm_projection * czm_view * czm_model * modelPosition;
-   *
    * @see UniformState#modelViewProjection
    * @see czm_model
    * @see czm_view
@@ -708,14 +659,12 @@ const AutomaticUniforms = {
    * An automatic GLSL uniform representing a 4x4 inverse model-view-projection transformation matrix that
    * transforms clip coordinates to model coordinates.  Clip coordinates is the
    * coordinate system for a vertex shader's <code>gl_Position</code> output.
-   *
    * @example
    * // GLSL declaration
    * uniform mat4 czm_inverseModelViewProjection;
    *
    * // Example
    * vec4 modelPosition = czm_inverseModelViewProjection * clipPosition;
-   *
    * @see UniformState#modelViewProjection
    * @see czm_modelViewProjection
    */
@@ -732,7 +681,6 @@ const AutomaticUniforms = {
    * transforms model coordinates, relative to the eye, to clip coordinates.  Clip coordinates is the
    * coordinate system for a vertex shader's <code>gl_Position</code> output.  This is used in
    * conjunction with {@link czm_translateRelativeToEye}.
-   *
    * @example
    * // GLSL declaration
    * uniform mat4 czm_modelViewProjectionRelativeToEye;
@@ -746,7 +694,6 @@ const AutomaticUniforms = {
    *   vec4 p = czm_translateRelativeToEye(positionHigh, positionLow);
    *   gl_Position = czm_modelViewProjectionRelativeToEye * p;
    * }
-   *
    * @see czm_modelViewRelativeToEye
    * @see czm_translateRelativeToEye
    * @see EncodedCartesian3
@@ -765,7 +712,6 @@ const AutomaticUniforms = {
    * coordinate system for a vertex shader's <code>gl_Position</code> output.  The projection matrix places
    * the far plane at infinity.  This is useful in algorithms like shadow volumes and GPU ray casting with
    * proxy geometry to ensure that triangles are not clipped by the far plane.
-   *
    * @example
    * // GLSL declaration
    * uniform mat4 czm_modelViewInfiniteProjection;
@@ -775,7 +721,6 @@ const AutomaticUniforms = {
    *
    * // The above is equivalent to, but more efficient than:
    * gl_Position = czm_infiniteProjection * czm_view * czm_model * modelPosition;
-   *
    * @see UniformState#modelViewInfiniteProjection
    * @see czm_model
    * @see czm_view
@@ -792,7 +737,6 @@ const AutomaticUniforms = {
 
   /**
    * An automatic GLSL uniform that indicates if the current camera is orthographic in 3D.
-   *
    * @see UniformState#orthographicIn3D
    */
   czm_orthographicIn3D: new AutomaticUniform({
@@ -809,14 +753,12 @@ const AutomaticUniforms = {
    * <br /><br />
    * Positions should be transformed to eye coordinates using {@link czm_modelView} and
    * normals should be transformed using <code>czm_normal</code>.
-   *
    * @example
    * // GLSL declaration
    * uniform mat3 czm_normal;
    *
    * // Example
    * vec3 eyeNormal = czm_normal * normal;
-   *
    * @see UniformState#normal
    * @see czm_inverseNormal
    * @see czm_modelView
@@ -839,14 +781,12 @@ const AutomaticUniforms = {
    * <br /><br />
    * Positions should be transformed to eye coordinates using {@link czm_modelView3D} and
    * normals should be transformed using <code>czm_normal3D</code>.
-   *
    * @example
    * // GLSL declaration
    * uniform mat3 czm_normal3D;
    *
    * // Example
    * vec3 eyeNormal = czm_normal3D * normal;
-   *
    * @see UniformState#normal3D
    * @see czm_normal
    */
@@ -862,14 +802,12 @@ const AutomaticUniforms = {
    * An automatic GLSL uniform representing a 3x3 normal transformation matrix that
    * transforms normal vectors in eye coordinates to model coordinates.  This is
    * the opposite of the transform provided by {@link czm_normal}.
-   *
    * @example
    * // GLSL declaration
    * uniform mat3 czm_inverseNormal;
    *
    * // Example
    * vec3 normalMC = czm_inverseNormal * normalEC;
-   *
    * @see UniformState#inverseNormal
    * @see czm_normal
    * @see czm_modelView
@@ -891,14 +829,12 @@ const AutomaticUniforms = {
    * {@link czm_inverseNormal}, but in 2D and Columbus View it represents the inverse normal transformation
    * matrix as if the camera were at an equivalent location in 3D mode.  This is useful for lighting
    * 2D and Columbus View in the same way that 3D is lit.
-   *
    * @example
    * // GLSL declaration
    * uniform mat3 czm_inverseNormal3D;
    *
    * // Example
    * vec3 normalMC = czm_inverseNormal3D * normalEC;
-   *
    * @see UniformState#inverseNormal3D
    * @see czm_inverseNormal
    */
@@ -913,7 +849,6 @@ const AutomaticUniforms = {
   /**
    * An automatic GLSL uniform containing the height in meters of the
    * eye (camera) above or below the ellipsoid.
-   *
    * @see UniformState#eyeHeight
    */
   czm_eyeHeight: new AutomaticUniform({
@@ -928,7 +863,6 @@ const AutomaticUniforms = {
    * An automatic GLSL uniform containing height (<code>x</code>) and height squared (<code>y</code>)
    * in meters of the eye (camera) above the 2D world plane. This uniform is only valid
    * when the {@link SceneMode} is <code>SCENE2D</code>.
-   *
    * @see UniformState#eyeHeight2D
    */
   czm_eyeHeight2D: new AutomaticUniform({
@@ -997,14 +931,12 @@ const AutomaticUniforms = {
    * An automatic GLSL uniform containing the near distance (<code>x</code>) and the far distance (<code>y</code>)
    * of the frustum defined by the camera.  This is the largest possible frustum, not an individual
    * frustum used for multi-frustum rendering.
-   *
    * @example
    * // GLSL declaration
    * uniform vec2 czm_entireFrustum;
    *
    * // Example
    * float frustumLength = czm_entireFrustum.y - czm_entireFrustum.x;
-   *
    * @see UniformState#entireFrustum
    * @see czm_currentFrustum
    */
@@ -1020,14 +952,12 @@ const AutomaticUniforms = {
    * An automatic GLSL uniform containing the near distance (<code>x</code>) and the far distance (<code>y</code>)
    * of the frustum defined by the camera.  This is the individual
    * frustum used for multi-frustum rendering.
-   *
    * @example
    * // GLSL declaration
    * uniform vec2 czm_currentFrustum;
    *
    * // Example
    * float frustumLength = czm_currentFrustum.y - czm_currentFrustum.x;
-   *
    * @see UniformState#currentFrustum
    * @see czm_entireFrustum
    */
@@ -1086,11 +1016,9 @@ const AutomaticUniforms = {
 
   /**
    * An automatic GLSL uniform representing the sun position in world coordinates.
-   *
    * @example
    * // GLSL declaration
    * uniform vec3 czm_sunPositionWC;
-   *
    * @see UniformState#sunPositionWC
    * @see czm_sunPositionColumbusView
    * @see czm_sunDirectionWC
@@ -1105,11 +1033,9 @@ const AutomaticUniforms = {
 
   /**
    * An automatic GLSL uniform representing the sun position in Columbus view world coordinates.
-   *
    * @example
    * // GLSL declaration
    * uniform vec3 czm_sunPositionColumbusView;
-   *
    * @see UniformState#sunPositionColumbusView
    * @see czm_sunPositionWC
    */
@@ -1123,14 +1049,12 @@ const AutomaticUniforms = {
 
   /**
    * An automatic GLSL uniform representing the normalized direction to the sun in eye coordinates.
-   *
    * @example
    * // GLSL declaration
    * uniform vec3 czm_sunDirectionEC;
    *
    * // Example
    * float diffuse = max(dot(czm_sunDirectionEC, normalEC), 0.0);
-   *
    * @see UniformState#sunDirectionEC
    * @see czm_moonDirectionEC
    * @see czm_sunDirectionWC
@@ -1145,14 +1069,12 @@ const AutomaticUniforms = {
 
   /**
    * An automatic GLSL uniform representing the normalized direction to the sun in world coordinates.
-   *
    * @example
    * // GLSL declaration
    * uniform vec3 czm_sunDirectionWC;
    *
    * // Example
    * float diffuse = max(dot(czm_sunDirectionWC, normalWC), 0.0);
-   *
    * @see UniformState#sunDirectionWC
    * @see czm_sunPositionWC
    * @see czm_sunDirectionEC
@@ -1167,14 +1089,12 @@ const AutomaticUniforms = {
 
   /**
    * An automatic GLSL uniform representing the normalized direction to the moon in eye coordinates.
-   *
    * @example
    * // GLSL declaration
    * uniform vec3 czm_moonDirectionEC;
    *
    * // Example
    * float diffuse = max(dot(czm_moonDirectionEC, normalEC), 0.0);
-   *
    * @see UniformState#moonDirectionEC
    * @see czm_sunDirectionEC
    */
@@ -1189,14 +1109,12 @@ const AutomaticUniforms = {
   /**
    * An automatic GLSL uniform representing the normalized direction to the scene's light source in eye coordinates.
    * This is commonly used for directional lighting computations.
-   *
    * @example
    * // GLSL declaration
    * uniform vec3 czm_lightDirectionEC;
    *
    * // Example
    * float diffuse = max(dot(czm_lightDirectionEC, normalEC), 0.0);
-   *
    * @see UniformState#lightDirectionEC
    * @see czm_lightDirectionWC
    */
@@ -1211,14 +1129,12 @@ const AutomaticUniforms = {
   /**
    * An automatic GLSL uniform representing the normalized direction to the scene's light source in world coordinates.
    * This is commonly used for directional lighting computations.
-   *
    * @example
    * // GLSL declaration
    * uniform vec3 czm_lightDirectionWC;
    *
    * // Example
    * float diffuse = max(dot(czm_lightDirectionWC, normalWC), 0.0);
-   *
    * @see UniformState#lightDirectionWC
    * @see czm_lightDirectionEC
    */
@@ -1234,14 +1150,12 @@ const AutomaticUniforms = {
    * An automatic GLSL uniform that represents the color of light emitted by the scene's light source. This
    * is equivalent to the light color multiplied by the light intensity limited to a maximum luminance of 1.0
    * suitable for non-HDR lighting.
-   *
    * @example
    * // GLSL declaration
    * uniform vec3 czm_lightColor;
    *
    * // Example
    * vec3 diffuseColor = czm_lightColor * max(dot(czm_lightDirectionWC, normalWC), 0.0);
-   *
    * @see UniformState#lightColor
    * @see czm_lightColorHdr
    */
@@ -1256,14 +1170,12 @@ const AutomaticUniforms = {
   /**
    * An automatic GLSL uniform that represents the high dynamic range color of light emitted by the scene's light
    * source. This is equivalent to the light color multiplied by the light intensity suitable for HDR lighting.
-   *
    * @example
    * // GLSL declaration
    * uniform vec3 czm_lightColorHdr;
    *
    * // Example
    * vec3 diffuseColor = czm_lightColorHdr * max(dot(czm_lightDirectionWC, normalWC), 0.0);
-   *
    * @see UniformState#lightColorHdr
    * @see czm_lightColor
    */
@@ -1279,11 +1191,9 @@ const AutomaticUniforms = {
    * An automatic GLSL uniform representing the high bits of the camera position in model
    * coordinates.  This is used for GPU RTE to eliminate jittering artifacts when rendering
    * as described in {@link http://help.agi.com/AGIComponents/html/BlogPrecisionsPrecisions.htm|Precisions, Precisions}.
-   *
    * @example
    * // GLSL declaration
    * uniform vec3 czm_encodedCameraPositionMCHigh;
-   *
    * @see czm_encodedCameraPositionMCLow
    * @see czm_modelViewRelativeToEye
    * @see czm_modelViewProjectionRelativeToEye
@@ -1300,11 +1210,9 @@ const AutomaticUniforms = {
    * An automatic GLSL uniform representing the low bits of the camera position in model
    * coordinates.  This is used for GPU RTE to eliminate jittering artifacts when rendering
    * as described in {@linkhttp://help.agi.com/AGIComponents/html/BlogPrecisionsPrecisions.htm|Precisions, Precisions}.
-   *
    * @example
    * // GLSL declaration
    * uniform vec3 czm_encodedCameraPositionMCLow;
-   *
    * @see czm_encodedCameraPositionMCHigh
    * @see czm_modelViewRelativeToEye
    * @see czm_modelViewProjectionRelativeToEye
@@ -1319,7 +1227,6 @@ const AutomaticUniforms = {
 
   /**
    * An automatic GLSL uniform representing the position of the viewer (camera) in world coordinates.
-   *
    * @example
    * // GLSL declaration
    * uniform vec3 czm_viewerPositionWC;
@@ -1338,7 +1245,6 @@ const AutomaticUniforms = {
   /**
    * An automatic GLSL uniform representing the frame number. This uniform is automatically incremented
    * every frame.
-   *
    * @example
    * // GLSL declaration
    * uniform float czm_frameNumber;
@@ -1354,7 +1260,6 @@ const AutomaticUniforms = {
   /**
    * An automatic GLSL uniform representing the current morph transition time between
    * 2D/Columbus View and 3D, with 0.0 being 2D or Columbus View and 1.0 being 3D.
-   *
    * @example
    * // GLSL declaration
    * uniform float czm_morphTime;
@@ -1373,7 +1278,6 @@ const AutomaticUniforms = {
   /**
    * An automatic GLSL uniform representing the current {@link SceneMode}, expressed
    * as a float.
-   *
    * @example
    * // GLSL declaration
    * uniform float czm_sceneMode;
@@ -1383,7 +1287,6 @@ const AutomaticUniforms = {
    * {
    *     eyeHeightSq = czm_eyeHeight2D.y;
    * }
-   *
    * @see czm_sceneMode2D
    * @see czm_sceneModeColumbusView
    * @see czm_sceneMode3D
@@ -1399,7 +1302,6 @@ const AutomaticUniforms = {
 
   /**
    * An automatic GLSL uniform representing the current rendering pass.
-   *
    * @example
    * // GLSL declaration
    * uniform float czm_pass;
@@ -1420,7 +1322,6 @@ const AutomaticUniforms = {
 
   /**
    * An automatic GLSL uniform representing the current scene background color.
-   *
    * @example
    * // GLSL declaration
    * uniform vec4 czm_backgroundColor;
@@ -1446,7 +1347,6 @@ const AutomaticUniforms = {
 
   /**
    * An automatic GLSL uniform containing the BRDF look up texture used for image-based lighting computations.
-   *
    * @example
    * // GLSL declaration
    * uniform sampler2D czm_brdfLut;
@@ -1466,7 +1366,6 @@ const AutomaticUniforms = {
 
   /**
    * An automatic GLSL uniform containing the environment map used within the scene.
-   *
    * @example
    * // GLSL declaration
    * uniform samplerCube czm_environmentMap;
@@ -1485,7 +1384,6 @@ const AutomaticUniforms = {
 
   /**
    * An automatic GLSL uniform containing the specular environment map atlas used within the scene.
-   *
    * @example
    * // GLSL declaration
    * uniform sampler2D czm_specularEnvironmentMaps;
@@ -1500,7 +1398,6 @@ const AutomaticUniforms = {
 
   /**
    * An automatic GLSL uniform containing the size of the specular environment map atlas used within the scene.
-   *
    * @example
    * // GLSL declaration
    * uniform vec2 czm_specularEnvironmentMapSize;
@@ -1515,7 +1412,6 @@ const AutomaticUniforms = {
 
   /**
    * An automatic GLSL uniform containing the maximum level-of-detail of the specular environment map atlas used within the scene.
-   *
    * @example
    * // GLSL declaration
    * uniform float czm_specularEnvironmentMapsMaximumLOD;
@@ -1530,7 +1426,6 @@ const AutomaticUniforms = {
 
   /**
    * An automatic GLSL uniform containing the spherical harmonic coefficients used within the scene.
-   *
    * @example
    * // GLSL declaration
    * uniform vec3[9] czm_sphericalHarmonicCoefficients;
@@ -1546,14 +1441,12 @@ const AutomaticUniforms = {
   /**
    * An automatic GLSL uniform representing a 3x3 rotation matrix that transforms
    * from True Equator Mean Equinox (TEME) axes to the pseudo-fixed axes at the current scene time.
-   *
    * @example
    * // GLSL declaration
    * uniform mat3 czm_temeToPseudoFixed;
    *
    * // Example
    * vec3 pseudoFixed = czm_temeToPseudoFixed * teme;
-   *
    * @see UniformState#temeToPseudoFixedMatrix
    * @see Transforms.computeTemeToPseudoFixedMatrix
    */
@@ -1567,7 +1460,6 @@ const AutomaticUniforms = {
 
   /**
    * An automatic GLSL uniform representing the ratio of canvas coordinate space to canvas pixel space.
-   *
    * @example
    * uniform float czm_pixelRatio;
    */
@@ -1581,7 +1473,6 @@ const AutomaticUniforms = {
 
   /**
    * An automatic GLSL uniform scalar used to mix a color with the fog color based on the distance to the camera.
-   *
    * @see czm_fog
    */
   czm_fogDensity: new AutomaticUniform({
@@ -1594,7 +1485,6 @@ const AutomaticUniforms = {
 
   /**
    * An automatic GLSL uniform scalar used to set a minimum brightness when dynamic lighting is applied to fog.
-   *
    * @see czm_fog
    */
   czm_fogMinimumBrightness: new AutomaticUniform({
@@ -1607,7 +1497,6 @@ const AutomaticUniforms = {
 
   /**
    * An automatic uniform representing the color shift for the atmosphere in HSB color space
-   *
    * @example
    * uniform vec3 czm_atmosphereHsbShift;
    */
@@ -1620,7 +1509,6 @@ const AutomaticUniforms = {
   }),
   /**
    * An automatic uniform representing the intensity of the light that is used for computing the atmosphere color
-   *
    * @example
    * uniform float czm_atmosphereLightIntensity;
    */
@@ -1633,7 +1521,6 @@ const AutomaticUniforms = {
   }),
   /**
    * An automatic uniform representing the Rayleigh scattering coefficient used when computing the atmosphere scattering
-   *
    * @example
    * uniform vec3 czm_atmosphereRayleighCoefficient;
    */
@@ -1646,7 +1533,6 @@ const AutomaticUniforms = {
   }),
   /**
    * An automatic uniform representing the Rayleigh scale height in meters used for computing atmosphere scattering.
-   *
    * @example
    * uniform vec3 czm_atmosphereRayleighScaleHeight;
    */
@@ -1659,7 +1545,6 @@ const AutomaticUniforms = {
   }),
   /**
    * An automatic uniform representing the Mie scattering coefficient used when computing atmosphere scattering.
-   *
    * @example
    * uniform vec3 czm_atmosphereMieCoefficient;
    */
@@ -1672,7 +1557,6 @@ const AutomaticUniforms = {
   }),
   /**
    * An automatic uniform storign the Mie scale height used when computing atmosphere scattering.
-   *
    * @example
    * uniform float czm_atmosphereMieScaleHeight;
    */
@@ -1685,7 +1569,6 @@ const AutomaticUniforms = {
   }),
   /**
    * An automatic uniform representing the anisotropy of the medium to consider for Mie scattering.
-   *
    * @example
    * uniform float czm_atmosphereAnisotropy;
    */
@@ -1699,7 +1582,6 @@ const AutomaticUniforms = {
 
   /**
    * An automatic uniform representing which light source to use for dynamic lighting
-   *
    * @example
    * uniform float czm_atmosphereDynamicLighting
    */
@@ -1714,7 +1596,6 @@ const AutomaticUniforms = {
   /**
    * An automatic GLSL uniform representing the splitter position to use when rendering with a splitter.
    * This will be in pixel coordinates relative to the canvas.
-   *
    * @example
    * // GLSL declaration
    * uniform float czm_splitPosition;

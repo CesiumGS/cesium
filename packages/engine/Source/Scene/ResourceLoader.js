@@ -9,12 +9,9 @@ import RuntimeError from "../Core/RuntimeError.js";
  * <p>
  * This type describes an interface and is not intended to be instantiated directly.
  * </p>
- *
  * @alias ResourceLoader
- * @constructor
- *
+ * @class
  * @see ResourceCache
- *
  * @private
  */
 function ResourceLoader() {}
@@ -22,9 +19,7 @@ function ResourceLoader() {}
 Object.defineProperties(ResourceLoader.prototype, {
   /**
    * The cache key of the resource.
-   *
    * @memberof ResourceLoader.prototype
-   *
    * @type {string}
    * @readonly
    * @private
@@ -54,7 +49,6 @@ ResourceLoader.prototype.unload = function () {};
 
 /**
  * Processes the resource until it becomes ready.
- *
  * @param {FrameState} frameState The frame state.
  * @returns {boolean} true once all resourced are ready.
  * @private
@@ -65,10 +59,8 @@ ResourceLoader.prototype.process = function (frameState) {
 
 /**
  * Constructs a {@link RuntimeError} from an errorMessage and an error.
- *
  * @param {string} errorMessage The error message.
  * @param {Error} [error] The error.
- *
  * @returns {RuntimeError} The runtime error.
  * @private
  */
@@ -94,9 +86,7 @@ ResourceLoader.prototype.getError = function (errorMessage, error) {
  * <br /><br />
  * If this object was destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
- *
  * @returns {boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
- *
  * @see ResourceLoader#destroy
  * @private
  */
@@ -110,12 +100,9 @@ ResourceLoader.prototype.isDestroyed = function () {
  * Once an object is destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
  * assign the return value (<code>undefined</code>) to the object as done in the example.
- *
- * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
- *
+ * @throws {DeveloperError} This object was destroyed, i.e., destroy() was called.
  * @example
  * resourceLoader = resourceLoader && resourceLoader.destroy();
- *
  * @see ResourceLoader#isDestroyed
  * @private
  */

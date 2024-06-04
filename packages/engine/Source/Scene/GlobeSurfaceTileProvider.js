@@ -56,14 +56,12 @@ import TileSelectionResult from "./TileSelectionResult.js";
 /**
  * Provides quadtree tiles representing the surface of the globe.  This type is intended to be used
  * with {@link QuadtreePrimitive}.
- *
  * @alias GlobeSurfaceTileProvider
- * @constructor
- *
+ * @class
  * @param {TerrainProvider} options.terrainProvider The terrain provider that describes the surface geometry.
+ * @param options
  * @param {ImageryLayerCollection} option.imageryLayers The collection of imagery layers describing the shading of the surface.
  * @param {GlobeSurfaceShaderSet} options.surfaceShaderSet The set of shaders used to render the surface.
- *
  * @private
  */
 function GlobeSurfaceTileProvider(options) {
@@ -299,9 +297,7 @@ Object.defineProperties(GlobeSurfaceTileProvider.prototype, {
   },
   /**
    * The {@link ClippingPlaneCollection} used to selectively disable rendering.
-   *
    * @type {ClippingPlaneCollection}
-   *
    * @private
    */
   clippingPlanes: {
@@ -315,9 +311,7 @@ Object.defineProperties(GlobeSurfaceTileProvider.prototype, {
 
   /**
    * The {@link ClippingPolygonCollection} used to selectively disable rendering inside or outside a list of polygons.
-   *
    * @type {ClippingPolygonCollection}
-   *
    * @private
    */
   clippingPolygons: {
@@ -346,6 +340,7 @@ function sortTileImageryByLayerIndex(a, b) {
 
 /**
  * Make updates to the tile provider that are not involved in rendering. Called before the render update cycle.
+ * @param frameState
  */
 GlobeSurfaceTileProvider.prototype.update = function (frameState) {
   // update collection: imagery indices, base layers, raise layer show/hide event
@@ -399,7 +394,6 @@ GlobeSurfaceTileProvider.prototype.initialize = function (frameState) {
 /**
  * Called at the beginning of the update cycle for each render frame, before {@link QuadtreeTileProvider#showTileThisFrame}
  * or any other functions.
- *
  * @param {FrameState} frameState The frame state.
  */
 GlobeSurfaceTileProvider.prototype.beginUpdate = function (frameState) {
@@ -432,7 +426,6 @@ GlobeSurfaceTileProvider.prototype.beginUpdate = function (frameState) {
 /**
  * Called at the end of the update cycle for each render frame, after {@link QuadtreeTileProvider#showTileThisFrame}
  * and any other functions.
- *
  * @param {FrameState} frameState The frame state.
  */
 GlobeSurfaceTileProvider.prototype.endUpdate = function (frameState) {
@@ -555,7 +548,6 @@ function pushCommand(command, frameState) {
 
 /**
  * Adds draw commands for tiles rendered in the previous frame for a pick pass.
- *
  * @param {FrameState} frameState The frame state.
  */
 GlobeSurfaceTileProvider.prototype.updateForPick = function (frameState) {
@@ -575,7 +567,6 @@ GlobeSurfaceTileProvider.prototype.cancelReprojections = function () {
 
 /**
  * Gets the maximum geometric error allowed in a tile at a given level, in meters.
- *
  * @param {number} level The tile level for which to get the maximum geometric error.
  * @returns {number} The maximum geometric error in meters.
  */
@@ -592,7 +583,6 @@ GlobeSurfaceTileProvider.prototype.getLevelMaximumGeometricError = function (
 /**
  * Loads, or continues loading, a given tile.  This function will continue to be called
  * until {@link QuadtreeTile#state} is no longer {@link QuadtreeTileLoadState#LOADING}.
- *
  * @param {FrameState} frameState The frame state.
  * @param {QuadtreeTile} tile The tile to load.
  */
@@ -710,11 +700,9 @@ function isUndergroundVisible(tileProvider, frameState) {
  * Determines the visibility of a given tile.  The tile may be fully visible, partially visible, or not
  * visible at all.  Tiles that are renderable and are at least partially visible will be shown by a call
  * to {@link GlobeSurfaceTileProvider#showTileThisFrame}.
- *
  * @param {QuadtreeTile} tile The tile instance.
  * @param {FrameState} frameState The state information about the current frame.
  * @param {QuadtreeOccluders} occluders The objects that may occlude this tile.
- *
  * @returns {Visibility} Visibility.NONE if the tile is not visible,
  *                       Visibility.PARTIAL if the tile is partially visible, or
  *                       Visibility.FULL if the tile is fully visible.
@@ -896,6 +884,7 @@ const canRenderTraversalStack = [];
  * called if this tile's descendants were rendered last frame. If the tile is fully loaded,
  * it is assumed that this method will return true and it will not be called.
  * @param {QuadtreeTile} tile The tile to check.
+ * @param frameState
  * @returns {boolean} True if the tile can be rendered without losing detail.
  */
 GlobeSurfaceTileProvider.prototype.canRenderWithoutLosingDetail = function (
@@ -1067,7 +1056,6 @@ const northeastScratch = new Cartesian3();
  * Shows a specified tile in this frame.  The provider can cause the tile to be shown by adding
  * render commands to the commandList, or use any other method as appropriate.  The tile is not
  * expected to be visible next frame as well, unless this method is called next frame, too.
- *
  * @param {QuadtreeTile} tile The tile instance.
  * @param {FrameState} frameState The state information of the current rendering frame.
  */
@@ -1165,10 +1153,8 @@ function computeOccludeePoint(
 
 /**
  * Gets the distance from the camera to the closest point on the tile.  This is used for level-of-detail selection.
- *
  * @param {QuadtreeTile} tile The tile instance.
  * @param {FrameState} frameState The state information of the current rendering frame.
- *
  * @returns {number} The distance from the camera to the closest point on the tile, in meters.
  */
 GlobeSurfaceTileProvider.prototype.computeDistanceToTile = function (
@@ -1383,9 +1369,7 @@ function updateTileBoundingRegion(tile, tileProvider, frameState) {
  * <br /><br />
  * If this object was destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
- *
  * @returns {boolean} True if this object was destroyed; otherwise, false.
- *
  * @see GlobeSurfaceTileProvider#destroy
  */
 GlobeSurfaceTileProvider.prototype.isDestroyed = function () {
@@ -1399,13 +1383,9 @@ GlobeSurfaceTileProvider.prototype.isDestroyed = function () {
  * Once an object is destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
  * assign the return value (<code>undefined</code>) to the object as done in the example.
- *
- * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
- *
- *
+ * @throws {DeveloperError} This object was destroyed, i.e., destroy() was called.
  * @example
  * provider = provider && provider();
- *
  * @see GlobeSurfaceTileProvider#isDestroyed
  */
 GlobeSurfaceTileProvider.prototype.destroy = function () {
@@ -1961,9 +1941,7 @@ function createWireframeVertexArrayIfNecessary(context, provider, tile) {
 
 /**
  * Creates a vertex array for wireframe rendering of a terrain tile.
- *
  * @private
- *
  * @param {Context} context The context in which to create the vertex array.
  * @param {VertexArray} vertexArray The existing, non-wireframe vertex array.  The new vertex array
  *                      will share vertex buffers with this existing one.

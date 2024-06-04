@@ -180,23 +180,20 @@ function computeExtrudedEllipse(options) {
 
 /**
  * A description of the outline of an ellipse on an ellipsoid.
- *
  * @alias EllipseOutlineGeometry
- * @constructor
- *
+ * @class
  * @param {object} options Object with the following properties:
  * @param {Cartesian3} options.center The ellipse's center point in the fixed frame.
  * @param {number} options.semiMajorAxis The length of the ellipse's semi-major axis in meters.
  * @param {number} options.semiMinorAxis The length of the ellipse's semi-minor axis in meters.
- * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid the ellipse will be on.
- * @param {number} [options.height=0.0] The distance in meters between the ellipse and the ellipsoid surface.
+ * @param {Ellipsoid} [options.ellipsoid] The ellipsoid the ellipse will be on.
+ * @param {number} [options.height] The distance in meters between the ellipse and the ellipsoid surface.
  * @param {number} [options.extrudedHeight] The distance in meters between the ellipse's extruded face and the ellipsoid surface.
- * @param {number} [options.rotation=0.0] The angle from north (counter-clockwise) in radians.
- * @param {number} [options.granularity=0.02] The angular distance between points on the ellipse in radians.
- * @param {number} [options.numberOfVerticalLines=16] Number of lines to draw between the top and bottom surface of an extruded ellipse.
- *
- * @exception {DeveloperError} semiMajorAxis and semiMinorAxis must be greater than zero.
- * @exception {DeveloperError} semiMajorAxis must be greater than or equal to the semiMinorAxis.
+ * @param {number} [options.rotation] The angle from north (counter-clockwise) in radians.
+ * @param {number} [options.granularity] The angular distance between points on the ellipse in radians.
+ * @param {number} [options.numberOfVerticalLines] Number of lines to draw between the top and bottom surface of an extruded ellipse.
+ * @throws {DeveloperError} semiMajorAxis and semiMinorAxis must be greater than zero.
+ * @throws {DeveloperError} semiMajorAxis must be greater than or equal to the semiMinorAxis.
  * @exception {DeveloperError} granularity must be greater than zero.
  *
  * @see EllipseOutlineGeometry.createGeometry
@@ -270,11 +267,9 @@ EllipseOutlineGeometry.packedLength =
 
 /**
  * Stores the provided instance into the provided array.
- *
  * @param {EllipseOutlineGeometry} value The value to pack.
  * @param {number[]} array The array to pack into.
- * @param {number} [startingIndex=0] The index into the array at which to start packing the elements.
- *
+ * @param {number} [startingIndex] The index into the array at which to start packing the elements.
  * @returns {number[]} The array that was packed into
  */
 EllipseOutlineGeometry.pack = function (value, array, startingIndex) {
@@ -324,9 +319,8 @@ const scratchOptions = {
 
 /**
  * Retrieves an instance from a packed array.
- *
  * @param {number[]} array The packed array.
- * @param {number} [startingIndex=0] The starting index of the element to be unpacked.
+ * @param {number} [startingIndex] The starting index of the element to be unpacked.
  * @param {EllipseOutlineGeometry} [result] The object into which to store the result.
  * @returns {EllipseOutlineGeometry} The modified result parameter or a new EllipseOutlineGeometry instance if one was not provided.
  */
@@ -385,7 +379,6 @@ EllipseOutlineGeometry.unpack = function (array, startingIndex, result) {
 
 /**
  * Computes the geometric representation of an outline of an ellipse on an ellipsoid, including its vertices, indices, and a bounding sphere.
- *
  * @param {EllipseOutlineGeometry} ellipseGeometry A description of the ellipse.
  * @returns {Geometry|undefined} The computed vertices and indices.
  */

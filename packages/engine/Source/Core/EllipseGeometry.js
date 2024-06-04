@@ -884,23 +884,20 @@ function computeRectangle(
 
 /**
  * A description of an ellipse on an ellipsoid. Ellipse geometry can be rendered with both {@link Primitive} and {@link GroundPrimitive}.
- *
  * @alias EllipseGeometry
- * @constructor
- *
+ * @class
  * @param {object} options Object with the following properties:
  * @param {Cartesian3} options.center The ellipse's center point in the fixed frame.
  * @param {number} options.semiMajorAxis The length of the ellipse's semi-major axis in meters.
  * @param {number} options.semiMinorAxis The length of the ellipse's semi-minor axis in meters.
- * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid the ellipse will be on.
- * @param {number} [options.height=0.0] The distance in meters between the ellipse and the ellipsoid surface.
+ * @param {Ellipsoid} [options.ellipsoid] The ellipsoid the ellipse will be on.
+ * @param {number} [options.height] The distance in meters between the ellipse and the ellipsoid surface.
  * @param {number} [options.extrudedHeight] The distance in meters between the ellipse's extruded face and the ellipsoid surface.
- * @param {number} [options.rotation=0.0] The angle of rotation counter-clockwise from north.
- * @param {number} [options.stRotation=0.0] The rotation of the texture coordinates counter-clockwise from north.
- * @param {number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The angular distance between points on the ellipse in radians.
- * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
- *
- * @exception {DeveloperError} semiMajorAxis and semiMinorAxis must be greater than zero.
+ * @param {number} [options.rotation] The angle of rotation counter-clockwise from north.
+ * @param {number} [options.stRotation] The rotation of the texture coordinates counter-clockwise from north.
+ * @param {number} [options.granularity] The angular distance between points on the ellipse in radians.
+ * @param {VertexFormat} [options.vertexFormat] The vertex attributes to be computed.
+ * @throws {DeveloperError} semiMajorAxis and semiMinorAxis must be greater than zero.
  * @exception {DeveloperError} semiMajorAxis must be greater than or equal to the semiMinorAxis.
  * @exception {DeveloperError} granularity must be greater than zero.
  *
@@ -977,11 +974,9 @@ EllipseGeometry.packedLength =
 
 /**
  * Stores the provided instance into the provided array.
- *
  * @param {EllipseGeometry} value The value to pack.
  * @param {number[]} array The array to pack into.
- * @param {number} [startingIndex=0] The index into the array at which to start packing the elements.
- *
+ * @param {number} [startingIndex] The index into the array at which to start packing the elements.
  * @returns {number[]} The array that was packed into
  */
 EllipseGeometry.pack = function (value, array, startingIndex) {
@@ -1034,9 +1029,8 @@ const scratchOptions = {
 
 /**
  * Retrieves an instance from a packed array.
- *
  * @param {number[]} array The packed array.
- * @param {number} [startingIndex=0] The starting index of the element to be unpacked.
+ * @param {number} [startingIndex] The starting index of the element to be unpacked.
  * @param {EllipseGeometry} [result] The object into which to store the result.
  * @returns {EllipseGeometry} The modified result parameter or a new EllipseGeometry instance if one was not provided.
  */
@@ -1104,16 +1098,14 @@ EllipseGeometry.unpack = function (array, startingIndex, result) {
 
 /**
  * Computes the bounding rectangle based on the provided options
- *
  * @param {object} options Object with the following properties:
  * @param {Cartesian3} options.center The ellipse's center point in the fixed frame.
  * @param {number} options.semiMajorAxis The length of the ellipse's semi-major axis in meters.
  * @param {number} options.semiMinorAxis The length of the ellipse's semi-minor axis in meters.
- * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid the ellipse will be on.
- * @param {number} [options.rotation=0.0] The angle of rotation counter-clockwise from north.
- * @param {number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The angular distance between points on the ellipse in radians.
+ * @param {Ellipsoid} [options.ellipsoid] The ellipsoid the ellipse will be on.
+ * @param {number} [options.rotation] The angle of rotation counter-clockwise from north.
+ * @param {number} [options.granularity] The angular distance between points on the ellipse in radians.
  * @param {Rectangle} [result] An object in which to store the result
- *
  * @returns {Rectangle} The result rectangle
  */
 EllipseGeometry.computeRectangle = function (options, result) {
@@ -1156,7 +1148,6 @@ EllipseGeometry.computeRectangle = function (options, result) {
 
 /**
  * Computes the geometric representation of a ellipse on an ellipsoid, including its vertices, indices, and a bounding sphere.
- *
  * @param {EllipseGeometry} ellipseGeometry A description of the ellipse.
  * @returns {Geometry|undefined} The computed vertices and indices.
  */
@@ -1226,6 +1217,9 @@ EllipseGeometry.createGeometry = function (ellipseGeometry) {
 };
 
 /**
+ * @param ellipseGeometry
+ * @param minHeightFunc
+ * @param maxHeightFunc
  * @private
  */
 EllipseGeometry.createShadowVolume = function (

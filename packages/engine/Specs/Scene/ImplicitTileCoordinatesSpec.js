@@ -10,7 +10,7 @@ describe("Scene/ImplicitTileCoordinates", function () {
    * @param {number} level
    * @param {number} x
    * @param {number} y
-   * @param {number} [subtreeLevels=2]
+   * @param {number} [subtreeLevels]
    * @returns {ImplicitTileCoordinates}
    */
   function quadtreeCoordinates(level, x, y, subtreeLevels) {
@@ -29,7 +29,7 @@ describe("Scene/ImplicitTileCoordinates", function () {
    * @param {number} x
    * @param {number} y
    * @param {number} z
-   * @param {number} [subtreeLevels=2]
+   * @param {number} [subtreeLevels]
    * @returns {ImplicitTileCoordinates}
    */
   function octreeCoordinates(level, x, y, z, subtreeLevels) {

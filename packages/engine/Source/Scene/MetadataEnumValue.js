@@ -7,16 +7,14 @@ import defaultValue from "../Core/defaultValue.js";
  * <p>
  * See the {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification/Metadata|3D Metadata Specification} for 3D Tiles
  * </p>
- *
  * @param {object} options Object with the following properties:
  * @param {number} options.value The integer value.
  * @param {string} options.name The name of the enum value.
  * @param {string} [options.description] The description of the enum value.
  * @param {*} [options.extras] Extra user-defined properties.
  * @param {object} [options.extensions] An object containing extensions.
- *
  * @alias MetadataEnumValue
- * @constructor
+ * @class
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 function MetadataEnumValue(options) {
@@ -39,11 +37,8 @@ function MetadataEnumValue(options) {
 
 /**
  * Creates a {@link MetadataEnumValue} from either 3D Tiles 1.1, 3DTILES_metadata, EXT_structural_metadata, or EXT_feature_metadata.
- *
  * @param {object} value The enum value JSON object.
- *
  * @returns {MetadataEnumValue} The newly created metadata enum value.
- *
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
@@ -64,7 +59,6 @@ MetadataEnumValue.fromJson = function (value) {
 Object.defineProperties(MetadataEnumValue.prototype, {
   /**
    * The integer value.
-   *
    * @memberof MetadataEnumValue.prototype
    * @type {number}
    * @readonly
@@ -77,7 +71,6 @@ Object.defineProperties(MetadataEnumValue.prototype, {
 
   /**
    * The name of the enum value.
-   *
    * @memberof MetadataEnumValue.prototype
    * @type {string}
    * @readonly
@@ -90,7 +83,6 @@ Object.defineProperties(MetadataEnumValue.prototype, {
 
   /**
    * The description of the enum value.
-   *
    * @memberof MetadataEnumValue.prototype
    * @type {string}
    * @readonly
@@ -103,7 +95,6 @@ Object.defineProperties(MetadataEnumValue.prototype, {
 
   /**
    * Extra user-defined properties.
-   *
    * @memberof MetadataEnumValue.prototype
    * @type {*}
    * @readonly
@@ -116,7 +107,6 @@ Object.defineProperties(MetadataEnumValue.prototype, {
 
   /**
    * An object containing extensions.
-   *
    * @memberof MetadataEnumValue.prototype
    * @type {object}
    * @readonly

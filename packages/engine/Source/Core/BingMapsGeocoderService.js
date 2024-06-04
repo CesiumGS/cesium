@@ -11,8 +11,7 @@ const url = "https://dev.virtualearth.net/REST/v1/Locations";
 /**
  * Provides geocoding through Bing Maps.
  * @alias BingMapsGeocoderService
- * @constructor
- *
+ * @class
  * @param {object} options Object with the following properties:
  * @param {string} options.key A key to use with the Bing Maps geocoding service
  * @param {string} [options.culture] A Bing Maps {@link https://docs.microsoft.com/en-us/bingmaps/rest-services/common-parameters-and-types/supported-culture-codes|Culture Code} to return results in a specific culture and language.
@@ -87,7 +86,6 @@ Object.defineProperties(BingMapsGeocoderService.prototype, {
 
 /**
  * @function
- *
  * @param {string} query The query to be sent to the geocoder service
  * @returns {Promise<GeocoderService.Result[]>}
  */

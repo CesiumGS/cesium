@@ -9,16 +9,13 @@ import defined from "./defined.js";
  * This is used to encode positions in vertex buffers for rendering without jittering artifacts
  * as described in {@link http://help.agi.com/AGIComponents/html/BlogPrecisionsPrecisions.htm|Precisions, Precisions}.
  * </p>
- *
  * @alias EncodedCartesian3
- * @constructor
- *
+ * @class
  * @private
  */
 function EncodedCartesian3() {
   /**
    * The high bits for each component.  Bits 0 to 22 store the whole value.  Bits 23 to 31 are not used.
-   *
    * @type {Cartesian3}
    * @default {@link Cartesian3.ZERO}
    */
@@ -26,7 +23,6 @@ function EncodedCartesian3() {
 
   /**
    * The low bits for each component.  Bits 7 to 22 store the whole value, and bits 0 to 6 store the fraction.  Bits 23 to 31 are not used.
-   *
    * @type {Cartesian3}
    * @default {@link Cartesian3.ZERO}
    */
@@ -40,11 +36,9 @@ function EncodedCartesian3() {
  * <p>
  * The fixed-point encoding follows {@link http://help.agi.com/AGIComponents/html/BlogPrecisionsPrecisions.htm|Precisions, Precisions}.
  * </p>
- *
  * @param {number} value The floating-point value to encode.
  * @param {object} [result] The object onto which to store the result.
  * @returns {object} The modified result parameter or a new instance if one was not provided.
- *
  * @example
  * const value = 1234567.1234567;
  * const splitValue = Cesium.EncodedCartesian3.encode(value);
@@ -86,11 +80,9 @@ const scratchEncode = {
  * <p>
  * The fixed-point encoding follows {@link https://help.agi.com/AGIComponents/html/BlogPrecisionsPrecisions.htm|Precisions, Precisions}.
  * </p>
- *
  * @param {Cartesian3} cartesian The cartesian to encode.
  * @param {EncodedCartesian3} [result] The object onto which to store the result.
  * @returns {EncodedCartesian3} The modified result parameter or a new EncodedCartesian3 instance if one was not provided.
- *
  * @example
  * const cart = new Cesium.Cartesian3(-10000000.0, 0.0, 10000000.0);
  * const encoded = Cesium.EncodedCartesian3.fromCartesian(cart);
@@ -130,13 +122,10 @@ const encodedP = new EncodedCartesian3();
  * <p>
  * This is used to create interleaved high-precision position vertex attributes.
  * </p>
- *
  * @param {Cartesian3} cartesian The cartesian to encode.
  * @param {number[]} cartesianArray The array to write to.
  * @param {number} index The index into the array to start writing.  Six elements will be written.
- *
- * @exception {DeveloperError} index must be a number greater than or equal to 0.
- *
+ * @throws {DeveloperError} index must be a number greater than or equal to 0.
  * @example
  * const positions = [
  *    new Cesium.Cartesian3(),

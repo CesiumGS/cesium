@@ -6,14 +6,12 @@ import WebGLConstants from "./WebGLConstants.js";
 /**
  * Constants for WebGL index datatypes.  These corresponds to the
  * <code>type</code> parameter of {@link http://www.khronos.org/opengles/sdk/docs/man/xhtml/glDrawElements.xml|drawElements}.
- *
  * @enum {number}
  */
 const IndexDatatype = {
   /**
    * 8-bit unsigned byte corresponding to <code>UNSIGNED_BYTE</code> and the type
    * of an element in <code>Uint8Array</code>.
-   *
    * @type {number}
    * @constant
    */
@@ -22,7 +20,6 @@ const IndexDatatype = {
   /**
    * 16-bit unsigned short corresponding to <code>UNSIGNED_SHORT</code> and the type
    * of an element in <code>Uint16Array</code>.
-   *
    * @type {number}
    * @constant
    */
@@ -31,7 +28,6 @@ const IndexDatatype = {
   /**
    * 32-bit unsigned int corresponding to <code>UNSIGNED_INT</code> and the type
    * of an element in <code>Uint32Array</code>.
-   *
    * @type {number}
    * @constant
    */
@@ -40,10 +36,8 @@ const IndexDatatype = {
 
 /**
  * Returns the size, in bytes, of the corresponding datatype.
- *
  * @param {IndexDatatype} indexDatatype The index datatype to get the size of.
  * @returns {number} The size in bytes.
- *
  * @example
  * // Returns 2
  * const size = Cesium.IndexDatatype.getSizeInBytes(Cesium.IndexDatatype.UNSIGNED_SHORT);
@@ -67,7 +61,6 @@ IndexDatatype.getSizeInBytes = function (indexDatatype) {
 
 /**
  * Gets the datatype with a given size in bytes.
- *
  * @param {number} sizeInBytes The size of a single index in bytes.
  * @returns {IndexDatatype} The index datatype with the given size.
  */
@@ -90,10 +83,8 @@ IndexDatatype.fromSizeInBytes = function (sizeInBytes) {
 
 /**
  * Validates that the provided index datatype is a valid {@link IndexDatatype}.
- *
  * @param {IndexDatatype} indexDatatype The index datatype to validate.
  * @returns {boolean} <code>true</code> if the provided index datatype is a valid value; otherwise, <code>false</code>.
- *
  * @example
  * if (!Cesium.IndexDatatype.validate(indexDatatype)) {
  *   throw new Cesium.DeveloperError('indexDatatype must be a valid value.');
@@ -111,11 +102,9 @@ IndexDatatype.validate = function (indexDatatype) {
 /**
  * Creates a typed array that will store indices, using either <code><Uint16Array</code>
  * or <code>Uint32Array</code> depending on the number of vertices.
- *
  * @param {number} numberOfVertices Number of vertices that the indices will reference.
  * @param {number|Array} indicesLengthOrArray Passed through to the typed array constructor.
  * @returns {Uint16Array|Uint32Array} A <code>Uint16Array</code> or <code>Uint32Array</code> constructed with <code>indicesLengthOrArray</code>.
- *
  * @example
  * this.indices = Cesium.IndexDatatype.createTypedArray(positions.length / 3, numberOfIndices);
  */
@@ -139,13 +128,11 @@ IndexDatatype.createTypedArray = function (
 /**
  * Creates a typed array from a source array buffer.  The resulting typed array will store indices, using either <code><Uint16Array</code>
  * or <code>Uint32Array</code> depending on the number of vertices.
- *
  * @param {number} numberOfVertices Number of vertices that the indices will reference.
  * @param {ArrayBuffer} sourceArray Passed through to the typed array constructor.
  * @param {number} byteOffset Passed through to the typed array constructor.
  * @param {number} length Passed through to the typed array constructor.
  * @returns {Uint16Array|Uint32Array} A <code>Uint16Array</code> or <code>Uint32Array</code> constructed with <code>sourceArray</code>, <code>byteOffset</code>, and <code>length</code>.
- *
  */
 IndexDatatype.createTypedArrayFromArrayBuffer = function (
   numberOfVertices,
@@ -174,7 +161,6 @@ IndexDatatype.createTypedArrayFromArrayBuffer = function (
 
 /**
  * Gets the {@link IndexDatatype} for the provided TypedArray instance.
- *
  * @param {Uint8Array|Uint16Array|Uint32Array} array The typed array.
  * @returns {IndexDatatype} The IndexDatatype for the provided array, or undefined if the array is not a Uint8Array, Uint16Array, or Uint32Array.
  */

@@ -19,17 +19,13 @@ import preprocess3DTileContent from "./preprocess3DTileContent.js";
  * <p>
  * Implements the {@link Cesium3DTileContent} interface.
  * </p>
- *
  * @see {@link https://github.com/CesiumGS/3d-tiles/tree/main/extensions/3DTILES_multiple_contents|3DTILES_multiple_contents extension}
- *
  * @alias Multiple3DTileContent
- * @constructor
- *
+ * @class
  * @param {Cesium3DTileset} tileset The tileset this content belongs to
  * @param {Cesium3DTile} tile The content this content belongs to
  * @param {Resource} tilesetResource The resource that points to the tileset. This will be used to derive each inner content's resource.
  * @param {object} contentsJson Either the tile JSON containing the contents array (3D Tiles 1.1), or <code>3DTILES_multiple_contents</code> extension JSON
- *
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
@@ -78,9 +74,7 @@ Object.defineProperties(Multiple3DTileContent.prototype, {
   /**
    * Part of the {@link Cesium3DTileContent} interface.  <code>Multiple3DTileContent</code> checks if any of the inner contents have dirty featurePropertiesDirty.
    * @memberof Multiple3DTileContent.prototype
-   *
    * @type {boolean}
-   *
    * @private
    */
   featurePropertiesDirty: {
@@ -107,12 +101,9 @@ Object.defineProperties(Multiple3DTileContent.prototype, {
   /**
    * Part of the {@link Cesium3DTileContent} interface.  <code>Multiple3DTileContent</code>
    * always returns <code>0</code>.  Instead call <code>featuresLength</code> for a specific inner content.
-   *
    * @memberof Multiple3DTileContent.prototype
-   *
    * @type {number}
    * @readonly
-   *
    * @private
    */
   featuresLength: {
@@ -124,12 +115,9 @@ Object.defineProperties(Multiple3DTileContent.prototype, {
   /**
    * Part of the {@link Cesium3DTileContent} interface.  <code>Multiple3DTileContent</code>
    * always returns <code>0</code>.  Instead, call <code>pointsLength</code> for a specific inner content.
-   *
    * @memberof Multiple3DTileContent.prototype
-   *
    * @type {number}
    * @readonly
-   *
    * @private
    */
   pointsLength: {
@@ -141,12 +129,9 @@ Object.defineProperties(Multiple3DTileContent.prototype, {
   /**
    * Part of the {@link Cesium3DTileContent} interface.  <code>Multiple3DTileContent</code>
    * always returns <code>0</code>.  Instead call <code>trianglesLength</code> for a specific inner content.
-   *
    * @memberof Multiple3DTileContent.prototype
-   *
    * @type {number}
    * @readonly
-   *
    * @private
    */
   trianglesLength: {
@@ -158,12 +143,9 @@ Object.defineProperties(Multiple3DTileContent.prototype, {
   /**
    * Part of the {@link Cesium3DTileContent} interface.  <code>Multiple3DTileContent</code>
    * always returns <code>0</code>.  Instead call <code>geometryByteLength</code> for a specific inner content.
-   *
    * @memberof Multiple3DTileContent.prototype
-   *
    * @type {number}
    * @readonly
-   *
    * @private
    */
   geometryByteLength: {
@@ -175,12 +157,9 @@ Object.defineProperties(Multiple3DTileContent.prototype, {
   /**
    * Part of the {@link Cesium3DTileContent} interface. <code>Multiple3DTileContent</code>
    * always returns <code>0</code>.  Instead call <code>texturesByteLength</code> for a specific inner content.
-   *
    * @memberof Multiple3DTileContent.prototype
-   *
    * @type {number}
    * @readonly
-   *
    * @private
    */
   texturesByteLength: {
@@ -192,12 +171,9 @@ Object.defineProperties(Multiple3DTileContent.prototype, {
   /**
    * Part of the {@link Cesium3DTileContent} interface.  <code>Multiple3DTileContent</code>
    * always returns <code>0</code>.  Instead call <code>batchTableByteLength</code> for a specific inner content.
-   *
    * @memberof Multiple3DTileContent.prototype
-   *
    * @type {number}
    * @readonly
-   *
    * @private
    */
   batchTableByteLength: {
@@ -214,9 +190,7 @@ Object.defineProperties(Multiple3DTileContent.prototype, {
 
   /**
    * Returns true when the tile's content is ready to render; otherwise false
-   *
    * @memberof Multiple3DTileContent.prototype
-   *
    * @type {boolean}
    * @readonly
    * @private
@@ -248,7 +222,6 @@ Object.defineProperties(Multiple3DTileContent.prototype, {
    * Unlike other content types, <code>Multiple3DTileContent</code> does not
    * have a single URL, so this returns undefined.
    * @memberof Multiple3DTileContent.prototype
-   *
    * @type {string}
    * @readonly
    * @private
@@ -312,7 +285,6 @@ Object.defineProperties(Multiple3DTileContent.prototype, {
    * been fetched or not. This is intended for use with
    * {@link Cesium3DTileset#debugShowUrl}.
    * @memberof Multiple3DTileContent.prototype
-   *
    * @type {string[]}
    * @readonly
    * @private
@@ -356,8 +328,7 @@ function cancelPendingRequests(multipleContents, originalContentState) {
  * This method also updates the tile statistics' pending request count if the
  * requests are successfully scheduled.
  * </p>
- *
- * @return {Promise<void>|undefined} A promise that resolves when the request completes, or undefined if there is no request needed, or the request cannot be scheduled.
+ * @returns {Promise<void>|undefined} A promise that resolves when the request completes, or undefined if there is no request needed, or the request cannot be scheduled.
  * @private
  */
 Multiple3DTileContent.prototype.requestInnerContents = function () {
@@ -391,7 +362,7 @@ Multiple3DTileContent.prototype.requestInnerContents = function () {
 /**
  * Check if all requests for inner contents can be scheduled at once. This is slower, but it avoids a potential memory leak.
  * @param {string[]} serverKeys The server keys for all of the inner contents
- * @return {boolean} True if the request scheduler has enough open slots for all inner contents
+ * @returns {boolean} True if the request scheduler has enough open slots for all inner contents
  * @private
  */
 function canScheduleAllRequests(serverKeys) {
@@ -591,7 +562,6 @@ function handleInnerContentFailed(multipleContents, index, error) {
 /**
  * Cancel all requests for inner contents. This is called by the tile
  * when a tile goes out of view.
- *
  * @private
  */
 Multiple3DTileContent.prototype.cancelRequests = function () {
@@ -606,6 +576,8 @@ Multiple3DTileContent.prototype.cancelRequests = function () {
 /**
  * Part of the {@link Cesium3DTileContent} interface.  <code>Multiple3DTileContent</code>
  * always returns <code>false</code>.  Instead call <code>hasProperty</code> for a specific inner content
+ * @param batchId
+ * @param name
  * @private
  */
 Multiple3DTileContent.prototype.hasProperty = function (batchId, name) {
@@ -615,6 +587,7 @@ Multiple3DTileContent.prototype.hasProperty = function (batchId, name) {
 /**
  * Part of the {@link Cesium3DTileContent} interface.  <code>Multiple3DTileContent</code>
  * always returns <code>undefined</code>.  Instead call <code>getFeature</code> for a specific inner content
+ * @param batchId
  * @private
  */
 Multiple3DTileContent.prototype.getFeature = function (batchId) {
@@ -653,12 +626,10 @@ Multiple3DTileContent.prototype.update = function (tileset, frameState) {
 
 /**
  * Find an intersection between a ray and the tile content surface that was rendered. The ray must be given in world coordinates.
- *
  * @param {Ray} ray The ray to test for intersection.
  * @param {FrameState} frameState The frame state.
  * @param {Cartesian3|undefined} [result] The intersection or <code>undefined</code> if none was found.
  * @returns {Cartesian3|undefined} The intersection or <code>undefined</code> if none was found.
- *
  * @private
  */
 Multiple3DTileContent.prototype.pick = function (ray, frameState, result) {

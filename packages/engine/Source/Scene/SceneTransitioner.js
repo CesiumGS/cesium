@@ -17,6 +17,7 @@ import Camera from "./Camera.js";
 import SceneMode from "./SceneMode.js";
 
 /**
+ * @param scene
  * @private
  */
 function SceneTransitioner(scene) {
@@ -298,7 +299,6 @@ SceneTransitioner.prototype.morphTo3D = function (duration, ellipsoid) {
  * <br /><br />
  * If this object was destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
- *
  * @returns {boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
  */
 SceneTransitioner.prototype.isDestroyed = function () {
@@ -309,9 +309,7 @@ SceneTransitioner.prototype.isDestroyed = function () {
  * Once an object is destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
  * assign the return value (<code>undefined</code>) to the object as done in the example.
- *
- * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
- *
+ * @throws {DeveloperError} This object was destroyed, i.e., destroy() was called.
  * @example
  * transitioner = transitioner && transitioner.destroy();
  */

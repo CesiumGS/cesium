@@ -4834,7 +4834,6 @@ function DocumentPacket() {
  * @typedef {object} CzmlDataSource.LoadOptions
  *
  * Initialization options for the <code>load</code> method.
- *
  * @property {Resource|string} [sourceUri] Overrides the url to use for resolving relative links.
  * @property {Credit|string} [credit] A credit for the data source, which is displayed on the canvas.
  */
@@ -4842,10 +4841,8 @@ function DocumentPacket() {
 /**
  * A {@link DataSource} which processes {@link https://github.com/AnalyticalGraphicsInc/czml-writer/wiki/CZML-Guide|CZML}.
  * @alias CzmlDataSource
- * @constructor
- *
+ * @class
  * @param {string} [name] An optional name for the data source.  This value will be overwritten if a loaded document contains a name.
- *
  * @demo {@link https://sandcastle.cesium.com/index.html?src=CZML.html|Cesium Sandcastle CZML Demo}
  */
 function CzmlDataSource(name) {
@@ -4865,10 +4862,8 @@ function CzmlDataSource(name) {
 
 /**
  * Creates a Promise to a new instance loaded with the provided CZML data.
- *
  * @param {Resource|string|object} czml A url or CZML object to be processed.
  * @param {CzmlDataSource.LoadOptions} [options] An object specifying configuration options
- *
  * @returns {Promise<CzmlDataSource>} A promise that resolves to the new instance once the data is processed.
  */
 CzmlDataSource.load = function (czml, options) {
@@ -4964,7 +4959,6 @@ Object.defineProperties(CzmlDataSource.prototype, {
 
   /**
    * Gets or sets the clustering options for this data source. This object can be shared between multiple data sources.
-   *
    * @memberof CzmlDataSource.prototype
    * @type {EntityCluster}
    */
@@ -4998,7 +4992,6 @@ Object.defineProperties(CzmlDataSource.prototype, {
  *
  * A CZML processing function that adds or updates entities in the provided
  * collection based on the provided CZML packet.
- *
  * @param {Entity} entity
  * @param {object} packet
  * @param {EntityCollection} entityCollection
@@ -5061,10 +5054,8 @@ CzmlDataSource.unregisterUpdater = function (updater) {
 
 /**
  * Processes the provided url or CZML object without clearing any existing data.
- *
  * @param {Resource|string|object} czml A url or CZML object to be processed.
  * @param {CzmlDataSource.LoadOptions} [options] An object specifying configuration options
- *
  * @returns {Promise<CzmlDataSource>} A promise that resolves to this instances once the data is processed.
  */
 CzmlDataSource.prototype.process = function (czml, options) {
@@ -5073,10 +5064,8 @@ CzmlDataSource.prototype.process = function (czml, options) {
 
 /**
  * Loads the provided url or CZML object, replacing any existing data.
- *
  * @param {Resource|string|object} czml A url or CZML object to be processed.
  * @param {CzmlDataSource.LoadOptions} [options] An object specifying configuration options
- *
  * @returns {Promise<CzmlDataSource>} A promise that resolves to this instances once the data is processed.
  */
 CzmlDataSource.prototype.load = function (czml, options) {
@@ -5088,7 +5077,6 @@ CzmlDataSource.prototype.load = function (czml, options) {
  * is not required to be implemented.  It is provided for data sources which
  * retrieve data based on the current animation time or scene state.
  * If implemented, update will be called by {@link DataSourceDisplay} once a frame.
- *
  * @param {JulianDate} time The simulation time.
  * @returns {boolean} True if this data source is ready to be displayed at the provided time, false otherwise.
  */
@@ -5100,7 +5088,6 @@ CzmlDataSource.prototype.update = function (time) {
  * A helper function used by custom CZML updater functions
  * which creates or updates a {@link Property} from a CZML packet.
  * @function
- *
  * @param {Function} type The constructor function for the property being processed.
  * @param {object} object The object on which the property will be added or updated.
  * @param {string} propertyName The name of the property on the object.
@@ -5115,7 +5102,6 @@ CzmlDataSource.processPacketData = processPacketData;
  * A helper function used by custom CZML updater functions
  * which creates or updates a {@link PositionProperty} from a CZML packet.
  * @function
- *
  * @param {object} object The object on which the property will be added or updated.
  * @param {string} propertyName The name of the property on the object.
  * @param {object} packetData The CZML packet being processed.
@@ -5129,7 +5115,6 @@ CzmlDataSource.processPositionPacketData = processPositionPacketData;
  * A helper function used by custom CZML updater functions
  * which creates or updates a {@link MaterialProperty} from a CZML packet.
  * @function
- *
  * @param {object} object The object on which the property will be added or updated.
  * @param {string} propertyName The name of the property on the object.
  * @param {object} packetData The CZML packet being processed.

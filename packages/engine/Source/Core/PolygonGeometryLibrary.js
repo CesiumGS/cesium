@@ -190,14 +190,12 @@ PolygonGeometryLibrary.subdivideRhumbLineCount = function (
 
 /**
  * Subdivides texture coordinates based on the subdivision of the associated world positions.
- *
  * @param {Cartesian2} t0 First texture coordinate.
  * @param {Cartesian2} t1 Second texture coordinate.
  * @param {Cartesian3} p0 First world position.
  * @param {Cartesian3} p1 Second world position.
  * @param {number} minDistance Minimum distance for a segment.
  * @param {Cartesian2[]} result The subdivided texture coordinates.
- *
  * @private
  */
 PolygonGeometryLibrary.subdivideTexcoordLine = function (
@@ -263,7 +261,6 @@ PolygonGeometryLibrary.subdivideLine = function (p0, p1, minDistance, result) {
 
 /**
  * Subdivides texture coordinates based on the subdivision of the associated world positions using a rhumb line.
- *
  * @param {Cartesian2} t0 First texture coordinate.
  * @param {Cartesian2} t1 Second texture coordinate.
  * @param {Ellipsoid} ellipsoid The ellipsoid.
@@ -271,7 +268,6 @@ PolygonGeometryLibrary.subdivideLine = function (p0, p1, minDistance, result) {
  * @param {Cartesian3} p1 Second world position.
  * @param {number} minDistance Minimum distance for a segment.
  * @param {Cartesian2[]} result The subdivided texture coordinates.
- *
  * @private
  */
 PolygonGeometryLibrary.subdivideTexcoordRhumbLine = function (
@@ -687,12 +683,10 @@ function wirePolygon(
 
 /**
  * Splits an array of polygons, defined as a list of Cartesian3 positions in counter-clockwise winding order, along the equator.
- *
  * @param {Array<Cartesian3[]>} outerRings An array of polygons, defined as a list of Cartesian3 positions in counter-clockwise winding order.
  * @param {Ellipsoid} ellipsoid The ellipsoid to be used as a reference.
  * @param {ArcType} arcType The type of line the polygon edges must follow. Valid options are {@link ArcType.GEODESIC} and {@link ArcType.RHUMB}.
  * @param {Array<Cartesian3[]>} [result] An array of split polygons.
- *
  * @returns {Array<Cartesian3[]>} An array of split polygons.
  */
 PolygonGeometryLibrary.splitPolygonsOnEquator = function (

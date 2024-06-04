@@ -6,6 +6,8 @@ import I3SDataProvider from "./I3SDataProvider.js";
  * <p>
  * Do not construct this directly, instead access tiles through {@link I3SNode}.
  * </p>
+ * @param parent
+ * @param uri
  * @alias I3SFeature
  * @internalConstructor
  */

@@ -10,6 +10,9 @@ import Resource from "../Core/Resource.js";
  * <p>
  * This object is normally not instantiated directly, use {@link I3SSublayer.fromData}.
  * </p>
+ * @param dataProvider
+ * @param parent
+ * @param sublayerData
  * @alias I3SSublayer
  * @internalConstructor
  */
@@ -123,6 +126,10 @@ Object.defineProperties(I3SSublayer.prototype, {
 });
 
 /**
+ * @param dataProvider
+ * @param buildingLayerUrl
+ * @param sublayerData
+ * @param parent
  * @private
  */
 I3SSublayer._fromData = async function (

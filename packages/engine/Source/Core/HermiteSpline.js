@@ -115,22 +115,18 @@ function generateNatural(points) {
  * tangents are defined for points [1, n - 1]. For example, when interpolating a segment of the curve between <code>points[i]</code> and
  * <code>points[i + 1]</code>, the tangents at the points will be <code>outTangents[i]</code> and <code>inTangents[i]</code>,
  * respectively.
- *
  * @alias HermiteSpline
- * @constructor
- *
+ * @class
  * @param {object} options Object with the following properties:
  * @param {number[]} options.times An array of strictly increasing, unit-less, floating-point times at each point.
  *                The values are in no way connected to the clock time. They are the parameterization for the curve.
  * @param {Cartesian3[]} options.points The array of control points.
  * @param {Cartesian3[]} options.inTangents The array of incoming tangents at each control point.
  * @param {Cartesian3[]} options.outTangents The array of outgoing tangents at each control point.
- *
- * @exception {DeveloperError} points.length must be greater than or equal to 2.
- * @exception {DeveloperError} times.length must be equal to points.length.
- * @exception {DeveloperError} inTangents and outTangents must have a length equal to points.length - 1.
- * @exception {DeveloperError} inTangents and outTangents must be of the same type as points.
- *
+ * @throws {DeveloperError} points.length must be greater than or equal to 2.
+ * @throws {DeveloperError} times.length must be equal to points.length.
+ * @throws {DeveloperError} inTangents and outTangents must have a length equal to points.length - 1.
+ * @throws {DeveloperError} inTangents and outTangents must be of the same type as points.
  * @example
  * // Create a G<sup>1</sup> continuous Hermite spline
  * const times = [ 0.0, 1.5, 3.0, 4.5, 6.0 ];
@@ -158,7 +154,6 @@ function generateNatural(points) {
  * });
  *
  * const p0 = spline.evaluate(times[0]);
- *
  * @see ConstantSpline
  * @see SteppedSpline
  * @see LinearSpline
@@ -226,9 +221,7 @@ function HermiteSpline(options) {
 Object.defineProperties(HermiteSpline.prototype, {
   /**
    * An array of times for the control points.
-   *
    * @memberof HermiteSpline.prototype
-   *
    * @type {number[]}
    * @readonly
    */
@@ -240,9 +233,7 @@ Object.defineProperties(HermiteSpline.prototype, {
 
   /**
    * An array of control points.
-   *
    * @memberof HermiteSpline.prototype
-   *
    * @type {Cartesian3[]}
    * @readonly
    */
@@ -254,9 +245,7 @@ Object.defineProperties(HermiteSpline.prototype, {
 
   /**
    * An array of incoming tangents at each control point.
-   *
    * @memberof HermiteSpline.prototype
-   *
    * @type {Cartesian3[]}
    * @readonly
    */
@@ -268,9 +257,7 @@ Object.defineProperties(HermiteSpline.prototype, {
 
   /**
    * An array of outgoing tangents at each control point.
-   *
    * @memberof HermiteSpline.prototype
-   *
    * @type {Cartesian3[]}
    * @readonly
    */
@@ -284,17 +271,14 @@ Object.defineProperties(HermiteSpline.prototype, {
 /**
  * Creates a spline where the tangents at each control point are the same.
  * The curves are guaranteed to be at least in the class C<sup>1</sup>.
- *
  * @param {object} options Object with the following properties:
  * @param {number[]} options.times The array of control point times.
  * @param {Cartesian3[]} options.points The array of control points.
  * @param {Cartesian3[]} options.tangents The array of tangents at the control points.
  * @returns {HermiteSpline} A hermite spline.
- *
- * @exception {DeveloperError} points, times and tangents are required.
- * @exception {DeveloperError} points.length must be greater than or equal to 2.
- * @exception {DeveloperError} times, points and tangents must have the same length.
- *
+ * @throws {DeveloperError} points, times and tangents are required.
+ * @throws {DeveloperError} points.length must be greater than or equal to 2.
+ * @throws {DeveloperError} times, points and tangents must have the same length.
  * @example
  * const points = [
  *     new Cesium.Cartesian3(1235398.0, -4810983.0, 4146266.0),
@@ -356,16 +340,13 @@ HermiteSpline.createC1 = function (options) {
 /**
  * Creates a natural cubic spline. The tangents at the control points are generated
  * to create a curve in the class C<sup>2</sup>.
- *
  * @param {object} options Object with the following properties:
  * @param {number[]} options.times The array of control point times.
  * @param {Cartesian3[]} options.points The array of control points.
  * @returns {HermiteSpline|LinearSpline} A hermite spline, or a linear spline if less than 3 control points were given.
- *
- * @exception {DeveloperError} points and times are required.
- * @exception {DeveloperError} points.length must be greater than or equal to 2.
- * @exception {DeveloperError} times.length must be equal to points.length.
- *
+ * @throws {DeveloperError} points and times are required.
+ * @throws {DeveloperError} points.length must be greater than or equal to 2.
+ * @throws {DeveloperError} times.length must be equal to points.length.
  * @example
  * // Create a natural cubic spline above the earth from Philadelphia to Los Angeles.
  * const spline = Cesium.HermiteSpline.createNaturalCubic({
@@ -421,19 +402,16 @@ HermiteSpline.createNaturalCubic = function (options) {
 /**
  * Creates a clamped cubic spline. The tangents at the interior control points are generated
  * to create a curve in the class C<sup>2</sup>.
- *
  * @param {object} options Object with the following properties:
  * @param {number[]} options.times The array of control point times.
  * @param {number[]|Cartesian3[]} options.points The array of control points.
  * @param {Cartesian3} options.firstTangent The outgoing tangent of the first control point.
  * @param {Cartesian3} options.lastTangent The incoming tangent of the last control point.
  * @returns {HermiteSpline|LinearSpline} A hermite spline, or a linear spline if less than 3 control points were given.
- *
- * @exception {DeveloperError} points, times, firstTangent and lastTangent are required.
- * @exception {DeveloperError} points.length must be greater than or equal to 2.
- * @exception {DeveloperError} times.length must be equal to points.length.
- * @exception {DeveloperError} firstTangent and lastTangent must be of the same type as points.
- *
+ * @throws {DeveloperError} points, times, firstTangent and lastTangent are required.
+ * @throws {DeveloperError} points.length must be greater than or equal to 2.
+ * @throws {DeveloperError} times.length must be equal to points.length.
+ * @throws {DeveloperError} firstTangent and lastTangent must be of the same type as points.
  * @example
  * // Create a clamped cubic spline above the earth from Philadelphia to Los Angeles.
  * const spline = Cesium.HermiteSpline.createClampedCubic({
@@ -522,11 +500,9 @@ HermiteSpline.hermiteCoefficientMatrix = new Matrix4(
  * Finds an index <code>i</code> in <code>times</code> such that the parameter
  * <code>time</code> is in the interval <code>[times[i], times[i + 1]]</code>.
  * @function
- *
  * @param {number} time The time.
  * @returns {number} The index for the element at the start of the interval.
- *
- * @exception {DeveloperError} time must be in the range <code>[t<sub>0</sub>, t<sub>n</sub>]</code>, where <code>t<sub>0</sub></code>
+ * @throws {DeveloperError} time must be in the range <code>[t<sub>0</sub>, t<sub>n</sub>]</code>, where <code>t<sub>0</sub></code>
  *                             is the first element in the array <code>times</code> and <code>t<sub>n</sub></code> is the last element
  *                             in the array <code>times</code>.
  */
@@ -538,29 +514,25 @@ const scratchTemp = new Cartesian3();
 /**
  * Wraps the given time to the period covered by the spline.
  * @function
- *
  * @param {number} time The time.
- * @return {number} The time, wrapped around to the updated animation.
+ * @returns {number} The time, wrapped around to the updated animation.
  */
 HermiteSpline.prototype.wrapTime = Spline.prototype.wrapTime;
 
 /**
  * Clamps the given time to the period covered by the spline.
  * @function
- *
  * @param {number} time The time.
- * @return {number} The time, clamped to the animation period.
+ * @returns {number} The time, clamped to the animation period.
  */
 HermiteSpline.prototype.clampTime = Spline.prototype.clampTime;
 
 /**
  * Evaluates the curve at a given time.
- *
  * @param {number} time The time at which to evaluate the curve.
  * @param {Cartesian3} [result] The object onto which to store the result.
  * @returns {Cartesian3} The modified result parameter or a new instance of the point on the curve at the given time.
- *
- * @exception {DeveloperError} time must be in the range <code>[t<sub>0</sub>, t<sub>n</sub>]</code>, where <code>t<sub>0</sub></code>
+ * @throws {DeveloperError} time must be in the range <code>[t<sub>0</sub>, t<sub>n</sub>]</code>, where <code>t<sub>0</sub></code>
  *                             is the first element in the array <code>times</code> and <code>t<sub>n</sub></code> is the last element
  *                             in the array <code>times</code>.
  */

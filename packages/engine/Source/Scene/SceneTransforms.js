@@ -14,7 +14,6 @@ import SceneMode from "./SceneMode.js";
 
 /**
  * Functions that do scene-dependent transforms between rendering-related coordinate systems.
- *
  * @namespace SceneTransforms
  */
 const SceneTransforms = {};
@@ -29,12 +28,10 @@ const scratchWindowCoord1 = new Cartesian2();
 /**
  * Transforms a position in WGS84 coordinates to window coordinates.  This is commonly used to place an
  * HTML element at the same screen position as an object in the scene.
- *
  * @param {Scene} scene The scene.
  * @param {Cartesian3} position The position in WGS84 (world) coordinates.
  * @param {Cartesian2} [result] An optional object to return the input position transformed to window coordinates.
  * @returns {Cartesian2} The modified result parameter or a new Cartesian2 instance if one was not provided.  This may be <code>undefined</code> if the input position is near the center of the ellipsoid.
- *
  * @example
  * // Output the window position of longitude/latitude (0, 0) every time the mouse moves.
  * const scene = widget.scene;
@@ -96,6 +93,10 @@ const scratchProjectedCartesian = new Cartesian3();
 const scratchCameraPosition = new Cartesian3();
 
 /**
+ * @param scene
+ * @param position
+ * @param eyeOffset
+ * @param result
  * @private
  */
 SceneTransforms.wgs84WithEyeOffsetToWindowCoordinates = function (
@@ -267,12 +268,10 @@ SceneTransforms.wgs84WithEyeOffsetToWindowCoordinates = function (
 /**
  * Transforms a position in WGS84 coordinates to drawing buffer coordinates.  This may produce different
  * results from SceneTransforms.wgs84ToWindowCoordinates when the browser zoom is not 100%, or on high-DPI displays.
- *
  * @param {Scene} scene The scene.
  * @param {Cartesian3} position The position in WGS84 (world) coordinates.
  * @param {Cartesian2} [result] An optional object to return the input position transformed to window coordinates.
  * @returns {Cartesian2} The modified result parameter or a new Cartesian2 instance if one was not provided.  This may be <code>undefined</code> if the input position is near the center of the ellipsoid.
- *
  * @example
  * // Output the window position of longitude/latitude (0, 0) every time the mouse moves.
  * const scene = widget.scene;
@@ -300,6 +299,9 @@ const projectedPosition = new Cartesian3();
 const positionInCartographic = new Cartographic();
 
 /**
+ * @param frameState
+ * @param position
+ * @param result
  * @private
  */
 SceneTransforms.computeActualWgs84Position = function (
@@ -357,6 +359,9 @@ const positionWC = new Cartesian3();
 const viewportTransform = new Matrix4();
 
 /**
+ * @param viewport
+ * @param position
+ * @param result
  * @private
  */
 SceneTransforms.clipToGLWindowCoordinates = function (
@@ -375,6 +380,9 @@ SceneTransforms.clipToGLWindowCoordinates = function (
 };
 
 /**
+ * @param scene
+ * @param windowPosition
+ * @param result
  * @private
  */
 SceneTransforms.transformWindowToDrawingBuffer = function (
@@ -396,6 +404,10 @@ const scratchNDC = new Cartesian4();
 const scratchWorldCoords = new Cartesian4();
 
 /**
+ * @param scene
+ * @param drawingBufferPosition
+ * @param depth
+ * @param result
  * @private
  */
 SceneTransforms.drawingBufferToWgs84Coordinates = function (

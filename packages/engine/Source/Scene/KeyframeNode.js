@@ -9,11 +9,9 @@ const LoadState = Object.freeze({
 
 /**
  * @alias KeyframeNode
- * @constructor
- *
+ * @class
  * @param {SpatialNode} spatialNode
  * @param {number} keyframe
- *
  * @private
  */
 function KeyframeNode(spatialNode, keyframe) {

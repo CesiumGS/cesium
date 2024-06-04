@@ -16,7 +16,6 @@ import PointCloudEyeDomeLightingShader from "../Shaders/PostProcessStages/PointC
 /**
  * Eye dome lighting. Does not support points with per-point translucency, but does allow translucent styling against the globe.
  * Requires support for EXT_frag_depth and WEBGL_draw_buffers extensions in WebGL 1.0.
- *
  * @private
  */
 function PointCloudEyeDomeLighting() {
@@ -253,9 +252,7 @@ PointCloudEyeDomeLighting.prototype.update = function (
  * <br /><br />
  * If this object was destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
- *
  * @returns {boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
- *
  * @see PointCloudEyeDomeLighting#destroy
  */
 PointCloudEyeDomeLighting.prototype.isDestroyed = function () {
@@ -269,12 +266,9 @@ PointCloudEyeDomeLighting.prototype.isDestroyed = function () {
  * Once an object is destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
  * assign the return value (<code>undefined</code>) to the object as done in the example.
- *
- * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
- *
+ * @throws {DeveloperError} This object was destroyed, i.e., destroy() was called.
  * @example
  * processor = processor && processor.destroy();
- *
  * @see PointCloudEyeDomeLighting#isDestroyed
  */
 PointCloudEyeDomeLighting.prototype.destroy = function () {

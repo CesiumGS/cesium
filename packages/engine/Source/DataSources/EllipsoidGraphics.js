@@ -9,7 +9,6 @@ import createPropertyDescriptor from "./createPropertyDescriptor.js";
  * @typedef {object} EllipsoidGraphics.ConstructorOptions
  *
  * Initialization options for the EllipsoidGraphics constructor
- *
  * @property {Property | boolean} [show=true] A boolean Property specifying the visibility of the ellipsoid.
  * @property {Property | Cartesian3} [radii] A {@link Cartesian3} Property specifying the radii of the ellipsoid.
  * @property {Property | Cartesian3} [innerRadii] A {@link Cartesian3} Property specifying the inner radii of the ellipsoid.
@@ -32,12 +31,9 @@ import createPropertyDescriptor from "./createPropertyDescriptor.js";
 
 /**
  * Describe an ellipsoid or sphere.  The center position and orientation are determined by the containing {@link Entity}.
- *
  * @alias EllipsoidGraphics
- * @constructor
- *
+ * @class
  * @param {EllipsoidGraphics.ConstructorOptions} [options] Object describing initialization options
- *
  * @demo {@link https://sandcastle.cesium.com/index.html?src=Spheres%20and%20Ellipsoids.html|Cesium Sandcastle Spheres and Ellipsoids Demo}
  */
 function EllipsoidGraphics(options) {
@@ -86,7 +82,6 @@ Object.defineProperties(EllipsoidGraphics.prototype, {
   /**
    * Gets the event that is raised whenever a property or sub-property is changed or modified.
    * @memberof EllipsoidGraphics.prototype
-   *
    * @type {Event}
    * @readonly
    */
@@ -247,7 +242,6 @@ Object.defineProperties(EllipsoidGraphics.prototype, {
 
 /**
  * Duplicates this instance.
- *
  * @param {EllipsoidGraphics} [result] The object onto which to store the result.
  * @returns {EllipsoidGraphics} The modified result parameter or a new instance if one was not provided.
  */
@@ -279,7 +273,6 @@ EllipsoidGraphics.prototype.clone = function (result) {
 /**
  * Assigns each unassigned property on this object to the value
  * of the same property on the provided source object.
- *
  * @param {EllipsoidGraphics} source The object to be merged into this object.
  */
 EllipsoidGraphics.prototype.merge = function (source) {

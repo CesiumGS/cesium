@@ -3,14 +3,12 @@ import CesiumMath from "./Math.js";
 
 /**
  * Defines functions for 2nd order polynomial functions of one variable with only real coefficients.
- *
  * @namespace QuadraticRealPolynomial
  */
 const QuadraticRealPolynomial = {};
 
 /**
  * Provides the discriminant of the quadratic equation from the supplied coefficients.
- *
  * @param {number} a The coefficient of the 2nd order monomial.
  * @param {number} b The coefficient of the 1st order monomial.
  * @param {number} c The coefficient of the 0th order monomial.
@@ -47,7 +45,6 @@ function addWithCancellationCheck(left, right, tolerance) {
 
 /**
  * Provides the real valued roots of the quadratic polynomial with the provided coefficients.
- *
  * @param {number} a The coefficient of the 2nd order monomial.
  * @param {number} b The coefficient of the 1st order monomial.
  * @param {number} c The coefficient of the 0th order monomial.

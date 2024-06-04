@@ -1,6 +1,7 @@
 import globals from "globals";
 import html from "eslint-plugin-html";
 import configCesium from "eslint-config-cesium";
+import jsdoc from "eslint-plugin-jsdoc";
 
 export default [
   {
@@ -42,13 +43,33 @@ export default [
   {
     files: ["packages/**/*.js", "Apps/**/*.js", "Specs/**/*.js", "**/*.html"],
     ...configCesium.configs.browser,
-    plugins: { html },
+    plugins: { html, jsdoc },
     rules: {
       ...configCesium.configs.browser.rules,
+      ...jsdoc.configs["flat/recommended-error"].rules,
       "no-unused-vars": [
         "error",
         { vars: "all", args: "none", caughtErrors: "none" },
       ],
+      "jsdoc/require-jsdoc": "off", // Only lint existing jsdoc
+      "jsdoc/no-undefined-types": "off", // Ignore types for now
+      "jsdoc/require-returns": "off",
+      "jsdoc/require-returns-description": "off",
+      "jsdoc/require-returns-type": "off",
+      "jsdoc/require-returns-check": "off",
+      "jsdoc/require-param-type": "off",
+      "jsdoc/require-param-description": "off",
+      "jsdoc/require-property-description": "off",
+      "jsdoc/require-description": "off",
+      "jsdoc/check-param-names": "off",
+      "jsdoc/check-property-names": "off",
+      "jsdoc/check-types": "off",
+      "jsdoc/valid-types": "off",
+      "jsdoc/tag-lines": "off",
+      "jsdoc/check-tag-names": "off",
+      "jsdoc/no-defaults": "off",
+      "jsdoc/no-multi-asterisks": "off",
+      "jsdoc/check-access": "off",
     },
   },
   {

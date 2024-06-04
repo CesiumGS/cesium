@@ -11,13 +11,10 @@ import Expression from "./Expression.js";
  * <p>
  * Implements the {@link StyleExpression} interface.
  * </p>
- *
  * @alias ConditionsExpression
- * @constructor
- *
+ * @class
  * @param {object} [conditionsExpression] The conditions expression defined using the 3D Tiles Styling language.
  * @param {object} [defines] Defines in the style.
- *
  * @example
  * const expression = new Cesium.ConditionsExpression({
  *     conditions : [
@@ -39,12 +36,9 @@ function ConditionsExpression(conditionsExpression, defines) {
 Object.defineProperties(ConditionsExpression.prototype, {
   /**
    * Gets the conditions expression defined in the 3D Tiles Styling language.
-   *
    * @memberof ConditionsExpression.prototype
-   *
    * @type {object}
    * @readonly
-   *
    * @default undefined
    */
   conditionsExpression: {
@@ -89,7 +83,6 @@ function setRuntime(expression, defines) {
  * object will be returned. If the result is a <code>Cartesian2</code>, <code>Cartesian3</code>, or <code>Cartesian4</code>,
  * a {@link Cartesian2}, {@link Cartesian3}, or {@link Cartesian4} object will be returned. If the <code>result</code> argument is
  * a {@link Color}, the {@link Cartesian4} value is converted to a {@link Color} and then returned.
- *
  * @param {Cesium3DTileFeature} feature The feature whose properties may be used as variables in the expression.
  * @param {object} [result] The object onto which to store the result.
  * @returns {boolean|number|string|RegExp|Cartesian2|Cartesian3|Cartesian4|Color} The result of evaluating the expression.
@@ -134,14 +127,11 @@ ConditionsExpression.prototype.evaluateColor = function (feature, result) {
 /**
  * Gets the shader function for this expression.
  * Returns undefined if the shader function can't be generated from this expression.
- *
  * @param {string} functionSignature Signature of the generated function.
  * @param {object} variableSubstitutionMap Maps variable names to shader variable names.
  * @param {object} shaderState Stores information about the generated shader function, including whether it is translucent.
  * @param {string} returnType The return type of the generated function.
- *
  * @returns {string} The shader function.
- *
  * @private
  */
 ConditionsExpression.prototype.getShaderFunction = function (
@@ -187,9 +177,7 @@ ConditionsExpression.prototype.getShaderFunction = function (
 
 /**
  * Gets the variables used by the expression.
- *
  * @returns {string[]} The variables used by the expression.
- *
  * @private
  */
 ConditionsExpression.prototype.getVariables = function () {

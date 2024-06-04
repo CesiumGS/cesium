@@ -3,7 +3,6 @@ import defaultValue from "../../Core/defaultValue.js";
 
 /**
  * The batch texture stage is responsible for setting up the batch texture for the primitive.
- *
  * @namespace BatchTexturePipelineStage
  * @private
  */
@@ -14,10 +13,9 @@ const BatchTexturePipelineStage = {
 /**
  * Processes a primitive. This modifies the following parts of the render resources:
  * <ul>
- *  <li>adds uniforms for the batch texture</li>
- *  <li>adds defines for multiline batch textures</li>
+ * <li>adds uniforms for the batch texture</li>
+ * <li>adds defines for multiline batch textures</li>
  * </ul>
- *
  * @param {PrimitiveRenderResources} renderResources The render resources for this primitive.
  * @param {ModelComponents.Primitive} primitive The primitive.
  * @param {FrameState} frameState The frame state.

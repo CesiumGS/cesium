@@ -23,7 +23,7 @@ const debugShowPackedDepth = false;
 /**
  * Handles buffers, drawing, and deriving commands needed for classifying translucent 3D Tiles.
  * Uses a depth texture, so classification on translucent 3D Tiles is not available in Internet Explorer.
- *
+ * @param context
  * @private
  */
 function TranslucentTileClassification(context) {
@@ -75,7 +75,6 @@ Object.defineProperties(TranslucentTileClassification.prototype, {
   /**
    * Gets whether or not translucent depth was rendered.
    * @memberof TranslucentTileClassification.prototype
-   *
    * @type {boolean}
    * @readonly
    */

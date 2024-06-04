@@ -86,6 +86,7 @@ function validateStencilOperation(stencilOperation) {
 }
 
 /**
+ * @param renderState
  * @private
  */
 function RenderState(renderState) {
@@ -371,18 +372,16 @@ let renderStateCache = {};
  * Validates and then finds or creates an immutable render state, which defines the pipeline
  * state for a {@link DrawCommand} or {@link ClearCommand}.  All inputs states are optional.  Omitted states
  * use the defaults shown in the example below.
- *
  * @param {object} [renderState] The states defining the render state as shown in the example below.
- *
- * @exception {RuntimeError} renderState.lineWidth is out of range.
- * @exception {DeveloperError} Invalid renderState.frontFace.
- * @exception {DeveloperError} Invalid renderState.cull.face.
- * @exception {DeveloperError} scissorTest.rectangle.width and scissorTest.rectangle.height must be greater than or equal to zero.
- * @exception {DeveloperError} renderState.depthRange.near can't be greater than renderState.depthRange.far.
- * @exception {DeveloperError} renderState.depthRange.near must be greater than or equal to zero.
- * @exception {DeveloperError} renderState.depthRange.far must be less than or equal to zero.
- * @exception {DeveloperError} Invalid renderState.depthTest.func.
- * @exception {DeveloperError} renderState.blending.color components must be greater than or equal to zero and less than or equal to one
+ * @throws {RuntimeError} renderState.lineWidth is out of range.
+ * @throws {DeveloperError} Invalid renderState.frontFace.
+ * @throws {DeveloperError} Invalid renderState.cull.face.
+ * @throws {DeveloperError} scissorTest.rectangle.width and scissorTest.rectangle.height must be greater than or equal to zero.
+ * @throws {DeveloperError} renderState.depthRange.near can't be greater than renderState.depthRange.far.
+ * @throws {DeveloperError} renderState.depthRange.near must be greater than or equal to zero.
+ * @throws {DeveloperError} renderState.depthRange.far must be less than or equal to zero.
+ * @throws {DeveloperError} Invalid renderState.depthTest.func.
+ * @throws {DeveloperError} renderState.blending.color components must be greater than or equal to zero and less than or equal to one
  * @exception {DeveloperError} Invalid renderState.blending.equationRgb.
  * @exception {DeveloperError} Invalid renderState.blending.equationAlpha.
  * @exception {DeveloperError} Invalid renderState.blending.functionSourceRgb.
@@ -525,6 +524,7 @@ RenderState.fromCache = function (renderState) {
 };
 
 /**
+ * @param renderState
  * @private
  */
 RenderState.removeFromCache = function (renderState) {

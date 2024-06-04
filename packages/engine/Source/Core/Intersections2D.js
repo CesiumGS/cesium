@@ -6,7 +6,6 @@ import DeveloperError from "./DeveloperError.js";
 
 /**
  * Contains functions for operating on 2D triangles.
- *
  * @namespace Intersections2D
  */
 const Intersections2D = {};
@@ -15,7 +14,6 @@ const Intersections2D = {};
  * Splits a 2D triangle at given axis-aligned threshold value and returns the resulting
  * polygon on a given side of the threshold.  The resulting polygon may have 0, 1, 2,
  * 3, or 4 vertices.
- *
  * @param {number} threshold The threshold coordinate value at which to clip the triangle.
  * @param {boolean} keepAbove true to keep the portion of the triangle above the threshold, or false
  *                            to keep the portion below.
@@ -32,7 +30,6 @@ const Intersections2D = {};
  *                     index of each of the two original vertices forming the line segment that
  *                     the new vertex lies on, and the fraction of the distance from the first
  *                     vertex to the second one.
- *
  * @example
  * const result = Cesium.Intersections2D.clipTriangleAtAxisAlignedThreshold(0.5, false, 0.2, 0.6, 0.4);
  * // result === [2, 0, -1, 1, 0, 0.25, -1, 1, 2, 0.5]
@@ -216,7 +213,6 @@ Intersections2D.clipTriangleAtAxisAlignedThreshold = function (
 
 /**
  * Compute the barycentric coordinates of a 2D position within a 2D triangle.
- *
  * @param {number} x The x coordinate of the position for which to find the barycentric coordinates.
  * @param {number} y The y coordinate of the position for which to find the barycentric coordinates.
  * @param {number} x1 The x coordinate of the triangle's first vertex.
@@ -228,7 +224,6 @@ Intersections2D.clipTriangleAtAxisAlignedThreshold = function (
  * @param {Cartesian3} [result] The instance into to which to copy the result.  If this parameter
  *                     is undefined, a new instance is created and returned.
  * @returns {Cartesian3} The barycentric coordinates of the position within the triangle.
- *
  * @example
  * const result = Cesium.Intersections2D.computeBarycentricCoordinates(0.0, 0.0, 0.0, 1.0, -1, -0.5, 1, -0.5);
  * // result === new Cesium.Cartesian3(1.0 / 3.0, 1.0 / 3.0, 1.0 / 3.0);
@@ -293,7 +288,6 @@ Intersections2D.computeBarycentricCoordinates = function (
 
 /**
  * Compute the intersection between 2 line segments
- *
  * @param {number} x00 The x coordinate of the first line's first vertex.
  * @param {number} y00 The y coordinate of the first line's first vertex.
  * @param {number} x01 The x coordinate of the first line's second vertex.
@@ -305,7 +299,6 @@ Intersections2D.computeBarycentricCoordinates = function (
  * @param {Cartesian2} [result] The instance into to which to copy the result. If this parameter
  *                     is undefined, a new instance is created and returned.
  * @returns {Cartesian2} The intersection point, undefined if there is no intersection point or lines are coincident.
- *
  * @example
  * const result = Cesium.Intersections2D.computeLineSegmentLineSegmentIntersection(0.0, 0.0, 0.0, 2.0, -1, 1, 1, 1);
  * // result === new Cesium.Cartesian2(0.0, 1.0);

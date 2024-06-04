@@ -178,6 +178,10 @@ function addShiftedPositions(positions, left, scalar, calculatedPositions) {
 }
 
 /**
+ * @param attribute
+ * @param value
+ * @param front
+ * @param back
  * @private
  */
 CorridorGeometryLibrary.addAttribute = function (
@@ -205,6 +209,7 @@ const scratchForwardProjection = new Cartesian3();
 const scratchBackwardProjection = new Cartesian3();
 
 /**
+ * @param params
  * @private
  */
 CorridorGeometryLibrary.computePositions = function (params) {

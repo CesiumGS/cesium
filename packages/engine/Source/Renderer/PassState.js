@@ -1,14 +1,13 @@
 /**
  * The state for a particular rendering pass.  This is used to supplement the state
  * in a command being executed.
- *
+ * @param context
  * @private
- * @constructor
+ * @class
  */
 function PassState(context) {
   /**
    * The context used to execute commands for this pass.
-   *
    * @type {Context}
    */
   this.context = context;
@@ -17,7 +16,6 @@ function PassState(context) {
    * The framebuffer to render to.  This framebuffer is used unless a {@link DrawCommand}
    * or {@link ClearCommand} explicitly define a framebuffer, which is used for off-screen
    * rendering.
-   *
    * @type {Framebuffer}
    * @default undefined
    */
@@ -29,7 +27,6 @@ function PassState(context) {
    * <p>
    * When this is <code>undefined</code>, the {@link DrawCommand}'s property is used.
    * </p>
-   *
    * @type {boolean}
    * @default undefined
    */
@@ -41,7 +38,6 @@ function PassState(context) {
    * <p>
    * When this is <code>undefined</code>, the {@link DrawCommand}'s property is used.
    * </p>
-   *
    * @type {object}
    * @default undefined
    */

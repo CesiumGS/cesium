@@ -4,7 +4,9 @@ import DeveloperError from "./DeveloperError.js";
  * Wraps a function on the provided objects with another function called in the
  * object's context so that the new function is always called immediately
  * before the old one.
- *
+ * @param obj
+ * @param oldFunction
+ * @param newFunction
  * @private
  */
 function wrapFunction(obj, oldFunction, newFunction) {

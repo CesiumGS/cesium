@@ -13,8 +13,7 @@ import DeveloperError from "./DeveloperError.js";
  * Provides geocoding through an external service. This type describes an interface and
  * is not intended to be used.
  * @alias GeocoderService
- * @constructor
- *
+ * @class
  * @see BingMapsGeocoderService
  * @see PeliasGeocoderService
  * @see OpenCageGeocoderService
@@ -51,7 +50,6 @@ GeocoderService.getCreditsFromResult = function (geocoderResult) {
 
 /**
  * @function
- *
  * @param {string} query The query to be sent to the geocoder service
  * @param {GeocodeType} [type=GeocodeType.SEARCH] The type of geocode to perform.
  * @returns {Promise<GeocoderService.Result[]>}

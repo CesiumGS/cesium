@@ -62,6 +62,7 @@
     "eslint": "^9.1.1",
     "eslint-config-cesium": "^11.0.1",
     "eslint-plugin-html": "^8.1.1",
+    "eslint-plugin-jsdoc": "^48.2.7",
     "express": "^4.17.1",
     "globals": "^15.1.0",
     "globby": "^14.0.0",

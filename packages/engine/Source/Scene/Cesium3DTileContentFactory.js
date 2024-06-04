@@ -8,7 +8,6 @@ import RuntimeError from "../Core/RuntimeError.js";
 
 /**
  * Maps a tile's magic field in its header to a new content object for the tile's payload.
- *
  * @private
  */
 const Cesium3DTileContentFactory = {

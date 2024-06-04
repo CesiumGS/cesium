@@ -6,11 +6,9 @@ import DeveloperError from "./DeveloperError.js";
 /**
  * Given a relative Uri and a base Uri, returns the absolute Uri of the relative Uri.
  * @function
- *
  * @param {string} relative The relative Uri.
  * @param {string} [base] The base Uri.
  * @returns {string} The absolute Uri of the given relative Uri.
- *
  * @example
  * //absolute Uri will be "https://test.com/awesome.png";
  * const absoluteUri = Cesium.getAbsoluteUri('awesome.png', 'https://test.com');

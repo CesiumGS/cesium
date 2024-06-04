@@ -8,7 +8,6 @@ import createPropertyDescriptor from "./createPropertyDescriptor.js";
  * @typedef {object} BillboardGraphics.ConstructorOptions
  *
  * Initialization options for the BillboardGraphics constructor
- *
  * @property {Property | boolean} [show=true] A boolean Property specifying the visibility of the billboard.
  * @property {Property | string | HTMLCanvasElement} [image] A Property specifying the Image, URI, or Canvas to use for the billboard.
  * @property {Property | number} [scale=1.0] A numeric Property specifying the scale to apply to the image size.
@@ -39,12 +38,9 @@ import createPropertyDescriptor from "./createPropertyDescriptor.js";
  * Example billboards
  * </div>
  * </p>
- *
  * @alias BillboardGraphics
- * @constructor
- *
+ * @class
  * @param {BillboardGraphics.ConstructorOptions} [options] Object describing initialization options
- *
  * @demo {@link https://sandcastle.cesium.com/index.html?src=Billboards.html|Cesium Sandcastle Billboard Demo}
  */
 function BillboardGraphics(options) {
@@ -97,7 +93,6 @@ Object.defineProperties(BillboardGraphics.prototype, {
   /**
    * Gets the event that is raised whenever a property or sub-property is changed or modified.
    * @memberof BillboardGraphics.prototype
-   *
    * @type {Event}
    * @readonly
    */
@@ -334,7 +329,6 @@ Object.defineProperties(BillboardGraphics.prototype, {
 
 /**
  * Duplicates this instance.
- *
  * @param {BillboardGraphics} [result] The object onto which to store the result.
  * @returns {BillboardGraphics} The modified result parameter or a new instance if one was not provided.
  */
@@ -368,7 +362,6 @@ BillboardGraphics.prototype.clone = function (result) {
 /**
  * Assigns each unassigned property on this object to the value
  * of the same property on the provided source object.
- *
  * @param {BillboardGraphics} source The object to be merged into this object.
  */
 BillboardGraphics.prototype.merge = function (source) {

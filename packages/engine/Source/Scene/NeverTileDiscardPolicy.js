@@ -1,9 +1,8 @@
 /**
  * A {@link TileDiscardPolicy} specifying that tile images should never be discard.
- *
+ * @param options
  * @alias NeverTileDiscardPolicy
- * @constructor
- *
+ * @class
  * @see DiscardMissingTileImagePolicy
  */
 function NeverTileDiscardPolicy(options) {}
@@ -18,7 +17,6 @@ NeverTileDiscardPolicy.prototype.isReady = function () {
 
 /**
  * Given a tile image, decide whether to discard that image.
- *
  * @param {HTMLImageElement} image An image to test.
  * @returns {boolean} True if the image should be discarded; otherwise, false.
  */

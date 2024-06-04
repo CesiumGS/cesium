@@ -3,7 +3,6 @@ import DoublyLinkedList from "../Core/DoublyLinkedList.js";
 
 /**
  * Stores tiles with content loaded.
- *
  * @private
  */
 function Cesium3DTilesetCache() {

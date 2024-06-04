@@ -54,12 +54,10 @@ function sort(array, compare, userDefinedObject, start, end) {
 
 /**
  * A stable merge sort.
- *
  * @function mergeSort
  * @param {Array} array The array to sort.
  * @param {mergeSortComparator} comparator The function to use to compare elements in the array.
  * @param {*} [userDefinedObject] Any item to pass as the third parameter to <code>comparator</code>.
- *
  * @example
  * // Assume array contains BoundingSpheres in world coordinates.
  * // Sort them in ascending order of distance from the camera.
@@ -95,14 +93,12 @@ function mergeSort(array, comparator, userDefinedObject) {
 /**
  * A function used to compare two items while performing a merge sort.
  * @callback mergeSortComparator
- *
  * @param {*} a An item in the array.
  * @param {*} b An item in the array.
  * @param {*} [userDefinedObject] An object that was passed to {@link mergeSort}.
  * @returns {number} Returns a negative value if <code>a</code> is less than <code>b</code>,
  *          a positive value if <code>a</code> is greater than <code>b</code>, or
  *          0 if <code>a</code> is equal to <code>b</code>.
- *
  * @example
  * function compareNumbers(a, b, userDefinedObject) {
  *     return a - b;

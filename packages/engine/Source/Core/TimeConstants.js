@@ -1,10 +1,7 @@
 /**
  * Constants for time conversions like those done by {@link JulianDate}.
- *
  * @namespace TimeConstants
- *
  * @see JulianDate
- *
  * @private
  */
 const TimeConstants = {

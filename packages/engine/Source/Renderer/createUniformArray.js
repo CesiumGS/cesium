@@ -10,8 +10,12 @@ import Matrix4 from "../Core/Matrix4.js";
 import RuntimeError from "../Core/RuntimeError.js";
 
 /**
+ * @param gl
+ * @param activeUniform
+ * @param uniformName
+ * @param locations
  * @private
- * @constructor
+ * @class
  */
 function createUniformArray(gl, activeUniform, uniformName, locations) {
   switch (activeUniform.type) {
@@ -67,8 +71,12 @@ function createUniformArray(gl, activeUniform, uniformName, locations) {
 }
 
 /**
+ * @param gl
+ * @param activeUniform
+ * @param uniformName
+ * @param locations
  * @private
- * @constructor
+ * @class
  */
 function UniformArrayFloat(gl, activeUniform, uniformName, locations) {
   const length = locations.length;
@@ -109,8 +117,12 @@ UniformArrayFloat.prototype.set = function () {
 ///////////////////////////////////////////////////////////////////////////
 
 /**
+ * @param gl
+ * @param activeUniform
+ * @param uniformName
+ * @param locations
  * @private
- * @constructor
+ * @class
  */
 function UniformArrayFloatVec2(gl, activeUniform, uniformName, locations) {
   const length = locations.length;
@@ -153,8 +165,12 @@ UniformArrayFloatVec2.prototype.set = function () {
 ///////////////////////////////////////////////////////////////////////////
 
 /**
+ * @param gl
+ * @param activeUniform
+ * @param uniformName
+ * @param locations
  * @private
- * @constructor
+ * @class
  */
 function UniformArrayFloatVec3(gl, activeUniform, uniformName, locations) {
   const length = locations.length;
@@ -215,8 +231,12 @@ UniformArrayFloatVec3.prototype.set = function () {
 ///////////////////////////////////////////////////////////////////////////
 
 /**
+ * @param gl
+ * @param activeUniform
+ * @param uniformName
+ * @param locations
  * @private
- * @constructor
+ * @class
  */
 function UniformArrayFloatVec4(gl, activeUniform, uniformName, locations) {
   const length = locations.length;
@@ -282,8 +302,12 @@ UniformArrayFloatVec4.prototype.set = function () {
 ///////////////////////////////////////////////////////////////////////////
 
 /**
+ * @param gl
+ * @param activeUniform
+ * @param uniformName
+ * @param locations
  * @private
- * @constructor
+ * @class
  */
 function UniformArraySampler(gl, activeUniform, uniformName, locations) {
   const length = locations.length;
@@ -332,8 +356,12 @@ UniformArraySampler.prototype._setSampler = function (textureUnitIndex) {
 ///////////////////////////////////////////////////////////////////////////
 
 /**
+ * @param gl
+ * @param activeUniform
+ * @param uniformName
+ * @param locations
  * @private
- * @constructor
+ * @class
  */
 function UniformArrayInt(gl, activeUniform, uniformName, locations) {
   const length = locations.length;
@@ -374,8 +402,12 @@ UniformArrayInt.prototype.set = function () {
 ///////////////////////////////////////////////////////////////////////////
 
 /**
+ * @param gl
+ * @param activeUniform
+ * @param uniformName
+ * @param locations
  * @private
- * @constructor
+ * @class
  */
 function UniformArrayIntVec2(gl, activeUniform, uniformName, locations) {
   const length = locations.length;
@@ -418,8 +450,12 @@ UniformArrayIntVec2.prototype.set = function () {
 ///////////////////////////////////////////////////////////////////////////
 
 /**
+ * @param gl
+ * @param activeUniform
+ * @param uniformName
+ * @param locations
  * @private
- * @constructor
+ * @class
  */
 function UniformArrayIntVec3(gl, activeUniform, uniformName, locations) {
   const length = locations.length;
@@ -462,8 +498,12 @@ UniformArrayIntVec3.prototype.set = function () {
 ///////////////////////////////////////////////////////////////////////////
 
 /**
+ * @param gl
+ * @param activeUniform
+ * @param uniformName
+ * @param locations
  * @private
- * @constructor
+ * @class
  */
 function UniformArrayIntVec4(gl, activeUniform, uniformName, locations) {
   const length = locations.length;
@@ -506,8 +546,12 @@ UniformArrayIntVec4.prototype.set = function () {
 ///////////////////////////////////////////////////////////////////////////
 
 /**
+ * @param gl
+ * @param activeUniform
+ * @param uniformName
+ * @param locations
  * @private
- * @constructor
+ * @class
  */
 function UniformArrayMat2(gl, activeUniform, uniformName, locations) {
   const length = locations.length;
@@ -550,8 +594,12 @@ UniformArrayMat2.prototype.set = function () {
 ///////////////////////////////////////////////////////////////////////////
 
 /**
+ * @param gl
+ * @param activeUniform
+ * @param uniformName
+ * @param locations
  * @private
- * @constructor
+ * @class
  */
 function UniformArrayMat3(gl, activeUniform, uniformName, locations) {
   const length = locations.length;
@@ -594,8 +642,12 @@ UniformArrayMat3.prototype.set = function () {
 ///////////////////////////////////////////////////////////////////////////
 
 /**
+ * @param gl
+ * @param activeUniform
+ * @param uniformName
+ * @param locations
  * @private
- * @constructor
+ * @class
  */
 function UniformArrayMat4(gl, activeUniform, uniformName, locations) {
   const length = locations.length;

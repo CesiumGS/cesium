@@ -3542,7 +3542,6 @@ function load(dataSource, entityCollection, data, options) {
  * @typedef {object} KmlDataSource.LoadOptions
  *
  * Initialization options for the `load` method.
- *
  * @property {string} [sourceUri] Overrides the url to use for resolving relative links and other KML network features.
  * @property {boolean} [clampToGround=false] true if we want the geometry features (Polygons, LineStrings and LinearRings) clamped to the ground.
  * @property {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The global ellipsoid used for geographical calculations.
@@ -3553,17 +3552,14 @@ function load(dataSource, entityCollection, data, options) {
  * @typedef {object} KmlDataSource.ConstructorOptions
  *
  * Options for constructing a new KmlDataSource, or calling the static `load` method.
- *
  * @property {Camera} [camera] The camera that is used for viewRefreshModes and sending camera properties to network links.
  * @property {HTMLCanvasElement} [canvas] The canvas that is used for sending viewer properties to network links.
  * @property {Credit|string} [credit] A credit for the data source, which is displayed on the canvas.
- *
  * @property {string} [sourceUri] Overrides the url to use for resolving relative links and other KML network features.
  * @property {boolean} [clampToGround=false] true if we want the geometry features (Polygons, LineStrings and LinearRings) clamped to the ground.
  * @property {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The global ellipsoid used for geographical calculations.
  * @property {Element|string} [screenOverlayContainer] A container for ScreenOverlay images.
-
-*/
+ */
 
 /**
  * A {@link DataSource} which processes Keyhole Markup Language 2.2 (KML).
@@ -3579,17 +3575,12 @@ function load(dataSource, entityCollection, data, options) {
  * is exposed via an instance of {@link KmlFeatureData}, which is added to each {@link Entity}
  * under the <code>kml</code> property.
  * </p>
- *
  * @alias KmlDataSource
- * @constructor
- *
+ * @class
  * @param {KmlDataSource.ConstructorOptions} [options] Object describing initialization options
- *
  * @see {@link http://www.opengeospatial.org/standards/kml/|Open Geospatial Consortium KML Standard}
  * @see {@link https://developers.google.com/kml/|Google KML Documentation}
- *
  * @demo {@link https://sandcastle.cesium.com/index.html?src=KML.html|Cesium Sandcastle KML Demo}
- *
  * @example
  * const viewer = new Cesium.Viewer('cesiumContainer');
  * viewer.dataSources.add(Cesium.KmlDataSource.load('../../SampleData/facilities.kmz',
@@ -3621,7 +3612,6 @@ function KmlDataSource(options) {
   /**
    * The current size of this Canvas will be used to populate the Link parameters
    * for client height and width.
-   *
    * @type {HTMLCanvasElement | undefined}
    */
   this.canvas = canvas;
@@ -3631,7 +3621,6 @@ function KmlDataSource(options) {
    * populate various camera parameters when making network requests.
    * Camera movement will determine when to trigger NetworkLink refresh if
    * <code>viewRefreshMode</code> is <code>onStop</code>.
-   *
    * @type {Camera | undefined}
    */
   this.camera = camera;
@@ -3666,10 +3655,8 @@ function KmlDataSource(options) {
 
 /**
  * Creates a Promise to a new instance loaded with the provided KML data.
- *
  * @param {Resource|string|Document|Blob} data A url, parsed KML document, or Blob containing binary KMZ data or a parsed KML document.
  * @param {KmlDataSource.ConstructorOptions} [options] An object specifying configuration options
- *
  * @returns {Promise<KmlDataSource>} A promise that will resolve to a new KmlDataSource instance once the KML is loaded.
  */
 KmlDataSource.load = function (data, options) {
@@ -3794,7 +3781,6 @@ Object.defineProperties(KmlDataSource.prototype, {
 
   /**
    * Gets or sets the clustering options for this data source. This object can be shared between multiple data sources.
-   *
    * @memberof KmlDataSource.prototype
    * @type {EntityCluster}
    */
@@ -3835,10 +3821,8 @@ Object.defineProperties(KmlDataSource.prototype, {
 
 /**
  * Asynchronously loads the provided KML data, replacing any existing data.
- *
  * @param {Resource|string|Document|Blob} data A url, parsed KML document, or Blob containing binary KMZ data or a parsed KML document.
  * @param {KmlDataSource.LoadOptions} [options] An object specifying configuration options
- *
  * @returns {Promise<KmlDataSource>} A promise that will resolve to this instances once the KML is loaded.
  */
 KmlDataSource.prototype.load = function (data, options) {
@@ -4111,7 +4095,6 @@ const entitiesToIgnore = new AssociativeArray();
 
 /**
  * Updates any NetworkLink that require updating.
- *
  * @param {JulianDate} time The simulation time.
  * @returns {boolean} True if this data source is ready to be displayed at the provided time, false otherwise.
  */
@@ -4248,7 +4231,7 @@ KmlDataSource.prototype.update = function (time) {
 /**
  * Contains KML Feature data loaded into the <code>Entity.kml</code> property by {@link KmlDataSource}.
  * @alias KmlFeatureData
- * @constructor
+ * @class
  */
 function KmlFeatureData() {
   /**

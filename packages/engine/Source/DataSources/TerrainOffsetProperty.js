@@ -14,6 +14,10 @@ import Property from "./Property.js";
 const scratchPosition = new Cartesian3();
 
 /**
+ * @param scene
+ * @param positionProperty
+ * @param heightReferenceProperty
+ * @param extrudedHeightReferenceProperty
  * @private
  */
 function TerrainOffsetProperty(
@@ -83,7 +87,6 @@ Object.defineProperties(TerrainOffsetProperty.prototype, {
   /**
    * Gets a value indicating if this property is constant.
    * @memberof TerrainOffsetProperty.prototype
-   *
    * @type {boolean}
    * @readonly
    */
@@ -95,7 +98,6 @@ Object.defineProperties(TerrainOffsetProperty.prototype, {
   /**
    * Gets the event that is raised whenever the definition of this property changes.
    * @memberof TerrainOffsetProperty.prototype
-   *
    * @type {Event}
    * @readonly
    */
@@ -149,7 +151,8 @@ TerrainOffsetProperty.prototype._updateClamping = function () {
 
 /**
  * Gets the height relative to the terrain based on the positions.
- *
+ * @param time
+ * @param result
  * @returns {Cartesian3} The offset
  */
 TerrainOffsetProperty.prototype.getValue = function (time, result) {
