@@ -120,7 +120,7 @@ MetadataPipelineStage.process = function (
     "SIGZ",
     "SIGR",
   ]);
-  console.log(`Setting pickId to ${pickId}`);
+  //console.log(`Setting pickId to ${pickId}`);
   renderResources.pickId = pickId;
 };
 
@@ -207,7 +207,7 @@ function generatePropertyTexturePropertyPickId(
     );
     if (!defined(propertyTextureInfo)) {
       console.log(
-        "WARNING: Property texture property for variable name ${metadataVariableName} not found - skipping"
+        `WARNING: Property texture property for variable name ${metadataVariableName} not found - skipping`
       );
       continue;
     }

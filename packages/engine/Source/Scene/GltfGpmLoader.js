@@ -283,10 +283,12 @@ GltfGpmLoader.prototype.obtainPpeTexturesMetadataSchema = function () {
     key
   );
   if (defined(ppeTexturesMetadataSchema)) {
-    console.log(`Using cached schema for GPM PPE textures with key ${key}`);
+    // XXX_UNCERTAINTY Debug log
+    //console.log(`Using cached schema for GPM PPE textures with key ${key}`);
     return ppeTexturesMetadataSchema;
   }
 
+  // XXX_UNCERTAINTY Debug log - if caching works, this should be printed only ONCE!
   console.log(`Creating schema for GPM PPE textures with key ${key}`);
   const schemaId = `PPE_TEXTURE_SCHEMA_${GltfGpmLoader.ppeTexturesMetadataSchemaCache.size}`;
   const ppeTexturesMetadataSchemaJson = {
@@ -398,9 +400,10 @@ GltfGpmLoader.prototype.process = function (frameState) {
       const ppePropertyName = traits.source;
       const metadataClass = ppeTexturesMetadataSchema.classes[classId];
 
-      console.log(
-        `Creating property texture with class ${classId} and property ${ppePropertyName}`
-      );
+      // XXX_UNCERTAINTY Debug log
+      //console.log(
+      //  `Creating property texture with class ${classId} and property ${ppePropertyName}`
+      //);
 
       const ppeTextureAsPropertyTexture = {
         class: classId,
