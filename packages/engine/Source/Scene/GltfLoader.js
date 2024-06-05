@@ -2702,18 +2702,20 @@ function parse(loader, gltf, supportedImageFormats, frameState) {
       if (defined(primitives)) {
         for (const primitive of primitives) {
           const primitiveExtensions = primitive.extensions;
-          const gpmExtension = primitiveExtensions.NGA_gpm_local;
-          if (defined(gpmExtension)) {
-            // XXX_UNCERTAINTY Hooking in for the GPM loading here:
-            console.log("Loading GPM");
-            const promise = loadGpm(
-              loader,
-              gltf,
-              gpmExtension,
-              supportedImageFormats,
-              frameState
-            );
-            loader._loaderPromises.push(promise);
+          if (defined(primitiveExtensions)) {
+            const gpmExtension = primitiveExtensions.NGA_gpm_local;
+            if (defined(gpmExtension)) {
+              // XXX_UNCERTAINTY Hooking in for the GPM loading here:
+              // console.log("Loading GPM");
+              const promise = loadGpm(
+                loader,
+                gltf,
+                gpmExtension,
+                supportedImageFormats,
+                frameState
+              );
+              loader._loaderPromises.push(promise);
+            }
           }
         }
       }
