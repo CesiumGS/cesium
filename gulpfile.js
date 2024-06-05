@@ -1695,7 +1695,7 @@ async function buildSandcastle() {
     streams.push(fileStream);
 
     const dataStream = gulp
-      .src(["Apps/SampleData/**"])
+      .src(["Apps/SampleData/**"], { encoding: false })
       .pipe(gulp.dest("Build/Sandcastle/SampleData"));
     streams.push(dataStream);
   }
