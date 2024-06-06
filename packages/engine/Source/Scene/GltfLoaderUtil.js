@@ -142,10 +142,7 @@ GltfLoaderUtil.createModelTextureReader = function (options) {
   let texCoord = defaultValue(textureInfo.texCoord, 0);
   let transform;
 
-  const textureTransform = defaultValue(
-    textureInfo.extensions,
-    defaultValue.EMPTY_OBJECT
-  ).KHR_texture_transform;
+  const textureTransform = textureInfo.extensions?.KHR_texture_transform;
 
   if (defined(textureTransform)) {
     texCoord = defaultValue(textureTransform.texCoord, texCoord);
@@ -177,6 +174,7 @@ GltfLoaderUtil.createModelTextureReader = function (options) {
   modelTextureReader.index = textureInfo.index;
   modelTextureReader.texture = texture;
   modelTextureReader.texCoord = texCoord;
+  modelTextureReader.scale = textureInfo.scale;
   modelTextureReader.transform = transform;
   modelTextureReader.channels = channels;
 
