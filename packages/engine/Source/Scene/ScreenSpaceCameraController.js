@@ -220,18 +220,18 @@ function ScreenSpaceCameraController(scene) {
   const ellipsoid = defaultValue(scene.ellipsoid, Ellipsoid.default);
 
   /**
-   * The minimum height the camera must be before picking the terrain or scene content instead of the ellipsoid.
+   * The minimum height the camera must be before picking the terrain or scene content instead of the ellipsoid. Defaults to scene.ellipsoid.minimumRadius * 0.025 when another ellipsoid than WGS84 is used.
    * @type {number}
-   * @default 150000.0
+   * @default 150000.0 or scene.ellipsoid.minimumRadius * 0.025
    */
   this.minimumPickingTerrainHeight = Ellipsoid.WGS84.equals(ellipsoid)
     ? 150000.0
     : ellipsoid.minimumRadius * 0.025;
   this._minimumPickingTerrainHeight = this.minimumPickingTerrainHeight;
   /**
-   * The minimum distance the camera must be before testing for collision with terrain when zoom with inertia.
+   * The minimum distance the camera must be before testing for collision with terrain when zoom with inertia. Default to scene.ellipsoid.minimumRadius * 0.00063 when another ellipsoid than WGS84 is used.
    * @type {number}
-   * @default 4000.0
+   * @default 4000.0 or scene.ellipsoid.minimumRadius * 0.00063
    */
   this.minimumPickingTerrainDistanceWithInertia = Ellipsoid.WGS84.equals(
     ellipsoid
@@ -239,9 +239,9 @@ function ScreenSpaceCameraController(scene) {
     ? 4000.0
     : ellipsoid.minimumRadius * 0.00063;
   /**
-   * The minimum height the camera must be before testing for collision with terrain.
+   * The minimum height the camera must be before testing for collision with terrain. Default to scene.ellipsoid.minimumRadius * 0.0025 when another ellipsoid than WGS84 is used.
    * @type {number}
-   * @default 15000.0
+   * @default 15000.0 or scene.ellipsoid.minimumRadius * 0.0025.
    */
   this.minimumCollisionTerrainHeight = Ellipsoid.WGS84.equals(ellipsoid)
     ? 15000.0
@@ -249,9 +249,9 @@ function ScreenSpaceCameraController(scene) {
   this._minimumCollisionTerrainHeight = this.minimumCollisionTerrainHeight;
   /**
    * The minimum height the camera must be before switching from rotating a track ball to
-   * free look when clicks originate on the sky or in space.
+   * free look when clicks originate on the sky or in space. Defaults to ellipsoid.minimumRadius * 1.175 when another ellipsoid than WGS84 is used.
    * @type {number}
-   * @default 7500000.0
+   * @default 7500000.0 or scene.ellipsoid.minimumRadius * 1.175
    */
   this.minimumTrackBallHeight = Ellipsoid.WGS84.equals(ellipsoid)
     ? 7500000.0
