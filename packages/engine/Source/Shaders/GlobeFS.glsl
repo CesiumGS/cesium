@@ -207,7 +207,7 @@ vec4 sampleAndBlend(
 
 #ifdef APPLY_COLOR_TO_ALPHA
     vec3 colorDiff = abs(color.rgb - colorToAlpha.rgb);
-    colorDiff.r = max(max(colorDiff.r, colorDiff.g), colorDiff.b);
+    colorDiff.r = czm_maximumComponent(colorDiff);
     alpha = czm_branchFreeTernary(colorDiff.r < colorToAlpha.a, 0.0, alpha);
 #endif
 

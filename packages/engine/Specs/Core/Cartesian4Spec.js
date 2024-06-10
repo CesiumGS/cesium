@@ -1,6 +1,5 @@
-import { Cartesian4, Color } from "../../index.js";
+import { Cartesian4, Color, Math as CesiumMath } from "../../index.js";
 
-import { Math as CesiumMath } from "../../index.js";
 import createPackableArraySpecs from "../../../../Specs/createPackableArraySpecs.js";
 import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";
 

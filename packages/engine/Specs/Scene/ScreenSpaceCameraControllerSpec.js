@@ -7,6 +7,7 @@ import {
   GeographicProjection,
   IntersectionTests,
   KeyboardEventModifier,
+  Math as CesiumMath,
   OrthographicFrustum,
   OrthographicOffCenterFrustum,
   Ray,
@@ -17,8 +18,6 @@ import {
   SceneMode,
   ScreenSpaceCameraController,
 } from "../../index.js";
-
-import { Math as CesiumMath } from "../../index.js";
 
 import createCamera from "../../../../Specs/createCamera.js";
 import createCanvas from "../../../../Specs/createCanvas.js";

@@ -11,6 +11,7 @@ import {
   GeometryInstance,
   HeadingPitchRoll,
   JulianDate,
+  Math as CesiumMath,
   PixelFormat,
   Rectangle,
   RectangleGeometry,
@@ -47,8 +48,6 @@ import {
   ColorGeometryInstanceAttribute,
   Resource,
 } from "../../index.js";
-
-import { Math as CesiumMath } from "../../index.js";
 
 import createCanvas from "../../../../Specs/createCanvas.js";
 import createScene from "../../../../Specs/createScene.js";

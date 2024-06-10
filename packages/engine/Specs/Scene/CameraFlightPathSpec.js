@@ -4,12 +4,11 @@ import {
   Ellipsoid,
   GeographicProjection,
   Globe,
+  Math as CesiumMath,
   OrthographicOffCenterFrustum,
   CameraFlightPath,
   SceneMode,
 } from "../../index.js";
-
-import { Math as CesiumMath } from "../../index.js";
 
 import createScene from "../../../../Specs/createScene.js";
 
