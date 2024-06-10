@@ -234,7 +234,7 @@ describe("Widgets/BaseLayerPicker/BaseLayerPickerViewModel", function () {
       imageryProviderViewModels: imageryViewModels,
     });
 
-    expect(imageryLayers.length).toEqual(0);
+    expect(imageryLayers.length).toEqual(1);
 
     viewModel.selectedImagery = testProviderViewModel;
     expect(imageryLayers.length).toEqual(1);
@@ -335,7 +335,7 @@ describe("Widgets/BaseLayerPicker/BaseLayerPickerViewModel", function () {
       imageryProviderViewModels: imageryViewModels,
     });
 
-    expect(imageryLayers.length).toEqual(0);
+    expect(imageryLayers.length).toEqual(1);
 
     viewModel.selectedImagery = testProviderViewModel2;
     expect(imageryLayers.length).toEqual(2);
