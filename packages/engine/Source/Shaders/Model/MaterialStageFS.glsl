@@ -65,7 +65,11 @@ NormalInfo getNormalInfo(ProcessedAttributes attributes)
     #ifdef HAS_NORMAL_TEXTURE
         mat3 tbn = mat3(tangent, bitangent, geometryNormal);
         vec3 normalSample = texture(u_normalTexture, normalTexCoords).rgb;
-        vec3 normal = normalize(tbn * (2.0 * normalSample - 1.0));
+        normalSample = 2.0 * normalSample - 1.0;
+        #ifdef HAS_NORMAL_TEXTURE_SCALE
+            normalSample.xy *= u_normalTextureScale;
+        #endif
+        vec3 normal = normalize(tbn * normalSample);
     #else
         vec3 normal = geometryNormal;
     #endif
@@ -105,10 +109,12 @@ vec3 getNormalFromTexture(ProcessedAttributes attributes, vec3 geometryNormal)
     #endif
 
     mat3 tbn = mat3(t, b, geometryNormal);
-    vec3 n = texture(u_normalTexture, normalTexCoords).rgb;
-    vec3 textureNormal = normalize(tbn * (2.0 * n - 1.0));
-
-    return textureNormal;
+    vec3 normalSample = texture(u_normalTexture, normalTexCoords).rgb;
+    normalSample = 2.0 * normalSample - 1.0;
+    #ifdef HAS_NORMAL_TEXTURE_SCALE
+        normalSample.xy *= u_normalTextureScale;
+    #endif
+    return normalize(tbn * normalSample);
 }
 #endif
 
@@ -131,10 +137,12 @@ vec3 getClearcoatNormalFromTexture(ProcessedAttributes attributes, vec3 geometry
     #endif
 
     mat3 tbn = mat3(t, b, geometryNormal);
-    vec3 n = texture(u_clearcoatNormalTexture, normalTexCoords).rgb;
-    vec3 textureNormal = normalize(tbn * (2.0 * n - 1.0));
-
-    return textureNormal;
+    vec3 normalSample = texture(u_clearcoatNormalTexture, normalTexCoords).rgb;
+    normalSample = 2.0 * normalSample - 1.0;
+    #ifdef HAS_CLEARCOAT_NORMAL_TEXTURE_SCALE
+        normalSample.xy *= u_normalTextureScale;
+    #endif
+    return normalize(tbn * normalSample);
 }
 #endif
 

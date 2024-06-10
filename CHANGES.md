@@ -2,12 +2,15 @@
 
 ### 1.119 - 2024-07-01
 
+#### @cesium/engine
+
 ##### Additions :tada:
 
 - Added `Ellipsoid.default` to allow a central place to specify a default ellipsoid value to be used throughout the API where an ellipsoid is not otherwise specified. [#4245](https://github.com/CesiumGS/cesium/issues/4245)
 - Various defaults have been updated to adjust when `Ellipsoid.default` is changed to a value other than the WGS84 ellipsoid.
 - Added `Scene.ellipsoid`, `CesiumWidget.ellipsoid`, and `Viewer.ellipsoid` to set the default ellipsoid used for rendering.
 - Added `SkyBox.createEarthSkyBox` which creates a skybox instance with the default starmap for the Earth.
+- Added support for the `scale` property of a normal texture in a glTF material. [#12018](https://github.com/CesiumGS/cesium/pull/12018)
 
 ##### Fixes :wrench:
 
@@ -40,13 +43,13 @@ This is an npm-only release to fix a dependency issue published in 1.118
 
 #### @cesium/engine
 
-###### Additions :tada:
+##### Additions :tada:
 
 - Added support for glTF models with the [KHR_materials_specular extension](https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Khronos/KHR_materials_specular). [#11970](https://github.com/CesiumGS/cesium/pull/11970)
 - Added support for glTF models with the [KHR_materials_anisotropy extension](https://github.com/KhronosGroup/glTF/blob/main/extensions/2.0/Khronos/KHR_materials_anisotropy/README.md). [#11988](https://github.com/CesiumGS/cesium/pull/11988)
 - Added support for glTF models with the [KHR_materials_clearcoat extension](https://github.com/KhronosGroup/glTF/blob/main/extensions/2.0/Khronos/KHR_materials_clearcoat/README.md). [#12006](https://github.com/CesiumGS/cesium/pull/12006)
 
-#### Fixes :wrench:
+##### Fixes :wrench:
 
 - Fixed a bug where `scene.pickPosition` returned incorrect results against the globe when `depthTestAgainstTerrain` is `false`. [#4368](https://github.com/CesiumGS/cesium/issues/4368)
 - Fixed a bug where `TaskProcessor` worker loading would check the worker module ID rather than the absolute URL when determining if it is cross-origin. [#11833](https://github.com/CesiumGS/cesium/pull/11833)

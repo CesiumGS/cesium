@@ -24,8 +24,9 @@ There is no release manager; instead, our community shares the responsibility. A
 6. Update the Cesium ion demo token in `Ion.js` with a new token from the CesiumJS ion team account with read and geocode permissions. These tokens are named like this: `1.85 Release - Delete on November 1st, 2021`. Delete the token from 2 releases ago.
 7. Update the ArcGIS Developer API key in `ArcGisMapService.js` with a new API key from the CesiumJS ArcGIS Developer account. These API keys are named like this: `1.85 Release - Delete on November 1st, 2021`. Delete the API key from the last release.
 8. Proofread [`CHANGES.md`](../../../CHANGES.md) with the date of the release. Adjust the order of changes so that prominent/popular changes come first. Ensure each change is in the section for the relevant workspace.
-9. Based on `CHANGES.md`, update each workspace version following the rules of [semantic versioning](https://semver.org/), e.g.,
-   - `npm version minor -w @cesium/engine --no-git-tag-version`
+9. Based on `CHANGES.md`, update each workspace version following the rules of [semantic versioning](https://semver.org/), e.g.,  
+   `npm version minor -w @cesium/engine --no-git-tag-version`.  
+   Changes in one workspace may require version updates in other workspaces that depend on it. For example, if `CHANGES.md` reports changes in `@cesium/engine` only, the version for `@cesium/widgets` should also be incremented to reflect the updated dependency.
 10. Update the version in `package.json` to match, e.g. `1.115.0` -> `1.116.0`.
 11. Commit these changes.
 12. Make sure the repository is clean `git clean -d -x -f --exclude="/Specs/e2e/*-snapshots/"`. **This will delete all files not already in the repository, excluding end to end testing snapshots.**
@@ -54,10 +55,10 @@ There is no release manager; instead, our community shares the responsibility. A
       - Look at a [previous release](https://github.com/CesiumGS/cesium/releases/tag/1.79) for an example. Don't use emoji, headings, or other formatting
     - Attach the `Cesium-1.xx` release zip file
     - Publish the release
-28. Publish to npm by running `npm publish` in the repository root (not the unzipped file directory) (the first time you do this, you will need to authorize the machine using `npm adduser`)
-29. Use `npm publish -w <WORKSPACE>` in the repository root (not the unzipped file directory) to publish the workspace. Repeat this step for each **updated** workspace, in the following order:
+28. Use `npm publish -w <WORKSPACE>` in the repository root (not the unzipped file directory) to publish the workspaces. Repeat this step for each **updated** workspace, in the following order:
     - `npm publish -w @cesium/engine`
     - `npm publish -w @cesium/widgets`
+29. Publish the top-level `cesium` package to npm by running `npm publish` in the repository root (not the unzipped file directory) (the first time you do this, you will need to authorize the machine using `npm adduser`).
 30. Check out the `cesium.com` branch. Merge the new release tag into the `cesium.com` branch `git merge origin <tag-name>`. CI will deploy the hosted release, Sandcastle, and the updated doc when you push the branch up.
 31. After the `cesium.com` branch is live on cesium.com, comment in the `#comms-chat` slack channel to notify comms that the release is done so they can add these highlights and publish the monthly blog post
     - Note, it may take a little while for the new version of CesiumJS to be live on cesium.com (~30 minutes after the branch builds). You can check the version of Cesium in [sandcastle](https://sandcastle.cesium.com/) by looking at the tab above the cesium pane.
