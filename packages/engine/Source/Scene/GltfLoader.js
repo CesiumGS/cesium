@@ -2654,7 +2654,6 @@ function parse(loader, frameState) {
 
   if (defined(cesiumRtcExtension)) {
     // CESIUM_RTC is almost always WGS84 coordinates so no axis conversion needed
-    // TODO: Ellipsoids
     const center = Cartesian3.fromArray(
       cesiumRtcExtension.center,
       0,
