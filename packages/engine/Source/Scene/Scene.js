@@ -265,7 +265,7 @@ function Scene(options) {
   this.morphComplete = new Event();
 
   /**
-   * The {@link SkyBox} used to draw the stars. If undefined and the WGS84 ellipsoid is used, the default stars are used.
+   * The {@link SkyBox} used to draw the stars.
    *
    * @type {SkyBox}
    * @default undefined
@@ -275,7 +275,7 @@ function Scene(options) {
   this.skyBox = undefined;
 
   /**
-   * The sky atmosphere drawn around the globe. If undefined and the WGS84 ellipsoid is used, the default earth atmopshere is used.
+   * The sky atmosphere drawn around the globe.
    *
    * @type {SkyAtmosphere}
    * @default undefined
@@ -300,7 +300,7 @@ function Scene(options) {
   this._sunBloom = undefined;
 
   /**
-   * The {@link Moon}. If undefined and the WGS84 ellipsoid is used, the default earth moon is used.
+   * The {@link Moon}
    *
    * @type Moon
    * @default undefined

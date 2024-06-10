@@ -1,4 +1,3 @@
-import buildModuleUrl from "../Core/buildModuleUrl.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Clock from "../Core/Clock.js";
 import defaultValue from "../Core/defaultValue.js";
@@ -19,10 +18,6 @@ import ShadowMode from "../Scene/ShadowMode.js";
 import SkyAtmosphere from "../Scene/SkyAtmosphere.js";
 import SkyBox from "../Scene/SkyBox.js";
 import Sun from "../Scene/Sun.js";
-
-function getDefaultSkyBoxUrl(suffix) {
-  return buildModuleUrl(`Assets/Textures/SkyBox/tycho2t3_80_${suffix}.jpg`);
-}
 
 function startRenderLoop(widget) {
   widget._renderLoopRunning = true;
@@ -314,16 +309,7 @@ function CesiumWidget(container, options) {
 
     let skyBox = options.skyBox;
     if (!defined(skyBox) && Ellipsoid.WGS84.equals(ellipsoid)) {
-      skyBox = new SkyBox({
-        sources: {
-          positiveX: getDefaultSkyBoxUrl("px"),
-          negativeX: getDefaultSkyBoxUrl("mx"),
-          positiveY: getDefaultSkyBoxUrl("py"),
-          negativeY: getDefaultSkyBoxUrl("my"),
-          positiveZ: getDefaultSkyBoxUrl("pz"),
-          negativeZ: getDefaultSkyBoxUrl("mz"),
-        },
-      });
+      skyBox = SkyBox.createEarthSkyBox();
     }
     if (skyBox !== false) {
       scene.skyBox = skyBox;

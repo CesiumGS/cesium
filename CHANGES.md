@@ -7,6 +7,7 @@
 - Added `Ellipsoid.default` to allow a central place to specify a default ellipsoid value to be used throughout the API where an ellipsoid is not otherwise specified. [#4245](https://github.com/CesiumGS/cesium/issues/4245)
 - Various defaults have been updated to adjust when `Ellipsoid.default` is changed to a value other than the WGS84 ellipsoid.
 - Added `Scene.ellipsoid`, `CesiumWidget.ellipsoid`, and `Viewer.ellipsoid` to set the default ellipsoid used for rendering.
+- Added `SkyBox.createEarthSkyBox` which creates a skybox instance with the default starmap for the Earth.
 
 ##### Fixes :wrench:
 
