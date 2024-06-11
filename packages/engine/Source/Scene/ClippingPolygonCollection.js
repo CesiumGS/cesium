@@ -737,7 +737,7 @@ const scratchRectangleIntersection = new Rectangle();
  * @private
  *
  * @param {object} tileBoundingVolume The volume to determine the intersection with the polygons.
- * @param {Ellipsoid} [ellipsoid=WGS84] The ellipsoid on which the bounding volumes are defined.
+ * @param {Ellipsoid} [ellipsoid=Ellipsoid.default] The ellipsoid on which the bounding volumes are defined.
  * @returns {Intersect} The intersection type: {@link Intersect.OUTSIDE} if the entire volume is not clipped, {@link Intersect.INSIDE}
  *                      if the entire volume should be clipped, and {@link Intersect.INTERSECTING} if the volume intersects the polygons and will partially clipped.
  */

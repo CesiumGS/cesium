@@ -361,7 +361,7 @@ function computePositionsExtruded(params) {
  * @param {object} options Object with the following properties:
  * @param {Cartesian3[]} options.positions An array of positions that define the center of the corridor outline.
  * @param {number} options.width The distance between the edges of the corridor outline.
- * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference.
+ * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.default] The ellipsoid to be used as a reference.
  * @param {number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
  * @param {number} [options.height=0] The distance in meters between the positions and the ellipsoid surface.
  * @param {number} [options.extrudedHeight] The distance in meters between the extruded face and the ellipsoid surface.
@@ -390,7 +390,7 @@ function CorridorOutlineGeometry(options) {
 
   this._positions = positions;
   this._ellipsoid = Ellipsoid.clone(
-    defaultValue(options.ellipsoid, Ellipsoid.WGS84)
+    defaultValue(options.ellipsoid, Ellipsoid.default)
   );
   this._width = width;
   this._height = Math.max(height, extrudedHeight);

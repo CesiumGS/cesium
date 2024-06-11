@@ -307,10 +307,7 @@ function BaseLayerPickerViewModel(options) {
     options.selectedImageryProviderViewModel,
     imageryProviderViewModels[0]
   );
-  this.selectedTerrain = defaultValue(
-    options.selectedTerrainProviderViewModel,
-    terrainProviderViewModels[0]
-  );
+  this.selectedTerrain = options.selectedTerrainProviderViewModel;
 }
 
 Object.defineProperties(BaseLayerPickerViewModel.prototype, {

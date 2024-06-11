@@ -687,7 +687,7 @@ GeometryPipeline.projectTo2D = function (
     projectedValues[index++] = projectedLonLat.z;
   }
 
-  // Rename original cartesians to WGS84 cartesians.
+  // Rename original cartesians to ellipsoid cartesians.
   geometry.attributes[attributeName3D] = attribute;
 
   // Replace original cartesians with 2D projected cartesians
@@ -1902,7 +1902,7 @@ const splitTriangleResult = {
 };
 
 function splitTriangle(p0, p1, p2) {
-  // In WGS84 coordinates, for a triangle approximately on the
+  // In ellipsoid coordinates, for a triangle approximately on the
   // ellipsoid to cross the IDL, first it needs to be on the
   // negative side of the plane x = 0.
   if (p0.x >= 0.0 || p1.x >= 0.0 || p2.x >= 0.0) {
