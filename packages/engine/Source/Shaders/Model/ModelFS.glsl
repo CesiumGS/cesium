@@ -1,5 +1,14 @@
 
 precision highp float;
+
+
+in float depth;
+in vec3 con;
+in vec2 xy;
+in vec2 pixf;
+in vec4 vPosition;
+
+
 czm_modelMaterial defaultModelMaterial()
 {
     czm_modelMaterial material;
@@ -22,6 +31,11 @@ vec4 handleAlpha(vec3 color, float alpha)
     #endif
 
     return vec4(color, alpha);
+}
+
+vec3 depth_palette(float x) {
+    x = min(1., x);
+    return vec3( sin(x*6.28/4.), x*x, mix(sin(x*6.28),x,.6) );
 }
 
 SelectedFeature selectedFeature;
@@ -89,5 +103,11 @@ void main()
     atmosphereStage(color, attributes);
     #endif
 
-    out_FragColor = color;
+   // #ifdef HAS_POINT_CLOUD_SPLAT
+        float A = -dot(xy, xy);
+     //   if (A < -4.0) discard;
+        float B = exp(A) * material.alpha;
+        out_FragColor = vec4(material.diffuse, B);
+
+  //  #endif
 }

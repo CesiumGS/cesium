@@ -1,5 +1,12 @@
 precision highp float;
 
+
+out float depth;
+out vec3 con;
+out vec2 xy;
+out vec2 pixf;
+out vec4 vPosition;
+
 czm_modelVertexOutput defaultVertexOutput(vec3 positionMC) {
     czm_modelVertexOutput vsOutput;
     vsOutput.positionMC = positionMC;
@@ -134,67 +141,147 @@ void main()
     #endif
 
     #ifdef PRIMITIVE_TYPE_POINTS
-        #ifdef HAS_CUSTOM_VERTEX_SHADER
-        gl_PointSize = vsOutput.pointSize;
-        #elif defined(HAS_POINT_CLOUD_POINT_SIZE_STYLE) || defined(HAS_POINT_CLOUD_ATTENUATION)
-        gl_PointSize = pointCloudPointSizeStylingStage(attributes, metadata);
-        #else
-        //gl_PointSize = 1.0;
 
-        //convert gaussian scale and rot to covariance matrix
-        vec3 vscale = attributes.scale;
+    #ifdef HAS_CUSTOM_VERTEX_SHADER
+    gl_PointSize = vsOutput.pointSize;
+    #elif defined(HAS_POINT_CLOUD_POINT_SIZE_STYLE) || defined(HAS_POINT_CLOUD_ATTENUATION)
+    gl_PointSize = pointCloudPointSizeStylingStage(attributes, metadata);
+    #else
+   // gl_PointSize = 1.0;
 
-        uvec4 centerWorldPos = uvec4(attributes.positionMC.x, attributes.positionMC.y, attributes.positionMC.z, 0);
-        vec4 cam = czm_view * vec4(uintBitsToFloat(centerWorldPos.xyz), 1);
-        vec4 pos2d = czm_projection * cam;
+            //convert gaussian scale and rot to covariance matrix
+            vec3 vscale = attributes.scale;
+            mat4 viewMatrix = czm_view;
+            vec3 viewPos = (viewMatrix * vec4(attributes.positionMC, 1)).xyz;
 
-        float clip = 1.2 * pos2d.w;
-        /*
-        if (pos2d.z < -clip || pos2d.x < -clip || pos2d.x > clip || pos2d.y < -clip || pos2d.y > clip) {
-            gl_Position = vec4(0.0, 0.0, 2.0, 1.0);
-            return;
-        }
-*/
-        //calc matrix from scale and rot
-        mat3 ms = mat3(
-        vscale.x, 0., 0.,
-        0., vscale.y, 0.,
-        0., 0., vscale.z
-        );
-        float x = attributes.rotation.x;
-        float y = attributes.rotation.y;
-        float z = attributes.rotation.z;
-        float w = attributes.rotation.w;
-        mat3 mr = mat3(
-            1.-2.*(y*y + z*z),   2.*(x*y - w*z),   2.*(x*z + w*y),
-            2.*(x*y + w*z), 1.-2.*(x*x + z*z),   2.*(y*z - w*x),
-            2.*(x*z - w*y),   2.*(y*z + w*x), 1.-2.*(x*x + y*y)
-        );
-        mat3 Mrs =  mr * ms;
+            // this is needed in order for splats that are visible in view but clipped "quite a lot" to work
+            float aspect = czm_projection[0][0] / czm_projection[1][1];
+            float tanFovX = 1./czm_projection[0][0];
+            float tanFovY = 1./czm_projection[1][1] * aspect;
+            float limX = 1.3 * tanFovX;
+            float limY = 1.3 * tanFovY;
+            viewPos.x = clamp(viewPos.x / viewPos.z, -limX, limX) * viewPos.z;
+            viewPos.y = clamp(viewPos.y / viewPos.z, -limY, limY) * viewPos.z;
 
-        mat3 J = mat3(
-        czm_viewerPositionWC.x / cam.z, 0., -(czm_viewerPositionWC.x * cam.x) / (cam.z * cam.z),
-        0., -czm_viewerPositionWC.y / cam.z, (czm_viewerPositionWC.y * cam.y) / (cam.z * cam.z),
-        0., 0., 0.
-        );
+            //we must calc the focal point of our camera
+            float focal = czm_viewport.x * czm_projection[0][0] / 2.0;
 
-        mat3 T = transpose(mat3(czm_view)) * J;
-        mat3 cov2d = transpose(T) * Mrs * T;
+            vec3 p_orig = attributes.positionMC;
 
-        // decompose covariance
-        float mid = (cov2d[0][0] + cov2d[1][1]) / 2.0;
-        float radius = length(vec2((cov2d[0][0] - cov2d[1][1]) / 2.0, cov2d[0][1]));
-        float lambda1 = mid + radius, lambda2 = mid - radius;
+            // Transform point by projecting
+            vec4 p_hom = czm_projection * vec4(p_orig, 1);
+            float p_w = 1. / (p_hom.w + 1e-7);
+            vec3 p_proj = p_hom.xyz * p_w;
 
-        //if(lambda2 < 0.0) return;
-        vec2 diagonalVector = normalize(vec2(cov2d[0][1], lambda1 - cov2d[0][0]));
-        vec2 majorAxis = min(sqrt(2.0 * lambda1), 1024.0) * diagonalVector;
-        vec2 minorAxis = min(sqrt(2.0 * lambda2), 1024.0) * vec2(diagonalVector.y, -diagonalVector.x);
+            // Perform near culling, quit if outside.
+            vec4 p_view = czm_view * vec4(p_orig, 1);
+            if (p_view.z <= .4) {
+                gl_Position = vec4(0, 0, 0, 1);
+                return;
+            }
+              //matrix from rot & scale
+            mat3 ms = mat3(
+            vscale.x, 0., 0.,
+            0., vscale.y, 0.,
+            0., 0., vscale.z
+            );
+            float x = attributes.rotation.x;
+            float y = attributes.rotation.y;
+            float z = attributes.rotation.z;
+            float w = attributes.rotation.w;
+            mat3 mr = mat3(
+                1.-2.*(y*y + z*z),   2.*(x*y - w*z),   2.*(x*z + w*y),
+                2.*(x*y + w*z), 1.-2.*(x*x + z*z),   2.*(y*z - w*x),
+                2.*(x*z - w*y),   2.*(y*z + w*x), 1.-2.*(x*x + y*y)
+            );
+            mat3 Mrs = mr * ms;
 
-        gl_PointSize = sqrt(2.0 * lambda1);
+            //covariance 3D
+            mat3 sigma = Mrs * transpose(Mrs);
+            vec3 sig1 = vec3(sigma[0][0], sigma[0][1], sigma[0][2]);
+            vec3 sig2 = vec3(sigma[1][0], sigma[1][1], sigma[1][2]);
 
-        #endif
-        gl_PointSize *= show;
+            mat3 J = mat3(
+            focal / viewPos.z, 0., -(focal * viewPos.x) / (viewPos.z * viewPos.z),
+            0., focal / viewPos.z, -(focal * viewPos.y) / (viewPos.z * viewPos.z),
+            0., 0., 0.
+            );
+
+            mat3 V = mat3(
+                sig1.x, sig1.y, sig1.z,
+                sig1.y, sig2.x, sig2.y,
+                sig1.z, sig2.y, sig2.z
+            );
+
+            //covariance2D
+            mat3 T = mat3(czm_view) * J;
+            mat3 cov2d = T * (V * transpose(T));
+
+            cov2d[0][0] += 0.3;
+            cov2d[1][1] += 0.3;
+
+            // Invert covariance (EWA algorithm)
+            float det = (cov2d[0][0] * cov2d[1][1] - cov2d[0][1] * cov2d[0][1]);
+            if (det == 0.) {
+                gl_Position = vec4(0, 0, 0, 1);
+                return;
+            }
+            //may not need these
+            float det_inv = 1. / det;
+            vec3 conic = vec3(cov2d[1][1], -cov2d[0][1], cov2d[0][0]) * det_inv;
+
+            //decompose covariance
+            float diag1 = cov2d[0][0];
+            float diag2 = cov2d[1][1];
+            float offDiag = cov2d[0][1];
+
+            float mid = (diag1 + diag2) / 2.0;
+            float radius = length(vec2((diag1 - diag2) / 2.0, offDiag));
+            float lambda1 = mid + radius;
+            float lambda2 = max(mid - radius, 0.1);
+
+            //if(lambda2 < 0.0) return;
+            vec2 diagonalVector = normalize(vec2(offDiag, lambda1 - diag1));
+            vec2 majorAxis = min(sqrt(2.0 * lambda1), 4096.0) * diagonalVector;
+            vec2 minorAxis = min(sqrt(2.0 * lambda2), 4096.0) * vec2(diagonalVector.y, -diagonalVector.x);
+
+
+            // float mid = 0.5 * (cov2d[0][0] + cov2d[1][1]);
+            // float lambda1 = mid + sqrt(max(0.1, mid * mid - det));
+            // float lambda2 = mid - sqrt(max(0.1, mid * mid - det));
+            // float my_radius = ceil(3. * sqrt(max(lambda1, lambda2)));
+            // vec2 point_image = vec2(ndc2Pix(p_proj.x, czm_projection[0][0] ), ndc2Pix(p_proj.y, czm_projection[1][1] ));
+
+            gl_PointSize = 10.0;
+
+            // // (Webgl-specific) Convert gl_VertexID from [0,1,2,3] to [-1,-1],[1,-1],[-1,1],[1,1]
+            // vec2 corner = vec2((gl_VertexID << 1) & 2, gl_VertexID & 2) - 1.;
+            // // Vertex position in screen space
+            // vec2 screen_pos = point_image + my_radius * corner;
+
+            // // Store some useful helper data for the fragment stage
+            // con = conic;
+            // xy = a_position;
+            // pixf = screen_pos;
+            // depth = p_view.z;
+
+            vec2 quadPos = vec2((gl_VertexID << 1) & 2, gl_VertexID & 2) - 1.;
+            quadPos *= 2.;
+
+            xy = quadPos;
+
+            vec2 deltaScreenPos = (quadPos.x * majorAxis + quadPos.y * minorAxis) * 2. / czm_viewport.xy;
+            vPosition = gl_Position;
+            gl_Position.xy +=  deltaScreenPos * gl_Position.w;
+
+            // (Webgl-specific) Convert from screen-space to clip-space
+          //  vec2 clip_pos = screen_pos / vec2(W, H) * 2. - 1.;
+
+        //screen space calc is already done in geometryStage above
+       //     gl_Position = vec4(clip_pos, 0, 1);
+
+    #endif
+    gl_PointSize *= show;
     #endif
 
     gl_Position = show * positionClip;
