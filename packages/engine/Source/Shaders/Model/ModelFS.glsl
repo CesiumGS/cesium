@@ -33,11 +33,6 @@ vec4 handleAlpha(vec3 color, float alpha)
     return vec4(color, alpha);
 }
 
-vec3 depth_palette(float x) {
-    x = min(1., x);
-    return vec3( sin(x*6.28/4.), x*x, mix(sin(x*6.28),x,.6) );
-}
-
 SelectedFeature selectedFeature;
 
 void main()
@@ -104,10 +99,31 @@ void main()
     #endif
 
    // #ifdef HAS_POINT_CLOUD_SPLAT
-        float A = -dot(xy, xy);
-     //   if (A < -4.0) discard;
-        float B = exp(A) * material.alpha;
-        out_FragColor = vec4(material.diffuse, B);
+        // float A = -dot(xy, xy);
+        // float B = exp(A) * material.alpha;
+        // // if (B < 1./255.) {
+        // // discard;
+        // // }
+        // out_FragColor = vec4(material.diffuse * B, B);
+    // Resample using conic matrix (cf. "Surface
+    // Splatting" by Zwicker et al., 2001)
+    vec2 d = xy - pixf;
+    float power = -0.5 * (con.x * d.x * d.x + con.z * d.y * d.y) - con.y * d.x * d.y;
 
-  //  #endif
+    // if (power > 0.) {
+    //     discard;
+    // }
+
+    // (Custom) As the covariance matrix is calculated in a one-time operation on CPU in this implementation,
+    // we need to apply the scale modifier differently to still allow for real-time scaling of the splats.
+   // power *= 2.;
+
+    // Eq. (2) from 3D Gaussian splatting paper.
+    float alpha = min(.99f, material.alpha * exp(power));
+    // if (alpha < 1./255.) {
+    //     discard;
+    // }
+
+    out_FragColor = vec4(material.diffuse * alpha, alpha);
+   // #endif
 }

@@ -147,7 +147,12 @@ void main()
     #elif defined(HAS_POINT_CLOUD_POINT_SIZE_STYLE) || defined(HAS_POINT_CLOUD_ATTENUATION)
     gl_PointSize = pointCloudPointSizeStylingStage(attributes, metadata);
     #else
-   // gl_PointSize = 1.0;
+    gl_PointSize = 1.0;
+    #endif
+    gl_PointSize *= show;
+    #endif
+
+    #ifdef HAS_POINT_CLOUD_SPLAT
 
             //convert gaussian scale and rot to covariance matrix
             vec3 vscale = attributes.scale;
@@ -164,7 +169,8 @@ void main()
             viewPos.y = clamp(viewPos.y / viewPos.z, -limY, limY) * viewPos.z;
 
             //we must calc the focal point of our camera
-            float focal = czm_viewport.x * czm_projection[0][0] / 2.0;
+            float focal_x = czm_viewport.x * czm_projection[0][0] / 2.0;
+            float focal_y = czm_viewport.y * czm_projection[1][1] / 2.0;
 
             vec3 p_orig = attributes.positionMC;
 
@@ -202,8 +208,8 @@ void main()
             vec3 sig2 = vec3(sigma[1][0], sigma[1][1], sigma[1][2]);
 
             mat3 J = mat3(
-            focal / viewPos.z, 0., -(focal * viewPos.x) / (viewPos.z * viewPos.z),
-            0., focal / viewPos.z, -(focal * viewPos.y) / (viewPos.z * viewPos.z),
+            focal_x / viewPos.z, 0., -(focal_x * viewPos.x) / (viewPos.z * viewPos.z),
+            0., focal_y / viewPos.z, -(focal_y * viewPos.y) / (viewPos.z * viewPos.z),
             0., 0., 0.
             );
 
@@ -245,34 +251,27 @@ void main()
             vec2 majorAxis = min(sqrt(2.0 * lambda1), 4096.0) * diagonalVector;
             vec2 minorAxis = min(sqrt(2.0 * lambda2), 4096.0) * vec2(diagonalVector.y, -diagonalVector.x);
 
-
-            // float mid = 0.5 * (cov2d[0][0] + cov2d[1][1]);
-            // float lambda1 = mid + sqrt(max(0.1, mid * mid - det));
-            // float lambda2 = mid - sqrt(max(0.1, mid * mid - det));
-            // float my_radius = ceil(3. * sqrt(max(lambda1, lambda2)));
-            // vec2 point_image = vec2(ndc2Pix(p_proj.x, czm_projection[0][0] ), ndc2Pix(p_proj.y, czm_projection[1][1] ));
-
-            gl_PointSize = 10.0;
-
             // // (Webgl-specific) Convert gl_VertexID from [0,1,2,3] to [-1,-1],[1,-1],[-1,1],[1,1]
             // vec2 corner = vec2((gl_VertexID << 1) & 2, gl_VertexID & 2) - 1.;
             // // Vertex position in screen space
             // vec2 screen_pos = point_image + my_radius * corner;
 
             // // Store some useful helper data for the fragment stage
-            // con = conic;
+             con = conic;
             // xy = a_position;
             // pixf = screen_pos;
             // depth = p_view.z;
 
-            vec2 quadPos = vec2((gl_VertexID << 1) & 2, gl_VertexID & 2) - 1.;
+            vec2 quadPos = vec2(gl_VertexID&1, (gl_VertexID>>1)&1) * 2.0 - 1.0;
             quadPos *= 2.;
 
             xy = quadPos;
 
             vec2 deltaScreenPos = (quadPos.x * majorAxis + quadPos.y * minorAxis) * 2. / czm_viewport.xy;
+            pixf = deltaScreenPos;
             vPosition = gl_Position;
-            gl_Position.xy +=  deltaScreenPos * gl_Position.w;
+            gl_Position = show *  positionClip;
+            gl_Position.xy += deltaScreenPos * gl_Position.w;
 
             // (Webgl-specific) Convert from screen-space to clip-space
           //  vec2 clip_pos = screen_pos / vec2(W, H) * 2. - 1.;
@@ -281,8 +280,5 @@ void main()
        //     gl_Position = vec4(clip_pos, 0, 1);
 
     #endif
-    gl_PointSize *= show;
-    #endif
-
-    gl_Position = show * positionClip;
+gl_Position = show * positionClip;
 }

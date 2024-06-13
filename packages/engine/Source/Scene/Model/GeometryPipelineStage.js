@@ -187,7 +187,14 @@ GeometryPipelineStage.process = function (
   handleBitangents(shaderBuilder, primitive.attributes);
 
   if (primitive.primitiveType === PrimitiveType.POINTS) {
+    //if splats dont set points
     shaderBuilder.addDefine("PRIMITIVE_TYPE_POINTS");
+    //temp hack. Will need to check glTF for splat extension
+    shaderBuilder.addDefine(
+      "HAS_POINT_CLOUD_SPLAT",
+      undefined,
+      ShaderDestination.BOTH
+    );
   }
 
   shaderBuilder.addVertexLines(GeometryStageVS);

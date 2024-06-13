@@ -1368,7 +1368,13 @@ function continueDraw(context, drawCommand, shaderProgram, uniformMap) {
       count = va.numberOfVertices;
     }
     if (instanceCount === 0) {
-      context._gl.drawArrays(primitiveType, offset, count);
+      context._gl.drawArrays(
+        primitiveType === PrimitiveType.POINTS
+          ? PrimitiveType.TRIANGLE_STRIP
+          : primitiveType,
+        offset,
+        count
+      );
     } else {
       context.glDrawArraysInstanced(
         primitiveType,

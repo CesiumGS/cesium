@@ -348,13 +348,6 @@ function addShaderFunctionsAndDefines(shaderBuilder, shaderFunctionInfo) {
     );
     shaderBuilder.addVertexLines(pointSizeStyleFunction);
   }
-
-  //temp hack. Will need to check glTF for splat extension
-  shaderBuilder.addDefine(
-    "HAS_POINT_CLOUD_SPLAT",
-    undefined,
-    ShaderDestination.BOTH
-  );
 }
 
 /**
