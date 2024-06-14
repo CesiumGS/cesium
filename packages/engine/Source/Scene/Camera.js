@@ -2302,16 +2302,30 @@ Camera.prototype.getMagnitude = function () {
 const scratchLookAtMatrix4 = new Matrix4();
 
 /**
- * Sets the camera position and orientation using a target and offset. The target must be given in
- * world coordinates. The offset can be either a cartesian or heading/pitch/range in the local east-north-up reference frame centered at the target.
- * If the offset is a cartesian, then it is an offset from the center of the reference frame defined by the transformation matrix. If the offset
- * is heading/pitch/range, then the heading and the pitch angles are defined in the reference frame defined by the transformation matrix.
- * The heading is the angle from y axis and increasing towards the x axis. Pitch is the rotation from the xy-plane. Positive pitch
- * angles are below the plane. Negative pitch angles are above the plane. The range is the distance from the center.
+ * Sets the camera position and orientation using a target and offset.
  *
- * In 2D, there must be a top down view. The camera will be placed above the target looking down. The height above the
- * target will be the magnitude of the offset. The heading will be determined from the offset. If the heading cannot be
- * determined from the offset, the heading will be north.
+ * The target must be given in world coordinates. It will be used for
+ * computing the transformation matrix that describes the local
+ * east-north-up reference frame for the given target, using
+ * {@link Transforms.eastNorthUpToFixedFrame}.
+ *
+ * The offset can be either a cartesian or heading/pitch/range in the local
+ * east-north-up reference frame centered at the target.
+ *
+ * If the offset is a cartesian, then it is an offset from the center of
+ * the reference frame defined by the transformation matrix.
+ *
+ * If the offset is heading/pitch/range, then the heading and the pitch
+ * angles are defined in the reference frame defined by the transformation
+ * matrix. The heading is the angle from y axis and increasing towards
+ * the x axis. Pitch is the rotation from the xy-plane. Positive pitch
+ * angles are below the plane. Negative pitch angles are above the plane.
+ * The range is the distance from the center.
+ *
+ * In 2D, there must be a top down view. The camera will be placed above
+ * the target looking down. The height above the target will be the magnitude
+ * of the offset. The heading will be determined from the offset. If the
+ * heading cannot be determined from the offset, the heading will be north.
  *
  * @param {Cartesian3} target The target position in world coordinates.
  * @param {Cartesian3|HeadingPitchRange} offset The offset from the target in the local east-north-up reference frame centered at the target.
@@ -2330,7 +2344,7 @@ const scratchLookAtMatrix4 = new Matrix4();
  * const range = 5000.0;
  * viewer.camera.lookAt(center, new Cesium.HeadingPitchRange(heading, pitch, range));
  */
-Camera.prototype.lookAt = function (target, offset) {
+Camera.prototype.lookAtOriginal = function (target, offset) {
   //>>includeStart('debug', pragmas.debug);
   if (!defined(target)) {
     throw new DeveloperError("target is required");
@@ -2353,6 +2367,100 @@ Camera.prototype.lookAt = function (target, offset) {
   );
   this.lookAtTransform(transform, offset);
 };
+Camera.prototype.lookAt = function (target, offset) {
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(target)) {
+    throw new DeveloperError("target is required");
+  }
+  if (!defined(offset)) {
+    throw new DeveloperError("offset is required");
+  }
+  if (this._mode === SceneMode.MORPHING) {
+    throw new DeveloperError("lookAt is not supported while morphing.");
+  }
+  //>>includeEnd('debug');
+
+  console.log("camera.lookAt");
+  console.log(`target ${target}`);
+  console.log(`offset HPR ${offset.heading} ${offset.pitch} ${offset.range}`);
+  console.log(`offset XYZ ${offset.x} ${offset.y} ${offset.z}`);
+
+  // The default ENU for the degenerate case:
+  const transformA = Matrix4.fromArray(
+    [0, 1, 0, 0, -1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1],
+    0,
+    new Matrix4()
+  );
+  Matrix4.setColumn(
+    transformA,
+    3,
+    new Cartesian4(target.x, target.y, target.z, 1.0),
+    transformA
+  );
+
+  // The transform based on the ENU of the target
+  const transformB = Transforms.eastNorthUpToFixedFrame(
+    target,
+    Ellipsoid.WGS84,
+    scratchLookAtMatrix4
+  );
+
+  // Compute the cartesian offset if the given one is HPR
+  function computeCartesianOffset(theOffset) {
+    if (defined(theOffset.heading)) {
+      return offsetFromHeadingPitchRange(
+        offset.heading,
+        offset.pitch,
+        offset.range
+      );
+    }
+    return theOffset;
+  }
+  const cartesianOffset = computeCartesianOffset(offset);
+
+  // Compute the distance of the target to the origin,
+  // and the distance of the eye to the target. When
+  // the eye is far away from the target, then small
+  // deviations in in the target position should not
+  // affect the orientation.
+  const eyeDistanceFromTarget = Cartesian3.magnitude(cartesianOffset);
+  const targetDistanceFromOrigin = Cartesian3.magnitude(target);
+  const weight = Math.min(
+    1.0,
+    targetDistanceFromOrigin / eyeDistanceFromTarget
+  );
+  console.log(`weight ${weight}`);
+
+  const transform = interpolateAffine(transformA, transformB, weight);
+
+  this.lookAtTransform(transform, offset);
+};
+
+function interpolateAffine(matrix4a, matrix4b, t) {
+  // TODO Yeah, scratch variables and such...
+  const matrix3a = Matrix4.getRotation(matrix4a, new Matrix3());
+  const matrix3b = Matrix4.getRotation(matrix4b, new Matrix3());
+  const quatA = Quaternion.fromRotationMatrix(matrix3a, new Quaternion());
+  const quatB = Quaternion.fromRotationMatrix(matrix3b, new Quaternion());
+  const quat = Quaternion.slerp(quatA, quatB, t, new Quaternion());
+  const matrix3 = Matrix3.fromQuaternion(quat, new Matrix3());
+
+  const translationA = Matrix4.getColumn(matrix4a, 3, new Cartesian4());
+  const translationB = Matrix4.getColumn(matrix4b, 3, new Cartesian4());
+  const translation = Cartesian4.lerp(
+    translationA,
+    translationB,
+    t,
+    new Cartesian4()
+  );
+
+  const result = Matrix4.fromRotationTranslation(
+    matrix3,
+    translation,
+    new Matrix4()
+  );
+  return result;
+}
 
 const scratchLookAtHeadingPitchRangeOffset = new Cartesian3();
 const scratchLookAtHeadingPitchRangeQuaternion1 = new Quaternion();
@@ -2394,18 +2502,31 @@ function offsetFromHeadingPitchRange(heading, pitch, range) {
 }
 
 /**
- * Sets the camera position and orientation using a target and transformation matrix. The offset can be either a cartesian or heading/pitch/range.
- * If the offset is a cartesian, then it is an offset from the center of the reference frame defined by the transformation matrix. If the offset
- * is heading/pitch/range, then the heading and the pitch angles are defined in the reference frame defined by the transformation matrix.
- * The heading is the angle from y axis and increasing towards the x axis. Pitch is the rotation from the xy-plane. Positive pitch
- * angles are below the plane. Negative pitch angles are above the plane. The range is the distance from the center.
+ * Sets the camera position and orientation using a target and transformation matrix.
  *
- * In 2D, there must be a top down view. The camera will be placed above the center of the reference frame. The height above the
- * target will be the magnitude of the offset. The heading will be determined from the offset. If the heading cannot be
- * determined from the offset, the heading will be north.
+ * The offset can be either be undefined, or a cartesian or heading/pitch/range in
+ * the local east-north-up reference frame centered at the target.
+ *
+ * If the offset is undefined, then the given transformation matrix will be
+ * used directly as the transformation matrix of the camera.
+ *
+ * If the offset is a cartesian, then it is an offset from the center of
+ * the reference frame defined by the transformation matrix.
+ *
+ * If the offset is heading/pitch/range, then the heading and the pitch
+ * angles are defined in the reference frame defined by the transformation
+ * matrix. The heading is the angle from y axis and increasing towards
+ * the x axis. Pitch is the rotation from the xy-plane. Positive pitch
+ * angles are below the plane. Negative pitch angles are above the plane.
+ * The range is the distance from the center.
+ *
+ * In 2D, there must be a top down view. The camera will be placed above
+ * the target looking down. The height above the target will be the magnitude
+ * of the offset. The heading will be determined from the offset. If the
+ * heading cannot be determined from the offset, the heading will be north.
  *
  * @param {Matrix4} transform The transformation matrix defining the reference frame.
- * @param {Cartesian3|HeadingPitchRange} [offset] The offset from the target in a reference frame centered at the target.
+ * @param {Cartesian3|HeadingPitchRange|undefined} [offset] The offset from the target in a reference frame centered at the target.
  *
  * @exception {DeveloperError} lookAtTransform is not supported while morphing.
  *
