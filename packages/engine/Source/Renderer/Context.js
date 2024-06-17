@@ -51,7 +51,7 @@ function Context(canvas, options) {
   } = defaultValue(options, {});
 
   // Override select WebGL defaults
-  webglOptions.alpha = defaultValue(webglOptions.alpha, false); // WebGL default is true
+  webglOptions.alpha = defaultValue(webglOptions.alpha, true); // WebGL default is true
   webglOptions.stencil = defaultValue(webglOptions.stencil, true); // WebGL default is false
   webglOptions.powerPreference = defaultValue(
     webglOptions.powerPreference,
@@ -1368,13 +1368,7 @@ function continueDraw(context, drawCommand, shaderProgram, uniformMap) {
       count = va.numberOfVertices;
     }
     if (instanceCount === 0) {
-      context._gl.drawArrays(
-        primitiveType === PrimitiveType.POINTS
-          ? PrimitiveType.TRIANGLE_STRIP
-          : primitiveType,
-        offset,
-        count
-      );
+      context._gl.drawArrays(primitiveType, offset, count);
     } else {
       context.glDrawArraysInstanced(
         primitiveType,
