@@ -1,16 +1,14 @@
 precision highp float;
 
-out float depth;
-out vec3 con;
-out vec2 xy;
-out vec2 pixf;
-out vec4 v_position;
-out vec3 v_cov2d;
 
-out vec2 v_eigen1;
-out vec2 v_eigen2;
-out float v_lambda1;
-out float v_lambda2;
+out vec4 v_position;
+out float v_anisotropy;
+out vec2 vEigenVector1;
+out vec2 vEigenVector2;
+out float vEigenValue1;
+out float vEigenValue2;
+out mat2 vCovarianceMatrix;
+out vec2 v_cov2d;
 
 czm_modelVertexOutput defaultVertexOutput(vec3 positionMC) {
     czm_modelVertexOutput vsOutput;
@@ -52,15 +50,16 @@ vec3 calcCov2D(vec3 posEC, float focal_x, float focal_y, float tan_fovx, float t
     vec4 t = viewmatrix * vec4(posEC, 1.0);
     mat3 J = mat3(
         focal_x / t.z, 0, -(focal_x * t.x) / (t.z * t.z),
-        0, focal_y / t.z, -(focal_y * t.y) / (t.z * t.z),
+        0, -focal_y / t.z, (focal_y * t.y) / (t.z * t.z),
         0, 0, 0
     );
 
-    mat3 W =  mat3(
-        viewmatrix[0][0], viewmatrix[1][0], viewmatrix[2][0],
-        viewmatrix[0][1], viewmatrix[1][1], viewmatrix[2][1],
-        viewmatrix[0][2], viewmatrix[1][2], viewmatrix[2][2]
-    );
+    // mat3 W =  mat3(
+    //     viewmatrix[0][0], viewmatrix[1][0], viewmatrix[2][0],
+    //     viewmatrix[0][1], viewmatrix[1][1], viewmatrix[2][1],
+    //     viewmatrix[0][2], viewmatrix[1][2], viewmatrix[2][2]
+    // );
+    mat3 W = transpose(mat3(viewmatrix));
 
     mat3 T = W * J;
 
@@ -236,103 +235,65 @@ void main()
     float focal_x = czm_viewport.x * czm_projection[0][0] / 2.0;
     float focal_y = czm_viewport.y * czm_projection[1][1] / 2.0;
 
-    mat4 viewMatrix = czm_inverseModelView;
+    mat4 viewMatrix = czm_inverseView;
 
     //vec3 calcCov2D(vec3 posEC, float focal_x, float focal_y, float tan_fovx, float tan_fovy, float[6] cov3D, mat4 viewmatrix)
     vec3 cov2d = calcCov2D(attributes.positionMC, focal_x, focal_y, tan_fovx, tan_fovy, cov3D, viewMatrix);
 
+    //this is computed in the geometryStageVS, but lets be explicit for now
     vec4 eyeCoord = viewMatrix * vec4(attributes.positionMC, 1.0);
+    vec4 pos2d = czm_projection * eyeCoord;
 
-    v_cov2d = cov2d;
+    // float mid = (cov2d.x + cov2d.z) / 2.0;
+    // float radius = length(vec2((cov2d.x - cov2d.z) / 2.0, cov2d.y));
+    // float lambda1 = mid + radius, lambda2 = mid - radius;
 
-    mat4 adjVP = czm_inverseViewProjection;
-    vec4 p_hom = adjVP * vec4(attributes.positionMC, 1.0);
-    float p_w = 1. / (p_hom.w + 1e-7);
-    vec3 p_proj = p_hom.xyz * p_w;
-
-    // Invert covariance (EWA algorithm)
-    float det = (cov2d.x * cov2d.z - cov2d.y * cov2d.y);
-    if (det == 0.) {
-        gl_Position = vec4(0, 0, 0, 1);
-        return;
-    }
-    //may not need these
-    float det_inv = 1. / det;
-    vec3 conic = vec3(cov2d.z, -cov2d.y, cov2d.x) * det_inv;
+    // if(lambda2 < 0.0) return;
+    // vec2 diagonalVector = normalize(vec2(cov2d.y, lambda1 - cov2d.x));
+    // vec2 majorAxis = min(sqrt(2.0 * lambda1), 1024.0) * diagonalVector;
+    // vec2 minorAxis = min(sqrt(2.0 * lambda2), 1024.0) * vec2(diagonalVector.y, -diagonalVector.x);
 
 
-    // Compute extent in screen space (by finding eigenvalues of
-    // 2D covariance matrix). Use extent to compute the bounding
-    // rectangle of the splat in screen space.
+    // Calculate the eigenvalues of the 2D covariance matrix
+    float a = cov2d.x;
+    float b = cov2d.y;
+    float c = cov2d.z;
+    float trace = a + c;
+    float det = a * c - b * b;
+    float delta = sqrt(max(0.0, trace * trace - 4.0 * det));
+    float lambda1 = (trace + delta) / 2.0;
+    float lambda2 = (trace - delta) / 2.0;
 
-    float mid = 0.5 * (cov2d.x + cov2d.z);
-    float lambda1 = mid + sqrt(max(0.1, mid * mid - det));
-    float lambda2 = mid - sqrt(max(0.1, mid * mid - det));
-    float my_radius = ceil(3. * sqrt(max(lambda1, lambda2)));
-    vec2 point_image = vec2(ndc2Pix(p_proj.x,  czm_projection[0][0]), ndc2Pix(p_proj.y,  czm_projection[1][1]));
+    // Calculate the eigenvectors and eigenvalues
+    vec2 eigenVector1 = normalize(vec2(lambda1 - c, b));
+    vec2 eigenVector2 = vec2(-eigenVector1.y, eigenVector1.x);
 
-    // (Webgl-specific) As the covariance matrix is calculated as a one-time operation on CPU in this implementation,
-    // we need to apply the scale modifier differently to still allow for real-time scaling of the splats.
 
-    // (Webgl-specific) Convert gl_VertexID from [0,1,2,3] to [-1,-1],[1,-1],[-1,1],[1,1]
-    vec2 corner = vec2((gl_VertexID << 1) & 2, gl_VertexID & 2) - 1.;
-    // Vertex position in screen space
-    vec2 screen_pos = point_image + my_radius * corner;
+    float anisotropy = lambda1 / max(lambda2, 1e-5);
 
-    // Store some useful helper data for the fragment stage
-    con = conic;
-    xy = point_image;
-    pixf = screen_pos;
-    depth = eyeCoord.z;
+    // Calculate the point size based on the eigenvalues and anisotropy factor
+    float baseSize = 5.0; // Adjust this value to control the base size of the points
+    float scaleFactor = 2048.0; // Adjust this value to control the scaling based on anisotropy
+    float pointSize = baseSize * pow(anisotropy, scaleFactor);
 
-    // (Webgl-specific) Convert from screen-space to clip-space
-    vec2 clip_pos = screen_pos / vec2(czm_projection[0][0], czm_projection[1][1]) * 2. - 1.;
 
-  //  gl_Position = vec4(clip_pos, 0.0, 1.0);
-gl_Position = show * positionClip;
-    gl_PointSize = 20. * (sqrt(det) * 2048.) * (1.0 / -eyeCoord.z);
+    gl_Position = show * positionClip;
+    gl_PointSize = pointSize;
 
-        // //decompose covariance
-        // float diag1 = cov2d[0][0];
-        // float diag2 = cov2d[1][1];
-        // float offDiag = cov2d[0][1];
+    // Calculate the 2D covariance matrix
+    mat2 covarianceMatrix = mat2(
+        cov2d.x, cov2d.y,
+        cov2d.y, cov2d.z
+    );
+v_cov2d = vec2(cov2d.x, cov2d.z);
+    vCovarianceMatrix = inverse(covarianceMatrix);
 
-        // float mid = (diag1 + diag2) / 2.0;
-        // float radius = length(vec2((diag1 - diag2) / 2.0, offDiag));
-        // v_lambda1 = mid + radius;
-        // v_lambda2 = max(mid - radius, 0.1);
 
-        // //if(lambda2 < 0.0) return;
-        // vec2 diagonalVector = normalize(vec2(offDiag, v_lambda1 - diag1));
-        // vec2 majorAxis = min(sqrt(2.0 * v_lambda1), 4096.0) * diagonalVector;
-        // vec2 minorAxis = min(sqrt(2.0 * v_lambda2), 4096.0) * vec2(diagonalVector.y, -diagonalVector.x);
-
-        // v_eigen1 = diagonalVector;
-        // v_eigen2 = vec2(-v_eigen1.y, v_eigen1.x);
-
-        // // // (Webgl-specific) Convert gl_VertexID from [0,1,2,3] to [-1,-1],[1,-1],[-1,1],[1,1]
-        // // vec2 corner = vec2((gl_VertexID << 1) & 2, gl_VertexID & 2) - 1.;
-        // // // Vertex position in screen space
-        // // vec2 screen_pos = point_image + my_radius * corner;
-
-        // // // Store some useful helper data for the fragment stage
-        //     con = conic;
-        // // xy = a_position;
-        // // pixf = screen_pos;
-        // // depth = p_view.z;
-
-        // vec2 quadPos = vec2(gl_VertexID&1, (gl_VertexID>>1)&1) * 2.0 - 1.0;
-        // quadPos *= 2.;
-
-        // xy = quadPos;
-
-        // vec2 deltaScreenPos = (quadPos.x * majorAxis + quadPos.y * minorAxis) * 2. / czm_viewport.xy;
-        // pixf = deltaScreenPos;
-        // v_position = gl_Position;
-
-        // gl_Position = czm_projection * viewPos;
-
-        // gl_PointSize = 15.;//(sqrt(det) * 2048.) * (1.0/ -viewPos.z);
+    v_anisotropy = anisotropy;
+    vEigenVector1 = eigenVector1;
+    vEigenVector2 = eigenVector2;
+    vEigenValue1 = lambda1;
+    vEigenValue2 = lambda2;
 
     #endif
    // gl_Position = show * positionClip;
