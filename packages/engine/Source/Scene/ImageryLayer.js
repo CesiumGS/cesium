@@ -132,8 +132,8 @@ import TileImagery from "./TileImagery.js";
  * @alias ImageryLayer
  * @constructor
  *
- * @param {ImageryProvider} imageryProvider The imagery provider to use.
- * @param {ImageryLayer.ConstructorOptions} options An object describing initialization options
+ * @param {ImageryProvider} [imageryProvider] The imagery provider to use.
+ * @param {ImageryLayer.ConstructorOptions} [options] An object describing initialization options
  *
  * @see ImageryLayer.fromProviderAsync
  * @see ImageryLayer.fromWorldImagery
@@ -142,7 +142,7 @@ import TileImagery from "./TileImagery.js";
  * // Add an OpenStreetMaps layer
  * const imageryLayer = new Cesium.ImageryLayer(new Cesium.OpenStreetMapImageryProvider({
  *   url: "https://tile.openstreetmap.org/"
- * })),
+ * }));
  * scene.imageryLayers.add(imageryLayer);
  *
  * @example

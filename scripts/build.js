@@ -1,17 +1,16 @@
-/*eslint-env node*/
 import child_process from "child_process";
 import { existsSync, readFileSync, statSync } from "fs";
 import { readFile, writeFile } from "fs/promises";
 import { EOL } from "os";
 import path from "path";
 import { createRequire } from "module";
+import { finished } from 'stream/promises';
 
 import esbuild from "esbuild";
 import { globby } from "globby";
 import glslStripComments from "glsl-strip-comments";
 import gulp from "gulp";
 import { rimraf } from "rimraf";
-import streamToPromise from "stream-to-promise";
 
 import { mkdirp } from "mkdirp";
 
@@ -162,7 +161,6 @@ export async function bundleCesiumJs(options) {
   buildConfig.entryPoints = ["Source/Cesium.js"];
   buildConfig.minify = options.minify;
   buildConfig.sourcemap = options.sourcemap;
-  buildConfig.external = ["https", "http", "url", "zlib"];
   buildConfig.plugins = options.removePragmas ? [stripPragmaPlugin] : undefined;
   buildConfig.write = options.write;
   buildConfig.banner = {
@@ -361,7 +359,7 @@ export async function bundleWorkers(options) {
   const workers = await globby(["packages/engine/Source/Workers/**"]);
   const workerConfig = defaultESBuildOptions();
   workerConfig.bundle = true;
-  workerConfig.external = ["http", "https", "url", "zlib", "fs", "path"];
+  workerConfig.external = ["fs", "path"];
 
   if (options.iife) {
     let contents = ``;
@@ -622,7 +620,7 @@ export async function createGalleryList(noDevelopmentGallery) {
     fileList.push("!Apps/Sandcastle/gallery/development/**/*.html");
   }
 
-  // On travis, the version is set to something like '1.43.0-branch-name-travisBuildNumber'
+  // In CI, the version is set to something like '1.43.0-branch-name-buildNumber'
   // We need to extract just the Major.Minor version
   const majorMinor = packageJson.version.match(/^(.*)\.(.*)\./);
   const major = majorMinor[1];
@@ -641,7 +639,7 @@ export async function createGalleryList(noDevelopmentGallery) {
       .toString()
       .trim()
       .split("\n");
-  } catch (e) {
+  } catch {
     // On a Cesium fork, tags don't exist so we can't generate the list.
   }
 
@@ -716,10 +714,11 @@ const has_new_gallery_demos = ${newDemos.length > 0 ? "true;" : "false;"}\n`;
  */
 export async function copyFiles(globs, destination, base) {
   const stream = gulp
-    .src(globs, { nodir: true, base: base ?? "" })
+    .src(globs, { nodir: true, base: base ?? "", encoding: false })
     .pipe(gulp.dest(destination));
 
-  return streamToPromise(stream);
+  await finished(stream);
+  return stream;
 }
 
 /**
@@ -732,6 +731,7 @@ export async function copyEngineAssets(destination) {
   const engineStaticAssets = [
     "packages/engine/Source/**",
     "!packages/engine/Source/**/*.js",
+    "!packages/engine/Source/**/*.ts",
     "!packages/engine/Source/**/*.glsl",
     "!packages/engine/Source/**/*.css",
     "!packages/engine/Source/**/*.md",
@@ -759,6 +759,7 @@ export async function copyWidgetsAssets(destination) {
   const widgetsStaticAssets = [
     "packages/widgets/Source/**",
     "!packages/widgets/Source/**/*.js",
+    "!packages/widgets/Source/**/*.ts",
     "!packages/widgets/Source/**/*.css",
     "!packages/widgets/Source/**/*.glsl",
     "!packages/widgets/Source/**/*.md",
@@ -816,7 +817,6 @@ export async function bundleCombinedSpecs(options) {
     sourcemap: true,
     outdir: path.join("Build", "Specs"),
     plugins: [externalResolvePlugin],
-    external: [`http`, `https`, `url`, `zlib`],
     write: options.write,
   });
 }
@@ -843,7 +843,7 @@ export async function bundleTestWorkers(options) {
     format: "esm",
     sourcemap: true,
     outdir: path.join("Build", "Specs", "TestWorkers"),
-    external: ["http", "https", "url", "zlib", "fs", "path"],
+    external: ["fs", "path"],
     write: options.write,
   });
 }
@@ -960,7 +960,6 @@ async function bundleSpecs(options) {
     format: "esm",
     outdir: options.outdir,
     sourcemap: true,
-    external: ["https", "http", "zlib", "url"],
     target: "es2020",
     write: write,
   };

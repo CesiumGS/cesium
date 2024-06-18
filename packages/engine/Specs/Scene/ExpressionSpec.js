@@ -5,10 +5,9 @@ import {
   Color,
   Expression,
   ExpressionNodeType,
+  Math as CesiumMath,
   RuntimeError,
 } from "../../index.js";
-
-import { Math as CesiumMath } from "../../index.js";
 
 describe("Scene/Expression", function () {
   function MockFeature() {

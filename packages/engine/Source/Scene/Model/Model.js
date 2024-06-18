@@ -9,6 +9,7 @@ import defaultValue from "../../Core/defaultValue.js";
 import DeveloperError from "../../Core/DeveloperError.js";
 import destroyObject from "../../Core/destroyObject.js";
 import DistanceDisplayCondition from "../../Core/DistanceDisplayCondition.js";
+import Ellipsoid from "../../Core/Ellipsoid.js";
 import Event from "../../Core/Event.js";
 import Matrix3 from "../../Core/Matrix3.js";
 import Matrix4 from "../../Core/Matrix4.js";
@@ -16,9 +17,12 @@ import Resource from "../../Core/Resource.js";
 import RuntimeError from "../../Core/RuntimeError.js";
 import Pass from "../../Renderer/Pass.js";
 import ClippingPlaneCollection from "../ClippingPlaneCollection.js";
+import ClippingPolygonCollection from "../ClippingPolygonCollection.js";
 import ColorBlendMode from "../ColorBlendMode.js";
 import GltfLoader from "../GltfLoader.js";
-import HeightReference from "../HeightReference.js";
+import HeightReference, {
+  isHeightReferenceRelative,
+} from "../HeightReference.js";
 import ImageBasedLighting from "../ImageBasedLighting.js";
 import PointCloudShading from "../PointCloudShading.js";
 import SceneMode from "../SceneMode.js";
@@ -37,6 +41,7 @@ import ModelUtility from "./ModelUtility.js";
 import oneTimeWarning from "../../Core/oneTimeWarning.js";
 import PntsLoader from "./PntsLoader.js";
 import StyleCommandsNeeded from "./StyleCommandsNeeded.js";
+import pickModel from "./pickModel.js";
 
 /**
  * <div class="notice">
@@ -112,7 +117,7 @@ import StyleCommandsNeeded from "./StyleCommandsNeeded.js";
  * @internalConstructor
  *
  * @privateParam {ResourceLoader} options.loader The loader used to load resources for this model.
- * @privateParam {ModelType} options.type Type of this model, to distinguish individual glTF files from 3D Tiles internally. 
+ * @privateParam {ModelType} options.type Type of this model, to distinguish individual glTF files from 3D Tiles internally.
  * @privateParam {object} options Object with the following properties:
  * @privateParam {Resource} options.resource The Resource to the 3D model.
  * @privateParam {boolean} [options.show=true] Whether or not to render the model.
@@ -143,6 +148,7 @@ import StyleCommandsNeeded from "./StyleCommandsNeeded.js";
  * @privateParam {boolean} [options.showOutline=true] Whether to display the outline for models using the {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension. When true, outlines are displayed. When false, outlines are not displayed.
  * @privateParam {Color} [options.outlineColor=Color.BLACK] The color to use when rendering outlines.
  * @privateParam {ClippingPlaneCollection} [options.clippingPlanes] The {@link ClippingPlaneCollection} used to selectively disable rendering the model.
+ * @privateParam {ClippingPolygonCollection} [options.clippingPolygons] The {@link ClippingPolygonCollection} used to selectively disable rendering the model.
  * @privateParam {Cartesian3} [options.lightColor] The light color when shading the model. When <code>undefined</code> the scene's light color is used instead.
  * @privateParam {ImageBasedLighting} [options.imageBasedLighting] The properties for managing image-based lighting on this model.
  * @privateParam {boolean} [options.backFaceCulling=true] Whether to cull back-facing geometry. When true, back face culling is determined by the material's doubleSided property; when false, back face culling is disabled. Back faces are not culled if the model's color is translucent.
@@ -150,11 +156,12 @@ import StyleCommandsNeeded from "./StyleCommandsNeeded.js";
  * @privateParam {boolean} [options.showCreditsOnScreen=false] Whether to display the credits of this model on screen.
  * @privateParam {SplitDirection} [options.splitDirection=SplitDirection.NONE] The {@link SplitDirection} split to apply to this model.
  * @privateParam {boolean} [options.projectTo2D=false] Whether to accurately project the model's positions in 2D. If this is true, the model will be projected accurately to 2D, but it will use more memory to do so. If this is false, the model will use less memory and will still render in 2D / CV mode, but its positions may be inaccurate. This disables minimumPixelSize and prevents future modification to the model matrix. This also cannot be set after the model has loaded.
+ * @privateParam {boolean} [options.enablePick=false] Whether to allow CPU picking with <code>pick</code> when not using WebGL 2 or above. If using WebGL 2 or above, this option will be ignored. If using WebGL 1 and this is true, the <code>pick</code> operation will work correctly, but it will use more memory to do so. If running with WebGL 1 and this is false, the model will use less memory, but <code>pick</code> will always return <code>undefined</code>. This cannot be set after the model has loaded.
  * @privateParam {string|number} [options.featureIdLabel="featureId_0"] Label of the feature ID set to use for picking and styling. For EXT_mesh_features, this is the feature ID's label property, or "featureId_N" (where N is the index in the featureIds array) when not specified. EXT_feature_metadata did not have a label field, so such feature ID sets are always labeled "featureId_N" where N is the index in the list of all feature Ids, where feature ID attributes are listed before feature ID textures. If featureIdLabel is an integer N, it is converted to the string "featureId_N" automatically. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
  * @privateParam {string|number} [options.instanceFeatureIdLabel="instanceFeatureId_0"] Label of the instance feature ID set used for picking and styling. If instanceFeatureIdLabel is set to an integer N, it is converted to the string "instanceFeatureId_N" automatically. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
  * @privateParam {object} [options.pointCloudShading] Options for constructing a {@link PointCloudShading} object to control point attenuation based on geometric error and lighting.
  * @privateParam {ClassificationType} [options.classificationType] Determines whether terrain, 3D Tiles or both will be classified by this model. This cannot be set after the model has loaded.
- 
+
  *
  * @see Model.fromGltfAsync
  *
@@ -192,7 +199,7 @@ function Model(options) {
    * When this is the identity matrix, the model is drawn in world coordinates, i.e., Earth's Cartesian WGS84 coordinates.
    * Local reference frames can be used by providing a different transformation matrix, like that returned
    * by {@link Transforms.eastNorthUpToFixedFrame}.
-   * 
+   *
    * @type {Matrix4}
 
    * @default {@link Matrix4.IDENTITY}
@@ -333,15 +340,16 @@ function Model(options) {
   this._heightDirty = this._heightReference !== HeightReference.NONE;
   this._removeUpdateHeightCallback = undefined;
 
+  this._verticalExaggerationOn = false;
+
   this._clampedModelMatrix = undefined; // For use with height reference
 
   const scene = options.scene;
   if (defined(scene) && defined(scene.terrainProviderChanged)) {
     this._terrainProviderChangedCallback = scene.terrainProviderChanged.addEventListener(
-      function () {
+      () => {
         this._heightDirty = true;
-      },
-      this
+      }
     );
   }
   this._scene = scene;
@@ -363,6 +371,20 @@ function Model(options) {
   }
   this._clippingPlanesState = 0; // If this value changes, the shaders need to be regenerated.
   this._clippingPlanesMatrix = Matrix4.clone(Matrix4.IDENTITY); // Derived from reference matrix and the current view matrix
+
+  // If the given clipping polygons don't have an owner, make this model its owner.
+  // Otherwise, the clipping polygons are passed down from a tileset.
+  const clippingPolygons = options.clippingPolygons;
+  if (defined(clippingPolygons) && clippingPolygons.owner === undefined) {
+    ClippingPolygonCollection.setOwner(
+      clippingPolygons,
+      this,
+      "_clippingPolygons"
+    );
+  } else {
+    this._clippingPolygons = clippingPolygons;
+  }
+  this._clippingPolygonsState = 0; // If this value changes, the shaders need to be regenerated.
 
   this._lightColor = Cartesian3.clone(options.lightColor);
 
@@ -453,6 +475,9 @@ function Model(options) {
 
   this._sceneMode = undefined;
   this._projectTo2D = defaultValue(options.projectTo2D, false);
+  this._enablePick = defaultValue(options.enablePick, false);
+
+  this._fogRenderable = undefined;
 
   this._skipLevelOfDetail = false;
   this._ignoreCommands = defaultValue(options.ignoreCommands, false);
@@ -1295,6 +1320,26 @@ Object.defineProperties(Model.prototype, {
   },
 
   /**
+   * The {@link ClippingPolygonCollection} used to selectively disable rendering the model.
+   *
+   * @memberof Model.prototype
+   *
+   * @type {ClippingPolygonCollection}
+   */
+  clippingPolygons: {
+    get: function () {
+      return this._clippingPolygons;
+    },
+    set: function (value) {
+      if (value !== this._clippingPolygons) {
+        // Handle destroying old clipping polygons, new clipping polygons ownership
+        ClippingPolygonCollection.setOwner(value, this, "_clippingPolygons");
+        this.resetDrawCommands();
+      }
+    },
+  },
+
+  /**
    * The light color when shading the model. When <code>undefined</code> the scene's light color is used instead.
    * <p>
    * Disabling additional light sources by setting
@@ -1548,10 +1593,14 @@ Object.defineProperties(Model.prototype, {
    *     <li>The glTF cannot contain morph targets, skins, or animations.</li>
    *     <li>The glTF cannot contain the <code>EXT_mesh_gpu_instancing</code> extension.</li>
    *     <li>Only meshes with TRIANGLES can be used to classify other assets.</li>
-   *     <li>The position attribute is required.</li>
+   *     <li>The meshes must be watertight.</li>
+   *     <li>The POSITION attribute is required.</li>
    *     <li>If feature IDs and an index buffer are both present, all indices with the same feature id must occupy contiguous sections of the index buffer.</li>
    *     <li>If feature IDs are present without an index buffer, all positions with the same feature id must occupy contiguous sections of the position buffer.</li>
    * </ul>
+   * </p>
+   * <p>
+   * The 3D Tiles or terrain receiving the classification must be opaque.
    * </p>
    *
    * @memberof Model.prototype
@@ -1788,7 +1837,10 @@ Model.prototype.update = function (frameState) {
   updateSilhouette(this, frameState);
   updateSkipLevelOfDetail(this, frameState);
   updateClippingPlanes(this, frameState);
+  updateClippingPolygons(this, frameState);
   updateSceneMode(this, frameState);
+  updateFog(this, frameState);
+  updateVerticalExaggeration(this, frameState);
 
   this._defaultTexture = frameState.context.defaultTexture;
 
@@ -1972,6 +2024,24 @@ function updateClippingPlanes(model, frameState) {
   }
 }
 
+function updateClippingPolygons(model, frameState) {
+  // Update the clipping polygon collection / state for this model to detect any changes.
+  let currentClippingPolygonsState = 0;
+  if (model.isClippingPolygonsEnabled()) {
+    if (model._clippingPolygons.owner === model) {
+      model._clippingPolygons.update(frameState);
+      model._clippingPolygons.queueCommands(frameState);
+    }
+    currentClippingPolygonsState =
+      model._clippingPolygons.clippingPolygonsState;
+  }
+
+  if (currentClippingPolygonsState !== model._clippingPolygonsState) {
+    model.resetDrawCommands();
+    model._clippingPolygonsState = currentClippingPolygonsState;
+  }
+}
+
 function updateSceneMode(model, frameState) {
   if (frameState.mode !== model._sceneMode) {
     if (model._projectTo2D) {
@@ -1980,6 +2050,22 @@ function updateSceneMode(model, frameState) {
       model._updateModelMatrix = true;
     }
     model._sceneMode = frameState.mode;
+  }
+}
+
+function updateFog(model, frameState) {
+  const fogRenderable = frameState.fog.enabled && frameState.fog.renderable;
+  if (fogRenderable !== model._fogRenderable) {
+    model.resetDrawCommands();
+    model._fogRenderable = fogRenderable;
+  }
+}
+
+function updateVerticalExaggeration(model, frameState) {
+  const verticalExaggerationNeeded = frameState.verticalExaggeration !== 1.0;
+  if (model._verticalExaggerationOn !== verticalExaggerationNeeded) {
+    model.resetDrawCommands();
+    model._verticalExaggerationOn = verticalExaggerationNeeded;
   }
 }
 
@@ -2025,15 +2111,11 @@ function updateClamping(model) {
   }
 
   const scene = model._scene;
-  if (
-    !defined(scene) ||
-    !defined(scene.globe) ||
-    model.heightReference === HeightReference.NONE
-  ) {
+  if (!defined(scene) || model.heightReference === HeightReference.NONE) {
     //>>includeStart('debug', pragmas.debug);
     if (model.heightReference !== HeightReference.NONE) {
       throw new DeveloperError(
-        "Height reference is not supported without a scene and globe."
+        "Height reference is not supported without a scene."
       );
     }
     //>>includeEnd('debug');
@@ -2041,8 +2123,7 @@ function updateClamping(model) {
     return;
   }
 
-  const globe = scene.globe;
-  const ellipsoid = globe.ellipsoid;
+  const ellipsoid = defaultValue(scene.ellipsoid, Ellipsoid.default);
 
   // Compute cartographic position so we don't recompute every update
   const modelMatrix = model.modelMatrix;
@@ -2056,14 +2137,14 @@ function updateClamping(model) {
   }
 
   // Install callback to handle updating of terrain tiles
-  const surface = globe._surface;
-  model._removeUpdateHeightCallback = surface.updateHeight(
+  model._removeUpdateHeightCallback = scene.updateHeight(
     cartoPosition,
-    getUpdateHeightCallback(model, ellipsoid, cartoPosition)
+    getUpdateHeightCallback(model, ellipsoid, cartoPosition),
+    model.heightReference
   );
 
   // Set the correct height now
-  const height = globe.getHeight(cartoPosition);
+  const height = scene.getHeight(cartoPosition, model.heightReference);
   if (defined(height)) {
     // Get callback with cartoPosition being the non-clamped position
     const callback = getUpdateHeightCallback(model, ellipsoid, cartoPosition);
@@ -2071,8 +2152,7 @@ function updateClamping(model) {
     // Compute the clamped cartesian and call updateHeight callback
     Cartographic.clone(cartoPosition, scratchCartographic);
     scratchCartographic.height = height;
-    ellipsoid.cartographicToCartesian(scratchCartographic, scratchPosition);
-    callback(scratchPosition);
+    callback(scratchCartographic);
   }
 
   model._heightDirty = false;
@@ -2125,7 +2205,7 @@ function updateComputedScale(model, modelMatrix, frameState) {
     Matrix4.getTranslation(modelMatrix, scratchPosition);
 
     if (model._sceneMode !== SceneMode.SCENE3D) {
-      SceneTransforms.computeActualWgs84Position(
+      SceneTransforms.computeActualEllipsoidPosition(
         frameState,
         scratchPosition,
         scratchPosition
@@ -2169,6 +2249,10 @@ function updatePickIds(model) {
   }
 }
 
+// Matrix3 is a row-major constructor.
+// The same constructor in GLSL will produce the transpose of this.
+const yUpToZUp = new Matrix3(-1, 0, 0, 0, 0, 1, 0, -1, 0);
+
 function updateReferenceMatrices(model, frameState) {
   const modelMatrix = defined(model._clampedModelMatrix)
     ? model._clampedModelMatrix
@@ -2186,15 +2270,16 @@ function updateReferenceMatrices(model, frameState) {
       referenceMatrix,
       iblReferenceFrameMatrix4
     );
-    iblReferenceFrameMatrix3 = Matrix4.getMatrix3(
+    iblReferenceFrameMatrix3 = Matrix4.getRotation(
       iblReferenceFrameMatrix4,
       iblReferenceFrameMatrix3
     );
-    iblReferenceFrameMatrix3 = Matrix3.getRotation(
+    iblReferenceFrameMatrix3 = Matrix3.transpose(
       iblReferenceFrameMatrix3,
       iblReferenceFrameMatrix3
     );
-    model._iblReferenceFrameMatrix = Matrix3.transpose(
+    model._iblReferenceFrameMatrix = Matrix3.multiply(
+      yUpToZUp,
       iblReferenceFrameMatrix3,
       model._iblReferenceFrameMatrix
     );
@@ -2329,24 +2414,25 @@ function scaleInPixels(positionWC, radius, frameState) {
   );
 }
 
-function getUpdateHeightCallback(model, ellipsoid, cartoPosition) {
+const scratchUpdateHeightCartesian = new Cartesian3();
+function getUpdateHeightCallback(model, ellipsoid, originalPostition) {
   return function (clampedPosition) {
-    if (model.heightReference === HeightReference.RELATIVE_TO_GROUND) {
-      const clampedCart = ellipsoid.cartesianToCartographic(
-        clampedPosition,
-        scratchCartographic
-      );
-      clampedCart.height += cartoPosition.height;
-      ellipsoid.cartographicToCartesian(clampedCart, clampedPosition);
+    if (isHeightReferenceRelative(model.heightReference)) {
+      clampedPosition.height += originalPostition.height;
     }
+
+    ellipsoid.cartographicToCartesian(
+      clampedPosition,
+      scratchUpdateHeightCartesian
+    );
 
     const clampedModelMatrix = model._clampedModelMatrix;
 
     // Modify clamped model matrix to use new height
     Matrix4.clone(model.modelMatrix, clampedModelMatrix);
-    clampedModelMatrix[12] = clampedPosition.x;
-    clampedModelMatrix[13] = clampedPosition.y;
-    clampedModelMatrix[14] = clampedPosition.z;
+    clampedModelMatrix[12] = scratchUpdateHeightCartesian.x;
+    clampedModelMatrix[13] = scratchUpdateHeightCartesian.y;
+    clampedModelMatrix[14] = scratchUpdateHeightCartesian.z;
 
     model._heightDirty = true;
   };
@@ -2378,7 +2464,11 @@ function passesDistanceDisplayCondition(model, frameState) {
 
     // This will project the position if the scene is in Columbus View,
     // but leave the position as-is in 3D mode.
-    SceneTransforms.computeActualWgs84Position(frameState, position, position);
+    SceneTransforms.computeActualEllipsoidPosition(
+      frameState,
+      position,
+      position
+    );
 
     distanceSquared = Cartesian3.distanceSquared(
       position,
@@ -2482,6 +2572,50 @@ Model.prototype.isClippingEnabled = function () {
 };
 
 /**
+ * Find an intersection between a ray and the model surface that was rendered. The ray must be given in world coordinates.
+ *
+ * @param {Ray} ray The ray to test for intersection.
+ * @param {FrameState} frameState The frame state.
+ * @param {number} [verticalExaggeration=1.0] A scalar used to exaggerate the height of a position relative to the ellipsoid. If the value is 1.0 there will be no effect.
+ * @param {number} [relativeHeight=0.0] The height above the ellipsoid relative to which a position is exaggerated. If the value is 0.0 the position will be exaggerated relative to the ellipsoid surface.
+ * @param {Cartesian3|undefined} [result] The intersection or <code>undefined</code> if none was found.
+ * @returns {Cartesian3|undefined} The intersection or <code>undefined</code> if none was found.
+ *
+ * @private
+ */
+Model.prototype.pick = function (
+  ray,
+  frameState,
+  verticalExaggeration,
+  relativeHeight,
+  result
+) {
+  return pickModel(
+    this,
+    ray,
+    frameState,
+    verticalExaggeration,
+    relativeHeight,
+    result
+  );
+};
+
+/**
+ * Gets whether or not clipping polygons are enabled for this model.
+ *
+ * @returns {boolean} <code>true</code> if clipping polygons are enabled for this model, <code>false</code>.
+ * @private
+ */
+Model.prototype.isClippingPolygonsEnabled = function () {
+  const clippingPolygons = this._clippingPolygons;
+  return (
+    defined(clippingPolygons) &&
+    clippingPolygons.enabled &&
+    clippingPolygons.length !== 0
+  );
+};
+
+/**
  * Returns true if this object was destroyed; otherwise, false.
  * <br /><br />
  * If this object was destroyed, it should not be used; calling any function other than
@@ -2549,6 +2683,17 @@ Model.prototype.destroy = function () {
     clippingPlaneCollection.destroy();
   }
   this._clippingPlanes = undefined;
+
+  // Only destroy the ClippingPolygonCollection if this is the owner.
+  const clippingPolygonCollection = this._clippingPolygons;
+  if (
+    defined(clippingPolygonCollection) &&
+    !clippingPolygonCollection.isDestroyed() &&
+    clippingPolygonCollection.owner === this
+  ) {
+    clippingPolygonCollection.destroy();
+  }
+  this._clippingPolygons = undefined;
 
   // Only destroy the ImageBasedLighting if this is the owner.
   if (
@@ -2633,6 +2778,7 @@ Model.prototype.destroyModelResources = function () {
  * @param {boolean} [options.showOutline=true] Whether to display the outline for models using the {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension. When true, outlines are displayed. When false, outlines are not displayed.
  * @param {Color} [options.outlineColor=Color.BLACK] The color to use when rendering outlines.
  * @param {ClippingPlaneCollection} [options.clippingPlanes] The {@link ClippingPlaneCollection} used to selectively disable rendering the model.
+ * @param {ClippingPolygonCollection} [options.clippingPolygons] The {@link ClippingPolygonCollection} used to selectively disable rendering the model.
  * @param {Cartesian3} [options.lightColor] The light color when shading the model. When <code>undefined</code> the scene's light color is used instead.
  * @param {ImageBasedLighting} [options.imageBasedLighting] The properties for managing image-based lighting on this model.
  * @param {boolean} [options.backFaceCulling=true] Whether to cull back-facing geometry. When true, back face culling is determined by the material's doubleSided property; when false, back face culling is disabled. Back faces are not culled if the model's color is translucent.
@@ -2640,6 +2786,7 @@ Model.prototype.destroyModelResources = function () {
  * @param {boolean} [options.showCreditsOnScreen=false] Whether to display the credits of this model on screen.
  * @param {SplitDirection} [options.splitDirection=SplitDirection.NONE] The {@link SplitDirection} split to apply to this model.
  * @param {boolean} [options.projectTo2D=false] Whether to accurately project the model's positions in 2D. If this is true, the model will be projected accurately to 2D, but it will use more memory to do so. If this is false, the model will use less memory and will still render in 2D / CV mode, but its positions may be inaccurate. This disables minimumPixelSize and prevents future modification to the model matrix. This also cannot be set after the model has loaded.
+ * @param {boolean} [options.enablePick=false] Whether to allow with CPU picking with <code>pick</code> when not using WebGL 2 or above. If using WebGL 2 or above, this option will be ignored. If using WebGL 1 and this is true, the <code>pick</code> operation will work correctly, but it will use more memory to do so. If running with WebGL 1 and this is false, the model will use less memory, but <code>pick</code> will always return <code>undefined</code>. This cannot be set after the model has loaded.
  * @param {string|number} [options.featureIdLabel="featureId_0"] Label of the feature ID set to use for picking and styling. For EXT_mesh_features, this is the feature ID's label property, or "featureId_N" (where N is the index in the featureIds array) when not specified. EXT_feature_metadata did not have a label field, so such feature ID sets are always labeled "featureId_N" where N is the index in the list of all feature Ids, where feature ID attributes are listed before feature ID textures. If featureIdLabel is an integer N, it is converted to the string "featureId_N" automatically. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
  * @param {string|number} [options.instanceFeatureIdLabel="instanceFeatureId_0"] Label of the instance feature ID set used for picking and styling. If instanceFeatureIdLabel is set to an integer N, it is converted to the string "instanceFeatureId_N" automatically. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
  * @param {object} [options.pointCloudShading] Options for constructing a {@link PointCloudShading} object to control point attenuation and lighting.
@@ -2734,6 +2881,7 @@ Model.fromGltfAsync = async function (options) {
     upAxis: options.upAxis,
     forwardAxis: options.forwardAxis,
     loadAttributesFor2D: options.projectTo2D,
+    enablePick: options.enablePick,
     loadIndicesForWireframe: options.enableDebugWireframe,
     loadPrimitiveOutline: options.enableShowOutline,
     loadForClassification: defined(options.classificationType),
@@ -2810,6 +2958,7 @@ Model.fromB3dm = async function (options) {
     upAxis: options.upAxis,
     forwardAxis: options.forwardAxis,
     loadAttributesFor2D: options.projectTo2D,
+    enablePick: options.enablePick,
     loadIndicesForWireframe: options.enableDebugWireframe,
     loadPrimitiveOutline: options.enableShowOutline,
     loadForClassification: defined(options.classificationType),
@@ -2865,6 +3014,7 @@ Model.fromI3dm = async function (options) {
     upAxis: options.upAxis,
     forwardAxis: options.forwardAxis,
     loadAttributesFor2D: options.projectTo2D,
+    enablePick: options.enablePick,
     loadIndicesForWireframe: options.enableDebugWireframe,
     loadPrimitiveOutline: options.enableShowOutline,
   };
@@ -2991,6 +3141,7 @@ function makeModelOptions(loader, modelType, options) {
     showOutline: options.showOutline,
     outlineColor: options.outlineColor,
     clippingPlanes: options.clippingPlanes,
+    clippingPolygons: options.clippingPolygons,
     lightColor: options.lightColor,
     imageBasedLighting: options.imageBasedLighting,
     backFaceCulling: options.backFaceCulling,
@@ -2998,6 +3149,7 @@ function makeModelOptions(loader, modelType, options) {
     showCreditsOnScreen: options.showCreditsOnScreen,
     splitDirection: options.splitDirection,
     projectTo2D: options.projectTo2D,
+    enablePick: options.enablePick,
     featureIdLabel: options.featureIdLabel,
     instanceFeatureIdLabel: options.instanceFeatureIdLabel,
     pointCloudShading: options.pointCloudShading,

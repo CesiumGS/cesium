@@ -8,6 +8,7 @@ import {
   CoplanarPolygonOutlineGeometry,
   Ellipsoid,
   JulianDate,
+  Math as CesiumMath,
   PolygonGeometry,
   PolygonHierarchy,
   PolygonOutlineGeometry,
@@ -23,8 +24,6 @@ import {
   HeightReference,
   PrimitiveCollection,
 } from "../../index.js";
-
-import { Math as CesiumMath } from "../../index.js";
 
 import createDynamicGeometryUpdaterSpecs from "../../../../Specs/createDynamicGeometryUpdaterSpecs.js";
 import createDynamicProperty from "../../../../Specs/createDynamicProperty.js";

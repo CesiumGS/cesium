@@ -240,6 +240,7 @@ PixelFormat.validate = function (pixelFormat) {
  */
 PixelFormat.isColorFormat = function (pixelFormat) {
   return (
+    pixelFormat === PixelFormat.RED ||
     pixelFormat === PixelFormat.ALPHA ||
     pixelFormat === PixelFormat.RGB ||
     pixelFormat === PixelFormat.RGBA ||
@@ -402,6 +403,11 @@ PixelFormat.alignmentInBytes = function (pixelFormat, pixelDatatype, width) {
 
 /**
  * @private
+ * @param {PixelFormat} pixelFormat The pixel format.
+ * @param {PixelDatatype} pixelDatatype The pixel datatype.
+ * @param {Number} width The width of the texture.
+ * @param {Number} height The height of the texture.
+ * @returns {TypedArray} The typed array.
  */
 PixelFormat.createTypedArray = function (
   pixelFormat,

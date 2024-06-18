@@ -37,22 +37,22 @@ describe(
           _debug: {
             tilesWaitingForChildren: 0,
           },
+          updateHeight: function () {},
         },
         terrainProviderChanged: new Event(),
         imageryLayersUpdatedEvent: new Event(),
+        tileLoadProgressEvent: new Event(),
         beginFrame: function () {},
         update: function () {},
         render: function () {},
         endFrame: function () {},
+        destroy: function () {},
+        isDestroyed: () => false,
       };
 
       scene.globe.getHeight = function () {
         return 0.0;
       };
-
-      scene.globe.destroy = function () {};
-
-      scene.globe._surface.updateHeight = function () {};
 
       scene.globe.terrainProviderChanged = new Event();
       Object.defineProperties(scene.globe, {
@@ -155,7 +155,7 @@ describe(
       let billboard = cluster.getBillboard(entity);
       billboard.id = entity;
       billboard.image = createBillboardImage();
-      billboard.position = SceneTransforms.drawingBufferToWgs84Coordinates(
+      billboard.position = SceneTransforms.drawingBufferToWorldCoordinates(
         scene,
         new Cartesian2(0.0, 0.0),
         depth
@@ -165,7 +165,7 @@ describe(
       billboard = cluster.getBillboard(entity);
       billboard.id = entity;
       billboard.image = createBillboardImage();
-      billboard.position = SceneTransforms.drawingBufferToWgs84Coordinates(
+      billboard.position = SceneTransforms.drawingBufferToWorldCoordinates(
         scene,
         new Cartesian2(scene.canvas.clientWidth, scene.canvas.clientHeight),
         depth
@@ -197,7 +197,7 @@ describe(
       let label = cluster.getLabel(entity);
       label.id = entity;
       label.text = "a";
-      label.position = SceneTransforms.drawingBufferToWgs84Coordinates(
+      label.position = SceneTransforms.drawingBufferToWorldCoordinates(
         scene,
         new Cartesian2(0.0, 0.0),
         depth
@@ -207,7 +207,7 @@ describe(
       label = cluster.getLabel(entity);
       label.id = entity;
       label.text = "b";
-      label.position = SceneTransforms.drawingBufferToWgs84Coordinates(
+      label.position = SceneTransforms.drawingBufferToWorldCoordinates(
         scene,
         new Cartesian2(scene.canvas.clientWidth, scene.canvas.clientHeight),
         depth
@@ -238,7 +238,7 @@ describe(
       let point = cluster.getPoint(entity);
       point.id = entity;
       point.pixelSize = 1;
-      point.position = SceneTransforms.drawingBufferToWgs84Coordinates(
+      point.position = SceneTransforms.drawingBufferToWorldCoordinates(
         scene,
         new Cartesian2(0.0, 0.0),
         depth
@@ -248,7 +248,7 @@ describe(
       point = cluster.getPoint(entity);
       point.id = entity;
       point.pixelSize = 1;
-      point.position = SceneTransforms.drawingBufferToWgs84Coordinates(
+      point.position = SceneTransforms.drawingBufferToWorldCoordinates(
         scene,
         new Cartesian2(scene.canvas.clientWidth, scene.canvas.clientHeight),
         depth
@@ -279,7 +279,7 @@ describe(
       let point = cluster.getPoint(entity);
       point.id = entity;
       point.pixelSize = 1;
-      point.position = SceneTransforms.drawingBufferToWgs84Coordinates(
+      point.position = SceneTransforms.drawingBufferToWorldCoordinates(
         scene,
         new Cartesian2(0.0, 0.0),
         depth
@@ -289,7 +289,7 @@ describe(
       point = cluster.getPoint(entity);
       point.id = entity;
       point.pixelSize = 1;
-      point.position = SceneTransforms.drawingBufferToWgs84Coordinates(
+      point.position = SceneTransforms.drawingBufferToWorldCoordinates(
         scene,
         new Cartesian2(scene.canvas.clientWidth, scene.canvas.clientHeight),
         depth
@@ -310,7 +310,7 @@ describe(
       let point = cluster.getPoint(entity);
       point.id = entity;
       point.pixelSize = 1;
-      point.position = SceneTransforms.drawingBufferToWgs84Coordinates(
+      point.position = SceneTransforms.drawingBufferToWorldCoordinates(
         scene,
         new Cartesian2(0.0, 0.0),
         depth
@@ -320,7 +320,7 @@ describe(
       point = cluster.getPoint(entity);
       point.id = entity;
       point.pixelSize = 1;
-      point.position = SceneTransforms.drawingBufferToWgs84Coordinates(
+      point.position = SceneTransforms.drawingBufferToWorldCoordinates(
         scene,
         new Cartesian2(scene.canvas.clientWidth, scene.canvas.clientHeight),
         depth
@@ -433,7 +433,7 @@ describe(
       let billboard = cluster.getBillboard(entity);
       billboard.id = entity;
       billboard.image = createBillboardImage();
-      billboard.position = SceneTransforms.drawingBufferToWgs84Coordinates(
+      billboard.position = SceneTransforms.drawingBufferToWorldCoordinates(
         scene,
         new Cartesian2(0.0, 0.0),
         depth
@@ -443,7 +443,7 @@ describe(
       billboard = cluster.getBillboard(entity);
       billboard.id = entity;
       billboard.image = createBillboardImage();
-      billboard.position = SceneTransforms.drawingBufferToWgs84Coordinates(
+      billboard.position = SceneTransforms.drawingBufferToWorldCoordinates(
         scene,
         new Cartesian2(scene.canvas.clientWidth, scene.canvas.clientHeight),
         depth
@@ -474,7 +474,7 @@ describe(
       let billboard = cluster.getBillboard(entity);
       billboard.id = entity;
       billboard.image = createBillboardImage();
-      billboard.position = SceneTransforms.drawingBufferToWgs84Coordinates(
+      billboard.position = SceneTransforms.drawingBufferToWorldCoordinates(
         scene,
         new Cartesian2(0.0, 0.0),
         depth
@@ -484,7 +484,7 @@ describe(
       billboard = cluster.getBillboard(entity);
       billboard.id = entity;
       billboard.image = createBillboardImage();
-      billboard.position = SceneTransforms.drawingBufferToWgs84Coordinates(
+      billboard.position = SceneTransforms.drawingBufferToWorldCoordinates(
         scene,
         new Cartesian2(scene.canvas.clientWidth, 0),
         depth
@@ -494,7 +494,7 @@ describe(
       billboard = cluster.getBillboard(entity);
       billboard.id = entity;
       billboard.image = createBillboardImage();
-      billboard.position = SceneTransforms.drawingBufferToWgs84Coordinates(
+      billboard.position = SceneTransforms.drawingBufferToWorldCoordinates(
         scene,
         new Cartesian2(0, scene.canvas.clientHeight),
         depth
@@ -504,7 +504,7 @@ describe(
       billboard = cluster.getBillboard(entity);
       billboard.id = entity;
       billboard.image = createBillboardImage();
-      billboard.position = SceneTransforms.drawingBufferToWgs84Coordinates(
+      billboard.position = SceneTransforms.drawingBufferToWorldCoordinates(
         scene,
         new Cartesian2(scene.canvas.clientWidth, scene.canvas.clientHeight),
         depth
@@ -535,7 +535,7 @@ describe(
       let billboard = cluster.getBillboard(entity);
       billboard.id = entity;
       billboard.image = createBillboardImage();
-      billboard.position = SceneTransforms.drawingBufferToWgs84Coordinates(
+      billboard.position = SceneTransforms.drawingBufferToWorldCoordinates(
         scene,
         new Cartesian2(0.0, 0.0),
         farDepth
@@ -545,7 +545,7 @@ describe(
       billboard = cluster.getBillboard(entity);
       billboard.id = entity;
       billboard.image = createBillboardImage();
-      billboard.position = SceneTransforms.drawingBufferToWgs84Coordinates(
+      billboard.position = SceneTransforms.drawingBufferToWorldCoordinates(
         scene,
         new Cartesian2(scene.canvas.clientWidth, scene.canvas.clientHeight),
         farDepth
@@ -594,7 +594,7 @@ describe(
       let point = cluster.getPoint(entity);
       point.id = entity;
       point.pixelSize = 1;
-      point.position = SceneTransforms.drawingBufferToWgs84Coordinates(
+      point.position = SceneTransforms.drawingBufferToWorldCoordinates(
         scene,
         new Cartesian2(0.0, 0.0),
         farDepth
@@ -604,7 +604,7 @@ describe(
       point = cluster.getPoint(entity);
       point.id = entity;
       point.pixelSize = 1;
-      point.position = SceneTransforms.drawingBufferToWgs84Coordinates(
+      point.position = SceneTransforms.drawingBufferToWorldCoordinates(
         scene,
         new Cartesian2(scene.canvas.clientWidth, scene.canvas.clientHeight),
         farDepth
@@ -643,7 +643,7 @@ describe(
       const entityCollection = dataSource.entities;
 
       entityCollection.add({
-        position: SceneTransforms.drawingBufferToWgs84Coordinates(
+        position: SceneTransforms.drawingBufferToWorldCoordinates(
           scene,
           new Cartesian2(0.0, 0.0),
           depth
@@ -657,7 +657,7 @@ describe(
       });
 
       entityCollection.add({
-        position: SceneTransforms.drawingBufferToWgs84Coordinates(
+        position: SceneTransforms.drawingBufferToWorldCoordinates(
           scene,
           new Cartesian2(scene.canvas.clientWidth, scene.canvas.clientHeight),
           depth

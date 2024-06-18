@@ -56,7 +56,7 @@ ApproximateTerrainHeights.initialize = function () {
 /**
  * Computes the minimum and maximum terrain heights for a given rectangle
  * @param {Rectangle} rectangle The bounding rectangle
- * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid
+ * @param {Ellipsoid} [ellipsoid=Ellipsoid.default] The ellipsoid
  * @return {{minimumTerrainHeight: number, maximumTerrainHeight: number}}
  */
 ApproximateTerrainHeights.getMinimumMaximumHeights = function (
@@ -71,7 +71,7 @@ ApproximateTerrainHeights.getMinimumMaximumHeights = function (
     );
   }
   //>>includeEnd('debug');
-  ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
+  ellipsoid = defaultValue(ellipsoid, Ellipsoid.default);
 
   const xyLevel = getTileXYLevel(rectangle);
 
@@ -130,7 +130,7 @@ ApproximateTerrainHeights.getMinimumMaximumHeights = function (
 /**
  * Computes the bounding sphere based on the tile heights in the rectangle
  * @param {Rectangle} rectangle The bounding rectangle
- * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid
+ * @param {Ellipsoid} [ellipsoid=Ellipsoid.default] The ellipsoid
  * @return {BoundingSphere} The result bounding sphere
  */
 ApproximateTerrainHeights.getBoundingSphere = function (rectangle, ellipsoid) {
@@ -142,7 +142,7 @@ ApproximateTerrainHeights.getBoundingSphere = function (rectangle, ellipsoid) {
     );
   }
   //>>includeEnd('debug');
-  ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
+  ellipsoid = defaultValue(ellipsoid, Ellipsoid.default);
 
   const xyLevel = getTileXYLevel(rectangle);
 

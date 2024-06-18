@@ -520,7 +520,10 @@ PointPrimitive._computeActualPosition = function (
   }
 
   Matrix4.multiplyByPoint(modelMatrix, position, tempCartesian3);
-  return SceneTransforms.computeActualWgs84Position(frameState, tempCartesian3);
+  return SceneTransforms.computeActualEllipsoidPosition(
+    frameState,
+    tempCartesian3
+  );
 };
 
 const scratchCartesian4 = new Cartesian4();
@@ -544,7 +547,7 @@ PointPrimitive._computeScreenSpacePosition = function (
     ),
     scratchCartesian4
   );
-  const positionWC = SceneTransforms.wgs84ToWindowCoordinates(
+  const positionWC = SceneTransforms.worldToWindowCoordinates(
     scene,
     positionWorld,
     result

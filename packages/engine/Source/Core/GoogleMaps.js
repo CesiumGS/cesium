@@ -1,15 +1,10 @@
 import Credit from "./Credit.js";
-import defined from "./defined.js";
 import Resource from "./Resource.js";
-
-let defaultKeyCredit;
-const defaultKey = "AIzaSyA3mA091skJHiLbk3IOlHrHnZmzCoYz3-c";
 
 /**
  * Default settings for accessing the Google Maps API.
  * <br/>
- * An API key is only required if you are using any Google Maps APIs, such as {@link createGooglePhotorealistic3DTileset}.
- * A default key is provided for evaluation purposes only.
+ * An API key is only required if you are directly using any Google Maps APIs, such as through {@link createGooglePhotorealistic3DTileset}.
  * Follow instructions for managing API keys for the Google Maps Platform at {@link https://developers.google.com/maps/documentation/embed/get-api-key}
  *
  * @see createGooglePhotorealistic3DTileset
@@ -22,9 +17,9 @@ const GoogleMaps = {};
 /**
  * Gets or sets the default Google Maps API key.
  *
- * @type {string}
+ * @type {undefined|string}
  */
-GoogleMaps.defaultApiKey = defaultKey;
+GoogleMaps.defaultApiKey = undefined;
 
 /**
  * Gets or sets the default Google Map Tiles API endpoint.
@@ -36,20 +31,10 @@ GoogleMaps.mapTilesApiEndpoint = new Resource({
   url: "https://tile.googleapis.com/v1/",
 });
 
-GoogleMaps.getDefaultApiKeyCredit = function (providedKey) {
-  if (providedKey !== defaultKey) {
-    return undefined;
-  }
-
-  if (!defined(defaultKeyCredit)) {
-    const defaultKeyMessage =
-      '<b> \
-            This application is using CesiumJS\'s default Google Maps API key. Please assign <i>Cesium.GoogleMaps.defaultApiKey</i> \
-            with <a href="https://developers.google.com/maps/documentation/embed/get-api-key">your API key for the Google Maps Platform</a>.</b>';
-
-    defaultKeyCredit = new Credit(defaultKeyMessage, true);
-  }
-
-  return defaultKeyCredit;
+GoogleMaps.getDefaultCredit = function () {
+  return new Credit(
+    `<img src="https://assets.ion-development.cesium.com/google-credit.png" alt="Google">`,
+    true
+  );
 };
 export default GoogleMaps;

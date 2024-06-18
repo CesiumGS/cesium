@@ -4,14 +4,13 @@ import {
   Cartesian2,
   Cartesian3,
   Ellipsoid,
+  Math as CesiumMath,
   Matrix4,
   TerrainEncoding,
-  TerrainExaggeration,
+  VerticalExaggeration,
   TerrainQuantization,
   Transforms,
 } from "../../index.js";
-
-import { Math as CesiumMath } from "../../index.js";
 
 describe("Core/TerrainEncoding", function () {
   let center;
@@ -217,7 +216,7 @@ describe("Core/TerrainEncoding", function () {
 
     const exaggeration = 2.0;
     const exaggerationRelativeHeight = 10.0;
-    const exaggeratedHeight = TerrainExaggeration.getHeight(
+    const exaggeratedHeight = VerticalExaggeration.getHeight(
       height,
       exaggeration,
       exaggerationRelativeHeight

@@ -1,9 +1,10 @@
 import {
+  Cartesian3,
+  defined,
   ComputeEngine,
   Pass,
   OctahedralProjectedCubeMap,
 } from "../../index.js";
-import { Cartesian3, defined } from "../../index.js";
 
 import createContext from "../../../../Specs/createContext.js";
 import createFrameState from "../../../../Specs/createFrameState.js";
@@ -208,7 +209,7 @@ describe(
         });
     });
 
-    it("raises error event when environment map fails to load.", function () {
+    it("raises error event when environment map fails to load.", async function () {
       if (!OctahedralProjectedCubeMap.isSupported(context)) {
         return;
       }
@@ -217,17 +218,22 @@ describe(
       const frameState = createFrameState(context);
       let error;
 
-      const removeListener = projection.errorEvent.addEventListener((e) => {
-        error = e;
-        expect(error).toBeDefined();
-        expect(projection.ready).toEqual(false);
-        removeListener();
+      const promise = new Promise((resolve, reject) => {
+        const removeListener = projection.errorEvent.addEventListener((e) => {
+          error = e;
+          expect(error).toBeDefined();
+          expect(projection.ready).toEqual(false);
+          removeListener();
+          resolve();
+        });
       });
 
-      return pollToPromise(function () {
+      await pollToPromise(function () {
         projection.update(frameState);
         return defined(error);
       });
+
+      return promise;
     });
   },
   "WebGL"

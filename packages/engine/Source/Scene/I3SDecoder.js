@@ -45,6 +45,7 @@ async function initializeDecoder() {
  * @param {Object} defaultGeometrySchema Schema to use during decoding
  * @param {I3SGeometry} geometryData The draco encoded geometry data
  * @param {Array} [featureData] The draco encoded feature data
+ * @param {Object} [symbologyData] The rendering symbology to apply
  * @returns Promise<undefined|object> Returns a promise which resolves to the glTF result, or undefined if the task cannot be scheduled this frame.
  *
  * @exception {RuntimeError} I3S decoder could not be initialized.
@@ -53,7 +54,8 @@ I3SDecoder.decode = async function (
   url,
   defaultGeometrySchema,
   geometryData,
-  featureData
+  featureData,
+  symbologyData
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.string("url", url);
@@ -118,6 +120,11 @@ I3SDecoder.decode = async function (
       cartographicCenter: cartographicCenter,
       cartesianCenter: cartesianCenter,
       parentRotation: parentRotation,
+      enableFeatures: geometryData._dataProvider.showFeatures,
+      splitGeometryByColorTransparency:
+        geometryData._dataProvider.adjustMaterialAlphaMode,
+      symbologyData: symbologyData,
+      calculateNormals: geometryData._dataProvider.calculateNormals,
     };
 
     return taskProcessor.scheduleTask(payload);

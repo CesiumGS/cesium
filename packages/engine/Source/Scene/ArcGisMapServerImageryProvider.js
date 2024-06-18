@@ -49,9 +49,9 @@ import DeveloperError from "../Core/DeveloperError.js";
  *                    a tiled layer.
  * @property {TilingScheme} [tilingScheme=new GeographicTilingScheme()] The tiling scheme to use to divide the world into tiles.
  *                       This parameter is ignored when accessing a tiled server.
- * @property {Ellipsoid} [ellipsoid] The ellipsoid.  If the tilingScheme is specified and used,
+ * @property {Ellipsoid} [ellipsoid=Ellipsoid.default] The ellipsoid.  If the tilingScheme is specified and used,
  *                    this parameter is ignored and the tiling scheme's ellipsoid is used instead. If neither
- *                    parameter is specified, the WGS84 ellipsoid is used.
+ *                    parameter is specified, the default ellipsoid is used.
  * @property {Credit|string} [credit] A credit for the data source, which is displayed on the canvas.  This parameter is ignored when accessing a tiled server.
  * @property {number} [tileWidth=256] The width of each tile in pixels.  This parameter is ignored when accessing a tiled server.
  * @property {number} [tileHeight=256] The height of each tile in pixels.  This parameter is ignored when accessing a tiled server.

@@ -120,6 +120,30 @@ function DataSourceDisplay(options) {
   this._ready = false;
 }
 
+const ExtraVisualizers = [];
+/**
+ * Add the provided Visualizer to the default visualizers callback if not already included
+ * @private
+ * @param {Visualizer} visualizer Visualizer class to add
+ */
+DataSourceDisplay.registerVisualizer = function (visualizer) {
+  if (!ExtraVisualizers.includes(visualizer)) {
+    ExtraVisualizers.push(visualizer);
+  }
+};
+
+/**
+ * Remove the provided Visualizer from the default visualizers callback if it's already included
+ * @private
+ * @param {Visualizer} visualizer Visualizer class to remove
+ */
+DataSourceDisplay.unregisterVisualizer = function (visualizer) {
+  if (ExtraVisualizers.includes(visualizer)) {
+    const index = ExtraVisualizers.indexOf(visualizer);
+    ExtraVisualizers.splice(index, 1);
+  }
+};
+
 /**
  * Gets or sets the default function which creates an array of visualizers used for visualization.
  * By default, this function uses all standard visualizers.
@@ -150,6 +174,9 @@ DataSourceDisplay.defaultVisualizersCallback = function (
       entities,
       dataSource._primitives,
       dataSource._groundPrimitives
+    ),
+    ...ExtraVisualizers.map(
+      (VisualizerClass) => new VisualizerClass(scene, entities)
     ),
   ];
 };
@@ -298,6 +325,11 @@ DataSourceDisplay.prototype.update = function (time) {
     result = visualizers[x].update(time) && result;
   }
 
+  // Request a rendering of the scene when the data source
+  // becomes 'ready' for the first time
+  if (!this._ready && result) {
+    this._scene.requestRender();
+  }
   this._ready = result;
 
   return result;

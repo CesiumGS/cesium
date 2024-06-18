@@ -1,3 +1,5 @@
+
+precision highp float;
 czm_modelMaterial defaultModelMaterial()
 {
     czm_modelMaterial material;
@@ -75,8 +77,16 @@ void main()
     modelClippingPlanesStage(color);
     #endif
 
+    #ifdef ENABLE_CLIPPING_POLYGONS
+    modelClippingPolygonsStage();
+    #endif
+
     #if defined(HAS_SILHOUETTE) && defined(HAS_NORMALS)
     silhouetteStage(color);
+    #endif
+
+    #ifdef HAS_ATMOSPHERE
+    atmosphereStage(color, attributes);
     #endif
 
     out_FragColor = color;

@@ -66,8 +66,8 @@ describe("Scene/QuadtreePrimitive", function () {
         afterRender: [],
         pixelRatio: 1.0,
 
-        terrainExaggeration: 1.0,
-        terrainExaggerationRelativeHeight: 0.0,
+        verticalExaggeration: 1.0,
+        verticalExaggerationRelativeHeight: 0.0,
 
         globeTranslucencyState: new GlobeTranslucencyState(),
       };

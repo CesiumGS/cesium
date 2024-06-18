@@ -3,11 +3,13 @@ import combine from "../Core/combine.js";
 import defined from "../Core/defined.js";
 import ShaderBuilder from "../Renderer/ShaderBuilder.js";
 import ShaderDestination from "../Renderer/ShaderDestination.js";
+import VoxelUtils from "../Shaders/Voxels/VoxelUtils.js";
 import VoxelFS from "../Shaders/Voxels/VoxelFS.js";
 import VoxelVS from "../Shaders/Voxels/VoxelVS.js";
 import IntersectionUtils from "../Shaders/Voxels/IntersectionUtils.js";
 import IntersectDepth from "../Shaders/Voxels/IntersectDepth.js";
 import IntersectClippingPlanes from "../Shaders/Voxels/IntersectClippingPlanes.js";
+import IntersectLongitude from "../Shaders/Voxels/IntersectLongitude.js";
 import IntersectBox from "../Shaders/Voxels/IntersectBox.js";
 import IntersectCylinder from "../Shaders/Voxels/IntersectCylinder.js";
 import IntersectEllipsoid from "../Shaders/Voxels/IntersectEllipsoid.js";
@@ -88,6 +90,7 @@ function VoxelRenderResources(primitive) {
     customShader.fragmentShaderText,
     "#line 0",
     Octree,
+    VoxelUtils,
     IntersectionUtils,
     Megatexture,
   ]);
@@ -123,7 +126,6 @@ function VoxelRenderResources(primitive) {
 
   const shapeType = primitive._provider.shape;
   if (shapeType === "BOX") {
-    shaderBuilder.addDefine("SHAPE_BOX", undefined, ShaderDestination.FRAGMENT);
     shaderBuilder.addFragmentLines([
       convertUvToBox,
       IntersectBox,
@@ -131,15 +133,22 @@ function VoxelRenderResources(primitive) {
     ]);
   } else if (shapeType === "CYLINDER") {
     shaderBuilder.addFragmentLines([
+      convertUvToCylinder,
+      IntersectLongitude,
       IntersectCylinder,
       Intersection,
-      convertUvToCylinder,
     ]);
   } else if (shapeType === "ELLIPSOID") {
+    shaderBuilder.addDefine(
+      "SHAPE_ELLIPSOID",
+      undefined,
+      ShaderDestination.FRAGMENT
+    );
     shaderBuilder.addFragmentLines([
+      convertUvToEllipsoid,
+      IntersectLongitude,
       IntersectEllipsoid,
       Intersection,
-      convertUvToEllipsoid,
     ]);
   }
 

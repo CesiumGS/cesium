@@ -243,7 +243,7 @@ PolygonGeometryUpdater.prototype._computeCenter = function (time, result) {
   if (positions.length === 0) {
     return;
   }
-  const ellipsoid = this._scene.mapProjection.ellipsoid;
+  const ellipsoid = this._scene.ellipsoid;
 
   const tangentPlane = EllipsoidTangentPlane.fromPoints(positions, ellipsoid);
   const positions2D = tangentPlane.projectPointsOntoPlane(
@@ -418,8 +418,14 @@ PolygonGeometryUpdater.prototype._setStaticOptions = function (
     extrudedHeightReferenceValue
   );
   if (extrudedHeightValue === GroundGeometryUpdater.CLAMP_TO_GROUND) {
+    const rectangle = PolygonGeometry.computeRectangleFromPositions(
+      options.polygonHierarchy.positions,
+      options.ellipsoid,
+      options.arcType,
+      scratchRectangle
+    );
     extrudedHeightValue = ApproximateTerrainHeights.getMinimumMaximumHeights(
-      PolygonGeometry.computeRectangle(options, scratchRectangle)
+      rectangle
     ).minimumTerrainHeight;
   }
 
@@ -565,8 +571,14 @@ DyanmicPolygonGeometryUpdater.prototype._setOptions = function (
     extrudedHeightReferenceValue
   );
   if (extrudedHeightValue === GroundGeometryUpdater.CLAMP_TO_GROUND) {
+    const rectangle = PolygonGeometry.computeRectangleFromPositions(
+      options.polygonHierarchy.positions,
+      options.ellipsoid,
+      options.arcType,
+      scratchRectangle
+    );
     extrudedHeightValue = ApproximateTerrainHeights.getMinimumMaximumHeights(
-      PolygonGeometry.computeRectangle(options, scratchRectangle)
+      rectangle
     ).minimumTerrainHeight;
   }
 

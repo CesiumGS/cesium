@@ -25,7 +25,7 @@ import OrthographicFrustum from "../Core/OrthographicFrustum.js";
 import PrimitiveType from "../Core/PrimitiveType.js";
 import Rectangle from "../Core/Rectangle.js";
 import SphereOutlineGeometry from "../Core/SphereOutlineGeometry.js";
-import TerrainExaggeration from "../Core/TerrainExaggeration.js";
+import VerticalExaggeration from "../Core/VerticalExaggeration.js";
 import TerrainQuantization from "../Core/TerrainQuantization.js";
 import Visibility from "../Core/Visibility.js";
 import WebMercatorProjection from "../Core/WebMercatorProjection.js";
@@ -38,6 +38,7 @@ import RenderState from "../Renderer/RenderState.js";
 import VertexArray from "../Renderer/VertexArray.js";
 import BlendingState from "./BlendingState.js";
 import ClippingPlaneCollection from "./ClippingPlaneCollection.js";
+import ClippingPolygonCollection from "./ClippingPolygonCollection.js";
 import DepthFunction from "./DepthFunction.js";
 import GlobeSurfaceTile from "./GlobeSurfaceTile.js";
 import ImageryLayer from "./ImageryLayer.js";
@@ -171,6 +172,13 @@ function GlobeSurfaceTileProvider(options) {
   this._clippingPlanes = undefined;
 
   /**
+   * A property specifying a {@link ClippingPolygonCollection} used to selectively disable rendering inside or outside a list of polygons.
+   * @type {ClippingPolygonCollection}
+   * @private
+   */
+  this._clippingPolygons = undefined;
+
+  /**
    * A property specifying a {@link Rectangle} used to selectively limit terrain and imagery rendering.
    * @type {Rectangle}
    */
@@ -179,8 +187,8 @@ function GlobeSurfaceTileProvider(options) {
   this._hasLoadedTilesThisFrame = false;
   this._hasFillTilesThisFrame = false;
 
-  this._oldTerrainExaggeration = undefined;
-  this._oldTerrainExaggerationRelativeHeight = undefined;
+  this._oldVerticalExaggeration = undefined;
+  this._oldVerticalExaggerationRelativeHeight = undefined;
 }
 
 Object.defineProperties(GlobeSurfaceTileProvider.prototype, {
@@ -290,7 +298,7 @@ Object.defineProperties(GlobeSurfaceTileProvider.prototype, {
     },
   },
   /**
-   * The {@link ClippingPlaneCollection} used to selectively disable rendering the tileset.
+   * The {@link ClippingPlaneCollection} used to selectively disable rendering.
    *
    * @type {ClippingPlaneCollection}
    *
@@ -302,6 +310,22 @@ Object.defineProperties(GlobeSurfaceTileProvider.prototype, {
     },
     set: function (value) {
       ClippingPlaneCollection.setOwner(value, this, "_clippingPlanes");
+    },
+  },
+
+  /**
+   * The {@link ClippingPolygonCollection} used to selectively disable rendering inside or outside a list of polygons.
+   *
+   * @type {ClippingPolygonCollection}
+   *
+   * @private
+   */
+  clippingPolygons: {
+    get: function () {
+      return this._clippingPolygons;
+    },
+    set: function (value) {
+      ClippingPolygonCollection.setOwner(value, this, "_clippingPolygons");
     },
   },
 });
@@ -391,6 +415,14 @@ GlobeSurfaceTileProvider.prototype.beginUpdate = function (frameState) {
   if (defined(clippingPlanes) && clippingPlanes.enabled) {
     clippingPlanes.update(frameState);
   }
+
+  // update clipping polygons
+  const clippingPolygons = this._clippingPolygons;
+  if (defined(clippingPolygons) && clippingPolygons.enabled) {
+    clippingPolygons.update(frameState);
+    clippingPolygons.queueCommands(frameState);
+  }
+
   this._usedDrawCommands = 0;
 
   this._hasLoadedTilesThisFrame = false;
@@ -448,7 +480,7 @@ GlobeSurfaceTileProvider.prototype.endUpdate = function (frameState) {
     );
   }
 
-  // When terrain exaggeration changes, all of the loaded tiles need to generate
+  // When vertical exaggeration changes, all of the loaded tiles need to generate
   // geodetic surface normals so they can scale properly when rendered.
   // When exaggeration is reset, geodetic surface normals are removed to decrease
   // memory usage. Some tiles might have been constructed with the correct
@@ -460,16 +492,16 @@ GlobeSurfaceTileProvider.prototype.endUpdate = function (frameState) {
   // exaggeration changes.
 
   const quadtree = this.quadtree;
-  const exaggeration = frameState.terrainExaggeration;
+  const exaggeration = frameState.verticalExaggeration;
   const exaggerationRelativeHeight =
-    frameState.terrainExaggerationRelativeHeight;
+    frameState.verticalExaggerationRelativeHeight;
   const exaggerationChanged =
-    this._oldTerrainExaggeration !== exaggeration ||
-    this._oldTerrainExaggerationRelativeHeight !== exaggerationRelativeHeight;
+    this._oldVerticalExaggeration !== exaggeration ||
+    this._oldVerticalExaggerationRelativeHeight !== exaggerationRelativeHeight;
 
   // Keep track of the next time there is a change in exaggeration
-  this._oldTerrainExaggeration = exaggeration;
-  this._oldTerrainExaggerationRelativeHeight = exaggerationRelativeHeight;
+  this._oldVerticalExaggeration = exaggeration;
+  this._oldVerticalExaggerationRelativeHeight = exaggerationRelativeHeight;
 
   if (exaggerationChanged) {
     quadtree.forEachLoadedTile(function (tile) {
@@ -657,6 +689,11 @@ function isUndergroundVisible(tileProvider, frameState) {
     return true;
   }
 
+  const clippingPolygons = tileProvider._clippingPolygons;
+  if (defined(clippingPolygons) && clippingPolygons.enabled) {
+    return true;
+  }
+
   if (
     !Rectangle.equals(
       tileProvider.cartographicLimitRectangle,
@@ -773,6 +810,16 @@ GlobeSurfaceTileProvider.prototype.computeTileVisibility = function (
     if (planeIntersection === Intersect.OUTSIDE) {
       return Visibility.NONE;
     }
+  }
+
+  const clippingPolygons = this._clippingPolygons;
+  if (defined(clippingPolygons) && clippingPolygons.enabled) {
+    const polygonIntersection = clippingPolygons.computeIntersectionWithBoundingVolume(
+      tileBoundingRegion
+    );
+    tile.isClipped = polygonIntersection !== Intersect.OUTSIDE;
+    // Polygon clipping intersections are determined by outer rectangles, therefore we cannot
+    // preemptively determine if a tile is completely clipped or not here.
   }
 
   let visibility;
@@ -1258,18 +1305,18 @@ function updateTileBoundingRegion(tile, tileProvider, frameState) {
 
   // Update bounding regions from the min and max heights
   if (sourceTile !== undefined) {
-    const exaggeration = frameState.terrainExaggeration;
+    const exaggeration = frameState.verticalExaggeration;
     const exaggerationRelativeHeight =
-      frameState.terrainExaggerationRelativeHeight;
+      frameState.verticalExaggerationRelativeHeight;
     const hasExaggeration = exaggeration !== 1.0;
     if (hasExaggeration) {
       hasBoundingVolumesFromMesh = false;
-      tileBoundingRegion.minimumHeight = TerrainExaggeration.getHeight(
+      tileBoundingRegion.minimumHeight = VerticalExaggeration.getHeight(
         tileBoundingRegion.minimumHeight,
         exaggeration,
         exaggerationRelativeHeight
       );
-      tileBoundingRegion.maximumHeight = TerrainExaggeration.getHeight(
+      tileBoundingRegion.maximumHeight = VerticalExaggeration.getHeight(
         tileBoundingRegion.maximumHeight,
         exaggeration,
         exaggerationRelativeHeight
@@ -1364,6 +1411,8 @@ GlobeSurfaceTileProvider.prototype.isDestroyed = function () {
 GlobeSurfaceTileProvider.prototype.destroy = function () {
   this._tileProvider = this._tileProvider && this._tileProvider.destroy();
   this._clippingPlanes = this._clippingPlanes && this._clippingPlanes.destroy();
+  this._clippingPolygons =
+    this._clippingPolygons && this._clippingPolygons.destroy();
   this._removeLayerAddedListener =
     this._removeLayerAddedListener && this._removeLayerAddedListener();
   this._removeLayerRemovedListener =
@@ -1625,8 +1674,8 @@ function createTileUniformMap(frameState, globeSurfaceTileProvider) {
     u_center3D: function () {
       return this.properties.center3D;
     },
-    u_terrainExaggerationAndRelativeHeight: function () {
-      return this.properties.terrainExaggerationAndRelativeHeight;
+    u_verticalExaggerationAndRelativeHeight: function () {
+      return this.properties.verticalExaggerationAndRelativeHeight;
     },
     u_tileRectangle: function () {
       return this.properties.tileRectangle;
@@ -1755,6 +1804,21 @@ function createTileUniformMap(frameState, globeSurfaceTileProvider) {
       style.alpha = this.properties.clippingPlanesEdgeWidth;
       return style;
     },
+    u_clippingDistance: function () {
+      const texture =
+        globeSurfaceTileProvider._clippingPolygons.clippingTexture;
+      if (defined(texture)) {
+        return texture;
+      }
+      return frameState.context.defaultTexture;
+    },
+    u_clippingExtents: function () {
+      const texture = globeSurfaceTileProvider._clippingPolygons.extentsTexture;
+      if (defined(texture)) {
+        return texture;
+      }
+      return frameState.context.defaultTexture;
+    },
     u_minimumBrightness: function () {
       return frameState.fog.minimumBrightness;
     },
@@ -1808,7 +1872,7 @@ function createTileUniformMap(frameState, globeSurfaceTileProvider) {
       modifiedModelView: new Matrix4(),
       tileRectangle: new Cartesian4(),
 
-      terrainExaggerationAndRelativeHeight: new Cartesian2(1.0, 0.0),
+      verticalExaggerationAndRelativeHeight: new Cartesian2(1.0, 0.0),
 
       dayTextures: [],
       dayTextureTranslationAndScale: [],
@@ -2039,6 +2103,8 @@ const surfaceShaderSetOptionsScratch = {
   enableFog: undefined,
   enableClippingPlanes: undefined,
   clippingPlanes: undefined,
+  enableClippingPolygons: undefined,
+  clippingPolygons: undefined,
   clippedByBoundaries: undefined,
   hasImageryLayerCutout: undefined,
   colorCorrect: undefined,
@@ -2166,6 +2232,13 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
   ) {
     --maxTextures;
   }
+  if (
+    defined(tileProvider.clippingPolygons) &&
+    tileProvider.clippingPolygons.enabled
+  ) {
+    --maxTextures;
+    --maxTextures;
+  }
 
   maxTextures -= globeTranslucencyState.numberOfTextureUniforms;
 
@@ -2174,9 +2247,9 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
   const encoding = mesh.encoding;
   const tileBoundingRegion = surfaceTile.tileBoundingRegion;
 
-  const exaggeration = frameState.terrainExaggeration;
+  const exaggeration = frameState.verticalExaggeration;
   const exaggerationRelativeHeight =
-    frameState.terrainExaggerationRelativeHeight;
+    frameState.verticalExaggerationRelativeHeight;
   const hasExaggeration = exaggeration !== 1.0;
   const hasGeodeticSurfaceNormals = encoding.hasGeodeticSurfaceNormals;
 
@@ -2431,8 +2504,8 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
       );
     }
 
-    uniformMapProperties.terrainExaggerationAndRelativeHeight.x = exaggeration;
-    uniformMapProperties.terrainExaggerationAndRelativeHeight.y = exaggerationRelativeHeight;
+    uniformMapProperties.verticalExaggerationAndRelativeHeight.x = exaggeration;
+    uniformMapProperties.verticalExaggerationAndRelativeHeight.y = exaggerationRelativeHeight;
 
     uniformMapProperties.center3D = mesh.center;
     Cartesian3.clone(rtc, uniformMapProperties.rtc);
@@ -2502,7 +2575,9 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
       uniformMapProperties.localizedTranslucencyRectangle
     );
 
-    // For performance, use fog in the shader only when the tile is in fog.
+    // For performance, render fog only when fog is enabled and the effect of
+    // fog would be non-negligible. This prevents the shader from running when
+    // the camera is in space, for example.
     const applyFog =
       enableFog &&
       CesiumMath.fog(tile._distance, frameState.fog.density) >
@@ -2724,6 +2799,11 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
       uniformMapProperties.clippingPlanesEdgeWidth = clippingPlanes.edgeWidth;
     }
 
+    // update clipping polygons
+    const clippingPolygons = tileProvider._clippingPolygons;
+    const clippingPolygonsEnabled =
+      defined(clippingPolygons) && clippingPolygons.enabled && tile.isClipped;
+
     surfaceShaderSetOptions.numberOfDayTextures = numberOfDayTextures;
     surfaceShaderSetOptions.applyBrightness = applyBrightness;
     surfaceShaderSetOptions.applyContrast = applyContrast;
@@ -2736,6 +2816,8 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
     surfaceShaderSetOptions.enableFog = applyFog;
     surfaceShaderSetOptions.enableClippingPlanes = clippingPlanesEnabled;
     surfaceShaderSetOptions.clippingPlanes = clippingPlanes;
+    surfaceShaderSetOptions.enableClippingPolygons = clippingPolygonsEnabled;
+    surfaceShaderSetOptions.clippingPolygons = clippingPolygons;
     surfaceShaderSetOptions.hasImageryLayerCutout = applyCutout;
     surfaceShaderSetOptions.colorCorrect = colorCorrect;
     surfaceShaderSetOptions.highlightFillTile = highlightFillTile;

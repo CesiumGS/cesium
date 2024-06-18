@@ -1,3 +1,4 @@
+import Cartesian2 from "./Cartesian2.js";
 import Cartesian3 from "./Cartesian3.js";
 import Cartographic from "./Cartographic.js";
 import Check from "./Check.js";
@@ -254,6 +255,40 @@ Ellipsoid.MOON = Object.freeze(
   )
 );
 
+Ellipsoid._default = Ellipsoid.WGS84;
+Object.defineProperties(Ellipsoid, {
+  /**
+   * The default ellipsoid used when not otherwise specified.
+   * @memberof Ellipsoid
+   * @type {Ellipsoid}
+   * @example
+   * Cesium.Ellipsoid.default = Cesium.Ellipsoid.MOON;
+   *
+   * // Apollo 11 landing site
+   * const position = Cesium.Cartesian3.fromRadians(
+   *   0.67416,
+   *   23.47315,
+   * );
+   */
+  default: {
+    get: function () {
+      return Ellipsoid._default;
+    },
+    set: function (value) {
+      //>>includeStart('debug', pragmas.debug);
+      Check.typeOf.object("value", value);
+      //>>includeEnd('debug');
+
+      Ellipsoid._default = value;
+      Cartesian3._ellipsoidRadiiSquared = value.radiiSquared;
+      Cartographic._ellipsoidOneOverRadii = value.oneOverRadii;
+      Cartographic._ellipsoidOneOverRadiiSquared = value.oneOverRadiiSquared;
+      Cartographic._ellipsoidCenterToleranceSquared =
+        value._centerToleranceSquared;
+    },
+  },
+});
+
 /**
  * Duplicates an Ellipsoid instance.
  *
@@ -362,6 +397,12 @@ Ellipsoid.prototype.geodeticSurfaceNormalCartographic = function (
  * @returns {Cartesian3} The modified result parameter or a new Cartesian3 instance if none was provided, or undefined if a normal cannot be found.
  */
 Ellipsoid.prototype.geodeticSurfaceNormal = function (cartesian, result) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("cartesian", cartesian);
+  if (isNaN(cartesian.x) || isNaN(cartesian.y) || isNaN(cartesian.z)) {
+    throw new DeveloperError("cartesian has a NaN component");
+  }
+  //>>includeEnd('debug');
   if (
     Cartesian3.equalsEpsilon(cartesian, Cartesian3.ZERO, CesiumMath.EPSILON14)
   ) {
@@ -692,6 +733,50 @@ Ellipsoid.prototype.getSurfaceNormalIntersectionWithZAxis = function (
   }
 
   return result;
+};
+
+const scratchEndpoint = new Cartesian3();
+
+/**
+ * Computes the ellipsoid curvatures at a given position on the surface.
+ *
+ * @param {Cartesian3} surfacePosition The position on the ellipsoid surface where curvatures will be calculated.
+ * @param {Cartesian2} [result] The cartesian to which to copy the result, or undefined to create and return a new instance.
+ * @returns {Cartesian2} The local curvature of the ellipsoid surface at the provided position, in east and north directions.
+ *
+ * @exception {DeveloperError} position is required.
+ */
+Ellipsoid.prototype.getLocalCurvature = function (surfacePosition, result) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("surfacePosition", surfacePosition);
+  //>>includeEnd('debug');
+
+  if (!defined(result)) {
+    result = new Cartesian2();
+  }
+
+  const primeVerticalEndpoint = this.getSurfaceNormalIntersectionWithZAxis(
+    surfacePosition,
+    0.0,
+    scratchEndpoint
+  );
+  const primeVerticalRadius = Cartesian3.distance(
+    surfacePosition,
+    primeVerticalEndpoint
+  );
+  // meridional radius = (1 - e^2) * primeVerticalRadius^3 / a^2
+  // where 1 - e^2 = b^2 / a^2,
+  // so meridional = b^2 * primeVerticalRadius^3 / a^4
+  //   = (b * primeVerticalRadius / a^2)^2 * primeVertical
+  const radiusRatio =
+    (this.minimumRadius * primeVerticalRadius) / this.maximumRadius ** 2;
+  const meridionalRadius = primeVerticalRadius * radiusRatio ** 2;
+
+  return Cartesian2.fromElements(
+    1.0 / primeVerticalRadius,
+    1.0 / meridionalRadius,
+    result
+  );
 };
 
 const abscissas = [

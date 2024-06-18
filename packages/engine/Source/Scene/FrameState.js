@@ -182,6 +182,7 @@ function FrameState(context, creditDisplay, jobScheduler) {
    * @type {object}
    * @property {boolean} render <code>true</code> if the primitive should update for a render pass, <code>false</code> otherwise.
    * @property {boolean} pick <code>true</code> if the primitive should update for a picking pass, <code>false</code> otherwise.
+   * @property {boolean} pickVoxel <code>true</code> if the primitive should update for a voxel picking pass, <code>false</code> otherwise.
    * @property {boolean} depth <code>true</code> if the primitive should update for a depth only pass, <code>false</code> otherwise.
    * @property {boolean} postProcess <code>true</code> if the primitive should update for a per-feature post-process pass, <code>false</code> otherwise.
    * @property {boolean} offscreen <code>true</code> if the primitive should update for an offscreen pass, <code>false</code> otherwise.
@@ -199,6 +200,10 @@ function FrameState(context, creditDisplay, jobScheduler) {
      * @default false
      */
     pick: false,
+    /**
+     * @default false
+     */
+    pickVoxel: false,
     /**
      * @default false
      */
@@ -254,7 +259,8 @@ function FrameState(context, creditDisplay, jobScheduler) {
   /**
    * @typedef FrameState.Fog
    * @type {object}
-   * @property {boolean} enabled <code>true</code> if fog is enabled, <code>false</code> otherwise.
+   * @property {boolean} enabled <code>true</code> if fog is enabled, <code>false</code> otherwise. This affects both fog culling and rendering.
+   * @property {boolean} renderable <code>true</code> if fog should be rendered, <code>false</code> if not. This flag should be checked in combination with fog.enabled.
    * @property {number} density A positive number used to mix the color and fog color based on camera distance.
    * @property {number} sse A scalar used to modify the screen space error of geometry partially in fog.
    * @property {number} minimumBrightness The minimum brightness of terrain with fog applied.
@@ -269,24 +275,31 @@ function FrameState(context, creditDisplay, jobScheduler) {
      * @default false
      */
     enabled: false,
+    renderable: false,
     density: undefined,
     sse: undefined,
     minimumBrightness: undefined,
   };
 
   /**
-   * A scalar used to exaggerate the terrain.
+   * The current Atmosphere
+   * @type {Atmosphere}
+   */
+  this.atmosphere = undefined;
+
+  /**
+   * A scalar used to vertically exaggerate the scene
    * @type {number}
    * @default 1.0
    */
-  this.terrainExaggeration = 1.0;
+  this.verticalExaggeration = 1.0;
 
   /**
-   * The height relative to which terrain is exaggerated.
+   * The height relative to which the scene is vertically exaggerated.
    * @type {number}
    * @default 0.0
    */
-  this.terrainExaggerationRelativeHeight = 0.0;
+  this.verticalExaggerationRelativeHeight = 0.0;
 
   /**
    * @typedef FrameState.ShadowState

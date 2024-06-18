@@ -173,6 +173,7 @@ Fog.prototype.update = function (frameState) {
     frameState.mode !== SceneMode.SCENE3D
   ) {
     frameState.fog.enabled = false;
+    frameState.fog.density = 0;
     return;
   }
 

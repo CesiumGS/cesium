@@ -178,7 +178,7 @@ EllipsoidGeometryUpdater.prototype.createFillGeometryInstance = function (
           time,
           entity.ellipsoid.heightReference,
           this._options.radii.z * 0.5,
-          this._scene.mapProjection.ellipsoid,
+          this._scene.ellipsoid,
           modelMatrixResult
         ),
     attributes: attributes,
@@ -250,7 +250,7 @@ EllipsoidGeometryUpdater.prototype.createOutlineGeometryInstance = function (
           time,
           entity.ellipsoid.heightReference,
           this._options.radii.z * 0.5,
-          this._scene.mapProjection.ellipsoid,
+          this._scene.ellipsoid,
           modelMatrixResult
         ),
     attributes: attributes,
@@ -413,7 +413,7 @@ DynamicEllipsoidGeometryUpdater.prototype.update = function (time) {
         time,
         ellipsoid.heightReference,
         radii.z * 0.5,
-        this._scene.mapProjection.ellipsoid,
+        this._scene.ellipsoid,
         this._modelMatrix
       )
     : undefined;
@@ -547,11 +547,10 @@ DynamicEllipsoidGeometryUpdater.prototype.update = function (time) {
     options.radii = Cartesian3.clone(in3D ? unitSphere : radii, options.radii);
     if (defined(innerRadii)) {
       if (in3D) {
-        const mag = Cartesian3.magnitude(radii);
         options.innerRadii = Cartesian3.fromElements(
-          innerRadii.x / mag,
-          innerRadii.y / mag,
-          innerRadii.z / mag,
+          innerRadii.x / radii.x,
+          innerRadii.y / radii.y,
+          innerRadii.z / radii.z,
           options.innerRadii
         );
       } else {

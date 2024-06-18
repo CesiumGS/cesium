@@ -1,0 +1,29 @@
+name: check-cla
+on:
+  pull_request_target:
+    types: [opened]
+
+jobs:
+  check-cla:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: install node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: install npm packages
+        working-directory: ./.github/actions/check-for-CLA
+        run: npm install
+      - name: run script
+        working-directory: ./.github/actions/check-for-CLA
+        run: node index.js
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PULL_REQUEST_ID: ${{ github.event.number }}      
+          GOOGLE_KEYS: ${{ secrets.GOOGLE_KEYS }}
+          INDIVIDUAL_CLA_SHEET_ID: ${{ secrets.INDIVIDUAL_CLA_SHEET_ID }}  
+          CORPORATE_CLA_SHEET_ID: ${{ secrets.CORPORATE_CLA_SHEET_ID }}  

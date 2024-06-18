@@ -59,7 +59,7 @@ describe("Scene/computeFlyToLocationForRectangle", function () {
     // Basically do the computation ourselves with our known values;
     let expectedResult;
     if (sceneMode === SceneMode.SCENE3D) {
-      expectedResult = scene.mapProjection.ellipsoid.cartesianToCartographic(
+      expectedResult = scene.ellipsoid.cartesianToCartographic(
         scene.camera.getRectangleCameraCoordinates(rectangle)
       );
     } else {
@@ -118,7 +118,7 @@ describe("Scene/computeFlyToLocationForRectangle", function () {
     const rectangle = new Rectangle(0.2, 0.4, 0.6, 0.8);
     spyOn(computeFlyToLocationForRectangle, "_sampleTerrainMostDetailed");
 
-    const expectedResult = scene.mapProjection.ellipsoid.cartesianToCartographic(
+    const expectedResult = scene.ellipsoid.cartesianToCartographic(
       scene.camera.getRectangleCameraCoordinates(rectangle)
     );
     return computeFlyToLocationForRectangle(rectangle, scene).then(function (
@@ -136,7 +136,7 @@ describe("Scene/computeFlyToLocationForRectangle", function () {
     const rectangle = new Rectangle(0.2, 0.4, 0.6, 0.8);
     spyOn(computeFlyToLocationForRectangle, "_sampleTerrainMostDetailed");
 
-    const expectedResult = scene.mapProjection.ellipsoid.cartesianToCartographic(
+    const expectedResult = scene.ellipsoid.cartesianToCartographic(
       scene.camera.getRectangleCameraCoordinates(rectangle)
     );
     return computeFlyToLocationForRectangle(rectangle, scene).then(function (

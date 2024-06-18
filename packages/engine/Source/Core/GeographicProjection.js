@@ -8,18 +8,18 @@ import Ellipsoid from "./Ellipsoid.js";
 /**
  * A simple map projection where longitude and latitude are linearly mapped to X and Y by multiplying
  * them by the {@link Ellipsoid#maximumRadius}.  This projection
- * is commonly known as geographic, equirectangular, equidistant cylindrical, or plate carrée.  It
+ * is commonly known as geographic, equirectangular, equidistant cylindrical, or plate carrée. When using the WGS84 ellipsoid, it
  * is also known as EPSG:4326.
  *
  * @alias GeographicProjection
  * @constructor
  *
- * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid.
+ * @param {Ellipsoid} [ellipsoid=Ellipsoid.default] The ellipsoid.
  *
  * @see WebMercatorProjection
  */
 function GeographicProjection(ellipsoid) {
-  this._ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
+  this._ellipsoid = defaultValue(ellipsoid, Ellipsoid.default);
   this._semimajorAxis = this._ellipsoid.maximumRadius;
   this._oneOverSemimajorAxis = 1.0 / this._semimajorAxis;
 }
@@ -102,4 +102,5 @@ GeographicProjection.prototype.unproject = function (cartesian, result) {
   result.height = height;
   return result;
 };
+
 export default GeographicProjection;

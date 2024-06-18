@@ -8,10 +8,8 @@ import Check from "./Check.js";
 import ComponentDatatype from "./ComponentDatatype.js";
 import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
-import deprecationWarning from "./deprecationWarning.js";
 import DeveloperError from "./DeveloperError.js";
 import Ellipsoid from "./Ellipsoid.js";
-import EllipsoidGeodesic from "./EllipsoidGeodesic.js";
 import EllipsoidTangentPlane from "./EllipsoidTangentPlane.js";
 import Geometry from "./Geometry.js";
 import GeometryAttribute from "./GeometryAttribute.js";
@@ -173,7 +171,7 @@ function computeAttributes(options) {
             scratchPosition
           );
           p = ellipsoid.scaleToGeodeticSurface(p, p);
-          const st = projectTo2d(p, appendTextureCoordinatesCartesian2);
+          const st = projectTo2d([p], appendTextureCoordinatesCartesian2)[0];
           Cartesian2.subtract(st, origin, st);
 
           const stx = CesiumMath.clamp(st.x / boundingRectangle.width, 0, 1);
@@ -425,123 +423,6 @@ function computeAttributes(options) {
   return geometry;
 }
 
-const startCartographicScratch = new Cartographic();
-const endCartographicScratch = new Cartographic();
-const idlCross = {
-  westOverIDL: 0.0,
-  eastOverIDL: 0.0,
-};
-let ellipsoidGeodesic = new EllipsoidGeodesic();
-function computeRectangle(positions, ellipsoid, arcType, granularity, result) {
-  result = defaultValue(result, new Rectangle());
-  if (!defined(positions) || positions.length < 3) {
-    result.west = 0.0;
-    result.north = 0.0;
-    result.south = 0.0;
-    result.east = 0.0;
-    return result;
-  }
-
-  if (arcType === ArcType.RHUMB) {
-    return Rectangle.fromCartesianArray(positions, ellipsoid, result);
-  }
-
-  if (!ellipsoidGeodesic.ellipsoid.equals(ellipsoid)) {
-    ellipsoidGeodesic = new EllipsoidGeodesic(undefined, undefined, ellipsoid);
-  }
-
-  result.west = Number.POSITIVE_INFINITY;
-  result.east = Number.NEGATIVE_INFINITY;
-  result.south = Number.POSITIVE_INFINITY;
-  result.north = Number.NEGATIVE_INFINITY;
-
-  idlCross.westOverIDL = Number.POSITIVE_INFINITY;
-  idlCross.eastOverIDL = Number.NEGATIVE_INFINITY;
-
-  const inverseChordLength =
-    1.0 / CesiumMath.chordLength(granularity, ellipsoid.maximumRadius);
-  const positionsLength = positions.length;
-  let endCartographic = ellipsoid.cartesianToCartographic(
-    positions[0],
-    endCartographicScratch
-  );
-  let startCartographic = startCartographicScratch;
-  let swap;
-
-  for (let i = 1; i < positionsLength; i++) {
-    swap = startCartographic;
-    startCartographic = endCartographic;
-    endCartographic = ellipsoid.cartesianToCartographic(positions[i], swap);
-    ellipsoidGeodesic.setEndPoints(startCartographic, endCartographic);
-    interpolateAndGrowRectangle(
-      ellipsoidGeodesic,
-      inverseChordLength,
-      result,
-      idlCross
-    );
-  }
-
-  swap = startCartographic;
-  startCartographic = endCartographic;
-  endCartographic = ellipsoid.cartesianToCartographic(positions[0], swap);
-  ellipsoidGeodesic.setEndPoints(startCartographic, endCartographic);
-  interpolateAndGrowRectangle(
-    ellipsoidGeodesic,
-    inverseChordLength,
-    result,
-    idlCross
-  );
-
-  if (result.east - result.west > idlCross.eastOverIDL - idlCross.westOverIDL) {
-    result.west = idlCross.westOverIDL;
-    result.east = idlCross.eastOverIDL;
-
-    if (result.east > CesiumMath.PI) {
-      result.east = result.east - CesiumMath.TWO_PI;
-    }
-    if (result.west > CesiumMath.PI) {
-      result.west = result.west - CesiumMath.TWO_PI;
-    }
-  }
-
-  return result;
-}
-
-const interpolatedCartographicScratch = new Cartographic();
-function interpolateAndGrowRectangle(
-  ellipsoidGeodesic,
-  inverseChordLength,
-  result,
-  idlCross
-) {
-  const segmentLength = ellipsoidGeodesic.surfaceDistance;
-
-  const numPoints = Math.ceil(segmentLength * inverseChordLength);
-  const subsegmentDistance =
-    numPoints > 0 ? segmentLength / (numPoints - 1) : Number.POSITIVE_INFINITY;
-  let interpolationDistance = 0.0;
-
-  for (let i = 0; i < numPoints; i++) {
-    const interpolatedCartographic = ellipsoidGeodesic.interpolateUsingSurfaceDistance(
-      interpolationDistance,
-      interpolatedCartographicScratch
-    );
-    interpolationDistance += subsegmentDistance;
-    const longitude = interpolatedCartographic.longitude;
-    const latitude = interpolatedCartographic.latitude;
-
-    result.west = Math.min(result.west, longitude);
-    result.east = Math.max(result.east, longitude);
-    result.south = Math.min(result.south, latitude);
-    result.north = Math.max(result.north, latitude);
-
-    const lonAdjusted =
-      longitude >= 0 ? longitude : longitude + CesiumMath.TWO_PI;
-    idlCross.westOverIDL = Math.min(idlCross.westOverIDL, lonAdjusted);
-    idlCross.eastOverIDL = Math.max(idlCross.eastOverIDL, lonAdjusted);
-  }
-}
-
 const createGeometryFromPositionsExtrudedPositions = [];
 
 function createGeometryFromPositionsExtruded(
@@ -636,7 +517,7 @@ function createGeometryFromPositionsExtruded(
   }
 
   let outerRing = hierarchy.outerRing;
-  let tangentPlane = EllipsoidTangentPlane.fromPoints(outerRing, ellipsoid);
+  const tangentPlane = EllipsoidTangentPlane.fromPoints(outerRing, ellipsoid);
   let positions2D = tangentPlane.projectPointsOntoPlane(
     outerRing,
     createGeometryFromPositionsExtrudedPositions
@@ -664,8 +545,6 @@ function createGeometryFromPositionsExtruded(
   const holes = hierarchy.holes;
   for (i = 0; i < holes.length; i++) {
     let hole = holes[i];
-
-    tangentPlane = EllipsoidTangentPlane.fromPoints(hole, ellipsoid);
     positions2D = tangentPlane.projectPointsOntoPlane(
       hole,
       createGeometryFromPositionsExtrudedPositions
@@ -706,7 +585,7 @@ function createGeometryFromPositionsExtruded(
  * @param {number} [options.extrudedHeight] The distance in meters between the polygon's extruded face and the ellipsoid surface.
  * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
  * @param {number} [options.stRotation=0.0] The rotation of the texture coordinates, in radians. A positive rotation is counter-clockwise.
- * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference.
+ * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.default] The ellipsoid to be used as a reference.
  * @param {number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
  * @param {boolean} [options.perPositionHeight=false] Use the height of options.positions for each position instead of using options.height to determine the height.
  * @param {boolean} [options.closeTop=true] When false, leaves off the top of an extruded polygon open.
@@ -812,7 +691,7 @@ function PolygonGeometry(options) {
 
   const polygonHierarchy = options.polygonHierarchy;
   const vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
-  const ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
+  const ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.default);
   const granularity = defaultValue(
     options.granularity,
     CesiumMath.RADIANS_PER_DEGREE
@@ -880,7 +759,7 @@ function PolygonGeometry(options) {
  * @param {number} [options.extrudedHeight] The height of the polygon extrusion.
  * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
  * @param {number} [options.stRotation=0.0] The rotation of the texture coordinates, in radians. A positive rotation is counter-clockwise.
- * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference.
+ * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.default] The ellipsoid to be used as a reference.
  * @param {number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
  * @param {boolean} [options.perPositionHeight=false] Use the height of options.positions for each position instead of using options.height to determine the height.
  * @param {boolean} [options.closeTop=true] When false, leaves off the top of an extruded polygon open.
@@ -1161,7 +1040,7 @@ const polygon = {
  * Computes a rectangle which encloses the polygon defined by the list of positions, including cases over the international date line and the poles.
  *
  * @param {Cartesian3[]} positions A linear ring defining the outer boundary of the polygon.
- * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference.
+ * @param {Ellipsoid} [ellipsoid=Ellipsoid.default] The ellipsoid to be used as a reference.
  * @param {ArcType} [arcType=ArcType.GEODESIC] The type of line the polygon edges must follow. Valid options are {@link ArcType.GEODESIC} and {@link ArcType.RHUMB}.
  * @param {Rectangle} [result] An object in which to store the result.
  *
@@ -1266,56 +1145,6 @@ PolygonGeometry.computeRectangleFromPositions = function (
   return result;
 };
 
-/**
- * Returns the bounding rectangle given the provided options
- *
- * @param {object} options Object with the following properties:
- * @param {PolygonHierarchy} options.polygonHierarchy A polygon hierarchy that can include holes.
- * @param {number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions sampled.
- * @param {ArcType} [options.arcType=ArcType.GEODESIC] The type of line the polygon edges must follow. Valid options are {@link ArcType.GEODESIC} and {@link ArcType.RHUMB}.
- * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference.
- * @param {Rectangle} [result] An object in which to store the result.
- *
- * @returns {Rectangle} The result rectangle
- *
- * @deprecated
- */
-PolygonGeometry.computeRectangle = function (options, result) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("options", options);
-  Check.typeOf.object("options.polygonHierarchy", options.polygonHierarchy);
-  //>>includeEnd('debug');
-
-  deprecationWarning(
-    "PolygonGeometry.computeRectangle",
-    "PolygonGeometry.computeRectangle was deprecated in CesiumJS 1.110.  It will be removed in CesiumJS 1.112. Use PolygonGeometry.computeRectangleFromPositions instead."
-  );
-
-  const granularity = defaultValue(
-    options.granularity,
-    CesiumMath.RADIANS_PER_DEGREE
-  );
-  const arcType = defaultValue(options.arcType, ArcType.GEODESIC);
-  //>>includeStart('debug', pragmas.debug);
-  if (arcType !== ArcType.GEODESIC && arcType !== ArcType.RHUMB) {
-    throw new DeveloperError(
-      "Invalid arcType. Valid options are ArcType.GEODESIC and ArcType.RHUMB."
-    );
-  }
-  //>>includeEnd('debug');
-
-  const polygonHierarchy = options.polygonHierarchy;
-  const ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
-
-  return computeRectangle(
-    polygonHierarchy.positions,
-    ellipsoid,
-    arcType,
-    granularity,
-    result
-  );
-};
-
 const scratchPolarForPlane = new Stereographic();
 function getTangentPlane(rectangle, positions, ellipsoid) {
   if (rectangle.height >= CesiumMath.PI || rectangle.width >= CesiumMath.PI) {
@@ -1331,7 +1160,7 @@ function getTangentPlane(rectangle, positions, ellipsoid) {
 }
 
 const scratchCartographicCyllindrical = new Cartographic();
-function createProjectTo2d(rectangle, ellipsoid) {
+function createProjectTo2d(rectangle, outerPositions, ellipsoid) {
   return (positions, results) => {
     // If the polygon positions span a large enough extent, use a specialized projection
     if (rectangle.height >= CesiumMath.PI || rectangle.width >= CesiumMath.PI) {
@@ -1360,7 +1189,10 @@ function createProjectTo2d(rectangle, ellipsoid) {
     }
 
     // Use a local tangent plane for smaller extents
-    const tangentPlane = EllipsoidTangentPlane.fromPoints(positions, ellipsoid);
+    const tangentPlane = EllipsoidTangentPlane.fromPoints(
+      outerPositions,
+      ellipsoid
+    );
     return tangentPlane.projectPointsOntoPlane(positions, results);
   };
 }
@@ -1466,7 +1298,7 @@ PolygonGeometry.createGeometry = function (polygonGeometry) {
   const results = PolygonGeometryLibrary.polygonsFromHierarchy(
     polygonHierarchy,
     hasTextureCoordinates,
-    createProjectTo2d(rectangle, ellipsoid),
+    createProjectTo2d(rectangle, outerPositions, ellipsoid),
     !perPositionHeight,
     ellipsoid,
     createSplitPolygons(rectangle, ellipsoid, arcType, perPositionHeight)

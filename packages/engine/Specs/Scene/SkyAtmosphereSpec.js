@@ -1,11 +1,11 @@
 import {
   Cartesian3,
+  DynamicAtmosphereLightingType,
   Ellipsoid,
+  Math as CesiumMath,
   SceneMode,
   SkyAtmosphere,
 } from "../../index.js";
-
-import { Math as CesiumMath } from "../../index.js";
 
 import createScene from "../../../../Specs/createScene.js";
 
@@ -52,9 +52,9 @@ describe(
       s.destroy();
     });
 
-    it("draws sky with setDynamicAtmosphereColor set to true", function () {
+    it("draws sky with dynamic lighting (scene light source)", function () {
       const s = new SkyAtmosphere();
-      s.setDynamicAtmosphereColor(true, false);
+      s.setDynamicLighting(DynamicAtmosphereLightingType.SCENE_LIGHT);
 
       expect(scene).toRender([0, 0, 0, 255]);
       scene.render();
@@ -67,9 +67,9 @@ describe(
       s.destroy();
     });
 
-    it("draws sky with setDynamicAtmosphereColor set to true using the sun direction", function () {
+    it("draws sky with dynamic lighting (sunlight)", function () {
       const s = new SkyAtmosphere();
-      s.setDynamicAtmosphereColor(true, true);
+      s.setDynamicLighting(DynamicAtmosphereLightingType.SUNLIGHT);
 
       expect(scene).toRender([0, 0, 0, 255]);
       scene.render();
@@ -82,9 +82,9 @@ describe(
       s.destroy();
     });
 
-    it("draws sky with setDynamicAtmosphereColor set to false", function () {
+    it("draws sky with dynamic lighting off", function () {
       const s = new SkyAtmosphere();
-      s.setDynamicAtmosphereColor(false, false);
+      s.setDynamicLighting(DynamicAtmosphereLightingType.NONE);
 
       expect(scene).toRender([0, 0, 0, 255]);
       scene.render();

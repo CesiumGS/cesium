@@ -113,7 +113,7 @@ Transforms.localFrameToFixedFrameGenerator = function (firstAxis, secondAxis) {
    * centered at the provided origin to the provided ellipsoid's fixed reference frame.
    * @callback Transforms.LocalFrameToFixedFrame
    * @param {Cartesian3} origin The center point of the local reference frame.
-   * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid whose fixed frame is used in the transformation.
+   * @param {Ellipsoid} [ellipsoid=Ellipsoid.default] The ellipsoid whose fixed frame is used in the transformation.
    * @param {Matrix4} [result] The object onto which to store the result.
    * @returns {Matrix4} The modified result parameter or a new Matrix4 instance if none was provided.
    */
@@ -126,6 +126,9 @@ Transforms.localFrameToFixedFrameGenerator = function (firstAxis, secondAxis) {
       //>>includeStart('debug', pragmas.debug);
       if (!defined(origin)) {
         throw new DeveloperError("origin is required.");
+      }
+      if (isNaN(origin.x) || isNaN(origin.y) || isNaN(origin.z)) {
+        throw new DeveloperError("origin has a NaN component");
       }
       //>>includeEnd('debug');
       if (!defined(result)) {
@@ -196,7 +199,7 @@ Transforms.localFrameToFixedFrameGenerator = function (firstAxis, secondAxis) {
           );
         }
       } else {
-        ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
+        ellipsoid = defaultValue(ellipsoid, Ellipsoid.default);
         ellipsoid.geodeticSurfaceNormal(origin, scratchCalculateCartesian.up);
 
         const up = scratchCalculateCartesian.up;
@@ -262,7 +265,7 @@ Transforms.localFrameToFixedFrameGenerator = function (firstAxis, secondAxis) {
  *
  * @function
  * @param {Cartesian3} origin The center point of the local reference frame.
- * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid whose fixed frame is used in the transformation.
+ * @param {Ellipsoid} [ellipsoid=Ellipsoid.default] The ellipsoid whose fixed frame is used in the transformation.
  * @param {Matrix4} [result] The object onto which to store the result.
  * @returns {Matrix4} The modified result parameter or a new Matrix4 instance if none was provided.
  *
@@ -288,7 +291,7 @@ Transforms.eastNorthUpToFixedFrame = Transforms.localFrameToFixedFrameGenerator(
  *
  * @function
  * @param {Cartesian3} origin The center point of the local reference frame.
- * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid whose fixed frame is used in the transformation.
+ * @param {Ellipsoid} [ellipsoid=Ellipsoid.default] The ellipsoid whose fixed frame is used in the transformation.
  * @param {Matrix4} [result] The object onto which to store the result.
  * @returns {Matrix4} The modified result parameter or a new Matrix4 instance if none was provided.
  *
@@ -314,7 +317,7 @@ Transforms.northEastDownToFixedFrame = Transforms.localFrameToFixedFrameGenerato
  *
  * @function
  * @param {Cartesian3} origin The center point of the local reference frame.
- * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid whose fixed frame is used in the transformation.
+ * @param {Ellipsoid} [ellipsoid=Ellipsoid.default] The ellipsoid whose fixed frame is used in the transformation.
  * @param {Matrix4} [result] The object onto which to store the result.
  * @returns {Matrix4} The modified result parameter or a new Matrix4 instance if none was provided.
  *
@@ -340,7 +343,7 @@ Transforms.northUpEastToFixedFrame = Transforms.localFrameToFixedFrameGenerator(
  *
  * @function
  * @param {Cartesian3} origin The center point of the local reference frame.
- * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid whose fixed frame is used in the transformation.
+ * @param {Ellipsoid} [ellipsoid=Ellipsoid.default] The ellipsoid whose fixed frame is used in the transformation.
  * @param {Matrix4} [result] The object onto which to store the result.
  * @returns {Matrix4} The modified result parameter or a new Matrix4 instance if none was provided.
  *
@@ -360,13 +363,13 @@ const scratchHPRMatrix4 = new Matrix4();
 
 /**
  * Computes a 4x4 transformation matrix from a reference frame with axes computed from the heading-pitch-roll angles
- * centered at the provided origin to the provided ellipsoid's fixed reference frame. Heading is the rotation from the local north
+ * centered at the provided origin to the provided ellipsoid's fixed reference frame. Heading is the rotation from the local east
  * direction where a positive angle is increasing eastward. Pitch is the rotation from the local east-north plane. Positive pitch angles
  * are above the plane. Negative pitch angles are below the plane. Roll is the first rotation applied about the local east axis.
  *
  * @param {Cartesian3} origin The center point of the local reference frame.
  * @param {HeadingPitchRoll} headingPitchRoll The heading, pitch, and roll.
- * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid whose fixed frame is used in the transformation.
+ * @param {Ellipsoid} [ellipsoid=Ellipsoid.default] The ellipsoid whose fixed frame is used in the transformation.
  * @param {Transforms.LocalFrameToFixedFrame} [fixedFrameTransform=Transforms.eastNorthUpToFixedFrame] A 4x4 transformation
  *  matrix from a reference frame to the provided ellipsoid's fixed reference frame
  * @param {Matrix4} [result] The object onto which to store the result.
@@ -415,13 +418,13 @@ const scratchHPRMatrix3 = new Matrix3();
 
 /**
  * Computes a quaternion from a reference frame with axes computed from the heading-pitch-roll angles
- * centered at the provided origin. Heading is the rotation from the local north
+ * centered at the provided origin. Heading is the rotation from the local east
  * direction where a positive angle is increasing eastward. Pitch is the rotation from the local east-north plane. Positive pitch angles
  * are above the plane. Negative pitch angles are below the plane. Roll is the first rotation applied about the local east axis.
  *
  * @param {Cartesian3} origin The center point of the local reference frame.
  * @param {HeadingPitchRoll} headingPitchRoll The heading, pitch, and roll.
- * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid whose fixed frame is used in the transformation.
+ * @param {Ellipsoid} [ellipsoid=Ellipsoid.default] The ellipsoid whose fixed frame is used in the transformation.
  * @param {Transforms.LocalFrameToFixedFrame} [fixedFrameTransform=Transforms.eastNorthUpToFixedFrame] A 4x4 transformation
  *  matrix from a reference frame to the provided ellipsoid's fixed reference frame
  * @param {Quaternion} [result] The object onto which to store the result.
@@ -465,12 +468,12 @@ const hprTransformScratch = new Matrix4();
 const hprRotationScratch = new Matrix3();
 const hprQuaternionScratch = new Quaternion();
 /**
- * Computes heading-pitch-roll angles from a transform in a particular reference frame. Heading is the rotation from the local north
+ * Computes heading-pitch-roll angles from a transform in a particular reference frame. Heading is the rotation from the local east
  * direction where a positive angle is increasing eastward. Pitch is the rotation from the local east-north plane. Positive pitch angles
  * are above the plane. Negative pitch angles are below the plane. Roll is the first rotation applied about the local east axis.
  *
  * @param {Matrix4} transform The transform
- * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid whose fixed frame is used in the transformation.
+ * @param {Ellipsoid} [ellipsoid=Ellipsoid.default] The ellipsoid whose fixed frame is used in the transformation.
  * @param {Transforms.LocalFrameToFixedFrame} [fixedFrameTransform=Transforms.eastNorthUpToFixedFrame] A 4x4 transformation
  *  matrix from a reference frame to the provided ellipsoid's fixed reference frame
  * @param {HeadingPitchRoll} [result] The object onto which to store the result.
@@ -486,7 +489,7 @@ Transforms.fixedFrameToHeadingPitchRoll = function (
   Check.defined("transform", transform);
   //>>includeEnd('debug');
 
-  ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
+  ellipsoid = defaultValue(ellipsoid, Ellipsoid.default);
   fixedFrameTransform = defaultValue(
     fixedFrameTransform,
     Transforms.eastNorthUpToFixedFrame
@@ -947,7 +950,7 @@ const upScratch = new Cartesian3();
  *
  * @param {Cartesian3} position The position to transform.
  * @param {Cartesian3} velocity The velocity vector to transform.
- * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid whose fixed frame is used in the transformation.
+ * @param {Ellipsoid} [ellipsoid=Ellipsoid.default] The ellipsoid whose fixed frame is used in the transformation.
  * @param {Matrix3} [result] The object onto which to store the result.
  * @returns {Matrix3} The modified result parameter or a new Matrix3 instance if none was provided.
  */
@@ -967,10 +970,10 @@ Transforms.rotationMatrixFromPositionVelocity = function (
   }
   //>>includeEnd('debug');
 
-  const normal = defaultValue(ellipsoid, Ellipsoid.WGS84).geodeticSurfaceNormal(
-    position,
-    normalScratch
-  );
+  const normal = defaultValue(
+    ellipsoid,
+    Ellipsoid.default
+  ).geodeticSurfaceNormal(position, normalScratch);
   let right = Cartesian3.cross(velocity, normal, rightScratch);
 
   if (Cartesian3.equalsEpsilon(right, Cartesian3.ZERO, CesiumMath.EPSILON6)) {
@@ -1045,23 +1048,32 @@ Transforms.basisTo2D = function (projection, matrix, result) {
   const rtcCenter = Matrix4.getTranslation(matrix, scratchCenter);
   const ellipsoid = projection.ellipsoid;
 
-  // Get the 2D Center
-  const cartographic = ellipsoid.cartesianToCartographic(
-    rtcCenter,
-    scratchCartographic
-  );
-  const projectedPosition = projection.project(
-    cartographic,
-    scratchCartesian3Projection
-  );
-  Cartesian3.fromElements(
-    projectedPosition.z,
-    projectedPosition.x,
-    projectedPosition.y,
-    projectedPosition
-  );
+  let projectedPosition;
+  if (Cartesian3.equals(rtcCenter, Cartesian3.ZERO)) {
+    projectedPosition = Cartesian3.clone(
+      Cartesian3.ZERO,
+      scratchCartesian3Projection
+    );
+  } else {
+    // Get the 2D Center
+    const cartographic = ellipsoid.cartesianToCartographic(
+      rtcCenter,
+      scratchCartographic
+    );
 
-  // Assuming the instance are positioned in WGS84, invert the WGS84 transform to get the local transform and then convert to 2D
+    projectedPosition = projection.project(
+      cartographic,
+      scratchCartesian3Projection
+    );
+    Cartesian3.fromElements(
+      projectedPosition.z,
+      projectedPosition.x,
+      projectedPosition.y,
+      projectedPosition
+    );
+  }
+
+  // Assuming the instance are positioned on the ellipsoid, invert the ellipsoidal transform to get the local transform and then convert to 2D
   const fromENU = Transforms.eastNorthUpToFixedFrame(
     rtcCenter,
     ellipsoid,
@@ -1079,7 +1091,7 @@ Transforms.basisTo2D = function (projection, matrix, result) {
 /**
  * @private
  */
-Transforms.wgs84To2DModelMatrix = function (projection, center, result) {
+Transforms.ellipsoidTo2DModelMatrix = function (projection, center, result) {
   //>>includeStart('debug', pragmas.debug);
   if (!defined(projection)) {
     throw new DeveloperError("projection is required.");

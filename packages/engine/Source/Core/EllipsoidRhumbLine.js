@@ -333,10 +333,16 @@ function interpolateUsingSurfaceDistance(
     latitude = calculateInverseM(M2, ellipticity, major);
 
     //Now find the longitude of the second point
-    const sigma1 = calculateSigma(ellipticity, start.latitude);
-    const sigma2 = calculateSigma(ellipticity, latitude);
-    deltaLongitude = Math.tan(heading) * (sigma2 - sigma1);
-    longitude = CesiumMath.negativePiToPi(start.longitude + deltaLongitude);
+
+    // Check to see if the rhumb line has constant longitude
+    if (Math.abs(heading) < CesiumMath.EPSILON10) {
+      longitude = CesiumMath.negativePiToPi(start.longitude);
+    } else {
+      const sigma1 = calculateSigma(ellipticity, start.latitude);
+      const sigma2 = calculateSigma(ellipticity, latitude);
+      deltaLongitude = Math.tan(heading) * (sigma2 - sigma1);
+      longitude = CesiumMath.negativePiToPi(start.longitude + deltaLongitude);
+    }
   } else {
     //If heading is close to 90 degrees
     latitude = start.latitude;
@@ -379,12 +385,12 @@ function interpolateUsingSurfaceDistance(
  *
  * @param {Cartographic} [start] The initial planetodetic point on the path.
  * @param {Cartographic} [end] The final planetodetic point on the path.
- * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the rhumb line lies.
+ * @param {Ellipsoid} [ellipsoid=Ellipsoid.default] The ellipsoid on which the rhumb line lies.
  *
  * @exception {DeveloperError} angle between start and end must be at least 0.0125 radians.
  */
 function EllipsoidRhumbLine(start, end, ellipsoid) {
-  const e = defaultValue(ellipsoid, Ellipsoid.WGS84);
+  const e = defaultValue(ellipsoid, Ellipsoid.default);
   this._ellipsoid = e;
   this._start = new Cartographic();
   this._end = new Cartographic();
@@ -475,7 +481,7 @@ Object.defineProperties(EllipsoidRhumbLine.prototype, {
  * @param {Cartographic} start The initial planetodetic point on the path.
  * @param {number} heading The heading in radians.
  * @param {number} distance The rhumb line distance between the start and end point.
- * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the rhumb line lies.
+ * @param {Ellipsoid} [ellipsoid=Ellipsoid.default] The ellipsoid on which the rhumb line lies.
  * @param {EllipsoidRhumbLine} [result] The object in which to store the result.
  * @returns {EllipsoidRhumbLine} The EllipsoidRhumbLine object.
  */
@@ -493,7 +499,7 @@ EllipsoidRhumbLine.fromStartHeadingDistance = function (
   Check.typeOf.number.greaterThan("distance", distance, 0.0);
   //>>includeEnd('debug');
 
-  const e = defaultValue(ellipsoid, Ellipsoid.WGS84);
+  const e = defaultValue(ellipsoid, Ellipsoid.default);
   const major = e.maximumRadius;
   const minor = e.minimumRadius;
   const majorSquared = major * major;

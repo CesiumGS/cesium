@@ -147,7 +147,7 @@ BoxGeometryUpdater.prototype.createFillGeometryInstance = function (time) {
       time,
       entity.box.heightReference,
       this._options.dimensions.z * 0.5,
-      this._scene.mapProjection.ellipsoid
+      this._scene.ellipsoid
     ),
     attributes: attributes,
   });
@@ -215,7 +215,7 @@ BoxGeometryUpdater.prototype.createOutlineGeometryInstance = function (time) {
       time,
       entity.box.heightReference,
       this._options.dimensions.z * 0.5,
-      this._scene.mapProjection.ellipsoid
+      this._scene.ellipsoid
     ),
     attributes: attributes,
   });
