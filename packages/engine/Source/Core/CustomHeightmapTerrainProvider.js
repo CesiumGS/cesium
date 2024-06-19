@@ -161,6 +161,20 @@ Object.defineProperties(CustomHeightmapTerrainProvider.prototype, {
   },
 
   /**
+   * Gets an object that can be used to determine availability of terrain from this provider, such as
+   * at points and in rectangles. This property may be undefined if availability
+   * information is not available.
+   * @memberof CustomHeightmapTerrainProvider.prototype
+   * @type {TileAvailability}
+   * @readonly
+   */
+  availability: {
+    get: function () {
+      return undefined;
+    },
+  },
+
+  /**
    * Gets the number of columns per heightmap tile.
    * @memberof CustomHeightmapTerrainProvider.prototype
    * @type {boolean}
