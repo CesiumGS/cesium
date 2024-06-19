@@ -1,15 +1,9 @@
 
 precision highp float;
 
-in vec4 v_position;
-in float v_anisotropy;
-in vec2 vEigenVector1;
-in vec2 vEigenVector2;
-in float vEigenValue1;
-in float vEigenValue2;
-in mat2 vCovarianceMatrix;
+in vec2 fsPosition;
 
-in vec2 v_cov2d;
+
 
 czm_modelMaterial defaultModelMaterial()
 {
@@ -101,45 +95,10 @@ void main()
     #endif
 
     #ifdef HAS_POINT_CLOUD_SPLAT
-    // vec2 pos = gl_PointCoord * 2.0 - 1.0;
-
-    //  // Calculate the Mahalanobis distance using the covariance matrix
-    // float mahalanobisDistance = dot(pos, vCovarianceMatrix * pos);
-
-    // // Discard fragments outside the ellipse
-    // if (mahalanobisDistance > 1.0) {
-    //     discard;
-    // }
-
-    // // Calculate the Gaussian falloff based on the Mahalanobis distance
-    // float gaussianFalloff = exp(-0.5 * mahalanobisDistance);
-
-
-    vec2 coord = gl_PointCoord;
-
-    // Calculate the inverse of the covariance matrix
-    float det = v_cov2d.x * v_cov2d.y;
-    float invDet = 1.0 / det;
-    mat2 invCov = mat2(
-        v_cov2d.y * invDet, 0.0,
-        0.0, v_cov2d.x * invDet
-    );
-
-    // Transform the coordinates using the inverse covariance matrix
-    vec2 transformedCoord = invCov * (coord - 0.5);
-
-    // Calculate the Mahalanobis distance
-    float mahalanobisDist = dot(transformedCoord, transformedCoord);
-
-    // Perform Gaussian falloff
-    float gaussian = exp(-0.5 * mahalanobisDist);
-
-    // Discard fragments outside the splat radius
-    if (mahalanobisDist > 1.0) {
-        discard;
-    }
-    // Apply the Gaussian falloff and alpha to the color
-    out_FragColor = vec4(material.diffuse * gaussian, material.alpha * gaussian);
+        float A = -dot(fsPosition, fsPosition);
+    if (A < -4.0) discard;
+    float B = exp(A) * material.alpha;
+    out_FragColor = vec4(B * material.diffuse, B);
     #endif
 }
 

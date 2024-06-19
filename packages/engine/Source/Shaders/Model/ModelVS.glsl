@@ -1,14 +1,8 @@
 precision highp float;
 
 
-out vec4 v_position;
-out float v_anisotropy;
-out vec2 vEigenVector1;
-out vec2 vEigenVector2;
-out float vEigenValue1;
-out float vEigenValue2;
-out mat2 vCovarianceMatrix;
-out vec2 v_cov2d;
+//in  vec2 v_position;
+out vec2 fsPosition;
 
 czm_modelVertexOutput defaultVertexOutput(vec3 positionMC) {
     czm_modelVertexOutput vsOutput;
@@ -48,18 +42,26 @@ void calcCov3D(vec3 scale, vec4 rot, float mod, out float[6] cov3D)
 
 vec3 calcCov2D(vec3 posEC, float focal_x, float focal_y, float tan_fovx, float tan_fovy, float[6] cov3D, mat4 viewmatrix) {
     vec4 t = viewmatrix * vec4(posEC, 1.0);
+
+    float limx = 1.3 * tan_fovx;
+    float limy = 1.3 * tan_fovy;
+    float txtz = t.x / t.z;
+    float tytz = t.y / t.z;
+    t.x = min(limx, max(-limx, txtz)) * t.z;
+    t.y = min(limy, max(-limy, tytz)) * t.z;
+
     mat3 J = mat3(
         focal_x / t.z, 0, -(focal_x * t.x) / (t.z * t.z),
-        0, -focal_y / t.z, (focal_y * t.y) / (t.z * t.z),
+        0, focal_y / t.z, -(focal_y * t.y) / (t.z * t.z),
         0, 0, 0
     );
 
-    // mat3 W =  mat3(
-    //     viewmatrix[0][0], viewmatrix[1][0], viewmatrix[2][0],
-    //     viewmatrix[0][1], viewmatrix[1][1], viewmatrix[2][1],
-    //     viewmatrix[0][2], viewmatrix[1][2], viewmatrix[2][2]
-    // );
-    mat3 W = transpose(mat3(viewmatrix));
+    mat3 W =  mat3(
+        viewmatrix[0][0], viewmatrix[1][0], viewmatrix[2][0],
+        viewmatrix[0][1], viewmatrix[1][1], viewmatrix[2][1],
+        viewmatrix[0][2], viewmatrix[1][2], viewmatrix[2][2]
+    );
+   // mat3 W = transpose(mat3(viewmatrix));
 
     mat3 T = W * J;
 
@@ -80,6 +82,44 @@ float ndc2Pix(float v, float S) {
     return ((v + 1.) * S - 1.) * .5;
 }
 
+
+vec4 addScreenSpaceOffset(vec4 positionEC, vec2 imageSize, float scale, vec2 direction, vec2 origin, vec2 translate, vec2 pixelOffset, vec3 alignedAxis, bool validAlignedAxis, float rotation, bool sizeInMeters, out mat2 rotationMatrix, out float mpp)
+{
+    // Note the halfSize cannot be computed in JavaScript because it is sent via
+    // compressed vertex attributes that coerce it to an integer.
+    vec2 halfSize = imageSize * scale * 0.5;
+    halfSize *= ((direction * 2.0) - 1.0);
+
+    vec2 originTranslate = origin * abs(halfSize);
+
+#if defined(ROTATION) || defined(ALIGNED_AXIS)
+    if (validAlignedAxis || rotation != 0.0)
+    {
+        float angle = rotation;
+        if (validAlignedAxis)
+        {
+            vec4 projectedAlignedAxis = czm_modelView3D * vec4(alignedAxis, 0.0);
+            angle += sign(-projectedAlignedAxis.x) * acos(sign(projectedAlignedAxis.y) * (projectedAlignedAxis.y * projectedAlignedAxis.y) /
+                    (projectedAlignedAxis.x * projectedAlignedAxis.x + projectedAlignedAxis.y * projectedAlignedAxis.y));
+        }
+
+        float cosTheta = cos(angle);
+        float sinTheta = sin(angle);
+        rotationMatrix = mat2(cosTheta, sinTheta, -sinTheta, cosTheta);
+        halfSize = rotationMatrix * halfSize;
+    }
+    else
+    {
+        rotationMatrix = mat2(1.0, 0.0, 0.0, 1.0);
+    }
+#endif
+
+    mpp = czm_metersPerPixel(positionEC);
+    positionEC.xy += (originTranslate + halfSize) * czm_branchFreeTernary(sizeInMeters, 1.0, mpp);
+    positionEC.xy += (translate + pixelOffset) * mpp;
+
+    return positionEC;
+}
 
 
 
@@ -227,73 +267,43 @@ void main()
     float[6] cov3D;
     calcCov3D(attributes.scale, attributes.rotation, 1.0, cov3D);
 
-    float aspect = czm_projection[0][0] / czm_projection[1][1];
-    float tan_fovx = 1./czm_projection[0][0];
-    float tan_fovy = 1./czm_projection[1][1] * aspect;
-    float lim_x = 1.3 * tan_fovx;
-    float lim_y = 1.3 * tan_fovy;
-    float focal_x = czm_viewport.x * czm_projection[0][0] / 2.0;
-    float focal_y = czm_viewport.y * czm_projection[1][1] / 2.0;
+    float aspect = czm_viewport.z / czm_viewport.w;
+    float fovx = 2.0 * atan(aspect / czm_projection[0][0]);//1./czm_projection[0][0];
+    float fovy = 2.0 * atan(1.0 / czm_projection[1][1]);//1./czm_projection[1][1] * aspect;
+    float tan_fovx = tan(fovx / 2.0);
+    float tan_fovy = tan(fovy / 2.0);
+    float focal_y = czm_viewport.w / (2.0 * tan_fovy);
+    float focal_x = czm_viewport.z / (2.0 * tan_fovx);
 
-    mat4 viewMatrix = czm_inverseView;
+     mat4 viewMatrix = czm_modelView;
+     vec3 cov2d = calcCov2D(attributes.positionMC, focal_x, focal_y, tan_fovx, tan_fovy, cov3D, viewMatrix);
 
-    //vec3 calcCov2D(vec3 posEC, float focal_x, float focal_y, float tan_fovx, float tan_fovy, float[6] cov3D, mat4 viewmatrix)
-    vec3 cov2d = calcCov2D(attributes.positionMC, focal_x, focal_y, tan_fovx, tan_fovy, cov3D, viewMatrix);
+    vec4 pos2d = czm_modelViewProjection * vec4(v_positionMC,1.0);
 
-    //this is computed in the geometryStageVS, but lets be explicit for now
-    vec4 eyeCoord = viewMatrix * vec4(attributes.positionMC, 1.0);
-    vec4 pos2d = czm_projection * eyeCoord;
+    float clip = 1.2 * pos2d.w;
+    if (pos2d.z < -clip || pos2d.x < -clip || pos2d.x > clip || pos2d.y < -clip || pos2d.y > clip) {
+        gl_Position = vec4(0.0, 0.0, 2.0, 1.0);
+        return;
+    }
 
-    // float mid = (cov2d.x + cov2d.z) / 2.0;
-    // float radius = length(vec2((cov2d.x - cov2d.z) / 2.0, cov2d.y));
-    // float lambda1 = mid + radius, lambda2 = mid - radius;
+    float mid = (cov2d.x + cov2d.z) / 2.0;
+    float radius = length(vec2((cov2d.x - cov2d.z) / 2.0, cov2d.y));
+    float lambda1 = mid + radius, lambda2 = mid - radius;
 
-    // if(lambda2 < 0.0) return;
-    // vec2 diagonalVector = normalize(vec2(cov2d.y, lambda1 - cov2d.x));
-    // vec2 majorAxis = min(sqrt(2.0 * lambda1), 1024.0) * diagonalVector;
-    // vec2 minorAxis = min(sqrt(2.0 * lambda2), 1024.0) * vec2(diagonalVector.y, -diagonalVector.x);
+    if(lambda2 < 0.0) return;
+    vec2 diagonalVector = normalize(vec2(cov2d.y, lambda1 - cov2d.x));
+    vec2 majorAxis = min(sqrt(2.0 * lambda1), 1024.0) * diagonalVector;
+    vec2 minorAxis = min(sqrt(2.0 * lambda2), 1024.0) * vec2(diagonalVector.y, -diagonalVector.x);
 
+    vec3 vCenter = pos2d.xyz / pos2d.w;
 
-    // Calculate the eigenvalues of the 2D covariance matrix
-    float a = cov2d.x;
-    float b = cov2d.y;
-    float c = cov2d.z;
-    float trace = a + c;
-    float det = a * c - b * b;
-    float delta = sqrt(max(0.0, trace * trace - 4.0 * det));
-    float lambda1 = (trace + delta) / 2.0;
-    float lambda2 = (trace - delta) / 2.0;
-
-    // Calculate the eigenvectors and eigenvalues
-    vec2 eigenVector1 = normalize(vec2(lambda1 - c, b));
-    vec2 eigenVector2 = vec2(-eigenVector1.y, eigenVector1.x);
+    gl_Position = vec4(
+        vCenter.xy
+        + v_position.x * majorAxis / czm_viewport.z
+        + v_position.y * minorAxis / czm_viewport.w, 0.0, 1.0);;
 
 
-    float anisotropy = lambda1 / max(lambda2, 1e-5);
-
-    // Calculate the point size based on the eigenvalues and anisotropy factor
-    float baseSize = 5.0; // Adjust this value to control the base size of the points
-    float scaleFactor = 2048.0; // Adjust this value to control the scaling based on anisotropy
-    float pointSize = baseSize * pow(anisotropy, scaleFactor);
-
-
-    gl_Position = show * positionClip;
-    gl_PointSize = pointSize;
-
-    // Calculate the 2D covariance matrix
-    mat2 covarianceMatrix = mat2(
-        cov2d.x, cov2d.y,
-        cov2d.y, cov2d.z
-    );
-v_cov2d = vec2(cov2d.x, cov2d.z);
-    vCovarianceMatrix = inverse(covarianceMatrix);
-
-
-    v_anisotropy = anisotropy;
-    vEigenVector1 = eigenVector1;
-    vEigenVector2 = eigenVector2;
-    vEigenValue1 = lambda1;
-    vEigenValue2 = lambda2;
+    fsPosition = v_position;
 
     #endif
    // gl_Position = show * positionClip;

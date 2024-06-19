@@ -1367,7 +1367,15 @@ function continueDraw(context, drawCommand, shaderProgram, uniformMap) {
     } else {
       count = va.numberOfVertices;
     }
-    if (instanceCount === 0) {
+
+    if (primitiveType === PrimitiveType.POINTS) {
+      // context._gl.drawArraysInstanced(PrimitiveType.TRIANGLE_FAN,
+      //   0,
+      //   4,
+      //   count
+      // );
+      context._gl.drawArrays(PrimitiveType.TRIANGLE_STRIP, offset, count * 4);
+    } else if (instanceCount === 0) {
       context._gl.drawArrays(primitiveType, offset, count);
     } else {
       context.glDrawArraysInstanced(
