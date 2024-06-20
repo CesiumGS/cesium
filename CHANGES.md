@@ -15,6 +15,7 @@
 ##### Fixes :wrench:
 
 - Fixed issue where Entities would not use a custom ellipsoid. [#3543](https://github.com/CesiumGS/cesium/issues/3543)
+- Fixed issue where Property 'availability' is missing in type 'CustomHeightmapTerrainProvider' but required in type 'TerrainProvider' when using with typescript
 
 ##### Breaking Changes :mega:
 
