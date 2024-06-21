@@ -121,23 +121,23 @@ void gaussianSplatStage(ProcessedAttributes attributes, inout vec4 positionClip)
     float W = czm_viewport.z;
     float H = czm_viewport.w;
 
-    vec4 p_hom = czm_viewProjection * vec4(v_positionMC, 1);
+    vec4 p_hom = czm_viewProjection * vec4(a_positionMC, 1);
     float p_w = 1. / (p_hom.w + 1e-7);
     vec3 p_proj = p_hom.xyz * p_w;
 
     // Perform near culling, quit if outside.
-    vec4 p_view = viewMatrix * vec4(v_positionMC, 1);
+    vec4 p_view = viewMatrix * vec4(a_positionMC, 1);
     if (p_view.z <= .4) {
-        gl_Position = vec4(0, 0, 0, 1);
+        positionClip = vec4(0, 0, 0, 1);
         return;
     }
 
         // Invert covariance (EWA algorithm)
     float det = (cov2d.x * cov2d.z - cov2d.y * cov2d.y);
-    if (det == 0.) {
-        positionClip = vec4(0, 0, 0, 1);
-        return;
-    }
+    // if (det == 0.) {
+    //     positionClip = vec4(0, 0, 0, 1);
+    //     return;
+    // }
     float det_inv = 1. / det;
     vec3 conic = vec3(cov2d.z, -cov2d.y, cov2d.x) * det_inv;
 
