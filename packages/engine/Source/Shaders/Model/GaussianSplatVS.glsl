@@ -85,34 +85,84 @@ void gaussianSplatStage(ProcessedAttributes attributes, inout vec4 positionClip)
      mat4 viewMatrix = czm_modelView;
      vec3 cov2d = calcCov2D(attributes.positionMC, focal_x, focal_y, tan_fovx, tan_fovy, cov3D, viewMatrix);
 
-    vec4 pos2d = czm_modelViewProjection * vec4(v_positionMC,1.0);
+    // vec4 pos2d = czm_modelViewProjection * vec4(v_positionMC,1.0);
 
-    float clip = 1.2 * pos2d.w;
-    if (pos2d.z < -clip || pos2d.x < -clip || pos2d.x > clip || pos2d.y < -clip || pos2d.y > clip) {
-        positionClip = vec4(0.0, 0.0, 2.0, 1.0);
+    // float clip = 1.2 * pos2d.w;
+    // if (pos2d.z < -clip || pos2d.x < -clip || pos2d.x > clip || pos2d.y < -clip || pos2d.y > clip) {
+    //     positionClip = vec4(0.0, 0.0, 2.0, 1.0);
+    //     return;
+    // }
+
+    // float mid = (cov2d.x + cov2d.z) / 2.0;
+    // float radius = length(vec2((cov2d.x - cov2d.z) / 2.0, cov2d.y));
+    // float lambda1 = mid + radius, lambda2 = mid - radius;
+
+    // if(lambda2 < 0.0) return;
+    // vec2 diagonalVector = normalize(vec2(cov2d.y, lambda1 - cov2d.x));
+    // vec2 majorAxis = min(sqrt(2.0 * lambda1), 1024.0) * diagonalVector;
+    // vec2 minorAxis = min(sqrt(2.0 * lambda2), 1024.0) * vec2(diagonalVector.y, -diagonalVector.x);
+
+    //  vec2 corner = vec2((gl_VertexID << 1) & 2, gl_VertexID & 2) - 1.;
+    //  corner *= 2.;
+
+    // vec3 vCenter = pos2d.xyz / pos2d.w;
+
+    // // vColorMod = clamp(pos2d.z/pos2d.w+1.0, 0.0, 1.0);
+
+    // positionClip = vec4(
+    //     vCenter.xy
+    //     + corner.x * majorAxis / czm_viewport.z
+    //     + corner.y * minorAxis / czm_viewport.w, 0.0, 1.0);
+
+    // v_splatPosition = corner;
+
+    ////////////////////////////////////////////////////////////////////////
+
+    float W = czm_viewport.z;
+    float H = czm_viewport.w;
+
+    vec4 p_hom = czm_viewProjection * vec4(v_positionMC, 1);
+    float p_w = 1. / (p_hom.w + 1e-7);
+    vec3 p_proj = p_hom.xyz * p_w;
+
+    // Perform near culling, quit if outside.
+    vec4 p_view = viewMatrix * vec4(v_positionMC, 1);
+    if (p_view.z <= .4) {
+        gl_Position = vec4(0, 0, 0, 1);
         return;
     }
 
-    float mid = (cov2d.x + cov2d.z) / 2.0;
-    float radius = length(vec2((cov2d.x - cov2d.z) / 2.0, cov2d.y));
-    float lambda1 = mid + radius, lambda2 = mid - radius;
+        // Invert covariance (EWA algorithm)
+    float det = (cov2d.x * cov2d.z - cov2d.y * cov2d.y);
+    if (det == 0.) {
+        positionClip = vec4(0, 0, 0, 1);
+        return;
+    }
+    float det_inv = 1. / det;
+    vec3 conic = vec3(cov2d.z, -cov2d.y, cov2d.x) * det_inv;
 
-    if(lambda2 < 0.0) return;
-    vec2 diagonalVector = normalize(vec2(cov2d.y, lambda1 - cov2d.x));
-    vec2 majorAxis = min(sqrt(2.0 * lambda1), 1024.0) * diagonalVector;
-    vec2 minorAxis = min(sqrt(2.0 * lambda2), 1024.0) * vec2(diagonalVector.y, -diagonalVector.x);
+    // Compute extent in screen space (by finding eigenvalues of
+    // 2D covariance matrix). Use extent to compute the bounding
+    // rectangle of the splat in screen space.
 
-     vec2 corner = vec2((gl_VertexID << 1) & 2, gl_VertexID & 2) - 1.;
-     corner *= 2.;
+    float mid = 0.5 * (cov2d.x + cov2d.z);
+    float lambda1 = mid + sqrt(max(0.1, mid * mid - det));
+    float lambda2 = mid - sqrt(max(0.1, mid * mid - det));
+    float my_radius = ceil(3. * sqrt(max(lambda1, lambda2)));
+    vec2 point_image = vec2(ndc2Pix(p_proj.x, W), ndc2Pix(p_proj.y, H));
 
-    vec3 vCenter = pos2d.xyz / pos2d.w;
+    // (Webgl-specific) Convert gl_VertexID from [0,1,2,3] to [-1,-1],[1,-1],[-1,1],[1,1]
+    vec2 corner = vec2((gl_VertexID << 1) & 2, gl_VertexID & 2) - 1.;
+    // Vertex position in screen space
+    vec2 screen_pos = point_image + my_radius * corner;
 
-    // vColorMod = clamp(pos2d.z/pos2d.w+1.0, 0.0, 1.0);
+    // Store some useful helper data for the fragment stage
+    v_conic = conic;
+    v_splatPosition = point_image;
+    v_splatVertexPos = screen_pos;
 
-    positionClip = vec4(
-        vCenter.xy
-        + corner.x * majorAxis / czm_viewport.z
-        + corner.y * minorAxis / czm_viewport.w, 0.0, 1.0);
+    // (Webgl-specific) Convert from screen-space to clip-space
+    vec2 clip_pos = screen_pos / vec2(W, H) * 2. - 1.;
 
-    v_splatPosition = a_splatPosition;
+    positionClip = vec4(clip_pos, 0, 1);
 }
