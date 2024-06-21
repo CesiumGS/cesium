@@ -12,9 +12,6 @@ import ModelUtility from "./ModelUtility.js";
 import SelectedFeatureIdPipelineStage from "./SelectedFeatureIdPipelineStage.js";
 import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
 
-import Buffer from "../../Renderer/Buffer.js";
-import BufferUsage from "../../Renderer/BufferUsage.js";
-
 /**
  * The geometry pipeline stage processes the vertex attributes of a primitive.
  *
@@ -190,45 +187,7 @@ GeometryPipelineStage.process = function (
   handleBitangents(shaderBuilder, primitive.attributes);
 
   if (primitive.primitiveType === PrimitiveType.POINTS) {
-    //if splats dont set points
     shaderBuilder.addDefine("PRIMITIVE_TYPE_POINTS");
-    //temp hack. Will need to check glTF for splat extension
-    shaderBuilder.addDefine(
-      "HAS_POINT_CLOUD_SPLAT",
-      undefined,
-      ShaderDestination.BOTH
-    );
-
-    const vPositionLoc = shaderBuilder.addAttribute("vec2", "v_position");
-
-    const vertexBuffer = Buffer.createVertexBuffer({
-      context: frameState.context,
-      typedArray: new Float32Array([
-        -5.0,
-        -5.0,
-        5.0,
-        -5.0,
-        5.0,
-        5.0,
-        -5.0,
-        5.0,
-      ]),
-      usage: BufferUsage.STATIC_DRAW,
-    });
-
-    frameState.context._gl.enableVertexAttribArray(vPositionLoc);
-    frameState.context._gl.bindBuffer(
-      frameState.context._gl.ARRAY_BUFFER,
-      vertexBuffer._buffer
-    );
-    frameState.context._gl.vertexAttribPointer(
-      vPositionLoc,
-      2,
-      frameState.context._gl.FLOAT,
-      false,
-      0,
-      0
-    );
   }
 
   shaderBuilder.addVertexLines(GeometryStageVS);

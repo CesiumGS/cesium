@@ -26,6 +26,7 @@ import SelectedFeatureIdPipelineStage from "./SelectedFeatureIdPipelineStage.js"
 import SkinningPipelineStage from "./SkinningPipelineStage.js";
 import VerticalExaggerationPipelineStage from "./VerticalExaggerationPipelineStage.js";
 import WireframePipelineStage from "./WireframePipelineStage.js";
+import GaussianSplatPipelineStage from "./GaussianSplatPipelineStage.js";
 
 /**
  * In memory representation of a single primitive, that is, a primitive
@@ -300,6 +301,10 @@ ModelRuntimePrimitive.prototype.configurePipeline = function (frameState) {
   if (hasOutlines) {
     pipelineStages.push(PrimitiveOutlinePipelineStage);
   }
+
+  //if(hasGaussianSplats) {
+  pipelineStages.push(GaussianSplatPipelineStage);
+  //}
 
   pipelineStages.push(AlphaPipelineStage);
 

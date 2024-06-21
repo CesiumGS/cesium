@@ -1,10 +1,6 @@
 
 precision highp float;
 
-in vec2 fsPosition;
-
-
-
 czm_modelMaterial defaultModelMaterial()
 {
     czm_modelMaterial material;
@@ -95,10 +91,9 @@ void main()
     #endif
 
     #ifdef HAS_POINT_CLOUD_SPLAT
-        float A = -dot(fsPosition, fsPosition);
-    if (A < -4.0) discard;
-    float B = exp(A) * material.alpha;
-    out_FragColor = vec4(B * material.diffuse, B);
+    gaussianSplatStage(color, v_splatPosition);
     #endif
+
+    out_FragColor = color;
 }
 

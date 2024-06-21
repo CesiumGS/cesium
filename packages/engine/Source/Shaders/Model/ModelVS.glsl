@@ -3,6 +3,7 @@ precision highp float;
 
 //in  vec2 v_position;
 out vec2 fsPosition;
+out float vColorMod;
 
 czm_modelVertexOutput defaultVertexOutput(vec3 positionMC) {
     czm_modelVertexOutput vsOutput;
@@ -295,15 +296,20 @@ void main()
     vec2 majorAxis = min(sqrt(2.0 * lambda1), 1024.0) * diagonalVector;
     vec2 minorAxis = min(sqrt(2.0 * lambda2), 1024.0) * vec2(diagonalVector.y, -diagonalVector.x);
 
+     vec2 corner = vec2((gl_VertexID << 1) & 2, gl_VertexID & 2) - 1.;
+     corner *= 2.;
+
     vec3 vCenter = pos2d.xyz / pos2d.w;
+
+     vColorMod = clamp(pos2d.z/pos2d.w+1.0, 0.0, 1.0);
 
     gl_Position = vec4(
         vCenter.xy
-        + v_position.x * majorAxis / czm_viewport.z
-        + v_position.y * minorAxis / czm_viewport.w, 0.0, 1.0);;
+        + corner.x * majorAxis / czm_viewport.z
+        + corner.y * minorAxis / czm_viewport.w, 0.0, 1.0);
 
 
-    fsPosition = v_position;
+    fsPosition = corner;
 
     #endif
    // gl_Position = show * positionClip;

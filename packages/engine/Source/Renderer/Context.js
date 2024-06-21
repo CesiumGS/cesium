@@ -1369,12 +1369,13 @@ function continueDraw(context, drawCommand, shaderProgram, uniformMap) {
     }
 
     if (primitiveType === PrimitiveType.POINTS) {
-      // context._gl.drawArraysInstanced(PrimitiveType.TRIANGLE_FAN,
-      //   0,
-      //   4,
-      //   count
-      // );
-      context._gl.drawArrays(PrimitiveType.TRIANGLE_STRIP, offset, count * 4);
+      context._gl.drawArraysInstanced(
+        PrimitiveType.TRIANGLE_STRIP,
+        0,
+        4,
+        count
+      );
+      //   context._gl.drawArrays(PrimitiveType.TRIANGLES, offset, count * 4);
     } else if (instanceCount === 0) {
       context._gl.drawArrays(primitiveType, offset, count);
     } else {
