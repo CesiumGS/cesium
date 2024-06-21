@@ -30,10 +30,11 @@ GaussianSplatPipelineStage.process = function (
     ShaderDestination.BOTH
   );
 
-  const vPositionLoc = shaderBuilder.addVarying("vec2", "v_splatPosition");
+  const aPositionLoc = shaderBuilder.addAttribute("vec2", "a_splatPosition");
+  shaderBuilder.addVarying("vec2", "v_splatPosition");
 
   const attr = {
-    index: vPositionLoc,
+    index: aPositionLoc,
     vertexBuffer: vertexBuffer,
     componentDatatype: ComponentDatatype.FLOAT,
     componentsPerAttribute: 2,

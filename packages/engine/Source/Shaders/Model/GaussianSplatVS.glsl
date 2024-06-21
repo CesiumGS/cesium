@@ -68,3 +68,51 @@ vec3 calcCov2D(vec3 posEC, float focal_x, float focal_y, float tan_fovx, float t
 float ndc2Pix(float v, float S) {
     return ((v + 1.) * S - 1.) * .5;
 }
+
+void gaussianSplatStage(ProcessedAttributes attributes, inout vec4 positionClip) {
+    //convert gaussian scale and rot to covariance matrix
+    float[6] cov3D;
+    calcCov3D(attributes.scale, attributes.rotation, 1.0, cov3D);
+
+    float aspect = czm_viewport.z / czm_viewport.w;
+    float fovx = 2.0 * atan(aspect / czm_projection[0][0]);//1./czm_projection[0][0];
+    float fovy = 2.0 * atan(1.0 / czm_projection[1][1]);//1./czm_projection[1][1] * aspect;
+    float tan_fovx = tan(fovx / 2.0);
+    float tan_fovy = tan(fovy / 2.0);
+    float focal_y = czm_viewport.w / (2.0 * tan_fovy);
+    float focal_x = czm_viewport.z / (2.0 * tan_fovx);
+
+     mat4 viewMatrix = czm_modelView;
+     vec3 cov2d = calcCov2D(attributes.positionMC, focal_x, focal_y, tan_fovx, tan_fovy, cov3D, viewMatrix);
+
+    vec4 pos2d = czm_modelViewProjection * vec4(v_positionMC,1.0);
+
+    float clip = 1.2 * pos2d.w;
+    if (pos2d.z < -clip || pos2d.x < -clip || pos2d.x > clip || pos2d.y < -clip || pos2d.y > clip) {
+        positionClip = vec4(0.0, 0.0, 2.0, 1.0);
+        return;
+    }
+
+    float mid = (cov2d.x + cov2d.z) / 2.0;
+    float radius = length(vec2((cov2d.x - cov2d.z) / 2.0, cov2d.y));
+    float lambda1 = mid + radius, lambda2 = mid - radius;
+
+    if(lambda2 < 0.0) return;
+    vec2 diagonalVector = normalize(vec2(cov2d.y, lambda1 - cov2d.x));
+    vec2 majorAxis = min(sqrt(2.0 * lambda1), 1024.0) * diagonalVector;
+    vec2 minorAxis = min(sqrt(2.0 * lambda2), 1024.0) * vec2(diagonalVector.y, -diagonalVector.x);
+
+     vec2 corner = vec2((gl_VertexID << 1) & 2, gl_VertexID & 2) - 1.;
+     corner *= 2.;
+
+    vec3 vCenter = pos2d.xyz / pos2d.w;
+
+    // vColorMod = clamp(pos2d.z/pos2d.w+1.0, 0.0, 1.0);
+
+    positionClip = vec4(
+        vCenter.xy
+        + corner.x * majorAxis / czm_viewport.z
+        + corner.y * minorAxis / czm_viewport.w, 0.0, 1.0);
+
+    v_splatPosition = a_splatPosition;
+}
