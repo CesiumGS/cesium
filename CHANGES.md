@@ -8,6 +8,10 @@
 
 - Added support for the `scale` property of a normal texture in a glTF material. [#12018](https://github.com/CesiumGS/cesium/pull/12018)
 
+##### Fixes :wrench:
+
+- Fixed diffuse color calculation for PBR materials. Many models will now appear slightly brighter. This also fixes an [issue affecting the KHR_materials_specular extension](https://github.com/CesiumGS/cesium/issues/12041). [#12043](https://github.com/CesiumGS/cesium/pull/12043)
+
 ### 1.118.2 - 2024-06-03
 
 This is an npm-only release to fix a dependency issue published in 1.118.1
