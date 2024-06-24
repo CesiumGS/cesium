@@ -301,7 +301,7 @@ float setMetallicRoughness(inout czm_modelMaterial material)
     material.specular = f0;
 
     // diffuse only applies to dielectrics.
-    material.diffuse = mix(material.baseColor.rgb, vec3(0), metalness);
+    material.diffuse = mix(material.baseColor.rgb, vec3(0.0), metalness);
 
     // roughness is authored as perceptual roughness
     // square it to get material roughness

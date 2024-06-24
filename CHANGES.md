@@ -14,7 +14,8 @@
 
 ##### Fixes :wrench:
 
-- Fixed diffuse color calculation for PBR materials. Many models will now appear slightly brighter. This also fixes an [issue affecting the KHR_materials_specular extension](https://github.com/CesiumGS/cesium/issues/12041). [#12043](https://github.com/CesiumGS/cesium/pull/12043)
+- Fixed diffuse color calculation for PBR materials. Many models will now appear slightly brighter. [#12043](https://github.com/CesiumGS/cesium/pull/12043)
+- Fixed the calculation of base color in materials using the KHR_materials_specular extension [#12041](https://github.com/CesiumGS/cesium/issues/12041).
 - Fixed issue where Entities would not use a custom ellipsoid. [#3543](https://github.com/CesiumGS/cesium/issues/3543)
 
 ##### Breaking Changes :mega:
