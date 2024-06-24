@@ -220,7 +220,7 @@ RectangleGeometryUpdater.prototype._computeCenter = function (time, result) {
     return;
   }
   const center = Rectangle.center(rect, scratchCarto);
-  return Cartographic.toCartesian(center, Ellipsoid.WGS84, result);
+  return Cartographic.toCartesian(center, Ellipsoid.default, result);
 };
 
 RectangleGeometryUpdater.prototype._isHidden = function (entity, rectangle) {

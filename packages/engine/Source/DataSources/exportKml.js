@@ -249,7 +249,7 @@ IdManager.prototype.get = function (id) {
  *
  * @param {object} options An object with the following properties:
  * @param {EntityCollection} options.entities The EntityCollection to export as KML.
- * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid for the output file.
+ * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.default] The ellipsoid for the output file.
  * @param {exportKmlModelCallback} [options.modelCallback] A callback that will be called with a {@link ModelGraphics} instance and should return the URI to use in the KML. Required if a model exists in the entity collection.
  * @param {JulianDate} [options.time=entities.computeAvailability().start] The time value to use to get properties that are not time varying in KML.
  * @param {TimeInterval} [options.defaultAvailability=entities.computeAvailability()] The interval that will be sampled if an entity doesn't have an availability.
@@ -405,7 +405,7 @@ exportKml._createState = function (options) {
   const kmlDoc = document.implementation.createDocument(kmlNamespace, "kml");
   return {
     kmlDoc: kmlDoc,
-    ellipsoid: defaultValue(options.ellipsoid, Ellipsoid.WGS84),
+    ellipsoid: defaultValue(options.ellipsoid, Ellipsoid.default),
     idManager: new IdManager(),
     styleCache: styleCache,
     externalFileHandler: externalFileHandler,

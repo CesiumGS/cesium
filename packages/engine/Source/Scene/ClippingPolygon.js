@@ -15,7 +15,7 @@ import Rectangle from "../Core/Rectangle.js";
  *
  * @param {object} options Object with the following properties:
  * @param {Cartesian3[]} options.positions A list of three or more Cartesian coordinates defining the outer ring of the clipping polygon.
- * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84]
+ * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.default]
  *
  * @example
  * const positions = Cesium.Cartesian3.fromRadiansArray([
@@ -46,7 +46,7 @@ function ClippingPolygon(options) {
   );
   //>>includeEnd('debug');
 
-  this._ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
+  this._ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.default);
   this._positions = [...options.positions];
 }
 

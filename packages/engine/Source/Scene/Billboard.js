@@ -1104,8 +1104,7 @@ Billboard._updateClamping = function (collection, owner) {
     return;
   }
 
-  const globe = scene.globe;
-  const ellipsoid = defaultValue(globe?.ellipsoid, Ellipsoid.WGS84);
+  const ellipsoid = defaultValue(scene.ellipsoid, Ellipsoid.default);
 
   const mode = scene.frameState.mode;
 
@@ -1375,7 +1374,10 @@ Billboard._computeActualPosition = function (
   }
 
   Matrix4.multiplyByPoint(modelMatrix, position, tempCartesian3);
-  return SceneTransforms.computeActualWgs84Position(frameState, tempCartesian3);
+  return SceneTransforms.computeActualEllipsoidPosition(
+    frameState,
+    tempCartesian3
+  );
 };
 
 const scratchCartesian3 = new Cartesian3();
@@ -1397,7 +1399,7 @@ Billboard._computeScreenSpacePosition = function (
   );
 
   // World to window coordinates
-  const positionWC = SceneTransforms.wgs84WithEyeOffsetToWindowCoordinates(
+  const positionWC = SceneTransforms.worldWithEyeOffsetToWindowCoordinates(
     scene,
     positionWorld,
     eyeOffset,

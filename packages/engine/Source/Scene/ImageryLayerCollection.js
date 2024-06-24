@@ -436,7 +436,7 @@ ImageryLayerCollection.prototype.pickImageryLayers = function (ray, scene) {
     return;
   }
 
-  const pickedLocation = scene.globe.ellipsoid.cartesianToCartographic(
+  const pickedLocation = scene.ellipsoid.cartesianToCartographic(
     pickedPosition
   );
 
@@ -491,7 +491,7 @@ ImageryLayerCollection.prototype.pickImageryLayerFeatures = function (
     return;
   }
 
-  const pickedLocation = scene.globe.ellipsoid.cartesianToCartographic(
+  const pickedLocation = scene.ellipsoid.cartesianToCartographic(
     pickedPosition
   );
 

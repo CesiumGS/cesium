@@ -1173,7 +1173,7 @@ Object.defineProperties(UniformState.prototype, {
    */
   ellipsoid: {
     get: function () {
-      return defaultValue(this._ellipsoid, Ellipsoid.WGS84);
+      return defaultValue(this._ellipsoid, Ellipsoid.default);
     },
   },
 });

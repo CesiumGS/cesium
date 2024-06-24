@@ -41,7 +41,7 @@ import ImageryProvider from "./ImageryProvider.js";
  * @property {TileDiscardPolicy} [tileDiscardPolicy] The policy that determines if a tile
  *        is invalid and should be discarded. To ensure that no tiles are discarded, construct and pass
  *        a {@link NeverTileDiscardPolicy} for this parameter.
- * @property {Ellipsoid} [ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
+ * @property {Ellipsoid} [ellipsoid=Ellipsoid.default] The ellipsoid.  If not specified, the default ellipsoid is used.
  */
 
 /**

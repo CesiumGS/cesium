@@ -243,7 +243,7 @@ PolygonGeometryUpdater.prototype._computeCenter = function (time, result) {
   if (positions.length === 0) {
     return;
   }
-  const ellipsoid = this._scene.mapProjection.ellipsoid;
+  const ellipsoid = this._scene.ellipsoid;
 
   const tangentPlane = EllipsoidTangentPlane.fromPoints(positions, ellipsoid);
   const positions2D = tangentPlane.projectPointsOntoPlane(
