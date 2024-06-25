@@ -9,7 +9,7 @@ const creditToId = {};
 /**
  * A credit contains data pertaining to how to display attributions/credits for certain content on the screen.
  * @param {string} html An string representing an html code snippet
- * @param {boolean} [showOnScreen=false] If true, the credit will be visible in the main credit container.  Otherwise, it will appear in a popover
+ * @param {boolean} [showOnScreen=false] If true, the credit will be visible in the main credit container.  Otherwise, it will appear in a popover. All credits are displayed `inline`, if you have an image we recommend sizing it correctly to match the text or use css to `vertical-align` it.
  *
  * @alias Credit
  * @constructor
@@ -18,7 +18,7 @@ const creditToId = {};
  *
  * @example
  * // Create a credit with a tooltip, image and link
- * const credit = new Cesium.Credit('<a href="https://cesium.com/" target="_blank"><img src="/images/cesium_logo.png" title="Cesium"/></a>');
+ * const credit = new Cesium.Credit('<a href="https://cesium.com/" target="_blank"><img src="/images/cesium_logo.png"  style="vertical-align: -7px" title="Cesium"/></a>');
  */
 function Credit(html, showOnScreen) {
   //>>includeStart('debug', pragmas.debug);
