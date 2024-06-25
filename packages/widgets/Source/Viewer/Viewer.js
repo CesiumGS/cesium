@@ -1639,8 +1639,9 @@ Viewer.prototype.resize = function () {
   const timeline = this._timeline;
   let animationContainer;
   let animationWidth = 0;
-  let creditLeft = 0;
-  let creditBottom = 0;
+  let creditLeft = 5;
+  let creditBottom = 3;
+  let creditRight = 0;
 
   if (
     animationExists &&
@@ -1697,8 +1698,14 @@ Viewer.prototype.resize = function () {
     timeline.resize();
   }
 
+  if (!timelineExists && defined(this._fullscreenButton)) {
+    // don't let long credits (like the default ion token) go behind the fullscreen button
+    creditRight = this._fullscreenButton.container.clientWidth;
+  }
+
   this._bottomContainer.style.left = `${creditLeft}px`;
   this._bottomContainer.style.bottom = `${creditBottom}px`;
+  this._bottomContainer.style.right = `${creditRight}px`;
 
   this._lastWidth = width;
   this._lastHeight = height;
