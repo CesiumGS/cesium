@@ -184,8 +184,10 @@ function appendCss(container) {
   margin: auto;
 }
 .cesium-credit-lightbox > ul > li a,
-.cesium-credit-lightbox > ul > li a:visited {
-  color: #${textColor};
+.cesium-credit-lightbox > ul > li a:visited,
+.cesium-credit-wrapper a,
+.cesium-credit-wrapper a:visited {
+  color: ${textColor};
 }
 .cesium-credit-lightbox > ul > li a:hover {
   color: ${highlightColor};
