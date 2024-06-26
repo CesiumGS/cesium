@@ -8,7 +8,7 @@
 void gaussianSplatStage(inout vec4 color, vec2 position) {
         // Resample using conic matrix (cf. "Surface
     // Splatting" by Zwicker et al., 2001)
-    vec2 d = v_splatPosition - v_splatVertexPos;
+    vec2 d = v_splatCenter - v_splatVertexPos;
     float power = -0.5 * (v_conic.x * d.x * d.x + v_conic.z * d.y * d.y) - v_conic.y * d.x * d.y;
 
     if (power > 0.) {
@@ -22,6 +22,5 @@ void gaussianSplatStage(inout vec4 color, vec2 position) {
         discard;
     }
 
-    // Eq. (3) from 3D Gaussian splatting paper.
-    color = vec4(color.xyz * alpha, alpha);
+    color = vec4(color.xyz * color.w, color.w);
 }

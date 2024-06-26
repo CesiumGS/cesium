@@ -121,48 +121,86 @@ void gaussianSplatStage(ProcessedAttributes attributes, inout vec4 positionClip)
     float W = czm_viewport.z;
     float H = czm_viewport.w;
 
-    vec4 p_hom = czm_viewProjection * vec4(a_positionMC, 1);
+    vec4 p_hom = czm_modelViewProjection * vec4(a_positionMC, 1);
     float p_w = 1. / (p_hom.w + 1e-7);
     vec3 p_proj = p_hom.xyz * p_w;
 
     // Perform near culling, quit if outside.
     vec4 p_view = viewMatrix * vec4(a_positionMC, 1);
-    if (p_view.z <= .4) {
-        positionClip = vec4(0, 0, 0, 1);
-        return;
-    }
+    // if (p_view.z <= .4) {
+    //     positionClip = vec4(0, 0, 0, 1);
+    //     return;
+    // }
 
         // Invert covariance (EWA algorithm)
-    float det = (cov2d.x * cov2d.z - cov2d.y * cov2d.y);
+   // float det = (cov2d.x * cov2d.z - cov2d.y * cov2d.y);
     // if (det == 0.) {
     //     positionClip = vec4(0, 0, 0, 1);
     //     return;
     // }
-    float det_inv = 1. / det;
-    vec3 conic = vec3(cov2d.z, -cov2d.y, cov2d.x) * det_inv;
+   // float det_inv = 1. / det;
+   // vec3 conic = vec3(cov2d.z, -cov2d.y, cov2d.x) * det_inv;
 
     // Compute extent in screen space (by finding eigenvalues of
     // 2D covariance matrix). Use extent to compute the bounding
     // rectangle of the splat in screen space.
 
-    float mid = 0.5 * (cov2d.x + cov2d.z);
-    float lambda1 = mid + sqrt(max(0.1, mid * mid - det));
-    float lambda2 = mid - sqrt(max(0.1, mid * mid - det));
-    float my_radius = ceil(3. * sqrt(max(lambda1, lambda2)));
-    vec2 point_image = vec2(ndc2Pix(p_proj.x, W), ndc2Pix(p_proj.y, H));
+    // float mid = 0.5 * (cov2d.x + cov2d.z);
+    // float lambda1 = mid + sqrt(max(0.1, mid * mid - det));
+    // float lambda2 = mid - sqrt(max(0.1, mid * mid - det));
+    // float my_radius = ceil(3. * sqrt(max(lambda1, lambda2)));
+     vec2 point_image = vec2(ndc2Pix(p_proj.x, W), ndc2Pix(p_proj.y, H));
+
+// Calculate eigenvalues and eigenvectors
+float a = cov2d.x;
+float b = cov2d.y;
+float c = cov2d.z;
+float trace = a + c;
+float det = max(0.0, a * c - b * b);  // Ensure non-negative
+float gap = sqrt(max(0.0, trace * trace / 4.0 - det));
+v_lambda1 = max(1e-5, (trace / 2.0) + gap);
+v_lambda2 = max(1e-5, (trace / 2.0) - gap);
+
+// Ensure lambda1 is the larger eigenvalue
+if (v_lambda2 > v_lambda1) {
+    float temp = v_lambda1;
+    v_lambda1 = v_lambda2;
+    v_lambda2 = temp;
+}
+
+v_eigen1 = normalize(vec2(b, v_lambda1 - a));
+v_eigen2 = vec2(-v_eigen1.y, v_eigen1.x);
+
+    // Calculate splat radius
+    float radius = ceil(3.0 * sqrt(max(v_lambda1, v_lambda2)));
 
     // (Webgl-specific) Convert gl_VertexID from [0,1,2,3] to [-1,-1],[1,-1],[-1,1],[1,1]
-    vec2 corner = vec2((gl_VertexID << 1) & 2, gl_VertexID & 2) - 1.;
+    //vec2 corner = vec2((gl_VertexID << 1) & 2, gl_VertexID & 2) - 1.;
     // Vertex position in screen space
-    vec2 screen_pos = point_image + my_radius * corner;
+    //vec2 screen_pos = point_image + my_radius * corner;
 
+    // Calculate splat bounds in screen space
+    vec4 bounds = vec4(
+        point_image.x - radius,
+        point_image.y - radius,
+        point_image.x + radius,
+        point_image.y + radius
+    );
+
+    // Pass data to fragment shader
+    v_splatBounds = bounds;
     // Store some useful helper data for the fragment stage
-    v_conic = conic;
-    v_splatPosition = point_image;
-    v_splatVertexPos = screen_pos;
+   // v_conic = conic;
+    v_splatCenter = p_proj.xy;
+   // v_splatVertexPos = screen_pos;
 
     // (Webgl-specific) Convert from screen-space to clip-space
-    vec2 clip_pos = screen_pos / vec2(W, H) * 2. - 1.;
+    vec2 clip_pos = point_image / vec2(W, H) * 2. - 1.;
 
-    positionClip = vec4(clip_pos, 0, 1);
+    positionClip = vec4(p_proj, 1.0);//vec4(clip_pos, 0, 1);
+
+    float distanceScale = 1.0 / max(1.0, -p_view.z);
+
+    // Set point size, scaled by distance and viewport height
+    gl_PointSize = 40.;
 }

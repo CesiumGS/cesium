@@ -265,10 +265,6 @@ ModelRuntimePrimitive.prototype.configurePipeline = function (frameState) {
     pipelineStages.push(PointCloudStylingPipelineStage);
   }
 
-  //if(hasGaussianSplats) {
-  pipelineStages.push(GaussianSplatPipelineStage);
-  //}
-
   if (hasQuantization) {
     pipelineStages.push(DequantizationPipelineStage);
   }
@@ -309,6 +305,10 @@ ModelRuntimePrimitive.prototype.configurePipeline = function (frameState) {
   pipelineStages.push(AlphaPipelineStage);
 
   pipelineStages.push(PrimitiveStatisticsPipelineStage);
+
+  //if(hasGaussianSplats) {
+  pipelineStages.push(GaussianSplatPipelineStage);
+  //}
 
   return;
 };

@@ -232,6 +232,7 @@ Model3DTileContent.prototype.update = function (tileset, frameState) {
   model.showOutline = tileset.showOutline;
   model.outlineColor = tileset.outlineColor;
   model.pointCloudShading = tileset.pointCloudShading;
+  model.showGaussianSplatting = tileset.showGaussianSplatting;
 
   // Updating clipping planes requires more effort because of ownership checks
   const tilesetClippingPlanes = tileset.clippingPlanes;
@@ -497,6 +498,7 @@ function makeModelOptions(tileset, tile, content, additionalOptions) {
     enableShowOutline: tileset._enableShowOutline,
     showOutline: tileset.showOutline,
     outlineColor: tileset.outlineColor,
+    showGaussianSplatting: tileset.showGaussianSplatting,
   };
 
   return combine(additionalOptions, mainOptions);

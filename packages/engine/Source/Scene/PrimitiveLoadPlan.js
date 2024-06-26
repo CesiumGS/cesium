@@ -157,6 +157,15 @@ function PrimitiveLoadPlan(primitive) {
    * @private
    */
   this.outlineIndices = undefined;
+
+  /**
+   * Set this true to indicate that the primitive has the
+   * KHR_gaussian_splatting extension and needs to be post-processed
+   *
+   * @type {boolean}
+   * @private
+   */
+  this.needsGaussianSplats = false;
 }
 
 /**
@@ -174,6 +183,9 @@ PrimitiveLoadPlan.prototype.postProcess = function (context) {
     generateOutlines(this);
     generateBuffers(this, context);
   }
+
+  //handle splat post-processing for point primitives
+  //if(this.hasGaussianSplatting)
 };
 
 function generateOutlines(loadPlan) {

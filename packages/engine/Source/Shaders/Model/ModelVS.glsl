@@ -148,5 +148,6 @@ void main()
     #ifdef HAS_POINT_CLOUD_SPLAT
     gaussianSplatStage(attributes, positionClip);
     #endif
+
     gl_Position = show * positionClip;
 }

@@ -460,6 +460,15 @@ function Model(options) {
    */
   this.showOutline = defaultValue(options.showOutline, true);
 
+  this.enableShowGaussianSplatting = defaultValue(
+    options.loader.gltfJson.extensionsUsed.includes("KHR_gaussian_splatting"),
+    false
+  );
+  this.showGaussianSplatting = defaultValue(
+    options.showGaussianSplatting,
+    true
+  );
+
   /**
    * The color to use when rendering outlines.
    *
@@ -3152,6 +3161,7 @@ function makeModelOptions(loader, modelType, options) {
     pointCloudShading: options.pointCloudShading,
     classificationType: options.classificationType,
     pickObject: options.pickObject,
+    showGaussianSplatting: options.showGaussianSplatting,
   };
 }
 
