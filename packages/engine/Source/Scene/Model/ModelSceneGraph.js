@@ -351,7 +351,7 @@ function computeModelMatrix2D(sceneGraph, frameState) {
     );
   } else {
     const center = sceneGraph.boundingSphere.center;
-    const to2D = Transforms.wgs84To2DModelMatrix(
+    const to2D = Transforms.ellipsoidTo2DModelMatrix(
       frameState.mapProjection,
       center,
       sceneGraph._computedModelMatrix2D

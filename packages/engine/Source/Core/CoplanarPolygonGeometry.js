@@ -231,7 +231,7 @@ function createGeometryFromPolygon(
  * @param {PolygonHierarchy} options.polygonHierarchy A polygon hierarchy that can include holes.
  * @param {number} [options.stRotation=0.0] The rotation of the texture coordinates, in radians. A positive rotation is counter-clockwise.
  * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
- * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference.
+ * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.default] The ellipsoid to be used as a reference.
  * @param {PolygonHierarchy} [options.textureCoordinates] Texture coordinates as a {@link PolygonHierarchy} of {@link Cartesian2} points.
  *
  * @example
@@ -259,7 +259,7 @@ function CoplanarPolygonGeometry(options) {
   this._polygonHierarchy = polygonHierarchy;
   this._stRotation = defaultValue(options.stRotation, 0.0);
   this._ellipsoid = Ellipsoid.clone(
-    defaultValue(options.ellipsoid, Ellipsoid.WGS84)
+    defaultValue(options.ellipsoid, Ellipsoid.default)
   );
   this._workerName = "createCoplanarPolygonGeometry";
   this._textureCoordinates = textureCoordinates;
@@ -291,7 +291,7 @@ function CoplanarPolygonGeometry(options) {
  * @param {Cartesian3[]} options.positions An array of positions that defined the corner points of the polygon.
  * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
  * @param {number} [options.stRotation=0.0] The rotation of the texture coordinates, in radians. A positive rotation is counter-clockwise.
- * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference.
+ * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.default] The ellipsoid to be used as a reference.
  * @param {PolygonHierarchy} [options.textureCoordinates] Texture coordinates as a {@link PolygonHierarchy} of {@link Cartesian2} points.
  * @returns {CoplanarPolygonGeometry}
  *

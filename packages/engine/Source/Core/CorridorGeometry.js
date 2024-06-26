@@ -1050,7 +1050,7 @@ function computeRectangle(positions, ellipsoid, width, cornerType, result) {
  * @param {object} options Object with the following properties:
  * @param {Cartesian3[]} options.positions An array of positions that define the center of the corridor.
  * @param {number} options.width The distance between the edges of the corridor in meters.
- * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference.
+ * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.default] The ellipsoid to be used as a reference.
  * @param {number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
  * @param {number} [options.height=0] The distance in meters between the ellipsoid surface and the positions.
  * @param {number} [options.extrudedHeight] The distance in meters between the ellipsoid surface and the extruded face.
@@ -1084,7 +1084,7 @@ function CorridorGeometry(options) {
 
   this._positions = positions;
   this._ellipsoid = Ellipsoid.clone(
-    defaultValue(options.ellipsoid, Ellipsoid.WGS84)
+    defaultValue(options.ellipsoid, Ellipsoid.default)
   );
   this._vertexFormat = VertexFormat.clone(
     defaultValue(options.vertexFormat, VertexFormat.DEFAULT)
@@ -1246,7 +1246,7 @@ CorridorGeometry.unpack = function (array, startingIndex, result) {
  * @param {object} options Object with the following properties:
  * @param {Cartesian3[]} options.positions An array of positions that define the center of the corridor.
  * @param {number} options.width The distance between the edges of the corridor in meters.
- * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference.
+ * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.default] The ellipsoid to be used as a reference.
  * @param {CornerType} [options.cornerType=CornerType.ROUNDED] Determines the style of the corners.
  * @param {Rectangle} [result] An object in which to store the result.
  *
@@ -1262,7 +1262,7 @@ CorridorGeometry.computeRectangle = function (options, result) {
   Check.defined("options.width", width);
   //>>includeEnd('debug');
 
-  const ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
+  const ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.default);
   const cornerType = defaultValue(options.cornerType, CornerType.ROUNDED);
 
   return computeRectangle(positions, ellipsoid, width, cornerType, result);

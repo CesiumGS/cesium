@@ -1440,10 +1440,10 @@ describe(
 
     it("converts to canvas coordinates", function () {
       const mockPosition = new Cartesian3();
-      spyOn(SceneTransforms, "wgs84ToWindowCoordinates");
+      spyOn(SceneTransforms, "worldToWindowCoordinates");
       scene.cartesianToCanvasCoordinates(mockPosition);
 
-      expect(SceneTransforms.wgs84ToWindowCoordinates).toHaveBeenCalledWith(
+      expect(SceneTransforms.worldToWindowCoordinates).toHaveBeenCalledWith(
         scene,
         mockPosition,
         undefined
@@ -1453,10 +1453,10 @@ describe(
     it("converts to canvas coordinates and return it in a variable", function () {
       const result = new Cartesian2();
       const mockPosition = new Cartesian3();
-      spyOn(SceneTransforms, "wgs84ToWindowCoordinates");
+      spyOn(SceneTransforms, "worldToWindowCoordinates");
       scene.cartesianToCanvasCoordinates(mockPosition, result);
 
-      expect(SceneTransforms.wgs84ToWindowCoordinates).toHaveBeenCalledWith(
+      expect(SceneTransforms.worldToWindowCoordinates).toHaveBeenCalledWith(
         scene,
         mockPosition,
         result

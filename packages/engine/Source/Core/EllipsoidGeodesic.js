@@ -280,10 +280,10 @@ function computeProperties(ellipsoidGeodesic, start, end, ellipsoid) {
  *
  * @param {Cartographic} [start] The initial planetodetic point on the path.
  * @param {Cartographic} [end] The final planetodetic point on the path.
- * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the geodesic lies.
+ * @param {Ellipsoid} [ellipsoid=Ellipsoid.default] The ellipsoid on which the geodesic lies.
  */
 function EllipsoidGeodesic(start, end, ellipsoid) {
-  const e = defaultValue(ellipsoid, Ellipsoid.WGS84);
+  const e = defaultValue(ellipsoid, Ellipsoid.default);
   this._ellipsoid = e;
   this._start = new Cartographic();
   this._end = new Cartographic();

@@ -277,7 +277,7 @@ function updateTransform(
  *
  * @param {Entity} entity The entity to track with the camera.
  * @param {Scene} scene The scene to use.
- * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid to use for orienting the camera.
+ * @param {Ellipsoid} [ellipsoid=Ellipsoid.default] The ellipsoid to use for orienting the camera.
  */
 function EntityView(entity, scene, ellipsoid) {
   //>>includeStart('debug', pragmas.debug);
@@ -301,7 +301,7 @@ function EntityView(entity, scene, ellipsoid) {
    * The ellipsoid to use for orienting the camera.
    * @type {Ellipsoid}
    */
-  this.ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
+  this.ellipsoid = defaultValue(ellipsoid, Ellipsoid.default);
 
   /**
    * The bounding sphere of the object.

@@ -22,7 +22,7 @@ const scratchCart4 = new Cartesian4();
  * @constructor
  *
  * @param {Cartesian3} origin The point on the surface of the ellipsoid where the tangent plane touches.
- * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid to use.
+ * @param {Ellipsoid} [ellipsoid=Ellipsoid.default] The ellipsoid to use.
  *
  * @exception {DeveloperError} origin must not be at the center of the ellipsoid.
  */
@@ -31,7 +31,7 @@ function EllipsoidTangentPlane(origin, ellipsoid) {
   Check.defined("origin", origin);
   //>>includeEnd('debug');
 
-  ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
+  ellipsoid = defaultValue(ellipsoid, Ellipsoid.default);
   origin = ellipsoid.scaleToGeodeticSurface(origin);
 
   //>>includeStart('debug', pragmas.debug);
@@ -136,7 +136,7 @@ const tmp = new AxisAlignedBoundingBox();
  * point of the provided Cartesians.
  *
  * @param {Cartesian3[]} cartesians The list of positions surrounding the center point.
- * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid to use.
+ * @param {Ellipsoid} [ellipsoid=Ellipsoid.default] The ellipsoid to use.
  * @returns {EllipsoidTangentPlane} The new instance of EllipsoidTangentPlane.
  */
 EllipsoidTangentPlane.fromPoints = function (cartesians, ellipsoid) {

@@ -65,7 +65,7 @@ const MetadataSemantic = {
    */
   TILE_BOUNDING_SPHERE: "TILE_BOUNDING_SPHERE",
   /**
-   * The minimum height of a tile above (or below) the WGS84 ellipsoid, stored as a <code>FLOAT32</code> or a <code>FLOAT64</code>. This semantic is used to tighten bounding regions implicitly calculated in implicit tiling.
+   * The minimum height of a tile above (or below) the ellipsoid, stored as a <code>FLOAT32</code> or a <code>FLOAT64</code>. This semantic is used to tighten bounding regions implicitly calculated in implicit tiling.
    *
    * @type {string}
    * @constant
@@ -73,7 +73,7 @@ const MetadataSemantic = {
    */
   TILE_MINIMUM_HEIGHT: "TILE_MINIMUM_HEIGHT",
   /**
-   * The maximum height of a tile above (or below) the WGS84 ellipsoid, stored as a <code>FLOAT32</code> or a <code>FLOAT64</code>. This semantic is used to tighten bounding regions implicitly calculated in implicit tiling.
+   * The maximum height of a tile above (or below) the ellipsoid, stored as a <code>FLOAT32</code> or a <code>FLOAT64</code>. This semantic is used to tighten bounding regions implicitly calculated in implicit tiling.
    *
    * @type {string}
    * @constant
@@ -123,7 +123,7 @@ const MetadataSemantic = {
    */
   CONTENT_BOUNDING_SPHERE: "CONTENT_BOUNDING_SPHERE",
   /**
-   * The minimum height of the content of a tile above (or below) the WGS84 ellipsoid, stored as a <code>FLOAT32</code> or a <code>FLOAT64</code>
+   * The minimum height of the content of a tile above (or below) the ellipsoid, stored as a <code>FLOAT32</code> or a <code>FLOAT64</code>
    *
    * @type {string}
    * @constant
@@ -131,7 +131,7 @@ const MetadataSemantic = {
    */
   CONTENT_MINIMUM_HEIGHT: "CONTENT_MINIMUM_HEIGHT",
   /**
-   * The maximum height of the content of a tile above (or below) the WGS84 ellipsoid, stored as a <code>FLOAT32</code> or a <code>FLOAT64</code>
+   * The maximum height of the content of a tile above (or below) the ellipsoid, stored as a <code>FLOAT32</code> or a <code>FLOAT64</code>
    *
    * @type {string}
    * @constant

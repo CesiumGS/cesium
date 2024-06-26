@@ -65,7 +65,11 @@ NormalInfo getNormalInfo(ProcessedAttributes attributes)
     #ifdef HAS_NORMAL_TEXTURE
         mat3 tbn = mat3(tangent, bitangent, geometryNormal);
         vec3 normalSample = texture(u_normalTexture, normalTexCoords).rgb;
-        vec3 normal = normalize(tbn * (2.0 * normalSample - 1.0));
+        normalSample = 2.0 * normalSample - 1.0;
+        #ifdef HAS_NORMAL_TEXTURE_SCALE
+            normalSample.xy *= u_normalTextureScale;
+        #endif
+        vec3 normal = normalize(tbn * normalSample);
     #else
         vec3 normal = geometryNormal;
     #endif
@@ -105,10 +109,12 @@ vec3 getNormalFromTexture(ProcessedAttributes attributes, vec3 geometryNormal)
     #endif
 
     mat3 tbn = mat3(t, b, geometryNormal);
-    vec3 n = texture(u_normalTexture, normalTexCoords).rgb;
-    vec3 textureNormal = normalize(tbn * (2.0 * n - 1.0));
-
-    return textureNormal;
+    vec3 normalSample = texture(u_normalTexture, normalTexCoords).rgb;
+    normalSample = 2.0 * normalSample - 1.0;
+    #ifdef HAS_NORMAL_TEXTURE_SCALE
+        normalSample.xy *= u_normalTextureScale;
+    #endif
+    return normalize(tbn * normalSample);
 }
 #endif
 
@@ -131,10 +137,12 @@ vec3 getClearcoatNormalFromTexture(ProcessedAttributes attributes, vec3 geometry
     #endif
 
     mat3 tbn = mat3(t, b, geometryNormal);
-    vec3 n = texture(u_clearcoatNormalTexture, normalTexCoords).rgb;
-    vec3 textureNormal = normalize(tbn * (2.0 * n - 1.0));
-
-    return textureNormal;
+    vec3 normalSample = texture(u_clearcoatNormalTexture, normalTexCoords).rgb;
+    normalSample = 2.0 * normalSample - 1.0;
+    #ifdef HAS_CLEARCOAT_NORMAL_TEXTURE_SCALE
+        normalSample.xy *= u_normalTextureScale;
+    #endif
+    return normalize(tbn * normalSample);
 }
 #endif
 
@@ -288,12 +296,12 @@ float setMetallicRoughness(inout czm_modelMaterial material)
 
     // dielectrics use f0 = 0.04, metals use albedo as f0
     const vec3 REFLECTANCE_DIELECTRIC = vec3(0.04);
-    vec3 f0 = mix(REFLECTANCE_DIELECTRIC, material.diffuse, metalness);
+    vec3 f0 = mix(REFLECTANCE_DIELECTRIC, material.baseColor.rgb, metalness);
 
     material.specular = f0;
 
     // diffuse only applies to dielectrics.
-    material.diffuse = material.diffuse * (1.0 - f0) * (1.0 - metalness);
+    material.diffuse = mix(material.baseColor.rgb, vec3(0.0), metalness);
 
     // roughness is authored as perceptual roughness
     // square it to get material roughness
@@ -341,7 +349,7 @@ void setSpecular(inout czm_modelMaterial material, in float metalness)
     material.specularWeight = specularWeight;
     vec3 f0 = material.specular;
     vec3 dielectricSpecularF0 = min(f0 * specularColorFactor, vec3(1.0));
-    material.specular = mix(dielectricSpecularF0, material.diffuse, metalness);
+    material.specular = mix(dielectricSpecularF0, material.baseColor.rgb, metalness);
 }
 #endif
 #ifdef USE_ANISOTROPY
@@ -450,6 +458,7 @@ void materialStage(inout czm_modelMaterial material, ProcessedAttributes attribu
         baseColorWithAlpha *= color;
     #endif
 
+    material.baseColor = baseColorWithAlpha;
     material.diffuse = baseColorWithAlpha.rgb;
     material.alpha = baseColorWithAlpha.a;
 

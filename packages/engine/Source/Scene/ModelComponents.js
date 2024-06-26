@@ -1188,6 +1188,15 @@ function TextureReader() {
   this.transform = Matrix3.clone(Matrix3.IDENTITY);
 
   /**
+   * Scale to apply to texture values.
+   *
+   * @type {number}
+   * @default 1.0
+   * @private
+   */
+  this.scale = 1.0;
+
+  /**
    * The texture channels to read from. When undefined all channels are read.
    *
    * @type {string}

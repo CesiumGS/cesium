@@ -499,7 +499,7 @@ const computeOccludeePointFromRectangleScratch = [];
  * Computes a point that can be used as the occludee position to the visibility functions from a rectangle.
  *
  * @param {Rectangle} rectangle The rectangle used to create a bounding sphere.
- * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid used to determine positions of the rectangle.
+ * @param {Ellipsoid} [ellipsoid=Ellipsoid.default] The ellipsoid used to determine positions of the rectangle.
  * @returns {object} An object containing two attributes: <code>occludeePoint</code> and <code>valid</code>
  * which is a boolean value.
  */
@@ -510,7 +510,7 @@ Occluder.computeOccludeePointFromRectangle = function (rectangle, ellipsoid) {
   }
   //>>includeEnd('debug');
 
-  ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
+  ellipsoid = defaultValue(ellipsoid, Ellipsoid.default);
   const positions = Rectangle.subsample(
     rectangle,
     ellipsoid,
@@ -519,7 +519,7 @@ Occluder.computeOccludeePointFromRectangle = function (rectangle, ellipsoid) {
   );
   const bs = BoundingSphere.fromPoints(positions);
 
-  // TODO: get correct ellipsoid center
+  // Assumes the ellipsoid is centered at the origin
   const ellipsoidCenter = Cartesian3.ZERO;
   if (!Cartesian3.equals(ellipsoidCenter, bs.center)) {
     return Occluder.computeOccludeePoint(

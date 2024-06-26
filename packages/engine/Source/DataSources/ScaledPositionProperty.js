@@ -6,7 +6,7 @@ import ReferenceFrame from "../Core/ReferenceFrame.js";
 import Property from "./Property.js";
 
 /**
- * This is a temporary class for scaling position properties to the WGS84 surface.
+ * This is a temporary class for scaling position properties to the ellipsoid surface.
  * It will go away or be refactored to support data with arbitrary height references.
  * @private
  */
@@ -80,7 +80,7 @@ ScaledPositionProperty.prototype.getValueInReferenceFrame = function (
 
   result = this._value.getValueInReferenceFrame(time, referenceFrame, result);
   return defined(result)
-    ? Ellipsoid.WGS84.scaleToGeodeticSurface(result, result)
+    ? Ellipsoid.default.scaleToGeodeticSurface(result, result)
     : undefined;
 };
 
