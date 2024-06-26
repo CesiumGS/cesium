@@ -15,6 +15,7 @@
 ##### Fixes :wrench:
 
 - Fixed issue where Entities would not use a custom ellipsoid. [#3543](https://github.com/CesiumGS/cesium/issues/3543)
+- Adjusted spacing for on screen Credits and updated recommendations for positioning custom ones. [#11912](https://github.com/CesiumGS/cesium/issues/11912)
 
 ##### Breaking Changes :mega:
 
