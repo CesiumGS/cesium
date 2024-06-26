@@ -98,6 +98,22 @@ function printBuildWarning({ location, text }) {
   console.log(message);
 }
 
+/**
+ * @function
+ *
+ * @param {Object} result The result object containing an array of warnings.
+ * @returns {void} Does not return anything.
+ *
+ * @example
+ * const buildResult = {
+ *    warnings: [
+ *        { location: { file: 'example.js' }, message: 'Example warning' },
+ *        { location: { file: 'protobufjs.js' }, message: 'Ignored warning' }
+ *    ]
+ * };
+ * handleBuildWarnings(buildResult);
+ */
+
 // Ignore `eval` warnings in third-party code we don't have control over
 function handleBuildWarnings(result) {
   for (const warning of result.warnings) {
@@ -415,6 +431,22 @@ export async function buildDocsWatch() {
   return gulp.watch(sourceFiles, buildDocs);
 }
 
+/**
+ * @function
+ *
+ * @returns {Promise} Returns a promise that resolves when the build process for Sandcastle is completed.
+ *
+ * @description
+ * Builds the Cesium library for Sandcastle by setting specific build options. This function configures
+ * the build to be unminified and includes all pragmas, making it suitable for development and debugging purposes.
+ *
+ * @example
+ * combineForSandcastle().then(() => {
+ *     console.log('Build completed for Sandcastle.');
+ * }).catch((error) => {
+ *     console.error('Build failed:', error);
+ * });
+ */
 function combineForSandcastle() {
   const outputDirectory = join("Build", "Sandcastle", "CesiumUnminified");
   return buildCesium({
