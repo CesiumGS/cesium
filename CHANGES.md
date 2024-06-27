@@ -17,6 +17,7 @@
 - Fixed diffuse color calculation for PBR materials. Many models will now appear slightly brighter. [#12043](https://github.com/CesiumGS/cesium/pull/12043)
 - Fixed the calculation of base color in materials using the KHR_materials_specular extension [#12041](https://github.com/CesiumGS/cesium/issues/12041).
 - Fixed issue where Entities would not use a custom ellipsoid. [#3543](https://github.com/CesiumGS/cesium/issues/3543)
+- Adjusted spacing for on screen Credits and updated recommendations for positioning custom ones. [#11912](https://github.com/CesiumGS/cesium/issues/11912)
 - Fixed issue where Property 'availability' is missing in type 'CustomHeightmapTerrainProvider' but required in type 'TerrainProvider' when using with typescript
 
 ##### Breaking Changes :mega:
