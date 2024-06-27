@@ -1,5 +1,4 @@
 import ApproximateTerrainHeights from "../Core/ApproximateTerrainHeights.js";
-import BoundingSphere from "../Core/BoundingSphere.js";
 import Cartesian2 from "../Core/Cartesian2.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Cartographic from "../Core/Cartographic.js";
@@ -14,8 +13,6 @@ import destroyObject from "../Core/destroyObject.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
 import Event from "../Core/Event.js";
 import ImageBasedLighting from "./ImageBasedLighting.js";
-import Interval from "../Core/Interval.js";
-import IntersectionTests from "../Core/IntersectionTests.js";
 import IonResource from "../Core/IonResource.js";
 import JulianDate from "../Core/JulianDate.js";
 import ManagedArray from "../Core/ManagedArray.js";
@@ -3644,7 +3641,7 @@ Cesium3DTileset.prototype.updateHeight = function (
   return removeCallback;
 };
 
-const scratchSphereIntersection = new Interval();
+const scratchVolumeIntersection = new Cartesian3();
 const scratchPickIntersection = new Cartesian3();
 
 /**
@@ -3668,12 +3665,15 @@ Cesium3DTileset.prototype.pick = function (ray, frameState, result) {
 
   for (let i = 0; i < selectedLength; ++i) {
     const tile = selectedTiles[i];
-    const boundsIntersection = IntersectionTests.raySphere(
+    if (!defined(tile.content)) {
+      continue;
+    }
+
+    const boundsIntersection = tile.contentBoundingVolume.intersectRay(
       ray,
-      tile.contentBoundingVolume.boundingSphere,
-      scratchSphereIntersection
+      scratchVolumeIntersection
     );
-    if (!defined(boundsIntersection) || !defined(tile.content)) {
+    if (!defined(boundsIntersection)) {
       continue;
     }
 
@@ -3682,12 +3682,10 @@ Cesium3DTileset.prototype.pick = function (ray, frameState, result) {
 
   const length = candidates.length;
   candidates.sort((a, b) => {
-    const aDist = BoundingSphere.distanceSquaredTo(
-      a.contentBoundingVolume.boundingSphere,
+    const aDist = a.contentBoundingVolume.boundingVolume.distanceSquaredTo(
       ray.origin
     );
-    const bDist = BoundingSphere.distanceSquaredTo(
-      b.contentBoundingVolume.boundingSphere,
+    const bDist = b.contentBoundingVolume.boundingVolume.distanceSquaredTo(
       ray.origin
     );
 

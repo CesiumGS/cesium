@@ -161,6 +161,17 @@ TileOrientedBoundingBox.prototype.intersectPlane = function (plane) {
 };
 
 /**
+ * Computes the nearest intersection along the ray with the bounding volume.
+ *
+ * @param {Ray} ray The ray to test against.
+ * @param {Cartesian3} [result] The nearest intersection along the provided ray with the bounding volume.
+ * @returns {Cartesian3|undefined} The nearest intersection along the provided ray with the bounding volume, or <code>undefined</code> if there is no intersection.
+ */
+TileOrientedBoundingBox.prototype.intersectRay = function (ray, result) {
+  return this._orientedBoundingBox.intersectRay(ray, result);
+};
+
+/**
  * Update the bounding box after the tile is transformed.
  *
  * @param {Cartesian3} center The center of the box.

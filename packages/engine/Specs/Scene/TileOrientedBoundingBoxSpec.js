@@ -5,6 +5,7 @@ import {
   Math as CesiumMath,
   Matrix3,
   Plane,
+  Ray,
   TileOrientedBoundingBox,
 } from "../../index.js";
 
@@ -114,5 +115,42 @@ describe("Scene/TileOrientedBoundingBox", function () {
     expect(tileBoundingVolume.intersectPlane(plane)).toEqual(Intersect.OUTSIDE);
     plane = new Plane(Cartesian3.UNIT_Z, -0.5 - eps6);
     expect(tileBoundingVolume.intersectPlane(plane)).toEqual(Intersect.OUTSIDE);
+  });
+
+  it("intersectRay throws without ray", function () {
+    expect(function () {
+      tileBoundingVolume.intersectRay();
+    }).toThrowDeveloperError();
+  });
+
+  it("intersectRay returns undefined if there is no intersection", function () {
+    const ray = new Ray();
+    ray.origin = new Cartesian3(0.0, 0.0, 2.0);
+    ray.direction = new Cartesian3(-1.0, 0.0, 0.0);
+    expect(tileBoundingVolume.intersectRay(ray)).toBeUndefined();
+  });
+
+  it("intersectRay returns intersection", function () {
+    const ray = new Ray();
+    ray.origin = new Cartesian3(1.0, 0.0, 0.0);
+    ray.direction = new Cartesian3(-1.0, 0.0, 0.0);
+
+    const expectedValue = new Cartesian3(0.5, 0.0, 0.0);
+    expect(tileBoundingVolume.intersectRay(ray)).toEqualEpsilon(
+      expectedValue,
+      CesiumMath.EPSILON8
+    );
+  });
+
+  it("intersectRay ruses result parameter", function () {
+    const ray = new Ray();
+    ray.origin = new Cartesian3(1.0, 0.0, 0.0);
+    ray.direction = new Cartesian3(-1.0, 0.0, 0.0);
+
+    const result = new Cartesian3();
+    const expectedValue = new Cartesian3(0.5, 0.0, 0.0);
+    const returned = tileBoundingVolume.intersectRay(ray, result);
+    expect(returned).toBe(result);
+    expect(result).toEqualEpsilon(expectedValue, CesiumMath.EPSILON8);
   });
 });
