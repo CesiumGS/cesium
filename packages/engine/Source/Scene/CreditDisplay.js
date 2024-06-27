@@ -246,16 +246,16 @@ function appendCss(container) {
   padding: 0 5px;
 }
 
-.cesium-credit-screenContainer *,
+.cesium-credit-textContainer *,
 .cesium-credit-logoContainer * {
   display: inline;
 }
 
-.cesium-credit-screenContainer a:hover {
+.cesium-credit-textContainer a:hover {
   color: ${highlightColor}
 }
 
-.cesium-credit-screenContainer .cesium-credit-wrapper:first-of-type {
+.cesium-credit-textContainer .cesium-credit-wrapper:first-of-type {
   padding-left: 5px;
 }
 `;
@@ -346,7 +346,7 @@ function CreditDisplay(container, delimiter, viewport) {
   container.appendChild(cesiumCreditContainer);
 
   const screenContainer = document.createElement("div");
-  screenContainer.className = "cesium-credit-screenContainer";
+  screenContainer.className = "cesium-credit-textContainer";
   screenContainer.style.display = "inline";
   container.appendChild(screenContainer);
 
