@@ -247,7 +247,7 @@ function appendCss(container) {
 }
 
 .cesium-credit-screenContainer *,
-.cesium-credit-cesiumCreditContainer * {
+.cesium-credit-logoContainer * {
   display: inline;
 }
 
@@ -341,7 +341,7 @@ function CreditDisplay(container, delimiter, viewport) {
   lightboxCredits.appendChild(creditList);
 
   const cesiumCreditContainer = document.createElement("div");
-  cesiumCreditContainer.className = "cesium-credit-cesiumCreditContainer";
+  cesiumCreditContainer.className = "cesium-credit-logoContainer";
   cesiumCreditContainer.style.display = "inline";
   container.appendChild(cesiumCreditContainer);
 
