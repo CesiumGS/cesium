@@ -7,7 +7,6 @@ import BufferUsage from "../Renderer/BufferUsage.js";
 import AttributeType from "./AttributeType.js";
 import ModelComponents from "./ModelComponents.js";
 import PrimitiveOutlineGenerator from "./Model/PrimitiveOutlineGenerator.js";
-
 /**
  * Simple struct for tracking whether an attribute will be loaded as a buffer
  * or typed array after post-processing.
@@ -185,7 +184,10 @@ PrimitiveLoadPlan.prototype.postProcess = function (context) {
   }
 
   //handle splat post-processing for point primitives
-  //if(this.hasGaussianSplatting)
+  if (this.needsGaussianSplats) {
+    generateSplatBuffers(this, context);
+    generateBuffers(this, context);
+  }
 };
 
 function generateOutlines(loadPlan) {
@@ -236,6 +238,42 @@ function makeOutlineCoordinatesAttribute(outlineCoordinatesTypedArray) {
   attribute.count = outlineCoordinatesTypedArray.length / 3;
 
   return attribute;
+}
+
+function generateSplatBuffers(loadPlan, context) {
+  const primitive = loadPlan.primitive;
+
+  const attributePlans = loadPlan.attributePlans;
+  const attrLen = attributePlans.length;
+  for (let i = 0; i < attrLen; i++) {
+    const attributePlan = attributePlans[i];
+    const attribute = attributePlan.attribute;
+    //attribute.buffer = quadBuffer;
+    attribute.instanceDivisor = 1;
+
+    if (attribute.name === "POSITION") {
+      //we don't want this position to attach to the semantic
+      attribute.name = "GS_POSITION";
+      attribute.semantic = undefined;
+    }
+  }
+
+  //build our new position buffer
+  const newAttribute = new ModelComponents.Attribute();
+  newAttribute.name = "POSITION";
+  newAttribute.typedArray = new Float32Array([-2, -2, 2, -2, 2, 2, -2, 2]);
+  newAttribute.componentDatatype = ComponentDatatype.FLOAT;
+  newAttribute.type = AttributeType.VEC2;
+  newAttribute.semantic = "POSITION";
+  newAttribute.count = 4;
+  newAttribute.normalized = false;
+
+  const newAttributePlan = new AttributeLoadPlan(newAttribute);
+  newAttributePlan.loadBuffer = true;
+  newAttributePlan.loadTypedArray = false;
+  loadPlan.attributePlans.push(newAttributePlan);
+  //primitive.gaussianSplattingQuad = newAttribute;
+  primitive.attributes.push(newAttribute);
 }
 
 function generateBuffers(loadPlan, context) {

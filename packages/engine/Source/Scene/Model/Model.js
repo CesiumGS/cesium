@@ -461,6 +461,7 @@ function Model(options) {
   this.showOutline = defaultValue(options.showOutline, true);
 
   this.enableShowGaussianSplatting = defaultValue(
+    //false,
     options.loader.gltfJson.extensionsUsed.includes("KHR_gaussian_splatting"),
     false
   );
@@ -2891,6 +2892,7 @@ Model.fromGltfAsync = async function (options) {
     loadIndicesForWireframe: options.enableDebugWireframe,
     loadPrimitiveOutline: options.enableShowOutline,
     loadForClassification: defined(options.classificationType),
+    loadGaussianSplatting: options.enableShowGaussianSplatting,
   };
 
   const basePath = defaultValue(options.basePath, "");

@@ -91,7 +91,7 @@ void main()
     #endif
 
     #ifdef HAS_POINT_CLOUD_SPLAT
-    gaussianSplatStage(color, v_splatCenter);
+    gaussianSplatStage(color, attributes);
     #endif
 
     out_FragColor = color;

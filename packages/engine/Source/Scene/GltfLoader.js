@@ -487,7 +487,7 @@ function postProcessGeometry(loader, context) {
     const loadPlan = loadPlans[i];
     loadPlan.postProcess(context);
 
-    if (loadPlan.needsOutlines) {
+    if (loadPlan.needsOutlines || loadPlan.needsGaussianSplats) {
       // The glTF loader takes ownership of any buffers generated in the
       // post-process stage since they were created after the geometry loaders
       // finished. This way they can be destroyed when the loader is destroyed.
@@ -504,6 +504,10 @@ function gatherPostProcessBuffers(loader, primitiveLoadPlan) {
   if (defined(outlineCoordinates)) {
     // outline coordinates are always loaded as a buffer.
     buffers.push(outlineCoordinates.buffer);
+  }
+
+  if (defined(primitive.gaussianSplattingQuad)) {
+    buffers.push(primitive.gaussianSplattingQuad.buffer);
   }
 
   // to do post-processing, all the attributes are loaded as typed arrays
@@ -1925,7 +1929,7 @@ function loadPrimitive(loader, gltfPrimitive, hasInstances, frameState) {
   );
   if (loader._loadGaussianSplatting && defined(gaussianSplattingExtension)) {
     needsPostProcessing = true;
-    primitivePlan.hasGaussianSplats = true;
+    primitivePlan.needsGaussianSplats = true;
   }
 
   const loadForClassification = loader._loadForClassification;
