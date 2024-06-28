@@ -140,7 +140,7 @@ vec3 getClearcoatNormalFromTexture(ProcessedAttributes attributes, vec3 geometry
     vec3 normalSample = texture(u_clearcoatNormalTexture, normalTexCoords).rgb;
     normalSample = 2.0 * normalSample - 1.0;
     #ifdef HAS_CLEARCOAT_NORMAL_TEXTURE_SCALE
-        normalSample.xy *= u_normalTextureScale;
+        normalSample.xy *= u_clearcoatNormalTextureScale;
     #endif
     return normalize(tbn * normalSample);
 }
