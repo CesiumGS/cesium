@@ -17,6 +17,7 @@ import {
   BillboardCollection,
   HeightReference,
   PointPrimitiveCollection,
+  SplitDirection,
 } from "../../index.js";
 
 import createScene from "../../../../Specs/createScene.js";
@@ -151,6 +152,7 @@ describe(
           scaleByDistance: new NearFarScalar(11, 12, 13, 14),
           distanceDisplayCondition: new DistanceDisplayCondition(10.0, 100.0),
           disableDepthTestDistance: 10.0,
+          splitDirection: SplitDirection.LEFT,
         },
       });
       const point = entity.point;
@@ -180,6 +182,9 @@ describe(
       expect(pointPrimitive.disableDepthTestDistance).toEqual(
         point.disableDepthTestDistance.getValue(time)
       );
+      expect(pointPrimitive.splitDirection).toEqual(
+        point.splitDirection.getValue(time)
+      );
 
       point.color = new Color(0.15, 0.16, 0.17, 0.18);
       point.outlineColor = new Color(0.19, 0.2, 0.21, 0.22);
@@ -191,6 +196,7 @@ describe(
         1000000.0
       );
       point.disableDepthTestDistance = 20.0;
+      point.splitDirection = SplitDirection.RIGHT;
 
       visualizer.update(time);
 
@@ -211,6 +217,9 @@ describe(
       );
       expect(pointPrimitive.disableDepthTestDistance).toEqual(
         point.disableDepthTestDistance.getValue(time)
+      );
+      expect(pointPrimitive.splitDirection).toEqual(
+        point.splitDirection.getValue(time)
       );
 
       point.show = false;
@@ -236,6 +245,7 @@ describe(
           distanceDisplayCondition: new DistanceDisplayCondition(10.0, 100.0),
           disableDepthTestDistance: 10.0,
           heightReference: HeightReference.CLAMP_TO_GROUND,
+          splitDirection: SplitDirection.LEFT,
         },
       });
       const point = entity.point;
@@ -257,6 +267,9 @@ describe(
       );
       expect(billboard.disableDepthTestDistance).toEqual(
         point.disableDepthTestDistance.getValue(time)
+      );
+      expect(billboard.splitDirection).toEqual(
+        point.splitDirection.getValue(time)
       );
       //expect(billboard.color).toEqual(point.color.getValue(time));
       //expect(billboard.outlineColor).toEqual(point.outlineColor.getValue(time));
