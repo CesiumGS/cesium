@@ -1358,7 +1358,8 @@ function continueDraw(context, drawCommand, shaderProgram, uniformMap) {
         count,
         indexBuffer.indexDatatype,
         offset,
-        instanceCount
+        100
+        //instanceCount
       );
     }
   } else {

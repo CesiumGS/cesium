@@ -31,11 +31,7 @@ GaussianSplatPipelineStage.process = function (
   );
 
   shaderBuilder.addVarying("vec2", "v_screenQuadPosition");
-  shaderBuilder.addVarying("vec2", "v_splatVertexPos"); //we may not need to pass this if v_positionMC suffices
-
-  shaderBuilder.addVarying("vec3", "v_conic");
-  shaderBuilder.addVarying("vec2", "v_screen_xy");
-  shaderBuilder.addVarying("vec2", "v_pixf");
+  shaderBuilder.addVarying("vec2", "v_vertPos");
 
   renderResources.instanceCount = renderResources.count;
   renderResources.count = 4;
