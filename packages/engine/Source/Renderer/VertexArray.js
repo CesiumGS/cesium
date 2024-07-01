@@ -11,6 +11,7 @@ import RuntimeError from "../Core/RuntimeError.js";
 import Buffer from "./Buffer.js";
 import BufferUsage from "./BufferUsage.js";
 import ContextLimits from "./ContextLimits.js";
+import AttributeType from "../Scene/AttributeType.js";
 
 function addAttribute(attributes, attribute, index, context) {
   const hasVertexBuffer = defined(attribute.vertexBuffer);
@@ -75,15 +76,15 @@ function addAttribute(attributes, attribute, index, context) {
       "attribute cannot have have an instanceDivisor if it is not backed by a buffer"
     );
   }
-  if (
-    defined(attribute.instanceDivisor) &&
-    attribute.instanceDivisor > 0 &&
-    attribute.index === 0
-  ) {
-    throw new DeveloperError(
-      "attribute zero cannot have an instanceDivisor greater than 0"
-    );
-  }
+  // if (
+  //   defined(attribute.instanceDivisor) &&
+  //   attribute.instanceDivisor > 0 &&
+  //   attribute.index === 0
+  // ) {
+  //   throw new DeveloperError(
+  //     "attribute zero cannot have an instanceDivisor greater than 0"
+  //   );
+  // }
   //>>includeEnd('debug');
 
   // Shallow copy the attribute; we do not want to copy the vertex buffer.
@@ -648,6 +649,7 @@ VertexArray.fromGeometry = function (options) {
           componentDatatype = ComponentDatatype.FLOAT;
         }
 
+        let attrProps = {};
         vertexBuffer = undefined;
         if (defined(attribute.values)) {
           vertexBuffer = Buffer.createVertexBuffer({
@@ -658,16 +660,48 @@ VertexArray.fromGeometry = function (options) {
             ),
             usage: bufferUsage,
           });
+
+          attrProps = {
+            index: attributeLocations[name],
+            vertexBuffer: vertexBuffer,
+            value: attribute.value,
+            componentDatatype: componentDatatype,
+            componentsPerAttribute: attribute.componentsPerAttribute,
+            normalize: attribute.normalize,
+          };
         }
 
-        vaAttributes.push({
-          index: attributeLocations[name],
-          vertexBuffer: vertexBuffer,
-          value: attribute.value,
-          componentDatatype: componentDatatype,
-          componentsPerAttribute: attribute.componentsPerAttribute,
-          normalize: attribute.normalize,
-        });
+        //if we already have a typedArray lets use it
+        if (defined(attribute.typedArray)) {
+          vertexBuffer = Buffer.createVertexBuffer({
+            context: context,
+            typedArray: attribute.typedArray,
+            usage: bufferUsage,
+          });
+
+          attrProps = {
+            index: attributeLocations[name],
+            vertexBuffer: vertexBuffer,
+            value: undefined,
+            componentDatatype: componentDatatype,
+            componentsPerAttribute: AttributeType.getNumberOfComponents(
+              attribute.type
+            ),
+            normalize: attribute.normalized,
+            instanceDivisor: attribute.instanceDivisor,
+          };
+        }
+
+        vaAttributes.push(attrProps);
+
+        // vaAttributes.push({
+        //   index: attributeLocations[name],
+        //   vertexBuffer: vertexBuffer,
+        //   value: attribute.value,
+        //   componentDatatype: componentDatatype,
+        //   componentsPerAttribute: attribute.componentsPerAttribute,
+        //   normalize: attribute.normalize,
+        // });
       }
     }
   }

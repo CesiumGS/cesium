@@ -186,7 +186,10 @@ GeometryPipelineStage.process = function (
 
   handleBitangents(shaderBuilder, primitive.attributes);
 
-  if (primitive.primitiveType === PrimitiveType.POINTS) {
+  if (
+    primitive.primitiveType === PrimitiveType.POINTS &&
+    !model.enableShowGaussianSplatting
+  ) {
     shaderBuilder.addDefine("PRIMITIVE_TYPE_POINTS");
   }
 

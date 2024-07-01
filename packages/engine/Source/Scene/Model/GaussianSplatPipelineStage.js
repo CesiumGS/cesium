@@ -22,7 +22,7 @@ GaussianSplatPipelineStage.process = function (
   renderStateOptions.blending = BlendingState.PRE_MULTIPLIED_ALPHA_BLEND;
 
   //use the voxel pass to isolate ourselves for now
-  renderResources.alphaOptions.pass = Pass.TRANSLUCENT;
+  renderResources.alphaOptions.pass = Pass.VOXELS;
 
   shaderBuilder.addDefine(
     "HAS_POINT_CLOUD_SPLAT",
@@ -30,8 +30,12 @@ GaussianSplatPipelineStage.process = function (
     ShaderDestination.BOTH
   );
 
-  shaderBuilder.addUniform("vec2", "v_splatPosition");
+  shaderBuilder.addVarying("vec2", "v_screenQuadPosition");
   shaderBuilder.addVarying("vec2", "v_splatVertexPos"); //we may not need to pass this if v_positionMC suffices
+
+  shaderBuilder.addVarying("vec3", "v_conic");
+  shaderBuilder.addVarying("vec2", "v_screen_xy");
+  shaderBuilder.addVarying("vec2", "v_pixf");
 
   renderResources.instanceCount = renderResources.count;
   renderResources.count = 4;

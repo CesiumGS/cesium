@@ -14,11 +14,11 @@ import ClassificationModelDrawCommand from "./ClassificationModelDrawCommand.js"
 import ModelUtility from "./ModelUtility.js";
 import ModelDrawCommand from "./ModelDrawCommand.js";
 
-// import Geometry from "../../Core/Geometry.js";
-// import GeometryAttribute from "../../Core/GeometryAttribute.js";
-// import ComponentDatatype from "../../Core/ComponentDatatype.js";
-// import PrimitiveType from "../../Core/PrimitiveType.js";
-// import BufferUsage from "../../Renderer/BufferUsage.js";
+import Geometry from "../../Core/Geometry.js";
+import GeometryAttribute from "../../Core/GeometryAttribute.js";
+import ComponentDatatype from "../../Core/ComponentDatatype.js";
+import PrimitiveType from "../../Core/PrimitiveType.js";
+import BufferUsage from "../../Renderer/BufferUsage.js";
 /**
  * Builds the {@link ModelDrawCommand} for a {@link ModelRuntimePrimitive}
  * using its render resources. If the model classifies another asset, it
@@ -37,43 +37,45 @@ function buildDrawCommand(primitiveRenderResources, frameState) {
   shaderBuilder.addFragmentLines(ModelFS);
 
   const indexBuffer = getIndexBuffer(primitiveRenderResources);
+
+  // const vertexArray = new VertexArray({
+  //   context: frameState.context,
+  //   indexBuffer: indexBuffer,
+  //   attributes: primitiveRenderResources.runtimePrimitive.primitive.attributes,
+  // });
   ////////////////
   ///////////////
 
-  // const splatQuadAttrLocations = {
-  //   position: 0,
-  //   '0': 1,
-  //   '1': 2,
-  //   '2': 3,
-  //   '3': 4
-  // };
+  const splatQuadAttrLocations = {
+    screenQuadPosition: 4,
+    0: 0,
+    1: 1,
+    2: 2,
+    3: 3,
+  };
 
-  // const geometry = new Geometry({
-  //   attributes: {
-  //     position: new GeometryAttribute({
-  //       componentDatatype: ComponentDatatype.FLOAT,
-  //       componentsPerAttribute: 2,
-  //       values: [-2, -2, 2, -2, 2, 2, -2, 2],
-  //     }),
+  const geometry = new Geometry({
+    attributes: {
+      screenQuadPosition: new GeometryAttribute({
+        componentDatatype: ComponentDatatype.FLOAT,
+        componentsPerAttribute: 2,
+        values: [-2, -2, 2, -2, 2, 2, -2, 2],
+        name: "_SCREEN_QUAD_POS",
+        variableName: "screenQuadPos",
+      }),
+      ...primitiveRenderResources.runtimePrimitive.primitive.attributes,
+    },
+    indices:
+      indexBuffer === undefined ? new Uint16Array([0, 1, 2, 3]) : indexBuffer,
+    primitiveType: PrimitiveType.TRIANGLE_STRIP,
+  });
 
-  //     ...primitiveRenderResources.runtimePrimitive.primitive.attributes
-  //   },
-  //   // Workaround Internet Explorer 11.0.8 lack of TRIANGLE_FAN
-  //  // indices: new Uint16Array([0, 1, 2, 0, 2, 3]),
-  //   primitiveType: PrimitiveType.TRIANGLE_STRIP,
-  // });
-
-  // const vertexArray = VertexArray.fromGeometry({
-  //   context: frameState.context,
-  //   geometry: geometry,
-  //   attributeLocations: splatQuadAttrLocations,
-  //   bufferUsage: BufferUsage.STATIC_DRAW,
-  //   interleave: false,
-  // });
-  const vertexArray = new VertexArray({
+  const vertexArray = VertexArray.fromGeometry({
     context: frameState.context,
-    indexBuffer: indexBuffer,
-    attributes: primitiveRenderResources.attributes,
+    geometry: geometry,
+    attributeLocations: splatQuadAttrLocations,
+    bufferUsage: BufferUsage.STATIC_DRAW,
+    interleave: false,
   });
 
   const model = primitiveRenderResources.model;

@@ -186,7 +186,7 @@ PrimitiveLoadPlan.prototype.postProcess = function (context) {
   //handle splat post-processing for point primitives
   if (this.needsGaussianSplats) {
     generateSplatBuffers(this, context);
-    generateBuffers(this, context);
+    //  generateBuffers(this, context);
   }
 };
 
@@ -241,8 +241,6 @@ function makeOutlineCoordinatesAttribute(outlineCoordinatesTypedArray) {
 }
 
 function generateSplatBuffers(loadPlan, context) {
-  const primitive = loadPlan.primitive;
-
   const attributePlans = loadPlan.attributePlans;
   const attrLen = attributePlans.length;
   for (let i = 0; i < attrLen; i++) {
@@ -250,30 +248,15 @@ function generateSplatBuffers(loadPlan, context) {
     const attribute = attributePlan.attribute;
     //attribute.buffer = quadBuffer;
     attribute.instanceDivisor = 1;
-
-    if (attribute.name === "POSITION") {
-      //we don't want this position to attach to the semantic
-      attribute.name = "GS_POSITION";
-      attribute.semantic = undefined;
-    }
+    // if (attribute.name === "POSITION") {
+    //   //we don't want this position to attach to the semantic
+    //   attribute.name = "GS_POSITION";
+    //   attribute.semantic = undefined;
+    // }
+    //defer til much later into the pipeline
+    attributePlan.loadBuffer = false;
+    attributePlan.loadTypedArray = true;
   }
-
-  //build our new position buffer
-  const newAttribute = new ModelComponents.Attribute();
-  newAttribute.name = "POSITION";
-  newAttribute.typedArray = new Float32Array([-2, -2, 2, -2, 2, 2, -2, 2]);
-  newAttribute.componentDatatype = ComponentDatatype.FLOAT;
-  newAttribute.type = AttributeType.VEC2;
-  newAttribute.semantic = "POSITION";
-  newAttribute.count = 4;
-  newAttribute.normalized = false;
-
-  const newAttributePlan = new AttributeLoadPlan(newAttribute);
-  newAttributePlan.loadBuffer = true;
-  newAttributePlan.loadTypedArray = false;
-  loadPlan.attributePlans.push(newAttributePlan);
-  //primitive.gaussianSplattingQuad = newAttribute;
-  primitive.attributes.push(newAttribute);
 }
 
 function generateBuffers(loadPlan, context) {
