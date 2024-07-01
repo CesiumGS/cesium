@@ -47,11 +47,12 @@ function buildDrawCommand(primitiveRenderResources, frameState) {
   ///////////////
 
   const splatQuadAttrLocations = {
-    screenQuadPosition: 4,
-    0: 0,
+    screenQuadPosition: 0,
+    0: 4,
     1: 1,
     2: 2,
     3: 3,
+    splatPosition: 5,
   };
 
   const geometry = new Geometry({
@@ -64,10 +65,14 @@ function buildDrawCommand(primitiveRenderResources, frameState) {
         variableName: "screenQuadPos",
       }),
       ...primitiveRenderResources.runtimePrimitive.primitive.attributes,
+      splatPosition: {
+        ...primitiveRenderResources.runtimePrimitive.primitive.attributes[0],
+        name: "_SPLAT_POSITION",
+        variableName: "splatPosition",
+      },
     },
-    indices:
-      indexBuffer === undefined ? new Uint16Array([0, 1, 2, 3]) : indexBuffer,
-    primitiveType: PrimitiveType.TRIANGLE_STRIP,
+    indices: indexBuffer,
+    primitiveType: PrimitiveType.TRIANGLES,
   });
 
   const vertexArray = VertexArray.fromGeometry({

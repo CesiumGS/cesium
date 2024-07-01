@@ -30,7 +30,9 @@ GaussianSplatPipelineStage.process = function (
     ShaderDestination.BOTH
   );
 
-  shaderBuilder.addVarying("vec2", "v_screenQuadPosition");
+  shaderBuilder.addAttribute("vec2", "v_screenQuadPosition");
+  shaderBuilder.addAttribute("vec3", "a_splatPosition");
+
   shaderBuilder.addVarying("vec2", "v_vertPos");
 
   renderResources.instanceCount = renderResources.count;

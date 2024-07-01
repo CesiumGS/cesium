@@ -6,14 +6,16 @@ void calcCov3D(vec3 scale, vec4 rot, float mod, out float[6] cov3D)
         0, 0, mod * scale[2]
     );
 
-    float x = rot.x;
-    float y = rot.y;
-    float z = rot.z;
-    float w = rot.w;
+    float r = rot.x;
+    float x = rot.y;
+    float y = rot.z;
+    float z = rot.w;
+
+    // Compute rotation matrix from quaternion
     mat3 R = mat3(
-        1.-2.*(y*y + z*z),   2.*(x*y - w*z),   2.*(x*z + w*y),
-        2.*(x*y + w*z), 1.-2.*(x*x + z*z),   2.*(y*z - w*x),
-        2.*(x*z - w*y),   2.*(y*z + w*x), 1.-2.*(x*x + y*y)
+        1. - 2. * (y * y + z * z), 2. * (x * y - r * z), 2. * (x * z + r * y),
+        2. * (x * y + r * z), 1. - 2. * (x * x + z * z), 2. * (y * z - r * x),
+        2. * (x * z - r * y), 2. * (y * z + r * x), 1. - 2. * (x * x + y * y)
     );
 
     mat3 M = S * R;
@@ -58,39 +60,23 @@ vec3 calcCov2D(vec3 worldPos, float focal_x, float focal_y, float tan_fovx, floa
     return vec3(cov[0][0], cov[0][1], cov[1][1]);
 }
 
-float ndc2Pix(float v, float S) {
-    return ((v + 1.) * S - 1.) * .5;
-}
-
-void invertMatrixRow4x4(mat4 matrix, int row)
-{
-    matrix[0][row] = -matrix[0][row];
-    matrix[1][row] = -matrix[1][row];
-    matrix[2][row] = -matrix[2][row];
-    matrix[3][row] = -matrix[3][row];
-}
-
 void gaussianSplatStage(ProcessedAttributes attributes, inout vec4 positionClip) {
-    mat4 viewMatrix = czm_view;
+    mat4 viewMatrix = czm_inverseView;
     mat4 projMatrix = czm_projection;
 
-    invertMatrixRow4x4(viewMatrix, 1);
-    invertMatrixRow4x4(viewMatrix, 2);
-    invertMatrixRow4x4(projMatrix, 1);
-    invertMatrixRow4x4(viewMatrix, 0);
-    invertMatrixRow4x4(projMatrix, 0);
+    vec4 clipPosition = czm_modelViewProjection * vec4(a_splatPosition,1.0);
+    positionClip = clipPosition;
 
     float[6] cov3D;
-    calcCov3D(attributes.scale, attributes.rotation, 1.0, cov3D);
+    calcCov3D(attributes.scale, attributes.rotation, 5.0, cov3D);
 
     float aspect = czm_viewport.z / czm_viewport.w;
     float tan_fovx = 1./projMatrix[0][0];
     float tan_fovy = 1./(projMatrix[1][1] * aspect);
-    //float focal_y = czm_viewport.w * projMatrix[1][1] / 2.;
     float focal_x = czm_viewport.z * projMatrix[0][0] / 2.;
 
     // Compute 2D screen-space covariance matrix
-    vec3 cov = calcCov2D(attributes.positionMC, focal_x, focal_x, tan_fovx, tan_fovy, cov3D, viewMatrix);
+    vec3 cov = calcCov2D(a_splatPosition, focal_x, focal_x, tan_fovx, tan_fovy, cov3D, viewMatrix);
 
     float mid = (cov.x + cov.z) / 2.0;
     float radius = length(vec2((cov.x - cov.z) / 2.0, cov.y));
