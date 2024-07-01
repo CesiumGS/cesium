@@ -86,11 +86,11 @@ void gaussianSplatStage(ProcessedAttributes attributes, inout vec4 positionClip)
     float aspect = czm_viewport.z / czm_viewport.w;
     float tan_fovx = 1./projMatrix[0][0];
     float tan_fovy = 1./(projMatrix[1][1] * aspect);
-    float focal_y = czm_viewport.w * projMatrix[1][1] / 2.;
-    float focal_x = czm_viewport.z *projMatrix[0][0] / 2.;
+    //float focal_y = czm_viewport.w * projMatrix[1][1] / 2.;
+    float focal_x = czm_viewport.z * projMatrix[0][0] / 2.;
 
     // Compute 2D screen-space covariance matrix
-    vec3 cov = calcCov2D(attribute.positionMC, focal_x, focal_y, tan_fovx, tan_fovy, cov3D, viewMatrix);
+    vec3 cov = calcCov2D(attributes.positionMC, focal_x, focal_x, tan_fovx, tan_fovy, cov3D, viewMatrix);
 
     float mid = (cov.x + cov.z) / 2.0;
     float radius = length(vec2((cov.x - cov.z) / 2.0, cov.y));
