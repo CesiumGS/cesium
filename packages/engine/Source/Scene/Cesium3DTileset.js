@@ -3568,7 +3568,7 @@ Cesium3DTileset.prototype.getHeight = function (cartographic, scene) {
   Check.typeOf.object("scene", scene);
   //>>includeEnd('debug');
 
-  let ellipsoid = scene.globe?.ellipsoid;
+  let ellipsoid = scene.ellipsoid;
   if (!defined(ellipsoid)) {
     ellipsoid = Ellipsoid.WGS84;
   }

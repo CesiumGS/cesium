@@ -216,33 +216,46 @@ function ScreenSpaceCameraController(scene) {
     eventType: CameraEventType.LEFT_DRAG,
     modifier: KeyboardEventModifier.SHIFT,
   };
+
+  const ellipsoid = defaultValue(scene.ellipsoid, Ellipsoid.default);
+
   /**
-   * The minimum height the camera must be before picking the terrain or scene content instead of the ellipsoid.
+   * The minimum height the camera must be before picking the terrain or scene content instead of the ellipsoid. Defaults to scene.ellipsoid.minimumRadius * 0.025 when another ellipsoid than WGS84 is used.
    * @type {number}
-   * @default 150000.0
+   * @default 150000.0 or scene.ellipsoid.minimumRadius * 0.025
    */
-  this.minimumPickingTerrainHeight = 150000.0;
+  this.minimumPickingTerrainHeight = Ellipsoid.WGS84.equals(ellipsoid)
+    ? 150000.0
+    : ellipsoid.minimumRadius * 0.025;
   this._minimumPickingTerrainHeight = this.minimumPickingTerrainHeight;
   /**
-   * The minimum distance the camera must be before testing for collision with terrain when zoom with inertia.
+   * The minimum distance the camera must be before testing for collision with terrain when zoom with inertia. Default to scene.ellipsoid.minimumRadius * 0.00063 when another ellipsoid than WGS84 is used.
    * @type {number}
-   * @default 4000.0
+   * @default 4000.0 or scene.ellipsoid.minimumRadius * 0.00063
    */
-  this.minimumPickingTerrainDistanceWithInertia = 4000.0;
+  this.minimumPickingTerrainDistanceWithInertia = Ellipsoid.WGS84.equals(
+    ellipsoid
+  )
+    ? 4000.0
+    : ellipsoid.minimumRadius * 0.00063;
   /**
-   * The minimum height the camera must be before testing for collision with terrain.
+   * The minimum height the camera must be before testing for collision with terrain. Default to scene.ellipsoid.minimumRadius * 0.0025 when another ellipsoid than WGS84 is used.
    * @type {number}
-   * @default 15000.0
+   * @default 15000.0 or scene.ellipsoid.minimumRadius * 0.0025.
    */
-  this.minimumCollisionTerrainHeight = 15000.0;
+  this.minimumCollisionTerrainHeight = Ellipsoid.WGS84.equals(ellipsoid)
+    ? 15000.0
+    : ellipsoid.minimumRadius * 0.0025;
   this._minimumCollisionTerrainHeight = this.minimumCollisionTerrainHeight;
   /**
    * The minimum height the camera must be before switching from rotating a track ball to
-   * free look when clicks originate on the sky or in space.
+   * free look when clicks originate on the sky or in space. Defaults to ellipsoid.minimumRadius * 1.175 when another ellipsoid than WGS84 is used.
    * @type {number}
-   * @default 7500000.0
+   * @default 7500000.0 or scene.ellipsoid.minimumRadius * 1.175
    */
-  this.minimumTrackBallHeight = 7500000.0;
+  this.minimumTrackBallHeight = Ellipsoid.WGS84.equals(ellipsoid)
+    ? 7500000.0
+    : ellipsoid.minimumRadius * 1.175;
   this._minimumTrackBallHeight = this.minimumTrackBallHeight;
   /**
    * When disabled, the values of <code>maximumZoomDistance</code> and <code>minimumZoomDistance</code> are ignored.
@@ -253,7 +266,7 @@ function ScreenSpaceCameraController(scene) {
 
   this._scene = scene;
   this._globe = undefined;
-  this._ellipsoid = undefined;
+  this._ellipsoid = ellipsoid;
 
   this._lastGlobeHeight = 0.0;
 
@@ -920,7 +933,7 @@ function handleZoom(
 
   if ((!sameStartPosition && zoomOnVector) || zoomingOnVector) {
     let ray;
-    const zoomMouseStart = SceneTransforms.wgs84ToWindowCoordinates(
+    const zoomMouseStart = SceneTransforms.worldToWindowCoordinates(
       scene,
       object._zoomWorldPosition,
       scratchZoomOffset
@@ -2861,14 +2874,13 @@ function adjustHeightForTerrain(controller, cameraChanged) {
 
   const scene = controller._scene;
   const mode = scene.mode;
-  const globe = scene.globe;
 
   if (mode === SceneMode.SCENE2D || mode === SceneMode.MORPHING) {
     return;
   }
 
   const camera = scene.camera;
-  const ellipsoid = defaultValue(globe?.ellipsoid, Ellipsoid.WGS84);
+  const ellipsoid = defaultValue(scene.ellipsoid, Ellipsoid.WGS84);
   const projection = scene.mapProjection;
 
   let transform;
@@ -2967,9 +2979,7 @@ ScreenSpaceCameraController.prototype.update = function () {
     this._ellipsoid = Ellipsoid.UNIT_SPHERE;
   } else {
     this._globe = globe;
-    this._ellipsoid = defined(this._globe)
-      ? this._globe.ellipsoid
-      : scene.mapProjection.ellipsoid;
+    this._ellipsoid = defaultValue(scene.ellipsoid, Ellipsoid.default);
   }
 
   const { verticalExaggeration, verticalExaggerationRelativeHeight } = scene;

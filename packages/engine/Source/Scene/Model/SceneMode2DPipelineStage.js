@@ -145,7 +145,7 @@ function computeBoundingSphere2D(renderResources, modelMatrix, frameState) {
     scratchProjectedMin
   );
 
-  const projectedMin = SceneTransforms.computeActualWgs84Position(
+  const projectedMin = SceneTransforms.computeActualEllipsoidPosition(
     frameState,
     transformedPositionMin,
     transformedPositionMin
@@ -157,7 +157,7 @@ function computeBoundingSphere2D(renderResources, modelMatrix, frameState) {
     scratchProjectedMax
   );
 
-  const projectedMax = SceneTransforms.computeActualWgs84Position(
+  const projectedMax = SceneTransforms.computeActualEllipsoidPosition(
     frameState,
     transformedPositionMax,
     transformedPositionMax
@@ -244,7 +244,7 @@ function createPositionsTypedArrayFor2D(
       initialPosition
     );
 
-    const projectedPosition = SceneTransforms.computeActualWgs84Position(
+    const projectedPosition = SceneTransforms.computeActualEllipsoidPosition(
       frameState,
       transformedPosition,
       transformedPosition

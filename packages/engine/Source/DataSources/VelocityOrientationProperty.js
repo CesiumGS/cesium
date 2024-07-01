@@ -17,7 +17,7 @@ import VelocityVectorProperty from "./VelocityVectorProperty.js";
  * @constructor
  *
  * @param {PositionProperty} [position] The position property used to compute the orientation.
- * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid used to determine which way is up.
+ * @param {Ellipsoid} [ellipsoid=Ellipsoid.default] The ellipsoid used to determine which way is up.
  *
  * @example
  * //Create an entity with position and orientation.
@@ -34,7 +34,7 @@ function VelocityOrientationProperty(position, ellipsoid) {
   this._ellipsoid = undefined;
   this._definitionChanged = new Event();
 
-  this.ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
+  this.ellipsoid = defaultValue(ellipsoid, Ellipsoid.default);
 
   const that = this;
   this._velocityVectorProperty.definitionChanged.addEventListener(function () {

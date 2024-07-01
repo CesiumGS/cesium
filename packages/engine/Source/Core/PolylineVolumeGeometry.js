@@ -178,7 +178,7 @@ function computeAttributes(
  * @param {object} options Object with the following properties:
  * @param {Cartesian3[]} options.polylinePositions An array of {@link Cartesian3} positions that define the center of the polyline volume.
  * @param {Cartesian2[]} options.shapePositions An array of {@link Cartesian2} positions that define the shape to be extruded along the polyline
- * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference.
+ * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.default] The ellipsoid to be used as a reference.
  * @param {number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
  * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
  * @param {CornerType} [options.cornerType=CornerType.ROUNDED] Determines the style of the corners.
@@ -223,7 +223,7 @@ function PolylineVolumeGeometry(options) {
   this._positions = positions;
   this._shape = shape;
   this._ellipsoid = Ellipsoid.clone(
-    defaultValue(options.ellipsoid, Ellipsoid.WGS84)
+    defaultValue(options.ellipsoid, Ellipsoid.default)
   );
   this._cornerType = defaultValue(options.cornerType, CornerType.ROUNDED);
   this._vertexFormat = VertexFormat.clone(

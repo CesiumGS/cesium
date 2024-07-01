@@ -362,7 +362,7 @@ PolygonGeometryLibrary.scaleToGeodeticHeightExtruded = function (
   ellipsoid,
   perPositionHeight
 ) {
-  ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
+  ellipsoid = defaultValue(ellipsoid, Ellipsoid.default);
 
   const n1 = scaleToGeodeticHeightN1;
   let n2 = scaleToGeodeticHeightN2;

@@ -68,7 +68,7 @@ function interpolateColors(p0, p1, color0, color1, minDistance, array, offset) {
  * @param {boolean} [options.colorsPerVertex=false] A boolean that determines whether the colors will be flat across each segment of the line or interpolated across the vertices.
  * @param {ArcType} [options.arcType=ArcType.GEODESIC] The type of line the polyline segments must follow.
  * @param {number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude if options.arcType is not ArcType.NONE. Determines the number of positions in the buffer.
- * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference.
+ * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.default] The ellipsoid to be used as a reference.
  *
  * @exception {DeveloperError} At least two positions are required.
  * @exception {DeveloperError} colors has an invalid length.
@@ -114,7 +114,7 @@ function SimplePolylineGeometry(options) {
     options.granularity,
     CesiumMath.RADIANS_PER_DEGREE
   );
-  this._ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
+  this._ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.default);
   this._workerName = "createSimplePolylineGeometry";
 
   let numComponents = 1 + positions.length * Cartesian3.packedLength;

@@ -441,8 +441,7 @@ ModelVisualizer.prototype.getBoundingSphere = function (entity, result) {
   }
 
   const scene = this._scene;
-  const globe = scene.globe;
-  const ellipsoid = defaultValue(globe?.ellipsoid, Ellipsoid.WGS84);
+  const ellipsoid = defaultValue(scene.ellipsoid, Ellipsoid.default);
 
   const hasHeightReference = model.heightReference !== HeightReference.NONE;
   if (hasHeightReference) {

@@ -72,7 +72,7 @@ function TerrainOffsetProperty(
 
     this._updateClamping();
 
-    this._normal = scene.globe.ellipsoid.geodeticSurfaceNormal(
+    this._normal = scene.ellipsoid.geodeticSurfaceNormal(
       position,
       this._normal
     );
@@ -115,14 +115,13 @@ TerrainOffsetProperty.prototype._updateClamping = function () {
   }
 
   const scene = this._scene;
-  const globe = scene.globe;
   const position = this._position;
 
   if (Cartesian3.equals(position, Cartesian3.ZERO)) {
     this._terrainHeight = 0;
     return;
   }
-  const ellipsoid = globe.ellipsoid;
+  const ellipsoid = scene.ellipsoid;
   const cartographicPosition = ellipsoid.cartesianToCartographic(
     position,
     this._cartographicPosition
@@ -204,10 +203,7 @@ TerrainOffsetProperty.prototype.getValue = function (time, result) {
 
   this._updateClamping();
 
-  const normal = scene.globe.ellipsoid.geodeticSurfaceNormal(
-    position,
-    this._normal
-  );
+  const normal = scene.ellipsoid.geodeticSurfaceNormal(position, this._normal);
   return Cartesian3.multiplyByScalar(normal, this._terrainHeight, result);
 };
 

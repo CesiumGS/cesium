@@ -75,7 +75,7 @@ function interpolateColors(p0, p1, color0, color1, numPoints) {
  * @param {ArcType} [options.arcType=ArcType.GEODESIC] The type of line the polyline segments must follow.
  * @param {number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude if options.arcType is not ArcType.NONE. Determines the number of positions in the buffer.
  * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
- * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference.
+ * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.default] The ellipsoid to be used as a reference.
  *
  * @exception {DeveloperError} At least two positions are required.
  * @exception {DeveloperError} width must be greater than or equal to one.
@@ -134,7 +134,7 @@ function PolylineGeometry(options) {
     CesiumMath.RADIANS_PER_DEGREE
   );
   this._ellipsoid = Ellipsoid.clone(
-    defaultValue(options.ellipsoid, Ellipsoid.WGS84)
+    defaultValue(options.ellipsoid, Ellipsoid.default)
   );
   this._workerName = "createPolylineGeometry";
 
