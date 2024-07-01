@@ -61,14 +61,14 @@ vec3 calcCov2D(vec3 worldPos, float focal_x, float focal_y, float tan_fovx, floa
 }
 
 void gaussianSplatStage(ProcessedAttributes attributes, inout vec4 positionClip) {
-    mat4 viewMatrix = czm_view;
+    mat4 viewMatrix = czm_modelView;
     mat4 projMatrix = czm_projection;
 
     vec4 clipPosition = czm_modelViewProjection * vec4(a_splatPosition,1.0);
     positionClip = clipPosition;
 
     float[6] cov3D;
-    calcCov3D(attributes.scale, attributes.rotation, 512.0, cov3D);
+    calcCov3D(attributes.scale, attributes.rotation, .5, cov3D);
 
     float aspect = projMatrix[0][0] / projMatrix[1][1];
     float tan_fovx = 1./projMatrix[0][0];
