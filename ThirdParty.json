@@ -133,7 +133,7 @@
     "license": [
       "MIT"
     ],
-    "version": "0.20.0",
+    "version": "0.21.0",
     "url": "https://www.npmjs.com/package/meshoptimizer"
   },
   {
@@ -158,7 +158,7 @@
     "license": [
       "BSD-3-Clause"
     ],
-    "version": "7.3.0",
+    "version": "7.3.2",
     "url": "https://www.npmjs.com/package/protobufjs"
   },
   {
