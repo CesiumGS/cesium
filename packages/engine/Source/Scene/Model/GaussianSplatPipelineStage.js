@@ -30,14 +30,16 @@ GaussianSplatPipelineStage.process = function (
     ShaderDestination.BOTH
   );
 
-  shaderBuilder.addAttribute("vec2", "v_screenQuadPosition");
+  shaderBuilder.addAttribute("vec2", "a_screenQuadPosition");
   shaderBuilder.addAttribute("vec3", "a_splatPosition");
+  shaderBuilder.addAttribute("vec4", "a_splatColor");
 
+  shaderBuilder.addVarying("vec4", "v_splatColor");
   shaderBuilder.addVarying("vec2", "v_vertPos");
 
   renderResources.instanceCount = renderResources.count;
   renderResources.count = 4;
-  renderResources.primitiveType = PrimitiveType.TRIANGLE_STRIP;
+  renderResources.primitiveType = PrimitiveType.TRIANGLE_FAN;
 
   shaderBuilder.addVertexLines(GaussianSplatVS);
   shaderBuilder.addFragmentLines(GaussianSplatFS);

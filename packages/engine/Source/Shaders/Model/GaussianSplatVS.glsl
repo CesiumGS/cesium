@@ -6,10 +6,10 @@ void calcCov3D(vec3 scale, vec4 rot, float mod, out float[6] cov3D)
         0, 0, mod * scale[2]
     );
 
-    float r = rot.x;
-    float x = rot.y;
-    float y = rot.z;
-    float z = rot.w;
+    float r = rot.w;
+    float x = rot.x;
+    float y = rot.y;
+    float z = rot.z;
 
     // Compute rotation matrix from quaternion
     mat3 R = mat3(
@@ -61,21 +61,20 @@ vec3 calcCov2D(vec3 worldPos, float focal_x, float focal_y, float tan_fovx, floa
 }
 
 void gaussianSplatStage(ProcessedAttributes attributes, inout vec4 positionClip) {
-    mat4 viewMatrix = czm_inverseView;
+    mat4 viewMatrix = czm_view;
     mat4 projMatrix = czm_projection;
 
     vec4 clipPosition = czm_modelViewProjection * vec4(a_splatPosition,1.0);
     positionClip = clipPosition;
 
     float[6] cov3D;
-    calcCov3D(attributes.scale, attributes.rotation, 5.0, cov3D);
+    calcCov3D(attributes.scale, attributes.rotation, 512.0, cov3D);
 
-    float aspect = czm_viewport.z / czm_viewport.w;
+    float aspect = projMatrix[0][0] / projMatrix[1][1];
     float tan_fovx = 1./projMatrix[0][0];
     float tan_fovy = 1./(projMatrix[1][1] * aspect);
     float focal_x = czm_viewport.z * projMatrix[0][0] / 2.;
 
-    // Compute 2D screen-space covariance matrix
     vec3 cov = calcCov2D(a_splatPosition, focal_x, focal_x, tan_fovx, tan_fovy, cov3D, viewMatrix);
 
     float mid = (cov.x + cov.z) / 2.0;
@@ -84,8 +83,8 @@ void gaussianSplatStage(ProcessedAttributes attributes, inout vec4 positionClip)
 
     if(lambda2 < 0.0) return;
     vec2 diagonalVector = normalize(vec2(cov.y, lambda1 - cov.x));
-    vec2 majorAxis = min(sqrt(2.0 * lambda1), 1024.0) * diagonalVector;
-    vec2 minorAxis = min(sqrt(2.0 * lambda2), 1024.0) * vec2(diagonalVector.y, -diagonalVector.x);
+    vec2 majorAxis = min(sqrt(2.0 * lambda1), 4096.0) * diagonalVector;
+    vec2 minorAxis = min(sqrt(2.0 * lambda2), 4096.0) * vec2(diagonalVector.y, -diagonalVector.x);
 
     vec2 corner = vec2((gl_VertexID << 1) & 2, gl_VertexID & 2) - 1.;
     corner *= 2.0;
@@ -93,4 +92,5 @@ void gaussianSplatStage(ProcessedAttributes attributes, inout vec4 positionClip)
     vec2 deltaScreenPos = (corner.x * majorAxis + corner.y * minorAxis) * 2.0 / czm_viewport.zw;
     positionClip.xy += deltaScreenPos * positionClip.w;
     v_vertPos = corner;
+    v_splatColor = a_splatColor;
 }
