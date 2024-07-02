@@ -21,6 +21,7 @@ const Pass = {
   OPAQUE: 7,
   TRANSLUCENT: 8,
   VOXELS: 9,
+  GAUSSIAN_SPLATS: 10,
   OVERLAY: 11,
   NUMBER_OF_PASSES: 12,
 };
