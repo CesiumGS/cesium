@@ -34,7 +34,7 @@ const scratchWindowCoord1 = new Cartesian2();
  * @param {Scene} scene The scene.
  * @param {Cartesian3} position The position in world (WGS84 or alternative ellipsoid) coordinates.
  * @param {Cartesian2} [result] An optional object to return the input position transformed to window coordinates.
- * @returns {Cartesian2} The modified result parameter or a new Cartesian2 instance if one was not provided.  This may be <code>undefined</code> if the input position is near the center of the ellipsoid.
+ * @returns {Cartesian2|undefined} The modified result parameter or a new Cartesian2 instance if one was not provided.  This may be <code>undefined</code> if the input position is near the center of the ellipsoid.
  *
  * @example
  * // Output the window position of longitude/latitude (0, 0) every time the mouse moves.
@@ -60,7 +60,7 @@ SceneTransforms.worldToWindowCoordinates = function (scene, position, result) {
  * @param {Scene} scene The scene.
  * @param {Cartesian3} position The position in WGS84 (world) coordinates.
  * @param {Cartesian2} [result] An optional object to return the input position transformed to window coordinates.
- * @returns {Cartesian2} The modified result parameter or a new Cartesian2 instance if one was not provided.  This may be <code>undefined</code> if the input position is near the center of the ellipsoid.
+ * @returns {Cartesian2|undefined} The modified result parameter or a new Cartesian2 instance if one was not provided.  This may be <code>undefined</code> if the input position is near the center of the ellipsoid.
  *
  * @example
  * // Output the window position of longitude/latitude (0, 0) every time the mouse moves.
@@ -297,7 +297,7 @@ SceneTransforms.worldWithEyeOffsetToWindowCoordinates = function (
  * @param {Scene} scene The scene.
  * @param {Cartesian3} position The position in world (WGS84 or alternative ellipsoid) coordinates.
  * @param {Cartesian2} [result] An optional object to return the input position transformed to window coordinates.
- * @returns {Cartesian2} The modified result parameter or a new Cartesian2 instance if one was not provided.  This may be <code>undefined</code> if the input position is near the center of the ellipsoid.
+ * @returns {Cartesian2|undefined} The modified result parameter or a new Cartesian2 instance if one was not provided.  This may be <code>undefined</code> if the input position is near the center of the ellipsoid.
  *
  * @example
  * // Output the window position of longitude/latitude (0, 0) every time the mouse moves.
@@ -327,7 +327,7 @@ SceneTransforms.worldToDrawingBufferCoordinates = function (
  * @param {Scene} scene The scene.
  * @param {Cartesian3} position The position in world (WGS84 or alternative ellipsoid) coordinates.
  * @param {Cartesian2} [result] An optional object to return the input position transformed to window coordinates.
- * @returns {Cartesian2} The modified result parameter or a new Cartesian2 instance if one was not provided.  This may be <code>undefined</code> if the input position is near the center of the ellipsoid.
+ * @returns {Cartesian2|undefined} The modified result parameter or a new Cartesian2 instance if one was not provided.  This may be <code>undefined</code> if the input position is near the center of the ellipsoid.
  *
  * @example
  * // Output the window position of longitude/latitude (0, 0) every time the mouse moves.
