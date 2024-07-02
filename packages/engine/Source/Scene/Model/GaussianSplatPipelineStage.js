@@ -21,11 +21,10 @@ GaussianSplatPipelineStage.process = function (
   renderStateOptions.depthMask = false;
   renderStateOptions.blending = BlendingState.PRE_MULTIPLIED_ALPHA_BLEND;
 
-  //use the voxel pass to isolate ourselves for now
-  renderResources.alphaOptions.pass = Pass.VOXELS;
+  renderResources.alphaOptions.pass = Pass.GAUSSIAN_SPLATS;
 
   shaderBuilder.addDefine(
-    "HAS_POINT_CLOUD_SPLAT",
+    "HAS_GAUSSIAN_SPLATS",
     undefined,
     ShaderDestination.BOTH
   );
@@ -36,6 +35,51 @@ GaussianSplatPipelineStage.process = function (
 
   shaderBuilder.addVarying("vec4", "v_splatColor");
   shaderBuilder.addVarying("vec2", "v_vertPos");
+
+  shaderBuilder.addUniform("float", "u_aspectRatio");
+  shaderBuilder.addUniform("float", "u_tan_fovX");
+  shaderBuilder.addUniform("float", "u_tan_fovY");
+  shaderBuilder.addUniform("float", "u_focalX");
+  shaderBuilder.addUniform("float", "u_focalY");
+
+  const uniformMap = renderResources.uniformMap;
+  const cam = frameState.camera;
+  const model = renderResources.model;
+
+  const projMatrix = cam.frustum.projectionMatrix;
+  const aspect = projMatrix[0][0] / projMatrix[1][1];
+  const tan_fovx = 1 / projMatrix[0][0];
+  const tan_fovy = 1 / (projMatrix[1][1] * aspect);
+  const focal_x = (model.scene.viewport.width * projMatrix[0][0]) / 2;
+  const focal_y = (model.scene.viewport.height * projMatrix[1][1]) / 2;
+
+  uniformMap.u_aspectRatio = function () {
+    return aspect;
+  };
+
+  uniformMap.u_tan_fovX = function () {
+    return tan_fovx;
+  };
+
+  uniformMap.u_tan_fovY = function () {
+    return tan_fovy;
+  };
+
+  uniformMap.u_focalX = function () {
+    return focal_x;
+  };
+
+  uniformMap.u_focalY = function () {
+    return focal_y;
+  };
+
+  // const countSort = (gaussians, viewMatrix) => {
+  //   let maxDepth = Number.Infinity;
+  //   let minDepth = -Number.Infinity;
+
+  //   let sizeList = new Int32Array(gaussians.length);
+
+  // };
 
   renderResources.instanceCount = renderResources.count;
   renderResources.count = 4;

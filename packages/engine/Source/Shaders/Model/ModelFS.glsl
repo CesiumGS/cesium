@@ -90,7 +90,7 @@ void main()
     atmosphereStage(color, attributes);
     #endif
 
-    #ifdef HAS_POINT_CLOUD_SPLAT
+    #ifdef HAS_GAUSSIAN_SPLATS
     gaussianSplatStage(color, attributes);
     #endif
 

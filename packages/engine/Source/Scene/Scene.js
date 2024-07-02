@@ -2282,6 +2282,23 @@ function executeVoxelCommands(scene, executeFunction, passState, commands) {
   }
 }
 
+function executeGaussianSplatCommands(
+  scene,
+  executeFunction,
+  passState,
+  commands
+) {
+  const context = scene.context;
+
+  //still necessary?
+  mergeSort(commands, backToFront, scene.camera.positionWC);
+
+  const length = commands.length;
+  for (let i = 0; i < length; ++i) {
+    executeFunction(commands[i], scene, context, passState);
+  }
+}
+
 const scratchPerspectiveFrustum = new PerspectiveFrustum();
 const scratchPerspectiveOffCenterFrustum = new PerspectiveOffCenterFrustum();
 const scratchOrthographicFrustum = new OrthographicFrustum();
@@ -2623,6 +2640,12 @@ function executeCommands(scene, passState) {
     length = frustumCommands.indices[Pass.VOXELS];
     commands.length = length;
     executeVoxelCommands(scene, executeCommand, passState, commands);
+
+    uniformState.updatePass(Pass.GAUSSIAN_SPLATS);
+    commands = frustumCommands.commands[Pass.GAUSSIAN_SPLATS];
+    length = frustumCommands.indices[Pass.GAUSSIAN_SPLATS];
+    commands.length = length;
+    executeGaussianSplatCommands(scene, executeCommand, passState, commands);
 
     uniformState.updatePass(Pass.OPAQUE);
     commands = frustumCommands.commands[Pass.OPAQUE];

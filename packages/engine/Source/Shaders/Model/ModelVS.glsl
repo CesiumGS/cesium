@@ -145,7 +145,7 @@ void main()
     gl_PointSize *= show;
     #endif
 
-    #ifdef HAS_POINT_CLOUD_SPLAT
+    #ifdef HAS_GAUSSIAN_SPLATS
     gaussianSplatStage(attributes, positionClip);
     #endif
 
