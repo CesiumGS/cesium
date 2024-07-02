@@ -36,26 +36,21 @@ GaussianSplatPipelineStage.process = function (
   shaderBuilder.addVarying("vec4", "v_splatColor");
   shaderBuilder.addVarying("vec2", "v_vertPos");
 
-  shaderBuilder.addUniform("float", "u_aspectRatio");
-  shaderBuilder.addUniform("float", "u_tan_fovX");
-  shaderBuilder.addUniform("float", "u_tan_fovY");
-  shaderBuilder.addUniform("float", "u_focalX");
-  shaderBuilder.addUniform("float", "u_focalY");
+  shaderBuilder.addUniform("float", "u_aspectRatio", ShaderDestination.VERTEX);
+  shaderBuilder.addUniform("float", "u_tan_fovX", ShaderDestination.VERTEX);
+  shaderBuilder.addUniform("float", "u_tan_fovY", ShaderDestination.VERTEX);
+  shaderBuilder.addUniform("float", "u_focalX", ShaderDestination.VERTEX);
+  shaderBuilder.addUniform("float", "u_focalY", ShaderDestination.VERTEX);
 
   const uniformMap = renderResources.uniformMap;
   const cam = frameState.camera;
-  const model = renderResources.model;
+  const width = frameState.context.drawingBufferWidth;
+  const height = frameState.context.drawingBufferHeight;
 
-  const projMatrix = cam.frustum.projectionMatrix;
-  const aspect = projMatrix[0][0] / projMatrix[1][1];
-  const tan_fovx = 1 / projMatrix[0][0];
-  const tan_fovy = 1 / (projMatrix[1][1] * aspect);
-  const focal_x = (model.scene.viewport.width * projMatrix[0][0]) / 2;
-  const focal_y = (model.scene.viewport.height * projMatrix[1][1]) / 2;
-
-  uniformMap.u_aspectRatio = function () {
-    return aspect;
-  };
+  const tan_fovx = Math.tan(cam.frustum.fov * 0.5);
+  const tan_fovy = Math.tan(cam.frustum.fovy * 0.5);
+  const focal_x = width / (tan_fovx * 2);
+  const focal_y = height / (tan_fovy * 2);
 
   uniformMap.u_tan_fovX = function () {
     return tan_fovx;
@@ -73,17 +68,90 @@ GaussianSplatPipelineStage.process = function (
     return focal_y;
   };
 
-  // const countSort = (gaussians, viewMatrix) => {
-  //   let maxDepth = Number.Infinity;
-  //   let minDepth = -Number.Infinity;
+  const countSort = () => {
+    const attributes = primitive.attributes;
+    const viewMatrix = cam.viewMatrix;
 
-  //   let sizeList = new Int32Array(gaussians.length);
+    const posAttr = attributes.find((a) => a.name === "POSITION");
+    const scaleAttr = attributes.find((a) => a.name === "_SCALE");
+    const rotAttr = attributes.find((a) => a.name === "_ROTATION");
+    const clrAttr = attributes.find((a) => a.name === "COLOR_0");
 
-  // };
+    const posArray = posAttr.typedArray;
+    const scaleArray = scaleAttr.typedArray;
+    const rotArray = rotAttr.typedArray;
+    const clrArray = clrAttr.typedArray;
+
+    const newPosArray = new posArray.constructor(posArray.length);
+    const newScaleArray = new scaleArray.constructor(scaleArray.length);
+    const newRotArray = new rotArray.constructor(rotArray.length);
+    const newClrArray = new clrArray.constructor(clrArray.length);
+
+    const calcDepth = (i) =>
+      posArray[i * 3] * viewMatrix[2] +
+      posArray[i * 3 + 1] * viewMatrix[6] +
+      posArray[i * 3 + 2] * viewMatrix[10];
+
+    let maxDepth = -Infinity;
+    let minDepth = Infinity;
+
+    const sizeList = new Int32Array(renderResources.count);
+    for (let i = 0; i < renderResources.count; i++) {
+      const depth = (calcDepth(i) * 4096) | 0;
+
+      sizeList[i] = depth;
+      maxDepth = Math.max(maxDepth, depth);
+      minDepth = Math.min(minDepth, depth);
+    }
+
+    const depthInv = (256 * 256) / (maxDepth - minDepth);
+    const counts0 = new Uint32Array(256 * 256);
+    for (let i = 0; i < renderResources.count; i++) {
+      sizeList[i] = ((sizeList[i] - minDepth) * depthInv) | 0;
+      counts0[sizeList[i]]++;
+    }
+    const starts0 = new Uint32Array(256 * 256);
+    for (let i = 1; i < 256 * 256; i++) {
+      starts0[i] = starts0[i - 1] + counts0[i - 1];
+    }
+
+    const depthIndex = new Uint32Array(renderResources.count);
+    for (let i = 0; i < renderResources.count; i++) {
+      depthIndex[starts0[sizeList[i]]++] = i;
+    }
+
+    for (let i = 0; i < renderResources.count; i++) {
+      const j = depthIndex[i];
+
+      newPosArray[j * 3] = posArray[i * 3];
+      newPosArray[j * 3 + 1] = posArray[i * 3 + 1];
+      newPosArray[j * 3 + 2] = posArray[i * 3 + 2];
+
+      newScaleArray[j * 3] = scaleArray[i * 3];
+      newScaleArray[j * 3 + 1] = scaleArray[i * 3 + 1];
+      newScaleArray[j * 3 + 2] = scaleArray[i * 3 + 2];
+
+      newRotArray[j * 4] = rotArray[i * 4];
+      newRotArray[j * 4 + 1] = rotArray[i * 4 + 1];
+      newRotArray[j * 4 + 2] = rotArray[i * 4 + 2];
+      newRotArray[j * 4 + 3] = rotArray[i * 4 + 3];
+
+      newClrArray[j * 3] = clrArray[i * 3];
+      newClrArray[j * 3 + 1] = clrArray[i * 3 + 1];
+      newClrArray[j * 3 + 2] = clrArray[i * 3 + 2];
+    }
+
+    posAttr.typedArray = newPosArray;
+    scaleAttr.typedArray = newScaleArray;
+    rotAttr.typedArray = newRotArray;
+    clrAttr.typedArray = newClrArray;
+  };
+
+  countSort();
 
   renderResources.instanceCount = renderResources.count;
   renderResources.count = 4;
-  renderResources.primitiveType = PrimitiveType.TRIANGLE_FAN;
+  renderResources.primitiveType = PrimitiveType.TRIANGLE_STRIP;
 
   shaderBuilder.addVertexLines(GaussianSplatVS);
   shaderBuilder.addFragmentLines(GaussianSplatFS);

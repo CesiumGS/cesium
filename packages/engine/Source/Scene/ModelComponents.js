@@ -620,15 +620,6 @@ function Primitive() {
    * @private
    */
   this.outlineCoordinates = undefined;
-
-  /**
-   * If the KHR_gaussian_splatting glTF extension is used, this property
-   * stores an additional attribute storing a screen space quad
-   *
-   * @type {Attribute}
-   * @private
-   */
-  this.gaussianSplattingQuad = undefined;
 }
 
 /**

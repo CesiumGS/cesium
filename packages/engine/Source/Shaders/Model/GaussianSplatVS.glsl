@@ -68,14 +68,7 @@ void gaussianSplatStage(ProcessedAttributes attributes, inout vec4 positionClip)
     positionClip = clipPosition;
 
     float[6] cov3D;
-    calcCov3D(attributes.scale, attributes.rotation, .5, cov3D);
-
-    //move to invars
-    // float aspect = projMatrix[0][0] / projMatrix[1][1];
-    // float tan_fovx = 1./projMatrix[0][0];
-    // float tan_fovy = 1./(projMatrix[1][1] * aspect);
-    // float focal_x = czm_viewport.z * projMatrix[0][0] / 2.;
-
+    calcCov3D(attributes.scale, attributes.rotation, 3., cov3D);
     vec3 cov = calcCov2D(a_splatPosition, u_focalX, u_focalY, u_tan_fovX, u_tan_fovY, cov3D, viewMatrix);
 
     float mid = (cov.x + cov.z) / 2.0;

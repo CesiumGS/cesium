@@ -506,10 +506,6 @@ function gatherPostProcessBuffers(loader, primitiveLoadPlan) {
     buffers.push(outlineCoordinates.buffer);
   }
 
-  if (defined(primitive.gaussianSplattingQuad)) {
-    buffers.push(primitive.gaussianSplattingQuad.buffer);
-  }
-
   // to do post-processing, all the attributes are loaded as typed arrays
   // so if a buffer exists, it was newly generated
   const attributes = primitive.attributes;

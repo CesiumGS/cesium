@@ -185,8 +185,7 @@ PrimitiveLoadPlan.prototype.postProcess = function (context) {
 
   //handle splat post-processing for point primitives
   if (this.needsGaussianSplats) {
-    generateSplatBuffers(this, context);
-    //  generateBuffers(this, context);
+    setupGaussianSplatBuffers(this, context);
   }
 };
 
@@ -240,19 +239,13 @@ function makeOutlineCoordinatesAttribute(outlineCoordinatesTypedArray) {
   return attribute;
 }
 
-function generateSplatBuffers(loadPlan, context) {
+function setupGaussianSplatBuffers(loadPlan, context) {
   const attributePlans = loadPlan.attributePlans;
   const attrLen = attributePlans.length;
   for (let i = 0; i < attrLen; i++) {
     const attributePlan = attributePlans[i];
     const attribute = attributePlan.attribute;
-    //attribute.buffer = quadBuffer;
     attribute.instanceDivisor = 1;
-    // if (attribute.name === "POSITION") {
-    //   //we don't want this position to attach to the semantic
-    //   attribute.name = "GS_POSITION";
-    //   attribute.semantic = undefined;
-    // }
     //defer til much later into the pipeline
     attributePlan.loadBuffer = false;
     attributePlan.loadTypedArray = true;

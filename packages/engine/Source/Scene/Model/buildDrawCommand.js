@@ -47,11 +47,11 @@ function buildDrawCommand(primitiveRenderResources, frameState) {
   ///////////////
 
   const splatQuadAttrLocations = {
-    screenQuadPosition: 4,
     0: 0,
     1: 1,
     2: 2,
     3: 3,
+    screenQuadPosition: 4,
     splatPosition: 5,
     splatColor: 6,
   };
@@ -78,7 +78,7 @@ function buildDrawCommand(primitiveRenderResources, frameState) {
       },
     },
     indices: indexBuffer,
-    primitiveType: PrimitiveType.TRIANGLE_FAN,
+    primitiveType: PrimitiveType.TRIANGLE_STRIP,
   });
 
   const vertexArray = VertexArray.fromGeometry({
