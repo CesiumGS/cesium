@@ -306,9 +306,9 @@ ModelRuntimePrimitive.prototype.configurePipeline = function (frameState) {
 
   pipelineStages.push(PrimitiveStatisticsPipelineStage);
 
-  //if(hasGaussianSplats) {
-  pipelineStages.push(GaussianSplatPipelineStage);
-  //}
+  if (model.enableShowGaussianSplatting) {
+    pipelineStages.push(GaussianSplatPipelineStage);
+  }
 
   return;
 };
