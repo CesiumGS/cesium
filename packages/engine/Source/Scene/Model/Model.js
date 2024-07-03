@@ -2038,7 +2038,7 @@ function updatePointCloudShading(model) {
 }
 
 function updateGaussianSplatting(model, frameState) {
-  //if the camera has moved enough, update commands
+  //if the camera has rotated enough, update commands
   const viewProj = new Matrix4();
   Matrix4.multiply(
     frameState.camera.frustum.projectionMatrix,
@@ -2056,11 +2056,10 @@ function updateGaussianSplatting(model, frameState) {
     model._previousViewProj[6] * viewProj[6] +
     model._previousViewProj[10] * viewProj[10];
 
-  if (Math.abs(dot - 1) < CesiumMath.EPSILON2) {
+  if (Math.abs(dot - 1) > CesiumMath.EPSILON2) {
     model.resetDrawCommands();
+    model._previousViewProj = viewProj;
   }
-
-  model._previousViewProj = viewProj;
 }
 
 function updateSilhouette(model, frameState) {
