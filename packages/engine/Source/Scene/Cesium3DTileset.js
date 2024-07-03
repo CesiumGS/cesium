@@ -869,10 +869,6 @@ function Cesium3DTileset(options) {
    */
   this.outlineColor = defaultValue(options.outlineColor, Color.BLACK);
 
-  this.showGaussianSplatting = defaultValue(
-    options.showGaussianSplatting,
-    true
-  );
   /**
    * The {@link SplitDirection} to apply to this tileset.
    *

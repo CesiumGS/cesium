@@ -37,59 +37,65 @@ function buildDrawCommand(primitiveRenderResources, frameState) {
   shaderBuilder.addFragmentLines(ModelFS);
 
   const indexBuffer = getIndexBuffer(primitiveRenderResources);
-
-  // const vertexArray = new VertexArray({
-  //   context: frameState.context,
-  //   indexBuffer: indexBuffer,
-  //   attributes: primitiveRenderResources.runtimePrimitive.primitive.attributes,
-  // });
-  ////////////////
-  ///////////////
-
-  const splatQuadAttrLocations = {
-    0: 0,
-    1: 1,
-    2: 2,
-    3: 3,
-    screenQuadPosition: 4,
-    splatPosition: 5,
-    splatColor: 6,
-  };
-
-  const geometry = new Geometry({
-    attributes: {
-      screenQuadPosition: new GeometryAttribute({
-        componentDatatype: ComponentDatatype.FLOAT,
-        componentsPerAttribute: 2,
-        values: [-2, -2, 2, -2, 2, 2, -2, 2],
-        name: "_SCREEN_QUAD_POS",
-        variableName: "screenQuadPos",
-      }),
-      ...primitiveRenderResources.runtimePrimitive.primitive.attributes,
-      splatPosition: {
-        ...primitiveRenderResources.runtimePrimitive.primitive.attributes[1],
-        name: "_SPLAT_POSITION",
-        variableName: "splatPosition",
-      },
-      splatColor: {
-        ...primitiveRenderResources.runtimePrimitive.primitive.attributes[0],
-        name: "_SPLAT_COLOR",
-        variableName: "splatColor",
-      },
-    },
-    indices: indexBuffer,
-    primitiveType: PrimitiveType.TRIANGLE_STRIP,
-  });
-
-  const vertexArray = VertexArray.fromGeometry({
-    context: frameState.context,
-    geometry: geometry,
-    attributeLocations: splatQuadAttrLocations,
-    bufferUsage: BufferUsage.STATIC_DRAW,
-    interleave: false,
-  });
-
   const model = primitiveRenderResources.model;
+
+  const vertexArray = (() => {
+    if (model.enableShowGaussianSplatting) {
+      const splatQuadAttrLocations = {
+        0: 0,
+        1: 1,
+        2: 2,
+        3: 3,
+        screenQuadPosition: 4,
+        splatPosition: 5,
+        splatColor: 6,
+      };
+      const geometry = new Geometry({
+        attributes: {
+          screenQuadPosition: new GeometryAttribute({
+            componentDatatype: ComponentDatatype.FLOAT,
+            componentsPerAttribute: 2,
+            values: [-2, -2, 2, -2, 2, 2, -2, 2],
+            name: "_SCREEN_QUAD_POS",
+            variableName: "screenQuadPos",
+          }),
+          ...primitiveRenderResources.runtimePrimitive.primitive.attributes,
+          splatPosition: {
+            ...primitiveRenderResources.runtimePrimitive.primitive.attributes.find(
+              (a) => a.name === "POSITION"
+            ),
+            name: "_SPLAT_POSITION",
+            variableName: "splatPosition",
+          },
+          splatColor: {
+            ...primitiveRenderResources.runtimePrimitive.primitive.attributes.find(
+              (a) => a.name === "COLOR_0"
+            ),
+            name: "_SPLAT_COLOR",
+            variableName: "splatColor",
+          },
+        },
+        indices: indexBuffer,
+        primitiveType: PrimitiveType.TRIANGLE_STRIP,
+      });
+
+      return VertexArray.fromGeometry({
+        context: frameState.context,
+        geometry: geometry,
+        attributeLocations: splatQuadAttrLocations,
+        bufferUsage: BufferUsage.STATIC_DRAW,
+        interleave: false,
+      });
+    }
+
+    return new VertexArray({
+      context: frameState.context,
+      indexBuffer: indexBuffer,
+      attributes:
+        primitiveRenderResources.runtimePrimitive.primitive.attributes,
+    });
+  })();
+
   model._pipelineResources.push(vertexArray);
 
   const shaderProgram = shaderBuilder.buildShaderProgram(frameState.context);

@@ -807,6 +807,38 @@ Object.defineProperties(Model.prototype, {
   },
 
   /**
+   *
+   * {@link Cesium3DTileset}.
+   *
+   * @memberof Model.prototype
+   *
+   * @type {PointCloudShading}
+   */
+  enableShowGaussianSplatting: {
+    get: function () {
+      return this._enableShowGaussianSplatting;
+    },
+    set: function (value) {
+      if (value !== this._enableShowGaussianSplatting) {
+        this.resetDrawCommands();
+      }
+      this._enableShowGaussianSplatting = value;
+      // Warning for improper setup of gaussian splatting
+      if (
+        (this._enableShowGaussianSplatting === true &&
+          this._loader.extensionsUsed.includes("KHR_gaussian_splatting") ===
+            false) ||
+        this.type !== ModelType.GLTF
+      ) {
+        oneTimeWarning(
+          "model-enable-show-gaussian-splatting-ignored",
+          "enableShowGaussian splatting must be used with a glTF model that has the KHR_gaussian_splatting extension"
+        );
+      }
+    },
+  },
+
+  /**
    * The model's custom shader, if it exists. Using custom shaders with a {@link Cesium3DTileStyle}
    * may lead to undefined behavior.
    *

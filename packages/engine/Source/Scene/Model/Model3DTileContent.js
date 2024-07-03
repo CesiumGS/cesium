@@ -232,7 +232,6 @@ Model3DTileContent.prototype.update = function (tileset, frameState) {
   model.showOutline = tileset.showOutline;
   model.outlineColor = tileset.outlineColor;
   model.pointCloudShading = tileset.pointCloudShading;
-  model.showGaussianSplatting = tileset.showGaussianSplatting;
 
   // Updating clipping planes requires more effort because of ownership checks
   const tilesetClippingPlanes = tileset.clippingPlanes;
@@ -318,6 +317,10 @@ Model3DTileContent.fromGltf = async function (tileset, tile, resource, gltf) {
     : tileset.classificationType;
 
   modelOptions.classificationType = classificationType;
+
+  modelOptions.enableShowGaussianSplatting = gltf.extensionsUsed.includes(
+    "KHR_gaussian_splatting"
+  );
 
   const model = await Model.fromGltfAsync(modelOptions);
   content._model = model;
@@ -498,7 +501,6 @@ function makeModelOptions(tileset, tile, content, additionalOptions) {
     enableShowOutline: tileset._enableShowOutline,
     showOutline: tileset.showOutline,
     outlineColor: tileset.outlineColor,
-    showGaussianSplatting: tileset.showGaussianSplatting,
   };
 
   return combine(additionalOptions, mainOptions);
