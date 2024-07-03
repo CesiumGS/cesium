@@ -140,7 +140,7 @@ vec3 getClearcoatNormalFromTexture(ProcessedAttributes attributes, vec3 geometry
     vec3 normalSample = texture(u_clearcoatNormalTexture, normalTexCoords).rgb;
     normalSample = 2.0 * normalSample - 1.0;
     #ifdef HAS_CLEARCOAT_NORMAL_TEXTURE_SCALE
-        normalSample.xy *= u_normalTextureScale;
+        normalSample.xy *= u_clearcoatNormalTextureScale;
     #endif
     return normalize(tbn * normalSample);
 }
@@ -459,12 +459,11 @@ void materialStage(inout czm_modelMaterial material, ProcessedAttributes attribu
     #endif
 
     material.baseColor = baseColorWithAlpha;
+    #ifdef USE_CPU_STYLING
+        material.baseColor.rgb = blend(baseColorWithAlpha.rgb, feature.color.rgb, model_colorBlend);
+    #endif
     material.diffuse = baseColorWithAlpha.rgb;
     material.alpha = baseColorWithAlpha.a;
-
-    #ifdef USE_CPU_STYLING
-        material.diffuse = blend(material.diffuse, feature.color.rgb, model_colorBlend);
-    #endif
 
     #ifdef HAS_OCCLUSION_TEXTURE
         vec2 occlusionTexCoords = TEXCOORD_OCCLUSION;
