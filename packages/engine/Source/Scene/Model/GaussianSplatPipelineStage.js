@@ -4,6 +4,7 @@ import GaussianSplatFS from "../../Shaders/Model/GaussianSplatFS.js";
 import Pass from "../../Renderer/Pass.js";
 import PrimitiveType from "../../Core/PrimitiveType.js";
 import BlendingState from "../BlendingState.js";
+import Matrix4 from "../../Core/Matrix4.js";
 
 const GaussianSplatPipelineStage = {
   name: "GaussianSplatPipelineStage",
@@ -36,7 +37,6 @@ GaussianSplatPipelineStage.process = function (
   shaderBuilder.addVarying("vec4", "v_splatColor");
   shaderBuilder.addVarying("vec2", "v_vertPos");
 
-  shaderBuilder.addUniform("float", "u_aspectRatio", ShaderDestination.VERTEX);
   shaderBuilder.addUniform("float", "u_tan_fovX", ShaderDestination.VERTEX);
   shaderBuilder.addUniform("float", "u_tan_fovY", ShaderDestination.VERTEX);
   shaderBuilder.addUniform("float", "u_focalX", ShaderDestination.VERTEX);
@@ -70,7 +70,8 @@ GaussianSplatPipelineStage.process = function (
 
   const countSort = () => {
     const attributes = primitive.attributes;
-    const viewMatrix = cam.viewMatrix;
+    const viewProj = new Matrix4();
+    Matrix4.multiply(cam.frustum.projectionMatrix, cam.viewMatrix, viewProj);
 
     const posAttr = attributes.find((a) => a.name === "POSITION");
     const scaleAttr = attributes.find((a) => a.name === "_SCALE");
@@ -88,9 +89,9 @@ GaussianSplatPipelineStage.process = function (
     const newClrArray = new clrArray.constructor(clrArray.length);
 
     const calcDepth = (i) =>
-      posArray[i * 3] * viewMatrix[2] +
-      posArray[i * 3 + 1] * viewMatrix[6] +
-      posArray[i * 3 + 2] * viewMatrix[10];
+      posArray[i * 3] * viewProj[2] +
+      posArray[i * 3 + 1] * viewProj[6] +
+      posArray[i * 3 + 2] * viewProj[10];
 
     let maxDepth = -Infinity;
     let minDepth = Infinity;

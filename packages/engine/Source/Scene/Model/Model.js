@@ -15,6 +15,7 @@ import Matrix3 from "../../Core/Matrix3.js";
 import Matrix4 from "../../Core/Matrix4.js";
 import Resource from "../../Core/Resource.js";
 import RuntimeError from "../../Core/RuntimeError.js";
+import CesiumMath from "../../Core/Math.js";
 import Pass from "../../Renderer/Pass.js";
 import ClippingPlaneCollection from "../ClippingPlaneCollection.js";
 import ClippingPolygonCollection from "../ClippingPolygonCollection.js";
@@ -460,15 +461,19 @@ function Model(options) {
    */
   this.showOutline = defaultValue(options.showOutline, true);
 
-  this.enableShowGaussianSplatting = defaultValue(
+  this._enableShowGaussianSplatting = defaultValue(
     //false,
     options.loader.gltfJson.extensionsUsed.includes("KHR_gaussian_splatting"),
     false
   );
+
   this.showGaussianSplatting = defaultValue(
     options.showGaussianSplatting,
     true
   );
+
+  //track last camera view to determine if gaussian splats need to be re-sorted
+  this._previousViewProj = undefined;
 
   /**
    * The color to use when rendering outlines.
@@ -1851,6 +1856,7 @@ Model.prototype.update = function (frameState) {
   updateSceneMode(this, frameState);
   updateFog(this, frameState);
   updateVerticalExaggeration(this, frameState);
+  updateGaussianSplatting(this, frameState);
 
   this._defaultTexture = frameState.context.defaultTexture;
 
@@ -1997,6 +2003,32 @@ function updatePointCloudShading(model) {
     model.resetDrawCommands();
     model._pointCloudBackFaceCulling = pointCloudShading.backFaceCulling;
   }
+}
+
+function updateGaussianSplatting(model, frameState) {
+  //if the camera has moved enough, update commands
+  const viewProj = new Matrix4();
+  Matrix4.multiply(
+    frameState.camera.frustum.projectionMatrix,
+    frameState.camera.viewMatrix,
+    viewProj
+  );
+
+  if (model._previousViewProj === undefined) {
+    model._previousViewProj = viewProj;
+    return;
+  }
+
+  const dot =
+    model._previousViewProj[2] * viewProj[2] +
+    model._previousViewProj[6] * viewProj[6] +
+    model._previousViewProj[10] * viewProj[10];
+
+  if (Math.abs(dot - 1) < CesiumMath.EPSILON2) {
+    model.resetDrawCommands();
+  }
+
+  model._previousViewProj = viewProj;
 }
 
 function updateSilhouette(model, frameState) {
