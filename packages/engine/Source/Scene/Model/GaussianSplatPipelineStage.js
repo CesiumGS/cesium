@@ -70,8 +70,9 @@ GaussianSplatPipelineStage.process = function (
 
   const countSort = () => {
     const attributes = primitive.attributes;
-    const viewProj = new Matrix4();
-    Matrix4.multiply(cam.frustum.projectionMatrix, cam.viewMatrix, viewProj);
+    const modelView = new Matrix4();
+    const modelMat = renderResources.model.modelMatrix;
+    Matrix4.multiply(cam.viewMatrix, modelMat, modelView);
 
     const posAttr = attributes.find((a) => a.name === "POSITION");
     const scaleAttr = attributes.find((a) => a.name === "_SCALE");
@@ -89,9 +90,9 @@ GaussianSplatPipelineStage.process = function (
     const newClrArray = new clrArray.constructor(clrArray.length);
 
     const calcDepth = (i) =>
-      posArray[i * 3] * viewProj[2] +
-      posArray[i * 3 + 1] * viewProj[6] +
-      posArray[i * 3 + 2] * viewProj[10];
+      posArray[i * 3] * modelView[2] +
+      posArray[i * 3 + 1] * modelView[6] +
+      posArray[i * 3 + 2] * modelView[10];
 
     let maxDepth = -Infinity;
     let minDepth = Infinity;
@@ -124,22 +125,22 @@ GaussianSplatPipelineStage.process = function (
     for (let i = 0; i < renderResources.count; i++) {
       const j = depthIndex[i];
 
-      newPosArray[j * 3] = posArray[i * 3];
-      newPosArray[j * 3 + 1] = posArray[i * 3 + 1];
-      newPosArray[j * 3 + 2] = posArray[i * 3 + 2];
+      newPosArray[i * 3] = posArray[j * 3];
+      newPosArray[i * 3 + 1] = posArray[j * 3 + 1];
+      newPosArray[i * 3 + 2] = posArray[j * 3 + 2];
 
-      newScaleArray[j * 3] = scaleArray[i * 3];
-      newScaleArray[j * 3 + 1] = scaleArray[i * 3 + 1];
-      newScaleArray[j * 3 + 2] = scaleArray[i * 3 + 2];
+      newScaleArray[i * 3] = scaleArray[j * 3];
+      newScaleArray[i * 3 + 1] = scaleArray[j * 3 + 1];
+      newScaleArray[i * 3 + 2] = scaleArray[j * 3 + 2];
 
-      newRotArray[j * 4] = rotArray[i * 4];
-      newRotArray[j * 4 + 1] = rotArray[i * 4 + 1];
-      newRotArray[j * 4 + 2] = rotArray[i * 4 + 2];
-      newRotArray[j * 4 + 3] = rotArray[i * 4 + 3];
+      newRotArray[i * 4] = rotArray[j * 4];
+      newRotArray[i * 4 + 1] = rotArray[j * 4 + 1];
+      newRotArray[i * 4 + 2] = rotArray[j * 4 + 2];
+      newRotArray[i * 4 + 3] = rotArray[j * 4 + 3];
 
-      newClrArray[j * 3] = clrArray[i * 3];
-      newClrArray[j * 3 + 1] = clrArray[i * 3 + 1];
-      newClrArray[j * 3 + 2] = clrArray[i * 3 + 2];
+      newClrArray[i * 3] = clrArray[j * 3];
+      newClrArray[i * 3 + 1] = clrArray[j * 3 + 1];
+      newClrArray[i * 3 + 2] = clrArray[j * 3 + 2];
     }
 
     posAttr.typedArray = newPosArray;

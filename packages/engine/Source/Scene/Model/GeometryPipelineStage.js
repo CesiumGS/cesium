@@ -124,7 +124,7 @@ GeometryPipelineStage.process = function (
   );
 
   // .pnts point clouds store sRGB color rather than linear color
-  if (model.type === ModelType.TILE_PNTS) {
+  if (model.type === ModelType.TILE_PNTS || model.enableShowGaussianSplatting) {
     shaderBuilder.addDefine(
       "HAS_SRGB_COLOR",
       undefined,

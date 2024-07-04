@@ -41,11 +41,11 @@ vec3 calcCov2D(vec3 worldPos, float focal_x, float focal_y, float tan_fovx, floa
 
     mat3 J = mat3(
         focal_x / t.z, 0, -(focal_x * t.x) / (t.z * t.z),
-        0, focal_y / t.z, -(focal_y * t.y) / (t.z * t.z),
+        0, -focal_y / t.z, (focal_y * t.y) / (t.z * t.z),
         0, 0, 0
     );
 
-    mat3 W = mat3(viewmatrix);
+    mat3 W = transpose(mat3(viewmatrix));
     mat3 T = W * J;
     mat3 Vrk = mat3(
         cov3D[0], cov3D[1], cov3D[2],
@@ -53,22 +53,28 @@ vec3 calcCov2D(vec3 worldPos, float focal_x, float focal_y, float tan_fovx, floa
         cov3D[2], cov3D[4], cov3D[5]
     );
 
-    mat3 cov = transpose(T) * transpose(Vrk) * T;
+    mat3 cov = transpose(T) * Vrk * T;//transpose(T) * transpose(Vrk) * T;
 
     cov[0][0] += .3;
     cov[1][1] += .3;
     return vec3(cov[0][0], cov[0][1], cov[1][1]);
 }
 
+void invertRow4x4(mat4 matrix, int row)
+{
+    matrix[0][row] = -matrix[0][row];
+    matrix[1][row] = -matrix[1][row];
+    matrix[2][row] = -matrix[2][row];
+    matrix[3][row] = -matrix[3][row];
+}
+
 void gaussianSplatStage(ProcessedAttributes attributes, inout vec4 positionClip) {
     mat4 viewMatrix = czm_modelView;
-    mat4 projMatrix = czm_projection;
-
     vec4 clipPosition = czm_modelViewProjection * vec4(a_splatPosition,1.0);
     positionClip = clipPosition;
 
     float[6] cov3D;
-    calcCov3D(attributes.scale, attributes.rotation, 3., cov3D);
+    calcCov3D(attributes.scale, attributes.rotation, 1., cov3D);
     vec3 cov = calcCov2D(a_splatPosition, u_focalX, u_focalY, u_tan_fovX, u_tan_fovY, cov3D, viewMatrix);
 
     float mid = (cov.x + cov.z) / 2.0;
@@ -77,14 +83,14 @@ void gaussianSplatStage(ProcessedAttributes attributes, inout vec4 positionClip)
 
     if(lambda2 < 0.0) return;
     vec2 diagonalVector = normalize(vec2(cov.y, lambda1 - cov.x));
-    vec2 majorAxis = min(sqrt(2.0 * lambda1), 4096.0) * diagonalVector;
-    vec2 minorAxis = min(sqrt(2.0 * lambda2), 4096.0) * vec2(diagonalVector.y, -diagonalVector.x);
+    vec2 majorAxis = min(sqrt(2.0 * lambda1), 1024.0) * diagonalVector;
+    vec2 minorAxis = min(sqrt(2.0 * lambda2), 1024.0) * vec2(diagonalVector.y, -diagonalVector.x);
 
     vec2 corner = vec2((gl_VertexID << 1) & 2, gl_VertexID & 2) - 1.;
     corner *= 2.0;
 
-    vec2 deltaScreenPos = (corner.x * majorAxis + corner.y * minorAxis) * 2.0 / czm_viewport.zw;
-    positionClip.xy += deltaScreenPos * positionClip.w;
-    v_vertPos = corner;
+   vec2 deltaScreenPos = (corner.x * majorAxis + corner.y * minorAxis) * 2.0 / czm_viewport.zw;
+   positionClip.xy += deltaScreenPos * positionClip.w;
+    v_vertPos = corner;//a_screenQuadPosition;
     v_splatColor = a_splatColor;
 }
