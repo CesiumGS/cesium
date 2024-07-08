@@ -140,6 +140,8 @@
             onselect: () => {
               imageBasedLighting.sphericalHarmonicCoefficients = coefficients;
               imageBasedLighting.specularEnvironmentMaps = environmentMapURL;
+              imageBasedLighting.imageBasedLightingFactor =
+                Cesium.Cartesian2.ONE;
             },
           },
           {
@@ -147,6 +149,15 @@
             onselect: () => {
               imageBasedLighting.sphericalHarmonicCoefficients = undefined;
               imageBasedLighting.specularEnvironmentMaps = undefined;
+              imageBasedLighting.imageBasedLightingFactor =
+                Cesium.Cartesian2.ONE;
+            },
+          },
+          {
+            text: "Direct lighting only",
+            onselect: () => {
+              imageBasedLighting.imageBasedLightingFactor =
+                Cesium.Cartesian2.ZERO;
             },
           },
         ];
@@ -193,6 +204,10 @@
           {
             text: "Barn Lamp",
             onselect: () => loadModel(2583726),
+          },
+          {
+            text: "Metal-Roughness Spheres",
+            onselect: () => loadModel(2635364),
           },
         ];
         Sandcastle.addToolbarMenu(modelOptions, "modelsToolbar");

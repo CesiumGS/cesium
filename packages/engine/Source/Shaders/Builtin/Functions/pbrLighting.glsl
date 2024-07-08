@@ -41,31 +41,31 @@ float GGX_anisotropic(float roughness, float tangentialRoughness, vec3 halfwayDi
 }
 #endif
 
-float smithVisibilityG1(float NdotV, float roughness)
-{
-    // this is the k value for direct lighting.
-    // for image based lighting it will be roughness^2 / 2
-    float k = (roughness + 1.0) * (roughness + 1.0) / 8.0;
-    return NdotV / (NdotV * (1.0 - k) + k);
-}
-
 /**
  * Estimate the geometric self-shadowing of the microfacets in a surface,
- * using the Schlick GGX approximation of a Smith visibility function.
+ * using the Smith Joint GGX visibility function.
+ * Note: Vis = G / (4 * NdotL * NdotV)
+ * see Eric Heitz. 2014. Understanding the Masking-Shadowing Function in Microfacet-Based BRDFs. Journal of Computer Graphics Techniques, 3
+ * see Real-Time Rendering. Page 331 to 336.
+ * see https://google.github.io/filament/Filament.md.html#materialsystem/specularbrdf/geometricshadowing(specularg)
  *
- * @param {float} roughness The roughness of the material.
+ * @param {float} alphaRoughness The roughness of the material, expressed as the square of perceptual roughness.
  * @param {float} NdotL The cosine of the angle between the surface normal and the direction to the light source.
  * @param {float} NdotV The cosine of the angle between the surface normal and the direction to the camera.
  */
-float smithVisibilityGGX(float roughness, float NdotL, float NdotV)
+float smithVisibilityGGX(float alphaRoughness, float NdotL, float NdotV)
 {
-    // Avoid divide-by-zero errors
-    NdotL = clamp(NdotL, 0.001, 1.0);
-    NdotV += 0.001;
-    return (
-        smithVisibilityG1(NdotL, roughness) *
-        smithVisibilityG1(NdotV, roughness)
-    ) / (4.0 * NdotL * NdotV);
+    float alphaRoughnessSq = alphaRoughness * alphaRoughness;
+
+    float GGXV = NdotL * sqrt(NdotV * NdotV * (1.0 - alphaRoughnessSq) + alphaRoughnessSq);
+    float GGXL = NdotV * sqrt(NdotL * NdotL * (1.0 - alphaRoughnessSq) + alphaRoughnessSq);
+
+    float GGX = GGXV + GGXL;
+    if (GGX > 0.0)
+    {
+        return 0.5 / GGX;
+    }
+    return 0.0;
 }
 
 /**
