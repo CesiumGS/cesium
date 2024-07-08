@@ -32,8 +32,8 @@ void calcCov3D(vec3 scale, vec4 rot, float mod, out float[6] cov3D)
 vec3 calcCov2D(vec3 worldPos, float focal_x, float focal_y, float tan_fovx, float tan_fovy, float[6] cov3D, mat4 viewmatrix) {
     vec4 t = viewmatrix * vec4(worldPos, 1.0);
 
-    float limx = 1.3 * tan_fovx;
-    float limy = 1.3 * tan_fovy;
+    float limx = 1.0 * tan_fovx;
+    float limy = 1.0 * tan_fovy;
     float txtz = t.x / t.z;
     float tytz = t.y / t.z;
     t.x = min(limx, max(-limx, txtz)) * t.z;
@@ -41,11 +41,16 @@ vec3 calcCov2D(vec3 worldPos, float focal_x, float focal_y, float tan_fovx, floa
 
     mat3 J = mat3(
         focal_x / t.z, 0, -(focal_x * t.x) / (t.z * t.z),
-        0, -focal_y / t.z, (focal_y * t.y) / (t.z * t.z),
+        0, focal_x / t.z, -(focal_x * t.y) / (t.z * t.z),
         0, 0, 0
     );
 
-    mat3 W = transpose(mat3(viewmatrix));
+   // mat3 W = mat3(viewmatrix);
+       mat3 W =  mat3(
+        viewmatrix[0][0], viewmatrix[1][0], viewmatrix[2][0],
+        viewmatrix[0][1], viewmatrix[1][1], viewmatrix[2][1],
+        viewmatrix[0][2], viewmatrix[1][2], viewmatrix[2][2]
+    );
     mat3 T = W * J;
     mat3 Vrk = mat3(
         cov3D[0], cov3D[1], cov3D[2],
@@ -53,23 +58,16 @@ vec3 calcCov2D(vec3 worldPos, float focal_x, float focal_y, float tan_fovx, floa
         cov3D[2], cov3D[4], cov3D[5]
     );
 
-    mat3 cov = transpose(T) * Vrk * T;//transpose(T) * transpose(Vrk) * T;
+    mat3 cov = transpose(T) * transpose(Vrk) * T;
 
     cov[0][0] += .3;
     cov[1][1] += .3;
     return vec3(cov[0][0], cov[0][1], cov[1][1]);
 }
 
-void invertRow4x4(mat4 matrix, int row)
-{
-    matrix[0][row] = -matrix[0][row];
-    matrix[1][row] = -matrix[1][row];
-    matrix[2][row] = -matrix[2][row];
-    matrix[3][row] = -matrix[3][row];
-}
-
 void gaussianSplatStage(ProcessedAttributes attributes, inout vec4 positionClip) {
     mat4 viewMatrix = czm_modelView;
+
     vec4 clipPosition = czm_modelViewProjection * vec4(a_splatPosition,1.0);
     positionClip = clipPosition;
 
@@ -89,8 +87,8 @@ void gaussianSplatStage(ProcessedAttributes attributes, inout vec4 positionClip)
     vec2 corner = vec2((gl_VertexID << 1) & 2, gl_VertexID & 2) - 1.;
     corner *= 2.0;
 
-   vec2 deltaScreenPos = (corner.x * majorAxis + corner.y * minorAxis) * 2.0 / czm_viewport.zw;
-   positionClip.xy += deltaScreenPos * positionClip.w;
-    v_vertPos = corner;//a_screenQuadPosition;
+    vec2 deltaScreenPos = (corner.x * majorAxis + corner.y * minorAxis) * 2.0 / czm_viewport.zw;
+    positionClip.xy += deltaScreenPos * positionClip.w;
+    v_vertPos = corner;
     v_splatColor = a_splatColor;
 }
