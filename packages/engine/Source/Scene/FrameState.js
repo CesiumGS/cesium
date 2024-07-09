@@ -421,6 +421,31 @@ function FrameState(context, creditDisplay, jobScheduler) {
    * @default 0.0
    */
   this.minimumTerrainHeight = 0.0;
+
+  /**
+   * The schema ID for the metadata values that are supposed to be picked
+   * with `Scene.pickMetadata`, or `undefined` to pick values from any
+   * schema.
+   *
+   * @type {string|undefined}
+   */
+  this.pickedMetadataSchemaId = undefined;
+
+  /**
+   * The name of the metadata class that values should be picked from
+   * with `Scene.pickMetadata`
+   *
+   * @type {string|undefined}
+   */
+  this.pickedMetadataClassName = undefined;
+
+  /**
+   * The name of the metadata property that values should be picked from
+   * with `Scene.pickMetadata`
+   *
+   * @type {string|undefined}
+   */
+  this.pickedMetadataPropertyName = undefined;
 }
 
 /**

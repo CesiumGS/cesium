@@ -15,6 +15,7 @@ import GeometryPipelineStage from "./GeometryPipelineStage.js";
 import LightingPipelineStage from "./LightingPipelineStage.js";
 import MaterialPipelineStage from "./MaterialPipelineStage.js";
 import MetadataPipelineStage from "./MetadataPipelineStage.js";
+import MetadataPickingPipelineStage from "./MetadataPickingPipelineStage.js";
 import ModelUtility from "./ModelUtility.js";
 import MorphTargetsPipelineStage from "./MorphTargetsPipelineStage.js";
 import PickingPipelineStage from "./PickingPipelineStage.js";
@@ -276,6 +277,7 @@ ModelRuntimePrimitive.prototype.configurePipeline = function (frameState) {
   // are declared to avoid compilation errors.
   pipelineStages.push(FeatureIdPipelineStage);
   pipelineStages.push(MetadataPipelineStage);
+  pipelineStages.push(MetadataPickingPipelineStage);
 
   if (featureIdFlags.hasPropertyTable) {
     pipelineStages.push(SelectedFeatureIdPipelineStage);

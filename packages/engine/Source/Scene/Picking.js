@@ -39,6 +39,10 @@ const pickTilesetPassState = new Cesium3DTilePassState({
   pass: Cesium3DTilePass.PICK,
 });
 
+const renderTilesetPassState = new Cesium3DTilePassState({
+  pass: Cesium3DTilePass.RENDER,
+});
+
 /**
  * @private
  */
@@ -224,17 +228,41 @@ function getPickCullingVolume(
   );
 }
 
-// pick rectangle width and height, assumed odd
-let scratchRectangleWidth = 3.0;
-let scratchRectangleHeight = 3.0;
-let scratchRectangle = new BoundingRectangle(
-  0.0,
-  0.0,
-  scratchRectangleWidth,
-  scratchRectangleHeight
-);
+// Pick position and rectangle, used in all picking functions,
+// filled in computePickingDrawingBufferRectangle and passed
+// the the FrameBuffer being/end methods
+const scratchRectangle = new BoundingRectangle(0.0, 0.0, 3.0, 3.0);
 const scratchPosition = new Cartesian2();
+
+// Dummy color that is passed to updateAndExecuteCommands in
+// all picking functions, used as the "background color"
 const scratchColorZero = new Color(0.0, 0.0, 0.0, 0.0);
+
+/**
+ * Compute the rectangle that describes the part of the drawing buffer
+ * that is relevant for picking.
+ *
+ * @param {number} drawingBufferHeight - The height of the drawing buffer
+ * @param {Cartesian2} position - The position inside the drawing buffer
+ * @param {number|undefined} width - The width of the rectangle, asssumed to
+ * be an odd integer number, default: 3.0
+ * @param {number|undefined} height - The height of the rectangle, default: width
+ * @param {BoundingRectangle} result The result rectangle
+ * @returns The result rectangle
+ */
+function computePickingDrawingBufferRectangle(
+  drawingBufferHeight,
+  position,
+  width,
+  height,
+  result
+) {
+  result.width = defaultValue(width, 3.0);
+  result.height = defaultValue(height, result.width);
+  result.x = position.x - (result.width - 1.0) * 0.5;
+  result.y = drawingBufferHeight - position.y - (result.height - 1.0) * 0.5;
+  return result;
+}
 
 /**
  * Returns an object with a <code>primitive</code> property that contains the first (top) primitive in the scene
@@ -254,9 +282,6 @@ Picking.prototype.pick = function (scene, windowPosition, width, height) {
   Check.defined("windowPosition", windowPosition);
   //>>includeEnd('debug');
 
-  scratchRectangleWidth = defaultValue(width, 3.0);
-  scratchRectangleHeight = defaultValue(height, scratchRectangleWidth);
-
   const { context, frameState, defaultView } = scene;
   const { viewport, pickFramebuffer } = defaultView;
 
@@ -275,6 +300,13 @@ Picking.prototype.pick = function (scene, windowPosition, width, height) {
     windowPosition,
     scratchPosition
   );
+  const drawingBufferRectangle = computePickingDrawingBufferRectangle(
+    context.drawingBufferHeight,
+    drawingBufferPosition,
+    width,
+    height,
+    scratchRectangle
+  );
 
   scene.jobScheduler.disableThisFrame();
 
@@ -282,8 +314,8 @@ Picking.prototype.pick = function (scene, windowPosition, width, height) {
   frameState.cullingVolume = getPickCullingVolume(
     scene,
     drawingBufferPosition,
-    scratchRectangleWidth,
-    scratchRectangleHeight,
+    drawingBufferRectangle.width,
+    drawingBufferRectangle.height,
     viewport
   );
   frameState.invertClassification = false;
@@ -294,20 +326,12 @@ Picking.prototype.pick = function (scene, windowPosition, width, height) {
 
   scene.updateEnvironment();
 
-  scratchRectangle.x =
-    drawingBufferPosition.x - (scratchRectangleWidth - 1.0) * 0.5;
-  scratchRectangle.y =
-    scene.drawingBufferHeight -
-    drawingBufferPosition.y -
-    (scratchRectangleHeight - 1.0) * 0.5;
-  scratchRectangle.width = scratchRectangleWidth;
-  scratchRectangle.height = scratchRectangleHeight;
-  passState = pickFramebuffer.begin(scratchRectangle, viewport);
+  passState = pickFramebuffer.begin(drawingBufferRectangle, viewport);
 
   scene.updateAndExecuteCommands(passState, scratchColorZero);
   scene.resolveFramebuffers(passState);
 
-  const object = pickFramebuffer.end(scratchRectangle);
+  const object = pickFramebuffer.end(drawingBufferRectangle);
   context.endFrame();
   return object;
 };
@@ -333,8 +357,90 @@ Picking.prototype.pickVoxelCoordinate = function (
   Check.defined("windowPosition", windowPosition);
   //>>includeEnd('debug');
 
-  scratchRectangleWidth = defaultValue(width, 3.0);
-  scratchRectangleHeight = defaultValue(height, scratchRectangleWidth);
+  const { context, frameState, defaultView } = scene;
+  const { viewport, pickFramebuffer } = defaultView;
+
+  scene.view = defaultView;
+
+  viewport.x = 0;
+  viewport.y = 0;
+  viewport.width = context.drawingBufferWidth;
+  viewport.height = context.drawingBufferHeight;
+
+  let passState = defaultView.passState;
+  passState.viewport = BoundingRectangle.clone(viewport, passState.viewport);
+
+  const drawingBufferPosition = SceneTransforms.transformWindowToDrawingBuffer(
+    scene,
+    windowPosition,
+    scratchPosition
+  );
+  const drawingBufferRectangle = computePickingDrawingBufferRectangle(
+    context.drawingBufferHeight,
+    drawingBufferPosition,
+    width,
+    height,
+    scratchRectangle
+  );
+
+  scene.jobScheduler.disableThisFrame();
+
+  scene.updateFrameState();
+  frameState.cullingVolume = getPickCullingVolume(
+    scene,
+    drawingBufferPosition,
+    drawingBufferRectangle.width,
+    drawingBufferRectangle.height,
+    viewport
+  );
+  frameState.invertClassification = false;
+  frameState.passes.pickVoxel = true;
+  frameState.tilesetPassState = pickTilesetPassState;
+
+  context.uniformState.update(frameState);
+
+  scene.updateEnvironment();
+
+  passState = pickFramebuffer.begin(drawingBufferRectangle, viewport);
+
+  scene.updateAndExecuteCommands(passState, scratchColorZero);
+  scene.resolveFramebuffers(passState);
+
+  const voxelInfo = pickFramebuffer.readCenterPixel(drawingBufferRectangle);
+  context.endFrame();
+  return voxelInfo;
+};
+
+/**
+ * Pick a metadata value at the given window position.
+ *
+ * @param {Cartesian2} windowPosition Window coordinates to perform picking on.
+ * @param {string|undefined} schemaId The ID of the metadata schema to pick values
+ * from, or `undefined` to pick values from any schema.
+ * @param {string} className The name of the metadata class to pick
+ * values from
+ * @param {string} propertyName The Name of the metadata property to pick
+ * values from
+ * @param {number} [width=3] Width of the pick rectangle.
+ * @param {number} [height=3] Height of the pick rectangle.
+ * @returns The metadata values as a raw, 4-byte buffer
+ *
+ * @private
+ */
+Picking.prototype.pickMetadata = function (
+  scene,
+  windowPosition,
+  schemaId,
+  className,
+  propertyName,
+  width,
+  height
+) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("windowPosition", windowPosition);
+  Check.typeOf.string("className", className);
+  Check.typeOf.string("propertyName", propertyName);
+  //>>includeEnd('debug');
 
   const { context, frameState, defaultView } = scene;
   const { viewport, pickFramebuffer } = defaultView;
@@ -354,6 +460,13 @@ Picking.prototype.pickVoxelCoordinate = function (
     windowPosition,
     scratchPosition
   );
+  const drawingBufferRectangle = computePickingDrawingBufferRectangle(
+    context.drawingBufferHeight,
+    drawingBufferPosition,
+    width,
+    height,
+    scratchRectangle
+  );
 
   scene.jobScheduler.disableThisFrame();
 
@@ -361,34 +474,48 @@ Picking.prototype.pickVoxelCoordinate = function (
   frameState.cullingVolume = getPickCullingVolume(
     scene,
     drawingBufferPosition,
-    scratchRectangleWidth,
-    scratchRectangleHeight,
+    drawingBufferRectangle.width,
+    drawingBufferRectangle.height,
     viewport
   );
   frameState.invertClassification = false;
-  frameState.passes.pickVoxel = true;
-  frameState.tilesetPassState = pickTilesetPassState;
+
+  // This has to be set to 'true', because otherwise, the
+  // submitCommandsForPass variable will be "false" in
+  // Model.js, and nothing will be rendered.
+  frameState.passes.render = true;
+  frameState.tilesetPassState = renderTilesetPassState;
+
+  frameState.pickedMetadataSchemaId = schemaId;
+  frameState.pickedMetadataClassName = className;
+  frameState.pickedMetadataPropertyName = propertyName;
 
   context.uniformState.update(frameState);
 
   scene.updateEnvironment();
 
-  scratchRectangle.x =
-    drawingBufferPosition.x - (scratchRectangleWidth - 1.0) * 0.5;
-  scratchRectangle.y =
-    scene.drawingBufferHeight -
-    drawingBufferPosition.y -
-    (scratchRectangleHeight - 1.0) * 0.5;
-  scratchRectangle.width = scratchRectangleWidth;
-  scratchRectangle.height = scratchRectangleHeight;
-  passState = pickFramebuffer.begin(scratchRectangle, viewport);
+  passState = pickFramebuffer.begin(drawingBufferRectangle, viewport);
 
   scene.updateAndExecuteCommands(passState, scratchColorZero);
-  scene.resolveFramebuffers(passState);
 
-  const voxelInfo = pickFramebuffer.readVoxelInfo(scratchRectangle);
+  // When OIT is enabled, then the resolveFrameBuffers function
+  // will juggle around several frame buffers, and eventually use
+  // the "environmentState.originalFramebuffer" instead of the
+  // picking frame buffer. Skipping a million questions, just
+  // switch OIT off here:
+  const oldOIT = scene._environmentState.useOIT;
+  scene._environmentState.useOIT = false;
+  scene.resolveFramebuffers(passState);
+  scene._environmentState.useOIT = oldOIT;
+
+  const metadataInfo = pickFramebuffer.readCenterPixel(drawingBufferRectangle);
   context.endFrame();
-  return voxelInfo;
+
+  delete frameState.pickedMetadataSchemaId;
+  delete frameState.pickedMetadataClassName;
+  delete frameState.pickedMetadataPropertyName;
+
+  return metadataInfo;
 };
 
 function renderTranslucentDepthForPick(scene, drawingBufferPosition) {
@@ -828,9 +955,15 @@ function getRayIntersection(
 
   updateOffscreenCameraFromRay(picking, ray, width, view.camera);
 
-  scratchRectangle = BoundingRectangle.clone(view.viewport, scratchRectangle);
+  const drawingBufferRectangle = BoundingRectangle.clone(
+    view.viewport,
+    scratchRectangle
+  );
 
-  const passState = view.pickFramebuffer.begin(scratchRectangle, view.viewport);
+  const passState = view.pickFramebuffer.begin(
+    drawingBufferRectangle,
+    view.viewport
+  );
 
   scene.jobScheduler.disableThisFrame();
 
@@ -852,7 +985,7 @@ function getRayIntersection(
   scene.resolveFramebuffers(passState);
 
   let position;
-  const object = view.pickFramebuffer.end(scratchRectangle);
+  const object = view.pickFramebuffer.end(drawingBufferRectangle);
 
   if (scene.context.depthTexture) {
     const numFrustums = view.frustumCommandsList.length;

@@ -77,6 +77,7 @@ import View from "./View.js";
 import DebugInspector from "./DebugInspector.js";
 import VoxelCell from "./VoxelCell.js";
 import VoxelPrimitive from "./VoxelPrimitive.js";
+import hasMetadataProperty from "./hasMetadataProperty.js";
 
 const requestRenderAfterFrame = function (scene) {
   return function () {
@@ -4252,6 +4253,99 @@ Scene.prototype.pickVoxel = function (windowPosition, width, height) {
     sampleIndex,
     keyframeNode
   );
+};
+
+/**
+ * Pick a metadata value at the given window position.
+ *
+ * @param {Cartesian2} windowPosition Window coordinates to perform picking on.
+ * @param {string|undefined} schemaId The ID of the metadata schema to pick values
+ * from, or `undefined` to pick values from any schema.
+ * @param {string} className The name of the metadata class to pick
+ * values from
+ * @param {string} propertyName The Name of the metadata property to pick
+ * values from
+ * @param {number} [width=3] Width of the pick rectangle.
+ * @param {number} [height=3] Height of the pick rectangle.
+ * @returns The metadata value
+ *
+ * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
+ */
+Scene.prototype.pickMetadata = function (
+  windowPosition,
+  schemaId,
+  className,
+  propertyName,
+  width,
+  height
+) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("windowPosition", windowPosition);
+  Check.typeOf.string("className", className);
+  Check.typeOf.string("propertyName", propertyName);
+  //>>includeEnd('debug');
+
+  const pickedObject = this.pick(windowPosition, width, height);
+  if (!defined(pickedObject)) {
+    return undefined;
+  }
+
+  // Check if the picked object is a model that has structural
+  // metadata, with a schema that contains the specified
+  // property.
+  const detail = pickedObject?.detail;
+  const model = detail?.model;
+  const structuralMetadata = model?.structuralMetadata;
+  const schema = structuralMetadata?.schema;
+
+  const XXX_METADATA_PICKING_DEBUG_LOG = false;
+  if (XXX_METADATA_PICKING_DEBUG_LOG) {
+    console.log("pickedObject ", pickedObject);
+    console.log("model ", model);
+    console.log("structuralMetadata ", structuralMetadata);
+    console.log("schema ", schema);
+  }
+
+  if (!hasMetadataProperty(schema, schemaId, className, propertyName)) {
+    if (XXX_METADATA_PICKING_DEBUG_LOG) {
+      console.log("The metadata property was not found");
+      console.log("schema ", schema);
+      console.log("schemaId ", schemaId);
+      console.log("className ", className);
+      console.log("propertyName ", propertyName);
+    }
+    return undefined;
+  }
+
+  // The `Picking.pickMetadata` function will update the FrameState
+  // to add the `schemaId`, `className`, and `propertyName`. Based
+  // these values, the `MetadataPickingPipelineStage` will update
+  // the shaders for the metadata picking. Reset the draw commands
+  // here to trigger a rebuild of the draw commands with the updated
+  // shaders for the metadata picking render pass.
+  model.resetDrawCommands();
+
+  const pickedMetadataValues = this._picking.pickMetadata(
+    this,
+    windowPosition,
+    schemaId,
+    className,
+    propertyName,
+    width,
+    height
+  );
+
+  if (XXX_METADATA_PICKING_DEBUG_LOG) {
+    console.log("pickedMetadataValues ", pickedMetadataValues);
+  }
+
+  // Trigger a rebuild of the draw commands to use the
+  // original shaders after picking. See notes above.
+  model.resetDrawCommands();
+
+  // TODO_METADATA_PICKING The result here is a 4-element (byte) buffer.
+  // Convert this to the required target type
+  return pickedMetadataValues;
 };
 
 /**
