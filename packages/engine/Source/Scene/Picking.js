@@ -230,7 +230,7 @@ function getPickCullingVolume(
 
 // Pick position and rectangle, used in all picking functions,
 // filled in computePickingDrawingBufferRectangle and passed
-// the the FrameBuffer being/end methods
+// the the FrameBuffer begin/end methods
 const scratchRectangle = new BoundingRectangle(0.0, 0.0, 3.0, 3.0);
 const scratchPosition = new Cartesian2();
 
