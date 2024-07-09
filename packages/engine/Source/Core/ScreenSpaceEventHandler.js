@@ -49,6 +49,8 @@ const MouseButton = {
   RIGHT: 2,
 };
 
+const MousePassModifier;
+
 function registerListener(screenSpaceEventHandler, domType, element, callback) {
   function listener(e) {
     callback(screenSpaceEventHandler, e);
@@ -228,11 +230,11 @@ function handleMouseDown(screenSpaceEventHandler, event) {
   Cartesian2.clone(position, screenSpaceEventHandler._primaryStartPosition);
   Cartesian2.clone(position, screenSpaceEventHandler._primaryPreviousPosition);
 
-  const modifier = getModifier(event);
+  MousePassModifier = getModifier(event);
 
   const action = screenSpaceEventHandler.getInputAction(
     screenSpaceEventType,
-    modifier
+    MousePassModifier
   );
 
   if (defined(action)) {
@@ -257,7 +259,16 @@ function cancelMouseEvent(
   clickScreenSpaceEventType,
   event
 ) {
-  const modifier = getModifier(event);
+  let modifier;
+  if(
+    screenSpaceEventHandler._buttonDown[MouseButton.LEFT] ||
+    screenSpaceEventHandler._buttonDown[MouseButton.MIDDLE] ||
+    screenSpaceEventHandler._buttonDown[MouseButton.RIGHT] 
+  ) {
+    modifier = MousePassModifier;
+  } else {
+    modifier = getModifier(event);
+  }
 
   const action = screenSpaceEventHandler.getInputAction(
     screenSpaceEventType,
@@ -352,7 +363,16 @@ function handleMouseMove(screenSpaceEventHandler, event) {
     return;
   }
 
-  const modifier = getModifier(event);
+  let modifier;
+  if(
+    screenSpaceEventHandler._buttonDown[MouseButton.LEFT] ||
+    screenSpaceEventHandler._buttonDown[MouseButton.MIDDLE] ||
+    screenSpaceEventHandler._buttonDown[MouseButton.RIGHT] 
+  ) {
+    modifier = MousePassModifier;
+  } else {
+    modifier = getModifier(event);
+  }
 
   const position = getPosition(
     screenSpaceEventHandler,
