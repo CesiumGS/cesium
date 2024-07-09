@@ -46,9 +46,11 @@ function buildDrawCommand(primitiveRenderResources, frameState) {
         1: 1,
         2: 2,
         3: 3,
-        screenQuadPosition: 4,
-        splatPosition: 5,
-        splatColor: 6,
+        4: 4,
+        screenQuadPosition: 5,
+        splatPosition: 6,
+        splatColor: 7,
+        splatOpacity: 8,
       };
       const geometry = new Geometry({
         attributes: {
@@ -73,6 +75,13 @@ function buildDrawCommand(primitiveRenderResources, frameState) {
             ),
             name: "_SPLAT_COLOR",
             variableName: "splatColor",
+          },
+          splatOpacity: {
+            ...primitiveRenderResources.runtimePrimitive.primitive.attributes.find(
+              (a) => a.name === "_OPACITY"
+            ),
+            name: "_SPLAT_OPACITY",
+            variableName: "splatOpacity",
           },
         },
         indices: indexBuffer,

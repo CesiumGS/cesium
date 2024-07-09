@@ -33,9 +33,11 @@ GaussianSplatPipelineStage.process = function (
   shaderBuilder.addAttribute("vec2", "a_screenQuadPosition");
   shaderBuilder.addAttribute("vec3", "a_splatPosition");
   shaderBuilder.addAttribute("vec4", "a_splatColor");
+  shaderBuilder.addAttribute("float", "a_splatOpacity");
 
   shaderBuilder.addVarying("vec4", "v_splatColor");
   shaderBuilder.addVarying("vec2", "v_vertPos");
+  shaderBuilder.addVarying("float", "v_splatOpacity");
 
   shaderBuilder.addUniform("float", "u_tan_fovX", ShaderDestination.VERTEX);
   shaderBuilder.addUniform("float", "u_tan_fovY", ShaderDestination.VERTEX);
@@ -78,16 +80,19 @@ GaussianSplatPipelineStage.process = function (
     const scaleAttr = attributes.find((a) => a.name === "_SCALE");
     const rotAttr = attributes.find((a) => a.name === "_ROTATION");
     const clrAttr = attributes.find((a) => a.name === "COLOR_0");
+    const opAttr = attributes.find((a) => a.name === "_OPACITY");
 
     const posArray = posAttr.typedArray;
     const scaleArray = scaleAttr.typedArray;
     const rotArray = rotAttr.typedArray;
     const clrArray = clrAttr.typedArray;
+    const opArray = opAttr.typedArray;
 
     const newPosArray = new posArray.constructor(posArray.length);
     const newScaleArray = new scaleArray.constructor(scaleArray.length);
     const newRotArray = new rotArray.constructor(rotArray.length);
     const newClrArray = new clrArray.constructor(clrArray.length);
+    const newOpArray = new opArray.constructor(opArray.length);
 
     const calcDepth = (i) =>
       posArray[i * 3] * modelView[2] +
@@ -141,6 +146,8 @@ GaussianSplatPipelineStage.process = function (
       newClrArray[i * 3] = clrArray[j * 3];
       newClrArray[i * 3 + 1] = clrArray[j * 3 + 1];
       newClrArray[i * 3 + 2] = clrArray[j * 3 + 2];
+
+      newOpArray[i] = opArray[j];
     }
 
     posAttr.typedArray = newPosArray;

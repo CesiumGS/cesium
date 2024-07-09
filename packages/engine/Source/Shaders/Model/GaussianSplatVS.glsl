@@ -41,7 +41,7 @@ vec3 calcCov2D(vec3 worldPos, float focal_x, float focal_y, float tan_fovx, floa
 
     mat3 J = mat3(
         focal_x / t.z, 0, -(focal_x * t.x) / (t.z * t.z),
-        0, focal_x / t.z, -(focal_x * t.y) / (t.z * t.z),
+        0, focal_y / t.z, -(focal_y * t.y) / (t.z * t.z),
         0, 0, 0
     );
 
@@ -91,4 +91,6 @@ void gaussianSplatStage(ProcessedAttributes attributes, inout vec4 positionClip)
     positionClip.xy += deltaScreenPos * positionClip.w;
     v_vertPos = corner;
     v_splatColor = a_splatColor;
+    v_splatOpacity = a_splatOpacity;
 }
+
