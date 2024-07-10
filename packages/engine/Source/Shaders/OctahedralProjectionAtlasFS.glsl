@@ -7,11 +7,15 @@ uniform sampler2D texture2;
 uniform sampler2D texture3;
 uniform sampler2D texture4;
 uniform sampler2D texture5;
+uniform sampler2D texture6;
+uniform sampler2D texture7;
 
-const float yMipLevel1 = 1.0 - (1.0 / pow(2.0, 1.0));
-const float yMipLevel2 = 1.0 - (1.0 / pow(2.0, 2.0));
-const float yMipLevel3 = 1.0 - (1.0 / pow(2.0, 3.0));
-const float yMipLevel4 = 1.0 - (1.0 / pow(2.0, 4.0));
+const float yMipLevel1 = 1.0 - exp2(-1.0);
+const float yMipLevel2 = 1.0 - exp2(-2.0);
+const float yMipLevel3 = 1.0 - exp2(-3.0);
+const float yMipLevel4 = 1.0 - exp2(-4.0);
+const float yMipLevel5 = 1.0 - exp2(-5.0);
+const float yMipLevel6 = 1.0 - exp2(-6.0);
 
 void main()
 {
@@ -24,7 +28,7 @@ void main()
     if (uv.x - pixel.x > (textureSize.y / textureSize.x))
     {
         mipLevel = 1.0;
-        if (uv.y - pixel.y > yMipLevel1)
+        if (uv.y - pixel.y * 1.0 > yMipLevel1)
         {
             mipLevel = 2.0;
             if (uv.y - pixel.y * 3.0 > yMipLevel2)
@@ -36,6 +40,14 @@ void main()
                     if (uv.y - pixel.y * 7.0 > yMipLevel4)
                     {
                         mipLevel = 5.0;
+                        if (uv.y - pixel.y * 9.0 > yMipLevel5)
+                        {
+                            mipLevel = 6.0;
+                            if (uv.y - pixel.y * 11.0 > yMipLevel6)
+                            {
+                                mipLevel = 7.0;
+                            }
+                        }
                     }
                 }
             }
@@ -44,13 +56,13 @@ void main()
 
     if (mipLevel > 0.0)
     {
-        float scale = pow(2.0, mipLevel);
+        float scale = exp2(mipLevel);
 
-        uv.y -= (pixel.y * (mipLevel - 1.0) * 2.0);
-        uv.x *= ((textureSize.x - 2.0) / textureSize.y);
+        uv.y -= pixel.y * (mipLevel - 1.0) * 2.0;
+        uv.x *= (textureSize.x - 2.0) / textureSize.y;
 
         uv.x -= 1.0 + pixel.x;
-        uv.y -= (1.0 - (1.0 / pow(2.0, mipLevel - 1.0)));
+        uv.y -= 1.0 - exp2(1.0 - mipLevel);
         uv *= scale;
     }
     else
@@ -81,6 +93,14 @@ void main()
     else if(mipLevel == 5.0)
     {
         out_FragColor = texture(texture5, uv);
+    }
+    else if(mipLevel == 6.0)
+    {
+        out_FragColor = texture(texture6, uv);
+    }
+    else if(mipLevel == 7.0)
+    {
+        out_FragColor = texture(texture7, uv);
     }
     else
     {

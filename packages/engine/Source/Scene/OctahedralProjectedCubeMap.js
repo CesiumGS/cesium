@@ -227,20 +227,15 @@ function cleanupResources(map) {
   map._va = map._va && map._va.destroy();
   map._sp = map._sp && map._sp.destroy();
 
-  let i;
-  let length;
-
   const cubeMaps = map._cubeMaps;
   if (defined(cubeMaps)) {
-    length = cubeMaps.length;
-    for (i = 0; i < length; ++i) {
+    for (let i = 0; i < cubeMaps.length; ++i) {
       cubeMaps[i].destroy();
     }
   }
   const mipTextures = map._mipTextures;
   if (defined(mipTextures)) {
-    length = mipTextures.length;
-    for (i = 0; i < length; ++i) {
+    for (let i = 0; i < mipTextures.length; ++i) {
       mipTextures[i].destroy();
     }
   }
