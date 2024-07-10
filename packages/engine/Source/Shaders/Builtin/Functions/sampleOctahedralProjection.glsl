@@ -68,7 +68,7 @@ vec3 czm_sampleOctahedralProjectionWithFiltering(sampler2D projectedMap, vec2 te
  * @returns {vec3} The color of the cube map at the direction.
  */
 vec3 czm_sampleOctahedralProjection(sampler2D projectedMap, vec2 textureSize, vec3 direction, float lod, float maxLod) {
-    float currentLod = floor(lod + 0.5);
+    float currentLod = floor(lod);
     float nextLod = min(currentLod + 1.0, maxLod);
 
     vec3 colorCurrentLod = czm_sampleOctahedralProjectionWithFiltering(projectedMap, textureSize, direction, currentLod);
