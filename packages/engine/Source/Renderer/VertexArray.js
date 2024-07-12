@@ -76,15 +76,15 @@ function addAttribute(attributes, attribute, index, context) {
       "attribute cannot have have an instanceDivisor if it is not backed by a buffer"
     );
   }
-  // if (
-  //   defined(attribute.instanceDivisor) &&
-  //   attribute.instanceDivisor > 0 &&
-  //   attribute.index === 0
-  // ) {
-  //   throw new DeveloperError(
-  //     "attribute zero cannot have an instanceDivisor greater than 0"
-  //   );
-  // }
+  if (
+    defined(attribute.instanceDivisor) &&
+    attribute.instanceDivisor > 0 &&
+    attribute.index === 0
+  ) {
+    throw new DeveloperError(
+      "attribute zero cannot have an instanceDivisor greater than 0"
+    );
+  }
   //>>includeEnd('debug');
 
   // Shallow copy the attribute; we do not want to copy the vertex buffer.

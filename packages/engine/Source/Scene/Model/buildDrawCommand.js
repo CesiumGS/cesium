@@ -42,12 +42,12 @@ function buildDrawCommand(primitiveRenderResources, frameState) {
   const vertexArray = (() => {
     if (model.enableShowGaussianSplatting) {
       const splatQuadAttrLocations = {
-        0: 0,
+        0: 5,
         1: 1,
         2: 2,
         3: 3,
         4: 4,
-        screenQuadPosition: 5,
+        screenQuadPosition: 0,
         splatPosition: 6,
         splatColor: 7,
         splatOpacity: 8,
