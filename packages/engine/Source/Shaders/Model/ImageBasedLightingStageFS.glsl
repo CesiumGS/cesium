@@ -227,7 +227,7 @@ vec3 textureIBL(
 
     #ifdef SPECULAR_IBL
         vec3 reflectMC = normalize(model_iblReferenceFrameMatrix * reflectEC);
-        float NdotV = abs(dot(normalEC, viewDirectionEC));
+        float NdotV = clamp(dot(normalEC, viewDirectionEC), 0.0, 1.0);
         vec3 f0 = material.specular;
         vec3 specularContribution = computeSpecularIBL(reflectMC, NdotV, f0, material.roughness);
     #else
