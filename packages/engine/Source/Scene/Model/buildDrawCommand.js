@@ -40,7 +40,10 @@ function buildDrawCommand(primitiveRenderResources, frameState) {
   const model = primitiveRenderResources.model;
 
   const vertexArray = (() => {
-    if (model.enableShowGaussianSplatting) {
+    if (
+      model.enableShowGaussianSplatting &&
+      (model?.style?.showGaussianSplatting ?? true)
+    ) {
       const splatQuadAttrLocations = {
         0: 5,
         1: 1,
@@ -100,8 +103,7 @@ function buildDrawCommand(primitiveRenderResources, frameState) {
     return new VertexArray({
       context: frameState.context,
       indexBuffer: indexBuffer,
-      attributes:
-        primitiveRenderResources.runtimePrimitive.primitive.attributes,
+      attributes: primitiveRenderResources.attributes,
     });
   })();
 

@@ -462,7 +462,6 @@ function Model(options) {
   this.showOutline = defaultValue(options.showOutline, true);
 
   this._enableShowGaussianSplatting = defaultValue(
-    //false,
     options.loader.gltfJson.extensionsUsed.includes("KHR_gaussian_splatting"),
     false
   );

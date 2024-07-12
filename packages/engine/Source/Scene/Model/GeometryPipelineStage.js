@@ -12,6 +12,9 @@ import ModelUtility from "./ModelUtility.js";
 import SelectedFeatureIdPipelineStage from "./SelectedFeatureIdPipelineStage.js";
 import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
 
+import Buffer from "../../Renderer/Buffer.js";
+import BufferUsage from "../../Renderer/BufferUsage.js";
+
 /**
  * The geometry pipeline stage processes the vertex attributes of a primitive.
  *
@@ -124,12 +127,57 @@ GeometryPipelineStage.process = function (
   );
 
   // .pnts point clouds store sRGB color rather than linear color
-  if (model.type === ModelType.TILE_PNTS || model.enableShowGaussianSplatting) {
+  if (model.type === ModelType.TILE_PNTS) {
     shaderBuilder.addDefine(
       "HAS_SRGB_COLOR",
       undefined,
       ShaderDestination.FRAGMENT
     );
+  }
+
+  if (primitive.primitiveType === PrimitiveType.POINTS) {
+    const gaussianSplatsEnabled = model.enableShowGaussianSplatting;
+    if (gaussianSplatsEnabled) {
+      const showSplats = model?.style?.showGaussianSplatting ?? true;
+      primitive.attributes.find(
+        (a) => a.name === "POSITION"
+      ).instanceDivisor = showSplats ? 1 : 0;
+      primitive.attributes.find(
+        (a) => a.name === "_SCALE"
+      ).instanceDivisor = showSplats ? 1 : 0;
+      primitive.attributes.find(
+        (a) => a.name === "_ROTATION"
+      ).instanceDivisor = showSplats ? 1 : 0;
+      primitive.attributes.find(
+        (a) => a.name === "COLOR_0"
+      ).instanceDivisor = showSplats ? 1 : 0;
+      primitive.attributes.find(
+        (a) => a.name === "_OPACITY"
+      ).instanceDivisor = showSplats ? 1 : 0;
+
+      if (!showSplats) {
+        shaderBuilder.addDefine("PRIMITIVE_TYPE_POINTS");
+
+        for (const name in primitive.attributes) {
+          if (
+            primitive.attributes.hasOwnProperty(name) &&
+            defined(primitive.attributes[name])
+          ) {
+            const attribute = primitive.attributes[name];
+            const vertexBuffer = Buffer.createVertexBuffer({
+              context: frameState.context,
+              typedArray: attribute.typedArray,
+              usage: BufferUsage.DYNAMIC_DRAW,
+            });
+
+            vertexBuffer.vertexArrayDestroyable = false;
+            attribute.buffer = vertexBuffer;
+          }
+        }
+      }
+    } else {
+      shaderBuilder.addDefine("PRIMITIVE_TYPE_POINTS");
+    }
   }
 
   // Attributes, structs, and functions will need to be modified for 2D / CV.
@@ -185,13 +233,6 @@ GeometryPipelineStage.process = function (
   }
 
   handleBitangents(shaderBuilder, primitive.attributes);
-
-  if (
-    primitive.primitiveType === PrimitiveType.POINTS &&
-    !model.enableShowGaussianSplatting
-  ) {
-    shaderBuilder.addDefine("PRIMITIVE_TYPE_POINTS");
-  }
 
   shaderBuilder.addVertexLines(GeometryStageVS);
   shaderBuilder.addFragmentLines(GeometryStageFS);

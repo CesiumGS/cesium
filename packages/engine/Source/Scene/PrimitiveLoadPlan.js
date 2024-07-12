@@ -244,8 +244,6 @@ function setupGaussianSplatBuffers(loadPlan, context) {
   const attrLen = attributePlans.length;
   for (let i = 0; i < attrLen; i++) {
     const attributePlan = attributePlans[i];
-    const attribute = attributePlan.attribute;
-    attribute.instanceDivisor = 1;
     //defer til much later into the pipeline
     attributePlan.loadBuffer = false;
     attributePlan.loadTypedArray = true;

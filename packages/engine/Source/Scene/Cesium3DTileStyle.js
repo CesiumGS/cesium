@@ -74,6 +74,7 @@ function Cesium3DTileStyle(style) {
   this._meta = undefined;
 
   this._splatScale = undefined;
+  this._showGaussianSplatting = true;
 
   this._colorShaderFunction = undefined;
   this._showShaderFunction = undefined;
@@ -119,6 +120,7 @@ function setup(that, styleJson) {
   that.labelVerticalOrigin = styleJson.labelVerticalOrigin;
 
   that.splatScale = styleJson.splatScale;
+  that.showGaussianSplatting = styleJson.showGaussianSplatting;
 
   const meta = {};
   if (defined(styleJson.meta)) {
@@ -1319,6 +1321,15 @@ Object.defineProperties(Cesium3DTileStyle.prototype, {
     },
     set: function (value) {
       this._splatScale = value;
+    },
+  },
+
+  showGaussianSplatting: {
+    get: function () {
+      return this._showGaussianSplatting;
+    },
+    set: function (value) {
+      this._showGaussianSplatting = value;
     },
   },
 });
