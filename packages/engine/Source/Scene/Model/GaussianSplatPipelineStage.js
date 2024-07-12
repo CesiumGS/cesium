@@ -20,6 +20,7 @@ GaussianSplatPipelineStage.process = function (
   const renderStateOptions = renderResources.renderStateOptions;
   renderStateOptions.cull.enabled = false;
   renderStateOptions.depthMask = false;
+  renderStateOptions.depthTest.enabled = false;
   renderStateOptions.blending = BlendingState.PRE_MULTIPLIED_ALPHA_BLEND;
 
   renderResources.alphaOptions.pass = Pass.GAUSSIAN_SPLATS;
@@ -43,6 +44,7 @@ GaussianSplatPipelineStage.process = function (
   shaderBuilder.addUniform("float", "u_tan_fovY", ShaderDestination.VERTEX);
   shaderBuilder.addUniform("float", "u_focalX", ShaderDestination.VERTEX);
   shaderBuilder.addUniform("float", "u_focalY", ShaderDestination.VERTEX);
+  shaderBuilder.addUniform("float", "u_splatScale", ShaderDestination.VERTEX);
 
   const uniformMap = renderResources.uniformMap;
   const cam = frameState.camera;
@@ -68,6 +70,10 @@ GaussianSplatPipelineStage.process = function (
 
   uniformMap.u_focalY = function () {
     return focal_y;
+  };
+
+  uniformMap.u_splatScale = function () {
+    return renderResources.model?.style?.splatScale ?? 1.0;
   };
 
   const countSort = () => {

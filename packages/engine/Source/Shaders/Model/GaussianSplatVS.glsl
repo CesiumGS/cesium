@@ -1,9 +1,9 @@
-void calcCov3D(vec3 scale, vec4 rot, float mod, out float[6] cov3D)
+void calcCov3D(vec3 scale, vec4 rot, out float[6] cov3D)
 {
     mat3 S = mat3(
-        mod * scale[0], 0, 0,
-        0, mod * scale[1], 0,
-        0, 0, mod * scale[2]
+        u_splatScale * scale[0], 0, 0,
+        0, u_splatScale * scale[1], 0,
+        0, 0, u_splatScale * scale[2]
     );
 
     float r = rot.w;
@@ -32,8 +32,8 @@ void calcCov3D(vec3 scale, vec4 rot, float mod, out float[6] cov3D)
 vec3 calcCov2D(vec3 worldPos, float focal_x, float focal_y, float tan_fovx, float tan_fovy, float[6] cov3D, mat4 viewmatrix) {
     vec4 t = viewmatrix * vec4(worldPos, 1.0);
 
-    float limx = 1.0 * tan_fovx;
-    float limy = 1.0 * tan_fovy;
+    float limx = 1.3 * tan_fovx;
+    float limy = 1.3 * tan_fovy;
     float txtz = t.x / t.z;
     float tytz = t.y / t.z;
     t.x = min(limx, max(-limx, txtz)) * t.z;
@@ -72,7 +72,7 @@ void gaussianSplatStage(ProcessedAttributes attributes, inout vec4 positionClip)
     positionClip = clipPosition;
 
     float[6] cov3D;
-    calcCov3D(attributes.scale, attributes.rotation, 1., cov3D);
+    calcCov3D(attributes.scale, attributes.rotation, cov3D);
     vec3 cov = calcCov2D(a_splatPosition, u_focalX, u_focalY, u_tan_fovX, u_tan_fovY, cov3D, viewMatrix);
 
     float mid = (cov.x + cov.z) / 2.0;
