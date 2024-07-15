@@ -4317,14 +4317,6 @@ Scene.prototype.pickMetadata = function (
     return undefined;
   }
 
-  // The `Picking.pickMetadata` function will update the FrameState
-  // to add the `schemaId`, `className`, and `propertyName`. Based
-  // these values, the `MetadataPickingPipelineStage` will update
-  // the shaders for the metadata picking. Reset the draw commands
-  // here to trigger a rebuild of the draw commands with the updated
-  // shaders for the metadata picking render pass.
-  model.resetDrawCommands();
-
   const pickedMetadataValues = this._picking.pickMetadata(
     this,
     windowPosition,
@@ -4338,10 +4330,6 @@ Scene.prototype.pickMetadata = function (
   if (XXX_METADATA_PICKING_DEBUG_LOG) {
     console.log("pickedMetadataValues ", pickedMetadataValues);
   }
-
-  // Trigger a rebuild of the draw commands to use the
-  // original shaders after picking. See notes above.
-  model.resetDrawCommands();
 
   // TODO_METADATA_PICKING The result here is a 4-element (byte) buffer.
   // Convert this to the required target type

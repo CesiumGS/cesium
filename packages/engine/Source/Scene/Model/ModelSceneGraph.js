@@ -7,7 +7,6 @@ import Matrix4 from "../../Core/Matrix4.js";
 import Transforms from "../../Core/Transforms.js";
 import SceneMode from "../SceneMode.js";
 import SplitDirection from "../SplitDirection.js";
-import buildDrawCommand from "./buildDrawCommand.js";
 import TilesetPipelineStage from "./TilesetPipelineStage.js";
 import AtmospherePipelineStage from "./AtmospherePipelineStage.js";
 import ImageBasedLightingPipelineStage from "./ImageBasedLightingPipelineStage.js";
@@ -26,6 +25,7 @@ import ModelSplitterPipelineStage from "./ModelSplitterPipelineStage.js";
 import ModelType from "./ModelType.js";
 import NodeRenderResources from "./NodeRenderResources.js";
 import PrimitiveRenderResources from "./PrimitiveRenderResources.js";
+import ModelDrawCommands from "./ModelDrawCommands.js";
 
 /**
  * An in memory representation of the scene graph for a {@link Model}
@@ -560,11 +560,24 @@ ModelSceneGraph.prototype.buildDrawCommands = function (frameState) {
         modelPositionMax
       );
 
-      const drawCommand = buildDrawCommand(
+      const shaderBuilderRender = primitiveRenderResources.shaderBuilder.clone();
+      const shaderBuilderPickMetadata = primitiveRenderResources.shaderBuilder.clone();
+
+      const drawCommand = ModelDrawCommands.buildModelDrawCommand(
         primitiveRenderResources,
-        frameState
+        frameState,
+        shaderBuilderRender,
+        false
       );
       runtimePrimitive.drawCommand = drawCommand;
+
+      const metadataPickingDrawCommand = ModelDrawCommands.buildModelDrawCommand(
+        primitiveRenderResources,
+        frameState,
+        shaderBuilderPickMetadata,
+        true
+      );
+      runtimePrimitive.metadataPickingDrawCommand = metadataPickingDrawCommand;
     }
   }
 
@@ -818,8 +831,9 @@ ModelSceneGraph.prototype.updateBackFaceCulling = function (backFaceCulling) {
 
 // Callback is defined here to avoid allocating a closure in the render loop
 function updatePrimitiveBackFaceCulling(runtimePrimitive, options) {
-  const drawCommand = runtimePrimitive.drawCommand;
-  drawCommand.backFaceCulling = options.backFaceCulling;
+  runtimePrimitive.drawCommand.backFaceCulling = options.backFaceCulling;
+  runtimePrimitive.metadataPickingDrawCommand.backFaceCulling =
+    options.backFaceCulling;
 }
 
 const scratchShadowOptions = {
@@ -841,8 +855,8 @@ ModelSceneGraph.prototype.updateShadows = function (shadowMode) {
 
 // Callback is defined here to avoid allocating a closure in the render loop
 function updatePrimitiveShadows(runtimePrimitive, options) {
-  const drawCommand = runtimePrimitive.drawCommand;
-  drawCommand.shadows = options.shadowMode;
+  runtimePrimitive.drawCommand.shadows = options.shadows;
+  runtimePrimitive.metadataPickingDrawCommand.shadows = options.shadows;
 }
 
 const scratchShowBoundingVolumeOptions = {
@@ -872,8 +886,10 @@ ModelSceneGraph.prototype.updateShowBoundingVolume = function (
 
 // Callback is defined here to avoid allocating a closure in the render loop
 function updatePrimitiveShowBoundingVolume(runtimePrimitive, options) {
-  const drawCommand = runtimePrimitive.drawCommand;
-  drawCommand.debugShowBoundingVolume = options.debugShowBoundingVolume;
+  runtimePrimitive.drawCommand.debugShowBoundingVolume =
+    options.debugShowBoundingVolume;
+  runtimePrimitive.metadataPickingDrawCommand.debugShowBoundingVolume =
+    options.debugShowBoundingVolume;
 }
 
 const scratchSilhouetteCommands = [];
@@ -921,7 +937,15 @@ function pushPrimitiveDrawCommands(runtimePrimitive, options) {
 
   const passes = frameState.passes;
   const silhouetteCommands = scratchSilhouetteCommands;
-  const primitiveDrawCommand = runtimePrimitive.drawCommand;
+  let primitiveDrawCommand;
+
+  //const schemaId = frameState.pickedMetadataSchemaId;
+  if (frameState.pickMetadata) {
+    console.log("Using metadata picking command");
+    primitiveDrawCommand = runtimePrimitive.metadataPickingDrawCommand;
+  } else {
+    primitiveDrawCommand = runtimePrimitive.drawCommand;
+  }
 
   primitiveDrawCommand.pushCommands(frameState, frameState.commandList);
 

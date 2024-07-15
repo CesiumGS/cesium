@@ -486,6 +486,7 @@ Picking.prototype.pickMetadata = function (
   frameState.passes.render = true;
   frameState.tilesetPassState = renderTilesetPassState;
 
+  frameState.pickMetadata = true;
   frameState.pickedMetadataSchemaId = schemaId;
   frameState.pickedMetadataClassName = className;
   frameState.pickedMetadataPropertyName = propertyName;
@@ -511,10 +512,7 @@ Picking.prototype.pickMetadata = function (
   const metadataInfo = pickFramebuffer.readCenterPixel(drawingBufferRectangle);
   context.endFrame();
 
-  delete frameState.pickedMetadataSchemaId;
-  delete frameState.pickedMetadataClassName;
-  delete frameState.pickedMetadataPropertyName;
-
+  frameState.pickMetadata = false;
   return metadataInfo;
 };
 

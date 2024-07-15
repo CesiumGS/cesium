@@ -423,6 +423,13 @@ function FrameState(context, creditDisplay, jobScheduler) {
   this.minimumTerrainHeight = 0.0;
 
   /**
+   * Whether the current drawing pass is intended for metadata picking
+   *
+   * @type {boolean}
+   */
+  this.pickMetadata = false;
+
+  /**
    * The schema ID for the metadata values that are supposed to be picked
    * with `Scene.pickMetadata`, or `undefined` to pick values from any
    * schema.

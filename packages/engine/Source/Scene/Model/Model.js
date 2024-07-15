@@ -479,6 +479,10 @@ function Model(options) {
 
   this._fogRenderable = undefined;
 
+  this._pickedMetadataSchemaId = undefined;
+  this._pickedMetadataClassName = undefined;
+  this._pickedMetadataPropertyName = undefined;
+
   this._skipLevelOfDetail = false;
   this._ignoreCommands = defaultValue(options.ignoreCommands, false);
 
@@ -1841,6 +1845,7 @@ Model.prototype.update = function (frameState) {
   updateSceneMode(this, frameState);
   updateFog(this, frameState);
   updateVerticalExaggeration(this, frameState);
+  updatePickedMetadata(this, frameState);
 
   this._defaultTexture = frameState.context.defaultTexture;
 
@@ -2066,6 +2071,30 @@ function updateVerticalExaggeration(model, frameState) {
   if (model._verticalExaggerationOn !== verticalExaggerationNeeded) {
     model.resetDrawCommands();
     model._verticalExaggerationOn = verticalExaggerationNeeded;
+  }
+}
+
+function updatePickedMetadata(model, frameState) {
+  if (
+    frameState.pickedMetadataSchemaId !== model._pickedMetadataSchemaId ||
+    frameState.pickedMetadataClassName !== model._pickedMetadataClassName ||
+    frameState.pickedMetadataPropertyName !== model._pickedMetadataPropertyName
+  ) {
+    console.log("pickedMetadata changed, reset draw commands");
+    console.log("  pickedMetadataSchemaId", frameState.pickedMetadataSchemaId);
+    console.log(
+      "  pickedMetadataClassName",
+      frameState.pickedMetadataClassName
+    );
+    console.log(
+      "  pickedMetadataPropertyName",
+      frameState.pickedMetadataPropertyName
+    );
+
+    model.resetDrawCommands();
+    model._pickedMetadataSchemaId = frameState.pickedMetadataSchemaId;
+    model._pickedMetadataClassName = frameState.pickedMetadataClassName;
+    model._pickedMetadataPropertyName = frameState.pickedMetadataPropertyName;
   }
 }
 
