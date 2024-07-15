@@ -452,6 +452,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
 
   const viewerContainer = document.createElement("div");
   viewerContainer.className = "cesium-viewer";
+  viewerContainer.setAttribute("part", "cesium-viewer");
   container.appendChild(viewerContainer);
 
   // Cesium widget container
