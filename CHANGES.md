@@ -8,6 +8,7 @@
 
 - Updated geometric self-shadowing function to improve direct lighting on models using physically-based rendering. [#12063](https://github.com/CesiumGS/cesium/pull/12063)
 - Fixed environment map LOD selection in image-based lighting. [#12070](https://github.com/CesiumGS/cesium/pull/12070)
+- Fixed performance issues with GLTF extension CESIUM_primitive_outline since version 1.96. [#12077](https://github.com/CesiumGS/cesium/issues/12077)
 
 ### 1.119 - 2024-07-01
 
