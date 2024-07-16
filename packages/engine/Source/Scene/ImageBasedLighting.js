@@ -186,8 +186,8 @@ Object.defineProperties(ImageBasedLighting.prototype, {
    * </p>
    *
    * These values can be obtained by preprocessing the environment map using the <code>cmgen</code> tool of
-   * {@link https://github.com/google/filament/releases|Google's Filament project}. This will also generate a KTX file that can be
-   * supplied to {@link Model#specularEnvironmentMaps}.
+   * {@link https://github.com/google/filament/releases|Google's Filament project}.
+   * Be sure to use the <code>--no-mirror</code> option in <code>cmgen</code>.
    *
    * @memberof ImageBasedLighting.prototype
    *
