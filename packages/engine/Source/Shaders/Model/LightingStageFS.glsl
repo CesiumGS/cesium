@@ -4,7 +4,7 @@ vec3 computeIBL(vec3 position, vec3 normal, vec3 lightDirection, vec3 lightColor
     #if defined(DIFFUSE_IBL) || defined(SPECULAR_IBL)
         // Environment maps were provided, use them for IBL
         vec3 viewDirection = -normalize(position);
-        vec3 iblColor = textureIBL(viewDirection, normal, lightDirection, material);
+        vec3 iblColor = textureIBL(viewDirection, normal, material);
     #else
         // Use procedural IBL if there are no environment maps
         vec3 imageBasedLighting = proceduralIBL(position, normal, lightDirection, material);
