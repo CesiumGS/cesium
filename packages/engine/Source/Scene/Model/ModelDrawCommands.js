@@ -195,8 +195,7 @@ ModelDrawCommands.buildDrawCommandForModel = function (
 
     boundingSphere = BoundingSphere.transform(
       primitiveRenderResources.boundingSphere,
-      modelMatrix,
-      primitiveRenderResources.boundingSphere
+      modelMatrix
     );
   }
 
