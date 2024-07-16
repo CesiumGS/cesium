@@ -63,9 +63,9 @@ ModelDrawCommands.buildModelDrawCommand = function (
     const lines = [
       "float value = float(metadata.METADATA_PICKING_PROPERTY_NAME);",
       "metadataValues.x = value / 255.0;",
-      "metadataValues.y = 1.0;",
+      "metadataValues.y = 0.0;",
       "metadataValues.z = 0.0;",
-      "metadataValues.w = 1.0;",
+      "metadataValues.w = 0.0;",
     ];
     shaderBuilder.addFunctionLines(
       "metadataPickingStage",
@@ -90,7 +90,6 @@ ModelDrawCommands.buildModelDrawCommand = function (
       propertyName,
       ShaderDestination.FRAGMENT
     );
-    shaderBuilder.addFragmentLines("test()");
   }
 
   const shaderProgram = ModelDrawCommands.createShaderProgram(
