@@ -1,8 +1,10 @@
 import combine from "../../Core/combine.js";
+import defaultValue from "../../Core/defaultValue.js";
 import defined from "../../Core/defined.js";
 import ImageBasedLightingStageFS from "../../Shaders/Model/ImageBasedLightingStageFS.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import OctahedralProjectedCubeMap from "../OctahedralProjectedCubeMap.js";
+import Matrix4 from "../../Core/Matrix4.js";
 
 const ImageBasedLightingPipelineStage = {
   name: "ImageBasedLightingPipelineStage", // Helps with debugging
@@ -21,7 +23,12 @@ ImageBasedLightingPipelineStage.process = function (
   frameState
 ) {
   const imageBasedLighting = model.imageBasedLighting;
+  const environmentMapManager = model.environmentMapManager;
   const shaderBuilder = renderResources.shaderBuilder;
+
+  // If environment maps are not specifically provided, use procedural lighting.
+  const specularEnvironmentMapAtlas = environmentMapManager.radianceMapAtlas;
+  const sphericalHarmonicCoefficients = environmentMapManager.sphericalHarmonicCoefficients;
 
   shaderBuilder.addDefine(
     "USE_IBL_LIGHTING",
@@ -47,7 +54,7 @@ ImageBasedLightingPipelineStage.process = function (
       );
     }
 
-    if (defined(imageBasedLighting.sphericalHarmonicCoefficients)) {
+    if (defined(sphericalHarmonicCoefficients) && defined(sphericalHarmonicCoefficients[0])) {
       shaderBuilder.addDefine(
         "DIFFUSE_IBL",
         undefined,
@@ -72,8 +79,8 @@ ImageBasedLightingPipelineStage.process = function (
     }
 
     if (
-      defined(imageBasedLighting.specularEnvironmentMapAtlas) &&
-      imageBasedLighting.specularEnvironmentMapAtlas.ready
+      defined(specularEnvironmentMapAtlas) &&
+      specularEnvironmentMapAtlas.ready
     ) {
       shaderBuilder.addDefine(
         "SPECULAR_IBL",
@@ -135,18 +142,21 @@ ImageBasedLightingPipelineStage.process = function (
       return imageBasedLighting.luminanceAtZenith;
     },
     model_sphericalHarmonicCoefficients: function () {
-      return imageBasedLighting.sphericalHarmonicCoefficients;
-    },
-    model_specularEnvironmentMaps: function () {
-      return imageBasedLighting.specularEnvironmentMapAtlas.texture;
-    },
-    model_specularEnvironmentMapsSize: function () {
-      return imageBasedLighting.specularEnvironmentMapAtlas.texture.dimensions;
-    },
-    model_specularEnvironmentMapsMaximumLOD: function () {
-      return imageBasedLighting.specularEnvironmentMapAtlas.maximumMipmapLevel;
+      return sphericalHarmonicCoefficients;
     },
   };
+
+  if (defined(specularEnvironmentMapAtlas)) {
+    uniformMap.model_specularEnvironmentMaps = function () {
+      return specularEnvironmentMapAtlas.texture;
+    };
+    uniformMap.model_specularEnvironmentMapsSize = function () {
+      return specularEnvironmentMapAtlas.texture.dimensions;
+    };
+    uniformMap.model_specularEnvironmentMapsMaximumLOD = function () {
+      return specularEnvironmentMapAtlas.maximumMipmapLevel;
+    };
+  }
 
   renderResources.uniformMap = combine(uniformMap, renderResources.uniformMap);
 };

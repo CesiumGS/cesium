@@ -1,3 +1,4 @@
+import Cartesian3 from "../Core/Cartesian3.js";
 import Check from "../Core/Check.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
@@ -570,6 +571,46 @@ Object.defineProperties(CubeMap.prototype, {
     },
   },
 });
+
+function* makeFacesIterator(cubeMap) {
+  yield cubeMap._negativeX;
+  yield cubeMap._negativeY;
+  yield cubeMap._negativeZ;
+  yield cubeMap._positiveX;
+  yield cubeMap._positiveY;
+  yield cubeMap._positiveZ;
+}
+
+/**
+* Creates an iterator for looping over the cubemap faces.
+* @type {Iterable<CubeMapFace>}
+*/
+CubeMap.prototype.faces = function () {
+   return makeFacesIterator(this);
+}
+
+/**
+ * TODO
+ * @param {*} face 
+ * @param {*} result 
+ * @returns 
+ */
+CubeMap.prototype.getDirection = function (face, result) {
+  switch(face) {
+    case this.positiveX:
+      return Cartesian3.clone(Cartesian3.UNIT_X, result);
+    case this.negativeX:
+      return Cartesian3.negate(Cartesian3.UNIT_X, result);
+    case this.positiveY:
+      return Cartesian3.clone(Cartesian3.UNIT_Y, result);
+    case this.negativeY:
+      return Cartesian3.negate(Cartesian3.UNIT_Y, result);
+    case this.positiveZ:
+      return Cartesian3.clone(Cartesian3.UNIT_Z, result);
+    case this.negativeZ:
+      return Cartesian3.negate(Cartesian3.UNIT_Z, result);
+  }
+}
 
 /**
  * Generates a complete mipmap chain for each cubemap face.

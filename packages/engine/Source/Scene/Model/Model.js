@@ -18,6 +18,7 @@ import RuntimeError from "../../Core/RuntimeError.js";
 import Pass from "../../Renderer/Pass.js";
 import ClippingPlaneCollection from "../ClippingPlaneCollection.js";
 import ClippingPolygonCollection from "../ClippingPolygonCollection.js";
+import DynamicEnvironmentMapManager from "../DynamicEnvironmentMapManager.js";
 import ColorBlendMode from "../ColorBlendMode.js";
 import GltfLoader from "../GltfLoader.js";
 import HeightReference, {
@@ -392,6 +393,8 @@ function Model(options) {
     ? options.imageBasedLighting
     : new ImageBasedLighting();
   this._shouldDestroyImageBasedLighting = !defined(options.imageBasedLighting);
+
+  this._environmentMapManager = new DynamicEnvironmentMapManager();
 
   this._backFaceCulling = defaultValue(options.backFaceCulling, true);
   this._backFaceCullingDirty = false;
@@ -1340,7 +1343,7 @@ Object.defineProperties(Model.prototype, {
   },
 
   /**
-   * The light color when shading the model. When <code>undefined</code> the scene's light color is used instead.
+   * The directional light color when shading the model. When <code>undefined</code> the scene's light color is used instead.
    * <p>
    * Disabling additional light sources by setting
    * <code>model.imageBasedLighting.imageBasedLightingFactor = new Cartesian2(0.0, 0.0)</code>
@@ -1394,6 +1397,21 @@ Object.defineProperties(Model.prototype, {
       }
     },
   },
+
+  /**
+   * TODO: The properties for managing image-based lighting on this model.
+   *
+   * @memberof Model.prototype
+   * @private
+   * @readonly
+   *
+   * @type {DynamicEnvironmentMapManager}
+   */
+    environmentMapManager: {
+      get: function () {
+        return this._environmentMapManager;
+      },
+    },
 
   /**
    * Whether to cull back-facing geometry. When true, back face culling is
@@ -1784,6 +1802,13 @@ Model.prototype.update = function (frameState) {
 
   // A custom shader may have to load texture uniforms.
   updateCustomShader(this, frameState);
+
+  if (this._ready) {
+    this._environmentMapManager.position = this._boundingSphere.center;
+  }
+  if (this._environmentMapManager.update(frameState)) {
+    this.resetDrawCommands();
+  }
 
   // The image-based lighting may have to load texture uniforms
   // for specular maps.

@@ -3,9 +3,9 @@ void geometryStage(out ProcessedAttributes attributes)
   attributes.positionMC = v_positionMC;
   attributes.positionEC = v_positionEC;
 
-  #if defined(COMPUTE_POSITION_WC_CUSTOM_SHADER) || defined(COMPUTE_POSITION_WC_STYLE) || defined(COMPUTE_POSITION_WC_ATMOSPHERE)
+  // TODO #if defined(COMPUTE_POSITION_WC_CUSTOM_SHADER) || defined(COMPUTE_POSITION_WC_STYLE) || defined(COMPUTE_POSITION_WC_ATMOSPHERE)
   attributes.positionWC = v_positionWC;
-  #endif
+  //#endif
 
   #ifdef HAS_NORMALS
   // renormalize after interpolation

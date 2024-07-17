@@ -113,6 +113,10 @@ OctahedralProjectedCubeMap.isSupported = function (context) {
   );
 };
 
+OctahedralProjectedCubeMap.fromUrl = function(url) {
+
+}
+
 // These vertices are based on figure 1 from "Octahedron Environment Maps".
 const v1 = new Cartesian3(1.0, 0.0, 0.0);
 const v2 = new Cartesian3(0.0, 0.0, 1.0);
@@ -408,6 +412,101 @@ OctahedralProjectedCubeMap.prototype.update = function (frameState) {
 
   this._ready = true;
 };
+
+/**
+ * TODO
+ * @param {*} cubeMap 
+ * @param {*} frameState 
+ * @returns 
+ */
+OctahedralProjectedCubeMap.fromCubeMap = function(cubeMap, frameState) {
+  const atlas = new OctahedralProjectedCubeMap(); // TODO: No url means no caching.
+  
+  const length = 6;
+  const cubeMaps = (atlas._cubeMaps = new Array(length));
+  const context = frameState.context;
+  atlas._maximumMipmapLevel = 1;
+
+  const mipTextures = (atlas._mipTextures = new Array(length));
+  const originalSize = cubeMap.width * 2.0;
+  const uniformMap = {
+    originalSize: function () {
+      return originalSize;
+    },
+  };
+
+  const fs = new ShaderSource({
+    sources: [OctahedralProjectionFS],
+  });
+
+  atlas._va = createVertexArray(context);
+  atlas._sp = ShaderProgram.fromCache({
+    context: context,
+    vertexShaderSource: OctahedralProjectionVS,
+    fragmentShaderSource: fs,
+    attributeLocations: {
+      position: 0,
+      cubeMapCoordinates: 1,
+    },
+  });
+
+
+  // TODO: Swap +Y/-Y faces since the octahedral projection expects this order?
+
+  // TODO: Can we extract the code into helper function and use it in `update` as well?
+  // First we project each cubemap onto a flat octahedron, and write that to a texture.
+  for (let i = 0; i < length; ++i) { 
+    cubeMaps[i] = cubeMap;
+    const size = cubeMap.width * 2;
+
+    const mipTexture = (mipTextures[i] = new Texture({
+      context: context,
+      width: size,
+      height: size,
+      pixelDatatype: cubeMap.pixelDatatype,
+      pixelFormat: cubeMap.pixelFormat,
+    }));
+
+    const command = new ComputeCommand({
+      vertexArray: atlas._va,
+      shaderProgram: atlas._sp,
+      uniformMap: {
+        cubeMap: createUniformTexture(cubeMap),
+      },
+      outputTexture: mipTexture,
+      persists: true,
+      owner: atlas,
+    });
+    frameState.commandList.push(command);
+
+    uniformMap[`texture${i}`] = createUniformTexture(mipTexture);
+  }
+
+  atlas._texture = new Texture({
+    context: context,
+    width: originalSize * 1.5 + 2.0, // We add a 1 pixel border to avoid linear sampling artifacts.
+    height: originalSize,
+    pixelDatatype: cubeMap.pixelDatatype,
+    pixelFormat: cubeMap.pixelFormat,
+  });
+
+  atlas._texture.maximumMipmapLevel = atlas._maximumMipmapLevel;
+  // TODO
+  //context.textureCache.addTexture(atlas._url, atlas._texture);
+
+  const atlasCommand = new ComputeCommand({
+    fragmentShaderSource: OctahedralProjectionAtlasFS,
+    uniformMap: uniformMap,
+    outputTexture: atlas._texture,
+    persists: false,
+    owner: atlas,
+  });
+  frameState.commandList.push(atlasCommand);
+
+  atlas._ready = true;
+  return atlas;
+}
+
 
 /**
  * Returns true if this object was destroyed; otherwise, false.
