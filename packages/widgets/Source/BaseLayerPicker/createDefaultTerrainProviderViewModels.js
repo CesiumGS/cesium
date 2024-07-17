@@ -1,6 +1,7 @@
 import {
   buildModuleUrl,
   createWorldTerrainAsync,
+  Ellipsoid,
   EllipsoidTerrainProvider,
 } from "@cesium/engine";
 import ProviderViewModel from "./ProviderViewModel.js";
@@ -17,7 +18,7 @@ function createDefaultTerrainProviderViewModels() {
       tooltip: "WGS84 standard ellipsoid, also known as EPSG:4326",
       category: "Cesium ion",
       creationFunction: function () {
-        return new EllipsoidTerrainProvider();
+        return new EllipsoidTerrainProvider({ ellipsoid: Ellipsoid.WGS84 });
       },
     })
   );

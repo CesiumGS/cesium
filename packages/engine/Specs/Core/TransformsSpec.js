@@ -1890,12 +1890,12 @@ describe("Core/Transforms", function () {
     expect(rotation2D).toEqualEpsilon(expected, CesiumMath.EPSILON3);
   });
 
-  it("wgs84To2DModelMatrix creates a model matrix to transform vertices centered origin to 2D", function () {
+  it("ellipsoidTo2DModelMatrix creates a model matrix to transform vertices centered origin to 2D", function () {
     const ellipsoid = Ellipsoid.WGS84;
     const projection = new GeographicProjection(ellipsoid);
     const origin = Cartesian3.fromDegrees(-72.0, 40.0, 100.0, ellipsoid);
 
-    const actual = Transforms.wgs84To2DModelMatrix(
+    const actual = Transforms.ellipsoidTo2DModelMatrix(
       projection,
       origin,
       new Matrix4()
@@ -2053,9 +2053,9 @@ describe("Core/Transforms", function () {
     }).toThrowDeveloperError();
   });
 
-  it("wgs84To2DModelMatrix throws without projection", function () {
+  it("ellipsoidTo2DModelMatrix throws without projection", function () {
     expect(function () {
-      Transforms.wgs84To2DModelMatrix(
+      Transforms.ellipsoidTo2DModelMatrix(
         undefined,
         Cartesian3.UNIT_X,
         new Matrix4()
@@ -2063,9 +2063,9 @@ describe("Core/Transforms", function () {
     }).toThrowDeveloperError();
   });
 
-  it("wgs84To2DModelMatrix throws without center", function () {
+  it("ellipsoidTo2DModelMatrix throws without center", function () {
     expect(function () {
-      Transforms.wgs84To2DModelMatrix(
+      Transforms.ellipsoidTo2DModelMatrix(
         new GeographicProjection(),
         undefined,
         new Matrix4()
@@ -2073,9 +2073,9 @@ describe("Core/Transforms", function () {
     }).toThrowDeveloperError();
   });
 
-  it("wgs84To2DModelMatrix throws without result", function () {
+  it("ellipsoidTo2DModelMatrix throws without result", function () {
     expect(function () {
-      Transforms.wgs84To2DModelMatrix(
+      Transforms.ellipsoidTo2DModelMatrix(
         new GeographicProjection(),
         Cartesian3.UNIT_X,
         undefined

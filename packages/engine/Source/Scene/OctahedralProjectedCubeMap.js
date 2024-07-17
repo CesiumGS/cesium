@@ -113,9 +113,7 @@ OctahedralProjectedCubeMap.isSupported = function (context) {
   );
 };
 
-OctahedralProjectedCubeMap.fromUrl = function(url) {
-
-}
+OctahedralProjectedCubeMap.fromUrl = function (url) {};
 
 // These vertices are based on figure 1 from "Octahedron Environment Maps".
 const v1 = new Cartesian3(1.0, 0.0, 0.0);
@@ -341,11 +339,10 @@ OctahedralProjectedCubeMap.prototype.update = function (frameState) {
     },
   });
 
-  // We only need up to 6 mip levels to avoid artifacts.
-  const length = Math.min(cubeMapBuffers.length, 6);
-  this._maximumMipmapLevel = length - 1;
-  const cubeMaps = (this._cubeMaps = new Array(length));
-  const mipTextures = (this._mipTextures = new Array(length));
+  const mipLevels = cubeMapBuffers.length;
+  this._maximumMipmapLevel = mipLevels - 1;
+  const cubeMaps = (this._cubeMaps = new Array(mipLevels));
+  const mipTextures = (this._mipTextures = new Array(mipLevels));
   const originalSize = cubeMapBuffers[0].positiveX.width * 2.0;
   const uniformMap = {
     originalSize: function () {
@@ -354,7 +351,7 @@ OctahedralProjectedCubeMap.prototype.update = function (frameState) {
   };
 
   // First we project each cubemap onto a flat octahedron, and write that to a texture.
-  for (let i = 0; i < length; ++i) {
+  for (let i = 0; i < mipLevels; ++i) {
     // Swap +Y/-Y faces since the octahedral projection expects this order.
     const positiveY = cubeMapBuffers[i].positiveY;
     cubeMapBuffers[i].positiveY = cubeMapBuffers[i].negativeY;
@@ -415,13 +412,13 @@ OctahedralProjectedCubeMap.prototype.update = function (frameState) {
 
 /**
  * TODO
- * @param {*} cubeMap 
- * @param {*} frameState 
- * @returns 
+ * @param {*} cubeMap
+ * @param {*} frameState
+ * @returns
  */
-OctahedralProjectedCubeMap.fromCubeMap = function(cubeMap, frameState) {
+OctahedralProjectedCubeMap.fromCubeMap = function (cubeMap, frameState) {
   const atlas = new OctahedralProjectedCubeMap(); // TODO: No url means no caching.
-  
+
   const length = 6;
   const cubeMaps = (atlas._cubeMaps = new Array(length));
   const context = frameState.context;
@@ -450,12 +447,11 @@ OctahedralProjectedCubeMap.fromCubeMap = function(cubeMap, frameState) {
     },
   });
 
-
   // TODO: Swap +Y/-Y faces since the octahedral projection expects this order?
 
   // TODO: Can we extract the code into helper function and use it in `update` as well?
   // First we project each cubemap onto a flat octahedron, and write that to a texture.
-  for (let i = 0; i < length; ++i) { 
+  for (let i = 0; i < length; ++i) {
     cubeMaps[i] = cubeMap;
     const size = cubeMap.width * 2;
 
@@ -505,8 +501,7 @@ OctahedralProjectedCubeMap.fromCubeMap = function(cubeMap, frameState) {
 
   atlas._ready = true;
   return atlas;
-}
-
+};
 
 /**
  * Returns true if this object was destroyed; otherwise, false.

@@ -16,8 +16,8 @@ import Rectangle from "./Rectangle.js";
  * @constructor
  *
  * @param {object} [options] Object with the following properties:
- * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid whose surface is being tiled. Defaults to
- * the WGS84 ellipsoid.
+ * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.default] The ellipsoid whose surface is being tiled. Defaults to
+ * the default ellipsoid.
  * @param {Rectangle} [options.rectangle=Rectangle.MAX_VALUE] The rectangle, in radians, covered by the tiling scheme.
  * @param {number} [options.numberOfLevelZeroTilesX=2] The number of tiles in the X direction at level zero of
  * the tile tree.
@@ -27,7 +27,7 @@ import Rectangle from "./Rectangle.js";
 function GeographicTilingScheme(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-  this._ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
+  this._ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.default);
   this._rectangle = defaultValue(options.rectangle, Rectangle.MAX_VALUE);
   this._projection = new GeographicProjection(this._ellipsoid);
   this._numberOfLevelZeroTilesX = defaultValue(

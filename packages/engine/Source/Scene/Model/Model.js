@@ -1407,11 +1407,11 @@ Object.defineProperties(Model.prototype, {
    *
    * @type {DynamicEnvironmentMapManager}
    */
-    environmentMapManager: {
-      get: function () {
-        return this._environmentMapManager;
-      },
+  environmentMapManager: {
+    get: function () {
+      return this._environmentMapManager;
     },
+  },
 
   /**
    * Whether to cull back-facing geometry. When true, back face culling is
@@ -2148,8 +2148,7 @@ function updateClamping(model) {
     return;
   }
 
-  const globe = scene.globe;
-  const ellipsoid = defaultValue(globe?.ellipsoid, Ellipsoid.WGS84);
+  const ellipsoid = defaultValue(scene.ellipsoid, Ellipsoid.default);
 
   // Compute cartographic position so we don't recompute every update
   const modelMatrix = model.modelMatrix;
@@ -2231,7 +2230,7 @@ function updateComputedScale(model, modelMatrix, frameState) {
     Matrix4.getTranslation(modelMatrix, scratchPosition);
 
     if (model._sceneMode !== SceneMode.SCENE3D) {
-      SceneTransforms.computeActualWgs84Position(
+      SceneTransforms.computeActualEllipsoidPosition(
         frameState,
         scratchPosition,
         scratchPosition
@@ -2490,7 +2489,11 @@ function passesDistanceDisplayCondition(model, frameState) {
 
     // This will project the position if the scene is in Columbus View,
     // but leave the position as-is in 3D mode.
-    SceneTransforms.computeActualWgs84Position(frameState, position, position);
+    SceneTransforms.computeActualEllipsoidPosition(
+      frameState,
+      position,
+      position
+    );
 
     distanceSquared = Cartesian3.distanceSquared(
       position,

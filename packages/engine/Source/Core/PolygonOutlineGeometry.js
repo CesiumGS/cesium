@@ -273,7 +273,7 @@ function createGeometryFromPositionsExtruded(
  * @param {number} [options.height=0.0] The distance in meters between the polygon and the ellipsoid surface.
  * @param {number} [options.extrudedHeight] The distance in meters between the polygon's extruded face and the ellipsoid surface.
  * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
- * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference.
+ * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.default] The ellipsoid to be used as a reference.
  * @param {number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
  * @param {boolean} [options.perPositionHeight=false] Use the height of options.positions for each position instead of using options.height to determine the height.
  * @param {ArcType} [options.arcType=ArcType.GEODESIC] The type of path the outline must follow. Valid options are {@link ArcType.GEODESIC} and {@link ArcType.RHUMB}.
@@ -370,7 +370,7 @@ function PolygonOutlineGeometry(options) {
   //>>includeEnd('debug');
 
   const polygonHierarchy = options.polygonHierarchy;
-  const ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
+  const ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.default);
   const granularity = defaultValue(
     options.granularity,
     CesiumMath.RADIANS_PER_DEGREE
@@ -518,7 +518,7 @@ PolygonOutlineGeometry.unpack = function (array, startingIndex, result) {
  * @param {Cartesian3[]} options.positions An array of positions that defined the corner points of the polygon.
  * @param {number} [options.height=0.0] The height of the polygon.
  * @param {number} [options.extrudedHeight] The height of the polygon extrusion.
- * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference.
+ * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.default] The ellipsoid to be used as a reference.
  * @param {number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
  * @param {boolean} [options.perPositionHeight=false] Use the height of options.positions for each position instead of using options.height to determine the height.
  * @param {ArcType} [options.arcType=ArcType.GEODESIC] The type of path the outline must follow. Valid options are {@link LinkType.GEODESIC} and {@link ArcType.RHUMB}.

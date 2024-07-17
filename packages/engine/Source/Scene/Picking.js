@@ -525,7 +525,7 @@ Picking.prototype.pickPositionWorldCoordinates = function (
         uniformState.updateFrustum(frustum);
       }
 
-      result = SceneTransforms.drawingBufferToWgs84Coordinates(
+      result = SceneTransforms.drawingBufferToWorldCoordinates(
         scene,
         drawingBufferPosition,
         depth,
@@ -1112,10 +1112,7 @@ const scratchSurfaceRay = new Ray();
 const scratchCartographic = new Cartographic();
 
 function getRayForSampleHeight(scene, cartographic) {
-  const globe = scene.globe;
-  const ellipsoid = defined(globe)
-    ? globe.ellipsoid
-    : scene.mapProjection.ellipsoid;
+  const ellipsoid = scene.ellipsoid;
   const height = ApproximateTerrainHeights._defaultMaxTerrainHeight;
   const surfaceNormal = ellipsoid.geodeticSurfaceNormalCartographic(
     cartographic,
@@ -1136,10 +1133,7 @@ function getRayForSampleHeight(scene, cartographic) {
 }
 
 function getRayForClampToHeight(scene, cartesian) {
-  const globe = scene.globe;
-  const ellipsoid = defined(globe)
-    ? globe.ellipsoid
-    : scene.mapProjection.ellipsoid;
+  const ellipsoid = scene.ellipsoid;
   const cartographic = Cartographic.fromCartesian(
     cartesian,
     ellipsoid,
@@ -1149,10 +1143,7 @@ function getRayForClampToHeight(scene, cartesian) {
 }
 
 function getHeightFromCartesian(scene, cartesian) {
-  const globe = scene.globe;
-  const ellipsoid = defined(globe)
-    ? globe.ellipsoid
-    : scene.mapProjection.ellipsoid;
+  const ellipsoid = scene.ellipsoid;
   const cartographic = Cartographic.fromCartesian(
     cartesian,
     ellipsoid,

@@ -9,6 +9,10 @@ import createPackableArraySpecs from "../../../../Specs/createPackableArraySpecs
 import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";
 
 describe("Core/Cartesian3", function () {
+  afterEach(function () {
+    Ellipsoid.default = Ellipsoid.WGS84;
+  });
+
   it("construct with default values", function () {
     const cartesian = new Cartesian3();
     expect(cartesian.x).toEqual(0.0);
@@ -1247,6 +1251,19 @@ describe("Core/Cartesian3", function () {
     }).toThrowDeveloperError();
   });
 
+  it("fromDegrees works works with default ellipsoid", function () {
+    Ellipsoid.default = Ellipsoid.MOON;
+
+    const expectedPosition = new Cartesian3(
+      1593514.338295244,
+      691991.9979835141,
+      20442.318221152018
+    );
+
+    const position = Cartesian3.fromDegrees(23.47315, 0.67416);
+    expect(position).toEqualEpsilon(expectedPosition, CesiumMath.EPSILON8);
+  });
+
   it("fromRadians", function () {
     const lon = CesiumMath.toRadians(150);
     const lat = CesiumMath.toRadians(-40);
@@ -1284,6 +1301,19 @@ describe("Core/Cartesian3", function () {
     expect(actual).toBe(result);
   });
 
+  it("fromRadians works works with default ellipsoid", function () {
+    Ellipsoid.default = Ellipsoid.MOON;
+
+    const expectedPosition = new Cartesian3(
+      1593514.3406204558,
+      691991.9927155221,
+      20442.315293410087
+    );
+
+    const position = Cartesian3.fromRadians(0.40968375, 0.01176631);
+    expect(position).toEqualEpsilon(expectedPosition, CesiumMath.EPSILON8);
+  });
+
   it("fromRadians throws with no longitude", function () {
     expect(function () {
       Cartesian3.fromRadians();
@@ -1309,6 +1339,30 @@ describe("Core/Cartesian3", function () {
       Cartographic.fromDegrees(lon2, lat2),
     ]);
     expect(actual).toEqual(expected);
+  });
+
+  it("fromDegreesArray works works with default ellipsoid", function () {
+    Ellipsoid.default = Ellipsoid.MOON;
+
+    const expectedPositions = [
+      new Cartesian3(1593514.338295244, 691991.9979835141, 20442.318221152018),
+      new Cartesian3(
+        1653831.6133167143,
+        -520773.6558050613,
+        -110428.9555038242
+      ),
+      new Cartesian3(1556660.3478111108, 98714.16930719782, 765259.9782626687),
+    ];
+
+    const positions = Cartesian3.fromDegreesArray([
+      23.47315,
+      0.67416,
+      342.52135,
+      -3.64417,
+      3.6285,
+      26.13341,
+    ]);
+    expect(positions).toEqualEpsilon(expectedPositions, CesiumMath.EPSILON8);
   });
 
   it("fromDegreesArray throws with no positions", function () {
@@ -1365,6 +1419,30 @@ describe("Core/Cartesian3", function () {
     expect(actual).toBe(result);
   });
 
+  it("fromRadiansArray works works with default ellipsoid", function () {
+    Ellipsoid.default = Ellipsoid.MOON;
+
+    const expectedPositions = [
+      new Cartesian3(1593514.3406204558, 691991.9927155221, 20442.315293410087),
+      new Cartesian3(
+        1653831.6107836158,
+        -520773.6656886929,
+        -110428.94683022468
+      ),
+      new Cartesian3(1556660.3474447567, 98714.16630095398, 765259.9793956806),
+    ];
+
+    const positions = Cartesian3.fromRadiansArray([
+      0.40968375,
+      0.01176631,
+      5.97812531,
+      -0.06360276,
+      0.06332927,
+      0.45611405,
+    ]);
+    expect(positions).toEqualEpsilon(expectedPositions, CesiumMath.EPSILON8);
+  });
+
   it("fromRadiansArray throws with no positions", function () {
     expect(function () {
       Cartesian3.fromRadiansArray();
@@ -1405,6 +1483,33 @@ describe("Core/Cartesian3", function () {
       Cartographic.fromDegrees(lon2, lat2, alt2),
     ]);
     expect(actual).toEqual(expected);
+  });
+
+  it("fromDegreesArrayHeights works works with default ellipsoid", function () {
+    Ellipsoid.default = Ellipsoid.MOON;
+
+    const expectedPositions = [
+      new Cartesian3(1593606.0566294384, 692031.8271534222, 20443.494825170732),
+      new Cartesian3(
+        1653926.8033485617,
+        -520803.63011470815,
+        -110435.31149297487
+      ),
+      new Cartesian3(1556749.9449302435, 98719.85102524245, 765304.0245374623),
+    ];
+
+    const positions = Cartesian3.fromDegreesArrayHeights([
+      23.47315,
+      0.67416,
+      100,
+      342.52135,
+      -3.64417,
+      100,
+      3.6285,
+      26.13341,
+      100,
+    ]);
+    expect(positions).toEqualEpsilon(expectedPositions, CesiumMath.EPSILON8);
   });
 
   it("fromDegreesArrayHeights throws with no positions", function () {
@@ -1470,6 +1575,33 @@ describe("Core/Cartesian3", function () {
     ]);
     expect(result).toEqual(expected);
     expect(actual).toBe(result);
+  });
+
+  it("fromRadiansArrayHeights works works with default ellipsoid", function () {
+    Ellipsoid.default = Ellipsoid.MOON;
+
+    const expectedPositions = [
+      new Cartesian3(1593606.0589547842, 692031.821885127, 20443.49189726029),
+      new Cartesian3(
+        1653926.8008153175,
+        -520803.6399989086,
+        -110435.30281887612
+      ),
+      new Cartesian3(1556749.9445638682, 98719.84801882556, 765304.0256705394),
+    ];
+
+    const positions = Cartesian3.fromRadiansArrayHeights([
+      0.40968375,
+      0.01176631,
+      100,
+      5.97812531,
+      -0.06360276,
+      100,
+      0.06332927,
+      0.45611405,
+      100,
+    ]);
+    expect(positions).toEqualEpsilon(expectedPositions, CesiumMath.EPSILON8);
   });
 
   it("fromRadiansArrayHeights throws with no positions", function () {

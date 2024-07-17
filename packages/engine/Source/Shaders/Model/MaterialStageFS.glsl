@@ -140,7 +140,7 @@ vec3 getClearcoatNormalFromTexture(ProcessedAttributes attributes, vec3 geometry
     vec3 normalSample = texture(u_clearcoatNormalTexture, normalTexCoords).rgb;
     normalSample = 2.0 * normalSample - 1.0;
     #ifdef HAS_CLEARCOAT_NORMAL_TEXTURE_SCALE
-        normalSample.xy *= u_normalTextureScale;
+        normalSample.xy *= u_clearcoatNormalTextureScale;
     #endif
     return normalize(tbn * normalSample);
 }
@@ -296,12 +296,12 @@ float setMetallicRoughness(inout czm_modelMaterial material)
 
     // dielectrics use f0 = 0.04, metals use albedo as f0
     const vec3 REFLECTANCE_DIELECTRIC = vec3(0.04);
-    vec3 f0 = mix(REFLECTANCE_DIELECTRIC, material.diffuse, metalness);
+    vec3 f0 = mix(REFLECTANCE_DIELECTRIC, material.baseColor.rgb, metalness);
 
     material.specular = f0;
 
     // diffuse only applies to dielectrics.
-    material.diffuse = material.diffuse * (1.0 - f0) * (1.0 - metalness);
+    material.diffuse = mix(material.baseColor.rgb, vec3(0.0), metalness);
 
     // roughness is authored as perceptual roughness
     // square it to get material roughness
@@ -349,7 +349,7 @@ void setSpecular(inout czm_modelMaterial material, in float metalness)
     material.specularWeight = specularWeight;
     vec3 f0 = material.specular;
     vec3 dielectricSpecularF0 = min(f0 * specularColorFactor, vec3(1.0));
-    material.specular = mix(dielectricSpecularF0, material.diffuse, metalness);
+    material.specular = mix(dielectricSpecularF0, material.baseColor.rgb, metalness);
 }
 #endif
 #ifdef USE_ANISOTROPY
@@ -458,12 +458,12 @@ void materialStage(inout czm_modelMaterial material, ProcessedAttributes attribu
         baseColorWithAlpha *= color;
     #endif
 
+    material.baseColor = baseColorWithAlpha;
+    #ifdef USE_CPU_STYLING
+        material.baseColor.rgb = blend(baseColorWithAlpha.rgb, feature.color.rgb, model_colorBlend);
+    #endif
     material.diffuse = baseColorWithAlpha.rgb;
     material.alpha = baseColorWithAlpha.a;
-
-    #ifdef USE_CPU_STYLING
-        material.diffuse = blend(material.diffuse, feature.color.rgb, model_colorBlend);
-    #endif
 
     #ifdef HAS_OCCLUSION_TEXTURE
         vec2 occlusionTexCoords = TEXCOORD_OCCLUSION;
