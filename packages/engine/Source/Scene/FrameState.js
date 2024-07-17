@@ -453,6 +453,14 @@ function FrameState(context, creditDisplay, jobScheduler) {
    * @type {string|undefined}
    */
   this.pickedMetadataPropertyName = undefined;
+
+  /**
+   * The metadata class property that values should be picked from
+   * with `Scene.pickMetadata`
+   *
+   * @type {MetadataClassProperty|undefined}
+   */
+  this.pickedMetadataClassProperty = undefined;
 }
 
 /**

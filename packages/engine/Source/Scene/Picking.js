@@ -419,10 +419,9 @@ Picking.prototype.pickVoxelCoordinate = function (
  * from, or `undefined` to pick values from any schema.
  * @param {string} className The name of the metadata class to pick
  * values from
- * @param {string} propertyName The Name of the metadata property to pick
+ * @param {string} propertyName The name of the metadata property to pick
  * values from
- * @param {number} [width=3] Width of the pick rectangle.
- * @param {number} [height=3] Height of the pick rectangle.
+ * @param {MetadataClassProperty} classProperty The actual class property
  * @returns The metadata values as a raw, 4-byte buffer
  *
  * @private
@@ -433,8 +432,7 @@ Picking.prototype.pickMetadata = function (
   schemaId,
   className,
   propertyName,
-  width,
-  height
+  classProperty
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("windowPosition", windowPosition);
@@ -463,8 +461,8 @@ Picking.prototype.pickMetadata = function (
   const drawingBufferRectangle = computePickingDrawingBufferRectangle(
     context.drawingBufferHeight,
     drawingBufferPosition,
-    width,
-    height,
+    1.0,
+    1.0,
     scratchRectangle
   );
 
@@ -486,11 +484,17 @@ Picking.prototype.pickMetadata = function (
   frameState.passes.render = true;
   frameState.tilesetPassState = renderTilesetPassState;
 
+  // Insert the information about the picked metadata property
+  // into the frame state, so that ...
+  // - changes in these properties are picked up by the Model.update
+  //   function to trigger a rebuild of the draw commands
+  // - the ModelDrawCommands functions will insert the proper code
+  //   for picking the values into the shader
   frameState.pickMetadata = true;
   frameState.pickedMetadataSchemaId = schemaId;
   frameState.pickedMetadataClassName = className;
   frameState.pickedMetadataPropertyName = propertyName;
-
+  frameState.pickedMetadataClassProperty = classProperty;
   context.uniformState.update(frameState);
 
   scene.updateEnvironment();

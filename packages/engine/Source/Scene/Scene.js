@@ -77,7 +77,7 @@ import View from "./View.js";
 import DebugInspector from "./DebugInspector.js";
 import VoxelCell from "./VoxelCell.js";
 import VoxelPrimitive from "./VoxelPrimitive.js";
-import hasMetadataProperty from "./hasMetadataProperty.js";
+import getMetadataClassProperty from "./getMetadataClassProperty.js";
 
 const requestRenderAfterFrame = function (scene) {
   return function () {
@@ -4265,8 +4265,6 @@ Scene.prototype.pickVoxel = function (windowPosition, width, height) {
  * values from
  * @param {string} propertyName The Name of the metadata property to pick
  * values from
- * @param {number} [width=3] Width of the pick rectangle.
- * @param {number} [height=3] Height of the pick rectangle.
  * @returns The metadata value
  *
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
@@ -4275,9 +4273,7 @@ Scene.prototype.pickMetadata = function (
   windowPosition,
   schemaId,
   className,
-  propertyName,
-  width,
-  height
+  propertyName
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("windowPosition", windowPosition);
@@ -4285,7 +4281,7 @@ Scene.prototype.pickMetadata = function (
   Check.typeOf.string("propertyName", propertyName);
   //>>includeEnd('debug');
 
-  const pickedObject = this.pick(windowPosition, width, height);
+  const pickedObject = this.pick(windowPosition);
   if (!defined(pickedObject)) {
     return undefined;
   }
@@ -4306,7 +4302,13 @@ Scene.prototype.pickMetadata = function (
     console.log("schema ", schema);
   }
 
-  if (!hasMetadataProperty(schema, schemaId, className, propertyName)) {
+  const classProperty = getMetadataClassProperty(
+    schema,
+    schemaId,
+    className,
+    propertyName
+  );
+  if (classProperty === undefined) {
     if (XXX_METADATA_PICKING_DEBUG_LOG) {
       console.log("The metadata property was not found");
       console.log("schema ", schema);
@@ -4323,8 +4325,7 @@ Scene.prototype.pickMetadata = function (
     schemaId,
     className,
     propertyName,
-    width,
-    height
+    classProperty
   );
 
   if (XXX_METADATA_PICKING_DEBUG_LOG) {
@@ -4334,6 +4335,32 @@ Scene.prototype.pickMetadata = function (
   // TODO_METADATA_PICKING The result here is a 4-element (byte) buffer.
   // Convert this to the required target type
   return pickedMetadataValues;
+};
+
+/**
+ * Pick the schema of the metadata of the object at the given position
+ *
+ * @param {Cartesian2} windowPosition Window coordinates to perform picking on.
+ * @returns The metadata schema, or `undefined` if there is no object with
+ * associated metadata at the given position.
+ *
+ * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
+ */
+Scene.prototype.pickMetadataSchema = function (windowPosition) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("windowPosition", windowPosition);
+  //>>includeEnd('debug');
+
+  const pickedObject = this.pick(windowPosition);
+  if (!defined(pickedObject)) {
+    return undefined;
+  }
+
+  const detail = pickedObject?.detail;
+  const model = detail?.model;
+  const structuralMetadata = model?.structuralMetadata;
+  const schema = structuralMetadata?.schema;
+  return schema;
 };
 
 /**

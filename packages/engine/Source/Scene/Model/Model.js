@@ -2074,6 +2074,15 @@ function updateVerticalExaggeration(model, frameState) {
   }
 }
 
+/**
+ * Will be called during `update`, and detect changes in the `pickedMetadata*`
+ * properties. When they changed, then the draw commands will be reset, to
+ * eventually be rebuilt by the `ModelDrawCommands` class, with the new picked
+ * metadata property values
+ *
+ * @param {Model} model The model
+ * @param {FrameState} frameState The frame state
+ */
 function updatePickedMetadata(model, frameState) {
   if (
     frameState.pickedMetadataSchemaId !== model._pickedMetadataSchemaId ||

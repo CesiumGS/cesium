@@ -561,8 +561,6 @@ ModelSceneGraph.prototype.buildDrawCommands = function (frameState) {
       );
 
       const shaderBuilderRender = primitiveRenderResources.shaderBuilder.clone();
-      const shaderBuilderPickMetadata = primitiveRenderResources.shaderBuilder.clone();
-
       const drawCommand = ModelDrawCommands.buildModelDrawCommand(
         primitiveRenderResources,
         frameState,
@@ -570,6 +568,21 @@ ModelSceneGraph.prototype.buildDrawCommands = function (frameState) {
         false
       );
       runtimePrimitive.drawCommand = drawCommand;
+
+      const shaderBuilderPickMetadata = primitiveRenderResources.shaderBuilder.clone();
+      if (frameState.pickMetadata === true) {
+        const schemaId = frameState.pickedMetadataSchemaId;
+        const className = frameState.pickedMetadataClassName;
+        const propertyName = frameState.pickedMetadataPropertyName;
+        const classProperty = frameState.pickedMetadataClassProperty;
+        ModelDrawCommands.prepareMetadataPickingStage(
+          shaderBuilderPickMetadata,
+          schemaId,
+          className,
+          propertyName,
+          classProperty
+        );
+      }
 
       const metadataPickingDrawCommand = ModelDrawCommands.buildModelDrawCommand(
         primitiveRenderResources,

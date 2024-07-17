@@ -14,6 +14,7 @@ import ModelVS from "../../Shaders/Model/ModelVS.js";
 import ModelFS from "../../Shaders/Model/ModelFS.js";
 import ModelUtility from "./ModelUtility.js";
 import DeveloperError from "../../Core/DeveloperError.js";
+import MetadataType from "../MetadataType.js";
 
 /**
  * Internal functions to build draw commands for models.
@@ -24,6 +25,105 @@ import DeveloperError from "../../Core/DeveloperError.js";
  * @private
  */
 function ModelDrawCommands() {}
+
+function getComponentCount(classProperty) {
+  if (!classProperty.isArray) {
+    return MetadataType.getComponentCount(classProperty.type);
+  }
+  return classProperty.arrayLength;
+}
+function getGlslType(classProperty) {
+  const componentCount = getComponentCount(classProperty);
+  if (classProperty.normalized) {
+    if (componentCount === 1) {
+      return "float";
+    }
+    return `vec${componentCount}`;
+  }
+  if (componentCount === 1) {
+    return "int";
+  }
+  return `ivec${componentCount}`;
+}
+
+ModelDrawCommands.prepareMetadataPickingStage = function (
+  shaderBuilder,
+  schemaId,
+  className,
+  propertyName,
+  classProperty
+) {
+  console.log("Now adding that stuff...");
+  console.log("  schemaId", schemaId);
+  console.log("  className", className);
+  console.log("  propertyName", propertyName);
+  console.log("  classProperty", classProperty);
+
+  shaderBuilder.addFunction(
+    "metadataPickingStage",
+    "void metadataPickingStage(Metadata metadata, MetadataClass metadataClass, inout vec4 metadataValues)",
+    ShaderDestination.FRAGMENT
+  );
+
+  const lines = [];
+
+  const glslType = getGlslType(classProperty);
+  lines.push(
+    `${glslType} value = ${glslType}(metadata.METADATA_PICKING_PROPERTY_NAME);`
+  );
+
+  const normalized = classProperty.normalized === true;
+  //const glslComponentType = getGlslComponentType(classProperty);
+  const componentCount = getComponentCount(classProperty);
+  const sourceValueStrings = ["0.0", "0.0", "0.0", "0.0"];
+  if (componentCount === 1) {
+    const valueString = `value`;
+    sourceValueStrings[0] = `float(${valueString})`;
+    if (normalized) {
+      sourceValueStrings[0] += " / 255.0";
+    }
+  } else {
+    const components = ["x", "y", "z", "w"];
+    for (let i = 0; i < componentCount; i++) {
+      const component = components[i];
+      const valueString = `value.${component}`;
+      sourceValueStrings[i] = `float(${valueString}) / 255.0`;
+      if (normalized) {
+        sourceValueStrings[i] += " / 255.0";
+      }
+    }
+  }
+  lines.push(`metadataValues.x = ${sourceValueStrings[0]};`);
+  lines.push(`metadataValues.y = ${sourceValueStrings[1]};`);
+  lines.push(`metadataValues.z = ${sourceValueStrings[2]};`);
+  lines.push(`metadataValues.w = ${sourceValueStrings[3]};`);
+  shaderBuilder.addFunctionLines(
+    "metadataPickingStage",
+    lines,
+    ShaderDestination.FRAGMENT
+  );
+
+  console.log("Name is ", propertyName);
+  console.log("lines");
+  console.log("  ", lines[1]);
+  console.log("  ", lines[2]);
+  console.log("  ", lines[3]);
+  console.log("  ", lines[4]);
+
+  // Enable METADATA_PICKING in `ModelFS.glsl`
+  shaderBuilder.addDefine(
+    "METADATA_PICKING",
+    undefined,
+    ShaderDestination.FRAGMENT
+  );
+
+  // Add the define for the property that should be picked
+  shaderBuilder.addDefine(
+    "METADATA_PICKING_PROPERTY_NAME",
+    propertyName,
+    ShaderDestination.FRAGMENT
+  );
+};
 
 /**
  * Builds the {@link ModelDrawCommand} for a {@link ModelRuntimePrimitive}
@@ -40,58 +140,8 @@ function ModelDrawCommands() {}
 ModelDrawCommands.buildModelDrawCommand = function (
   primitiveRenderResources,
   frameState,
-  shaderBuilder,
-  pickMetadata
+  shaderBuilder
 ) {
-  if (frameState.pickMetadata === true && pickMetadata === true) {
-    console.log("Now adding that stuff...");
-    console.log("  pickedMetadataSchemaId", frameState.pickedMetadataSchemaId);
-    console.log(
-      "  pickedMetadataClassName",
-      frameState.pickedMetadataClassName
-    );
-    console.log(
-      "  pickedMetadataPropertyName",
-      frameState.pickedMetadataPropertyName
-    );
-
-    shaderBuilder.addFunction(
-      "metadataPickingStage",
-      "void metadataPickingStage(Metadata metadata, MetadataClass metadataClass, inout vec4 metadataValues)",
-      ShaderDestination.FRAGMENT
-    );
-    const lines = [
-      "float value = float(metadata.METADATA_PICKING_PROPERTY_NAME);",
-      "metadataValues.x = value / 255.0;",
-      "metadataValues.y = 0.0;",
-      "metadataValues.z = 0.0;",
-      "metadataValues.w = 0.0;",
-    ];
-    shaderBuilder.addFunctionLines(
-      "metadataPickingStage",
-      lines,
-      ShaderDestination.FRAGMENT
-    );
-
-    //const schemaId = frameState.pickedMetadataSchemaId;
-    //const className = frameState.pickedMetadataClassName;
-    const propertyName = frameState.pickedMetadataPropertyName;
-
-    // Enable METADATA_PICKING in `ModelFS.glsl`
-    shaderBuilder.addDefine(
-      "METADATA_PICKING",
-      undefined,
-      ShaderDestination.FRAGMENT
-    );
-
-    // Add the define for the property that should be picked
-    shaderBuilder.addDefine(
-      "METADATA_PICKING_PROPERTY_NAME",
-      propertyName,
-      ShaderDestination.FRAGMENT
-    );
-  }
-
   const shaderProgram = ModelDrawCommands.createShaderProgram(
     primitiveRenderResources,
     shaderBuilder,
@@ -103,6 +153,7 @@ ModelDrawCommands.buildModelDrawCommand = function (
     shaderProgram,
     frameState
   );
+
   const model = primitiveRenderResources.model;
   const hasClassification = defined(model.classificationType);
   if (hasClassification) {
