@@ -9,6 +9,7 @@
 - Updated geometric self-shadowing function to improve direct lighting on models using physically-based rendering. [#12063](https://github.com/CesiumGS/cesium/pull/12063)
 - When the mouse is pressed, the modifiers will be recorded. Modifying the modifiers during this process is invalid. [#11903](https://github.com/CesiumGS/cesium/pull/11903)
 - Fixed environment map LOD selection in image-based lighting. [#12070](https://github.com/CesiumGS/cesium/pull/12070)
+- Corrected calculation of diffuse component in image-based lighting. [#12082](https://github.com/CesiumGS/cesium/pull/12082)
 
 ### 1.119 - 2024-07-01
 
