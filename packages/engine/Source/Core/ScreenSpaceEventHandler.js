@@ -49,8 +49,6 @@ const MouseButton = {
   RIGHT: 2,
 };
 
-const MousePassModifier;
-
 function registerListener(screenSpaceEventHandler, domType, element, callback) {
   function listener(e) {
     callback(screenSpaceEventHandler, e);
@@ -230,11 +228,14 @@ function handleMouseDown(screenSpaceEventHandler, event) {
   Cartesian2.clone(position, screenSpaceEventHandler._primaryStartPosition);
   Cartesian2.clone(position, screenSpaceEventHandler._primaryPreviousPosition);
 
-  MousePassModifier = getModifier(event);
+  const modifier = getModifier(event);
+  if (ScreenSpaceEventHandler.isMousePassModifierLock) {
+    screenSpaceEventHandler._lastMousePassModifier = modifier;
+  }
 
   const action = screenSpaceEventHandler.getInputAction(
     screenSpaceEventType,
-    MousePassModifier
+    modifier
   );
 
   if (defined(action)) {
@@ -260,12 +261,13 @@ function cancelMouseEvent(
   event
 ) {
   let modifier;
-  if(
-    screenSpaceEventHandler._buttonDown[MouseButton.LEFT] ||
-    screenSpaceEventHandler._buttonDown[MouseButton.MIDDLE] ||
-    screenSpaceEventHandler._buttonDown[MouseButton.RIGHT] 
+  if (
+    ScreenSpaceEventHandler.isMousePassModifierLock &&
+    (screenSpaceEventHandler._buttonDown[MouseButton.LEFT] ||
+      screenSpaceEventHandler._buttonDown[MouseButton.MIDDLE] ||
+      screenSpaceEventHandler._buttonDown[MouseButton.RIGHT])
   ) {
-    modifier = MousePassModifier;
+    modifier = screenSpaceEventHandler._lastMousePassModifier;
   } else {
     modifier = getModifier(event);
   }
@@ -364,12 +366,13 @@ function handleMouseMove(screenSpaceEventHandler, event) {
   }
 
   let modifier;
-  if(
-    screenSpaceEventHandler._buttonDown[MouseButton.LEFT] ||
-    screenSpaceEventHandler._buttonDown[MouseButton.MIDDLE] ||
-    screenSpaceEventHandler._buttonDown[MouseButton.RIGHT] 
+  if (
+    ScreenSpaceEventHandler.isMousePassModifierLock &&
+    (screenSpaceEventHandler._buttonDown[MouseButton.LEFT] ||
+      screenSpaceEventHandler._buttonDown[MouseButton.MIDDLE] ||
+      screenSpaceEventHandler._buttonDown[MouseButton.RIGHT])
   ) {
-    modifier = MousePassModifier;
+    modifier = screenSpaceEventHandler._lastMousePassModifier;
   } else {
     modifier = getModifier(event);
   }
@@ -1026,6 +1029,8 @@ function ScreenSpaceEventHandler(element) {
   this._clickPixelTolerance = 5;
   this._holdPixelTolerance = 25;
 
+  this._lastMousePassModifier = undefined;
+
   this._element = defaultValue(element, document);
 
   registerListeners(this);
@@ -1157,4 +1162,12 @@ ScreenSpaceEventHandler.mouseEmulationIgnoreMilliseconds = 800;
  * @default 1500
  */
 ScreenSpaceEventHandler.touchHoldDelayMilliseconds = 1500;
+
+/**
+ * Gets or sets the modified
+ * Lock the Modifier in the executed events.
+ * @type {Boolean}
+ * @default false
+ */
+ScreenSpaceEventHandler.isMousePassModifierLock = false;
 export default ScreenSpaceEventHandler;
