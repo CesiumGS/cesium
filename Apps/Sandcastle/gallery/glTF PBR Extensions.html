@@ -79,52 +79,53 @@
 
         // To generate the spherical harmonic coefficients below, use Google's Filament project:
         // 1 - Download the Filament release (https://github.com/google/filament/releases).
-        // 2 - Run `cmgen --type=ktx --deploy=/path/to/output /path/to/image.hdr`. Other formats are also supported. Run `cmgen --help` for all options.
+        // 2 - Run `cmgen --no-mirror --type=ktx --deploy=/path/to/output /path/to/image.hdr`.
+        //     Other formats are also supported. Run `cmgen --help` for all options.
         // 3 - Take the generated coefficients and load them in CesiumJS as shown below.
         const L00 = new Cesium.Cartesian3(
-          1.234709620475769,
-          1.221461296081543,
-          1.273156881332397
+          1.234897375106812,
+          1.221635103225708,
+          1.273374080657959
         );
         const L1_1 = new Cesium.Cartesian3(
-          1.135921120643616,
-          1.171217799186707,
-          1.287644743919373
+          1.136140108108521,
+          1.171419978141785,
+          1.287894368171692
         );
         const L10 = new Cesium.Cartesian3(
-          1.245193719863892,
-          1.245591878890991,
-          1.282818794250488
+          1.245410919189453,
+          1.245791077613831,
+          1.283067107200623
         );
         const L11 = new Cesium.Cartesian3(
-          -1.106930732727051,
-          -1.112522482872009,
-          -1.153198838233948
+          1.107124328613281,
+          1.112697005271912,
+          1.153419137001038
         );
         const L2_2 = new Cesium.Cartesian3(
-          -1.086226940155029,
-          -1.079731941223145,
-          -1.101912498474121
+          1.08641505241394,
+          1.079904079437256,
+          1.10212504863739
         );
         const L2_1 = new Cesium.Cartesian3(
-          1.189834713935852,
-          1.185906887054443,
-          1.214385271072388
+          1.190043210983276,
+          1.186099290847778,
+          1.214627981185913
         );
         const L20 = new Cesium.Cartesian3(
-          0.01778045296669,
-          0.02013735473156,
-          0.025313569232821
+          0.017783647403121,
+          0.020140396431088,
+          0.025317270308733
         );
         const L21 = new Cesium.Cartesian3(
-          -1.086826920509338,
-          -1.084611177444458,
-          -1.111204028129578
+          1.087014317512512,
+          1.084779262542725,
+          1.111417651176453
         );
         const L22 = new Cesium.Cartesian3(
-          -0.05241484940052,
-          -0.048303380608559,
-          -0.041960217058659
+          -0.052426788955927,
+          -0.048315055668354,
+          -0.041973855346441
         );
         const coefficients = [L00, L1_1, L10, L11, L2_2, L2_1, L20, L21, L22];
 
