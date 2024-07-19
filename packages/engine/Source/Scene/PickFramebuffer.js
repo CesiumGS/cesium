@@ -129,7 +129,7 @@ PickFramebuffer.prototype.end = function (screenSpaceRectangle) {
  * of a metadata picking rendering pass.
  *
  * @param {BoundingRectangle} screenSpaceRectangle
- * @returns {TypedArray} The RGBA components
+ * @returns {Uint8Array} The RGBA components
  */
 PickFramebuffer.prototype.readCenterPixel = function (screenSpaceRectangle) {
   const width = defaultValue(screenSpaceRectangle.width, 1.0);
