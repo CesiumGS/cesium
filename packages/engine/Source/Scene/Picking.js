@@ -19,6 +19,7 @@ import Camera from "./Camera.js";
 import Cesium3DTileFeature from "./Cesium3DTileFeature.js";
 import Cesium3DTilePass from "./Cesium3DTilePass.js";
 import Cesium3DTilePassState from "./Cesium3DTilePassState.js";
+import MetadataComponentType from "./MetadataComponentType.js";
 import PickDepth from "./PickDepth.js";
 import PrimitiveCollection from "./PrimitiveCollection.js";
 import SceneMode from "./SceneMode.js";
@@ -411,6 +412,62 @@ Picking.prototype.pickVoxelCoordinate = function (
   return voxelInfo;
 };
 
+Picking.prototype.getDecodedMetadataValue = function (
+  componentType,
+  dataView,
+  index
+) {
+  switch (componentType) {
+    case MetadataComponentType.INT8:
+      return dataView.getInt8(index);
+    case MetadataComponentType.UINT8:
+      return dataView.getUint8(index);
+    case MetadataComponentType.INT16:
+      return dataView.getInt16(index);
+    case MetadataComponentType.UINT16:
+      return dataView.getUint16(index);
+    case MetadataComponentType.INT32:
+      return dataView.getInt32(index);
+    case MetadataComponentType.UINT32:
+      return dataView.getUint32(index);
+    case MetadataComponentType.FLOAT32:
+      return dataView.getFloat32(index);
+    case MetadataComponentType.FLOAT64:
+      return dataView.getFloat64(index);
+  }
+  return undefined;
+};
+
+Picking.prototype.decodePickedMetadataValues = function (
+  classProperty,
+  rawValues
+) {
+  const componentType = classProperty.componentType;
+  const dataView = new DataView(
+    rawValues.buffer,
+    rawValues.byteOffset,
+    rawValues.byteLength
+  );
+  if (classProperty.isArray) {
+    const arrayLength = classProperty.arrayLength;
+    const result = Array(arrayLength);
+    for (let i = 0; i < arrayLength; i++) {
+      const element = this.getDecodedMetadataValue(componentType, dataView, i);
+      if (classProperty.normalized) {
+        result[i] = element / 255.0;
+      } else {
+        result[i] = element;
+      }
+    }
+    return result;
+  }
+  const value = this.getDecodedMetadataValue(componentType, dataView, 0);
+  if (classProperty.normalized) {
+    return value / 255.0;
+  }
+  return value;
+};
+
 /**
  * Pick a metadata value at the given window position.
  *
@@ -422,7 +479,7 @@ Picking.prototype.pickVoxelCoordinate = function (
  * @param {string} propertyName The name of the metadata property to pick
  * values from
  * @param {MetadataClassProperty} classProperty The actual class property
- * @returns The metadata values as a raw, 4-byte buffer
+ * @returns The metadata values
  *
  * @private
  */
@@ -438,6 +495,7 @@ Picking.prototype.pickMetadata = function (
   Check.typeOf.object("windowPosition", windowPosition);
   Check.typeOf.string("className", className);
   Check.typeOf.string("propertyName", propertyName);
+  Check.typeOf.object("classProperty", classProperty);
   //>>includeEnd('debug');
 
   const { context, frameState, defaultView } = scene;
@@ -517,6 +575,13 @@ Picking.prototype.pickMetadata = function (
   context.endFrame();
 
   frameState.pickMetadata = false;
+
+  const metadataValue = this.decodePickedMetadataValues(
+    classProperty,
+    metadataInfo
+  );
+  console.log("metadataValue ", metadataValue);
+
   return metadataInfo;
 };
 

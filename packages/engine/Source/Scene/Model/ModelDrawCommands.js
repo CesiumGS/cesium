@@ -72,27 +72,27 @@ ModelDrawCommands.prepareMetadataPickingStage = function (
     `${glslType} value = ${glslType}(metadata.METADATA_PICKING_PROPERTY_NAME);`
   );
 
-  const normalized = classProperty.normalized === true;
-  //const glslComponentType = getGlslComponentType(classProperty);
-  const componentCount = getComponentCount(classProperty);
   const sourceValueStrings = ["0.0", "0.0", "0.0", "0.0"];
+  const componentCount = getComponentCount(classProperty);
   if (componentCount === 1) {
     const valueString = `value`;
-    sourceValueStrings[0] = `float(${valueString})`;
-    if (normalized) {
-      sourceValueStrings[0] += " / 255.0";
-    }
+    sourceValueStrings[0] = `float(${valueString}) / 255.0`;
   } else {
     const components = ["x", "y", "z", "w"];
     for (let i = 0; i < componentCount; i++) {
       const component = components[i];
       const valueString = `value.${component}`;
       sourceValueStrings[i] = `float(${valueString}) / 255.0`;
-      if (normalized) {
-        sourceValueStrings[i] += " / 255.0";
-      }
     }
   }
+  /*
+  const normalized = classProperty.normalized === true;
+  if (normalized) {
+    for (let i = 0; i < componentCount; i++) {
+      sourceValueStrings[i] += ` / 255.0`;
+    }
+  }
+  */
   lines.push(`metadataValues.x = ${sourceValueStrings[0]};`);
   lines.push(`metadataValues.y = ${sourceValueStrings[1]};`);
   lines.push(`metadataValues.z = ${sourceValueStrings[2]};`);
@@ -105,6 +105,7 @@ ModelDrawCommands.prepareMetadataPickingStage = function (
 
   console.log("Name is ", propertyName);
   console.log("lines");
+  console.log("  ", lines[0]);
   console.log("  ", lines[1]);
   console.log("  ", lines[2]);
   console.log("  ", lines[3]);
