@@ -570,11 +570,15 @@ ModelSceneGraph.prototype.buildDrawCommands = function (frameState) {
       runtimePrimitive.drawCommand = drawCommand;
 
       const shaderBuilderPickMetadata = primitiveRenderResources.shaderBuilder.clone();
-      if (frameState.pickMetadata === true) {
-        const schemaId = frameState.pickedMetadataSchemaId;
-        const className = frameState.pickedMetadataClassName;
-        const propertyName = frameState.pickedMetadataPropertyName;
-        const classProperty = frameState.pickedMetadataClassProperty;
+      const schemaId = frameState.pickedMetadataSchemaId;
+      const className = frameState.pickedMetadataClassName;
+      const propertyName = frameState.pickedMetadataPropertyName;
+      const classProperty = frameState.pickedMetadataClassProperty;
+      if (
+        defined(className) &&
+        defined(propertyName) &&
+        defined(classProperty)
+      ) {
         ModelDrawCommands.prepareMetadataPickingStage(
           shaderBuilderPickMetadata,
           schemaId,
@@ -583,7 +587,6 @@ ModelSceneGraph.prototype.buildDrawCommands = function (frameState) {
           classProperty
         );
       }
-
       const metadataPickingDrawCommand = ModelDrawCommands.buildModelDrawCommand(
         primitiveRenderResources,
         frameState,
@@ -845,8 +848,10 @@ ModelSceneGraph.prototype.updateBackFaceCulling = function (backFaceCulling) {
 // Callback is defined here to avoid allocating a closure in the render loop
 function updatePrimitiveBackFaceCulling(runtimePrimitive, options) {
   runtimePrimitive.drawCommand.backFaceCulling = options.backFaceCulling;
-  runtimePrimitive.metadataPickingDrawCommand.backFaceCulling =
-    options.backFaceCulling;
+  if (defined(runtimePrimitive.metadataPickingDrawCommand)) {
+    runtimePrimitive.metadataPickingDrawCommand.backFaceCulling =
+      options.backFaceCulling;
+  }
 }
 
 const scratchShadowOptions = {
@@ -869,7 +874,9 @@ ModelSceneGraph.prototype.updateShadows = function (shadowMode) {
 // Callback is defined here to avoid allocating a closure in the render loop
 function updatePrimitiveShadows(runtimePrimitive, options) {
   runtimePrimitive.drawCommand.shadows = options.shadows;
-  runtimePrimitive.metadataPickingDrawCommand.shadows = options.shadows;
+  if (defined(runtimePrimitive.metadataPickingDrawCommand)) {
+    runtimePrimitive.metadataPickingDrawCommand.shadows = options.shadows;
+  }
 }
 
 const scratchShowBoundingVolumeOptions = {
@@ -901,8 +908,10 @@ ModelSceneGraph.prototype.updateShowBoundingVolume = function (
 function updatePrimitiveShowBoundingVolume(runtimePrimitive, options) {
   runtimePrimitive.drawCommand.debugShowBoundingVolume =
     options.debugShowBoundingVolume;
-  runtimePrimitive.metadataPickingDrawCommand.debugShowBoundingVolume =
-    options.debugShowBoundingVolume;
+  if (defined(runtimePrimitive.metadataPickingDrawCommand)) {
+    runtimePrimitive.metadataPickingDrawCommand.debugShowBoundingVolume =
+      options.debugShowBoundingVolume;
+  }
 }
 
 const scratchSilhouetteCommands = [];

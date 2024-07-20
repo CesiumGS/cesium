@@ -19,7 +19,7 @@ import Camera from "./Camera.js";
 import Cesium3DTileFeature from "./Cesium3DTileFeature.js";
 import Cesium3DTilePass from "./Cesium3DTilePass.js";
 import Cesium3DTilePassState from "./Cesium3DTilePassState.js";
-import MetadataComponentType from "./MetadataComponentType.js";
+import MetadataPicking from "./MetadataPicking.js";
 import PickDepth from "./PickDepth.js";
 import PrimitiveCollection from "./PrimitiveCollection.js";
 import SceneMode from "./SceneMode.js";
@@ -412,62 +412,6 @@ Picking.prototype.pickVoxelCoordinate = function (
   return voxelInfo;
 };
 
-Picking.prototype.getDecodedMetadataValue = function (
-  componentType,
-  dataView,
-  index
-) {
-  switch (componentType) {
-    case MetadataComponentType.INT8:
-      return dataView.getInt8(index);
-    case MetadataComponentType.UINT8:
-      return dataView.getUint8(index);
-    case MetadataComponentType.INT16:
-      return dataView.getInt16(index);
-    case MetadataComponentType.UINT16:
-      return dataView.getUint16(index);
-    case MetadataComponentType.INT32:
-      return dataView.getInt32(index);
-    case MetadataComponentType.UINT32:
-      return dataView.getUint32(index);
-    case MetadataComponentType.FLOAT32:
-      return dataView.getFloat32(index);
-    case MetadataComponentType.FLOAT64:
-      return dataView.getFloat64(index);
-  }
-  return undefined;
-};
-
-Picking.prototype.decodePickedMetadataValues = function (
-  classProperty,
-  rawValues
-) {
-  const componentType = classProperty.componentType;
-  const dataView = new DataView(
-    rawValues.buffer,
-    rawValues.byteOffset,
-    rawValues.byteLength
-  );
-  if (classProperty.isArray) {
-    const arrayLength = classProperty.arrayLength;
-    const result = Array(arrayLength);
-    for (let i = 0; i < arrayLength; i++) {
-      const element = this.getDecodedMetadataValue(componentType, dataView, i);
-      if (classProperty.normalized) {
-        result[i] = element / 255.0;
-      } else {
-        result[i] = element;
-      }
-    }
-    return result;
-  }
-  const value = this.getDecodedMetadataValue(componentType, dataView, 0);
-  if (classProperty.normalized) {
-    return value / 255.0;
-  }
-  return value;
-};
-
 /**
  * Pick a metadata value at the given window position.
  *
@@ -571,18 +515,20 @@ Picking.prototype.pickMetadata = function (
   scene.resolveFramebuffers(passState);
   scene._environmentState.useOIT = oldOIT;
 
-  const metadataInfo = pickFramebuffer.readCenterPixel(drawingBufferRectangle);
+  const rawMetadataPixel = pickFramebuffer.readCenterPixel(
+    drawingBufferRectangle
+  );
   context.endFrame();
 
   frameState.pickMetadata = false;
 
-  const metadataValue = this.decodePickedMetadataValues(
+  const metadataValue = MetadataPicking.decodeMetadataValues(
     classProperty,
-    metadataInfo
+    rawMetadataPixel
   );
   console.log("metadataValue ", metadataValue);
 
-  return metadataInfo;
+  return metadataValue;
 };
 
 function renderTranslucentDepthForPick(scene, drawingBufferPosition) {

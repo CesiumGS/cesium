@@ -4332,8 +4332,6 @@ Scene.prototype.pickMetadata = function (
     console.log("pickedMetadataValues ", pickedMetadataValues);
   }
 
-  // TODO_METADATA_PICKING The result here is a 4-element (byte) buffer.
-  // Convert this to the required target type
   return pickedMetadataValues;
 };
 
