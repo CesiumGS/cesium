@@ -229,9 +229,7 @@ function handleMouseDown(screenSpaceEventHandler, event) {
   Cartesian2.clone(position, screenSpaceEventHandler._primaryPreviousPosition);
 
   const modifier = getModifier(event);
-  if (ScreenSpaceEventHandler.isMousePassModifierLock) {
-    screenSpaceEventHandler._lastMousePassModifier = modifier;
-  }
+  screenSpaceEventHandler._lastMousePassModifier = modifier;
 
   const action = screenSpaceEventHandler.getInputAction(
     screenSpaceEventType,
@@ -262,10 +260,9 @@ function cancelMouseEvent(
 ) {
   let modifier;
   if (
-    ScreenSpaceEventHandler.isMousePassModifierLock &&
-    (screenSpaceEventHandler._buttonDown[MouseButton.LEFT] ||
-      screenSpaceEventHandler._buttonDown[MouseButton.MIDDLE] ||
-      screenSpaceEventHandler._buttonDown[MouseButton.RIGHT])
+    screenSpaceEventHandler._buttonDown[MouseButton.LEFT] ||
+    screenSpaceEventHandler._buttonDown[MouseButton.MIDDLE] ||
+    screenSpaceEventHandler._buttonDown[MouseButton.RIGHT]
   ) {
     modifier = screenSpaceEventHandler._lastMousePassModifier;
   } else {
@@ -367,10 +364,9 @@ function handleMouseMove(screenSpaceEventHandler, event) {
 
   let modifier;
   if (
-    ScreenSpaceEventHandler.isMousePassModifierLock &&
-    (screenSpaceEventHandler._buttonDown[MouseButton.LEFT] ||
-      screenSpaceEventHandler._buttonDown[MouseButton.MIDDLE] ||
-      screenSpaceEventHandler._buttonDown[MouseButton.RIGHT])
+    screenSpaceEventHandler._buttonDown[MouseButton.LEFT] ||
+    screenSpaceEventHandler._buttonDown[MouseButton.MIDDLE] ||
+    screenSpaceEventHandler._buttonDown[MouseButton.RIGHT]
   ) {
     modifier = screenSpaceEventHandler._lastMousePassModifier;
   } else {
@@ -1163,11 +1159,4 @@ ScreenSpaceEventHandler.mouseEmulationIgnoreMilliseconds = 800;
  */
 ScreenSpaceEventHandler.touchHoldDelayMilliseconds = 1500;
 
-/**
- * Gets or sets the modified
- * Lock the Modifier in the executed events.
- * @type {Boolean}
- * @default false
- */
-ScreenSpaceEventHandler.isMousePassModifierLock = false;
 export default ScreenSpaceEventHandler;
