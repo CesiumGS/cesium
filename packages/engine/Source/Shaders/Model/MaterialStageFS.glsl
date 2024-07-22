@@ -258,8 +258,7 @@ void setSpecularGlossiness(inout czm_modelMaterial material)
     material.specular = specular;
 
     // glossiness is the opposite of roughness, but easier for artists to use.
-    float roughness = 1.0 - glossiness;
-    material.roughness = roughness * roughness;
+    material.roughness = 1.0 - glossiness;
 }
 #elif defined(LIGHTING_PBR)
 float setMetallicRoughness(inout czm_modelMaterial material)
@@ -272,7 +271,7 @@ float setMetallicRoughness(inout czm_modelMaterial material)
 
         vec3 metallicRoughness = texture(u_metallicRoughnessTexture, metallicRoughnessTexCoords).rgb;
         float metalness = clamp(metallicRoughness.b, 0.0, 1.0);
-        float roughness = clamp(metallicRoughness.g, 0.04, 1.0);
+        float roughness = clamp(metallicRoughness.g, 0.0, 1.0);
         #ifdef HAS_METALLIC_FACTOR
             metalness = clamp(metalness * u_metallicFactor, 0.0, 1.0);
         #endif
@@ -288,7 +287,7 @@ float setMetallicRoughness(inout czm_modelMaterial material)
         #endif
 
         #ifdef HAS_ROUGHNESS_FACTOR
-            float roughness = clamp(u_roughnessFactor, 0.04, 1.0);
+            float roughness = clamp(u_roughnessFactor, 0.0, 1.0);
         #else
             float roughness = 1.0;
         #endif
@@ -303,9 +302,8 @@ float setMetallicRoughness(inout czm_modelMaterial material)
     // diffuse only applies to dielectrics.
     material.diffuse = mix(material.baseColor.rgb, vec3(0.0), metalness);
 
-    // roughness is authored as perceptual roughness
-    // square it to get material roughness
-    material.roughness = roughness * roughness;
+    // This is perceptual roughness. The square of this value is used for direct lighting
+    material.roughness = roughness;
 
     return metalness;
 }
@@ -418,9 +416,8 @@ void setClearcoat(inout czm_modelMaterial material, in ProcessedAttributes attri
     #endif
 
     material.clearcoatFactor = clearcoatFactor;
-    // roughness is authored as perceptual roughness
-    // square it to get material roughness
-    material.clearcoatRoughness = clearcoatRoughness * clearcoatRoughness;
+    // This is perceptual roughness. The square of this value is used for direct lighting
+    material.clearcoatRoughness = clearcoatRoughness;
     #ifdef HAS_CLEARCOAT_NORMAL_TEXTURE
         material.clearcoatNormal = getClearcoatNormalFromTexture(attributes, attributes.normalEC);
     #else
