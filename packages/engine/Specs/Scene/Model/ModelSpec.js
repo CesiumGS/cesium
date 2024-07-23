@@ -1757,6 +1757,9 @@ describe(
 
     describe("reference matrices", function () {
       it("sets IBL transform matrix", async function () {
+        if (!scene.highDynamicRangeSupported) {
+          return;
+        }
         const resource = Resource.createIfNeeded(boxTexturedGlbUrl);
         const buffer = await resource.fetchArrayBuffer();
         const imageBasedLighting = new ImageBasedLighting({
