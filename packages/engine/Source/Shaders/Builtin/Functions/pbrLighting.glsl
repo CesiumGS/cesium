@@ -13,14 +13,14 @@ vec3 fresnelSchlick2(vec3 f0, vec3 f90, float VdotH)
 
 #ifdef USE_ANISOTROPY
 /**
- * @param {float} roughness Material roughness (along the anisotropy bitangent)
+ * @param {float} bitangentRoughness Material roughness (along the anisotropy bitangent)
  * @param {float} tangentialRoughness Anisotropic roughness (along the anisotropy tangent)
  * @param {vec3} lightDirection The direction from the fragment to the light source, transformed to tangent-bitangent-normal coordinates
  * @param {vec3} viewDirection The direction from the fragment to the camera, transformed to tangent-bitangent-normal coordinates
  */
-float smithVisibilityGGX_anisotropic(float roughness, float tangentialRoughness, vec3 lightDirection, vec3 viewDirection)
+float smithVisibilityGGX_anisotropic(float bitangentRoughness, float tangentialRoughness, vec3 lightDirection, vec3 viewDirection)
 {
-    vec3 roughnessScale = vec3(tangentialRoughness, roughness, 1.0);
+    vec3 roughnessScale = vec3(tangentialRoughness, bitangentRoughness, 1.0);
     float GGXV = lightDirection.z * length(roughnessScale * viewDirection);
     float GGXL = viewDirection.z * length(roughnessScale * lightDirection);
     float v = 0.5 / (GGXV + GGXL);
@@ -28,14 +28,14 @@ float smithVisibilityGGX_anisotropic(float roughness, float tangentialRoughness,
 }
 
 /**
- * @param {float} roughness Material roughness (along the anisotropy bitangent)
+ * @param {float} bitangentRoughness Material roughness (along the anisotropy bitangent)
  * @param {float} tangentialRoughness Anisotropic roughness (along the anisotropy tangent)
  * @param {vec3} halfwayDirection The unit vector halfway between light and view directions, transformed to tangent-bitangent-normal coordinates
  */
-float GGX_anisotropic(float roughness, float tangentialRoughness, vec3 halfwayDirection)
+float GGX_anisotropic(float bitangentRoughness, float tangentialRoughness, vec3 halfwayDirection)
 {
-    float roughnessSquared = roughness * tangentialRoughness;
-    vec3 f = halfwayDirection * vec3(roughness, tangentialRoughness, roughnessSquared);
+    float roughnessSquared = bitangentRoughness * tangentialRoughness;
+    vec3 f = halfwayDirection * vec3(bitangentRoughness, tangentialRoughness, roughnessSquared);
     float w2 = roughnessSquared / dot(f, f);
     return roughnessSquared * w2 * w2 / czm_pi;
 }
@@ -73,15 +73,15 @@ float smithVisibilityGGX(float alphaRoughness, float NdotL, float NdotV)
  * the halfway vector, which is aligned halfway between the directions from
  * the fragment to the camera and from the fragment to the light source.
  *
- * @param {float} roughness The roughness of the material.
+ * @param {float} alphaRoughness The roughness of the material, expressed as the square of perceptual roughness.
  * @param {float} NdotH The cosine of the angle between the surface normal and the halfway vector.
  * @return {float} The fraction of microfacets aligned to the halfway vector.
  */
-float GGX(float roughness, float NdotH)
+float GGX(float alphaRoughness, float NdotH)
 {
-    float roughnessSquared = roughness * roughness;
-    float f = (NdotH * roughnessSquared - NdotH) * NdotH + 1.0;
-    return roughnessSquared / (czm_pi * f * f);
+    float alphaRoughnessSquared = alphaRoughness * alphaRoughness;
+    float f = (NdotH * alphaRoughnessSquared - NdotH) * NdotH + 1.0;
+    return alphaRoughnessSquared / (czm_pi * f * f);
 }
 
 /**
@@ -91,16 +91,16 @@ float GGX(float roughness, float NdotH)
  * @param {vec3} lightDirection The unit vector pointing from the fragment to the light source.
  * @param {vec3} viewDirection The unit vector pointing from the fragment to the camera.
  * @param {vec3} halfwayDirection The unit vector pointing from the fragment to halfway between the light source and the camera.
- * @param {float} roughness The roughness of the material.
+ * @param {float} alphaRoughness The roughness of the material, expressed as the square of perceptual roughness.
  * @return {float} The strength of the specular reflection.
  */
-float computeDirectSpecularStrength(vec3 normal, vec3 lightDirection, vec3 viewDirection, vec3 halfwayDirection, float roughness)
+float computeDirectSpecularStrength(vec3 normal, vec3 lightDirection, vec3 viewDirection, vec3 halfwayDirection, float alphaRoughness)
 {
     float NdotL = dot(normal, lightDirection);
     float NdotV = abs(dot(normal, viewDirection));
-    float G = smithVisibilityGGX(roughness, NdotL, NdotV);
+    float G = smithVisibilityGGX(alphaRoughness, NdotL, NdotV);
     float NdotH = clamp(dot(normal, halfwayDirection), 0.0, 1.0);
-    float D = GGX(roughness, NdotH);
+    float D = GGX(alphaRoughness, NdotH);
     return G * D;
 }
 
@@ -138,19 +138,20 @@ vec3 czm_pbrLighting(vec3 viewDirectionEC, vec3 normalEC, vec3 lightDirectionEC,
         F *= material.specularWeight;
     #endif
 
-    float alpha = material.roughness;
+    float alphaRoughness = material.roughness * material.roughness;
     #ifdef USE_ANISOTROPY
         mat3 tbn = mat3(material.anisotropicT, material.anisotropicB, normalEC);
         vec3 lightDirection = lightDirectionEC * tbn;
         vec3 viewDirection = viewDirectionEC * tbn;
         vec3 halfwayDirection = halfwayDirectionEC * tbn;
         float anisotropyStrength = material.anisotropyStrength;
-        float tangentialRoughness = mix(alpha, 1.0, anisotropyStrength * anisotropyStrength);
-        float G = smithVisibilityGGX_anisotropic(alpha, tangentialRoughness, lightDirection, viewDirection);
-        float D = GGX_anisotropic(alpha, tangentialRoughness, halfwayDirection);
+        float tangentialRoughness = mix(alphaRoughness, 1.0, anisotropyStrength * anisotropyStrength);
+        float bitangentRoughness = clamp(alphaRoughness, 0.001, 1.0);
+        float G = smithVisibilityGGX_anisotropic(bitangentRoughness, tangentialRoughness, lightDirection, viewDirection);
+        float D = GGX_anisotropic(bitangentRoughness, tangentialRoughness, halfwayDirection);
         vec3 specularContribution = F * G * D;
     #else
-        float specularStrength = computeDirectSpecularStrength(normalEC, lightDirectionEC, viewDirectionEC, halfwayDirectionEC, alpha);
+        float specularStrength = computeDirectSpecularStrength(normalEC, lightDirectionEC, viewDirectionEC, halfwayDirectionEC, alphaRoughness);
         vec3 specularContribution = F * specularStrength;
     #endif
 
