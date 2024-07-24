@@ -14,6 +14,30 @@ import TextureMagnificationFilter from "./TextureMagnificationFilter.js";
 import TextureMinificationFilter from "./TextureMinificationFilter.js";
 
 /**
+ * @typedef CubeMap.ConstructorOptions
+ *
+ * @property {Context} context
+ * @property {object} [source] The source for texel values to be loaded into the texture
+ * @property {PixelFormat} [pixelFormat=PixelFormat.RGBA] The format of each pixel, i.e., the number of components it has and what they represent.
+ * @property {PixelDatatype} [pixelDatatype=PixelDatatype.UNSIGNED_BYTE] The data type of each pixel.
+ * @property {boolean} [flipY=true] If true, the source values will be read as if the y-axis is inverted (y=0 at the top).
+ * @property {boolean} [skipColorSpaceConversion=false] If true, color space conversions will be skipped when reading the texel values.
+ * @property {Sampler} [sampler] Information about how to sample the cubemap texture.
+ * @property {number} [width] The pixel width of the texture. If not supplied, must be available from the source. Must be equal to height.
+ * @property {number} [height] The pixel height of the texture. If not supplied, must be available from the source. Must be equal to width.
+ * @property {boolean} [preMultiplyAlpha] If true, the alpha channel will be multiplied into the other channels.
+ *
+ * @private
+ */
+
+/**
+ * A wrapper for a {@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLTexture|WebGLTexture}
+ * used as a cube map, to abstract away the verbose GL calls associated with setting up a texture.
+ *
+ * @alias CubeMap
+ * @constructor
+ *
+ * @param {CubeMap.ConstructorOptions} options An object describing initialization options.
  * @private
  */
 function CubeMap(options) {
@@ -23,10 +47,24 @@ function CubeMap(options) {
   Check.defined("options.context", options.context);
   //>>includeEnd('debug');
 
-  const context = options.context;
-  const source = options.source;
-  let width;
-  let height;
+  const {
+    context,
+    source,
+    pixelFormat = PixelFormat.RGBA,
+    pixelDatatype = PixelDatatype.UNSIGNED_BYTE,
+    flipY = true,
+    skipColorSpaceConversion = false,
+    sampler = new Sampler(),
+  } = options;
+
+  // Use premultiplied alpha for opaque textures should perform better on Chrome:
+  // http://media.tojicode.com/webglCamp4/#20
+  const preMultiplyAlpha =
+    options.preMultiplyAlpha ||
+    pixelFormat === PixelFormat.RGB ||
+    pixelFormat === PixelFormat.LUMINANCE;
+
+  let { width, height } = options;
 
   if (defined(source)) {
     const faces = [
@@ -39,14 +77,7 @@ function CubeMap(options) {
     ];
 
     //>>includeStart('debug', pragmas.debug);
-    if (
-      !faces[0] ||
-      !faces[1] ||
-      !faces[2] ||
-      !faces[3] ||
-      !faces[4] ||
-      !faces[5]
-    ) {
+    if (!faces.every(defined)) {
       throw new DeveloperError(
         "options.source requires positiveX, negativeX, positiveY, negativeY, positiveZ, and negativeZ faces."
       );
@@ -68,22 +99,9 @@ function CubeMap(options) {
       }
     }
     //>>includeEnd('debug');
-  } else {
-    width = options.width;
-    height = options.height;
   }
 
   const size = width;
-  const pixelDatatype = defaultValue(
-    options.pixelDatatype,
-    PixelDatatype.UNSIGNED_BYTE
-  );
-  const pixelFormat = defaultValue(options.pixelFormat, PixelFormat.RGBA);
-  const internalFormat = PixelFormat.toInternalFormat(
-    pixelFormat,
-    pixelDatatype,
-    context
-  );
 
   //>>includeStart('debug', pragmas.debug);
   if (!defined(width) || !defined(height)) {
@@ -102,7 +120,7 @@ function CubeMap(options) {
 
   if (size > ContextLimits.maximumCubeMapSize) {
     throw new DeveloperError(
-      `Width and height must be less than or equal to the maximum cube map size (${ContextLimits.maximumCubeMapSize}).  Check maximumCubeMapSize.`
+      `Width and height must be less than or equal to the maximum cube map size (${ContextLimits.maximumCubeMapSize}). Check maximumCubeMapSize.`
     );
   }
 
@@ -138,17 +156,10 @@ function CubeMap(options) {
 
   const sizeInBytes =
     PixelFormat.textureSizeInBytes(pixelFormat, pixelDatatype, size, size) * 6;
-
-  // Use premultiplied alpha for opaque textures should perform better on Chrome:
-  // http://media.tojicode.com/webglCamp4/#20
-  const preMultiplyAlpha =
-    options.preMultiplyAlpha ||
-    pixelFormat === PixelFormat.RGB ||
-    pixelFormat === PixelFormat.LUMINANCE;
-  const flipY = defaultValue(options.flipY, true);
-  const skipColorSpaceConversion = defaultValue(
-    options.skipColorSpaceConversion,
-    false
+  const internalFormat = PixelFormat.toInternalFormat(
+    pixelFormat,
+    pixelDatatype,
+    context
   );
 
   const gl = context._gl;
@@ -158,17 +169,8 @@ function CubeMap(options) {
   gl.activeTexture(gl.TEXTURE0);
   gl.bindTexture(textureTarget, texture);
 
-  function createFace(
-    target,
-    sourceFace,
-    preMultiplyAlpha,
-    flipY,
-    skipColorSpaceConversion
-  ) {
-    let arrayBufferView = sourceFace.arrayBufferView;
-    if (!defined(arrayBufferView)) {
-      arrayBufferView = sourceFace.bufferView;
-    }
+  function createFace(target, sourceFace) {
+    const { arrayBufferView = sourceFace.bufferView } = sourceFace;
 
     let unpackAlignment = 4;
     if (defined(arrayBufferView)) {
@@ -178,7 +180,6 @@ function CubeMap(options) {
         width
       );
     }
-
     gl.pixelStorei(gl.UNPACK_ALIGNMENT, unpackAlignment);
 
     if (skipColorSpaceConversion) {
@@ -190,157 +191,69 @@ function CubeMap(options) {
       );
     }
 
+    let pixels;
     if (defined(arrayBufferView)) {
       gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
       gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
-
       if (flipY) {
-        arrayBufferView = PixelFormat.flipY(
+        pixels = PixelFormat.flipY(
           arrayBufferView,
           pixelFormat,
           pixelDatatype,
           size,
           size
         );
+      } else {
+        pixels = arrayBufferView;
       }
-      gl.texImage2D(
-        target,
-        0,
-        internalFormat,
-        size,
-        size,
-        0,
-        pixelFormat,
-        PixelDatatype.toWebGLConstant(pixelDatatype, context),
-        arrayBufferView
-      );
     } else {
       // Only valid for DOM-Element uploads
       gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, preMultiplyAlpha);
       gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, flipY);
-
-      // Source: ImageData, HTMLImageElement, HTMLCanvasElement, or HTMLVideoElement
-      gl.texImage2D(
-        target,
-        0,
-        internalFormat,
-        pixelFormat,
-        PixelDatatype.toWebGLConstant(pixelDatatype, context),
-        sourceFace
-      );
+      pixels = sourceFace;
     }
+
+    gl.texImage2D(
+      target,
+      0,
+      internalFormat,
+      size,
+      size,
+      0,
+      pixelFormat,
+      PixelDatatype.toWebGLConstant(pixelDatatype, context),
+      pixels
+    );
+  }
+
+  function createNullFace(targetFace) {
+    gl.texImage2D(
+      targetFace,
+      0,
+      internalFormat,
+      size,
+      size,
+      0,
+      pixelFormat,
+      PixelDatatype.toWebGLConstant(pixelDatatype, context),
+      null
+    );
   }
 
   if (defined(source)) {
-    createFace(
-      gl.TEXTURE_CUBE_MAP_POSITIVE_X,
-      source.positiveX,
-      preMultiplyAlpha,
-      flipY,
-      skipColorSpaceConversion
-    );
-    createFace(
-      gl.TEXTURE_CUBE_MAP_NEGATIVE_X,
-      source.negativeX,
-      preMultiplyAlpha,
-      flipY,
-      skipColorSpaceConversion
-    );
-    createFace(
-      gl.TEXTURE_CUBE_MAP_POSITIVE_Y,
-      source.positiveY,
-      preMultiplyAlpha,
-      flipY,
-      skipColorSpaceConversion
-    );
-    createFace(
-      gl.TEXTURE_CUBE_MAP_NEGATIVE_Y,
-      source.negativeY,
-      preMultiplyAlpha,
-      flipY,
-      skipColorSpaceConversion
-    );
-    createFace(
-      gl.TEXTURE_CUBE_MAP_POSITIVE_Z,
-      source.positiveZ,
-      preMultiplyAlpha,
-      flipY,
-      skipColorSpaceConversion
-    );
-    createFace(
-      gl.TEXTURE_CUBE_MAP_NEGATIVE_Z,
-      source.negativeZ,
-      preMultiplyAlpha,
-      flipY,
-      skipColorSpaceConversion
-    );
+    createFace(gl.TEXTURE_CUBE_MAP_POSITIVE_X, source.positiveX);
+    createFace(gl.TEXTURE_CUBE_MAP_NEGATIVE_X, source.negativeX);
+    createFace(gl.TEXTURE_CUBE_MAP_POSITIVE_Y, source.positiveY);
+    createFace(gl.TEXTURE_CUBE_MAP_NEGATIVE_Y, source.negativeY);
+    createFace(gl.TEXTURE_CUBE_MAP_POSITIVE_Z, source.positiveZ);
+    createFace(gl.TEXTURE_CUBE_MAP_NEGATIVE_Z, source.negativeZ);
   } else {
-    gl.texImage2D(
-      gl.TEXTURE_CUBE_MAP_POSITIVE_X,
-      0,
-      internalFormat,
-      size,
-      size,
-      0,
-      pixelFormat,
-      PixelDatatype.toWebGLConstant(pixelDatatype, context),
-      null
-    );
-    gl.texImage2D(
-      gl.TEXTURE_CUBE_MAP_NEGATIVE_X,
-      0,
-      internalFormat,
-      size,
-      size,
-      0,
-      pixelFormat,
-      PixelDatatype.toWebGLConstant(pixelDatatype, context),
-      null
-    );
-    gl.texImage2D(
-      gl.TEXTURE_CUBE_MAP_POSITIVE_Y,
-      0,
-      internalFormat,
-      size,
-      size,
-      0,
-      pixelFormat,
-      PixelDatatype.toWebGLConstant(pixelDatatype, context),
-      null
-    );
-    gl.texImage2D(
-      gl.TEXTURE_CUBE_MAP_NEGATIVE_Y,
-      0,
-      internalFormat,
-      size,
-      size,
-      0,
-      pixelFormat,
-      PixelDatatype.toWebGLConstant(pixelDatatype, context),
-      null
-    );
-    gl.texImage2D(
-      gl.TEXTURE_CUBE_MAP_POSITIVE_Z,
-      0,
-      internalFormat,
-      size,
-      size,
-      0,
-      pixelFormat,
-      PixelDatatype.toWebGLConstant(pixelDatatype, context),
-      null
-    );
-    gl.texImage2D(
-      gl.TEXTURE_CUBE_MAP_NEGATIVE_Z,
-      0,
-      internalFormat,
-      size,
-      size,
-      0,
-      pixelFormat,
-      PixelDatatype.toWebGLConstant(pixelDatatype, context),
-      null
-    );
+    createNullFace(gl.TEXTURE_CUBE_MAP_POSITIVE_X);
+    createNullFace(gl.TEXTURE_CUBE_MAP_NEGATIVE_X);
+    createNullFace(gl.TEXTURE_CUBE_MAP_POSITIVE_Y);
+    createNullFace(gl.TEXTURE_CUBE_MAP_NEGATIVE_Y);
+    createNullFace(gl.TEXTURE_CUBE_MAP_POSITIVE_Z);
+    createNullFace(gl.TEXTURE_CUBE_MAP_NEGATIVE_Z);
   }
   gl.bindTexture(textureTarget, null);
 
@@ -355,89 +268,32 @@ function CubeMap(options) {
   this._sizeInBytes = sizeInBytes;
   this._preMultiplyAlpha = preMultiplyAlpha;
   this._flipY = flipY;
-  this._sampler = undefined;
 
   const initialized = defined(source);
-  this._positiveX = new CubeMapFace(
-    context,
-    texture,
-    textureTarget,
-    gl.TEXTURE_CUBE_MAP_POSITIVE_X,
-    internalFormat,
-    pixelFormat,
-    pixelDatatype,
-    size,
-    preMultiplyAlpha,
-    flipY,
-    initialized
-  );
-  this._negativeX = new CubeMapFace(
-    context,
-    texture,
-    textureTarget,
-    gl.TEXTURE_CUBE_MAP_NEGATIVE_X,
-    internalFormat,
-    pixelFormat,
-    pixelDatatype,
-    size,
-    preMultiplyAlpha,
-    flipY,
-    initialized
-  );
-  this._positiveY = new CubeMapFace(
-    context,
-    texture,
-    textureTarget,
-    gl.TEXTURE_CUBE_MAP_POSITIVE_Y,
-    internalFormat,
-    pixelFormat,
-    pixelDatatype,
-    size,
-    preMultiplyAlpha,
-    flipY,
-    initialized
-  );
-  this._negativeY = new CubeMapFace(
-    context,
-    texture,
-    textureTarget,
-    gl.TEXTURE_CUBE_MAP_NEGATIVE_Y,
-    internalFormat,
-    pixelFormat,
-    pixelDatatype,
-    size,
-    preMultiplyAlpha,
-    flipY,
-    initialized
-  );
-  this._positiveZ = new CubeMapFace(
-    context,
-    texture,
-    textureTarget,
-    gl.TEXTURE_CUBE_MAP_POSITIVE_Z,
-    internalFormat,
-    pixelFormat,
-    pixelDatatype,
-    size,
-    preMultiplyAlpha,
-    flipY,
-    initialized
-  );
-  this._negativeZ = new CubeMapFace(
-    context,
-    texture,
-    textureTarget,
-    gl.TEXTURE_CUBE_MAP_NEGATIVE_Z,
-    internalFormat,
-    pixelFormat,
-    pixelDatatype,
-    size,
-    preMultiplyAlpha,
-    flipY,
-    initialized
-  );
+  function constructFace(targetFace) {
+    return new CubeMapFace(
+      context,
+      texture,
+      textureTarget,
+      targetFace,
+      internalFormat,
+      pixelFormat,
+      pixelDatatype,
+      size,
+      preMultiplyAlpha,
+      flipY,
+      initialized
+    );
+  }
+  this._positiveX = constructFace(gl.TEXTURE_CUBE_MAP_POSITIVE_X);
+  this._negativeX = constructFace(gl.TEXTURE_CUBE_MAP_NEGATIVE_X);
+  this._positiveY = constructFace(gl.TEXTURE_CUBE_MAP_POSITIVE_Y);
+  this._negativeY = constructFace(gl.TEXTURE_CUBE_MAP_NEGATIVE_Y);
+  this._positiveZ = constructFace(gl.TEXTURE_CUBE_MAP_POSITIVE_Z);
+  this._negativeZ = constructFace(gl.TEXTURE_CUBE_MAP_NEGATIVE_Z);
 
-  this.sampler = defined(options.sampler) ? options.sampler : new Sampler();
+  this._sampler = sampler;
+  setupSampler(sampler, this);
 }
 
 Object.defineProperties(CubeMap.prototype, {
@@ -476,52 +332,7 @@ Object.defineProperties(CubeMap.prototype, {
       return this._sampler;
     },
     set: function (sampler) {
-      let minificationFilter = sampler.minificationFilter;
-      let magnificationFilter = sampler.magnificationFilter;
-
-      const mipmap =
-        minificationFilter ===
-          TextureMinificationFilter.NEAREST_MIPMAP_NEAREST ||
-        minificationFilter ===
-          TextureMinificationFilter.NEAREST_MIPMAP_LINEAR ||
-        minificationFilter ===
-          TextureMinificationFilter.LINEAR_MIPMAP_NEAREST ||
-        minificationFilter === TextureMinificationFilter.LINEAR_MIPMAP_LINEAR;
-
-      const context = this._context;
-      const pixelDatatype = this._pixelDatatype;
-
-      // float textures only support nearest filtering unless the linear extensions are supported, so override the sampler's settings
-      if (
-        (pixelDatatype === PixelDatatype.FLOAT &&
-          !context.textureFloatLinear) ||
-        (pixelDatatype === PixelDatatype.HALF_FLOAT &&
-          !context.textureHalfFloatLinear)
-      ) {
-        minificationFilter = mipmap
-          ? TextureMinificationFilter.NEAREST_MIPMAP_NEAREST
-          : TextureMinificationFilter.NEAREST;
-        magnificationFilter = TextureMagnificationFilter.NEAREST;
-      }
-
-      const gl = context._gl;
-      const target = this._textureTarget;
-
-      gl.activeTexture(gl.TEXTURE0);
-      gl.bindTexture(target, this._texture);
-      gl.texParameteri(target, gl.TEXTURE_MIN_FILTER, minificationFilter);
-      gl.texParameteri(target, gl.TEXTURE_MAG_FILTER, magnificationFilter);
-      gl.texParameteri(target, gl.TEXTURE_WRAP_S, sampler.wrapS);
-      gl.texParameteri(target, gl.TEXTURE_WRAP_T, sampler.wrapT);
-      if (defined(this._textureFilterAnisotropic)) {
-        gl.texParameteri(
-          target,
-          this._textureFilterAnisotropic.TEXTURE_MAX_ANISOTROPY_EXT,
-          sampler.maximumAnisotropy
-        );
-      }
-      gl.bindTexture(target, null);
-
+      setupSampler(sampler, this);
       this._sampler = sampler;
     },
   },
@@ -570,6 +381,57 @@ Object.defineProperties(CubeMap.prototype, {
     },
   },
 });
+
+/**
+ * Set up a sampler for use with a cube map.
+ * @param {Sampler} sampler Information about how to sample the cubemap texture.
+ * @param {CubeMap} cubeMap The cube map containing the texture to be sampled by this sampler.
+ * @private
+ */
+function setupSampler(sampler, cubeMap) {
+  let { minificationFilter, magnificationFilter } = sampler;
+
+  const mipmap = [
+    TextureMinificationFilter.NEAREST_MIPMAP_NEAREST,
+    TextureMinificationFilter.NEAREST_MIPMAP_LINEAR,
+    TextureMinificationFilter.LINEAR_MIPMAP_NEAREST,
+    TextureMinificationFilter.LINEAR_MIPMAP_LINEAR,
+  ].includes(minificationFilter);
+
+  const context = cubeMap._context;
+  const pixelDatatype = cubeMap._pixelDatatype;
+
+  // float textures only support nearest filtering unless the linear extensions are supported
+  if (
+    (pixelDatatype === PixelDatatype.FLOAT && !context.textureFloatLinear) ||
+    (pixelDatatype === PixelDatatype.HALF_FLOAT &&
+      !context.textureHalfFloatLinear)
+  ) {
+    // override the sampler's settings
+    minificationFilter = mipmap
+      ? TextureMinificationFilter.NEAREST_MIPMAP_NEAREST
+      : TextureMinificationFilter.NEAREST;
+    magnificationFilter = TextureMagnificationFilter.NEAREST;
+  }
+
+  const gl = context._gl;
+  const target = cubeMap._textureTarget;
+
+  gl.activeTexture(gl.TEXTURE0);
+  gl.bindTexture(target, cubeMap._texture);
+  gl.texParameteri(target, gl.TEXTURE_MIN_FILTER, minificationFilter);
+  gl.texParameteri(target, gl.TEXTURE_MAG_FILTER, magnificationFilter);
+  gl.texParameteri(target, gl.TEXTURE_WRAP_S, sampler.wrapS);
+  gl.texParameteri(target, gl.TEXTURE_WRAP_T, sampler.wrapT);
+  if (defined(cubeMap._textureFilterAnisotropic)) {
+    gl.texParameteri(
+      target,
+      cubeMap._textureFilterAnisotropic.TEXTURE_MAX_ANISOTROPY_EXT,
+      sampler.maximumAnisotropy
+    );
+  }
+  gl.bindTexture(target, null);
+}
 
 /**
  * Generates a complete mipmap chain for each cubemap face.
