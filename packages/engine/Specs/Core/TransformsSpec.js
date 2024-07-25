@@ -1248,7 +1248,6 @@ describe("Core/Transforms", function () {
         t[3] * t[1] * t[8] -
         t[0] * t[7] * t[5];
       expect(det).toEqualEpsilon(1.0, CesiumMath.EPSILON14);
-      console.log(t);
 
       // rotation matrix inverses are equal to its transpose
       const t4 = Matrix4.fromRotationTranslation(t);
