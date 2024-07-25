@@ -539,6 +539,35 @@ const twoPiOverSecondsInDay = CesiumMath.TWO_PI / 86400.0;
 let dateInUtc = new JulianDate();
 
 /**
+ * The default function to compute a rotation matrix to transform a point or vector from the International Celestial
+ * Reference Frame (GCRF/ICRF) inertial frame axes to the central body, typically Earth, fixed frame axis at a given
+ * time for use in lighting and transformation from inertial reference frames. This function may return undefined if
+ * the data necessary to do the transformation is not yet loaded.
+ *
+ * @param {JulianDate} date The time at which to compute the rotation matrix.
+ * @param {Matrix3} [result] The object onto which to store the result.  If this parameter is
+ *                  not specified, a new instance is created and returned.
+ * @returns {Matrix3|undefined} The rotation matrix, or undefined if the data necessary to do the
+ *                   transformation is not yet loaded.
+ *
+ * @example
+ * // Set the default ICRF to fixed transformation to that of the Moon.
+ * Cesium.Transforms.computeIcrfToCentralBodyFixedMatrix = Cesium.Transforms.computeIcrfToMoonFixedMatrix;
+ *
+ * @see Transforms.computeIcrfToFixedMatrix
+ * @see Transforms.computeTemeToPseudoFixedMatrix
+ * @see Transforms.computeIcrfToMoonFixedMatrix
+ */
+Transforms.computeIcrfToCentralBodyFixedMatrix = function (date, result) {
+  let transformMatrix = Transforms.computeIcrfToFixedMatrix(date, result);
+  if (!defined(transformMatrix)) {
+    transformMatrix = Transforms.computeTemeToPseudoFixedMatrix(date, result);
+  }
+
+  return transformMatrix;
+};
+
+/**
  * Computes a rotation matrix to transform a point or vector from True Equator Mean Equinox (TEME) axes to the
  * pseudo-fixed axes at a given time.  This method treats the UT1 time standard as equivalent to UTC.
  *
@@ -691,7 +720,7 @@ Transforms.preloadIcrfFixed = function (timeInterval) {
  * @param {JulianDate} date The time at which to compute the rotation matrix.
  * @param {Matrix3} [result] The object onto which to store the result.  If this parameter is
  *                  not specified, a new instance is created and returned.
- * @returns {Matrix3} The rotation matrix, or undefined if the data necessary to do the
+ * @returns {Matrix3|undefined} The rotation matrix, or undefined if the data necessary to do the
  *                   transformation is not yet loaded.
  *
  *
@@ -731,6 +760,27 @@ const J2000d = 2451545;
 const scratchHpr = new HeadingPitchRoll();
 const scratchRotationMatrix = new Matrix3();
 const dateScratch = new JulianDate();
+
+/**
+ * Computes a rotation matrix to transform a point or vector from the Moon-Fixed frame axes
+ * to the International Celestial Reference Frame (GCRF/ICRF) inertial frame axes
+ * at a given time.
+ *
+ * @param {JulianDate} date The time at which to compute the rotation matrix.
+ * @param {Matrix3} [result] The object onto which to store the result.  If this parameter is
+ *                  not specified, a new instance is created and returned.
+ * @returns {Matrix3} The rotation matrix.
+ *
+ * @example
+ * // Transform a point from the Fixed axes to the ICRF axes.
+ * const now = Cesium.JulianDate.now();
+ * const pointInFixed = Cesium.Cartesian3.fromDegrees(0.0, 0.0);
+ * const fixedToIcrf = Cesium.Transforms.computeMoonFixedToIcrfMatrix(now);
+ * let pointInInertial = new Cesium.Cartesian3();
+ * if (Cesium.defined(fixedToIcrf)) {
+ *     pointInInertial = Cesium.Matrix3.multiplyByVector(fixedToIcrf, pointInFixed, pointInInertial);
+ * }
+ */
 Transforms.computeMoonFixedToIcrfMatrix = function (date, result) {
   //>>includeStart('debug', pragmas.debug);
   if (!defined(date)) {
@@ -779,6 +829,30 @@ Transforms.computeMoonFixedToIcrfMatrix = function (date, result) {
   return Matrix3.fromHeadingPitchRoll(scratchHpr, scratchRotationMatrix);
 };
 
+/**
+ * Computes a rotation matrix to transform a point or vector from the International Celestial
+ * Reference Frame (GCRF/ICRF) inertial frame axes to the Moon-Fixed frame axes
+ * at a given time.
+ *
+ * @param {JulianDate} date The time at which to compute the rotation matrix.
+ * @param {Matrix3} [result] The object onto which to store the result.  If this parameter is
+ *                  not specified, a new instance is created and returned.
+ * @returns {Matrix3} The rotation matrix.
+ *
+ * @example
+ * TODO
+ *
+ * @example
+ * scene.postUpdate.addEventListener(function(scene, time) {
+ *   // View in ICRF.
+ *   const toFixed = Cesium.Transforms.computeMoonFixedToIcrfMatrix(time);
+ *   if (Cesium.defined(toFixed)) {
+ *     const offset = Cesium.Cartesian3.clone(camera.position);
+ *     const transform = Cesium.Matrix4.fromRotationTranslation(toFixed);
+ *     camera.lookAtTransform(transform, offset);
+ *   }
+ * });
+ */
 Transforms.computeIcrfToMoonFixedMatrix = function (date, result) {
   //>>includeStart('debug', pragmas.debug);
   if (!defined(date)) {
@@ -818,7 +892,7 @@ const rotation2Scratch = new Matrix3();
  * @param {JulianDate} date The time at which to compute the rotation matrix.
  * @param {Matrix3} [result] The object onto which to store the result.  If this parameter is
  *                  not specified, a new instance is created and returned.
- * @returns {Matrix3} The rotation matrix, or undefined if the data necessary to do the
+ * @returns {Matrix3|undefined} The rotation matrix, or undefined if the data necessary to do the
  *                   transformation is not yet loaded.
  *
  *

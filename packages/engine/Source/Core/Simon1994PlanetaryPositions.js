@@ -681,37 +681,4 @@ Simon1994PlanetaryPositions.computeMoonPositionInEarthInertialFrame = function (
   return result;
 };
 
-/**
- * Computes the position of the Sun in the Moon-centered fixed frame
- *
- * @param {JulianDate} [julianDate] The time at which to compute the Sun's position, if not provided the current system time is used.
- * @param {Cartesian3} [result] The object onto which to store the result.
- * @returns {Cartesian3} Calculated Sun position
- */
-Simon1994PlanetaryPositions.computeSunPositionInMoonInertialFrame = function (
-  julianDate,
-  result
-) {
-  if (!defined(julianDate)) {
-    julianDate = JulianDate.now();
-  }
-
-  if (!defined(result)) {
-    result = new Cartesian3();
-  }
-
-  //first forward transformation
-  translation = computeSimonEarthMoonBarycenter(julianDate, translation);
-  result = Cartesian3.negate(translation, result);
-
-  //second forward transformation
-  computeSimonMoon(julianDate, translation);
-
-  Cartesian3.subtract(result, translation, result);
-
-  //Matrix3.multiplyByVector(rotation, result, result); TODO: ?
-
-  return result;
-};
-
 export default Simon1994PlanetaryPositions;
