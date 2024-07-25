@@ -9,6 +9,7 @@
 - Updated geometric self-shadowing function to improve direct lighting on models using physically-based rendering. [#12063](https://github.com/CesiumGS/cesium/pull/12063)
 - Fixed environment map LOD selection in image-based lighting. [#12070](https://github.com/CesiumGS/cesium/pull/12070)
 - Corrected calculation of diffuse component in image-based lighting. [#12082](https://github.com/CesiumGS/cesium/pull/12082)
+- Prevent Bing Imagery API format issues from throwing errors [#12094](https://github.com/CesiumGS/cesium/pull/12094)
 
 ### 1.119 - 2024-07-01
 
