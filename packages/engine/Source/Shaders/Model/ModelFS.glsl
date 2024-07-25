@@ -47,7 +47,7 @@ void main()
 
     //========================================================================
     // When not picking metadata START
-    #ifndef METADATA_PICKING
+    #ifndef METADATA_PICKING_ENABLED
 
     #ifdef HAS_SELECTED_FEATURE_ID
     selectedFeatureIdStage(selectedFeature, featureIds);
@@ -101,7 +101,7 @@ void main()
 
     //========================================================================
     // When not picking metadata START
-    #ifndef METADATA_PICKING
+    #ifndef METADATA_PICKING_ENABLED
 
     #if defined(HAS_SILHOUETTE) && defined(HAS_NORMALS)
     silhouetteStage(color);

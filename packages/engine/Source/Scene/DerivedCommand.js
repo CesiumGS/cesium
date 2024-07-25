@@ -2,6 +2,7 @@ import defined from "../Core/defined.js";
 import DrawCommand from "../Renderer/DrawCommand.js";
 import RenderState from "../Renderer/RenderState.js";
 import ShaderSource from "../Renderer/ShaderSource.js";
+import MetadataType from "./MetadataType.js";
 
 /**
  * @private
@@ -370,6 +371,175 @@ DerivedCommand.createPickDerivedCommand = function (
   } else {
     result.pickCommand.shaderProgram = shader;
     result.pickCommand.renderState = renderState;
+  }
+
+  return result;
+};
+
+function replaceDefine(defines, defineName, newDefineValue) {
+  const n = defines.length;
+  for (let i = 0; i < n; i++) {
+    if (defines[i].startsWith(defineName)) {
+      defines[i] = `${defineName} ${newDefineValue}`;
+    }
+  }
+}
+
+function getComponentCount(classProperty) {
+  if (!classProperty.isArray) {
+    return MetadataType.getComponentCount(classProperty.type);
+  }
+  return classProperty.arrayLength;
+}
+function getGlslType(classProperty) {
+  const componentCount = getComponentCount(classProperty);
+  if (classProperty.normalized) {
+    if (componentCount === 1) {
+      return "float";
+    }
+    return `vec${componentCount}`;
+  }
+  if (componentCount === 1) {
+    return "int";
+  }
+  return `ivec${componentCount}`;
+}
+
+function getPickMetadataShaderProgram(
+  context,
+  shaderProgram,
+  pickedMetadataInfo
+) {
+  let shader = context.shaderCache.getDerivedShaderProgram(
+    shaderProgram,
+    "pickMetadata"
+  );
+  if (defined(shader)) {
+    return shader;
+  }
+
+  const propertyName = pickedMetadataInfo.propertyName;
+  const classProperty = pickedMetadataInfo.classProperty;
+  const glslType = getGlslType(classProperty);
+
+  // Define the components that will go into the output `metadataValues`.
+  // By default, all of them are 0.0.
+  const sourceValueStrings = ["0.0", "0.0", "0.0", "0.0"];
+  const componentCount = getComponentCount(classProperty);
+  if (componentCount === 1) {
+    // When the property is a scalar, store its value directly
+    // in `metadataValues.x`
+    sourceValueStrings[0] = `float(value)`;
+  } else {
+    // When the property is an array, store the array elements
+    // in `metadataValues.x/y/z/w`
+    const components = ["x", "y", "z", "w"];
+    for (let i = 0; i < componentCount; i++) {
+      const component = components[i];
+      const valueString = `value.${component}`;
+      sourceValueStrings[i] = `float(${valueString})`;
+    }
+  }
+
+  // Make sure that the `metadataValues` components are all in
+  // the range [0, 1] (which will result in RGBA components
+  // in [0, 255] during rendering)
+  if (!classProperty.normalized) {
+    for (let i = 0; i < componentCount; i++) {
+      sourceValueStrings[i] += " / 255.0";
+    }
+  }
+
+  let fs = shaderProgram.fragmentShaderSource;
+  const newDefines = [...fs.defines];
+  newDefines.push("METADATA_PICKING_ENABLED");
+
+  // Replace the defines of the shader, using the type, property
+  // access, and value components  that have been determined
+  replaceDefine(newDefines, "METADATA_PICKING_VALUE_TYPE", glslType);
+  replaceDefine(
+    newDefines,
+    "METADATA_PICKING_VALUE_STRING",
+    `metadata.${propertyName}`
+  );
+  replaceDefine(
+    newDefines,
+    "METADATA_PICKING_VALUE_COMPONENT_X",
+    sourceValueStrings[0]
+  );
+  replaceDefine(
+    newDefines,
+    "METADATA_PICKING_VALUE_COMPONENT_Y",
+    sourceValueStrings[1]
+  );
+  replaceDefine(
+    newDefines,
+    "METADATA_PICKING_VALUE_COMPONENT_Z",
+    sourceValueStrings[2]
+  );
+  replaceDefine(
+    newDefines,
+    "METADATA_PICKING_VALUE_COMPONENT_W",
+    sourceValueStrings[3]
+  );
+
+  console.log("newDefines");
+  for (const d of newDefines) {
+    console.log(d);
+  }
+
+  fs = new ShaderSource({
+    sources: fs.sources,
+    defines: newDefines,
+  });
+  shader = context.shaderCache.createDerivedShaderProgram(
+    shaderProgram,
+    "pickMetadata",
+    {
+      vertexShaderSource: shaderProgram.vertexShaderSource,
+      fragmentShaderSource: fs,
+      attributeLocations: shaderProgram._attributeLocations,
+    }
+  );
+  return shader;
+}
+
+DerivedCommand.createPickMetadataDerivedCommand = function (
+  scene,
+  command,
+  context,
+  result
+) {
+  if (!defined(result)) {
+    result = {};
+  }
+
+  let shader;
+  let renderState;
+  if (defined(result.pickMetadataCommand)) {
+    shader = result.pickMetadataCommand.shaderProgram;
+    renderState = result.pickMetadataCommand.renderState;
+  }
+
+  result.pickMetadataCommand = DrawCommand.shallowClone(
+    command,
+    result.pickMetadataCommand
+  );
+
+  if (!defined(shader) || result.shaderProgramId !== command.shaderProgram.id) {
+    result.pickMetadataCommand.shaderProgram = getPickMetadataShaderProgram(
+      context,
+      command.shaderProgram,
+      command.pickedMetadataInfo
+    );
+    result.pickMetadataCommand.renderState = getPickRenderState(
+      scene,
+      command.renderState
+    );
+    result.shaderProgramId = command.shaderProgram.id;
+  } else {
+    result.pickMetadataCommand.shaderProgram = shader;
+    result.pickMetadataCommand.renderState = renderState;
   }
 
   return result;

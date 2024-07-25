@@ -1732,7 +1732,17 @@ function updateDerivedCommands(scene, command, shadowsDirty) {
       derivedCommands.picking
     );
   }
-
+  ///*
+  if (defined(command.pickedMetadataInfo)) {
+    console.log("Creating derived command for ", command.pickedMetadataInfo);
+    derivedCommands.pickingMetadata = DerivedCommand.createPickMetadataDerivedCommand(
+      scene,
+      command,
+      context,
+      derivedCommands.pickingMetadata
+    );
+  }
+  //*/
   if (!command.pickOnly) {
     derivedCommands.depth = DerivedCommand.createDepthOnlyDerivedCommand(
       scene,
@@ -2175,14 +2185,28 @@ function executeCommand(command, scene, context, passState, debugFramebuffer) {
   }
 
   if (passes.pick || passes.depth) {
-    if (
-      passes.pick &&
-      !passes.depth &&
-      defined(command.derivedCommands.picking)
-    ) {
-      command = command.derivedCommands.picking.pickCommand;
-      command.execute(context, passState);
-      return;
+    if (passes.pick && !passes.depth) {
+      if (
+        frameState.pickingMetadata &&
+        defined(command.derivedCommands.pickingMetadata)
+      ) {
+        //XXX_METADATA_PICKING
+        // TODO The same has to be done in executeIdCommand!
+        console.log("Actually executing the pickingMetadata command");
+        command = command.derivedCommands.pickingMetadata.pickMetadataCommand;
+        command.execute(context, passState);
+        return;
+      }
+      if (
+        !frameState.pickingMetadata &&
+        defined(command.derivedCommands.picking)
+      ) {
+        //XXX_METADATA_PICKING
+        console.log("Executing the picking command");
+        command = command.derivedCommands.picking.pickCommand;
+        command.execute(context, passState);
+        return;
+      }
     } else if (defined(command.derivedCommands.depth)) {
       command = command.derivedCommands.depth.depthOnlyCommand;
       command.execute(context, passState);
@@ -4319,13 +4343,17 @@ Scene.prototype.pickMetadata = function (
     return undefined;
   }
 
+  const pickedMetadataInfo = {
+    schemaId: schemaId,
+    className: className,
+    propertyName: propertyName,
+    classProperty: classProperty,
+  };
+
   const pickedMetadataValues = this._picking.pickMetadata(
     this,
     windowPosition,
-    schemaId,
-    className,
-    propertyName,
-    classProperty
+    pickedMetadataInfo
   );
 
   if (XXX_METADATA_PICKING_DEBUG_LOG) {

@@ -40,6 +40,7 @@ function DrawCommand(options) {
   this._owner = options.owner;
   this._debugOverlappingFrustums = 0;
   this._pickId = options.pickId;
+  this._pickedMetadataInfo = options.pickedMetadataInfo;
 
   // Set initial flags.
   this._flags = 0;
@@ -511,7 +512,7 @@ Object.defineProperties(DrawCommand.prototype, {
    * during the pick pass.
    *
    * @memberof DrawCommand.prototype
-   * @type {string}
+   * @type {string|undefined}
    * @default undefined
    */
   pickId: {
@@ -525,6 +526,28 @@ Object.defineProperties(DrawCommand.prototype, {
       }
     },
   },
+
+  /**
+   * Information about picked metadata.
+   *
+   * XXX_METADATA_PICKING Documentation. On just say "@private". Lol.
+   *
+   * @memberof DrawCommand.prototype
+   * @type {object|undefined}
+   * @default undefined
+   */
+  pickedMetadataInfo: {
+    get: function () {
+      return this._pickedMetadataInfo;
+    },
+    set: function (value) {
+      if (this._pickedMetadataInfo !== value) {
+        this._pickedMetadataInfo = value;
+        this.dirty = true;
+      }
+    },
+  },
+
   /**
    * Whether this command should be executed in the pick pass only.
    *
@@ -590,6 +613,7 @@ DrawCommand.shallowClone = function (command, result) {
   result._owner = command._owner;
   result._debugOverlappingFrustums = command._debugOverlappingFrustums;
   result._pickId = command._pickId;
+  result._pickedMetadataInfo = command._pickedMetadataInfo;
   result._flags = command._flags;
 
   result.dirty = true;

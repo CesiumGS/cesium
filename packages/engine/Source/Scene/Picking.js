@@ -40,10 +40,6 @@ const pickTilesetPassState = new Cesium3DTilePassState({
   pass: Cesium3DTilePass.PICK,
 });
 
-const renderTilesetPassState = new Cesium3DTilePassState({
-  pass: Cesium3DTilePass.RENDER,
-});
-
 /**
  * @private
  */
@@ -416,13 +412,7 @@ Picking.prototype.pickVoxelCoordinate = function (
  * Pick a metadata value at the given window position.
  *
  * @param {Cartesian2} windowPosition Window coordinates to perform picking on.
- * @param {string|undefined} schemaId The ID of the metadata schema to pick values
- * from, or `undefined` to pick values from any schema.
- * @param {string} className The name of the metadata class to pick
- * values from
- * @param {string} propertyName The name of the metadata property to pick
- * values from
- * @param {MetadataClassProperty} classProperty The actual class property
+ * @param {object} pickedMetadataInfo The picked metadata
  * @returns The metadata values
  *
  * @private
@@ -430,16 +420,11 @@ Picking.prototype.pickVoxelCoordinate = function (
 Picking.prototype.pickMetadata = function (
   scene,
   windowPosition,
-  schemaId,
-  className,
-  propertyName,
-  classProperty
+  pickedMetadataInfo
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("windowPosition", windowPosition);
-  Check.typeOf.string("className", className);
-  Check.typeOf.string("propertyName", propertyName);
-  Check.typeOf.object("classProperty", classProperty);
+  Check.typeOf.object("pickedMetadataInfo", pickedMetadataInfo);
   //>>includeEnd('debug');
 
   const { context, frameState, defaultView } = scene;
@@ -480,11 +465,8 @@ Picking.prototype.pickMetadata = function (
   );
   frameState.invertClassification = false;
 
-  // This has to be set to 'true', because otherwise, the
-  // submitCommandsForPass variable will be "false" in
-  // Model.js, and nothing will be rendered.
-  frameState.passes.render = true;
-  frameState.tilesetPassState = renderTilesetPassState;
+  frameState.passes.pick = true;
+  frameState.tilesetPassState = pickTilesetPassState;
 
   // Insert the information about the picked metadata property
   // into the frame state, so that ...
@@ -492,11 +474,8 @@ Picking.prototype.pickMetadata = function (
   //   function to trigger a rebuild of the draw commands
   // - the ModelDrawCommands functions will insert the proper code
   //   for picking the values into the shader
-  frameState.pickMetadata = true;
-  frameState.pickedMetadataSchemaId = schemaId;
-  frameState.pickedMetadataClassName = className;
-  frameState.pickedMetadataPropertyName = propertyName;
-  frameState.pickedMetadataClassProperty = classProperty;
+  frameState.pickingMetadata = true;
+  frameState.pickedMetadataInfo = pickedMetadataInfo;
   context.uniformState.update(frameState);
 
   scene.updateEnvironment();
@@ -520,10 +499,10 @@ Picking.prototype.pickMetadata = function (
   );
   context.endFrame();
 
-  frameState.pickMetadata = false;
+  frameState.pickingMetadata = false;
 
   const metadataValue = MetadataPicking.decodeMetadataValues(
-    classProperty,
+    pickedMetadataInfo.classProperty,
     rawMetadataPixel
   );
   console.log("metadataValue ", metadataValue);

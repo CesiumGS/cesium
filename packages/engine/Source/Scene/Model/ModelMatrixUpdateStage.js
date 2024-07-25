@@ -1,7 +1,6 @@
 import Matrix4 from "../../Core/Matrix4.js";
 import ModelUtility from "./ModelUtility.js";
 import SceneMode from "../SceneMode.js";
-import defined from "../../Core/defined.js";
 
 /**
  * The model matrix update stage is responsible for updating the model matrices and bounding volumes of the draw commands.
@@ -96,13 +95,6 @@ function updateRuntimeNode(
       modelMatrix,
       transformToRoot
     );
-    if (defined(runtimePrimitive.metadataPickingDrawCommand)) {
-      updateDrawCommand(
-        runtimePrimitive.metadataPickingDrawCommand,
-        modelMatrix,
-        transformToRoot
-      );
-    }
   }
 
   const childrenLength = runtimeNode.children.length;

@@ -422,45 +422,17 @@ function FrameState(context, creditDisplay, jobScheduler) {
    */
   this.minimumTerrainHeight = 0.0;
 
-  /**
-   * Whether the current drawing pass is intended for metadata picking
-   *
-   * @type {boolean}
-   */
-  this.pickMetadata = false;
+  // XXX_METADATA_PICKING
+  this.pickingMetadata = false;
 
   /**
-   * The schema ID for the metadata values that are supposed to be picked
-   * with `Scene.pickMetadata`, or `undefined` to pick values from any
-   * schema.
+   * Metadata picking information.
    *
-   * @type {string|undefined}
-   */
-  this.pickedMetadataSchemaId = undefined;
-
-  /**
-   * The name of the metadata class that values should be picked from
-   * with `Scene.pickMetadata`
+   * XXX_METADATA_PICKING Documentation...
    *
-   * @type {string|undefined}
+   * @type {object}
    */
-  this.pickedMetadataClassName = undefined;
-
-  /**
-   * The name of the metadata property that values should be picked from
-   * with `Scene.pickMetadata`
-   *
-   * @type {string|undefined}
-   */
-  this.pickedMetadataPropertyName = undefined;
-
-  /**
-   * The metadata class property that values should be picked from
-   * with `Scene.pickMetadata`
-   *
-   * @type {MetadataClassProperty|undefined}
-   */
-  this.pickedMetadataClassProperty = undefined;
+  this.pickedMetadataInfo = undefined;
 }
 
 /**
