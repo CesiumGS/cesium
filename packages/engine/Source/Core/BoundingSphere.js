@@ -275,6 +275,7 @@ BoundingSphere.fromRectangleWithHeights2D = function (
     return result;
   }
 
+  defaultProjection._ellipsoid = Ellipsoid.default;
   projection = defaultValue(projection, defaultProjection);
 
   Rectangle.southwest(rectangle, fromRectangle2DSouthwest);
@@ -1277,6 +1278,7 @@ BoundingSphere.projectTo2D = function (sphere, projection, result) {
   Check.typeOf.object("sphere", sphere);
   //>>includeEnd('debug');
 
+  projectTo2DProjection._ellipsoid = Ellipsoid.default;
   projection = defaultValue(projection, projectTo2DProjection);
 
   const ellipsoid = projection.ellipsoid;

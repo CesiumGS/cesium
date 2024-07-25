@@ -1454,7 +1454,7 @@ const AutomaticUniforms = {
    * // Example: For a given roughness and NdotV value, find the material's BRDF information in the red and green channels
    * float roughness = 0.5;
    * float NdotV = dot(normal, view);
-   * vec2 brdfLut = texture(czm_brdfLut, vec2(NdotV, 1.0 - roughness)).rg;
+   * vec2 brdfLut = texture(czm_brdfLut, vec2(NdotV, roughness)).rg;
    */
   czm_brdfLut: new AutomaticUniform({
     size: 1,

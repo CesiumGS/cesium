@@ -90,7 +90,7 @@ const scratchEllipseGeometry = new EllipseGeometry({
 const scratchOptions = {
   center: new Cartesian3(),
   radius: undefined,
-  ellipsoid: Ellipsoid.clone(Ellipsoid.UNIT_SPHERE),
+  ellipsoid: Ellipsoid.clone(Ellipsoid.default),
   height: undefined,
   extrudedHeight: undefined,
   granularity: undefined,
@@ -122,6 +122,10 @@ CircleGeometry.unpack = function (array, startingIndex, result) {
   scratchOptions.ellipsoid = Ellipsoid.clone(
     ellipseGeometry._ellipsoid,
     scratchOptions.ellipsoid
+  );
+  scratchOptions.ellipsoid = Ellipsoid.clone(
+    ellipseGeometry._ellipsoid,
+    scratchEllipseGeometry._ellipsoid
   );
   scratchOptions.height = ellipseGeometry._height;
   scratchOptions.extrudedHeight = ellipseGeometry._extrudedHeight;

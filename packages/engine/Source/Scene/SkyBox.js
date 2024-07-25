@@ -1,3 +1,4 @@
+import buildModuleUrl from "../Core/buildModuleUrl.js";
 import BoxGeometry from "../Core/BoxGeometry.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import defaultValue from "../Core/defaultValue.js";
@@ -249,4 +250,29 @@ SkyBox.prototype.destroy = function () {
   this._cubeMap = this._cubeMap && this._cubeMap.destroy();
   return destroyObject(this);
 };
+
+function getDefaultSkyBoxUrl(suffix) {
+  return buildModuleUrl(`Assets/Textures/SkyBox/tycho2t3_80_${suffix}.jpg`);
+}
+
+/**
+ * Creates a skybox instance with the default starmap for the Earth.
+ * @return {SkyBox} The default skybox for the Earth
+ *
+ * @example
+ * viewer.scene.skyBox = Cesium.SkyBox.createEarthSkyBox();
+ */
+SkyBox.createEarthSkyBox = function () {
+  return new SkyBox({
+    sources: {
+      positiveX: getDefaultSkyBoxUrl("px"),
+      negativeX: getDefaultSkyBoxUrl("mx"),
+      positiveY: getDefaultSkyBoxUrl("py"),
+      negativeY: getDefaultSkyBoxUrl("my"),
+      positiveZ: getDefaultSkyBoxUrl("pz"),
+      negativeZ: getDefaultSkyBoxUrl("mz"),
+    },
+  });
+};
+
 export default SkyBox;

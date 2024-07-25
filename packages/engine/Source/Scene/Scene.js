@@ -30,6 +30,7 @@ import OrthographicFrustum from "../Core/OrthographicFrustum.js";
 import OrthographicOffCenterFrustum from "../Core/OrthographicOffCenterFrustum.js";
 import PerspectiveFrustum from "../Core/PerspectiveFrustum.js";
 import PerspectiveOffCenterFrustum from "../Core/PerspectiveOffCenterFrustum.js";
+import Rectangle from "../Core/Rectangle.js";
 import RequestScheduler from "../Core/RequestScheduler.js";
 import TaskProcessor from "../Core/TaskProcessor.js";
 import Transforms from "../Core/Transforms.js";
@@ -97,7 +98,7 @@ const requestRenderAfterFrame = function (scene) {
  * @param {ContextOptions} [options.contextOptions] Context and WebGL creation properties.
  * @param {Element} [options.creditContainer] The HTML element in which the credits will be displayed.
  * @param {Element} [options.creditViewport] The HTML element in which to display the credit popup.  If not specified, the viewport will be a added as a sibling of the canvas.
- * @param {Ellipsoid} [options.ellipsoid] The default ellipsoid.
+ * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.default] The default ellipsoid. If not specified, the default ellipsoid is used.
  * @param {MapProjection} [options.mapProjection=new GeographicProjection(options.ellipsoid)] The map projection to use in 2D and Columbus View modes.
  * @param {boolean} [options.orderIndependentTranslucency=true] If true and the configuration supports it, use order independent translucency.
  * @param {boolean} [options.scene3DOnly=false] If true, optimizes memory use and performance for 3D mode but disables the ability to use 2D or Columbus View.
@@ -155,7 +156,7 @@ function Scene(options) {
   this._jobScheduler = new JobScheduler();
   this._frameState = new FrameState(
     context,
-    new CreditDisplay(creditContainer, " • ", creditViewport),
+    new CreditDisplay(creditContainer, "•", creditViewport),
     this._jobScheduler
   );
   this._frameState.scene3DOnly = defaultValue(options.scene3DOnly, false);
@@ -534,10 +535,21 @@ function Scene(options) {
   /**
    * Blends the atmosphere to geometry far from the camera for horizon views. Allows for additional
    * performance improvements by rendering less geometry and dispatching less terrain requests.
+   *
+   * Disbaled by default if an ellipsoid other than WGS84 is used.
    * @type {Fog}
    */
   this.fog = new Fog();
   this.fog.enabled = Ellipsoid.WGS84.equals(this._ellipsoid);
+
+  if (!Ellipsoid.WGS84.equals(this._ellipsoid)) {
+    Camera.DEFAULT_VIEW_RECTANGLE = Rectangle.fromDegrees(
+      -45.0,
+      -45.0,
+      45.0,
+      45.0
+    );
+  }
 
   this._shadowMapCamera = new Camera(this);
 
@@ -920,7 +932,11 @@ Object.defineProperties(Scene.prototype, {
   },
 
   /**
-   * TODO: Ellipsoids
+   * The ellipsoid.  If not specified, the default ellipsoid is used.
+   * @memberof Scene.prototype
+   *
+   * @type {Ellipsoid}
+   * @readonly
    */
   ellipsoid: {
     get: function () {
@@ -4621,7 +4637,6 @@ Scene.prototype.clampToHeightMostDetailed = function (
  * @example
  * // Output the canvas position of longitude/latitude (0, 0) every time the mouse moves.
  * const scene = widget.scene;
- * const ellipsoid = scene.ellipsoid;
  * const position = Cesium.Cartesian3.fromDegrees(0.0, 0.0);
  * const handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
  * handler.setInputAction(function(movement) {
@@ -4629,7 +4644,7 @@ Scene.prototype.clampToHeightMostDetailed = function (
  * }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
  */
 Scene.prototype.cartesianToCanvasCoordinates = function (position, result) {
-  return SceneTransforms.wgs84ToWindowCoordinates(this, position, result); // TODO: Ellipsoids
+  return SceneTransforms.worldToWindowCoordinates(this, position, result);
 };
 
 /**

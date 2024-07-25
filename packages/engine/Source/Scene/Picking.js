@@ -525,8 +525,7 @@ Picking.prototype.pickPositionWorldCoordinates = function (
         uniformState.updateFrustum(frustum);
       }
 
-      result = SceneTransforms.drawingBufferToWgs84Coordinates(
-        // TODO: Ellipsoids
+      result = SceneTransforms.drawingBufferToWorldCoordinates(
         scene,
         drawingBufferPosition,
         depth,

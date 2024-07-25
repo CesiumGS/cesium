@@ -35,9 +35,7 @@ const GltfLoaderUtil = {};
  */
 GltfLoaderUtil.getImageIdFromTexture = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  const gltf = options.gltf;
-  const textureId = options.textureId;
-  const supportedImageFormats = options.supportedImageFormats;
+  const { gltf, textureId, supportedImageFormats } = options;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.gltf", gltf);
@@ -73,12 +71,7 @@ GltfLoaderUtil.getImageIdFromTexture = function (options) {
  */
 GltfLoaderUtil.createSampler = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  const gltf = options.gltf;
-  const textureInfo = options.textureInfo;
-  const compressedTextureNoMipmap = defaultValue(
-    options.compressedTextureNoMipmap,
-    false
-  );
+  const { gltf, textureInfo, compressedTextureNoMipmap = false } = options;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.gltf", gltf);
@@ -140,9 +133,7 @@ const defaultScale = new Cartesian2(1.0, 1.0);
  */
 GltfLoaderUtil.createModelTextureReader = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  const textureInfo = options.textureInfo;
-  const channels = options.channels;
-  const texture = options.texture;
+  const { textureInfo, channels, texture } = options;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.textureInfo", textureInfo);
@@ -151,10 +142,7 @@ GltfLoaderUtil.createModelTextureReader = function (options) {
   let texCoord = defaultValue(textureInfo.texCoord, 0);
   let transform;
 
-  const textureTransform = defaultValue(
-    textureInfo.extensions,
-    defaultValue.EMPTY_OBJECT
-  ).KHR_texture_transform;
+  const textureTransform = textureInfo.extensions?.KHR_texture_transform;
 
   if (defined(textureTransform)) {
     texCoord = defaultValue(textureTransform.texCoord, texCoord);
@@ -186,6 +174,7 @@ GltfLoaderUtil.createModelTextureReader = function (options) {
   modelTextureReader.index = textureInfo.index;
   modelTextureReader.texture = texture;
   modelTextureReader.texCoord = texCoord;
+  modelTextureReader.scale = textureInfo.scale;
   modelTextureReader.transform = transform;
   modelTextureReader.channels = channels;
 

@@ -4,11 +4,10 @@ import {
   Cartesian3,
   Color,
   Ellipsoid,
+  Math as CesiumMath,
   PrimitiveType,
   SimplePolylineGeometry,
 } from "../../index.js";
-
-import { Math as CesiumMath } from "../../index.js";
 
 import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";
 

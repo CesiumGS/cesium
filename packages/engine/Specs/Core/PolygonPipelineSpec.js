@@ -2,11 +2,10 @@ import {
   Cartesian2,
   Cartesian3,
   Ellipsoid,
+  Math as CesiumMath,
   PolygonPipeline,
   WindingOrder,
 } from "../../index.js";
-
-import { Math as CesiumMath } from "../../index.js";
 
 describe("Core/PolygonPipeline", function () {
   beforeEach(function () {

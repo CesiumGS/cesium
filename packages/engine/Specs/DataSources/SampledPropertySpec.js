@@ -6,12 +6,11 @@ import {
   JulianDate,
   LagrangePolynomialApproximation,
   LinearApproximation,
+  Math as CesiumMath,
   Quaternion,
   TimeInterval,
   SampledProperty,
 } from "../../index.js";
-
-import { Math as CesiumMath } from "../../index.js";
 
 describe("DataSources/SampledProperty", function () {
   it("constructor sets expected defaults", function () {

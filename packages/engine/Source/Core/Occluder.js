@@ -519,7 +519,7 @@ Occluder.computeOccludeePointFromRectangle = function (rectangle, ellipsoid) {
   );
   const bs = BoundingSphere.fromPoints(positions);
 
-  // TODO: get correct ellipsoid center
+  // Assumes the ellipsoid is centered at the origin
   const ellipsoidCenter = Cartesian3.ZERO;
   if (!Cartesian3.equals(ellipsoidCenter, bs.center)) {
     return Occluder.computeOccludeePoint(

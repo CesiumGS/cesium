@@ -1,11 +1,10 @@
 import {
   GeographicTilingScheme,
   Rectangle,
+  Math as CesiumMath,
   WebMercatorTilingScheme,
   QuadtreeTile,
 } from "../../index.js";
-
-import { Math as CesiumMath } from "../../index.js";
 
 describe("Scene/QuadtreeTile", function () {
   it("throws without a options", function () {

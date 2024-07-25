@@ -271,7 +271,7 @@ Sun.prototype.update = function (frameState, passState, useHdr) {
     frameState,
     sunPosition,
     scratchCartesian4
-  ); // TODO: ellipsoids
+  );
 
   const dist = Cartesian3.magnitude(
     Cartesian3.subtract(position, frameState.camera.position, scratchCartesian4)

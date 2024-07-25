@@ -1321,7 +1321,7 @@ function setSunAndMoonDirections(uniformState, frameState) {
 
   Transforms.computeIcrfToMoonFixedMatrix(frameState.time, transformMatrix);
 
-  let position = Simon1994PlanetaryPositions.computeSunPositionInMoonInertialFrame(
+  let position = Simon1994PlanetaryPositions.computeSunPositionInEarthInertialFrame(
     frameState.time,
     uniformState._sunPositionWC
   );

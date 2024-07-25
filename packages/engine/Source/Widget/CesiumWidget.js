@@ -1,4 +1,3 @@
-import buildModuleUrl from "../Core/buildModuleUrl.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Clock from "../Core/Clock.js";
 import defaultValue from "../Core/defaultValue.js";
@@ -19,10 +18,6 @@ import ShadowMode from "../Scene/ShadowMode.js";
 import SkyAtmosphere from "../Scene/SkyAtmosphere.js";
 import SkyBox from "../Scene/SkyBox.js";
 import Sun from "../Scene/Sun.js";
-
-function getDefaultSkyBoxUrl(suffix) {
-  return buildModuleUrl(`Assets/Textures/SkyBox/tycho2t3_80_${suffix}.jpg`);
-}
 
 function startRenderLoop(widget) {
   widget._renderLoopRunning = true;
@@ -127,8 +122,8 @@ function configureCameraFrustum(widget) {
  * @param {ImageryLayer|false} [options.baseLayer=ImageryLayer.fromWorldImagery()] The bottommost imagery layer applied to the globe. If set to <code>false</code>, no imagery provider will be added.
  * @param {TerrainProvider} [options.terrainProvider=new EllipsoidTerrainProvider(options.ellipsoid)] The terrain provider.
  * @param {Terrain} [options.terrain] A terrain object which handles asynchronous terrain provider. Can only specify if options.terrainProvider is undefined.
- * @param {SkyBox| false} [options.skyBox] The skybox used to render the stars.  When <code>undefined</code>, the default stars are used. If set to <code>false</code>, no skyBox, Sun, or Moon will be added.
- * @param {SkyAtmosphere | false} [options.skyAtmosphere] Blue sky, and the glow around the Earth's limb.  Set to <code>false</code> to turn it off.
+ * @param {SkyBox| false} [options.skyBox] The skybox used to render the stars. When <code>undefined</code> and the WGS84 ellipsoid used, the default stars are used. If set to <code>false</code>, no skyBox, Sun, or Moon will be added.
+ * @param {SkyAtmosphere | false} [options.skyAtmosphere] Blue sky, and the glow around the Earth's limb. Enabled when the default ellipsoid used. Set to <code>false</code> to turn it off.
  * @param {SceneMode} [options.sceneMode=SceneMode.SCENE3D] The initial scene mode.
  * @param {boolean} [options.scene3DOnly=false] When <code>true</code>, each geometry instance will only be rendered in 3D to save GPU memory.
  * @param {boolean} [options.orderIndependentTranslucency=true] If true and the configuration supports it, use order independent translucency.
@@ -314,16 +309,7 @@ function CesiumWidget(container, options) {
 
     let skyBox = options.skyBox;
     if (!defined(skyBox) && Ellipsoid.WGS84.equals(ellipsoid)) {
-      skyBox = new SkyBox({
-        sources: {
-          positiveX: getDefaultSkyBoxUrl("px"),
-          negativeX: getDefaultSkyBoxUrl("mx"),
-          positiveY: getDefaultSkyBoxUrl("py"),
-          negativeY: getDefaultSkyBoxUrl("my"),
-          positiveZ: getDefaultSkyBoxUrl("pz"),
-          negativeZ: getDefaultSkyBoxUrl("mz"),
-        },
-      });
+      skyBox = SkyBox.createEarthSkyBox();
     }
     if (skyBox !== false) {
       scene.skyBox = skyBox;

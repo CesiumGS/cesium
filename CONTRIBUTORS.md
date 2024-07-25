@@ -131,6 +131,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
   - [Tony Luk](https://github.com/impactblue573)
   - [Daniel Cooper](https://github.com/moodragon46)
   - [Harry Morris](https://github.com/harrythemorris)
+  - [Jesse Gibbs](https://github.com/jesseyay)
 - [GeoFS](https://www.geo-fs.com)
   - [Xavier Tassin](https://github.com/xtassin/)
 - [Esri](https://www.esri.com)
@@ -389,3 +390,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [dslming](https://github.com/dslming)
 - [Peter A. Jonsson](https://github.com/pjonsson)
 - [Zhongxiang Wang](https://github.com/plainheart)
+- [Tim Schneider](https://github.com/Tim-S)

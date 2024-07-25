@@ -157,7 +157,7 @@ CylinderGeometryUpdater.prototype.createFillGeometryInstance = function (time) {
       time,
       entity.cylinder.heightReference,
       this._options.length * 0.5,
-      this._scene.mapProjection.ellipsoid
+      this._scene.ellipsoid
     ),
     attributes: attributes,
   });
@@ -227,7 +227,7 @@ CylinderGeometryUpdater.prototype.createOutlineGeometryInstance = function (
       time,
       entity.cylinder.heightReference,
       this._options.length * 0.5,
-      this._scene.mapProjection.ellipsoid
+      this._scene.ellipsoid
     ),
     attributes: attributes,
   });

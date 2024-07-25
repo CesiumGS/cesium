@@ -11,6 +11,7 @@ import {
   GeometryInstance,
   HeadingPitchRoll,
   JulianDate,
+  Math as CesiumMath,
   PixelFormat,
   Rectangle,
   RectangleGeometry,
@@ -47,8 +48,6 @@ import {
   ColorGeometryInstanceAttribute,
   Resource,
 } from "../../index.js";
-
-import { Math as CesiumMath } from "../../index.js";
 
 import createCanvas from "../../../../Specs/createCanvas.js";
 import createScene from "../../../../Specs/createScene.js";
@@ -1441,10 +1440,10 @@ describe(
 
     it("converts to canvas coordinates", function () {
       const mockPosition = new Cartesian3();
-      spyOn(SceneTransforms, "wgs84ToWindowCoordinates");
+      spyOn(SceneTransforms, "worldToWindowCoordinates");
       scene.cartesianToCanvasCoordinates(mockPosition);
 
-      expect(SceneTransforms.wgs84ToWindowCoordinates).toHaveBeenCalledWith(
+      expect(SceneTransforms.worldToWindowCoordinates).toHaveBeenCalledWith(
         scene,
         mockPosition,
         undefined
@@ -1454,10 +1453,10 @@ describe(
     it("converts to canvas coordinates and return it in a variable", function () {
       const result = new Cartesian2();
       const mockPosition = new Cartesian3();
-      spyOn(SceneTransforms, "wgs84ToWindowCoordinates");
+      spyOn(SceneTransforms, "worldToWindowCoordinates");
       scene.cartesianToCanvasCoordinates(mockPosition, result);
 
-      expect(SceneTransforms.wgs84ToWindowCoordinates).toHaveBeenCalledWith(
+      expect(SceneTransforms.worldToWindowCoordinates).toHaveBeenCalledWith(
         scene,
         mockPosition,
         result

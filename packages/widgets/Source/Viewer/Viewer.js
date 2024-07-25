@@ -317,8 +317,8 @@ function enableVRUI(viewer, enabled) {
  * @property {Ellipsoid} [ellipsoid = Ellipsoid.default] The default ellipsoid.
  * @property {TerrainProvider} [terrainProvider=new EllipsoidTerrainProvider()] The terrain provider to use
  * @property {Terrain} [terrain] A terrain object which handles asynchronous terrain provider. Can only specify if options.terrainProvider is undefined.
- * @property {SkyBox|false} [skyBox] The skybox used to render the stars.  When <code>undefined</code>, the default stars are used. If set to <code>false</code>, no skyBox, Sun, or Moon will be added.
- * @property {SkyAtmosphere|false} [skyAtmosphere] Blue sky, and the glow around the Earth's limb.  Set to <code>false</code> to turn it off.
+ * @property {SkyBox|false} [skyBox] The skybox used to render the stars. When <code>undefined</code> and the WGS84 ellipsoid used, the default stars are used. If set to <code>false</code>, no skyBox, Sun, or Moon will be added.
+ * @property {SkyAtmosphere|false} [skyAtmosphere] Blue sky, and the glow around the Earth's limb. Enabled when the WGS84 ellipsoid used. Set to <code>false</code> to turn it off.
  * @property {Element|string} [fullscreenElement=document.body] The element or id to be placed into fullscreen mode when the full screen button is pressed.
  * @property {boolean} [useDefaultRenderLoop=true] True if this widget should control the render loop, false otherwise.
  * @property {number} [targetFrameRate] The target frame rate when using the default render loop.
@@ -486,7 +486,8 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
   // Cesium widget
   const cesiumWidget = new CesiumWidget(cesiumWidgetContainer, {
     baseLayer:
-      createBaseLayerPicker ||
+      (createBaseLayerPicker &&
+        defined(options.selectedImageryProviderViewModel)) ||
       defined(options.baseLayer) ||
       defined(options.imageryProvider)
         ? false
@@ -706,7 +707,6 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
     //>>includeEnd('debug')
 
     if (createBaseLayerPicker) {
-      baseLayerPicker.viewModel.selectedTerrain = undefined;
       // Required as this is otherwise set by the baseLayerPicker
       scene.globe.depthTestAgainstTerrain = true;
     }
@@ -1639,8 +1639,9 @@ Viewer.prototype.resize = function () {
   const timeline = this._timeline;
   let animationContainer;
   let animationWidth = 0;
-  let creditLeft = 0;
-  let creditBottom = 0;
+  let creditLeft = 5;
+  let creditBottom = 3;
+  let creditRight = 0;
 
   if (
     animationExists &&
@@ -1697,8 +1698,14 @@ Viewer.prototype.resize = function () {
     timeline.resize();
   }
 
+  if (!timelineExists && defined(this._fullscreenButton)) {
+    // don't let long credits (like the default ion token) go behind the fullscreen button
+    creditRight = this._fullscreenButton.container.clientWidth;
+  }
+
   this._bottomContainer.style.left = `${creditLeft}px`;
   this._bottomContainer.style.bottom = `${creditBottom}px`;
+  this._bottomContainer.style.right = `${creditRight}px`;
 
   this._lastWidth = width;
   this._lastHeight = height;

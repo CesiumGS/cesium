@@ -192,7 +192,7 @@ function Globe(ellipsoid) {
    * Enable the ground atmosphere, which is drawn over the globe when viewed from a distance between <code>lightingFadeInDistance</code> and <code>lightingFadeOutDistance</code>.
    *
    * @type {boolean}
-   * @default true when using an earth ellipsoid, false otherwise
+   * @default true when using the WGS84 ellipsoid, false otherwise
    */
   this.showGroundAtmosphere = Ellipsoid.WGS84.equals(ellipsoid);
 

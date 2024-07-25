@@ -1,6 +1,0 @@
-{
-  "extends": "cesium/browser",
-  "plugins": [
-    "es"
-  ]
-}
