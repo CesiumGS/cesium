@@ -34,18 +34,19 @@ vec3 addClearcoatReflection(vec3 baseLayerColor, vec3 position, vec3 lightDirect
 
     // compute specular reflection from direct lighting
     float roughness = material.clearcoatRoughness;
-    float directStrength = computeDirectSpecularStrength(normal, lightDirection, viewDirection, halfwayDirection, roughness);
+    float alphaRoughness = roughness * roughness;
+    float directStrength = computeDirectSpecularStrength(normal, lightDirection, viewDirection, halfwayDirection, alphaRoughness);
     vec3 directReflection = F * directStrength * NdotL;
     vec3 color = lightColorHdr * directReflection;
 
     #ifdef SPECULAR_IBL
         // Find the direction in which to sample the environment map
-        vec3 cubeDir = normalize(model_iblReferenceFrameMatrix * normalize(reflect(-viewDirection, normal)));
-        vec3 iblColor = computeSpecularIBL(cubeDir, NdotV, NdotV, f0, roughness);
+        vec3 reflectMC = normalize(model_iblReferenceFrameMatrix * reflect(-viewDirection, normal));
+        vec3 iblColor = computeSpecularIBL(reflectMC, NdotV, f0, roughness);
         color += iblColor * material.occlusion;
     #elif defined(USE_IBL_LIGHTING)
         vec3 positionWC = vec3(czm_inverseView * vec4(position, 1.0));
-        vec3 reflectionWC = normalize(czm_inverseViewRotation * normalize(reflect(viewDirection, normal)));
+        vec3 reflectionWC = normalize(czm_inverseViewRotation * reflect(viewDirection, normal));
         vec3 skyMetrics = getProceduralSkyMetrics(positionWC, reflectionWC);
 
         vec3 specularIrradiance = getProceduralSpecularIrradiance(reflectionWC, skyMetrics, roughness);
@@ -57,7 +58,7 @@ vec3 addClearcoatReflection(vec3 baseLayerColor, vec3 position, vec3 lightDirect
         #endif
         float maximumComponent = czm_maximumComponent(lightColorHdr);
         vec3 clampedLightColor = lightColorHdr / max(maximumComponent, 1.0);
-        color += clampedLightColor* iblColor * material.occlusion;
+        color += clampedLightColor * iblColor * material.occlusion;
     #endif
 
     float clearcoatFactor = material.clearcoatFactor;
