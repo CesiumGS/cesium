@@ -840,18 +840,8 @@ Transforms.computeMoonFixedToIcrfMatrix = function (date, result) {
  * @returns {Matrix3} The rotation matrix.
  *
  * @example
- * TODO
- *
- * @example
- * scene.postUpdate.addEventListener(function(scene, time) {
- *   // View in ICRF.
- *   const toFixed = Cesium.Transforms.computeMoonFixedToIcrfMatrix(time);
- *   if (Cesium.defined(toFixed)) {
- *     const offset = Cesium.Cartesian3.clone(camera.position);
- *     const transform = Cesium.Matrix4.fromRotationTranslation(toFixed);
- *     camera.lookAtTransform(transform, offset);
- *   }
- * });
+ * // Set the default ICRF to fixed transformation to that of the Moon.
+ * Cesium.Transforms.computeIcrfToCentralBodyFixedMatrix = Cesium.Transforms.computeIcrfToMoonFixedMatrix;
  */
 Transforms.computeIcrfToMoonFixedMatrix = function (date, result) {
   //>>includeStart('debug', pragmas.debug);
