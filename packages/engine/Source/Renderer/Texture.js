@@ -18,7 +18,7 @@ import TextureMinificationFilter from "./TextureMinificationFilter.js";
  * @typedef {object} Texture.ConstructorOptions
  *
  * @property {Context} context
- * @property {object} [source] The source for texel values to be loaded into the texture
+ * @property {object} [source] The source for texel values to be loaded into the texture.
  * @property {PixelFormat} [pixelFormat=PixelFormat.RGBA] The format of each pixel, i.e., the number of components it has and what they represent.
  * @property {PixelDatatype} [pixelDatatype=PixelDatatype.UNSIGNED_BYTE] The data type of each pixel.
  * @property {boolean} [flipY=true] If true, the source values will be read as if the y-axis is inverted (y=0 at the top).
@@ -209,14 +209,67 @@ function Texture(options) {
   }
   //>>includeEnd('debug');
 
-  let initialized = true;
-
   const gl = context._gl;
-  const textureTarget = gl.TEXTURE_2D;
-  const texture = gl.createTexture();
+
+  const sizeInBytes = isCompressed
+    ? PixelFormat.compressedTextureSizeInBytes(pixelFormat, width, height)
+    : PixelFormat.textureSizeInBytes(pixelFormat, pixelDatatype, width, height);
+
+  this._id = createGuid();
+  this._context = context;
+  this._textureFilterAnisotropic = context._textureFilterAnisotropic;
+  this._textureTarget = gl.TEXTURE_2D;
+  this._texture = gl.createTexture();
+  this._internalFormat = internalFormat;
+  this._pixelFormat = pixelFormat;
+  this._pixelDatatype = pixelDatatype;
+  this._width = width;
+  this._height = height;
+  this._dimensions = new Cartesian2(width, height);
+  this._hasMipmap = false;
+  this._sizeInBytes = sizeInBytes;
+  this._preMultiplyAlpha = preMultiplyAlpha;
+  this._flipY = flipY;
+  this._initialized = false;
+  this._sampler = undefined;
+
+  this._sampler = sampler;
+  setupSampler(this, sampler);
+
+  if (defined(source)) {
+    loadSource(this, source, skipColorSpaceConversion);
+  } else {
+    loadNull(this);
+  }
+}
+
+/**
+ * Load texel data into a texture.
+ *
+ * @param {Texture} texture The texture to which texel values will be loaded.
+ * @param {object} [source] The source for texel values to be loaded into the texture.
+ * @param {boolean} skipColorSpaceConversion If true, color space conversions will be skipped when reading the texel values.
+ *
+ * @private
+ */
+function loadSource(texture, source, skipColorSpaceConversion) {
+  const context = texture._context;
+  const gl = context._gl;
+  const textureTarget = texture._textureTarget;
+  const internalFormat = texture._internalFormat;
+  const isCompressed = PixelFormat.isCompressedFormat(internalFormat);
+
+  const {
+    width,
+    height,
+    pixelFormat,
+    pixelDatatype,
+    flipY,
+    preMultiplyAlpha,
+  } = texture;
 
   gl.activeTexture(gl.TEXTURE0);
-  gl.bindTexture(textureTarget, texture);
+  gl.bindTexture(textureTarget, texture._texture);
 
   let unpackAlignment = 4;
   if (defined(source) && defined(source.arrayBufferView) && !isCompressed) {
@@ -226,7 +279,6 @@ function Texture(options) {
       width
     );
   }
-
   gl.pixelStorei(gl.UNPACK_ALIGNMENT, unpackAlignment);
 
   if (skipColorSpaceConversion) {
@@ -238,184 +290,163 @@ function Texture(options) {
     );
   }
 
-  if (defined(source)) {
-    if (defined(source.arrayBufferView)) {
-      gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
-      gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+  if (defined(source.arrayBufferView)) {
+    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
 
-      // Source: typed array
-      let arrayBufferView = source.arrayBufferView;
-      if (isCompressed) {
-        gl.compressedTexImage2D(
-          textureTarget,
-          0,
-          internalFormat,
-          width,
-          height,
-          0,
-          arrayBufferView
-        );
-        if (defined(source.mipLevels)) {
-          let mipWidth = width;
-          let mipHeight = height;
-          for (let i = 0; i < source.mipLevels.length; ++i) {
-            mipWidth = Math.floor(mipWidth / 2) | 0;
-            if (mipWidth < 1) {
-              mipWidth = 1;
-            }
-            mipHeight = Math.floor(mipHeight / 2) | 0;
-            if (mipHeight < 1) {
-              mipHeight = 1;
-            }
-            gl.compressedTexImage2D(
-              textureTarget,
-              i + 1,
-              internalFormat,
-              mipWidth,
-              mipHeight,
-              0,
-              source.mipLevels[i]
-            );
-          }
-        }
-      } else {
-        if (flipY) {
-          arrayBufferView = PixelFormat.flipY(
-            arrayBufferView,
-            pixelFormat,
-            pixelDatatype,
-            width,
-            height
-          );
-        }
-        gl.texImage2D(
-          textureTarget,
-          0,
-          internalFormat,
-          width,
-          height,
-          0,
-          pixelFormat,
-          PixelDatatype.toWebGLConstant(pixelDatatype, context),
-          arrayBufferView
-        );
-
-        if (defined(source.mipLevels)) {
-          let mipWidth = width;
-          let mipHeight = height;
-          for (let i = 0; i < source.mipLevels.length; ++i) {
-            mipWidth = Math.floor(mipWidth / 2) | 0;
-            if (mipWidth < 1) {
-              mipWidth = 1;
-            }
-            mipHeight = Math.floor(mipHeight / 2) | 0;
-            if (mipHeight < 1) {
-              mipHeight = 1;
-            }
-            gl.texImage2D(
-              textureTarget,
-              i + 1,
-              internalFormat,
-              mipWidth,
-              mipHeight,
-              0,
-              pixelFormat,
-              PixelDatatype.toWebGLConstant(pixelDatatype, context),
-              source.mipLevels[i]
-            );
-          }
-        }
-      }
-    } else if (defined(source.framebuffer)) {
-      gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
-      gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
-
-      // Source: framebuffer
-      if (source.framebuffer !== context.defaultFramebuffer) {
-        source.framebuffer._bind();
-      }
-
-      gl.copyTexImage2D(
+    // Source: typed array
+    let arrayBufferView = source.arrayBufferView;
+    if (isCompressed) {
+      gl.compressedTexImage2D(
         textureTarget,
         0,
         internalFormat,
-        source.xOffset,
-        source.yOffset,
         width,
         height,
-        0
+        0,
+        arrayBufferView
       );
-
-      if (source.framebuffer !== context.defaultFramebuffer) {
-        source.framebuffer._unBind();
+      if (defined(source.mipLevels)) {
+        let mipWidth = width;
+        let mipHeight = height;
+        for (let i = 0; i < source.mipLevels.length; ++i) {
+          mipWidth = nextMipSize(mipWidth);
+          mipHeight = nextMipSize(mipHeight);
+          gl.compressedTexImage2D(
+            textureTarget,
+            i + 1,
+            internalFormat,
+            mipWidth,
+            mipHeight,
+            0,
+            source.mipLevels[i]
+          );
+        }
       }
     } else {
-      // Only valid for DOM-Element uploads
-      gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, preMultiplyAlpha);
-      gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, flipY);
-
-      // Source: ImageData, HTMLImageElement, HTMLCanvasElement, or HTMLVideoElement
+      if (flipY) {
+        arrayBufferView = PixelFormat.flipY(
+          arrayBufferView,
+          pixelFormat,
+          pixelDatatype,
+          width,
+          height
+        );
+      }
       gl.texImage2D(
         textureTarget,
         0,
         internalFormat,
+        width,
+        height,
+        0,
         pixelFormat,
         PixelDatatype.toWebGLConstant(pixelDatatype, context),
-        source
+        arrayBufferView
       );
+
+      if (defined(source.mipLevels)) {
+        let mipWidth = width;
+        let mipHeight = height;
+        for (let i = 0; i < source.mipLevels.length; ++i) {
+          mipWidth = nextMipSize(mipWidth);
+          mipHeight = nextMipSize(mipHeight);
+          gl.texImage2D(
+            textureTarget,
+            i + 1,
+            internalFormat,
+            mipWidth,
+            mipHeight,
+            0,
+            pixelFormat,
+            PixelDatatype.toWebGLConstant(pixelDatatype, context),
+            source.mipLevels[i]
+          );
+        }
+      }
+    }
+  } else if (defined(source.framebuffer)) {
+    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+
+    if (source.framebuffer !== context.defaultFramebuffer) {
+      source.framebuffer._bind();
+    }
+
+    gl.copyTexImage2D(
+      textureTarget,
+      0,
+      internalFormat,
+      source.xOffset,
+      source.yOffset,
+      width,
+      height,
+      0
+    );
+
+    if (source.framebuffer !== context.defaultFramebuffer) {
+      source.framebuffer._unBind();
     }
   } else {
+    // Only valid for DOM-Element uploads
+    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, preMultiplyAlpha);
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, flipY);
+
+    // Source: ImageData, HTMLImageElement, HTMLCanvasElement, or HTMLVideoElement
     gl.texImage2D(
       textureTarget,
       0,
       internalFormat,
-      width,
-      height,
-      0,
       pixelFormat,
       PixelDatatype.toWebGLConstant(pixelDatatype, context),
-      null
+      source
     );
-    initialized = false;
   }
+  texture._initialized = true;
   gl.bindTexture(textureTarget, null);
+}
 
-  let sizeInBytes;
-  if (isCompressed) {
-    sizeInBytes = PixelFormat.compressedTextureSizeInBytes(
-      pixelFormat,
-      width,
-      height
-    );
-  } else {
-    sizeInBytes = PixelFormat.textureSizeInBytes(
-      pixelFormat,
-      pixelDatatype,
-      width,
-      height
-    );
-  }
+/**
+ * Compute a dimension of the image for the next mip level.
+ *
+ * @param {number} currentSize The size of the current mip level.
+ * @returns {number} The size of the next mip level.
+ *
+ * @private
+ */
+function nextMipSize(currentSize) {
+  const nextSize = Math.floor(currentSize / 2) | 0;
+  return Math.max(nextSize, 1);
+}
 
-  this._id = createGuid();
-  this._context = context;
-  this._textureFilterAnisotropic = context._textureFilterAnisotropic;
-  this._textureTarget = textureTarget;
-  this._texture = texture;
-  this._internalFormat = internalFormat;
-  this._pixelFormat = pixelFormat;
-  this._pixelDatatype = pixelDatatype;
-  this._width = width;
-  this._height = height;
-  this._dimensions = new Cartesian2(width, height);
-  this._hasMipmap = false;
-  this._sizeInBytes = sizeInBytes;
-  this._preMultiplyAlpha = preMultiplyAlpha;
-  this._flipY = flipY;
-  this._initialized = initialized;
-  this._sampler = undefined;
+/**
+ * Allocate a texture in GPU memory, without providing any image data.
+ *
+ * @param {Texture} texture The texture to be initialized with null values.
+ *
+ * @private
+ */
+function loadNull(texture) {
+  const context = texture._context;
+  const gl = context._gl;
+  const textureTarget = texture._textureTarget;
 
-  this._sampler = sampler;
-  setupSampler(sampler, this);
+  gl.activeTexture(gl.TEXTURE0);
+  gl.bindTexture(textureTarget, texture._texture);
+
+  gl.texImage2D(
+    textureTarget,
+    0,
+    texture._internalFormat,
+    texture._width,
+    texture._height,
+    0,
+    texture._pixelFormat,
+    PixelDatatype.toWebGLConstant(texture._pixelDatatype, context),
+    null
+  );
+
+  gl.bindTexture(textureTarget, null);
 }
 
 /**
@@ -559,7 +590,7 @@ Object.defineProperties(Texture.prototype, {
       return this._sampler;
     },
     set: function (sampler) {
-      setupSampler(sampler, this);
+      setupSampler(this, sampler);
       this._sampler = sampler;
     },
   },
@@ -615,11 +646,11 @@ Object.defineProperties(Texture.prototype, {
 
 /**
  * Set up a sampler for use with a texture
- * @param {Sampler} sampler Information about how to sample the texture
  * @param {Texture} texture The texture to be sampled by this sampler
+ * @param {Sampler} sampler Information about how to sample the texture
  * @private
  */
-function setupSampler(sampler, texture) {
+function setupSampler(texture, sampler) {
   let { minificationFilter, magnificationFilter } = sampler;
 
   const mipmap = [

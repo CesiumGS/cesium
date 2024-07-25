@@ -166,97 +166,6 @@ function CubeMap(options) {
   const textureTarget = gl.TEXTURE_CUBE_MAP;
   const texture = gl.createTexture();
 
-  gl.activeTexture(gl.TEXTURE0);
-  gl.bindTexture(textureTarget, texture);
-
-  function createFace(target, sourceFace) {
-    const { arrayBufferView = sourceFace.bufferView } = sourceFace;
-
-    let unpackAlignment = 4;
-    if (defined(arrayBufferView)) {
-      unpackAlignment = PixelFormat.alignmentInBytes(
-        pixelFormat,
-        pixelDatatype,
-        width
-      );
-    }
-    gl.pixelStorei(gl.UNPACK_ALIGNMENT, unpackAlignment);
-
-    if (skipColorSpaceConversion) {
-      gl.pixelStorei(gl.UNPACK_COLORSPACE_CONVERSION_WEBGL, gl.NONE);
-    } else {
-      gl.pixelStorei(
-        gl.UNPACK_COLORSPACE_CONVERSION_WEBGL,
-        gl.BROWSER_DEFAULT_WEBGL
-      );
-    }
-
-    let pixels;
-    if (defined(arrayBufferView)) {
-      gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
-      gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
-      if (flipY) {
-        pixels = PixelFormat.flipY(
-          arrayBufferView,
-          pixelFormat,
-          pixelDatatype,
-          size,
-          size
-        );
-      } else {
-        pixels = arrayBufferView;
-      }
-    } else {
-      // Only valid for DOM-Element uploads
-      gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, preMultiplyAlpha);
-      gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, flipY);
-      pixels = sourceFace;
-    }
-
-    gl.texImage2D(
-      target,
-      0,
-      internalFormat,
-      size,
-      size,
-      0,
-      pixelFormat,
-      PixelDatatype.toWebGLConstant(pixelDatatype, context),
-      pixels
-    );
-  }
-
-  function createNullFace(targetFace) {
-    gl.texImage2D(
-      targetFace,
-      0,
-      internalFormat,
-      size,
-      size,
-      0,
-      pixelFormat,
-      PixelDatatype.toWebGLConstant(pixelDatatype, context),
-      null
-    );
-  }
-
-  if (defined(source)) {
-    createFace(gl.TEXTURE_CUBE_MAP_POSITIVE_X, source.positiveX);
-    createFace(gl.TEXTURE_CUBE_MAP_NEGATIVE_X, source.negativeX);
-    createFace(gl.TEXTURE_CUBE_MAP_POSITIVE_Y, source.positiveY);
-    createFace(gl.TEXTURE_CUBE_MAP_NEGATIVE_Y, source.negativeY);
-    createFace(gl.TEXTURE_CUBE_MAP_POSITIVE_Z, source.positiveZ);
-    createFace(gl.TEXTURE_CUBE_MAP_NEGATIVE_Z, source.negativeZ);
-  } else {
-    createNullFace(gl.TEXTURE_CUBE_MAP_POSITIVE_X);
-    createNullFace(gl.TEXTURE_CUBE_MAP_NEGATIVE_X);
-    createNullFace(gl.TEXTURE_CUBE_MAP_POSITIVE_Y);
-    createNullFace(gl.TEXTURE_CUBE_MAP_NEGATIVE_Y);
-    createNullFace(gl.TEXTURE_CUBE_MAP_POSITIVE_Z);
-    createNullFace(gl.TEXTURE_CUBE_MAP_NEGATIVE_Z);
-  }
-  gl.bindTexture(textureTarget, null);
-
   this._context = context;
   this._textureFilterAnisotropic = context._textureFilterAnisotropic;
   this._textureTarget = textureTarget;
@@ -293,7 +202,109 @@ function CubeMap(options) {
   this._negativeZ = constructFace(gl.TEXTURE_CUBE_MAP_NEGATIVE_Z);
 
   this._sampler = sampler;
-  setupSampler(sampler, this);
+  setupSampler(this, sampler);
+
+  gl.activeTexture(gl.TEXTURE0);
+  gl.bindTexture(textureTarget, texture);
+
+  if (skipColorSpaceConversion) {
+    gl.pixelStorei(gl.UNPACK_COLORSPACE_CONVERSION_WEBGL, gl.NONE);
+  } else {
+    gl.pixelStorei(
+      gl.UNPACK_COLORSPACE_CONVERSION_WEBGL,
+      gl.BROWSER_DEFAULT_WEBGL
+    );
+  }
+
+  loadFace(this._positiveX, source?.positiveX);
+  loadFace(this._negativeX, source?.negativeX);
+  loadFace(this._positiveY, source?.positiveY);
+  loadFace(this._negativeY, source?.negativeY);
+  loadFace(this._positiveZ, source?.positiveZ);
+  loadFace(this._negativeZ, source?.negativeZ);
+
+  gl.bindTexture(textureTarget, null);
+}
+
+/**
+ * Load texel data into one face of a cube map.
+ *
+ * @param {CubeMapFace} cubeMapFace The face to which texel values will be loaded.
+ * @param {object} [source] The source for texel values to be loaded into the texture.
+ *
+ * @private
+ */
+function loadFace(cubeMapFace, source) {
+  const targetFace = cubeMapFace._targetFace;
+  const size = cubeMapFace._size;
+  const pixelFormat = cubeMapFace._pixelFormat;
+  const pixelDatatype = cubeMapFace._pixelDatatype;
+  const internalFormat = cubeMapFace._internalFormat;
+  const flipY = cubeMapFace._flipY;
+  const preMultiplyAlpha = cubeMapFace._preMultiplyAlpha;
+  const context = cubeMapFace._context;
+  const gl = context._gl;
+
+  if (!defined(source)) {
+    gl.texImage2D(
+      targetFace,
+      0,
+      internalFormat,
+      size,
+      size,
+      0,
+      pixelFormat,
+      PixelDatatype.toWebGLConstant(pixelDatatype, context),
+      null
+    );
+    return;
+  }
+
+  const { arrayBufferView = source.bufferView } = source;
+
+  let unpackAlignment = 4;
+  if (defined(arrayBufferView)) {
+    unpackAlignment = PixelFormat.alignmentInBytes(
+      pixelFormat,
+      pixelDatatype,
+      size
+    );
+  }
+  gl.pixelStorei(gl.UNPACK_ALIGNMENT, unpackAlignment);
+
+  let pixels;
+  if (defined(arrayBufferView)) {
+    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+    if (flipY) {
+      pixels = PixelFormat.flipY(
+        arrayBufferView,
+        pixelFormat,
+        pixelDatatype,
+        size,
+        size
+      );
+    } else {
+      pixels = arrayBufferView;
+    }
+  } else {
+    // Only valid for DOM-Element uploads
+    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, preMultiplyAlpha);
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, flipY);
+    pixels = source;
+  }
+
+  gl.texImage2D(
+    targetFace,
+    0,
+    internalFormat,
+    size,
+    size,
+    0,
+    pixelFormat,
+    PixelDatatype.toWebGLConstant(pixelDatatype, context),
+    pixels
+  );
 }
 
 Object.defineProperties(CubeMap.prototype, {
@@ -332,7 +343,7 @@ Object.defineProperties(CubeMap.prototype, {
       return this._sampler;
     },
     set: function (sampler) {
-      setupSampler(sampler, this);
+      setupSampler(this, sampler);
       this._sampler = sampler;
     },
   },
@@ -384,11 +395,11 @@ Object.defineProperties(CubeMap.prototype, {
 
 /**
  * Set up a sampler for use with a cube map.
- * @param {Sampler} sampler Information about how to sample the cubemap texture.
  * @param {CubeMap} cubeMap The cube map containing the texture to be sampled by this sampler.
+ * @param {Sampler} sampler Information about how to sample the cubemap texture.
  * @private
  */
-function setupSampler(sampler, cubeMap) {
+function setupSampler(cubeMap, sampler) {
   let { minificationFilter, magnificationFilter } = sampler;
 
   const mipmap = [
