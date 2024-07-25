@@ -18,7 +18,7 @@ function SunLight(options) {
    * @type {Color}
    * @default Color.WHITE
    */
-  this.color = Color.clone(defaultValue(options.color, Color.WHITE));
+  this.color = Color.clone(defaultValue(options.color, Color.fromBytes(255, 245, 240)));
 
   /**
    * The intensity of the light.

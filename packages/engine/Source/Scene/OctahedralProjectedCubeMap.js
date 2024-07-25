@@ -416,15 +416,14 @@ OctahedralProjectedCubeMap.prototype.update = function (frameState) {
  * @param {*} frameState
  * @returns
  */
-OctahedralProjectedCubeMap.fromCubeMap = function (cubeMap, frameState) {
+OctahedralProjectedCubeMap.fromCubeMap = function (cubeMap, mipLevels, frameState) {
   const atlas = new OctahedralProjectedCubeMap(); // TODO: No url means no caching.
 
-  const length = 6;
-  const cubeMaps = (atlas._cubeMaps = new Array(length));
+  const cubeMaps = (atlas._cubeMaps = new Array(mipLevels));
   const context = frameState.context;
-  atlas._maximumMipmapLevel = 1;
+  atlas._maximumMipmapLevel = mipLevels - 1;
 
-  const mipTextures = (atlas._mipTextures = new Array(length));
+  const mipTextures = (atlas._mipTextures = new Array(mipLevels));
   const originalSize = cubeMap.width * 2.0;
   const uniformMap = {
     originalSize: function () {
@@ -451,7 +450,7 @@ OctahedralProjectedCubeMap.fromCubeMap = function (cubeMap, frameState) {
 
   // TODO: Can we extract the code into helper function and use it in `update` as well?
   // First we project each cubemap onto a flat octahedron, and write that to a texture.
-  for (let i = 0; i < length; ++i) {
+  for (let i = 0; i < mipLevels; ++i) {
     cubeMaps[i] = cubeMap;
     const size = cubeMap.width * 2;
 

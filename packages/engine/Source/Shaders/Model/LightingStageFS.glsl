@@ -12,7 +12,7 @@ vec3 computeIBL(vec3 position, vec3 normal, vec3 lightDirection, vec3 lightColor
         vec3 clampedLightColor = lightColorHdr / max(maximumComponent, 1.0);
         vec3 iblColor = clampedLightColor * imageBasedLighting;
     #endif
-    return iblColor * material.occlusion;
+    return iblColor;
 }
 #endif
 
@@ -98,23 +98,6 @@ vec3 computePbrLighting(in czm_modelMaterial material, in vec3 position)
     return color;
 }
 #endif
-
-float computeEllipsoidOcclusion(vec3 positionWC, vec3 normalEC) {
-    // Approximate as a sphere for now
-    float radius = max(max(czm_ellipsoidRadii.x, czm_ellipsoidRadii.y), czm_ellipsoidRadii.z);
-    vec3 ellipsoidNormal = normalize(positionWC);
-
-    float height = length(positionWC);
-    vec3 normalWC = normalize(czm_inverseViewRotation * normalEC);
-
-    // Eventually sample multiple directions, but for as sphere we can do a integration of all angles
-    float bias = 1.1 / (radius);
-    float alpha = acos(max(dot(normalWC, ellipsoidNormal), 0.0));
-    // From https://ceur-ws.org/Vol-3027/paper5.pdf
-    float occlusion = 1.0 - 1.0 / (czm_pi) * sin(alpha) * max(sin(alpha) * height, 0.0) * bias;
-
-    return 1.0;
-}
 
 /**
  * Compute the material color under the current lighting conditions.

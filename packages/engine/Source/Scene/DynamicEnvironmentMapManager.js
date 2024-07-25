@@ -6,12 +6,15 @@ import ComputeCommand from "../Renderer/ComputeCommand.js";
 import Framebuffer from "../Renderer/Framebuffer.js";
 import Texture from "../Renderer/Texture.js";
 import PixelDatatype from "../Renderer/PixelDatatype";
+import Sampler from "../Renderer/Sampler.js";
+import TextureMinificationFilter from "../Renderer/TextureMinificationFilter.js";
 import PixelFormat from "../Core/PixelFormat";
 import ShaderSource from "../Renderer/ShaderSource.js";
 import SkyAtmosphereCommon from "../Shaders/SkyAtmosphereCommon.js";
 import AtmosphereCommon from "../Shaders/AtmosphereCommon.js";
 import ComputeIrradianceMapFS from "../Shaders/ComputeIrradianceMapFS.js";
 import ComputeRadianceMapFS from "../Shaders/ComputeRadianceMapFS.js";
+import ConvolveSpecularMapFS from "../Shaders/ConvolveSpecularMapFS.js";
 import CesiumMath from "../Core/Math.js";
 import CubeMap from "../Renderer/CubeMap.js";
 import OctahedralProjectedCubeMap from "./OctahedralProjectedCubeMap.js";
@@ -26,14 +29,18 @@ function DynamicEnvironmentMapManager() {
 
   this._radianceCommandsDirty = true;
   this._radianceMapDirty = true;
-  this._radianceMapAtlasDirty = true;
-  this._irradianceCommandDirty = true;
-  this._irradianceTextureDirty = true;
+  this._convolutionsCommandsDirty = false;
+  this._radianceMapAtlasDirty = false;
+  this._irradianceCommandDirty = false;
+  this._irradianceTextureDirty = false;
 
+  this._mipmapLevels = 10; 
   this._radianceMapComputeCommands = new Array(6);
+  this._convolutionComputeCommands = new Array(6 * this._mipmapLevels);
   this._irradianceComputeCommand = undefined; // TODO: Clearer naming: Specular and SH?
 
   this._radianceMapTextures = new Array(6);
+  this._specularMapTextures = new Array(6 * this._mipmapLevels);
   this._radianceMapAtlas = undefined;
   this._radianceCubeMap = undefined;
 
@@ -43,6 +50,12 @@ function DynamicEnvironmentMapManager() {
   this._sphericalHarmonicCoefficients = new Array(9);
 
   this._lastTime = new JulianDate();
+  this._textureDimensions = new Cartesian2(512, 512);
+  
+
+  /**
+   * TODO
+   */
   this.maximumSecondsDifference = 60 * 20;
 }
 
@@ -121,6 +134,12 @@ DynamicEnvironmentMapManager.prototype._reset = function () {
     }
   }
 
+  for (const command of this._convolutionComputeCommands) {
+    if (defined(command)) {
+      command.canceled = true;
+    }
+  }
+
   if (defined(this._irradianceMapComputeCommand)) {
     this._irradianceMapComputeCommand.canceled = true;
     this._irradianceMapComputeCommand = undefined;
@@ -130,6 +149,7 @@ DynamicEnvironmentMapManager.prototype._reset = function () {
 };
 
 const scratchCartesian = new Cartesian3();
+const scratchSurfacePosition = new Cartesian3();
 const scratchMatrix = new Matrix4();
 
 /**
@@ -146,20 +166,34 @@ DynamicEnvironmentMapManager.prototype.update = function (frameState) {
   }
 
   if (!JulianDate.equalsEpsilon(frameState.time, this._lastTime, this.maximumSecondsDifference)) {
-    console.log("reset");
     this._reset();
   }
 
   const context = frameState.context;
-  const textureDimensions = { x: 512, y: 512 }; // TODO
+  const textureDimensions = this._textureDimensions;
   const pixelFormat = PixelFormat.RGBA;
   const pixelDatatype = PixelDatatype.UNSIGNED_BYTE;
+  const position = this._position;
+
+  const ellipsoid = frameState.mapProjection.ellipsoid;
+  const surfacePosition = ellipsoid.scaleToGeodeticSurface(position, scratchSurfacePosition);
+  const outerEllipsoidScale = 1.025;
+
+  // outer radius, inner radius, dynamic atmosphere color flag
+  const radiiAndDynamicAtmosphereColor = new Cartesian3();
+  const radius = Cartesian3.magnitude(surfacePosition);
+  radiiAndDynamicAtmosphereColor.x =
+    radius * outerEllipsoidScale;
+  radiiAndDynamicAtmosphereColor.y = radius;
+
+  // Toggles whether the sun position is used. 0 treats the sun as always directly overhead.
+  radiiAndDynamicAtmosphereColor.z = 0;
+
+  const skyAtmosphere = new SkyAtmosphere(ellipsoid); // TODO
 
   if (this._radianceMapDirty) {
-    console.log("copying time");
     this._lastTime = JulianDate.clone(frameState.time, this._lastTime);
     if (!defined(this._radianceCubeMap)) {
-      console.log("creatign cubemap");
       this._radianceCubeMap = new CubeMap({
         context: context,
         width: textureDimensions.x,
@@ -170,21 +204,6 @@ DynamicEnvironmentMapManager.prototype.update = function (frameState) {
     }
 
     if (this._radianceCommandsDirty) {
-      console.log("creating command...");
-      const ellipsoid = frameState.mapProjection.ellipsoid;
-      const outerEllipsoidScale = 1.025;
-
-      // outer radius, inner radius, dynamic atmosphere color flag
-      const radiiAndDynamicAtmosphereColor = new Cartesian3();
-      radiiAndDynamicAtmosphereColor.x =
-        ellipsoid.maximumRadius * outerEllipsoidScale; // TODO: can we get the radius at this position instead?
-      radiiAndDynamicAtmosphereColor.y = ellipsoid.maximumRadius;
-
-      // Toggles whether the sun position is used. 0 treats the sun as always directly overhead.
-      radiiAndDynamicAtmosphereColor.z = 0;
-
-      const skyAtmosphere = new SkyAtmosphere(ellipsoid); // TODO
-
       const fs = new ShaderSource({
         sources: [AtmosphereCommon, SkyAtmosphereCommon, ComputeRadianceMapFS],
       });
@@ -200,6 +219,7 @@ DynamicEnvironmentMapManager.prototype.update = function (frameState) {
         }));
 
         const index = i;
+        console.log("creating radiance command");
         const command = new ComputeCommand({
           fragmentShaderSource: fs,
           outputTexture: texture,
@@ -232,7 +252,7 @@ DynamicEnvironmentMapManager.prototype.update = function (frameState) {
               return this._radianceCubeMap.getDirection(face, scratchCartesian);
             },
             u_positionWC: () => {
-              return this._position;
+              return position;
             },
           },
           persists: false,
@@ -251,17 +271,16 @@ DynamicEnvironmentMapManager.prototype.update = function (frameState) {
             face.copyFromFramebuffer();
             framebuffer._unBind();
             framebuffer.destroy();
-            this._radianceMapTextures[index].destroy();
-            this._radianceMapTextures[index] = undefined;
+            //this._radianceMapTextures[index].destroy();
+            //this._radianceMapTextures[index] = undefined;
 
             if (!commands.some(defined)) {
-              console.log("all commands done");
               this._radianceMapDirty = false;
-              this._radianceMapAtlasDirty = true;
+              this._convolutionsCommandsDirty = true;
+              console.log("done radiance map");
             }
           },
         });
-        console.log("queuing command");
         frameState.commandList.push(command);
         this._radianceMapComputeCommands[i] = command;
         i++;
@@ -272,19 +291,121 @@ DynamicEnvironmentMapManager.prototype.update = function (frameState) {
     return false;
   }
 
+  if (this._convolutionsCommandsDirty && this._mipmapLevels <= 1) {
+    this._convolutionsCommandsDirty = false;
+    this._radianceMapAtlasDirty = true;
+    return false;
+  }
+
+  if (this._convolutionsCommandsDirty) {
+    const fs = new ShaderSource({
+      sources: [ConvolveSpecularMapFS],
+    });
+    let width = textureDimensions.x / 2;
+    let height = textureDimensions.y / 2;
+
+    for (let i = 0; i < this._mipmapLevels; ++i) { // TODO: Start at 1?
+      let f = 0;
+      for (const face of this._radianceCubeMap.faces()) {
+        const index = f + i * 6;
+        const faceIndex = f;
+        const w = width;
+        const h = height;
+        const level = i;
+        const texture = (this._specularMapTextures[index] = new Texture({
+          context: context,
+          width: w,
+          height: h,
+          pixelDatatype: pixelDatatype,
+          pixelFormat: pixelFormat,
+        }));
+
+        const command = new ComputeCommand({
+          fragmentShaderSource: fs,
+          outputTexture: texture,
+          persists: false,
+              owner: this,
+              uniformMap: {
+                u_roughness: () => {
+                  return (level) / this._mipmapLevels;
+                },
+                u_radianceTexture: () => {
+                  return this._radianceMapTextures[faceIndex];
+                },
+                u_radiiAndDynamicAtmosphereColor: () => {
+                  return radiiAndDynamicAtmosphereColor;
+                },
+                u_faceDirection: () => {
+                  return this._radianceCubeMap.getDirection(face, scratchCartesian);
+                },
+                u_positionWC: () => {
+                  return position;
+                },
+                u_enuToFixedFrame: () => {
+                  return Transforms.eastNorthUpToFixedFrame(this._position, ellipsoid, scratchMatrix);
+              },
+              },
+              postExecute: () => {
+                const commands = this._convolutionComputeCommands;
+                commands[index] = undefined;
+
+                const framebuffer = new Framebuffer({
+                  context: context,
+                  colorTextures: [this._specularMapTextures[index]],
+                  destroyAttachments: false,
+                });
+    
+                framebuffer._bind();
+                face.copyMipmapFromFramebuffer(0, 0, w, h, level);
+                framebuffer._unBind();
+                framebuffer.destroy();
+
+                this._specularMapTextures[index].destroy();
+                this._specularMapTextures[index] = undefined;
+
+
+                if (!commands.some(defined)) {
+                  this._radianceMapAtlasDirty = true;
+                  this._radianceCubeMap._hasMipmap = true;
+
+                  for (let t = 0; t < 6; ++t) {
+                    // this._radianceMapTextures[t].destroy();
+                    // this._radianceMapTextures[t] = undefined;
+                  }
+                }
+              }
+        });
+        this._convolutionComputeCommands[i] = command;
+        frameState.commandList.push(command);
+
+        f++;
+      }
+
+      width /= 2;
+      height /= 2;
+    }
+    this._convolutionsCommandsDirty = false;
+    return false;
+  }
+
   if (this._radianceMapAtlasDirty) {
-    console.log("creating radiance map atlas");
     if (defined(this._radianceMapAtlas)) {
       //this._radianceMapAtlas.destroy(); TODO?
       this._radianceMapAtlas = undefined;
     }
+    //this._radianceCubeMap.generateMipmap();
+    // this._radianceCubeMap.sampler = new Sampler({
+    //    minificationFilter : TextureMinificationFilter.NEAREST_MIPMAP_LINEAR
+    // })
     this._radianceMapAtlas = OctahedralProjectedCubeMap.fromCubeMap(
       this._radianceCubeMap,
+      this._mipmapLevels,
       frameState
     );
 
     this._radianceMapAtlasDirty = false;
     this._irradianceCommandDirty = true;
+    console.log("radiance cubemap done");
   }
 
   if (this._irradianceCommandDirty) {
@@ -329,8 +450,7 @@ DynamicEnvironmentMapManager.prototype.update = function (frameState) {
     return false;
   }
 
-  if (this._sphericalHarmonicCoefficientsDirty) {
-    console.log("copying harmonic coefficients");
+  if (this._sphericalHarmonicCoefficientsDirty && defined(this._irradianceMapTexture)) {
     const framebuffer = new Framebuffer({
       context: context,
       colorTextures: [this._irradianceMapTexture],
@@ -350,7 +470,6 @@ DynamicEnvironmentMapManager.prototype.update = function (frameState) {
 
     framebuffer.destroy();
     this._sphericalHarmonicCoefficientsDirty = false;
-    console.log("all done!");
     return true;
   }
 };

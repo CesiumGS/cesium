@@ -94,7 +94,6 @@ void main() {
    int samples = 512;
     float solidAngle = 1.0 / float(samples);
 
-    float range = (czm_pi / float(samples)) * (2.0 * czm_pi / float(samples));
     for (int i = 0; i < samples; ++i) {
         vec3 direction = generateDirection(i, samples);
 
