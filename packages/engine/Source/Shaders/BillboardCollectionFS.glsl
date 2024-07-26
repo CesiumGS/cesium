@@ -7,6 +7,7 @@ uniform vec4 u_highlightColor;
 in vec2 v_textureCoordinates;
 in vec4 v_pickColor;
 in vec4 v_color;
+in float v_splitDirection;
 
 #ifdef SDF
 in vec4 v_outlineColor;
@@ -86,6 +87,9 @@ vec4 getSDFColor(vec2 position, float outlineWidth, vec4 outlineColor, float smo
 
 void main()
 {
+    if (v_splitDirection < 0.0 && gl_FragCoord.x > czm_splitPosition) discard;
+    if (v_splitDirection > 0.0 && gl_FragCoord.x < czm_splitPosition) discard;
+    
     vec4 color = texture(u_atlas, v_textureCoordinates);
 
 #ifdef SDF

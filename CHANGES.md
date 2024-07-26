@@ -4,6 +4,10 @@
 
 #### @cesium/engine
 
+##### Additions :tada:
+
+- Added SplitDirection property for display PointPrimitive and Billboard relative to the `Scene.splitPosition`. [#11982](https://github.com/CesiumGS/cesium/pull/11982)
+
 ##### Fixes :wrench:
 
 - Updated geometric self-shadowing function to improve direct lighting on models using physically-based rendering. [#12063](https://github.com/CesiumGS/cesium/pull/12063)
