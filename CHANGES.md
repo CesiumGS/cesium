@@ -1,10 +1,12 @@
 # Change Log
 
-- Added SplitDirection property for display PointPrimitive and Billboard relative to the `Scene.splitPosition`. [#11982](https://github.com/CesiumGS/cesium/pull/11982)
-
 ### 1.120 - 2024-08-01
 
 #### @cesium/engine
+
+##### Additions :tada:
+
+- Added SplitDirection property for display PointPrimitive and Billboard relative to the `Scene.splitPosition`. [#11982](https://github.com/CesiumGS/cesium/pull/11982)
 
 ##### Fixes :wrench:
 
