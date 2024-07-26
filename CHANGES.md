@@ -6,6 +6,8 @@
 
 ##### Additions :tada:
 
+- Added `Transforms.computeIcrfToMoonFixedMatrix` and `Transforms.computeMoonFixedToIcrfMatrix` to compute the transformations between the Moon's fixed frame and ICRF at a given time.
+- Added `Transforms.computeIcrfToCentralBodyFixedMatrix` to specific the default ICRF to fixed frame transformation to use internally, including for lighting calculations.
 - Added SplitDirection property for display PointPrimitive and Billboard relative to the `Scene.splitPosition`. [#11982](https://github.com/CesiumGS/cesium/pull/11982)
 
 ##### Fixes :wrench:

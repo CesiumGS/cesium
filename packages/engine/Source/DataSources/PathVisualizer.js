@@ -430,10 +430,10 @@ function PolylineUpdater(scene, referenceFrame) {
 
 PolylineUpdater.prototype.update = function (time) {
   if (this._referenceFrame === ReferenceFrame.INERTIAL) {
-    let toFixed = Transforms.computeIcrfToFixedMatrix(time, toFixedScratch);
-    if (!defined(toFixed)) {
-      toFixed = Transforms.computeTemeToPseudoFixedMatrix(time, toFixedScratch);
-    }
+    const toFixed = Transforms.computeIcrfToCentralBodyFixedMatrix(
+      time,
+      toFixedScratch
+    );
     Matrix4.fromRotationTranslation(
       toFixed,
       Cartesian3.ZERO,
