@@ -29,6 +29,7 @@ import createPropertyDescriptor from "./createPropertyDescriptor.js";
  * @property {Property | BoundingRectangle} [imageSubRegion] A Property specifying a {@link BoundingRectangle} that defines a sub-region of the image to use for the billboard, rather than the entire image, measured in pixels from the bottom-left.
  * @property {Property | DistanceDisplayCondition} [distanceDisplayCondition] A Property specifying at what distance from the camera that this billboard will be displayed.
  * @property {Property | number} [disableDepthTestDistance] A Property specifying the distance from the camera at which to disable the depth test to.
+ * @property {Property | SplitDirection} [splitDirection] A Property specifying the {@link SplitDirection} of the billboard.
  */
 
 /**
@@ -89,6 +90,8 @@ function BillboardGraphics(options) {
   this._distanceDisplayConditionSubscription = undefined;
   this._disableDepthTestDistance = undefined;
   this._disableDepthTestDistanceSubscription = undefined;
+  this._splitDirection = undefined;
+  this._splitDirectionSubscription = undefined;
 
   this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
 }
@@ -330,6 +333,14 @@ Object.defineProperties(BillboardGraphics.prototype, {
   disableDepthTestDistance: createPropertyDescriptor(
     "disableDepthTestDistance"
   ),
+
+  /**
+   * Gets or sets the Property specifying the {@link SplitDirection} of this billboard.
+   * @memberof BillboardGraphics.prototype
+   * @type {Property|undefined}
+   * @default SplitDirection.NONE
+   */
+  splitDirection: createPropertyDescriptor("splitDirection"),
 });
 
 /**
@@ -362,6 +373,7 @@ BillboardGraphics.prototype.clone = function (result) {
   result.imageSubRegion = this._imageSubRegion;
   result.distanceDisplayCondition = this._distanceDisplayCondition;
   result.disableDepthTestDistance = this._disableDepthTestDistance;
+  result.splitDirection = this._splitDirection;
   return result;
 };
 
@@ -424,6 +436,10 @@ BillboardGraphics.prototype.merge = function (source) {
   this.disableDepthTestDistance = defaultValue(
     this._disableDepthTestDistance,
     source.disableDepthTestDistance
+  );
+  this.splitDirection = defaultValue(
+    this.splitDirection,
+    source.splitDirection
   );
 };
 export default BillboardGraphics;

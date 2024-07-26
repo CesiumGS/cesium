@@ -11,6 +11,7 @@ import {
   BlendOption,
   PointPrimitive,
   PointPrimitiveCollection,
+  SplitDirection,
 } from "../../index.js";
 
 import createScene from "../../../../Specs/createScene.js";
@@ -64,6 +65,7 @@ describe(
       expect(p.distanceDisplayCondition).not.toBeDefined();
       expect(p.disableDepthTestDistance).toEqual(0.0);
       expect(p.id).not.toBeDefined();
+      expect(p.splitDirection).toEqual(SplitDirection.NONE);
     });
 
     it("can add and remove before first render.", function () {
@@ -95,6 +97,7 @@ describe(
         distanceDisplayCondition: new DistanceDisplayCondition(10.0, 100.0),
         disableDepthTestDistance: 10.0,
         id: "id",
+        splitDirection: SplitDirection.LEFT,
       });
 
       expect(p.show).toEqual(false);
@@ -120,6 +123,7 @@ describe(
       );
       expect(p.disableDepthTestDistance).toEqual(10.0);
       expect(p.id).toEqual("id");
+      expect(p.splitDirection).toEqual(SplitDirection.LEFT);
     });
 
     it("sets pointPrimitive properties", function () {
@@ -134,6 +138,7 @@ describe(
       p.translucencyByDistance = new NearFarScalar(1.0e6, 1.0, 1.0e8, 0.0);
       p.distanceDisplayCondition = new DistanceDisplayCondition(10.0, 100.0);
       p.disableDepthTestDistance = 10.0;
+      p.splitDirection = SplitDirection.LEFT;
 
       expect(p.show).toEqual(false);
       expect(p.position).toEqual(new Cartesian3(1.0, 2.0, 3.0));
@@ -157,6 +162,7 @@ describe(
         new DistanceDisplayCondition(10.0, 100.0)
       );
       expect(p.disableDepthTestDistance).toEqual(10.0);
+      expect(p.splitDirection).toEqual(SplitDirection.LEFT);
     });
 
     it("is not destroyed", function () {

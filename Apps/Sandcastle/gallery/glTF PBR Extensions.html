@@ -61,14 +61,13 @@
           hpr
         );
 
-        scene.globe.enableLighting = true;
-
         scene.light = new Cesium.DirectionalLight({
           direction: new Cesium.Cartesian3(
             0.2454278300540191,
             0.8842635425193919,
             0.39729481195458805
           ),
+          intensity: 0.0,
         });
 
         // This environment map was processed using Khronos's glTF IBL Sampler. To process your own:
@@ -143,6 +142,7 @@
               imageBasedLighting.specularEnvironmentMaps = environmentMapURL;
               imageBasedLighting.imageBasedLightingFactor =
                 Cesium.Cartesian2.ONE;
+              scene.light.intensity = 0.0;
             },
           },
           {
@@ -152,6 +152,7 @@
               imageBasedLighting.specularEnvironmentMaps = undefined;
               imageBasedLighting.imageBasedLightingFactor =
                 Cesium.Cartesian2.ONE;
+              scene.light.intensity = 1.0;
             },
           },
           {
@@ -159,6 +160,7 @@
             onselect: () => {
               imageBasedLighting.imageBasedLightingFactor =
                 Cesium.Cartesian2.ZERO;
+              scene.light.intensity = 1.0;
             },
           },
         ];
@@ -209,6 +211,14 @@
           {
             text: "Metal-Roughness Spheres",
             onselect: () => loadModel(2635364),
+          },
+          {
+            text: "Water Bottle",
+            onselect: () => loadModel(2654597),
+          },
+          {
+            text: "Mirror Ball",
+            onselect: () => loadModel(2674524),
           },
         ];
         Sandcastle.addToolbarMenu(modelOptions, "modelsToolbar");
