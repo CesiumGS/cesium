@@ -24,13 +24,20 @@ describe(
     let cubeMap;
 
     function expectCubeMapFaces(options) {
-      const cubeMap = options.cubeMap;
-      const expectedColors = options.expectedColors;
+      const { cubeMap, expectedColors, level } = options;
 
-      const fs =
-        "uniform samplerCube u_texture;" +
-        "uniform mediump vec3 u_direction;" +
-        "void main() { out_FragColor = czm_textureCube(u_texture, normalize(u_direction)); }";
+      let fs;
+      if (defined(level)) {
+        fs =
+          `uniform samplerCube u_texture;` +
+          `uniform mediump vec3 u_direction;` +
+          `void main() { out_FragColor = czm_textureCube(u_texture, normalize(u_direction), ${level}); }`;
+      } else {
+        fs =
+          `uniform samplerCube u_texture;` +
+          `uniform mediump vec3 u_direction;` +
+          `void main() { out_FragColor = czm_textureCube(u_texture, normalize(u_direction)); }`;
+      }
 
       let faceDirections = options.faceDirections;
       if (!defined(faceDirections)) {
@@ -414,6 +421,49 @@ describe(
           [255, 0, 255, 255], // +Z
           [255, 255, 0, 255], // -Z
         ],
+      });
+    });
+
+    it("CubeMap.fromMipMaps loads all mip levels correctly", function () {
+      const red = [255, 0, 0, 255];
+      const green = [0, 255, 0, 255];
+      const blue = [0, 0, 255, 255];
+      const yellow = [255, 255, 0, 255];
+      const magenta = [255, 0, 255, 255];
+      const cyan = [0, 255, 255, 255];
+
+      const level0colors = [red, green, blue, yellow, magenta, cyan];
+      const level0 = CubeMap.faceNames.reduce((level, faceName, index) => {
+        const color = level0colors[index];
+        const colorData = new Uint8Array([color, color, color, color].flat());
+        level[faceName] = { width: 2, height: 2, arrayBufferView: colorData };
+        return level;
+      }, {});
+      const level1colors = [yellow, magenta, cyan, red, green, blue];
+      const level1 = CubeMap.faceNames.reduce((level, faceName, index) => {
+        const color = level1colors[index];
+        const colorData = new Uint8Array(color);
+        level[faceName] = { width: 1, height: 1, arrayBufferView: colorData };
+        return level;
+      }, {});
+
+      cubeMap = CubeMap.fromMipmaps({
+        context: context,
+        source: [level0, level1],
+        sampler: new Sampler({
+          minificationFilter: TextureMinificationFilter.NEAREST_MIPMAP_LINEAR,
+        }),
+      });
+
+      expectCubeMapFaces({
+        cubeMap: cubeMap,
+        expectedColors: level0colors,
+        level: "0.0",
+      });
+      expectCubeMapFaces({
+        cubeMap: cubeMap,
+        expectedColors: level1colors,
+        level: "1.0",
       });
     });
 

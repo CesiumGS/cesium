@@ -66,33 +66,23 @@ function CubeMap(options) {
 
   let { width, height } = options;
 
-  if (defined(source)) {
-    const faces = [
-      source.positiveX,
-      source.negativeX,
-      source.positiveY,
-      source.negativeY,
-      source.positiveZ,
-      source.negativeZ,
-    ];
+  const faceNames = CubeMap.faceNames;
 
+  if (defined(source)) {
     //>>includeStart('debug', pragmas.debug);
-    if (!faces.every(defined)) {
+    if (!faceNames.every((faceName) => defined(source[faceName]))) {
       throw new DeveloperError(
-        "options.source requires positiveX, negativeX, positiveY, negativeY, positiveZ, and negativeZ faces."
+        `options.source requires faces ${faceNames.join(", ")}.`
       );
     }
     //>>includeEnd('debug');
 
-    width = faces[0].width;
-    height = faces[0].height;
+    ({ width, height } = source[faceNames[0]]);
 
     //>>includeStart('debug', pragmas.debug);
     for (let i = 1; i < 6; ++i) {
-      if (
-        Number(faces[i].width) !== width ||
-        Number(faces[i].height) !== height
-      ) {
+      const face = source[faceNames[i]];
+      if (Number(face.width) !== width || Number(face.height) !== height) {
         throw new DeveloperError(
           "Each face in options.source must have the same width and height."
         );
@@ -216,27 +206,90 @@ function CubeMap(options) {
     );
   }
 
-  loadFace(this._positiveX, source?.positiveX);
-  loadFace(this._negativeX, source?.negativeX);
-  loadFace(this._positiveY, source?.positiveY);
-  loadFace(this._negativeY, source?.negativeY);
-  loadFace(this._positiveZ, source?.positiveZ);
-  loadFace(this._negativeZ, source?.negativeZ);
+  for (let i = 0; i < faceNames.length; i++) {
+    const faceName = faceNames[i];
+    loadFace(this[faceName], source?.[faceName], 0);
+  }
 
   gl.bindTexture(textureTarget, null);
 }
+
+CubeMap.faceNames = Object.freeze([
+  "positiveX",
+  "negativeX",
+  "positiveY",
+  "negativeY",
+  "positiveZ",
+  "negativeZ",
+]);
+
+/**
+ * Creates a CubeMap, using a texel data source that includes pre-generated mipmaps.
+ *
+ * @param {CubeMap.ConstructorOptions} options An object describing initialization options.
+ * @returns {CubeMap}
+ *
+ * @private
+ */
+CubeMap.fromMipmaps = function (options) {
+  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  const { source, skipColorSpaceConversion } = options;
+
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("options.source", source);
+
+  // TODO: Verify that input is an array
+  // TODO: Verify that the structure of each mip level matches the first.
+  // TODO: Verify that the length of the array is equal to Math.log2(source[0].positiveX.width)
+  //>>includeEnd('debug');
+
+  options.source = source[0];
+  const cubeMap = new CubeMap(options);
+
+  const gl = cubeMap._context._gl;
+  const texture = cubeMap._texture;
+  const textureTarget = cubeMap._textureTarget;
+
+  gl.activeTexture(gl.TEXTURE0);
+  gl.bindTexture(textureTarget, texture);
+
+  if (skipColorSpaceConversion) {
+    gl.pixelStorei(gl.UNPACK_COLORSPACE_CONVERSION_WEBGL, gl.NONE);
+  } else {
+    gl.pixelStorei(
+      gl.UNPACK_COLORSPACE_CONVERSION_WEBGL,
+      gl.BROWSER_DEFAULT_WEBGL
+    );
+  }
+
+  const faceNames = CubeMap.faceNames;
+  for (let mipLevel = 1; mipLevel < source.length; mipLevel++) {
+    const mipSource = source[mipLevel];
+    for (let j = 0; j < faceNames.length; j++) {
+      const faceName = faceNames[j];
+      loadFace(cubeMap[faceName], mipSource[faceName], mipLevel);
+    }
+  }
+
+  gl.bindTexture(textureTarget, null);
+
+  cubeMap._hasMipmap = true;
+
+  return cubeMap;
+};
 
 /**
  * Load texel data into one face of a cube map.
  *
  * @param {CubeMapFace} cubeMapFace The face to which texel values will be loaded.
  * @param {object} [source] The source for texel values to be loaded into the texture.
+ * @param {number} mipLevel The mip level to which the texel values will be loaded.
  *
  * @private
  */
-function loadFace(cubeMapFace, source) {
+function loadFace(cubeMapFace, source, mipLevel) {
   const targetFace = cubeMapFace._targetFace;
-  const size = cubeMapFace._size;
+  const size = Math.max(Math.floor(cubeMapFace._size / 2 ** mipLevel), 1);
   const pixelFormat = cubeMapFace._pixelFormat;
   const pixelDatatype = cubeMapFace._pixelDatatype;
   const internalFormat = cubeMapFace._internalFormat;
@@ -248,7 +301,7 @@ function loadFace(cubeMapFace, source) {
   if (!defined(source)) {
     gl.texImage2D(
       targetFace,
-      0,
+      mipLevel,
       internalFormat,
       size,
       size,
@@ -296,7 +349,7 @@ function loadFace(cubeMapFace, source) {
 
   gl.texImage2D(
     targetFace,
-    0,
+    mipLevel,
     internalFormat,
     size,
     size,
