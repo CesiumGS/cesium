@@ -47,6 +47,7 @@ import Primitive from "./Primitive.js";
 import QuadtreeTileLoadState from "./QuadtreeTileLoadState.js";
 import SceneMode from "./SceneMode.js";
 import ShadowMode from "./ShadowMode.js";
+import SplitDirection from "./SplitDirection.js";
 import TerrainFillMesh from "./TerrainFillMesh.js";
 import TerrainState from "./TerrainState.js";
 import TileBoundingRegion from "./TileBoundingRegion.js";
@@ -90,6 +91,7 @@ function GlobeSurfaceTileProvider(options) {
   this.showGroundAtmosphere = false;
   this.shadows = ShadowMode.RECEIVE_ONLY;
   this.vertexShadowDarkness = 0.3;
+  this.splitDirection = SplitDirection.NONE;
 
   /**
    * The color to use to highlight terrain fill tiles. If undefined, fill tiles are not
@@ -1785,6 +1787,9 @@ function createTileUniformMap(frameState, globeSurfaceTileProvider) {
     u_vertexShadowDarkness: function () {
       return this.properties.vertexShadowDarkness;
     },
+    u_terrainSplitDirection: function () {
+      return globeSurfaceTileProvider.splitDirection;
+    },
 
     // make a separate object so that changes to the properties are seen on
     // derived commands that combine another uniform map with this one.
@@ -2282,6 +2287,8 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
   surfaceShaderSetOptions.clippedByBoundaries = surfaceTile.clippedByBoundaries;
   surfaceShaderSetOptions.hasGeodeticSurfaceNormals = hasGeodeticSurfaceNormals;
   surfaceShaderSetOptions.hasExaggeration = hasExaggeration;
+  surfaceShaderSetOptions.splitTerrain =
+    tileProvider.splitDirection !== SplitDirection.NONE;
 
   const tileImageryCollection = surfaceTile.imagery;
   let imageryIndex = 0;

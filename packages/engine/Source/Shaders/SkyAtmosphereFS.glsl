@@ -2,6 +2,10 @@ in vec3 v_outerPositionWC;
 
 uniform vec3 u_hsbShift;
 
+#ifdef SPLIT_ATMOSPHERE
+uniform float u_splitDirection;
+#endif
+
 #ifndef PER_FRAGMENT_ATMOSPHERE
 in vec3 v_mieColor;
 in vec3 v_rayleighColor;
@@ -11,6 +15,15 @@ in float v_translucent;
 
 void main (void)
 {
+    #ifdef SPLIT_ATMOSPHERE
+        float splitPosition = czm_splitPosition;
+        if (u_splitDirection < 0.0 && gl_FragCoord.x > splitPosition) {
+            discard;
+        } else if (u_splitDirection > 0.0 && gl_FragCoord.x < splitPosition) {
+            discard;
+        }
+    #endif
+
     float lightEnum = u_radiiAndDynamicAtmosphereColor.z;
     vec3 lightDirection = czm_getDynamicAtmosphereLightDirection(v_outerPositionWC, lightEnum);
 
