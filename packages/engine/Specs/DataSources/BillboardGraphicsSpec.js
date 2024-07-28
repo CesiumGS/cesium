@@ -9,6 +9,7 @@ import {
   HeightReference,
   HorizontalOrigin,
   VerticalOrigin,
+  SplitDirection,
 } from "../../index.js";
 
 describe("DataSources/BillboardGraphics", function () {
@@ -33,6 +34,7 @@ describe("DataSources/BillboardGraphics", function () {
       sizeInMeters: true,
       distanceDisplayCondition: new DistanceDisplayCondition(10.0, 100.0),
       disableDepthTestDistance: 10.0,
+      splitDirection: SplitDirection.LEFT,
     };
 
     const billboard = new BillboardGraphics(options);
@@ -56,6 +58,7 @@ describe("DataSources/BillboardGraphics", function () {
     expect(billboard.sizeInMeters).toBeInstanceOf(ConstantProperty);
     expect(billboard.distanceDisplayCondition).toBeInstanceOf(ConstantProperty);
     expect(billboard.disableDepthTestDistance).toBeInstanceOf(ConstantProperty);
+    expect(billboard.splitDirection).toBeInstanceOf(ConstantProperty);
 
     expect(billboard.image.getValue()).toEqual(options.image);
     expect(billboard.rotation.getValue()).toEqual(options.rotation);
@@ -89,6 +92,7 @@ describe("DataSources/BillboardGraphics", function () {
     expect(billboard.disableDepthTestDistance.getValue()).toEqual(
       options.disableDepthTestDistance
     );
+    expect(billboard.splitDirection.getValue()).toEqual(options.splitDirection);
   });
 
   it("merge assigns unassigned properties", function () {
@@ -118,7 +122,8 @@ describe("DataSources/BillboardGraphics", function () {
     source.distanceDisplayCondition = new ConstantProperty(
       new DistanceDisplayCondition(10.0, 100.0)
     );
-    source.disableDepthTestDistance = 10.0;
+    source.disableDepthTestDistance = new ConstantProperty(10.0);
+    source.splitDirection = new ConstantProperty(SplitDirection.LEFT);
 
     const target = new BillboardGraphics();
     target.merge(source);
@@ -149,6 +154,7 @@ describe("DataSources/BillboardGraphics", function () {
     expect(target.disableDepthTestDistance).toBe(
       source.disableDepthTestDistance
     );
+    expect(target.splitDirection).toBe(source.splitDirection);
   });
 
   it("merge does not assign assigned properties", function () {
@@ -179,6 +185,7 @@ describe("DataSources/BillboardGraphics", function () {
       new DistanceDisplayCondition(10.0, 100.0)
     );
     source.disableDepthTestDistance = new ConstantProperty(10.0);
+    source.splitDirection = new ConstantProperty(SplitDirection.LEFT);
 
     const image = new ConstantProperty("");
     const imageSubRegion = new ConstantProperty();
@@ -206,6 +213,7 @@ describe("DataSources/BillboardGraphics", function () {
       new DistanceDisplayCondition()
     );
     const disableDepthTestDistance = new ConstantProperty(10.0);
+    const splitDirection = new ConstantProperty(SplitDirection.LEFT);
 
     const target = new BillboardGraphics();
     target.image = image;
@@ -228,6 +236,7 @@ describe("DataSources/BillboardGraphics", function () {
     target.sizeInMeters = sizeInMeters;
     target.distanceDisplayCondition = distanceDisplayCondition;
     target.disableDepthTestDistance = disableDepthTestDistance;
+    target.splitDirection = splitDirection;
 
     target.merge(source);
 
@@ -251,6 +260,7 @@ describe("DataSources/BillboardGraphics", function () {
     expect(target.sizeInMeters).toBe(sizeInMeters);
     expect(target.distanceDisplayCondition).toBe(distanceDisplayCondition);
     expect(target.disableDepthTestDistance).toBe(disableDepthTestDistance);
+    expect(target.splitDirection).toBe(splitDirection);
   });
 
   it("clone works", function () {
@@ -281,6 +291,7 @@ describe("DataSources/BillboardGraphics", function () {
       new DistanceDisplayCondition(10.0, 100.0)
     );
     source.disableDepthTestDistance = new ConstantProperty(10.0);
+    source.splitDirection = new ConstantProperty(SplitDirection.LEFT);
 
     const result = source.clone();
     expect(result.image).toBe(source.image);
@@ -309,6 +320,7 @@ describe("DataSources/BillboardGraphics", function () {
     expect(result.disableDepthTestDistance).toBe(
       source.disableDepthTestDistance
     );
+    expect(result.splitDirection).toBe(source.splitDirection);
   });
 
   it("merge throws if source undefined", function () {

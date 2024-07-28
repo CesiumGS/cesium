@@ -31,6 +31,7 @@ import {
   JobScheduler,
   JulianDate,
   Math as CesiumMath,
+  Matrix3,
   Matrix4,
   Model,
   ModelFeature,
@@ -1750,6 +1751,48 @@ describe(
         expect(boundingSphere.radius).toEqualEpsilon(
           2.0 * expectedRadius,
           CesiumMath.EPSILON8
+        );
+      });
+    });
+
+    describe("reference matrices", function () {
+      it("sets IBL transform matrix", async function () {
+        if (!scene.highDynamicRangeSupported) {
+          return;
+        }
+        const resource = Resource.createIfNeeded(boxTexturedGlbUrl);
+        const buffer = await resource.fetchArrayBuffer();
+        const imageBasedLighting = new ImageBasedLighting({
+          specularEnvironmentMaps:
+            "./Data/EnvironmentMap/kiara_6_afternoon_2k_ibl.ktx2",
+        });
+        const model = await loadAndZoomToModelAsync(
+          {
+            gltf: new Uint8Array(buffer),
+            imageBasedLighting: imageBasedLighting,
+          },
+          scene
+        );
+        await pollToPromise(function () {
+          scene.render();
+          return (
+            defined(imageBasedLighting.specularEnvironmentMapAtlas) &&
+            imageBasedLighting.specularEnvironmentMapAtlas.ready
+          );
+        });
+        expect(model.modelMatrix).toEqual(Matrix4.IDENTITY);
+        const { view3D } = scene.context.uniformState;
+        const viewRotation = Matrix4.getRotation(view3D, new Matrix3());
+        Matrix3.transpose(viewRotation, viewRotation);
+        const yUpToZUp = new Matrix3(1, 0, 0, 0, 0, 1, 0, -1, 0);
+        const expectedIblTransform = Matrix3.multiply(
+          yUpToZUp,
+          viewRotation,
+          new Matrix3()
+        );
+        expect(model._iblReferenceFrameMatrix).toEqualEpsilon(
+          expectedIblTransform,
+          CesiumMath.EPSILON14
         );
       });
     });

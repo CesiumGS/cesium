@@ -4,12 +4,20 @@
 
 #### @cesium/engine
 
+##### Additions :tada:
+
+- Added `Transforms.computeIcrfToMoonFixedMatrix` and `Transforms.computeMoonFixedToIcrfMatrix` to compute the transformations between the Moon's fixed frame and ICRF at a given time.
+- Added `Transforms.computeIcrfToCentralBodyFixedMatrix` to specific the default ICRF to fixed frame transformation to use internally, including for lighting calculations.
+- Added SplitDirection property for display PointPrimitive and Billboard relative to the `Scene.splitPosition`. [#11982](https://github.com/CesiumGS/cesium/pull/11982)
+
 ##### Fixes :wrench:
 
 - Updated geometric self-shadowing function to improve direct lighting on models using physically-based rendering. [#12063](https://github.com/CesiumGS/cesium/pull/12063)
 - When the mouse is pressed, the modifiers will be recorded. Modifying the modifiers during this process is invalid. [#11903](https://github.com/CesiumGS/cesium/pull/11903)
 - Fixed environment map LOD selection in image-based lighting. [#12070](https://github.com/CesiumGS/cesium/pull/12070)
 - Corrected calculation of diffuse component in image-based lighting. [#12082](https://github.com/CesiumGS/cesium/pull/12082)
+- Updated specular BRDF for image-based lighting. [#12083](https://github.com/CesiumGS/cesium/pull/12083)
+- Fixed environment map transform for image-based lighting. [#12091](https://github.com/CesiumGS/cesium/pull/12091)
 
 ### 1.119 - 2024-07-01
 

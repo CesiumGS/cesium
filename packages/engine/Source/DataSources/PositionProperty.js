@@ -112,13 +112,10 @@ PositionProperty.convertToReferenceFrame = function (
     return Cartesian3.clone(value, result);
   }
 
-  let icrfToFixed = Transforms.computeIcrfToFixedMatrix(time, scratchMatrix3);
-  if (!defined(icrfToFixed)) {
-    icrfToFixed = Transforms.computeTemeToPseudoFixedMatrix(
-      time,
-      scratchMatrix3
-    );
-  }
+  const icrfToFixed = Transforms.computeIcrfToCentralBodyFixedMatrix(
+    time,
+    scratchMatrix3
+  );
   if (inputFrame === ReferenceFrame.INERTIAL) {
     return Matrix3.multiplyByVector(icrfToFixed, value, result);
   }
