@@ -77,6 +77,10 @@ uniform mat4 u_clippingPlanesMatrix;
 uniform vec4 u_clippingPlanesEdgeStyle;
 #endif
 
+#ifdef SPLIT_TERRAIN
+uniform float u_terrainSplitDirection;
+#endif
+
 #if defined(GROUND_ATMOSPHERE) || defined(FOG) && defined(DYNAMIC_ATMOSPHERE_LIGHTING) && (defined(ENABLE_VERTEX_LIGHTING) || defined(ENABLE_DAYNIGHT_SHADING))
 uniform float u_minimumBrightness;
 #endif
@@ -298,6 +302,15 @@ void main()
         {
             discard;
         }
+#endif
+
+#ifdef SPLIT_TERRAIN
+    float splitPosition = czm_splitPosition;
+    if (u_terrainSplitDirection < 0.0 && gl_FragCoord.x > splitPosition) {
+        discard;
+    } else if (u_terrainSplitDirection > 0.0 && gl_FragCoord.x < splitPosition) {
+        discard;
+    }
 #endif
 
 #ifdef ENABLE_CLIPPING_PLANES
