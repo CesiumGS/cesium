@@ -120,13 +120,15 @@ function metadataSuccess(data, imageryProviderBuilder) {
   imageryProviderBuilder.maximumLevel = resource.zoomMax - 1;
   imageryProviderBuilder.imageUrlSubdomains = resource.imageUrlSubdomains;
   imageryProviderBuilder.imageUrlTemplate = resource.imageUrl;
-  const validProviders = !defined(resource.imageryProviders)
-    ? resource.imageryProviders
-    : resource.imageryProviders.filter((provider) =>
-        // prevent issues with the imagery API from crashing the viewer when the expected properties are not there
-        // See https://github.com/CesiumGS/cesium/issues/12088
-        provider.coverageAreas?.some((area) => defined(area.bbox))
-      );
+
+  let validProviders = resource.imageryProviders;
+  if (defined(resource.imageryProviders)) {
+    // prevent issues with the imagery API from crashing the viewer when the expected properties are not there
+    // See https://github.com/CesiumGS/cesium/issues/12088
+    validProviders = resource.imageryProviders.filter((provider) =>
+      provider.coverageAreas?.some((area) => defined(area.bbox))
+    );
+  }
   imageryProviderBuilder.attributionList = validProviders;
 }
 
