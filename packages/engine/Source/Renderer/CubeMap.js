@@ -238,9 +238,15 @@ CubeMap.fromMipmaps = function (options) {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("options.source", source);
 
-  // TODO: Verify that input is an array
+  if (!Array.isArray(source)) {
+    throw new DeveloperError(`options.source must be an array`);
+  }
+  const faceSize = source[0].positiveX.width;
+  const mipCount = Math.log2(faceSize) + 1;
+  if (source.length !== mipCount) {
+    throw new DeveloperError(`all mip levels must be defined`);
+  }
   // TODO: Verify that the structure of each mip level matches the first.
-  // TODO: Verify that the length of the array is equal to Math.log2(source[0].positiveX.width)
   //>>includeEnd('debug');
 
   options.source = source[0];

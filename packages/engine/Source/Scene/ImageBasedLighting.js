@@ -4,7 +4,7 @@ import defined from "../Core/defined.js";
 import defaultValue from "../Core/defaultValue.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
-import OctahedralProjectedCubeMap from "./OctahedralProjectedCubeMap.js";
+import SpecularEnvironmentCubeMap from "./SpecularEnvironmentCubeMap.js";
 
 /**
  * Properties for managing image-based lighting on tilesets and models.
@@ -302,7 +302,7 @@ Object.defineProperties(ImageBasedLighting.prototype, {
    * The texture atlas for the specular environment maps.
    *
    * @memberof ImageBasedLighting.prototype
-   * @type {OctahedralProjectedCubeMap}
+   * @type {SpecularEnvironmentCubeMap}
    *
    * @private
    */
@@ -346,7 +346,7 @@ Object.defineProperties(ImageBasedLighting.prototype, {
 });
 
 function createSpecularEnvironmentMapAtlas(imageBasedLighting, context) {
-  if (!OctahedralProjectedCubeMap.isSupported(context)) {
+  if (!SpecularEnvironmentCubeMap.isSupported(context)) {
     return;
   }
 
@@ -355,7 +355,7 @@ function createSpecularEnvironmentMapAtlas(imageBasedLighting, context) {
     imageBasedLighting._specularEnvironmentMapAtlas.destroy();
 
   if (defined(imageBasedLighting._specularEnvironmentMaps)) {
-    const atlas = new OctahedralProjectedCubeMap(
+    const atlas = new SpecularEnvironmentCubeMap(
       imageBasedLighting._specularEnvironmentMaps
     );
     imageBasedLighting._specularEnvironmentMapAtlas = atlas;

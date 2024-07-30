@@ -1499,21 +1499,6 @@ const AutomaticUniforms = {
   }),
 
   /**
-   * An automatic GLSL uniform containing the size of the specular environment map atlas used within the scene.
-   *
-   * @example
-   * // GLSL declaration
-   * uniform vec2 czm_specularEnvironmentMapSize;
-   */
-  czm_specularEnvironmentMapSize: new AutomaticUniform({
-    size: 1,
-    datatype: WebGLConstants.FLOAT_VEC2,
-    getValue: function (uniformState) {
-      return uniformState.specularEnvironmentMapsDimensions;
-    },
-  }),
-
-  /**
    * An automatic GLSL uniform containing the maximum level-of-detail of the specular environment map atlas used within the scene.
    *
    * @example

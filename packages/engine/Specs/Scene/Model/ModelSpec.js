@@ -36,7 +36,6 @@ import {
   Model,
   ModelFeature,
   ModelSceneGraph,
-  OctahedralProjectedCubeMap,
   ModelUtility,
   Pass,
   PrimitiveType,
@@ -45,6 +44,7 @@ import {
   RuntimeError,
   ShaderProgram,
   ShadowMode,
+  SpecularEnvironmentCubeMap,
   SplitDirection,
   StyleCommandsNeeded,
   SunLight,
@@ -3387,7 +3387,7 @@ describe(
       });
 
       it("renders when specularEnvironmentMaps aren't supported", async function () {
-        spyOn(OctahedralProjectedCubeMap, "isSupported").and.returnValue(false);
+        spyOn(SpecularEnvironmentCubeMap, "isSupported").and.returnValue(false);
 
         const model = await loadAndZoomToModelAsync(
           {
