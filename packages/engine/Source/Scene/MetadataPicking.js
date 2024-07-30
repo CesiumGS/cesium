@@ -1,4 +1,4 @@
-import MetadataComponentType from "./MetadataComponentType";
+import MetadataComponentType from "./MetadataComponentType.js";
 
 /**
  * Utility functions for metadata picking.
