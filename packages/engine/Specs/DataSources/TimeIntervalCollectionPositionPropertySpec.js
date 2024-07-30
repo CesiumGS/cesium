@@ -189,11 +189,12 @@ describe("DataSources/TimeIntervalCollectionPositionProperty", function () {
     expect(result).toBeUndefined();
   });
 
-  it("throws with no time parameter", function () {
+  it("getValue uses JulianDate.now() if time parameter is undefined", function () {
+    spyOn(JulianDate, "now").and.callThrough();
+
     const property = new TimeIntervalCollectionPositionProperty();
-    expect(function () {
-      property.getValue(undefined);
-    }).toThrowDeveloperError();
+    property.getValue();
+    expect(JulianDate.now).toHaveBeenCalled();
   });
 
   it("throws with no reference frame parameter", function () {

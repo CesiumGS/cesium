@@ -5,6 +5,7 @@ import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import Event from "../Core/Event.js";
 import Iso8601 from "../Core/Iso8601.js";
+import JulianDate from "../Core/JulianDate.js";
 import CesiumMath from "../Core/Math.js";
 import HeightReference, {
   isHeightReferenceRelative,
@@ -149,9 +150,15 @@ TerrainOffsetProperty.prototype._updateClamping = function () {
 /**
  * Gets the height relative to the terrain based on the positions.
  *
+ * @param {JulianDate} [time=JulianDate.now()] The time for which to retrieve the value. If omitted, the current system time is used.
+ * @param {object} [result] The object to store the value into, if omitted, a new instance is created and returned.
  * @returns {Cartesian3} The offset
  */
 TerrainOffsetProperty.prototype.getValue = function (time, result) {
+  if (!defined(time)) {
+    time = JulianDate.now();
+  }
+
   const heightReference = Property.getValueOrDefault(
     this._heightReference,
     time,

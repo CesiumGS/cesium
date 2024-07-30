@@ -159,10 +159,11 @@ describe("DataSources/CompositeProperty", function () {
     expect(listener.calls.count()).toBe(2);
   });
 
-  it("getValue throws with no time parameter", function () {
+  it("getValue uses JulianDate.now() if time parameter is undefined", function () {
+    spyOn(JulianDate, "now").and.callThrough();
+
     const property = new CompositeProperty();
-    expect(function () {
-      property.getValue(undefined);
-    }).toThrowDeveloperError();
+    property.getValue();
+    expect(JulianDate.now).toHaveBeenCalled();
   });
 });

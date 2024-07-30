@@ -1,6 +1,7 @@
 import Color from "../Core/Color.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
+import JulianDate from "../Core/JulianDate.js";
 import Material from "../Scene/Material.js";
 
 /**
@@ -83,6 +84,9 @@ MaterialProperty.prototype.equals = DeveloperError.throwInstantiationError;
  */
 MaterialProperty.getValue = function (time, materialProperty, material) {
   let type;
+  if (!defined(time)) {
+    time = JulianDate.now();
+  }
 
   if (defined(materialProperty)) {
     type = materialProperty.getType(time);

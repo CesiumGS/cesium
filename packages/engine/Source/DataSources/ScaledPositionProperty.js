@@ -2,6 +2,7 @@ import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
 import Event from "../Core/Event.js";
+import JulianDate from "../Core/JulianDate.js";
 import ReferenceFrame from "../Core/ReferenceFrame.js";
 import Property from "./Property.js";
 
@@ -38,6 +39,9 @@ Object.defineProperties(ScaledPositionProperty.prototype, {
 });
 
 ScaledPositionProperty.prototype.getValue = function (time, result) {
+  if (!defined(time)) {
+    time = JulianDate.now();
+  }
   return this.getValueInReferenceFrame(time, ReferenceFrame.FIXED, result);
 };
 

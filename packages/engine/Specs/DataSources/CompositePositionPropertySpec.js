@@ -272,11 +272,12 @@ describe("DataSources/CompositePositionProperty", function () {
     expect(left.equals(right)).toEqual(false);
   });
 
-  it("getValue throws with no time parameter", function () {
+  it("getValue uses JulianDate.now() if time parameter is undefined", function () {
+    spyOn(JulianDate, "now").and.callThrough();
+
     const property = new CompositePositionProperty();
-    expect(function () {
-      property.getValue(undefined);
-    }).toThrowDeveloperError();
+    property.getValue();
+    expect(JulianDate.now).toHaveBeenCalled();
   });
 
   it("getValueInReferenceFrame throws with no referenceFrame parameter", function () {

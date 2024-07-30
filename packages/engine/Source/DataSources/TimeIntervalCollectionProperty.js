@@ -1,6 +1,6 @@
 import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
 import Event from "../Core/Event.js";
+import JulianDate from "../Core/JulianDate.js";
 import TimeIntervalCollection from "../Core/TimeIntervalCollection.js";
 import Property from "./Property.js";
 
@@ -94,16 +94,14 @@ Object.defineProperties(TimeIntervalCollectionProperty.prototype, {
 /**
  * Gets the value of the property at the provided time.
  *
- * @param {JulianDate} time The time for which to retrieve the value.
+ * @param {JulianDate} [time=JulianDate.now()] The time for which to retrieve the value. If omitted, the current system time is used.
  * @param {object} [result] The object to store the value into, if omitted, a new instance is created and returned.
  * @returns {object} The modified result parameter or a new instance if the result parameter was not supplied.
  */
 TimeIntervalCollectionProperty.prototype.getValue = function (time, result) {
-  //>>includeStart('debug', pragmas.debug);
   if (!defined(time)) {
-    throw new DeveloperError("time is required");
+    time = JulianDate.now();
   }
-  //>>includeEnd('debug');
 
   const value = this._intervals.findDataForIntervalContainingDate(time);
   if (defined(value) && typeof value.clone === "function") {
