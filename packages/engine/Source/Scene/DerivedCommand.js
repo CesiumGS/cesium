@@ -376,6 +376,9 @@ DerivedCommand.createPickDerivedCommand = function (
   return result;
 };
 
+/**
+ * @private (undocumented)
+ */
 function replaceDefine(defines, defineName, newDefineValue) {
   const n = defines.length;
   for (let i = 0; i < n; i++) {
@@ -385,6 +388,9 @@ function replaceDefine(defines, defineName, newDefineValue) {
   }
 }
 
+/**
+ * @private (undocumented)
+ */
 function getComponentCount(classProperty) {
   if (!classProperty.isArray) {
     return MetadataType.getComponentCount(classProperty.type);
@@ -405,20 +411,26 @@ function getGlslType(classProperty) {
   return `ivec${componentCount}`;
 }
 
+/**
+ * @private (undocumented)
+ */
 function getPickMetadataShaderProgram(
   context,
   shaderProgram,
   pickedMetadataInfo
 ) {
+  const schemaId = pickedMetadataInfo.schemaId;
+  const className = pickedMetadataInfo.className;
+  const propertyName = pickedMetadataInfo.propertyName;
+  const keyword = `pickMetadata-${schemaId}-${className}-${propertyName}`;
   let shader = context.shaderCache.getDerivedShaderProgram(
     shaderProgram,
-    "pickMetadata"
+    keyword
   );
   if (defined(shader)) {
     return shader;
   }
 
-  const propertyName = pickedMetadataInfo.propertyName;
   const classProperty = pickedMetadataInfo.classProperty;
   const glslType = getGlslType(classProperty);
 
@@ -483,18 +495,20 @@ function getPickMetadataShaderProgram(
     sourceValueStrings[3]
   );
 
+  // XXX_METADATA_PICKING
+  //*/
   console.log("newDefines");
   for (const d of newDefines) {
     console.log(d);
   }
-
+  //*/
   fs = new ShaderSource({
     sources: fs.sources,
     defines: newDefines,
   });
   shader = context.shaderCache.createDerivedShaderProgram(
     shaderProgram,
-    "pickMetadata",
+    keyword,
     {
       vertexShaderSource: shaderProgram.vertexShaderSource,
       fragmentShaderSource: fs,
@@ -504,6 +518,9 @@ function getPickMetadataShaderProgram(
   return shader;
 }
 
+/**
+ * @private (undocumented)
+ */
 DerivedCommand.createPickMetadataDerivedCommand = function (
   scene,
   command,
@@ -513,34 +530,21 @@ DerivedCommand.createPickMetadataDerivedCommand = function (
   if (!defined(result)) {
     result = {};
   }
-
-  let shader;
-  let renderState;
-  if (defined(result.pickMetadataCommand)) {
-    shader = result.pickMetadataCommand.shaderProgram;
-    renderState = result.pickMetadataCommand.renderState;
-  }
-
   result.pickMetadataCommand = DrawCommand.shallowClone(
     command,
     result.pickMetadataCommand
   );
 
-  if (!defined(shader) || result.shaderProgramId !== command.shaderProgram.id) {
-    result.pickMetadataCommand.shaderProgram = getPickMetadataShaderProgram(
-      context,
-      command.shaderProgram,
-      command.pickedMetadataInfo
-    );
-    result.pickMetadataCommand.renderState = getPickRenderState(
-      scene,
-      command.renderState
-    );
-    result.shaderProgramId = command.shaderProgram.id;
-  } else {
-    result.pickMetadataCommand.shaderProgram = shader;
-    result.pickMetadataCommand.renderState = renderState;
-  }
+  result.pickMetadataCommand.shaderProgram = getPickMetadataShaderProgram(
+    context,
+    command.shaderProgram,
+    command.pickedMetadataInfo
+  );
+  result.pickMetadataCommand.renderState = getPickRenderState(
+    scene,
+    command.renderState
+  );
+  result.shaderProgramId = command.shaderProgram.id;
 
   return result;
 };

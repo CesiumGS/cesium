@@ -411,8 +411,11 @@ Picking.prototype.pickVoxelCoordinate = function (
 /**
  * Pick a metadata value at the given window position.
  *
+ * The given `pickedMetadataInfo` defines the metadata value that is
+ * supposed to be picked.
+ *
  * @param {Cartesian2} windowPosition Window coordinates to perform picking on.
- * @param {object} pickedMetadataInfo The picked metadata
+ * @param {PickedMetadataInfo} pickedMetadataInfo Information about the picked metadata.
  * @returns The metadata values
  *
  * @private
@@ -469,11 +472,10 @@ Picking.prototype.pickMetadata = function (
   frameState.tilesetPassState = pickTilesetPassState;
 
   // Insert the information about the picked metadata property
-  // into the frame state, so that ...
-  // - changes in these properties are picked up by the Model.update
-  //   function to trigger a rebuild of the draw commands
-  // - the ModelDrawCommands functions will insert the proper code
-  //   for picking the values into the shader
+  // into the frame state, so that the `Scene.updateDerivedCommands`
+  // call can detect any changes in the picked metadata description,
+  // and update the derived commands for the new picked metadata
+  // property
   frameState.pickingMetadata = true;
   frameState.pickedMetadataInfo = pickedMetadataInfo;
   context.uniformState.update(frameState);
@@ -509,6 +511,17 @@ Picking.prototype.pickMetadata = function (
 
   return metadataValue;
 };
+
+/**
+ * @typedef {object} PickedMetadataInfo
+ *
+ * Information about metadata that is supposed to be picked
+ *
+ * @property {string|undefined} schemaId The optional ID of the metadata schema
+ * @property {string} className The name of the metadata class
+ * @property {string} propertyName The name of the metadata property
+ * @property {MetadataClassProperty} classProperty The metadata class property
+ */
 
 function renderTranslucentDepthForPick(scene, drawingBufferPosition) {
   // PERFORMANCE_IDEA: render translucent only and merge with the previous frame

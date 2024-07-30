@@ -479,8 +479,6 @@ function Model(options) {
 
   this._fogRenderable = undefined;
 
-  this._pickedMetadataInfo = undefined;
-
   this._skipLevelOfDetail = false;
   this._ignoreCommands = defaultValue(options.ignoreCommands, false);
 
@@ -1843,7 +1841,6 @@ Model.prototype.update = function (frameState) {
   updateSceneMode(this, frameState);
   updateFog(this, frameState);
   updateVerticalExaggeration(this, frameState);
-  updatePickedMetadataInfo(this, frameState);
 
   this._defaultTexture = frameState.context.defaultTexture;
 
@@ -2072,32 +2069,6 @@ function updateVerticalExaggeration(model, frameState) {
   }
 }
 
-/**
- * Will be called during `update`, and detect changes in the `pickedMetadataInfo*`
- * properties. When they changed, then the draw commands will be reset, to
- * eventually be rebuilt by the `ModelDrawCommands` class, with the new picked
- * metadata property values
- *
- * @param {Model} model The model
- * @param {FrameState} frameState The frame state
- */
-function updatePickedMetadataInfo(model, frameState) {
-  if (
-    frameState.pickedMetadataInfo?.schemaId !==
-      model._pickedMetadataInfo?.schemaId ||
-    frameState.pickedMetadataInfo?.classnName !==
-      model._pickedMetadataInfo?.classnName ||
-    frameState.pickedMetadataInfo?.propertyName !==
-      model._pickedMetadataInfo?.propertyName
-  ) {
-    console.log(
-      "pickedMetadataInfo changed, reset draw commands ",
-      frameState.pickedMetadataInfo
-    );
-    model.resetDrawCommands();
-    model._pickedMetadataInfo = frameState.pickedMetadataInfo;
-  }
-}
 function buildDrawCommands(model, frameState) {
   if (!model._drawCommandsBuilt) {
     model.destroyPipelineResources();

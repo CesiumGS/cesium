@@ -1715,6 +1715,23 @@ Scene.prototype.getCompressedTextureFormatSupported = function (format) {
   );
 };
 
+function pickedMetadataInfoChanged(command, frameState) {
+  const oldPickedMetadataInfo = command.pickedMetadataInfo;
+  const newPickedMetadataInfo = frameState.pickedMetadataInfo;
+  if (oldPickedMetadataInfo?.schemaId !== newPickedMetadataInfo?.schemaId) {
+    return true;
+  }
+  if (oldPickedMetadataInfo?.className !== newPickedMetadataInfo?.className) {
+    return true;
+  }
+  if (
+    oldPickedMetadataInfo?.propertyName !== newPickedMetadataInfo?.propertyName
+  ) {
+    return true;
+  }
+  return false;
+}
+
 function updateDerivedCommands(scene, command, shadowsDirty) {
   const frameState = scene._frameState;
   const context = scene._context;
@@ -1732,17 +1749,19 @@ function updateDerivedCommands(scene, command, shadowsDirty) {
       derivedCommands.picking
     );
   }
-  ///*
-  if (defined(command.pickedMetadataInfo)) {
-    console.log("Creating derived command for ", command.pickedMetadataInfo);
-    derivedCommands.pickingMetadata = DerivedCommand.createPickMetadataDerivedCommand(
-      scene,
-      command,
-      context,
-      derivedCommands.pickingMetadata
-    );
+  if (frameState.pickingMetadata && command.pickMetadataAllowed) {
+    if (pickedMetadataInfoChanged(command, frameState)) {
+      command.pickedMetadataInfo = frameState.pickedMetadataInfo;
+      if (defined(command.pickedMetadataInfo)) {
+        derivedCommands.pickingMetadata = DerivedCommand.createPickMetadataDerivedCommand(
+          scene,
+          command,
+          context,
+          derivedCommands.pickingMetadata
+        );
+      }
+    }
   }
-  //*/
   if (!command.pickOnly) {
     derivedCommands.depth = DerivedCommand.createDepthOnlyDerivedCommand(
       scene,
@@ -1825,13 +1844,14 @@ Scene.prototype.updateDerivedCommands = function (command) {
     useLogDepth && !hasLogDepthDerivedCommands;
   const needsHdrCommands = useHdr && !hasHdrCommands;
   const needsDerivedCommands = (!useLogDepth || !useHdr) && !hasDerivedCommands;
+
   command.dirty =
     command.dirty ||
     needsLogDepthDerivedCommands ||
     needsHdrCommands ||
     needsDerivedCommands;
 
-  if (command.dirty) {
+  if (command.dirty || frameState.pickingMetadata) {
     command.dirty = false;
 
     const shadowMaps = frameState.shadowState.shadowMaps;
@@ -1858,7 +1878,11 @@ Scene.prototype.updateDerivedCommands = function (command) {
         shadowsDirty
       );
     }
-    if (hasDerivedCommands || needsDerivedCommands) {
+    if (
+      hasDerivedCommands ||
+      needsDerivedCommands ||
+      frameState.pickingMetadata
+    ) {
       updateDerivedCommands(this, command, shadowsDirty);
     }
   }
@@ -2190,8 +2214,7 @@ function executeCommand(command, scene, context, passState, debugFramebuffer) {
         frameState.pickingMetadata &&
         defined(command.derivedCommands.pickingMetadata)
       ) {
-        //XXX_METADATA_PICKING
-        // TODO The same has to be done in executeIdCommand!
+        // XXX_METADATA_PICKING
         console.log("Actually executing the pickingMetadata command");
         command = command.derivedCommands.pickingMetadata.pickMetadataCommand;
         command.execute(context, passState);
@@ -2201,8 +2224,6 @@ function executeCommand(command, scene, context, passState, debugFramebuffer) {
         !frameState.pickingMetadata &&
         defined(command.derivedCommands.picking)
       ) {
-        //XXX_METADATA_PICKING
-        console.log("Executing the picking command");
         command = command.derivedCommands.picking.pickCommand;
         command.execute(context, passState);
         return;
@@ -2249,6 +2270,11 @@ function executeIdCommand(command, scene, context, passState) {
   }
 
   derivedCommands = command.derivedCommands;
+
+  if (defined(derivedCommands.pickingMetadata)) {
+    command = derivedCommands.pickingMetadata.pickMetadataCommand;
+    command.execute(context, passState);
+  }
   if (defined(derivedCommands.picking)) {
     command = derivedCommands.picking.pickCommand;
     command.execute(context, passState);
@@ -4287,7 +4313,7 @@ Scene.prototype.pickVoxel = function (windowPosition, width, height) {
  * from, or `undefined` to pick values from any schema.
  * @param {string} className The name of the metadata class to pick
  * values from
- * @param {string} propertyName The Name of the metadata property to pick
+ * @param {string} propertyName The name of the metadata property to pick
  * values from
  * @returns The metadata value
  *

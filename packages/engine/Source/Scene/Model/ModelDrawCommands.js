@@ -184,7 +184,7 @@ ModelDrawCommands.buildDrawCommandForModel = function (
     count: primitiveRenderResources.count,
     owner: model,
     pickId: pickId,
-    pickedMetadataInfo: frameState.pickedMetadataInfo,
+    pickMetadataAllowed: true,
     instanceCount: primitiveRenderResources.instanceCount,
     primitiveType: primitiveRenderResources.primitiveType,
     debugShowBoundingVolume: model.debugShowBoundingVolume,
