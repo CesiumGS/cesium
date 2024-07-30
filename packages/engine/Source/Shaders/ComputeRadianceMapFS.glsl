@@ -6,6 +6,8 @@ uniform vec3 u_faceDirection; // Current cubemap face
 uniform vec3 u_positionWC;
 uniform mat4 u_enuToFixedFrame;
 
+const float fExposure = 2.0;
+
 vec4 getCubeMapDirection(vec2 uv, vec3 faceDir) {
     vec2 scaledUV = uv * 2.0 - 1.0;
 
@@ -38,17 +40,15 @@ void main() {
     vec3 direction = (u_enuToFixedFrame * getCubeMapDirection(v_textureCoordinates, u_faceDirection)).xyz * vec3(-1.0, -1.0, 1.0); // TODO: Where does this come from?
     vec3 normalizedDirection = normalize(direction);
 
-    czm_ray intersectionRay = czm_ray(u_positionWC, normalizedDirection);
-    czm_raySegment intersection = czm_rayEllipsoidIntersectionInterval(intersectionRay, vec3(0.0), czm_ellipsoidInverseRadii);
+    czm_ray ray = czm_ray(u_positionWC, normalizedDirection);
+    czm_raySegment intersection = czm_rayEllipsoidIntersectionInterval(ray, vec3(0.0), czm_ellipsoidInverseRadii);
     float d = czm_branchFreeTernary(czm_isEmpty(intersection), radius, clamp(intersection.start, ellipsoidHeight, radius));
 
     // Compute sky color for each position on a sphere at radius centered around the model's origin
     vec3 skyPositionWC = u_positionWC + normalizedDirection * d;
 
-    vec3 lightDirectionWC = czm_lightDirectionWC.xyz; // TODO: Match this with type of lighting selected
-    vec3 cameraToPositionWC = skyPositionWC - czm_viewerPositionWC;
-    vec3 cameraToPositionWCDirection = normalize(cameraToPositionWC);
-    czm_ray primaryRay = czm_ray(czm_viewerPositionWC, cameraToPositionWCDirection);
+    float lightEnum = u_radiiAndDynamicAtmosphereColor.z;
+    vec3 lightDirectionWC = czm_getDynamicAtmosphereLightDirection(skyPositionWC, lightEnum);
 
     // Use the computed position for the sky color calculation
     vec3 mieColor;
@@ -56,7 +56,7 @@ void main() {
     float opacity;
     float translucent;
     computeScattering(
-        primaryRay,
+        ray,
         d,
         lightDirectionWC,
         u_radiiAndDynamicAtmosphereColor.y,
@@ -68,8 +68,6 @@ void main() {
 
     vec3 sceneSkyBox = vec3(0.0);//czm_textureCube(czm_environmentMap, vec3(v_textureCoordinates, 1.0)).rgb; // TODO
 
-    //out_FragColor = vec4(u_faceDirection, 1.0);
-
     float transmittanceModifier = 0.5;
     float transmittance = transmittanceModifier + clamp(1.0 - skyColor.a, 0.0, 1.0);
     
@@ -78,5 +76,22 @@ void main() {
     vec3 adjustedSkyColor = skyColor.rgb * scalar * transmittance;
 
     vec4 color = vec4(mix(sceneSkyBox, adjustedSkyColor, skyColor.a), 1.0);
+
+    // #ifndef HDR
+    //     color.rgb = czm_acesTonemapping(color.rgb);
+    //     color.rgb = czm_inverseGamma(color.rgb);
+    // #endif
+
+    #ifdef COLOR_CORRECT
+        const bool ignoreBlackPixels = true;
+        color.rgb = czm_applyHSBShift(color.rgb, u_hsbShift, ignoreBlackPixels);
+    #endif
+
+    // #ifndef HDR
+    //     color.rgb = vec3(1.0) - exp(-fExposure * color.rgb);
+    // #else
+        color.rgb = czm_saturation(color.rgb, 0.65);
+    // #endif
+
     out_FragColor = color;
 }

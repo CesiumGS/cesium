@@ -3,10 +3,9 @@ precision highp float;
 in vec2 v_textureCoordinates;
 
 uniform float u_roughness;
-uniform vec3 u_faceDirection;
 uniform vec3 u_positionWC;
 uniform mat4 u_enuToFixedFrame;
-uniform sampler2D u_radianceTexture;
+uniform samplerCube u_radianceTexture;
 uniform vec3 u_radiiAndDynamicAtmosphereColor;
 
 vec4 getCubeMapDirection(vec2 uv, vec3 faceDir) {
@@ -65,12 +64,12 @@ void main() {
     float ellipsoidHeight = height - u_radiiAndDynamicAtmosphereColor.y;
     float radius = max(u_radiiAndDynamicAtmosphereColor.x - height, 2.0 * ellipsoidHeight);
 
-    vec3 direction = (u_enuToFixedFrame * getCubeMapDirection(v_textureCoordinates, u_faceDirection)).xyz * vec3(-1.0, -1.0, 1.0); // TODO: Where does this come from?
-    vec3 normalizedDirection = normalize(direction);
+    //vec3 direction = (u_enuToFixedFrame * getCubeMapDirection(v_textureCoordinates, u_faceDirection)).xyz * vec3(-1.0, -1.0, 1.0); // TODO: Where does this come from?
+    // vec3 normalizedDirection = normalize(direction);
 
-    vec3 skyPositionWC = u_positionWC + normalizedDirection * radius;
+    // vec3 skyPositionWC = u_positionWC + normalizedDirection * radius;
 
-    vec3 normal = normalize(direction);
+    vec3 normal = normalize(u_positionWC);
 
     vec3 color = vec3(0.0);
     int samples = 512;
@@ -82,7 +81,7 @@ void main() {
 
         float NdotL = max(dot(normal, L), 0.0);
         if (NdotL > 0.0) {
-            color += texture(u_radianceTexture, xi).rgb * NdotL;
+            color += texture(u_radianceTexture, L).rgb * NdotL;
             weight += NdotL;
         }
     }
