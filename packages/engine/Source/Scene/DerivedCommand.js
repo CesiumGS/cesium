@@ -377,7 +377,7 @@ DerivedCommand.createPickDerivedCommand = function (
 };
 
 /**
- * @private (undocumented)
+ * @private
  */
 function replaceDefine(defines, defineName, newDefineValue) {
   const n = defines.length;
@@ -389,7 +389,7 @@ function replaceDefine(defines, defineName, newDefineValue) {
 }
 
 /**
- * @private (undocumented)
+ * @private
  */
 function getComponentCount(classProperty) {
   if (!classProperty.isArray) {
@@ -412,7 +412,7 @@ function getGlslType(classProperty) {
 }
 
 /**
- * @private (undocumented)
+ * @private
  */
 function getPickMetadataShaderProgram(
   context,
@@ -519,7 +519,7 @@ function getPickMetadataShaderProgram(
 }
 
 /**
- * @private (undocumented)
+ * @private
  */
 DerivedCommand.createPickMetadataDerivedCommand = function (
   scene,

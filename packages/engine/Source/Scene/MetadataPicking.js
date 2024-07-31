@@ -8,7 +8,9 @@ import MetadataComponentType from "./MetadataComponentType.js";
  * into the actual metadata values, according to the structure
  * defined by the `MetadataClassProperty`.
  *
- * @private (to be used by `Picking.js`)
+ * This is marked as 'private', but supposed to be used in Picking.js.
+ *
+ * @private
  */
 function MetadataPicking() {}
 
