@@ -20,20 +20,25 @@ import createContext from "../../../../Specs/createContext.js";
 describe(
   "Renderer/CubeMap",
   function () {
-    let context;
+    let webgl2Context;
     let cubeMap;
 
     function expectCubeMapFaces(options) {
-      const { cubeMap, expectedColors, level } = options;
+      const {
+        cubeMap,
+        expectedColors,
+        level,
+        context = webgl2Context,
+      } = options;
 
-      let fs;
+      let fragmentShader;
       if (defined(level)) {
-        fs =
+        fragmentShader =
           `uniform samplerCube u_texture;` +
           `uniform mediump vec3 u_direction;` +
           `void main() { out_FragColor = czm_textureCube(u_texture, normalize(u_direction), ${level}); }`;
       } else {
-        fs =
+        fragmentShader =
           `uniform samplerCube u_texture;` +
           `uniform mediump vec3 u_direction;` +
           `void main() { out_FragColor = czm_textureCube(u_texture, normalize(u_direction)); }`;
@@ -66,7 +71,7 @@ describe(
         uniformMap.direction = faceDirections[i];
         expect({
           context: context,
-          fragmentShader: fs,
+          fragmentShader: fragmentShader,
           uniformMap: uniformMap,
           epsilon: options.epsilon,
         }).contextToRender(expectedColors[i]);
@@ -84,7 +89,7 @@ describe(
     let supportsImageBitmapOptions;
 
     beforeAll(function () {
-      context = createContext();
+      webgl2Context = createContext();
       supportsImageBitmapOptions = Resource.supportsImageBitmapOptions();
 
       const promises = [];
@@ -136,7 +141,7 @@ describe(
     });
 
     afterAll(function () {
-      context.destroyForSpecs();
+      webgl2Context.destroyForSpecs();
     });
 
     afterEach(function () {
@@ -145,7 +150,7 @@ describe(
 
     it("gets the pixel format", function () {
       cubeMap = new CubeMap({
-        context: context,
+        context: webgl2Context,
         width: 16,
         height: 16,
       });
@@ -161,7 +166,7 @@ describe(
 
     it("gets the pixel datatype", function () {
       cubeMap = new CubeMap({
-        context: context,
+        context: webgl2Context,
         width: 16,
         height: 16,
       });
@@ -189,7 +194,7 @@ describe(
 
     it("sets a sampler", function () {
       cubeMap = new CubeMap({
-        context: context,
+        context: webgl2Context,
         width: 16,
         height: 16,
       });
@@ -211,7 +216,7 @@ describe(
 
     it("gets width and height", function () {
       cubeMap = new CubeMap({
-        context: context,
+        context: webgl2Context,
         width: 16,
         height: 16,
       });
@@ -222,7 +227,7 @@ describe(
 
     it("gets size in bytes", function () {
       cubeMap = new CubeMap({
-        context: context,
+        context: webgl2Context,
         width: 16,
         height: 16,
       });
@@ -232,7 +237,7 @@ describe(
 
     it("gets flip Y", function () {
       cubeMap = new CubeMap({
-        context: context,
+        context: webgl2Context,
         width: 16,
         height: 16,
         flipY: true,
@@ -243,7 +248,7 @@ describe(
 
     it("draws with a cube map", function () {
       cubeMap = new CubeMap({
-        context: context,
+        context: webgl2Context,
         source: {
           positiveX: blueImage,
           negativeX: greenImage,
@@ -269,7 +274,7 @@ describe(
 
     it("draws with a cube map with premultiplied alpha", function () {
       cubeMap = new CubeMap({
-        context: context,
+        context: webgl2Context,
         source: {
           positiveX: blueAlphaImage,
           negativeX: blueAlphaImage,
@@ -302,7 +307,7 @@ describe(
       }
 
       cubeMap = new CubeMap({
-        context: context,
+        context: webgl2Context,
         source: {
           positiveX: gammaImage,
           negativeX: customColorProfileImage,
@@ -334,7 +339,7 @@ describe(
       }
 
       cubeMap = new CubeMap({
-        context: context,
+        context: webgl2Context,
         source: {
           positiveX: gammaImage,
           negativeX: customColorProfileImage,
@@ -362,7 +367,7 @@ describe(
 
     it("draws the context default cube map", function () {
       expectCubeMapFaces({
-        cubeMap: context.defaultCubeMap,
+        cubeMap: webgl2Context.defaultCubeMap,
         expectedColors: [
           [255, 255, 255, 255], // +X
           [255, 255, 255, 255], // -X
@@ -376,7 +381,7 @@ describe(
 
     it("creates a cube map with typed arrays", function () {
       cubeMap = new CubeMap({
-        context: context,
+        context: webgl2Context,
         source: {
           positiveX: {
             width: 1,
@@ -448,7 +453,7 @@ describe(
       }, {});
 
       cubeMap = CubeMap.fromMipmaps({
-        context: context,
+        context: webgl2Context,
         source: [level0, level1],
         sampler: new Sampler({
           minificationFilter: TextureMinificationFilter.NEAREST_MIPMAP_LINEAR,
@@ -467,8 +472,59 @@ describe(
       });
     });
 
+    it("CubeMap.fromMipMaps works in WebGL 1", function () {
+      const webgl1Context = createContext({
+        requestWebgl1: true,
+      });
+
+      const red = [255, 0, 0, 255];
+      const green = [0, 255, 0, 255];
+      const blue = [0, 0, 255, 255];
+      const yellow = [255, 255, 0, 255];
+      const magenta = [255, 0, 255, 255];
+      const cyan = [0, 255, 255, 255];
+
+      const level0colors = [red, green, blue, yellow, magenta, cyan];
+      const level0 = CubeMap.faceNames.reduce((level, faceName, index) => {
+        const color = level0colors[index];
+        const colorData = new Uint8Array([color, color, color, color].flat());
+        level[faceName] = { width: 2, height: 2, arrayBufferView: colorData };
+        return level;
+      }, {});
+      const level1colors = [yellow, magenta, cyan, red, green, blue];
+      const level1 = CubeMap.faceNames.reduce((level, faceName, index) => {
+        const color = level1colors[index];
+        const colorData = new Uint8Array(color);
+        level[faceName] = { width: 1, height: 1, arrayBufferView: colorData };
+        return level;
+      }, {});
+
+      cubeMap = CubeMap.fromMipmaps({
+        context: webgl1Context,
+        source: [level0, level1],
+        sampler: new Sampler({
+          minificationFilter: TextureMinificationFilter.NEAREST_MIPMAP_LINEAR,
+        }),
+      });
+
+      expectCubeMapFaces({
+        cubeMap: cubeMap,
+        expectedColors: level0colors,
+        level: "0.0",
+        context: webgl1Context,
+      });
+      expectCubeMapFaces({
+        cubeMap: cubeMap,
+        expectedColors: level1colors,
+        level: "1.0",
+        context: webgl1Context,
+      });
+
+      webgl1Context.destroyForSpecs();
+    });
+
     it("creates a cube map with floating-point textures", function () {
-      if (!context.floatingPointTexture) {
+      if (!webgl2Context.floatingPointTexture) {
         return;
       }
 
@@ -480,7 +536,7 @@ describe(
       const negativeZColor = new Color(1.0, 1.0, 0.0, 1.0);
 
       cubeMap = new CubeMap({
-        context: context,
+        context: webgl2Context,
         source: {
           positiveX: {
             width: 1,
@@ -560,7 +616,7 @@ describe(
     });
 
     it("creates a cube map with floating-point textures and linear filtering", function () {
-      if (!context.floatingPointTexture) {
+      if (!webgl2Context.floatingPointTexture) {
         return;
       }
 
@@ -572,7 +628,7 @@ describe(
       const negativeZColor = new Color(1.0, 1.0, 0.0, 1.0);
 
       cubeMap = new CubeMap({
-        context: context,
+        context: webgl2Context,
         source: {
           positiveX: {
             width: 1,
@@ -654,9 +710,9 @@ describe(
         },
       };
 
-      if (!context.textureFloatLinear) {
+      if (!webgl2Context.textureFloatLinear) {
         expect({
-          context: context,
+          context: webgl2Context,
           fragmentShader: fs,
           uniformMap: uniformMap,
           epsilon: 1,
@@ -666,7 +722,7 @@ describe(
         Color.multiplyByScalar(positiveYColor, 0.5, positiveYColor);
         const color = Color.add(positiveXColor, positiveYColor, positiveXColor);
         expect({
-          context: context,
+          context: webgl2Context,
           fragmentShader: fs,
           uniformMap: uniformMap,
           epsilon: 1,
@@ -675,7 +731,7 @@ describe(
     });
 
     it("creates a cube map with half floating-point textures", function () {
-      if (!context.halfFloatingPointTexture) {
+      if (!webgl2Context.halfFloatingPointTexture) {
         return;
       }
 
@@ -694,7 +750,7 @@ describe(
       const negativeZColor = new Color(0.6, 0.2, 0.4, 1.0);
 
       cubeMap = new CubeMap({
-        context: context,
+        context: webgl2Context,
         source: {
           positiveX: {
             width: 1,
@@ -744,7 +800,7 @@ describe(
     });
 
     it("creates a cube map with half floating-point textures and linear filtering", function () {
-      if (!context.halfFloatingPointTexture) {
+      if (!webgl2Context.halfFloatingPointTexture) {
         return;
       }
 
@@ -759,7 +815,7 @@ describe(
       const positiveYColor = new Color(0.6, 0.4, 0.2, 1.0);
 
       cubeMap = new CubeMap({
-        context: context,
+        context: webgl2Context,
         source: {
           positiveX: {
             width: 1,
@@ -811,9 +867,9 @@ describe(
         },
       };
 
-      if (!context.textureHalfFloatLinear) {
+      if (!webgl2Context.textureHalfFloatLinear) {
         expect({
-          context: context,
+          context: webgl2Context,
           fragmentShader: fs,
           uniformMap: uniformMap,
           epsilon: 1,
@@ -823,7 +879,7 @@ describe(
         Color.multiplyByScalar(positiveYColor, 0.5, positiveYColor);
         const color = Color.add(positiveXColor, positiveYColor, positiveXColor);
         expect({
-          context: context,
+          context: webgl2Context,
           fragmentShader: fs,
           uniformMap: uniformMap,
           epsilon: 1,
@@ -833,7 +889,7 @@ describe(
 
     it("creates a cube map with typed arrays and images", function () {
       cubeMap = new CubeMap({
-        context: context,
+        context: webgl2Context,
         source: {
           positiveX: blueImage,
           negativeX: greenImage,
@@ -875,7 +931,7 @@ describe(
 
     it("copies to a cube map", function () {
       cubeMap = new CubeMap({
-        context: context,
+        context: webgl2Context,
         width: 1,
         height: 1,
       });
@@ -901,7 +957,7 @@ describe(
 
     it("copies from a typed array", function () {
       cubeMap = new CubeMap({
-        context: context,
+        context: webgl2Context,
         width: 1,
         height: 1,
       });
@@ -963,7 +1019,7 @@ describe(
 
     it("sub copies images to a cube map", function () {
       cubeMap = new CubeMap({
-        context: context,
+        context: webgl2Context,
         width: 2,
         height: 2,
       });
@@ -1038,7 +1094,7 @@ describe(
 
     it("sub copies array buffers to a cube map", function () {
       cubeMap = new CubeMap({
-        context: context,
+        context: webgl2Context,
         width: 2,
         height: 2,
       });
@@ -1142,7 +1198,7 @@ describe(
 
     it("draws with a cube map and a texture", function () {
       cubeMap = new CubeMap({
-        context: context,
+        context: webgl2Context,
         source: {
           positiveX: greenImage,
           negativeX: greenImage,
@@ -1154,7 +1210,7 @@ describe(
       });
 
       let texture = new Texture({
-        context: context,
+        context: webgl2Context,
         source: blueImage,
       });
 
@@ -1173,7 +1229,7 @@ describe(
       };
 
       expect({
-        context: context,
+        context: webgl2Context,
         fragmentShader: fs,
         uniformMap: uniformMap,
       }).contextToRender([0, 255, 255, 255]);
@@ -1183,7 +1239,7 @@ describe(
 
     it("generates mipmaps", function () {
       cubeMap = new CubeMap({
-        context: context,
+        context: webgl2Context,
         source: {
           positiveX: blueImage,
           negativeX: greenImage,
@@ -1210,7 +1266,7 @@ describe(
       };
 
       expect({
-        context: context,
+        context: webgl2Context,
         fragmentShader: fs,
         uniformMap: uniformMap,
       }).contextToRender([0, 0, 255, 255]);
@@ -1218,7 +1274,7 @@ describe(
 
     it("gets size in bytes for mipmap", function () {
       cubeMap = new CubeMap({
-        context: context,
+        context: webgl2Context,
         source: {
           positiveX: red16x16Image,
           negativeX: red16x16Image,
@@ -1239,7 +1295,7 @@ describe(
 
     it("destroys", function () {
       const c = new CubeMap({
-        context: context,
+        context: webgl2Context,
         width: 16,
         height: 16,
       });
@@ -1258,7 +1314,7 @@ describe(
     it("fails to create (source)", function () {
       expect(function () {
         cubeMap = new CubeMap({
-          context: context,
+          context: webgl2Context,
         });
       }).toThrowDeveloperError();
     });
@@ -1266,7 +1322,7 @@ describe(
     it("fails to create (width, no height)", function () {
       expect(function () {
         cubeMap = new CubeMap({
-          context: context,
+          context: webgl2Context,
           width: 16,
         });
       }).toThrowDeveloperError();
@@ -1275,7 +1331,7 @@ describe(
     it("fails to create (width != height)", function () {
       expect(function () {
         cubeMap = new CubeMap({
-          context: context,
+          context: webgl2Context,
           width: 16,
           height: 32,
         });
@@ -1285,7 +1341,7 @@ describe(
     it("fails to create (small width)", function () {
       expect(function () {
         cubeMap = new CubeMap({
-          context: context,
+          context: webgl2Context,
           width: 0,
           height: 0,
         });
@@ -1295,7 +1351,7 @@ describe(
     it("fails to create (large width)", function () {
       expect(function () {
         cubeMap = new CubeMap({
-          context: context,
+          context: webgl2Context,
           width: ContextLimits.maximumCubeMapSize + 1,
           height: ContextLimits.maximumCubeMapSize + 1,
         });
@@ -1305,7 +1361,7 @@ describe(
     it("fails to create (PixelFormat)", function () {
       expect(function () {
         cubeMap = new CubeMap({
-          context: context,
+          context: webgl2Context,
           width: 16,
           height: 16,
           pixelFormat: "invalid PixelFormat",
@@ -1316,7 +1372,7 @@ describe(
     it("throws during creation if pixel format is depth or depth-stencil", function () {
       expect(function () {
         cubeMap = new CubeMap({
-          context: context,
+          context: webgl2Context,
           width: 16,
           height: 16,
           pixelFormat: PixelFormat.DEPTH_COMPONENT,
@@ -1325,10 +1381,10 @@ describe(
     });
 
     it("throws during creation if pixelDatatype is FLOAT, and OES_texture_float is not supported", function () {
-      if (!context.floatingPointTexture) {
+      if (!webgl2Context.floatingPointTexture) {
         expect(function () {
           cubeMap = new CubeMap({
-            context: context,
+            context: webgl2Context,
             width: 16,
             height: 16,
             pixelDatatype: PixelDatatype.FLOAT,
@@ -1338,10 +1394,10 @@ describe(
     });
 
     it("throws during creation if pixelDatatype is HALF_FLOAT, and OES_texture_half_float is not supported", function () {
-      if (!context.halfFloatingPointTexture) {
+      if (!webgl2Context.halfFloatingPointTexture) {
         expect(function () {
           cubeMap = new CubeMap({
-            context: context,
+            context: webgl2Context,
             width: 16,
             height: 16,
             pixelDatatype: PixelDatatype.HALF_FLOAT,
@@ -1353,7 +1409,7 @@ describe(
     it("fails to create (pixelDatatype)", function () {
       expect(function () {
         cubeMap = new CubeMap({
-          context: context,
+          context: webgl2Context,
           width: 16,
           height: 16,
           pixelFormat: PixelFormat.RGBA,
@@ -1365,7 +1421,7 @@ describe(
     it("fails to create (source)", function () {
       expect(function () {
         cubeMap = new CubeMap({
-          context: context,
+          context: webgl2Context,
           source: {},
         });
       }).toThrowDeveloperError();
@@ -1374,7 +1430,7 @@ describe(
     it("fails to create (source width and height)", function () {
       expect(function () {
         cubeMap = new CubeMap({
-          context: context,
+          context: webgl2Context,
           source: {
             positiveX: greenImage, // 1x1
             negativeX: greenImage, // 1x1
@@ -1389,7 +1445,7 @@ describe(
 
     it("fails to copy from no options", function () {
       cubeMap = new CubeMap({
-        context: context,
+        context: webgl2Context,
         width: 16,
         height: 16,
       });
@@ -1401,7 +1457,7 @@ describe(
 
     it("fails to copy from no image (source)", function () {
       cubeMap = new CubeMap({
-        context: context,
+        context: webgl2Context,
         width: 16,
         height: 16,
       });
@@ -1416,7 +1472,7 @@ describe(
 
     it("fails to copy from an image (xOffset)", function () {
       cubeMap = new CubeMap({
-        context: context,
+        context: webgl2Context,
         width: 16,
         height: 16,
       });
@@ -1432,7 +1488,7 @@ describe(
 
     it("fails to copy from an image (yOffset)", function () {
       cubeMap = new CubeMap({
-        context: context,
+        context: webgl2Context,
         width: 16,
         height: 16,
       });
@@ -1449,7 +1505,7 @@ describe(
 
     it("fails to copy from an image (width)", function () {
       cubeMap = new CubeMap({
-        context: context,
+        context: webgl2Context,
         width: 16,
         height: 16,
       });
@@ -1465,7 +1521,7 @@ describe(
 
     it("fails to copy from an image (height)", function () {
       cubeMap = new CubeMap({
-        context: context,
+        context: webgl2Context,
         width: 16,
         height: 16,
       });
@@ -1480,9 +1536,9 @@ describe(
     });
 
     it("fails to copy from the framebuffer (invalid data type)", function () {
-      if (context.floatingPointTexture) {
+      if (webgl2Context.floatingPointTexture) {
         cubeMap = new CubeMap({
-          context: context,
+          context: webgl2Context,
           width: 1,
           height: 1,
           pixelDatatype: PixelDatatype.FLOAT,
@@ -1496,7 +1552,7 @@ describe(
 
     it("fails to copy from the framebuffer (xOffset)", function () {
       cubeMap = new CubeMap({
-        context: context,
+        context: webgl2Context,
         width: 1,
         height: 1,
       });
@@ -1508,7 +1564,7 @@ describe(
 
     it("fails to copy from the framebuffer (yOffset)", function () {
       cubeMap = new CubeMap({
-        context: context,
+        context: webgl2Context,
         width: 1,
         height: 1,
       });
@@ -1520,7 +1576,7 @@ describe(
 
     it("fails to copy from the framebuffer (framebufferXOffset)", function () {
       cubeMap = new CubeMap({
-        context: context,
+        context: webgl2Context,
         width: 1,
         height: 1,
       });
@@ -1532,7 +1588,7 @@ describe(
 
     it("fails to copy from the framebuffer (framebufferYOffset)", function () {
       cubeMap = new CubeMap({
-        context: context,
+        context: webgl2Context,
         width: 1,
         height: 1,
       });
@@ -1544,7 +1600,7 @@ describe(
 
     it("fails to copy from the framebuffer (width)", function () {
       cubeMap = new CubeMap({
-        context: context,
+        context: webgl2Context,
         width: 1,
         height: 1,
       });
@@ -1556,7 +1612,7 @@ describe(
 
     it("fails to copy from the framebuffer (height)", function () {
       cubeMap = new CubeMap({
-        context: context,
+        context: webgl2Context,
         width: 1,
         height: 1,
       });
@@ -1574,12 +1630,12 @@ describe(
     });
 
     it("fails to copy from the framebuffer (FLOAT", function () {
-      if (!context.floatingPointTexture) {
+      if (!webgl2Context.floatingPointTexture) {
         return;
       }
 
       cubeMap = new CubeMap({
-        context: context,
+        context: webgl2Context,
         width: 1,
         height: 1,
         pixelDatatype: PixelDatatype.FLOAT,
@@ -1591,12 +1647,12 @@ describe(
     });
 
     it("fails to copy from the framebuffer (HALF_FLOAT", function () {
-      if (!context.halfFloatingPointTexture) {
+      if (!webgl2Context.halfFloatingPointTexture) {
         return;
       }
 
       cubeMap = new CubeMap({
-        context: context,
+        context: webgl2Context,
         width: 1,
         height: 1,
         pixelDatatype: PixelDatatype.HALF_FLOAT,
@@ -1609,7 +1665,7 @@ describe(
 
     it("fails to generate mipmaps (width)", function () {
       cubeMap = new CubeMap({
-        context: context,
+        context: webgl2Context,
         width: 3,
         height: 3,
       });
@@ -1621,7 +1677,7 @@ describe(
 
     it("fails to generate mipmaps (hint)", function () {
       cubeMap = new CubeMap({
-        context: context,
+        context: webgl2Context,
         width: 16,
         height: 16,
       });
@@ -1633,7 +1689,7 @@ describe(
 
     it("fails to destroy", function () {
       const c = new CubeMap({
-        context: context,
+        context: webgl2Context,
         width: 16,
         height: 16,
       });
