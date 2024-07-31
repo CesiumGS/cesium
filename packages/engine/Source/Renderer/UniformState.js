@@ -1305,19 +1305,13 @@ function setCamera(uniformState, camera) {
   );
 }
 
-let transformMatrix = new Matrix3();
+const transformMatrix = new Matrix3();
 const sunCartographicScratch = new Cartographic();
 function setSunAndMoonDirections(uniformState, frameState) {
-  if (
-    !defined(
-      Transforms.computeIcrfToFixedMatrix(frameState.time, transformMatrix)
-    )
-  ) {
-    transformMatrix = Transforms.computeTemeToPseudoFixedMatrix(
-      frameState.time,
-      transformMatrix
-    );
-  }
+  Transforms.computeIcrfToCentralBodyFixedMatrix(
+    frameState.time,
+    transformMatrix
+  );
 
   let position = Simon1994PlanetaryPositions.computeSunPositionInEarthInertialFrame(
     frameState.time,
