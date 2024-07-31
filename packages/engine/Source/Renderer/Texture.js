@@ -236,174 +236,215 @@ function Texture(options) {
   this._sampler = sampler;
   setupSampler(this, sampler);
 
+  gl.activeTexture(gl.TEXTURE0);
+  gl.bindTexture(this._textureTarget, this._texture);
+
   if (defined(source)) {
-    loadSource(this, source, skipColorSpaceConversion);
+    if (skipColorSpaceConversion) {
+      gl.pixelStorei(gl.UNPACK_COLORSPACE_CONVERSION_WEBGL, gl.NONE);
+    } else {
+      gl.pixelStorei(
+        gl.UNPACK_COLORSPACE_CONVERSION_WEBGL,
+        gl.BROWSER_DEFAULT_WEBGL
+      );
+    }
+    if (defined(source.arrayBufferView)) {
+      const isCompressed = PixelFormat.isCompressedFormat(internalFormat);
+      if (isCompressed) {
+        loadCompressedBufferSource(this, source);
+      } else {
+        loadBufferSource(this, source);
+      }
+    } else if (defined(source.framebuffer)) {
+      loadFramebufferSource(this, source);
+    } else {
+      loadImageSource(this, source);
+    }
+    this._initialized = true;
   } else {
     loadNull(this);
   }
+
+  gl.bindTexture(this._textureTarget, null);
 }
 
 /**
- * Load texel data into a texture.
+ * Load compressed texel data from a buffer into a texture.
  *
  * @param {Texture} texture The texture to which texel values will be loaded.
- * @param {object} [source] The source for texel values to be loaded into the texture.
- * @param {boolean} skipColorSpaceConversion If true, color space conversions will be skipped when reading the texel values.
+ * @param {object} source The source for texel values to be loaded into the texture.
  *
  * @private
  */
-function loadSource(texture, source, skipColorSpaceConversion) {
+function loadCompressedBufferSource(texture, source) {
   const context = texture._context;
   const gl = context._gl;
   const textureTarget = texture._textureTarget;
   const internalFormat = texture._internalFormat;
-  const isCompressed = PixelFormat.isCompressedFormat(internalFormat);
 
-  const {
+  const { width, height } = texture;
+
+  gl.pixelStorei(gl.UNPACK_ALIGNMENT, 4);
+  gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+
+  gl.compressedTexImage2D(
+    textureTarget,
+    0,
+    internalFormat,
     width,
     height,
-    pixelFormat,
-    pixelDatatype,
-    flipY,
-    preMultiplyAlpha,
-  } = texture;
+    0,
+    source.arrayBufferView
+  );
 
-  gl.activeTexture(gl.TEXTURE0);
-  gl.bindTexture(textureTarget, texture._texture);
-
-  let unpackAlignment = 4;
-  if (defined(source) && defined(source.arrayBufferView) && !isCompressed) {
-    unpackAlignment = PixelFormat.alignmentInBytes(
-      pixelFormat,
-      pixelDatatype,
-      width
-    );
-  }
-  gl.pixelStorei(gl.UNPACK_ALIGNMENT, unpackAlignment);
-
-  if (skipColorSpaceConversion) {
-    gl.pixelStorei(gl.UNPACK_COLORSPACE_CONVERSION_WEBGL, gl.NONE);
-  } else {
-    gl.pixelStorei(
-      gl.UNPACK_COLORSPACE_CONVERSION_WEBGL,
-      gl.BROWSER_DEFAULT_WEBGL
-    );
-  }
-
-  if (defined(source.arrayBufferView)) {
-    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
-    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
-
-    // Source: typed array
-    let arrayBufferView = source.arrayBufferView;
-    if (isCompressed) {
+  if (defined(source.mipLevels)) {
+    let mipWidth = width;
+    let mipHeight = height;
+    for (let i = 0; i < source.mipLevels.length; ++i) {
+      mipWidth = nextMipSize(mipWidth);
+      mipHeight = nextMipSize(mipHeight);
       gl.compressedTexImage2D(
         textureTarget,
-        0,
+        i + 1,
         internalFormat,
-        width,
-        height,
+        mipWidth,
+        mipHeight,
         0,
-        arrayBufferView
+        source.mipLevels[i]
       );
-      if (defined(source.mipLevels)) {
-        let mipWidth = width;
-        let mipHeight = height;
-        for (let i = 0; i < source.mipLevels.length; ++i) {
-          mipWidth = nextMipSize(mipWidth);
-          mipHeight = nextMipSize(mipHeight);
-          gl.compressedTexImage2D(
-            textureTarget,
-            i + 1,
-            internalFormat,
-            mipWidth,
-            mipHeight,
-            0,
-            source.mipLevels[i]
-          );
-        }
-      }
-    } else {
-      if (flipY) {
-        arrayBufferView = PixelFormat.flipY(
-          arrayBufferView,
-          pixelFormat,
-          pixelDatatype,
-          width,
-          height
-        );
-      }
+    }
+  }
+}
+
+/**
+ * Load texel data from a buffer into a texture.
+ *
+ * @param {Texture} texture The texture to which texel values will be loaded.
+ * @param {object} source The source for texel values to be loaded into the texture.
+ *
+ * @private
+ */
+function loadBufferSource(texture, source) {
+  const context = texture._context;
+  const gl = context._gl;
+  const textureTarget = texture._textureTarget;
+  const internalFormat = texture._internalFormat;
+
+  const { width, height, pixelFormat, pixelDatatype, flipY } = texture;
+
+  const unpackAlignment = PixelFormat.alignmentInBytes(
+    pixelFormat,
+    pixelDatatype,
+    width
+  );
+  gl.pixelStorei(gl.UNPACK_ALIGNMENT, unpackAlignment);
+  gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+
+  let arrayBufferView = source.arrayBufferView;
+  if (flipY) {
+    arrayBufferView = PixelFormat.flipY(
+      arrayBufferView,
+      pixelFormat,
+      pixelDatatype,
+      width,
+      height
+    );
+  }
+  gl.texImage2D(
+    textureTarget,
+    0,
+    internalFormat,
+    width,
+    height,
+    0,
+    pixelFormat,
+    PixelDatatype.toWebGLConstant(pixelDatatype, context),
+    arrayBufferView
+  );
+
+  if (defined(source.mipLevels)) {
+    let mipWidth = width;
+    let mipHeight = height;
+    for (let i = 0; i < source.mipLevels.length; ++i) {
+      mipWidth = nextMipSize(mipWidth);
+      mipHeight = nextMipSize(mipHeight);
       gl.texImage2D(
         textureTarget,
-        0,
+        i + 1,
         internalFormat,
-        width,
-        height,
+        mipWidth,
+        mipHeight,
         0,
         pixelFormat,
         PixelDatatype.toWebGLConstant(pixelDatatype, context),
-        arrayBufferView
+        source.mipLevels[i]
       );
-
-      if (defined(source.mipLevels)) {
-        let mipWidth = width;
-        let mipHeight = height;
-        for (let i = 0; i < source.mipLevels.length; ++i) {
-          mipWidth = nextMipSize(mipWidth);
-          mipHeight = nextMipSize(mipHeight);
-          gl.texImage2D(
-            textureTarget,
-            i + 1,
-            internalFormat,
-            mipWidth,
-            mipHeight,
-            0,
-            pixelFormat,
-            PixelDatatype.toWebGLConstant(pixelDatatype, context),
-            source.mipLevels[i]
-          );
-        }
-      }
     }
-  } else if (defined(source.framebuffer)) {
-    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
-    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
-
-    if (source.framebuffer !== context.defaultFramebuffer) {
-      source.framebuffer._bind();
-    }
-
-    gl.copyTexImage2D(
-      textureTarget,
-      0,
-      internalFormat,
-      source.xOffset,
-      source.yOffset,
-      width,
-      height,
-      0
-    );
-
-    if (source.framebuffer !== context.defaultFramebuffer) {
-      source.framebuffer._unBind();
-    }
-  } else {
-    // Only valid for DOM-Element uploads
-    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, preMultiplyAlpha);
-    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, flipY);
-
-    // Source: ImageData, HTMLImageElement, HTMLCanvasElement, or HTMLVideoElement
-    gl.texImage2D(
-      textureTarget,
-      0,
-      internalFormat,
-      pixelFormat,
-      PixelDatatype.toWebGLConstant(pixelDatatype, context),
-      source
-    );
   }
-  texture._initialized = true;
-  gl.bindTexture(textureTarget, null);
+}
+
+/**
+ * Load texel data from a framebuffer into a texture.
+ *
+ * @param {Texture} texture The texture to which texel values will be loaded.
+ * @param {object} source The source for texel values to be loaded into the texture.
+ *
+ * @private
+ */
+function loadFramebufferSource(texture, source) {
+  const context = texture._context;
+  const gl = context._gl;
+
+  gl.pixelStorei(gl.UNPACK_ALIGNMENT, 4);
+  gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+
+  if (source.framebuffer !== context.defaultFramebuffer) {
+    source.framebuffer._bind();
+  }
+
+  gl.copyTexImage2D(
+    texture._textureTarget,
+    0,
+    texture._internalFormat,
+    source.xOffset,
+    source.yOffset,
+    texture.width,
+    texture.height,
+    0
+  );
+
+  if (source.framebuffer !== context.defaultFramebuffer) {
+    source.framebuffer._unBind();
+  }
+}
+
+/**
+ * Load texel data from an Image into a texture.
+ *
+ * @param {Texture} texture The texture to which texel values will be loaded.
+ * @param {ImageData|HTMLImageElement|HTMLCanvasElement|HTMLVideoElement} source The source for texel values to be loaded into the texture.
+ *
+ * @private
+ */
+function loadImageSource(texture, source) {
+  const context = texture._context;
+  const gl = context._gl;
+
+  gl.pixelStorei(gl.UNPACK_ALIGNMENT, 4);
+  gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, texture.preMultiplyAlpha);
+  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, texture.flipY);
+
+  gl.texImage2D(
+    texture._textureTarget,
+    0,
+    texture._internalFormat,
+    texture.pixelFormat,
+    PixelDatatype.toWebGLConstant(texture.pixelDatatype, context),
+    source
+  );
 }
 
 /**
@@ -428,14 +469,9 @@ function nextMipSize(currentSize) {
  */
 function loadNull(texture) {
   const context = texture._context;
-  const gl = context._gl;
-  const textureTarget = texture._textureTarget;
 
-  gl.activeTexture(gl.TEXTURE0);
-  gl.bindTexture(textureTarget, texture._texture);
-
-  gl.texImage2D(
-    textureTarget,
+  context._gl.texImage2D(
+    texture._textureTarget,
     0,
     texture._internalFormat,
     texture._width,
@@ -445,8 +481,6 @@ function loadNull(texture) {
     PixelDatatype.toWebGLConstant(texture._pixelDatatype, context),
     null
   );
-
-  gl.bindTexture(textureTarget, null);
 }
 
 /**

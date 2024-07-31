@@ -319,7 +319,7 @@ function loadFace(cubeMapFace, source, mipLevel) {
     return;
   }
 
-  const { arrayBufferView = source.bufferView } = source;
+  let { arrayBufferView = source.bufferView } = source;
 
   let unpackAlignment = 4;
   if (defined(arrayBufferView)) {
@@ -331,39 +331,42 @@ function loadFace(cubeMapFace, source, mipLevel) {
   }
   gl.pixelStorei(gl.UNPACK_ALIGNMENT, unpackAlignment);
 
-  let pixels;
   if (defined(arrayBufferView)) {
     gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
     if (flipY) {
-      pixels = PixelFormat.flipY(
+      arrayBufferView = PixelFormat.flipY(
         arrayBufferView,
         pixelFormat,
         pixelDatatype,
         size,
         size
       );
-    } else {
-      pixels = arrayBufferView;
     }
+    gl.texImage2D(
+      targetFace,
+      mipLevel,
+      internalFormat,
+      size,
+      size,
+      0,
+      pixelFormat,
+      PixelDatatype.toWebGLConstant(pixelDatatype, context),
+      arrayBufferView
+    );
   } else {
     // Only valid for DOM-Element uploads
     gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, preMultiplyAlpha);
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, flipY);
-    pixels = source;
+    gl.texImage2D(
+      targetFace,
+      mipLevel,
+      internalFormat,
+      pixelFormat,
+      PixelDatatype.toWebGLConstant(pixelDatatype, context),
+      source
+    );
   }
-
-  gl.texImage2D(
-    targetFace,
-    mipLevel,
-    internalFormat,
-    size,
-    size,
-    0,
-    pixelFormat,
-    PixelDatatype.toWebGLConstant(pixelDatatype, context),
-    pixels
-  );
 }
 
 Object.defineProperties(CubeMap.prototype, {
