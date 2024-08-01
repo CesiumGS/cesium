@@ -58,7 +58,7 @@
     "chokidar": "^3.5.3",
     "cloc": "^2.0.0-cloc",
     "compression": "^1.7.4",
-    "esbuild": "^0.21.4",
+    "esbuild": "^0.23.0",
     "eslint": "^9.1.1",
     "eslint-config-cesium": "^11.0.1",
     "eslint-plugin-html": "^8.1.1",
