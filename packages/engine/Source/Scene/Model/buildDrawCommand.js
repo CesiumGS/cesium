@@ -78,6 +78,27 @@ function buildDrawCommand(primitiveRenderResources, frameState) {
     );
   }
 
+  console.log("buildDrawCommand");
+  console.log("  positionMin", primitiveRenderResources.positionMin);
+  console.log("  positionMax", primitiveRenderResources.positionMax);
+  console.log(
+    "  instancingTranslationMin ",
+    primitiveRenderResources.runtimeNode.instancingTranslationMin
+  );
+  console.log(
+    "  instancingTranslationMax ",
+    primitiveRenderResources.runtimeNode.instancingTranslationMax
+  );
+  console.log(
+    "  node scale ",
+    primitiveRenderResources.runtimeNode.computedTransform[0]
+  );
+  console.log(
+    "  instances transformInWorldSpace ",
+    primitiveRenderResources.runtimeNode.node?.instances?.transformInWorldSpace
+  );
+  console.log("  radius", primitiveRenderResources.boundingSphere.radius);
+
   // Initialize render state with default values
   let renderState = clone(
     RenderState.fromCache(primitiveRenderResources.renderStateOptions),
@@ -117,7 +138,7 @@ function buildDrawCommand(primitiveRenderResources, frameState) {
     pickId: pickId,
     instanceCount: primitiveRenderResources.instanceCount,
     primitiveType: primitiveRenderResources.primitiveType,
-    debugShowBoundingVolume: model.debugShowBoundingVolume,
+    debugShowBoundingVolume: true, //model.debugShowBoundingVolume,
     castShadows: castShadows,
     receiveShadows: receiveShadows,
   });
