@@ -5,6 +5,7 @@ import clone from "../../Core/clone.js";
 import defined from "../../Core/defined.js";
 import ModelUtility from "./ModelUtility.js";
 import ModelLightingOptions from "./ModelLightingOptions.js";
+import Matrix4 from "../../Core/Matrix4.js";
 
 /**
  * Each node may have many mesh primitives. Most model pipeline stages operate
@@ -232,14 +233,66 @@ function PrimitiveRenderResources(nodeRenderResources, runtimePrimitive) {
    */
   this.primitiveType = primitive.primitiveType;
 
+  // For computing the `positionMin` and `positionMax` properties,
+  // the instancing translation (if present) has to be taken into
+  // account.
+  // The `positionMin` and `positionMax` are supposed to NOT take
+  // the node transform into account.
+  // So when the instancing translations are supposed to be applied
+  // in world space (as indicated by instances.transformInWorldSpace),
+  // then the instancing translations have to be multiplied with the
+  // inverse of the node transform, to eventually yield the true
+  // minimum/maximum after applying the node transform.
+
+  let instancingTranslationMin = this.runtimeNode.instancingTranslationMin;
+  let instancingTranslationMax = this.runtimeNode.instancingTranslationMax;
+
+  //*/
+  const instances = this.runtimeNode.node.instances;
+  if (defined(instances)) {
+    // TODO Is this check necessary?
+    if (
+      !defined(instancingTranslationMin) ||
+      !defined(instancingTranslationMax)
+    ) {
+      console.log("Something wrong, they should be defined... I guess...");
+    }
+    if (instances.transformInWorldSpace) {
+      const nodeTransform = this.runtimeNode.computedTransform;
+      // TODO Use scratches here
+      const inverseNodeTransform = Matrix4.inverse(
+        nodeTransform,
+        new Matrix4()
+      );
+      instancingTranslationMin = Matrix4.multiplyByPoint(
+        inverseNodeTransform,
+        instancingTranslationMin,
+        new Cartesian3()
+      );
+      instancingTranslationMax = Matrix4.multiplyByPoint(
+        inverseNodeTransform,
+        instancingTranslationMax,
+        new Cartesian3()
+      );
+    }
+  }
+  //*/
   const positionMinMax = ModelUtility.getPositionMinMax(
     primitive,
-    this.runtimeNode.instancingTranslationMin,
-    this.runtimeNode.instancingTranslationMax
+    instancingTranslationMin,
+    instancingTranslationMax
   );
 
   /**
    * The minimum position value for this primitive.
+   *
+   * This does not take into account the transform of the node that this
+   * primitive is attached to.
+   *
+   * But it does take into account any possible instancing transforms,
+   * multiplied with the inverse of the node transform. So transforming
+   * this position value with the node transform will yield the actual
+   * minimum position, including the instancing transforms.
    *
    * @type {Cartesian3}
    * @readonly
@@ -250,6 +303,14 @@ function PrimitiveRenderResources(nodeRenderResources, runtimePrimitive) {
 
   /**
    * The maximum position value for this primitive.
+   *
+   * This does not take into account the transform of the node that this
+   * primitive is attached to.
+   *
+   * But it does take into account any possible instancing transforms,
+   * multiplied with the inverse of the node transform. So transforming
+   * this position value with the node transform will yield the actual
+   * maximum position, including the instancing transforms.
    *
    * @type {Cartesian3}
    * @readonly
