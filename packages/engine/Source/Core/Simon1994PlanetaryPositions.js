@@ -627,6 +627,7 @@ const axesTransformation = new Matrix3(
   0.9174820620691819
 );
 let translation = new Cartesian3();
+
 /**
  * Computes the position of the Sun in the Earth-centered inertial frame
  *
@@ -662,7 +663,7 @@ Simon1994PlanetaryPositions.computeSunPositionInEarthInertialFrame = function (
 /**
  * Computes the position of the Moon in the Earth-centered inertial frame
  *
- * @param {JulianDate} [julianDate] The time at which to compute the moon's position, if not provided the current system time is used.
+ * @param {JulianDate} [julianDate] The time at which to compute the Moon's position, if not provided the current system time is used.
  * @param {Cartesian3} [result] The object onto which to store the result.
  * @returns {Cartesian3} Calculated moon position
  */

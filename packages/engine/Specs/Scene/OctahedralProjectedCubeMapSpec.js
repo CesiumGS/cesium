@@ -120,7 +120,7 @@ describe(
       });
     }
 
-    it("creates a packed texture with the right dimensions", function () {
+    it("creates a packed texture with the right dimensions", async function () {
       if (!OctahedralProjectedCubeMap.isSupported(context)) {
         return;
       }
@@ -128,17 +128,16 @@ describe(
       octahedralMap = new OctahedralProjectedCubeMap(environmentMapUrl);
       const frameState = createFrameState(context);
 
-      return pollToPromise(function () {
+      await pollToPromise(function () {
         octahedralMap.update(frameState);
         return octahedralMap.ready;
-      }).then(function () {
-        expect(octahedralMap.texture.width).toEqual(770);
-        expect(octahedralMap.texture.height).toEqual(512);
-        expect(octahedralMap.maximumMipmapLevel).toEqual(5);
       });
+      expect(octahedralMap.texture.width).toEqual(770);
+      expect(octahedralMap.texture.height).toEqual(512);
+      expect(octahedralMap.maximumMipmapLevel).toEqual(7);
     });
 
-    it("correctly projects the given cube map and all mip levels", function () {
+    it("correctly projects the given cube map and all mip levels", async function () {
       if (!OctahedralProjectedCubeMap.isSupported(context)) {
         return;
       }
@@ -146,7 +145,7 @@ describe(
       octahedralMap = new OctahedralProjectedCubeMap(environmentMapUrl);
       const frameState = createFrameState(context);
 
-      return pollToPromise(function () {
+      await pollToPromise(function () {
         // We manually call update and execute the commands
         // because calling scene.renderForSpecs does not
         // actually execute these commands, and we need
@@ -155,34 +154,32 @@ describe(
         executeCommands(frameState);
 
         return octahedralMap.ready;
-      }).then(function () {
-        const directions = {
-          positiveX: new Cartesian3(1, 0, 0),
-          negativeX: new Cartesian3(-1, 0, 0),
-          positiveY: new Cartesian3(0, 1, 0),
-          negativeY: new Cartesian3(0, -1, 0),
-          positiveZ: new Cartesian3(0, 0, 1),
-          negativeZ: new Cartesian3(0, 0, -1),
-        };
+      });
+      const directions = {
+        positiveX: new Cartesian3(1, 0, 0),
+        negativeX: new Cartesian3(-1, 0, 0),
+        positiveY: new Cartesian3(0, 1, 0),
+        negativeY: new Cartesian3(0, -1, 0),
+        positiveZ: new Cartesian3(0, 0, 1),
+        negativeZ: new Cartesian3(0, 0, -1),
+      };
 
-        for (
-          let mipLevel = 0;
-          mipLevel < octahedralMap.maximumMipmapLevel;
-          mipLevel++
-        ) {
-          for (const key in directions) {
-            if (directions.hasOwnProperty(key)) {
-              const direction = directions[key];
+      // The projection is less accurate for the last mip levels,
+      // where the input cubemap only has a few samples.
+      const lastAccurateMip = octahedralMap.maximumMipmapLevel - 2;
+      for (let mipLevel = 0; mipLevel < lastAccurateMip; mipLevel++) {
+        for (const key in directions) {
+          if (directions.hasOwnProperty(key)) {
+            const direction = directions[key];
 
-              expectCubeMapAndOctahedralMapEqual(
-                octahedralMap,
-                direction,
-                mipLevel
-              );
-            }
+            expectCubeMapAndOctahedralMapEqual(
+              octahedralMap,
+              direction,
+              mipLevel
+            );
           }
         }
-      });
+      }
     });
 
     it("caches projected textures", function () {

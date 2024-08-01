@@ -16,10 +16,10 @@ vec3 getProceduralSkyMetrics(vec3 positionWC, vec3 reflectionWC)
 }
 
 /**
- * Compute the diffuse irradiance for a procedural sky lighting model
+ * Compute the diffuse irradiance for a procedural sky lighting model.
  *
  * @param {vec3} skyMetrics The dot products of the horizon and reflection directions with the nadir, and an atmosphere boundary distance.
- * @return {vec3} The computed diffuse irradiance
+ * @return {vec3} The computed diffuse irradiance.
  */
 vec3 getProceduralDiffuseIrradiance(vec3 skyMetrics)
 {
@@ -30,10 +30,12 @@ vec3 getProceduralDiffuseIrradiance(vec3 skyMetrics)
 }
 
 /**
- * Compute the specular irradiance for a procedural sky lighting model
+ * Compute the specular irradiance for a procedural sky lighting model.
  *
+ * @param {vec3} reflectionWC The reflection vector in world coordinates.
  * @param {vec3} skyMetrics The dot products of the horizon and reflection directions with the nadir, and an atmosphere boundary distance.
- * @return {vec3} The computed specular irradiance
+ * @param {float} roughness The roughness of the material.
+ * @return {vec3} The computed specular irradiance.
  */
 vec3 getProceduralSpecularIrradiance(vec3 reflectionWC, vec3 skyMetrics, float roughness)
 {
@@ -42,7 +44,7 @@ vec3 getProceduralSpecularIrradiance(vec3 reflectionWC, vec3 skyMetrics, float r
     reflectionWC = -normalize(czm_temeToPseudoFixed * reflectionWC);
     reflectionWC.x = -reflectionWC.x;
 
-    float inverseRoughness = 1.04 - roughness;
+    float inverseRoughness = 1.0 - roughness;
     inverseRoughness *= inverseRoughness;
     vec3 sceneSkyBox = czm_textureCube(czm_environmentMap, reflectionWC).rgb * inverseRoughness;
 
@@ -121,7 +123,7 @@ float getSunLuminance(vec3 positionWC, vec3 normalEC, vec3 lightDirectionEC)
 ) {
     vec3 viewDirectionEC = -normalize(positionEC);
     vec3 positionWC = vec3(czm_inverseView * vec4(positionEC, 1.0));
-    vec3 reflectionWC = normalize(czm_inverseViewRotation * normalize(reflect(viewDirectionEC, normalEC)));
+    vec3 reflectionWC = normalize(czm_inverseViewRotation * reflect(viewDirectionEC, normalEC));
     vec3 skyMetrics = getProceduralSkyMetrics(positionWC, reflectionWC);
 
     float roughness = material.roughness;
@@ -173,11 +175,12 @@ vec3 sampleSpecularEnvironment(vec3 cubeDir, float roughness)
         return czm_sampleOctahedralProjection(czm_specularEnvironmentMaps, czm_specularEnvironmentMapSize, cubeDir, lod, maxLod);
     #endif
 }
-vec3 computeSpecularIBL(vec3 cubeDir, float NdotV, float VdotH, vec3 f0, float roughness)
+vec3 computeSpecularIBL(vec3 cubeDir, float NdotV, vec3 f0, float roughness)
 {
-    float reflectance = czm_maximumComponent(f0);
-    vec3 f90 = vec3(clamp(reflectance * 25.0, 0.0, 1.0));
-    vec3 F = fresnelSchlick2(f0, f90, VdotH);
+    // see https://bruop.github.io/ibl/ at Single Scattering Results
+    // Roughness dependent fresnel, from Fdez-Aguera
+    vec3 f90 = max(vec3(1.0 - roughness), f0);
+    vec3 F = fresnelSchlick2(f0, f90, NdotV);
 
     vec2 brdfLut = texture(czm_brdfLut, vec2(NdotV, roughness)).rg;
     vec3 specularSample = sampleSpecularEnvironment(cubeDir, roughness);
@@ -202,34 +205,31 @@ vec3 textureIBL(
     vec3 lightDirectionEC,
     czm_modelMaterial material
 ) {
-    // Find the direction in which to sample the environment map
-    vec3 cubeDir = normalize(model_iblReferenceFrameMatrix * normalize(reflect(-viewDirectionEC, normalEC)));
-
     #ifdef DIFFUSE_IBL
-        vec3 diffuseContribution = computeDiffuseIBL(cubeDir) * material.diffuse;
+        vec3 normalMC = normalize(model_iblReferenceFrameMatrix * normalEC);
+        vec3 diffuseContribution = computeDiffuseIBL(normalMC) * material.diffuse;
     #else
         vec3 diffuseContribution = vec3(0.0); 
     #endif
 
-    float roughness = material.roughness;
-
     #ifdef USE_ANISOTROPY
-        // Update environment map sampling direction to account for anisotropic distortion of specular reflection
+        // Bend normal to account for anisotropic distortion of specular reflection
         vec3 anisotropyDirection = material.anisotropicB;
         vec3 anisotropicTangent = cross(anisotropyDirection, viewDirectionEC);
         vec3 anisotropicNormal = cross(anisotropicTangent, anisotropyDirection);
-        float bendFactor = 1.0 - material.anisotropyStrength * (1.0 - roughness);
+        float bendFactor = 1.0 - material.anisotropyStrength * (1.0 - material.roughness);
         float bendFactorPow4 = bendFactor * bendFactor * bendFactor * bendFactor;
         vec3 bentNormal = normalize(mix(anisotropicNormal, normalEC, bendFactorPow4));
-        cubeDir = normalize(model_iblReferenceFrameMatrix * normalize(reflect(-viewDirectionEC, bentNormal)));
+        vec3 reflectEC = reflect(-viewDirectionEC, bentNormal);
+    #else
+        vec3 reflectEC = reflect(-viewDirectionEC, normalEC);
     #endif
 
     #ifdef SPECULAR_IBL
-        float NdotV = abs(dot(normalEC, viewDirectionEC)) + 0.001;
-        vec3 halfwayDirectionEC = normalize(viewDirectionEC + lightDirectionEC);
-        float VdotH = clamp(dot(viewDirectionEC, halfwayDirectionEC), 0.0, 1.0);
+        vec3 reflectMC = normalize(model_iblReferenceFrameMatrix * reflectEC);
+        float NdotV = clamp(dot(normalEC, viewDirectionEC), 0.0, 1.0);
         vec3 f0 = material.specular;
-        vec3 specularContribution = computeSpecularIBL(cubeDir, NdotV, VdotH, f0, roughness);
+        vec3 specularContribution = computeSpecularIBL(reflectMC, NdotV, f0, material.roughness);
     #else
         vec3 specularContribution = vec3(0.0); 
     #endif
