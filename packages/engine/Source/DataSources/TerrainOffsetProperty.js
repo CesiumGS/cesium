@@ -147,6 +147,8 @@ TerrainOffsetProperty.prototype._updateClamping = function () {
   );
 };
 
+const timeScratch = new JulianDate();
+
 /**
  * Gets the height relative to the terrain based on the positions.
  *
@@ -156,7 +158,7 @@ TerrainOffsetProperty.prototype._updateClamping = function () {
  */
 TerrainOffsetProperty.prototype.getValue = function (time, result) {
   if (!defined(time)) {
-    time = JulianDate.now();
+    time = JulianDate.now(timeScratch);
   }
 
   const heightReference = Property.getValueOrDefault(

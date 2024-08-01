@@ -91,6 +91,8 @@ Object.defineProperties(TimeIntervalCollectionProperty.prototype, {
   },
 });
 
+const timeScratch = new JulianDate();
+
 /**
  * Gets the value of the property at the provided time.
  *
@@ -100,7 +102,7 @@ Object.defineProperties(TimeIntervalCollectionProperty.prototype, {
  */
 TimeIntervalCollectionProperty.prototype.getValue = function (time, result) {
   if (!defined(time)) {
-    time = JulianDate.now();
+    time = JulianDate.now(timeScratch);
   }
 
   const value = this._intervals.findDataForIntervalContainingDate(time);

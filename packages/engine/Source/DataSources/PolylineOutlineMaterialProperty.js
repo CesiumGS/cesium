@@ -103,6 +103,8 @@ PolylineOutlineMaterialProperty.prototype.getType = function (time) {
   return "PolylineOutline";
 };
 
+const timeScratch = new JulianDate();
+
 /**
  * Gets the value of the property at the provided time.
  *
@@ -112,7 +114,7 @@ PolylineOutlineMaterialProperty.prototype.getType = function (time) {
  */
 PolylineOutlineMaterialProperty.prototype.getValue = function (time, result) {
   if (!defined(time)) {
-    time = JulianDate.now();
+    time = JulianDate.now(timeScratch);
   }
   if (!defined(result)) {
     result = {};

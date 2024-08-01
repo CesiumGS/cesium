@@ -68,6 +68,8 @@ PolylineArrowMaterialProperty.prototype.getType = function (time) {
   return "PolylineArrow";
 };
 
+const timeScratch = new JulianDate();
+
 /**
  * Gets the value of the property at the provided time.
  *
@@ -77,7 +79,7 @@ PolylineArrowMaterialProperty.prototype.getType = function (time) {
  */
 PolylineArrowMaterialProperty.prototype.getValue = function (time, result) {
   if (!defined(time)) {
-    time = JulianDate.now();
+    time = JulianDate.now(timeScratch);
   }
   if (!defined(result)) {
     result = {};

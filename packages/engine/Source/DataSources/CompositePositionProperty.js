@@ -83,6 +83,8 @@ Object.defineProperties(CompositePositionProperty.prototype, {
   },
 });
 
+const timeScratch = new JulianDate();
+
 /**
  * Gets the value of the property at the provided time in the fixed frame.
  *
@@ -92,7 +94,7 @@ Object.defineProperties(CompositePositionProperty.prototype, {
  */
 CompositePositionProperty.prototype.getValue = function (time, result) {
   if (!defined(time)) {
-    time = JulianDate.now();
+    time = JulianDate.now(timeScratch);
   }
   return this.getValueInReferenceFrame(time, ReferenceFrame.FIXED, result);
 };

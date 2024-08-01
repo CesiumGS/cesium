@@ -83,6 +83,8 @@ CompositeMaterialProperty.prototype.getType = function (time) {
   return undefined;
 };
 
+const timeScratch = new JulianDate();
+
 /**
  * Gets the value of the property at the provided time.
  *
@@ -92,7 +94,7 @@ CompositeMaterialProperty.prototype.getType = function (time) {
  */
 CompositeMaterialProperty.prototype.getValue = function (time, result) {
   if (!defined(time)) {
-    time = JulianDate.now();
+    time = JulianDate.now(timeScratch);
   }
 
   const innerProperty = this._composite._intervals.findDataForIntervalContainingDate(

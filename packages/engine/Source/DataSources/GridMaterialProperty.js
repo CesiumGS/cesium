@@ -135,6 +135,8 @@ GridMaterialProperty.prototype.getType = function (time) {
   return "Grid";
 };
 
+const timeScratch = new JulianDate();
+
 /**
  * Gets the value of the property at the provided time.
  *
@@ -144,7 +146,7 @@ GridMaterialProperty.prototype.getType = function (time) {
  */
 GridMaterialProperty.prototype.getValue = function (time, result) {
   if (!defined(time)) {
-    time = JulianDate.now();
+    time = JulianDate.now(timeScratch);
   }
   if (!defined(result)) {
     result = {};

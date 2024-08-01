@@ -77,6 +77,8 @@ Object.defineProperties(PositionPropertyArray.prototype, {
   },
 });
 
+const timeScratch = new JulianDate();
+
 /**
  * Gets the value of the property.
  *
@@ -86,7 +88,7 @@ Object.defineProperties(PositionPropertyArray.prototype, {
  */
 PositionPropertyArray.prototype.getValue = function (time, result) {
   if (!defined(time)) {
-    time = JulianDate.now();
+    time = JulianDate.now(timeScratch);
   }
   return this.getValueInReferenceFrame(time, ReferenceFrame.FIXED, result);
 };

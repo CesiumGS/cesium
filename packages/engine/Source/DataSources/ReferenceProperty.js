@@ -255,6 +255,8 @@ ReferenceProperty.fromString = function (targetCollection, referenceString) {
   return new ReferenceProperty(targetCollection, identifier, values);
 };
 
+const timeScratch = new JulianDate();
+
 /**
  * Gets the value of the property at the provided time.
  *
@@ -265,7 +267,7 @@ ReferenceProperty.fromString = function (targetCollection, referenceString) {
 ReferenceProperty.prototype.getValue = function (time, result) {
   const target = resolve(this);
   if (!defined(time)) {
-    time = JulianDate.now();
+    time = JulianDate.now(timeScratch);
   }
   return defined(target) ? target.getValue(time, result) : undefined;
 };

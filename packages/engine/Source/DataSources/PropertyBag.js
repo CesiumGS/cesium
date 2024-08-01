@@ -158,6 +158,8 @@ PropertyBag.prototype.removeProperty = function (propertyName) {
   this._definitionChanged.raiseEvent(this);
 };
 
+const timeScratch = new JulianDate();
+
 /**
  * Gets the value of this property.  Each contained property will be evaluated at the given time, and the overall
  * result will be an object, mapping property names to those values.
@@ -169,7 +171,7 @@ PropertyBag.prototype.removeProperty = function (propertyName) {
  */
 PropertyBag.prototype.getValue = function (time, result) {
   if (!defined(time)) {
-    time = JulianDate.now();
+    time = JulianDate.now(timeScratch);
   }
 
   if (!defined(result)) {

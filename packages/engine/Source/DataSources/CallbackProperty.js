@@ -47,6 +47,8 @@ Object.defineProperties(CallbackProperty.prototype, {
   },
 });
 
+const timeScratch = new JulianDate();
+
 /**
  * Gets the value of the property.
  *
@@ -56,7 +58,7 @@ Object.defineProperties(CallbackProperty.prototype, {
  */
 CallbackProperty.prototype.getValue = function (time, result) {
   if (!defined(time)) {
-    time = JulianDate.now();
+    time = JulianDate.now(timeScratch);
   }
   return this._callback(time, result);
 };

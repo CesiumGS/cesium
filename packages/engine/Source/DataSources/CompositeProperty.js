@@ -1,7 +1,7 @@
-import { JulianDate } from "@cesium/engine";
 import defined from "../Core/defined.js";
 import Event from "../Core/Event.js";
 import EventHelper from "../Core/EventHelper.js";
+import JulianDate from "../Core/JulianDate.js";
 import TimeIntervalCollection from "../Core/TimeIntervalCollection.js";
 import Property from "./Property.js";
 
@@ -103,6 +103,8 @@ Object.defineProperties(CompositeProperty.prototype, {
   },
 });
 
+const timeScratch = new JulianDate();
+
 /**
  * Gets the value of the property at the provided time.
  *
@@ -112,7 +114,7 @@ Object.defineProperties(CompositeProperty.prototype, {
  */
 CompositeProperty.prototype.getValue = function (time, result) {
   if (!defined(time)) {
-    time = JulianDate.now();
+    time = JulianDate.now(timeScratch);
   }
 
   const innerProperty = this._intervals.findDataForIntervalContainingDate(time);

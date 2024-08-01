@@ -105,6 +105,7 @@ Object.defineProperties(VelocityOrientationProperty.prototype, {
 const positionScratch = new Cartesian3();
 const velocityScratch = new Cartesian3();
 const rotationScratch = new Matrix3();
+const timeScratch = new JulianDate();
 
 /**
  * Gets the value of the property at the provided time.
@@ -115,7 +116,7 @@ const rotationScratch = new Matrix3();
  */
 VelocityOrientationProperty.prototype.getValue = function (time, result) {
   if (!defined(time)) {
-    time = JulianDate.now();
+    time = JulianDate.now(timeScratch);
   }
   const velocity = this._velocityVectorProperty._getValue(
     time,

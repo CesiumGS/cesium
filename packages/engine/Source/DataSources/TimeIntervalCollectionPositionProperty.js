@@ -79,6 +79,8 @@ Object.defineProperties(TimeIntervalCollectionPositionProperty.prototype, {
   },
 });
 
+const timeScratch = new JulianDate();
+
 /**
  * Gets the value of the property at the provided time in the fixed frame.
  *
@@ -91,7 +93,7 @@ TimeIntervalCollectionPositionProperty.prototype.getValue = function (
   result
 ) {
   if (!defined(time)) {
-    time = JulianDate.now();
+    time = JulianDate.now(timeScratch);
   }
   return this.getValueInReferenceFrame(time, ReferenceFrame.FIXED, result);
 };

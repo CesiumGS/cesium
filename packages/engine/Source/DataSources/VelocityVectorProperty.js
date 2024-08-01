@@ -118,6 +118,7 @@ Object.defineProperties(VelocityVectorProperty.prototype, {
 const position1Scratch = new Cartesian3();
 const position2Scratch = new Cartesian3();
 const timeScratch = new JulianDate();
+const timeNowScratch = new JulianDate();
 const step = 1.0 / 60.0;
 
 /**
@@ -140,7 +141,7 @@ VelocityVectorProperty.prototype._getValue = function (
   positionResult
 ) {
   if (!defined(time)) {
-    time = JulianDate.now();
+    time = JulianDate.now(timeNowScratch);
   }
 
   if (!defined(velocityResult)) {

@@ -38,9 +38,11 @@ Object.defineProperties(ScaledPositionProperty.prototype, {
   },
 });
 
+const timeScratch = new JulianDate();
+
 ScaledPositionProperty.prototype.getValue = function (time, result) {
   if (!defined(time)) {
-    time = JulianDate.now();
+    time = JulianDate.now(timeScratch);
   }
   return this.getValueInReferenceFrame(time, ReferenceFrame.FIXED, result);
 };

@@ -93,6 +93,8 @@ Object.defineProperties(NodeTransformationProperty.prototype, {
   scale: createPropertyDescriptor("scale"),
 });
 
+const timeScratch = new JulianDate();
+
 /**
  * Gets the value of the property at the provided time.
  *
@@ -102,7 +104,7 @@ Object.defineProperties(NodeTransformationProperty.prototype, {
  */
 NodeTransformationProperty.prototype.getValue = function (time, result) {
   if (!defined(time)) {
-    time = JulianDate.now();
+    time = JulianDate.now(timeScratch);
   }
   if (!defined(result)) {
     result = new TranslationRotationScale();

@@ -179,6 +179,8 @@ Object.defineProperties(SampledPositionProperty.prototype, {
   },
 });
 
+const timeScratch = new JulianDate();
+
 /**
  * Gets the position at the provided time.
  *
@@ -188,7 +190,7 @@ Object.defineProperties(SampledPositionProperty.prototype, {
  */
 SampledPositionProperty.prototype.getValue = function (time, result) {
   if (!defined(time)) {
-    time = JulianDate.now();
+    time = JulianDate.now(timeScratch);
   }
   return this.getValueInReferenceFrame(time, ReferenceFrame.FIXED, result);
 };
