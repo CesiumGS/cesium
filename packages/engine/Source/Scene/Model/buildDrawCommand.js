@@ -73,8 +73,7 @@ function buildDrawCommand(primitiveRenderResources, frameState) {
 
     boundingSphere = BoundingSphere.transform(
       primitiveRenderResources.boundingSphere,
-      modelMatrix,
-      primitiveRenderResources.boundingSphere
+      modelMatrix
     );
   }
 
