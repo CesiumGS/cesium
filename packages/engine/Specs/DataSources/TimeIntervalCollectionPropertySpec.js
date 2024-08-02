@@ -89,11 +89,12 @@ describe("DataSources/TimeIntervalCollectionProperty", function () {
     expect(result2).toEqual(interval2.data);
   });
 
-  it("throws with no time parameter", function () {
+  it("getValue uses JulianDate.now() if time parameter is undefined", function () {
+    spyOn(JulianDate, "now").and.callThrough();
+
     const property = new TimeIntervalCollectionProperty();
-    expect(function () {
-      property.getValue(undefined);
-    }).toThrowDeveloperError();
+    property.getValue();
+    expect(JulianDate.now).toHaveBeenCalled();
   });
 
   it("equals works for differing basic type intervals", function () {
