@@ -1,7 +1,6 @@
 import Cartesian3 from "../Core/Cartesian3.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
 import Event from "../Core/Event.js";
 import JulianDate from "../Core/JulianDate.js";
 import Property from "./Property.js";
@@ -119,12 +118,13 @@ Object.defineProperties(VelocityVectorProperty.prototype, {
 const position1Scratch = new Cartesian3();
 const position2Scratch = new Cartesian3();
 const timeScratch = new JulianDate();
+const timeNowScratch = new JulianDate();
 const step = 1.0 / 60.0;
 
 /**
  * Gets the value of the property at the provided time.
  *
- * @param {JulianDate} [time] The time for which to retrieve the value.
+ * @param {JulianDate} [time=JulianDate.now()] The time for which to retrieve the value. If omitted, the current system time is used.
  * @param {Cartesian3} [result] The object to store the value into, if omitted, a new instance is created and returned.
  * @returns {Cartesian3} The modified result parameter or a new instance if the result parameter was not supplied.
  */
@@ -140,11 +140,9 @@ VelocityVectorProperty.prototype._getValue = function (
   velocityResult,
   positionResult
 ) {
-  //>>includeStart('debug', pragmas.debug);
   if (!defined(time)) {
-    throw new DeveloperError("time is required");
+    time = JulianDate.now(timeNowScratch);
   }
-  //>>includeEnd('debug');
 
   if (!defined(velocityResult)) {
     velocityResult = new Cartesian3();
