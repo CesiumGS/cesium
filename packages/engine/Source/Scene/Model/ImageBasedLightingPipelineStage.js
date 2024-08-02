@@ -1,10 +1,8 @@
 import combine from "../../Core/combine.js";
-import defaultValue from "../../Core/defaultValue.js";
 import defined from "../../Core/defined.js";
 import ImageBasedLightingStageFS from "../../Shaders/Model/ImageBasedLightingStageFS.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
-import OctahedralProjectedCubeMap from "../OctahedralProjectedCubeMap.js";
-import Matrix4 from "../../Core/Matrix4.js";
+import SpecularEnvironmentCubeMap from "../SpecularEnvironmentCubeMap.js";
 
 const ImageBasedLightingPipelineStage = {
   name: "ImageBasedLightingPipelineStage", // Helps with debugging
@@ -28,7 +26,8 @@ ImageBasedLightingPipelineStage.process = function (
 
   // If environment maps are not specifically provided, use procedural lighting.
   const specularEnvironmentMapAtlas = environmentMapManager.radianceMapAtlas;
-  const sphericalHarmonicCoefficients = environmentMapManager.sphericalHarmonicCoefficients;
+  const sphericalHarmonicCoefficients =
+    environmentMapManager.sphericalHarmonicCoefficients;
 
   shaderBuilder.addDefine(
     "USE_IBL_LIGHTING",
@@ -41,7 +40,7 @@ ImageBasedLightingPipelineStage.process = function (
     ShaderDestination.FRAGMENT
   );
 
-  if (OctahedralProjectedCubeMap.isSupported(frameState.context)) {
+  if (SpecularEnvironmentCubeMap.isSupported(frameState.context)) {
     const addMatrix =
       imageBasedLighting.useSphericalHarmonics ||
       imageBasedLighting.useSpecularEnvironmentMaps ||
@@ -54,7 +53,10 @@ ImageBasedLightingPipelineStage.process = function (
       );
     }
 
-    if (defined(sphericalHarmonicCoefficients) && defined(sphericalHarmonicCoefficients[0])) {
+    if (
+      defined(sphericalHarmonicCoefficients) &&
+      defined(sphericalHarmonicCoefficients[0])
+    ) {
       shaderBuilder.addDefine(
         "DIFFUSE_IBL",
         undefined,
@@ -93,13 +95,8 @@ ImageBasedLightingPipelineStage.process = function (
         ShaderDestination.FRAGMENT
       );
       shaderBuilder.addUniform(
-        "sampler2D",
+        "samplerCube",
         "model_specularEnvironmentMaps",
-        ShaderDestination.FRAGMENT
-      );
-      shaderBuilder.addUniform(
-        "vec2",
-        "model_specularEnvironmentMapsSize",
         ShaderDestination.FRAGMENT
       );
       shaderBuilder.addUniform(
@@ -143,6 +140,12 @@ ImageBasedLightingPipelineStage.process = function (
     },
     model_sphericalHarmonicCoefficients: function () {
       return sphericalHarmonicCoefficients;
+    },
+    model_specularEnvironmentMaps: function () {
+      return imageBasedLighting.specularEnvironmentMapAtlas.texture;
+    },
+    model_specularEnvironmentMapsMaximumLOD: function () {
+      return imageBasedLighting.specularEnvironmentMapAtlas.maximumMipmapLevel;
     },
   };
 

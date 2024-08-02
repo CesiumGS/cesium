@@ -86,26 +86,30 @@ CubeMapFace.prototype.copyFrom = function (options) {
   Check.defined("options", options);
   //>>includeEnd('debug');
 
-  const xOffset = defaultValue(options.xOffset, 0);
-  const yOffset = defaultValue(options.yOffset, 0);
+  const {
+    xOffset = 0,
+    yOffset = 0,
+    source,
+    skipColorSpaceConversion = false,
+  } = options;
 
   //>>includeStart('debug', pragmas.debug);
-  Check.defined("options.source", options.source);
+  Check.defined("options.source", source);
   Check.typeOf.number.greaterThanOrEquals("xOffset", xOffset, 0);
   Check.typeOf.number.greaterThanOrEquals("yOffset", yOffset, 0);
-  if (xOffset + options.source.width > this._size) {
+  if (xOffset + source.width > this._size) {
     throw new DeveloperError(
       "xOffset + options.source.width must be less than or equal to width."
     );
   }
-  if (yOffset + options.source.height > this._size) {
+  if (yOffset + source.height > this._size) {
     throw new DeveloperError(
       "yOffset + options.source.height must be less than or equal to height."
     );
   }
   //>>includeEnd('debug');
 
-  const source = options.source;
+  const { width, height } = source;
 
   const gl = this._context._gl;
   const target = this._textureTarget;
@@ -114,8 +118,6 @@ CubeMapFace.prototype.copyFrom = function (options) {
   gl.activeTexture(gl.TEXTURE0);
   gl.bindTexture(target, this._texture);
 
-  const width = source.width;
-  const height = source.height;
   let arrayBufferView = source.arrayBufferView;
 
   const size = this._size;
@@ -125,10 +127,6 @@ CubeMapFace.prototype.copyFrom = function (options) {
 
   const preMultiplyAlpha = this._preMultiplyAlpha;
   const flipY = this._flipY;
-  const skipColorSpaceConversion = defaultValue(
-    options.skipColorSpaceConversion,
-    false
-  );
 
   let unpackAlignment = 4;
   if (defined(arrayBufferView)) {
@@ -138,7 +136,6 @@ CubeMapFace.prototype.copyFrom = function (options) {
       width
     );
   }
-
   gl.pixelStorei(gl.UNPACK_ALIGNMENT, unpackAlignment);
 
   if (skipColorSpaceConversion) {
@@ -152,12 +149,12 @@ CubeMapFace.prototype.copyFrom = function (options) {
 
   let uploaded = false;
   if (!this._initialized) {
+    let pixels;
     if (xOffset === 0 && yOffset === 0 && width === size && height === size) {
       // initialize the entire texture
       if (defined(arrayBufferView)) {
         gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
         gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
-
         if (flipY) {
           arrayBufferView = PixelFormat.flipY(
             arrayBufferView,
@@ -167,55 +164,36 @@ CubeMapFace.prototype.copyFrom = function (options) {
             size
           );
         }
-        gl.texImage2D(
-          targetFace,
-          0,
-          internalFormat,
-          size,
-          size,
-          0,
-          pixelFormat,
-          PixelDatatype.toWebGLConstant(pixelDatatype, this._context),
-          arrayBufferView
-        );
+        pixels = arrayBufferView;
       } else {
         // Only valid for DOM-Element uploads
         gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, preMultiplyAlpha);
         gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, flipY);
-
-        gl.texImage2D(
-          targetFace,
-          0,
-          internalFormat,
-          pixelFormat,
-          PixelDatatype.toWebGLConstant(pixelDatatype, this._context),
-          source
-        );
+        pixels = source;
       }
       uploaded = true;
     } else {
+      // initialize the entire texture to zero
       gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
       gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
-
-      // initialize the entire texture to zero
-      const bufferView = PixelFormat.createTypedArray(
+      pixels = PixelFormat.createTypedArray(
         pixelFormat,
         pixelDatatype,
         size,
         size
       );
-      gl.texImage2D(
-        targetFace,
-        0,
-        internalFormat,
-        size,
-        size,
-        0,
-        pixelFormat,
-        PixelDatatype.toWebGLConstant(pixelDatatype, this._context),
-        bufferView
-      );
     }
+    gl.texImage2D(
+      targetFace,
+      0,
+      internalFormat,
+      size,
+      size,
+      0,
+      pixelFormat,
+      PixelDatatype.toWebGLConstant(pixelDatatype, this._context),
+      pixels
+    );
     this._initialized = true;
   }
 

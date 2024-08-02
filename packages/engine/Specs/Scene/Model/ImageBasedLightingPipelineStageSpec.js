@@ -179,8 +179,7 @@ describe("Scene/Model/ImageBasedLightingPipelineStage", function () {
     ShaderBuilderTester.expectHasFragmentUniforms(shaderBuilder, [
       "uniform vec2 model_iblFactor;",
       "uniform mat3 model_iblReferenceFrameMatrix;",
-      "uniform sampler2D model_specularEnvironmentMaps;",
-      "uniform vec2 model_specularEnvironmentMapsSize;",
+      "uniform samplerCube model_specularEnvironmentMaps;",
       "uniform float model_specularEnvironmentMapsMaximumLOD;",
     ]);
 
@@ -200,7 +199,6 @@ describe("Scene/Model/ImageBasedLightingPipelineStage", function () {
     ).toBe(true);
 
     expect(uniformMap.model_specularEnvironmentMaps()).toBeDefined();
-    expect(uniformMap.model_specularEnvironmentMapsSize()).toBeDefined();
     expect(uniformMap.model_specularEnvironmentMapsMaximumLOD()).toBeDefined();
   });
 });

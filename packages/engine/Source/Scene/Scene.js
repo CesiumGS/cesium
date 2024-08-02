@@ -57,7 +57,6 @@ import GlobeTranslucencyState from "./GlobeTranslucencyState.js";
 import InvertClassification from "./InvertClassification.js";
 import JobScheduler from "./JobScheduler.js";
 import MapMode2D from "./MapMode2D.js";
-import OctahedralProjectedCubeMap from "./OctahedralProjectedCubeMap.js";
 import PerformanceDisplay from "./PerformanceDisplay.js";
 import PerInstanceColorAppearance from "./PerInstanceColorAppearance.js";
 import Picking from "./Picking.js";
@@ -69,6 +68,7 @@ import SceneTransforms from "./SceneTransforms.js";
 import SceneTransitioner from "./SceneTransitioner.js";
 import ScreenSpaceCameraController from "./ScreenSpaceCameraController.js";
 import ShadowMap from "./ShadowMap.js";
+import SpecularEnvironmentCubeMap from "./SpecularEnvironmentCubeMap.js";
 import StencilConstants from "./StencilConstants.js";
 import SunLight from "./SunLight.js";
 import SunPostProcess from "./SunPostProcess.js";
@@ -927,7 +927,7 @@ Object.defineProperties(Scene.prototype, {
    */
   specularEnvironmentMapsSupported: {
     get: function () {
-      return OctahedralProjectedCubeMap.isSupported(this._context);
+      return SpecularEnvironmentCubeMap.isSupported(this._context);
     },
   },
 
@@ -3334,7 +3334,7 @@ Scene.prototype.updateEnvironment = function () {
     (!defined(envMapAtlas) || envMapAtlas.url !== envMaps)
   ) {
     envMapAtlas = envMapAtlas && envMapAtlas.destroy();
-    this._specularEnvironmentMapAtlas = new OctahedralProjectedCubeMap(envMaps);
+    this._specularEnvironmentMapAtlas = new SpecularEnvironmentCubeMap(envMaps);
   } else if (!defined(envMaps) && defined(envMapAtlas)) {
     envMapAtlas.destroy();
     this._specularEnvironmentMapAtlas = undefined;

@@ -157,7 +157,6 @@ function UniformState() {
 
   this._sphericalHarmonicCoefficients = undefined;
   this._specularEnvironmentMaps = undefined;
-  this._specularEnvironmentMapsDimensions = new Cartesian2();
   this._specularEnvironmentMapsMaximumLOD = undefined;
 
   this._fogDensity = undefined;
@@ -1095,17 +1094,6 @@ Object.defineProperties(UniformState.prototype, {
   },
 
   /**
-   * The dimensions of the specular environment map atlas of the scene.
-   * @memberof UniformState.prototype
-   * @type {Cartesian2}
-   */
-  specularEnvironmentMapsDimensions: {
-    get: function () {
-      return this._specularEnvironmentMapsDimensions;
-    },
-  },
-
-  /**
    * The maximum level-of-detail of the specular environment map atlas of the scene.
    * @memberof UniformState.prototype
    * @type {number}
@@ -1499,13 +1487,6 @@ UniformState.prototype.update = function (frameState) {
   this._specularEnvironmentMaps = frameState.specularEnvironmentMaps;
   this._specularEnvironmentMapsMaximumLOD =
     frameState.specularEnvironmentMapsMaximumLOD;
-
-  if (defined(this._specularEnvironmentMaps)) {
-    Cartesian2.clone(
-      this._specularEnvironmentMaps.dimensions,
-      this._specularEnvironmentMapsDimensions
-    );
-  }
 
   this._fogDensity = frameState.fog.density;
   this._fogMinimumBrightness = frameState.fog.minimumBrightness;
