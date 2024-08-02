@@ -8,6 +8,7 @@ import {
   Intersect,
   Math as CesiumMath,
   Plane,
+  Ray,
   Rectangle,
   SceneMode,
   TileBoundingRegion,
@@ -285,5 +286,42 @@ describe("Scene/TileBoundingRegion", function () {
     expect(tileBoundingRegion.intersectPlane(plane)).toEqual(
       Intersect.INTERSECTING
     );
+  });
+
+  it("intersectRay throws without ray", function () {
+    expect(function () {
+      tileBoundingRegion.intersectRay();
+    }).toThrowDeveloperError();
+  });
+
+  it("intersectRay returns undefined if there is no intersection", function () {
+    const ray = new Ray();
+    ray.origin = Cartesian3.fromRadians(0.0, 0.0, 2.0);
+    ray.direction = new Cartesian3(0.0, 0.0, -1.0);
+    expect(tileBoundingRegion.intersectRay(ray)).toBeUndefined();
+  });
+
+  it("intersectRay returns intersection", function () {
+    const ray = new Ray();
+    ray.origin = Cartesian3.fromRadians(0.0, 0.0, 0.0);
+    ray.direction = new Cartesian3(0.0, 0.0, -1.0);
+
+    const expectedValue = new Cartesian3(6378137, 0.0, 0.0);
+    expect(tileBoundingRegion.intersectRay(ray)).toEqualEpsilon(
+      expectedValue,
+      CesiumMath.EPSILON8
+    );
+  });
+
+  it("intersectRay ruses result parameter", function () {
+    const ray = new Ray();
+    ray.origin = Cartesian3.fromRadians(0.0, 0.0, 0.0);
+    ray.direction = new Cartesian3(0.0, 0.0, -1.0);
+
+    const result = new Cartesian3();
+    const expectedValue = new Cartesian3(6378137, 0.0, 0.0);
+    const returned = tileBoundingRegion.intersectRay(ray, result);
+    expect(returned).toBe(result);
+    expect(result).toEqualEpsilon(expectedValue, CesiumMath.EPSILON8);
   });
 });

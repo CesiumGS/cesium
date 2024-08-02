@@ -1,4 +1,4 @@
-import { Cartesian3, Ray } from "../../index.js";
+import { Cartesian3, Matrix4, Ray } from "../../index.js";
 
 describe("Core/Ray", function () {
   it("default constructor create zero valued Ray", function () {
@@ -114,5 +114,60 @@ describe("Core/Ray", function () {
     expect(function () {
       Ray.getPoint(ray, undefined);
     }).toThrowDeveloperError();
+  });
+
+  it("transform throws without ray", function () {
+    const transform = Matrix4.IDENTITY;
+    expect(function () {
+      Ray.transform(undefined, transform);
+    }).toThrowDeveloperError();
+  });
+
+  it("transform throws without transform", function () {
+    const ray = new Ray();
+    expect(function () {
+      Ray.transform(ray, undefined);
+    }).toThrowDeveloperError();
+  });
+
+  it("transform works with zero values for ray", function () {
+    const ray = new Ray();
+    const transform = Matrix4.IDENTITY;
+    const result = Ray.transform(ray, transform);
+    expect(result.origin).toEqual(Cartesian3.ZERO);
+    expect(result.direction).toEqual(Cartesian3.ZERO);
+  });
+
+  it("transform works with zero values for transform", function () {
+    const ray = new Ray();
+    ray.origin = new Cartesian3(-3, -2, -1);
+    ray.direction = new Cartesian3(1, 2, 3);
+    const transform = Matrix4.ZERO;
+    const result = Ray.transform(ray, transform);
+    expect(result.origin).toEqual(Cartesian3.ZERO);
+    expect(result.direction).toEqual(Cartesian3.ZERO);
+  });
+
+  it("transform works with non-zero values", function () {
+    const ray = new Ray();
+    ray.origin = new Cartesian3(-3, -2, -1);
+    ray.direction = new Cartesian3(1, 2, 3);
+    const transform = Matrix4.fromUniformScale(2.0);
+    const result = Ray.transform(ray, transform);
+    expect(result.origin).toEqual(new Cartesian3(-6, -4, -2));
+    expect(result.direction).toEqual(new Cartesian3(2, 4, 6));
+  });
+
+  it("transform works with result paramter", function () {
+    const ray = new Ray();
+    ray.origin = new Cartesian3(-3, -2, -1);
+    ray.direction = new Cartesian3(1, 2, 3);
+    const transform = Matrix4.fromUniformScale(2.0);
+
+    const result = new Ray();
+    const returned = Ray.transform(ray, transform, result);
+    expect(returned).toBe(result);
+    expect(result.origin).toEqual(new Cartesian3(-6, -4, -2));
+    expect(result.direction).toEqual(new Cartesian3(2, 4, 6));
   });
 });

@@ -11,6 +11,7 @@ import {
   OrientedBoundingBox,
   Plane,
   Quaternion,
+  Ray,
   Rectangle,
 } from "../../index.js";
 
@@ -1502,6 +1503,217 @@ describe("Core/OrientedBoundingBox", function () {
     expect(function () {
       OrientedBoundingBox.intersectPlane(box, undefined);
     }).toThrowDeveloperError();
+  });
+
+  it("intersectRay fails without box parameter", function () {
+    const ray = new Ray();
+    expect(function () {
+      OrientedBoundingBox.intersectRay(undefined, ray);
+    }).toThrowDeveloperError();
+  });
+
+  it("intersectRay fails without ray parameter", function () {
+    const box = new OrientedBoundingBox(Cartesian3.IDENTITY, Matrix3.ZERO);
+    expect(function () {
+      OrientedBoundingBox.intersectRay(box, undefined);
+    }).toThrowDeveloperError();
+  });
+
+  it("intersectRay works with untransformed box from inside", function () {
+    const box = new OrientedBoundingBox(
+      Cartesian3.ZERO,
+      Matrix3.multiplyByScalar(Matrix3.IDENTITY, 0.5, new Matrix3())
+    );
+
+    const ray = new Ray();
+    ray.direction = new Cartesian3(0.0, 0.0, 1.0);
+
+    let expectedValue = new Cartesian3(0, 0, 0.5);
+    expect(OrientedBoundingBox.intersectRay(box, ray)).toEqual(expectedValue);
+
+    ray.direction = new Cartesian3(0.0, 1.0, 0.0);
+
+    expectedValue = new Cartesian3(0.0, 0.5, 0.0);
+    expect(OrientedBoundingBox.intersectRay(box, ray)).toEqual(expectedValue);
+
+    ray.direction = new Cartesian3(1.0, 0.0, 0.0);
+
+    expectedValue = new Cartesian3(0.5, 0.0, 0.0);
+    expect(OrientedBoundingBox.intersectRay(box, ray)).toEqual(expectedValue);
+
+    ray.direction = new Cartesian3(1.0, 2.0, 3.0);
+    Cartesian3.normalize(ray.direction, ray.direction);
+
+    expectedValue = new Cartesian3(1 / 6, 1 / 3, 0.5);
+    expect(OrientedBoundingBox.intersectRay(box, ray)).toEqualEpsilon(
+      expectedValue,
+      CesiumMath.EPSILON10
+    );
+  });
+
+  it("intersectRay works with untransformed box from outside", function () {
+    const box = new OrientedBoundingBox(
+      Cartesian3.ZERO,
+      Matrix3.multiplyByScalar(Matrix3.IDENTITY, 0.5, new Matrix3())
+    );
+
+    const ray = new Ray();
+    ray.origin = new Cartesian3(0, 0, 2);
+    ray.direction = new Cartesian3(0, 0, -1);
+
+    let expectedValue = new Cartesian3(0, 0, 0.5);
+    expect(OrientedBoundingBox.intersectRay(box, ray)).toEqual(expectedValue);
+
+    ray.origin = new Cartesian3(0, 2, 0);
+    ray.direction = new Cartesian3(0, -1, 0);
+
+    expectedValue = new Cartesian3(0, 0.5, 0);
+    expect(OrientedBoundingBox.intersectRay(box, ray)).toEqual(expectedValue);
+
+    ray.origin = new Cartesian3(2.0, 0.0, 0.0);
+    ray.direction = new Cartesian3(-1.0, 0.0, 0.0);
+
+    expectedValue = new Cartesian3(0.5, 0.0, 0.0);
+    expect(OrientedBoundingBox.intersectRay(box, ray)).toEqual(expectedValue);
+
+    ray.origin = new Cartesian3(2.0, 4.0, 6.0);
+    ray.direction = new Cartesian3(-1.0, -2.0, -3.0);
+    Cartesian3.normalize(ray.direction, ray.direction);
+
+    expectedValue = new Cartesian3(1 / 6, 1 / 3, 0.5);
+    expect(OrientedBoundingBox.intersectRay(box, ray)).toEqualEpsilon(
+      expectedValue,
+      CesiumMath.EPSILON10
+    );
+  });
+
+  it("intersectRay returns undefined when there is no intersection", function () {
+    const box = new OrientedBoundingBox(
+      Cartesian3.ZERO,
+      Matrix3.multiplyByScalar(Matrix3.IDENTITY, 0.5, new Matrix3())
+    );
+
+    const ray = new Ray();
+    ray.origin = new Cartesian3(-1.0, -2.0, -3.0);
+    ray.direction = new Cartesian3(-1.0, -2.0, -3.0);
+    Cartesian3.normalize(ray.direction, ray.direction);
+
+    expect(OrientedBoundingBox.intersectRay(box, ray)).toBeUndefined();
+  });
+
+  it("intersectRay works with off-center box from the inside", function () {
+    let origin = new Cartesian3(1.0, 0.0, 0.0);
+    const box = new OrientedBoundingBox(origin, Matrix3.IDENTITY);
+
+    const ray = new Ray();
+    ray.origin = origin;
+    ray.direction = new Cartesian3(0.0, 0.0, 1.0);
+
+    let expectedValue = new Cartesian3(1.0, 0.0, 1.0);
+    expect(OrientedBoundingBox.intersectRay(box, ray)).toEqualEpsilon(
+      expectedValue,
+      CesiumMath.EPSILON10
+    );
+
+    origin = new Cartesian3(0.7, -1.8, 12.0);
+    box.center = origin;
+
+    ray.origin = origin;
+    expectedValue = new Cartesian3(0.7, -1.8, 13.0);
+    expect(OrientedBoundingBox.intersectRay(box, ray)).toEqualEpsilon(
+      expectedValue,
+      CesiumMath.EPSILON10
+    );
+  });
+
+  it("intersectRay works with off-center box from the outside", function () {
+    let origin = new Cartesian3(1.0, 0.0, 0.0);
+    const box = new OrientedBoundingBox(origin, Matrix3.IDENTITY);
+
+    const ray = new Ray();
+    ray.origin = new Cartesian3(1.0, 0.0, -5.0);
+    ray.direction = new Cartesian3(0.0, 0.0, 1.0);
+
+    let expectedValue = new Cartesian3(1.0, 0.0, -1.0);
+    expect(OrientedBoundingBox.intersectRay(box, ray)).toEqualEpsilon(
+      expectedValue,
+      CesiumMath.EPSILON10
+    );
+
+    origin = new Cartesian3(0.7, -1.8, 12.0);
+    box.center = origin;
+
+    ray.origin = new Cartesian3(0.7, -1.8, 6);
+    expectedValue = new Cartesian3(0.7, -1.8, 11.0);
+    expect(OrientedBoundingBox.intersectRay(box, ray)).toEqualEpsilon(
+      expectedValue,
+      CesiumMath.EPSILON10
+    );
+  });
+
+  it("intersectRay works with off-center scaled box", function () {
+    const origin = new Cartesian3(3.0, 0.0, 7.0);
+    const box = new OrientedBoundingBox(
+      origin,
+      Matrix3.fromScale(new Cartesian3(2.0, 1.0, 1.0))
+    );
+
+    const ray = new Ray();
+    ray.origin = origin;
+    ray.direction = new Cartesian3(2.0, 0.0, 1.0);
+    ray.direction = Cartesian3.normalize(ray.direction, ray.direction);
+
+    let expectedValue = new Cartesian3(5, 0.0, 8.0);
+    expect(OrientedBoundingBox.intersectRay(box, ray)).toEqualEpsilon(
+      expectedValue,
+      CesiumMath.EPSILON10
+    );
+
+    ray.origin = new Cartesian3(-3.0, 0.0, 5.0);
+
+    expectedValue = new Cartesian3(1.0, 0.0, 7.0);
+    expect(OrientedBoundingBox.intersectRay(box, ray)).toEqualEpsilon(
+      expectedValue,
+      CesiumMath.EPSILON10
+    );
+  });
+
+  it("intersectRay works with this arbitrary box", function () {
+    const m = Matrix3.fromScale(new Cartesian3(1.5, 80.4, 2.6), new Matrix3());
+    const n = Matrix3.fromQuaternion(
+      Quaternion.fromAxisAngle(new Cartesian3(0.5, 1.5, -1.2), 1.2),
+      new Matrix3()
+    );
+    Matrix3.multiply(m, n, n);
+
+    const origin = new Cartesian3(-5.1, 0.0, 0.1);
+    const box = new OrientedBoundingBox(origin, n);
+
+    const ray = new Ray();
+    ray.origin = origin;
+    ray.direction = new Cartesian3(0.0, 1.0, 0.0);
+
+    const expectedValue = new Cartesian3(-5.1, 110.66856614565339, 0.1);
+    expect(OrientedBoundingBox.intersectRay(box, ray)).toEqualEpsilon(
+      expectedValue,
+      CesiumMath.EPSILON10
+    );
+  });
+
+  it("intersectRay uses result parameter", function () {
+    const box = new OrientedBoundingBox(
+      Cartesian3.ZERO,
+      Matrix3.multiplyByScalar(Matrix3.IDENTITY, 0.5, new Matrix3())
+    );
+
+    const ray = new Ray();
+    ray.direction = new Cartesian3(0.0, 0.0, 1.0);
+
+    const result = new Cartesian3();
+    const expectedValue = new Cartesian3(0.0, 0.0, 0.5);
+    const returned = OrientedBoundingBox.intersectRay(box, ray, result);
+    expect(returned).toBe(result);
+    expect(result).toEqual(expectedValue);
   });
 
   it("distanceSquaredTo", function () {

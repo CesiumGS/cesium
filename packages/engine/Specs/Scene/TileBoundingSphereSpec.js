@@ -4,6 +4,7 @@ import {
   Intersect,
   Math as CesiumMath,
   Plane,
+  Ray,
   TileBoundingSphere,
 } from "../../index.js";
 
@@ -66,5 +67,46 @@ describe("Scene/TileBoundingSphere", function () {
     expect(tileBoundingSphere.intersectPlane(plane)).toEqual(
       Intersect.INTERSECTING
     );
+  });
+
+  it("intersectRay throws when ray is undefined", function () {
+    expect(function () {
+      return tileBoundingSphere.intersectRay();
+    }).toThrowDeveloperError();
+  });
+
+  it("intersectRay returns undefined if there is no intersection", function () {
+    const ray = new Ray();
+    ray.origin = new Cartesian3(0.0, 0.0, 2.0);
+    ray.direction = new Cartesian3(0.0, 1.0, 0.0);
+
+    expect(tileBoundingSphere.intersectRay(ray)).toBeUndefined();
+  });
+
+  it("intersectRay works with origin inside", function () {
+    const ray = new Ray();
+    ray.direction = new Cartesian3(0.0, 0.0, 1.0);
+
+    const expected = new Cartesian3(0.0, 0.0, 1.0);
+    expect(tileBoundingSphere.intersectRay(ray)).toEqual(expected);
+  });
+
+  it("intersectRay works with origin outside", function () {
+    const ray = new Ray();
+    ray.origin = new Cartesian3(0.0, 0.0, 2.0);
+    ray.direction = new Cartesian3(0.0, 0.0, -1.0);
+
+    const expected = new Cartesian3(0.0, 0.0, 1.0);
+    expect(tileBoundingSphere.intersectRay(ray)).toEqual(expected);
+  });
+
+  it("intersectRay works with result parameter", function () {
+    const ray = new Ray();
+    ray.direction = new Cartesian3(0.0, 0.0, 1.0);
+    const result = new Cartesian3();
+
+    const expected = new Cartesian3(0.0, 0.0, 1.0);
+    expect(tileBoundingSphere.intersectRay(ray, result)).toBe(result);
+    expect(result).toEqual(expected);
   });
 });
