@@ -429,7 +429,7 @@ describe(
       });
     });
 
-    it("CubeMap.fromMipMaps loads all mip levels correctly", function () {
+    it("CubeMap.fromMipmaps loads all mip levels correctly", function () {
       const red = [255, 0, 0, 255];
       const green = [0, 255, 0, 255];
       const blue = [0, 0, 255, 255];
@@ -454,7 +454,8 @@ describe(
 
       cubeMap = CubeMap.fromMipmaps({
         context: webgl2Context,
-        source: [level0, level1],
+        source: level0,
+        mipLevels: [level1],
         sampler: new Sampler({
           minificationFilter: TextureMinificationFilter.NEAREST_MIPMAP_LINEAR,
         }),
@@ -472,7 +473,7 @@ describe(
       });
     });
 
-    it("CubeMap.fromMipMaps works in WebGL 1", function () {
+    it("CubeMap.fromMipmaps works in WebGL 1", function () {
       const webgl1Context = createContext({
         requestWebgl1: true,
       });
@@ -501,7 +502,8 @@ describe(
 
       cubeMap = CubeMap.fromMipmaps({
         context: webgl1Context,
-        source: [level0, level1],
+        source: level0,
+        mipLevels: [level1],
         sampler: new Sampler({
           minificationFilter: TextureMinificationFilter.NEAREST_MIPMAP_LINEAR,
         }),

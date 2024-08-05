@@ -184,7 +184,8 @@ SpecularEnvironmentCubeMap.prototype.update = function (frameState) {
 
   this._texture = CubeMap.fromMipmaps({
     context: context,
-    source: cubeMapBuffers,
+    source: cubeMapBuffers[0],
+    mipLevels: cubeMapBuffers.slice(1),
     flipY: false,
     pixelDatatype: pixelDatatype,
     pixelFormat: pixelFormat,

@@ -14,10 +14,34 @@ import TextureMagnificationFilter from "./TextureMagnificationFilter.js";
 import TextureMinificationFilter from "./TextureMinificationFilter.js";
 
 /**
+ * @typedef CubeMap.BufferSource
+ *
+ * Exactly one of <code>arrayBufferView</code> or <code>bufferView</code> must be defined.
+ * @property {TypedArray} [arrayBufferView] A view of a binary data buffer containing pixel values.
+ * @property {TypedArray} [bufferView] A view of a binary data buffer containing pixel values, e.g. from a KTX2 file.
+ * @property {number} width The width of one face of the cube map, in pixels. Must be equal to height.
+ * @property {number} height The height of one face of the cube map, in pixels. Must be equal to width.
+ *
+ * @private
+ */
+
+/**
+ * @typedef CubeMap.Source
+ *
+ * @property {ImageData|HTMLImageElement|HTMLCanvasElement|HTMLVideoElement|CubeMap.BufferSource} positiveX
+ * @property {ImageData|HTMLImageElement|HTMLCanvasElement|HTMLVideoElement|CubeMap.BufferSource} negativeX
+ * @property {ImageData|HTMLImageElement|HTMLCanvasElement|HTMLVideoElement|CubeMap.BufferSource} positiveY
+ * @property {ImageData|HTMLImageElement|HTMLCanvasElement|HTMLVideoElement|CubeMap.BufferSource} negativeY
+ * @property {ImageData|HTMLImageElement|HTMLCanvasElement|HTMLVideoElement|CubeMap.BufferSource} positiveZ
+ * @property {ImageData|HTMLImageElement|HTMLCanvasElement|HTMLVideoElement|CubeMap.BufferSource} negativeZ
+ */
+
+/**
  * @typedef CubeMap.ConstructorOptions
  *
  * @property {Context} context
- * @property {object} [source] The source for texel values to be loaded into the texture
+ * @property {CubeMap.Source} [source] The source for texel values to be loaded into the texture.
+ * @property {CubeMap.Source[]} [mipLevels] The source for texel values to be loaded into the higher mip levels (level >= 1).
  * @property {PixelFormat} [pixelFormat=PixelFormat.RGBA] The format of each pixel, i.e., the number of components it has and what they represent.
  * @property {PixelDatatype} [pixelDatatype=PixelDatatype.UNSIGNED_BYTE] The data type of each pixel.
  * @property {boolean} [flipY=true] If true, the source values will be read as if the y-axis is inverted (y=0 at the top).
@@ -233,53 +257,10 @@ CubeMap.faceNames = Object.freeze([
  */
 CubeMap.fromMipmaps = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  const { source, skipColorSpaceConversion } = options;
-
-  //>>includeStart('debug', pragmas.debug);
-  Check.defined("options.source", source);
-
-  if (!Array.isArray(source)) {
-    throw new DeveloperError(`options.source must be an array`);
-  }
-  const faceSize = source[0].positiveX.width;
-  const mipCount = Math.log2(faceSize) + 1;
-  if (source.length !== mipCount) {
-    throw new DeveloperError(`all mip levels must be defined`);
-  }
-  // TODO: Verify that the structure of each mip level matches the first.
-  //>>includeEnd('debug');
-
-  options.source = source[0];
   const cubeMap = new CubeMap(options);
 
-  const gl = cubeMap._context._gl;
-  const texture = cubeMap._texture;
-  const textureTarget = cubeMap._textureTarget;
-
-  gl.activeTexture(gl.TEXTURE0);
-  gl.bindTexture(textureTarget, texture);
-
-  if (skipColorSpaceConversion) {
-    gl.pixelStorei(gl.UNPACK_COLORSPACE_CONVERSION_WEBGL, gl.NONE);
-  } else {
-    gl.pixelStorei(
-      gl.UNPACK_COLORSPACE_CONVERSION_WEBGL,
-      gl.BROWSER_DEFAULT_WEBGL
-    );
-  }
-
-  const faceNames = CubeMap.faceNames;
-  for (let mipLevel = 1; mipLevel < source.length; mipLevel++) {
-    const mipSource = source[mipLevel];
-    for (let j = 0; j < faceNames.length; j++) {
-      const faceName = faceNames[j];
-      loadFace(cubeMap[faceName], mipSource[faceName], mipLevel);
-    }
-  }
-
-  gl.bindTexture(textureTarget, null);
-
-  cubeMap._hasMipmap = true;
+  const { mipLevels, skipColorSpaceConversion } = options;
+  cubeMap.loadMipmaps(mipLevels, skipColorSpaceConversion);
 
   return cubeMap;
 };
@@ -288,12 +269,13 @@ CubeMap.fromMipmaps = function (options) {
  * Load texel data into one face of a cube map.
  *
  * @param {CubeMapFace} cubeMapFace The face to which texel values will be loaded.
- * @param {object} [source] The source for texel values to be loaded into the texture.
- * @param {number} mipLevel The mip level to which the texel values will be loaded.
+ * @param {ImageData|HTMLImageElement|HTMLCanvasElement|HTMLVideoElement|CubeMap.BufferSource} [source] The source for texel values to be loaded into the texture.
+ * @param {number} [mipLevel=0] The mip level to which the texel values will be loaded.
  *
  * @private
  */
 function loadFace(cubeMapFace, source, mipLevel) {
+  mipLevel = defaultValue(mipLevel, 0);
   const targetFace = cubeMapFace._targetFace;
   const size = Math.max(Math.floor(cubeMapFace._size / 2 ** mipLevel), 1);
   const pixelFormat = cubeMapFace._pixelFormat;
@@ -505,6 +487,60 @@ function setupSampler(cubeMap, sampler) {
   }
   gl.bindTexture(target, null);
 }
+
+/**
+ * Load a complete mipmap chain for each cubemap face.
+ *
+ * @param {CubeMap.Source[]} source The source data for each mip level.
+ * @param {boolean} [skipColorSpaceConversion=false] If true, color space conversions will be skipped when reading the texel values.
+ *
+ * @private
+ */
+CubeMap.prototype.loadMipmaps = function (source, skipColorSpaceConversion) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("source", source);
+  if (!Array.isArray(source)) {
+    throw new DeveloperError(`source must be an array`);
+  }
+  const mipCount = Math.log2(this._size);
+  if (source.length !== mipCount) {
+    throw new DeveloperError(`all mip levels must be defined`);
+  }
+  // TODO: Verify that the structure of each mip level matches the first.
+  //>>includeEnd('debug');
+
+  skipColorSpaceConversion = defaultValue(skipColorSpaceConversion, false);
+  const gl = this._context._gl;
+  const texture = this._texture;
+  const textureTarget = this._textureTarget;
+
+  gl.activeTexture(gl.TEXTURE0);
+  gl.bindTexture(textureTarget, texture);
+
+  if (skipColorSpaceConversion) {
+    gl.pixelStorei(gl.UNPACK_COLORSPACE_CONVERSION_WEBGL, gl.NONE);
+  } else {
+    gl.pixelStorei(
+      gl.UNPACK_COLORSPACE_CONVERSION_WEBGL,
+      gl.BROWSER_DEFAULT_WEBGL
+    );
+  }
+
+  const faceNames = CubeMap.faceNames;
+  for (let i = 0; i < source.length; i++) {
+    const mipSource = source[i];
+    // mipLevel 0 was the base layer, already loaded when the CubeMap was constructed.
+    const mipLevel = i + 1;
+    for (let j = 0; j < faceNames.length; j++) {
+      const faceName = faceNames[j];
+      loadFace(this[faceName], mipSource[faceName], mipLevel);
+    }
+  }
+
+  gl.bindTexture(textureTarget, null);
+
+  this._hasMipmap = true;
+};
 
 /**
  * Generates a complete mipmap chain for each cubemap face.
