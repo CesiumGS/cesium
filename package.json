@@ -104,6 +104,8 @@
     "yargs": "^17.0.1"
   },
   "scripts": {
+    "link-source": "cd Source && npm link",
+    "link-cesium": "cd project && npm link cesium",
     "prepare": "gulp prepare && husky && playwright install --with-deps",
     "start": "node server.js",
     "start-public": "node server.js --public",

@@ -31,6 +31,8 @@ export interface HttpOptions extends LoadingOptions {
   errorMessage?: string
   // 请求成功后的自定义显示消息
   successMessage?: string
+  // url统一前缀
+  prefix?: boolean
 }
 
 // 分页
@@ -76,7 +78,7 @@ export default class Http {
    */
   private static async request<T>(options: HttpOptions): Promise<Data<T>> {
     let { url, loading } = options
-    const { method, params, data, target, text, isDownload, errorMessage, successMessage } = options
+    const { method, params, data, target, text, isDownload, errorMessage, successMessage, prefix=true } = options
     // url校验
     if (!url) throw new Error('The request url is required')
     if (!url.startsWith('/')) url = `/${url}`
@@ -118,7 +120,7 @@ export default class Http {
     // 加载loading
     let close
     loading && (close = Loading.show(target, text))
-    url = `${this.apiUri}${url}`
+    if (prefix) url = `${this.apiUri}${url}`
     try {
       // 发起请求
       const resp = await fetch(url, {
@@ -149,7 +151,7 @@ export default class Http {
         throw new Error(`${result.msg}`)
       }
       // 0失败 1成功
-      else if (result.code === 1) {
+      else if (result.code === 200) {
         successMessage && Message.success(successMessage)
         return result.data
       }

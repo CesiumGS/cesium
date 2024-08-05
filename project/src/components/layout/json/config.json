@@ -1,0 +1,13 @@
+{
+  "title": "基础模板系统",
+  "source": "local",
+  "background": "url('../src/assets/image/top.png')",
+  "logoTitle": "山东省气候业务平台",
+  "menuUrl": "",
+  "setPass": true,
+  "login": true,
+  "redirect": "/index",
+  "showTime": true,
+  "logout": true,
+  "userinfo": true
+}

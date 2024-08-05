@@ -1,0 +1,122 @@
+.layout-container {
+  width: 100%;
+  height: 100%;
+  color: #333;
+  display: flex;
+  flex-wrap: wrap;
+  flex-direction: column;
+  .main-top {
+    position: relative;
+    width: 100%;
+    height: 66px;
+    display: flex;
+    user-select: none;
+    justify-content: space-between;
+    background-size: calc(100% + 20px);
+    background-repeat: no-repeat;
+    box-shadow: 4px 4px 4px 0 rgba(14, 67, 215, 0.2);
+    .logo {
+      height: 100%;
+      //width: 500px;
+      display: flex;
+      align-items: center;
+      .dec-item {
+        width: 4px;
+        height: 45px;
+        background: #ffffff;
+      }
+      .cloud {
+        width: 40px;
+        height: 32px;
+        margin-left: 15px;
+      }
+      .title {
+        font-size: 28px;
+        font-weight: 700;
+        margin-left: 10px;
+        box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.25);
+        white-space: nowrap;
+
+        background-image: linear-gradient(89.38deg, #0AE4DC 0%, #008BFF 165.92%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+    }
+    .menu-1 {
+      height: 100%;
+      background-color: transparent;
+      :deep(.el-menu-item) {
+        font-size: 22px;
+        font-weight: 700;
+        color: rgba(171, 183, 206, 1);
+        &:hover {
+          background: transparent;
+        }
+        &:focus,
+        &.is-active {
+          background: rgba(216, 230, 255, 0.2);
+          background-image: linear-gradient(89.38deg, #0AE4DC 0%, #008BFF 165.92%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+        }
+      }
+    }
+    ul.infos {
+      color: #fff;
+      display: flex;
+      align-items: center;
+      margin-right: 30px;
+      font-size: 14px;
+
+      li > .iconfont,
+      li.user-info > .info-content {
+        cursor: pointer;
+      }
+
+      li:not(:last-child) {
+        border-right: 1px solid rgba(255, 255, 255, 0.5);
+        padding-right: 15px;
+      }
+
+      li:not(:first-child) {
+        padding-left: 15px;
+      }
+
+      li:last-child > .iconfont {
+        font-size: 24px;
+      }
+
+      li.user-info > .info-content {
+        display: flex;
+        align-items: center;
+        column-gap: 8px;
+      }
+    }
+  }
+  .main-wrapper {
+    //height: 100%;
+    //background: #00B7FF;
+    width: 100%;
+    flex: 1;
+    display: flex;
+    user-select: none;
+    position: relative;
+    .isCollapse {
+      width: 64px;
+    }
+    .router-main {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-content: flex-start;
+    }
+    .signal-main {
+      width: 100%;
+      height: 100%;
+    }
+    .cache-page-wrapper {
+      width: 100%;
+      height: 100%;
+    }
+  }
+}

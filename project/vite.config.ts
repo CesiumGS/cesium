@@ -24,7 +24,8 @@ export default defineConfig(config => ({
   ],
   resolve: {
     alias: {
-      '@': fileURLToPath(new URL('./src', import.meta.url))
+      '@': fileURLToPath(new URL('./src', import.meta.url)),
+      cesium: '../src/Source/Cesium.js',
     }
   },
   base: '/',

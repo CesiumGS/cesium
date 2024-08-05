@@ -11,14 +11,17 @@
     "type-check": "vue-tsc --noEmit -p tsconfig.app.json --composite false",
     "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix --ignore-path .gitignore --ignore-pattern /src/assets/icons/*",
     "format": "prettier --write src/",
-    "prepare": "husky"
+    "prepare": "husky",
+    "init-server": "pnpm run --filter server start"
   },
   "dependencies": {
+    "@element-plus/icons": "^0.0.11",
     "@turf/turf": "~6.5.0",
     "@vueuse/core": "~10.10.0",
     "dayjs": "~1.11.11",
     "echarts": "~5.5.0",
     "element-plus": "~2.7.4",
+    "express": "^4.19.2",
     "file-saver": "~2.0.5",
     "html2canvas": "~1.4.1",
     "jszip": "~3.10.1",
@@ -28,7 +31,9 @@
     "pinia": "~2.1.7",
     "pinia-plugin-persistedstate": "~3.2.1",
     "vue": "~3.4.27",
-    "vue-router": "~4.3.2"
+    "vue-router": "~4.3.2",
+    "vxe-pc-ui": "v4",
+    "vxe-table": "v4"
   },
   "devDependencies": {
     "@commitlint/cli": "~19.3.0",

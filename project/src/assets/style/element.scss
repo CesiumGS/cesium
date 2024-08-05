@@ -1,3 +1,47 @@
 :root {
   // 在此处定义覆盖element-plus的样式
+  .test {
+    --el-color-primary: #1984f3;
+    --el-color-primary-light-3: #5ea8f6;
+    --el-color-primary-light-5: #8cc1f9;
+    --el-color-primary-light-7: #badafb;
+    --el-color-primary-light-8: #d1e6fc;
+    --el-color-primary-light-9: #e8f2fd;
+    --el-color-primary-dark-2: #1984f3;
+    --el-color-success: #55de12;
+    --el-color-success-light-3: #88e759;
+    --el-color-success-light-5: #aaee88;
+    --el-color-success-light-7: #ccf5b7;
+    --el-color-success-light-8: #ddf8cf;
+    --el-color-success-light-9: #eefbe7;
+    --el-color-success-dark-2: #55de12;
+    --el-color-warning: #ea9412;
+    --el-color-warning-light-3: #f0b459;
+    --el-color-warning-light-5: #f4c988;
+    --el-color-warning-light-7: #f8deb7;
+    --el-color-warning-light-8: #fae9cf;
+    --el-color-warning-light-9: #fcf4e7;
+    --el-color-warning-dark-2: #ea9412;
+    --el-color-danger: #e12020;
+    --el-color-danger-light-3: #ea6262;
+    --el-color-danger-light-5: #f08f8f;
+    --el-color-danger-light-7: #f6bcbc;
+    --el-color-danger-light-8: #f9d2d2;
+    --el-color-danger-light-9: #fce8e8;
+    --el-color-danger-dark-2: #e12020;
+    --el-color-error: #e12020;
+    --el-color-error-light-3: #ea6262;
+    --el-color-error-light-5: #f08f8f;
+    --el-color-error-light-7: #f6bcbc;
+    --el-color-error-light-8: #f9d2d2;
+    --el-color-error-light-9: #fce8e8;
+    --el-color-error-dark-2: #e12020;
+    --el-color-info: #209399;
+    --el-color-info-light-3: #62b3b7;
+    --el-color-info-light-5: #8fc9cc;
+    --el-color-info-light-7: #bcdee0;
+    --el-color-info-light-8: #d2e9ea;
+    --el-color-info-light-9: #e8f4f4;
+    --el-color-info-dark-2: #209399;
+  }
 }
