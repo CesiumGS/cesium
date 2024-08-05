@@ -1,0 +1,29 @@
+@font-face {
+  font-family: 'mt-serve';
+  src: url('./iconfont.woff2?t=1650965439020') format('woff2'), url('./iconfont.woff?t=1650965439020') format('woff'),
+    url('./iconfont.ttf?t=1650965439020') format('truetype');
+}
+
+.mt-icons-serve {
+  font-family: 'mt-serve' !important;
+  font-size: 16px;
+  font-style: normal;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.mt-serve-shuiwenzhan:before {
+  content: '\e686';
+}
+
+.mt-serve-daba:before {
+  content: '\e687';
+}
+
+.mt-serve-yuliangzhan:before {
+  content: '\e688';
+}
+
+.mt-serve-shuidianzhan:before {
+  content: '\e689';
+}

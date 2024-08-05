@@ -1,0 +1,178 @@
+@font-face {
+  font-family: 'mt-observe';
+  src: url('./iconfont.woff2?t=1650965527326') format('woff2'), url('./iconfont.woff?t=1650965527326') format('woff'),
+    url('./iconfont.ttf?t=1650965527326') format('truetype'),
+    url('./iconfont.svg?t=1650965527326#iconfont') format('svg');
+}
+
+.mt-icons-observe {
+  font-family: 'mt-observe' !important;
+  font-size: 16px;
+  font-style: normal;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.mt-station-benditai:before {
+  content: '\e67e';
+}
+
+.mt-location-2d:before {
+  content: '\e67f';
+}
+
+.mt-observe-fangcang:before {
+  content: '\e680';
+}
+
+.mt-observe-gpstancehuojian:before {
+  content: '\e681';
+}
+
+.mt-station-bianxieduoyaosuqixiangzhan:before {
+  content: '\e682';
+}
+
+.mt-observe-dianchang:before {
+  content: '\e683';
+}
+
+.mt-radar-xboduan:before {
+  content: '\e684';
+}
+
+.mt-station-countryground:before {
+  content: '\e685';
+}
+
+.mt-station-daqiao:before {
+  content: '\e686';
+}
+
+.mt-satellite-fengyun2:before {
+  content: '\e687';
+}
+
+.mt-observe-gnssme:before {
+  content: '\e688';
+}
+
+.mt-radar-fengkuoxian:before {
+  content: '\e689';
+}
+
+.mt-station-neilao:before {
+  content: '\e68a';
+}
+
+.mt-radar-713:before {
+  content: '\e68b';
+}
+
+.mt-satellite-kuihua:before {
+  content: '\e68c';
+}
+
+.mt-radar-haomibo:before {
+  content: '\e68d';
+}
+
+.mt-satellite-fengyun3:before {
+  content: '\e68e';
+}
+
+.mt-station-qixiangshuiwen:before {
+  content: '\e68f';
+}
+
+.mt-station-jiaotong:before {
+  content: '\e690';
+}
+
+.mt-station-country:before {
+  content: '\e691';
+}
+
+.mt-observe-chengxiang:before {
+  content: '\e692';
+}
+
+.mt-station-sheshinongye:before {
+  content: '\e693';
+}
+
+.mt-radar-duopulei:before {
+  content: '\e694';
+}
+
+.mt-radar-weimaichong:before {
+  content: '\e695';
+}
+
+.mt-location-3d:before {
+  content: '\e696';
+}
+
+.mt-tankongqiqiu:before {
+  content: '\e697';
+}
+
+.mt-radar-tankong:before {
+  content: '\e698';
+}
+
+.mt-station-area:before {
+  content: '\e699';
+}
+
+.mt-radar-weixingyu:before {
+  content: '\e69a';
+}
+
+.mt-radar-shuangbochangamanjiguangleida:before {
+  content: '\e69b';
+}
+
+.mt-station-shengtai:before {
+  content: '\e69c';
+}
+
+.mt-station-turanshuifen:before {
+  content: '\e69d';
+}
+
+.mt-radar-xiangkongzhen:before {
+  content: '\e69e';
+}
+
+.mt-satellite-fengyun4:before {
+  content: '\e69f';
+}
+
+.mt-observe-yudipu:before {
+  content: '\e6a0';
+}
+
+.mt-instrument-shiwendu:before {
+  content: '\e6a1';
+}
+
+.mt-observe-fushe:before {
+  content: '\e6a2';
+}
+
+.mt-station-wenshiqiti:before {
+  content: '\e6a3';
+}
+
+.mt-station-ditufeng:before {
+  content: '\e6a4';
+}
+
+.mt-station-xiadianmainwendu:before {
+  content: '\e6a5';
+}
+
+.mt-instrument-yuliang:before {
+  content: '\e6a6';
+}

@@ -1,0 +1,11 @@
+{
+  "extends": [
+    "@commitlint/config-conventional"
+  ],
+  "rules": {
+    "type-enum": [2, "always", [
+      "build", "ci", "docs", "feat", "update",  "fix", "perf", "refactor", "style"
+    ]]
+  },
+  "helpUrl": "http://192.168.1.160:8118/pages/devSpec/commit.html"
+}

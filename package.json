@@ -107,6 +107,7 @@
     "prepare": "gulp prepare && husky && playwright install --with-deps",
     "start": "node server.js",
     "start-public": "node server.js --public",
+    "dev": "cd project && npm run dev",
     "build": "gulp build",
     "build-release": "gulp buildRelease",
     "build-watch": "gulp buildWatch",

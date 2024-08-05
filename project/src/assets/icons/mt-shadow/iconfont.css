@@ -1,0 +1,79 @@
+@font-face {
+  font-family: "mt-shadow"; /* Project id 3292654 */
+  src: url('./iconfont.woff2?t=1650965501171') format('woff2'),
+       url('./iconfont.woff?t=1650965501171') format('woff'),
+       url('./iconfont.ttf?t=1650965501171') format('truetype');
+}
+
+.mt-icons-shadow {
+  font-family: "mt-shadow" !important;
+  font-size: 16px;
+  font-style: normal;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.mt-shadow-zuoyerenyuan:before {
+  content: "\e683";
+}
+
+.mt-shadow-rocket:before {
+  content: "\e684";
+}
+
+.mt-shadow-gaopaodan:before {
+  content: "\e685";
+}
+
+.mt-shadow-plane:before {
+  content: "\e686";
+}
+
+.mt-shadow-feibiaozhunkufang:before {
+  content: "\e687";
+}
+
+.mt-shadow-bigsafebox:before {
+  content: "\e688";
+}
+
+.mt-shadow-oven:before {
+  content: "\e689";
+}
+
+.mt-shadow-point-move:before {
+  content: "\e68a";
+}
+
+.mt-shadow-huojiandan:before {
+  content: "\e68b";
+}
+
+.mt-shadow-jianzhuwukufang:before {
+  content: "\e68c";
+}
+
+.mt-shadow-smallsafebox:before {
+  content: "\e68d";
+}
+
+.gaopao:before {
+  content: "\e68e";
+}
+
+.mt-shadow-safebox:before {
+  content: "\e68f";
+}
+
+.mt-shadow-point-fix:before {
+  content: "\e690";
+}
+
+.mt-shadow-unit:before {
+  content: "\e691";
+}
+
+.mt-shadow-yantiao:before {
+  content: "\e692";
+}
+

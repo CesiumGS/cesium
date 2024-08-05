@@ -1,0 +1,104 @@
+@font-face {
+  font-family: "mt-alarm"; /* Project id 3286393 */
+  src: url('iconfont.woff2?t=1651025558704') format('woff2'),
+       url('iconfont.woff?t=1651025558704') format('woff'),
+       url('iconfont.ttf?t=1651025558704') format('truetype'),
+       url('iconfont.svg?t=1651025558704#iconfont') format('svg');
+}
+
+.mt-icons-alarm {
+  font-family: "mt-alarm" !important;
+  font-size: 16px;
+  font-style: normal;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.mt-alarm-hail:before {
+  content: "\e689";
+}
+
+.mt-alarm-fog:before {
+  content: "\e65c";
+}
+
+.mt-alarm-haze:before {
+  content: "\e65d";
+}
+
+.mt-alarm-hongshui:before {
+  content: "\e662";
+}
+
+.mt-alarm-dsqjiangshui:before {
+  content: "\e65f";
+}
+
+.mt-alarm-baoyu:before {
+  content: "\e656";
+}
+
+.mt-alarm-dafeng:before {
+  content: "\e657";
+}
+
+.mt-alarm-dizhizhaihai:before {
+  content: "\e658";
+}
+
+.mt-alarm-lowtemp:before {
+  content: "\e65a";
+}
+
+.mt-alarm-drought:before {
+  content: "\e65b";
+}
+
+.mt-alarm-chengshineilao:before {
+  content: "\e65e";
+}
+
+.mt-alarm-other:before {
+  content: "\e660";
+}
+
+.mt-alarm-maxtemp:before {
+  content: "\e661";
+}
+
+.mt-alarm-senlinhuoxian:before {
+  content: "\e663";
+}
+
+.mt-alarm-thunder:before {
+  content: "\e664";
+}
+
+.mt-alarm-shanhong:before {
+  content: "\e665";
+}
+
+.mt-alarm-radar:before {
+  content: "\e666";
+}
+
+.mt-alarm-reyuanhuodian:before {
+  content: "\e667";
+}
+
+.mt-alarm-runoff:before {
+  content: "\e668";
+}
+
+.mt-alarm-waterlevel:before {
+  content: "\e669";
+}
+
+.mt-alarm-snowfall:before {
+  content: "\e66a";
+}
+
+.mt-alarm-qiangjiangwen:before {
+  content: "\e66b";
+}
+

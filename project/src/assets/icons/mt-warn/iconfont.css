@@ -1,0 +1,413 @@
+@font-face {
+  font-family: 'mt-warn';
+  src: url('./iconfont.woff2?t=1650965720322') format('woff2'), url('./iconfont.woff?t=1650965720322') format('woff'),
+    url('./iconfont.ttf?t=1650965720322') format('truetype');
+}
+
+.mt-icons-warn {
+  font-family: 'mt-warn' !important;
+  font-size: 16px;
+  font-style: normal;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.mt-warn-organge-other:before {
+  content: '\e6cf';
+}
+
+.mt-warn-red-other:before {
+  content: '\e6d0';
+}
+
+.mt-warn-yellow-other:before {
+  content: '\e6d1';
+}
+
+.mt-warn-blue-other:before {
+  content: '\e6d2';
+}
+
+.mt-warn-blue-geodisaster:before {
+  content: '\e6c0';
+}
+
+.mt-warn-blue-sandstorm:before {
+  content: '\e6c1';
+}
+
+.mt-warn-red-fog:before {
+  content: '\e6c2';
+}
+
+.mt-warn-yellow-sandstorm:before {
+  content: '\e6c3';
+}
+
+.mt-warn-red-geodisaster:before {
+  content: '\e6c4';
+}
+
+.mt-warn-red-blizzard:before {
+  content: '\e6c5';
+}
+
+.mt-warn-blue-torrent:before {
+  content: '\e6c6';
+}
+
+.mt-warn-blue-snow:before {
+  content: '\e6c7';
+}
+
+.mt-warn-blue-thunderwind:before {
+  content: '\e6c8';
+}
+
+.mt-warn-red-sandstorm:before {
+  content: '\e6c9';
+}
+
+.mt-warn-organge-blizzard:before {
+  content: '\e6ca';
+}
+
+.mt-warn-organge-coldwave:before {
+  content: '\e6cb';
+}
+
+.mt-warn-red-iceroad:before {
+  content: '\e6cc';
+}
+
+.mt-warn-red-thunderwind:before {
+  content: '\e6cd';
+}
+
+.mt-warn-organge-torrent:before {
+  content: '\e6ce';
+}
+
+.mt-warn-red-typhoon:before {
+  content: '\e66f';
+}
+
+.mt-warn-yellow-drought:before {
+  content: '\e670';
+}
+
+.mt-warn-red-waterlogging:before {
+  content: '\e671';
+}
+
+.mt-warn-yellow-fog:before {
+  content: '\e672';
+}
+
+.mt-warn-yellow-lowtemp:before {
+  content: '\e673';
+}
+
+.mt-warn-yellow-frozen:before {
+  content: '\e674';
+}
+
+.mt-warn-yellow-haze:before {
+  content: '\e675';
+}
+
+.mt-warn-yellow-coldwave:before {
+  content: '\e676';
+}
+
+.mt-warn-yellow-flood:before {
+  content: '\e677';
+}
+
+.mt-warn-yellow-typhoon:before {
+  content: '\e678';
+}
+
+.mt-warn-blue-haze:before {
+  content: '\e679';
+}
+
+.mt-warn-yellow-blizzard:before {
+  content: '\e67a';
+}
+
+.mt-warn-yellow-thunder:before {
+  content: '\e67b';
+}
+
+.mt-warn-yellow-rainstorm:before {
+  content: '\e67c';
+}
+
+.mt-warn-yellow-iceroad:before {
+  content: '\e67d';
+}
+
+.mt-warn-yellow-gale:before {
+  content: '\e67e';
+}
+
+.mt-warn-organge-frozen:before {
+  content: '\e67f';
+}
+
+.mt-warn-organge-mountainflood:before {
+  content: '\e680';
+}
+
+.mt-warn-yellow-geodisaster:before {
+  content: '\e681';
+}
+
+.mt-warn-yellow-snow:before {
+  content: '\e682';
+}
+
+.mt-warn-yellow-foreastfire:before {
+  content: '\e683';
+}
+
+.mt-warn-blue-flood:before {
+  content: '\e684';
+}
+
+.mt-warn-red-flood:before {
+  content: '\e685';
+}
+
+.mt-warn-blue-mountainflood:before {
+  content: '\e686';
+}
+
+.mt-warn-blue-strongcool:before {
+  content: '\e687';
+}
+
+.mt-warn-blue-gale:before {
+  content: '\e688';
+}
+
+.mt-warn-yellow-hail:before {
+  content: '\e689';
+}
+
+.mt-warn-blue-blizzard:before {
+  content: '\e68a';
+}
+
+.mt-warn-yellow-mountainflood:before {
+  content: '\e68b';
+}
+
+.mt-warn-yellow-hightemp:before {
+  content: '\e68c';
+}
+
+.mt-warn-organge-hightemp:before {
+  content: '\e68d';
+}
+
+.mt-warn-blue-drought:before {
+  content: '\e68e';
+}
+
+.mt-warn-red-gale:before {
+  content: '\e68f';
+}
+
+.mt-warn-red-hightemp:before {
+  content: '\e690';
+}
+
+.mt-warn-red-frozen:before {
+  content: '\e691';
+}
+
+.mt-warn-blue-lowtemp:before {
+  content: '\e692';
+}
+
+.mt-warn-blue-typhoon:before {
+  content: '\e693';
+}
+
+.mt-warn-organge-haze:before {
+  content: '\e694';
+}
+
+.mt-warn-yellow-strongcool:before {
+  content: '\e695';
+}
+
+.mt-warn-red-drought:before {
+  content: '\e696';
+}
+
+.mt-warn-organge-fog:before {
+  content: '\e697';
+}
+
+.mt-warn-organge-geodisaster:before {
+  content: '\e698';
+}
+
+.mt-warn-red-thunder:before {
+  content: '\e699';
+}
+
+.mt-warn-yellow-torrent:before {
+  content: '\e69a';
+}
+
+.mt-warn-red-coldwave:before {
+  content: '\e69b';
+}
+
+.mt-warn-organge-foreastfire:before {
+  content: '\e69c';
+}
+
+.mt-warn-blue-rainstorm:before {
+  content: '\e69d';
+}
+
+.mt-warn-organge-drought:before {
+  content: '\e69e';
+}
+
+.mt-warn-organge-hail:before {
+  content: '\e69f';
+}
+
+.mt-warn-red-hail:before {
+  content: '\e6a0';
+}
+
+.mt-warn-organge-strongcool:before {
+  content: '\e6a1';
+}
+
+.mt-warn-red-mountainflood:before {
+  content: '\e6a2';
+}
+
+.mt-warn-red-snow:before {
+  content: '\e6a3';
+}
+
+.mt-warn-organge-rainstorm:before {
+  content: '\e6a4';
+}
+
+.mt-warn-organge-lowtemp:before {
+  content: '\e6a5';
+}
+
+.mt-warn-blue-frozen:before {
+  content: '\e6a6';
+}
+
+.mt-warn-blue-coldwave:before {
+  content: '\e6a7';
+}
+
+.mt-warn-red-strongcool:before {
+  content: '\e6a8';
+}
+
+.mt-warn-organge-thunder:before {
+  content: '\e6a9';
+}
+
+.mt-warn-blue-foreastfire:before {
+  content: '\e6aa';
+}
+
+.mt-warn-blue-hail:before {
+  content: '\e6ab';
+}
+
+.mt-warn-red-rainstorm:before {
+  content: '\e6ac';
+}
+
+.mt-warn-organge-iceroad:before {
+  content: '\e6ad';
+}
+
+.mt-warn-yellow-waterlogging:before {
+  content: '\e6ae';
+}
+
+.mt-warn-organge-sandstorm:before {
+  content: '\e6af';
+}
+
+.mt-warn-yellow-thunderwind:before {
+  content: '\e6b0';
+}
+
+.mt-warn-blue-thunder:before {
+  content: '\e6b1';
+}
+
+.mt-warn-blue-waterlogging:before {
+  content: '\e6b2';
+}
+
+.mt-warn-organge-typhoon:before {
+  content: '\e6b3';
+}
+
+.mt-warn-red-haze:before {
+  content: '\e6b4';
+}
+
+.mt-warn-organge-thunderwind:before {
+  content: '\e6b5';
+}
+
+.mt-warn-red-foreastfire:before {
+  content: '\e6b6';
+}
+
+.mt-warn-red-lowtemp:before {
+  content: '\e6b7';
+}
+
+.mt-warn-blue-hightemp:before {
+  content: '\e6b8';
+}
+
+.mt-warn-organge-flood:before {
+  content: '\e6b9';
+}
+
+.mt-warn-organge-gale:before {
+  content: '\e6ba';
+}
+
+.mt-warn-red-torrent:before {
+  content: '\e6bb';
+}
+
+.mt-warn-organge-snow:before {
+  content: '\e6bc';
+}
+
+.mt-warn-blue-fog:before {
+  content: '\e6bd';
+}
+
+.mt-warn-blue-iceroad:before {
+  content: '\e6be';
+}
+
+.mt-warn-organge-waterlogging:before {
+  content: '\e6bf';
+}

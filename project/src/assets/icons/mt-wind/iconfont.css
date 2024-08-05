@@ -1,0 +1,108 @@
+@font-face {
+  font-family: "mt-wind"; /* Project id 3283198 */
+  src: url('iconfont.woff2?t=1653881229521') format('woff2'),
+       url('iconfont.woff?t=1653881229521') format('woff'),
+       url('iconfont.ttf?t=1653881229521') format('truetype'),
+       url('iconfont.svg?t=1653881229521#iconfont') format('svg');
+}
+
+.mt-icons-wind {
+  font-family: "mt-wind" !important;
+  font-size: 16px;
+  font-style: normal;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.mt-windy-300223:before {
+  content: "\e68d";
+}
+
+.mt-windy-300222:before {
+  content: "\e68b";
+}
+
+.mt-windy-300201:before {
+  content: "\e64b";
+}
+
+.mt-windy-300202:before {
+  content: "\e64c";
+}
+
+.mt-windy-300203:before {
+  content: "\e64d";
+}
+
+.mt-windy-300209:before {
+  content: "\e64e";
+}
+
+.mt-windy-300208:before {
+  content: "\e64f";
+}
+
+.mt-windy-300206:before {
+  content: "\e650";
+}
+
+.mt-windy-300211:before {
+  content: "\e651";
+}
+
+.mt-windy-300207:before {
+  content: "\e652";
+}
+
+.mt-windy-300215:before {
+  content: "\e653";
+}
+
+.mt-windy-300204:before {
+  content: "\e654";
+}
+
+.mt-windy-300212:before {
+  content: "\e655";
+}
+
+.mt-windy-300210:before {
+  content: "\e656";
+}
+
+.mt-windy-300213:before {
+  content: "\e657";
+}
+
+.mt-windy-300205:before {
+  content: "\e658";
+}
+
+.mt-windy-300217:before {
+  content: "\e659";
+}
+
+.mt-windy-300218:before {
+  content: "\e65a";
+}
+
+.mt-windy-300221:before {
+  content: "\e65b";
+}
+
+.mt-windy-300220:before {
+  content: "\e65c";
+}
+
+.mt-windy-300216:before {
+  content: "\e65d";
+}
+
+.mt-windy-300214:before {
+  content: "\e65e";
+}
+
+.mt-windy-300219:before {
+  content: "\e65f";
+}
+

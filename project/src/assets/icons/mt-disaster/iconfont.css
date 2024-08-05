@@ -1,0 +1,160 @@
+@font-face {
+  font-family: "mt-disaster";
+  src: url('./iconfont.woff2?t=1650965559871') format('woff2'),
+       url('./iconfont.woff?t=1650965559871') format('woff'),
+       url('./iconfont.ttf?t=1650965559871') format('truetype'),
+       url('./iconfont.svg?t=1650965559871#iconfont') format('svg');
+}
+
+.mt-icons-disaster {
+  font-family: "mt-disaster" !important;
+  font-size: 16px;
+  font-style: normal;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.dizhizaihaiyinhuandian:before {
+  content: "\e698";
+}
+
+.zhongyaodanwei:before {
+  content: "\e699";
+}
+
+.zhongxiaoheliu:before {
+  content: "\e69a";
+}
+
+.mt-units-public-shangchang:before {
+  content: "\e68c";
+}
+
+.mt-units-scenic-4a:before {
+  content: "\e677";
+}
+
+.mt-units-farm-park:before {
+  content: "\e678";
+}
+
+.mt-risk-city-yilaodian:before {
+  content: "\e679";
+}
+
+.mt-risk-dizai-bengta:before {
+  content: "\e67a";
+}
+
+.mt-risk-dizai-dimiancengjiang:before {
+  content: "\e67b";
+}
+
+.mt-units-scenic-5a:before {
+  content: "\e67c";
+}
+
+.mt-units-facility-difang:before {
+  content: "\e67d";
+}
+
+.mt-prevention-warn-monitor:before {
+  content: "\e67e";
+}
+
+.mt-risk-dizai-doupo:before {
+  content: "\e67f";
+}
+
+.mt-units-scenic-3a:before {
+  content: "\e680";
+}
+
+.mt-prevention-warn-guangbo:before {
+  content: "\e681";
+}
+
+.mt-risk-dizai-xiepo:before {
+  content: "\e682";
+}
+
+.mt-risk-dizai-foreastfire:before {
+  content: "\e683";
+}
+
+.mt-units-public-huochezhan:before {
+  content: "\e684";
+}
+
+.mt-units-company-fadianzhan:before {
+  content: "\e685";
+}
+
+.mt-prevention-country-changsuo:before {
+  content: "\e686";
+}
+
+.mt-units-public-jichang:before {
+  content: "\e687";
+}
+
+.mt-units-company-gongkuang:before {
+  content: "\e688";
+}
+
+.mt-prevention-site-guangchang:before {
+  content: "\e689";
+}
+
+.mt-risk-dizai-wadi:before {
+  content: "\e68a";
+}
+
+.mt-units-public-yiyuan:before {
+  content: "\e68b";
+}
+
+.mt-risk-dizai-nishiliu:before {
+  content: "\e68d";
+}
+
+.mt-units-company-yiranyibaodian:before {
+  content: "\e68e";
+}
+
+.mt-prevention-site-yingji:before {
+  content: "\e68f";
+}
+
+.mt-units-facility-qiaoliang:before {
+  content: "\e690";
+}
+
+.mt-units-public-qichezhan:before {
+  content: "\e691";
+}
+
+.mt-risk-dizai-huapo:before {
+  content: "\e692";
+}
+
+.mt-prevention-warn-laba:before {
+  content: "\e693";
+}
+
+.mt-risk-shanhonggou:before {
+  content: "\e694";
+}
+
+.mt-units-public-xuexiao:before {
+  content: "\e695";
+}
+
+.mt-units-facility-shuiku:before {
+  content: "\e696";
+}
+
+.mt-prevention-site-chubei:before {
+  content: "\e697";
+}
+
