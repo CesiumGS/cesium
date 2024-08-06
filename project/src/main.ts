@@ -4,13 +4,14 @@ import '@/assets/style/base.scss'
 // pinia
 import { createPinia } from 'pinia'
 import piniaPluginPersistedState from 'pinia-plugin-persistedstate'
+import 'cesium/Source/Widgets/widgets.css'
 
 // icons 需要使用时取消注释
 // import '@/assets/icons/icons.scss'
 // import '@/assets/icons/icons'
 
 import App from './App.vue'
-import router from '@/components/layout/router'
+import router from '@/router'
 
 import Loading from '@/common/loading'
 import Message from '@/common/message'

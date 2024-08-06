@@ -34,6 +34,9 @@ export default defineConfig(config => ({
     host: '0.0.0.0',
     open: false,
     proxy,
+    fs: {
+      allow: ['..']
+    },
     watch: {
       ignored: [fileURLToPath(new URL('./src/components/layout/json/menu.json', import.meta.url))],
     }
@@ -53,6 +56,9 @@ export default defineConfig(config => ({
         }
       }
     }
+  },
+  define: {
+    CESIUM_BASE_URL: JSON.stringify('./Source')
   },
   esbuild: {
     // 构建时删除控制台输出语句

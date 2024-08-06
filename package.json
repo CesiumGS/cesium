@@ -43,6 +43,9 @@
     }
   },
   "type": "module",
+  "files": [
+    "Source"
+  ],
   "sideEffects": [
     "./Source/ThirdParty/**/*",
     "./Source/Widgets/**/*.css",

@@ -67,7 +67,6 @@ function getCesiumBaseUrl() {
     );
   }
   //>>includeEnd('debug');
-
   baseResource = new Resource({
     url: tryMakeAbsolute(baseUrlString),
   });
