@@ -280,7 +280,7 @@ function generateDeclaration(workspace, file) {
     assignmentName = `_shaders${assignmentName}`;
   }
   assignmentName = assignmentName.replace(/(\.|-)/g, "_");
-  return `export { ${assignmentName} } from '../packages/${workspace}';`;
+  return `export { ${assignmentName} } from '@${scope}/${workspace}';`;
 }
 
 /**
@@ -437,8 +437,8 @@ const shaderFiles = [
 export async function glslToJavaScript(minify, minifyStateFilePath, workspace) {
   await writeFile(minifyStateFilePath, minify.toString());
   const minifyStateFileLastModified = existsSync(minifyStateFilePath)
-    ? statSync(minifyStateFilePath).mtime.getTime()
-    : 0;
+                                      ? statSync(minifyStateFilePath).mtime.getTime()
+                                      : 0;
 
   // collect all currently existing JS files into a set, later we will remove the ones
   // we still are using from the set, then delete any files remaining in the set.
@@ -488,8 +488,8 @@ export async function glslToJavaScript(minify, minifyStateFilePath, workspace) {
 
       const jsFileExists = existsSync(jsFile);
       const jsFileModified = jsFileExists
-        ? statSync(jsFile).mtime.getTime()
-        : 0;
+                             ? statSync(jsFile).mtime.getTime()
+                             : 0;
       const glslFileModified = statSync(glslFile).mtime.getTime();
 
       if (
