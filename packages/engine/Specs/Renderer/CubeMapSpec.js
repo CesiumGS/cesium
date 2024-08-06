@@ -438,14 +438,14 @@ describe(
       const cyan = [0, 255, 255, 255];
 
       const level0colors = [red, green, blue, yellow, magenta, cyan];
-      const level0 = CubeMap.faceNames.reduce((level, faceName, index) => {
+      const level0 = CubeMap.getFaceNames().reduce((level, faceName, index) => {
         const color = level0colors[index];
         const colorData = new Uint8Array([color, color, color, color].flat());
         level[faceName] = { width: 2, height: 2, arrayBufferView: colorData };
         return level;
       }, {});
       const level1colors = [yellow, magenta, cyan, red, green, blue];
-      const level1 = CubeMap.faceNames.reduce((level, faceName, index) => {
+      const level1 = CubeMap.getFaceNames().reduce((level, faceName, index) => {
         const color = level1colors[index];
         const colorData = new Uint8Array(color);
         level[faceName] = { width: 1, height: 1, arrayBufferView: colorData };
@@ -486,14 +486,14 @@ describe(
       const cyan = [0, 255, 255, 255];
 
       const level0colors = [red, green, blue, yellow, magenta, cyan];
-      const level0 = CubeMap.faceNames.reduce((level, faceName, index) => {
+      const level0 = CubeMap.getFaceNames().reduce((level, faceName, index) => {
         const color = level0colors[index];
         const colorData = new Uint8Array([color, color, color, color].flat());
         level[faceName] = { width: 2, height: 2, arrayBufferView: colorData };
         return level;
       }, {});
       const level1colors = [yellow, magenta, cyan, red, green, blue];
-      const level1 = CubeMap.faceNames.reduce((level, faceName, index) => {
+      const level1 = CubeMap.getFaceNames().reduce((level, faceName, index) => {
         const color = level1colors[index];
         const colorData = new Uint8Array(color);
         level[faceName] = { width: 1, height: 1, arrayBufferView: colorData };

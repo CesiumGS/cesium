@@ -90,22 +90,24 @@ function CubeMap(options) {
 
   let { width, height } = options;
 
-  const faceNames = CubeMap.faceNames;
-
   if (defined(source)) {
     //>>includeStart('debug', pragmas.debug);
-    if (!faceNames.every((faceName) => defined(source[faceName]))) {
+    if (
+      !CubeMap.getFaceNames().every((faceName) => defined(source[faceName]))
+    ) {
       throw new DeveloperError(
-        `options.source requires faces ${faceNames.join(", ")}.`
+        `options.source requires faces ${Array.from(
+          CubeMap.getFaceNames()
+        ).join(", ")}.`
       );
     }
     //>>includeEnd('debug');
 
-    ({ width, height } = source[faceNames[0]]);
+    ({ width, height } = source.positiveX);
 
     //>>includeStart('debug', pragmas.debug);
-    for (let i = 1; i < 6; ++i) {
-      const face = source[faceNames[i]];
+    for (const faceName of CubeMap.getFaceNames()) {
+      const face = source[faceName];
       if (Number(face.width) !== width || Number(face.height) !== height) {
         throw new DeveloperError(
           "Each face in options.source must have the same width and height."
@@ -230,22 +232,49 @@ function CubeMap(options) {
     );
   }
 
-  for (let i = 0; i < faceNames.length; i++) {
-    const faceName = faceNames[i];
+  for (const faceName of CubeMap.getFaceNames()) {
     loadFace(this[faceName], source?.[faceName], 0);
   }
 
   gl.bindTexture(textureTarget, null);
 }
 
-CubeMap.faceNames = Object.freeze([
-  "positiveX",
-  "negativeX",
-  "positiveY",
-  "negativeY",
-  "positiveZ",
-  "negativeZ",
-]);
+/**
+ * An enum defining the names of the faces of a cube map.
+ *
+ * @alias {CubeMap.FaceNames}
+ * @enum {string}
+ *
+ * @private
+ */
+CubeMap.FaceName = Object.freeze({
+  POSITIVEX: "positiveX",
+  NEGATIVEX: "negativeX",
+  POSITIVEY: "positiveY",
+  NEGATIVEY: "negativeY",
+  POSITIVEZ: "positiveZ",
+  NEGATIVEZ: "negativeZ",
+});
+
+function* makeFacesIterator() {
+  yield CubeMap.FaceName.POSITIVEX;
+  yield CubeMap.FaceName.NEGATIVEX;
+  yield CubeMap.FaceName.POSITIVEY;
+  yield CubeMap.FaceName.NEGATIVEY;
+  yield CubeMap.FaceName.POSITIVEZ;
+  yield CubeMap.FaceName.NEGATIVEZ;
+}
+
+/**
+ * Creates an iterator for looping over the cubemap faces.
+ *
+ * @type {Iterable<CubeMap.FaceName>}
+ *
+ * @private
+ */
+CubeMap.getFaceNames = function () {
+  return makeFacesIterator();
+};
 
 /**
  * Creates a CubeMap, using a texel data source that includes pre-generated mipmaps.
@@ -506,7 +535,27 @@ CubeMap.prototype.loadMipmaps = function (source, skipColorSpaceConversion) {
   if (source.length !== mipCount) {
     throw new DeveloperError(`all mip levels must be defined`);
   }
-  // TODO: Verify that the structure of each mip level matches the first.
+  // Verify that each mip level has the required faces with correct sizes.
+  for (let i = 0; i < source.length; i++) {
+    const mipSource = source[i];
+    const mipLevel = i + 1;
+    const mipSize = Math.max(Math.floor(this._size / 2 ** mipLevel), 1);
+    for (const faceName of CubeMap.getFaceNames()) {
+      const face = mipSource[faceName];
+      if (!defined(face)) {
+        throw new DeveloperError(
+          `Each mip level requires faces ${Array.from(
+            CubeMap.getFaceNames()
+          ).join(", ")}.`
+        );
+      }
+      if (Number(face.width) !== mipSize || Number(face.height) !== mipSize) {
+        throw new DeveloperError(
+          "Each face must have the same width and height."
+        );
+      }
+    }
+  }
   //>>includeEnd('debug');
 
   skipColorSpaceConversion = defaultValue(skipColorSpaceConversion, false);
@@ -526,13 +575,11 @@ CubeMap.prototype.loadMipmaps = function (source, skipColorSpaceConversion) {
     );
   }
 
-  const faceNames = CubeMap.faceNames;
   for (let i = 0; i < source.length; i++) {
     const mipSource = source[i];
     // mipLevel 0 was the base layer, already loaded when the CubeMap was constructed.
     const mipLevel = i + 1;
-    for (let j = 0; j < faceNames.length; j++) {
-      const faceName = faceNames[j];
+    for (const faceName of CubeMap.getFaceNames()) {
       loadFace(this[faceName], mipSource[faceName], mipLevel);
     }
   }

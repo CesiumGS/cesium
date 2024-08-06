@@ -170,7 +170,7 @@ SpecularEnvironmentCubeMap.prototype.update = function (frameState) {
     // for roughness 1.0.
     // Fill the remaining levels with null values, to avoid WebGL errors.
     const dummyMipLevel = {};
-    CubeMap.faceNames.forEach((faceName) => {
+    CubeMap.getFaceNames().forEach((faceName) => {
       dummyMipLevel[faceName] = undefined;
     });
     for (let mipLevel = mipLevels; mipLevel < expectedMipLevels; mipLevel++) {
