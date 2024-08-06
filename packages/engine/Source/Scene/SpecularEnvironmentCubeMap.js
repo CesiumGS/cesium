@@ -182,15 +182,16 @@ SpecularEnvironmentCubeMap.prototype.update = function (frameState) {
     minificationFilter: TextureMinificationFilter.LINEAR_MIPMAP_LINEAR,
   });
 
-  this._texture = CubeMap.fromMipmaps({
+  const cubeMap = new CubeMap({
     context: context,
     source: cubeMapBuffers[0],
-    mipLevels: cubeMapBuffers.slice(1),
     flipY: false,
     pixelDatatype: pixelDatatype,
     pixelFormat: pixelFormat,
     sampler: sampler,
   });
+  cubeMap.loadMipmaps(cubeMapBuffers.slice(1));
+  this._texture = cubeMap;
 
   this._texture.maximumMipmapLevel = this._maximumMipmapLevel;
   context.textureCache.addTexture(this._url, this._texture);

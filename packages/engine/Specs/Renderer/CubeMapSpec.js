@@ -429,7 +429,7 @@ describe(
       });
     });
 
-    it("CubeMap.fromMipmaps loads all mip levels correctly", function () {
+    it("loadMipmaps loads all mip levels correctly", function () {
       const red = [255, 0, 0, 255];
       const green = [0, 255, 0, 255];
       const blue = [0, 0, 255, 255];
@@ -444,6 +444,15 @@ describe(
         level[faceName] = { width: 2, height: 2, arrayBufferView: colorData };
         return level;
       }, {});
+
+      cubeMap = new CubeMap({
+        context: webgl2Context,
+        source: level0,
+        sampler: new Sampler({
+          minificationFilter: TextureMinificationFilter.NEAREST_MIPMAP_LINEAR,
+        }),
+      });
+
       const level1colors = [yellow, magenta, cyan, red, green, blue];
       const level1 = CubeMap.getFaceNames().reduce((level, faceName, index) => {
         const color = level1colors[index];
@@ -452,14 +461,7 @@ describe(
         return level;
       }, {});
 
-      cubeMap = CubeMap.fromMipmaps({
-        context: webgl2Context,
-        source: level0,
-        mipLevels: [level1],
-        sampler: new Sampler({
-          minificationFilter: TextureMinificationFilter.NEAREST_MIPMAP_LINEAR,
-        }),
-      });
+      cubeMap.loadMipmaps([level1]);
 
       expectCubeMapFaces({
         cubeMap: cubeMap,
@@ -473,7 +475,7 @@ describe(
       });
     });
 
-    it("CubeMap.fromMipmaps works in WebGL 1", function () {
+    it("loadMipmaps works in WebGL 1", function () {
       const webgl1Context = createContext({
         requestWebgl1: true,
       });
@@ -492,6 +494,15 @@ describe(
         level[faceName] = { width: 2, height: 2, arrayBufferView: colorData };
         return level;
       }, {});
+
+      cubeMap = new CubeMap({
+        context: webgl1Context,
+        source: level0,
+        sampler: new Sampler({
+          minificationFilter: TextureMinificationFilter.NEAREST_MIPMAP_LINEAR,
+        }),
+      });
+
       const level1colors = [yellow, magenta, cyan, red, green, blue];
       const level1 = CubeMap.getFaceNames().reduce((level, faceName, index) => {
         const color = level1colors[index];
@@ -500,14 +511,7 @@ describe(
         return level;
       }, {});
 
-      cubeMap = CubeMap.fromMipmaps({
-        context: webgl1Context,
-        source: level0,
-        mipLevels: [level1],
-        sampler: new Sampler({
-          minificationFilter: TextureMinificationFilter.NEAREST_MIPMAP_LINEAR,
-        }),
-      });
+      cubeMap.loadMipmaps([level1]);
 
       expectCubeMapFaces({
         cubeMap: cubeMap,

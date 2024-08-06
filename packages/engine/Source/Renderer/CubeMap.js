@@ -41,7 +41,6 @@ import TextureMinificationFilter from "./TextureMinificationFilter.js";
  *
  * @property {Context} context
  * @property {CubeMap.Source} [source] The source for texel values to be loaded into the texture.
- * @property {CubeMap.Source[]} [mipLevels] The source for texel values to be loaded into the higher mip levels (level >= 1).
  * @property {PixelFormat} [pixelFormat=PixelFormat.RGBA] The format of each pixel, i.e., the number of components it has and what they represent.
  * @property {PixelDatatype} [pixelDatatype=PixelDatatype.UNSIGNED_BYTE] The data type of each pixel.
  * @property {boolean} [flipY=true] If true, the source values will be read as if the y-axis is inverted (y=0 at the top).
@@ -277,24 +276,6 @@ CubeMap.getFaceNames = function () {
 };
 
 /**
- * Creates a CubeMap, using a texel data source that includes pre-generated mipmaps.
- *
- * @param {CubeMap.ConstructorOptions} options An object describing initialization options.
- * @returns {CubeMap}
- *
- * @private
- */
-CubeMap.fromMipmaps = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  const cubeMap = new CubeMap(options);
-
-  const { mipLevels, skipColorSpaceConversion } = options;
-  cubeMap.loadMipmaps(mipLevels, skipColorSpaceConversion);
-
-  return cubeMap;
-};
-
-/**
  * Load texel data into one face of a cube map.
  *
  * @param {CubeMapFace} cubeMapFace The face to which texel values will be loaded.
@@ -520,7 +501,7 @@ function setupSampler(cubeMap, sampler) {
 /**
  * Load a complete mipmap chain for each cubemap face.
  *
- * @param {CubeMap.Source[]} source The source data for each mip level.
+ * @param {CubeMap.Source[]} source The source data for each mip level, beginning at level 1.
  * @param {boolean} [skipColorSpaceConversion=false] If true, color space conversions will be skipped when reading the texel values.
  *
  * @private
@@ -534,27 +515,6 @@ CubeMap.prototype.loadMipmaps = function (source, skipColorSpaceConversion) {
   const mipCount = Math.log2(this._size);
   if (source.length !== mipCount) {
     throw new DeveloperError(`all mip levels must be defined`);
-  }
-  // Verify that each mip level has the required faces with correct sizes.
-  for (let i = 0; i < source.length; i++) {
-    const mipSource = source[i];
-    const mipLevel = i + 1;
-    const mipSize = Math.max(Math.floor(this._size / 2 ** mipLevel), 1);
-    for (const faceName of CubeMap.getFaceNames()) {
-      const face = mipSource[faceName];
-      if (!defined(face)) {
-        throw new DeveloperError(
-          `Each mip level requires faces ${Array.from(
-            CubeMap.getFaceNames()
-          ).join(", ")}.`
-        );
-      }
-      if (Number(face.width) !== mipSize || Number(face.height) !== mipSize) {
-        throw new DeveloperError(
-          "Each face must have the same width and height."
-        );
-      }
-    }
   }
   //>>includeEnd('debug');
 
