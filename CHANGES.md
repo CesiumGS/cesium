@@ -1,5 +1,7 @@
 # Change Log
 
+- Fixed the PointCloudShading.normalShading parameter. Now it disables shading using normals if point cloud contains normals, but the parameter is set to false. [#12066](https://github.com/CesiumGS/cesium/pull/12066)
+
 ### 1.121 - 2024-09-01
 
 #### @cesium/engine
