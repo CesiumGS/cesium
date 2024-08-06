@@ -2868,6 +2868,7 @@ function update3D(controller) {
 
 const scratchAdjustHeightTransform = new Matrix4();
 const scratchAdjustHeightCartographic = new Cartographic();
+const transformOrigin = new Cartesian3();
 
 function adjustHeightForTerrain(controller, cameraChanged) {
   controller._adjustedHeightForTerrain = true;
@@ -2900,31 +2901,38 @@ function adjustHeightForTerrain(controller, cameraChanged) {
 
   let heightUpdated = false;
   if (cartographic.height < controller._minimumCollisionTerrainHeight) {
-    const globeHeight = controller._scene.globeHeight;
-    if (defined(globeHeight)) {
-      const height = globeHeight + controller.minimumZoomDistance;
-      const difference = globeHeight - controller._lastGlobeHeight;
-      const percentDifference = difference / controller._lastGlobeHeight;
+    let transformOriginLen = Infinity;
+    if (defined(transform)) {
+      Matrix4.getTranslation(transform, transformOrigin);
+      transformOriginLen = Cartesian3.magnitude(transformOrigin);
+    }
+    if (transformOriginLen > controller._minimumCollisionTerrainHeight) {
+      const globeHeight = controller._scene.globeHeight;
+      if (defined(globeHeight)) {
+        const height = globeHeight + controller.minimumZoomDistance;
+        const difference = globeHeight - controller._lastGlobeHeight;
+        const percentDifference = difference / controller._lastGlobeHeight;
 
-      // Unless the camera has been moved by user input, to avoid big jumps during tile loads
-      // only make height updates when the globe height has been fairly stable across several frames
-      if (
-        cartographic.height < height &&
-        (cameraChanged || Math.abs(percentDifference) <= 0.1)
-      ) {
-        cartographic.height = height;
-        if (mode === SceneMode.SCENE3D) {
-          ellipsoid.cartographicToCartesian(cartographic, camera.position);
-        } else {
-          projection.project(cartographic, camera.position);
+        // Unless the camera has been moved by user input, to avoid big jumps during tile loads
+        // only make height updates when the globe height has been fairly stable across several frames
+        if (
+          cartographic.height < height &&
+          (cameraChanged || Math.abs(percentDifference) <= 0.1)
+        ) {
+          cartographic.height = height;
+          if (mode === SceneMode.SCENE3D) {
+            ellipsoid.cartographicToCartesian(cartographic, camera.position);
+          } else {
+            projection.project(cartographic, camera.position);
+          }
+          heightUpdated = true;
         }
-        heightUpdated = true;
-      }
 
-      if (cameraChanged || Math.abs(percentDifference) <= 0.1) {
-        controller._lastGlobeHeight = globeHeight;
-      } else {
-        controller._lastGlobeHeight += difference * 0.1;
+        if (cameraChanged || Math.abs(percentDifference) <= 0.1) {
+          controller._lastGlobeHeight = globeHeight;
+        } else {
+          controller._lastGlobeHeight += difference * 0.1;
+        }
       }
     }
   }
