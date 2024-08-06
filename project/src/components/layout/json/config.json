@@ -6,7 +6,7 @@
   "menuUrl": "",
   "setPass": true,
   "login": true,
-  "redirect": "/index",
+  "redirect": "/engine",
   "showTime": true,
   "logout": true,
   "userinfo": true

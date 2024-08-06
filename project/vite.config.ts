@@ -33,7 +33,10 @@ export default defineConfig(config => ({
   server: {
     host: '0.0.0.0',
     open: false,
-    proxy
+    proxy,
+    watch: {
+      ignored: [fileURLToPath(new URL('./src/components/layout/json/menu.json', import.meta.url))],
+    }
   },
   build: {
     chunkSizeWarningLimit: 5120,

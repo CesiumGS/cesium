@@ -105,6 +105,7 @@
   },
   "scripts": {
     "dev": "cd project && npm run dev",
+    "init-server": "cd project && npm run init-server",
     "prepare": "gulp prepare && husky && playwright install --with-deps",
     "start": "node server.js",
     "start-public": "node server.js --public",

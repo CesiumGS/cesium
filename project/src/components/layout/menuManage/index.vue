@@ -101,7 +101,7 @@
 
 <script lang="ts" setup>
 import { reactive, ref, shallowRef } from 'vue'
-import { VxeTableInstance } from 'vxe-table'
+import type { VxeTableInstance } from 'vxe-table'
 import useMenuStore from '@/components/layout/store/menu'
 import addMenu from './addMenu/index.vue'
 import { menuProps } from '@/components/layout/utils/config'
