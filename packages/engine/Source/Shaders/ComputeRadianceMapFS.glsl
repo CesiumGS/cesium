@@ -32,12 +32,12 @@ float computeOcclusion(vec3 positionWC, vec3 normalWC, float ellipsoidRadius, fl
     return 1.0 / (2.0 * czm_pi) * abs(sin(czm_pi - alpha));
 }
 
-void main() {
+void main() {    
     float height = length(u_positionWC);
     float ellipsoidHeight = height - u_radiiAndDynamicAtmosphereColor.y;
     float radius = max(u_radiiAndDynamicAtmosphereColor.x - height, 2.0 * ellipsoidHeight);
 
-    vec3 direction = (u_enuToFixedFrame * getCubeMapDirection(v_textureCoordinates, u_faceDirection)).xyz * vec3(-1.0, -1.0, 1.0); // TODO: Where does this come from?
+    vec3 direction = (u_enuToFixedFrame * getCubeMapDirection(v_textureCoordinates, u_faceDirection)).xyz * vec3(1.0, 1.0, -1.0); // TODO: Where does this come from?
     vec3 normalizedDirection = normalize(direction);
 
     czm_ray ray = czm_ray(u_positionWC, normalizedDirection);
@@ -72,8 +72,8 @@ void main() {
     float transmittance = transmittanceModifier + clamp(1.0 - skyColor.a, 0.0, 1.0);
     
     // Scale the sky radiance based on the overall amount of un-occluded light
-    float scalar = computeOcclusion(u_positionWC, normalizedDirection, u_radiiAndDynamicAtmosphereColor.y, radius);
-    vec3 adjustedSkyColor = skyColor.rgb * scalar * transmittance;
+    float scalar = 1.61;//computeOcclusion(u_positionWC, normalizedDirection, u_radiiAndDynamicAtmosphereColor.y, radius);
+    vec3 adjustedSkyColor = skyColor.rgb * scalar;// * transmittance;
 
     vec4 color = vec4(mix(sceneSkyBox, adjustedSkyColor, skyColor.a), 1.0);
 
@@ -90,8 +90,10 @@ void main() {
     // #ifndef HDR
     //     color.rgb = vec3(1.0) - exp(-fExposure * color.rgb);
     // #else
-        color.rgb = czm_saturation(color.rgb, 0.65);
+        color.rgb = czm_saturation(color.rgb, 0.8);
     // #endif
+
+    color.rgb = czm_gammaCorrect(color.rgb);
 
     out_FragColor = color;
 }

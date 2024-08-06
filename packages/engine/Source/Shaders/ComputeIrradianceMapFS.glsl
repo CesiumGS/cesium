@@ -1,5 +1,4 @@
-uniform ivec2 u_textureDimensions;
-uniform sampler2D u_octahedralTexture;
+uniform samplerCube u_radianceMap;
 
 in vec2 v_textureCoordinates;
 
@@ -103,7 +102,7 @@ void main() {
 
         // Sample the color from the specular environment map
         vec3 lookupDirection = vec3(-direction.x, -direction.y, direction.z);
-        vec4 color = vec4(czm_sampleOctahedralProjection(u_octahedralTexture, vec2(u_textureDimensions), lookupDirection , 0.0, 1.0), 1.0);
+        vec4 color = czm_textureCube(u_radianceMap, lookupDirection, 0.0);
 
         // Use the relevant function for this coefficient
         float Ylm = SHb[coefficientIndex];

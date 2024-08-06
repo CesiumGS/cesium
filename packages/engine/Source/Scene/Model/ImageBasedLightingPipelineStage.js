@@ -25,7 +25,7 @@ ImageBasedLightingPipelineStage.process = function (
   const shaderBuilder = renderResources.shaderBuilder;
 
   // If environment maps are not specifically provided, use procedural lighting.
-  const specularEnvironmentMapAtlas = environmentMapManager.radianceMapAtlas;
+  const specularEnvironmentMapAtlas = environmentMapManager.radianceCubeMap;
   const sphericalHarmonicCoefficients =
     environmentMapManager.sphericalHarmonicCoefficients;
 
@@ -81,8 +81,7 @@ ImageBasedLightingPipelineStage.process = function (
     }
 
     if (
-      defined(specularEnvironmentMapAtlas) &&
-      specularEnvironmentMapAtlas.ready
+      defined(specularEnvironmentMapAtlas)
     ) {
       shaderBuilder.addDefine(
         "SPECULAR_IBL",
@@ -151,13 +150,10 @@ ImageBasedLightingPipelineStage.process = function (
 
   if (defined(specularEnvironmentMapAtlas)) {
     uniformMap.model_specularEnvironmentMaps = function () {
-      return specularEnvironmentMapAtlas.texture;
-    };
-    uniformMap.model_specularEnvironmentMapsSize = function () {
-      return specularEnvironmentMapAtlas.texture.dimensions;
+      return specularEnvironmentMapAtlas;
     };
     uniformMap.model_specularEnvironmentMapsMaximumLOD = function () {
-      return specularEnvironmentMapAtlas.maximumMipmapLevel;
+      return environmentMapManager.maximumMipmapLevel;
     };
   }
 

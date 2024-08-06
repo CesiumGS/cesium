@@ -2286,7 +2286,7 @@ function updateReferenceMatrices(model, frameState) {
   const context = frameState.context;
 
   const ibl = model._imageBasedLighting;
-  if (ibl.useSphericalHarmonicCoefficients || ibl.useSpecularEnvironmentMaps) {
+ // if (ibl.useSphericalHarmonicCoefficients || ibl.useSpecularEnvironmentMaps) {
     let iblReferenceFrameMatrix3 = scratchIBLReferenceFrameMatrix3;
     let iblReferenceFrameMatrix4 = scratchIBLReferenceFrameMatrix4;
 
@@ -2308,7 +2308,7 @@ function updateReferenceMatrices(model, frameState) {
       iblReferenceFrameMatrix3,
       model._iblReferenceFrameMatrix
     );
-  }
+  //}
 
   if (model.isClippingEnabled()) {
     let clippingPlanesMatrix = scratchClippingPlanesMatrix;

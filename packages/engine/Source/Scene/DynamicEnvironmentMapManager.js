@@ -6,23 +6,27 @@ import ComputeCommand from "../Renderer/ComputeCommand.js";
 import Framebuffer from "../Renderer/Framebuffer.js";
 import Texture from "../Renderer/Texture.js";
 import PixelDatatype from "../Renderer/PixelDatatype";
-import Sampler from "../Renderer/Sampler.js";
-import TextureMinificationFilter from "../Renderer/TextureMinificationFilter.js";
 import PixelFormat from "../Core/PixelFormat";
+import Sampler from "../Renderer/Sampler.js";
+import ShaderProgram from "../Renderer/ShaderProgram.js";
 import ShaderSource from "../Renderer/ShaderSource.js";
+import TextureMinificationFilter from "../Renderer/TextureMinificationFilter.js";
 import SkyAtmosphereCommon from "../Shaders/SkyAtmosphereCommon.js";
 import AtmosphereCommon from "../Shaders/AtmosphereCommon.js";
 import ComputeIrradianceMapFS from "../Shaders/ComputeIrradianceMapFS.js";
 import ComputeRadianceMapFS from "../Shaders/ComputeRadianceMapFS.js";
 import ConvolveSpecularMapFS from "../Shaders/ConvolveSpecularMapFS.js";
+import ConvolveSpecularMapVS from "../Shaders/ConvolveSpecularMapVS.js";
 import CesiumMath from "../Core/Math.js";
 import CubeMap from "../Renderer/CubeMap.js";
-import OctahedralProjectedCubeMap from "./OctahedralProjectedCubeMap.js";
 import Cartesian2 from "../Core/Cartesian2.js";
 import Transforms from "../Core/Transforms.js";
 import Matrix4 from "../Core/Matrix4.js";
 import JulianDate from "../Core/JulianDate.js";
 
+/**
+ * TODO
+ */
 function DynamicEnvironmentMapManager() {
   this._position = undefined;
   this.enabled = true;
@@ -30,17 +34,18 @@ function DynamicEnvironmentMapManager() {
   this._radianceCommandsDirty = true;
   this._radianceMapDirty = true;
   this._convolutionsCommandsDirty = false;
-  this._radianceMapAtlasDirty = false;
   this._irradianceCommandDirty = false;
   this._irradianceTextureDirty = false;
 
-  this._mipmapLevels = 6; 
+  this._mipmapLevels = 10; // TODO: get this from texture dimensions (or vice versa);
   this._radianceMapComputeCommands = new Array(6);
-  this._convolutionComputeCommands = new Array(this._mipmapLevels);
+  this._convolutionComputeCommands = new Array((this._mipmapLevels - 1) * 6);
   this._irradianceComputeCommand = undefined; // TODO: Clearer naming: Specular and SH?
 
+  this._va = undefined;
+
   this._radianceMapTextures = new Array(6);
-  this._specularMapTextures = new Array(this._mipmapLevels);
+  this._specularMapTextures = new Array(this._mipmapLevels * 6);
   this._radianceMapAtlas = undefined;
   this._radianceCubeMap = undefined;
 
@@ -52,7 +57,6 @@ function DynamicEnvironmentMapManager() {
   this._lastTime = new JulianDate();
   this._textureDimensions = new Cartesian2(512, 512);
   
-
   /**
    * TODO
    */
@@ -88,21 +92,11 @@ Object.defineProperties(DynamicEnvironmentMapManager.prototype, {
    * @memberof DynamicEnvironmentMapManager.prototype
    * @type {CubeMap|undefined}
    * @readonly
+   * @private
    */
   radianceCubeMap: {
     get: function () {
       return this._radianceCubeMap;
-    },
-  },
-
-  /**
-   * TODO
-   * @type {OctahedralProjectedCubeMap|undefined}
-   * @readonly
-   */
-  radianceMapAtlas: {
-    get: function () {
-      return this._radianceMapAtlas;
     },
   },
 
@@ -117,14 +111,27 @@ Object.defineProperties(DynamicEnvironmentMapManager.prototype, {
    * @memberof DynamicEnvironmentMapManager.prototype
    * @readonly
    * @type {Cartesian3[]|undefined}
-   * @demo {@link https://sandcastle.cesium.com/index.html?src=Image-Based Lighting.html|Sandcastle Image Based Lighting Demo}
    * @see {@link https://graphics.stanford.edu/papers/envmap/envmap.pdf|An Efficient Representation for Irradiance Environment Maps}
+   * @private
    */
   sphericalHarmonicCoefficients: {
     get: function () {
       return this._sphericalHarmonicCoefficients;
     },
   },
+
+  /**
+   * The maximum number of mip levels.
+   * @memberOf SpecularEnvironmentCubeMap.prototype
+   * @type {number}
+   * @readonly
+   * @private
+   */
+    maximumMipmapLevel: {
+      get: function () {
+        return this._mipmapLevels;
+      },
+    },
 });
 
 DynamicEnvironmentMapManager.prototype._reset = function () {
@@ -216,7 +223,7 @@ DynamicEnvironmentMapManager.prototype.update = function (frameState) {
           height: textureDimensions.y,
           pixelDatatype: pixelDatatype,
           pixelFormat: pixelFormat,
-        }));
+        })); // TODO: Don't recreate the textures
 
         const index = i;
         const command = new ComputeCommand({
@@ -270,8 +277,6 @@ DynamicEnvironmentMapManager.prototype.update = function (frameState) {
             face.copyFromFramebuffer();
             framebuffer._unBind();
             framebuffer.destroy();
-            //this._radianceMapTextures[index].destroy();
-            //this._radianceMapTextures[index] = undefined;
 
             if (!commands.some(defined)) {
               this._radianceMapDirty = false;
@@ -290,29 +295,18 @@ DynamicEnvironmentMapManager.prototype.update = function (frameState) {
   }
 
   const mipmapLevels = this._mipmapLevels;
-
-  if (this._convolutionsCommandsDirty) {// && mipmapLevels <= 1) {
-    this._convolutionsCommandsDirty = false;
-    this._radianceMapAtlasDirty = true;
-    return false;
- }
-
   if (this._convolutionsCommandsDirty) {
-    const fs = new ShaderSource({
-      sources: [ConvolveSpecularMapFS],
-    });
     let width = textureDimensions.x / 2;
     let height = textureDimensions.y / 2;
+    this._radianceCubeMap.generateMipmap();
 
-    for (let i = 1; i < mipmapLevels; ++i) { // TODO: Start at 1?
-      //let f = 0;
-      //for (const face of this._radianceCubeMap.faces()) {
-        const index = i;//f + i * 6;
-        //const faceIndex = f;
+    let facesCopied = 0;
+    for (let level = 1; level < mipmapLevels; ++level) { 
+      for (const [faceIndex, face] of CubeMap.faceNames.entries()) {
         const w = width;
         const h = height;
-        const level = i;
-        const texture = (this._specularMapTextures[index] = new CubeMap({
+        const index = level * 6 + faceIndex;
+        const texture = (this._specularMapTextures[index] = new Texture({
           context: context,
           width: w,
           height: h,
@@ -320,88 +314,71 @@ DynamicEnvironmentMapManager.prototype.update = function (frameState) {
           pixelFormat: pixelFormat,
         }));
 
+        let vertexArray = this._va;
+        if (!defined(vertexArray)) {
+          vertexArray = CubeMap.createVertexArray(context, face);
+          this._va = vertexArray;
+        }
+
+        let shaderProgram = this._sp;
+        if (!defined(shaderProgram)) {
+          shaderProgram = this._sp = ShaderProgram.fromCache({
+            context: context,
+            vertexShaderSource: ConvolveSpecularMapVS,
+            fragmentShaderSource: ConvolveSpecularMapFS,
+            attributeLocations: {
+              positions: 0,
+            },
+          });
+        }
+
         const command = new ComputeCommand({
-          fragmentShaderSource: fs,
+          shaderProgram: shaderProgram,
+          vertexArray: vertexArray,
           outputTexture: texture,
-          persists: false,
+          persists: true,
               owner: this,
               uniformMap: {
                 u_roughness: () => {
-                  return (level) / mipmapLevels;
+                  return level / (mipmapLevels - 1);
                 },
                 u_radianceTexture: () => {
                   return this._radianceCubeMap;
                 },
-                u_radiiAndDynamicAtmosphereColor: () => {
-                  return radiiAndDynamicAtmosphereColor;
+                u_faceDirection: () => {
+                  return CubeMap.getDirection(face, scratchCartesian);
                 },
-                u_positionWC: () => {
-                  return position;
-                },
-                u_enuToFixedFrame: () => {
-                  return Transforms.eastNorthUpToFixedFrame(this._position, ellipsoid, scratchMatrix);
               },
-              },
+              // eslint-disable-next-line no-loop-func
               postExecute: () => {
                 const commands = this._convolutionComputeCommands;
                 commands[index] = undefined;
 
-                // const framebuffer = new Framebuffer({
-                //   context: context,
-                //   colorTextures: [this._specularMapTextures[index]],
-                //   destroyAttachments: false,
-                // });
-    
-                // framebuffer._bind();
-                // face.copyMipmapFromFramebuffer(0, 0, w, h, level);
-                // framebuffer._unBind();
-                // framebuffer.destroy();
+                this._radianceCubeMap.copyFace(frameState, texture, face, level);
 
-                // this._specularMapTextures[index].destroy();
-                // this._specularMapTextures[index] = undefined;
+                // TODO: Can we re-used the cubemaps instead?
+                // this._specularMapTextures[level].destroy();
+                // this._specularMapTextures[level] = undefined;
 
+                facesCopied++;
 
-                if (!commands.some(defined)) {
-                  this._radianceMapAtlasDirty = true;
-                  this._radianceCubeMap._hasMipmap = true;
-
-                  for (let t = 0; t < 6; ++t) {
-                    // this._radianceMapTextures[t].destroy();
-                    // this._radianceMapTextures[t] = undefined;
-                  }
+                if (facesCopied === 6 * (mipmapLevels - 1)) {
+                  this._irradianceCommandDirty = true;
+                  this._radianceCubeMap.sampler = new Sampler({
+                      minificationFilter: TextureMinificationFilter.LINEAR_MIPMAP_LINEAR
+                  });
                 }
               }
         });
-        this._convolutionComputeCommands[i] = command;
+        this._convolutionComputeCommands[index] = command;
         frameState.commandList.push(command);
-
-        //f++;
-      //}
+      }
 
       width /= 2;
       height /= 2;
     }
     this._convolutionsCommandsDirty = false;
     return false;
-  }
-
-  if (this._radianceMapAtlasDirty) {
-    if (defined(this._radianceMapAtlas)) {
-      //this._radianceMapAtlas.destroy(); TODO?
-      this._radianceMapAtlas = undefined;
-    }
-    //this._radianceCubeMap.generateMipmap();
-    // this._radianceCubeMap.sampler = new Sampler({
-    //    minificationFilter : TextureMinificationFilter.NEAREST_MIPMAP_LINEAR
-    // })
-    this._radianceMapAtlas = OctahedralProjectedCubeMap.fromCubeMap(
-      this._radianceCubeMap,
-      mipmapLevels,
-      frameState
-    );
-
-    this._radianceMapAtlasDirty = false;
-    this._irradianceCommandDirty = true;
   }
 
   if (this._irradianceCommandDirty) {
@@ -421,11 +398,8 @@ DynamicEnvironmentMapManager.prototype.update = function (frameState) {
       fragmentShaderSource: fs,
       outputTexture: texture,
       uniformMap: {
-        u_textureDimensions: () => {
-          return this._radianceMapAtlas.texture.dimensions;
-        },
-        u_octahedralTexture: () => {
-          return this._radianceMapAtlas.texture;
+        u_radianceMap: () => {
+          return this._radianceCubeMap;
         },
       },
       postExecute: () => {

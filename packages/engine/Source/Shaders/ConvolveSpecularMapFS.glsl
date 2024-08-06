@@ -1,24 +1,10 @@
 precision highp float;
 
-in vec2 v_textureCoordinates;
+in vec3 v_textureCoordinates;
 
 uniform float u_roughness;
-uniform vec3 u_positionWC;
-uniform mat4 u_enuToFixedFrame;
 uniform samplerCube u_radianceTexture;
-uniform vec3 u_radiiAndDynamicAtmosphereColor;
-
-vec4 getCubeMapDirection(vec2 uv, vec3 faceDir) {
-    vec2 scaledUV = uv * 2.0 - 1.0;
-
-    if (faceDir.x != 0.0) {
-        return vec4(faceDir.x, scaledUV.y, scaledUV.x * faceDir.x, 0.0);
-    } else if (faceDir.y != 0.0) {
-        return vec4(scaledUV.x, -faceDir.y, -scaledUV.y * faceDir.y, 0.0);
-    } else {
-        return vec4(scaledUV.x * faceDir.z, scaledUV.y, -faceDir.z, 0.0); 
-    }
-}
+uniform vec3 u_faceDirection;
 
 float vdcRadicalInverse(int i)
 {
@@ -60,31 +46,22 @@ vec3 importanceSampleGGX(vec2 xi, float alphaRoughness, vec3 N)
 }
 
 void main() {
-    float height = length(u_positionWC);
-    float ellipsoidHeight = height - u_radiiAndDynamicAtmosphereColor.y;
-    float radius = max(u_radiiAndDynamicAtmosphereColor.x - height, 2.0 * ellipsoidHeight);
+    vec3 normal = u_faceDirection;
+    vec3 V = normalize(v_textureCoordinates);
 
-    //vec3 direction = (u_enuToFixedFrame * getCubeMapDirection(v_textureCoordinates, u_faceDirection)).xyz * vec3(-1.0, -1.0, 1.0); // TODO: Where does this come from?
-    // vec3 normalizedDirection = normalize(direction);
-
-    // vec3 skyPositionWC = u_positionWC + normalizedDirection * radius;
-
-    vec3 normal = normalize(u_positionWC);
-
-    vec3 color = vec3(0.0);
-    int samples = 512;
+    vec4 color = vec4(0.0);
+    int samples = 1024;
     float weight = 0.0;
     for (int i = 0; i < samples; ++i) {
-        vec2 xi = hammersley2D(i, samples);
-        vec3 H = importanceSampleGGX(xi, u_roughness, normal);
-        vec3 L = 2.0 * dot(normal, H) * H - normal;
+            vec2 xi = hammersley2D(i, samples);
+            vec3 H = importanceSampleGGX(xi, u_roughness * u_roughness, V);
+            vec3 L = 2.0 * dot(V, H) * H - V; // reflected vector
 
-        float NdotL = max(dot(normal, L), 0.0);
-        if (NdotL > 0.0) {
-            color += texture(u_radianceTexture, L).rgb * NdotL;
-            weight += NdotL;
+            float NdotL = max(dot(V, L), 0.0);
+            if (NdotL > 0.0) {
+                color += vec4(texture(u_radianceTexture, L).rgb, 1.0) * NdotL;
+                weight += NdotL;
+            }
         }
-    }
-    out_FragColor = vec4(color / weight, 1.0);
-    //out_FragColor = vec4(u_faceDirection, 1.0);
+    out_FragColor = color / weight;
 }

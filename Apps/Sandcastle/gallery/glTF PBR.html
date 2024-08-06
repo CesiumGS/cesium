@@ -27,6 +27,7 @@
     <div id="loadingOverlay"><h1>Loading...</h1></div>
     <div id="toolbar">
       <div id="lightingToolbar"></div>
+      <div id="environmentToolbar"></div>
       <div id="modelsToolbar"></div>
     </div>
     <script id="cesium_sandcastle_script">
@@ -118,43 +119,61 @@
         );
         const coefficients = [L00, L1_1, L10, L11, L2_2, L2_1, L20, L21, L22];
 
-        const imageBasedLighting = new Cesium.ImageBasedLighting({
-          luminanceAtZenith: 0.7,
-          sphericalHarmonicCoefficients: coefficients,
-          specularEnvironmentMaps: environmentMapURL,
-        });
+        const imageBasedLighting = new Cesium.ImageBasedLighting();
 
-        const lightingOptions = [
-          {
-            text: "Environment map lighting",
+        const environmentMapOptions = [
+        {
+            text: "Dynamic environment maps - None",
             onselect: () => {
-              imageBasedLighting.sphericalHarmonicCoefficients = coefficients;
-              imageBasedLighting.specularEnvironmentMaps = environmentMapURL;
+              imageBasedLighting.imageBasedLightingFactor =
+                Cesium.Cartesian2.ZERO;
+            },
+          },
+          {
+            text: "Dynamic environment maps - Diffuse only",
+            onselect: () => {
+              imageBasedLighting.imageBasedLightingFactor =
+                Cesium.Cartesian2.UNIT_X;
+            },
+          },
+          {
+            text: "Dynamic environment maps intensity - Specular only",
+            onselect: () => {
+              imageBasedLighting.imageBasedLightingFactor =
+                Cesium.Cartesian2.UNIT_Y;
+            },
+          },
+          {
+            text: "Dynamic environment maps intensity - Both",
+            onselect: () => {
               imageBasedLighting.imageBasedLightingFactor =
                 Cesium.Cartesian2.ONE;
+            },
+          }
+        ];
+
+        const lightingOptions = [
+        {
+            text: "Directional light intensity - 1",
+            onselect: () => {
+              scene.light.intensity = 1.0;
+            },
+          },
+          {
+            text: "Directional light intensity - 0",
+            onselect: () => {
               scene.light.intensity = 0.0;
             },
           },
           {
-            text: "Procedural sky lighting",
+            text: "Directional light intensity - 2",
             onselect: () => {
-              imageBasedLighting.sphericalHarmonicCoefficients = undefined;
-              imageBasedLighting.specularEnvironmentMaps = undefined;
-              imageBasedLighting.imageBasedLightingFactor =
-                Cesium.Cartesian2.ONE;
-              scene.light.intensity = 1.0;
-            },
-          },
-          {
-            text: "Direct lighting only",
-            onselect: () => {
-              imageBasedLighting.imageBasedLightingFactor =
-                Cesium.Cartesian2.ZERO;
-              scene.light.intensity = 1.0;
+              scene.light.intensity = 2.0;
             },
           },
         ];
         Sandcastle.addToolbarMenu(lightingOptions, "lightingToolbar");
+        Sandcastle.addToolbarMenu(environmentMapOptions, "environmentToolbar");
 
         let model;
         const modelOptions = [
@@ -291,6 +310,10 @@
           checked
         ) {
           scene.highDynamicRange = checked;
+        });
+
+        viewer.scene.postRender.addEventListener(() => {
+          viewer.camera.rotate(Cesium.Cartesian3.UNIT_Z,  Math.PI / 1800.0 );
         });
 
         //Sandcastle_End
