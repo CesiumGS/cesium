@@ -2,6 +2,9 @@
 import { ref } from 'vue'
 import { useColorStore } from '@/components/layout/store/useColorStore'
 import { Search, Message, Delete, Star, Edit, Check } from '@element-plus/icons'
+import * as Cesium from 'cesium'
+
+console.log(Cesium)
 
 const themeName = ref('默认主题')
 const colorStore = useColorStore()
