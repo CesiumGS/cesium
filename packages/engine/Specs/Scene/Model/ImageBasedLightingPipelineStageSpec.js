@@ -14,6 +14,7 @@ describe("Scene/Model/ImageBasedLightingPipelineStage", function () {
     context: {
       floatingPointTexture: true,
       colorBufferFloat: true,
+      supportsTextureLod: true,
     },
   };
 
