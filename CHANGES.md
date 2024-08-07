@@ -1,5 +1,11 @@
 # Change Log
 
+### 1.121 - 2024-09-01
+
+##### Breaking Changes :mega:
+
+- `ImageBasedLighting.luminanceAtZenith` has been removed. Use newFoo instead.
+
 ### 1.120 - 2024-08-01
 
 #### @cesium/engine

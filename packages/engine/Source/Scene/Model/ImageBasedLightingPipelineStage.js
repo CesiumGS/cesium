@@ -112,19 +112,6 @@ ImageBasedLightingPipelineStage.process = function (
     }
   }
 
-  if (defined(imageBasedLighting.luminanceAtZenith)) {
-    shaderBuilder.addDefine(
-      "USE_SUN_LUMINANCE",
-      undefined,
-      ShaderDestination.FRAGMENT
-    );
-    shaderBuilder.addUniform(
-      "float",
-      "model_luminanceAtZenith",
-      ShaderDestination.FRAGMENT
-    );
-  }
-
   shaderBuilder.addFragmentLines(ImageBasedLightingStageFS);
 
   const uniformMap = {

@@ -20,7 +20,6 @@ import SpecularEnvironmentCubeMap from "./SpecularEnvironmentCubeMap.js";
  * @constructor
  *
  * @param {Cartesian2} [options.imageBasedLightingFactor=Cartesian2(1.0, 1.0)] Scales diffuse and specular image-based lighting from the earth, sky, atmosphere and star skybox.
- * @param {number} [options.luminanceAtZenith=0.2] The sun's luminance at the zenith in kilo candela per meter squared to use for this model's procedural environment map.
  * @param {Cartesian3[]} [options.sphericalHarmonicCoefficients] The third order spherical harmonic coefficients used for the diffuse color of image-based lighting.
  * @param {string} [options.specularEnvironmentMaps] A URL to a KTX2 file that contains a cube map of the specular lighting and the convoluted specular mipmaps.
  */
@@ -59,14 +58,6 @@ function ImageBasedLighting(options) {
 
   this._imageBasedLightingFactor = imageBasedLightingFactor;
 
-  const luminanceAtZenith = defaultValue(options.luminanceAtZenith, 0.2);
-
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.number("options.luminanceAtZenith", luminanceAtZenith);
-  //>>includeEnd('debug');
-
-  this._luminanceAtZenith = luminanceAtZenith;
-
   const sphericalHarmonicCoefficients = options.sphericalHarmonicCoefficients;
 
   //>>includeStart('debug', pragmas.debug);
@@ -100,7 +91,6 @@ function ImageBasedLighting(options) {
   this._previousImageBasedLightingFactor = Cartesian2.clone(
     imageBasedLightingFactor
   );
-  this._previousLuminanceAtZenith = luminanceAtZenith;
   this._previousSphericalHarmonicCoefficients = sphericalHarmonicCoefficients;
   this._removeErrorListener = undefined;
 }
@@ -156,26 +146,6 @@ Object.defineProperties(ImageBasedLighting.prototype, {
     },
   },
 
-  /**
-   * The sun's luminance at the zenith in kilo candela per meter squared
-   * to use for this model's procedural environment map. This is used when
-   * {@link ImageBasedLighting#specularEnvironmentMaps} and {@link ImageBasedLighting#sphericalHarmonicCoefficients}
-   * are not defined.
-   *
-   * @memberof ImageBasedLighting.prototype
-   *
-   * @type {number}
-   * @default 0.2
-   */
-  luminanceAtZenith: {
-    get: function () {
-      return this._luminanceAtZenith;
-    },
-    set: function (value) {
-      this._previousLuminanceAtZenith = this._luminanceAtZenith;
-      this._luminanceAtZenith = value;
-    },
-  },
 
   /**
    * The third order spherical harmonic coefficients used for the diffuse color of image-based lighting. When <code>undefined</code>, a diffuse irradiance
@@ -398,15 +368,6 @@ ImageBasedLighting.prototype.update = function (frameState) {
       this._imageBasedLightingFactor,
       this._previousImageBasedLightingFactor
     );
-  }
-
-  if (this._luminanceAtZenith !== this._previousLuminanceAtZenith) {
-    this._shouldRegenerateShaders =
-      this._shouldRegenerateShaders ||
-      defined(this._luminanceAtZenith) !==
-        defined(this._previousLuminanceAtZenith);
-
-    this._previousLuminanceAtZenith = this._luminanceAtZenith;
   }
 
   if (
