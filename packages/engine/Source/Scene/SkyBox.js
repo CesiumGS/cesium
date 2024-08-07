@@ -118,7 +118,7 @@ SkyBox.prototype.update = function (frameState, useHdr) {
     //>>includeStart('debug', pragmas.debug);
     Check.defined("this.sources", sources);
     if (
-      Object.values(CubeMap.FaceNames).some(
+      Object.values(CubeMap.FaceName).some(
         (faceName) => !defined(sources[faceName])
       )
     ) {
@@ -129,7 +129,7 @@ SkyBox.prototype.update = function (frameState, useHdr) {
 
     const sourceType = typeof sources.positiveX;
     if (
-      Object.values(CubeMap.FaceNames).some(
+      Object.values(CubeMap.FaceName).some(
         (faceName) => typeof sources[faceName] !== sourceType
       )
     ) {

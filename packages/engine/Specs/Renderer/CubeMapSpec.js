@@ -438,7 +438,7 @@ describe(
       const cyan = [0, 255, 255, 255];
 
       const level0colors = [red, green, blue, yellow, magenta, cyan];
-      const level0 = Object.values(CubeMap.FaceNames).reduce(
+      const level0 = Object.values(CubeMap.FaceName).reduce(
         (level, faceName, index) => {
           const color = level0colors[index];
           const colorData = new Uint8Array([color, color, color, color].flat());
@@ -457,7 +457,7 @@ describe(
       });
 
       const level1colors = [yellow, magenta, cyan, red, green, blue];
-      const level1 = Object.values(CubeMap.FaceNames).reduce(
+      const level1 = Object.values(CubeMap.FaceName).reduce(
         (level, faceName, index) => {
           const color = level1colors[index];
           const colorData = new Uint8Array(color);
@@ -494,7 +494,7 @@ describe(
       const cyan = [0, 255, 255, 255];
 
       const level0colors = [red, green, blue, yellow, magenta, cyan];
-      const level0 = Object.values(CubeMap.FaceNames).reduce(
+      const level0 = Object.values(CubeMap.FaceName).reduce(
         (level, faceName, index) => {
           const color = level0colors[index];
           const colorData = new Uint8Array([color, color, color, color].flat());
@@ -513,7 +513,7 @@ describe(
       });
 
       const level1colors = [yellow, magenta, cyan, red, green, blue];
-      const level1 = Object.values(CubeMap.FaceNames).reduce(
+      const level1 = Object.values(CubeMap.FaceName).reduce(
         (level, faceName, index) => {
           const color = level1colors[index];
           const colorData = new Uint8Array(color);

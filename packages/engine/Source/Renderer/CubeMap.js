@@ -243,7 +243,7 @@ function CubeMap(options) {
 /**
  * An enum defining the names of the faces of a cube map.
  *
- * @alias {CubeMap.FaceNames}
+ * @alias {CubeMap.FaceName}
  * @enum {string}
  *
  * @private
