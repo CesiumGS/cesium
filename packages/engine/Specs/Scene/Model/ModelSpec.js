@@ -1776,8 +1776,8 @@ describe(
         await pollToPromise(function () {
           scene.render();
           return (
-            defined(imageBasedLighting.specularEnvironmentMapAtlas) &&
-            imageBasedLighting.specularEnvironmentMapAtlas.ready
+            defined(imageBasedLighting.specularEnvironmentCubeMap) &&
+            imageBasedLighting.specularEnvironmentCubeMap.ready
           );
         });
         expect(model.modelMatrix).toEqual(Matrix4.IDENTITY);
@@ -3363,8 +3363,8 @@ describe(
         await pollToPromise(function () {
           scene.render();
           return (
-            defined(ibl.specularEnvironmentMapAtlas) &&
-            ibl.specularEnvironmentMapAtlas.ready
+            defined(ibl.specularEnvironmentCubeMap) &&
+            ibl.specularEnvironmentCubeMap.ready
           );
         });
         scene.highDynamicRange = true;

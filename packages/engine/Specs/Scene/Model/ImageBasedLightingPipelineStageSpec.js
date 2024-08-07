@@ -151,7 +151,7 @@ describe("Scene/Model/ImageBasedLightingPipelineStage", function () {
       specularEnvironmentMaps: "example.ktx2",
     });
     imageBasedLighting.luminanceAtZenith = undefined;
-    imageBasedLighting._specularEnvironmentMapAtlas = mockAtlas;
+    imageBasedLighting._specularEnvironmentCubeMap = mockAtlas;
 
     const mockModel = {
       imageBasedLighting: imageBasedLighting,
