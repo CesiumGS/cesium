@@ -376,7 +376,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [Jason Summercamp](https://github.com/fullstacc)
 - [Shapovalov Kirill](https://github.com/ShapovalovKL)
 - [Alexander Popoff](https://github.com/aerialist7)
-chael Cabana](https://github.com/mikecabana)
+- [chael Cabana](https://github.com/mikecabana)
 - [Joseph Stanton](https://github.com/romejoe)
 - [Zehua Hu](https://github.com/lanvada)
 - [王秋艳](https://github.com/wqy224488)

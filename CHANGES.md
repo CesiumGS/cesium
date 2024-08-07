@@ -8,6 +8,10 @@
 
 - Made the `time` parameter optional for `Property`, using `JulianDate.now()` as default. [#12099](https://github.com/CesiumGS/cesium/pull/12099)
 
+##### Fixes :wrench:
+
+- When the mouse is pressed, the modifiers will be recorded. Modifying the modifiers during this process is invalid. [#11903](https://github.com/CesiumGS/cesium/pull/11903)
+
 ### 1.120 - 2024-08-01
 
 #### @cesium/engine
@@ -20,7 +24,6 @@
 
 ##### Fixes :wrench:
 
-- When the mouse is pressed, the modifiers will be recorded. Modifying the modifiers during this process is invalid. [#11903](https://github.com/CesiumGS/cesium/pull/11903)
 - Fixed environment map LOD selection in image-based lighting. [#12070](https://github.com/CesiumGS/cesium/pull/12070)
 - Corrected calculation of diffuse component in image-based lighting. [#12082](https://github.com/CesiumGS/cesium/pull/12082)
 - Updated specular BRDF for image-based lighting. [#12083](https://github.com/CesiumGS/cesium/pull/12083)
