@@ -67,7 +67,10 @@ Object.defineProperties(SpecularEnvironmentCubeMap.prototype, {
     },
   },
   /**
-   * The maximum number of mip levels.
+   * The maximum number of mip levels with valid environment map data.
+   * This may differ from the number of mips in the WebGL cubemap.
+   * The data loaded at <code>maximumMipmapLevel</code> is suitable for
+   * PBR rendering of a material with maximum roughness (1.0).
    * @memberOf SpecularEnvironmentCubeMap.prototype
    * @type {number}
    * @readonly
@@ -78,7 +81,7 @@ Object.defineProperties(SpecularEnvironmentCubeMap.prototype, {
     },
   },
   /**
-   * Determines if the texture atlas is complete and ready to use.
+   * Determines if the cube map is complete and ready to use.
    * @memberof SpecularEnvironmentCubeMap.prototype
    * @type {boolean}
    * @readonly
@@ -91,10 +94,10 @@ Object.defineProperties(SpecularEnvironmentCubeMap.prototype, {
 });
 
 SpecularEnvironmentCubeMap.isSupported = function (context) {
-  return (
+  const supportsFloatBuffersAndTextures =
     (context.colorBufferHalfFloat && context.halfFloatingPointTexture) ||
-    (context.floatingPointTexture && context.colorBufferFloat)
-  );
+    (context.floatingPointTexture && context.colorBufferFloat);
+  return supportsFloatBuffersAndTextures && context.supportsTextureLod;
 };
 
 function cleanupResources(map) {

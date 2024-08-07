@@ -345,7 +345,7 @@ Object.defineProperties(ImageBasedLighting.prototype, {
   },
 });
 
-function createSpecularEnvironmentMapAtlas(imageBasedLighting, context) {
+function createSpecularEnvironmentCubeMap(imageBasedLighting, context) {
   if (!SpecularEnvironmentCubeMap.isSupported(context)) {
     return;
   }
@@ -429,7 +429,7 @@ ImageBasedLighting.prototype.update = function (frameState) {
   this._previousSpecularEnvironmentMapLoaded = this._specularEnvironmentMapLoaded;
 
   if (this._specularEnvironmentCubeMapDirty) {
-    createSpecularEnvironmentMapAtlas(this, context);
+    createSpecularEnvironmentCubeMap(this, context);
     this._specularEnvironmentCubeMapDirty = false;
   }
 
@@ -440,11 +440,11 @@ ImageBasedLighting.prototype.update = function (frameState) {
     }
   }
 
-  const recompileWithDefaultAtlas =
+  const recompileWithDefaultCubeMap =
     !defined(this._specularEnvironmentCubeMap) &&
     defined(frameState.specularEnvironmentMaps) &&
     !this._useDefaultSpecularMaps;
-  const recompileWithoutDefaultAtlas =
+  const recompileWithoutDefaultCubeMap =
     !defined(frameState.specularEnvironmentMaps) &&
     this._useDefaultSpecularMaps;
 
@@ -458,8 +458,8 @@ ImageBasedLighting.prototype.update = function (frameState) {
 
   this._shouldRegenerateShaders =
     this._shouldRegenerateShaders ||
-    recompileWithDefaultAtlas ||
-    recompileWithoutDefaultAtlas ||
+    recompileWithDefaultCubeMap ||
+    recompileWithoutDefaultCubeMap ||
     recompileWithDefaultSHCoeffs ||
     recompileWithoutDefaultSHCoeffs;
 
