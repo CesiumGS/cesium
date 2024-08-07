@@ -2,6 +2,7 @@ import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Event from "../Core/Event.js";
+import JulianDate from "../Core/JulianDate.js";
 import ConstantProperty from "./ConstantProperty.js";
 import createPropertyDescriptor from "./createPropertyDescriptor.js";
 import Property from "./Property.js";
@@ -157,21 +158,21 @@ PropertyBag.prototype.removeProperty = function (propertyName) {
   this._definitionChanged.raiseEvent(this);
 };
 
+const timeScratch = new JulianDate();
+
 /**
  * Gets the value of this property.  Each contained property will be evaluated at the given time, and the overall
  * result will be an object, mapping property names to those values.
  *
- * @param {JulianDate} time The time for which to retrieve the value.
+ * @param {JulianDate} [time=JulianDate.now()] The time for which to retrieve the value. If omitted, the current system time is used.
  * @param {object} [result] The object to store the value into, if omitted, a new instance is created and returned.
  * Note that any properties in result which are not part of this PropertyBag will be left as-is.
  * @returns {object} The modified result parameter or a new instance if the result parameter was not supplied.
  */
 PropertyBag.prototype.getValue = function (time, result) {
-  //>>includeStart('debug', pragmas.debug);
   if (!defined(time)) {
-    throw new DeveloperError("time is required.");
+    time = JulianDate.now(timeScratch);
   }
-  //>>includeEnd('debug');
 
   if (!defined(result)) {
     result = {};
