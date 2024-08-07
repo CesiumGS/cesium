@@ -178,7 +178,6 @@ function listenMouseButtonDownUp(aggregator, modifier, type) {
   const isDown = aggregator._isDown;
   const eventStartPosition = aggregator._eventStartPosition;
   const pressTime = aggregator._pressTime;
-  const releaseTime = aggregator._releaseTime;
 
   isDown[key] = false;
   eventStartPosition[key] = new Cartesian2();
@@ -219,18 +218,71 @@ function listenMouseButtonDownUp(aggregator, modifier, type) {
 
   aggregator._eventHandler.setInputAction(
     function () {
-      aggregator._buttonsDown = Math.max(aggregator._buttonsDown - 1, 0);
-      isDown[key] = false;
-      releaseTime[key] = new Date();
+      cancelMouseDownAction(getKey(type, undefined), aggregator);
+      for (const modifierName in KeyboardEventModifier) {
+        if (KeyboardEventModifier.hasOwnProperty(modifierName)) {
+          const modifier = KeyboardEventModifier[modifierName];
+          if (defined(modifier)) {
+            const cancelKey = getKey(type, modifier);
+            cancelMouseDownAction(cancelKey, aggregator);
+          }
+        }
+      }
     },
     up,
     modifier
   );
 }
 
+function cancelMouseDownAction(cancelKey, aggregator) {
+  const releaseTime = aggregator._releaseTime;
+  const isDown = aggregator._isDown;
+  if (isDown[cancelKey]) {
+    aggregator._buttonsDown = Math.max(aggregator._buttonsDown - 1, 0);
+  }
+  isDown[cancelKey] = false;
+  releaseTime[cancelKey] = new Date();
+}
+
 function cloneMouseMovement(mouseMovement, result) {
   Cartesian2.clone(mouseMovement.startPosition, result.startPosition);
   Cartesian2.clone(mouseMovement.endPosition, result.endPosition);
+}
+
+function refreshMouseDownStatus(type, modifier, aggregator) {
+  // first: Judge if the mouse is pressed
+  const isDown = aggregator._isDown;
+  let downFlag = false;
+  Object.keys(isDown).map((key) => {
+    if (
+      key.toString().startsWith(type) &&
+      isDown[key] &&
+      key.toString() !== getKey(type, modifier)
+    ) {
+      downFlag = true;
+      cancelMouseDownAction(key, aggregator);
+    }
+  });
+
+  if (!downFlag) {
+    return;
+  }
+
+  // second: If it is pressed, it will be transferred to the current modifier.
+  const key = getKey(type, modifier);
+  const pressTime = aggregator._pressTime;
+  let lastMovement = aggregator._lastMovement[key];
+  if (!defined(lastMovement)) {
+    lastMovement = aggregator._lastMovement[key] = {
+      startPosition: new Cartesian2(),
+      endPosition: new Cartesian2(),
+      valid: false,
+    };
+  }
+  aggregator._buttonsDown++;
+  lastMovement.valid = false;
+  isDown[key] = true;
+  pressTime[key] = new Date();
 }
 
 function listenMouseMove(aggregator, modifier) {
@@ -271,6 +323,7 @@ function listenMouseMove(aggregator, modifier) {
           const type = CameraEventType[typeName];
           if (defined(type)) {
             const key = getKey(type, modifier);
+            refreshMouseDownStatus(type, modifier, aggregator);
             if (isDown[key]) {
               if (!update[key]) {
                 Cartesian2.clone(

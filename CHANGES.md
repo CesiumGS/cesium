@@ -8,6 +8,10 @@
 
 - Made the `time` parameter optional for `Property`, using `JulianDate.now()` as default. [#12099](https://github.com/CesiumGS/cesium/pull/12099)
 
+##### Fixes :wrench:
+
+- When the mouse is pressed, the modifiers will be recorded. Modifying the modifiers during this process is invalid. [#11903](https://github.com/CesiumGS/cesium/pull/11903)
+
 ### 1.120 - 2024-08-01
 
 #### @cesium/engine
