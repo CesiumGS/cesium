@@ -92,12 +92,14 @@ function CubeMap(options) {
   if (defined(source)) {
     //>>includeStart('debug', pragmas.debug);
     if (
-      !CubeMap.getFaceNames().every((faceName) => defined(source[faceName]))
+      !Object.values(CubeMap.FaceName).every((faceName) =>
+        defined(source[faceName])
+      )
     ) {
       throw new DeveloperError(
-        `options.source requires faces ${Array.from(
-          CubeMap.getFaceNames()
-        ).join(", ")}.`
+        `options.source requires faces ${Object.values(CubeMap.FaceName).join(
+          ", "
+        )}.`
       );
     }
     //>>includeEnd('debug');
