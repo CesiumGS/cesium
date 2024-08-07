@@ -26,6 +26,8 @@ import ModelSplitterPipelineStage from "./ModelSplitterPipelineStage.js";
 import ModelType from "./ModelType.js";
 import NodeRenderResources from "./NodeRenderResources.js";
 import PrimitiveRenderResources from "./PrimitiveRenderResources.js";
+import OrientedBoundingBox from "../../Core/OrientedBoundingBox.js";
+import Matrix3 from "../../Core/Matrix3.js";
 
 /**
  * An in memory representation of the scene graph for a {@link Model}
@@ -441,10 +443,133 @@ function traverseAndCreateSceneGraph(sceneGraph, node, transformToRoot) {
   return index;
 }
 
+// A Cartesian3 that will store the scale factors for computing
+// an oriented bounding box in orientedBoundingBoxFromMinMax
+const scratchScale = new Cartesian3();
+
+/**
+ * Creates an oriented bounding box from the given minimum- and maximum
+ * point, stores it in the given result, and returns it.
+ *
+ * If the given result is `undefined`, then a new oriented bounding box
+ * will be created, filled, and returned.
+ *
+ * @param {Cartesian3} min The minimum point
+ * @param {Cartesian3} max The maximum point
+ * @param {OrientedBoundingBox} [result] The result
+ * @returns The result
+ */
+function orientedBoundingBoxFromMinMax(min, max, result) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("min", min);
+  Check.typeOf.object("max", max);
+  //>>includeEnd('debug');
+
+  if (!defined(result)) {
+    result = new OrientedBoundingBox();
+  }
+  Cartesian3.midpoint(min, max, result.center);
+  Cartesian3.subtract(max, min, scratchScale);
+  Cartesian3.multiplyByScalar(scratchScale, 0.5, scratchScale);
+  Matrix3.fromScale(scratchScale, result.halfAxes);
+  return result;
+}
+
+// A Matrix3 that will store the rotation and scale components
+// of a transform matrix in transformOrientedBoundingBox
+const scratchRotationScale = new Matrix3();
+
+/**
+ * Transforms the given oriented bounding box with the given matrix,
+ * stores the result in the given result parameter, and returns it.
+ *
+ * If the given result is `undefined`, then a new oriented bounding box
+ * will be created, filled, and returned.
+ *
+ * @param {OrientedBoundingBox} orientedBoundingBox The oriented bounding box
+ * @param {Matrix4} transform The transform matrix
+ * @param {OrientedBoundingBox} [result] The result
+ * @returns The result
+ */
+function transformOrientedBoundingBox(orientedBoundingBox, transform, result) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("orientedBoundingBox", orientedBoundingBox);
+  Check.typeOf.object("transform", transform);
+  //>>includeEnd('debug');
+
+  if (!defined(result)) {
+    result = new OrientedBoundingBox();
+  }
+  Matrix4.multiplyByPoint(transform, orientedBoundingBox.center, result.center);
+  Matrix4.getMatrix3(transform, scratchRotationScale);
+  Matrix3.multiply(
+    scratchRotationScale,
+    orientedBoundingBox.halfAxes,
+    result.halfAxes
+  );
+  return result;
+}
+
+// An oriented bounding box that will represent the (transformed) minimum
+// and maximum points in accumulateMinMax
+const scratchObb = new OrientedBoundingBox();
+
+// Oriented bounding box corners that will store the corners of the
+// transformed oriented bounding box in accumulateMinMax
+const scratchObbCorners = [
+  new Cartesian3(),
+  new Cartesian3(),
+  new Cartesian3(),
+  new Cartesian3(),
+  new Cartesian3(),
+  new Cartesian3(),
+  new Cartesian3(),
+  new Cartesian3(),
+];
+
+/**
+ * Accumulate the minimum and maximum from the given source points
+ * under the given transformation.
+ *
+ * This will compute the oriented bounding box from the given source
+ * points, transform it with the given transform, and store the
+ * component-wise minimum and maximum of the corner points of the
+ * transformed oriented bounding box in the given targets.
+ *
+ * @param {Cartesian3} targetMin The target minimum
+ * @param {Cartesian3} targetMax The target maximum
+ * @param {Cartesian3} sourceMin The source minimum
+ * @param {Cartesian3} sourceMax The source maximum
+ * @param {Matrix4} transform The transform
+ */
+function accumulateMinMax(
+  targetMin,
+  targetMax,
+  sourceMin,
+  sourceMax,
+  transform
+) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("targetMin", targetMin);
+  Check.typeOf.object("targetMax", targetMax);
+  Check.typeOf.object("sourceMin", sourceMin);
+  Check.typeOf.object("sourceMax", sourceMax);
+  Check.typeOf.object("transform", transform);
+  //>>includeEnd('debug');
+
+  const obb = orientedBoundingBoxFromMinMax(sourceMin, sourceMax, scratchObb);
+  transformOrientedBoundingBox(obb, transform, obb);
+  const corners = OrientedBoundingBox.computeCorners(obb, scratchObbCorners);
+  for (let i = 0; i < 8; i++) {
+    const corner = corners[i];
+    Cartesian3.minimumByComponent(targetMin, corner, targetMin);
+    Cartesian3.maximumByComponent(targetMax, corner, targetMax);
+  }
+}
+
 const scratchModelPositionMin = new Cartesian3();
 const scratchModelPositionMax = new Cartesian3();
-const scratchPrimitivePositionMin = new Cartesian3();
-const scratchPrimitivePositionMax = new Cartesian3();
+
 /**
  * Generates the {@link ModelDrawCommand} for each primitive in the model.
  * If the model is used for classification, a {@link ClassificationModelDrawCommand}
@@ -538,26 +663,12 @@ ModelSceneGraph.prototype.buildDrawCommands = function (frameState) {
         new BoundingSphere()
       );
 
-      const primitivePositionMin = Matrix4.multiplyByPoint(
-        nodeTransform,
-        primitiveRenderResources.positionMin,
-        scratchPrimitivePositionMin
-      );
-      const primitivePositionMax = Matrix4.multiplyByPoint(
-        nodeTransform,
-        primitiveRenderResources.positionMax,
-        scratchPrimitivePositionMax
-      );
-
-      Cartesian3.minimumByComponent(
+      accumulateMinMax(
         modelPositionMin,
-        primitivePositionMin,
-        modelPositionMin
-      );
-      Cartesian3.maximumByComponent(
         modelPositionMax,
-        primitivePositionMax,
-        modelPositionMax
+        primitiveRenderResources.positionMin,
+        primitiveRenderResources.positionMax,
+        nodeTransform
       );
 
       const drawCommand = buildDrawCommand(
