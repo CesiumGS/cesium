@@ -9,8 +9,12 @@ import Sampler from "../Renderer/Sampler.js";
 import TextureMinificationFilter from "../Renderer/TextureMinificationFilter.js";
 
 /**
- * TODO
+ * Manages a cube map for use as a specular environment map.
  *
+ * @alias SpecularEnvironmentCubeMap
+ * @constructor
+ *
+ * @param {string} url The url to the KTX2 file containing the specular environment map and convoluted mipmaps.
  * @private
  */
 function SpecularEnvironmentCubeMap(url) {
@@ -98,8 +102,10 @@ function cleanupResources(map) {
 }
 
 /**
- * TODO
- *
+ * Loads the environment map image and constructs the cube map for specular radiance calculations.
+ * <p>
+ * Once the image is loaded, the next call cleans up unused resources. Every call after that is a no-op.
+ * </p>
  * @param {FrameState} frameState The frame state.
  *
  * @private
@@ -147,16 +153,12 @@ SpecularEnvironmentCubeMap.prototype.update = function (frameState) {
     return;
   }
 
-  const defines = [];
   // Datatype is defined if it is a normalized type (i.e. ..._UNORM, ..._SFLOAT)
-  let pixelDatatype = cubeMapBuffers[0].positiveX.pixelDatatype;
+  let { pixelDatatype } = cubeMapBuffers[0].positiveX;
   if (!defined(pixelDatatype)) {
     pixelDatatype = context.halfFloatingPointTexture
       ? PixelDatatype.HALF_FLOAT
       : PixelDatatype.FLOAT;
-  } else {
-    // TODO: not needed?
-    defines.push("RGBA_NORMALIZED");
   }
   const pixelFormat = PixelFormat.RGBA;
 
