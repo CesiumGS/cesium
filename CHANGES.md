@@ -8,6 +8,10 @@
 
 - Made the `time` parameter optional for `Property`, using `JulianDate.now()` as default. [#12099](https://github.com/CesiumGS/cesium/pull/12099)
 
+##### Fixes :wrench:
+
+- Fixed specular reflection artifact in PBR direct lighting. [#12116](https://github.com/CesiumGS/cesium/pull/12116)
+
 ### 1.120 - 2024-08-01
 
 #### @cesium/engine
