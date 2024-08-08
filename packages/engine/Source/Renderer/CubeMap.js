@@ -16,9 +16,12 @@ import TextureMinificationFilter from "./TextureMinificationFilter.js";
 /**
  * @typedef CubeMap.BufferSource
  *
- * Exactly one of <code>arrayBufferView</code> or <code>bufferView</code> must be defined.
+ * Exactly one of <code>arrayBufferView</code> or <code>bufferView</code> must be defined. In both cases,
+ * it is a view of a binary data buffer. Either name is allowed for compatibility reasons: data coming from
+ * different sources may have different property names.
+ *
  * @property {TypedArray} [arrayBufferView] A view of a binary data buffer containing pixel values.
- * @property {TypedArray} [bufferView] A view of a binary data buffer containing pixel values, e.g. from a KTX2 file.
+ * @property {TypedArray} [bufferView] A view of a binary data buffer containing pixel values.
  * @property {number} width The width of one face of the cube map, in pixels. Must be equal to height.
  * @property {number} height The height of one face of the cube map, in pixels. Must be equal to width.
  *

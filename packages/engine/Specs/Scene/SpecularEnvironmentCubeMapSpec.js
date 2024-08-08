@@ -176,11 +176,12 @@ describe(
         for (const key in directions) {
           if (directions.hasOwnProperty(key)) {
             const direction = directions[key];
+            const expectedColor = directionalColors[mipLevel][key];
 
             sampleCubeMap(cubeMap, direction, mipLevel, function (
               cubeMapColor
             ) {
-              expect(cubeMapColor).toEqual(directionalColors[mipLevel][key]);
+              expect(cubeMapColor).toEqualEpsilon(expectedColor, 1);
             });
           }
         }

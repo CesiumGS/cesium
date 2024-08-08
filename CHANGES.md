@@ -10,7 +10,7 @@
 
 ##### Fixes :wrench:
 
-- Fix artifacts in image-based lighting by replacing `OctahedralProjectedCubeMap` with `SpecularEnvironmentCubeMap`. [#12100](https://github.com/CesiumGS/cesium/pull/12100)
+- Fix cube-mapping artifacts in image-based lighting. [#12100](https://github.com/CesiumGS/cesium/pull/12100)
 
 ##### Breaking Changes :mega:
 
