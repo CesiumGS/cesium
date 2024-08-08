@@ -4,6 +4,7 @@ import defined from "../Core/defined.js";
 import GltfLoaderUtil from "./GltfLoaderUtil.js";
 import MetadataType from "./MetadataType.js";
 import MetadataComponentType from "./MetadataComponentType.js";
+import oneTimeWarning from "../Core/oneTimeWarning.js";
 
 /**
  * A property in a property texture.
@@ -185,20 +186,48 @@ PropertyTextureProperty.prototype.isGpuCompatible = function () {
 
   if (classProperty.isArray) {
     // only support arrays of 1-4 UINT8 scalars (normalized or unnormalized)
-    return (
-      !classProperty.isVariableLengthArray &&
-      classProperty.arrayLength <= 4 &&
-      type === MetadataType.SCALAR &&
-      componentType === MetadataComponentType.UINT8
-    );
+    if (classProperty.isVariableLengthArray) {
+      oneTimeWarning(
+        `Property texture property ${classProperty.id} is a variable-length array, which is not supported`
+      );
+      return false;
+    }
+    if (classProperty.arrayLength > 4) {
+      oneTimeWarning(
+        `Property texture property ${classProperty.id} is an array of length ${classProperty.arrayLength}, but may have at most a length of 4`
+      );
+      return false;
+    }
+    if (type !== MetadataType.SCALAR) {
+      oneTimeWarning(
+        `Property texture property ${classProperty.id} is an array of type ${type}, but only SCALAR is supported`
+      );
+      return false;
+    }
+    if (componentType !== MetadataComponentType.UINT8) {
+      oneTimeWarning(
+        `Property texture property ${classProperty.id} is an array with component type ${componentType}, but only UINT8 is supported`
+      );
+      return false;
+    }
+    return true;
   }
 
   if (MetadataType.isVectorType(type) || type === MetadataType.SCALAR) {
-    return componentType === MetadataComponentType.UINT8;
+    if (componentType !== MetadataComponentType.UINT8) {
+      oneTimeWarning(
+        `Property texture property ${classProperty.id} has component type ${componentType}, but only UINT8 is supported`
+      );
+      return false;
+    }
+    return true;
   }
 
   // For this initial implementation, only UINT8-based properties
   // are supported.
+  oneTimeWarning(
+    `Property texture property ${classProperty.id} has an unsupported type`
+  );
   return false;
 };
 

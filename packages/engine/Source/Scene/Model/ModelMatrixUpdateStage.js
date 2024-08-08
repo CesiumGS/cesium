@@ -49,6 +49,23 @@ ModelMatrixUpdateStage.update = function (runtimeNode, sceneGraph, frameState) {
 };
 
 /**
+ * Update the modelMatrix and cullFrace of the given draw command.
+ *
+ * @private
+ */
+function updateDrawCommand(drawCommand, modelMatrix, transformToRoot) {
+  drawCommand.modelMatrix = Matrix4.multiplyTransformation(
+    modelMatrix,
+    transformToRoot,
+    drawCommand.modelMatrix
+  );
+  drawCommand.cullFace = ModelUtility.getCullFace(
+    drawCommand.modelMatrix,
+    drawCommand.primitiveType
+  );
+}
+
+/**
  * Recursively update all child runtime nodes and their runtime primitives.
  *
  * @private
@@ -73,15 +90,10 @@ function updateRuntimeNode(
   const primitivesLength = runtimeNode.runtimePrimitives.length;
   for (i = 0; i < primitivesLength; i++) {
     const runtimePrimitive = runtimeNode.runtimePrimitives[i];
-    const drawCommand = runtimePrimitive.drawCommand;
-    drawCommand.modelMatrix = Matrix4.multiplyTransformation(
+    updateDrawCommand(
+      runtimePrimitive.drawCommand,
       modelMatrix,
-      transformToRoot,
-      drawCommand.modelMatrix
-    );
-    drawCommand.cullFace = ModelUtility.getCullFace(
-      drawCommand.modelMatrix,
-      drawCommand.primitiveType
+      transformToRoot
     );
   }
 

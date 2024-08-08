@@ -421,6 +421,37 @@ function FrameState(context, creditDisplay, jobScheduler) {
    * @default 0.0
    */
   this.minimumTerrainHeight = 0.0;
+
+  /**
+   * Whether metadata picking is currently in progress.
+   *
+   * This is set to `true` in the `Picking.pickMetadata` function,
+   * immediately before updating and executing the draw commands,
+   * and set back to `false` immediately afterwards. It will be
+   * used to determine whether the metadata picking draw commands
+   * should be executed, in the `Scene.executeCommand` function.
+   *
+   * @type {boolean}
+   * @default false
+   */
+  this.pickingMetadata = false;
+
+  /**
+   * Metadata picking information.
+   *
+   * This describes the metadata property that is supposed to be picked
+   * in a `Picking.pickMetadata` call.
+   *
+   * This is stored in the frame state and in the metadata picking draw
+   * commands. In the `Scene.updateDerivedCommands` call, it will be
+   * checked whether the instance that is stored in the frame state
+   * is different from the one in the draw command, and if necessary,
+   * the derived commands for metadata picking will be updated based
+   * on this information.
+   *
+   * @type {PickedMetadataInfo|undefined}
+   */
+  this.pickedMetadataInfo = undefined;
 }
 
 /**

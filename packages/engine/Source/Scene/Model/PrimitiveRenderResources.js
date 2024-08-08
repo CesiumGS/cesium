@@ -287,7 +287,7 @@ function PrimitiveRenderResources(nodeRenderResources, runtimePrimitive) {
    * The shader variable to use for picking. If picking is enabled, this value
    * is set by PickingPipelineStage.
    *
-   * @type {string}
+   * @type {string|undefined}
    *
    * @private
    */

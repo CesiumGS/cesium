@@ -40,6 +40,8 @@ function DrawCommand(options) {
   this._owner = options.owner;
   this._debugOverlappingFrustums = 0;
   this._pickId = options.pickId;
+  this._pickMetadataAllowed = options.pickMetadataAllowed === true;
+  this._pickedMetadataInfo = undefined;
 
   // Set initial flags.
   this._flags = 0;
@@ -511,7 +513,7 @@ Object.defineProperties(DrawCommand.prototype, {
    * during the pick pass.
    *
    * @memberof DrawCommand.prototype
-   * @type {string}
+   * @type {string|undefined}
    * @default undefined
    */
   pickId: {
@@ -525,6 +527,40 @@ Object.defineProperties(DrawCommand.prototype, {
       }
     },
   },
+
+  /**
+   * Whether metadata picking is allowed
+   *
+   * @memberof DrawCommand.prototype
+   * @type {boolean}
+   * @default undefined
+   * @private
+   */
+  pickMetadataAllowed: {
+    get: function () {
+      return this._pickMetadataAllowed;
+    },
+  },
+
+  /**
+   * Information about picked metadata.
+   *
+   * @memberof DrawCommand.prototype
+   * @type {PickedMetadataInfo|undefined}
+   * @default undefined
+   */
+  pickedMetadataInfo: {
+    get: function () {
+      return this._pickedMetadataInfo;
+    },
+    set: function (value) {
+      if (this._pickedMetadataInfo !== value) {
+        this._pickedMetadataInfo = value;
+        this.dirty = true;
+      }
+    },
+  },
+
   /**
    * Whether this command should be executed in the pick pass only.
    *
@@ -590,6 +626,8 @@ DrawCommand.shallowClone = function (command, result) {
   result._owner = command._owner;
   result._debugOverlappingFrustums = command._debugOverlappingFrustums;
   result._pickId = command._pickId;
+  result._pickMetadataAllowed = command._pickMetadataAllowed;
+  result._pickedMetadataInfo = command._pickedMetadataInfo;
   result._flags = command._flags;
 
   result.dirty = true;

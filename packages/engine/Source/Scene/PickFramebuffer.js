@@ -121,13 +121,17 @@ PickFramebuffer.prototype.end = function (screenSpaceRectangle) {
 };
 
 /**
- * Return voxel tile and sample information as rendered by a pickVoxel pass,
- * within a given rectangle.
+ * Return a typed array containing the RGBA (byte) components of the
+ * pixel that is at the center of the given rectangle.
+ *
+ * This may, for example, be voxel tile and sample information as rendered
+ * by a pickVoxel pass, within a given rectangle. Or it may be the result
+ * of a metadata picking rendering pass.
  *
  * @param {BoundingRectangle} screenSpaceRectangle
- * @returns {TypedArray}
+ * @returns {Uint8Array} The RGBA components
  */
-PickFramebuffer.prototype.readVoxelInfo = function (screenSpaceRectangle) {
+PickFramebuffer.prototype.readCenterPixel = function (screenSpaceRectangle) {
   const width = defaultValue(screenSpaceRectangle.width, 1.0);
   const height = defaultValue(screenSpaceRectangle.height, 1.0);
 
