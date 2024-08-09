@@ -232,11 +232,7 @@ function PrimitiveRenderResources(nodeRenderResources, runtimePrimitive) {
    */
   this.primitiveType = primitive.primitiveType;
 
-  const positionMinMax = ModelUtility.getPositionMinMax(
-    primitive,
-    this.runtimeNode.instancingTranslationMin,
-    this.runtimeNode.instancingTranslationMax
-  );
+  const positionMinMax = ModelUtility.getPositionMinMax(primitive);
 
   /**
    * The minimum position value for this primitive.
