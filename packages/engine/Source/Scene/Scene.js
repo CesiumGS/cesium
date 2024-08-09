@@ -738,7 +738,7 @@ function Scene(options) {
    * @type {string}
    */
   this.specularEnvironmentMaps = undefined;
-  this._specularEnvironmentMapAtlas = undefined;
+  this._specularEnvironmentCubeMap = undefined;
 
   /**
    * The light source for shading. Defaults to a directional light from the Sun.
@@ -1964,11 +1964,11 @@ Scene.prototype.updateFrameState = function () {
   frameState.verticalExaggerationRelativeHeight = this.verticalExaggerationRelativeHeight;
 
   if (
-    defined(this._specularEnvironmentMapAtlas) &&
-    this._specularEnvironmentMapAtlas.ready
+    defined(this._specularEnvironmentCubeMap) &&
+    this._specularEnvironmentCubeMap.ready
   ) {
-    frameState.specularEnvironmentMaps = this._specularEnvironmentMapAtlas.texture;
-    frameState.specularEnvironmentMapsMaximumLOD = this._specularEnvironmentMapAtlas.maximumMipmapLevel;
+    frameState.specularEnvironmentMaps = this._specularEnvironmentCubeMap.texture;
+    frameState.specularEnvironmentMapsMaximumLOD = this._specularEnvironmentCubeMap.maximumMipmapLevel;
   } else {
     frameState.specularEnvironmentMaps = undefined;
     frameState.specularEnvironmentMapsMaximumLOD = undefined;
@@ -3328,20 +3328,18 @@ Scene.prototype.updateEnvironment = function () {
   );
 
   const envMaps = this.specularEnvironmentMaps;
-  let envMapAtlas = this._specularEnvironmentMapAtlas;
-  if (
-    defined(envMaps) &&
-    (!defined(envMapAtlas) || envMapAtlas.url !== envMaps)
-  ) {
-    envMapAtlas = envMapAtlas && envMapAtlas.destroy();
-    this._specularEnvironmentMapAtlas = new SpecularEnvironmentCubeMap(envMaps);
-  } else if (!defined(envMaps) && defined(envMapAtlas)) {
-    envMapAtlas.destroy();
-    this._specularEnvironmentMapAtlas = undefined;
+  let specularEnvironmentCubeMap = this._specularEnvironmentCubeMap;
+  if (defined(envMaps) && specularEnvironmentCubeMap?.url !== envMaps) {
+    specularEnvironmentCubeMap =
+      specularEnvironmentCubeMap && specularEnvironmentCubeMap.destroy();
+    this._specularEnvironmentCubeMap = new SpecularEnvironmentCubeMap(envMaps);
+  } else if (!defined(envMaps) && defined(specularEnvironmentCubeMap)) {
+    specularEnvironmentCubeMap.destroy();
+    this._specularEnvironmentCubeMap = undefined;
   }
 
-  if (defined(this._specularEnvironmentMapAtlas)) {
-    this._specularEnvironmentMapAtlas.update(frameState);
+  if (defined(this._specularEnvironmentCubeMap)) {
+    this._specularEnvironmentCubeMap.update(frameState);
   }
 };
 

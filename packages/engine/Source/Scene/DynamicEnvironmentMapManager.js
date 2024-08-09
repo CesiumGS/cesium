@@ -226,7 +226,7 @@ function updateRadianceMap(manager, frameState) {
     }
 
     let i = 0;
-    for (const face of manager._radianceCubeMap.faces()) {
+    for (const face of CubeMap.faces()) {
       let texture = manager._radianceMapTextures[i];
       if (!defined(texture)) {
         texture = new Texture({
@@ -280,8 +280,7 @@ function updateRadianceMap(manager, frameState) {
           u_atmosphereMieScaleHeight: () => atmosphere.mieScaleHeight,
           u_atmosphereMieAnisotropy: () => atmosphere.mieAnisotropy,
           u_enuToFixedFrame: () => enuToFixedFrame,
-          u_faceDirection: () =>
-            manager._radianceCubeMap.getDirection(face, scratchCartesian),
+          u_faceDirection: () => CubeMap.getDirection(face, scratchCartesian),
           u_positionWC: () => position,
         },
         persists: false,
@@ -298,7 +297,7 @@ function updateRadianceMap(manager, frameState) {
 
           // Copy the output texture into the corresponding cubemap face
           framebuffer._bind();
-          face.copyFromFramebuffer();
+          manager._radianceCubeMap[face].copyFromFramebuffer();
           framebuffer._unBind();
           framebuffer.destroy();
 
@@ -350,9 +349,9 @@ function updateSpecularMaps(manager, frameState) {
     }
   };
 
+  let index = 0;
   for (let level = 1; level < mipmapLevels; ++level) {
-    for (const [faceIndex, face] of CubeMap.faceNames.entries()) {
-      const index = (level - 1) * 6 + faceIndex;
+    for (const face of CubeMap.faces()) {
       const texture = (manager._specularMapTextures[index] = new Texture({
         context: context,
         width: width,
@@ -397,6 +396,7 @@ function updateSpecularMaps(manager, frameState) {
       });
       manager._convolutionComputeCommands[index] = command;
       frameState.commandList.push(command);
+      ++index;
     }
 
     width /= 2;

@@ -80,9 +80,7 @@ ImageBasedLightingPipelineStage.process = function (
       );
     }
 
-    if (
-      defined(specularEnvironmentMapAtlas)
-    ) {
+    if (defined(specularEnvironmentMapAtlas)) {
       shaderBuilder.addDefine(
         "SPECULAR_IBL",
         undefined,
@@ -128,10 +126,10 @@ ImageBasedLightingPipelineStage.process = function (
       return sphericalHarmonicCoefficients;
     },
     model_specularEnvironmentMaps: function () {
-      return imageBasedLighting.specularEnvironmentMapAtlas.texture;
+      return imageBasedLighting.specularEnvironmentCubeMap.texture;
     },
     model_specularEnvironmentMapsMaximumLOD: function () {
-      return imageBasedLighting.specularEnvironmentMapAtlas.maximumMipmapLevel;
+      return imageBasedLighting.specularEnvironmentCubeMap.maximumMipmapLevel;
     },
   };
 

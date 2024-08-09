@@ -117,7 +117,11 @@ SkyBox.prototype.update = function (frameState, useHdr) {
 
     //>>includeStart('debug', pragmas.debug);
     Check.defined("this.sources", sources);
-    if (CubeMap.faceNames.some((faceName) => !defined(sources[faceName]))) {
+    if (
+      Object.values(CubeMap.FaceName).some(
+        (faceName) => !defined(sources[faceName])
+      )
+    ) {
       throw new DeveloperError(
         "this.sources must have positiveX, negativeX, positiveY, negativeY, positiveZ, and negativeZ properties."
       );
@@ -125,7 +129,7 @@ SkyBox.prototype.update = function (frameState, useHdr) {
 
     const sourceType = typeof sources.positiveX;
     if (
-      CubeMap.faceNames.some(
+      Object.values(CubeMap.FaceName).some(
         (faceName) => typeof sources[faceName] !== sourceType
       )
     ) {

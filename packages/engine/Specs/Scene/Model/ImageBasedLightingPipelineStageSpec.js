@@ -14,6 +14,7 @@ describe("Scene/Model/ImageBasedLightingPipelineStage", function () {
     context: {
       floatingPointTexture: true,
       colorBufferFloat: true,
+      supportsTextureLod: true,
     },
   };
 
@@ -140,7 +141,7 @@ describe("Scene/Model/ImageBasedLightingPipelineStage", function () {
   });
 
   it("configures the render resources for specular environment maps", function () {
-    const mockAtlas = {
+    const mockCubeMap = {
       texture: {
         dimensions: {},
       },
@@ -151,7 +152,7 @@ describe("Scene/Model/ImageBasedLightingPipelineStage", function () {
       specularEnvironmentMaps: "example.ktx2",
     });
     imageBasedLighting.luminanceAtZenith = undefined;
-    imageBasedLighting._specularEnvironmentMapAtlas = mockAtlas;
+    imageBasedLighting._specularEnvironmentCubeMap = mockCubeMap;
 
     const mockModel = {
       imageBasedLighting: imageBasedLighting,

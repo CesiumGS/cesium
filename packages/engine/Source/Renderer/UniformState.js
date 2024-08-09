@@ -1083,7 +1083,7 @@ Object.defineProperties(UniformState.prototype, {
   },
 
   /**
-   * The specular environment map atlas of the scene.
+   * The specular environment cube map of the scene.
    * @memberof UniformState.prototype
    * @type {Texture}
    */
@@ -1094,7 +1094,7 @@ Object.defineProperties(UniformState.prototype, {
   },
 
   /**
-   * The maximum level-of-detail of the specular environment map atlas of the scene.
+   * The maximum level-of-detail of the specular environment cube map of the scene.
    * @memberof UniformState.prototype
    * @type {number}
    */
@@ -1479,7 +1479,7 @@ UniformState.prototype.update = function (frameState) {
   );
 
   // IE 11 doesn't optimize out uniforms that are #ifdef'd out. So undefined values for the spherical harmonic
-  // coefficients and specular environment map atlas dimensions cause a crash.
+  // coefficients cause a crash.
   this._sphericalHarmonicCoefficients = defaultValue(
     frameState.sphericalHarmonicCoefficients,
     EMPTY_ARRAY

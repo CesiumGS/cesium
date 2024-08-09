@@ -1484,7 +1484,7 @@ const AutomaticUniforms = {
   }),
 
   /**
-   * An automatic GLSL uniform containing the specular environment map atlas used within the scene.
+   * An automatic GLSL uniform containing the specular environment cube map used within the scene.
    *
    * @example
    * // GLSL declaration
@@ -1499,7 +1499,7 @@ const AutomaticUniforms = {
   }),
 
   /**
-   * An automatic GLSL uniform containing the maximum level-of-detail of the specular environment map atlas used within the scene.
+   * An automatic GLSL uniform containing the maximum valid level-of-detail of the specular environment cube map used within the scene.
    *
    * @example
    * // GLSL declaration

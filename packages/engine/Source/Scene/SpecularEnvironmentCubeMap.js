@@ -9,8 +9,12 @@ import Sampler from "../Renderer/Sampler.js";
 import TextureMinificationFilter from "../Renderer/TextureMinificationFilter.js";
 
 /**
- * TODO
+ * Manages a cube map for use as a specular environment map.
  *
+ * @alias SpecularEnvironmentCubeMap
+ * @constructor
+ *
+ * @param {string} url The url to the KTX2 file containing the specular environment map and convoluted mipmaps.
  * @private
  */
 function SpecularEnvironmentCubeMap(url) {
@@ -63,7 +67,10 @@ Object.defineProperties(SpecularEnvironmentCubeMap.prototype, {
     },
   },
   /**
-   * The maximum number of mip levels.
+   * The maximum number of mip levels with valid environment map data.
+   * This may differ from the number of mips in the WebGL cubemap.
+   * The data loaded at <code>maximumMipmapLevel</code> is suitable for
+   * PBR rendering of a material with maximum roughness (1.0).
    * @memberOf SpecularEnvironmentCubeMap.prototype
    * @type {number}
    * @readonly
@@ -74,7 +81,7 @@ Object.defineProperties(SpecularEnvironmentCubeMap.prototype, {
     },
   },
   /**
-   * Determines if the texture atlas is complete and ready to use.
+   * Determines if the cube map is complete and ready to use.
    * @memberof SpecularEnvironmentCubeMap.prototype
    * @type {boolean}
    * @readonly
@@ -87,10 +94,10 @@ Object.defineProperties(SpecularEnvironmentCubeMap.prototype, {
 });
 
 SpecularEnvironmentCubeMap.isSupported = function (context) {
-  return (
+  const supportsFloatBuffersAndTextures =
     (context.colorBufferHalfFloat && context.halfFloatingPointTexture) ||
-    (context.floatingPointTexture && context.colorBufferFloat)
-  );
+    (context.floatingPointTexture && context.colorBufferFloat);
+  return supportsFloatBuffersAndTextures && context.supportsTextureLod;
 };
 
 function cleanupResources(map) {
@@ -98,8 +105,10 @@ function cleanupResources(map) {
 }
 
 /**
- * TODO
- *
+ * Loads the environment map image and constructs the cube map for specular radiance calculations.
+ * <p>
+ * Once the image is loaded, the next call cleans up unused resources. Every call after that is a no-op.
+ * </p>
  * @param {FrameState} frameState The frame state.
  *
  * @private
@@ -147,16 +156,12 @@ SpecularEnvironmentCubeMap.prototype.update = function (frameState) {
     return;
   }
 
-  const defines = [];
   // Datatype is defined if it is a normalized type (i.e. ..._UNORM, ..._SFLOAT)
-  let pixelDatatype = cubeMapBuffers[0].positiveX.pixelDatatype;
+  let { pixelDatatype } = cubeMapBuffers[0].positiveX;
   if (!defined(pixelDatatype)) {
     pixelDatatype = context.halfFloatingPointTexture
       ? PixelDatatype.HALF_FLOAT
       : PixelDatatype.FLOAT;
-  } else {
-    // TODO: not needed?
-    defines.push("RGBA_NORMALIZED");
   }
   const pixelFormat = PixelFormat.RGBA;
 
@@ -170,7 +175,7 @@ SpecularEnvironmentCubeMap.prototype.update = function (frameState) {
     // for roughness 1.0.
     // Fill the remaining levels with null values, to avoid WebGL errors.
     const dummyMipLevel = {};
-    CubeMap.faceNames.forEach((faceName) => {
+    Object.values(CubeMap.FaceName).forEach((faceName) => {
       dummyMipLevel[faceName] = undefined;
     });
     for (let mipLevel = mipLevels; mipLevel < expectedMipLevels; mipLevel++) {
@@ -182,14 +187,16 @@ SpecularEnvironmentCubeMap.prototype.update = function (frameState) {
     minificationFilter: TextureMinificationFilter.LINEAR_MIPMAP_LINEAR,
   });
 
-  this._texture = CubeMap.fromMipmaps({
+  const cubeMap = new CubeMap({
     context: context,
-    source: cubeMapBuffers,
+    source: cubeMapBuffers[0],
     flipY: false,
     pixelDatatype: pixelDatatype,
     pixelFormat: pixelFormat,
     sampler: sampler,
   });
+  cubeMap.loadMipmaps(cubeMapBuffers.slice(1));
+  this._texture = cubeMap;
 
   this._texture.maximumMipmapLevel = this._maximumMipmapLevel;
   context.textureCache.addTexture(this._url, this._texture);
