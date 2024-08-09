@@ -23,6 +23,7 @@ import Property from "./Property.js";
 import Cartographic from "../Core/Cartographic.js";
 
 const defaultScale = 1.0;
+const defaultAllowVerticalexaggeration = false;
 const defaultMinimumPixelSize = 0.0;
 const defaultIncrementallyLoadTextures = true;
 const defaultClampAnimations = true;
@@ -198,6 +199,13 @@ ModelVisualizer.prototype.update = function (time) {
       time,
       defaultScale
     );
+
+    model.allowVerticalExaggeration = Property.getValueOrDefault(
+      modelGraphics._allowVerticalExaggeration,
+      time,
+      defaultAllowVerticalexaggeration
+    );
+
     model.minimumPixelSize = Property.getValueOrDefault(
       modelGraphics._minimumPixelSize,
       time,

@@ -517,6 +517,8 @@ describe(
       expect(model.id).toBeUndefined();
       expect(model.allowPicking).toEqual(true);
 
+      expect(model.allowVerticalExaggeration).toEqual(false);
+
       expect(model.activeAnimations).toBeDefined();
       expect(model.clampAnimations).toEqual(true);
 
