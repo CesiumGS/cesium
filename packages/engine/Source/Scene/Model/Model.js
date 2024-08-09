@@ -2251,7 +2251,7 @@ function updatePickIds(model) {
 
 // Matrix3 is a row-major constructor.
 // The same constructor in GLSL will produce the transpose of this.
-const yUpToZUp = new Matrix3(-1, 0, 0, 0, 0, 1, 0, -1, 0);
+const yUpToZUp = new Matrix3(1, 0, 0, 0, 0, 1, 0, -1, 0);
 
 function updateReferenceMatrices(model, frameState) {
   const modelMatrix = defined(model._clampedModelMatrix)

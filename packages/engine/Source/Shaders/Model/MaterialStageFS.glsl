@@ -455,10 +455,10 @@ void materialStage(inout czm_modelMaterial material, ProcessedAttributes attribu
         baseColorWithAlpha *= color;
     #endif
 
-    material.baseColor = baseColorWithAlpha;
     #ifdef USE_CPU_STYLING
-        material.baseColor.rgb = blend(baseColorWithAlpha.rgb, feature.color.rgb, model_colorBlend);
+        baseColorWithAlpha.rgb = blend(baseColorWithAlpha.rgb, feature.color.rgb, model_colorBlend);
     #endif
+    material.baseColor = baseColorWithAlpha;
     material.diffuse = baseColorWithAlpha.rgb;
     material.alpha = baseColorWithAlpha.a;
 

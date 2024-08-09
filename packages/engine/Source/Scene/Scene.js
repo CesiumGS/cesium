@@ -57,7 +57,6 @@ import GlobeTranslucencyState from "./GlobeTranslucencyState.js";
 import InvertClassification from "./InvertClassification.js";
 import JobScheduler from "./JobScheduler.js";
 import MapMode2D from "./MapMode2D.js";
-import OctahedralProjectedCubeMap from "./OctahedralProjectedCubeMap.js";
 import PerformanceDisplay from "./PerformanceDisplay.js";
 import PerInstanceColorAppearance from "./PerInstanceColorAppearance.js";
 import Picking from "./Picking.js";
@@ -69,6 +68,7 @@ import SceneTransforms from "./SceneTransforms.js";
 import SceneTransitioner from "./SceneTransitioner.js";
 import ScreenSpaceCameraController from "./ScreenSpaceCameraController.js";
 import ShadowMap from "./ShadowMap.js";
+import SpecularEnvironmentCubeMap from "./SpecularEnvironmentCubeMap.js";
 import StencilConstants from "./StencilConstants.js";
 import SunLight from "./SunLight.js";
 import SunPostProcess from "./SunPostProcess.js";
@@ -738,7 +738,7 @@ function Scene(options) {
    * @type {string}
    */
   this.specularEnvironmentMaps = undefined;
-  this._specularEnvironmentMapAtlas = undefined;
+  this._specularEnvironmentCubeMap = undefined;
 
   /**
    * The light source for shading. Defaults to a directional light from the Sun.
@@ -927,7 +927,7 @@ Object.defineProperties(Scene.prototype, {
    */
   specularEnvironmentMapsSupported: {
     get: function () {
-      return OctahedralProjectedCubeMap.isSupported(this._context);
+      return SpecularEnvironmentCubeMap.isSupported(this._context);
     },
   },
 
@@ -1964,11 +1964,11 @@ Scene.prototype.updateFrameState = function () {
   frameState.verticalExaggerationRelativeHeight = this.verticalExaggerationRelativeHeight;
 
   if (
-    defined(this._specularEnvironmentMapAtlas) &&
-    this._specularEnvironmentMapAtlas.ready
+    defined(this._specularEnvironmentCubeMap) &&
+    this._specularEnvironmentCubeMap.ready
   ) {
-    frameState.specularEnvironmentMaps = this._specularEnvironmentMapAtlas.texture;
-    frameState.specularEnvironmentMapsMaximumLOD = this._specularEnvironmentMapAtlas.maximumMipmapLevel;
+    frameState.specularEnvironmentMaps = this._specularEnvironmentCubeMap.texture;
+    frameState.specularEnvironmentMapsMaximumLOD = this._specularEnvironmentCubeMap.maximumMipmapLevel;
   } else {
     frameState.specularEnvironmentMaps = undefined;
     frameState.specularEnvironmentMapsMaximumLOD = undefined;
@@ -3328,20 +3328,18 @@ Scene.prototype.updateEnvironment = function () {
   );
 
   const envMaps = this.specularEnvironmentMaps;
-  let envMapAtlas = this._specularEnvironmentMapAtlas;
-  if (
-    defined(envMaps) &&
-    (!defined(envMapAtlas) || envMapAtlas.url !== envMaps)
-  ) {
-    envMapAtlas = envMapAtlas && envMapAtlas.destroy();
-    this._specularEnvironmentMapAtlas = new OctahedralProjectedCubeMap(envMaps);
-  } else if (!defined(envMaps) && defined(envMapAtlas)) {
-    envMapAtlas.destroy();
-    this._specularEnvironmentMapAtlas = undefined;
+  let specularEnvironmentCubeMap = this._specularEnvironmentCubeMap;
+  if (defined(envMaps) && specularEnvironmentCubeMap?.url !== envMaps) {
+    specularEnvironmentCubeMap =
+      specularEnvironmentCubeMap && specularEnvironmentCubeMap.destroy();
+    this._specularEnvironmentCubeMap = new SpecularEnvironmentCubeMap(envMaps);
+  } else if (!defined(envMaps) && defined(specularEnvironmentCubeMap)) {
+    specularEnvironmentCubeMap.destroy();
+    this._specularEnvironmentCubeMap = undefined;
   }
 
-  if (defined(this._specularEnvironmentMapAtlas)) {
-    this._specularEnvironmentMapAtlas.update(frameState);
+  if (defined(this._specularEnvironmentCubeMap)) {
+    this._specularEnvironmentCubeMap.update(frameState);
   }
 };
 

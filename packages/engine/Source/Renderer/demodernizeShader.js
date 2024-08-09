@@ -60,6 +60,8 @@ function demodernizeShader(input, isFragmentShader) {
       output = output.replaceAll(/gl_FragDepth/g, `gl_FragDepthEXT`);
     }
 
+    // Enable the EXT_shader_texture_lod extension
+    output = `#ifdef GL_EXT_shader_texture_lod\n#extension GL_EXT_shader_texture_lod : enable\n#endif\n${output}`;
     // Enable the OES_standard_derivatives extension
     output = `#ifdef GL_OES_standard_derivatives\n#extension GL_OES_standard_derivatives : enable\n#endif\n${output}`;
   } else {

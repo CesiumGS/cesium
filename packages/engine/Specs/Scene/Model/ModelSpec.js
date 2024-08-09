@@ -31,11 +31,11 @@ import {
   JobScheduler,
   JulianDate,
   Math as CesiumMath,
+  Matrix3,
   Matrix4,
   Model,
   ModelFeature,
   ModelSceneGraph,
-  OctahedralProjectedCubeMap,
   ModelUtility,
   Pass,
   PrimitiveType,
@@ -44,6 +44,7 @@ import {
   RuntimeError,
   ShaderProgram,
   ShadowMode,
+  SpecularEnvironmentCubeMap,
   SplitDirection,
   StyleCommandsNeeded,
   SunLight,
@@ -1754,6 +1755,48 @@ describe(
       });
     });
 
+    describe("reference matrices", function () {
+      it("sets IBL transform matrix", async function () {
+        if (!scene.highDynamicRangeSupported) {
+          return;
+        }
+        const resource = Resource.createIfNeeded(boxTexturedGlbUrl);
+        const buffer = await resource.fetchArrayBuffer();
+        const imageBasedLighting = new ImageBasedLighting({
+          specularEnvironmentMaps:
+            "./Data/EnvironmentMap/kiara_6_afternoon_2k_ibl.ktx2",
+        });
+        const model = await loadAndZoomToModelAsync(
+          {
+            gltf: new Uint8Array(buffer),
+            imageBasedLighting: imageBasedLighting,
+          },
+          scene
+        );
+        await pollToPromise(function () {
+          scene.render();
+          return (
+            defined(imageBasedLighting.specularEnvironmentCubeMap) &&
+            imageBasedLighting.specularEnvironmentCubeMap.ready
+          );
+        });
+        expect(model.modelMatrix).toEqual(Matrix4.IDENTITY);
+        const { view3D } = scene.context.uniformState;
+        const viewRotation = Matrix4.getRotation(view3D, new Matrix3());
+        Matrix3.transpose(viewRotation, viewRotation);
+        const yUpToZUp = new Matrix3(1, 0, 0, 0, 0, 1, 0, -1, 0);
+        const expectedIblTransform = Matrix3.multiply(
+          yUpToZUp,
+          viewRotation,
+          new Matrix3()
+        );
+        expect(model._iblReferenceFrameMatrix).toEqualEpsilon(
+          expectedIblTransform,
+          CesiumMath.EPSILON14
+        );
+      });
+    });
+
     describe("picking and id", function () {
       it("initializes with id", async function () {
         // This model gets clipped if log depth is disabled, so zoom out
@@ -3320,8 +3363,8 @@ describe(
         await pollToPromise(function () {
           scene.render();
           return (
-            defined(ibl.specularEnvironmentMapAtlas) &&
-            ibl.specularEnvironmentMapAtlas.ready
+            defined(ibl.specularEnvironmentCubeMap) &&
+            ibl.specularEnvironmentCubeMap.ready
           );
         });
         scene.highDynamicRange = true;
@@ -3344,7 +3387,7 @@ describe(
       });
 
       it("renders when specularEnvironmentMaps aren't supported", async function () {
-        spyOn(OctahedralProjectedCubeMap, "isSupported").and.returnValue(false);
+        spyOn(SpecularEnvironmentCubeMap, "isSupported").and.returnValue(false);
 
         const model = await loadAndZoomToModelAsync(
           {
