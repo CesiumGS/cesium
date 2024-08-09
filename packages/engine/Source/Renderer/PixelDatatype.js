@@ -95,4 +95,27 @@ PixelDatatype.validate = function (pixelDatatype) {
   );
 };
 
+/**
+ * Determine which TypedArray class should be used for a given PixelDatatype.
+ *
+ * @param {PixelDatatype} pixelDatatype The pixel datatype.
+ * @returns {function} The constructor for the appropriate TypedArray class.
+ *
+ * @private
+ */
+PixelDatatype.getTypedArrayConstructor = function (pixelDatatype) {
+  const sizeInBytes = PixelDatatype.sizeInBytes(pixelDatatype);
+  if (sizeInBytes === Uint8Array.BYTES_PER_ELEMENT) {
+    return Uint8Array;
+  } else if (sizeInBytes === Uint16Array.BYTES_PER_ELEMENT) {
+    return Uint16Array;
+  } else if (
+    sizeInBytes === Float32Array.BYTES_PER_ELEMENT &&
+    pixelDatatype === PixelDatatype.FLOAT
+  ) {
+    return Float32Array;
+  }
+  return Uint32Array;
+};
+
 export default Object.freeze(PixelDatatype);
