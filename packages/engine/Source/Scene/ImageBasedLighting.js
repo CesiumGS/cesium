@@ -146,7 +146,6 @@ Object.defineProperties(ImageBasedLighting.prototype, {
     },
   },
 
-
   /**
    * The third order spherical harmonic coefficients used for the diffuse color of image-based lighting. When <code>undefined</code>, a diffuse irradiance
    * computed from the atmosphere color is used.
@@ -234,37 +233,6 @@ Object.defineProperties(ImageBasedLighting.prototype, {
   shouldRegenerateShaders: {
     get: function () {
       return this._shouldRegenerateShaders;
-    },
-  },
-
-  /**
-   * Whether or not to use the default spherical harmonic coefficients.
-   *
-   * @memberof ImageBasedLighting.prototype
-   * @type {boolean}
-   *
-   * @private
-   */
-  useDefaultSphericalHarmonics: {
-    get: function () {
-      return this._useDefaultSphericalHarmonics;
-    },
-  },
-
-  /**
-   * Whether or not the image-based lighting settings use spherical harmonic coefficients.
-   *
-   * @memberof ImageBasedLighting.prototype
-   * @type {boolean}
-   *
-   * @private
-   */
-  useSphericalHarmonicCoefficients: {
-    get: function () {
-      return (
-        defined(this._sphericalHarmonicCoefficients) ||
-        this._useDefaultSphericalHarmonics
-      );
     },
   },
 

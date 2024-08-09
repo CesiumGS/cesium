@@ -1,17 +1,14 @@
 import BoxGeometry from "../Core/BoxGeometry.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Check from "../Core/Check.js";
-import ComponentDatatype from "../Core/ComponentDatatype.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import GeometryPipeline from "../Core/GeometryPipeline.js";
-import IndexDatatype from "../Core/IndexDatatype.js";
 import CesiumMath from "../Core/Math.js";
 import PixelFormat from "../Core/PixelFormat.js";
 import VertexFormat from "../Core/VertexFormat.js";
-import Buffer from "./Buffer.js";
 import BufferUsage from "./BufferUsage.js";
 import ContextLimits from "./ContextLimits.js";
 import CubeMapFace from "./CubeMapFace.js";
@@ -22,7 +19,6 @@ import Sampler from "./Sampler.js";
 import TextureMagnificationFilter from "./TextureMagnificationFilter.js";
 import TextureMinificationFilter from "./TextureMinificationFilter.js";
 import VertexArray from "./VertexArray.js";
-
 
 /**
  * @typedef CubeMap.ConstructorOptions
@@ -240,21 +236,26 @@ CubeMap.faceNames = Object.freeze([
  * @param {*} frameState
  * @returns
  */
-CubeMap.prototype.copyFace = function (frameState, texture, face, mipLevel ) {
+CubeMap.prototype.copyFace = function (frameState, texture, face, mipLevel) {
   const context = frameState.context;
-    const framebuffer = new Framebuffer({
-      context: context,
-      colorTextures: [texture],
-      destroyAttachments: false
-    })
+  const framebuffer = new Framebuffer({
+    context: context,
+    colorTextures: [texture],
+    destroyAttachments: false,
+  });
 
-    framebuffer._bind();
+  framebuffer._bind();
 
-    this[face].copyMipmapFromFramebuffer(0, 0, texture.width, texture.height, mipLevel);
-    framebuffer._unBind();
-    framebuffer.destroy();
+  this[face].copyMipmapFromFramebuffer(
+    0,
+    0,
+    texture.width,
+    texture.height,
+    mipLevel
+  );
+  framebuffer._unBind();
+  framebuffer.destroy();
 };
-
 
 /**
  * Creates a CubeMap, using a texel data source that includes pre-generated mipmaps.
@@ -644,7 +645,7 @@ CubeMap.prototype.generateMipmap = function (hint) {
 /**
  * TODO
  */
-CubeMap.createVertexArray = function(context, face) {
+CubeMap.createVertexArray = function (context, face) {
   const geometry = BoxGeometry.createGeometry(
     BoxGeometry.fromDimensions({
       dimensions: new Cartesian3(2.0, 2.0, 2.0),
@@ -661,7 +662,7 @@ CubeMap.createVertexArray = function(context, face) {
     attributeLocations: attributeLocations,
     bufferUsage: BufferUsage.STATIC_DRAW,
   });
-}
+};
 
 CubeMap.prototype.isDestroyed = function () {
   return false;

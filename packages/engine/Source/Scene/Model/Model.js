@@ -2285,30 +2285,27 @@ function updateReferenceMatrices(model, frameState) {
   const referenceMatrix = defaultValue(model.referenceMatrix, modelMatrix);
   const context = frameState.context;
 
-  const ibl = model._imageBasedLighting;
- // if (ibl.useSphericalHarmonicCoefficients || ibl.useSpecularEnvironmentMaps) {
-    let iblReferenceFrameMatrix3 = scratchIBLReferenceFrameMatrix3;
-    let iblReferenceFrameMatrix4 = scratchIBLReferenceFrameMatrix4;
+  let iblReferenceFrameMatrix3 = scratchIBLReferenceFrameMatrix3;
+  let iblReferenceFrameMatrix4 = scratchIBLReferenceFrameMatrix4;
 
-    iblReferenceFrameMatrix4 = Matrix4.multiply(
-      context.uniformState.view3D,
-      referenceMatrix,
-      iblReferenceFrameMatrix4
-    );
-    iblReferenceFrameMatrix3 = Matrix4.getRotation(
-      iblReferenceFrameMatrix4,
-      iblReferenceFrameMatrix3
-    );
-    iblReferenceFrameMatrix3 = Matrix3.transpose(
-      iblReferenceFrameMatrix3,
-      iblReferenceFrameMatrix3
-    );
-    model._iblReferenceFrameMatrix = Matrix3.multiply(
-      yUpToZUp,
-      iblReferenceFrameMatrix3,
-      model._iblReferenceFrameMatrix
-    );
-  //}
+  iblReferenceFrameMatrix4 = Matrix4.multiply(
+    context.uniformState.view3D,
+    referenceMatrix,
+    iblReferenceFrameMatrix4
+  );
+  iblReferenceFrameMatrix3 = Matrix4.getRotation(
+    iblReferenceFrameMatrix4,
+    iblReferenceFrameMatrix3
+  );
+  iblReferenceFrameMatrix3 = Matrix3.transpose(
+    iblReferenceFrameMatrix3,
+    iblReferenceFrameMatrix3
+  );
+  model._iblReferenceFrameMatrix = Matrix3.multiply(
+    yUpToZUp,
+    iblReferenceFrameMatrix3,
+    model._iblReferenceFrameMatrix
+  );
 
   if (model.isClippingEnabled()) {
     let clippingPlanesMatrix = scratchClippingPlanesMatrix;

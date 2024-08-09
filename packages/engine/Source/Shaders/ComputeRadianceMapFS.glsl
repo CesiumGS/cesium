@@ -66,7 +66,7 @@ void main() {
     );
     vec4 skyColor = computeAtmosphereColor(skyPositionWC, lightDirectionWC, rayleighColor, mieColor, opacity);
 
-    vec3 sceneSkyBox = vec3(0.0);//czm_textureCube(czm_environmentMap, vec3(v_textureCoordinates, 1.0)).rgb; // TODO
+    vec3 sceneSkyBoxColor = czm_textureCube(czm_environmentMap, normalizedDirection).rgb; // TODO: I'm not sure if this is oriented correctly
 
     float transmittanceModifier = 0.5;
     float transmittance = transmittanceModifier + clamp(1.0 - skyColor.a, 0.0, 1.0);
@@ -75,7 +75,7 @@ void main() {
     float scalar = 1.61;//computeOcclusion(u_positionWC, normalizedDirection, u_radiiAndDynamicAtmosphereColor.y, radius);
     vec3 adjustedSkyColor = skyColor.rgb * scalar;// * transmittance;
 
-    vec4 color = vec4(mix(sceneSkyBox, adjustedSkyColor, skyColor.a), 1.0);
+    vec4 color = vec4(mix(sceneSkyBoxColor, adjustedSkyColor, skyColor.a), 1.0);
 
     // #ifndef HDR
     //     color.rgb = czm_acesTonemapping(color.rgb);
