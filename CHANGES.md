@@ -10,7 +10,13 @@
 
 ##### Fixes :wrench:
 
-- When the mouse is pressed, the modifiers will be recorded. Modifying the modifiers during this process is invalid. [#11903](https://github.com/CesiumGS/cesium/pull/11903)
+- Fixed When the mouse is pressed, the modifiers will be recorded. Modifying the modifiers during this process is invalid. [#11903](https://github.com/CesiumGS/cesium/pull/11903)
+- Fixed cube-mapping artifacts in image-based lighting. [#12100](https://github.com/CesiumGS/cesium/pull/12100)
+- Fixed specular reflection artifact in PBR direct lighting. [#12116](https://github.com/CesiumGS/cesium/pull/12116)
+
+##### Breaking Changes :mega:
+
+- Custom specular environment maps in `ImageBasedLighting` now require either a WebGL2 context or a WebGL1 context that supports the [`EXT_shader_texture_lod` extension](https://registry.khronos.org/webgl/extensions/EXT_shader_texture_lod/).
 
 ### 1.120 - 2024-08-01
 
