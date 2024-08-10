@@ -13,6 +13,7 @@ import ShadowMode from "../ShadowMode.js";
 import ClassificationModelDrawCommand from "./ClassificationModelDrawCommand.js";
 import ModelUtility from "./ModelUtility.js";
 import ModelDrawCommand from "./ModelDrawCommand.js";
+import Cartesian3 from "../../Core/Cartesian3.js";
 
 /**
  * Builds the {@link ModelDrawCommand} for a {@link ModelRuntimePrimitive}
@@ -65,17 +66,35 @@ function buildDrawCommand(primitiveRenderResources, frameState) {
       ? sceneGraph._computedModelMatrix
       : sceneGraph._computedModelMatrix2D;
 
+    const scales = Matrix4.getScale(computedModelMatrix, new Cartesian3());
+    modelMatrix = computedModelMatrix;
+    console.log("in buildDrawCommand ", modelMatrix);
+    console.log("in buildDrawCommand scales ", scales);
+    console.log(
+      "in buildDrawCommand center ",
+      primitiveRenderResources.boundingSphere.center
+    );
+    console.log(
+      "in buildDrawCommand radius ",
+      primitiveRenderResources.boundingSphere.radius
+    );
+    console.log(
+      "in buildDrawCommand computedTransform ",
+      primitiveRenderResources.runtimeNode.computedTransform
+    );
+    //*/
     modelMatrix = Matrix4.multiplyTransformation(
       computedModelMatrix,
       primitiveRenderResources.runtimeNode.computedTransform,
       new Matrix4()
     );
-
+    //*/
     boundingSphere = BoundingSphere.transform(
       primitiveRenderResources.boundingSphere,
-      modelMatrix,
-      primitiveRenderResources.boundingSphere
+      modelMatrix
+      //primitiveRenderResources.boundingSphere
     );
+    //*/
   }
 
   // Initialize render state with default values
@@ -103,6 +122,8 @@ function buildDrawCommand(primitiveRenderResources, frameState) {
     ? undefined
     : primitiveRenderResources.pickId;
 
+  console.log("Now building that command with ", boundingSphere.radius);
+  // XXX
   const command = new DrawCommand({
     boundingVolume: boundingSphere,
     modelMatrix: modelMatrix,
