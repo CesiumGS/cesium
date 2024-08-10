@@ -257,7 +257,7 @@ function refreshMouseDownStatus(type, modifier, aggregator) {
     if (
       key.toString().startsWith(type) &&
       isDown[key] &&
-      key.toString() !== getKey(type, modifier)
+      key.toString() !== getKey(type, modifier).toString()
     ) {
       downFlag = true;
       cancelMouseDownAction(key, aggregator);
@@ -379,6 +379,8 @@ function CameraEventAggregator(canvas) {
   this._eventStartPosition = {};
   this._pressTime = {};
   this._releaseTime = {};
+
+  this._passButton = undefined;
 
   this._buttonsDown = 0;
 
