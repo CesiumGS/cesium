@@ -926,7 +926,9 @@ function createDrawCommands(cloudCollection, frameState) {
     for (let i = 0; i < vaLength; i++) {
       let command = colorList[i];
       if (!defined(command)) {
-        command = colorList[i] = new DrawCommand();
+        command = colorList[i] = new DrawCommand({
+          description: `cloudCollection.colorList[${i}]`,
+        });
       }
       command.pass = Pass.TRANSLUCENT;
       command.owner = cloudCollection;

@@ -21,6 +21,7 @@ const Flags = {
 function DrawCommand(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
+  this._description = defaultValue(options.description, "<unknown>");
   this._boundingVolume = options.boundingVolume;
   this._orientedBoundingBox = options.orientedBoundingBox;
   this._modelMatrix = options.modelMatrix;
@@ -83,6 +84,23 @@ function setFlag(command, flag, value) {
 }
 
 Object.defineProperties(DrawCommand.prototype, {
+  /**
+   * A short description of this draw command.
+   * <p>
+   * This is supposed to be a short description that may not be human-readable,
+   * but developer-readable, and that helps to identify this command. The exact
+   * structure of this string is not specified.
+   * </p>
+   *
+   * @memberof DrawCommand.prototype
+   * @type {string}
+   */
+  description: {
+    get: function () {
+      return this._description;
+    },
+  },
+
   /**
    * The bounding volume of the geometry in world space.  This is used for culling and frustum selection.
    * <p>
@@ -566,14 +584,18 @@ Object.defineProperties(DrawCommand.prototype, {
 /**
  * @private
  */
-DrawCommand.shallowClone = function (command, result) {
+DrawCommand.shallowClone = function (command, suffix, result) {
   if (!defined(command)) {
     return undefined;
   }
   if (!defined(result)) {
     result = new DrawCommand();
   }
-
+  if (!defined(suffix)) {
+    result._description = `${command._description}.<unknown>`;
+  } else {
+    result._description = `${command._description}${suffix}`;
+  }
   result._boundingVolume = command._boundingVolume;
   result._orientedBoundingBox = command._orientedBoundingBox;
   result._modelMatrix = command._modelMatrix;

@@ -188,9 +188,11 @@ function EllipsoidPrimitive(options) {
   this._pickId = undefined;
 
   this._colorCommand = new DrawCommand({
+    description: `ellipsoidPrimitive._colorCommand`,
     owner: defaultValue(options._owner, this),
   });
   this._pickCommand = new DrawCommand({
+    description: `ellipsoidPrimitive._pickCommand`,
     owner: defaultValue(options._owner, this),
     pickOnly: true,
   });

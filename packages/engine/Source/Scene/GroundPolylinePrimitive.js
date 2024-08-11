@@ -521,6 +521,7 @@ function createCommands(
     let command = colorCommands[i];
     if (!defined(command)) {
       command = colorCommands[i] = new DrawCommand({
+        description: `groundPolylinePrimitive.colorCommands[${i}]`,
         owner: groundPolylinePrimitive,
         primitiveType: primitive._primitiveType,
       });
@@ -535,6 +536,7 @@ function createCommands(
 
     const derivedTilesetCommand = DrawCommand.shallowClone(
       command,
+      ".tileset",
       command.derivedCommands.tileset
     );
     derivedTilesetCommand.renderState =
@@ -545,6 +547,7 @@ function createCommands(
     // derive for 2D
     const derived2DCommand = DrawCommand.shallowClone(
       command,
+      ".2d",
       command.derivedCommands.color2D
     );
     derived2DCommand.shaderProgram = groundPolylinePrimitive._sp2D;
@@ -552,6 +555,7 @@ function createCommands(
 
     const derived2DTilesetCommand = DrawCommand.shallowClone(
       derivedTilesetCommand,
+      ".2d",
       derivedTilesetCommand.derivedCommands.color2D
     );
     derived2DTilesetCommand.shaderProgram = groundPolylinePrimitive._sp2D;
@@ -560,6 +564,7 @@ function createCommands(
     // derive for Morph
     const derivedMorphCommand = DrawCommand.shallowClone(
       command,
+      ".morph",
       command.derivedCommands.colorMorph
     );
     derivedMorphCommand.renderState = groundPolylinePrimitive._renderStateMorph;

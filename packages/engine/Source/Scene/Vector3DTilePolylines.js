@@ -482,6 +482,7 @@ function queueCommands(primitive, frameState) {
       primitive._uniformMap
     );
     primitive._command = new DrawCommand({
+      description: `vector3DTilePolylines.primitive._command`,
       owner: primitive,
       vertexArray: primitive._va,
       renderState: primitive._rs,

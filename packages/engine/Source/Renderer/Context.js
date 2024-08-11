@@ -1549,6 +1549,7 @@ Context.prototype.createViewportQuadCommand = function (
   overrides = defaultValue(overrides, defaultValue.EMPTY_OBJECT);
 
   return new DrawCommand({
+    description: "viewportQuadCommand",
     vertexArray: this.getViewportQuadVertexArray(),
     primitiveType: PrimitiveType.TRIANGLES,
     renderState: overrides.renderState,

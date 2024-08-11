@@ -153,6 +153,7 @@ DepthPlane.prototype.update = function (frameState) {
     });
 
     this._command = new DrawCommand({
+      description: `depthPlane._command`,
       renderState: this._rs,
       boundingVolume: new BoundingSphere(
         Cartesian3.ZERO,

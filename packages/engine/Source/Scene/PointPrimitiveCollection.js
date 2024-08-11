@@ -1163,7 +1163,9 @@ PointPrimitiveCollection.prototype.update = function (frameState) {
 
       command = colorList[j];
       if (!defined(command)) {
-        command = colorList[j] = new DrawCommand();
+        command = colorList[j] = new DrawCommand({
+          description: `pointPrimitiveCollection.colorList[${j}]`,
+        });
       }
 
       command.primitiveType = PrimitiveType.POINTS;

@@ -2400,7 +2400,9 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
     let uniformMap;
 
     if (tileProvider._drawCommands.length <= tileProvider._usedDrawCommands) {
-      command = new DrawCommand();
+      command = new DrawCommand({
+        description: `tileProvider._drawCommands[${tileProvider._drawCommands.length}]`,
+      });
       command.owner = tile;
       command.cull = false;
       command.boundingVolume = new BoundingSphere();

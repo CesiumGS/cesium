@@ -861,7 +861,11 @@ function updateDerivedCommands(
         derivedRenderState = undefined;
       }
 
-      derivedCommand = DrawCommand.shallowClone(command, derivedCommand);
+      derivedCommand = DrawCommand.shallowClone(
+        command,
+        `.derived${i}`,
+        derivedCommand
+      );
       derivedCommandsObject[derivedCommandName] = derivedCommand;
 
       const derivedUniformMapDirtyFrame = defaultValue(

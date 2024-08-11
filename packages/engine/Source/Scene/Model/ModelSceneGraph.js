@@ -560,7 +560,15 @@ ModelSceneGraph.prototype.buildDrawCommands = function (frameState) {
         modelPositionMax
       );
 
+      let description = "model";
+      if (defined(model._resource?._url)) {
+        description += `-${model._resource._url}`;
+      }
+      description += `-node[${i}]`;
+      description += `-primitive[${j}]`;
+
       const drawCommand = buildDrawCommand(
+        description,
         primitiveRenderResources,
         frameState
       );

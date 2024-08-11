@@ -1886,6 +1886,7 @@ function createCommands(
       colorCommand = colorCommands[i];
       if (!defined(colorCommand)) {
         colorCommand = colorCommands[i] = new DrawCommand({
+          description: `primitive.colorCommands[${i}]`,
           owner: primitive,
           primitiveType: primitive._primitiveType,
         });
@@ -1902,6 +1903,7 @@ function createCommands(
     colorCommand = colorCommands[i];
     if (!defined(colorCommand)) {
       colorCommand = colorCommands[i] = new DrawCommand({
+        description: `primitive.colorCommands[${i}]`,
         owner: primitive,
         primitiveType: primitive._primitiveType,
       });
@@ -1919,6 +1921,7 @@ function createCommands(
         colorCommand = colorCommands[i];
         if (!defined(colorCommand)) {
           colorCommand = colorCommands[i] = new DrawCommand({
+            description: `primitive.colorCommands[${i}]`,
             owner: primitive,
             primitiveType: primitive._primitiveType,
           });
@@ -1935,6 +1938,7 @@ function createCommands(
       colorCommand = colorCommands[i];
       if (!defined(colorCommand)) {
         colorCommand = colorCommands[i] = new DrawCommand({
+          description: `primitive.colorCommands[${i}]`,
           owner: primitive,
           primitiveType: primitive._primitiveType,
         });

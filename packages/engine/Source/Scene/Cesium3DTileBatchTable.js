@@ -1010,7 +1010,7 @@ function getStyleCommandsNeeded(batchTable) {
 }
 
 function deriveCommand(command) {
-  const derivedCommand = DrawCommand.shallowClone(command);
+  const derivedCommand = DrawCommand.shallowClone(command, ".derived");
 
   // Add a uniform to indicate if the original command was translucent so
   // the shader knows not to cull vertices that were originally transparent
@@ -1028,14 +1028,14 @@ function deriveCommand(command) {
 }
 
 function deriveTranslucentCommand(command) {
-  const derivedCommand = DrawCommand.shallowClone(command);
+  const derivedCommand = DrawCommand.shallowClone(command, ".translucent");
   derivedCommand.pass = Pass.TRANSLUCENT;
   derivedCommand.renderState = getTranslucentRenderState(command.renderState);
   return derivedCommand;
 }
 
 function deriveOpaqueCommand(command) {
-  const derivedCommand = DrawCommand.shallowClone(command);
+  const derivedCommand = DrawCommand.shallowClone(command, ".opaque");
   derivedCommand.renderState = getOpaqueRenderState(command.renderState);
   return derivedCommand;
 }
@@ -1066,7 +1066,7 @@ function getLogDepthPolygonOffsetFragmentShaderProgram(context, shaderProgram) {
 
 function deriveZBackfaceCommand(context, command) {
   // Write just backface depth of unresolved tiles so resolved stenciled tiles do not appear in front
-  const derivedCommand = DrawCommand.shallowClone(command);
+  const derivedCommand = DrawCommand.shallowClone(command, ".zBackface");
   const rs = clone(derivedCommand.renderState, true);
   rs.cull.enabled = true;
   rs.cull.face = CullFace.FRONT;
@@ -1111,7 +1111,7 @@ function deriveZBackfaceCommand(context, command) {
 function deriveStencilCommand(command, reference) {
   // Tiles only draw if their selection depth is >= the tile drawn already. They write their
   // selection depth to the stencil buffer to prevent ancestor tiles from drawing on top
-  const derivedCommand = DrawCommand.shallowClone(command);
+  const derivedCommand = DrawCommand.shallowClone(command, ".stencil");
   const rs = clone(derivedCommand.renderState, true);
   // Stencil test is masked to the most significant 3 bits so the reference is shifted. Writes 0 for the terrain bit
   rs.stencilTest.enabled = true;

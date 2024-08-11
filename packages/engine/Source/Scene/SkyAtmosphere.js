@@ -72,6 +72,7 @@ function SkyAtmosphere(ellipsoid) {
   this._modelMatrix = new Matrix4();
 
   this._command = new DrawCommand({
+    description: `skyAtmosphere._command`,
     owner: this,
     modelMatrix: this._modelMatrix,
   });

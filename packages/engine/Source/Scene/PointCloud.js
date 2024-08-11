@@ -594,6 +594,7 @@ function createResources(pointCloud, frameState) {
   );
 
   pointCloud._drawCommand = new DrawCommand({
+    description: `pointCloud._drawCommand`,
     boundingVolume: new BoundingSphere(),
     cull: pointCloud._cull,
     modelMatrix: new Matrix4(),

@@ -674,6 +674,7 @@ function createColorCommands(classificationPrimitive, colorCommands) {
     command = colorCommands[i];
     if (!defined(command)) {
       command = colorCommands[i] = new DrawCommand({
+        description: `classificationPrimitive.colorCommands[${i}]`,
         owner: classificationPrimitive,
         primitiveType: primitive._primitiveType,
       });
@@ -687,6 +688,7 @@ function createColorCommands(classificationPrimitive, colorCommands) {
 
     derivedCommand = DrawCommand.shallowClone(
       command,
+      ".tileset",
       command.derivedCommands.tileset
     );
     derivedCommand.renderState =
@@ -698,6 +700,7 @@ function createColorCommands(classificationPrimitive, colorCommands) {
     command = colorCommands[i + 1];
     if (!defined(command)) {
       command = colorCommands[i + 1] = new DrawCommand({
+        description: `classificationPrimitive.colorCommands[${i + 1}]`,
         owner: classificationPrimitive,
         primitiveType: primitive._primitiveType,
       });
@@ -718,6 +721,7 @@ function createColorCommands(classificationPrimitive, colorCommands) {
 
     derivedCommand = DrawCommand.shallowClone(
       command,
+      ".tileset",
       command.derivedCommands.tileset
     );
     derivedCommand.pass = Pass.CESIUM_3D_TILE_CLASSIFICATION;
@@ -728,6 +732,7 @@ function createColorCommands(classificationPrimitive, colorCommands) {
       // First derive from the terrain command
       let derived2DCommand = DrawCommand.shallowClone(
         command,
+        ".2d",
         command.derivedCommands.appearance2D
       );
       derived2DCommand.shaderProgram = classificationPrimitive._spColor2D;
@@ -736,6 +741,7 @@ function createColorCommands(classificationPrimitive, colorCommands) {
       // Then derive from the 3D Tiles command
       derived2DCommand = DrawCommand.shallowClone(
         derivedCommand,
+        ".2d",
         derivedCommand.derivedCommands.appearance2D
       );
       derived2DCommand.shaderProgram = classificationPrimitive._spColor2D;
@@ -752,6 +758,7 @@ function createColorCommands(classificationPrimitive, colorCommands) {
   for (let j = 0; j < length; ++j) {
     const commandIgnoreShow = (commandsIgnoreShow[j] = DrawCommand.shallowClone(
       colorCommands[commandIndex],
+      ".ignoreShow",
       commandsIgnoreShow[j]
     ));
     commandIgnoreShow.shaderProgram = spStencil;
@@ -799,6 +806,7 @@ function createPickCommands(classificationPrimitive, pickCommands) {
     command = pickCommands[j];
     if (!defined(command)) {
       command = pickCommands[j] = new DrawCommand({
+        description: `classificationPrimitive.pickCommands[${j}]`,
         owner: classificationPrimitive,
         primitiveType: primitive._primitiveType,
         pickOnly: true,
@@ -818,6 +826,7 @@ function createPickCommands(classificationPrimitive, pickCommands) {
     // Derive for 3D Tiles classification
     derivedCommand = DrawCommand.shallowClone(
       command,
+      ".tilesetClassification",
       command.derivedCommands.tileset
     );
     derivedCommand.renderState =
@@ -829,6 +838,7 @@ function createPickCommands(classificationPrimitive, pickCommands) {
     command = pickCommands[j + 1];
     if (!defined(command)) {
       command = pickCommands[j + 1] = new DrawCommand({
+        description: `classificationPrimitive.pickCommands[${j + 1}]`,
         owner: classificationPrimitive,
         primitiveType: primitive._primitiveType,
         pickOnly: true,
@@ -847,6 +857,7 @@ function createPickCommands(classificationPrimitive, pickCommands) {
 
     derivedCommand = DrawCommand.shallowClone(
       command,
+      ".tileClassification",
       command.derivedCommands.tileset
     );
     derivedCommand.pass = Pass.CESIUM_3D_TILE_CLASSIFICATION;
@@ -857,6 +868,7 @@ function createPickCommands(classificationPrimitive, pickCommands) {
       // First derive from the terrain command
       let derived2DCommand = DrawCommand.shallowClone(
         command,
+        ".2d",
         command.derivedCommands.pick2D
       );
       derived2DCommand.shaderProgram = classificationPrimitive._spPick2D;
@@ -865,6 +877,7 @@ function createPickCommands(classificationPrimitive, pickCommands) {
       // Then derive from the 3D Tiles command
       derived2DCommand = DrawCommand.shallowClone(
         derivedCommand,
+        ".2d",
         derivedCommand.derivedCommands.pick2D
       );
       derived2DCommand.shaderProgram = classificationPrimitive._spPick2D;

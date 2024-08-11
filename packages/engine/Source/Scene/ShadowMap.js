@@ -1705,7 +1705,7 @@ function createCastDerivedCommand(
     castUniformMap = result.uniformMap;
   }
 
-  result = DrawCommand.shallowClone(command, result);
+  result = DrawCommand.shallowClone(command, ".cast", result);
   result.castShadows = true;
   result.receiveShadows = false;
 
@@ -1818,6 +1818,7 @@ ShadowMap.createReceiveDerivedCommand = function (
 
     result.receiveCommand = DrawCommand.shallowClone(
       command,
+      ".receive",
       result.receiveCommand
     );
     result.castShadows = false;

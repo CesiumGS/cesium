@@ -19,6 +19,7 @@ import ModelDrawCommand from "./ModelDrawCommand.js";
  * using its render resources. If the model classifies another asset, it
  * builds a {@link ClassificationModelDrawCommand} instead.
  *
+ * @param {string} description The description that will become the DrawCommand.description
  * @param {PrimitiveRenderResources} primitiveRenderResources The render resources for a primitive.
  * @param {FrameState} frameState The frame state for creating GPU resources.
  *
@@ -26,7 +27,7 @@ import ModelDrawCommand from "./ModelDrawCommand.js";
  *
  * @private
  */
-function buildDrawCommand(primitiveRenderResources, frameState) {
+function buildDrawCommand(description, primitiveRenderResources, frameState) {
   const shaderBuilder = primitiveRenderResources.shaderBuilder;
   shaderBuilder.addVertexLines(ModelVS);
   shaderBuilder.addFragmentLines(ModelFS);
@@ -104,6 +105,7 @@ function buildDrawCommand(primitiveRenderResources, frameState) {
     : primitiveRenderResources.pickId;
 
   const command = new DrawCommand({
+    description: description,
     boundingVolume: boundingSphere,
     modelMatrix: modelMatrix,
     uniformMap: primitiveRenderResources.uniformMap,

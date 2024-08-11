@@ -122,6 +122,7 @@ DerivedCommand.createDepthOnlyDerivedCommand = function (
 
   result.depthOnlyCommand = DrawCommand.shallowClone(
     command,
+    ".depthOnly",
     result.depthOnlyCommand
   );
 
@@ -251,7 +252,11 @@ DerivedCommand.createLogDepthCommand = function (command, context, result) {
     shader = result.command.shaderProgram;
   }
 
-  result.command = DrawCommand.shallowClone(command, result.command);
+  result.command = DrawCommand.shallowClone(
+    command,
+    ".logDepth",
+    result.command
+  );
 
   if (!defined(shader) || result.shaderProgramId !== command.shaderProgram.id) {
     result.command.shaderProgram = getLogDepthShaderProgram(
@@ -354,7 +359,11 @@ DerivedCommand.createPickDerivedCommand = function (
     renderState = result.pickCommand.renderState;
   }
 
-  result.pickCommand = DrawCommand.shallowClone(command, result.pickCommand);
+  result.pickCommand = DrawCommand.shallowClone(
+    command,
+    ".pick",
+    result.pickCommand
+  );
 
   if (!defined(shader) || result.shaderProgramId !== command.shaderProgram.id) {
     result.pickCommand.shaderProgram = getPickShaderProgram(
@@ -414,7 +423,7 @@ DerivedCommand.createHdrCommand = function (command, context, result) {
     shader = result.command.shaderProgram;
   }
 
-  result.command = DrawCommand.shallowClone(command, result.command);
+  result.command = DrawCommand.shallowClone(command, ".hdr", result.command);
 
   if (!defined(shader) || result.shaderProgramId !== command.shaderProgram.id) {
     result.command.shaderProgram = getHdrShaderProgram(

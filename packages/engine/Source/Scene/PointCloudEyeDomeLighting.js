@@ -215,7 +215,11 @@ PointCloudEyeDomeLighting.prototype.update = function (
     ) {
       // Prevent crash when tiles out-of-view come in-view during context size change or
       // when the underlying shader changes while EDL is disabled
-      derivedCommand = DrawCommand.shallowClone(command, derivedCommand);
+      derivedCommand = DrawCommand.shallowClone(
+        command,
+        ".derived",
+        derivedCommand
+      );
       derivedCommand.framebuffer = this.framebuffer;
       derivedCommand.shaderProgram = getECShaderProgram(
         frameState.context,

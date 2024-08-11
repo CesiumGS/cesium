@@ -86,6 +86,7 @@ function buildVoxelDrawCommands(primitive, context) {
   const viewportQuadVertexArray = context.getViewportQuadVertexArray();
   const depthTest = primitive._depthTest;
   const drawCommand = new DrawCommand({
+    description: `voxelDrawCommand`,
     vertexArray: viewportQuadVertexArray,
     primitiveType: PrimitiveType.TRIANGLES,
     renderState: renderState,
@@ -102,6 +103,7 @@ function buildVoxelDrawCommands(primitive, context) {
   // Create the pick draw command
   const drawCommandPick = DrawCommand.shallowClone(
     drawCommand,
+    ".pick",
     new DrawCommand()
   );
   drawCommandPick.shaderProgram = shaderProgramPick;
@@ -110,6 +112,7 @@ function buildVoxelDrawCommands(primitive, context) {
   // Create the pick voxels draw command
   const drawCommandPickVoxel = DrawCommand.shallowClone(
     drawCommand,
+    ".pickVoxel",
     new DrawCommand()
   );
   drawCommandPickVoxel.shaderProgram = shaderProgramPickVoxel;

@@ -781,6 +781,7 @@ function createColorCommands(primitive, context) {
     let stencilDepthCommand = commands[j * 2];
     if (!defined(stencilDepthCommand)) {
       stencilDepthCommand = commands[j * 2] = new DrawCommand({
+        description: `vector3DTilePrimitive.stencilDepthCommand[${j}]`,
         owner: primitive,
       });
     }
@@ -798,6 +799,7 @@ function createColorCommands(primitive, context) {
 
     const stencilDepthDerivedCommand = DrawCommand.shallowClone(
       stencilDepthCommand,
+      ".tileset",
       stencilDepthCommand.derivedCommands.tileset
     );
     stencilDepthDerivedCommand.renderState =
@@ -808,6 +810,7 @@ function createColorCommands(primitive, context) {
     let colorCommand = commands[j * 2 + 1];
     if (!defined(colorCommand)) {
       colorCommand = commands[j * 2 + 1] = new DrawCommand({
+        description: `vector3DTilePrimitive.colorCommand[${j}]`,
         owner: primitive,
       });
     }
@@ -825,6 +828,7 @@ function createColorCommands(primitive, context) {
 
     const colorDerivedCommand = DrawCommand.shallowClone(
       colorCommand,
+      ".classification",
       colorCommand.derivedCommands.tileset
     );
     colorDerivedCommand.pass = Pass.CESIUM_3D_TILE_CLASSIFICATION;
@@ -854,6 +858,7 @@ function createColorCommandsIgnoreShow(primitive, frameState) {
   for (let j = 0; j < length; ++j) {
     const commandIgnoreShow = (commandsIgnoreShow[j] = DrawCommand.shallowClone(
       commands[commandIndex],
+      ".ignoreShow",
       commandsIgnoreShow[j]
     ));
     commandIgnoreShow.shaderProgram = spStencil;
@@ -890,6 +895,7 @@ function createPickCommands(primitive) {
     let stencilDepthCommand = pickCommands[j * 2];
     if (!defined(stencilDepthCommand)) {
       stencilDepthCommand = pickCommands[j * 2] = new DrawCommand({
+        description: `vector3DTilePrimitive.stencilDepthCommand[${j}]`,
         owner: primitive,
         pickOnly: true,
       });
@@ -907,6 +913,7 @@ function createPickCommands(primitive) {
 
     const stencilDepthDerivedCommand = DrawCommand.shallowClone(
       stencilDepthCommand,
+      ".classification",
       stencilDepthCommand.derivedCommands.tileset
     );
     stencilDepthDerivedCommand.renderState =
@@ -917,6 +924,7 @@ function createPickCommands(primitive) {
     let colorCommand = pickCommands[j * 2 + 1];
     if (!defined(colorCommand)) {
       colorCommand = pickCommands[j * 2 + 1] = new DrawCommand({
+        description: `vector3DTilePrimitive.pickCommand[${j}]`,
         owner: primitive,
         pickOnly: true,
       });
@@ -934,6 +942,7 @@ function createPickCommands(primitive) {
 
     const colorDerivedCommand = DrawCommand.shallowClone(
       colorCommand,
+      ".classification",
       colorCommand.derivedCommands.tileset
     );
     colorDerivedCommand.pass = Pass.CESIUM_3D_TILE_CLASSIFICATION;

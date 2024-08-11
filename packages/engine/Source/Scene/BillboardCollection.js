@@ -2376,7 +2376,9 @@ BillboardCollection.prototype.update = function (frameState) {
     for (let j = 0; j < totalLength; ++j) {
       let command = colorList[j];
       if (!defined(command)) {
-        command = colorList[j] = new DrawCommand();
+        command = colorList[j] = new DrawCommand({
+          description: `billboardCollection.colorList[${j}]`,
+        });
       }
 
       const opaqueCommand = opaque || (opaqueAndTranslucent && j % 2 === 0);

@@ -623,7 +623,7 @@ function derive2DCommand(drawCommand, derivedCommand) {
   // in one viewport is drawn in the other.
   const derivedCommand2D = ModelDerivedCommand.clone(derivedCommand);
 
-  const command2D = DrawCommand.shallowClone(derivedCommand.command);
+  const command2D = DrawCommand.shallowClone(derivedCommand.command, ".2d");
   command2D.modelMatrix = drawCommand._modelMatrix2D;
   command2D.boundingVolume = drawCommand._boundingVolume2D;
 
@@ -647,7 +647,7 @@ function derive2DCommands(drawCommand) {
 }
 
 function deriveTranslucentCommand(command) {
-  const derivedCommand = DrawCommand.shallowClone(command);
+  const derivedCommand = DrawCommand.shallowClone(command, ".translucent");
   derivedCommand.pass = Pass.TRANSLUCENT;
   const rs = clone(command.renderState, true);
   rs.cull.enabled = false;
@@ -662,7 +662,10 @@ function deriveSilhouetteModelCommand(command, model) {
   // Wrap around after exceeding the 8-bit stencil limit.
   // The reference is unique to each model until this point.
   const stencilReference = model._silhouetteId % 255;
-  const silhouetteModelCommand = DrawCommand.shallowClone(command);
+  const silhouetteModelCommand = DrawCommand.shallowClone(
+    command,
+    ".silhouette"
+  );
   const renderState = clone(command.renderState, true);
 
   // Write the reference value into the stencil buffer.
@@ -702,7 +705,10 @@ function deriveSilhouetteColorCommand(command, model) {
   // Wrap around after exceeding the 8-bit stencil limit.
   // The reference is unique to each model until this point.
   const stencilReference = model._silhouetteId % 255;
-  const silhouetteColorCommand = DrawCommand.shallowClone(command);
+  const silhouetteColorCommand = DrawCommand.shallowClone(
+    command,
+    ".silhouetteColor"
+  );
   const renderState = clone(command.renderState, true);
   renderState.cull.enabled = false;
 
@@ -792,7 +798,7 @@ function getStencilReference(selectionDepth) {
 function deriveSkipLodBackfaceCommand(command) {
   // Write just backface depth of unresolved tiles so resolved stenciled tiles
   // do not appear in front.
-  const backfaceCommand = DrawCommand.shallowClone(command);
+  const backfaceCommand = DrawCommand.shallowClone(command, ".backface");
   const renderState = clone(command.renderState, true);
   renderState.cull.enabled = true;
   renderState.cull.face = CullFace.FRONT;
@@ -831,7 +837,7 @@ function deriveSkipLodBackfaceCommand(command) {
 function deriveSkipLodStencilCommand(command) {
   // Tiles only draw if their selection depth is >= the tile drawn already. They write their
   // selection depth to the stencil buffer to prevent ancestor tiles from drawing on top
-  const stencilCommand = DrawCommand.shallowClone(command);
+  const stencilCommand = DrawCommand.shallowClone(command, ".skipLodStencil");
   const renderState = clone(command.renderState, true);
   // The stencil reference is updated dynamically; see updateSkipLodStencilCommand().
   const { stencilTest } = renderState;

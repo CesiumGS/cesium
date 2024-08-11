@@ -619,6 +619,7 @@ OIT.prototype.createDerivedCommands = function (command, context, result) {
 
     result.translucentCommand = DrawCommand.shallowClone(
       command,
+      ".translucent",
       result.translucentCommand
     );
 
@@ -656,9 +657,14 @@ OIT.prototype.createDerivedCommands = function (command, context, result) {
 
   result.translucentCommand = DrawCommand.shallowClone(
     command,
+    ".translucent",
     result.translucentCommand
   );
-  result.alphaCommand = DrawCommand.shallowClone(command, result.alphaCommand);
+  result.alphaCommand = DrawCommand.shallowClone(
+    command,
+    ".alpha",
+    result.alphaCommand
+  );
 
   if (
     !defined(colorShader) ||

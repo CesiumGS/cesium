@@ -21,6 +21,7 @@ function ComputeEngine(context) {
 
 let renderStateScratch;
 const drawCommandScratch = new DrawCommand({
+  description: "ComputeEngine.drawCommandScratch",
   primitiveType: PrimitiveType.TRIANGLES,
 });
 const clearCommandScratch = new ClearCommand({

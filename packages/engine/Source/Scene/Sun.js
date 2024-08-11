@@ -49,6 +49,7 @@ function Sun() {
   this.show = true;
 
   this._drawCommand = new DrawCommand({
+    description: `sun._drawCommand`,
     primitiveType: PrimitiveType.TRIANGLES,
     boundingVolume: new BoundingSphere(),
     owner: this,

@@ -584,6 +584,7 @@ function queueCommands(primitive, frameState) {
       primitive._uniformMap
     );
     command = primitive._command = new DrawCommand({
+      description: `vector3DTileClampedPolylines.primitive._command`,
       owner: primitive,
       vertexArray: primitive._va,
       renderState: primitive._rs,
@@ -596,6 +597,7 @@ function queueCommands(primitive, frameState) {
 
     const derivedTilesetCommand = DrawCommand.shallowClone(
       command,
+      ".tileset",
       command.derivedCommands.tileset
     );
     derivedTilesetCommand.renderState = primitive._rs3DTiles;

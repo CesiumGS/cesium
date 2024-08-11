@@ -208,7 +208,10 @@ function updateResources(
         attributeLocations: compositeProgram._attributeLocations,
       }
     );
-    const compositePickCommand = DrawCommand.shallowClone(compositeCommand);
+    const compositePickCommand = DrawCommand.shallowClone(
+      compositeCommand,
+      ".pick"
+    );
     compositePickCommand.shaderProgram = compositePickProgram;
     compositeCommand.derivedCommands.pick = compositePickCommand;
   }

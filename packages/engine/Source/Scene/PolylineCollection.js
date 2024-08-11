@@ -642,6 +642,7 @@ function createCommandLists(
 
             if (commandIndex >= commandsLength) {
               command = new DrawCommand({
+                description: `polylineCollection.commands[${s}]`,
                 owner: polylineCollection,
               });
               commands.push(command);
@@ -734,6 +735,7 @@ function createCommandLists(
       if (defined(currentId) && count > 0) {
         if (commandIndex >= commandsLength) {
           command = new DrawCommand({
+            description: `polylineCollection.commands[${commands.length}]`,
             owner: polylineCollection,
           });
           commands.push(command);

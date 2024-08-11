@@ -254,7 +254,10 @@ function createBatchCommands(drawCommand, derivedCommands, result) {
     // they must be added in a certain order even within the batches.
     for (let j = 0; j < numDerivedCommands; j++) {
       const derivedCommand = derivedCommands[j];
-      const batchCommand = DrawCommand.shallowClone(derivedCommand);
+      const batchCommand = DrawCommand.shallowClone(
+        derivedCommand,
+        `.batch${j}`
+      );
       batchCommand.count = batchLength;
       batchCommand.offset = batchOffset;
       result.push(batchCommand);
@@ -265,7 +268,10 @@ function createBatchCommands(drawCommand, derivedCommands, result) {
 }
 
 function deriveStencilDepthCommand(command, pass) {
-  const stencilDepthCommand = DrawCommand.shallowClone(command);
+  const stencilDepthCommand = DrawCommand.shallowClone(
+    command,
+    ".stencilDepth"
+  );
   stencilDepthCommand.cull = false;
   stencilDepthCommand.pass = pass;
 
@@ -280,7 +286,7 @@ function deriveStencilDepthCommand(command, pass) {
 }
 
 function deriveColorCommand(command, pass) {
-  const colorCommand = DrawCommand.shallowClone(command);
+  const colorCommand = DrawCommand.shallowClone(command, ".color");
   colorCommand.cull = false;
   colorCommand.pass = pass;
 
@@ -296,11 +302,14 @@ function createPickCommands(drawCommand, derivedCommands, commandList) {
   const stencilDepthCommand = derivedCommands[0];
   const colorCommand = derivedCommands[1];
 
-  const pickStencilDepthCommand = DrawCommand.shallowClone(stencilDepthCommand);
+  const pickStencilDepthCommand = DrawCommand.shallowClone(
+    stencilDepthCommand,
+    ".pick"
+  );
   pickStencilDepthCommand.cull = true;
   pickStencilDepthCommand.pickOnly = true;
 
-  const pickColorCommand = DrawCommand.shallowClone(colorCommand);
+  const pickColorCommand = DrawCommand.shallowClone(colorCommand, ".pick");
   pickColorCommand.cull = true;
   pickColorCommand.pickOnly = true;
   pickColorCommand.renderState = renderState;

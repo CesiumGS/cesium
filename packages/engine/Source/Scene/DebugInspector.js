@@ -122,7 +122,9 @@ function createDebugShowFrustumsUniformMap(scene, command) {
   return debugUniformMap;
 }
 
-const scratchShowFrustumCommand = new DrawCommand();
+const scratchShowFrustumCommand = new DrawCommand({
+  description: `DebugInspector.scratchShowFrustumCommand`,
+});
 DebugInspector.prototype.executeDebugShowFrustumsCommand = function (
   scene,
   command,
@@ -142,6 +144,7 @@ DebugInspector.prototype.executeDebugShowFrustumsCommand = function (
 
   const debugCommand = DrawCommand.shallowClone(
     command,
+    ".debug",
     scratchShowFrustumCommand
   );
   debugCommand.shaderProgram = debugShaderProgram;

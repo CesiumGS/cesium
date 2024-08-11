@@ -74,6 +74,7 @@ function SkyBox(options) {
   this.show = defaultValue(options.show, true);
 
   this._command = new DrawCommand({
+    description: `skyBox.command`,
     modelMatrix: Matrix4.clone(Matrix4.IDENTITY),
     owner: this,
   });
