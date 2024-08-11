@@ -94,6 +94,7 @@ describe("Renderer/DrawCommand", function () {
 
   it("shallow clones", function () {
     const c = new DrawCommand({
+      description: "spec",
       boundingVolume: {},
       orientedBoundingBox: {},
       cull: false,
@@ -147,6 +148,7 @@ describe("Renderer/DrawCommand", function () {
 
   it("shallow clones with result", function () {
     const c = new DrawCommand({
+      desciption: "spec",
       boundingVolume: {},
       orientedBoundingBox: {},
       cull: false,
@@ -172,7 +174,7 @@ describe("Renderer/DrawCommand", function () {
     });
 
     const result = new DrawCommand();
-    const clone = DrawCommand.shallowClone(c, result);
+    const clone = DrawCommand.shallowClone(c, "", result);
 
     expect(result).toBe(clone);
     expect(clone.boundingVolume).toBe(c.boundingVolume);
