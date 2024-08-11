@@ -123,7 +123,7 @@ import pickModel from "./pickModel.js";
  * @privateParam {boolean} [options.show=true] Whether or not to render the model.
  * @privateParam {Matrix4} [options.modelMatrix=Matrix4.IDENTITY]  The 4x4 transformation matrix that transforms the model from model to world coordinates.
  * @privateParam {number} [options.scale=1.0] A uniform scale applied to this model.
- * @privateParam {boolean} [options.allowVerticalExaggeration] Allows the model to participate in vertical exaggeration.
+ * @privateParam {boolean} [options.allowVerticalExaggeration=false] Allows the model to participate in vertical exaggeration.
  * @privateParam {number} [options.minimumPixelSize=0.0] The approximate minimum pixel size of the model regardless of zoom.
  * @privateParam {number} [options.maximumScale] The maximum scale size of a model. An upper limit for minimumPixelSize.
  * @privateParam {object} [options.id] A user-defined object to return when the model is picked with {@link Scene#pick}.
@@ -341,8 +341,12 @@ function Model(options) {
   this._heightDirty = this._heightReference !== HeightReference.NONE;
   this._removeUpdateHeightCallback = undefined;
 
-  this._allowVerticalExaggeration = defaultValue(options.allowVerticalExaggeration, false);
+  this._allowVerticalExaggeration = defaultValue(
+    options.allowVerticalExaggeration,
+    false
+  );
   this._verticalExaggerationOn = false;
+  this._modelInitialExaggerationSet = false;
 
   this._clampedModelMatrix = undefined; // For use with height reference
 
@@ -1355,12 +1359,11 @@ Object.defineProperties(Model.prototype, {
     set: function (value) {
       if (value !== this._allowVerticalExaggeration) {
         this.resetDrawCommands();
+        //this._verticalExaggerationDirty = true;
       }
       this._allowVerticalExaggeration = value;
     },
   },
-
-
 
   /**
    * The light color when shading the model. When <code>undefined</code> the scene's light color is used instead.
@@ -1783,6 +1786,20 @@ const scratchClippingPlanesMatrix = new Matrix4();
  * @exception {RuntimeError} Failed to load external reference.
  */
 Model.prototype.update = function (frameState) {
+  //if VerticalExaggeration is not 1.0 when the model is built, it must be reset and rebuilt.
+  if (!this._modelVerticalExaggerationSet) {
+    if (!this._allowVerticalExaggeration) {
+      if (frameState.verticalExaggeration !== 1.0) {
+        //capture previous state and persist.
+        this._prevVerticalExaggerationSet = true;
+        this._prevVerticalExaggeration = frameState.verticalExaggeration;
+        frameState.verticalExaggeration = 1.0;
+      } else {
+        this._modelVerticalExaggerationSet = true;
+      }
+    }
+  }
+
   let finishedProcessing = false;
   try {
     // Keep processing the model every frame until the main resources
@@ -1905,6 +1922,12 @@ Model.prototype.update = function (frameState) {
   }
 
   updatePickIds(this);
+
+  //reset previous state if required
+  if (this._prevVerticalExaggerationSet) {
+    frameState.verticalExaggeration = this._prevVerticalExaggeration;
+    this._prevVerticalExaggerationSet = false;
+  }
 
   // Update the scene graph and draw commands for any changes in model's properties
   // (e.g. model matrix, back-face culling)
@@ -2085,15 +2108,18 @@ function updateFog(model, frameState) {
 }
 
 function updateVerticalExaggeration(model, frameState) {
-  let shouldExaggerate = false;
-  if(model._allowVerticalExaggeration) {
-    shouldExaggerate = frameState.verticalExaggeration !== 1.0;
-  }
-
-  const verticalExaggerationNeeded = shouldExaggerate;
-  if (model._verticalExaggerationOn !== verticalExaggerationNeeded) {
-    model.resetDrawCommands();
-    model._verticalExaggerationOn = verticalExaggerationNeeded;
+  if (model._allowVerticalExaggeration) {
+    const verticalExaggerationNeeded = frameState.verticalExaggeration !== 1.0;
+    if (model._verticalExaggerationOn !== verticalExaggerationNeeded) {
+      model.resetDrawCommands();
+      model._verticalExaggerationOn = verticalExaggerationNeeded;
+    }
+    if (model._verticalExaggerationOn && verticalExaggerationNeeded) {
+      model._modelInitialExaggerationSet = false;
+    }
+  } else if (model._verticalExaggerationOn) {
+    model.resetDrawCommands(); //if verticalExaggeration was on, reset.
+    model._verticalExaggerationOn = false;
   }
 }
 
