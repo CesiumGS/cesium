@@ -199,7 +199,8 @@ ModelRuntimePrimitive.prototype.configurePipeline = function (frameState) {
   const mode = frameState.mode;
   const use2D =
     mode !== SceneMode.SCENE3D && !frameState.scene3DOnly && model._projectTo2D;
-  const exaggerateTerrain = frameState.verticalExaggeration !== 1.0;
+  const exaggerateTerrain =
+    frameState.verticalExaggeration !== 1.0 && model.verticalExaggerationOn;
 
   const hasMorphTargets =
     defined(primitive.morphTargets) && primitive.morphTargets.length > 0;

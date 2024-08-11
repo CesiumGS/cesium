@@ -346,7 +346,6 @@ function Model(options) {
     false
   );
   this._verticalExaggerationOn = false;
-  this._modelInitialExaggerationSet = false;
 
   this._clampedModelMatrix = undefined; // For use with height reference
 
@@ -1366,6 +1365,19 @@ Object.defineProperties(Model.prototype, {
   },
 
   /**
+   * State of VerticalExaggeration (true = enabled, false = disabled).
+   *
+   * @memberof Model.prototype
+   *
+   * @type {boolean}
+   */
+  verticalExaggerationOn: {
+    get: function () {
+      return this._verticalExaggerationOn;
+    },
+  },
+
+  /**
    * The light color when shading the model. When <code>undefined</code> the scene's light color is used instead.
    * <p>
    * Disabling additional light sources by setting
@@ -1786,20 +1798,6 @@ const scratchClippingPlanesMatrix = new Matrix4();
  * @exception {RuntimeError} Failed to load external reference.
  */
 Model.prototype.update = function (frameState) {
-  //if VerticalExaggeration is not 1.0 when the model is built, it must be reset and rebuilt.
-  if (!this._modelVerticalExaggerationSet) {
-    if (!this._allowVerticalExaggeration) {
-      if (frameState.verticalExaggeration !== 1.0) {
-        //capture previous state and persist.
-        this._prevVerticalExaggerationSet = true;
-        this._prevVerticalExaggeration = frameState.verticalExaggeration;
-        frameState.verticalExaggeration = 1.0;
-      } else {
-        this._modelVerticalExaggerationSet = true;
-      }
-    }
-  }
-
   let finishedProcessing = false;
   try {
     // Keep processing the model every frame until the main resources
@@ -1922,12 +1920,6 @@ Model.prototype.update = function (frameState) {
   }
 
   updatePickIds(this);
-
-  //reset previous state if required
-  if (this._prevVerticalExaggerationSet) {
-    frameState.verticalExaggeration = this._prevVerticalExaggeration;
-    this._prevVerticalExaggerationSet = false;
-  }
 
   // Update the scene graph and draw commands for any changes in model's properties
   // (e.g. model matrix, back-face culling)
@@ -2108,16 +2100,13 @@ function updateFog(model, frameState) {
 }
 
 function updateVerticalExaggeration(model, frameState) {
-  if (model._allowVerticalExaggeration) {
+  if (model.allowVerticalExaggeration) {
     const verticalExaggerationNeeded = frameState.verticalExaggeration !== 1.0;
-    if (model._verticalExaggerationOn !== verticalExaggerationNeeded) {
+    if (model.verticalExaggerationOn !== verticalExaggerationNeeded) {
       model.resetDrawCommands();
       model._verticalExaggerationOn = verticalExaggerationNeeded;
     }
-    if (model._verticalExaggerationOn && verticalExaggerationNeeded) {
-      model._modelInitialExaggerationSet = false;
-    }
-  } else if (model._verticalExaggerationOn) {
+  } else if (model.verticalExaggerationOn) {
     model.resetDrawCommands(); //if verticalExaggeration was on, reset.
     model._verticalExaggerationOn = false;
   }

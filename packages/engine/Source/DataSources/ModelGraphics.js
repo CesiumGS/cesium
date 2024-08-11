@@ -71,6 +71,8 @@ function ModelGraphics(options) {
   this._uriSubscription = undefined;
   this._scale = undefined;
   this._scaleSubscription = undefined;
+  this._verticalExaggerationOn = undefined;
+  this.__verticalExaggerationOnSubscription = undefined;
   this._allowVerticalExaggeration = undefined;
   this._allowVerticalExaggerationSubscription = undefined;
   this._minimumPixelSize = undefined;
@@ -160,7 +162,9 @@ Object.defineProperties(ModelGraphics.prototype, {
    * @type {Property|undefined}
    * @default false
    */
-  allowVerticalExaggeration: createPropertyDescriptor("allowVerticalExaggeration"),
+  allowVerticalExaggeration: createPropertyDescriptor(
+    "allowVerticalExaggeration"
+  ),
 
   /**
    * Gets or sets the numeric Property specifying the approximate minimum
