@@ -81,6 +81,17 @@ Object.defineProperties(CompressedTextureBuffer.prototype, {
       return this._buffer;
     },
   },
+  /**
+   * The compressed texture buffer. Alias for bufferView.
+   * @type {Uint8Array}
+   * @readonly
+   * @memberof CompressedTextureBuffer.prototype
+   */
+  arrayBufferView: {
+    get: function () {
+      return this._buffer;
+    },
+  },
 });
 
 /**
