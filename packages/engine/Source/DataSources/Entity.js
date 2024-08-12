@@ -74,7 +74,7 @@ function createPropertyTypeDescriptor(name, Type) {
  * @property {TimeIntervalCollection} [availability] The availability, if any, associated with this object.
  * @property {boolean} [show] A boolean value indicating if the entity and its children are displayed.
  * @property {Property | string} [description] A string Property specifying an HTML description for this entity.
- * @property {PositionProperty | Cartesian3} [position] A Property specifying the entity position.
+ * @property {PositionProperty | Cartesian3 | CallbackProperty} [position] A Property specifying the entity position.
  * @property {Property | Quaternion} [orientation=Transforms.eastNorthUpToFixedFrame(position)] A Property specifying the entity orientation in respect to Earth-fixed-Earth-centered (ECEF). If undefined, east-north-up at entity position is used.
  * @property {Property | Cartesian3} [viewFrom] A suggested initial offset for viewing this object.
  * @property {Entity} [parent] A parent entity to associate with this entity.
