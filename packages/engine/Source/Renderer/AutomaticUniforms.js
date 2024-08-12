@@ -1484,7 +1484,7 @@ const AutomaticUniforms = {
   }),
 
   /**
-   * An automatic GLSL uniform containing the specular environment map atlas used within the scene.
+   * An automatic GLSL uniform containing the specular environment cube map used within the scene.
    *
    * @example
    * // GLSL declaration
@@ -1499,22 +1499,7 @@ const AutomaticUniforms = {
   }),
 
   /**
-   * An automatic GLSL uniform containing the size of the specular environment map atlas used within the scene.
-   *
-   * @example
-   * // GLSL declaration
-   * uniform vec2 czm_specularEnvironmentMapSize;
-   */
-  czm_specularEnvironmentMapSize: new AutomaticUniform({
-    size: 1,
-    datatype: WebGLConstants.FLOAT_VEC2,
-    getValue: function (uniformState) {
-      return uniformState.specularEnvironmentMapsDimensions;
-    },
-  }),
-
-  /**
-   * An automatic GLSL uniform containing the maximum level-of-detail of the specular environment map atlas used within the scene.
+   * An automatic GLSL uniform containing the maximum valid level-of-detail of the specular environment cube map used within the scene.
    *
    * @example
    * // GLSL declaration

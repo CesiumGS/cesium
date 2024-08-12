@@ -2,7 +2,7 @@ import combine from "../../Core/combine.js";
 import defined from "../../Core/defined.js";
 import ImageBasedLightingStageFS from "../../Shaders/Model/ImageBasedLightingStageFS.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
-import OctahedralProjectedCubeMap from "../OctahedralProjectedCubeMap.js";
+import SpecularEnvironmentCubeMap from "../SpecularEnvironmentCubeMap.js";
 
 const ImageBasedLightingPipelineStage = {
   name: "ImageBasedLightingPipelineStage", // Helps with debugging
@@ -34,7 +34,7 @@ ImageBasedLightingPipelineStage.process = function (
     ShaderDestination.FRAGMENT
   );
 
-  if (OctahedralProjectedCubeMap.isSupported(frameState.context)) {
+  if (SpecularEnvironmentCubeMap.isSupported(frameState.context)) {
     const addMatrix =
       imageBasedLighting.useSphericalHarmonics ||
       imageBasedLighting.useSpecularEnvironmentMaps ||
@@ -72,8 +72,8 @@ ImageBasedLightingPipelineStage.process = function (
     }
 
     if (
-      defined(imageBasedLighting.specularEnvironmentMapAtlas) &&
-      imageBasedLighting.specularEnvironmentMapAtlas.ready
+      defined(imageBasedLighting.specularEnvironmentCubeMap) &&
+      imageBasedLighting.specularEnvironmentCubeMap.ready
     ) {
       shaderBuilder.addDefine(
         "SPECULAR_IBL",
@@ -86,13 +86,8 @@ ImageBasedLightingPipelineStage.process = function (
         ShaderDestination.FRAGMENT
       );
       shaderBuilder.addUniform(
-        "sampler2D",
+        "samplerCube",
         "model_specularEnvironmentMaps",
-        ShaderDestination.FRAGMENT
-      );
-      shaderBuilder.addUniform(
-        "vec2",
-        "model_specularEnvironmentMapsSize",
         ShaderDestination.FRAGMENT
       );
       shaderBuilder.addUniform(
@@ -138,13 +133,10 @@ ImageBasedLightingPipelineStage.process = function (
       return imageBasedLighting.sphericalHarmonicCoefficients;
     },
     model_specularEnvironmentMaps: function () {
-      return imageBasedLighting.specularEnvironmentMapAtlas.texture;
-    },
-    model_specularEnvironmentMapsSize: function () {
-      return imageBasedLighting.specularEnvironmentMapAtlas.texture.dimensions;
+      return imageBasedLighting.specularEnvironmentCubeMap.texture;
     },
     model_specularEnvironmentMapsMaximumLOD: function () {
-      return imageBasedLighting.specularEnvironmentMapAtlas.maximumMipmapLevel;
+      return imageBasedLighting.specularEnvironmentCubeMap.maximumMipmapLevel;
     },
   };
 

@@ -8,6 +8,15 @@
 
 - Made the `time` parameter optional for `Property`, using `JulianDate.now()` as default. [#12099](https://github.com/CesiumGS/cesium/pull/12099)
 
+##### Fixes :wrench:
+
+- Fixed cube-mapping artifacts in image-based lighting. [#12100](https://github.com/CesiumGS/cesium/pull/12100)
+- Fixed specular reflection artifact in PBR direct lighting. [#12116](https://github.com/CesiumGS/cesium/pull/12116)
+
+##### Breaking Changes :mega:
+
+- Custom specular environment maps in `ImageBasedLighting` now require either a WebGL2 context or a WebGL1 context that supports the [`EXT_shader_texture_lod` extension](https://registry.khronos.org/webgl/extensions/EXT_shader_texture_lod/).
+
 ### 1.120 - 2024-08-01
 
 #### @cesium/engine

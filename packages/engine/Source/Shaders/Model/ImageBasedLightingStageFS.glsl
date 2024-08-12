@@ -166,13 +166,11 @@ vec3 computeDiffuseIBL(vec3 cubeDir)
 vec3 sampleSpecularEnvironment(vec3 cubeDir, float roughness)
 {
     #ifdef CUSTOM_SPECULAR_IBL
-        float maxLod = model_specularEnvironmentMapsMaximumLOD;
-        float lod = roughness * maxLod;
-        return czm_sampleOctahedralProjection(model_specularEnvironmentMaps, model_specularEnvironmentMapsSize, cubeDir, lod, maxLod);
+        float lod = roughness * model_specularEnvironmentMapsMaximumLOD;
+        return czm_textureCube(model_specularEnvironmentMaps, cubeDir, lod).rgb;
     #else
-        float maxLod = czm_specularEnvironmentMapsMaximumLOD;
-        float lod = roughness * maxLod;
-        return czm_sampleOctahedralProjection(czm_specularEnvironmentMaps, czm_specularEnvironmentMapSize, cubeDir, lod, maxLod);
+        float lod = roughness * czm_specularEnvironmentMapsMaximumLOD;
+        return czm_textureCube(czm_specularEnvironmentMaps, cubeDir, lod).rgb;
     #endif
 }
 vec3 computeSpecularIBL(vec3 cubeDir, float NdotV, vec3 f0, float roughness)
