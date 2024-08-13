@@ -1,6 +1,6 @@
 # Change Log
 
-### 1.122 - 2024-08-11
+### 1.121 - 2024-09-01
 
 #### @cesium/engine
 
@@ -10,15 +10,9 @@
 
 ##### Additions :tada:
 
-- Exposes `ScreenSpaceCameraController.zoomFactor` to allow adjusting the zoom factor (speed). [#9145](https://github.com/CesiumGS/cesium/pull/9145)
-
-### 1.121 - 2024-09-01
-
-#### @cesium/engine
-
-##### Additions :tada:
-
 - Made the `time` parameter optional for `Property`, using `JulianDate.now()` as default. [#12099](https://github.com/CesiumGS/cesium/pull/12099)
+
+- Exposes `ScreenSpaceCameraController.zoomFactor` to allow adjusting the zoom factor (speed). [#9145](https://github.com/CesiumGS/cesium/pull/9145)
 
 ### 1.120 - 2024-08-01
 
