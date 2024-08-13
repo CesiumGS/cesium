@@ -16,24 +16,24 @@ vec4 clipToEye(vec2 uv, float depth)
     return posEC;
 }
 
-vec4 screenToEye(vec2 screenCoordinate)
+vec3 screenToEye(vec2 screenCoordinate)
 {
     float depth = czm_readDepth(depthTexture, screenCoordinate);
-    return clipToEye(screenCoordinate, depth);
+    return clipToEye(screenCoordinate, depth).xyz;
 }
 
 // Reconstruct surface normal, avoiding edges
-vec3 getNormalXEdge(vec3 posInCamera, vec2 pixelSize)
+vec3 getNormalXEdge(vec3 positionEC, vec2 pixelSize)
 {
-    vec4 posInCameraUp = screenToEye(v_textureCoordinates - vec2(0.0, pixelSize.y));
-    vec4 posInCameraDown = screenToEye(v_textureCoordinates + vec2(0.0, pixelSize.y));
-    vec4 posInCameraLeft = screenToEye(v_textureCoordinates - vec2(pixelSize.x, 0.0));
-    vec4 posInCameraRight = screenToEye(v_textureCoordinates + vec2(pixelSize.x, 0.0));
+    vec3 positionUp = screenToEye(v_textureCoordinates - vec2(0.0, pixelSize.y));
+    vec3 positionDown = screenToEye(v_textureCoordinates + vec2(0.0, pixelSize.y));
+    vec3 positionLeft = screenToEye(v_textureCoordinates - vec2(pixelSize.x, 0.0));
+    vec3 positionRight = screenToEye(v_textureCoordinates + vec2(pixelSize.x, 0.0));
 
-    vec3 up = posInCamera - posInCameraUp.xyz;
-    vec3 down = posInCameraDown.xyz - posInCamera;
-    vec3 left = posInCamera - posInCameraLeft.xyz;
-    vec3 right = posInCameraRight.xyz - posInCamera;
+    vec3 up = positionEC - positionUp;
+    vec3 down = positionDown - positionEC;
+    vec3 left = positionEC - positionLeft;
+    vec3 right = positionRight - positionEC;
 
     vec3 DX = length(left) < length(right) ? left : right;
     vec3 DY = length(up) < length(down) ? up : down;
@@ -43,35 +43,44 @@ vec3 getNormalXEdge(vec3 posInCamera, vec2 pixelSize)
 
 void main(void)
 {
-    vec4 posInCamera = screenToEye(v_textureCoordinates);
+    vec3 positionEC = screenToEye(v_textureCoordinates);
 
-    if (posInCamera.z > frustumLength)
+    if (positionEC.z > frustumLength)
     {
         out_FragColor = vec4(1.0);
         return;
     }
 
     vec2 pixelSize = czm_pixelRatio / czm_viewport.zw;
-    vec3 normalInCamera = getNormalXEdge(posInCamera.xyz, pixelSize);
-    // Sampling direction rotation (different for each pixel)
-    float randomVal = texture(randomTexture, v_textureCoordinates / pixelSize / 255.0).x;
+    vec3 normalEC = getNormalXEdge(positionEC, pixelSize);
 
     float ao = 0.0;
 
+    const int ANGLE_STEPS = 4;
+    float angleStepScale = 1.0 / float(ANGLE_STEPS);
+    float angleStep = angleStepScale * czm_twoPi;
+    float cosStep = cos(angleStep);
+    float sinStep = sin(angleStep);
+    mat2 rotateStep = mat2(cosStep, sinStep, -sinStep, cosStep);
+
+    // Initial sampling direction (different for each pixel)
+    float randomVal = texture(randomTexture, v_textureCoordinates / pixelSize / 255.0).x;
+    vec2 sampleDirection = vec2(cos(angleStep * randomVal), sin(angleStep * randomVal));
+
+    vec2 radialStepSize = stepSize * pixelSize;
+
     // Loop over sampling directions
-    for (int i = 0; i < 4; i++)
+    for (int i = 0; i < ANGLE_STEPS; i++)
     {
-        // TODO: each direction is just mat2(0.0, 1.0, -1.0, 0.0) * prevDirection. Could skip 3/4 of the sin/cos
-        float sampleAngle = czm_piOverTwo * (float(i) + randomVal);
-        vec2 sampleDirection = vec2(cos(sampleAngle), sin(sampleAngle));
+        sampleDirection = rotateStep * sampleDirection;
 
         float localAO = 0.0;
-        float localStepSize = stepSize;
+        vec2 radialStep = radialStepSize;
 
         for (int j = 0; j < 6; j++)
         {
             // Step along sampling direction, away from output pixel
-            vec2 newCoords = v_textureCoordinates + sampleDirection * localStepSize * pixelSize;
+            vec2 newCoords = v_textureCoordinates + sampleDirection * radialStep;
 
             // Exit if we stepped off the screen
             if (newCoords.x > 1.0 || newCoords.y > 1.0 || newCoords.x < 0.0 || newCoords.y < 0.0)
@@ -79,31 +88,30 @@ void main(void)
                 break;
             }
 
-            vec4 stepPosInCamera = screenToEye(newCoords);
-            vec3 diffVec = stepPosInCamera.xyz - posInCamera.xyz;
-            float len = length(diffVec);
+            vec3 stepPositionEC = screenToEye(newCoords);
+            vec3 stepVector = stepPositionEC - positionEC;
+            float stepLength = length(stepVector);
 
-            if (len > lengthCap)
+            if (stepLength > lengthCap)
             {
                 break;
             }
 
-            float dotVal = clamp(dot(normalInCamera, normalize(diffVec)), 0.0, 1.0);
-            float weight = len / lengthCap;
-            weight = 1.0 - weight * weight;
-
+            float dotVal = clamp(dot(normalEC, normalize(stepVector)), 0.0, 1.0);
             if (dotVal < bias)
             {
                 dotVal = 0.0;
             }
 
+            float weight = stepLength / lengthCap;
+            weight = 1.0 - weight * weight;
             localAO = max(localAO, dotVal * weight);
-            localStepSize += stepSize;
+            radialStep += radialStepSize;
         }
         ao += localAO;
     }
 
-    ao /= 4.0;
+    ao *= angleStepScale;
     ao = 1.0 - clamp(ao, 0.0, 1.0);
     ao = pow(ao, intensity);
     out_FragColor = vec4(vec3(ao), 1.0);
