@@ -10,7 +10,7 @@ in vec2 v_textureCoordinates;
 
 vec4 clipToEye(vec2 uv, float depth)
 {
-    vec2 xy = vec2((uv.x * 2.0 - 1.0), ((1.0 - uv.y) * 2.0 - 1.0));
+    vec2 xy = 2.0 * uv - vec2(1.0);
     vec4 posEC = czm_inverseProjection * vec4(xy, depth, 1.0);
     posEC = posEC / posEC.w;
     return posEC;
@@ -22,23 +22,26 @@ vec3 screenToEye(vec2 screenCoordinate)
     return clipToEye(screenCoordinate, depth).xyz;
 }
 
-// Reconstruct surface normal, avoiding edges
+// Reconstruct surface normal in eye coordinates, avoiding edges
 vec3 getNormalXEdge(vec3 positionEC, vec2 pixelSize)
 {
-    vec3 positionUp = screenToEye(v_textureCoordinates - vec2(0.0, pixelSize.y));
-    vec3 positionDown = screenToEye(v_textureCoordinates + vec2(0.0, pixelSize.y));
+    // Find the 3D surface positions at adjacent screen pixels
     vec3 positionLeft = screenToEye(v_textureCoordinates - vec2(pixelSize.x, 0.0));
     vec3 positionRight = screenToEye(v_textureCoordinates + vec2(pixelSize.x, 0.0));
+    vec3 positionUp = screenToEye(v_textureCoordinates + vec2(0.0, pixelSize.y));
+    vec3 positionDown = screenToEye(v_textureCoordinates - vec2(0.0, pixelSize.y));
 
-    vec3 up = positionEC - positionUp;
-    vec3 down = positionDown - positionEC;
-    vec3 left = positionEC - positionLeft;
-    vec3 right = positionRight - positionEC;
+    // Compute potential tangent vectors
+    vec3 dx0 = positionEC - positionLeft;
+    vec3 dx1 = positionRight - positionEC;
+    vec3 dy0 = positionEC - positionDown;
+    vec3 dy1 = positionUp - positionEC;
 
-    vec3 DX = length(left) < length(right) ? left : right;
-    vec3 DY = length(up) < length(down) ? up : down;
+    // The shorter tangent is more likely to be on the same surface
+    vec3 dx = length(dx0) < length(dx1) ? dx0 : dx1;
+    vec3 dy = length(dy0) < length(dy1) ? dy0 : dy1;
 
-    return normalize(cross(DY, DX));
+    return normalize(cross(dx, dy));
 }
 
 void main(void)
