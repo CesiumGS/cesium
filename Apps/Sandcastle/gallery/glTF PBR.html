@@ -122,7 +122,7 @@
         const imageBasedLighting = new Cesium.ImageBasedLighting();
 
         const environmentMapOptions = [
-        {
+          {
             text: "Dynamic environment maps - None",
             onselect: () => {
               imageBasedLighting.imageBasedLightingFactor =
@@ -149,11 +149,11 @@
               imageBasedLighting.imageBasedLightingFactor =
                 Cesium.Cartesian2.ONE;
             },
-          }
+          },
         ];
 
         const lightingOptions = [
-        {
+          {
             text: "Directional light intensity - 1",
             onselect: () => {
               scene.light.intensity = 1.0;
@@ -294,11 +294,16 @@
           );
         }
 
-        Sandcastle.addToggleButton("Dynamic lighting", scene.globe.enableLighting, function (
-          checked
-        ) {
-          scene.globe.enableLighting = checked;
-        });
+        Sandcastle.addToggleButton(
+          "Dynamic lighting",
+          scene.globe.enableLighting,
+          function (checked) {
+            scene.globe.enableLighting = checked;
+            scene.atmosphere.dynamicLighting = checked
+              ? Cesium.DynamicAtmosphereLightingType.SUNLIGHT
+              : Cesium.DynamicAtmosphereLightingType.NONE;
+          }
+        );
 
         Sandcastle.addToggleButton("Shadows", viewer.shadows, function (
           checked
@@ -313,7 +318,7 @@
         });
 
         viewer.scene.postRender.addEventListener(() => {
-          viewer.camera.rotate(Cesium.Cartesian3.UNIT_Z,  Math.PI / 1800.0 );
+          viewer.camera.rotate(Cesium.Cartesian3.UNIT_Z, Math.PI / 1800.0);
         });
 
         //Sandcastle_End

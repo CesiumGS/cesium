@@ -25,6 +25,7 @@ import Cartesian2 from "../Core/Cartesian2.js";
 import Transforms from "../Core/Transforms.js";
 import Matrix4 from "../Core/Matrix4.js";
 import JulianDate from "../Core/JulianDate.js";
+import DynamicAtmosphereLightingType from "./DynamicAtmosphereLightingType.js";
 
 /**
  * @typedef {Object} DynamicEnvironmentMapManager.ConstructorOptions
@@ -75,6 +76,8 @@ function DynamicEnvironmentMapManager(options) {
   this._lastTime = new JulianDate();
   const width = Math.pow(2, mipmapLevels - 1);
   this._textureDimensions = new Cartesian2(width, width);
+
+  this._radiiAndDynamicAtmosphereColor = new Cartesian3();
 
   /**
    * If true, the environment map and related properties will continue to update.
@@ -230,8 +233,44 @@ DynamicEnvironmentMapManager.prototype._reset = function () {
   this._radianceCommandsDirty = true;
 };
 
-const scratchCartesian = new Cartesian3();
+const scratchPackedAtmosphere = new Cartesian3();
 const scratchSurfacePosition = new Cartesian3();
+
+function updateAtmosphere(manager, frameState) {
+  const position = manager._position;
+  const atmosphere = frameState.atmosphere;
+
+  const ellipsoid = frameState.mapProjection.ellipsoid;
+  const surfacePosition = ellipsoid.scaleToGeodeticSurface(
+    position,
+    scratchSurfacePosition
+  );
+  const outerEllipsoidScale = 1.025;
+
+  // Pack outer radius, inner radius, and dynamic atmosphere flag
+  const radiiAndDynamicAtmosphereColor = scratchPackedAtmosphere;
+  const radius = Cartesian3.magnitude(surfacePosition);
+  radiiAndDynamicAtmosphereColor.x = radius * outerEllipsoidScale;
+  radiiAndDynamicAtmosphereColor.y = radius;
+  radiiAndDynamicAtmosphereColor.z = atmosphere.dynamicLighting;
+
+  if (
+    !Cartesian3.equalsEpsilon(
+      manager._radiiAndDynamicAtmosphereColor,
+      radiiAndDynamicAtmosphereColor
+    )
+  ) {
+    Cartesian3.clone(
+      radiiAndDynamicAtmosphereColor,
+      manager._radiiAndDynamicAtmosphereColor
+    );
+    return true;
+  }
+
+  return false;
+}
+
+const scratchCartesian = new Cartesian3();
 const scratchMatrix = new Matrix4();
 const scratchAdjustments = new Cartesian4();
 
@@ -279,27 +318,12 @@ function updateRadianceMap(manager, frameState) {
         manager._radianceMapTextures[i] = texture;
       }
 
-      // TODO: Should we be tracking changes to the atmosphere and lighting settings?
       const atmosphere = frameState.atmosphere;
       const position = manager._position;
+      const radiiAndDynamicAtmosphereColor =
+        manager._radiiAndDynamicAtmosphereColor;
 
       const ellipsoid = frameState.mapProjection.ellipsoid;
-      const surfacePosition = ellipsoid.scaleToGeodeticSurface(
-        position,
-        scratchSurfacePosition
-      );
-      const outerEllipsoidScale = 1.025;
-
-      // Pack outer radius, inner radius, and dynamic atmosphere flag
-      const radiiAndDynamicAtmosphereColor = new Cartesian3();
-      const radius = Cartesian3.magnitude(surfacePosition);
-      radiiAndDynamicAtmosphereColor.x = radius * outerEllipsoidScale;
-      radiiAndDynamicAtmosphereColor.y = radius;
-
-      // TODO
-      // Toggles whether the sun position is used. 0 treats the sun as always directly overhead.
-      radiiAndDynamicAtmosphereColor.z = 1;
-
       const enuToFixedFrame = Transforms.eastNorthUpToFixedFrame(
         manager._position,
         ellipsoid,
@@ -541,13 +565,17 @@ DynamicEnvironmentMapManager.prototype.update = function (frameState) {
     return false;
   }
 
-  if (
-    !JulianDate.equalsEpsilon(
-      frameState.time,
-      this._lastTime,
-      this.maximumSecondsDifference
-    )
-  ) {
+  const dynamicLighting = frameState.atmosphere.dynamicLighting;
+  const regenerateEnvironmentMap =
+    updateAtmosphere(this, frameState) ||
+    (dynamicLighting === DynamicAtmosphereLightingType.SUNLIGHT &&
+      !JulianDate.equalsEpsilon(
+        frameState.time,
+        this._lastTime,
+        this.maximumSecondsDifference
+      ));
+
+  if (regenerateEnvironmentMap) {
     this._reset();
     this._lastTime = JulianDate.clone(frameState.time, this._lastTime);
   }
