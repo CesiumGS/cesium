@@ -5,6 +5,8 @@ in vec2 v_textureCoordinates;
 uniform vec3 u_faceDirection; // Current cubemap face
 uniform vec3 u_positionWC;
 uniform mat4 u_enuToFixedFrame;
+uniform vec4 u_brightnessSaturationGammaIntensity;
+uniform vec4 u_groundColor;
 
 const float fExposure = 2.0;
 
@@ -20,21 +22,10 @@ vec4 getCubeMapDirection(vec2 uv, vec3 faceDir) {
     }
 }
 
-float computeHorizonAngle(vec3 positionWC, float ellipsoidRadius) {
-    // Approximate a sphere
-    float height = length(positionWC);
-   return asin(ellipsoidRadius/height);
-}
-
-float computeOcclusion(vec3 positionWC, vec3 normalWC, float ellipsoidRadius, float maxRadius) {
-   // From https://ceur-ws.org/Vol-3027/paper5.pdf
-   float alpha = computeHorizonAngle(positionWC, ellipsoidRadius);
-    return 1.0 / (2.0 * czm_pi) * abs(sin(czm_pi - alpha));
-}
-
 void main() {    
     float height = length(u_positionWC);
     float ellipsoidHeight = height - u_radiiAndDynamicAtmosphereColor.y;
+    float atmosphereHeight = u_radiiAndDynamicAtmosphereColor.x - u_radiiAndDynamicAtmosphereColor.y;
     float radius = max(u_radiiAndDynamicAtmosphereColor.x - height, 2.0 * ellipsoidHeight);
 
     vec3 direction = (u_enuToFixedFrame * getCubeMapDirection(v_textureCoordinates, u_faceDirection)).xyz * vec3(1.0, 1.0, -1.0); // TODO: Where does this come from?
@@ -67,32 +58,28 @@ void main() {
     vec4 skyColor = computeAtmosphereColor(skyPositionWC, lightDirectionWC, rayleighColor, mieColor, opacity);
 
     vec3 sceneSkyBoxColor = czm_textureCube(czm_environmentMap, normalizedDirection).rgb; // TODO: I'm not sure if this is oriented correctly
+    vec3 groundColor = mix(vec3(0.0), u_groundColor.xyz, u_groundColor.a * (1.0 - ellipsoidHeight / atmosphereHeight));
+    vec3 backgroundColor = czm_branchFreeTernary(czm_isEmpty(intersection), sceneSkyBoxColor, groundColor);
 
-    float transmittanceModifier = 0.5;
-    float transmittance = transmittanceModifier + clamp(1.0 - skyColor.a, 0.0, 1.0);
-    
-    // Scale the sky radiance based on the overall amount of un-occluded light
-    float scalar = 1.61;//computeOcclusion(u_positionWC, normalizedDirection, u_radiiAndDynamicAtmosphereColor.y, radius);
-    vec3 adjustedSkyColor = skyColor.rgb * scalar;// * transmittance;
+    float intensity = u_brightnessSaturationGammaIntensity.w;
+    vec3 adjustedSkyColor = skyColor.rgb * intensity;
 
-    vec4 color = vec4(mix(sceneSkyBoxColor, adjustedSkyColor, skyColor.a), 1.0);
+    vec4 color = vec4(mix(backgroundColor, adjustedSkyColor, skyColor.a), 1.0);
 
-    // #ifndef HDR
-    //     color.rgb = czm_acesTonemapping(color.rgb);
-    //     color.rgb = czm_inverseGamma(color.rgb);
-    // #endif
+    // TODO: HDR?
 
     #ifdef COLOR_CORRECT
         const bool ignoreBlackPixels = true;
         color.rgb = czm_applyHSBShift(color.rgb, u_hsbShift, ignoreBlackPixels);
     #endif
 
-    // #ifndef HDR
-    //     color.rgb = vec3(1.0) - exp(-fExposure * color.rgb);
-    // #else
-        color.rgb = czm_saturation(color.rgb, 0.8);
-    // #endif
+    float brightness = u_brightnessSaturationGammaIntensity.x;
+    float saturation = u_brightnessSaturationGammaIntensity.y;
+    float gamma = u_brightnessSaturationGammaIntensity.z;
 
+    color.rgb = mix(vec3(0.0), color.rgb, brightness);
+    color.rgb = czm_saturation(color.rgb, saturation);
+    color.rgb = pow(color.rgb, vec3(gamma));
     color.rgb = czm_gammaCorrect(color.rgb);
 
     out_FragColor = color;

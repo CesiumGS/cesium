@@ -1,4 +1,6 @@
 import Cartesian3 from "../Core/Cartesian3.js";
+import Cartesian4 from "../Core/Cartesian4.js";
+import Color from "../Core/Color.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
@@ -76,17 +78,54 @@ function DynamicEnvironmentMapManager(options) {
 
   /**
    * If true, the environment map and related properties will continue to update.
-   * @memberOf DynamicEnvironmentMapManager.prototype
    * @type {boolean}
+   * @default true
    */
   this.enabled = true;
 
   /**
    * The maximum amount of elapsed seconds before a new environment map is created.
-   * @memberOf DynamicEnvironmentMapManager.prototype
    * @type {number}
+   * @default 180
    */
-  this.maximumSecondsDifference = 60 * 20;
+  this.maximumSecondsDifference = 60 * 30;
+
+  /**
+   * The gamma correction to apply to the range of light.  1.0 uses the unmodified incoming light color.
+   */
+  this.gamma = 1.0;
+
+  /**
+   * The brightness of light.  1.0 uses the unmodified incoming environment color.  Less than 1.0
+   * makes the light darker while greater than 1.0 makes it brighter.
+   *
+   * @type {number}
+   * @default 1.0
+   */
+  this.brightness = 1.0;
+
+  /**
+   * The saturation of the light. 1.0 uses the unmodified incoming environment color. Less than 1.0 reduces the
+   * saturation while greater than 1.0 increases it.
+   *
+   * @type {number}
+   * @default 0.8
+   */
+  this.saturation = 0.8;
+
+  /**
+   * The intensity of the light.
+   * @type {number}
+   * @default 2.0
+   */
+  this.intensity = 2.0;
+
+  /**
+   * Solid color used to represent the ground.
+   * @type {Color}
+   * @default Color.fromCssColorString("#6E6259").withAlpha(0.3) average ground color on earth, a warm grey
+   */
+  this.groundColor = Color.fromCssColorString("#6E6259").withAlpha(0.3);
 }
 
 Object.defineProperties(DynamicEnvironmentMapManager.prototype, {
@@ -194,6 +233,7 @@ DynamicEnvironmentMapManager.prototype._reset = function () {
 const scratchCartesian = new Cartesian3();
 const scratchSurfacePosition = new Cartesian3();
 const scratchMatrix = new Matrix4();
+const scratchAdjustments = new Cartesian4();
 
 /**
  * Renders the highest resolution specular map by creating compute commands for each cube face
@@ -266,6 +306,12 @@ function updateRadianceMap(manager, frameState) {
         scratchMatrix
       );
 
+      const adjustments = scratchAdjustments;
+      adjustments.x = manager.brightness;
+      adjustments.y = manager.saturation;
+      adjustments.z = manager.gamma;
+      adjustments.w = manager.intensity;
+
       const index = i;
       const command = new ComputeCommand({
         fragmentShaderSource: fs,
@@ -282,6 +328,8 @@ function updateRadianceMap(manager, frameState) {
           u_enuToFixedFrame: () => enuToFixedFrame,
           u_faceDirection: () => CubeMap.getDirection(face, scratchCartesian),
           u_positionWC: () => position,
+          u_brightnessSaturationGammaIntensity: () => adjustments,
+          u_groundColor: () => manager.groundColor,
         },
         persists: false,
         owner: manager,
