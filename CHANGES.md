@@ -4,15 +4,24 @@
 
 #### @cesium/engine
 
-##### Breaking Changes :mega:
-
-- `ScreenSpaceCameraController._zoomFactor` replaced with public zoomFactor attribute.
-
 ##### Additions :tada:
 
 - Made the `time` parameter optional for `Property`, using `JulianDate.now()` as default. [#12099](https://github.com/CesiumGS/cesium/pull/12099)
 
 - Exposes `ScreenSpaceCameraController.zoomFactor` to allow adjusting the zoom factor (speed). [#9145](https://github.com/CesiumGS/cesium/pull/9145)
+
+##### Fixes :wrench:
+
+- Fixed cube-mapping artifacts in image-based lighting. [#12100](https://github.com/CesiumGS/cesium/pull/12100)
+- Fixed specular reflection artifact in PBR direct lighting. [#12116](https://github.com/CesiumGS/cesium/pull/12116)
+- Added multiscattering terms to diffuse BRDF in image-based lighting. [#12118](https://github.com/CesiumGS/cesium/pull/12118)
+- Fixed CallbackProperty type not being present on entity position. [#12120](https://github.com/CesiumGS/cesium/pull/12120)
+
+##### Breaking Changes :mega:
+
+- Custom specular environment maps in `ImageBasedLighting` now require either a WebGL2 context or a WebGL1 context that supports the [`EXT_shader_texture_lod` extension](https://registry.khronos.org/webgl/extensions/EXT_shader_texture_lod/).
+
+- `ScreenSpaceCameraController._zoomFactor` replaced with public zoomFactor attribute.
 
 ### 1.120 - 2024-08-01
 
