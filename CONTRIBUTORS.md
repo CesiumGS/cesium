@@ -393,3 +393,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [Tim Schneider](https://github.com/Tim-S)
 - [Vladislav Yunev](https://github.com/YunVlad)
 - [Levi Montgomery](https://github.com/Levi-Montgomery)
+- [Brandon Berisford](https://github.com/BeyondBelief96)
