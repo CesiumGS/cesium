@@ -16,18 +16,24 @@ vec4 clipToEye(vec2 uv, float depth)
     return posEC;
 }
 
-//Reconstruct Normal Without Edge Removation
-vec3 getNormalXEdge(vec3 posInCamera, float depthU, float depthD, float depthL, float depthR, vec2 pixelSize)
+vec4 screenToEye(vec2 screenCoordinate)
 {
-    vec4 posInCameraUp = clipToEye(v_textureCoordinates - vec2(0.0, pixelSize.y), depthU);
-    vec4 posInCameraDown = clipToEye(v_textureCoordinates + vec2(0.0, pixelSize.y), depthD);
-    vec4 posInCameraLeft = clipToEye(v_textureCoordinates - vec2(pixelSize.x, 0.0), depthL);
-    vec4 posInCameraRight = clipToEye(v_textureCoordinates + vec2(pixelSize.x, 0.0), depthR);
+    float depth = czm_readDepth(depthTexture, screenCoordinate);
+    return clipToEye(screenCoordinate, depth);
+}
 
-    vec3 up = posInCamera.xyz - posInCameraUp.xyz;
-    vec3 down = posInCameraDown.xyz - posInCamera.xyz;
-    vec3 left = posInCamera.xyz - posInCameraLeft.xyz;
-    vec3 right = posInCameraRight.xyz - posInCamera.xyz;
+// Reconstruct surface normal, avoiding edges
+vec3 getNormalXEdge(vec3 posInCamera, vec2 pixelSize)
+{
+    vec4 posInCameraUp = screenToEye(v_textureCoordinates - vec2(0.0, pixelSize.y));
+    vec4 posInCameraDown = screenToEye(v_textureCoordinates + vec2(0.0, pixelSize.y));
+    vec4 posInCameraLeft = screenToEye(v_textureCoordinates - vec2(pixelSize.x, 0.0));
+    vec4 posInCameraRight = screenToEye(v_textureCoordinates + vec2(pixelSize.x, 0.0));
+
+    vec3 up = posInCamera - posInCameraUp.xyz;
+    vec3 down = posInCameraDown.xyz - posInCamera;
+    vec3 left = posInCamera - posInCameraLeft.xyz;
+    vec3 right = posInCameraRight.xyz - posInCamera;
 
     vec3 DX = length(left) < length(right) ? left : right;
     vec3 DY = length(up) < length(down) ? up : down;
@@ -37,8 +43,7 @@ vec3 getNormalXEdge(vec3 posInCamera, float depthU, float depthD, float depthL, 
 
 void main(void)
 {
-    float depth = czm_readDepth(depthTexture, v_textureCoordinates);
-    vec4 posInCamera = clipToEye(v_textureCoordinates, depth);
+    vec4 posInCamera = screenToEye(v_textureCoordinates);
 
     if (posInCamera.z > frustumLength)
     {
@@ -47,44 +52,34 @@ void main(void)
     }
 
     vec2 pixelSize = czm_pixelRatio / czm_viewport.zw;
-    float depthU = czm_readDepth(depthTexture, v_textureCoordinates - vec2(0.0, pixelSize.y));
-    float depthD = czm_readDepth(depthTexture, v_textureCoordinates + vec2(0.0, pixelSize.y));
-    float depthL = czm_readDepth(depthTexture, v_textureCoordinates - vec2(pixelSize.x, 0.0));
-    float depthR = czm_readDepth(depthTexture, v_textureCoordinates + vec2(pixelSize.x, 0.0));
-    vec3 normalInCamera = getNormalXEdge(posInCamera.xyz, depthU, depthD, depthL, depthR, pixelSize);
-
-    float ao = 0.0;
-    vec2 sampleDirection = vec2(1.0, 0.0);
-    float gapAngle = 90.0 * czm_radiansPerDegree;
-
-    // RandomNoise
+    vec3 normalInCamera = getNormalXEdge(posInCamera.xyz, pixelSize);
+    // Sampling direction rotation (different for each pixel)
     float randomVal = texture(randomTexture, v_textureCoordinates / pixelSize / 255.0).x;
 
-    //Loop for each direction
+    float ao = 0.0;
+
+    // Loop over sampling directions
     for (int i = 0; i < 4; i++)
     {
-        float newGapAngle = gapAngle * (float(i) + randomVal);
-        float cosVal = cos(newGapAngle);
-        float sinVal = sin(newGapAngle);
+        // TODO: each direction is just mat2(0.0, 1.0, -1.0, 0.0) * prevDirection. Could skip 3/4 of the sin/cos
+        float sampleAngle = czm_piOverTwo * (float(i) + randomVal);
+        vec2 sampleDirection = vec2(cos(sampleAngle), sin(sampleAngle));
 
-        //Rotate Sampling Direction
-        vec2 rotatedSampleDirection = vec2(cosVal * sampleDirection.x - sinVal * sampleDirection.y, sinVal * sampleDirection.x + cosVal * sampleDirection.y);
         float localAO = 0.0;
         float localStepSize = stepSize;
 
-        //Loop for each step
         for (int j = 0; j < 6; j++)
         {
-            vec2 newCoords = v_textureCoordinates + rotatedSampleDirection * localStepSize * pixelSize;
+            // Step along sampling direction, away from output pixel
+            vec2 newCoords = v_textureCoordinates + sampleDirection * localStepSize * pixelSize;
 
-            //Exception Handling
-            if(newCoords.x > 1.0 || newCoords.y > 1.0 || newCoords.x < 0.0 || newCoords.y < 0.0)
+            // Exit if we stepped off the screen
+            if (newCoords.x > 1.0 || newCoords.y > 1.0 || newCoords.x < 0.0 || newCoords.y < 0.0)
             {
                 break;
             }
 
-            float stepDepthInfo = czm_readDepth(depthTexture, newCoords);
-            vec4 stepPosInCamera = clipToEye(newCoords, stepDepthInfo);
+            vec4 stepPosInCamera = screenToEye(newCoords);
             vec3 diffVec = stepPosInCamera.xyz - posInCamera.xyz;
             float len = length(diffVec);
 
@@ -93,7 +88,7 @@ void main(void)
                 break;
             }
 
-            float dotVal = clamp(dot(normalInCamera, normalize(diffVec)), 0.0, 1.0 );
+            float dotVal = clamp(dot(normalInCamera, normalize(diffVec)), 0.0, 1.0);
             float weight = len / lengthCap;
             weight = 1.0 - weight * weight;
 
