@@ -14,6 +14,7 @@
 uniform mat3 u_transformDirectionViewToLocal;
 uniform vec3 u_cameraPositionUv;
 uniform float u_stepSize;
+uniform float u_time;
 
 #if defined(PICKING)
     uniform vec4 u_pickColor;
@@ -29,17 +30,8 @@ float hash(vec2 p)
 #endif
 
 vec4 getStepSize(in SampleData sampleData, in Ray viewRay, in RayShapeIntersection shapeIntersection) {
-#if defined(SHAPE_BOX)
-    Box voxelBox = constructVoxelBox(sampleData.tileCoords, sampleData.tileUv);
-    RayShapeIntersection voxelIntersection = intersectBox(viewRay, voxelBox);
-    vec4 entry = shapeIntersection.entry.w >= voxelIntersection.entry.w ? shapeIntersection.entry : voxelIntersection.entry;
-    float exit = min(voxelIntersection.exit.w, shapeIntersection.exit.w);
-    float dt = (exit - entry.w) * RAY_SCALE;
-    return vec4(normalize(entry.xyz), dt);
-#else
     float dimAtLevel = pow(2.0, float(sampleData.tileCoords.w));
     return vec4(viewRay.dir, u_stepSize / dimAtLevel);
-#endif
 }
 
 void main()
@@ -87,7 +79,7 @@ void main()
         setStatistics(fragmentInput.metadata.statistics);
     #endif
 
-    vec4 colorAccum =vec4(0.0);
+    vec4 colorAccum = vec4(0.0);
 
     for (int stepCount = 0; stepCount < STEP_COUNT_MAX; ++stepCount) {
         // Read properties from the megatexture based on the traversal state
@@ -103,6 +95,8 @@ void main()
         fragmentInput.voxel.surfaceNormal = step.xyz;
         fragmentInput.voxel.travelDistance = step.w;
         fragmentInput.voxel.octreeCoords = vec4(sampleDatas[0].tileCoords);
+        fragmentInput.voxel.dimensions = vec3(u_dimensions);
+        fragmentInput.voxel.time = u_time;
 
         // Run the custom shader
         czm_modelMaterial materialOutput;

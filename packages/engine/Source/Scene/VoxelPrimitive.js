@@ -423,6 +423,7 @@ function VoxelPrimitive(options) {
     clippingPlanesTexture: undefined,
     clippingPlanesMatrix: new Matrix4(),
     stepSize: 0,
+    time: 0,
     pickColor: new Color(),
   };
 
@@ -1133,6 +1134,7 @@ VoxelPrimitive.prototype.update = function (frameState) {
     uniforms.cameraPositionUv
   );
   uniforms.stepSize = this._stepSizeUv * this._stepSizeMultiplier;
+  uniforms.time = keyframeLocation;
 
   // Render the primitive
   const command = frameState.passes.pick

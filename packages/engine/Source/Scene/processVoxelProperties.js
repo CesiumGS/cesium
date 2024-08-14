@@ -153,8 +153,9 @@ function processVoxelProperties(renderResources, primitive) {
   shaderBuilder.addStructField(voxelStructId, "vec3", "viewDirWorld");
   shaderBuilder.addStructField(voxelStructId, "vec3", "surfaceNormal");
   shaderBuilder.addStructField(voxelStructId, "float", "travelDistance");
-  shaderBuilder.addStructField(voxelStructId, "vec3", "dimensions");
   shaderBuilder.addStructField(voxelStructId, "vec4", "octreeCoords");
+  shaderBuilder.addStructField(voxelStructId, "vec3", "dimensions");
+  shaderBuilder.addStructField(voxelStructId, "float", "time");
 
   // FragmentInput struct
   const fragmentInputStructId = "FragmentInput";

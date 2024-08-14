@@ -147,9 +147,9 @@ SpatialNode.prototype.computeScreenSpaceError = function (
   let distance = Cartesian3.distance(obb.center, cameraPosition);
   // Avoid divide-by-zero when viewer is inside the tile.
   distance = Math.max(distance, CesiumMath.EPSILON7);
-  const approximateVoxelSize = this.approximateVoxelSize;
+  const approximateVoxelSize = this.approximateVoxelSize * 20000.0;
   const error = screenSpaceErrorMultiplier * (approximateVoxelSize / distance);
-  this.screenSpaceError = error;
+  this.screenSpaceError = error * 2.0;
 };
 
 // This object imitates a KeyframeNode. Only used for binary search function.
