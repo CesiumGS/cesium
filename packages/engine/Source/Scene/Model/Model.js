@@ -152,6 +152,7 @@ import pickModel from "./pickModel.js";
  * @privateParam {ClippingPolygonCollection} [options.clippingPolygons] The {@link ClippingPolygonCollection} used to selectively disable rendering the model.
  * @privateParam {Cartesian3} [options.lightColor] The light color when shading the model. When <code>undefined</code> the scene's light color is used instead.
  * @privateParam {ImageBasedLighting} [options.imageBasedLighting] The properties for managing image-based lighting on this model.
+ * @privateParam {DynamicEnvironmentMapManager.ConstructorOptions} [options.environmentMapOptions] The properties for managing dynamic environment maps on this model. Affects lighting.
  * @privateParam {boolean} [options.backFaceCulling=true] Whether to cull back-facing geometry. When true, back face culling is determined by the material's doubleSided property; when false, back face culling is disabled. Back faces are not culled if the model's color is translucent.
  * @privateParam {Credit|string} [options.credit] A credit for the data source, which is displayed on the canvas.
  * @privateParam {boolean} [options.showCreditsOnScreen=false] Whether to display the credits of this model on screen.
@@ -394,9 +395,10 @@ function Model(options) {
     : new ImageBasedLighting();
   this._shouldDestroyImageBasedLighting = !defined(options.imageBasedLighting);
 
-  // TODO: Options
   this._environmentMapManager = undefined;
-  const environmentMapManager = new DynamicEnvironmentMapManager();
+  const environmentMapManager = new DynamicEnvironmentMapManager(
+    options.environmentMapOptions
+  );
   DynamicEnvironmentMapManager.setOwner(
     environmentMapManager,
     this,
@@ -1406,10 +1408,9 @@ Object.defineProperties(Model.prototype, {
   },
 
   /**
-   * TODO: The properties for managing image-based lighting on this model.
+   * The properties for managing dynamic environment maps on this model. Affects lighting.
    *
    * @memberof Model.prototype
-   * @private
    * @readonly
    *
    * @type {DynamicEnvironmentMapManager}
@@ -1826,7 +1827,6 @@ Model.prototype.update = function (frameState) {
 
   const environmentMapManager = this._environmentMapManager;
   if (this._ready && environmentMapManager.owner === this) {
-    // TODO: Probs don't want to do this every frame
     environmentMapManager.position = this._boundingSphere.center;
 
     if (environmentMapManager.update(frameState)) {
@@ -2837,6 +2837,7 @@ Model.prototype.destroyModelResources = function () {
  * @param {ClippingPolygonCollection} [options.clippingPolygons] The {@link ClippingPolygonCollection} used to selectively disable rendering the model.
  * @param {Cartesian3} [options.lightColor] The light color when shading the model. When <code>undefined</code> the scene's light color is used instead.
  * @param {ImageBasedLighting} [options.imageBasedLighting] The properties for managing image-based lighting on this model.
+ * @param {DynamicEnvironmentMapManager.ConstructorOptions} [options.environmentMapOptions] The properties for managing dynamic environment maps on this model.
  * @param {boolean} [options.backFaceCulling=true] Whether to cull back-facing geometry. When true, back face culling is determined by the material's doubleSided property; when false, back face culling is disabled. Back faces are not culled if the model's color is translucent.
  * @param {Credit|string} [options.credit] A credit for the data source, which is displayed on the canvas.
  * @param {boolean} [options.showCreditsOnScreen=false] Whether to display the credits of this model on screen.

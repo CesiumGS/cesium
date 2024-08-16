@@ -246,10 +246,11 @@ function CubeMap(options) {
 }
 
 /**
- * TODO
- * @param {*} cubeMap
- * @param {*} frameState
- * @returns
+ * Copy an existing texture to a cubemap face.
+ * @param {FrameState} frameState The current rendering frameState
+ * @param {Texture} texture Texture being copied
+ * @param {CubeMap.FaceName} face The face to which to copy
+ * @param {number} [mipLevel=0] The mip level at which to copy
  */
 CubeMap.prototype.copyFace = function (frameState, texture, face, mipLevel) {
   const context = frameState.context;
@@ -266,7 +267,7 @@ CubeMap.prototype.copyFace = function (frameState, texture, face, mipLevel) {
     0,
     texture.width,
     texture.height,
-    mipLevel
+    defaultValue(mipLevel, 0)
   );
   framebuffer._unBind();
   framebuffer.destroy();
@@ -484,10 +485,10 @@ Object.defineProperties(CubeMap.prototype, {
 });
 
 /**
- * TODO
- * @param {CubeMap.FaceName} face
- * @param {Cartesian3} result
- * @returns
+ * Get a vector representing the cubemap face direction
+ * @param {CubeMap.FaceName} face The relevant face
+ * @param {Cartesian3} [result] The object onto which to store the result.
+ * @returns {Cartesian3} The vector representing the cubemap face direction
  */
 CubeMap.getDirection = function (face, result) {
   switch (face) {
@@ -652,9 +653,11 @@ CubeMap.prototype.generateMipmap = function (hint) {
 };
 
 /**
- * TODO
+ * Create a vertex array that can be used for cubemap shaders.
+ * @param {Context} context The rendering context
+ * @returns {VertexArray} The created vertex array
  */
-CubeMap.createVertexArray = function (context, face) {
+CubeMap.createVertexArray = function (context) {
   const geometry = BoxGeometry.createGeometry(
     BoxGeometry.fromDimensions({
       dimensions: new Cartesian3(2.0, 2.0, 2.0),

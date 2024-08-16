@@ -263,7 +263,6 @@ ModelVisualizer.prototype.update = function (time) {
       time,
       defaultImageBasedLightingFactor
     );
-    // TODO: environmentMapManager
     let lightColor = Property.getValueOrUndefined(
       modelGraphics._lightColor,
       time

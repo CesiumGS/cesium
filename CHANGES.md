@@ -18,7 +18,7 @@
 ##### Breaking Changes :mega:
 
 - Custom specular environment maps in `ImageBasedLighting` now require either a WebGL2 context or a WebGL1 context that supports the [`EXT_shader_texture_lod` extension](https://registry.khronos.org/webgl/extensions/EXT_shader_texture_lod/).
-- `ImageBasedLighting.luminanceAtZenith` has been removed. Use newFoo instead.
+- `ImageBasedLighting.luminanceAtZenith` has been removed. Use `DynamicEnvironmentMapManager` instead.
 
 ### 1.120 - 2024-08-01
 

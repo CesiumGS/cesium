@@ -33,7 +33,15 @@ import DynamicAtmosphereLightingType from "./DynamicAtmosphereLightingType.js";
  *
  * Options for the DynamicEnvironmentMapManager constructor
  *
+ * @property {boolean} [enabled=true] If true, the environment map and related properties will continue to update.
  * @property {number} [mipmapLevels=10] The number of mipmap levels to generate for specular maps. More mipmap levels will produce a higher resolution specular reflection.
+ * @property {number} [maximumSecondsDifference=1800] The maximum amount of elapsed seconds before a new environment map is created
+ * @property {number} [maximumPositionEpsilon=CesiumMath.EPSILON1] The maximum difference in position before a new environment map is created. Small differences in position will not visibly affect results.
+ * @property {number} [intensity=2.0] The intensity of the light. This should be adjusted relative to the value of {@link Scene.light} intensity.
+ * @property {number} [gamma=1.0] The gamma correction to apply to the range of light. 1.0 uses the unmodified incoming light color.
+ * @property {number} [brightness=1.0] The brightness of light. 1.0 uses the unmodified incoming environment color. Less than 1.0 makes the light darker while greater than 1.0 makes it brighter.
+ * @property {number} [saturation=0.8] The saturation of the light. 1.0 uses the unmodified incoming environment color. Less than 1.0 reduces the saturation while greater than 1.0 increases it.
+ * @property {Color} [groundColor=DynamicEnvironmentMapManager.AVERAGE_EARTH_GROUND_COLOR] Solid color used to represent the ground.
  */
 
 /**
@@ -89,30 +97,52 @@ function DynamicEnvironmentMapManager(options) {
    * @type {boolean}
    * @default true
    */
-  this.enabled = true;
+  this.enabled = defaultValue(options.enabled, true);
 
   /**
    * The maximum amount of elapsed seconds before a new environment map is created.
    * @type {number}
-   * @default 180
+   * @default 1800
    */
-  this.maximumSecondsDifference = 60 * 30;
+  this.maximumSecondsDifference = defaultValue(
+    options.maximumSecondsDifference,
+    60 * 30
+  );
 
   /**
-   * The gamma correction to apply to the range of light.  1.0 uses the unmodified incoming light color.
+   * The maximum difference in position before a new environment map is created. Small differences in position will not visibly affect results.
+   * @type {number}
+   * @default CesiumMath.EPSILON1
+   */
+  this.maximumPositionEpsilon = defaultValue(
+    options.maximumPositionEpsilon,
+    CesiumMath.EPSILON1
+  );
+
+  /**
+   * The intensity of the light. This should be adjusted relative to the value of {@link Scene.light} intensity.
+   * @type {number}
+   * @default 2.0
+   * @see {DirectionalLight.intensity}
+   * @see {SunLight.intensity}
+   */
+  this.intensity = defaultValue(options.intensity, 2.0);
+
+  /**
+   * The gamma correction to apply to the range of light. 1.0 uses the unmodified incoming light color.
    * @type {number}
    * @default 1.0
    */
-  this.gamma = 1.0;
+  this.gamma = defaultValue(options.gamma, 1.0);
 
   /**
-   * The brightness of light.  1.0 uses the unmodified incoming environment color.  Less than 1.0
+   * The brightness of light. 1.0 uses the unmodified incoming environment color. Less than 1.0
    * makes the light darker while greater than 1.0 makes it brighter.
    *
    * @type {number}
    * @default 1.0
    */
-  this.brightness = 1.0;
+  this.brightness = defaultValue(options.brightness, 1.0);
 
   /**
    * The saturation of the light. 1.0 uses the unmodified incoming environment color. Less than 1.0 reduces the
@@ -121,21 +151,17 @@ function DynamicEnvironmentMapManager(options) {
    * @type {number}
    * @default 0.8
    */
-  this.saturation = 0.8;
-
-  /**
-   * The intensity of the light.
-   * @type {number}
-   * @default 2.0
-   */
-  this.intensity = 2.0;
+  this.saturation = defaultValue(options.saturation, 0.8);
 
   /**
    * Solid color used to represent the ground.
    * @type {Color}
    * @default Color.fromCssColorString("#6E6259").withAlpha(0.3) average ground color on earth, a warm grey
    */
-  this.groundColor = Color.fromCssColorString("#6E6259").withAlpha(0.3);
+  this.groundColor = defaultValue(
+    options.groundColor,
+    DynamicEnvironmentMapManager.AVERAGE_EARTH_GROUND_COLOR
+  );
 }
 
 Object.defineProperties(DynamicEnvironmentMapManager.prototype, {
@@ -163,7 +189,11 @@ Object.defineProperties(DynamicEnvironmentMapManager.prototype, {
     },
     set: function (value) {
       if (
-        Cartesian3.equalsEpsilon(value, this._position, CesiumMath.EPSILON8)
+        Cartesian3.equalsEpsilon(
+          value,
+          this._position,
+          this.maximumPositionEpsilon
+        )
       ) {
         return;
       }
@@ -347,7 +377,6 @@ function updateRadianceMap(manager, frameState) {
   }
 
   if (manager._radianceCommandsDirty) {
-    // TODO: Do we need both of these dirty flags?
     let fs = manager._radianceMapFS;
     if (!defined(fs)) {
       fs = new ShaderSource({
@@ -609,7 +638,7 @@ function updateSphericalHarmonicCoefficients(manager, frameState) {
  * Do not call this function directly.
  * </p>
  * @private
- * @return {boolean} TODO
+ * @return {boolean} true is shaders should be updated.
  */
 DynamicEnvironmentMapManager.prototype.update = function (frameState) {
   if (!this.enabled || !defined(this._position)) {
@@ -731,5 +760,13 @@ DynamicEnvironmentMapManager.prototype.destroy = function () {
 
   return destroyObject(this);
 };
+
+/**
+ * Average hue of ground color on earth.
+ * @type {Color}
+ */
+DynamicEnvironmentMapManager.AVERAGE_EARTH_GROUND_COLOR = Object.freeze(
+  Color.fromCssColorString("#25211E")
+);
 
 export default DynamicEnvironmentMapManager;
