@@ -61,6 +61,7 @@ import Cesium3DTilesetMostDetailedTraversal from "./Cesium3DTilesetMostDetailedT
 import Cesium3DTilesetBaseTraversal from "./Cesium3DTilesetBaseTraversal.js";
 import Cesium3DTilesetSkipTraversal from "./Cesium3DTilesetSkipTraversal.js";
 import Ray from "../Core/Ray.js";
+import DynamicEnvironmentMapManager from "./DynamicEnvironmentMapManager.js";
 
 /**
  * @typedef {Object} Cesium3DTileset.ConstructorOptions
@@ -826,6 +827,9 @@ function Cesium3DTileset(options) {
     this._imageBasedLighting = new ImageBasedLighting();
     this._shouldDestroyImageBasedLighting = true;
   }
+
+  // TODO: options
+  this._environmentMapManager = new DynamicEnvironmentMapManager();
 
   /**
    * The light color when shading models. When <code>undefined</code> the scene's light color is used instead.
@@ -1860,6 +1864,21 @@ Object.defineProperties(Cesium3DTileset.prototype, {
   },
 
   /**
+   * TODO: The properties for managing image-based lighting on this model.
+   *
+   * @memberof Model.prototype
+   * @private
+   * @readonly
+   *
+   * @type {DynamicEnvironmentMapManager}
+   */
+  environmentMapManager: {
+    get: function () {
+      return this._environmentMapManager;
+    },
+  },
+
+  /**
    * Indicates that only the tileset's vector tiles should be used for classification.
    *
    * @memberof Cesium3DTileset.prototype
@@ -2646,6 +2665,7 @@ function handleTileFailure(error, tileset, tile) {
   } else {
     console.log(`A 3D tile failed to load: ${url}`);
     console.log(`Error: ${message}`);
+    console.log(error.stack);
   }
 }
 
@@ -3411,6 +3431,10 @@ Cesium3DTileset.prototype.updateForPass = function (
     originalCullingVolume
   );
 
+  const environmentMapManager = this._environmentMapManager;
+  environmentMapManager.position = this.boundingSphere.center;
+  environmentMapManager.update(frameState);
+
   // Update clipping polygons
   const clippingPolygons = this._clippingPolygons;
   if (defined(clippingPolygons) && clippingPolygons.enabled) {
@@ -3512,6 +3536,11 @@ Cesium3DTileset.prototype.destroy = function () {
     this._imageBasedLighting.destroy();
   }
   this._imageBasedLighting = undefined;
+
+  if (!this._environmentMapManager.isDestroyed()) {
+    this._environmentMapManager.destroy();
+  }
+  this._environmentMapManager = undefined;
 
   return destroyObject(this);
 };

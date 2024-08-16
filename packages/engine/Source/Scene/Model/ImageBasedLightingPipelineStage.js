@@ -3,10 +3,13 @@ import defined from "../../Core/defined.js";
 import ImageBasedLightingStageFS from "../../Shaders/Model/ImageBasedLightingStageFS.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import SpecularEnvironmentCubeMap from "../SpecularEnvironmentCubeMap.js";
+import Cartesian2 from "../../Core/Cartesian2.js";
 
 const ImageBasedLightingPipelineStage = {
   name: "ImageBasedLightingPipelineStage", // Helps with debugging
 };
+
+const scratchCartesian = new Cartesian2();
 
 /**
  * Add shader code, uniforms, and defines related to image based lighting
@@ -114,13 +117,14 @@ ImageBasedLightingPipelineStage.process = function (
 
   const uniformMap = {
     model_iblFactor: function () {
-      return imageBasedLighting.imageBasedLightingFactor;
+      return Cartesian2.multiplyByScalar(
+        imageBasedLighting.imageBasedLightingFactor,
+        environmentMapManager?.intensity || 1.0,
+        scratchCartesian
+      );
     },
     model_iblReferenceFrameMatrix: function () {
       return model._iblReferenceFrameMatrix;
-    },
-    model_luminanceAtZenith: function () {
-      return imageBasedLighting.luminanceAtZenith;
     },
     model_sphericalHarmonicCoefficients: function () {
       return sphericalHarmonicCoefficients;

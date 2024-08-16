@@ -4,6 +4,7 @@ import Color from "../Core/Color.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
+import DeveloperError from "../Core/DeveloperError.js";
 import ComputeCommand from "../Renderer/ComputeCommand.js";
 import Framebuffer from "../Renderer/Framebuffer.js";
 import Texture from "../Renderer/Texture.js";
@@ -59,7 +60,7 @@ function DynamicEnvironmentMapManager(options) {
   this._mipmapLevels = mipmapLevels;
   this._radianceMapComputeCommands = new Array(6);
   this._convolutionComputeCommands = new Array((mipmapLevels - 1) * 6);
-  this._irradianceComputeCommand = undefined; // TODO: Clearer naming: Specular and SH?
+  this._irradianceComputeCommand = undefined;
 
   this._radianceMapFS = undefined;
   this._irradianceMapFS = undefined;
@@ -79,6 +80,10 @@ function DynamicEnvironmentMapManager(options) {
 
   this._radiiAndDynamicAtmosphereColor = new Cartesian3();
 
+  // If this DynamicEnvironmentMapManager has an owner, only its owner should update or destroy it.
+  // This is because in a Cesium3DTileset multiple models may reference one tileset's DynamicEnvironmentMapManager.
+  this._owner = undefined;
+
   /**
    * If true, the environment map and related properties will continue to update.
    * @type {boolean}
@@ -95,6 +100,8 @@ function DynamicEnvironmentMapManager(options) {
 
   /**
    * The gamma correction to apply to the range of light.  1.0 uses the unmodified incoming light color.
+   * @type {number}
+   * @default 1.0
    */
   this.gamma = 1.0;
 
@@ -132,6 +139,18 @@ function DynamicEnvironmentMapManager(options) {
 }
 
 Object.defineProperties(DynamicEnvironmentMapManager.prototype, {
+  /**
+   * A reference to the DynamicEnvironmentMapManager's owner, if any.
+   *
+   * @memberof DynamicEnvironmentMapManager.prototype
+   * @readonly
+   * @private
+   */
+  owner: {
+    get: function () {
+      return this._owner;
+    },
+  },
   /**
    * The position around which the environment map is generated.
    *
@@ -200,6 +219,39 @@ Object.defineProperties(DynamicEnvironmentMapManager.prototype, {
     },
   },
 });
+
+/**
+ * Sets the owner for the input DynamicEnvironmentMapManager if there wasn't another owner.
+ * Destroys the owner's previous DynamicEnvironmentMapManager if setting is successful.
+ *
+ * @param {DynamicEnvironmentMapManager} [environmentMapManager] A DynamicEnvironmentMapManager (or undefined) being attached to an object
+ * @param {object} owner An Object that should receive the new DynamicEnvironmentMapManager
+ * @param {string} key The Key for the Object to reference the DynamicEnvironmentMapManager
+ * @private
+ */
+DynamicEnvironmentMapManager.setOwner = function (
+  environmentMapManager,
+  owner,
+  key
+) {
+  // Don't destroy the DynamicEnvironmentMapManager if it is already owned by newOwner
+  if (environmentMapManager === owner[key]) {
+    return;
+  }
+  // Destroy the existing DynamicEnvironmentMapManager, if any
+  owner[key] = owner[key] && owner[key].destroy();
+  if (defined(environmentMapManager)) {
+    //>>includeStart('debug', pragmas.debug);
+    if (defined(environmentMapManager._owner)) {
+      throw new DeveloperError(
+        "DynamicEnvironmentMapManager should only be assigned to one object"
+      );
+    }
+    //>>includeEnd('debug');
+    environmentMapManager._owner = owner;
+    owner[key] = environmentMapManager;
+  }
+};
 
 /**
  * Cancels any in-progress commands and marks the environment map as dirty.
@@ -415,7 +467,6 @@ function updateSpecularMaps(manager, frameState) {
     if (facesCopied === manager._specularMapTextures.length) {
       manager._irradianceCommandDirty = true;
       radianceCubeMap.sampler = new Sampler({
-        // TODO: Adjust existing sampler?
         minificationFilter: TextureMinificationFilter.LINEAR_MIPMAP_LINEAR,
       });
     }

@@ -410,6 +410,9 @@ ModelGraphics.prototype.merge = function (source) {
     this.imageBasedLightingFactor,
     source.imageBasedLightingFactor
   );
+
+  // TODO environmentMapManager
+
   this.lightColor = defaultValue(this.lightColor, source.lightColor);
   this.distanceDisplayCondition = defaultValue(
     this.distanceDisplayCondition,

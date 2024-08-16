@@ -394,7 +394,14 @@ function Model(options) {
     : new ImageBasedLighting();
   this._shouldDestroyImageBasedLighting = !defined(options.imageBasedLighting);
 
-  this._environmentMapManager = new DynamicEnvironmentMapManager();
+  // TODO: Options
+  this._environmentMapManager = undefined;
+  const environmentMapManager = new DynamicEnvironmentMapManager();
+  DynamicEnvironmentMapManager.setOwner(
+    environmentMapManager,
+    this,
+    "_environmentMapManager"
+  );
 
   this._backFaceCulling = defaultValue(options.backFaceCulling, true);
   this._backFaceCullingDirty = false;
@@ -1381,7 +1388,7 @@ Object.defineProperties(Model.prototype, {
     },
     set: function (value) {
       //>>includeStart('debug', pragmas.debug);
-      Check.typeOf.object("imageBasedLighting", this._imageBasedLighting);
+      Check.typeOf.object("imageBasedLighting", value);
       //>>includeEnd('debug');
 
       if (value !== this._imageBasedLighting) {
@@ -1410,6 +1417,20 @@ Object.defineProperties(Model.prototype, {
   environmentMapManager: {
     get: function () {
       return this._environmentMapManager;
+    },
+    set: function (value) {
+      //>>includeStart('debug', pragmas.debug);
+      Check.typeOf.object("environmentMapManager", value);
+      //>>includeEnd('debug');
+
+      if (value !== this.environmentMapManager) {
+        DynamicEnvironmentMapManager.setOwner(
+          value,
+          this,
+          "_environmentMapManager"
+        );
+        this.resetDrawCommands();
+      }
     },
   },
 
@@ -1803,11 +1824,14 @@ Model.prototype.update = function (frameState) {
   // A custom shader may have to load texture uniforms.
   updateCustomShader(this, frameState);
 
-  if (this._ready) {
-    this._environmentMapManager.position = this._boundingSphere.center;
-  }
-  if (this._environmentMapManager.update(frameState)) {
-    this.resetDrawCommands();
+  const environmentMapManager = this._environmentMapManager;
+  if (this._ready && environmentMapManager.owner === this) {
+    // TODO: Probs don't want to do this every frame
+    environmentMapManager.position = this._boundingSphere.center;
+
+    if (environmentMapManager.update(frameState)) {
+      this.resetDrawCommands();
+    }
   }
 
   // The image-based lighting may have to load texture uniforms
@@ -2725,6 +2749,16 @@ Model.prototype.destroy = function () {
     this._imageBasedLighting.destroy();
   }
   this._imageBasedLighting = undefined;
+
+  // Only destroy the environment map manager if this is the owner.
+  const environmentMapManager = this._environmentMapManager;
+  if (
+    !environmentMapManager.isDestroyed() &&
+    environmentMapManager.owner === this
+  ) {
+    environmentMapManager.destroy();
+  }
+  this._environmentMapManager = undefined;
 
   destroyObject(this);
 };

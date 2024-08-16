@@ -70,7 +70,7 @@ vec3 textureIBL(vec3 viewDirectionEC, vec3 normalEC, czm_modelMaterial material)
         float Ems = specularWeight * (1.0 - brdfLut.x - brdfLut.y);
         vec3 FmsEms = FssEss * averageFresnel * Ems / (1.0 - averageFresnel * Ems);
         vec3 dielectricScattering = (1.0 - FssEss - FmsEms) * material.diffuse;
-        vec3 diffuseContribution = irradiance * (FmsEms + dielectricScattering);
+        vec3 diffuseContribution = irradiance * (FmsEms + dielectricScattering) * model_iblFactor.x;
     #else
         vec3 diffuseContribution = vec3(0.0);
     #endif
@@ -91,7 +91,7 @@ vec3 textureIBL(vec3 viewDirectionEC, vec3 normalEC, czm_modelMaterial material)
     #ifdef SPECULAR_IBL
         vec3 reflectMC = normalize(model_iblReferenceFrameMatrix * reflectEC);
         vec3 radiance = sampleSpecularEnvironment(reflectMC, roughness);
-        vec3 specularContribution = radiance * FssEss;
+        vec3 specularContribution = radiance * FssEss * model_iblFactor.y;
     #else
         vec3 specularContribution = vec3(0.0);
     #endif
