@@ -2214,8 +2214,6 @@ function executeCommand(command, scene, context, passState, debugFramebuffer) {
         frameState.pickingMetadata &&
         defined(command.derivedCommands.pickingMetadata)
       ) {
-        // XXX_METADATA_PICKING
-        console.log("Actually executing the pickingMetadata command");
         command = command.derivedCommands.pickingMetadata.pickMetadataCommand;
         command.execute(context, passState);
         return;
