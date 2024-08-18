@@ -507,7 +507,6 @@ Picking.prototype.pickMetadata = function (
     pickedMetadataInfo.classProperty,
     rawMetadataPixel
   );
-  console.log("metadataValue ", metadataValue);
 
   return metadataValue;
 };
