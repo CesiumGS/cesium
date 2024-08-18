@@ -377,18 +377,44 @@ DerivedCommand.createPickDerivedCommand = function (
 };
 
 /**
+ * Replaces the value of the specified 'define' directive identifier
+ * with the given value.
+ *
+ * The given defines are the parts of the define directives that are
+ * stored in the `ShaderSource`. For example, the defines may be
+ * `["EXAMPLE", "EXAMPLE_VALUE 123"]`
+ *
+ * Calling `replaceDefine(defines, "EXAMPLE", 999)` will result in
+ * the defines being
+ * `["EXAMPLE 999", "EXAMPLE_VALUE 123"]`
+ *
+ * @param {string[]} defines The define directive identifiers
+ * @param {string} defineName The name (identifier) of the define directive
+ * @param {any} newDefineValue The new value whose string representation
+ * will become the token string for the define directive
  * @private
  */
 function replaceDefine(defines, defineName, newDefineValue) {
   const n = defines.length;
   for (let i = 0; i < n; i++) {
-    if (defines[i].startsWith(defineName)) {
+    const define = defines[i];
+    const tokens = define.trimStart().split(/\s+/);
+    if (tokens[0] === defineName) {
       defines[i] = `${defineName} ${newDefineValue}`;
     }
   }
 }
 
 /**
+ * Returns the component count for the given class property, or
+ * its array length if it is an array.
+ *
+ * This will be
+ * `[1, 2, 3, 4]` for `[SCALAR, VEC2, VEC3, VEC4`] types,
+ * or the array length if it is an array.
+ *
+ * @param {MetadataClassProperty} classProperty The class property
+ * @returns The component count
  * @private
  */
 function getComponentCount(classProperty) {
@@ -397,6 +423,16 @@ function getComponentCount(classProperty) {
   }
   return classProperty.arrayLength;
 }
+
+/**
+ * Returns the type that the given class property has in a GLSL shader.
+ *
+ * It returns the same string as `PropertyTextureProperty.prototype.getGlslType`
+ * for a property texture property with the given class property
+ *
+ * @param {MetadataClassProperty} classProperty The class property
+ * @returns The GLSL shader type string for the property
+ */
 function getGlslType(classProperty) {
   const componentCount = getComponentCount(classProperty);
   if (classProperty.normalized) {
@@ -412,6 +448,22 @@ function getGlslType(classProperty) {
 }
 
 /**
+ * Creates a new `ShaderProgram` from the given input that renders metadata
+ * values into the frame buffer, according to the given picked metadata info.
+ *
+ * This will update the `defines` of the fragment shader of the given shader
+ * program, by setting `METADATA_PICKING_ENABLED`, and updating the
+ * `METADATA_PICKING_VALUE_*` defines so that they reflect the components
+ * of the metadata that should be written into the RGBA (vec4) that
+ * ends up as the 'color' in the frame buffer.
+ *
+ * The RGBA values will eventually be converted back into an actual metadata
+ * value in `Picking.js`, by calling `MetadataPicking.decodeMetadataValues`.
+ *
+ * @param {Context} context The context
+ * @param {ShaderProgram} shaderProgram The shader program
+ * @param {PickedMetadataInfo} pickedMetadataInfo The picked metadata info
+ * @returns The new shader program
  * @private
  */
 function getPickMetadataShaderProgram(
@@ -423,7 +475,7 @@ function getPickMetadataShaderProgram(
   const className = pickedMetadataInfo.className;
   const propertyName = pickedMetadataInfo.propertyName;
   const keyword = `pickMetadata-${schemaId}-${className}-${propertyName}`;
-  let shader = context.shaderCache.getDerivedShaderProgram(
+  const shader = context.shaderCache.getDerivedShaderProgram(
     shaderProgram,
     keyword
   );
@@ -462,8 +514,7 @@ function getPickMetadataShaderProgram(
     }
   }
 
-  let fs = shaderProgram.fragmentShaderSource;
-  const newDefines = [...fs.defines];
+  const newDefines = shaderProgram.fragmentShaderSource.defines.slice();
   newDefines.push("METADATA_PICKING_ENABLED");
 
   // Replace the defines of the shader, using the type, property
@@ -495,27 +546,20 @@ function getPickMetadataShaderProgram(
     sourceValueStrings[3]
   );
 
-  // XXX_METADATA_PICKING
-  //*/
-  console.log("newDefines");
-  for (const d of newDefines) {
-    console.log(d);
-  }
-  //*/
-  fs = new ShaderSource({
-    sources: fs.sources,
+  const newFragmentShaderSource = new ShaderSource({
+    sources: shaderProgram.fragmentShaderSource.sources,
     defines: newDefines,
   });
-  shader = context.shaderCache.createDerivedShaderProgram(
+  const newShader = context.shaderCache.createDerivedShaderProgram(
     shaderProgram,
     keyword,
     {
       vertexShaderSource: shaderProgram.vertexShaderSource,
-      fragmentShaderSource: fs,
+      fragmentShaderSource: newFragmentShaderSource,
       attributeLocations: shaderProgram._attributeLocations,
     }
   );
-  return shader;
+  return newShader;
 }
 
 /**
