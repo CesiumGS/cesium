@@ -12,7 +12,7 @@ import MetadataComponentType from "./MetadataComponentType.js";
  *
  * @private
  */
-function MetadataPicking() {}
+const MetadataPicking = {};
 
 /**
  * Returns the value at the specified inded of the given data view,

@@ -3,6 +3,7 @@ import DrawCommand from "../Renderer/DrawCommand.js";
 import RenderState from "../Renderer/RenderState.js";
 import ShaderSource from "../Renderer/ShaderSource.js";
 import MetadataType from "./MetadataType.js";
+import MetadataPickingPipelineStage from "./Model/MetadataPickingPipelineStage.js";
 
 /**
  * @private
@@ -515,34 +516,38 @@ function getPickMetadataShaderProgram(
   }
 
   const newDefines = shaderProgram.fragmentShaderSource.defines.slice();
-  newDefines.push("METADATA_PICKING_ENABLED");
+  newDefines.push(MetadataPickingPipelineStage.METADATA_PICKING_ENABLED);
 
   // Replace the defines of the shader, using the type, property
   // access, and value components  that have been determined
-  replaceDefine(newDefines, "METADATA_PICKING_VALUE_TYPE", glslType);
   replaceDefine(
     newDefines,
-    "METADATA_PICKING_VALUE_STRING",
+    MetadataPickingPipelineStage.METADATA_PICKING_VALUE_TYPE,
+    glslType
+  );
+  replaceDefine(
+    newDefines,
+    MetadataPickingPipelineStage.METADATA_PICKING_VALUE_STRING,
     `metadata.${propertyName}`
   );
   replaceDefine(
     newDefines,
-    "METADATA_PICKING_VALUE_COMPONENT_X",
+    MetadataPickingPipelineStage.METADATA_PICKING_VALUE_COMPONENT_X,
     sourceValueStrings[0]
   );
   replaceDefine(
     newDefines,
-    "METADATA_PICKING_VALUE_COMPONENT_Y",
+    MetadataPickingPipelineStage.METADATA_PICKING_VALUE_COMPONENT_Y,
     sourceValueStrings[1]
   );
   replaceDefine(
     newDefines,
-    "METADATA_PICKING_VALUE_COMPONENT_Z",
+    MetadataPickingPipelineStage.METADATA_PICKING_VALUE_COMPONENT_Z,
     sourceValueStrings[2]
   );
   replaceDefine(
     newDefines,
-    "METADATA_PICKING_VALUE_COMPONENT_W",
+    MetadataPickingPipelineStage.METADATA_PICKING_VALUE_COMPONENT_W,
     sourceValueStrings[3]
   );
 

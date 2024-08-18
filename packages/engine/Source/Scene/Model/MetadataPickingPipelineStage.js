@@ -12,6 +12,18 @@ import ShaderDestination from "../../Renderer/ShaderDestination.js";
  */
 const MetadataPickingPipelineStage = {
   name: "MetadataPickingPipelineStage", // Helps with debugging
+
+  // The identifiers for 'define' directives that are inserted into the
+  // shader code. The values of these defines will be be assigned
+  // in the `DerivedCommands` class when a derived command for metadata
+  // picking is created.
+  METADATA_PICKING_ENABLED: "METADATA_PICKING_ENABLED",
+  METADATA_PICKING_VALUE_TYPE: "METADATA_PICKING_VALUE_TYPE",
+  METADATA_PICKING_VALUE_STRING: "METADATA_PICKING_VALUE_STRING",
+  METADATA_PICKING_VALUE_COMPONENT_X: "METADATA_PICKING_VALUE_COMPONENT_X",
+  METADATA_PICKING_VALUE_COMPONENT_Y: "METADATA_PICKING_VALUE_COMPONENT_Y",
+  METADATA_PICKING_VALUE_COMPONENT_Z: "METADATA_PICKING_VALUE_COMPONENT_Z",
+  METADATA_PICKING_VALUE_COMPONENT_W: "METADATA_PICKING_VALUE_COMPONENT_W",
 };
 
 /**
@@ -32,32 +44,32 @@ MetadataPickingPipelineStage.process = function (
   const shaderBuilder = renderResources.shaderBuilder;
 
   shaderBuilder.addDefine(
-    "METADATA_PICKING_VALUE_TYPE",
+    MetadataPickingPipelineStage.METADATA_PICKING_VALUE_TYPE,
     "float",
     ShaderDestination.FRAGMENT
   );
   shaderBuilder.addDefine(
-    "METADATA_PICKING_VALUE_STRING",
+    MetadataPickingPipelineStage.METADATA_PICKING_VALUE_STRING,
     "0.0",
     ShaderDestination.FRAGMENT
   );
   shaderBuilder.addDefine(
-    "METADATA_PICKING_VALUE_COMPONENT_X",
+    MetadataPickingPipelineStage.METADATA_PICKING_VALUE_COMPONENT_X,
     "0.0",
     ShaderDestination.FRAGMENT
   );
   shaderBuilder.addDefine(
-    "METADATA_PICKING_VALUE_COMPONENT_Y",
+    MetadataPickingPipelineStage.METADATA_PICKING_VALUE_COMPONENT_Y,
     "0.0",
     ShaderDestination.FRAGMENT
   );
   shaderBuilder.addDefine(
-    "METADATA_PICKING_VALUE_COMPONENT_Z",
+    MetadataPickingPipelineStage.METADATA_PICKING_VALUE_COMPONENT_Z,
     "0.0",
     ShaderDestination.FRAGMENT
   );
   shaderBuilder.addDefine(
-    "METADATA_PICKING_VALUE_COMPONENT_W",
+    MetadataPickingPipelineStage.METADATA_PICKING_VALUE_COMPONENT_W,
     "0.0",
     ShaderDestination.FRAGMENT
   );
@@ -71,11 +83,11 @@ MetadataPickingPipelineStage.process = function (
   shaderBuilder.addFunctionLines(
     "metadataPickingStage",
     [
-      "METADATA_PICKING_VALUE_TYPE value = METADATA_PICKING_VALUE_TYPE(METADATA_PICKING_VALUE_STRING);",
-      "metadataValues.x = METADATA_PICKING_VALUE_COMPONENT_X;",
-      "metadataValues.y = METADATA_PICKING_VALUE_COMPONENT_Y;",
-      "metadataValues.z = METADATA_PICKING_VALUE_COMPONENT_Z;",
-      "metadataValues.w = METADATA_PICKING_VALUE_COMPONENT_W;",
+      `${MetadataPickingPipelineStage.METADATA_PICKING_VALUE_TYPE} value = ${MetadataPickingPipelineStage.METADATA_PICKING_VALUE_TYPE}(${MetadataPickingPipelineStage.METADATA_PICKING_VALUE_STRING});`,
+      `metadataValues.x = ${MetadataPickingPipelineStage.METADATA_PICKING_VALUE_COMPONENT_X};`,
+      `metadataValues.y = ${MetadataPickingPipelineStage.METADATA_PICKING_VALUE_COMPONENT_Y};`,
+      `metadataValues.z = ${MetadataPickingPipelineStage.METADATA_PICKING_VALUE_COMPONENT_Z};`,
+      `metadataValues.w = ${MetadataPickingPipelineStage.METADATA_PICKING_VALUE_COMPONENT_W};`,
     ],
     ShaderDestination.FRAGMENT
   );
