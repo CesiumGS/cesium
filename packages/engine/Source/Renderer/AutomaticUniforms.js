@@ -1052,6 +1052,17 @@ const AutomaticUniforms = {
   }),
 
   /**
+   * The inverse of the ratio of the frustum length to the depth of the far plane.
+   */
+  czm_inverseFrustumDepthRatio: new AutomaticUniform({
+    size: 1,
+    datatype: WebGLConstants.FLOAT,
+    getValue: function (uniformState) {
+      return uniformState.inverseFrustumDepthRatio;
+    },
+  }),
+
+  /**
    * Gets the far plane's distance from the near plane, plus 1.0.
    */
   czm_farDepthFromNearPlusOne: new AutomaticUniform({

@@ -45,6 +45,7 @@ function UniformState() {
   this._entireFrustum = new Cartesian2();
   this._currentFrustum = new Cartesian2();
   this._frustumPlanes = new Cartesian4();
+  this._inverseFrustumDepthRatio = undefined;
   this._farDepthFromNearPlusOne = undefined;
   this._log2FarDepthFromNearPlusOne = undefined;
   this._oneOverLog2FarDepthFromNearPlusOne = undefined;
@@ -646,6 +647,18 @@ Object.defineProperties(UniformState.prototype, {
   frustumPlanes: {
     get: function () {
       return this._frustumPlanes;
+    },
+  },
+
+  /**
+   * The inverse of the ratio of the frustum length to the depth of the far plane.
+   *
+   * @memberof UniformState.prototype
+   * @type {number}
+   */
+  inverseFrustumDepthRatio: {
+    get: function () {
+      return this._inverseFrustumDepthRatio;
     },
   },
 
@@ -1369,6 +1382,7 @@ UniformState.prototype.updateFrustum = function (frustum) {
   this._currentFrustum.x = frustum.near;
   this._currentFrustum.y = frustum.far;
 
+  this._inverseFrustumDepthRatio = frustum.far / (frustum.far - frustum.near);
   this._farDepthFromNearPlusOne = frustum.far - frustum.near + 1.0;
   this._log2FarDepthFromNearPlusOne = CesiumMath.log2(
     this._farDepthFromNearPlusOne
