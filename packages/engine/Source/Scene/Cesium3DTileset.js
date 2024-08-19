@@ -2715,6 +2715,7 @@ function processUpdateHeight(tileset, tile, frameState) {
       Cartesian3.distance(position, boundingSphere.center) <=
       boundingSphere.radius
     ) {
+      callbackData.invoked = true;
       frameState.afterRender.push(() => {
         // Callback can be removed before it actually invoked at the end of the frame
         if (defined(callbackData.callback)) {
