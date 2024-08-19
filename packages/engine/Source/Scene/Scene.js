@@ -3756,11 +3756,6 @@ Scene.prototype.updateHeight = function (
     ) {
       return;
     }
-    console.log(
-      "executing for frame number: ",
-      this.frameState.frameNumber,
-      callbackWrapperCalledForFrameState
-    );
     callbackWrapperCalledForFrameState = this.frameState.frameNumber;
     Cartographic.clone(cartographic, updateHeightScratchCartographic);
 
