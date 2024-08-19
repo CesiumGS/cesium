@@ -2,6 +2,10 @@
 
 ### 1.121 - 2024-09-01
 
+##### Fixes :wrench:
+
+- Fixed a performance issue where `Scene.updateHeight` would be called too many times.
+
 #### @cesium/engine
 
 ##### Additions :tada:
