@@ -137,6 +137,14 @@ function ScreenSpaceCameraController(scene) {
    * @default {@link Number.POSITIVE_INFINITY}
    */
   this.maximumZoomDistance = Number.POSITIVE_INFINITY;
+
+  /**
+   * A multiplier for the speed at which the camera will zoom.
+   * @type {Number}
+   * @default 5.0
+   */
+  this.zoomFactor = 5.0;
+
   /**
    * The input that allows the user to pan around the map. This only applies in 2D and Columbus view modes.
    * <p>
@@ -324,7 +332,6 @@ function ScreenSpaceCameraController(scene) {
   );
 
   // Constants, Make any of these public?
-  this._zoomFactor = 5.0;
   this._rotateFactor = undefined;
   this._rotateRateRangeAdjustment = undefined;
   this._maximumRotateRate = 1.77;
@@ -1005,7 +1012,7 @@ function zoom2D(controller, startPosition, movement) {
     controller,
     startPosition,
     movement,
-    controller._zoomFactor,
+    controller.zoomFactor,
     camera.getMagnitude()
   );
 }
@@ -1763,7 +1770,7 @@ function zoomCV(controller, startPosition, movement) {
     controller,
     startPosition,
     movement,
-    controller._zoomFactor,
+    controller.zoomFactor,
     distance
   );
 }
@@ -2363,7 +2370,7 @@ function zoom3D(controller, startPosition, movement) {
     controller,
     startPosition,
     movement,
-    controller._zoomFactor,
+    controller.zoomFactor,
     distance,
     Cartesian3.dot(unitPosition, camera.direction)
   );

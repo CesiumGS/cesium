@@ -39,7 +39,8 @@
     "./Build/*.js": null,
     ".": {
       "require": "./index.cjs",
-      "import": "./Source/Cesium.js"
+      "import": "./Source/Cesium.js",
+      "types": "./Source/Cesium.d.ts"
     }
   },
   "type": "module",
