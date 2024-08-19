@@ -219,7 +219,7 @@ I3SNode.prototype.load = async function () {
     const uriIndex = node.mesh.geometry.resource;
     uri = `../${uriIndex}/`;
   }
-  if (defined(uri)) {
+  if (defined(uri) && defined(that._parent.resource)) {
     that._resource = that._parent.resource.getDerivedResource({ url: uri });
   }
 
