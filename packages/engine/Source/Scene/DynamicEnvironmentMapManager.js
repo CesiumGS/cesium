@@ -14,7 +14,6 @@ import Sampler from "../Renderer/Sampler.js";
 import ShaderProgram from "../Renderer/ShaderProgram.js";
 import ShaderSource from "../Renderer/ShaderSource.js";
 import TextureMinificationFilter from "../Renderer/TextureMinificationFilter.js";
-import SkyAtmosphereCommon from "../Shaders/SkyAtmosphereCommon.js";
 import AtmosphereCommon from "../Shaders/AtmosphereCommon.js";
 import ComputeIrradianceMapFS from "../Shaders/ComputeIrradianceMapFS.js";
 import ComputeRadianceMapFS from "../Shaders/ComputeRadianceMapFS.js";
@@ -55,8 +54,8 @@ import DynamicAtmosphereLightingType from "./DynamicAtmosphereLightingType.js";
 function DynamicEnvironmentMapManager(options) {
   this._position = undefined;
 
-  this._radianceCommandsDirty = true;
-  this._radianceMapDirty = true;
+  this._radianceMapDirty = false;
+  this._radianceCommandsDirty = false;
   this._convolutionsCommandsDirty = false;
   this._irradianceCommandDirty = false;
   this._irradianceTextureDirty = false;
@@ -290,25 +289,16 @@ DynamicEnvironmentMapManager.setOwner = function (
 DynamicEnvironmentMapManager.prototype._reset = function () {
   let length = this._radianceMapComputeCommands.length;
   for (let i = 0; i < length; ++i) {
-    const command = this._radianceMapComputeCommands[i];
-    if (defined(command)) {
-      command.canceled = true;
-    }
     this._radianceMapComputeCommands[i] = undefined;
   }
 
   length = this._convolutionComputeCommands.length;
   for (let i = 0; i < length; ++i) {
-    const command = this._convolutionComputeCommands[i];
-    if (defined(command)) {
-      command.canceled = true;
-    }
     this._convolutionComputeCommands[i] = undefined;
   }
 
-  if (defined(this._irradianceMapComputeCommand)) {
-    this._irradianceMapComputeCommand.canceled = true;
-    this._irradianceMapComputeCommand = undefined;
+  if (defined(this._irradianceComputeCommand)) {
+    this._irradianceComputeCommand = undefined;
   }
 
   this._radianceMapDirty = true;
@@ -380,42 +370,43 @@ function updateRadianceMap(manager, frameState) {
     let fs = manager._radianceMapFS;
     if (!defined(fs)) {
       fs = new ShaderSource({
-        sources: [AtmosphereCommon, SkyAtmosphereCommon, ComputeRadianceMapFS],
+        sources: [AtmosphereCommon, ComputeRadianceMapFS],
       });
       manager._radianceMapFS = fs;
     }
 
+    const position = manager._position;
+    const radiiAndDynamicAtmosphereColor =
+      manager._radiiAndDynamicAtmosphereColor;
+
+    const ellipsoid = frameState.mapProjection.ellipsoid;
+    const enuToFixedFrame = Transforms.eastNorthUpToFixedFrame(
+      manager._position,
+      ellipsoid,
+      scratchMatrix
+    );
+
+    const adjustments = scratchAdjustments;
+    adjustments.x = manager.brightness;
+    adjustments.y = manager.saturation;
+    adjustments.z = manager.gamma;
+    adjustments.w = manager.intensity;
+
     let i = 0;
     for (const face of CubeMap.faces()) {
       let texture = manager._radianceMapTextures[i];
-      if (!defined(texture)) {
-        texture = new Texture({
-          context: context,
-          width: textureDimensions.x,
-          height: textureDimensions.y,
-          pixelDatatype: PixelDatatype.UNSIGNED_BYTE,
-          pixelFormat: PixelFormat.RGBA,
-        });
-        manager._radianceMapTextures[i] = texture;
+      if (defined(texture)) {
+        texture.destroy();
       }
 
-      const atmosphere = frameState.atmosphere;
-      const position = manager._position;
-      const radiiAndDynamicAtmosphereColor =
-        manager._radiiAndDynamicAtmosphereColor;
-
-      const ellipsoid = frameState.mapProjection.ellipsoid;
-      const enuToFixedFrame = Transforms.eastNorthUpToFixedFrame(
-        manager._position,
-        ellipsoid,
-        scratchMatrix
-      );
-
-      const adjustments = scratchAdjustments;
-      adjustments.x = manager.brightness;
-      adjustments.y = manager.saturation;
-      adjustments.z = manager.gamma;
-      adjustments.w = manager.intensity;
+      texture = new Texture({
+        context: context,
+        width: textureDimensions.x,
+        height: textureDimensions.y,
+        pixelDatatype: PixelDatatype.UNSIGNED_BYTE,
+        pixelFormat: PixelFormat.RGBA,
+      });
+      manager._radianceMapTextures[i] = texture;
 
       const index = i;
       const command = new ComputeCommand({
@@ -424,22 +415,20 @@ function updateRadianceMap(manager, frameState) {
         uniformMap: {
           u_radiiAndDynamicAtmosphereColor: () =>
             radiiAndDynamicAtmosphereColor,
-          u_atmosphereLightIntensity: () => atmosphere.lightIntensity,
-          u_atmosphereRayleighCoefficient: () => atmosphere.rayleighCoefficient,
-          u_atmosphereMieCoefficient: () => atmosphere.mieCoefficient,
-          u_atmosphereRayleighScaleHeight: () => atmosphere.rayleighScaleHeight,
-          u_atmosphereMieScaleHeight: () => atmosphere.mieScaleHeight,
-          u_atmosphereMieAnisotropy: () => atmosphere.mieAnisotropy,
           u_enuToFixedFrame: () => enuToFixedFrame,
           u_faceDirection: () => CubeMap.getDirection(face, scratchCartesian),
           u_positionWC: () => position,
           u_brightnessSaturationGammaIntensity: () => adjustments,
           u_groundColor: () => manager.groundColor,
         },
-        persists: false,
+        persists: true,
         owner: manager,
         postExecute: () => {
           const commands = manager._radianceMapComputeCommands;
+          if (!defined(commands[index])) {
+            // This command was cancelled
+            return;
+          }
           commands[index] = undefined;
 
           const framebuffer = new Framebuffer({
@@ -487,6 +476,10 @@ function updateSpecularMaps(manager, frameState) {
   const getPostExecute = (index, texture, face, level) => () => {
     // Copy output texture to corresponding face and mipmap level
     const commands = manager._convolutionComputeCommands;
+    if (!defined(commands[index])) {
+      // This command was cancelled
+      return;
+    }
     commands[index] = undefined;
 
     radianceCubeMap.copyFace(frameState, texture, face, level);
@@ -592,6 +585,10 @@ function updateIrradianceResources(manager, frameState) {
       u_radianceMap: () => manager._radianceCubeMap,
     },
     postExecute: () => {
+      if (!defined(manager._irradianceComputeCommand)) {
+        // This command was cancelled
+        return;
+      }
       manager._irradianceTextureDirty = false;
       manager._irradianceComputeCommand = undefined;
       manager._sphericalHarmonicCoefficientsDirty = true;
@@ -722,23 +719,15 @@ DynamicEnvironmentMapManager.prototype.destroy = function () {
   // Cancel in-progress commands
   let length = this._radianceMapComputeCommands.length;
   for (let i = 0; i < length; ++i) {
-    const command = this._radianceMapComputeCommands[i];
-    if (defined(command)) {
-      command.canceled = true;
-    }
+    this._radianceMapComputeCommands[i] = undefined;
   }
 
   length = this._convolutionComputeCommands.length;
   for (let i = 0; i < length; ++i) {
-    const command = this._convolutionComputeCommands[i];
-    if (defined(command)) {
-      command.canceled = true;
-    }
+    this._convolutionComputeCommands[i] = undefined;
   }
 
-  if (defined(this._irradianceMapComputeCommand)) {
-    this._irradianceMapComputeCommand.canceled = true;
-  }
+  this._irradianceMapComputeCommand = undefined;
 
   // Destroy all textures
   length = this._radianceMapTextures.length;

@@ -24,15 +24,17 @@ vec4 getCubeMapDirection(vec2 uv, vec3 faceDir) {
 
 void main() {    
     float height = length(u_positionWC);
-    float ellipsoidHeight = height - u_radiiAndDynamicAtmosphereColor.y;
-    float atmosphereHeight = u_radiiAndDynamicAtmosphereColor.x - u_radiiAndDynamicAtmosphereColor.y;
-    float radius = max(u_radiiAndDynamicAtmosphereColor.x - height, 2.0 * ellipsoidHeight);
+    float atmosphereInnerRadius = u_radiiAndDynamicAtmosphereColor.y;
+    float ellipsoidHeight = height - atmosphereInnerRadius;
+    float atmosphereOuterRadius = u_radiiAndDynamicAtmosphereColor.x;
+    float atmosphereHeight = atmosphereOuterRadius - atmosphereInnerRadius;
+    float radius = max(atmosphereOuterRadius - height, 2.0 * ellipsoidHeight);
 
     vec3 direction = (u_enuToFixedFrame * getCubeMapDirection(v_textureCoordinates, u_faceDirection)).xyz * vec3(1.0, 1.0, -1.0); // TODO: Where does this come from?
     vec3 normalizedDirection = normalize(direction);
 
     czm_ray ray = czm_ray(u_positionWC, normalizedDirection);
-    czm_raySegment intersection = czm_rayEllipsoidIntersectionInterval(ray, vec3(0.0), czm_ellipsoidInverseRadii);
+    czm_raySegment intersection = czm_raySphereIntersectionInterval(ray, vec3(0.0), atmosphereInnerRadius);
     float d = czm_branchFreeTernary(czm_isEmpty(intersection), radius, clamp(intersection.start, ellipsoidHeight, radius));
 
     // Compute sky color for each position on a sphere at radius centered around the model's origin
@@ -45,17 +47,21 @@ void main() {
     vec3 mieColor;
     vec3 rayleighColor;
     float opacity;
-    float translucent;
-    computeScattering(
+    czm_computeScattering(
         ray,
         d,
         lightDirectionWC,
-        u_radiiAndDynamicAtmosphereColor.y,
+        atmosphereInnerRadius, 
         rayleighColor,
         mieColor,
         opacity
     );
-    vec4 skyColor = computeAtmosphereColor(skyPositionWC, lightDirectionWC, rayleighColor, mieColor, opacity);
+
+    vec4 skyColor = czm_computeAtmosphereColor(ray, lightDirectionWC, rayleighColor, mieColor, opacity);
+
+    // Alter the opacity based on how close the object is to the ground.
+    // (0.0 = At edge of atmosphere, 1.0 = On ground)
+    opacity = clamp((atmosphereOuterRadius - height) / (atmosphereOuterRadius - atmosphereInnerRadius), 0.0, 1.0);
 
     vec3 sceneSkyBoxColor = czm_textureCube(czm_environmentMap, normalizedDirection).rgb; // TODO: I'm not sure if this is oriented correctly
     vec3 groundColor = mix(vec3(0.0), u_groundColor.xyz, u_groundColor.a * (1.0 - ellipsoidHeight / atmosphereHeight));
