@@ -1409,10 +1409,8 @@ Object.defineProperties(Model.prototype, {
 
   /**
    * The properties for managing dynamic environment maps on this model. Affects lighting.
-   *
    * @memberof Model.prototype
    * @readonly
-   *
    * @type {DynamicEnvironmentMapManager}
    */
   environmentMapManager: {

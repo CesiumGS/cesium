@@ -28,10 +28,8 @@ import JulianDate from "../Core/JulianDate.js";
 import DynamicAtmosphereLightingType from "./DynamicAtmosphereLightingType.js";
 
 /**
- * @typedef {Object} DynamicEnvironmentMapManager.ConstructorOptions
- *
+ * @typedef {object} DynamicEnvironmentMapManager.ConstructorOptions
  * Options for the DynamicEnvironmentMapManager constructor
- *
  * @property {boolean} [enabled=true] If true, the environment map and related properties will continue to update.
  * @property {number} [mipmapLevels=10] The number of mipmap levels to generate for specular maps. More mipmap levels will produce a higher resolution specular reflection.
  * @property {number} [maximumSecondsDifference=1800] The maximum amount of elapsed seconds before a new environment map is created
@@ -45,10 +43,8 @@ import DynamicAtmosphereLightingType from "./DynamicAtmosphereLightingType.js";
 
 /**
  * Generates an environment map at the given position based on scene's current lighting conditions. From this, it produces multiple levels of specular maps and spherical harmonic coefficients than can be used with {@link ImageBasedLighting} for models or tilesets.
- *
  * @alias DynamicEnvironmentMapManager
  * @constructor
- *
  * @param {DynamicEnvironmentMapManager.ConstructorOptions} options An object describing initialization options.
  */
 function DynamicEnvironmentMapManager(options) {
@@ -137,7 +133,6 @@ function DynamicEnvironmentMapManager(options) {
   /**
    * The brightness of light. 1.0 uses the unmodified incoming environment color. Less than 1.0
    * makes the light darker while greater than 1.0 makes it brighter.
-   *
    * @type {number}
    * @default 1.0
    */
@@ -146,7 +141,6 @@ function DynamicEnvironmentMapManager(options) {
   /**
    * The saturation of the light. 1.0 uses the unmodified incoming environment color. Less than 1.0 reduces the
    * saturation while greater than 1.0 increases it.
-   *
    * @type {number}
    * @default 0.8
    */
@@ -166,7 +160,6 @@ function DynamicEnvironmentMapManager(options) {
 Object.defineProperties(DynamicEnvironmentMapManager.prototype, {
   /**
    * A reference to the DynamicEnvironmentMapManager's owner, if any.
-   *
    * @memberof DynamicEnvironmentMapManager.prototype
    * @readonly
    * @private
@@ -178,7 +171,6 @@ Object.defineProperties(DynamicEnvironmentMapManager.prototype, {
   },
   /**
    * The position around which the environment map is generated.
-   *
    * @memberof DynamicEnvironmentMapManager.prototype
    * @type {Cartesian3|undefined}
    */
@@ -204,7 +196,6 @@ Object.defineProperties(DynamicEnvironmentMapManager.prototype, {
 
   /**
    * The computed radiance map, or <code>undefined</code> if it has not yet been created.
-   *
    * @memberof DynamicEnvironmentMapManager.prototype
    * @type {CubeMap|undefined}
    * @readonly
@@ -218,7 +209,7 @@ Object.defineProperties(DynamicEnvironmentMapManager.prototype, {
 
   /**
    * The maximum number of mip levels available in the radiance cubemap.
-   * @memberOf DynamicEnvironmentMapManager.prototype
+   * @memberof DynamicEnvironmentMapManager.prototype
    * @type {number}
    * @readonly
    * @private
@@ -235,7 +226,6 @@ Object.defineProperties(DynamicEnvironmentMapManager.prototype, {
    * There are nine <code>Cartesian3</code> coefficients.
    * The order of the coefficients is: L<sub>0,0</sub>, L<sub>1,-1</sub>, L<sub>1,0</sub>, L<sub>1,1</sub>, L<sub>2,-2</sub>, L<sub>2,-1</sub>, L<sub>2,0</sub>, L<sub>2,1</sub>, L<sub>2,2</sub>
    * </p>
-   *
    * @memberof DynamicEnvironmentMapManager.prototype
    * @readonly
    * @type {Cartesian3[]|undefined}
@@ -252,7 +242,6 @@ Object.defineProperties(DynamicEnvironmentMapManager.prototype, {
 /**
  * Sets the owner for the input DynamicEnvironmentMapManager if there wasn't another owner.
  * Destroys the owner's previous DynamicEnvironmentMapManager if setting is successful.
- *
  * @param {DynamicEnvironmentMapManager} [environmentMapManager] A DynamicEnvironmentMapManager (or undefined) being attached to an object
  * @param {object} owner An Object that should receive the new DynamicEnvironmentMapManager
  * @param {string} key The Key for the Object to reference the DynamicEnvironmentMapManager
@@ -308,7 +297,14 @@ DynamicEnvironmentMapManager.prototype._reset = function () {
 const scratchPackedAtmosphere = new Cartesian3();
 const scratchSurfacePosition = new Cartesian3();
 
-function updateAtmosphere(manager, frameState) {
+/**
+ * Update atmosphere properties and returns true if the environment map needs to be regenerated.
+ * @param {DynamicEnvironmentMapManager} manager this manager
+ * @param {FrameState} frameState the current frameState
+ * @returns {boolean} true if the environment map needs to be regenerated.
+ * @private
+ */
+function atmosphereNeedsUpdate(manager, frameState) {
   const position = manager._position;
   const atmosphere = frameState.atmosphere;
 
@@ -348,8 +344,8 @@ const scratchAdjustments = new Cartesian4();
 
 /**
  * Renders the highest resolution specular map by creating compute commands for each cube face
- * @param {DynamicEnvironmentMapManager} manager
- * @param {FrameState} frameState
+ * @param {DynamicEnvironmentMapManager} manager this manager
+ * @param {FrameState} frameState the current frameState
  * @private
  */
 function updateRadianceMap(manager, frameState) {
@@ -458,8 +454,8 @@ function updateRadianceMap(manager, frameState) {
 
 /**
  * Creates a mipmap chain for the cubemap by convolving the environment map for each roughness level
- * @param {DynamicEnvironmentMapManager} manager
- * @param {FrameState} frameState
+ * @param {DynamicEnvironmentMapManager} manager this manager
+ * @param {FrameState} frameState the current frameState
  * @private
  */
 function updateSpecularMaps(manager, frameState) {
@@ -551,8 +547,8 @@ function updateSpecularMaps(manager, frameState) {
 
 /**
  * Computes spherical harmonic coefficients by convolving the environment map
- * @param {DynamicEnvironmentMapManager} manager
- * @param {FrameState} frameState
+ * @param {DynamicEnvironmentMapManager} manager this manager
+ * @param {FrameState} frameState the current frameState
  */
 function updateIrradianceResources(manager, frameState) {
   const context = frameState.context;
@@ -601,8 +597,8 @@ function updateIrradianceResources(manager, frameState) {
 
 /**
  * Copies coefficients from the output texture using readPixels.
- * @param {DynamicEnvironmentMapManager} manager
- * @param {FrameState} frameState
+ * @param {DynamicEnvironmentMapManager} manager this manager
+ * @param {FrameState} frameState the current frameState
  */
 function updateSphericalHarmonicCoefficients(manager, frameState) {
   const context = frameState.context;
@@ -635,7 +631,7 @@ function updateSphericalHarmonicCoefficients(manager, frameState) {
  * Do not call this function directly.
  * </p>
  * @private
- * @return {boolean} true is shaders should be updated.
+ * @returns {boolean} true is shaders should be updated.
  */
 DynamicEnvironmentMapManager.prototype.update = function (frameState) {
   if (!this.enabled || !defined(this._position)) {
@@ -644,7 +640,7 @@ DynamicEnvironmentMapManager.prototype.update = function (frameState) {
 
   const dynamicLighting = frameState.atmosphere.dynamicLighting;
   const regenerateEnvironmentMap =
-    updateAtmosphere(this, frameState) ||
+    atmosphereNeedsUpdate(this, frameState) ||
     (dynamicLighting === DynamicAtmosphereLightingType.SUNLIGHT &&
       !JulianDate.equalsEpsilon(
         frameState.time,
@@ -690,9 +686,7 @@ DynamicEnvironmentMapManager.prototype.update = function (frameState) {
  * <br /><br />
  * If this object was destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
- *
  * @returns {boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
- *
  * @see DynamicEnvironmentMapManager#destroy
  */
 DynamicEnvironmentMapManager.prototype.isDestroyed = function () {
@@ -706,13 +700,9 @@ DynamicEnvironmentMapManager.prototype.isDestroyed = function () {
  * Once an object is destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
  * assign the return value (<code>undefined</code>) to the object as done in the example.
- *
- * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
- *
- *
+ * @throws {DeveloperError} This object was destroyed, i.e., destroy() was called.
  * @example
  * mapManager = mapManager && mapManager.destroy();
- *
  * @see DynamicEnvironmentMapManager#isDestroyed
  */
 DynamicEnvironmentMapManager.prototype.destroy = function () {

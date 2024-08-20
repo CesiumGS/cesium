@@ -1868,7 +1868,7 @@ Object.defineProperties(Cesium3DTileset.prototype, {
   /**
    * The properties for managing dynamic environment maps on this model. Affects lighting.
    *
-   * @memberof Model.prototype
+   * @memberof Cesium3DTileset.prototype
    * @readonly
    *
    * @type {DynamicEnvironmentMapManager}

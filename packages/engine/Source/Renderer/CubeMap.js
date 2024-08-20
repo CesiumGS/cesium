@@ -275,10 +275,8 @@ CubeMap.prototype.copyFace = function (frameState, texture, face, mipLevel) {
 
 /**
  * An enum defining the names of the faces of a cube map.
- *
  * @alias {CubeMap.FaceName}
  * @enum {string}
- *
  * @private
  */
 CubeMap.FaceName = Object.freeze({
@@ -301,9 +299,7 @@ function* makeFacesIterator() {
 
 /**
  * Creates an iterator for looping over the cubemap faces.
- *
- * @type {Iterable<CubeMap.FaceName>}
- *
+ * @type {iterable<CubeMap.FaceName>}
  * @private
  */
 CubeMap.faces = function () {
@@ -312,11 +308,9 @@ CubeMap.faces = function () {
 
 /**
  * Load texel data into one face of a cube map.
- *
  * @param {CubeMapFace} cubeMapFace The face to which texel values will be loaded.
  * @param {ImageData|HTMLImageElement|HTMLCanvasElement|HTMLVideoElement|CubeMap.BufferSource} [source] The source for texel values to be loaded into the texture.
  * @param {number} [mipLevel=0] The mip level to which the texel values will be loaded.
- *
  * @private
  */
 function loadFace(cubeMapFace, source, mipLevel) {
