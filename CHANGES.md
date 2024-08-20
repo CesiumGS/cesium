@@ -6,6 +6,7 @@
 
 ##### Additions :tada:
 
+- added allowVerticalExaggeration configuration to models [#12141](https://github.com/CesiumGS/cesium/pull/12141)
 - Made the `time` parameter optional for `Property`, using `JulianDate.now()` as default. [#12099](https://github.com/CesiumGS/cesium/pull/12099)
 
 ### 1.120 - 2024-08-01
