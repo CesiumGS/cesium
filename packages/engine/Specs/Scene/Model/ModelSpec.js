@@ -36,7 +36,6 @@ import {
   Model,
   ModelFeature,
   ModelSceneGraph,
-  OctahedralProjectedCubeMap,
   ModelUtility,
   Pass,
   PrimitiveType,
@@ -45,6 +44,7 @@ import {
   RuntimeError,
   ShaderProgram,
   ShadowMode,
+  SpecularEnvironmentCubeMap,
   SplitDirection,
   StyleCommandsNeeded,
   SunLight,
@@ -1778,8 +1778,8 @@ describe(
         await pollToPromise(function () {
           scene.render();
           return (
-            defined(imageBasedLighting.specularEnvironmentMapAtlas) &&
-            imageBasedLighting.specularEnvironmentMapAtlas.ready
+            defined(imageBasedLighting.specularEnvironmentCubeMap) &&
+            imageBasedLighting.specularEnvironmentCubeMap.ready
           );
         });
         expect(model.modelMatrix).toEqual(Matrix4.IDENTITY);
@@ -3365,8 +3365,8 @@ describe(
         await pollToPromise(function () {
           scene.render();
           return (
-            defined(ibl.specularEnvironmentMapAtlas) &&
-            ibl.specularEnvironmentMapAtlas.ready
+            defined(ibl.specularEnvironmentCubeMap) &&
+            ibl.specularEnvironmentCubeMap.ready
           );
         });
         scene.highDynamicRange = true;
@@ -3389,7 +3389,7 @@ describe(
       });
 
       it("renders when specularEnvironmentMaps aren't supported", async function () {
-        spyOn(OctahedralProjectedCubeMap, "isSupported").and.returnValue(false);
+        spyOn(SpecularEnvironmentCubeMap, "isSupported").and.returnValue(false);
 
         const model = await loadAndZoomToModelAsync(
           {
