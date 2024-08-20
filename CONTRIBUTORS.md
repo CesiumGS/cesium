@@ -196,6 +196,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [T2 Software](http://t2.com.tr/)
   - [Hüseyin ATEŞ](https://github.com/ateshuseyin)
   - [İbrahim Furkan Aygar](https://github.com/furkanaygar)
+  - [Timothy Eichfeld](https://github.com/timeichfeld-msa)
 
 ## [Individual CLA](Documentation/Contributors/CLAs/individual-contributor-license-agreement-v1.0.pdf)
 
@@ -392,4 +393,3 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [Zhongxiang Wang](https://github.com/plainheart)
 - [Tim Schneider](https://github.com/Tim-S)
 - [Vladislav Yunev](https://github.com/YunVlad)
-- [Timothy Eichfeld](https://github.com/timeichfeld-msa)
