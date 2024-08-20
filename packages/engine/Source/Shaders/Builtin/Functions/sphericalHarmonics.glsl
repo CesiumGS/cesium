@@ -1,9 +1,3 @@
-float c0 = 0.282095;
-float c1 = 0.488603;
-float c2 = 1.092548;
-float c3 = 0.315392;
-float c4 = 0.546274;
-
 /**
  * Computes a color from the third order spherical harmonic coefficients and a normalized direction vector.
  * <p>
@@ -35,15 +29,16 @@ vec3 czm_sphericalHarmonics(vec3 normal, vec3 coefficients[9])
     float y = normal.y;
     float z = normal.z;
 
-    vec3 L = 
-          L00 * c0
-         + L1_1 * y * c1
-        + L10 * z * c1
-        + L11 * x * c1;
-        + L2_2 * (y * x) * c2
-        + L2_1 * (y * z) * c2
-        + L20 * (3.0 * z * z - 1.0) * c3
-        + L21 * (z * x) * c2
-        + L22 * (x * x - y * y) * c4;
+    vec3 L =
+          L00
+        + L1_1 * y
+        + L10 * z
+        + L11 * x
+        + L2_2 * (y * x)
+        + L2_1 * (y * z)
+        + L20 * (3.0 * z * z - 1.0)
+        + L21 * (z * x)
+        + L22 * (x * x - y * y);
+        
     return max(L, vec3(0.0));
 }

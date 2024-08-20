@@ -14,8 +14,7 @@ float factorial(int n) {
 }
 
 float normalization(int l, int m) {
-    return 1.0;
-    //return sqrt((2.0 * float(l) + 1.0) / (4.0 * czm_pi) * factorial(l - abs(m)) / factorial(l + abs(m)));
+    return sqrt((2.0 * float(l) + 1.0) / (4.0 * czm_pi) * factorial(l - abs(m)) / factorial(l + abs(m)));
 }
 
 void computeShBasis(inout float SHb[9], vec3 s) {

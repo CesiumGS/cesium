@@ -56,6 +56,14 @@ ImageBasedLightingPipelineStage.process = function (
       );
     }
 
+    if (defined(specularEnvironmentMapAtlas)) {
+      shaderBuilder.addDefine(
+        "COMPUTE_POSITION_WC_ATMOSPHERE",
+        undefined,
+        ShaderDestination.BOTH
+      );
+    }
+
     if (
       defined(sphericalHarmonicCoefficients) &&
       defined(sphericalHarmonicCoefficients[0])
