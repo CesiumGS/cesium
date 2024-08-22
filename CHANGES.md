@@ -10,6 +10,8 @@
 
 - Exposes `ScreenSpaceCameraController.zoomFactor` to allow adjusting the zoom factor (speed). [#9145](https://github.com/CesiumGS/cesium/pull/9145)
 
+- Removed `jitter` option from `VoxelPrimitive.js` and related test code in `VoxelPrimitiveSpec.js`. [#11913](https://github.com/CesiumGS/cesium/issues/11913)
+
 ##### Fixes :wrench:
 
 - Fixed cube-mapping artifacts in image-based lighting. [#12100](https://github.com/CesiumGS/cesium/pull/12100)

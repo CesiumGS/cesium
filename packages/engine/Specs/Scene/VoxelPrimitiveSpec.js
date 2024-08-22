@@ -78,7 +78,6 @@ describe(
       });
 
       toggleOption("depthTest", true, false);
-      toggleOption("jitter", false, true);
       toggleOption("nearestSampling", false, true);
     });
 
