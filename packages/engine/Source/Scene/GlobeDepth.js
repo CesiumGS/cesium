@@ -83,20 +83,13 @@ Object.defineProperties(GlobeDepth.prototype, {
   },
 });
 
-function destroyFramebuffers(globeDepth) {
-  globeDepth._pickColorFramebuffer.destroy();
-  globeDepth._outputFramebuffer.destroy();
-  globeDepth._copyDepthFramebuffer.destroy();
-  globeDepth._tempCopyDepthFramebuffer.destroy();
-  globeDepth._updateDepthFramebuffer.destroy();
-}
-
 function updateCopyCommands(globeDepth, context, width, height, passState) {
-  globeDepth._viewport.width = width;
-  globeDepth._viewport.height = height;
+  const viewport = globeDepth._viewport;
+  viewport.width = width;
+  viewport.height = height;
 
   const useScissorTest = !BoundingRectangle.equals(
-    globeDepth._viewport,
+    viewport,
     passState.viewport
   );
   let updateScissor = useScissorTest !== globeDepth._useScissorTest;
@@ -114,18 +107,18 @@ function updateCopyCommands(globeDepth, context, width, height, passState) {
 
   if (
     !defined(globeDepth._rs) ||
-    !BoundingRectangle.equals(globeDepth._viewport, globeDepth._rs.viewport) ||
+    !BoundingRectangle.equals(viewport, globeDepth._rs.viewport) ||
     updateScissor
   ) {
     globeDepth._rs = RenderState.fromCache({
-      viewport: globeDepth._viewport,
+      viewport: viewport,
       scissorTest: {
         enabled: globeDepth._useScissorTest,
         rectangle: globeDepth._scissorRectangle,
       },
     });
     globeDepth._rsBlend = RenderState.fromCache({
-      viewport: globeDepth._viewport,
+      viewport: viewport,
       scissorTest: {
         enabled: globeDepth._useScissorTest,
         rectangle: globeDepth._scissorRectangle,
@@ -135,7 +128,7 @@ function updateCopyCommands(globeDepth, context, width, height, passState) {
 
     // Copy packed depth only if the 3D Tiles bit is set
     globeDepth._rsUpdate = RenderState.fromCache({
-      viewport: globeDepth._viewport,
+      viewport: viewport,
       scissorTest: {
         enabled: globeDepth._useScissorTest,
         rectangle: globeDepth._scissorRectangle,
@@ -244,8 +237,7 @@ GlobeDepth.prototype.update = function (
   hdr,
   clearGlobeDepth
 ) {
-  const width = viewport.width;
-  const height = viewport.height;
+  const { width, height } = viewport;
 
   const pixelDatatype = hdr
     ? context.halfFloatingPointTexture
@@ -296,44 +288,44 @@ GlobeDepth.prototype.executeUpdateDepth = function (
     ? depthTexture
     : passState.framebuffer.depthStencilTexture;
   if (
-    clearGlobeDepth ||
-    depthTextureToCopy !== this.colorFramebufferManager.getDepthStencilTexture()
+    !clearGlobeDepth &&
+    depthTextureToCopy === this.colorFramebufferManager.getDepthStencilTexture()
   ) {
-    // First copy the depth to a temporary globe depth texture, then update the
-    // main globe depth texture where the stencil bit for 3D Tiles is set.
-    // This preserves the original globe depth except where 3D Tiles is rendered.
-    // The additional texture and framebuffer resources are created on demand.
-    if (defined(this._updateDepthCommand)) {
-      if (
-        !defined(this._updateDepthFramebuffer.framebuffer) ||
-        this._updateDepthFramebuffer.getDepthStencilTexture() !==
-          depthTextureToCopy ||
-        this._updateDepthFramebuffer.getColorTexture() !==
-          this._copyDepthFramebuffer.getColorTexture()
-      ) {
-        const width = this._copyDepthFramebuffer.getColorTexture().width;
-        const height = this._copyDepthFramebuffer.getColorTexture().height;
-        this._tempCopyDepthFramebuffer.destroy();
-        this._tempCopyDepthFramebuffer.update(context, width, height);
-
-        const colorTexture = this._copyDepthFramebuffer.getColorTexture();
-        this._updateDepthFramebuffer.setColorTexture(colorTexture, 0);
-        this._updateDepthFramebuffer.setDepthStencilTexture(depthTextureToCopy);
-        this._updateDepthFramebuffer.update(context, width, height);
-
-        updateCopyCommands(this, context, width, height, passState);
-      }
-      this._tempCopyDepthTexture = depthTextureToCopy;
-      this._tempCopyDepthCommand.execute(context, passState);
-      this._updateDepthCommand.execute(context, passState);
+    // Fast path - the depth texture can be copied normally.
+    if (defined(this._copyDepthCommand)) {
+      this._copyDepthCommand.execute(context, passState);
     }
     return;
   }
-
-  // Fast path - the depth texture can be copied normally.
-  if (defined(this._copyDepthCommand)) {
-    this._copyDepthCommand.execute(context, passState);
+  if (!defined(this._updateDepthCommand)) {
+    return;
   }
+
+  // First copy the depth to a temporary globe depth texture, then update the
+  // main globe depth texture where the stencil bit for 3D Tiles is set.
+  // This preserves the original globe depth except where 3D Tiles is rendered.
+  // The additional texture and framebuffer resources are created on demand.
+  if (
+    !defined(this._updateDepthFramebuffer.framebuffer) ||
+    this._updateDepthFramebuffer.getDepthStencilTexture() !==
+      depthTextureToCopy ||
+    this._updateDepthFramebuffer.getColorTexture() !==
+      this._copyDepthFramebuffer.getColorTexture()
+  ) {
+    const colorTexture = this._copyDepthFramebuffer.getColorTexture();
+    const { width, height } = colorTexture;
+    this._tempCopyDepthFramebuffer.destroy();
+    this._tempCopyDepthFramebuffer.update(context, width, height);
+
+    this._updateDepthFramebuffer.setColorTexture(colorTexture, 0);
+    this._updateDepthFramebuffer.setDepthStencilTexture(depthTextureToCopy);
+    this._updateDepthFramebuffer.update(context, width, height);
+
+    updateCopyCommands(this, context, width, height, passState);
+  }
+  this._tempCopyDepthTexture = depthTextureToCopy;
+  this._tempCopyDepthCommand.execute(context, passState);
+  this._updateDepthCommand.execute(context, passState);
 };
 
 GlobeDepth.prototype.executeCopyColor = function (context, passState) {
@@ -353,6 +345,14 @@ GlobeDepth.prototype.clear = function (context, passState, clearColor) {
 GlobeDepth.prototype.isDestroyed = function () {
   return false;
 };
+
+function destroyFramebuffers(globeDepth) {
+  globeDepth._pickColorFramebuffer.destroy();
+  globeDepth._outputFramebuffer.destroy();
+  globeDepth._copyDepthFramebuffer.destroy();
+  globeDepth._tempCopyDepthFramebuffer.destroy();
+  globeDepth._updateDepthFramebuffer.destroy();
+}
 
 GlobeDepth.prototype.destroy = function () {
   destroyFramebuffers(this);

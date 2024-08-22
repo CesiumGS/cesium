@@ -1787,26 +1787,25 @@ function updateDerivedCommands(scene, command, shadowsDirty) {
  * @private
  */
 Scene.prototype.updateDerivedCommands = function (command) {
-  if (!defined(command.derivedCommands)) {
+  const { derivedCommands } = command;
+  if (!defined(derivedCommands)) {
     // Is not a DrawCommand
     return;
   }
 
-  const frameState = this._frameState;
+  const { shadowState, useLogDepth } = this._frameState;
   const context = this._context;
 
   // Update derived commands when any shadow maps become dirty
   let shadowsDirty = false;
-  const lastDirtyTime = frameState.shadowState.lastDirtyTime;
+  const lastDirtyTime = shadowState.lastDirtyTime;
   if (command.lastDirtyTime !== lastDirtyTime) {
     command.lastDirtyTime = lastDirtyTime;
     command.dirty = true;
     shadowsDirty = true;
   }
 
-  const useLogDepth = frameState.useLogDepth;
   const useHdr = this._hdr;
-  const derivedCommands = command.derivedCommands;
   const hasLogDepthDerivedCommands = defined(derivedCommands.logDepth);
   const hasHdrCommands = defined(derivedCommands.hdr);
   const hasDerivedCommands = defined(derivedCommands.originalCommand);
@@ -1820,36 +1819,33 @@ Scene.prototype.updateDerivedCommands = function (command) {
     needsHdrCommands ||
     needsDerivedCommands;
 
-  if (command.dirty) {
-    command.dirty = false;
+  if (!command.dirty) {
+    return;
+  }
 
-    const shadowMaps = frameState.shadowState.shadowMaps;
-    const shadowsEnabled = frameState.shadowState.shadowsEnabled;
-    if (shadowsEnabled && command.castShadows) {
-      derivedCommands.shadows = ShadowMap.createCastDerivedCommand(
-        shadowMaps,
-        command,
-        shadowsDirty,
-        context,
-        derivedCommands.shadows
-      );
-    }
+  command.dirty = false;
 
-    if (hasLogDepthDerivedCommands || needsLogDepthDerivedCommands) {
-      derivedCommands.logDepth = DerivedCommand.createLogDepthCommand(
-        command,
-        context,
-        derivedCommands.logDepth
-      );
-      updateDerivedCommands(
-        this,
-        derivedCommands.logDepth.command,
-        shadowsDirty
-      );
-    }
-    if (hasDerivedCommands || needsDerivedCommands) {
-      updateDerivedCommands(this, command, shadowsDirty);
-    }
+  const { shadowsEnabled, shadowMaps } = shadowState;
+  if (shadowsEnabled && command.castShadows) {
+    derivedCommands.shadows = ShadowMap.createCastDerivedCommand(
+      shadowMaps,
+      command,
+      shadowsDirty,
+      context,
+      derivedCommands.shadows
+    );
+  }
+
+  if (hasLogDepthDerivedCommands || needsLogDepthDerivedCommands) {
+    derivedCommands.logDepth = DerivedCommand.createLogDepthCommand(
+      command,
+      context,
+      derivedCommands.logDepth
+    );
+    updateDerivedCommands(this, derivedCommands.logDepth.command, shadowsDirty);
+  }
+  if (hasDerivedCommands || needsDerivedCommands) {
+    updateDerivedCommands(this, command, shadowsDirty);
   }
 };
 
@@ -2821,44 +2817,46 @@ function executeOverlayCommands(scene, passState) {
 }
 
 function insertShadowCastCommands(scene, commandList, shadowMap) {
-  const shadowVolume = shadowMap.shadowMapCullingVolume;
-  const isPointLight = shadowMap.isPointLight;
-  const passes = shadowMap.passes;
+  const { shadowMapCullingVolume, isPointLight, passes } = shadowMap;
   const numberOfPasses = passes.length;
 
-  const length = commandList.length;
-  for (let i = 0; i < length; ++i) {
+  const shadowedPasses = [
+    Pass.GLOBE,
+    Pass.CESIUM_3D_TILE,
+    Pass.OPAQUE,
+    Pass.TRANSLUCENT,
+  ];
+
+  for (let i = 0; i < commandList.length; ++i) {
     const command = commandList[i];
     scene.updateDerivedCommands(command);
 
     if (
-      command.castShadows &&
-      (command.pass === Pass.GLOBE ||
-        command.pass === Pass.CESIUM_3D_TILE ||
-        command.pass === Pass.OPAQUE ||
-        command.pass === Pass.TRANSLUCENT)
+      !command.castShadows ||
+      shadowedPasses.indexOf(command.pass) < 0 ||
+      !scene.isVisible(command, shadowMapCullingVolume)
     ) {
-      if (scene.isVisible(command, shadowVolume)) {
-        if (isPointLight) {
-          for (let k = 0; k < numberOfPasses; ++k) {
-            passes[k].commandList.push(command);
-          }
-        } else if (numberOfPasses === 1) {
-          passes[0].commandList.push(command);
-        } else {
-          let wasVisible = false;
-          // Loop over cascades from largest to smallest
-          for (let j = numberOfPasses - 1; j >= 0; --j) {
-            const cascadeVolume = passes[j].cullingVolume;
-            if (scene.isVisible(command, cascadeVolume)) {
-              passes[j].commandList.push(command);
-              wasVisible = true;
-            } else if (wasVisible) {
-              // If it was visible in the previous cascade but now isn't
-              // then there is no need to check any more cascades
-              break;
-            }
-          }
+      continue;
+    }
+
+    if (isPointLight) {
+      for (let k = 0; k < numberOfPasses; ++k) {
+        passes[k].commandList.push(command);
+      }
+    } else if (numberOfPasses === 1) {
+      passes[0].commandList.push(command);
+    } else {
+      let wasVisible = false;
+      // Loop over cascades from largest to smallest
+      for (let j = numberOfPasses - 1; j >= 0; --j) {
+        const cascadeVolume = passes[j].cullingVolume;
+        if (scene.isVisible(command, cascadeVolume)) {
+          passes[j].commandList.push(command);
+          wasVisible = true;
+        } else if (wasVisible) {
+          // If it was visible in the previous cascade but now isn't
+          // then there is no need to check any more cascades
+          break;
         }
       }
     }

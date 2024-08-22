@@ -122,8 +122,8 @@ View.prototype.checkForCameraUpdates = function (scene) {
 
 function updateFrustums(view, scene, near, far) {
   const frameState = scene.frameState;
-  const camera = frameState.camera;
-  const farToNearRatio = frameState.useLogDepth
+  const { camera, useLogDepth } = frameState;
+  const farToNearRatio = useLogDepth
     ? scene.logarithmicDepthFarToNearRatio
     : scene.farToNearRatio;
   const is2D = scene.mode === SceneMode.SCENE2D;
@@ -153,7 +153,7 @@ function updateFrustums(view, scene, near, far) {
     numFrustums = Math.ceil(Math.log(far / near) / Math.log(farToNearRatio));
   }
 
-  const frustumCommandsList = view.frustumCommandsList;
+  const { frustumCommandsList } = view;
   frustumCommandsList.length = numFrustums;
   for (let m = 0; m < numFrustums; ++m) {
     let curNear;
@@ -187,10 +187,9 @@ function insertIntoBin(view, scene, command, commandNear, commandFar) {
     command.debugOverlappingFrustums = 0;
   }
 
-  const frustumCommandsList = view.frustumCommandsList;
-  const length = frustumCommandsList.length;
+  const { frustumCommandsList } = view;
 
-  for (let i = 0; i < length; ++i) {
+  for (let i = 0; i < frustumCommandsList.length; ++i) {
     const frustumCommands = frustumCommandsList[i];
     const curNear = frustumCommands.near;
     const curFar = frustumCommands.far;
@@ -234,13 +233,11 @@ const scratchNearFarInterval = new Interval();
 
 View.prototype.createPotentiallyVisibleSet = function (scene) {
   const frameState = scene.frameState;
-  const camera = frameState.camera;
-  const direction = camera.directionWC;
-  const position = camera.positionWC;
+  const { camera, commandList } = frameState;
+  const { positionWC, directionWC, frustum } = camera;
 
   const computeList = scene._computeCommandList;
   const overlayList = scene._overlayCommandList;
-  const commandList = frameState.commandList;
 
   if (scene.debugShowFrustums) {
     this.debugFrustumStatistics = {
@@ -250,10 +247,8 @@ View.prototype.createPotentiallyVisibleSet = function (scene) {
   }
 
   const frustumCommandsList = this.frustumCommandsList;
-  const numberOfFrustums = frustumCommandsList.length;
-  const numberOfPasses = Pass.NUMBER_OF_PASSES;
-  for (let n = 0; n < numberOfFrustums; ++n) {
-    for (let p = 0; p < numberOfPasses; ++p) {
+  for (let n = 0; n < frustumCommandsList.length; ++n) {
+    for (let p = 0; p < Pass.NUMBER_OF_PASSES; ++p) {
       frustumCommandsList[n].indices[p] = 0;
     }
   }
@@ -284,10 +279,9 @@ View.prototype.createPotentiallyVisibleSet = function (scene) {
   }
   cullingVolume = scratchCullingVolume;
 
-  const length = commandList.length;
-  for (let i = 0; i < length; ++i) {
+  for (let i = 0; i < commandList.length; ++i) {
     const command = commandList[i];
-    const pass = command.pass;
+    const { pass, boundingVolume } = command;
 
     if (pass === Pass.COMPUTE) {
       computeList.push(command);
@@ -297,15 +291,14 @@ View.prototype.createPotentiallyVisibleSet = function (scene) {
       let commandNear;
       let commandFar;
 
-      const boundingVolume = command.boundingVolume;
       if (defined(boundingVolume)) {
         if (!scene.isVisible(command, cullingVolume, occluder)) {
           continue;
         }
 
         const nearFarInterval = boundingVolume.computePlaneDistances(
-          position,
-          direction,
+          positionWC,
+          directionWC,
           scratchNearFarInterval
         );
         commandNear = nearFarInterval.start;
@@ -334,13 +327,13 @@ View.prototype.createPotentiallyVisibleSet = function (scene) {
         }
       } else if (command instanceof ClearCommand) {
         // Clear commands don't need a bounding volume - just add the clear to all frustums.
-        commandNear = camera.frustum.near;
-        commandFar = camera.frustum.far;
+        commandNear = frustum.near;
+        commandFar = frustum.far;
       } else {
         // If command has no bounding volume we need to use the camera's
         // worst-case near and far planes to avoid clipping something important.
-        commandNear = camera.frustum.near;
-        commandFar = camera.frustum.far;
+        commandNear = frustum.near;
+        commandFar = frustum.far;
         near = Math.min(near, commandNear);
         far = Math.max(far, commandFar);
       }
@@ -357,11 +350,8 @@ View.prototype.createPotentiallyVisibleSet = function (scene) {
   }
 
   if (shadowsEnabled) {
-    shadowNear = Math.min(
-      Math.max(shadowNear, camera.frustum.near),
-      camera.frustum.far
-    );
-    shadowFar = Math.max(Math.min(shadowFar, camera.frustum.far), shadowNear);
+    shadowNear = Math.min(Math.max(shadowNear, frustum.near), frustum.far);
+    shadowFar = Math.max(Math.min(shadowFar, frustum.far), shadowNear);
   }
 
   // Use the computed near and far for shadows
@@ -373,18 +363,15 @@ View.prototype.createPotentiallyVisibleSet = function (scene) {
 
   updateFrustums(this, scene, near, far);
 
-  let c;
-  let ce;
-
-  for (c = 0; c < commandExtentCount; c++) {
-    ce = commandExtents[c];
+  for (let c = 0; c < commandExtentCount; c++) {
+    const ce = commandExtents[c];
     insertIntoBin(this, scene, ce.command, ce.near, ce.far);
   }
 
   // Dereference old commands
   if (commandExtentCount < commandExtentCapacity) {
-    for (c = commandExtentCount; c < commandExtentCapacity; c++) {
-      ce = commandExtents[c];
+    for (let c = commandExtentCount; c < commandExtentCapacity; c++) {
+      const ce = commandExtents[c];
       if (!defined(ce.command)) {
         // If the command is undefined, it's assumed that all
         // subsequent commmands were set to undefined as well,
@@ -421,10 +408,8 @@ View.prototype.destroy = function () {
     this.globeTranslucencyFramebuffer &&
     this.globeTranslucencyFramebuffer.destroy();
 
-  let i;
   const pickDepths = this.pickDepths;
-  const length = pickDepths.length;
-  for (i = 0; i < length; ++i) {
+  for (let i = 0; i < pickDepths.length; ++i) {
     pickDepths[i].destroy();
   }
 };
