@@ -26,7 +26,7 @@ function createArticulationStagePropertyBag(value) {
  * @property {Property | boolean} [show=true] A boolean Property specifying the visibility of the model.
  * @property {Property | string | Resource} [uri] A string or Resource Property specifying the URI of the glTF asset.
  * @property {Property | number} [scale=1.0] A numeric Property specifying a uniform linear scale.
- * @property {Property | boolean} [allowVerticalExaggeration=false] A boolean Property specifying to allow participation in scene Vertical Exaggeration.
+ * @property {Property | boolean} [allowVerticalExaggeration=true] A boolean Property specifying to allow participation in scene Vertical Exaggeration.
  * @property {Property | number} [minimumPixelSize=0.0] A numeric Property specifying the approximate minimum pixel size of the model regardless of zoom.
  * @property {Property | number} [maximumScale] The maximum scale size of a model. An upper limit for minimumPixelSize.
  * @property {Property | boolean} [incrementallyLoadTextures=true] Determine if textures may continue to stream in after the model is loaded.
@@ -72,7 +72,7 @@ function ModelGraphics(options) {
   this._scale = undefined;
   this._scaleSubscription = undefined;
   this._verticalExaggerationOn = undefined;
-  this.__verticalExaggerationOnSubscription = undefined;
+  this._verticalExaggerationOnSubscription = undefined;
   this._allowVerticalExaggeration = undefined;
   this._allowVerticalExaggerationSubscription = undefined;
   this._minimumPixelSize = undefined;
