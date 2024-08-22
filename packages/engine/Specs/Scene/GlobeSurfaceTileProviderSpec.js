@@ -19,6 +19,8 @@ import {
   BlendingState,
   ClippingPlane,
   ClippingPlaneCollection,
+  ClippingPolygon,
+  ClippingPolygonCollection,
   Fog,
   Globe,
   GlobeSurfaceShaderSet,
@@ -1258,6 +1260,198 @@ describe(
       expect(function () {
         globe.clippingPlanes = clippingPlanes;
       }).toThrowDeveloperError();
+    });
+
+    describe("clippingPolygons", () => {
+      const positions = Cartesian3.fromRadiansArray([
+        -1.3194369277314022,
+        0.6988062530900625,
+        -1.31941,
+        0.69879,
+        -1.3193955980204217,
+        0.6988091578771254,
+        -1.3193931220959367,
+        0.698743632490865,
+        -1.3194358224045408,
+        0.6987471965556998,
+      ]);
+      let polygon;
+
+      beforeEach(() => {
+        polygon = new ClippingPolygon({ positions });
+      });
+
+      it("selectively disable rendering globe surface", async function () {
+        if (!scene.context.webgl2) {
+          return;
+        }
+
+        expect(scene).toRender([0, 0, 0, 255]);
+
+        switchViewMode(
+          SceneMode.SCENE3D,
+          new GeographicProjection(Ellipsoid.WGS84)
+        );
+
+        await updateUntilDone(scene.globe);
+        expect(scene).notToRender([0, 0, 0, 255]);
+
+        let result;
+        expect(scene).toRenderAndCall(function (rgba) {
+          result = rgba;
+          expect(rgba).not.toEqual([0, 0, 0, 255]);
+        });
+
+        scene.globe.clippingPolygons = new ClippingPolygonCollection({
+          polygons: [polygon],
+        });
+
+        expect(scene).toRender(result);
+
+        scene.globe.clippingPolygons.inverse = true;
+
+        expect(scene).not.toRender(result);
+
+        scene.globe.clippingPolygons = undefined;
+      });
+
+      it("renders with multiple clipping regions", async function () {
+        if (!scene.context.webgl2) {
+          return;
+        }
+
+        expect(scene).toRender([0, 0, 0, 255]);
+
+        switchViewMode(
+          SceneMode.SCENE3D,
+          new GeographicProjection(Ellipsoid.WGS84)
+        );
+
+        await updateUntilDone(scene.globe);
+        expect(scene).notToRender([0, 0, 0, 255]);
+
+        let result;
+        expect(scene).toRenderAndCall(function (rgba) {
+          result = rgba;
+          expect(rgba).not.toEqual([0, 0, 0, 255]);
+        });
+
+        const positionsB = Cartesian3.fromDegreesArray([
+          153.033834435422932,
+          -27.569622925766826,
+          153.033836082527984,
+          -27.569616899897252,
+          153.033905701988772,
+          -27.569628939963906,
+          153.033999779170614,
+          -27.569639093357882,
+        ]);
+
+        scene.globe.clippingPolygons = new ClippingPolygonCollection({
+          polygons: [polygon, new ClippingPolygon({ positions: positionsB })],
+        });
+
+        expect(scene).toRender(result);
+
+        scene.globe.clippingPolygons.inverse = true;
+
+        expect(scene).not.toRender(result);
+
+        scene.globe.clippingPolygons = undefined;
+      });
+
+      it("Clips tiles when completely inside clipping region", async function () {
+        if (!scene.context.webgl2) {
+          return;
+        }
+
+        const globe = scene.globe;
+        scene.globe.clippingPolygons = new ClippingPolygonCollection({
+          polygons: [polygon],
+          inverse: true,
+        });
+
+        switchViewMode(
+          SceneMode.SCENE3D,
+          new GeographicProjection(Ellipsoid.WGS84)
+        );
+
+        await updateUntilDone(globe);
+        const surface = globe._surface;
+        const tile = surface._levelZeroTiles[0];
+        expect(tile.isClipped).toBe(true);
+      });
+
+      it("Clips tiles that intersect a clipping region", async function () {
+        if (!scene.context.webgl2) {
+          return;
+        }
+
+        const globe = scene.globe;
+        scene.globe.clippingPolygons = new ClippingPolygonCollection({
+          polygons: [polygon],
+        });
+
+        switchViewMode(
+          SceneMode.SCENE3D,
+          new GeographicProjection(Ellipsoid.WGS84)
+        );
+
+        await updateUntilDone(globe);
+        const surface = globe._surface;
+        const tile = surface._levelZeroTiles[1];
+        expect(tile.isClipped).toBe(true);
+      });
+
+      it("Doesn't clip tiles when completely outside clipping region", async function () {
+        if (!scene.context.webgl2) {
+          return;
+        }
+
+        const globe = scene.globe;
+        scene.globe.clippingPolygons = new ClippingPolygonCollection({
+          polygons: [polygon],
+        });
+
+        switchViewMode(
+          SceneMode.SCENE3D,
+          new GeographicProjection(Ellipsoid.WGS84)
+        );
+
+        await updateUntilDone(globe);
+        const surface = globe._surface;
+        const tile = surface._levelZeroTiles[0];
+        expect(tile.isClipped).toBe(false);
+      });
+
+      it("destroys attached ClippingPolygonCollections that have been detached", function () {
+        const globe = scene.globe;
+        const collection = new ClippingPolygonCollection({
+          polygons: [polygon],
+        });
+        globe.clippingPolygons = collection;
+        expect(collection.isDestroyed()).toBe(false);
+
+        globe.clippingPolygons = undefined;
+        expect(collection.isDestroyed()).toBe(true);
+      });
+
+      it("throws a DeveloperError when given a ClippingPolygonCollection attached to a Model", async function () {
+        const collection = new ClippingPolygonCollection({
+          polygons: [polygon],
+        });
+        const model = scene.primitives.add(
+          await Model.fromGltfAsync({
+            url: "./Data/Models/glTF-2.0/BoxTextured/glTF/BoxTextured.gltf",
+          })
+        );
+        model.clippingPolygons = collection;
+        const globe = scene.globe;
+
+        expect(function () {
+          globe.clippingPolygons = collection;
+        }).toThrowDeveloperError();
+      });
     });
 
     it("cartographicLimitRectangle selectively enables rendering globe surface", function () {

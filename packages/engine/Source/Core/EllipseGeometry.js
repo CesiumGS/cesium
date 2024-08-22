@@ -892,7 +892,7 @@ function computeRectangle(
  * @param {Cartesian3} options.center The ellipse's center point in the fixed frame.
  * @param {number} options.semiMajorAxis The length of the ellipse's semi-major axis in meters.
  * @param {number} options.semiMinorAxis The length of the ellipse's semi-minor axis in meters.
- * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid the ellipse will be on.
+ * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.default] The ellipsoid the ellipse will be on.
  * @param {number} [options.height=0.0] The distance in meters between the ellipse and the ellipsoid surface.
  * @param {number} [options.extrudedHeight] The distance in meters between the ellipse's extruded face and the ellipsoid surface.
  * @param {number} [options.rotation=0.0] The angle of rotation counter-clockwise from north.
@@ -921,7 +921,7 @@ function EllipseGeometry(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
   const center = options.center;
-  const ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
+  const ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.default);
   const semiMajorAxis = options.semiMajorAxis;
   const semiMinorAxis = options.semiMinorAxis;
   const granularity = defaultValue(
@@ -1109,7 +1109,7 @@ EllipseGeometry.unpack = function (array, startingIndex, result) {
  * @param {Cartesian3} options.center The ellipse's center point in the fixed frame.
  * @param {number} options.semiMajorAxis The length of the ellipse's semi-major axis in meters.
  * @param {number} options.semiMinorAxis The length of the ellipse's semi-minor axis in meters.
- * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid the ellipse will be on.
+ * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.default] The ellipsoid the ellipse will be on.
  * @param {number} [options.rotation=0.0] The angle of rotation counter-clockwise from north.
  * @param {number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The angular distance between points on the ellipse in radians.
  * @param {Rectangle} [result] An object in which to store the result
@@ -1120,7 +1120,7 @@ EllipseGeometry.computeRectangle = function (options, result) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
   const center = options.center;
-  const ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
+  const ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.default);
   const semiMajorAxis = options.semiMajorAxis;
   const semiMinorAxis = options.semiMinorAxis;
   const granularity = defaultValue(

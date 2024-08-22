@@ -178,7 +178,7 @@ EllipsoidGeometryUpdater.prototype.createFillGeometryInstance = function (
           time,
           entity.ellipsoid.heightReference,
           this._options.radii.z * 0.5,
-          this._scene.mapProjection.ellipsoid,
+          this._scene.ellipsoid,
           modelMatrixResult
         ),
     attributes: attributes,
@@ -250,7 +250,7 @@ EllipsoidGeometryUpdater.prototype.createOutlineGeometryInstance = function (
           time,
           entity.ellipsoid.heightReference,
           this._options.radii.z * 0.5,
-          this._scene.mapProjection.ellipsoid,
+          this._scene.ellipsoid,
           modelMatrixResult
         ),
     attributes: attributes,
@@ -413,7 +413,7 @@ DynamicEllipsoidGeometryUpdater.prototype.update = function (time) {
         time,
         ellipsoid.heightReference,
         radii.z * 0.5,
-        this._scene.mapProjection.ellipsoid,
+        this._scene.ellipsoid,
         this._modelMatrix
       )
     : undefined;

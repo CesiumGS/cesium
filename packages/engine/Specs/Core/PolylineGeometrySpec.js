@@ -1,14 +1,15 @@
 import {
+  ArcType,
   Cartesian3,
   Color,
+  defaultValue,
   Ellipsoid,
+  Math as CesiumMath,
   PolylineGeometry,
   VertexFormat,
 } from "../../index.js";
-import { ArcType, defaultValue } from "../../index.js";
 
 import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";
-import CesiumMath from "../../Source/Core/Math.js";
 
 describe("Core/PolylineGeometry", function () {
   it("constructor throws with no positions", function () {

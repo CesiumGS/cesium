@@ -63,8 +63,7 @@ GeometryPipelineStage.process = function (
   primitive,
   frameState
 ) {
-  const shaderBuilder = renderResources.shaderBuilder;
-  const model = renderResources.model;
+  const { shaderBuilder, model } = renderResources;
 
   // These structs are similar, though the fragment shader version has a couple
   // additional fields.
@@ -125,8 +124,7 @@ GeometryPipelineStage.process = function (
   );
 
   // .pnts point clouds store sRGB color rather than linear color
-  const modelType = model.type;
-  if (modelType === ModelType.TILE_PNTS) {
+  if (model.type === ModelType.TILE_PNTS) {
     shaderBuilder.addDefine(
       "HAS_SRGB_COLOR",
       undefined,
@@ -246,8 +244,7 @@ function processAttribute(
 }
 
 function addSemanticDefine(shaderBuilder, attribute) {
-  const semantic = attribute.semantic;
-  const setIndex = attribute.setIndex;
+  const { semantic, setIndex } = attribute;
   switch (semantic) {
     case VertexAttributeSemantic.NORMAL:
       shaderBuilder.addDefine("HAS_NORMALS");
@@ -272,19 +269,11 @@ function addAttributeToRenderResources(
   attributeIndex,
   modifyFor2D
 ) {
-  const quantization = attribute.quantization;
-  let type;
-  let componentDatatype;
-  if (defined(quantization)) {
-    type = quantization.type;
-    componentDatatype = quantization.componentDatatype;
-  } else {
-    type = attribute.type;
-    componentDatatype = attribute.componentDatatype;
-  }
+  const { quantization, semantic, setIndex } = attribute;
+  const { type, componentDatatype } = defined(quantization)
+    ? quantization
+    : attribute;
 
-  const semantic = attribute.semantic;
-  const setIndex = attribute.setIndex;
   if (
     semantic === VertexAttributeSemantic.FEATURE_ID &&
     setIndex >= renderResources.featureIdVertexAttributeSetIndex
@@ -337,18 +326,10 @@ function addMatrixAttributeToRenderResources(
   attributeIndex,
   columnCount
 ) {
-  const quantization = attribute.quantization;
-  let type;
-  let componentDatatype;
-  if (defined(quantization)) {
-    type = quantization.type;
-    componentDatatype = quantization.componentDatatype;
-  } else {
-    type = attribute.type;
-    componentDatatype = attribute.componentDatatype;
-  }
-
-  const normalized = attribute.normalized;
+  const { quantization, normalized } = attribute;
+  const { type, componentDatatype } = defined(quantization)
+    ? quantization
+    : attribute;
 
   // componentCount is either 4, 9 or 16
   const componentCount = AttributeType.getNumberOfComponents(type);
@@ -435,7 +416,7 @@ function addAttributeDeclaration(shaderBuilder, attributeInfo, modifyFor2D) {
 function updateAttributesStruct(shaderBuilder, attributeInfo, use2D) {
   const vsStructId = GeometryPipelineStage.STRUCT_ID_PROCESSED_ATTRIBUTES_VS;
   const fsStructId = GeometryPipelineStage.STRUCT_ID_PROCESSED_ATTRIBUTES_FS;
-  const variableName = attributeInfo.variableName;
+  const { variableName, glslType } = attributeInfo;
 
   if (variableName === "tangentMC") {
     // The w component of the tangent is only used for computing the bitangent,
@@ -451,16 +432,8 @@ function updateAttributesStruct(shaderBuilder, attributeInfo, use2D) {
     shaderBuilder.addStructField(vsStructId, "vec3", "normalMC");
     shaderBuilder.addStructField(fsStructId, "vec3", "normalEC");
   } else {
-    shaderBuilder.addStructField(
-      vsStructId,
-      attributeInfo.glslType,
-      variableName
-    );
-    shaderBuilder.addStructField(
-      fsStructId,
-      attributeInfo.glslType,
-      variableName
-    );
+    shaderBuilder.addStructField(vsStructId, glslType, variableName);
+    shaderBuilder.addStructField(fsStructId, glslType, variableName);
   }
 
   if (variableName === "positionMC" && use2D) {
@@ -501,8 +474,7 @@ function updateInitializeAttributesFunction(
 }
 
 function updateSetDynamicVaryingsFunction(shaderBuilder, attributeInfo) {
-  const semantic = attributeInfo.attribute.semantic;
-  const setIndex = attributeInfo.attribute.setIndex;
+  const { semantic, setIndex } = attributeInfo.attribute;
   if (defined(semantic) && !defined(setIndex)) {
     // positions, normals, and tangents are handled statically in
     // GeometryStageVS

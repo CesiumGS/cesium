@@ -1188,6 +1188,15 @@ function TextureReader() {
   this.transform = Matrix3.clone(Matrix3.IDENTITY);
 
   /**
+   * Scale to apply to texture values.
+   *
+   * @type {number}
+   * @default 1.0
+   * @private
+   */
+  this.scale = 1.0;
+
+  /**
    * The texture channels to read from. When undefined all channels are read.
    *
    * @type {string}
@@ -1337,10 +1346,151 @@ SpecularGlossiness.DEFAULT_SPECULAR_FACTOR = Cartesian3.ONE;
  */
 SpecularGlossiness.DEFAULT_GLOSSINESS_FACTOR = 1.0;
 
+function Specular() {
+  /**
+   * The specular factor.
+   *
+   * @type {number}
+   * @default 1.0
+   * @private
+   */
+  this.specularFactor = Specular.DEFAULT_SPECULAR_FACTOR;
+
+  /**
+   * The specular texture reader.
+   *
+   * @type {ModelComponents.TextureReader}
+   * @private
+   */
+  this.specularTexture = undefined;
+
+  /**
+   * The specular color factor.
+   *
+   * @type {Cartesian3}
+   * @default new Cartesian3(1.0, 1.0, 1.0)
+   * @private
+   */
+  this.specularColorFactor = Cartesian3.clone(
+    Specular.DEFAULT_SPECULAR_COLOR_FACTOR
+  );
+
+  /**
+   * The specular color texture reader.
+   *
+   * @type {ModelComponents.TextureReader}
+   * @private
+   */
+  this.specularColorTexture = undefined;
+}
+
+/**
+ * @private
+ */
+Specular.DEFAULT_SPECULAR_FACTOR = 1.0;
+
+/**
+ * @private
+ */
+Specular.DEFAULT_SPECULAR_COLOR_FACTOR = Cartesian3.ONE;
+
+function Anisotropy() {
+  /**
+   * The anisotropy strength.
+   *
+   * @type {number}
+   * @default 0.0
+   * @private
+   */
+  this.anisotropyStrength = Anisotropy.DEFAULT_ANISOTROPY_STRENGTH;
+
+  /**
+   * The rotation of the anisotropy in tangent, bitangent space,
+   * measured in radians counter-clockwise from the tangent.
+   *
+   * @type {number}
+   * @default 0.0
+   * @private
+   */
+  this.anisotropyRotation = Anisotropy.DEFAULT_ANISOTROPY_ROTATION;
+
+  /**
+   * The anisotropy texture reader.
+   *
+   * @type {ModelComponents.TextureReader}
+   * @private
+   */
+  this.anisotropyTexture = undefined;
+}
+
+/**
+ * @private
+ */
+Anisotropy.DEFAULT_ANISOTROPY_STRENGTH = 0.0;
+
+/**
+ * @private
+ */
+Anisotropy.DEFAULT_ANISOTROPY_ROTATION = 0.0;
+
+function Clearcoat() {
+  /**
+   * The clearcoat layer intensity.
+   *
+   * @type {number}
+   * @default 0.0
+   * @private
+   */
+  this.clearcoatFactor = Clearcoat.DEFAULT_CLEARCOAT_FACTOR;
+
+  /**
+   * The clearcoat layer intensity texture reader.
+   *
+   * @type {ModelComponents.TextureReader}
+   * @private
+   */
+  this.clearcoatTexture = undefined;
+
+  /**
+   * The clearcoat layer roughness.
+   *
+   * @type {number}
+   * @default 0.0
+   * @private
+   */
+  this.clearcoatRoughnessFactor = Clearcoat.DEFAULT_CLEARCOAT_ROUGHNESS_FACTOR;
+
+  /**
+   * The clearcoat layer roughness texture.
+   *
+   * @type {ModelComponents.TextureReader}
+   * @private
+   */
+  this.clearcoatRoughnessTexture = undefined;
+
+  /**
+   * The clearcoat normal map texture.
+   *
+   * @type {ModelComponents.TextureReader}
+   * @private
+   */
+  this.clearcoatNormalTexture = undefined;
+}
+
+/**
+ * @private
+ */
+Clearcoat.DEFAULT_CLEARCOAT_FACTOR = 0.0;
+
+/**
+ * @private
+ */
+Clearcoat.DEFAULT_CLEARCOAT_ROUGHNESS_FACTOR = 0.0;
+
 /**
  * The material appearance of a primitive.
  *
- * @alias ModelComponent.Material
+ * @alias ModelComponents.Material
  * @constructor
  *
  * @private
@@ -1361,6 +1511,30 @@ function Material() {
    * @private
    */
   this.specularGlossiness = undefined;
+
+  /**
+   * Material properties for the PBR specular shading model.
+   *
+   * @type {ModelComponents.Specular}
+   * @private
+   */
+  this.specular = undefined;
+
+  /**
+   * Material properties for the PBR anisotropy shading model.
+   *
+   * @type {ModelComponents.Anisotropy}
+   * @private
+   */
+  this.anisotropy = undefined;
+
+  /**
+   * Material properties for the PBR clearcoat shading model.
+   *
+   * @type {ModelComponents.Clearcoat}
+   * @private
+   */
+  this.clearcoat = undefined;
 
   /**
    * The emissive texture reader.
@@ -1461,6 +1635,9 @@ ModelComponents.Components = Components;
 ModelComponents.TextureReader = TextureReader;
 ModelComponents.MetallicRoughness = MetallicRoughness;
 ModelComponents.SpecularGlossiness = SpecularGlossiness;
+ModelComponents.Specular = Specular;
+ModelComponents.Anisotropy = Anisotropy;
+ModelComponents.Clearcoat = Clearcoat;
 ModelComponents.Material = Material;
 
 export default ModelComponents;

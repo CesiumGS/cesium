@@ -243,7 +243,7 @@ describe("Scene/BingMapsImageryProvider", function () {
     });
 
     //These are the same instance only if the cache has been used
-    expect(provider._attributionList).toBe(provider2._attributionList);
+    expect(provider._imageUrlSubdomains).toBe(provider2._imageUrlSubdomains);
 
     installFakeMetadataRequest(url, BingMapsStyle.AERIAL);
     installFakeImageRequest();
@@ -253,8 +253,10 @@ describe("Scene/BingMapsImageryProvider", function () {
       mapStyle: BingMapsStyle.AERIAL,
     });
 
-    // Because the road is different, a non-cached request should have happened
-    expect(provider3._attributionList).not.toBe(provider._attributionList);
+    // Because the style is different, a non-cached request should have happened
+    expect(provider3._imageUrlSubdomains).not.toBe(
+      provider._imageUrlSubdomains
+    );
   });
 
   it("fromUrl resolves with a path", async function () {

@@ -2,9 +2,9 @@ import {
   Cartesian3,
   EllipsoidOutlineGeometry,
   GeometryOffsetAttribute,
+  Math as CesiumMath,
 } from "../../index.js";
 
-import { Math as CesiumMath } from "../../index.js";
 import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";
 
 describe("Core/EllipsoidOutlineGeometry", function () {

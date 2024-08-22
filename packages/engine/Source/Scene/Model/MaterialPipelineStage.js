@@ -12,15 +12,20 @@ import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
 import LightingModel from "./LightingModel.js";
 import ModelUtility from "./ModelUtility.js";
 
-const Material = ModelComponents.Material;
-const MetallicRoughness = ModelComponents.MetallicRoughness;
-const SpecularGlossiness = ModelComponents.SpecularGlossiness;
+const {
+  Material,
+  MetallicRoughness,
+  SpecularGlossiness,
+  Specular,
+  Clearcoat,
+} = ModelComponents;
 
 /**
  * The material pipeline stage processes textures and other uniforms needed
  * to render a primitive. This handles the following material types:
  * <ul>
  *   <li>Basic glTF materials (PBR metallic roughness model)</li>
+ *   <li>The `KHR_materials_specular` glTF extension</li>
  *   <li>The `KHR_materials_pbrSpecularGlossiness` glTF extension</li>
  *   <li>The `KHR_materials_unlit` glTF extension</li>
  * </ul>
@@ -59,20 +64,19 @@ MaterialPipelineStage.process = function (
   // gltf-pipeline automatically creates a default material so this will always
   // be defined.
   const material = primitive.material;
-  const model = renderResources.model;
+  const { model, uniformMap, shaderBuilder } = renderResources;
 
   // Classification models only use position and feature ID attributes,
   // so textures should be disabled to avoid compile errors.
   const hasClassification = defined(model.classificationType);
   const disableTextures = hasClassification;
 
-  const uniformMap = renderResources.uniformMap;
-  const shaderBuilder = renderResources.shaderBuilder;
-
   // When textures are loaded incrementally, fall back to a default 1x1 texture
-  const defaultTexture = frameState.context.defaultTexture;
-  const defaultNormalTexture = frameState.context.defaultNormalTexture;
-  const defaultEmissiveTexture = frameState.context.defaultEmissiveTexture;
+  const {
+    defaultTexture,
+    defaultNormalTexture,
+    defaultEmissiveTexture,
+  } = frameState.context;
 
   processMaterialUniforms(
     material,
@@ -86,15 +90,51 @@ MaterialPipelineStage.process = function (
 
   if (defined(material.specularGlossiness)) {
     processSpecularGlossinessUniforms(
-      material,
+      material.specularGlossiness,
       uniformMap,
       shaderBuilder,
       defaultTexture,
       disableTextures
     );
   } else {
+    if (
+      defined(material.specular) &&
+      ModelUtility.supportedExtensions.KHR_materials_specular
+    ) {
+      processSpecularUniforms(
+        material.specular,
+        uniformMap,
+        shaderBuilder,
+        defaultTexture,
+        disableTextures
+      );
+    }
+    if (
+      defined(material.anisotropy) &&
+      ModelUtility.supportedExtensions.KHR_materials_anisotropy
+    ) {
+      processAnisotropyUniforms(
+        material.anisotropy,
+        uniformMap,
+        shaderBuilder,
+        defaultTexture,
+        disableTextures
+      );
+    }
+    if (
+      defined(material.clearcoat) &&
+      ModelUtility.supportedExtensions.KHR_materials_clearcoat
+    ) {
+      processClearcoatUniforms(
+        material.clearcoat,
+        uniformMap,
+        shaderBuilder,
+        defaultTexture,
+        disableTextures
+      );
+    }
     processMetallicRoughnessUniforms(
-      material,
+      material.metallicRoughness,
       uniformMap,
       shaderBuilder,
       defaultTexture,
@@ -177,6 +217,44 @@ function processTextureTransform(
 }
 
 /**
+ * Process a single texture scale and add it to the shader and uniform map.
+ *
+ * @param {ShaderBuilder} shaderBuilder The shader builder to modify
+ * @param {Object<string, Function>} uniformMap The uniform map to modify.
+ * @param {ModelComponents.TextureReader} textureReader The texture to add to the shader
+ * @param {string} uniformName The name of the sampler uniform such as <code>u_baseColorTexture</code>
+ * @param {string} defineName The name of the texture for use in the defines, minus any prefix or suffix. For example, "BASE_COLOR" or "EMISSIVE"
+ *
+ * @private
+ */
+function processTextureScale(
+  shaderBuilder,
+  uniformMap,
+  textureReader,
+  uniformName,
+  defineName
+) {
+  // Add a define to enable the texture transformation code in the shader.
+  const transformDefine = `HAS_${defineName}_TEXTURE_SCALE`;
+  shaderBuilder.addDefine(
+    transformDefine,
+    undefined,
+    ShaderDestination.FRAGMENT
+  );
+
+  // Add a uniform for the transformation matrix
+  const scaleUniformName = `${uniformName}Scale`;
+  shaderBuilder.addUniform(
+    "float",
+    scaleUniformName,
+    ShaderDestination.FRAGMENT
+  );
+  uniformMap[scaleUniformName] = function () {
+    return textureReader.scale;
+  };
+}
+
+/**
  * Process a single texture and add it to the shader and uniform map.
  *
  * @param {ShaderBuilder} shaderBuilder The shader builder to modify
@@ -234,6 +312,17 @@ function processTexture(
       defineName
     );
   }
+
+  const { scale } = textureReader;
+  if (defined(scale) && scale !== 1.0) {
+    processTextureScale(
+      shaderBuilder,
+      uniformMap,
+      textureReader,
+      uniformName,
+      defineName
+    );
+  }
 }
 
 function processMaterialUniforms(
@@ -245,7 +334,13 @@ function processMaterialUniforms(
   defaultEmissiveTexture,
   disableTextures
 ) {
-  const emissiveFactor = material.emissiveFactor;
+  const {
+    emissiveFactor,
+    emissiveTexture,
+    normalTexture,
+    occlusionTexture,
+  } = material;
+
   if (
     defined(emissiveFactor) &&
     !Cartesian3.equals(emissiveFactor, Material.DEFAULT_EMISSIVE_FACTOR)
@@ -264,7 +359,6 @@ function processMaterialUniforms(
       ShaderDestination.FRAGMENT
     );
 
-    const emissiveTexture = material.emissiveTexture;
     if (defined(emissiveTexture) && !disableTextures) {
       processTexture(
         shaderBuilder,
@@ -277,7 +371,6 @@ function processMaterialUniforms(
     }
   }
 
-  const normalTexture = material.normalTexture;
   if (defined(normalTexture) && !disableTextures) {
     processTexture(
       shaderBuilder,
@@ -289,7 +382,6 @@ function processMaterialUniforms(
     );
   }
 
-  const occlusionTexture = material.occlusionTexture;
   if (defined(occlusionTexture) && !disableTextures) {
     processTexture(
       shaderBuilder,
@@ -302,21 +394,37 @@ function processMaterialUniforms(
   }
 }
 
+/**
+ * Add uniforms and defines for the KHR_materials_pbrSpecularGlossiness extension
+ *
+ * @param {ModelComponents.SpecularGlossiness} specularGlossiness
+ * @param {Object<string, Function>} uniformMap The uniform map to modify.
+ * @param {ShaderBuilder} shaderBuilder
+ * @param {Texture} defaultTexture
+ * @param {boolean} disableTextures
+ * @private
+ */
 function processSpecularGlossinessUniforms(
-  material,
+  specularGlossiness,
   uniformMap,
   shaderBuilder,
   defaultTexture,
   disableTextures
 ) {
-  const specularGlossiness = material.specularGlossiness;
+  const {
+    diffuseTexture,
+    diffuseFactor,
+    specularGlossinessTexture,
+    specularFactor,
+    glossinessFactor,
+  } = specularGlossiness;
+
   shaderBuilder.addDefine(
     "USE_SPECULAR_GLOSSINESS",
     undefined,
     ShaderDestination.FRAGMENT
   );
 
-  const diffuseTexture = specularGlossiness.diffuseTexture;
   if (defined(diffuseTexture) && !disableTextures) {
     processTexture(
       shaderBuilder,
@@ -328,7 +436,6 @@ function processSpecularGlossinessUniforms(
     );
   }
 
-  const diffuseFactor = specularGlossiness.diffuseFactor;
   if (
     defined(diffuseFactor) &&
     !Cartesian4.equals(diffuseFactor, SpecularGlossiness.DEFAULT_DIFFUSE_FACTOR)
@@ -348,8 +455,6 @@ function processSpecularGlossinessUniforms(
     );
   }
 
-  const specularGlossinessTexture =
-    specularGlossiness.specularGlossinessTexture;
   if (defined(specularGlossinessTexture) && !disableTextures) {
     processTexture(
       shaderBuilder,
@@ -361,7 +466,6 @@ function processSpecularGlossinessUniforms(
     );
   }
 
-  const specularFactor = specularGlossiness.specularFactor;
   if (
     defined(specularFactor) &&
     !Cartesian3.equals(
@@ -371,20 +475,19 @@ function processSpecularGlossinessUniforms(
   ) {
     shaderBuilder.addUniform(
       "vec3",
-      "u_specularFactor",
+      "u_legacySpecularFactor",
       ShaderDestination.FRAGMENT
     );
-    uniformMap.u_specularFactor = function () {
+    uniformMap.u_legacySpecularFactor = function () {
       return specularGlossiness.specularFactor;
     };
     shaderBuilder.addDefine(
-      "HAS_SPECULAR_FACTOR",
+      "HAS_LEGACY_SPECULAR_FACTOR",
       undefined,
       ShaderDestination.FRAGMENT
     );
   }
 
-  const glossinessFactor = specularGlossiness.glossinessFactor;
   if (
     defined(glossinessFactor) &&
     glossinessFactor !== SpecularGlossiness.DEFAULT_GLOSSINESS_FACTOR
@@ -405,14 +508,277 @@ function processSpecularGlossinessUniforms(
   }
 }
 
-function processMetallicRoughnessUniforms(
-  material,
+/**
+ * Add uniforms and defines for the KHR_materials_specular extension
+ *
+ * @param {ModelComponents.Specular} specular
+ * @param {Object<string, Function>} uniformMap The uniform map to modify.
+ * @param {ShaderBuilder} shaderBuilder
+ * @param {Texture} defaultTexture
+ * @param {boolean} disableTextures
+ * @private
+ */
+function processSpecularUniforms(
+  specular,
   uniformMap,
   shaderBuilder,
   defaultTexture,
   disableTextures
 ) {
-  const metallicRoughness = material.metallicRoughness;
+  const {
+    specularTexture,
+    specularFactor,
+    specularColorTexture,
+    specularColorFactor,
+  } = specular;
+
+  shaderBuilder.addDefine(
+    "USE_SPECULAR",
+    undefined,
+    ShaderDestination.FRAGMENT
+  );
+
+  if (defined(specularTexture) && !disableTextures) {
+    processTexture(
+      shaderBuilder,
+      uniformMap,
+      specularTexture,
+      "u_specularTexture",
+      "SPECULAR",
+      defaultTexture
+    );
+  }
+
+  if (
+    defined(specularFactor) &&
+    specularFactor !== Specular.DEFAULT_SPECULAR_FACTOR
+  ) {
+    shaderBuilder.addUniform(
+      "float",
+      "u_specularFactor",
+      ShaderDestination.FRAGMENT
+    );
+    uniformMap.u_specularFactor = function () {
+      return specular.specularFactor;
+    };
+    shaderBuilder.addDefine(
+      "HAS_SPECULAR_FACTOR",
+      undefined,
+      ShaderDestination.FRAGMENT
+    );
+  }
+
+  if (defined(specularColorTexture) && !disableTextures) {
+    processTexture(
+      shaderBuilder,
+      uniformMap,
+      specularColorTexture,
+      "u_specularColorTexture",
+      "SPECULAR_COLOR",
+      defaultTexture
+    );
+  }
+
+  if (
+    defined(specularColorFactor) &&
+    !Cartesian3.equals(
+      specularColorFactor,
+      Specular.DEFAULT_SPECULAR_COLOR_FACTOR
+    )
+  ) {
+    shaderBuilder.addUniform(
+      "vec3",
+      "u_specularColorFactor",
+      ShaderDestination.FRAGMENT
+    );
+    uniformMap.u_specularColorFactor = function () {
+      return specular.specularColorFactor;
+    };
+    shaderBuilder.addDefine(
+      "HAS_SPECULAR_COLOR_FACTOR",
+      undefined,
+      ShaderDestination.FRAGMENT
+    );
+  }
+}
+
+const scratchAnisotropy = new Cartesian3();
+
+/**
+ * Add uniforms and defines for the KHR_materials_anisotropy extension
+ *
+ * @param {ModelComponents.Anisotropy} anisotropy
+ * @param {Object<string, Function>} uniformMap The uniform map to modify.
+ * @param {ShaderBuilder} shaderBuilder
+ * @param {Texture} defaultTexture
+ * @param {boolean} disableTextures
+ * @private
+ */
+function processAnisotropyUniforms(
+  anisotropy,
+  uniformMap,
+  shaderBuilder,
+  defaultTexture,
+  disableTextures
+) {
+  const {
+    anisotropyStrength,
+    anisotropyRotation,
+    anisotropyTexture,
+  } = anisotropy;
+
+  shaderBuilder.addDefine(
+    "USE_ANISOTROPY",
+    undefined,
+    ShaderDestination.FRAGMENT
+  );
+
+  if (defined(anisotropyTexture) && !disableTextures) {
+    processTexture(
+      shaderBuilder,
+      uniformMap,
+      anisotropyTexture,
+      "u_anisotropyTexture",
+      "ANISOTROPY",
+      defaultTexture
+    );
+  }
+
+  // Pre-compute cos and sin of rotation, since they are the same for all fragments.
+  // Combine with strength as one vec3 uniform.
+  const cosRotation = Math.cos(anisotropyRotation);
+  const sinRotation = Math.sin(anisotropyRotation);
+  shaderBuilder.addUniform("vec3", "u_anisotropy", ShaderDestination.FRAGMENT);
+  uniformMap.u_anisotropy = function () {
+    return Cartesian3.fromElements(
+      cosRotation,
+      sinRotation,
+      anisotropyStrength,
+      scratchAnisotropy
+    );
+  };
+}
+
+/**
+ * Add uniforms and defines for the KHR_materials_clearcoat extension
+ *
+ * @param {ModelComponents.Clearcoat} clearcoat
+ * @param {Object<string, Function>} uniformMap The uniform map to modify.
+ * @param {ShaderBuilder} shaderBuilder
+ * @param {Texture} defaultTexture
+ * @param {boolean} disableTextures
+ * @private
+ */
+function processClearcoatUniforms(
+  clearcoat,
+  uniformMap,
+  shaderBuilder,
+  defaultTexture,
+  disableTextures
+) {
+  const {
+    clearcoatFactor,
+    clearcoatTexture,
+    clearcoatRoughnessFactor,
+    clearcoatRoughnessTexture,
+    clearcoatNormalTexture,
+  } = clearcoat;
+
+  shaderBuilder.addDefine(
+    "USE_CLEARCOAT",
+    undefined,
+    ShaderDestination.FRAGMENT
+  );
+
+  if (
+    defined(clearcoatFactor) &&
+    clearcoatFactor !== Clearcoat.DEFAULT_CLEARCOAT_FACTOR
+  ) {
+    shaderBuilder.addUniform(
+      "float",
+      "u_clearcoatFactor",
+      ShaderDestination.FRAGMENT
+    );
+    uniformMap.u_clearcoatFactor = function () {
+      return clearcoat.clearcoatFactor;
+    };
+    shaderBuilder.addDefine(
+      "HAS_CLEARCOAT_FACTOR",
+      undefined,
+      ShaderDestination.FRAGMENT
+    );
+  }
+
+  if (defined(clearcoatTexture) && !disableTextures) {
+    processTexture(
+      shaderBuilder,
+      uniformMap,
+      clearcoatTexture,
+      "u_clearcoatTexture",
+      "CLEARCOAT",
+      defaultTexture
+    );
+  }
+
+  if (
+    defined(clearcoatRoughnessFactor) &&
+    clearcoatFactor !== Clearcoat.DEFAULT_CLEARCOAT_ROUGHNESS_FACTOR
+  ) {
+    shaderBuilder.addUniform(
+      "float",
+      "u_clearcoatRoughnessFactor",
+      ShaderDestination.FRAGMENT
+    );
+    uniformMap.u_clearcoatRoughnessFactor = function () {
+      return clearcoat.clearcoatRoughnessFactor;
+    };
+    shaderBuilder.addDefine(
+      "HAS_CLEARCOAT_ROUGHNESS_FACTOR",
+      undefined,
+      ShaderDestination.FRAGMENT
+    );
+  }
+
+  if (defined(clearcoatRoughnessTexture) && !disableTextures) {
+    processTexture(
+      shaderBuilder,
+      uniformMap,
+      clearcoatRoughnessTexture,
+      "u_clearcoatRoughnessTexture",
+      "CLEARCOAT_ROUGHNESS",
+      defaultTexture
+    );
+  }
+
+  if (defined(clearcoatNormalTexture) && !disableTextures) {
+    processTexture(
+      shaderBuilder,
+      uniformMap,
+      clearcoatNormalTexture,
+      "u_clearcoatNormalTexture",
+      "CLEARCOAT_NORMAL",
+      defaultTexture
+    );
+  }
+}
+
+/**
+ * Add uniforms and defines for the PBR metallic roughness model
+ *
+ * @param {ModelComponents.MetallicRoughness} metallicRoughness
+ * @param {Object<string, Function>} uniformMap The uniform map to modify.
+ * @param {ShaderBuilder} shaderBuilder
+ * @param {Texture} defaultTexture
+ * @param {boolean} disableTextures
+ * @private
+ */
+function processMetallicRoughnessUniforms(
+  metallicRoughness,
+  uniformMap,
+  shaderBuilder,
+  defaultTexture,
+  disableTextures
+) {
   shaderBuilder.addDefine(
     "USE_METALLIC_ROUGHNESS",
     undefined,

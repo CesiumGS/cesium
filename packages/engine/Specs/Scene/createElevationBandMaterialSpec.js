@@ -2,12 +2,11 @@ import {
   Cartesian4,
   Color,
   createElevationBandMaterial,
+  Math as CesiumMath,
   PixelFormat,
   Texture,
   TextureMinificationFilter,
 } from "../../index.js";
-
-import { Math as CesiumMath } from "../../index.js";
 
 import createScene from "../../../../Specs/createScene.js";
 

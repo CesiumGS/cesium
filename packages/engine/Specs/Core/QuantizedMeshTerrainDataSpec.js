@@ -3,12 +3,11 @@ import {
   Cartesian3,
   defined,
   GeographicTilingScheme,
+  Math as CesiumMath,
   QuantizedMeshTerrainData,
   TerrainData,
   TerrainMesh,
 } from "../../index.js";
-
-import { Math as CesiumMath } from "../../index.js";
 
 describe("Core/QuantizedMeshTerrainData", function () {
   it("conforms to TerrainData interface", function () {

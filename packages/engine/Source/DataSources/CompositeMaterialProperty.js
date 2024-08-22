@@ -1,6 +1,7 @@
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Event from "../Core/Event.js";
+import JulianDate from "../Core/JulianDate.js";
 import CompositeProperty from "./CompositeProperty.js";
 import Property from "./Property.js";
 
@@ -82,19 +83,19 @@ CompositeMaterialProperty.prototype.getType = function (time) {
   return undefined;
 };
 
+const timeScratch = new JulianDate();
+
 /**
  * Gets the value of the property at the provided time.
  *
- * @param {JulianDate} time The time for which to retrieve the value.
+ * @param {JulianDate} [time=JulianDate.now()] The time for which to retrieve the value. If omitted, the current system time is used.
  * @param {object} [result] The object to store the value into, if omitted, a new instance is created and returned.
  * @returns {object} The modified result parameter or a new instance if the result parameter was not supplied.
  */
 CompositeMaterialProperty.prototype.getValue = function (time, result) {
-  //>>includeStart('debug', pragmas.debug);
   if (!defined(time)) {
-    throw new DeveloperError("time is required");
+    time = JulianDate.now(timeScratch);
   }
-  //>>includeEnd('debug');
 
   const innerProperty = this._composite._intervals.findDataForIntervalContainingDate(
     time

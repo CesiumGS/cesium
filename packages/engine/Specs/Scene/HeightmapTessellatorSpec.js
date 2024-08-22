@@ -3,11 +3,10 @@ import {
   Cartesian3,
   Ellipsoid,
   HeightmapTessellator,
+  Math as CesiumMath,
   Rectangle,
   WebMercatorProjection,
 } from "../../index.js";
-
-import { Math as CesiumMath } from "../../index.js";
 
 describe("Scene/HeightmapTessellator", function () {
   it("throws when heightmap is not provided", function () {

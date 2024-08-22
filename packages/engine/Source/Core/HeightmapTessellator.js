@@ -62,7 +62,7 @@ const maximumScratch = new Cartesian3();
  * @param {boolean} [options.isGeographic=true] True if the heightmap uses a {@link GeographicProjection}, or false if it uses
  *                  a {@link WebMercatorProjection}.
  * @param {Cartesian3} [options.relativeToCenter=Cartesian3.ZERO] The positions will be computed as <code>Cartesian3.subtract(worldPosition, relativeToCenter)</code>.
- * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to which the heightmap applies.
+ * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.default] The ellipsoid to which the heightmap applies.
  * @param {object} [options.structure] An object describing the structure of the height data.
  * @param {number} [options.structure.heightScale=1.0] The factor by which to multiply height samples in order to obtain
  *                 the height above the heightOffset, in meters.  The heightOffset is added to the resulting
@@ -149,7 +149,7 @@ HeightmapTessellator.computeVertices = function (options) {
   const hasSkirts = skirtHeight > 0.0;
 
   const isGeographic = defaultValue(options.isGeographic, true);
-  const ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
+  const ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.default);
 
   const oneOverGlobeSemimajorAxis = 1.0 / ellipsoid.maximumRadius;
 

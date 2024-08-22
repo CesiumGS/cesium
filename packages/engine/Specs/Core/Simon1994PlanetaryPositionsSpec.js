@@ -1,5 +1,4 @@
 import {
-  defined,
   JulianDate,
   Matrix3,
   Math as CesiumMath,
@@ -83,16 +82,10 @@ describe("Core/Simon1994PlanetaryPositions", function () {
     }
     const angles = [];
     for (i = 0; i < 24; i++) {
-      transformMatrix = Transforms.computeIcrfToFixedMatrix(
+      transformMatrix = Transforms.computeIcrfToCentralBodyFixedMatrix(
         timesOfDay[i],
         transformMatrix
       );
-      if (!defined(transformMatrix)) {
-        transformMatrix = Transforms.computeTemeToPseudoFixedMatrix(
-          timesOfDay[i],
-          transformMatrix
-        );
-      }
       const position = PlanetaryPositions.computeSunPositionInEarthInertialFrame(
         timesOfDay[i]
       );

@@ -4,7 +4,7 @@ import Resource from "./Resource.js";
 
 let defaultTokenCredit;
 const defaultAccessToken =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJjM2I5YWEyNS02NzRiLTRmOTEtYWZhNi1jNzlhZTI5Yjc3YWYiLCJpZCI6MjU5LCJpYXQiOjE3MTE1NTQ2Njd9.dawdakmPEfdAKpH2-Cv-IDOlVHwicZ1Mgk7ZzI775hQ";
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIxY2UxZDdkOS02YTJkLTQ2Y2EtYmMxNS03ZDI2NWQ1NzUzMjAiLCJpZCI6MjU5LCJpYXQiOjE3MjI1Mjg0MTl9.IMe1VGs-5blTCJJA1y76M8WNixMgms2C87kIkXQVcww";
 /**
  * Default settings for accessing the Cesium ion API.
  *

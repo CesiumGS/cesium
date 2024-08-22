@@ -13,6 +13,7 @@ import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
+import Ellipsoid from "../Core/Ellipsoid.js";
 import EllipsoidGeometry from "../Core/EllipsoidGeometry.js";
 import Event from "../Core/Event.js";
 import GeographicProjection from "../Core/GeographicProjection.js";
@@ -29,6 +30,7 @@ import OrthographicFrustum from "../Core/OrthographicFrustum.js";
 import OrthographicOffCenterFrustum from "../Core/OrthographicOffCenterFrustum.js";
 import PerspectiveFrustum from "../Core/PerspectiveFrustum.js";
 import PerspectiveOffCenterFrustum from "../Core/PerspectiveOffCenterFrustum.js";
+import Rectangle from "../Core/Rectangle.js";
 import RequestScheduler from "../Core/RequestScheduler.js";
 import TaskProcessor from "../Core/TaskProcessor.js";
 import Transforms from "../Core/Transforms.js";
@@ -55,7 +57,6 @@ import GlobeTranslucencyState from "./GlobeTranslucencyState.js";
 import InvertClassification from "./InvertClassification.js";
 import JobScheduler from "./JobScheduler.js";
 import MapMode2D from "./MapMode2D.js";
-import OctahedralProjectedCubeMap from "./OctahedralProjectedCubeMap.js";
 import PerformanceDisplay from "./PerformanceDisplay.js";
 import PerInstanceColorAppearance from "./PerInstanceColorAppearance.js";
 import Picking from "./Picking.js";
@@ -67,6 +68,7 @@ import SceneTransforms from "./SceneTransforms.js";
 import SceneTransitioner from "./SceneTransitioner.js";
 import ScreenSpaceCameraController from "./ScreenSpaceCameraController.js";
 import ShadowMap from "./ShadowMap.js";
+import SpecularEnvironmentCubeMap from "./SpecularEnvironmentCubeMap.js";
 import StencilConstants from "./StencilConstants.js";
 import SunLight from "./SunLight.js";
 import SunPostProcess from "./SunPostProcess.js";
@@ -96,7 +98,8 @@ const requestRenderAfterFrame = function (scene) {
  * @param {ContextOptions} [options.contextOptions] Context and WebGL creation properties.
  * @param {Element} [options.creditContainer] The HTML element in which the credits will be displayed.
  * @param {Element} [options.creditViewport] The HTML element in which to display the credit popup.  If not specified, the viewport will be a added as a sibling of the canvas.
- * @param {MapProjection} [options.mapProjection=new GeographicProjection()] The map projection to use in 2D and Columbus View modes.
+ * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.default] The default ellipsoid. If not specified, the default ellipsoid is used.
+ * @param {MapProjection} [options.mapProjection=new GeographicProjection(options.ellipsoid)] The map projection to use in 2D and Columbus View modes.
  * @param {boolean} [options.orderIndependentTranslucency=true] If true and the configuration supports it, use order independent translucency.
  * @param {boolean} [options.scene3DOnly=false] If true, optimizes memory use and performance for 3D mode but disables the ability to use 2D or Columbus View.
  * @param {boolean} [options.shadows=false] Determines if shadows are cast by light sources.
@@ -153,7 +156,7 @@ function Scene(options) {
   this._jobScheduler = new JobScheduler();
   this._frameState = new FrameState(
     context,
-    new CreditDisplay(creditContainer, " • ", creditViewport),
+    new CreditDisplay(creditContainer, "•", creditViewport),
     this._jobScheduler
   );
   this._frameState.scene3DOnly = defaultValue(options.scene3DOnly, false);
@@ -163,6 +166,8 @@ function Scene(options) {
   this._canvas = canvas;
   this._context = context;
   this._computeEngine = new ComputeEngine(context);
+
+  this._ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.default);
   this._globe = undefined;
   this._globeTranslucencyState = new GlobeTranslucencyState();
   this._primitives = new PrimitiveCollection();
@@ -316,7 +321,7 @@ function Scene(options) {
 
   this._mapProjection = defined(options.mapProjection)
     ? options.mapProjection
-    : new GeographicProjection();
+    : new GeographicProjection(this._ellipsoid);
 
   /**
    * The current morph transition time between 2D/Columbus View and 3D,
@@ -530,9 +535,21 @@ function Scene(options) {
   /**
    * Blends the atmosphere to geometry far from the camera for horizon views. Allows for additional
    * performance improvements by rendering less geometry and dispatching less terrain requests.
+   *
+   * Disbaled by default if an ellipsoid other than WGS84 is used.
    * @type {Fog}
    */
   this.fog = new Fog();
+  this.fog.enabled = Ellipsoid.WGS84.equals(this._ellipsoid);
+
+  if (!Ellipsoid.WGS84.equals(this._ellipsoid)) {
+    Camera.DEFAULT_VIEW_RECTANGLE = Rectangle.fromDegrees(
+      -45.0,
+      -45.0,
+      45.0,
+      45.0
+    );
+  }
 
   this._shadowMapCamera = new Camera(this);
 
@@ -721,7 +738,7 @@ function Scene(options) {
    * @type {string}
    */
   this.specularEnvironmentMaps = undefined;
-  this._specularEnvironmentMapAtlas = undefined;
+  this._specularEnvironmentCubeMap = undefined;
 
   /**
    * The light source for shading. Defaults to a directional light from the Sun.
@@ -910,7 +927,20 @@ Object.defineProperties(Scene.prototype, {
    */
   specularEnvironmentMapsSupported: {
     get: function () {
-      return OctahedralProjectedCubeMap.isSupported(this._context);
+      return SpecularEnvironmentCubeMap.isSupported(this._context);
+    },
+  },
+
+  /**
+   * The ellipsoid.  If not specified, the default ellipsoid is used.
+   * @memberof Scene.prototype
+   *
+   * @type {Ellipsoid}
+   * @readonly
+   */
+  ellipsoid: {
+    get: function () {
+      return this._ellipsoid;
     },
   },
 
@@ -1853,7 +1883,7 @@ function getOccluder(scene) {
     !scene._cameraUnderground &&
     !scene._globeTranslucencyState.translucent
   ) {
-    const ellipsoid = globe.ellipsoid;
+    const ellipsoid = scene.ellipsoid;
     const minimumTerrainHeight = scene.frameState.minimumTerrainHeight;
     scratchOccluderBoundingSphere.radius =
       ellipsoid.minimumRadius + minimumTerrainHeight;
@@ -1934,11 +1964,11 @@ Scene.prototype.updateFrameState = function () {
   frameState.verticalExaggerationRelativeHeight = this.verticalExaggerationRelativeHeight;
 
   if (
-    defined(this._specularEnvironmentMapAtlas) &&
-    this._specularEnvironmentMapAtlas.ready
+    defined(this._specularEnvironmentCubeMap) &&
+    this._specularEnvironmentCubeMap.ready
   ) {
-    frameState.specularEnvironmentMaps = this._specularEnvironmentMapAtlas.texture;
-    frameState.specularEnvironmentMapsMaximumLOD = this._specularEnvironmentMapAtlas.maximumMipmapLevel;
+    frameState.specularEnvironmentMaps = this._specularEnvironmentCubeMap.texture;
+    frameState.specularEnvironmentMapsMaximumLOD = this._specularEnvironmentCubeMap.maximumMipmapLevel;
   } else {
     frameState.specularEnvironmentMaps = undefined;
     frameState.specularEnvironmentMapsMaximumLOD = undefined;
@@ -3298,20 +3328,18 @@ Scene.prototype.updateEnvironment = function () {
   );
 
   const envMaps = this.specularEnvironmentMaps;
-  let envMapAtlas = this._specularEnvironmentMapAtlas;
-  if (
-    defined(envMaps) &&
-    (!defined(envMapAtlas) || envMapAtlas.url !== envMaps)
-  ) {
-    envMapAtlas = envMapAtlas && envMapAtlas.destroy();
-    this._specularEnvironmentMapAtlas = new OctahedralProjectedCubeMap(envMaps);
-  } else if (!defined(envMaps) && defined(envMapAtlas)) {
-    envMapAtlas.destroy();
-    this._specularEnvironmentMapAtlas = undefined;
+  let specularEnvironmentCubeMap = this._specularEnvironmentCubeMap;
+  if (defined(envMaps) && specularEnvironmentCubeMap?.url !== envMaps) {
+    specularEnvironmentCubeMap =
+      specularEnvironmentCubeMap && specularEnvironmentCubeMap.destroy();
+    this._specularEnvironmentCubeMap = new SpecularEnvironmentCubeMap(envMaps);
+  } else if (!defined(envMaps) && defined(specularEnvironmentCubeMap)) {
+    specularEnvironmentCubeMap.destroy();
+    this._specularEnvironmentCubeMap = undefined;
   }
 
-  if (defined(this._specularEnvironmentMapAtlas)) {
-    this._specularEnvironmentMapAtlas.update(frameState);
+  if (defined(this._specularEnvironmentCubeMap)) {
+    this._specularEnvironmentCubeMap.update(frameState);
   }
 };
 
@@ -3745,7 +3773,7 @@ Scene.prototype.updateHeight = function (
   }
 
   let tilesetRemoveCallbacks = {};
-  const ellipsoid = this.globe?.ellipsoid;
+  const ellipsoid = this._ellipsoid;
   const createPrimitiveEventListener = (primitive) => {
     if (
       ignore3dTiles ||
@@ -4607,7 +4635,6 @@ Scene.prototype.clampToHeightMostDetailed = function (
  * @example
  * // Output the canvas position of longitude/latitude (0, 0) every time the mouse moves.
  * const scene = widget.scene;
- * const ellipsoid = scene.globe.ellipsoid;
  * const position = Cesium.Cartesian3.fromDegrees(0.0, 0.0);
  * const handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
  * handler.setInputAction(function(movement) {
@@ -4615,7 +4642,7 @@ Scene.prototype.clampToHeightMostDetailed = function (
  * }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
  */
 Scene.prototype.cartesianToCanvasCoordinates = function (position, result) {
-  return SceneTransforms.wgs84ToWindowCoordinates(this, position, result);
+  return SceneTransforms.worldToWindowCoordinates(this, position, result);
 };
 
 /**
@@ -4630,15 +4657,8 @@ Scene.prototype.completeMorph = function () {
  * @param {number} [duration=2.0] The amount of time, in seconds, for transition animations to complete.
  */
 Scene.prototype.morphTo2D = function (duration) {
-  let ellipsoid;
-  const globe = this.globe;
-  if (defined(globe)) {
-    ellipsoid = globe.ellipsoid;
-  } else {
-    ellipsoid = this.mapProjection.ellipsoid;
-  }
   duration = defaultValue(duration, 2.0);
-  this._transitioner.morphTo2D(duration, ellipsoid);
+  this._transitioner.morphTo2D(duration, this._ellipsoid);
 };
 
 /**
@@ -4646,15 +4666,8 @@ Scene.prototype.morphTo2D = function (duration) {
  * @param {number} [duration=2.0] The amount of time, in seconds, for transition animations to complete.
  */
 Scene.prototype.morphToColumbusView = function (duration) {
-  let ellipsoid;
-  const globe = this.globe;
-  if (defined(globe)) {
-    ellipsoid = globe.ellipsoid;
-  } else {
-    ellipsoid = this.mapProjection.ellipsoid;
-  }
   duration = defaultValue(duration, 2.0);
-  this._transitioner.morphToColumbusView(duration, ellipsoid);
+  this._transitioner.morphToColumbusView(duration, this._ellipsoid);
 };
 
 /**
@@ -4662,15 +4675,8 @@ Scene.prototype.morphToColumbusView = function (duration) {
  * @param {number} [duration=2.0] The amount of time, in seconds, for transition animations to complete.
  */
 Scene.prototype.morphTo3D = function (duration) {
-  let ellipsoid;
-  const globe = this.globe;
-  if (defined(globe)) {
-    ellipsoid = globe.ellipsoid;
-  } else {
-    ellipsoid = this.mapProjection.ellipsoid;
-  }
   duration = defaultValue(duration, 2.0);
-  this._transitioner.morphTo3D(duration, ellipsoid);
+  this._transitioner.morphTo3D(duration, this._ellipsoid);
 };
 
 function setTerrain(scene, terrain) {

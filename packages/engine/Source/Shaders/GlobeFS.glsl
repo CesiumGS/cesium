@@ -77,6 +77,12 @@ uniform mat4 u_clippingPlanesMatrix;
 uniform vec4 u_clippingPlanesEdgeStyle;
 #endif
 
+#ifdef ENABLE_CLIPPING_POLYGONS
+uniform highp sampler2D u_clippingDistance;
+in vec2 v_clippingPosition;
+flat in int v_regionIndex;
+#endif
+
 #if defined(GROUND_ATMOSPHERE) || defined(FOG) && defined(DYNAMIC_ATMOSPHERE_LIGHTING) && (defined(ENABLE_VERTEX_LIGHTING) || defined(ENABLE_DAYNIGHT_SHADING))
 uniform float u_minimumBrightness;
 #endif
@@ -201,7 +207,7 @@ vec4 sampleAndBlend(
 
 #ifdef APPLY_COLOR_TO_ALPHA
     vec3 colorDiff = abs(color.rgb - colorToAlpha.rgb);
-    colorDiff.r = max(max(colorDiff.r, colorDiff.g), colorDiff.b);
+    colorDiff.r = czm_maximumComponent(colorDiff);
     alpha = czm_branchFreeTernary(colorDiff.r < colorToAlpha.a, 0.0, alpha);
 #endif
 
@@ -368,8 +374,8 @@ void main()
     {
         mat3 enuToEye = czm_eastNorthUpToEyeCoordinates(v_positionMC, normalEC);
 
-        vec2 ellipsoidTextureCoordinates = czm_ellipsoidWgs84TextureCoordinates(normalMC);
-        vec2 ellipsoidFlippedTextureCoordinates = czm_ellipsoidWgs84TextureCoordinates(normalMC.zyx);
+        vec2 ellipsoidTextureCoordinates = czm_ellipsoidTextureCoordinates(normalMC);
+        vec2 ellipsoidFlippedTextureCoordinates = czm_ellipsoidTextureCoordinates(normalMC.zyx);
 
         vec2 textureCoordinates = mix(ellipsoidTextureCoordinates, ellipsoidFlippedTextureCoordinates, czm_morphTime * smoothstep(0.9, 0.95, normalMC.z));
 
@@ -411,6 +417,12 @@ void main()
     {
         finalColor = clippingPlanesEdgeColor;
     }
+#endif
+
+#ifdef ENABLE_CLIPPING_POLYGONS
+    vec2 clippingPosition = v_clippingPosition;
+    int regionIndex = v_regionIndex;
+    clipPolygons(u_clippingDistance, CLIPPING_POLYGON_REGIONS_LENGTH, clippingPosition, regionIndex);    
 #endif
 
 #ifdef HIGHLIGHT_FILL_TILE

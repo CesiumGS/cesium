@@ -24,7 +24,7 @@ function DataRectangle(rectangle, maxLevel) {
  *
  * Initialization options for the VRTheWorldTerrainProvider constructor
  *
- * @property {Ellipsoid} [ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
+ * @property {Ellipsoid} [ellipsoid=Ellipsoid.default] The ellipsoid.  If not specified, the default ellipsoid is used.
  * @property {Credit|string} [credit] A credit for the data source, which is displayed on the canvas.
  */
 
@@ -37,7 +37,7 @@ function DataRectangle(rectangle, maxLevel) {
  * @param {VRTheWorldTerrainProvider.ConstructorOptions} options An object describing initialization options
  */
 function TerrainProviderBuilder(options) {
-  this.ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
+  this.ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.default);
   this.tilingScheme = undefined;
   this.heightmapWidth = undefined;
   this.heightmapHeight = undefined;

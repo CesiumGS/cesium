@@ -17,9 +17,9 @@ import TerrainProvider from "./TerrainProvider.js";
  * @param {TilingScheme} [options.tilingScheme] The tiling scheme specifying how the ellipsoidal
  * surface is broken into tiles.  If this parameter is not provided, a {@link GeographicTilingScheme}
  * is used.
- * @param {Ellipsoid} [options.ellipsoid] The ellipsoid.  If the tilingScheme is specified,
+ * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.default] The ellipsoid.  If the tilingScheme is specified,
  * this parameter is ignored and the tiling scheme's ellipsoid is used instead. If neither
- * parameter is specified, the WGS84 ellipsoid is used.
+ * parameter is specified, the default ellipsoid is used.
  *
  * @see TerrainProvider
  */
@@ -29,7 +29,7 @@ function EllipsoidTerrainProvider(options) {
   this._tilingScheme = options.tilingScheme;
   if (!defined(this._tilingScheme)) {
     this._tilingScheme = new GeographicTilingScheme({
-      ellipsoid: defaultValue(options.ellipsoid, Ellipsoid.WGS84),
+      ellipsoid: defaultValue(options.ellipsoid, Ellipsoid.default),
     });
   }
 

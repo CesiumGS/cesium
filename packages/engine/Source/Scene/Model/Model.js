@@ -17,6 +17,7 @@ import Resource from "../../Core/Resource.js";
 import RuntimeError from "../../Core/RuntimeError.js";
 import Pass from "../../Renderer/Pass.js";
 import ClippingPlaneCollection from "../ClippingPlaneCollection.js";
+import ClippingPolygonCollection from "../ClippingPolygonCollection.js";
 import ColorBlendMode from "../ColorBlendMode.js";
 import GltfLoader from "../GltfLoader.js";
 import HeightReference, {
@@ -147,6 +148,7 @@ import pickModel from "./pickModel.js";
  * @privateParam {boolean} [options.showOutline=true] Whether to display the outline for models using the {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension. When true, outlines are displayed. When false, outlines are not displayed.
  * @privateParam {Color} [options.outlineColor=Color.BLACK] The color to use when rendering outlines.
  * @privateParam {ClippingPlaneCollection} [options.clippingPlanes] The {@link ClippingPlaneCollection} used to selectively disable rendering the model.
+ * @privateParam {ClippingPolygonCollection} [options.clippingPolygons] The {@link ClippingPolygonCollection} used to selectively disable rendering the model.
  * @privateParam {Cartesian3} [options.lightColor] The light color when shading the model. When <code>undefined</code> the scene's light color is used instead.
  * @privateParam {ImageBasedLighting} [options.imageBasedLighting] The properties for managing image-based lighting on this model.
  * @privateParam {boolean} [options.backFaceCulling=true] Whether to cull back-facing geometry. When true, back face culling is determined by the material's doubleSided property; when false, back face culling is disabled. Back faces are not culled if the model's color is translucent.
@@ -369,6 +371,20 @@ function Model(options) {
   }
   this._clippingPlanesState = 0; // If this value changes, the shaders need to be regenerated.
   this._clippingPlanesMatrix = Matrix4.clone(Matrix4.IDENTITY); // Derived from reference matrix and the current view matrix
+
+  // If the given clipping polygons don't have an owner, make this model its owner.
+  // Otherwise, the clipping polygons are passed down from a tileset.
+  const clippingPolygons = options.clippingPolygons;
+  if (defined(clippingPolygons) && clippingPolygons.owner === undefined) {
+    ClippingPolygonCollection.setOwner(
+      clippingPolygons,
+      this,
+      "_clippingPolygons"
+    );
+  } else {
+    this._clippingPolygons = clippingPolygons;
+  }
+  this._clippingPolygonsState = 0; // If this value changes, the shaders need to be regenerated.
 
   this._lightColor = Cartesian3.clone(options.lightColor);
 
@@ -1304,6 +1320,26 @@ Object.defineProperties(Model.prototype, {
   },
 
   /**
+   * The {@link ClippingPolygonCollection} used to selectively disable rendering the model.
+   *
+   * @memberof Model.prototype
+   *
+   * @type {ClippingPolygonCollection}
+   */
+  clippingPolygons: {
+    get: function () {
+      return this._clippingPolygons;
+    },
+    set: function (value) {
+      if (value !== this._clippingPolygons) {
+        // Handle destroying old clipping polygons, new clipping polygons ownership
+        ClippingPolygonCollection.setOwner(value, this, "_clippingPolygons");
+        this.resetDrawCommands();
+      }
+    },
+  },
+
+  /**
    * The light color when shading the model. When <code>undefined</code> the scene's light color is used instead.
    * <p>
    * Disabling additional light sources by setting
@@ -1801,6 +1837,7 @@ Model.prototype.update = function (frameState) {
   updateSilhouette(this, frameState);
   updateSkipLevelOfDetail(this, frameState);
   updateClippingPlanes(this, frameState);
+  updateClippingPolygons(this, frameState);
   updateSceneMode(this, frameState);
   updateFog(this, frameState);
   updateVerticalExaggeration(this, frameState);
@@ -1987,6 +2024,24 @@ function updateClippingPlanes(model, frameState) {
   }
 }
 
+function updateClippingPolygons(model, frameState) {
+  // Update the clipping polygon collection / state for this model to detect any changes.
+  let currentClippingPolygonsState = 0;
+  if (model.isClippingPolygonsEnabled()) {
+    if (model._clippingPolygons.owner === model) {
+      model._clippingPolygons.update(frameState);
+      model._clippingPolygons.queueCommands(frameState);
+    }
+    currentClippingPolygonsState =
+      model._clippingPolygons.clippingPolygonsState;
+  }
+
+  if (currentClippingPolygonsState !== model._clippingPolygonsState) {
+    model.resetDrawCommands();
+    model._clippingPolygonsState = currentClippingPolygonsState;
+  }
+}
+
 function updateSceneMode(model, frameState) {
   if (frameState.mode !== model._sceneMode) {
     if (model._projectTo2D) {
@@ -2068,8 +2123,7 @@ function updateClamping(model) {
     return;
   }
 
-  const globe = scene.globe;
-  const ellipsoid = defaultValue(globe?.ellipsoid, Ellipsoid.WGS84);
+  const ellipsoid = defaultValue(scene.ellipsoid, Ellipsoid.default);
 
   // Compute cartographic position so we don't recompute every update
   const modelMatrix = model.modelMatrix;
@@ -2151,7 +2205,7 @@ function updateComputedScale(model, modelMatrix, frameState) {
     Matrix4.getTranslation(modelMatrix, scratchPosition);
 
     if (model._sceneMode !== SceneMode.SCENE3D) {
-      SceneTransforms.computeActualWgs84Position(
+      SceneTransforms.computeActualEllipsoidPosition(
         frameState,
         scratchPosition,
         scratchPosition
@@ -2195,6 +2249,10 @@ function updatePickIds(model) {
   }
 }
 
+// Matrix3 is a row-major constructor.
+// The same constructor in GLSL will produce the transpose of this.
+const yUpToZUp = new Matrix3(1, 0, 0, 0, 0, 1, 0, -1, 0);
+
 function updateReferenceMatrices(model, frameState) {
   const modelMatrix = defined(model._clampedModelMatrix)
     ? model._clampedModelMatrix
@@ -2212,15 +2270,16 @@ function updateReferenceMatrices(model, frameState) {
       referenceMatrix,
       iblReferenceFrameMatrix4
     );
-    iblReferenceFrameMatrix3 = Matrix4.getMatrix3(
+    iblReferenceFrameMatrix3 = Matrix4.getRotation(
       iblReferenceFrameMatrix4,
       iblReferenceFrameMatrix3
     );
-    iblReferenceFrameMatrix3 = Matrix3.getRotation(
+    iblReferenceFrameMatrix3 = Matrix3.transpose(
       iblReferenceFrameMatrix3,
       iblReferenceFrameMatrix3
     );
-    model._iblReferenceFrameMatrix = Matrix3.transpose(
+    model._iblReferenceFrameMatrix = Matrix3.multiply(
+      yUpToZUp,
       iblReferenceFrameMatrix3,
       model._iblReferenceFrameMatrix
     );
@@ -2405,7 +2464,11 @@ function passesDistanceDisplayCondition(model, frameState) {
 
     // This will project the position if the scene is in Columbus View,
     // but leave the position as-is in 3D mode.
-    SceneTransforms.computeActualWgs84Position(frameState, position, position);
+    SceneTransforms.computeActualEllipsoidPosition(
+      frameState,
+      position,
+      position
+    );
 
     distanceSquared = Cartesian3.distanceSquared(
       position,
@@ -2538,6 +2601,21 @@ Model.prototype.pick = function (
 };
 
 /**
+ * Gets whether or not clipping polygons are enabled for this model.
+ *
+ * @returns {boolean} <code>true</code> if clipping polygons are enabled for this model, <code>false</code>.
+ * @private
+ */
+Model.prototype.isClippingPolygonsEnabled = function () {
+  const clippingPolygons = this._clippingPolygons;
+  return (
+    defined(clippingPolygons) &&
+    clippingPolygons.enabled &&
+    clippingPolygons.length !== 0
+  );
+};
+
+/**
  * Returns true if this object was destroyed; otherwise, false.
  * <br /><br />
  * If this object was destroyed, it should not be used; calling any function other than
@@ -2605,6 +2683,17 @@ Model.prototype.destroy = function () {
     clippingPlaneCollection.destroy();
   }
   this._clippingPlanes = undefined;
+
+  // Only destroy the ClippingPolygonCollection if this is the owner.
+  const clippingPolygonCollection = this._clippingPolygons;
+  if (
+    defined(clippingPolygonCollection) &&
+    !clippingPolygonCollection.isDestroyed() &&
+    clippingPolygonCollection.owner === this
+  ) {
+    clippingPolygonCollection.destroy();
+  }
+  this._clippingPolygons = undefined;
 
   // Only destroy the ImageBasedLighting if this is the owner.
   if (
@@ -2689,6 +2778,7 @@ Model.prototype.destroyModelResources = function () {
  * @param {boolean} [options.showOutline=true] Whether to display the outline for models using the {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension. When true, outlines are displayed. When false, outlines are not displayed.
  * @param {Color} [options.outlineColor=Color.BLACK] The color to use when rendering outlines.
  * @param {ClippingPlaneCollection} [options.clippingPlanes] The {@link ClippingPlaneCollection} used to selectively disable rendering the model.
+ * @param {ClippingPolygonCollection} [options.clippingPolygons] The {@link ClippingPolygonCollection} used to selectively disable rendering the model.
  * @param {Cartesian3} [options.lightColor] The light color when shading the model. When <code>undefined</code> the scene's light color is used instead.
  * @param {ImageBasedLighting} [options.imageBasedLighting] The properties for managing image-based lighting on this model.
  * @param {boolean} [options.backFaceCulling=true] Whether to cull back-facing geometry. When true, back face culling is determined by the material's doubleSided property; when false, back face culling is disabled. Back faces are not culled if the model's color is translucent.
@@ -3051,6 +3141,7 @@ function makeModelOptions(loader, modelType, options) {
     showOutline: options.showOutline,
     outlineColor: options.outlineColor,
     clippingPlanes: options.clippingPlanes,
+    clippingPolygons: options.clippingPolygons,
     lightColor: options.lightColor,
     imageBasedLighting: options.imageBasedLighting,
     backFaceCulling: options.backFaceCulling,

@@ -1,14 +1,13 @@
 import {
   Cartesian3,
   Cartesian4,
+  Math as CesiumMath,
   Matrix3,
   Matrix4,
   Quaternion,
   TranslationRotationScale,
   RuntimeError,
 } from "../../index.js";
-
-import { Math as CesiumMath } from "../../index.js";
 
 import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";
 import createPackableArraySpecs from "../../../../Specs/createPackableArraySpecs.js";
