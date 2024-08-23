@@ -244,19 +244,19 @@ function cloneMouseMovement(mouseMovement, result) {
   Cartesian2.clone(mouseMovement.endPosition, result.endPosition);
 }
 
-function anyBUttonIsDown(type, modifier, aggregator) {
+function refreshMouseDownStatus(type, modifier, aggregator) {
   // first: Judge if the mouse is pressed
   const isDown = aggregator._isDown;
-  let downFlag = false;
+  let anyButtonIsDown = false;
   const currentKey = getKey(type, modifier);
   for (const [downKey, downValue] of Object.entries(isDown)) {
     if (downKey.startsWith(type) && downValue && downKey !== currentKey) {
-      downFlag = true;
+      anyButtonIsDown = true;
       cancelMouseDownAction(downKey, aggregator);
     }
   }
 
-  if (!downFlag) {
+  if (!anyButtonIsDown) {
     return;
   }
 
@@ -314,7 +314,7 @@ function listenMouseMove(aggregator, modifier) {
           const type = CameraEventType[typeName];
           if (defined(type)) {
             const key = getKey(type, modifier);
-            anyBUttonIsDown(type, modifier, aggregator);
+            refreshMouseDownStatus(type, modifier, aggregator);
             if (isDown[key]) {
               if (!update[key]) {
                 Cartesian2.clone(
