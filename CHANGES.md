@@ -17,6 +17,7 @@
 - Added multiscattering terms to diffuse BRDF in image-based lighting. [#12118](https://github.com/CesiumGS/cesium/pull/12118)
 - Fixed CallbackProperty type not being present on entity position. [#12120](https://github.com/CesiumGS/cesium/pull/12120)
 - Additional TypeScript types export in package.json to assist some project configurations using Cesium. [#12122](https://github.com/CesiumGS/cesium/pull/12122)
+- Fixed documentation about default values for Label origins [#12139](https://github.com/CesiumGS/cesium/pull/12139)
 
 ##### Breaking Changes :mega:
 
