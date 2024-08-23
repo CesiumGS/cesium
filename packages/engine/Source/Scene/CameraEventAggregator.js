@@ -9,7 +9,7 @@ import ScreenSpaceEventType from "../Core/ScreenSpaceEventType.js";
 import CameraEventType from "./CameraEventType.js";
 
 function getKey(type, modifier) {
-  let key = type;
+  let key = `${type}`;
   if (defined(modifier)) {
     key += `+${modifier}`;
   }
@@ -219,14 +219,9 @@ function listenMouseButtonDownUp(aggregator, modifier, type) {
   aggregator._eventHandler.setInputAction(
     function () {
       cancelMouseDownAction(getKey(type, undefined), aggregator);
-      for (const modifierName in KeyboardEventModifier) {
-        if (KeyboardEventModifier.hasOwnProperty(modifierName)) {
-          const modifier = KeyboardEventModifier[modifierName];
-          if (defined(modifier)) {
-            const cancelKey = getKey(type, modifier);
-            cancelMouseDownAction(cancelKey, aggregator);
-          }
-        }
+      for (const modifier of Object.values(KeyboardEventModifier)) {
+        const cancelKey = getKey(type, modifier);
+        cancelMouseDownAction(cancelKey, aggregator);
       }
     },
     up,
@@ -249,31 +244,27 @@ function cloneMouseMovement(mouseMovement, result) {
   Cartesian2.clone(mouseMovement.endPosition, result.endPosition);
 }
 
-function refreshMouseDownStatus(type, modifier, aggregator) {
+function anyBUttonIsDown(type, modifier, aggregator) {
   // first: Judge if the mouse is pressed
   const isDown = aggregator._isDown;
   let downFlag = false;
-  Object.keys(isDown).map((key) => {
-    if (
-      key.toString().startsWith(type) &&
-      isDown[key] &&
-      key.toString() !== getKey(type, modifier).toString()
-    ) {
+  const currentKey = getKey(type, modifier);
+  for (const [downKey, downValue] of Object.entries(isDown)) {
+    if (downKey.startsWith(type) && downValue && downKey !== currentKey) {
       downFlag = true;
-      cancelMouseDownAction(key, aggregator);
+      cancelMouseDownAction(downKey, aggregator);
     }
-  });
+  }
 
   if (!downFlag) {
     return;
   }
 
   // second: If it is pressed, it will be transferred to the current modifier.
-  const key = getKey(type, modifier);
   const pressTime = aggregator._pressTime;
-  let lastMovement = aggregator._lastMovement[key];
+  let lastMovement = aggregator._lastMovement[currentKey];
   if (!defined(lastMovement)) {
-    lastMovement = aggregator._lastMovement[key] = {
+    lastMovement = aggregator._lastMovement[currentKey] = {
       startPosition: new Cartesian2(),
       endPosition: new Cartesian2(),
       valid: false,
@@ -281,8 +272,8 @@ function refreshMouseDownStatus(type, modifier, aggregator) {
   }
   aggregator._buttonsDown++;
   lastMovement.valid = false;
-  isDown[key] = true;
-  pressTime[key] = new Date();
+  isDown[currentKey] = true;
+  pressTime[currentKey] = new Date();
 }
 
 function listenMouseMove(aggregator, modifier) {
@@ -323,7 +314,7 @@ function listenMouseMove(aggregator, modifier) {
           const type = CameraEventType[typeName];
           if (defined(type)) {
             const key = getKey(type, modifier);
-            refreshMouseDownStatus(type, modifier, aggregator);
+            anyBUttonIsDown(type, modifier, aggregator);
             if (isDown[key]) {
               if (!update[key]) {
                 Cartesian2.clone(
@@ -379,8 +370,6 @@ function CameraEventAggregator(canvas) {
   this._eventStartPosition = {};
   this._pressTime = {};
   this._releaseTime = {};
-
-  this._passButton = undefined;
 
   this._buttonsDown = 0;
 
