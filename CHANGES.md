@@ -10,8 +10,6 @@
 
 - Exposes `ScreenSpaceCameraController.zoomFactor` to allow adjusting the zoom factor (speed). [#9145](https://github.com/CesiumGS/cesium/pull/9145)
 
-- Removed `jitter` option from `VoxelPrimitive.js` and related test code in `VoxelPrimitiveSpec.js`. [#11913](https://github.com/CesiumGS/cesium/issues/11913)
-
 ##### Fixes :wrench:
 
 - Update CameraEventAggregator to only trigger events for the currently held modifier while dragging. Events are canceled for all modifiers when the mouse is lifted. [#11903](https://github.com/CesiumGS/cesium/pull/11903)
@@ -23,6 +21,8 @@
 - Fixed documentation about default values for Label origins [#12139](https://github.com/CesiumGS/cesium/pull/12139)
 
 ##### Breaking Changes :mega:
+
+- Removed `jitter` option from `VoxelPrimitive.js`, `VoxelRenderResources.js`, and related test code in `VoxelPrimitiveSpec.js`. [#11913](https://github.com/CesiumGS/cesium/issues/11913)
 
 - Custom specular environment maps in `ImageBasedLighting` now require either a WebGL2 context or a WebGL1 context that supports the [`EXT_shader_texture_lod` extension](https://registry.khronos.org/webgl/extensions/EXT_shader_texture_lod/).
 
