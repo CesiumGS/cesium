@@ -69,8 +69,10 @@ void main() {
 
     vec3 sceneSkyBoxColor = czm_textureCube(czm_environmentMap, lookupDirection).rgb;
 
-    // Interpolate the ground color based on distance
-    vec3 groundColor = mix(vec3(0.0), u_groundColor.xyz, u_groundColor.a * (1.0 - d / radius));
+    // Interpolate the ground color based on distance and sun exposure
+    vec3 up = normalize(u_positionWC);
+    float occlusion = max(dot(lightDirectionWC, up), 0.15); // Ensure a low-level of ambiant light
+    vec3 groundColor = mix(vec3(0.0), u_groundColor.xyz, occlusion * u_groundColor.a * (1.0 - d / radius));
 
     // Only show the stars when not obscured by the ellipsoid
     vec3 backgroundColor = czm_branchFreeTernary(czm_isEmpty(intersection), sceneSkyBoxColor, groundColor);

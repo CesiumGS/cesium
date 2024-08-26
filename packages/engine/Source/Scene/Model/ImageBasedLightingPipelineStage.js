@@ -1,4 +1,5 @@
 import combine from "../../Core/combine.js";
+import defaultValue from "../../Core/defaultValue.js";
 import defined from "../../Core/defined.js";
 import ImageBasedLightingStageFS from "../../Shaders/Model/ImageBasedLightingStageFS.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
@@ -27,10 +28,15 @@ ImageBasedLightingPipelineStage.process = function (
   const environmentMapManager = model.environmentMapManager;
   const shaderBuilder = renderResources.shaderBuilder;
 
-  // If environment maps are not specifically provided, use procedural lighting.
-  const specularEnvironmentMapAtlas = environmentMapManager.radianceCubeMap;
-  const sphericalHarmonicCoefficients =
-    environmentMapManager.sphericalHarmonicCoefficients;
+  // If environment maps or spherical harmonics are not specifically provided, use procedural lighting.
+  let specularEnvironmentMapAtlas;
+  if (!defined(imageBasedLighting.specularEnvironmentMaps)) {
+    specularEnvironmentMapAtlas = environmentMapManager.radianceCubeMap;
+  }
+  const sphericalHarmonicCoefficients = defaultValue(
+    imageBasedLighting.sphericalHarmonicCoefficients,
+    environmentMapManager.sphericalHarmonicCoefficients
+  );
 
   shaderBuilder.addDefine(
     "USE_IBL_LIGHTING",
@@ -91,7 +97,11 @@ ImageBasedLightingPipelineStage.process = function (
       );
     }
 
-    if (defined(specularEnvironmentMapAtlas)) {
+    if (
+      (defined(imageBasedLighting.specularEnvironmentCubeMap) &&
+        imageBasedLighting.specularEnvironmentCubeMap.ready) ||
+      defined(specularEnvironmentMapAtlas)
+    ) {
       shaderBuilder.addDefine(
         "SPECULAR_IBL",
         undefined,

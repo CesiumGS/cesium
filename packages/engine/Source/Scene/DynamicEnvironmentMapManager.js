@@ -95,6 +95,13 @@ function DynamicEnvironmentMapManager(options) {
   this.enabled = defaultValue(options.enabled, true);
 
   /**
+   * Disables updates. For internal use.
+   * @private
+   * @default true
+   */
+  this.shouldUpdate = true;
+
+  /**
    * The maximum amount of elapsed seconds before a new environment map is created.
    * @type {number}
    * @default 1800
@@ -634,7 +641,7 @@ function updateSphericalHarmonicCoefficients(manager, frameState) {
  * @returns {boolean} true is shaders should be updated.
  */
 DynamicEnvironmentMapManager.prototype.update = function (frameState) {
-  if (!this.enabled || !defined(this._position)) {
+  if (!this.enabled || !this.shouldUpdate || !defined(this._position)) {
     return false;
   }
 
@@ -745,7 +752,7 @@ DynamicEnvironmentMapManager.prototype.destroy = function () {
  * @type {Color}
  */
 DynamicEnvironmentMapManager.AVERAGE_EARTH_GROUND_COLOR = Object.freeze(
-  Color.fromCssColorString("#25211E")
+  Color.fromCssColorString("#423c35")
 );
 
 export default DynamicEnvironmentMapManager;

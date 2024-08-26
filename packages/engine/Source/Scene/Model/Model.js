@@ -1826,6 +1826,9 @@ Model.prototype.update = function (frameState) {
   const environmentMapManager = this._environmentMapManager;
   if (this._ready && environmentMapManager.owner === this) {
     environmentMapManager.position = this._boundingSphere.center;
+    environmentMapManager.shouldUpdate =
+      !defined(this._imageBasedLighting.sphericalHarmonicCoefficients) ||
+      !defined(this._imageBasedLighting.specularEnvironmentMaps);
 
     if (environmentMapManager.update(frameState)) {
       this.resetDrawCommands();

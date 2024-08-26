@@ -251,6 +251,20 @@ Object.defineProperties(ImageBasedLighting.prototype, {
   },
 
   /**
+   * Whether or not to use the default spherical harmonics coefficients.
+   *
+   * @memberof ImageBasedLighting.prototype
+   * @type {boolean}
+   *
+   * @private
+   */
+  useDefaultSphericalHarmonics: {
+    get: function () {
+      return this._useDefaultSphericalHarmonics;
+    },
+  },
+
+  /**
    * Whether or not to use the default specular environment maps.
    *
    * @memberof ImageBasedLighting.prototype
