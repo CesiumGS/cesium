@@ -20,6 +20,7 @@ import TerrainMesh from "./TerrainMesh.js";
  * Terrain data for a single tile where the terrain data is represented as a glb (binary glTF).
  *
  * @alias Cesium3DTilesTerrainData
+ * @experimental
  * @constructor
  *
  * @param {Object} options Object with the following properties:
@@ -33,6 +34,7 @@ import TerrainMesh from "./TerrainMesh.js";
  *                      The point is expressed in ellipsoid-scaled coordinates.
  * @param {Number} options.skirtHeight The height of the skirt to add on the edges of the tile.
  * @param {Boolean} [options.requestVertexNormals=false] Indicates whether normals should be loaded.
+ * @param {Boolean} [options.requestWaterMask=false] Indicates whether water mask data should be loaded.
  * @param {Credit[]} [options.credits] Array of credits for this tile.
  * @param {Number} [options.childTileMask=15] A bit mask indicating which of this tile's four children exist.
  * If a child's bit is set, geometry will be requested for that tile as well when it
@@ -101,6 +103,9 @@ function Cesium3DTilesTerrainData(options) {
   this._hasVertexNormals = defaultValue(options.requestVertexNormals, false);
 
   /** @type {Boolean} */
+  this._hasWaterMask = defaultValue(options.requestWaterMask, false);
+
+  /** @type {Boolean} */
   this._hasWebMercatorT = true;
 
   /** @type {Credit[]|undefined} */
@@ -120,6 +125,8 @@ function Cesium3DTilesTerrainData(options) {
    * @type {TerrainMesh|undefined}
    */
   this._mesh = undefined;
+
+  this._waterMask = undefined;
 }
 
 Object.defineProperties(Cesium3DTilesTerrainData.prototype, {
@@ -146,8 +153,7 @@ Object.defineProperties(Cesium3DTilesTerrainData.prototype, {
   waterMask: {
     // @ts-ignore
     get: function () {
-      // Not supported currently
-      return undefined;
+      return this._waterMask;
     },
   },
 });
@@ -273,6 +279,7 @@ Cesium3DTilesTerrainData.prototype.createMesh = function (options) {
     ellipsoid: ellipsoid,
     rectangle: rectangle,
     hasVertexNormals: this._hasVertexNormals,
+    hasWaterMask: this._hasWaterMask,
     hasWebMercatorT: this._hasWebMercatorT,
     gltf: this._gltf,
     minimumHeight: this._minimumHeight,
@@ -295,7 +302,7 @@ Cesium3DTilesTerrainData.prototype.createMesh = function (options) {
   return Promise.resolve(verticesPromise).then(function (result) {
     const taskResult = result;
 
-    // Need to re-clone and re-wrap all buffers and complex ojects to put them back into their normal state
+    // Need to re-clone and re-wrap all buffers and complex objects to put them back into their normal state
     const encoding = TerrainEncoding.clone(
       taskResult.encoding,
       new TerrainEncoding()
@@ -347,6 +354,8 @@ Cesium3DTilesTerrainData.prototype.createMesh = function (options) {
     );
 
     that._mesh = mesh;
+    that._waterMask = new Uint8Array(taskResult.waterMaskBuffer);
+
     return Promise.resolve(mesh);
   });
 };

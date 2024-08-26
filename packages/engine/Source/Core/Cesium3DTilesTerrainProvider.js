@@ -186,7 +186,8 @@ function isChildAvailable(implicitTileset, subtree, coord, x, y) {
  * Initialization options for the Cesium3DTilesTerrainProvider constructor
  *
  * @property {boolean} [requestVertexNormals=false] Flag that indicates if the client should request additional lighting information from the server, in the form of per vertex normals if available.
- * @property {Ellipsoid} [ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
+ * @property {boolean} [requestWaterMask=false] Flag that indicates if the client should request per tile water masks from the server, if available.
+ * @property {Ellipsoid} [ellipsoid=Ellipsoid.default] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
  * @property {Credit|string} [credit] A credit for the data source, which is displayed on the canvas.
  */
 
@@ -194,6 +195,7 @@ function isChildAvailable(implicitTileset, subtree, coord, x, y) {
  * A {@link TerrainProvider} that accesses terrain data in a 3D Tiles format.
  *
  * @alias Cesium3DTilesTerrainProvider
+ * @experimental
  * @constructor
  *
  * @param {Cesium3DTilesTerrainProvider.ConstructorOptions}[options] An object describing initialization options
@@ -240,10 +242,25 @@ function Cesium3DTilesTerrainProvider(options) {
   // @ts-ignore
   this._resource = undefined;
 
+  /**
+   * Boolean flag that indicates if the client should request vertex normals from the server.
+   * @type {boolean}
+   * @default false
+   * @private
+   */
   this._requestVertexNormals = defaultValue(
     options.requestVertexNormals,
     false
   );
+
+  /**
+   * Boolean flag that indicates if the client should request tile watermasks from the server.
+   * @type {boolean}
+   * @default false
+   * @private
+   */
+  this._requestWaterMask = defaultValue(options.requestWaterMask, false);
+  this._hasWaterMask = false;
 }
 
 /**
@@ -694,7 +711,7 @@ Object.defineProperties(Cesium3DTilesTerrainProvider.prototype, {
   // @ts-ignore
   hasWaterMask: {
     get: function () {
-      return false;
+      return this._hasWaterMask && this._requestWaterMask;
     },
   },
 

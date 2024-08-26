@@ -170,14 +170,14 @@ function decodeNormals(gltf) {
       bufferViewMeshOpt.byteLength
     );
 
-    const normalByteLengh = bufferViewMeshOpt.byteStride;
-    const normalsResult = new Int8Array(normalCount * normalByteLengh);
+    const normalByteLength = bufferViewMeshOpt.byteStride;
+    const normalsResult = new Int8Array(normalCount * normalByteLength);
 
     // @ts-ignore
     MeshoptDecoder.decodeVertexBuffer(
       new Uint8Array(normalsResult.buffer),
       normalCount,
-      normalByteLengh,
+      normalByteLength,
       compressedBuffer
     );
 
@@ -337,6 +337,28 @@ function decodeEdgeIndices(gltf, name) {
   }
 
   return indices;
+}
+
+/**
+ * @private
+ * @param {Object.<string,*>} gltf
+ * @param {String} propertyId
+ * @returns {Uint8Array}
+ */
+function decodeWaterMask(gltf, propertyId) {
+
+  const loader = new GltfStructuralMetadataLoader({
+    gltf: gltf,
+    extension:
+    
+  })
+
+  const propertyTexture;
+  const property = propertyTexture.getProperty(propertyId);
+  property.textureReader
+
+  const propertyTable = structuralMetadata.getPropertyTable(propertyTableId) 
+  return propertyTable.getPropertyTypedArray(propertyId);
 }
 
 /**
