@@ -783,40 +783,16 @@ JulianDate.toIso8601 = function (julianDate, precision) {
 
   let millisecondStr;
 
-  if (!defined(precision) && millisecond !== 0) {
-    //Forces milliseconds into a number with at least 3 digits to whatever the default toString() precision is.
-    millisecondStr = (millisecond * 0.01).toString().replace(".", "");
-    return `${year.toString().padStart(4, "0")}-${month
-      .toString()
-      .padStart(2, "0")}-${day
-      .toString()
-      .padStart(2, "0")}T${hour
-      .toString()
-      .padStart(2, "0")}:${minute
-      .toString()
-      .padStart(2, "0")}:${second
-      .toString()
-      .padStart(2, "0")}.${millisecondStr}Z`;
+  if (millisecond !== 0 || defined(precision)) {
+    if (!defined(precision)) {
+      precision = 7; // Default precision if not provided
+    }
+    // Forces milliseconds into a number with the specified precision, without scientific notation
+    const fractionalSeconds = (second + millisecond * 0.001).toFixed(precision);
+    const parts = fractionalSeconds.split('.');
+    millisecondStr = parts.length > 1 ? parts[1] : '';
   }
 
-  //Precision is either 0 or milliseconds is 0 with undefined precision, in either case, leave off milliseconds entirely
-  if (!defined(precision) || precision === 0) {
-    return `${year.toString().padStart(4, "0")}-${month
-      .toString()
-      .padStart(2, "0")}-${day
-      .toString()
-      .padStart(2, "0")}T${hour
-      .toString()
-      .padStart(2, "0")}:${minute
-      .toString()
-      .padStart(2, "0")}:${second.toString().padStart(2, "0")}Z`;
-  }
-
-  //Forces milliseconds into a number with at least 3 digits to whatever the specified precision is.
-  millisecondStr = (millisecond * 0.01)
-    .toFixed(precision)
-    .replace(".", "")
-    .slice(0, precision);
   return `${year.toString().padStart(4, "0")}-${month
     .toString()
     .padStart(2, "0")}-${day
@@ -825,9 +801,9 @@ JulianDate.toIso8601 = function (julianDate, precision) {
     .toString()
     .padStart(2, "0")}:${minute
     .toString()
-    .padStart(2, "0")}:${second
-    .toString()
-    .padStart(2, "0")}.${millisecondStr}Z`;
+    .padStart(2, "0")}:${Math.floor(second).toString().padStart(2, "0")}${
+    millisecondStr ? `.${millisecondStr}` : ''
+  }Z`;
 };
 
 /**
