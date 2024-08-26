@@ -125,7 +125,7 @@ async function main() {
         sourceType = "geojson";
       } else if (/\.kml$/i.test(source) || /\.kmz$/i.test(source)) {
         sourceType = "kml";
-      } else if (/\.gpx$/i.test(source) || /\.gpx$/i.test(source)) {
+      } else if (/\.gpx$/i.test(source)) {
         sourceType = "gpx";
       }
     }
