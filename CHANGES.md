@@ -6,6 +6,7 @@
 
 ##### Additions :tada:
 
+- Updated default 3D Tiles and Model lighting when using PBR in order to create a more realistic appearance. Added `DynamicEnvironmentMapManager` to control lighting parameters. These can be accessed via `Cesium3DTileset.environmentMapManager` and `Model.environmentMapManager`. [#12129](https://github.com/CesiumGS/cesium/pull/12129)
 - Made the `time` parameter optional for `Property`, using `JulianDate.now()` as default. [#12099](https://github.com/CesiumGS/cesium/pull/12099)
 
 ##### Fixes :wrench:
@@ -14,11 +15,12 @@
 - Fixed specular reflection artifact in PBR direct lighting. [#12116](https://github.com/CesiumGS/cesium/pull/12116)
 - Added multiscattering terms to diffuse BRDF in image-based lighting. [#12118](https://github.com/CesiumGS/cesium/pull/12118)
 - Fixed CallbackProperty type not being present on entity position. [#12120](https://github.com/CesiumGS/cesium/pull/12120)
+- Fixed `ImageBasedLighting.imageBasedLightingFactor` not affecting lighting. [#12129](https://github.com/CesiumGS/cesium/pull/12129)
 
 ##### Breaking Changes :mega:
 
 - Custom specular environment maps in `ImageBasedLighting` now require either a WebGL2 context or a WebGL1 context that supports the [`EXT_shader_texture_lod` extension](https://registry.khronos.org/webgl/extensions/EXT_shader_texture_lod/).
-- `ImageBasedLighting.luminanceAtZenith` has been removed. Use `DynamicEnvironmentMapManager` instead.
+- `ImageBasedLighting.luminanceAtZenith` has been removed. Use `DynamicEnvironmentMapManager` instead. [#12129](https://github.com/CesiumGS/cesium/pull/12129)
 
 ### 1.120 - 2024-08-01
 
