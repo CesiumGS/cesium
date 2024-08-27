@@ -6,7 +6,7 @@
 
 ##### Additions :tada:
 
-- Enable MSAA by default with 4 samples. To turn MSAA off set `scene.msaaSamples = 1`
+- Enable MSAA by default with 4 samples. To turn MSAA off set `scene.msaaSamples = 1` [#12158](https://github.com/CesiumGS/cesium/pull/12158)
 - Made the `time` parameter optional for `Property`, using `JulianDate.now()` as default. [#12099](https://github.com/CesiumGS/cesium/pull/12099)
 - Exposes `ScreenSpaceCameraController.zoomFactor` to allow adjusting the zoom factor (speed). [#9145](https://github.com/CesiumGS/cesium/pull/9145)
 
