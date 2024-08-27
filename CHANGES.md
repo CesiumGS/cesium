@@ -1,5 +1,17 @@
 # Change Log
 
+### 1.121 - 2024-08-26
+
+#### @cesium/engine
+
+##### Additions :Deprecation Updates for SceneTransforms Methods:
+
+- Updated method calls in the codebase from `wgs84ToDrawingBufferCoordinates` to `worldToDrawingBufferCoordinates`.
+- Updated method calls in the codebase from `wgs84ToWindowCoordinates` to `worldToWindowCoordinates`.
+- Ran tests using the original `gulpfile.js` to execute them.
+- Verified that all tests for `SceneTransforms` pass successfully in different viewing modes (3D, ColumbusView, 2D) and frustum configurations.
+- Ensured that test output is correctly reported and errors are handled gracefully.
+
 ### 1.121 - 2024-09-01
 
 #### @cesium/engine
