@@ -72,7 +72,7 @@ SceneTransforms.worldToWindowCoordinates = function (scene, position, result) {
  *     console.log(Cesium.SceneTransforms.wgs84ToWindowCoordinates(scene, position));
  * }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
  */
-SceneTransforms.wgs84ToWindowCoordinates = function (scene, position, result) {
+SceneTransforms.worldToWindowCoordinates = function (scene, position, result) {
   deprecationWarning(
     "SceneTransforms.wgs84ToWindowCoordinates",
     "SceneTransforms.wgs84ToWindowCoordinates has been deprecated. It will be removed in 1.21. Use SceneTransforms.worldToWindowCoordinates instead."
@@ -337,7 +337,7 @@ SceneTransforms.worldToDrawingBufferCoordinates = function (
  *     console.log(Cesium.SceneTransforms.wgs84ToWindowCoordinates(scene, position));
  * }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
  */
-SceneTransforms.wgs84ToDrawingBufferCoordinates = function (
+SceneTransforms.worldToDrawingBufferCoordinates = function (
   scene,
   position,
   result
