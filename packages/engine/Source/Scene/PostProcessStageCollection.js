@@ -12,7 +12,7 @@ import TextureWrap from "../Renderer/TextureWrap.js";
 import PassThrough from "../Shaders/PostProcessStages/PassThrough.js";
 import PostProcessStageLibrary from "./PostProcessStageLibrary.js";
 import PostProcessStageTextureCache from "./PostProcessStageTextureCache.js";
-import Tonemapper from "./Tonemapper.js";
+import Tonemapper, { validateToneMapper } from "./Tonemapper.js";
 
 const stackScratch = [];
 
@@ -44,8 +44,8 @@ function PostProcessStageCollection() {
   this._tonemapping = undefined;
   this._tonemapper = undefined;
 
-  // set tonemapper and tonemapping
-  this.tonemapper = Tonemapper.ACES;
+  // set tonemapper and tonemapping using the setter
+  this.tonemapper = Tonemapper.PBR_NEUTRAL;
 
   const tonemapping = this._tonemapping;
 
@@ -313,11 +313,10 @@ Object.defineProperties(PostProcessStageCollection.prototype, {
   },
 
   /**
-   * Gets and sets the tonemapping algorithm used when rendering with high dynamic range.
+   * Specifies the tonemapping algorithm used when rendering with high dynamic range. Defaults to `Tonemapper.PBR_NEUTRAL`
    *
    * @memberof PostProcessStageCollection.prototype
    * @type {Tonemapper}
-   * @private
    */
   tonemapper: {
     get: function () {
@@ -328,7 +327,7 @@ Object.defineProperties(PostProcessStageCollection.prototype, {
         return;
       }
       //>>includeStart('debug', pragmas.debug);
-      if (!Tonemapper.validate(value)) {
+      if (!validateToneMapper(value)) {
         throw new DeveloperError("tonemapper was set to an invalid value.");
       }
       //>>includeEnd('debug');
@@ -339,26 +338,31 @@ Object.defineProperties(PostProcessStageCollection.prototype, {
       }
 
       const useAutoExposure = this._autoExposureEnabled;
-      let tonemapper;
+      let tonemapping;
 
       switch (value) {
         case Tonemapper.REINHARD:
-          tonemapper = PostProcessStageLibrary.createReinhardTonemappingStage(
+          tonemapping = PostProcessStageLibrary.createReinhardTonemappingStage(
             useAutoExposure
           );
           break;
         case Tonemapper.MODIFIED_REINHARD:
-          tonemapper = PostProcessStageLibrary.createModifiedReinhardTonemappingStage(
+          tonemapping = PostProcessStageLibrary.createModifiedReinhardTonemappingStage(
             useAutoExposure
           );
           break;
         case Tonemapper.FILMIC:
-          tonemapper = PostProcessStageLibrary.createFilmicTonemappingStage(
+          tonemapping = PostProcessStageLibrary.createFilmicTonemappingStage(
+            useAutoExposure
+          );
+          break;
+        case Tonemapper.PBR_NEUTRAL:
+          tonemapping = PostProcessStageLibrary.createPBRNeutralTonemappingStage(
             useAutoExposure
           );
           break;
         default:
-          tonemapper = PostProcessStageLibrary.createAcesTonemappingStage(
+          tonemapping = PostProcessStageLibrary.createAcesTonemappingStage(
             useAutoExposure
           );
           break;
@@ -366,17 +370,17 @@ Object.defineProperties(PostProcessStageCollection.prototype, {
 
       if (useAutoExposure) {
         const autoexposure = this._autoExposure;
-        tonemapper.uniforms.autoExposure = function () {
+        tonemapping.uniforms.autoExposure = function () {
           return autoexposure.outputTexture;
         };
       }
 
       this._tonemapper = value;
-      this._tonemapping = tonemapper;
+      this._tonemapping = tonemapping;
 
       if (defined(this._stageNames)) {
-        this._stageNames[tonemapper.name] = tonemapper;
-        tonemapper._textureCache = this._textureCache;
+        this._stageNames[tonemapping.name] = tonemapping;
+        tonemapping._textureCache = this._textureCache;
       }
 
       this._textureCacheDirty = true;
