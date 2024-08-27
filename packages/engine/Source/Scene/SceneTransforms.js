@@ -4,7 +4,6 @@ import Cartesian3 from "../Core/Cartesian3.js";
 import Cartesian4 from "../Core/Cartesian4.js";
 import Cartographic from "../Core/Cartographic.js";
 import defined from "../Core/defined.js";
-import deprecationWarning from "../Core/deprecationWarning.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import CesiumMath from "../Core/Math.js";
 import Matrix4 from "../Core/Matrix4.js";
@@ -73,10 +72,6 @@ SceneTransforms.worldToWindowCoordinates = function (scene, position, result) {
  * }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
  */
 SceneTransforms.worldToWindowCoordinates = function (scene, position, result) {
-  deprecationWarning(
-    "SceneTransforms.wgs84ToWindowCoordinates",
-    "SceneTransforms.wgs84ToWindowCoordinates has been deprecated. It will be removed in 1.21. Use SceneTransforms.worldToWindowCoordinates instead."
-  );
   return SceneTransforms.worldToWindowCoordinates(scene, position, result);
 };
 
@@ -337,22 +332,6 @@ SceneTransforms.worldToDrawingBufferCoordinates = function (
  *     console.log(Cesium.SceneTransforms.wgs84ToWindowCoordinates(scene, position));
  * }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
  */
-SceneTransforms.worldToDrawingBufferCoordinates = function (
-  scene,
-  position,
-  result
-) {
-  deprecationWarning(
-    "SceneTransforms.wgs84ToDrawingBufferCoordinates",
-    "SceneTransforms.wgs84ToDrawingBufferCoordinates has been deprecated. It will be removed in 1.21. Use SceneTransforms.worldToDrawingBufferCoordinates instead."
-  );
-
-  return SceneTransforms.worldToDrawingBufferCoordinates(
-    scene,
-    position,
-    result
-  );
-};
 
 const projectedPosition = new Cartesian3();
 const positionInCartographic = new Cartographic();

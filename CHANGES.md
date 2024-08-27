@@ -1,17 +1,5 @@
 # Change Log
 
-### 1.121 - 2024-08-26
-
-#### @cesium/engine
-
-##### Additions :Deprecation Updates for SceneTransforms Methods:
-
-- Updated method calls in the codebase from `wgs84ToDrawingBufferCoordinates` to `worldToDrawingBufferCoordinates`.
-- Updated method calls in the codebase from `wgs84ToWindowCoordinates` to `worldToWindowCoordinates`.
-- Ran tests using the original `gulpfile.js` to execute them.
-- Verified that all tests for `SceneTransforms` pass successfully in different viewing modes (3D, ColumbusView, 2D) and frustum configurations.
-- Ensured that test output is correctly reported and errors are handled gracefully.
-
 ### 1.121 - 2024-09-01
 
 #### @cesium/engine
@@ -33,6 +21,9 @@
 - Fixed documentation about default values for Label origins [#12139](https://github.com/CesiumGS/cesium/pull/12139)
 
 ##### Breaking Changes :mega:
+
+- `SceneTransforms.wgs84ToWindowCoordinates` has been removed. Use `SceneTransforms.worldToWindowCoordinates` instead.
+- `SceneTransforms.wgs84ToDrawingBufferCoordinates` has been removed. Use `SceneTransforms.worldToDrawingBufferCoordinates` instead.
 
 - Removed `jitter` option from `VoxelPrimitive.js`, `VoxelRenderResources.js`, and related test code in `VoxelPrimitiveSpec.js`. [#11913](https://github.com/CesiumGS/cesium/issues/11913)
 

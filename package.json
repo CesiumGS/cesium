@@ -52,8 +52,7 @@
   ],
   "dependencies": {
     "@cesium/engine": "^10.1.0",
-    "@cesium/widgets": "^7.1.0",
-    "cesium": "^1.120.0"
+    "@cesium/widgets": "^7.1.0"
   },
   "devDependencies": {
     "@playwright/test": "^1.41.1",
