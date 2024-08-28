@@ -3108,7 +3108,11 @@ describe(
     describe("light color", function () {
       it("initializes with light color", async function () {
         const model = await loadAndZoomToModelAsync(
-          { gltf: boxTexturedGltfUrl, lightColor: Cartesian3.ZERO },
+          {
+            gltf: boxTexturedGltfUrl,
+            lightColor: Cartesian3.ZERO,
+            imageBasedLighting: undefined,
+          },
           scene
         );
         verifyRender(model, false);
@@ -3116,7 +3120,7 @@ describe(
 
       it("changing light color works", async function () {
         const model = await loadAndZoomToModelAsync(
-          { gltf: boxTexturedGltfUrl },
+          { gltf: boxTexturedGltfUrl, imageBasedLighting: undefined },
           scene
         );
         model.lightColor = Cartesian3.ZERO;
@@ -3131,7 +3135,7 @@ describe(
 
       it("light color doesn't affect unlit models", async function () {
         const model = await loadAndZoomToModelAsync(
-          { gltf: boxUnlitUrl },
+          { gltf: boxUnlitUrl, imageBasedLighting: undefined },
           scene
         );
         const options = {
@@ -3164,7 +3168,10 @@ describe(
 
       it("creates default imageBasedLighting", async function () {
         const model = await loadAndZoomToModelAsync(
-          { gltf: boxTexturedGltfUrl },
+          {
+            gltf: boxTexturedGltfUrl,
+            imageBasedLighting: undefined,
+          },
           scene
         );
         const imageBasedLighting = model.imageBasedLighting;
@@ -3183,11 +3190,23 @@ describe(
 
       it("changing imageBasedLighting works", async function () {
         const imageBasedLighting = new ImageBasedLighting({
-          imageBasedLightingFactor: Cartesian2.ZERO,
-          specularEnvironmentMaps: "/Data/EnvironmentMap/kiara_6_afternoon",
+          sphericalHarmonicCoefficients: [
+            new Cartesian3(0.35449, 0.35449, 0.35449),
+            Cartesian3.ZERO,
+            Cartesian3.ZERO,
+            Cartesian3.ZERO,
+            Cartesian3.ZERO,
+            Cartesian3.ZERO,
+            Cartesian3.ZERO,
+            Cartesian3.ZERO,
+            Cartesian3.ZERO,
+          ],
         });
         const model = await loadAndZoomToModelAsync(
-          { gltf: boxTexturedGltfUrl },
+          {
+            gltf: boxTexturedGltfUrl,
+            imageBasedLighting: undefined,
+          },
           scene
         );
         const renderOptions = {
@@ -3213,6 +3232,17 @@ describe(
             gltf: boxTexturedGltfUrl,
             imageBasedLighting: new ImageBasedLighting({
               imageBasedLightingFactor: Cartesian2.ZERO,
+              sphericalHarmonicCoefficients: [
+                new Cartesian3(0.35449, 0.35449, 0.35449),
+                Cartesian3.ZERO,
+                Cartesian3.ZERO,
+                Cartesian3.ZERO,
+                Cartesian3.ZERO,
+                Cartesian3.ZERO,
+                Cartesian3.ZERO,
+                Cartesian3.ZERO,
+                Cartesian3.ZERO,
+              ],
             }),
           },
           scene

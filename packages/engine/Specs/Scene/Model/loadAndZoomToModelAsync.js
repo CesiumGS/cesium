@@ -1,5 +1,20 @@
-import { Model } from "../../../index.js";
+import { Model, ImageBasedLighting, Cartesian3 } from "../../../index.js";
 import pollToPromise from "../../../../../Specs/pollToPromise.js";
+
+// A white ambient light with low intensity
+const defaultIbl = new ImageBasedLighting({
+  sphericalHarmonicCoefficients: [
+    new Cartesian3(0.35449, 0.35449, 0.35449),
+    Cartesian3.ZERO,
+    Cartesian3.ZERO,
+    Cartesian3.ZERO,
+    Cartesian3.ZERO,
+    Cartesian3.ZERO,
+    Cartesian3.ZERO,
+    Cartesian3.ZERO,
+    Cartesian3.ZERO,
+  ],
+});
 
 async function loadAndZoomToModelAsync(options, scene) {
   options = {
@@ -7,6 +22,7 @@ async function loadAndZoomToModelAsync(options, scene) {
       enabled: false, // disable other diffuse lighting by default
       ...options.environmentMapOptions,
     },
+    imageBasedLighting: defaultIbl,
     ...options,
   };
 
