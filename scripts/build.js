@@ -4,7 +4,7 @@ import { readFile, writeFile } from "fs/promises";
 import { EOL } from "os";
 import path from "path";
 import { createRequire } from "module";
-import { finished } from 'stream/promises';
+import { finished } from "stream/promises";
 
 import esbuild from "esbuild";
 import { globby } from "globby";
@@ -434,8 +434,16 @@ const shaderFiles = [
   "packages/engine/Source/Shaders/**/*.glsl",
   "packages/engine/Source/ThirdParty/Shaders/*.glsl",
 ];
-export async function glslToJavaScript(minify, minifyStateFilePath, workspace) {
-  await writeFile(minifyStateFilePath, minify.toString());
+export async function glslToJavaScript(
+  minify,
+  minifyStateFilePath,
+  workspace,
+  specificFiles
+) {
+  const minifyFile = readFileSync(minifyStateFilePath, "utf-8");
+  if (minifyFile !== minify.toString()) {
+    await writeFile(minifyStateFilePath, minify.toString());
+  }
   const minifyStateFileLastModified = existsSync(minifyStateFilePath)
     ? statSync(minifyStateFilePath).mtime.getTime()
     : 0;
@@ -456,7 +464,16 @@ export async function glslToJavaScript(minify, minifyStateFilePath, workspace) {
   const builtinConstants = [];
   const builtinStructs = [];
 
-  const glslFiles = await globby(shaderFiles);
+  const glslFiles = await globby(specificFiles ?? shaderFiles);
+  const baseDir = path.join(
+    `packages/${workspace}/`,
+    "Source",
+    "Shaders",
+    "Builtin"
+  );
+  const functionsDir = path.normalize(path.join(baseDir, "Functions"));
+  const constantsDir = path.normalize(path.join(baseDir, "Constants"));
+  const structsDir = path.normalize(path.join(baseDir, "Structs"));
   await Promise.all(
     glslFiles.map(async function (glslFile) {
       glslFile = path.normalize(glslFile);
@@ -464,23 +481,11 @@ export async function glslToJavaScript(minify, minifyStateFilePath, workspace) {
       const jsFile = `${path.join(path.dirname(glslFile), baseName)}.js`;
 
       // identify built in functions, structs, and constants
-      const baseDir = path.join(
-        `packages/${workspace}/`,
-        "Source",
-        "Shaders",
-        "Builtin"
-      );
-      if (
-        glslFile.indexOf(path.normalize(path.join(baseDir, "Functions"))) === 0
-      ) {
+      if (glslFile.indexOf(functionsDir) === 0) {
         builtinFunctions.push(baseName);
-      } else if (
-        glslFile.indexOf(path.normalize(path.join(baseDir, "Constants"))) === 0
-      ) {
+      } else if (glslFile.indexOf(constantsDir) === 0) {
         builtinConstants.push(baseName);
-      } else if (
-        glslFile.indexOf(path.normalize(path.join(baseDir, "Structs"))) === 0
-      ) {
+      } else if (glslFile.indexOf(structsDir) === 0) {
         builtinStructs.push(baseName);
       }
 
@@ -529,10 +534,18 @@ export default "${contents}";\n`;
     })
   );
 
-  // delete any left over JS files from old shaders
-  Object.keys(leftOverJsFiles).forEach(function (filepath) {
-    rimraf.sync(filepath);
-  });
+  if (!specificFiles) {
+    // delete any left over JS files from old shaders
+    Object.keys(leftOverJsFiles).forEach(function (filepath) {
+      rimraf.sync(filepath);
+    });
+  } else {
+    for (const path of specificFiles) {
+      if (!existsSync(path) && existsSync(path.replace("glsl", "js"))) {
+        rimraf.sync(path.replace("glsl", "js"));
+      }
+    }
+  }
 
   const generateBuiltinContents = function (contents, builtins, path) {
     for (let i = 0; i < builtins.length; i++) {

@@ -209,11 +209,24 @@ async function generateDevelopmentBuild() {
     );
 
     const glslWatcher = chokidar.watch(shaderFiles, { ignoreInitial: true });
-    glslWatcher.on("all", async () => {
-      await glslToJavaScript(false, "Build/minifyShaders.state", "engine");
+    glslWatcher.on("all", async (eventType, path) => {
+      if (
+        eventType === "add" ||
+        eventType === "change" ||
+        eventType === "unlink"
+      ) {
+        // only operate on the single file that was modified
+        await glslToJavaScript(false, "Build/minifyShaders.state", "engine", [
+          path,
+        ]);
+      } else {
+        await glslToJavaScript(false, "Build/minifyShaders.state", "engine");
+      }
       esmCache.clear();
       iifeCache.clear();
     });
+    // build once on launch to guarantee all shaders exist and are updated
+    await glslToJavaScript(false, "Build/minifyShaders.state", "engine");
 
     let jsHintOptionsCache;
     const sourceCodeWatcher = chokidar.watch(sourceFiles, {
@@ -404,7 +417,6 @@ async function generateDevelopmentBuild() {
 
   server.on("close", function () {
     console.log("Cesium development server stopped.");
-    // eslint-disable-next-line n/no-process-exit
     process.exit(0);
   });
 
