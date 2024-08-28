@@ -5,6 +5,9 @@ import FramebufferManager from "../Renderer/FramebufferManager.js";
 import RenderState from "../Renderer/RenderState.js";
 
 /**
+ * @alias PickDepth
+ * @constructor
+ *
  * @private
  */
 function PickDepth() {
@@ -72,6 +75,16 @@ const packedDepthScale = new Cartesian4(
   1.0 / 16581375.0
 );
 
+/**
+ * Read the depth from the framebuffer at the given coordinate.
+ *
+ * @param {Context} context
+ * @param {number} x The x-coordinate at which to read the depth.
+ * @param {number} y The y-coordinate at which to read the depth.
+ * @returns {number} The depth read from the framebuffer.
+ *
+ * @private
+ */
 PickDepth.prototype.getDepth = function (context, x, y) {
   // If this function is called before the framebuffer is created, the depth is undefined.
   if (!defined(this.framebuffer)) {

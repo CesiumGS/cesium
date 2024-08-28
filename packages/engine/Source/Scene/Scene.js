@@ -2484,8 +2484,6 @@ function executeCommands(scene, passState) {
     // Draw terrain classification
     if (!environmentState.renderTranslucentDepthForPick) {
       uniformState.updatePass(Pass.TERRAIN_CLASSIFICATION);
-      const commands = frustumCommands.commands[Pass.TERRAIN_CLASSIFICATION];
-      length = frustumCommands.indices[Pass.TERRAIN_CLASSIFICATION];
 
       if (globeTranslucent) {
         globeTranslucencyState.executeGlobeClassificationCommands(
@@ -2496,6 +2494,8 @@ function executeCommands(scene, passState) {
           passState
         );
       } else {
+        const commands = frustumCommands.commands[Pass.TERRAIN_CLASSIFICATION];
+        length = frustumCommands.indices[Pass.TERRAIN_CLASSIFICATION];
         for (let j = 0; j < length; ++j) {
           executeCommand(commands[j], scene, context, passState);
         }
@@ -3169,10 +3169,8 @@ function executeCommandsInViewport(
   passState,
   backgroundColor
 ) {
-  const environmentState = scene._environmentState;
   const view = scene._view;
-  const renderTranslucentDepthForPick =
-    environmentState.renderTranslucentDepthForPick;
+  const { renderTranslucentDepthForPick } = scene._environmentState;
 
   if (!firstViewport) {
     scene.frameState.commandList.length = 0;
@@ -3355,21 +3353,21 @@ function updateDebugFrustumPlanes(scene) {
 
 function updateShadowMaps(scene) {
   const frameState = scene._frameState;
-  const shadowMaps = frameState.shadowMaps;
+  const { passes, shadowState, shadowMaps } = frameState;
   const length = shadowMaps.length;
 
   const shadowsEnabled =
     length > 0 &&
-    !frameState.passes.pick &&
-    !frameState.passes.pickVoxel &&
+    !passes.pick &&
+    !passes.pickVoxel &&
     scene.mode === SceneMode.SCENE3D;
-  if (shadowsEnabled !== frameState.shadowState.shadowsEnabled) {
+  if (shadowsEnabled !== shadowState.shadowsEnabled) {
     // Update derived commands when shadowsEnabled changes
-    ++frameState.shadowState.lastDirtyTime;
-    frameState.shadowState.shadowsEnabled = shadowsEnabled;
+    ++shadowState.lastDirtyTime;
+    shadowState.shadowsEnabled = shadowsEnabled;
   }
 
-  frameState.shadowState.lightShadowsEnabled = false;
+  shadowState.lightShadowsEnabled = false;
 
   if (!shadowsEnabled) {
     return;
@@ -3378,28 +3376,28 @@ function updateShadowMaps(scene) {
   // Check if the shadow maps are different than the shadow maps last frame.
   // If so, the derived commands need to be updated.
   for (let j = 0; j < length; ++j) {
-    if (shadowMaps[j] !== frameState.shadowState.shadowMaps[j]) {
-      ++frameState.shadowState.lastDirtyTime;
+    if (shadowMaps[j] !== shadowState.shadowMaps[j]) {
+      ++shadowState.lastDirtyTime;
       break;
     }
   }
 
-  frameState.shadowState.shadowMaps.length = 0;
-  frameState.shadowState.lightShadowMaps.length = 0;
+  shadowState.shadowMaps.length = 0;
+  shadowState.lightShadowMaps.length = 0;
 
   for (let i = 0; i < length; ++i) {
     const shadowMap = shadowMaps[i];
     shadowMap.update(frameState);
 
-    frameState.shadowState.shadowMaps.push(shadowMap);
+    shadowState.shadowMaps.push(shadowMap);
 
     if (shadowMap.fromLightSource) {
-      frameState.shadowState.lightShadowMaps.push(shadowMap);
-      frameState.shadowState.lightShadowsEnabled = true;
+      shadowState.lightShadowMaps.push(shadowMap);
+      shadowState.lightShadowsEnabled = true;
     }
 
     if (shadowMap.dirty) {
-      ++frameState.shadowState.lastDirtyTime;
+      ++shadowState.lastDirtyTime;
       shadowMap.dirty = false;
     }
   }
