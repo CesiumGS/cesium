@@ -433,8 +433,10 @@ View.prototype.createPotentiallyVisibleSet = function (scene) {
   frustumSplits.length = numFrustums + 1;
   for (let j = 0; j < numFrustums; ++j) {
     frustumSplits[j] = frustumCommandsList[j].near;
+    if (j === numFrustums - 1) {
+      frustumSplits[j + 1] = frustumCommandsList[j].far;
+    }
   }
-  frustumSplits[numFrustums] = frustumCommandsList[numFrustums - 1].far;
 };
 
 View.prototype.destroy = function () {
