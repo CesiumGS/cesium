@@ -282,8 +282,8 @@ describe(
       });
     }
 
-    function executeCommand(command, scene, context, passState) {
-      command.execute(context, passState);
+    function executeCommand(command, scene, passState) {
+      command.execute(scene._context, passState);
     }
 
     it("draws translucent commands into a buffer for depth", function () {

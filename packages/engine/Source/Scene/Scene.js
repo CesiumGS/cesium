@@ -2136,8 +2136,9 @@ function debugShowBoundingVolume(command, scene, passState, debugFramebuffer) {
   frameState.commandList = savedCommandList;
 }
 
-function executeCommand(command, scene, context, passState, debugFramebuffer) {
+function executeCommand(command, scene, passState, debugFramebuffer) {
   const frameState = scene._frameState;
+  const context = scene._context;
 
   if (defined(scene.debugCommandFilter) && !scene.debugCommandFilter(command)) {
     return;
@@ -2251,22 +2252,14 @@ function executeTranslucentCommandsBackToFront(
   commands,
   invertClassification
 ) {
-  const context = scene.context;
-
   mergeSort(commands, backToFront, scene.camera.positionWC);
 
   if (defined(invertClassification)) {
-    executeFunction(
-      invertClassification.unclassifiedCommand,
-      scene,
-      context,
-      passState
-    );
+    executeFunction(invertClassification.unclassifiedCommand, scene, passState);
   }
 
-  const length = commands.length;
-  for (let i = 0; i < length; ++i) {
-    executeFunction(commands[i], scene, context, passState);
+  for (let i = 0; i < commands.length; ++i) {
+    executeFunction(commands[i], scene, passState);
   }
 }
 
@@ -2277,33 +2270,22 @@ function executeTranslucentCommandsFrontToBack(
   commands,
   invertClassification
 ) {
-  const context = scene.context;
-
   mergeSort(commands, frontToBack, scene.camera.positionWC);
 
   if (defined(invertClassification)) {
-    executeFunction(
-      invertClassification.unclassifiedCommand,
-      scene,
-      context,
-      passState
-    );
+    executeFunction(invertClassification.unclassifiedCommand, scene, passState);
   }
 
-  const length = commands.length;
-  for (let i = 0; i < length; ++i) {
-    executeFunction(commands[i], scene, context, passState);
+  for (let i = 0; i < commands.length; ++i) {
+    executeFunction(commands[i], scene, passState);
   }
 }
 
 function executeVoxelCommands(scene, executeFunction, passState, commands) {
-  const context = scene.context;
-
   mergeSort(commands, backToFront, scene.camera.positionWC);
 
-  const length = commands.length;
-  for (let i = 0; i < length; ++i) {
-    executeFunction(commands[i], scene, context, passState);
+  for (let i = 0; i < commands.length; ++i) {
+    executeFunction(commands[i], scene, passState);
   }
 }
 
@@ -2349,16 +2331,11 @@ function executeCommands(scene, passState) {
   if (!picking) {
     const skyBoxCommand = environmentState.skyBoxCommand;
     if (defined(skyBoxCommand)) {
-      executeCommand(skyBoxCommand, scene, context, passState);
+      executeCommand(skyBoxCommand, scene, passState);
     }
 
     if (environmentState.isSkyAtmosphereVisible) {
-      executeCommand(
-        environmentState.skyAtmosphereCommand,
-        scene,
-        context,
-        passState
-      );
+      executeCommand(environmentState.skyAtmosphereCommand, scene, passState);
     }
 
     if (environmentState.isSunVisible) {
@@ -2472,7 +2449,7 @@ function executeCommands(scene, passState) {
       const commands = frustumCommands.commands[Pass.GLOBE];
       length = frustumCommands.indices[Pass.GLOBE];
       for (let j = 0; j < length; ++j) {
-        executeCommand(commands[j], scene, context, passState);
+        executeCommand(commands[j], scene, passState);
       }
     }
 
@@ -2497,7 +2474,7 @@ function executeCommands(scene, passState) {
         const commands = frustumCommands.commands[Pass.TERRAIN_CLASSIFICATION];
         length = frustumCommands.indices[Pass.TERRAIN_CLASSIFICATION];
         for (let j = 0; j < length; ++j) {
-          executeCommand(commands[j], scene, context, passState);
+          executeCommand(commands[j], scene, passState);
         }
       }
     }
@@ -2521,7 +2498,7 @@ function executeCommands(scene, passState) {
       const commands = frustumCommands.commands[Pass.CESIUM_3D_TILE];
       length = frustumCommands.indices[Pass.CESIUM_3D_TILE];
       for (let j = 0; j < length; ++j) {
-        executeCommand(commands[j], scene, context, passState);
+        executeCommand(commands[j], scene, passState);
       }
 
       if (length > 0) {
@@ -2544,7 +2521,7 @@ function executeCommands(scene, passState) {
             frustumCommands.commands[Pass.CESIUM_3D_TILE_CLASSIFICATION];
           length = frustumCommands.indices[Pass.CESIUM_3D_TILE_CLASSIFICATION];
           for (let j = 0; j < length; ++j) {
-            executeCommand(commands[j], scene, context, passState);
+            executeCommand(commands[j], scene, passState);
           }
         }
       }
@@ -2591,7 +2568,7 @@ function executeCommands(scene, passState) {
       let commands = frustumCommands.commands[Pass.CESIUM_3D_TILE];
       length = frustumCommands.indices[Pass.CESIUM_3D_TILE];
       for (let j = 0; j < length; ++j) {
-        executeCommand(commands[j], scene, context, passState);
+        executeCommand(commands[j], scene, passState);
       }
 
       if (defined(globeDepth) && environmentState.useGlobeDepthFramebuffer) {
@@ -2613,7 +2590,7 @@ function executeCommands(scene, passState) {
       length =
         frustumCommands.indices[Pass.CESIUM_3D_TILE_CLASSIFICATION_IGNORE_SHOW];
       for (let j = 0; j < length; ++j) {
-        executeCommand(commands[j], scene, context, passState);
+        executeCommand(commands[j], scene, passState);
       }
 
       passState.framebuffer = opaqueClassificationFramebuffer;
@@ -2635,7 +2612,7 @@ function executeCommands(scene, passState) {
       commands = frustumCommands.commands[Pass.CESIUM_3D_TILE_CLASSIFICATION];
       length = frustumCommands.indices[Pass.CESIUM_3D_TILE_CLASSIFICATION];
       for (let j = 0; j < length; ++j) {
-        executeCommand(commands[j], scene, context, passState);
+        executeCommand(commands[j], scene, passState);
       }
     }
 
@@ -2653,7 +2630,7 @@ function executeCommands(scene, passState) {
     commands = frustumCommands.commands[Pass.OPAQUE];
     length = frustumCommands.indices[Pass.OPAQUE];
     for (let j = 0; j < length; ++j) {
-      executeCommand(commands[j], scene, context, passState);
+      executeCommand(commands[j], scene, passState);
     }
 
     if (index !== 0 && scene.mode !== SceneMode.SCENE2D) {
@@ -2895,12 +2872,8 @@ function executeShadowMapCastCommands(scene) {
         // Set the correct pass before rendering into the shadow map because some shaders
         // conditionally render based on whether the pass is translucent or opaque.
         uniformState.updatePass(command.pass);
-        executeCommand(
-          command.derivedCommands.shadows.castCommands[i],
-          scene,
-          context,
-          pass.passState
-        );
+        const castCommand = command.derivedCommands.shadows.castCommands[i];
+        executeCommand(castCommand, scene, pass.passState);
       }
     }
   }
