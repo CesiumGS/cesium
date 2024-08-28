@@ -4331,6 +4331,7 @@ Scene.prototype.pickMetadata = function (
 
   const pickedObject = this.pick(windowPosition);
   if (!defined(pickedObject)) {
+    console.log("pickedObject ", pickedObject);
     return undefined;
   }
 

@@ -268,11 +268,15 @@ DerivedCommand.createLogDepthCommand = function (command, context, result) {
   return result;
 };
 
-function getPickShaderProgram(context, shaderProgram, pickId) {
+function getPickShaderProgram(context, shaderProgram, pickId, pickingMetadata) {
+  const keyword = `pick-pickingMetadata-${pickingMetadata}`;
   let shader = context.shaderCache.getDerivedShaderProgram(
     shaderProgram,
-    "pick"
+    keyword
   );
+  //console.log("getPickShaderProgram with pickId ", pickId);
+  //console.log("getPickShaderProgram with pickingMetadata ", pickingMetadata);
+  //console.log("getPickShaderProgram with shader ", shader);
   if (!defined(shader)) {
     const attributeLocations = shaderProgram._attributeLocations;
     let fs = shaderProgram.fragmentShaderSource;
@@ -286,7 +290,18 @@ function getPickShaderProgram(context, shaderProgram, pickId) {
     const outputColorVariable = hasFragData
       ? "out_FragData_0"
       : "out_FragColor";
-    const newMain = `void main () 
+
+    // The output fragment should be discarded only when NOT
+    // trying to pick metadata
+    let newMain;
+    if (pickingMetadata === true) {
+      newMain = `void main () 
+{ 
+    czm_non_pick_main(); 
+    ${outputColorVariable} = ${pickId}; 
+} `;
+    } else {
+      newMain = `void main () 
 { 
     czm_non_pick_main(); 
     if (${outputColorVariable}.a == 0.0) { 
@@ -294,6 +309,7 @@ function getPickShaderProgram(context, shaderProgram, pickId) {
     } 
     ${outputColorVariable} = ${pickId}; 
 } `;
+    }
 
     const newSources = new Array(length + 1);
     for (let i = 0; i < length; ++i) {
@@ -306,7 +322,7 @@ function getPickShaderProgram(context, shaderProgram, pickId) {
     });
     shader = context.shaderCache.createDerivedShaderProgram(
       shaderProgram,
-      "pick",
+      keyword,
       {
         vertexShaderSource: shaderProgram.vertexShaderSource,
         fragmentShaderSource: fs,
@@ -358,11 +374,18 @@ DerivedCommand.createPickDerivedCommand = function (
 
   result.pickCommand = DrawCommand.shallowClone(command, result.pickCommand);
 
-  if (!defined(shader) || result.shaderProgramId !== command.shaderProgram.id) {
+  const frameState = scene._frameState;
+  const pickingMetadata = frameState.pickingMetadata;
+  if (
+    !defined(shader) ||
+    pickingMetadata ||
+    result.shaderProgramId !== command.shaderProgram.id
+  ) {
     result.pickCommand.shaderProgram = getPickShaderProgram(
       context,
       command.shaderProgram,
-      command.pickId
+      command.pickId,
+      pickingMetadata
     );
     result.pickCommand.renderState = getPickRenderState(
       scene,

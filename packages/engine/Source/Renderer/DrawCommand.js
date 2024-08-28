@@ -529,7 +529,11 @@ Object.defineProperties(DrawCommand.prototype, {
   },
 
   /**
-   * Whether metadata picking is allowed
+   * Whether metadata picking is allowed.
+   *
+   * This is essentially only set to `true` for draw commands that are
+   * part of a `ModelDrawCommand`, to check whether a derived command
+   * for metadata picking has to be created.
    *
    * @memberof DrawCommand.prototype
    * @type {boolean}

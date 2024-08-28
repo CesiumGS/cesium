@@ -109,7 +109,7 @@ MetadataPicking.decodeRawMetadataValueComponent = function (
  *
  * In any case, the return value will be the "raw" value, which does
  * take into account normalization, but does NOT take into account
- * any offset/scale, or default/noData value handling.
+ * default/noData value handling.
  *
  * @param {MetadataClassProperty} classProperty The metadata class property
  * @param {DataView} dataView The data view containing the raw metadata values
@@ -163,7 +163,7 @@ MetadataPicking.decodeRawMetadataValueElement = function (
  * values that have been read from the metadata picking
  * frame buffer. They are assumed to contain the value for
  * the given class property, as encoded by the
- * `ModelDrawCommands` for metadata picking.
+ * `MetadataPickingPipelineStage` for metadata picking.
  *
  * When the given class property is an array, then (it has to be
  * a fixed-length array, and) the result will be an array with
