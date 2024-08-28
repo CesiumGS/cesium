@@ -5,7 +5,7 @@
  */
 const Tonemapper = {
   /**
-   * Use the Reinhard tonemapping operator.
+   * Use the Reinhard tonemapping.
    *
    * @type {string}
    * @constant
@@ -13,7 +13,7 @@ const Tonemapper = {
   REINHARD: "REINHARD",
 
   /**
-   * Use the modified Reinhard tonemapping operator.
+   * Use the modified Reinhard tonemapping.
    *
    * @type {string}
    * @constant
@@ -21,7 +21,7 @@ const Tonemapper = {
   MODIFIED_REINHARD: "MODIFIED_REINHARD",
 
   /**
-   * Use the Filmic tonemapping operator.
+   * Use the Filmic tonemapping.
    *
    * @type {string}
    * @constant
@@ -29,7 +29,7 @@ const Tonemapper = {
   FILMIC: "FILMIC",
 
   /**
-   * Use the ACES tonemapping operator.
+   * Use the ACES tonemapping.
    *
    * @type {string}
    * @constant
@@ -37,7 +37,7 @@ const Tonemapper = {
   ACES: "ACES",
 
   /**
-   * Use the PBRNeutral tonemapping operator.
+   * Use the PbrNeutral tonemapping from Khronos.
    *
    * @type {string}
    * @constant
@@ -51,7 +51,7 @@ const Tonemapper = {
  *
  * @param {string} tonemapper
  */
-export function validateToneMapper(tonemapper) {
+export function validateTonemapper(tonemapper) {
   return (
     tonemapper === Tonemapper.REINHARD ||
     tonemapper === Tonemapper.MODIFIED_REINHARD ||

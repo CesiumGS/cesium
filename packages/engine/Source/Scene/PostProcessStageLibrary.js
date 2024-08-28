@@ -14,7 +14,7 @@ import DepthOfField from "../Shaders/PostProcessStages/DepthOfField.js";
 import DepthView from "../Shaders/PostProcessStages/DepthView.js";
 import EdgeDetection from "../Shaders/PostProcessStages/EdgeDetection.js";
 import FilmicTonemapping from "../Shaders/PostProcessStages/FilmicTonemapping.js";
-import PBRNeutralTonemapping from "../Shaders/PostProcessStages/PBRNeutralTonemapping.js";
+import PbrNeutralTonemapping from "../Shaders/PostProcessStages/PbrNeutralTonemapping.js";
 import FXAA from "../Shaders/PostProcessStages/FXAA.js";
 import GaussianBlur1D from "../Shaders/PostProcessStages/GaussianBlur1D.js";
 import LensFlare from "../Shaders/PostProcessStages/LensFlare.js";
@@ -700,11 +700,11 @@ PostProcessStageLibrary.createFilmicTonemappingStage = function (
  * @return {PostProcessStage} A post-process stage that applies filmic tonemapping operator.
  * @private
  */
-PostProcessStageLibrary.createPBRNeutralTonemappingStage = function (
+PostProcessStageLibrary.createPbrNeutralTonemappingStage = function (
   useAutoExposure
 ) {
   let fs = useAutoExposure ? "#define AUTO_EXPOSURE\n" : "";
-  fs += PBRNeutralTonemapping;
+  fs += PbrNeutralTonemapping;
   return new PostProcessStage({
     name: "czm_pbr_neutral",
     fragmentShader: fs,

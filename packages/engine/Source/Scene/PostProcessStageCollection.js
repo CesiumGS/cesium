@@ -12,7 +12,7 @@ import TextureWrap from "../Renderer/TextureWrap.js";
 import PassThrough from "../Shaders/PostProcessStages/PassThrough.js";
 import PostProcessStageLibrary from "./PostProcessStageLibrary.js";
 import PostProcessStageTextureCache from "./PostProcessStageTextureCache.js";
-import Tonemapper, { validateToneMapper } from "./Tonemapper.js";
+import Tonemapper, { validateTonemapper } from "./Tonemapper.js";
 
 const stackScratch = [];
 
@@ -327,7 +327,7 @@ Object.defineProperties(PostProcessStageCollection.prototype, {
         return;
       }
       //>>includeStart('debug', pragmas.debug);
-      if (!validateToneMapper(value)) {
+      if (!validateTonemapper(value)) {
         throw new DeveloperError("tonemapper was set to an invalid value.");
       }
       //>>includeEnd('debug');
@@ -357,7 +357,7 @@ Object.defineProperties(PostProcessStageCollection.prototype, {
           );
           break;
         case Tonemapper.PBR_NEUTRAL:
-          tonemapping = PostProcessStageLibrary.createPBRNeutralTonemappingStage(
+          tonemapping = PostProcessStageLibrary.createPbrNeutralTonemappingStage(
             useAutoExposure
           );
           break;
