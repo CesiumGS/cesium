@@ -1823,17 +1823,8 @@ Model.prototype.update = function (frameState) {
   // A custom shader may have to load texture uniforms.
   updateCustomShader(this, frameState);
 
-  const environmentMapManager = this._environmentMapManager;
-  if (this._ready && environmentMapManager.owner === this) {
-    environmentMapManager.position = this._boundingSphere.center;
-    environmentMapManager.shouldUpdate =
-      !defined(this._imageBasedLighting.sphericalHarmonicCoefficients) ||
-      !defined(this._imageBasedLighting.specularEnvironmentMaps);
-
-    if (environmentMapManager.update(frameState)) {
-      this.resetDrawCommands();
-    }
-  }
+  // Environment maps, specular maps, and spherical harmonics may need to be updated or regenerated
+  updateEnvironmentMap(this, frameState);
 
   // The image-based lighting may have to load texture uniforms
   // for specular maps.
@@ -1956,6 +1947,22 @@ function processLoader(model, frameState) {
 function updateCustomShader(model, frameState) {
   if (defined(model._customShader)) {
     model._customShader.update(frameState);
+  }
+}
+
+function updateEnvironmentMap(model, frameState) {
+  const environmentMapManager = model._environmentMapManager;
+  if (model._ready && environmentMapManager.owner === model) {
+    environmentMapManager.position = model._boundingSphere.center;
+    environmentMapManager.shouldUpdate =
+      !defined(model._imageBasedLighting.sphericalHarmonicCoefficients) ||
+      !defined(model._imageBasedLighting.specularEnvironmentMaps);
+
+    environmentMapManager.update(frameState);
+
+    if (environmentMapManager.shouldRegenerateShaders) {
+      model.resetDrawCommands();
+    }
   }
 }
 
@@ -2969,6 +2976,7 @@ Model.fromGltfAsync = async function (options) {
 
   const modelOptions = makeModelOptions(loader, type, options);
   modelOptions.resource = resource;
+  modelOptions.environmentMapOptions = options.environmentMapOptions;
 
   try {
     // This load the gltf JSON and ensures the gltf is valid

@@ -83,8 +83,6 @@ void main() {
 
     vec4 color = vec4(mix(backgroundColor, adjustedSkyColor, skyColor.a), 1.0);
 
-    // TODO: HDR?
-
     #ifdef COLOR_CORRECT
         const bool ignoreBlackPixels = true;
         color.rgb = czm_applyHSBShift(color.rgb, u_hsbShift, ignoreBlackPixels);

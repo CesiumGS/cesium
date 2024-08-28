@@ -3154,7 +3154,6 @@ describe(
       it("initializes with imageBasedLighting", async function () {
         const ibl = new ImageBasedLighting({
           imageBasedLightingFactor: Cartesian2.ZERO,
-          luminanceAtZenith: 0.5,
         });
         const model = await loadAndZoomToModelAsync(
           { gltf: boxTexturedGltfUrl, imageBasedLighting: ibl },
@@ -3176,7 +3175,6 @@ describe(
             new Cartesian2(1, 1)
           )
         ).toBe(true);
-        expect(imageBasedLighting.luminanceAtZenith).toBe(0.2);
         expect(
           imageBasedLighting.sphericalHarmonicCoefficients
         ).toBeUndefined();
@@ -3186,6 +3184,7 @@ describe(
       it("changing imageBasedLighting works", async function () {
         const imageBasedLighting = new ImageBasedLighting({
           imageBasedLightingFactor: Cartesian2.ZERO,
+          specularEnvironmentMaps: "/Data/EnvironmentMap/kiara_6_afternoon",
         });
         const model = await loadAndZoomToModelAsync(
           { gltf: boxTexturedGltfUrl },
@@ -3231,34 +3230,6 @@ describe(
 
         const ibl = model.imageBasedLighting;
         ibl.imageBasedLightingFactor = new Cartesian2(1, 1);
-        expect(renderOptions).toRenderAndCall(function (rgba) {
-          expect(rgba).not.toEqual(result);
-        });
-      });
-
-      it("changing luminanceAtZenith works", async function () {
-        const model = await loadAndZoomToModelAsync(
-          {
-            gltf: boxTexturedGltfUrl,
-            imageBasedLighting: new ImageBasedLighting({
-              luminanceAtZenith: 0.0,
-            }),
-          },
-          scene
-        );
-        const renderOptions = {
-          scene: scene,
-          time: defaultDate,
-        };
-
-        let result;
-        verifyRender(model, true);
-        expect(renderOptions).toRenderAndCall(function (rgba) {
-          result = rgba;
-        });
-
-        const ibl = model.imageBasedLighting;
-        ibl.luminanceAtZenith = 0.2;
         expect(renderOptions).toRenderAndCall(function (rgba) {
           expect(rgba).not.toEqual(result);
         });
@@ -4585,7 +4556,7 @@ describe(
       const sunnyDate = JulianDate.fromIso8601("2024-01-11T15:00:00Z");
       const darkDate = JulianDate.fromIso8601("2024-01-11T00:00:00Z");
 
-      afterEach(function () {
+      beforeEach(function () {
         scene.atmosphere = new Atmosphere();
         scene.fog = new Fog();
         scene.light = new SunLight();

@@ -57,6 +57,8 @@ function DynamicEnvironmentMapManager(options) {
   this._irradianceTextureDirty = false;
   this._sphericalHarmonicCoefficientsDirty = false;
 
+  this._shouldRegenerateShaders = false;
+
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
   const mipmapLevels = defaultValue(options.mipmapLevels, 10);
@@ -168,6 +170,7 @@ Object.defineProperties(DynamicEnvironmentMapManager.prototype, {
   /**
    * A reference to the DynamicEnvironmentMapManager's owner, if any.
    * @memberof DynamicEnvironmentMapManager.prototype
+   * @type {object|undefined}
    * @readonly
    * @private
    */
@@ -176,6 +179,20 @@ Object.defineProperties(DynamicEnvironmentMapManager.prototype, {
       return this._owner;
     },
   },
+
+  /**
+   * True if model shaders need to be regenerated to account for updates.
+   * @memberof DynamicEnvironmentMapManager.prototype
+   * @type {boolean}
+   * @readonly
+   * @private
+   */
+  shouldRegenerateShaders: {
+    get: function () {
+      return this._shouldRegenerateShaders;
+    },
+  },
+
   /**
    * The position around which the environment map is generated.
    * @memberof DynamicEnvironmentMapManager.prototype
@@ -196,7 +213,7 @@ Object.defineProperties(DynamicEnvironmentMapManager.prototype, {
         return;
       }
 
-      this._position = value;
+      this._position = Cartesian3.clone(value, this._position);
       this._reset();
     },
   },
@@ -324,7 +341,9 @@ function atmosphereNeedsUpdate(manager, frameState) {
 
   // Pack outer radius, inner radius, and dynamic atmosphere flag
   const radiiAndDynamicAtmosphereColor = scratchPackedAtmosphere;
-  const radius = Cartesian3.magnitude(surfacePosition);
+  const radius = defined(surfacePosition)
+    ? Cartesian3.magnitude(surfacePosition)
+    : ellipsoid.maximumRadius;
   radiiAndDynamicAtmosphereColor.x = radius * outerEllipsoidScale;
   radiiAndDynamicAtmosphereColor.y = radius;
   radiiAndDynamicAtmosphereColor.z = atmosphere.dynamicLighting;
@@ -448,6 +467,7 @@ function updateRadianceMap(manager, frameState) {
 
           if (!commands.some(defined)) {
             manager._convolutionsCommandsDirty = true;
+            manager._shouldRegenerateShaders = true;
           }
         },
       });
@@ -494,6 +514,7 @@ function updateSpecularMaps(manager, frameState) {
       radianceCubeMap.sampler = new Sampler({
         minificationFilter: TextureMinificationFilter.LINEAR_MIPMAP_LINEAR,
       });
+      manager._shouldRegenerateShaders = true;
     }
   };
 
@@ -629,6 +650,7 @@ function updateSphericalHarmonicCoefficients(manager, frameState) {
   }
 
   framebuffer.destroy();
+  manager._shouldRegenerateShaders = true;
 }
 
 /**
@@ -638,11 +660,16 @@ function updateSphericalHarmonicCoefficients(manager, frameState) {
  * Do not call this function directly.
  * </p>
  * @private
- * @returns {boolean} true is shaders should be updated.
  */
 DynamicEnvironmentMapManager.prototype.update = function (frameState) {
-  if (!this.enabled || !this.shouldUpdate || !defined(this._position)) {
-    return false;
+  if (
+    !this.enabled ||
+    !this.shouldUpdate ||
+    !defined(this._position) ||
+    !defined(frameState.environmentMap)
+  ) {
+    this._shouldRegenerateShaders = false;
+    return;
   }
 
   const dynamicLighting = frameState.atmosphere.dynamicLighting;
@@ -663,13 +690,11 @@ DynamicEnvironmentMapManager.prototype.update = function (frameState) {
   if (this._radianceMapDirty) {
     updateRadianceMap(this, frameState);
     this._radianceMapDirty = false;
-    return false;
   }
 
   if (this._convolutionsCommandsDirty) {
     updateSpecularMaps(this, frameState);
     this._convolutionsCommandsDirty = false;
-    return false;
   }
 
   if (this._irradianceCommandDirty) {
@@ -678,14 +703,17 @@ DynamicEnvironmentMapManager.prototype.update = function (frameState) {
   }
 
   if (this._irradianceTextureDirty) {
-    return false;
+    this._shouldRegenerateShaders = false;
+    return;
   }
 
   if (this._sphericalHarmonicCoefficientsDirty) {
     updateSphericalHarmonicCoefficients(this, frameState);
     this._sphericalHarmonicCoefficientsDirty = false;
-    return true;
+    return;
   }
+
+  this._shouldRegenerateShaders = false;
 };
 
 /**
