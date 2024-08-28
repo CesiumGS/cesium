@@ -14,6 +14,9 @@ import StencilFunction from "./StencilFunction.js";
 import StencilOperation from "./StencilOperation.js";
 
 /**
+ * @alias GlobeDepth
+ * @constructor
+ *
  * @private
  */
 function GlobeDepth() {

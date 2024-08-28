@@ -28,6 +28,13 @@ function CommandExtent() {
 }
 
 /**
+ * @alias View
+ * @constructor
+ *
+ * @param {Scene} scene
+ * @param {Camera} camera
+ * @param {BoundingRectangle} viewport
+ *
  * @private
  */
 function View(scene, camera, viewport) {
@@ -62,6 +69,9 @@ function View(scene, camera, viewport) {
   this.translucentTileClassification = new TranslucentTileClassification(
     context
   );
+  /**
+   * @type {PickDepth[]}
+   */
   this.pickDepths = [];
   this.frustumCommandsList = [];
   this.debugFrustumStatistics = undefined;
