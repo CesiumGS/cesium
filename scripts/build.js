@@ -440,8 +440,10 @@ export async function glslToJavaScript(
   workspace,
   specificFiles
 ) {
-  const minifyFile = readFileSync(minifyStateFilePath, "utf-8");
-  if (minifyFile !== minify.toString()) {
+  if (
+    !existsSync(minifyStateFilePath) ||
+    readFileSync(minifyStateFilePath, "utf-8") !== minify.toString()
+  ) {
     await writeFile(minifyStateFilePath, minify.toString());
   }
   const minifyStateFileLastModified = existsSync(minifyStateFilePath)
