@@ -137,6 +137,7 @@ describe(
         expect(scene.mapProjection).toBeInstanceOf(GeographicProjection);
         expect(scene.frameState).toBeInstanceOf(FrameState);
         expect(scene.tweens).toBeInstanceOf(TweenCollection);
+        expect(scene.msaaSamples).toEqual(4);
 
         const contextAttributes = scene.context._gl.getContextAttributes();
         // Do not check depth and antialias since they are requests not requirements

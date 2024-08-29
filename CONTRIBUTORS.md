@@ -198,6 +198,10 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
   - [İbrahim Furkan Aygar](https://github.com/furkanaygar)
 - [MSA]
   - [Timothy Eichfeld](https://github.com/timeichfeld-msa)
+- [EMapGis](http://emapgis.com)
+  - [IKangXu](https://github.com/IKangXu)
+  - [EMapGIS](https://github.com/EMapGIS)
+  - [CandyACE](https://github.com/CandyACE)
 
 ## [Individual CLA](Documentation/Contributors/CLAs/individual-contributor-license-agreement-v1.0.pdf)
 
@@ -374,7 +378,13 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [Jason Summercamp](https://github.com/fullstacc)
 - [Shapovalov Kirill](https://github.com/ShapovalovKL)
 - [Alexander Popoff](https://github.com/aerialist7)
-- [IKangXu](https://github.com/IKangXu)
+- [chael Cabana](https://github.com/mikecabana)
+- [Joseph Stanton](https://github.com/romejoe)
+- [Zehua Hu](https://github.com/lanvada)
+- [王秋艳](https://github.com/wqy224488)
+- [Jason Summercamp](https://github.com/fullstacc)
+- [Shapovalov Kirill](https://github.com/ShapovalovKL)
+- [Alexander Popoff](https://github.com/aerialist7)
 - [e3dio](https://github.com/e3dio)
 - [Dphalos](https://github.com/Dphalos)
 - [hongfaqiu](https://github.com/hongfaqiu)
@@ -394,3 +404,6 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [Zhongxiang Wang](https://github.com/plainheart)
 - [Tim Schneider](https://github.com/Tim-S)
 - [Vladislav Yunev](https://github.com/YunVlad)
+- [Levi Montgomery](https://github.com/Levi-Montgomery)
+- [Brandon Berisford](https://github.com/BeyondBelief96)
+- [Adam Wirth](https://https://github.com/adamwirth)
