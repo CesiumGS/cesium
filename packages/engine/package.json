@@ -32,7 +32,7 @@
     "./Specs/**/*"
   ],
   "dependencies": {
-    "@tweenjs/tween.js": "^23.1.1",
+    "@tweenjs/tween.js": "^25.0.0",
     "@zip.js/zip.js": "^2.7.34",
     "autolinker": "^4.0.0",
     "bitmap-sdf": "^1.0.3",
