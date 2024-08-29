@@ -21,11 +21,13 @@
    ```bash
     npm install
    ```
+
 3. Build the project
 
    ```bash
    npm run build
    ```
+
 4. Start the [server](#development-server)
 
    ```bash
@@ -71,6 +73,7 @@ Cesium ships with a simple HTTP server for testing. Once all modules have been i
 ```bash
 npm run build
 ```
+
 Then, run the development server:
 
 ```bash
