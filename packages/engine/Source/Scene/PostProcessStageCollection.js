@@ -41,6 +41,7 @@ function PostProcessStageCollection() {
   // Some shaders, such as the atmosphere and ground atmosphere, output values slightly over 1.0.
   this._autoExposureEnabled = false;
   this._autoExposure = PostProcessStageLibrary.createAutoExposureStage();
+  this._exposure = 1.0;
   this._tonemapping = undefined;
   this._tonemapper = undefined;
 
@@ -373,6 +374,8 @@ Object.defineProperties(PostProcessStageCollection.prototype, {
         tonemapping.uniforms.autoExposure = function () {
           return autoexposure.outputTexture;
         };
+      } else {
+        tonemapping.uniforms.exposure = this._exposure;
       }
 
       this._tonemapper = value;
@@ -384,6 +387,22 @@ Object.defineProperties(PostProcessStageCollection.prototype, {
       }
 
       this._textureCacheDirty = true;
+    },
+  },
+
+  /**
+   * Control the exposure when HDR is on. Defaults to 1.
+   *
+   * @memberof PostProcessStageCollection.prototype
+   * @type {number}
+   */
+  exposure: {
+    get: function () {
+      return this._exposure;
+    },
+    set: function (value) {
+      this._tonemapping.uniforms.exposure = value;
+      this._exposure = value;
     },
   },
 });

@@ -6,6 +6,7 @@ in vec2 v_textureCoordinates;
 #ifdef AUTO_EXPOSURE
 uniform sampler2D autoExposure;
 #endif
+uniform float exposure;
 
 // See equation 4:
 //    http://www.cs.utah.edu/~reinhard/cdrom/tonemap.pdf
@@ -17,6 +18,8 @@ void main()
 #ifdef AUTO_EXPOSURE
     float exposure = texture(autoExposure, vec2(0.5)).r;
     color /= exposure;
+#else
+    color *= vec3(exposure);
 #endif
     color = (color * (1.0 + color / white)) / (1.0 + color);
     color = czm_inverseGamma(color);
