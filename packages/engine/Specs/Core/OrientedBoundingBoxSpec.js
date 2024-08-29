@@ -1,3 +1,4 @@
+/* eslint-disable no-restricted-globals */
 import {
   BoundingSphere,
   Cartesian3,
@@ -182,6 +183,130 @@ describe("Core/OrientedBoundingBox", function () {
       CesiumMath.EPSILON14
     );
     expect(box.center).toEqualEpsilon(translation, CesiumMath.EPSILON15);
+  });
+
+  fit("fromMinMax creates the right bounding box", function () {
+    const min = new Cartesian3(-2.0, -3.0, -4.0);
+    const max = new Cartesian3(2.0, 3.0, 4.0);
+    const box = OrientedBoundingBox.fromMinMax(min, max);
+
+    expect(box.center).toEqualEpsilon(
+      new Cartesian3(0.0, 0.0, 0.0),
+      CesiumMath.EPSILON15
+    );
+
+    const halfAxes = new Matrix3(2, 0, 0, 0, 3, 0, 0, 0, 4);
+    expect(box.halfAxes).toEqualEpsilon(halfAxes, CesiumMath.EPSILON15);
+  });
+
+  fit("fromMinMax throws without min/max", function () {
+    expect(function () {
+      OrientedBoundingBox.fromMinMax(undefined, undefined);
+    }).toThrowDeveloperError();
+  });
+
+  fit("fromMinMax creates the right bounding box with a result parameter", function () {
+    const min = new Cartesian3(-2.0, -3.0, -4.0);
+    const max = new Cartesian3(2.0, 3.0, 4.0);
+    const result = new OrientedBoundingBox();
+    const box = OrientedBoundingBox.fromMinMax(min, max, result);
+
+    expect(box).toBe(result);
+
+    expect(box.center).toEqualEpsilon(
+      new Cartesian3(0.0, 0.0, 0.0),
+      CesiumMath.EPSILON15
+    );
+
+    const halfAxes = new Matrix3(2, 0, 0, 0, 3, 0, 0, 0, 4);
+    expect(box.halfAxes).toEqualEpsilon(halfAxes, CesiumMath.EPSILON15);
+  });
+
+  fit("fromMinMax creates the right bounding box with a result parameter", function () {
+    const min = new Cartesian3(-2.0, -3.0, -4.0);
+    const max = new Cartesian3(2.0, 3.0, 4.0);
+    const result = new OrientedBoundingBox();
+    const box = OrientedBoundingBox.fromMinMax(min, max, result);
+
+    expect(box).toBe(result);
+
+    expect(box.center).toEqualEpsilon(
+      new Cartesian3(0.0, 0.0, 0.0),
+      CesiumMath.EPSILON15
+    );
+
+    const halfAxes = new Matrix3(2, 0, 0, 0, 3, 0, 0, 0, 4);
+    expect(box.halfAxes).toEqualEpsilon(halfAxes, CesiumMath.EPSILON15);
+  });
+
+  fit("transform throws without transform", function () {
+    expect(function () {
+      const box = new OrientedBoundingBox();
+      OrientedBoundingBox.transform(box, undefined);
+    }).toThrowDeveloperError();
+  });
+
+  fit("transform transforms the bounding box with transform", function () {
+    const center = new Cartesian3(1.0, 2.0, 3.0);
+    const halfAxes = new Matrix3(2, 0, 0, 0, 3, 0, 0, 0, 4);
+    const box = new OrientedBoundingBox(center, halfAxes);
+
+    const rotation = Matrix3.fromRotationX(CesiumMath.PI / 2.0);
+    const translation = new Cartesian3(2.0, 3.0, 4.0);
+    const transform = Matrix4.fromRotationTranslation(rotation, translation);
+
+    // The rotation transforms the center into (x, -z, y) =  (1, -3, 2)
+    // Adding the translation of (2, 3, 4) results in (3, 0, 6)
+    const expectedCenter = new Cartesian3(3.0, 0.0, 6.0);
+    const expectedHalfAxes = new Matrix3(2, 0, 0, 0, 0, -4, 0, 3, 0);
+    const expectedBox = new OrientedBoundingBox(
+      expectedCenter,
+      expectedHalfAxes
+    );
+
+    const actualBox = OrientedBoundingBox.transform(box, transform);
+
+    expect(actualBox.center).toEqualEpsilon(
+      expectedBox.center,
+      CesiumMath.EPSILON15
+    );
+    expect(actualBox.halfAxes).toEqualEpsilon(
+      expectedBox.halfAxes,
+      CesiumMath.EPSILON15
+    );
+  });
+
+  fit("transform transforms the bounding box with transform with a result parameter", function () {
+    const center = new Cartesian3(1.0, 2.0, 3.0);
+    const halfAxes = new Matrix3(2, 0, 0, 0, 3, 0, 0, 0, 4);
+    const box = new OrientedBoundingBox(center, halfAxes);
+
+    const rotation = Matrix3.fromRotationX(CesiumMath.PI / 2.0);
+    const translation = new Cartesian3(2.0, 3.0, 4.0);
+    const transform = Matrix4.fromRotationTranslation(rotation, translation);
+
+    // The rotation transforms the center into (x, -z, y) =  (1, -3, 2)
+    // Adding the translation of (2, 3, 4) results in (3, 0, 6)
+    const expectedCenter = new Cartesian3(3.0, 0.0, 6.0);
+    const expectedHalfAxes = new Matrix3(2, 0, 0, 0, 0, -4, 0, 3, 0);
+    const expectedBox = new OrientedBoundingBox(
+      expectedCenter,
+      expectedHalfAxes
+    );
+
+    const result = new OrientedBoundingBox();
+    const actualBox = OrientedBoundingBox.transform(box, transform, result);
+
+    expect(actualBox).toBe(result);
+
+    expect(actualBox.center).toEqualEpsilon(
+      expectedBox.center,
+      CesiumMath.EPSILON15
+    );
+    expect(actualBox.halfAxes).toEqualEpsilon(
+      expectedBox.halfAxes,
+      CesiumMath.EPSILON15
+    );
   });
 
   it("fromRectangle sets correct default ellipsoid", function () {

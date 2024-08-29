@@ -240,6 +240,96 @@ OrientedBoundingBox.fromPoints = function (positions, result) {
   return result;
 };
 
+// A Cartesian3 that will store the scale factors for computing
+// an oriented bounding box in fromMinMax
+const scratchScaleFromMinMax = new Cartesian3();
+
+/**
+ * Creates an oriented bounding box from the given minimum- and maximum
+ * point, stores it in the given result, and returns it.
+ *
+ * If the given result is `undefined`, then a new oriented bounding box
+ * will be created, filled, and returned.
+ *
+ * @param {Cartesian3} min The minimum point
+ * @param {Cartesian3} max The maximum point
+ * @param {OrientedBoundingBox} [result] The result
+ * @returns The result
+ */
+OrientedBoundingBox.fromMinMax = function (min, max, result) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("min", min);
+  Check.typeOf.object("max", max);
+  //>>includeEnd('debug');
+
+  if (!defined(result)) {
+    result = new OrientedBoundingBox();
+  }
+  Cartesian3.midpoint(min, max, result.center);
+  Cartesian3.subtract(max, min, scratchScaleFromMinMax);
+  Cartesian3.multiplyByScalar(
+    scratchScaleFromMinMax,
+    0.5,
+    scratchScaleFromMinMax
+  );
+  Matrix3.fromScale(scratchScaleFromMinMax, result.halfAxes);
+  return result;
+};
+
+// A Matrix3 that will store the rotation and scale components
+// of a transform matrix in transform
+const scratchRotationScaleTransform = new Matrix3();
+
+/**
+ * Transforms the given oriented bounding box with the given matrix,
+ * stores the result in the given result parameter, and returns it.
+ *
+ * If the given result is `undefined`, then a new oriented bounding box
+ * will be created, filled, and returned.
+ *
+ * @param {OrientedBoundingBox} orientedBoundingBox The oriented bounding box
+ * @param {Matrix4} transform The transform matrix
+ * @param {OrientedBoundingBox} [result] The result
+ * @returns The result
+ */
+OrientedBoundingBox.transform = function (
+  orientedBoundingBox,
+  transform,
+  result
+) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("orientedBoundingBox", orientedBoundingBox);
+  Check.typeOf.object("transform", transform);
+  //>>includeEnd('debug');
+
+  if (!defined(result)) {
+    result = new OrientedBoundingBox();
+  }
+  Matrix4.multiplyByPoint(transform, orientedBoundingBox.center, result.center);
+  Matrix4.getMatrix3(transform, scratchRotationScaleTransform);
+  Matrix3.multiply(
+    scratchRotationScaleTransform,
+    orientedBoundingBox.halfAxes,
+    result.halfAxes
+  );
+  return result;
+};
+
+/**
+ * Transforms this oriented bounding box with the given matrix,
+ * stores the result in the given result parameter, and returns it.
+ *
+ * If the given result is `undefined`, then a new oriented bounding box
+ * will be created, filled, and returned.
+ *
+ * @param {Matrix4} transform The transform matrix
+ * @param {OrientedBoundingBox} [result] The result
+ * @returns The result
+ */
+OrientedBoundingBox.prototype.transform = function (transform, result) {
+  return OrientedBoundingBox.transform(this, transform, result);
+};
+
 const scratchOffset = new Cartesian3();
 const scratchScale = new Cartesian3();
 function fromPlaneExtents(
