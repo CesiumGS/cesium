@@ -10,8 +10,9 @@ import createScene from "../../../../../Specs/createScene.js";
 import createCanvas from "../../../../../Specs/createCanvas.js";
 import pollToPromise from "../../../../../Specs/pollToPromise.js";
 
-const propertyTextureSizeX = 16;
-const propertyTextureSizeY = 16;
+const textureSizeX = 16;
+const textureSizeY = 16;
+const canvasScaling = 32;
 
 /**
  * Creates the RGBA bytes of a property texture image for the specs.
@@ -23,8 +24,8 @@ const propertyTextureSizeY = 16;
  * @returns The pixels
  */
 function createExamplePropertyTexturePixelsRgbaBytes() {
-  const sizeX = propertyTextureSizeX;
-  const sizeY = propertyTextureSizeY;
+  const sizeX = textureSizeX;
+  const sizeY = textureSizeY;
   const pixelsRgbaBytes = Array(sizeX * sizeY * 4);
   for (let y = 0; y < sizeY; y++) {
     for (let x = 0; x < sizeX; x++) {
@@ -68,16 +69,32 @@ function createExamplePropertyTexturePixelsRgbaBytes() {
         a = 255;
       }
 
-      //r = 255;
-      //g = 255;
-      //b = 0;
-      //a = 255;
-
       const index = y * sizeX + x;
       pixelsRgbaBytes[index * 4 + 0] = r;
       pixelsRgbaBytes[index * 4 + 1] = g;
       pixelsRgbaBytes[index * 4 + 2] = b;
       pixelsRgbaBytes[index * 4 + 3] = a;
+    }
+  }
+  return pixelsRgbaBytes;
+}
+
+/**
+ * Creates the RGBA bytes of a base color texture for the specs.
+ *
+ * The result will be the the same as for createExamplePropertyTexturePixelsRgbaBytes,
+ * but with all alpha component bytes being 255.
+ *
+ * @returns The pixels
+ */
+function createExampleBaseColorTexturePixelsRgbaBytes() {
+  const sizeX = textureSizeX;
+  const sizeY = textureSizeY;
+  const pixelsRgbaBytes = createExamplePropertyTexturePixelsRgbaBytes();
+  for (let y = 0; y < sizeY; y++) {
+    for (let x = 0; x < sizeX; x++) {
+      const index = y * sizeX + x;
+      pixelsRgbaBytes[index * 4 + 3] = 255;
     }
   }
   return pixelsRgbaBytes;
@@ -104,76 +121,6 @@ function createPngDataUri(sizeX, sizeY, pixelsRgbaBytes) {
 }
 
 /**
- * Create the PNG data URI for the property texture image used in the specs
- * @returns The data URI
- */
-function createExamplePropertyTexturePngDataUri() {
-  const pixelsRgbaBytes = createExamplePropertyTexturePixelsRgbaBytes();
-  const dataUri = createPngDataUri(
-    propertyTextureSizeX,
-    propertyTextureSizeY,
-    pixelsRgbaBytes
-  );
-  return dataUri;
-}
-
-/**
- * Creates a metadata schema for the metadata property texture picking specs.
- *
- * This is for the 'scalar' test case
- *
- * @returns The schema
- */
-function createExampleSchemaScalar() {
-  const schema = {
-    id: "ExampleSchema",
-    classes: {
-      exampleClass: {
-        name: "Example class",
-        properties: {
-          example_UINT8_SCALAR: {
-            name: "Example SCALAR property with UINT8 components",
-            type: "SCALAR",
-            componentType: "UINT8",
-          },
-          example_normalized_UINT8_SCALAR: {
-            name: "Example SCALAR property with normalized UINT8 components",
-            type: "SCALAR",
-            componentType: "UINT8",
-            normalized: true,
-          },
-        },
-      },
-    },
-  };
-  return schema;
-}
-
-/**
- * Creates the property texture properties definition for the
- * metadata property texture picking specs.
- *
- * This is for the 'scalar' test case
- *
- * @returns The properties
- */
-function createPropertyTexturePropertiesScalar() {
-  const properties = {
-    example_UINT8_SCALAR: {
-      index: 0,
-      texCoord: 0,
-      channels: [0],
-    },
-    example_normalized_UINT8_SCALAR: {
-      index: 0,
-      texCoord: 0,
-      channels: [1],
-    },
-  };
-  return properties;
-}
-
-/**
  * Creates an embedded glTF asset with a property texture.
  *
  * This creates an assed that represents a unit square and uses
@@ -183,12 +130,14 @@ function createPropertyTexturePropertiesScalar() {
  * @param {object} schema The metadata schema
  * @param {object} propertyTextureProperties The property texture properties
  * @param {string} propertyTexturePngDataUri The PNG data URI of the property texture
+ * @param {string} baseColorTexturePngDataUri The PNG data URI of the base color texture
  * @returns The gltf
  */
 function createEmbeddedGltfWithPropertyTexture(
   schema,
   propertyTextureProperties,
-  propertyTexturePngDataUri
+  propertyTexturePngDataUri,
+  baseColorTexturePngDataUri
 ) {
   const result = {
     extensions: {
@@ -272,13 +221,17 @@ function createEmbeddedGltfWithPropertyTexture(
         uri: propertyTexturePngDataUri,
         mimeType: "image/png",
       },
+      {
+        uri: baseColorTexturePngDataUri,
+        mimeType: "image/png",
+      },
     ],
     materials: [
       {
         pbrMetallicRoughness: {
           baseColorFactor: [1.0, 1.0, 1.0, 1.0],
           baseColorTexture: {
-            index: 0,
+            index: 1,
             texCoord: 0,
           },
           metallicFactor: 0.0,
@@ -331,19 +284,93 @@ function createEmbeddedGltfWithPropertyTexture(
         sampler: 0,
         source: 0,
       },
+      {
+        sampler: 0,
+        source: 1,
+      },
     ],
   };
   return result;
 }
 
+/**
+ * Creates a metadata schema for the metadata property texture picking specs.
+ *
+ * This is for the 'scalar' test case
+ *
+ * @returns The schema
+ */
+function createExampleSchemaScalar() {
+  const schema = {
+    id: "ExampleSchema",
+    classes: {
+      exampleClass: {
+        name: "Example class",
+        properties: {
+          example_UINT8_SCALAR: {
+            name: "Example SCALAR property with UINT8 components",
+            type: "SCALAR",
+            componentType: "UINT8",
+          },
+          example_normalized_UINT8_SCALAR: {
+            name: "Example SCALAR property with normalized UINT8 components",
+            type: "SCALAR",
+            componentType: "UINT8",
+            normalized: true,
+          },
+        },
+      },
+    },
+  };
+  return schema;
+}
+
+/**
+ * Creates the property texture properties definition for the
+ * metadata property texture picking specs.
+ *
+ * This is for the 'scalar' test case
+ *
+ * @returns The properties
+ */
+function createPropertyTexturePropertiesScalar() {
+  const properties = {
+    example_UINT8_SCALAR: {
+      index: 0,
+      texCoord: 0,
+      channels: [0],
+    },
+    example_normalized_UINT8_SCALAR: {
+      index: 0,
+      texCoord: 0,
+      channels: [1],
+    },
+  };
+  return properties;
+}
+
 function createPropertyTextureGltfScalar() {
   const schema = createExampleSchemaScalar();
   const properties = createPropertyTexturePropertiesScalar();
-  const imageDataUri = createExamplePropertyTexturePngDataUri();
+
+  const propertyTexturePixelsRgbaBytes = createExamplePropertyTexturePixelsRgbaBytes();
+  const propertyTextureDataUri = createPngDataUri(
+    textureSizeX,
+    textureSizeY,
+    propertyTexturePixelsRgbaBytes
+  );
+  const baseColorTexturePixelsRgbaBytes = createExampleBaseColorTexturePixelsRgbaBytes();
+  const baseColorTextureDataUri = createPngDataUri(
+    textureSizeX,
+    textureSizeY,
+    baseColorTexturePixelsRgbaBytes
+  );
+
   const gltf = createEmbeddedGltfWithPropertyTexture(
     schema,
     properties,
-    imageDataUri
+    propertyTextureDataUri,
+    baseColorTextureDataUri
   );
   //*/
   console.log("SPEC GLTF:");
@@ -352,6 +379,78 @@ function createPropertyTextureGltfScalar() {
   console.log("-".repeat(80));
   //*/
   return gltf;
+}
+
+/**
+ * Create a model from the given glTF, add it as a primitive
+ * to the given scene, and wait until it is fully loaded.
+ *
+ * @param {Scene} scene The scene
+ * @param {object} gltf The gltf
+ */
+async function loadAsModel(scene, gltf) {
+  const basePath = "SPEC_BASE_PATH";
+  const model = await Model.fromGltfAsync({
+    gltf: gltf,
+    basePath: basePath,
+    // This is important to make sure that the property
+    // texture is fully loaded when the model is rendered!
+    incrementallyLoadTextures: false,
+  });
+  scene.primitives.add(model);
+
+  await pollToPromise(
+    function () {
+      scene.renderForSpecs();
+      return model.ready;
+    },
+    { timeout: 10000 }
+  );
+}
+
+/**
+ * Move the camera to exactly look at the unit square along -X
+ *
+ * @param {Camera} camera
+ */
+function fitCameraToUnitSquare(camera) {
+  const fov = CesiumMath.PI_OVER_THREE;
+  camera.frustum.fov = fov;
+  camera.frustum.near = 0.01;
+  camera.frustum.far = 100.0;
+  const distance = 1.0 / (2.0 * Math.tan(fov * 0.5));
+  camera.position = new Cartesian3(distance, 0.5, 0.5);
+  camera.direction = Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3());
+  camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
+  camera.right = Cartesian3.clone(Cartesian3.UNIT_Y);
+}
+
+/**
+ * Pick the specified metadata value from the screen that is contained in
+ * the property texture at the given coordinates.
+ *
+ * (This assumes that the property texture is on a unit square, and
+ * fitCameraToUnitSquare was called)
+ *
+ * @param {Scene} scene The scene
+ * @param {string|undefined} schemaId The schema ID
+ * @param {string} className The class name
+ * @param {string} propertyName The property name
+ * @param {number} x The x-coordinate in the texture
+ * @param {number} y The y-coordinate in the texture
+ * @returns The metadata value
+ */
+function pickMetadataAt(scene, schemaId, className, propertyName, x, y) {
+  const screenX = Math.floor(x * canvasScaling + canvasScaling / 2);
+  const screenY = Math.floor(y * canvasScaling + canvasScaling / 2);
+  const screenPosition = new Cartesian2(screenX, screenY);
+  const metadataValue = scene.pickMetadata(
+    screenPosition,
+    schemaId,
+    className,
+    propertyName
+  );
+  return metadataValue;
 }
 
 describe(
@@ -397,70 +496,102 @@ describe(
       const propertyName = "example_UINT8_SCALAR";
       const gltf = createPropertyTextureGltfScalar();
 
-      const scaling = 32;
-      const canvasSizeX = propertyTextureSizeX * scaling;
-      const canvasSizeY = propertyTextureSizeY * scaling;
+      const canvasSizeX = textureSizeX * canvasScaling;
+      const canvasSizeY = textureSizeY * canvasScaling;
       scene = createScene({
         canvas: createCanvas(canvasSizeX, canvasSizeY),
       });
 
-      // Create the model and wait until it is ready
-      const basePath = "SPEC_BASE_PATH";
-      const model = await Model.fromGltfAsync({
-        gltf: gltf,
-        basePath: basePath,
-        // This is important to make sure that the property
-        // texture is fully loaded when the model is rendered!
-        incrementallyLoadTextures: false,
-      });
-      scene.primitives.add(model);
-
-      await pollToPromise(
-        function () {
-          scene.renderForSpecs();
-          return model.ready;
-        },
-        { timeout: 10000 }
-      );
-
-      scene.camera.flyToBoundingSphere(model.boundingSphere, {
-        duration: 0,
-      });
-
-      // Move the camera so that the unit square exactly
-      // fills the canvas
-      const camera = scene.camera;
-      const fov = CesiumMath.PI_OVER_THREE;
-      camera.frustum.fov = fov;
-      camera.frustum.near = 0.01;
-      camera.frustum.far = 100.0;
-      const distance = 1.0 / (2.0 * Math.tan(fov * 0.5));
-      camera.position = new Cartesian3(distance, 0.5, 0.5);
-      camera.direction = Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3());
-      camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
-      camera.right = Cartesian3.clone(Cartesian3.UNIT_Y);
+      await loadAsModel(scene, gltf);
+      fitCameraToUnitSquare(scene.camera);
 
       scene.initializeFrame();
       scene.render(defaultDate);
 
-      console.log("position ", camera.position);
-      console.log("direction ", camera.direction);
-      console.log("up ", camera.up);
-      console.log("right ", camera.right);
+      const actualMetadataValue0 = pickMetadataAt(
+        scene,
+        schemaId,
+        className,
+        propertyName,
+        0,
+        3
+      );
+      const actualMetadataValue1 = pickMetadataAt(
+        scene,
+        schemaId,
+        className,
+        propertyName,
+        0,
+        4
+      );
+      const actualMetadataValue2 = pickMetadataAt(
+        scene,
+        schemaId,
+        className,
+        propertyName,
+        0,
+        5
+      );
+      const expectedMetadataValue0 = 0;
+      const expectedMetadataValue1 = 127;
+      const expectedMetadataValue2 = 255;
+
+      expect(
+        CesiumMath.equalsEpsilon(
+          actualMetadataValue0,
+          expectedMetadataValue0,
+          1
+        )
+      ).toBe(true);
+      expect(
+        CesiumMath.equalsEpsilon(
+          actualMetadataValue1,
+          expectedMetadataValue1,
+          1
+        )
+      ).toBe(true);
+      expect(
+        CesiumMath.equalsEpsilon(
+          actualMetadataValue2,
+          expectedMetadataValue2,
+          1
+        )
+      ).toBe(true);
+    });
+
+    // eslint-disable-next-line no-restricted-globals
+    fit("picks metadata from a property texture quarry", async function () {
+      // Create the gltf with the metadata that is about to be picked
+      const schemaId = undefined;
+      const className = "exampleClass";
+      const propertyName = "example_UINT8_SCALAR";
+      const gltf = createPropertyTextureGltfScalar();
+
+      const canvasSizeX = textureSizeX * canvasScaling;
+      const canvasSizeY = textureSizeY * canvasScaling;
+      scene = createScene({
+        canvas: createCanvas(canvasSizeX, canvasSizeY),
+      });
+
+      await loadAsModel(scene, gltf);
+      fitCameraToUnitSquare(scene.camera);
+
+      scene.initializeFrame();
+      scene.render(defaultDate);
 
       for (let x = 0; x < 16; x++) {
         for (let y = 0; y < 16; y++) {
-          const screenX = Math.floor(x * scaling + scaling / 2);
-          const screenY = Math.floor(y * scaling + scaling / 2);
-          const screenPosition = new Cartesian2(screenX, screenY);
-          const actualMetadataValue = scene.pickMetadata(
-            screenPosition,
+          const actualMetadataValue = pickMetadataAt(
+            scene,
             schemaId,
             className,
-            propertyName
+            propertyName,
+            x,
+            y
           );
+
           console.log(
-            `actualMetadataValue at ${x} ${y} screen ${screenPosition} is `,
+            `actualMetadataValue at ${x} ${y}  is `,
             actualMetadataValue
           );
         }
