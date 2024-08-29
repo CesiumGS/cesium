@@ -21,13 +21,19 @@
     npm install
    ```
 
-3. Start the [server](#development-server)
+3. Build the project
+
+   ```bash
+   npm run build
+   ```
+
+4. Start the [server](#development-server)
 
    ```bash
    npm start
    ```
 
-4. Navigate to : [`http://localhost:8080/`](http://localhost:8080)
+5. Navigate to : [`http://localhost:8080/`](http://localhost:8080)
 
 ---
 
@@ -61,8 +67,13 @@ Cesium uses [npm modules](https://docs.npmjs.com/getting-started/what-is-npm) fo
 npm install
 ```
 
-Cesium ships with a simple HTTP server for testing.
-Once all modules have been installed, run `npm start` to use it:
+Cesium ships with a simple HTTP server for testing. Once all modules have been installed, run `npm run build` to build the project:
+
+```bash
+npm run build
+```
+
+Then, run the development server:
 
 ```bash
 npm start
