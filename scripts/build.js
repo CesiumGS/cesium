@@ -430,10 +430,6 @@ export async function bundleWorkers(options) {
   return writeInjectionCode(result);
 }
 
-const shaderFiles = [
-  "packages/engine/Source/Shaders/**/*.glsl",
-  "packages/engine/Source/ThirdParty/Shaders/*.glsl",
-];
 export async function glslToJavaScript(
   minify,
   minifyStateFilePath,
@@ -454,42 +450,24 @@ export async function glslToJavaScript(
   // we still are using from the set, then delete any files remaining in the set.
   const leftOverJsFiles = {};
 
-  const files = await globby([
+  const jsFiles = await globby([
     `packages/${workspace}/Source/Shaders/**/*.js`,
     `packages/${workspace}/Source/ThirdParty/Shaders/*.js`,
   ]);
-  files.forEach(function (file) {
+  jsFiles.forEach(function (file) {
     leftOverJsFiles[path.normalize(file)] = true;
   });
 
-  const builtinFunctions = [];
-  const builtinConstants = [];
-  const builtinStructs = [];
-
+  const shaderFiles = [
+    "packages/engine/Source/Shaders/**/*.glsl",
+    "packages/engine/Source/ThirdParty/Shaders/*.glsl",
+  ];
   const glslFiles = await globby(specificFiles ?? shaderFiles);
-  const baseDir = path.join(
-    `packages/${workspace}/`,
-    "Source",
-    "Shaders",
-    "Builtin"
-  );
-  const functionsDir = path.normalize(path.join(baseDir, "Functions"));
-  const constantsDir = path.normalize(path.join(baseDir, "Constants"));
-  const structsDir = path.normalize(path.join(baseDir, "Structs"));
   await Promise.all(
     glslFiles.map(async function (glslFile) {
       glslFile = path.normalize(glslFile);
       const baseName = path.basename(glslFile, ".glsl");
       const jsFile = `${path.join(path.dirname(glslFile), baseName)}.js`;
-
-      // identify built in functions, structs, and constants
-      if (glslFile.indexOf(functionsDir) === 0) {
-        builtinFunctions.push(baseName);
-      } else if (glslFile.indexOf(constantsDir) === 0) {
-        builtinConstants.push(baseName);
-      } else if (glslFile.indexOf(structsDir) === 0) {
-        builtinStructs.push(baseName);
-      }
 
       delete leftOverJsFiles[jsFile];
 
@@ -549,28 +527,27 @@ export default "${contents}";\n`;
     }
   }
 
-  const generateBuiltinContents = function (contents, builtins, path) {
-    for (let i = 0; i < builtins.length; i++) {
-      const builtin = builtins[i];
-      contents.imports.push(
-        `import czm_${builtin} from './${path}/${builtin}.js'`
-      );
-      contents.builtinLookup.push(`czm_${builtin} : ` + `czm_${builtin}`);
-    }
-  };
+  const builtinDir = `packages/${workspace}/Source/Shaders/Builtin`;
+  const builtinFiles = await globby([
+    `${builtinDir}/Constants/**/*.js`,
+    `${builtinDir}/Functions/**/*.js`,
+    `${builtinDir}/Structs/**/*.js`,
+  ]);
 
-  //generate the JS file for Built-in GLSL Functions, Structs, and Constants
-  const contents = {
-    imports: [],
-    builtinLookup: [],
-  };
-  generateBuiltinContents(contents, builtinConstants, "Constants");
-  generateBuiltinContents(contents, builtinStructs, "Structs");
-  generateBuiltinContents(contents, builtinFunctions, "Functions");
+  const builtins = builtinFiles.map((file) => {
+    const name = path.basename(file, ".js");
+    return { path: file.replace(builtinDir, "."), name };
+  });
+
+  const contents = { imports: [], exports: [] };
+  for (const builtin of builtins) {
+    contents.imports.push(`import czm_${builtin.name} from '${builtin.path}'`);
+    contents.exports.push(`czm_${builtin.name}: czm_${builtin.name}`);
+  }
 
   const fileContents = `//This file is automatically rebuilt by the Cesium build process.\n${contents.imports.join(
     "\n"
-  )}\n\nexport default {\n    ${contents.builtinLookup.join(",\n    ")}\n};\n`;
+  )}\n\nexport default {\n    ${contents.exports.join(",\n    ")}\n};\n`;
 
   return writeFile(
     path.join(
