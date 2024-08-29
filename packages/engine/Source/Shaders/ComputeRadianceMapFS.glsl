@@ -67,7 +67,8 @@ void main() {
     lookupDirection = -normalize(czm_temeToPseudoFixed * lookupDirection);
     lookupDirection.x = -lookupDirection.x;
 
-    vec3 sceneSkyBoxColor = czm_textureCube(czm_environmentMap, lookupDirection).rgb;
+    vec4 sceneSkyBoxColor = czm_textureCube(czm_environmentMap, lookupDirection);
+    vec3 backgroundColor = mix(sceneSkyBoxColor.rgb, czm_backgroundColor, sceneSkyBoxColor.a);
 
     // Interpolate the ground color based on distance and sun exposure
     vec3 up = normalize(u_positionWC);
@@ -75,7 +76,7 @@ void main() {
     vec3 groundColor = mix(vec3(0.0), u_groundColor.xyz, occlusion * u_groundColor.a * (1.0 - d / radius));
 
     // Only show the stars when not obscured by the ellipsoid
-    vec3 backgroundColor = czm_branchFreeTernary(czm_isEmpty(intersection), sceneSkyBoxColor, groundColor);
+    vec3 backgroundColor = czm_branchFreeTernary(czm_isEmpty(intersection), backgroundColor, groundColor);
 
     // Apply intensity to sky only
     float intensity = u_brightnessSaturationGammaIntensity.w;

@@ -18,9 +18,7 @@ function SunLight(options) {
    * @type {Color}
    * @default Color.WHITE
    */
-  this.color = Color.clone(
-    defaultValue(options.color, Color.fromBytes(255, 255, 251))
-  ); // From https://planetpixelemporium.com/tutorialpages/light.html
+  this.color = Color.clone(defaultValue(options.color, Color.WHITE));
 
   /**
    * The intensity of the light.

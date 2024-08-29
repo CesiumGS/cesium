@@ -1,3 +1,4 @@
+import Cartesian2 from "../Core/Cartesian2.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Cartesian4 from "../Core/Cartesian4.js";
 import Color from "../Core/Color.js";
@@ -5,6 +6,10 @@ import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
+import JulianDate from "../Core/JulianDate.js";
+import Matrix4 from "../Core/Matrix4.js";
+import SceneMode from "./SceneMode.js";
+import Transforms from "../Core/Transforms.js";
 import ComputeCommand from "../Renderer/ComputeCommand.js";
 import Framebuffer from "../Renderer/Framebuffer.js";
 import Texture from "../Renderer/Texture.js";
@@ -19,12 +24,7 @@ import ComputeIrradianceMapFS from "../Shaders/ComputeIrradianceMapFS.js";
 import ComputeRadianceMapFS from "../Shaders/ComputeRadianceMapFS.js";
 import ConvolveSpecularMapFS from "../Shaders/ConvolveSpecularMapFS.js";
 import ConvolveSpecularMapVS from "../Shaders/ConvolveSpecularMapVS.js";
-import CesiumMath from "../Core/Math.js";
 import CubeMap from "../Renderer/CubeMap.js";
-import Cartesian2 from "../Core/Cartesian2.js";
-import Transforms from "../Core/Transforms.js";
-import Matrix4 from "../Core/Matrix4.js";
-import JulianDate from "../Core/JulianDate.js";
 import DynamicAtmosphereLightingType from "./DynamicAtmosphereLightingType.js";
 
 /**
@@ -45,7 +45,7 @@ import DynamicAtmosphereLightingType from "./DynamicAtmosphereLightingType.js";
  * Generates an environment map at the given position based on scene's current lighting conditions. From this, it produces multiple levels of specular maps and spherical harmonic coefficients than can be used with {@link ImageBasedLighting} for models or tilesets.
  * @alias DynamicEnvironmentMapManager
  * @constructor
- * @param {DynamicEnvironmentMapManager.ConstructorOptions} options An object describing initialization options.
+ * @param {DynamicEnvironmentMapManager.ConstructorOptions} [options] An object describing initialization options.
  */
 function DynamicEnvironmentMapManager(options) {
   this._position = undefined;
@@ -84,6 +84,8 @@ function DynamicEnvironmentMapManager(options) {
   this._textureDimensions = new Cartesian2(width, width);
 
   this._radiiAndDynamicAtmosphereColor = new Cartesian3();
+  this._sceneEnvironmentMap = undefined;
+  this._backgroundColor = undefined;
 
   // If this DynamicEnvironmentMapManager has an owner, only its owner should update or destroy it.
   // This is because in a Cesium3DTileset multiple models may reference one tileset's DynamicEnvironmentMapManager.
@@ -116,11 +118,11 @@ function DynamicEnvironmentMapManager(options) {
   /**
    * The maximum difference in position before a new environment map is created. Small differences in position will not visibly affect results.
    * @type {number}
-   * @default CesiumMath.EPSILON1
+   * @default 1.0
    */
   this.maximumPositionEpsilon = defaultValue(
     options.maximumPositionEpsilon,
-    CesiumMath.EPSILON1
+    1.0
   );
 
   /**
@@ -352,12 +354,16 @@ function atmosphereNeedsUpdate(manager, frameState) {
     !Cartesian3.equalsEpsilon(
       manager._radiiAndDynamicAtmosphereColor,
       radiiAndDynamicAtmosphereColor
-    )
+    ) ||
+    frameState.environmentMap !== manager._sceneEnvironmentMap ||
+    frameState.backgroundColor !== manager._backgroundColor
   ) {
     Cartesian3.clone(
       radiiAndDynamicAtmosphereColor,
       manager._radiiAndDynamicAtmosphereColor
     );
+    manager._sceneEnvironmentMap = frameState.environmentMap;
+    manager._backgroundColor = frameState.backgroundColor;
     return true;
   }
 
@@ -403,7 +409,7 @@ function updateRadianceMap(manager, frameState) {
 
     const ellipsoid = frameState.mapProjection.ellipsoid;
     const enuToFixedFrame = Transforms.eastNorthUpToFixedFrame(
-      manager._position,
+      position,
       ellipsoid,
       scratchMatrix
     );
@@ -662,11 +668,13 @@ function updateSphericalHarmonicCoefficients(manager, frameState) {
  * @private
  */
 DynamicEnvironmentMapManager.prototype.update = function (frameState) {
+  const mode = frameState.mode;
+
   if (
     !this.enabled ||
     !this.shouldUpdate ||
     !defined(this._position) ||
-    !defined(frameState.environmentMap)
+    mode === SceneMode.MORPHING
   ) {
     this._shouldRegenerateShaders = false;
     return;

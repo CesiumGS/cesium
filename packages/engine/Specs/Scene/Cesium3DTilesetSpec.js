@@ -2694,25 +2694,21 @@ describe(
       );
     });
 
-    it("renders with lightColor", function () {
+    it("renders with lightColor", async function () {
       const renderOptions = {
         scene: scene,
         time: new JulianDate(2457522.154792),
       };
-      return Cesium3DTilesTester.loadTileset(scene, withoutBatchTableUrl).then(
-        function (tileset) {
-          const ibl = tileset.imageBasedLighting;
-          expect(renderOptions).toRenderAndCall(function (rgba) {
-            expect(rgba).not.toEqual([0, 0, 0, 255]);
-            ibl.imageBasedLightingFactor = new Cartesian2(0.0, 0.0);
-            expect(renderOptions).toRenderAndCall(function (rgba2) {
-              expect(rgba2).not.toEqual(rgba);
-              tileset.lightColor = new Cartesian3(5.0, 5.0, 5.0);
-              expect(renderOptions).notToRender(rgba2);
-            });
-          });
-        }
+      const tileset = await Cesium3DTilesTester.loadTileset(
+        scene,
+        withoutBatchTableUrl
       );
+      const ibl = tileset.imageBasedLighting;
+      ibl.imageBasedLightingFactor = new Cartesian2(0.0, 0.0);
+      expect(renderOptions).toRenderAndCall(function (rgba) {
+        tileset.lightColor = new Cartesian3(5.0, 5.0, 5.0);
+        expect(renderOptions).notToRender(rgba);
+      });
     });
 
     function testBackFaceCulling(url, setViewOptions) {
