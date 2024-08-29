@@ -351,19 +351,80 @@ VoxelBoxShape.prototype.computeOrientedBoundingBoxForTile = function (
   );
 };
 
+const sampleSizeScratch = new Cartesian3();
+
 /**
- * Computes an approximate step size for raymarching the root tile of a voxel grid.
+ * Computes an oriented bounding box for a specified sample within a specified tile.
  * The update function must be called before calling this function.
  *
- * @param {Cartesian3} dimensions The voxel grid dimensions for a tile.
- * @returns {number} The step size.
+ * @param {SpatialNode} spatialNode The spatial node containing the sample
+ * @param {Cartesian3} tileDimensions The size of the tile in number of samples, before padding
+ * @param {Cartesian3} tileUv The sample coordinate within the tile
+ * @param {OrientedBoundingBox} result The oriented bounding box that will be set to enclose the specified sample
+ * @returns {OrientedBoundingBox} The oriented bounding box.
  */
-VoxelBoxShape.prototype.computeApproximateStepSize = function (dimensions) {
+VoxelBoxShape.prototype.computeOrientedBoundingBoxForSample = function (
+  spatialNode,
+  tileDimensions,
+  tileUv,
+  result
+) {
   //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("dimensions", dimensions);
+  Check.typeOf.object("spatialNode", spatialNode);
+  Check.typeOf.object("tileDimensions", tileDimensions);
+  Check.typeOf.object("tileUv", tileUv);
+  Check.typeOf.object("result", result);
   //>>includeEnd('debug');
 
-  return 1.0 / Cartesian3.maximumComponent(dimensions);
+  const tileSizeAtLevel = 1.0 / Math.pow(2, spatialNode.level);
+  const sampleSize = Cartesian3.divideComponents(
+    Cartesian3.ONE,
+    tileDimensions,
+    sampleSizeScratch
+  );
+  const sampleSizeAtLevel = Cartesian3.multiplyByScalar(
+    sampleSize,
+    tileSizeAtLevel,
+    sampleSizeScratch
+  );
+
+  const minLerp = Cartesian3.multiplyByScalar(
+    Cartesian3.fromElements(
+      spatialNode.x + tileUv.x,
+      spatialNode.y + tileUv.y,
+      spatialNode.z + tileUv.z,
+      scratchTileMinBounds
+    ),
+    tileSizeAtLevel,
+    scratchTileMinBounds
+  );
+  const maxLerp = Cartesian3.add(
+    minLerp,
+    sampleSizeAtLevel,
+    scratchTileMaxBounds
+  );
+
+  const minBounds = this._minBounds;
+  const maxBounds = this._maxBounds;
+  const sampleMinBounds = Cartesian3.fromElements(
+    CesiumMath.lerp(minBounds.x, maxBounds.x, minLerp.x),
+    CesiumMath.lerp(minBounds.y, maxBounds.y, minLerp.y),
+    CesiumMath.lerp(minBounds.z, maxBounds.z, minLerp.z),
+    scratchTileMinBounds
+  );
+  const sampleMaxBounds = Cartesian3.fromElements(
+    CesiumMath.lerp(minBounds.x, maxBounds.x, maxLerp.x),
+    CesiumMath.lerp(minBounds.y, maxBounds.y, maxLerp.y),
+    CesiumMath.lerp(minBounds.z, maxBounds.z, maxLerp.z),
+    scratchTileMaxBounds
+  );
+
+  return getBoxChunkObb(
+    sampleMinBounds,
+    sampleMaxBounds,
+    this.shapeTransform,
+    result
+  );
 };
 
 /**

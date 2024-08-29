@@ -197,7 +197,7 @@ function Camera(scene) {
   this.defaultZoomAmount = 100000.0;
   /**
    * If set, the camera will not be able to rotate past this axis in either direction.
-   * @type {Cartesian3}
+   * @type {Cartesian3 | undefined}
    * @default undefined
    */
   this.constrainedAxis = undefined;
@@ -217,6 +217,7 @@ function Camera(scene) {
   this._changedDirection = undefined;
   this._changedFrustum = undefined;
   this._changedHeading = undefined;
+  this._changedRoll = undefined;
 
   /**
    * The amount the camera has to change before the <code>changed</code> event is raised. The value is a percentage in the [0, 1] range.
@@ -380,25 +381,55 @@ Camera.prototype._updateCameraChanged = function () {
 
   const percentageChanged = camera.percentageChanged;
 
+  // check heading
   const currentHeading = camera.heading;
 
   if (!defined(camera._changedHeading)) {
     camera._changedHeading = currentHeading;
   }
 
-  let delta =
+  let headingDelta =
     Math.abs(camera._changedHeading - currentHeading) % CesiumMath.TWO_PI;
-  delta = delta > CesiumMath.PI ? CesiumMath.TWO_PI - delta : delta;
+  headingDelta =
+    headingDelta > CesiumMath.PI
+      ? CesiumMath.TWO_PI - headingDelta
+      : headingDelta;
 
   // Since delta is computed as the shortest distance between two angles
   // the percentage is relative to the half circle.
-  const headingChangedPercentage = delta / Math.PI;
+  const headingChangedPercentage = headingDelta / Math.PI;
 
   if (headingChangedPercentage > percentageChanged) {
-    camera._changed.raiseEvent(headingChangedPercentage);
     camera._changedHeading = currentHeading;
   }
 
+  // check roll
+  const currentRoll = camera.roll;
+
+  if (!defined(camera._changedRoll)) {
+    camera._changedRoll = currentRoll;
+  }
+
+  let rollDelta =
+    Math.abs(camera._changedRoll - currentRoll) % CesiumMath.TWO_PI;
+  rollDelta =
+    rollDelta > CesiumMath.PI ? CesiumMath.TWO_PI - rollDelta : rollDelta;
+
+  // Since delta is computed as the shortest distance between two angles
+  // the percentage is relative to the half circle.
+  const rollChangedPercentage = rollDelta / Math.PI;
+
+  if (rollChangedPercentage > percentageChanged) {
+    camera._changedRoll = currentRoll;
+  }
+  if (
+    rollChangedPercentage > percentageChanged ||
+    headingChangedPercentage > percentageChanged
+  ) {
+    camera._changed.raiseEvent(
+      Math.max(rollChangedPercentage, headingChangedPercentage)
+    );
+  }
   if (camera._mode === SceneMode.SCENE2D) {
     if (!defined(camera._changedFrustum)) {
       camera._changedPosition = Cartesian3.clone(
@@ -1233,6 +1264,11 @@ const scratchSetViewMatrix3 = new Matrix3();
 const scratchSetViewCartographic = new Cartographic();
 
 function setView3D(camera, position, hpr) {
+  //>>includeStart('debug', pragmas.debug);
+  if (isNaN(position.x) || isNaN(position.y) || isNaN(position.z)) {
+    throw new DeveloperError("position has a NaN component");
+  }
+  //>>includeEnd('debug');
   const currentTransform = Matrix4.clone(
     camera.transform,
     scratchSetViewTransform1
@@ -1400,7 +1436,7 @@ const scratchHpr = new HeadingPitchRoll();
  * Sets the camera position, orientation and transform.
  *
  * @param {object} options Object with the following properties:
- * @param {Cartesian3|Rectangle} [options.destination] The final position of the camera in WGS84 (world) coordinates or a rectangle that would be visible from a top-down view.
+ * @param {Cartesian3|Rectangle} [options.destination] The final position of the camera in world coordinates or a rectangle that would be visible from a top-down view.
  * @param {HeadingPitchRollValues|DirectionUp} [options.orientation] An object that contains either direction and up properties or heading, pitch and roll properties. By default, the direction will point
  * towards the center of the frame in 3D and in the negative z direction in Columbus view. The up direction will point towards local north in 3D and in the positive
  * y direction in Columbus view. Orientation is not used in 2D when in infinite scrolling mode.
@@ -1473,6 +1509,12 @@ Camera.prototype.setView = function (options) {
       destination,
       scratchSetViewCartesian
     );
+    //>>includeStart('debug', pragmas.debug);
+    // destination.z may be null in 2D, but .x and .y should be numeric
+    if (isNaN(destination.x) || isNaN(destination.y)) {
+      throw new DeveloperError(`destination has a NaN component`);
+    }
+    //>>includeEnd('debug');
     convert = false;
   }
 
@@ -2301,9 +2343,12 @@ Camera.prototype.lookAt = function (target, offset) {
   }
   //>>includeEnd('debug');
 
+  const scene = this._scene;
+  const ellipsoid = defaultValue(scene.ellipsoid, Ellipsoid.default);
+
   const transform = Transforms.eastNorthUpToFixedFrame(
     target,
-    Ellipsoid.WGS84,
+    ellipsoid,
     scratchLookAtMatrix4
   );
   this.lookAtTransform(transform, offset);
@@ -2799,7 +2844,7 @@ Camera.prototype.getRectangleCameraCoordinates = function (rectangle, result) {
 
 const pickEllipsoid3DRay = new Ray();
 function pickEllipsoid3D(camera, windowPosition, ellipsoid, result) {
-  ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
+  ellipsoid = defaultValue(ellipsoid, Ellipsoid.default);
   const ray = camera.getPickRay(windowPosition, pickEllipsoid3DRay);
   const intersection = IntersectionTests.rayEllipsoid(ray, ellipsoid);
   if (!intersection) {
@@ -2851,7 +2896,7 @@ function pickMapColumbusView(camera, windowPosition, projection, result) {
  * Pick an ellipsoid or map.
  *
  * @param {Cartesian2} windowPosition The x and y coordinates of a pixel.
- * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid to pick.
+ * @param {Ellipsoid} [ellipsoid=Ellipsoid.default] The ellipsoid to pick.
  * @param {Cartesian3} [result] The object onto which to store the result.
  * @returns {Cartesian3 | undefined} If the ellipsoid or map was picked,
  * returns the point on the surface of the ellipsoid or map in world
@@ -2860,7 +2905,7 @@ function pickMapColumbusView(camera, windowPosition, projection, result) {
  * @example
  * const canvas = viewer.scene.canvas;
  * const center = new Cesium.Cartesian2(canvas.clientWidth / 2.0, canvas.clientHeight / 2.0);
- * const ellipsoid = viewer.scene.globe.ellipsoid;
+ * const ellipsoid = viewer.scene.ellipsoid;
  * const result = viewer.camera.pickEllipsoid(center, ellipsoid);
  */
 Camera.prototype.pickEllipsoid = function (windowPosition, ellipsoid, result) {
@@ -2879,7 +2924,7 @@ Camera.prototype.pickEllipsoid = function (windowPosition, ellipsoid, result) {
     result = new Cartesian3();
   }
 
-  ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
+  ellipsoid = defaultValue(ellipsoid, Ellipsoid.default);
 
   if (this._mode === SceneMode.SCENE3D) {
     result = pickEllipsoid3D(this, windowPosition, ellipsoid, result);
@@ -3274,7 +3319,7 @@ Camera.prototype.completeFlight = function () {
  * Flies the camera from its current position to a new position.
  *
  * @param {object} options Object with the following properties:
- * @param {Cartesian3|Rectangle} options.destination The final position of the camera in WGS84 (world) coordinates or a rectangle that would be visible from a top-down view.
+ * @param {Cartesian3|Rectangle} options.destination The final position of the camera in world coordinates or a rectangle that would be visible from a top-down view.
  * @param {object} [options.orientation] An object that contains either direction and up properties or heading, pitch and roll properties. By default, the direction will point
  * towards the center of the frame in 3D and in the negative z direction in Columbus view. The up direction will point towards local north in 3D and in the positive
  * y direction in Columbus view.  Orientation is not used in 2D when in infinite scrolling mode.
@@ -3590,9 +3635,12 @@ Camera.prototype.flyToBoundingSphere = function (boundingSphere, options) {
     );
   }
 
+  const scene = this._scene;
+  const ellipsoid = defaultValue(scene.ellipsoid, Ellipsoid.default);
+
   const transform = Transforms.eastNorthUpToFixedFrame(
     boundingSphere.center,
-    Ellipsoid.WGS84,
+    ellipsoid,
     scratchflyToBoundingSphereTransform
   );
   Matrix4.multiplyByPoint(transform, position, position);
@@ -3772,13 +3820,13 @@ function addToResult(x, y, index, camera, ellipsoid, computedHorizonQuad) {
 /**
  * Computes the approximate visible rectangle on the ellipsoid.
  *
- * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid that you want to know the visible region.
+ * @param {Ellipsoid} [ellipsoid=Ellipsoid.default] The ellipsoid that you want to know the visible region.
  * @param {Rectangle} [result] The rectangle in which to store the result
  *
  * @returns {Rectangle|undefined} The visible rectangle or undefined if the ellipsoid isn't visible at all.
  */
 Camera.prototype.computeViewRectangle = function (ellipsoid, result) {
-  ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
+  ellipsoid = defaultValue(ellipsoid, Ellipsoid.default);
   const cullingVolume = this.frustum.computeCullingVolume(
     this.positionWC,
     this.directionWC,

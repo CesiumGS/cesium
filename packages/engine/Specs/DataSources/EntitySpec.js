@@ -181,6 +181,27 @@ describe("DataSources/Entity", function () {
     }
   });
 
+  it("definitionChanged works for properties added via addProperty", function () {
+    const entity = new Entity();
+
+    const propertyName = "justForTest";
+    entity.addProperty(propertyName);
+    const oldValue = new ConstantProperty(1);
+    entity[propertyName] = oldValue;
+
+    const listener = jasmine.createSpy("listener");
+    entity.definitionChanged.addEventListener(listener);
+
+    const newValue = new ConstantProperty(1);
+    entity[propertyName] = newValue;
+    expect(listener).toHaveBeenCalledWith(
+      entity,
+      propertyName,
+      newValue,
+      oldValue
+    );
+  });
+
   it("merge ignores reserved property names when called with a plain object.", function () {
     const entity = new Entity();
 

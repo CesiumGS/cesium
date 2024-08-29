@@ -1,0 +1,64 @@
+name: deploy
+on: 
+  push:
+    branches-ignore: 
+      - 'cesium.com'
+      - production
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      statuses: write
+      contents: read
+    env:
+      BUILD_VERSION: ${{ github.ref_name }}.${{ github.run_number }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.DEV_AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.DEV_AWS_SECRET_ACCESS_KEY }}
+      AWS_REGION: us-east-1
+      BRANCH: ${{ github.ref_name }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GITHUB_REPO: ${{ github.repository }}
+      GITHUB_SHA: ${{ github.sha }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: install node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: npm install
+        run: npm install
+      - name: set the version in package.json
+        run: npm run deploy-set-version -- --buildVersion $BUILD_VERSION
+      - name: create release zip
+        run: npm run make-zip
+      - name: package cesium module
+        run: npm pack &> /dev/null
+      - name: package workspace modules
+        run: npm pack --workspaces &> /dev/null
+      - name: build apps
+        run: npm run build-apps
+      - uses: ./.github/actions/verify-package
+      - name: deploy to s3
+        if: ${{ env.AWS_ACCESS_KEY_ID != '' }}
+        run: |
+          aws s3 sync . s3://cesium-public-builds/cesium/$BRANCH/ \
+          --cache-control "no-cache" \
+          --exclude ".git/*" \
+          --exclude ".concierge/*" \
+          --exclude ".github/*" \
+          --exclude ".husky/*" \
+          --exclude ".vscode/*" \
+          --exclude "Build/Coverage/*" \
+          --exclude "Build/CesiumDev/*" \
+          --exclude "Build/Specs/e2e" \
+          --exclude "Documentation/*" \
+          --exclude "node_modules/*" \
+          --exclude "scripts/*" \
+          --exclude "Tools/*" \
+          --delete 
+      - name: set status
+        if: ${{ env.AWS_ACCESS_KEY_ID != '' }}
+        run: npm run deploy-status -- --status success --message Deployed

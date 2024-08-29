@@ -10,14 +10,48 @@ import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import DistanceDisplayCondition from "../Core/DistanceDisplayCondition.js";
+import Ellipsoid from "../Core/Ellipsoid.js";
 import Matrix4 from "../Core/Matrix4.js";
 import NearFarScalar from "../Core/NearFarScalar.js";
 import Resource from "../Core/Resource.js";
-import HeightReference from "./HeightReference.js";
+import HeightReference, {
+  isHeightReferenceRelative,
+} from "./HeightReference.js";
 import HorizontalOrigin from "./HorizontalOrigin.js";
 import SceneMode from "./SceneMode.js";
 import SceneTransforms from "./SceneTransforms.js";
 import VerticalOrigin from "./VerticalOrigin.js";
+import SplitDirection from "./SplitDirection.js";
+
+/**
+ * @typedef {object} Billboard.ConstructorOptions
+ *
+ * Initialization options for the first param of Billboard constructor
+ *
+ * @property {Cartesian3} position The cartesian position of the billboard.
+ * @property {*} [id] A user-defined object to return when the billboard is picked with {@link Scene#pick}.
+ * @property {boolean} [show=true] Determines if this billboard will be shown.
+ * @property {string | HTMLCanvasElement} [image] A loaded HTMLImageElement, ImageData, or a url to an image to use for the billboard.
+ * @property {number} [scale=1.0] A number specifying the uniform scale that is multiplied with the billboard's image size in pixels.
+ * @property {Cartesian2} [pixelOffset=Cartesian2.ZERO] A {@link Cartesian2} Specifying the pixel offset in screen space from the origin of this billboard.
+ * @property {Cartesian3} [eyeOffset=Cartesian3.ZERO] A {@link Cartesian3} Specifying the 3D Cartesian offset applied to this billboard in eye coordinates.
+ * @property {HorizontalOrigin} [horizontalOrigin=HorizontalOrigin.CENTER] A {@link HorizontalOrigin} Specifying the horizontal origin of this billboard.
+ * @property {VerticalOrigin} [verticalOrigin=VerticalOrigin.CENTER] A {@link VerticalOrigin} Specifying the vertical origin of this billboard.
+ * @property {HeightReference} [heightReference=HeightReference.NONE] A {@link HeightReference} Specifying the height reference of this billboard.
+ * @property {Color} [color=Color.WHITE] A {@link Color} Specifying the color that is multiplied with the billboard's texture.
+ * @property {number} [rotation=0] A number specifying the rotation angle in radians.
+ * @property {Cartesian3} [alignedAxis=Cartesian3.ZERO] A {@link Cartesian3} Specifying the aligned axis in world space.
+ * @property {boolean} [sizeInMeters] A boolean specifying if the billboard size is in meters or pixels.
+ * @property {number} [width] A number specifying the width of the billboard. If undefined, the image width will be used.
+ * @property {number} [height] A number specifying the height of the billboard. If undefined, the image height will be used.
+ * @property {NearFarScalar} [scaleByDistance] A {@link NearFarScalar} Specifying near and far scaling properties of a Billboard based on the billboard's distance from the camera.
+ * @property {NearFarScalar} [translucencyByDistance] A {@link NearFarScalar} Specifying near and far translucency properties of a Billboard based on the billboard's distance from the camera.
+ * @property {NearFarScalar} [pixelOffsetScaleByDistance] A {@link NearFarScalar} Specifying near and far pixel offset scaling properties of a Billboard based on the billboard's distance from the camera.
+ * @property {BoundingRectangle} [imageSubRegion] A {@link BoundingRectangle} Specifying the sub-region of the image to use for the billboard, rather than the entire image.
+ * @property {DistanceDisplayCondition} [distanceDisplayCondition] A {@link DistanceDisplayCondition} Specifying the distance from the camera at which this billboard will be displayed.
+ * @property {number} [disableDepthTestDistance] A number specifying the distance from the camera at which to disable the depth test to, for example, prevent clipping against terrain.
+ * @property {SplitDirection} [splitDirection] A {@link SplitDirection} Specifying the split property of the billboard.
+ */
 
 /**
  * <div class="notice">
@@ -52,6 +86,9 @@ import VerticalOrigin from "./VerticalOrigin.js";
  *
  * @internalConstructor
  * @class
+ *
+ * @param {Billboard.ConstructorOptions} options Object describing initialization options
+ * @param {BillboardCollection} billboardCollection Instance of BillboardCollection
  *
  * @demo {@link https://sandcastle.cesium.com/index.html?src=Billboards.html|Cesium Sandcastle Billboard Demo}
  */
@@ -215,6 +252,11 @@ function Billboard(options, billboardCollection) {
   this._outlineWidth = defaultValue(options.outlineWidth, 0.0);
 
   this._updateClamping();
+
+  this._splitDirection = defaultValue(
+    options.splitDirection,
+    SplitDirection.NONE
+  );
 }
 
 const SHOW_INDEX = (Billboard.SHOW_INDEX = 0);
@@ -235,7 +277,8 @@ const DISTANCE_DISPLAY_CONDITION = (Billboard.DISTANCE_DISPLAY_CONDITION = 14);
 const DISABLE_DEPTH_DISTANCE = (Billboard.DISABLE_DEPTH_DISTANCE = 15);
 Billboard.TEXTURE_COORDINATE_BOUNDS = 16;
 const SDF_INDEX = (Billboard.SDF_INDEX = 17);
-Billboard.NUMBER_OF_PROPERTIES = 18;
+const SPLIT_DIRECTION_INDEX = (Billboard.SPLIT_DIRECTION_INDEX = 18);
+Billboard.NUMBER_OF_PROPERTIES = 19;
 
 function makeDirty(billboard, propertyChanged) {
   const billboardCollection = billboard._billboardCollection;
@@ -857,7 +900,7 @@ Object.defineProperties(Billboard.prototype, {
   /**
    * Gets or sets the user-defined object returned when the billboard is picked.
    * @memberof Billboard.prototype
-   * @type {object}
+   * @type {*}
    */
   id: {
     get: function () {
@@ -1037,6 +1080,24 @@ Object.defineProperties(Billboard.prototype, {
       }
     },
   },
+
+  /**
+   * Gets or sets the {@link SplitDirection} of this billboard.
+   * @memberof Billboard.prototype
+   * @type {SplitDirection}
+   * @default {@link SplitDirection.NONE}
+   */
+  splitDirection: {
+    get: function () {
+      return this._splitDirection;
+    },
+    set: function (value) {
+      if (this._splitDirection !== value) {
+        this._splitDirection = value;
+        makeDirty(this, SPLIT_DIRECTION_INDEX);
+      }
+    },
+  },
 });
 
 Billboard.prototype.getPickId = function (context) {
@@ -1056,24 +1117,20 @@ Billboard.prototype._updateClamping = function () {
 };
 
 const scratchCartographic = new Cartographic();
-const scratchPosition = new Cartesian3();
-
 Billboard._updateClamping = function (collection, owner) {
   const scene = collection._scene;
-  if (!defined(scene) || !defined(scene.globe)) {
+  if (!defined(scene)) {
     //>>includeStart('debug', pragmas.debug);
     if (owner._heightReference !== HeightReference.NONE) {
       throw new DeveloperError(
-        "Height reference is not supported without a scene and globe."
+        "Height reference is not supported without a scene."
       );
     }
     //>>includeEnd('debug');
     return;
   }
 
-  const globe = scene.globe;
-  const ellipsoid = globe.ellipsoid;
-  const surface = globe._surface;
+  const ellipsoid = defaultValue(scene.ellipsoid, Ellipsoid.default);
 
   const mode = scene.frameState.mode;
 
@@ -1096,45 +1153,50 @@ Billboard._updateClamping = function (collection, owner) {
     return;
   }
 
+  if (defined(owner._removeCallbackFunc)) {
+    owner._removeCallbackFunc();
+  }
+
   const position = ellipsoid.cartesianToCartographic(owner._position);
   if (!defined(position)) {
     owner._actualClampedPosition = undefined;
     return;
   }
 
-  if (defined(owner._removeCallbackFunc)) {
-    owner._removeCallbackFunc();
-  }
-
   function updateFunction(clampedPosition) {
-    if (owner._heightReference === HeightReference.RELATIVE_TO_GROUND) {
-      if (owner._mode === SceneMode.SCENE3D) {
-        const clampedCart = ellipsoid.cartesianToCartographic(
-          clampedPosition,
-          scratchCartographic
-        );
-        clampedCart.height += position.height;
-        ellipsoid.cartographicToCartesian(clampedCart, clampedPosition);
-      } else {
-        clampedPosition.x += position.height;
-      }
-    }
-    owner._clampedPosition = Cartesian3.clone(
+    const updatedClampedPosition = ellipsoid.cartographicToCartesian(
       clampedPosition,
       owner._clampedPosition
     );
+
+    if (isHeightReferenceRelative(owner._heightReference)) {
+      if (owner._mode === SceneMode.SCENE3D) {
+        clampedPosition.height += position.height;
+        ellipsoid.cartographicToCartesian(
+          clampedPosition,
+          updatedClampedPosition
+        );
+      } else {
+        updatedClampedPosition.x += position.height;
+      }
+    }
+
+    owner._clampedPosition = updatedClampedPosition;
   }
-  owner._removeCallbackFunc = surface.updateHeight(position, updateFunction);
+
+  owner._removeCallbackFunc = scene.updateHeight(
+    position,
+    updateFunction,
+    owner._heightReference
+  );
 
   Cartographic.clone(position, scratchCartographic);
-  const height = globe.getHeight(position);
+  const height = scene.getHeight(position, owner._heightReference);
   if (defined(height)) {
     scratchCartographic.height = height;
   }
 
-  ellipsoid.cartographicToCartesian(scratchCartographic, scratchPosition);
-
-  updateFunction(scratchPosition);
+  updateFunction(scratchCartographic);
 };
 
 Billboard.prototype._loadImage = function () {
@@ -1166,6 +1228,13 @@ Billboard.prototype._loadImage = function () {
     that._image = undefined;
     that._imageIndexPromise = undefined;
     makeDirty(that, IMAGE_INDEX_INDEX);
+
+    const scene = that._billboardCollection._scene;
+    if (!defined(scene)) {
+      return;
+    }
+    // Request a new render in request render mode
+    scene.frameState.afterRender.push(() => true);
   }
 
   if (defined(image)) {
@@ -1331,7 +1400,10 @@ Billboard._computeActualPosition = function (
   }
 
   Matrix4.multiplyByPoint(modelMatrix, position, tempCartesian3);
-  return SceneTransforms.computeActualWgs84Position(frameState, tempCartesian3);
+  return SceneTransforms.computeActualEllipsoidPosition(
+    frameState,
+    tempCartesian3
+  );
 };
 
 const scratchCartesian3 = new Cartesian3();
@@ -1353,7 +1425,7 @@ Billboard._computeScreenSpacePosition = function (
   );
 
   // World to window coordinates
-  const positionWC = SceneTransforms.wgs84WithEyeOffsetToWindowCoordinates(
+  const positionWC = SceneTransforms.worldWithEyeOffsetToWindowCoordinates(
     scene,
     positionWorld,
     eyeOffset,
@@ -1521,7 +1593,8 @@ Billboard.prototype.equals = function (other) {
         this._distanceDisplayCondition,
         other._distanceDisplayCondition
       ) &&
-      this._disableDepthTestDistance === other._disableDepthTestDistance)
+      this._disableDepthTestDistance === other._disableDepthTestDistance &&
+      this._splitDirection === other._splitDirection)
   );
 };
 

@@ -30,7 +30,7 @@ Generally, just follow the patterns that are already in comparable parts of the 
 
 ## Building the Doc
 
-The reference doc is written in JavaScript code comments using [JSDoc3](http://usejsdoc.org/index.html) tags. At the command line, build the doc from the root CesiumJS directory by running the following:
+The reference doc is written in JavaScript code comments using [JSDoc3](https://jsdoc.app/) tags. At the command line, build the doc from the root CesiumJS directory by running the following:
 
 ```bash
 npm run build-docs
@@ -50,7 +50,7 @@ npm start
 
 ## Basics
 
-Consider one of the simplest functions in CesiumJS, `defined`:
+Consider one of the simplest functions in CesiumJS, [`defined`](../../../packages/engine/Source/Core/defined.js):
 
 ```javascript
 /**
@@ -67,7 +67,7 @@ Consider one of the simplest functions in CesiumJS, `defined`:
  * }
  */
 function defined(value) {
-  return value !== undefined;
+  return value !== undefined && value !== null;
 }
 ```
 
@@ -80,7 +80,7 @@ The above reference doc is built into the following:
 
 ![Documentation for defined](defined.jpg)
 
-This guide describes best practices for writing doc. For complete details on JSDoc tags, see their [documentation](http://usejsdoc.org/index.html).
+This guide describes best practices for writing doc. For complete details on JSDoc tags, see their [documentation](https://jsdoc.app/).
 
 ## Parameters
 
@@ -116,13 +116,14 @@ As a complete example,
  * @param {Matrix4} [result] The object in which the result will be stored, if undefined a new instance will be created.
  * @returns {Matrix4} The modified result parameter, or a new Matrix4 instance if one was not provided.
  */
-Matrix4.fromRotationTranslation = function(rotation, translation, result) {
+Matrix4.fromRotationTranslation = function (rotation, translation, result) {
     // ..
 ```
 
 generates
 
 ![Function Documentation](fromRotationTranslation.jpg)
+
 The CesiumJS classes in the `Type` column are links to their doc.
 
 ## `options` Parameters

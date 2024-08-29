@@ -3,13 +3,12 @@ import {
   Event,
   ExtrapolationType,
   JulianDate,
+  Math as CesiumMath,
   CallbackProperty,
   ConstantPositionProperty,
   SampledPositionProperty,
   VelocityVectorProperty,
 } from "../../index.js";
-
-import { Math as CesiumMath } from "../../index.js";
 
 describe("DataSources/VelocityVectorProperty", function () {
   const time = JulianDate.now();
@@ -242,10 +241,11 @@ describe("DataSources/VelocityVectorProperty", function () {
     expect(left.equals(right)).toBe(true);
   });
 
-  it("getValue throws without time", function () {
+  it("getValue uses JulianDate.now() if time parameter is undefined", function () {
+    spyOn(JulianDate, "now").and.callThrough();
+
     const property = new VelocityVectorProperty();
-    expect(function () {
-      property.getValue();
-    }).toThrowDeveloperError();
+    property.getValue();
+    expect(JulianDate.now).toHaveBeenCalled();
   });
 });

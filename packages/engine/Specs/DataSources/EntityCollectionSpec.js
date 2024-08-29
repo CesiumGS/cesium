@@ -5,7 +5,6 @@ import {
   TimeIntervalCollection,
   Entity,
   EntityCollection,
-  RuntimeError,
 } from "../../index.js";
 
 describe("DataSources/EntityCollection", function () {
@@ -474,7 +473,7 @@ describe("DataSources/EntityCollection", function () {
 
     expect(function () {
       entityCollection.add(entity2);
-    }).toThrowError(RuntimeError);
+    }).toThrowDeveloperError();
   });
 
   it("contains returns true if in collection", function () {

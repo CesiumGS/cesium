@@ -19,7 +19,7 @@ const defaultCredit = new Credit(
  * @property {string} mapId The Mapbox Map ID.
  * @property {string} accessToken The public access token for the imagery.
  * @property {string} [format='png'] The format of the image request.
- * @property {Ellipsoid} [ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
+ * @property {Ellipsoid} [ellipsoid=Ellipsoid.default] The ellipsoid.  If not specified, the default ellipsoid is used.
  * @property {number} [minimumLevel=0] The minimum level-of-detail supported by the imagery provider.  Take care when specifying
  *                 this that the number of tiles at the minimum level is small, such as four or less.  A larger number is likely
  *                 to result in rendering problems.
@@ -43,8 +43,8 @@ const defaultCredit = new Credit(
  *     accessToken: 'thisIsMyAccessToken'
  * });
  *
- * @see {@link https://www.mapbox.com/developers/api/maps/#tiles}
- * @see {@link https://www.mapbox.com/developers/api/#access-tokens}
+ * @see {@link https://docs.mapbox.com/api/maps/raster-tiles/}
+ * @see {@link https://docs.mapbox.com/api/accounts/tokens/}
  */
 function MapboxImageryProvider(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);

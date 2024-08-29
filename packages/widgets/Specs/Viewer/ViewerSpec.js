@@ -534,6 +534,7 @@ describe(
 
       viewer = createViewer(container, {
         imageryProviderViewModels: models,
+        selectedImageryProviderViewModel: models[0],
       });
       await pollToPromise(() => viewer.scene.imageryLayers.get(0).ready);
       expect(viewer.scene.imageryLayers.length).toEqual(1);

@@ -280,7 +280,7 @@ function createDeclutterCallback(entityCluster) {
     const previousHeight = entityCluster._previousHeight;
     const currentHeight = scene.camera.positionCartographic.height;
 
-    const ellipsoid = scene.mapProjection.ellipsoid;
+    const ellipsoid = scene.ellipsoid;
     const cameraPosition = scene.camera.positionWC;
     const occluder = new EllipsoidalOccluder(ellipsoid, cameraPosition);
 
@@ -648,7 +648,7 @@ function createGetEntity(
 
     const unusedIndices = this[unusedIndicesProperty];
     if (unusedIndices.length > 0) {
-      index = unusedIndices.pop();
+      index = unusedIndices.shift();
       entityItem = collection.get(index);
     } else {
       entityItem = collection.add();

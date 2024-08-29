@@ -13,11 +13,13 @@ import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
+import Ellipsoid from "../Core/Ellipsoid.js";
 import EllipsoidGeometry from "../Core/EllipsoidGeometry.js";
 import Event from "../Core/Event.js";
 import GeographicProjection from "../Core/GeographicProjection.js";
 import GeometryInstance from "../Core/GeometryInstance.js";
 import GeometryPipeline from "../Core/GeometryPipeline.js";
+import HeightReference from "./HeightReference.js";
 import Intersect from "../Core/Intersect.js";
 import JulianDate from "../Core/JulianDate.js";
 import CesiumMath from "../Core/Math.js";
@@ -28,6 +30,7 @@ import OrthographicFrustum from "../Core/OrthographicFrustum.js";
 import OrthographicOffCenterFrustum from "../Core/OrthographicOffCenterFrustum.js";
 import PerspectiveFrustum from "../Core/PerspectiveFrustum.js";
 import PerspectiveOffCenterFrustum from "../Core/PerspectiveOffCenterFrustum.js";
+import Rectangle from "../Core/Rectangle.js";
 import RequestScheduler from "../Core/RequestScheduler.js";
 import TaskProcessor from "../Core/TaskProcessor.js";
 import Transforms from "../Core/Transforms.js";
@@ -37,6 +40,7 @@ import Context from "../Renderer/Context.js";
 import ContextLimits from "../Renderer/ContextLimits.js";
 import Pass from "../Renderer/Pass.js";
 import RenderState from "../Renderer/RenderState.js";
+import Atmosphere from "./Atmosphere.js";
 import BrdfLutGenerator from "./BrdfLutGenerator.js";
 import Camera from "./Camera.js";
 import Cesium3DTilePass from "./Cesium3DTilePass.js";
@@ -46,13 +50,13 @@ import DebugCameraPrimitive from "./DebugCameraPrimitive.js";
 import DepthPlane from "./DepthPlane.js";
 import DerivedCommand from "./DerivedCommand.js";
 import DeviceOrientationCameraController from "./DeviceOrientationCameraController.js";
+import DynamicAtmosphereLightingType from "./DynamicAtmosphereLightingType.js";
 import Fog from "./Fog.js";
 import FrameState from "./FrameState.js";
 import GlobeTranslucencyState from "./GlobeTranslucencyState.js";
 import InvertClassification from "./InvertClassification.js";
 import JobScheduler from "./JobScheduler.js";
 import MapMode2D from "./MapMode2D.js";
-import OctahedralProjectedCubeMap from "./OctahedralProjectedCubeMap.js";
 import PerformanceDisplay from "./PerformanceDisplay.js";
 import PerInstanceColorAppearance from "./PerInstanceColorAppearance.js";
 import Picking from "./Picking.js";
@@ -64,12 +68,15 @@ import SceneTransforms from "./SceneTransforms.js";
 import SceneTransitioner from "./SceneTransitioner.js";
 import ScreenSpaceCameraController from "./ScreenSpaceCameraController.js";
 import ShadowMap from "./ShadowMap.js";
+import SpecularEnvironmentCubeMap from "./SpecularEnvironmentCubeMap.js";
 import StencilConstants from "./StencilConstants.js";
 import SunLight from "./SunLight.js";
 import SunPostProcess from "./SunPostProcess.js";
 import TweenCollection from "./TweenCollection.js";
 import View from "./View.js";
 import DebugInspector from "./DebugInspector.js";
+import VoxelCell from "./VoxelCell.js";
+import VoxelPrimitive from "./VoxelPrimitive.js";
 
 const requestRenderAfterFrame = function (scene) {
   return function () {
@@ -91,7 +98,8 @@ const requestRenderAfterFrame = function (scene) {
  * @param {ContextOptions} [options.contextOptions] Context and WebGL creation properties.
  * @param {Element} [options.creditContainer] The HTML element in which the credits will be displayed.
  * @param {Element} [options.creditViewport] The HTML element in which to display the credit popup.  If not specified, the viewport will be a added as a sibling of the canvas.
- * @param {MapProjection} [options.mapProjection=new GeographicProjection()] The map projection to use in 2D and Columbus View modes.
+ * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.default] The default ellipsoid. If not specified, the default ellipsoid is used.
+ * @param {MapProjection} [options.mapProjection=new GeographicProjection(options.ellipsoid)] The map projection to use in 2D and Columbus View modes.
  * @param {boolean} [options.orderIndependentTranslucency=true] If true and the configuration supports it, use order independent translucency.
  * @param {boolean} [options.scene3DOnly=false] If true, optimizes memory use and performance for 3D mode but disables the ability to use 2D or Columbus View.
  * @param {boolean} [options.shadows=false] Determines if shadows are cast by light sources.
@@ -99,7 +107,7 @@ const requestRenderAfterFrame = function (scene) {
  * @param {boolean} [options.requestRenderMode=false] If true, rendering a frame will only occur when needed as determined by changes within the scene. Enabling improves performance of the application, but requires using {@link Scene#requestRender} to render a new frame explicitly in this mode. This will be necessary in many cases after making changes to the scene in other parts of the API. See {@link https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/|Improving Performance with Explicit Rendering}.
  * @param {number} [options.maximumRenderTimeChange=0.0] If requestRenderMode is true, this value defines the maximum change in simulation time allowed before a render is requested. See {@link https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/|Improving Performance with Explicit Rendering}.
  * @param {number} [options.depthPlaneEllipsoidOffset=0.0] Adjust the DepthPlane to address rendering artefacts below ellipsoid zero elevation.
- * @param {number} [options.msaaSamples=1] If provided, this value controls the rate of multisample antialiasing. Typical multisampling rates are 2, 4, and sometimes 8 samples per pixel. Higher sampling rates of MSAA may impact performance in exchange for improved visual quality. This value only applies to WebGL2 contexts that support multisample render targets.
+ * @param {number} [options.msaaSamples=4] If provided, this value controls the rate of multisample antialiasing. Typical multisampling rates are 2, 4, and sometimes 8 samples per pixel. Higher sampling rates of MSAA may impact performance in exchange for improved visual quality. This value only applies to WebGL2 contexts that support multisample render targets. Set to 1 to disable MSAA.
  *
  * @see CesiumWidget
  * @see {@link http://www.khronos.org/registry/webgl/specs/latest/#5.2|WebGLContextAttributes}
@@ -148,7 +156,7 @@ function Scene(options) {
   this._jobScheduler = new JobScheduler();
   this._frameState = new FrameState(
     context,
-    new CreditDisplay(creditContainer, " • ", creditViewport),
+    new CreditDisplay(creditContainer, "•", creditViewport),
     this._jobScheduler
   );
   this._frameState.scene3DOnly = defaultValue(options.scene3DOnly, false);
@@ -158,15 +166,19 @@ function Scene(options) {
   this._canvas = canvas;
   this._context = context;
   this._computeEngine = new ComputeEngine(context);
+
+  this._ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.default);
   this._globe = undefined;
   this._globeTranslucencyState = new GlobeTranslucencyState();
   this._primitives = new PrimitiveCollection();
   this._groundPrimitives = new PrimitiveCollection();
 
   this._globeHeight = undefined;
+  this._globeHeightDirty = true;
   this._cameraUnderground = false;
+  this._removeUpdateHeightCallback = undefined;
 
-  this._logDepthBuffer = context.fragmentDepth;
+  this._logDepthBuffer = Scene.defaultLogDepthBuffer && context.fragmentDepth;
   this._logDepthBufferDirty = true;
 
   this._tweens = new TweenCollection();
@@ -216,7 +228,7 @@ function Scene(options) {
   this._minimumDisableDepthTestDistance = 0.0;
   this._debugInspector = new DebugInspector();
 
-  this._msaaSamples = defaultValue(options.msaaSamples, 1);
+  this._msaaSamples = defaultValue(options.msaaSamples, 4);
 
   /**
    * Exceptions occurring in <code>render</code> are always caught in order to raise the
@@ -309,7 +321,7 @@ function Scene(options) {
 
   this._mapProjection = defined(options.mapProjection)
     ? options.mapProjection
-    : new GeographicProjection();
+    : new GeographicProjection(this._ellipsoid);
 
   /**
    * The current morph transition time between 2D/Columbus View and 3D,
@@ -355,6 +367,24 @@ function Scene(options) {
    * @default 1.75e6
    */
   this.nearToFarDistance2D = 1.75e6;
+
+  /**
+   * The vertical exaggeration of the scene.
+   * When set to 1.0, no exaggeration is applied.
+   *
+   * @type {number}
+   * @default 1.0
+   */
+  this.verticalExaggeration = 1.0;
+
+  /**
+   * The reference height for vertical exaggeration of the scene.
+   * When set to 0.0, the exaggeration is applied relative to the ellipsoid surface.
+   *
+   * @type {number}
+   * @default 0.0
+   */
+  this.verticalExaggerationRelativeHeight = 0.0;
 
   /**
    * This property is for debugging only; it is not for production use.
@@ -495,11 +525,31 @@ function Scene(options) {
   this.cameraEventWaitTime = 500.0;
 
   /**
+   * Settings for atmosphere lighting effects affecting 3D Tiles and model rendering. This is not to be confused with
+   * {@link Scene#skyAtmosphere} which is responsible for rendering the sky.
+   *
+   * @type {Atmosphere}
+   */
+  this.atmosphere = new Atmosphere();
+
+  /**
    * Blends the atmosphere to geometry far from the camera for horizon views. Allows for additional
    * performance improvements by rendering less geometry and dispatching less terrain requests.
+   *
+   * Disbaled by default if an ellipsoid other than WGS84 is used.
    * @type {Fog}
    */
   this.fog = new Fog();
+  this.fog.enabled = Ellipsoid.WGS84.equals(this._ellipsoid);
+
+  if (!Ellipsoid.WGS84.equals(this._ellipsoid)) {
+    Camera.DEFAULT_VIEW_RECTANGLE = Rectangle.fromDegrees(
+      -45.0,
+      -45.0,
+      45.0,
+      45.0
+    );
+  }
 
   this._shadowMapCamera = new Camera(this);
 
@@ -688,7 +738,7 @@ function Scene(options) {
    * @type {string}
    */
   this.specularEnvironmentMaps = undefined;
-  this._specularEnvironmentMapAtlas = undefined;
+  this._specularEnvironmentCubeMap = undefined;
 
   /**
    * The light source for shading. Defaults to a directional light from the Sun.
@@ -701,6 +751,12 @@ function Scene(options) {
   this.updateFrameState();
   this.initializeFrame();
 }
+
+/**
+ * Use this to set the default value for {@link Scene#logarithmicDepthBuffer} in newly constructed Scenes
+ * This property relies on fragmentDepth being supported.
+ */
+Scene.defaultLogDepthBuffer = true;
 
 function updateGlobeListeners(scene, globe) {
   for (let i = 0; i < scene._removeGlobeCallbacks.length; ++i) {
@@ -871,7 +927,20 @@ Object.defineProperties(Scene.prototype, {
    */
   specularEnvironmentMapsSupported: {
     get: function () {
-      return OctahedralProjectedCubeMap.isSupported(this._context);
+      return SpecularEnvironmentCubeMap.isSupported(this._context);
+    },
+  },
+
+  /**
+   * The ellipsoid.  If not specified, the default ellipsoid is used.
+   * @memberof Scene.prototype
+   *
+   * @type {Ellipsoid}
+   * @readonly
+   */
+  ellipsoid: {
+    get: function () {
+      return this._ellipsoid;
     },
   },
 
@@ -1814,7 +1883,7 @@ function getOccluder(scene) {
     !scene._cameraUnderground &&
     !scene._globeTranslucencyState.translucent
   ) {
-    const ellipsoid = globe.ellipsoid;
+    const ellipsoid = scene.ellipsoid;
     const minimumTerrainHeight = scene.frameState.minimumTerrainHeight;
     scratchOccluderBoundingSphere.radius =
       ellipsoid.minimumRadius + minimumTerrainHeight;
@@ -1831,10 +1900,12 @@ function getOccluder(scene) {
 
 /**
  * @private
+ * @param {FrameState.Passes} passes
  */
 Scene.prototype.clearPasses = function (passes) {
   passes.render = false;
   passes.pick = false;
+  passes.pickVoxel = false;
   passes.depth = false;
   passes.postProcess = false;
   passes.offscreen = false;
@@ -1880,17 +1951,24 @@ Scene.prototype.updateFrameState = function () {
   frameState.cameraUnderground = this._cameraUnderground;
   frameState.globeTranslucencyState = this._globeTranslucencyState;
 
-  if (defined(this.globe)) {
-    frameState.terrainExaggeration = this.globe.terrainExaggeration;
-    frameState.terrainExaggerationRelativeHeight = this.globe.terrainExaggerationRelativeHeight;
+  const { globe } = this;
+  if (defined(globe) && globe._terrainExaggerationChanged) {
+    // Honor a user-set value for the old deprecated globe.terrainExaggeration.
+    // This can be removed when Globe.terrainExaggeration is removed.
+    this.verticalExaggeration = globe._terrainExaggeration;
+    this.verticalExaggerationRelativeHeight =
+      globe._terrainExaggerationRelativeHeight;
+    globe._terrainExaggerationChanged = false;
   }
+  frameState.verticalExaggeration = this.verticalExaggeration;
+  frameState.verticalExaggerationRelativeHeight = this.verticalExaggerationRelativeHeight;
 
   if (
-    defined(this._specularEnvironmentMapAtlas) &&
-    this._specularEnvironmentMapAtlas.ready
+    defined(this._specularEnvironmentCubeMap) &&
+    this._specularEnvironmentCubeMap.ready
   ) {
-    frameState.specularEnvironmentMaps = this._specularEnvironmentMapAtlas.texture;
-    frameState.specularEnvironmentMapsMaximumLOD = this._specularEnvironmentMapAtlas.maximumMipmapLevel;
+    frameState.specularEnvironmentMaps = this._specularEnvironmentCubeMap.texture;
+    frameState.specularEnvironmentMapsMaximumLOD = this._specularEnvironmentCubeMap.maximumMipmapLevel;
   } else {
     frameState.specularEnvironmentMaps = undefined;
     frameState.specularEnvironmentMapsMaximumLOD = undefined;
@@ -2086,6 +2164,7 @@ function executeCommand(command, scene, context, passState, debugFramebuffer) {
   const passes = frameState.passes;
   if (
     !passes.pick &&
+    !passes.pickVoxel &&
     !passes.depth &&
     scene._hdr &&
     defined(command.derivedCommands) &&
@@ -2239,12 +2318,10 @@ const scratchOrthographicFrustum = new OrthographicFrustum();
 const scratchOrthographicOffCenterFrustum = new OrthographicOffCenterFrustum();
 
 function executeCommands(scene, passState) {
-  const camera = scene.camera;
-  const context = scene.context;
-  const frameState = scene.frameState;
-  const us = context.uniformState;
+  const { camera, context, frameState } = scene;
+  const { uniformState } = context;
 
-  us.updateCamera(camera);
+  uniformState.updateCamera(camera);
 
   // Create a working frustum from the original camera frustum.
   let frustum;
@@ -2262,11 +2339,11 @@ function executeCommands(scene, passState) {
   // early-z, but we would have to draw it in each frustum
   frustum.near = camera.frustum.near;
   frustum.far = camera.frustum.far;
-  us.updateFrustum(frustum);
-  us.updatePass(Pass.ENVIRONMENT);
+  uniformState.updateFrustum(frustum);
+  uniformState.updatePass(Pass.ENVIRONMENT);
 
   const passes = frameState.passes;
-  const picking = passes.pick;
+  const picking = passes.pick || passes.pickVoxel;
   const environmentState = scene._environmentState;
   const view = scene._view;
   const renderTranslucentDepthForPick =
@@ -2368,8 +2445,8 @@ function executeCommands(scene, passState) {
       camera.position.z = height2D - frustumCommands.near + 1.0;
       frustum.far = Math.max(1.0, frustumCommands.far - frustumCommands.near);
       frustum.near = 1.0;
-      us.update(frameState);
-      us.updateFrustum(frustum);
+      uniformState.update(frameState);
+      uniformState.updateFrustum(frustum);
     } else {
       // Avoid tearing artifacts between adjacent frustums in the opaque passes
       frustum.near =
@@ -2377,7 +2454,7 @@ function executeCommands(scene, passState) {
           ? frustumCommands.near * scene.opaqueFrustumNearOffset
           : frustumCommands.near;
       frustum.far = frustumCommands.far;
-      us.updateFrustum(frustum);
+      uniformState.updateFrustum(frustum);
     }
 
     clearDepth.execute(context, passState);
@@ -2386,7 +2463,7 @@ function executeCommands(scene, passState) {
       clearStencil.execute(context, passState);
     }
 
-    us.updatePass(Pass.GLOBE);
+    uniformState.updatePass(Pass.GLOBE);
     let commands = frustumCommands.commands[Pass.GLOBE];
     let length = frustumCommands.indices[Pass.GLOBE];
 
@@ -2411,7 +2488,7 @@ function executeCommands(scene, passState) {
 
     // Draw terrain classification
     if (!environmentState.renderTranslucentDepthForPick) {
-      us.updatePass(Pass.TERRAIN_CLASSIFICATION);
+      uniformState.updatePass(Pass.TERRAIN_CLASSIFICATION);
       commands = frustumCommands.commands[Pass.TERRAIN_CLASSIFICATION];
       length = frustumCommands.indices[Pass.TERRAIN_CLASSIFICATION];
 
@@ -2445,7 +2522,7 @@ function executeCommands(scene, passState) {
       // Common/fastest path. Draw 3D Tiles and classification normally.
 
       // Draw 3D Tiles
-      us.updatePass(Pass.CESIUM_3D_TILE);
+      uniformState.updatePass(Pass.CESIUM_3D_TILE);
       commands = frustumCommands.commands[Pass.CESIUM_3D_TILE];
       length = frustumCommands.indices[Pass.CESIUM_3D_TILE];
       for (j = 0; j < length; ++j) {
@@ -2467,7 +2544,7 @@ function executeCommands(scene, passState) {
 
         // Draw classifications. Modifies 3D Tiles color.
         if (!environmentState.renderTranslucentDepthForPick) {
-          us.updatePass(Pass.CESIUM_3D_TILE_CLASSIFICATION);
+          uniformState.updatePass(Pass.CESIUM_3D_TILE_CLASSIFICATION);
           commands =
             frustumCommands.commands[Pass.CESIUM_3D_TILE_CLASSIFICATION];
           length = frustumCommands.indices[Pass.CESIUM_3D_TILE_CLASSIFICATION];
@@ -2515,7 +2592,7 @@ function executeCommands(scene, passState) {
       passState.framebuffer = scene._invertClassification._fbo.framebuffer;
 
       // Draw normally
-      us.updatePass(Pass.CESIUM_3D_TILE);
+      uniformState.updatePass(Pass.CESIUM_3D_TILE);
       commands = frustumCommands.commands[Pass.CESIUM_3D_TILE];
       length = frustumCommands.indices[Pass.CESIUM_3D_TILE];
       for (j = 0; j < length; ++j) {
@@ -2533,7 +2610,7 @@ function executeCommands(scene, passState) {
       }
 
       // Set stencil
-      us.updatePass(Pass.CESIUM_3D_TILE_CLASSIFICATION_IGNORE_SHOW);
+      uniformState.updatePass(Pass.CESIUM_3D_TILE_CLASSIFICATION_IGNORE_SHOW);
       commands =
         frustumCommands.commands[
           Pass.CESIUM_3D_TILE_CLASSIFICATION_IGNORE_SHOW
@@ -2559,7 +2636,7 @@ function executeCommands(scene, passState) {
       }
 
       // Draw style over classification.
-      us.updatePass(Pass.CESIUM_3D_TILE_CLASSIFICATION);
+      uniformState.updatePass(Pass.CESIUM_3D_TILE_CLASSIFICATION);
       commands = frustumCommands.commands[Pass.CESIUM_3D_TILE_CLASSIFICATION];
       length = frustumCommands.indices[Pass.CESIUM_3D_TILE_CLASSIFICATION];
       for (j = 0; j < length; ++j) {
@@ -2571,13 +2648,13 @@ function executeCommands(scene, passState) {
       clearStencil.execute(context, passState);
     }
 
-    us.updatePass(Pass.VOXELS);
+    uniformState.updatePass(Pass.VOXELS);
     commands = frustumCommands.commands[Pass.VOXELS];
     length = frustumCommands.indices[Pass.VOXELS];
     commands.length = length;
     executeVoxelCommands(scene, executeCommand, passState, commands);
 
-    us.updatePass(Pass.OPAQUE);
+    uniformState.updatePass(Pass.OPAQUE);
     commands = frustumCommands.commands[Pass.OPAQUE];
     length = frustumCommands.indices[Pass.OPAQUE];
     for (j = 0; j < length; ++j) {
@@ -2587,7 +2664,7 @@ function executeCommands(scene, passState) {
     if (index !== 0 && scene.mode !== SceneMode.SCENE2D) {
       // Do not overlap frustums in the translucent pass to avoid blending artifacts
       frustum.near = frustumCommands.near;
-      us.updateFrustum(frustum);
+      uniformState.updateFrustum(frustum);
     }
 
     let invertClassification;
@@ -2601,7 +2678,7 @@ function executeCommands(scene, passState) {
       invertClassification = scene._invertClassification;
     }
 
-    us.updatePass(Pass.TRANSLUCENT);
+    uniformState.updatePass(Pass.TRANSLUCENT);
     commands = frustumCommands.commands[Pass.TRANSLUCENT];
     commands.length = frustumCommands.indices[Pass.TRANSLUCENT];
     executeTranslucentCommands(
@@ -2660,9 +2737,9 @@ function executeCommands(scene, passState) {
         ? frustumCommands.near * scene.opaqueFrustumNearOffset
         : frustumCommands.near;
     frustum.far = frustumCommands.far;
-    us.updateFrustum(frustum);
+    uniformState.updateFrustum(frustum);
 
-    us.updatePass(Pass.GLOBE);
+    uniformState.updatePass(Pass.GLOBE);
     commands = frustumCommands.commands[Pass.GLOBE];
     length = frustumCommands.indices[Pass.GLOBE];
 
@@ -2690,21 +2767,21 @@ function executeCommands(scene, passState) {
       depthPlane.execute(context, passState);
     }
 
-    us.updatePass(Pass.CESIUM_3D_TILE);
+    uniformState.updatePass(Pass.CESIUM_3D_TILE);
     commands = frustumCommands.commands[Pass.CESIUM_3D_TILE];
     length = frustumCommands.indices[Pass.CESIUM_3D_TILE];
     for (j = 0; j < length; ++j) {
       executeIdCommand(commands[j], scene, context, passState);
     }
 
-    us.updatePass(Pass.OPAQUE);
+    uniformState.updatePass(Pass.OPAQUE);
     commands = frustumCommands.commands[Pass.OPAQUE];
     length = frustumCommands.indices[Pass.OPAQUE];
     for (j = 0; j < length; ++j) {
       executeIdCommand(commands[j], scene, context, passState);
     }
 
-    us.updatePass(Pass.TRANSLUCENT);
+    uniformState.updatePass(Pass.TRANSLUCENT);
     commands = frustumCommands.commands[Pass.TRANSLUCENT];
     length = frustumCommands.indices[Pass.TRANSLUCENT];
     for (j = 0; j < length; ++j) {
@@ -3142,6 +3219,7 @@ Scene.prototype.updateEnvironment = function () {
   const environmentState = this._environmentState;
   const renderPass = frameState.passes.render;
   const offscreenPass = frameState.passes.offscreen;
+  const atmosphere = this.atmosphere;
   const skyAtmosphere = this.skyAtmosphere;
   const globe = this.globe;
   const globeTranslucencyState = this._globeTranslucencyState;
@@ -3160,14 +3238,19 @@ Scene.prototype.updateEnvironment = function () {
   } else {
     if (defined(skyAtmosphere)) {
       if (defined(globe)) {
-        skyAtmosphere.setDynamicAtmosphereColor(
-          globe.enableLighting && globe.dynamicAtmosphereLighting,
-          globe.dynamicAtmosphereLightingFromSun
+        skyAtmosphere.setDynamicLighting(
+          DynamicAtmosphereLightingType.fromGlobeFlags(globe)
         );
         environmentState.isReadyForAtmosphere =
           environmentState.isReadyForAtmosphere ||
+          !globe.show ||
           globe._surface._tilesToRender.length > 0;
+      } else {
+        const dynamicLighting = atmosphere.dynamicLighting;
+        skyAtmosphere.setDynamicLighting(dynamicLighting);
+        environmentState.isReadyForAtmosphere = true;
       }
+
       environmentState.skyAtmosphereCommand = skyAtmosphere.update(
         frameState,
         globe
@@ -3245,20 +3328,18 @@ Scene.prototype.updateEnvironment = function () {
   );
 
   const envMaps = this.specularEnvironmentMaps;
-  let envMapAtlas = this._specularEnvironmentMapAtlas;
-  if (
-    defined(envMaps) &&
-    (!defined(envMapAtlas) || envMapAtlas.url !== envMaps)
-  ) {
-    envMapAtlas = envMapAtlas && envMapAtlas.destroy();
-    this._specularEnvironmentMapAtlas = new OctahedralProjectedCubeMap(envMaps);
-  } else if (!defined(envMaps) && defined(envMapAtlas)) {
-    envMapAtlas.destroy();
-    this._specularEnvironmentMapAtlas = undefined;
+  let specularEnvironmentCubeMap = this._specularEnvironmentCubeMap;
+  if (defined(envMaps) && specularEnvironmentCubeMap?.url !== envMaps) {
+    specularEnvironmentCubeMap =
+      specularEnvironmentCubeMap && specularEnvironmentCubeMap.destroy();
+    this._specularEnvironmentCubeMap = new SpecularEnvironmentCubeMap(envMaps);
+  } else if (!defined(envMaps) && defined(specularEnvironmentCubeMap)) {
+    specularEnvironmentCubeMap.destroy();
+    this._specularEnvironmentCubeMap = undefined;
   }
 
-  if (defined(this._specularEnvironmentMapAtlas)) {
-    this._specularEnvironmentMapAtlas.update(frameState);
+  if (defined(this._specularEnvironmentCubeMap)) {
+    this._specularEnvironmentCubeMap.update(frameState);
   }
 };
 
@@ -3289,7 +3370,10 @@ function updateShadowMaps(scene) {
   const length = shadowMaps.length;
 
   const shadowsEnabled =
-    length > 0 && !frameState.passes.pick && scene.mode === SceneMode.SCENE3D;
+    length > 0 &&
+    !frameState.passes.pick &&
+    !frameState.passes.pickVoxel &&
+    scene.mode === SceneMode.SCENE3D;
   if (shadowsEnabled !== frameState.shadowState.shadowsEnabled) {
     // Update derived commands when shadowsEnabled changes
     ++frameState.shadowState.lastDirtyTime;
@@ -3353,7 +3437,7 @@ function updateAndClearFramebuffers(scene, passState, clearColor) {
   const view = scene._view;
 
   const passes = scene._frameState.passes;
-  const picking = passes.pick;
+  const picking = passes.pick || passes.pickVoxel;
   if (defined(view.globeDepth)) {
     view.globeDepth.picking = picking;
   }
@@ -3573,19 +3657,179 @@ function callAfterRenderFunctions(scene) {
 }
 
 function getGlobeHeight(scene) {
-  const globe = scene._globe;
+  if (scene.mode === SceneMode.MORPHING) {
+    return;
+  }
+
   const camera = scene.camera;
   const cartographic = camera.positionCartographic;
-  if (defined(globe) && globe.show && defined(cartographic)) {
-    return globe.getHeight(cartographic);
-  }
-  return undefined;
+  return scene.getHeight(cartographic);
 }
+
+/**
+ * Gets the height of the loaded surface at the cartographic position.
+ * @param {Cartographic} cartographic The cartographic position.
+ * @param {HeightReference} [heightReference=CLAMP_TO_GROUND] Based on the height reference value, determines whether to ignore heights from 3D Tiles or terrain.
+ * @private
+ */
+Scene.prototype.getHeight = function (cartographic, heightReference) {
+  if (!defined(cartographic)) {
+    return undefined;
+  }
+
+  const ignore3dTiles =
+    heightReference === HeightReference.CLAMP_TO_TERRAIN ||
+    heightReference === HeightReference.RELATIVE_TO_TERRAIN;
+
+  const ignoreTerrain =
+    heightReference === HeightReference.CLAMP_TO_3D_TILE ||
+    heightReference === HeightReference.RELATIVE_TO_3D_TILE;
+
+  if (!defined(cartographic)) {
+    return;
+  }
+
+  let maxHeight = Number.NEGATIVE_INFINITY;
+
+  if (!ignore3dTiles) {
+    const length = this.primitives.length;
+    for (let i = 0; i < length; ++i) {
+      const primitive = this.primitives.get(i);
+      if (
+        !primitive.isCesium3DTileset ||
+        !primitive.show ||
+        !primitive.enableCollision
+      ) {
+        continue;
+      }
+
+      const result = primitive.getHeight(cartographic, this);
+      if (defined(result) && result > maxHeight) {
+        maxHeight = result;
+      }
+    }
+  }
+
+  const globe = this._globe;
+  if (!ignoreTerrain && defined(globe) && globe.show) {
+    const result = globe.getHeight(cartographic);
+    if (result > maxHeight) {
+      maxHeight = result;
+    }
+  }
+
+  if (maxHeight > Number.NEGATIVE_INFINITY) {
+    return maxHeight;
+  }
+
+  return undefined;
+};
+
+const updateHeightScratchCartographic = new Cartographic();
+/**
+ * Calls the callback when a new tile is rendered that contains the given cartographic. The only parameter
+ * is the cartesian position on the tile.
+ *
+ * @private
+ *
+ * @param {Cartographic} cartographic The cartographic position.
+ * @param {Function} callback The function to be called when a new tile is loaded containing the updated cartographic.
+ * @param {HeightReference} [heightReference=CLAMP_TO_GROUND] Based on the height reference value, determines whether to ignore heights from 3D Tiles or terrain.
+ * @returns {Function} The function to remove this callback from the quadtree.
+ */
+Scene.prototype.updateHeight = function (
+  cartographic,
+  callback,
+  heightReference
+) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.func("callback", callback);
+  //>>includeEnd('debug');
+
+  const callbackWrapper = () => {
+    Cartographic.clone(cartographic, updateHeightScratchCartographic);
+
+    const height = this.getHeight(cartographic, heightReference);
+    if (defined(height)) {
+      updateHeightScratchCartographic.height = height;
+      callback(updateHeightScratchCartographic);
+    }
+  };
+
+  const ignore3dTiles =
+    heightReference === HeightReference.CLAMP_TO_TERRAIN ||
+    heightReference === HeightReference.RELATIVE_TO_TERRAIN;
+
+  const ignoreTerrain =
+    heightReference === HeightReference.CLAMP_TO_3D_TILE ||
+    heightReference === HeightReference.RELATIVE_TO_3D_TILE;
+
+  let terrainRemoveCallback;
+  if (!ignoreTerrain && defined(this.globe)) {
+    terrainRemoveCallback = this.globe._surface.updateHeight(
+      cartographic,
+      callbackWrapper
+    );
+  }
+
+  let tilesetRemoveCallbacks = {};
+  const ellipsoid = this._ellipsoid;
+  const createPrimitiveEventListener = (primitive) => {
+    if (
+      ignore3dTiles ||
+      primitive.isDestroyed() ||
+      !primitive.isCesium3DTileset
+    ) {
+      return;
+    }
+
+    const tilesetRemoveCallback = primitive.updateHeight(
+      cartographic,
+      callbackWrapper,
+      ellipsoid
+    );
+    tilesetRemoveCallbacks[primitive.id] = tilesetRemoveCallback;
+  };
+
+  if (!ignore3dTiles) {
+    const length = this.primitives.length;
+    for (let i = 0; i < length; ++i) {
+      const primitive = this.primitives.get(i);
+      createPrimitiveEventListener(primitive);
+    }
+  }
+
+  const removeAddedListener = this.primitives.primitiveAdded.addEventListener(
+    createPrimitiveEventListener
+  );
+  const removeRemovedListener = this.primitives.primitiveRemoved.addEventListener(
+    (primitive) => {
+      if (primitive.isDestroyed() || !primitive.isCesium3DTileset) {
+        return;
+      }
+      if (defined(tilesetRemoveCallbacks[primitive.id])) {
+        tilesetRemoveCallbacks[primitive.id]();
+      }
+      delete tilesetRemoveCallbacks[primitive.id];
+    }
+  );
+
+  const removeCallback = () => {
+    terrainRemoveCallback = terrainRemoveCallback && terrainRemoveCallback();
+    Object.values(tilesetRemoveCallbacks).forEach((tilesetRemoveCallback) =>
+      tilesetRemoveCallback()
+    );
+    tilesetRemoveCallbacks = {};
+    removeAddedListener();
+    removeRemovedListener();
+  };
+
+  return removeCallback;
+};
 
 function isCameraUnderground(scene) {
   const camera = scene.camera;
   const mode = scene._mode;
-  const globe = scene.globe;
   const cameraController = scene._screenSpaceCameraController;
   const cartographic = camera.positionCartographic;
 
@@ -3599,12 +3843,7 @@ function isCameraUnderground(scene) {
     return true;
   }
 
-  if (
-    !defined(globe) ||
-    !globe.show ||
-    mode === SceneMode.SCENE2D ||
-    mode === SceneMode.MORPHING
-  ) {
+  if (mode === SceneMode.SCENE2D || mode === SceneMode.MORPHING) {
     return false;
   }
 
@@ -3625,7 +3864,27 @@ Scene.prototype.initializeFrame = function () {
 
   this._tweens.update();
 
-  this._globeHeight = getGlobeHeight(this);
+  if (this._globeHeightDirty) {
+    if (defined(this._removeUpdateHeightCallback)) {
+      this._removeUpdateHeightCallback();
+      this._removeUpdateHeightCallback = undefined;
+    }
+
+    this._globeHeight = getGlobeHeight(this);
+    this._globeHeightDirty = false;
+
+    const cartographic = this.camera.positionCartographic;
+    this._removeUpdateHeightCallback = this.updateHeight(
+      cartographic,
+      (updatedCartographic) => {
+        if (this.isDestroyed()) {
+          return;
+        }
+
+        this._globeHeight = updatedCartographic.height;
+      }
+    );
+  }
   this._cameraUnderground = isCameraUnderground(this);
   this._globeTranslucencyState.update(this);
 
@@ -3712,6 +3971,7 @@ function render(scene) {
   }
   frameState.backgroundColor = backgroundColor;
 
+  frameState.atmosphere = scene.atmosphere;
   scene.fog.update(frameState);
 
   us.update(frameState);
@@ -3800,8 +4060,12 @@ Scene.prototype.render = function (time) {
     time = JulianDate.now();
   }
 
-  // Determine if shouldRender
   const cameraChanged = this._view.checkForCameraUpdates(this);
+  if (cameraChanged) {
+    this._globeHeightDirty = true;
+  }
+
+  // Determine if should render a new frame in request render mode
   let shouldRender =
     !this.requestRenderMode ||
     this._renderRequested ||
@@ -3933,6 +4197,59 @@ Scene.prototype.clampLineWidth = function (width) {
  */
 Scene.prototype.pick = function (windowPosition, width, height) {
   return this._picking.pick(this, windowPosition, width, height);
+};
+
+/**
+ * Returns a {@link VoxelCell} for the voxel sample rendered at a particular window coordinate,
+ * or undefined if no voxel is rendered at that position.
+ *
+ * @example
+ * On left click, report the value of the "color" property at that voxel sample.
+ * handler.setInputAction(function(movement) {
+ *   const voxelCell = scene.pickVoxel(movement.position);
+ *   if (defined(voxelCell)) {
+ *     console.log(voxelCell.getProperty("color"));
+ *   }
+ * }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+ *
+ * @param {Cartesian2} windowPosition Window coordinates to perform picking on.
+ * @param {number} [width=3] Width of the pick rectangle.
+ * @param {number} [height=3] Height of the pick rectangle.
+ * @returns {VoxelCell|undefined} Information about the voxel cell rendered at the picked position.
+ *
+ * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
+ */
+Scene.prototype.pickVoxel = function (windowPosition, width, height) {
+  const pickedObject = this.pick(windowPosition, width, height);
+  if (!defined(pickedObject)) {
+    return;
+  }
+  const voxelPrimitive = pickedObject.primitive;
+  if (!(voxelPrimitive instanceof VoxelPrimitive)) {
+    return;
+  }
+  const voxelCoordinate = this._picking.pickVoxelCoordinate(
+    this,
+    windowPosition,
+    width,
+    height
+  );
+  // Look up the keyframeNode containing this picked cell
+  const tileIndex = 255 * voxelCoordinate[0] + voxelCoordinate[1];
+  const keyframeNode = voxelPrimitive._traversal.findKeyframeNode(tileIndex);
+  if (!defined(keyframeNode)) {
+    // The tile rendered at the pick position has since been discarded by
+    // a traversal update
+    return;
+  }
+  // Look up the metadata for the picked cell
+  const sampleIndex = 255 * voxelCoordinate[2] + voxelCoordinate[3];
+  return VoxelCell.fromKeyframeNode(
+    voxelPrimitive,
+    tileIndex,
+    sampleIndex,
+    keyframeNode
+  );
 };
 
 /**
@@ -4318,7 +4635,6 @@ Scene.prototype.clampToHeightMostDetailed = function (
  * @example
  * // Output the canvas position of longitude/latitude (0, 0) every time the mouse moves.
  * const scene = widget.scene;
- * const ellipsoid = scene.globe.ellipsoid;
  * const position = Cesium.Cartesian3.fromDegrees(0.0, 0.0);
  * const handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
  * handler.setInputAction(function(movement) {
@@ -4326,7 +4642,7 @@ Scene.prototype.clampToHeightMostDetailed = function (
  * }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
  */
 Scene.prototype.cartesianToCanvasCoordinates = function (position, result) {
-  return SceneTransforms.wgs84ToWindowCoordinates(this, position, result);
+  return SceneTransforms.worldToWindowCoordinates(this, position, result);
 };
 
 /**
@@ -4341,15 +4657,8 @@ Scene.prototype.completeMorph = function () {
  * @param {number} [duration=2.0] The amount of time, in seconds, for transition animations to complete.
  */
 Scene.prototype.morphTo2D = function (duration) {
-  let ellipsoid;
-  const globe = this.globe;
-  if (defined(globe)) {
-    ellipsoid = globe.ellipsoid;
-  } else {
-    ellipsoid = this.mapProjection.ellipsoid;
-  }
   duration = defaultValue(duration, 2.0);
-  this._transitioner.morphTo2D(duration, ellipsoid);
+  this._transitioner.morphTo2D(duration, this._ellipsoid);
 };
 
 /**
@@ -4357,15 +4666,8 @@ Scene.prototype.morphTo2D = function (duration) {
  * @param {number} [duration=2.0] The amount of time, in seconds, for transition animations to complete.
  */
 Scene.prototype.morphToColumbusView = function (duration) {
-  let ellipsoid;
-  const globe = this.globe;
-  if (defined(globe)) {
-    ellipsoid = globe.ellipsoid;
-  } else {
-    ellipsoid = this.mapProjection.ellipsoid;
-  }
   duration = defaultValue(duration, 2.0);
-  this._transitioner.morphToColumbusView(duration, ellipsoid);
+  this._transitioner.morphToColumbusView(duration, this._ellipsoid);
 };
 
 /**
@@ -4373,15 +4675,8 @@ Scene.prototype.morphToColumbusView = function (duration) {
  * @param {number} [duration=2.0] The amount of time, in seconds, for transition animations to complete.
  */
 Scene.prototype.morphTo3D = function (duration) {
-  let ellipsoid;
-  const globe = this.globe;
-  if (defined(globe)) {
-    ellipsoid = globe.ellipsoid;
-  } else {
-    ellipsoid = this.mapProjection.ellipsoid;
-  }
   duration = defaultValue(duration, 2.0);
-  this._transitioner.morphTo3D(duration, ellipsoid);
+  this._transitioner.morphTo3D(duration, this._ellipsoid);
 };
 
 function setTerrain(scene, terrain) {
@@ -4527,6 +4822,11 @@ Scene.prototype.destroy = function () {
     this._removeGlobeCallbacks[i]();
   }
   this._removeGlobeCallbacks.length = 0;
+
+  if (defined(this._removeUpdateHeightCallback)) {
+    this._removeUpdateHeightCallback();
+    this._removeUpdateHeightCallback = undefined;
+  }
 
   return destroyObject(this);
 };

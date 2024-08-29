@@ -267,7 +267,7 @@ Sun.prototype.update = function (frameState, passState, useHdr) {
     BoundingSphere.clone(boundingVolume2D, drawCommand.boundingVolume);
   }
 
-  const position = SceneTransforms.computeActualWgs84Position(
+  const position = SceneTransforms.computeActualEllipsoidPosition(
     frameState,
     sunPosition,
     scratchCartesian4

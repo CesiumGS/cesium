@@ -1,6 +1,7 @@
 import Color from "../Core/Color.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
+import JulianDate from "../Core/JulianDate.js";
 import Material from "../Scene/Material.js";
 
 /**
@@ -62,7 +63,7 @@ MaterialProperty.prototype.getType = DeveloperError.throwInstantiationError;
  * Gets the value of the property at the provided time.
  * @function
  *
- * @param {JulianDate} time The time for which to retrieve the value.
+ * @param {JulianDate} [time=JulianDate.now()] The time for which to retrieve the value. If omitted, the current system time is used.
  * @param {object} [result] The object to store the value into, if omitted, a new instance is created and returned.
  * @returns {object} The modified result parameter or a new instance if the result parameter was not supplied.
  */
@@ -78,11 +79,16 @@ MaterialProperty.prototype.getValue = DeveloperError.throwInstantiationError;
  */
 MaterialProperty.prototype.equals = DeveloperError.throwInstantiationError;
 
+const timeScratch = new JulianDate();
+
 /**
  * @private
  */
 MaterialProperty.getValue = function (time, materialProperty, material) {
   let type;
+  if (!defined(time)) {
+    time = JulianDate.now(timeScratch);
+  }
 
   if (defined(materialProperty)) {
     type = materialProperty.getType(time);

@@ -8,16 +8,6 @@ float interpolateByDistance(vec4 nearFarScalar, float distance)
     return mix(startValue, endValue, t);
 }
 
-vec3 getLightDirection(vec3 positionWC)
-{
-    float lightEnum = u_radiiAndDynamicAtmosphereColor.z;
-    vec3 lightDirection =
-        positionWC * float(lightEnum == 0.0) +
-        czm_lightDirectionWC * float(lightEnum == 1.0) +
-        czm_sunDirectionWC * float(lightEnum == 2.0);
-    return normalize(lightDirection);
-}
-
 void computeAtmosphereScattering(vec3 positionWC, vec3 lightDirection, out vec3 rayleighColor, out vec3 mieColor, out float opacity, out float underTranslucentGlobe)
 {
     float ellipsoidRadiiDifference = czm_ellipsoidRadii.x - czm_ellipsoidRadii.z;
@@ -28,7 +18,7 @@ void computeAtmosphereScattering(vec3 positionWC, vec3 lightDirection, out vec3 
     float distanceAdjustModifier = ellipsoidRadiiDifference / 2.0;
     float distanceAdjust = distanceAdjustModifier * clamp((czm_eyeHeight - distanceAdjustMin) / (distanceAdjustMax - distanceAdjustMin), 0.0, 1.0);
 
-    // Since atmosphere scattering assumes the atmosphere is a spherical shell, we compute an inner radius of the atmosphere best fit 
+    // Since atmosphere scattering assumes the atmosphere is a spherical shell, we compute an inner radius of the atmosphere best fit
     // for the position on the ellipsoid.
     float radiusAdjust = (ellipsoidRadiiDifference / 4.0) + distanceAdjust;
     float atmosphereInnerRadius = (length(czm_viewerPositionWC) - czm_eyeHeight) - radiusAdjust;
@@ -46,7 +36,7 @@ void computeAtmosphereScattering(vec3 positionWC, vec3 lightDirection, out vec3 
         // Check for intersection with the inner radius of the atmopshere.
         czm_raySegment primaryRayEarthIntersect = czm_raySphereIntersectionInterval(primaryRay, vec3(0.0), atmosphereInnerRadius + radiusAdjust);
         if (primaryRayEarthIntersect.start > 0.0 && primaryRayEarthIntersect.stop > 0.0) {
-            
+
             // Compute position on globe.
             vec3 direction = normalize(positionWC);
             czm_ray ellipsoidRay = czm_ray(positionWC, -direction);
@@ -62,7 +52,7 @@ void computeAtmosphereScattering(vec3 positionWC, vec3 lightDirection, out vec3 
             vec3 nearColor = vec3(0.0);
 
             rayleighColor = mix(nearColor, horizonColor, exp(-angle) * opacity);
-            
+
             // Set the traslucent flag to avoid alpha adjustment in computeFinalColor funciton.
             underTranslucentGlobe = 1.0;
             return;

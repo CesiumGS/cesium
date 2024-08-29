@@ -22,6 +22,9 @@ import PolylineCollection from "./PolylineCollection.js";
 import VoxelShapeType from "./VoxelShapeType.js";
 import VoxelTraversal from "./VoxelTraversal.js";
 import CustomShader from "./Model/CustomShader.js";
+import Cartographic from "../Core/Cartographic.js";
+import Ellipsoid from "../Core/Ellipsoid.js";
+import VerticalExaggeration from "../Core/VerticalExaggeration.js";
 
 /**
  * A primitive that renders voxel data from a {@link VoxelProvider}.
@@ -132,6 +135,38 @@ function VoxelPrimitive(options) {
   this._maxBoundsOld = new Cartesian3();
 
   /**
+   * Minimum bounds with vertical exaggeration applied
+   *
+   * @type {Cartesian3}
+   * @private
+   */
+  this._exaggeratedMinBounds = new Cartesian3();
+
+  /**
+   * Used to detect if the shape is dirty.
+   *
+   * @type {Cartesian3}
+   * @private
+   */
+  this._exaggeratedMinBoundsOld = new Cartesian3();
+
+  /**
+   * Maximum bounds with vertical exaggeration applied
+   *
+   * @type {Cartesian3}
+   * @private
+   */
+  this._exaggeratedMaxBounds = new Cartesian3();
+
+  /**
+   * Used to detect if the shape is dirty.
+   *
+   * @type {Cartesian3}
+   * @private
+   */
+  this._exaggeratedMaxBoundsOld = new Cartesian3();
+
+  /**
    * This member is not known until the provider is ready.
    *
    * @type {Cartesian3}
@@ -198,6 +233,14 @@ function VoxelPrimitive(options) {
   this._modelMatrix = Matrix4.clone(
     defaultValue(options.modelMatrix, Matrix4.IDENTITY)
   );
+
+  /**
+   * Model matrix with vertical exaggeration applied. Only used for BOX shape type.
+   *
+   * @type {Matrix4}
+   * @private
+   */
+  this._exaggeratedModelMatrix = Matrix4.clone(this._modelMatrix);
 
   /**
    * The primitive's model matrix multiplied by the provider's model matrix.
@@ -288,19 +331,7 @@ function VoxelPrimitive(options) {
    */
   this._transformNormalLocalToWorld = new Matrix3();
 
-  /**
-   * @type {number}
-   * @private
-   */
-  this._stepSizeUv = 1.0;
-
   // Rendering
-  /**
-   * @type {boolean}
-   * @private
-   */
-  this._jitter = true;
-
   /**
    * @type {boolean}
    * @private
@@ -437,6 +468,20 @@ function initialize(primitive, provider) {
   primitive.minClippingBounds = VoxelShapeType.getMinBounds(shapeType);
   primitive.maxClippingBounds = VoxelShapeType.getMaxBounds(shapeType);
 
+  // Initialize the exaggerated versions of bounds and model matrix
+  primitive._exaggeratedMinBounds = Cartesian3.clone(
+    primitive._minBounds,
+    primitive._exaggeratedMinBounds
+  );
+  primitive._exaggeratedMaxBounds = Cartesian3.clone(
+    primitive._maxBounds,
+    primitive._exaggeratedMaxBounds
+  );
+  primitive._exaggeratedModelMatrix = Matrix4.clone(
+    primitive._modelMatrix,
+    primitive._exaggeratedModelMatrix
+  );
+
   checkTransformAndBounds(primitive, provider);
 
   // Create the shape object, and update it so it is valid for VoxelTraversal
@@ -498,7 +543,7 @@ Object.defineProperties(VoxelPrimitive.prototype, {
    */
   orientedBoundingBox: {
     get: function () {
-      return this.shape.orientedBoundingBox;
+      return this._shape.orientedBoundingBox;
     },
   },
 
@@ -648,29 +693,6 @@ Object.defineProperties(VoxelPrimitive.prototype, {
 
       if (this._depthTest !== depthTest) {
         this._depthTest = depthTest;
-        this._shaderDirty = true;
-      }
-    },
-  },
-
-  /**
-   * Gets or sets whether or not to jitter the view ray during the raymarch.
-   * This reduces stair-step artifacts but introduces noise.
-   *
-   * @memberof VoxelPrimitive.prototype
-   * @type {boolean}
-   */
-  jitter: {
-    get: function () {
-      return this._jitter;
-    },
-    set: function (jitter) {
-      //>>includeStart('debug', pragmas.debug);
-      Check.typeOf.bool("jitter", jitter);
-      //>>includeEnd('debug');
-
-      if (this._jitter !== jitter) {
-        this._jitter = jitter;
         this._shaderDirty = true;
       }
     },
@@ -964,6 +986,8 @@ VoxelPrimitive.prototype.update = function (frameState) {
     return;
   }
 
+  updateVerticalExaggeration(this, frameState);
+
   // Check if the shape is dirty before updating it. This needs to happen every
   // frame because the member variables can be modified externally via the
   // getters.
@@ -1097,15 +1121,119 @@ VoxelPrimitive.prototype.update = function (frameState) {
     cameraPositionWorld,
     uniforms.cameraPositionUv
   );
-  uniforms.stepSize = this._stepSizeUv * this._stepSizeMultiplier;
+  uniforms.stepSize = this._stepSizeMultiplier;
 
   // Render the primitive
   const command = frameState.passes.pick
     ? this._drawCommandPick
+    : frameState.passes.pickVoxel
+    ? this._drawCommandPickVoxel
     : this._drawCommand;
   command.boundingVolume = shape.boundingSphere;
   frameState.commandList.push(command);
 };
+
+const scratchExaggerationScale = new Cartesian3();
+const scratchExaggerationCenter = new Cartesian3();
+const scratchCartographicCenter = new Cartographic();
+const scratchExaggerationTranslation = new Cartesian3();
+
+/**
+ * Update the exaggerated bounds of a primitive to account for vertical exaggeration
+ * Currently only applies to Ellipsoid shape type
+ * @param {VoxelPrimitive} primitive
+ * @param {FrameState} frameState
+ * @private
+ */
+function updateVerticalExaggeration(primitive, frameState) {
+  primitive._exaggeratedMinBounds = Cartesian3.clone(
+    primitive._minBounds,
+    primitive._exaggeratedMinBounds
+  );
+  primitive._exaggeratedMaxBounds = Cartesian3.clone(
+    primitive._maxBounds,
+    primitive._exaggeratedMaxBounds
+  );
+
+  if (primitive.shape === VoxelShapeType.ELLIPSOID) {
+    // Apply the exaggeration by stretching the height bounds
+    const relativeHeight = frameState.verticalExaggerationRelativeHeight;
+    const exaggeration = frameState.verticalExaggeration;
+    primitive._exaggeratedMinBounds.z =
+      (primitive._minBounds.z - relativeHeight) * exaggeration + relativeHeight;
+    primitive._exaggeratedMaxBounds.z =
+      (primitive._maxBounds.z - relativeHeight) * exaggeration + relativeHeight;
+  } else if (primitive.shape === VoxelShapeType.BOX) {
+    // Apply the exaggeration via the model matrix
+    const exaggerationScale = Cartesian3.fromElements(
+      1.0,
+      1.0,
+      frameState.verticalExaggeration,
+      scratchExaggerationScale
+    );
+    primitive._exaggeratedModelMatrix = Matrix4.multiplyByScale(
+      primitive._modelMatrix,
+      exaggerationScale,
+      primitive._exaggeratedModelMatrix
+    );
+    primitive._exaggeratedModelMatrix = Matrix4.multiplyByTranslation(
+      primitive._exaggeratedModelMatrix,
+      computeBoxExaggerationTranslation(primitive, frameState),
+      primitive._exaggeratedModelMatrix
+    );
+  }
+}
+
+function computeBoxExaggerationTranslation(primitive, frameState) {
+  // Compute translation based on box center, relative height, and exaggeration
+  const {
+    shapeTransform = Matrix4.IDENTITY,
+    globalTransform = Matrix4.IDENTITY,
+  } = primitive._provider;
+
+  // Find the Cartesian position of the center of the OBB
+  const initialCenter = Matrix4.getTranslation(
+    shapeTransform,
+    scratchExaggerationCenter
+  );
+  const intermediateCenter = Matrix4.multiplyByPoint(
+    primitive._modelMatrix,
+    initialCenter,
+    scratchExaggerationCenter
+  );
+  const transformedCenter = Matrix4.multiplyByPoint(
+    globalTransform,
+    intermediateCenter,
+    scratchExaggerationCenter
+  );
+
+  // Find the cartographic height
+  const ellipsoid = Ellipsoid.WGS84;
+  const centerCartographic = ellipsoid.cartesianToCartographic(
+    transformedCenter,
+    scratchCartographicCenter
+  );
+
+  let centerHeight = 0.0;
+  if (defined(centerCartographic)) {
+    centerHeight = centerCartographic.height;
+  }
+
+  // Find the shift that will put the center in the right position relative
+  // to relativeHeight, after it is scaled by verticalExaggeration
+  const exaggeratedHeight = VerticalExaggeration.getHeight(
+    centerHeight,
+    frameState.verticalExaggeration,
+    frameState.verticalExaggerationRelativeHeight
+  );
+
+  return Cartesian3.fromElements(
+    0.0,
+    0.0,
+    (exaggeratedHeight - centerHeight) / frameState.verticalExaggeration,
+    scratchExaggerationTranslation
+  );
+}
 
 /**
  * Initialize primitive properties that are derived from the voxel provider
@@ -1191,7 +1319,7 @@ function checkTransformAndBounds(primitive, provider) {
   // Compound model matrix = global transform * model matrix * shape transform
   Matrix4.multiplyTransformation(
     globalTransform,
-    primitive._modelMatrix,
+    primitive._exaggeratedModelMatrix,
     primitive._compoundModelMatrix
   );
   Matrix4.multiplyTransformation(
@@ -1203,6 +1331,16 @@ function checkTransformAndBounds(primitive, provider) {
     updateBound(primitive, "_compoundModelMatrix", "_compoundModelMatrixOld") +
     updateBound(primitive, "_minBounds", "_minBoundsOld") +
     updateBound(primitive, "_maxBounds", "_maxBoundsOld") +
+    updateBound(
+      primitive,
+      "_exaggeratedMinBounds",
+      "_exaggeratedMinBoundsOld"
+    ) +
+    updateBound(
+      primitive,
+      "_exaggeratedMaxBounds",
+      "_exaggeratedMaxBoundsOld"
+    ) +
     updateBound(primitive, "_minClippingBounds", "_minClippingBoundsOld") +
     updateBound(primitive, "_maxClippingBounds", "_maxClippingBoundsOld");
   return numChanges > 0;
@@ -1239,8 +1377,8 @@ function updateBound(primitive, newBoundKey, oldBoundKey) {
 function updateShapeAndTransforms(primitive, shape, provider) {
   const visible = shape.update(
     primitive._compoundModelMatrix,
-    primitive.minBounds,
-    primitive.maxBounds,
+    primitive._exaggeratedMinBounds,
+    primitive._exaggeratedMaxBounds,
     primitive.minClippingBounds,
     primitive.maxClippingBounds
   );
@@ -1272,8 +1410,6 @@ function updateShapeAndTransforms(primitive, shape, provider) {
   );
 
   // Set member variables when the shape is dirty
-  const dimensions = provider.dimensions;
-  primitive._stepSizeUv = shape.computeApproximateStepSize(dimensions);
   primitive._transformPositionWorldToUv = Matrix4.multiplyTransformation(
     transformPositionLocalToUv,
     transformPositionWorldToLocal,

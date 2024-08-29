@@ -16,6 +16,8 @@ import {
   ClearCommand,
   ClippingPlane,
   ClippingPlaneCollection,
+  ClippingPolygon,
+  ClippingPolygonCollection,
   Color,
   ContextLimits,
   Credit,
@@ -46,6 +48,7 @@ import Cesium3DTilesTester from "../../../../Specs/Cesium3DTilesTester.js";
 import createScene from "../../../../Specs/createScene.js";
 import generateJsonBuffer from "../../../../Specs/generateJsonBuffer.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
+import Ellipsoid from "../../Source/Core/Ellipsoid.js";
 
 describe(
   "Scene/Cesium3DTileset",
@@ -211,6 +214,7 @@ describe(
     });
 
     afterEach(function () {
+      scene.verticalExaggeration = 1.0;
       scene.primitives.removeAll();
       ResourceCache.clearForSpecs();
     });
@@ -267,7 +271,7 @@ describe(
     it("loads json with static loadJson method", async function () {
       const tilesetJson = {
         asset: {
-          version: 2.0,
+          version: 1.1,
         },
       };
 
@@ -1096,30 +1100,27 @@ describe(
       });
     });
 
-    function testDynamicScreenSpaceError(url, distance) {
-      return Cesium3DTilesTester.loadTileset(scene, url).then(function (
-        tileset
-      ) {
-        const statistics = tileset._statistics;
+    async function testDynamicScreenSpaceError(url, distance) {
+      const tileset = await Cesium3DTilesTester.loadTileset(scene, url);
+      const statistics = tileset._statistics;
 
-        // Horizon view, only root is visible
-        const center = Cartesian3.fromRadians(centerLongitude, centerLatitude);
-        scene.camera.lookAt(center, new HeadingPitchRange(0.0, 0.0, distance));
+      // Horizon view, only root is visible
+      const center = Cartesian3.fromRadians(centerLongitude, centerLatitude);
+      scene.camera.lookAt(center, new HeadingPitchRange(0.0, 0.0, distance));
 
-        // Set dynamic SSE to false (default)
-        tileset.dynamicScreenSpaceError = false;
-        scene.renderForSpecs();
-        expect(statistics.visited).toEqual(1);
-        expect(statistics.numberOfCommands).toEqual(1);
+      // Turn off dynamic SSE
+      tileset.dynamicScreenSpaceError = false;
+      scene.renderForSpecs();
+      expect(statistics.visited).toEqual(1);
+      expect(statistics.numberOfCommands).toEqual(1);
 
-        // Set dynamic SSE to true, now the root is not rendered
-        tileset.dynamicScreenSpaceError = true;
-        tileset.dynamicScreenSpaceErrorDensity = 1.0;
-        tileset.dynamicScreenSpaceErrorFactor = 10.0;
-        scene.renderForSpecs();
-        expect(statistics.visited).toEqual(0);
-        expect(statistics.numberOfCommands).toEqual(0);
-      });
+      // Turn on dynamic SSE, now the root is not rendered
+      tileset.dynamicScreenSpaceError = true;
+      tileset.dynamicScreenSpaceErrorDensity = 1.0;
+      tileset.dynamicScreenSpaceErrorFactor = 10.0;
+      scene.renderForSpecs();
+      expect(statistics.visited).toEqual(0);
+      expect(statistics.numberOfCommands).toEqual(0);
     }
 
     function numberOfChildrenWithoutContent(tile) {
@@ -1151,6 +1152,39 @@ describe(
 
     it("uses dynamic screen space error for local tileset with sphere", function () {
       return testDynamicScreenSpaceError(withTransformSphereUrl, 144.0);
+    });
+
+    it("dynamic screen space error constructor options work", async function () {
+      const options = {
+        dynamicScreenSpaceError: true,
+        dynamicScreenSpaceErrorDensity: 1.0,
+        dynamicScreenSpaceErrorFactor: 10.0,
+        dynamicScreenSpaceErrorHeightFalloff: 0.5,
+      };
+      const distance = 103.0;
+      const tileset = await Cesium3DTilesTester.loadTileset(
+        scene,
+        withTransformBoxUrl,
+        options
+      );
+
+      // Make sure the values match the constructor, not hard-coded defaults
+      // like in https://github.com/CesiumGS/cesium/issues/11677
+      expect(tileset.dynamicScreenSpaceError).toBe(true);
+      expect(tileset.dynamicScreenSpaceErrorDensity).toBe(1.0);
+      expect(tileset.dynamicScreenSpaceErrorFactor).toBe(10.0);
+      expect(tileset.dynamicScreenSpaceErrorHeightFalloff).toBe(0.5);
+
+      const statistics = tileset._statistics;
+
+      // Horizon view, only root is in view, however due to dynamic SSE,
+      // it will not render.
+      const center = Cartesian3.fromRadians(centerLongitude, centerLatitude);
+      scene.camera.lookAt(center, new HeadingPitchRange(0.0, 0.0, distance));
+
+      scene.renderForSpecs();
+      expect(statistics.visited).toEqual(0);
+      expect(statistics.numberOfCommands).toEqual(0);
     });
 
     it("additive refinement - selects root when sse is met", function () {
@@ -1303,29 +1337,6 @@ describe(
       });
     });
 
-    it("replacement refinement - selects upwards when traversal stops at empty tile", function () {
-      // No children have content, but all grandchildren have content
-      //
-      //          C
-      //      E       E
-      //    C   C   C   C
-      //
-      return Cesium3DTilesTester.loadTileset(
-        scene,
-        tilesetReplacement1Url
-      ).then(function (tileset) {
-        tileset.root.geometricError = 90;
-        setZoom(80);
-        scene.renderForSpecs();
-
-        const statistics = tileset._statistics;
-        expect(statistics.selected).toEqual(1);
-        expect(statistics.visited).toEqual(3);
-        expect(isSelected(tileset, tileset.root)).toBe(true);
-        return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
-      });
-    });
-
     it("replacement refinement - selects root when sse is not met and subtree is not refinable (1)", function () {
       // No children have content, but all grandchildren have content
       //
@@ -1347,7 +1358,6 @@ describe(
 
         // Even though root's children are loaded, the grandchildren need to be loaded before it becomes refinable
         expect(numberOfChildrenWithoutContent(root)).toEqual(0); // Children are loaded
-        expect(statistics.numberOfCommands).toEqual(1); // No stencil or backface commands; no mixed content
         expect(statistics.numberOfPendingRequests).toEqual(4); // Loading grandchildren
 
         return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(
@@ -2414,6 +2424,199 @@ describe(
         });
     });
 
+    it("picks", async function () {
+      const tileset = await Cesium3DTilesTester.loadTileset(scene, tilesetUrl, {
+        enablePick: !scene.frameState.context.webgl2,
+      });
+      viewRootOnly();
+      scene.renderForSpecs();
+
+      const ray = scene.camera.getPickRay(
+        new Cartesian2(
+          scene.drawingBufferWidth / 2.0,
+          scene.drawingBufferHeight / 2.0
+        )
+      );
+
+      const expected = new Cartesian3(
+        1215026.8094312553,
+        -4736367.339076743,
+        4081652.238842398
+      );
+      expect(tileset.pick(ray, scene.frameState)).toEqualEpsilon(
+        expected,
+        CesiumMath.EPSILON12
+      );
+    });
+
+    it("picks tileset of tilesets", async function () {
+      const tileset = await Cesium3DTilesTester.loadTileset(
+        scene,
+        tilesetOfTilesetsUrl,
+        {
+          enablePick: !scene.frameState.context.webgl2,
+        }
+      );
+      viewRootOnly();
+      scene.renderForSpecs();
+
+      const ray = scene.camera.getPickRay(
+        new Cartesian2(
+          scene.drawingBufferWidth / 2.0,
+          scene.drawingBufferHeight / 2.0
+        )
+      );
+
+      const expected = new Cartesian3(
+        1215026.8094312553,
+        -4736367.339076743,
+        4081652.238842398
+      );
+      expect(tileset.pick(ray, scene.frameState)).toEqualEpsilon(
+        expected,
+        CesiumMath.EPSILON12
+      );
+    });
+
+    it("picks instanced tileset", async function () {
+      const tileset = await Cesium3DTilesTester.loadTileset(
+        scene,
+        instancedUrl,
+        {
+          enablePick: !scene.frameState.context.webgl2,
+        }
+      );
+      viewInstances();
+      scene.renderForSpecs();
+
+      const ray = scene.camera.getPickRay(
+        new Cartesian2(
+          scene.drawingBufferWidth / 2.0,
+          scene.drawingBufferHeight / 2.0
+        )
+      );
+
+      const expected = new Cartesian3(
+        1215015.7820120894,
+        -4736324.352446682,
+        4081615.004915994
+      );
+      expect(tileset.pick(ray, scene.frameState)).toEqualEpsilon(
+        expected,
+        CesiumMath.EPSILON12
+      );
+    });
+
+    it("picks translucent tileset", async function () {
+      const tileset = await Cesium3DTilesTester.loadTileset(
+        scene,
+        translucentUrl,
+        {
+          enablePick: !scene.frameState.context.webgl2,
+        }
+      );
+      viewAllTiles();
+      scene.renderForSpecs();
+
+      const ray = scene.camera.getPickRay(
+        new Cartesian2(
+          scene.drawingBufferWidth / 2.0,
+          scene.drawingBufferHeight / 2.0
+        )
+      );
+
+      const expected = new Cartesian3(
+        1215013.1035421563,
+        -4736313.911345786,
+        4081605.96109977
+      );
+      expect(tileset.pick(ray, scene.frameState)).toEqualEpsilon(
+        expected,
+        CesiumMath.EPSILON12
+      );
+    });
+
+    it("picks tileset with transforms", async function () {
+      const tileset = await Cesium3DTilesTester.loadTileset(
+        scene,
+        tilesetWithTransformsUrl,
+        {
+          enablePick: !scene.frameState.context.webgl2,
+        }
+      );
+      viewAllTiles();
+      scene.renderForSpecs();
+
+      const ray = scene.camera.getPickRay(
+        new Cartesian2(
+          scene.drawingBufferWidth / 2.0,
+          scene.drawingBufferHeight / 2.0
+        )
+      );
+
+      const expected = new Cartesian3(
+        1215013.1035421563,
+        -4736313.911345786,
+        4081605.96109977
+      );
+      expect(tileset.pick(ray, scene.frameState)).toEqualEpsilon(
+        expected,
+        CesiumMath.EPSILON12
+      );
+    });
+
+    it("picking point cloud tileset returns undefined", async function () {
+      const tileset = await Cesium3DTilesTester.loadTileset(
+        scene,
+        pointCloudUrl,
+        {
+          enablePick: !scene.frameState.context.webgl2,
+        }
+      );
+      viewAllTiles();
+      scene.renderForSpecs();
+
+      const ray = scene.camera.getPickRay(
+        new Cartesian2(
+          scene.drawingBufferWidth / 2.0,
+          scene.drawingBufferHeight / 2.0
+        )
+      );
+
+      expect(tileset.pick(ray, scene.frameState)).toBeUndefined();
+    });
+
+    it("getHeight samples height at a cartographic position", async function () {
+      const tileset = await Cesium3DTilesTester.loadTileset(scene, tilesetUrl, {
+        enablePick: !scene.frameState.context.webgl2,
+      });
+      viewRootOnly();
+      await Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
+      scene.renderForSpecs();
+
+      const center = Ellipsoid.WGS84.cartesianToCartographic(
+        tileset.boundingSphere.center
+      );
+      const height = tileset.getHeight(center, scene);
+      expect(height).toEqualEpsilon(78.1558019795064, CesiumMath.EPSILON12);
+    });
+
+    it("getHeight samples height accounting for vertical exaggeration", async function () {
+      const tileset = await Cesium3DTilesTester.loadTileset(scene, tilesetUrl, {
+        enablePick: !scene.frameState.context.webgl2,
+      });
+      viewRootOnly();
+      await Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
+      scene.verticalExaggeration = 2.0;
+      scene.renderForSpecs();
+
+      const center = Ellipsoid.WGS84.cartesianToCartographic(
+        tileset.boundingSphere.center
+      );
+      const height = tileset.getHeight(center, scene);
+      expect(height).toEqualEpsilon(156.31161477299992, CesiumMath.EPSILON12);
+    });
+
     it("destroys", function () {
       return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function (
         tileset
@@ -3109,7 +3312,7 @@ describe(
       );
     });
 
-    function testColorBlendMode(url) {
+    async function testColorBlendMode(url) {
       // Check that the feature is red
       let sourceRed;
       let sourceGreen;
@@ -3119,148 +3322,145 @@ describe(
         scene: scene,
         time: new JulianDate(2457522.154792),
       };
-      let tileset;
-      return Cesium3DTilesTester.loadTileset(scene, url).then(function (t) {
-        tileset = t;
-        tileset.luminanceAtZenith = undefined;
+      const tileset = await Cesium3DTilesTester.loadTileset(scene, url);
+      tileset.luminanceAtZenith = undefined;
 
-        expect(renderOptions).toRenderAndCall(function (rgba) {
-          sourceRed = rgba[0];
-          sourceGreen = rgba[1];
-        });
+      expect(renderOptions).toRenderAndCall(function (rgba) {
+        sourceRed = rgba[0];
+        sourceGreen = rgba[1];
+      });
 
-        expect(renderOptions).toRenderAndCall(function (rgba) {
-          expect(rgba[0]).toBeGreaterThan(200);
-          expect(rgba[1]).toBeLessThan(25);
-          expect(rgba[2]).toBeLessThan(25);
-          expect(rgba[3]).toEqual(255);
-        });
+      expect(renderOptions).toRenderAndCall(function (rgba) {
+        expect(rgba[0]).toBeGreaterThan(200);
+        expect(rgba[1]).toBeLessThan(25);
+        expect(rgba[2]).toBeLessThan(25);
+        expect(rgba[3]).toEqual(255);
+      });
 
-        // Use HIGHLIGHT blending
-        tileset.colorBlendMode = Cesium3DTileColorBlendMode.HIGHLIGHT;
+      // Use HIGHLIGHT blending
+      tileset.colorBlendMode = Cesium3DTileColorBlendMode.HIGHLIGHT;
 
-        // Style with dark yellow. Expect the red channel to be darker than before.
-        tileset.style = new Cesium3DTileStyle({
-          color: "rgb(128, 128, 0)",
-        });
+      // Style with dark yellow. Expect the red channel to be darker than before.
+      tileset.style = new Cesium3DTileStyle({
+        color: "rgb(128, 128, 0)",
+      });
 
-        expect(renderOptions).toRenderAndCall(function (rgba) {
-          expect(rgba[0]).toBeGreaterThan(100);
-          expect(rgba[0]).toBeLessThan(sourceRed);
-          expect(rgba[1]).toBeLessThan(25);
-          expect(rgba[2]).toBeLessThan(25);
-          expect(rgba[3]).toEqual(255);
-        });
+      expect(renderOptions).toRenderAndCall(function (rgba) {
+        expect(rgba[0]).toBeGreaterThan(100);
+        expect(rgba[0]).toBeLessThan(sourceRed);
+        expect(rgba[1]).toBeLessThan(25);
+        expect(rgba[2]).toBeLessThan(25);
+        expect(rgba[3]).toEqual(255);
+      });
 
-        // Style with yellow + alpha. Expect the red channel to be darker than before.
-        tileset.style = new Cesium3DTileStyle({
-          color: "rgba(255, 255, 0, 0.5)",
-        });
+      // Style with yellow + alpha. Expect the red channel to be darker than before.
+      tileset.style = new Cesium3DTileStyle({
+        color: "rgba(255, 255, 0, 0.5)",
+      });
 
-        expect(renderOptions).toRenderAndCall(function (rgba) {
-          expect(rgba[0]).toBeGreaterThan(100);
-          expect(rgba[0]).toBeLessThan(sourceRed);
-          expect(rgba[1]).toBeLessThan(25);
-          expect(rgba[2]).toBeLessThan(25);
-          expect(rgba[3]).toEqual(255);
-        });
+      expect(renderOptions).toRenderAndCall(function (rgba) {
+        expect(rgba[0]).toBeGreaterThan(100);
+        expect(rgba[0]).toBeLessThan(sourceRed);
+        expect(rgba[1]).toBeLessThan(25);
+        expect(rgba[2]).toBeLessThan(25);
+        expect(rgba[3]).toEqual(255);
+      });
 
-        // Use REPLACE blending
-        tileset.colorBlendMode = Cesium3DTileColorBlendMode.REPLACE;
+      // Use REPLACE blending
+      tileset.colorBlendMode = Cesium3DTileColorBlendMode.REPLACE;
 
-        // Style with dark yellow. Expect the red and green channels to be roughly dark yellow.
-        tileset.style = new Cesium3DTileStyle({
-          color: "rgb(128, 128, 0)",
-        });
+      // Style with dark yellow. Expect the red and green channels to be roughly dark yellow.
+      tileset.style = new Cesium3DTileStyle({
+        color: "rgb(128, 128, 0)",
+      });
 
-        expect(renderOptions).toRenderAndCall(function (rgba) {
-          replaceRed = rgba[0];
-          replaceGreen = rgba[1];
-          expect(rgba[0]).toBeGreaterThan(100);
-          expect(rgba[0]).toBeLessThan(255);
-          expect(rgba[1]).toBeGreaterThan(100);
-          expect(rgba[1]).toBeLessThan(255);
-          expect(rgba[2]).toBeLessThan(25);
-          expect(rgba[3]).toEqual(255);
-        });
+      expect(renderOptions).toRenderAndCall(function (rgba) {
+        replaceRed = rgba[0];
+        replaceGreen = rgba[1];
+        expect(rgba[0]).toBeGreaterThan(100);
+        expect(rgba[0]).toBeLessThan(255);
+        expect(rgba[1]).toBeGreaterThan(100);
+        expect(rgba[1]).toBeLessThan(255);
+        expect(rgba[2]).toBeLessThan(25);
+        expect(rgba[3]).toEqual(255);
+      });
 
-        // Style with yellow + alpha. Expect the red and green channels to be a shade of yellow.
-        tileset.style = new Cesium3DTileStyle({
-          color: "rgba(255, 255, 0, 0.5)",
-        });
+      // Style with yellow + alpha. Expect the red and green channels to be a shade of yellow.
+      tileset.style = new Cesium3DTileStyle({
+        color: "rgba(255, 255, 0, 0.5)",
+      });
 
-        expect(renderOptions).toRenderAndCall(function (rgba) {
-          expect(rgba[0]).toBeGreaterThan(100);
-          expect(rgba[0]).toBeLessThan(255);
-          expect(rgba[1]).toBeGreaterThan(100);
-          expect(rgba[1]).toBeLessThan(255);
-          expect(rgba[2]).toBeLessThan(25);
-          expect(rgba[3]).toEqual(255);
-        });
+      expect(renderOptions).toRenderAndCall(function (rgba) {
+        expect(rgba[0]).toBeGreaterThan(100);
+        expect(rgba[0]).toBeLessThan(255);
+        expect(rgba[1]).toBeGreaterThan(100);
+        expect(rgba[1]).toBeLessThan(255);
+        expect(rgba[2]).toBeLessThan(25);
+        expect(rgba[3]).toEqual(255);
+      });
 
-        // Use MIX blending
-        tileset.colorBlendMode = Cesium3DTileColorBlendMode.MIX;
-        tileset.colorBlendAmount = 0.5;
+      // Use MIX blending
+      tileset.colorBlendMode = Cesium3DTileColorBlendMode.MIX;
+      tileset.colorBlendAmount = 0.5;
 
-        // Style with dark yellow. Expect color to be a mix of the source and style colors.
-        tileset.style = new Cesium3DTileStyle({
-          color: "rgb(128, 128, 0)",
-        });
+      // Style with dark yellow. Expect color to be a mix of the source and style colors.
+      tileset.style = new Cesium3DTileStyle({
+        color: "rgb(128, 128, 0)",
+      });
 
-        let mixRed;
-        let mixGreen;
-        expect(renderOptions).toRenderAndCall(function (rgba) {
-          mixRed = rgba[0];
-          mixGreen = rgba[1];
-          expect(rgba[0]).toBeGreaterThan(replaceRed);
-          expect(rgba[0]).toBeLessThan(sourceRed);
-          expect(rgba[1]).toBeGreaterThan(sourceGreen);
-          expect(rgba[1]).toBeLessThan(replaceGreen);
-          expect(rgba[2]).toBeLessThan(25);
-          expect(rgba[3]).toEqual(255);
-        });
+      let mixRed;
+      let mixGreen;
+      expect(renderOptions).toRenderAndCall(function (rgba) {
+        mixRed = rgba[0];
+        mixGreen = rgba[1];
+        expect(rgba[0]).toBeGreaterThan(replaceRed);
+        expect(rgba[0]).toBeLessThan(sourceRed);
+        expect(rgba[1]).toBeGreaterThan(sourceGreen);
+        expect(rgba[1]).toBeLessThan(replaceGreen);
+        expect(rgba[2]).toBeLessThan(25);
+        expect(rgba[3]).toEqual(255);
+      });
 
-        // Set colorBlendAmount to 0.25. Expect color to be closer to the source color.
-        tileset.colorBlendAmount = 0.25;
-        expect(renderOptions).toRenderAndCall(function (rgba) {
-          expect(rgba[0]).toBeGreaterThan(mixRed);
-          expect(rgba[0]).toBeLessThan(sourceRed);
-          expect(rgba[1]).toBeGreaterThan(0);
-          expect(rgba[1]).toBeLessThan(mixGreen);
-          expect(rgba[2]).toBeLessThan(25);
-          expect(rgba[3]).toEqual(255);
-        });
+      // Set colorBlendAmount to 0.25. Expect color to be closer to the source color.
+      tileset.colorBlendAmount = 0.25;
+      expect(renderOptions).toRenderAndCall(function (rgba) {
+        expect(rgba[0]).toBeGreaterThan(mixRed);
+        expect(rgba[0]).toBeLessThan(sourceRed);
+        expect(rgba[1]).toBeGreaterThan(0);
+        expect(rgba[1]).toBeLessThan(mixGreen);
+        expect(rgba[2]).toBeLessThan(25);
+        expect(rgba[3]).toEqual(255);
+      });
 
-        // Set colorBlendAmount to 0.0. Expect color to equal the source color
-        tileset.colorBlendAmount = 0.0;
-        expect(renderOptions).toRenderAndCall(function (rgba) {
-          expect(rgba[0]).toEqual(sourceRed);
-          expect(rgba[1]).toBeLessThan(25);
-          expect(rgba[2]).toBeLessThan(25);
-          expect(rgba[3]).toEqual(255);
-        });
+      // Set colorBlendAmount to 0.0. Expect color to equal the source color
+      tileset.colorBlendAmount = 0.0;
+      expect(renderOptions).toRenderAndCall(function (rgba) {
+        expect(rgba[0]).toEqual(sourceRed);
+        expect(rgba[1]).toBeLessThan(25);
+        expect(rgba[2]).toBeLessThan(25);
+        expect(rgba[3]).toEqual(255);
+      });
 
-        // Set colorBlendAmount to 1.0. Expect color to equal the style color
-        tileset.colorBlendAmount = 1.0;
-        expect(renderOptions).toRenderAndCall(function (rgba) {
-          expect(rgba[0]).toEqual(replaceRed);
-          expect(rgba[1]).toEqual(replaceGreen);
-          expect(rgba[2]).toBeLessThan(25);
-          expect(rgba[3]).toEqual(255);
-        });
+      // Set colorBlendAmount to 1.0. Expect color to equal the style color
+      tileset.colorBlendAmount = 1.0;
+      expect(renderOptions).toRenderAndCall(function (rgba) {
+        expect(rgba[0]).toEqual(replaceRed);
+        expect(rgba[1]).toEqual(replaceGreen);
+        expect(rgba[2]).toBeLessThan(25);
+        expect(rgba[3]).toEqual(255);
+      });
 
-        // Style with yellow + alpha. Expect color to be a mix of the source and style colors.
-        tileset.colorBlendAmount = 0.5;
-        tileset.style = new Cesium3DTileStyle({
-          color: "rgba(255, 255, 0, 0.5)",
-        });
+      // Style with yellow + alpha. Expect color to be a mix of the source and style colors.
+      tileset.colorBlendAmount = 0.5;
+      tileset.style = new Cesium3DTileStyle({
+        color: "rgba(255, 255, 0, 0.5)",
+      });
 
-        expect(renderOptions).toRenderAndCall(function (rgba) {
-          expect(rgba[0]).toBeGreaterThan(0);
-          expect(rgba[1]).toBeGreaterThan(0);
-          expect(rgba[2]).toBeLessThan(25);
-          expect(rgba[3]).toEqual(255);
-        });
+      expect(renderOptions).toRenderAndCall(function (rgba) {
+        expect(rgba[0]).toBeGreaterThan(0);
+        expect(rgba[1]).toBeGreaterThan(0);
+        expect(rgba[2]).toBeLessThan(25);
+        expect(rgba[3]).toEqual(255);
       });
     }
 
@@ -3294,77 +3494,6 @@ describe(
 
     ///////////////////////////////////////////////////////////////////////////
     // Cache replacement tests
-
-    it("Unload all cached tiles not required to meet SSE using maximumMemoryUsage", function () {
-      return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function (
-        tileset
-      ) {
-        tileset.maximumMemoryUsage = 0;
-
-        // Render parent and four children (using additive refinement)
-        viewAllTiles();
-        scene.renderForSpecs();
-
-        const statistics = tileset._statistics;
-        expect(statistics.numberOfCommands).toEqual(5);
-        expect(statistics.numberOfTilesWithContentReady).toEqual(5); // Five loaded tiles
-        expect(tileset.totalMemoryUsageInBytes).toEqual(37200); // Specific to this tileset
-
-        // Zoom out so only root tile is needed to meet SSE.  This unloads
-        // the four children since the maximum memory usage is zero.
-        viewRootOnly();
-        scene.renderForSpecs();
-
-        expect(statistics.numberOfCommands).toEqual(1);
-        expect(statistics.numberOfTilesWithContentReady).toEqual(1);
-        expect(tileset.totalMemoryUsageInBytes).toEqual(7440); // Specific to this tileset
-
-        // Zoom back in so all four children are re-requested.
-        viewAllTiles();
-
-        return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(
-          function () {
-            expect(statistics.numberOfCommands).toEqual(5);
-            expect(statistics.numberOfTilesWithContentReady).toEqual(5); // Five loaded tiles
-            expect(tileset.totalMemoryUsageInBytes).toEqual(37200); // Specific to this tileset
-          }
-        );
-      });
-    });
-
-    it("Unload some cached tiles not required to meet SSE using maximumMemoryUsage", function () {
-      return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function (
-        tileset
-      ) {
-        tileset.maximumMemoryUsage = 0.025; // Just enough memory to allow 3 tiles to remain
-        // Render parent and four children (using additive refinement)
-        viewAllTiles();
-        scene.renderForSpecs();
-
-        const statistics = tileset._statistics;
-        expect(statistics.numberOfCommands).toEqual(5);
-        expect(statistics.numberOfTilesWithContentReady).toEqual(5); // Five loaded tiles
-
-        // Zoom out so only root tile is needed to meet SSE.  This unloads
-        // two of the four children so three tiles are still loaded (the
-        // root and two children) since the maximum memory usage is sufficient.
-        viewRootOnly();
-        scene.renderForSpecs();
-
-        expect(statistics.numberOfCommands).toEqual(1);
-        expect(statistics.numberOfTilesWithContentReady).toEqual(3);
-
-        // Zoom back in so the two children are re-requested.
-        viewAllTiles();
-
-        return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(
-          function () {
-            expect(statistics.numberOfCommands).toEqual(5);
-            expect(statistics.numberOfTilesWithContentReady).toEqual(5); // Five loaded tiles
-          }
-        );
-      });
-    });
 
     it("Unload all cached tiles not required to meet SSE using cacheBytes", function () {
       return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function (
@@ -3669,13 +3798,6 @@ describe(
         expect(spyUpdate.calls.argsFor(2)[0]).toBe(tileset.root.children[2]);
         expect(spyUpdate.calls.argsFor(3)[0]).toBe(tileset.root.children[3]);
       });
-    });
-
-    it("maximumMemoryUsage throws when negative", async function () {
-      const tileset = await Cesium3DTileset.fromUrl(tilesetUrl, options);
-      expect(function () {
-        tileset.maximumMemoryUsage = -1;
-      }).toThrowDeveloperError();
     });
 
     it("cacheBytes throws when negative", async function () {
@@ -4554,6 +4676,99 @@ describe(
           );
         }
       );
+    });
+
+    describe("clippingPolygons", () => {
+      const positions = Cartesian3.fromRadiansArray([
+        -1.3194369277314022,
+        0.6988062530900625,
+        -1.31941,
+        0.69879,
+        -1.3193955980204217,
+        0.6988091578771254,
+        -1.3193931220959367,
+        0.698743632490865,
+        -1.3194358224045408,
+        0.6987471965556998,
+      ]);
+      let polygon;
+
+      beforeEach(() => {
+        polygon = new ClippingPolygon({ positions });
+      });
+
+      it("destroys attached ClippingPolygonCollections and ClippingPolygonCollections that have been detached", async function () {
+        const tileset = await Cesium3DTilesTester.loadTileset(
+          scene,
+          tilesetUrl
+        );
+        const collectionA = new ClippingPolygonCollection({
+          polygons: [polygon],
+        });
+        expect(collectionA.owner).not.toBeDefined();
+
+        tileset.clippingPolygons = collectionA;
+        const collectionB = new ClippingPolygonCollection({
+          polygons: [polygon],
+        });
+
+        tileset.clippingPolygons = collectionB;
+        expect(collectionA.isDestroyed()).toBe(true);
+
+        scene.primitives.remove(tileset);
+        expect(collectionB.isDestroyed()).toBe(true);
+      });
+
+      it("throws a DeveloperError when given a ClippingPolygonCollection attached to another tileset", async function () {
+        const tilesetA = await Cesium3DTilesTester.loadTileset(
+          scene,
+          tilesetUrl
+        );
+
+        const tilesetB = await Cesium3DTilesTester.loadTileset(
+          scene,
+          tilesetUrl
+        );
+
+        const collection = new ClippingPolygonCollection({
+          polygons: [polygon],
+        });
+        tilesetA.clippingPolygons = collection;
+
+        expect(function () {
+          tilesetB.clippingPolygons = collection;
+        }).toThrowDeveloperError();
+      });
+
+      it("cull hidden content", async function () {
+        if (!scene.context.webgl2) {
+          return;
+        }
+
+        const tileset = await Cesium3DTilesTester.loadTileset(
+          scene,
+          tilesetUrl
+        );
+
+        let visibility = tileset.root.contentVisibility(scene.frameState);
+
+        expect(visibility).not.toBe(Intersect.OUTSIDE);
+        expect(visibility).not.toBe(Intersect.MASK_OUTSIDE);
+
+        tileset.clippingPolygons = new ClippingPolygonCollection({
+          polygons: [polygon],
+        });
+
+        visibility = tileset.root.contentVisibility(scene.frameState);
+
+        expect(visibility).not.toBe(Intersect.OUTSIDE);
+        expect(visibility).not.toBe(Intersect.MASK_OUTSIDE);
+
+        tileset.clippingPolygons.inverse = true;
+        visibility = tileset.root.contentVisibility(scene.frameState);
+
+        expect(visibility).toBe(Intersect.OUTSIDE);
+      });
     });
 
     it("throws if pointCloudShading is set to undefined", function () {

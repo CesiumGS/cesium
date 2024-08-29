@@ -33,6 +33,8 @@ describe(
       "./Data/Cesium3DTiles/Instanced/InstancedScaleNonUniform/instancedScaleNonUniform.i3dm";
     const instancedRTCUrl =
       "./Data/Cesium3DTiles/Instanced/InstancedRTC/instancedRTC.i3dm";
+    const instancedZeroRTCUrl =
+      "./Data/Cesium3DTiles/Instanced/InstancedZeroRTC/instancedZeroRTC.i3dm";
     const instancedQuantizedUrl =
       "./Data/Cesium3DTiles/Instanced/InstancedQuantized/instancedQuantized.i3dm";
     const instancedQuantizedOct32POrientationUrl =
@@ -295,6 +297,29 @@ describe(
         1.0, 0.0, 0.0, 1215013.8340490046,
         0.0, 1.0, 0.0, -4736316.75897742,
         0.0, 0.0, 1.0, 4081608.4380407534,
+        0.0, 0.0, 0.0, 1.0
+      ), CesiumMath.EPSILON8);
+      });
+    });
+
+    it("loads InstancedZeroRTCUrl", function () {
+      return loadI3dm(instancedZeroRTCUrl).then(function (loader) {
+        verifyInstances(
+          loader,
+          [
+            InstanceAttributeSemantic.TRANSLATION,
+            InstanceAttributeSemantic.ROTATION,
+            InstanceAttributeSemantic.FEATURE_ID,
+          ],
+          25
+        );
+
+        const transform = loader.components.transform;
+        // prettier-ignore
+        expect(transform).toEqualEpsilon(new Matrix4(
+        1.0, 0.0, 0.0, 1215013.8125,
+        0.0, 1.0, 0.0, -4736316.75,
+        0.0, 0.0, 1.0, 4081608.5,
         0.0, 0.0, 0.0, 1.0
       ), CesiumMath.EPSILON8);
       });

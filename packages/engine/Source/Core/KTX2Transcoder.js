@@ -1,6 +1,7 @@
 import Check from "./Check.js";
 import CompressedTextureBuffer from "./CompressedTextureBuffer.js";
 import defined from "./defined.js";
+import RuntimeError from "./RuntimeError.js";
 import TaskProcessor from "./TaskProcessor.js";
 
 /**
@@ -20,11 +21,14 @@ KTX2Transcoder._readyPromise = undefined;
 function makeReadyPromise() {
   const readyPromise = KTX2Transcoder._transcodeTaskProcessor
     .initWebAssemblyModule({
-      modulePath: "ThirdParty/Workers/basis_transcoder.js",
       wasmBinaryFile: "ThirdParty/basis_transcoder.wasm",
     })
-    .then(function () {
-      return KTX2Transcoder._transcodeTaskProcessor;
+    .then(function (result) {
+      if (result) {
+        return KTX2Transcoder._transcodeTaskProcessor;
+      }
+
+      throw new RuntimeError("KTX2 transcoder could not be initialized.");
     });
   KTX2Transcoder._readyPromise = readyPromise;
 }
@@ -40,30 +44,23 @@ KTX2Transcoder.transcode = function (ktx2Buffer, supportedTargetFormats) {
 
   return KTX2Transcoder._readyPromise
     .then(function (taskProcessor) {
-      let parameters;
+      let bufferView = ktx2Buffer;
       if (ktx2Buffer instanceof ArrayBuffer) {
-        const view = new Uint8Array(ktx2Buffer);
-        parameters = {
-          supportedTargetFormats: supportedTargetFormats,
-          ktx2Buffer: view,
-        };
-        return taskProcessor.scheduleTask(parameters, [ktx2Buffer]);
+        bufferView = new Uint8Array(ktx2Buffer);
       }
-      parameters = {
+      const parameters = {
         supportedTargetFormats: supportedTargetFormats,
-        ktx2Buffer: ktx2Buffer,
+        ktx2Buffer: bufferView,
       };
-      return taskProcessor.scheduleTask(parameters, [ktx2Buffer.buffer]);
+      return taskProcessor.scheduleTask(parameters, [bufferView.buffer]);
     })
     .then(function (result) {
       const levelsLength = result.length;
       const faceKeys = Object.keys(result[0]);
-      const faceKeysLength = faceKeys.length;
 
-      let i;
-      for (i = 0; i < levelsLength; i++) {
+      for (let i = 0; i < levelsLength; i++) {
         const faces = result[i];
-        for (let j = 0; j < faceKeysLength; j++) {
+        for (let j = 0; j < faceKeys.length; j++) {
           const face = faces[faceKeys[j]];
           faces[faceKeys[j]] = new CompressedTextureBuffer(
             face.internalFormat,
@@ -76,8 +73,8 @@ KTX2Transcoder.transcode = function (ktx2Buffer, supportedTargetFormats) {
       }
 
       // Cleaning up parsed result if it's a single image
-      if (faceKeysLength === 1) {
-        for (i = 0; i < levelsLength; ++i) {
+      if (faceKeys.length === 1) {
+        for (let i = 0; i < levelsLength; ++i) {
           result[i] = result[i][faceKeys[0]];
         }
 

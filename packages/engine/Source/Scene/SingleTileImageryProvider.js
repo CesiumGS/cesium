@@ -24,8 +24,9 @@ import ImageryProvider from "./ImageryProvider.js";
  */
 
 /**
- * Provides a single, top-level imagery tile.  The single image is assumed to use a
- * {@link GeographicTilingScheme}.
+ * Provides a single, top-level imagery tile.  The single image is assumed to be in
+ * the Geographic projection (i.e. WGS84 / EPSG:4326),
+ * and will be rendered using a {@link GeographicTilingScheme}.
  *
  * @alias SingleTileImageryProvider
  * @constructor
@@ -295,6 +296,7 @@ async function doRequest(resource, provider, previousError) {
  * Creates a provider for a single, top-level imagery tile.  The single image is assumed to use a
  * @param {Resource|String} url The url for the tile
  * @param {SingleTileImageryProvider.fromUrlOptions} [options] Object describing initialization options.
+ * @returns {Promise.<SingleTileImageryProvider>} The resolved SingleTileImageryProvider.
  *
  * @example
  * const provider = await SingleTileImageryProvider.fromUrl("https://yoururl.com/image.png");

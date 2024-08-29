@@ -82,7 +82,7 @@ describe("Scene/BingMapsImageryProvider", function () {
     expect(BingMapsImageryProvider).toConformToInterface(ImageryProvider);
   });
 
-  function installFakeMetadataRequest(url, mapStyle, proxy) {
+  function installFakeMetadataRequest(url, mapStyle, mapLayer, culture) {
     const baseUri = new Uri(appendForwardSlash(url));
     const expectedUri = new Uri(
       `REST/v1/Imagery/Metadata/${mapStyle}`
@@ -92,15 +92,20 @@ describe("Scene/BingMapsImageryProvider", function () {
       url,
       functionName
     ) {
-      let uri = new Uri(url);
-      if (proxy) {
-        uri = new Uri(decodeURIComponent(uri.query()));
-      }
+      const uri = new Uri(url);
 
       const query = queryToObject(uri.query());
       expect(query.jsonp).toBeDefined();
       expect(query.incl).toEqual("ImageryProviders");
       expect(query.key).toBeDefined();
+
+      if (defined(mapLayer)) {
+        expect(query.mapLayer).toEqual(mapLayer);
+      }
+
+      if (defined(culture)) {
+        expect(query.culture).toEqual(culture);
+      }
 
       uri.query("");
       expect(uri.toString()).toStartWith(expectedUri.toString());
@@ -238,7 +243,7 @@ describe("Scene/BingMapsImageryProvider", function () {
     });
 
     //These are the same instance only if the cache has been used
-    expect(provider._attributionList).toBe(provider2._attributionList);
+    expect(provider._imageUrlSubdomains).toBe(provider2._imageUrlSubdomains);
 
     installFakeMetadataRequest(url, BingMapsStyle.AERIAL);
     installFakeImageRequest();
@@ -248,8 +253,10 @@ describe("Scene/BingMapsImageryProvider", function () {
       mapStyle: BingMapsStyle.AERIAL,
     });
 
-    // Because the road is different, a non-cached request should have happened
-    expect(provider3._attributionList).not.toBe(provider._attributionList);
+    // Because the style is different, a non-cached request should have happened
+    expect(provider3._imageUrlSubdomains).not.toBe(
+      provider._imageUrlSubdomains
+    );
   });
 
   it("fromUrl resolves with a path", async function () {
@@ -299,6 +306,28 @@ describe("Scene/BingMapsImageryProvider", function () {
     });
     expect(provider).toBeInstanceOf(BingMapsImageryProvider);
     expect(provider.url).toEqual(url);
+  });
+
+  it("fromUrl takes mapLayer as option and sets hasAlphaChannel accordingly", async function () {
+    const url = "http://fake.fake.invalid/";
+    const mapStyle = BingMapsStyle.AERIAL_WITH_LABELS_ON_DEMAND;
+    const mapLayer = "Foreground";
+
+    installFakeMetadataRequest(url, mapStyle, mapLayer);
+    installFakeImageRequest();
+
+    const resource = new Resource({
+      url: url,
+    });
+
+    const provider = await BingMapsImageryProvider.fromUrl(resource, {
+      key: "",
+      mapStyle: mapStyle,
+      mapLayer: mapLayer,
+    });
+
+    expect(provider.mapLayer).toEqual("Foreground");
+    expect(provider.hasAlphaChannel).toBe(true);
   });
 
   it("fromUrl throws if request fails", async function () {
@@ -411,11 +440,10 @@ describe("Scene/BingMapsImageryProvider", function () {
   it("sets correct culture in tile requests", async function () {
     const url = "http://fake.fake.invalid";
     const mapStyle = BingMapsStyle.AERIAL_WITH_LABELS;
-
-    installFakeMetadataRequest(url, mapStyle);
-    installFakeImageRequest();
-
     const culture = "ja-jp";
+
+    installFakeMetadataRequest(url, mapStyle, undefined, culture);
+    installFakeImageRequest();
 
     const provider = await BingMapsImageryProvider.fromUrl(url, {
       key: "",

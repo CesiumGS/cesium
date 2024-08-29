@@ -2,12 +2,11 @@ import {
   Cartesian3,
   Color,
   Intersect,
+  Math as CesiumMath,
   Matrix3,
   Plane,
   TileOrientedBoundingBox,
 } from "../../index.js";
-
-import { Math as CesiumMath } from "../../index.js";
 
 import createFrameState from "../../../../Specs/createFrameState.js";
 

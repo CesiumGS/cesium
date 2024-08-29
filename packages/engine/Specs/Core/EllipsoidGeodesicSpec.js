@@ -1,6 +1,9 @@
-import { Cartographic, Ellipsoid, EllipsoidGeodesic } from "../../index.js";
-
-import { Math as CesiumMath } from "../../index.js";
+import {
+  Cartographic,
+  Ellipsoid,
+  EllipsoidGeodesic,
+  Math as CesiumMath,
+} from "../../index.js";
 
 describe("Core/EllipsoidGeodesic", function () {
   it("throws without start", function () {

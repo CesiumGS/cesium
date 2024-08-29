@@ -80,6 +80,14 @@ Cartesian3.maximumComponent(); // Not Cartesian3.maxComponent()
 Ellipsoid.WGS84; // Not Ellipsoid.WORLD_GEODETIC_SYSTEM_1984
 ```
 
+- If you do use abbreviations, use the recommended casing and do not capitalize all letters in the abbreviation. e.g.
+
+```javascript
+new UrlTemplateImageryProvider(); // Not URLTemplateImageryProvider
+
+resource.url; // Not resource.URL
+```
+
 - Prefer short and descriptive names for local variables, e.g., if a function has only one length variable,
 
 ```javascript
@@ -111,7 +119,7 @@ A few more naming conventions are introduced below along with their design patte
 
 ## Linting
 
-For syntax and style guidelines, we use the ESLint recommended settings (the list of rules can be found [here](http://eslint.org/docs/rules/)) as a base and extend it with additional rules via a shared config Node module, [eslint-config-cesium](https://www.npmjs.com/package/eslint-config-cesium). This package is maintained as a part of the Cesium repository and is also used throughout the Cesium ecosystem. For a list of which rules are enabled, look in [index.js](https://github.com/CesiumGS/cesium/blob/main/Tools/eslint-config-cesium/index.js), [browser.js](https://github.com/CesiumGS/eslint-config-cesium/blob/main/browser.js), and [node.js](https://github.com/CesiumGS/eslint-config-cesium/blob/main/node.js).
+For syntax and style guidelines, we use the ESLint recommended settings (the list of rules can be found [here](http://eslint.org/docs/rules/)) as a base and extend it with additional rules via a shared config Node module, [eslint-config-cesium](https://www.npmjs.com/package/eslint-config-cesium). This package is maintained as a part of the Cesium repository and is also used throughout the Cesium ecosystem. For an up to date list of which rules are enabled, look in [index.js](https://github.com/CesiumGS/eslint-config-cesium/blob/main/index.js), [browser.js](https://github.com/CesiumGS/eslint-config-cesium/blob/main/browser.js), and [node.js](https://github.com/CesiumGS/eslint-config-cesium/blob/main/node.js). Below are listed some specific rules to keep in mind
 
 **General rules:**
 
@@ -128,14 +136,11 @@ For syntax and style guidelines, we use the ESLint recommended settings (the lis
 - [no-trailing-spaces](http://eslint.org/docs/rules/no-trailing-spaces)
 - [no-lonely-if](http://eslint.org/docs/rules/no-lonely-if)
 - [quotes](http://eslint.org/docs/rules/quotes) to enforce using single-quotes
-- [no-sequences](http://eslint.org/docs/rules/no-sequences)
-- [no-unused-expressions](http://eslint.org/docs/rules/no-unused-expressions)
 
 **Node-specific rules:**
 
 - [global-require](http://eslint.org/docs/rules/global-require)
-- [no-buffer-constructor](http://eslint.org/docs/rules/no-buffer-constructor)
-- [no-new-require](http://eslint.org/docs/rules/no-new-require)
+- [n/no-new-require](https://github.com/eslint-community/eslint-plugin-n/blob/master/docs/rules/no-new-require.md)
 
 **[Disabling Rules with Inline Comments](http://eslint.org/docs/user-guide/configuring#disabling-rules-with-inline-comments)**
 
@@ -161,21 +166,13 @@ try {
 ## Units
 
 - Cesium uses SI units:
-  - meters for distances,
-  - radians for angles, and
-  - seconds for time durations.
+  - meters for distances
+  - radians for angles
+  - seconds for time durations
 - If a function has a parameter with a non-standard unit, such as degrees, put the unit in the function name, e.g.,
 
 ```javascript
-Cartesian3.fromDegrees = function (
-  longitude,
-  latitude,
-  height,
-  ellipsoid,
-  result
-) {
-  /* ... */
-};
+Cartesian3.fromDegrees(); // Not Cartesin3.fromAngle()
 ```
 
 ## Basic Code Construction
@@ -248,7 +245,7 @@ console.log(i); // i is undefined here.  Never use a variable before it is decla
 let i = 0.0;
 ```
 
-- A `const` variables is preferred when a value is not updated. This ensures immutability.
+- A `const` variable is preferred when a value is not updated. This ensures immutability.
 
 - :speedboat: Avoid redundant nested property access. This
 
@@ -286,31 +283,26 @@ function radiiEquals(left, right) {
 ```
 
 - Use `undefined` instead of `null`.
-- Test if a variable is defined using Cesium's `defined` function, e.g.,
+- Test if a variable is defined using Cesium's `defined` function. It checks specifically for `undefined` and `null` values allowing _falsy_ values to be defined, e.g.,
 
 ```javascript
-const v = undefined;
-if (defined(v)) {
-  // False
-}
+defined(undefined); // False
+defined(null); // False
 
-const u = {};
-if (defined(u)) {
-  // True
-}
+defined({}); // True
+defined(""); // True
+defined(0); // True
 ```
 
 - Use `Object.freeze` function to create enums, e.g.,
 
 ```javascript
+const ModelAnimationState = {
+  STOPPED: 0,
+  ANIMATING: 1,
+};
 
-    const ModelAnimationState = {
-        STOPPED : 0,
-        ANIMATING : 1
-    };
-
-    return Object.freeze(ModelAnimationState);
-});
+return Object.freeze(ModelAnimationState);
 ```
 
 - Use descriptive comments for non-obvious code, e.g.,
@@ -483,7 +475,7 @@ Some common sensible defaults are
 
 ### Throwing Exceptions
 
-Use the functions of Cesium's [Check](https://github.com/CesiumGS/cesium/blob/main/Source/Core/Check.js) class to throw a `DeveloperError` when the user has a coding error. The most common errors are parameters that are missing, have the wrong type or are out of rangers of the wrong type or are out of range.
+Use the functions of Cesium's [Check](https://github.com/CesiumGS/cesium/blob/main/Source/Core/Check.js) class to throw a `DeveloperError` when the user has a coding error. The most common errors are parameters that are missing, have the wrong type or are out of range.
 
 - For example, to check that a parameter is defined and is an object:
 
@@ -673,7 +665,7 @@ Functions that start with `to` return a new type of object, e.g.,
 
 ```javascript
 Cartesian3.prototype.toString = function () {
-  return "(${this.x}, ${this.y}, ${this.z})";
+  return `(${this.x}, ${this.y}, ${this.z})`;
 };
 ```
 

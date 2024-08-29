@@ -1,11 +1,10 @@
 import {
   Cartesian3,
   HeadingPitchRoll,
+  Math as CesiumMath,
   Matrix3,
   Quaternion,
 } from "../../index.js";
-
-import { Math as CesiumMath } from "../../index.js";
 
 import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";
 
@@ -449,9 +448,18 @@ describe("Core/Quaternion", function () {
     expect(result).toBe(returnedResult);
   });
 
-  it("axis returns Cartesian3 0 when w equals 1.0", function () {
-    const expected = new Cartesian3(0.0, 0.0, 0.0);
+  it("axis returns Cartesian3 (1,0,0) when w equals 1.0", function () {
+    const expected = new Cartesian3(1.0, 0.0, 0.0);
     const quaternion = new Quaternion(4.0, 2.0, 3.0, 1.0);
+    const result = new Cartesian3(1, 2, 3);
+    const returnedResult = Quaternion.computeAxis(quaternion, result);
+    expect(returnedResult).toEqual(expected);
+    expect(result).toBe(returnedResult);
+  });
+
+  it("axis returns Cartesian3 (1,0,0) when w equals -1.0", function () {
+    const expected = new Cartesian3(1.0, 0.0, 0.0);
+    const quaternion = new Quaternion(4.0, 2.0, 3.0, -1.0);
     const result = new Cartesian3(1, 2, 3);
     const returnedResult = Quaternion.computeAxis(quaternion, result);
     expect(returnedResult).toEqual(expected);

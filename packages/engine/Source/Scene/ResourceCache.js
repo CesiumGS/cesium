@@ -146,8 +146,7 @@ ResourceCache.unload = function (resourceLoader) {
  */
 ResourceCache.getSchemaLoader = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  const schema = options.schema;
-  const resource = options.resource;
+  const { schema, resource } = options;
 
   //>>includeStart('debug', pragmas.debug);
   if (defined(schema) === defined(resource)) {
@@ -189,9 +188,7 @@ ResourceCache.getSchemaLoader = function (options) {
  */
 ResourceCache.getEmbeddedBufferLoader = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  const parentResource = options.parentResource;
-  const bufferId = options.bufferId;
-  const typedArray = options.typedArray;
+  const { parentResource, bufferId, typedArray } = options;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.parentResource", parentResource);
@@ -231,7 +228,7 @@ ResourceCache.getEmbeddedBufferLoader = function (options) {
  */
 ResourceCache.getExternalBufferLoader = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  const resource = options.resource;
+  const { resource } = options;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.resource", resource);
@@ -268,10 +265,7 @@ ResourceCache.getExternalBufferLoader = function (options) {
  */
 ResourceCache.getGltfJsonLoader = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  const gltfResource = options.gltfResource;
-  const baseResource = options.baseResource;
-  const typedArray = options.typedArray;
-  const gltfJson = options.gltfJson;
+  const { gltfResource, baseResource, typedArray, gltfJson } = options;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.gltfResource", gltfResource);
@@ -313,10 +307,7 @@ ResourceCache.getGltfJsonLoader = function (options) {
  */
 ResourceCache.getBufferViewLoader = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  const gltf = options.gltf;
-  const bufferViewId = options.bufferViewId;
-  const gltfResource = options.gltfResource;
-  const baseResource = options.baseResource;
+  const { gltf, bufferViewId, gltfResource, baseResource } = options;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.gltf", gltf);
@@ -363,10 +354,7 @@ ResourceCache.getBufferViewLoader = function (options) {
  */
 ResourceCache.getDracoLoader = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  const gltf = options.gltf;
-  const draco = options.draco;
-  const gltfResource = options.gltfResource;
-  const baseResource = options.baseResource;
+  const { gltf, draco, gltfResource, baseResource } = options;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.gltf", gltf);
@@ -424,18 +412,20 @@ ResourceCache.getDracoLoader = function (options) {
  */
 ResourceCache.getVertexBufferLoader = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  const gltf = options.gltf;
-  const gltfResource = options.gltfResource;
-  const baseResource = options.baseResource;
-  const frameState = options.frameState;
-  const bufferViewId = options.bufferViewId;
-  const draco = options.draco;
-  const attributeSemantic = options.attributeSemantic;
-  const accessorId = options.accessorId;
-  const asynchronous = defaultValue(options.asynchronous, true);
-  const dequantize = defaultValue(options.dequantize, false);
-  const loadBuffer = defaultValue(options.loadBuffer, false);
-  const loadTypedArray = defaultValue(options.loadTypedArray, false);
+  const {
+    gltf,
+    gltfResource,
+    baseResource,
+    frameState,
+    bufferViewId,
+    draco,
+    attributeSemantic,
+    accessorId,
+    asynchronous = true,
+    dequantize = false,
+    loadBuffer = false,
+    loadTypedArray = false,
+  } = options;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.gltf", gltf);
@@ -541,15 +531,17 @@ function hasDracoCompression(draco, semantic) {
  */
 ResourceCache.getIndexBufferLoader = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  const gltf = options.gltf;
-  const accessorId = options.accessorId;
-  const gltfResource = options.gltfResource;
-  const baseResource = options.baseResource;
-  const frameState = options.frameState;
-  const draco = options.draco;
-  const asynchronous = defaultValue(options.asynchronous, true);
-  const loadBuffer = defaultValue(options.loadBuffer, false);
-  const loadTypedArray = defaultValue(options.loadTypedArray, false);
+  const {
+    gltf,
+    accessorId,
+    gltfResource,
+    baseResource,
+    frameState,
+    draco,
+    asynchronous = true,
+    loadBuffer = false,
+    loadTypedArray = false,
+  } = options;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.gltf", gltf);
@@ -610,10 +602,7 @@ ResourceCache.getIndexBufferLoader = function (options) {
  */
 ResourceCache.getImageLoader = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  const gltf = options.gltf;
-  const imageId = options.imageId;
-  const gltfResource = options.gltfResource;
-  const baseResource = options.baseResource;
+  const { gltf, imageId, gltfResource, baseResource } = options;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.gltf", gltf);
@@ -663,13 +652,15 @@ ResourceCache.getImageLoader = function (options) {
  */
 ResourceCache.getTextureLoader = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  const gltf = options.gltf;
-  const textureInfo = options.textureInfo;
-  const gltfResource = options.gltfResource;
-  const baseResource = options.baseResource;
-  const supportedImageFormats = options.supportedImageFormats;
-  const frameState = options.frameState;
-  const asynchronous = defaultValue(options.asynchronous, true);
+  const {
+    gltf,
+    textureInfo,
+    gltfResource,
+    baseResource,
+    supportedImageFormats,
+    frameState,
+    asynchronous = true,
+  } = options;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.gltf", gltf);

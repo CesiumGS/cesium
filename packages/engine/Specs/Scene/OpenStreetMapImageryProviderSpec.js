@@ -1,4 +1,5 @@
 import {
+  Math as CesiumMath,
   Rectangle,
   Request,
   RequestScheduler,
@@ -10,7 +11,6 @@ import {
   ImageryState,
   UrlTemplateImageryProvider,
 } from "../../index.js";
-import { Math as CesiumMath } from "../../index.js";
 
 import pollToPromise from "../../../../Specs/pollToPromise.js";
 
@@ -229,6 +229,32 @@ describe("Scene/OpenStreetMapImageryProvider", function () {
       minimumLevel: 1,
     });
     expect(provider.minimumLevel).toEqual(1);
+  });
+
+  it("uses retinaTiles passed to constructor", async function () {
+    const provider = new OpenStreetMapImageryProvider({
+      url: "made/up/osm/server",
+      retinaTiles: true,
+    });
+
+    spyOn(Resource._Implementations, "createImage").and.callFake(function (
+      request,
+      crossOrigin,
+      deferred
+    ) {
+      expect(request.url).toContain("0/0/0@2x.png");
+
+      // Just return any old image.
+      Resource._DefaultImplementations.createImage(
+        new Request({ url: "Data/Images/Red16x16.png" }),
+        crossOrigin,
+        deferred
+      );
+    });
+
+    const image = await provider.requestImage(0, 0, 0);
+    expect(Resource._Implementations.createImage).toHaveBeenCalled();
+    expect(image).toBeImageOrImageBitmap();
   });
 
   it("raises error event when image cannot be loaded", function () {

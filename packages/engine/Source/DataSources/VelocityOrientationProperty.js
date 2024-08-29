@@ -3,6 +3,7 @@ import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
 import Event from "../Core/Event.js";
+import JulianDate from "../Core/JulianDate.js";
 import Matrix3 from "../Core/Matrix3.js";
 import Quaternion from "../Core/Quaternion.js";
 import Transforms from "../Core/Transforms.js";
@@ -17,7 +18,7 @@ import VelocityVectorProperty from "./VelocityVectorProperty.js";
  * @constructor
  *
  * @param {PositionProperty} [position] The position property used to compute the orientation.
- * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid used to determine which way is up.
+ * @param {Ellipsoid} [ellipsoid=Ellipsoid.default] The ellipsoid used to determine which way is up.
  *
  * @example
  * //Create an entity with position and orientation.
@@ -34,7 +35,7 @@ function VelocityOrientationProperty(position, ellipsoid) {
   this._ellipsoid = undefined;
   this._definitionChanged = new Event();
 
-  this.ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
+  this.ellipsoid = defaultValue(ellipsoid, Ellipsoid.default);
 
   const that = this;
   this._velocityVectorProperty.definitionChanged.addEventListener(function () {
@@ -104,15 +105,19 @@ Object.defineProperties(VelocityOrientationProperty.prototype, {
 const positionScratch = new Cartesian3();
 const velocityScratch = new Cartesian3();
 const rotationScratch = new Matrix3();
+const timeScratch = new JulianDate();
 
 /**
  * Gets the value of the property at the provided time.
  *
- * @param {JulianDate} [time] The time for which to retrieve the value.
+ * @param {JulianDate} [time=JulianDate.now()] The time for which to retrieve the value. If omitted, the current system time is used.
  * @param {Quaternion} [result] The object to store the value into, if omitted, a new instance is created and returned.
  * @returns {Quaternion} The modified result parameter or a new instance if the result parameter was not supplied.
  */
 VelocityOrientationProperty.prototype.getValue = function (time, result) {
+  if (!defined(time)) {
+    time = JulianDate.now(timeScratch);
+  }
   const velocity = this._velocityVectorProperty._getValue(
     time,
     velocityScratch,

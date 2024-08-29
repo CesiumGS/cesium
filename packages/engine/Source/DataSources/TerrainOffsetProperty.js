@@ -5,13 +5,14 @@ import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import Event from "../Core/Event.js";
 import Iso8601 from "../Core/Iso8601.js";
+import JulianDate from "../Core/JulianDate.js";
 import CesiumMath from "../Core/Math.js";
-import HeightReference from "../Scene/HeightReference.js";
-import SceneMode from "../Scene/SceneMode.js";
+import HeightReference, {
+  isHeightReferenceRelative,
+} from "../Scene/HeightReference.js";
 import Property from "./Property.js";
 
 const scratchPosition = new Cartesian3();
-const scratchCarto = new Cartographic();
 
 /**
  * @private
@@ -72,7 +73,7 @@ function TerrainOffsetProperty(
 
     this._updateClamping();
 
-    this._normal = scene.globe.ellipsoid.geodeticSurfaceNormal(
+    this._normal = scene.ellipsoid.geodeticSurfaceNormal(
       position,
       this._normal
     );
@@ -115,52 +116,51 @@ TerrainOffsetProperty.prototype._updateClamping = function () {
   }
 
   const scene = this._scene;
-  const globe = scene.globe;
   const position = this._position;
 
-  if (!defined(globe) || Cartesian3.equals(position, Cartesian3.ZERO)) {
+  if (Cartesian3.equals(position, Cartesian3.ZERO)) {
     this._terrainHeight = 0;
     return;
   }
-  const ellipsoid = globe.ellipsoid;
-  const surface = globe._surface;
-
-  const that = this;
+  const ellipsoid = scene.ellipsoid;
   const cartographicPosition = ellipsoid.cartesianToCartographic(
     position,
     this._cartographicPosition
   );
-  const height = globe.getHeight(cartographicPosition);
+
+  const height = scene.getHeight(cartographicPosition, this._heightReference);
   if (defined(height)) {
     this._terrainHeight = height;
   } else {
     this._terrainHeight = 0;
   }
 
-  function updateFunction(clampedPosition) {
-    if (scene.mode === SceneMode.SCENE3D) {
-      const carto = ellipsoid.cartesianToCartographic(
-        clampedPosition,
-        scratchCarto
-      );
-      that._terrainHeight = carto.height;
-    } else {
-      that._terrainHeight = clampedPosition.x;
-    }
-    that.definitionChanged.raiseEvent();
-  }
-  this._removeCallbackFunc = surface.updateHeight(
+  const updateFunction = (clampedPosition) => {
+    this._terrainHeight = clampedPosition.height;
+    this.definitionChanged.raiseEvent();
+  };
+
+  this._removeCallbackFunc = scene.updateHeight(
     cartographicPosition,
-    updateFunction
+    updateFunction,
+    this._heightReference
   );
 };
+
+const timeScratch = new JulianDate();
 
 /**
  * Gets the height relative to the terrain based on the positions.
  *
+ * @param {JulianDate} [time=JulianDate.now()] The time for which to retrieve the value. If omitted, the current system time is used.
+ * @param {object} [result] The object to store the value into, if omitted, a new instance is created and returned.
  * @returns {Cartesian3} The offset
  */
 TerrainOffsetProperty.prototype.getValue = function (time, result) {
+  if (!defined(time)) {
+    time = JulianDate.now(timeScratch);
+  }
+
   const heightReference = Property.getValueOrDefault(
     this._heightReference,
     time,
@@ -174,7 +174,7 @@ TerrainOffsetProperty.prototype.getValue = function (time, result) {
 
   if (
     heightReference === HeightReference.NONE &&
-    extrudedHeightReference !== HeightReference.RELATIVE_TO_GROUND
+    !isHeightReferenceRelative(extrudedHeightReference)
   ) {
     this._position = Cartesian3.clone(Cartesian3.ZERO, this._position);
     return Cartesian3.clone(Cartesian3.ZERO, result);
@@ -212,10 +212,7 @@ TerrainOffsetProperty.prototype.getValue = function (time, result) {
 
   this._updateClamping();
 
-  const normal = scene.globe.ellipsoid.geodeticSurfaceNormal(
-    position,
-    this._normal
-  );
+  const normal = scene.ellipsoid.geodeticSurfaceNormal(position, this._normal);
   return Cartesian3.multiplyByScalar(normal, this._terrainHeight, result);
 };
 

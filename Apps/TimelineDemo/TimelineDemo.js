@@ -1,6 +1,5 @@
 define(["dijit/dijit", "dojo"], function (dijit, dojo) {
   "use strict";
-  /* global Cesium */
 
   const defined = Cesium.defined;
   const Clock = Cesium.Clock;

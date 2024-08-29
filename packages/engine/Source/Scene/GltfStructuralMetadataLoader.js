@@ -34,15 +34,17 @@ import ResourceLoaderState from "./ResourceLoaderState.js";
  */
 function GltfStructuralMetadataLoader(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  const gltf = options.gltf;
-  const extension = options.extension;
-  const extensionLegacy = options.extensionLegacy;
-  const gltfResource = options.gltfResource;
-  const baseResource = options.baseResource;
-  const supportedImageFormats = options.supportedImageFormats;
-  const frameState = options.frameState;
-  const cacheKey = options.cacheKey;
-  const asynchronous = defaultValue(options.asynchronous, true);
+  const {
+    gltf,
+    extension,
+    extensionLegacy,
+    gltfResource,
+    baseResource,
+    supportedImageFormats,
+    frameState,
+    cacheKey,
+    asynchronous = true,
+  } = options;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.gltf", gltf);

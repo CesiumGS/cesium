@@ -1,12 +1,11 @@
 import {
   Cartesian3,
+  Math as CesiumMath,
   Matrix3,
   Matrix4,
   Plane,
   ClippingPlane,
 } from "../../index.js";
-
-import { Math as CesiumMath } from "../../index.js";
 
 describe("Scene/ClippingPlane", function () {
   it("constructs", function () {

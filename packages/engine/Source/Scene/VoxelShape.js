@@ -118,13 +118,16 @@ VoxelShape.prototype.computeOrientedBoundingBoxForTile =
   DeveloperError.throwInstantiationError;
 
 /**
- * Computes an approximate step size for raymarching the root tile of a voxel grid.
+ * Computes an oriented bounding box for a specified sample within a specified tile.
  * The update function must be called before calling this function.
  *
- * @param {Cartesian3} voxelDimensions The voxel grid dimensions for a tile.
- * @returns {number} The step size.
+ * @param {SpatialNode} spatialNode The spatial node containing the sample
+ * @param {Cartesian3} tileDimensions The size of the tile in number of samples, before padding
+ * @param {Cartesian3} tileUv The sample coordinate within the tile
+ * @param {OrientedBoundingBox} result The oriented bounding box that will be set to enclose the specified sample
+ * @returns {OrientedBoundingBox} The oriented bounding box.
  */
-VoxelShape.prototype.computeApproximateStepSize =
+VoxelShape.prototype.computeOrientedBoundingBoxForSample =
   DeveloperError.throwInstantiationError;
 
 /**

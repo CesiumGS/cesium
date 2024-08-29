@@ -1,0 +1,47 @@
+name: main
+on: 
+  workflow_run:
+    workflows: [dev, prod]
+    types: [completed]
+    branches: 
+      - main
+      - 'cesium.com'
+      - production
+jobs:
+  if_error_or_failure:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'failure' }}
+    steps:
+      - name: message result in slack
+        id: slack
+        uses: slackapi/slack-github-action@v1.26.0
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+        with:
+          channel-id: cesiumjs
+          payload: |
+            {
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": ":gh-failed: Last commit on \"${{ github.ref_name }}\" failed"
+                  }
+                },
+                {
+                  "type": "actions",
+                  "elements": [
+                    {
+                      "type": "button",
+                      "text": {
+                          "type": "plain_text",
+                          "text": "See commit"
+                      },
+                      "url": "${{ github.event.head_commit.url }}",
+                      "action_id": "button_1"
+                    }
+                  ]
+                }
+              ]
+            }

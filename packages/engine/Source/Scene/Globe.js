@@ -28,6 +28,7 @@ import ImageryLayerCollection from "./ImageryLayerCollection.js";
 import QuadtreePrimitive from "./QuadtreePrimitive.js";
 import SceneMode from "./SceneMode.js";
 import ShadowMode from "./ShadowMode.js";
+import CesiumMath from "../Core/Math.js";
 
 /**
  * The globe rendered in the scene, including its terrain ({@link Globe#terrainProvider})
@@ -36,11 +37,11 @@ import ShadowMode from "./ShadowMode.js";
  * @alias Globe
  * @constructor
  *
- * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] Determines the size and shape of the
+ * @param {Ellipsoid} [ellipsoid=Ellipsoid.default] Determines the size and shape of the
  * globe.
  */
 function Globe(ellipsoid) {
-  ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
+  ellipsoid = defaultValue(ellipsoid, Ellipsoid.default);
   const terrainProvider = new EllipsoidTerrainProvider({
     ellipsoid: ellipsoid,
   });
@@ -191,9 +192,9 @@ function Globe(ellipsoid) {
    * Enable the ground atmosphere, which is drawn over the globe when viewed from a distance between <code>lightingFadeInDistance</code> and <code>lightingFadeOutDistance</code>.
    *
    * @type {boolean}
-   * @default true
+   * @default true when using the WGS84 ellipsoid, false otherwise
    */
-  this.showGroundAtmosphere = true;
+  this.showGroundAtmosphere = Ellipsoid.WGS84.equals(ellipsoid);
 
   /**
    * The intensity of the light that is used for computing the ground atmosphere color.
@@ -250,18 +251,19 @@ function Globe(ellipsoid) {
    * when <code>enableLighting</code> or <code>showGroundAtmosphere</code> is <code>true</code>.
    *
    * @type {number}
-   * @default 10000000.0
+   * @default 1/2 * pi * ellipsoid.minimumRadius
    */
-  this.lightingFadeOutDistance = 1.0e7;
+  this.lightingFadeOutDistance =
+    CesiumMath.PI_OVER_TWO * ellipsoid.minimumRadius;
 
   /**
    * The distance where lighting resumes. This only takes effect
    * when <code>enableLighting</code> or <code>showGroundAtmosphere</code> is <code>true</code>.
    *
    * @type {number}
-   * @default 20000000.0
+   * @default pi * ellipsoid.minimumRadius
    */
-  this.lightingFadeInDistance = 2.0e7;
+  this.lightingFadeInDistance = CesiumMath.PI * ellipsoid.minimumRadius;
 
   /**
    * The distance where the darkness of night from the ground atmosphere fades out to a lit ground atmosphere.
@@ -269,9 +271,9 @@ function Globe(ellipsoid) {
    * <code>dynamicAtmosphereLighting</code> are <code>true</code>.
    *
    * @type {number}
-   * @default 10000000.0
+   * @default 1/2 * pi * ellipsoid.minimumRadius
    */
-  this.nightFadeOutDistance = 1.0e7;
+  this.nightFadeOutDistance = CesiumMath.PI_OVER_TWO * ellipsoid.minimumRadius;
 
   /**
    * The distance where the darkness of night from the ground atmosphere fades in to an unlit ground atmosphere.
@@ -279,9 +281,10 @@ function Globe(ellipsoid) {
    * <code>dynamicAtmosphereLighting</code> are <code>true</code>.
    *
    * @type {number}
-   * @default 50000000.0
+   * @default 5/2 * pi * ellipsoid.minimumRadius
    */
-  this.nightFadeInDistance = 5.0e7;
+  this.nightFadeInDistance =
+    5.0 * CesiumMath.PI_OVER_TWO * ellipsoid.minimumRadius;
 
   /**
    * True if an animated wave effect should be shown in areas of the globe
@@ -339,26 +342,6 @@ function Globe(ellipsoid) {
    * @default 0.0
    */
   this.atmosphereBrightnessShift = 0.0;
-
-  /**
-   * A scalar used to exaggerate the terrain. Defaults to <code>1.0</code> (no exaggeration).
-   * A value of <code>2.0</code> scales the terrain by 2x.
-   * A value of <code>0.0</code> makes the terrain completely flat.
-   * Note that terrain exaggeration will not modify any other primitive as they are positioned relative to the ellipsoid.
-   * @type {number}
-   * @default 1.0
-   */
-  this.terrainExaggeration = 1.0;
-
-  /**
-   * The height from which terrain is exaggerated. Defaults to <code>0.0</code> (scaled relative to ellipsoid surface).
-   * Terrain that is above this height will scale upwards and terrain that is below this height will scale downwards.
-   * Note that terrain exaggeration will not modify any other primitive as they are positioned relative to the ellipsoid.
-   * If {@link Globe#terrainExaggeration} is <code>1.0</code> this value will have no effect.
-   * @type {number}
-   * @default 0.0
-   */
-  this.terrainExaggerationRelativeHeight = 0.0;
 
   /**
    * Whether to show terrain skirts. Terrain skirts are geometry extending downwards from a tile's edges used to hide seams between neighboring tiles.
@@ -467,6 +450,20 @@ Object.defineProperties(Globe.prototype, {
     },
     set: function (value) {
       this._surface.tileProvider.clippingPlanes = value;
+    },
+  },
+  /**
+   * A property specifying a {@link ClippingPolygonCollection} used to selectively disable rendering inside or outside a list of polygons.
+   *
+   * @memberof Globe.prototype
+   * @type {ClippingPolygonCollection}
+   */
+  clippingPolygons: {
+    get: function () {
+      return this._surface.tileProvider.clippingPolygons;
+    },
+    set: function (value) {
+      this._surface.tileProvider.clippingPolygons = value;
     },
   },
   /**
@@ -644,8 +641,8 @@ function makeShadersDirty(globe) {
 
   const requireNormals =
     defined(globe._material) &&
-    (globe._material.shaderSource.match(/slope/) ||
-      globe._material.shaderSource.match("normalEC"));
+    (defined(globe._material.shaderSource.match(/slope/)) ||
+      defined(globe._material.shaderSource.match("normalEC")));
 
   const fragmentSources = [AtmosphereCommon, GroundAtmosphere];
   if (
@@ -815,7 +812,7 @@ Globe.prototype.pick = function (ray, scene, result) {
   if (defined(result) && scene.mode !== SceneMode.SCENE3D) {
     result = Cartesian3.fromElements(result.y, result.z, result.x, result);
     const carto = scene.mapProjection.unproject(result, cartoScratch);
-    result = scene.globe.ellipsoid.cartographicToCartesian(carto, result);
+    result = this._ellipsoid.cartographicToCartesian(carto, result);
   }
 
   return result;
@@ -1059,6 +1056,7 @@ Globe.prototype.beginFrame = function (frameState) {
     tileProvider.undergroundColor = this._undergroundColor;
     tileProvider.undergroundColorAlphaByDistance = this._undergroundColorAlphaByDistance;
     tileProvider.lambertDiffuseMultiplier = this.lambertDiffuseMultiplier;
+
     surface.beginFrame(frameState);
   }
 };

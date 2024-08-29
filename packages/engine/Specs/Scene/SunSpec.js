@@ -1,6 +1,10 @@
-import { BoundingSphere, Color, SceneMode, Sun } from "../../index.js";
-
-import { Math as CesiumMath } from "../../index.js";
+import {
+  BoundingSphere,
+  Color,
+  Math as CesiumMath,
+  SceneMode,
+  Sun,
+} from "../../index.js";
 
 import createScene from "../../../../Specs/createScene.js";
 

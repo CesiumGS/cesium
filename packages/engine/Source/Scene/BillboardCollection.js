@@ -28,7 +28,7 @@ import BillboardCollectionVS from "../Shaders/BillboardCollectionVS.js";
 import Billboard from "./Billboard.js";
 import BlendingState from "./BlendingState.js";
 import BlendOption from "./BlendOption.js";
-import HeightReference from "./HeightReference.js";
+import HeightReference, { isHeightReferenceClamp } from "./HeightReference.js";
 import HorizontalOrigin from "./HorizontalOrigin.js";
 import SceneMode from "./SceneMode.js";
 import SDFSettings from "./SDFSettings.js";
@@ -54,6 +54,7 @@ const DISTANCE_DISPLAY_CONDITION_INDEX = Billboard.DISTANCE_DISPLAY_CONDITION;
 const DISABLE_DEPTH_DISTANCE = Billboard.DISABLE_DEPTH_DISTANCE;
 const TEXTURE_COORDINATE_BOUNDS = Billboard.TEXTURE_COORDINATE_BOUNDS;
 const SDF_INDEX = Billboard.SDF_INDEX;
+const SPLIT_DIRECTION_INDEX = Billboard.SPLIT_DIRECTION_INDEX;
 const NUMBER_OF_PROPERTIES = Billboard.NUMBER_OF_PROPERTIES;
 
 let attributeLocations;
@@ -71,6 +72,7 @@ const attributeLocationsBatched = {
   textureCoordinateBoundsOrLabelTranslate: 9,
   a_batchId: 10,
   sdf: 11,
+  splitDirection: 12,
 };
 
 const attributeLocationsInstanced = {
@@ -87,6 +89,7 @@ const attributeLocationsInstanced = {
   textureCoordinateBoundsOrLabelTranslate: 10,
   a_batchId: 11,
   sdf: 12,
+  splitDirection: 13,
 };
 
 /**
@@ -311,6 +314,7 @@ function BillboardCollection(options) {
     BufferUsage.STATIC_DRAW, // PIXEL_OFFSET_SCALE_BY_DISTANCE_INDEX
     BufferUsage.STATIC_DRAW, // DISTANCE_DISPLAY_CONDITION_INDEX
     BufferUsage.STATIC_DRAW, // TEXTURE_COORDINATE_BOUNDS
+    BufferUsage.STATIC_DRAW, // SPLIT_DIRECTION_INDEX
   ];
 
   this._highlightColor = Color.clone(Color.WHITE); // Only used by Vector3DTilePoints
@@ -426,7 +430,7 @@ function destroyBillboards(billboards) {
  * Creates and adds a billboard with the specified initial properties to the collection.
  * The added billboard is returned so it can be modified or removed from the collection later.
  *
- * @param {object}[options] A template describing the billboard's properties as shown in Example 1.
+ * @param {Billboard.ConstructorOptions}[options] A template describing the billboard's properties as shown in Example 1.
  * @returns {Billboard} The billboard that was added to the collection.
  *
  * @performance Calling <code>add</code> is expected constant time.  However, the collection's vertex buffer
@@ -776,6 +780,12 @@ function createVAF(
       componentsPerAttribute: 4,
       componentDatatype: ComponentDatatype.FLOAT,
       usage: buffersUsage[TEXTURE_COORDINATE_BOUNDS],
+    },
+    {
+      index: attributeLocations.splitDirection,
+      componentsPerAttribute: 1,
+      componentDatatype: ComponentDatatype.FLOAT,
+      usage: buffersUsage[SPLIT_DIRECTION_INDEX],
     },
   ];
 
@@ -1375,7 +1385,7 @@ function writeCompressedAttribute3(
 
   let disableDepthTestDistance = billboard.disableDepthTestDistance;
   const clampToGround =
-    billboard.heightReference === HeightReference.CLAMP_TO_GROUND &&
+    isHeightReferenceClamp(billboard.heightReference) &&
     frameState.context.depthTexture;
   if (!defined(disableDepthTestDistance)) {
     disableDepthTestDistance = clampToGround ? 5000.0 : 0.0;
@@ -1448,7 +1458,7 @@ function writeTextureCoordinateBoundsOrLabelTranslate(
   vafWriters,
   billboard
 ) {
-  if (billboard.heightReference === HeightReference.CLAMP_TO_GROUND) {
+  if (isHeightReferenceClamp(billboard.heightReference)) {
     const scene = billboardCollection._scene;
     const context = frameState.context;
     const globeTranslucent = frameState.globeTranslucencyState.translucent;
@@ -1586,6 +1596,34 @@ function writeSDF(
   }
 }
 
+function writeSplitDirection(
+  billboardCollection,
+  frameState,
+  textureAtlasCoordinates,
+  vafWriters,
+  billboard
+) {
+  const writer = vafWriters[attributeLocations.splitDirection];
+  let direction = 0.0;
+
+  const split = billboard.splitDirection;
+  if (defined(split)) {
+    direction = split;
+  }
+
+  let i;
+  if (billboardCollection._instanced) {
+    i = billboard._index;
+    writer(i, direction);
+  } else {
+    i = billboard._index * 4;
+    writer(i + 0, direction);
+    writer(i + 1, direction);
+    writer(i + 2, direction);
+    writer(i + 3, direction);
+  }
+}
+
 function writeBillboard(
   billboardCollection,
   frameState,
@@ -1664,6 +1702,13 @@ function writeBillboard(
     billboard
   );
   writeSDF(
+    billboardCollection,
+    frameState,
+    textureAtlasCoordinates,
+    vafWriters,
+    billboard
+  );
+  writeSplitDirection(
     billboardCollection,
     frameState,
     textureAtlasCoordinates,
@@ -1979,6 +2024,10 @@ BillboardCollection.prototype.update = function (frameState) {
 
     if (properties[SDF_INDEX]) {
       writers.push(writeSDF);
+    }
+
+    if (properties[SPLIT_DIRECTION_INDEX]) {
+      writers.push(writeSplitDirection);
     }
 
     const numWriters = writers.length;

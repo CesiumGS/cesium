@@ -7,13 +7,11 @@ import {
   ComputeCommand,
   DrawCommand,
   defined,
+  Math as CesiumMath,
   PerspectiveFrustum,
 } from "../../index.js";
 
 import createScene from "../../../../Specs/createScene.js";
-
-import { Math as CesiumMath } from "../../index.js";
-
 import pollToPromise from "../../../../Specs/pollToPromise.js";
 
 describe(

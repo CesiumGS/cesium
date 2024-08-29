@@ -35,9 +35,9 @@ import TerrainProvider from "./TerrainProvider.js";
  * @param {TilingScheme} [options.tilingScheme] The tiling scheme specifying how the ellipsoidal
  * surface is broken into tiles. If this parameter is not provided, a {@link GeographicTilingScheme}
  * is used.
- * @param {Ellipsoid} [options.ellipsoid] The ellipsoid.  If the tilingScheme is specified,
+ * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.default] The ellipsoid.  If the tilingScheme is specified,
  * this parameter is ignored and the tiling scheme's ellipsoid is used instead. If neither
- * parameter is specified, the WGS84 ellipsoid is used.
+ * parameter is specified, the default ellipsoid is used.
  * @param {Credit|string} [options.credit] A credit for the data source, which is displayed on the canvas.
  *
  * @example
@@ -67,7 +67,7 @@ function CustomHeightmapTerrainProvider(options) {
   this._tilingScheme = options.tilingScheme;
   if (!defined(this._tilingScheme)) {
     this._tilingScheme = new GeographicTilingScheme({
-      ellipsoid: defaultValue(options.ellipsoid, Ellipsoid.WGS84),
+      ellipsoid: defaultValue(options.ellipsoid, Ellipsoid.default),
     });
   }
 
@@ -157,6 +157,20 @@ Object.defineProperties(CustomHeightmapTerrainProvider.prototype, {
   hasVertexNormals: {
     get: function () {
       return false;
+    },
+  },
+
+  /**
+   * Gets an object that can be used to determine availability of terrain from this provider, such as
+   * at points and in rectangles. This property may be undefined if availability
+   * information is not available.
+   * @memberof CustomHeightmapTerrainProvider.prototype
+   * @type {TileAvailability}
+   * @readonly
+   */
+  availability: {
+    get: function () {
+      return undefined;
     },
   },
 

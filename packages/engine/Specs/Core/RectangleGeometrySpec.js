@@ -4,13 +4,12 @@ import {
   Ellipsoid,
   GeographicProjection,
   GeometryOffsetAttribute,
+  Math as CesiumMath,
   Matrix2,
   Rectangle,
   RectangleGeometry,
   VertexFormat,
 } from "../../index.js";
-
-import { Math as CesiumMath } from "../../index.js";
 
 import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";
 

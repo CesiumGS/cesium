@@ -208,6 +208,7 @@ describe("Widgets/BaseLayerPicker/BaseLayerPickerViewModel", function () {
     });
 
     viewModel.selectedImagery = testProviderViewModel;
+    viewModel.selectedTerrain = testProviderViewModel3;
     await testProviderViewModel.creationCommand();
     expect(viewModel.buttonTooltip).toEqual(
       `${testProviderViewModel.name}\n${testProviderViewModel3.name}`
