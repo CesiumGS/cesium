@@ -177,14 +177,26 @@
         });
 
         const camera = viewer.camera;
+        const scene = viewer.scene;
 
         const scratchPosition = new Cesium.Cartesian3();
         const scratchOrientation = new Cesium.Quaternion();
         const scratchTransform = new Cesium.Matrix4();
         const offset = new Cesium.Cartesian3(-100, 0, 10);
 
+        let morphing = false;
+        scene.morphStart.addEventListener(function () {
+          morphing = true;
+        });
+        scene.morphComplete.addEventListener(function () {
+          morphing = false;
+        });
+
         // Update camera to follow entity's position and orientation
         viewer.clock.onTick.addEventListener(function (clock) {
+          if (morphing) {
+            return;
+          }
           const time = clock.currentTime;
           const entityPosition = position.getValue(time, scratchPosition);
           const entityOrientation = orientation.getValue(
