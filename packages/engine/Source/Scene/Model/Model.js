@@ -343,7 +343,7 @@ function Model(options) {
 
   this._allowVerticalExaggeration = defaultValue(
     options.allowVerticalExaggeration,
-    false
+    true
   );
   this._verticalExaggerationOn = false;
 
