@@ -33,6 +33,7 @@ This is an npm-only release to extra source maps included in 1.121
 - Added `WaterMask` globe material, which visualizes areas of water or land based on the terrain's water mask. [#12149](https://github.com/CesiumGS/cesium/pull/12149)
 - Made the `time` parameter optional for `Property`, using `JulianDate.now()` as default. [#12099](https://github.com/CesiumGS/cesium/pull/12099)
 - Exposes `ScreenSpaceCameraController.zoomFactor` to allow adjusting the zoom factor (speed). [#9145](https://github.com/CesiumGS/cesium/pull/9145)
+- Added `ScreenSpaceCameraController.maximumTiltAngle` to limit how much the camera can tilt.
 
 ##### Fixes :wrench:
 
