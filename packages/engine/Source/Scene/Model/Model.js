@@ -123,7 +123,7 @@ import pickModel from "./pickModel.js";
  * @privateParam {boolean} [options.show=true] Whether or not to render the model.
  * @privateParam {Matrix4} [options.modelMatrix=Matrix4.IDENTITY]  The 4x4 transformation matrix that transforms the model from model to world coordinates.
  * @privateParam {number} [options.scale=1.0] A uniform scale applied to this model.
- * @privateParam {boolean} [options.allowVerticalExaggeration=false] Allows the model to participate in vertical exaggeration.
+ * @privateParam {boolean} [options.allowVerticalExaggeration=true] Allows the model to participate in vertical exaggeration.
  * @privateParam {number} [options.minimumPixelSize=0.0] The approximate minimum pixel size of the model regardless of zoom.
  * @privateParam {number} [options.maximumScale] The maximum scale size of a model. An upper limit for minimumPixelSize.
  * @privateParam {object} [options.id] A user-defined object to return when the model is picked with {@link Scene#pick}.
@@ -1358,7 +1358,6 @@ Object.defineProperties(Model.prototype, {
     set: function (value) {
       if (value !== this._allowVerticalExaggeration) {
         this.resetDrawCommands();
-        //this._verticalExaggerationDirty = true;
       }
       this._allowVerticalExaggeration = value;
     },
@@ -2791,7 +2790,7 @@ Model.prototype.destroyModelResources = function () {
  * @param {boolean} [options.show=true] Whether or not to render the model.
  * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the model from model to world coordinates.
  * @param {number} [options.scale=1.0] A uniform scale applied to this model.
- * @param {boolean} [options.allowVerticalExaggeration=false] Allows the model to participate in Vertical Exaggeration
+ * @param {boolean} [options.allowVerticalExaggeration=true] Allows the model to participate in Vertical Exaggeration
  * @param {number} [options.minimumPixelSize=0.0] The approximate minimum pixel size of the model regardless of zoom.
  * @param {number} [options.maximumScale] The maximum scale size of a model. An upper limit for minimumPixelSize.
  * @param {object} [options.id] A user-defined object to return when the model is picked with {@link Scene#pick}.

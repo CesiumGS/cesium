@@ -196,7 +196,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [T2 Software](http://t2.com.tr/)
   - [Hüseyin ATEŞ](https://github.com/ateshuseyin)
   - [İbrahim Furkan Aygar](https://github.com/furkanaygar)
-- [MSA]
+- MSA
   - [Timothy Eichfeld](https://github.com/timeichfeld-msa)
 - [EMapGis](http://emapgis.com)
   - [IKangXu](https://github.com/IKangXu)

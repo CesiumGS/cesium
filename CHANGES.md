@@ -6,7 +6,6 @@
 
 ##### Additions :tada:
 
-
 - added allowVerticalExaggeration configuration to models [#12141](https://github.com/CesiumGS/cesium/pull/12141)
 - Enable MSAA by default with 4 samples. To turn MSAA off set `scene.msaaSamples = 1` [#12158](https://github.com/CesiumGS/cesium/pull/12158)
 - Made the `time` parameter optional for `Property`, using `JulianDate.now()` as default. [#12099](https://github.com/CesiumGS/cesium/pull/12099)
