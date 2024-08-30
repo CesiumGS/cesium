@@ -83,6 +83,7 @@ function GlobeSurfaceTileProvider(options) {
   this.lightingFadeOutDistance = 6500000.0;
   this.lightingFadeInDistance = 9000000.0;
   this.hasWaterMask = false;
+  this.showWaterEffect = false;
   this.oceanNormalMap = undefined;
   this.zoomedOutOceanSpecularIntensity = 0.5;
   this.enableLighting = false;
@@ -2181,8 +2182,8 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
   const lambertDiffuseMultiplier = tileProvider.lambertDiffuseMultiplier;
   const vertexShadowDarkness = tileProvider.vertexShadowDarkness;
 
-  const showReflectiveOcean =
-    tileProvider.hasWaterMask && defined(waterMaskTexture);
+  const hasWaterMask = tileProvider.hasWaterMask && defined(waterMaskTexture);
+  const showReflectiveOcean = hasWaterMask && tileProvider.showWaterEffect;
   const oceanNormalMap = tileProvider.oceanNormalMap;
   const showOceanWaves = showReflectiveOcean && defined(oceanNormalMap);
   const terrainProvider = tileProvider.terrainProvider;
@@ -2214,7 +2215,7 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
     perFragmentGroundAtmosphere = cameraDistance > fadeOutDistance;
   }
 
-  if (showReflectiveOcean) {
+  if (hasWaterMask) {
     --maxTextures;
   }
   if (showOceanWaves) {
@@ -2329,6 +2330,7 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
   const surfaceShaderSetOptions = surfaceShaderSetOptionsScratch;
   surfaceShaderSetOptions.frameState = frameState;
   surfaceShaderSetOptions.surfaceTile = surfaceTile;
+  surfaceShaderSetOptions.hasWaterMask = hasWaterMask;
   surfaceShaderSetOptions.showReflectiveOcean = showReflectiveOcean;
   surfaceShaderSetOptions.showOceanWaves = showOceanWaves;
   surfaceShaderSetOptions.enableLighting = tileProvider.enableLighting;
