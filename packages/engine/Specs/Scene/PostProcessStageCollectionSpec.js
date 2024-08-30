@@ -423,9 +423,6 @@ describe(
           expect(rgba[2]).withContext("b").toEqual(expectedColor[2]);
           expect(rgba[3]).withContext("a").toEqual(expectedColor[3]);
         });
-
-        scene.highDynamicRange = false;
-        scene.primitives.removeAll();
       }
 
       describe("Reinhard", () => {
