@@ -822,7 +822,7 @@ describe(
 
       const rectanglePrimitive = createRectangle(rectangle, 1000.0);
       rectanglePrimitive.appearance.material.uniforms.color = new Color(
-        10.0,
+        4.0,
         0.0,
         0.0,
         1.0
@@ -836,8 +836,8 @@ describe(
       expect(scene).toRenderAndCall(function (rgba) {
         expect(rgba[0]).toBeGreaterThan(0);
         expect(rgba[0]).toBeLessThanOrEqual(255);
-        expect(rgba[1]).toEqual(0);
-        expect(rgba[2]).toEqual(0);
+        expect(rgba[1]).toEqualEpsilon(223, 1);
+        expect(rgba[2]).toEqualEpsilon(223, 1);
       });
     });
 

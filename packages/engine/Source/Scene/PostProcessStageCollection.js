@@ -317,7 +317,7 @@ Object.defineProperties(PostProcessStageCollection.prototype, {
    * Specifies the tonemapping algorithm used when rendering with high dynamic range.
    * {@link https://sandcastle.cesium.com/?src=High%20Dynamic%20Range.html|Sandcastle Demo}
    *
-   * @example viewer.scene.postProcessStages.tonemapper = Cesium.Tonemapper.PBR_NEUTRAL;
+   * @example viewer.scene.postProcessStages.tonemapper = Cesium.Tonemapper.ACES;
    *
    * @default Tonemapper.PBR_NEUTRAL
    * @memberof PostProcessStageCollection.prototype
@@ -397,7 +397,7 @@ Object.defineProperties(PostProcessStageCollection.prototype, {
   /**
    * Control the exposure when HDR is on. Less than 1.0 makes the tonemapping darker while greater than 1.0 makes it brighter.
    *
-   * @example viewer.scene.postProcessStages.exposure = 1.0
+   * @example viewer.scene.postProcessStages.exposure = 1.0;
    *
    * @default 1.0
    * @memberof PostProcessStageCollection.prototype
