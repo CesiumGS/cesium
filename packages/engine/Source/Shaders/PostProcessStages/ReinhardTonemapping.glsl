@@ -4,8 +4,9 @@ in vec2 v_textureCoordinates;
 
 #ifdef AUTO_EXPOSURE
 uniform sampler2D autoExposure;
-#endif
+#else
 uniform float exposure;
+#endif
 
 // See equation 3:
 //    http://www.cs.utah.edu/~reinhard/cdrom/tonemap.pdf

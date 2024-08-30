@@ -670,7 +670,7 @@ PostProcessStageLibrary.createAcesTonemappingStage = function (
     fragmentShader: fs,
     uniforms: {
       autoExposure: undefined,
-      exposure: 1,
+      exposure: 1.0,
     },
   });
 };
@@ -691,7 +691,7 @@ PostProcessStageLibrary.createFilmicTonemappingStage = function (
     fragmentShader: fs,
     uniforms: {
       autoExposure: undefined,
-      exposure: 1,
+      exposure: 1.0,
     },
   });
 };
@@ -712,7 +712,7 @@ PostProcessStageLibrary.createPbrNeutralTonemappingStage = function (
     fragmentShader: fs,
     uniforms: {
       autoExposure: undefined,
-      exposure: 1,
+      exposure: 1.0,
     },
   });
 };
@@ -733,7 +733,7 @@ PostProcessStageLibrary.createReinhardTonemappingStage = function (
     fragmentShader: fs,
     uniforms: {
       autoExposure: undefined,
-      exposure: 1,
+      exposure: 1.0,
     },
   });
 };

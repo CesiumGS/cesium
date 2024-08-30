@@ -134,7 +134,6 @@
         Cesium.knockout
           .getObservable(viewModel, "exposure")
           .subscribe(function (newValue) {
-            console.log(newValue);
             viewer.scene.postProcessStages.exposure = Number.parseFloat(
               newValue
             );

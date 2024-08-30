@@ -37,7 +37,7 @@ const Tonemapper = {
   ACES: "ACES",
 
   /**
-   * Use the PbrNeutral tonemapping from Khronos.
+   * Use the PBR Neutral tonemapping {@link https://github.com/KhronosGroup/ToneMapping/tree/main/PBR_Neutral|from Khronos}.
    *
    * @type {string}
    * @constant

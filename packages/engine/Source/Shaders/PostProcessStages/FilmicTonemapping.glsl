@@ -4,8 +4,9 @@ in vec2 v_textureCoordinates;
 
 #ifdef AUTO_EXPOSURE
 uniform sampler2D autoExposure;
-#endif
+#else
 uniform float exposure;
+#endif
 
 // See slides 142 and 143:
 //     http://www.gdcvault.com/play/1012459/Uncharted_2__HDR_Lighting
