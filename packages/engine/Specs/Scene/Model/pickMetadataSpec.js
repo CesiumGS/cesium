@@ -1,3 +1,4 @@
+/* eslint-disable no-restricted-globals */
 import {
   Cartesian2,
   Cartesian3,
@@ -34,6 +35,7 @@ function createExamplePropertyTexturePixelsRgbaBytes() {
       let b = 0;
       let a = 0;
 
+      /*
       if (x > 8 || y > 8) {
         continue;
       }
@@ -66,6 +68,20 @@ function createExamplePropertyTexturePixelsRgbaBytes() {
         a = 127;
       }
       if ((hiy & 0x2) !== 0) {
+        a = 255;
+      }
+      */
+
+      r = 255;
+      g = 255;
+      b = 255;
+      if (y >= 4) {
+        a = 64;
+      }
+      if (y >= 8) {
+        a = 128;
+      }
+      if (y >= 12) {
         a = 255;
       }
 
@@ -488,9 +504,97 @@ describe(
       ResourceCache.clearForSpecs();
     });
 
-    // eslint-disable-next-line no-restricted-globals
-    fit("picks metadata from a property texture", async function () {
-      // Create the gltf with the metadata that is about to be picked
+    fit("throws without windowPosition", async function () {
+      const windowPosition = undefined; // For spec
+      const schemaId = undefined;
+      const className = "exampleClass";
+      const propertyName = "example_UINT8_SCALAR";
+      scene.initializeFrame();
+      scene.render(defaultDate);
+      expect(() => {
+        scene.pickMetadata(windowPosition, schemaId, className, propertyName);
+      }).toThrowDeveloperError();
+    });
+
+    fit("throws without className", async function () {
+      const windowPosition = new Cartesian2();
+      const schemaId = undefined;
+      const className = undefined; // For spec
+      const propertyName = "example_UINT8_SCALAR";
+      scene.initializeFrame();
+      scene.render(defaultDate);
+      expect(() => {
+        scene.pickMetadata(windowPosition, schemaId, className, propertyName);
+      }).toThrowDeveloperError();
+    });
+
+    fit("throws without propertyName", async function () {
+      const windowPosition = new Cartesian2();
+      const schemaId = undefined;
+      const className = "exampleClass";
+      const propertyName = undefined; // For spec
+      scene.initializeFrame();
+      scene.render(defaultDate);
+      expect(() => {
+        scene.pickMetadata(windowPosition, schemaId, className, propertyName);
+      }).toThrowDeveloperError();
+    });
+
+    fit("returns undefined for class name that does not exist", async function () {
+      const schemaId = undefined;
+      const className = "exampleClass_THAT_DOES_NOT_EXIST"; // For spec
+      const propertyName = "example_UINT8_SCALAR";
+      const gltf = createPropertyTextureGltfScalar();
+
+      const canvasSizeX = textureSizeX * canvasScaling;
+      const canvasSizeY = textureSizeY * canvasScaling;
+      scene = createScene({
+        canvas: createCanvas(canvasSizeX, canvasSizeY),
+      });
+
+      await loadAsModel(scene, gltf);
+      fitCameraToUnitSquare(scene.camera);
+
+      const windowPosition = new Cartesian2(
+        Math.floor(canvasSizeX / 2),
+        Math.floor(canvasSizeY / 2)
+      );
+      const actualMetadataValue = scene.pickMetadata(
+        windowPosition,
+        schemaId,
+        className,
+        propertyName
+      );
+      expect(actualMetadataValue).toBeUndefined();
+    });
+
+    fit("returns undefined when there is no object with metadata", async function () {
+      const schemaId = undefined;
+      const className = "exampleClass";
+      const propertyName = "example_UINT8_SCALAR";
+
+      const canvasSizeX = textureSizeX * canvasScaling;
+      const canvasSizeY = textureSizeY * canvasScaling;
+      scene = createScene({
+        canvas: createCanvas(canvasSizeX, canvasSizeY),
+      });
+
+      fitCameraToUnitSquare(scene.camera);
+
+      const windowPosition = new Cartesian2(
+        Math.floor(canvasSizeX / 2),
+        Math.floor(canvasSizeY / 2)
+      );
+      const actualMetadataValue = scene.pickMetadata(
+        windowPosition,
+        schemaId,
+        className,
+        propertyName
+      );
+      expect(actualMetadataValue).toBeUndefined();
+    });
+
+    fit("picks UINT8 SCALAR from a property texture", async function () {
       const schemaId = undefined;
       const className = "exampleClass";
       const propertyName = "example_UINT8_SCALAR";
@@ -540,23 +644,118 @@ describe(
         CesiumMath.equalsEpsilon(
           actualMetadataValue0,
           expectedMetadataValue0,
-          1
+          0.0,
+          1.0
         )
       ).toBe(true);
       expect(
         CesiumMath.equalsEpsilon(
           actualMetadataValue1,
           expectedMetadataValue1,
-          1
+          0.0,
+          1.0
         )
       ).toBe(true);
       expect(
         CesiumMath.equalsEpsilon(
           actualMetadataValue2,
           expectedMetadataValue2,
-          1
+          0.0,
+          1.0
         )
       ).toBe(true);
+    });
+
+    // eslint-disable-next-line no-restricted-globals
+    fit("picks normalized UINT8 SCALAR from a property texture", async function () {
+      const schemaId = undefined;
+      const className = "exampleClass";
+      const propertyName = "example_normalized_UINT8_SCALAR";
+      const gltf = createPropertyTextureGltfScalar();
+
+      const canvasSizeX = textureSizeX * canvasScaling;
+      const canvasSizeY = textureSizeY * canvasScaling;
+      scene = createScene({
+        canvas: createCanvas(canvasSizeX, canvasSizeY),
+      });
+
+      await loadAsModel(scene, gltf);
+      fitCameraToUnitSquare(scene.camera);
+
+      scene.initializeFrame();
+      scene.render(defaultDate);
+
+      const actualMetadataValue0 = pickMetadataAt(
+        scene,
+        schemaId,
+        className,
+        propertyName,
+        0,
+        3
+      );
+      const actualMetadataValue1 = pickMetadataAt(
+        scene,
+        schemaId,
+        className,
+        propertyName,
+        3,
+        3
+      );
+      const actualMetadataValue2 = pickMetadataAt(
+        scene,
+        schemaId,
+        className,
+        propertyName,
+        6,
+        3
+      );
+      const expectedMetadataValue0 = 0.0;
+      const expectedMetadataValue1 = 0.5;
+      const expectedMetadataValue2 = 1.0;
+
+      expect(
+        CesiumMath.equalsEpsilon(
+          actualMetadataValue0,
+          expectedMetadataValue0,
+          0.0,
+          0.01
+        )
+      ).toBe(true);
+      expect(
+        CesiumMath.equalsEpsilon(
+          actualMetadataValue1,
+          expectedMetadataValue1,
+          0.0,
+          0.01
+        )
+      ).toBe(true);
+      expect(
+        CesiumMath.equalsEpsilon(
+          actualMetadataValue2,
+          expectedMetadataValue2,
+          0.0,
+          0.01
+        )
+      ).toBe(true);
+
+      for (let x = 0; x < 16; x++) {
+        for (let y = 0; y < 16; y++) {
+          const actualMetadataValue = pickMetadataAt(
+            scene,
+            schemaId,
+            className,
+            propertyName,
+            x,
+            y
+          );
+
+          console.log(
+            `actualMetadataValue at ${x} ${y}  is `,
+            actualMetadataValue
+          );
+        }
+      }
+      console.log("done");
     });
 
     // eslint-disable-next-line no-restricted-globals
