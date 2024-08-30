@@ -1362,7 +1362,10 @@ UniformState.prototype.updateCamera = function (camera) {
  * @param {object} frustum The frustum to synchronize with.
  */
 UniformState.prototype.updateFrustum = function (frustum) {
+  // If any frustum parameters have changed, calling the frustum.projectionMatrix
+  // getter will recompute the projection before it is copied.
   setProjection(this, frustum.projectionMatrix);
+
   if (defined(frustum.infiniteProjectionMatrix)) {
     setInfiniteProjection(this, frustum.infiniteProjectionMatrix);
   }

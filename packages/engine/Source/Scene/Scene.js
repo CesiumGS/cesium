@@ -2316,7 +2316,6 @@ function executeCommands(scene, passState) {
   // early-z, but we would have to draw it in each frustum
   frustum.near = camera.frustum.near;
   frustum.far = camera.frustum.far;
-  uniformState.updateFrustum(frustum);
   uniformState.updatePass(Pass.ENVIRONMENT);
 
   const passes = frameState.passes;
@@ -2396,7 +2395,7 @@ function executeCommands(scene, passState) {
   const useDepthPlane = environmentState.useDepthPlane;
   const globeTranslucencyState = scene._globeTranslucencyState;
   const globeTranslucent = globeTranslucencyState.translucent;
-  const globeTranslucencyFramebuffer = scene._view.globeTranslucencyFramebuffer;
+  const globeTranslucencyFramebuffer = view.globeTranslucencyFramebuffer;
   const clearDepth = scene._depthClearCommand;
   const clearStencil = scene._stencilClearCommand;
   const clearClassificationStencil = scene._classificationStencilClearCommand;
