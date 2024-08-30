@@ -28,6 +28,8 @@
 
 - Switched the default (non-HDR) tonemapping for models, atmosphere, and globe from ACES to [PBR Neutral Tonemap from Khronos](https://github.com/KhronosGroup/ToneMapping/tree/main/PBR_Neutral). The widens the gamut of possible colors, and provides more consistent color appearances across renderers. [#12160](https://github.com/CesiumGS/cesium/pull/12160)
 - Switched the default tonemapper when HDR is turned _on_ from ACES to [PBR Neutral Tonemap from Khronos](https://github.com/KhronosGroup/ToneMapping/tree/main/PBR_Neutral). To preserve the previous behavior set `viewer.scene.postProcessStages.tonemapper = Cesium.Tonemapper.ACES;` [#12160](https://github.com/CesiumGS/cesium/pull/12160)
+- `SceneTransforms.wgs84ToWindowCoordinates` has been removed. Use `SceneTransforms.worldToWindowCoordinates` instead.
+- `SceneTransforms.wgs84ToDrawingBufferCoordinates` has been removed. Use `SceneTransforms.worldToDrawingBufferCoordinates` instead.
 - Removed `jitter` option from `VoxelPrimitive.js`, `VoxelRenderResources.js`, and related test code in `VoxelPrimitiveSpec.js`. [#11913](https://github.com/CesiumGS/cesium/issues/11913)
 - Custom specular environment maps in `ImageBasedLighting` now require either a WebGL2 context or a WebGL1 context that supports the [`EXT_shader_texture_lod` extension](https://registry.khronos.org/webgl/extensions/EXT_shader_texture_lod/).
 - `ScreenSpaceCameraController._zoomFactor` replaced with public zoomFactor attribute.
