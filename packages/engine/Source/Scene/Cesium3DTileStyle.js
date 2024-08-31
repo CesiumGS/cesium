@@ -1453,15 +1453,21 @@ Cesium3DTileStyle.prototype.getVariables = function () {
   let variables = [];
 
   if (defined(this.color) && defined(this.color.getVariables)) {
-    variables.push.apply(variables, this.color.getVariables());
+    for (let i = 0; i < this.color.getVariables().length; i++) {
+      variables.push(this.color.getVariables()[i]);
+    }
   }
 
   if (defined(this.show) && defined(this.show.getVariables)) {
-    variables.push.apply(variables, this.show.getVariables());
+    for (let i = 0; i < this.show.getVariables().length; i++) {
+      variables.push(this.show.getVariables()[i]);
+    }
   }
 
   if (defined(this.pointSize) && defined(this.pointSize.getVariables)) {
-    variables.push.apply(variables, this.pointSize.getVariables());
+    for (let i = 0; i < this.pointSize.getVariables().length; i++) {
+      variables.push(this.pointSize.getVariables()[i]);
+    }
   }
 
   // Remove duplicates

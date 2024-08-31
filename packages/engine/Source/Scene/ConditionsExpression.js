@@ -203,8 +203,12 @@ ConditionsExpression.prototype.getVariables = function () {
   const length = conditions.length;
   for (let i = 0; i < length; ++i) {
     const statement = conditions[i];
-    variables.push.apply(variables, statement.condition.getVariables());
-    variables.push.apply(variables, statement.expression.getVariables());
+    for (const variable of statement.condition.getVariables()) {
+      variables.push(variable);
+    }
+    for (const variable of statement.expression.getVariables()) {
+      variables.push(variable);
+    }
   }
 
   // Remove duplicates
