@@ -280,8 +280,6 @@ PropertyTable.prototype.propertyExistsBySemantic = function (semantic) {
   return false;
 };
 
-const scratchResults = [];
-
 /**
  * Returns an array of property IDs. For compatibility with the <code>3DTILES_batch_table_hierarchy</code> extension, this is computed for a specific feature.
  *
@@ -296,24 +294,21 @@ PropertyTable.prototype.getPropertyIds = function (index, results) {
 
   if (defined(this._metadataTable)) {
     // concat in place to avoid unnecessary array allocation
-    results.push.apply(
-      results,
-      this._metadataTable.getPropertyIds(scratchResults)
-    );
+    for (let i = 0; i < this._metadataTable.propertyIds.length; i++) {
+      results.push(this._metadataTable.propertyIds[i]);
+    }
   }
 
   if (defined(this._batchTableHierarchy)) {
-    results.push.apply(
-      results,
-      this._batchTableHierarchy.getPropertyIds(index, scratchResults)
-    );
+    for (let i = 0; i < this._batchTableHierarchy.propertyIds.length; i++) {
+      results.push(this._batchTableHierarchy.propertyIds[i]);
+    }
   }
 
   if (defined(this._jsonMetadataTable)) {
-    results.push.apply(
-      results,
-      this._jsonMetadataTable.getPropertyIds(scratchResults)
-    );
+    for (let i = 0; i < this._jsonMetadataTable.propertyIds.length; i++) {
+      results.push(this._jsonMetadataTable.propertyIds[i]);
+    }
   }
 
   return results;

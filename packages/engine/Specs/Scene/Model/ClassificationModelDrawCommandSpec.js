@@ -814,8 +814,13 @@ describe(
       expect(drawCommand.modelMatrix).toBe(command.modelMatrix);
 
       const commandList = [];
-      commandList.push.apply(commandList, drawCommand._commandListTerrain);
-      commandList.push.apply(commandList, drawCommand._commandList3DTiles);
+      for (let i = 0; i < drawCommand._commandListTerrain.length; i++) {
+        commandList.push(drawCommand._commandListTerrain[i]);
+      }
+
+      for (let i = 0; i < drawCommand._commandList3DTiles.length; i++) {
+        commandList.push(drawCommand._commandList3DTiles[i]);
+      }
 
       const length = commandList.length;
       expect(length).toEqual(12);

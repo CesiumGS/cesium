@@ -42,7 +42,9 @@ LeafChunk.prototype = {
 
   // Helper used to collapse a small branch into a single leaf.
   collapse(lines) {
-    lines.push.apply(lines, this.lines)
+    for (let i = 0; i < this.lines.length; ++i){
+      lines.push(this.lines[i])
+    } 
   },
 
   // Insert the given array of lines at offset 'at', count them as
