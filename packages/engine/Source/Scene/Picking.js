@@ -501,10 +501,6 @@ Picking.prototype.pickMetadata = function (
   );
   context.endFrame();
 
-  // XXX_DEBUG
-  console.log("rawMetadataPixel ", rawMetadataPixel);
-  // XXX_DEBUG
-
   frameState.pickingMetadata = false;
 
   const metadataValue = MetadataPicking.decodeMetadataValues(
