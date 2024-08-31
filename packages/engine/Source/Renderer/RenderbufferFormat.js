@@ -14,6 +14,7 @@ const RenderbufferFormat = {
   STENCIL_INDEX8: WebGLConstants.STENCIL_INDEX8,
   DEPTH_STENCIL: WebGLConstants.DEPTH_STENCIL,
   DEPTH24_STENCIL8: WebGLConstants.DEPTH24_STENCIL8,
+  DEPTH32F_STENCIL8: WebGLConstants.DEPTH32F_STENCIL8,
 
   validate: function (renderbufferFormat) {
     return (
@@ -26,7 +27,8 @@ const RenderbufferFormat = {
       renderbufferFormat === RenderbufferFormat.DEPTH_COMPONENT16 ||
       renderbufferFormat === RenderbufferFormat.STENCIL_INDEX8 ||
       renderbufferFormat === RenderbufferFormat.DEPTH_STENCIL ||
-      renderbufferFormat === RenderbufferFormat.DEPTH24_STENCIL8
+      renderbufferFormat === RenderbufferFormat.DEPTH24_STENCIL8 ||
+      renderbufferFormat === RenderbufferFormat.DEPTH32F_STENCIL8
     );
   },
 

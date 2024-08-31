@@ -13,14 +13,15 @@ const PixelDatatype = {
   FLOAT: WebGLConstants.FLOAT,
   HALF_FLOAT: WebGLConstants.HALF_FLOAT_OES,
   UNSIGNED_INT_24_8: WebGLConstants.UNSIGNED_INT_24_8,
+  FLOAT_32_UNSIGNED_INT_24_8_REV: WebGLConstants.FLOAT_32_UNSIGNED_INT_24_8_REV,
   UNSIGNED_SHORT_4_4_4_4: WebGLConstants.UNSIGNED_SHORT_4_4_4_4,
   UNSIGNED_SHORT_5_5_5_1: WebGLConstants.UNSIGNED_SHORT_5_5_5_1,
   UNSIGNED_SHORT_5_6_5: WebGLConstants.UNSIGNED_SHORT_5_6_5,
 };
 
 /**
-  @private
-*/
+ * @private
+ */
 PixelDatatype.toWebGLConstant = function (pixelDatatype, context) {
   switch (pixelDatatype) {
     case PixelDatatype.UNSIGNED_BYTE:
@@ -37,6 +38,8 @@ PixelDatatype.toWebGLConstant = function (pixelDatatype, context) {
         : WebGLConstants.HALF_FLOAT_OES;
     case PixelDatatype.UNSIGNED_INT_24_8:
       return WebGLConstants.UNSIGNED_INT_24_8;
+    case PixelDatatype.FLOAT_32_UNSIGNED_INT_24_8_REV:
+      return WebGLConstants.FLOAT_32_UNSIGNED_INT_24_8_REV;
     case PixelDatatype.UNSIGNED_SHORT_4_4_4_4:
       return WebGLConstants.UNSIGNED_SHORT_4_4_4_4;
     case PixelDatatype.UNSIGNED_SHORT_5_5_5_1:
@@ -47,20 +50,21 @@ PixelDatatype.toWebGLConstant = function (pixelDatatype, context) {
 };
 
 /**
-  @private
-*/
+ * @private
+ */
 PixelDatatype.isPacked = function (pixelDatatype) {
   return (
     pixelDatatype === PixelDatatype.UNSIGNED_INT_24_8 ||
     pixelDatatype === PixelDatatype.UNSIGNED_SHORT_4_4_4_4 ||
     pixelDatatype === PixelDatatype.UNSIGNED_SHORT_5_5_5_1 ||
-    pixelDatatype === PixelDatatype.UNSIGNED_SHORT_5_6_5
+    pixelDatatype === PixelDatatype.UNSIGNED_SHORT_5_6_5 ||
+    pixelDatatype === PixelDatatype.FLOAT_32_UNSIGNED_INT_24_8_REV
   );
 };
 
 /**
-  @private
-*/
+ * @private
+ */
 PixelDatatype.sizeInBytes = function (pixelDatatype) {
   switch (pixelDatatype) {
     case PixelDatatype.UNSIGNED_BYTE:
@@ -75,12 +79,14 @@ PixelDatatype.sizeInBytes = function (pixelDatatype) {
     case PixelDatatype.FLOAT:
     case PixelDatatype.UNSIGNED_INT_24_8:
       return 4;
+    case PixelDatatype.FLOAT_32_UNSIGNED_INT_24_8_REV:
+      return 8;
   }
 };
 
 /**
-  @private
-*/
+ * @private
+ */
 PixelDatatype.validate = function (pixelDatatype) {
   return (
     pixelDatatype === PixelDatatype.UNSIGNED_BYTE ||
@@ -91,7 +97,8 @@ PixelDatatype.validate = function (pixelDatatype) {
     pixelDatatype === PixelDatatype.UNSIGNED_INT_24_8 ||
     pixelDatatype === PixelDatatype.UNSIGNED_SHORT_4_4_4_4 ||
     pixelDatatype === PixelDatatype.UNSIGNED_SHORT_5_5_5_1 ||
-    pixelDatatype === PixelDatatype.UNSIGNED_SHORT_5_6_5
+    pixelDatatype === PixelDatatype.UNSIGNED_SHORT_5_6_5 ||
+    pixelDatatype === PixelDatatype.FLOAT_32_UNSIGNED_INT_24_8_REV
   );
 };
 

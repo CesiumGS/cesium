@@ -556,7 +556,7 @@ function createFramebufferDepth(shadowMap, context) {
     width: shadowMap._textureSize.x,
     height: shadowMap._textureSize.y,
     pixelFormat: PixelFormat.DEPTH_STENCIL,
-    pixelDatatype: PixelDatatype.UNSIGNED_INT_24_8,
+    pixelDatatype: PixelDatatype.FLOAT_32_UNSIGNED_INT_24_8_REV,
     sampler: Sampler.NEAREST,
   });
 

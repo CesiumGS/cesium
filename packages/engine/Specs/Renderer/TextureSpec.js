@@ -879,8 +879,8 @@ describe(
           16,
           16,
           PixelFormat.DEPTH_STENCIL,
-          PixelDatatype.UNSIGNED_INT_24_8,
-          256 * 4
+          PixelDatatype.FLOAT_32_UNSIGNED_INT_24_8_REV,
+          256 * 8
         );
       }
 
@@ -1037,7 +1037,7 @@ describe(
       }).toThrowDeveloperError();
     });
 
-    it("throws when creating if pixelFormat is DEPTH_STENCIL and pixelDatatype is not UNSIGNED_INT_24_8", function () {
+    it("throws when creating if pixelFormat is DEPTH_STENCIL and pixelDatatype is not UNSIGNED_INT_24_8 or FLOAT_32_UNSIGNED_INT_24_8_REV", function () {
       expect(function () {
         texture = new Texture({
           context: context,

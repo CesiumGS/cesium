@@ -1,12 +1,14 @@
 import Check from "../Core/Check.js";
 import defaultValue from "../Core/defaultValue.js";
-import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import ContextLimits from "./ContextLimits.js";
 import RenderbufferFormat from "./RenderbufferFormat.js";
 
 /**
+ * @alias Renderbuffer
+ * @constructor
+ *
  * @private
  */
 function Renderbuffer(options) {
@@ -20,12 +22,12 @@ function Renderbuffer(options) {
   const gl = context._gl;
   const maximumRenderbufferSize = ContextLimits.maximumRenderbufferSize;
 
-  const format = defaultValue(options.format, RenderbufferFormat.RGBA4);
-  const width = defined(options.width) ? options.width : gl.drawingBufferWidth;
-  const height = defined(options.height)
-    ? options.height
-    : gl.drawingBufferHeight;
-  const numSamples = defaultValue(options.numSamples, 1);
+  const {
+    format = RenderbufferFormat.RGBA4,
+    width = gl.drawingBufferWidth,
+    height = gl.drawingBufferHeight,
+    numSamples = 1,
+  } = options;
 
   //>>includeStart('debug', pragmas.debug);
   if (!RenderbufferFormat.validate(format)) {

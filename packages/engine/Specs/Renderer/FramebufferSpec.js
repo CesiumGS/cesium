@@ -117,7 +117,7 @@ describe(
             width: 1,
             height: 1,
             pixelFormat: PixelFormat.DEPTH_STENCIL,
-            pixelDatatype: PixelDatatype.UNSIGNED_INT_24_8,
+            pixelDatatype: PixelDatatype.FLOAT_32_UNSIGNED_INT_24_8_REV,
           }),
         });
         expect(framebuffer.depthStencilTexture).toBeDefined();
@@ -478,7 +478,7 @@ describe(
             width: 1,
             height: 1,
             pixelFormat: PixelFormat.DEPTH_STENCIL,
-            pixelDatatype: PixelDatatype.UNSIGNED_INT_24_8,
+            pixelDatatype: PixelDatatype.FLOAT_32_UNSIGNED_INT_24_8_REV,
           }),
         });
 

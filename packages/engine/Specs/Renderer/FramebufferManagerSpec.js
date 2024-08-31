@@ -274,7 +274,9 @@ describe(
         expect(texture.width).toEqual(1);
         expect(texture.height).toEqual(1);
         expect(texture.pixelFormat).toEqual(PixelFormat.DEPTH_STENCIL);
-        expect(texture.pixelDatatype).toEqual(PixelDatatype.UNSIGNED_INT_24_8);
+        expect(texture.pixelDatatype).toEqual(
+          PixelDatatype.FLOAT_32_UNSIGNED_INT_24_8_REV
+        );
       } else {
         const renderbuffer = fbm.getDepthStencilRenderbuffer();
         expect(renderbuffer).toBeDefined();

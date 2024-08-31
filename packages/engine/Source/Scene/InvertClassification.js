@@ -202,14 +202,14 @@ InvertClassification.prototype.update = function (
         width: width,
         height: height,
         pixelFormat: PixelFormat.DEPTH_STENCIL,
-        pixelDatatype: PixelDatatype.UNSIGNED_INT_24_8,
+        pixelDatatype: PixelDatatype.FLOAT_32_UNSIGNED_INT_24_8_REV,
       });
       if (numSamples > 1) {
         this._depthStencilRenderbuffer = new Renderbuffer({
           context: context,
           width: width,
           height: height,
-          format: RenderbufferFormat.DEPTH24_STENCIL8,
+          format: RenderbufferFormat.DEPTH32F_STENCIL8,
           numSamples: numSamples,
         });
       }

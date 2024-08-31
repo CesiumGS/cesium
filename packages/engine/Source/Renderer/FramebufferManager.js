@@ -200,20 +200,26 @@ FramebufferManager.prototype.update = function (
     // Create depth stencil texture or renderbuffer
     if (this._depthStencil && this._createDepthAttachments) {
       if (this._supportsDepthTexture && context.depthTexture) {
+        const pixelDatatype = context.webgl2
+          ? PixelDatatype.FLOAT_32_UNSIGNED_INT_24_8_REV
+          : PixelDatatype.UNSIGNED_INT_24_8;
         this._depthStencilTexture = new Texture({
           context: context,
           width: width,
           height: height,
           pixelFormat: PixelFormat.DEPTH_STENCIL,
-          pixelDatatype: PixelDatatype.UNSIGNED_INT_24_8,
+          pixelDatatype: pixelDatatype,
           sampler: Sampler.NEAREST,
         });
         if (this._numSamples > 1) {
+          const format = context.webgl2
+            ? RenderbufferFormat.DEPTH32F_STENCIL8
+            : RenderbufferFormat.DEPTH24_STENCIL8;
           this._depthStencilRenderbuffer = new Renderbuffer({
             context: context,
             width: width,
             height: height,
-            format: RenderbufferFormat.DEPTH24_STENCIL8,
+            format: format,
             numSamples: this._numSamples,
           });
         }

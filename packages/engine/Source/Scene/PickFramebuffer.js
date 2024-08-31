@@ -7,6 +7,9 @@ import FramebufferManager from "../Renderer/FramebufferManager.js";
 import PassState from "../Renderer/PassState.js";
 
 /**
+ * @alias PickFramebuffer
+ * @constructor
+ *
  * @private
  */
 function PickFramebuffer(context) {

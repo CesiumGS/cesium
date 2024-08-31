@@ -105,7 +105,7 @@ describe(
           width: 1,
           height: 1,
           pixelFormat: PixelFormat.DEPTH_STENCIL,
-          pixelDatatype: PixelDatatype.UNSIGNED_INT_24_8,
+          pixelDatatype: PixelDatatype.FLOAT_32_UNSIGNED_INT_24_8_REV,
         }),
         depthStencilRenderbuffer: new Renderbuffer({
           context: context,
@@ -319,13 +319,13 @@ describe(
           width: 1,
           height: 1,
           pixelFormat: PixelFormat.DEPTH_STENCIL,
-          pixelDatatype: PixelDatatype.UNSIGNED_INT_24_8,
+          pixelDatatype: PixelDatatype.FLOAT_32_UNSIGNED_INT_24_8_REV,
         }),
         depthStencilRenderbuffer: new Renderbuffer({
           context: context,
           width: 1,
           height: 1,
-          format: RenderbufferFormat.DEPTH24_STENCIL8,
+          format: RenderbufferFormat.DEPTH32F_STENCIL8,
           numSamples: 2,
         }),
       });

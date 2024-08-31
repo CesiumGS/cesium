@@ -16,7 +16,7 @@ const PixelFormat = {
   DEPTH_COMPONENT: WebGLConstants.DEPTH_COMPONENT,
 
   /**
-   * A pixel format containing a depth and stencil value, most often used with {@link PixelDatatype.UNSIGNED_INT_24_8}.
+   * A pixel format containing a depth and stencil value, most often used with {@link PixelDatatype.FLOAT_32_UNSIGNED_INT_24_8_REV}.
    *
    * @type {number}
    * @constant
@@ -462,7 +462,7 @@ PixelFormat.toInternalFormat = function (pixelFormat, pixelDatatype, context) {
 
   // Convert pixelFormat to correct internalFormat for WebGL 2
   if (pixelFormat === PixelFormat.DEPTH_STENCIL) {
-    return WebGLConstants.DEPTH24_STENCIL8;
+    return WebGLConstants.DEPTH32F_STENCIL8;
   }
 
   if (pixelFormat === PixelFormat.DEPTH_COMPONENT) {
