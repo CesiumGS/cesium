@@ -1,5 +1,13 @@
 # Change Log
 
+### 1.122 - 2024-08-30
+
+#### @cesium/engine
+
+##### Fixes :wrench:
+
+- Replaced `Array.prototype.push.apply` with `for` loops to avoid exceeding the call stack limit. This change improves stability when handling large arrays. [#12053](https://github.com/CesiumGS/cesium/issues/12053)
+
 ### 1.121 - 2024-09-01
 
 #### @cesium/engine
