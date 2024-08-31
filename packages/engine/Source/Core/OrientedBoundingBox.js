@@ -330,6 +330,231 @@ OrientedBoundingBox.prototype.transform = function (transform, result) {
   return OrientedBoundingBox.transform(this, transform, result);
 };
 
+/**
+ * Computes the range that is covered by projecting the given points
+ * on the given axis.
+ *
+ * This will project all points on the given axis, compute the
+ * minimum- and maximum position of the projected points along
+ * this axis, store them as the `start`/`stop` of the given
+ * interval, and return the interval.
+ *
+ * If the given interval is `undefined`, then a new interval
+ * will be created, filled, and returned.
+ *
+ * (The axis will usually have unit length)
+ *
+ * @param {Cartesian3} axis The axis
+ * @param {Cartesian3[]} points The points
+ * @param {Interval} [result] The interval that will store the result
+ * @returns The result
+ */
+function computeProjectedRange(axis, points, result) {
+  let min = Number.MAX_VALUE;
+  let max = -Number.MAX_VALUE;
+  for (let i = 0; i < points.length; i++) {
+    const dot = Cartesian3.dot(points[i], axis);
+    min = Math.min(min, dot);
+    max = Math.max(max, dot);
+  }
+  if (!defined(result)) {
+    return new Interval(min, max);
+  }
+  result.start = min;
+  result.stop = max;
+  return result;
+}
+
+// Scratch intervals for `areSeparatedAlongAxis`
+const scratchIntervalA = new Interval();
+const scratchIntervalB = new Interval();
+
+/**
+ * Returns whether the projections of the given points on the given
+ * axis are non-overlapping.
+ *
+ * This method will return `true` when the points are "touching" -
+ * i.e. it returns `true` if and only if they are really separated.
+ *
+ * The axis will usually have unit length (but does not need to).
+ * If the given axis has a length that is epsilon-equal to zero,
+ * then `false` is returned.
+ *
+ * @param {Cartesian3} axis The axis
+ * @param {Cartesian3[]} pointsA The first set of points
+ * @param {Cartesian3[]} pointsB The second set of points
+ * @returns Whether the projections are separated
+ */
+function areSeparatedAlongAxis(axis, pointsA, pointsB) {
+  // See https://gamma.cs.unc.edu/users/gottschalk/main.pdf section 4.3
+  if (Cartesian3.equalsEpsilon(axis, Cartesian3.ZERO, Math.EPSILON10)) {
+    return false;
+  }
+  const rangeA = computeProjectedRange(axis, pointsA, scratchIntervalA);
+  const rangeB = computeProjectedRange(axis, pointsB, scratchIntervalB);
+  if (rangeA.start > rangeB.stop) {
+    return true;
+  }
+  if (rangeA.stop < rangeB.start) {
+    return true;
+  }
+  return false;
+}
+
+// Scratch axes for OBB a in `intersect`
+const scratchAx = new Cartesian3();
+const scratchAy = new Cartesian3();
+const scratchAz = new Cartesian3();
+
+// Scratch axes for OBB B in `intersect`
+const scratchBx = new Cartesian3();
+const scratchBy = new Cartesian3();
+const scratchBz = new Cartesian3();
+
+// Scratch axis for cross products in `intersect`
+const scratchCrossAxis = new Cartesian3();
+
+// Scratch corners for OBB A in `intersect`
+const scratchCornersA = [
+  new Cartesian3(),
+  new Cartesian3(),
+  new Cartesian3(),
+  new Cartesian3(),
+  new Cartesian3(),
+  new Cartesian3(),
+  new Cartesian3(),
+  new Cartesian3(),
+];
+
+// Scratch corners for OBB B in `intersect`
+const scratchCornersB = [
+  new Cartesian3(),
+  new Cartesian3(),
+  new Cartesian3(),
+  new Cartesian3(),
+  new Cartesian3(),
+  new Cartesian3(),
+  new Cartesian3(),
+  new Cartesian3(),
+];
+
+/**
+ * Returns whether the given oriented bounding boxes are intersecting.
+ *
+ * This returns `true` when the given bounding boxes are intersecting,
+ * which includes the case that they are only "touching".
+ *
+ * @param {OrientedBoundingBox} obbA The first oriented bounding box
+ * @param {OrientedBoundingBox} obbB The second oriented bounding box
+ * @returns Whether the bounding boxes are intersecting
+ */
+OrientedBoundingBox.intersect = function (obbA, obbB) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("obbA", obbA);
+  Check.typeOf.object("obbB", obbB);
+  //>>includeEnd('debug');
+
+  const cornersA = OrientedBoundingBox.computeCorners(obbA, scratchCornersA);
+  const cornersB = OrientedBoundingBox.computeCorners(obbB, scratchCornersB);
+
+  // For a list of the axes that have to be checked, see table 1 of
+  // https://www.geometrictools.com/Documentation/DynamicCollisionDetection.pdf
+
+  // Checks along the main axes (matrix columns)
+
+  const Ax = Matrix3.getColumn(obbA.halfAxes, 0, scratchAx);
+  if (areSeparatedAlongAxis(Ax, cornersA, cornersB)) {
+    return false;
+  }
+
+  const Ay = Matrix3.getColumn(obbA.halfAxes, 1, scratchAy);
+  if (areSeparatedAlongAxis(Ay, cornersA, cornersB)) {
+    return false;
+  }
+
+  const Az = Matrix3.getColumn(obbA.halfAxes, 2, scratchAz);
+  if (areSeparatedAlongAxis(Az, cornersA, cornersB)) {
+    return false;
+  }
+
+  const Bx = Matrix3.getColumn(obbB.halfAxes, 0, scratchBx);
+  if (areSeparatedAlongAxis(Bx, cornersA, cornersB)) {
+    return false;
+  }
+
+  const By = Matrix3.getColumn(obbB.halfAxes, 1, scratchBy);
+  if (areSeparatedAlongAxis(By, cornersA, cornersB)) {
+    return false;
+  }
+
+  const Bz = Matrix3.getColumn(obbB.halfAxes, 2, scratchBz);
+  if (areSeparatedAlongAxis(Bz, cornersA, cornersB)) {
+    return false;
+  }
+
+  // Checks along the cross products of the main axes
+
+  const crossAxBx = Cartesian3.cross(Ax, Bx, scratchCrossAxis);
+  if (areSeparatedAlongAxis(crossAxBx, cornersA, cornersB)) {
+    return false;
+  }
+
+  const crossAxBy = Cartesian3.cross(Ax, By, scratchCrossAxis);
+  if (areSeparatedAlongAxis(crossAxBy, cornersA, cornersB)) {
+    return false;
+  }
+
+  const crossAxBz = Cartesian3.cross(Ax, Bz, scratchCrossAxis);
+  if (areSeparatedAlongAxis(crossAxBz, cornersA, cornersB)) {
+    return false;
+  }
+
+  const crossAyBx = Cartesian3.cross(Ay, Bx, scratchCrossAxis);
+  if (areSeparatedAlongAxis(crossAyBx, cornersA, cornersB)) {
+    return false;
+  }
+
+  const crossAyBy = Cartesian3.cross(Ay, By, scratchCrossAxis);
+  if (areSeparatedAlongAxis(crossAyBy, cornersA, cornersB)) {
+    return false;
+  }
+
+  const crossAyBz = Cartesian3.cross(Ay, Bz, scratchCrossAxis);
+  if (areSeparatedAlongAxis(crossAyBz, cornersA, cornersB)) {
+    return false;
+  }
+
+  const crossAzBx = Cartesian3.cross(Az, Bx, scratchCrossAxis);
+  if (areSeparatedAlongAxis(crossAzBx, cornersA, cornersB)) {
+    return false;
+  }
+
+  const crossAzBy = Cartesian3.cross(Az, By, scratchCrossAxis);
+  if (areSeparatedAlongAxis(crossAzBy, cornersA, cornersB)) {
+    return false;
+  }
+
+  const crossAzBz = Cartesian3.cross(Az, Bz, scratchCrossAxis);
+  if (areSeparatedAlongAxis(crossAzBz, cornersA, cornersB)) {
+    return false;
+  }
+
+  return true;
+};
+
+/**
+ * Returns whether this oriented bounding box intersects the given one.
+ *
+ * This returns `true` when the bounding boxes are intersecting,
+ * which includes the case that they are only "touching".
+ *
+ * @param {OrientedBoundingBox} other The other oriented bounding box
+ * @returns Whether the bounding boxes are intersecting
+ */
+OrientedBoundingBox.prototype.intersect = function (other) {
+  return OrientedBoundingBox.intersect(this, other);
+};
+
 const scratchOffset = new Cartesian3();
 const scratchScale = new Cartesian3();
 function fromPlaneExtents(
