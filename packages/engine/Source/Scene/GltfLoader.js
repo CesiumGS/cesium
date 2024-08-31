@@ -2683,12 +2683,26 @@ function parse(loader, frameState) {
 
   // Gather promises and handle any errors
   const readyPromises = [];
-  readyPromises.push.apply(readyPromises, loader._loaderPromises);
+  for (let i = 0; i < loader._loaderPromises.length; ++i) {
+    const promise = loader._loaderPromises[i];
+    promise.then(undefined, function (error) {
+      loader._state = GltfLoaderState.FAILED;
+      loader._error = error;
+    });
+    readyPromises.push(promise);
+  }
 
   // When incrementallyLoadTextures is true, the errors are caught and thrown individually
   // since it doesn't affect the overall loader state
   if (!loader._incrementallyLoadTextures) {
-    readyPromises.push.apply(readyPromises, loader._texturesPromises);
+    for (let i = 0; i < loader._textureLoaders.length; ++i) {
+      const promise = loader._textureLoaders[i].readyPromise;
+      promise.then(undefined, function (error) {
+        loader._state = GltfLoaderState.FAILED;
+        loader._error = error;
+      });
+      readyPromises.push(promise);
+    }
   }
 
   return Promise.all(readyPromises);

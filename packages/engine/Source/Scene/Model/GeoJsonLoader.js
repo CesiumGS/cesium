@@ -166,7 +166,11 @@ function parseMultiPolygon(coordinates) {
   const polygonsLength = coordinates.length;
   const lines = [];
   for (let i = 0; i < polygonsLength; i++) {
-    Array.prototype.push.apply(lines, parsePolygon(coordinates[i]));
+    const polygon = parsePolygon(coordinates[i]);
+    const polygonLength = polygon.length;
+    for (let j = 0; j < polygonLength; j++) {
+      lines.push(polygon[j]);
+    }
   }
   return lines;
 }

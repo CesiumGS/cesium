@@ -503,7 +503,10 @@ AnimationViewModel.prototype.setShuttleRingTicks = function (positiveTicks) {
       allTicks.push(-tick);
     }
   }
-  Array.prototype.push.apply(allTicks, sortedFilteredPositiveTicks);
+  for (i = 0, len = sortedFilteredPositiveTicks.length; i < len; ++i) {
+    tick = sortedFilteredPositiveTicks[i];
+    allTicks.push(tick);
+  }
 
   this._allShuttleRingTicks = allTicks;
 };

@@ -482,16 +482,22 @@ ClassificationModelDrawCommand.prototype.pushCommands = function (
   const passes = frameState.passes;
   if (passes.render) {
     if (this._useDebugWireframe) {
-      result.push.apply(result, this._commandListDebugWireframe);
+      for (let i = 0; i < this._commandListDebugWireframe.length; i++) {
+        result.push(this._commandListDebugWireframe[i]);
+      }
       return;
     }
 
     if (this._classifiesTerrain) {
-      result.push.apply(result, this._commandListTerrain);
+      for (let i = 0; i < this._commandListTerrain.length; i++) {
+        result.push(this._commandListTerrain[i]);
+      }
     }
 
     if (this._classifies3DTiles) {
-      result.push.apply(result, this._commandList3DTiles);
+      for (let i = 0; i < this._commandList3DTiles.length; i++) {
+        result.push(this._commandList3DTiles[i]);
+      }
     }
 
     const useIgnoreShowCommands =
@@ -513,17 +519,23 @@ ClassificationModelDrawCommand.prototype.pushCommands = function (
         );
       }
 
-      result.push.apply(result, this._commandListIgnoreShow);
+      for (let i = 0; i < this._commandListIgnoreShow.length; i++) {
+        result.push(this._commandListIgnoreShow[i]);
+      }
     }
   }
 
   if (passes.pick) {
     if (this._classifiesTerrain) {
-      result.push.apply(result, this._commandListTerrainPicking);
+      for (let i = 0; i < this._commandListTerrainPicking.length; i++) {
+        result.push(this._commandListTerrainPicking[i]);
+      }
     }
 
     if (this._classifies3DTiles) {
-      result.push.apply(result, this._commandList3DTilesPicking);
+      for (let i = 0; i < this._commandList3DTilesPicking.length; i++) {
+        result.push(this._commandList3DTilesPicking[i]);
+      }
     }
   }
 

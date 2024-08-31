@@ -19,7 +19,9 @@ describe("Scene/Model/ClassificationPipelineStage", function () {
       const batchLength = batchLengths[id];
       const batch = new Array(batchLength);
       batch.fill(id);
-      featureIds.push.apply(featureIds, batch);
+      for (let j = 0; j < batch.length; j++) {
+        featureIds.push(batch[j]);
+      }
     }
 
     return featureIds;

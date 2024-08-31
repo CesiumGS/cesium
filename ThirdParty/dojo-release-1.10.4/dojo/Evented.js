@@ -28,7 +28,9 @@ define(["./aspect", "./on"], function(aspect, on){
 		},
 		emit: function(type, event){
 			var args = [this];
-			args.push.apply(args, arguments);
+			for (var i = 0; i < arguments.length; i++){
+        args.push(arguments[i]);
+      }
 			return on.emit.apply(on, args);
 		}
 	};

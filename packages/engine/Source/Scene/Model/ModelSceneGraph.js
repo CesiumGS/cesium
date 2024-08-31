@@ -911,7 +911,10 @@ ModelSceneGraph.prototype.pushDrawCommands = function (frameState) {
     pushDrawCommandOptions
   );
 
-  frameState.commandList.push.apply(frameState.commandList, silhouetteCommands);
+  for (let i = 0; i < silhouetteCommands.length; i++) {
+    const silhouetteCommand = silhouetteCommands[i];
+    silhouetteCommand.execute(frameState);
+  }
 };
 
 // Callback is defined here to avoid allocating a closure in the render loop

@@ -414,7 +414,9 @@ ShaderBuilder.prototype.addVertexLines = function (lines) {
 
   const vertexLines = this._vertexShaderParts.shaderLines;
   if (Array.isArray(lines)) {
-    vertexLines.push.apply(vertexLines, lines);
+    for (let i = 0; i < lines.length; i++) {
+      vertexLines.push(lines[i]);
+    }
   } else {
     // Single string case
     vertexLines.push(lines);
@@ -449,7 +451,9 @@ ShaderBuilder.prototype.addFragmentLines = function (lines) {
 
   const fragmentLines = this._fragmentShaderParts.shaderLines;
   if (Array.isArray(lines)) {
-    fragmentLines.push.apply(fragmentLines, lines);
+    for (let i = 0; i < lines.length; i++) {
+      fragmentLines.push(lines[i]);
+    }
   } else {
     // Single string case
     fragmentLines.push(lines);
@@ -534,7 +538,9 @@ function generateStructLines(shaderBuilder) {
     structId = structIds[i];
     struct = shaderBuilder._structs[structId];
     structLines = struct.generateGlslLines();
-    vertexLines.push.apply(vertexLines, structLines);
+    for (let j = 0; j < structLines.length; j++) {
+      vertexLines.push(structLines[j]);
+    }
   }
 
   structIds = shaderBuilder._fragmentShaderParts.structIds;
@@ -542,7 +548,9 @@ function generateStructLines(shaderBuilder) {
     structId = structIds[i];
     struct = shaderBuilder._structs[structId];
     structLines = struct.generateGlslLines();
-    fragmentLines.push.apply(fragmentLines, structLines);
+    for (let j = 0; j < structLines.length; j++) {
+      fragmentLines.push(structLines[j]);
+    }
   }
 
   return {
@@ -577,7 +585,9 @@ function generateFunctionLines(shaderBuilder) {
     functionId = functionIds[i];
     func = shaderBuilder._functions[functionId];
     functionLines = func.generateGlslLines();
-    vertexLines.push.apply(vertexLines, functionLines);
+    for (let j = 0; j < functionLines.length; j++) {
+      vertexLines.push(functionLines[j]);
+    }
   }
 
   functionIds = shaderBuilder._fragmentShaderParts.functionIds;
@@ -585,7 +595,9 @@ function generateFunctionLines(shaderBuilder) {
     functionId = functionIds[i];
     func = shaderBuilder._functions[functionId];
     functionLines = func.generateGlslLines();
-    fragmentLines.push.apply(fragmentLines, functionLines);
+    for (let j = 0; j < functionLines.length; j++) {
+      fragmentLines.push(functionLines[j]);
+    }
   }
 
   return {

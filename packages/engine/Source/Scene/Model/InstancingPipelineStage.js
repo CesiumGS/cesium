@@ -210,10 +210,9 @@ InstancingPipelineStage.process = function (renderResources, node, frameState) {
   renderResources.uniformMap = combine(uniformMap, renderResources.uniformMap);
 
   renderResources.instanceCount = count;
-  renderResources.attributes.push.apply(
-    renderResources.attributes,
-    instancingVertexAttributes
-  );
+  for (let i = 0; i < instancingVertexAttributes.length; i++) {
+    instancingVertexAttributes[i].instanceCount = count;
+  }
 };
 
 const projectedTransformScratch = new Matrix4();
@@ -988,10 +987,9 @@ function processMatrixAttributes(
   shaderBuilder.addAttribute("vec4", `a_instancing${attributeString}Row1`);
   shaderBuilder.addAttribute("vec4", `a_instancing${attributeString}Row2`);
 
-  instancingVertexAttributes.push.apply(
-    instancingVertexAttributes,
-    matrixAttributes
-  );
+  for (let i = 0; i < matrixAttributes.length; i++) {
+    instancingVertexAttributes.push(matrixAttributes[i]);
+  }
 }
 
 function processVec3Attribute(
