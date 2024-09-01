@@ -374,7 +374,7 @@ const scratchIntervalB = new Interval();
  * axis are non-overlapping.
  *
  * This method will return `true` when the points are "touching" -
- * i.e. it returns `true` if and only if they are really separated.
+ * i.e. it returns `false` if and only if they are really separated.
  *
  * The axis will usually have unit length (but does not need to).
  * If the given axis has a length that is epsilon-equal to zero,
