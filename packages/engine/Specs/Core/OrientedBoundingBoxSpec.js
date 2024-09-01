@@ -1,4 +1,3 @@
-/* eslint-disable no-restricted-globals */
 import {
   BoundingSphere,
   Cartesian3,
@@ -49,8 +48,8 @@ function createObb(
   const center = new Cartesian3(deltaX, deltaY, deltaZ);
   const halfAxes = Matrix3.clone(Matrix3.IDENTITY);
   const rotX = Matrix3.fromRotationX(CesiumMath.toRadians(angleDegX));
-  const rotY = Matrix3.fromRotationX(CesiumMath.toRadians(angleDegY));
-  const rotZ = Matrix3.fromRotationX(CesiumMath.toRadians(angleDegZ));
+  const rotY = Matrix3.fromRotationY(CesiumMath.toRadians(angleDegY));
+  const rotZ = Matrix3.fromRotationZ(CesiumMath.toRadians(angleDegZ));
   const scale = Matrix3.fromScale(new Cartesian3(sizeX, sizeY, sizeZ));
   Matrix3.multiply(halfAxes, rotX, halfAxes);
   Matrix3.multiply(halfAxes, rotY, halfAxes);
@@ -230,7 +229,7 @@ describe("Core/OrientedBoundingBox", function () {
     expect(box.center).toEqualEpsilon(translation, CesiumMath.EPSILON15);
   });
 
-  fit("fromMinMax creates the right bounding box", function () {
+  it("fromMinMax creates the right bounding box", function () {
     const min = new Cartesian3(-2.0, -3.0, -4.0);
     const max = new Cartesian3(2.0, 3.0, 4.0);
     const box = OrientedBoundingBox.fromMinMax(min, max);
@@ -244,13 +243,13 @@ describe("Core/OrientedBoundingBox", function () {
     expect(box.halfAxes).toEqualEpsilon(halfAxes, CesiumMath.EPSILON15);
   });
 
-  fit("fromMinMax throws without min/max", function () {
+  it("fromMinMax throws without min/max", function () {
     expect(function () {
       OrientedBoundingBox.fromMinMax(undefined, undefined);
     }).toThrowDeveloperError();
   });
 
-  fit("fromMinMax creates the right bounding box with a result parameter", function () {
+  it("fromMinMax creates the right bounding box with a result parameter", function () {
     const min = new Cartesian3(-2.0, -3.0, -4.0);
     const max = new Cartesian3(2.0, 3.0, 4.0);
     const result = new OrientedBoundingBox();
@@ -267,7 +266,7 @@ describe("Core/OrientedBoundingBox", function () {
     expect(box.halfAxes).toEqualEpsilon(halfAxes, CesiumMath.EPSILON15);
   });
 
-  fit("fromMinMax creates the right bounding box with a result parameter", function () {
+  it("fromMinMax creates the right bounding box with a result parameter", function () {
     const min = new Cartesian3(-2.0, -3.0, -4.0);
     const max = new Cartesian3(2.0, 3.0, 4.0);
     const result = new OrientedBoundingBox();
@@ -284,14 +283,14 @@ describe("Core/OrientedBoundingBox", function () {
     expect(box.halfAxes).toEqualEpsilon(halfAxes, CesiumMath.EPSILON15);
   });
 
-  fit("transform throws without transform", function () {
+  it("transform throws without transform", function () {
     expect(function () {
       const box = new OrientedBoundingBox();
       OrientedBoundingBox.transform(box, undefined);
     }).toThrowDeveloperError();
   });
 
-  fit("transform transforms the bounding box with transform", function () {
+  it("transform transforms the bounding box with transform", function () {
     const center = new Cartesian3(1.0, 2.0, 3.0);
     const halfAxes = new Matrix3(2, 0, 0, 0, 3, 0, 0, 0, 4);
     const box = new OrientedBoundingBox(center, halfAxes);
@@ -321,7 +320,7 @@ describe("Core/OrientedBoundingBox", function () {
     );
   });
 
-  fit("transform transforms the bounding box with transform with a result parameter", function () {
+  it("transform transforms the bounding box with transform with a result parameter", function () {
     const center = new Cartesian3(1.0, 2.0, 3.0);
     const halfAxes = new Matrix3(2, 0, 0, 0, 3, 0, 0, 0, 4);
     const box = new OrientedBoundingBox(center, halfAxes);
@@ -354,21 +353,21 @@ describe("Core/OrientedBoundingBox", function () {
     );
   });
 
-  fit("intersect throws without first argument", function () {
+  it("intersect throws without first argument", function () {
     expect(function () {
       const obbB = new OrientedBoundingBox();
       OrientedBoundingBox.intersect(undefined, obbB);
     }).toThrowDeveloperError();
   });
 
-  fit("intersect throws without first argument", function () {
+  it("intersect throws without first argument", function () {
     expect(function () {
       const obbA = new OrientedBoundingBox();
       OrientedBoundingBox.intersect(obbA, undefined);
     }).toThrowDeveloperError();
   });
 
-  fit("intersect detects separation along A0", function () {
+  it("intersect detects separation along A0", function () {
     const obbA = createObb(10, 20, 30, 100, 0, 0, 0, 0, 0);
     const obbB = createObb(10, 20, 30, 0, 0, 0, 0, 0, 0);
 
@@ -376,7 +375,7 @@ describe("Core/OrientedBoundingBox", function () {
     expect(actual).toBeFalse();
   });
 
-  fit("intersect detects touching along A0", function () {
+  it("intersect detects touching along A0", function () {
     const obbA = createObb(10, 20, 30, 20, 0, 0, 0, 0, 0);
     const obbB = createObb(10, 20, 30, 0, 0, 0, 0, 0, 0);
 
@@ -384,7 +383,7 @@ describe("Core/OrientedBoundingBox", function () {
     expect(actual).toBeTrue();
   });
 
-  fit("intersect detects separation along A1", function () {
+  it("intersect detects separation along A1", function () {
     const obbA = createObb(10, 20, 30, 0, 100, 0, 0, 0, 0);
     const obbB = createObb(10, 20, 30, 0, 0, 0, 0, 0, 0);
 
@@ -392,7 +391,7 @@ describe("Core/OrientedBoundingBox", function () {
     expect(actual).toBeFalse();
   });
 
-  fit("intersect detects touching along A1", function () {
+  it("intersect detects touching along A1", function () {
     const obbA = createObb(10, 20, 30, 0, 40, 0, 0, 0, 0);
     const obbB = createObb(10, 20, 30, 0, 0, 0, 0, 0, 0);
 
@@ -400,7 +399,7 @@ describe("Core/OrientedBoundingBox", function () {
     expect(actual).toBeTrue();
   });
 
-  fit("intersect detects separation along A2", function () {
+  it("intersect detects separation along A2", function () {
     const obbA = createObb(10, 20, 30, 0, 0, 100, 0, 0, 0);
     const obbB = createObb(10, 20, 30, 0, 0, 0, 0, 0, 0);
 
@@ -408,7 +407,7 @@ describe("Core/OrientedBoundingBox", function () {
     expect(actual).toBeFalse();
   });
 
-  fit("intersect detects touching along A2", function () {
+  it("intersect detects touching along A2", function () {
     const obbA = createObb(10, 20, 30, 0, 0, 60, 0, 0, 0);
     const obbB = createObb(10, 20, 30, 0, 0, 0, 0, 0, 0);
 
@@ -416,7 +415,7 @@ describe("Core/OrientedBoundingBox", function () {
     expect(actual).toBeTrue();
   });
 
-  fit("intersect detects separation along Bx", function () {
+  it("intersect detects separation along Bx", function () {
     const obbA = createObb(10, 20, 30, 44, 0, 0, 0, 45, 0);
     const obbB = createObb(10, 20, 30, 0, 0, 0, 0, 0, 0);
 
@@ -424,7 +423,7 @@ describe("Core/OrientedBoundingBox", function () {
     expect(actual).toBeFalse();
   });
 
-  fit("intersect detects separation along By", function () {
+  it("intersect detects separation along By", function () {
     const obbA = createObb(10, 20, 30, 0, 58, 0, 45, 0, 0);
     const obbB = createObb(10, 20, 30, 0, 0, 0, 0, 0, 0);
 
@@ -432,7 +431,7 @@ describe("Core/OrientedBoundingBox", function () {
     expect(actual).toBeFalse();
   });
 
-  fit("intersect detects separation along Bz", function () {
+  it("intersect detects separation along Bz", function () {
     const obbA = createObb(10, 20, 30, 0, 0, 72, 44, 0, 0);
     const obbB = createObb(10, 20, 30, 0, 0, 0, 0, 0, 0);
 
@@ -440,7 +439,7 @@ describe("Core/OrientedBoundingBox", function () {
     expect(actual).toBeFalse();
   });
 
-  fit("intersect detects separation along AxBx", function () {
+  it("intersect detects separation along AxBx", function () {
     const obbA = createObb(10, 20, 30, 0, 53, 40, 135, 135, 45);
     const obbB = createObb(10, 20, 30, 0, 0, 0, 0, 0, 0);
 
@@ -448,7 +447,7 @@ describe("Core/OrientedBoundingBox", function () {
     expect(actual).toBeFalse();
   });
 
-  fit("intersect detects separation along AxBy", function () {
+  it("intersect detects separation along AxBy", function () {
     const obbA = createObb(10, 20, 30, 0, 0, 62, 45, 45, 47);
     const obbB = createObb(10, 20, 30, 0, 0, 0, 0, 0, 0);
 
@@ -456,7 +455,7 @@ describe("Core/OrientedBoundingBox", function () {
     expect(actual).toBeFalse();
   });
 
-  fit("intersect detects separation along AxBz", function () {
+  it("intersect detects separation along AxBz", function () {
     const obbA = createObb(10, 20, 30, 0, 53, 35, 135, 45, 45);
     const obbB = createObb(10, 20, 30, 0, 0, 0, 0, 0, 0);
 
@@ -464,7 +463,7 @@ describe("Core/OrientedBoundingBox", function () {
     expect(actual).toBeFalse();
   });
 
-  fit("intersect detects separation along AyBx", function () {
+  it("intersect detects separation along AyBx", function () {
     const obbA = createObb(10, 20, 30, 0, 40, 40, 45, 90, 135);
     const obbB = createObb(10, 20, 30, 0, 0, 0, 0, 0, 0);
 
@@ -472,7 +471,7 @@ describe("Core/OrientedBoundingBox", function () {
     expect(actual).toBeFalse();
   });
 
-  fit("intersect detects separation along AyBy", function () {
+  it("intersect detects separation along AyBy", function () {
     const obbA = createObb(10, 20, 30, 35, 0, 56, 45, 45, 45);
     const obbB = createObb(10, 20, 30, 0, 0, 0, 0, 0, 0);
 
@@ -480,7 +479,7 @@ describe("Core/OrientedBoundingBox", function () {
     expect(actual).toBeFalse();
   });
 
-  fit("intersect detects separation along AyBz", function () {
+  it("intersect detects separation along AyBz", function () {
     const obbA = createObb(10, 20, 30, 39, 39, 0, 45, 135, 136);
     const obbB = createObb(10, 20, 30, 0, 0, 0, 0, 0, 0);
 
@@ -488,7 +487,7 @@ describe("Core/OrientedBoundingBox", function () {
     expect(actual).toBeFalse();
   });
 
-  fit("intersect detects separation along AzBx", function () {
+  it("intersect detects separation along AzBx", function () {
     const obbA = createObb(10, 20, 30, 0, 40, 44, 45, 45, 136);
     const obbB = createObb(10, 20, 30, 0, 0, 0, 0, 0, 0);
 
@@ -496,7 +495,7 @@ describe("Core/OrientedBoundingBox", function () {
     expect(actual).toBeFalse();
   });
 
-  fit("intersect detects separation along AzBy", function () {
+  it("intersect detects separation along AzBy", function () {
     const obbA = createObb(10, 20, 30, 0, 0, 62, 45, 45, 0);
     const obbB = createObb(10, 20, 30, 0, 0, 0, 0, 0, 0);
 
@@ -504,7 +503,7 @@ describe("Core/OrientedBoundingBox", function () {
     expect(actual).toBeFalse();
   });
 
-  fit("intersect detects separation along AzBz", function () {
+  it("intersect detects separation along AzBz", function () {
     const obbA = createObb(10, 20, 30, 23, 28, 0, 45, 45, 45);
     const obbB = createObb(10, 20, 30, 0, 0, 0, 0, 0, 0);
 
