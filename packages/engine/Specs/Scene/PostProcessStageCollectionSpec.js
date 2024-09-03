@@ -411,7 +411,20 @@ describe(
         scene.primitives.add(new ViewportPrimitive(fs));
 
         // validate we start by rendering the expected color
-        expect(scene).withContext(`without HDR`).toRender(inputColorRgb);
+        expect(scene)
+          .withContext(`without HDR`)
+          .toRenderAndCall((rgba) => {
+            expect(rgba[0])
+              .withContext("r")
+              .toEqualEpsilon(inputColorRgb[0], 1);
+            expect(rgba[1])
+              .withContext("g")
+              .toEqualEpsilon(inputColorRgb[1], 1);
+            expect(rgba[2])
+              .withContext("b")
+              .toEqualEpsilon(inputColorRgb[2], 1);
+            expect(rgba[3]).withContext("a").toEqual(inputColorRgb[3]);
+          });
         // toggle HDR on
         scene.highDynamicRange = true;
         // validate we render a DIFFERENT color, not black, and that it matches the expected color
