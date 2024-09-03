@@ -428,7 +428,7 @@ void main()
 #ifdef ENABLE_CLIPPING_POLYGONS
     vec2 clippingPosition = v_clippingPosition;
     int regionIndex = v_regionIndex;
-    clipPolygons(u_clippingDistance, CLIPPING_POLYGON_REGIONS_LENGTH, clippingPosition, regionIndex);    
+    clipPolygons(u_clippingDistance, CLIPPING_POLYGON_REGIONS_LENGTH, clippingPosition, regionIndex);
 #endif
 
 #ifdef HIGHLIGHT_FILL_TILE
@@ -495,7 +495,7 @@ void main()
             #endif
 
             #ifndef HDR
-                fogColor.rgb = czm_acesTonemapping(fogColor.rgb);
+                fogColor.rgb = czm_pbrNeutralTonemapping(fogColor.rgb);
                 fogColor.rgb = czm_inverseGamma(fogColor.rgb);
             #endif
 
