@@ -49,6 +49,13 @@ function createScene(options) {
   const scene = new Scene(options);
   scene.highDynamicRange = false;
 
+  if (
+    scene.context.drawingBufferWidth <= 2 ||
+    scene.context.drawingBufferHeight <= 2
+  ) {
+    scene.msaaSamples = 1;
+  }
+
   if (!!window.webglValidation) {
     const context = scene.context;
     context.validateShaderProgram = true;
