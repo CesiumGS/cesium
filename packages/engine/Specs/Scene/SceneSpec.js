@@ -128,6 +128,10 @@ describe(
 
     describe("constructor", () => {
       it("has expected defaults", function () {
+        const scene = createScene({
+          canvas: createCanvas(5, 5),
+        });
+
         expect(scene.canvas).toBeInstanceOf(HTMLCanvasElement);
         expect(scene.primitives).toBeInstanceOf(PrimitiveCollection);
         expect(scene.camera).toBeInstanceOf(Camera);
@@ -146,6 +150,7 @@ describe(
         expect(contextAttributes.premultipliedAlpha).toEqual(true);
         expect(contextAttributes.preserveDrawingBuffer).toEqual(false);
         expect(scene._depthPlane._ellipsoidOffset).toEqual(0);
+        scene.destroyForSpecs();
       });
 
       it("respects default log depth buffer override", () => {

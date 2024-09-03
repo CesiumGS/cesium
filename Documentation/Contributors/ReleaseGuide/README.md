@@ -8,7 +8,7 @@ There is no release manager; instead, our community shares the responsibility. A
 
 1. Check for any outdated dependencies with `npm outdated`.
 2. If one or more dependencies are outdated, checkout a new branch and run `npm install <packagename>@latest` for each package to increment the version.
-3. Verify each update. If an update can be resolved, open a PR with your changes. If an update is incompatible, open an issue.
+3. Verify each update. If an update can be resolved, open a PR with your changes. If an update is incompatible, open an issue. Check the [`dependencies` label](https://github.com/CesiumGS/cesium/issues?q=is%3Aissue+is%3Aopen+label%3Adependencies) for any open issues pinning versions.
 4. Check the [`priority - next release` issues and PRs](https://github.com/CesiumGS/cesium/labels/priority%20-%20next%20release). If there are any outstanding items, post a message to the `#cesiumjs` channel in Slack to figure out what needs to be addressed before we can release.
 5. Ensure you've generated valid [end to end testing snapshots](../TestingGuide/README.md) against a previous release tag with `npm run test-e2e-update`.
 
@@ -24,8 +24,8 @@ There is no release manager; instead, our community shares the responsibility. A
 6. Update the Cesium ion demo token in `Ion.js` with a new token from the CesiumJS ion team account with read and geocode permissions. These tokens are named like this: `1.85 Release - Delete on November 1st, 2021`. Delete the token from 2 releases ago.
 7. Update the ArcGIS Developer API key in `ArcGisMapService.js` with a new API key from the CesiumJS ArcGIS Developer account. These API keys are named like this: `1.85 Release - Delete on November 1st, 2021`. Delete the API key from the last release.
 8. Proofread [`CHANGES.md`](../../../CHANGES.md) with the date of the release. Adjust the order of changes so that prominent/popular changes come first. Ensure each change is in the section for the relevant workspace.
-9. Based on `CHANGES.md`, update each workspace version following the rules of [semantic versioning](https://semver.org/), e.g.,  
-   `npm version minor -w @cesium/engine --no-git-tag-version`.  
+9. Based on `CHANGES.md`, update each workspace version following the rules of [semantic versioning](https://semver.org/), e.g.,
+   `npm version minor -w @cesium/engine --no-git-tag-version`.
    Changes in one workspace may require version updates in other workspaces that depend on it. For example, if `CHANGES.md` reports changes in `@cesium/engine` only, the version for `@cesium/widgets` should also be incremented to reflect the updated dependency.
 10. Update the version in `package.json` to match, e.g. `1.115.0` -> `1.116.0`.
 11. Commit these changes.
