@@ -123,7 +123,7 @@ import pickModel from "./pickModel.js";
  * @privateParam {boolean} [options.show=true] Whether or not to render the model.
  * @privateParam {Matrix4} [options.modelMatrix=Matrix4.IDENTITY]  The 4x4 transformation matrix that transforms the model from model to world coordinates.
  * @privateParam {number} [options.scale=1.0] A uniform scale applied to this model.
- * @privateParam {boolean} [options.allowVerticalExaggeration=true] Allows the model to participate in vertical exaggeration.
+ * @privateParam {boolean} [options.enableVerticalExaggeration=true] If <code>true</code>, the model is exaggerated along the ellipsoid normal when {@link Scene.verticalExaggeration} is set to a value other than <code>1.0</code>.
  * @privateParam {number} [options.minimumPixelSize=0.0] The approximate minimum pixel size of the model regardless of zoom.
  * @privateParam {number} [options.maximumScale] The maximum scale size of a model. An upper limit for minimumPixelSize.
  * @privateParam {object} [options.id] A user-defined object to return when the model is picked with {@link Scene#pick}.
@@ -341,11 +341,11 @@ function Model(options) {
   this._heightDirty = this._heightReference !== HeightReference.NONE;
   this._removeUpdateHeightCallback = undefined;
 
-  this._allowVerticalExaggeration = defaultValue(
-    options.allowVerticalExaggeration,
+  this._enableVerticalExaggeration = defaultValue(
+    options.enableVerticalExaggeration,
     true
   );
-  this._verticalExaggerationOn = false;
+  this._hasVerticalExaggeration = false;
 
   this._clampedModelMatrix = undefined; // For use with height reference
 
@@ -1345,34 +1345,41 @@ Object.defineProperties(Model.prototype, {
   },
 
   /**
-   * Enable Models to participate in scene verticalExaggeration.
+   * If <code>true</code>, the model is exaggerated along the ellipsoid normal when {@link Scene.verticalExaggeration} is set to a value other than <code>1.0</code>.
    *
    * @memberof Model.prototype
-   *
    * @type {boolean}
+   * @default true
+   *
+   * @example
+   * // Exaggerate terrain by a factor of 2, but prevent model exaggeration
+   * scene.verticalExaggeration = 2.0;
+   * model.enableVerticalExaggeration = false;
    */
-  allowVerticalExaggeration: {
+  enableVerticalExaggeration: {
     get: function () {
-      return this._allowVerticalExaggeration;
+      return this._enableVerticalExaggeration;
     },
     set: function (value) {
-      if (value !== this._allowVerticalExaggeration) {
+      if (value !== this._enableVerticalExaggeration) {
         this.resetDrawCommands();
       }
-      this._allowVerticalExaggeration = value;
+      this._enableVerticalExaggeration = value;
     },
   },
 
   /**
-   * State of VerticalExaggeration (true = enabled, false = disabled).
+   * If <code>true</code>, the model is vertically exaggerated along the ellipsoid normal.
    *
    * @memberof Model.prototype
-   *
    * @type {boolean}
+   * @default true
+   * @readonly
+   * @private
    */
-  verticalExaggerationOn: {
+  hasVerticalExaggeration: {
     get: function () {
-      return this._verticalExaggerationOn;
+      return this._hasVerticalExaggeration;
     },
   },
 
@@ -2099,15 +2106,15 @@ function updateFog(model, frameState) {
 }
 
 function updateVerticalExaggeration(model, frameState) {
-  if (model.allowVerticalExaggeration) {
+  if (model.enableVerticalExaggeration) {
     const verticalExaggerationNeeded = frameState.verticalExaggeration !== 1.0;
-    if (model.verticalExaggerationOn !== verticalExaggerationNeeded) {
+    if (model.hasVerticalExaggeration !== verticalExaggerationNeeded) {
       model.resetDrawCommands();
-      model._verticalExaggerationOn = verticalExaggerationNeeded;
+      model._hasVerticalExaggeration = verticalExaggerationNeeded;
     }
-  } else if (model.verticalExaggerationOn) {
+  } else if (model.hasVerticalExaggeration) {
     model.resetDrawCommands(); //if verticalExaggeration was on, reset.
-    model._verticalExaggerationOn = false;
+    model._hasVerticalExaggeration = false;
   }
 }
 
@@ -2790,7 +2797,7 @@ Model.prototype.destroyModelResources = function () {
  * @param {boolean} [options.show=true] Whether or not to render the model.
  * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the model from model to world coordinates.
  * @param {number} [options.scale=1.0] A uniform scale applied to this model.
- * @param {boolean} [options.allowVerticalExaggeration=true] Allows the model to participate in Vertical Exaggeration
+ * @param {boolean} [options.enableVerticalExaggeration=true] If <code>true</code>, the model is exaggerated along the ellipsoid normal when {@link Scene.verticalExaggeration} is set to a value other than <code>1.0</code>.
  * @param {number} [options.minimumPixelSize=0.0] The approximate minimum pixel size of the model regardless of zoom.
  * @param {number} [options.maximumScale] The maximum scale size of a model. An upper limit for minimumPixelSize.
  * @param {object} [options.id] A user-defined object to return when the model is picked with {@link Scene#pick}.
@@ -3159,7 +3166,7 @@ function makeModelOptions(loader, modelType, options) {
     show: options.show,
     modelMatrix: options.modelMatrix,
     scale: options.scale,
-    allowVerticalExaggeration: options.allowVerticalExaggeration,
+    enableVerticalExaggeration: options.enableVerticalExaggeration,
     minimumPixelSize: options.minimumPixelSize,
     maximumScale: options.maximumScale,
     id: options.id,
