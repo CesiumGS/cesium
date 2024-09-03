@@ -129,6 +129,10 @@ Cesium3DTilesTester.loadTileset = async function (scene, url, options) {
     options.imageBasedLighting,
     defaultIbl
   );
+  options.environmentMapOptions = {
+    enabled: false, // disable other diffuse lighting by default
+    ...options.environmentMapOptions,
+  };
 
   const tileset = await Cesium3DTileset.fromUrl(url, options);
 

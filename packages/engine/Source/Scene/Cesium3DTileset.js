@@ -3432,9 +3432,13 @@ Cesium3DTileset.prototype.updateForPass = function (
     originalCullingVolume
   );
 
-  const environmentMapManager = this._environmentMapManager;
-  environmentMapManager.position = this.boundingSphere.center;
-  environmentMapManager.update(frameState);
+  if (passOptions.isRender) {
+    const environmentMapManager = this._environmentMapManager;
+    if (defined(this._root)) {
+      environmentMapManager.position = this.boundingSphere.center;
+    }
+    environmentMapManager.update(frameState);
+  }
 
   // Update clipping polygons
   const clippingPolygons = this._clippingPolygons;

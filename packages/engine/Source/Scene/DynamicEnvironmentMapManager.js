@@ -19,6 +19,7 @@ import Sampler from "../Renderer/Sampler.js";
 import ShaderProgram from "../Renderer/ShaderProgram.js";
 import ShaderSource from "../Renderer/ShaderSource.js";
 import TextureMinificationFilter from "../Renderer/TextureMinificationFilter.js";
+import Atmosphere from "./Atmosphere.js";
 import AtmosphereCommon from "../Shaders/AtmosphereCommon.js";
 import ComputeIrradianceMapFS from "../Shaders/ComputeIrradianceMapFS.js";
 import ComputeRadianceMapFS from "../Shaders/ComputeRadianceMapFS.js";
@@ -153,9 +154,9 @@ function DynamicEnvironmentMapManager(options) {
    * The saturation of the light. 1.0 uses the unmodified incoming environment color. Less than 1.0 reduces the
    * saturation while greater than 1.0 increases it.
    * @type {number}
-   * @default 0.8
+   * @default 1.0
    */
-  this.saturation = defaultValue(options.saturation, 0.8);
+  this.saturation = defaultValue(options.saturation, 1.0);
 
   /**
    * Solid color used to represent the ground.
@@ -403,6 +404,10 @@ function updateRadianceMap(manager, frameState) {
       manager._radianceMapFS = fs;
     }
 
+    if (Atmosphere.requiresColorCorrect(frameState.atmosphere)) {
+      fs.defines.push("ATMOSPHERE_COLOR_CORRECT");
+    }
+
     const position = manager._position;
     const radiiAndDynamicAtmosphereColor =
       manager._radiiAndDynamicAtmosphereColor;
@@ -415,10 +420,15 @@ function updateRadianceMap(manager, frameState) {
     );
 
     const adjustments = scratchAdjustments;
+
     adjustments.x = manager.brightness;
     adjustments.y = manager.saturation;
     adjustments.z = manager.gamma;
     adjustments.w = manager.intensity;
+
+    if (manager.brightness !== 1.0 || manager.saturation !== 1.0 || manager.gamma !== 1.0) {
+      fs.defines.push("ENVIRONMENT_COLOR_CORRECT");
+    }
 
     let i = 0;
     for (const face of CubeMap.faces()) {

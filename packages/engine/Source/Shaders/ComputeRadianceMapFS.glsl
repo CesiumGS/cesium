@@ -8,8 +8,6 @@ uniform mat4 u_enuToFixedFrame;
 uniform vec4 u_brightnessSaturationGammaIntensity;
 uniform vec4 u_groundColor;
 
-const float fExposure = 2.0;
-
 vec4 getCubeMapDirection(vec2 uv, vec3 faceDir) {
     vec2 scaledUV = uv * 2.0 - 1.0;
 
@@ -57,9 +55,10 @@ void main() {
 
     vec4 skyColor = czm_computeAtmosphereColor(ray, lightDirectionWC, rayleighColor, mieColor, opacity);
 
-    // Alter the opacity based on how close the object is to the ground.
-    // (0.0 = At edge of atmosphere, 1.0 = On ground)
-    opacity = clamp((atmosphereOuterRadius - height) / (atmosphereOuterRadius - atmosphereInnerRadius), 0.0, 1.0);
+#ifdef ATMOSPHERE_COLOR_CORRECT
+    const bool ignoreBlackPixels = true;
+    skyColor.rgb = czm_applyHSBShift(skyColor.rgb, czm_atmosphereHsbShift, ignoreBlackPixels);
+#endif
 
     vec3 lookupDirection = -normalizedDirection;
      // Flipping the X vector is a cheap way to get the inverse of czm_temeToPseudoFixed, since that's a rotation about Z.
@@ -68,34 +67,32 @@ void main() {
     lookupDirection.x = -lookupDirection.x;
 
     vec4 sceneSkyBoxColor = czm_textureCube(czm_environmentMap, lookupDirection);
-    vec3 backgroundColor = mix(sceneSkyBoxColor.rgb, czm_backgroundColor, sceneSkyBoxColor.a);
+    vec3 skyBackgroundColor = mix(czm_backgroundColor.rgb, sceneSkyBoxColor.rgb, sceneSkyBoxColor.a);
 
     // Interpolate the ground color based on distance and sun exposure
     vec3 up = normalize(u_positionWC);
     float occlusion = max(dot(lightDirectionWC, up), 0.15); // Ensure a low-level of ambiant light
-    vec3 groundColor = mix(vec3(0.0), u_groundColor.xyz, occlusion * u_groundColor.a * (1.0 - d / radius));
+    vec3 groundColor = mix(vec3(0.0), u_groundColor.rgb, occlusion * u_groundColor.a * (1.0 - d / radius));
 
     // Only show the stars when not obscured by the ellipsoid
-    vec3 backgroundColor = czm_branchFreeTernary(czm_isEmpty(intersection), backgroundColor, groundColor);
+    vec3 backgroundColor = czm_branchFreeTernary(czm_isEmpty(intersection), skyBackgroundColor, groundColor);
 
     // Apply intensity to sky only
     float intensity = u_brightnessSaturationGammaIntensity.w;
-    vec3 adjustedSkyColor = skyColor.rgb * intensity;
+    vec4 adjustedSkyColor = skyColor;
+    adjustedSkyColor.rgb = skyColor.rgb * intensity;
 
-    vec4 color = vec4(mix(backgroundColor, adjustedSkyColor, skyColor.a), 1.0);
-
-    #ifdef COLOR_CORRECT
-        const bool ignoreBlackPixels = true;
-        color.rgb = czm_applyHSBShift(color.rgb, u_hsbShift, ignoreBlackPixels);
-    #endif
+    vec4 color = vec4(mix(backgroundColor, adjustedSkyColor.rgb, adjustedSkyColor.a), 1.0);
 
     float brightness = u_brightnessSaturationGammaIntensity.x;
     float saturation = u_brightnessSaturationGammaIntensity.y;
     float gamma = u_brightnessSaturationGammaIntensity.z;
 
+#ifdef ENVIRONMENT_COLOR_CORRECT
     color.rgb = mix(vec3(0.0), color.rgb, brightness);
     color.rgb = czm_saturation(color.rgb, saturation);
-    color.rgb = pow(color.rgb, vec3(gamma));
+#endif
+    color.rgb = pow(color.rgb, vec3(gamma)); // Normally this would be in the ifdef above, but there is a precision issue with the atmmopshere scattering transmittance (alpha) which this loine works around, even when gamma is 1.0.
     color.rgb = czm_gammaCorrect(color.rgb);
 
     out_FragColor = color;

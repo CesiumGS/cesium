@@ -3327,7 +3327,8 @@ describe(
       });
 
       expect(renderOptions).toRenderAndCall(function (rgba) {
-        expect(rgba[0]).toBeGreaterThan(200);
+        expect(rgba[0]).toBeGreaterThan(rgba[1]);
+        expect(rgba[0]).toBeGreaterThan(rgba[2]);
         expect(rgba[1]).toBeLessThan(25);
         expect(rgba[2]).toBeLessThan(25);
         expect(rgba[3]).toEqual(255);
@@ -3342,7 +3343,8 @@ describe(
       });
 
       expect(renderOptions).toRenderAndCall(function (rgba) {
-        expect(rgba[0]).toBeGreaterThan(100);
+        expect(rgba[0]).toBeGreaterThan(rgba[1]);
+        expect(rgba[0]).toBeGreaterThan(rgba[2]);
         expect(rgba[0]).toBeLessThan(sourceRed);
         expect(rgba[1]).toBeLessThan(25);
         expect(rgba[2]).toBeLessThan(25);
@@ -3355,7 +3357,8 @@ describe(
       });
 
       expect(renderOptions).toRenderAndCall(function (rgba) {
-        expect(rgba[0]).toBeGreaterThan(100);
+        expect(rgba[0]).toBeGreaterThan(rgba[1]);
+        expect(rgba[0]).toBeGreaterThan(rgba[2]);
         expect(rgba[0]).toBeLessThan(sourceRed);
         expect(rgba[1]).toBeLessThan(25);
         expect(rgba[2]).toBeLessThan(25);
@@ -3387,9 +3390,9 @@ describe(
       });
 
       expect(renderOptions).toRenderAndCall(function (rgba) {
-        expect(rgba[0]).toBeGreaterThan(100);
+        expect(rgba[0]).toBeGreaterThan(rgba[2]);
         expect(rgba[0]).toBeLessThan(255);
-        expect(rgba[1]).toBeGreaterThan(100);
+        expect(rgba[1]).toBeGreaterThan(rgba[2]);
         expect(rgba[1]).toBeLessThan(255);
         expect(rgba[2]).toBeLessThan(25);
         expect(rgba[3]).toEqual(255);
