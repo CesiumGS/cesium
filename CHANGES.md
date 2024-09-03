@@ -10,6 +10,9 @@
 - Enable MSAA by default with 4 samples. To turn MSAA off set `scene.msaaSamples = 1` [#12158](https://github.com/CesiumGS/cesium/pull/12158)
 - Made the `time` parameter optional for `Property`, using `JulianDate.now()` as default. [#12099](https://github.com/CesiumGS/cesium/pull/12099)
 - Exposes `ScreenSpaceCameraController.zoomFactor` to allow adjusting the zoom factor (speed). [#9145](https://github.com/CesiumGS/cesium/pull/9145)
+- Expose the `tonemapper` property of `PostProcessStageCollection` to allow changing the tonemap used when HDR is turned on. This defaults to the [PBR Neutral Tonemap from Khronos](https://github.com/KhronosGroup/ToneMapping/tree/main/PBR_Neutral) [#12160](https://github.com/CesiumGS/cesium/pull/12160)
+  - The enum `Tonemapper` contains the list of valid tonemap options to use with the `tonemapper` setting
+- Expose the `exposure` property of `PostProcessStageCollection` to allow changing the exposure used for the current HDR tonemap [#12160](https://github.com/CesiumGS/cesium/pull/12160)
 - Added `WaterMask` globe material, which visualizes areas of water or land based on the terrain's water mask. [#12149](https://github.com/CesiumGS/cesium/pull/12149)
 
 ##### Fixes :wrench:
@@ -24,13 +27,12 @@
 
 ##### Breaking Changes :mega:
 
+- Switched the default (non-HDR) tonemapping for models, atmosphere, and globe from ACES to [PBR Neutral Tonemap from Khronos](https://github.com/KhronosGroup/ToneMapping/tree/main/PBR_Neutral). The widens the gamut of possible colors, and provides more consistent color appearances across renderers. [#12160](https://github.com/CesiumGS/cesium/pull/12160)
+- Switched the default tonemapper when HDR is turned _on_ from ACES to [PBR Neutral Tonemap from Khronos](https://github.com/KhronosGroup/ToneMapping/tree/main/PBR_Neutral). To preserve the previous behavior set `viewer.scene.postProcessStages.tonemapper = Cesium.Tonemapper.ACES;` [#12160](https://github.com/CesiumGS/cesium/pull/12160)
 - `SceneTransforms.wgs84ToWindowCoordinates` has been removed. Use `SceneTransforms.worldToWindowCoordinates` instead.
 - `SceneTransforms.wgs84ToDrawingBufferCoordinates` has been removed. Use `SceneTransforms.worldToDrawingBufferCoordinates` instead.
-
 - Removed `jitter` option from `VoxelPrimitive.js`, `VoxelRenderResources.js`, and related test code in `VoxelPrimitiveSpec.js`. [#11913](https://github.com/CesiumGS/cesium/issues/11913)
-
 - Custom specular environment maps in `ImageBasedLighting` now require either a WebGL2 context or a WebGL1 context that supports the [`EXT_shader_texture_lod` extension](https://registry.khronos.org/webgl/extensions/EXT_shader_texture_lod/).
-
 - `ScreenSpaceCameraController._zoomFactor` replaced with public zoomFactor attribute.
 
 ### 1.120 - 2024-08-01
