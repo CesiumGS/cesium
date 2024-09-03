@@ -34,6 +34,7 @@ import SlopeRampMaterial from "../Shaders/Materials/SlopeRampMaterial.js";
 import StripeMaterial from "../Shaders/Materials/StripeMaterial.js";
 import TextureMagnificationFilter from "../Renderer/TextureMagnificationFilter.js";
 import TextureMinificationFilter from "../Renderer/TextureMinificationFilter.js";
+import WaterMaskMaterial from "../Shaders/Materials/WaterMaskMaterial.js";
 import WaterMaterial from "../Shaders/Materials/Water.js";
 
 /**
@@ -219,6 +220,11 @@ import WaterMaterial from "../Shaders/Materials/Water.js";
  *      <li><code>heights</code>: image of heights sorted from lowest to highest.</li>
  *      <li><code>colors</code>: image of colors at the corresponding heights.</li>
  * </ul>
+ * <li>WaterMask</li>
+ * <ul>
+ *      <li><code>waterColor</code>: diffuse color and alpha for the areas covered by water.</li>
+ *      <li><code>landColor</code>: diffuse color and alpha for the areas covered by land.</li>
+ * </ul>
  * </ul>
  * </ul>
  * </div>
@@ -233,7 +239,6 @@ import WaterMaterial from "../Shaders/Materials/Water.js";
  * @param {TextureMinificationFilter} [options.minificationFilter=TextureMinificationFilter.LINEAR] The {@link TextureMinificationFilter} to apply to this material's textures.
  * @param {TextureMagnificationFilter} [options.magnificationFilter=TextureMagnificationFilter.LINEAR] The {@link TextureMagnificationFilter} to apply to this material's textures.
  * @param {object} options.fabric The fabric JSON used to generate the material.
- *ructor
  *
  * @exception {DeveloperError} fabric: uniform has invalid type.
  * @exception {DeveloperError} fabric: uniforms and materials cannot share the same property.
@@ -245,7 +250,6 @@ import WaterMaterial from "../Shaders/Materials/Water.js";
  * @exception {DeveloperError} strict: shader source does not use material.
  *
  * @see {@link https://github.com/CesiumGS/cesium/wiki/Fabric|Fabric wiki page} for a more detailed options of Fabric.
- *
  * @demo {@link https://sandcastle.cesium.com/index.html?src=Materials.html|Cesium Sandcastle Materials Demo}
  *
  * @example
@@ -1737,6 +1741,24 @@ Material._materialCache.addMaterial(Material.ElevationBandType, {
     source: ElevationBandMaterial,
   },
   translucent: true,
+});
+
+/**
+ * Gets the name of the water mask material.
+ * @type {string}
+ * @readonly
+ */
+Material.WaterMaskType = "WaterMask";
+Material._materialCache.addMaterial(Material.WaterMaskType, {
+  fabric: {
+    type: Material.WaterMaskType,
+    source: WaterMaskMaterial,
+    uniforms: {
+      waterColor: new Color(1.0, 1.0, 1.0, 1.0),
+      landColor: new Color(0.0, 0.0, 0.0, 0.0),
+    },
+  },
+  translucent: false,
 });
 
 export default Material;

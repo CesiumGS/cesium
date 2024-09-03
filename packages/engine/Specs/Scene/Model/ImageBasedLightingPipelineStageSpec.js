@@ -14,6 +14,7 @@ describe("Scene/Model/ImageBasedLightingPipelineStage", function () {
     context: {
       floatingPointTexture: true,
       colorBufferFloat: true,
+      supportsTextureLod: true,
     },
   };
 
@@ -140,7 +141,7 @@ describe("Scene/Model/ImageBasedLightingPipelineStage", function () {
   });
 
   it("configures the render resources for specular environment maps", function () {
-    const mockAtlas = {
+    const mockCubeMap = {
       texture: {
         dimensions: {},
       },
@@ -151,7 +152,7 @@ describe("Scene/Model/ImageBasedLightingPipelineStage", function () {
       specularEnvironmentMaps: "example.ktx2",
     });
     imageBasedLighting.luminanceAtZenith = undefined;
-    imageBasedLighting._specularEnvironmentMapAtlas = mockAtlas;
+    imageBasedLighting._specularEnvironmentCubeMap = mockCubeMap;
 
     const mockModel = {
       imageBasedLighting: imageBasedLighting,
@@ -179,8 +180,7 @@ describe("Scene/Model/ImageBasedLightingPipelineStage", function () {
     ShaderBuilderTester.expectHasFragmentUniforms(shaderBuilder, [
       "uniform vec2 model_iblFactor;",
       "uniform mat3 model_iblReferenceFrameMatrix;",
-      "uniform sampler2D model_specularEnvironmentMaps;",
-      "uniform vec2 model_specularEnvironmentMapsSize;",
+      "uniform samplerCube model_specularEnvironmentMaps;",
       "uniform float model_specularEnvironmentMapsMaximumLOD;",
     ]);
 
@@ -200,7 +200,6 @@ describe("Scene/Model/ImageBasedLightingPipelineStage", function () {
     ).toBe(true);
 
     expect(uniformMap.model_specularEnvironmentMaps()).toBeDefined();
-    expect(uniformMap.model_specularEnvironmentMapsSize()).toBeDefined();
     expect(uniformMap.model_specularEnvironmentMapsMaximumLOD()).toBeDefined();
   });
 });

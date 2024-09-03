@@ -47,8 +47,6 @@
           );
         }
 
-        scene.msaaSamples = 4;
-
         const height = 20.0;
         const hpr = new Cesium.HeadingPitchRoll(0.0, 0.0, 0.0);
         const origin = Cesium.Cartesian3.fromDegrees(
@@ -173,6 +171,46 @@
             onselect: () => loadModel(2584329),
           },
           {
+            text: "Damaged Helmet",
+            onselect: () => loadModel(2681021),
+          },
+          {
+            text: "Water Bottle",
+            onselect: () => loadModel(2654597),
+          },
+          {
+            text: "Antique Camera",
+            onselect: () => loadModel(2681022),
+          },
+          {
+            text: "Toy Car",
+            onselect: () => loadModel(2584331),
+          },
+          {
+            text: "Pot of Coals",
+            onselect: () => loadModel(2584330),
+          },
+          {
+            text: "Barn Lamp",
+            onselect: () => loadModel(2583726),
+          },
+          {
+            text: "Duck",
+            onselect: () => loadModel(2681027),
+          },
+          {
+            text: "Environment Test",
+            onselect: () => loadModel(2681028),
+          },
+          {
+            text: "Mirror Ball",
+            onselect: () => loadModel(2674524),
+          },
+          {
+            text: "Metal-Roughness Spheres",
+            onselect: () => loadModel(2635364),
+          },
+          {
             text: "Specular Test",
             onselect: () => loadModel(2572779),
           },
@@ -195,30 +233,6 @@
           {
             text: "Clear Coat Car Paint",
             onselect: () => loadModel(2584328),
-          },
-          {
-            text: "Toy Car",
-            onselect: () => loadModel(2584331),
-          },
-          {
-            text: "Pot of Coals",
-            onselect: () => loadModel(2584330),
-          },
-          {
-            text: "Barn Lamp",
-            onselect: () => loadModel(2583726),
-          },
-          {
-            text: "Metal-Roughness Spheres",
-            onselect: () => loadModel(2635364),
-          },
-          {
-            text: "Water Bottle",
-            onselect: () => loadModel(2654597),
-          },
-          {
-            text: "Mirror Ball",
-            onselect: () => loadModel(2674524),
           },
         ];
         Sandcastle.addToolbarMenu(modelOptions, "modelsToolbar");

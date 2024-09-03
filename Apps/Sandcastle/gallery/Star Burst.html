@@ -320,7 +320,7 @@
 
           // Remove the star burst if the mouse exits the screen space circle.
           // If the mouse is inside the circle, show the label of the billboard the mouse is hovering over.
-          const screenPosition = Cesium.SceneTransforms.wgs84ToWindowCoordinates(
+          const screenPosition = Cesium.SceneTransforms.worldToWindowCoordinates(
             scene,
             starBurstState.center
           );

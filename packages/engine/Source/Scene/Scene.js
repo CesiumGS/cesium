@@ -57,7 +57,6 @@ import GlobeTranslucencyState from "./GlobeTranslucencyState.js";
 import InvertClassification from "./InvertClassification.js";
 import JobScheduler from "./JobScheduler.js";
 import MapMode2D from "./MapMode2D.js";
-import OctahedralProjectedCubeMap from "./OctahedralProjectedCubeMap.js";
 import PerformanceDisplay from "./PerformanceDisplay.js";
 import PerInstanceColorAppearance from "./PerInstanceColorAppearance.js";
 import Picking from "./Picking.js";
@@ -69,6 +68,7 @@ import SceneTransforms from "./SceneTransforms.js";
 import SceneTransitioner from "./SceneTransitioner.js";
 import ScreenSpaceCameraController from "./ScreenSpaceCameraController.js";
 import ShadowMap from "./ShadowMap.js";
+import SpecularEnvironmentCubeMap from "./SpecularEnvironmentCubeMap.js";
 import StencilConstants from "./StencilConstants.js";
 import SunLight from "./SunLight.js";
 import SunPostProcess from "./SunPostProcess.js";
@@ -107,7 +107,7 @@ const requestRenderAfterFrame = function (scene) {
  * @param {boolean} [options.requestRenderMode=false] If true, rendering a frame will only occur when needed as determined by changes within the scene. Enabling improves performance of the application, but requires using {@link Scene#requestRender} to render a new frame explicitly in this mode. This will be necessary in many cases after making changes to the scene in other parts of the API. See {@link https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/|Improving Performance with Explicit Rendering}.
  * @param {number} [options.maximumRenderTimeChange=0.0] If requestRenderMode is true, this value defines the maximum change in simulation time allowed before a render is requested. See {@link https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/|Improving Performance with Explicit Rendering}.
  * @param {number} [options.depthPlaneEllipsoidOffset=0.0] Adjust the DepthPlane to address rendering artefacts below ellipsoid zero elevation.
- * @param {number} [options.msaaSamples=1] If provided, this value controls the rate of multisample antialiasing. Typical multisampling rates are 2, 4, and sometimes 8 samples per pixel. Higher sampling rates of MSAA may impact performance in exchange for improved visual quality. This value only applies to WebGL2 contexts that support multisample render targets.
+ * @param {number} [options.msaaSamples=4] If provided, this value controls the rate of multisample antialiasing. Typical multisampling rates are 2, 4, and sometimes 8 samples per pixel. Higher sampling rates of MSAA may impact performance in exchange for improved visual quality. This value only applies to WebGL2 contexts that support multisample render targets. Set to 1 to disable MSAA.
  *
  * @see CesiumWidget
  * @see {@link http://www.khronos.org/registry/webgl/specs/latest/#5.2|WebGLContextAttributes}
@@ -228,7 +228,7 @@ function Scene(options) {
   this._minimumDisableDepthTestDistance = 0.0;
   this._debugInspector = new DebugInspector();
 
-  this._msaaSamples = defaultValue(options.msaaSamples, 1);
+  this._msaaSamples = defaultValue(options.msaaSamples, 4);
 
   /**
    * Exceptions occurring in <code>render</code> are always caught in order to raise the
@@ -738,7 +738,7 @@ function Scene(options) {
    * @type {string}
    */
   this.specularEnvironmentMaps = undefined;
-  this._specularEnvironmentMapAtlas = undefined;
+  this._specularEnvironmentCubeMap = undefined;
 
   /**
    * The light source for shading. Defaults to a directional light from the Sun.
@@ -927,7 +927,7 @@ Object.defineProperties(Scene.prototype, {
    */
   specularEnvironmentMapsSupported: {
     get: function () {
-      return OctahedralProjectedCubeMap.isSupported(this._context);
+      return SpecularEnvironmentCubeMap.isSupported(this._context);
     },
   },
 
@@ -1630,7 +1630,7 @@ Object.defineProperties(Scene.prototype, {
    * The sample rate of multisample antialiasing (values greater than 1 enable MSAA).
    * @memberof Scene.prototype
    * @type {number}
-   * @default 1
+   * @default 4
    */
   msaaSamples: {
     get: function () {
@@ -1964,11 +1964,11 @@ Scene.prototype.updateFrameState = function () {
   frameState.verticalExaggerationRelativeHeight = this.verticalExaggerationRelativeHeight;
 
   if (
-    defined(this._specularEnvironmentMapAtlas) &&
-    this._specularEnvironmentMapAtlas.ready
+    defined(this._specularEnvironmentCubeMap) &&
+    this._specularEnvironmentCubeMap.ready
   ) {
-    frameState.specularEnvironmentMaps = this._specularEnvironmentMapAtlas.texture;
-    frameState.specularEnvironmentMapsMaximumLOD = this._specularEnvironmentMapAtlas.maximumMipmapLevel;
+    frameState.specularEnvironmentMaps = this._specularEnvironmentCubeMap.texture;
+    frameState.specularEnvironmentMapsMaximumLOD = this._specularEnvironmentCubeMap.maximumMipmapLevel;
   } else {
     frameState.specularEnvironmentMaps = undefined;
     frameState.specularEnvironmentMapsMaximumLOD = undefined;
@@ -3328,20 +3328,18 @@ Scene.prototype.updateEnvironment = function () {
   );
 
   const envMaps = this.specularEnvironmentMaps;
-  let envMapAtlas = this._specularEnvironmentMapAtlas;
-  if (
-    defined(envMaps) &&
-    (!defined(envMapAtlas) || envMapAtlas.url !== envMaps)
-  ) {
-    envMapAtlas = envMapAtlas && envMapAtlas.destroy();
-    this._specularEnvironmentMapAtlas = new OctahedralProjectedCubeMap(envMaps);
-  } else if (!defined(envMaps) && defined(envMapAtlas)) {
-    envMapAtlas.destroy();
-    this._specularEnvironmentMapAtlas = undefined;
+  let specularEnvironmentCubeMap = this._specularEnvironmentCubeMap;
+  if (defined(envMaps) && specularEnvironmentCubeMap?.url !== envMaps) {
+    specularEnvironmentCubeMap =
+      specularEnvironmentCubeMap && specularEnvironmentCubeMap.destroy();
+    this._specularEnvironmentCubeMap = new SpecularEnvironmentCubeMap(envMaps);
+  } else if (!defined(envMaps) && defined(specularEnvironmentCubeMap)) {
+    specularEnvironmentCubeMap.destroy();
+    this._specularEnvironmentCubeMap = undefined;
   }
 
-  if (defined(this._specularEnvironmentMapAtlas)) {
-    this._specularEnvironmentMapAtlas.update(frameState);
+  if (defined(this._specularEnvironmentCubeMap)) {
+    this._specularEnvironmentCubeMap.update(frameState);
   }
 };
 

@@ -96,8 +96,8 @@ float GGX(float alphaRoughness, float NdotH)
  */
 float computeDirectSpecularStrength(vec3 normal, vec3 lightDirection, vec3 viewDirection, vec3 halfwayDirection, float alphaRoughness)
 {
-    float NdotL = dot(normal, lightDirection);
-    float NdotV = abs(dot(normal, viewDirection));
+    float NdotL = clamp(dot(normal, lightDirection), 0.0, 1.0);
+    float NdotV = clamp(dot(normal, viewDirection), 0.0, 1.0);
     float G = smithVisibilityGGX(alphaRoughness, NdotL, NdotV);
     float NdotH = clamp(dot(normal, halfwayDirection), 0.0, 1.0);
     float D = GGX(alphaRoughness, NdotH);

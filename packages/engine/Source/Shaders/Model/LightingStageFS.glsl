@@ -4,7 +4,7 @@ vec3 computeIBL(vec3 position, vec3 normal, vec3 lightDirection, vec3 lightColor
     #if defined(DIFFUSE_IBL) || defined(SPECULAR_IBL)
         // Environment maps were provided, use them for IBL
         vec3 viewDirection = -normalize(position);
-        vec3 iblColor = textureIBL(viewDirection, normal, lightDirection, material);
+        vec3 iblColor = textureIBL(viewDirection, normal, material);
     #else
         // Use procedural IBL if there are no environment maps
         vec3 imageBasedLighting = proceduralIBL(position, normal, lightDirection, material);
@@ -120,7 +120,7 @@ void lightingStage(inout czm_modelMaterial material, ProcessedAttributes attribu
         // tonemapping. However, if HDR is not enabled, we must tonemap else large
         // values may be clamped to 1.0
         #ifndef HDR
-            color = czm_acesTonemapping(color);
+            color = czm_pbrNeutralTonemapping(color);
         #endif
     #else // unlit
         vec3 color = material.diffuse;

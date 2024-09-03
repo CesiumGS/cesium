@@ -1635,6 +1635,52 @@ describe(
         });
       });
     });
+
+    it("hasWaterMask returns expected value", async function () {
+      // Mock terrain tile loading
+      Resource._Implementations.loadWithXhr = function (
+        url,
+        responseType,
+        method,
+        data,
+        headers,
+        deferred,
+        overrideMimeType
+      ) {
+        if (defined(url.match(/\/\d+\/\d+\/\d+\.terrain/))) {
+          Resource._DefaultImplementations.loadWithXhr(
+            "Data/CesiumTerrainTileJson/tile.32bitIndices.terrain",
+            responseType,
+            method,
+            data,
+            headers,
+            deferred
+          );
+          return;
+        }
+
+        Resource._DefaultImplementations.loadWithXhr(
+          url,
+          responseType,
+          method,
+          data,
+          headers,
+          deferred,
+          overrideMimeType
+        );
+      };
+      scene.terrainProvider = await CesiumTerrainProvider.fromUrl(
+        "Data/CesiumTerrainTileJson/QuantizedMesh.tile.json",
+        {
+          requestWaterMask: true,
+        }
+      );
+      scene.globe.showWaterEffect = false;
+
+      await updateUntilDone(scene.globe);
+
+      expect(scene.globe._surface.tileProvider.hasWaterMask).toBeTrue();
+    });
   },
   "WebGL"
 );
