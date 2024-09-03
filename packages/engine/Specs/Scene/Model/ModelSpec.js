@@ -3771,7 +3771,28 @@ describe(
       scene.verticalExaggeration = 2.0;
       scene.renderForSpecs();
       expect(resetDrawCommands).toHaveBeenCalled();
-      scene.verticalExaggeration = 1.0;
+    });
+
+    it("resets draw commands when enableVerticalExaggeration changes", async function () {
+      scene.verticalExaggeration = 2.0;
+      const model = await loadAndZoomToModelAsync(
+        {
+          gltf: boxTexturedGltfUrl,
+        },
+        scene
+      );
+      const resetDrawCommands = spyOn(
+        model,
+        "resetDrawCommands"
+      ).and.callThrough();
+      expect(model.ready).toBe(true);
+      expect(model.hasVerticalExaggeration).toBe(true);
+
+      model.enableVerticalExaggeration = false;
+
+      scene.renderForSpecs();
+      expect(resetDrawCommands).toHaveBeenCalled();
+      expect(model.hasVerticalExaggeration).toBe(false);
     });
 
     it("does not issue draw commands when ignoreCommands is true", async function () {

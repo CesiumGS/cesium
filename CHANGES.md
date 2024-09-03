@@ -1,12 +1,15 @@
 # Change Log
 
+### 1.122 - 2024-10-01
+
+- Added `enableVerticalExaggeration` option to models. Set this value to `false` to prevent model exaggeration when `Scene.verticalExaggeration` is set to a value other than `1.0`. [#12141](https://github.com/CesiumGS/cesium/pull/12141)
+
 ### 1.121 - 2024-09-01
 
 #### @cesium/engine
 
 ##### Additions :tada:
 
-- Added `enableVerticalExaggeration` option to models. Set this value to `false` to prevent model exaggeration when `Scene.verticalExaggeration` is set to a value other than `1.0`. [#12141](https://github.com/CesiumGS/cesium/pull/12141)
 - Enable MSAA by default with 4 samples. To turn MSAA off set `scene.msaaSamples = 1` [#12158](https://github.com/CesiumGS/cesium/pull/12158)
 - Made the `time` parameter optional for `Property`, using `JulianDate.now()` as default. [#12099](https://github.com/CesiumGS/cesium/pull/12099)
 - Exposes `ScreenSpaceCameraController.zoomFactor` to allow adjusting the zoom factor (speed). [#9145](https://github.com/CesiumGS/cesium/pull/9145)

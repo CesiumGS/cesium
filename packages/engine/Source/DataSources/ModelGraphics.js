@@ -71,8 +71,8 @@ function ModelGraphics(options) {
   this._uriSubscription = undefined;
   this._scale = undefined;
   this._scaleSubscription = undefined;
-  this._verticalExaggerationOn = undefined;
-  this._verticalExaggerationOnSubscription = undefined;
+  this._hasVerticalExaggeration = undefined;
+  this._hasVerticalExaggerationSubscription = undefined;
   this._enableVerticalExaggeration = undefined;
   this._enableVerticalExaggerationSubscription = undefined;
   this._minimumPixelSize = undefined;
