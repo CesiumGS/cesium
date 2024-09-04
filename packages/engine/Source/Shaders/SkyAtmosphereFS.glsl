@@ -38,7 +38,7 @@ void main (void)
     vec4 color = computeAtmosphereColor(v_outerPositionWC, lightDirection, rayleighColor, mieColor, opacity);
 
     #ifndef HDR
-        color.rgb = czm_acesTonemapping(color.rgb);
+        color.rgb = czm_pbrNeutralTonemapping(color.rgb);
         color.rgb = czm_inverseGamma(color.rgb);
     #endif
 

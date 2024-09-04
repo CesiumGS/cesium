@@ -5,6 +5,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 ## [Corporate CLA](Documentation/Contributors/CLAs/corporate-contributor-license-agreement-v1.0.pdf)
 
 - [Analytical Graphics, Inc.](http://www.agi.com/)
+  - [Korey Hines](https://github.com/devkthines)
   - [Patrick Cozzi](https://github.com/pjcozzi)
   - [Kristian Calhoun](https://github.com/kristiancalhoun)
   - [Kevin Ring](https://github.com/kring)
@@ -405,3 +406,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [Levi Montgomery](https://github.com/Levi-Montgomery)
 - [Brandon Berisford](https://github.com/BeyondBelief96)
 - [Adam Wirth](https://https://github.com/adamwirth)
+- [Javier Sanchez](https://github.com/jvrjsanchez)

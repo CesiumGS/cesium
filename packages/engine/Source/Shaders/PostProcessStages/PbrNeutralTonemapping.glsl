@@ -8,20 +8,18 @@ uniform sampler2D autoExposure;
 uniform float exposure;
 #endif
 
-// See equation 3:
-//    http://www.cs.utah.edu/~reinhard/cdrom/tonemap.pdf
-
 void main()
 {
     vec4 fragmentColor = texture(colorTexture, v_textureCoordinates);
     vec3 color = fragmentColor.rgb;
+
 #ifdef AUTO_EXPOSURE
-    float exposure = texture(autoExposure, vec2(0.5)).r;
-    color /= exposure;
+    color /= texture(autoExposure, vec2(0.5)).r;
 #else
     color *= vec3(exposure);
 #endif
-    color = color / (1.0 + color);
+    color = czm_pbrNeutralTonemapping(color);
     color = czm_inverseGamma(color);
+
     out_FragColor = vec4(color, fragmentColor.a);
 }

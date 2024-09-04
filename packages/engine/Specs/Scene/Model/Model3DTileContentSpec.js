@@ -1169,6 +1169,7 @@ describe(
         const scene = createScene({
           canvas: createCanvas(10, 10),
         });
+        scene.msaaSamples = 1;
         noAttenuationPixelCount = scene.logarithmicDepthBuffer ? 20 : 16;
         const center = new Cartesian3.fromRadians(
           centerLongitude,

@@ -56,6 +56,7 @@ describe(
         canvas: canvas,
       });
       scene.postProcessStages.fxaa.enabled = false;
+      scene.msaaSamples = 1;
 
       context = scene.context;
 

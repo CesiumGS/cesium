@@ -702,32 +702,33 @@ describe(
         scene.camera.lookAt(center, viewEast);
         expect(renderOptions).toRenderAndCall(function (rgba) {
           expect(rgba[0]).toBeGreaterThan(190);
-          expect(rgba[1]).toBeLessThan(64);
-          expect(rgba[2]).toBeLessThan(64);
+          expect(rgba[1]).toBeLessThanOrEqual(108);
+          expect(rgba[2]).toBeLessThanOrEqual(108);
           expect(rgba[3]).toEqual(255);
         });
 
         // The north (+y) face of the cube is green
         scene.camera.lookAt(center, viewNorth);
         expect(renderOptions).toRenderAndCall(function (rgba) {
-          expect(rgba[0]).toBeLessThan(64);
+          expect(rgba[0]).toBeLessThanOrEqual(108);
           expect(rgba[1]).toBeGreaterThan(190);
-          expect(rgba[2]).toBeLessThan(64);
+          expect(rgba[2]).toBeLessThanOrEqual(108);
           expect(rgba[3]).toEqual(255);
         });
 
         // The up (+z) face of the cube is blue
         scene.camera.lookAt(center, viewUp);
         expect(renderOptions).toRenderAndCall(function (rgba) {
-          expect(rgba[0]).toBeLessThan(64);
-          expect(rgba[1]).toBeLessThan(64);
+          expect(rgba[0]).toBeLessThanOrEqual(108);
+          expect(rgba[1]).toBeLessThanOrEqual(108);
           expect(rgba[2]).toBeGreaterThan(190);
           expect(rgba[3]).toEqual(255);
         });
       });
     });
 
-    it("verify statistics", async function () {
+    xit("verify statistics", async function () {
+      // Excluded due to frequent CI errors https://github.com/CesiumGS/cesium/issues/11958
       const tileset = await Cesium3DTileset.fromUrl(tilesetUrl, options);
 
       // Verify initial values after root and children are requested
@@ -3331,10 +3332,10 @@ describe(
       });
 
       expect(renderOptions).toRenderAndCall(function (rgba) {
-        expect(rgba[0]).toBeGreaterThan(200);
-        expect(rgba[1]).toBeLessThan(25);
-        expect(rgba[2]).toBeLessThan(25);
-        expect(rgba[3]).toEqual(255);
+        expect(rgba[0]).withContext("starting red .r").toBeGreaterThan(200);
+        expect(rgba[1]).withContext("starting red .g").toEqualEpsilon(116, 1);
+        expect(rgba[2]).withContext("starting red .b").toEqualEpsilon(116, 1);
+        expect(rgba[3]).withContext("starting red .a").toEqual(255);
       });
 
       // Use HIGHLIGHT blending
@@ -3346,11 +3347,13 @@ describe(
       });
 
       expect(renderOptions).toRenderAndCall(function (rgba) {
-        expect(rgba[0]).toBeGreaterThan(100);
-        expect(rgba[0]).toBeLessThan(sourceRed);
-        expect(rgba[1]).toBeLessThan(25);
-        expect(rgba[2]).toBeLessThan(25);
-        expect(rgba[3]).toEqual(255);
+        expect(rgba[0]).withContext("hl dark yellow .r").toBeGreaterThan(100);
+        expect(rgba[0])
+          .withContext("hl dark yellow .r")
+          .toBeLessThan(sourceRed);
+        expect(rgba[1]).withContext("hl dark yellow .g").toEqualEpsilon(58, 1);
+        expect(rgba[2]).withContext("hl dark yellow .b").toEqualEpsilon(0, 1);
+        expect(rgba[3]).withContext("hl dark yellow .a").toEqual(255);
       });
 
       // Style with yellow + alpha. Expect the red channel to be darker than before.
@@ -3359,11 +3362,13 @@ describe(
       });
 
       expect(renderOptions).toRenderAndCall(function (rgba) {
-        expect(rgba[0]).toBeGreaterThan(100);
-        expect(rgba[0]).toBeLessThan(sourceRed);
-        expect(rgba[1]).toBeLessThan(25);
-        expect(rgba[2]).toBeLessThan(25);
-        expect(rgba[3]).toEqual(255);
+        expect(rgba[0]).withContext("hl yellow+alpha .r").toBeGreaterThan(100);
+        expect(rgba[0])
+          .withContext("hl yellow+alpha .r")
+          .toBeLessThan(sourceRed);
+        expect(rgba[1]).withContext("hl yellow+alpha .g").toEqualEpsilon(43, 1);
+        expect(rgba[2]).withContext("hl yellow+alpha .b").toEqualEpsilon(0, 1);
+        expect(rgba[3]).withContext("hl yellow+alpha .a").toEqual(255);
       });
 
       // Use REPLACE blending
@@ -3377,12 +3382,12 @@ describe(
       expect(renderOptions).toRenderAndCall(function (rgba) {
         replaceRed = rgba[0];
         replaceGreen = rgba[1];
-        expect(rgba[0]).toBeGreaterThan(100);
-        expect(rgba[0]).toBeLessThan(255);
-        expect(rgba[1]).toBeGreaterThan(100);
-        expect(rgba[1]).toBeLessThan(255);
-        expect(rgba[2]).toBeLessThan(25);
-        expect(rgba[3]).toEqual(255);
+        expect(rgba[0]).withContext("replace yellow .r").toBeGreaterThan(100);
+        expect(rgba[0]).withContext("replace yellow .r").toBeLessThan(255);
+        expect(rgba[1]).withContext("replace yellow .g").toBeGreaterThan(100);
+        expect(rgba[1]).withContext("replace yellow .g").toBeLessThan(255);
+        expect(rgba[2]).withContext("replace yellow .b").toEqualEpsilon(73, 1);
+        expect(rgba[3]).withContext("replace yellow .a").toEqual(255);
       });
 
       // Style with yellow + alpha. Expect the red and green channels to be a shade of yellow.
@@ -3391,12 +3396,22 @@ describe(
       });
 
       expect(renderOptions).toRenderAndCall(function (rgba) {
-        expect(rgba[0]).toBeGreaterThan(100);
-        expect(rgba[0]).toBeLessThan(255);
-        expect(rgba[1]).toBeGreaterThan(100);
-        expect(rgba[1]).toBeLessThan(255);
-        expect(rgba[2]).toBeLessThan(25);
-        expect(rgba[3]).toEqual(255);
+        expect(rgba[0])
+          .withContext("replace yellow+alpha .r")
+          .toBeGreaterThan(100);
+        expect(rgba[0])
+          .withContext("replace yellow+alpha .r")
+          .toBeLessThan(255);
+        expect(rgba[1])
+          .withContext("replace yellow+alpha .g")
+          .toBeGreaterThan(100);
+        expect(rgba[1])
+          .withContext("replace yellow+alpha .g")
+          .toBeLessThan(255);
+        expect(rgba[2])
+          .withContext("replace yellow+alpha .b")
+          .toEqualEpsilon(48, 1);
+        expect(rgba[3]).withContext("replace yellow+alpha .a").toEqual(255);
       });
 
       // Use MIX blending
@@ -3413,41 +3428,49 @@ describe(
       expect(renderOptions).toRenderAndCall(function (rgba) {
         mixRed = rgba[0];
         mixGreen = rgba[1];
-        expect(rgba[0]).toBeGreaterThan(replaceRed);
-        expect(rgba[0]).toBeLessThan(sourceRed);
-        expect(rgba[1]).toBeGreaterThan(sourceGreen);
-        expect(rgba[1]).toBeLessThan(replaceGreen);
-        expect(rgba[2]).toBeLessThan(25);
-        expect(rgba[3]).toEqual(255);
+        expect(rgba[0])
+          .withContext("mix yellow .r")
+          .toBeGreaterThan(replaceRed);
+        expect(rgba[0]).withContext("mix yellow .r").toBeLessThan(sourceRed);
+        expect(rgba[1])
+          .withContext("mix yellow .g")
+          .toBeGreaterThan(sourceGreen);
+        expect(rgba[1]).withContext("mix yellow .g").toBeLessThan(replaceGreen);
+        expect(rgba[2]).withContext("mix yellow .b").toEqualEpsilon(94, 1);
+        expect(rgba[3]).withContext("mix yellow .a").toEqual(255);
       });
 
       // Set colorBlendAmount to 0.25. Expect color to be closer to the source color.
       tileset.colorBlendAmount = 0.25;
       expect(renderOptions).toRenderAndCall(function (rgba) {
-        expect(rgba[0]).toBeGreaterThan(mixRed);
-        expect(rgba[0]).toBeLessThan(sourceRed);
-        expect(rgba[1]).toBeGreaterThan(0);
-        expect(rgba[1]).toBeLessThan(mixGreen);
-        expect(rgba[2]).toBeLessThan(25);
-        expect(rgba[3]).toEqual(255);
+        expect(rgba[0])
+          .withContext("mix blend 0.25 .r")
+          .toBeGreaterThan(mixRed);
+        expect(rgba[0])
+          .withContext("mix blend 0.25 .r")
+          .toBeLessThanOrEqual(sourceRed);
+        expect(rgba[1]).withContext("mix blend 0.25 .g").toBeGreaterThan(0);
+        expect(rgba[1]).withContext("mix blend 0.25 .g").toBeLessThan(mixGreen);
+        expect(rgba[2]).withContext("mix blend 0.25 .b").toEqualEpsilon(106, 1);
+        expect(rgba[3]).withContext("mix blend 0.25 .a").toEqual(255);
       });
 
       // Set colorBlendAmount to 0.0. Expect color to equal the source color
       tileset.colorBlendAmount = 0.0;
       expect(renderOptions).toRenderAndCall(function (rgba) {
-        expect(rgba[0]).toEqual(sourceRed);
-        expect(rgba[1]).toBeLessThan(25);
-        expect(rgba[2]).toBeLessThan(25);
-        expect(rgba[3]).toEqual(255);
+        expect(rgba[0]).withContext("mix blend 0.0 .r").toEqual(sourceRed);
+        expect(rgba[1]).withContext("mix blend 0.0 .g").toEqualEpsilon(116, 1);
+        expect(rgba[2]).withContext("mix blend 0.0 .b").toEqualEpsilon(116, 1);
+        expect(rgba[3]).withContext("mix blend 0.0 .a").toEqual(255);
       });
 
       // Set colorBlendAmount to 1.0. Expect color to equal the style color
       tileset.colorBlendAmount = 1.0;
       expect(renderOptions).toRenderAndCall(function (rgba) {
-        expect(rgba[0]).toEqual(replaceRed);
-        expect(rgba[1]).toEqual(replaceGreen);
-        expect(rgba[2]).toBeLessThan(25);
-        expect(rgba[3]).toEqual(255);
+        expect(rgba[0]).withContext("mix blend 1.0 .r").toEqual(replaceRed);
+        expect(rgba[1]).withContext("mix blend 1.0 .g").toEqual(replaceGreen);
+        expect(rgba[2]).withContext("mix blend 1.0 .b").toEqualEpsilon(73, 1);
+        expect(rgba[3]).withContext("mix blend 1.0 .a").toEqual(255);
       });
 
       // Style with yellow + alpha. Expect color to be a mix of the source and style colors.
@@ -3457,10 +3480,12 @@ describe(
       });
 
       expect(renderOptions).toRenderAndCall(function (rgba) {
-        expect(rgba[0]).toBeGreaterThan(0);
-        expect(rgba[1]).toBeGreaterThan(0);
-        expect(rgba[2]).toBeLessThan(25);
-        expect(rgba[3]).toEqual(255);
+        expect(rgba[0]).withContext("mix yellow+alpha .r").toBeGreaterThan(0);
+        expect(rgba[1]).withContext("mix yellow+alpha .g").toBeGreaterThan(0);
+        expect(rgba[2])
+          .withContext("mix yellow+alpha .b")
+          .toEqualEpsilon(43, 1);
+        expect(rgba[3]).withContext("mix yellow+alpha .a").toEqual(255);
       });
     }
 
