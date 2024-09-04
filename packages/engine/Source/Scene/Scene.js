@@ -1811,6 +1811,7 @@ Scene.prototype.updateDerivedCommands = function (command) {
   const needsLogDepthDerivedCommands =
     useLogDepth && !hasLogDepthDerivedCommands;
   const needsHdrCommands = useHdr && !hasHdrCommands;
+  // TODO: if (!useLogDepth && !useHdr), why do we need derived commands?
   const needsDerivedCommands = (!useLogDepth || !useHdr) && !hasDerivedCommands;
   command.dirty =
     command.dirty ||
@@ -1866,31 +1867,36 @@ const requestRenderModeDeferCheckPassState = new Cesium3DTilePassState({
 
 const scratchOccluderBoundingSphere = new BoundingSphere();
 let scratchOccluder;
-
+/**
+ * Get the central body occluder for the scene.
+ *
+ * TODO: The occluder is the top-level globe. When we add
+ *       support for multiple central bodies, this should be the closest one.
+ *
+ * @param {Scene} scene
+ * @returns {Occluder|undefined}
+ *
+ * @private
+ */
 function getOccluder(scene) {
-  // TODO: The occluder is the top-level globe. When we add
-  //       support for multiple central bodies, this should be the closest one.
-  const globe = scene.globe;
   if (
-    scene._mode === SceneMode.SCENE3D &&
-    defined(globe) &&
-    globe.show &&
-    !scene._cameraUnderground &&
-    !scene._globeTranslucencyState.translucent
+    scene._mode !== SceneMode.SCENE3D ||
+    !scene.globe?.show ||
+    scene._cameraUnderground ||
+    scene._globeTranslucencyState.translucent
   ) {
-    const ellipsoid = scene.ellipsoid;
-    const minimumTerrainHeight = scene.frameState.minimumTerrainHeight;
-    scratchOccluderBoundingSphere.radius =
-      ellipsoid.minimumRadius + minimumTerrainHeight;
-    scratchOccluder = Occluder.fromBoundingSphere(
-      scratchOccluderBoundingSphere,
-      scene.camera.positionWC,
-      scratchOccluder
-    );
-    return scratchOccluder;
+    return undefined;
   }
 
-  return undefined;
+  scratchOccluderBoundingSphere.radius =
+    scene.ellipsoid.minimumRadius + scene.frameState.minimumTerrainHeight;
+  scratchOccluder = Occluder.fromBoundingSphere(
+    scratchOccluderBoundingSphere,
+    scene.camera.positionWC,
+    scratchOccluder
+  );
+
+  return scratchOccluder;
 }
 
 /**
@@ -1993,18 +1999,31 @@ Scene.prototype.updateFrameState = function () {
 };
 
 /**
+ * Check whether a draw command will render anything visible in the current Scene,
+ * based on its bounding volume.
+ *
+ * @param {DrawCommand} [command] The draw command
+ * @param {CullingVolume} cullingVolume The culling volume of the current Scene.
+ * @param {Occluder} [occluder] An occluder that may be in front of the command's bounding volume.
+ * @returns {boolean} <code>true</code> if the command's bounding volume is visible in the scene.
+ *
  * @private
  */
 Scene.prototype.isVisible = function (command, cullingVolume, occluder) {
+  if (!defined(command)) {
+    return false;
+  }
+  const { boundingVolume, cull } = command;
+  if (!defined(boundingVolume) || !defined(cull)) {
+    return true;
+  }
+  if (cullingVolume.computeVisibility(boundingVolume) === Intersect.OUTSIDE) {
+    return false;
+  }
   return (
-    defined(command) &&
-    (!defined(command.boundingVolume) ||
-      !command.cull ||
-      (cullingVolume.computeVisibility(command.boundingVolume) !==
-        Intersect.OUTSIDE &&
-        (!defined(occluder) ||
-          !command.occlude ||
-          !command.boundingVolume.isOccluded(occluder))))
+    !defined(occluder) ||
+    !command.occlude ||
+    !command.boundingVolume.isOccluded(occluder)
   );
 };
 
@@ -2031,9 +2050,18 @@ transformFrom2D = Matrix4.inverseTransformation(
   transformFrom2D
 );
 
+/**
+ * Debug code to draw bounding volume for command.  Not optimized!
+ * Assumes bounding volume is a bounding sphere or box.
+ *
+ * @param {DrawCommand} command The draw command for which to render the bounding volume.
+ * @param {Scene} scene The scene.
+ * @param {PassState} passState The state for the current render pass.
+ * @param {Framebuffer} debugFramebuffer The framebuffer where the bounding volume will be rendered.
+ *
+ * @private
+ */
 function debugShowBoundingVolume(command, scene, passState, debugFramebuffer) {
-  // Debug code to draw bounding volume for command.  Not optimized!
-  // Assumes bounding volume is a bounding sphere or box
   const frameState = scene._frameState;
   const context = frameState.context;
   const boundingVolume = command.boundingVolume;
@@ -2041,8 +2069,6 @@ function debugShowBoundingVolume(command, scene, passState, debugFramebuffer) {
   if (defined(scene._debugVolume)) {
     scene._debugVolume.destroy();
   }
-
-  let geometry;
 
   let center = Cartesian3.clone(boundingVolume.center);
   if (frameState.mode !== SceneMode.SCENE3D) {
@@ -2052,63 +2078,44 @@ function debugShowBoundingVolume(command, scene, passState, debugFramebuffer) {
     center = projection.ellipsoid.cartographicToCartesian(centerCartographic);
   }
 
-  if (defined(boundingVolume.radius)) {
-    const radius = boundingVolume.radius;
-
-    geometry = GeometryPipeline.toWireframe(
-      EllipsoidGeometry.createGeometry(
-        new EllipsoidGeometry({
-          radii: new Cartesian3(radius, radius, radius),
-          vertexFormat: PerInstanceColorAppearance.FLAT_VERTEX_FORMAT,
-        })
-      )
+  let geometry;
+  let modelMatrix;
+  const { radius } = boundingVolume;
+  if (defined(radius)) {
+    geometry = EllipsoidGeometry.createGeometry(
+      new EllipsoidGeometry({
+        radii: new Cartesian3(radius, radius, radius),
+        vertexFormat: PerInstanceColorAppearance.FLAT_VERTEX_FORMAT,
+      })
     );
-
-    scene._debugVolume = new Primitive({
-      geometryInstances: new GeometryInstance({
-        geometry: geometry,
-        modelMatrix: Matrix4.fromTranslation(center),
-        attributes: {
-          color: new ColorGeometryInstanceAttribute(1.0, 0.0, 0.0, 1.0),
-        },
-      }),
-      appearance: new PerInstanceColorAppearance({
-        flat: true,
-        translucent: false,
-      }),
-      asynchronous: false,
-    });
+    modelMatrix = Matrix4.fromTranslation(center);
   } else {
-    const halfAxes = boundingVolume.halfAxes;
-
-    geometry = GeometryPipeline.toWireframe(
-      BoxGeometry.createGeometry(
-        BoxGeometry.fromDimensions({
-          dimensions: new Cartesian3(2.0, 2.0, 2.0),
-          vertexFormat: PerInstanceColorAppearance.FLAT_VERTEX_FORMAT,
-        })
-      )
+    geometry = BoxGeometry.createGeometry(
+      BoxGeometry.fromDimensions({
+        dimensions: new Cartesian3(2.0, 2.0, 2.0),
+        vertexFormat: PerInstanceColorAppearance.FLAT_VERTEX_FORMAT,
+      })
     );
-
-    scene._debugVolume = new Primitive({
-      geometryInstances: new GeometryInstance({
-        geometry: geometry,
-        modelMatrix: Matrix4.fromRotationTranslation(
-          halfAxes,
-          center,
-          new Matrix4()
-        ),
-        attributes: {
-          color: new ColorGeometryInstanceAttribute(1.0, 0.0, 0.0, 1.0),
-        },
-      }),
-      appearance: new PerInstanceColorAppearance({
-        flat: true,
-        translucent: false,
-      }),
-      asynchronous: false,
-    });
+    modelMatrix = Matrix4.fromRotationTranslation(
+      boundingVolume.halfAxes,
+      center,
+      new Matrix4()
+    );
   }
+  scene._debugVolume = new Primitive({
+    geometryInstances: new GeometryInstance({
+      geometry: GeometryPipeline.toWireframe(geometry),
+      modelMatrix: modelMatrix,
+      attributes: {
+        color: new ColorGeometryInstanceAttribute(1.0, 0.0, 0.0, 1.0),
+      },
+    }),
+    appearance: new PerInstanceColorAppearance({
+      flat: true,
+      translucent: false,
+    }),
+    asynchronous: false,
+  });
 
   const savedCommandList = frameState.commandList;
   const commandList = (frameState.commandList = []);
@@ -2136,6 +2143,16 @@ function debugShowBoundingVolume(command, scene, passState, debugFramebuffer) {
   frameState.commandList = savedCommandList;
 }
 
+/**
+ * Execute a single draw command, or one of its derived commands if appropriate for the current render state.
+ *
+ * @param {DrawCommand} command The command to execute.
+ * @param {Scene} scene The scene.
+ * @param {PassState} passState The state for the current render pass.
+ * @param {Framebuffer} debugFramebuffer The framebuffer where debug QCs will be rendered.
+ *
+ * @private
+ */
 function executeCommand(command, scene, passState, debugFramebuffer) {
   const frameState = scene._frameState;
   const context = scene._context;
@@ -2208,23 +2225,34 @@ function executeCommand(command, scene, passState, debugFramebuffer) {
   }
 }
 
-function executeIdCommand(command, scene, context, passState) {
-  const frameState = scene._frameState;
-  let derivedCommands = command.derivedCommands;
+/**
+ * Execute a single ID draw command, used to render information for picking.
+ *
+ * @param {DrawCommand} command The command to execute.
+ * @param {Scene} scene The scene.
+ * @param {PassState} passState The state for the current render pass.
+ *
+ * @private
+ */
+function executeIdCommand(command, scene, passState) {
+  const { derivedCommands } = command;
   if (!defined(derivedCommands)) {
     return;
   }
+
+  const frameState = scene._frameState;
+  const context = scene._context;
 
   if (frameState.useLogDepth && defined(derivedCommands.logDepth)) {
     command = derivedCommands.logDepth.command;
   }
 
-  derivedCommands = command.derivedCommands;
-  if (defined(derivedCommands.picking)) {
-    command = derivedCommands.picking.pickCommand;
+  const { picking, depth } = command.derivedCommands;
+  if (defined(picking)) {
+    command = picking.pickCommand;
     command.execute(context, passState);
-  } else if (defined(derivedCommands.depth)) {
-    command = derivedCommands.depth.depthOnlyCommand;
+  } else if (defined(depth)) {
+    command = depth.depthOnlyCommand;
     command.execute(context, passState);
   }
 }
@@ -2294,6 +2322,14 @@ const scratchPerspectiveOffCenterFrustum = new PerspectiveOffCenterFrustum();
 const scratchOrthographicFrustum = new OrthographicFrustum();
 const scratchOrthographicOffCenterFrustum = new OrthographicOffCenterFrustum();
 
+/**
+ * Execute the draw commands for all the render passes.
+ *
+ * @param {Scene} scene
+ * @param {PassState} passState
+ *
+ * @private
+ */
 function executeCommands(scene, passState) {
   const { camera, context, frameState } = scene;
   const { uniformState } = context;
@@ -2312,57 +2348,33 @@ function executeCommands(scene, passState) {
     frustum = camera.frustum.clone(scratchOrthographicOffCenterFrustum);
   }
 
-  // Ideally, we would render the sky box and atmosphere last for
-  // early-z, but we would have to draw it in each frustum
   frustum.near = camera.frustum.near;
   frustum.far = camera.frustum.far;
-  uniformState.updatePass(Pass.ENVIRONMENT);
 
   const passes = frameState.passes;
   const picking = passes.pick || passes.pickVoxel;
-  const environmentState = scene._environmentState;
-  const view = scene._view;
-  const renderTranslucentDepthForPick =
-    environmentState.renderTranslucentDepthForPick;
-  const useWebVR = environmentState.useWebVR;
 
+  // Ideally, we would render the sky box and atmosphere last for
+  // early-z, but we would have to draw it in each frustum.
   // Do not render environment primitives during a pick pass since they do not generate picking commands.
   if (!picking) {
-    const skyBoxCommand = environmentState.skyBoxCommand;
-    if (defined(skyBoxCommand)) {
-      executeCommand(skyBoxCommand, scene, passState);
-    }
-
-    if (environmentState.isSkyAtmosphereVisible) {
-      executeCommand(environmentState.skyAtmosphereCommand, scene, passState);
-    }
-
-    if (environmentState.isSunVisible) {
-      environmentState.sunDrawCommand.execute(context, passState);
-      if (scene.sunBloom && !useWebVR) {
-        let framebuffer;
-        if (environmentState.useGlobeDepthFramebuffer) {
-          framebuffer = view.globeDepth.framebuffer;
-        } else if (environmentState.usePostProcess) {
-          framebuffer = view.sceneFramebuffer.framebuffer;
-        } else {
-          framebuffer = environmentState.originalFramebuffer;
-        }
-        scene._sunPostProcess.execute(context);
-        scene._sunPostProcess.copy(context, framebuffer);
-        passState.framebuffer = framebuffer;
-      }
-    }
-
-    // Moon can be seen through the atmosphere, since the sun is rendered after the atmosphere.
-    if (environmentState.isMoonVisible) {
-      environmentState.moonCommand.execute(context, passState);
-    }
+    executeEnvironmentCommands(scene, passState);
   }
+
+  const view = scene._view;
+  const {
+    clearGlobeDepth,
+    renderTranslucentDepthForPick,
+    useDepthPlane,
+    useGlobeDepthFramebuffer,
+    useInvertClassification,
+    useOIT,
+    usePostProcessSelected,
+  } = scene._environmentState;
 
   // Determine how translucent surfaces will be handled.
   let executeTranslucentCommands;
-  if (environmentState.useOIT) {
+  if (useOIT) {
     if (!defined(scene._executeOITFunction)) {
       scene._executeOITFunction = function (
         scene,
@@ -2388,21 +2400,39 @@ function executeCommands(scene, passState) {
     executeTranslucentCommands = executeTranslucentCommandsFrontToBack;
   }
 
-  const frustumCommandsList = view.frustumCommandsList;
+  const {
+    globeDepth,
+    globeTranslucencyFramebuffer,
+    frustumCommandsList,
+  } = view;
   const numFrustums = frustumCommandsList.length;
 
-  const clearGlobeDepth = environmentState.clearGlobeDepth;
-  const useDepthPlane = environmentState.useDepthPlane;
   const globeTranslucencyState = scene._globeTranslucencyState;
-  const globeTranslucent = globeTranslucencyState.translucent;
-  const globeTranslucencyFramebuffer = view.globeTranslucencyFramebuffer;
   const clearDepth = scene._depthClearCommand;
   const clearStencil = scene._stencilClearCommand;
   const clearClassificationStencil = scene._classificationStencilClearCommand;
   const depthPlane = scene._depthPlane;
-  const usePostProcessSelected = environmentState.usePostProcessSelected;
 
   const height2D = camera.position.z;
+
+  function executePass(frustumCommands, passId) {
+    uniformState.updatePass(passId);
+    const commands = frustumCommands.commands[passId];
+    const length = frustumCommands.indices[passId];
+    for (let j = 0; j < length; ++j) {
+      executeCommand(commands[j], scene, passState);
+    }
+    return length;
+  }
+
+  function executeIdPass(frustumCommands, passId) {
+    uniformState.updatePass(passId);
+    const commands = frustumCommands.commands[passId];
+    const length = frustumCommands.indices[passId];
+    for (let j = 0; j < length; ++j) {
+      executeIdCommand(commands[j], scene, passState);
+    }
+  }
 
   // Execute commands in each frustum in back to front order
   for (let i = 0; i < numFrustums; ++i) {
@@ -2433,10 +2463,10 @@ function executeCommands(scene, passState) {
       clearStencil.execute(context, passState);
     }
 
-    uniformState.updatePass(Pass.GLOBE);
     let length;
 
-    if (globeTranslucent) {
+    if (globeTranslucencyState.translucent) {
+      uniformState.updatePass(Pass.GLOBE);
       globeTranslucencyState.executeGlobeCommands(
         frustumCommands,
         executeCommand,
@@ -2445,23 +2475,17 @@ function executeCommands(scene, passState) {
         passState
       );
     } else {
-      const commands = frustumCommands.commands[Pass.GLOBE];
-      length = frustumCommands.indices[Pass.GLOBE];
-      for (let j = 0; j < length; ++j) {
-        executeCommand(commands[j], scene, passState);
-      }
+      length = executePass(frustumCommands, Pass.GLOBE);
     }
 
-    const globeDepth = view.globeDepth;
-    if (defined(globeDepth) && environmentState.useGlobeDepthFramebuffer) {
+    if (defined(globeDepth) && useGlobeDepthFramebuffer) {
       globeDepth.executeCopyDepth(context, passState);
     }
 
     // Draw terrain classification
-    if (!environmentState.renderTranslucentDepthForPick) {
-      uniformState.updatePass(Pass.TERRAIN_CLASSIFICATION);
-
-      if (globeTranslucent) {
+    if (!renderTranslucentDepthForPick) {
+      if (globeTranslucencyState.translucent) {
+        uniformState.updatePass(Pass.TERRAIN_CLASSIFICATION);
         globeTranslucencyState.executeGlobeClassificationCommands(
           frustumCommands,
           executeCommand,
@@ -2470,11 +2494,7 @@ function executeCommands(scene, passState) {
           passState
         );
       } else {
-        const commands = frustumCommands.commands[Pass.TERRAIN_CLASSIFICATION];
-        length = frustumCommands.indices[Pass.TERRAIN_CLASSIFICATION];
-        for (let j = 0; j < length; ++j) {
-          executeCommand(commands[j], scene, passState);
-        }
+        length = executePass(frustumCommands, Pass.TERRAIN_CLASSIFICATION);
       }
     }
 
@@ -2485,23 +2505,14 @@ function executeCommands(scene, passState) {
       }
     }
 
-    if (
-      !environmentState.useInvertClassification ||
-      picking ||
-      environmentState.renderTranslucentDepthForPick
-    ) {
+    if (!useInvertClassification || picking || renderTranslucentDepthForPick) {
       // Common/fastest path. Draw 3D Tiles and classification normally.
 
       // Draw 3D Tiles
-      uniformState.updatePass(Pass.CESIUM_3D_TILE);
-      const commands = frustumCommands.commands[Pass.CESIUM_3D_TILE];
-      length = frustumCommands.indices[Pass.CESIUM_3D_TILE];
-      for (let j = 0; j < length; ++j) {
-        executeCommand(commands[j], scene, passState);
-      }
+      length = executePass(frustumCommands, Pass.CESIUM_3D_TILE);
 
       if (length > 0) {
-        if (defined(globeDepth) && environmentState.useGlobeDepthFramebuffer) {
+        if (defined(globeDepth) && useGlobeDepthFramebuffer) {
           // When clearGlobeDepth is true, executeUpdateDepth needs
           // a globe depth texture with resolved stencil bits.
           globeDepth.prepareColorTextures(context, clearGlobeDepth);
@@ -2514,14 +2525,11 @@ function executeCommands(scene, passState) {
         }
 
         // Draw classifications. Modifies 3D Tiles color.
-        if (!environmentState.renderTranslucentDepthForPick) {
-          uniformState.updatePass(Pass.CESIUM_3D_TILE_CLASSIFICATION);
-          const commands =
-            frustumCommands.commands[Pass.CESIUM_3D_TILE_CLASSIFICATION];
-          length = frustumCommands.indices[Pass.CESIUM_3D_TILE_CLASSIFICATION];
-          for (let j = 0; j < length; ++j) {
-            executeCommand(commands[j], scene, passState);
-          }
+        if (!renderTranslucentDepthForPick) {
+          length = executePass(
+            frustumCommands,
+            Pass.CESIUM_3D_TILE_CLASSIFICATION
+          );
         }
       }
     } else {
@@ -2563,14 +2571,9 @@ function executeCommands(scene, passState) {
       passState.framebuffer = scene._invertClassification._fbo.framebuffer;
 
       // Draw normally
-      uniformState.updatePass(Pass.CESIUM_3D_TILE);
-      let commands = frustumCommands.commands[Pass.CESIUM_3D_TILE];
-      length = frustumCommands.indices[Pass.CESIUM_3D_TILE];
-      for (let j = 0; j < length; ++j) {
-        executeCommand(commands[j], scene, passState);
-      }
+      length = executePass(frustumCommands, Pass.CESIUM_3D_TILE);
 
-      if (defined(globeDepth) && environmentState.useGlobeDepthFramebuffer) {
+      if (defined(globeDepth) && useGlobeDepthFramebuffer) {
         scene._invertClassification.prepareTextures(context);
         globeDepth.executeUpdateDepth(
           context,
@@ -2581,16 +2584,10 @@ function executeCommands(scene, passState) {
       }
 
       // Set stencil
-      uniformState.updatePass(Pass.CESIUM_3D_TILE_CLASSIFICATION_IGNORE_SHOW);
-      commands =
-        frustumCommands.commands[
-          Pass.CESIUM_3D_TILE_CLASSIFICATION_IGNORE_SHOW
-        ];
-      length =
-        frustumCommands.indices[Pass.CESIUM_3D_TILE_CLASSIFICATION_IGNORE_SHOW];
-      for (let j = 0; j < length; ++j) {
-        executeCommand(commands[j], scene, passState);
-      }
+      length = executePass(
+        frustumCommands,
+        Pass.CESIUM_3D_TILE_CLASSIFICATION_IGNORE_SHOW
+      );
 
       passState.framebuffer = opaqueClassificationFramebuffer;
 
@@ -2607,12 +2604,7 @@ function executeCommands(scene, passState) {
       }
 
       // Draw style over classification.
-      uniformState.updatePass(Pass.CESIUM_3D_TILE_CLASSIFICATION);
-      commands = frustumCommands.commands[Pass.CESIUM_3D_TILE_CLASSIFICATION];
-      length = frustumCommands.indices[Pass.CESIUM_3D_TILE_CLASSIFICATION];
-      for (let j = 0; j < length; ++j) {
-        executeCommand(commands[j], scene, passState);
-      }
+      length = executePass(frustumCommands, Pass.CESIUM_3D_TILE_CLASSIFICATION);
     }
 
     if (length > 0 && context.stencilBuffer) {
@@ -2621,16 +2613,10 @@ function executeCommands(scene, passState) {
 
     uniformState.updatePass(Pass.VOXELS);
     let commands = frustumCommands.commands[Pass.VOXELS];
-    length = frustumCommands.indices[Pass.VOXELS];
-    commands.length = length;
+    commands.length = frustumCommands.indices[Pass.VOXELS];
     executeVoxelCommands(scene, executeCommand, passState, commands);
 
-    uniformState.updatePass(Pass.OPAQUE);
-    commands = frustumCommands.commands[Pass.OPAQUE];
-    length = frustumCommands.indices[Pass.OPAQUE];
-    for (let j = 0; j < length; ++j) {
-      executeCommand(commands[j], scene, passState);
-    }
+    length = executePass(frustumCommands, Pass.OPAQUE);
 
     if (index !== 0 && scene.mode !== SceneMode.SCENE2D) {
       // Do not overlap frustums in the translucent pass to avoid blending artifacts
@@ -2641,7 +2627,7 @@ function executeCommands(scene, passState) {
     let invertClassification;
     if (
       !picking &&
-      environmentState.useInvertClassification &&
+      useInvertClassification &&
       frameState.invertClassificationColor.alpha < 1.0
     ) {
       // Fullscreen pass to copy unclassified fragments when alpha < 1.0.
@@ -2685,8 +2671,7 @@ function executeCommands(scene, passState) {
     if (
       context.depthTexture &&
       scene.useDepthPicking &&
-      (environmentState.useGlobeDepthFramebuffer ||
-        renderTranslucentDepthForPick)
+      (useGlobeDepthFramebuffer || renderTranslucentDepthForPick)
     ) {
       // PERFORMANCE_IDEA: Use MRT to avoid the extra copy.
       const depthStencilTexture = globeDepth.depthStencilTexture;
@@ -2710,11 +2695,8 @@ function executeCommands(scene, passState) {
     frustum.far = frustumCommands.far;
     uniformState.updateFrustum(frustum);
 
-    uniformState.updatePass(Pass.GLOBE);
-    commands = frustumCommands.commands[Pass.GLOBE];
-    length = frustumCommands.indices[Pass.GLOBE];
-
-    if (globeTranslucent) {
+    if (globeTranslucencyState.translucent) {
+      uniformState.updatePass(Pass.GLOBE);
       globeTranslucencyState.executeGlobeCommands(
         frustumCommands,
         executeIdCommand,
@@ -2723,9 +2705,7 @@ function executeCommands(scene, passState) {
         passState
       );
     } else {
-      for (let j = 0; j < length; ++j) {
-        executeIdCommand(commands[j], scene, context, passState);
-      }
+      executeIdPass(frustumCommands, Pass.GLOBE);
     }
 
     if (clearGlobeDepth) {
@@ -2738,28 +2718,55 @@ function executeCommands(scene, passState) {
       depthPlane.execute(context, passState);
     }
 
-    uniformState.updatePass(Pass.CESIUM_3D_TILE);
-    commands = frustumCommands.commands[Pass.CESIUM_3D_TILE];
-    length = frustumCommands.indices[Pass.CESIUM_3D_TILE];
-    for (let j = 0; j < length; ++j) {
-      executeIdCommand(commands[j], scene, context, passState);
-    }
-
-    uniformState.updatePass(Pass.OPAQUE);
-    commands = frustumCommands.commands[Pass.OPAQUE];
-    length = frustumCommands.indices[Pass.OPAQUE];
-    for (let j = 0; j < length; ++j) {
-      executeIdCommand(commands[j], scene, context, passState);
-    }
-
-    uniformState.updatePass(Pass.TRANSLUCENT);
-    commands = frustumCommands.commands[Pass.TRANSLUCENT];
-    length = frustumCommands.indices[Pass.TRANSLUCENT];
-    for (let j = 0; j < length; ++j) {
-      executeIdCommand(commands[j], scene, context, passState);
-    }
+    executeIdPass(frustumCommands, Pass.CESIUM_3D_TILE);
+    executeIdPass(frustumCommands, Pass.OPAQUE);
+    executeIdPass(frustumCommands, Pass.TRANSLUCENT);
 
     passState.framebuffer = originalFramebuffer;
+  }
+}
+
+/**
+ * Execute draw commands for the environment primitives.
+ *
+ * @param {Scene} scene The scene.
+ * @param {PassState} passState The render state for the pass.
+ *
+ * @private
+ */
+function executeEnvironmentCommands(scene, passState) {
+  const { context, environmentState, view } = scene;
+
+  context.uniformState.updatePass(Pass.ENVIRONMENT);
+
+  if (defined(environmentState.skyBoxCommand)) {
+    executeCommand(environmentState.skyBoxCommand, scene, passState);
+  }
+
+  if (environmentState.isSkyAtmosphereVisible) {
+    executeCommand(environmentState.skyAtmosphereCommand, scene, passState);
+  }
+
+  if (environmentState.isSunVisible) {
+    environmentState.sunDrawCommand.execute(context, passState);
+    if (scene.sunBloom && !environmentState.useWebVR) {
+      let framebuffer;
+      if (environmentState.useGlobeDepthFramebuffer) {
+        framebuffer = view.globeDepth.framebuffer;
+      } else if (environmentState.usePostProcess) {
+        framebuffer = view.sceneFramebuffer.framebuffer;
+      } else {
+        framebuffer = environmentState.originalFramebuffer;
+      }
+      scene._sunPostProcess.execute(context);
+      scene._sunPostProcess.copy(context, framebuffer);
+      passState.framebuffer = framebuffer;
+    }
+  }
+
+  // Moon can be seen through the atmosphere, since the sun is rendered after the atmosphere.
+  if (environmentState.isMoonVisible) {
+    environmentState.moonCommand.execute(context, passState);
   }
 }
 
@@ -2787,6 +2794,15 @@ function executeOverlayCommands(scene, passState) {
   }
 }
 
+/**
+ * Add the scene's draw commands into the shadow map passes.
+ *
+ * @param {Scene} scene
+ * @param {DrawCommand[]} commandList
+ * @param {ShadowMap} shadowMap
+ *
+ * @private
+ */
 function insertShadowCastCommands(scene, commandList, shadowMap) {
   const { shadowMapCullingVolume, isPointLight, passes } = shadowMap;
   const numberOfPasses = passes.length;
@@ -2834,16 +2850,23 @@ function insertShadowCastCommands(scene, commandList, shadowMap) {
   }
 }
 
+/**
+ * Execute the draw commands to cast shadows into the shadow maps.
+ *
+ * @param {Scene} scene
+ *
+ * @private
+ */
 function executeShadowMapCastCommands(scene) {
-  const frameState = scene.frameState;
-  const shadowMaps = frameState.shadowState.shadowMaps;
+  const { shadowState, commandList } = scene.frameState;
+  const { shadowsEnabled, shadowMaps } = shadowState;
 
-  if (!frameState.shadowState.shadowsEnabled) {
+  if (!shadowsEnabled) {
     return;
   }
 
-  const context = scene.context;
-  const uniformState = context.uniformState;
+  const { context } = scene;
+  const { uniformState } = context;
 
   for (let i = 0; i < shadowMaps.length; ++i) {
     const shadowMap = shadowMaps[i];
@@ -2852,14 +2875,13 @@ function executeShadowMapCastCommands(scene) {
     }
 
     // Reset the command lists
-    const passes = shadowMap.passes;
+    const { passes } = shadowMap;
     for (let j = 0; j < passes.length; ++j) {
       passes[j].commandList.length = 0;
     }
 
-    // Insert the primitive/model commands into the command lists
-    const sceneCommands = frameState.commandList;
-    insertShadowCastCommands(scene, sceneCommands, shadowMap);
+    // Insert the primitive/model commands into the shadow map command lists
+    insertShadowCastCommands(scene, commandList, shadowMap);
 
     for (let j = 0; j < passes.length; ++j) {
       const pass = shadowMap.passes[j];
@@ -2881,6 +2903,11 @@ function executeShadowMapCastCommands(scene) {
 const scratchEyeTranslation = new Cartesian3();
 
 /**
+ * Update framebuffers as needed, and execute draw commands.
+ *
+ * @param {PassState} passState State specific to each render pass.
+ * @param {Color} backgroundColor
+ *
  * @private
  */
 Scene.prototype.updateAndExecuteCommands = function (
@@ -2904,6 +2931,15 @@ Scene.prototype.updateAndExecuteCommands = function (
   }
 };
 
+/**
+ * Execute the draw commands to render the scene into the stereo viewports of a WebVR application.
+ *
+ * @param {Scene} scene
+ * @param {PassState} passState
+ * @param {Color} backgroundColor
+ *
+ * @private
+ */
 function executeWebVRCommands(scene, passState, backgroundColor) {
   const view = scene._view;
   const camera = view.camera;
@@ -2973,8 +3009,17 @@ const scratch2DViewportEyePoint = new Cartesian3();
 const scratch2DViewportWindowCoords = new Cartesian3();
 const scratch2DViewport = new BoundingRectangle();
 
+/**
+ * Execute the draw commands to render into a 2D viewport.
+ *
+ * @param {Scene} scene
+ * @param {PassState} passState
+ *
+ * @private
+ */
 function execute2DViewportCommands(scene, passState) {
-  const { context, frameState, camera } = scene;
+  const { frameState, camera } = scene;
+  const { uniformState } = scene.context;
 
   const originalViewport = passState.viewport;
   const viewport = BoundingRectangle.clone(originalViewport, scratch2DViewport);
@@ -3045,7 +3090,7 @@ function execute2DViewportCommands(scene, passState) {
       camera.directionWC,
       camera.upWC
     );
-    context.uniformState.update(frameState);
+    uniformState.update(frameState);
 
     executeCommandsInViewport(true, scene, passState);
 
@@ -3061,7 +3106,7 @@ function execute2DViewportCommands(scene, passState) {
       camera.directionWC,
       camera.upWC
     );
-    context.uniformState.update(frameState);
+    uniformState.update(frameState);
 
     executeCommandsInViewport(false, scene, passState);
   } else if (windowCoordinates.x > viewportX + viewportWidth * 0.5) {
@@ -3075,7 +3120,7 @@ function execute2DViewportCommands(scene, passState) {
       camera.directionWC,
       camera.upWC
     );
-    context.uniformState.update(frameState);
+    uniformState.update(frameState);
 
     executeCommandsInViewport(true, scene, passState);
 
@@ -3092,7 +3137,7 @@ function execute2DViewportCommands(scene, passState) {
       camera.directionWC,
       camera.upWC
     );
-    context.uniformState.update(frameState);
+    uniformState.update(frameState);
 
     executeCommandsInViewport(false, scene, passState);
   } else {
@@ -3107,7 +3152,7 @@ function execute2DViewportCommands(scene, passState) {
       camera.directionWC,
       camera.upWC
     );
-    context.uniformState.update(frameState);
+    uniformState.update(frameState);
 
     executeCommandsInViewport(true, scene, passState);
 
@@ -3124,7 +3169,7 @@ function execute2DViewportCommands(scene, passState) {
       camera.directionWC,
       camera.upWC
     );
-    context.uniformState.update(frameState);
+    uniformState.update(frameState);
 
     executeCommandsInViewport(false, scene, passState);
   }
@@ -3135,6 +3180,17 @@ function execute2DViewportCommands(scene, passState) {
   passState.viewport = originalViewport;
 }
 
+/**
+ * Execute the draw commands to render the scene into the viewport.
+ * If this is the first viewport rendered, the framebuffers will be cleared to the background color.
+ *
+ * @param {boolean} firstViewport <code>true</code> if this is the first viewport rendered.
+ * @param {Scene} scene
+ * @param {PassState} passState
+ * @param {Color} backgroundColor
+ *
+ * @private
+ */
 function executeCommandsInViewport(
   firstViewport,
   scene,
@@ -3501,7 +3557,7 @@ function updateAndClearFramebuffers(scene, passState, clearColor) {
   if (useInvertClassification) {
     let depthFramebuffer;
     if (frameState.invertClassificationColor.alpha === 1.0) {
-      if (environmentState.useGlobeDepthFramebuffer) {
+      if (useGlobeDepthFramebuffer) {
         depthFramebuffer = view.globeDepth.framebuffer;
       }
     }
@@ -3551,11 +3607,13 @@ Scene.prototype.resolveFramebuffers = function (passState) {
     globeDepth.prepareColorTextures(context);
   }
 
-  const useOIT = environmentState.useOIT;
-  const useGlobeDepthFramebuffer = environmentState.useGlobeDepthFramebuffer;
-  const usePostProcess = environmentState.usePostProcess;
+  const {
+    useOIT,
+    useGlobeDepthFramebuffer,
+    usePostProcess,
+    originalFramebuffer,
+  } = environmentState;
 
-  const defaultFramebuffer = environmentState.originalFramebuffer;
   const globeFramebuffer = useGlobeDepthFramebuffer
     ? globeDepth.colorFramebufferManager
     : undefined;
@@ -3565,7 +3623,7 @@ Scene.prototype.resolveFramebuffers = function (passState) {
   if (useOIT) {
     passState.framebuffer = usePostProcess
       ? sceneFramebuffer.framebuffer
-      : defaultFramebuffer;
+      : originalFramebuffer;
     view.oit.execute(context, passState);
   }
 
@@ -3592,11 +3650,11 @@ Scene.prototype.resolveFramebuffers = function (passState) {
       sceneFramebuffer
     ).getDepthStencilTexture();
     postProcess.execute(context, colorTexture, depthTexture, idTexture);
-    postProcess.copy(context, defaultFramebuffer);
+    postProcess.copy(context, originalFramebuffer);
   }
 
   if (!useOIT && !usePostProcess && useGlobeDepthFramebuffer) {
-    passState.framebuffer = defaultFramebuffer;
+    passState.framebuffer = originalFramebuffer;
     globeDepth.executeCopyColor(context, passState);
   }
 };
@@ -3901,6 +3959,12 @@ function postPassesUpdate(scene) {
 
 const scratchBackgroundColor = new Color();
 
+/**
+ * Render the scene
+ *
+ * @param {Scene} scene
+ * @private
+ */
 function render(scene) {
   const frameState = scene._frameState;
 
@@ -4058,9 +4122,7 @@ Scene.prototype.render = function (time) {
   tryAndCatchError(this, prePassesUpdate);
 
   /**
-   *
    * Passes update. Add any passes here
-   *
    */
   if (this.primitives.show) {
     tryAndCatchError(this, updateMostDetailedRayPicks);
@@ -4080,14 +4142,13 @@ Scene.prototype.render = function (time) {
   }
 
   /**
-   *
    * Post passes update. Execute any pass invariant code that should run after the passes here.
-   *
    */
   updateDebugShowFramesPerSecond(this, shouldRender);
   tryAndCatchError(this, postPassesUpdate);
 
-  // Often used to trigger events (so don't want in trycatch) that the user might be subscribed to. Things like the tile load events, promises, etc.
+  // Often used to trigger events (so don't want in trycatch) that the user
+  // might be subscribed to. Things like the tile load events, promises, etc.
   // We don't want those events to resolve during the render loop because the events might add new primitives
   callAfterRenderFunctions(this);
 
