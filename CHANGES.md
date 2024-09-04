@@ -1,5 +1,9 @@
 # Change Log
 
+### 1.121.1 - 2024-09-04
+
+This is an npm-only release to extra source maps included in 1.121
+
 ### 1.121 - 2024-09-03
 
 #### @cesium/engine
