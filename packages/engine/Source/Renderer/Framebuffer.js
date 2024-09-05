@@ -161,16 +161,10 @@ function Framebuffer(options) {
 
   this._bind();
 
-  let texture;
-  let renderbuffer;
-  let i;
-  let length;
-  let attachmentEnum;
-
   if (defined(options.colorTextures)) {
     const textures = options.colorTextures;
-    length = this._colorTextures.length = this._activeColorAttachments.length =
-      textures.length;
+    const length = (this._colorTextures.length = this._activeColorAttachments.length =
+      textures.length);
 
     //>>includeStart('debug', pragmas.debug);
     if (length > maximumColorAttachments) {
@@ -180,8 +174,8 @@ function Framebuffer(options) {
     }
     //>>includeEnd('debug');
 
-    for (i = 0; i < length; ++i) {
-      texture = textures[i];
+    for (let i = 0; i < length; ++i) {
+      const texture = textures[i];
 
       //>>includeStart('debug', pragmas.debug);
       if (!PixelFormat.isColorFormat(texture.pixelFormat)) {
@@ -207,7 +201,7 @@ function Framebuffer(options) {
       }
       //>>includeEnd('debug');
 
-      attachmentEnum = this._gl.COLOR_ATTACHMENT0 + i;
+      const attachmentEnum = this._gl.COLOR_ATTACHMENT0 + i;
       attachTexture(this, attachmentEnum, texture);
       this._activeColorAttachments[i] = attachmentEnum;
       this._colorTextures[i] = texture;
@@ -216,8 +210,8 @@ function Framebuffer(options) {
 
   if (defined(options.colorRenderbuffers)) {
     const renderbuffers = options.colorRenderbuffers;
-    length = this._colorRenderbuffers.length = this._activeColorAttachments.length =
-      renderbuffers.length;
+    const length = (this._colorRenderbuffers.length = this._activeColorAttachments.length =
+      renderbuffers.length);
 
     //>>includeStart('debug', pragmas.debug);
     if (length > maximumColorAttachments) {
@@ -227,9 +221,9 @@ function Framebuffer(options) {
     }
     //>>includeEnd('debug');
 
-    for (i = 0; i < length; ++i) {
-      renderbuffer = renderbuffers[i];
-      attachmentEnum = this._gl.COLOR_ATTACHMENT0 + i;
+    for (let i = 0; i < length; ++i) {
+      const renderbuffer = renderbuffers[i];
+      const attachmentEnum = this._gl.COLOR_ATTACHMENT0 + i;
       attachRenderbuffer(this, attachmentEnum, renderbuffer);
       this._activeColorAttachments[i] = attachmentEnum;
       this._colorRenderbuffers[i] = renderbuffer;
@@ -237,7 +231,7 @@ function Framebuffer(options) {
   }
 
   if (defined(options.depthTexture)) {
-    texture = options.depthTexture;
+    const texture = options.depthTexture;
 
     //>>includeStart('debug', pragmas.debug);
     if (texture.pixelFormat !== PixelFormat.DEPTH_COMPONENT) {
@@ -252,19 +246,19 @@ function Framebuffer(options) {
   }
 
   if (defined(options.depthRenderbuffer)) {
-    renderbuffer = options.depthRenderbuffer;
+    const renderbuffer = options.depthRenderbuffer;
     attachRenderbuffer(this, this._gl.DEPTH_ATTACHMENT, renderbuffer);
     this._depthRenderbuffer = renderbuffer;
   }
 
   if (defined(options.stencilRenderbuffer)) {
-    renderbuffer = options.stencilRenderbuffer;
+    const renderbuffer = options.stencilRenderbuffer;
     attachRenderbuffer(this, this._gl.STENCIL_ATTACHMENT, renderbuffer);
     this._stencilRenderbuffer = renderbuffer;
   }
 
   if (defined(options.depthStencilTexture)) {
-    texture = options.depthStencilTexture;
+    const texture = options.depthStencilTexture;
 
     //>>includeStart('debug', pragmas.debug);
     if (texture.pixelFormat !== PixelFormat.DEPTH_STENCIL) {
@@ -279,7 +273,7 @@ function Framebuffer(options) {
   }
 
   if (defined(options.depthStencilRenderbuffer)) {
-    renderbuffer = options.depthStencilRenderbuffer;
+    const renderbuffer = options.depthStencilRenderbuffer;
     attachRenderbuffer(this, this._gl.DEPTH_STENCIL_ATTACHMENT, renderbuffer);
     this._depthStencilRenderbuffer = renderbuffer;
   }
@@ -411,10 +405,8 @@ Framebuffer.prototype.isDestroyed = function () {
 Framebuffer.prototype.destroy = function () {
   if (this.destroyAttachments) {
     // If the color texture is a cube map face, it is owned by the cube map, and will not be destroyed.
-    let i = 0;
     const textures = this._colorTextures;
-    let length = textures.length;
-    for (; i < length; ++i) {
+    for (let i = 0; i < textures.length; ++i) {
       const texture = textures[i];
       if (defined(texture)) {
         texture.destroy();
@@ -422,8 +414,7 @@ Framebuffer.prototype.destroy = function () {
     }
 
     const renderbuffers = this._colorRenderbuffers;
-    length = renderbuffers.length;
-    for (i = 0; i < length; ++i) {
+    for (let i = 0; i < renderbuffers.length; ++i) {
       const renderbuffer = renderbuffers[i];
       if (defined(renderbuffer)) {
         renderbuffer.destroy();
