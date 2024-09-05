@@ -2674,9 +2674,8 @@ function executeCommands(scene, passState) {
       (useGlobeDepthFramebuffer || renderTranslucentDepthForPick)
     ) {
       // PERFORMANCE_IDEA: Use MRT to avoid the extra copy.
-      const depthStencilTexture = globeDepth.depthStencilTexture;
       const pickDepth = scene._picking.getPickDepth(scene, index);
-      pickDepth.update(context, depthStencilTexture);
+      pickDepth.update(context, globeDepth.depthStencilTexture);
       pickDepth.executeCopyDepth(context, passState);
     }
 
