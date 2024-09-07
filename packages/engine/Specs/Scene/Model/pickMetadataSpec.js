@@ -1,4 +1,3 @@
-/* eslint-disable no-restricted-globals */
 import {
   Cartesian2,
   Cartesian3,
@@ -30,120 +29,6 @@ const canvasScaling = 32;
 const propertyValueEpsilon = 0.01;
 
 /**
- * Creates the RGBA bytes of a property texture image for the specs.
- *
- * The result will be the RGBA bytes of a 16x16 texture, with
- * the upper 9x9 pixels filled with the pattern that contains
- * all combinations of (0, 127, 255) for the RGBA components.
- *
- * @returns The pixels
- */
-function createSpecPropertyTexturePixelsRgbaBytes() {
-  const sizeX = textureSizeX;
-  const sizeY = textureSizeY;
-  const pixelsRgbaBytes = Array(sizeX * sizeY * 4);
-  for (let y = 0; y < sizeY; y++) {
-    for (let x = 0; x < sizeX; x++) {
-      let r = 0;
-      let g = 0;
-      let b = 0;
-      let a = 0;
-
-      if (x > 8 || y > 8) {
-        continue;
-      }
-
-      const lox = x % 3;
-      const hix = Math.floor(x / 3);
-      const loy = y % 3;
-      const hiy = Math.floor(y / 3);
-
-      if ((lox & 0x1) !== 0) {
-        r = 127;
-      }
-      if ((lox & 0x2) !== 0) {
-        r = 255;
-      }
-      if ((hix & 0x1) !== 0) {
-        g = 127;
-      }
-      if ((hix & 0x2) !== 0) {
-        g = 255;
-      }
-
-      if ((loy & 0x1) !== 0) {
-        b = 127;
-      }
-      if ((loy & 0x2) !== 0) {
-        b = 255;
-      }
-      if ((hiy & 0x1) !== 0) {
-        a = 127;
-      }
-      if ((hiy & 0x2) !== 0) {
-        a = 255;
-      }
-
-      // XXX_ALPHA NOTE: There seems to be a bug in the metadata handling
-      // that causes metadata values in the shader to be affected by
-      // the alpha value in the property texture, even when they are
-      // read from other channels.
-      // Fix the alpha value to 255 here:
-      a = 255;
-      // Also see the places marked with XXX_ALPHA below
-
-      const index = y * sizeX + x;
-      pixelsRgbaBytes[index * 4 + 0] = r;
-      pixelsRgbaBytes[index * 4 + 1] = g;
-      pixelsRgbaBytes[index * 4 + 2] = b;
-      pixelsRgbaBytes[index * 4 + 3] = a;
-    }
-  }
-  return pixelsRgbaBytes;
-}
-
-/**
- * Creates the RGBA bytes of a base color texture for the specs.
- *
- * The result will be the the same as for createSpecPropertyTexturePixelsRgbaBytes,
- * but with all alpha component bytes being 255.
- *
- * @returns The pixels
- */
-function createSpecBaseColorTexturePixelsRgbaBytes() {
-  const sizeX = textureSizeX;
-  const sizeY = textureSizeY;
-  const pixelsRgbaBytes = createSpecPropertyTexturePixelsRgbaBytes();
-  for (let y = 0; y < sizeY; y++) {
-    for (let x = 0; x < sizeX; x++) {
-      const index = y * sizeX + x;
-      pixelsRgbaBytes[index * 4 + 3] = 255;
-    }
-  }
-  return pixelsRgbaBytes;
-}
-
-/**
- * Creates a data URI for a PNG image with the given pixels.
- *
- * @param {number} sizeX The size in x-direction
- * @param {number} sizeY The size in y-direction
- * @param {number[]} pixelsRgbaBytes The RGBA pixel bytes
- * @returns The PNG data URI
- */
-function createPngDataUri(sizeX, sizeY, pixelsRgbaBytes) {
-  const canvas = document.createElement("canvas");
-  const context = canvas.getContext("2d");
-  canvas.width = sizeX;
-  canvas.height = sizeY;
-  const dataArray = new Uint8ClampedArray(pixelsRgbaBytes);
-  const imageData = new ImageData(dataArray, sizeX, sizeY);
-  context.putImageData(imageData, 0, 0);
-  const dataUri = canvas.toDataURL("image/png");
-  return dataUri;
-}
-
-/**
  * Creates an embedded glTF asset with a property texture.
  *
  * This creates an assed that represents a unit square and uses
@@ -152,15 +37,11 @@ function createPngDataUri(sizeX, sizeY, pixelsRgbaBytes) {
  *
  * @param {object} schema The metadata schema
  * @param {object} propertyTextureProperties The property texture properties
- * @param {string} propertyTexturePngDataUri The PNG data URI of the property texture
- * @param {string} baseColorTexturePngDataUri The PNG data URI of the base color texture
  * @returns The gltf
  */
 function createEmbeddedGltfWithPropertyTexture(
   schema,
-  propertyTextureProperties,
-  propertyTexturePngDataUri,
-  baseColorTexturePngDataUri
+  propertyTextureProperties
 ) {
   const result = {
     extensions: {
@@ -241,11 +122,16 @@ function createEmbeddedGltfWithPropertyTexture(
     ],
     images: [
       {
-        uri: propertyTexturePngDataUri,
+        // A 16x16 pixels image that contains all combinations of
+        // (0, 127, 255) in its upper-left 9x9 pixels
+        uri:
+          "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAi0lEQVR42u2RUQ6AMAhDd3OO/qQt8VP8NRHjNpf0leI5ruqXbNVL4c9Dn+E8ljV+iLaXaoAY1YDaADaynBg2gFZLR1+wAdJEWZpW1AIVqmjCruqybw4qnEJbbQBHdWoS2XIUXdp+F8DNUOpM0tIZCusQJrzHNTnsOy2pFTZ7xpKhYFUu4M1v+OvrdQGABqEpS2kSLgAAAABJRU5ErkJggg==",
         mimeType: "image/png",
       },
       {
-        uri: baseColorTexturePngDataUri,
+        // A 1x1 image of a white pixel
+        uri:
+          "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVR42mP4DwQACfsD/Wj6HMwAAAAASUVORK5CYII=",
         mimeType: "image/png",
       },
     ],
@@ -325,26 +211,7 @@ function createEmbeddedGltfWithPropertyTexture(
  * @returns The glTF
  */
 function createPropertyTextureGltf(schema, properties) {
-  const propertyTexturePixelsRgbaBytes = createSpecPropertyTexturePixelsRgbaBytes();
-  const propertyTextureDataUri = createPngDataUri(
-    textureSizeX,
-    textureSizeY,
-    propertyTexturePixelsRgbaBytes
-  );
-  const baseColorTexturePixelsRgbaBytes = createSpecBaseColorTexturePixelsRgbaBytes();
-  const baseColorTextureDataUri = createPngDataUri(
-    textureSizeX,
-    textureSizeY,
-    baseColorTexturePixelsRgbaBytes
-  );
-
-  const gltf = createEmbeddedGltfWithPropertyTexture(
-    schema,
-    properties,
-    propertyTextureDataUri,
-    baseColorTextureDataUri
-  );
-
+  const gltf = createEmbeddedGltfWithPropertyTexture(schema, properties);
   //*/
   // Copy-and-paste this into a file to have the actual glTF:
   console.log("SPEC GLTF:");
@@ -767,7 +634,7 @@ describe(
       ResourceCache.clearForSpecs();
     });
 
-    fit("throws without windowPosition", async function () {
+    it("throws without windowPosition", async function () {
       const windowPosition = undefined; // For spec
       const schemaId = undefined;
       const className = "exampleClass";
@@ -779,7 +646,7 @@ describe(
       }).toThrowDeveloperError();
     });
 
-    fit("throws without className", async function () {
+    it("throws without className", async function () {
       const windowPosition = new Cartesian2();
       const schemaId = undefined;
       const className = undefined; // For spec
@@ -791,7 +658,7 @@ describe(
       }).toThrowDeveloperError();
     });
 
-    fit("throws without propertyName", async function () {
+    it("throws without propertyName", async function () {
       const windowPosition = new Cartesian2();
       const schemaId = undefined;
       const className = "exampleClass";
@@ -803,7 +670,7 @@ describe(
       }).toThrowDeveloperError();
     });
 
-    fit("returns undefined for class name that does not exist", async function () {
+    it("returns undefined for class name that does not exist", async function () {
       const schemaId = undefined;
       const className = "exampleClass_THAT_DOES_NOT_EXIST"; // For spec
       const propertyName = "example_UINT8_SCALAR";
@@ -831,7 +698,7 @@ describe(
       expect(actualMetadataValue).toBeUndefined();
     });
 
-    fit("returns undefined when there is no object with metadata", async function () {
+    it("returns undefined when there is no object with metadata", async function () {
       const schemaId = undefined;
       const className = "exampleClass";
       const propertyName = "example_UINT8_SCALAR";
@@ -857,7 +724,7 @@ describe(
       expect(actualMetadataValue).toBeUndefined();
     });
 
-    fit("picks UINT8 SCALAR from a property texture", async function () {
+    it("picks UINT8 SCALAR from a property texture", async function () {
       const schemaId = undefined;
       const className = "exampleClass";
       const propertyName = "example_UINT8_SCALAR";
@@ -917,7 +784,7 @@ describe(
       );
     });
 
-    fit("picks normalized UINT8 SCALAR from a property texture", async function () {
+    it("picks normalized UINT8 SCALAR from a property texture", async function () {
       const schemaId = undefined;
       const className = "exampleClass";
       const propertyName = "example_normalized_UINT8_SCALAR";
@@ -977,7 +844,7 @@ describe(
       );
     });
 
-    fit("picks fixed length UINT8 SCALAR array from a property texture", async function () {
+    it("picks fixed length UINT8 SCALAR array from a property texture", async function () {
       const schemaId = undefined;
       const className = "exampleClass";
       const propertyName = "example_fixed_length_UINT8_SCALAR_array";
@@ -1037,7 +904,7 @@ describe(
       );
     });
 
-    fit("picks UINT8 VEC2 from a property texture", async function () {
+    it("picks UINT8 VEC2 from a property texture", async function () {
       const schemaId = undefined;
       const className = "exampleClass";
       const propertyName = "example_UINT8_VEC2";
@@ -1097,7 +964,7 @@ describe(
       );
     });
 
-    fit("picks normalized UINT8 VEC2 from a property texture", async function () {
+    it("picks normalized UINT8 VEC2 from a property texture", async function () {
       const schemaId = undefined;
       const className = "exampleClass";
       const propertyName = "example_normalized_UINT8_VEC2";
@@ -1159,7 +1026,7 @@ describe(
       );
     });
 
-    fit("picks UINT8 VEC3 from a property texture", async function () {
+    it("picks UINT8 VEC3 from a property texture", async function () {
       const schemaId = undefined;
       const className = "exampleClass";
       const propertyName = "example_UINT8_VEC3";
@@ -1219,7 +1086,7 @@ describe(
       );
     });
 
-    fit("picks UINT8 VEC4 from a property texture", async function () {
+    it("picks UINT8 VEC4 from a property texture", async function () {
       const schemaId = undefined;
       const className = "exampleClass";
       const propertyName = "example_UINT8_VEC4";
@@ -1282,7 +1149,7 @@ describe(
     });
 
     // XXX For debugging:
-    fit("picks metadata from a property texture quarry - TO BE REMOVED", async function () {
+    it("picks metadata from a property texture quarry - TO BE REMOVED", async function () {
       const schemaId = undefined;
       const className = "exampleClass";
       const propertyName = "example_UINT8_SCALAR";
