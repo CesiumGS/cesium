@@ -359,17 +359,19 @@ Object.defineProperties(SampledProperty.prototype, {
   },
 });
 
+const timeScratch = new JulianDate();
+
 /**
  * Gets the value of the property at the provided time.
  *
- * @param {JulianDate} time The time for which to retrieve the value.
+ * @param {JulianDate} [time=JulianDate.now()] The time for which to retrieve the value. If omitted, the current system time is used.
  * @param {object} [result] The object to store the value into, if omitted, a new instance is created and returned.
  * @returns {object} The modified result parameter or a new instance if the result parameter was not supplied.
  */
 SampledProperty.prototype.getValue = function (time, result) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.defined("time", time);
-  //>>includeEnd('debug');
+  if (!defined(time)) {
+    time = JulianDate.now(timeScratch);
+  }
 
   const times = this._times;
   const timesLength = times.length;

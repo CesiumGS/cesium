@@ -1978,6 +1978,40 @@ describe("Scene/ScreenSpaceCameraController", function () {
     );
   });
 
+  it("can adjust zoom factor", function () {
+    setUp3D();
+
+    // Zoom out
+    const mouseWheelMovement = -120;
+
+    // Slow zoom
+    const initialPosition = Cartesian3.clone(camera.position);
+    controller.zoomFactor = 1.0;
+    simulateMouseWheel(mouseWheelMovement);
+    updateController();
+    const slowZoomPosition = Cartesian3.clone(camera.position);
+    const slowZoomMagnitude = Cartesian3.magnitude(slowZoomPosition);
+
+    // Medium zoom
+    camera.position = Cartesian3.clone(initialPosition);
+    controller.zoomFactor = 5.0;
+    simulateMouseWheel(mouseWheelMovement);
+    updateController();
+    const mediumZoomPosition = Cartesian3.clone(camera.position);
+    const mediumZoomMagnitude = Cartesian3.magnitude(mediumZoomPosition);
+
+    // Fast zoom
+    camera.position = Cartesian3.clone(initialPosition);
+    controller.zoomFactor = 10.0;
+    simulateMouseWheel(mouseWheelMovement);
+    updateController();
+    const fastZoomPosition = Cartesian3.clone(camera.position);
+    const fastZoomMagnitude = Cartesian3.magnitude(fastZoomPosition);
+
+    expect(fastZoomMagnitude).toBeGreaterThan(mediumZoomMagnitude);
+    expect(mediumZoomMagnitude).toBeGreaterThan(slowZoomMagnitude);
+  });
+
   it("is destroyed", function () {
     expect(controller.isDestroyed()).toEqual(false);
     controller.destroy();

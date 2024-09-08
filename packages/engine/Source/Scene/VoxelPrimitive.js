@@ -336,12 +336,6 @@ function VoxelPrimitive(options) {
    * @type {boolean}
    * @private
    */
-  this._jitter = false;
-
-  /**
-   * @type {boolean}
-   * @private
-   */
   this._nearestSampling = false;
 
   /**
@@ -699,29 +693,6 @@ Object.defineProperties(VoxelPrimitive.prototype, {
 
       if (this._depthTest !== depthTest) {
         this._depthTest = depthTest;
-        this._shaderDirty = true;
-      }
-    },
-  },
-
-  /**
-   * Gets or sets whether or not to jitter the view ray during the raymarch.
-   * This reduces stair-step artifacts but introduces noise.
-   *
-   * @memberof VoxelPrimitive.prototype
-   * @type {boolean}
-   */
-  jitter: {
-    get: function () {
-      return this._jitter;
-    },
-    set: function (jitter) {
-      //>>includeStart('debug', pragmas.debug);
-      Check.typeOf.bool("jitter", jitter);
-      //>>includeEnd('debug');
-
-      if (this._jitter !== jitter) {
-        this._jitter = jitter;
         this._shaderDirty = true;
       }
     },

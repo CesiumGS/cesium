@@ -160,6 +160,8 @@ function Context(canvas, options) {
     "OES_texture_half_float_linear",
   ]);
 
+  this._supportsTextureLod = !!getExtension(gl, ["EXT_shader_texture_lod"]);
+
   this._colorBufferFloat = !!getExtension(gl, [
     "EXT_color_buffer_float",
     "WEBGL_color_buffer_float",
@@ -774,6 +776,19 @@ Object.defineProperties(Context.prototype, {
         (this._webgl2 && this._textureFloatLinear) ||
         (!this._webgl2 && this._textureHalfFloatLinear)
       );
+    },
+  },
+
+  /**
+   * <code>true</code> if EXT_shader_texture_lod is supported. This extension provides
+   * access to explicit LOD selection in texture sampling functions.
+   * @memberof Context.prototype
+   * @type {boolean}
+   * @see {@link https://registry.khronos.org/webgl/extensions/EXT_shader_texture_lod/}
+   */
+  supportsTextureLod: {
+    get: function () {
+      return this._webgl2 || this._supportsTextureLod;
     },
   },
 
