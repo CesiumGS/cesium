@@ -33,7 +33,16 @@ function attachRenderbuffer(framebuffer, attachment, renderbuffer) {
  * Framebuffers are used for render-to-texture effects; they allow us to render to
  * textures in one pass, and read from it in a later pass.
  *
- * @param {object} options The initial framebuffer attachments as shown in the example below. <code>context</code> is required. The possible properties are <code>colorTextures</code>, <code>colorRenderbuffers</code>, <code>depthTexture</code>, <code>depthRenderbuffer</code>, <code>stencilRenderbuffer</code>, <code>depthStencilTexture</code>, <code>depthStencilRenderbuffer</code>, and <code>destroyAttachments</code>.
+ * @param {object} options Object with the following properties:
+ * @param {Context} options.context
+ * @param {Texture[]} [options.colorTextures]
+ * @param {Renderbuffer[]} [options.colorRenderbuffers]
+ * @param {Texture} [options.depthTexture]
+ * @param {Renderbuffer} [options.depthRenderbuffer]
+ * @param {Renderbuffer} [options.stencilRenderbuffer]
+ * @param {Texture} [options.depthStencilTexture]
+ * @param {Renderbuffer} [options.depthStencilRenderbuffer]
+ * @param {boolean} [options.destroyAttachments=true] When true, the framebuffer owns its attachments so they will be destroyed when {@link Framebuffer#destroy} is called or when a new attachment is assigned to an attachment point.
  *
  * @exception {DeveloperError} Cannot have both color texture and color renderbuffer attachments.
  * @exception {DeveloperError} Cannot have both a depth texture and depth renderbuffer attachment.
@@ -130,7 +139,6 @@ function Framebuffer(options) {
       "Cannot have both a depth-stencil texture and depth-stencil renderbuffer attachment."
     );
   }
-  //>>includeEnd('debug');
 
   // Avoid errors defined in Section 6.5 of the WebGL spec
   const depthAttachment =
@@ -138,8 +146,6 @@ function Framebuffer(options) {
   const depthStencilAttachment =
     defined(options.depthStencilTexture) ||
     defined(options.depthStencilRenderbuffer);
-
-  //>>includeStart('debug', pragmas.debug);
   if (depthAttachment && depthStencilAttachment) {
     throw new DeveloperError(
       "Cannot have both a depth and depth-stencil attachment."
@@ -156,8 +162,6 @@ function Framebuffer(options) {
     );
   }
   //>>includeEnd('debug');
-
-  ///////////////////////////////////////////////////////////////////
 
   this._bind();
 
