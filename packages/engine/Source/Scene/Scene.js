@@ -107,7 +107,7 @@ const requestRenderAfterFrame = function (scene) {
  * @param {boolean} [options.requestRenderMode=false] If true, rendering a frame will only occur when needed as determined by changes within the scene. Enabling improves performance of the application, but requires using {@link Scene#requestRender} to render a new frame explicitly in this mode. This will be necessary in many cases after making changes to the scene in other parts of the API. See {@link https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/|Improving Performance with Explicit Rendering}.
  * @param {number} [options.maximumRenderTimeChange=0.0] If requestRenderMode is true, this value defines the maximum change in simulation time allowed before a render is requested. See {@link https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/|Improving Performance with Explicit Rendering}.
  * @param {number} [options.depthPlaneEllipsoidOffset=0.0] Adjust the DepthPlane to address rendering artefacts below ellipsoid zero elevation.
- * @param {number} [options.msaaSamples=1] If provided, this value controls the rate of multisample antialiasing. Typical multisampling rates are 2, 4, and sometimes 8 samples per pixel. Higher sampling rates of MSAA may impact performance in exchange for improved visual quality. This value only applies to WebGL2 contexts that support multisample render targets.
+ * @param {number} [options.msaaSamples=4] If provided, this value controls the rate of multisample antialiasing. Typical multisampling rates are 2, 4, and sometimes 8 samples per pixel. Higher sampling rates of MSAA may impact performance in exchange for improved visual quality. This value only applies to WebGL2 contexts that support multisample render targets. Set to 1 to disable MSAA.
  *
  * @see CesiumWidget
  * @see {@link http://www.khronos.org/registry/webgl/specs/latest/#5.2|WebGLContextAttributes}
@@ -228,7 +228,7 @@ function Scene(options) {
   this._minimumDisableDepthTestDistance = 0.0;
   this._debugInspector = new DebugInspector();
 
-  this._msaaSamples = defaultValue(options.msaaSamples, 1);
+  this._msaaSamples = defaultValue(options.msaaSamples, 4);
 
   /**
    * Exceptions occurring in <code>render</code> are always caught in order to raise the
@@ -1630,7 +1630,7 @@ Object.defineProperties(Scene.prototype, {
    * The sample rate of multisample antialiasing (values greater than 1 enable MSAA).
    * @memberof Scene.prototype
    * @type {number}
-   * @default 1
+   * @default 4
    */
   msaaSamples: {
     get: function () {

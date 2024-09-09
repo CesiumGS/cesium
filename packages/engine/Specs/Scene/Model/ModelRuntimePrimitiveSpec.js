@@ -44,6 +44,7 @@ describe("Scene/Model/ModelRuntimePrimitive", function () {
     type: ModelType.GLTF,
     allowPicking: true,
     featureIdLabel: "featureId_0",
+    hasVerticalExaggeration: true,
   };
   const mockWebgl1Context = {
     webgl2: false,
@@ -983,6 +984,33 @@ describe("Scene/Model/ModelRuntimePrimitive", function () {
       FeatureIdPipelineStage,
       MetadataPipelineStage,
       VerticalExaggerationPipelineStage,
+      LightingPipelineStage,
+      PickingPipelineStage,
+      AlphaPipelineStage,
+      PrimitiveStatisticsPipelineStage,
+    ];
+
+    primitive.configurePipeline(frameState);
+    verifyExpectedStages(primitive.pipelineStages, expectedStages);
+  });
+
+  it("configures pipeline stages for vertical exaggeration when enableVerticalExaggeration is false", function () {
+    const primitive = new ModelRuntimePrimitive({
+      primitive: mockPrimitive,
+      node: mockNode,
+      model: {
+        ...mockModel,
+        hasVerticalExaggeration: false,
+      },
+    });
+    const frameState = createFrameState(mockWebgl2Context);
+    frameState.verticalExaggeration = 2.0;
+
+    const expectedStages = [
+      GeometryPipelineStage,
+      MaterialPipelineStage,
+      FeatureIdPipelineStage,
+      MetadataPipelineStage,
       LightingPipelineStage,
       PickingPipelineStage,
       AlphaPipelineStage,

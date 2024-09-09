@@ -12,7 +12,7 @@ import TextureWrap from "../Renderer/TextureWrap.js";
 import PassThrough from "../Shaders/PostProcessStages/PassThrough.js";
 import PostProcessStageLibrary from "./PostProcessStageLibrary.js";
 import PostProcessStageTextureCache from "./PostProcessStageTextureCache.js";
-import Tonemapper from "./Tonemapper.js";
+import Tonemapper, { validateTonemapper } from "./Tonemapper.js";
 
 const stackScratch = [];
 
@@ -41,11 +41,12 @@ function PostProcessStageCollection() {
   // Some shaders, such as the atmosphere and ground atmosphere, output values slightly over 1.0.
   this._autoExposureEnabled = false;
   this._autoExposure = PostProcessStageLibrary.createAutoExposureStage();
+  this._exposure = 1.0;
   this._tonemapping = undefined;
   this._tonemapper = undefined;
 
-  // set tonemapper and tonemapping
-  this.tonemapper = Tonemapper.ACES;
+  // set tonemapper and tonemapping using the setter
+  this.tonemapper = Tonemapper.PBR_NEUTRAL;
 
   const tonemapping = this._tonemapping;
 
@@ -313,11 +314,14 @@ Object.defineProperties(PostProcessStageCollection.prototype, {
   },
 
   /**
-   * Gets and sets the tonemapping algorithm used when rendering with high dynamic range.
+   * Specifies the tonemapping algorithm used when rendering with high dynamic range.
+   * {@link https://sandcastle.cesium.com/?src=High%20Dynamic%20Range.html|Sandcastle Demo}
    *
+   * @example viewer.scene.postProcessStages.tonemapper = Cesium.Tonemapper.ACES;
+   *
+   * @default Tonemapper.PBR_NEUTRAL
    * @memberof PostProcessStageCollection.prototype
    * @type {Tonemapper}
-   * @private
    */
   tonemapper: {
     get: function () {
@@ -328,7 +332,7 @@ Object.defineProperties(PostProcessStageCollection.prototype, {
         return;
       }
       //>>includeStart('debug', pragmas.debug);
-      if (!Tonemapper.validate(value)) {
+      if (!validateTonemapper(value)) {
         throw new DeveloperError("tonemapper was set to an invalid value.");
       }
       //>>includeEnd('debug');
@@ -339,26 +343,31 @@ Object.defineProperties(PostProcessStageCollection.prototype, {
       }
 
       const useAutoExposure = this._autoExposureEnabled;
-      let tonemapper;
+      let tonemapping;
 
       switch (value) {
         case Tonemapper.REINHARD:
-          tonemapper = PostProcessStageLibrary.createReinhardTonemappingStage(
+          tonemapping = PostProcessStageLibrary.createReinhardTonemappingStage(
             useAutoExposure
           );
           break;
         case Tonemapper.MODIFIED_REINHARD:
-          tonemapper = PostProcessStageLibrary.createModifiedReinhardTonemappingStage(
+          tonemapping = PostProcessStageLibrary.createModifiedReinhardTonemappingStage(
             useAutoExposure
           );
           break;
         case Tonemapper.FILMIC:
-          tonemapper = PostProcessStageLibrary.createFilmicTonemappingStage(
+          tonemapping = PostProcessStageLibrary.createFilmicTonemappingStage(
+            useAutoExposure
+          );
+          break;
+        case Tonemapper.PBR_NEUTRAL:
+          tonemapping = PostProcessStageLibrary.createPbrNeutralTonemappingStage(
             useAutoExposure
           );
           break;
         default:
-          tonemapper = PostProcessStageLibrary.createAcesTonemappingStage(
+          tonemapping = PostProcessStageLibrary.createAcesTonemappingStage(
             useAutoExposure
           );
           break;
@@ -366,20 +375,41 @@ Object.defineProperties(PostProcessStageCollection.prototype, {
 
       if (useAutoExposure) {
         const autoexposure = this._autoExposure;
-        tonemapper.uniforms.autoExposure = function () {
+        tonemapping.uniforms.autoExposure = function () {
           return autoexposure.outputTexture;
         };
+      } else {
+        tonemapping.uniforms.exposure = this._exposure;
       }
 
       this._tonemapper = value;
-      this._tonemapping = tonemapper;
+      this._tonemapping = tonemapping;
 
       if (defined(this._stageNames)) {
-        this._stageNames[tonemapper.name] = tonemapper;
-        tonemapper._textureCache = this._textureCache;
+        this._stageNames[tonemapping.name] = tonemapping;
+        tonemapping._textureCache = this._textureCache;
       }
 
       this._textureCacheDirty = true;
+    },
+  },
+
+  /**
+   * Control the exposure when HDR is on. Less than 1.0 makes the tonemapping darker while greater than 1.0 makes it brighter.
+   *
+   * @example viewer.scene.postProcessStages.exposure = 1.0;
+   *
+   * @default 1.0
+   * @memberof PostProcessStageCollection.prototype
+   * @type {number}
+   */
+  exposure: {
+    get: function () {
+      return this._exposure;
+    },
+    set: function (value) {
+      this._tonemapping.uniforms.exposure = value;
+      this._exposure = value;
     },
   },
 });
