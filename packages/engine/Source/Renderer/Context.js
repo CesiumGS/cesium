@@ -1409,7 +1409,7 @@ Context.prototype.draw = function (
   //>>includeEnd('debug');
 
   passState = defaultValue(passState, this._defaultPassState);
-  // The command's framebuffer takes presidence over the pass' framebuffer, e.g., for off-screen rendering.
+  // The command's framebuffer takes precedence over the pass' framebuffer, e.g., for off-screen rendering.
   const framebuffer = defaultValue(
     drawCommand._framebuffer,
     passState.framebuffer
