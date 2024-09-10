@@ -8,6 +8,10 @@
 
 - Added `enableVerticalExaggeration` option to models. Set this value to `false` to prevent model exaggeration when `Scene.verticalExaggeration` is set to a value other than `1.0`. [#12141](https://github.com/CesiumGS/cesium/pull/12141)
 
+##### Fixes :wrench:
+
+- Use first geometryBuffer if no best match found in I3SNode [#12132](https://github.com/CesiumGS/cesium/pull/12132)
+
 ### 1.121.1 - 2024-09-04
 
 This is an npm-only release to extra source maps included in 1.121
