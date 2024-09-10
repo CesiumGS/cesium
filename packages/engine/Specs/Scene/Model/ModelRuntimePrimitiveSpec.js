@@ -1039,6 +1039,7 @@ describe("Scene/Model/ModelRuntimePrimitive", function () {
       MaterialPipelineStage,
       FeatureIdPipelineStage,
       MetadataPipelineStage,
+      MetadataPickingPipelineStage,
       LightingPipelineStage,
       PickingPipelineStage,
       AlphaPipelineStage,
