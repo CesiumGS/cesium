@@ -1,5 +1,13 @@
 # Change Log
 
+### 1.122 - 2024-10-01
+
+#### @cesium/engine
+
+##### Additions :tada:
+
+- Added `enableVerticalExaggeration` option to models. Set this value to `false` to prevent model exaggeration when `Scene.verticalExaggeration` is set to a value other than `1.0`. [#12141](https://github.com/CesiumGS/cesium/pull/12141)
+
 ### 1.121.1 - 2024-09-04
 
 This is an npm-only release to extra source maps included in 1.121
