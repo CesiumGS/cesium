@@ -232,6 +232,18 @@ function updateCopyCommands(globeDepth, context, width, height, passState) {
   globeDepth._clearGlobeColorCommand.framebuffer = globeDepth.framebuffer;
 }
 
+/**
+ * Update framebuffers and render state.
+ *
+ * @param {Context} context The context used for rendering.
+ * @param {PassState} passState Rendering state for subsequent render passes.
+ * @param {BoundingRectangle} viewport The viewport for the rendering.
+ * @param {number} numSamples The number of samples for multi-sample anti-aliasing (MSAA).
+ * @param {boolean} hdr <code>true</code> if the color output needs to be floating point for HDR rendering.
+ * @param {boolean} clearGlobeDepth <code>true</code> if the depth buffer should be cleared before rendering 3D Tiles and opaque entities.
+ *
+ * @private
+ */
 GlobeDepth.prototype.update = function (
   context,
   passState,
@@ -263,10 +275,17 @@ GlobeDepth.prototype.update = function (
   updateCopyCommands(this, context, width, height, passState);
   context.uniformState.globeDepthTexture = undefined;
 
-  this._useHdr = hdr;
   this._clearGlobeDepth = clearGlobeDepth;
 };
 
+/**
+ * If using MSAA, resolve the stencil.
+ *
+ * @param {Context} context
+ * @param {boolean} blitStencil <code>true</code> if the stencil has been set.
+ *
+ * @private
+ */
 GlobeDepth.prototype.prepareColorTextures = function (context, blitStencil) {
   if (!this.picking && this._numSamples > 1) {
     this._outputFramebuffer.prepareTextures(context, blitStencil);
@@ -281,17 +300,23 @@ GlobeDepth.prototype.executeCopyDepth = function (context, passState) {
   }
 };
 
+/**
+ * Update the existing depth texture using a stencil.
+ *
+ * @param {Context} context The context used for rendering.
+ * @param {PassState} passState Render state for subsequent rendering passes.
+ * @param {Texture} [depthTexture] The depth texture to copy.
+ */
 GlobeDepth.prototype.executeUpdateDepth = function (
   context,
   passState,
-  clearGlobeDepth,
   depthTexture
 ) {
   const depthTextureToCopy = defined(depthTexture)
     ? depthTexture
     : passState.framebuffer.depthStencilTexture;
   if (
-    !clearGlobeDepth &&
+    !this._clearGlobeDepth &&
     depthTextureToCopy === this.colorFramebufferManager.getDepthStencilTexture()
   ) {
     // Fast path - the depth texture can be copied normally.
@@ -308,11 +333,11 @@ GlobeDepth.prototype.executeUpdateDepth = function (
   // main globe depth texture where the stencil bit for 3D Tiles is set.
   // This preserves the original globe depth except where 3D Tiles is rendered.
   // The additional texture and framebuffer resources are created on demand.
+  const updateDepthFramebuffer = this._updateDepthFramebuffer;
   if (
-    !defined(this._updateDepthFramebuffer.framebuffer) ||
-    this._updateDepthFramebuffer.getDepthStencilTexture() !==
-      depthTextureToCopy ||
-    this._updateDepthFramebuffer.getColorTexture() !==
+    !defined(updateDepthFramebuffer.framebuffer) ||
+    updateDepthFramebuffer.getDepthStencilTexture() !== depthTextureToCopy ||
+    updateDepthFramebuffer.getColorTexture() !==
       this._copyDepthFramebuffer.getColorTexture()
   ) {
     const colorTexture = this._copyDepthFramebuffer.getColorTexture();
@@ -320,9 +345,9 @@ GlobeDepth.prototype.executeUpdateDepth = function (
     this._tempCopyDepthFramebuffer.destroy();
     this._tempCopyDepthFramebuffer.update(context, width, height);
 
-    this._updateDepthFramebuffer.setColorTexture(colorTexture, 0);
-    this._updateDepthFramebuffer.setDepthStencilTexture(depthTextureToCopy);
-    this._updateDepthFramebuffer.update(context, width, height);
+    updateDepthFramebuffer.setColorTexture(colorTexture, 0);
+    updateDepthFramebuffer.setDepthStencilTexture(depthTextureToCopy);
+    updateDepthFramebuffer.update(context, width, height);
 
     updateCopyCommands(this, context, width, height, passState);
   }

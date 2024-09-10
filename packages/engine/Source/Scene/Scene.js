@@ -2478,7 +2478,7 @@ function executeCommands(scene, passState) {
       length = executePass(frustumCommands, Pass.GLOBE);
     }
 
-    if (defined(globeDepth) && useGlobeDepthFramebuffer) {
+    if (useGlobeDepthFramebuffer) {
       globeDepth.executeCopyDepth(context, passState);
     }
 
@@ -2512,14 +2512,11 @@ function executeCommands(scene, passState) {
       length = executePass(frustumCommands, Pass.CESIUM_3D_TILE);
 
       if (length > 0) {
-        if (defined(globeDepth) && useGlobeDepthFramebuffer) {
-          // When clearGlobeDepth is true, executeUpdateDepth needs
-          // a globe depth texture with resolved stencil bits.
+        if (useGlobeDepthFramebuffer) {
           globeDepth.prepareColorTextures(context, clearGlobeDepth);
           globeDepth.executeUpdateDepth(
             context,
             passState,
-            clearGlobeDepth,
             globeDepth.depthStencilTexture
           );
         }
@@ -2573,12 +2570,11 @@ function executeCommands(scene, passState) {
       // Draw normally
       length = executePass(frustumCommands, Pass.CESIUM_3D_TILE);
 
-      if (defined(globeDepth) && useGlobeDepthFramebuffer) {
+      if (useGlobeDepthFramebuffer) {
         scene._invertClassification.prepareTextures(context);
         globeDepth.executeUpdateDepth(
           context,
           passState,
-          clearGlobeDepth,
           scene._invertClassification._fbo.getDepthStencilTexture()
         );
       }
@@ -2783,6 +2779,14 @@ function executeComputeCommands(scene) {
   }
 }
 
+/**
+ * Execute the draw commands for overlays
+ *
+ * @param {Scene} scene
+ * @param {PassState} passState
+ *
+ * @private
+ */
 function executeOverlayCommands(scene, passState) {
   scene.context.uniformState.updatePass(Pass.OVERLAY);
 
@@ -2902,7 +2906,7 @@ function executeShadowMapCastCommands(scene) {
 const scratchEyeTranslation = new Cartesian3();
 
 /**
- * Update framebuffers as needed, and execute draw commands.
+ * Update and clear framebuffers, and execute draw commands.
  *
  * @param {PassState} passState State specific to each render pass.
  * @param {Color} backgroundColor
@@ -2913,19 +2917,16 @@ Scene.prototype.updateAndExecuteCommands = function (
   passState,
   backgroundColor
 ) {
-  const frameState = this._frameState;
-  const mode = frameState.mode;
-  const useWebVR = this._environmentState.useWebVR;
+  updateAndClearFramebuffers(this, passState, backgroundColor);
 
-  if (useWebVR) {
+  if (this._environmentState.useWebVR) {
     executeWebVRCommands(this, passState, backgroundColor);
   } else if (
-    mode !== SceneMode.SCENE2D ||
+    this._frameState.mode !== SceneMode.SCENE2D ||
     this._mapMode2D === MapMode2D.ROTATE
   ) {
-    executeCommandsInViewport(true, this, passState, backgroundColor);
+    executeCommandsInViewport(true, this, passState);
   } else {
-    updateAndClearFramebuffers(this, passState, backgroundColor);
     execute2DViewportCommands(this, passState);
   }
 };
@@ -2935,18 +2936,15 @@ Scene.prototype.updateAndExecuteCommands = function (
  *
  * @param {Scene} scene
  * @param {PassState} passState
- * @param {Color} backgroundColor
  *
  * @private
  */
-function executeWebVRCommands(scene, passState, backgroundColor) {
+function executeWebVRCommands(scene, passState) {
   const view = scene._view;
   const camera = view.camera;
   const environmentState = scene._environmentState;
   const renderTranslucentDepthForPick =
     environmentState.renderTranslucentDepthForPick;
-
-  updateAndClearFramebuffers(scene, passState, backgroundColor);
 
   updateAndRenderPrimitives(scene);
 
@@ -3186,16 +3184,10 @@ function execute2DViewportCommands(scene, passState) {
  * @param {boolean} firstViewport <code>true</code> if this is the first viewport rendered.
  * @param {Scene} scene
  * @param {PassState} passState
- * @param {Color} backgroundColor
  *
  * @private
  */
-function executeCommandsInViewport(
-  firstViewport,
-  scene,
-  passState,
-  backgroundColor
-) {
+function executeCommandsInViewport(firstViewport, scene, passState) {
   const view = scene._view;
   const { renderTranslucentDepthForPick } = scene._environmentState;
 
@@ -3208,9 +3200,6 @@ function executeCommandsInViewport(
   view.createPotentiallyVisibleSet(scene);
 
   if (firstViewport) {
-    if (defined(backgroundColor)) {
-      updateAndClearFramebuffers(scene, passState, backgroundColor);
-    }
     executeComputeCommands(scene);
     if (!renderTranslucentDepthForPick) {
       executeShadowMapCastCommands(scene);
