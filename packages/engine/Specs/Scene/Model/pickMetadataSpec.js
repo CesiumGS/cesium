@@ -5,7 +5,6 @@ import {
   Math as CesiumMath,
   Model,
   ResourceCache,
-  Cartesian4,
 } from "../../../index.js";
 import createScene from "../../../../../Specs/createScene.js";
 import createCanvas from "../../../../../Specs/createCanvas.js";
@@ -128,21 +127,11 @@ function createEmbeddedGltfWithPropertyTexture(
           "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAi0lEQVR42u2RUQ6AMAhDd3OO/qQt8VP8NRHjNpf0leI5ruqXbNVL4c9Dn+E8ljV+iLaXaoAY1YDaADaynBg2gFZLR1+wAdJEWZpW1AIVqmjCruqybw4qnEJbbQBHdWoS2XIUXdp+F8DNUOpM0tIZCusQJrzHNTnsOy2pFTZ7xpKhYFUu4M1v+OvrdQGABqEpS2kSLgAAAABJRU5ErkJggg==",
         mimeType: "image/png",
       },
-      {
-        // A 1x1 image of a white pixel
-        uri:
-          "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVR42mP4DwQACfsD/Wj6HMwAAAAASUVORK5CYII=",
-        mimeType: "image/png",
-      },
     ],
     materials: [
       {
         pbrMetallicRoughness: {
           baseColorFactor: [1.0, 1.0, 1.0, 1.0],
-          baseColorTexture: {
-            index: 1,
-            texCoord: 0,
-          },
           metallicFactor: 0.0,
           roughnessFactor: 1.0,
         },
@@ -212,7 +201,7 @@ function createEmbeddedGltfWithPropertyTexture(
  */
 function createPropertyTextureGltf(schema, properties) {
   const gltf = createEmbeddedGltfWithPropertyTexture(schema, properties);
-  //*/
+  /*/
   // Copy-and-paste this into a file to have the actual glTF:
   console.log("SPEC GLTF:");
   console.log("-".repeat(80));
@@ -223,13 +212,11 @@ function createPropertyTextureGltf(schema, properties) {
 }
 
 /**
- * Creates a metadata schema for the metadata property texture picking specs.
+ * Creates the glTF for the 'scalar' test case
  *
- * This is for the 'scalar' test case
- *
- * @returns The schema
+ * @returns The glTF
  */
-function createSpecSchemaScalar() {
+function createPropertyTextureGltfScalar() {
   const schema = {
     id: "ExampleSchema",
     classes: {
@@ -251,18 +238,6 @@ function createSpecSchemaScalar() {
       },
     },
   };
-  return schema;
-}
-
-/**
- * Creates the property texture properties definition for the
- * metadata property texture picking specs.
- *
- * This is for the 'scalar' test case
- *
- * @returns The properties
- */
-function createPropertyTexturePropertiesScalar() {
   const properties = {
     example_UINT8_SCALAR: {
       index: 0,
@@ -275,28 +250,15 @@ function createPropertyTexturePropertiesScalar() {
       channels: [1],
     },
   };
-  return properties;
-}
-
-/**
- * Creates the glTF for the 'scalar' test case
- *
- * @returns The glTF
- */
-function createPropertyTextureGltfScalar() {
-  const schema = createSpecSchemaScalar();
-  const properties = createPropertyTexturePropertiesScalar();
   return createPropertyTextureGltf(schema, properties);
 }
 
 /**
- * Creates a metadata schema for the metadata property texture picking specs.
+ * Creates the glTF for the 'scalar array' test case
  *
- * This is for the 'scalar array' test case
- *
- * @returns The schema
+ * @returns The glTF
  */
-function createSpecSchemaScalarArray() {
+function createPropertyTextureGltfScalarArray() {
   const schema = {
     id: "ExampleSchema",
     classes: {
@@ -315,18 +277,6 @@ function createSpecSchemaScalarArray() {
       },
     },
   };
-  return schema;
-}
-
-/**
- * Creates the property texture properties definition for the
- * metadata property texture picking specs.
- *
- * This is for the 'scalar array' test case
- *
- * @returns The properties
- */
-function createPropertyTexturePropertiesScalarArray() {
   const properties = {
     example_fixed_length_UINT8_SCALAR_array: {
       index: 0,
@@ -334,28 +284,15 @@ function createPropertyTexturePropertiesScalarArray() {
       channels: [0, 1, 2],
     },
   };
-  return properties;
-}
-
-/**
- * Creates the glTF for the 'scalar array' test case
- *
- * @returns The glTF
- */
-function createPropertyTextureGltfScalarArray() {
-  const schema = createSpecSchemaScalarArray();
-  const properties = createPropertyTexturePropertiesScalarArray();
   return createPropertyTextureGltf(schema, properties);
 }
 
 /**
- * Creates a metadata schema for the metadata property texture picking specs.
+ * Creates the glTF for the 'vec2' test case
  *
- * This is for the 'vec2' test case
- *
- * @returns The schema
+ * @returns The glTF
  */
-function createSpecSchemaVec2() {
+function createPropertyTextureGltfVec2() {
   const schema = {
     id: "ExampleSchema",
     classes: {
@@ -367,6 +304,32 @@ function createSpecSchemaVec2() {
             type: "VEC2",
             componentType: "UINT8",
           },
+        },
+      },
+    },
+  };
+  const properties = {
+    example_UINT8_VEC2: {
+      index: 0,
+      texCoord: 0,
+      channels: [0, 1],
+    },
+  };
+  return createPropertyTextureGltf(schema, properties);
+}
+
+/**
+ * Creates the glTF for the normalized 'vec2' test case
+ *
+ * @returns The glTF
+ */
+function createPropertyTextureGltfNormalizedVec2() {
+  const schema = {
+    id: "ExampleSchema",
+    classes: {
+      exampleClass: {
+        name: "Example class",
+        properties: {
           example_normalized_UINT8_VEC2: {
             name: "Example VEC2 property with normalized UINT8 components",
             type: "VEC2",
@@ -377,52 +340,22 @@ function createSpecSchemaVec2() {
       },
     },
   };
-  return schema;
-}
-
-/**
- * Creates the property texture properties definition for the
- * metadata property texture picking specs.
- *
- * This is for the 'vec2' test case
- *
- * @returns The properties
- */
-function createPropertyTexturePropertiesVec2() {
   const properties = {
-    example_UINT8_VEC2: {
+    example_normalized_UINT8_VEC2: {
       index: 0,
       texCoord: 0,
       channels: [0, 1],
     },
-    example_normalized_UINT8_VEC2: {
-      index: 0,
-      texCoord: 0,
-      channels: [2, 3],
-    },
   };
-  return properties;
-}
-
-/**
- * Creates the glTF for the 'vec2' test case
- *
- * @returns The glTF
- */
-function createPropertyTextureGltfVec2() {
-  const schema = createSpecSchemaVec2();
-  const properties = createPropertyTexturePropertiesVec2();
   return createPropertyTextureGltf(schema, properties);
 }
 
 /**
- * Creates a metadata schema for the metadata property texture picking specs.
+ * Creates the glTF for the 'vec3' test case
  *
- * This is for the 'vec3' test case
- *
- * @returns The schema
+ * @returns The glTF
  */
-function createSpecSchemaVec3() {
+function createPropertyTextureGltfVec3() {
   const schema = {
     id: "ExampleSchema",
     classes: {
@@ -438,18 +371,6 @@ function createSpecSchemaVec3() {
       },
     },
   };
-  return schema;
-}
-
-/**
- * Creates the property texture properties definition for the
- * metadata property texture picking specs.
- *
- * This is for the 'vec3' test case
- *
- * @returns The properties
- */
-function createPropertyTexturePropertiesVec3() {
   const properties = {
     example_UINT8_VEC3: {
       index: 0,
@@ -457,73 +378,6 @@ function createPropertyTexturePropertiesVec3() {
       channels: [0, 1, 2],
     },
   };
-  return properties;
-}
-
-/**
- * Creates the glTF for the 'vec3' test case
- *
- * @returns The glTF
- */
-function createPropertyTextureGltfVec3() {
-  const schema = createSpecSchemaVec3();
-  const properties = createPropertyTexturePropertiesVec3();
-  return createPropertyTextureGltf(schema, properties);
-}
-
-/**
- * Creates a metadata schema for the metadata property texture picking specs.
- *
- * This is for the 'vec4' test case
- *
- * @returns The schema
- */
-function createSpecSchemaVec4() {
-  const schema = {
-    id: "ExampleSchema",
-    classes: {
-      exampleClass: {
-        name: "Example class",
-        properties: {
-          example_UINT8_VEC4: {
-            name: "Example VEC4 property with UINT8 components",
-            type: "VEC4",
-            componentType: "UINT8",
-          },
-        },
-      },
-    },
-  };
-  return schema;
-}
-
-/**
- * Creates the property texture properties definition for the
- * metadata property texture picking specs.
- *
- * This is for the 'vec4' test case
- *
- * @returns The properties
- */
-function createPropertyTexturePropertiesVec4() {
-  const properties = {
-    example_UINT8_VEC4: {
-      index: 0,
-      texCoord: 0,
-      channels: [0, 1, 2, 3],
-    },
-  };
-  return properties;
-}
-
-/**
- * Creates the glTF for the 'vec4' test case
- *
- * @returns The glTF
- */
-function createPropertyTextureGltfVec4() {
-  const schema = createSpecSchemaVec4();
-  const properties = createPropertyTexturePropertiesVec4();
   return createPropertyTextureGltf(schema, properties);
 }
 
@@ -724,6 +578,53 @@ describe(
       expect(actualMetadataValue).toBeUndefined();
     });
 
+    it("pickMetadataSchema returns undefined when there is no object with metadata", async function () {
+      const canvasSizeX = textureSizeX * canvasScaling;
+      const canvasSizeY = textureSizeY * canvasScaling;
+      scene = createScene({
+        canvas: createCanvas(canvasSizeX, canvasSizeY),
+      });
+
+      fitCameraToUnitSquare(scene.camera);
+
+      const windowPosition = new Cartesian2(
+        Math.floor(canvasSizeX / 2),
+        Math.floor(canvasSizeY / 2)
+      );
+      const metadataSchema = scene.pickMetadataSchema(windowPosition);
+
+      expect(metadataSchema).toBeUndefined();
+    });
+
+    it("pickMetadataSchema picks the metadata schema object", async function () {
+      const gltf = createPropertyTextureGltfScalar();
+
+      const canvasSizeX = textureSizeX * canvasScaling;
+      const canvasSizeY = textureSizeY * canvasScaling;
+      scene = createScene({
+        canvas: createCanvas(canvasSizeX, canvasSizeY),
+      });
+
+      await loadAsModel(scene, gltf);
+      fitCameraToUnitSquare(scene.camera);
+
+      scene.initializeFrame();
+      scene.render(defaultDate);
+
+      const windowPosition = new Cartesian2(
+        Math.floor(canvasSizeX / 2),
+        Math.floor(canvasSizeY / 2)
+      );
+
+      // The pickMetadataSchema call should return the schema that
+      // was defined in createPropertyTextureGltfScalar
+      const metadataSchema = scene.pickMetadataSchema(windowPosition);
+
+      expect(metadataSchema).toBeDefined();
+      expect(metadataSchema.id).toEqual("ExampleSchema");
+      expect(metadataSchema.classes).toBeDefined();
+    });
+
     it("picks UINT8 SCALAR from a property texture", async function () {
       const schemaId = undefined;
       const className = "exampleClass";
@@ -748,7 +649,7 @@ describe(
         className,
         propertyName,
         0,
-        0
+        3
       );
       const actualMetadataValue1 = pickMetadataAt(
         scene,
@@ -756,7 +657,7 @@ describe(
         className,
         propertyName,
         1,
-        0
+        3
       );
       const actualMetadataValue2 = pickMetadataAt(
         scene,
@@ -764,7 +665,7 @@ describe(
         className,
         propertyName,
         2,
-        0
+        3
       );
       const expectedMetadataValue0 = 0;
       const expectedMetadataValue1 = 127;
@@ -808,7 +709,7 @@ describe(
         className,
         propertyName,
         0,
-        0
+        3
       );
       const actualMetadataValue1 = pickMetadataAt(
         scene,
@@ -816,7 +717,7 @@ describe(
         className,
         propertyName,
         3,
-        0
+        3
       );
       const actualMetadataValue2 = pickMetadataAt(
         scene,
@@ -824,7 +725,7 @@ describe(
         className,
         propertyName,
         6,
-        0
+        3
       );
       const expectedMetadataValue0 = 0.0;
       const expectedMetadataValue1 = 0.5;
@@ -868,7 +769,7 @@ describe(
         className,
         propertyName,
         0,
-        0
+        3
       );
       const actualMetadataValue1 = pickMetadataAt(
         scene,
@@ -876,7 +777,7 @@ describe(
         className,
         propertyName,
         1,
-        1
+        4
       );
       const actualMetadataValue2 = pickMetadataAt(
         scene,
@@ -884,7 +785,7 @@ describe(
         className,
         propertyName,
         2,
-        2
+        5
       );
       const expectedMetadataValue0 = [0, 0, 0];
       const expectedMetadataValue1 = [127, 0, 127];
@@ -928,7 +829,7 @@ describe(
         className,
         propertyName,
         0,
-        0
+        3
       );
       const actualMetadataValue1 = pickMetadataAt(
         scene,
@@ -936,7 +837,7 @@ describe(
         className,
         propertyName,
         1,
-        1
+        4
       );
       const actualMetadataValue2 = pickMetadataAt(
         scene,
@@ -944,7 +845,7 @@ describe(
         className,
         propertyName,
         2,
-        2
+        5
       );
       const expectedMetadataValue0 = new Cartesian2(0, 0);
       const expectedMetadataValue1 = new Cartesian2(127, 0);
@@ -968,7 +869,7 @@ describe(
       const schemaId = undefined;
       const className = "exampleClass";
       const propertyName = "example_normalized_UINT8_VEC2";
-      const gltf = createPropertyTextureGltfVec2();
+      const gltf = createPropertyTextureGltfNormalizedVec2();
 
       const canvasSizeX = textureSizeX * canvasScaling;
       const canvasSizeY = textureSizeY * canvasScaling;
@@ -988,7 +889,7 @@ describe(
         className,
         propertyName,
         0,
-        0
+        3
       );
       const actualMetadataValue1 = pickMetadataAt(
         scene,
@@ -996,7 +897,7 @@ describe(
         className,
         propertyName,
         1,
-        1
+        4
       );
       const actualMetadataValue2 = pickMetadataAt(
         scene,
@@ -1004,13 +905,12 @@ describe(
         className,
         propertyName,
         2,
-        2
+        5
       );
 
-      // XXX_ALPHA The second component should be 0.0!!!
-      const expectedMetadataValue0 = new Cartesian2(0.0, 1.0);
-      const expectedMetadataValue1 = new Cartesian2(0.5, 1.0);
-      const expectedMetadataValue2 = new Cartesian2(1.0, 1.0);
+      const expectedMetadataValue0 = new Cartesian2(0.0, 0.0);
+      const expectedMetadataValue1 = new Cartesian2(0.5, 0.0);
+      const expectedMetadataValue2 = new Cartesian2(1.0, 0.0);
 
       expect(actualMetadataValue0).toEqualEpsilon(
         expectedMetadataValue0,
@@ -1050,7 +950,7 @@ describe(
         className,
         propertyName,
         0,
-        0
+        3
       );
       const actualMetadataValue1 = pickMetadataAt(
         scene,
@@ -1058,7 +958,7 @@ describe(
         className,
         propertyName,
         1,
-        1
+        4
       );
       const actualMetadataValue2 = pickMetadataAt(
         scene,
@@ -1066,7 +966,7 @@ describe(
         className,
         propertyName,
         2,
-        2
+        5
       );
       const expectedMetadataValue0 = new Cartesian3(0, 0, 0);
       const expectedMetadataValue1 = new Cartesian3(127, 0, 127);
@@ -1084,107 +984,6 @@ describe(
         expectedMetadataValue2,
         propertyValueEpsilon
       );
-    });
-
-    it("picks UINT8 VEC4 from a property texture", async function () {
-      const schemaId = undefined;
-      const className = "exampleClass";
-      const propertyName = "example_UINT8_VEC4";
-      const gltf = createPropertyTextureGltfVec4();
-
-      const canvasSizeX = textureSizeX * canvasScaling;
-      const canvasSizeY = textureSizeY * canvasScaling;
-      scene = createScene({
-        canvas: createCanvas(canvasSizeX, canvasSizeY),
-      });
-
-      await loadAsModel(scene, gltf);
-      fitCameraToUnitSquare(scene.camera);
-
-      scene.initializeFrame();
-      scene.render(defaultDate);
-
-      const actualMetadataValue0 = pickMetadataAt(
-        scene,
-        schemaId,
-        className,
-        propertyName,
-        0,
-        0
-      );
-      const actualMetadataValue1 = pickMetadataAt(
-        scene,
-        schemaId,
-        className,
-        propertyName,
-        1,
-        1
-      );
-      const actualMetadataValue2 = pickMetadataAt(
-        scene,
-        schemaId,
-        className,
-        propertyName,
-        2,
-        2
-      );
-
-      // XXX_ALPHA: The last component should be 0!
-      const expectedMetadataValue0 = new Cartesian4(0, 0, 0, 255);
-      const expectedMetadataValue1 = new Cartesian4(127, 0, 127, 255);
-      const expectedMetadataValue2 = new Cartesian4(255, 0, 255, 255);
-
-      expect(actualMetadataValue0).toEqualEpsilon(
-        expectedMetadataValue0,
-        propertyValueEpsilon
-      );
-      expect(actualMetadataValue1).toEqualEpsilon(
-        expectedMetadataValue1,
-        propertyValueEpsilon
-      );
-      expect(actualMetadataValue2).toEqualEpsilon(
-        expectedMetadataValue2,
-        propertyValueEpsilon
-      );
-    });
-
-    // XXX For debugging:
-    it("picks metadata from a property texture quarry - TO BE REMOVED", async function () {
-      const schemaId = undefined;
-      const className = "exampleClass";
-      const propertyName = "example_UINT8_SCALAR";
-      const gltf = createPropertyTextureGltfScalar();
-
-      const canvasSizeX = textureSizeX * canvasScaling;
-      const canvasSizeY = textureSizeY * canvasScaling;
-      scene = createScene({
-        canvas: createCanvas(canvasSizeX, canvasSizeY),
-      });
-
-      await loadAsModel(scene, gltf);
-      fitCameraToUnitSquare(scene.camera);
-
-      scene.initializeFrame();
-      scene.render(defaultDate);
-
-      for (let x = 0; x < 16; x++) {
-        for (let y = 0; y < 16; y++) {
-          const actualMetadataValue = pickMetadataAt(
-            scene,
-            schemaId,
-            className,
-            propertyName,
-            x,
-            y
-          );
-
-          console.log(
-            `actualMetadataValue at ${x} ${y}  is `,
-            actualMetadataValue
-          );
-        }
-      }
-      console.log("done");
     });
   },
   "WebGL"
