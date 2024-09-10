@@ -73,16 +73,26 @@ function View(scene, camera, viewport) {
 
 const scratchPosition0 = new Cartesian3();
 const scratchPosition1 = new Cartesian3();
-function maxComponent(a, b) {
-  const x = Math.max(Math.abs(a.x), Math.abs(b.x));
-  const y = Math.max(Math.abs(a.y), Math.abs(b.y));
-  const z = Math.max(Math.abs(a.z), Math.abs(b.z));
-  return Math.max(Math.max(x, y), z);
-}
-
+/**
+ * Check if two cameras have the same view.
+ *
+ * @param {Camera} camera0 The first camera for comparison.
+ * @param {Camera} camera1 The second camera for comparison.
+ * @param {number} epsilon The epsilon tolerance to use for equality testing.
+ * @returns {boolean} <code>true</code> if the cameras are equal.
+ *
+ * @private
+ */
 function cameraEqual(camera0, camera1, epsilon) {
-  const scalar =
-    1 / Math.max(1, maxComponent(camera0.position, camera1.position));
+  const maximumPositionComponent = Math.max(
+    Cartesian3.maximumComponent(
+      Cartesian3.abs(camera0.position, scratchPosition0)
+    ),
+    Cartesian3.maximumComponent(
+      Cartesian3.abs(camera1.position, scratchPosition1)
+    )
+  );
+  const scalar = 1 / Math.max(1, maximumPositionComponent);
   Cartesian3.multiplyByScalar(camera0.position, scalar, scratchPosition0);
   Cartesian3.multiplyByScalar(camera1.position, scalar, scratchPosition1);
   return (
@@ -95,6 +105,14 @@ function cameraEqual(camera0, camera1, epsilon) {
   );
 }
 
+/**
+ * Check if the camera position or direction has changed.
+ *
+ * @param {Scene} scene
+ * @returns {boolean} <code>true</code> if the camera has been updated
+ *
+ * @private
+ */
 View.prototype.checkForCameraUpdates = function (scene) {
   const camera = this.camera;
   const cameraClone = this._cameraClone;
@@ -120,8 +138,20 @@ View.prototype.checkForCameraUpdates = function (scene) {
   return false;
 };
 
+/**
+ * Split the depth range of the scene into multiple frustums, and initialize
+ * a list of {@link FrustumCommands} with the distances to the near and far
+ * planes for each frustum.
+ *
+ * @param {View} view The view to which the frustum commands list is attached.
+ * @param {Scene} scene The scene to be rendered.
+ * @param {number} near The distance to the nearest object in the scene.
+ * @param {number} far The distance to the farthest object in the scene.
+ *
+ * @private
+ */
 function updateFrustums(view, scene, near, far) {
-  const frameState = scene.frameState;
+  const { frameState } = scene;
   const { camera, useLogDepth } = frameState;
   const farToNearRatio = useLogDepth
     ? scene.logarithmicDepthFarToNearRatio
@@ -182,7 +212,19 @@ function updateFrustums(view, scene, near, far) {
   }
 }
 
-function insertIntoBin(view, scene, command, commandNear, commandFar) {
+/**
+ * Insert a command into the appropriate {@link FrustumCommands} based on the
+ * range of depths covered by its bounding volume.
+ *
+ * @param {View} view
+ * @param {Scene} scene
+ * @param {CommandExtent} commandExtent
+ *
+ * @private
+ */
+function insertIntoBin(view, scene, commandExtent) {
+  const { command, near, far } = commandExtent;
+
   if (scene.debugShowFrustums) {
     command.debugOverlappingFrustums = 0;
   }
@@ -191,14 +233,12 @@ function insertIntoBin(view, scene, command, commandNear, commandFar) {
 
   for (let i = 0; i < frustumCommandsList.length; ++i) {
     const frustumCommands = frustumCommandsList[i];
-    const curNear = frustumCommands.near;
-    const curFar = frustumCommands.far;
 
-    if (commandNear > curFar) {
+    if (near > frustumCommands.far) {
       continue;
     }
 
-    if (commandFar < curNear) {
+    if (far < frustumCommands.near) {
       break;
     }
 
@@ -216,13 +256,13 @@ function insertIntoBin(view, scene, command, commandNear, commandFar) {
   }
 
   if (scene.debugShowFrustums) {
-    const cf = view.debugFrustumStatistics.commandsInFrustums;
-    cf[command.debugOverlappingFrustums] = defined(
-      cf[command.debugOverlappingFrustums]
-    )
-      ? cf[command.debugOverlappingFrustums] + 1
+    const { debugFrustumStatistics } = view;
+    const { debugOverlappingFrustums } = command;
+    const cf = debugFrustumStatistics.commandsInFrustums;
+    cf[debugOverlappingFrustums] = defined(cf[debugOverlappingFrustums])
+      ? cf[debugOverlappingFrustums] + 1
       : 1;
-    ++view.debugFrustumStatistics.totalCommands;
+    ++debugFrustumStatistics.totalCommands;
   }
 
   scene.updateDerivedCommands(command);
@@ -232,8 +272,8 @@ const scratchCullingVolume = new CullingVolume();
 const scratchNearFarInterval = new Interval();
 
 View.prototype.createPotentiallyVisibleSet = function (scene) {
-  const frameState = scene.frameState;
-  const { camera, commandList } = frameState;
+  const { frameState } = scene;
+  const { camera, commandList, shadowState } = frameState;
   const { positionWC, directionWC, frustum } = camera;
 
   const computeList = scene._computeCommandList;
@@ -263,16 +303,16 @@ View.prototype.createPotentiallyVisibleSet = function (scene) {
   let near = +Number.MAX_VALUE;
   let far = -Number.MAX_VALUE;
 
-  const shadowsEnabled = frameState.shadowState.shadowsEnabled;
+  const { shadowsEnabled } = shadowState;
   let shadowNear = +Number.MAX_VALUE;
   let shadowFar = -Number.MAX_VALUE;
   let shadowClosestObjectSize = Number.MAX_VALUE;
 
   const occluder =
     frameState.mode === SceneMode.SCENE3D ? frameState.occluder : undefined;
-  let cullingVolume = frameState.cullingVolume;
 
   // get user culling volume minus the far plane.
+  let { cullingVolume } = frameState;
   const planes = scratchCullingVolume.planes;
   for (let k = 0; k < 5; ++k) {
     planes[k] = cullingVolume.planes[k];
@@ -352,45 +392,39 @@ View.prototype.createPotentiallyVisibleSet = function (scene) {
   if (shadowsEnabled) {
     shadowNear = Math.min(Math.max(shadowNear, frustum.near), frustum.far);
     shadowFar = Math.max(Math.min(shadowFar, frustum.far), shadowNear);
-  }
-
-  // Use the computed near and far for shadows
-  if (shadowsEnabled) {
-    frameState.shadowState.nearPlane = shadowNear;
-    frameState.shadowState.farPlane = shadowFar;
-    frameState.shadowState.closestObjectSize = shadowClosestObjectSize;
+    // Use the computed near and far for shadows
+    shadowState.nearPlane = shadowNear;
+    shadowState.farPlane = shadowFar;
+    shadowState.closestObjectSize = shadowClosestObjectSize;
   }
 
   updateFrustums(this, scene, near, far);
 
   for (let c = 0; c < commandExtentCount; c++) {
-    const ce = commandExtents[c];
-    insertIntoBin(this, scene, ce.command, ce.near, ce.far);
+    insertIntoBin(this, scene, commandExtents[c]);
   }
 
   // Dereference old commands
   if (commandExtentCount < commandExtentCapacity) {
     for (let c = commandExtentCount; c < commandExtentCapacity; c++) {
-      const ce = commandExtents[c];
-      if (!defined(ce.command)) {
+      const commandExtent = commandExtents[c];
+      if (!defined(commandExtent.command)) {
         // If the command is undefined, it's assumed that all
         // subsequent commmands were set to undefined as well,
         // so no need to loop over them all
         break;
       }
-      ce.command = undefined;
+      commandExtent.command = undefined;
     }
   }
 
   const numFrustums = frustumCommandsList.length;
-  const frustumSplits = frameState.frustumSplits;
+  const { frustumSplits } = frameState;
   frustumSplits.length = numFrustums + 1;
   for (let j = 0; j < numFrustums; ++j) {
     frustumSplits[j] = frustumCommandsList[j].near;
-    if (j === numFrustums - 1) {
-      frustumSplits[j + 1] = frustumCommandsList[j].far;
-    }
   }
+  frustumSplits[numFrustums] = frustumCommandsList[numFrustums - 1].far;
 };
 
 View.prototype.destroy = function () {

@@ -486,34 +486,31 @@ function createUniformMap(stage) {
   const uniforms = stage._uniforms;
   const actualUniforms = stage._actualUniforms;
   for (const name in uniforms) {
-    if (uniforms.hasOwnProperty(name)) {
-      if (typeof uniforms[name] !== "function") {
-        uniformMap[name] = getUniformMapFunction(stage, name);
-        newUniforms[name] = getUniformValueGetterAndSetter(
-          stage,
-          uniforms,
-          name
-        );
-      } else {
-        uniformMap[name] = uniforms[name];
-        newUniforms[name] = uniforms[name];
-      }
+    if (!uniforms.hasOwnProperty(name)) {
+      continue;
+    }
+    if (typeof uniforms[name] !== "function") {
+      uniformMap[name] = getUniformMapFunction(stage, name);
+      newUniforms[name] = getUniformValueGetterAndSetter(stage, uniforms, name);
+    } else {
+      uniformMap[name] = uniforms[name];
+      newUniforms[name] = uniforms[name];
+    }
 
-      actualUniforms[name] = uniforms[name];
+    actualUniforms[name] = uniforms[name];
 
-      const value = uniformMap[name]();
-      if (
-        typeof value === "string" ||
-        value instanceof Texture ||
-        value instanceof HTMLImageElement ||
-        value instanceof HTMLCanvasElement ||
-        value instanceof HTMLVideoElement
-      ) {
-        uniformMap[`${name}Dimensions`] = getUniformMapDimensionsFunction(
-          uniformMap,
-          name
-        );
-      }
+    const value = uniformMap[name]();
+    if (
+      typeof value === "string" ||
+      value instanceof Texture ||
+      value instanceof HTMLImageElement ||
+      value instanceof HTMLCanvasElement ||
+      value instanceof HTMLVideoElement
+    ) {
+      uniformMap[`${name}Dimensions`] = getUniformMapDimensionsFunction(
+        uniformMap,
+        name
+      );
     }
   }
 
@@ -545,6 +542,35 @@ function createUniformMap(stage) {
   });
 }
 
+function addSelectedIdToShader(shaderSource, idTextureWidth) {
+  shaderSource = shaderSource.replace(/in\s+vec2\s+v_textureCoordinates;/g, "");
+  return `#define CZM_SELECTED_FEATURE
+uniform sampler2D czm_idTexture;
+uniform sampler2D czm_selectedIdTexture;
+uniform float czm_selectedIdTextureStep;
+in vec2 v_textureCoordinates;
+bool czm_selected(vec2 offset)
+{
+    bool selected = false;
+    vec4 id = texture(czm_idTexture, v_textureCoordinates + offset);
+    for (int i = 0; i < ${idTextureWidth}; ++i)
+    {
+        vec4 selectedId = texture(czm_selectedIdTexture, vec2((float(i) + 0.5) * czm_selectedIdTextureStep, 0.5));
+        if (all(equal(id, selectedId)))
+        {
+            return true;
+        }
+    }
+    return false;
+}
+bool czm_selected()
+{
+    return czm_selected(vec2(0.0));
+}
+
+${shaderSource}`;
+}
+
 function createDrawCommand(stage, context) {
   if (
     defined(stage._command) &&
@@ -554,42 +580,15 @@ function createDrawCommand(stage, context) {
     return;
   }
 
-  let fs = stage._fragmentShader;
+  let fragmentShaderSource = stage._fragmentShader;
   if (defined(stage._selectedIdTexture)) {
     const width = stage._selectedIdTexture.width;
-
-    fs = fs.replace(/in\s+vec2\s+v_textureCoordinates;/g, "");
-    fs =
-      `${
-        "#define CZM_SELECTED_FEATURE \n" +
-        "uniform sampler2D czm_idTexture; \n" +
-        "uniform sampler2D czm_selectedIdTexture; \n" +
-        "uniform float czm_selectedIdTextureStep; \n" +
-        "in vec2 v_textureCoordinates; \n" +
-        "bool czm_selected(vec2 offset) \n" +
-        "{ \n" +
-        "    bool selected = false;\n" +
-        "    vec4 id = texture(czm_idTexture, v_textureCoordinates + offset); \n" +
-        "    for (int i = 0; i < "
-      }${width}; ++i) \n` +
-      `    { \n` +
-      `        vec4 selectedId = texture(czm_selectedIdTexture, vec2((float(i) + 0.5) * czm_selectedIdTextureStep, 0.5)); \n` +
-      `        if (all(equal(id, selectedId))) \n` +
-      `        { \n` +
-      `            return true; \n` +
-      `        } \n` +
-      `    } \n` +
-      `    return false; \n` +
-      `} \n\n` +
-      `bool czm_selected() \n` +
-      `{ \n` +
-      `    return czm_selected(vec2(0.0)); \n` +
-      `} \n\n${fs}`;
+    fragmentShaderSource = addSelectedIdToShader(fragmentShaderSource, width);
   }
 
   const fragmentShader = new ShaderSource({
     defines: [stage._useLogDepth ? "LOG_DEPTH" : ""],
-    sources: [fs],
+    sources: [fragmentShaderSource],
   });
   stage._command = context.createViewportQuadCommand(fragmentShader, {
     uniformMap: stage._uniformMap,
@@ -801,12 +800,7 @@ function createSelectedTexture(stage, context) {
 
   if (features.length === 0 || textureLength === 0) {
     // max pick id is reserved
-    const empty = new Uint8Array(4);
-    empty[0] = 255;
-    empty[1] = 255;
-    empty[2] = 255;
-    empty[3] = 255;
-
+    const empty = new Uint8Array([255, 255, 255, 255]);
     stage._selectedIdTexture = new Texture({
       context: context,
       pixelFormat: PixelFormat.RGBA,
