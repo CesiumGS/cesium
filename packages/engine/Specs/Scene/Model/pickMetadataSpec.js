@@ -5,6 +5,7 @@ import {
   Math as CesiumMath,
   Model,
   ResourceCache,
+  Cartesian4,
 } from "../../../index.js";
 import createScene from "../../../../../Specs/createScene.js";
 import createCanvas from "../../../../../Specs/createCanvas.js";
@@ -382,6 +383,37 @@ function createPropertyTextureGltfVec3() {
 }
 
 /**
+ * Creates the glTF for the 'vec4' test case
+ *
+ * @returns The glTF
+ */
+function createPropertyTextureGltfVec4() {
+  const schema = {
+    id: "ExampleSchema",
+    classes: {
+      exampleClass: {
+        name: "Example class",
+        properties: {
+          example_UINT8_VEC4: {
+            name: "Example VEC4 property with UINT8 components",
+            type: "VEC4",
+            componentType: "UINT8",
+          },
+        },
+      },
+    },
+  };
+  const properties = {
+    example_UINT8_VEC4: {
+      index: 0,
+      texCoord: 0,
+      channels: [0, 1, 2, 3],
+    },
+  };
+  return createPropertyTextureGltf(schema, properties);
+}
+
+/**
  * Create a model from the given glTF, add it as a primitive
  * to the given scene, and wait until it is fully loaded.
  *
@@ -649,23 +681,23 @@ describe(
         className,
         propertyName,
         0,
-        3
+        0
       );
       const actualMetadataValue1 = pickMetadataAt(
         scene,
         schemaId,
         className,
         propertyName,
-        1,
-        3
+        0,
+        1
       );
       const actualMetadataValue2 = pickMetadataAt(
         scene,
         schemaId,
         className,
         propertyName,
-        2,
-        3
+        0,
+        2
       );
       const expectedMetadataValue0 = 0;
       const expectedMetadataValue1 = 127;
@@ -709,7 +741,7 @@ describe(
         className,
         propertyName,
         0,
-        3
+        0
       );
       const actualMetadataValue1 = pickMetadataAt(
         scene,
@@ -717,7 +749,7 @@ describe(
         className,
         propertyName,
         3,
-        3
+        0
       );
       const actualMetadataValue2 = pickMetadataAt(
         scene,
@@ -725,7 +757,7 @@ describe(
         className,
         propertyName,
         6,
-        3
+        0
       );
       const expectedMetadataValue0 = 0.0;
       const expectedMetadataValue1 = 0.5;
@@ -769,7 +801,7 @@ describe(
         className,
         propertyName,
         0,
-        3
+        0
       );
       const actualMetadataValue1 = pickMetadataAt(
         scene,
@@ -777,7 +809,7 @@ describe(
         className,
         propertyName,
         1,
-        4
+        1
       );
       const actualMetadataValue2 = pickMetadataAt(
         scene,
@@ -785,7 +817,7 @@ describe(
         className,
         propertyName,
         2,
-        5
+        2
       );
       const expectedMetadataValue0 = [0, 0, 0];
       const expectedMetadataValue1 = [127, 0, 127];
@@ -829,7 +861,7 @@ describe(
         className,
         propertyName,
         0,
-        3
+        0
       );
       const actualMetadataValue1 = pickMetadataAt(
         scene,
@@ -837,7 +869,7 @@ describe(
         className,
         propertyName,
         1,
-        4
+        1
       );
       const actualMetadataValue2 = pickMetadataAt(
         scene,
@@ -845,7 +877,7 @@ describe(
         className,
         propertyName,
         2,
-        5
+        2
       );
       const expectedMetadataValue0 = new Cartesian2(0, 0);
       const expectedMetadataValue1 = new Cartesian2(127, 0);
@@ -889,7 +921,7 @@ describe(
         className,
         propertyName,
         0,
-        3
+        0
       );
       const actualMetadataValue1 = pickMetadataAt(
         scene,
@@ -897,7 +929,7 @@ describe(
         className,
         propertyName,
         1,
-        4
+        1
       );
       const actualMetadataValue2 = pickMetadataAt(
         scene,
@@ -905,7 +937,7 @@ describe(
         className,
         propertyName,
         2,
-        5
+        2
       );
 
       const expectedMetadataValue0 = new Cartesian2(0.0, 0.0);
@@ -950,7 +982,7 @@ describe(
         className,
         propertyName,
         0,
-        3
+        0
       );
       const actualMetadataValue1 = pickMetadataAt(
         scene,
@@ -958,7 +990,7 @@ describe(
         className,
         propertyName,
         1,
-        4
+        1
       );
       const actualMetadataValue2 = pickMetadataAt(
         scene,
@@ -966,7 +998,7 @@ describe(
         className,
         propertyName,
         2,
-        5
+        2
       );
       const expectedMetadataValue0 = new Cartesian3(0, 0, 0);
       const expectedMetadataValue1 = new Cartesian3(127, 0, 127);
@@ -984,6 +1016,106 @@ describe(
         expectedMetadataValue2,
         propertyValueEpsilon
       );
+    });
+
+    it("picks UINT8 VEC4 from a property texture", async function () {
+      const schemaId = undefined;
+      const className = "exampleClass";
+      const propertyName = "example_UINT8_VEC4";
+      const gltf = createPropertyTextureGltfVec4();
+
+      const canvasSizeX = textureSizeX * canvasScaling;
+      const canvasSizeY = textureSizeY * canvasScaling;
+      scene = createScene({
+        canvas: createCanvas(canvasSizeX, canvasSizeY),
+      });
+
+      await loadAsModel(scene, gltf);
+      fitCameraToUnitSquare(scene.camera);
+
+      scene.initializeFrame();
+      scene.render(defaultDate);
+
+      const actualMetadataValue0 = pickMetadataAt(
+        scene,
+        schemaId,
+        className,
+        propertyName,
+        0,
+        0
+      );
+      const actualMetadataValue1 = pickMetadataAt(
+        scene,
+        schemaId,
+        className,
+        propertyName,
+        1,
+        1
+      );
+      const actualMetadataValue2 = pickMetadataAt(
+        scene,
+        schemaId,
+        className,
+        propertyName,
+        2,
+        2
+      );
+
+      const expectedMetadataValue0 = new Cartesian4(0, 0, 0, 0);
+      const expectedMetadataValue1 = new Cartesian4(127, 0, 127, 0);
+      const expectedMetadataValue2 = new Cartesian4(255, 0, 255, 0);
+
+      expect(actualMetadataValue0).toEqualEpsilon(
+        expectedMetadataValue0,
+        propertyValueEpsilon
+      );
+      expect(actualMetadataValue1).toEqualEpsilon(
+        expectedMetadataValue1,
+        propertyValueEpsilon
+      );
+      expect(actualMetadataValue2).toEqualEpsilon(
+        expectedMetadataValue2,
+        propertyValueEpsilon
+      );
+    });
+
+    // XXX For debugging:
+    it("picks metadata from a property texture quarry - TO BE REMOVED", async function () {
+      const schemaId = undefined;
+      const className = "exampleClass";
+      const propertyName = "example_UINT8_SCALAR";
+      const gltf = createPropertyTextureGltfScalar();
+
+      const canvasSizeX = textureSizeX * canvasScaling;
+      const canvasSizeY = textureSizeY * canvasScaling;
+      scene = createScene({
+        canvas: createCanvas(canvasSizeX, canvasSizeY),
+      });
+
+      await loadAsModel(scene, gltf);
+      fitCameraToUnitSquare(scene.camera);
+
+      scene.initializeFrame();
+      scene.render(defaultDate);
+
+      for (let x = 0; x < 16; x++) {
+        for (let y = 0; y < 16; y++) {
+          const actualMetadataValue = pickMetadataAt(
+            scene,
+            schemaId,
+            className,
+            propertyName,
+            x,
+            y
+          );
+
+          console.log(
+            `actualMetadataValue at ${x} ${y}  is `,
+            actualMetadataValue
+          );
+        }
+      }
+      console.log("done");
     });
   },
   "WebGL"
