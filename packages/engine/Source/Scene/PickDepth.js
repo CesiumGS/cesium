@@ -23,8 +23,7 @@ Object.defineProperties(PickDepth.prototype, {
 });
 
 function updateFramebuffers(pickDepth, context, depthTexture) {
-  const width = depthTexture.width;
-  const height = depthTexture.height;
+  const { width, height } = depthTexture;
   pickDepth._framebuffer.update(context, width, height);
 }
 
