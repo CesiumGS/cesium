@@ -1036,7 +1036,9 @@ GlobeTranslucencyState.prototype.executeGlobeClassificationCommands = function (
   scene,
   passState
 ) {
-  const context = scene.context;
+  const { context } = scene;
+  const { uniformState } = context;
+
   const globeCommands = frustumCommands.commands[Pass.GLOBE];
   const globeCommandsLength = frustumCommands.indices[Pass.GLOBE];
   const classificationCommands =
@@ -1069,7 +1071,7 @@ GlobeTranslucencyState.prototype.executeGlobeClassificationCommands = function (
 
   this._globeTranslucencyFramebuffer = globeTranslucencyFramebuffer;
 
-  const originalGlobeDepthTexture = context.uniformState.globeDepthTexture;
+  const originalGlobeDepthTexture = uniformState.globeDepthTexture;
   const originalFramebuffer = passState.framebuffer;
 
   // Render to internal framebuffer and get the first depth peel
@@ -1091,7 +1093,7 @@ GlobeTranslucencyState.prototype.executeGlobeClassificationCommands = function (
       context,
       passState
     );
-    context.uniformState.globeDepthTexture = packedDepthTexture;
+    uniformState.globeDepthTexture = packedDepthTexture;
   }
 
   // Render classification on translucent faces
@@ -1104,7 +1106,7 @@ GlobeTranslucencyState.prototype.executeGlobeClassificationCommands = function (
   );
 
   // Unset temporary state
-  context.uniformState.globeDepthTexture = originalGlobeDepthTexture;
+  uniformState.globeDepthTexture = originalGlobeDepthTexture;
   passState.framebuffer = originalFramebuffer;
 };
 

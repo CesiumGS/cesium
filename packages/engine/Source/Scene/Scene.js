@@ -191,6 +191,12 @@ function Scene(options) {
   this._overlayCommandList = [];
 
   this._useOIT = defaultValue(options.orderIndependentTranslucency, true);
+  /**
+   * The function that will be used for executing translucent commands when
+   * useOIT is true. This is created once in
+   * obtainTranslucentCommandExecutionFunction, then cached here.
+   * @private
+   */
   this._executeOITFunction = undefined;
 
   this._depthPlane = new DepthPlane(options.depthPlaneEllipsoidOffset);
@@ -2309,11 +2315,25 @@ function executeTranslucentCommandsFrontToBack(
   }
 }
 
-function executeVoxelCommands(scene, executeFunction, passState, commands) {
+/**
+ * Execute commands to render voxels in the scene.
+ *
+ * @param {Scene} scene The scene.
+ * @param {PassState} passState The state for the current render pass.
+ * @param {FrustumCommands} frustumCommands The draw commands for the current frustum.
+ *
+ * @private
+ */
+function performVoxelsPass(scene, passState, frustumCommands) {
+  scene.context.uniformState.updatePass(Pass.VOXELS);
+
+  const commands = frustumCommands.commands[Pass.VOXELS];
+  commands.length = frustumCommands.indices[Pass.VOXELS];
+
   mergeSort(commands, backToFront, scene.camera.positionWC);
 
   for (let i = 0; i < commands.length; ++i) {
-    executeFunction(commands[i], scene, passState);
+    executeCommand(commands[i], scene, passState);
   }
 }
 
@@ -2321,61 +2341,43 @@ const scratchPerspectiveFrustum = new PerspectiveFrustum();
 const scratchPerspectiveOffCenterFrustum = new PerspectiveOffCenterFrustum();
 const scratchOrthographicFrustum = new OrthographicFrustum();
 const scratchOrthographicOffCenterFrustum = new OrthographicOffCenterFrustum();
-
 /**
- * Execute the draw commands for all the render passes.
+ * Create a working frustum from the original camera frustum.
  *
- * @param {Scene} scene
- * @param {PassState} passState
+ * @param {Camera} camera The camera
+ * @returns {PerspectiveFrustum|PerspectiveOffCenterFrustum|OrthographicFrustum|OrthographicOffCenterFrustum} The working frustum
  *
  * @private
  */
-function executeCommands(scene, passState) {
-  const { camera, context, frameState } = scene;
-  const { uniformState } = context;
-
-  uniformState.updateCamera(camera);
-
-  // Create a working frustum from the original camera frustum.
-  let frustum;
-  if (defined(camera.frustum.fov)) {
-    frustum = camera.frustum.clone(scratchPerspectiveFrustum);
-  } else if (defined(camera.frustum.infiniteProjectionMatrix)) {
-    frustum = camera.frustum.clone(scratchPerspectiveOffCenterFrustum);
-  } else if (defined(camera.frustum.width)) {
-    frustum = camera.frustum.clone(scratchOrthographicFrustum);
-  } else {
-    frustum = camera.frustum.clone(scratchOrthographicOffCenterFrustum);
+function createWorkingFrustum(camera) {
+  const { frustum } = camera;
+  if (defined(frustum.fov)) {
+    return frustum.clone(scratchPerspectiveFrustum);
   }
-
-  frustum.near = camera.frustum.near;
-  frustum.far = camera.frustum.far;
-
-  const passes = frameState.passes;
-  const picking = passes.pick || passes.pickVoxel;
-
-  // Ideally, we would render the sky box and atmosphere last for
-  // early-z, but we would have to draw it in each frustum.
-  // Do not render environment primitives during a pick pass since they do not generate picking commands.
-  if (!picking) {
-    executeEnvironmentCommands(scene, passState);
+  if (defined(frustum.infiniteProjectionMatrix)) {
+    return frustum.clone(scratchPerspectiveOffCenterFrustum);
   }
+  if (defined(frustum.width)) {
+    return frustum.clone(scratchOrthographicFrustum);
+  }
+  return frustum.clone(scratchOrthographicOffCenterFrustum);
+}
 
-  const view = scene._view;
-  const {
-    clearGlobeDepth,
-    renderTranslucentDepthForPick,
-    useDepthPlane,
-    useGlobeDepthFramebuffer,
-    useInvertClassification,
-    useOIT,
-    usePostProcessSelected,
-  } = scene._environmentState;
-
-  // Determine how translucent surfaces will be handled.
-  let executeTranslucentCommands;
-  if (useOIT) {
+/**
+ * Determine how translucent surfaces will be handled.
+ *
+ * When OIT is enabled, then this will delegate to OIT.executeCommands.
+ * Otherwise, it will just be executeTranslucentCommandsBackToFront
+ * for render passes, or executeTranslucentCommandsFrontToBack for
+ * other passes.
+ *
+ * @param {Scene} scene The scene.
+ * @returns {Function} A function to execute translucent commands.
+ */
+function obtainTranslucentCommandExecutionFunction(scene) {
+  if (scene._environmentState.useOIT) {
     if (!defined(scene._executeOITFunction)) {
+      const { view, context } = scene;
       scene._executeOITFunction = function (
         scene,
         executeFunction,
@@ -2393,18 +2395,138 @@ function executeCommands(scene, passState) {
         );
       };
     }
-    executeTranslucentCommands = scene._executeOITFunction;
-  } else if (passes.render) {
-    executeTranslucentCommands = executeTranslucentCommandsBackToFront;
-  } else {
-    executeTranslucentCommands = executeTranslucentCommandsFrontToBack;
+    return scene._executeOITFunction;
   }
+  if (scene.frameState.passes.render) {
+    return executeTranslucentCommandsBackToFront;
+  }
+  return executeTranslucentCommandsFrontToBack;
+}
+
+/**
+ * Execute draw commands to render translucent objects in the scene.
+ *
+ * @param {Scene} scene The scene.
+ * @param {PassState} passState The state for the current render pass.
+ * @param {FrustumCommands} frustumCommands The draw commands for the current frustum.
+ *
+ * @private
+ */
+function performTranslucentPass(scene, passState, frustumCommands) {
+  const { frameState, context } = scene;
+  const { pick, pickVoxel } = frameState.passes;
+  const picking = pick || pickVoxel;
+
+  let invertClassification;
+  if (
+    !picking &&
+    scene._environmentState.useInvertClassification &&
+    frameState.invertClassificationColor.alpha < 1.0
+  ) {
+    // Fullscreen pass to copy unclassified fragments when alpha < 1.0.
+    // Not executed when undefined.
+    invertClassification = scene._invertClassification;
+  }
+
+  const executeTranslucentCommands = obtainTranslucentCommandExecutionFunction(
+    scene
+  );
+
+  context.uniformState.updatePass(Pass.TRANSLUCENT);
+  const commands = frustumCommands.commands[Pass.TRANSLUCENT];
+  commands.length = frustumCommands.indices[Pass.TRANSLUCENT];
+  executeTranslucentCommands(
+    scene,
+    executeCommand,
+    passState,
+    commands,
+    invertClassification
+  );
+}
+
+/**
+ * Execute commands for classification of translucent 3D Tiles.
+ *
+ * @param {Scene} scene The scene.
+ * @param {PassState} passState The state for the current render pass.
+ * @param {FrustumCommands} frustumCommands The draw commands for the current frustum.
+ *
+ * @private
+ */
+function performTranslucent3DTilesClassification(
+  scene,
+  passState,
+  frustumCommands
+) {
+  const { translucentTileClassification, globeDepth } = scene._view;
+  const has3DTilesClassificationCommands =
+    frustumCommands.indices[Pass.CESIUM_3D_TILE_CLASSIFICATION] > 0;
+  if (
+    !has3DTilesClassificationCommands ||
+    !translucentTileClassification.isSupported()
+  ) {
+    return;
+  }
+
+  const commands = frustumCommands.commands[Pass.TRANSLUCENT];
+  translucentTileClassification.executeTranslucentCommands(
+    scene,
+    executeCommand,
+    passState,
+    commands,
+    globeDepth.depthStencilTexture
+  );
+  translucentTileClassification.executeClassificationCommands(
+    scene,
+    executeCommand,
+    passState,
+    frustumCommands
+  );
+}
+
+/**
+ * Execute the draw commands for all the render passes.
+ *
+ * @param {Scene} scene
+ * @param {PassState} passState
+ *
+ * @private
+ */
+function executeCommands(scene, passState) {
+  const { camera, context, frameState } = scene;
+  const { uniformState } = context;
+
+  uniformState.updateCamera(camera);
+
+  const frustum = createWorkingFrustum(camera);
+  frustum.near = camera.frustum.near;
+  frustum.far = camera.frustum.far;
+
+  const passes = frameState.passes;
+  const picking = passes.pick || passes.pickVoxel;
+
+  // Ideally, we would render the sky box and atmosphere last for
+  // early-z, but we would have to draw it in each frustum.
+  // Do not render environment primitives during a pick pass since they do not generate picking commands.
+  if (!picking) {
+    renderEnvironment(scene, passState);
+  }
+
+  const {
+    clearGlobeDepth,
+    renderTranslucentDepthForPick,
+    useDepthPlane,
+    useGlobeDepthFramebuffer,
+    useInvertClassification,
+    usePostProcessSelected,
+  } = scene._environmentState;
 
   const {
     globeDepth,
     globeTranslucencyFramebuffer,
+    sceneFramebuffer,
     frustumCommandsList,
-  } = view;
+  } = scene._view;
   const numFrustums = frustumCommandsList.length;
 
   const globeTranslucencyState = scene._globeTranslucencyState;
@@ -2415,21 +2537,21 @@ function executeCommands(scene, passState) {
 
   const height2D = camera.position.z;
 
-  function executePass(frustumCommands, passId) {
+  function performPass(frustumCommands, passId) {
     uniformState.updatePass(passId);
     const commands = frustumCommands.commands[passId];
-    const length = frustumCommands.indices[passId];
-    for (let j = 0; j < length; ++j) {
+    const commandCount = frustumCommands.indices[passId];
+    for (let j = 0; j < commandCount; ++j) {
       executeCommand(commands[j], scene, passState);
     }
-    return length;
+    return commandCount;
   }
 
-  function executeIdPass(frustumCommands, passId) {
+  function performIdPass(frustumCommands, passId) {
     uniformState.updatePass(passId);
     const commands = frustumCommands.commands[passId];
-    const length = frustumCommands.indices[passId];
-    for (let j = 0; j < length; ++j) {
+    const commandCount = frustumCommands.indices[passId];
+    for (let j = 0; j < commandCount; ++j) {
       executeIdCommand(commands[j], scene, passState);
     }
   }
@@ -2463,8 +2585,6 @@ function executeCommands(scene, passState) {
       clearStencil.execute(context, passState);
     }
 
-    let length;
-
     if (globeTranslucencyState.translucent) {
       uniformState.updatePass(Pass.GLOBE);
       globeTranslucencyState.executeGlobeCommands(
@@ -2475,7 +2595,7 @@ function executeCommands(scene, passState) {
         passState
       );
     } else {
-      length = executePass(frustumCommands, Pass.GLOBE);
+      performPass(frustumCommands, Pass.GLOBE);
     }
 
     if (useGlobeDepthFramebuffer) {
@@ -2494,7 +2614,7 @@ function executeCommands(scene, passState) {
           passState
         );
       } else {
-        length = executePass(frustumCommands, Pass.TERRAIN_CLASSIFICATION);
+        performPass(frustumCommands, Pass.TERRAIN_CLASSIFICATION);
       }
     }
 
@@ -2505,13 +2625,14 @@ function executeCommands(scene, passState) {
       }
     }
 
+    let commandCount;
     if (!useInvertClassification || picking || renderTranslucentDepthForPick) {
       // Common/fastest path. Draw 3D Tiles and classification normally.
 
       // Draw 3D Tiles
-      length = executePass(frustumCommands, Pass.CESIUM_3D_TILE);
+      commandCount = performPass(frustumCommands, Pass.CESIUM_3D_TILE);
 
-      if (length > 0) {
+      if (commandCount > 0) {
         if (useGlobeDepthFramebuffer) {
           globeDepth.prepareColorTextures(context, clearGlobeDepth);
           globeDepth.executeUpdateDepth(
@@ -2523,7 +2644,7 @@ function executeCommands(scene, passState) {
 
         // Draw classifications. Modifies 3D Tiles color.
         if (!renderTranslucentDepthForPick) {
-          length = executePass(
+          commandCount = performPass(
             frustumCommands,
             Pass.CESIUM_3D_TILE_CLASSIFICATION
           );
@@ -2568,7 +2689,7 @@ function executeCommands(scene, passState) {
       passState.framebuffer = scene._invertClassification._fbo.framebuffer;
 
       // Draw normally
-      length = executePass(frustumCommands, Pass.CESIUM_3D_TILE);
+      commandCount = performPass(frustumCommands, Pass.CESIUM_3D_TILE);
 
       if (useGlobeDepthFramebuffer) {
         scene._invertClassification.prepareTextures(context);
@@ -2580,7 +2701,7 @@ function executeCommands(scene, passState) {
       }
 
       // Set stencil
-      length = executePass(
+      commandCount = performPass(
         frustumCommands,
         Pass.CESIUM_3D_TILE_CLASSIFICATION_IGNORE_SHOW
       );
@@ -2595,24 +2716,24 @@ function executeCommands(scene, passState) {
       }
 
       // Clear stencil set by the classification for the next classification pass
-      if (length > 0 && context.stencilBuffer) {
+      if (commandCount > 0 && context.stencilBuffer) {
         clearClassificationStencil.execute(context, passState);
       }
 
       // Draw style over classification.
-      length = executePass(frustumCommands, Pass.CESIUM_3D_TILE_CLASSIFICATION);
+      commandCount = performPass(
+        frustumCommands,
+        Pass.CESIUM_3D_TILE_CLASSIFICATION
+      );
     }
 
-    if (length > 0 && context.stencilBuffer) {
+    if (commandCount > 0 && context.stencilBuffer) {
       clearStencil.execute(context, passState);
     }
 
-    uniformState.updatePass(Pass.VOXELS);
-    let commands = frustumCommands.commands[Pass.VOXELS];
-    commands.length = frustumCommands.indices[Pass.VOXELS];
-    executeVoxelCommands(scene, executeCommand, passState, commands);
+    performVoxelsPass(scene, passState, frustumCommands);
 
-    length = executePass(frustumCommands, Pass.OPAQUE);
+    performPass(frustumCommands, Pass.OPAQUE);
 
     if (index !== 0 && scene.mode !== SceneMode.SCENE2D) {
       // Do not overlap frustums in the translucent pass to avoid blending artifacts
@@ -2620,49 +2741,9 @@ function executeCommands(scene, passState) {
       uniformState.updateFrustum(frustum);
     }
 
-    let invertClassification;
-    if (
-      !picking &&
-      useInvertClassification &&
-      frameState.invertClassificationColor.alpha < 1.0
-    ) {
-      // Fullscreen pass to copy unclassified fragments when alpha < 1.0.
-      // Not executed when undefined.
-      invertClassification = scene._invertClassification;
-    }
+    performTranslucentPass(scene, passState, frustumCommands);
 
-    uniformState.updatePass(Pass.TRANSLUCENT);
-    commands = frustumCommands.commands[Pass.TRANSLUCENT];
-    commands.length = frustumCommands.indices[Pass.TRANSLUCENT];
-    executeTranslucentCommands(
-      scene,
-      executeCommand,
-      passState,
-      commands,
-      invertClassification
-    );
-
-    // Classification for translucent 3D Tiles
-    const has3DTilesClassificationCommands =
-      frustumCommands.indices[Pass.CESIUM_3D_TILE_CLASSIFICATION] > 0;
-    if (
-      has3DTilesClassificationCommands &&
-      view.translucentTileClassification.isSupported()
-    ) {
-      view.translucentTileClassification.executeTranslucentCommands(
-        scene,
-        executeCommand,
-        passState,
-        commands,
-        globeDepth.depthStencilTexture
-      );
-      view.translucentTileClassification.executeClassificationCommands(
-        scene,
-        executeCommand,
-        passState,
-        frustumCommands
-      );
-    }
+    performTranslucent3DTilesClassification(scene, passState, frustumCommands);
 
     if (
       context.depthTexture &&
@@ -2680,7 +2761,7 @@ function executeCommands(scene, passState) {
     }
 
     const originalFramebuffer = passState.framebuffer;
-    passState.framebuffer = view.sceneFramebuffer.getIdFramebuffer();
+    passState.framebuffer = sceneFramebuffer.getIdFramebuffer();
 
     // reset frustum
     frustum.near =
@@ -2700,7 +2781,7 @@ function executeCommands(scene, passState) {
         passState
       );
     } else {
-      executeIdPass(frustumCommands, Pass.GLOBE);
+      performIdPass(frustumCommands, Pass.GLOBE);
     }
 
     if (clearGlobeDepth) {
@@ -2713,23 +2794,23 @@ function executeCommands(scene, passState) {
       depthPlane.execute(context, passState);
     }
 
-    executeIdPass(frustumCommands, Pass.CESIUM_3D_TILE);
-    executeIdPass(frustumCommands, Pass.OPAQUE);
-    executeIdPass(frustumCommands, Pass.TRANSLUCENT);
+    performIdPass(frustumCommands, Pass.CESIUM_3D_TILE);
+    performIdPass(frustumCommands, Pass.OPAQUE);
+    performIdPass(frustumCommands, Pass.TRANSLUCENT);
 
     passState.framebuffer = originalFramebuffer;
   }
 }
 
 /**
- * Execute draw commands for the environment primitives.
+ * Render the sky, atmosphere, sun, and moon
  *
  * @param {Scene} scene The scene.
  * @param {PassState} passState The render state for the pass.
  *
  * @private
  */
-function executeEnvironmentCommands(scene, passState) {
+function renderEnvironment(scene, passState) {
   const { context, environmentState, view } = scene;
 
   context.uniformState.updatePass(Pass.ENVIRONMENT);
@@ -2765,6 +2846,13 @@ function executeEnvironmentCommands(scene, passState) {
   }
 }
 
+/**
+ * Execute compute commands from the scene's environment state and computeCommandList
+ *
+ * @param {Scene} scene
+ *
+ * @private
+ */
 function executeComputeCommands(scene) {
   scene.context.uniformState.updatePass(Pass.COMPUTE);
 
@@ -3590,7 +3678,7 @@ Scene.prototype.resolveFramebuffers = function (passState) {
   const context = this._context;
   const environmentState = this._environmentState;
   const view = this._view;
-  const globeDepth = view.globeDepth;
+  const { globeDepth, translucentTileClassification } = view;
   if (defined(globeDepth)) {
     globeDepth.prepareColorTextures(context);
   }
@@ -3615,7 +3703,6 @@ Scene.prototype.resolveFramebuffers = function (passState) {
     view.oit.execute(context, passState);
   }
 
-  const translucentTileClassification = view.translucentTileClassification;
   if (
     translucentTileClassification.hasTranslucentDepth &&
     translucentTileClassification.isSupported()
