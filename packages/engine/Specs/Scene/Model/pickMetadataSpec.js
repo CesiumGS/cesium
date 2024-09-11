@@ -500,8 +500,10 @@ describe(
     let scene;
 
     afterEach(function () {
-      scene.primitives.removeAll();
-      scene.destroyForSpecs();
+      if (scene) {
+        scene.primitives.removeAll();
+        scene.destroyForSpecs();
+      }
       ResourceCache.clearForSpecs();
     });
 
