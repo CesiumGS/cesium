@@ -501,7 +501,6 @@ describe(
 
     afterEach(function () {
       if (scene) {
-        scene.primitives.removeAll();
         scene.destroyForSpecs();
       }
       ResourceCache.clearForSpecs();
