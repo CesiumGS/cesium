@@ -488,6 +488,11 @@ function pickMetadataAt(scene, schemaId, className, propertyName, x, y) {
 describe(
   "Scene/pickMetadata",
   function () {
+    // When using a WebGL stub, the functionality of reading metadata
+    // values back from the frame buffer is not supported. So nearly
+    // all the tests have to be skipped.
+    const webglStub = !!window.webglStub;
+
     const defaultDate = JulianDate.fromDate(
       new Date("January 1, 2014 12:00:00 UTC")
     );
@@ -648,6 +653,10 @@ describe(
     });
 
     it("pickMetadataSchema picks the metadata schema object", async function () {
+      if (webglStub) {
+        return;
+      }
+
       const gltf = createPropertyTextureGltfScalar();
 
       const canvasSizeX = textureSizeX * canvasScaling;
@@ -680,6 +689,10 @@ describe(
     });
 
     it("picks UINT8 SCALAR from a property texture", async function () {
+      if (webglStub) {
+        return;
+      }
+
       const schemaId = undefined;
       const className = "exampleClass";
       const propertyName = "example_UINT8_SCALAR";
@@ -743,6 +756,9 @@ describe(
     });
 
     it("picks normalized UINT8 SCALAR from a property texture", async function () {
+      if (webglStub) {
+        return;
+      }
       const schemaId = undefined;
       const className = "exampleClass";
       const propertyName = "example_normalized_UINT8_SCALAR";
@@ -806,6 +822,9 @@ describe(
     });
 
     it("picks fixed length UINT8 SCALAR array from a property texture", async function () {
+      if (webglStub) {
+        return;
+      }
       const schemaId = undefined;
       const className = "exampleClass";
       const propertyName = "example_fixed_length_UINT8_SCALAR_array";
@@ -869,6 +888,10 @@ describe(
     });
 
     it("picks UINT8 VEC2 from a property texture", async function () {
+      if (webglStub) {
+        return;
+      }
+
       const schemaId = undefined;
       const className = "exampleClass";
       const propertyName = "example_UINT8_VEC2";
@@ -932,6 +955,10 @@ describe(
     });
 
     it("picks normalized UINT8 VEC2 from a property texture", async function () {
+      if (webglStub) {
+        return;
+      }
+
       const schemaId = undefined;
       const className = "exampleClass";
       const propertyName = "example_normalized_UINT8_VEC2";
@@ -996,6 +1023,10 @@ describe(
     });
 
     it("picks UINT8 VEC3 from a property texture", async function () {
+      if (webglStub) {
+        return;
+      }
+
       const schemaId = undefined;
       const className = "exampleClass";
       const propertyName = "example_UINT8_VEC3";
@@ -1059,6 +1090,10 @@ describe(
     });
 
     it("picks UINT8 VEC4 from a property texture", async function () {
+      if (webglStub) {
+        return;
+      }
+
       const schemaId = undefined;
       const className = "exampleClass";
       const propertyName = "example_UINT8_VEC4";
