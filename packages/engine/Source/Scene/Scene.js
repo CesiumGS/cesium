@@ -1,3 +1,4 @@
+import ApproximateTerrainHeights from "../Core/ApproximateTerrainHeights.js";
 import BoundingRectangle from "../Core/BoundingRectangle.js";
 import BoundingSphere from "../Core/BoundingSphere.js";
 import BoxGeometry from "../Core/BoxGeometry.js";
@@ -1938,7 +1939,8 @@ Scene.prototype.updateFrameState = function () {
     camera.upWC
   );
   frameState.occluder = getOccluder(this);
-  frameState.minimumTerrainHeight = 0.0;
+  frameState.minimumTerrainHeight =
+    ApproximateTerrainHeights._defaultMinTerrainHeight;
   frameState.minimumDisableDepthTestDistance = this._minimumDisableDepthTestDistance;
   frameState.invertClassification = this.invertClassification;
   frameState.useLogDepth =

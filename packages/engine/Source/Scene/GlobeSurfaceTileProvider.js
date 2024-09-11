@@ -532,10 +532,13 @@ GlobeSurfaceTileProvider.prototype.endUpdate = function (frameState) {
       const tile = tilesToRender[tileIndex];
       const tileBoundingRegion = tile.data.tileBoundingRegion;
       addDrawCommandsForTile(this, tile, frameState);
-      frameState.minimumTerrainHeight = Math.min(
-        frameState.minimumTerrainHeight,
-        tileBoundingRegion.minimumHeight
-      );
+      frameState.minimumTerrainHeight =
+        tileIndex === 0
+          ? tileBoundingRegion.minimumHeight
+          : Math.min(
+              frameState.minimumTerrainHeight,
+              tileBoundingRegion.minimumHeight
+            );
     }
   }
 };
