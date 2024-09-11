@@ -4,7 +4,6 @@ import {
   JulianDate,
   Math as CesiumMath,
   Model,
-  ResourceCache,
   Cartesian4,
 } from "../../../index.js";
 import createScene from "../../../../../Specs/createScene.js";
@@ -497,15 +496,6 @@ describe(
       new Date("January 1, 2014 12:00:00 UTC")
     );
 
-    let scene;
-
-    afterEach(function () {
-      if (scene) {
-        scene.destroyForSpecs();
-      }
-      ResourceCache.clearForSpecs();
-    });
-
     it("throws without windowPosition", async function () {
       const windowPosition = undefined; // For spec
       const schemaId = undefined;
@@ -514,7 +504,7 @@ describe(
 
       const canvasSizeX = textureSizeX * canvasScaling;
       const canvasSizeY = textureSizeY * canvasScaling;
-      scene = createScene({
+      const scene = createScene({
         canvas: createCanvas(canvasSizeX, canvasSizeY),
         contextOptions: {
           requestWebgl1: true,
@@ -526,6 +516,7 @@ describe(
       expect(() => {
         scene.pickMetadata(windowPosition, schemaId, className, propertyName);
       }).toThrowDeveloperError();
+      scene.destroyForSpecs();
     });
 
     it("throws without className", async function () {
@@ -536,7 +527,7 @@ describe(
 
       const canvasSizeX = textureSizeX * canvasScaling;
       const canvasSizeY = textureSizeY * canvasScaling;
-      scene = createScene({
+      const scene = createScene({
         canvas: createCanvas(canvasSizeX, canvasSizeY),
         contextOptions: {
           requestWebgl1: true,
@@ -548,6 +539,7 @@ describe(
       expect(() => {
         scene.pickMetadata(windowPosition, schemaId, className, propertyName);
       }).toThrowDeveloperError();
+      scene.destroyForSpecs();
     });
 
     it("throws without propertyName", async function () {
@@ -558,7 +550,7 @@ describe(
 
       const canvasSizeX = textureSizeX * canvasScaling;
       const canvasSizeY = textureSizeY * canvasScaling;
-      scene = createScene({
+      const scene = createScene({
         canvas: createCanvas(canvasSizeX, canvasSizeY),
         contextOptions: {
           requestWebgl1: true,
@@ -570,6 +562,7 @@ describe(
       expect(() => {
         scene.pickMetadata(windowPosition, schemaId, className, propertyName);
       }).toThrowDeveloperError();
+      scene.destroyForSpecs();
     });
 
     it("returns undefined for class name that does not exist", async function () {
@@ -580,7 +573,7 @@ describe(
 
       const canvasSizeX = textureSizeX * canvasScaling;
       const canvasSizeY = textureSizeY * canvasScaling;
-      scene = createScene({
+      const scene = createScene({
         canvas: createCanvas(canvasSizeX, canvasSizeY),
         contextOptions: {
           requestWebgl1: true,
@@ -601,6 +594,7 @@ describe(
         propertyName
       );
       expect(actualMetadataValue).toBeUndefined();
+      scene.destroyForSpecs();
     });
 
     it("returns undefined when there is no object with metadata", async function () {
@@ -610,7 +604,7 @@ describe(
 
       const canvasSizeX = textureSizeX * canvasScaling;
       const canvasSizeY = textureSizeY * canvasScaling;
-      scene = createScene({
+      const scene = createScene({
         canvas: createCanvas(canvasSizeX, canvasSizeY),
         contextOptions: {
           requestWebgl1: true,
@@ -630,12 +624,13 @@ describe(
         propertyName
       );
       expect(actualMetadataValue).toBeUndefined();
+      scene.destroyForSpecs();
     });
 
     it("pickMetadataSchema returns undefined when there is no object with metadata", async function () {
       const canvasSizeX = textureSizeX * canvasScaling;
       const canvasSizeY = textureSizeY * canvasScaling;
-      scene = createScene({
+      const scene = createScene({
         canvas: createCanvas(canvasSizeX, canvasSizeY),
         contextOptions: {
           requestWebgl1: true,
@@ -651,6 +646,7 @@ describe(
       const metadataSchema = scene.pickMetadataSchema(windowPosition);
 
       expect(metadataSchema).toBeUndefined();
+      scene.destroyForSpecs();
     });
 
     it("pickMetadataSchema picks the metadata schema object", async function () {
@@ -662,7 +658,7 @@ describe(
 
       const canvasSizeX = textureSizeX * canvasScaling;
       const canvasSizeY = textureSizeY * canvasScaling;
-      scene = createScene({
+      const scene = createScene({
         canvas: createCanvas(canvasSizeX, canvasSizeY),
         contextOptions: {
           requestWebgl1: true,
@@ -687,6 +683,7 @@ describe(
       expect(metadataSchema).toBeDefined();
       expect(metadataSchema.id).toEqual("ExampleSchema");
       expect(metadataSchema.classes).toBeDefined();
+      scene.destroyForSpecs();
     });
 
     it("picks UINT8 SCALAR from a property texture", async function () {
@@ -701,7 +698,7 @@ describe(
 
       const canvasSizeX = textureSizeX * canvasScaling;
       const canvasSizeY = textureSizeY * canvasScaling;
-      scene = createScene({
+      const scene = createScene({
         canvas: createCanvas(canvasSizeX, canvasSizeY),
         contextOptions: {
           requestWebgl1: true,
@@ -754,6 +751,7 @@ describe(
         expectedMetadataValue2,
         propertyValueEpsilon
       );
+      scene.destroyForSpecs();
     });
 
     it("picks normalized UINT8 SCALAR from a property texture", async function () {
@@ -767,7 +765,7 @@ describe(
 
       const canvasSizeX = textureSizeX * canvasScaling;
       const canvasSizeY = textureSizeY * canvasScaling;
-      scene = createScene({
+      const scene = createScene({
         canvas: createCanvas(canvasSizeX, canvasSizeY),
         contextOptions: {
           requestWebgl1: true,
@@ -820,6 +818,7 @@ describe(
         expectedMetadataValue2,
         propertyValueEpsilon
       );
+      scene.destroyForSpecs();
     });
 
     it("picks fixed length UINT8 SCALAR array from a property texture", async function () {
@@ -833,7 +832,7 @@ describe(
 
       const canvasSizeX = textureSizeX * canvasScaling;
       const canvasSizeY = textureSizeY * canvasScaling;
-      scene = createScene({
+      const scene = createScene({
         canvas: createCanvas(canvasSizeX, canvasSizeY),
         contextOptions: {
           requestWebgl1: true,
@@ -886,6 +885,7 @@ describe(
         expectedMetadataValue2,
         propertyValueEpsilon
       );
+      scene.destroyForSpecs();
     });
 
     it("picks UINT8 VEC2 from a property texture", async function () {
@@ -900,7 +900,7 @@ describe(
 
       const canvasSizeX = textureSizeX * canvasScaling;
       const canvasSizeY = textureSizeY * canvasScaling;
-      scene = createScene({
+      const scene = createScene({
         canvas: createCanvas(canvasSizeX, canvasSizeY),
         contextOptions: {
           requestWebgl1: true,
@@ -953,6 +953,7 @@ describe(
         expectedMetadataValue2,
         propertyValueEpsilon
       );
+      scene.destroyForSpecs();
     });
 
     it("picks normalized UINT8 VEC2 from a property texture", async function () {
@@ -967,7 +968,7 @@ describe(
 
       const canvasSizeX = textureSizeX * canvasScaling;
       const canvasSizeY = textureSizeY * canvasScaling;
-      scene = createScene({
+      const scene = createScene({
         canvas: createCanvas(canvasSizeX, canvasSizeY),
         contextOptions: {
           requestWebgl1: true,
@@ -1021,6 +1022,7 @@ describe(
         expectedMetadataValue2,
         propertyValueEpsilon
       );
+      scene.destroyForSpecs();
     });
 
     it("picks UINT8 VEC3 from a property texture", async function () {
@@ -1035,7 +1037,7 @@ describe(
 
       const canvasSizeX = textureSizeX * canvasScaling;
       const canvasSizeY = textureSizeY * canvasScaling;
-      scene = createScene({
+      const scene = createScene({
         canvas: createCanvas(canvasSizeX, canvasSizeY),
         contextOptions: {
           requestWebgl1: true,
@@ -1088,6 +1090,7 @@ describe(
         expectedMetadataValue2,
         propertyValueEpsilon
       );
+      scene.destroyForSpecs();
     });
 
     it("picks UINT8 VEC4 from a property texture", async function () {
@@ -1102,7 +1105,7 @@ describe(
 
       const canvasSizeX = textureSizeX * canvasScaling;
       const canvasSizeY = textureSizeY * canvasScaling;
-      scene = createScene({
+      const scene = createScene({
         canvas: createCanvas(canvasSizeX, canvasSizeY),
         contextOptions: {
           requestWebgl1: true,
@@ -1156,6 +1159,7 @@ describe(
         expectedMetadataValue2,
         propertyValueEpsilon
       );
+      scene.destroyForSpecs();
     });
   },
   "WebGL"
