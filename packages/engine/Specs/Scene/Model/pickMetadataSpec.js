@@ -493,30 +493,10 @@ describe(
     );
 
     let scene;
-    let scene2D;
-    let sceneCV;
-
-    beforeAll(function () {
-      scene = createScene();
-
-      scene2D = createScene();
-      scene2D.morphTo2D(0.0);
-
-      sceneCV = createScene();
-      sceneCV.morphToColumbusView(0.0);
-    });
-
-    afterAll(function () {
-      scene.destroyForSpecs();
-      scene2D.destroyForSpecs();
-      sceneCV.destroyForSpecs();
-    });
 
     afterEach(function () {
       scene.primitives.removeAll();
-      scene2D.primitives.removeAll();
-      sceneCV.primitives.removeAll();
-      scene.verticalExaggeration = 1.0;
+      scene.destroyForSpecs();
       ResourceCache.clearForSpecs();
     });
 
@@ -525,6 +505,16 @@ describe(
       const schemaId = undefined;
       const className = "exampleClass";
       const propertyName = "example_UINT8_SCALAR";
+
+      const canvasSizeX = textureSizeX * canvasScaling;
+      const canvasSizeY = textureSizeY * canvasScaling;
+      scene = createScene({
+        canvas: createCanvas(canvasSizeX, canvasSizeY),
+        contextOptions: {
+          requestWebgl1: true,
+        },
+      });
+
       scene.initializeFrame();
       scene.render(defaultDate);
       expect(() => {
@@ -537,6 +527,16 @@ describe(
       const schemaId = undefined;
       const className = undefined; // For spec
       const propertyName = "example_UINT8_SCALAR";
+
+      const canvasSizeX = textureSizeX * canvasScaling;
+      const canvasSizeY = textureSizeY * canvasScaling;
+      scene = createScene({
+        canvas: createCanvas(canvasSizeX, canvasSizeY),
+        contextOptions: {
+          requestWebgl1: true,
+        },
+      });
+
       scene.initializeFrame();
       scene.render(defaultDate);
       expect(() => {
@@ -549,6 +549,16 @@ describe(
       const schemaId = undefined;
       const className = "exampleClass";
       const propertyName = undefined; // For spec
+
+      const canvasSizeX = textureSizeX * canvasScaling;
+      const canvasSizeY = textureSizeY * canvasScaling;
+      scene = createScene({
+        canvas: createCanvas(canvasSizeX, canvasSizeY),
+        contextOptions: {
+          requestWebgl1: true,
+        },
+      });
+
       scene.initializeFrame();
       scene.render(defaultDate);
       expect(() => {
@@ -566,6 +576,9 @@ describe(
       const canvasSizeY = textureSizeY * canvasScaling;
       scene = createScene({
         canvas: createCanvas(canvasSizeX, canvasSizeY),
+        contextOptions: {
+          requestWebgl1: true,
+        },
       });
 
       await loadAsModel(scene, gltf);
@@ -593,6 +606,9 @@ describe(
       const canvasSizeY = textureSizeY * canvasScaling;
       scene = createScene({
         canvas: createCanvas(canvasSizeX, canvasSizeY),
+        contextOptions: {
+          requestWebgl1: true,
+        },
       });
 
       fitCameraToUnitSquare(scene.camera);
@@ -615,6 +631,9 @@ describe(
       const canvasSizeY = textureSizeY * canvasScaling;
       scene = createScene({
         canvas: createCanvas(canvasSizeX, canvasSizeY),
+        contextOptions: {
+          requestWebgl1: true,
+        },
       });
 
       fitCameraToUnitSquare(scene.camera);
@@ -635,6 +654,9 @@ describe(
       const canvasSizeY = textureSizeY * canvasScaling;
       scene = createScene({
         canvas: createCanvas(canvasSizeX, canvasSizeY),
+        contextOptions: {
+          requestWebgl1: true,
+        },
       });
 
       await loadAsModel(scene, gltf);
@@ -667,6 +689,9 @@ describe(
       const canvasSizeY = textureSizeY * canvasScaling;
       scene = createScene({
         canvas: createCanvas(canvasSizeX, canvasSizeY),
+        contextOptions: {
+          requestWebgl1: true,
+        },
       });
 
       await loadAsModel(scene, gltf);
@@ -727,6 +752,9 @@ describe(
       const canvasSizeY = textureSizeY * canvasScaling;
       scene = createScene({
         canvas: createCanvas(canvasSizeX, canvasSizeY),
+        contextOptions: {
+          requestWebgl1: true,
+        },
       });
 
       await loadAsModel(scene, gltf);
@@ -787,6 +815,9 @@ describe(
       const canvasSizeY = textureSizeY * canvasScaling;
       scene = createScene({
         canvas: createCanvas(canvasSizeX, canvasSizeY),
+        contextOptions: {
+          requestWebgl1: true,
+        },
       });
 
       await loadAsModel(scene, gltf);
@@ -847,6 +878,9 @@ describe(
       const canvasSizeY = textureSizeY * canvasScaling;
       scene = createScene({
         canvas: createCanvas(canvasSizeX, canvasSizeY),
+        contextOptions: {
+          requestWebgl1: true,
+        },
       });
 
       await loadAsModel(scene, gltf);
@@ -907,6 +941,9 @@ describe(
       const canvasSizeY = textureSizeY * canvasScaling;
       scene = createScene({
         canvas: createCanvas(canvasSizeX, canvasSizeY),
+        contextOptions: {
+          requestWebgl1: true,
+        },
       });
 
       await loadAsModel(scene, gltf);
@@ -968,6 +1005,9 @@ describe(
       const canvasSizeY = textureSizeY * canvasScaling;
       scene = createScene({
         canvas: createCanvas(canvasSizeX, canvasSizeY),
+        contextOptions: {
+          requestWebgl1: true,
+        },
       });
 
       await loadAsModel(scene, gltf);
@@ -1028,6 +1068,9 @@ describe(
       const canvasSizeY = textureSizeY * canvasScaling;
       scene = createScene({
         canvas: createCanvas(canvasSizeX, canvasSizeY),
+        contextOptions: {
+          requestWebgl1: true,
+        },
       });
 
       await loadAsModel(scene, gltf);
