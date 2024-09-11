@@ -12,6 +12,7 @@
 ##### Fixes :wrench:
 
 - Use first geometryBuffer if no best match found in I3SNode [#12132](https://github.com/CesiumGS/cesium/pull/12132)
+- Fix incorrect entity occlusion when the camera is below the planet's radius and no terrain tiles are in view. [#12190](https://github.com/CesiumGS/cesium/pull/12190)
 
 ### 1.121.1 - 2024-09-04
 
