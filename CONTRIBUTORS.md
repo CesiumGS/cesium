@@ -197,6 +197,8 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [T2 Software](http://t2.com.tr/)
   - [Hüseyin ATEŞ](https://github.com/ateshuseyin)
   - [İbrahim Furkan Aygar](https://github.com/furkanaygar)
+- MSA
+  - [Timothy Eichfeld](https://github.com/timeichfeld-msa)
 - [EMapGis](http://emapgis.com)
   - [IKangXu](https://github.com/IKangXu)
   - [EMapGIS](https://github.com/EMapGIS)
@@ -405,6 +407,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [Vladislav Yunev](https://github.com/YunVlad)
 - [Levi Montgomery](https://github.com/Levi-Montgomery)
 - [Brandon Berisford](https://github.com/BeyondBelief96)
+- [Lawrence Owen](https://github.com/ljowen)
 - [Adam Wirth](https://github.com/adamwirth)
 - [Javier Sanchez](https://github.com/jvrjsanchez)
 - [Jérôme Fayot](https://github.com/jfayot)

@@ -6,30 +6,39 @@
 
 ##### Additions :tada:
 
+- Added `enableVerticalExaggeration` option to models. Set this value to `false` to prevent model exaggeration when `Scene.verticalExaggeration` is set to a value other than `1.0`. [#12141](https://github.com/CesiumGS/cesium/pull/12141)
 - Added `CallbackPositionProperty` to allow lazy entity position evaluation. [#12170](https://github.com/CesiumGS/cesium/pull/12170)
 
-### 1.121 - 2024-09-01
+##### Fixes :wrench:
+
+- Use first geometryBuffer if no best match found in I3SNode [#12132](https://github.com/CesiumGS/cesium/pull/12132)
+
+### 1.121.1 - 2024-09-04
+
+This is an npm-only release to extra source maps included in 1.121
+
+### 1.121 - 2024-09-03
 
 #### @cesium/engine
 
 ##### Additions :tada:
 
 - Enable MSAA by default with 4 samples. To turn MSAA off set `scene.msaaSamples = 1` [#12158](https://github.com/CesiumGS/cesium/pull/12158)
-- Made the `time` parameter optional for `Property`, using `JulianDate.now()` as default. [#12099](https://github.com/CesiumGS/cesium/pull/12099)
-- Exposes `ScreenSpaceCameraController.zoomFactor` to allow adjusting the zoom factor (speed). [#9145](https://github.com/CesiumGS/cesium/pull/9145)
 - Expose the `tonemapper` property of `PostProcessStageCollection` to allow changing the tonemap used when HDR is turned on. This defaults to the [PBR Neutral Tonemap from Khronos](https://github.com/KhronosGroup/ToneMapping/tree/main/PBR_Neutral) [#12160](https://github.com/CesiumGS/cesium/pull/12160)
   - The enum `Tonemapper` contains the list of valid tonemap options to use with the `tonemapper` setting
 - Expose the `exposure` property of `PostProcessStageCollection` to allow changing the exposure used for the current HDR tonemap [#12160](https://github.com/CesiumGS/cesium/pull/12160)
 - Added `WaterMask` globe material, which visualizes areas of water or land based on the terrain's water mask. [#12149](https://github.com/CesiumGS/cesium/pull/12149)
+- Made the `time` parameter optional for `Property`, using `JulianDate.now()` as default. [#12099](https://github.com/CesiumGS/cesium/pull/12099)
+- Exposes `ScreenSpaceCameraController.zoomFactor` to allow adjusting the zoom factor (speed). [#9145](https://github.com/CesiumGS/cesium/pull/9145)
 
 ##### Fixes :wrench:
 
-- Update CameraEventAggregator to only trigger events for the currently held modifier while dragging. Events are canceled for all modifiers when the mouse is lifted. [#11903](https://github.com/CesiumGS/cesium/pull/11903)
+- Update `CameraEventAggregator` to only trigger events for the currently held modifier while dragging. Events are canceled for all modifiers when the mouse is lifted. [#11903](https://github.com/CesiumGS/cesium/pull/11903)
 - Fixed cube-mapping artifacts in image-based lighting. [#12100](https://github.com/CesiumGS/cesium/pull/12100)
 - Fixed specular reflection artifact in PBR direct lighting. [#12116](https://github.com/CesiumGS/cesium/pull/12116)
 - Added multiscattering terms to diffuse BRDF in image-based lighting. [#12118](https://github.com/CesiumGS/cesium/pull/12118)
-- Fixed CallbackProperty type not being present on entity position. [#12120](https://github.com/CesiumGS/cesium/pull/12120)
-- Additional TypeScript types export in package.json to assist some project configurations using Cesium. [#12122](https://github.com/CesiumGS/cesium/pull/12122)
+- Fixed `CallbackProperty` type not being present on entity position. [#12120](https://github.com/CesiumGS/cesium/pull/12120)
+- Additional TypeScript types export in `package.json` to assist some project configurations using Cesium. [#12122](https://github.com/CesiumGS/cesium/pull/12122)
 - Fixed documentation about default values for Label origins [#12139](https://github.com/CesiumGS/cesium/pull/12139)
 
 ##### Breaking Changes :mega:
@@ -40,7 +49,6 @@
 - `SceneTransforms.wgs84ToDrawingBufferCoordinates` has been removed. Use `SceneTransforms.worldToDrawingBufferCoordinates` instead.
 - Removed `jitter` option from `VoxelPrimitive.js`, `VoxelRenderResources.js`, and related test code in `VoxelPrimitiveSpec.js`. [#11913](https://github.com/CesiumGS/cesium/issues/11913)
 - Custom specular environment maps in `ImageBasedLighting` now require either a WebGL2 context or a WebGL1 context that supports the [`EXT_shader_texture_lod` extension](https://registry.khronos.org/webgl/extensions/EXT_shader_texture_lod/).
-- `ScreenSpaceCameraController._zoomFactor` replaced with public zoomFactor attribute.
 
 ### 1.120 - 2024-08-01
 
