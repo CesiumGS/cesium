@@ -61,7 +61,7 @@ describe("DataSources/ConstantPositionProperty", function () {
     expect(property.getValue(time)).toBeUndefined();
   });
 
-  it("getValue work swith undefined inertial value", function () {
+  it("getValue works with undefined inertial value", function () {
     const property = new ConstantPositionProperty(
       undefined,
       ReferenceFrame.INERTIAL
