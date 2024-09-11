@@ -551,17 +551,19 @@ ShaderProgram.prototype._setUniforms = function (
   let len;
   let i;
 
-
   if (defined(uniformMap)) {
     const manualUniforms = this._manualUniforms;
     len = manualUniforms.length;
     for (i = 0; i < len; ++i) {
       const mu = manualUniforms[i];
-      try {
-        mu.value = uniformMap[mu.name]();
-      } catch (error) {
-        throw new RuntimeError(`Error setting uniform "${mu.name}" : ${error}`)
+
+      //>>includeStart('debug', pragmas.debug);
+      if (!defined(uniformMap[mu.name])) {
+        throw new DeveloperError(`Unknown uniform: ${mu.name}`);
       }
+      //>>includeEnd('debug');
+
+      mu.value = uniformMap[mu.name]();
     }
   }
 
