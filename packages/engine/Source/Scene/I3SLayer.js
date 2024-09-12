@@ -291,9 +291,15 @@ I3SLayer.prototype._findBestGeometryBuffers = function (
         };
       }
     }
+    // If no match found return first geometryBuffer
+    if (defined(geometryDefinition[0])) {
+      return {
+        bufferIndex: 0,
+        definition: geometryDefinition,
+        geometryBufferInfo: geometryDefinition[0],
+      };
+    }
   }
-
-  return 0;
 };
 
 /**

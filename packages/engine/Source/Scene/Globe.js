@@ -979,7 +979,6 @@ Globe.prototype.beginFrame = function (frameState) {
   const tileProvider = surface.tileProvider;
   const terrainProvider = this.terrainProvider;
   const hasWaterMask =
-    this.showWaterEffect &&
     defined(terrainProvider) &&
     terrainProvider.hasWaterMask &&
     terrainProvider.hasWaterMask;
@@ -1034,6 +1033,7 @@ Globe.prototype.beginFrame = function (frameState) {
     tileProvider.zoomedOutOceanSpecularIntensity =
       mode === SceneMode.SCENE3D ? this._zoomedOutOceanSpecularIntensity : 0.0;
     tileProvider.hasWaterMask = hasWaterMask;
+    tileProvider.showWaterEffect = this.showWaterEffect;
     tileProvider.oceanNormalMap = this._oceanNormalMap;
     tileProvider.enableLighting = this.enableLighting;
     tileProvider.dynamicAtmosphereLighting = this.dynamicAtmosphereLighting;

@@ -52,7 +52,7 @@ void applyFog(inout vec4 color, vec4 groundAtmosphereColor, vec3 lightDirection,
 
     // Tonemap if HDR rendering is disabled
     #ifndef HDR
-        fogColor.rgb = czm_acesTonemapping(fogColor.rgb);
+        fogColor.rgb = czm_pbrNeutralTonemapping(fogColor.rgb);
         fogColor.rgb = czm_inverseGamma(fogColor.rgb);
     #endif
 
