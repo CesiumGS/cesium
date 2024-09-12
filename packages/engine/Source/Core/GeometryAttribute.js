@@ -66,7 +66,6 @@ function GeometryAttribute(options) {
    *
    * @type {ComponentDatatype}
    *
-   * @default undefined
    */
   this.componentDatatype = options.componentDatatype;
 
@@ -76,8 +75,6 @@ function GeometryAttribute(options) {
    * shown in the code example.
    *
    * @type {number}
-   *
-   * @default undefined
    *
    * @example
    * attribute.componentDatatype = Cesium.ComponentDatatype.FLOAT;
@@ -121,8 +118,6 @@ function GeometryAttribute(options) {
    * <code>componentsPerAttribute</code> is 3.
    *
    * @type {number[]|Int8Array|Uint8Array|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array|Float64Array}
-   *
-   * @default undefined
    *
    * @example
    * attribute.componentDatatype = Cesium.ComponentDatatype.FLOAT;
