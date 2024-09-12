@@ -1817,7 +1817,7 @@ Scene.prototype.updateDerivedCommands = function (command) {
   const needsLogDepthDerivedCommands =
     useLogDepth && !hasLogDepthDerivedCommands;
   const needsHdrCommands = useHdr && !hasHdrCommands;
-  // TODO: if (!useLogDepth && !useHdr), why do we need derived commands?
+  // PERFORMANCE_IDEA: if (!useLogDepth && !useHdr), we may be able to save a call to updateDerivedCommands.
   const needsDerivedCommands = (!useLogDepth || !useHdr) && !hasDerivedCommands;
   command.dirty =
     command.dirty ||
