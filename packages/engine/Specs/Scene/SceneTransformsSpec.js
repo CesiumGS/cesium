@@ -40,13 +40,13 @@ describe(
     it("throws an exception without scene", function () {
       const position = Cartesian3.fromDegrees(0.0, 0.0);
       expect(function () {
-        SceneTransforms.wgs84ToWindowCoordinates(undefined, position);
+        SceneTransforms.worldToWindowCoordinates(undefined, position);
       }).toThrowDeveloperError();
     });
 
     it("throws an exception without position", function () {
       expect(function () {
-        SceneTransforms.wgs84ToWindowCoordinates(scene);
+        SceneTransforms.worldToWindowCoordinates(scene);
       }).toThrowDeveloperError();
     });
 
@@ -61,7 +61,7 @@ describe(
       // Update scene state
       scene.renderForSpecs();
 
-      const windowCoordinates = SceneTransforms.wgs84ToWindowCoordinates(
+      const windowCoordinates = SceneTransforms.worldToWindowCoordinates(
         scene,
         position
       );
@@ -80,7 +80,7 @@ describe(
       // Update scene state
       scene.renderForSpecs();
 
-      const drawingBufferCoordinates = SceneTransforms.wgs84ToDrawingBufferCoordinates(
+      const drawingBufferCoordinates = SceneTransforms.worldToDrawingBufferCoordinates(
         scene,
         position
       );
@@ -105,7 +105,7 @@ describe(
       // Update scene state
       scene.renderForSpecs();
 
-      const windowCoordinates = SceneTransforms.wgs84ToWindowCoordinates(
+      const windowCoordinates = SceneTransforms.worldToWindowCoordinates(
         scene,
         position
       );
@@ -123,7 +123,7 @@ describe(
       // Update scene state
       scene.renderForSpecs();
 
-      const drawingBufferCoordinates = SceneTransforms.wgs84ToDrawingBufferCoordinates(
+      const drawingBufferCoordinates = SceneTransforms.worldToDrawingBufferCoordinates(
         scene,
         position
       );
@@ -138,7 +138,7 @@ describe(
       const actualWindowCoordinates = new Cartesian2(0.5, 0.5);
       const position = scene.camera.pickEllipsoid(actualWindowCoordinates);
 
-      const windowCoordinates = SceneTransforms.wgs84ToWindowCoordinates(
+      const windowCoordinates = SceneTransforms.worldToWindowCoordinates(
         scene,
         position
       );
@@ -158,7 +158,7 @@ describe(
         actualDrawingBufferCoordinates
       );
 
-      const drawingBufferCoordinates = SceneTransforms.wgs84ToDrawingBufferCoordinates(
+      const drawingBufferCoordinates = SceneTransforms.worldToDrawingBufferCoordinates(
         scene,
         position
       );
@@ -182,7 +182,7 @@ describe(
         scene.camera.direction
       );
 
-      const windowCoordinates = SceneTransforms.wgs84ToWindowCoordinates(
+      const windowCoordinates = SceneTransforms.worldToWindowCoordinates(
         scene,
         position
       );
@@ -203,7 +203,7 @@ describe(
         scene.camera.direction
       );
 
-      const drawingBufferCoordinates = SceneTransforms.wgs84ToDrawingBufferCoordinates(
+      const drawingBufferCoordinates = SceneTransforms.worldToDrawingBufferCoordinates(
         scene,
         position
       );
@@ -225,7 +225,7 @@ describe(
       scene.renderForSpecs();
 
       const position = Cartesian3.fromDegrees(0, 0);
-      const windowCoordinates = SceneTransforms.wgs84ToWindowCoordinates(
+      const windowCoordinates = SceneTransforms.worldToWindowCoordinates(
         scene,
         position
       );
@@ -256,7 +256,7 @@ describe(
       });
 
       const position = Cartesian3.fromDegrees(0, 0);
-      const windowCoordinates = SceneTransforms.wgs84ToWindowCoordinates(
+      const windowCoordinates = SceneTransforms.worldToWindowCoordinates(
         scene,
         position
       );
@@ -283,7 +283,7 @@ describe(
       scene.renderForSpecs();
 
       const position = Cartesian3.fromDegrees(0, 0);
-      const drawingBufferCoordinates = SceneTransforms.wgs84ToDrawingBufferCoordinates(
+      const drawingBufferCoordinates = SceneTransforms.worldToDrawingBufferCoordinates(
         scene,
         position
       );
@@ -306,7 +306,7 @@ describe(
       scene.renderForSpecs();
 
       const position = Cartesian3.fromDegrees(-80, 25);
-      const windowCoordinates = SceneTransforms.wgs84ToWindowCoordinates(
+      const windowCoordinates = SceneTransforms.worldToWindowCoordinates(
         scene,
         position
       );
