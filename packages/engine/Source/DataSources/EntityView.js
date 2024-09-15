@@ -345,10 +345,10 @@ function EntityView(entity, scene, ellipsoid) {
   this._lastCartesian = new Cartesian3();
   this._defaultOffset3D = undefined;
 
-  this._orientationProperty = new VelocityOrientationProperty(
-    entity.position,
-    ellipsoid
-  );
+  this._orientationProperty =
+    entity.orientation !== undefined
+      ? entity.orientation
+      : new VelocityOrientationProperty(entity.position, ellipsoid);
 
   this._offset3D = new Cartesian3();
 }
