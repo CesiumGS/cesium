@@ -4,6 +4,7 @@ import {
   Matrix3,
   Matrix4,
   Quaternion,
+  ReferenceFrame,
   TimeInterval,
   TimeIntervalCollection,
   Transforms,
@@ -54,11 +55,13 @@ describe("DataSources/Entity", function () {
     expect(entity.viewFrom).toBeUndefined();
     expect(entity.wall).toBeUndefined();
     expect(entity.entityCollection).toBeUndefined();
+    expect(entity.trackingReferenceFrame).toBe(ReferenceFrame.FIXED);
 
     const options = {
       id: "someId",
       name: "bob",
       show: false,
+      trackingReferenceFrame: ReferenceFrame.INERTIAL,
       availability: new TimeIntervalCollection(),
       parent: new Entity(),
       customProperty: {},
@@ -88,6 +91,7 @@ describe("DataSources/Entity", function () {
     expect(entity.id).toEqual(options.id);
     expect(entity.name).toEqual(options.name);
     expect(entity.show).toBe(options.show);
+    expect(entity.trackingReferenceFrame).toBe(options.trackingReferenceFrame);
     expect(entity.availability).toBe(options.availability);
     expect(entity.parent).toBe(options.parent);
     expect(entity.customProperty).toBe(options.customProperty);
