@@ -6,6 +6,7 @@ import {
   ConstantPositionProperty,
   Entity,
   EntityView,
+  ReferenceFrame,
 } from "../../index.js";
 
 import createScene from "../../../../Specs/createScene.js";
@@ -74,6 +75,10 @@ describe(
       const view = new EntityView(entity, scene);
       view.update(JulianDate.now());
       expect(view.scene.camera.position).toEqualEpsilon(sampleOffset, 1e-10);
+
+      entity.trackingReferenceFrame = ReferenceFrame.INERTIAL;
+      view.update(JulianDate.now());
+      expect(view.scene.camera.position).toEqualEpsilon(sampleOffset, 1e-10);
     });
 
     it("uses entity bounding sphere", function () {
@@ -90,6 +95,13 @@ describe(
       view.update(
         JulianDate.now(),
         new BoundingSphere(new Cartesian3(3, 4, 5), 6),
+      );
+      expect(view.scene.camera.position).toEqualEpsilon(sampleOffset, 1e-10);
+
+      entity.trackingReferenceFrame = ReferenceFrame.INERTIAL;
+      view.update(
+        JulianDate.now(),
+        new BoundingSphere(new Cartesian3(3, 4, 5), 6)
       );
       expect(view.scene.camera.position).toEqualEpsilon(sampleOffset, 1e-10);
     });
@@ -109,6 +121,10 @@ describe(
       );
       view.update(JulianDate.now());
       expect(view.scene.camera.position).toEqualEpsilon(sampleOffset, 1e-10);
+
+      entity.trackingReferenceFrame = ReferenceFrame.INERTIAL;
+      view.update(JulianDate.now());
+      expect(view.scene.camera.position).toEqualEpsilon(sampleOffset, 1e-10);
     });
 
     it("update throws without time parameter", function () {
@@ -122,6 +138,13 @@ describe(
 
     it("update returns without entity.position property.", function () {
       const entity = new Entity();
+      const view = new EntityView(entity, scene);
+      view.update(JulianDate.now());
+    });
+
+    it("update returns with entity.trackingReferenceFrame set to INERTIAL and without entity.orientation property.", function () {
+      const entity = new Entity();
+      entity.trackingReferenceFrame = ReferenceFrame.INERTIAL;
       const view = new EntityView(entity, scene);
       view.update(JulianDate.now());
     });

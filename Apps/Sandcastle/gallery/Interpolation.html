@@ -154,6 +154,21 @@
           viewer.trackedEntity = entity;
         });
 
+        Sandcastle.addToolbarMenu([
+          {
+            text: "Tracking reference frame: Fixed",
+            onselect: function () {
+              entity.trackingReferenceFrame = Cesium.ReferenceFrame.FIXED;
+            },
+          },
+          {
+            text: "Tracking reference frame: Inertial",
+            onselect: function () {
+              entity.trackingReferenceFrame = Cesium.ReferenceFrame.INERTIAL;
+            },
+          },
+        ]);
+
         //Add a combo box for selecting each interpolation mode.
         Sandcastle.addToolbarMenu(
           [
