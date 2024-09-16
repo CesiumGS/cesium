@@ -1,3 +1,5 @@
+precision highp float;
+
 uniform sampler2D randomTexture;
 uniform sampler2D depthTexture;
 uniform float intensity;
@@ -20,6 +22,15 @@ vec3 screenToEye(vec2 screenCoordinate)
 {
     float depth = czm_readDepth(depthTexture, screenCoordinate);
     return clipToEye(screenCoordinate, depth).xyz;
+}
+
+vec3 pixelToEye(vec2 screenCoordinate)
+{
+    float depthOrLogDepth = texelFetch(depthTexture, ivec2(screenCoordinate), 0).r;
+    float depth = czm_reverseLogDepth(depthOrLogDepth);
+    ivec2 screenDimensions = textureSize(depthTexture, 0);
+    vec2 normalizedCoordinate = screenCoordinate / vec2(screenDimensions);
+    return clipToEye(normalizedCoordinate, depth).xyz;
 }
 
 // Reconstruct surface normal in eye coordinates, avoiding edges
@@ -46,10 +57,12 @@ vec3 getNormalXEdge(vec3 positionEC, vec2 pixelSize)
 
 void main(void)
 {
-    //vec2 pixelSize = czm_pixelRatio / czm_viewport.zw;
-    vec2 pixelSize = 1.0 / vec2(textureSize(depthTexture, 0));
+    vec2 screenSize = vec2(textureSize(depthTexture, 0));
+    vec2 pixelSize = 1.0 / screenSize;
 
-    vec3 positionEC = screenToEye(v_textureCoordinates);
+    // Note: fract(centerCoord) = vec2(0.5) !!
+    vec2 centerCoord = gl_FragCoord.xy;
+    vec3 positionEC = pixelToEye(centerCoord);
 
     if (positionEC.z > frustumLength)
     {
@@ -80,22 +93,20 @@ void main(void)
         sampleDirection = rotateStep * sampleDirection;
 
         float localAO = 0.0;
-        vec2 radialStep = radialStepSize * sampleDirection;
+        vec2 radialStep = stepSize * sampleDirection;
 
         for (int j = 0; j < 6; j++)
         {
             // Step along sampling direction, away from output pixel
-            vec2 newCoords = v_textureCoordinates + float(j + 1) * radialStep;
-            // Snap to grid
-            //newCoords = round(newCoords / pixelSize) * pixelSize;
+            vec2 newCoords = floor(centerCoord + float(j + 1) * radialStep) + vec2(0.5);
 
             // Exit if we stepped off the screen
-            if (newCoords.x > 1.0 || newCoords.y > 1.0 || newCoords.x < 0.0 || newCoords.y < 0.0)
+            if (clamp(newCoords, vec2(0.0), screenSize) != newCoords)
             {
                 break;
             }
 
-            vec3 stepPositionEC = screenToEye(newCoords);
+            vec3 stepPositionEC = pixelToEye(newCoords);
             vec3 stepVector = stepPositionEC - positionEC;
             float stepLength = length(stepVector);
 
