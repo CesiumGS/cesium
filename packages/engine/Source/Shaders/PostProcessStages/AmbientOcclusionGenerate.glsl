@@ -18,12 +18,6 @@ vec4 clipToEye(vec2 uv, float depth)
     return posEC;
 }
 
-vec3 screenToEye(vec2 screenCoordinate)
-{
-    float depth = czm_readDepth(depthTexture, screenCoordinate);
-    return clipToEye(screenCoordinate, depth).xyz;
-}
-
 vec3 pixelToEye(vec2 screenCoordinate)
 {
     float depthOrLogDepth = texelFetch(depthTexture, ivec2(screenCoordinate), 0).r;
@@ -34,13 +28,14 @@ vec3 pixelToEye(vec2 screenCoordinate)
 }
 
 // Reconstruct surface normal in eye coordinates, avoiding edges
-vec3 getNormalXEdge(vec3 positionEC, vec2 pixelSize)
+vec3 getNormalXEdge(vec3 positionEC)
 {
     // Find the 3D surface positions at adjacent screen pixels
-    vec3 positionLeft = screenToEye(v_textureCoordinates - vec2(pixelSize.x, 0.0));
-    vec3 positionRight = screenToEye(v_textureCoordinates + vec2(pixelSize.x, 0.0));
-    vec3 positionUp = screenToEye(v_textureCoordinates + vec2(0.0, pixelSize.y));
-    vec3 positionDown = screenToEye(v_textureCoordinates - vec2(0.0, pixelSize.y));
+    vec2 centerCoord = gl_FragCoord.xy;
+    vec3 positionLeft = pixelToEye(centerCoord + vec2(-1.0, 0.0));
+    vec3 positionRight = pixelToEye(centerCoord + vec2(1.0, 0.0));
+    vec3 positionUp = pixelToEye(centerCoord + vec2(0.0, 1.0));
+    vec3 positionDown = pixelToEye(centerCoord + vec2(0.0, -1.0));
 
     // Compute potential tangent vectors
     vec3 dx0 = positionEC - positionLeft;
@@ -58,11 +53,8 @@ vec3 getNormalXEdge(vec3 positionEC, vec2 pixelSize)
 void main(void)
 {
     vec2 screenSize = vec2(textureSize(depthTexture, 0));
-    vec2 pixelSize = 1.0 / screenSize;
 
-    // Note: fract(centerCoord) = vec2(0.5) !!
-    vec2 centerCoord = gl_FragCoord.xy;
-    vec3 positionEC = pixelToEye(centerCoord);
+    vec3 positionEC = pixelToEye(gl_FragCoord.xy);
 
     if (positionEC.z > frustumLength)
     {
@@ -70,7 +62,7 @@ void main(void)
         return;
     }
 
-    vec3 normalEC = getNormalXEdge(positionEC, pixelSize);
+    vec3 normalEC = getNormalXEdge(positionEC);
 
     float ao = 0.0;
 
@@ -82,10 +74,10 @@ void main(void)
     mat2 rotateStep = mat2(cosStep, sinStep, -sinStep, cosStep);
 
     // Initial sampling direction (different for each pixel)
-    float randomVal = texture(randomTexture, v_textureCoordinates / pixelSize / 255.0).x;
+    vec2 randomTextureSize = vec2(textureSize(randomTexture, 0));
+    vec2 randomTexCoord = mod(gl_FragCoord.xy, randomTextureSize);
+    float randomVal = texelFetch(randomTexture, ivec2(randomTexCoord), 0).x;
     vec2 sampleDirection = vec2(cos(angleStep * randomVal), sin(angleStep * randomVal));
-
-    vec2 radialStepSize = stepSize * pixelSize;
 
     // Loop over sampling directions
     for (int i = 0; i < ANGLE_STEPS; i++)
@@ -98,7 +90,7 @@ void main(void)
         for (int j = 0; j < 6; j++)
         {
             // Step along sampling direction, away from output pixel
-            vec2 newCoords = floor(centerCoord + float(j + 1) * radialStep) + vec2(0.5);
+            vec2 newCoords = floor(gl_FragCoord.xy + float(j + 1) * radialStep) + vec2(0.5);
 
             // Exit if we stepped off the screen
             if (clamp(newCoords, vec2(0.0), screenSize) != newCoords)
@@ -112,6 +104,7 @@ void main(void)
 
             if (stepLength > lengthCap)
             {
+                // TODO: should we continue instead? We don't want to cut off the background shading if we crossed a foreground wire
                 break;
             }
 
