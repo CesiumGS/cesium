@@ -46,6 +46,9 @@ vec3 getNormalXEdge(vec3 positionEC, vec2 pixelSize)
 
 void main(void)
 {
+    //vec2 pixelSize = czm_pixelRatio / czm_viewport.zw;
+    vec2 pixelSize = 1.0 / vec2(textureSize(depthTexture, 0));
+
     vec3 positionEC = screenToEye(v_textureCoordinates);
 
     if (positionEC.z > frustumLength)
@@ -54,7 +57,6 @@ void main(void)
         return;
     }
 
-    vec2 pixelSize = czm_pixelRatio / czm_viewport.zw;
     vec3 normalEC = getNormalXEdge(positionEC, pixelSize);
 
     float ao = 0.0;
@@ -78,12 +80,14 @@ void main(void)
         sampleDirection = rotateStep * sampleDirection;
 
         float localAO = 0.0;
-        vec2 radialStep = radialStepSize;
+        vec2 radialStep = radialStepSize * sampleDirection;
 
         for (int j = 0; j < 6; j++)
         {
             // Step along sampling direction, away from output pixel
-            vec2 newCoords = v_textureCoordinates + sampleDirection * radialStep;
+            vec2 newCoords = v_textureCoordinates + float(j + 1) * radialStep;
+            // Snap to grid
+            //newCoords = round(newCoords / pixelSize) * pixelSize;
 
             // Exit if we stepped off the screen
             if (newCoords.x > 1.0 || newCoords.y > 1.0 || newCoords.x < 0.0 || newCoords.y < 0.0)
@@ -109,7 +113,6 @@ void main(void)
             float weight = stepLength / lengthCap;
             weight = 1.0 - weight * weight;
             localAO = max(localAO, dotVal * weight);
-            radialStep += radialStepSize;
         }
         ao += localAO;
     }
