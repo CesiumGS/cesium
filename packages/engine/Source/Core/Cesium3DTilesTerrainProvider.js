@@ -201,7 +201,7 @@ function isChildAvailable(implicitTileset, subtree, coord, x, y) {
  * A {@link TerrainProvider} that accesses terrain data in a 3D Tiles format.
  *
  * @alias Cesium3DTilesTerrainProvider
- * @experimental
+ * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  * @constructor
  *
  * @param {Cesium3DTilesTerrainProvider.ConstructorOptions}[options] An object describing initialization options

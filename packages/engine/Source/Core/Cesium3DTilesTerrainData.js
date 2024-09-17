@@ -19,7 +19,7 @@ import TerrainMesh from "./TerrainMesh.js";
  * Terrain data for a single tile where the terrain data is represented as a glb (binary glTF).
  *
  * @alias Cesium3DTilesTerrainData
- * @experimental
+ * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  * @constructor
  *
  * @param {Object} options Object with the following properties:
