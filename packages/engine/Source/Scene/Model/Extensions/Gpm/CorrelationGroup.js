@@ -1,0 +1,67 @@
+import Check from "../Core/Check.js";
+
+/**
+ * Metadata identifying parameters using same correlation modeling and
+ * associated correlation parameters.
+ *
+ * @private
+ * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
+ */
+function CorrelationGroup(options) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("options.groupFlags", options.groupFlags);
+  Check.typeOf.object("options.rotationThetas", options.rotationThetas);
+  Check.typeOf.object("options.params", options.params);
+  //>>includeEnd('debug');
+
+  this._groupFlags = options.groupFlags;
+  this._rotationThetas = options.rotationThetas;
+  this._params = options.params;
+}
+
+Object.defineProperties(CorrelationGroup.prototype, {
+  /**
+   * Array of 3 booleans indicating if parameters delta-x delta-y delta-z
+   * used in the correlation group
+   *
+   * @memberof CorrelationGroup.prototype
+   * @type {boolean[]}
+   * @readonly
+   * @private
+   */
+  groupFlags: {
+    get: function () {
+      return this._groupFlags;
+    },
+  },
+
+  /**
+   * Rotations in milliradians about X, Y, Z axes, respectively
+   *
+   * @memberof CorrelationGroup.prototype
+   * @type {Cartesian3}
+   * @readonly
+   * @private
+   */
+  rotationThetas: {
+    get: function () {
+      return this._rotationThetas;
+    },
+  },
+
+  /**
+   * Array of 3 sets of SPDCF parameters, for the U, V, W directions, respectively
+   *
+   * @memberof CorrelationGroup.prototype
+   * @type {Spdcf[]}
+   * @readonly
+   * @private
+   */
+  params: {
+    get: function () {
+      return this._params;
+    },
+  },
+});
+
+export default CorrelationGroup;
