@@ -341,28 +341,6 @@ function decodeEdgeIndices(gltf, name) {
 
 /**
  * @private
- * @param {Object.<string,*>} gltf
- * @param {String} propertyId
- * @returns {Uint8Array}
- */
-function decodeWaterMask(gltf, propertyId) {
-
-  const loader = new GltfStructuralMetadataLoader({
-    gltf: gltf,
-    extension:
-    
-  })
-
-  const propertyTexture;
-  const property = propertyTexture.getProperty(propertyId);
-  property.textureReader
-
-  const propertyTable = structuralMetadata.getPropertyTable(propertyTableId) 
-  return propertyTable.getPropertyTypedArray(propertyId);
-}
-
-/**
- * @private
  * @typedef GltfInfo
  *
  * @property {Float32Array} positions

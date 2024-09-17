@@ -222,8 +222,6 @@ ResourceCacheKey.getBufferViewCacheKey = function (options) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.gltf", gltf);
   Check.typeOf.number("options.bufferViewId", bufferViewId);
-  Check.typeOf.object("options.gltfResource", gltfResource);
-  Check.typeOf.object("options.baseResource", baseResource);
   //>>includeEnd('debug');
 
   const bufferView = gltf.bufferViews[bufferViewId];
