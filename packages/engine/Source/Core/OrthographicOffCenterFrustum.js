@@ -40,7 +40,7 @@ function OrthographicOffCenterFrustum(options) {
 
   /**
    * The left clipping plane.
-   * @type {number}
+   * @type {number|undefined}
    * @default undefined
    */
   this.left = options.left;
@@ -48,7 +48,7 @@ function OrthographicOffCenterFrustum(options) {
 
   /**
    * The right clipping plane.
-   * @type {number}
+   * @type {number|undefined}
    * @default undefined
    */
   this.right = options.right;
@@ -56,7 +56,7 @@ function OrthographicOffCenterFrustum(options) {
 
   /**
    * The top clipping plane.
-   * @type {number}
+   * @type {number|undefined}
    * @default undefined
    */
   this.top = options.top;
@@ -64,7 +64,7 @@ function OrthographicOffCenterFrustum(options) {
 
   /**
    * The bottom clipping plane.
-   * @type {number}
+   * @type {number|undefined}
    * @default undefined
    */
   this.bottom = options.bottom;
