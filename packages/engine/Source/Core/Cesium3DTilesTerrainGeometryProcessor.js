@@ -685,13 +685,20 @@ Cesium3DTilesTerrainGeometryProcessor.createMesh = function (options) {
 
       let normalOct;
       if (hasVertexNormals) {
-        const normal = scratchNormal;
+        let normal = scratchNormal;
         // @ts-ignore
         normal.x = normalsWithoutSkirts[i * 3 + 0];
         // @ts-ignore
         normal.y = normalsWithoutSkirts[i * 3 + 1];
         // @ts-ignore
         normal.z = normalsWithoutSkirts[i * 3 + 2];
+
+        normal = Matrix4.multiplyByPointAsVector(
+          tilesetTransform,
+          normal,
+          scratchNormal
+        );
+
         normalOct = AttributeCompression.octEncode(normal, scratchNormalOct);
       }
 

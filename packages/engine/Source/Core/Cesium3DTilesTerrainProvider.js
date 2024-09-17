@@ -406,8 +406,6 @@ async function loadWaterMask(gltf, gltfResource) {
     skipColorSpaceConversion: true,
   });
 
-  bufferViewLoader.destroy();
-
   return image;
 }
 
