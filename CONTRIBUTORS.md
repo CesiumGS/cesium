@@ -167,6 +167,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
   - [jjspace](https://github.com/jjspace)
   - [Siddhesh Ranade](https://github.com/siddheshranade)
   - [Adam Morris](https://github.com/weegeekps)
+  - [Luke McKinstry](https://github.com/lukemckinstry)
 - [Northrop Grumman](http://www.northropgrumman.com)
   - [Joseph Stein](https://github.com/nahgrin)
 - [EOX IT Services GmbH](https://eox.at)
