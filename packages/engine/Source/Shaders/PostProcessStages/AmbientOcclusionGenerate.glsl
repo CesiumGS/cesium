@@ -8,23 +8,13 @@ uniform float lengthCap;
 uniform float stepSize;
 uniform float frustumLength;
 
-in vec2 v_textureCoordinates;
-
-vec4 clipToEye(vec2 uv, float depth)
-{
-    vec2 xy = 2.0 * uv - vec2(1.0);
-    vec4 posEC = czm_inverseProjection * vec4(xy, depth, 1.0);
-    posEC = posEC / posEC.w;
-    return posEC;
-}
-
 vec3 pixelToEye(vec2 screenCoordinate)
 {
-    float depthOrLogDepth = texelFetch(depthTexture, ivec2(screenCoordinate), 0).r;
-    float depth = czm_reverseLogDepth(depthOrLogDepth);
-    ivec2 screenDimensions = textureSize(depthTexture, 0);
-    vec2 normalizedCoordinate = screenCoordinate / vec2(screenDimensions);
-    return clipToEye(normalizedCoordinate, depth).xyz;
+    vec2 uv = screenCoordinate / czm_viewport.zw;
+    float depth = czm_readDepth(depthTexture, uv);
+    vec2 xy = 2.0 * uv - vec2(1.0);
+    vec4 posEC = czm_inverseProjection * vec4(xy, depth, 1.0);
+    return posEC.xyz / posEC.w;
 }
 
 // Reconstruct surface normal in eye coordinates, avoiding edges
@@ -52,8 +42,6 @@ vec3 getNormalXEdge(vec3 positionEC)
 
 void main(void)
 {
-    vec2 screenSize = vec2(textureSize(depthTexture, 0));
-
     vec3 positionEC = pixelToEye(gl_FragCoord.xy);
 
     if (positionEC.z > frustumLength)
@@ -74,9 +62,9 @@ void main(void)
     mat2 rotateStep = mat2(cosStep, sinStep, -sinStep, cosStep);
 
     // Initial sampling direction (different for each pixel)
-    vec2 randomTextureSize = vec2(textureSize(randomTexture, 0));
-    vec2 randomTexCoord = mod(gl_FragCoord.xy, randomTextureSize);
-    float randomVal = texelFetch(randomTexture, ivec2(randomTexCoord), 0).x;
+    const float randomTextureSize = 255.0;
+    vec2 randomTexCoord = fract(gl_FragCoord.xy / randomTextureSize);
+    float randomVal = texture(randomTexture, randomTexCoord).x;
     vec2 sampleDirection = vec2(cos(angleStep * randomVal), sin(angleStep * randomVal));
 
     // Loop over sampling directions
@@ -93,7 +81,7 @@ void main(void)
             vec2 newCoords = floor(gl_FragCoord.xy + float(j + 1) * radialStep) + vec2(0.5);
 
             // Exit if we stepped off the screen
-            if (clamp(newCoords, vec2(0.0), screenSize) != newCoords)
+            if (clamp(newCoords, vec2(0.0), czm_viewport.zw) != newCoords)
             {
                 break;
             }
@@ -104,7 +92,6 @@ void main(void)
 
             if (stepLength > lengthCap)
             {
-                // TODO: should we continue instead? We don't want to cut off the background shading if we crossed a foreground wire
                 break;
             }
 
