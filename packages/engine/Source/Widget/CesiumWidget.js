@@ -849,7 +849,7 @@ Object.defineProperties(CesiumWidget.prototype, {
    * For example, if asynchronous primitives are being processed in the
    * background, the clock will not advance until the geometry is ready.
    *
-   * @memberof Viewer.prototype
+   * @memberof CesiumWidget.prototype
    *
    * @type {boolean}
    */
