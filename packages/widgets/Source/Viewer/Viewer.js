@@ -834,7 +834,6 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
   this._eventHelper = eventHelper;
   this._lastWidth = 0;
   this._lastHeight = 0;
-  this._allowDataSourcesToSuspendAnimation = true;
   this._enableInfoOrSelection = defined(infoBox) || defined(selectionIndicator);
   this._selectedEntity = undefined;
   this._selectedEntityChanged = new Event();
@@ -1382,10 +1381,10 @@ Object.defineProperties(Viewer.prototype, {
    */
   allowDataSourcesToSuspendAnimation: {
     get: function () {
-      return this._allowDataSourcesToSuspendAnimation;
+      return this._cesiumWidget.allowDataSourcesToSuspendAnimation;
     },
     set: function (value) {
-      this._allowDataSourcesToSuspendAnimation = value;
+      this._cesiumWidget.allowDataSourcesToSuspendAnimation = value;
     },
   },
 
@@ -1754,7 +1753,7 @@ Viewer.prototype._onTick = function (clock) {
   const time = clock.currentTime;
 
   const isUpdated = this._cesiumWidget.dataSourceDisplay.ready;
-  if (this._allowDataSourcesToSuspendAnimation) {
+  if (this.allowDataSourcesToSuspendAnimation) {
     this._clockViewModel.canAnimate = isUpdated;
   }
 
