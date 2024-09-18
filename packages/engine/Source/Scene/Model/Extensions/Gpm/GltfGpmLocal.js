@@ -1,7 +1,7 @@
-import defined from "../Core/defined.js";
-import Check from "../Core/Check.js";
+import defined from "../../../../Core/defined.js";
+import Check from "../../../../Core/Check.js";
+import RuntimeError from "../../../../Core/RuntimeError.js";
 import StorageType from "./StorageType.js";
-import RuntimeError from "../Core/RuntimeError.js";
 
 /**
  * The GPM metadata for a Ground-Space Indirect implementation stored
@@ -12,7 +12,7 @@ import RuntimeError from "../Core/RuntimeError.js";
  */
 function GltfGpmLocal(options) {
   //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("options.storageType", options.storageType);
+  Check.typeOf.string("options.storageType", options.storageType);
   //>>includeEnd('debug');
 
   this._storageType = options.storageType;

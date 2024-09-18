@@ -1,4 +1,4 @@
-import Check from "../Core/Check.js";
+import Check from "../../../../Core/Check.js";
 
 /**
  * Metadata for one stored anchor point using direct storage
@@ -8,7 +8,7 @@ import Check from "../Core/Check.js";
  */
 function AnchorPointDirect(options) {
   //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("options.position", options.property);
+  Check.typeOf.object("options.position", options.position);
   Check.typeOf.object("options.adjustmentParams", options.adjustmentParams);
   //>>includeEnd('debug');
 

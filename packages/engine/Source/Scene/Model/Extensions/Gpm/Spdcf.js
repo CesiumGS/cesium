@@ -1,4 +1,4 @@
-import Check from "../Core/Check.js";
+import Check from "../../../../Core/Check.js";
 
 /**
  * Variables for a Strictly Positive-Definite Correlation Function.

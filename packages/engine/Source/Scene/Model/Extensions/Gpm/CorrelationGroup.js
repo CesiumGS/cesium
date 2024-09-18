@@ -1,4 +1,4 @@
-import Check from "../Core/Check.js";
+import Check from "../../../../Core/Check.js";
 
 /**
  * Metadata identifying parameters using same correlation modeling and

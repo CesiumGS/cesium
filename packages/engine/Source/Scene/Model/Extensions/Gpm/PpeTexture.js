@@ -1,4 +1,4 @@
-import Check from "../Core/Check.js";
+import Check from "../../../../Core/Check.js";
 
 /**
  * PPE (Per-Point Error) texture in `NGA_gpm_local`.
