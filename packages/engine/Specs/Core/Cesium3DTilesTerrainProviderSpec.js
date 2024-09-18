@@ -77,6 +77,16 @@ describe("Core/Cesium3DTilesTerrainProvider", function () {
     expect(provider.credit).toBeDefined();
     expect(provider.credit.html).toEqual("test");
   });
+
+  it("has a water mask when requested", async function () {
+    const path = "Data/Cesium3DTiles/Terrain/Test/tileset.json";
+
+    const provider = await Cesium3DTilesTerrainProvider.fromUrl(path, {
+      requestWaterMask: true,
+    });
+
+    expect(provider.hasWaterMask).toBe(true);
+  });
 });
 
 // TODO: test with dataUri

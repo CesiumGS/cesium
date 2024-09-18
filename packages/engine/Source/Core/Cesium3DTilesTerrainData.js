@@ -1,4 +1,3 @@
-import parseGlb from "../Scene/GltfPipeline/parseGlb.js";
 import BoundingSphere from "./BoundingSphere.js";
 import Cartesian2 from "./Cartesian2.js";
 import Cartesian3 from "./Cartesian3.js";
@@ -20,10 +19,11 @@ import TerrainMesh from "./TerrainMesh.js";
  * Terrain data for a single tile where the terrain data is represented as a glb (binary glTF).
  *
  * @alias Cesium3DTilesTerrainData
+ * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  * @constructor
  *
  * @param {Object} options Object with the following properties:
- * @param {ArrayBuffer} options.buffer The glb buffer.
+ * @param {Object.<string,*>} options.gltf The parsed glTF JSON.
  * @param {Number} options.minimumHeight The minimum terrain height within the tile, in meters above the ellipsoid.
  * @param {Number} options.maximumHeight The maximum terrain height within the tile, in meters above the ellipsoid.
  * @param {BoundingSphere} options.boundingSphere A sphere bounding all of the vertices in the mesh.
@@ -33,8 +33,10 @@ import TerrainMesh from "./TerrainMesh.js";
  *                      The point is expressed in ellipsoid-scaled coordinates.
  * @param {Number} options.skirtHeight The height of the skirt to add on the edges of the tile.
  * @param {Boolean} [options.requestVertexNormals=false] Indicates whether normals should be loaded.
+ * @param {Boolean} [options.requestWaterMask=false] Indicates whether water mask data should be loaded.
  * @param {Credit[]} [options.credits] Array of credits for this tile.
  * @param {Number} [options.childTileMask=15] A bit mask indicating which of this tile's four children exist.
+ * @param {Uint8Array} [options.waterMask] The buffer containing the water mask.
  * If a child's bit is set, geometry will be requested for that tile as well when it
  * is needed.  If the bit is cleared, the child tile is not requested and geometry is
  * instead upsampled from the parent.  The bit values are as follows:
@@ -55,7 +57,7 @@ function Cesium3DTilesTerrainData(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
   //>>includeStart('debug', pragmas.debug)
-  Check.defined("options.buffer", options.buffer);
+  Check.defined("options.gltf", options.gltf);
   Check.typeOf.number("options.minimumHeight", options.minimumHeight);
   Check.typeOf.number("options.maximumHeight", options.maximumHeight);
   Check.typeOf.object("options.boundingSphere", options.boundingSphere);
@@ -101,6 +103,9 @@ function Cesium3DTilesTerrainData(options) {
   this._hasVertexNormals = defaultValue(options.requestVertexNormals, false);
 
   /** @type {Boolean} */
+  this._hasWaterMask = defaultValue(options.requestWaterMask, false);
+
+  /** @type {Boolean} */
   this._hasWebMercatorT = true;
 
   /** @type {Credit[]|undefined} */
@@ -109,17 +114,16 @@ function Cesium3DTilesTerrainData(options) {
   /** @type {Number} */
   this._childTileMask = defaultValue(options.childTileMask, 15);
 
-  const glbBuffer = new Uint8Array(options.buffer);
-  // @ts-ignore
-  const gltf = parseGlb(glbBuffer);
   /** @type {Object.<string,*>} */
-  this._gltf = gltf;
+  this._gltf = options.gltf;
 
   /**
    * @private
    * @type {TerrainMesh|undefined}
    */
   this._mesh = undefined;
+
+  this._waterMask = options.waterMask;
 }
 
 Object.defineProperties(Cesium3DTilesTerrainData.prototype, {
@@ -146,8 +150,7 @@ Object.defineProperties(Cesium3DTilesTerrainData.prototype, {
   waterMask: {
     // @ts-ignore
     get: function () {
-      // Not supported currently
-      return undefined;
+      return this._waterMask;
     },
   },
 });
@@ -269,12 +272,14 @@ Cesium3DTilesTerrainData.prototype.createMesh = function (options) {
     new Rectangle()
   );
 
+  const gltf = this._gltf;
   const verticesPromise = createMeshTaskProcessor.scheduleTask({
     ellipsoid: ellipsoid,
     rectangle: rectangle,
     hasVertexNormals: this._hasVertexNormals,
+    hasWaterMask: this._hasWaterMask,
     hasWebMercatorT: this._hasWebMercatorT,
-    gltf: this._gltf,
+    gltf: gltf,
     minimumHeight: this._minimumHeight,
     maximumHeight: this._maximumHeight,
     boundingSphere: this._boundingSphere,
@@ -295,7 +300,7 @@ Cesium3DTilesTerrainData.prototype.createMesh = function (options) {
   return Promise.resolve(verticesPromise).then(function (result) {
     const taskResult = result;
 
-    // Need to re-clone and re-wrap all buffers and complex ojects to put them back into their normal state
+    // Need to re-clone and re-wrap all buffers and complex objects to put them back into their normal state
     const encoding = TerrainEncoding.clone(
       taskResult.encoding,
       new TerrainEncoding()
@@ -347,6 +352,7 @@ Cesium3DTilesTerrainData.prototype.createMesh = function (options) {
     );
 
     that._mesh = mesh;
+
     return Promise.resolve(mesh);
   });
 };

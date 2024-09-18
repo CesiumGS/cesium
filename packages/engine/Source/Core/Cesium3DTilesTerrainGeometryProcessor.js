@@ -170,14 +170,14 @@ function decodeNormals(gltf) {
       bufferViewMeshOpt.byteLength
     );
 
-    const normalByteLengh = bufferViewMeshOpt.byteStride;
-    const normalsResult = new Int8Array(normalCount * normalByteLengh);
+    const normalByteLength = bufferViewMeshOpt.byteStride;
+    const normalsResult = new Int8Array(normalCount * normalByteLength);
 
     // @ts-ignore
     MeshoptDecoder.decodeVertexBuffer(
       new Uint8Array(normalsResult.buffer),
       normalCount,
-      normalByteLengh,
+      normalByteLength,
       compressedBuffer
     );
 
@@ -685,13 +685,20 @@ Cesium3DTilesTerrainGeometryProcessor.createMesh = function (options) {
 
       let normalOct;
       if (hasVertexNormals) {
-        const normal = scratchNormal;
+        let normal = scratchNormal;
         // @ts-ignore
         normal.x = normalsWithoutSkirts[i * 3 + 0];
         // @ts-ignore
         normal.y = normalsWithoutSkirts[i * 3 + 1];
         // @ts-ignore
         normal.z = normalsWithoutSkirts[i * 3 + 2];
+
+        normal = Matrix4.multiplyByPointAsVector(
+          tilesetTransform,
+          normal,
+          scratchNormal
+        );
+
         normalOct = AttributeCompression.octEncode(normal, scratchNormalOct);
       }
 

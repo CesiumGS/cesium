@@ -187,7 +187,7 @@ describe("Scene/GltfBufferViewLoader", function () {
   });
 
   it("loads buffer view for embedded buffer", async function () {
-    const bufferLoader = ResourceCache.getEmbeddedBufferLoader({
+    const bufferLoader = ResourceCache.addBufferLoader({
       parentResource: gltfResource,
       bufferId: 0,
       typedArray: bufferTypedArray,
@@ -259,7 +259,7 @@ describe("Scene/GltfBufferViewLoader", function () {
   });
 
   it("decodes positions with EXT_meshopt_compression", async function () {
-    const bufferLoader = ResourceCache.getEmbeddedBufferLoader({
+    const bufferLoader = ResourceCache.addBufferLoader({
       parentResource: gltfResource,
       bufferId: 0,
       typedArray: meshoptPositionTypedArray,

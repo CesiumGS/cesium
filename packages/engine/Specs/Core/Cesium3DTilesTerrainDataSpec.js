@@ -14,6 +14,7 @@ import {
   TerrainProvider,
   Transforms,
   OrientedBoundingBox,
+  parseGlb,
   EllipsoidalOccluder,
 } from "../../index.js";
 
@@ -373,8 +374,10 @@ function createTerrainDataFromScratch(options) {
   glbBytes.set(binBuffer, glbByteOffset);
   glbByteOffset += binBuffer.byteLength;
 
+  const updatedGltf = parseGlb(new Uint8Array(glbBytes));
+
   const terrainData = new Cesium3DTilesTerrainData({
-    buffer: glbBytes,
+    gltf: updatedGltf,
     minimumHeight: minimumHeight,
     maximumHeight: maximumHeight,
     boundingSphere: boundingSphere,

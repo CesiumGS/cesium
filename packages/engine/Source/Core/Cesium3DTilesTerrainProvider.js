@@ -4,6 +4,7 @@ import CesiumMath from "./Math.js";
 import Check from "./Check.js";
 import Credit from "./Credit.js";
 import defaultValue from "./defaultValue.js";
+import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import DoubleEndedPriorityQueue from "./DoubleEndedPriorityQueue.js";
 import Ellipsoid from "./Ellipsoid.js";
@@ -11,6 +12,7 @@ import Event from "./Event.js";
 import GeographicTilingScheme from "./GeographicTilingScheme.js";
 import ImplicitSubtree from "../Scene/ImplicitSubtree.js";
 import ImplicitTileCoordinates from "../Scene/ImplicitTileCoordinates.js";
+import IonResource from "./IonResource.js";
 import ImplicitTileset from "../Scene/ImplicitTileset.js";
 import MetadataSchema from "../Scene/MetadataSchema.js";
 import MetadataSemantic from "../Scene/MetadataSemantic.js";
@@ -19,6 +21,10 @@ import Rectangle from "./Rectangle.js";
 import Resource from "./Resource.js";
 import RuntimeError from "./RuntimeError.js";
 import TerrainProvider from "./TerrainProvider.js";
+import MetadataSchemaLoader from "../Scene/MetadataSchemaLoader.js";
+import parseGlb from "../Scene/GltfPipeline/parseGlb.js";
+import ResourceCache from "../Scene/ResourceCache.js";
+import loadImageFromTypedArray from "./loadImageFromTypedArray.js";
 
 /**
  * @private
@@ -186,7 +192,8 @@ function isChildAvailable(implicitTileset, subtree, coord, x, y) {
  * Initialization options for the Cesium3DTilesTerrainProvider constructor
  *
  * @property {boolean} [requestVertexNormals=false] Flag that indicates if the client should request additional lighting information from the server, in the form of per vertex normals if available.
- * @property {Ellipsoid} [ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
+ * @property {boolean} [requestWaterMask=false] Flag that indicates if the client should request per tile water masks from the server, if available.
+ * @property {Ellipsoid} [ellipsoid=Ellipsoid.default] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
  * @property {Credit|string} [credit] A credit for the data source, which is displayed on the canvas.
  */
 
@@ -194,12 +201,25 @@ function isChildAvailable(implicitTileset, subtree, coord, x, y) {
  * A {@link TerrainProvider} that accesses terrain data in a 3D Tiles format.
  *
  * @alias Cesium3DTilesTerrainProvider
+ * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  * @constructor
  *
  * @param {Cesium3DTilesTerrainProvider.ConstructorOptions}[options] An object describing initialization options
  *
  * @see TerrainProvider
  * @see Cesium3DTilesTerrainProvider.fromUrl
+ * @see Cesium3DTilesTerrainProvider.fromIonAssetId
+ *
+ * // Create GTOPO30 with vertex normals
+ * try {
+ *   const viewer = new Cesium.Viewer("cesiumContainer", {
+ *     terrainProvider: await Cesium.Cesium3DTilesTerrainProvider.fromIonAssetId(2732686, {
+ *         requestVertexNormals: true
+ *     })
+ *   });
+ * } catch (error) {
+ *   console.log(error);
+ * }
  */
 function Cesium3DTilesTerrainProvider(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -240,10 +260,24 @@ function Cesium3DTilesTerrainProvider(options) {
   // @ts-ignore
   this._resource = undefined;
 
+  /**
+   * Boolean flag that indicates if the client should request vertex normals from the server.
+   * @type {boolean}
+   * @default false
+   * @private
+   */
   this._requestVertexNormals = defaultValue(
     options.requestVertexNormals,
     false
   );
+
+  /**
+   * Boolean flag that indicates if the client should request tile watermasks from the server.
+   * @type {boolean}
+   * @default false
+   * @private
+   */
+  this._requestWaterMask = defaultValue(options.requestWaterMask, false);
 }
 
 /**
@@ -310,7 +344,114 @@ Cesium3DTilesTerrainProvider.fromUrl = async function (url, options) {
   return provider;
 };
 
-const scratchPromises = new Array(2);
+async function loadWaterMask(gltf, gltfResource) {
+  const extension = gltf.extensions["EXT_structural_metadata"];
+  if (!defined(extension)) {
+    return;
+  }
+
+  if (!defined(extension.propertyTextures)) {
+    return;
+  }
+
+  const schemaLoader = new MetadataSchemaLoader({
+    schema: extension.schema,
+  });
+
+  await schemaLoader.load();
+  const schema = schemaLoader.schema;
+
+  let metadataClass, waterMaskProperty;
+  if (defined(schema.classes)) {
+    for (const classId in schema.classes) {
+      if (schema.classes.hasOwnProperty(classId)) {
+        metadataClass = schema.classes[classId];
+        waterMaskProperty = metadataClass.propertiesBySemantic["WATERMASK"];
+        if (defined(waterMaskProperty)) {
+          break;
+        }
+      }
+    }
+  }
+
+  if (!defined(waterMaskProperty)) {
+    return;
+  }
+
+  const propertyTextureData = extension.propertyTextures.find(
+    (data) => data.class === metadataClass.id
+  );
+  if (!defined(propertyTextureData)) {
+    throw new DeveloperError(
+      `Expected a propertyTexture with a class ${metadataClass.id}`
+    );
+  }
+
+  const textureInfo = propertyTextureData.properties[waterMaskProperty.id];
+  const texture = gltf.textures[textureInfo.index];
+  const bufferViewId = gltf.images[texture.source]?.bufferView;
+
+  const bufferViewLoader = ResourceCache.getBufferViewLoader({
+    gltf: gltf,
+    bufferViewId: bufferViewId,
+    gltfResource: gltfResource,
+    baseResource: gltfResource,
+  });
+  await bufferViewLoader.load();
+
+  const image = await loadImageFromTypedArray({
+    uint8Array: new Uint8Array(bufferViewLoader.typedArray),
+    format: "image/png",
+    flipY: false,
+    skipColorSpaceConversion: true,
+  });
+
+  return image;
+}
+
+/**
+ * Creates a {@link TerrainProvider} from a Cesium ion asset ID that accesses terrain data in a Cesium terrain format
+ * Terrain formats can be one of the following:
+ * <ul>
+ * <li> {@link https://github.com/AnalyticalGraphicsInc/quantized-mesh Quantized Mesh} </li>
+ * <li> {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/heightmap-1.0 Height Map} </li>
+ * </ul>
+ *
+ * @param {number} assetId The Cesium ion asset id.
+ * @param {CesiumTerrainProvider.ConstructorOptions} [options] An object describing initialization options.
+ * @returns {Promise<CesiumTerrainProvider>}
+ *
+ * @example
+ * // Create GTOPO30 with vertex normals
+ * try {
+ *   const viewer = new Cesium.Viewer("cesiumContainer", {
+ *     terrainProvider: await Cesium.Cesium3DTilesTerrainProvider.fromIonAssetId(2732686, {
+ *         requestVertexNormals: true
+ *     })
+ *   });
+ * } catch (error) {
+ *   console.log(error);
+ * }
+ *
+ * @exception {RuntimeError} layer.json does not specify a format
+ * @exception {RuntimeError} layer.json specifies an unknown format
+ * @exception {RuntimeError} layer.json specifies an unsupported quantized-mesh version
+ * @exception {RuntimeError} layer.json does not specify a tiles property, or specifies an empty array
+ * @exception {RuntimeError} layer.json does not specify any tile URL templates
+ */
+Cesium3DTilesTerrainProvider.fromIonAssetId = async function (
+  assetId,
+  options
+) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("assetId", assetId);
+  //>>includeEnd('debug');
+
+  const resource = await IonResource.fromAssetId(assetId);
+  return Cesium3DTilesTerrainProvider.fromUrl(resource, options);
+};
+
+const scratchPromises = new Array(3);
 
 /**
  * Requests the geometry for a given tile. This function should not be called before
@@ -347,6 +488,8 @@ Cesium3DTilesTerrainProvider.prototype.requestTileGeometry = function (
 
   const cache = this._subtreeCache;
   let subtree = cache.find(rootId, subtreeCoord);
+
+  const requestWaterMask = this._requestWaterMask;
   const that = this;
 
   /** @type {Promise<ImplicitSubtree>} */
@@ -410,127 +553,106 @@ Cesium3DTilesTerrainProvider.prototype.requestTileGeometry = function (
     return undefined;
   }
 
+  const gltfPromise = glbPromise.then((glbBuffer) =>
+    parseGlb(new Uint8Array(glbBuffer))
+  );
+
   const promises = scratchPromises;
   promises[0] = subtreePromise;
-  promises[1] = glbPromise;
+  promises[1] = gltfPromise;
+  promises[2] = requestWaterMask
+    ? gltfPromise.then((gltf) => loadWaterMask(gltf, glbResource))
+    : undefined;
+
   // @ts-ignore
   return Promise.all(promises)
-    .then(
-      function (results) {
-        /** @type {ImplicitSubtree} */
-        const subtree = results[0];
-        /** @type {ArrayBuffer} */
-        const glbBuffer = results[1];
+    .then(function (results) {
+      const subtree = results[0];
+      const gltf = results[1];
+      const waterMask = results[2];
 
-        /** @type {ImplicitMetadataView} */
-        const metadataView = subtree.getTileMetadataView(tileCoord);
+      /** @type {ImplicitMetadataView} */
+      const metadataView = subtree.getTileMetadataView(tileCoord);
 
-        // @ts-ignore
-        const minimumHeight = metadataView.getPropertyBySemantic(
-          MetadataSemantic.TILE_MINIMUM_HEIGHT
-        );
+      // @ts-ignore
+      const minimumHeight = metadataView.getPropertyBySemantic(
+        MetadataSemantic.TILE_MINIMUM_HEIGHT
+      );
 
-        // @ts-ignore
-        const maximumHeight = metadataView.getPropertyBySemantic(
-          MetadataSemantic.TILE_MAXIMUM_HEIGHT
-        );
+      // @ts-ignore
+      const maximumHeight = metadataView.getPropertyBySemantic(
+        MetadataSemantic.TILE_MAXIMUM_HEIGHT
+      );
 
-        // @ts-ignore
-        const boundingSphereArray = metadataView.getPropertyBySemantic(
-          MetadataSemantic.TILE_BOUNDING_SPHERE
-        );
-        const boundingSphere = BoundingSphere.unpack(
-          boundingSphereArray,
-          0,
-          new BoundingSphere()
-        );
+      // @ts-ignore
+      const boundingSphereArray = metadataView.getPropertyBySemantic(
+        MetadataSemantic.TILE_BOUNDING_SPHERE
+      );
+      const boundingSphere = BoundingSphere.unpack(
+        boundingSphereArray,
+        0,
+        new BoundingSphere()
+      );
 
-        // @ts-ignore
-        const horizonOcclusionPoint = metadataView.getPropertyBySemantic(
-          MetadataSemantic.TILE_HORIZON_OCCLUSION_POINT
-        );
+      // @ts-ignore
+      const horizonOcclusionPoint = metadataView.getPropertyBySemantic(
+        MetadataSemantic.TILE_HORIZON_OCCLUSION_POINT
+      );
 
-        const tilingScheme = that._tilingScheme;
+      const tilingScheme = that._tilingScheme;
 
-        // The tiling scheme uses geographic coords, not implicit coords
-        const rectangle = tilingScheme.tileXYToRectangle(
-          x,
-          y,
-          level,
-          new Rectangle()
-        );
+      // The tiling scheme uses geographic coords, not implicit coords
+      const rectangle = tilingScheme.tileXYToRectangle(
+        x,
+        y,
+        level,
+        new Rectangle()
+      );
 
-        const ellipsoid = that._ellipsoid;
+      const ellipsoid = that._ellipsoid;
 
-        const orientedBoundingBox = OrientedBoundingBox.fromRectangle(
-          rectangle,
-          minimumHeight,
-          maximumHeight,
-          ellipsoid,
-          new OrientedBoundingBox()
-        );
+      const orientedBoundingBox = OrientedBoundingBox.fromRectangle(
+        rectangle,
+        minimumHeight,
+        maximumHeight,
+        ellipsoid,
+        new OrientedBoundingBox()
+      );
 
-        const skirtHeight = that.getLevelMaximumGeometricError(level) * 5.0;
+      const skirtHeight = that.getLevelMaximumGeometricError(level) * 5.0;
 
-        const hasSW = isChildAvailable(
-          implicitTileset,
-          subtree,
-          tileCoord,
-          0,
-          0
-        );
-        const hasSE = isChildAvailable(
-          implicitTileset,
-          subtree,
-          tileCoord,
-          1,
-          0
-        );
-        const hasNW = isChildAvailable(
-          implicitTileset,
-          subtree,
-          tileCoord,
-          0,
-          1
-        );
-        const hasNE = isChildAvailable(
-          implicitTileset,
-          subtree,
-          tileCoord,
-          1,
-          1
-        );
-        const childTileMask =
-          (hasSW ? 1 : 0) | (hasSE ? 2 : 0) | (hasNW ? 4 : 0) | (hasNE ? 8 : 0);
+      const hasSW = isChildAvailable(implicitTileset, subtree, tileCoord, 0, 0);
+      const hasSE = isChildAvailable(implicitTileset, subtree, tileCoord, 1, 0);
+      const hasNW = isChildAvailable(implicitTileset, subtree, tileCoord, 0, 1);
+      const hasNE = isChildAvailable(implicitTileset, subtree, tileCoord, 1, 1);
+      const childTileMask =
+        (hasSW ? 1 : 0) | (hasSE ? 2 : 0) | (hasNW ? 4 : 0) | (hasNE ? 8 : 0);
 
-        const terrainData = new Cesium3DTilesTerrainData({
-          buffer: glbBuffer,
-          minimumHeight: minimumHeight,
-          maximumHeight: maximumHeight,
-          boundingSphere: boundingSphere,
-          orientedBoundingBox: orientedBoundingBox,
-          horizonOcclusionPoint: horizonOcclusionPoint,
-          skirtHeight: skirtHeight,
-          requestVertexNormals: that._requestVertexNormals,
-          childTileMask: childTileMask,
-          credits: that._tileCredits,
-        });
+      const terrainData = new Cesium3DTilesTerrainData({
+        gltf: gltf,
+        minimumHeight: minimumHeight,
+        maximumHeight: maximumHeight,
+        boundingSphere: boundingSphere,
+        orientedBoundingBox: orientedBoundingBox,
+        horizonOcclusionPoint: horizonOcclusionPoint,
+        skirtHeight: skirtHeight,
+        requestVertexNormals: that._requestVertexNormals,
+        childTileMask: childTileMask,
+        credits: that._tileCredits,
+        waterMask: waterMask,
+      });
 
-        return Promise.resolve(terrainData);
-      },
-      function (/**@type {any}*/ err) {
-        console.log(
-          `Could not load subtree: ${rootId} ${subtreeCoord.level} ${subtreeCoord.x} ${subtreeCoord.y}: ${err}`
-        );
+      return Promise.resolve(terrainData);
+    })
+    .catch(function (err) {
+      console.log(
+        `Could not load subtree: ${rootId} ${subtreeCoord.level} ${subtreeCoord.x} ${subtreeCoord.y}: ${err}`
+      );
 
-        console.log(
-          `Could not load tile: ${rootId} ${tileCoord.level} ${tileCoord.x} ${tileCoord.y}: ${err}`
-        );
-        return undefined;
-      }
-    )
-    .catch(function (error) {
-      console.log(error);
+      console.log(
+        `Could not load tile: ${rootId} ${tileCoord.level} ${tileCoord.x} ${tileCoord.y}: ${err}`
+      );
+      return undefined;
     });
 };
 
@@ -694,7 +816,7 @@ Object.defineProperties(Cesium3DTilesTerrainProvider.prototype, {
   // @ts-ignore
   hasWaterMask: {
     get: function () {
-      return false;
+      return this._requestWaterMask;
     },
   },
 
