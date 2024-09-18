@@ -29,6 +29,8 @@ import ResourceCache from "./ResourceCache.js";
 import ResourceLoader from "./ResourceLoader.js";
 import SupportedImageFormats from "./SupportedImageFormats.js";
 import VertexAttributeSemantic from "./VertexAttributeSemantic.js";
+import GltfGpmLoader from "./GltfGpmLoader.js";
+import GltfMeshPrimitiveGpmLoader from "./GltfMeshPrimitiveGpmLoader.js";
 
 const {
   Attribute,
@@ -260,6 +262,8 @@ function GltfLoader(options) {
   this._geometryLoaders = [];
   this._geometryCallbacks = [];
   this._structuralMetadataLoader = undefined;
+  this._gpmLoader = undefined;
+  this._meshPrimitiveGpmLoader = undefined;
   this._loadResourcesPromise = undefined;
   this._resourcesLoaded = false;
   this._texturesLoaded = false;
@@ -467,6 +471,29 @@ function processLoaders(loader, frameState) {
     if (metadataReady) {
       loader._components.structuralMetadata =
         structuralMetadataLoader.structuralMetadata;
+    }
+    ready = ready && metadataReady;
+  }
+
+  const gpmLoader = loader._gpmLoader;
+  if (defined(gpmLoader)) {
+    const gpmReady = gpmLoader.process(frameState);
+    if (gpmReady) {
+      // XXX
+      console.log("Got GPM data, storing ", gpmLoader._gltfGpmLocal);
+      loader._components.extensions["NGA_gpm_local"] = gpmLoader._gltfGpmLocal;
+    }
+    ready = ready && gpmReady;
+  }
+
+  const meshPrimitiveGpmLoader = loader._meshPrimitiveGpmLoader;
+  if (defined(meshPrimitiveGpmLoader)) {
+    const metadataReady = meshPrimitiveGpmLoader.process(frameState);
+    if (metadataReady) {
+      // XXX
+      console.log("Overwriting structural metadata with GPM data");
+      loader._components.structuralMetadata =
+        meshPrimitiveGpmLoader.structuralMetadata;
     }
     ready = ready && metadataReady;
   }
@@ -2453,6 +2480,32 @@ async function loadStructuralMetadata(
   return structuralMetadataLoader.load();
 }
 
+async function loadGpm(loader, gltf, extension) {
+  const gpmLoader = new GltfGpmLoader({
+    gltf: gltf,
+    extension: extension,
+    gltfResource: loader._gltfResource,
+    baseResource: loader._baseResource,
+    asynchronous: loader._asynchronous,
+  });
+  loader._gpmLoader = gpmLoader;
+  return gpmLoader.load();
+}
+
+async function loadMeshPrimitiveGpm(loader, gltf, extension, frameState) {
+  const meshPrimitiveGpmLoader = new GltfMeshPrimitiveGpmLoader({
+    gltf: gltf,
+    extension: extension,
+    gltfResource: loader._gltfResource,
+    baseResource: loader._baseResource,
+    supportedImageFormats: loader._supportedImageFormats,
+    frameState: frameState,
+    asynchronous: loader._asynchronous,
+  });
+  loader._meshPrimitiveGpmLoader = meshPrimitiveGpmLoader;
+  return meshPrimitiveGpmLoader.load();
+}
+
 function loadAnimationSampler(loader, gltfSampler) {
   const animationSampler = new AnimationSampler();
   const accessors = loader.gltfJson.accessors;
@@ -2681,6 +2734,39 @@ function parse(loader, frameState) {
     loader._loaderPromises.push(promise);
   }
 
+  // Load NGA_gpm_local from root object
+  const gpmExtension = extensions.NGA_gpm_local;
+  if (defined(gpmExtension)) {
+    console.log("Loading GPM from root");
+    const promise = loadGpm(loader, gltf, gpmExtension);
+    loader._loaderPromises.push(promise);
+  }
+
+  // Load NGA_gpm_local from mesh primitives
+  const meshes = gltf.meshes;
+  if (defined(meshes)) {
+    for (const mesh of meshes) {
+      const primitives = mesh.primitives;
+      if (defined(primitives)) {
+        for (const primitive of primitives) {
+          const primitiveExtensions = primitive.extensions;
+          const meshPrimitiveGpmExtension = primitiveExtensions.NGA_gpm_local;
+          if (defined(meshPrimitiveGpmExtension)) {
+            // XXX
+            console.log("Loading GPM from mesh primitive");
+            const promise = loadMeshPrimitiveGpm(
+              loader,
+              gltf,
+              meshPrimitiveGpmExtension,
+              frameState
+            );
+            loader._loaderPromises.push(promise);
+          }
+        }
+      }
+    }
+  }
+
   // Gather promises and handle any errors
   const readyPromises = [];
   readyPromises.push.apply(readyPromises, loader._loaderPromises);
@@ -2745,6 +2831,23 @@ function unloadStructuralMetadata(loader) {
   }
 }
 
+function unloadGpm(loader) {
+  if (defined(loader._gpmLoader) && !loader._gpmLoader.isDestroyed()) {
+    loader._gpmLoader.destroy();
+    loader._gpmLoader = undefined;
+  }
+}
+
+function unloadMeshPrimitiveGpm(loader) {
+  if (
+    defined(loader._meshPrimitiveGpmLoader) &&
+    !loader._meshPrimitiveGpmLoader.isDestroyed()
+  ) {
+    loader._meshPrimitiveGpmLoader.destroy();
+    loader._meshPrimitiveGpmLoader = undefined;
+  }
+}
+
 /**
  * Returns whether the resource has been unloaded.
  * @private
@@ -2768,6 +2871,8 @@ GltfLoader.prototype.unload = function () {
   unloadGeometry(this);
   unloadGeneratedAttributes(this);
   unloadStructuralMetadata(this);
+  unloadGpm(this);
+  unloadMeshPrimitiveGpm(this);
 
   this._components = undefined;
   this._typedArray = undefined;

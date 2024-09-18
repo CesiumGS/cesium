@@ -1773,6 +1773,24 @@ Model.prototype.applyArticulations = function () {
 };
 
 /**
+ * XXX_TODO_COMMENT
+ *
+ * @exception {DeveloperError} The model is not loaded. Use Model.readyEvent or wait for Model.ready to be true.
+ */
+Model.prototype.getExtension = function (extensionName) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("extensionName", extensionName);
+  if (!this._ready) {
+    throw new DeveloperError(
+      "The model is not loaded. Use Model.readyEvent or wait for Model.ready to be true."
+    );
+  }
+  //>>includeEnd('debug');
+  const components = this._loader.components;
+  return components.extensions[extensionName];
+};
+
+/**
  * Marks the model's {@link Model#style} as dirty, which forces all features
  * to re-evaluate the style in the next frame the model is visible.
  */
