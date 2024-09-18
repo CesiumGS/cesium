@@ -721,6 +721,30 @@ describe(
       }, "render loop to be disabled.");
     });
 
+    it("suspends animation by dataSources if allowed", function () {
+      viewer = createViewer(container);
+
+      let updateResult = true;
+      spyOn(viewer.dataSourceDisplay, "update").and.callFake(function () {
+        viewer.dataSourceDisplay._ready = updateResult;
+        return updateResult;
+      });
+
+      expect(viewer.clockViewModel.canAnimate).toBe(true);
+
+      viewer.render();
+      expect(viewer.clockViewModel.canAnimate).toBe(true);
+
+      updateResult = false;
+      viewer.render();
+      expect(viewer.clockViewModel.canAnimate).toBe(false);
+
+      viewer.clockViewModel.canAnimate = true;
+      viewer.allowDataSourcesToSuspendAnimation = false;
+      viewer.render();
+      expect(viewer.clockViewModel.canAnimate).toBe(true);
+    });
+
     it("sets the clock and timeline based on the first data source", function () {
       const dataSource = new MockDataSource();
       dataSource.clock = new DataSourceClock();
@@ -1234,7 +1258,7 @@ describe(
       );
       const promise = viewer.zoomTo(tileset);
 
-      viewer._postRender();
+      viewer._cesiumWidget._postRender();
 
       return promise.then(function () {
         expect(wasCompleted).toEqual(true);
@@ -1265,7 +1289,7 @@ describe(
         },
       );
 
-      viewer._postRender();
+      viewer._cesiumWidget._postRender();
 
       return promise.then(function () {
         expect(wasCompleted).toEqual(true);
@@ -1333,7 +1357,7 @@ describe(
           },
         );
 
-        viewer._postRender();
+        viewer._cesiumWidget._postRender();
 
         return promise.then(function () {
           expect(wasCompleted).toEqual(true);
@@ -1362,7 +1386,7 @@ describe(
           },
         );
 
-        viewer._postRender();
+        viewer._cesiumWidget._postRender();
 
         return promise.then(function () {
           expect(wasCompleted).toEqual(true);
@@ -1402,7 +1426,7 @@ describe(
           },
         );
 
-        viewer._postRender();
+        viewer._cesiumWidget._postRender();
 
         return promise.then(function () {
           expect(wasCompleted).toEqual(true);
@@ -1431,7 +1455,7 @@ describe(
           },
         );
 
-        viewer._postRender();
+        viewer._cesiumWidget._postRender();
 
         return promise.then(function () {
           expect(wasCompleted).toEqual(true);
@@ -1454,7 +1478,7 @@ describe(
 
       const promise = viewer.zoomTo(entities);
       let wasCompleted = false;
-      spyOn(viewer._dataSourceDisplay, "getBoundingSphere").and.callFake(
+      spyOn(viewer.dataSourceDisplay, "getBoundingSphere").and.callFake(
         function () {
           return new BoundingSphere();
         },
@@ -1469,7 +1493,7 @@ describe(
         },
       );
 
-      viewer._postRender();
+      viewer._cesiumWidget._postRender();
 
       return promise.then(function () {
         expect(wasCompleted).toEqual(true);
@@ -1493,7 +1517,7 @@ describe(
 
       const promise = viewer.zoomTo(entities, expectedOffset);
       let wasCompleted = false;
-      spyOn(viewer._dataSourceDisplay, "getBoundingSphere").and.callFake(
+      spyOn(viewer.dataSourceDisplay, "getBoundingSphere").and.callFake(
         function () {
           return new BoundingSphere();
         },
@@ -1505,7 +1529,7 @@ describe(
         },
       );
 
-      viewer._postRender();
+      viewer._cesiumWidget._postRender();
 
       return promise.then(function () {
         expect(wasCompleted).toEqual(true);
@@ -1568,7 +1592,7 @@ describe(
         },
       );
 
-      viewer._postRender();
+      viewer._cesiumWidget._postRender();
 
       return promise.then(function () {
         expect(wasCompleted).toEqual(true);
@@ -1597,7 +1621,7 @@ describe(
         },
       );
 
-      viewer._postRender();
+      viewer._cesiumWidget._postRender();
 
       return promise.then(function () {
         expect(wasCompleted).toEqual(true);
@@ -1630,7 +1654,7 @@ describe(
         },
       );
 
-      viewer._postRender();
+      viewer._cesiumWidget._postRender();
 
       return promise.then(function () {
         expect(wasCompleted).toEqual(true);
@@ -1653,7 +1677,7 @@ describe(
           },
         );
 
-        viewer._postRender();
+        viewer._cesiumWidget._postRender();
 
         return promise.then(function () {
           expect(wasCompleted).toEqual(true);
@@ -1679,7 +1703,7 @@ describe(
           },
         );
 
-        viewer._postRender();
+        viewer._cesiumWidget._postRender();
 
         return promise.then(function () {
           expect(wasCompleted).toEqual(true);
@@ -1709,7 +1733,7 @@ describe(
           },
         );
 
-        viewer._postRender();
+        viewer._cesiumWidget._postRender();
 
         return promise.then(function () {
           expect(wasCompleted).toEqual(true);
@@ -1735,7 +1759,7 @@ describe(
           },
         );
 
-        viewer._postRender();
+        viewer._cesiumWidget._postRender();
 
         return promise.then(function () {
           expect(wasCompleted).toEqual(true);
@@ -1761,7 +1785,7 @@ describe(
           },
         );
 
-        viewer._postRender();
+        viewer._cesiumWidget._postRender();
 
         return promise.then(function () {
           expect(wasCompleted).toEqual(true);
@@ -1793,7 +1817,7 @@ describe(
           },
         );
 
-        viewer._postRender();
+        viewer._cesiumWidget._postRender();
 
         return promise.then(function () {
           expect(wasCompleted).toEqual(true);
@@ -1816,7 +1840,7 @@ describe(
       const entities = viewer.entities;
       const promise = viewer.flyTo(entities);
       let wasCompleted = false;
-      spyOn(viewer._dataSourceDisplay, "getBoundingSphere").and.callFake(
+      spyOn(viewer.dataSourceDisplay, "getBoundingSphere").and.callFake(
         function () {
           return new BoundingSphere();
         },
@@ -1830,7 +1854,7 @@ describe(
         },
       );
 
-      viewer._postRender();
+      viewer._cesiumWidget._postRender();
 
       return promise.then(function () {
         expect(wasCompleted).toEqual(true);
@@ -1846,7 +1870,7 @@ describe(
         duration: 0,
       });
 
-      viewer._postRender();
+      viewer._cesiumWidget._postRender();
 
       await expectAsync(promise).toBeResolved();
     });
@@ -1868,7 +1892,7 @@ describe(
           },
         );
 
-        viewer._postRender();
+        viewer._cesiumWidget._postRender();
 
         return promise.then(function () {
           expect(wasCompleted).toEqual(true);
@@ -1894,7 +1918,7 @@ describe(
           },
         );
 
-        viewer._postRender();
+        viewer._cesiumWidget._postRender();
 
         return promise.then(function () {
           expect(wasCompleted).toEqual(true);
@@ -1926,7 +1950,7 @@ describe(
           },
         );
 
-        viewer._postRender();
+        viewer._cesiumWidget._postRender();
 
         return promise.then(function () {
           expect(wasCompleted).toEqual(true);
@@ -1951,7 +1975,7 @@ describe(
 
       const promise = viewer.flyTo(entities, options);
       let wasCompleted = false;
-      spyOn(viewer._dataSourceDisplay, "getBoundingSphere").and.callFake(
+      spyOn(viewer.dataSourceDisplay, "getBoundingSphere").and.callFake(
         function () {
           return new BoundingSphere();
         },
@@ -1965,7 +1989,7 @@ describe(
         },
       );
 
-      viewer._postRender();
+      viewer._cesiumWidget._postRender();
 
       return promise.then(function () {
         expect(wasCompleted).toEqual(true);
@@ -1994,7 +2018,7 @@ describe(
 
       const promise = viewer.flyTo(entities, options);
       let wasCompleted = false;
-      spyOn(viewer._dataSourceDisplay, "getBoundingSphere").and.callFake(
+      spyOn(viewer.dataSourceDisplay, "getBoundingSphere").and.callFake(
         function () {
           return new BoundingSphere();
         },
@@ -2008,7 +2032,7 @@ describe(
         },
       );
 
-      viewer._postRender();
+      viewer._cesiumWidget._postRender();
 
       return promise.then(function () {
         expect(wasCompleted).toEqual(true);
@@ -2035,7 +2059,7 @@ describe(
 
       const promise = viewer.flyTo(entities, options);
       let wasCompleted = false;
-      spyOn(viewer._dataSourceDisplay, "getBoundingSphere").and.callFake(
+      spyOn(viewer.dataSourceDisplay, "getBoundingSphere").and.callFake(
         function () {
           return new BoundingSphere();
         },
@@ -2049,7 +2073,7 @@ describe(
         },
       );
 
-      viewer._postRender();
+      viewer._cesiumWidget._postRender();
 
       return promise.then(function () {
         expect(wasCompleted).toEqual(true);
