@@ -131,41 +131,25 @@ function TerrainMesh(
 
   /**
    * The indices of the vertices on the Western edge of the tile, ordered from South to North (clockwise).
-<<<<<<< HEAD
-   * @type {Number[]|Uint8Array|Uint16Array|Uint32Array}
-=======
-   * @type {number[]}
->>>>>>> main
+   * @type {number[]|Uint8Array|Uint16Array|Uint32Array}
    */
   this.westIndicesSouthToNorth = westIndicesSouthToNorth;
 
   /**
    * The indices of the vertices on the Southern edge of the tile, ordered from East to West (clockwise).
-<<<<<<< HEAD
-   * @type {Number[]|Uint8Array|Uint16Array|Uint32Array}
-=======
-   * @type {number[]}
->>>>>>> main
+   * @type {number[]|Uint8Array|Uint16Array|Uint32Array}
    */
   this.southIndicesEastToWest = southIndicesEastToWest;
 
   /**
    * The indices of the vertices on the Eastern edge of the tile, ordered from North to South (clockwise).
-<<<<<<< HEAD
-   * @type {Number[]|Uint8Array|Uint16Array|Uint32Array}
-=======
-   * @type {number[]}
->>>>>>> main
+   * @type {number[]|Uint8Array|Uint16Array|Uint32Array}
    */
   this.eastIndicesNorthToSouth = eastIndicesNorthToSouth;
 
   /**
    * The indices of the vertices on the Northern edge of the tile, ordered from West to East (clockwise).
-<<<<<<< HEAD
-   * @type {Number[]|Uint8Array|Uint16Array|Uint32Array}
-=======
-   * @type {number[]}
->>>>>>> main
+   * @type {number[]|Uint8Array|Uint16Array|Uint32Array}
    */
   this.northIndicesWestToEast = northIndicesWestToEast;
 }
