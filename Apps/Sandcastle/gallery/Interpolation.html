@@ -156,15 +156,17 @@
 
         Sandcastle.addToolbarMenu([
           {
-            text: "Tracking reference frame: Fixed",
+            text: "Tracking reference frame: East-North-Up",
             onselect: function () {
-              entity.trackingReferenceFrame = Cesium.ReferenceFrame.FIXED;
+              entity.trackingReferenceFrame =
+                Cesium.TrackingReferenceFrame.EAST_NORTH_UP;
             },
           },
           {
             text: "Tracking reference frame: Inertial",
             onselect: function () {
-              entity.trackingReferenceFrame = Cesium.ReferenceFrame.INERTIAL;
+              entity.trackingReferenceFrame =
+                Cesium.TrackingReferenceFrame.INERTIAL;
             },
           },
         ]);
