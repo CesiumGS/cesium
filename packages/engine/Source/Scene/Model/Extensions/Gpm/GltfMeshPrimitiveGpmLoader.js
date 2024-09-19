@@ -224,8 +224,7 @@ GltfMeshPrimitiveGpmLoader.prototype.createPpeTextureClassJson = function (
   const traits = ppeTexture.traits;
   const ppePropertyName = traits.source;
 
-  // XXX_UNCERTAINTY: The ppeTexture will have a structure
-  // like this:
+  // The ppeTexture will have a structure like this:
   //
   //"ppeTextures" : [
   //  {
@@ -241,16 +240,16 @@ GltfMeshPrimitiveGpmLoader.prototype.createPpeTextureClassJson = function (
   //    "texCoord" : 1
   //  },
   //
-  // Note that in GPM 1.2d, the min/max should be part of the
-  // texture, but in the actual data (GPM 1.2i), they are in
-  // the traits (ppeMetadata). And there, they/ seem to denote
-  // the min/max values that actually appear in the texture.
-  // So they are integrated into the 'scale' factor here:
-  const min = traits.min ?? 0;
-  const max = traits.max ?? 255;
-  const minMaxScale = 255.0 / (max - min);
-  const offset = ppeTexture.offset;
-  const scale = ppeTexture.scale * minMaxScale;
+  // This is translated into a single class property here, that defines
+  // the structure of the property texture property.
+  //
+  // Given that `offset` and `scale` may only be applied to integer
+  // property values when they are `normalized`, the values will be
+  // declared as `normalized` here.
+  // The and the normalization factor will later have to be
+  // cancelled out, when integrating the `scale` into the
+  // actual property texture property. In the property texture
+  // property, the `scale` has to be multiplied by 255.
   const classJson = {
     name: `PPE texture class ${index}`,
     properties: {
@@ -259,8 +258,8 @@ GltfMeshPrimitiveGpmLoader.prototype.createPpeTextureClassJson = function (
         type: "SCALAR",
         componentType: "UINT8",
         normalized: true,
-        offset: offset,
-        scale: scale,
+        min: traits.min,
+        max: traits.max,
       },
     },
   };
@@ -407,12 +406,19 @@ GltfMeshPrimitiveGpmLoader.prototype.process = function (frameState) {
       //  `Creating property texture with class ${classId} and property ${ppePropertyName}`
       //);
 
+      // The class property has been declared as `normalized`, so
+      // that `offset` and `scale` can be applied. The normalization
+      // factor has to be cancelled out here, by multiplying the
+      // `scale` with 255.
+      const scale = ppeTexture.scale * 255.0;
       const ppeTextureAsPropertyTexture = {
         class: classId,
         properties: {
           [ppePropertyName]: {
             index: ppeTexture.index,
             texCoord: ppeTexture.texCoord,
+            offset: ppeTexture.offset,
+            scale: scale,
           },
         },
       };
