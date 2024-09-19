@@ -19,6 +19,13 @@ import StorageType from "./StorageType.js";
  * </p>
  * Implementation note: This is an experimental implementation.
  *
+ * TODO This implements ResourceLoader, even though it does not really
+ * load other resources (in contrast to GltfMeshPrimitiveGpmLoader,
+ * which loads textures). Parsing the JSON into a GltfGpmLocal
+ * could be done directly (synchronously in the GltfLoader class).
+ * But it should be carved out into a dedicated class, regardless
+ * of how this is eventually USED from the GltfLoader.
+ *
  * @alias GltfGpmLoader
  * @constructor
  * @augments ResourceLoader
