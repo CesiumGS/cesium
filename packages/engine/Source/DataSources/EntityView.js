@@ -9,7 +9,7 @@ import CesiumMath from "../Core/Math.js";
 import Matrix3 from "../Core/Matrix3.js";
 import Matrix4 from "../Core/Matrix4.js";
 import Quaternion from "../Core/Quaternion.js";
-import ReferenceFrame from "../Core/ReferenceFrame.js";
+import TrackingReferenceFrame from "../Core/TrackingReferenceFrame.js";
 import Transforms from "../Core/Transforms.js";
 import SceneMode from "../Scene/SceneMode.js";
 
@@ -243,7 +243,7 @@ function updateTransform(
     }
 
     if (
-      trackingReferenceFrame === ReferenceFrame.INERTIAL &&
+      trackingReferenceFrame === TrackingReferenceFrame.INERTIAL &&
       defined(orientation)
     ) {
       Matrix4.fromTranslationQuaternionRotationScale(
@@ -275,7 +275,7 @@ function updateTransform(
     }
 
     if (
-      trackingReferenceFrame === ReferenceFrame.FIXED ||
+      trackingReferenceFrame === TrackingReferenceFrame.EAST_NORTH_UP ||
       mode === SceneMode.SCENE2D
     ) {
       camera._setTransform(transform);
@@ -400,7 +400,7 @@ EntityView.prototype.update = function (time, boundingSphere) {
   }
   const orientationProperty = entity.orientation;
   if (
-    trackingReferenceFrame === ReferenceFrame.INERTIAL &&
+    trackingReferenceFrame === TrackingReferenceFrame.INERTIAL &&
     !defined(orientationProperty)
   ) {
     return;

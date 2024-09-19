@@ -6,7 +6,7 @@ import {
   ConstantPositionProperty,
   Entity,
   EntityView,
-  ReferenceFrame,
+  TrackingReferenceFrame,
 } from "../../index.js";
 
 import createScene from "../../../../Specs/createScene.js";
@@ -76,7 +76,7 @@ describe(
       view.update(JulianDate.now());
       expect(view.scene.camera.position).toEqualEpsilon(sampleOffset, 1e-10);
 
-      entity.trackingReferenceFrame = ReferenceFrame.INERTIAL;
+      entity.trackingReferenceFrame = TrackingReferenceFrame.INERTIAL;
       view.update(JulianDate.now());
       expect(view.scene.camera.position).toEqualEpsilon(sampleOffset, 1e-10);
     });
@@ -98,7 +98,7 @@ describe(
       );
       expect(view.scene.camera.position).toEqualEpsilon(sampleOffset, 1e-10);
 
-      entity.trackingReferenceFrame = ReferenceFrame.INERTIAL;
+      entity.trackingReferenceFrame = TrackingReferenceFrame.INERTIAL;
       view.update(
         JulianDate.now(),
         new BoundingSphere(new Cartesian3(3, 4, 5), 6)
@@ -122,7 +122,7 @@ describe(
       view.update(JulianDate.now());
       expect(view.scene.camera.position).toEqualEpsilon(sampleOffset, 1e-10);
 
-      entity.trackingReferenceFrame = ReferenceFrame.INERTIAL;
+      entity.trackingReferenceFrame = TrackingReferenceFrame.INERTIAL;
       view.update(JulianDate.now());
       expect(view.scene.camera.position).toEqualEpsilon(sampleOffset, 1e-10);
     });
@@ -144,7 +144,7 @@ describe(
 
     it("update returns with entity.trackingReferenceFrame set to INERTIAL and without entity.orientation property.", function () {
       const entity = new Entity();
-      entity.trackingReferenceFrame = ReferenceFrame.INERTIAL;
+      entity.trackingReferenceFrame = TrackingReferenceFrame.INERTIAL;
       const view = new EntityView(entity, scene);
       view.update(JulianDate.now());
     });
