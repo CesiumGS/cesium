@@ -1,6 +1,5 @@
 import {
   buildModuleUrl,
-  defaultValue,
   defined,
   destroyObject,
   DeveloperError,
@@ -42,11 +41,7 @@ function NavigationHelpButton(options) {
 
   const viewModel = new NavigationHelpButtonViewModel();
 
-  const showInsructionsDefault = defaultValue(
-    options.instructionsInitiallyVisible,
-    false
-  );
-  viewModel.showInstructions = showInsructionsDefault;
+  viewModel.showInstructions = options.instructionsInitiallyVisible ?? false;
 
   viewModel._svgPath =
     "M16,1.466C7.973,1.466,1.466,7.973,1.466,16c0,8.027,6.507,14.534,14.534,14.534c8.027,0,14.534-6.507,14.534-14.534C30.534,7.973,24.027,1.466,16,1.466z M17.328,24.371h-2.707v-2.596h2.707V24.371zM17.328,19.003v0.858h-2.707v-1.057c0-3.19,3.63-3.696,3.63-5.963c0-1.034-0.924-1.826-2.134-1.826c-1.254,0-2.354,0.924-2.354,0.924l-1.541-1.915c0,0,1.519-1.584,4.137-1.584c2.487,0,4.796,1.54,4.796,4.136C21.156,16.208,17.328,16.627,17.328,19.003z";
@@ -64,7 +59,7 @@ function NavigationHelpButton(options) {
     "\
 attr: { title: tooltip },\
 click: command,\
-cesiumSvgPath: { path: _svgPath, width: 32, height: 32 }"
+cesiumSvgPath: { path: _svgPath, width: 32, height: 32 }",
   );
   wrapper.appendChild(button);
 
@@ -72,7 +67,7 @@ cesiumSvgPath: { path: _svgPath, width: 32, height: 32 }"
   instructionContainer.className = "cesium-navigation-help";
   instructionContainer.setAttribute(
     "data-bind",
-    'css: { "cesium-navigation-help-visible" : showInstructions}'
+    'css: { "cesium-navigation-help-visible" : showInstructions}',
   );
   wrapper.appendChild(instructionContainer);
 
@@ -82,7 +77,7 @@ cesiumSvgPath: { path: _svgPath, width: 32, height: 32 }"
     "cesium-navigation-button cesium-navigation-button-left";
   mouseButton.setAttribute(
     "data-bind",
-    'click: showClick, css: {"cesium-navigation-button-selected": !_touch, "cesium-navigation-button-unselected": _touch}'
+    'click: showClick, css: {"cesium-navigation-button-selected": !_touch, "cesium-navigation-button-unselected": _touch}',
   );
   const mouseIcon = document.createElement("img");
   mouseIcon.src = buildModuleUrl("Widgets/Images/NavigationHelp/Mouse.svg");
@@ -98,7 +93,7 @@ cesiumSvgPath: { path: _svgPath, width: 32, height: 32 }"
     "cesium-navigation-button cesium-navigation-button-right";
   touchButton.setAttribute(
     "data-bind",
-    'click: showTouch, css: {"cesium-navigation-button-selected": _touch, "cesium-navigation-button-unselected": !_touch}'
+    'click: showTouch, css: {"cesium-navigation-button-selected": _touch, "cesium-navigation-button-unselected": !_touch}',
   );
   const touchIcon = document.createElement("img");
   touchIcon.src = buildModuleUrl("Widgets/Images/NavigationHelp/Touch.svg");
@@ -116,13 +111,13 @@ cesiumSvgPath: { path: _svgPath, width: 32, height: 32 }"
     "cesium-click-navigation-help cesium-navigation-help-instructions";
   clickInstructions.setAttribute(
     "data-bind",
-    'css: { "cesium-click-navigation-help-visible" : !_touch}'
+    'css: { "cesium-click-navigation-help-visible" : !_touch}',
   );
   clickInstructions.innerHTML = `\
             <table>\
                 <tr>\
                     <td><img src="${buildModuleUrl(
-                      "Widgets/Images/NavigationHelp/MouseLeft.svg"
+                      "Widgets/Images/NavigationHelp/MouseLeft.svg",
                     )}" width="48" height="48" /></td>\
                     <td>\
                         <div class="cesium-navigation-help-pan">Pan view</div>\
@@ -131,7 +126,7 @@ cesiumSvgPath: { path: _svgPath, width: 32, height: 32 }"
                 </tr>\
                 <tr>\
                     <td><img src="${buildModuleUrl(
-                      "Widgets/Images/NavigationHelp/MouseRight.svg"
+                      "Widgets/Images/NavigationHelp/MouseRight.svg",
                     )}" width="48" height="48" /></td>\
                     <td>\
                         <div class="cesium-navigation-help-zoom">Zoom view</div>\
@@ -141,7 +136,7 @@ cesiumSvgPath: { path: _svgPath, width: 32, height: 32 }"
                 </tr>\
                 <tr>\
                     <td><img src="${buildModuleUrl(
-                      "Widgets/Images/NavigationHelp/MouseMiddle.svg"
+                      "Widgets/Images/NavigationHelp/MouseMiddle.svg",
                     )}" width="48" height="48" /></td>\
                     <td>\
                         <div class="cesium-navigation-help-rotate">Rotate view</div>\
@@ -158,13 +153,13 @@ cesiumSvgPath: { path: _svgPath, width: 32, height: 32 }"
     "cesium-touch-navigation-help cesium-navigation-help-instructions";
   touchInstructions.setAttribute(
     "data-bind",
-    'css: { "cesium-touch-navigation-help-visible" : _touch}'
+    'css: { "cesium-touch-navigation-help-visible" : _touch}',
   );
   touchInstructions.innerHTML = `\
             <table>\
                 <tr>\
                     <td><img src="${buildModuleUrl(
-                      "Widgets/Images/NavigationHelp/TouchDrag.svg"
+                      "Widgets/Images/NavigationHelp/TouchDrag.svg",
                     )}" width="70" height="48" /></td>\
                     <td>\
                         <div class="cesium-navigation-help-pan">Pan view</div>\
@@ -173,7 +168,7 @@ cesiumSvgPath: { path: _svgPath, width: 32, height: 32 }"
                 </tr>\
                 <tr>\
                     <td><img src="${buildModuleUrl(
-                      "Widgets/Images/NavigationHelp/TouchZoom.svg"
+                      "Widgets/Images/NavigationHelp/TouchZoom.svg",
                     )}" width="70" height="48" /></td>\
                     <td>\
                         <div class="cesium-navigation-help-zoom">Zoom view</div>\
@@ -182,7 +177,7 @@ cesiumSvgPath: { path: _svgPath, width: 32, height: 32 }"
                 </tr>\
                 <tr>\
                     <td><img src="${buildModuleUrl(
-                      "Widgets/Images/NavigationHelp/TouchTilt.svg"
+                      "Widgets/Images/NavigationHelp/TouchTilt.svg",
                     )}" width="70" height="48" /></td>\
                     <td>\
                         <div class="cesium-navigation-help-rotate">Tilt view</div>\
@@ -191,7 +186,7 @@ cesiumSvgPath: { path: _svgPath, width: 32, height: 32 }"
                 </tr>\
                 <tr>\
                     <td><img src="${buildModuleUrl(
-                      "Widgets/Images/NavigationHelp/TouchRotate.svg"
+                      "Widgets/Images/NavigationHelp/TouchRotate.svg",
                     )}" width="70" height="48" /></td>\
                     <td>\
                         <div class="cesium-navigation-help-tilt">Rotate view</div>\
