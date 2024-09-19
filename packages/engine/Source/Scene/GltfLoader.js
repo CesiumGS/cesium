@@ -29,8 +29,8 @@ import ResourceCache from "./ResourceCache.js";
 import ResourceLoader from "./ResourceLoader.js";
 import SupportedImageFormats from "./SupportedImageFormats.js";
 import VertexAttributeSemantic from "./VertexAttributeSemantic.js";
-import GltfGpmLoader from "./GltfGpmLoader.js";
-import GltfMeshPrimitiveGpmLoader from "./GltfMeshPrimitiveGpmLoader.js";
+import GltfGpmLoader from "./Model/Extensions/Gpm/GltfGpmLoader.js";
+import GltfMeshPrimitiveGpmLoader from "./Model/Extensions/Gpm/GltfMeshPrimitiveGpmLoader.js";
 
 const {
   Attribute,

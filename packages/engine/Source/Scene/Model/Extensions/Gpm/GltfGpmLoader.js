@@ -1,16 +1,16 @@
-import Cartesian3 from "../Core/Cartesian3.js";
-import Check from "../Core/Check.js";
-import defaultValue from "../Core/defaultValue.js";
-import defined from "../Core/defined.js";
-import Matrix3 from "../Core/Matrix3.js";
-import AnchorPointDirect from "./Model/Extensions/Gpm/AnchorPointDirect.js";
-import AnchorPointIndirect from "./Model/Extensions/Gpm/AnchorPointIndirect.js";
-import CorrelationGroup from "./Model/Extensions/Gpm/CorrelationGroup.js";
-import GltfGpmLocal from "./Model/Extensions/Gpm/GltfGpmLocal.js";
-import Spdcf from "./Model/Extensions/Gpm/Spdcf.js";
-import StorageType from "./Model/Extensions/Gpm/StorageType.js";
-import ResourceLoader from "./ResourceLoader.js";
-import ResourceLoaderState from "./ResourceLoaderState.js";
+import Cartesian3 from "../../../../Core/Cartesian3.js";
+import Check from "../../../../Core/Check.js";
+import defaultValue from "../../../../Core/defaultValue.js";
+import defined from "../../../../Core/defined.js";
+import Matrix3 from "../../../../Core/Matrix3.js";
+import ResourceLoader from "./../../../ResourceLoader.js";
+import ResourceLoaderState from "./../../../ResourceLoaderState.js";
+import AnchorPointDirect from "./AnchorPointDirect.js";
+import AnchorPointIndirect from "./AnchorPointIndirect.js";
+import CorrelationGroup from "./CorrelationGroup.js";
+import GltfGpmLocal from "./GltfGpmLocal.js";
+import Spdcf from "./Spdcf.js";
+import StorageType from "./StorageType.js";
 
 /**
  * Loads glTF NGA_gpm_local from the root of a glTF object

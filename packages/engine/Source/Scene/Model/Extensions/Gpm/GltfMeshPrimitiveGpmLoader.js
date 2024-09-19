@@ -1,12 +1,12 @@
-import Check from "../Core/Check.js";
-import defaultValue from "../Core/defaultValue.js";
-import defined from "../Core/defined.js";
-import ResourceCache from "./ResourceCache.js";
-import ResourceLoader from "./ResourceLoader.js";
-import ResourceLoaderState from "./ResourceLoaderState.js";
-import PropertyTexture from "./PropertyTexture.js";
-import StructuralMetadata from "./StructuralMetadata.js";
-import MetadataSchema from "./MetadataSchema.js";
+import Check from "../../../../Core/Check.js";
+import defaultValue from "../../../../Core/defaultValue.js";
+import defined from "../../../../Core/defined.js";
+import ResourceCache from "../../../ResourceCache.js";
+import ResourceLoader from "../../../ResourceLoader.js";
+import ResourceLoaderState from "../../../ResourceLoaderState.js";
+import PropertyTexture from "../../../PropertyTexture.js";
+import StructuralMetadata from "../../../StructuralMetadata.js";
+import MetadataSchema from "../../../MetadataSchema.js";
 
 /**
  * Loads glTF NGA_gpm_local from a glTF mesh primitive.
