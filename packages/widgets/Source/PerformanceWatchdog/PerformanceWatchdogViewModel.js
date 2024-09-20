@@ -69,13 +69,13 @@ function PerformanceWatchdogViewModel(options) {
       if (!that.lowFrameRateMessageDismissed) {
         that.showingLowFrameRateMessage = true;
       }
-    },
+    }
   );
 
   this._unsubscribeNominalFrameRate = monitor.nominalFrameRate.addEventListener(
     function () {
       that.showingLowFrameRateMessage = false;
-    },
+    }
   );
 }
 

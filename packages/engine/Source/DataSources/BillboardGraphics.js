@@ -302,7 +302,7 @@ Object.defineProperties(BillboardGraphics.prototype, {
    * @type {Property|undefined}
    */
   pixelOffsetScaleByDistance: createPropertyDescriptor(
-    "pixelOffsetScaleByDistance",
+    "pixelOffsetScaleByDistance"
   ),
 
   /**
@@ -320,7 +320,7 @@ Object.defineProperties(BillboardGraphics.prototype, {
    * @type {Property|undefined}
    */
   distanceDisplayCondition: createPropertyDescriptor(
-    "distanceDisplayCondition",
+    "distanceDisplayCondition"
   ),
 
   /**
@@ -330,7 +330,7 @@ Object.defineProperties(BillboardGraphics.prototype, {
    * @type {Property|undefined}
    */
   disableDepthTestDistance: createPropertyDescriptor(
-    "disableDepthTestDistance",
+    "disableDepthTestDistance"
   ),
 
   /**
