@@ -215,9 +215,6 @@ function VoxelRenderResources(primitive) {
       ShaderDestination.FRAGMENT
     );
   }
-  if (primitive._jitter) {
-    shaderBuilder.addDefine("JITTER", undefined, ShaderDestination.FRAGMENT);
-  }
   if (primitive._nearestSampling) {
     shaderBuilder.addDefine(
       "NEAREST_SAMPLING",

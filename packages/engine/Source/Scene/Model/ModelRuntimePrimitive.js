@@ -199,7 +199,8 @@ ModelRuntimePrimitive.prototype.configurePipeline = function (frameState) {
   const mode = frameState.mode;
   const use2D =
     mode !== SceneMode.SCENE3D && !frameState.scene3DOnly && model._projectTo2D;
-  const exaggerateTerrain = frameState.verticalExaggeration !== 1.0;
+  const hasVerticalExaggeration =
+    frameState.verticalExaggeration !== 1.0 && model.hasVerticalExaggeration;
 
   const hasMorphTargets =
     defined(primitive.morphTargets) && primitive.morphTargets.length > 0;
@@ -283,7 +284,7 @@ ModelRuntimePrimitive.prototype.configurePipeline = function (frameState) {
     pipelineStages.push(CPUStylingPipelineStage);
   }
 
-  if (exaggerateTerrain) {
+  if (hasVerticalExaggeration) {
     pipelineStages.push(VerticalExaggerationPipelineStage);
   }
 
