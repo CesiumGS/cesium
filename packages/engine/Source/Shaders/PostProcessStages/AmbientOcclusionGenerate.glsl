@@ -40,6 +40,13 @@ vec3 getNormalXEdge(vec3 positionEC)
     return normalize(cross(dx, dy));
 }
 
+const float sqrtTwoPi = sqrt(czm_twoPi);
+
+float gaussian(float x, float standardDeviation) {
+    float argument = x / standardDeviation;
+    return exp(-0.5 * argument * argument) / (sqrtTwoPi * standardDeviation);
+}
+
 void main(void)
 {
     vec3 positionEC = pixelToEye(gl_FragCoord.xy);
@@ -51,15 +58,17 @@ void main(void)
     }
 
     vec3 normalEC = getNormalXEdge(positionEC);
+    float samplingRadius = lengthCap * sqrt(-positionEC.z);
 
-    float ao = 0.0;
-
-    const int ANGLE_STEPS = 4;
+    const int ANGLE_STEPS = 16;
     float angleStepScale = 1.0 / float(ANGLE_STEPS);
     float angleStep = angleStepScale * czm_twoPi;
     float cosStep = cos(angleStep);
     float sinStep = sin(angleStep);
     mat2 rotateStep = mat2(cosStep, sinStep, -sinStep, cosStep);
+
+    const int RADIAL_STEPS = 64;
+    float radialStepScale = 1.0 / float(RADIAL_STEPS);
 
     // Initial sampling direction (different for each pixel)
     const float randomTextureSize = 255.0;
@@ -67,6 +76,7 @@ void main(void)
     float randomVal = texture(randomTexture, randomTexCoord).x;
     vec2 sampleDirection = vec2(cos(angleStep * randomVal), sin(angleStep * randomVal));
 
+    float ao = 0.0;
     // Loop over sampling directions
     for (int i = 0; i < ANGLE_STEPS; i++)
     {
@@ -75,7 +85,7 @@ void main(void)
         float localAO = 0.0;
         vec2 radialStep = stepSize * sampleDirection;
 
-        for (int j = 0; j < 6; j++)
+        for (int j = 0; j < RADIAL_STEPS; j++)
         {
             // Step along sampling direction, away from output pixel
             vec2 newCoords = floor(gl_FragCoord.xy + float(j + 1) * radialStep) + vec2(0.5);
@@ -90,25 +100,19 @@ void main(void)
             vec3 stepVector = stepPositionEC - positionEC;
             float stepLength = length(stepVector);
 
-            if (stepLength > lengthCap)
-            {
-                break;
-            }
-
             float dotVal = clamp(dot(normalEC, normalize(stepVector)), 0.0, 1.0);
             if (dotVal < bias)
             {
                 dotVal = 0.0;
             }
 
-            float weight = stepLength / lengthCap;
-            weight = 1.0 - weight * weight;
-            localAO = max(localAO, dotVal * weight);
+            float weight = gaussian(stepLength, samplingRadius);
+            localAO += weight * dotVal;
         }
         ao += localAO;
     }
 
-    ao *= angleStepScale;
+    ao *= angleStepScale * radialStepScale * sqrt(-positionEC.z);
     ao = 1.0 - clamp(ao, 0.0, 1.0);
     ao = pow(ao, intensity);
     out_FragColor = vec4(vec3(ao), 1.0);
