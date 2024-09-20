@@ -5,6 +5,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 ## [Corporate CLA](Documentation/Contributors/CLAs/corporate-contributor-license-agreement-v1.0.pdf)
 
 - [Analytical Graphics, Inc.](http://www.agi.com/)
+  - [Korey Hines](https://github.com/devkthines)
   - [Patrick Cozzi](https://github.com/pjcozzi)
   - [Kristian Calhoun](https://github.com/kristiancalhoun)
   - [Kevin Ring](https://github.com/kring)
@@ -166,6 +167,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
   - [jjspace](https://github.com/jjspace)
   - [Siddhesh Ranade](https://github.com/siddheshranade)
   - [Adam Morris](https://github.com/weegeekps)
+  - [Luke McKinstry](https://github.com/lukemckinstry)
 - [Northrop Grumman](http://www.northropgrumman.com)
   - [Joseph Stein](https://github.com/nahgrin)
 - [EOX IT Services GmbH](https://eox.at)
@@ -196,6 +198,8 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [T2 Software](http://t2.com.tr/)
   - [Hüseyin ATEŞ](https://github.com/ateshuseyin)
   - [İbrahim Furkan Aygar](https://github.com/furkanaygar)
+- MSA
+  - [Timothy Eichfeld](https://github.com/timeichfeld-msa)
 - [EMapGis](http://emapgis.com)
   - [IKangXu](https://github.com/IKangXu)
   - [EMapGIS](https://github.com/EMapGIS)
@@ -405,5 +409,6 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [Levi Montgomery](https://github.com/Levi-Montgomery)
 - [Brandon Berisford](https://github.com/BeyondBelief96)
 - [Jay Yong](https://github.com/Alforoan)
-- [Adam Wirth](https://https://github.com/adamwirth)
-
+- [Lawrence Owen](https://github.com/ljowen)
+- [Javier Sanchez](https://github.com/jvrjsanchez)
+- [Jérôme Fayot](https://github.com/jfayot)

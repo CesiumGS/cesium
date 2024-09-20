@@ -41,7 +41,7 @@ function PerspectiveFrustum(options) {
    * The angle of the field of view (FOV), in radians.  This angle will be used
    * as the horizontal FOV if the width is greater than the height, otherwise
    * it will be the vertical FOV.
-   * @type {number}
+   * @type {number|undefined}
    * @default undefined
    */
   this.fov = options.fov;
@@ -52,7 +52,7 @@ function PerspectiveFrustum(options) {
 
   /**
    * The aspect ratio of the frustum's width to it's height.
-   * @type {number}
+   * @type {number|undefined}
    * @default undefined
    */
   this.aspectRatio = options.aspectRatio;
@@ -253,7 +253,7 @@ Object.defineProperties(PerspectiveFrustum.prototype, {
   /**
    * Gets the angle of the vertical field of view, in radians.
    * @memberof PerspectiveFrustum.prototype
-   * @type {number}
+   * @type {number|undefined}
    * @readonly
    * @default undefined
    */

@@ -556,6 +556,13 @@ ShaderProgram.prototype._setUniforms = function (
     len = manualUniforms.length;
     for (i = 0; i < len; ++i) {
       const mu = manualUniforms[i];
+
+      //>>includeStart('debug', pragmas.debug);
+      if (!defined(uniformMap[mu.name])) {
+        throw new DeveloperError(`Unknown uniform: ${mu.name}`);
+      }
+      //>>includeEnd('debug');
+
       mu.value = uniformMap[mu.name]();
     }
   }

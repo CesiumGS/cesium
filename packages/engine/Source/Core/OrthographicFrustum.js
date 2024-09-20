@@ -34,7 +34,7 @@ function OrthographicFrustum(options) {
 
   /**
    * The horizontal width of the frustum in meters.
-   * @type {number}
+   * @type {number|undefined}
    * @default undefined
    */
   this.width = options.width;
@@ -42,7 +42,7 @@ function OrthographicFrustum(options) {
 
   /**
    * The aspect ratio of the frustum's width to it's height.
-   * @type {number}
+   * @type {number|undefined}
    * @default undefined
    */
   this.aspectRatio = options.aspectRatio;
