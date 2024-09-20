@@ -38,4 +38,5 @@ Specs/jasmine/**
 Apps/Sandcastle/ThirdParty
 Tools/jsdoc/cesium_template/static/javascript/prism.js
 Tools/jsdoc/cesium_template/static/styles/prism.css
+**/LICENSE.md
 
