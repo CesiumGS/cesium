@@ -1,18 +1,36 @@
-// cSpell Settings
 {
   "version": "0.2",
   "language": "en",
   "allowCompoundWords": true,
   "caseSensitive": false,
+  "files": [
+    "**/*.js",
+    "**/*.html",
+    "**/*.css",
+    "**/*.md"
+  ],
   "ignorePaths": [
-    "node_modules/**"
+    "node_modules/**",
+    "**/ThirdParty/**",
+    "**/Build/**",
+    "Source/**",
+    "CONTRIBUTORS.md",
+    "**/LICENSE.md"
   ],
   "useGitignore": true,
   "dictionaries": [
     "typescript",
     "node",
     "html",
-    "css"
+    "css",
+    "packages"
+  ],
+  "dictionaryDefinitions": [
+    {
+      "name": "packages",
+      "path": "./.cspell/cspell-packages.txt",
+      "addWords": false
+    }
   ],
   "words": [
     "3DTILES",

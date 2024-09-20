@@ -140,7 +140,8 @@
     "deploy-status": "gulp deployStatus",
     "deploy-set-version": "gulp deploySetVersion",
     "prettier": "prettier --write --no-config \"**/*\"",
-    "prettier-check": "prettier --check --no-config \"**/*\""
+    "prettier-check": "prettier --check --no-config \"**/*\"",
+    "cspell": "npx cspell lint -c .vscode/cspell.json --unique --no-progress"
   },
   "engines": {
     "node": ">=18.18.0"
