@@ -314,7 +314,7 @@ function computeTopBottomAttributes(positions, options, extrude) {
 function topIndices(numPts) {
   // numTriangles in half = 3 + 8 + 12 + ... = -1 + 4 + (4 + 4) + (4 + 4 + 4) + ... = -1 + 4 * (1 + 2 + 3 + ...)
   //              = -1 + 4 * ((n * ( n + 1)) / 2)
-  // total triangles = 2 * numTrangles in half
+  // total triangles = 2 * numTriangles in half
   // indices = total triangles * 3;
   // Substitute numPts for n above
 
