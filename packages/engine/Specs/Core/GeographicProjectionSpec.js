@@ -23,7 +23,7 @@ describe("Core/GeographicProjection", function () {
     const cartographic = new Cartographic(0.0, 0.0, height);
     const projection = new GeographicProjection();
     expect(projection.project(cartographic)).toEqual(
-      new Cartesian3(0.0, 0.0, height)
+      new Cartesian3(0.0, 0.0, height),
     );
   });
 
@@ -33,7 +33,7 @@ describe("Core/GeographicProjection", function () {
     const expected = new Cartesian3(
       Math.PI * ellipsoid.radii.x,
       CesiumMath.PI_OVER_TWO * ellipsoid.radii.x,
-      0.0
+      0.0,
     );
     const projection = new GeographicProjection(ellipsoid);
     expect(projection.project(cartographic)).toEqual(expected);
@@ -44,7 +44,7 @@ describe("Core/GeographicProjection", function () {
     const cartographic = new Cartographic(
       -Math.PI,
       CesiumMath.PI_OVER_TWO,
-      0.0
+      0.0,
     );
     const expected = new Cartesian3(-Math.PI, CesiumMath.PI_OVER_TWO, 0.0);
     const projection = new GeographicProjection(ellipsoid);
@@ -57,7 +57,7 @@ describe("Core/GeographicProjection", function () {
     const expected = new Cartesian3(
       Math.PI * ellipsoid.radii.x,
       CesiumMath.PI_OVER_TWO * ellipsoid.radii.x,
-      0.0
+      0.0,
     );
     const projection = new GeographicProjection(ellipsoid);
     const result = new Cartesian3(0.0, 0.0, 0.0);
@@ -70,7 +70,7 @@ describe("Core/GeographicProjection", function () {
     const cartographic = new Cartographic(
       CesiumMath.PI_OVER_TWO,
       CesiumMath.PI_OVER_FOUR,
-      12.0
+      12.0,
     );
     const projection = new GeographicProjection();
     const projected = projection.project(cartographic);
@@ -81,7 +81,7 @@ describe("Core/GeographicProjection", function () {
     const cartographic = new Cartographic(
       CesiumMath.PI_OVER_TWO,
       CesiumMath.PI_OVER_FOUR,
-      12.0
+      12.0,
     );
     const projection = new GeographicProjection();
     const projected = projection.project(cartographic);

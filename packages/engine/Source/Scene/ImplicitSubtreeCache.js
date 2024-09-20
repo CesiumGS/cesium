@@ -42,7 +42,7 @@ function ImplicitSubtreeCache(options) {
 ImplicitSubtreeCache.prototype.addSubtree = function (subtree) {
   const cacheNode = new ImplicitSubtreeCacheNode(
     subtree,
-    this._subtreeRequestCounter
+    this._subtreeRequestCounter,
   );
   this._subtreeRequestCounter++;
   this._queue.insert(cacheNode);

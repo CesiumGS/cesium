@@ -34,7 +34,7 @@ PickFramebuffer.prototype.begin = function (screenSpaceRectangle, viewport) {
 
   BoundingRectangle.clone(
     screenSpaceRectangle,
-    this._passState.scissorTest.rectangle
+    this._passState.scissorTest.rectangle,
   );
 
   // Create or recreate renderbuffers and framebuffer used for picking

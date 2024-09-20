@@ -66,24 +66,24 @@ function B3dmLoader(options) {
   const asynchronous = defaultValue(options.asynchronous, true);
   const incrementallyLoadTextures = defaultValue(
     options.incrementallyLoadTextures,
-    true
+    true,
   );
   const upAxis = defaultValue(options.upAxis, Axis.Y);
   const forwardAxis = defaultValue(options.forwardAxis, Axis.X);
   const loadAttributesAsTypedArray = defaultValue(
     options.loadAttributesAsTypedArray,
-    false
+    false,
   );
   const loadAttributesFor2D = defaultValue(options.loadAttributesFor2D, false);
   const enablePick = defaultValue(options.enablePick, false);
   const loadIndicesForWireframe = defaultValue(
     options.loadIndicesForWireframe,
-    false
+    false,
   );
   const loadPrimitiveOutline = defaultValue(options.loadPrimitiveOutline, true);
   const loadForClassification = defaultValue(
     options.loadForClassification,
-    false
+    false,
   );
 
   //>>includeStart('debug', pragmas.debug);
@@ -196,7 +196,7 @@ B3dmLoader.prototype.load = function () {
 
   const featureTable = new Cesium3DTileFeatureTable(
     featureTableJson,
-    featureTableBinary
+    featureTableBinary,
   );
   batchLength = featureTable.getGlobalProperty("BATCH_LENGTH");
   // Set batch length.
@@ -205,7 +205,7 @@ B3dmLoader.prototype.load = function () {
   const rtcCenter = featureTable.getGlobalProperty(
     "RTC_CENTER",
     ComponentDatatype.FLOAT,
-    3
+    3,
   );
   if (defined(rtcCenter)) {
     this._transform = Matrix4.fromTranslation(Cartesian3.fromArray(rtcCenter));
@@ -293,7 +293,7 @@ B3dmLoader.prototype.process = function (frameState) {
   components.transform = Matrix4.multiplyTransformation(
     this._transform,
     components.transform,
-    components.transform
+    components.transform,
   );
   createStructuralMetadata(this, components);
   this._components = components;
@@ -354,7 +354,7 @@ function processNode(node) {
     const primitive = node.primitives[i];
     const featureIdVertexAttribute = ModelUtility.getAttributeBySemantic(
       primitive,
-      VertexAttributeSemantic.FEATURE_ID
+      VertexAttributeSemantic.FEATURE_ID,
     );
     if (defined(featureIdVertexAttribute)) {
       featureIdVertexAttribute.setIndex = 0;

@@ -15,7 +15,7 @@ describe("DataSources/ConstantPositionProperty", function () {
 
     property = new ConstantPositionProperty(
       new Cartesian3(1, 2, 3),
-      ReferenceFrame.INERTIAL
+      ReferenceFrame.INERTIAL,
     );
     expect(property.referenceFrame).toBe(ReferenceFrame.INERTIAL);
   });
@@ -45,11 +45,11 @@ describe("DataSources/ConstantPositionProperty", function () {
       time,
       valueInertial,
       ReferenceFrame.INERTIAL,
-      ReferenceFrame.FIXED
+      ReferenceFrame.FIXED,
     );
     const property = new ConstantPositionProperty(
       valueInertial,
-      ReferenceFrame.INERTIAL
+      ReferenceFrame.INERTIAL,
     );
 
     const result = property.getValue(time);
@@ -64,7 +64,7 @@ describe("DataSources/ConstantPositionProperty", function () {
   it("getValue works with undefined inertial value", function () {
     const property = new ConstantPositionProperty(
       undefined,
-      ReferenceFrame.INERTIAL
+      ReferenceFrame.INERTIAL,
     );
     expect(property.getValue(time)).toBeUndefined();
   });
@@ -75,7 +75,7 @@ describe("DataSources/ConstantPositionProperty", function () {
 
     const result = property.getValueInReferenceFrame(
       time,
-      ReferenceFrame.INERTIAL
+      ReferenceFrame.INERTIAL,
     );
     expect(result).not.toBe(value);
     expect(result).toEqual(
@@ -83,8 +83,8 @@ describe("DataSources/ConstantPositionProperty", function () {
         time,
         value,
         ReferenceFrame.FIXED,
-        ReferenceFrame.INERTIAL
-      )
+        ReferenceFrame.INERTIAL,
+      ),
     );
   });
 
@@ -92,14 +92,14 @@ describe("DataSources/ConstantPositionProperty", function () {
     const value = new Cartesian3(1, 2, 3);
     const property = new ConstantPositionProperty(
       value,
-      ReferenceFrame.INERTIAL
+      ReferenceFrame.INERTIAL,
     );
 
     const expected = new Cartesian3();
     const result = property.getValueInReferenceFrame(
       time,
       ReferenceFrame.FIXED,
-      expected
+      expected,
     );
     expect(result).toBe(expected);
     expect(expected).toEqual(
@@ -107,8 +107,8 @@ describe("DataSources/ConstantPositionProperty", function () {
         time,
         value,
         ReferenceFrame.INERTIAL,
-        ReferenceFrame.FIXED
-      )
+        ReferenceFrame.FIXED,
+      ),
     );
   });
 
@@ -131,7 +131,7 @@ describe("DataSources/ConstantPositionProperty", function () {
   it("setValue raises definitionChanged when referenceFrame changes", function () {
     const property = new ConstantPositionProperty(
       new Cartesian3(0, 0, 0),
-      ReferenceFrame.FIXED
+      ReferenceFrame.FIXED,
     );
     const listener = jasmine.createSpy("listener");
     property.definitionChanged.addEventListener(listener);
@@ -142,24 +142,24 @@ describe("DataSources/ConstantPositionProperty", function () {
   it("equals works", function () {
     const left = new ConstantPositionProperty(
       new Cartesian3(1, 2, 3),
-      ReferenceFrame.INERTIAL
+      ReferenceFrame.INERTIAL,
     );
     let right = new ConstantPositionProperty(
       new Cartesian3(1, 2, 3),
-      ReferenceFrame.INERTIAL
+      ReferenceFrame.INERTIAL,
     );
 
     expect(left.equals(right)).toEqual(true);
 
     right = new ConstantPositionProperty(
       new Cartesian3(1, 2, 3),
-      ReferenceFrame.FIXED
+      ReferenceFrame.FIXED,
     );
     expect(left.equals(right)).toEqual(false);
 
     right = new ConstantPositionProperty(
       new Cartesian3(1, 2, 4),
-      ReferenceFrame.INERTIAL
+      ReferenceFrame.INERTIAL,
     );
     expect(left.equals(right)).toEqual(false);
   });

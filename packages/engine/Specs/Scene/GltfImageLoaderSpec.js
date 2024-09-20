@@ -20,18 +20,18 @@ describe(
       "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+ip1sAAAAASUVORK5CYII=";
 
     const pngBuffer = dataUriToBuffer(
-      "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+ip1sAAAAASUVORK5CYII="
+      "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+ip1sAAAAASUVORK5CYII=",
     );
     const jpgBuffer = dataUriToBuffer(
-      "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDAP//////////////////////////////////////////////////////////////////////////////////////wAALCAABAAEBAREA/8QAJgABAAAAAAAAAAAAAAAAAAAAAxABAAAAAAAAAAAAAAAAAAAAAP/aAAgBAQAAPwBH/9k"
+      "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDAP//////////////////////////////////////////////////////////////////////////////////////wAALCAABAAEBAREA/8QAJgABAAAAAAAAAAAAAAAAAAAAAxABAAAAAAAAAAAAAAAAAAAAAP/aAAgBAQAAPwBH/9k",
     );
 
     const webpBuffer = dataUriToBuffer(
-      "data:image/webp;base64,UklGRiIAAABXRUJQVlA4IBYAAAAwAQCdASoBAAEADsD+JaQAA3AAAAAA"
+      "data:image/webp;base64,UklGRiIAAABXRUJQVlA4IBYAAAAwAQCdASoBAAEADsD+JaQAA3AAAAAA",
     );
 
     const gifBuffer = dataUriToBuffer(
-      "data:image/gif;base64,R0lGODdhBAAEAIAAAP///////ywAAAAABAAEAAACBISPCQUAOw=="
+      "data:image/gif;base64,R0lGODdhBAAEAIAAAP///////ywAAAAABAAEAAACBISPCQUAOw==",
     );
 
     let ktx2BasisBuffer;
@@ -186,13 +186,13 @@ describe(
 
       await expectAsync(imageLoader.load()).toBeRejectedWithError(
         RuntimeError,
-        "Failed to load embedded image\nFailed to load buffer view\nFailed to load external buffer: https://example.com/external.bin\n404 Not Found"
+        "Failed to load embedded image\nFailed to load buffer view\nFailed to load external buffer: https://example.com/external.bin\n404 Not Found",
       );
     });
 
     it("load throws if image format is not recognized", async function () {
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
-        Promise.resolve(gifBuffer)
+        Promise.resolve(gifBuffer),
       );
 
       const imageLoader = new GltfImageLoader({
@@ -205,7 +205,7 @@ describe(
 
       await expectAsync(imageLoader.load()).toBeRejectedWithError(
         RuntimeError,
-        "Failed to load embedded image\nImage format is not recognized"
+        "Failed to load embedded image\nImage format is not recognized",
       );
     });
 
@@ -225,13 +225,13 @@ describe(
 
       await expectAsync(imageLoader.load()).toBeRejectedWithError(
         RuntimeError,
-        "Failed to load image: image.png\n404 Not Found"
+        "Failed to load image: image.png\n404 Not Found",
       );
     });
 
     async function loadsFromBufferView(imageBuffer) {
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
-        Promise.resolve(imageBuffer)
+        Promise.resolve(imageBuffer),
       );
 
       const imageLoader = new GltfImageLoader({
@@ -272,7 +272,7 @@ describe(
       }
 
       spyOn(BufferLoader, "_fetchArrayBuffer").and.returnValue(
-        Promise.resolve(ktx2BasisBuffer)
+        Promise.resolve(ktx2BasisBuffer),
       );
 
       const imageLoader = new GltfImageLoader({
@@ -297,7 +297,7 @@ describe(
       }
 
       spyOn(BufferLoader, "_fetchArrayBuffer").and.returnValue(
-        Promise.resolve(ktx2BasisMipmapBuffer)
+        Promise.resolve(ktx2BasisMipmapBuffer),
       );
 
       const imageLoader = new GltfImageLoader({
@@ -318,7 +318,7 @@ describe(
 
     it("loads from uri", async function () {
       spyOn(Resource.prototype, "fetchImage").and.returnValue(
-        Promise.resolve(image)
+        Promise.resolve(image),
       );
 
       const imageLoader = new GltfImageLoader({
@@ -377,12 +377,12 @@ describe(
 
     it("destroys image loader", async function () {
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
-        Promise.resolve(pngBuffer)
+        Promise.resolve(pngBuffer),
       );
 
       const unloadBufferView = spyOn(
         GltfBufferViewLoader.prototype,
-        "unload"
+        "unload",
       ).and.callThrough();
 
       const imageLoader = new GltfImageLoader({
@@ -415,7 +415,7 @@ describe(
             } else {
               resolve(pngBuffer);
             }
-          })
+          }),
       );
 
       const imageLoader = new GltfImageLoader({
@@ -447,7 +447,7 @@ describe(
 
     async function resolveImageFromTypedArrayAfterDestroy(rejectPromise) {
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
-        Promise.resolve(pngBuffer)
+        Promise.resolve(pngBuffer),
       );
 
       spyOn(GltfImageLoader, "_loadImageFromTypedArray").and.callFake(
@@ -458,7 +458,7 @@ describe(
             } else {
               resolve(image);
             }
-          })
+          }),
       );
 
       const imageLoader = new GltfImageLoader({
@@ -496,7 +496,7 @@ describe(
             } else {
               resolve(image);
             }
-          })
+          }),
       );
 
       const imageLoader = new GltfImageLoader({
@@ -526,5 +526,5 @@ describe(
       return resolveUriAfterDestroy(true);
     });
   },
-  "WebGL"
+  "WebGL",
 );

@@ -35,7 +35,7 @@ function SelectionIndicator(container, scene) {
     "data-bind",
     '\
 style: { "top" : _screenPositionY, "left" : _screenPositionX },\
-css: { "cesium-selection-wrapper-visible" : isVisible }'
+css: { "cesium-selection-wrapper-visible" : isVisible }',
   );
   container.appendChild(el);
   this._element = el;
@@ -63,7 +63,7 @@ css: { "cesium-selection-wrapper-visible" : isVisible }'
   const viewModel = new SelectionIndicatorViewModel(
     scene,
     this._element,
-    this._container
+    this._container,
   );
   this._viewModel = viewModel;
 

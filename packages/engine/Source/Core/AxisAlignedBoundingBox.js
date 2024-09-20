@@ -197,12 +197,12 @@ AxisAlignedBoundingBox.intersectPlane = function (box, plane) {
   intersectScratch = Cartesian3.subtract(
     box.maximum,
     box.minimum,
-    intersectScratch
+    intersectScratch,
   );
   const h = Cartesian3.multiplyByScalar(
     intersectScratch,
     0.5,
-    intersectScratch
+    intersectScratch,
   ); //The positive half diagonal
   const normal = plane.normal;
   const e =

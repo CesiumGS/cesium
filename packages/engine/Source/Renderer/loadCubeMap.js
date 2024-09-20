@@ -46,7 +46,7 @@ function loadCubeMap(context, urls, skipColorSpaceConversion) {
     Object.values(CubeMap.FaceName).some((faceName) => !defined(urls[faceName]))
   ) {
     throw new DeveloperError(
-      "urls must have positiveX, negativeX, positiveY, negativeY, positiveZ, and negativeZ properties."
+      "urls must have positiveX, negativeX, positiveY, negativeY, positiveZ, and negativeZ properties.",
     );
   }
   //>>includeEnd('debug');

@@ -43,7 +43,7 @@ function BingMapsGeocoderService(options) {
 
   this._credit = new Credit(
     `<img src="http:\/\/dev.virtualearth.net\/Branding\/logo_powered_by.png"\/>`,
-    false
+    false,
   );
 }
 

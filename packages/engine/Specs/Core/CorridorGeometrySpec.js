@@ -31,7 +31,7 @@ describe("Core/CorridorGeometry", function () {
       new CorridorGeometry({
         positions: Cartesian3.fromDegreesArray([90.0, -30.0, 90.0, -30.0]),
         width: 10000,
-      })
+      }),
     );
     expect(geometry).toBeUndefined();
 
@@ -41,16 +41,16 @@ describe("Core/CorridorGeometry", function () {
           new Cartesian3(
             -1349511.388149118,
             -5063973.22857992,
-            3623141.6372688496
+            3623141.6372688496,
           ), //same lon/lat, different height
           new Cartesian3(
             -1349046.4811926484,
             -5062228.688739784,
-            3621885.0521561056
+            3621885.0521561056,
           ),
         ],
         width: 10000,
-      })
+      }),
     );
     expect(geometry).toBeUndefined();
   });
@@ -62,7 +62,7 @@ describe("Core/CorridorGeometry", function () {
         positions: Cartesian3.fromDegreesArray([90.0, -30.0, 90.0, -35.0]),
         cornerType: CornerType.MITERED,
         width: 30000,
-      })
+      }),
     );
 
     const numVertices = 12; //6 left + 6 right
@@ -78,7 +78,7 @@ describe("Core/CorridorGeometry", function () {
         positions: Cartesian3.fromDegreesArray([90.0, -30.0, 90.0, -35.0]),
         cornerType: CornerType.MITERED,
         width: 30000,
-      })
+      }),
     );
 
     const numVertices = 12;
@@ -99,7 +99,7 @@ describe("Core/CorridorGeometry", function () {
         cornerType: CornerType.MITERED,
         width: 30000,
         extrudedHeight: 30000,
-      })
+      }),
     );
 
     const numVertices = 72; // 6 positions x 4 for a box at each position x 3 to duplicate for normals
@@ -116,7 +116,7 @@ describe("Core/CorridorGeometry", function () {
         cornerType: CornerType.MITERED,
         width: 30000,
         extrudedHeight: 30000,
-      })
+      }),
     );
 
     const numVertices = 72;
@@ -137,7 +137,7 @@ describe("Core/CorridorGeometry", function () {
         cornerType: CornerType.MITERED,
         width: 30000,
         offsetAttribute: GeometryOffsetAttribute.TOP,
-      })
+      }),
     );
 
     const numVertices = 12;
@@ -158,7 +158,7 @@ describe("Core/CorridorGeometry", function () {
         width: 30000,
         extrudedHeight: 30000,
         offsetAttribute: GeometryOffsetAttribute.TOP,
-      })
+      }),
     );
 
     const numVertices = 72;
@@ -182,7 +182,7 @@ describe("Core/CorridorGeometry", function () {
         width: 30000,
         extrudedHeight: 30000,
         offsetAttribute: GeometryOffsetAttribute.ALL,
-      })
+      }),
     );
 
     const numVertices = 72;
@@ -199,16 +199,11 @@ describe("Core/CorridorGeometry", function () {
       new CorridorGeometry({
         vertexFormat: VertexFormat.POSITION_ONLY,
         positions: Cartesian3.fromDegreesArray([
-          90.0,
-          -30.0,
-          90.0,
-          -31.0,
-          91.0,
-          -31.0,
+          90.0, -30.0, 90.0, -31.0, 91.0, -31.0,
         ]),
         cornerType: CornerType.MITERED,
         width: 30000,
-      })
+      }),
     );
 
     expect(m.attributes.position.values.length).toEqual(8 * 3); // 4 left + 4 right
@@ -220,16 +215,11 @@ describe("Core/CorridorGeometry", function () {
       new CorridorGeometry({
         vertexFormat: VertexFormat.POSITION_ONLY,
         positions: Cartesian3.fromDegreesArray([
-          90.0,
-          -30.0,
-          90.0,
-          -31.0,
-          89.0,
-          -31.0,
+          90.0, -30.0, 90.0, -31.0, 89.0, -31.0,
         ]),
         cornerType: CornerType.MITERED,
         width: 30000,
-      })
+      }),
     );
 
     expect(m.attributes.position.values.length).toEqual(8 * 3);
@@ -241,18 +231,11 @@ describe("Core/CorridorGeometry", function () {
       new CorridorGeometry({
         vertexFormat: VertexFormat.POSITION_AND_ST,
         positions: Cartesian3.fromDegreesArray([
-          90.0,
-          -30.0,
-          90.0,
-          -31.0,
-          89.0,
-          -31.0,
-          89.0,
-          -32.0,
+          90.0, -30.0, 90.0, -31.0, 89.0, -31.0, 89.0, -32.0,
         ]),
         cornerType: CornerType.ROUNDED,
         width: 30000,
-      })
+      }),
     );
 
     const endCaps = 72; // 36 points * 2 end caps
@@ -269,18 +252,11 @@ describe("Core/CorridorGeometry", function () {
       new CorridorGeometry({
         vertexFormat: VertexFormat.POSITION_ONLY,
         positions: Cartesian3.fromDegreesArray([
-          90.0,
-          -30.0,
-          90.0,
-          -31.0,
-          89.0,
-          -31.0,
-          89.0,
-          -32.0,
+          90.0, -30.0, 90.0, -31.0, 89.0, -31.0, 89.0, -32.0,
         ]),
         cornerType: CornerType.BEVELED,
         width: 30000,
-      })
+      }),
     );
 
     expect(m.attributes.position.values.length).toEqual(10 * 3);
@@ -292,20 +268,14 @@ describe("Core/CorridorGeometry", function () {
       new CorridorGeometry({
         vertexFormat: VertexFormat.POSITION_ONLY,
         positions: Cartesian3.fromDegreesArray([
-          2.00571672577652,
-          52.7781459942399,
-          1.99188457974115,
-          52.7764958852886,
-          2.01325961458495,
-          52.7674170680511,
-          1.98708058340534,
-          52.7733979856253,
-          2.00634853946644,
+          2.00571672577652, 52.7781459942399, 1.99188457974115,
+          52.7764958852886, 2.01325961458495, 52.7674170680511,
+          1.98708058340534, 52.7733979856253, 2.00634853946644,
           52.7650460748473,
         ]),
         cornerType: CornerType.BEVELED,
         width: 100,
-      })
+      }),
     );
 
     expect(m.attributes.position.values.length).toEqual(13 * 3); // 3 points * 3 corners + 2 points * 2 ends
@@ -317,17 +287,12 @@ describe("Core/CorridorGeometry", function () {
       new CorridorGeometry({
         vertexFormat: VertexFormat.POSITION_ONLY,
         positions: Cartesian3.fromDegreesArray([
-          -67.655,
-          0.0,
-          -67.655,
-          15.0,
-          -67.655,
-          20.0,
+          -67.655, 0.0, -67.655, 15.0, -67.655, 20.0,
         ]),
         cornerType: CornerType.BEVELED,
         width: 400000,
         granularity: Math.PI / 6.0,
-      })
+      }),
     );
 
     expect(m.attributes.position.values.length).toEqual(4 * 3);
@@ -346,24 +311,14 @@ describe("Core/CorridorGeometry", function () {
       const corridor1 = new CorridorGeometry({
         vertexFormat: VertexFormat.POSITION_ONLY,
         positions: Cartesian3.fromDegreesArray([
-          -67.655,
-          0.0,
-          -67.655,
-          15.0,
-          -67.655,
-          20.0,
+          -67.655, 0.0, -67.655, 15.0, -67.655, 20.0,
         ]),
         width: 0,
       });
       const corridor2 = new CorridorGeometry({
         vertexFormat: VertexFormat.POSITION_ONLY,
         positions: Cartesian3.fromDegreesArray([
-          -67.655,
-          0.0,
-          -67.655,
-          15.0,
-          -67.655,
-          20.0,
+          -67.655, 0.0, -67.655, 15.0, -67.655, 20.0,
         ]),
         width: -100,
       });
@@ -375,19 +330,14 @@ describe("Core/CorridorGeometry", function () {
       expect(geometry0).toBeUndefined();
       expect(geometry1).toBeUndefined();
       expect(geometry2).toBeUndefined();
-    }
+    },
   );
 
   it("computing rectangle property", function () {
     const c = new CorridorGeometry({
       vertexFormat: VertexFormat.POSITION_ONLY,
       positions: Cartesian3.fromDegreesArray([
-        -67.655,
-        0.0,
-        -67.655,
-        15.0,
-        -67.655,
-        20.0,
+        -67.655, 0.0, -67.655, 15.0, -67.655, 20.0,
       ]),
       cornerType: CornerType.MITERED,
       width: 1,
@@ -397,11 +347,11 @@ describe("Core/CorridorGeometry", function () {
     const r = c.rectangle;
     expect(CesiumMath.toDegrees(r.north)).toEqualEpsilon(
       20.0,
-      CesiumMath.EPSILON13
+      CesiumMath.EPSILON13,
     );
     expect(CesiumMath.toDegrees(r.south)).toEqualEpsilon(
       0.0,
-      CesiumMath.EPSILON20
+      CesiumMath.EPSILON20,
     );
     expect(CesiumMath.toDegrees(r.east)).toEqual(-67.65499522658291);
     expect(CesiumMath.toDegrees(r.west)).toEqual(-67.6550047734171);
@@ -411,12 +361,7 @@ describe("Core/CorridorGeometry", function () {
     const options = {
       vertexFormat: VertexFormat.POSITION_ONLY,
       positions: Cartesian3.fromDegreesArray([
-        -67.655,
-        0.0,
-        -67.655,
-        15.0,
-        -67.655,
-        20.0,
+        -67.655, 0.0, -67.655, 15.0, -67.655, 20.0,
       ]),
       cornerType: CornerType.MITERED,
       width: 1,
@@ -432,12 +377,7 @@ describe("Core/CorridorGeometry", function () {
   it("computeRectangle with result parameter", function () {
     const options = {
       positions: Cartesian3.fromDegreesArray([
-        72.0,
-        0.0,
-        85.0,
-        15.0,
-        83.0,
-        20.0,
+        72.0, 0.0, 85.0, 15.0, 83.0, 20.0,
       ]),
       width: 5,
     };
@@ -455,12 +395,7 @@ describe("Core/CorridorGeometry", function () {
     const c = new CorridorGeometry({
       vertexFormat: VertexFormat.POSITION_ONLY,
       positions: Cartesian3.fromDegreesArray([
-        -67.655,
-        0.0,
-        -67.655,
-        15.0,
-        -67.655,
-        20.0,
+        -67.655, 0.0, -67.655, 15.0, -67.655, 20.0,
       ]),
       cornerType: CornerType.MITERED,
       width: 1,
@@ -472,27 +407,27 @@ describe("Core/CorridorGeometry", function () {
     expect(textureCoordinateRotationPoints.length).toEqual(6);
     expect(textureCoordinateRotationPoints[0]).toEqualEpsilon(
       0,
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     );
     expect(textureCoordinateRotationPoints[1]).toEqualEpsilon(
       0,
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     );
     expect(textureCoordinateRotationPoints[2]).toEqualEpsilon(
       0,
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     );
     expect(textureCoordinateRotationPoints[3]).toEqualEpsilon(
       1,
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     );
     expect(textureCoordinateRotationPoints[4]).toEqualEpsilon(
       1,
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     );
     expect(textureCoordinateRotationPoints[5]).toEqualEpsilon(
       0,
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     );
   });
 
@@ -517,7 +452,7 @@ describe("Core/CorridorGeometry", function () {
   packedInstance.push(
     Ellipsoid.WGS84.radii.x,
     Ellipsoid.WGS84.radii.y,
-    Ellipsoid.WGS84.radii.z
+    Ellipsoid.WGS84.radii.z,
   );
   packedInstance.push(1.0, 0.0, 0.0, 0.0, 0.0, 0.0);
   packedInstance.push(30000.0, 0.0, 0.0, 2.0, 0.1, 0.0, -1);

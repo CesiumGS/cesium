@@ -119,22 +119,22 @@ SkyBox.prototype.update = function (frameState, useHdr) {
     Check.defined("this.sources", sources);
     if (
       Object.values(CubeMap.FaceName).some(
-        (faceName) => !defined(sources[faceName])
+        (faceName) => !defined(sources[faceName]),
       )
     ) {
       throw new DeveloperError(
-        "this.sources must have positiveX, negativeX, positiveY, negativeY, positiveZ, and negativeZ properties."
+        "this.sources must have positiveX, negativeX, positiveY, negativeY, positiveZ, and negativeZ properties.",
       );
     }
 
     const sourceType = typeof sources.positiveX;
     if (
       Object.values(CubeMap.FaceName).some(
-        (faceName) => typeof sources[faceName] !== sourceType
+        (faceName) => typeof sources[faceName] !== sourceType,
       )
     ) {
       throw new DeveloperError(
-        "this.sources properties must all be the same type."
+        "this.sources properties must all be the same type.",
       );
     }
     //>>includeEnd('debug');
@@ -167,11 +167,10 @@ SkyBox.prototype.update = function (frameState, useHdr) {
       BoxGeometry.fromDimensions({
         dimensions: new Cartesian3(2.0, 2.0, 2.0),
         vertexFormat: VertexFormat.POSITION_ONLY,
-      })
+      }),
     );
-    const attributeLocations = (this._attributeLocations = GeometryPipeline.createAttributeLocations(
-      geometry
-    ));
+    const attributeLocations = (this._attributeLocations =
+      GeometryPipeline.createAttributeLocations(geometry));
 
     command.vertexArray = VertexArray.fromGeometry({
       context: context,

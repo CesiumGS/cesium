@@ -84,7 +84,7 @@ export const Check: {
       lessThanOrEquals(
         name: string,
         test: any,
-        limit: number
+        limit: number,
       ): asserts test is number;
       /**
        * Throws if test is not typeof 'number' and greater than limit
@@ -97,7 +97,7 @@ export const Check: {
       greaterThan(
         name: string,
         test: any,
-        limit: number
+        limit: number,
       ): asserts test is number;
       /**
        * Throws if test is not typeof 'number' and greater than or equal to limit
@@ -110,7 +110,7 @@ export const Check: {
       greaterThanOrEquals(
         name: string,
         test: any,
-        limit: number
+        limit: number,
       ): asserts test is number;
       /**
        * Throws if test1 and test2 is not typeof 'number' and not equal in value

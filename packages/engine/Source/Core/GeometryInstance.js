@@ -76,7 +76,7 @@ function GeometryInstance(options) {
    * @default Matrix4.IDENTITY
    */
   this.modelMatrix = Matrix4.clone(
-    defaultValue(options.modelMatrix, Matrix4.IDENTITY)
+    defaultValue(options.modelMatrix, Matrix4.IDENTITY),
   );
 
   /**

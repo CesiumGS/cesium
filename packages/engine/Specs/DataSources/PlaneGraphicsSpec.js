@@ -50,7 +50,7 @@ describe("DataSources/PlaneGraphics", function () {
     expect(plane.dimensions.getValue()).toEqual(options.dimensions);
     expect(plane.shadows.getValue()).toEqual(options.shadows);
     expect(plane.distanceDisplayCondition.getValue()).toEqual(
-      options.distanceDisplayCondition
+      options.distanceDisplayCondition,
     );
   });
 
@@ -66,7 +66,7 @@ describe("DataSources/PlaneGraphics", function () {
     source.dimensions = new ConstantProperty();
     source.shadows = new ConstantProperty(ShadowMode.ENABLED);
     source.distanceDisplayCondition = new ConstantProperty(
-      new DistanceDisplayCondition(10.0, 100.0)
+      new DistanceDisplayCondition(10.0, 100.0),
     );
 
     const target = new PlaneGraphics();
@@ -82,7 +82,7 @@ describe("DataSources/PlaneGraphics", function () {
     expect(target.dimensions).toBe(source.dimensions);
     expect(target.shadows).toBe(source.shadows);
     expect(target.distanceDisplayCondition).toBe(
-      source.distanceDisplayCondition
+      source.distanceDisplayCondition,
     );
   });
 
@@ -150,7 +150,7 @@ describe("DataSources/PlaneGraphics", function () {
     expect(result.dimensions).toBe(source.dimensions);
     expect(result.shadows).toBe(source.shadows);
     expect(result.distanceDisplayCondition).toBe(
-      source.distanceDisplayCondition
+      source.distanceDisplayCondition,
     );
   });
 
@@ -173,25 +173,25 @@ describe("DataSources/PlaneGraphics", function () {
       property,
       "plane",
       new Plane(Cartesian3.UNIT_X, 0.0),
-      new Plane(Cartesian3.UNIT_Z, 1.0)
+      new Plane(Cartesian3.UNIT_Z, 1.0),
     );
     testDefinitionChanged(
       property,
       "dimensions",
       new Cartesian2(0.0, 0.0),
-      new Cartesian2(1.0, 1.0)
+      new Cartesian2(1.0, 1.0),
     );
     testDefinitionChanged(
       property,
       "shadows",
       ShadowMode.ENABLED,
-      ShadowMode.DISABLED
+      ShadowMode.DISABLED,
     );
     testDefinitionChanged(
       property,
       "distanceDisplayCondition",
       new DistanceDisplayCondition(),
-      new DistanceDisplayCondition(10.0, 100.0)
+      new DistanceDisplayCondition(10.0, 100.0),
     );
   });
 });
