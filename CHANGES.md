@@ -70,7 +70,7 @@ This is an npm-only release to extra source maps included in 1.121
 - Fixed environment map transform for image-based lighting. [#12091](https://github.com/CesiumGS/cesium/pull/12091)
 - Updated geometric self-shadowing function to improve direct lighting on models using physically-based rendering. [#12063](https://github.com/CesiumGS/cesium/pull/12063)
 - Prevent Bing Imagery API format issues from throwing errors [#12094](https://github.com/CesiumGS/cesium/pull/12094)
-- Fix non iso compliant string so the function properly converts the milliseconds into a fractional second with the specified precision [#11507](https://github.com/CesiumGS/cesium/issues/11507)
+- Fix JulianDate to always generate valid ISO strings for fractional milliseconds [#11507](https://github.com/CesiumGS/cesium/issues/11507)
 
 ### 1.119 - 2024-07-01
 
