@@ -26,6 +26,9 @@ import ModelSplitterPipelineStage from "./ModelSplitterPipelineStage.js";
 import ModelType from "./ModelType.js";
 import NodeRenderResources from "./NodeRenderResources.js";
 import PrimitiveRenderResources from "./PrimitiveRenderResources.js";
+import OrientedBoundingBox from "../../Core/OrientedBoundingBox.js";
+import Matrix3 from "../../Core/Matrix3.js";
+import InstancingPipelineStage from "./InstancingPipelineStage.js";
 
 /**
  * An in memory representation of the scene graph for a {@link Model}
@@ -441,10 +444,398 @@ function traverseAndCreateSceneGraph(sceneGraph, node, transformToRoot) {
   return index;
 }
 
+// A Cartesian3 that will store the scale factors for computing
+// an oriented bounding box in orientedBoundingBoxFromMinMax
+const scratchScale = new Cartesian3();
+
+/**
+ * Creates an oriented bounding box from the given minimum- and maximum
+ * point, stores it in the given result, and returns it.
+ *
+ * If the given result is `undefined`, then a new oriented bounding box
+ * will be created, filled, and returned.
+ *
+ * @param {Cartesian3} min The minimum point
+ * @param {Cartesian3} max The maximum point
+ * @param {OrientedBoundingBox} [result] The result
+ * @returns The result
+ *
+ * @private
+ */
+function orientedBoundingBoxFromMinMax(min, max, result) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("min", min);
+  Check.typeOf.object("max", max);
+  //>>includeEnd('debug');
+
+  if (!defined(result)) {
+    result = new OrientedBoundingBox();
+  }
+  Cartesian3.midpoint(min, max, result.center);
+  Cartesian3.subtract(max, min, scratchScale);
+  Cartesian3.multiplyByScalar(scratchScale, 0.5, scratchScale);
+  Matrix3.fromScale(scratchScale, result.halfAxes);
+  return result;
+}
+
+// A Matrix3 that will store the rotation and scale components
+// of a transform matrix in transformOrientedBoundingBox
+const scratchRotationScale = new Matrix3();
+
+/**
+ * Transforms the given oriented bounding box with the given matrix,
+ * stores the result in the given result parameter, and returns it.
+ *
+ * If the given result is `undefined`, then a new oriented bounding box
+ * will be created, filled, and returned.
+ *
+ * @param {OrientedBoundingBox} orientedBoundingBox The oriented bounding box
+ * @param {Matrix4} transform The transform matrix
+ * @param {OrientedBoundingBox} [result] The result
+ * @returns The result
+ *
+ * @private
+ */
+function transformOrientedBoundingBox(orientedBoundingBox, transform, result) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("orientedBoundingBox", orientedBoundingBox);
+  Check.typeOf.object("transform", transform);
+  //>>includeEnd('debug');
+
+  if (!defined(result)) {
+    result = new OrientedBoundingBox();
+  }
+  Matrix4.multiplyByPoint(transform, orientedBoundingBox.center, result.center);
+  Matrix4.getMatrix3(transform, scratchRotationScale);
+  Matrix3.multiply(
+    scratchRotationScale,
+    orientedBoundingBox.halfAxes,
+    result.halfAxes
+  );
+  return result;
+}
+
+// An oriented bounding box that will represent the (transformed) minimum
+// and maximum points in accumulateMinMax
+const scratchObb = new OrientedBoundingBox();
+
+// Oriented bounding box corners that will store the corners of the
+// transformed oriented bounding box in accumulateMinMax
+const scratchObbCorners = [
+  new Cartesian3(),
+  new Cartesian3(),
+  new Cartesian3(),
+  new Cartesian3(),
+  new Cartesian3(),
+  new Cartesian3(),
+  new Cartesian3(),
+  new Cartesian3(),
+];
+
+/**
+ * Accumulate the minimum and maximum from the given source points
+ * under the given transformation.
+ *
+ * This will compute the oriented bounding box from the given source
+ * points, transform it with the given transform, and store the
+ * component-wise minimum and maximum of the corner points of the
+ * transformed oriented bounding box in the given targets.
+ *
+ * @param {Cartesian3} targetMin The target minimum
+ * @param {Cartesian3} targetMax The target maximum
+ * @param {Cartesian3} sourceMin The source minimum
+ * @param {Cartesian3} sourceMax The source maximum
+ * @param {Matrix4} transform The transform
+ *
+ * @private
+ */
+function accumulateMinMax(
+  targetMin,
+  targetMax,
+  sourceMin,
+  sourceMax,
+  transform
+) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("targetMin", targetMin);
+  Check.typeOf.object("targetMax", targetMax);
+  Check.typeOf.object("sourceMin", sourceMin);
+  Check.typeOf.object("sourceMax", sourceMax);
+  Check.typeOf.object("transform", transform);
+  //>>includeEnd('debug');
+
+  const obb = orientedBoundingBoxFromMinMax(sourceMin, sourceMax, scratchObb);
+  transformOrientedBoundingBox(obb, transform, obb);
+  const corners = OrientedBoundingBox.computeCorners(obb, scratchObbCorners);
+  for (let i = 0; i < 8; i++) {
+    const corner = corners[i];
+    Cartesian3.minimumByComponent(targetMin, corner, targetMin);
+    Cartesian3.maximumByComponent(targetMax, corner, targetMax);
+  }
+}
+
+/**
+ * Compute the minimum and maximum from the given source points
+ * under the given transformations.
+ *
+ * This will call `accumulateMinMax` with each transform and the
+ * given source points, accumulating into results that are
+ * initialized with `+/- Number.MAX_VALUE`.
+ *
+ * @param {Cartesian3} sourceMin The source minimum
+ * @param {Cartesian3} sourceMax The source maximum
+ * @param {Matrix4} transform The transform
+ * @returns An object containing the resulting `min` and `max` properties
+ * as `Cartesian3` objects
+ */
+function computeMinMax(sourceMin, sourceMax, transforms) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("sourceMin", sourceMin);
+  Check.typeOf.object("sourceMax", sourceMax);
+  Check.typeOf.object("transforms", transforms);
+  //>>includeEnd('debug');
+
+  const resultMin = Cartesian3.fromElements(
+    Number.MAX_VALUE,
+    Number.MAX_VALUE,
+    Number.MAX_VALUE
+  );
+  const resultMax = Cartesian3.fromElements(
+    -Number.MAX_VALUE,
+    -Number.MAX_VALUE,
+    -Number.MAX_VALUE
+  );
+
+  for (const transform of transforms) {
+    accumulateMinMax(resultMin, resultMax, sourceMin, sourceMax, transform);
+  }
+  return {
+    min: resultMin,
+    max: resultMax,
+  };
+}
+
+/**
+ * Returns an array containing all transforms from the `ModelComponents.Instances`
+ * are stored as the `runtimeNode.node.instances`.
+ *
+ * If the the node does not have instancing information, then an array
+ * containing the identity matrix is returned.
+ *
+ * These are only the "raw" transforms from the instancing information, and
+ * do not take into account the actual node transform. For the complete
+ * node instance transforms, `computeNodeInstanceTransforms` can be used.
+ *
+ * @param {ModelRuntimeNode} runtimeNode The runtime node
+ * @param {NodeRenderResources} nodeRenderResources The node render resources
+ * @returns The instance transforms as `Matrix4` objects
+ *
+ * @private
+ */
+function computeRawInstanceTransforms(runtimeNode, nodeRenderResources) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("runtimeNode", runtimeNode);
+  Check.typeOf.object("nodeRenderResources", nodeRenderResources);
+  //>>includeEnd('debug');
+
+  const instances = runtimeNode.node.instances;
+  if (!defined(instances)) {
+    return [Matrix4.clone(Matrix4.IDENTITY)];
+  }
+
+  const count = instances.attributes[0].count;
+  const transforms = InstancingPipelineStage._getInstanceTransformsAsMatrices(
+    instances,
+    count,
+    nodeRenderResources
+  );
+  return transforms;
+}
+
+/**
+ * Returns an array containing all transforms for the given nodes, including
+ * any instancing transforms (if present). If the node does not have
+ * instancing information, then the result will be an array containing
+ * a single matrix.
+ *
+ * This includes...
+ * - the instancing transforms (if present)
+ * - the `nodeRenderResources.model.sceneGraph.components.transform`
+ * - the `nodeRenderResources.model.sceneGraph._axisCorrectionMatrix`
+ * - the `runtimeNode.computedTransform`
+ *
+ * I'd like to write more about what this IS, but [TODO complete comment].
+ *
+ * @param {ModelRuntimeNode} runtimeNode The runtime node
+ * @param {NodeRenderResources} nodeRenderResources The node render resources
+ * @returns The node instance transforms as `Matrix4` objects
+ *
+ * @private
+ */
+function computeNodeInstanceTransforms(runtimeNode, nodeRenderResources) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("runtimeNode", runtimeNode);
+  Check.typeOf.object("nodeRenderResources", nodeRenderResources);
+  //>>includeEnd('debug');
+
+  const nodeTransform = runtimeNode.computedTransform;
+  const instanceTransforms = computeRawInstanceTransforms(
+    runtimeNode,
+    nodeRenderResources
+  );
+  const nodeInstanceTransforms = [];
+  for (const rawInstanceTransform of instanceTransforms) {
+    const model = nodeRenderResources.model;
+    const sceneGraph = model.sceneGraph;
+    const components = sceneGraph._components;
+
+    const fullTransform = Matrix4.clone(Matrix4.IDENTITY, new Matrix4());
+
+    // TODO only when transformInWorldSpace, probably:
+    Matrix4.multiplyTransformation(
+      fullTransform,
+      rawInstanceTransform,
+      fullTransform
+    );
+
+    Matrix4.multiplyTransformation(
+      fullTransform,
+      components.transform,
+      fullTransform
+    );
+
+    Matrix4.multiplyTransformation(
+      fullTransform,
+      sceneGraph._axisCorrectionMatrix,
+      fullTransform
+    );
+
+    Matrix4.multiplyTransformation(fullTransform, nodeTransform, fullTransform);
+
+    //*/ DEBUG OUTPUT
+    {
+      console.log("computeNodeInstanceTransforms");
+      console.log(" with rawInstanceTransform ", rawInstanceTransform);
+      console.log(" with components.transform ", components.transform);
+      console.log(
+        " with sceneGraph._axisCorrectionMatrix ",
+        sceneGraph._axisCorrectionMatrix
+      );
+      console.log(" with nodeTransform ", nodeTransform);
+      console.log(" result ", fullTransform);
+    }
+    //*/
+
+    nodeInstanceTransforms.push(fullTransform);
+  }
+  return nodeInstanceTransforms;
+}
+
+/**
+ * Creates the `PrimitiveRenderResources` for the given runtime primtive
+ * that is attached to a node with the given resources that defines the
+ * given instance transforms.
+ *
+ * The main purpose of this method is to compute the minimum/maximum
+ * point of the given runtime primitive under the given instance transforms,
+ * to pass that to the `PrimitiveRenderResources` to compute the proper
+ * bounding sphere.
+ *
+ * The `nodeInstanceTransforms` are supposed to be computed with
+ * `computeNodeInstanceTransforms`: When the node defines instancing
+ * information, then this will be an array containing one transform
+ * for each instance (otherwise, it is a single-element array with
+ * the node transform). This is used for computing the actual minimum
+ * and maximum of any instance (!) of the primitive that will be rendered.
+ *
+ * @param {NodeRenderResources} nodeRenderResources The node render resources
+ * @param {ModelRuntimePrimitive} runtimePrimitive The runtime primitive
+ * @param {Matrix4[]} nodeInstanceTransforms The instance transforms for the node
+ * @returns The primitive render resources
+ *
+ * @private
+ */
+function createPrimitiveRenderResources(
+  nodeRenderResources,
+  runtimePrimitive,
+  nodeInstanceTransforms
+) {
+  const primitive = runtimePrimitive.primitive;
+  const positionGltfAttribute = ModelUtility.getAttributeBySemantic(
+    primitive,
+    "POSITION"
+  );
+  const originalPositionMin = positionGltfAttribute.min;
+  const originalPositionMax = positionGltfAttribute.max;
+
+  const minMax = computeMinMax(
+    originalPositionMin,
+    originalPositionMax,
+    nodeInstanceTransforms
+  );
+
+  //*/ DEBUG OUTPUT
+  {
+    const positionMin = Cartesian3.fromElements(
+      Number.MAX_VALUE,
+      Number.MAX_VALUE,
+      Number.MAX_VALUE
+    );
+    const positionMax = Cartesian3.fromElements(
+      -Number.MAX_VALUE,
+      -Number.MAX_VALUE,
+      -Number.MAX_VALUE
+    );
+
+    for (const nodeInstanceTransform of nodeInstanceTransforms) {
+      console.log("transforming originalPositionMin ", originalPositionMin);
+      console.log("transforming originalPositionMax ", originalPositionMax);
+      console.log("with nodeInstanceTransform ", nodeInstanceTransform);
+      accumulateMinMax(
+        positionMin,
+        positionMax,
+        originalPositionMin,
+        originalPositionMax,
+        nodeInstanceTransform
+      );
+    }
+  }
+  //*/
+
+  const primitiveRenderResources = new PrimitiveRenderResources(
+    nodeRenderResources,
+    runtimePrimitive,
+    minMax.min,
+    minMax.max
+  );
+
+  //*/ DEBUG OUTPUT
+  {
+    console.log(
+      "result primitiveRenderResources positionMin ",
+      primitiveRenderResources.positionMin
+    );
+    console.log(
+      "result primitiveRenderResources positionMin ",
+      primitiveRenderResources.positionMax
+    );
+    console.log(
+      "result primitiveRenderResources center ",
+      primitiveRenderResources.boundingSphere.center
+    );
+    console.log(
+      "result primitiveRenderResources radius ",
+      primitiveRenderResources.boundingSphere.radius
+    );
+  }
+  //*/
+
+  return primitiveRenderResources;
+}
+
 const scratchModelPositionMin = new Cartesian3();
 const scratchModelPositionMax = new Cartesian3();
-const scratchPrimitivePositionMin = new Cartesian3();
-const scratchPrimitivePositionMax = new Cartesian3();
+
 /**
  * Generates the {@link ModelDrawCommand} for each primitive in the model.
  * If the model is used for classification, a {@link ClassificationModelDrawCommand}
@@ -465,8 +856,7 @@ ModelSceneGraph.prototype.buildDrawCommands = function (frameState) {
   this.configurePipeline(frameState);
   const modelPipelineStages = this.modelPipelineStages;
 
-  let i, j, k;
-  for (i = 0; i < modelPipelineStages.length; i++) {
+  for (let i = 0; i < modelPipelineStages.length; i++) {
     const modelPipelineStage = modelPipelineStages[i];
     modelPipelineStage.process(modelRenderResources, model, frameState);
   }
@@ -484,7 +874,7 @@ ModelSceneGraph.prototype.buildDrawCommands = function (frameState) {
     scratchModelPositionMax
   );
 
-  for (i = 0; i < this._runtimeNodes.length; i++) {
+  for (let i = 0; i < this._runtimeNodes.length; i++) {
     const runtimeNode = this._runtimeNodes[i];
 
     // If a node in the model was unreachable from the scene graph, there will
@@ -501,7 +891,7 @@ ModelSceneGraph.prototype.buildDrawCommands = function (frameState) {
       runtimeNode
     );
 
-    for (j = 0; j < nodePipelineStages.length; j++) {
+    for (let j = 0; j < nodePipelineStages.length; j++) {
       const nodePipelineStage = nodePipelineStages[j];
 
       nodePipelineStage.process(
@@ -511,19 +901,24 @@ ModelSceneGraph.prototype.buildDrawCommands = function (frameState) {
       );
     }
 
-    const nodeTransform = runtimeNode.computedTransform;
-    for (j = 0; j < runtimeNode.runtimePrimitives.length; j++) {
+    const nodeInstanceTransforms = computeNodeInstanceTransforms(
+      runtimeNode,
+      nodeRenderResources
+    );
+
+    for (let j = 0; j < runtimeNode.runtimePrimitives.length; j++) {
       const runtimePrimitive = runtimeNode.runtimePrimitives[j];
 
       runtimePrimitive.configurePipeline(frameState);
       const primitivePipelineStages = runtimePrimitive.pipelineStages;
 
-      const primitiveRenderResources = new PrimitiveRenderResources(
+      const primitiveRenderResources = createPrimitiveRenderResources(
         nodeRenderResources,
-        runtimePrimitive
+        runtimePrimitive,
+        nodeInstanceTransforms
       );
 
-      for (k = 0; k < primitivePipelineStages.length; k++) {
+      for (let k = 0; k < primitivePipelineStages.length; k++) {
         const primitivePipelineStage = primitivePipelineStages[k];
 
         primitivePipelineStage.process(
@@ -538,25 +933,19 @@ ModelSceneGraph.prototype.buildDrawCommands = function (frameState) {
         new BoundingSphere()
       );
 
-      const primitivePositionMin = Matrix4.multiplyByPoint(
-        nodeTransform,
-        primitiveRenderResources.positionMin,
-        scratchPrimitivePositionMin
-      );
-      const primitivePositionMax = Matrix4.multiplyByPoint(
-        nodeTransform,
-        primitiveRenderResources.positionMax,
-        scratchPrimitivePositionMax
+      console.log(
+        "runtimePrimitive.boundingSphere",
+        runtimePrimitive.boundingSphere
       );
 
       Cartesian3.minimumByComponent(
         modelPositionMin,
-        primitivePositionMin,
+        primitiveRenderResources.positionMin,
         modelPositionMin
       );
       Cartesian3.maximumByComponent(
         modelPositionMax,
-        primitivePositionMax,
+        primitiveRenderResources.positionMax,
         modelPositionMax
       );
 
@@ -574,6 +963,9 @@ ModelSceneGraph.prototype.buildDrawCommands = function (frameState) {
     new BoundingSphere()
   );
 
+  // XXX This should already have been taken into account
+  // for the PrimitiveRenderResources min/max computation:
+  /*
   this._boundingSphere = BoundingSphere.transformWithoutScale(
     this._boundingSphere,
     this._axisCorrectionMatrix,
@@ -585,6 +977,7 @@ ModelSceneGraph.prototype.buildDrawCommands = function (frameState) {
     this._components.transform,
     this._boundingSphere
   );
+  */
 
   model._boundingSphere = BoundingSphere.transform(
     this._boundingSphere,

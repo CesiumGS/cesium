@@ -616,6 +616,9 @@ function getInstanceTransformsAsMatrices(instances, count, renderResources) {
 
   // Unload the typed arrays. These are just pointers to the arrays
   // in the vertex buffer loader.
+  // XXX NO, DON'T FRIGGIN "UNLOAD" SOMETHING IN A FUNCTION
+  // THAT HAS A NAME THAT STARTS WITH "get"!!!
+  /*
   if (hasTranslation) {
     translationAttribute.typedArray = undefined;
   }
@@ -625,7 +628,7 @@ function getInstanceTransformsAsMatrices(instances, count, renderResources) {
   if (hasScale) {
     scaleAttribute.typedArray = undefined;
   }
-
+  */
   return transforms;
 }
 
@@ -675,7 +678,9 @@ function getInstanceTranslationsAsCartesian3s(
 
   // Unload the typed array. This is just a pointer to the array
   // in the vertex buffer loader.
-  translationAttribute.typedArray = undefined;
+  // XXX NO, DON'T FRIGGIN "UNLOAD" SOMETHING IN A FUNCTION
+  // THAT HAS A NAME THAT STARTS WITH "get"!!!
+  //translationAttribute.typedArray = undefined;
 
   return instancingTranslations;
 }

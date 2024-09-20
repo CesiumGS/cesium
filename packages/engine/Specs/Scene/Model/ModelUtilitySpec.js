@@ -210,6 +210,7 @@ describe("Scene/Model/ModelUtility", function () {
       attributes: attributes,
     };
 
+    console.log("XXX TODO REMOVE THIS TEST - instancing min/max are omitted");
     const minMax = ModelUtility.getPositionMinMax(
       mockPrimitive,
       new Cartesian3(-5, -5, -5),

@@ -10,12 +10,23 @@ import ModelLightingOptions from "./ModelLightingOptions.js";
  * Each node may have many mesh primitives. Most model pipeline stages operate
  * at the primitive level. Again, properties are inherited from the parent.
  *
+ * The given minimim- and maximum positions include node-, axis correction-,
+ * and instancing transforms, but excluding any model transforms. They will
+ * be used for computing the bounding sphere of the primitive render resources.
+ *
  * @param {NodeRenderResources} nodeRenderResources The node resources to inherit from
  * @param {ModelRuntimePrimitive} runtimePrimitive The primitive.
+ * @param {Cartesian3} positionMin The minimum vertex position of this primitive
+ * @param {Cartesian3} positionMax The maximum vertex position of this primitive
  *
  * @private
  */
-function PrimitiveRenderResources(nodeRenderResources, runtimePrimitive) {
+function PrimitiveRenderResources(
+  nodeRenderResources,
+  runtimePrimitive,
+  positionMin,
+  positionMax
+) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("nodeRenderResources", nodeRenderResources);
   Check.typeOf.object("runtimePrimitive", runtimePrimitive);
@@ -232,12 +243,6 @@ function PrimitiveRenderResources(nodeRenderResources, runtimePrimitive) {
    */
   this.primitiveType = primitive.primitiveType;
 
-  const positionMinMax = ModelUtility.getPositionMinMax(
-    primitive,
-    this.runtimeNode.instancingTranslationMin,
-    this.runtimeNode.instancingTranslationMax
-  );
-
   /**
    * The minimum position value for this primitive.
    *
@@ -246,7 +251,7 @@ function PrimitiveRenderResources(nodeRenderResources, runtimePrimitive) {
    *
    * @private
    */
-  this.positionMin = Cartesian3.clone(positionMinMax.min, new Cartesian3());
+  this.positionMin = Cartesian3.clone(positionMin, new Cartesian3());
 
   /**
    * The maximum position value for this primitive.
@@ -256,7 +261,7 @@ function PrimitiveRenderResources(nodeRenderResources, runtimePrimitive) {
    *
    * @private
    */
-  this.positionMax = Cartesian3.clone(positionMinMax.max, new Cartesian3());
+  this.positionMax = Cartesian3.clone(positionMax, new Cartesian3());
 
   /**
    * The bounding sphere that contains all the vertices in this primitive.
