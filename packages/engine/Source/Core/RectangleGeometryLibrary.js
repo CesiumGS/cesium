@@ -2,6 +2,7 @@ import Cartesian3 from "./Cartesian3.js";
 import Cartographic from "./Cartographic.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
+import Ellipsoid from "./Ellipsoid.js";
 import GeographicProjection from "./GeographicProjection.js";
 import CesiumMath from "./Math.js";
 import Matrix2 from "./Matrix2.js";
@@ -100,6 +101,7 @@ function getRotationOptions(
   const granYSin = granularityY * sinRotation;
   const granXSin = granularityX * sinRotation;
 
+  proj._ellipsoid = Ellipsoid.default;
   nwCartesian = proj.project(nwCorner, nwCartesian);
 
   nwCartesian = Cartesian3.subtract(nwCartesian, centerCartesian, nwCartesian);
@@ -190,6 +192,7 @@ RectangleGeometryLibrary.computeOptions = function (
     if (center.longitude < nwCorner.longitude) {
       center.longitude += CesiumMath.TWO_PI;
     }
+    proj._ellipsoid = Ellipsoid.default;
     centerCartesian = proj.project(center, centerCartesian);
   }
 

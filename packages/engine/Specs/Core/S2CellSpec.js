@@ -1,8 +1,9 @@
-import { Cartesian3, FeatureDetection, S2Cell } from "../../index.js";
-/* eslint-disable new-cap */
-/* eslint-disable no-undef */
-
-import { Math as CesiumMath } from "../../index.js";
+import {
+  Cartesian3,
+  FeatureDetection,
+  Math as CesiumMath,
+  S2Cell,
+} from "../../index.js";
 
 describe("Core/S2Cell", function () {
   if (!FeatureDetection.supportsBigInt()) {
@@ -15,16 +16,16 @@ describe("Core/S2Cell", function () {
   });
 
   it("throws for invalid cell ID in constructor", function () {
-    // eslint-disable-next-line new-cap
     expect(function () {
-      S2Cell(BigInt(-1));
+      // eslint-disable-next-line no-unused-vars
+      const cell = new S2Cell(BigInt(-1));
     }).toThrowDeveloperError();
   });
 
   it("throws for missing cell ID in constructor", function () {
-    // eslint-disable-next-line new-cap
     expect(function () {
-      S2Cell();
+      // eslint-disable-next-line no-unused-vars
+      const cell = new S2Cell();
     }).toThrowDeveloperError();
   });
 

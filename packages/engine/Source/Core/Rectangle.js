@@ -1,9 +1,12 @@
+import Cartesian3 from "./Cartesian3.js";
 import Cartographic from "./Cartographic.js";
 import Check from "./Check.js";
 import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 import Ellipsoid from "./Ellipsoid.js";
 import CesiumMath from "./Math.js";
+import Transforms from "./Transforms.js";
+import Matrix4 from "./Matrix4.js";
 
 /**
  * A two dimensional region specified as longitude and latitude coordinates.
@@ -282,7 +285,7 @@ Rectangle.fromCartographicArray = function (cartographics, result) {
  * Creates the smallest possible Rectangle that encloses all positions in the provided array.
  *
  * @param {Cartesian3[]} cartesians The list of Cartesian instances.
- * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid the cartesians are on.
+ * @param {Ellipsoid} [ellipsoid=Ellipsoid.default] The ellipsoid the cartesians are on.
  * @param {Rectangle} [result] The object onto which to store the result, or undefined if a new instance should be created.
  * @returns {Rectangle} The modified result parameter or a new Rectangle instance if none was provided.
  */
@@ -290,7 +293,7 @@ Rectangle.fromCartesianArray = function (cartesians, ellipsoid, result) {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("cartesians", cartesians);
   //>>includeEnd('debug');
-  ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
+  ellipsoid = defaultValue(ellipsoid, Ellipsoid.default);
 
   let west = Number.MAX_VALUE;
   let east = -Number.MAX_VALUE;
@@ -335,6 +338,92 @@ Rectangle.fromCartesianArray = function (cartesians, ellipsoid, result) {
   result.east = east;
   result.north = north;
   return result;
+};
+
+const fromBoundingSphereMatrixScratch = new Cartesian3();
+const fromBoundingSphereEastScratch = new Cartesian3();
+const fromBoundingSphereNorthScratch = new Cartesian3();
+const fromBoundingSphereWestScratch = new Cartesian3();
+const fromBoundingSphereSouthScratch = new Cartesian3();
+const fromBoundingSpherePositionsScratch = new Array(5);
+for (let n = 0; n < fromBoundingSpherePositionsScratch.length; ++n) {
+  fromBoundingSpherePositionsScratch[n] = new Cartesian3();
+}
+/**
+ * Create a rectangle from a bounding sphere, ignoring height.
+ *
+ *
+ * @param {BoundingSphere} boundingSphere The bounding sphere.
+ * @param {Ellipsoid} [ellipsoid=Ellipsoid.default] The ellipsoid.
+ * @param {Rectangle} [result] The object onto which to store the result, or undefined if a new instance should be created.
+ * @returns {Rectangle} The modified result parameter or a new Rectangle instance if none was provided.
+ */
+Rectangle.fromBoundingSphere = function (boundingSphere, ellipsoid, result) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("boundingSphere", boundingSphere);
+  //>>includeEnd('debug');
+
+  const center = boundingSphere.center;
+  const radius = boundingSphere.radius;
+
+  if (!defined(ellipsoid)) {
+    ellipsoid = Ellipsoid.default;
+  }
+
+  if (!defined(result)) {
+    result = new Rectangle();
+  }
+
+  if (Cartesian3.equals(center, Cartesian3.ZERO)) {
+    Rectangle.clone(Rectangle.MAX_VALUE, result);
+    return result;
+  }
+
+  const fromENU = Transforms.eastNorthUpToFixedFrame(
+    center,
+    ellipsoid,
+    fromBoundingSphereMatrixScratch
+  );
+  const east = Matrix4.multiplyByPointAsVector(
+    fromENU,
+    Cartesian3.UNIT_X,
+    fromBoundingSphereEastScratch
+  );
+  Cartesian3.normalize(east, east);
+  const north = Matrix4.multiplyByPointAsVector(
+    fromENU,
+    Cartesian3.UNIT_Y,
+    fromBoundingSphereNorthScratch
+  );
+  Cartesian3.normalize(north, north);
+
+  Cartesian3.multiplyByScalar(north, radius, north);
+  Cartesian3.multiplyByScalar(east, radius, east);
+
+  const south = Cartesian3.negate(north, fromBoundingSphereSouthScratch);
+  const west = Cartesian3.negate(east, fromBoundingSphereWestScratch);
+
+  const positions = fromBoundingSpherePositionsScratch;
+
+  // North
+  let corner = positions[0];
+  Cartesian3.add(center, north, corner);
+
+  // West
+  corner = positions[1];
+  Cartesian3.add(center, west, corner);
+
+  // South
+  corner = positions[2];
+  Cartesian3.add(center, south, corner);
+
+  // East
+  corner = positions[3];
+  Cartesian3.add(center, east, corner);
+
+  positions[4] = center;
+
+  return Rectangle.fromCartesianArray(positions, ellipsoid, result);
 };
 
 /**
@@ -823,7 +912,7 @@ const subsampleLlaScratch = new Cartographic();
  * for rectangles that cover the poles or cross the equator.
  *
  * @param {Rectangle} rectangle The rectangle to subsample.
- * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid to use.
+ * @param {Ellipsoid} [ellipsoid=Ellipsoid.default] The ellipsoid to use.
  * @param {number} [surfaceHeight=0.0] The height of the rectangle above the ellipsoid.
  * @param {Cartesian3[]} [result] The array of Cartesians onto which to store the result.
  * @returns {Cartesian3[]} The modified result parameter or a new Array of Cartesians instances if none was provided.
@@ -833,7 +922,7 @@ Rectangle.subsample = function (rectangle, ellipsoid, surfaceHeight, result) {
   Check.typeOf.object("rectangle", rectangle);
   //>>includeEnd('debug');
 
-  ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
+  ellipsoid = defaultValue(ellipsoid, Ellipsoid.default);
   surfaceHeight = defaultValue(surfaceHeight, 0.0);
 
   if (!defined(result)) {

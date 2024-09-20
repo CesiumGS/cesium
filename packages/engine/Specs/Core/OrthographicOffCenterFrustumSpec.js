@@ -2,11 +2,10 @@ import {
   Cartesian2,
   Cartesian3,
   Cartesian4,
+  Math as CesiumMath,
   Matrix4,
   OrthographicOffCenterFrustum,
 } from "../../index.js";
-
-import { Math as CesiumMath } from "../../index.js";
 
 describe("Core/OrthographicOffCenterFrustum", function () {
   let frustum, planes;

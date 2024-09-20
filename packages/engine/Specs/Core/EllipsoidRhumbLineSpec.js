@@ -4,9 +4,8 @@ import {
   Ellipsoid,
   EllipsoidGeodesic,
   EllipsoidRhumbLine,
+  Math as CesiumMath,
 } from "../../index.js";
-
-import { Math as CesiumMath } from "../../index.js";
 
 describe("Core/EllipsoidRhumbLine", function () {
   const oneDegree = CesiumMath.RADIANS_PER_DEGREE;

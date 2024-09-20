@@ -23,6 +23,7 @@ import Property from "./Property.js";
 import Cartographic from "../Core/Cartographic.js";
 
 const defaultScale = 1.0;
+const defaultEnableVerticalExaggeration = true;
 const defaultMinimumPixelSize = 0.0;
 const defaultIncrementallyLoadTextures = true;
 const defaultClampAnimations = true;
@@ -198,6 +199,13 @@ ModelVisualizer.prototype.update = function (time) {
       time,
       defaultScale
     );
+
+    model.enableVerticalExaggeration = Property.getValueOrDefault(
+      modelGraphics._enableVerticalExaggeration,
+      time,
+      defaultEnableVerticalExaggeration
+    );
+
     model.minimumPixelSize = Property.getValueOrDefault(
       modelGraphics._minimumPixelSize,
       time,
@@ -441,8 +449,7 @@ ModelVisualizer.prototype.getBoundingSphere = function (entity, result) {
   }
 
   const scene = this._scene;
-  const globe = scene.globe;
-  const ellipsoid = defaultValue(globe?.ellipsoid, Ellipsoid.WGS84);
+  const ellipsoid = defaultValue(scene.ellipsoid, Ellipsoid.default);
 
   const hasHeightReference = model.heightReference !== HeightReference.NONE;
   if (hasHeightReference) {

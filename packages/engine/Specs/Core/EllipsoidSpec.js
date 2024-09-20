@@ -824,4 +824,10 @@ describe("Core/Ellipsoid", function () {
     Ellipsoid.WGS84.radii.y,
     Ellipsoid.WGS84.radii.z,
   ]);
+
+  it("set default throws if undefined", function () {
+    expect(function () {
+      Ellipsoid.default = undefined;
+    }).toThrowDeveloperError();
+  });
 });

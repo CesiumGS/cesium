@@ -229,12 +229,7 @@
 
             const scene = viewer.scene;
             if (scene.mode !== Cesium.SceneMode.MORPHING) {
-              const pickedObject = scene.pick(movement.endPosition);
-              if (
-                scene.pickPositionSupported &&
-                Cesium.defined(pickedObject) &&
-                pickedObject.id === modelEntity
-              ) {
+              if (scene.pickPositionSupported) {
                 const cartesian = viewer.scene.pickPosition(
                   movement.endPosition
                 );

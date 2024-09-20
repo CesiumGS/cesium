@@ -11,6 +11,7 @@ import TimeInterval from "../Core/TimeInterval.js";
 import Transforms from "../Core/Transforms.js";
 import PolylineCollection from "../Scene/PolylineCollection.js";
 import SceneMode from "../Scene/SceneMode.js";
+import CallbackPositionProperty from "./CallbackPositionProperty.js";
 import CompositePositionProperty from "./CompositePositionProperty.js";
 import ConstantPositionProperty from "./ConstantPositionProperty.js";
 import MaterialProperty from "./MaterialProperty.js";
@@ -133,6 +134,58 @@ function subSampleSampledProperty(
   }
 
   return r;
+}
+
+function subSampleCallbackPositionProperty(
+  property,
+  start,
+  stop,
+  updateTime,
+  referenceFrame,
+  maximumStep,
+  startingIndex,
+  result
+) {
+  let tmp;
+  let i = 0;
+  let index = startingIndex;
+  let time = start;
+  let steppedOnNow =
+    !defined(updateTime) ||
+    JulianDate.lessThanOrEquals(updateTime, start) ||
+    JulianDate.greaterThanOrEquals(updateTime, stop);
+  while (JulianDate.lessThan(time, stop)) {
+    if (!steppedOnNow && JulianDate.greaterThanOrEquals(time, updateTime)) {
+      steppedOnNow = true;
+      tmp = property.getValueInReferenceFrame(
+        updateTime,
+        referenceFrame,
+        result[index]
+      );
+      if (defined(tmp)) {
+        result[index] = tmp;
+        index++;
+      }
+    }
+    tmp = property.getValueInReferenceFrame(
+      time,
+      referenceFrame,
+      result[index]
+    );
+    if (defined(tmp)) {
+      result[index] = tmp;
+      index++;
+    }
+    i++;
+    time = JulianDate.addSeconds(start, maximumStep * i, new JulianDate());
+  }
+  //Always sample stop.
+  tmp = property.getValueInReferenceFrame(stop, referenceFrame, result[index]);
+  if (defined(tmp)) {
+    result[index] = tmp;
+    index++;
+  }
+  return index;
 }
 
 function subSampleGenericProperty(
@@ -339,6 +392,17 @@ function reallySubSample(
       index,
       result
     );
+  } else if (property instanceof CallbackPositionProperty) {
+    index = subSampleCallbackPositionProperty(
+      property,
+      start,
+      stop,
+      updateTime,
+      referenceFrame,
+      maximumStep,
+      index,
+      result
+    );
   } else if (property instanceof CompositePositionProperty) {
     index = subSampleCompositeProperty(
       property,
@@ -430,10 +494,10 @@ function PolylineUpdater(scene, referenceFrame) {
 
 PolylineUpdater.prototype.update = function (time) {
   if (this._referenceFrame === ReferenceFrame.INERTIAL) {
-    let toFixed = Transforms.computeIcrfToFixedMatrix(time, toFixedScratch);
-    if (!defined(toFixed)) {
-      toFixed = Transforms.computeTemeToPseudoFixedMatrix(time, toFixedScratch);
-    }
+    const toFixed = Transforms.computeIcrfToCentralBodyFixedMatrix(
+      time,
+      toFixedScratch
+    );
     Matrix4.fromRotationTranslation(
       toFixed,
       Cartesian3.ZERO,

@@ -7,7 +7,7 @@ import Pass from "../../Renderer/Pass.js";
 /**
  * A pipeline stage for configuring the alpha options for handling translucency.
  *
- * @namespace MaterialPipelineStage
+ * @namespace AlphaPipelineStage
  *
  * @private
  */

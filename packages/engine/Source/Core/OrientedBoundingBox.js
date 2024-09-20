@@ -332,7 +332,7 @@ const scratchPlane = new Plane(Cartesian3.UNIT_X, 0.0);
  * @param {Rectangle} rectangle The cartographic rectangle on the surface of the ellipsoid.
  * @param {number} [minimumHeight=0.0] The minimum height (elevation) within the tile.
  * @param {number} [maximumHeight=0.0] The maximum height (elevation) within the tile.
- * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the rectangle is defined.
+ * @param {Ellipsoid} [ellipsoid=Ellipsoid.default] The ellipsoid on which the rectangle is defined.
  * @param {OrientedBoundingBox} [result] The object onto which to store the result.
  * @returns {OrientedBoundingBox} The modified result parameter or a new OrientedBoundingBox instance if none was provided.
  *
@@ -373,7 +373,7 @@ OrientedBoundingBox.fromRectangle = function (
 
   minimumHeight = defaultValue(minimumHeight, 0.0);
   maximumHeight = defaultValue(maximumHeight, 0.0);
-  ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
+  ellipsoid = defaultValue(ellipsoid, Ellipsoid.default);
 
   let minX, maxX, minY, maxY, minZ, maxZ, plane;
 

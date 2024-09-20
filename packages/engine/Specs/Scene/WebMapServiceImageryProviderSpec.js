@@ -12,6 +12,7 @@ import {
   ImageryProvider,
   ImageryState,
   JulianDate,
+  Math as CesiumMath,
   queryToObject,
   Rectangle,
   Request,
@@ -22,8 +23,6 @@ import {
   WebMapServiceImageryProvider,
   WebMercatorTilingScheme,
 } from "../../index.js";
-
-import { Math as CesiumMath } from "../../index.js";
 
 import pollToPromise from "../../../../Specs/pollToPromise.js";
 

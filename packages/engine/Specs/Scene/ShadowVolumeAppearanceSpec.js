@@ -4,6 +4,7 @@ import {
   ComponentDatatype,
   Ellipsoid,
   EncodedCartesian3,
+  Math as CesiumMath,
   Matrix4,
   Rectangle,
   Transforms,
@@ -13,8 +14,6 @@ import {
   PerInstanceColorAppearance,
   ShadowVolumeAppearance,
 } from "../../index.js";
-
-import { Math as CesiumMath } from "../../index.js";
 
 describe("Scene/ShadowVolumeAppearance", function () {
   // using ShadowVolumeAppearanceVS directly fails on CI with the --release test

@@ -2,10 +2,9 @@ import {
   Cartesian3,
   CircleGeometry,
   Ellipsoid,
+  Math as CesiumMath,
   VertexFormat,
 } from "../../index.js";
-
-import { Math as CesiumMath } from "../../index.js";
 
 import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";
 

@@ -14,6 +14,7 @@ import ImageBasedLightingPipelineStage from "./ImageBasedLightingPipelineStage.j
 import ModelArticulation from "./ModelArticulation.js";
 import ModelColorPipelineStage from "./ModelColorPipelineStage.js";
 import ModelClippingPlanesPipelineStage from "./ModelClippingPlanesPipelineStage.js";
+import ModelClippingPolygonsPipelineStage from "./ModelClippingPolygonsPipelineStage.js";
 import ModelNode from "./ModelNode.js";
 import ModelRuntimeNode from "./ModelRuntimeNode.js";
 import ModelRuntimePrimitive from "./ModelRuntimePrimitive.js";
@@ -350,7 +351,7 @@ function computeModelMatrix2D(sceneGraph, frameState) {
     );
   } else {
     const center = sceneGraph.boundingSphere.center;
-    const to2D = Transforms.wgs84To2DModelMatrix(
+    const to2D = Transforms.ellipsoidTo2DModelMatrix(
       frameState.mapProjection,
       center,
       sceneGraph._computedModelMatrix2D
@@ -624,6 +625,10 @@ ModelSceneGraph.prototype.configurePipeline = function (frameState) {
 
   if (model.isClippingEnabled()) {
     modelPipelineStages.push(ModelClippingPlanesPipelineStage);
+  }
+
+  if (model.isClippingPolygonsEnabled()) {
+    modelPipelineStages.push(ModelClippingPolygonsPipelineStage);
   }
 
   if (model.hasSilhouette(frameState)) {

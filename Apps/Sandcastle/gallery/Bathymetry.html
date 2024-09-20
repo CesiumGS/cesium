@@ -106,9 +106,6 @@
 
         const scene = viewer.scene;
 
-        // prevent aliasing from countour lines
-        scene.msaaSamples = 4;
-
         const globe = scene.globe;
         globe.enableLighting = true;
         globe.maximumScreenSpaceError = 1.0; // Load higher resolution tiles for better seafloor shading

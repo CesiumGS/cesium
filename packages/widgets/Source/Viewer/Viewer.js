@@ -202,7 +202,7 @@ function pickImageryLayerFeature(viewer, windowPosition) {
       });
 
       if (defined(feature.position)) {
-        const ecfPosition = viewer.scene.globe.ellipsoid.cartographicToCartesian(
+        const ecfPosition = viewer.scene.ellipsoid.cartographicToCartesian(
           feature.position,
           cartesian3Scratch
         );
@@ -314,10 +314,11 @@ function enableVRUI(viewer, enabled) {
  * @property {ProviderViewModel} [selectedTerrainProviderViewModel] The view model for the current base terrain layer, if not supplied the first available base layer is used.  This value is only valid if `baseLayerPicker` is set to true.
  * @property {ProviderViewModel[]} [terrainProviderViewModels=createDefaultTerrainProviderViewModels()] The array of ProviderViewModels to be selectable from the BaseLayerPicker.  This value is only valid if `baseLayerPicker` is set to true.
  * @property {ImageryLayer|false} [baseLayer=ImageryLayer.fromWorldImagery()] The bottommost imagery layer applied to the globe. If set to <code>false</code>, no imagery provider will be added. This value is only valid if `baseLayerPicker` is set to false.
+ * @property {Ellipsoid} [ellipsoid = Ellipsoid.default] The default ellipsoid.
  * @property {TerrainProvider} [terrainProvider=new EllipsoidTerrainProvider()] The terrain provider to use
  * @property {Terrain} [terrain] A terrain object which handles asynchronous terrain provider. Can only specify if options.terrainProvider is undefined.
- * @property {SkyBox|false} [skyBox] The skybox used to render the stars.  When <code>undefined</code>, the default stars are used. If set to <code>false</code>, no skyBox, Sun, or Moon will be added.
- * @property {SkyAtmosphere|false} [skyAtmosphere] Blue sky, and the glow around the Earth's limb.  Set to <code>false</code> to turn it off.
+ * @property {SkyBox|false} [skyBox] The skybox used to render the stars. When <code>undefined</code> and the WGS84 ellipsoid used, the default stars are used. If set to <code>false</code>, no skyBox, Sun, or Moon will be added.
+ * @property {SkyAtmosphere|false} [skyAtmosphere] Blue sky, and the glow around the Earth's limb. Enabled when the WGS84 ellipsoid used. Set to <code>false</code> to turn it off.
  * @property {Element|string} [fullscreenElement=document.body] The element or id to be placed into fullscreen mode when the full screen button is pressed.
  * @property {boolean} [useDefaultRenderLoop=true] True if this widget should control the render loop, false otherwise.
  * @property {number} [targetFrameRate] The target frame rate when using the default render loop.
@@ -326,8 +327,8 @@ function enableVRUI(viewer, enabled) {
  * @property {boolean} [automaticallyTrackDataSourceClocks=true] If true, this widget will automatically track the clock settings of newly added DataSources, updating if the DataSource's clock changes.  Set this to false if you want to configure the clock independently.
  * @property {ContextOptions} [contextOptions] Context and WebGL creation properties passed to {@link Scene}.
  * @property {SceneMode} [sceneMode=SceneMode.SCENE3D] The initial scene mode.
- * @property {MapProjection} [mapProjection=new GeographicProjection()] The map projection to use in 2D and Columbus View modes.
- * @property {Globe|false} [globe=new Globe(mapProjection.ellipsoid)] The globe to use in the scene.  If set to <code>false</code>, no globe will be added and the sky atmosphere will be hidden by default.
+ * @property {MapProjection} [mapProjection=new GeographicProjection(options.ellipsoid)] The map projection to use in 2D and Columbus View modes.
+ * @property {Globe|false} [globe=new Globe(options.ellipsoid)] The globe to use in the scene.  If set to <code>false</code>, no globe will be added and the sky atmosphere will be hidden by default.
  * @property {boolean} [orderIndependentTranslucency=true] If true and the configuration supports it, use order independent translucency.
  * @property {Element|string} [creditContainer] The DOM element or ID that will contain the {@link CreditDisplay}.  If not specified, the credits are added to the bottom of the widget itself.
  * @property {Element|string} [creditViewport] The DOM element or ID that will contain the credit pop up created by the {@link CreditDisplay}.  If not specified, it will appear over the widget itself.
@@ -341,7 +342,7 @@ function enableVRUI(viewer, enabled) {
  * @property {boolean} [requestRenderMode=false] If true, rendering a frame will only occur when needed as determined by changes within the scene. Enabling reduces the CPU/GPU usage of your application and uses less battery on mobile, but requires using {@link Scene#requestRender} to render a new frame explicitly in this mode. This will be necessary in many cases after making changes to the scene in other parts of the API. See {@link https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/|Improving Performance with Explicit Rendering}.
  * @property {number} [maximumRenderTimeChange=0.0] If requestRenderMode is true, this value defines the maximum change in simulation time allowed before a render is requested. See {@link https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/|Improving Performance with Explicit Rendering}.
  * @property {number} [depthPlaneEllipsoidOffset=0.0] Adjust the DepthPlane to address rendering artefacts below ellipsoid zero elevation.
- * @property {number} [msaaSamples=1] If provided, this value controls the rate of multisample antialiasing. Typical multisampling rates are 2, 4, and sometimes 8 samples per pixel. Higher sampling rates of MSAA may impact performance in exchange for improved visual quality. This value only applies to WebGL2 contexts that support multisample render targets.
+ * @property {number} [msaaSamples=4] If provided, this value controls the rate of multisample antialiasing. Typical multisampling rates are 2, 4, and sometimes 8 samples per pixel. Higher sampling rates of MSAA may impact performance in exchange for improved visual quality. This value only applies to WebGL2 contexts that support multisample render targets. Set to 1 to disable MSAA.
  */
 
 /**
@@ -485,7 +486,8 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
   // Cesium widget
   const cesiumWidget = new CesiumWidget(cesiumWidgetContainer, {
     baseLayer:
-      createBaseLayerPicker ||
+      (createBaseLayerPicker &&
+        defined(options.selectedImageryProviderViewModel)) ||
       defined(options.baseLayer) ||
       defined(options.imageryProvider)
         ? false
@@ -494,6 +496,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
     skyBox: options.skyBox,
     skyAtmosphere: options.skyAtmosphere,
     sceneMode: options.sceneMode,
+    ellipsoid: options.ellipsoid,
     mapProjection: options.mapProjection,
     globe: options.globe,
     orderIndependentTranslucency: options.orderIndependentTranslucency,
@@ -704,7 +707,6 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
     //>>includeEnd('debug')
 
     if (createBaseLayerPicker) {
-      baseLayerPicker.viewModel.selectedTerrain = undefined;
       // Required as this is otherwise set by the baseLayerPicker
       scene.globe.depthTestAgainstTerrain = true;
     }
@@ -1295,6 +1297,20 @@ Object.defineProperties(Viewer.prototype, {
   },
 
   /**
+   * Gets the default ellipsoid for the scene.
+   * @memberof Viewer.prototype
+   *
+   * @type {Ellipsoid}
+   * @default Ellipsoid.default
+   * @readonly
+   */
+  ellipsoid: {
+    get: function () {
+      return this._scene.ellipsoid;
+    },
+  },
+
+  /**
    * Gets the post-process stages.
    * @memberof Viewer.prototype
    *
@@ -1623,8 +1639,9 @@ Viewer.prototype.resize = function () {
   const timeline = this._timeline;
   let animationContainer;
   let animationWidth = 0;
-  let creditLeft = 0;
-  let creditBottom = 0;
+  let creditLeft = 5;
+  let creditBottom = 3;
+  let creditRight = 0;
 
   if (
     animationExists &&
@@ -1681,8 +1698,14 @@ Viewer.prototype.resize = function () {
     timeline.resize();
   }
 
+  if (!timelineExists && defined(this._fullscreenButton)) {
+    // don't let long credits (like the default ion token) go behind the fullscreen button
+    creditRight = this._fullscreenButton.container.clientWidth;
+  }
+
   this._bottomContainer.style.left = `${creditLeft}px`;
   this._bottomContainer.style.bottom = `${creditBottom}px`;
+  this._bottomContainer.style.right = `${creditRight}px`;
 
   this._lastWidth = width;
   this._lastHeight = height;
@@ -2303,9 +2326,7 @@ function updateZoomTarget(viewer) {
   // If zoomTarget was an ImageryLayer
   if (target instanceof Cartographic) {
     options = {
-      destination: scene.mapProjection.ellipsoid.cartographicToCartesian(
-        target
-      ),
+      destination: scene.ellipsoid.cartographicToCartesian(target),
       duration: zoomOptions.duration,
       maximumHeight: zoomOptions.maximumHeight,
       complete: function () {
@@ -2422,11 +2443,7 @@ function updateTrackedEntity(viewer) {
 
   const bs =
     state !== BoundingSphereState.FAILED ? boundingSphereScratch : undefined;
-  viewer._entityView = new EntityView(
-    trackedEntity,
-    scene,
-    scene.mapProjection.ellipsoid
-  );
+  viewer._entityView = new EntityView(trackedEntity, scene, scene.ellipsoid);
   viewer._entityView.update(currentTime, bs);
   viewer._needTrackedEntityUpdate = false;
 }

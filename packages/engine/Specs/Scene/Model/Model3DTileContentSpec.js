@@ -8,6 +8,8 @@ import {
   ClassificationType,
   ClippingPlane,
   ClippingPlaneCollection,
+  ClippingPolygon,
+  ClippingPolygonCollection,
   Color,
   ColorGeometryInstanceAttribute,
   ContentMetadata,
@@ -1167,6 +1169,7 @@ describe(
         const scene = createScene({
           canvas: createCanvas(10, 10),
         });
+        scene.msaaSamples = 1;
         noAttenuationPixelCount = scene.logarithmicDepthBuffer ? 20 : 16;
         const center = new Cartesian3.fromRadians(
           centerLongitude,
@@ -1643,6 +1646,50 @@ describe(
             expect(scene).toRender(color);
           }
         );
+      });
+    });
+
+    describe("clipping polygons", function () {
+      const positions = Cartesian3.fromRadiansArray([
+        centerLongitude + 0.001,
+        centerLatitude + 0.001,
+        centerLongitude + 0.001,
+        centerLatitude - 0.001,
+        centerLongitude - 0.001,
+        centerLatitude - 0.001,
+        centerLongitude - 0.001,
+        centerLatitude + 0.001,
+      ]);
+      let polygon;
+      beforeEach(function () {
+        setCamera(centerLongitude, centerLatitude, 15.0);
+        polygon = new ClippingPolygon({ positions });
+      });
+
+      it("clipping planes selectively disable rendering", async function () {
+        if (!scene.context.webgl2) {
+          return;
+        }
+
+        const tileset = await Cesium3DTilesTester.loadTileset(
+          scene,
+          withBatchTableUrl
+        );
+        let color;
+        expect(scene).toRenderAndCall(function (rgba) {
+          color = rgba;
+        });
+
+        const collection = new ClippingPolygonCollection({
+          polygons: [polygon],
+        });
+        tileset.clippingPolygons = collection;
+
+        expect(scene).notToRender(color);
+
+        collection.inverse = true;
+
+        expect(scene).toRender(color);
       });
     });
 

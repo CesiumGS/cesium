@@ -9,6 +9,7 @@ import {
   createGuid,
   DistanceDisplayCondition,
   Globe,
+  Math as CesiumMath,
   NearFarScalar,
   OrthographicOffCenterFrustum,
   PerspectiveFrustum,
@@ -21,9 +22,8 @@ import {
   HorizontalOrigin,
   TextureAtlas,
   VerticalOrigin,
+  SplitDirection,
 } from "../../index.js";
-
-import { Math as CesiumMath } from "../../index.js";
 
 import createScene from "../../../../Specs/createScene.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
@@ -121,6 +121,7 @@ describe(
       expect(b.sizeInMeters).toEqual(false);
       expect(b.distanceDisplayCondition).toBeUndefined();
       expect(b.disableDepthTestDistance).toBeUndefined();
+      expect(b.splitDirection).toEqual(SplitDirection.NONE);
     });
 
     it("can add and remove before first update.", function () {
@@ -156,6 +157,7 @@ describe(
         distanceDisplayCondition: new DistanceDisplayCondition(10.0, 100.0),
         disableDepthTestDistance: 10.0,
         id: "id",
+        splitDirection: SplitDirection.LEFT,
       });
 
       expect(b.show).toEqual(false);
@@ -189,6 +191,7 @@ describe(
       );
       expect(b.disableDepthTestDistance).toEqual(10.0);
       expect(b.id).toEqual("id");
+      expect(b.splitDirection).toEqual(SplitDirection.LEFT);
     });
 
     it("sets billboard properties", function () {
@@ -212,6 +215,7 @@ describe(
       b.sizeInMeters = true;
       b.distanceDisplayCondition = new DistanceDisplayCondition(10.0, 100.0);
       b.disableDepthTestDistance = 10.0;
+      b.splitDirection = SplitDirection.LEFT;
 
       expect(b.show).toEqual(false);
       expect(b.position).toEqual(new Cartesian3(1.0, 2.0, 3.0));
@@ -243,6 +247,7 @@ describe(
         new DistanceDisplayCondition(10.0, 100.0)
       );
       expect(b.disableDepthTestDistance).toEqual(10.0);
+      expect(b.splitDirection).toEqual(SplitDirection.LEFT);
     });
 
     it("required properties throw for undefined", function () {

@@ -6,13 +6,12 @@ import {
   Ellipsoid,
   GeographicTilingScheme,
   Intersect,
+  Math as CesiumMath,
   Plane,
   Rectangle,
   SceneMode,
   TileBoundingRegion,
 } from "../../index.js";
-
-import { Math as CesiumMath } from "../../index.js";
 
 import createFrameState from "../../../../Specs/createFrameState.js";
 

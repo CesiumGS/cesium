@@ -1,5 +1,7 @@
+import buildModuleUrl from "../Core/buildModuleUrl.js";
 import BoxGeometry from "../Core/BoxGeometry.js";
 import Cartesian3 from "../Core/Cartesian3.js";
+import Check from "../Core/Check.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
@@ -94,49 +96,42 @@ function SkyBox(options) {
  */
 SkyBox.prototype.update = function (frameState, useHdr) {
   const that = this;
+  const { mode, passes, context } = frameState;
 
   if (!this.show) {
     return undefined;
   }
 
-  if (
-    frameState.mode !== SceneMode.SCENE3D &&
-    frameState.mode !== SceneMode.MORPHING
-  ) {
+  if (mode !== SceneMode.SCENE3D && mode !== SceneMode.MORPHING) {
     return undefined;
   }
 
   // The sky box is only rendered during the render pass; it is not pickable, it doesn't cast shadows, etc.
-  if (!frameState.passes.render) {
+  if (!passes.render) {
     return undefined;
   }
-
-  const context = frameState.context;
 
   if (this._sources !== this.sources) {
     this._sources = this.sources;
     const sources = this.sources;
 
     //>>includeStart('debug', pragmas.debug);
+    Check.defined("this.sources", sources);
     if (
-      !defined(sources.positiveX) ||
-      !defined(sources.negativeX) ||
-      !defined(sources.positiveY) ||
-      !defined(sources.negativeY) ||
-      !defined(sources.positiveZ) ||
-      !defined(sources.negativeZ)
+      Object.values(CubeMap.FaceName).some(
+        (faceName) => !defined(sources[faceName])
+      )
     ) {
       throw new DeveloperError(
-        "this.sources is required and must have positiveX, negativeX, positiveY, negativeY, positiveZ, and negativeZ properties."
+        "this.sources must have positiveX, negativeX, positiveY, negativeY, positiveZ, and negativeZ properties."
       );
     }
 
+    const sourceType = typeof sources.positiveX;
     if (
-      typeof sources.positiveX !== typeof sources.negativeX ||
-      typeof sources.positiveX !== typeof sources.positiveY ||
-      typeof sources.positiveX !== typeof sources.negativeY ||
-      typeof sources.positiveX !== typeof sources.positiveZ ||
-      typeof sources.positiveX !== typeof sources.negativeZ
+      Object.values(CubeMap.FaceName).some(
+        (faceName) => typeof sources[faceName] !== sourceType
+      )
     ) {
       throw new DeveloperError(
         "this.sources properties must all be the same type."
@@ -249,4 +244,29 @@ SkyBox.prototype.destroy = function () {
   this._cubeMap = this._cubeMap && this._cubeMap.destroy();
   return destroyObject(this);
 };
+
+function getDefaultSkyBoxUrl(suffix) {
+  return buildModuleUrl(`Assets/Textures/SkyBox/tycho2t3_80_${suffix}.jpg`);
+}
+
+/**
+ * Creates a skybox instance with the default starmap for the Earth.
+ * @return {SkyBox} The default skybox for the Earth
+ *
+ * @example
+ * viewer.scene.skyBox = Cesium.SkyBox.createEarthSkyBox();
+ */
+SkyBox.createEarthSkyBox = function () {
+  return new SkyBox({
+    sources: {
+      positiveX: getDefaultSkyBoxUrl("px"),
+      negativeX: getDefaultSkyBoxUrl("mx"),
+      positiveY: getDefaultSkyBoxUrl("py"),
+      negativeY: getDefaultSkyBoxUrl("my"),
+      positiveZ: getDefaultSkyBoxUrl("pz"),
+      negativeZ: getDefaultSkyBoxUrl("mz"),
+    },
+  });
+};
+
 export default SkyBox;

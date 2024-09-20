@@ -61,7 +61,7 @@ describe("DataSources/ConstantPositionProperty", function () {
     expect(property.getValue(time)).toBeUndefined();
   });
 
-  it("getValue work swith undefined inertial value", function () {
+  it("getValue works with undefined inertial value", function () {
     const property = new ConstantPositionProperty(
       undefined,
       ReferenceFrame.INERTIAL
@@ -164,11 +164,12 @@ describe("DataSources/ConstantPositionProperty", function () {
     expect(left.equals(right)).toEqual(false);
   });
 
-  it("getValue throws without time parameter", function () {
+  it("getValue uses JulianDate.now() if time parameter is undefined", function () {
+    spyOn(JulianDate, "now").and.callThrough();
+
     const property = new ConstantPositionProperty(new Cartesian3(1, 2, 3));
-    expect(function () {
-      property.getValue(undefined);
-    }).toThrowDeveloperError();
+    property.getValue();
+    expect(JulianDate.now).toHaveBeenCalled();
   });
 
   it("getValueInReferenceFrame throws with no referenceFrame parameter", function () {

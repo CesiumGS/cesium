@@ -1,6 +1,9 @@
-import { Cartesian3, Cartographic, Ellipsoid } from "../../index.js";
-
-import { Math as CesiumMath } from "../../index.js";
+import {
+  Cartesian3,
+  Cartographic,
+  Ellipsoid,
+  Math as CesiumMath,
+} from "../../index.js";
 
 describe("Core/Cartographic", function () {
   const surfaceCartesian = new Cartesian3(
@@ -13,6 +16,10 @@ describe("Core/Cartographic", function () {
     CesiumMath.toRadians(45.0),
     0.0
   );
+
+  afterEach(function () {
+    Ellipsoid.default = Ellipsoid.WGS84;
+  });
 
   it("default constructor sets expected properties", function () {
     const c = new Cartographic();
@@ -38,6 +45,20 @@ describe("Core/Cartographic", function () {
       new Cartographic(lon, lat, height)
     );
     expect(actual).toEqual(expected);
+  });
+
+  it("toCartesian uses default ellipsoid", function () {
+    Ellipsoid.default = Ellipsoid.MOON;
+
+    const expectedPosition = new Cartesian3(
+      1593514.338295244,
+      691991.9979835141,
+      20442.318221152018
+    );
+    const cartographic = Cartographic.fromDegrees(23.47315, 0.67416);
+    const position = Cartographic.toCartesian(cartographic);
+
+    expect(position).toEqualEpsilon(expectedPosition, CesiumMath.EPSILON8);
   });
 
   it("fromRadians works without a result parameter", function () {
@@ -115,6 +136,23 @@ describe("Core/Cartographic", function () {
   it("fromCartesian works without an ellipsoid", function () {
     const c = Cartographic.fromCartesian(surfaceCartesian);
     expect(c).toEqualEpsilon(surfaceCartographic, CesiumMath.EPSILON8);
+  });
+
+  it("fromCartesian uses default ellipsoid", function () {
+    Ellipsoid.default = Ellipsoid.MOON;
+
+    const position = new Cartesian3(
+      1593514.338295244,
+      691991.9979835141,
+      20442.318221152018
+    );
+    const cartographic = new Cartographic.fromCartesian(position);
+
+    const expectedCartographic = Cartographic.fromDegrees(23.47315, 0.67416);
+    expect(cartographic).toEqualEpsilon(
+      expectedCartographic,
+      CesiumMath.EPSILON8
+    );
   });
 
   it("fromCartesian throws when there is no cartesian", function () {

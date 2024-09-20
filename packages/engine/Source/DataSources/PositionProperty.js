@@ -14,6 +14,7 @@ import Transforms from "../Core/Transforms.js";
  * @constructor
  * @abstract
  *
+ * @see CallbackPositionProperty
  * @see CompositePositionProperty
  * @see ConstantPositionProperty
  * @see SampledPositionProperty
@@ -61,7 +62,7 @@ Object.defineProperties(PositionProperty.prototype, {
  * Gets the value of the property at the provided time in the fixed frame.
  * @function
  *
- * @param {JulianDate} time The time for which to retrieve the value.
+ * @param {JulianDate} [time=JulianDate.now()] The time for which to retrieve the value. If omitted, the current system time is used.
  * @param {Cartesian3} [result] The object to store the value into, if omitted, a new instance is created and returned.
  * @returns {Cartesian3 | undefined} The modified result parameter or a new instance if the result parameter was not supplied.
  */
@@ -112,13 +113,10 @@ PositionProperty.convertToReferenceFrame = function (
     return Cartesian3.clone(value, result);
   }
 
-  let icrfToFixed = Transforms.computeIcrfToFixedMatrix(time, scratchMatrix3);
-  if (!defined(icrfToFixed)) {
-    icrfToFixed = Transforms.computeTemeToPseudoFixedMatrix(
-      time,
-      scratchMatrix3
-    );
-  }
+  const icrfToFixed = Transforms.computeIcrfToCentralBodyFixedMatrix(
+    time,
+    scratchMatrix3
+  );
   if (inputFrame === ReferenceFrame.INERTIAL) {
     return Matrix3.multiplyByVector(icrfToFixed, value, result);
   }

@@ -27,26 +27,24 @@ const scratchWindowCoord0 = new Cartesian2();
 const scratchWindowCoord1 = new Cartesian2();
 
 /**
- * Transforms a position in WGS84 coordinates to window coordinates.  This is commonly used to place an
+ * Transforms a position in world (WGS84 or alternative ellipsoid) coordinates to window coordinates.  This is commonly used to place an
  * HTML element at the same screen position as an object in the scene.
  *
  * @param {Scene} scene The scene.
- * @param {Cartesian3} position The position in WGS84 (world) coordinates.
+ * @param {Cartesian3} position The position in world (WGS84 or alternative ellipsoid) coordinates.
  * @param {Cartesian2} [result] An optional object to return the input position transformed to window coordinates.
- * @returns {Cartesian2} The modified result parameter or a new Cartesian2 instance if one was not provided.  This may be <code>undefined</code> if the input position is near the center of the ellipsoid.
+ * @returns {Cartesian2|undefined} The modified result parameter or a new Cartesian2 instance if one was not provided.  This may be <code>undefined</code> if the input position is near the center of the ellipsoid.
  *
  * @example
  * // Output the window position of longitude/latitude (0, 0) every time the mouse moves.
- * const scene = widget.scene;
- * const ellipsoid = scene.globe.ellipsoid;
  * const position = Cesium.Cartesian3.fromDegrees(0.0, 0.0);
  * const handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
  * handler.setInputAction(function(movement) {
- *     console.log(Cesium.SceneTransforms.wgs84ToWindowCoordinates(scene, position));
+ *     console.log(Cesium.SceneTransforms.worldToWindowCoordinates(scene, position));
  * }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
  */
-SceneTransforms.wgs84ToWindowCoordinates = function (scene, position, result) {
-  return SceneTransforms.wgs84WithEyeOffsetToWindowCoordinates(
+SceneTransforms.worldToWindowCoordinates = function (scene, position, result) {
+  return SceneTransforms.worldWithEyeOffsetToWindowCoordinates(
     scene,
     position,
     Cartesian3.ZERO,
@@ -98,7 +96,7 @@ const scratchCameraPosition = new Cartesian3();
 /**
  * @private
  */
-SceneTransforms.wgs84WithEyeOffsetToWindowCoordinates = function (
+SceneTransforms.worldWithEyeOffsetToWindowCoordinates = function (
   scene,
   position,
   eyeOffset,
@@ -115,7 +113,7 @@ SceneTransforms.wgs84WithEyeOffsetToWindowCoordinates = function (
 
   // Transform for 3D, 2D, or Columbus view
   const frameState = scene.frameState;
-  const actualPosition = SceneTransforms.computeActualWgs84Position(
+  const actualPosition = SceneTransforms.computeActualEllipsoidPosition(
     frameState,
     position,
     actualPositionScratch
@@ -265,30 +263,28 @@ SceneTransforms.wgs84WithEyeOffsetToWindowCoordinates = function (
 };
 
 /**
- * Transforms a position in WGS84 coordinates to drawing buffer coordinates.  This may produce different
- * results from SceneTransforms.wgs84ToWindowCoordinates when the browser zoom is not 100%, or on high-DPI displays.
+ * Transforms a position in world coordinates to drawing buffer coordinates.  This may produce different
+ * results from SceneTransforms.worldToWindowCoordinates when the browser zoom is not 100%, or on high-DPI displays.
  *
  * @param {Scene} scene The scene.
- * @param {Cartesian3} position The position in WGS84 (world) coordinates.
+ * @param {Cartesian3} position The position in world (WGS84 or alternative ellipsoid) coordinates.
  * @param {Cartesian2} [result] An optional object to return the input position transformed to window coordinates.
- * @returns {Cartesian2} The modified result parameter or a new Cartesian2 instance if one was not provided.  This may be <code>undefined</code> if the input position is near the center of the ellipsoid.
+ * @returns {Cartesian2|undefined} The modified result parameter or a new Cartesian2 instance if one was not provided.  This may be <code>undefined</code> if the input position is near the center of the ellipsoid.
  *
  * @example
  * // Output the window position of longitude/latitude (0, 0) every time the mouse moves.
- * const scene = widget.scene;
- * const ellipsoid = scene.globe.ellipsoid;
  * const position = Cesium.Cartesian3.fromDegrees(0.0, 0.0);
  * const handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
  * handler.setInputAction(function(movement) {
- *     console.log(Cesium.SceneTransforms.wgs84ToWindowCoordinates(scene, position));
+ *     console.log(Cesium.SceneTransforms.worldToDrawingBufferCoordinates(scene, position));
  * }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
  */
-SceneTransforms.wgs84ToDrawingBufferCoordinates = function (
+SceneTransforms.worldToDrawingBufferCoordinates = function (
   scene,
   position,
   result
 ) {
-  result = SceneTransforms.wgs84ToWindowCoordinates(scene, position, result);
+  result = SceneTransforms.worldToWindowCoordinates(scene, position, result);
   if (!defined(result)) {
     return undefined;
   }
@@ -302,7 +298,7 @@ const positionInCartographic = new Cartographic();
 /**
  * @private
  */
-SceneTransforms.computeActualWgs84Position = function (
+SceneTransforms.computeActualEllipsoidPosition = function (
   frameState,
   position,
   result
@@ -398,7 +394,7 @@ const scratchWorldCoords = new Cartesian4();
 /**
  * @private
  */
-SceneTransforms.drawingBufferToWgs84Coordinates = function (
+SceneTransforms.drawingBufferToWorldCoordinates = function (
   scene,
   drawingBufferPosition,
   depth,

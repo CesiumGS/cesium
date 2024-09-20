@@ -1,11 +1,10 @@
 import {
   Cartesian3,
   Ellipsoid,
+  Math as CesiumMath,
   PolylinePipeline,
   Transforms,
 } from "../../index.js";
-
-import { Math as CesiumMath } from "../../index.js";
 
 describe("Core/PolylinePipeline", function () {
   it("wrapLongitude", function () {

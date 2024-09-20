@@ -2,13 +2,12 @@ import {
   Cartesian2,
   Cartographic,
   Ellipsoid,
+  Math as CesiumMath,
   Rectangle,
   TilingScheme,
   WebMercatorProjection,
   WebMercatorTilingScheme,
 } from "../../index.js";
-
-import { Math as CesiumMath } from "../../index.js";
 
 describe("Core/WebMercatorTilingScheme", function () {
   let tilingScheme;

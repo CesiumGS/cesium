@@ -10,12 +10,14 @@ import createBillboardPointCallback from "../Scene/createBillboardPointCallback.
 import HeightReference from "../Scene/HeightReference.js";
 import BoundingSphereState from "./BoundingSphereState.js";
 import Property from "./Property.js";
+import SplitDirection from "../Scene/SplitDirection.js";
 
 const defaultColor = Color.WHITE;
 const defaultOutlineColor = Color.BLACK;
 const defaultOutlineWidth = 0.0;
 const defaultPixelSize = 1.0;
 const defaultDisableDepthTestDistance = 0.0;
+const defaultSplitDirection = SplitDirection.NONE;
 
 const colorScratch = new Color();
 const positionScratch = new Cartesian3();
@@ -192,6 +194,11 @@ PointVisualizer.prototype.update = function (time) {
         time,
         defaultDisableDepthTestDistance
       );
+      pointPrimitive.splitDirection = Property.getValueOrDefault(
+        pointGraphics._splitDirection,
+        time,
+        defaultSplitDirection
+      );
     } else if (defined(billboard)) {
       billboard.show = true;
       billboard.position = position;
@@ -214,6 +221,11 @@ PointVisualizer.prototype.update = function (time) {
         pointGraphics._disableDepthTestDistance,
         time,
         defaultDisableDepthTestDistance
+      );
+      billboard.splitDirection = Property.getValueOrDefault(
+        pointGraphics._splitDirection,
+        time,
+        defaultSplitDirection
       );
       billboard.heightReference = heightReference;
 

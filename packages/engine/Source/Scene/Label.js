@@ -91,7 +91,7 @@ function parseFont(label) {
  * Initialization options for the Label constructor
  *
  * @property {Cartesian3} position The cartesian position of the label.
- * @property {string} [id] A user-defined object to return when the label is picked with {@link Scene#pick}.
+ * @property {*} [id] A user-defined object to return when the label is picked with {@link Scene#pick}.
  * @property {boolean} [show=true] Determines if this label will be shown.
  * @property {string} [text] A string specifying the text of the label.
  * @property {string} [font='30px sans-serif'] A string specifying the font used to draw this label. Fonts are specified using the same syntax as the CSS 'font' property.
@@ -102,8 +102,8 @@ function parseFont(label) {
  * @property {Cartesian2} [backgroundPadding=new Cartesian2(7, 5)] A {@link Cartesian2} Specifying the horizontal and vertical background padding in pixels.
  * @property {Cartesian2} [pixelOffset=Cartesian2.ZERO] A {@link Cartesian2} specifying the pixel offset in screen space from the origin of this label.
  * @property {Cartesian3} [eyeOffset=Cartesian3.ZERO] A {@link Cartesian3} specifying the 3D Cartesian offset applied to this label in eye coordinates.
- * @property {HorizontalOrigin} [horizontalOrigin=HorizontalOrigin.CENTER] A {@link HorizontalOrigin} specifying the horizontal origin of this label.
- * @property {VerticalOrigin} [verticalOrigin=VerticalOrigin.CENTER] A {@link VerticalOrigin} specifying the vertical origin of this label.
+ * @property {HorizontalOrigin} [horizontalOrigin=HorizontalOrigin.LEFT] A {@link HorizontalOrigin} specifying the horizontal origin of this label.
+ * @property {VerticalOrigin} [verticalOrigin=VerticalOrigin.BASELINE] A {@link VerticalOrigin} specifying the vertical origin of this label.
  * @property {HeightReference} [heightReference=HeightReference.NONE] A {@link HeightReference} specifying the height reference of this label.
  * @property {Color} [fillColor=Color.WHITE] A {@link Color} specifying the fill color of the label.
  * @property {Color} [outlineColor=Color.BLACK] A {@link Color} specifying the outline color of the label.

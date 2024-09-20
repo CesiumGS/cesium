@@ -11,6 +11,7 @@ import {
   GeometryInstance,
   HeadingPitchRoll,
   JulianDate,
+  Math as CesiumMath,
   PixelFormat,
   Rectangle,
   RectangleGeometry,
@@ -47,8 +48,6 @@ import {
   ColorGeometryInstanceAttribute,
   Resource,
 } from "../../index.js";
-
-import { Math as CesiumMath } from "../../index.js";
 
 import createCanvas from "../../../../Specs/createCanvas.js";
 import createScene from "../../../../Specs/createScene.js";
@@ -129,6 +128,10 @@ describe(
 
     describe("constructor", () => {
       it("has expected defaults", function () {
+        const scene = createScene({
+          canvas: createCanvas(5, 5),
+        });
+
         expect(scene.canvas).toBeInstanceOf(HTMLCanvasElement);
         expect(scene.primitives).toBeInstanceOf(PrimitiveCollection);
         expect(scene.camera).toBeInstanceOf(Camera);
@@ -138,6 +141,7 @@ describe(
         expect(scene.mapProjection).toBeInstanceOf(GeographicProjection);
         expect(scene.frameState).toBeInstanceOf(FrameState);
         expect(scene.tweens).toBeInstanceOf(TweenCollection);
+        expect(scene.msaaSamples).toEqual(4);
 
         const contextAttributes = scene.context._gl.getContextAttributes();
         // Do not check depth and antialias since they are requests not requirements
@@ -146,6 +150,7 @@ describe(
         expect(contextAttributes.premultipliedAlpha).toEqual(true);
         expect(contextAttributes.preserveDrawingBuffer).toEqual(false);
         expect(scene._depthPlane._ellipsoidOffset).toEqual(0);
+        scene.destroyForSpecs();
       });
 
       it("respects default log depth buffer override", () => {
@@ -817,7 +822,7 @@ describe(
 
       const rectanglePrimitive = createRectangle(rectangle, 1000.0);
       rectanglePrimitive.appearance.material.uniforms.color = new Color(
-        10.0,
+        4.0,
         0.0,
         0.0,
         1.0
@@ -831,8 +836,8 @@ describe(
       expect(scene).toRenderAndCall(function (rgba) {
         expect(rgba[0]).toBeGreaterThan(0);
         expect(rgba[0]).toBeLessThanOrEqual(255);
-        expect(rgba[1]).toEqual(0);
-        expect(rgba[2]).toEqual(0);
+        expect(rgba[1]).toEqualEpsilon(223, 1);
+        expect(rgba[2]).toEqualEpsilon(223, 1);
       });
     });
 
@@ -1441,10 +1446,10 @@ describe(
 
     it("converts to canvas coordinates", function () {
       const mockPosition = new Cartesian3();
-      spyOn(SceneTransforms, "wgs84ToWindowCoordinates");
+      spyOn(SceneTransforms, "worldToWindowCoordinates");
       scene.cartesianToCanvasCoordinates(mockPosition);
 
-      expect(SceneTransforms.wgs84ToWindowCoordinates).toHaveBeenCalledWith(
+      expect(SceneTransforms.worldToWindowCoordinates).toHaveBeenCalledWith(
         scene,
         mockPosition,
         undefined
@@ -1454,10 +1459,10 @@ describe(
     it("converts to canvas coordinates and return it in a variable", function () {
       const result = new Cartesian2();
       const mockPosition = new Cartesian3();
-      spyOn(SceneTransforms, "wgs84ToWindowCoordinates");
+      spyOn(SceneTransforms, "worldToWindowCoordinates");
       scene.cartesianToCanvasCoordinates(mockPosition, result);
 
-      expect(SceneTransforms.wgs84ToWindowCoordinates).toHaveBeenCalledWith(
+      expect(SceneTransforms.worldToWindowCoordinates).toHaveBeenCalledWith(
         scene,
         mockPosition,
         result
