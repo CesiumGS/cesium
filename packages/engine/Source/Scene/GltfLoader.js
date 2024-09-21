@@ -262,7 +262,6 @@ function GltfLoader(options) {
   this._geometryLoaders = [];
   this._geometryCallbacks = [];
   this._structuralMetadataLoader = undefined;
-  this._gpmLoader = undefined;
   this._meshPrimitiveGpmLoader = undefined;
   this._loadResourcesPromise = undefined;
   this._resourcesLoaded = false;
@@ -473,17 +472,6 @@ function processLoaders(loader, frameState) {
         structuralMetadataLoader.structuralMetadata;
     }
     ready = ready && metadataReady;
-  }
-
-  const gpmLoader = loader._gpmLoader;
-  if (defined(gpmLoader)) {
-    const gpmReady = gpmLoader.process(frameState);
-    if (gpmReady) {
-      // XXX
-      console.log("Got GPM data, storing ", gpmLoader._gltfGpmLocal);
-      loader._components.extensions["NGA_gpm_local"] = gpmLoader._gltfGpmLocal;
-    }
-    ready = ready && gpmReady;
   }
 
   const meshPrimitiveGpmLoader = loader._meshPrimitiveGpmLoader;
@@ -2480,18 +2468,6 @@ async function loadStructuralMetadata(
   return structuralMetadataLoader.load();
 }
 
-async function loadGpm(loader, gltf, extension) {
-  const gpmLoader = new GltfGpmLoader({
-    gltf: gltf,
-    extension: extension,
-    gltfResource: loader._gltfResource,
-    baseResource: loader._baseResource,
-    asynchronous: loader._asynchronous,
-  });
-  loader._gpmLoader = gpmLoader;
-  return gpmLoader.load();
-}
-
 async function loadMeshPrimitiveGpm(loader, gltf, extension, frameState) {
   const meshPrimitiveGpmLoader = new GltfMeshPrimitiveGpmLoader({
     gltf: gltf,
@@ -2738,8 +2714,8 @@ function parse(loader, frameState) {
   const gpmExtension = extensions.NGA_gpm_local;
   if (defined(gpmExtension)) {
     console.log("Loading GPM from root");
-    const promise = loadGpm(loader, gltf, gpmExtension);
-    loader._loaderPromises.push(promise);
+    const gltfGpmLocal = GltfGpmLoader.load(gpmExtension);
+    loader._components.extensions["NGA_gpm_local"] = gltfGpmLocal;
   }
 
   // Load NGA_gpm_local from mesh primitives
@@ -2831,13 +2807,6 @@ function unloadStructuralMetadata(loader) {
   }
 }
 
-function unloadGpm(loader) {
-  if (defined(loader._gpmLoader) && !loader._gpmLoader.isDestroyed()) {
-    loader._gpmLoader.destroy();
-    loader._gpmLoader = undefined;
-  }
-}
-
 function unloadMeshPrimitiveGpm(loader) {
   if (
     defined(loader._meshPrimitiveGpmLoader) &&
@@ -2871,7 +2840,6 @@ GltfLoader.prototype.unload = function () {
   unloadGeometry(this);
   unloadGeneratedAttributes(this);
   unloadStructuralMetadata(this);
-  unloadGpm(this);
   unloadMeshPrimitiveGpm(this);
 
   this._components = undefined;

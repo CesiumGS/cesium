@@ -1,10 +1,7 @@
 import Cartesian3 from "../../../../Core/Cartesian3.js";
 import Check from "../../../../Core/Check.js";
-import defaultValue from "../../../../Core/defaultValue.js";
-import defined from "../../../../Core/defined.js";
+import DeveloperError from "../../../../Core/DeveloperError.js";
 import Matrix3 from "../../../../Core/Matrix3.js";
-import ResourceLoader from "./../../../ResourceLoader.js";
-import ResourceLoaderState from "./../../../ResourceLoaderState.js";
 import AnchorPointDirect from "./AnchorPointDirect.js";
 import AnchorPointIndirect from "./AnchorPointIndirect.js";
 import CorrelationGroup from "./CorrelationGroup.js";
@@ -15,110 +12,19 @@ import StorageType from "./StorageType.js";
 /**
  * Loads glTF NGA_gpm_local from the root of a glTF object
  * <p>
- * Implements the {@link ResourceLoader} interface.
- * </p>
  * Implementation note: This is an experimental implementation.
- *
- * TODO This implements ResourceLoader, even though it does not really
- * load other resources (in contrast to GltfMeshPrimitiveGpmLoader,
- * which loads textures). Parsing the JSON into a GltfGpmLocal
- * could be done directly (synchronously in the GltfLoader class).
- * But it should be carved out into a dedicated class, regardless
- * of how this is eventually USED from the GltfLoader.
  *
  * @alias GltfGpmLoader
  * @constructor
- * @augments ResourceLoader
  *
  * @param {object} options Object with the following properties:
  * @param {object} options.gltf The glTF JSON.
  * @param {string} [options.extension] The <code>NGA_gpm_local</code> extension object.
- * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
- * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
- * @param {string} [options.cacheKey] The cache key of the resource.
- * @param {boolean} [options.asynchronous=true] Determines if WebGL resource creation will be spread out over several frames or block until all WebGL resources are created.
  *
  * @private
  * @experimental This feature is subject to change without Cesium's standard deprecation policy.
  */
-function GltfGpmLoader(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  const gltf = options.gltf;
-  const extension = options.extension;
-  const gltfResource = options.gltfResource;
-  const baseResource = options.baseResource;
-  const cacheKey = options.cacheKey;
-  const asynchronous = defaultValue(options.asynchronous, true);
-
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("options.gltf", gltf);
-  Check.typeOf.object("options.extension", extension);
-  Check.typeOf.object("options.gltfResource", gltfResource);
-  Check.typeOf.object("options.baseResource", baseResource);
-  //>>includeEnd('debug');
-
-  this._gltfResource = gltfResource;
-  this._baseResource = baseResource;
-  this._gltf = gltf;
-  this._extension = extension;
-  this._cacheKey = cacheKey;
-  this._asynchronous = asynchronous;
-  this._gltfGpmLocal = undefined;
-
-  // Immediately go into the "LOADED" state, since there
-  // are no resources to wait for
-  this._state = ResourceLoaderState.LOADED;
-  this._promise = undefined;
-}
-
-if (defined(Object.create)) {
-  GltfGpmLoader.prototype = Object.create(ResourceLoader.prototype);
-  GltfGpmLoader.prototype.constructor = GltfGpmLoader;
-}
-
-Object.defineProperties(GltfGpmLoader.prototype, {
-  /**
-   * The cache key of the resource.
-   *
-   * @memberof GltfGpmLoader.prototype
-   *
-   * @type {string}
-   * @readonly
-   * @private
-   */
-  cacheKey: {
-    get: function () {
-      return this._cacheKey;
-    },
-  },
-  /**
-   * The parsed GltfGpmLocal object
-   *
-   * @memberof GltfGpmLoader.prototype
-   *
-   * @type {GltfGpmLocal}
-   * @readonly
-   * @private
-   */
-  gltfGpmLocal: {
-    get: function () {
-      return this._gltfGpmLocal;
-    },
-  },
-});
-
-/**
- * Loads the resource.
- * @returns {Promise<GltfGpmLoader>} A promise which resolves to the loader when the resource loading is completed.
- * @private
- */
-GltfGpmLoader.prototype.load = function () {
-  if (defined(this._promise)) {
-    return this._promise;
-  }
-  this._promise = Promise.resolve(this);
-  return this._promise;
-};
+function GltfGpmLoader() {}
 
 /**
  * Creates a Matrix3 that describes a covariance matrix (which is
@@ -144,135 +50,187 @@ function createCovarianceMatrixFromUpperTriangle(array) {
 }
 
 /**
- * Processes the resource until it becomes ready.
+ * Creates an `AnchorPointDirect` from the given JSON representation
  *
- * @param {FrameState} frameState The frame state.
- * @private
+ * @param {object} anchorPointDirectJson The input JSON
+ * @returns The `AnchorPointDirect`
  */
-GltfGpmLoader.prototype.process = function (frameState) {
+function createAnchorPointDirect(anchorPointDirectJson) {
+  const position = Cartesian3.fromArray(
+    anchorPointDirectJson.position,
+    0,
+    new Cartesian3()
+  );
+  const adjustmentParams = Cartesian3.fromArray(
+    anchorPointDirectJson.adjustmentParams,
+    0,
+    new Cartesian3()
+  );
+  const anchorPointDirect = new AnchorPointDirect({
+    position: position,
+    adjustmentParams: adjustmentParams,
+  });
+  return anchorPointDirect;
+}
+
+/**
+ * Creates an `AnchorPointIndirect` from the given JSON representation
+ *
+ * @param {object} anchorPointIndirectJson The input JSON
+ * @returns The `AnchorPointIndirect`
+ */
+function createAnchorPointIndirect(anchorPointIndirectJson) {
+  const position = Cartesian3.fromArray(
+    anchorPointIndirectJson.position,
+    0,
+    new Cartesian3()
+  );
+  const adjustmentParams = Cartesian3.fromArray(
+    anchorPointIndirectJson.adjustmentParams,
+    0,
+    new Cartesian3()
+  );
+  const covarianceMatrix = createCovarianceMatrixFromUpperTriangle(
+    anchorPointIndirectJson.covarianceMatrix
+  );
+  const anchorPointIndirect = new AnchorPointIndirect({
+    position: position,
+    adjustmentParams: adjustmentParams,
+    covarianceMatrix: covarianceMatrix,
+  });
+  return anchorPointIndirect;
+}
+
+/**
+ * Creates a `CorrelationGroup` from the given JSON representation
+ *
+ * @param {object} correlationGroupJson The input JSON
+ * @returns The `CorrelationGroup`
+ */
+function createCorrelationGroup(correlationGroupJson) {
+  const groupFlags = correlationGroupJson.groupFlags;
+  const rotationThetas = Cartesian3.fromArray(
+    correlationGroupJson.rotationThetas,
+    0,
+    new Cartesian3()
+  );
+  const params = [];
+  for (const paramJson of correlationGroupJson.params) {
+    const param = new Spdcf({
+      A: paramJson.A,
+      alpha: paramJson.alpha,
+      beta: paramJson.beta,
+      T: paramJson.T,
+    });
+    params.push(param);
+  }
+  const correlationGroup = new CorrelationGroup({
+    groupFlags: groupFlags,
+    rotationThetas: rotationThetas,
+    params: params,
+  });
+  return correlationGroup;
+}
+
+/**
+ * Loads the GPM data from the given JSON that was found as the
+ * `NGA_gpm_local` extension object in the root of the glTF.
+ *
+ * @param {object} gltfGpmLocalJson The extension object
+ * @returns {GltfGpmLocal} The parsed object
+ * @private
+ * @throws DeveloperError When the given object is `undefined`
+ * or contains invalid structures
+ */
+GltfGpmLoader.load = function (gltfGpmLocalJson) {
   //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("frameState", frameState);
+  Check.typeOf.object("gltfGpmLocalJson", gltfGpmLocalJson);
   //>>includeEnd('debug');
 
-  if (this._state === ResourceLoaderState.READY) {
-    return true;
-  }
-  if (this._state === ResourceLoaderState.FAILED) {
-    return true;
-  }
-  if (this._state !== ResourceLoaderState.LOADED) {
-    return false;
-  }
-
-  console.log("PARSE AND STORE HERE! ", this._extension);
-
-  const extensionJson = this._extension;
-
-  const storageType = extensionJson.storageType;
+  const storageType = gltfGpmLocalJson.storageType;
   if (storageType === StorageType.Direct) {
-    const anchorPointsDirect = [];
-    const anchorPointsDirectJson = extensionJson.anchorPointsDirect;
-    for (const anchorPointDirectJson of anchorPointsDirectJson) {
-      const position = Cartesian3.fromArray(
-        anchorPointDirectJson.position,
-        0,
-        new Cartesian3()
-      );
-      const adjustmentParams = Cartesian3.fromArray(
-        anchorPointDirectJson.adjustmentParams,
-        0,
-        new Cartesian3()
-      );
-      const anchorPointDirect = new AnchorPointDirect({
-        position: position,
-        adjustmentParams: adjustmentParams,
-      });
-      anchorPointsDirect.push(anchorPointDirect);
-    }
-    const covarianceDirect = createCovarianceMatrixFromUpperTriangle(
-      extensionJson.covarianceDirectUpperTriangle
-    );
-
-    this._gltfGpmLocal = new GltfGpmLocal({
-      storageType: storageType,
-      anchorPointsDirect: anchorPointsDirect,
-      covarianceDirect: covarianceDirect,
-    });
-    this._state = ResourceLoaderState.READY;
-    return true;
+    return GltfGpmLoader.loadDirect(gltfGpmLocalJson);
   }
   if (storageType === StorageType.Indirect) {
-    const anchorPointsIndirect = [];
-    const anchorPointsIndirectJson = extensionJson.anchorPointsIndirect;
-    for (const anchorPointIndirectJson of anchorPointsIndirectJson) {
-      const position = Cartesian3.fromArray(
-        anchorPointIndirectJson.position,
-        0,
-        new Cartesian3()
-      );
-      const adjustmentParams = Cartesian3.fromArray(
-        anchorPointIndirectJson.adjustmentParams,
-        0,
-        new Cartesian3()
-      );
-      const covarianceMatrix = createCovarianceMatrixFromUpperTriangle(
-        anchorPointIndirectJson.covarianceMatrix
-      );
-      const anchorPointIndirect = new AnchorPointIndirect({
-        position: position,
-        adjustmentParams: adjustmentParams,
-        covarianceMatrix: covarianceMatrix,
-      });
-      anchorPointsIndirect.push(anchorPointIndirect);
-    }
-
-    const intraTileCorrelationGroupsJson =
-      extensionJson.intraTileCorrelationGroups;
-    const intraTileCorrelationGroups = [];
-
-    for (const correlationGroupJson of intraTileCorrelationGroupsJson) {
-      const groupFlags = correlationGroupJson.groupFlags;
-      const rotationThetas = Cartesian3.fromArray(
-        correlationGroupJson.rotationThetas,
-        0,
-        new Cartesian3()
-      );
-      const params = [];
-      for (const paramJson of correlationGroupJson.params) {
-        const param = new Spdcf({
-          A: paramJson.A,
-          alpha: paramJson.alpha,
-          beta: paramJson.beta,
-          T: paramJson.T,
-        });
-        params.push(param);
-      }
-      const correlationGroup = new CorrelationGroup({
-        groupFlags: groupFlags,
-        rotationThetas: rotationThetas,
-        params: params,
-      });
-      intraTileCorrelationGroups.push(correlationGroup);
-    }
-
-    this._gltfGpmLocal = new GltfGpmLocal({
-      storageType: storageType,
-      anchorPointsIndirect: anchorPointsIndirect,
-      intraTileCorrelationGroups: intraTileCorrelationGroups,
-    });
-    this._state = ResourceLoaderState.READY;
-    return true;
+    return GltfGpmLoader.loadIndirect(gltfGpmLocalJson);
   }
-  this._state = ResourceLoaderState.FAILED;
-  return false;
+  throw new DeveloperError(
+    `Invalid storage type in NGA_gpm_local - expected 'Direct' or 'Indirect', but found ${storageType}`
+  );
 };
 
 /**
- * Unloads the resource.
+ * Loads the GPM data from the given JSON that was found as the
+ * `NGA_gpm_local` extension object in the root of the glTF,
+ * assuming that the `storageType` of the given object is
+ * `StorageType.Direct`.
+ *
+ * @param {object} gltfGpmLocalJson The extension object
+ * @returns {GltfGpmLocal} The parsed object
  * @private
  */
-GltfGpmLoader.prototype.unload = function () {
-  this._gltfGpmLocal = undefined;
+GltfGpmLoader.loadDirect = function (gltfGpmLocalJson) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("gltfGpmLocalJson", gltfGpmLocalJson);
+  //>>includeEnd('debug');
+
+  const anchorPointsDirect = [];
+  const anchorPointsDirectJson = gltfGpmLocalJson.anchorPointsDirect;
+  for (const anchorPointDirectJson of anchorPointsDirectJson) {
+    const anchorPointDirect = createAnchorPointDirect(anchorPointDirectJson);
+    anchorPointsDirect.push(anchorPointDirect);
+  }
+  const covarianceDirect = createCovarianceMatrixFromUpperTriangle(
+    gltfGpmLocalJson.covarianceDirectUpperTriangle
+  );
+
+  const gltfGpmLocal = new GltfGpmLocal({
+    storageType: StorageType.Direct,
+    anchorPointsDirect: anchorPointsDirect,
+    covarianceDirect: covarianceDirect,
+  });
+  return gltfGpmLocal;
+};
+
+/**
+ * Loads the GPM data from the given JSON that was found as the
+ * `NGA_gpm_local` extension object in the root of the glTF,
+ * assuming that the `storageType` of the given object is
+ * `StorageType.Indirect`.
+ *
+ * @param {object} gltfGpmLocalJson The extension object
+ * @returns {GltfGpmLocal} The parsed object
+ * @private
+ */
+GltfGpmLoader.loadIndirect = function (gltfGpmLocalJson) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("gltfGpmLocalJson", gltfGpmLocalJson);
+  //>>includeEnd('debug');
+
+  const anchorPointsIndirect = [];
+  const anchorPointsIndirectJson = gltfGpmLocalJson.anchorPointsIndirect;
+  for (const anchorPointIndirectJson of anchorPointsIndirectJson) {
+    const anchorPointIndirect = createAnchorPointIndirect(
+      anchorPointIndirectJson
+    );
+    anchorPointsIndirect.push(anchorPointIndirect);
+  }
+
+  const intraTileCorrelationGroupsJson =
+    gltfGpmLocalJson.intraTileCorrelationGroups;
+  const intraTileCorrelationGroups = [];
+
+  for (const correlationGroupJson of intraTileCorrelationGroupsJson) {
+    const correlationGroup = createCorrelationGroup(correlationGroupJson);
+    intraTileCorrelationGroups.push(correlationGroup);
+  }
+
+  const gltfGpmLocal = new GltfGpmLocal({
+    storageType: StorageType.Indirect,
+    anchorPointsIndirect: anchorPointsIndirect,
+    intraTileCorrelationGroups: intraTileCorrelationGroups,
+  });
+  return gltfGpmLocal;
 };
 
 export default GltfGpmLoader;
