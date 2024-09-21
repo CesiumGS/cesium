@@ -246,10 +246,10 @@ GltfMeshPrimitiveGpmLoader.prototype.createPpeTextureClassJson = function (
   // Given that `offset` and `scale` may only be applied to integer
   // property values when they are `normalized`, the values will be
   // declared as `normalized` here.
-  // The and the normalization factor will later have to be
-  // cancelled out, when integrating the `scale` into the
-  // actual property texture property. In the property texture
-  // property, the `scale` has to be multiplied by 255.
+  // The normalization factor will later have to be cancelled out,
+  // when integrating the `scale` into the actual property texture
+  // property. In the property texture property, the `scale` has to
+  // be multiplied by 255.
   const classJson = {
     name: `PPE texture class ${index}`,
     properties: {
@@ -410,7 +410,7 @@ GltfMeshPrimitiveGpmLoader.prototype.process = function (frameState) {
       // that `offset` and `scale` can be applied. The normalization
       // factor has to be cancelled out here, by multiplying the
       // `scale` with 255.
-      const scale = ppeTexture.scale * 255.0;
+      const scale = (ppeTexture.scale ?? 1.0) * 255.0;
       const ppeTextureAsPropertyTexture = {
         class: classId,
         properties: {
@@ -465,6 +465,8 @@ function unloadTextures(meshPrimitiveGpmLoader) {
  */
 GltfMeshPrimitiveGpmLoader.prototype.unload = function () {
   unloadTextures(this);
+  this._gltf = undefined;
+  this._extension = undefined;
   this._structuralMetadata = undefined;
 };
 
