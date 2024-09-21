@@ -7,18 +7,20 @@ import ResourceLoaderState from "../../../ResourceLoaderState.js";
 import PropertyTexture from "../../../PropertyTexture.js";
 import StructuralMetadata from "../../../StructuralMetadata.js";
 import MetadataSchema from "../../../MetadataSchema.js";
+import PpeTexture from "./PpeTexture.js";
+import PpeMetadata from "./PpeMetadata.js";
+import MeshPrimitiveGpmLocal from "./MeshPrimitiveGpmLocal.js";
 
 /**
  * Loads glTF NGA_gpm_local from a glTF mesh primitive.
  * <p>
  * Implements the {@link ResourceLoader} interface.
  * </p>
- * Implementation note: This is an experimental implementation. It is based
- * on a GltfStructuralMetadataLoader, by removing everything that is not
- * related to property textures, and translating the "ppeTextures" of
- * the NGA_gpm_local extension into property texture properties. These will
- * be returned as part of a `StructuralMetadata` object, which may override
- * any `StructuralMetadata` that was read directly from the glTF.
+ * This loads the "ppeTextures" of the NGA_gpm_local extension of a mesh primitive
+ * and stores them in a `MeshPrimitiveGpmLocal` object.
+ *
+ * This object will be converted into a `StructuralMetadata` object, which may
+ * override any `StructuralMetadata` that was read directly from the glTF.
  *
  * @alias GltfMeshPrimitiveGpmLoader
  * @constructor
@@ -67,6 +69,7 @@ function GltfMeshPrimitiveGpmLoader(options) {
   this._asynchronous = asynchronous;
   this._textureLoaders = [];
   this._textureIds = [];
+  this._meshPrimitiveGpmLocal = undefined;
   this._structuralMetadata = undefined;
   this._state = ResourceLoaderState.UNLOADED;
   this._promise = undefined;
@@ -110,30 +113,30 @@ Object.defineProperties(GltfMeshPrimitiveGpmLoader.prototype, {
   },
 });
 
-async function loadResources(loader) {
+GltfMeshPrimitiveGpmLoader.prototype.loadResources = async function () {
   try {
-    const texturesPromise = loadTextures(loader);
+    const texturesPromise = this.loadTextures();
     await texturesPromise;
 
-    if (loader.isDestroyed()) {
+    if (this.isDestroyed()) {
       return;
     }
 
-    loader._gltf = undefined; // No longer need to hold onto the glTF
+    this._gltf = undefined; // No longer need to hold onto the glTF
 
-    loader._state = ResourceLoaderState.LOADED;
-    return loader;
+    this._state = ResourceLoaderState.LOADED;
+    return this;
   } catch (error) {
-    if (loader.isDestroyed()) {
+    if (this.isDestroyed()) {
       return;
     }
 
-    loader.unload();
-    loader._state = ResourceLoaderState.FAILED;
+    this.unload();
+    this._state = ResourceLoaderState.FAILED;
     const errorMessage = "Failed to load GPM data";
-    throw loader.getError(errorMessage, error);
+    throw this.getError(errorMessage, error);
   }
-}
+};
 
 /**
  * Loads the resource.
@@ -146,7 +149,7 @@ GltfMeshPrimitiveGpmLoader.prototype.load = function () {
   }
 
   this._state = ResourceLoaderState.LOADING;
-  this._promise = loadResources(this);
+  this._promise = this.loadResources(this);
   return this._promise;
 };
 
@@ -164,18 +167,18 @@ function gatherUsedTextureIds(gpmExtension) {
   return textureIds;
 }
 
-function loadTextures(meshPrimitiveGpmLoader) {
+GltfMeshPrimitiveGpmLoader.prototype.loadTextures = function () {
   let textureIds;
-  if (defined(meshPrimitiveGpmLoader._extension)) {
-    textureIds = gatherUsedTextureIds(meshPrimitiveGpmLoader._extension);
+  if (defined(this._extension)) {
+    textureIds = gatherUsedTextureIds(this._extension);
   }
 
-  const gltf = meshPrimitiveGpmLoader._gltf;
-  const gltfResource = meshPrimitiveGpmLoader._gltfResource;
-  const baseResource = meshPrimitiveGpmLoader._baseResource;
-  const supportedImageFormats = meshPrimitiveGpmLoader._supportedImageFormats;
-  const frameState = meshPrimitiveGpmLoader._frameState;
-  const asynchronous = meshPrimitiveGpmLoader._asynchronous;
+  const gltf = this._gltf;
+  const gltfResource = this._gltfResource;
+  const baseResource = this._baseResource;
+  const supportedImageFormats = this._supportedImageFormats;
+  const frameState = this._frameState;
+  const asynchronous = this._asynchronous;
 
   // Load the textures
   const texturePromises = [];
@@ -190,14 +193,14 @@ function loadTextures(meshPrimitiveGpmLoader) {
         frameState: frameState,
         asynchronous: asynchronous,
       });
-      meshPrimitiveGpmLoader._textureLoaders.push(textureLoader);
-      meshPrimitiveGpmLoader._textureIds.push(textureId);
+      this._textureLoaders.push(textureLoader);
+      this._textureIds.push(textureId);
       texturePromises.push(textureLoader.load());
     }
   }
 
   return Promise.all(texturePromises);
-}
+};
 
 /**
  * A static mapping from PPE texture property identifier keys
@@ -217,7 +220,7 @@ GltfMeshPrimitiveGpmLoader.ppeTexturesMetadataSchemaCache = new Map();
  * @param {number} index - The index of the texture in the extension
  * @returns The class JSON
  */
-GltfMeshPrimitiveGpmLoader.prototype.createPpeTextureClassJson = function (
+GltfMeshPrimitiveGpmLoader.createPpeTextureClassJson = function (
   ppeTexture,
   index
 ) {
@@ -267,18 +270,24 @@ GltfMeshPrimitiveGpmLoader.prototype.createPpeTextureClassJson = function (
 };
 
 /**
- * Returns the `MetadataSchema` for the PPE textures in this instance.
+ * Returns the `MetadataSchema` for the PPE textures in the given
+ * `MeshPrimitiveGpmLocal` instance.
  *
  * This method will return a (statically/globally) cached metadata
- * schema that reflects the structure of the PPE textures in this
- * instance, creating and caching it if necessary.
+ * schema that reflects the structure of the PPE textures in the
+ * given instance, creating and caching it if necessary.
  *
  * For details on the cache key, see `collectPpeTexturePropertyIdentifiers`
  *
+ * @param {MeshPrimitiveGpmLocal} meshPrimitiveGpmLocal The extension object
  * @returns The `MetadataSchema`
  */
-GltfMeshPrimitiveGpmLoader.prototype.obtainPpeTexturesMetadataSchema = function () {
-  const ppeTexturePropertyIdentifiers = this.collectPpeTexturePropertyIdentifiers();
+GltfMeshPrimitiveGpmLoader.obtainPpeTexturesMetadataSchema = function (
+  meshPrimitiveGpmLocal
+) {
+  const ppeTexturePropertyIdentifiers = GltfMeshPrimitiveGpmLoader.collectPpeTexturePropertyIdentifiers(
+    meshPrimitiveGpmLocal
+  );
   const key = ppeTexturePropertyIdentifiers.toString();
   let ppeTexturesMetadataSchema = GltfMeshPrimitiveGpmLoader.ppeTexturesMetadataSchemaCache.get(
     key
@@ -297,14 +306,15 @@ GltfMeshPrimitiveGpmLoader.prototype.obtainPpeTexturesMetadataSchema = function 
     classes: {},
   };
 
-  const extension = this._extension;
-  if (defined(extension.ppeTextures)) {
-    for (let i = 0; i < extension.ppeTextures.length; i++) {
-      const ppeTexture = extension.ppeTextures[i];
-      const classId = `ppeTexture_${i}`;
-      const classJson = this.createPpeTextureClassJson(ppeTexture, i);
-      ppeTexturesMetadataSchemaJson.classes[classId] = classJson;
-    }
+  const ppeTextures = meshPrimitiveGpmLocal.ppeTextures;
+  for (let i = 0; i < ppeTextures.length; i++) {
+    const ppeTexture = ppeTextures[i];
+    const classId = `ppeTexture_${i}`;
+    const classJson = GltfMeshPrimitiveGpmLoader.createPpeTextureClassJson(
+      ppeTexture,
+      i
+    );
+    ppeTexturesMetadataSchemaJson.classes[classId] = classJson;
   }
 
   ppeTexturesMetadataSchema = MetadataSchema.fromJson(
@@ -329,24 +339,96 @@ GltfMeshPrimitiveGpmLoader.prototype.obtainPpeTexturesMetadataSchema = function 
  * that are relevant for distinguishing two PPE textures in terms
  * of their structure within a `StructuralMetadata`.
  *
+ * @param {MeshPrimitiveGpmLocal} meshPrimitiveGpmLocal The extension object
  * @returns The identifiers
  */
-GltfMeshPrimitiveGpmLoader.prototype.collectPpeTexturePropertyIdentifiers = function () {
-  const extension = this._extension;
+GltfMeshPrimitiveGpmLoader.collectPpeTexturePropertyIdentifiers = function (
+  meshPrimitiveGpmLocal
+) {
   const ppeTexturePropertyIdentifiers = [];
-  if (defined(extension.ppeTextures)) {
-    for (let i = 0; i < extension.ppeTextures.length; i++) {
-      const ppeTexture = extension.ppeTextures[i];
-      // The following will create an identifier that can be used
-      // to define two PPE textures as "representing the same
-      // property texture property" within a structural metadata
-      // schema.
-      const classJson = this.createPpeTextureClassJson(ppeTexture, i);
-      const ppeTexturePropertyIdentifier = JSON.stringify(classJson);
-      ppeTexturePropertyIdentifiers.push(ppeTexturePropertyIdentifier);
-    }
+  const ppeTextures = meshPrimitiveGpmLocal.ppeTextures;
+  for (let i = 0; i < ppeTextures.length; i++) {
+    const ppeTexture = ppeTextures[i];
+    // The following will create an identifier that can be used
+    // to define two PPE textures as "representing the same
+    // property texture property" within a structural metadata
+    // schema.
+    const classJson = GltfMeshPrimitiveGpmLoader.createPpeTextureClassJson(
+      ppeTexture,
+      i
+    );
+    const ppeTexturePropertyIdentifier = JSON.stringify(classJson);
+    ppeTexturePropertyIdentifiers.push(ppeTexturePropertyIdentifier);
   }
   return ppeTexturePropertyIdentifiers;
+};
+
+/**
+ * Converts the given `MeshPrimitiveGpmLocal` object into a `StructuralMetadata`
+ * object.
+ *
+ * This will translate the PPE textures from the given object into property
+ * texture properties. The schema will be created based on the the structure
+ * of the PPE textures.
+ *
+ * @param {MeshPrimitiveGpmLocal} meshPrimitiveGpmLocal The extension object
+ * @param {object} textures The mapping from texture ID to texture objects
+ * @returns The `StructuralMetadata` object
+ */
+GltfMeshPrimitiveGpmLoader.convertToStructuralMetadata = function (
+  meshPrimitiveGpmLocal,
+  textures
+) {
+  const propertyTextures = [];
+  const ppeTexturesMetadataSchema = GltfMeshPrimitiveGpmLoader.obtainPpeTexturesMetadataSchema(
+    meshPrimitiveGpmLocal
+  );
+  const ppeTextures = meshPrimitiveGpmLocal.ppeTextures;
+  for (let i = 0; i < ppeTextures.length; i++) {
+    const ppeTexture = ppeTextures[i];
+    const classId = `ppeTexture_${i}`;
+    const traits = ppeTexture.traits;
+    const ppePropertyName = traits.source;
+    const metadataClass = ppeTexturesMetadataSchema.classes[classId];
+
+    // XXX_UNCERTAINTY Debug log
+    //console.log(
+    //  `Creating property texture with class ${classId} and property ${ppePropertyName}`
+    //);
+
+    // The class property has been declared as `normalized`, so
+    // that `offset` and `scale` can be applied. The normalization
+    // factor has to be cancelled out here, by multiplying the
+    // `scale` with 255.
+    const scale = (ppeTexture.scale ?? 1.0) * 255.0;
+    const ppeTextureAsPropertyTexture = {
+      class: classId,
+      properties: {
+        [ppePropertyName]: {
+          index: ppeTexture.index,
+          texCoord: ppeTexture.texCoord,
+          offset: ppeTexture.offset,
+          scale: scale,
+        },
+      },
+    };
+    propertyTextures.push(
+      new PropertyTexture({
+        id: i,
+        name: ppeTexture.name,
+        propertyTexture: ppeTextureAsPropertyTexture,
+        class: metadataClass,
+        textures: textures,
+      })
+    );
+  }
+  const structuralMetadata = new StructuralMetadata({
+    schema: ppeTexturesMetadataSchema,
+    propertyTables: [],
+    propertyTextures: propertyTextures,
+    propertyAttributes: [],
+  });
+  return structuralMetadata;
 };
 
 /**
@@ -368,6 +450,8 @@ GltfMeshPrimitiveGpmLoader.prototype.process = function (frameState) {
     return false;
   }
 
+  // The standard process of loading textures
+  // (from GltfStructuralMetadataLoader)
   const textureLoaders = this._textureLoaders;
   const textureLoadersLength = textureLoaders.length;
   let ready = true;
@@ -381,6 +465,8 @@ GltfMeshPrimitiveGpmLoader.prototype.process = function (frameState) {
     return false;
   }
 
+  // More of the standard process of loading textures
+  // (from GltfStructuralMetadataLoader)
   const textures = {};
   for (let i = 0; i < this._textureIds.length; ++i) {
     const textureId = this._textureIds[i];
@@ -390,81 +476,61 @@ GltfMeshPrimitiveGpmLoader.prototype.process = function (frameState) {
     }
   }
 
-  const ppeTexturesMetadataSchema = this.obtainPpeTexturesMetadataSchema();
+  // Convert the JSON representation of the `ppeTextures` that
+  // are found in the extensjon JSON into `PpeTexture` objects
+  const ppeTextures = [];
   const extension = this._extension;
-  const propertyTextures = [];
   if (defined(extension.ppeTextures)) {
-    for (let i = 0; i < extension.ppeTextures.length; i++) {
-      const ppeTexture = extension.ppeTextures[i];
-      const classId = `ppeTexture_${i}`;
-      const traits = ppeTexture.traits;
-      const ppePropertyName = traits.source;
-      const metadataClass = ppeTexturesMetadataSchema.classes[classId];
-
-      // XXX_UNCERTAINTY Debug log
-      //console.log(
-      //  `Creating property texture with class ${classId} and property ${ppePropertyName}`
-      //);
-
-      // The class property has been declared as `normalized`, so
-      // that `offset` and `scale` can be applied. The normalization
-      // factor has to be cancelled out here, by multiplying the
-      // `scale` with 255.
-      const scale = (ppeTexture.scale ?? 1.0) * 255.0;
-      const ppeTextureAsPropertyTexture = {
-        class: classId,
-        properties: {
-          [ppePropertyName]: {
-            index: ppeTexture.index,
-            texCoord: ppeTexture.texCoord,
-            offset: ppeTexture.offset,
-            scale: scale,
-          },
-        },
-      };
-      propertyTextures.push(
-        new PropertyTexture({
-          id: i,
-          name: ppeTexture.name,
-          propertyTexture: ppeTextureAsPropertyTexture,
-          class: metadataClass,
-          textures: textures,
-        })
-      );
+    const ppeTexturesJson = extension.ppeTextures;
+    for (const ppeTextureJson of ppeTexturesJson) {
+      const traitsJson = ppeTextureJson.traits;
+      const traits = new PpeMetadata({
+        min: traitsJson.min,
+        max: traitsJson.max,
+        source: traitsJson.source,
+      });
+      const ppeTexture = new PpeTexture({
+        traits: traits,
+        noData: ppeTextureJson.noData,
+        offset: ppeTextureJson.offset,
+        scale: ppeTextureJson.scale,
+        index: ppeTextureJson.index,
+        texCoord: ppeTextureJson.texCoord,
+      });
+      ppeTextures.push(ppeTexture);
     }
   }
-
-  const structuralMetadata = new StructuralMetadata({
-    schema: ppeTexturesMetadataSchema,
-    propertyTables: [],
-    propertyTextures: propertyTextures,
-    propertyAttributes: [],
-    statistics: extension.statistics,
-    extras: extension.extras,
-    extensions: extension.extensions,
+  const meshPrimitiveGpmLocal = new MeshPrimitiveGpmLocal({
+    ppeTextures: ppeTextures,
   });
+  this._meshPrimitiveGpmLocal = meshPrimitiveGpmLocal;
+
+  const structuralMetadata = GltfMeshPrimitiveGpmLoader.convertToStructuralMetadata(
+    meshPrimitiveGpmLocal,
+    textures
+  );
   this._structuralMetadata = structuralMetadata;
 
   this._state = ResourceLoaderState.READY;
   return true;
 };
 
-function unloadTextures(meshPrimitiveGpmLoader) {
-  const textureLoaders = meshPrimitiveGpmLoader._textureLoaders;
+GltfMeshPrimitiveGpmLoader.prototype.unloadTextures = function () {
+  const textureLoaders = this._textureLoaders;
   const textureLoadersLength = textureLoaders.length;
   for (let i = 0; i < textureLoadersLength; ++i) {
     ResourceCache.unload(textureLoaders[i]);
   }
-  meshPrimitiveGpmLoader._textureLoaders.length = 0;
-  meshPrimitiveGpmLoader._textureIds.length = 0;
-}
+  this._textureLoaders.length = 0;
+  this._textureIds.length = 0;
+};
 
 /**
  * Unloads the resource.
  * @private
  */
 GltfMeshPrimitiveGpmLoader.prototype.unload = function () {
-  unloadTextures(this);
+  this.unloadTextures();
   this._gltf = undefined;
   this._extension = undefined;
   this._structuralMetadata = undefined;
