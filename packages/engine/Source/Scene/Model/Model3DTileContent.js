@@ -474,11 +474,9 @@ Model3DTileContent.prototype.pick = function (ray, frameState, result) {
 };
 
 function makeModelOptions(tileset, tile, content, additionalOptions) {
-  console.log("XXX KEEPING glTF in Model3DTileContent");
   const mainOptions = {
     cull: false, // The model is already culled by 3D Tiles
-    //releaseGltfJson: true, // Models are unique and will not benefit from caching so save memory
-    releaseGltfJson: false,
+    releaseGltfJson: true, // Models are unique and will not benefit from caching so save memory
     opaquePass: Pass.CESIUM_3D_TILE, // Draw opaque portions of the model during the 3D Tiles pass
     modelMatrix: tile.computedTransform,
     upAxis: tileset._modelUpAxis,
