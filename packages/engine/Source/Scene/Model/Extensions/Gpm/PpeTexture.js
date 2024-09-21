@@ -13,7 +13,7 @@ import Check from "../../../../Core/Check.js";
 function PpeTexture(options) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.traits", options.traits);
-  Check.typeOf.object("options.index", options.index);
+  Check.typeOf.number.greaterThanOrEquals("options.index", options.index, 0);
   //>>includeEnd('debug');
 
   this._traits = options.traits;

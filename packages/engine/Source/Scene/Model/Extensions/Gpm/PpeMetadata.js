@@ -8,7 +8,7 @@ import Check from "../../../../Core/Check.js";
  */
 function PpeMetadata(options) {
   //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("options.source", options.source);
+  Check.typeOf.string("options.source", options.source);
   //>>includeEnd('debug');
 
   this._min = options.min;
