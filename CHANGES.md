@@ -1,6 +1,7 @@
 # Change Log
 
 ### 1.122 - 2024-10-01
+- Fix JulianDate to always generate valid ISO strings for fractional milliseconds [#11507](https://github.com/CesiumGS/cesium/issues/11507)
 
 #### @cesium/engine
 
@@ -70,7 +71,6 @@ This is an npm-only release to extra source maps included in 1.121
 - Fixed environment map transform for image-based lighting. [#12091](https://github.com/CesiumGS/cesium/pull/12091)
 - Updated geometric self-shadowing function to improve direct lighting on models using physically-based rendering. [#12063](https://github.com/CesiumGS/cesium/pull/12063)
 - Prevent Bing Imagery API format issues from throwing errors [#12094](https://github.com/CesiumGS/cesium/pull/12094)
-- Fix JulianDate to always generate valid ISO strings for fractional milliseconds [#11507](https://github.com/CesiumGS/cesium/issues/11507)
 
 ### 1.119 - 2024-07-01
 
