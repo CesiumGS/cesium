@@ -123,6 +123,9 @@ function GeocoderViewModel(options) {
     const destination = data.destination;
     clearSuggestions(that);
     that.destinationFound(that, destination);
+
+    //This treats clicking a suggestion the same as hitting the enterKey
+    that._searchCommand();
   };
 
   this.hideSuggestions = function () {
