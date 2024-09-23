@@ -123,6 +123,8 @@ function GeocoderViewModel(options) {
     const destination = data.destination;
     clearSuggestions(that);
     that.destinationFound(that, destination);
+
+    that._searchCommand();
   };
 
   this.hideSuggestions = function () {
