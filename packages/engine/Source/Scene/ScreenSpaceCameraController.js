@@ -25,6 +25,7 @@ import MapMode2D from "./MapMode2D.js";
 import SceneMode from "./SceneMode.js";
 import SceneTransforms from "./SceneTransforms.js";
 import TweenCollection from "./TweenCollection.js";
+import FrameRateMonitor from "./FrameRateMonitor.js";
 
 /**
  * Modifies the camera position and orientation based on mouse input to a canvas.
@@ -144,6 +145,8 @@ function ScreenSpaceCameraController(scene) {
    * @default 5.0
    */
   this.zoomFactor = 5.0;
+
+  this.frameRateMonitor = FrameRateMonitor.fromScene(scene);
 
   /**
    * The input that allows the user to pan around the map. This only applies in 2D and Columbus view modes.
@@ -573,7 +576,15 @@ function handleZoom(
   const maxHeight = object.maximumZoomDistance;
 
   const minDistance = distanceMeasure - minHeight;
-  let zoomRate = zoomFactor * minDistance;
+
+  let fpsMultiplier = 1;
+  const fps = object.frameRateMonitor.lastFramesPerSecond;
+  if (fps) {
+    fpsMultiplier = 30 / fps;
+  }
+
+  let zoomRate = zoomFactor * minDistance * fpsMultiplier;
+
   zoomRate = CesiumMath.clamp(
     zoomRate,
     object._minimumZoomRate,
