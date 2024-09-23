@@ -413,7 +413,7 @@ describe("Core/Rectangle", function () {
 
   it("validate throws with no rectangle", function () {
     expect(function () {
-      Rectangle.validate();
+      Rectangle._validate();
     }).toThrowDeveloperError();
   });
 
@@ -421,7 +421,7 @@ describe("Core/Rectangle", function () {
     const rectangle = new Rectangle(west, south, east, north);
     rectangle.west = undefined;
     expect(function () {
-      Rectangle.validate(rectangle);
+      Rectangle._validate(rectangle);
     }).toThrowDeveloperError();
   });
 
@@ -429,7 +429,7 @@ describe("Core/Rectangle", function () {
     const rectangle = new Rectangle(west, south, east, north);
     rectangle.south = undefined;
     expect(function () {
-      Rectangle.validate(rectangle);
+      Rectangle._validate(rectangle);
     }).toThrowDeveloperError();
   });
 
@@ -437,7 +437,7 @@ describe("Core/Rectangle", function () {
     const rectangle = new Rectangle(west, south, east, north);
     rectangle.east = undefined;
     expect(function () {
-      Rectangle.validate(rectangle);
+      Rectangle._validate(rectangle);
     }).toThrowDeveloperError();
   });
 
@@ -445,7 +445,7 @@ describe("Core/Rectangle", function () {
     const rectangle = new Rectangle(west, south, east, north);
     rectangle.north = undefined;
     expect(function () {
-      Rectangle.validate(rectangle);
+      Rectangle._validate(rectangle);
     }).toThrowDeveloperError();
   });
 
@@ -453,7 +453,7 @@ describe("Core/Rectangle", function () {
     const rectangle = new Rectangle(west, south, east, north);
     rectangle.west = Math.PI * 2;
     expect(function () {
-      Rectangle.validate(rectangle);
+      Rectangle._validate(rectangle);
     }).toThrowDeveloperError();
   });
 
@@ -461,7 +461,7 @@ describe("Core/Rectangle", function () {
     const rectangle = new Rectangle(west, south, east, north);
     rectangle.south = Math.PI * 2;
     expect(function () {
-      Rectangle.validate(rectangle);
+      Rectangle._validate(rectangle);
     }).toThrowDeveloperError();
   });
 
@@ -469,7 +469,7 @@ describe("Core/Rectangle", function () {
     const rectangle = new Rectangle(west, south, east, north);
     rectangle.east = Math.PI * 2;
     expect(function () {
-      Rectangle.validate(rectangle);
+      Rectangle._validate(rectangle);
     }).toThrowDeveloperError();
   });
 
@@ -477,7 +477,7 @@ describe("Core/Rectangle", function () {
     const rectangle = new Rectangle(west, south, east, north);
     rectangle.north = Math.PI * 2;
     expect(function () {
-      Rectangle.validate(rectangle);
+      Rectangle._validate(rectangle);
     }).toThrowDeveloperError();
   });
 

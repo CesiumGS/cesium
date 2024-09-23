@@ -542,7 +542,7 @@ Rectangle.prototype.equalsEpsilon = function (other, epsilon) {
  * @exception {DeveloperError} <code>east</code> must be in the interval [<code>-Pi</code>, <code>Pi</code>].
  * @exception {DeveloperError} <code>west</code> must be in the interval [<code>-Pi</code>, <code>Pi</code>].
  */
-Rectangle.validate = function (rectangle) {
+Rectangle._validate = function (rectangle) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("rectangle", rectangle);
 
