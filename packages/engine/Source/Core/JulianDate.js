@@ -784,9 +784,6 @@ JulianDate.toIso8601 = function (julianDate, precision) {
   let millisecondStr;
 
   if (millisecond !== 0 || defined(precision)) {
-    if (!defined(precision)) {
-      precision = 7; // Default precision if not provided
-    }
     // Forces milliseconds into a number with the specified precision, without scientific notation
     const fractionalSeconds = (second + millisecond * 0.001).toFixed(precision);
     const parts = fractionalSeconds.split('.');
