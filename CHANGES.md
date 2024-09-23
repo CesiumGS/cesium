@@ -1,5 +1,13 @@
 # Change Log
 
+### 1.122 - 2024-10-23
+
+#### @cesium/engine
+
+#### Make Rectangle.validate private #4921
+
+Renamed all insances of `Rectangle.validate` to `Rectangle._validate` . This method is never called outside of a pragma and it's entire implementation is wrapped in a pragma.
+
 ### 1.122 - 2024-10-01
 
 #### @cesium/engine
