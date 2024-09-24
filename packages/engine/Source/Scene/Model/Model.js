@@ -1773,9 +1773,20 @@ Model.prototype.applyArticulations = function () {
 };
 
 /**
- * XXX_TODO_COMMENT
+ * Returns the object that was created for the given extension.
  *
+ * The given name may be the name of a glTF extension, like `"EXT_example_extension"`.
+ * If the specified extension was present in the root of the underlying glTF asset,
+ * and a loder for the specified extension has processed the extension data, then
+ * this will return the model representation of the extension.
+ *
+ * @param {string} extensionName The name of the extension
+ * @returns The object, or `undefined`
  * @exception {DeveloperError} The model is not loaded. Use Model.readyEvent or wait for Model.ready to be true.
+ *
+ * @private
+ * @experimental This feature is subject to change without Cesium's standard deprecation policy.
+ *
  */
 Model.prototype.getExtension = function (extensionName) {
   //>>includeStart('debug', pragmas.debug);
