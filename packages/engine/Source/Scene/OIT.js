@@ -151,7 +151,7 @@ function updateTextures(oit, context, width, height) {
     pixelDatatype: PixelDatatype.FLOAT,
     width: width,
     height: height,
-    flipY: false
+    flipY: false,
   });
 }
 

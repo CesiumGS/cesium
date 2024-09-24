@@ -594,12 +594,12 @@ describe(
       const colorTexture0 = new Texture({
         context: context,
         width: 1,
-        height: 1
+        height: 1,
       });
       const colorTexture1 = new Texture({
         context: context,
         width: 1,
-        height: 1
+        height: 1,
       });
       framebuffer = new Framebuffer({
         context: context,
