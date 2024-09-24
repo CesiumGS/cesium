@@ -19,7 +19,7 @@ const customShader = new Cesium.CustomShader({
       }),
       type: Cesium.UniformType.SAMPLER_2D
     }
-  }
+  },
   // Custom varyings that will appear in the custom vertex and fragment shader
   // text.
   varyings: {
