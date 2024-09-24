@@ -74,7 +74,10 @@ function createPropertyTypeDescriptor(name, Type) {
  * @property {string} [name] A human readable name to display to users. It does not have to be unique.
  * @property {TimeIntervalCollection} [availability] The availability, if any, associated with this object.
  * @property {boolean} [show] A boolean value indicating if the entity and its children are displayed.
- * @property {TrackingReferenceFrame} [trackingReferenceFrame=TrackingReferenceFrame.EAST_NORTH_UP] The reference frame used when this entity is being tracked. If undefined, east-north-up at entity's position is used. When set to TrackingReferenceFrame.INERTIAL, the camera will track and rotate according to entity's position and orirentation.
+ * @property {TrackingReferenceFrame} [trackingReferenceFrame=TrackingReferenceFrame.AUTODETECT] The reference frame used when this entity is being tracked.
+ * If undefined, an auto-detect algorithm is used: near-surface slow moving entities are tracked using the local
+ * east-north-up reference frame, whereas fast moving entities such as satellites are tracked using VVLH (Vehicle Velocity,
+ * Local Horizontal).
  * @property {Property | string} [description] A string Property specifying an HTML description for this entity.
  * @property {PositionProperty | Cartesian3 | CallbackPositionProperty} [position] A Property specifying the entity position.
  * @property {Property | Quaternion} [orientation=Transforms.eastNorthUpToFixedFrame(position)] A Property specifying the entity orientation in respect to Earth-fixed-Earth-centered (ECEF). If undefined, east-north-up at entity position is used.
@@ -126,7 +129,7 @@ function Entity(options) {
   this._show = defaultValue(options.show, true);
   this._trackingReferenceFrame = defaultValue(
     options.trackingReferenceFrame,
-    TrackingReferenceFrame.EAST_NORTH_UP
+    TrackingReferenceFrame.AUTODETECT
   );
   this._parent = undefined;
   this._propertyNames = [
@@ -304,7 +307,7 @@ Object.defineProperties(Entity.prototype, {
   },
   /**
    * Gets or sets the entity's tracking reference frame.
-   * @demo {@link https://sandcastle.cesium.com/index.html?src=Interpolation.html|Cesium Sandcastle Interpolation Demo}
+   * @demo {@link https://sandcastle.cesium.com/index.html?src=Entity tracking.html|Cesium Sandcastle Entity tracking Demo}
    *
    * @memberof Entity.prototype
    * @type {TrackingReferenceFrame}

@@ -5,19 +5,36 @@
  */
 const TrackingReferenceFrame = {
   /**
-   * The east-north-up entity's frame.
+   * Auto-detect algorithm. The reference frame used to track the Entity will
+   * be automatically selected based on its trajectory: near-surface slow moving
+   * objects will be tracked in the entity's local east-north-up reference
+   * frame, while faster objects like satellites will use VVLH (Vehicle Velocity,
+   * Local Horizontal).
    *
    * @type {number}
    * @constant
    */
-  EAST_NORTH_UP: 0,
+  AUTODETECT: 0,
 
   /**
-   * The entity's inertial frame.
+   * The entity's inertial reference frame. If entity has no defined orientation
+   * property, a {@link VelocityOrientationProperty} is used instead, thus
+   * falling back to TrackingReferenceFrame.VELOCITY.
+   * When selected, the auto-detect algorithm is overridden.
    *
    * @type {number}
    * @constant
    */
   INERTIAL: 1,
+
+  /**
+   * The entity's inertial reference frame with orientation fixed to its
+   * {@link VelocityOrientationProperty}, ignoring its own orientation.
+   * When selected, the auto-detect algorithm is overridden.
+   *
+   * @type {number}
+   * @constant
+   */
+  VELOCITY: 2,
 };
 export default Object.freeze(TrackingReferenceFrame);

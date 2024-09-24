@@ -56,7 +56,7 @@ describe("DataSources/Entity", function () {
     expect(entity.wall).toBeUndefined();
     expect(entity.entityCollection).toBeUndefined();
     expect(entity.trackingReferenceFrame).toBe(
-      TrackingReferenceFrame.EAST_NORTH_UP
+      TrackingReferenceFrame.AUTODETECT
     );
 
     const options = {
