@@ -172,6 +172,14 @@ GltfGpmLoader.load = function (gltfGpmLocalJson) {
 GltfGpmLoader.loadDirect = function (gltfGpmLocalJson) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("gltfGpmLocalJson", gltfGpmLocalJson);
+  Check.typeOf.object(
+    "gltfGpmLocalJson.anchorPointsDirect",
+    gltfGpmLocalJson.anchorPointsDirect
+  );
+  Check.typeOf.object(
+    "gltfGpmLocalJson.covarianceDirectUpperTriangle",
+    gltfGpmLocalJson.covarianceDirectUpperTriangle
+  );
   //>>includeEnd('debug');
 
   const anchorPointsDirect = [];
@@ -205,6 +213,14 @@ GltfGpmLoader.loadDirect = function (gltfGpmLocalJson) {
 GltfGpmLoader.loadIndirect = function (gltfGpmLocalJson) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("gltfGpmLocalJson", gltfGpmLocalJson);
+  Check.typeOf.object(
+    "gltfGpmLocalJson.anchorPointsIndirect",
+    gltfGpmLocalJson.anchorPointsIndirect
+  );
+  Check.typeOf.object(
+    "gltfGpmLocalJson.intraTileCorrelationGroups",
+    gltfGpmLocalJson.intraTileCorrelationGroups
+  );
   //>>includeEnd('debug');
 
   const anchorPointsIndirect = [];
