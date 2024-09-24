@@ -12,6 +12,8 @@ import Quaternion from "../Core/Quaternion.js";
 import TrackingReferenceFrame from "../Core/TrackingReferenceFrame.js";
 import Transforms from "../Core/Transforms.js";
 import SceneMode from "../Scene/SceneMode.js";
+import VelocityOrientationProperty from "./VelocityOrientationProperty.js";
+import VelocityVectorProperty from "./VelocityVectorProperty.js";
 
 const updateTransformMatrix3Scratch1 = new Matrix3();
 const updateTransformMatrix3Scratch2 = new Matrix3();
@@ -24,6 +26,8 @@ const updateTransformCartesian3Scratch4 = new Cartesian3();
 const updateTransformCartesian3Scratch5 = new Cartesian3();
 const updateTransformCartesian3Scratch6 = new Cartesian3();
 const updateTransformOrientationScratch = new Quaternion();
+const velocityScratch = new Cartesian3();
+const rotationScratch = new Matrix3();
 const deltaTime = new JulianDate();
 const northUpAxisFactor = 1.25; // times ellipsoid's maximum radius
 
@@ -33,6 +37,7 @@ function updateTransform(
   updateLookAt,
   saveCamera,
   positionProperty,
+  velocityProperty,
   orientationProperty,
   trackingReferenceFrame,
   time,
@@ -242,6 +247,8 @@ function updateTransform(
       );
     }
 
+    const velocity = velocityProperty.getValue(time, velocityScratch);
+
     if (
       trackingReferenceFrame === TrackingReferenceFrame.INERTIAL &&
       defined(orientation)
@@ -252,6 +259,17 @@ function updateTransform(
         Cartesian3.ONE,
         transform
       );
+    } else if (
+      trackingReferenceFrame === TrackingReferenceFrame.VELOCITY &&
+      defined(velocity)
+    ) {
+      const rotation = Transforms.rotationMatrixFromPositionVelocity(
+        cartesian,
+        velocity,
+        ellipsoid,
+        rotationScratch
+      );
+      Matrix4.fromRotationTranslation(rotation, cartesian, transform);
     } else if (hasBasis) {
       transform[0] = xBasis.x;
       transform[1] = xBasis.y;
@@ -274,20 +292,13 @@ function updateTransform(
       Transforms.eastNorthUpToFixedFrame(cartesian, ellipsoid, transform);
     }
 
-    if (
-      trackingReferenceFrame === TrackingReferenceFrame.EAST_NORTH_UP ||
-      mode === SceneMode.SCENE2D
-    ) {
-      camera._setTransform(transform);
+    camera._setTransform(transform);
 
-      if (saveCamera) {
-        Cartesian3.clone(position, camera.position);
-        Cartesian3.clone(direction, camera.direction);
-        Cartesian3.clone(up, camera.up);
-        Cartesian3.cross(direction, up, camera.right);
-      }
-    } else {
-      camera.lookAtTransform(transform, position);
+    if (saveCamera) {
+      Cartesian3.clone(position, camera.position);
+      Cartesian3.clone(direction, camera.direction);
+      Cartesian3.clone(up, camera.up);
+      Cartesian3.cross(direction, up, camera.right);
     }
   }
 
@@ -347,6 +358,8 @@ function EntityView(entity, scene, ellipsoid) {
   this._lastCartesian = new Cartesian3();
   this._defaultOffset3D = undefined;
 
+  this._velocityProperty = new VelocityVectorProperty(entity.position, true);
+
   this._offset3D = new Cartesian3();
 }
 
@@ -398,12 +411,13 @@ EntityView.prototype.update = function (time, boundingSphere) {
   if (!defined(positionProperty)) {
     return;
   }
-  const orientationProperty = entity.orientation;
+  const velocityProperty = this._velocityProperty;
+  let orientationProperty = entity.orientation;
   if (
     trackingReferenceFrame === TrackingReferenceFrame.INERTIAL &&
     !defined(orientationProperty)
   ) {
-    return;
+    orientationProperty = new VelocityOrientationProperty(positionProperty);
   }
   const objectChanged = entity !== this._lastEntity;
   const sceneModeChanged = sceneMode !== this._mode;
@@ -458,6 +472,7 @@ EntityView.prototype.update = function (time, boundingSphere) {
     updateLookAt,
     saveCamera,
     positionProperty,
+    velocityProperty,
     orientationProperty,
     trackingReferenceFrame,
     time,
