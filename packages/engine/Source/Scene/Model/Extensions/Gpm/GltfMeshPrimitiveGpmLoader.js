@@ -293,13 +293,9 @@ GltfMeshPrimitiveGpmLoader.obtainPpeTexturesMetadataSchema = function (
     key
   );
   if (defined(ppeTexturesMetadataSchema)) {
-    // XXX_UNCERTAINTY Debug log
-    //console.log(`Using cached schema for GPM PPE textures with key ${key}`);
     return ppeTexturesMetadataSchema;
   }
 
-  // XXX_UNCERTAINTY Debug log - if caching works, this should be printed only ONCE!
-  console.log(`Creating schema for GPM PPE textures with key ${key}`);
   const schemaId = `PPE_TEXTURE_SCHEMA_${GltfMeshPrimitiveGpmLoader.ppeTexturesMetadataSchemaCache.size}`;
   const ppeTexturesMetadataSchemaJson = {
     id: schemaId,
@@ -390,11 +386,6 @@ GltfMeshPrimitiveGpmLoader.convertToStructuralMetadata = function (
     const traits = ppeTexture.traits;
     const ppePropertyName = traits.source;
     const metadataClass = ppeTexturesMetadataSchema.classes[classId];
-
-    // XXX_UNCERTAINTY Debug log
-    //console.log(
-    //  `Creating property texture with class ${classId} and property ${ppePropertyName}`
-    //);
 
     // The class property has been declared as `normalized`, so
     // that `offset` and `scale` can be applied. The normalization

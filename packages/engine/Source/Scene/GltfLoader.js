@@ -31,6 +31,7 @@ import SupportedImageFormats from "./SupportedImageFormats.js";
 import VertexAttributeSemantic from "./VertexAttributeSemantic.js";
 import GltfGpmLoader from "./Model/Extensions/Gpm/GltfGpmLoader.js";
 import GltfMeshPrimitiveGpmLoader from "./Model/Extensions/Gpm/GltfMeshPrimitiveGpmLoader.js";
+import oneTimeWarning from "../Core/oneTimeWarning.js";
 
 const {
   Attribute,
@@ -478,8 +479,12 @@ function processLoaders(loader, frameState) {
   if (defined(meshPrimitiveGpmLoader)) {
     const metadataReady = meshPrimitiveGpmLoader.process(frameState);
     if (metadataReady) {
-      // XXX
-      console.log("Overwriting structural metadata with GPM data");
+      if (defined(loader._components.structuralMetadata)) {
+        oneTimeWarning(
+          "structural-metadata-gpm",
+          "Structural metadata is replaced with GPM data"
+        );
+      }
       loader._components.structuralMetadata =
         meshPrimitiveGpmLoader.structuralMetadata;
     }
@@ -2728,8 +2733,6 @@ function parse(loader, frameState) {
           const primitiveExtensions = primitive.extensions;
           const meshPrimitiveGpmExtension = primitiveExtensions.NGA_gpm_local;
           if (defined(meshPrimitiveGpmExtension)) {
-            // XXX
-            console.log("Loading GPM from mesh primitive");
             const promise = loadMeshPrimitiveGpm(
               loader,
               gltf,
