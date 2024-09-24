@@ -117,6 +117,14 @@ A few more naming conventions are introduced below along with their design patte
 - For HTML code, keep the existing style. Use double quotes.
 - Text files, end with a newline to minimize the noise in diffs.
 
+## Spelling
+
+- We have a basic setup for `cspell` to spellcheck our files. This is currently not enforced but recommended to use and check while programming. This is especially true for JSDoc comments that well end up in our documentation or Readme files
+  - Run `npm run cspell` to check all files
+  - Run `npx cspell -c .vscode/cspell.json [file path]` to check a specific file
+- If you are using VSCode you can use the [Code Spell Checker](https://marketplace.visualstudio.com/items?itemName=streetsidesoftware.code-spell-checker) extension to highlight misspelled words and add them to our wordlist if they are valid.
+- Using cspell optional while we build up the wordlist but may eventually be required as part of our git hooks and CI. See [this issue](https://github.com/CesiumGS/cesium/issues/11954) for an active status on that.
+
 ## Linting
 
 For syntax and style guidelines, we use the ESLint recommended settings (the list of rules can be found [here](http://eslint.org/docs/rules/)) as a base and extend it with additional rules via a shared config Node module, [eslint-config-cesium](https://www.npmjs.com/package/eslint-config-cesium). This package is maintained as a part of the Cesium repository and is also used throughout the Cesium ecosystem. For an up to date list of which rules are enabled, look in [index.js](https://github.com/CesiumGS/eslint-config-cesium/blob/main/index.js), [browser.js](https://github.com/CesiumGS/eslint-config-cesium/blob/main/browser.js), and [node.js](https://github.com/CesiumGS/eslint-config-cesium/blob/main/node.js). Below are listed some specific rules to keep in mind
