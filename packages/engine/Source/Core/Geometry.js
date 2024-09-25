@@ -104,8 +104,6 @@ function Geometry(options) {
    *
    * @type GeometryAttributes
    *
-   * @default undefined
-   *
    *
    * @example
    * geometry.attributes.position = new Cesium.GeometryAttribute({
@@ -123,7 +121,7 @@ function Geometry(options) {
    * Optional index data that - along with {@link Geometry#primitiveType} -
    * determines the primitives in the geometry.
    *
-   * @type {Array}
+   * @type {Array|undefined}
    *
    * @default undefined
    */
@@ -133,9 +131,9 @@ function Geometry(options) {
    * The type of primitives in the geometry.  This is most often {@link PrimitiveType.TRIANGLES},
    * but can varying based on the specific geometry.
    *
-   * @type PrimitiveType
+   * @type {PrimitiveType|undefined}
    *
-   * @default undefined
+   * @default PrimitiveType.TRIANGLES
    */
   this.primitiveType = defaultValue(
     options.primitiveType,
@@ -146,7 +144,7 @@ function Geometry(options) {
    * An optional bounding sphere that fully encloses the geometry.  This is
    * commonly used for culling.
    *
-   * @type BoundingSphere
+   * @type {BoundingSphere|undefined}
    *
    * @default undefined
    */

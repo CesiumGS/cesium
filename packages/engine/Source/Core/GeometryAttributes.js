@@ -19,7 +19,7 @@ function GeometryAttributes(options) {
    * 64-bit floating-point (for precision).  3 components per attribute.
    * </p>
    *
-   * @type GeometryAttribute
+   * @type {GeometryAttribute|undefined}
    *
    * @default undefined
    */
@@ -31,7 +31,7 @@ function GeometryAttributes(options) {
    * 32-bit floating-point.  3 components per attribute.
    * </p>
    *
-   * @type GeometryAttribute
+   * @type {GeometryAttribute|undefined}
    *
    * @default undefined
    */
@@ -43,7 +43,7 @@ function GeometryAttributes(options) {
    * 32-bit floating-point.  2 components per attribute
    * </p>
    *
-   * @type GeometryAttribute
+   * @type {GeometryAttribute|undefined}
    *
    * @default undefined
    */
@@ -55,7 +55,7 @@ function GeometryAttributes(options) {
    * 32-bit floating-point.  3 components per attribute.
    * </p>
    *
-   * @type GeometryAttribute
+   * @type {GeometryAttribute|undefined}
    *
    * @default undefined
    */
@@ -67,7 +67,7 @@ function GeometryAttributes(options) {
    * 32-bit floating-point.  3 components per attribute.
    * </p>
    *
-   * @type GeometryAttribute
+   * @type {GeometryAttribute|undefined}
    *
    * @default undefined
    */
@@ -79,7 +79,7 @@ function GeometryAttributes(options) {
    * 8-bit unsigned integer. 4 components per attribute.
    * </p>
    *
-   * @type GeometryAttribute
+   * @type {GeometryAttribute|undefined}
    *
    * @default undefined
    */

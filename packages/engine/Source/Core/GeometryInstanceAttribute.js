@@ -68,7 +68,6 @@ function GeometryInstanceAttribute(options) {
    *
    * @type ComponentDatatype
    *
-   * @default undefined
    */
   this.componentDatatype = options.componentDatatype;
 
@@ -78,8 +77,6 @@ function GeometryInstanceAttribute(options) {
    * shown in the code example.
    *
    * @type {number}
-   *
-   * @default undefined
    *
    * @example
    * show : new Cesium.GeometryInstanceAttribute({
@@ -122,8 +119,6 @@ function GeometryInstanceAttribute(options) {
    * <code>componentsPerAttribute</code> is 3.
    *
    * @type {number[]}
-   *
-   * @default undefined
    *
    * @example
    * show : new Cesium.GeometryInstanceAttribute({

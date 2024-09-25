@@ -16,6 +16,8 @@ import {
   PolylineOutlineMaterialProperty,
   ReferenceProperty,
   SampledPositionProperty,
+  CallbackPositionProperty,
+  LinearSpline,
   ScaledPositionProperty,
   TimeIntervalCollectionPositionProperty,
   SceneMode,
@@ -731,6 +733,58 @@ describe(
         result
       );
       expect(result).toEqual([new Cartesian3(0, 0, 3)]);
+    });
+
+    it("subSample works for callback position properties", function () {
+      const t1 = new JulianDate(0, 0);
+      const t2 = new JulianDate(2, 0);
+      const updateTime = new JulianDate(1, 1);
+      const duration = JulianDate.secondsDifference(t2, t1);
+      const spline = new LinearSpline({
+        times: [0, 1],
+        points: [new Cartesian3(0, 0, 0), new Cartesian3(0, 0, 1)],
+      });
+      const callback = function (time, result) {
+        if (JulianDate.lessThan(time, t1) || JulianDate.greaterThan(time, t2)) {
+          return undefined;
+        }
+        if (result === undefined) {
+          result = new Cartesian3();
+        }
+        const delta = JulianDate.secondsDifference(time, t1);
+        return spline.evaluate(delta / duration, result);
+      };
+
+      const property = new CallbackPositionProperty(callback, false);
+
+      const referenceFrame = ReferenceFrame.FIXED;
+      const maximumStep = 43200;
+      const result = [];
+      PathVisualizer._subSample(
+        property,
+        t1,
+        t2,
+        updateTime,
+        referenceFrame,
+        maximumStep,
+        result
+      );
+      expect(result).toEqual([
+        property.getValue(t1),
+        property.getValue(
+          JulianDate.addSeconds(t1, maximumStep, new JulianDate())
+        ),
+        property.getValue(
+          JulianDate.addSeconds(t1, maximumStep * 2, new JulianDate())
+        ),
+        property.getValue(updateTime),
+        property.getValue(
+          JulianDate.addSeconds(t1, maximumStep * 3, new JulianDate())
+        ),
+        property.getValue(
+          JulianDate.addSeconds(t1, maximumStep * 4, new JulianDate())
+        ),
+      ]);
     });
 
     function CustomPositionProperty(innerProperty) {

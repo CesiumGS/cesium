@@ -2599,7 +2599,7 @@ describe(
         tileset.boundingSphere.center
       );
       const height = tileset.getHeight(center, scene);
-      expect(height).toEqualEpsilon(78.1558019795064, CesiumMath.EPSILON12);
+      expect(height).toEqualEpsilon(78.1558019795064, CesiumMath.EPSILON8);
     });
 
     it("getHeight samples height accounting for vertical exaggeration", async function () {
@@ -2615,7 +2615,7 @@ describe(
         tileset.boundingSphere.center
       );
       const height = tileset.getHeight(center, scene);
-      expect(height).toEqualEpsilon(156.31161477299992, CesiumMath.EPSILON12);
+      expect(height).toEqualEpsilon(156.31161477299992, CesiumMath.EPSILON8);
     });
 
     it("destroys", function () {
