@@ -877,6 +877,23 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
     this,
   );
 
+  // Subscribe to left clicks and zoom to the picked object.
+  function pickAndTrackObject(e) {
+    const entity = pickEntity(that, e);
+    if (defined(entity)) {
+      //Only track the entity if it has a valid position at the current time.
+      if (
+        Property.getValueOrUndefined(entity.position, that.clock.currentTime)
+      ) {
+        that.trackedEntity = entity;
+      } else {
+        that.zoomTo(entity);
+      }
+    } else if (defined(that.trackedEntity)) {
+      that.trackedEntity = undefined;
+    }
+  }
+
   function pickAndSelectObject(e) {
     that.selectedEntity = pickEntity(that, e);
   }
@@ -884,6 +901,10 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
   cesiumWidget.screenSpaceEventHandler.setInputAction(
     pickAndSelectObject,
     ScreenSpaceEventType.LEFT_CLICK,
+  );
+  cesiumWidget.screenSpaceEventHandler.setInputAction(
+    pickAndTrackObject,
+    ScreenSpaceEventType.LEFT_DOUBLE_CLICK,
   );
 }
 
@@ -1631,13 +1652,17 @@ Viewer.prototype.isDestroyed = function () {
  * removing the widget from layout.
  */
 Viewer.prototype.destroy = function () {
-  // Unsubscribe from data sources
-  const dataSources = this.dataSources;
-  const dataSourceLength = dataSources.length;
-  for (let i = 0; i < dataSourceLength; i++) {
-    this._dataSourceRemoved(dataSources, dataSources.get(i));
+  if (
+    defined(this.screenSpaceEventHandler) &&
+    !this.screenSpaceEventHandler.isDestroyed()
+  ) {
+    this.screenSpaceEventHandler.removeInputAction(
+      ScreenSpaceEventType.LEFT_CLICK,
+    );
+    this.screenSpaceEventHandler.removeInputAction(
+      ScreenSpaceEventType.LEFT_DOUBLE_CLICK,
+    );
   }
-  this._dataSourceRemoved(undefined, this.dataSourceDisplay.defaultDataSource);
 
   this._container.removeChild(this._element);
   this._element.removeChild(this._toolbar);
