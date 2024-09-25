@@ -2718,7 +2718,6 @@ function parse(loader, frameState) {
   // Load NGA_gpm_local from root object
   const gpmExtension = extensions.NGA_gpm_local;
   if (defined(gpmExtension)) {
-    console.log("Loading GPM from root");
     const gltfGpmLocal = GltfGpmLoader.load(gpmExtension);
     loader._components.extensions["NGA_gpm_local"] = gltfGpmLocal;
   }
@@ -2731,15 +2730,17 @@ function parse(loader, frameState) {
       if (defined(primitives)) {
         for (const primitive of primitives) {
           const primitiveExtensions = primitive.extensions;
-          const meshPrimitiveGpmExtension = primitiveExtensions.NGA_gpm_local;
-          if (defined(meshPrimitiveGpmExtension)) {
-            const promise = loadMeshPrimitiveGpm(
-              loader,
-              gltf,
-              meshPrimitiveGpmExtension,
-              frameState
-            );
-            loader._loaderPromises.push(promise);
+          if (defined(primitiveExtensions)) {
+            const meshPrimitiveGpmExtension = primitiveExtensions.NGA_gpm_local;
+            if (defined(meshPrimitiveGpmExtension)) {
+              const promise = loadMeshPrimitiveGpm(
+                loader,
+                gltf,
+                meshPrimitiveGpmExtension,
+                frameState
+              );
+              loader._loaderPromises.push(promise);
+            }
           }
         }
       }
