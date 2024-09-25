@@ -16,7 +16,6 @@ import Matrix4 from "../Core/Matrix4.js";
 import BoundingSphereState from "../DataSources/BoundingSphereState.js";
 import DataSourceCollection from "../DataSources/DataSourceCollection.js";
 import DataSourceDisplay from "../DataSources/DataSourceDisplay.js";
-import Entity from "../DataSources/Entity.js";
 import EntityView from "../DataSources/EntityView.js";
 import getElement from "../DataSources/getElement.js";
 import Property from "../DataSources/Property.js";
@@ -28,7 +27,6 @@ import Moon from "../Scene/Moon.js";
 import Scene from "../Scene/Scene.js";
 import SceneMode from "../Scene/SceneMode.js";
 import ScreenSpaceEventHandler from "../Core/ScreenSpaceEventHandler.js";
-import ScreenSpaceEventType from "../Core/ScreenSpaceEventType.js";
 import ShadowMode from "../Scene/ShadowMode.js";
 import SkyAtmosphere from "../Scene/SkyAtmosphere.js";
 import SkyBox from "../Scene/SkyBox.js";
@@ -41,16 +39,6 @@ function trackDataSourceClock(clock, dataSource) {
     const dataSourceClock = dataSource.clock;
     if (defined(dataSourceClock)) {
       dataSourceClock.getValue(clock);
-    }
-  }
-}
-
-function pickEntity(viewer, e) {
-  const picked = viewer.scene.pick(e.position);
-  if (defined(picked)) {
-    const id = defaultValue(picked.id, picked.primitive.id);
-    if (id instanceof Entity) {
-      return id;
     }
   }
 }
@@ -176,11 +164,11 @@ function configureCameraFrustum(widget) {
  *        to the bottom of the widget itself.
  * @param {Element|string} [options.creditViewport] The DOM element or ID that will contain the credit pop up created by the {@link CreditDisplay}.  If not specified, it will appear over the widget itself.
  * @param {DataSourceCollection} [options.dataSources=new DataSourceCollection()] The collection of data sources visualized by the widget.  If this parameter is provided,
- *                               the instance is assumed to be owned by the caller and will not be destroyed when the viewer is destroyed.
+ *                               the instance is assumed to be owned by the caller and will not be destroyed when the widget is destroyed.
  * @param {boolean} [options.shadows=false] Determines if shadows are cast by light sources.
  * @param {ShadowMode} [options.terrainShadows=ShadowMode.RECEIVE_ONLY] Determines if the terrain casts or receives shadows from light sources.
  * @param {MapMode2D} [options.mapMode2D=MapMode2D.INFINITE_SCROLL] Determines if the 2D map is rotatable or can be scrolled infinitely in the horizontal direction.
- * @param {boolean} [options.blurActiveElementOnCanvasFocus=true] If true, the active element will blur when the viewer's canvas is clicked. Setting this to false is useful for cases when the canvas is clicked only for retrieving position or an entity data without actually meaning to set the canvas to be the active element.
+ * @param {boolean} [options.blurActiveElementOnCanvasFocus=true] If true, the active element will blur when the widget's canvas is clicked. Setting this to false is useful for cases when the canvas is clicked only for retrieving position or an entity data without actually meaning to set the canvas to be the active element.
  * @param {boolean} [options.requestRenderMode=false] If true, rendering a frame will only occur when needed as determined by changes within the scene. Enabling improves performance of the application, but requires using {@link Scene#requestRender} to render a new frame explicitly in this mode. This will be necessary in many cases after making changes to the scene in other parts of the API. See {@link https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/|Improving Performance with Explicit Rendering}.
  * @param {number} [options.maximumRenderTimeChange=0.0] If requestRenderMode is true, this value defines the maximum change in simulation time allowed before a render is requested. See {@link https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/|Improving Performance with Explicit Rendering}.
  * @param {number} [options.msaaSamples=4] If provided, this value controls the rate of multisample antialiasing. Typical multisampling rates are 2, 4, and sometimes 8 samples per pixel. Higher sampling rates of MSAA may impact performance in exchange for improved visual quality. This value only applies to WebGL2 contexts that support multisample render targets. Set to 1 to disable MSAA.
@@ -508,28 +496,6 @@ function CesiumWidget(container, options) {
       dataSourceCollection.dataSourceRemoved,
       CesiumWidget.prototype._dataSourceRemoved,
       this,
-    );
-
-    // Subscribe to left clicks and zoom to the picked object.
-    function pickAndTrackObject(e) {
-      const entity = pickEntity(that, e);
-      if (defined(entity)) {
-        //Only track the entity if it has a valid position at the current time.
-        if (
-          Property.getValueOrUndefined(entity.position, that.clock.currentTime)
-        ) {
-          that.trackedEntity = entity;
-        } else {
-          that.zoomTo(entity);
-        }
-      } else if (defined(that.trackedEntity)) {
-        that.trackedEntity = undefined;
-      }
-    }
-
-    this._screenSpaceEventHandler.setInputAction(
-      pickAndTrackObject,
-      ScreenSpaceEventType.LEFT_DOUBLE_CLICK,
     );
   } catch (error) {
     if (showRenderLoopErrors) {
@@ -925,7 +891,7 @@ Object.defineProperties(CesiumWidget.prototype, {
   },
 
   /**
-   * Gets or sets the data source to track with the viewer's clock.
+   * Gets or sets the data source to track with the widget's clock.
    * @memberof CesiumWidget.prototype
    * @type {DataSource}
    */
@@ -1072,18 +1038,6 @@ CesiumWidget.prototype.destroy = function () {
   this._dataSourceRemoved(undefined, this._dataSourceDisplay.defaultDataSource);
 
   this._dataSourceDisplay = this._dataSourceDisplay.destroy();
-
-  if (
-    defined(this._screenSpaceEventHandler) &&
-    !this._screenSpaceEventHandler.isDestroyed()
-  ) {
-    this._screenSpaceEventHandler.removeInputAction(
-      ScreenSpaceEventType.LEFT_CLICK,
-    );
-    this._screenSpaceEventHandler.removeInputAction(
-      ScreenSpaceEventType.LEFT_DOUBLE_CLICK,
-    );
-  }
 
   if (defined(this._scene)) {
     this._scene.renderError.removeEventListener(this._onRenderError);
@@ -1432,17 +1386,17 @@ function zoomToOrFly(that, zoomTarget, options, isFlight) {
   return zoomPromise;
 }
 
-function clearZoom(viewer) {
-  viewer._zoomPromise = undefined;
-  viewer._zoomTarget = undefined;
-  viewer._zoomOptions = undefined;
+function clearZoom(widget) {
+  widget._zoomPromise = undefined;
+  widget._zoomTarget = undefined;
+  widget._zoomOptions = undefined;
 }
 
-function cancelZoom(viewer) {
-  const zoomPromise = viewer._zoomPromise;
+function cancelZoom(widget) {
+  const zoomPromise = widget._zoomPromise;
   if (defined(zoomPromise)) {
-    clearZoom(viewer);
-    viewer._completeZoom(false);
+    clearZoom(widget);
+    widget._completeZoom(false);
   }
 }
 
@@ -1454,15 +1408,15 @@ CesiumWidget.prototype._postRender = function () {
   updateTrackedEntity(this);
 };
 
-function updateZoomTarget(viewer) {
-  const target = viewer._zoomTarget;
-  if (!defined(target) || viewer.scene.mode === SceneMode.MORPHING) {
+function updateZoomTarget(widget) {
+  const target = widget._zoomTarget;
+  if (!defined(target) || widget.scene.mode === SceneMode.MORPHING) {
     return;
   }
 
-  const scene = viewer.scene;
+  const scene = widget.scene;
   const camera = scene.camera;
-  const zoomOptions = defaultValue(viewer._zoomOptions, {});
+  const zoomOptions = defaultValue(widget._zoomOptions, {});
   let options;
   function zoomToBoundingSphere(boundingSphere) {
     // If offset was originally undefined then give it base value instead of empty object
@@ -1479,24 +1433,24 @@ function updateZoomTarget(viewer) {
       duration: zoomOptions.duration,
       maximumHeight: zoomOptions.maximumHeight,
       complete: function () {
-        viewer._completeZoom(true);
+        widget._completeZoom(true);
       },
       cancel: function () {
-        viewer._completeZoom(false);
+        widget._completeZoom(false);
       },
     };
 
-    if (viewer._zoomIsFlight) {
+    if (widget._zoomIsFlight) {
       camera.flyToBoundingSphere(target.boundingSphere, options);
     } else {
       camera.viewBoundingSphere(boundingSphere, zoomOptions.offset);
       camera.lookAtTransform(Matrix4.IDENTITY);
 
       // Finish the promise
-      viewer._completeZoom(true);
+      widget._completeZoom(true);
     }
 
-    clearZoom(viewer);
+    clearZoom(widget);
   }
 
   if (target instanceof TimeDynamicPointCloud) {
@@ -1527,20 +1481,20 @@ function updateZoomTarget(viewer) {
       duration: zoomOptions.duration,
       maximumHeight: zoomOptions.maximumHeight,
       complete: function () {
-        viewer._completeZoom(true);
+        widget._completeZoom(true);
       },
       cancel: function () {
-        viewer._completeZoom(false);
+        widget._completeZoom(false);
       },
     };
 
-    if (viewer._zoomIsFlight) {
+    if (widget._zoomIsFlight) {
       camera.flyTo(options);
     } else {
       camera.setView(options);
-      viewer._completeZoom(true);
+      widget._completeZoom(true);
     }
-    clearZoom(viewer);
+    clearZoom(widget);
     return;
   }
 
@@ -1548,7 +1502,7 @@ function updateZoomTarget(viewer) {
 
   const boundingSpheres = [];
   for (let i = 0, len = entities.length; i < len; i++) {
-    const state = viewer._dataSourceDisplay.getBoundingSphere(
+    const state = widget._dataSourceDisplay.getBoundingSphere(
       entities[i],
       false,
       boundingSphereScratch,
@@ -1562,43 +1516,43 @@ function updateZoomTarget(viewer) {
   }
 
   if (boundingSpheres.length === 0) {
-    cancelZoom(viewer);
+    cancelZoom(widget);
     return;
   }
 
   // Stop tracking the current entity.
-  viewer.trackedEntity = undefined;
+  widget.trackedEntity = undefined;
 
   const boundingSphere = BoundingSphere.fromBoundingSpheres(boundingSpheres);
 
-  if (!viewer._zoomIsFlight) {
+  if (!widget._zoomIsFlight) {
     camera.viewBoundingSphere(boundingSphere, zoomOptions.offset);
     camera.lookAtTransform(Matrix4.IDENTITY);
-    clearZoom(viewer);
-    viewer._completeZoom(true);
+    clearZoom(widget);
+    widget._completeZoom(true);
   } else {
-    clearZoom(viewer);
+    clearZoom(widget);
     camera.flyToBoundingSphere(boundingSphere, {
       duration: zoomOptions.duration,
       maximumHeight: zoomOptions.maximumHeight,
       complete: function () {
-        viewer._completeZoom(true);
+        widget._completeZoom(true);
       },
       cancel: function () {
-        viewer._completeZoom(false);
+        widget._completeZoom(false);
       },
       offset: zoomOptions.offset,
     });
   }
 }
 
-function updateTrackedEntity(viewer) {
-  if (!viewer._needTrackedEntityUpdate) {
+function updateTrackedEntity(widget) {
+  if (!widget._needTrackedEntityUpdate) {
     return;
   }
 
-  const trackedEntity = viewer._trackedEntity;
-  const currentTime = viewer.clock.currentTime;
+  const trackedEntity = widget._trackedEntity;
+  const currentTime = widget.clock.currentTime;
 
   //Verify we have a current position at this time. This is only triggered if a position
   //has become undefined after trackedEntity is set but before the boundingSphere has been
@@ -1612,9 +1566,9 @@ function updateTrackedEntity(viewer) {
     return;
   }
 
-  const scene = viewer.scene;
+  const scene = widget.scene;
 
-  const state = viewer._dataSourceDisplay.getBoundingSphere(
+  const state = widget._dataSourceDisplay.getBoundingSphere(
     trackedEntity,
     false,
     boundingSphereScratch,
@@ -1640,9 +1594,9 @@ function updateTrackedEntity(viewer) {
 
   const bs =
     state !== BoundingSphereState.FAILED ? boundingSphereScratch : undefined;
-  viewer._entityView = new EntityView(trackedEntity, scene, scene.ellipsoid);
-  viewer._entityView.update(currentTime, bs);
-  viewer._needTrackedEntityUpdate = false;
+  widget._entityView = new EntityView(trackedEntity, scene, scene.ellipsoid);
+  widget._entityView.update(currentTime, bs);
+  widget._needTrackedEntityUpdate = false;
 }
 
 export default CesiumWidget;
