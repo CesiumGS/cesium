@@ -97,8 +97,27 @@ Object.defineProperties(GltfMeshPrimitiveGpmLoader.prototype, {
       return this._cacheKey;
     },
   },
+
   /**
-   * The parsed structural metadata
+   * The parsed GPM extension information from the mesh primitive
+   *
+   * @memberof GltfMeshPrimitiveGpmLoader.prototype
+   *
+   * @type {MeshPrimitiveGpmLocal}
+   * @readonly
+   * @private
+   */
+  meshPrimitiveGpmLocal: {
+    get: function () {
+      return this._meshPrimitiveGpmLocal;
+    },
+  },
+
+  /**
+   * Returns the result of converting the parsed 'MeshPrimitiveGpmLocal'
+   * into a 'StructuralMetadata'.
+   *
+   * Some details about the translation are intentionally not specified here.
    *
    * @memberof GltfMeshPrimitiveGpmLoader.prototype
    *
