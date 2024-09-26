@@ -42,7 +42,8 @@ function FrameRateMonitor(options) {
   this._scene = options.scene;
 
   /**
-   * Gets or sets the length of the sliding window over which to compute the average frame rate, in seconds.
+   * Gets or sets the length of the sliding window over which to compute the average frame rate, in seconds, for the
+   * purpose of calculating if the frame rate is lower or higher than the minimum frame rate threshold.
    * @type {number}
    */
   this.samplingWindow = defaultValue(
@@ -51,7 +52,8 @@ function FrameRateMonitor(options) {
   );
 
   /**
-   * Gets or sets the length of the sliding window over which to compute the average frame rate, in seconds.
+   * Gets or sets the length of the sliding window over which to compute the average frame rate, in number of frame,
+   * for the purpose of calculating and displaying <code>averageFramesPerSecond</code>.
    * @type {number}
    */
   this.averageFrameRateWindow = defaultValue(
