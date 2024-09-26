@@ -210,8 +210,10 @@ InstancingPipelineStage.process = function (renderResources, node, frameState) {
   renderResources.uniformMap = combine(uniformMap, renderResources.uniformMap);
 
   renderResources.instanceCount = count;
-  for (let i = 0; i < instancingVertexAttributes.length; i++) {
-    instancingVertexAttributes[i].instanceCount = count;
+
+  const instancingVertexAttributesLength = instancingVertexAttributes.length;
+  for (let i = 0; i < instancingVertexAttributesLength; i++) {
+    renderResources.attributes.push(instancingVertexAttributes[i]);
   }
 };
 

@@ -1453,20 +1453,26 @@ Cesium3DTileStyle.prototype.getVariables = function () {
   let variables = [];
 
   if (defined(this.color) && defined(this.color.getVariables)) {
-    for (let i = 0; i < this.color.getVariables().length; i++) {
-      variables.push(this.color.getVariables()[i]);
+    const colorVariables = this.color.getVariables();
+    const n = colorVariables.length;
+    for (let i = 0; i < n; i++) {
+      variables.push(colorVariables[i]);
     }
   }
 
   if (defined(this.show) && defined(this.show.getVariables)) {
-    for (let i = 0; i < this.show.getVariables().length; i++) {
-      variables.push(this.show.getVariables()[i]);
+    const showVariables = this.show.getVariables();
+    const n = showVariables.length;
+    for (let i = 0; i < n; i++) {
+      variables.push(showVariables[i]);
     }
   }
 
   if (defined(this.pointSize) && defined(this.pointSize.getVariables)) {
-    for (let i = 0; i < this.pointSize.getVariables().length; i++) {
-      variables.push(this.pointSize.getVariables()[i]);
+    const pointSizeVariables = this.pointSize.getVariables();
+    const n = pointSizeVariables.length;
+    for (let i = 0; i < n; i++) {
+      variables.push(pointSizeVariables[i]);
     }
   }
 
