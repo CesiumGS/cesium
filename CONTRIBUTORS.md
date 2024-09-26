@@ -412,3 +412,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [Adam Wirth](https://github.com/adamwirth)
 - [Javier Sanchez](https://github.com/jvrjsanchez)
 - [Jérôme Fayot](https://github.com/jfayot)
+- [Kirn Kim](https://github.com/squrki)
