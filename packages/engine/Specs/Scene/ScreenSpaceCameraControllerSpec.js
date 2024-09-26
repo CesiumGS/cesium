@@ -22,6 +22,7 @@ import {
 import createCamera from "../../../../Specs/createCamera.js";
 import createCanvas from "../../../../Specs/createCanvas.js";
 import DomEventSimulator from "../../../../Specs/DomEventSimulator.js";
+import Event from "../../Source/Core/Event.js";
 
 describe("Scene/ScreenSpaceCameraController", function () {
   let usePointerEvents;
@@ -41,6 +42,7 @@ describe("Scene/ScreenSpaceCameraController", function () {
     this.screenSpaceCameraController = undefined;
     this.cameraUnderground = false;
     this.globeHeight = 0.0;
+    this.preUpdate = new Event();
   }
 
   function MockGlobe(ellipsoid) {
