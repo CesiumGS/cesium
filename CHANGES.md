@@ -1,6 +1,7 @@
 # Change Log
 
 ### 1.122 - 2024-10-01
+- Fix JulianDate to always generate valid ISO strings for fractional milliseconds [#11507](https://github.com/CesiumGS/cesium/issues/11507)
 
 #### @cesium/engine
 
