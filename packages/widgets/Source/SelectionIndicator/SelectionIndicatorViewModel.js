@@ -1,6 +1,5 @@
 import {
   Cartesian2,
-  defaultValue,
   defined,
   DeveloperError,
   EasingFunction,
@@ -43,7 +42,7 @@ function SelectionIndicatorViewModel(
   this._screenPositionX = offScreen;
   this._screenPositionY = offScreen;
   this._tweens = scene.tweens;
-  this._container = defaultValue(container, document.body);
+  this._container = container ?? document.body;
   this._selectionIndicatorElement = selectionIndicatorElement;
   this._scale = 1;
 

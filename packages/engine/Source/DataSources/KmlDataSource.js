@@ -401,10 +401,8 @@ function loadXmlFromZip(entry, uriResolver) {
 }
 
 function loadDataUriFromZip(entry, uriResolver) {
-  const mimeType = defaultValue(
-    MimeTypes.detectFromFilename(entry.filename),
-    "application/octet-stream"
-  );
+  const mimeType =
+    MimeTypes.detectFromFilename(entry.filename) ?? "application/octet-stream";
   return Promise.resolve(entry.getData(new zip.Data64URIWriter(mimeType))).then(
     function (dataUri) {
       uriResolver[entry.filename] = dataUri;
@@ -851,8 +849,8 @@ function getIconHref(
     const palette = href.charAt(21);
 
     // Get the icon number
-    let x = defaultValue(queryNumericValue(iconNode, "x", namespaces.gx), 0);
-    let y = defaultValue(queryNumericValue(iconNode, "y", namespaces.gx), 0);
+    let x = queryNumericValue(iconNode, "x", namespaces.gx) ?? 0;
+    let y = queryNumericValue(iconNode, "y", namespaces.gx) ?? 0;
     x = Math.min(x / 32, 7);
     y = 7 - Math.min(y / 32, 7);
     const iconNum = 8 * y + x;
