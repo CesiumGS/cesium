@@ -579,6 +579,7 @@ function handleZoom(
 
   let fpsMultiplier = 1;
   const fps = object.frameRateMonitor.averageFramesPerSecond;
+  // we set the ideal browser refresh rate to 30hz
   if (fps) {
     fpsMultiplier = 30 / fps;
   }
