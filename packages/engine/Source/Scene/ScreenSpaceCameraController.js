@@ -578,7 +578,7 @@ function handleZoom(
   const minDistance = distanceMeasure - minHeight;
 
   let fpsMultiplier = 1;
-  const fps = object.frameRateMonitor.lastFramesPerSecond;
+  const fps = object.frameRateMonitor.averageFramesPerSecond;
   if (fps) {
     fpsMultiplier = 30 / fps;
   }
