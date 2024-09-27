@@ -180,18 +180,18 @@ function update(frustum) {
   }
 
   //>>includeStart('debug', pragmas.debug);
-  if (frustum.fov < 0 || frustum.fov >= Math.PI) {
-    throw new DeveloperError("fov must be in the range [0, PI).");
-  }
+  Check.typeOf.number.greaterThanOrEquals("fov", frustum.fov, 0.0);
+  Check.typeOf.number.lessThan("fov", frustum.fov, Math.PI);
 
-  if (frustum.aspectRatio < 0) {
-    throw new DeveloperError("aspectRatio must be positive.");
-  }
+  Check.typeOf.number.greaterThanOrEquals(
+    "aspectRatio",
+    frustum.aspectRatio,
+    0.0
+  );
 
-  if (frustum.near < 0 || frustum.near > frustum.far) {
-    throw new DeveloperError(
-      "near must be greater than zero and less than far."
-    );
+  Check.typeOf.number.greaterThanOrEquals("near", frustum.near, 0.0);
+  if (frustum.near > frustum.far) {
+    throw new DeveloperError("near must be less than far.");
   }
   //>>includeEnd('debug');
 

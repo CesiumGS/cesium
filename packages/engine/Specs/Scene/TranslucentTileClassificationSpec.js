@@ -49,9 +49,9 @@ describe(
       scene.render(); // generate globeDepth.framebuffer
 
       context = scene.context;
-      passState = scene._defaultView.passState;
-      if (defined(scene._defaultView.globeDepth)) {
-        globeDepthFramebuffer = scene._defaultView.globeDepth.framebuffer;
+      passState = scene.defaultView.passState;
+      if (defined(scene.defaultView.globeDepth)) {
+        globeDepthFramebuffer = scene.defaultView.globeDepth.framebuffer;
       }
 
       ellipsoid = Ellipsoid.WGS84;
@@ -283,7 +283,7 @@ describe(
     }
 
     function executeCommand(command, scene, passState) {
-      command.execute(scene._context, passState);
+      command.execute(scene.context, passState);
     }
 
     it("draws translucent commands into a buffer for depth", function () {

@@ -1875,9 +1875,7 @@ const scratchOccluderBoundingSphere = new BoundingSphere();
 let scratchOccluder;
 /**
  * Get the central body occluder for the scene.
- *
- * TODO: The occluder is the top-level globe. When we add
- *       support for multiple central bodies, this should be the closest one.
+ * Assumes only one central body occluder, the top-level globe.
  *
  * @param {Scene} scene
  * @returns {Occluder|undefined}
@@ -2008,14 +2006,14 @@ Scene.prototype.updateFrameState = function () {
  * Check whether a draw command will render anything visible in the current Scene,
  * based on its bounding volume.
  *
- * @param {DrawCommand} [command] The draw command
  * @param {CullingVolume} cullingVolume The culling volume of the current Scene.
+ * @param {DrawCommand} [command] The draw command
  * @param {Occluder} [occluder] An occluder that may be in front of the command's bounding volume.
  * @returns {boolean} <code>true</code> if the command's bounding volume is visible in the scene.
  *
  * @private
  */
-Scene.prototype.isVisible = function (command, cullingVolume, occluder) {
+Scene.prototype.isVisible = function (cullingVolume, command, occluder) {
   if (!defined(command)) {
     return false;
   }
@@ -2912,7 +2910,7 @@ function insertShadowCastCommands(scene, commandList, shadowMap) {
     if (
       !command.castShadows ||
       shadowedPasses.indexOf(command.pass) < 0 ||
-      !scene.isVisible(command, shadowMapCullingVolume)
+      !scene.isVisible(shadowMapCullingVolume, command)
     ) {
       continue;
     }
@@ -2928,7 +2926,7 @@ function insertShadowCastCommands(scene, commandList, shadowMap) {
       // Loop over cascades from largest to smallest
       for (let j = numberOfPasses - 1; j >= 0; --j) {
         const cascadeVolume = passes[j].cullingVolume;
-        if (scene.isVisible(command, cascadeVolume)) {
+        if (scene.isVisible(cascadeVolume, command)) {
           passes[j].commandList.push(command);
           wasVisible = true;
         } else if (wasVisible) {
@@ -3408,13 +3406,13 @@ Scene.prototype.updateEnvironment = function () {
     defined(environmentState.skyAtmosphereCommand) &&
     environmentState.isReadyForAtmosphere;
   environmentState.isSunVisible = this.isVisible(
-    environmentState.sunDrawCommand,
     cullingVolume,
+    environmentState.sunDrawCommand,
     occluder
   );
   environmentState.isMoonVisible = this.isVisible(
-    environmentState.moonCommand,
     cullingVolume,
+    environmentState.moonCommand,
     occluder
   );
 

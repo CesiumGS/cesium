@@ -34,18 +34,21 @@ function getDepthOnlyShaderProgram(context, shaderProgram) {
   const usesLogDepth = fs.defines.indexOf("LOG_DEPTH") >= 0;
 
   if (!writesDepthOrDiscards && !usesLogDepth) {
-    const source =
-      "void main() \n" + "{ \n" + "    out_FragColor = vec4(1.0); \n" + "} \n";
+    const source = `void main()
+{
+    out_FragColor = vec4(1.0);
+}
+`;
     fs = new ShaderSource({
       sources: [source],
     });
   } else if (!writesDepthOrDiscards && usesLogDepth) {
-    const source =
-      "void main() \n" +
-      "{ \n" +
-      "    out_FragColor = vec4(1.0); \n" +
-      "    czm_writeLogDepth(); \n" +
-      "} \n";
+    const source = `void main()
+{
+    out_FragColor = vec4(1.0);
+    czm_writeLogDepth();
+}
+`;
     fs = new ShaderSource({
       defines: ["LOG_DEPTH"],
       sources: [source],
@@ -169,13 +172,14 @@ function getLogDepthShaderProgram(context, shaderProgram) {
       sources[i] = ShaderSource.replaceMain(sources[i], "czm_log_depth_main");
     }
 
-    const logMain =
-      "\n\n" +
-      "void main() \n" +
-      "{ \n" +
-      "    czm_log_depth_main(); \n" +
-      "    czm_vertexLogDepth(); \n" +
-      "} \n";
+    const logMain = `
+
+void main()
+{
+    czm_log_depth_main();
+    czm_vertexLogDepth();
+}
+`;
     sources.push(logMain);
   }
 
@@ -199,13 +203,13 @@ function getLogDepthShaderProgram(context, shaderProgram) {
       sources[i] = ShaderSource.replaceMain(sources[i], "czm_log_depth_main");
     }
 
-    logSource +=
-      "\n" +
-      "void main() \n" +
-      "{ \n" +
-      "    czm_log_depth_main(); \n" +
-      "    czm_writeLogDepth(); \n" +
-      "} \n";
+    logSource = `
+void main()
+{
+    czm_log_depth_main();
+    czm_writeLogDepth();
+}
+`;
   }
 
   sources.push(logSource);

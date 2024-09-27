@@ -342,7 +342,7 @@ View.prototype.createPotentiallyVisibleSet = function (scene) {
       let commandFar;
 
       if (defined(boundingVolume)) {
-        if (!scene.isVisible(command, cullingVolume, occluder)) {
+        if (!scene.isVisible(cullingVolume, command, occluder)) {
           continue;
         }
 
