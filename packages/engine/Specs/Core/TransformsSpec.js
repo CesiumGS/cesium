@@ -30,24 +30,24 @@ describe("Core/Transforms", function () {
       origin.x,
       origin.y,
       origin.z,
-      1.0
+      1.0,
     );
 
     const returnedResult = Transforms.eastNorthUpToFixedFrame(
       origin,
-      Ellipsoid.UNIT_SPHERE
+      Ellipsoid.UNIT_SPHERE,
     );
     expect(Matrix4.getColumn(returnedResult, 0, new Cartesian4())).toEqual(
-      Cartesian4.UNIT_Y
+      Cartesian4.UNIT_Y,
     ); // east
     expect(Matrix4.getColumn(returnedResult, 1, new Cartesian4())).toEqual(
-      Cartesian4.UNIT_Z
+      Cartesian4.UNIT_Z,
     ); // north
     expect(Matrix4.getColumn(returnedResult, 2, new Cartesian4())).toEqual(
-      Cartesian4.UNIT_X
+      Cartesian4.UNIT_X,
     ); // up
     expect(Matrix4.getColumn(returnedResult, 3, new Cartesian4())).toEqual(
-      expectedTranslation
+      expectedTranslation,
     ); // translation
   });
 
@@ -57,27 +57,27 @@ describe("Core/Transforms", function () {
       origin.x,
       origin.y,
       origin.z,
-      1.0
+      1.0,
     );
     const result = new Matrix4(2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2);
 
     const returnedResult = Transforms.eastNorthUpToFixedFrame(
       origin,
       Ellipsoid.UNIT_SPHERE,
-      result
+      result,
     );
     expect(result).toBe(returnedResult);
     expect(Matrix4.getColumn(returnedResult, 0, new Cartesian4())).toEqual(
-      Cartesian4.UNIT_Y
+      Cartesian4.UNIT_Y,
     ); // east
     expect(Matrix4.getColumn(returnedResult, 1, new Cartesian4())).toEqual(
-      Cartesian4.UNIT_Z
+      Cartesian4.UNIT_Z,
     ); // north
     expect(Matrix4.getColumn(returnedResult, 2, new Cartesian4())).toEqual(
-      Cartesian4.UNIT_X
+      Cartesian4.UNIT_X,
     ); // up
     expect(Matrix4.getColumn(returnedResult, 3, new Cartesian4())).toEqual(
-      expectedTranslation
+      expectedTranslation,
     ); // translation
   });
 
@@ -87,27 +87,27 @@ describe("Core/Transforms", function () {
       northPole.x,
       northPole.y,
       northPole.z,
-      1.0
+      1.0,
     );
 
     const result = new Matrix4();
     const returnedResult = Transforms.eastNorthUpToFixedFrame(
       northPole,
       Ellipsoid.UNIT_SPHERE,
-      result
+      result,
     );
     expect(returnedResult).toBe(result);
     expect(Matrix4.getColumn(returnedResult, 0, new Cartesian4())).toEqual(
-      Cartesian4.UNIT_Y
+      Cartesian4.UNIT_Y,
     ); // east
     expect(Matrix4.getColumn(returnedResult, 1, new Cartesian4())).toEqual(
-      negativeX
+      negativeX,
     ); // north
     expect(Matrix4.getColumn(returnedResult, 2, new Cartesian4())).toEqual(
-      Cartesian4.UNIT_Z
+      Cartesian4.UNIT_Z,
     ); // up
     expect(Matrix4.getColumn(returnedResult, 3, new Cartesian4())).toEqual(
-      expectedTranslation
+      expectedTranslation,
     ); // translation
   });
 
@@ -117,24 +117,24 @@ describe("Core/Transforms", function () {
       southPole.x,
       southPole.y,
       southPole.z,
-      1.0
+      1.0,
     );
 
     const returnedResult = Transforms.eastNorthUpToFixedFrame(
       southPole,
-      Ellipsoid.UNIT_SPHERE
+      Ellipsoid.UNIT_SPHERE,
     );
     expect(Matrix4.getColumn(returnedResult, 0, new Cartesian4())).toEqual(
-      Cartesian4.UNIT_Y
+      Cartesian4.UNIT_Y,
     ); // east
     expect(Matrix4.getColumn(returnedResult, 1, new Cartesian4())).toEqual(
-      Cartesian4.UNIT_X
+      Cartesian4.UNIT_X,
     ); // north
     expect(Matrix4.getColumn(returnedResult, 2, new Cartesian4())).toEqual(
-      negativeZ
+      negativeZ,
     ); // up
     expect(Matrix4.getColumn(returnedResult, 3, new Cartesian4())).toEqual(
-      expectedTranslation
+      expectedTranslation,
     ); // translation
   });
 
@@ -144,19 +144,19 @@ describe("Core/Transforms", function () {
 
     const returnedResult = Transforms.eastNorthUpToFixedFrame(
       origin,
-      Ellipsoid.WGS84
+      Ellipsoid.WGS84,
     );
     expect(Matrix4.getColumn(returnedResult, 0, new Cartesian4())).toEqual(
-      Cartesian4.UNIT_Y
+      Cartesian4.UNIT_Y,
     ); // east
     expect(Matrix4.getColumn(returnedResult, 1, new Cartesian4())).toEqual(
-      negativeX
+      negativeX,
     ); // north
     expect(Matrix4.getColumn(returnedResult, 2, new Cartesian4())).toEqual(
-      Cartesian4.UNIT_Z
+      Cartesian4.UNIT_Z,
     ); // up
     expect(Matrix4.getColumn(returnedResult, 3, new Cartesian4())).toEqual(
-      expectedTranslation
+      expectedTranslation,
     ); // translation
   });
 
@@ -166,24 +166,24 @@ describe("Core/Transforms", function () {
       origin.x,
       origin.y,
       origin.z,
-      1.0
+      1.0,
     );
 
     const returnedResult = Transforms.northEastDownToFixedFrame(
       origin,
-      Ellipsoid.UNIT_SPHERE
+      Ellipsoid.UNIT_SPHERE,
     );
     expect(Matrix4.getColumn(returnedResult, 0, new Cartesian4())).toEqual(
-      Cartesian4.UNIT_Z
+      Cartesian4.UNIT_Z,
     ); // north
     expect(Matrix4.getColumn(returnedResult, 1, new Cartesian4())).toEqual(
-      Cartesian4.UNIT_Y
+      Cartesian4.UNIT_Y,
     ); // east
     expect(Matrix4.getColumn(returnedResult, 2, new Cartesian4())).toEqual(
-      negativeX
+      negativeX,
     ); // down
     expect(Matrix4.getColumn(returnedResult, 3, new Cartesian4())).toEqual(
-      expectedTranslation
+      expectedTranslation,
     ); // translation
   });
 
@@ -193,27 +193,27 @@ describe("Core/Transforms", function () {
       origin.x,
       origin.y,
       origin.z,
-      1.0
+      1.0,
     );
     const result = new Matrix4(2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2);
 
     const returnedResult = Transforms.northEastDownToFixedFrame(
       origin,
       Ellipsoid.UNIT_SPHERE,
-      result
+      result,
     );
     expect(result).toBe(returnedResult);
     expect(Matrix4.getColumn(returnedResult, 0, new Cartesian4())).toEqual(
-      Cartesian4.UNIT_Z
+      Cartesian4.UNIT_Z,
     ); // north
     expect(Matrix4.getColumn(returnedResult, 1, new Cartesian4())).toEqual(
-      Cartesian4.UNIT_Y
+      Cartesian4.UNIT_Y,
     ); // east
     expect(Matrix4.getColumn(returnedResult, 2, new Cartesian4())).toEqual(
-      negativeX
+      negativeX,
     ); // down
     expect(Matrix4.getColumn(returnedResult, 3, new Cartesian4())).toEqual(
-      expectedTranslation
+      expectedTranslation,
     ); // translation
   });
 
@@ -223,27 +223,27 @@ describe("Core/Transforms", function () {
       northPole.x,
       northPole.y,
       northPole.z,
-      1.0
+      1.0,
     );
 
     const result = new Matrix4();
     const returnedResult = Transforms.northEastDownToFixedFrame(
       northPole,
       Ellipsoid.UNIT_SPHERE,
-      result
+      result,
     );
     expect(returnedResult).toBe(result);
     expect(Matrix4.getColumn(returnedResult, 0, new Cartesian4())).toEqual(
-      negativeX
+      negativeX,
     ); // north
     expect(Matrix4.getColumn(returnedResult, 1, new Cartesian4())).toEqual(
-      Cartesian4.UNIT_Y
+      Cartesian4.UNIT_Y,
     ); // east
     expect(Matrix4.getColumn(returnedResult, 2, new Cartesian4())).toEqual(
-      negativeZ
+      negativeZ,
     ); // down
     expect(Matrix4.getColumn(returnedResult, 3, new Cartesian4())).toEqual(
-      expectedTranslation
+      expectedTranslation,
     ); // translation
   });
 
@@ -253,24 +253,24 @@ describe("Core/Transforms", function () {
       southPole.x,
       southPole.y,
       southPole.z,
-      1.0
+      1.0,
     );
 
     const returnedResult = Transforms.northEastDownToFixedFrame(
       southPole,
-      Ellipsoid.UNIT_SPHERE
+      Ellipsoid.UNIT_SPHERE,
     );
     expect(Matrix4.getColumn(returnedResult, 0, new Cartesian4())).toEqual(
-      Cartesian4.UNIT_X
+      Cartesian4.UNIT_X,
     ); // north
     expect(Matrix4.getColumn(returnedResult, 1, new Cartesian4())).toEqual(
-      Cartesian4.UNIT_Y
+      Cartesian4.UNIT_Y,
     ); // east
     expect(Matrix4.getColumn(returnedResult, 2, new Cartesian4())).toEqual(
-      Cartesian4.UNIT_Z
+      Cartesian4.UNIT_Z,
     ); // down
     expect(Matrix4.getColumn(returnedResult, 3, new Cartesian4())).toEqual(
-      expectedTranslation
+      expectedTranslation,
     ); // translation
   });
 
@@ -280,19 +280,19 @@ describe("Core/Transforms", function () {
 
     const returnedResult = Transforms.northEastDownToFixedFrame(
       origin,
-      Ellipsoid.UNIT_SPHERE
+      Ellipsoid.UNIT_SPHERE,
     );
     expect(Matrix4.getColumn(returnedResult, 0, new Cartesian4())).toEqual(
-      negativeX
+      negativeX,
     ); // north
     expect(Matrix4.getColumn(returnedResult, 1, new Cartesian4())).toEqual(
-      Cartesian4.UNIT_Y
+      Cartesian4.UNIT_Y,
     ); // east
     expect(Matrix4.getColumn(returnedResult, 2, new Cartesian4())).toEqual(
-      negativeZ
+      negativeZ,
     ); // down
     expect(Matrix4.getColumn(returnedResult, 3, new Cartesian4())).toEqual(
-      expectedTranslation
+      expectedTranslation,
     ); // translation
   });
 
@@ -302,24 +302,24 @@ describe("Core/Transforms", function () {
       origin.x,
       origin.y,
       origin.z,
-      1.0
+      1.0,
     );
 
     const returnedResult = Transforms.northUpEastToFixedFrame(
       origin,
-      Ellipsoid.UNIT_SPHERE
+      Ellipsoid.UNIT_SPHERE,
     );
     expect(Matrix4.getColumn(returnedResult, 0, new Cartesian4())).toEqual(
-      Cartesian4.UNIT_Z
+      Cartesian4.UNIT_Z,
     ); // north
     expect(Matrix4.getColumn(returnedResult, 1, new Cartesian4())).toEqual(
-      Cartesian4.UNIT_X
+      Cartesian4.UNIT_X,
     ); // up
     expect(Matrix4.getColumn(returnedResult, 2, new Cartesian4())).toEqual(
-      Cartesian4.UNIT_Y
+      Cartesian4.UNIT_Y,
     ); // east
     expect(Matrix4.getColumn(returnedResult, 3, new Cartesian4())).toEqual(
-      expectedTranslation
+      expectedTranslation,
     ); // translation
   });
 
@@ -329,27 +329,27 @@ describe("Core/Transforms", function () {
       origin.x,
       origin.y,
       origin.z,
-      1.0
+      1.0,
     );
     const result = new Matrix4(2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2);
 
     const returnedResult = Transforms.northUpEastToFixedFrame(
       origin,
       Ellipsoid.UNIT_SPHERE,
-      result
+      result,
     );
     expect(result).toBe(returnedResult);
     expect(Matrix4.getColumn(returnedResult, 0, new Cartesian4())).toEqual(
-      Cartesian4.UNIT_Z
+      Cartesian4.UNIT_Z,
     ); // north
     expect(Matrix4.getColumn(returnedResult, 1, new Cartesian4())).toEqual(
-      Cartesian4.UNIT_X
+      Cartesian4.UNIT_X,
     ); // up
     expect(Matrix4.getColumn(returnedResult, 2, new Cartesian4())).toEqual(
-      Cartesian4.UNIT_Y
+      Cartesian4.UNIT_Y,
     ); // east
     expect(Matrix4.getColumn(returnedResult, 3, new Cartesian4())).toEqual(
-      expectedTranslation
+      expectedTranslation,
     ); // translation
   });
 
@@ -359,27 +359,27 @@ describe("Core/Transforms", function () {
       northPole.x,
       northPole.y,
       northPole.z,
-      1.0
+      1.0,
     );
 
     const result = new Matrix4();
     const returnedResult = Transforms.northUpEastToFixedFrame(
       northPole,
       Ellipsoid.UNIT_SPHERE,
-      result
+      result,
     );
     expect(returnedResult).toBe(result);
     expect(Matrix4.getColumn(returnedResult, 0, new Cartesian4())).toEqual(
-      negativeX
+      negativeX,
     ); // north
     expect(Matrix4.getColumn(returnedResult, 1, new Cartesian4())).toEqual(
-      Cartesian4.UNIT_Z
+      Cartesian4.UNIT_Z,
     ); // up
     expect(Matrix4.getColumn(returnedResult, 2, new Cartesian4())).toEqual(
-      Cartesian4.UNIT_Y
+      Cartesian4.UNIT_Y,
     ); // east
     expect(Matrix4.getColumn(returnedResult, 3, new Cartesian4())).toEqual(
-      expectedTranslation
+      expectedTranslation,
     ); // translation
   });
 
@@ -389,24 +389,24 @@ describe("Core/Transforms", function () {
       southPole.x,
       southPole.y,
       southPole.z,
-      1.0
+      1.0,
     );
 
     const returnedResult = Transforms.northUpEastToFixedFrame(
       southPole,
-      Ellipsoid.UNIT_SPHERE
+      Ellipsoid.UNIT_SPHERE,
     );
     expect(Matrix4.getColumn(returnedResult, 0, new Cartesian4())).toEqual(
-      Cartesian4.UNIT_X
+      Cartesian4.UNIT_X,
     ); // north
     expect(Matrix4.getColumn(returnedResult, 1, new Cartesian4())).toEqual(
-      negativeZ
+      negativeZ,
     ); // up
     expect(Matrix4.getColumn(returnedResult, 2, new Cartesian4())).toEqual(
-      Cartesian4.UNIT_Y
+      Cartesian4.UNIT_Y,
     ); // east
     expect(Matrix4.getColumn(returnedResult, 3, new Cartesian4())).toEqual(
-      expectedTranslation
+      expectedTranslation,
     ); // translation
   });
 
@@ -416,19 +416,19 @@ describe("Core/Transforms", function () {
 
     const returnedResult = Transforms.northUpEastToFixedFrame(
       origin,
-      Ellipsoid.UNIT_SPHERE
+      Ellipsoid.UNIT_SPHERE,
     );
     expect(Matrix4.getColumn(returnedResult, 0, new Cartesian4())).toEqual(
-      negativeX
+      negativeX,
     ); // north
     expect(Matrix4.getColumn(returnedResult, 1, new Cartesian4())).toEqual(
-      Cartesian4.UNIT_Z
+      Cartesian4.UNIT_Z,
     ); // up
     expect(Matrix4.getColumn(returnedResult, 2, new Cartesian4())).toEqual(
-      Cartesian4.UNIT_Y
+      Cartesian4.UNIT_Y,
     ); // east
     expect(Matrix4.getColumn(returnedResult, 3, new Cartesian4())).toEqual(
-      expectedTranslation
+      expectedTranslation,
     ); // translation
   });
 
@@ -438,24 +438,24 @@ describe("Core/Transforms", function () {
       origin.x,
       origin.y,
       origin.z,
-      1.0
+      1.0,
     );
 
     const returnedResult = Transforms.northWestUpToFixedFrame(
       origin,
-      Ellipsoid.UNIT_SPHERE
+      Ellipsoid.UNIT_SPHERE,
     );
     expect(Matrix4.getColumn(returnedResult, 0, new Cartesian4())).toEqual(
-      Cartesian4.UNIT_Z
+      Cartesian4.UNIT_Z,
     ); // north
     expect(Matrix4.getColumn(returnedResult, 1, new Cartesian4())).toEqual(
-      negativeY
+      negativeY,
     ); // west
     expect(Matrix4.getColumn(returnedResult, 2, new Cartesian4())).toEqual(
-      Cartesian4.UNIT_X
+      Cartesian4.UNIT_X,
     ); // up
     expect(Matrix4.getColumn(returnedResult, 3, new Cartesian4())).toEqual(
-      expectedTranslation
+      expectedTranslation,
     ); // translation
   });
 
@@ -465,27 +465,27 @@ describe("Core/Transforms", function () {
       origin.x,
       origin.y,
       origin.z,
-      1.0
+      1.0,
     );
     const result = new Matrix4(2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2);
 
     const returnedResult = Transforms.northWestUpToFixedFrame(
       origin,
       Ellipsoid.UNIT_SPHERE,
-      result
+      result,
     );
     expect(result).toBe(returnedResult);
     expect(Matrix4.getColumn(returnedResult, 0, new Cartesian4())).toEqual(
-      Cartesian4.UNIT_Z
+      Cartesian4.UNIT_Z,
     ); // north
     expect(Matrix4.getColumn(returnedResult, 1, new Cartesian4())).toEqual(
-      negativeY
+      negativeY,
     ); // west
     expect(Matrix4.getColumn(returnedResult, 2, new Cartesian4())).toEqual(
-      Cartesian4.UNIT_X
+      Cartesian4.UNIT_X,
     ); // up
     expect(Matrix4.getColumn(returnedResult, 3, new Cartesian4())).toEqual(
-      expectedTranslation
+      expectedTranslation,
     ); // translation
   });
 
@@ -495,27 +495,27 @@ describe("Core/Transforms", function () {
       northPole.x,
       northPole.y,
       northPole.z,
-      1.0
+      1.0,
     );
 
     const result = new Matrix4();
     const returnedResult = Transforms.northWestUpToFixedFrame(
       northPole,
       Ellipsoid.UNIT_SPHERE,
-      result
+      result,
     );
     expect(returnedResult).toBe(result);
     expect(Matrix4.getColumn(returnedResult, 0, new Cartesian4())).toEqual(
-      negativeX
+      negativeX,
     ); // north
     expect(Matrix4.getColumn(returnedResult, 1, new Cartesian4())).toEqual(
-      negativeY
+      negativeY,
     ); // west
     expect(Matrix4.getColumn(returnedResult, 2, new Cartesian4())).toEqual(
-      Cartesian4.UNIT_Z
+      Cartesian4.UNIT_Z,
     ); // up
     expect(Matrix4.getColumn(returnedResult, 3, new Cartesian4())).toEqual(
-      expectedTranslation
+      expectedTranslation,
     ); // translation
   });
 
@@ -525,24 +525,24 @@ describe("Core/Transforms", function () {
       southPole.x,
       southPole.y,
       southPole.z,
-      1.0
+      1.0,
     );
 
     const returnedResult = Transforms.northWestUpToFixedFrame(
       southPole,
-      Ellipsoid.UNIT_SPHERE
+      Ellipsoid.UNIT_SPHERE,
     );
     expect(Matrix4.getColumn(returnedResult, 0, new Cartesian4())).toEqual(
-      Cartesian4.UNIT_X
+      Cartesian4.UNIT_X,
     ); // north
     expect(Matrix4.getColumn(returnedResult, 1, new Cartesian4())).toEqual(
-      negativeY
+      negativeY,
     ); // west
     expect(Matrix4.getColumn(returnedResult, 2, new Cartesian4())).toEqual(
-      negativeZ
+      negativeZ,
     ); // up
     expect(Matrix4.getColumn(returnedResult, 3, new Cartesian4())).toEqual(
-      expectedTranslation
+      expectedTranslation,
     ); // translation
   });
 
@@ -552,19 +552,19 @@ describe("Core/Transforms", function () {
 
     const returnedResult = Transforms.northWestUpToFixedFrame(
       origin,
-      Ellipsoid.UNIT_SPHERE
+      Ellipsoid.UNIT_SPHERE,
     );
     expect(Matrix4.getColumn(returnedResult, 0, new Cartesian4())).toEqual(
-      negativeX
+      negativeX,
     ); // north
     expect(Matrix4.getColumn(returnedResult, 1, new Cartesian4())).toEqual(
-      negativeY
+      negativeY,
     ); // west
     expect(Matrix4.getColumn(returnedResult, 2, new Cartesian4())).toEqual(
-      Cartesian4.UNIT_Z
+      Cartesian4.UNIT_Z,
     ); // up
     expect(Matrix4.getColumn(returnedResult, 3, new Cartesian4())).toEqual(
-      expectedTranslation
+      expectedTranslation,
     ); // translation
   });
 
@@ -667,7 +667,7 @@ describe("Core/Transforms", function () {
       for (let i = 0; i < converterTab.length; i++) {
         const converterMatrix = converterTab[i].converter(
           position,
-          Ellipsoid.UNIT_SPHERE
+          Ellipsoid.UNIT_SPHERE,
         );
         const order = converterTab[i].order;
         // check translation
@@ -701,10 +701,8 @@ describe("Core/Transforms", function () {
 
     for (let i = 0; i < cartesianTab.length; i++) {
       const cartesian = cartesianTab[i];
-      const classicalEastNorthUpReferential = Transforms.eastNorthUpToFixedFrame(
-        cartesian,
-        Ellipsoid.UNIT_SPHERE
-      );
+      const classicalEastNorthUpReferential =
+        Transforms.eastNorthUpToFixedFrame(cartesian, Ellipsoid.UNIT_SPHERE);
       testAllLocalFrame(classicalEastNorthUpReferential, cartesian);
     }
   });
@@ -746,7 +744,7 @@ describe("Core/Transforms", function () {
     const hpr = new HeadingPitchRoll(heading, pitch, roll);
 
     const expectedRotation = Matrix3.fromQuaternion(
-      Quaternion.fromHeadingPitchRoll(hpr)
+      Quaternion.fromHeadingPitchRoll(hpr),
     );
     const expectedX = Matrix3.getColumn(expectedRotation, 0, new Cartesian3());
     const expectedY = Matrix3.getColumn(expectedRotation, 1, new Cartesian3());
@@ -759,19 +757,19 @@ describe("Core/Transforms", function () {
     const returnedResult = Transforms.headingPitchRollToFixedFrame(
       origin,
       hpr,
-      Ellipsoid.UNIT_SPHERE
+      Ellipsoid.UNIT_SPHERE,
     );
     const actualX = Cartesian3.fromCartesian4(
-      Matrix4.getColumn(returnedResult, 0, new Cartesian4())
+      Matrix4.getColumn(returnedResult, 0, new Cartesian4()),
     );
     const actualY = Cartesian3.fromCartesian4(
-      Matrix4.getColumn(returnedResult, 1, new Cartesian4())
+      Matrix4.getColumn(returnedResult, 1, new Cartesian4()),
     );
     const actualZ = Cartesian3.fromCartesian4(
-      Matrix4.getColumn(returnedResult, 2, new Cartesian4())
+      Matrix4.getColumn(returnedResult, 2, new Cartesian4()),
     );
     const actualTranslation = Cartesian3.fromCartesian4(
-      Matrix4.getColumn(returnedResult, 3, new Cartesian4())
+      Matrix4.getColumn(returnedResult, 3, new Cartesian4()),
     );
 
     expect(actualX).toEqual(expectedX);
@@ -788,7 +786,7 @@ describe("Core/Transforms", function () {
     const hpr = new HeadingPitchRoll(heading, pitch, roll);
 
     const expectedRotation = Matrix3.fromQuaternion(
-      Quaternion.fromHeadingPitchRoll(hpr)
+      Quaternion.fromHeadingPitchRoll(hpr),
     );
     const expectedX = Matrix3.getColumn(expectedRotation, 0, new Cartesian3());
     const expectedY = Matrix3.getColumn(expectedRotation, 1, new Cartesian3());
@@ -801,19 +799,19 @@ describe("Core/Transforms", function () {
     const returnedResult = Transforms.headingPitchRollToFixedFrame(
       origin,
       hpr,
-      Ellipsoid.UNIT_SPHERE
+      Ellipsoid.UNIT_SPHERE,
     );
     const actualX = Cartesian3.fromCartesian4(
-      Matrix4.getColumn(returnedResult, 0, new Cartesian4())
+      Matrix4.getColumn(returnedResult, 0, new Cartesian4()),
     );
     const actualY = Cartesian3.fromCartesian4(
-      Matrix4.getColumn(returnedResult, 1, new Cartesian4())
+      Matrix4.getColumn(returnedResult, 1, new Cartesian4()),
     );
     const actualZ = Cartesian3.fromCartesian4(
-      Matrix4.getColumn(returnedResult, 2, new Cartesian4())
+      Matrix4.getColumn(returnedResult, 2, new Cartesian4()),
     );
     const actualTranslation = Cartesian3.fromCartesian4(
-      Matrix4.getColumn(returnedResult, 3, new Cartesian4())
+      Matrix4.getColumn(returnedResult, 3, new Cartesian4()),
     );
 
     expect(actualX).toEqual(expectedX);
@@ -830,7 +828,7 @@ describe("Core/Transforms", function () {
     const hpr = new HeadingPitchRoll(heading, pitch, roll);
 
     const expectedRotation = Matrix3.fromQuaternion(
-      Quaternion.fromHeadingPitchRoll(hpr)
+      Quaternion.fromHeadingPitchRoll(hpr),
     );
     const expectedX = Matrix3.getColumn(expectedRotation, 0, new Cartesian3());
     const expectedY = Matrix3.getColumn(expectedRotation, 1, new Cartesian3());
@@ -844,19 +842,19 @@ describe("Core/Transforms", function () {
       origin,
       hpr,
       Ellipsoid.UNIT_SPHERE,
-      Transforms.eastNorthUpToFixedFrame
+      Transforms.eastNorthUpToFixedFrame,
     );
     const actualX = Cartesian3.fromCartesian4(
-      Matrix4.getColumn(returnedResult, 0, new Cartesian4())
+      Matrix4.getColumn(returnedResult, 0, new Cartesian4()),
     );
     const actualY = Cartesian3.fromCartesian4(
-      Matrix4.getColumn(returnedResult, 1, new Cartesian4())
+      Matrix4.getColumn(returnedResult, 1, new Cartesian4()),
     );
     const actualZ = Cartesian3.fromCartesian4(
-      Matrix4.getColumn(returnedResult, 2, new Cartesian4())
+      Matrix4.getColumn(returnedResult, 2, new Cartesian4()),
     );
     const actualTranslation = Cartesian3.fromCartesian4(
-      Matrix4.getColumn(returnedResult, 3, new Cartesian4())
+      Matrix4.getColumn(returnedResult, 3, new Cartesian4()),
     );
 
     expect(actualX).toEqual(expectedX);
@@ -873,7 +871,7 @@ describe("Core/Transforms", function () {
     const hpr = new HeadingPitchRoll(heading, pitch, roll);
 
     const expectedRotation = Matrix3.fromQuaternion(
-      Quaternion.fromHeadingPitchRoll(hpr)
+      Quaternion.fromHeadingPitchRoll(hpr),
     );
     const expectedX = Matrix3.getColumn(expectedRotation, 0, new Cartesian3());
     const expectedY = Matrix3.getColumn(expectedRotation, 1, new Cartesian3());
@@ -889,19 +887,19 @@ describe("Core/Transforms", function () {
       hpr,
       Ellipsoid.UNIT_SPHERE,
       Transforms.eastNorthUpToFixedFrame,
-      result
+      result,
     );
     const actualX = Cartesian3.fromCartesian4(
-      Matrix4.getColumn(returnedResult, 0, new Cartesian4())
+      Matrix4.getColumn(returnedResult, 0, new Cartesian4()),
     );
     const actualY = Cartesian3.fromCartesian4(
-      Matrix4.getColumn(returnedResult, 1, new Cartesian4())
+      Matrix4.getColumn(returnedResult, 1, new Cartesian4()),
     );
     const actualZ = Cartesian3.fromCartesian4(
-      Matrix4.getColumn(returnedResult, 2, new Cartesian4())
+      Matrix4.getColumn(returnedResult, 2, new Cartesian4()),
     );
     const actualTranslation = Cartesian3.fromCartesian4(
-      Matrix4.getColumn(returnedResult, 3, new Cartesian4())
+      Matrix4.getColumn(returnedResult, 3, new Cartesian4()),
     );
 
     expect(returnedResult).toBe(result);
@@ -919,17 +917,17 @@ describe("Core/Transforms", function () {
     const hpr = new HeadingPitchRoll(heading, pitch, roll);
 
     const expectedRotation = Matrix3.fromQuaternion(
-      Quaternion.fromHeadingPitchRoll(hpr)
+      Quaternion.fromHeadingPitchRoll(hpr),
     );
     const expectedEast = Matrix3.getColumn(
       expectedRotation,
       0,
-      new Cartesian3()
+      new Cartesian3(),
     ); // east
     const expectedNorth = Matrix3.getColumn(
       expectedRotation,
       1,
-      new Cartesian3()
+      new Cartesian3(),
     ); // north
     const expectedUp = Matrix3.getColumn(expectedRotation, 2, new Cartesian3()); // up
 
@@ -937,19 +935,19 @@ describe("Core/Transforms", function () {
       expectedEast.z,
       expectedEast.x,
       expectedEast.y,
-      expectedEast
+      expectedEast,
     );
     Cartesian3.fromElements(
       expectedNorth.z,
       expectedNorth.x,
       expectedNorth.y,
-      expectedNorth
+      expectedNorth,
     );
     Cartesian3.fromElements(
       expectedUp.z,
       expectedUp.x,
       expectedUp.y,
-      expectedUp
+      expectedUp,
     );
 
     const result = new Matrix4();
@@ -958,19 +956,19 @@ describe("Core/Transforms", function () {
       hpr,
       Ellipsoid.UNIT_SPHERE,
       Transforms.eastNorthUpToFixedFrame,
-      result
+      result,
     );
     let actualEast = Cartesian3.fromCartesian4(
-      Matrix4.getColumn(returnedResult, 0, new Cartesian4())
+      Matrix4.getColumn(returnedResult, 0, new Cartesian4()),
     ); // east
     let actualNorth = Cartesian3.fromCartesian4(
-      Matrix4.getColumn(returnedResult, 1, new Cartesian4())
+      Matrix4.getColumn(returnedResult, 1, new Cartesian4()),
     ); // north
     let actualUp = Cartesian3.fromCartesian4(
-      Matrix4.getColumn(returnedResult, 2, new Cartesian4())
+      Matrix4.getColumn(returnedResult, 2, new Cartesian4()),
     ); // up
     let actualTranslation = Cartesian3.fromCartesian4(
-      Matrix4.getColumn(returnedResult, 3, new Cartesian4())
+      Matrix4.getColumn(returnedResult, 3, new Cartesian4()),
     );
 
     expect(returnedResult).toBe(result);
@@ -981,32 +979,32 @@ describe("Core/Transforms", function () {
 
     const UNEFixedFrameConverter = Transforms.localFrameToFixedFrameGenerator(
       "west",
-      "south"
+      "south",
     ); // up north east
     returnedResult = Transforms.headingPitchRollToFixedFrame(
       origin,
       hpr,
       Ellipsoid.UNIT_SPHERE,
       UNEFixedFrameConverter,
-      result
+      result,
     );
     actualEast = Cartesian3.fromCartesian4(
-      Matrix4.getColumn(returnedResult, 0, new Cartesian4())
+      Matrix4.getColumn(returnedResult, 0, new Cartesian4()),
     ); // east
     actualEast.y = -actualEast.y;
     actualEast.z = -actualEast.z;
     actualNorth = Cartesian3.fromCartesian4(
-      Matrix4.getColumn(returnedResult, 1, new Cartesian4())
+      Matrix4.getColumn(returnedResult, 1, new Cartesian4()),
     ); // north
     actualNorth.y = -actualNorth.y;
     actualNorth.z = -actualNorth.z;
     actualUp = Cartesian3.fromCartesian4(
-      Matrix4.getColumn(returnedResult, 2, new Cartesian4())
+      Matrix4.getColumn(returnedResult, 2, new Cartesian4()),
     ); // up
     actualUp.y = -actualUp.y;
     actualUp.z = -actualUp.z;
     actualTranslation = Cartesian3.fromCartesian4(
-      Matrix4.getColumn(returnedResult, 3, new Cartesian4())
+      Matrix4.getColumn(returnedResult, 3, new Cartesian4()),
     );
 
     expect(returnedResult).toBe(result);
@@ -1026,7 +1024,7 @@ describe("Core/Transforms", function () {
     const transform = Transforms.headingPitchRollToFixedFrame(
       origin,
       hpr,
-      Ellipsoid.UNIT_SPHERE
+      Ellipsoid.UNIT_SPHERE,
     );
     const expected = Matrix4.getMatrix3(transform, new Matrix3());
 
@@ -1034,7 +1032,7 @@ describe("Core/Transforms", function () {
       origin,
       hpr,
       Ellipsoid.UNIT_SPHERE,
-      Transforms.eastNorthUpToFixedFrame
+      Transforms.eastNorthUpToFixedFrame,
     );
     const actual = Matrix3.fromQuaternion(quaternion);
     expect(actual).toEqualEpsilon(expected, CesiumMath.EPSILON11);
@@ -1050,7 +1048,7 @@ describe("Core/Transforms", function () {
     const transform = Transforms.headingPitchRollToFixedFrame(
       origin,
       hpr,
-      Ellipsoid.UNIT_SPHERE
+      Ellipsoid.UNIT_SPHERE,
     );
     const expected = Matrix4.getMatrix3(transform, new Matrix3());
 
@@ -1060,7 +1058,7 @@ describe("Core/Transforms", function () {
       hpr,
       Ellipsoid.UNIT_SPHERE,
       Transforms.eastNorthUpToFixedFrame,
-      result
+      result,
     );
     const actual = Matrix3.fromQuaternion(quaternion);
     expect(quaternion).toBe(result);
@@ -1077,7 +1075,7 @@ describe("Core/Transforms", function () {
     const transform = Transforms.headingPitchRollToFixedFrame(
       origin,
       hpr,
-      Ellipsoid.UNIT_SPHERE
+      Ellipsoid.UNIT_SPHERE,
     );
     const expected = Matrix4.getMatrix3(transform, new Matrix3());
 
@@ -1087,7 +1085,7 @@ describe("Core/Transforms", function () {
       hpr,
       Ellipsoid.UNIT_SPHERE,
       undefined,
-      result
+      result,
     );
     const actual = Matrix3.fromQuaternion(quaternion);
     expect(quaternion).toBe(result);
@@ -1102,14 +1100,14 @@ describe("Core/Transforms", function () {
     const hpr = new HeadingPitchRoll(heading, pitch, roll);
     const fixedFrameTransform = Transforms.localFrameToFixedFrameGenerator(
       "west",
-      "south"
+      "south",
     );
 
     const transform = Transforms.headingPitchRollToFixedFrame(
       origin,
       hpr,
       Ellipsoid.UNIT_SPHERE,
-      fixedFrameTransform
+      fixedFrameTransform,
     );
     const expected = Matrix4.getMatrix3(transform, new Matrix3());
 
@@ -1119,7 +1117,7 @@ describe("Core/Transforms", function () {
       hpr,
       Ellipsoid.UNIT_SPHERE,
       fixedFrameTransform,
-      result
+      result,
     );
     const actual = Matrix3.fromQuaternion(quaternion);
     expect(quaternion).toBe(result);
@@ -1144,11 +1142,11 @@ describe("Core/Transforms", function () {
     const t4 = Matrix4.fromRotationTranslation(
       t,
       Cartesian3.ZERO,
-      new Matrix4()
+      new Matrix4(),
     );
     expect(Matrix4.inverse(t4, new Matrix4())).toEqualEpsilon(
       Matrix4.inverseTransformation(t4, new Matrix4()),
-      CesiumMath.EPSILON14
+      CesiumMath.EPSILON14,
     );
 
     time = JulianDate.addHours(time, 23.93447, new JulianDate()); // add one sidereal day
@@ -1177,7 +1175,7 @@ describe("Core/Transforms", function () {
     const t4 = Matrix4.fromRotationTranslation(t);
     expect(Matrix4.inverse(t4, new Matrix4())).toEqualEpsilon(
       Matrix4.inverseTransformation(t4, new Matrix4()),
-      CesiumMath.EPSILON14
+      CesiumMath.EPSILON14,
     );
 
     time = JulianDate.addHours(time, 23.93447, new JulianDate()); // add one sidereal day
@@ -1208,7 +1206,7 @@ describe("Core/Transforms", function () {
     const t4 = Matrix4.fromRotationTranslation(t);
     expect(Matrix4.inverse(t4, new Matrix4())).toEqualEpsilon(
       Matrix4.inverseTransformation(t4, new Matrix4()),
-      CesiumMath.EPSILON14
+      CesiumMath.EPSILON14,
     );
 
     time = JulianDate.addHours(time, 23.93447, new JulianDate()); // add one sidereal day
@@ -1253,7 +1251,7 @@ describe("Core/Transforms", function () {
       const t4 = Matrix4.fromRotationTranslation(t);
       expect(Matrix4.inverse(t4, new Matrix4())).toEqualEpsilon(
         Matrix4.inverseTransformation(t4, new Matrix4()),
-        CesiumMath.EPSILON14
+        CesiumMath.EPSILON14,
       );
 
       time = JulianDate.addHours(time, 27.321661 * 24, new JulianDate()); // add one sidereal month
@@ -1273,13 +1271,13 @@ describe("Core/Transforms", function () {
         0.4170384828971786,
         0.3598159441089767,
         0.2133099942194372,
-        -0.9083123541662688
+        -0.9083123541662688,
       );
 
       const testInverse = Matrix3.multiply(
         Matrix3.transpose(t, new Matrix3()),
         expectedMtx,
-        new Matrix3()
+        new Matrix3(),
       );
       const testDiff = new Matrix3();
       for (let i = 0; i < 9; i++) {
@@ -1287,7 +1285,7 @@ describe("Core/Transforms", function () {
       }
       expect(testInverse).toEqualEpsilon(
         Matrix3.IDENTITY,
-        CesiumMath.EPSILON14
+        CesiumMath.EPSILON14,
       );
       expect(testDiff).toEqualEpsilon(new Matrix3(), CesiumMath.EPSILON14);
     });
@@ -1296,9 +1294,8 @@ describe("Core/Transforms", function () {
   describe("computeIcrfToFixedMatrix", function () {
     async function preloadTransformationData(start, stop, eopUrl) {
       if (defined(eopUrl)) {
-        Transforms.earthOrientationParameters = await EarthOrientationParameters.fromUrl(
-          eopUrl
-        );
+        Transforms.earthOrientationParameters =
+          await EarthOrientationParameters.fromUrl(eopUrl);
       }
 
       Transforms.iau2006XysData = new Iau2006XysData();
@@ -1326,17 +1323,17 @@ describe("Core/Transforms", function () {
       // what happens when we try evaluating at times when we don't have EOP as well as at
       // times where we do.  The samples are not at exact EOP times, in order to test interpolation.
       const componentsData = await Resource.fetchJson(
-        "Data/EarthOrientationParameters/IcrfToFixedStkComponentsRotationData.json"
+        "Data/EarthOrientationParameters/IcrfToFixedStkComponentsRotationData.json",
       );
       const start = JulianDate.fromIso8601(componentsData[0].date);
       const stop = JulianDate.fromIso8601(
-        componentsData[componentsData.length - 1].date
+        componentsData[componentsData.length - 1].date,
       );
 
       await preloadTransformationData(
         start,
         stop,
-        "Data/EarthOrientationParameters/EOP-2011-July.json"
+        "Data/EarthOrientationParameters/EOP-2011-July.json",
       );
       for (let i = 0; i < componentsData.length; ++i) {
         const time = JulianDate.fromIso8601(componentsData[i].date);
@@ -1358,19 +1355,19 @@ describe("Core/Transforms", function () {
         const t4 = Matrix4.fromRotationTranslation(t);
         expect(Matrix4.inverse(t4, new Matrix4())).toEqualEpsilon(
           Matrix4.inverseTransformation(t4, new Matrix4()),
-          CesiumMath.EPSILON14
+          CesiumMath.EPSILON14,
         );
 
         const expectedMtx = Matrix3.fromQuaternion(
           Quaternion.conjugate(
             componentsData[i].icrfToFixedQuaternion,
-            new Quaternion()
-          )
+            new Quaternion(),
+          ),
         );
         const testInverse = Matrix3.multiply(
           Matrix3.transpose(t, new Matrix3()),
           expectedMtx,
-          new Matrix3()
+          new Matrix3(),
         );
         const testDiff = new Matrix3();
         for (let k = 0; k < 9; k++) {
@@ -1378,7 +1375,7 @@ describe("Core/Transforms", function () {
         }
         expect(testInverse).toEqualEpsilon(
           Matrix3.IDENTITY,
-          CesiumMath.EPSILON14
+          CesiumMath.EPSILON14,
         );
         expect(testDiff).toEqualEpsilon(new Matrix3(), CesiumMath.EPSILON14);
       }
@@ -1391,7 +1388,7 @@ describe("Core/Transforms", function () {
       await preloadTransformationData(
         time,
         time,
-        "Data/EarthOrientationParameters/EOP-2011-July.json"
+        "Data/EarthOrientationParameters/EOP-2011-July.json",
       );
       const resultT = new Matrix3();
       const t = Transforms.computeIcrfToFixedMatrix(time, resultT);
@@ -1411,7 +1408,7 @@ describe("Core/Transforms", function () {
       const t4 = Matrix4.fromRotationTranslation(t);
       expect(Matrix4.inverse(t4, new Matrix4())).toEqualEpsilon(
         Matrix4.inverseTransformation(t4, new Matrix4()),
-        CesiumMath.EPSILON14
+        CesiumMath.EPSILON14,
       );
 
       time = JulianDate.addHours(time, 23.93447, new JulianDate()); // add one sidereal day
@@ -1432,13 +1429,13 @@ describe("Core/Transforms", function () {
         -0.0011325710874539787,
         0.0011536112127187594,
         -0.0000089534866085598909,
-        0.99999933455028112
+        0.99999933455028112,
       );
 
       const testInverse = Matrix3.multiply(
         Matrix3.transpose(t, new Matrix3()),
         expectedMtx,
-        new Matrix3()
+        new Matrix3(),
       );
       const testDiff = new Matrix3();
       for (let i = 0; i < 9; i++) {
@@ -1446,7 +1443,7 @@ describe("Core/Transforms", function () {
       }
       expect(testInverse).toEqualEpsilon(
         Matrix3.IDENTITY,
-        CesiumMath.EPSILON14
+        CesiumMath.EPSILON14,
       );
       expect(testDiff).toEqualEpsilon(new Matrix3(), CesiumMath.EPSILON14);
     });
@@ -1457,7 +1454,7 @@ describe("Core/Transforms", function () {
       await preloadTransformationData(
         time,
         time,
-        "Data/EarthOrientationParameters/EOP-2011-July.json"
+        "Data/EarthOrientationParameters/EOP-2011-July.json",
       );
       const resultT = new Matrix3();
       const t = Transforms.computeIcrfToFixedMatrix(time, resultT);
@@ -1472,13 +1469,13 @@ describe("Core/Transforms", function () {
         0.0011266944449015753,
         0.0011497249933208494,
         -0.000010082996932331842,
-        0.99999933901516791
+        0.99999933901516791,
       );
 
       const testInverse = Matrix3.multiply(
         Matrix3.transpose(t, new Matrix3()),
         expectedMtx,
-        new Matrix3()
+        new Matrix3(),
       );
       const testDiff = new Matrix3();
       for (let i = 0; i < 9; i++) {
@@ -1486,7 +1483,7 @@ describe("Core/Transforms", function () {
       }
       expect(testInverse).toEqualEpsilon(
         Matrix3.IDENTITY,
-        CesiumMath.EPSILON14
+        CesiumMath.EPSILON14,
       );
       expect(testDiff).toEqualEpsilon(new Matrix3(), CesiumMath.EPSILON14);
     });
@@ -1497,7 +1494,7 @@ describe("Core/Transforms", function () {
       await preloadTransformationData(
         time,
         time,
-        "Data/EarthOrientationParameters/EOP-2011-July.json"
+        "Data/EarthOrientationParameters/EOP-2011-July.json",
       );
       const resultT = new Matrix3();
       const t = Transforms.computeIcrfToFixedMatrix(time, resultT);
@@ -1512,13 +1509,13 @@ describe("Core/Transforms", function () {
         0.0011297972845023996,
         0.0011493056536445096,
         -0.00001025368996280683,
-        0.99999933949547
+        0.99999933949547,
       );
 
       const testInverse = Matrix3.multiply(
         Matrix3.transpose(t, new Matrix3()),
         expectedMtx,
-        new Matrix3()
+        new Matrix3(),
       );
       const testDiff = new Matrix3();
       for (let i = 0; i < 9; i++) {
@@ -1526,7 +1523,7 @@ describe("Core/Transforms", function () {
       }
       expect(testInverse).toEqualEpsilon(
         Matrix3.IDENTITY,
-        CesiumMath.EPSILON14
+        CesiumMath.EPSILON14,
       );
       expect(testDiff).toEqualEpsilon(new Matrix3(), CesiumMath.EPSILON14);
     });
@@ -1536,13 +1533,13 @@ describe("Core/Transforms", function () {
       const inertialPos = new Cartesian3(
         -7322101.15395708,
         -41525699.1558387,
-        0
+        0,
       );
       // The following is the value computed by STK Components for the date specified below
       const expectedFixedPos = new Cartesian3(
         39489858.9917795,
         -14783363.192887,
-        -8075.05820056297
+        -8075.05820056297,
       );
 
       // 2011-07-03 00:00:00 UTC
@@ -1551,7 +1548,7 @@ describe("Core/Transforms", function () {
       await preloadTransformationData(
         time,
         time,
-        "Data/EarthOrientationParameters/EOP-2011-July.json"
+        "Data/EarthOrientationParameters/EOP-2011-July.json",
       );
       const resultT = new Matrix3();
       const t = Transforms.computeIcrfToFixedMatrix(time, resultT);
@@ -1560,7 +1557,7 @@ describe("Core/Transforms", function () {
       const error = Cartesian3.subtract(
         result,
         expectedFixedPos,
-        new Cartesian3()
+        new Cartesian3(),
       );
 
       // Given the magnitude of the positions involved (1e8)
@@ -1576,7 +1573,7 @@ describe("Core/Transforms", function () {
       // we don't have the data in Cesium to load.
       await preloadTransformationData(
         time,
-        JulianDate.addDays(time, 1, new JulianDate())
+        JulianDate.addDays(time, 1, new JulianDate()),
       );
 
       const resultT = new Matrix3();
@@ -1593,7 +1590,7 @@ describe("Core/Transforms", function () {
       // we don't have the data in Cesium to load.
       await preloadTransformationData(
         time,
-        JulianDate.addDays(time, 1, new JulianDate())
+        JulianDate.addDays(time, 1, new JulianDate()),
       );
       const resultT = new Matrix3();
       const t = Transforms.computeIcrfToFixedMatrix(time, resultT);
@@ -1605,13 +1602,13 @@ describe("Core/Transforms", function () {
       const inertialPos = new Cartesian3(
         -7322101.15395708,
         -41525699.1558387,
-        0
+        0,
       );
       // The following is the value computed by STK Components for the date specified below
       const expectedFixedPos = new Cartesian3(
         39489545.7583001,
         -14784199.9085371,
-        -8034.77037239318
+        -8034.77037239318,
       );
 
       // 2011-07-03 00:00:00 UTC
@@ -1626,7 +1623,7 @@ describe("Core/Transforms", function () {
       const error = Cartesian3.subtract(
         result,
         expectedFixedPos,
-        new Cartesian3()
+        new Cartesian3(),
       );
 
       // Given the magnitude of the positions involved (1e8)
@@ -1643,13 +1640,13 @@ describe("Core/Transforms", function () {
           await preloadTransformationData(
             time,
             time,
-            "Data/EarthOrientationParameters/EOP-Invalid.json"
+            "Data/EarthOrientationParameters/EOP-Invalid.json",
           );
           return Transforms.computeIcrfToFixedMatrix(time);
-        })()
+        })(),
       ).toBeRejectedWithError(
         RuntimeError,
-        "Error in loaded EOP data: The columnNames property is required."
+        "Error in loaded EOP data: The columnNames property is required.",
       );
     });
 
@@ -1669,7 +1666,7 @@ describe("Core/Transforms", function () {
     width / height,
     1.0,
     10.0,
-    new Matrix4()
+    new Matrix4(),
   );
   const vpTransform = Matrix4.computeViewportTransformation(
     {
@@ -1678,7 +1675,7 @@ describe("Core/Transforms", function () {
     },
     0,
     1,
-    new Matrix4()
+    new Matrix4(),
   );
 
   it("pointToGLWindowCoordinates works at the center", function () {
@@ -1686,7 +1683,7 @@ describe("Core/Transforms", function () {
       position: Cartesian3.multiplyByScalar(
         Cartesian3.UNIT_X,
         2.0,
-        new Cartesian3()
+        new Cartesian3(),
       ),
       direction: Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3()),
       up: Cartesian3.UNIT_Z,
@@ -1697,7 +1694,7 @@ describe("Core/Transforms", function () {
     const returnedResult = Transforms.pointToGLWindowCoordinates(
       mvpMatrix,
       vpTransform,
-      Cartesian3.ZERO
+      Cartesian3.ZERO,
     );
     expect(returnedResult).toEqual(expected);
   });
@@ -1707,7 +1704,7 @@ describe("Core/Transforms", function () {
       position: Cartesian3.multiplyByScalar(
         Cartesian3.UNIT_X,
         2.0,
-        new Cartesian3()
+        new Cartesian3(),
       ),
       direction: Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3()),
       up: Cartesian3.UNIT_Z,
@@ -1720,7 +1717,7 @@ describe("Core/Transforms", function () {
       mvpMatrix,
       vpTransform,
       Cartesian3.ZERO,
-      result
+      result,
     );
     expect(result).toBe(returnedResult);
     expect(returnedResult).toEqual(expected);
@@ -1737,7 +1734,7 @@ describe("Core/Transforms", function () {
     const returnedResult = Transforms.pointToGLWindowCoordinates(
       perspective,
       vpTransform,
-      point
+      point,
     );
     expect(returnedResult).toEqualEpsilon(expected, CesiumMath.EPSILON12);
   });
@@ -1753,7 +1750,7 @@ describe("Core/Transforms", function () {
     const returnedResult = Transforms.pointToGLWindowCoordinates(
       perspective,
       vpTransform,
-      point
+      point,
     );
     expect(returnedResult).toEqualEpsilon(expected, CesiumMath.EPSILON12);
   });
@@ -1763,7 +1760,7 @@ describe("Core/Transforms", function () {
       position: Cartesian3.multiplyByScalar(
         Cartesian3.UNIT_X,
         2.0,
-        new Cartesian3()
+        new Cartesian3(),
       ),
       direction: Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3()),
       up: Cartesian3.UNIT_Z,
@@ -1774,7 +1771,7 @@ describe("Core/Transforms", function () {
     const returnedResult = Transforms.pointToWindowCoordinates(
       mvpMatrix,
       vpTransform,
-      Cartesian3.ZERO
+      Cartesian3.ZERO,
     );
     expect(returnedResult).toEqual(expected);
   });
@@ -1784,7 +1781,7 @@ describe("Core/Transforms", function () {
       position: Cartesian3.multiplyByScalar(
         Cartesian3.UNIT_X,
         2.0,
-        new Cartesian3()
+        new Cartesian3(),
       ),
       direction: Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3()),
       up: Cartesian3.UNIT_Z,
@@ -1797,7 +1794,7 @@ describe("Core/Transforms", function () {
       mvpMatrix,
       vpTransform,
       Cartesian3.ZERO,
-      result
+      result,
     );
     expect(result).toBe(returnedResult);
     expect(returnedResult).toEqual(expected);
@@ -1814,7 +1811,7 @@ describe("Core/Transforms", function () {
     const returnedResult = Transforms.pointToWindowCoordinates(
       perspective,
       vpTransform,
-      point
+      point,
     );
     expect(returnedResult).toEqualEpsilon(expected, CesiumMath.EPSILON12);
   });
@@ -1830,7 +1827,7 @@ describe("Core/Transforms", function () {
     const returnedResult = Transforms.pointToWindowCoordinates(
       perspective,
       vpTransform,
-      point
+      point,
     );
     expect(returnedResult).toEqualEpsilon(expected, CesiumMath.EPSILON12);
   });
@@ -1838,21 +1835,21 @@ describe("Core/Transforms", function () {
   it("rotationMatrixFromPositionVelocity works without a result parameter", function () {
     let matrix = Transforms.rotationMatrixFromPositionVelocity(
       Cartesian3.UNIT_X,
-      Cartesian3.UNIT_Y
+      Cartesian3.UNIT_Y,
     );
     let expected = new Matrix3(0, 0, 1, 1, 0, 0, 0, 1, 0);
     expect(matrix).toEqualEpsilon(expected, CesiumMath.EPSILON14);
 
     matrix = Transforms.rotationMatrixFromPositionVelocity(
       Cartesian3.UNIT_X,
-      Cartesian3.UNIT_Z
+      Cartesian3.UNIT_Z,
     );
     expected = new Matrix3(0, 0, 1, 0, -1, 0, 1, 0, 0);
     expect(matrix).toEqualEpsilon(expected, CesiumMath.EPSILON14);
 
     matrix = Transforms.rotationMatrixFromPositionVelocity(
       Cartesian3.UNIT_Y,
-      Cartesian3.UNIT_Z
+      Cartesian3.UNIT_Z,
     );
     expected = new Matrix3(0, 1, 0, 0, 0, 1, 1, 0, 0);
     expect(matrix).toEqualEpsilon(expected, CesiumMath.EPSILON14);
@@ -1864,7 +1861,7 @@ describe("Core/Transforms", function () {
       Cartesian3.UNIT_X,
       Cartesian3.UNIT_Y,
       Ellipsoid.WGS84,
-      result
+      result,
     );
     let expected = new Matrix3(0, 0, 1, 1, 0, 0, 0, 1, 0);
     expect(result).toEqualEpsilon(expected, CesiumMath.EPSILON14);
@@ -1873,7 +1870,7 @@ describe("Core/Transforms", function () {
       Cartesian3.UNIT_X,
       Cartesian3.UNIT_Z,
       Ellipsoid.WGS84,
-      result
+      result,
     );
     expected = new Matrix3(0, 0, 1, 0, -1, 0, 1, 0, 0);
     expect(result).toEqualEpsilon(expected, CesiumMath.EPSILON14);
@@ -1882,7 +1879,7 @@ describe("Core/Transforms", function () {
       Cartesian3.UNIT_Y,
       Cartesian3.UNIT_Z,
       Ellipsoid.WGS84,
-      result
+      result,
     );
     expected = new Matrix3(0, 1, 0, 0, 0, 1, 1, 0, 0);
     expect(result).toEqualEpsilon(expected, CesiumMath.EPSILON14);
@@ -1900,16 +1897,16 @@ describe("Core/Transforms", function () {
     const modelMatrix = Transforms.headingPitchRollToFixedFrame(
       origin,
       hpr,
-      ellipsoid
+      ellipsoid,
     );
     const modelMatrix2D = Transforms.basisTo2D(
       projection,
       modelMatrix,
-      new Matrix4()
+      new Matrix4(),
     );
 
     const translation2D = Cartesian3.fromCartesian4(
-      Matrix4.getColumn(modelMatrix2D, 3, new Cartesian4())
+      Matrix4.getColumn(modelMatrix2D, 3, new Cartesian4()),
     );
 
     const carto = ellipsoid.cartesianToCartographic(origin);
@@ -1931,12 +1928,12 @@ describe("Core/Transforms", function () {
     const modelMatrix = Transforms.headingPitchRollToFixedFrame(
       origin,
       hpr,
-      ellipsoid
+      ellipsoid,
     );
     const modelMatrix2D = Transforms.basisTo2D(
       projection,
       modelMatrix,
-      new Matrix4()
+      new Matrix4(),
     );
 
     const rotation2D = Matrix4.getMatrix3(modelMatrix2D, new Matrix3());
@@ -1947,7 +1944,7 @@ describe("Core/Transforms", function () {
     const hprPlusTranslate = Matrix4.multiply(
       enuInverse,
       modelMatrix,
-      new Matrix4()
+      new Matrix4(),
     );
     const hpr2 = Matrix4.getMatrix3(hprPlusTranslate, new Matrix3());
 
@@ -1971,7 +1968,7 @@ describe("Core/Transforms", function () {
     const actual = Transforms.ellipsoidTo2DModelMatrix(
       projection,
       origin,
-      new Matrix4()
+      new Matrix4(),
     );
     const expected = Matrix4.fromTranslation(origin);
     Transforms.basisTo2D(projection, expected, expected);
@@ -1980,19 +1977,19 @@ describe("Core/Transforms", function () {
     const expectedRotation = Matrix4.getMatrix3(expected, new Matrix3());
     expect(actualRotation).toEqualEpsilon(
       expectedRotation,
-      CesiumMath.EPSILON14
+      CesiumMath.EPSILON14,
     );
 
     const fromENU = Transforms.eastNorthUpToFixedFrame(
       origin,
       ellipsoid,
-      new Matrix4()
+      new Matrix4(),
     );
     const toENU = Matrix4.inverseTransformation(fromENU, new Matrix4());
     const toENUTranslation = Matrix4.getTranslation(toENU, new Cartesian4());
     const projectedTranslation = Matrix4.getTranslation(
       expected,
-      new Cartesian4()
+      new Cartesian4(),
     );
 
     const expectedTranslation = new Cartesian4();
@@ -2004,7 +2001,7 @@ describe("Core/Transforms", function () {
 
     expect(actualTranslation).toEqualEpsilon(
       expectedTranslation,
-      CesiumMath.EPSILON14
+      CesiumMath.EPSILON14,
     );
   });
 
@@ -2012,12 +2009,12 @@ describe("Core/Transforms", function () {
     const expected = new HeadingPitchRoll(0.5, 0.6, 0.7);
 
     let transform = Transforms.eastNorthUpToFixedFrame(
-      Cartesian3.fromDegrees(0, 0)
+      Cartesian3.fromDegrees(0, 0),
     );
     const transform2 = Matrix4.fromTranslationQuaternionRotationScale(
       new Cartesian3(),
       Quaternion.fromHeadingPitchRoll(expected),
-      new Cartesian3(1, 1, 1)
+      new Cartesian3(1, 1, 1),
     );
     transform = Matrix4.multiply(transform, transform2, transform2);
 
@@ -2053,7 +2050,7 @@ describe("Core/Transforms", function () {
     expect(function () {
       Transforms.headingPitchRollToFixedFrame(
         undefined,
-        new HeadingPitchRoll()
+        new HeadingPitchRoll(),
       );
     }).toThrowDeveloperError();
   });
@@ -2075,7 +2072,7 @@ describe("Core/Transforms", function () {
       Transforms.pointToWindowCoordinates(
         undefined,
         Matrix4.IDENTITY,
-        Cartesian3.ZERO
+        Cartesian3.ZERO,
       );
     }).toThrowDeveloperError();
   });
@@ -2085,7 +2082,7 @@ describe("Core/Transforms", function () {
       Transforms.pointToWindowCoordinates(
         Matrix4.IDENTITY,
         undefined,
-        Cartesian3.ZERO
+        Cartesian3.ZERO,
       );
     }).toThrowDeveloperError();
   });
@@ -2095,7 +2092,7 @@ describe("Core/Transforms", function () {
       Transforms.pointToWindowCoordinates(
         Matrix4.IDENTITY,
         Matrix4.IDENTITY,
-        undefined
+        undefined,
       );
     }).toThrowDeveloperError();
   });
@@ -2111,7 +2108,7 @@ describe("Core/Transforms", function () {
       Transforms.basisTo2D(
         new GeographicProjection(),
         undefined,
-        new Matrix4()
+        new Matrix4(),
       );
     }).toThrowDeveloperError();
   });
@@ -2121,7 +2118,7 @@ describe("Core/Transforms", function () {
       Transforms.basisTo2D(
         new GeographicProjection(),
         Matrix4.IDENTITY,
-        undefined
+        undefined,
       );
     }).toThrowDeveloperError();
   });
@@ -2131,7 +2128,7 @@ describe("Core/Transforms", function () {
       Transforms.ellipsoidTo2DModelMatrix(
         undefined,
         Cartesian3.UNIT_X,
-        new Matrix4()
+        new Matrix4(),
       );
     }).toThrowDeveloperError();
   });
@@ -2141,7 +2138,7 @@ describe("Core/Transforms", function () {
       Transforms.ellipsoidTo2DModelMatrix(
         new GeographicProjection(),
         undefined,
-        new Matrix4()
+        new Matrix4(),
       );
     }).toThrowDeveloperError();
   });
@@ -2151,7 +2148,7 @@ describe("Core/Transforms", function () {
       Transforms.ellipsoidTo2DModelMatrix(
         new GeographicProjection(),
         Cartesian3.UNIT_X,
-        undefined
+        undefined,
       );
     }).toThrowDeveloperError();
   });

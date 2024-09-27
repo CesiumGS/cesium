@@ -2151,7 +2151,7 @@ _This is an npm-only release to fix a publishing issue_.
   - This is to make clipping planes' coordinates always relative to the object they're attached to. So if you were positioning the clipping planes as in the example below, this is no longer necessary:
   ```javascript
   clippingPlanes.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(
-    tileset.boundingSphere.center
+    tileset.boundingSphere.center,
   );
   ```
   - This also fixes several issues with clipping planes not using the correct transform for tilesets with children.

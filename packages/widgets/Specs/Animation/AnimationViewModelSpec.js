@@ -35,7 +35,7 @@ describe("Widgets/Animation/AnimationViewModel", function () {
     expect(viewModel.playForwardViewModel.toggled).toEqual(false);
     expect(viewModel.playRealtimeViewModel.toggled).toEqual(true);
     expect(viewModel.shuttleRingAngle).toEqual(
-      AnimationViewModel._realtimeShuttleRingAngle
+      AnimationViewModel._realtimeShuttleRingAngle,
     );
   }
 
@@ -422,16 +422,16 @@ describe("Widgets/Animation/AnimationViewModel", function () {
     clockViewModel.startTime = JulianDate.addSeconds(
       clockViewModel.systemTime,
       -60,
-      new JulianDate()
+      new JulianDate(),
     );
     clockViewModel.stopTime = JulianDate.addSeconds(
       clockViewModel.systemTime,
       -30,
-      new JulianDate()
+      new JulianDate(),
     );
     expect(viewModel.playRealtimeViewModel.command.canExecute).toEqual(true);
     expect(viewModel.playRealtimeViewModel.tooltip).toEqual(
-      "Today (real-time)"
+      "Today (real-time)",
     );
 
     //CLAMPED but unavailable when start/stop time does not include realtime
@@ -439,16 +439,16 @@ describe("Widgets/Animation/AnimationViewModel", function () {
     clockViewModel.startTime = JulianDate.addSeconds(
       clockViewModel.systemTime,
       -60,
-      new JulianDate()
+      new JulianDate(),
     );
     clockViewModel.stopTime = JulianDate.addSeconds(
       clockViewModel.systemTime,
       -30,
-      new JulianDate()
+      new JulianDate(),
     );
     expect(viewModel.playRealtimeViewModel.command.canExecute).toEqual(false);
     expect(viewModel.playRealtimeViewModel.tooltip).toEqual(
-      "Current time not in range"
+      "Current time not in range",
     );
 
     //CLAMPED but available when start/stop time includes realtime
@@ -456,16 +456,16 @@ describe("Widgets/Animation/AnimationViewModel", function () {
     clockViewModel.startTime = JulianDate.addSeconds(
       clockViewModel.systemTime,
       -60,
-      new JulianDate()
+      new JulianDate(),
     );
     clockViewModel.stopTime = JulianDate.addSeconds(
       clockViewModel.systemTime,
       60,
-      new JulianDate()
+      new JulianDate(),
     );
     expect(viewModel.playRealtimeViewModel.command.canExecute).toEqual(true);
     expect(viewModel.playRealtimeViewModel.tooltip).toEqual(
-      "Today (real-time)"
+      "Today (real-time)",
     );
 
     //LOOP_STOP but unavailable when start/stop time does not include realtime
@@ -473,16 +473,16 @@ describe("Widgets/Animation/AnimationViewModel", function () {
     clockViewModel.startTime = JulianDate.addSeconds(
       clockViewModel.systemTime,
       -60,
-      new JulianDate()
+      new JulianDate(),
     );
     clockViewModel.stopTime = JulianDate.addSeconds(
       clockViewModel.systemTime,
       -30,
-      new JulianDate()
+      new JulianDate(),
     );
     expect(viewModel.playRealtimeViewModel.command.canExecute).toEqual(false);
     expect(viewModel.playRealtimeViewModel.tooltip).toEqual(
-      "Current time not in range"
+      "Current time not in range",
     );
 
     //LOOP_STOP but available when start/stop time includes realtime
@@ -490,16 +490,16 @@ describe("Widgets/Animation/AnimationViewModel", function () {
     clockViewModel.startTime = JulianDate.addSeconds(
       clockViewModel.systemTime,
       -60,
-      new JulianDate()
+      new JulianDate(),
     );
     clockViewModel.stopTime = JulianDate.addSeconds(
       clockViewModel.systemTime,
       60,
-      new JulianDate()
+      new JulianDate(),
     );
     expect(viewModel.playRealtimeViewModel.command.canExecute).toEqual(true);
     expect(viewModel.playRealtimeViewModel.tooltip).toEqual(
-      "Today (real-time)"
+      "Today (real-time)",
     );
   });
 
@@ -619,7 +619,7 @@ describe("Widgets/Animation/AnimationViewModel", function () {
 
     viewModel.shuttleRingAngle = 0.0;
     expect(clockViewModel.multiplier).toEqual(
-      AnimationViewModel.defaultTicks[0]
+      AnimationViewModel.defaultTicks[0],
     );
   });
 
@@ -667,10 +667,7 @@ describe("Widgets/Animation/AnimationViewModel", function () {
 
     animationViewModel.setShuttleRingTicks(ticks);
     expect(animationViewModel.getShuttleRingTicks()).toEqual([
-      0.0,
-      2.0,
-      4.0,
-      8.0,
+      0.0, 2.0, 4.0, 8.0,
     ]);
   });
 });

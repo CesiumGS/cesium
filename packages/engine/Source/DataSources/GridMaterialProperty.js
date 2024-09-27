@@ -155,30 +155,30 @@ GridMaterialProperty.prototype.getValue = function (time, result) {
     this._color,
     time,
     defaultColor,
-    result.color
+    result.color,
   );
   result.cellAlpha = Property.getValueOrDefault(
     this._cellAlpha,
     time,
-    defaultCellAlpha
+    defaultCellAlpha,
   );
   result.lineCount = Property.getValueOrClonedDefault(
     this._lineCount,
     time,
     defaultLineCount,
-    result.lineCount
+    result.lineCount,
   );
   result.lineThickness = Property.getValueOrClonedDefault(
     this._lineThickness,
     time,
     defaultLineThickness,
-    result.lineThickness
+    result.lineThickness,
   );
   result.lineOffset = Property.getValueOrClonedDefault(
     this._lineOffset,
     time,
     defaultLineOffset,
-    result.lineOffset
+    result.lineOffset,
   );
   return result;
 };

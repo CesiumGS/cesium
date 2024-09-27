@@ -18,12 +18,12 @@ function I3SDecoder() {}
 // Maximum concurrency to use when decoding draco models
 I3SDecoder._maxDecodingConcurrency = Math.max(
   FeatureDetection.hardwareConcurrency - 1,
-  1
+  1,
 );
 
 I3SDecoder._decodeTaskProcessor = new TaskProcessor(
   "decodeI3S",
-  I3SDecoder._maxDecodingConcurrency
+  I3SDecoder._maxDecodingConcurrency,
 );
 
 I3SDecoder._promise = undefined;
@@ -55,7 +55,7 @@ I3SDecoder.decode = async function (
   defaultGeometrySchema,
   geometryData,
   featureData,
-  symbologyData
+  symbologyData,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.string("url", url);
@@ -93,18 +93,17 @@ I3SDecoder.decode = async function (
     Matrix3.multiply(
       axisFlipRotation,
       parentRotationInverseMatrix,
-      parentRotation
+      parentRotation,
     );
 
     const cartographicCenter = Cartographic.fromDegrees(
       longitude,
       latitude,
-      height
+      height,
     );
 
-    const cartesianCenter = Ellipsoid.WGS84.cartographicToCartesian(
-      cartographicCenter
-    );
+    const cartesianCenter =
+      Ellipsoid.WGS84.cartographicToCartesian(cartographicCenter);
 
     const payload = {
       binaryData: geometryData._data,

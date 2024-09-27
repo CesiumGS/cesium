@@ -26,7 +26,7 @@ function Tween(
   easingFunction,
   update,
   complete,
-  cancel
+  cancel,
 ) {
   this._tweens = tweens;
   this._tweenjs = tweenjs;
@@ -217,13 +217,13 @@ TweenCollection.prototype.add = function (options) {
   //>>includeStart('debug', pragmas.debug);
   if (!defined(options.startObject) || !defined(options.stopObject)) {
     throw new DeveloperError(
-      "options.startObject and options.stopObject are required."
+      "options.startObject and options.stopObject are required.",
     );
   }
 
   if (!defined(options.duration) || options.duration < 0.0) {
     throw new DeveloperError(
-      "options.duration is required and must be positive."
+      "options.duration is required and must be positive.",
     );
   }
   //>>includeEnd('debug');
@@ -240,7 +240,7 @@ TweenCollection.prototype.add = function (options) {
   const delay = delayInSeconds / TimeConstants.SECONDS_PER_MILLISECOND;
   const easingFunction = defaultValue(
     options.easingFunction,
-    EasingFunction.LINEAR_NONE
+    EasingFunction.LINEAR_NONE,
   );
 
   const value = options.startObject;
@@ -266,7 +266,7 @@ TweenCollection.prototype.add = function (options) {
     easingFunction,
     options.update,
     options.complete,
-    options.cancel
+    options.cancel,
   );
   this._tweens.push(tween);
   return tween;
@@ -303,17 +303,17 @@ TweenCollection.prototype.addProperty = function (options) {
   //>>includeStart('debug', pragmas.debug);
   if (!defined(object) || !defined(options.property)) {
     throw new DeveloperError(
-      "options.object and options.property are required."
+      "options.object and options.property are required.",
     );
   }
   if (!defined(object[property])) {
     throw new DeveloperError(
-      "options.object must have the specified property."
+      "options.object must have the specified property.",
     );
   }
   if (!defined(startValue) || !defined(stopValue)) {
     throw new DeveloperError(
-      "options.startValue and options.stopValue are required."
+      "options.startValue and options.stopValue are required.",
     );
   }
   //>>includeEnd('debug');
@@ -384,7 +384,7 @@ TweenCollection.prototype.addAlpha = function (options) {
   //>>includeStart('debug', pragmas.debug);
   if (properties.length === 0) {
     throw new DeveloperError(
-      "material has no properties with alpha components."
+      "material has no properties with alpha components.",
     );
   }
   //>>includeEnd('debug');

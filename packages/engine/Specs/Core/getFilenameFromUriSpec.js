@@ -3,12 +3,12 @@ import { getFilenameFromUri } from "../../index.js";
 describe("Core/getFilenameFromUri", function () {
   it("works as expected", function () {
     let result = getFilenameFromUri(
-      "http://www.mysite.com/awesome?makeitawesome=true"
+      "http://www.mysite.com/awesome?makeitawesome=true",
     );
     expect(result).toEqual("awesome");
 
     result = getFilenameFromUri(
-      "http://www.mysite.com/somefolder/awesome.png#makeitawesome"
+      "http://www.mysite.com/somefolder/awesome.png#makeitawesome",
     );
     expect(result).toEqual("awesome.png");
   });

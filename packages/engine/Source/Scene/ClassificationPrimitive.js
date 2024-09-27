@@ -110,7 +110,7 @@ function ClassificationPrimitive(options) {
    */
   this.classificationType = defaultValue(
     options.classificationType,
-    ClassificationType.BOTH
+    ClassificationType.BOTH,
   );
   /**
    * This property is for debugging only; it is not for production use nor is it optimized.
@@ -124,7 +124,7 @@ function ClassificationPrimitive(options) {
    */
   this.debugShowBoundingVolume = defaultValue(
     options.debugShowBoundingVolume,
-    false
+    false,
   );
   /**
    * This property is for debugging only; it is not for production use nor is it optimized.
@@ -138,7 +138,7 @@ function ClassificationPrimitive(options) {
    */
   this.debugShowShadowVolume = defaultValue(
     options.debugShowShadowVolume,
-    false
+    false,
   );
   this._debugShowShadowVolume = false;
 
@@ -185,7 +185,7 @@ function ClassificationPrimitive(options) {
     interleave: defaultValue(options.interleave, false),
     releaseGeometryInstances: defaultValue(
       options.releaseGeometryInstances,
-      true
+      true,
     ),
     allowPicking: defaultValue(options.allowPicking, true),
     asynchronous: defaultValue(options.asynchronous, true),
@@ -434,7 +434,7 @@ function createRenderStates(
   classificationPrimitive,
   context,
   appearance,
-  twoPasses
+  twoPasses,
 ) {
   if (defined(classificationPrimitive._rsStencilDepthPass)) {
     return;
@@ -442,13 +442,13 @@ function createRenderStates(
   const stencilEnabled = !classificationPrimitive.debugShowShadowVolume;
 
   classificationPrimitive._rsStencilDepthPass = RenderState.fromCache(
-    getStencilDepthRenderState(stencilEnabled, false)
+    getStencilDepthRenderState(stencilEnabled, false),
   );
   classificationPrimitive._rsStencilDepthPass3DTiles = RenderState.fromCache(
-    getStencilDepthRenderState(stencilEnabled, true)
+    getStencilDepthRenderState(stencilEnabled, true),
   );
   classificationPrimitive._rsColorPass = RenderState.fromCache(
-    getColorRenderState(stencilEnabled, false)
+    getColorRenderState(stencilEnabled, false),
   );
   classificationPrimitive._rsPickPass = RenderState.fromCache(pickRenderState);
 }
@@ -471,7 +471,7 @@ function modifyForEncodedNormals(primitive, vertexShaderSource) {
     modifiedVS = modifiedVS.replace(/in\s+vec3\s+extrudeDirection;/g, "");
     modifiedVS = ShaderSource.replaceMain(
       modifiedVS,
-      "czm_non_compressed_main"
+      "czm_non_compressed_main",
     );
     const compressedMain =
       `${"void main() \n" + "{ \n"}${decode}    czm_non_compressed_main(); \n` +
@@ -485,14 +485,15 @@ function createShaderProgram(classificationPrimitive, frameState) {
   const context = frameState.context;
   const primitive = classificationPrimitive._primitive;
   let vs = ShadowVolumeAppearanceVS;
-  vs = classificationPrimitive._primitive._batchTable.getVertexShaderCallback()(
-    vs
-  );
+  vs =
+    classificationPrimitive._primitive._batchTable.getVertexShaderCallback()(
+      vs,
+    );
   vs = Primitive._appendDistanceDisplayConditionToShader(primitive, vs);
   vs = Primitive._modifyShaderPosition(
     classificationPrimitive,
     vs,
-    frameState.scene3DOnly
+    frameState.scene3DOnly,
   );
   vs = Primitive._updateColorAttribute(primitive, vs);
 
@@ -521,7 +522,7 @@ function createShaderProgram(classificationPrimitive, frameState) {
   const shadowVolumeAppearance = new ShadowVolumeAppearance(
     cullFragmentsUsingExtents,
     planarExtents,
-    classificationPrimitive.appearance
+    classificationPrimitive.appearance,
   );
 
   classificationPrimitive._spStencil = ShaderProgram.replaceCache({
@@ -542,7 +543,7 @@ function createShaderProgram(classificationPrimitive, frameState) {
       [extrudedDefine],
       vsPick,
       false,
-      frameState.mapProjection
+      frameState.mapProjection,
     );
 
     classificationPrimitive._spPick = ShaderProgram.replaceCache({
@@ -558,7 +559,7 @@ function createShaderProgram(classificationPrimitive, frameState) {
     if (cullFragmentsUsingExtents) {
       let pickProgram2D = context.shaderCache.getDerivedShaderProgram(
         classificationPrimitive._spPick,
-        "2dPick"
+        "2dPick",
       );
       if (!defined(pickProgram2D)) {
         const pickFS2D = shadowVolumeAppearance.createPickFragmentShader(true);
@@ -566,7 +567,7 @@ function createShaderProgram(classificationPrimitive, frameState) {
           [extrudedDefine],
           vsPick,
           true,
-          frameState.mapProjection
+          frameState.mapProjection,
         );
 
         pickProgram2D = context.shaderCache.createDerivedShaderProgram(
@@ -576,7 +577,7 @@ function createShaderProgram(classificationPrimitive, frameState) {
             vertexShaderSource: pickVS2D,
             fragmentShaderSource: pickFS2D,
             attributeLocations: attributeLocations,
-          }
+          },
         );
       }
       classificationPrimitive._spPick2D = pickProgram2D;
@@ -610,7 +611,7 @@ function createShaderProgram(classificationPrimitive, frameState) {
     [extrudedDefine],
     vs,
     false,
-    frameState.mapProjection
+    frameState.mapProjection,
   );
 
   classificationPrimitive._spColor = ShaderProgram.replaceCache({
@@ -627,7 +628,7 @@ function createShaderProgram(classificationPrimitive, frameState) {
   if (cullFragmentsUsingExtents) {
     let colorProgram2D = context.shaderCache.getDerivedShaderProgram(
       classificationPrimitive._spColor,
-      "2dColor"
+      "2dColor",
     );
     if (!defined(colorProgram2D)) {
       const fsColorSource2D = shadowVolumeAppearance.createFragmentShader(true);
@@ -635,7 +636,7 @@ function createShaderProgram(classificationPrimitive, frameState) {
         [extrudedDefine],
         vs,
         true,
-        frameState.mapProjection
+        frameState.mapProjection,
       );
 
       colorProgram2D = context.shaderCache.createDerivedShaderProgram(
@@ -645,7 +646,7 @@ function createShaderProgram(classificationPrimitive, frameState) {
           vertexShaderSource: vsColorSource2D,
           fragmentShaderSource: fsColorSource2D,
           attributeLocations: attributeLocations,
-        }
+        },
       );
     }
     classificationPrimitive._spColor2D = colorProgram2D;
@@ -662,7 +663,7 @@ function createColorCommands(classificationPrimitive, colorCommands) {
   let derivedCommand;
   let vaIndex = 0;
   let uniformMap = primitive._batchTable.getUniformMapCallback()(
-    classificationPrimitive._uniformMap
+    classificationPrimitive._uniformMap,
   );
 
   const needs2DShader = classificationPrimitive._needs2DShader;
@@ -687,7 +688,7 @@ function createColorCommands(classificationPrimitive, colorCommands) {
 
     derivedCommand = DrawCommand.shallowClone(
       command,
-      command.derivedCommands.tileset
+      command.derivedCommands.tileset,
     );
     derivedCommand.renderState =
       classificationPrimitive._rsStencilDepthPass3DTiles;
@@ -718,7 +719,7 @@ function createColorCommands(classificationPrimitive, colorCommands) {
 
     derivedCommand = DrawCommand.shallowClone(
       command,
-      command.derivedCommands.tileset
+      command.derivedCommands.tileset,
     );
     derivedCommand.pass = Pass.CESIUM_3D_TILE_CLASSIFICATION;
     command.derivedCommands.tileset = derivedCommand;
@@ -728,7 +729,7 @@ function createColorCommands(classificationPrimitive, colorCommands) {
       // First derive from the terrain command
       let derived2DCommand = DrawCommand.shallowClone(
         command,
-        command.derivedCommands.appearance2D
+        command.derivedCommands.appearance2D,
       );
       derived2DCommand.shaderProgram = classificationPrimitive._spColor2D;
       command.derivedCommands.appearance2D = derived2DCommand;
@@ -736,7 +737,7 @@ function createColorCommands(classificationPrimitive, colorCommands) {
       // Then derive from the 3D Tiles command
       derived2DCommand = DrawCommand.shallowClone(
         derivedCommand,
-        derivedCommand.derivedCommands.appearance2D
+        derivedCommand.derivedCommands.appearance2D,
       );
       derived2DCommand.shaderProgram = classificationPrimitive._spColor2D;
       derivedCommand.derivedCommands.appearance2D = derived2DCommand;
@@ -752,7 +753,7 @@ function createColorCommands(classificationPrimitive, colorCommands) {
   for (let j = 0; j < length; ++j) {
     const commandIgnoreShow = (commandsIgnoreShow[j] = DrawCommand.shallowClone(
       colorCommands[commandIndex],
-      commandsIgnoreShow[j]
+      commandsIgnoreShow[j],
     ));
     commandIgnoreShow.shaderProgram = spStencil;
     commandIgnoreShow.pass = Pass.CESIUM_3D_TILE_CLASSIFICATION_IGNORE_SHOW;
@@ -783,7 +784,7 @@ function createPickCommands(classificationPrimitive, pickCommands) {
   let derivedCommand;
   let vaIndex = 0;
   const uniformMap = primitive._batchTable.getUniformMapCallback()(
-    classificationPrimitive._uniformMap
+    classificationPrimitive._uniformMap,
   );
 
   const needs2DShader = classificationPrimitive._needs2DShader;
@@ -818,7 +819,7 @@ function createPickCommands(classificationPrimitive, pickCommands) {
     // Derive for 3D Tiles classification
     derivedCommand = DrawCommand.shallowClone(
       command,
-      command.derivedCommands.tileset
+      command.derivedCommands.tileset,
     );
     derivedCommand.renderState =
       classificationPrimitive._rsStencilDepthPass3DTiles;
@@ -847,7 +848,7 @@ function createPickCommands(classificationPrimitive, pickCommands) {
 
     derivedCommand = DrawCommand.shallowClone(
       command,
-      command.derivedCommands.tileset
+      command.derivedCommands.tileset,
     );
     derivedCommand.pass = Pass.CESIUM_3D_TILE_CLASSIFICATION;
     command.derivedCommands.tileset = derivedCommand;
@@ -857,7 +858,7 @@ function createPickCommands(classificationPrimitive, pickCommands) {
       // First derive from the terrain command
       let derived2DCommand = DrawCommand.shallowClone(
         command,
-        command.derivedCommands.pick2D
+        command.derivedCommands.pick2D,
       );
       derived2DCommand.shaderProgram = classificationPrimitive._spPick2D;
       command.derivedCommands.pick2D = derived2DCommand;
@@ -865,7 +866,7 @@ function createPickCommands(classificationPrimitive, pickCommands) {
       // Then derive from the 3D Tiles command
       derived2DCommand = DrawCommand.shallowClone(
         derivedCommand,
-        derivedCommand.derivedCommands.pick2D
+        derivedCommand.derivedCommands.pick2D,
       );
       derived2DCommand.shaderProgram = classificationPrimitive._spPick2D;
       derivedCommand.derivedCommands.pick2D = derived2DCommand;
@@ -880,7 +881,7 @@ function createCommands(
   translucent,
   twoPasses,
   colorCommands,
-  pickCommands
+  pickCommands,
 ) {
   createColorCommands(classificationPrimitive, colorCommands);
   createPickCommands(classificationPrimitive, pickCommands);
@@ -896,7 +897,7 @@ function updateAndQueueRenderCommand(
   modelMatrix,
   cull,
   boundingVolume,
-  debugShowBoundingVolume
+  debugShowBoundingVolume,
 ) {
   command.modelMatrix = modelMatrix;
   command.boundingVolume = boundingVolume;
@@ -911,7 +912,7 @@ function updateAndQueuePickCommand(
   frameState,
   modelMatrix,
   cull,
-  boundingVolume
+  boundingVolume,
 ) {
   command.modelMatrix = modelMatrix;
   command.boundingVolume = boundingVolume;
@@ -928,7 +929,7 @@ function updateAndQueueCommands(
   modelMatrix,
   cull,
   debugShowBoundingVolume,
-  twoPasses
+  twoPasses,
 ) {
   const primitive = classificationPrimitive._primitive;
   Primitive._updateBoundingVolumes(primitive, frameState, modelMatrix);
@@ -971,7 +972,7 @@ function updateAndQueueCommands(
           modelMatrix,
           cull,
           boundingVolume,
-          debugShowBoundingVolume
+          debugShowBoundingVolume,
         );
       }
       if (queue3DTilesCommands) {
@@ -982,7 +983,7 @@ function updateAndQueueCommands(
           modelMatrix,
           cull,
           boundingVolume,
-          debugShowBoundingVolume
+          debugShowBoundingVolume,
         );
       }
     }
@@ -999,7 +1000,7 @@ function updateAndQueueCommands(
           modelMatrix,
           cull,
           boundingVolume,
-          debugShowBoundingVolume
+          debugShowBoundingVolume,
         );
       }
     }
@@ -1018,7 +1019,7 @@ function updateAndQueueCommands(
           frameState,
           modelMatrix,
           cull,
-          boundingVolume
+          boundingVolume,
         );
       }
       if (queue3DTilesCommands) {
@@ -1028,7 +1029,7 @@ function updateAndQueueCommands(
           frameState,
           modelMatrix,
           cull,
-          boundingVolume
+          boundingVolume,
         );
       }
     }
@@ -1080,12 +1081,12 @@ ClassificationPrimitive.prototype.update = function (frameState) {
       attributes = instances[0].attributes;
       // Not expecting these to be set by users, should only be set via GroundPrimitive.
       // So don't check for mismatch.
-      hasSphericalExtentsAttribute = ShadowVolumeAppearance.hasAttributesForSphericalExtents(
-        attributes
-      );
-      hasPlanarExtentsAttributes = ShadowVolumeAppearance.hasAttributesForTextureCoordinatePlanes(
-        attributes
-      );
+      hasSphericalExtentsAttribute =
+        ShadowVolumeAppearance.hasAttributesForSphericalExtents(attributes);
+      hasPlanarExtentsAttributes =
+        ShadowVolumeAppearance.hasAttributesForTextureCoordinatePlanes(
+          attributes,
+        );
       firstColor = attributes.color;
     }
 
@@ -1098,7 +1099,7 @@ ClassificationPrimitive.prototype.update = function (frameState) {
       //>>includeStart('debug', pragmas.debug);
       else if (hasPerColorAttribute) {
         throw new DeveloperError(
-          "All GeometryInstances must have color attributes to use per-instance color."
+          "All GeometryInstances must have color attributes to use per-instance color.",
         );
       }
       //>>includeEnd('debug');
@@ -1117,7 +1118,7 @@ ClassificationPrimitive.prototype.update = function (frameState) {
       !hasPlanarExtentsAttributes
     ) {
       throw new DeveloperError(
-        "All GeometryInstances must have the same color attribute except via GroundPrimitives"
+        "All GeometryInstances must have the same color attribute except via GroundPrimitives",
       );
     }
 
@@ -1135,7 +1136,7 @@ ClassificationPrimitive.prototype.update = function (frameState) {
       appearance instanceof PerInstanceColorAppearance
     ) {
       throw new DeveloperError(
-        "PerInstanceColorAppearance requires color GeometryInstanceAttributes on all GeometryInstances"
+        "PerInstanceColorAppearance requires color GeometryInstanceAttributes on all GeometryInstances",
       );
     }
     if (
@@ -1144,7 +1145,7 @@ ClassificationPrimitive.prototype.update = function (frameState) {
       !hasPlanarExtentsAttributes
     ) {
       throw new DeveloperError(
-        "Materials on ClassificationPrimitives are not supported except via GroundPrimitives"
+        "Materials on ClassificationPrimitives are not supported except via GroundPrimitives",
       );
     }
     //>>includeEnd('debug');
@@ -1173,7 +1174,7 @@ ClassificationPrimitive.prototype.update = function (frameState) {
     if (defined(this._createBoundingVolumeFunction)) {
       primitiveOptions._createBoundingVolumeFunction = function (
         frameState,
-        geometry
+        geometry,
       ) {
         that._createBoundingVolumeFunction(frameState, geometry);
       };
@@ -1183,14 +1184,14 @@ ClassificationPrimitive.prototype.update = function (frameState) {
       primitive,
       context,
       appearance,
-      twoPasses
+      twoPasses,
     ) {
       createRenderStates(that, context);
     };
     primitiveOptions._createShaderProgramFunction = function (
       primitive,
       frameState,
-      appearance
+      appearance,
     ) {
       createShaderProgram(that, frameState);
     };
@@ -1201,7 +1202,7 @@ ClassificationPrimitive.prototype.update = function (frameState) {
       translucent,
       twoPasses,
       colorCommands,
-      pickCommands
+      pickCommands,
     ) {
       createCommands(
         that,
@@ -1210,7 +1211,7 @@ ClassificationPrimitive.prototype.update = function (frameState) {
         true,
         false,
         colorCommands,
-        pickCommands
+        pickCommands,
       );
     };
 
@@ -1223,7 +1224,7 @@ ClassificationPrimitive.prototype.update = function (frameState) {
         modelMatrix,
         cull,
         debugShowBoundingVolume,
-        twoPasses
+        twoPasses,
       ) {
         that._updateAndQueueCommandsFunction(
           primitive,
@@ -1233,7 +1234,7 @@ ClassificationPrimitive.prototype.update = function (frameState) {
           modelMatrix,
           cull,
           debugShowBoundingVolume,
-          twoPasses
+          twoPasses,
         );
       };
     } else {
@@ -1245,7 +1246,7 @@ ClassificationPrimitive.prototype.update = function (frameState) {
         modelMatrix,
         cull,
         debugShowBoundingVolume,
-        twoPasses
+        twoPasses,
       ) {
         updateAndQueueCommands(
           that,
@@ -1255,7 +1256,7 @@ ClassificationPrimitive.prototype.update = function (frameState) {
           modelMatrix,
           cull,
           debugShowBoundingVolume,
-          twoPasses
+          twoPasses,
         );
       };
     }
@@ -1270,19 +1271,19 @@ ClassificationPrimitive.prototype.update = function (frameState) {
   ) {
     this._debugShowShadowVolume = true;
     this._rsStencilDepthPass = RenderState.fromCache(
-      getStencilDepthRenderState(false, false)
+      getStencilDepthRenderState(false, false),
     );
     this._rsStencilDepthPass3DTiles = RenderState.fromCache(
-      getStencilDepthRenderState(false, true)
+      getStencilDepthRenderState(false, true),
     );
     this._rsColorPass = RenderState.fromCache(getColorRenderState(false));
   } else if (!this.debugShowShadowVolume && this._debugShowShadowVolume) {
     this._debugShowShadowVolume = false;
     this._rsStencilDepthPass = RenderState.fromCache(
-      getStencilDepthRenderState(true, false)
+      getStencilDepthRenderState(true, false),
     );
     this._rsStencilDepthPass3DTiles = RenderState.fromCache(
-      getStencilDepthRenderState(true, true)
+      getStencilDepthRenderState(true, true),
     );
     this._rsColorPass = RenderState.fromCache(getColorRenderState(true));
   }
@@ -1296,7 +1297,7 @@ ClassificationPrimitive.prototype.update = function (frameState) {
       defined(appearance.material)
     ) {
       throw new DeveloperError(
-        "Materials on ClassificationPrimitives are not supported except via GroundPrimitive"
+        "Materials on ClassificationPrimitives are not supported except via GroundPrimitive",
       );
     }
     if (
@@ -1304,7 +1305,7 @@ ClassificationPrimitive.prototype.update = function (frameState) {
       appearance instanceof PerInstanceColorAppearance
     ) {
       throw new DeveloperError(
-        "PerInstanceColorAppearance requires color GeometryInstanceAttribute"
+        "PerInstanceColorAppearance requires color GeometryInstanceAttribute",
       );
     }
     //>>includeEnd('debug');
@@ -1340,12 +1341,12 @@ ClassificationPrimitive.prototype.update = function (frameState) {
  * attributes.show = Cesium.ShowGeometryInstanceAttribute.toValue(true);
  */
 ClassificationPrimitive.prototype.getGeometryInstanceAttributes = function (
-  id
+  id,
 ) {
   //>>includeStart('debug', pragmas.debug);
   if (!defined(this._primitive)) {
     throw new DeveloperError(
-      "must call update before calling getGeometryInstanceAttributes"
+      "must call update before calling getGeometryInstanceAttributes",
     );
   }
   //>>includeEnd('debug');

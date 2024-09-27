@@ -18,7 +18,7 @@ import equals from "./equals.js";
 function createMissingFunctionMessageFunction(
   item,
   actualPrototype,
-  expectedInterfacePrototype
+  expectedInterfacePrototype,
 ) {
   return function () {
     return `Expected function '${item}' to exist on ${actualPrototype.constructor.name} because it should implement interface ${expectedInterfacePrototype.constructor.name}.`;
@@ -274,7 +274,7 @@ function createDefaultMatchers(debug) {
                 message: createMissingFunctionMessageFunction(
                   item,
                   actualPrototype,
-                  expectedInterfacePrototype
+                  expectedInterfacePrototype,
                 ),
               };
             }
@@ -399,7 +399,7 @@ function createDefaultMatchers(debug) {
         compare: function (actual, expected, args) {
           const scene = actual;
           const result = scene.pickVoxel(
-            defaultValue(args, new Cartesian2(0, 0))
+            defaultValue(args, new Cartesian2(0, 0)),
           );
 
           const webglStub = !!window.webglStub;
@@ -467,14 +467,14 @@ function createDefaultMatchers(debug) {
           ray,
           limit,
           objectsToExclude,
-          width
+          width,
         ) {
           const scene = actual;
           const results = scene.drillPickFromRay(
             ray,
             limit,
             objectsToExclude,
-            width
+            width,
           );
 
           const webglStub = !!window.webglStub;
@@ -499,7 +499,7 @@ function createDefaultMatchers(debug) {
           expected,
           position,
           objectsToExclude,
-          width
+          width,
         ) {
           const scene = actual;
           const results = scene.sampleHeight(position, objectsToExclude, width);
@@ -526,13 +526,13 @@ function createDefaultMatchers(debug) {
           expected,
           cartesian,
           objectsToExclude,
-          width
+          width,
         ) {
           const scene = actual;
           const results = scene.clampToHeight(
             cartesian,
             objectsToExclude,
-            width
+            width,
           );
 
           const webglStub = !!window.webglStub;
@@ -708,7 +708,7 @@ function createDefaultMatchers(debug) {
     toThrowDeveloperError: makeThrowFunction(
       debug,
       DeveloperError,
-      "DeveloperError"
+      "DeveloperError",
     ),
   };
 }
@@ -718,7 +718,7 @@ function createDefaultAsyncMatchers(debug) {
     toBeRejectedWithDeveloperError: makeAsyncThrowFunction(
       debug,
       DeveloperError,
-      "DeveloperError"
+      "DeveloperError",
     ),
   };
 }
@@ -796,7 +796,7 @@ function renderEquals(util, actual, expected, expectEqual) {
     message = `Expected ${
       expectEqual ? "" : "not "
     }to render [${typedArrayToArray(
-      expected
+      expected,
     )}], but actually rendered [${typedArrayToArray(actualRgba)}].`;
   }
 
@@ -883,19 +883,19 @@ function contextRenderAndReadPixels(options) {
 
   if (!defined(fs) && !defined(sp)) {
     throw new DeveloperError(
-      "options.fragmentShader or options.shaderProgram is required."
+      "options.fragmentShader or options.shaderProgram is required.",
     );
   }
 
   if (defined(fs) && defined(sp)) {
     throw new DeveloperError(
-      "Both options.fragmentShader and options.shaderProgram can not be used at the same time."
+      "Both options.fragmentShader and options.shaderProgram can not be used at the same time.",
     );
   }
 
   if (defined(vs) && defined(sp)) {
     throw new DeveloperError(
-      "Both options.vertexShader and options.shaderProgram can not be used at the same time."
+      "Both options.vertexShader and options.shaderProgram can not be used at the same time.",
     );
   }
 

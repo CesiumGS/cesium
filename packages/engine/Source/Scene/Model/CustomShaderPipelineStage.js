@@ -69,7 +69,7 @@ const CustomShaderPipelineStage = {
 CustomShaderPipelineStage.process = function (
   renderResources,
   primitive,
-  frameState
+  frameState,
 ) {
   const { shaderBuilder, model, alphaOptions } = renderResources;
   const { customShader } = model;
@@ -109,7 +109,7 @@ CustomShaderPipelineStage.process = function (
     shaderBuilder.addDefine(
       "COMPUTE_POSITION_WC_CUSTOM_SHADER",
       undefined,
-      ShaderDestination.BOTH
+      ShaderDestination.BOTH,
     );
   }
 
@@ -117,7 +117,7 @@ CustomShaderPipelineStage.process = function (
     shaderBuilder.addDefine(
       "HAS_CUSTOM_VERTEX_SHADER",
       undefined,
-      ShaderDestination.VERTEX
+      ShaderDestination.VERTEX,
     );
   }
 
@@ -125,7 +125,7 @@ CustomShaderPipelineStage.process = function (
     shaderBuilder.addDefine(
       "HAS_CUSTOM_FRAGMENT_SHADER",
       undefined,
-      ShaderDestination.FRAGMENT
+      ShaderDestination.FRAGMENT,
     );
 
     // add defines like CUSTOM_SHADER_MODIFY_MATERIAL
@@ -133,7 +133,7 @@ CustomShaderPipelineStage.process = function (
     shaderBuilder.addDefine(
       shaderModeDefine,
       undefined,
-      ShaderDestination.FRAGMENT
+      ShaderDestination.FRAGMENT,
     );
   }
 
@@ -155,7 +155,7 @@ CustomShaderPipelineStage.process = function (
 
   renderResources.uniformMap = combine(
     renderResources.uniformMap,
-    customShader.uniformMap
+    customShader.uniformMap,
   );
 };
 
@@ -232,12 +232,12 @@ function generateVertexShaderLines(customShader, attributesByName) {
   const addToShader = getPrimitiveAttributesUsedInShader(
     attributesByName,
     primitiveAttributes,
-    false
+    false,
   );
   const needsDefault = getAttributesNeedingDefaults(
     attributesByName,
     primitiveAttributes,
-    false
+    false,
   );
 
   let vertexInitialization;
@@ -264,7 +264,7 @@ function generateVertexShaderLines(customShader, attributesByName) {
     if (!defined(attributeDefaults)) {
       CustomShaderPipelineStage._oneTimeWarning(
         "CustomShaderPipelineStage.incompatiblePrimitiveVS",
-        `Primitive is missing attribute ${variableName}, disabling custom vertex shader`
+        `Primitive is missing attribute ${variableName}, disabling custom vertex shader`,
       );
       // This primitive isn't compatible with the shader. Return early
       // to skip the vertex shader
@@ -296,7 +296,7 @@ function generatePositionBuiltins(customShader) {
   if (usedVariables.hasOwnProperty("positionWC")) {
     attributeFields.push(["vec3", "positionWC"]);
     initializationLines.push(
-      "fsInput.attributes.positionWC = attributes.positionWC;"
+      "fsInput.attributes.positionWC = attributes.positionWC;",
     );
   }
 
@@ -304,7 +304,7 @@ function generatePositionBuiltins(customShader) {
   if (usedVariables.hasOwnProperty("positionEC")) {
     attributeFields.push(["vec3", "positionEC"]);
     initializationLines.push(
-      "fsInput.attributes.positionEC = attributes.positionEC;"
+      "fsInput.attributes.positionEC = attributes.positionEC;",
     );
   }
 
@@ -329,12 +329,12 @@ function generateFragmentShaderLines(customShader, attributesByName) {
   const addToShader = getPrimitiveAttributesUsedInShader(
     attributesByName,
     primitiveAttributes,
-    true
+    true,
   );
   const needsDefault = getAttributesNeedingDefaults(
     attributesByName,
     primitiveAttributes,
-    true
+    true,
   );
 
   let fragmentInitialization;
@@ -362,7 +362,7 @@ function generateFragmentShaderLines(customShader, attributesByName) {
     if (!defined(attributeDefaults)) {
       CustomShaderPipelineStage._oneTimeWarning(
         "CustomShaderPipelineStage.incompatiblePrimitiveFS",
-        `Primitive is missing attribute ${variableName}, disabling custom fragment shader.`
+        `Primitive is missing attribute ${variableName}, disabling custom fragment shader.`,
       );
 
       // This primitive isn't compatible with the shader. Return early
@@ -381,9 +381,8 @@ function generateFragmentShaderLines(customShader, attributesByName) {
   return {
     enabled: true,
     attributeFields: attributeFields.concat(positionBuiltins.attributeFields),
-    initializationLines: positionBuiltins.initializationLines.concat(
-      initializationLines
-    ),
+    initializationLines:
+      positionBuiltins.initializationLines.concat(initializationLines),
   };
 }
 
@@ -406,7 +405,7 @@ const builtinAttributes = {
 function getPrimitiveAttributesUsedInShader(
   primitiveAttributes,
   shaderAttributeSet,
-  isFragmentShader
+  isFragmentShader,
 ) {
   const addToShader = {};
   for (const attributeName in primitiveAttributes) {
@@ -446,7 +445,7 @@ function getPrimitiveAttributesUsedInShader(
 function getAttributesNeedingDefaults(
   primitiveAttributes,
   shaderAttributeSet,
-  isFragmentShader
+  isFragmentShader,
 ) {
   const needDefaults = [];
   for (const attributeName in shaderAttributeSet) {
@@ -487,7 +486,7 @@ function generateShaderLines(customShader, primitive) {
   const vertexLines = generateVertexShaderLines(customShader, attributesByName);
   const fragmentLines = generateFragmentShaderLines(
     customShader,
-    attributesByName
+    attributesByName,
   );
 
   // positionWC must be computed in the vertex shader
@@ -513,7 +512,7 @@ function addVertexLinesToShader(shaderBuilder, vertexLines) {
   shaderBuilder.addStruct(
     structId,
     CustomShaderPipelineStage.STRUCT_NAME_ATTRIBUTES,
-    ShaderDestination.VERTEX
+    ShaderDestination.VERTEX,
   );
 
   const { attributeFields, initializationLines } = vertexLines;
@@ -528,36 +527,36 @@ function addVertexLinesToShader(shaderBuilder, vertexLines) {
   shaderBuilder.addStruct(
     structId,
     CustomShaderPipelineStage.STRUCT_NAME_VERTEX_INPUT,
-    ShaderDestination.VERTEX
+    ShaderDestination.VERTEX,
   );
   shaderBuilder.addStructField(
     structId,
     CustomShaderPipelineStage.STRUCT_NAME_ATTRIBUTES,
-    "attributes"
+    "attributes",
   );
   // Add FeatureIds struct from the Feature ID stage
   shaderBuilder.addStructField(
     structId,
     FeatureIdPipelineStage.STRUCT_NAME_FEATURE_IDS,
-    "featureIds"
+    "featureIds",
   );
   // Add Metadata struct from the metadata stage
   shaderBuilder.addStructField(
     structId,
     MetadataPipelineStage.STRUCT_NAME_METADATA,
-    "metadata"
+    "metadata",
   );
   // Add MetadataClass struct from the metadata stage
   shaderBuilder.addStructField(
     structId,
     MetadataPipelineStage.STRUCT_NAME_METADATA_CLASS,
-    "metadataClass"
+    "metadataClass",
   );
   // Add MetadataStatistics struct from the metadata stage
   shaderBuilder.addStructField(
     structId,
     MetadataPipelineStage.STRUCT_NAME_METADATA_STATISTICS,
-    "metadataStatistics"
+    "metadataStatistics",
   );
 
   const functionId =
@@ -565,7 +564,7 @@ function addVertexLinesToShader(shaderBuilder, vertexLines) {
   shaderBuilder.addFunction(
     functionId,
     CustomShaderPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_INPUT_STRUCT_VS,
-    ShaderDestination.VERTEX
+    ShaderDestination.VERTEX,
   );
 
   shaderBuilder.addFunctionLines(functionId, initializationLines);
@@ -576,7 +575,7 @@ function addFragmentLinesToShader(shaderBuilder, fragmentLines) {
   shaderBuilder.addStruct(
     structId,
     CustomShaderPipelineStage.STRUCT_NAME_ATTRIBUTES,
-    ShaderDestination.FRAGMENT
+    ShaderDestination.FRAGMENT,
   );
 
   const { attributeFields, initializationLines } = fragmentLines;
@@ -589,36 +588,36 @@ function addFragmentLinesToShader(shaderBuilder, fragmentLines) {
   shaderBuilder.addStruct(
     structId,
     CustomShaderPipelineStage.STRUCT_NAME_FRAGMENT_INPUT,
-    ShaderDestination.FRAGMENT
+    ShaderDestination.FRAGMENT,
   );
   shaderBuilder.addStructField(
     structId,
     CustomShaderPipelineStage.STRUCT_NAME_ATTRIBUTES,
-    "attributes"
+    "attributes",
   );
   // Add FeatureIds struct from the Feature ID stage
   shaderBuilder.addStructField(
     structId,
     FeatureIdPipelineStage.STRUCT_NAME_FEATURE_IDS,
-    "featureIds"
+    "featureIds",
   );
   // Add Metadata struct from the metadata stage
   shaderBuilder.addStructField(
     structId,
     MetadataPipelineStage.STRUCT_NAME_METADATA,
-    "metadata"
+    "metadata",
   );
   // Add MetadataClass struct from the metadata stage
   shaderBuilder.addStructField(
     structId,
     MetadataPipelineStage.STRUCT_NAME_METADATA_CLASS,
-    "metadataClass"
+    "metadataClass",
   );
   // Add MetadataStatistics struct from the metadata stage
   shaderBuilder.addStructField(
     structId,
     MetadataPipelineStage.STRUCT_NAME_METADATA_STATISTICS,
-    "metadataStatistics"
+    "metadataStatistics",
   );
 
   const functionId =
@@ -626,7 +625,7 @@ function addFragmentLinesToShader(shaderBuilder, fragmentLines) {
   shaderBuilder.addFunction(
     functionId,
     CustomShaderPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_INPUT_STRUCT_FS,
-    ShaderDestination.FRAGMENT
+    ShaderDestination.FRAGMENT,
   );
 
   shaderBuilder.addFunctionLines(functionId, initializationLines);
@@ -645,7 +644,7 @@ function addLinesToShader(shaderBuilder, customShader, generatedCode) {
     shaderLines.push(
       "#line 0",
       customShader.vertexShaderText,
-      CustomShaderStageVS
+      CustomShaderStageVS,
     );
 
     shaderBuilder.addVertexLines(shaderLines);
@@ -658,7 +657,7 @@ function addLinesToShader(shaderBuilder, customShader, generatedCode) {
     shaderLines.push(
       "#line 0",
       customShader.fragmentShaderText,
-      CustomShaderStageFS
+      CustomShaderStageFS,
     );
 
     shaderBuilder.addFragmentLines(shaderLines);

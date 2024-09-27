@@ -383,18 +383,18 @@ Rectangle.fromBoundingSphere = function (boundingSphere, ellipsoid, result) {
   const fromENU = Transforms.eastNorthUpToFixedFrame(
     center,
     ellipsoid,
-    fromBoundingSphereMatrixScratch
+    fromBoundingSphereMatrixScratch,
   );
   const east = Matrix4.multiplyByPointAsVector(
     fromENU,
     Cartesian3.UNIT_X,
-    fromBoundingSphereEastScratch
+    fromBoundingSphereEastScratch,
   );
   Cartesian3.normalize(east, east);
   const north = Matrix4.multiplyByPointAsVector(
     fromENU,
     Cartesian3.UNIT_Y,
-    fromBoundingSphereNorthScratch
+    fromBoundingSphereNorthScratch,
   );
   Cartesian3.normalize(north, north);
 
@@ -444,7 +444,7 @@ Rectangle.clone = function (rectangle, result) {
       rectangle.west,
       rectangle.south,
       rectangle.east,
-      rectangle.north
+      rectangle.north,
     );
   }
 
@@ -547,7 +547,7 @@ Rectangle.prototype.equalsEpsilon = function (other, epsilon) {
 Rectangle.validate = function (rectangle) {
   deprecationWarning(
     "Rectangle.validate",
-    "Rectangle.validate is a no-op and has been deprecated. It will be removed in Cesium 1.124."
+    "Rectangle.validate is a no-op and has been deprecated. It will be removed in Cesium 1.124.",
   );
   return Rectangle._validate(rectangle);
 };
@@ -571,7 +571,7 @@ Rectangle._validate = function (rectangle) {
   Check.typeOf.number.greaterThanOrEquals(
     "north",
     north,
-    -CesiumMath.PI_OVER_TWO
+    -CesiumMath.PI_OVER_TWO,
   );
   Check.typeOf.number.lessThanOrEquals("north", north, CesiumMath.PI_OVER_TWO);
 
@@ -579,7 +579,7 @@ Rectangle._validate = function (rectangle) {
   Check.typeOf.number.greaterThanOrEquals(
     "south",
     south,
-    -CesiumMath.PI_OVER_TWO
+    -CesiumMath.PI_OVER_TWO,
   );
   Check.typeOf.number.lessThanOrEquals("south", south, CesiumMath.PI_OVER_TWO);
 
@@ -746,10 +746,10 @@ Rectangle.intersection = function (rectangle, otherRectangle, result) {
   }
 
   const west = CesiumMath.negativePiToPi(
-    Math.max(rectangleWest, otherRectangleWest)
+    Math.max(rectangleWest, otherRectangleWest),
   );
   const east = CesiumMath.negativePiToPi(
-    Math.min(rectangleEast, otherRectangleEast)
+    Math.min(rectangleEast, otherRectangleEast),
   );
 
   if (
@@ -851,10 +851,10 @@ Rectangle.union = function (rectangle, otherRectangle, result) {
   }
 
   const west = CesiumMath.negativePiToPi(
-    Math.min(rectangleWest, otherRectangleWest)
+    Math.min(rectangleWest, otherRectangleWest),
   );
   const east = CesiumMath.negativePiToPi(
-    Math.max(rectangleEast, otherRectangleEast)
+    Math.max(rectangleEast, otherRectangleEast),
   );
 
   result.west = west;
@@ -1021,7 +1021,7 @@ Rectangle.subsection = function (
   southLerp,
   eastLerp,
   northLerp,
-  result
+  result,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("rectangle", rectangle);
@@ -1086,7 +1086,7 @@ Rectangle.MAX_VALUE = Object.freeze(
     -Math.PI,
     -CesiumMath.PI_OVER_TWO,
     Math.PI,
-    CesiumMath.PI_OVER_TWO
-  )
+    CesiumMath.PI_OVER_TWO,
+  ),
 );
 export default Rectangle;

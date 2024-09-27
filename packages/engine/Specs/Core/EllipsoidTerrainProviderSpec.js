@@ -36,5 +36,5 @@ describe(
       expect(provider.getTileDataAvailable()).toBeUndefined();
     });
   },
-  "WebGL"
+  "WebGL",
 );

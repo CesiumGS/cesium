@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -21,10 +21,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -59,49 +56,40 @@
               }),
               modelMatrix: Cesium.Matrix4.multiplyByTranslation(
                 Cesium.Transforms.eastNorthUpToFixedFrame(
-                  Cesium.Cartesian3.fromDegrees(-105.0, 45.0)
+                  Cesium.Cartesian3.fromDegrees(-105.0, 45.0),
                 ),
                 new Cesium.Cartesian3(0.0, 0.0, 250000),
-                new Cesium.Matrix4()
+                new Cesium.Matrix4(),
               ),
               attributes: {
                 color: Cesium.ColorGeometryInstanceAttribute.fromColor(
-                  Cesium.Color.RED.withAlpha(0.5)
+                  Cesium.Color.RED.withAlpha(0.5),
                 ),
               },
             }),
             appearance: new Cesium.PerInstanceColorAppearance({
               closed: true,
             }),
-          })
+          }),
         );
 
         scene.primitives.add(
           new Cesium.Primitive({
             geometryInstances: new Cesium.GeometryInstance({
               geometry: new Cesium.RectangleGeometry({
-                rectangle: Cesium.Rectangle.fromDegrees(
-                  -100.0,
-                  30.0,
-                  -93.0,
-                  37.0
-                ),
+                rectangle: Cesium.Rectangle.fromDegrees(-100.0, 30.0, -93.0, 37.0),
                 height: 100000,
                 vertexFormat: Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
               }),
               attributes: {
-                color: Cesium.ColorGeometryInstanceAttribute.fromColor(
-                  Cesium.Color.BLUE
-                ),
+                color: Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.BLUE),
               },
             }),
             appearance: new Cesium.PerInstanceColorAppearance(),
-          })
+          }),
         );
 
-        const billboards = scene.primitives.add(
-          new Cesium.BillboardCollection()
-        );
+        const billboards = scene.primitives.add(new Cesium.BillboardCollection());
         billboards.add({
           position: Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883, 150000),
           image: "../images/Cesium_Logo_overlay.png",

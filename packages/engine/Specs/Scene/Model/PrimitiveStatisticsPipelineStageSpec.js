@@ -337,7 +337,7 @@ describe(
 
       PrimitiveStatisticsPipelineStage._count2DPositions(
         statistics,
-        mockRuntimePrimitive
+        mockRuntimePrimitive,
       );
 
       expect(statistics.geometryByteLength).toBe(0);
@@ -365,7 +365,7 @@ describe(
 
         PrimitiveStatisticsPipelineStage._count2DPositions(
           statistics,
-          mockRuntimePrimitive
+          mockRuntimePrimitive,
         );
 
         // This stage intentionally counts the GPU + CPU copies of the 2D
@@ -383,7 +383,7 @@ describe(
 
         PrimitiveStatisticsPipelineStage._countMorphTargetAttributes(
           statistics,
-          primitive
+          primitive,
         );
 
         let totalSize = 0;
@@ -409,7 +409,7 @@ describe(
 
         PrimitiveStatisticsPipelineStage._countMaterialTextures(
           statistics,
-          primitive.material
+          primitive.material,
         );
 
         expect(statistics.texturesByteLength).toBe(0);
@@ -427,7 +427,7 @@ describe(
 
         PrimitiveStatisticsPipelineStage._countMaterialTextures(
           statistics,
-          primitive.material
+          primitive.material,
         );
 
         const totalTextureSize =
@@ -452,7 +452,7 @@ describe(
 
         PrimitiveStatisticsPipelineStage._countMaterialTextures(
           statistics,
-          primitive.material
+          primitive.material,
         );
 
         const totalTextureSize =
@@ -475,13 +475,13 @@ describe(
 
         PrimitiveStatisticsPipelineStage._countFeatureIdTextures(
           statistics,
-          primitive.featureIds
+          primitive.featureIds,
         );
 
         const featureIdTexture = primitive.featureIds[0];
         expect(statistics.geometryByteLength).toBe(0);
         expect(statistics.texturesByteLength).toBe(
-          featureIdTexture.textureReader.texture.sizeInBytes
+          featureIdTexture.textureReader.texture.sizeInBytes,
         );
       });
     });
@@ -494,7 +494,7 @@ describe(
 
         PrimitiveStatisticsPipelineStage._countBinaryMetadata(
           statistics,
-          model
+          model,
         );
 
         expect(statistics.geometryByteLength).toBe(0);
@@ -509,33 +509,33 @@ describe(
 
         PrimitiveStatisticsPipelineStage._countBinaryMetadata(
           statistics,
-          model
+          model,
         );
 
         const structuralMetadata = model.structuralMetadata;
         const propertyTable = structuralMetadata.getPropertyTable(0);
 
         expect(statistics.propertyTablesByteLength).toBe(
-          propertyTable.byteLength
+          propertyTable.byteLength,
         );
       });
     });
 
     it("_countBinaryMetadata does not update statistics for property attributes", function () {
-      return loadGltf(pointCloudWithPropertyAttributes).then(function (
-        gltfLoader
-      ) {
-        const statistics = new ModelStatistics();
-        const components = gltfLoader.components;
-        const model = mockModel(components);
+      return loadGltf(pointCloudWithPropertyAttributes).then(
+        function (gltfLoader) {
+          const statistics = new ModelStatistics();
+          const components = gltfLoader.components;
+          const model = mockModel(components);
 
-        PrimitiveStatisticsPipelineStage._countBinaryMetadata(
-          statistics,
-          model
-        );
+          PrimitiveStatisticsPipelineStage._countBinaryMetadata(
+            statistics,
+            model,
+          );
 
-        expect(statistics.geometryByteLength).toBe(0);
-      });
+          expect(statistics.geometryByteLength).toBe(0);
+        },
+      );
     });
 
     it("_countBinaryMetadata updates statistics for propertyTextures", function () {
@@ -546,7 +546,7 @@ describe(
 
         PrimitiveStatisticsPipelineStage._countBinaryMetadata(
           statistics,
-          model
+          model,
         );
 
         // everything shares the same texture, so the memory is only counted
@@ -560,5 +560,5 @@ describe(
       });
     });
   },
-  "WebGL"
+  "WebGL",
 );

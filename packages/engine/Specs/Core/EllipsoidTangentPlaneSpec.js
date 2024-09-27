@@ -16,7 +16,7 @@ describe("Core/EllipsoidTangentPlane", function () {
   it("constructor sets expected values", function () {
     const tangentPlane = new EllipsoidTangentPlane(
       Cartesian3.UNIT_X,
-      Ellipsoid.UNIT_SPHERE
+      Ellipsoid.UNIT_SPHERE,
     );
     expect(tangentPlane.ellipsoid).toBe(Ellipsoid.UNIT_SPHERE);
     expect(tangentPlane.origin).toEqual(Cartesian3.UNIT_X);
@@ -29,7 +29,7 @@ describe("Core/EllipsoidTangentPlane", function () {
     ];
     const tangentPlane = EllipsoidTangentPlane.fromPoints(
       points,
-      Ellipsoid.UNIT_SPHERE
+      Ellipsoid.UNIT_SPHERE,
     );
     expect(tangentPlane.ellipsoid).toBe(Ellipsoid.UNIT_SPHERE);
     expect(tangentPlane.origin).toEqual(Cartesian3.UNIT_X);
@@ -65,7 +65,7 @@ describe("Core/EllipsoidTangentPlane", function () {
     const result = new Cartesian2();
     const returnedResult = tangentPlane.projectPointOntoPlane(
       positions,
-      result
+      result,
     );
     expect(result).toBe(returnedResult);
     expect(returnedResult).toEqual(expectedResult);
@@ -110,7 +110,7 @@ describe("Core/EllipsoidTangentPlane", function () {
     const result = [index0];
     const returnedResults = tangentPlane.projectPointsOntoPlane(
       positions,
-      result
+      result,
     );
     expect(result).toBe(returnedResults);
     expect(result[0]).toBe(index0);
@@ -159,7 +159,7 @@ describe("Core/EllipsoidTangentPlane", function () {
     const result = new Cartesian3();
     const returnedResult = tangentPlane.projectPointOntoEllipsoid(
       position,
-      result
+      result,
     );
     expect(result).toBe(returnedResult);
     expect(returnedResult).toEqual(expectedResult);
@@ -199,7 +199,7 @@ describe("Core/EllipsoidTangentPlane", function () {
     const result = [index0];
     const returnedResults = tangentPlane.projectPointsOntoEllipsoid(
       positions,
-      result
+      result,
     );
     expect(result).toBe(returnedResults);
     expect(result[0]).toBe(index0);
@@ -223,16 +223,16 @@ describe("Core/EllipsoidTangentPlane", function () {
     const tangentPlane = new EllipsoidTangentPlane(origin, ellipsoid);
 
     expect(
-      tangentPlane.projectPointToNearestOnPlane(new Cartesian3(2.0, 0.0, 0.0))
+      tangentPlane.projectPointToNearestOnPlane(new Cartesian3(2.0, 0.0, 0.0)),
     ).toEqual(new Cartesian2(0.0, 0.0));
     expect(
-      tangentPlane.projectPointToNearestOnPlane(new Cartesian3(1.0, 0.0, 0.0))
+      tangentPlane.projectPointToNearestOnPlane(new Cartesian3(1.0, 0.0, 0.0)),
     ).toEqual(new Cartesian2(0.0, 0.0));
     expect(
-      tangentPlane.projectPointToNearestOnPlane(new Cartesian3(0.0, 0.0, 0.0))
+      tangentPlane.projectPointToNearestOnPlane(new Cartesian3(0.0, 0.0, 0.0)),
     ).toEqual(new Cartesian2(0.0, 0.0));
     expect(
-      tangentPlane.projectPointToNearestOnPlane(new Cartesian3(-1.0, 0.0, 0.0))
+      tangentPlane.projectPointToNearestOnPlane(new Cartesian3(-1.0, 0.0, 0.0)),
     ).toEqual(new Cartesian2(0.0, 0.0));
   });
 
@@ -246,7 +246,7 @@ describe("Core/EllipsoidTangentPlane", function () {
     const result = new Cartesian2();
     const returnedResult = tangentPlane.projectPointToNearestOnPlane(
       positions,
-      result
+      result,
     );
     expect(result).toBe(returnedResult);
     expect(returnedResult).toEqual(expectedResult);
@@ -267,9 +267,8 @@ describe("Core/EllipsoidTangentPlane", function () {
       new Cartesian2(0.0, 0.0),
       new Cartesian2(1.0, 0.0),
     ];
-    const returnedResults = tangentPlane.projectPointsToNearestOnPlane(
-      positions
-    );
+    const returnedResults =
+      tangentPlane.projectPointsToNearestOnPlane(positions);
     expect(returnedResults).toEqual(expectedResults);
   });
 
@@ -293,7 +292,7 @@ describe("Core/EllipsoidTangentPlane", function () {
     const result = [index0];
     const returnedResults = tangentPlane.projectPointsToNearestOnPlane(
       positions,
-      result
+      result,
     );
     expect(result).toBe(returnedResults);
     expect(result[0]).toBe(index0);
@@ -321,7 +320,7 @@ describe("Core/EllipsoidTangentPlane", function () {
   it("projectPointOntoPlane throws without cartesian", function () {
     const tangentPlane = new EllipsoidTangentPlane(
       Cartesian3.UNIT_X,
-      Ellipsoid.UNIT_SPHERE
+      Ellipsoid.UNIT_SPHERE,
     );
     expect(function () {
       return tangentPlane.projectPointOntoPlane(undefined);
@@ -331,7 +330,7 @@ describe("Core/EllipsoidTangentPlane", function () {
   it("projectPointsOntoPlane throws without cartesians", function () {
     const tangentPlane = new EllipsoidTangentPlane(
       Cartesian3.UNIT_X,
-      Ellipsoid.UNIT_SPHERE
+      Ellipsoid.UNIT_SPHERE,
     );
     expect(function () {
       return tangentPlane.projectPointsOntoPlane(undefined);
@@ -341,7 +340,7 @@ describe("Core/EllipsoidTangentPlane", function () {
   it("projectPointToNearestOnPlane throws without cartesian", function () {
     const tangentPlane = new EllipsoidTangentPlane(
       Cartesian3.UNIT_X,
-      Ellipsoid.UNIT_SPHERE
+      Ellipsoid.UNIT_SPHERE,
     );
     expect(function () {
       return tangentPlane.projectPointToNearestOnPlane(undefined);
@@ -351,7 +350,7 @@ describe("Core/EllipsoidTangentPlane", function () {
   it("projectPointsToNearestOnPlane throws without cartesians", function () {
     const tangentPlane = new EllipsoidTangentPlane(
       Cartesian3.UNIT_X,
-      Ellipsoid.UNIT_SPHERE
+      Ellipsoid.UNIT_SPHERE,
     );
     expect(function () {
       return tangentPlane.projectPointsToNearestOnPlane(undefined);
@@ -361,7 +360,7 @@ describe("Core/EllipsoidTangentPlane", function () {
   it("projectPointsOntoEllipsoid throws without cartesians", function () {
     const tangentPlane = new EllipsoidTangentPlane(
       Cartesian3.UNIT_X,
-      Ellipsoid.UNIT_SPHERE
+      Ellipsoid.UNIT_SPHERE,
     );
     expect(function () {
       return tangentPlane.projectPointsOntoEllipsoid(undefined);
@@ -370,21 +369,12 @@ describe("Core/EllipsoidTangentPlane", function () {
 
   it("projectPointsOntoEllipsoid works with an arbitrary ellipsoid using fromPoints", function () {
     const points = Cartesian3.fromDegreesArray([
-      -72.0,
-      40.0,
-      -68.0,
-      35.0,
-      -75.0,
-      30.0,
-      -70.0,
-      30.0,
-      -68.0,
-      40.0,
+      -72.0, 40.0, -68.0, 35.0, -75.0, 30.0, -70.0, 30.0, -68.0, 40.0,
     ]);
 
     const tangentPlane = EllipsoidTangentPlane.fromPoints(
       points,
-      Ellipsoid.WGS84
+      Ellipsoid.WGS84,
     );
     const points2D = tangentPlane.projectPointsOntoPlane(points);
     const positionsBack = tangentPlane.projectPointsOntoEllipsoid(points2D);

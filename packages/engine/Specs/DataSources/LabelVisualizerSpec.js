@@ -87,7 +87,7 @@ describe(
 
       const testObject = entityCollection.getOrCreateEntity("test");
       testObject.position = new ConstantProperty(
-        new Cartesian3(1234, 5678, 9101112)
+        new Cartesian3(1234, 5678, 9101112),
       );
       visualizer.update(JulianDate.now());
       expect(scene.primitives.get(0)).toBeUndefined();
@@ -112,7 +112,7 @@ describe(
 
       const testObject = entityCollection.getOrCreateEntity("test");
       testObject.position = new ConstantProperty(
-        new Cartesian3(1234, 5678, 9101112)
+        new Cartesian3(1234, 5678, 9101112),
       );
       const label = (testObject.label = new LabelGraphics());
       label.show = new ConstantProperty(true);
@@ -131,7 +131,7 @@ describe(
       const label = (testObject.label = new LabelGraphics());
 
       testObject.position = new ConstantProperty(
-        new Cartesian3(1234, 5678, 9101112)
+        new Cartesian3(1234, 5678, 9101112),
       );
       label.text = new ConstantProperty("a");
       label.font = new ConstantProperty("sans serif");
@@ -147,11 +147,11 @@ describe(
       label.show = new ConstantProperty(true);
       label.translucencyByDistance = new ConstantProperty(new NearFarScalar());
       label.pixelOffsetScaleByDistance = new ConstantProperty(
-        new NearFarScalar()
+        new NearFarScalar(),
       );
       label.scaleByDistance = new ConstantProperty(new NearFarScalar());
       label.distanceDisplayCondition = new ConstantProperty(
-        new DistanceDisplayCondition()
+        new DistanceDisplayCondition(),
       );
       label.disableDepthTestDistance = new ConstantProperty(10.0);
 
@@ -169,41 +169,41 @@ describe(
       expect(l.style).toEqual(testObject.label.style.getValue(time));
       expect(l.fillColor).toEqual(testObject.label.fillColor.getValue(time));
       expect(l.outlineColor).toEqual(
-        testObject.label.outlineColor.getValue(time)
+        testObject.label.outlineColor.getValue(time),
       );
       expect(l.outlineWidth).toEqual(
-        testObject.label.outlineWidth.getValue(time)
+        testObject.label.outlineWidth.getValue(time),
       );
       expect(l.horizontalOrigin).toEqual(
-        testObject.label.horizontalOrigin.getValue(time)
+        testObject.label.horizontalOrigin.getValue(time),
       );
       expect(l.verticalOrigin).toEqual(
-        testObject.label.verticalOrigin.getValue(time)
+        testObject.label.verticalOrigin.getValue(time),
       );
       expect(l.eyeOffset).toEqual(testObject.label.eyeOffset.getValue(time));
       expect(l.pixelOffset).toEqual(
-        testObject.label.pixelOffset.getValue(time)
+        testObject.label.pixelOffset.getValue(time),
       );
       expect(l.scale).toEqual(testObject.label.scale.getValue(time));
       expect(l.show).toEqual(testObject.label.show.getValue(time));
       expect(l.translucencyByDistance).toEqual(
-        testObject.label.translucencyByDistance.getValue(time)
+        testObject.label.translucencyByDistance.getValue(time),
       );
       expect(l.pixelOffsetScaleByDistance).toEqual(
-        testObject.label.pixelOffsetScaleByDistance.getValue(time)
+        testObject.label.pixelOffsetScaleByDistance.getValue(time),
       );
       expect(l.scaleByDistance).toEqual(
-        testObject.label.scaleByDistance.getValue(time)
+        testObject.label.scaleByDistance.getValue(time),
       );
       expect(l.distanceDisplayCondition).toEqual(
-        testObject.label.distanceDisplayCondition.getValue(time)
+        testObject.label.distanceDisplayCondition.getValue(time),
       );
       expect(l.disableDepthTestDistance).toEqual(
-        testObject.label.disableDepthTestDistance.getValue(time)
+        testObject.label.disableDepthTestDistance.getValue(time),
       );
 
       testObject.position = new ConstantProperty(
-        new Cartesian3(5678, 1234, 1293434)
+        new Cartesian3(5678, 1234, 1293434),
       );
       label.text = new ConstantProperty("b");
       label.font = new ConstantProperty("serif");
@@ -219,11 +219,11 @@ describe(
       label.show = new ConstantProperty(true);
       label.translucencyByDistance = new ConstantProperty(new NearFarScalar());
       label.pixelOffsetScaleByDistance = new ConstantProperty(
-        new NearFarScalar()
+        new NearFarScalar(),
       );
       label.scaleByDistance = new ConstantProperty(new NearFarScalar());
       label.distanceDisplayCondition = new ConstantProperty(
-        new DistanceDisplayCondition()
+        new DistanceDisplayCondition(),
       );
       label.disableDepthTestDistance = new ConstantProperty(20.0);
 
@@ -234,37 +234,37 @@ describe(
       expect(l.style).toEqual(testObject.label.style.getValue(time));
       expect(l.fillColor).toEqual(testObject.label.fillColor.getValue(time));
       expect(l.outlineColor).toEqual(
-        testObject.label.outlineColor.getValue(time)
+        testObject.label.outlineColor.getValue(time),
       );
       expect(l.outlineWidth).toEqual(
-        testObject.label.outlineWidth.getValue(time)
+        testObject.label.outlineWidth.getValue(time),
       );
       expect(l.horizontalOrigin).toEqual(
-        testObject.label.horizontalOrigin.getValue(time)
+        testObject.label.horizontalOrigin.getValue(time),
       );
       expect(l.verticalOrigin).toEqual(
-        testObject.label.verticalOrigin.getValue(time)
+        testObject.label.verticalOrigin.getValue(time),
       );
       expect(l.eyeOffset).toEqual(testObject.label.eyeOffset.getValue(time));
       expect(l.pixelOffset).toEqual(
-        testObject.label.pixelOffset.getValue(time)
+        testObject.label.pixelOffset.getValue(time),
       );
       expect(l.scale).toEqual(testObject.label.scale.getValue(time));
       expect(l.show).toEqual(testObject.label.show.getValue(time));
       expect(l.translucencyByDistance).toEqual(
-        testObject.label.translucencyByDistance.getValue(time)
+        testObject.label.translucencyByDistance.getValue(time),
       );
       expect(l.pixelOffsetScaleByDistance).toEqual(
-        testObject.label.pixelOffsetScaleByDistance.getValue(time)
+        testObject.label.pixelOffsetScaleByDistance.getValue(time),
       );
       expect(l.scaleByDistance).toEqual(
-        testObject.label.scaleByDistance.getValue(time)
+        testObject.label.scaleByDistance.getValue(time),
       );
       expect(l.distanceDisplayCondition).toEqual(
-        testObject.label.distanceDisplayCondition.getValue(time)
+        testObject.label.distanceDisplayCondition.getValue(time),
       );
       expect(l.disableDepthTestDistance).toEqual(
-        testObject.label.disableDepthTestDistance.getValue(time)
+        testObject.label.disableDepthTestDistance.getValue(time),
       );
 
       label.show = new ConstantProperty(false);
@@ -278,7 +278,7 @@ describe(
 
       const testObject = entityCollection.getOrCreateEntity("test");
       testObject.position = new ConstantProperty(
-        new Cartesian3(1234, 5678, 9101112)
+        new Cartesian3(1234, 5678, 9101112),
       );
       testObject.label = new LabelGraphics();
       testObject.label.text = new ConstantProperty("a");
@@ -297,7 +297,7 @@ describe(
 
       const testObject2 = entityCollection.getOrCreateEntity("test2");
       testObject2.position = new ConstantProperty(
-        new Cartesian3(1234, 5678, 9101112)
+        new Cartesian3(1234, 5678, 9101112),
       );
       testObject2.label = new LabelGraphics();
       testObject2.label.text = new ConstantProperty("b");
@@ -316,7 +316,7 @@ describe(
       const label = (testObject.label = new LabelGraphics());
 
       testObject.position = new ConstantProperty(
-        new Cartesian3(1234, 5678, 9101112)
+        new Cartesian3(1234, 5678, 9101112),
       );
       label.show = new ConstantProperty(true);
       label.text = new ConstantProperty("lorum ipsum");
@@ -344,7 +344,7 @@ describe(
       const label = (testObject.label = new LabelGraphics());
 
       testObject.position = new ConstantProperty(
-        new Cartesian3(1234, 5678, 9101112)
+        new Cartesian3(1234, 5678, 9101112),
       );
       label.show = new ConstantProperty(true);
       label.text = new ConstantProperty("lorum ipsum");
@@ -365,7 +365,7 @@ describe(
       const label = (testObject.label = new LabelGraphics());
 
       testObject.position = new ConstantProperty(
-        new Cartesian3(1234, 5678, 9101112)
+        new Cartesian3(1234, 5678, 9101112),
       );
       label.show = new ConstantProperty(true);
       label.text = new ConstantProperty("lorum ipsum");
@@ -407,5 +407,5 @@ describe(
       }).toThrowDeveloperError();
     });
   },
-  "WebGL"
+  "WebGL",
 );

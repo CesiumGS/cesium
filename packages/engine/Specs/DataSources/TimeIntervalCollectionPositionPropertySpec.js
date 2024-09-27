@@ -77,7 +77,7 @@ describe("DataSources/TimeIntervalCollectionPositionProperty", function () {
     });
 
     const property = new TimeIntervalCollectionPositionProperty(
-      ReferenceFrame.INERTIAL
+      ReferenceFrame.INERTIAL,
     );
     property.intervals.addInterval(interval1);
 
@@ -86,7 +86,7 @@ describe("DataSources/TimeIntervalCollectionPositionProperty", function () {
       interval1.start,
       valueInertial,
       ReferenceFrame.INERTIAL,
-      ReferenceFrame.FIXED
+      ReferenceFrame.FIXED,
     );
 
     const result = property.getValue(interval1.start);
@@ -107,7 +107,7 @@ describe("DataSources/TimeIntervalCollectionPositionProperty", function () {
     });
 
     const property = new TimeIntervalCollectionPositionProperty(
-      ReferenceFrame.FIXED
+      ReferenceFrame.FIXED,
     );
     property.intervals.addInterval(interval1);
     property.intervals.addInterval(interval2);
@@ -116,14 +116,14 @@ describe("DataSources/TimeIntervalCollectionPositionProperty", function () {
       interval1.start,
       interval1.data,
       ReferenceFrame.FIXED,
-      ReferenceFrame.INERTIAL
+      ReferenceFrame.INERTIAL,
     );
 
     const expected = new Cartesian3();
     const result1 = property.getValueInReferenceFrame(
       interval1.start,
       ReferenceFrame.INERTIAL,
-      expected
+      expected,
     );
     expect(result1).toBe(expected);
     expect(result1).toEqual(valueInertial);
@@ -131,7 +131,7 @@ describe("DataSources/TimeIntervalCollectionPositionProperty", function () {
     const result2 = property.getValueInReferenceFrame(
       interval2.stop,
       ReferenceFrame.FIXED,
-      expected
+      expected,
     );
     expect(result2).toBe(expected);
     expect(result2).toEqual(interval2.data);
@@ -151,7 +151,7 @@ describe("DataSources/TimeIntervalCollectionPositionProperty", function () {
     });
 
     const property = new TimeIntervalCollectionPositionProperty(
-      ReferenceFrame.FIXED
+      ReferenceFrame.FIXED,
     );
     property.intervals.addInterval(interval1);
     property.intervals.addInterval(interval2);
@@ -160,18 +160,18 @@ describe("DataSources/TimeIntervalCollectionPositionProperty", function () {
       interval1.start,
       interval1.data,
       ReferenceFrame.FIXED,
-      ReferenceFrame.INERTIAL
+      ReferenceFrame.INERTIAL,
     );
 
     const result1 = property.getValueInReferenceFrame(
       interval1.start,
-      ReferenceFrame.INERTIAL
+      ReferenceFrame.INERTIAL,
     );
     expect(result1).toEqual(valueInertial);
 
     const result2 = property.getValueInReferenceFrame(
       interval2.stop,
-      ReferenceFrame.FIXED
+      ReferenceFrame.FIXED,
     );
     expect(result2).toEqual(interval2.data);
   });
@@ -207,10 +207,10 @@ describe("DataSources/TimeIntervalCollectionPositionProperty", function () {
 
   it("equals works for differing referenceFrames", function () {
     const left = new TimeIntervalCollectionPositionProperty(
-      ReferenceFrame.FIXED
+      ReferenceFrame.FIXED,
     );
     let right = new TimeIntervalCollectionPositionProperty(
-      ReferenceFrame.INERTIAL
+      ReferenceFrame.INERTIAL,
     );
     expect(left.equals(right)).toEqual(false);
 
@@ -232,13 +232,13 @@ describe("DataSources/TimeIntervalCollectionPositionProperty", function () {
     });
 
     const left = new TimeIntervalCollectionPositionProperty(
-      ReferenceFrame.FIXED
+      ReferenceFrame.FIXED,
     );
     left.intervals.addInterval(interval1);
     left.intervals.addInterval(interval2);
 
     const right = new TimeIntervalCollectionPositionProperty(
-      ReferenceFrame.FIXED
+      ReferenceFrame.FIXED,
     );
     right.intervals.addInterval(interval1);
 

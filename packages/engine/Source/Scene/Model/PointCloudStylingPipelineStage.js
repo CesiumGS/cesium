@@ -58,7 +58,7 @@ const PointCloudStylingPipelineStage = {
 PointCloudStylingPipelineStage.process = function (
   renderResources,
   primitive,
-  frameState
+  frameState,
 ) {
   const shaderBuilder = renderResources.shaderBuilder;
   const model = renderResources.model;
@@ -81,12 +81,11 @@ PointCloudStylingPipelineStage.process = function (
   const hasBatchTable = !defined(propertyAttributes) && hasFeatureTable;
 
   if (defined(style) && !hasBatchTable) {
-    const variableSubstitutionMap = getVariableSubstitutionMap(
-      propertyAttributes
-    );
+    const variableSubstitutionMap =
+      getVariableSubstitutionMap(propertyAttributes);
     const shaderFunctionInfo = getStyleShaderFunctionInfo(
       style,
-      variableSubstitutionMap
+      variableSubstitutionMap,
     );
     addShaderFunctionsAndDefines(shaderBuilder, shaderFunctionInfo);
 
@@ -95,19 +94,19 @@ PointCloudStylingPipelineStage.process = function (
     const usesNormalSemantic = propertyNames.indexOf("normalMC") >= 0;
     const hasNormals = ModelUtility.getAttributeBySemantic(
       primitive,
-      VertexAttributeSemantic.NORMAL
+      VertexAttributeSemantic.NORMAL,
     );
 
     if (usesNormalSemantic && !hasNormals) {
       throw new RuntimeError(
-        "Style references the NORMAL semantic but the point cloud does not have normals"
+        "Style references the NORMAL semantic but the point cloud does not have normals",
       );
     }
 
     shaderBuilder.addDefine(
       "COMPUTE_POSITION_WC_STYLE",
       undefined,
-      ShaderDestination.VERTEX
+      ShaderDestination.VERTEX,
     );
 
     // If the style is translucent, the alpha options must be adjusted.
@@ -122,7 +121,7 @@ PointCloudStylingPipelineStage.process = function (
     shaderBuilder.addDefine(
       "HAS_POINT_CLOUD_ATTENUATION",
       undefined,
-      ShaderDestination.VERTEX
+      ShaderDestination.VERTEX,
     );
   }
 
@@ -130,7 +129,7 @@ PointCloudStylingPipelineStage.process = function (
     shaderBuilder.addDefine(
       "HAS_POINT_CLOUD_BACK_FACE_CULLING",
       undefined,
-      ShaderDestination.VERTEX
+      ShaderDestination.VERTEX,
     );
   }
 
@@ -147,7 +146,7 @@ PointCloudStylingPipelineStage.process = function (
   shaderBuilder.addUniform(
     "vec4",
     "model_pointCloudParameters",
-    ShaderDestination.VERTEX
+    ShaderDestination.VERTEX,
   );
 
   shaderBuilder.addVertexLines(PointCloudStylingStageVS);
@@ -165,7 +164,7 @@ PointCloudStylingPipelineStage.process = function (
     }
     vec4.x = defaultValue(
       pointCloudShading.maximumAttenuation,
-      defaultPointSize
+      defaultPointSize,
     );
     vec4.x *= frameState.pixelRatio;
 
@@ -174,7 +173,7 @@ PointCloudStylingPipelineStage.process = function (
       renderResources,
       primitive,
       pointCloudShading,
-      content
+      content,
     );
     vec4.y = geometricError * pointCloudShading.geometricErrorScale;
 
@@ -210,7 +209,7 @@ function getGeometricError(
   renderResources,
   primitive,
   pointCloudShading,
-  content
+  content,
 ) {
   if (defined(content)) {
     const geometricError = content.tile.geometricError;
@@ -226,7 +225,7 @@ function getGeometricError(
 
   const positionAttribute = ModelUtility.getAttributeBySemantic(
     primitive,
-    VertexAttributeSemantic.POSITION
+    VertexAttributeSemantic.POSITION,
   );
   const pointsLength = positionAttribute.count;
 
@@ -235,13 +234,13 @@ function getGeometricError(
   let dimensions = Cartesian3.subtract(
     positionAttribute.max,
     positionAttribute.min,
-    scratchDimensions
+    scratchDimensions,
   );
   // dimensions is a vector, as it is a subtraction between two points
   dimensions = Matrix4.multiplyByPointAsVector(
     nodeTransform,
     dimensions,
-    scratchDimensions
+    scratchDimensions,
   );
   const volume = dimensions.x * dimensions.y * dimensions.z;
   const geometricErrorEstimate = CesiumMath.cbrt(volume / pointsLength);
@@ -296,17 +295,17 @@ function getStyleShaderFunctionInfo(style, variableSubstitutionMap) {
   info.colorStyleFunction = style.getColorShaderFunction(
     `getColorFromStyle(${parameterList})`,
     variableSubstitutionMap,
-    shaderState
+    shaderState,
   );
   info.showStyleFunction = style.getShowShaderFunction(
     `getShowFromStyle(${parameterList})`,
     variableSubstitutionMap,
-    shaderState
+    shaderState,
   );
   info.pointSizeStyleFunction = style.getPointSizeShaderFunction(
     `getPointSizeFromStyle(${parameterList})`,
     variableSubstitutionMap,
-    shaderState
+    shaderState,
   );
   info.styleTranslucent =
     defined(info.colorStyleFunction) && shaderState.translucent;
@@ -320,7 +319,7 @@ function addShaderFunctionsAndDefines(shaderBuilder, shaderFunctionInfo) {
     shaderBuilder.addDefine(
       "HAS_POINT_CLOUD_COLOR_STYLE",
       undefined,
-      ShaderDestination.BOTH
+      ShaderDestination.BOTH,
     );
     shaderBuilder.addVertexLines(colorStyleFunction);
 
@@ -334,7 +333,7 @@ function addShaderFunctionsAndDefines(shaderBuilder, shaderFunctionInfo) {
     shaderBuilder.addDefine(
       "HAS_POINT_CLOUD_SHOW_STYLE",
       undefined,
-      ShaderDestination.VERTEX
+      ShaderDestination.VERTEX,
     );
     shaderBuilder.addVertexLines(showStyleFunction);
   }
@@ -344,7 +343,7 @@ function addShaderFunctionsAndDefines(shaderBuilder, shaderFunctionInfo) {
     shaderBuilder.addDefine(
       "HAS_POINT_CLOUD_POINT_SIZE_STYLE",
       undefined,
-      ShaderDestination.VERTEX
+      ShaderDestination.VERTEX,
     );
     shaderBuilder.addVertexLines(pointSizeStyleFunction);
   }

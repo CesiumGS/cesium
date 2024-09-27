@@ -52,7 +52,7 @@ function GeometryUpdaterSet(entity, scene) {
 
   this._removeEntitySubscription = entity.definitionChanged.addEventListener(
     GeometryUpdaterSet.prototype._onEntityPropertyChanged,
-    this
+    this,
   );
 }
 
@@ -60,7 +60,7 @@ GeometryUpdaterSet.prototype._onEntityPropertyChanged = function (
   entity,
   propertyName,
   newValue,
-  oldValue
+  oldValue,
 ) {
   const updaters = this.updaters;
   for (let i = 0; i < updaters.length; i++) {
@@ -68,7 +68,7 @@ GeometryUpdaterSet.prototype._onEntityPropertyChanged = function (
       entity,
       propertyName,
       newValue,
-      oldValue
+      oldValue,
     );
   }
 };

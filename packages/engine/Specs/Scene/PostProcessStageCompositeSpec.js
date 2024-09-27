@@ -56,7 +56,7 @@ describe(
       expect(composite.enabled).toEqual(true);
       expect(composite.uniforms).toEqual(uniforms);
       expect(composite.inputPreviousStageTexture).toEqual(
-        inputPreviousStageTexture
+        inputPreviousStageTexture,
       );
       expect(composite.length).toEqual(1);
     });
@@ -195,7 +195,7 @@ describe(
           fragmentShader: `void main() { out_FragColor = vec4(vec3(${
             bgColor / 255
           }), 1.0); }`,
-        })
+        }),
       );
 
       //Stage we expect to not run
@@ -207,7 +207,7 @@ describe(
                 "uniform sampler2D depthTexture; void main() { out_FragColor = vec4(1.0); }",
             }),
           ],
-        })
+        }),
       );
       return pollToPromise(function () {
         s.renderForSpecs();
@@ -244,5 +244,5 @@ describe(
       expect(stage2.isDestroyed()).toEqual(true);
     });
   },
-  "WebGL"
+  "WebGL",
 );

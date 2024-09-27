@@ -8,13 +8,13 @@ import {
 describe("Scene/VoxelShapeType", function () {
   it("getMinBounds works", function () {
     expect(VoxelShapeType.getMinBounds(VoxelShapeType.BOX)).toEqual(
-      VoxelBoxShape.DefaultMinBounds
+      VoxelBoxShape.DefaultMinBounds,
     );
     expect(VoxelShapeType.getMinBounds(VoxelShapeType.ELLIPSOID)).toEqual(
-      VoxelEllipsoidShape.DefaultMinBounds
+      VoxelEllipsoidShape.DefaultMinBounds,
     );
     expect(VoxelShapeType.getMinBounds(VoxelShapeType.CYLINDER)).toEqual(
-      VoxelCylinderShape.DefaultMinBounds
+      VoxelCylinderShape.DefaultMinBounds,
     );
   });
 
@@ -26,13 +26,13 @@ describe("Scene/VoxelShapeType", function () {
 
   it("getMaxBounds works", function () {
     expect(VoxelShapeType.getMaxBounds(VoxelShapeType.BOX)).toEqual(
-      VoxelBoxShape.DefaultMaxBounds
+      VoxelBoxShape.DefaultMaxBounds,
     );
     expect(VoxelShapeType.getMaxBounds(VoxelShapeType.ELLIPSOID)).toEqual(
-      VoxelEllipsoidShape.DefaultMaxBounds
+      VoxelEllipsoidShape.DefaultMaxBounds,
     );
     expect(VoxelShapeType.getMaxBounds(VoxelShapeType.CYLINDER)).toEqual(
-      VoxelCylinderShape.DefaultMaxBounds
+      VoxelCylinderShape.DefaultMaxBounds,
     );
   });
 
@@ -44,13 +44,13 @@ describe("Scene/VoxelShapeType", function () {
 
   it("getShapeConstructor works", function () {
     expect(VoxelShapeType.getShapeConstructor(VoxelShapeType.BOX)).toBe(
-      VoxelBoxShape
+      VoxelBoxShape,
     );
     expect(VoxelShapeType.getShapeConstructor(VoxelShapeType.ELLIPSOID)).toBe(
-      VoxelEllipsoidShape
+      VoxelEllipsoidShape,
     );
     expect(VoxelShapeType.getShapeConstructor(VoxelShapeType.CYLINDER)).toBe(
-      VoxelCylinderShape
+      VoxelCylinderShape,
     );
   });
 

@@ -60,7 +60,7 @@ function constructRectangle(geometry, computedOptions) {
       false,
       row,
       0,
-      position
+      position,
     );
     positions[posIndex++] = position.x;
     positions[posIndex++] = position.y;
@@ -73,7 +73,7 @@ function constructRectangle(geometry, computedOptions) {
         false,
         row,
         col,
-        position
+        position,
       );
       positions[posIndex++] = position.x;
       positions[posIndex++] = position.y;
@@ -89,7 +89,7 @@ function constructRectangle(geometry, computedOptions) {
       false,
       row,
       col,
-      position
+      position,
     );
     positions[posIndex++] = position.x;
     positions[posIndex++] = position.y;
@@ -106,7 +106,7 @@ function constructRectangle(geometry, computedOptions) {
         false,
         row,
         col,
-        position
+        position,
       );
       positions[posIndex++] = position.x;
       positions[posIndex++] = position.y;
@@ -122,7 +122,7 @@ function constructRectangle(geometry, computedOptions) {
       false,
       row,
       col,
-      position
+      position,
     );
     positions[posIndex++] = position.x;
     positions[posIndex++] = position.y;
@@ -132,7 +132,7 @@ function constructRectangle(geometry, computedOptions) {
   const indicesSize = (positions.length / 3) * 2;
   const indices = IndexDatatype.createTypedArray(
     positions.length / 3,
-    indicesSize
+    indicesSize,
   );
 
   let index = 0;
@@ -171,7 +171,7 @@ function constructExtrudedRectangle(rectangleGeometry, computedOptions) {
     geo.attributes.position.values,
     maxHeight,
     ellipsoid,
-    false
+    false,
   );
   let length = topPositions.length;
   const positions = new Float64Array(length * 2);
@@ -179,7 +179,7 @@ function constructExtrudedRectangle(rectangleGeometry, computedOptions) {
   const bottomPositions = PolygonPipeline.scaleToGeodeticHeight(
     geo.attributes.position.values,
     minHeight,
-    ellipsoid
+    ellipsoid,
   );
   positions.set(bottomPositions, length);
   geo.attributes.position.values = positions;
@@ -197,7 +197,7 @@ function constructExtrudedRectangle(rectangleGeometry, computedOptions) {
   const indicesSize = (positions.length / 3 + corners) * 2;
   const indices = IndexDatatype.createTypedArray(
     positions.length / 3,
-    indicesSize
+    indicesSize,
   );
   length = positions.length / 6;
   let index = 0;
@@ -275,7 +275,7 @@ function RectangleOutlineGeometry(options) {
   const rectangle = options.rectangle;
   const granularity = defaultValue(
     options.granularity,
-    CesiumMath.RADIANS_PER_DEGREE
+    CesiumMath.RADIANS_PER_DEGREE,
   );
   const ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.default);
   const rotation = defaultValue(options.rotation, 0.0);
@@ -287,7 +287,7 @@ function RectangleOutlineGeometry(options) {
   Rectangle._validate(rectangle);
   if (rectangle.north < rectangle.south) {
     throw new DeveloperError(
-      "options.rectangle.north must be greater than options.rectangle.south"
+      "options.rectangle.north must be greater than options.rectangle.south",
     );
   }
   //>>includeEnd('debug');
@@ -430,7 +430,7 @@ RectangleOutlineGeometry.createGeometry = function (rectangleGeometry) {
     rectangleGeometry._rotation,
     0,
     rectangleScratch,
-    nwScratch
+    nwScratch,
   );
 
   let geometry;
@@ -440,12 +440,12 @@ RectangleOutlineGeometry.createGeometry = function (rectangleGeometry) {
     CesiumMath.equalsEpsilon(
       rectangle.north,
       rectangle.south,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     ) ||
     CesiumMath.equalsEpsilon(
       rectangle.east,
       rectangle.west,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     )
   ) {
     return undefined;
@@ -457,7 +457,7 @@ RectangleOutlineGeometry.createGeometry = function (rectangleGeometry) {
     surfaceHeight,
     extrudedHeight,
     0,
-    CesiumMath.EPSILON2
+    CesiumMath.EPSILON2,
   );
   let offsetValue;
   if (extrude) {
@@ -485,13 +485,13 @@ RectangleOutlineGeometry.createGeometry = function (rectangleGeometry) {
       rectangle,
       ellipsoid,
       surfaceHeight,
-      topBoundingSphere
+      topBoundingSphere,
     );
     const bottomBS = BoundingSphere.fromRectangle3D(
       rectangle,
       ellipsoid,
       extrudedHeight,
-      bottomBoundingSphere
+      bottomBoundingSphere,
     );
     boundingSphere = BoundingSphere.union(topBS, bottomBS);
   } else {
@@ -500,7 +500,7 @@ RectangleOutlineGeometry.createGeometry = function (rectangleGeometry) {
       geometry.attributes.position.values,
       surfaceHeight,
       ellipsoid,
-      false
+      false,
     );
 
     if (defined(rectangleGeometry._offsetAttribute)) {
@@ -520,7 +520,7 @@ RectangleOutlineGeometry.createGeometry = function (rectangleGeometry) {
     boundingSphere = BoundingSphere.fromRectangle3D(
       rectangle,
       ellipsoid,
-      surfaceHeight
+      surfaceHeight,
     );
   }
 

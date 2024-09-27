@@ -176,7 +176,7 @@ Object.defineProperties(PolylineVolumeGraphics.prototype, {
    * @type {Property|undefined}
    */
   distanceDisplayCondition: createPropertyDescriptor(
-    "distanceDisplayCondition"
+    "distanceDisplayCondition",
   ),
 });
 
@@ -231,7 +231,7 @@ PolylineVolumeGraphics.prototype.merge = function (source) {
   this.shadows = defaultValue(this.shadows, source.shadows);
   this.distanceDisplayCondition = defaultValue(
     this.distanceDisplayCondition,
-    source.distanceDisplayCondition
+    source.distanceDisplayCondition,
   );
 };
 export default PolylineVolumeGraphics;

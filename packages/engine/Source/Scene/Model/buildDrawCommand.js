@@ -55,7 +55,7 @@ function buildDrawCommand(primitiveRenderResources, frameState) {
     modelMatrix = Matrix4.multiplyTransformation(
       sceneGraph._computedModelMatrix,
       primitiveRenderResources.runtimeNode.computedTransform,
-      new Matrix4()
+      new Matrix4(),
     );
 
     const runtimePrimitive = primitiveRenderResources.runtimePrimitive;
@@ -68,25 +68,25 @@ function buildDrawCommand(primitiveRenderResources, frameState) {
     modelMatrix = Matrix4.multiplyTransformation(
       computedModelMatrix,
       primitiveRenderResources.runtimeNode.computedTransform,
-      new Matrix4()
+      new Matrix4(),
     );
 
     boundingSphere = BoundingSphere.transform(
       primitiveRenderResources.boundingSphere,
       modelMatrix,
-      primitiveRenderResources.boundingSphere
+      primitiveRenderResources.boundingSphere,
     );
   }
 
   // Initialize render state with default values
   let renderState = clone(
     RenderState.fromCache(primitiveRenderResources.renderStateOptions),
-    true
+    true,
   );
 
   renderState.cull.face = ModelUtility.getCullFace(
     modelMatrix,
-    primitiveRenderResources.primitiveType
+    primitiveRenderResources.primitiveType,
   );
   renderState = RenderState.fromCache(renderState);
 

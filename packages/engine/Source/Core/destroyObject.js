@@ -35,7 +35,7 @@ function returnTrue() {
 function destroyObject(object, message) {
   message = defaultValue(
     message,
-    "This object was destroyed, i.e., destroy() was called."
+    "This object was destroyed, i.e., destroy() was called.",
   );
 
   function throwOnDestroyed() {

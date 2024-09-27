@@ -24,7 +24,7 @@
 
       document.body.className = document.body.className.replace(
         /(?:\s|^)sandcastle-loading(?:\s|$)/,
-        " "
+        " ",
       );
     },
     addToggleButton: function (text, checked, onchange, toolbarID) {
@@ -101,7 +101,7 @@
   if (window.location.protocol === "file:") {
     if (
       window.confirm(
-        "You must host this app on a web server.\nSee contributor's guide for more info?"
+        "You must host this app on a web server.\nSee contributor's guide for more info?",
       )
     ) {
       window.location =

@@ -104,7 +104,7 @@ async function generateDevelopmentBuild() {
   });
 
   console.log(
-    `Cesium built in ${formatTimeSinceInSeconds(startTime)} seconds.`
+    `Cesium built in ${formatTimeSinceInSeconds(startTime)} seconds.`,
   );
 
   return contexts;
@@ -140,7 +140,7 @@ async function generateDevelopmentBuild() {
       ],
       "text/plain": ["glsl"],
     },
-    true
+    true,
   );
 
   const app = express();
@@ -150,7 +150,7 @@ async function generateDevelopmentBuild() {
     res.header("Access-Control-Allow-Origin", "*");
     res.header(
       "Access-Control-Allow-Headers",
-      "Origin, X-Requested-With, Content-Type, Accept"
+      "Origin, X-Requested-With, Content-Type, Accept",
     );
     next();
   });
@@ -193,19 +193,19 @@ async function generateDevelopmentBuild() {
       "Cesium.js",
       "/Build/CesiumUnminified/Cesium.js*",
       contexts.iife,
-      [iifeWorkersCache]
+      [iifeWorkersCache],
     );
     const esmCache = createRoute(
       app,
       "index.js",
       "/Build/CesiumUnminified/index.js*",
-      contexts.esm
+      contexts.esm,
     );
     const workersCache = createRoute(
       app,
       "Workers/*",
       "/Build/CesiumUnminified/Workers/*.js",
-      contexts.workers
+      contexts.workers,
     );
 
     const glslWatcher = chokidar.watch(shaderFiles, { ignoreInitial: true });
@@ -232,7 +232,7 @@ async function generateDevelopmentBuild() {
       app,
       "TestWorkers/*",
       "/Build/Specs/TestWorkers/*",
-      contexts.testWorkers
+      contexts.testWorkers,
     );
     chokidar
       .watch(["Specs/TestWorkers/*.js"], { ignoreInitial: true })
@@ -242,7 +242,7 @@ async function generateDevelopmentBuild() {
       app,
       "Specs/*",
       "/Build/Specs/*",
-      contexts.specs
+      contexts.specs,
     );
     const specWatcher = chokidar.watch(specFiles, { ignoreInitial: true });
     specWatcher.on("all", async (event) => {
@@ -254,21 +254,24 @@ async function generateDevelopmentBuild() {
     });
 
     // Rebuild jsHintOptions as needed and serve as-is
-    app.get("/Apps/Sandcastle/jsHintOptions.js", async function (
-      //eslint-disable-next-line no-unused-vars
-      req,
-      res,
-      //eslint-disable-next-line no-unused-vars
-      next
-    ) {
-      if (!jsHintOptionsCache) {
-        jsHintOptionsCache = await createJsHintOptions();
-      }
+    app.get(
+      "/Apps/Sandcastle/jsHintOptions.js",
+      async function (
+        //eslint-disable-next-line no-unused-vars
+        req,
+        res,
+        //eslint-disable-next-line no-unused-vars
+        next,
+      ) {
+        if (!jsHintOptionsCache) {
+          jsHintOptionsCache = await createJsHintOptions();
+        }
 
-      res.append("Cache-Control", "max-age=0");
-      res.append("Content-Type", "application/javascript");
-      res.send(jsHintOptionsCache);
-    });
+        res.append("Cache-Control", "max-age=0");
+        res.append("Content-Type", "application/javascript");
+        res.send(jsHintOptionsCache);
+      },
+    );
 
     // Serve any static files starting with "Build/CesiumUnminified" from the
     // development build instead. That way, previous build output is preserved
@@ -293,7 +296,8 @@ async function generateDevelopmentBuild() {
     return remoteUrl;
   }
 
-  const dontProxyHeaderRegex = /^(?:Host|Proxy-Connection|Connection|Keep-Alive|Transfer-Encoding|TE|Trailer|Proxy-Authorization|Proxy-Authenticate|Upgrade)$/i;
+  const dontProxyHeaderRegex =
+    /^(?:Host|Proxy-Connection|Connection|Keep-Alive|Transfer-Encoding|TE|Trailer|Proxy-Authorization|Proxy-Authenticate|Upgrade)$/i;
 
   //eslint-disable-next-line no-unused-vars
   function filterHeaders(req, headers) {
@@ -360,7 +364,7 @@ async function generateDevelopmentBuild() {
         }
 
         res.status(code).send(body);
-      }
+      },
     );
   });
 
@@ -371,28 +375,28 @@ async function generateDevelopmentBuild() {
       if (argv.public) {
         console.log(
           "Cesium development server running publicly.  Connect to http://localhost:%d/",
-          server.address().port
+          server.address().port,
         );
       } else {
         console.log(
           "Cesium development server running locally.  Connect to http://localhost:%d/",
-          server.address().port
+          server.address().port,
         );
       }
-    }
+    },
   );
 
   server.on("error", function (e) {
     if (e.code === "EADDRINUSE") {
       console.log(
         "Error: Port %d is already in use, select a different port.",
-        argv.port
+        argv.port,
       );
       console.log("Example: node server.js --port %d", argv.port + 1);
     } else if (e.code === "EACCES") {
       console.log(
         "Error: This process does not have permission to listen on port %d.",
-        argv.port
+        argv.port,
       );
       if (argv.port < 1024) {
         console.log("Try a port number higher than 1024.");

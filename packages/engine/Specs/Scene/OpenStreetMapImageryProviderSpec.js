@@ -46,20 +46,18 @@ describe("Scene/OpenStreetMapImageryProvider", function () {
       url: resource,
     });
 
-    spyOn(Resource._Implementations, "createImage").and.callFake(function (
-      request,
-      crossOrigin,
-      deferred
-    ) {
-      expect(request.url).not.toContain("//");
+    spyOn(Resource._Implementations, "createImage").and.callFake(
+      function (request, crossOrigin, deferred) {
+        expect(request.url).not.toContain("//");
 
-      // Just return any old image.
-      Resource._DefaultImplementations.createImage(
-        new Request({ url: "Data/Images/Red16x16.png" }),
-        crossOrigin,
-        deferred
-      );
-    });
+        // Just return any old image.
+        Resource._DefaultImplementations.createImage(
+          new Request({ url: "Data/Images/Red16x16.png" }),
+          crossOrigin,
+          deferred,
+        );
+      },
+    );
 
     return provider.requestImage(0, 0, 0).then(function (image) {
       expect(Resource._Implementations.createImage).toHaveBeenCalled();
@@ -72,20 +70,18 @@ describe("Scene/OpenStreetMapImageryProvider", function () {
       url: "made/up/osm/server/",
     });
 
-    spyOn(Resource._Implementations, "createImage").and.callFake(function (
-      request,
-      crossOrigin,
-      deferred
-    ) {
-      expect(request.url).not.toContain("//");
+    spyOn(Resource._Implementations, "createImage").and.callFake(
+      function (request, crossOrigin, deferred) {
+        expect(request.url).not.toContain("//");
 
-      // Just return any old image.
-      Resource._DefaultImplementations.createImage(
-        new Request({ url: "Data/Images/Red16x16.png" }),
-        crossOrigin,
-        deferred
-      );
-    });
+        // Just return any old image.
+        Resource._DefaultImplementations.createImage(
+          new Request({ url: "Data/Images/Red16x16.png" }),
+          crossOrigin,
+          deferred,
+        );
+      },
+    );
 
     return provider.requestImage(0, 0, 0).then(function (image) {
       expect(Resource._Implementations.createImage).toHaveBeenCalled();
@@ -98,20 +94,18 @@ describe("Scene/OpenStreetMapImageryProvider", function () {
       url: "made/up/osm/server",
     });
 
-    spyOn(Resource._Implementations, "createImage").and.callFake(function (
-      request,
-      crossOrigin,
-      deferred
-    ) {
-      expect(request.url).toContain("made/up/osm/server/");
+    spyOn(Resource._Implementations, "createImage").and.callFake(
+      function (request, crossOrigin, deferred) {
+        expect(request.url).toContain("made/up/osm/server/");
 
-      // Just return any old image.
-      Resource._DefaultImplementations.createImage(
-        new Request({ url: "Data/Images/Red16x16.png" }),
-        crossOrigin,
-        deferred
-      );
-    });
+        // Just return any old image.
+        Resource._DefaultImplementations.createImage(
+          new Request({ url: "Data/Images/Red16x16.png" }),
+          crossOrigin,
+          deferred,
+        );
+      },
+    );
 
     return provider.requestImage(0, 0, 0).then(function (image) {
       expect(Resource._Implementations.createImage).toHaveBeenCalled();
@@ -131,18 +125,16 @@ describe("Scene/OpenStreetMapImageryProvider", function () {
     expect(provider.tilingScheme).toBeInstanceOf(WebMercatorTilingScheme);
     expect(provider.rectangle).toEqual(new WebMercatorTilingScheme().rectangle);
 
-    spyOn(Resource._Implementations, "createImage").and.callFake(function (
-      request,
-      crossOrigin,
-      deferred
-    ) {
-      // Just return any old image.
-      Resource._DefaultImplementations.createImage(
-        new Request({ url: "Data/Images/Red16x16.png" }),
-        crossOrigin,
-        deferred
-      );
-    });
+    spyOn(Resource._Implementations, "createImage").and.callFake(
+      function (request, crossOrigin, deferred) {
+        // Just return any old image.
+        Resource._DefaultImplementations.createImage(
+          new Request({ url: "Data/Images/Red16x16.png" }),
+          crossOrigin,
+          deferred,
+        );
+      },
+    );
 
     return provider.requestImage(0, 0, 0).then(function (image) {
       expect(Resource._Implementations.createImage).toHaveBeenCalled();
@@ -178,36 +170,34 @@ describe("Scene/OpenStreetMapImageryProvider", function () {
     expect(provider.tilingScheme).toBeInstanceOf(WebMercatorTilingScheme);
     expect(provider.rectangle.west).toBeCloseTo(
       rectangle.west,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
     expect(provider.rectangle.south).toBeCloseTo(
       rectangle.south,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
     expect(provider.rectangle.east).toBeCloseTo(
       rectangle.east,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
     expect(provider.rectangle.north).toBeCloseTo(
       rectangle.north,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
     expect(provider.tileDiscardPolicy).toBeUndefined();
 
-    spyOn(Resource._Implementations, "createImage").and.callFake(function (
-      request,
-      crossOrigin,
-      deferred
-    ) {
-      expect(request.url).toContain("/0/0/0");
+    spyOn(Resource._Implementations, "createImage").and.callFake(
+      function (request, crossOrigin, deferred) {
+        expect(request.url).toContain("/0/0/0");
 
-      // Just return any old image.
-      Resource._DefaultImplementations.createImage(
-        new Request({ url: "Data/Images/Red16x16.png" }),
-        crossOrigin,
-        deferred
-      );
-    });
+        // Just return any old image.
+        Resource._DefaultImplementations.createImage(
+          new Request({ url: "Data/Images/Red16x16.png" }),
+          crossOrigin,
+          deferred,
+        );
+      },
+    );
 
     return provider.requestImage(0, 0, 0).then(function (image) {
       expect(Resource._Implementations.createImage).toHaveBeenCalled();
@@ -237,20 +227,18 @@ describe("Scene/OpenStreetMapImageryProvider", function () {
       retinaTiles: true,
     });
 
-    spyOn(Resource._Implementations, "createImage").and.callFake(function (
-      request,
-      crossOrigin,
-      deferred
-    ) {
-      expect(request.url).toContain("0/0/0@2x.png");
+    spyOn(Resource._Implementations, "createImage").and.callFake(
+      function (request, crossOrigin, deferred) {
+        expect(request.url).toContain("0/0/0@2x.png");
 
-      // Just return any old image.
-      Resource._DefaultImplementations.createImage(
-        new Request({ url: "Data/Images/Red16x16.png" }),
-        crossOrigin,
-        deferred
-      );
-    });
+        // Just return any old image.
+        Resource._DefaultImplementations.createImage(
+          new Request({ url: "Data/Images/Red16x16.png" }),
+          crossOrigin,
+          deferred,
+        );
+      },
+    );
 
     const image = await provider.requestImage(0, 0, 0);
     expect(Resource._Implementations.createImage).toHaveBeenCalled();
@@ -279,14 +267,14 @@ describe("Scene/OpenStreetMapImageryProvider", function () {
     Resource._Implementations.createImage = function (
       request,
       crossOrigin,
-      deferred
+      deferred,
     ) {
       if (tries === 2) {
         // Succeed after 2 tries
         Resource._DefaultImplementations.createImage(
           new Request({ url: "Data/Images/Red16x16.png" }),
           crossOrigin,
-          deferred
+          deferred,
         );
       } else {
         // fail
@@ -315,7 +303,7 @@ describe("Scene/OpenStreetMapImageryProvider", function () {
       0.0,
       0.0,
       CesiumMath.toRadians(1.0),
-      CesiumMath.toRadians(1.0)
+      CesiumMath.toRadians(1.0),
     );
 
     expect(function () {

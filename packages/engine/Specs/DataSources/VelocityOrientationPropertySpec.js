@@ -27,7 +27,7 @@ describe("DataSources/VelocityOrientationProperty", function () {
     const position = new SampledPositionProperty();
     const property = new VelocityOrientationProperty(
       position,
-      Ellipsoid.UNIT_SPHERE
+      Ellipsoid.UNIT_SPHERE,
     );
     expect(property.isConstant).toBe(true);
     expect(property.definitionChanged).toBeInstanceOf(Event);
@@ -106,7 +106,7 @@ describe("DataSources/VelocityOrientationProperty", function () {
     const velocity = Cartesian3.subtract(
       values[1],
       values[0],
-      new Cartesian3()
+      new Cartesian3(),
     );
     Cartesian3.normalize(velocity, velocity);
 
@@ -117,18 +117,18 @@ describe("DataSources/VelocityOrientationProperty", function () {
 
     let matrix = Transforms.rotationMatrixFromPositionVelocity(
       position.getValue(times[0]),
-      velocity
+      velocity,
     );
     expect(property.getValue(times[0])).toEqual(
-      Quaternion.fromRotationMatrix(matrix)
+      Quaternion.fromRotationMatrix(matrix),
     );
 
     matrix = Transforms.rotationMatrixFromPositionVelocity(
       position.getValue(times[0]),
-      velocity
+      velocity,
     );
     expect(property.getValue(times[1])).toEqual(
-      Quaternion.fromRotationMatrix(matrix)
+      Quaternion.fromRotationMatrix(matrix),
     );
   });
 
@@ -141,7 +141,7 @@ describe("DataSources/VelocityOrientationProperty", function () {
     const velocity = Cartesian3.subtract(
       values[1],
       values[0],
-      new Cartesian3()
+      new Cartesian3(),
     );
     Cartesian3.normalize(velocity, velocity);
 
@@ -156,7 +156,7 @@ describe("DataSources/VelocityOrientationProperty", function () {
 
     const matrix = Transforms.rotationMatrixFromPositionVelocity(
       position.getValue(times[0]),
-      velocity
+      velocity,
     );
     expect(expected).toEqual(Quaternion.fromRotationMatrix(matrix));
   });
