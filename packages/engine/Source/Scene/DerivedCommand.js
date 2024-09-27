@@ -284,13 +284,13 @@ function getPickShaderProgram(context, shaderProgram, pickId) {
     const outputColorVariable = hasFragData
       ? "out_FragData_0"
       : "out_FragColor";
-    const newMain = `void main ()
+    const newMain = `void main () 
 {
-    czm_non_pick_main();
-    if (${outputColorVariable}.a == 0.0) {
-        discard;
-    }
-    ${outputColorVariable} = ${pickId};
+    czm_non_pick_main(); 
+    if (${outputColorVariable}.a == 0.0) { 
+        discard; 
+    } 
+    ${outputColorVariable} = ${pickId}; 
 } `;
 
     const newSources = new Array(length + 1);
