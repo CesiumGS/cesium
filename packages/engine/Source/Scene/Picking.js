@@ -414,9 +414,20 @@ Picking.prototype.pickVoxelCoordinate = function (
  * The given `pickedMetadataInfo` defines the metadata value that is
  * supposed to be picked.
  *
+ * The return type will depend on the type of the metadata property
+ * that is picked. Given the current limitations of the types that
+ * are supported for metadata picking, the return type will be one
+ * of the following:
+ *
+ * - For `SCALAR`, the return type will be a `number`
+ * - For `SCALAR` arrays, the return type will be a `number[]`
+ * - For `VEC2`, the return type will be a `Cartesian2`
+ * - For `VEC3`, the return type will be a `Cartesian3`
+ * - For `VEC4`, the return type will be a `Cartesian4`
+ *
  * @param {Cartesian2} windowPosition Window coordinates to perform picking on.
  * @param {PickedMetadataInfo} pickedMetadataInfo Information about the picked metadata.
- * @returns The metadata values
+ * @returns {object} The metadata values
  *
  * @private
  */
