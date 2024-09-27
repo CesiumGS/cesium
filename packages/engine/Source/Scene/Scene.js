@@ -4308,7 +4308,8 @@ Scene.prototype.pickVoxel = function (windowPosition, width, height) {
  *
  * @param {Cartesian2} windowPosition Window coordinates to perform picking on.
  * @param {string|undefined} schemaId The ID of the metadata schema to pick values
- * from, or `undefined` to pick values from any schema.
+ * from. If this is `undefined`, then it will pick the values from the object
+ * that match the given class- and property name, regardless of the schema ID.
  * @param {string} className The name of the metadata class to pick
  * values from
  * @param {string} propertyName The name of the metadata property to pick
