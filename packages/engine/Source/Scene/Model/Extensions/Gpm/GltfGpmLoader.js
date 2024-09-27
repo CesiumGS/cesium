@@ -30,7 +30,7 @@ function GltfGpmLoader() {}
  * column-major order.
  *
  * @param {number[]} array The input array
- * @returns The Matrix3
+ * @returns {Matrix3} The Matrix3
  */
 function createCovarianceMatrixFromUpperTriangle(array) {
   const covarianceMatrix = new Matrix3(
@@ -51,7 +51,7 @@ function createCovarianceMatrixFromUpperTriangle(array) {
  * Creates an `AnchorPointDirect` from the given JSON representation
  *
  * @param {object} anchorPointDirectJson The input JSON
- * @returns The `AnchorPointDirect`
+ * @returns {AnchorPointDirect} The direct anchor point
  */
 function createAnchorPointDirect(anchorPointDirectJson) {
   const position = Cartesian3.fromArray(
@@ -75,7 +75,7 @@ function createAnchorPointDirect(anchorPointDirectJson) {
  * Creates an `AnchorPointIndirect` from the given JSON representation
  *
  * @param {object} anchorPointIndirectJson The input JSON
- * @returns The `AnchorPointIndirect`
+ * @returns {AnchorPointIndirect} The indirect anchor point
  */
 function createAnchorPointIndirect(anchorPointIndirectJson) {
   const position = Cartesian3.fromArray(
@@ -103,7 +103,7 @@ function createAnchorPointIndirect(anchorPointIndirectJson) {
  * Creates a `CorrelationGroup` from the given JSON representation
  *
  * @param {object} correlationGroupJson The input JSON
- * @returns The `CorrelationGroup`
+ * @returns {CorrelationGroup} The correlation group
  */
 function createCorrelationGroup(correlationGroupJson) {
   const groupFlags = correlationGroupJson.groupFlags;
