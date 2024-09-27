@@ -78,7 +78,7 @@ MetadataPicking.decodeRawMetadataValue = function (
  * @param {DataView} dataView The data view containing the raw metadata values
  * @param {number} dataViewOffset The byte offset within the data view from
  * which the component should be read
- * @returns The metadata value component
+ * @returns {number|bigint|undefined} The metadata value component
  */
 MetadataPicking.decodeRawMetadataValueComponent = function (
   classProperty,
@@ -115,7 +115,7 @@ MetadataPicking.decodeRawMetadataValueComponent = function (
  * @param {DataView} dataView The data view containing the raw metadata values
  * @param {number} elementIndex The index of the element. This is the index
  * inside the array for array-typed properties, and 0 for non-array types.
- * @returns The decoded metadata value element
+ * @returns {number|number[]|bigint|bigint[]|undefined} The decoded metadata value element
  */
 MetadataPicking.decodeRawMetadataValueElement = function (
   classProperty,
@@ -232,7 +232,7 @@ MetadataPicking.decodeRawMetadataValues = function (
  *
  * @param {string} type The `ClassProperty` type
  * @param {number|bigint|number[]|bigint[]|undefined} value The input value
- * @returns The object representation
+ * @returns {any} The object representation
  */
 MetadataPicking.convertToObjectType = function (type, value) {
   if (!defined(value)) {

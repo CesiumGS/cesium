@@ -415,7 +415,7 @@ function replaceDefine(defines, defineName, newDefineValue) {
  * or the array length if it is an array.
  *
  * @param {MetadataClassProperty} classProperty The class property
- * @returns The component count
+ * @returns {number} The component count
  * @private
  */
 function getComponentCount(classProperty) {
