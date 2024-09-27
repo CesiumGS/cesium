@@ -427,7 +427,7 @@ Picking.prototype.pickVoxelCoordinate = function (
  *
  * @param {Cartesian2} windowPosition Window coordinates to perform picking on.
  * @param {PickedMetadataInfo} pickedMetadataInfo Information about the picked metadata.
- * @returns {object} The metadata values
+ * @returns {any} The metadata values
  *
  * @private
  */
