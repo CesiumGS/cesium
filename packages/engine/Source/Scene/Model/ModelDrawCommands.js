@@ -40,13 +40,13 @@ ModelDrawCommands.buildModelDrawCommand = function (
   frameState
 ) {
   const shaderBuilder = primitiveRenderResources.shaderBuilder;
-  const shaderProgram = ModelDrawCommands.createShaderProgram(
+  const shaderProgram = createShaderProgram(
     primitiveRenderResources,
     shaderBuilder,
     frameState
   );
 
-  const command = ModelDrawCommands.buildDrawCommandForModel(
+  const command = buildDrawCommandForModel(
     primitiveRenderResources,
     shaderProgram,
     frameState
@@ -70,7 +70,7 @@ ModelDrawCommands.buildModelDrawCommand = function (
 /**
  * @private
  */
-ModelDrawCommands.createShaderProgram = function (
+function createShaderProgram(
   primitiveRenderResources,
   shaderBuilder,
   frameState
@@ -82,7 +82,7 @@ ModelDrawCommands.createShaderProgram = function (
   const shaderProgram = shaderBuilder.buildShaderProgram(frameState.context);
   model._pipelineResources.push(shaderProgram);
   return shaderProgram;
-};
+}
 
 /**
  * Builds the {@link DrawCommand} that serves as the basis for either creating
@@ -97,14 +97,12 @@ ModelDrawCommands.createShaderProgram = function (
  *
  * @private
  */
-ModelDrawCommands.buildDrawCommandForModel = function (
+function buildDrawCommandForModel(
   primitiveRenderResources,
   shaderProgram,
   frameState
 ) {
-  const indexBuffer = ModelDrawCommands.getIndexBuffer(
-    primitiveRenderResources
-  );
+  const indexBuffer = getIndexBuffer(primitiveRenderResources);
 
   const vertexArray = new VertexArray({
     context: frameState.context,
@@ -192,12 +190,12 @@ ModelDrawCommands.buildDrawCommandForModel = function (
     receiveShadows: receiveShadows,
   });
   return command;
-};
+}
 
 /**
  * @private
  */
-ModelDrawCommands.getIndexBuffer = function (primitiveRenderResources) {
+function getIndexBuffer(primitiveRenderResources) {
   const wireframeIndexBuffer = primitiveRenderResources.wireframeIndexBuffer;
   if (defined(wireframeIndexBuffer)) {
     return wireframeIndexBuffer;
@@ -215,6 +213,6 @@ ModelDrawCommands.getIndexBuffer = function (primitiveRenderResources) {
   //>>includeEnd('debug');
 
   return indices.buffer;
-};
+}
 
 export default ModelDrawCommands;
