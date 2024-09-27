@@ -61,7 +61,7 @@ SensorVolumePortionToDisplay.toString = function (portionToDisplay) {
       return "ABOVE_ELLIPSOID_HORIZON";
     default:
       throw new DeveloperError(
-        "SensorVolumePortionToDisplay value is not valid and cannot be converted to a String."
+        "SensorVolumePortionToDisplay value is not valid and cannot be converted to a String.",
       );
   }
 };

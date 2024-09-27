@@ -50,7 +50,7 @@ describe("Core/Matrix4", function () {
       13.0,
       14.0,
       15.0,
-      16.0
+      16.0,
     );
     expect(matrix[Matrix4.COLUMN0ROW0]).toEqual(1.0);
     expect(matrix[Matrix4.COLUMN1ROW0]).toEqual(2.0);
@@ -87,25 +87,11 @@ describe("Core/Matrix4", function () {
       13.0,
       14.0,
       15.0,
-      16.0
+      16.0,
     );
     const matrix = Matrix4.fromArray([
-      1.0,
-      5.0,
-      9.0,
-      13.0,
-      2.0,
-      6.0,
-      10.0,
-      14.0,
-      3.0,
-      7.0,
-      11.0,
-      15.0,
-      4.0,
-      8.0,
-      12.0,
-      16.0,
+      1.0, 5.0, 9.0, 13.0, 2.0, 6.0, 10.0, 14.0, 3.0, 7.0, 11.0, 15.0, 4.0, 8.0,
+      12.0, 16.0,
     ]);
     expect(matrix).toEqual(expected);
   });
@@ -127,30 +113,16 @@ describe("Core/Matrix4", function () {
       13.0,
       14.0,
       15.0,
-      16.0
+      16.0,
     );
     const result = new Matrix4();
     const matrix = Matrix4.fromArray(
       [
-        1.0,
-        5.0,
-        9.0,
-        13.0,
-        2.0,
-        6.0,
-        10.0,
-        14.0,
-        3.0,
-        7.0,
-        11.0,
-        15.0,
-        4.0,
-        8.0,
-        12.0,
-        16.0,
+        1.0, 5.0, 9.0, 13.0, 2.0, 6.0, 10.0, 14.0, 3.0, 7.0, 11.0, 15.0, 4.0,
+        8.0, 12.0, 16.0,
       ],
       0,
-      result
+      result,
     );
     expect(matrix).toBe(result);
     expect(matrix).toEqual(expected);
@@ -173,33 +145,16 @@ describe("Core/Matrix4", function () {
       13.0,
       14.0,
       15.0,
-      16.0
+      16.0,
     );
     const result = new Matrix4();
     const matrix = Matrix4.fromArray(
       [
-        0.0,
-        0.0,
-        0.0,
-        1.0,
-        5.0,
-        9.0,
-        13.0,
-        2.0,
-        6.0,
-        10.0,
-        14.0,
-        3.0,
-        7.0,
-        11.0,
-        15.0,
-        4.0,
-        8.0,
-        12.0,
-        16.0,
+        0.0, 0.0, 0.0, 1.0, 5.0, 9.0, 13.0, 2.0, 6.0, 10.0, 14.0, 3.0, 7.0,
+        11.0, 15.0, 4.0, 8.0, 12.0, 16.0,
       ],
       3,
-      result
+      result,
     );
     expect(matrix).toBe(result);
     expect(matrix).toEqual(expected);
@@ -222,25 +177,11 @@ describe("Core/Matrix4", function () {
       13.0,
       14.0,
       15.0,
-      16.0
+      16.0,
     );
     const matrix = Matrix4.fromRowMajorArray([
-      1.0,
-      2.0,
-      3.0,
-      4.0,
-      5.0,
-      6.0,
-      7.0,
-      8.0,
-      9.0,
-      10.0,
-      11.0,
-      12.0,
-      13.0,
-      14.0,
-      15.0,
-      16.0,
+      1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0,
+      15.0, 16.0,
     ]);
     expect(matrix).toEqual(expected);
   });
@@ -262,29 +203,15 @@ describe("Core/Matrix4", function () {
       13.0,
       14.0,
       15.0,
-      16.0
+      16.0,
     );
     const result = new Matrix4();
     const matrix = Matrix4.fromRowMajorArray(
       [
-        1.0,
-        2.0,
-        3.0,
-        4.0,
-        5.0,
-        6.0,
-        7.0,
-        8.0,
-        9.0,
-        10.0,
-        11.0,
-        12.0,
-        13.0,
-        14.0,
-        15.0,
-        16.0,
+        1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0,
+        14.0, 15.0, 16.0,
       ],
-      result
+      result,
     );
     expect(matrix).toBe(result);
     expect(matrix).toEqual(expected);
@@ -307,25 +234,11 @@ describe("Core/Matrix4", function () {
       13.0,
       14.0,
       15.0,
-      16.0
+      16.0,
     );
     const matrix = Matrix4.fromColumnMajorArray([
-      1.0,
-      5.0,
-      9.0,
-      13.0,
-      2.0,
-      6.0,
-      10.0,
-      14.0,
-      3.0,
-      7.0,
-      11.0,
-      15.0,
-      4.0,
-      8.0,
-      12.0,
-      16.0,
+      1.0, 5.0, 9.0, 13.0, 2.0, 6.0, 10.0, 14.0, 3.0, 7.0, 11.0, 15.0, 4.0, 8.0,
+      12.0, 16.0,
     ]);
     expect(matrix).toEqual(expected);
   });
@@ -347,29 +260,15 @@ describe("Core/Matrix4", function () {
       13.0,
       14.0,
       15.0,
-      16.0
+      16.0,
     );
     const result = new Matrix4();
     const matrix = Matrix4.fromColumnMajorArray(
       [
-        1.0,
-        5.0,
-        9.0,
-        13.0,
-        2.0,
-        6.0,
-        10.0,
-        14.0,
-        3.0,
-        7.0,
-        11.0,
-        15.0,
-        4.0,
-        8.0,
-        12.0,
-        16.0,
+        1.0, 5.0, 9.0, 13.0, 2.0, 6.0, 10.0, 14.0, 3.0, 7.0, 11.0, 15.0, 4.0,
+        8.0, 12.0, 16.0,
       ],
-      result
+      result,
     );
     expect(matrix).toBe(result);
     expect(matrix).toEqual(expected);
@@ -392,7 +291,7 @@ describe("Core/Matrix4", function () {
       13.0,
       14.0,
       15.0,
-      16.0
+      16.0,
     );
     const returnedResult = expected.clone();
     expect(returnedResult).not.toBe(expected);
@@ -416,7 +315,7 @@ describe("Core/Matrix4", function () {
       13.0,
       14.0,
       15.0,
-      16.0
+      16.0,
     );
     const result = new Matrix4();
     const returnedResult = expected.clone(result);
@@ -442,11 +341,11 @@ describe("Core/Matrix4", function () {
       0.0,
       0.0,
       0.0,
-      1.0
+      1.0,
     );
     const returnedResult = Matrix4.fromRotationTranslation(
       new Matrix3(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0),
-      new Cartesian3(10.0, 11.0, 12.0)
+      new Cartesian3(10.0, 11.0, 12.0),
     );
     expect(returnedResult).not.toBe(expected);
     expect(returnedResult).toEqual(expected);
@@ -469,13 +368,13 @@ describe("Core/Matrix4", function () {
       0.0,
       0.0,
       0.0,
-      1.0
+      1.0,
     );
     const result = new Matrix4();
     const returnedResult = Matrix4.fromRotationTranslation(
       new Matrix3(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0),
       new Cartesian3(10.0, 11.0, 12.0),
-      result
+      result,
     );
     expect(returnedResult).toBe(result);
     expect(returnedResult).not.toBe(expected);
@@ -499,10 +398,10 @@ describe("Core/Matrix4", function () {
       0.0,
       0.0,
       0.0,
-      1.0
+      1.0,
     );
     const returnedResult = Matrix4.fromTranslation(
-      new Cartesian3(10.0, 11.0, 12.0)
+      new Cartesian3(10.0, 11.0, 12.0),
     );
     expect(returnedResult).not.toBe(expected);
     expect(returnedResult).toEqual(expected);
@@ -525,12 +424,12 @@ describe("Core/Matrix4", function () {
       0.0,
       0.0,
       0.0,
-      1.0
+      1.0,
     );
     const returnedResult = Matrix4.fromTranslationQuaternionRotationScale(
       new Cartesian3(1.0, 2.0, 3.0), // translation
       Quaternion.fromAxisAngle(Cartesian3.UNIT_X, CesiumMath.toRadians(-90.0)), // rotation
-      new Cartesian3(7.0, 8.0, 9.0)
+      new Cartesian3(7.0, 8.0, 9.0),
     ); // scale
     expect(returnedResult).not.toBe(expected);
     expect(returnedResult).toEqualEpsilon(expected, CesiumMath.EPSILON14);
@@ -553,14 +452,14 @@ describe("Core/Matrix4", function () {
       0.0,
       0.0,
       0.0,
-      1.0
+      1.0,
     );
     const result = new Matrix4();
     const returnedResult = Matrix4.fromTranslationQuaternionRotationScale(
       new Cartesian3(1.0, 2.0, 3.0), // translation
       Quaternion.fromAxisAngle(Cartesian3.UNIT_X, CesiumMath.toRadians(-90.0)), // rotation
       new Cartesian3(7.0, 8.0, 9.0), // scale
-      result
+      result,
     );
     expect(returnedResult).toBe(result);
     expect(returnedResult).not.toBe(expected);
@@ -584,13 +483,13 @@ describe("Core/Matrix4", function () {
       0.0,
       0.0,
       0.0,
-      1.0
+      1.0,
     );
 
     const trs = new TranslationRotationScale(
       new Cartesian3(1.0, 2.0, 3.0),
       Quaternion.fromAxisAngle(Cartesian3.UNIT_X, CesiumMath.toRadians(-90.0)),
-      new Cartesian3(7.0, 8.0, 9.0)
+      new Cartesian3(7.0, 8.0, 9.0),
     );
 
     const returnedResult = Matrix4.fromTranslationRotationScale(trs);
@@ -615,13 +514,13 @@ describe("Core/Matrix4", function () {
       0.0,
       0.0,
       0.0,
-      1.0
+      1.0,
     );
 
     const trs = new TranslationRotationScale(
       new Cartesian3(1.0, 2.0, 3.0),
       Quaternion.fromAxisAngle(Cartesian3.UNIT_X, CesiumMath.toRadians(-90.0)),
-      new Cartesian3(7.0, 8.0, 9.0)
+      new Cartesian3(7.0, 8.0, 9.0),
     );
 
     const result = new Matrix4();
@@ -648,12 +547,12 @@ describe("Core/Matrix4", function () {
       0.0,
       0.0,
       0.0,
-      1.0
+      1.0,
     );
     const result = new Matrix4();
     const returnedResult = Matrix4.fromTranslation(
       new Cartesian3(10.0, 11.0, 12.0),
-      result
+      result,
     );
     expect(returnedResult).toBe(result);
     expect(returnedResult).not.toBe(expected);
@@ -677,7 +576,7 @@ describe("Core/Matrix4", function () {
       0.0,
       0.0,
       0.0,
-      1.0
+      1.0,
     );
     const returnedResult = Matrix4.fromScale(new Cartesian3(7.0, 8.0, 9.0));
     expect(returnedResult).not.toBe(expected);
@@ -701,12 +600,12 @@ describe("Core/Matrix4", function () {
       0.0,
       0.0,
       0.0,
-      1.0
+      1.0,
     );
     const result = new Matrix4();
     const returnedResult = Matrix4.fromScale(
       new Cartesian3(7.0, 8.0, 9.0),
-      result
+      result,
     );
     expect(returnedResult).toBe(result);
     expect(returnedResult).not.toBe(expected);
@@ -730,7 +629,7 @@ describe("Core/Matrix4", function () {
       0.0,
       0.0,
       0.0,
-      1.0
+      1.0,
     );
     const returnedResult = Matrix4.fromUniformScale(2.0);
     expect(returnedResult).toEqual(expected);
@@ -753,7 +652,7 @@ describe("Core/Matrix4", function () {
       0.0,
       0.0,
       0.0,
-      1.0
+      1.0,
     );
     const result = new Matrix4();
     const returnedResult = Matrix4.fromUniformScale(2.0, result);
@@ -763,73 +662,29 @@ describe("Core/Matrix4", function () {
 
   it("fromRotation works without a result parameter", function () {
     const expected = Matrix4.fromColumnMajorArray([
-      1.0,
-      2.0,
-      3.0,
-      0.0,
-      4.0,
-      5.0,
-      6.0,
-      0.0,
-      7.0,
-      8.0,
-      9.0,
-      0.0,
-      0.0,
-      0.0,
-      0.0,
+      1.0, 2.0, 3.0, 0.0, 4.0, 5.0, 6.0, 0.0, 7.0, 8.0, 9.0, 0.0, 0.0, 0.0, 0.0,
       1.0,
     ]);
     const returnedResult = Matrix4.fromRotation(
       Matrix3.fromColumnMajorArray([
-        1.0,
-        2.0,
-        3.0,
-        4.0,
-        5.0,
-        6.0,
-        7.0,
-        8.0,
-        9.0,
-      ])
+        1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0,
+      ]),
     );
     expect(returnedResult).toEqual(expected);
   });
 
   it("fromRotation works with a result parameter", function () {
     const expected = Matrix4.fromColumnMajorArray([
-      1.0,
-      2.0,
-      3.0,
-      0.0,
-      4.0,
-      5.0,
-      6.0,
-      0.0,
-      7.0,
-      8.0,
-      9.0,
-      0.0,
-      0.0,
-      0.0,
-      0.0,
+      1.0, 2.0, 3.0, 0.0, 4.0, 5.0, 6.0, 0.0, 7.0, 8.0, 9.0, 0.0, 0.0, 0.0, 0.0,
       1.0,
     ]);
 
     const result = new Matrix4();
     const returnedResult = Matrix4.fromRotation(
       Matrix3.fromColumnMajorArray([
-        1.0,
-        2.0,
-        3.0,
-        4.0,
-        5.0,
-        6.0,
-        7.0,
-        8.0,
-        9.0,
+        1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0,
       ]),
-      result
+      result,
     );
     expect(returnedResult).toBe(result);
     expect(returnedResult).toEqual(expected);
@@ -852,7 +707,7 @@ describe("Core/Matrix4", function () {
       0,
       0,
       -1,
-      0
+      0,
     );
     const result = new Matrix4();
     const returnedResult = Matrix4.computePerspectiveFieldOfView(
@@ -860,7 +715,7 @@ describe("Core/Matrix4", function () {
       1,
       1,
       10,
-      result
+      result,
     );
     expect(returnedResult).toEqualEpsilon(expected, CesiumMath.EPSILON15);
   });
@@ -884,7 +739,7 @@ describe("Core/Matrix4", function () {
         direction: Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3()),
         up: Cartesian3.UNIT_Y,
       },
-      result
+      result,
     );
     expect(returnedResult).toBe(result);
     expect(returnedResult).toEqual(expected);
@@ -907,7 +762,7 @@ describe("Core/Matrix4", function () {
       0,
       0,
       0,
-      1
+      1,
     );
     const result = new Matrix4();
     const returnedResult = Matrix4.computeOrthographicOffCenter(
@@ -917,7 +772,7 @@ describe("Core/Matrix4", function () {
       3,
       0,
       1,
-      result
+      result,
     );
     expect(returnedResult).toBe(result);
     expect(returnedResult).toEqual(expected);
@@ -940,7 +795,7 @@ describe("Core/Matrix4", function () {
       0.0,
       0.0,
       0.0,
-      1.0
+      1.0,
     );
     const returnedResult = Matrix4.computeViewportTransformation(
       {
@@ -950,7 +805,7 @@ describe("Core/Matrix4", function () {
         height: 6.0,
       },
       0.0,
-      2.0
+      2.0,
     );
     expect(returnedResult).toEqual(expected);
   });
@@ -972,7 +827,7 @@ describe("Core/Matrix4", function () {
       0.0,
       0.0,
       0.0,
-      1.0
+      1.0,
     );
     const result = new Matrix4();
     const returnedResult = Matrix4.computeViewportTransformation(
@@ -984,7 +839,7 @@ describe("Core/Matrix4", function () {
       },
       0.0,
       2.0,
-      result
+      result,
     );
     expect(returnedResult).toEqual(expected);
     expect(returnedResult).toBe(result);
@@ -1007,7 +862,7 @@ describe("Core/Matrix4", function () {
       0,
       0,
       -1,
-      0
+      0,
     );
     const result = new Matrix4();
     const returnedResult = Matrix4.computePerspectiveOffCenter(
@@ -1017,7 +872,7 @@ describe("Core/Matrix4", function () {
       3,
       1,
       2,
-      result
+      result,
     );
     expect(returnedResult).toEqual(expected);
     expect(returnedResult).toBe(result);
@@ -1040,7 +895,7 @@ describe("Core/Matrix4", function () {
       0,
       0,
       -1,
-      0
+      0,
     );
     const result = new Matrix4();
     const returnedResult = Matrix4.computeInfinitePerspectiveOffCenter(
@@ -1049,32 +904,18 @@ describe("Core/Matrix4", function () {
       2,
       3,
       1,
-      result
+      result,
     );
     expect(returnedResult).toEqual(expected);
   });
 
   it("toArray works without a result parameter", function () {
     const expected = [
-      1.0,
-      2.0,
-      3.0,
-      4.0,
-      5.0,
-      6.0,
-      7.0,
-      8.0,
-      9.0,
-      10.0,
-      11.0,
-      12.0,
-      13.0,
-      14.0,
-      15.0,
-      16.0,
+      1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0,
+      15.0, 16.0,
     ];
     const returnedResult = Matrix4.toArray(
-      Matrix4.fromColumnMajorArray(expected)
+      Matrix4.fromColumnMajorArray(expected),
     );
     expect(returnedResult).not.toBe(expected);
     expect(returnedResult).toEqual(expected);
@@ -1082,27 +923,13 @@ describe("Core/Matrix4", function () {
 
   it("toArray works with a result parameter", function () {
     const expected = [
-      1.0,
-      2.0,
-      3.0,
-      4.0,
-      5.0,
-      6.0,
-      7.0,
-      8.0,
-      9.0,
-      10.0,
-      11.0,
-      12.0,
-      13.0,
-      14.0,
-      15.0,
-      16.0,
+      1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0,
+      15.0, 16.0,
     ];
     const result = [];
     const returnedResult = Matrix4.toArray(
       Matrix4.fromColumnMajorArray(expected),
-      result
+      result,
     );
     expect(returnedResult).toBe(result);
     expect(returnedResult).not.toBe(expected);
@@ -1137,7 +964,7 @@ describe("Core/Matrix4", function () {
       13.0,
       14.0,
       15.0,
-      16.0
+      16.0,
     );
     const expectedColumn0 = new Cartesian4(1.0, 5.0, 9.0, 13.0);
     const expectedColumn1 = new Cartesian4(2.0, 6.0, 10.0, 14.0);
@@ -1180,7 +1007,7 @@ describe("Core/Matrix4", function () {
       13.0,
       14.0,
       15.0,
-      16.0
+      16.0,
     );
 
     const result = new Matrix4();
@@ -1201,13 +1028,13 @@ describe("Core/Matrix4", function () {
       20.0,
       14.0,
       15.0,
-      16.0
+      16.0,
     );
     let returnedResult = Matrix4.setColumn(
       matrix,
       0,
       new Cartesian4(17.0, 18.0, 19.0, 20.0),
-      result
+      result,
     );
     expect(result).toBe(returnedResult);
     expect(result).toEqual(expected);
@@ -1228,13 +1055,13 @@ describe("Core/Matrix4", function () {
       13.0,
       20.0,
       15.0,
-      16.0
+      16.0,
     );
     returnedResult = Matrix4.setColumn(
       matrix,
       1,
       new Cartesian4(17.0, 18.0, 19.0, 20.0),
-      result
+      result,
     );
     expect(result).toBe(returnedResult);
     expect(result).toEqual(expected);
@@ -1255,13 +1082,13 @@ describe("Core/Matrix4", function () {
       13.0,
       14.0,
       20.0,
-      16.0
+      16.0,
     );
     returnedResult = Matrix4.setColumn(
       matrix,
       2,
       new Cartesian4(17.0, 18.0, 19.0, 20.0),
-      result
+      result,
     );
     expect(result).toBe(returnedResult);
     expect(result).toEqual(expected);
@@ -1282,13 +1109,13 @@ describe("Core/Matrix4", function () {
       13.0,
       14.0,
       15.0,
-      20.0
+      20.0,
     );
     returnedResult = Matrix4.setColumn(
       matrix,
       3,
       new Cartesian4(17.0, 18.0, 19.0, 20.0),
-      result
+      result,
     );
     expect(result).toBe(returnedResult);
     expect(result).toEqual(expected);
@@ -1311,7 +1138,7 @@ describe("Core/Matrix4", function () {
       13.0,
       14.0,
       15.0,
-      16.0
+      16.0,
     );
     const translation = new Cartesian3(-1.0, -2.0, -3.0);
     const result = new Matrix4();
@@ -1332,7 +1159,7 @@ describe("Core/Matrix4", function () {
       13.0,
       14.0,
       15.0,
-      16.0
+      16.0,
     );
     const returnedResult = Matrix4.setTranslation(matrix, translation, result);
     expect(result).toBe(returnedResult);
@@ -1356,7 +1183,7 @@ describe("Core/Matrix4", function () {
       13.0,
       14.0,
       15.0,
-      16.0
+      16.0,
     );
     const expectedRow0 = new Cartesian4(1.0, 2.0, 3.0, 4.0);
     const expectedRow1 = new Cartesian4(5.0, 6.0, 7.0, 8.0);
@@ -1399,7 +1226,7 @@ describe("Core/Matrix4", function () {
       13.0,
       14.0,
       15.0,
-      16.0
+      16.0,
     );
     const result = new Matrix4();
 
@@ -1419,13 +1246,13 @@ describe("Core/Matrix4", function () {
       13.0,
       14.0,
       15.0,
-      16.0
+      16.0,
     );
     let returnedResult = Matrix4.setRow(
       matrix,
       0,
       new Cartesian4(91.0, 92.0, 93.0, 94.0),
-      result
+      result,
     );
     expect(result).toBe(returnedResult);
     expect(result).toEqual(expected);
@@ -1446,13 +1273,13 @@ describe("Core/Matrix4", function () {
       13.0,
       14.0,
       15.0,
-      16.0
+      16.0,
     );
     returnedResult = Matrix4.setRow(
       matrix,
       1,
       new Cartesian4(95.0, 96.0, 97.0, 98.0),
-      result
+      result,
     );
     expect(result).toBe(returnedResult);
     expect(result).toEqual(expected);
@@ -1473,13 +1300,13 @@ describe("Core/Matrix4", function () {
       13.0,
       14.0,
       15.0,
-      16.0
+      16.0,
     );
     returnedResult = Matrix4.setRow(
       matrix,
       2,
       new Cartesian4(99.0, 910.0, 911.0, 912.0),
-      result
+      result,
     );
     expect(result).toBe(returnedResult);
     expect(result).toEqual(expected);
@@ -1500,13 +1327,13 @@ describe("Core/Matrix4", function () {
       913.0,
       914.0,
       915.0,
-      916.0
+      916.0,
     );
     returnedResult = Matrix4.setRow(
       matrix,
       3,
       new Cartesian4(913.0, 914.0, 915.0, 916.0),
-      result
+      result,
     );
     expect(result).toBe(returnedResult);
     expect(result).toEqual(expected);
@@ -1524,7 +1351,7 @@ describe("Core/Matrix4", function () {
     const returnedResult = Matrix4.setScale(matrix, newScale, result);
 
     expect(Matrix4.getScale(returnedResult, new Cartesian3())).toEqual(
-      newScale
+      newScale,
     );
     expect(result).toBe(returnedResult);
   });
@@ -1541,7 +1368,7 @@ describe("Core/Matrix4", function () {
     const returnedResult = Matrix4.setUniformScale(matrix, newScale, result);
 
     expect(Matrix4.getScale(returnedResult, new Cartesian3())).toEqual(
-      new Cartesian3(newScale, newScale, newScale)
+      new Cartesian3(newScale, newScale, newScale),
     );
     expect(result).toBe(returnedResult);
   });
@@ -1559,7 +1386,7 @@ describe("Core/Matrix4", function () {
     const m = Matrix4.fromScale(new Cartesian3(2.0, 3.0, 4.0));
     expect(Matrix4.getMaximumScale(m)).toEqualEpsilon(
       4.0,
-      CesiumMath.EPSILON14
+      CesiumMath.EPSILON14,
     );
   });
 
@@ -1579,16 +1406,8 @@ describe("Core/Matrix4", function () {
   it("getRotation returns matrix without scale", function () {
     const matrix = Matrix4.fromRotation(
       Matrix3.fromColumnMajorArray([
-        1.0,
-        2.0,
-        3.0,
-        4.0,
-        5.0,
-        6.0,
-        7.0,
-        8.0,
-        9.0,
-      ])
+        1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0,
+      ]),
     );
     const expectedRotation = Matrix3.fromColumnMajorArray([
       1.0 / Math.sqrt(1.0 * 1.0 + 2.0 * 2.0 + 3.0 * 3.0),
@@ -1608,16 +1427,8 @@ describe("Core/Matrix4", function () {
   it("getRotation does not modify rotation matrix", function () {
     const matrix = Matrix4.fromRotation(
       Matrix3.fromColumnMajorArray([
-        1.0,
-        2.0,
-        3.0,
-        4.0,
-        5.0,
-        6.0,
-        7.0,
-        8.0,
-        9.0,
-      ])
+        1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0,
+      ]),
     );
     const duplicateMatrix = Matrix4.clone(matrix, new Matrix4());
     const expectedRotation = Matrix3.fromColumnMajorArray([
@@ -1654,7 +1465,7 @@ describe("Core/Matrix4", function () {
       13,
       14,
       15,
-      16
+      16,
     );
     const right = new Matrix4(
       17,
@@ -1672,7 +1483,7 @@ describe("Core/Matrix4", function () {
       29,
       30,
       31,
-      32
+      32,
     );
     const expected = new Matrix4(
       250,
@@ -1690,7 +1501,7 @@ describe("Core/Matrix4", function () {
       1354,
       1412,
       1470,
-      1528
+      1528,
     );
     const result = new Matrix4();
     const returnedResult = Matrix4.multiply(left, right, result);
@@ -1715,7 +1526,7 @@ describe("Core/Matrix4", function () {
       13,
       14,
       15,
-      16
+      16,
     );
     const right = new Matrix4(
       17,
@@ -1733,7 +1544,7 @@ describe("Core/Matrix4", function () {
       29,
       30,
       31,
-      32
+      32,
     );
     const expected = new Matrix4(
       250,
@@ -1751,7 +1562,7 @@ describe("Core/Matrix4", function () {
       1354,
       1412,
       1470,
-      1528
+      1528,
     );
     const returnedResult = Matrix4.multiply(left, right, left);
     expect(returnedResult).toBe(left);
@@ -1775,7 +1586,7 @@ describe("Core/Matrix4", function () {
       13,
       14,
       15,
-      16
+      16,
     );
     const right = new Matrix4(
       17,
@@ -1793,7 +1604,7 @@ describe("Core/Matrix4", function () {
       29,
       30,
       31,
-      32
+      32,
     );
     const expected = new Matrix4(
       18,
@@ -1811,7 +1622,7 @@ describe("Core/Matrix4", function () {
       42,
       44,
       46,
-      48
+      48,
     );
     const result = new Matrix4();
     const returnedResult = Matrix4.add(left, right, result);
@@ -1836,7 +1647,7 @@ describe("Core/Matrix4", function () {
       13,
       14,
       15,
-      16
+      16,
     );
     const right = new Matrix4(
       17,
@@ -1854,7 +1665,7 @@ describe("Core/Matrix4", function () {
       29,
       30,
       31,
-      32
+      32,
     );
     const expected = new Matrix4(
       18,
@@ -1872,7 +1683,7 @@ describe("Core/Matrix4", function () {
       42,
       44,
       46,
-      48
+      48,
     );
     const returnedResult = Matrix4.add(left, right, left);
     expect(returnedResult).toBe(left);
@@ -1896,7 +1707,7 @@ describe("Core/Matrix4", function () {
       42,
       44,
       46,
-      48
+      48,
     );
     const right = new Matrix4(
       17,
@@ -1914,7 +1725,7 @@ describe("Core/Matrix4", function () {
       29,
       30,
       31,
-      32
+      32,
     );
     const expected = new Matrix4(
       1,
@@ -1932,7 +1743,7 @@ describe("Core/Matrix4", function () {
       13,
       14,
       15,
-      16
+      16,
     );
     const result = new Matrix4();
     const returnedResult = Matrix4.subtract(left, right, result);
@@ -1957,7 +1768,7 @@ describe("Core/Matrix4", function () {
       42,
       44,
       46,
-      48
+      48,
     );
     const right = new Matrix4(
       17,
@@ -1975,7 +1786,7 @@ describe("Core/Matrix4", function () {
       29,
       30,
       31,
-      32
+      32,
     );
     const expected = new Matrix4(
       1,
@@ -1993,7 +1804,7 @@ describe("Core/Matrix4", function () {
       13,
       14,
       15,
-      16
+      16,
     );
     const returnedResult = Matrix4.subtract(left, right, left);
     expect(returnedResult).toBe(left);
@@ -2018,7 +1829,7 @@ describe("Core/Matrix4", function () {
       0,
       0,
       0,
-      1
+      1,
     );
     const expected = new Matrix4(
       134,
@@ -2036,7 +1847,7 @@ describe("Core/Matrix4", function () {
       0,
       0,
       0,
-      1
+      1,
     );
     const result = new Matrix4();
     const returnedResult = Matrix4.multiplyTransformation(left, right, result);
@@ -2062,7 +1873,7 @@ describe("Core/Matrix4", function () {
       0,
       0,
       0,
-      1
+      1,
     );
     const expected = new Matrix4(
       134,
@@ -2080,7 +1891,7 @@ describe("Core/Matrix4", function () {
       0,
       0,
       0,
-      1
+      1,
     );
     const returnedResult = Matrix4.multiplyTransformation(left, right, left);
     expect(returnedResult).toBe(left);
@@ -2090,20 +1901,20 @@ describe("Core/Matrix4", function () {
   it("multiplyByMatrix3 works", function () {
     const left = Matrix4.fromRotationTranslation(
       Matrix3.fromRotationZ(CesiumMath.toRadians(45.0)),
-      new Cartesian3(1.0, 2.0, 3.0)
+      new Cartesian3(1.0, 2.0, 3.0),
     );
     const rightRotation = Matrix3.fromRotationX(CesiumMath.toRadians(30.0));
     const right = Matrix4.fromRotationTranslation(rightRotation);
     const expected = new Matrix4.multiplyTransformation(
       left,
       right,
-      new Matrix4()
+      new Matrix4(),
     );
     const result = new Matrix4();
     const returnedResult = Matrix4.multiplyByMatrix3(
       left,
       rightRotation,
-      result
+      result,
     );
     expect(returnedResult).toBe(result);
     expect(result).toEqual(expected);
@@ -2112,14 +1923,14 @@ describe("Core/Matrix4", function () {
   it("multiplyByMatrix3 works with a result parameter that is an input result parameter", function () {
     const left = Matrix4.fromRotationTranslation(
       Matrix3.fromRotationZ(CesiumMath.toRadians(45.0)),
-      new Cartesian3(1.0, 2.0, 3.0)
+      new Cartesian3(1.0, 2.0, 3.0),
     );
     const rightRotation = Matrix3.fromRotationX(CesiumMath.toRadians(30.0));
     const right = Matrix4.fromRotationTranslation(rightRotation);
     const expected = new Matrix4.multiplyTransformation(
       left,
       right,
-      new Matrix4()
+      new Matrix4(),
     );
     const returnedResult = Matrix4.multiplyByMatrix3(left, rightRotation, left);
     expect(returnedResult).toBe(left);
@@ -2132,13 +1943,13 @@ describe("Core/Matrix4", function () {
     const expected = Matrix4.multiply(
       m,
       Matrix4.fromTranslation(translation),
-      new Matrix4()
+      new Matrix4(),
     );
     const result = new Matrix4();
     const returnedResult = Matrix4.multiplyByTranslation(
       m,
       translation,
-      result
+      result,
     );
     expect(returnedResult).toBe(result);
     expect(result).toEqual(expected);
@@ -2150,7 +1961,7 @@ describe("Core/Matrix4", function () {
     const expected = Matrix4.multiply(
       m,
       Matrix4.fromTranslation(translation),
-      new Matrix4()
+      new Matrix4(),
     );
     const returnedResult = Matrix4.multiplyByTranslation(m, translation, m);
     expect(returnedResult).toBe(m);
@@ -2159,22 +1970,7 @@ describe("Core/Matrix4", function () {
 
   it("multiplyByUniformScale works", function () {
     const m = Matrix4.fromColumnMajorArray([
-      2,
-      3,
-      4,
-      5,
-      6,
-      7,
-      8,
-      9,
-      10,
-      11,
-      12,
-      13,
-      14,
-      15,
-      16,
-      17,
+      2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17,
     ]);
     const scale = 2.0;
     const expected = Matrix4.fromColumnMajorArray([
@@ -2203,22 +1999,7 @@ describe("Core/Matrix4", function () {
 
   it("multiplyByUniformScale works with a result parameter that is an input result parameter", function () {
     const m = Matrix4.fromColumnMajorArray([
-      2,
-      3,
-      4,
-      5,
-      6,
-      7,
-      8,
-      9,
-      10,
-      11,
-      12,
-      13,
-      14,
-      15,
-      16,
-      17,
+      2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17,
     ]);
     const scale = 2.0;
     const expected = Matrix4.fromColumnMajorArray([
@@ -2268,7 +2049,7 @@ describe("Core/Matrix4", function () {
     const expected = Matrix4.multiply(
       m,
       Matrix4.fromScale(scale),
-      new Matrix4()
+      new Matrix4(),
     );
     const returnedResult = Matrix4.multiplyByScale(m, scale, m);
     expect(returnedResult).toBe(m);
@@ -2277,22 +2058,7 @@ describe("Core/Matrix4", function () {
 
   it("multiplyByUniformScale works", function () {
     const m = Matrix4.fromColumnMajorArray([
-      2,
-      3,
-      4,
-      5,
-      6,
-      7,
-      8,
-      9,
-      10,
-      11,
-      12,
-      13,
-      14,
-      15,
-      16,
-      17,
+      2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17,
     ]);
     const scale = 2.0;
     const expected = Matrix4.fromColumnMajorArray([
@@ -2322,22 +2088,7 @@ describe("Core/Matrix4", function () {
 
   it('multiplyByUniformScale works with "this" result parameter', function () {
     const m = Matrix4.fromColumnMajorArray([
-      2,
-      3,
-      4,
-      5,
-      6,
-      7,
-      8,
-      9,
-      10,
-      11,
-      12,
-      13,
-      14,
-      15,
-      16,
-      17,
+      2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17,
     ]);
     const scale = 2.0;
     const expected = Matrix4.fromColumnMajorArray([
@@ -2381,7 +2132,7 @@ describe("Core/Matrix4", function () {
       13,
       14,
       15,
-      16
+      16,
     );
     const right = new Cartesian4(17, 18, 19, 20);
     const expected = new Cartesian4(190, 486, 782, 1078);
@@ -2408,7 +2159,7 @@ describe("Core/Matrix4", function () {
       13,
       14,
       15,
-      16
+      16,
     );
     const right = new Cartesian3(17, 18, 19);
     const expected = new Cartesian3(114, 334, 554);
@@ -2435,7 +2186,7 @@ describe("Core/Matrix4", function () {
       13,
       14,
       15,
-      16
+      16,
     );
     const right = new Cartesian3(17, 18, 19);
     const expected = new Cartesian3(110, 326, 542);
@@ -2462,7 +2213,7 @@ describe("Core/Matrix4", function () {
       13,
       14,
       15,
-      16
+      16,
     );
     const right = 2;
     const expected = new Matrix4(
@@ -2481,7 +2232,7 @@ describe("Core/Matrix4", function () {
       26,
       28,
       30,
-      32
+      32,
     );
     const result = new Matrix4();
     const returnedResult = Matrix4.multiplyByScalar(left, right, result);
@@ -2506,7 +2257,7 @@ describe("Core/Matrix4", function () {
       13.0,
       14.0,
       15.0,
-      16.0
+      16.0,
     );
     const expected = new Matrix4(
       -1.0,
@@ -2524,7 +2275,7 @@ describe("Core/Matrix4", function () {
       -13.0,
       -14.0,
       -15.0,
-      -16.0
+      -16.0,
     );
     const result = new Matrix4();
     const returnedResult = Matrix4.negate(matrix, result);
@@ -2549,7 +2300,7 @@ describe("Core/Matrix4", function () {
       13.0,
       14.0,
       15.0,
-      16.0
+      16.0,
     );
     const expected = new Matrix4(
       -1.0,
@@ -2567,7 +2318,7 @@ describe("Core/Matrix4", function () {
       -13.0,
       -14.0,
       -15.0,
-      -16.0
+      -16.0,
     );
     const returnedResult = Matrix4.negate(matrix, matrix);
     expect(matrix).toBe(returnedResult);
@@ -2591,7 +2342,7 @@ describe("Core/Matrix4", function () {
       13.0,
       14.0,
       15.0,
-      16.0
+      16.0,
     );
     const expected = new Matrix4(
       1.0,
@@ -2609,7 +2360,7 @@ describe("Core/Matrix4", function () {
       4.0,
       8.0,
       12.0,
-      16.0
+      16.0,
     );
     const result = new Matrix4();
     const returnedResult = Matrix4.transpose(matrix, result);
@@ -2634,12 +2385,12 @@ describe("Core/Matrix4", function () {
       13.0,
       -27.0,
       15.0,
-      16.0
+      16.0,
     );
     const expectedInverse = Matrix4.inverse(matrix, new Matrix4());
     const expectedInverseTranspose = Matrix4.transpose(
       expectedInverse,
-      new Matrix4()
+      new Matrix4(),
     );
     const result = Matrix4.inverseTranspose(matrix, new Matrix4());
     expect(result).toEqual(expectedInverseTranspose);
@@ -2662,7 +2413,7 @@ describe("Core/Matrix4", function () {
       13.0,
       14.0,
       15.0,
-      16.0
+      16.0,
     );
     const expected = new Matrix4(
       1.0,
@@ -2680,7 +2431,7 @@ describe("Core/Matrix4", function () {
       4.0,
       8.0,
       12.0,
-      16.0
+      16.0,
     );
     const returnedResult = Matrix4.transpose(matrix, matrix);
     expect(matrix).toBe(returnedResult);
@@ -2704,7 +2455,7 @@ describe("Core/Matrix4", function () {
       13.0,
       14.0,
       15.0,
-      16.0
+      16.0,
     );
     let right = new Matrix4(
       1.0,
@@ -2722,7 +2473,7 @@ describe("Core/Matrix4", function () {
       13.0,
       14.0,
       15.0,
-      16.0
+      16.0,
     );
     expect(Matrix4.equals(left, right)).toEqual(true);
 
@@ -2742,7 +2493,7 @@ describe("Core/Matrix4", function () {
       13.0,
       14.0,
       15.0,
-      16.0
+      16.0,
     );
     right = new Matrix4(5.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0);
     expect(Matrix4.equals(left, right)).toEqual(false);
@@ -2763,7 +2514,7 @@ describe("Core/Matrix4", function () {
       13.0,
       14.0,
       15.0,
-      16.0
+      16.0,
     );
     right = new Matrix4(1.0, 6.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0);
     expect(Matrix4.equals(left, right)).toEqual(false);
@@ -2784,7 +2535,7 @@ describe("Core/Matrix4", function () {
       13.0,
       14.0,
       15.0,
-      16.0
+      16.0,
     );
     right = new Matrix4(1.0, 2.0, 7.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0);
     expect(Matrix4.equals(left, right)).toEqual(false);
@@ -2805,7 +2556,7 @@ describe("Core/Matrix4", function () {
       13.0,
       14.0,
       15.0,
-      16.0
+      16.0,
     );
     right = new Matrix4(1.0, 2.0, 3.0, 8.0, 5.0, 6.0, 7.0, 8.0, 9.0);
     expect(Matrix4.equals(left, right)).toEqual(false);
@@ -2826,7 +2577,7 @@ describe("Core/Matrix4", function () {
       13.0,
       14.0,
       15.0,
-      16.0
+      16.0,
     );
     right = new Matrix4(1.0, 2.0, 3.0, 4.0, 9.0, 6.0, 7.0, 8.0, 9.0);
     expect(Matrix4.equals(left, right)).toEqual(false);
@@ -2847,7 +2598,7 @@ describe("Core/Matrix4", function () {
       13.0,
       14.0,
       15.0,
-      16.0
+      16.0,
     );
     right = new Matrix4(1.0, 2.0, 3.0, 4.0, 5.0, 10.0, 7.0, 8.0, 9.0);
     expect(Matrix4.equals(left, right)).toEqual(false);
@@ -2868,7 +2619,7 @@ describe("Core/Matrix4", function () {
       13.0,
       14.0,
       15.0,
-      16.0
+      16.0,
     );
     right = new Matrix4(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 11.0, 8.0, 9.0);
     expect(Matrix4.equals(left, right)).toEqual(false);
@@ -2889,7 +2640,7 @@ describe("Core/Matrix4", function () {
       13.0,
       14.0,
       15.0,
-      16.0
+      16.0,
     );
     right = new Matrix4(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 12.0, 9.0);
     expect(Matrix4.equals(left, right)).toEqual(false);
@@ -2910,7 +2661,7 @@ describe("Core/Matrix4", function () {
       13.0,
       14.0,
       15.0,
-      16.0
+      16.0,
     );
     right = new Matrix4(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 13.0);
     expect(Matrix4.equals(left, right)).toEqual(false);
@@ -2939,7 +2690,7 @@ describe("Core/Matrix4", function () {
       13.0,
       14.0,
       15.0,
-      16.0
+      16.0,
     );
     let right = new Matrix4(
       1.0,
@@ -2957,7 +2708,7 @@ describe("Core/Matrix4", function () {
       13.0,
       14.0,
       15.0,
-      16.0
+      16.0,
     );
     expect(Matrix4.equalsEpsilon(left, right, 1.0)).toEqual(true);
 
@@ -2977,7 +2728,7 @@ describe("Core/Matrix4", function () {
       13.0,
       14.0,
       15.0,
-      16.0
+      16.0,
     );
     right = new Matrix4(
       5.0,
@@ -2995,7 +2746,7 @@ describe("Core/Matrix4", function () {
       13.0,
       14.0,
       15.0,
-      16.0
+      16.0,
     );
     expect(Matrix4.equalsEpsilon(left, right, 3.9)).toEqual(false);
     expect(Matrix4.equalsEpsilon(left, right, 4.0)).toEqual(true);
@@ -3016,7 +2767,7 @@ describe("Core/Matrix4", function () {
       13.0,
       14.0,
       15.0,
-      16.0
+      16.0,
     );
     right = new Matrix4(
       1.0,
@@ -3034,7 +2785,7 @@ describe("Core/Matrix4", function () {
       13.0,
       14.0,
       15.0,
-      16.0
+      16.0,
     );
     expect(Matrix4.equalsEpsilon(left, right, 3.9)).toEqual(false);
     expect(Matrix4.equalsEpsilon(left, right, 4.0)).toEqual(true);
@@ -3055,7 +2806,7 @@ describe("Core/Matrix4", function () {
       13.0,
       14.0,
       15.0,
-      16.0
+      16.0,
     );
     right = new Matrix4(
       1.0,
@@ -3073,7 +2824,7 @@ describe("Core/Matrix4", function () {
       13.0,
       14.0,
       15.0,
-      16.0
+      16.0,
     );
     expect(Matrix4.equalsEpsilon(left, right, 3.9)).toEqual(false);
     expect(Matrix4.equalsEpsilon(left, right, 4.0)).toEqual(true);
@@ -3094,7 +2845,7 @@ describe("Core/Matrix4", function () {
       13.0,
       14.0,
       15.0,
-      16.0
+      16.0,
     );
     right = new Matrix4(
       1.0,
@@ -3112,7 +2863,7 @@ describe("Core/Matrix4", function () {
       13.0,
       14.0,
       15.0,
-      16.0
+      16.0,
     );
     expect(Matrix4.equalsEpsilon(left, right, 3.9)).toEqual(false);
     expect(Matrix4.equalsEpsilon(left, right, 4.0)).toEqual(true);
@@ -3133,7 +2884,7 @@ describe("Core/Matrix4", function () {
       13.0,
       14.0,
       15.0,
-      16.0
+      16.0,
     );
     right = new Matrix4(
       1.0,
@@ -3151,7 +2902,7 @@ describe("Core/Matrix4", function () {
       13.0,
       14.0,
       15.0,
-      16.0
+      16.0,
     );
     expect(Matrix4.equalsEpsilon(left, right, 3.9)).toEqual(false);
     expect(Matrix4.equalsEpsilon(left, right, 4.0)).toEqual(true);
@@ -3172,7 +2923,7 @@ describe("Core/Matrix4", function () {
       13.0,
       14.0,
       15.0,
-      16.0
+      16.0,
     );
     right = new Matrix4(
       1.0,
@@ -3190,7 +2941,7 @@ describe("Core/Matrix4", function () {
       13.0,
       14.0,
       15.0,
-      16.0
+      16.0,
     );
     expect(Matrix4.equalsEpsilon(left, right, 3.9)).toEqual(false);
     expect(Matrix4.equalsEpsilon(left, right, 4.0)).toEqual(true);
@@ -3211,7 +2962,7 @@ describe("Core/Matrix4", function () {
       13.0,
       14.0,
       15.0,
-      16.0
+      16.0,
     );
     right = new Matrix4(
       1.0,
@@ -3229,7 +2980,7 @@ describe("Core/Matrix4", function () {
       13.0,
       14.0,
       15.0,
-      16.0
+      16.0,
     );
     expect(Matrix4.equalsEpsilon(left, right, 3.9)).toEqual(false);
     expect(Matrix4.equalsEpsilon(left, right, 4.0)).toEqual(true);
@@ -3250,7 +3001,7 @@ describe("Core/Matrix4", function () {
       13.0,
       14.0,
       15.0,
-      16.0
+      16.0,
     );
     right = new Matrix4(
       1.0,
@@ -3268,7 +3019,7 @@ describe("Core/Matrix4", function () {
       13.0,
       14.0,
       15.0,
-      16.0
+      16.0,
     );
     expect(Matrix4.equalsEpsilon(left, right, 3.9)).toEqual(false);
     expect(Matrix4.equalsEpsilon(left, right, 4.0)).toEqual(true);
@@ -3289,7 +3040,7 @@ describe("Core/Matrix4", function () {
       13.0,
       14.0,
       15.0,
-      16.0
+      16.0,
     );
     right = new Matrix4(
       1.0,
@@ -3307,7 +3058,7 @@ describe("Core/Matrix4", function () {
       13.0,
       14.0,
       15.0,
-      16.0
+      16.0,
     );
     expect(Matrix4.equalsEpsilon(left, right, 3.9)).toEqual(false);
     expect(Matrix4.equalsEpsilon(left, right, 4.0)).toEqual(true);
@@ -3328,7 +3079,7 @@ describe("Core/Matrix4", function () {
       13.0,
       14.0,
       15.0,
-      16.0
+      16.0,
     );
     right = new Matrix4(
       1.0,
@@ -3346,7 +3097,7 @@ describe("Core/Matrix4", function () {
       13.0,
       14.0,
       15.0,
-      16.0
+      16.0,
     );
     expect(Matrix4.equalsEpsilon(left, right, 3.9)).toEqual(false);
     expect(Matrix4.equalsEpsilon(left, right, 4.0)).toEqual(true);
@@ -3367,7 +3118,7 @@ describe("Core/Matrix4", function () {
       13.0,
       14.0,
       15.0,
-      16.0
+      16.0,
     );
     right = new Matrix4(
       1.0,
@@ -3385,7 +3136,7 @@ describe("Core/Matrix4", function () {
       13.0,
       14.0,
       15.0,
-      16.0
+      16.0,
     );
     expect(Matrix4.equalsEpsilon(left, right, 3.9)).toEqual(false);
     expect(Matrix4.equalsEpsilon(left, right, 4.0)).toEqual(true);
@@ -3406,7 +3157,7 @@ describe("Core/Matrix4", function () {
       13.0,
       14.0,
       15.0,
-      16.0
+      16.0,
     );
     right = new Matrix4(
       1.0,
@@ -3424,7 +3175,7 @@ describe("Core/Matrix4", function () {
       13.0,
       14.0,
       15.0,
-      16.0
+      16.0,
     );
     expect(Matrix4.equalsEpsilon(left, right, 3.9)).toEqual(false);
     expect(Matrix4.equalsEpsilon(left, right, 4.0)).toEqual(true);
@@ -3445,7 +3196,7 @@ describe("Core/Matrix4", function () {
       13.0,
       14.0,
       15.0,
-      16.0
+      16.0,
     );
     right = new Matrix4(
       1.0,
@@ -3463,7 +3214,7 @@ describe("Core/Matrix4", function () {
       17.0,
       14.0,
       15.0,
-      16.0
+      16.0,
     );
     expect(Matrix4.equalsEpsilon(left, right, 3.9)).toEqual(false);
     expect(Matrix4.equalsEpsilon(left, right, 4.0)).toEqual(true);
@@ -3484,7 +3235,7 @@ describe("Core/Matrix4", function () {
       13.0,
       14.0,
       15.0,
-      16.0
+      16.0,
     );
     right = new Matrix4(
       1.0,
@@ -3502,7 +3253,7 @@ describe("Core/Matrix4", function () {
       13.0,
       18.0,
       15.0,
-      16.0
+      16.0,
     );
     expect(Matrix4.equalsEpsilon(left, right, 3.9)).toEqual(false);
     expect(Matrix4.equalsEpsilon(left, right, 4.0)).toEqual(true);
@@ -3523,7 +3274,7 @@ describe("Core/Matrix4", function () {
       13.0,
       14.0,
       15.0,
-      16.0
+      16.0,
     );
     right = new Matrix4(
       1.0,
@@ -3541,7 +3292,7 @@ describe("Core/Matrix4", function () {
       13.0,
       14.0,
       19.0,
-      16.0
+      16.0,
     );
     expect(Matrix4.equalsEpsilon(left, right, 3.9)).toEqual(false);
     expect(Matrix4.equalsEpsilon(left, right, 4.0)).toEqual(true);
@@ -3562,7 +3313,7 @@ describe("Core/Matrix4", function () {
       13.0,
       14.0,
       15.0,
-      16.0
+      16.0,
     );
     right = new Matrix4(
       1.0,
@@ -3580,7 +3331,7 @@ describe("Core/Matrix4", function () {
       13.0,
       14.0,
       15.0,
-      20.0
+      20.0,
     );
     expect(Matrix4.equalsEpsilon(left, right, 3.9)).toEqual(false);
     expect(Matrix4.equalsEpsilon(left, right, 4.0)).toEqual(true);
@@ -3609,10 +3360,10 @@ describe("Core/Matrix4", function () {
       13,
       14,
       15,
-      16
+      16,
     );
     expect(matrix.toString()).toEqual(
-      "(1, 2, 3, 4)\n(5, 6, 7, 8)\n(9, 10, 11, 12)\n(13, 14, 15, 16)"
+      "(1, 2, 3, 4)\n(5, 6, 7, 8)\n(9, 10, 11, 12)\n(13, 14, 15, 16)",
     );
   });
 
@@ -3633,7 +3384,7 @@ describe("Core/Matrix4", function () {
       13,
       14,
       15,
-      16
+      16,
     );
     const expected = new Cartesian3(4, 8, 12);
     const result = new Cartesian3();
@@ -3659,7 +3410,7 @@ describe("Core/Matrix4", function () {
       13,
       14,
       15,
-      16
+      16,
     );
     const expected = new Matrix3(1, 2, 3, 5, 6, 7, 9, 10, 11);
     const result = new Matrix3();
@@ -3685,7 +3436,7 @@ describe("Core/Matrix4", function () {
       0.0,
       0.0,
       0.0,
-      1.0
+      1.0,
     );
 
     const expected = new Matrix4(
@@ -3704,7 +3455,7 @@ describe("Core/Matrix4", function () {
       0.0,
       0.0,
       0.0,
-      1.0
+      1.0,
     );
 
     const result = new Matrix4();
@@ -3712,7 +3463,7 @@ describe("Core/Matrix4", function () {
     expect(returnedResult).toBe(result);
     expect(expected).toEqualEpsilon(returnedResult, CesiumMath.EPSILON20);
     expect(
-      Matrix4.multiply(returnedResult, matrix, new Matrix4())
+      Matrix4.multiply(returnedResult, matrix, new Matrix4()),
     ).toEqualEpsilon(Matrix4.IDENTITY, CesiumMath.EPSILON15);
   });
 
@@ -3730,7 +3481,7 @@ describe("Core/Matrix4", function () {
     const trs = new TranslationRotationScale(
       new Cartesian3(0.0, 0.0, 0.0),
       Quaternion.fromAxisAngle(Cartesian3.UNIT_X, 0.0),
-      new Cartesian3(1.0e-7, 1.0e-7, 1.1e-7)
+      new Cartesian3(1.0e-7, 1.0e-7, 1.1e-7),
     );
 
     const matrix = Matrix4.fromTranslationRotationScale(trs);
@@ -3751,7 +3502,7 @@ describe("Core/Matrix4", function () {
       0,
       0,
       0,
-      1
+      1,
     );
 
     const result = Matrix4.inverse(matrix, new Matrix4());
@@ -3762,7 +3513,7 @@ describe("Core/Matrix4", function () {
     const trs = new TranslationRotationScale(
       new Cartesian3(0.0, 0.0, 0.0),
       Quaternion.fromAxisAngle(Cartesian3.UNIT_X, 0.0),
-      new Cartesian3(1.8e-8, 1.2e-8, 1.2e-8)
+      new Cartesian3(1.8e-8, 1.2e-8, 1.2e-8),
     );
 
     const matrix = Matrix4.fromTranslationRotationScale(trs);
@@ -3783,7 +3534,7 @@ describe("Core/Matrix4", function () {
       0,
       0,
       0,
-      1
+      1,
     );
 
     const result = Matrix4.inverse(matrix, new Matrix4());
@@ -3807,7 +3558,7 @@ describe("Core/Matrix4", function () {
       0,
       0,
       0,
-      1
+      1,
     );
 
     const expected = new Matrix4(
@@ -3826,7 +3577,7 @@ describe("Core/Matrix4", function () {
       0,
       0,
       0,
-      1
+      1,
     );
 
     const result = new Matrix4();
@@ -3834,7 +3585,7 @@ describe("Core/Matrix4", function () {
     expect(returnedResult).toBe(result);
     expect(expected).toEqual(returnedResult);
     expect(Matrix4.multiply(returnedResult, matrix, new Matrix4())).toEqual(
-      Matrix4.IDENTITY
+      Matrix4.IDENTITY,
     );
   });
 
@@ -3861,7 +3612,7 @@ describe("Core/Matrix4", function () {
       -13.0,
       -14.0,
       -15.0,
-      -16.0
+      -16.0,
     );
     const expected = new Matrix4(
       1.0,
@@ -3879,7 +3630,7 @@ describe("Core/Matrix4", function () {
       13.0,
       14.0,
       15.0,
-      16.0
+      16.0,
     );
     const result = new Matrix4();
     let returnedResult = Matrix4.abs(matrix, result);
@@ -3901,7 +3652,7 @@ describe("Core/Matrix4", function () {
       13.0,
       14.0,
       15.0,
-      16.0
+      16.0,
     );
     returnedResult = Matrix4.abs(matrix, result);
     expect(returnedResult).toEqual(expected);
@@ -3922,7 +3673,7 @@ describe("Core/Matrix4", function () {
       13.0,
       -14.0,
       15.0,
-      -16.0
+      -16.0,
     );
     returnedResult = Matrix4.abs(matrix, result);
     expect(returnedResult).toEqual(expected);
@@ -3945,7 +3696,7 @@ describe("Core/Matrix4", function () {
       -13.0,
       -14.0,
       -15.0,
-      -16.0
+      -16.0,
     );
     const expected = new Matrix4(
       1.0,
@@ -3963,7 +3714,7 @@ describe("Core/Matrix4", function () {
       13.0,
       14.0,
       15.0,
-      16.0
+      16.0,
     );
     const returnedResult = Matrix4.abs(matrix, matrix);
     expect(matrix).toBe(returnedResult);
@@ -3999,7 +3750,7 @@ describe("Core/Matrix4", function () {
       Matrix4.fromTranslationQuaternionRotationScale(
         undefined,
         new Quaternion(),
-        new Cartesian3()
+        new Cartesian3(),
       );
     }).toThrowDeveloperError();
   });
@@ -4009,7 +3760,7 @@ describe("Core/Matrix4", function () {
       Matrix4.fromTranslationQuaternionRotationScale(
         new Matrix3(),
         undefined,
-        new Cartesian3()
+        new Cartesian3(),
       );
     }).toThrowDeveloperError();
   });
@@ -4019,7 +3770,7 @@ describe("Core/Matrix4", function () {
       Matrix4.fromTranslationQuaternionRotationScale(
         new Matrix3(),
         new Quaternion(),
-        undefined
+        undefined,
       );
     }).toThrowDeveloperError();
   });
@@ -4118,7 +3869,7 @@ describe("Core/Matrix4", function () {
         bottom,
         top,
         near,
-        far
+        far,
       );
     }).toThrowDeveloperError();
   });
@@ -4136,7 +3887,7 @@ describe("Core/Matrix4", function () {
         bottom,
         top,
         near,
-        far
+        far,
       );
     }).toThrowDeveloperError();
   });
@@ -4154,7 +3905,7 @@ describe("Core/Matrix4", function () {
         undefined,
         top,
         near,
-        far
+        far,
       );
     }).toThrowDeveloperError();
   });
@@ -4172,7 +3923,7 @@ describe("Core/Matrix4", function () {
         bottom,
         undefined,
         near,
-        far
+        far,
       );
     }).toThrowDeveloperError();
   });
@@ -4190,7 +3941,7 @@ describe("Core/Matrix4", function () {
         bottom,
         top,
         undefined,
-        far
+        far,
       );
     }).toThrowDeveloperError();
   });
@@ -4208,7 +3959,7 @@ describe("Core/Matrix4", function () {
         bottom,
         top,
         near,
-        undefined
+        undefined,
       );
     }).toThrowDeveloperError();
   });
@@ -4226,7 +3977,7 @@ describe("Core/Matrix4", function () {
         bottom,
         top,
         near,
-        far
+        far,
       );
     }).toThrowDeveloperError();
   });
@@ -4244,7 +3995,7 @@ describe("Core/Matrix4", function () {
         bottom,
         top,
         near,
-        far
+        far,
       );
     }).toThrowDeveloperError();
   });
@@ -4262,7 +4013,7 @@ describe("Core/Matrix4", function () {
         undefined,
         top,
         near,
-        far
+        far,
       );
     }).toThrowDeveloperError();
   });
@@ -4280,7 +4031,7 @@ describe("Core/Matrix4", function () {
         bottom,
         undefined,
         near,
-        far
+        far,
       );
     }).toThrowDeveloperError();
   });
@@ -4298,7 +4049,7 @@ describe("Core/Matrix4", function () {
         bottom,
         top,
         undefined,
-        far
+        far,
       );
     }).toThrowDeveloperError();
   });
@@ -4316,7 +4067,7 @@ describe("Core/Matrix4", function () {
         bottom,
         top,
         near,
-        undefined
+        undefined,
       );
     }).toThrowDeveloperError();
   });
@@ -4334,7 +4085,7 @@ describe("Core/Matrix4", function () {
         bottom,
         top,
         near,
-        far
+        far,
       );
     }).toThrowDeveloperError();
   });
@@ -4352,7 +4103,7 @@ describe("Core/Matrix4", function () {
         bottom,
         top,
         near,
-        far
+        far,
       );
     }).toThrowDeveloperError();
   });
@@ -4370,7 +4121,7 @@ describe("Core/Matrix4", function () {
         undefined,
         top,
         near,
-        far
+        far,
       );
     }).toThrowDeveloperError();
   });
@@ -4388,7 +4139,7 @@ describe("Core/Matrix4", function () {
         bottom,
         undefined,
         near,
-        far
+        far,
       );
     }).toThrowDeveloperError();
   });
@@ -4406,7 +4157,7 @@ describe("Core/Matrix4", function () {
         bottom,
         top,
         undefined,
-        far
+        far,
       );
     }).toThrowDeveloperError();
   });
@@ -4756,7 +4507,7 @@ describe("Core/Matrix4", function () {
       13,
       14,
       15,
-      16
+      16,
     );
     expect(function () {
       Matrix4.inverse(matrix, new Matrix4());
@@ -5003,7 +4754,7 @@ describe("Core/Matrix4", function () {
         right,
         bottom,
         top,
-        near
+        near,
       );
     }).toThrowDeveloperError();
   });
@@ -5035,7 +4786,7 @@ describe("Core/Matrix4", function () {
       4,
       8,
       12,
-      16
+      16,
     );
     expect(matrix.length).toEqual(16);
     const intArray = new Uint32Array(matrix.length);

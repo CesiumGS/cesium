@@ -124,7 +124,7 @@ Property.getValueOrClonedDefault = function (
   property,
   time,
   valueDefault,
-  result
+  result,
 ) {
   let value;
   if (defined(property)) {

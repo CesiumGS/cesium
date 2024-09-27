@@ -97,7 +97,7 @@ describe("Scene/Cesium3DTileStyle", function () {
       expect(style.pointOutlineWidth).toEqual(new Expression("5.0"));
       expect(style.labelColor).toEqual(new Expression("color('yellow')"));
       expect(style.labelOutlineColor).toEqual(
-        new Expression("color('orange')")
+        new Expression("color('orange')"),
       );
       expect(style.labelOutlineWidth).toEqual(new Expression("6.0"));
       expect(style.font).toEqual(new Expression("'24px Helvetica'"));
@@ -107,13 +107,13 @@ describe("Scene/Cesium3DTileStyle", function () {
       expect(style.backgroundPadding).toEqual(new Expression("vec2(1.0, 2.0)"));
       expect(style.backgroundEnabled).toEqual(new Expression("true"));
       expect(style.scaleByDistance).toEqual(
-        new Expression("vec4(1.0, 2.0, 3.0, 4.0)")
+        new Expression("vec4(1.0, 2.0, 3.0, 4.0)"),
       );
       expect(style.translucencyByDistance).toEqual(
-        new Expression("vec4(5.0, 6.0, 7.0, 8.0)")
+        new Expression("vec4(5.0, 6.0, 7.0, 8.0)"),
       );
       expect(style.distanceDisplayCondition).toEqual(
-        new Expression("vec2(3.0, 4.0)")
+        new Expression("vec2(3.0, 4.0)"),
       );
       expect(style.heightOffset).toEqual(new Expression("10.0"));
       expect(style.anchorLineEnabled).toEqual(new Expression("true"));
@@ -131,7 +131,7 @@ describe("Scene/Cesium3DTileStyle", function () {
     return Cesium3DTileStyle.fromUrl(
       new Resource({
         url: styleUrl,
-      })
+      }),
     ).then(function (style) {
       expect(style.style).toEqual({
         color: "color('red')",
@@ -168,7 +168,7 @@ describe("Scene/Cesium3DTileStyle", function () {
       expect(style.pointOutlineWidth).toEqual(new Expression("5.0"));
       expect(style.labelColor).toEqual(new Expression("color('yellow')"));
       expect(style.labelOutlineColor).toEqual(
-        new Expression("color('orange')")
+        new Expression("color('orange')"),
       );
       expect(style.labelOutlineWidth).toEqual(new Expression("6.0"));
       expect(style.font).toEqual(new Expression("'24px Helvetica'"));
@@ -178,13 +178,13 @@ describe("Scene/Cesium3DTileStyle", function () {
       expect(style.backgroundPadding).toEqual(new Expression("vec2(1.0, 2.0)"));
       expect(style.backgroundEnabled).toEqual(new Expression("true"));
       expect(style.scaleByDistance).toEqual(
-        new Expression("vec4(1.0, 2.0, 3.0, 4.0)")
+        new Expression("vec4(1.0, 2.0, 3.0, 4.0)"),
       );
       expect(style.translucencyByDistance).toEqual(
-        new Expression("vec4(5.0, 6.0, 7.0, 8.0)")
+        new Expression("vec4(5.0, 6.0, 7.0, 8.0)"),
       );
       expect(style.distanceDisplayCondition).toEqual(
-        new Expression("vec2(3.0, 4.0)")
+        new Expression("vec2(3.0, 4.0)"),
       );
       expect(style.heightOffset).toEqual(new Expression("10.0"));
       expect(style.anchorLineEnabled).toEqual(new Expression("true"));
@@ -279,7 +279,7 @@ describe("Scene/Cesium3DTileStyle", function () {
     const style = new Cesium3DTileStyle({ defines: defines });
     style.show = "${height} * ${showFactor} >= 1000";
     expect(style.show).toEqual(
-      new Expression("${height} * ${showFactor} >= 1000", defines)
+      new Expression("${height} * ${showFactor} >= 1000", defines),
     );
 
     style.show = false;
@@ -349,8 +349,8 @@ describe("Scene/Cesium3DTileStyle", function () {
 
     expect(style.color).toEqual(
       new Expression(
-        '(${height} * 10 >= 1000) ? rgba(0.0, 0.0, 1.0, 0.5) : color("blue")'
-      )
+        '(${height} * 10 >= 1000) ? rgba(0.0, 0.0, 1.0, 0.5) : color("blue")',
+      ),
     );
   });
 
@@ -417,7 +417,7 @@ describe("Scene/Cesium3DTileStyle", function () {
     const style = new Cesium3DTileStyle({ defines: defines });
     style.color = 'color("${targetColor}")';
     expect(style.color).toEqual(
-      new Expression('color("${targetColor}")', defines)
+      new Expression('color("${targetColor}")', defines),
     );
 
     const jsonExp = {
@@ -545,7 +545,7 @@ describe("Scene/Cesium3DTileStyle", function () {
 
     style.pointSize = "${targetPointSize} + 1.0";
     expect(style.pointSize).toEqual(
-      new Expression("${targetPointSize} + 1.0", defines)
+      new Expression("${targetPointSize} + 1.0", defines),
     );
 
     const jsonExp = {
@@ -599,7 +599,7 @@ describe("Scene/Cesium3DTileStyle", function () {
       pointOutlineColor: "rgba(30, 30, 30, 0.5)",
     });
     expect(style.pointOutlineColor).toEqual(
-      new Expression("rgba(30, 30, 30, 0.5)")
+      new Expression("rgba(30, 30, 30, 0.5)"),
     );
 
     style = new Cesium3DTileStyle({
@@ -608,8 +608,8 @@ describe("Scene/Cesium3DTileStyle", function () {
     });
     expect(style.pointOutlineColor).toEqual(
       new Expression(
-        '(${height} * 10 >= 1000) ? rgba(0.0, 0.0, 1.0, 0.5) : color("blue")'
-      )
+        '(${height} * 10 >= 1000) ? rgba(0.0, 0.0, 1.0, 0.5) : color("blue")',
+      ),
     );
   });
 
@@ -684,7 +684,7 @@ describe("Scene/Cesium3DTileStyle", function () {
     const style = new Cesium3DTileStyle({ defines: defines });
     style.pointOutlineColor = 'color("${targetColor}")';
     expect(style.pointOutlineColor).toEqual(
-      new Expression('color("${targetColor}")', defines)
+      new Expression('color("${targetColor}")', defines),
     );
 
     const jsonExp = {
@@ -696,7 +696,7 @@ describe("Scene/Cesium3DTileStyle", function () {
 
     style.pointOutlineColor = jsonExp;
     expect(style.pointOutlineColor).toEqual(
-      new ConditionsExpression(jsonExp, defines)
+      new ConditionsExpression(jsonExp, defines),
     );
   });
 
@@ -817,7 +817,7 @@ describe("Scene/Cesium3DTileStyle", function () {
 
     style.pointOutlineWidth = "${targetPointSize} + 1.0";
     expect(style.pointOutlineWidth).toEqual(
-      new Expression("${targetPointSize} + 1.0", defines)
+      new Expression("${targetPointSize} + 1.0", defines),
     );
 
     const jsonExp = {
@@ -829,7 +829,7 @@ describe("Scene/Cesium3DTileStyle", function () {
 
     style.pointOutlineWidth = jsonExp;
     expect(style.pointOutlineWidth).toEqual(
-      new ConditionsExpression(jsonExp, defines)
+      new ConditionsExpression(jsonExp, defines),
     );
   });
 
@@ -880,8 +880,8 @@ describe("Scene/Cesium3DTileStyle", function () {
     });
     expect(style.labelColor).toEqual(
       new Expression(
-        '(${height} * 10 >= 1000) ? rgba(0.0, 0.0, 1.0, 0.5) : color("blue")'
-      )
+        '(${height} * 10 >= 1000) ? rgba(0.0, 0.0, 1.0, 0.5) : color("blue")',
+      ),
     );
   });
 
@@ -955,7 +955,7 @@ describe("Scene/Cesium3DTileStyle", function () {
     const style = new Cesium3DTileStyle({ defines: defines });
     style.labelColor = 'color("${targetColor}")';
     expect(style.labelColor).toEqual(
-      new Expression('color("${targetColor}")', defines)
+      new Expression('color("${targetColor}")', defines),
     );
 
     const jsonExp = {
@@ -967,7 +967,7 @@ describe("Scene/Cesium3DTileStyle", function () {
 
     style.labelColor = jsonExp;
     expect(style.labelColor).toEqual(
-      new ConditionsExpression(jsonExp, defines)
+      new ConditionsExpression(jsonExp, defines),
     );
   });
 
@@ -1008,7 +1008,7 @@ describe("Scene/Cesium3DTileStyle", function () {
       labelOutlineColor: "rgba(30, 30, 30, 0.5)",
     });
     expect(style.labelOutlineColor).toEqual(
-      new Expression("rgba(30, 30, 30, 0.5)")
+      new Expression("rgba(30, 30, 30, 0.5)"),
     );
 
     style = new Cesium3DTileStyle({
@@ -1017,8 +1017,8 @@ describe("Scene/Cesium3DTileStyle", function () {
     });
     expect(style.labelOutlineColor).toEqual(
       new Expression(
-        '(${height} * 10 >= 1000) ? rgba(0.0, 0.0, 1.0, 0.5) : color("blue")'
-      )
+        '(${height} * 10 >= 1000) ? rgba(0.0, 0.0, 1.0, 0.5) : color("blue")',
+      ),
     );
   });
 
@@ -1093,7 +1093,7 @@ describe("Scene/Cesium3DTileStyle", function () {
     const style = new Cesium3DTileStyle({ defines: defines });
     style.labelOutlineColor = 'color("${targetColor}")';
     expect(style.labelOutlineColor).toEqual(
-      new Expression('color("${targetColor}")', defines)
+      new Expression('color("${targetColor}")', defines),
     );
 
     const jsonExp = {
@@ -1105,7 +1105,7 @@ describe("Scene/Cesium3DTileStyle", function () {
 
     style.labelOutlineColor = jsonExp;
     expect(style.labelOutlineColor).toEqual(
-      new ConditionsExpression(jsonExp, defines)
+      new ConditionsExpression(jsonExp, defines),
     );
   });
 
@@ -1225,7 +1225,7 @@ describe("Scene/Cesium3DTileStyle", function () {
 
     style.labelOutlineWidth = "${targetLabelSize} + 1.0";
     expect(style.labelOutlineWidth).toEqual(
-      new Expression("${targetLabelSize} + 1.0", defines)
+      new Expression("${targetLabelSize} + 1.0", defines),
     );
 
     const jsonExp = {
@@ -1237,7 +1237,7 @@ describe("Scene/Cesium3DTileStyle", function () {
 
     style.labelOutlineWidth = jsonExp;
     expect(style.labelOutlineWidth).toEqual(
-      new ConditionsExpression(jsonExp, defines)
+      new ConditionsExpression(jsonExp, defines),
     );
   });
 
@@ -1484,7 +1484,7 @@ describe("Scene/Cesium3DTileStyle", function () {
 
     style.labelStyle = "${targetLabelStyle}";
     expect(style.labelStyle).toEqual(
-      new Expression("${targetLabelStyle}", defines)
+      new Expression("${targetLabelStyle}", defines),
     );
 
     const jsonExp = {
@@ -1496,7 +1496,7 @@ describe("Scene/Cesium3DTileStyle", function () {
 
     style.labelStyle = jsonExp;
     expect(style.labelStyle).toEqual(
-      new ConditionsExpression(jsonExp, defines)
+      new ConditionsExpression(jsonExp, defines),
     );
   });
 
@@ -1673,7 +1673,7 @@ describe("Scene/Cesium3DTileStyle", function () {
       backgroundColor: "rgba(30, 30, 30, 0.5)",
     });
     expect(style.backgroundColor).toEqual(
-      new Expression("rgba(30, 30, 30, 0.5)")
+      new Expression("rgba(30, 30, 30, 0.5)"),
     );
 
     style = new Cesium3DTileStyle({
@@ -1682,8 +1682,8 @@ describe("Scene/Cesium3DTileStyle", function () {
     });
     expect(style.backgroundColor).toEqual(
       new Expression(
-        '(${height} * 10 >= 1000) ? rgba(0.0, 0.0, 1.0, 0.5) : color("blue")'
-      )
+        '(${height} * 10 >= 1000) ? rgba(0.0, 0.0, 1.0, 0.5) : color("blue")',
+      ),
     );
   });
 
@@ -1758,7 +1758,7 @@ describe("Scene/Cesium3DTileStyle", function () {
     const style = new Cesium3DTileStyle({ defines: defines });
     style.backgroundColor = 'color("${targetColor}")';
     expect(style.backgroundColor).toEqual(
-      new Expression('color("${targetColor}")', defines)
+      new Expression('color("${targetColor}")', defines),
     );
 
     const jsonExp = {
@@ -1770,7 +1770,7 @@ describe("Scene/Cesium3DTileStyle", function () {
 
     style.backgroundColor = jsonExp;
     expect(style.backgroundColor).toEqual(
-      new ConditionsExpression(jsonExp, defines)
+      new ConditionsExpression(jsonExp, defines),
     );
   });
 
@@ -1818,8 +1818,8 @@ describe("Scene/Cesium3DTileStyle", function () {
     });
     expect(style.backgroundPadding).toEqual(
       new Expression(
-        "(${height} * 10 >= 1000) ? vec2(1.0, 2.0) : vec2(3.0, 4.0)"
-      )
+        "(${height} * 10 >= 1000) ? vec2(1.0, 2.0) : vec2(3.0, 4.0)",
+      ),
     );
   });
 
@@ -1891,7 +1891,7 @@ describe("Scene/Cesium3DTileStyle", function () {
     const style = new Cesium3DTileStyle({ defines: defines });
     style.backgroundPadding = 'vec2("${targetPadding}")';
     expect(style.backgroundPadding).toEqual(
-      new Expression('vec2("${targetPadding}")', defines)
+      new Expression('vec2("${targetPadding}")', defines),
     );
 
     const jsonExp = {
@@ -1903,7 +1903,7 @@ describe("Scene/Cesium3DTileStyle", function () {
 
     style.backgroundPadding = jsonExp;
     expect(style.backgroundPadding).toEqual(
-      new ConditionsExpression(jsonExp, defines)
+      new ConditionsExpression(jsonExp, defines),
     );
   });
 
@@ -1949,7 +1949,7 @@ describe("Scene/Cesium3DTileStyle", function () {
       backgroundEnabled: "${height} * 10 >= 1000",
     });
     expect(style.backgroundEnabled).toEqual(
-      new Expression("${height} * 10 >= 1000")
+      new Expression("${height} * 10 >= 1000"),
     );
 
     style = new Cesium3DTileStyle({
@@ -2025,7 +2025,7 @@ describe("Scene/Cesium3DTileStyle", function () {
     const style = new Cesium3DTileStyle({ defines: defines });
     style.backgroundEnabled = "${height} * ${backgroundFactor} >= 1000";
     expect(style.backgroundEnabled).toEqual(
-      new Expression("${height} * ${backgroundFactor} >= 1000", defines)
+      new Expression("${height} * ${backgroundFactor} >= 1000", defines),
     );
 
     style.backgroundEnabled = false;
@@ -2040,7 +2040,7 @@ describe("Scene/Cesium3DTileStyle", function () {
 
     style.backgroundEnabled = jsonExp;
     expect(style.backgroundEnabled).toEqual(
-      new ConditionsExpression(jsonExp, defines)
+      new ConditionsExpression(jsonExp, defines),
     );
 
     style.backgroundEnabled = undefined;
@@ -2054,7 +2054,7 @@ describe("Scene/Cesium3DTileStyle", function () {
     const style = new Cesium3DTileStyle({ defines: defines });
     style.backgroundEnabled = "${height} * ${backgroundFactor} >= 1000";
     expect(style.style.backgroundEnabled).toEqual(
-      "${height} * ${backgroundFactor} >= 1000"
+      "${height} * ${backgroundFactor} >= 1000",
     );
 
     style.backgroundEnabled = false;
@@ -2088,7 +2088,7 @@ describe("Scene/Cesium3DTileStyle", function () {
     });
 
     expect(style.scaleByDistance).toEqual(
-      new Expression("vec4(1.0, 2.0, 3.0, 4.0)")
+      new Expression("vec4(1.0, 2.0, 3.0, 4.0)"),
     );
 
     style = new Cesium3DTileStyle({
@@ -2096,7 +2096,7 @@ describe("Scene/Cesium3DTileStyle", function () {
     });
 
     expect(style.scaleByDistance).toEqual(
-      new Expression("vec4(5.0, 6.0, 7.0, 8.0)")
+      new Expression("vec4(5.0, 6.0, 7.0, 8.0)"),
     );
 
     style = new Cesium3DTileStyle({
@@ -2105,8 +2105,8 @@ describe("Scene/Cesium3DTileStyle", function () {
     });
     expect(style.scaleByDistance).toEqual(
       new Expression(
-        "(${height} * 10 >= 1000) ? vec4(1.0, 2.0, 3.0, 4.0) : vec4(5.0, 6.0, 7.0, 8.0)"
-      )
+        "(${height} * 10 >= 1000) ? vec4(1.0, 2.0, 3.0, 4.0) : vec4(5.0, 6.0, 7.0, 8.0)",
+      ),
     );
   });
 
@@ -2179,7 +2179,7 @@ describe("Scene/Cesium3DTileStyle", function () {
     const style = new Cesium3DTileStyle({ defines: defines });
     style.scaleByDistance = 'vec4("${targetScale}")';
     expect(style.scaleByDistance).toEqual(
-      new Expression('vec4("${targetScale}")', defines)
+      new Expression('vec4("${targetScale}")', defines),
     );
 
     const jsonExp = {
@@ -2191,7 +2191,7 @@ describe("Scene/Cesium3DTileStyle", function () {
 
     style.scaleByDistance = jsonExp;
     expect(style.scaleByDistance).toEqual(
-      new ConditionsExpression(jsonExp, defines)
+      new ConditionsExpression(jsonExp, defines),
     );
   });
 
@@ -2227,14 +2227,14 @@ describe("Scene/Cesium3DTileStyle", function () {
       distanceDisplayCondition: "vec4(1.0, 2.0, 3.0, 4.0)",
     });
     expect(style.distanceDisplayCondition).toEqual(
-      new Expression("vec4(1.0, 2.0, 3.0, 4.0)")
+      new Expression("vec4(1.0, 2.0, 3.0, 4.0)"),
     );
 
     style = new Cesium3DTileStyle({
       distanceDisplayCondition: "vec4(5.0, 6.0, 7.0, 8.0)",
     });
     expect(style.distanceDisplayCondition).toEqual(
-      new Expression("vec4(5.0, 6.0, 7.0, 8.0)")
+      new Expression("vec4(5.0, 6.0, 7.0, 8.0)"),
     );
 
     style = new Cesium3DTileStyle({
@@ -2243,8 +2243,8 @@ describe("Scene/Cesium3DTileStyle", function () {
     });
     expect(style.distanceDisplayCondition).toEqual(
       new Expression(
-        "(${height} * 10 >= 1000) ? vec4(1.0, 2.0, 3.0, 4.0) : vec4(5.0, 6.0, 7.0, 8.0)"
-      )
+        "(${height} * 10 >= 1000) ? vec4(1.0, 2.0, 3.0, 4.0) : vec4(5.0, 6.0, 7.0, 8.0)",
+      ),
     );
   });
 
@@ -2260,7 +2260,7 @@ describe("Scene/Cesium3DTileStyle", function () {
       distanceDisplayCondition: jsonExp,
     });
     expect(style.distanceDisplayCondition).toEqual(
-      new ConditionsExpression(jsonExp)
+      new ConditionsExpression(jsonExp),
     );
   });
 
@@ -2288,7 +2288,7 @@ describe("Scene/Cesium3DTileStyle", function () {
     const style = new Cesium3DTileStyle();
     style.distanceDisplayCondition = new Expression("vec4(5.0, 6.0, 7.0, 8.0)");
     expect(style.style.distanceDisplayCondition).toEqual(
-      "vec4(5.0, 6.0, 7.0, 8.0)"
+      "vec4(5.0, 6.0, 7.0, 8.0)",
     );
 
     const jsonExp = {
@@ -2320,7 +2320,7 @@ describe("Scene/Cesium3DTileStyle", function () {
     const style = new Cesium3DTileStyle({ defines: defines });
     style.distanceDisplayCondition = 'vec4("${targetTranslucency}")';
     expect(style.distanceDisplayCondition).toEqual(
-      new Expression('vec4("${targetTranslucency}")', defines)
+      new Expression('vec4("${targetTranslucency}")', defines),
     );
 
     const jsonExp = {
@@ -2332,7 +2332,7 @@ describe("Scene/Cesium3DTileStyle", function () {
 
     style.distanceDisplayCondition = jsonExp;
     expect(style.distanceDisplayCondition).toEqual(
-      new ConditionsExpression(jsonExp, defines)
+      new ConditionsExpression(jsonExp, defines),
     );
   });
 
@@ -2343,7 +2343,7 @@ describe("Scene/Cesium3DTileStyle", function () {
     const style = new Cesium3DTileStyle({ defines: defines });
     style.distanceDisplayCondition = 'vec4("${targetTranslucency}")';
     expect(style.style.distanceDisplayCondition).toEqual(
-      'vec4("${targetTranslucency}")'
+      'vec4("${targetTranslucency}")',
     );
 
     const jsonExp = {
@@ -2456,7 +2456,7 @@ describe("Scene/Cesium3DTileStyle", function () {
 
     style.heightOffset = "${targetHeight} + 1.0";
     expect(style.heightOffset).toEqual(
-      new Expression("${targetHeight} + 1.0", defines)
+      new Expression("${targetHeight} + 1.0", defines),
     );
 
     const jsonExp = {
@@ -2468,7 +2468,7 @@ describe("Scene/Cesium3DTileStyle", function () {
 
     style.heightOffset = jsonExp;
     expect(style.heightOffset).toEqual(
-      new ConditionsExpression(jsonExp, defines)
+      new ConditionsExpression(jsonExp, defines),
     );
   });
 
@@ -2514,7 +2514,7 @@ describe("Scene/Cesium3DTileStyle", function () {
       anchorLineEnabled: "${height} * 10 >= 1000",
     });
     expect(style.anchorLineEnabled).toEqual(
-      new Expression("${height} * 10 >= 1000")
+      new Expression("${height} * 10 >= 1000"),
     );
 
     style = new Cesium3DTileStyle({
@@ -2590,7 +2590,7 @@ describe("Scene/Cesium3DTileStyle", function () {
     const style = new Cesium3DTileStyle({ defines: defines });
     style.anchorLineEnabled = "${height} * ${anchorFactor} >= 1000";
     expect(style.anchorLineEnabled).toEqual(
-      new Expression("${height} * ${anchorFactor} >= 1000", defines)
+      new Expression("${height} * ${anchorFactor} >= 1000", defines),
     );
 
     style.anchorLineEnabled = false;
@@ -2605,7 +2605,7 @@ describe("Scene/Cesium3DTileStyle", function () {
 
     style.anchorLineEnabled = jsonExp;
     expect(style.anchorLineEnabled).toEqual(
-      new ConditionsExpression(jsonExp, defines)
+      new ConditionsExpression(jsonExp, defines),
     );
 
     style.anchorLineEnabled = undefined;
@@ -2619,7 +2619,7 @@ describe("Scene/Cesium3DTileStyle", function () {
     const style = new Cesium3DTileStyle({ defines: defines });
     style.anchorLineEnabled = "${height} * ${anchorFactor} >= 1000";
     expect(style.style.anchorLineEnabled).toEqual(
-      "${height} * ${anchorFactor} >= 1000"
+      "${height} * ${anchorFactor} >= 1000",
     );
 
     style.anchorLineEnabled = false;
@@ -2657,7 +2657,7 @@ describe("Scene/Cesium3DTileStyle", function () {
       anchorLineColor: "rgba(30, 30, 30, 0.5)",
     });
     expect(style.anchorLineColor).toEqual(
-      new Expression("rgba(30, 30, 30, 0.5)")
+      new Expression("rgba(30, 30, 30, 0.5)"),
     );
 
     style = new Cesium3DTileStyle({
@@ -2666,8 +2666,8 @@ describe("Scene/Cesium3DTileStyle", function () {
     });
     expect(style.anchorLineColor).toEqual(
       new Expression(
-        '(${height} * 10 >= 1000) ? rgba(0.0, 0.0, 1.0, 0.5) : color("blue")'
-      )
+        '(${height} * 10 >= 1000) ? rgba(0.0, 0.0, 1.0, 0.5) : color("blue")',
+      ),
     );
   });
 
@@ -2742,7 +2742,7 @@ describe("Scene/Cesium3DTileStyle", function () {
     const style = new Cesium3DTileStyle({ defines: defines });
     style.anchorLineColor = 'color("${targetColor}")';
     expect(style.anchorLineColor).toEqual(
-      new Expression('color("${targetColor}")', defines)
+      new Expression('color("${targetColor}")', defines),
     );
 
     const jsonExp = {
@@ -2754,7 +2754,7 @@ describe("Scene/Cesium3DTileStyle", function () {
 
     style.anchorLineColor = jsonExp;
     expect(style.anchorLineColor).toEqual(
-      new ConditionsExpression(jsonExp, defines)
+      new ConditionsExpression(jsonExp, defines),
     );
   });
 
@@ -2928,7 +2928,7 @@ describe("Scene/Cesium3DTileStyle", function () {
       disableDepthTestDistance: "${height} / 10",
     });
     expect(style.disableDepthTestDistance).toEqual(
-      new Expression("${height} / 10")
+      new Expression("${height} / 10"),
     );
 
     style = new Cesium3DTileStyle({
@@ -2949,7 +2949,7 @@ describe("Scene/Cesium3DTileStyle", function () {
       disableDepthTestDistance: jsonExp,
     });
     expect(style.disableDepthTestDistance).toEqual(
-      new ConditionsExpression(jsonExp)
+      new ConditionsExpression(jsonExp),
     );
   });
 
@@ -3013,7 +3013,7 @@ describe("Scene/Cesium3DTileStyle", function () {
 
     style.disableDepthTestDistance = "${targetDistance} + 1.0";
     expect(style.disableDepthTestDistance).toEqual(
-      new Expression("${targetDistance} + 1.0", defines)
+      new Expression("${targetDistance} + 1.0", defines),
     );
 
     const jsonExp = {
@@ -3025,7 +3025,7 @@ describe("Scene/Cesium3DTileStyle", function () {
 
     style.disableDepthTestDistance = jsonExp;
     expect(style.disableDepthTestDistance).toEqual(
-      new ConditionsExpression(jsonExp, defines)
+      new ConditionsExpression(jsonExp, defines),
     );
   });
 
@@ -3118,7 +3118,7 @@ describe("Scene/Cesium3DTileStyle", function () {
 
     style.horizontalOrigin = "${targetOrigin}";
     expect(style.horizontalOrigin).toEqual(
-      new Expression("${targetOrigin}", defines)
+      new Expression("${targetOrigin}", defines),
     );
 
     const jsonExp = {
@@ -3130,7 +3130,7 @@ describe("Scene/Cesium3DTileStyle", function () {
 
     style.horizontalOrigin = jsonExp;
     expect(style.horizontalOrigin).toEqual(
-      new ConditionsExpression(jsonExp, defines)
+      new ConditionsExpression(jsonExp, defines),
     );
   });
 
@@ -3244,7 +3244,7 @@ describe("Scene/Cesium3DTileStyle", function () {
 
     style.verticalOrigin = "${targetOrigin}";
     expect(style.verticalOrigin).toEqual(
-      new Expression("${targetOrigin}", defines)
+      new Expression("${targetOrigin}", defines),
     );
 
     const jsonExp = {
@@ -3256,7 +3256,7 @@ describe("Scene/Cesium3DTileStyle", function () {
 
     style.verticalOrigin = jsonExp;
     expect(style.verticalOrigin).toEqual(
-      new ConditionsExpression(jsonExp, defines)
+      new ConditionsExpression(jsonExp, defines),
     );
   });
 
@@ -3308,7 +3308,7 @@ describe("Scene/Cesium3DTileStyle", function () {
       labelHorizontalOrigin: jsonExp,
     });
     expect(style.labelHorizontalOrigin).toEqual(
-      new ConditionsExpression(jsonExp)
+      new ConditionsExpression(jsonExp),
     );
   });
 
@@ -3372,7 +3372,7 @@ describe("Scene/Cesium3DTileStyle", function () {
 
     style.labelHorizontalOrigin = "${targetOrigin}";
     expect(style.labelHorizontalOrigin).toEqual(
-      new Expression("${targetOrigin}", defines)
+      new Expression("${targetOrigin}", defines),
     );
 
     const jsonExp = {
@@ -3384,7 +3384,7 @@ describe("Scene/Cesium3DTileStyle", function () {
 
     style.labelHorizontalOrigin = jsonExp;
     expect(style.labelHorizontalOrigin).toEqual(
-      new ConditionsExpression(jsonExp, defines)
+      new ConditionsExpression(jsonExp, defines),
     );
   });
 
@@ -3436,7 +3436,7 @@ describe("Scene/Cesium3DTileStyle", function () {
       labelVerticalOrigin: jsonExp,
     });
     expect(style.labelVerticalOrigin).toEqual(
-      new ConditionsExpression(jsonExp)
+      new ConditionsExpression(jsonExp),
     );
   });
 
@@ -3501,7 +3501,7 @@ describe("Scene/Cesium3DTileStyle", function () {
 
     style.labelVerticalOrigin = "${targetOrigin}";
     expect(style.labelVerticalOrigin).toEqual(
-      new Expression("${targetOrigin}", defines)
+      new Expression("${targetOrigin}", defines),
     );
 
     const jsonExp = {
@@ -3513,7 +3513,7 @@ describe("Scene/Cesium3DTileStyle", function () {
 
     style.labelVerticalOrigin = jsonExp;
     expect(style.labelVerticalOrigin).toEqual(
-      new ConditionsExpression(jsonExp, defines)
+      new ConditionsExpression(jsonExp, defines),
     );
   });
 
@@ -3554,7 +3554,7 @@ describe("Scene/Cesium3DTileStyle", function () {
       },
     });
     expect(style.meta.featureColor.evaluateColor(feature1)).toEqual(
-      Color.fromBytes(38, 255, 82)
+      Color.fromBytes(38, 255, 82),
     );
     expect(style.meta.volume.evaluate(feature1)).toEqual(20 * 20 * 100);
   });
@@ -3631,10 +3631,10 @@ describe("Scene/Cesium3DTileStyle", function () {
       color: "rgba(${red}, ${green}, ${blue}, (${volume} > 100 ? 0.5 : 1.0))",
     });
     expect(style.color.evaluateColor(feature1)).toEqual(
-      new Color(38 / 255, 255 / 255, 82 / 255, 0.5)
+      new Color(38 / 255, 255 / 255, 82 / 255, 0.5),
     );
     expect(style.color.evaluateColor(feature2)).toEqual(
-      new Color(255 / 255, 30 / 255, 30 / 255, 1.0)
+      new Color(255 / 255, 30 / 255, 30 / 255, 1.0),
     );
   });
 
@@ -3734,10 +3734,10 @@ describe("Scene/Cesium3DTileStyle", function () {
     expect(style.pointSize.evaluate(feature1)).toEqual(114);
     expect(style.pointSize.evaluate(feature2)).toEqual(44);
     expect(style.meta.description.evaluate(feature1)).toEqual(
-      "Half height is 50"
+      "Half height is 50",
     );
     expect(style.meta.description.evaluate(feature2)).toEqual(
-      "Half height is 19"
+      "Half height is 19",
     );
   });
 
@@ -3750,7 +3750,7 @@ describe("Scene/Cesium3DTileStyle", function () {
     const pointSizeFunction = style.getPointSizeShaderFunction(
       "getPointSize",
       {},
-      {}
+      {},
     );
     expect(colorFunction).toBeUndefined();
     expect(showFunction).toBeUndefined();

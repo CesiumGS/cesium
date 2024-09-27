@@ -65,7 +65,7 @@ describe("DataSources/SampledPositionProperty", function () {
       time,
       valueInertial,
       ReferenceFrame.INERTIAL,
-      ReferenceFrame.FIXED
+      ReferenceFrame.FIXED,
     );
     const property = new SampledPositionProperty(ReferenceFrame.INERTIAL);
     property.addSample(time, valueInertial);
@@ -82,7 +82,7 @@ describe("DataSources/SampledPositionProperty", function () {
 
     const result = property.getValueInReferenceFrame(
       time,
-      ReferenceFrame.INERTIAL
+      ReferenceFrame.INERTIAL,
     );
     expect(result).not.toBe(value);
     expect(result).toEqual(
@@ -90,8 +90,8 @@ describe("DataSources/SampledPositionProperty", function () {
         time,
         value,
         ReferenceFrame.FIXED,
-        ReferenceFrame.INERTIAL
-      )
+        ReferenceFrame.INERTIAL,
+      ),
     );
   });
 
@@ -105,7 +105,7 @@ describe("DataSources/SampledPositionProperty", function () {
     const result = property.getValueInReferenceFrame(
       time,
       ReferenceFrame.FIXED,
-      expected
+      expected,
     );
     expect(result).toBe(expected);
     expect(expected).toEqual(
@@ -113,8 +113,8 @@ describe("DataSources/SampledPositionProperty", function () {
         time,
         value,
         ReferenceFrame.INERTIAL,
-        ReferenceFrame.FIXED
-      )
+        ReferenceFrame.FIXED,
+      ),
     );
   });
 
@@ -126,7 +126,7 @@ describe("DataSources/SampledPositionProperty", function () {
     property.addSamplesPackedArray(data, epoch);
     expect(property.getValue(epoch)).toEqual(new Cartesian3(7, 8, 9));
     expect(property.getValue(new JulianDate(0, 0.5))).toEqual(
-      new Cartesian3(7.5, 8.5, 9.5)
+      new Cartesian3(7.5, 8.5, 9.5),
     );
   });
 
@@ -151,7 +151,7 @@ describe("DataSources/SampledPositionProperty", function () {
     expect(property.getValue(times[1])).toEqual(values[1]);
     expect(property.getValue(times[2])).toEqual(values[2]);
     expect(property.getValue(new JulianDate(0.5, 0))).toEqual(
-      new Cartesian3(7.5, 8.5, 9.5)
+      new Cartesian3(7.5, 8.5, 9.5),
     );
   });
 
@@ -173,7 +173,7 @@ describe("DataSources/SampledPositionProperty", function () {
     expect(property.getValue(times[1])).toEqual(values[1]);
     expect(property.getValue(times[2])).toEqual(values[2]);
     expect(property.getValue(new JulianDate(0.5, 0))).toEqual(
-      new Cartesian3(7.5, 8.5, 9.5)
+      new Cartesian3(7.5, 8.5, 9.5),
     );
   });
 
@@ -233,7 +233,7 @@ describe("DataSources/SampledPositionProperty", function () {
       new TimeInterval({
         start: times[1],
         stop: times[2],
-      })
+      }),
     );
 
     expect(listener).toHaveBeenCalledWith(property);
@@ -247,27 +247,7 @@ describe("DataSources/SampledPositionProperty", function () {
 
   it("addSamplesPackedArray works with derivatives", function () {
     const data = [
-      0,
-      7,
-      8,
-      9,
-      1,
-      0,
-      0,
-      1,
-      8,
-      9,
-      10,
-      0,
-      1,
-      0,
-      2,
-      9,
-      10,
-      11,
-      0,
-      0,
-      1,
+      0, 7, 8, 9, 1, 0, 0, 1, 8, 9, 10, 0, 1, 0, 2, 9, 10, 11, 0, 0, 1,
     ];
     const epoch = new JulianDate(0, 0);
 
@@ -275,7 +255,7 @@ describe("DataSources/SampledPositionProperty", function () {
     property.addSamplesPackedArray(data, epoch);
     expect(property.getValue(epoch)).toEqual(new Cartesian3(7, 8, 9));
     expect(property.getValue(new JulianDate(0, 0.5))).toEqual(
-      new Cartesian3(7.5, 8.5, 9.5)
+      new Cartesian3(7.5, 8.5, 9.5),
     );
   });
 
@@ -305,7 +285,7 @@ describe("DataSources/SampledPositionProperty", function () {
     expect(property.getValue(times[1])).toEqual(positions[1]);
     expect(property.getValue(times[2])).toEqual(positions[2]);
     expect(property.getValue(new JulianDate(0.5, 0))).toEqual(
-      new Cartesian3(7.5, 8.5, 9.5)
+      new Cartesian3(7.5, 8.5, 9.5),
     );
   });
 
@@ -332,7 +312,7 @@ describe("DataSources/SampledPositionProperty", function () {
     expect(property.getValue(times[1])).toEqual(positions[1]);
     expect(property.getValue(times[2])).toEqual(positions[2]);
     expect(property.getValue(new JulianDate(0.5, 0))).toEqual(
-      new Cartesian3(7.5, 8.5, 9.5)
+      new Cartesian3(7.5, 8.5, 9.5),
     );
   });
 
@@ -342,7 +322,7 @@ describe("DataSources/SampledPositionProperty", function () {
       property.addSample(
         new JulianDate(0, 0),
         new Cartesian3(7, 8, 9),
-        undefined
+        undefined,
       );
     }).toThrowDeveloperError();
   });
@@ -435,7 +415,7 @@ describe("DataSources/SampledPositionProperty", function () {
     });
     expect(property.getValue(epoch)).toEqual(new Cartesian3(7, 8, 9));
     expect(property.getValue(new JulianDate(0, 3))).toEqual(
-      new Cartesian3(2, 3, 4)
+      new Cartesian3(2, 3, 4),
     );
 
     expect(timesCalled).toEqual(1);
@@ -450,7 +430,7 @@ describe("DataSources/SampledPositionProperty", function () {
 
     expect(property.getValue(time)).toEqual(value);
     expect(
-      property.getValue(JulianDate.addSeconds(time, 4, new JulianDate()))
+      property.getValue(JulianDate.addSeconds(time, 4, new JulianDate())),
     ).toBeUndefined();
   });
 

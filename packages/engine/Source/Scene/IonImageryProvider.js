@@ -269,7 +269,7 @@ IonImageryProvider.fromAssetId = async function (assetId, options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   const endpointResource = IonResource._createEndpointResource(
     assetId,
-    options
+    options,
   );
 
   // A simple cache to avoid making repeated requests to ion for endpoints we've
@@ -286,7 +286,7 @@ IonImageryProvider.fromAssetId = async function (assetId, options) {
   const endpoint = await promise;
   if (endpoint.type !== "IMAGERY") {
     throw new RuntimeError(
-      `Cesium ion asset ${assetId} is not an imagery asset.`
+      `Cesium ion asset ${assetId} is not an imagery asset.`,
     );
   }
 
@@ -294,14 +294,14 @@ IonImageryProvider.fromAssetId = async function (assetId, options) {
   const externalType = endpoint.externalType;
   if (!defined(externalType)) {
     imageryProvider = await TileMapServiceImageryProvider.fromUrl(
-      new IonResource(endpoint, endpointResource)
+      new IonResource(endpoint, endpointResource),
     );
   } else {
     const factory = ImageryProviderAsyncMapping[externalType];
 
     if (!defined(factory)) {
       throw new RuntimeError(
-        `Unrecognized Cesium ion imagery type: ${externalType}`
+        `Unrecognized Cesium ion imagery type: ${externalType}`,
       );
     }
     // Make a copy before editing since this object reference is cached;
@@ -322,7 +322,7 @@ IonImageryProvider.fromAssetId = async function (assetId, options) {
 
   provider._tileCredits = IonResource.getCreditsFromEndpoint(
     endpoint,
-    endpointResource
+    endpointResource,
   );
 
   provider._imageryProvider = imageryProvider;
@@ -384,7 +384,7 @@ IonImageryProvider.prototype.pickFeatures = function (
   y,
   level,
   longitude,
-  latitude
+  latitude,
 ) {
   return this._imageryProvider.pickFeatures(x, y, level, longitude, latitude);
 };

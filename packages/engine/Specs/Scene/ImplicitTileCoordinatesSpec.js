@@ -53,7 +53,7 @@ describe("Scene/ImplicitTileCoordinates", function () {
     });
 
     expect(coordinates.subdivisionScheme).toEqual(
-      ImplicitSubdivisionScheme.QUADTREE
+      ImplicitSubdivisionScheme.QUADTREE,
     );
     expect(coordinates.level).toEqual(4);
     expect(coordinates.x).toEqual(3);
@@ -72,7 +72,7 @@ describe("Scene/ImplicitTileCoordinates", function () {
     });
 
     expect(coordinates.subdivisionScheme).toEqual(
-      ImplicitSubdivisionScheme.OCTREE
+      ImplicitSubdivisionScheme.OCTREE,
     );
     expect(coordinates.level).toEqual(4);
     expect(coordinates.x).toEqual(3);
@@ -128,7 +128,7 @@ describe("Scene/ImplicitTileCoordinates", function () {
     // mismatched subdivisionScheme
     expect(function () {
       return quadtreeCoordinates(0, 0, 0).getDescendantCoordinates(
-        octreeCoordinates(0, 0, 0, 0)
+        octreeCoordinates(0, 0, 0, 0),
       );
     }).toThrowDeveloperError();
 
@@ -140,7 +140,7 @@ describe("Scene/ImplicitTileCoordinates", function () {
         0,
         0,
         0,
-        subtreeLevelsA
+        subtreeLevelsA,
       ).getDescendantCoordinates(quadtreeCoordinates(0, 0, 0, subtreeLevelsB));
     }).toThrowDeveloperError();
   });
@@ -149,19 +149,19 @@ describe("Scene/ImplicitTileCoordinates", function () {
     expect(
       quadtreeCoordinates(0, 0, 0)
         .getDescendantCoordinates(quadtreeCoordinates(0, 0, 0))
-        .isEqual(quadtreeCoordinates(0, 0, 0))
+        .isEqual(quadtreeCoordinates(0, 0, 0)),
     ).toEqual(true);
 
     expect(
       quadtreeCoordinates(0, 0, 0)
         .getDescendantCoordinates(quadtreeCoordinates(1, 1, 1))
-        .isEqual(quadtreeCoordinates(1, 1, 1))
+        .isEqual(quadtreeCoordinates(1, 1, 1)),
     ).toEqual(true);
 
     expect(
       quadtreeCoordinates(1, 1, 1)
         .getDescendantCoordinates(quadtreeCoordinates(2, 3, 3))
-        .isEqual(quadtreeCoordinates(3, 7, 7))
+        .isEqual(quadtreeCoordinates(3, 7, 7)),
     ).toEqual(true);
   });
 
@@ -169,19 +169,19 @@ describe("Scene/ImplicitTileCoordinates", function () {
     expect(
       octreeCoordinates(0, 0, 0, 0)
         .getDescendantCoordinates(octreeCoordinates(0, 0, 0, 0))
-        .isEqual(octreeCoordinates(0, 0, 0, 0))
+        .isEqual(octreeCoordinates(0, 0, 0, 0)),
     ).toEqual(true);
 
     expect(
       octreeCoordinates(0, 0, 0, 0)
         .getDescendantCoordinates(octreeCoordinates(1, 1, 1, 1))
-        .isEqual(octreeCoordinates(1, 1, 1, 1))
+        .isEqual(octreeCoordinates(1, 1, 1, 1)),
     ).toEqual(true);
 
     expect(
       octreeCoordinates(1, 1, 1, 1)
         .getDescendantCoordinates(octreeCoordinates(2, 3, 3, 3))
-        .isEqual(octreeCoordinates(3, 7, 7, 7))
+        .isEqual(octreeCoordinates(3, 7, 7, 7)),
     ).toEqual(true);
   });
 
@@ -206,31 +206,31 @@ describe("Scene/ImplicitTileCoordinates", function () {
     expect(
       quadtreeCoordinates(0, 0, 0)
         .getAncestorCoordinates(0)
-        .isEqual(quadtreeCoordinates(0, 0, 0))
+        .isEqual(quadtreeCoordinates(0, 0, 0)),
     ).toEqual(true);
 
     expect(
       quadtreeCoordinates(1, 0, 0)
         .getAncestorCoordinates(1)
-        .isEqual(quadtreeCoordinates(0, 0, 0))
+        .isEqual(quadtreeCoordinates(0, 0, 0)),
     ).toEqual(true);
 
     expect(
       quadtreeCoordinates(1, 1, 1)
         .getAncestorCoordinates(1)
-        .isEqual(quadtreeCoordinates(0, 0, 0))
+        .isEqual(quadtreeCoordinates(0, 0, 0)),
     ).toEqual(true);
 
     expect(
       quadtreeCoordinates(2, 3, 3)
         .getAncestorCoordinates(1)
-        .isEqual(quadtreeCoordinates(1, 1, 1))
+        .isEqual(quadtreeCoordinates(1, 1, 1)),
     ).toEqual(true);
 
     expect(
       quadtreeCoordinates(2, 3, 3)
         .getAncestorCoordinates(2)
-        .isEqual(quadtreeCoordinates(0, 0, 0))
+        .isEqual(quadtreeCoordinates(0, 0, 0)),
     ).toEqual(true);
   });
 
@@ -238,31 +238,31 @@ describe("Scene/ImplicitTileCoordinates", function () {
     expect(
       octreeCoordinates(0, 0, 0, 0)
         .getAncestorCoordinates(0)
-        .isEqual(octreeCoordinates(0, 0, 0, 0))
+        .isEqual(octreeCoordinates(0, 0, 0, 0)),
     ).toEqual(true);
 
     expect(
       octreeCoordinates(1, 0, 0, 0)
         .getAncestorCoordinates(1)
-        .isEqual(octreeCoordinates(0, 0, 0, 0))
+        .isEqual(octreeCoordinates(0, 0, 0, 0)),
     ).toEqual(true);
 
     expect(
       octreeCoordinates(1, 1, 1, 1)
         .getAncestorCoordinates(1)
-        .isEqual(octreeCoordinates(0, 0, 0, 0))
+        .isEqual(octreeCoordinates(0, 0, 0, 0)),
     ).toEqual(true);
 
     expect(
       octreeCoordinates(2, 3, 3, 3)
         .getAncestorCoordinates(1)
-        .isEqual(octreeCoordinates(1, 1, 1, 1))
+        .isEqual(octreeCoordinates(1, 1, 1, 1)),
     ).toEqual(true);
 
     expect(
       octreeCoordinates(2, 3, 3, 3)
         .getAncestorCoordinates(2)
-        .isEqual(octreeCoordinates(0, 0, 0, 0))
+        .isEqual(octreeCoordinates(0, 0, 0, 0)),
     ).toEqual(true);
   });
 
@@ -275,21 +275,21 @@ describe("Scene/ImplicitTileCoordinates", function () {
     // descendant is above ancestor
     expect(function () {
       return quadtreeCoordinates(1, 0, 0).getOffsetCoordinates(
-        quadtreeCoordinates(0, 0, 0)
+        quadtreeCoordinates(0, 0, 0),
       );
     }).toThrowDeveloperError();
 
     // descendant is not actually a descendant
     expect(function () {
       return quadtreeCoordinates(1, 0, 0).getOffsetCoordinates(
-        quadtreeCoordinates(2, 3, 3)
+        quadtreeCoordinates(2, 3, 3),
       );
     }).toThrowDeveloperError();
 
     // mismatched subdivisionScheme
     expect(function () {
       return quadtreeCoordinates(0, 0, 0).getOffsetCoordinates(
-        octreeCoordinates(0, 0, 0, 0)
+        octreeCoordinates(0, 0, 0, 0),
       );
     }).toThrowDeveloperError();
 
@@ -298,7 +298,7 @@ describe("Scene/ImplicitTileCoordinates", function () {
       const subtreeLevelsA = 2;
       const subtreeLevelsB = 3;
       return quadtreeCoordinates(0, 0, 0, subtreeLevelsA).getOffsetCoordinates(
-        quadtreeCoordinates(0, 0, 0, subtreeLevelsB)
+        quadtreeCoordinates(0, 0, 0, subtreeLevelsB),
       );
     }).toThrowDeveloperError();
   });
@@ -307,25 +307,25 @@ describe("Scene/ImplicitTileCoordinates", function () {
     expect(
       quadtreeCoordinates(0, 0, 0)
         .getOffsetCoordinates(quadtreeCoordinates(0, 0, 0))
-        .isEqual(quadtreeCoordinates(0, 0, 0))
+        .isEqual(quadtreeCoordinates(0, 0, 0)),
     ).toEqual(true);
 
     expect(
       quadtreeCoordinates(0, 0, 0)
         .getOffsetCoordinates(quadtreeCoordinates(1, 1, 1))
-        .isEqual(quadtreeCoordinates(1, 1, 1))
+        .isEqual(quadtreeCoordinates(1, 1, 1)),
     ).toEqual(true);
 
     expect(
       quadtreeCoordinates(0, 0, 0)
         .getOffsetCoordinates(quadtreeCoordinates(2, 3, 3))
-        .isEqual(quadtreeCoordinates(2, 3, 3))
+        .isEqual(quadtreeCoordinates(2, 3, 3)),
     ).toEqual(true);
 
     expect(
       quadtreeCoordinates(1, 1, 1)
         .getOffsetCoordinates(quadtreeCoordinates(2, 2, 2))
-        .isEqual(quadtreeCoordinates(1, 0, 0))
+        .isEqual(quadtreeCoordinates(1, 0, 0)),
     ).toEqual(true);
   });
 
@@ -333,25 +333,25 @@ describe("Scene/ImplicitTileCoordinates", function () {
     expect(
       octreeCoordinates(0, 0, 0, 0)
         .getOffsetCoordinates(octreeCoordinates(0, 0, 0, 0))
-        .isEqual(octreeCoordinates(0, 0, 0, 0))
+        .isEqual(octreeCoordinates(0, 0, 0, 0)),
     ).toEqual(true);
 
     expect(
       octreeCoordinates(0, 0, 0, 0)
         .getOffsetCoordinates(octreeCoordinates(1, 1, 1, 1))
-        .isEqual(octreeCoordinates(1, 1, 1, 1))
+        .isEqual(octreeCoordinates(1, 1, 1, 1)),
     ).toEqual(true);
 
     expect(
       octreeCoordinates(0, 0, 0, 0)
         .getOffsetCoordinates(octreeCoordinates(2, 3, 3, 3))
-        .isEqual(octreeCoordinates(2, 3, 3, 3))
+        .isEqual(octreeCoordinates(2, 3, 3, 3)),
     ).toEqual(true);
 
     expect(
       octreeCoordinates(1, 1, 1, 1)
         .getOffsetCoordinates(octreeCoordinates(2, 2, 2, 2))
-        .isEqual(octreeCoordinates(1, 0, 0, 0))
+        .isEqual(octreeCoordinates(1, 0, 0, 0)),
     ).toEqual(true);
   });
 
@@ -372,19 +372,19 @@ describe("Scene/ImplicitTileCoordinates", function () {
     const coordinates = quadtreeCoordinates(1, 0, 0);
 
     expect(
-      coordinates.getChildCoordinates(0).isEqual(quadtreeCoordinates(2, 0, 0))
+      coordinates.getChildCoordinates(0).isEqual(quadtreeCoordinates(2, 0, 0)),
     ).toEqual(true);
 
     expect(
-      coordinates.getChildCoordinates(1).isEqual(quadtreeCoordinates(2, 1, 0))
+      coordinates.getChildCoordinates(1).isEqual(quadtreeCoordinates(2, 1, 0)),
     ).toEqual(true);
 
     expect(
-      coordinates.getChildCoordinates(2).isEqual(quadtreeCoordinates(2, 0, 1))
+      coordinates.getChildCoordinates(2).isEqual(quadtreeCoordinates(2, 0, 1)),
     ).toEqual(true);
 
     expect(
-      coordinates.getChildCoordinates(3).isEqual(quadtreeCoordinates(2, 1, 1))
+      coordinates.getChildCoordinates(3).isEqual(quadtreeCoordinates(2, 1, 1)),
     ).toEqual(true);
   });
 
@@ -392,35 +392,35 @@ describe("Scene/ImplicitTileCoordinates", function () {
     const coordinates = octreeCoordinates(1, 0, 1, 1);
 
     expect(
-      coordinates.getChildCoordinates(0).isEqual(octreeCoordinates(2, 0, 2, 2))
+      coordinates.getChildCoordinates(0).isEqual(octreeCoordinates(2, 0, 2, 2)),
     ).toEqual(true);
 
     expect(
-      coordinates.getChildCoordinates(1).isEqual(octreeCoordinates(2, 1, 2, 2))
+      coordinates.getChildCoordinates(1).isEqual(octreeCoordinates(2, 1, 2, 2)),
     ).toEqual(true);
 
     expect(
-      coordinates.getChildCoordinates(2).isEqual(octreeCoordinates(2, 0, 3, 2))
+      coordinates.getChildCoordinates(2).isEqual(octreeCoordinates(2, 0, 3, 2)),
     ).toEqual(true);
 
     expect(
-      coordinates.getChildCoordinates(3).isEqual(octreeCoordinates(2, 1, 3, 2))
+      coordinates.getChildCoordinates(3).isEqual(octreeCoordinates(2, 1, 3, 2)),
     ).toEqual(true);
 
     expect(
-      coordinates.getChildCoordinates(4).isEqual(octreeCoordinates(2, 0, 2, 3))
+      coordinates.getChildCoordinates(4).isEqual(octreeCoordinates(2, 0, 2, 3)),
     ).toEqual(true);
 
     expect(
-      coordinates.getChildCoordinates(5).isEqual(octreeCoordinates(2, 1, 2, 3))
+      coordinates.getChildCoordinates(5).isEqual(octreeCoordinates(2, 1, 2, 3)),
     ).toEqual(true);
 
     expect(
-      coordinates.getChildCoordinates(6).isEqual(octreeCoordinates(2, 0, 3, 3))
+      coordinates.getChildCoordinates(6).isEqual(octreeCoordinates(2, 0, 3, 3)),
     ).toEqual(true);
 
     expect(
-      coordinates.getChildCoordinates(7).isEqual(octreeCoordinates(2, 1, 3, 3))
+      coordinates.getChildCoordinates(7).isEqual(octreeCoordinates(2, 1, 3, 3)),
     ).toEqual(true);
   });
 
@@ -428,25 +428,25 @@ describe("Scene/ImplicitTileCoordinates", function () {
     expect(
       quadtreeCoordinates(0, 0, 0)
         .getSubtreeCoordinates()
-        .isEqual(quadtreeCoordinates(0, 0, 0))
+        .isEqual(quadtreeCoordinates(0, 0, 0)),
     ).toEqual(true);
 
     expect(
       quadtreeCoordinates(1, 1, 1)
         .getSubtreeCoordinates()
-        .isEqual(quadtreeCoordinates(0, 0, 0))
+        .isEqual(quadtreeCoordinates(0, 0, 0)),
     ).toEqual(true);
 
     expect(
       quadtreeCoordinates(2, 3, 3)
         .getSubtreeCoordinates()
-        .isEqual(quadtreeCoordinates(2, 3, 3))
+        .isEqual(quadtreeCoordinates(2, 3, 3)),
     ).toEqual(true);
 
     expect(
       quadtreeCoordinates(3, 7, 7)
         .getSubtreeCoordinates()
-        .isEqual(quadtreeCoordinates(2, 3, 3))
+        .isEqual(quadtreeCoordinates(2, 3, 3)),
     ).toEqual(true);
   });
 
@@ -454,25 +454,25 @@ describe("Scene/ImplicitTileCoordinates", function () {
     expect(
       octreeCoordinates(0, 0, 0, 0)
         .getSubtreeCoordinates()
-        .isEqual(octreeCoordinates(0, 0, 0, 0))
+        .isEqual(octreeCoordinates(0, 0, 0, 0)),
     ).toEqual(true);
 
     expect(
       octreeCoordinates(1, 1, 1, 1)
         .getSubtreeCoordinates()
-        .isEqual(octreeCoordinates(0, 0, 0, 0))
+        .isEqual(octreeCoordinates(0, 0, 0, 0)),
     ).toEqual(true);
 
     expect(
       octreeCoordinates(2, 3, 3, 3)
         .getSubtreeCoordinates()
-        .isEqual(octreeCoordinates(2, 3, 3, 3))
+        .isEqual(octreeCoordinates(2, 3, 3, 3)),
     ).toEqual(true);
 
     expect(
       octreeCoordinates(3, 7, 7, 7)
         .getSubtreeCoordinates()
-        .isEqual(octreeCoordinates(2, 3, 3, 3))
+        .isEqual(octreeCoordinates(2, 3, 3, 3)),
     ).toEqual(true);
   });
 
@@ -492,31 +492,31 @@ describe("Scene/ImplicitTileCoordinates", function () {
     expect(
       quadtreeCoordinates(2, 0, 0)
         .getParentSubtreeCoordinates()
-        .isEqual(quadtreeCoordinates(0, 0, 0))
+        .isEqual(quadtreeCoordinates(0, 0, 0)),
     ).toEqual(true);
 
     expect(
       quadtreeCoordinates(2, 3, 3)
         .getParentSubtreeCoordinates()
-        .isEqual(quadtreeCoordinates(0, 0, 0))
+        .isEqual(quadtreeCoordinates(0, 0, 0)),
     ).toEqual(true);
 
     expect(
       quadtreeCoordinates(3, 7, 7)
         .getParentSubtreeCoordinates()
-        .isEqual(quadtreeCoordinates(0, 0, 0))
+        .isEqual(quadtreeCoordinates(0, 0, 0)),
     ).toEqual(true);
 
     expect(
       quadtreeCoordinates(4, 0, 0)
         .getParentSubtreeCoordinates()
-        .isEqual(quadtreeCoordinates(2, 0, 0))
+        .isEqual(quadtreeCoordinates(2, 0, 0)),
     ).toEqual(true);
 
     expect(
       quadtreeCoordinates(4, 15, 15)
         .getParentSubtreeCoordinates()
-        .isEqual(quadtreeCoordinates(2, 3, 3))
+        .isEqual(quadtreeCoordinates(2, 3, 3)),
     ).toEqual(true);
   });
 
@@ -524,31 +524,31 @@ describe("Scene/ImplicitTileCoordinates", function () {
     expect(
       octreeCoordinates(2, 0, 0, 0)
         .getParentSubtreeCoordinates()
-        .isEqual(octreeCoordinates(0, 0, 0, 0))
+        .isEqual(octreeCoordinates(0, 0, 0, 0)),
     ).toEqual(true);
 
     expect(
       octreeCoordinates(2, 3, 3, 3)
         .getParentSubtreeCoordinates()
-        .isEqual(octreeCoordinates(0, 0, 0, 0))
+        .isEqual(octreeCoordinates(0, 0, 0, 0)),
     ).toEqual(true);
 
     expect(
       octreeCoordinates(3, 7, 7, 7)
         .getParentSubtreeCoordinates()
-        .isEqual(octreeCoordinates(0, 0, 0, 0))
+        .isEqual(octreeCoordinates(0, 0, 0, 0)),
     ).toEqual(true);
 
     expect(
       octreeCoordinates(4, 0, 0, 0)
         .getParentSubtreeCoordinates()
-        .isEqual(octreeCoordinates(2, 0, 0, 0))
+        .isEqual(octreeCoordinates(2, 0, 0, 0)),
     ).toEqual(true);
 
     expect(
       octreeCoordinates(4, 15, 15, 15)
         .getParentSubtreeCoordinates()
-        .isEqual(octreeCoordinates(2, 3, 3, 3))
+        .isEqual(octreeCoordinates(2, 3, 3, 3)),
     ).toEqual(true);
   });
 
@@ -561,7 +561,7 @@ describe("Scene/ImplicitTileCoordinates", function () {
     // mismatched subdivisionScheme
     expect(function () {
       return quadtreeCoordinates(0, 0, 0).isAncestor(
-        octreeCoordinates(0, 0, 0, 0)
+        octreeCoordinates(0, 0, 0, 0),
       );
     }).toThrowDeveloperError();
 
@@ -570,7 +570,7 @@ describe("Scene/ImplicitTileCoordinates", function () {
       const subtreeLevelsA = 2;
       const subtreeLevelsB = 3;
       return quadtreeCoordinates(0, 0, 0, subtreeLevelsA).isAncestor(
-        quadtreeCoordinates(0, 0, 0, subtreeLevelsB)
+        quadtreeCoordinates(0, 0, 0, subtreeLevelsB),
       );
     }).toThrowDeveloperError();
   });
@@ -578,54 +578,54 @@ describe("Scene/ImplicitTileCoordinates", function () {
   it("isAncestor works as expected for quadtree", function () {
     // cannot be ancestor of itself
     expect(
-      quadtreeCoordinates(0, 0, 0).isAncestor(quadtreeCoordinates(0, 0, 0))
+      quadtreeCoordinates(0, 0, 0).isAncestor(quadtreeCoordinates(0, 0, 0)),
     ).toEqual(false);
 
     // ancestor one level above
     expect(
-      quadtreeCoordinates(0, 0, 0).isAncestor(quadtreeCoordinates(1, 1, 1))
+      quadtreeCoordinates(0, 0, 0).isAncestor(quadtreeCoordinates(1, 1, 1)),
     ).toEqual(true);
 
     // cannot be descendant
     expect(
-      quadtreeCoordinates(1, 1, 1).isAncestor(quadtreeCoordinates(0, 0, 0))
+      quadtreeCoordinates(1, 1, 1).isAncestor(quadtreeCoordinates(0, 0, 0)),
     ).toEqual(false);
 
     // works with bigger divide
     expect(
-      quadtreeCoordinates(0, 0, 0).isAncestor(quadtreeCoordinates(3, 7, 7))
+      quadtreeCoordinates(0, 0, 0).isAncestor(quadtreeCoordinates(3, 7, 7)),
     ).toEqual(true);
 
     // higher up in the tree but not an ancestor
     expect(
-      quadtreeCoordinates(1, 0, 0).isAncestor(quadtreeCoordinates(2, 3, 3))
+      quadtreeCoordinates(1, 0, 0).isAncestor(quadtreeCoordinates(2, 3, 3)),
     ).toEqual(false);
   });
 
   it("isAncestor works as expected for octree", function () {
     // cannot be ancestor of itself
     expect(
-      octreeCoordinates(0, 0, 0, 0).isAncestor(octreeCoordinates(0, 0, 0, 0))
+      octreeCoordinates(0, 0, 0, 0).isAncestor(octreeCoordinates(0, 0, 0, 0)),
     ).toEqual(false);
 
     // ancestor one level above
     expect(
-      octreeCoordinates(0, 0, 0, 0).isAncestor(octreeCoordinates(1, 1, 1, 1))
+      octreeCoordinates(0, 0, 0, 0).isAncestor(octreeCoordinates(1, 1, 1, 1)),
     ).toEqual(true);
 
     // cannot be descendant
     expect(
-      octreeCoordinates(1, 1, 1, 1).isAncestor(octreeCoordinates(0, 0, 0, 0))
+      octreeCoordinates(1, 1, 1, 1).isAncestor(octreeCoordinates(0, 0, 0, 0)),
     ).toEqual(false);
 
     // works with bigger divide
     expect(
-      octreeCoordinates(0, 0, 0, 0).isAncestor(octreeCoordinates(3, 7, 7, 7))
+      octreeCoordinates(0, 0, 0, 0).isAncestor(octreeCoordinates(3, 7, 7, 7)),
     ).toEqual(true);
 
     // higher up in the tree but not an ancestor
     expect(
-      octreeCoordinates(1, 0, 0, 0).isAncestor(octreeCoordinates(2, 3, 3, 3))
+      octreeCoordinates(1, 0, 0, 0).isAncestor(octreeCoordinates(2, 3, 3, 3)),
     ).toEqual(false);
   });
 
@@ -639,32 +639,32 @@ describe("Scene/ImplicitTileCoordinates", function () {
   it("isEqual works as expected for quadtree", function () {
     // same
     expect(
-      octreeCoordinates(0, 0, 0, 0).isEqual(octreeCoordinates(0, 0, 0, 0))
+      octreeCoordinates(0, 0, 0, 0).isEqual(octreeCoordinates(0, 0, 0, 0)),
     ).toEqual(true);
 
     // different level
     expect(
-      octreeCoordinates(0, 0, 0, 0).isEqual(octreeCoordinates(1, 0, 0, 0))
+      octreeCoordinates(0, 0, 0, 0).isEqual(octreeCoordinates(1, 0, 0, 0)),
     ).toEqual(false);
 
     // different X
     expect(
-      octreeCoordinates(1, 0, 0, 0).isEqual(octreeCoordinates(1, 1, 0, 0))
+      octreeCoordinates(1, 0, 0, 0).isEqual(octreeCoordinates(1, 1, 0, 0)),
     ).toEqual(false);
 
     // different Y
     expect(
-      octreeCoordinates(1, 0, 0, 0).isEqual(octreeCoordinates(1, 0, 1, 0))
+      octreeCoordinates(1, 0, 0, 0).isEqual(octreeCoordinates(1, 0, 1, 0)),
     ).toEqual(false);
 
     // different Z
     expect(
-      octreeCoordinates(1, 0, 0, 0).isEqual(octreeCoordinates(1, 0, 0, 1))
+      octreeCoordinates(1, 0, 0, 0).isEqual(octreeCoordinates(1, 0, 0, 1)),
     ).toEqual(false);
 
     // mismatched subdivisionScheme
     expect(
-      quadtreeCoordinates(0, 0, 0).isEqual(octreeCoordinates(0, 0, 0, 0))
+      quadtreeCoordinates(0, 0, 0).isEqual(octreeCoordinates(0, 0, 0, 0)),
     ).toEqual(false);
 
     // mismatched subtreeLevels
@@ -672,8 +672,8 @@ describe("Scene/ImplicitTileCoordinates", function () {
     const subtreeLevelsB = 3;
     expect(
       quadtreeCoordinates(0, 0, 0, subtreeLevelsA).isEqual(
-        quadtreeCoordinates(0, 0, 0, subtreeLevelsB)
-      )
+        quadtreeCoordinates(0, 0, 0, subtreeLevelsB),
+      ),
     ).toEqual(false);
   });
 
@@ -736,11 +736,11 @@ describe("Scene/ImplicitTileCoordinates", function () {
       ImplicitSubdivisionScheme.QUADTREE,
       subtreeLevels,
       3,
-      42
+      42,
     );
 
     expect(
-      coordinates.isEqual(quadtreeCoordinates(3, 0, 7, subtreeLevels))
+      coordinates.isEqual(quadtreeCoordinates(3, 0, 7, subtreeLevels)),
     ).toEqual(true);
   });
 
@@ -753,11 +753,11 @@ describe("Scene/ImplicitTileCoordinates", function () {
       ImplicitSubdivisionScheme.OCTREE,
       subtreeLevels,
       2,
-      43
+      43,
     );
 
     expect(
-      coordinates.isEqual(octreeCoordinates(2, 3, 1, 2, subtreeLevels))
+      coordinates.isEqual(octreeCoordinates(2, 3, 1, 2, subtreeLevels)),
     ).toEqual(true);
   });
 
@@ -793,11 +793,11 @@ describe("Scene/ImplicitTileCoordinates", function () {
     const coordinates = ImplicitTileCoordinates.fromTileIndex(
       ImplicitSubdivisionScheme.QUADTREE,
       subtreeLevels,
-      63
+      63,
     );
 
     expect(
-      coordinates.isEqual(quadtreeCoordinates(3, 0, 7, subtreeLevels))
+      coordinates.isEqual(quadtreeCoordinates(3, 0, 7, subtreeLevels)),
     ).toEqual(true);
   });
 
@@ -812,18 +812,18 @@ describe("Scene/ImplicitTileCoordinates", function () {
     const coordinates = ImplicitTileCoordinates.fromTileIndex(
       ImplicitSubdivisionScheme.OCTREE,
       subtreeLevels,
-      52
+      52,
     );
 
     expect(
-      coordinates.isEqual(octreeCoordinates(2, 3, 1, 2, subtreeLevels))
+      coordinates.isEqual(octreeCoordinates(2, 3, 1, 2, subtreeLevels)),
     ).toEqual(true);
   });
 
   it("getTemplateValues works as expected for quadtree", function () {
     const subtreeLevels = 6;
     expect(
-      quadtreeCoordinates(4, 3, 2, subtreeLevels).getTemplateValues()
+      quadtreeCoordinates(4, 3, 2, subtreeLevels).getTemplateValues(),
     ).toEqual({
       level: 4,
       x: 3,
@@ -835,7 +835,7 @@ describe("Scene/ImplicitTileCoordinates", function () {
     const subtreeLevels = 6;
 
     expect(
-      octreeCoordinates(4, 3, 2, 1, subtreeLevels).getTemplateValues()
+      octreeCoordinates(4, 3, 2, 1, subtreeLevels).getTemplateValues(),
     ).toEqual({
       level: 4,
       x: 3,

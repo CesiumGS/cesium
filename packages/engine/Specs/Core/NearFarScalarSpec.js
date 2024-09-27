@@ -40,10 +40,9 @@ describe("Core/NearFarScalar", function () {
     expect(scalar).toBe(returnedResult);
   });
 
-  createPackableSpecs(NearFarScalar, new NearFarScalar(1, 2, 3, 4), [
-    1,
-    2,
-    3,
-    4,
-  ]);
+  createPackableSpecs(
+    NearFarScalar,
+    new NearFarScalar(1, 2, 3, 4),
+    [1, 2, 3, 4],
+  );
 });

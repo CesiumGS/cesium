@@ -58,7 +58,7 @@ function Cesium3DTilesetMetadata(options) {
         new GroupMetadata({
           group: group,
           class: schema.classes[group.class],
-        })
+        }),
       );
     }
   } else if (defined(groupsJson)) {
@@ -75,7 +75,7 @@ function Cesium3DTilesetMetadata(options) {
             id: groupId,
             group: groupsJson[groupId],
             class: schema.classes[group.class],
-          })
+          }),
         );
       }
     }

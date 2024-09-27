@@ -18,24 +18,13 @@ import createScene from "../../../../Specs/createScene.js";
 
 describe("Scene/ClippingPolygonCollection", function () {
   const positions = Cartesian3.fromRadiansArray([
-    -1.3194369277314022,
-    0.6988062530900625,
-    -1.31941,
-    0.69879,
-    -1.3193955980204217,
-    0.6988091578771254,
-    -1.3193931220959367,
-    0.698743632490865,
-    -1.3194358224045408,
-    0.6987471965556998,
+    -1.3194369277314022, 0.6988062530900625, -1.31941, 0.69879,
+    -1.3193955980204217, 0.6988091578771254, -1.3193931220959367,
+    0.698743632490865, -1.3194358224045408, 0.6987471965556998,
   ]);
   const positionsB = Cartesian3.fromRadiansArray([
-    -1.3194369277314022,
-    0.6988062530900625,
-    -1.31941,
-    0.69879,
-    -1.3193931220959367,
-    0.698743632490865,
+    -1.3194369277314022, 0.6988062530900625, -1.31941, 0.69879,
+    -1.3193931220959367, 0.698743632490865,
   ]);
 
   it("default constructor", function () {
@@ -176,7 +165,7 @@ describe("Scene/ClippingPolygonCollection", function () {
     expect(() => {
       polygons.update(scene.frameState);
     }).toThrowError(
-      "ClippingPolygonCollections are only supported for WebGL 2."
+      "ClippingPolygonCollections are only supported for WebGL 2.",
     );
 
     scene.destroyForSpecs();
@@ -258,19 +247,19 @@ describe("Scene/ClippingPolygonCollection", function () {
     expect(arrayBufferView[1]).toBe(0); // extents index
     expect(arrayBufferView[2]).toEqualEpsilon(
       0.6969271302223206,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     ); // first position in spherical coordinates
     expect(arrayBufferView[3]).toEqualEpsilon(
       -1.3191630840301514,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
     expect(arrayBufferView[10]).toEqualEpsilon(
       0.6968677043914795,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     ); // last position in spherical coordinates
     expect(arrayBufferView[11]).toEqualEpsilon(
       -1.3191620111465454,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
     expect(arrayBufferView[12]).toBe(0); // padding
 
@@ -300,19 +289,19 @@ describe("Scene/ClippingPolygonCollection", function () {
     expect(arrayBufferView).toBeDefined();
     expect(arrayBufferView[0]).toEqualEpsilon(
       0.6958641409873962,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     ); // south
     expect(arrayBufferView[1]).toEqualEpsilon(
       -1.3201631307601929,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     ); // west
     expect(arrayBufferView[2]).toEqualEpsilon(
       484.0434265136719,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     ); // 1 / (north - south)
     expect(arrayBufferView[3]).toEqualEpsilon(
       489.4261779785156,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     ); // 1 / (east - west)
     expect(arrayBufferView[4]).toBe(0); // padding
     expect(arrayBufferView[5]).toBe(0); // padding
@@ -352,19 +341,19 @@ describe("Scene/ClippingPolygonCollection", function () {
     expect(arrayBufferView).toBeDefined();
     expect(arrayBufferView[0]).toEqualEpsilon(
       0.6958641409873962,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     ); // south
     expect(arrayBufferView[1]).toEqualEpsilon(
       -1.3201631307601929,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     ); // west
     expect(arrayBufferView[2]).toEqualEpsilon(
       484.0434265136719,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     ); // north - south
     expect(arrayBufferView[3]).toEqualEpsilon(
       489.4261779785156,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     ); // east - west
     expect(arrayBufferView[4]).toBe(0); // padding
     expect(arrayBufferView[5]).toBe(0); // padding
@@ -447,10 +436,11 @@ describe("Scene/ClippingPolygonCollection", function () {
     // Set this to the minimum possible value so texture sizes can be consistently tested
     ContextLimits._maximumTextureSize = 64;
 
-    const result = ClippingPolygonCollection.getClippingDistanceTextureResolution(
-      polygons,
-      new Cartesian2()
-    );
+    const result =
+      ClippingPolygonCollection.getClippingDistanceTextureResolution(
+        polygons,
+        new Cartesian2(),
+      );
     expect(result.x).toBe(64);
     expect(result.y).toBe(64);
 
@@ -467,10 +457,11 @@ describe("Scene/ClippingPolygonCollection", function () {
     // Set this to the minimum possible value so texture sizes can be consistently tested
     ContextLimits._maximumTextureSize = 64;
 
-    const result = ClippingPolygonCollection.getClippingExtentsTextureResolution(
-      polygons,
-      new Cartesian2()
-    );
+    const result =
+      ClippingPolygonCollection.getClippingExtentsTextureResolution(
+        polygons,
+        new Cartesian2(),
+      );
     expect(result.x).toBe(1);
     expect(result.y).toBe(2);
 
@@ -484,9 +475,8 @@ describe("Scene/ClippingPolygonCollection", function () {
       rectangle: Rectangle.fromCartesianArray(positions),
     });
 
-    let intersect = polygons.computeIntersectionWithBoundingVolume(
-      boundingVolume
-    );
+    let intersect =
+      polygons.computeIntersectionWithBoundingVolume(boundingVolume);
     expect(intersect).toEqual(Intersect.OUTSIDE);
 
     polygons.add(new ClippingPolygon({ positions }));
@@ -496,7 +486,7 @@ describe("Scene/ClippingPolygonCollection", function () {
     const boundingSphere = BoundingSphere.fromPoints(positions);
     boundingVolume = new TileBoundingSphere(
       boundingSphere.center,
-      boundingSphere.radius
+      boundingSphere.radius,
     );
     intersect = polygons.computeIntersectionWithBoundingVolume(boundingVolume);
     expect(intersect).toEqual(Intersect.INTERSECTING);
@@ -515,9 +505,8 @@ describe("Scene/ClippingPolygonCollection", function () {
       rectangle: Rectangle.fromCartesianArray(positions),
     });
 
-    let intersect = polygons.computeIntersectionWithBoundingVolume(
-      boundingVolume
-    );
+    let intersect =
+      polygons.computeIntersectionWithBoundingVolume(boundingVolume);
     expect(intersect).toEqual(Intersect.INSIDE);
 
     polygons.add(new ClippingPolygon({ positions }));
@@ -527,7 +516,7 @@ describe("Scene/ClippingPolygonCollection", function () {
     const boundingSphere = BoundingSphere.fromPoints(positions);
     boundingVolume = new TileBoundingSphere(
       boundingSphere.center,
-      boundingSphere.radius
+      boundingSphere.radius,
     );
     intersect = polygons.computeIntersectionWithBoundingVolume(boundingVolume);
     expect(intersect).toEqual(Intersect.INTERSECTING);

@@ -95,7 +95,7 @@
     "mkdirp": "^3.0.1",
     "node-fetch": "^3.2.10",
     "open": "^10.0.2",
-    "prettier": "2.1.2",
+    "prettier": "^3.3.3",
     "prismjs": "^1.28.0",
     "request": "^2.79.0",
     "rimraf": "^5.0.0",
@@ -139,8 +139,8 @@
     "test-e2e-update": "playwright test -c Specs/e2e/playwright.config.js --project=chromium -u",
     "deploy-status": "gulp deployStatus",
     "deploy-set-version": "gulp deploySetVersion",
-    "prettier": "prettier --write --no-config \"**/*\"",
-    "prettier-check": "prettier --check --no-config \"**/*\""
+    "prettier": "prettier --write \"**/*\"",
+    "prettier-check": "prettier --check \"**/*\""
   },
   "engines": {
     "node": ">=18.18.0"
@@ -148,11 +148,11 @@
   "lint-staged": {
     "*.{js,cjs,mjs,css,html}": [
       "eslint --cache --quiet",
-      "prettier --write --no-config"
+      "prettier --write"
     ],
     "*.md": [
       "markdownlint",
-      "prettier --write --no-config"
+      "prettier --write"
     ]
   },
   "workspaces": [

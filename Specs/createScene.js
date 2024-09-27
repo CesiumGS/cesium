@@ -18,7 +18,7 @@ function createScene(options) {
   const debugWidth = window.debugCanvasWidth;
   const debugHeight = defaultValue(
     window.debugCanvasHeight,
-    window.debugCanvasWidth
+    window.debugCanvasWidth,
   );
 
   // save the canvas so we don't try to clone an HTMLCanvasElement
@@ -36,11 +36,11 @@ function createScene(options) {
   contextOptions.webgl = defaultValue(contextOptions.webgl, {});
   contextOptions.webgl.antialias = defaultValue(
     contextOptions.webgl.antialias,
-    false
+    false,
   );
   contextOptions.webgl.stencil = defaultValue(
     contextOptions.webgl.stencil,
-    true
+    true,
   );
   if (!!window.webglStub) {
     contextOptions.getWebGLStub = getWebGLStub;
