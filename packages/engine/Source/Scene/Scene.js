@@ -78,6 +78,7 @@ import DebugInspector from "./DebugInspector.js";
 import VoxelCell from "./VoxelCell.js";
 import VoxelPrimitive from "./VoxelPrimitive.js";
 import getMetadataClassProperty from "./getMetadataClassProperty.js";
+import PickedMetadataInfo from "./PickedMetadataInfo.js";
 
 const requestRenderAfterFrame = function (scene) {
   return function () {
@@ -4349,12 +4350,12 @@ Scene.prototype.pickMetadata = function (
     return undefined;
   }
 
-  const pickedMetadataInfo = {
-    schemaId: schemaId,
-    className: className,
-    propertyName: propertyName,
-    classProperty: classProperty,
-  };
+  const pickedMetadataInfo = new PickedMetadataInfo(
+    schemaId,
+    className,
+    propertyName,
+    classProperty
+  );
 
   const pickedMetadataValues = this._picking.pickMetadata(
     this,
