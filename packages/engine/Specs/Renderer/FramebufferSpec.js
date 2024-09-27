@@ -591,22 +591,15 @@ describe(
         return;
       }
 
-      const source = new Uint8Array(4);
       const colorTexture0 = new Texture({
         context: context,
-        source: {
-          arrayBufferView: source,
-          width: 1,
-          height: 1,
-        },
+        width: 1,
+        height: 1,
       });
       const colorTexture1 = new Texture({
         context: context,
-        source: {
-          arrayBufferView: source,
-          width: 1,
-          height: 1,
-        },
+        width: 1,
+        height: 1,
       });
       framebuffer = new Framebuffer({
         context: context,

@@ -145,18 +145,12 @@ function updateTextures(oit, context, width, height) {
     pixelDatatype: PixelDatatype.FLOAT,
   });
 
-  // Use zeroed arraybuffer instead of null to initialize texture
-  // to workaround Firefox. Only needed for the second color attachment.
-  const source = new Float32Array(width * height * 4);
   oit._revealageTexture = new Texture({
     context: context,
     pixelFormat: PixelFormat.RGBA,
     pixelDatatype: PixelDatatype.FLOAT,
-    source: {
-      arrayBufferView: source,
-      width: width,
-      height: height,
-    },
+    width: width,
+    height: height,
     flipY: false,
   });
 }
