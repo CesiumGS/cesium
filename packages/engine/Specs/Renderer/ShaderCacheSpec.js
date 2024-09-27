@@ -73,11 +73,11 @@ describe(
       // only be called the first time a shader is created.
       spyOn(
         ShaderSource.prototype,
-        "createCombinedVertexShader"
+        "createCombinedVertexShader",
       ).and.callThrough();
       spyOn(
         ShaderSource.prototype,
-        "createCombinedFragmentShader"
+        "createCombinedFragmentShader",
       ).and.callThrough();
 
       const cache = new ShaderCache(context);
@@ -101,10 +101,10 @@ describe(
       expect(cache.numberOfShaders).toEqual(1);
 
       expect(
-        ShaderSource.prototype.createCombinedVertexShader
+        ShaderSource.prototype.createCombinedVertexShader,
       ).toHaveBeenCalledTimes(1);
       expect(
-        ShaderSource.prototype.createCombinedFragmentShader
+        ShaderSource.prototype.createCombinedFragmentShader,
       ).toHaveBeenCalledTimes(1);
 
       sp.destroy();
@@ -138,11 +138,11 @@ describe(
       // only be called the first time a shader is created.
       spyOn(
         ShaderSource.prototype,
-        "createCombinedVertexShader"
+        "createCombinedVertexShader",
       ).and.callThrough();
       spyOn(
         ShaderSource.prototype,
-        "createCombinedFragmentShader"
+        "createCombinedFragmentShader",
       ).and.callThrough();
 
       const cache = new ShaderCache(context);
@@ -162,10 +162,10 @@ describe(
       expect(cache.numberOfShaders).toEqual(1);
 
       expect(
-        ShaderSource.prototype.createCombinedVertexShader
+        ShaderSource.prototype.createCombinedVertexShader,
       ).toHaveBeenCalledTimes(1);
       expect(
-        ShaderSource.prototype.createCombinedFragmentShader
+        ShaderSource.prototype.createCombinedFragmentShader,
       ).toHaveBeenCalledTimes(1);
 
       sp.destroy();
@@ -371,5 +371,5 @@ describe(
       expect(cache.isDestroyed()).toEqual(false);
     });
   },
-  "WebGL"
+  "WebGL",
 );

@@ -60,7 +60,7 @@ function View(scene, camera, viewport) {
   this.globeTranslucencyFramebuffer = new GlobeTranslucencyFramebuffer();
   this.oit = oit;
   this.translucentTileClassification = new TranslucentTileClassification(
-    context
+    context,
   );
   this.pickDepths = [];
   this.frustumCommandsList = [];
@@ -146,7 +146,7 @@ function updateFrustums(view, scene, near, far) {
     far = Math.min(far, camera.position.z + scene.nearToFarDistance2D);
     near = Math.min(near, far);
     numFrustums = Math.ceil(
-      Math.max(1.0, far - near) / scene.nearToFarDistance2D
+      Math.max(1.0, far - near) / scene.nearToFarDistance2D,
     );
   } else {
     // The multifrustum for 3D/CV is non-uniformly distributed.
@@ -162,7 +162,7 @@ function updateFrustums(view, scene, near, far) {
     if (is2D) {
       curNear = Math.min(
         far - nearToFarDistance2D,
-        near + m * nearToFarDistance2D
+        near + m * nearToFarDistance2D,
       );
       curFar = Math.min(far, curNear + nearToFarDistance2D);
     } else {
@@ -173,7 +173,7 @@ function updateFrustums(view, scene, near, far) {
     if (!defined(frustumCommands)) {
       frustumCommands = frustumCommandsList[m] = new FrustumCommands(
         curNear,
-        curFar
+        curFar,
       );
     } else {
       frustumCommands.near = curNear;
@@ -219,7 +219,7 @@ function insertIntoBin(view, scene, command, commandNear, commandFar) {
   if (scene.debugShowFrustums) {
     const cf = view.debugFrustumStatistics.commandsInFrustums;
     cf[command.debugOverlappingFrustums] = defined(
-      cf[command.debugOverlappingFrustums]
+      cf[command.debugOverlappingFrustums],
     )
       ? cf[command.debugOverlappingFrustums] + 1
       : 1;
@@ -306,7 +306,7 @@ View.prototype.createPotentiallyVisibleSet = function (scene) {
         const nearFarInterval = boundingVolume.computePlaneDistances(
           position,
           direction,
-          scratchNearFarInterval
+          scratchNearFarInterval,
         );
         commandNear = nearFarInterval.start;
         commandFar = nearFarInterval.stop;
@@ -359,7 +359,7 @@ View.prototype.createPotentiallyVisibleSet = function (scene) {
   if (shadowsEnabled) {
     shadowNear = Math.min(
       Math.max(shadowNear, camera.frustum.near),
-      camera.frustum.far
+      camera.frustum.far,
     );
     shadowFar = Math.max(Math.min(shadowFar, camera.frustum.far), shadowNear);
   }

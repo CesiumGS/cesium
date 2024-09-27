@@ -73,7 +73,7 @@ describe("Core/EllipsoidOutlineGeometry", function () {
         stackPartitions: 3,
         slicePartitions: 3,
         subdivisions: 3,
-      })
+      }),
     );
 
     expect(m.attributes.position.values.length).toEqual(24 * 3);
@@ -92,7 +92,7 @@ describe("Core/EllipsoidOutlineGeometry", function () {
         stackPartitions: 3,
         slicePartitions: 3,
         subdivisions: 3,
-      })
+      }),
     );
 
     expect(m.attributes.position.values.length).toEqual(24 * 3);
@@ -107,7 +107,7 @@ describe("Core/EllipsoidOutlineGeometry", function () {
         slicePartitions: 3,
         subdivisions: 3,
         offsetAttribute: GeometryOffsetAttribute.ALL,
-      })
+      }),
     );
 
     const numVertices = 24;
@@ -176,42 +176,30 @@ describe("Core/EllipsoidOutlineGeometry", function () {
       innerRadii: new Cartesian3(100000.0, 100000.0, -10.0),
     });
 
-    const geometry0 = EllipsoidOutlineGeometry.createGeometry(
-      ellipsoidOutline0
-    );
-    const geometry1 = EllipsoidOutlineGeometry.createGeometry(
-      ellipsoidOutline1
-    );
-    const geometry2 = EllipsoidOutlineGeometry.createGeometry(
-      ellipsoidOutline2
-    );
-    const geometry3 = EllipsoidOutlineGeometry.createGeometry(
-      ellipsoidOutline3
-    );
-    const geometry4 = EllipsoidOutlineGeometry.createGeometry(
-      ellipsoidOutline4
-    );
-    const geometry5 = EllipsoidOutlineGeometry.createGeometry(
-      ellipsoidOutline5
-    );
-    const geometry6 = EllipsoidOutlineGeometry.createGeometry(
-      ellipsoidOutline6
-    );
-    const geometry7 = EllipsoidOutlineGeometry.createGeometry(
-      ellipsoidOutline7
-    );
-    const geometry8 = EllipsoidOutlineGeometry.createGeometry(
-      ellipsoidOutline8
-    );
-    const geometry9 = EllipsoidOutlineGeometry.createGeometry(
-      ellipsoidOutline9
-    );
-    const geometry10 = EllipsoidOutlineGeometry.createGeometry(
-      ellipsoidOutline10
-    );
-    const geometry11 = EllipsoidOutlineGeometry.createGeometry(
-      ellipsoidOutline11
-    );
+    const geometry0 =
+      EllipsoidOutlineGeometry.createGeometry(ellipsoidOutline0);
+    const geometry1 =
+      EllipsoidOutlineGeometry.createGeometry(ellipsoidOutline1);
+    const geometry2 =
+      EllipsoidOutlineGeometry.createGeometry(ellipsoidOutline2);
+    const geometry3 =
+      EllipsoidOutlineGeometry.createGeometry(ellipsoidOutline3);
+    const geometry4 =
+      EllipsoidOutlineGeometry.createGeometry(ellipsoidOutline4);
+    const geometry5 =
+      EllipsoidOutlineGeometry.createGeometry(ellipsoidOutline5);
+    const geometry6 =
+      EllipsoidOutlineGeometry.createGeometry(ellipsoidOutline6);
+    const geometry7 =
+      EllipsoidOutlineGeometry.createGeometry(ellipsoidOutline7);
+    const geometry8 =
+      EllipsoidOutlineGeometry.createGeometry(ellipsoidOutline8);
+    const geometry9 =
+      EllipsoidOutlineGeometry.createGeometry(ellipsoidOutline9);
+    const geometry10 =
+      EllipsoidOutlineGeometry.createGeometry(ellipsoidOutline10);
+    const geometry11 =
+      EllipsoidOutlineGeometry.createGeometry(ellipsoidOutline11);
 
     expect(geometry0).toBeUndefined();
     expect(geometry1).toBeUndefined();
@@ -239,24 +227,11 @@ describe("Core/EllipsoidOutlineGeometry", function () {
     subdivisions: 3,
   });
   const packedInstance = [
-    1.0,
-    2.0,
-    3.0,
-    0.5,
-    0.6,
-    0.7,
-    0.1,
-    0.2,
-    0.3,
-    0.4,
-    3.0,
-    3.0,
-    3.0,
-    -1,
+    1.0, 2.0, 3.0, 0.5, 0.6, 0.7, 0.1, 0.2, 0.3, 0.4, 3.0, 3.0, 3.0, -1,
   ];
   createPackableSpecs(
     EllipsoidOutlineGeometry,
     ellipsoidgeometry,
-    packedInstance
+    packedInstance,
   );
 });

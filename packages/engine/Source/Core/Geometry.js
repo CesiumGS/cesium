@@ -137,7 +137,7 @@ function Geometry(options) {
    */
   this.primitiveType = defaultValue(
     options.primitiveType,
-    PrimitiveType.TRIANGLES
+    PrimitiveType.TRIANGLES,
   );
 
   /**
@@ -194,7 +194,7 @@ Geometry.computeNumberOfVertices = function (geometry) {
       //>>includeStart('debug', pragmas.debug);
       if (numberOfVertices !== num && numberOfVertices !== -1) {
         throw new DeveloperError(
-          "All attribute lists must have the same number of attributes."
+          "All attribute lists must have the same number of attributes.",
         );
       }
       //>>includeEnd('debug');
@@ -252,7 +252,7 @@ Geometry._textureCoordinateRotationPoints = function (
   positions,
   stRotation,
   ellipsoid,
-  boundingRectangle
+  boundingRectangle,
 ) {
   let i;
 
@@ -262,21 +262,21 @@ Geometry._textureCoordinateRotationPoints = function (
   // aka "ENU texture space."
   const rectangleCenter = Rectangle.center(
     boundingRectangle,
-    rectangleCenterScratch
+    rectangleCenterScratch,
   );
   const enuCenter = Cartographic.toCartesian(
     rectangleCenter,
     ellipsoid,
-    enuCenterScratch
+    enuCenterScratch,
   );
   const enuToFixedFrame = Transforms.eastNorthUpToFixedFrame(
     enuCenter,
     ellipsoid,
-    fixedFrameToEnuScratch
+    fixedFrameToEnuScratch,
   );
   const fixedFrameToEnu = Matrix4.inverse(
     enuToFixedFrame,
-    fixedFrameToEnuScratch
+    fixedFrameToEnuScratch,
   );
 
   const boundingPointsEnu = boundingRectanglePointsEnuScratch;
@@ -306,11 +306,11 @@ Geometry._textureCoordinateRotationPoints = function (
   const rotation = Quaternion.fromAxisAngle(
     Cartesian3.UNIT_Z,
     -stRotation,
-    enuRotationScratch
+    enuRotationScratch,
   );
   const textureMatrix = Matrix3.fromQuaternion(
     rotation,
-    enuRotationMatrixScratch
+    enuRotationMatrixScratch,
   );
 
   const positionsLength = positions.length;
@@ -322,7 +322,7 @@ Geometry._textureCoordinateRotationPoints = function (
     posEnu = Matrix4.multiplyByPointAsVector(
       fixedFrameToEnu,
       positions[i],
-      posEnu
+      posEnu,
     );
     posEnu = Matrix3.multiplyByVector(textureMatrix, posEnu, posEnu);
 
@@ -334,7 +334,7 @@ Geometry._textureCoordinateRotationPoints = function (
 
   const toDesiredInComputed = Matrix2.fromRotation(
     stRotation,
-    rotation2DScratch
+    rotation2DScratch,
   );
 
   const points2D = points2DScratch;

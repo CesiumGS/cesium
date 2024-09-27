@@ -58,7 +58,7 @@ function CompositeProperty() {
   this._intervals = new TimeIntervalCollection();
   this._intervals.changedEvent.addEventListener(
     CompositeProperty.prototype._intervalsChanged,
-    this
+    this,
   );
 }
 
@@ -147,7 +147,7 @@ CompositeProperty.prototype._intervalsChanged = function () {
     this,
     this._eventHelper,
     this._definitionChanged,
-    this._intervals
+    this._intervals,
   );
   this._definitionChanged.raiseEvent(this);
 };

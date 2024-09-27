@@ -29,7 +29,7 @@ const BoundingVolumeSemantics = {};
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 BoundingVolumeSemantics.parseAllBoundingVolumeSemantics = function (
-  tileMetadata
+  tileMetadata,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("tileMetadata", tileMetadata);
@@ -39,29 +39,29 @@ BoundingVolumeSemantics.parseAllBoundingVolumeSemantics = function (
     tile: {
       boundingVolume: BoundingVolumeSemantics.parseBoundingVolumeSemantic(
         "TILE",
-        tileMetadata
+        tileMetadata,
       ),
       minimumHeight: BoundingVolumeSemantics._parseMinimumHeight(
         "TILE",
-        tileMetadata
+        tileMetadata,
       ),
       maximumHeight: BoundingVolumeSemantics._parseMaximumHeight(
         "TILE",
-        tileMetadata
+        tileMetadata,
       ),
     },
     content: {
       boundingVolume: BoundingVolumeSemantics.parseBoundingVolumeSemantic(
         "CONTENT",
-        tileMetadata
+        tileMetadata,
       ),
       minimumHeight: BoundingVolumeSemantics._parseMinimumHeight(
         "CONTENT",
-        tileMetadata
+        tileMetadata,
       ),
       maximumHeight: BoundingVolumeSemantics._parseMaximumHeight(
         "CONTENT",
-        tileMetadata
+        tileMetadata,
       ),
     },
   };
@@ -83,7 +83,7 @@ BoundingVolumeSemantics.parseAllBoundingVolumeSemantics = function (
  */
 BoundingVolumeSemantics.parseBoundingVolumeSemantic = function (
   prefix,
-  tileMetadata
+  tileMetadata,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.string("prefix", prefix);
@@ -104,7 +104,7 @@ BoundingVolumeSemantics.parseBoundingVolumeSemantic = function (
 
   const boundingRegionSemantic = `${prefix}_BOUNDING_REGION`;
   const boundingRegion = tileMetadata.getPropertyBySemantic(
-    boundingRegionSemantic
+    boundingRegionSemantic,
   );
 
   if (defined(boundingRegion)) {
@@ -115,7 +115,7 @@ BoundingVolumeSemantics.parseBoundingVolumeSemantic = function (
 
   const boundingSphereSemantic = `${prefix}_BOUNDING_SPHERE`;
   const boundingSphere = tileMetadata.getPropertyBySemantic(
-    boundingSphereSemantic
+    boundingSphereSemantic,
   );
 
   if (defined(boundingSphere)) {

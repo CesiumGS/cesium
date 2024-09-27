@@ -7,8 +7,8 @@ describe("Core/pointInsideTriangle", function () {
         new Cartesian2(0.25, 0.25),
         Cartesian2.ZERO,
         new Cartesian2(1.0, 0.0),
-        new Cartesian2(0.0, 1.0)
-      )
+        new Cartesian2(0.0, 1.0),
+      ),
     ).toEqual(true);
   });
 
@@ -18,8 +18,8 @@ describe("Core/pointInsideTriangle", function () {
         new Cartesian2(1.0, 1.0),
         Cartesian2.ZERO,
         new Cartesian2(1.0, 0.0),
-        new Cartesian2(0.0, 1.0)
-      )
+        new Cartesian2(0.0, 1.0),
+      ),
     ).toEqual(false);
   });
 
@@ -29,8 +29,8 @@ describe("Core/pointInsideTriangle", function () {
         new Cartesian2(0.5, -0.5),
         Cartesian2.ZERO,
         new Cartesian2(1.0, 0.0),
-        new Cartesian2(0.0, 1.0)
-      )
+        new Cartesian2(0.0, 1.0),
+      ),
     ).toEqual(false);
   });
 
@@ -40,8 +40,8 @@ describe("Core/pointInsideTriangle", function () {
         new Cartesian2(-0.5, 0.5),
         Cartesian2.ZERO,
         new Cartesian2(1.0, 0.0),
-        new Cartesian2(0.0, 1.0)
-      )
+        new Cartesian2(0.0, 1.0),
+      ),
     ).toEqual(false);
   });
 
@@ -51,8 +51,8 @@ describe("Core/pointInsideTriangle", function () {
         Cartesian2.ZERO,
         Cartesian2.ZERO,
         new Cartesian2(1.0, 0.0),
-        new Cartesian2(0.0, 1.0)
-      )
+        new Cartesian2(0.0, 1.0),
+      ),
     ).toEqual(false);
   });
 
@@ -62,8 +62,8 @@ describe("Core/pointInsideTriangle", function () {
         new Cartesian2(0.5, 0.0),
         Cartesian2.ZERO,
         new Cartesian2(1.0, 0.0),
-        new Cartesian2(0.0, 1.0)
-      )
+        new Cartesian2(0.0, 1.0),
+      ),
     ).toEqual(false);
   });
 

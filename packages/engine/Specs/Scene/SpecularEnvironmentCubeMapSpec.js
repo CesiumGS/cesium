@@ -178,11 +178,14 @@ describe(
             const direction = directions[key];
             const expectedColor = directionalColors[mipLevel][key];
 
-            sampleCubeMap(cubeMap, direction, mipLevel, function (
-              cubeMapColor
-            ) {
-              expect(cubeMapColor).toEqualEpsilon(expectedColor, 1);
-            });
+            sampleCubeMap(
+              cubeMap,
+              direction,
+              mipLevel,
+              function (cubeMapColor) {
+                expect(cubeMapColor).toEqualEpsilon(expectedColor, 1);
+              },
+            );
           }
         }
       }
@@ -239,5 +242,5 @@ describe(
       return promise;
     });
   },
-  "WebGL"
+  "WebGL",
 );

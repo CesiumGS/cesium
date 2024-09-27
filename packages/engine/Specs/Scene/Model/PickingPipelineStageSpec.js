@@ -121,7 +121,7 @@ describe(
       expect(detailPickObject.model).toEqual(model);
       expect(detailPickObject.node).toEqual(renderResources.runtimeNode);
       expect(detailPickObject.primitive).toEqual(
-        renderResources.runtimePrimitive
+        renderResources.runtimePrimitive,
       );
     }
 
@@ -318,7 +318,7 @@ describe(
         expect(renderResources.attributeIndex).toEqual(2);
         expect(pickIdAttribute.vertexBuffer).toBeDefined();
         expect(pickIdAttribute.vertexBuffer.sizeInBytes).toEqual(
-          renderResources.instanceCount * 4
+          renderResources.instanceCount * 4,
         );
         expect(pickIdAttribute.instanceDivisor).toEqual(1);
 
@@ -327,7 +327,7 @@ describe(
 
         const statistics = renderResources.model.statistics;
         expect(statistics.geometryByteLength).toBe(
-          renderResources.instanceCount * 4
+          renderResources.instanceCount * 4,
         );
 
         expect(renderResources.pickId).toEqual("v_pickColor");
@@ -368,10 +368,10 @@ describe(
         ]);
 
         expect(renderResources.pickId).toEqual(
-          "((selectedFeature.id < int(model_featuresLength)) ? texture(model_pickTexture, selectedFeature.st) : vec4(0.0))"
+          "((selectedFeature.id < int(model_featuresLength)) ? texture(model_pickTexture, selectedFeature.st) : vec4(0.0))",
         );
       });
     });
   },
-  "WebGL"
+  "WebGL",
 );

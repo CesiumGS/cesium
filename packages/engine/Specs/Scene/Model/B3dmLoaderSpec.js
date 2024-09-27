@@ -76,7 +76,7 @@ describe(
     async function expectLoadError(arrayBuffer) {
       const resource = new Resource("http://example.com/test.b3dm");
       await expectAsync(
-        loadB3dmArrayBuffer(resource, arrayBuffer)
+        loadB3dmArrayBuffer(resource, arrayBuffer),
       ).toBeRejectedWithError(RuntimeError);
     }
 
@@ -138,7 +138,7 @@ describe(
         expect(propertyTable.count).toEqual(10);
 
         expect(loader.components.transform).toEqual(
-          Matrix4.fromTranslation(new Cartesian3(0.1, 0.2, 0.3))
+          Matrix4.fromTranslation(new Cartesian3(0.1, 0.2, 0.3)),
         );
       });
     });
@@ -170,7 +170,7 @@ describe(
     it("destroys b3dm loader", function () {
       const unloadGltfLoader = spyOn(
         GltfLoader.prototype,
-        "unload"
+        "unload",
       ).and.callThrough();
 
       return loadB3dm(withBatchTableUrl).then(function (loader) {
@@ -186,5 +186,5 @@ describe(
       });
     });
   },
-  "WebGL"
+  "WebGL",
 );

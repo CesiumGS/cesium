@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -18,10 +18,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -46,7 +43,7 @@
         const modelMatrix = Cesium.Matrix4.multiplyByTranslation(
           Cesium.Transforms.eastNorthUpToFixedFrame(positionOnEllipsoid),
           new Cesium.Cartesian3(0.0, 0.0, radii.z),
-          new Cesium.Matrix4()
+          new Cesium.Matrix4(),
         );
         // Create a ellipsoid geometry.
         const ellipsoidGeometry = new Cesium.EllipsoidGeometry({
@@ -59,9 +56,7 @@
           geometry: ellipsoidGeometry,
           modelMatrix: modelMatrix,
           attributes: {
-            color: Cesium.ColorGeometryInstanceAttribute.fromColor(
-              Cesium.Color.BLUE
-            ),
+            color: Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.BLUE),
           },
         });
         // Add the geometry instance to primitives.
@@ -72,7 +67,7 @@
               translucent: false,
               closed: true,
             }),
-          })
+          }),
         );
         //Sandcastle_End
       };

@@ -261,7 +261,7 @@ function failure(resource, error, provider, previousError) {
     0,
     0,
     0,
-    error
+    error,
   );
   if (reportedError.retry) {
     return doRequest(resource, provider, reportedError);
@@ -345,7 +345,7 @@ SingleTileImageryProvider.prototype.requestImage = async function (
   x,
   y,
   level,
-  request
+  request,
 ) {
   if (!this._hasError && !defined(this._image)) {
     const image = await doRequest(this._resource, this);
@@ -373,7 +373,7 @@ SingleTileImageryProvider.prototype.pickFeatures = function (
   y,
   level,
   longitude,
-  latitude
+  latitude,
 ) {
   return undefined;
 };

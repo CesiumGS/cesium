@@ -44,7 +44,7 @@ function subSampleSampledProperty(
   referenceFrame,
   maximumStep,
   startingIndex,
-  result
+  result,
 ) {
   let r = startingIndex;
   //Always step exactly on start (but only use it if it exists.)
@@ -76,7 +76,7 @@ function subSampleSampledProperty(
       tmp = property.getValueInReferenceFrame(
         updateTime,
         referenceFrame,
-        result[r]
+        result[r],
       );
       if (defined(tmp)) {
         result[r++] = tmp;
@@ -91,7 +91,7 @@ function subSampleSampledProperty(
       tmp = property.getValueInReferenceFrame(
         current,
         referenceFrame,
-        result[r]
+        result[r],
       );
       if (defined(tmp)) {
         result[r++] = tmp;
@@ -116,7 +116,7 @@ function subSampleSampledProperty(
         current = JulianDate.addSeconds(
           current,
           sampleStepSize,
-          new JulianDate()
+          new JulianDate(),
         );
         sampleStepsTaken++;
         continue;
@@ -144,7 +144,7 @@ function subSampleCallbackPositionProperty(
   referenceFrame,
   maximumStep,
   startingIndex,
-  result
+  result,
 ) {
   let tmp;
   let i = 0;
@@ -160,7 +160,7 @@ function subSampleCallbackPositionProperty(
       tmp = property.getValueInReferenceFrame(
         updateTime,
         referenceFrame,
-        result[index]
+        result[index],
       );
       if (defined(tmp)) {
         result[index] = tmp;
@@ -170,7 +170,7 @@ function subSampleCallbackPositionProperty(
     tmp = property.getValueInReferenceFrame(
       time,
       referenceFrame,
-      result[index]
+      result[index],
     );
     if (defined(tmp)) {
       result[index] = tmp;
@@ -196,7 +196,7 @@ function subSampleGenericProperty(
   referenceFrame,
   maximumStep,
   startingIndex,
-  result
+  result,
 ) {
   let tmp;
   let i = 0;
@@ -213,7 +213,7 @@ function subSampleGenericProperty(
       tmp = property.getValueInReferenceFrame(
         updateTime,
         referenceFrame,
-        result[index]
+        result[index],
       );
       if (defined(tmp)) {
         result[index] = tmp;
@@ -223,7 +223,7 @@ function subSampleGenericProperty(
     tmp = property.getValueInReferenceFrame(
       time,
       referenceFrame,
-      result[index]
+      result[index],
     );
     if (defined(tmp)) {
       result[index] = tmp;
@@ -249,7 +249,7 @@ function subSampleIntervalProperty(
   referenceFrame,
   maximumStep,
   startingIndex,
-  result
+  result,
 ) {
   subSampleIntervalPropertyScratch.start = start;
   subSampleIntervalPropertyScratch.stop = stop;
@@ -262,7 +262,7 @@ function subSampleIntervalProperty(
       !TimeInterval.intersect(
         interval,
         subSampleIntervalPropertyScratch,
-        scratchTimeInterval
+        scratchTimeInterval,
       ).isEmpty
     ) {
       let time = interval.start;
@@ -273,14 +273,14 @@ function subSampleIntervalProperty(
           time = JulianDate.addSeconds(
             interval.start,
             JulianDate.secondsDifference(interval.stop, interval.start) / 2,
-            new JulianDate()
+            new JulianDate(),
           );
         }
       }
       const tmp = property.getValueInReferenceFrame(
         time,
         referenceFrame,
-        result[index]
+        result[index],
       );
       if (defined(tmp)) {
         result[index] = tmp;
@@ -299,12 +299,12 @@ function subSampleConstantProperty(
   referenceFrame,
   maximumStep,
   startingIndex,
-  result
+  result,
 ) {
   const tmp = property.getValueInReferenceFrame(
     start,
     referenceFrame,
-    result[startingIndex]
+    result[startingIndex],
   );
   if (defined(tmp)) {
     result[startingIndex++] = tmp;
@@ -320,7 +320,7 @@ function subSampleCompositeProperty(
   referenceFrame,
   maximumStep,
   startingIndex,
-  result
+  result,
 ) {
   subSampleCompositePropertyScratch.start = start;
   subSampleCompositePropertyScratch.stop = stop;
@@ -333,7 +333,7 @@ function subSampleCompositeProperty(
       !TimeInterval.intersect(
         interval,
         subSampleCompositePropertyScratch,
-        scratchTimeInterval
+        scratchTimeInterval,
       ).isEmpty
     ) {
       const intervalStart = interval.start;
@@ -357,7 +357,7 @@ function subSampleCompositeProperty(
         referenceFrame,
         maximumStep,
         index,
-        result
+        result,
       );
     }
   }
@@ -372,7 +372,7 @@ function reallySubSample(
   referenceFrame,
   maximumStep,
   index,
-  result
+  result,
 ) {
   //Unwrap any references until we have the actual property.
   while (property instanceof ReferenceProperty) {
@@ -390,7 +390,7 @@ function reallySubSample(
       referenceFrame,
       maximumStep,
       index,
-      result
+      result,
     );
   } else if (property instanceof CallbackPositionProperty) {
     index = subSampleCallbackPositionProperty(
@@ -401,7 +401,7 @@ function reallySubSample(
       referenceFrame,
       maximumStep,
       index,
-      result
+      result,
     );
   } else if (property instanceof CompositePositionProperty) {
     index = subSampleCompositeProperty(
@@ -412,7 +412,7 @@ function reallySubSample(
       referenceFrame,
       maximumStep,
       index,
-      result
+      result,
     );
   } else if (property instanceof TimeIntervalCollectionPositionProperty) {
     index = subSampleIntervalProperty(
@@ -423,7 +423,7 @@ function reallySubSample(
       referenceFrame,
       maximumStep,
       index,
-      result
+      result,
     );
   } else if (
     property instanceof ConstantPositionProperty ||
@@ -438,7 +438,7 @@ function reallySubSample(
       referenceFrame,
       maximumStep,
       index,
-      result
+      result,
     );
   } else {
     //Fallback to generic sampling.
@@ -450,7 +450,7 @@ function reallySubSample(
       referenceFrame,
       maximumStep,
       index,
-      result
+      result,
     );
   }
   return index;
@@ -463,7 +463,7 @@ function subSample(
   updateTime,
   referenceFrame,
   maximumStep,
-  result
+  result,
 ) {
   if (!defined(result)) {
     result = [];
@@ -477,7 +477,7 @@ function subSample(
     referenceFrame,
     maximumStep,
     0,
-    result
+    result,
   );
   result.length = length;
   return result;
@@ -496,12 +496,12 @@ PolylineUpdater.prototype.update = function (time) {
   if (this._referenceFrame === ReferenceFrame.INERTIAL) {
     const toFixed = Transforms.computeIcrfToCentralBodyFixedMatrix(
       time,
-      toFixedScratch
+      toFixedScratch,
     );
     Matrix4.fromRotationTranslation(
       toFixed,
       Cartesian3.ZERO,
-      this._polylineCollection.modelMatrix
+      this._polylineCollection.modelMatrix,
     );
   }
 };
@@ -527,7 +527,7 @@ PolylineUpdater.prototype.updateObject = function (time, item) {
     const leadTime = Property.getValueOrUndefined(pathGraphics._leadTime, time);
     const trailTime = Property.getValueOrUndefined(
       pathGraphics._trailTime,
-      time
+      time,
     );
     const availability = entity._availability;
     const hasAvailability = defined(availability);
@@ -594,7 +594,7 @@ PolylineUpdater.prototype.updateObject = function (time, item) {
   const resolution = Property.getValueOrDefault(
     pathGraphics._resolution,
     time,
-    defaultResolution
+    defaultResolution,
   );
 
   polyline.show = true;
@@ -605,22 +605,22 @@ PolylineUpdater.prototype.updateObject = function (time, item) {
     time,
     this._referenceFrame,
     resolution,
-    polyline.positions.slice()
+    polyline.positions.slice(),
   );
   polyline.material = MaterialProperty.getValue(
     time,
     pathGraphics._material,
-    polyline.material
+    polyline.material,
   );
   polyline.width = Property.getValueOrDefault(
     pathGraphics._width,
     time,
-    defaultWidth
+    defaultWidth,
   );
   polyline.distanceDisplayCondition = Property.getValueOrUndefined(
     pathGraphics._distanceDisplayCondition,
     time,
-    polyline.distanceDisplayCondition
+    polyline.distanceDisplayCondition,
   );
 };
 
@@ -660,7 +660,7 @@ function PathVisualizer(scene, entityCollection) {
 
   entityCollection.collectionChanged.addEventListener(
     PathVisualizer.prototype._onCollectionChanged,
-    this
+    this,
   );
 
   this._scene = scene;
@@ -758,7 +758,7 @@ PathVisualizer.prototype.isDestroyed = function () {
 PathVisualizer.prototype.destroy = function () {
   this._entityCollection.collectionChanged.removeEventListener(
     PathVisualizer.prototype._onCollectionChanged,
-    this
+    this,
   );
 
   const updaters = this._updaters;
@@ -775,7 +775,7 @@ PathVisualizer.prototype._onCollectionChanged = function (
   entityCollection,
   added,
   removed,
-  changed
+  changed,
 ) {
   let i;
   let entity;

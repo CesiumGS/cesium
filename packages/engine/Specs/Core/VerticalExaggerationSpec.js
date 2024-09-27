@@ -14,7 +14,7 @@ describe("Core/VerticalExaggeration", function () {
     const result = VerticalExaggeration.getHeight(
       height,
       scale,
-      relativeHeight
+      relativeHeight,
     );
     expect(result).toEqual(height);
   });
@@ -27,7 +27,7 @@ describe("Core/VerticalExaggeration", function () {
     const result = VerticalExaggeration.getHeight(
       height,
       scale,
-      relativeHeight
+      relativeHeight,
     );
     expect(result).toEqual(200.0);
   });
@@ -40,7 +40,7 @@ describe("Core/VerticalExaggeration", function () {
     const result = VerticalExaggeration.getHeight(
       height,
       scale,
-      relativeHeight
+      relativeHeight,
     );
     expect(result).toEqual(100.0);
   });
@@ -53,7 +53,7 @@ describe("Core/VerticalExaggeration", function () {
     const result = VerticalExaggeration.getHeight(
       height,
       scale,
-      relativeHeight
+      relativeHeight,
     );
     expect(result).toEqual(0.0);
   });
@@ -68,7 +68,7 @@ describe("Core/VerticalExaggeration", function () {
       position,
       ellipsoid,
       verticalExaggeration,
-      verticalExaggerationRelativeHeight
+      verticalExaggerationRelativeHeight,
     );
     expect(result).toEqualEpsilon(position, CesiumMath.EPSILON8);
   });
@@ -83,11 +83,11 @@ describe("Core/VerticalExaggeration", function () {
       position,
       ellipsoid,
       verticalExaggeration,
-      verticalExaggerationRelativeHeight
+      verticalExaggerationRelativeHeight,
     );
     expect(result).toEqualEpsilon(
       Cartesian3.fromRadians(0.0, 0.0, 200.0),
-      CesiumMath.EPSILON8
+      CesiumMath.EPSILON8,
     );
   });
 
@@ -101,7 +101,7 @@ describe("Core/VerticalExaggeration", function () {
       position,
       ellipsoid,
       verticalExaggeration,
-      verticalExaggerationRelativeHeight
+      verticalExaggerationRelativeHeight,
     );
     expect(result).toEqualEpsilon(position, CesiumMath.EPSILON8);
   });
@@ -116,11 +116,11 @@ describe("Core/VerticalExaggeration", function () {
       position,
       ellipsoid,
       verticalExaggeration,
-      verticalExaggerationRelativeHeight
+      verticalExaggerationRelativeHeight,
     );
     expect(result).toEqualEpsilon(
       Cartesian3.fromRadians(0.0, 0.0, 0.0),
-      CesiumMath.EPSILON8
+      CesiumMath.EPSILON8,
     );
   });
 });

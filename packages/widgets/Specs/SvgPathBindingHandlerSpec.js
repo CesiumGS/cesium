@@ -6,7 +6,7 @@ describe("ThirdParty/knockout", function () {
     div.setAttribute(
       "data-bind",
       '\
-cesiumSvgPath: { path: "M 100 100 L 300 100 L 200 300 Z", width: 28, height: 40, css: "someClass" }'
+cesiumSvgPath: { path: "M 100 100 L 300 100 L 200 300 Z", width: 28, height: 40, css: "someClass" }',
     );
 
     document.body.appendChild(div);
@@ -32,7 +32,7 @@ cesiumSvgPath: { path: "M 100 100 L 300 100 L 200 300 Z", width: 28, height: 40,
     div.setAttribute(
       "data-bind",
       "\
-cesiumSvgPath: { path: p, width: w, height: h, css: c }"
+cesiumSvgPath: { path: p, width: w, height: h, css: c }",
     );
 
     document.body.appendChild(div);
@@ -44,7 +44,7 @@ cesiumSvgPath: { path: p, width: w, height: h, css: c }"
         h: knockout.observable(40),
         c: knockout.observable("someClass"),
       },
-      div
+      div,
     );
 
     const svg = div.querySelector("svg.cesium-svgPath-svg");
@@ -63,8 +63,11 @@ cesiumSvgPath: { path: p, width: w, height: h, css: c }"
 
   it("check binding with observable parameter object", function () {
     const div = document.createElement("div");
-    div.setAttribute("data-bind", "\
-cesiumSvgPath: svgPath");
+    div.setAttribute(
+      "data-bind",
+      "\
+cesiumSvgPath: svgPath",
+    );
 
     document.body.appendChild(div);
 

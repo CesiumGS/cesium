@@ -12,7 +12,7 @@ import Check from "../Core/Check.js";
 function getClipAndStyleCode(
   samplerUniformName,
   matrixUniformName,
-  styleUniformName
+  styleUniformName,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.string("samplerUniformName", samplerUniformName);

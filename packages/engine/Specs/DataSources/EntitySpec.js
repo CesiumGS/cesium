@@ -145,15 +145,15 @@ describe("DataSources/Entity", function () {
     entity.availability = intervals;
     expect(
       entity.isAvailable(
-        JulianDate.addSeconds(interval.start, -1, new JulianDate())
-      )
+        JulianDate.addSeconds(interval.start, -1, new JulianDate()),
+      ),
     ).toEqual(false);
     expect(entity.isAvailable(interval.start)).toEqual(true);
     expect(entity.isAvailable(interval.stop)).toEqual(true);
     expect(
       entity.isAvailable(
-        JulianDate.addSeconds(interval.stop, 1, new JulianDate())
-      )
+        JulianDate.addSeconds(interval.stop, 1, new JulianDate()),
+      ),
     ).toEqual(false);
   });
 
@@ -198,7 +198,7 @@ describe("DataSources/Entity", function () {
       entity,
       propertyName,
       newValue,
-      oldValue
+      oldValue,
     );
   });
 
@@ -298,7 +298,7 @@ describe("DataSources/Entity", function () {
     const modelMatrix = entity.computeModelMatrix(new JulianDate());
     const expected = Matrix4.fromRotationTranslation(
       Matrix3.fromQuaternion(orientation),
-      position
+      position,
     );
     expect(modelMatrix).toEqual(expected);
   });
