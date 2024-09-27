@@ -1,13 +1,5 @@
 # Change Log
 
-### 1.122 - 2024-10-23
-
-#### @cesium/engine
-
-#### Make Rectangle.validate private #4921
-
-Point `Rectangle.validate` to `Rectangle._validate` and deprecate it. Renamed all instances of `Rectangle.validate` to `Rectangle._validate` because it is never called outside of a pragma and it's entire implementation is wrapped in a pragma.
-
 ### 1.122 - 2024-10-01
 
 #### @cesium/engine
@@ -22,6 +14,10 @@ Point `Rectangle.validate` to `Rectangle._validate` and deprecate it. Renamed al
 - Use first geometryBuffer if no best match found in I3SNode [#12132](https://github.com/CesiumGS/cesium/pull/12132)
 - Update type definitions to allow undefined for optional parameters [#12193](https://github.com/CesiumGS/cesium/pull/12193)
 - Fixed noise in ambient occlusion post process. [#12201](https://github.com/CesiumGS/cesium/pull/12201)
+
+##### Deprecated :hourglass_flowing_sand:
+
+- `Rectangle.validate` has been deprecated. It will be removed in 1.124.
 
 ### 1.121.1 - 2024-09-04
 
