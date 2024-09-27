@@ -1784,8 +1784,6 @@ Model.prototype.applyArticulations = function () {
  * @exception {DeveloperError} The model is not loaded. Use Model.readyEvent or wait for Model.ready to be true.
  *
  * @private
- * @experimental This feature is subject to change without Cesium's standard deprecation policy.
- *
  */
 Model.prototype.getExtension = function (extensionName) {
   //>>includeStart('debug', pragmas.debug);
