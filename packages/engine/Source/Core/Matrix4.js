@@ -937,8 +937,8 @@ Matrix4.computeOrthographicOffCenter = function (
  *
  * @param {number} left The number of meters to the left of the camera that will be in view.
  * @param {number} right The number of meters to the right of the camera that will be in view.
- * @param {number} bottom The number of meters below of the camera that will be in view.
- * @param {number} top The number of meters above of the camera that will be in view.
+ * @param {number} bottom The number of meters below the camera that will be in view.
+ * @param {number} top The number of meters above the camera that will be in view.
  * @param {number} near The distance to the near plane in meters.
  * @param {number} far The distance to the far plane in meters.
  * @param {Matrix4} result The object in which the result will be stored.

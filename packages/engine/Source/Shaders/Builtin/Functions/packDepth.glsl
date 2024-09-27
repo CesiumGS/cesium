@@ -1,11 +1,11 @@
 /**
- * Packs a depth value into a vec3 that can be represented by unsigned bytes.
+ * Packs a depth value into a vec4 that can be represented by unsigned bytes.
  *
  * @name czm_packDepth
  * @glslFunction
  *
  * @param {float} depth The floating-point depth.
- * @returns {vec3} The packed depth.
+ * @returns {vec4} The packed depth.
  */
 vec4 czm_packDepth(float depth)
 {
