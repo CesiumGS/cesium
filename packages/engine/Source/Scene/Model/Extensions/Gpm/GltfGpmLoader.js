@@ -1,7 +1,7 @@
 import Cartesian3 from "../../../../Core/Cartesian3.js";
 import Check from "../../../../Core/Check.js";
-import DeveloperError from "../../../../Core/DeveloperError.js";
 import Matrix3 from "../../../../Core/Matrix3.js";
+import RuntimeError from "../../../../Core/RuntimeError.js";
 import AnchorPointDirect from "./AnchorPointDirect.js";
 import AnchorPointIndirect from "./AnchorPointIndirect.js";
 import CorrelationGroup from "./CorrelationGroup.js";
@@ -136,9 +136,8 @@ function createCorrelationGroup(correlationGroupJson) {
  *
  * @param {object} gltfGpmLocalJson The extension object
  * @returns {GltfGpmLocal} The parsed object
+ * @throws RuntimeError When the given object contains invalid storage types.
  * @private
- * @throws DeveloperError When the given object is `undefined`
- * or contains invalid structures
  */
 GltfGpmLoader.load = function (gltfGpmLocalJson) {
   //>>includeStart('debug', pragmas.debug);
@@ -152,7 +151,7 @@ GltfGpmLoader.load = function (gltfGpmLocalJson) {
   if (storageType === StorageType.Indirect) {
     return GltfGpmLoader.loadIndirect(gltfGpmLocalJson);
   }
-  throw new DeveloperError(
+  throw new RuntimeError(
     `Invalid storage type in NGA_gpm_local - expected 'Direct' or 'Indirect', but found ${storageType}`,
   );
 };
