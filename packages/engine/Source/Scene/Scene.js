@@ -4338,17 +4338,19 @@ Scene.prototype.pickMetadata = function (
   // Check if the picked object is a model that has structural
   // metadata, with a schema that contains the specified
   // property.
-  const detail = pickedObject?.detail;
-  const model = detail?.model;
-  const structuralMetadata = model?.structuralMetadata;
-  const schema = structuralMetadata?.schema;
-
+  // Check if the picked object is a model that has structural
+  // metadata, with a schema that contains the specified
+  // property.
+  const schema = pickedObject.detail?.model?.structuralMetadata?.schema;
   const classProperty = getMetadataClassProperty(
     schema,
     schemaId,
     className,
     propertyName
   );
+  if (!defined(classProperty)) {
+    return undefined;
+  }
 
   const pickedMetadataInfo = {
     schemaId: schemaId,
