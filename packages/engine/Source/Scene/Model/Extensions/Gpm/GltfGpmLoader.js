@@ -11,8 +11,6 @@ import StorageType from "./StorageType.js";
 
 /**
  * Loads glTF NGA_gpm_local from the root of a glTF object
- * <p>
- * Implementation note: This is an experimental implementation.
  *
  * @alias GltfGpmLoader
  * @constructor
