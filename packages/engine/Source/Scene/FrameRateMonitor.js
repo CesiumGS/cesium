@@ -58,7 +58,7 @@ function FrameRateMonitor(options) {
    */
   this.averageFrameRateWindow = defaultValue(
     options.averageFrameRateWindow,
-    FrameRateMonitor.defaultSettings.averageFrameRateWindow
+    FrameRateMonitor.defaultSettings.averageFrameRateWindow,
   );
 
   /**
