@@ -1780,7 +1780,7 @@ Model.prototype.applyArticulations = function () {
  * this will return the model representation of the extension.
  *
  * @param {string} extensionName The name of the extension
- * @returns The object, or `undefined`
+ * @returns {object|undefined} The object, or `undefined`
  * @exception {DeveloperError} The model is not loaded. Use Model.readyEvent or wait for Model.ready to be true.
  *
  * @private
