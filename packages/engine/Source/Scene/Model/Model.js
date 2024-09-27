@@ -105,6 +105,9 @@ import pickModel from "./pickModel.js";
  *  <li>
  *  {@link https://github.com/KhronosGroup/glTF/blob/main/extensions/1.0/Vendor/WEB3D_quantized_attributes/README.md|WEB3D_quantized_attributes}
  *  </li>
+ *  <li>
+ *  {@link https://nsgreg.nga.mil/csmwg.jsp|NGA_gpm_local}
+ *  </li>
  * </ul>
  * </p>
  * <p>
