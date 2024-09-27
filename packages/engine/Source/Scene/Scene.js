@@ -4338,9 +4338,6 @@ Scene.prototype.pickMetadata = function (
   // Check if the picked object is a model that has structural
   // metadata, with a schema that contains the specified
   // property.
-  // Check if the picked object is a model that has structural
-  // metadata, with a schema that contains the specified
-  // property.
   const schema = pickedObject.detail?.model?.structuralMetadata?.schema;
   const classProperty = getMetadataClassProperty(
     schema,
@@ -4372,7 +4369,7 @@ Scene.prototype.pickMetadata = function (
  * Pick the schema of the metadata of the object at the given position
  *
  * @param {Cartesian2} windowPosition Window coordinates to perform picking on.
- * @returns The metadata schema, or `undefined` if there is no object with
+ * @returns {MetadataSchema} The metadata schema, or `undefined` if there is no object with
  * associated metadata at the given position.
  *
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
@@ -4386,11 +4383,7 @@ Scene.prototype.pickMetadataSchema = function (windowPosition) {
   if (!defined(pickedObject)) {
     return undefined;
   }
-
-  const detail = pickedObject?.detail;
-  const model = detail?.model;
-  const structuralMetadata = model?.structuralMetadata;
-  const schema = structuralMetadata?.schema;
+  const schema = pickedObject.detail?.model?.structuralMetadata?.schema;
   return schema;
 };
 
