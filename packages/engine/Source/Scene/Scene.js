@@ -1750,16 +1750,14 @@ function updateDerivedCommands(scene, command, shadowsDirty) {
     );
   }
   if (frameState.pickingMetadata && command.pickMetadataAllowed) {
-    if (pickedMetadataInfoChanged(command, frameState)) {
-      command.pickedMetadataInfo = frameState.pickedMetadataInfo;
-      if (defined(command.pickedMetadataInfo)) {
-        derivedCommands.pickingMetadata = DerivedCommand.createPickMetadataDerivedCommand(
-          scene,
-          command,
-          context,
-          derivedCommands.pickingMetadata
-        );
-      }
+    command.pickedMetadataInfo = frameState.pickedMetadataInfo;
+    if (defined(command.pickedMetadataInfo)) {
+      derivedCommands.pickingMetadata = DerivedCommand.createPickMetadataDerivedCommand(
+        scene,
+        command,
+        context,
+        derivedCommands.pickingMetadata
+      );
     }
   }
   if (!command.pickOnly) {
@@ -1844,14 +1842,18 @@ Scene.prototype.updateDerivedCommands = function (command) {
     useLogDepth && !hasLogDepthDerivedCommands;
   const needsHdrCommands = useHdr && !hasHdrCommands;
   const needsDerivedCommands = (!useLogDepth || !useHdr) && !hasDerivedCommands;
+  const needsUpdateForMetadataPicking =
+    frameState.pickingMetadata &&
+    pickedMetadataInfoChanged(command, frameState);
 
   command.dirty =
     command.dirty ||
     needsLogDepthDerivedCommands ||
     needsHdrCommands ||
-    needsDerivedCommands;
+    needsDerivedCommands ||
+    needsUpdateForMetadataPicking;
 
-  if (command.dirty || frameState.pickingMetadata) {
+  if (command.dirty) {
     command.dirty = false;
 
     const shadowMaps = frameState.shadowState.shadowMaps;
