@@ -245,7 +245,7 @@ const scratchColorZero = new Color(0.0, 0.0, 0.0, 0.0);
  * be an odd integer number, default: 3.0
  * @param {number|undefined} height - The height of the rectangle, default: width
  * @param {BoundingRectangle} result The result rectangle
- * @returns The result rectangle
+ * @returns {BoundingRectangle} The result rectangle
  */
 function computePickingDrawingBufferRectangle(
   drawingBufferHeight,
