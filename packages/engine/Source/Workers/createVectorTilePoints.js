@@ -45,7 +45,7 @@ function createVectorTilePoints(parameters, transferableObjects) {
   const vBuffer = positions.subarray(positionsLength, 2 * positionsLength);
   const heightBuffer = positions.subarray(
     2 * positionsLength,
-    3 * positionsLength
+    3 * positionsLength,
   );
   AttributeCompression.zigZagDeltaDecode(uBuffer, vBuffer, heightBuffer);
 
@@ -63,11 +63,11 @@ function createVectorTilePoints(parameters, transferableObjects) {
       lon,
       lat,
       alt,
-      scratchBVCartographic
+      scratchBVCartographic,
     );
     const decodedPosition = ellipsoid.cartographicToCartesian(
       cartographic,
-      scratchEncodedPosition
+      scratchEncodedPosition,
     );
     Cartesian3.pack(decodedPosition, decoded, i * 3);
   }

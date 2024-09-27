@@ -51,7 +51,7 @@ describe("Scene/VoxelCell", function () {
       voxelPrimitive,
       tileIndex,
       sampleIndex,
-      keyframeNode
+      keyframeNode,
     );
     expect(voxelCell instanceof VoxelCell).toBe(true);
     expect(voxelCell.primitive).toBe(voxelPrimitive);
@@ -68,7 +68,7 @@ describe("Scene/VoxelCell", function () {
         undefined,
         tileIndex,
         sampleIndex,
-        keyframeNode
+        keyframeNode,
       );
     }).toThrowDeveloperError();
     expect(function () {
@@ -76,7 +76,7 @@ describe("Scene/VoxelCell", function () {
         voxelPrimitive,
         tileIndex,
         undefined,
-        keyframeNode
+        keyframeNode,
       );
     }).toThrowDeveloperError();
     expect(function () {
@@ -84,7 +84,7 @@ describe("Scene/VoxelCell", function () {
         undefined,
         tileIndex,
         sampleIndex,
-        undefined
+        undefined,
       );
     }).toThrowDeveloperError();
   });
@@ -97,7 +97,7 @@ describe("Scene/VoxelCell", function () {
       voxelPrimitive,
       tileIndex,
       sampleIndex,
-      keyframeNode
+      keyframeNode,
     );
     expect(voxelCell.getNames()).toEqual(["a"]);
     expect(voxelCell.hasProperty("a")).toBe(true);
@@ -112,19 +112,19 @@ describe("Scene/VoxelCell", function () {
       voxelPrimitive,
       tileIndex,
       sampleIndex,
-      keyframeNode
+      keyframeNode,
     );
     const orientedBoundingBox = voxelCell.orientedBoundingBox;
     expect(orientedBoundingBox instanceof OrientedBoundingBox).toBe(true);
     const expectedCenter = new Cartesian3(0.5, 0.5, 0.5);
     expect(orientedBoundingBox.center).toEqualEpsilon(
       expectedCenter,
-      CesiumMath.EPSILON6
+      CesiumMath.EPSILON6,
     );
     const expectedHalfAxes = new Matrix3.fromUniformScale(0.5);
     expect(orientedBoundingBox.halfAxes).toEqualEpsilon(
       expectedHalfAxes,
-      CesiumMath.EPSILON6
+      CesiumMath.EPSILON6,
     );
   });
 });

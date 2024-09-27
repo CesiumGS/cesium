@@ -1330,7 +1330,7 @@ const AutomaticUniforms = {
     getValue: function (uniformState) {
       return Matrix4.getTranslation(
         uniformState.inverseView,
-        viewerPositionWCScratch
+        viewerPositionWCScratch,
       );
     },
   }),

@@ -111,7 +111,7 @@ HeadingPitchRoll.clone = function (headingPitchRoll, result) {
     return new HeadingPitchRoll(
       headingPitchRoll.heading,
       headingPitchRoll.pitch,
-      headingPitchRoll.roll
+      headingPitchRoll.roll,
     );
   }
   result.heading = headingPitchRoll.heading;
@@ -154,7 +154,7 @@ HeadingPitchRoll.equalsEpsilon = function (
   left,
   right,
   relativeEpsilon,
-  absoluteEpsilon
+  absoluteEpsilon,
 ) {
   return (
     left === right ||
@@ -164,19 +164,19 @@ HeadingPitchRoll.equalsEpsilon = function (
         left.heading,
         right.heading,
         relativeEpsilon,
-        absoluteEpsilon
+        absoluteEpsilon,
       ) &&
       CesiumMath.equalsEpsilon(
         left.pitch,
         right.pitch,
         relativeEpsilon,
-        absoluteEpsilon
+        absoluteEpsilon,
       ) &&
       CesiumMath.equalsEpsilon(
         left.roll,
         right.roll,
         relativeEpsilon,
-        absoluteEpsilon
+        absoluteEpsilon,
       ))
   );
 };
@@ -215,13 +215,13 @@ HeadingPitchRoll.prototype.equals = function (right) {
 HeadingPitchRoll.prototype.equalsEpsilon = function (
   right,
   relativeEpsilon,
-  absoluteEpsilon
+  absoluteEpsilon,
 ) {
   return HeadingPitchRoll.equalsEpsilon(
     this,
     right,
     relativeEpsilon,
-    absoluteEpsilon
+    absoluteEpsilon,
   );
 };
 

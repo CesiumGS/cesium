@@ -40,7 +40,7 @@ const defaultMaterial = new ColorMaterialProperty(Color.WHITE);
 const defaultShow = new ConstantProperty(true);
 const defaultShadows = new ConstantProperty(ShadowMode.DISABLED);
 const defaultDistanceDisplayCondition = new ConstantProperty(
-  new DistanceDisplayCondition()
+  new DistanceDisplayCondition(),
 );
 const defaultClassificationType = new ConstantProperty(ClassificationType.BOTH);
 
@@ -82,7 +82,7 @@ function PolylineGeometryUpdater(entity, scene) {
   this._scene = scene;
   this._entitySubscription = entity.definitionChanged.addEventListener(
     PolylineGeometryUpdater.prototype._onEntityPropertyChanged,
-    this
+    this,
   );
   this._fillEnabled = false;
   this._dynamic = false;
@@ -366,7 +366,7 @@ PolylineGeometryUpdater.prototype.createFillGeometryInstance = function (time) {
 
   if (!this._fillEnabled) {
     throw new DeveloperError(
-      "This instance does not represent a filled geometry."
+      "This instance does not represent a filled geometry.",
     );
   }
   //>>includeEnd('debug');
@@ -374,14 +374,14 @@ PolylineGeometryUpdater.prototype.createFillGeometryInstance = function (time) {
   const entity = this._entity;
   const isAvailable = entity.isAvailable(time);
   const show = new ShowGeometryInstanceAttribute(
-    isAvailable && entity.isShowing && this._showProperty.getValue(time)
+    isAvailable && entity.isShowing && this._showProperty.getValue(time),
   );
-  const distanceDisplayCondition = this._distanceDisplayConditionProperty.getValue(
-    time
-  );
-  const distanceDisplayConditionAttribute = DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition(
-    distanceDisplayCondition
-  );
+  const distanceDisplayCondition =
+    this._distanceDisplayConditionProperty.getValue(time);
+  const distanceDisplayConditionAttribute =
+    DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition(
+      distanceDisplayCondition,
+    );
 
   const attributes = {
     show: show,
@@ -420,15 +420,14 @@ PolylineGeometryUpdater.prototype.createFillGeometryInstance = function (time) {
     ) {
       currentColor = this._depthFailMaterialProperty.color.getValue(
         time,
-        scratchColor
+        scratchColor,
       );
     }
     if (!defined(currentColor)) {
       currentColor = Color.WHITE;
     }
-    attributes.depthFailColor = ColorGeometryInstanceAttribute.fromColor(
-      currentColor
-    );
+    attributes.depthFailColor =
+      ColorGeometryInstanceAttribute.fromColor(currentColor);
   }
 
   return new GeometryInstance({
@@ -447,11 +446,11 @@ PolylineGeometryUpdater.prototype.createFillGeometryInstance = function (time) {
  * @exception {DeveloperError} This instance does not represent an outlined geometry.
  */
 PolylineGeometryUpdater.prototype.createOutlineGeometryInstance = function (
-  time
+  time,
 ) {
   //>>includeStart('debug', pragmas.debug);
   throw new DeveloperError(
-    "This instance does not represent an outlined geometry."
+    "This instance does not represent an outlined geometry.",
   );
   //>>includeEnd('debug');
 };
@@ -479,7 +478,7 @@ PolylineGeometryUpdater.prototype._onEntityPropertyChanged = function (
   entity,
   propertyName,
   newValue,
-  oldValue
+  oldValue,
 ) {
   if (!(propertyName === "availability" || propertyName === "polyline")) {
     return;
@@ -520,11 +519,11 @@ PolylineGeometryUpdater.prototype._onEntityPropertyChanged = function (
   this._shadowsProperty = defaultValue(polyline.shadows, defaultShadows);
   this._distanceDisplayConditionProperty = defaultValue(
     polyline.distanceDisplayCondition,
-    defaultDistanceDisplayCondition
+    defaultDistanceDisplayCondition,
   );
   this._classificationTypeProperty = defaultValue(
     polyline.classificationType,
-    defaultClassificationType
+    defaultClassificationType,
   );
   this._fillEnabled = true;
   this._zIndex = defaultValue(zIndex, defaultZIndex);
@@ -550,7 +549,7 @@ PolylineGeometryUpdater.prototype._onEntityPropertyChanged = function (
     const geometryOptions = this._geometryOptions;
     const positions = positionsProperty.getValue(
       Iso8601.MINIMUM_VALUE,
-      geometryOptions.positions
+      geometryOptions.positions,
     );
 
     //Because of the way we currently handle reference properties,
@@ -598,7 +597,7 @@ PolylineGeometryUpdater.prototype._onEntityPropertyChanged = function (
 
     if (!this._clampToGround && defined(zIndex)) {
       oneTimeWarning(
-        "Entity polylines must have clampToGround: true when using zIndex.  zIndex will be ignored."
+        "Entity polylines must have clampToGround: true when using zIndex.  zIndex will be ignored.",
       );
     }
 
@@ -619,7 +618,7 @@ PolylineGeometryUpdater.prototype._onEntityPropertyChanged = function (
  */
 PolylineGeometryUpdater.prototype.createDynamicUpdater = function (
   primitives,
-  groundPrimitives
+  groundPrimitives,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("primitives", primitives);
@@ -627,7 +626,7 @@ PolylineGeometryUpdater.prototype.createDynamicUpdater = function (
 
   if (!this._dynamic) {
     throw new DeveloperError(
-      "This instance does not represent dynamic geometry."
+      "This instance does not represent dynamic geometry.",
     );
   }
   //>>includeEnd('debug');
@@ -687,31 +686,28 @@ DynamicGeometryUpdater.prototype.update = function (time) {
   let positions = Property.getValueOrUndefined(
     positionsProperty,
     time,
-    this._positions
+    this._positions,
   );
 
   // Synchronize with geometryUpdater for GroundPolylinePrimitive
   geometryUpdater._clampToGround = Property.getValueOrDefault(
     polyline._clampToGround,
     time,
-    false
+    false,
   );
   geometryUpdater._groundGeometryOptions.positions = positions;
   geometryUpdater._groundGeometryOptions.width = Property.getValueOrDefault(
     polyline._width,
     time,
-    1
+    1,
   );
   geometryUpdater._groundGeometryOptions.arcType = Property.getValueOrDefault(
     polyline._arcType,
     time,
-    ArcType.GEODESIC
+    ArcType.GEODESIC,
   );
-  geometryUpdater._groundGeometryOptions.granularity = Property.getValueOrDefault(
-    polyline._granularity,
-    time,
-    9999
-  );
+  geometryUpdater._groundGeometryOptions.granularity =
+    Property.getValueOrDefault(polyline._granularity, time, 9999);
 
   const groundPrimitives = this._groundPrimitives;
 
@@ -741,7 +737,7 @@ DynamicGeometryUpdater.prototype.update = function (time) {
       const material = MaterialProperty.getValue(
         time,
         fillMaterialProperty,
-        this._material
+        this._material,
       );
       appearance = new PolylineMaterialAppearance({
         material: material,
@@ -754,12 +750,11 @@ DynamicGeometryUpdater.prototype.update = function (time) {
       new GroundPolylinePrimitive({
         geometryInstances: geometryUpdater.createFillGeometryInstance(time),
         appearance: appearance,
-        classificationType: geometryUpdater.classificationTypeProperty.getValue(
-          time
-        ),
+        classificationType:
+          geometryUpdater.classificationTypeProperty.getValue(time),
         asynchronous: false,
       }),
-      Property.getValueOrUndefined(geometryUpdater.zIndex, time)
+      Property.getValueOrUndefined(geometryUpdater.zIndex, time),
     );
 
     // Hide the polyline in the collection, if any
@@ -795,19 +790,19 @@ DynamicGeometryUpdater.prototype.update = function (time) {
     generateCartesianArcOptions.positions = positions;
     generateCartesianArcOptions.granularity = Property.getValueOrUndefined(
       polyline._granularity,
-      time
+      time,
     );
     generateCartesianArcOptions.height = PolylinePipeline.extractHeights(
       positions,
-      ellipsoid
+      ellipsoid,
     );
     if (arcType === ArcType.GEODESIC) {
       positions = PolylinePipeline.generateCartesianArc(
-        generateCartesianArcOptions
+        generateCartesianArcOptions,
       );
     } else {
       positions = PolylinePipeline.generateCartesianRhumbArc(
-        generateCartesianArcOptions
+        generateCartesianArcOptions,
       );
     }
   }
@@ -817,13 +812,13 @@ DynamicGeometryUpdater.prototype.update = function (time) {
   line.material = MaterialProperty.getValue(
     time,
     geometryUpdater.fillMaterialProperty,
-    line.material
+    line.material,
   );
   line.width = Property.getValueOrDefault(polyline._width, time, 1);
   line.distanceDisplayCondition = Property.getValueOrUndefined(
     polyline._distanceDisplayCondition,
     time,
-    line.distanceDisplayCondition
+    line.distanceDisplayCondition,
   );
 };
 
@@ -846,7 +841,7 @@ DynamicGeometryUpdater.prototype.getBoundingSphere = function (result) {
       groundPolylinePrimitive.ready
     ) {
       const attributes = groundPolylinePrimitive.getGeometryInstanceAttributes(
-        this._geometryUpdater._entity
+        this._geometryUpdater._entity,
       );
       if (defined(attributes) && defined(attributes.boundingSphere)) {
         BoundingSphere.clone(attributes.boundingSphere, result);

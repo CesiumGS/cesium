@@ -43,7 +43,7 @@ PntsParser.parse = function (arrayBuffer, byteOffset) {
   const version = view.getUint32(byteOffset, true);
   if (version !== 1) {
     throw new RuntimeError(
-      `Only Point Cloud tile version 1 is supported.  Version ${version} is not.`
+      `Only Point Cloud tile version 1 is supported.  Version ${version} is not.`,
     );
   }
   byteOffset += sizeOfUint32;
@@ -54,7 +54,7 @@ PntsParser.parse = function (arrayBuffer, byteOffset) {
   const featureTableJsonByteLength = view.getUint32(byteOffset, true);
   if (featureTableJsonByteLength === 0) {
     throw new RuntimeError(
-      "Feature table must have a byte length greater than zero"
+      "Feature table must have a byte length greater than zero",
     );
   }
   byteOffset += sizeOfUint32;
@@ -70,14 +70,14 @@ PntsParser.parse = function (arrayBuffer, byteOffset) {
   const featureTableJson = getJsonFromTypedArray(
     uint8Array,
     byteOffset,
-    featureTableJsonByteLength
+    featureTableJsonByteLength,
   );
   byteOffset += featureTableJsonByteLength;
 
   const featureTableBinary = new Uint8Array(
     arrayBuffer,
     byteOffset,
-    featureTableBinaryByteLength
+    featureTableBinaryByteLength,
   );
   byteOffset += featureTableBinaryByteLength;
 
@@ -89,7 +89,7 @@ PntsParser.parse = function (arrayBuffer, byteOffset) {
     batchTableJson = getJsonFromTypedArray(
       uint8Array,
       byteOffset,
-      batchTableJsonByteLength
+      batchTableJsonByteLength,
     );
     byteOffset += batchTableJsonByteLength;
 
@@ -98,7 +98,7 @@ PntsParser.parse = function (arrayBuffer, byteOffset) {
       batchTableBinary = new Uint8Array(
         arrayBuffer,
         byteOffset,
-        batchTableBinaryByteLength
+        batchTableBinaryByteLength,
       );
       byteOffset += batchTableBinaryByteLength;
     }
@@ -106,7 +106,7 @@ PntsParser.parse = function (arrayBuffer, byteOffset) {
 
   const featureTable = new Cesium3DTileFeatureTable(
     featureTableJson,
-    featureTableBinary
+    featureTableBinary,
   );
 
   const pointsLength = featureTable.getGlobalProperty("POINTS_LENGTH");
@@ -114,14 +114,14 @@ PntsParser.parse = function (arrayBuffer, byteOffset) {
 
   if (!defined(pointsLength)) {
     throw new RuntimeError(
-      "Feature table global property: POINTS_LENGTH must be defined"
+      "Feature table global property: POINTS_LENGTH must be defined",
     );
   }
 
   let rtcCenter = featureTable.getGlobalProperty(
     "RTC_CENTER",
     ComponentDatatype.FLOAT,
-    3
+    3,
   );
   if (defined(rtcCenter)) {
     rtcCenter = Cartesian3.unpack(rtcCenter);
@@ -142,7 +142,7 @@ PntsParser.parse = function (arrayBuffer, byteOffset) {
 
   if (!parsedContent.hasPositions) {
     throw new RuntimeError(
-      "Either POSITION or POSITION_QUANTIZED must be defined."
+      "Either POSITION or POSITION_QUANTIZED must be defined.",
     );
   }
 
@@ -170,7 +170,7 @@ PntsParser.parse = function (arrayBuffer, byteOffset) {
     const batchLength = featureTable.getGlobalProperty("BATCH_LENGTH");
     if (!defined(batchLength)) {
       throw new RuntimeError(
-        "Global property: BATCH_LENGTH must be defined when BATCH_ID is defined."
+        "Global property: BATCH_LENGTH must be defined when BATCH_ID is defined.",
       );
     }
     parsedContent.batchLength = batchLength;
@@ -219,12 +219,12 @@ function parseDracoProperties(featureTable, batchTableJson) {
       !defined(dracoByteLength)
     ) {
       throw new RuntimeError(
-        "Draco properties, byteOffset, and byteLength must be defined"
+        "Draco properties, byteOffset, and byteLength must be defined",
       );
     }
     dracoBuffer = featureTable.buffer.slice(
       dracoByteOffset,
-      dracoByteOffset + dracoByteLength
+      dracoByteOffset + dracoByteLength,
     );
     hasPositions = defined(dracoFeatureTableProperties.POSITION);
     hasColors =
@@ -243,7 +243,7 @@ function parseDracoProperties(featureTable, batchTableJson) {
       batchTableProperties: dracoBatchTableProperties,
       properties: combine(
         dracoFeatureTableProperties,
-        dracoBatchTableProperties
+        dracoBatchTableProperties,
       ),
       dequantizeInShader: true,
     };
@@ -267,7 +267,7 @@ function parsePositions(featureTable) {
     positions = featureTable.getPropertyArray(
       "POSITION",
       ComponentDatatype.FLOAT,
-      3
+      3,
     );
 
     return {
@@ -282,17 +282,17 @@ function parsePositions(featureTable) {
     positions = featureTable.getPropertyArray(
       "POSITION_QUANTIZED",
       ComponentDatatype.UNSIGNED_SHORT,
-      3
+      3,
     );
 
     const quantizedVolumeScale = featureTable.getGlobalProperty(
       "QUANTIZED_VOLUME_SCALE",
       ComponentDatatype.FLOAT,
-      3
+      3,
     );
     if (!defined(quantizedVolumeScale)) {
       throw new RuntimeError(
-        "Global property: QUANTIZED_VOLUME_SCALE must be defined for quantized positions."
+        "Global property: QUANTIZED_VOLUME_SCALE must be defined for quantized positions.",
       );
     }
     const quantizedRange = (1 << 16) - 1;
@@ -300,11 +300,11 @@ function parsePositions(featureTable) {
     const quantizedVolumeOffset = featureTable.getGlobalProperty(
       "QUANTIZED_VOLUME_OFFSET",
       ComponentDatatype.FLOAT,
-      3
+      3,
     );
     if (!defined(quantizedVolumeOffset)) {
       throw new RuntimeError(
-        "Global property: QUANTIZED_VOLUME_OFFSET must be defined for quantized positions."
+        "Global property: QUANTIZED_VOLUME_OFFSET must be defined for quantized positions.",
       );
     }
 
@@ -332,7 +332,7 @@ function parseColors(featureTable) {
     colors = featureTable.getPropertyArray(
       "RGBA",
       ComponentDatatype.UNSIGNED_BYTE,
-      4
+      4,
     );
     return {
       name: VertexAttributeSemantic.COLOR,
@@ -349,7 +349,7 @@ function parseColors(featureTable) {
     colors = featureTable.getPropertyArray(
       "RGB",
       ComponentDatatype.UNSIGNED_BYTE,
-      3
+      3,
     );
     return {
       name: "COLOR",
@@ -366,7 +366,7 @@ function parseColors(featureTable) {
     colors = featureTable.getPropertyArray(
       "RGB565",
       ComponentDatatype.UNSIGNED_SHORT,
-      1
+      1,
     );
     return {
       name: "COLOR",
@@ -387,7 +387,7 @@ function parseColors(featureTable) {
     const constantRGBA = featureTable.getGlobalProperty(
       "CONSTANT_RGBA",
       ComponentDatatype.UNSIGNED_BYTE,
-      4
+      4,
     );
 
     const alpha = constantRGBA[3];
@@ -395,7 +395,7 @@ function parseColors(featureTable) {
       constantRGBA[0],
       constantRGBA[1],
       constantRGBA[2],
-      alpha
+      alpha,
     );
 
     const isTranslucent = alpha < 255;
@@ -421,7 +421,7 @@ function parseNormals(featureTable) {
     normals = featureTable.getPropertyArray(
       "NORMAL",
       ComponentDatatype.FLOAT,
-      3
+      3,
     );
     return {
       name: VertexAttributeSemantic.NORMAL,
@@ -436,7 +436,7 @@ function parseNormals(featureTable) {
     normals = featureTable.getPropertyArray(
       "NORMAL_OCT16P",
       ComponentDatatype.UNSIGNED_BYTE,
-      2
+      2,
     );
     const quantizationBits = 8;
     return {
@@ -462,7 +462,7 @@ function parseBatchIds(featureTable) {
     const batchIds = featureTable.getPropertyArray(
       "BATCH_ID",
       ComponentDatatype.UNSIGNED_SHORT,
-      1
+      1,
     );
     return {
       name: VertexAttributeSemantic.FEATURE_ID,

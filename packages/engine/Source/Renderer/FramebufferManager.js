@@ -36,7 +36,7 @@ function FramebufferManager(options) {
   this._numSamples = defaultValue(options.numSamples, 1);
   this._colorAttachmentsLength = defaultValue(
     options.colorAttachmentsLength,
-    1
+    1,
   );
 
   this._color = defaultValue(options.color, true);
@@ -44,28 +44,28 @@ function FramebufferManager(options) {
   this._depthStencil = defaultValue(options.depthStencil, false);
   this._supportsDepthTexture = defaultValue(
     options.supportsDepthTexture,
-    false
+    false,
   );
   //>>includeStart('debug', pragmas.debug);
   if (!this._color && !this._depth && !this._depthStencil) {
     throw new DeveloperError(
-      "Must enable at least one type of framebuffer attachment."
+      "Must enable at least one type of framebuffer attachment.",
     );
   }
   if (this._depth && this._depthStencil) {
     throw new DeveloperError(
-      "Cannot have both a depth and depth-stencil attachment."
+      "Cannot have both a depth and depth-stencil attachment.",
     );
   }
   //>>includeEnd('debug');
 
   this._createColorAttachments = defaultValue(
     options.createColorAttachments,
-    true
+    true,
   );
   this._createDepthAttachments = defaultValue(
     options.createDepthAttachments,
-    true
+    true,
   );
 
   this._pixelDatatype = options.pixelDatatype;
@@ -116,7 +116,7 @@ FramebufferManager.prototype.isDirty = function (
   height,
   numSamples,
   pixelDatatype,
-  pixelFormat
+  pixelFormat,
 ) {
   numSamples = defaultValue(numSamples, 1);
   const dimensionChanged = this._width !== width || this._height !== height;
@@ -145,7 +145,7 @@ FramebufferManager.prototype.update = function (
   height,
   numSamples,
   pixelDatatype,
-  pixelFormat
+  pixelFormat,
 ) {
   //>>includeStart('debug', pragmas.debug);
   if (!defined(width) || !defined(height)) {
@@ -157,11 +157,11 @@ FramebufferManager.prototype.update = function (
     pixelDatatype,
     this._color
       ? defaultValue(this._pixelDatatype, PixelDatatype.UNSIGNED_BYTE)
-      : undefined
+      : undefined,
   );
   pixelFormat = defaultValue(
     pixelFormat,
-    this._color ? defaultValue(this._pixelFormat, PixelFormat.RGBA) : undefined
+    this._color ? defaultValue(this._pixelFormat, PixelFormat.RGBA) : undefined,
   );
 
   if (this.isDirty(width, height, numSamples, pixelDatatype, pixelFormat)) {
@@ -278,7 +278,7 @@ FramebufferManager.prototype.getColorTexture = function (index) {
   //>>includeStart('debug', pragmas.debug);
   if (index >= this._colorAttachmentsLength) {
     throw new DeveloperError(
-      "index must be smaller than total number of color attachments."
+      "index must be smaller than total number of color attachments.",
     );
   }
   //>>includeEnd('debug');
@@ -290,12 +290,12 @@ FramebufferManager.prototype.setColorTexture = function (texture, index) {
   //>>includeStart('debug', pragmas.debug);
   if (this._createColorAttachments) {
     throw new DeveloperError(
-      "createColorAttachments must be false if setColorTexture is called."
+      "createColorAttachments must be false if setColorTexture is called.",
     );
   }
   if (index >= this._colorAttachmentsLength) {
     throw new DeveloperError(
-      "index must be smaller than total number of color attachments."
+      "index must be smaller than total number of color attachments.",
     );
   }
   //>>includeEnd('debug');
@@ -308,7 +308,7 @@ FramebufferManager.prototype.getColorRenderbuffer = function (index) {
   //>>includeStart('debug', pragmas.debug);
   if (index >= this._colorAttachmentsLength) {
     throw new DeveloperError(
-      "index must be smaller than total number of color attachments."
+      "index must be smaller than total number of color attachments.",
     );
   }
   //>>includeEnd('debug');
@@ -317,18 +317,18 @@ FramebufferManager.prototype.getColorRenderbuffer = function (index) {
 
 FramebufferManager.prototype.setColorRenderbuffer = function (
   renderbuffer,
-  index
+  index,
 ) {
   index = defaultValue(index, 0);
   //>>includeStart('debug', pragmas.debug);
   if (this._createColorAttachments) {
     throw new DeveloperError(
-      "createColorAttachments must be false if setColorRenderbuffer is called."
+      "createColorAttachments must be false if setColorRenderbuffer is called.",
     );
   }
   if (index >= this._colorAttachmentsLength) {
     throw new DeveloperError(
-      "index must be smaller than total number of color attachments."
+      "index must be smaller than total number of color attachments.",
     );
   }
   //>>includeEnd('debug');
@@ -344,7 +344,7 @@ FramebufferManager.prototype.setDepthRenderbuffer = function (renderbuffer) {
   //>>includeStart('debug', pragmas.debug);
   if (this._createDepthAttachments) {
     throw new DeveloperError(
-      "createDepthAttachments must be false if setDepthRenderbuffer is called."
+      "createDepthAttachments must be false if setDepthRenderbuffer is called.",
     );
   }
   //>>includeEnd('debug');
@@ -360,7 +360,7 @@ FramebufferManager.prototype.setDepthTexture = function (texture) {
   //>>includeStart('debug', pragmas.debug);
   if (this._createDepthAttachments) {
     throw new DeveloperError(
-      "createDepthAttachments must be false if setDepthTexture is called."
+      "createDepthAttachments must be false if setDepthTexture is called.",
     );
   }
   //>>includeEnd('debug');
@@ -373,12 +373,12 @@ FramebufferManager.prototype.getDepthStencilRenderbuffer = function () {
 };
 
 FramebufferManager.prototype.setDepthStencilRenderbuffer = function (
-  renderbuffer
+  renderbuffer,
 ) {
   //>>includeStart('debug', pragmas.debug);
   if (this._createDepthAttachments) {
     throw new DeveloperError(
-      "createDepthAttachments must be false if setDepthStencilRenderbuffer is called."
+      "createDepthAttachments must be false if setDepthStencilRenderbuffer is called.",
     );
   }
   //>>includeEnd('debug');
@@ -394,7 +394,7 @@ FramebufferManager.prototype.setDepthStencilTexture = function (texture) {
   //>>includeStart('debug', pragmas.debug);
   if (this._createDepthAttachments) {
     throw new DeveloperError(
-      "createDepthAttachments must be false if setDepthStencilTexture is called."
+      "createDepthAttachments must be false if setDepthStencilTexture is called.",
     );
   }
   //>>includeEnd('debug');
@@ -419,7 +419,7 @@ FramebufferManager.prototype.prepareTextures = function (context, blitStencil) {
 FramebufferManager.prototype.clear = function (
   context,
   clearCommand,
-  passState
+  passState,
 ) {
   const framebuffer = clearCommand.framebuffer;
   clearCommand.framebuffer = this.framebuffer;

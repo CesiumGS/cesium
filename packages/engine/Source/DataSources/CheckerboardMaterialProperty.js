@@ -126,13 +126,13 @@ CheckerboardMaterialProperty.prototype.getValue = function (time, result) {
     this._evenColor,
     time,
     defaultEvenColor,
-    result.lightColor
+    result.lightColor,
   );
   result.darkColor = Property.getValueOrClonedDefault(
     this._oddColor,
     time,
     defaultOddColor,
-    result.darkColor
+    result.darkColor,
   );
   result.repeat = Property.getValueOrDefault(this._repeat, time, defaultRepeat);
   return result;

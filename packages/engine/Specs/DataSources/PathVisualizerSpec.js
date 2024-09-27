@@ -144,12 +144,12 @@ describe(
       path.material = new PolylineOutlineMaterialProperty();
       path.material.color = new ConstantProperty(new Color(0.8, 0.7, 0.6, 0.5));
       path.material.outlineColor = new ConstantProperty(
-        new Color(0.1, 0.2, 0.3, 0.4)
+        new Color(0.1, 0.2, 0.3, 0.4),
       );
       path.material.outlineWidth = new ConstantProperty(2.5);
       path.width = new ConstantProperty(12.5);
       path.distanceDisplayCondition = new ConstantProperty(
-        new DistanceDisplayCondition(10.0, 20.0)
+        new DistanceDisplayCondition(10.0, 20.0),
       );
       path.leadTime = new ConstantProperty(25);
       path.trailTime = new ConstantProperty(10);
@@ -165,39 +165,39 @@ describe(
           JulianDate.addSeconds(
             updateTime,
             -path.trailTime.getValue(),
-            new JulianDate()
-          )
-        )
+            new JulianDate(),
+          ),
+        ),
       );
       expect(primitive.positions[1]).toEqual(
-        testObject.position.getValue(updateTime)
+        testObject.position.getValue(updateTime),
       );
       expect(primitive.positions[2]).toEqual(
         testObject.position.getValue(
           JulianDate.addSeconds(
             updateTime,
             path.leadTime.getValue(),
-            new JulianDate()
-          )
-        )
+            new JulianDate(),
+          ),
+        ),
       );
       expect(primitive.show).toEqual(testObject.path.show.getValue(updateTime));
       expect(primitive.width).toEqual(
-        testObject.path.width.getValue(updateTime)
+        testObject.path.width.getValue(updateTime),
       );
       expect(primitive.distanceDisplayCondition).toEqual(
-        testObject.path.distanceDisplayCondition.getValue(updateTime)
+        testObject.path.distanceDisplayCondition.getValue(updateTime),
       );
 
       const material = primitive.material;
       expect(material.uniforms.color).toEqual(
-        testObject.path.material.color.getValue(updateTime)
+        testObject.path.material.color.getValue(updateTime),
       );
       expect(material.uniforms.outlineColor).toEqual(
-        testObject.path.material.outlineColor.getValue(updateTime)
+        testObject.path.material.outlineColor.getValue(updateTime),
       );
       expect(material.uniforms.outlineWidth).toEqual(
-        testObject.path.material.outlineWidth.getValue(updateTime)
+        testObject.path.material.outlineWidth.getValue(updateTime),
       );
 
       path.show = new ConstantProperty(false);
@@ -225,7 +225,7 @@ describe(
       path.material = new PolylineOutlineMaterialProperty();
       path.material.color = new ConstantProperty(new Color(0.8, 0.7, 0.6, 0.5));
       path.material.outlineColor = new ConstantProperty(
-        new Color(0.1, 0.2, 0.3, 0.4)
+        new Color(0.1, 0.2, 0.3, 0.4),
       );
       path.material.outlineWidth = new ConstantProperty(2.5);
       path.width = new ConstantProperty(12.5);
@@ -278,13 +278,13 @@ describe(
 
       const material = primitive.material;
       expect(material.uniforms.color).toEqual(
-        testObject.path.material.color.getValue(updateTime)
+        testObject.path.material.color.getValue(updateTime),
       );
       expect(material.uniforms.glowPower).toEqual(
-        testObject.path.material.glowPower.getValue(updateTime)
+        testObject.path.material.glowPower.getValue(updateTime),
       );
       expect(material.uniforms.taperPower).toEqual(
-        testObject.path.material.taperPower.getValue(updateTime)
+        testObject.path.material.taperPower.getValue(updateTime),
       );
     });
 
@@ -361,7 +361,7 @@ describe(
       const inertialPolylineCollection = scene.primitives.get(0);
       expect(inertialPolylineCollection.length).toEqual(1);
       expect(inertialPolylineCollection.modelMatrix).not.toEqual(
-        Matrix4.IDENTITY
+        Matrix4.IDENTITY,
       );
 
       const inertialLine = inertialPolylineCollection.get(0);
@@ -498,7 +498,7 @@ describe(
 
     it("subSample works for constant properties", function () {
       const property = new ConstantPositionProperty(
-        new Cartesian3(1000, 2000, 3000)
+        new Cartesian3(1000, 2000, 3000),
       );
       const start = new JulianDate(0, 0);
       const stop = new JulianDate(1, 0);
@@ -511,14 +511,14 @@ describe(
         stop,
         updateTime,
         referenceFrame,
-        maximumStep
+        maximumStep,
       );
       expect(result).toEqual([property._value]);
     });
 
     it("subSample works for reference properties", function () {
       const property = new ConstantPositionProperty(
-        new Cartesian3(1000, 2000, 3000)
+        new Cartesian3(1000, 2000, 3000),
       );
       const start = new JulianDate(0, 0);
       const stop = new JulianDate(1, 0);
@@ -540,7 +540,7 @@ describe(
         stop,
         updateTime,
         referenceFrame,
-        maximumStep
+        maximumStep,
       );
       expect(result).toEqual([property._value]);
     });
@@ -567,7 +567,7 @@ describe(
         updateTime,
         referenceFrame,
         maximumStep,
-        result
+        result,
       );
       expect(result).toEqual([
         property.getValue(start),
@@ -585,16 +585,16 @@ describe(
         updateTime,
         referenceFrame,
         maximumStep,
-        result
+        result,
       );
       expect(result).toEqual([
         property.getValue(start),
         property.getValue(
-          JulianDate.addSeconds(start, expectedStep, new JulianDate())
+          JulianDate.addSeconds(start, expectedStep, new JulianDate()),
         ),
         property.getValue(updateTime),
         property.getValue(
-          JulianDate.addSeconds(start, expectedStep * 2, new JulianDate())
+          JulianDate.addSeconds(start, expectedStep * 2, new JulianDate()),
         ),
         property.getValue(stop),
       ]);
@@ -610,12 +610,12 @@ describe(
         updateTime,
         referenceFrame,
         maximumStep,
-        result
+        result,
       );
       expect(result).toEqual([
         property.getValue(start),
         property.getValue(
-          JulianDate.addSeconds(start, expectedStep, new JulianDate())
+          JulianDate.addSeconds(start, expectedStep, new JulianDate()),
         ),
         property.getValue(updateTime),
         property.getValue(stop),
@@ -632,16 +632,16 @@ describe(
         updateTime,
         referenceFrame,
         maximumStep,
-        result
+        result,
       );
       expect(result).toEqual([
         property.getValue(start),
         property.getValue(updateTime),
         property.getValue(
-          JulianDate.addSeconds(start, expectedStep, new JulianDate())
+          JulianDate.addSeconds(start, expectedStep, new JulianDate()),
         ),
         property.getValue(
-          JulianDate.addSeconds(start, expectedStep * 2, new JulianDate())
+          JulianDate.addSeconds(start, expectedStep * 2, new JulianDate()),
         ),
         property.getValue(stop),
       ]);
@@ -659,7 +659,7 @@ describe(
           start: t1,
           stop: t2,
           data: new Cartesian3(0, 0, 1),
-        })
+        }),
       );
       property.intervals.addInterval(
         new TimeInterval({
@@ -668,14 +668,14 @@ describe(
           isStartIncluded: false,
           isStopIncluded: false,
           data: new Cartesian3(0, 0, 2),
-        })
+        }),
       );
       property.intervals.addInterval(
         new TimeInterval({
           start: t3,
           stop: t4,
           data: new Cartesian3(0, 0, 3),
-        })
+        }),
       );
 
       const updateTime = new JulianDate(1, 43200);
@@ -689,7 +689,7 @@ describe(
         updateTime,
         referenceFrame,
         maximumStep,
-        result
+        result,
       );
       expect(result).toEqual([
         new Cartesian3(0, 0, 1),
@@ -704,7 +704,7 @@ describe(
         updateTime,
         referenceFrame,
         maximumStep,
-        result
+        result,
       );
       expect(result).toEqual([
         new Cartesian3(0, 0, 1),
@@ -719,7 +719,7 @@ describe(
         updateTime,
         referenceFrame,
         maximumStep,
-        result
+        result,
       );
       expect(result).toEqual([new Cartesian3(0, 0, 1)]);
 
@@ -730,7 +730,7 @@ describe(
         updateTime,
         referenceFrame,
         maximumStep,
-        result
+        result,
       );
       expect(result).toEqual([new Cartesian3(0, 0, 3)]);
     });
@@ -767,22 +767,22 @@ describe(
         updateTime,
         referenceFrame,
         maximumStep,
-        result
+        result,
       );
       expect(result).toEqual([
         property.getValue(t1),
         property.getValue(
-          JulianDate.addSeconds(t1, maximumStep, new JulianDate())
+          JulianDate.addSeconds(t1, maximumStep, new JulianDate()),
         ),
         property.getValue(
-          JulianDate.addSeconds(t1, maximumStep * 2, new JulianDate())
+          JulianDate.addSeconds(t1, maximumStep * 2, new JulianDate()),
         ),
         property.getValue(updateTime),
         property.getValue(
-          JulianDate.addSeconds(t1, maximumStep * 3, new JulianDate())
+          JulianDate.addSeconds(t1, maximumStep * 3, new JulianDate()),
         ),
         property.getValue(
-          JulianDate.addSeconds(t1, maximumStep * 4, new JulianDate())
+          JulianDate.addSeconds(t1, maximumStep * 4, new JulianDate()),
         ),
       ]);
     });
@@ -801,7 +801,7 @@ describe(
         return innerProperty.getValueInReferenceFrame(
           time,
           referenceFrame,
-          result
+          result,
         );
       };
 
@@ -835,28 +835,28 @@ describe(
         updateTime,
         referenceFrame,
         maximumStep,
-        result
+        result,
       );
       expect(result).toEqual([
         sampledProperty.getValue(t1),
         sampledProperty.getValue(
-          JulianDate.addSeconds(t1, maximumStep, new JulianDate())
+          JulianDate.addSeconds(t1, maximumStep, new JulianDate()),
         ),
         sampledProperty.getValue(
-          JulianDate.addSeconds(t1, maximumStep * 2, new JulianDate())
+          JulianDate.addSeconds(t1, maximumStep * 2, new JulianDate()),
         ),
         sampledProperty.getValue(updateTime),
         sampledProperty.getValue(
-          JulianDate.addSeconds(t1, maximumStep * 3, new JulianDate())
+          JulianDate.addSeconds(t1, maximumStep * 3, new JulianDate()),
         ),
         sampledProperty.getValue(
-          JulianDate.addSeconds(t1, maximumStep * 4, new JulianDate())
+          JulianDate.addSeconds(t1, maximumStep * 4, new JulianDate()),
         ),
         sampledProperty.getValue(
-          JulianDate.addSeconds(t1, maximumStep * 5, new JulianDate())
+          JulianDate.addSeconds(t1, maximumStep * 5, new JulianDate()),
         ),
         sampledProperty.getValue(
-          JulianDate.addSeconds(t1, maximumStep * 6, new JulianDate())
+          JulianDate.addSeconds(t1, maximumStep * 6, new JulianDate()),
         ),
       ]);
     });
@@ -870,7 +870,7 @@ describe(
       const t6 = new JulianDate(5, 0);
 
       const constantProperty = new ConstantPositionProperty(
-        new Cartesian3(0, 0, 1)
+        new Cartesian3(0, 0, 1),
       );
 
       const intervalProperty = new TimeIntervalCollectionPositionProperty();
@@ -879,7 +879,7 @@ describe(
           start: t1,
           stop: t2,
           data: new Cartesian3(0, 0, 1),
-        })
+        }),
       );
       intervalProperty.intervals.addInterval(
         new TimeInterval({
@@ -888,14 +888,14 @@ describe(
           isStartIncluded: false,
           isStopIncluded: false,
           data: new Cartesian3(0, 0, 2),
-        })
+        }),
       );
       intervalProperty.intervals.addInterval(
         new TimeInterval({
           start: t1,
           stop: t2,
           data: new Cartesian3(0, 0, 3),
-        })
+        }),
       );
 
       const sampledProperty = new SampledPositionProperty();
@@ -907,7 +907,7 @@ describe(
       const entities = new EntityCollection();
       const targetEntity = entities.getOrCreateEntity("target");
       targetEntity.position = new ConstantPositionProperty(
-        new Cartesian3(0, 0, 5)
+        new Cartesian3(0, 0, 5),
       );
       const referenceProperty = new ReferenceProperty(entities, "target", [
         "position",
@@ -921,7 +921,7 @@ describe(
           start: t1,
           stop: t2,
           data: intervalProperty,
-        })
+        }),
       );
       property.intervals.addInterval(
         new TimeInterval({
@@ -930,14 +930,14 @@ describe(
           isStartIncluded: false,
           isStopIncluded: false,
           data: constantProperty,
-        })
+        }),
       );
       property.intervals.addInterval(
         new TimeInterval({
           start: t3,
           stop: t4,
           data: sampledProperty,
-        })
+        }),
       );
       property.intervals.addInterval(
         new TimeInterval({
@@ -946,7 +946,7 @@ describe(
           isStartIncluded: false,
           isStopIncluded: true,
           data: referenceProperty,
-        })
+        }),
       );
       property.intervals.addInterval(
         new TimeInterval({
@@ -955,7 +955,7 @@ describe(
           isStartIncluded: false,
           isStopIncluded: true,
           data: scaledProperty,
-        })
+        }),
       );
 
       const updateTime = new JulianDate(0, 0);
@@ -979,14 +979,14 @@ describe(
         updateTime,
         referenceFrame,
         maximumStep,
-        result
+        result,
       );
       expect(result).toEqual([
         intervalProperty.intervals.get(0).data,
         constantProperty.getValue(t1),
         sampledProperty.getValue(t3),
         sampledProperty.getValue(
-          JulianDate.addSeconds(t3, maximumStep, new JulianDate())
+          JulianDate.addSeconds(t3, maximumStep, new JulianDate()),
         ),
         sampledProperty.getValue(t4),
         targetEntity.position.getValue(t5),
@@ -1002,5 +1002,5 @@ describe(
       createCompositeTest(true);
     });
   },
-  "WebGL"
+  "WebGL",
 );

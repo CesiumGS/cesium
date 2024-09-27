@@ -15,7 +15,7 @@ function createBillboardPointCallback(
   cssColor,
   cssOutlineColor,
   cssOutlineWidth,
-  pixelSize
+  pixelSize,
 ) {
   return function () {
     const canvas = document.createElement("canvas");
@@ -43,7 +43,7 @@ function createBillboardPointCallback(
           pixelSize / 2,
           0,
           2 * Math.PI,
-          true
+          true,
         );
         context2D.closePath();
         context2D.fillStyle = "black";

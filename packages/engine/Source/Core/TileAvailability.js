@@ -48,7 +48,7 @@ TileAvailability.prototype.addAvailableTileRange = function (
   startX,
   startY,
   endX,
-  endY
+  endY,
 ) {
   const tilingScheme = this._tilingScheme;
 
@@ -76,7 +76,7 @@ TileAvailability.prototype.addAvailableTileRange = function (
     west,
     south,
     east,
-    north
+    north,
   );
 
   for (let i = 0; i < rootNodes.length; ++i) {
@@ -130,7 +130,7 @@ const eastScratch = new Rectangle();
  * @return {number} The best available level for the entire rectangle.
  */
 TileAvailability.prototype.computeBestAvailableLevelOverRectangle = function (
-  rectangle
+  rectangle,
 ) {
   const rectangles = rectanglesScratch;
   rectangles.length = 0;
@@ -143,8 +143,8 @@ TileAvailability.prototype.computeBestAvailableLevelOverRectangle = function (
         rectangle.south,
         rectangle.east,
         rectangle.north,
-        westScratch
-      )
+        westScratch,
+      ),
     );
     rectangles.push(
       Rectangle.fromRadians(
@@ -152,8 +152,8 @@ TileAvailability.prototype.computeBestAvailableLevelOverRectangle = function (
         rectangle.south,
         Math.PI,
         rectangle.north,
-        eastScratch
-      )
+        eastScratch,
+      ),
     );
   } else {
     rectangles.push(rectangle);
@@ -167,7 +167,7 @@ TileAvailability.prototype.computeBestAvailableLevelOverRectangle = function (
     updateCoverageWithNode(
       remainingToCoverByLevel,
       this._rootNodes[i],
-      rectangles
+      rectangles,
     );
   }
 
@@ -202,7 +202,7 @@ TileAvailability.prototype.isTileAvailable = function (level, x, y) {
     x,
     y,
     level,
-    rectangleScratch
+    rectangleScratch,
   );
   Rectangle.center(rectangle, cartographicScratch);
   return this.computeMaximumLevelAtPosition(cartographicScratch) >= level;
@@ -265,7 +265,7 @@ Object.defineProperties(QuadtreeNode.prototype, {
           this,
           this.level + 1,
           this.x * 2,
-          this.y * 2
+          this.y * 2,
         );
       }
       return this._nw;
@@ -280,7 +280,7 @@ Object.defineProperties(QuadtreeNode.prototype, {
           this,
           this.level + 1,
           this.x * 2 + 1,
-          this.y * 2
+          this.y * 2,
         );
       }
       return this._ne;
@@ -295,7 +295,7 @@ Object.defineProperties(QuadtreeNode.prototype, {
           this,
           this.level + 1,
           this.x * 2,
-          this.y * 2 + 1
+          this.y * 2 + 1,
         );
       }
       return this._sw;
@@ -310,7 +310,7 @@ Object.defineProperties(QuadtreeNode.prototype, {
           this,
           this.level + 1,
           this.x * 2 + 1,
-          this.y * 2 + 1
+          this.y * 2 + 1,
         );
       }
       return this._se;
@@ -359,7 +359,7 @@ function putRectangleInQuadtree(maxDepth, node, rectangle) {
     let index = binarySearch(
       node.rectangles,
       rectangle.level,
-      rectangleLevelComparator
+      rectangleLevelComparator,
     );
     if (index < 0) {
       index = ~index;
@@ -408,25 +408,25 @@ function findMaxLevelFromNode(stopNode, node, position) {
       if (nw) {
         maxLevel = Math.max(
           maxLevel,
-          findMaxLevelFromNode(node, node._nw, position)
+          findMaxLevelFromNode(node, node._nw, position),
         );
       }
       if (ne) {
         maxLevel = Math.max(
           maxLevel,
-          findMaxLevelFromNode(node, node._ne, position)
+          findMaxLevelFromNode(node, node._ne, position),
         );
       }
       if (sw) {
         maxLevel = Math.max(
           maxLevel,
-          findMaxLevelFromNode(node, node._sw, position)
+          findMaxLevelFromNode(node, node._sw, position),
         );
       }
       if (se) {
         maxLevel = Math.max(
           maxLevel,
-          findMaxLevelFromNode(node, node._se, position)
+          findMaxLevelFromNode(node, node._se, position),
         );
       }
       break;
@@ -468,7 +468,7 @@ function findMaxLevelFromNode(stopNode, node, position) {
 function updateCoverageWithNode(
   remainingToCoverByLevel,
   node,
-  rectanglesToCover
+  rectanglesToCover,
 ) {
   if (!node) {
     return;
@@ -496,7 +496,7 @@ function updateCoverageWithNode(
 
     remainingToCoverByLevel[rectangle.level] = subtractRectangle(
       remainingToCoverByLevel[rectangle.level],
-      rectangle
+      rectangle,
     );
   }
 
@@ -522,8 +522,8 @@ function subtractRectangle(rectangleList, rectangleToSubtract) {
             rectangle.west,
             rectangle.south,
             rectangleToSubtract.west,
-            rectangle.north
-          )
+            rectangle.north,
+          ),
         );
       }
       if (rectangle.east > rectangleToSubtract.east) {
@@ -532,8 +532,8 @@ function subtractRectangle(rectangleList, rectangleToSubtract) {
             rectangleToSubtract.east,
             rectangle.south,
             rectangle.east,
-            rectangle.north
-          )
+            rectangle.north,
+          ),
         );
       }
       if (rectangle.south < rectangleToSubtract.south) {
@@ -542,8 +542,8 @@ function subtractRectangle(rectangleList, rectangleToSubtract) {
             Math.max(rectangleToSubtract.west, rectangle.west),
             rectangle.south,
             Math.min(rectangleToSubtract.east, rectangle.east),
-            rectangleToSubtract.south
-          )
+            rectangleToSubtract.south,
+          ),
         );
       }
       if (rectangle.north > rectangleToSubtract.north) {
@@ -552,8 +552,8 @@ function subtractRectangle(rectangleList, rectangleToSubtract) {
             Math.max(rectangleToSubtract.west, rectangle.west),
             rectangleToSubtract.north,
             Math.min(rectangleToSubtract.east, rectangle.east),
-            rectangle.north
-          )
+            rectangle.north,
+          ),
         );
       }
     }

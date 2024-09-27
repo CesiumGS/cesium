@@ -14,7 +14,7 @@ const discardRegex = /\bdiscard\b/;
 function getDepthOnlyShaderProgram(context, shaderProgram) {
   const cachedShader = context.shaderCache.getDerivedShaderProgram(
     shaderProgram,
-    "depthOnly"
+    "depthOnly",
   );
   if (defined(cachedShader)) {
     return cachedShader;
@@ -62,7 +62,7 @@ function getDepthOnlyShaderProgram(context, shaderProgram) {
       vertexShaderSource: shaderProgram.vertexShaderSource,
       fragmentShaderSource: fs,
       attributeLocations: shaderProgram._attributeLocations,
-    }
+    },
   );
 }
 
@@ -93,7 +93,7 @@ DerivedCommand.createDepthOnlyDerivedCommand = function (
   scene,
   command,
   context,
-  result
+  result,
 ) {
   // For a depth only pass, we bind a framebuffer with only a depth attachment (no color attachments),
   // do not write color, and write depth. If the fragment shader doesn't modify the fragment depth
@@ -109,17 +109,17 @@ DerivedCommand.createDepthOnlyDerivedCommand = function (
 
   result.depthOnlyCommand = DrawCommand.shallowClone(
     command,
-    result.depthOnlyCommand
+    result.depthOnlyCommand,
   );
 
   if (!defined(shader) || result.shaderProgramId !== command.shaderProgram.id) {
     result.depthOnlyCommand.shaderProgram = getDepthOnlyShaderProgram(
       context,
-      command.shaderProgram
+      command.shaderProgram,
     );
     result.depthOnlyCommand.renderState = getDepthOnlyRenderState(
       scene,
-      command.renderState
+      command.renderState,
     );
     result.shaderProgramId = command.shaderProgram.id;
   } else {
@@ -143,7 +143,7 @@ function getLogDepthShaderProgram(context, shaderProgram) {
 
   const cachedShader = context.shaderCache.getDerivedShaderProgram(
     shaderProgram,
-    "logDepth"
+    "logDepth",
   );
   if (defined(cachedShader)) {
     return cachedShader;
@@ -221,7 +221,7 @@ void main()
       vertexShaderSource: vs,
       fragmentShaderSource: fs,
       attributeLocations: attributeLocations,
-    }
+    },
   );
 }
 
@@ -237,7 +237,7 @@ DerivedCommand.createLogDepthCommand = function (command, context, result) {
   if (!defined(shader) || result.shaderProgramId !== command.shaderProgram.id) {
     result.command.shaderProgram = getLogDepthShaderProgram(
       context,
-      command.shaderProgram
+      command.shaderProgram,
     );
     result.shaderProgramId = command.shaderProgram.id;
   } else {
@@ -250,7 +250,7 @@ DerivedCommand.createLogDepthCommand = function (command, context, result) {
 function getPickShaderProgram(context, shaderProgram, pickId) {
   const cachedShader = context.shaderCache.getDerivedShaderProgram(
     shaderProgram,
-    "pick"
+    "pick",
   );
   if (defined(cachedShader)) {
     return cachedShader;
@@ -313,7 +313,7 @@ DerivedCommand.createPickDerivedCommand = function (
   scene,
   command,
   context,
-  result
+  result,
 ) {
   if (!defined(result)) {
     result = {};
@@ -328,11 +328,11 @@ DerivedCommand.createPickDerivedCommand = function (
     result.pickCommand.shaderProgram = getPickShaderProgram(
       context,
       command.shaderProgram,
-      command.pickId
+      command.pickId,
     );
     result.pickCommand.renderState = getPickRenderState(
       scene,
-      command.renderState
+      command.renderState,
     );
     result.shaderProgramId = command.shaderProgram.id;
   } else {
@@ -346,7 +346,7 @@ DerivedCommand.createPickDerivedCommand = function (
 function getHdrShaderProgram(context, shaderProgram) {
   const cachedShader = context.shaderCache.getDerivedShaderProgram(
     shaderProgram,
-    "HDR"
+    "HDR",
   );
   if (defined(cachedShader)) {
     return cachedShader;
@@ -380,7 +380,7 @@ DerivedCommand.createHdrCommand = function (command, context, result) {
   if (!defined(shader) || result.shaderProgramId !== command.shaderProgram.id) {
     result.command.shaderProgram = getHdrShaderProgram(
       context,
-      command.shaderProgram
+      command.shaderProgram,
     );
     result.shaderProgramId = command.shaderProgram.id;
   } else {

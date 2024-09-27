@@ -661,7 +661,7 @@ PostProcessStageLibrary.createFXAAStage = function () {
  * @private
  */
 PostProcessStageLibrary.createAcesTonemappingStage = function (
-  useAutoExposure
+  useAutoExposure,
 ) {
   let fs = useAutoExposure ? "#define AUTO_EXPOSURE\n" : "";
   fs += AcesTonemapping;
@@ -682,7 +682,7 @@ PostProcessStageLibrary.createAcesTonemappingStage = function (
  * @private
  */
 PostProcessStageLibrary.createFilmicTonemappingStage = function (
-  useAutoExposure
+  useAutoExposure,
 ) {
   let fs = useAutoExposure ? "#define AUTO_EXPOSURE\n" : "";
   fs += FilmicTonemapping;
@@ -703,7 +703,7 @@ PostProcessStageLibrary.createFilmicTonemappingStage = function (
  * @private
  */
 PostProcessStageLibrary.createPbrNeutralTonemappingStage = function (
-  useAutoExposure
+  useAutoExposure,
 ) {
   let fs = useAutoExposure ? "#define AUTO_EXPOSURE\n" : "";
   fs += PbrNeutralTonemapping;
@@ -724,7 +724,7 @@ PostProcessStageLibrary.createPbrNeutralTonemappingStage = function (
  * @private
  */
 PostProcessStageLibrary.createReinhardTonemappingStage = function (
-  useAutoExposure
+  useAutoExposure,
 ) {
   let fs = useAutoExposure ? "#define AUTO_EXPOSURE\n" : "";
   fs += ReinhardTonemapping;
@@ -745,7 +745,7 @@ PostProcessStageLibrary.createReinhardTonemappingStage = function (
  * @private
  */
 PostProcessStageLibrary.createModifiedReinhardTonemappingStage = function (
-  useAutoExposure
+  useAutoExposure,
 ) {
   let fs = useAutoExposure ? "#define AUTO_EXPOSURE\n" : "";
   fs += ModifiedReinhardTonemapping;

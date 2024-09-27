@@ -64,7 +64,7 @@ describe("Core/EllipseOutlineGeometry", function () {
         granularity: 0.1,
         semiMajorAxis: 1.0,
         semiMinorAxis: 1.0,
-      })
+      }),
     );
 
     expect(m.attributes.position.values.length).toEqual(8 * 3);
@@ -81,7 +81,7 @@ describe("Core/EllipseOutlineGeometry", function () {
         semiMajorAxis: 1.0,
         semiMinorAxis: 1.0,
         extrudedHeight: 5.0,
-      })
+      }),
     );
 
     expect(m.attributes.position.values.length).toEqual(16 * 3); // 8 top  + 8 bottom
@@ -97,7 +97,7 @@ describe("Core/EllipseOutlineGeometry", function () {
         semiMajorAxis: 1.0,
         semiMinorAxis: 1.0,
         offsetAttribute: GeometryOffsetAttribute.TOP,
-      })
+      }),
     );
 
     const numVertices = 8;
@@ -119,7 +119,7 @@ describe("Core/EllipseOutlineGeometry", function () {
         semiMinorAxis: 1.0,
         extrudedHeight: 5.0,
         offsetAttribute: GeometryOffsetAttribute.TOP,
-      })
+      }),
     );
 
     const numVertices = 16;
@@ -141,7 +141,7 @@ describe("Core/EllipseOutlineGeometry", function () {
         semiMinorAxis: 1.0,
         extrudedHeight: 5.0,
         offsetAttribute: GeometryOffsetAttribute.ALL,
-      })
+      }),
     );
 
     const numVertices = 16;
@@ -163,7 +163,7 @@ describe("Core/EllipseOutlineGeometry", function () {
         semiMinorAxis: 1.0,
         extrudedHeight: 5.0,
         numberOfVerticalLines: 0,
-      })
+      }),
     );
 
     expect(m.attributes.position.values.length).toEqual(16 * 3);
@@ -236,7 +236,7 @@ describe("Core/EllipseOutlineGeometry", function () {
     EllipseOutlineGeometry,
     packableInstance,
     packedInstance,
-    "extruded"
+    "extruded",
   );
 
   //Because extrudedHeight is optional and has to be taken into account when packing, we have a second test without it.
@@ -270,6 +270,6 @@ describe("Core/EllipseOutlineGeometry", function () {
     EllipseOutlineGeometry,
     packableInstance,
     packedInstance,
-    "at height"
+    "at height",
   );
 });

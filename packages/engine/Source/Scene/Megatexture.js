@@ -34,7 +34,7 @@ function Megatexture(
   dimensions,
   channelCount,
   componentType,
-  textureMemoryByteLength
+  textureMemoryByteLength,
 ) {
   // TODO there are a lot of texture packing rules, see https://github.com/CesiumGS/cesium/issues/9572
   // Unsigned short textures not allowed in webgl 1, so treat as float
@@ -76,18 +76,17 @@ function Megatexture(
   const defaultTextureMemoryByteLength = 128 * 1024 * 1024;
   textureMemoryByteLength = Math.min(
     defaultValue(textureMemoryByteLength, defaultTextureMemoryByteLength),
-    maximumTextureMemoryByteLength
+    maximumTextureMemoryByteLength,
   );
   const maximumTextureDimensionContext = ContextLimits.maximumTextureSize;
-  const componentTypeByteLength = MetadataComponentType.getSizeInBytes(
-    componentType
-  );
+  const componentTypeByteLength =
+    MetadataComponentType.getSizeInBytes(componentType);
   const texelCount = Math.floor(
-    textureMemoryByteLength / (channelCount * componentTypeByteLength)
+    textureMemoryByteLength / (channelCount * componentTypeByteLength),
   );
   const textureDimension = Math.min(
     maximumTextureDimensionContext,
-    CesiumMath.previousPowerOfTwo(Math.floor(Math.sqrt(texelCount)))
+    CesiumMath.previousPowerOfTwo(Math.floor(Math.sqrt(texelCount))),
   );
 
   const sliceCountPerRegionX = Math.ceil(Math.sqrt(dimensions.x));
@@ -95,10 +94,10 @@ function Megatexture(
   const voxelCountPerRegionX = sliceCountPerRegionX * dimensions.x;
   const voxelCountPerRegionY = sliceCountPerRegionY * dimensions.y;
   const regionCountPerMegatextureX = Math.floor(
-    textureDimension / voxelCountPerRegionX
+    textureDimension / voxelCountPerRegionX,
   );
   const regionCountPerMegatextureY = Math.floor(
-    textureDimension / voxelCountPerRegionY
+    textureDimension / voxelCountPerRegionY,
   );
 
   if (regionCountPerMegatextureX === 0 || regionCountPerMegatextureY === 0) {
@@ -136,7 +135,7 @@ function Megatexture(
    */
   this.regionCountPerMegatexture = new Cartesian2(
     regionCountPerMegatextureX,
-    regionCountPerMegatextureY
+    regionCountPerMegatextureY,
   );
 
   /**
@@ -145,7 +144,7 @@ function Megatexture(
    */
   this.voxelCountPerRegion = new Cartesian2(
     voxelCountPerRegionX,
-    voxelCountPerRegionY
+    voxelCountPerRegionY,
   );
 
   /**
@@ -154,7 +153,7 @@ function Megatexture(
    */
   this.sliceCountPerRegion = new Cartesian2(
     sliceCountPerRegionX,
-    sliceCountPerRegionY
+    sliceCountPerRegionY,
   );
 
   /**
@@ -163,7 +162,7 @@ function Megatexture(
    */
   this.voxelSizeUv = new Cartesian2(
     1.0 / textureDimension,
-    1.0 / textureDimension
+    1.0 / textureDimension,
   );
 
   /**
@@ -172,7 +171,7 @@ function Megatexture(
    */
   this.sliceSizeUv = new Cartesian2(
     dimensions.x / textureDimension,
-    dimensions.y / textureDimension
+    dimensions.y / textureDimension,
   );
 
   /**
@@ -181,7 +180,7 @@ function Megatexture(
    */
   this.regionSizeUv = new Cartesian2(
     voxelCountPerRegionX / textureDimension,
-    voxelCountPerRegionY / textureDimension
+    voxelCountPerRegionY / textureDimension,
   );
 
   /**
@@ -203,16 +202,15 @@ function Megatexture(
     }),
   });
 
-  const componentDatatype = MetadataComponentType.toComponentDatatype(
-    componentType
-  );
+  const componentDatatype =
+    MetadataComponentType.toComponentDatatype(componentType);
 
   /**
    * @type {Array}
    */
   this.tileVoxelDataTemp = ComponentDatatype.createTypedArray(
     componentDatatype,
-    voxelCountPerRegionX * voxelCountPerRegionY * channelCount
+    voxelCountPerRegionX * voxelCountPerRegionY * channelCount,
   );
 
   /**
@@ -351,7 +349,7 @@ Megatexture.getApproximateTextureMemoryByteLength = function (
   tileCount,
   dimensions,
   channelCount,
-  componentType
+  componentType,
 ) {
   // TODO there's a lot of code duplicate with Megatexture constructor
 
@@ -360,9 +358,8 @@ Megatexture.getApproximateTextureMemoryByteLength = function (
     componentType = MetadataComponentType.FLOAT32;
   }
 
-  const datatypeSizeInBytes = MetadataComponentType.getSizeInBytes(
-    componentType
-  );
+  const datatypeSizeInBytes =
+    MetadataComponentType.getSizeInBytes(componentType);
   const voxelCountTotal =
     tileCount * dimensions.x * dimensions.y * dimensions.z;
 
@@ -374,7 +371,7 @@ Megatexture.getApproximateTextureMemoryByteLength = function (
   // Find the power of two that can fit all tile data, accounting for slices.
   // There's probably a non-iterative solution for this, but this is good enough for now.
   let textureDimension = CesiumMath.previousPowerOfTwo(
-    Math.floor(Math.sqrt(voxelCountTotal))
+    Math.floor(Math.sqrt(voxelCountTotal)),
   );
   for (;;) {
     const regionCountX = Math.floor(textureDimension / voxelCountPerRegionX);

@@ -123,18 +123,18 @@ PolylineOutlineMaterialProperty.prototype.getValue = function (time, result) {
     this._color,
     time,
     defaultColor,
-    result.color
+    result.color,
   );
   result.outlineColor = Property.getValueOrClonedDefault(
     this._outlineColor,
     time,
     defaultOutlineColor,
-    result.outlineColor
+    result.outlineColor,
   );
   result.outlineWidth = Property.getValueOrDefault(
     this._outlineWidth,
     time,
-    defaultOutlineWidth
+    defaultOutlineWidth,
   );
   return result;
 };

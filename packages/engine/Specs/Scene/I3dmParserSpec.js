@@ -112,5 +112,5 @@ describe(
       expect(getStringFromTypedArray(results.gltf)).toEqual(gltfUri);
     });
   },
-  "WebGL"
+  "WebGL",
 );

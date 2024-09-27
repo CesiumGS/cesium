@@ -14,7 +14,7 @@ function attachTexture(framebuffer, attachment, texture) {
     attachment,
     texture._target,
     texture._texture,
-    0
+    0,
   );
 }
 
@@ -24,7 +24,7 @@ function attachRenderbuffer(framebuffer, attachment, renderbuffer) {
     gl.FRAMEBUFFER,
     attachment,
     gl.RENDERBUFFER,
-    renderbuffer._getRenderbuffer()
+    renderbuffer._getRenderbuffer(),
   );
 }
 
@@ -123,12 +123,12 @@ function Framebuffer(options) {
   //>>includeStart('debug', pragmas.debug);
   if (defined(options.colorTextures) && defined(options.colorRenderbuffers)) {
     throw new DeveloperError(
-      "Cannot have both color texture and color renderbuffer attachments."
+      "Cannot have both color texture and color renderbuffer attachments.",
     );
   }
   if (defined(options.depthTexture) && defined(options.depthRenderbuffer)) {
     throw new DeveloperError(
-      "Cannot have both a depth texture and depth renderbuffer attachment."
+      "Cannot have both a depth texture and depth renderbuffer attachment.",
     );
   }
   if (
@@ -136,7 +136,7 @@ function Framebuffer(options) {
     defined(options.depthStencilRenderbuffer)
   ) {
     throw new DeveloperError(
-      "Cannot have both a depth-stencil texture and depth-stencil renderbuffer attachment."
+      "Cannot have both a depth-stencil texture and depth-stencil renderbuffer attachment.",
     );
   }
 
@@ -148,17 +148,17 @@ function Framebuffer(options) {
     defined(options.depthStencilRenderbuffer);
   if (depthAttachment && depthStencilAttachment) {
     throw new DeveloperError(
-      "Cannot have both a depth and depth-stencil attachment."
+      "Cannot have both a depth and depth-stencil attachment.",
     );
   }
   if (defined(options.stencilRenderbuffer) && depthStencilAttachment) {
     throw new DeveloperError(
-      "Cannot have both a stencil and depth-stencil attachment."
+      "Cannot have both a stencil and depth-stencil attachment.",
     );
   }
   if (depthAttachment && defined(options.stencilRenderbuffer)) {
     throw new DeveloperError(
-      "Cannot have both a depth and stencil attachment."
+      "Cannot have both a depth and stencil attachment.",
     );
   }
   //>>includeEnd('debug');
@@ -167,13 +167,15 @@ function Framebuffer(options) {
 
   if (defined(options.colorTextures)) {
     const textures = options.colorTextures;
-    const length = (this._colorTextures.length = this._activeColorAttachments.length =
-      textures.length);
+    const length =
+      (this._colorTextures.length =
+      this._activeColorAttachments.length =
+        textures.length);
 
     //>>includeStart('debug', pragmas.debug);
     if (length > maximumColorAttachments) {
       throw new DeveloperError(
-        "The number of color attachments exceeds the number supported."
+        "The number of color attachments exceeds the number supported.",
       );
     }
     //>>includeEnd('debug');
@@ -184,7 +186,7 @@ function Framebuffer(options) {
       //>>includeStart('debug', pragmas.debug);
       if (!PixelFormat.isColorFormat(texture.pixelFormat)) {
         throw new DeveloperError(
-          "The color-texture pixel-format must be a color format."
+          "The color-texture pixel-format must be a color format.",
         );
       }
       if (
@@ -192,7 +194,7 @@ function Framebuffer(options) {
         !context.colorBufferFloat
       ) {
         throw new DeveloperError(
-          "The color texture pixel datatype is FLOAT and the WebGL implementation does not support the EXT_color_buffer_float or WEBGL_color_buffer_float extensions. See Context.colorBufferFloat."
+          "The color texture pixel datatype is FLOAT and the WebGL implementation does not support the EXT_color_buffer_float or WEBGL_color_buffer_float extensions. See Context.colorBufferFloat.",
         );
       }
       if (
@@ -200,7 +202,7 @@ function Framebuffer(options) {
         !context.colorBufferHalfFloat
       ) {
         throw new DeveloperError(
-          "The color texture pixel datatype is HALF_FLOAT and the WebGL implementation does not support the EXT_color_buffer_half_float extension. See Context.colorBufferHalfFloat."
+          "The color texture pixel datatype is HALF_FLOAT and the WebGL implementation does not support the EXT_color_buffer_half_float extension. See Context.colorBufferHalfFloat.",
         );
       }
       //>>includeEnd('debug');
@@ -214,13 +216,15 @@ function Framebuffer(options) {
 
   if (defined(options.colorRenderbuffers)) {
     const renderbuffers = options.colorRenderbuffers;
-    const length = (this._colorRenderbuffers.length = this._activeColorAttachments.length =
-      renderbuffers.length);
+    const length =
+      (this._colorRenderbuffers.length =
+      this._activeColorAttachments.length =
+        renderbuffers.length);
 
     //>>includeStart('debug', pragmas.debug);
     if (length > maximumColorAttachments) {
       throw new DeveloperError(
-        "The number of color attachments exceeds the number supported."
+        "The number of color attachments exceeds the number supported.",
       );
     }
     //>>includeEnd('debug');
@@ -240,7 +244,7 @@ function Framebuffer(options) {
     //>>includeStart('debug', pragmas.debug);
     if (texture.pixelFormat !== PixelFormat.DEPTH_COMPONENT) {
       throw new DeveloperError(
-        "The depth-texture pixel-format must be DEPTH_COMPONENT."
+        "The depth-texture pixel-format must be DEPTH_COMPONENT.",
       );
     }
     //>>includeEnd('debug');
@@ -267,7 +271,7 @@ function Framebuffer(options) {
     //>>includeStart('debug', pragmas.debug);
     if (texture.pixelFormat !== PixelFormat.DEPTH_STENCIL) {
       throw new DeveloperError(
-        "The depth-stencil pixel-format must be DEPTH_STENCIL."
+        "The depth-stencil pixel-format must be DEPTH_STENCIL.",
       );
     }
     //>>includeEnd('debug');
@@ -378,7 +382,7 @@ Framebuffer.prototype.getColorTexture = function (index) {
   //>>includeStart('debug', pragmas.debug);
   if (!defined(index) || index < 0 || index >= this._colorTextures.length) {
     throw new DeveloperError(
-      "index is required, must be greater than or equal to zero and must be less than the number of color attachments."
+      "index is required, must be greater than or equal to zero and must be less than the number of color attachments.",
     );
   }
   //>>includeEnd('debug');
@@ -394,7 +398,7 @@ Framebuffer.prototype.getColorRenderbuffer = function (index) {
     index >= this._colorRenderbuffers.length
   ) {
     throw new DeveloperError(
-      "index is required, must be greater than or equal to zero and must be less than the number of color attachments."
+      "index is required, must be greater than or equal to zero and must be less than the number of color attachments.",
     );
   }
   //>>includeEnd('debug');

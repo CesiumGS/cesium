@@ -55,7 +55,7 @@ function Context(canvas, options) {
   webglOptions.stencil = defaultValue(webglOptions.stencil, true); // WebGL default is false
   webglOptions.powerPreference = defaultValue(
     webglOptions.powerPreference,
-    "high-performance"
+    "high-performance",
   ); // WebGL default is "default"
 
   const glContext = defined(getWebGLStub)
@@ -87,32 +87,32 @@ function Context(canvas, options) {
   this._stencilBits = gl.getParameter(gl.STENCIL_BITS);
 
   ContextLimits._maximumCombinedTextureImageUnits = gl.getParameter(
-    gl.MAX_COMBINED_TEXTURE_IMAGE_UNITS
+    gl.MAX_COMBINED_TEXTURE_IMAGE_UNITS,
   ); // min: 8
   ContextLimits._maximumCubeMapSize = gl.getParameter(
-    gl.MAX_CUBE_MAP_TEXTURE_SIZE
+    gl.MAX_CUBE_MAP_TEXTURE_SIZE,
   ); // min: 16
   ContextLimits._maximumFragmentUniformVectors = gl.getParameter(
-    gl.MAX_FRAGMENT_UNIFORM_VECTORS
+    gl.MAX_FRAGMENT_UNIFORM_VECTORS,
   ); // min: 16
   ContextLimits._maximumTextureImageUnits = gl.getParameter(
-    gl.MAX_TEXTURE_IMAGE_UNITS
+    gl.MAX_TEXTURE_IMAGE_UNITS,
   ); // min: 8
   ContextLimits._maximumRenderbufferSize = gl.getParameter(
-    gl.MAX_RENDERBUFFER_SIZE
+    gl.MAX_RENDERBUFFER_SIZE,
   ); // min: 1
   ContextLimits._maximumTextureSize = gl.getParameter(gl.MAX_TEXTURE_SIZE); // min: 64
   ContextLimits._maximumVaryingVectors = gl.getParameter(
-    gl.MAX_VARYING_VECTORS
+    gl.MAX_VARYING_VECTORS,
   ); // min: 8
   ContextLimits._maximumVertexAttributes = gl.getParameter(
-    gl.MAX_VERTEX_ATTRIBS
+    gl.MAX_VERTEX_ATTRIBS,
   ); // min: 8
   ContextLimits._maximumVertexTextureImageUnits = gl.getParameter(
-    gl.MAX_VERTEX_TEXTURE_IMAGE_UNITS
+    gl.MAX_VERTEX_TEXTURE_IMAGE_UNITS,
   ); // min: 0
   ContextLimits._maximumVertexUniformVectors = gl.getParameter(
-    gl.MAX_VERTEX_UNIFORM_VECTORS
+    gl.MAX_VERTEX_UNIFORM_VECTORS,
   ); // min: 128
 
   ContextLimits._maximumSamples = this._webgl2
@@ -133,7 +133,7 @@ function Context(canvas, options) {
 
   const highpFloat = gl.getShaderPrecisionFormat(
     gl.FRAGMENT_SHADER,
-    gl.HIGH_FLOAT
+    gl.HIGH_FLOAT,
   );
   ContextLimits._highpFloatSupported = highpFloat.precision !== 0;
   const highpInt = gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.HIGH_INT);
@@ -193,7 +193,7 @@ function Context(canvas, options) {
     this._astc,
     this._etc,
     this._etc1,
-    this._bc7
+    this._bc7,
   );
 
   const textureFilterAnisotropic = allowTextureFilterAnisotropic
@@ -204,7 +204,7 @@ function Context(canvas, options) {
     : undefined;
   this._textureFilterAnisotropic = textureFilterAnisotropic;
   ContextLimits._maximumTextureFilterAnisotropy = defined(
-    textureFilterAnisotropic
+    textureFilterAnisotropic,
   )
     ? gl.getParameter(textureFilterAnisotropic.MAX_TEXTURE_MAX_ANISOTROPY_EXT)
     : 1.0;
@@ -241,7 +241,7 @@ function Context(canvas, options) {
       count,
       type,
       offset,
-      instanceCount
+      instanceCount,
     ) {
       gl.drawElementsInstanced(mode, count, type, offset, instanceCount);
     };
@@ -276,14 +276,14 @@ function Context(canvas, options) {
         count,
         type,
         offset,
-        instanceCount
+        instanceCount,
       ) {
         instancedArrays.drawElementsInstancedANGLE(
           mode,
           count,
           type,
           offset,
-          instanceCount
+          instanceCount,
         );
       };
       glDrawArraysInstanced = function (mode, first, count, instanceCount) {
@@ -291,7 +291,7 @@ function Context(canvas, options) {
           mode,
           first,
           count,
-          instanceCount
+          instanceCount,
         );
       };
       glVertexAttribDivisor = function (index, divisor) {
@@ -415,7 +415,7 @@ function Context(canvas, options) {
 function getWebGLContext(canvas, webglOptions, requestWebgl1) {
   if (typeof WebGLRenderingContext === "undefined") {
     throw new RuntimeError(
-      "The browser does not support WebGL.  Visit http://get.webgl.org."
+      "The browser does not support WebGL.  Visit http://get.webgl.org.",
     );
   }
 
@@ -430,7 +430,7 @@ function getWebGLContext(canvas, webglOptions, requestWebgl1) {
 
   if (!defined(glContext)) {
     throw new RuntimeError(
-      "The browser supports WebGL, but initialization failed."
+      "The browser supports WebGL, but initialization failed.",
     );
   }
 
@@ -504,7 +504,7 @@ function throwOnError(gl, glFunc, glFuncArguments) {
   const error = gl.getError();
   if (error !== gl.NO_ERROR) {
     throw new RuntimeError(
-      createErrorMessage(gl, glFunc, glFuncArguments, error)
+      createErrorMessage(gl, glFunc, glFuncArguments, error),
     );
   }
 }
@@ -552,7 +552,7 @@ function wrapGL(gl, logFunction) {
       Object.defineProperty(
         glWrapper,
         propertyName,
-        makeGetterSetter(gl, propertyName, logFunction)
+        makeGetterSetter(gl, propertyName, logFunction),
       );
     }
   }
@@ -1004,7 +1004,7 @@ Object.defineProperties(Context.prototype, {
       this._throwOnWebGLError = value;
       this._gl = wrapGL(
         this._originalGLContext,
-        value ? throwOnError : undefined
+        value ? throwOnError : undefined,
       );
     },
   },
@@ -1206,7 +1206,7 @@ function applyRenderState(context, renderState, passState, clear) {
     renderState,
     previousPassState,
     passState,
-    clear
+    clear,
   );
 }
 
@@ -1281,7 +1281,7 @@ Context.prototype.clear = function (clearCommand, passState) {
   // The command's framebuffer takes presidence over the pass' framebuffer, e.g., for off-screen rendering.
   const framebuffer = defaultValue(
     clearCommand.framebuffer,
-    passState.framebuffer
+    passState.framebuffer,
   );
   bindFramebuffer(this, framebuffer);
 
@@ -1293,13 +1293,13 @@ function beginDraw(
   framebuffer,
   passState,
   shaderProgram,
-  renderState
+  renderState,
 ) {
   //>>includeStart('debug', pragmas.debug);
   if (defined(framebuffer) && renderState.depthTest) {
     if (renderState.depthTest.enabled && !framebuffer.hasDepthAttachment) {
       throw new DeveloperError(
-        "The depth test can not be enabled (drawCommand.renderState.depthTest.enabled) because the framebuffer (drawCommand.framebuffer) does not have a depth or depth-stencil renderbuffer."
+        "The depth test can not be enabled (drawCommand.renderState.depthTest.enabled) because the framebuffer (drawCommand.framebuffer) does not have a depth or depth-stencil renderbuffer.",
       );
     }
   }
@@ -1310,7 +1310,7 @@ function beginDraw(
   shaderProgram._bind();
   context._maxFrameTextureUnitIndex = Math.max(
     context._maxFrameTextureUnitIndex,
-    shaderProgram.maximumTextureUnitIndex
+    shaderProgram.maximumTextureUnitIndex,
   );
 }
 
@@ -1324,7 +1324,7 @@ function continueDraw(context, drawCommand, shaderProgram, uniformMap) {
   //>>includeStart('debug', pragmas.debug);
   if (!PrimitiveType.validate(primitiveType)) {
     throw new DeveloperError(
-      "drawCommand.primitiveType is required and must be valid."
+      "drawCommand.primitiveType is required and must be valid.",
     );
   }
 
@@ -1336,7 +1336,7 @@ function continueDraw(context, drawCommand, shaderProgram, uniformMap) {
   Check.typeOf.number.greaterThanOrEquals(
     "drawCommand.instanceCount",
     instanceCount,
-    0
+    0,
   );
   if (instanceCount > 0 && !context.instancedArrays) {
     throw new DeveloperError("Instanced arrays extension is not supported");
@@ -1347,7 +1347,7 @@ function continueDraw(context, drawCommand, shaderProgram, uniformMap) {
   shaderProgram._setUniforms(
     uniformMap,
     context._us,
-    context.validateShaderProgram
+    context.validateShaderProgram,
   );
 
   va._bind();
@@ -1365,7 +1365,7 @@ function continueDraw(context, drawCommand, shaderProgram, uniformMap) {
         primitiveType,
         count,
         indexBuffer.indexDatatype,
-        offset
+        offset,
       );
     } else {
       context.glDrawElementsInstanced(
@@ -1373,7 +1373,7 @@ function continueDraw(context, drawCommand, shaderProgram, uniformMap) {
         count,
         indexBuffer.indexDatatype,
         offset,
-        instanceCount
+        instanceCount,
       );
     }
   } else {
@@ -1389,7 +1389,7 @@ function continueDraw(context, drawCommand, shaderProgram, uniformMap) {
         primitiveType,
         offset,
         count,
-        instanceCount
+        instanceCount,
       );
     }
   }
@@ -1401,7 +1401,7 @@ Context.prototype.draw = function (
   drawCommand,
   passState,
   shaderProgram,
-  uniformMap
+  uniformMap,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("drawCommand", drawCommand);
@@ -1412,11 +1412,11 @@ Context.prototype.draw = function (
   // The command's framebuffer takes precedence over the pass' framebuffer, e.g., for off-screen rendering.
   const framebuffer = defaultValue(
     drawCommand._framebuffer,
-    passState.framebuffer
+    passState.framebuffer,
   );
   const renderState = defaultValue(
     drawCommand._renderState,
-    this._defaultRenderState
+    this._defaultRenderState,
   );
   shaderProgram = defaultValue(shaderProgram, drawCommand._shaderProgram);
   uniformMap = defaultValue(uniformMap, drawCommand._uniformMap);
@@ -1481,7 +1481,7 @@ Context.prototype.readPixels = function (readState) {
     PixelFormat.RGBA,
     pixelDatatype,
     width,
-    height
+    height,
   );
 
   bindFramebuffer(this, framebuffer);
@@ -1493,7 +1493,7 @@ Context.prototype.readPixels = function (readState) {
     height,
     PixelFormat.RGBA,
     PixelDatatype.toWebGLConstant(pixelDatatype, this),
-    pixels
+    pixels,
   );
 
   return pixels;
@@ -1544,7 +1544,7 @@ Context.prototype.getViewportQuadVertexArray = function () {
 
 Context.prototype.createViewportQuadCommand = function (
   fragmentShaderSource,
-  overrides
+  overrides,
 ) {
   overrides = defaultValue(overrides, defaultValue.EMPTY_OBJECT);
 

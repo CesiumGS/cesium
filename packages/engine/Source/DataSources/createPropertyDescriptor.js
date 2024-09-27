@@ -7,7 +7,7 @@ function createProperty(
   privateName,
   subscriptionName,
   configurable,
-  createPropertyCallback
+  createPropertyCallback,
 ) {
   return {
     configurable: configurable,
@@ -41,7 +41,7 @@ function createProperty(
           function () {
             this._definitionChanged.raiseEvent(this, name, value, value);
           },
-          this
+          this,
         );
       }
     },
@@ -66,7 +66,7 @@ function createPropertyDescriptor(name, configurable, createPropertyCallback) {
     `_${name.toString()}`,
     `_${name.toString()}Subscription`,
     defaultValue(configurable, false),
-    defaultValue(createPropertyCallback, createConstantProperty)
+    defaultValue(createPropertyCallback, createConstantProperty),
   );
 }
 export default createPropertyDescriptor;

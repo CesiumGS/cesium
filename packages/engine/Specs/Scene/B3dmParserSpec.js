@@ -74,7 +74,7 @@ describe(
           Cesium3DTilesTester.expectRenderTileset(scene, tileset);
           const batchTable = tileset.root.content.batchTable;
           expect(batchTable.featuresLength).toBe(10);
-        }
+        },
       );
     });
 
@@ -85,7 +85,7 @@ describe(
           Cesium3DTilesTester.expectRenderTileset(scene, tileset);
           const batchTable = tileset.root.content.batchTable;
           expect(batchTable.featuresLength).toBe(10);
-        }
+        },
       );
     });
 
@@ -94,9 +94,9 @@ describe(
         function (tileset) {
           expect(B3dmParser._deprecationWarning).toHaveBeenCalled();
           Cesium3DTilesTester.expectRenderTileset(scene, tileset);
-        }
+        },
       );
     });
   },
-  "WebGL"
+  "WebGL",
 );

@@ -74,7 +74,7 @@ describe(
           });
         }
         const depthColorAttribute = ColorGeometryInstanceAttribute.fromColor(
-          new Color(1.0, 0.0, 0.0, 1.0)
+          new Color(1.0, 0.0, 0.0, 1.0),
         );
         return new Primitive({
           geometryInstances: new GeometryInstance({
@@ -132,7 +132,7 @@ describe(
         reusableGlobePrimitive = createPrimitive(rectangle, Pass.GLOBE);
         reusableTilesetPrimitive = createPrimitive(
           rectangle,
-          Pass.CESIUM_3D_TILE
+          Pass.CESIUM_3D_TILE,
         );
       });
 
@@ -147,7 +147,7 @@ describe(
         globePrimitive = new MockPrimitive(reusableGlobePrimitive, Pass.GLOBE);
         tilesetPrimitive = new MockPrimitive(
           reusableTilesetPrimitive,
-          Pass.CESIUM_3D_TILE
+          Pass.CESIUM_3D_TILE,
         );
       });
 
@@ -232,7 +232,7 @@ describe(
         scene.primitives.add(globePrimitive);
 
         const center = ellipsoid.cartographicToCartesian(
-          Rectangle.center(rectangle)
+          Rectangle.center(rectangle),
         );
         polygons = scene.primitives.add(
           new Vector3DTilePolygons(
@@ -245,8 +245,8 @@ describe(
               batchTable: batchTable,
               batchIds: new Uint32Array([0]),
               isCartographic: true,
-            })
-          )
+            }),
+          ),
         );
         return loadPolygons(polygons).then(function () {
           scene.camera.setView({
@@ -283,7 +283,7 @@ describe(
         scene.primitives.add(globePrimitive);
 
         const center = ellipsoid.cartographicToCartesian(
-          Rectangle.center(rectangle)
+          Rectangle.center(rectangle),
         );
         polygons = scene.primitives.add(
           new Vector3DTilePolygons({
@@ -299,7 +299,7 @@ describe(
             batchTable: batchTable,
             batchIds: new Uint32Array([0, 1]),
             isCartographic: true,
-          })
+          }),
         );
         return loadPolygons(polygons).then(function () {
           scene.camera.setView({
@@ -347,7 +347,7 @@ describe(
         scene.primitives.add(globePrimitive);
 
         const center = ellipsoid.cartographicToCartesian(
-          Rectangle.center(rectangle)
+          Rectangle.center(rectangle),
         );
         polygons = scene.primitives.add(
           new Vector3DTilePolygons({
@@ -363,7 +363,7 @@ describe(
             batchTable: batchTable,
             batchIds: new Uint32Array([0, 1]),
             isCartographic: true,
-          })
+          }),
         );
         polygons.forceRebatch = true;
         return loadPolygons(polygons).then(function () {
@@ -412,7 +412,7 @@ describe(
         scene.primitives.add(globePrimitive);
 
         const center = ellipsoid.cartographicToCartesian(
-          Rectangle.center(rectangle)
+          Rectangle.center(rectangle),
         );
         polygons = scene.primitives.add(
           new Vector3DTilePolygons({
@@ -430,7 +430,7 @@ describe(
             batchTable: batchTable,
             batchIds: new Uint32Array([0, 1]),
             isCartographic: true,
-          })
+          }),
         );
         polygons.forceRebatch = true;
         return loadPolygons(polygons).then(function () {
@@ -463,7 +463,7 @@ describe(
         scene.primitives.add(tilesetPrimitive);
 
         const center = ellipsoid.cartographicToCartesian(
-          Rectangle.center(rectangle)
+          Rectangle.center(rectangle),
         );
         polygons = scene.primitives.add(
           new Vector3DTilePolygons(
@@ -476,8 +476,8 @@ describe(
               batchTable: batchTable,
               batchIds: new Uint32Array([0]),
               isCartographic: true,
-            })
-          )
+            }),
+          ),
         );
         return loadPolygons(polygons).then(function () {
           scene.camera.setView({
@@ -510,7 +510,7 @@ describe(
         scene.primitives.add(globePrimitive);
 
         const center = ellipsoid.cartographicToCartesian(
-          Rectangle.center(rectangle)
+          Rectangle.center(rectangle),
         );
         polygons = scene.primitives.add(
           new Vector3DTilePolygons(
@@ -523,8 +523,8 @@ describe(
               batchTable: batchTable,
               batchIds: new Uint32Array([0]),
               isCartographic: true,
-            })
-          )
+            }),
+          ),
         );
         polygons.debugWireframe = true;
         return loadPolygons(polygons).then(function () {
@@ -552,7 +552,7 @@ describe(
         scene.primitives.add(tilesetPrimitive);
 
         const center = ellipsoid.cartographicToCartesian(
-          Rectangle.center(rectangle)
+          Rectangle.center(rectangle),
         );
         polygons = scene.primitives.add(
           new Vector3DTilePolygons(
@@ -565,8 +565,8 @@ describe(
               batchTable: batchTable,
               batchIds: new Uint32Array([0]),
               isCartographic: true,
-            })
-          )
+            }),
+          ),
         );
         return loadPolygons(polygons).then(function () {
           scene.camera.setView({
@@ -611,7 +611,7 @@ describe(
         scene.primitives.add(globePrimitive);
 
         const center = ellipsoid.cartographicToCartesian(
-          Rectangle.center(rectangle)
+          Rectangle.center(rectangle),
         );
         polygons = scene.primitives.add(
           new Vector3DTilePolygons(
@@ -624,8 +624,8 @@ describe(
               batchTable: batchTable,
               batchIds: new Uint32Array([0]),
               isCartographic: true,
-            })
-          )
+            }),
+          ),
         );
         polygons.debugWireframe = true;
         return loadPolygons(polygons).then(function () {
@@ -659,5 +659,5 @@ describe(
       });
     }
   },
-  "WebGL"
+  "WebGL",
 );

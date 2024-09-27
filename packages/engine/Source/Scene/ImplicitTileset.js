@@ -73,7 +73,7 @@ function ImplicitTileset(baseResource, tileJson, metadataSchema) {
     !hasExtension(boundingVolume, "3DTILES_bounding_volume_cylinder")
   ) {
     throw new RuntimeError(
-      "Only box, region, 3DTILES_bounding_volume_S2, and 3DTILES_bounding_volume_cylinder are supported for implicit tiling"
+      "Only box, region, 3DTILES_bounding_volume_S2, and 3DTILES_bounding_volume_cylinder are supported for implicit tiling",
     );
   }
 
@@ -190,7 +190,7 @@ function ImplicitTileset(baseResource, tileJson, metadataSchema) {
    * @private
    */
   this.branchingFactor = ImplicitSubdivisionScheme.getBranchingFactor(
-    this.subdivisionScheme
+    this.subdivisionScheme,
   );
 
   /**

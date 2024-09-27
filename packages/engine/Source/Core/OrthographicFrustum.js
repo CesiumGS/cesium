@@ -132,7 +132,7 @@ function update(frustum) {
     !defined(frustum.far)
   ) {
     throw new DeveloperError(
-      "width, aspectRatio, near, or far parameters are not set."
+      "width, aspectRatio, near, or far parameters are not set.",
     );
   }
   //>>includeEnd('debug');
@@ -151,7 +151,7 @@ function update(frustum) {
     }
     if (frustum.near < 0 || frustum.near > frustum.far) {
       throw new DeveloperError(
-        "near must be greater than zero and less than far."
+        "near must be greater than zero and less than far.",
       );
     }
     //>>includeEnd('debug');
@@ -215,7 +215,7 @@ Object.defineProperties(OrthographicFrustum.prototype, {
 OrthographicFrustum.prototype.computeCullingVolume = function (
   position,
   direction,
-  up
+  up,
 ) {
   update(this);
   return this._offCenterFrustum.computeCullingVolume(position, direction, up);
@@ -245,7 +245,7 @@ OrthographicFrustum.prototype.getPixelDimensions = function (
   drawingBufferHeight,
   distance,
   pixelRatio,
-  result
+  result,
 ) {
   update(this);
   return this._offCenterFrustum.getPixelDimensions(
@@ -253,7 +253,7 @@ OrthographicFrustum.prototype.getPixelDimensions = function (
     drawingBufferHeight,
     distance,
     pixelRatio,
-    result
+    result,
   );
 };
 
@@ -319,7 +319,7 @@ OrthographicFrustum.prototype.equals = function (other) {
 OrthographicFrustum.prototype.equalsEpsilon = function (
   other,
   relativeEpsilon,
-  absoluteEpsilon
+  absoluteEpsilon,
 ) {
   if (!defined(other) || !(other instanceof OrthographicFrustum)) {
     return false;
@@ -333,18 +333,18 @@ OrthographicFrustum.prototype.equalsEpsilon = function (
       this.width,
       other.width,
       relativeEpsilon,
-      absoluteEpsilon
+      absoluteEpsilon,
     ) &&
     CesiumMath.equalsEpsilon(
       this.aspectRatio,
       other.aspectRatio,
       relativeEpsilon,
-      absoluteEpsilon
+      absoluteEpsilon,
     ) &&
     this._offCenterFrustum.equalsEpsilon(
       other._offCenterFrustum,
       relativeEpsilon,
-      absoluteEpsilon
+      absoluteEpsilon,
     )
   );
 };
