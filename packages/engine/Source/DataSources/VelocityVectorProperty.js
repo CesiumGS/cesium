@@ -85,7 +85,7 @@ Object.defineProperties(VelocityVectorProperty.prototype, {
             function () {
               this._definitionChanged.raiseEvent(this);
             },
-            this
+            this,
           );
         }
 
@@ -138,7 +138,7 @@ VelocityVectorProperty.prototype.getValue = function (time, result) {
 VelocityVectorProperty.prototype._getValue = function (
   time,
   velocityResult,
-  positionResult
+  positionResult,
 ) {
   if (!defined(time)) {
     time = JulianDate.now(timeNowScratch);
@@ -158,7 +158,7 @@ VelocityVectorProperty.prototype._getValue = function (
   let position1 = property.getValue(time, position1Scratch);
   let position2 = property.getValue(
     JulianDate.addSeconds(time, step, timeScratch),
-    position2Scratch
+    position2Scratch,
   );
 
   //If we don't have a position for now, return undefined.
@@ -171,7 +171,7 @@ VelocityVectorProperty.prototype._getValue = function (
     position2 = position1;
     position1 = property.getValue(
       JulianDate.addSeconds(time, -step, timeScratch),
-      position2Scratch
+      position2Scratch,
     );
 
     if (!defined(position1)) {

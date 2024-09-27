@@ -14,12 +14,8 @@ import createContext from "../../../../../Specs/createContext.js";
 
 describe("Scene/Model/ModelClippingPolygonsPipelineStage", function () {
   const positions = Cartesian3.fromRadiansArray([
-    -1.3194369277314022,
-    0.6988062530900625,
-    -1.31941,
-    0.69879,
-    -1.3193931220959367,
-    0.698743632490865,
+    -1.3194369277314022, 0.6988062530900625, -1.31941, 0.69879,
+    -1.3193931220959367, 0.698743632490865,
   ]);
   let polygon, clippingPolygons, context, model;
 
@@ -69,7 +65,7 @@ describe("Scene/Model/ModelClippingPolygonsPipelineStage", function () {
     ModelClippingPolygonsPipelineStage.process(
       renderResources,
       model,
-      mockFrameState
+      mockFrameState,
     );
 
     ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
@@ -132,7 +128,7 @@ describe("Scene/Model/ModelClippingPolygonsPipelineStage", function () {
     ModelClippingPolygonsPipelineStage.process(
       renderResources,
       model,
-      mockFrameState
+      mockFrameState,
     );
 
     ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [

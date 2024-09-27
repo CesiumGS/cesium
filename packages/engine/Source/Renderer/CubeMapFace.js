@@ -19,7 +19,7 @@ function CubeMapFace(
   size,
   preMultiplyAlpha,
   flipY,
-  initialized
+  initialized,
 ) {
   this._context = context;
   this._texture = texture;
@@ -99,12 +99,12 @@ CubeMapFace.prototype.copyFrom = function (options) {
   Check.typeOf.number.greaterThanOrEquals("yOffset", yOffset, 0);
   if (xOffset + source.width > this._size) {
     throw new DeveloperError(
-      "xOffset + options.source.width must be less than or equal to width."
+      "xOffset + options.source.width must be less than or equal to width.",
     );
   }
   if (yOffset + source.height > this._size) {
     throw new DeveloperError(
-      "yOffset + options.source.height must be less than or equal to height."
+      "yOffset + options.source.height must be less than or equal to height.",
     );
   }
   //>>includeEnd('debug');
@@ -133,7 +133,7 @@ CubeMapFace.prototype.copyFrom = function (options) {
     unpackAlignment = PixelFormat.alignmentInBytes(
       pixelFormat,
       pixelDatatype,
-      width
+      width,
     );
   }
   gl.pixelStorei(gl.UNPACK_ALIGNMENT, unpackAlignment);
@@ -143,7 +143,7 @@ CubeMapFace.prototype.copyFrom = function (options) {
   } else {
     gl.pixelStorei(
       gl.UNPACK_COLORSPACE_CONVERSION_WEBGL,
-      gl.BROWSER_DEFAULT_WEBGL
+      gl.BROWSER_DEFAULT_WEBGL,
     );
   }
 
@@ -161,7 +161,7 @@ CubeMapFace.prototype.copyFrom = function (options) {
             pixelFormat,
             pixelDatatype,
             size,
-            size
+            size,
           );
         }
         pixels = arrayBufferView;
@@ -180,7 +180,7 @@ CubeMapFace.prototype.copyFrom = function (options) {
         pixelFormat,
         pixelDatatype,
         size,
-        size
+        size,
       );
     }
     gl.texImage2D(
@@ -192,7 +192,7 @@ CubeMapFace.prototype.copyFrom = function (options) {
       0,
       pixelFormat,
       PixelDatatype.toWebGLConstant(pixelDatatype, this._context),
-      pixels
+      pixels,
     );
     this._initialized = true;
   }
@@ -208,7 +208,7 @@ CubeMapFace.prototype.copyFrom = function (options) {
           pixelFormat,
           pixelDatatype,
           width,
-          height
+          height,
         );
       }
       gl.texSubImage2D(
@@ -220,7 +220,7 @@ CubeMapFace.prototype.copyFrom = function (options) {
         height,
         pixelFormat,
         PixelDatatype.toWebGLConstant(pixelDatatype, this._context),
-        arrayBufferView
+        arrayBufferView,
       );
     } else {
       // Only valid for DOM-Element uploads
@@ -235,7 +235,7 @@ CubeMapFace.prototype.copyFrom = function (options) {
         yOffset,
         pixelFormat,
         PixelDatatype.toWebGLConstant(pixelDatatype, this._context),
-        source
+        source,
       );
     }
   }
@@ -274,7 +274,7 @@ CubeMapFace.prototype.copyFromFramebuffer = function (
   framebufferXOffset,
   framebufferYOffset,
   width,
-  height
+  height,
 ) {
   xOffset = defaultValue(xOffset, 0);
   yOffset = defaultValue(yOffset, 0);
@@ -289,31 +289,31 @@ CubeMapFace.prototype.copyFromFramebuffer = function (
   Check.typeOf.number.greaterThanOrEquals(
     "framebufferXOffset",
     framebufferXOffset,
-    0
+    0,
   );
   Check.typeOf.number.greaterThanOrEquals(
     "framebufferYOffset",
     framebufferYOffset,
-    0
+    0,
   );
   if (xOffset + width > this._size) {
     throw new DeveloperError(
-      "xOffset + source.width must be less than or equal to width."
+      "xOffset + source.width must be less than or equal to width.",
     );
   }
   if (yOffset + height > this._size) {
     throw new DeveloperError(
-      "yOffset + source.height must be less than or equal to height."
+      "yOffset + source.height must be less than or equal to height.",
     );
   }
   if (this._pixelDatatype === PixelDatatype.FLOAT) {
     throw new DeveloperError(
-      "Cannot call copyFromFramebuffer when the texture pixel data type is FLOAT."
+      "Cannot call copyFromFramebuffer when the texture pixel data type is FLOAT.",
     );
   }
   if (this._pixelDatatype === PixelDatatype.HALF_FLOAT) {
     throw new DeveloperError(
-      "Cannot call copyFromFramebuffer when the texture pixel data type is HALF_FLOAT."
+      "Cannot call copyFromFramebuffer when the texture pixel data type is HALF_FLOAT.",
     );
   }
   //>>includeEnd('debug');
@@ -331,7 +331,7 @@ CubeMapFace.prototype.copyFromFramebuffer = function (
     framebufferXOffset,
     framebufferYOffset,
     width,
-    height
+    height,
   );
   gl.bindTexture(target, null);
   this._initialized = true;

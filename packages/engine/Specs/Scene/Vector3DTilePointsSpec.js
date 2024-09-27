@@ -70,9 +70,8 @@ describe(
       // render until all labels have been updated
       return pollToPromise(function () {
         scene.renderForSpecs();
-        const backgroundBillboard = points._labelCollection._backgroundBillboardCollection.get(
-          0
-        );
+        const backgroundBillboard =
+          points._labelCollection._backgroundBillboardCollection.get(0);
         return (
           (!defined(backgroundBillboard) || backgroundBillboard.ready) &&
           points._labelCollection._labelsToUpdate.length === 0 &&
@@ -100,7 +99,7 @@ describe(
       rectangle,
       minimumHeight,
       maximumHeight,
-      positions
+      positions,
     ) {
       const length = positions.length;
       const buffer = new Uint16Array(length * 3);
@@ -145,7 +144,7 @@ describe(
         rectangle,
         minHeight,
         maxHeight,
-        cartoPositions
+        cartoPositions,
       );
 
       const batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
@@ -159,7 +158,7 @@ describe(
           rectangle: rectangle,
           minimumHeight: minHeight,
           maximumHeight: maxHeight,
-        })
+        }),
       );
       return loadPoints(points)
         .then(function () {
@@ -169,7 +168,7 @@ describe(
 
           scene.camera.lookAt(
             Cartesian3.fromDegrees(0.0, 0.0, 30.0),
-            new Cartesian3(0.0, 0.0, 50.0)
+            new Cartesian3(0.0, 0.0, 50.0),
           );
           return allPrimitivesReady(points);
         })
@@ -192,7 +191,7 @@ describe(
         rectangle,
         minHeight,
         maxHeight,
-        cartoPositions
+        cartoPositions,
       );
 
       const batchTable = new Cesium3DTileBatchTable(mockTileset, 5);
@@ -206,7 +205,7 @@ describe(
           rectangle: rectangle,
           minimumHeight: minHeight,
           maximumHeight: maxHeight,
-        })
+        }),
       );
       const style = new Cesium3DTileStyle({
         verticalOrigin: VerticalOrigin.BOTTOM,
@@ -225,7 +224,7 @@ describe(
         .then(function () {
           for (let i = 0; i < cartoPositions.length; ++i) {
             const position = ellipsoid.cartographicToCartesian(
-              cartoPositions[i]
+              cartoPositions[i],
             );
             scene.camera.lookAt(position, new Cartesian3(0.0, 0.0, 50.0));
             expect(scene).toRenderAndCall(function (rgba) {
@@ -246,7 +245,7 @@ describe(
         rectangle,
         minHeight,
         maxHeight,
-        cartoPositions
+        cartoPositions,
       );
 
       const batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
@@ -259,7 +258,7 @@ describe(
           rectangle: rectangle,
           minimumHeight: minHeight,
           maximumHeight: maxHeight,
-        })
+        }),
       );
       const features = [];
       const getFeature = mockTileset.getFeature;
@@ -267,7 +266,7 @@ describe(
         .then(function () {
           scene.camera.lookAt(
             Cartesian3.fromDegrees(0.0, 0.0, 10.0),
-            new Cartesian3(0.0, 0.0, 50.0)
+            new Cartesian3(0.0, 0.0, 50.0),
           );
 
           points.createFeatures(mockTileset, features);
@@ -305,7 +304,7 @@ describe(
         rectangle,
         minHeight,
         maxHeight,
-        cartoPositions
+        cartoPositions,
       );
 
       const mockTilesetClone = clone(mockTileset);
@@ -325,7 +324,7 @@ describe(
           rectangle: rectangle,
           minimumHeight: minHeight,
           maximumHeight: maxHeight,
-        })
+        }),
       );
 
       const style = new Cesium3DTileStyle({
@@ -369,41 +368,41 @@ describe(
             expect(feature.pointSize).toEqual(10.0);
             expect(feature.color).toEqual(new Color(1.0, 1.0, 0.0, 0.5));
             expect(feature.pointOutlineColor).toEqual(
-              new Color(1.0, 1.0, 0.0, 1.0)
+              new Color(1.0, 1.0, 0.0, 1.0),
             );
             expect(feature.pointOutlineWidth).toEqual(11.0 * i);
             expect(feature.labelColor).toEqual(new Color(1.0, 1.0, 0.0, 1.0));
             expect(feature.labelOutlineColor).toEqual(
-              new Color(1.0, 1.0, 0.0, 0.5)
+              new Color(1.0, 1.0, 0.0, 0.5),
             );
             expect(feature.labelOutlineWidth).toEqual(1.0);
             expect(feature.font).toEqual("30px sans-serif");
             expect(feature.labelStyle).toEqual(LabelStyle.FILL_AND_OUTLINE);
             expect(feature.labelText).toEqual("test");
             expect(feature.backgroundColor).toEqual(
-              new Color(1.0, 1.0, 0.0, 0.2)
+              new Color(1.0, 1.0, 0.0, 0.2),
             );
             expect(feature.backgroundPadding).toEqual(new Cartesian2(10, 11));
             expect(feature.backgroundEnabled).toEqual(true);
             expect(feature.scaleByDistance).toEqual(
-              new NearFarScalar(1.0e4, 1.0, 1.0e6, 0.0)
+              new NearFarScalar(1.0e4, 1.0, 1.0e6, 0.0),
             );
             expect(feature.translucencyByDistance).toEqual(
-              new NearFarScalar(1.0e4, 1.0, 1.0e6, 0.0)
+              new NearFarScalar(1.0e4, 1.0, 1.0e6, 0.0),
             );
             expect(feature.distanceDisplayCondition).toEqual(
-              new DistanceDisplayCondition(0.1, 1.0e6)
+              new DistanceDisplayCondition(0.1, 1.0e6),
             );
             expect(feature.heightOffset).toEqual(0.0);
             expect(feature.anchorLineEnabled).toEqual(true);
             expect(feature.anchorLineColor).toEqual(
-              new Color(1.0, 1.0, 0.0, 1.0)
+              new Color(1.0, 1.0, 0.0, 1.0),
             );
             expect(feature.disableDepthTestDistance).toEqual(1.0e6);
             expect(feature.horizontalOrigin).toEqual(HorizontalOrigin.CENTER);
             expect(feature.verticalOrigin).toEqual(VerticalOrigin.CENTER);
             expect(feature.labelHorizontalOrigin).toEqual(
-              HorizontalOrigin.RIGHT
+              HorizontalOrigin.RIGHT,
             );
             expect(feature.labelVerticalOrigin).toEqual(VerticalOrigin.BOTTOM);
           }
@@ -477,13 +476,13 @@ describe(
         rectangle,
         minHeight,
         maxHeight,
-        cartoPositions
+        cartoPositions,
       );
 
       const mockTilesetClone = clone(mockTileset);
       const batchTable = new Cesium3DTileBatchTable(
         mockTilesetClone,
-        testOptions.length
+        testOptions.length,
       );
       mockTilesetClone.batchTable = batchTable;
 
@@ -502,7 +501,7 @@ describe(
           rectangle: rectangle,
           minimumHeight: minHeight,
           maximumHeight: maxHeight,
-        })
+        }),
       );
 
       const styleOptions = {};
@@ -554,7 +553,7 @@ describe(
             if (defined(expectedCesium3DTileFeaturePropertyValue)) {
               expect(feature[cesium3DTileFeaturePropertyName]).toBeDefined();
               expect(feature[cesium3DTileFeaturePropertyName]).toEqual(
-                expectedCesium3DTileFeaturePropertyValue
+                expectedCesium3DTileFeaturePropertyValue,
               );
             } else {
               expect(feature[cesium3DTileFeaturePropertyName]).toBeUndefined();
@@ -576,7 +575,7 @@ describe(
         rectangle,
         minHeight,
         maxHeight,
-        cartoPositions
+        cartoPositions,
       );
 
       const batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
@@ -590,7 +589,7 @@ describe(
           rectangle: rectangle,
           minimumHeight: minHeight,
           maximumHeight: maxHeight,
-        })
+        }),
       );
 
       const style = new Cesium3DTileStyle({
@@ -609,7 +608,7 @@ describe(
 
         scene.camera.lookAt(
           Cartesian3.fromDegrees(0.0, 0.0, 10.0),
-          new Cartesian3(0.0, 0.0, 50.0)
+          new Cartesian3(0.0, 0.0, 50.0),
         );
         return pollToPromise(function () {
           scene.renderForSpecs();
@@ -635,7 +634,7 @@ describe(
         rectangle,
         minHeight,
         maxHeight,
-        cartoPositions
+        cartoPositions,
       );
 
       const batchTable = new Cesium3DTileBatchTable(mockTileset, 5);
@@ -649,7 +648,7 @@ describe(
           rectangle: rectangle,
           minimumHeight: minHeight,
           maximumHeight: maxHeight,
-        })
+        }),
       );
       const style = new Cesium3DTileStyle({
         verticalOrigin: VerticalOrigin.BOTTOM,
@@ -699,5 +698,5 @@ describe(
       expect(points.isDestroyed()).toEqual(true);
     });
   },
-  "WebGL"
+  "WebGL",
 );

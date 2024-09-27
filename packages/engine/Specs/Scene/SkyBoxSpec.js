@@ -12,11 +12,11 @@ describe(
     beforeAll(function () {
       scene = createScene();
 
-      return Resource.fetchImage("./Data/Images/Blue.png").then(function (
-        image
-      ) {
-        loadedImage = image;
-      });
+      return Resource.fetchImage("./Data/Images/Blue.png").then(
+        function (image) {
+          loadedImage = image;
+        },
+      );
     });
 
     afterAll(function () {
@@ -356,5 +356,5 @@ describe(
       }).toThrowDeveloperError();
     });
   },
-  "WebGL"
+  "WebGL",
 );

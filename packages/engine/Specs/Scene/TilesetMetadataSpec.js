@@ -48,7 +48,7 @@ describe("Scene/TilesetMetadata", function () {
     expect(tilesetMetadata.extras).toBe(extras);
     expect(tilesetMetadata.extensions).toBe(extensions);
     expect(tilesetMetadata.getProperty("neighborhoods")).toEqual(
-      properties.neighborhoods
+      properties.neighborhoods,
     );
   });
 

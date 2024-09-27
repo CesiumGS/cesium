@@ -31,7 +31,7 @@ function updateTransform(
   saveCamera,
   positionProperty,
   time,
-  ellipsoid
+  ellipsoid,
 ) {
   const mode = that.scene.mode;
   let cartesian = positionProperty.getValue(time, that._lastCartesian);
@@ -48,7 +48,7 @@ function updateTransform(
       JulianDate.addSeconds(time, 0.001, deltaTime);
       let deltaCartesian = positionProperty.getValue(
         deltaTime,
-        updateTransformCartesian3Scratch1
+        updateTransformCartesian3Scratch1,
       );
 
       // If no valid position at (time + 0.001), sample at (time - 0.001) and invert the vector
@@ -56,7 +56,7 @@ function updateTransform(
         JulianDate.addSeconds(time, -0.001, deltaTime);
         deltaCartesian = positionProperty.getValue(
           deltaTime,
-          updateTransformCartesian3Scratch1
+          updateTransformCartesian3Scratch1,
         );
         invertVelocity = true;
       }
@@ -64,50 +64,50 @@ function updateTransform(
       if (defined(deltaCartesian)) {
         let toInertial = Transforms.computeFixedToIcrfMatrix(
           time,
-          updateTransformMatrix3Scratch1
+          updateTransformMatrix3Scratch1,
         );
         let toInertialDelta = Transforms.computeFixedToIcrfMatrix(
           deltaTime,
-          updateTransformMatrix3Scratch2
+          updateTransformMatrix3Scratch2,
         );
         let toFixed;
 
         if (!defined(toInertial) || !defined(toInertialDelta)) {
           toFixed = Transforms.computeTemeToPseudoFixedMatrix(
             time,
-            updateTransformMatrix3Scratch3
+            updateTransformMatrix3Scratch3,
           );
           toInertial = Matrix3.transpose(
             toFixed,
-            updateTransformMatrix3Scratch1
+            updateTransformMatrix3Scratch1,
           );
           toInertialDelta = Transforms.computeTemeToPseudoFixedMatrix(
             deltaTime,
-            updateTransformMatrix3Scratch2
+            updateTransformMatrix3Scratch2,
           );
           Matrix3.transpose(toInertialDelta, toInertialDelta);
         } else {
           toFixed = Matrix3.transpose(
             toInertial,
-            updateTransformMatrix3Scratch3
+            updateTransformMatrix3Scratch3,
           );
         }
 
         const inertialCartesian = Matrix3.multiplyByVector(
           toInertial,
           cartesian,
-          updateTransformCartesian3Scratch5
+          updateTransformCartesian3Scratch5,
         );
         const inertialDeltaCartesian = Matrix3.multiplyByVector(
           toInertialDelta,
           deltaCartesian,
-          updateTransformCartesian3Scratch6
+          updateTransformCartesian3Scratch6,
         );
 
         Cartesian3.subtract(
           inertialCartesian,
           inertialDeltaCartesian,
-          updateTransformCartesian3Scratch4
+          updateTransformCartesian3Scratch4,
         );
         const inertialVelocity =
           Cartesian3.magnitude(updateTransformCartesian3Scratch4) * 1000.0; // meters/sec
@@ -132,14 +132,14 @@ function updateTransform(
           // Z is North
           zBasis = Cartesian3.clone(
             Cartesian3.UNIT_Z,
-            updateTransformCartesian3Scratch3
+            updateTransformCartesian3Scratch3,
           );
 
           // Y is along the cross of z and x (right handed basis / in the direction of motion)
           yBasis = Cartesian3.cross(
             zBasis,
             xBasis,
-            updateTransformCartesian3Scratch1
+            updateTransformCartesian3Scratch1,
           );
           if (Cartesian3.magnitude(yBasis) > CesiumMath.EPSILON7) {
             Cartesian3.normalize(xBasis, xBasis);
@@ -148,7 +148,7 @@ function updateTransform(
             zBasis = Cartesian3.cross(
               xBasis,
               yBasis,
-              updateTransformCartesian3Scratch3
+              updateTransformCartesian3Scratch3,
             );
             Cartesian3.normalize(zBasis, zBasis);
 
@@ -158,7 +158,7 @@ function updateTransform(
           !Cartesian3.equalsEpsilon(
             cartesian,
             deltaCartesian,
-            CesiumMath.EPSILON7
+            CesiumMath.EPSILON7,
           )
         ) {
           // Approximation of VVLH (Vehicle Velocity Local Horizontal) with the Z-axis flipped.
@@ -172,7 +172,7 @@ function updateTransform(
           yBasis = Cartesian3.cross(
             zBasis,
             inertialDeltaCartesian,
-            updateTransformCartesian3Scratch3
+            updateTransformCartesian3Scratch3,
           );
 
           if (invertVelocity) {
@@ -183,14 +183,14 @@ function updateTransform(
             !Cartesian3.equalsEpsilon(
               yBasis,
               Cartesian3.ZERO,
-              CesiumMath.EPSILON7
+              CesiumMath.EPSILON7,
             )
           ) {
             // X is along the cross of y and z (right handed basis / in the direction of motion)
             xBasis = Cartesian3.cross(
               yBasis,
               zBasis,
-              updateTransformCartesian3Scratch1
+              updateTransformCartesian3Scratch1,
             );
 
             Matrix3.multiplyByVector(toFixed, xBasis, xBasis);
@@ -218,11 +218,11 @@ function updateTransform(
     if (saveCamera) {
       position = Cartesian3.clone(
         camera.position,
-        updateTransformCartesian3Scratch4
+        updateTransformCartesian3Scratch4,
       );
       direction = Cartesian3.clone(
         camera.direction,
-        updateTransformCartesian3Scratch5
+        updateTransformCartesian3Scratch5,
       );
       up = Cartesian3.clone(camera.up, updateTransformCartesian3Scratch6);
     }
@@ -391,7 +391,7 @@ EntityView.prototype.update = function (time, boundingSphere) {
           1 /
             Math.max(
               1,
-              Cartesian3.magnitude(position) / ellipsoid.maximumRadius
+              Cartesian3.magnitude(position) / ellipsoid.maximumRadius,
             );
         scratchHeadingPitchRange.pitch *= factor;
       }
@@ -420,7 +420,7 @@ EntityView.prototype.update = function (time, boundingSphere) {
     saveCamera,
     positionProperty,
     time,
-    ellipsoid
+    ellipsoid,
   );
 };
 export default EntityView;

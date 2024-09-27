@@ -276,7 +276,7 @@ S2Cell.getTokenFromId = function (cellId) {
   const hexString = cellId.toString(16).replace(/0*$/, "");
 
   const zeroString = Array(17 - trailingZeroHexChars - hexString.length).join(
-    "0"
+    "0",
   );
   return zeroString + hexString;
 };
@@ -389,7 +389,7 @@ S2Cell.prototype.getCenter = function (ellipsoid) {
   center = Cartesian3.normalize(center, center);
   const cartographic = new Cartographic.fromCartesian(
     center,
-    Ellipsoid.UNIT_SPHERE
+    Ellipsoid.UNIT_SPHERE,
   );
   // Interpret as geodetic coordinates on the ellipsoid.
   return Cartographic.toCartesian(cartographic, ellipsoid, new Cartesian3());
@@ -418,7 +418,7 @@ S2Cell.prototype.getVertex = function (index, ellipsoid) {
   vertex = Cartesian3.normalize(vertex, vertex);
   const cartographic = new Cartographic.fromCartesian(
     vertex,
-    Ellipsoid.UNIT_SPHERE
+    Ellipsoid.UNIT_SPHERE,
   );
   // Interpret as geodetic coordinates on the ellipsoid.
   return Cartographic.toCartesian(cartographic, ellipsoid, new Cartesian3());
@@ -452,7 +452,7 @@ S2Cell.fromFacePositionLevel = function (face, position, level) {
     (face < 4 ? "0" : "") + (face < 2 ? "0" : "") + face.toString(2);
   const positionBitString = position.toString(2);
   const positionPrefixPadding = Array(
-    2 * level - positionBitString.length + 1
+    2 * level - positionBitString.length + 1,
   ).join("0");
   const positionSuffixPadding = Array(S2_POSITION_BITS - 2 * level).join("0");
 
@@ -461,7 +461,7 @@ S2Cell.fromFacePositionLevel = function (face, position, level) {
     `0b${faceBitString}${positionPrefixPadding}${positionBitString}1${
       // Adding the sentinel bit that always follows the position bits.
       positionSuffixPadding
-    }`
+    }`,
   );
   return new S2Cell(cellId);
 };
@@ -530,7 +530,7 @@ function convertCellIdToFaceIJ(cellId) {
     const extractMask = (1 << (2 * numberOfBits)) - 1;
     bits +=
       Number(
-        (cellId >> BigInt(k * 2 * S2_LOOKUP_BITS + 1)) & BigInt(extractMask) // eslint-disable-line
+        (cellId >> BigInt(k * 2 * S2_LOOKUP_BITS + 1)) & BigInt(extractMask), // eslint-disable-line
       ) << 2;
 
     bits = S2_LOOKUP_IJ[bits];
@@ -645,7 +645,7 @@ function generateLookupCell(
   j,
   originalOrientation,
   position,
-  orientation
+  orientation,
 ) {
   if (level === S2_LOOKUP_BITS) {
     const ij = (i << S2_LOOKUP_BITS) + j;
@@ -665,7 +665,7 @@ function generateLookupCell(
       j + (r[0] & 1),
       originalOrientation,
       position,
-      orientation ^ S2_POSITION_TO_ORIENTATION_MASK[0]
+      orientation ^ S2_POSITION_TO_ORIENTATION_MASK[0],
     );
     generateLookupCell(
       level,
@@ -673,7 +673,7 @@ function generateLookupCell(
       j + (r[1] & 1),
       originalOrientation,
       position + 1,
-      orientation ^ S2_POSITION_TO_ORIENTATION_MASK[1]
+      orientation ^ S2_POSITION_TO_ORIENTATION_MASK[1],
     );
     generateLookupCell(
       level,
@@ -681,7 +681,7 @@ function generateLookupCell(
       j + (r[2] & 1),
       originalOrientation,
       position + 2,
-      orientation ^ S2_POSITION_TO_ORIENTATION_MASK[2]
+      orientation ^ S2_POSITION_TO_ORIENTATION_MASK[2],
     );
     generateLookupCell(
       level,
@@ -689,7 +689,7 @@ function generateLookupCell(
       j + (r[3] & 1),
       originalOrientation,
       position + 3,
-      orientation ^ S2_POSITION_TO_ORIENTATION_MASK[3]
+      orientation ^ S2_POSITION_TO_ORIENTATION_MASK[3],
     );
   }
 }
@@ -707,7 +707,7 @@ function generateLookupTable() {
     0,
     S2_SWAP_MASK | S2_INVERT_MASK,
     0,
-    S2_SWAP_MASK | S2_INVERT_MASK
+    S2_SWAP_MASK | S2_INVERT_MASK,
   );
 }
 
@@ -730,74 +730,10 @@ function lsbForLevel(level) {
 // Lookup table for getting trailing zero bits.
 // https://graphics.stanford.edu/~seander/bithacks.html
 const Mod67BitPosition = [
-  64,
-  0,
-  1,
-  39,
-  2,
-  15,
-  40,
-  23,
-  3,
-  12,
-  16,
-  59,
-  41,
-  19,
-  24,
-  54,
-  4,
-  64,
-  13,
-  10,
-  17,
-  62,
-  60,
-  28,
-  42,
-  30,
-  20,
-  51,
-  25,
-  44,
-  55,
-  47,
-  5,
-  32,
-  65,
-  38,
-  14,
-  22,
-  11,
-  58,
-  18,
-  53,
-  63,
-  9,
-  61,
-  27,
-  29,
-  50,
-  43,
-  46,
-  31,
-  37,
-  21,
-  57,
-  52,
-  8,
-  26,
-  49,
-  45,
-  36,
-  56,
-  7,
-  48,
-  35,
-  6,
-  34,
-  33,
-  0,
+  64, 0, 1, 39, 2, 15, 40, 23, 3, 12, 16, 59, 41, 19, 24, 54, 4, 64, 13, 10, 17,
+  62, 60, 28, 42, 30, 20, 51, 25, 44, 55, 47, 5, 32, 65, 38, 14, 22, 11, 58, 18,
+  53, 63, 9, 61, 27, 29, 50, 43, 46, 31, 37, 21, 57, 52, 8, 26, 49, 45, 36, 56,
+  7, 48, 35, 6, 34, 33, 0,
 ];
 
 /**

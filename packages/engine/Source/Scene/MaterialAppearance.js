@@ -53,7 +53,7 @@ function MaterialAppearance(options) {
   const closed = defaultValue(options.closed, false);
   const materialSupport = defaultValue(
     options.materialSupport,
-    MaterialAppearance.MaterialSupport.TEXTURED
+    MaterialAppearance.MaterialSupport.TEXTURED,
   );
 
   /**
@@ -81,16 +81,16 @@ function MaterialAppearance(options) {
 
   this._vertexShaderSource = defaultValue(
     options.vertexShaderSource,
-    materialSupport.vertexShaderSource
+    materialSupport.vertexShaderSource,
   );
   this._fragmentShaderSource = defaultValue(
     options.fragmentShaderSource,
-    materialSupport.fragmentShaderSource
+    materialSupport.fragmentShaderSource,
   );
   this._renderState = Appearance.getDefaultRenderState(
     translucent,
     closed,
-    options.renderState
+    options.renderState,
   );
   this._closed = closed;
 

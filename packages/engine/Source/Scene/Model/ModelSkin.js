@@ -136,7 +136,7 @@ function initialize(runtimeSkin) {
     const jointMatrix = computeJointMatrix(
       runtimeNode,
       inverseBindMatrix,
-      new Matrix4()
+      new Matrix4(),
     );
     runtimeJointMatrices.push(jointMatrix);
   }
@@ -146,13 +146,13 @@ function computeJointMatrix(joint, inverseBindMatrix, result) {
   const jointWorldTransform = Matrix4.multiplyTransformation(
     joint.transformToRoot,
     joint.transform,
-    result
+    result,
   );
 
   result = Matrix4.multiplyTransformation(
     jointWorldTransform,
     inverseBindMatrix,
-    result
+    result,
   );
 
   return result;
@@ -172,7 +172,7 @@ ModelSkin.prototype.updateJointMatrices = function () {
     jointMatrices[i] = computeJointMatrix(
       joint,
       inverseBindMatrix,
-      jointMatrices[i]
+      jointMatrices[i],
     );
   }
 };

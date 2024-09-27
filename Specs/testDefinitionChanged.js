@@ -10,7 +10,7 @@ function testDefinitionChanged(property, name, value1, value2) {
     property,
     name,
     property[name],
-    oldValue
+    oldValue,
   );
   listener.calls.reset();
 
@@ -19,7 +19,7 @@ function testDefinitionChanged(property, name, value1, value2) {
     property,
     name,
     property[name],
-    property[name]
+    property[name],
   );
   listener.calls.reset();
 

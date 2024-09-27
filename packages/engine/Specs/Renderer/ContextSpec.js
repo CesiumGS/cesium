@@ -41,7 +41,7 @@ describe(
 
     it("get maximumCombinedTextureImageUnits", function () {
       expect(
-        ContextLimits.maximumCombinedTextureImageUnits
+        ContextLimits.maximumCombinedTextureImageUnits,
       ).toBeGreaterThanOrEqual(8);
     });
 
@@ -51,7 +51,7 @@ describe(
 
     it("get maximumFragmentUniformVectors", function () {
       expect(
-        ContextLimits.maximumFragmentUniformVectors
+        ContextLimits.maximumFragmentUniformVectors,
       ).toBeGreaterThanOrEqual(16);
     });
 
@@ -77,13 +77,13 @@ describe(
 
     it("get maximumVertexTextureImageUnits", function () {
       expect(
-        ContextLimits.maximumVertexTextureImageUnits
+        ContextLimits.maximumVertexTextureImageUnits,
       ).toBeGreaterThanOrEqual(0);
     });
 
     it("get maximumVertexUniformVectors", function () {
       expect(ContextLimits.maximumVertexUniformVectors).toBeGreaterThanOrEqual(
-        1
+        1,
       );
     });
 
@@ -188,7 +188,7 @@ describe(
     it("gets maximum texture filter anisotropy", function () {
       if (context.textureFilterAnisotropic) {
         expect(
-          ContextLimits.maximumTextureFilterAnisotropy
+          ContextLimits.maximumTextureFilterAnisotropy,
         ).toBeGreaterThanOrEqual(2);
       } else {
         expect(ContextLimits.maximumTextureFilterAnisotropy).toEqual(1);
@@ -342,5 +342,5 @@ describe(
       }
     });
   },
-  "WebGL"
+  "WebGL",
 );

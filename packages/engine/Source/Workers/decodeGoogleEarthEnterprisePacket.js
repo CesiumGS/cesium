@@ -69,7 +69,7 @@ function processMetadata(buffer, totalSize, quadKey) {
   offset += sizeOfUint32;
   if (quadVersion !== 2) {
     throw new RuntimeError(
-      "Invalid QuadTreePacket version. Only version 2 is supported."
+      "Invalid QuadTreePacket version. Only version 2 is supported.",
     );
   }
 
@@ -143,8 +143,8 @@ function processMetadata(buffer, totalSize, quadKey) {
         imageVersion,
         terrainVersion,
         imageProvider,
-        terrainProvider
-      )
+        terrainProvider,
+      ),
     );
   }
 

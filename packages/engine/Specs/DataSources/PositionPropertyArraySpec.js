@@ -69,7 +69,7 @@ describe("DataSources/PositionPropertyArray", function () {
     const property = new PositionPropertyArray(value);
     const result = property.getValueInReferenceFrame(
       time,
-      ReferenceFrame.INERTIAL
+      ReferenceFrame.INERTIAL,
     );
     expect(result).toEqual(expected);
   });

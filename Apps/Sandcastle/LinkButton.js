@@ -11,7 +11,7 @@ define([
   _WidgetBase,
   declare,
   domClass,
-  template
+  template,
 ) {
   "use strict";
 
@@ -34,6 +34,6 @@ define([
         this._set("label", content);
         (this.containerNode || this.focusNode).innerHTML = content;
       },
-    }
+    },
   );
 });

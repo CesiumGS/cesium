@@ -36,12 +36,12 @@ AlphaPipelineStage.process = function (renderResources, primitive, frameState) {
     shaderBuilder.addDefine(
       "ALPHA_MODE_MASK",
       undefined,
-      ShaderDestination.FRAGMENT
+      ShaderDestination.FRAGMENT,
     );
     shaderBuilder.addUniform(
       "float",
       "u_alphaCutoff",
-      ShaderDestination.FRAGMENT
+      ShaderDestination.FRAGMENT,
     );
     uniformMap.u_alphaCutoff = function () {
       return alphaOptions.alphaCutoff;

@@ -152,7 +152,7 @@ function trackDataSourceClock(timeline, clock, dataSource) {
           stopTime = JulianDate.addSeconds(
             startTime,
             CesiumMath.EPSILON2,
-            scratchStopTime
+            scratchStopTime,
           );
         }
         timeline.updateFromClock();
@@ -167,10 +167,8 @@ const cartesian3Scratch = new Cartesian3();
 function pickImageryLayerFeature(viewer, windowPosition) {
   const scene = viewer.scene;
   const pickRay = scene.camera.getPickRay(windowPosition);
-  const imageryLayerFeaturePromise = scene.imageryLayers.pickImageryLayerFeatures(
-    pickRay,
-    scene
-  );
+  const imageryLayerFeaturePromise =
+    scene.imageryLayers.pickImageryLayerFeatures(pickRay, scene);
   if (!defined(imageryLayerFeaturePromise)) {
     return;
   }
@@ -204,7 +202,7 @@ function pickImageryLayerFeature(viewer, windowPosition) {
       if (defined(feature.position)) {
         const ecfPosition = viewer.scene.ellipsoid.cartographicToCartesian(
           feature.position,
-          cartesian3Scratch
+          cartesian3Scratch,
         );
         entity.position = new ConstantPositionProperty(ecfPosition);
       }
@@ -217,7 +215,7 @@ function pickImageryLayerFeature(viewer, windowPosition) {
         return;
       }
       viewer.selectedEntity = createNoFeaturesEntity();
-    }
+    },
   );
 
   return loadingMessage;
@@ -432,7 +430,7 @@ function Viewer(container, options) {
   ) {
     throw new DeveloperError(
       "options.selectedImageryProviderViewModel is not available when not using the BaseLayerPicker widget. \
-Either specify options.baseLayer instead or set options.baseLayerPicker to true."
+Either specify options.baseLayer instead or set options.baseLayerPicker to true.",
     );
   }
 
@@ -443,7 +441,7 @@ Either specify options.baseLayer instead or set options.baseLayerPicker to true.
   ) {
     throw new DeveloperError(
       "options.selectedTerrainProviderViewModel is not available when not using the BaseLayerPicker widget. \
-Either specify options.terrainProvider instead or set options.baseLayerPicker to true."
+Either specify options.terrainProvider instead or set options.baseLayerPicker to true.",
     );
   }
   //>>includeEnd('debug')
@@ -551,7 +549,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
     viewerContainer.appendChild(selectionIndicatorContainer);
     selectionIndicator = new SelectionIndicator(
       selectionIndicatorContainer,
-      scene
+      scene,
     );
   }
 
@@ -567,12 +565,12 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
     eventHelper.add(
       infoBoxViewModel.cameraClicked,
       Viewer.prototype._onInfoBoxCameraClicked,
-      this
+      this,
     );
     eventHelper.add(
       infoBoxViewModel.closeClicked,
       Viewer.prototype._onInfoBoxClockClicked,
-      this
+      this,
     );
   }
 
@@ -602,7 +600,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
     eventHelper.add(
       geocoder.viewModel.search.beforeExecute,
       Viewer.prototype._clearObjects,
-      this
+      this,
     );
   }
 
@@ -623,7 +621,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
     eventHelper.add(
       homeButton.viewModel.command.beforeExecute,
       Viewer.prototype._clearTrackedObject,
-      this
+      this,
     );
   }
 
@@ -633,7 +631,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
   //>>includeStart('debug', pragmas.debug);
   if (options.sceneModePicker === true && scene3DOnly) {
     throw new DeveloperError(
-      "options.sceneModePicker is not available when options.scene3DOnly is set to true."
+      "options.sceneModePicker is not available when options.scene3DOnly is set to true.",
     );
   }
   //>>includeEnd('debug');
@@ -657,11 +655,11 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
   if (createBaseLayerPicker) {
     const imageryProviderViewModels = defaultValue(
       options.imageryProviderViewModels,
-      createDefaultImageryProviderViewModels()
+      createDefaultImageryProviderViewModels(),
     );
     const terrainProviderViewModels = defaultValue(
       options.terrainProviderViewModels,
-      createDefaultTerrainProviderViewModels()
+      createDefaultTerrainProviderViewModels(),
     );
 
     baseLayerPicker = new BaseLayerPicker(toolbar, {
@@ -676,7 +674,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
 
     //Grab the dropdown for resize code.
     const elements = toolbar.getElementsByClassName(
-      "cesium-baseLayerPicker-dropDown"
+      "cesium-baseLayerPicker-dropDown",
     );
     baseLayerPickerDropDown = elements[0];
   }
@@ -701,7 +699,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
     //>>includeStart('debug', pragmas.debug);
     if (defined(options.terrainProvider)) {
       throw new DeveloperError(
-        "Specify either options.terrainProvider or options.terrain."
+        "Specify either options.terrainProvider or options.terrain.",
       );
     }
     //>>includeEnd('debug')
@@ -725,7 +723,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
       //window.localStorage is null if disabled in Firefox or undefined in browsers with implementation
       if (defined(window.localStorage)) {
         const hasSeenNavHelp = window.localStorage.getItem(
-          "cesium-hasSeenNavHelp"
+          "cesium-hasSeenNavHelp",
         );
         if (defined(hasSeenNavHelp) && Boolean(hasSeenNavHelp)) {
           showNavHelp = false;
@@ -741,7 +739,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
       container: toolbar,
       instructionsInitiallyVisible: defaultValue(
         options.navigationInstructionsInitiallyVisible,
-        showNavHelp
+        showNavHelp,
       ),
     });
   }
@@ -754,7 +752,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
     viewerContainer.appendChild(animationContainer);
     animation = new Animation(
       animationContainer,
-      new AnimationViewModel(clockViewModel)
+      new AnimationViewModel(clockViewModel),
     );
   }
 
@@ -782,7 +780,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
     viewerContainer.appendChild(fullscreenContainer);
     fullscreenButton = new FullscreenButton(
       fullscreenContainer,
-      options.fullscreenElement
+      options.fullscreenElement,
     );
 
     //Subscribe to fullscreenButton.viewModel.isFullscreenEnabled so
@@ -798,7 +796,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
           timeline.container.style.right = `${fullscreenContainer.clientWidth}px`;
           timeline.resize();
         }
-      }
+      },
     );
   }
 
@@ -824,7 +822,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
           timeline.container.style.right = `${vrContainer.clientWidth}px`;
           timeline.resize();
         }
-      }
+      },
     );
 
     vrModeSubscription = subscribeAndEvaluate(
@@ -832,7 +830,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
       "isVRMode",
       function (isVRMode) {
         enableVRUI(that, isVRMode);
-      }
+      },
     );
   }
 
@@ -845,7 +843,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
   this._dataSourceChangedListeners = {};
   this._automaticallyTrackDataSourceClocks = defaultValue(
     options.automaticallyTrackDataSourceClocks,
-    true
+    true,
   );
   this._container = container;
   this._bottomContainer = bottomContainer;
@@ -896,12 +894,12 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
   eventHelper.add(
     dataSourceCollection.dataSourceAdded,
     Viewer.prototype._onDataSourceAdded,
-    this
+    this,
   );
   eventHelper.add(
     dataSourceCollection.dataSourceRemoved,
     Viewer.prototype._onDataSourceRemoved,
-    this
+    this,
   );
 
   // Prior to each render, check if anything needs to be resized.
@@ -921,12 +919,12 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
   eventHelper.add(
     dataSourceCollection.dataSourceAdded,
     Viewer.prototype._dataSourceAdded,
-    this
+    this,
   );
   eventHelper.add(
     dataSourceCollection.dataSourceRemoved,
     Viewer.prototype._dataSourceRemoved,
-    this
+    this,
   );
 
   // Subscribe to left clicks and zoom to the picked object.
@@ -952,11 +950,11 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
 
   cesiumWidget.screenSpaceEventHandler.setInputAction(
     pickAndSelectObject,
-    ScreenSpaceEventType.LEFT_CLICK
+    ScreenSpaceEventType.LEFT_CLICK,
   );
   cesiumWidget.screenSpaceEventHandler.setInputAction(
     pickAndTrackObject,
-    ScreenSpaceEventType.LEFT_DOUBLE_CLICK
+    ScreenSpaceEventType.LEFT_DOUBLE_CLICK,
   );
 }
 
@@ -1746,10 +1744,10 @@ Viewer.prototype.destroy = function () {
     !this.screenSpaceEventHandler.isDestroyed()
   ) {
     this.screenSpaceEventHandler.removeInputAction(
-      ScreenSpaceEventType.LEFT_CLICK
+      ScreenSpaceEventType.LEFT_CLICK,
     );
     this.screenSpaceEventHandler.removeInputAction(
-      ScreenSpaceEventType.LEFT_DOUBLE_CLICK
+      ScreenSpaceEventType.LEFT_DOUBLE_CLICK,
     );
   }
 
@@ -1795,7 +1793,7 @@ Viewer.prototype.destroy = function () {
     this._timeline.removeEventListener(
       "settime",
       onTimelineScrubfunction,
-      false
+      false,
     );
     this._element.removeChild(this._timeline.container);
     this._timeline = this._timeline.destroy();
@@ -1842,12 +1840,12 @@ Viewer.prototype.destroy = function () {
  */
 Viewer.prototype._dataSourceAdded = function (
   dataSourceCollection,
-  dataSource
+  dataSource,
 ) {
   const entityCollection = dataSource.entities;
   entityCollection.collectionChanged.addEventListener(
     Viewer.prototype._onEntityCollectionChanged,
-    this
+    this,
   );
 };
 
@@ -1856,12 +1854,12 @@ Viewer.prototype._dataSourceAdded = function (
  */
 Viewer.prototype._dataSourceRemoved = function (
   dataSourceCollection,
-  dataSource
+  dataSource,
 ) {
   const entityCollection = dataSource.entities;
   entityCollection.collectionChanged.removeEventListener(
     Viewer.prototype._onEntityCollectionChanged,
-    this
+    this,
   );
 
   if (defined(this.trackedEntity)) {
@@ -1898,7 +1896,7 @@ Viewer.prototype._onTick = function (clock) {
     const trackedState = this._dataSourceDisplay.getBoundingSphere(
       trackedEntity,
       false,
-      boundingSphereScratch
+      boundingSphereScratch,
     );
     if (trackedState === BoundingSphereState.DONE) {
       entityView.update(time, boundingSphereScratch);
@@ -1918,7 +1916,7 @@ Viewer.prototype._onTick = function (clock) {
     const state = this._dataSourceDisplay.getBoundingSphere(
       selectedEntity,
       true,
-      boundingSphereScratch
+      boundingSphereScratch,
     );
     if (state !== BoundingSphereState.FAILED) {
       position = boundingSphereScratch.center;
@@ -1934,7 +1932,7 @@ Viewer.prototype._onTick = function (clock) {
   if (defined(selectionIndicatorViewModel)) {
     selectionIndicatorViewModel.position = Cartesian3.clone(
       position,
-      selectionIndicatorViewModel.position
+      selectionIndicatorViewModel.position,
     );
     selectionIndicatorViewModel.showSelection = showSelection && enableCamera;
     selectionIndicatorViewModel.update();
@@ -1952,12 +1950,12 @@ Viewer.prototype._onTick = function (clock) {
     if (showSelection) {
       infoBoxViewModel.titleText = defaultValue(
         selectedEntity.name,
-        selectedEntity.id
+        selectedEntity.id,
       );
       infoBoxViewModel.description = Property.getValueOrDefault(
         selectedEntity.description,
         time,
-        ""
+        "",
       );
     } else {
       infoBoxViewModel.titleText = "";
@@ -1972,7 +1970,7 @@ Viewer.prototype._onTick = function (clock) {
 Viewer.prototype._onEntityCollectionChanged = function (
   collection,
   added,
-  removed
+  removed,
 ) {
   const length = removed.length;
   for (let i = 0; i < length; i++) {
@@ -2042,7 +2040,7 @@ Viewer.prototype._onDataSourceChanged = function (dataSource) {
  */
 Viewer.prototype._onDataSourceAdded = function (
   dataSourceCollection,
-  dataSource
+  dataSource,
 ) {
   if (this._automaticallyTrackDataSourceClocks) {
     this.clockTrackedDataSource = dataSource;
@@ -2051,7 +2049,7 @@ Viewer.prototype._onDataSourceAdded = function (
   const removalFunc = this._eventHelper.add(
     dataSource.changedEvent,
     Viewer.prototype._onDataSourceChanged,
-    this
+    this,
   );
   this._dataSourceChangedListeners[id] = removalFunc;
 };
@@ -2061,7 +2059,7 @@ Viewer.prototype._onDataSourceAdded = function (
  */
 Viewer.prototype._onDataSourceRemoved = function (
   dataSourceCollection,
-  dataSource
+  dataSource,
 ) {
   const resetClock = this.clockTrackedDataSource === dataSource;
   const id = dataSource.entities.id;
@@ -2071,7 +2069,7 @@ Viewer.prototype._onDataSourceRemoved = function (
     const numDataSources = dataSourceCollection.length;
     if (this._automaticallyTrackDataSourceClocks && numDataSources > 0) {
       this.clockTrackedDataSource = dataSourceCollection.get(
-        numDataSources - 1
+        numDataSources - 1,
       );
     } else {
       this.clockTrackedDataSource = undefined;
@@ -2273,7 +2271,7 @@ function updateZoomTarget(viewer) {
       zoomOptions.offset = new HeadingPitchRange(
         0.0,
         -0.5,
-        boundingSphere.radius
+        boundingSphere.radius,
       );
     }
 
@@ -2309,12 +2307,12 @@ function updateZoomTarget(viewer) {
     }
 
     // Otherwise, the first "frame" needs to have been rendered
-    const removeEventListener = target.frameChanged.addEventListener(function (
-      timeDynamicPointCloud
-    ) {
-      zoomToBoundingSphere(timeDynamicPointCloud.boundingSphere);
-      removeEventListener();
-    });
+    const removeEventListener = target.frameChanged.addEventListener(
+      function (timeDynamicPointCloud) {
+        zoomToBoundingSphere(timeDynamicPointCloud.boundingSphere);
+        removeEventListener();
+      },
+    );
     return;
   }
 
@@ -2354,7 +2352,7 @@ function updateZoomTarget(viewer) {
     const state = viewer._dataSourceDisplay.getBoundingSphere(
       entities[i],
       false,
-      boundingSphereScratch
+      boundingSphereScratch,
     );
 
     if (state === BoundingSphereState.PENDING) {
@@ -2408,7 +2406,7 @@ function updateTrackedEntity(viewer) {
   //computed. In this case, we will track the entity once it comes back into existence.
   const currentPosition = Property.getValueOrUndefined(
     trackedEntity.position,
-    currentTime
+    currentTime,
   );
 
   if (!defined(currentPosition)) {
@@ -2420,7 +2418,7 @@ function updateTrackedEntity(viewer) {
   const state = viewer._dataSourceDisplay.getBoundingSphere(
     trackedEntity,
     false,
-    boundingSphereScratch
+    boundingSphereScratch,
   );
   if (state === BoundingSphereState.PENDING) {
     return;

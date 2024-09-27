@@ -19,7 +19,7 @@ const AtmospherePipelineStage = {
 AtmospherePipelineStage.process = function (
   renderResources,
   model,
-  frameState
+  frameState,
 ) {
   const shaderBuilder = renderResources.shaderBuilder;
 
@@ -27,7 +27,7 @@ AtmospherePipelineStage.process = function (
   shaderBuilder.addDefine(
     "COMPUTE_POSITION_WC_ATMOSPHERE",
     undefined,
-    ShaderDestination.BOTH
+    ShaderDestination.BOTH,
   );
 
   shaderBuilder.addVarying("vec3", "v_atmosphereRayleighColor");
@@ -47,7 +47,7 @@ AtmospherePipelineStage.process = function (
     // from the camera to the bounding sphere center.
     const distance = Cartesian3.distance(
       frameState.camera.positionWC,
-      model.boundingSphere.center
+      model.boundingSphere.center,
     );
 
     return (
