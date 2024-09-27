@@ -482,7 +482,10 @@ function processLoaders(loader, frameState) {
       if (defined(loader._components.structuralMetadata)) {
         oneTimeWarning(
           "structural-metadata-gpm",
-          "Structural metadata is replaced with GPM data",
+          "The model defines both the 'EXT_structural_metadata' extension and the " +
+            "'NGA_gpm_local' extension. The data from the 'EXT_structural_metadata' " +
+            "extension will be replaced with the data from the 'NGA_gpm_local' extension, " +
+            "and will no longer be available for styling and picking.",
         );
       }
       loader._components.structuralMetadata =
