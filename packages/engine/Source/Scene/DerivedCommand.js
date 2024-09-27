@@ -432,7 +432,7 @@ function getComponentCount(classProperty) {
  * for a property texture property with the given class property
  *
  * @param {MetadataClassProperty} classProperty The class property
- * @returns The GLSL shader type string for the property
+ * @returns {string} The GLSL shader type string for the property
  */
 function getGlslType(classProperty) {
   const componentCount = getComponentCount(classProperty);
@@ -464,7 +464,7 @@ function getGlslType(classProperty) {
  * @param {Context} context The context
  * @param {ShaderProgram} shaderProgram The shader program
  * @param {PickedMetadataInfo} pickedMetadataInfo The picked metadata info
- * @returns The new shader program
+ * @returns {ShaderProgram} The new shader program
  * @private
  */
 function getPickMetadataShaderProgram(
