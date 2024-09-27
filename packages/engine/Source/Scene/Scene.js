@@ -4340,30 +4340,12 @@ Scene.prototype.pickMetadata = function (
   const structuralMetadata = model?.structuralMetadata;
   const schema = structuralMetadata?.schema;
 
-  const XXX_METADATA_PICKING_DEBUG_LOG = false;
-  if (XXX_METADATA_PICKING_DEBUG_LOG) {
-    console.log("pickedObject ", pickedObject);
-    console.log("model ", model);
-    console.log("structuralMetadata ", structuralMetadata);
-    console.log("schema ", schema);
-  }
-
   const classProperty = getMetadataClassProperty(
     schema,
     schemaId,
     className,
     propertyName
   );
-  if (classProperty === undefined) {
-    if (XXX_METADATA_PICKING_DEBUG_LOG) {
-      console.log("The metadata property was not found");
-      console.log("schema ", schema);
-      console.log("schemaId ", schemaId);
-      console.log("className ", className);
-      console.log("propertyName ", propertyName);
-    }
-    return undefined;
-  }
 
   const pickedMetadataInfo = {
     schemaId: schemaId,
@@ -4377,10 +4359,6 @@ Scene.prototype.pickMetadata = function (
     windowPosition,
     pickedMetadataInfo
   );
-
-  if (XXX_METADATA_PICKING_DEBUG_LOG) {
-    console.log("pickedMetadataValues ", pickedMetadataValues);
-  }
 
   return pickedMetadataValues;
 };
