@@ -4,6 +4,23 @@ import RuntimeError from "../../../../Core/RuntimeError.js";
 import StorageType from "./StorageType.js";
 
 /**
+ * @typedef {object} GltfGpmLocal.ConstructorOptions
+ *
+ * Initialization options for the GltfGpmLocal constructor
+ *
+ * @property {string} storageType The storage type.
+ * This must be one of the `StorageType` constants, i.e. `Direct` or `Indirect`.
+ * @property {AnchorPointIndirect[]|undefined} [anchorPointsIndirect] The indirect anchor points.
+ * This must be present if and only if the storage type is `Indirect`.
+ * @property {CorrelationGroup[]|undefined} [intraTileCorrelationGroups] The intra-tile correlation groups.
+ * This must be present if and only if the storage type is `Indirect`.
+ * @property {AnchorPointDirect[]|undefined} [anchorPointsDirect] The direct anchor points.
+ * This must be present if and only if the storage type is `Direct`.
+ * @property {Matrix3|undefined} [covarianceDirect] The covariance of anchor point parameters.
+ * This must be present if and only if the storage type is `Direct`.
+ */
+
+/**
  * The GPM metadata for a Ground-Space Indirect implementation stored
  * locally (i.e. a tile and/or leaf node).
  *
@@ -26,6 +43,8 @@ import StorageType from "./StorageType.js";
  *   `anchorPointsDirect` and `covarianceDirect` are present.
  *  </li>
  * </ul>
+ *
+ * @param {GltfGpmLocal.ConstructorOptions} options An object describing initialization options
  *
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */

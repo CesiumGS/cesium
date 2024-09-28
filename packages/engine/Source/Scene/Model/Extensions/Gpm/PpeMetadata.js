@@ -1,10 +1,22 @@
 import Check from "../../../../Core/Check.js";
 
 /**
+ * @typedef {object} PpeMetadata.ConstructorOptions
+ *
+ * Initialization options for the PpeMetadata constructor
+ *
+ * @property {PpeSource} source The source of the error data
+ * @property {number|undefined} [min] Minimum allowed value for the property.
+ * @property {number|undefined} [max] Maximum allowed value for the property.
+ */
+
+/**
  * Metadata related to the stored PPE (Per-Point Error) data.
  *
  * This reflects the `ppeMetadata` definition of the
  * {@link https://nsgreg.nga.mil/csmwg.jsp|NGA_gpm_local} glTF extension.
+ *
+ * @param {PpeMetadata.ConstructorOptions} options An object describing initialization options
  *
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */

@@ -1,6 +1,19 @@
 import Check from "../../../../Core/Check.js";
 
 /**
+ * @typedef {object} PpeTexture.ConstructorOptions
+ *
+ * Initialization options for the PpeTexture constructor
+ *
+ * @property {PpeMetadata} traits The traits that indicate which data is stored in this texture
+ * @property {number} index The index of the texture inside the glTF textures array
+ * @property {number|undefined} [texCoord] The optional set index for the TEXCOORD attribute
+ * @property {number|undefined} [noData] The value to represent missing data
+ * @property {number|undefined} [offset] An offset to apply to property values.
+ * @property {number|undefined} [scale] A scale to apply to property values.
+ */
+
+/**
  * PPE (Per-Point Error) texture in `NGA_gpm_local`.
  *
  * This reflects the `ppeTexture` definition of the
@@ -9,6 +22,8 @@ import Check from "../../../../Core/Check.js";
  * This is a valid glTF `TextureInfo` object (with a required `index`
  * and an optional `texCoord)`, with additional properties that
  * describe the structure of the metdata that is stored in the texture.
+ *
+ * @param {PpeTexture.ConstructorOptions} options An object describing initialization options
  *
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
