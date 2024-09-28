@@ -56,7 +56,7 @@ describe("Core/TerrainEncoding", function () {
       minimumHeight,
       maximumHeight,
       fromENU,
-      hasVertexNormals
+      hasVertexNormals,
     );
 
     expect(encoding.quantization).toEqual(TerrainQuantization.NONE);
@@ -85,7 +85,7 @@ describe("Core/TerrainEncoding", function () {
       minimumHeight,
       maximumHeight,
       fromENU,
-      hasVertexNormals
+      hasVertexNormals,
     );
 
     expect(encoding.quantization).toEqual(TerrainQuantization.BITS12);
@@ -114,7 +114,7 @@ describe("Core/TerrainEncoding", function () {
       minimumHeight,
       maximumHeight,
       fromENU,
-      hasVertexNormals
+      hasVertexNormals,
     );
 
     const position = new Cartesian3(1.0e3, 1.0e3, 1.0e3);
@@ -142,7 +142,7 @@ describe("Core/TerrainEncoding", function () {
       minimumHeight,
       maximumHeight,
       fromENU,
-      hasVertexNormals
+      hasVertexNormals,
     );
 
     const position = new Cartesian3(1.0e3, 1.0e3, 1.0e3);
@@ -166,7 +166,7 @@ describe("Core/TerrainEncoding", function () {
       minimumHeight,
       maximumHeight,
       fromENU,
-      hasVertexNormals
+      hasVertexNormals,
     );
 
     const position = new Cartesian3(1.0e2, 1.0e2, 1.0e2);
@@ -189,7 +189,7 @@ describe("Core/TerrainEncoding", function () {
       minimumHeight,
       maximumHeight,
       fromENU,
-      hasVertexNormals
+      hasVertexNormals,
     );
 
     const position = new Cartesian3(1.0e2, 1.0e2, 1.0e2);
@@ -219,7 +219,7 @@ describe("Core/TerrainEncoding", function () {
     const exaggeratedHeight = VerticalExaggeration.getHeight(
       height,
       exaggeration,
-      exaggerationRelativeHeight
+      exaggerationRelativeHeight,
     );
     const exaggeratedPosition = new Cartesian3(exaggeratedHeight, 0.0, 0.0);
 
@@ -239,7 +239,7 @@ describe("Core/TerrainEncoding", function () {
       hasWebMercatorT,
       hasGeodeticSurfaceNormals,
       exaggeration,
-      exaggerationRelativeHeight
+      exaggerationRelativeHeight,
     );
 
     const buffer = [];
@@ -251,17 +251,17 @@ describe("Core/TerrainEncoding", function () {
       height,
       undefined,
       undefined,
-      geodeticSurfaceNormal
+      geodeticSurfaceNormal,
     );
 
     expect(encoding.stride).toEqual(9);
     expect(buffer.length).toEqual(encoding.stride);
     expect(encoding.getExaggeratedPosition(buffer, 0)).toEqualEpsilon(
       exaggeratedPosition,
-      CesiumMath.EPSILON5
+      CesiumMath.EPSILON5,
     );
     expect(
-      encoding.decodeGeodeticSurfaceNormal(buffer, 0, new Cartesian3())
+      encoding.decodeGeodeticSurfaceNormal(buffer, 0, new Cartesian3()),
     ).toEqualEpsilon(geodeticSurfaceNormal, CesiumMath.EPSILON5);
   });
 
@@ -273,7 +273,7 @@ describe("Core/TerrainEncoding", function () {
       minimumHeight,
       maximumHeight,
       fromENU,
-      hasVertexNormals
+      hasVertexNormals,
     );
 
     const texCoords = new Cartesian2(0.25, 0.75);
@@ -286,7 +286,7 @@ describe("Core/TerrainEncoding", function () {
 
     expect(encoding.decodeTextureCoordinates(buffer, 0)).toEqualEpsilon(
       texCoords,
-      1.0 / 4095.0
+      1.0 / 4095.0,
     );
   });
 
@@ -298,7 +298,7 @@ describe("Core/TerrainEncoding", function () {
       minimumHeight,
       maximumHeight,
       fromENU,
-      hasVertexNormals
+      hasVertexNormals,
     );
 
     const texCoords = new Cartesian2(0.75, 0.25);
@@ -310,7 +310,7 @@ describe("Core/TerrainEncoding", function () {
       Cartesian3.ZERO,
       texCoords,
       100.0,
-      Cartesian3.UNIT_X
+      Cartesian3.UNIT_X,
     );
 
     expect(encoding.stride).toEqual(4);
@@ -318,7 +318,7 @@ describe("Core/TerrainEncoding", function () {
 
     expect(encoding.decodeTextureCoordinates(buffer, 0)).toEqualEpsilon(
       texCoords,
-      1.0 / 4095.0
+      1.0 / 4095.0,
     );
   });
 
@@ -332,7 +332,7 @@ describe("Core/TerrainEncoding", function () {
       minimumHeight,
       maximumHeight,
       fromENU,
-      hasVertexNormals
+      hasVertexNormals,
     );
 
     const buffer = [];
@@ -344,7 +344,7 @@ describe("Core/TerrainEncoding", function () {
 
     expect(encoding.decodeHeight(buffer, 0)).toEqualEpsilon(
       height,
-      200.0 / 4095.0
+      200.0 / 4095.0,
     );
   });
 
@@ -358,7 +358,7 @@ describe("Core/TerrainEncoding", function () {
       minimumHeight,
       maximumHeight,
       fromENU,
-      hasVertexNormals
+      hasVertexNormals,
     );
 
     const buffer = [];
@@ -369,7 +369,7 @@ describe("Core/TerrainEncoding", function () {
       center,
       Cartesian2.ZERO,
       height,
-      Cartesian3.UNIT_X
+      Cartesian3.UNIT_X,
     );
 
     expect(encoding.stride).toEqual(4);
@@ -377,7 +377,7 @@ describe("Core/TerrainEncoding", function () {
 
     expect(encoding.decodeHeight(buffer, 0)).toEqualEpsilon(
       height,
-      200.0 / 4095.0
+      200.0 / 4095.0,
     );
   });
 
@@ -389,7 +389,7 @@ describe("Core/TerrainEncoding", function () {
       minimumHeight,
       maximumHeight,
       fromENU,
-      hasVertexNormals
+      hasVertexNormals,
     );
 
     const normal = new Cartesian3(1.0, 1.0, 1.0);
@@ -403,7 +403,7 @@ describe("Core/TerrainEncoding", function () {
       center,
       Cartesian2.ZERO,
       minimumHeight,
-      octNormal
+      octNormal,
     );
 
     expect(encoding.stride).toEqual(4);
@@ -420,7 +420,7 @@ describe("Core/TerrainEncoding", function () {
       minimumHeight,
       maximumHeight,
       fromENU,
-      hasVertexNormals
+      hasVertexNormals,
     );
 
     const oldBuffer = [];
@@ -450,7 +450,7 @@ describe("Core/TerrainEncoding", function () {
       fromENU,
       hasVertexNormals,
       hasWebMarcatorT,
-      hasGeodeticSurfaceNormals
+      hasGeodeticSurfaceNormals,
     );
 
     const geodeticSurfaceNormal = new Cartesian3(1.0, 0.0, 0.0);
@@ -463,7 +463,7 @@ describe("Core/TerrainEncoding", function () {
       minimumHeight,
       undefined,
       undefined,
-      geodeticSurfaceNormal
+      geodeticSurfaceNormal,
     );
     const oldStride = encoding.stride;
 
@@ -496,7 +496,7 @@ describe("Core/TerrainEncoding", function () {
       minimumHeight,
       maximumHeight,
       fromENU,
-      hasVertexNormals
+      hasVertexNormals,
     );
 
     const buffer = [];
@@ -525,7 +525,7 @@ describe("Core/TerrainEncoding", function () {
       minimumHeight,
       maximumHeight,
       fromENU,
-      hasVertexNormals
+      hasVertexNormals,
     );
     const attributeLocations = encoding.getAttributeLocations();
 
@@ -551,7 +551,7 @@ describe("Core/TerrainEncoding", function () {
       minimumHeight,
       maximumHeight,
       fromENU,
-      hasVertexNormals
+      hasVertexNormals,
     );
     const cloned = TerrainEncoding.clone(encoding);
 
@@ -584,7 +584,7 @@ describe("Core/TerrainEncoding", function () {
       minimumHeight,
       maximumHeight,
       fromENU,
-      hasVertexNormals
+      hasVertexNormals,
     );
     const result = new TerrainEncoding();
     const cloned = TerrainEncoding.clone(encoding, result);

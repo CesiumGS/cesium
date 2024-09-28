@@ -32,13 +32,14 @@ describe(
         Transforms.computeTemeToPseudoFixedMatrix(date, icrfToFixed);
       }
 
-      const moonPosition = Simon1994PlanetaryPositions.computeMoonPositionInEarthInertialFrame(
-        date
-      );
+      const moonPosition =
+        Simon1994PlanetaryPositions.computeMoonPositionInEarthInertialFrame(
+          date,
+        );
       Matrix3.multiplyByVector(icrfToFixed, moonPosition, moonPosition);
 
       camera.viewBoundingSphere(
-        new BoundingSphere(moonPosition, Ellipsoid.MOON.maximumRadius)
+        new BoundingSphere(moonPosition, Ellipsoid.MOON.maximumRadius),
       );
     }
 
@@ -80,5 +81,5 @@ describe(
       expect(moon.isDestroyed()).toEqual(true);
     });
   },
-  "WebGL"
+  "WebGL",
 );

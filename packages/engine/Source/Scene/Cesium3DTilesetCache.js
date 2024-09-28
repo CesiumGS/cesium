@@ -37,7 +37,7 @@ Cesium3DTilesetCache.prototype.add = function (tile) {
 Cesium3DTilesetCache.prototype.unloadTile = function (
   tileset,
   tile,
-  unloadCallback
+  unloadCallback,
 ) {
   const node = tile.cacheNode;
   if (!defined(node)) {
@@ -51,7 +51,7 @@ Cesium3DTilesetCache.prototype.unloadTile = function (
 
 Cesium3DTilesetCache.prototype.unloadTiles = function (
   tileset,
-  unloadCallback
+  unloadCallback,
 ) {
   const trimTiles = this._trimTiles;
   this._trimTiles = false;

@@ -18,8 +18,8 @@
     b = c.cache[a]
       ? c.cache[a].cloneNode()
       : r.test(a)
-      ? (c.cache[a] = c.createElem(a)).cloneNode()
-      : c.createElem(a);
+        ? (c.cache[a] = c.createElem(a)).cloneNode()
+        : c.createElem(a);
     return b.canHaveChildren && !s.test(a) ? c.frag.appendChild(b) : b;
   }
   function t(a, b) {
@@ -41,7 +41,7 @@
             b.frag.createElement(a);
             return 'c("' + a + '")';
           }) +
-        ");return n}"
+        ");return n}",
     )(e, b.frag);
   }
   function q(a) {
@@ -62,7 +62,8 @@
   }
   var k = l.html5 || {},
     s = /^<|^(?:button|map|select|textarea|object|iframe|option|optgroup)$/i,
-    r = /^(?:a|b|code|div|fieldset|h1|h2|h3|h4|h5|h6|i|label|li|ol|p|q|span|strong|style|table|tbody|td|th|tr|ul)$/i,
+    r =
+      /^(?:a|b|code|div|fieldset|h1|h2|h3|h4|h5|h6|i|label|li|ol|p|q|span|strong|style|table|tbody|td|th|tr|ul)$/i,
     j,
     o = "_html5shiv",
     h = 0,

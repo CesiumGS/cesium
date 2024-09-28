@@ -40,7 +40,8 @@ describe(
 
       scene.postProcessStages.fxaa.enabled = false;
       scene.postProcessStages.bloom.enabled = false;
-      scene.postProcessStages.bloom.uniforms.brightness = originalBloomBrightness;
+      scene.postProcessStages.bloom.uniforms.brightness =
+        originalBloomBrightness;
       scene.postProcessStages.ambientOcclusion.enabled = false;
       scene.renderForSpecs();
     });
@@ -65,7 +66,7 @@ describe(
       });
 
       scene.postProcessStages.add(
-        PostProcessStageLibrary.createBlackAndWhiteStage()
+        PostProcessStageLibrary.createBlackAndWhiteStage(),
       );
       scene.renderForSpecs();
       expect(scene).toRenderAndCall(function (rgba) {
@@ -91,10 +92,10 @@ describe(
         {
           url: boxTexturedUrl,
         },
-        scene
+        scene,
       ).then(function (model) {
         const stage = scene.postProcessStages.add(
-          PostProcessStageLibrary.createBlackAndWhiteStage()
+          PostProcessStageLibrary.createBlackAndWhiteStage(),
         );
         stage.selected = [];
 
@@ -145,7 +146,7 @@ describe(
       });
 
       scene.postProcessStages.add(
-        PostProcessStageLibrary.createBrightnessStage()
+        PostProcessStageLibrary.createBrightnessStage(),
       );
       scene.renderForSpecs();
       expect(scene).toRenderAndCall(function (rgba) {
@@ -186,7 +187,7 @@ describe(
       });
 
       scene.postProcessStages.add(
-        PostProcessStageLibrary.createNightVisionStage()
+        PostProcessStageLibrary.createNightVisionStage(),
       );
       scene.renderForSpecs();
       expect(scene).toRenderAndCall(function (rgba) {
@@ -226,7 +227,7 @@ describe(
       });
 
       scene.postProcessStages.add(
-        PostProcessStageLibrary.createDepthViewStage()
+        PostProcessStageLibrary.createDepthViewStage(),
       );
       scene.renderForSpecs();
       expect(scene).toRenderAndCall(function (rgba) {
@@ -302,7 +303,7 @@ describe(
       const origin = Cartesian3.fromDegrees(-123.0744619, 44.0503706, 100.0);
       const modelMatrix = Transforms.headingPitchRollToFixedFrame(
         origin,
-        new HeadingPitchRoll()
+        new HeadingPitchRoll(),
       );
 
       return loadAndZoomToModelAsync(
@@ -312,7 +313,7 @@ describe(
           incrementallyLoadTextures: false,
           modelMatrix: modelMatrix,
         },
-        scene
+        scene,
       ).then(function () {
         // The range is chosen carefully here. If it's too small and log depth
         // is off, the model may clip out of view. If it is too large, the
@@ -334,7 +335,7 @@ describe(
 
         // Render with depth of field and compare
         scene.postProcessStages.add(
-          PostProcessStageLibrary.createDepthOfFieldStage()
+          PostProcessStageLibrary.createDepthOfFieldStage(),
         );
         scene.renderForSpecs();
         expect(scene).toRenderAndCall(function (rgba) {
@@ -423,7 +424,7 @@ describe(
       const origin = Cartesian3.fromDegrees(-123.0744619, 44.0503706, 100.0);
       const modelMatrix = Transforms.headingPitchRollToFixedFrame(
         origin,
-        new HeadingPitchRoll()
+        new HeadingPitchRoll(),
       );
 
       return loadAndZoomToModelAsync(
@@ -433,7 +434,7 @@ describe(
           incrementallyLoadTextures: false,
           modelMatrix: modelMatrix,
         },
-        scene
+        scene,
       ).then(function () {
         // The range is chosen carefully here. If it's too small and log depth
         // is off, the model may clip out of view. If it is too large, the
@@ -495,5 +496,5 @@ describe(
       expect(bloom.uniforms.stepSize).toEqual(2.0);
     });
   },
-  "WebGL"
+  "WebGL",
 );

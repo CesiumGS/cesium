@@ -407,9 +407,9 @@ function getExtents(polygons) {
             Rectangle.union(
               polygons[p].computeSphericalExtents(scratchRectangle),
               extents,
-              extents
+              extents,
             ),
-          extents
+          extents,
         );
 
         extentsList[i] = undefined;
@@ -442,7 +442,7 @@ function getExtents(polygons) {
   polygonIndicesList
     .filter(defined)
     .forEach((polygonIndices, e) =>
-      polygonIndices.forEach((p) => extentsIndexByPolygon.set(p, e))
+      polygonIndices.forEach((p) => extentsIndexByPolygon.set(p, e)),
     );
 
   return {
@@ -492,11 +492,11 @@ function packPolygonsAsFloats(clippingPolygonCollection) {
       // Use fastApproximateAtan2 for alignment with shader
       const latitudeApproximation = CesiumMath.fastApproximateAtan2(
         magXY,
-        spherePoint.z
+        spherePoint.z,
       );
       const longitudeApproximation = CesiumMath.fastApproximateAtan2(
         spherePoint.x,
-        spherePoint.y
+        spherePoint.y,
       );
 
       polygonsFloat32View[floatIndex++] = latitudeApproximation;
@@ -534,14 +534,14 @@ ClippingPolygonCollection.prototype.update = function (frameState) {
 
   if (!ClippingPolygonCollection.isSupported(frameState)) {
     throw new RuntimeError(
-      "ClippingPolygonCollections are only supported for WebGL 2."
+      "ClippingPolygonCollections are only supported for WebGL 2.",
     );
   }
 
   // It'd be expensive to validate any individual position has changed. Instead verify if the list of polygon positions has had elements added or removed, which should be good enough for most cases.
   const totalPositions = this._polygons.reduce(
     (totalPositions, polygon) => totalPositions + polygon.length,
-    0
+    0,
   );
 
   if (totalPositions === this.totalPositions) {
@@ -584,7 +584,7 @@ ClippingPolygonCollection.prototype.update = function (frameState) {
     const requiredResolution = ClippingPolygonCollection.getTextureResolution(
       polygonsTexture,
       this.pixelsNeededForPolygonPositions,
-      textureResolutionScratch
+      textureResolutionScratch,
     );
 
     polygonsTexture = new Texture({
@@ -597,7 +597,7 @@ ClippingPolygonCollection.prototype.update = function (frameState) {
       flipY: false,
     });
     this._float32View = new Float32Array(
-      requiredResolution.x * requiredResolution.y * 2
+      requiredResolution.x * requiredResolution.y * 2,
     );
     this._polygonsTexture = polygonsTexture;
   }
@@ -623,7 +623,7 @@ ClippingPolygonCollection.prototype.update = function (frameState) {
     const requiredResolution = ClippingPolygonCollection.getTextureResolution(
       extentsTexture,
       this.pixelsNeededForExtents,
-      textureResolutionScratch
+      textureResolutionScratch,
     );
 
     extentsTexture = new Texture({
@@ -636,7 +636,7 @@ ClippingPolygonCollection.prototype.update = function (frameState) {
       flipY: false,
     });
     this._extentsFloat32View = new Float32Array(
-      requiredResolution.x * requiredResolution.y * 4
+      requiredResolution.x * requiredResolution.y * 4,
     );
 
     this._extentsTexture = extentsTexture;
@@ -661,10 +661,11 @@ ClippingPolygonCollection.prototype.update = function (frameState) {
   });
 
   if (!defined(signedDistanceTexture)) {
-    const textureDimensions = ClippingPolygonCollection.getClippingDistanceTextureResolution(
-      this,
-      textureResolutionScratch
-    );
+    const textureDimensions =
+      ClippingPolygonCollection.getClippingDistanceTextureResolution(
+        this,
+        textureResolutionScratch,
+      );
     signedDistanceTexture = new Texture({
       context: context,
       width: textureDimensions.x,
@@ -741,56 +742,54 @@ const scratchRectangleIntersection = new Rectangle();
  * @returns {Intersect} The intersection type: {@link Intersect.OUTSIDE} if the entire volume is not clipped, {@link Intersect.INSIDE}
  *                      if the entire volume should be clipped, and {@link Intersect.INTERSECTING} if the volume intersects the polygons and will partially clipped.
  */
-ClippingPolygonCollection.prototype.computeIntersectionWithBoundingVolume = function (
-  tileBoundingVolume,
-  ellipsoid
-) {
-  const polygons = this._polygons;
-  const length = polygons.length;
+ClippingPolygonCollection.prototype.computeIntersectionWithBoundingVolume =
+  function (tileBoundingVolume, ellipsoid) {
+    const polygons = this._polygons;
+    const length = polygons.length;
 
-  let intersection = Intersect.OUTSIDE;
-  if (this.inverse) {
-    intersection = Intersect.INSIDE;
-  }
+    let intersection = Intersect.OUTSIDE;
+    if (this.inverse) {
+      intersection = Intersect.INSIDE;
+    }
 
-  for (let i = 0; i < length; ++i) {
-    const polygon = polygons[i];
+    for (let i = 0; i < length; ++i) {
+      const polygon = polygons[i];
 
-    const polygonBoundingRectangle = polygon.computeRectangle();
-    let tileBoundingRectangle = tileBoundingVolume.rectangle;
-    if (
-      !defined(tileBoundingRectangle) &&
-      defined(tileBoundingVolume.boundingVolume?.computeCorners)
-    ) {
-      const points = tileBoundingVolume.boundingVolume.computeCorners();
-      tileBoundingRectangle = Rectangle.fromCartesianArray(
-        points,
-        ellipsoid,
-        scratchRectangleTile
+      const polygonBoundingRectangle = polygon.computeRectangle();
+      let tileBoundingRectangle = tileBoundingVolume.rectangle;
+      if (
+        !defined(tileBoundingRectangle) &&
+        defined(tileBoundingVolume.boundingVolume?.computeCorners)
+      ) {
+        const points = tileBoundingVolume.boundingVolume.computeCorners();
+        tileBoundingRectangle = Rectangle.fromCartesianArray(
+          points,
+          ellipsoid,
+          scratchRectangleTile,
+        );
+      }
+
+      if (!defined(tileBoundingRectangle)) {
+        tileBoundingRectangle = Rectangle.fromBoundingSphere(
+          tileBoundingVolume.boundingSphere,
+          ellipsoid,
+          scratchRectangleTile,
+        );
+      }
+
+      const result = Rectangle.simpleIntersection(
+        tileBoundingRectangle,
+        polygonBoundingRectangle,
+        scratchRectangleIntersection,
       );
+
+      if (defined(result)) {
+        intersection = Intersect.INTERSECTING;
+      }
     }
 
-    if (!defined(tileBoundingRectangle)) {
-      tileBoundingRectangle = Rectangle.fromBoundingSphere(
-        tileBoundingVolume.boundingSphere,
-        ellipsoid,
-        scratchRectangleTile
-      );
-    }
-
-    const result = Rectangle.simpleIntersection(
-      tileBoundingRectangle,
-      polygonBoundingRectangle,
-      scratchRectangleIntersection
-    );
-
-    if (defined(result)) {
-      intersection = Intersect.INTERSECTING;
-    }
-  }
-
-  return intersection;
-};
+    return intersection;
+  };
 
 /**
  * Sets the owner for the input ClippingPolygonCollection if there wasn't another owner.
@@ -804,7 +803,7 @@ ClippingPolygonCollection.prototype.computeIntersectionWithBoundingVolume = func
 ClippingPolygonCollection.setOwner = function (
   clippingPolygonsCollection,
   owner,
-  key
+  key,
 ) {
   // Don't destroy the ClippingPolygonCollection if it is already owned by newOwner
   if (clippingPolygonsCollection === owner[key]) {
@@ -816,7 +815,7 @@ ClippingPolygonCollection.setOwner = function (
     //>>includeStart('debug', pragmas.debug);
     if (defined(clippingPolygonsCollection._owner)) {
       throw new DeveloperError(
-        "ClippingPolygonCollection should only be assigned to one object"
+        "ClippingPolygonCollection should only be assigned to one object",
       );
     }
     //>>includeEnd('debug');
@@ -849,7 +848,7 @@ ClippingPolygonCollection.isSupported = function (scene) {
 ClippingPolygonCollection.getTextureResolution = function (
   texture,
   pixelsNeeded,
-  result
+  result,
 ) {
   if (defined(texture)) {
     result.x = texture.width;
@@ -879,7 +878,7 @@ ClippingPolygonCollection.getTextureResolution = function (
  */
 ClippingPolygonCollection.getClippingDistanceTextureResolution = function (
   clippingPolygonCollection,
-  result
+  result,
 ) {
   const texture = clippingPolygonCollection.signedDistanceTexture;
   if (defined(texture)) {
@@ -906,7 +905,7 @@ ClippingPolygonCollection.getClippingDistanceTextureResolution = function (
  */
 ClippingPolygonCollection.getClippingExtentsTextureResolution = function (
   clippingPolygonCollection,
-  result
+  result,
 ) {
   const texture = clippingPolygonCollection.extentsTexture;
   if (defined(texture)) {
@@ -918,7 +917,7 @@ ClippingPolygonCollection.getClippingExtentsTextureResolution = function (
   return ClippingPolygonCollection.getTextureResolution(
     texture,
     clippingPolygonCollection.pixelsNeededForExtents,
-    result
+    result,
   );
 };
 

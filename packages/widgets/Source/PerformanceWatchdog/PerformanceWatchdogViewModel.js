@@ -35,7 +35,7 @@ function PerformanceWatchdogViewModel(options) {
    */
   this.lowFrameRateMessage = defaultValue(
     options.lowFrameRateMessage,
-    "This application appears to be performing poorly on your system.  Please try using a different web browser or updating your video drivers."
+    "This application appears to be performing poorly on your system.  Please try using a different web browser or updating your video drivers.",
   );
 
   /**
@@ -70,13 +70,13 @@ function PerformanceWatchdogViewModel(options) {
       if (!that.lowFrameRateMessageDismissed) {
         that.showingLowFrameRateMessage = true;
       }
-    }
+    },
   );
 
   this._unsubscribeNominalFrameRate = monitor.nominalFrameRate.addEventListener(
     function () {
       that.showingLowFrameRateMessage = false;
-    }
+    },
   );
 }
 

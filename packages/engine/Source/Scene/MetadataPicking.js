@@ -36,7 +36,7 @@ const MetadataPicking = {};
 MetadataPicking.decodeRawMetadataValue = function (
   componentType,
   dataView,
-  index
+  index,
 ) {
   switch (componentType) {
     case MetadataComponentType.INT8:
@@ -83,13 +83,13 @@ MetadataPicking.decodeRawMetadataValue = function (
 MetadataPicking.decodeRawMetadataValueComponent = function (
   classProperty,
   dataView,
-  dataViewOffset
+  dataViewOffset,
 ) {
   const componentType = classProperty.componentType;
   const component = MetadataPicking.decodeRawMetadataValue(
     componentType,
     dataView,
-    dataViewOffset
+    dataViewOffset,
   );
   if (classProperty.normalized) {
     return MetadataComponentType.normalize(component, componentType);
@@ -120,12 +120,11 @@ MetadataPicking.decodeRawMetadataValueComponent = function (
 MetadataPicking.decodeRawMetadataValueElement = function (
   classProperty,
   dataView,
-  elementIndex
+  elementIndex,
 ) {
   const componentType = classProperty.componentType;
-  const componentSizeInBytes = MetadataComponentType.getSizeInBytes(
-    componentType
-  );
+  const componentSizeInBytes =
+    MetadataComponentType.getSizeInBytes(componentType);
   const type = classProperty.type;
   const componentCount = MetadataType.getComponentCount(type);
   const elementSizeInBytes = componentSizeInBytes * componentCount;
@@ -137,7 +136,7 @@ MetadataPicking.decodeRawMetadataValueElement = function (
       const component = MetadataPicking.decodeRawMetadataValueComponent(
         classProperty,
         dataView,
-        offset
+        offset,
       );
       result[i] = component;
     }
@@ -147,7 +146,7 @@ MetadataPicking.decodeRawMetadataValueElement = function (
   const result = MetadataPicking.decodeRawMetadataValueComponent(
     classProperty,
     dataView,
-    offset
+    offset,
   );
   return result;
 };
@@ -191,12 +190,12 @@ MetadataPicking.decodeRawMetadataValueElement = function (
  */
 MetadataPicking.decodeRawMetadataValues = function (
   classProperty,
-  rawPixelValues
+  rawPixelValues,
 ) {
   const dataView = new DataView(
     rawPixelValues.buffer,
     rawPixelValues.byteOffset,
-    rawPixelValues.byteLength
+    rawPixelValues.byteLength,
   );
   if (classProperty.isArray) {
     const arrayLength = classProperty.arrayLength;
@@ -205,7 +204,7 @@ MetadataPicking.decodeRawMetadataValues = function (
       const element = MetadataPicking.decodeRawMetadataValueElement(
         classProperty,
         dataView,
-        i
+        i,
       );
       result[i] = element;
     }
@@ -214,7 +213,7 @@ MetadataPicking.decodeRawMetadataValues = function (
   const result = MetadataPicking.decodeRawMetadataValueElement(
     classProperty,
     dataView,
-    0
+    0,
   );
   return result;
 };
@@ -279,11 +278,11 @@ MetadataPicking.convertToObjectType = function (type, value) {
  */
 MetadataPicking.decodeMetadataValues = function (
   classProperty,
-  rawPixelValues
+  rawPixelValues,
 ) {
   const arrayBasedResult = MetadataPicking.decodeRawMetadataValues(
     classProperty,
-    rawPixelValues
+    rawPixelValues,
   );
   if (classProperty.isArray) {
     const arrayLength = classProperty.arrayLength;
@@ -292,7 +291,7 @@ MetadataPicking.decodeMetadataValues = function (
       const arrayBasedValue = arrayBasedResult[i];
       const objectBasedValue = MetadataPicking.convertToObjectType(
         classProperty.type,
-        arrayBasedValue
+        arrayBasedValue,
       );
       result[i] = objectBasedValue;
     }
@@ -300,7 +299,7 @@ MetadataPicking.decodeMetadataValues = function (
   }
   const result = MetadataPicking.convertToObjectType(
     classProperty.type,
-    arrayBasedResult
+    arrayBasedResult,
   );
   return result;
 };

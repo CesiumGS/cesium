@@ -47,7 +47,7 @@ async function main() {
   let baseLayer;
   if (defined(endUserOptions.tmsImageryUrl)) {
     baseLayer = ImageryLayer.fromProviderAsync(
-      TileMapServiceImageryProvider.fromUrl(endUserOptions.tmsImageryUrl)
+      TileMapServiceImageryProvider.fromUrl(endUserOptions.tmsImageryUrl),
     );
   }
 
@@ -222,11 +222,11 @@ async function main() {
     let hpr = "";
     if (defined(camera.heading)) {
       hpr = `,${CesiumMath.toDegrees(camera.heading)},${CesiumMath.toDegrees(
-        camera.pitch
+        camera.pitch,
       )},${CesiumMath.toDegrees(camera.roll)}`;
     }
     endUserOptions.view = `${CesiumMath.toDegrees(
-      position.longitude
+      position.longitude,
     )},${CesiumMath.toDegrees(position.latitude)},${position.height}${hpr}`;
     history.replaceState(undefined, "", `?${objectToQuery(endUserOptions)}`);
   }

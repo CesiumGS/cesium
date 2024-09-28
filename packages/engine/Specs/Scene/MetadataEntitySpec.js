@@ -200,25 +200,25 @@ describe("Scene/MetadataEntity", function () {
 
   it("hasProperty returns false when there are no properties", function () {
     expect(
-      MetadataEntity.hasProperty("name", {}, classWithNoPropertiesDefinition)
+      MetadataEntity.hasProperty("name", {}, classWithNoPropertiesDefinition),
     ).toBe(false);
   });
 
   it("hasProperty returns false when there's no property with the given property ID", function () {
     expect(
-      MetadataEntity.hasProperty("volume", properties, classDefinition)
+      MetadataEntity.hasProperty("volume", properties, classDefinition),
     ).toBe(false);
   });
 
   it("hasProperty returns true when there's a property with the given property ID", function () {
     expect(
-      MetadataEntity.hasProperty("name", properties, classDefinition)
+      MetadataEntity.hasProperty("name", properties, classDefinition),
     ).toBe(true);
   });
 
   it("hasProperty returns true when the class has a default value for a missing property", function () {
     expect(
-      MetadataEntity.hasProperty("height", properties, classDefinition)
+      MetadataEntity.hasProperty("height", properties, classDefinition),
     ).toBe(true);
   });
 
@@ -245,8 +245,8 @@ describe("Scene/MetadataEntity", function () {
       MetadataEntity.hasPropertyBySemantic(
         "NAME",
         {},
-        classWithNoPropertiesDefinition
-      )
+        classWithNoPropertiesDefinition,
+      ),
     ).toBe(false);
   });
 
@@ -255,20 +255,20 @@ describe("Scene/MetadataEntity", function () {
       MetadataEntity.hasPropertyBySemantic(
         "VOLUME",
         properties,
-        classDefinition
-      )
+        classDefinition,
+      ),
     ).toBe(false);
   });
 
   it("hasPropertyBySemantic returns true when there's a property with the given property ID", function () {
     expect(
-      MetadataEntity.hasPropertyBySemantic("NAME", properties, classDefinition)
+      MetadataEntity.hasPropertyBySemantic("NAME", properties, classDefinition),
     ).toBe(true);
   });
 
   it("hasPropertyBySemantic returns true when the class has a default value for a missing property", function () {
     expect(
-      MetadataEntity.hasPropertyBySemantic("NAME", properties, classDefinition)
+      MetadataEntity.hasPropertyBySemantic("NAME", properties, classDefinition),
     ).toBe(true);
   });
 
@@ -277,7 +277,7 @@ describe("Scene/MetadataEntity", function () {
       MetadataEntity.hasPropertyBySemantic(
         undefined,
         properties,
-        classDefinition
+        classDefinition,
       );
     }).toThrowDeveloperError();
   });
@@ -296,14 +296,14 @@ describe("Scene/MetadataEntity", function () {
 
   it("getPropertyIds returns empty array when there are no properties", function () {
     expect(
-      MetadataEntity.getPropertyIds({}, classWithNoPropertiesDefinition).length
+      MetadataEntity.getPropertyIds({}, classWithNoPropertiesDefinition).length,
     ).toBe(0);
   });
 
   it("getPropertyIds returns array of property IDs", function () {
     // Includes height which has a default value
     expect(
-      MetadataEntity.getPropertyIds(properties, classDefinition).sort()
+      MetadataEntity.getPropertyIds(properties, classDefinition).sort(),
     ).toEqual([
       "axisColors",
       "height",
@@ -319,7 +319,7 @@ describe("Scene/MetadataEntity", function () {
     const returnedResults = MetadataEntity.getPropertyIds(
       properties,
       classDefinition,
-      results
+      results,
     );
 
     expect(results).toBe(returnedResults);
@@ -356,14 +356,14 @@ describe("Scene/MetadataEntity", function () {
     const value = MetadataEntity.getProperty(
       "position",
       properties,
-      classDefinition
+      classDefinition,
     );
     expect(value).toEqual(properties.position);
   });
 
   it("getProperty returns the default value when the property is missing", function () {
     expect(
-      MetadataEntity.getProperty("height", properties, classDefinition)
+      MetadataEntity.getProperty("height", properties, classDefinition),
     ).toBe(10.0);
   });
 
@@ -372,71 +372,71 @@ describe("Scene/MetadataEntity", function () {
       MetadataEntity.getProperty(
         "noDefault",
         noDataProperties,
-        classWithNoDataValues
-      )
+        classWithNoDataValues,
+      ),
     ).not.toBeDefined();
     expect(
       MetadataEntity.getProperty(
         "hasDefault",
         noDataProperties,
-        classWithNoDataValues
-      )
+        classWithNoDataValues,
+      ),
     ).toBe(100);
     expect(
       MetadataEntity.getProperty(
         "noDefaultVector",
         noDataProperties,
-        classWithNoDataValues
-      )
+        classWithNoDataValues,
+      ),
     ).not.toBeDefined();
     expect(
       MetadataEntity.getProperty(
         "hasDefaultVector",
         noDataProperties,
-        classWithNoDataValues
-      )
+        classWithNoDataValues,
+      ),
     ).toEqual(new Cartesian2(100.0, 100.0));
     expect(
       MetadataEntity.getProperty(
         "noDefaultArray",
         noDataProperties,
-        classWithNoDataValues
-      )
+        classWithNoDataValues,
+      ),
     ).not.toBeDefined();
     expect(
       MetadataEntity.getProperty(
         "hasDefaultArray",
         noDataProperties,
-        classWithNoDataValues
-      )
+        classWithNoDataValues,
+      ),
     ).toEqual([1, 1, 1]);
     expect(
       MetadataEntity.getProperty(
         "noDefaultArrayOfVector",
         noDataProperties,
-        classWithNoDataValues
-      )
+        classWithNoDataValues,
+      ),
     ).not.toBeDefined();
     expect(
       MetadataEntity.getProperty(
         "hasDefaultArrayOfVector",
         noDataProperties,
-        classWithNoDataValues
-      )
+        classWithNoDataValues,
+      ),
     ).toEqual([new Cartesian2(1.0, 1.0), new Cartesian2(1.0, 1.0)]);
   });
 
   it("handles offset and scale", function () {
     expect(
-      MetadataEntity.getProperty("temperature", properties, classDefinition)
+      MetadataEntity.getProperty("temperature", properties, classDefinition),
     ).toEqual(32);
 
     expect(
       MetadataEntity.getProperty(
         "temperatureArray",
         properties,
-        classDefinition
-      )
+        classDefinition,
+      ),
     ).toEqual([32, 212, 212, 32]);
   });
 
@@ -460,7 +460,7 @@ describe("Scene/MetadataEntity", function () {
 
   it("getProperty handles arrays of vectors correctly", function () {
     expect(
-      MetadataEntity.getProperty("axisColors", properties, classDefinition)
+      MetadataEntity.getProperty("axisColors", properties, classDefinition),
     ).toEqual([
       new Cartesian3(1, 0, 0),
       new Cartesian3(0, 1, 0),
@@ -470,7 +470,7 @@ describe("Scene/MetadataEntity", function () {
 
   it("setProperty returns false if property doesn't exist", function () {
     expect(
-      MetadataEntity.setProperty("volume", 100.0, properties, classDefinition)
+      MetadataEntity.setProperty("volume", 100.0, properties, classDefinition),
     ).toBe(false);
   });
 
@@ -481,13 +481,13 @@ describe("Scene/MetadataEntity", function () {
         "position",
         position,
         properties,
-        classDefinition
-      )
+        classDefinition,
+      ),
     ).toBe(true);
     const retrievedPosition = MetadataEntity.getProperty(
       "position",
       properties,
-      classDefinition
+      classDefinition,
     );
     expect(retrievedPosition).toEqual(position);
     expect(retrievedPosition).not.toBe(position); // The value is cloned
@@ -504,13 +504,13 @@ describe("Scene/MetadataEntity", function () {
         "axisColors",
         axisColors,
         properties,
-        classDefinition
-      )
+        classDefinition,
+      ),
     ).toBe(true);
     const retrievedPosition = MetadataEntity.getProperty(
       "axisColors",
       properties,
-      classDefinition
+      classDefinition,
     );
     expect(retrievedPosition).toEqual(axisColors);
     expect(retrievedPosition).not.toBe(axisColors); // The value is cloned
@@ -518,13 +518,18 @@ describe("Scene/MetadataEntity", function () {
 
   it("handles offset and scale", function () {
     expect(
-      MetadataEntity.setProperty("temperature", 70, properties, classDefinition)
+      MetadataEntity.setProperty(
+        "temperature",
+        70,
+        properties,
+        classDefinition,
+      ),
     ).toBe(true);
 
     // There is some expected loss of precision due to storing as a UINT8
     // so the result is not 0
     expect(
-      MetadataEntity.getProperty("temperature", properties, classDefinition)
+      MetadataEntity.getProperty("temperature", properties, classDefinition),
     ).toEqualEpsilon(70.11764705882354, CesiumMath.EPSILON15);
 
     const values = [32, 32, 32, 32];
@@ -533,14 +538,14 @@ describe("Scene/MetadataEntity", function () {
         "temperatureArray",
         values,
         properties,
-        classDefinition
-      )
+        classDefinition,
+      ),
     ).toBe(true);
 
     const result = MetadataEntity.getProperty(
       "temperatureArray",
       properties,
-      classDefinition
+      classDefinition,
     );
     expect(result).toEqual(values);
     expect(result).not.toBe(values); // value should be cloned
@@ -552,7 +557,7 @@ describe("Scene/MetadataEntity", function () {
         undefined,
         "Building B",
         properties,
-        classDefinition
+        classDefinition,
       );
     }).toThrowDeveloperError();
   });
@@ -563,7 +568,7 @@ describe("Scene/MetadataEntity", function () {
         "name",
         undefined,
         properties,
-        classDefinition
+        classDefinition,
       );
     }).toThrowDeveloperError();
   });
@@ -574,7 +579,7 @@ describe("Scene/MetadataEntity", function () {
         "name",
         "Building B",
         undefined,
-        classDefinition
+        classDefinition,
       );
     }).toThrowDeveloperError();
   });
@@ -590,14 +595,14 @@ describe("Scene/MetadataEntity", function () {
       MetadataEntity.getPropertyBySemantic(
         "HEIGHT",
         properties,
-        classDefinition
-      )
+        classDefinition,
+      ),
     ).toBeUndefined();
   });
 
   it("getPropertyBySemantic returns the property value", function () {
     expect(
-      MetadataEntity.getPropertyBySemantic("NAME", properties, classDefinition)
+      MetadataEntity.getPropertyBySemantic("NAME", properties, classDefinition),
     ).toBe("Building A");
   });
 
@@ -606,7 +611,7 @@ describe("Scene/MetadataEntity", function () {
       MetadataEntity.getPropertyBySemantic(
         undefined,
         properties,
-        classDefinition
+        classDefinition,
       );
     }).toThrowDeveloperError();
   });
@@ -629,11 +634,11 @@ describe("Scene/MetadataEntity", function () {
         "NAME",
         "Building B",
         properties,
-        classDefinition
-      )
+        classDefinition,
+      ),
     ).toBe(true);
     expect(
-      MetadataEntity.getProperty("name", properties, classDefinition)
+      MetadataEntity.getProperty("name", properties, classDefinition),
     ).toBe("Building B");
   });
 
@@ -643,8 +648,8 @@ describe("Scene/MetadataEntity", function () {
         "HEIGHT",
         20.0,
         properties,
-        classDefinition
-      )
+        classDefinition,
+      ),
     ).toBe(false);
   });
 
@@ -654,7 +659,7 @@ describe("Scene/MetadataEntity", function () {
         undefined,
         "Building B",
         properties,
-        classDefinition
+        classDefinition,
       );
     }).toThrowDeveloperError();
   });
@@ -665,7 +670,7 @@ describe("Scene/MetadataEntity", function () {
         "NAME",
         undefined,
         properties,
-        classDefinition
+        classDefinition,
       );
     }).toThrowDeveloperError();
   });
@@ -676,7 +681,7 @@ describe("Scene/MetadataEntity", function () {
         "NAME",
         "Building B",
         undefined,
-        classDefinition
+        classDefinition,
       );
     }).toThrowDeveloperError();
   });
@@ -687,7 +692,7 @@ describe("Scene/MetadataEntity", function () {
         "NAME",
         "Building B",
         properties,
-        undefined
+        undefined,
       );
     }).toThrowDeveloperError();
   });

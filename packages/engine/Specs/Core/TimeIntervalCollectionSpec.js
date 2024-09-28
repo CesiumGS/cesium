@@ -26,7 +26,7 @@ describe("Core/TimeIntervalCollection", function () {
     julianDates,
     isStartIncluded,
     isStopIncluded,
-    dataCallback
+    dataCallback,
   ) {
     dataCallback = defaultValue(dataCallback, defaultDataCallback);
     const length = intervals.length;
@@ -37,7 +37,7 @@ describe("Core/TimeIntervalCollection", function () {
       expect(JulianDate.compare(interval.stop, julianDates[i + 1])).toEqual(0);
       expect(interval.isStartIncluded).toBe(i === 0 ? isStartIncluded : true);
       expect(interval.isStopIncluded).toBe(
-        i === length - 1 ? isStopIncluded : false
+        i === length - 1 ? isStopIncluded : false,
       );
       expect(interval.data).toEqual(dataCallback(interval, i));
     }
@@ -291,7 +291,7 @@ describe("Core/TimeIntervalCollection", function () {
         stop: interval2.stop,
         isStartIncluded: true,
         isStopIncluded: false,
-      })
+      }),
     ).toEqual(interval2);
   });
 
@@ -325,7 +325,7 @@ describe("Core/TimeIntervalCollection", function () {
       intervals.findInterval({
         start: interval2.start,
         stop: interval2.stop,
-      })
+      }),
     ).toEqual(interval2);
   });
 
@@ -357,7 +357,7 @@ describe("Core/TimeIntervalCollection", function () {
         stop: new JulianDate(2),
         isStartIncluded: false,
         isStopIncluded: true,
-      })
+      }),
     );
     expect(intervals.isEmpty).toEqual(false);
     intervals.removeAll();
@@ -375,7 +375,7 @@ describe("Core/TimeIntervalCollection", function () {
         isStartIncluded: true,
         isStopIncluded: true,
         data: 1,
-      })
+      }),
     );
     expect(intervals.length).toEqual(1);
 
@@ -386,7 +386,7 @@ describe("Core/TimeIntervalCollection", function () {
         isStartIncluded: true,
         isStopIncluded: true,
         data: 2,
-      })
+      }),
     );
     expect(intervals.length).toEqual(3);
 
@@ -404,7 +404,7 @@ describe("Core/TimeIntervalCollection", function () {
         isStartIncluded: true,
         isStopIncluded: true,
         data: 1,
-      })
+      }),
     );
     expect(intervals.length).toEqual(1);
 
@@ -415,7 +415,7 @@ describe("Core/TimeIntervalCollection", function () {
         isStartIncluded: true,
         isStopIncluded: true,
         data: 1,
-      })
+      }),
     );
     expect(intervals.length).toEqual(1);
 
@@ -455,10 +455,10 @@ describe("Core/TimeIntervalCollection", function () {
     expect(intervals.isEmpty).toEqual(false);
 
     expect(intervals.findIntervalContainingDate(interval1.start)).toEqual(
-      interval1
+      interval1,
     );
     expect(intervals.findIntervalContainingDate(interval1.stop)).toEqual(
-      interval1
+      interval1,
     );
 
     intervals.addInterval(interval2);
@@ -469,13 +469,13 @@ describe("Core/TimeIntervalCollection", function () {
     expect(intervals.isEmpty).toEqual(false);
 
     expect(intervals.findIntervalContainingDate(interval1.start)).toEqual(
-      interval1
+      interval1,
     );
     expect(intervals.findIntervalContainingDate(interval1.stop)).toEqual(
-      interval1
+      interval1,
     );
     expect(intervals.findIntervalContainingDate(interval2.stop)).toEqual(
-      interval2
+      interval2,
     );
 
     intervals.addInterval(interval3);
@@ -485,19 +485,19 @@ describe("Core/TimeIntervalCollection", function () {
     expect(intervals.isEmpty).toEqual(false);
 
     expect(intervals.findIntervalContainingDate(interval1.start)).toEqual(
-      interval1
+      interval1,
     );
     expect(intervals.findIntervalContainingDate(interval1.stop)).toEqual(
-      interval1
+      interval1,
     );
     expect(intervals.findIntervalContainingDate(interval2.stop)).toEqual(
-      interval2
+      interval2,
     );
     expect(intervals.findIntervalContainingDate(interval3.start)).toEqual(
-      interval3
+      interval3,
     );
     expect(intervals.findIntervalContainingDate(interval3.stop)).toEqual(
-      interval3
+      interval3,
     );
   });
 
@@ -533,10 +533,10 @@ describe("Core/TimeIntervalCollection", function () {
     expect(intervals.isEmpty).toEqual(false);
 
     expect(intervals.findIntervalContainingDate(interval1.start).data).toEqual(
-      1
+      1,
     );
     expect(intervals.findIntervalContainingDate(interval1.stop).data).toEqual(
-      1
+      1,
     );
 
     intervals.addInterval(interval2);
@@ -547,13 +547,13 @@ describe("Core/TimeIntervalCollection", function () {
     expect(intervals.isEmpty).toEqual(false);
 
     expect(intervals.findIntervalContainingDate(interval1.start).data).toEqual(
-      1
+      1,
     );
     expect(intervals.findIntervalContainingDate(interval1.stop).data).toEqual(
-      2
+      2,
     );
     expect(intervals.findIntervalContainingDate(interval2.stop).data).toEqual(
-      2
+      2,
     );
 
     intervals.addInterval(interval3);
@@ -563,22 +563,22 @@ describe("Core/TimeIntervalCollection", function () {
     expect(intervals.isEmpty).toEqual(false);
 
     expect(intervals.findIntervalContainingDate(interval1.start).data).toEqual(
-      3
+      3,
     );
     expect(intervals.findIntervalContainingDate(interval1.stop).data).toEqual(
-      3
+      3,
     );
     expect(intervals.findIntervalContainingDate(interval2.start).data).toEqual(
-      3
+      3,
     );
     expect(intervals.findIntervalContainingDate(interval2.stop).data).toEqual(
-      3
+      3,
     );
     expect(intervals.findIntervalContainingDate(interval3.start).data).toEqual(
-      3
+      3,
     );
     expect(intervals.findIntervalContainingDate(interval3.stop).data).toEqual(
-      3
+      3,
     );
   });
 
@@ -601,25 +601,25 @@ describe("Core/TimeIntervalCollection", function () {
     const intervals = new TimeIntervalCollection();
     intervals.addInterval(interval1);
     expect(
-      intervals.findDataForIntervalContainingDate(interval1.start)
+      intervals.findDataForIntervalContainingDate(interval1.start),
     ).toEqual(1);
     expect(intervals.findDataForIntervalContainingDate(interval1.stop)).toEqual(
-      1
+      1,
     );
 
     intervals.addInterval(interval2);
     expect(
-      intervals.findDataForIntervalContainingDate(interval1.start)
+      intervals.findDataForIntervalContainingDate(interval1.start),
     ).toEqual(1);
     expect(intervals.findDataForIntervalContainingDate(interval1.stop)).toEqual(
-      2
+      2,
     );
     expect(intervals.findDataForIntervalContainingDate(interval2.stop)).toEqual(
-      2
+      2,
     );
 
     expect(
-      intervals.findDataForIntervalContainingDate(new JulianDate(5))
+      intervals.findDataForIntervalContainingDate(new JulianDate(5)),
     ).toBeUndefined();
   });
 
@@ -697,7 +697,7 @@ describe("Core/TimeIntervalCollection", function () {
       startDays,
       stopDays,
       isStartIncluded,
-      isStopIncluded
+      isStopIncluded,
     ) {
       return new TimeInterval({
         start: new JulianDate(startDays, 0.0, TimeStandard.TAI),
@@ -717,25 +717,25 @@ describe("Core/TimeIntervalCollection", function () {
 
     // Before first
     expect(intervals.removeInterval(createTimeInterval(1.0, 5.0))).toEqual(
-      false
+      false,
     );
     expect(intervals.length).toEqual(2);
 
     // After last
     expect(intervals.removeInterval(createTimeInterval(50.0, 60.0))).toEqual(
-      false
+      false,
     );
     expect(intervals.length).toEqual(2);
 
     // Inside hole
     expect(intervals.removeInterval(createTimeInterval(22.0, 28.0))).toEqual(
-      false
+      false,
     );
     expect(intervals.length).toEqual(2);
 
     // From beginning
     expect(intervals.removeInterval(createTimeInterval(5.0, 15.0))).toEqual(
-      true
+      true,
     );
     expect(intervals.length).toEqual(2);
     expect(JulianDate.totalDays(intervals.get(0).start)).toEqual(15.0);
@@ -743,7 +743,7 @@ describe("Core/TimeIntervalCollection", function () {
 
     // From end
     expect(intervals.removeInterval(createTimeInterval(35.0, 45.0))).toEqual(
-      true
+      true,
     );
     expect(intervals.length).toEqual(2);
     expect(JulianDate.totalDays(intervals.get(1).start)).toEqual(30.0);
@@ -755,7 +755,7 @@ describe("Core/TimeIntervalCollection", function () {
 
     // From middle of single interval
     expect(intervals.removeInterval(createTimeInterval(12.0, 18.0))).toEqual(
-      true
+      true,
     );
     expect(intervals.length).toEqual(3);
     expect(JulianDate.totalDays(intervals.get(0).stop)).toEqual(12.0);
@@ -770,7 +770,7 @@ describe("Core/TimeIntervalCollection", function () {
 
     // Span an entire interval and into part of next
     expect(intervals.removeInterval(createTimeInterval(25.0, 46.0))).toEqual(
-      true
+      true,
     );
     expect(intervals.length).toEqual(2);
     expect(JulianDate.totalDays(intervals.get(1).start)).toEqual(46.0);
@@ -783,7 +783,7 @@ describe("Core/TimeIntervalCollection", function () {
 
     // Interval ends at same date as an existing interval
     expect(intervals.removeInterval(createTimeInterval(25.0, 40.0))).toEqual(
-      true
+      true,
     );
     expect(intervals.length).toEqual(2);
     expect(JulianDate.totalDays(intervals.get(0).stop)).toEqual(20.0);
@@ -797,7 +797,7 @@ describe("Core/TimeIntervalCollection", function () {
     // Interval ends at same date as an existing interval and single point of existing
     // interval survives.
     expect(
-      intervals.removeInterval(createTimeInterval(25.0, 40.0, true, false))
+      intervals.removeInterval(createTimeInterval(25.0, 40.0, true, false)),
     ).toEqual(true);
     expect(intervals.length).toEqual(3);
     expect(JulianDate.totalDays(intervals.get(0).stop)).toEqual(20.0);
@@ -815,7 +815,7 @@ describe("Core/TimeIntervalCollection", function () {
     // Interval ends at same date as an existing interval, single point of existing
     // interval survives, and single point can be combined with the next interval.
     expect(
-      intervals.removeInterval(createTimeInterval(25.0, 40.0, true, false))
+      intervals.removeInterval(createTimeInterval(25.0, 40.0, true, false)),
     ).toEqual(true);
     expect(intervals.length).toEqual(2);
     expect(JulianDate.totalDays(intervals.get(0).stop)).toEqual(20.0);
@@ -827,7 +827,7 @@ describe("Core/TimeIntervalCollection", function () {
 
     // End point of removal interval overlaps first point of existing interval.
     expect(intervals.removeInterval(createTimeInterval(0.0, 10.0))).toEqual(
-      true
+      true,
     );
     expect(intervals.length).toEqual(1);
     expect(JulianDate.totalDays(intervals.get(0).start)).toEqual(10.0);
@@ -841,7 +841,7 @@ describe("Core/TimeIntervalCollection", function () {
     // Start point of removal interval does NOT overlap last point of existing interval
     // because the start point is not included.
     expect(
-      intervals.removeInterval(createTimeInterval(20.0, 30.0, false, true))
+      intervals.removeInterval(createTimeInterval(20.0, 30.0, false, true)),
     ).toEqual(false);
     expect(intervals.length).toEqual(1);
     expect(JulianDate.totalDays(intervals.get(0).start)).toEqual(10.0);
@@ -853,7 +853,7 @@ describe("Core/TimeIntervalCollection", function () {
     intervals.removeAll();
     intervals.addInterval(createTimeInterval(0.0, 20.0));
     expect(
-      intervals.removeInterval(createTimeInterval(0.0, 20.0, false, false))
+      intervals.removeInterval(createTimeInterval(0.0, 20.0, false, false)),
     ).toEqual(true);
     expect(intervals.length).toEqual(2);
     expect(JulianDate.totalDays(intervals.get(0).start)).toEqual(0.0);
@@ -946,37 +946,37 @@ describe("Core/TimeIntervalCollection", function () {
           isStartIncluded: true,
           isStopIncluded: true,
           data: undefined,
-        })
+        }),
       );
     }
 
     function expectCollection(collection, count, expectation) {
       expectation.forEach(function (item) {
         const interval = collection.findIntervalContainingDate(
-          new JulianDate(CONST_DAY_NUM, item.sec)
+          new JulianDate(CONST_DAY_NUM, item.sec),
         );
         if (item.data === null) {
           // expect the interval at this time not to exist
           if (interval !== undefined) {
             throw new Error(
-              `expected undefined at ${item.sec} seconds but it was ${interval.data}`
+              `expected undefined at ${item.sec} seconds but it was ${interval.data}`,
             );
           }
           expect(interval).toBeUndefined();
         } else if (interval === undefined) {
           throw new Error(
-            `expected ${item.data} at ${item.sec} seconds, but it was undefined`
+            `expected ${item.data} at ${item.sec} seconds, but it was undefined`,
           );
         } else if (interval.data !== item.data) {
           throw new Error(
-            `expected ${item.data} at ${item.sec} seconds, but it was ${interval.data}`
+            `expected ${item.data} at ${item.sec} seconds, but it was ${interval.data}`,
           );
         }
       });
 
       if (collection.length !== count) {
         throw new Error(
-          `Expected interval to have ${count} elements but it had ${collection.length}`
+          `Expected interval to have ${count} elements but it had ${collection.length}`,
         );
       }
     }
@@ -1232,7 +1232,7 @@ describe("Core/TimeIntervalCollection", function () {
         stop: new JulianDate(2),
         isStartIncluded: true,
         isStopIncluded: false,
-      })
+      }),
     );
     intervals.addInterval(
       new TimeInterval({
@@ -1240,7 +1240,7 @@ describe("Core/TimeIntervalCollection", function () {
         stop: new JulianDate(3),
         isStartIncluded: false,
         isStopIncluded: false,
-      })
+      }),
     );
     intervals.addInterval(
       new TimeInterval({
@@ -1248,7 +1248,7 @@ describe("Core/TimeIntervalCollection", function () {
         stop: new JulianDate(4),
         isStartIncluded: false,
         isStopIncluded: false,
-      })
+      }),
     );
     intervals.addInterval(
       new TimeInterval({
@@ -1256,7 +1256,7 @@ describe("Core/TimeIntervalCollection", function () {
         stop: new JulianDate(5),
         isStartIncluded: false,
         isStopIncluded: true,
-      })
+      }),
     );
 
     const removedInterval = new TimeInterval({
@@ -1280,7 +1280,7 @@ describe("Core/TimeIntervalCollection", function () {
         stop: new JulianDate(4),
         isStartIncluded: true,
         isStopIncluded: true,
-      })
+      }),
     );
     expect(left.intersect(new TimeIntervalCollection()).length).toEqual(0);
   });
@@ -1293,7 +1293,7 @@ describe("Core/TimeIntervalCollection", function () {
         stop: new JulianDate(2),
         isStartIncluded: true,
         isStopIncluded: false,
-      })
+      }),
     );
 
     const right = new TimeIntervalCollection();
@@ -1303,7 +1303,7 @@ describe("Core/TimeIntervalCollection", function () {
         stop: new JulianDate(3),
         isStartIncluded: true,
         isStopIncluded: true,
-      })
+      }),
     );
     expect(left.intersect(right).length).toEqual(0);
   });
@@ -1316,7 +1316,7 @@ describe("Core/TimeIntervalCollection", function () {
         stop: new JulianDate(4),
         isStartIncluded: true,
         isStopIncluded: true,
-      })
+      }),
     );
 
     const right = new TimeIntervalCollection();
@@ -1326,7 +1326,7 @@ describe("Core/TimeIntervalCollection", function () {
         stop: new JulianDate(3),
         isStartIncluded: false,
         isStopIncluded: false,
-      })
+      }),
     );
 
     const intersectedIntervals = left.intersect(right);
@@ -1347,7 +1347,7 @@ describe("Core/TimeIntervalCollection", function () {
         isStartIncluded: true,
         isStopIncluded: true,
         data: new TestObject(1),
-      })
+      }),
     );
 
     const right = new TimeIntervalCollection();
@@ -1358,13 +1358,13 @@ describe("Core/TimeIntervalCollection", function () {
         isStartIncluded: false,
         isStopIncluded: false,
         data: new TestObject(2),
-      })
+      }),
     );
 
     const intersectedIntervals = left.intersect(
       right,
       TestObject.equals,
-      TestObject.merge
+      TestObject.merge,
     );
 
     expect(intersectedIntervals.length).toEqual(1);
@@ -1416,7 +1416,7 @@ describe("Core/TimeIntervalCollection", function () {
         isStartIncluded: true,
         isStopIncluded: true,
         data: {},
-      })
+      }),
     );
     left.addInterval(
       new TimeInterval({
@@ -1425,7 +1425,7 @@ describe("Core/TimeIntervalCollection", function () {
         isStartIncluded: false,
         isStopIncluded: true,
         data: {},
-      })
+      }),
     );
     left.addInterval(
       new TimeInterval({
@@ -1434,7 +1434,7 @@ describe("Core/TimeIntervalCollection", function () {
         isStartIncluded: true,
         isStopIncluded: true,
         data: {},
-      })
+      }),
     );
 
     const right = new TimeIntervalCollection();
@@ -1445,7 +1445,7 @@ describe("Core/TimeIntervalCollection", function () {
         isStartIncluded: true,
         isStopIncluded: true,
         data: {},
-      })
+      }),
     );
     right.addInterval(
       new TimeInterval({
@@ -1454,7 +1454,7 @@ describe("Core/TimeIntervalCollection", function () {
         isStartIncluded: false,
         isStopIncluded: true,
         data: {},
-      })
+      }),
     );
     right.addInterval(
       new TimeInterval({
@@ -1463,7 +1463,7 @@ describe("Core/TimeIntervalCollection", function () {
         isStartIncluded: true,
         isStopIncluded: true,
         data: {},
-      })
+      }),
     );
 
     expect(left.equals(right)).toEqual(false);
@@ -1471,13 +1471,13 @@ describe("Core/TimeIntervalCollection", function () {
     expect(
       left.equals(right, function () {
         return true;
-      })
+      }),
     ).toEqual(true);
 
     expect(
       left.equals(right, function () {
         return false;
-      })
+      }),
     ).toEqual(false);
   });
 
@@ -1891,7 +1891,7 @@ describe("Core/TimeIntervalCollection", function () {
     // Check trailing interval
     const trailing = intervals._intervals.pop();
     expect(
-      JulianDate.compare(trailing.start, julianDates[iso8601Dates.length - 1])
+      JulianDate.compare(trailing.start, julianDates[iso8601Dates.length - 1]),
     ).toEqual(0);
     expect(JulianDate.compare(trailing.stop, Iso8601.MAXIMUM_VALUE)).toEqual(0);
     expect(trailing.isStartIncluded).toBe(false);
@@ -1938,7 +1938,7 @@ describe("Core/TimeIntervalCollection", function () {
     // Check trailing interval
     const trailing = intervals._intervals.pop();
     expect(
-      JulianDate.compare(trailing.start, julianDates[iso8601Dates.length - 1])
+      JulianDate.compare(trailing.start, julianDates[iso8601Dates.length - 1]),
     ).toEqual(0);
     expect(JulianDate.compare(trailing.stop, Iso8601.MAXIMUM_VALUE)).toEqual(0);
     expect(trailing.isStartIncluded).toBe(true);
@@ -2009,7 +2009,7 @@ describe("Core/TimeIntervalCollection", function () {
     // Check trailing interval
     const trailing = intervals._intervals.pop();
     expect(
-      JulianDate.compare(trailing.start, julianDates[iso8601Dates.length - 1])
+      JulianDate.compare(trailing.start, julianDates[iso8601Dates.length - 1]),
     ).toEqual(0);
     expect(JulianDate.compare(trailing.stop, Iso8601.MAXIMUM_VALUE)).toEqual(0);
     expect(trailing.isStartIncluded).toBe(false);
@@ -2054,7 +2054,7 @@ describe("Core/TimeIntervalCollection", function () {
     // Check trailing interval
     const trailing = intervals._intervals.pop();
     expect(
-      JulianDate.compare(trailing.start, julianDates[iso8601Dates.length - 1])
+      JulianDate.compare(trailing.start, julianDates[iso8601Dates.length - 1]),
     ).toEqual(0);
     expect(JulianDate.compare(trailing.stop, Iso8601.MAXIMUM_VALUE)).toEqual(0);
     expect(trailing.isStartIncluded).toBe(true);
@@ -2103,7 +2103,7 @@ describe("Core/TimeIntervalCollection", function () {
     // Check trailing interval
     const trailing = intervals._intervals.pop();
     expect(
-      JulianDate.compare(trailing.start, julianDates[iso8601Dates.length - 1])
+      JulianDate.compare(trailing.start, julianDates[iso8601Dates.length - 1]),
     ).toEqual(0);
     expect(JulianDate.compare(trailing.stop, Iso8601.MAXIMUM_VALUE)).toEqual(0);
     expect(trailing.isStartIncluded).toBe(true);
@@ -2152,7 +2152,7 @@ describe("Core/TimeIntervalCollection", function () {
     // Check trailing interval
     const trailing = intervals._intervals.pop();
     expect(
-      JulianDate.compare(trailing.start, julianDates[iso8601Dates.length - 1])
+      JulianDate.compare(trailing.start, julianDates[iso8601Dates.length - 1]),
     ).toEqual(0);
     expect(JulianDate.compare(trailing.stop, Iso8601.MAXIMUM_VALUE)).toEqual(0);
     expect(trailing.isStartIncluded).toBe(true);

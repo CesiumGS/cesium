@@ -121,7 +121,7 @@ VelocityOrientationProperty.prototype.getValue = function (time, result) {
   const velocity = this._velocityVectorProperty._getValue(
     time,
     velocityScratch,
-    positionScratch
+    positionScratch,
   );
 
   if (!defined(velocity)) {
@@ -132,7 +132,7 @@ VelocityOrientationProperty.prototype.getValue = function (time, result) {
     positionScratch,
     velocity,
     this._ellipsoid,
-    rotationScratch
+    rotationScratch,
   );
   return Quaternion.fromRotationMatrix(rotationScratch, result);
 };
@@ -150,7 +150,7 @@ VelocityOrientationProperty.prototype.equals = function (other) {
     (other instanceof VelocityOrientationProperty &&
       Property.equals(
         this._velocityVectorProperty,
-        other._velocityVectorProperty
+        other._velocityVectorProperty,
       ) &&
       (this._ellipsoid === other._ellipsoid ||
         this._ellipsoid.equals(other._ellipsoid)))

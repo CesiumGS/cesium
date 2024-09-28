@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -18,10 +18,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -81,11 +78,9 @@
             viewer.scene.fog.density = newValue;
           });
 
-        Cesium.knockout
-          .getObservable(viewModel, "sse")
-          .subscribe(function (newValue) {
-            viewer.scene.fog.screenSpaceErrorFactor = newValue;
-          });
+        Cesium.knockout.getObservable(viewModel, "sse").subscribe(function (newValue) {
+          viewer.scene.fog.screenSpaceErrorFactor = newValue;
+        });
 
         viewModel.enabled = viewer.scene.fog.enabled;
         viewModel.density = viewer.scene.fog.density;
@@ -96,7 +91,7 @@
             destination: new Cesium.Cartesian3(
               -2467730.5740817646,
               -4390507.315824514,
-              3906155.113316938
+              3906155.113316938,
             ),
             orientation: {
               heading: 4.492211521856625,
@@ -110,7 +105,7 @@
             destination: new Cesium.Cartesian3(
               -734001.9511656855,
               -4214090.596769834,
-              4715898.125886317
+              4715898.125886317,
             ),
             orientation: {
               heading: 5.634257362559497,

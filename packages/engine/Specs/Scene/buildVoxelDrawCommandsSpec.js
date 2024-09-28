@@ -16,7 +16,7 @@ describe("Scene/buildVoxelDrawCommands", function () {
     scene = createScene();
 
     provider = await Cesium3DTilesVoxelProvider.fromUrl(
-      "./Data/Cesium3DTiles/Voxel/VoxelEllipsoid3DTiles/tileset.json"
+      "./Data/Cesium3DTiles/Voxel/VoxelEllipsoid3DTiles/tileset.json",
     );
   });
 

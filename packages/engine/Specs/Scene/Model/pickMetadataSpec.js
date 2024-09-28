@@ -40,7 +40,7 @@ const propertyValueEpsilon = 0.01;
  */
 function createEmbeddedGltfWithPropertyTexture(
   schema,
-  propertyTextureProperties
+  propertyTextureProperties,
 ) {
   const result = {
     extensions: {
@@ -99,8 +99,7 @@ function createEmbeddedGltfWithPropertyTexture(
     },
     buffers: [
       {
-        uri:
-          "data:application/gltf-buffer;base64,AAABAAIAAQADAAIAAAAAAAAAAAAAAAAAAACAPwAAAAAAAAAAAAAAAAAAgD8AAAAAAACAPwAAgD8AAAAAAAAAAAAAAAAAAIA/AAAAAAAAAAAAAIA/AAAAAAAAAAAAAIA/AAAAAAAAAAAAAIA/AAAAAAAAgD8AAAAAAACAPwAAgD8AAAAAAAAAAAAAAAAAAAAAAACAPwAAAAAAAAAA",
+        uri: "data:application/gltf-buffer;base64,AAABAAIAAQADAAIAAAAAAAAAAAAAAAAAAACAPwAAAAAAAAAAAAAAAAAAgD8AAAAAAACAPwAAgD8AAAAAAAAAAAAAAAAAAIA/AAAAAAAAAAAAAIA/AAAAAAAAAAAAAIA/AAAAAAAAAAAAAIA/AAAAAAAAgD8AAAAAAACAPwAAgD8AAAAAAAAAAAAAAAAAAAAAAACAPwAAAAAAAAAA",
         byteLength: 156,
       },
     ],
@@ -123,8 +122,7 @@ function createEmbeddedGltfWithPropertyTexture(
       {
         // A 16x16 pixels image that contains all combinations of
         // (0, 127, 255) in its upper-left 9x9 pixels
-        uri:
-          "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAi0lEQVR42u2RUQ6AMAhDd3OO/qQt8VP8NRHjNpf0leI5ruqXbNVL4c9Dn+E8ljV+iLaXaoAY1YDaADaynBg2gFZLR1+wAdJEWZpW1AIVqmjCruqybw4qnEJbbQBHdWoS2XIUXdp+F8DNUOpM0tIZCusQJrzHNTnsOy2pFTZ7xpKhYFUu4M1v+OvrdQGABqEpS2kSLgAAAABJRU5ErkJggg==",
+        uri: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAi0lEQVR42u2RUQ6AMAhDd3OO/qQt8VP8NRHjNpf0leI5ruqXbNVL4c9Dn+E8ljV+iLaXaoAY1YDaADaynBg2gFZLR1+wAdJEWZpW1AIVqmjCruqybw4qnEJbbQBHdWoS2XIUXdp+F8DNUOpM0tIZCusQJrzHNTnsOy2pFTZ7xpKhYFUu4M1v+OvrdQGABqEpS2kSLgAAAABJRU5ErkJggg==",
         mimeType: "image/png",
       },
     ],
@@ -266,8 +264,7 @@ function createPropertyTextureGltfScalarArray() {
         name: "Example class",
         properties: {
           example_fixed_length_UINT8_SCALAR_array: {
-            name:
-              "Example fixed-length SCALAR array property with UINT8 components",
+            name: "Example fixed-length SCALAR array property with UINT8 components",
             type: "SCALAR",
             componentType: "UINT8",
             array: true,
@@ -435,7 +432,7 @@ async function loadAsModel(scene, gltf) {
       scene.renderForSpecs();
       return model.ready;
     },
-    { timeout: 10000 }
+    { timeout: 10000 },
   );
 }
 
@@ -479,7 +476,7 @@ function pickMetadataAt(scene, schemaId, className, propertyName, x, y) {
     screenPosition,
     schemaId,
     className,
-    propertyName
+    propertyName,
   );
   return metadataValue;
 }
@@ -493,7 +490,7 @@ describe(
     const webglStub = !!window.webglStub;
 
     const defaultDate = JulianDate.fromDate(
-      new Date("January 1, 2014 12:00:00 UTC")
+      new Date("January 1, 2014 12:00:00 UTC"),
     );
 
     it("throws without windowPosition", async function () {
@@ -585,13 +582,13 @@ describe(
 
       const windowPosition = new Cartesian2(
         Math.floor(canvasSizeX / 2),
-        Math.floor(canvasSizeY / 2)
+        Math.floor(canvasSizeY / 2),
       );
       const actualMetadataValue = scene.pickMetadata(
         windowPosition,
         schemaId,
         className,
-        propertyName
+        propertyName,
       );
       expect(actualMetadataValue).toBeUndefined();
       scene.destroyForSpecs();
@@ -615,13 +612,13 @@ describe(
 
       const windowPosition = new Cartesian2(
         Math.floor(canvasSizeX / 2),
-        Math.floor(canvasSizeY / 2)
+        Math.floor(canvasSizeY / 2),
       );
       const actualMetadataValue = scene.pickMetadata(
         windowPosition,
         schemaId,
         className,
-        propertyName
+        propertyName,
       );
       expect(actualMetadataValue).toBeUndefined();
       scene.destroyForSpecs();
@@ -641,7 +638,7 @@ describe(
 
       const windowPosition = new Cartesian2(
         Math.floor(canvasSizeX / 2),
-        Math.floor(canvasSizeY / 2)
+        Math.floor(canvasSizeY / 2),
       );
       const metadataSchema = scene.pickMetadataSchema(windowPosition);
 
@@ -673,7 +670,7 @@ describe(
 
       const windowPosition = new Cartesian2(
         Math.floor(canvasSizeX / 2),
-        Math.floor(canvasSizeY / 2)
+        Math.floor(canvasSizeY / 2),
       );
 
       // The pickMetadataSchema call should return the schema that
@@ -717,7 +714,7 @@ describe(
         className,
         propertyName,
         0,
-        0
+        0,
       );
       const actualMetadataValue1 = pickMetadataAt(
         scene,
@@ -725,7 +722,7 @@ describe(
         className,
         propertyName,
         0,
-        1
+        1,
       );
       const actualMetadataValue2 = pickMetadataAt(
         scene,
@@ -733,7 +730,7 @@ describe(
         className,
         propertyName,
         0,
-        2
+        2,
       );
       const expectedMetadataValue0 = 0;
       const expectedMetadataValue1 = 127;
@@ -741,15 +738,15 @@ describe(
 
       expect(actualMetadataValue0).toEqualEpsilon(
         expectedMetadataValue0,
-        propertyValueEpsilon
+        propertyValueEpsilon,
       );
       expect(actualMetadataValue1).toEqualEpsilon(
         expectedMetadataValue1,
-        propertyValueEpsilon
+        propertyValueEpsilon,
       );
       expect(actualMetadataValue2).toEqualEpsilon(
         expectedMetadataValue2,
-        propertyValueEpsilon
+        propertyValueEpsilon,
       );
       scene.destroyForSpecs();
     });
@@ -784,7 +781,7 @@ describe(
         className,
         propertyName,
         0,
-        0
+        0,
       );
       const actualMetadataValue1 = pickMetadataAt(
         scene,
@@ -792,7 +789,7 @@ describe(
         className,
         propertyName,
         3,
-        0
+        0,
       );
       const actualMetadataValue2 = pickMetadataAt(
         scene,
@@ -800,7 +797,7 @@ describe(
         className,
         propertyName,
         6,
-        0
+        0,
       );
       const expectedMetadataValue0 = 0.0;
       const expectedMetadataValue1 = 0.5;
@@ -808,15 +805,15 @@ describe(
 
       expect(actualMetadataValue0).toEqualEpsilon(
         expectedMetadataValue0,
-        propertyValueEpsilon
+        propertyValueEpsilon,
       );
       expect(actualMetadataValue1).toEqualEpsilon(
         expectedMetadataValue1,
-        propertyValueEpsilon
+        propertyValueEpsilon,
       );
       expect(actualMetadataValue2).toEqualEpsilon(
         expectedMetadataValue2,
-        propertyValueEpsilon
+        propertyValueEpsilon,
       );
       scene.destroyForSpecs();
     });
@@ -851,7 +848,7 @@ describe(
         className,
         propertyName,
         0,
-        0
+        0,
       );
       const actualMetadataValue1 = pickMetadataAt(
         scene,
@@ -859,7 +856,7 @@ describe(
         className,
         propertyName,
         1,
-        1
+        1,
       );
       const actualMetadataValue2 = pickMetadataAt(
         scene,
@@ -867,7 +864,7 @@ describe(
         className,
         propertyName,
         2,
-        2
+        2,
       );
       const expectedMetadataValue0 = [0, 0, 0];
       const expectedMetadataValue1 = [127, 0, 127];
@@ -875,15 +872,15 @@ describe(
 
       expect(actualMetadataValue0).toEqualEpsilon(
         expectedMetadataValue0,
-        propertyValueEpsilon
+        propertyValueEpsilon,
       );
       expect(actualMetadataValue1).toEqualEpsilon(
         expectedMetadataValue1,
-        propertyValueEpsilon
+        propertyValueEpsilon,
       );
       expect(actualMetadataValue2).toEqualEpsilon(
         expectedMetadataValue2,
-        propertyValueEpsilon
+        propertyValueEpsilon,
       );
       scene.destroyForSpecs();
     });
@@ -919,7 +916,7 @@ describe(
         className,
         propertyName,
         0,
-        0
+        0,
       );
       const actualMetadataValue1 = pickMetadataAt(
         scene,
@@ -927,7 +924,7 @@ describe(
         className,
         propertyName,
         1,
-        1
+        1,
       );
       const actualMetadataValue2 = pickMetadataAt(
         scene,
@@ -935,7 +932,7 @@ describe(
         className,
         propertyName,
         2,
-        2
+        2,
       );
       const expectedMetadataValue0 = new Cartesian2(0, 0);
       const expectedMetadataValue1 = new Cartesian2(127, 0);
@@ -943,15 +940,15 @@ describe(
 
       expect(actualMetadataValue0).toEqualEpsilon(
         expectedMetadataValue0,
-        propertyValueEpsilon
+        propertyValueEpsilon,
       );
       expect(actualMetadataValue1).toEqualEpsilon(
         expectedMetadataValue1,
-        propertyValueEpsilon
+        propertyValueEpsilon,
       );
       expect(actualMetadataValue2).toEqualEpsilon(
         expectedMetadataValue2,
-        propertyValueEpsilon
+        propertyValueEpsilon,
       );
       scene.destroyForSpecs();
     });
@@ -987,7 +984,7 @@ describe(
         className,
         propertyName,
         0,
-        0
+        0,
       );
       const actualMetadataValue1 = pickMetadataAt(
         scene,
@@ -995,7 +992,7 @@ describe(
         className,
         propertyName,
         1,
-        1
+        1,
       );
       const actualMetadataValue2 = pickMetadataAt(
         scene,
@@ -1003,7 +1000,7 @@ describe(
         className,
         propertyName,
         2,
-        2
+        2,
       );
 
       const expectedMetadataValue0 = new Cartesian2(0.0, 0.0);
@@ -1012,15 +1009,15 @@ describe(
 
       expect(actualMetadataValue0).toEqualEpsilon(
         expectedMetadataValue0,
-        propertyValueEpsilon
+        propertyValueEpsilon,
       );
       expect(actualMetadataValue1).toEqualEpsilon(
         expectedMetadataValue1,
-        propertyValueEpsilon
+        propertyValueEpsilon,
       );
       expect(actualMetadataValue2).toEqualEpsilon(
         expectedMetadataValue2,
-        propertyValueEpsilon
+        propertyValueEpsilon,
       );
       scene.destroyForSpecs();
     });
@@ -1056,7 +1053,7 @@ describe(
         className,
         propertyName,
         0,
-        0
+        0,
       );
       const actualMetadataValue1 = pickMetadataAt(
         scene,
@@ -1064,7 +1061,7 @@ describe(
         className,
         propertyName,
         1,
-        1
+        1,
       );
       const actualMetadataValue2 = pickMetadataAt(
         scene,
@@ -1072,7 +1069,7 @@ describe(
         className,
         propertyName,
         2,
-        2
+        2,
       );
       const expectedMetadataValue0 = new Cartesian3(0, 0, 0);
       const expectedMetadataValue1 = new Cartesian3(127, 0, 127);
@@ -1080,15 +1077,15 @@ describe(
 
       expect(actualMetadataValue0).toEqualEpsilon(
         expectedMetadataValue0,
-        propertyValueEpsilon
+        propertyValueEpsilon,
       );
       expect(actualMetadataValue1).toEqualEpsilon(
         expectedMetadataValue1,
-        propertyValueEpsilon
+        propertyValueEpsilon,
       );
       expect(actualMetadataValue2).toEqualEpsilon(
         expectedMetadataValue2,
-        propertyValueEpsilon
+        propertyValueEpsilon,
       );
       scene.destroyForSpecs();
     });
@@ -1124,7 +1121,7 @@ describe(
         className,
         propertyName,
         0,
-        0
+        0,
       );
       const actualMetadataValue1 = pickMetadataAt(
         scene,
@@ -1132,7 +1129,7 @@ describe(
         className,
         propertyName,
         1,
-        1
+        1,
       );
       const actualMetadataValue2 = pickMetadataAt(
         scene,
@@ -1140,7 +1137,7 @@ describe(
         className,
         propertyName,
         2,
-        2
+        2,
       );
 
       const expectedMetadataValue0 = new Cartesian4(0, 0, 0, 0);
@@ -1149,18 +1146,18 @@ describe(
 
       expect(actualMetadataValue0).toEqualEpsilon(
         expectedMetadataValue0,
-        propertyValueEpsilon
+        propertyValueEpsilon,
       );
       expect(actualMetadataValue1).toEqualEpsilon(
         expectedMetadataValue1,
-        propertyValueEpsilon
+        propertyValueEpsilon,
       );
       expect(actualMetadataValue2).toEqualEpsilon(
         expectedMetadataValue2,
-        propertyValueEpsilon
+        propertyValueEpsilon,
       );
       scene.destroyForSpecs();
     });
   },
-  "WebGL"
+  "WebGL",
 );

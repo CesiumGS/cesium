@@ -48,7 +48,7 @@ export default function pickModel(
   verticalExaggeration,
   relativeHeight,
   ellipsoid,
-  result
+  result,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("model", model);
@@ -70,11 +70,11 @@ export default function pickModel(
 
     let nodeComputedTransform = Matrix4.clone(
       runtimeNode.computedTransform,
-      scratchNodeComputedTransform
+      scratchNodeComputedTransform,
     );
     let modelMatrix = Matrix4.clone(
       sceneGraph.computedModelMatrix,
-      scratchModelMatrix
+      scratchModelMatrix,
     );
 
     const instances = node.instances;
@@ -84,13 +84,13 @@ export default function pickModel(
         modelMatrix = Matrix4.multiplyTransformation(
           model.modelMatrix,
           sceneGraph.components.transform,
-          modelMatrix
+          modelMatrix,
         );
 
         nodeComputedTransform = Matrix4.multiplyTransformation(
           sceneGraph.axisCorrectionMatrix,
           runtimeNode.computedTransform,
-          nodeComputedTransform
+          nodeComputedTransform,
         );
       }
     }
@@ -98,14 +98,14 @@ export default function pickModel(
     let computedModelMatrix = Matrix4.multiplyTransformation(
       modelMatrix,
       nodeComputedTransform,
-      scratchcomputedModelMatrix
+      scratchcomputedModelMatrix,
     );
 
     if (frameState.mode !== SceneMode.SCENE3D) {
       computedModelMatrix = Transforms.basisTo2D(
         frameState.mapProjection,
         computedModelMatrix,
-        computedModelMatrix
+        computedModelMatrix,
       );
     }
 
@@ -122,7 +122,7 @@ export default function pickModel(
         if (defined(instanceTransformsBuffer) && frameState.context.webgl2) {
           transformsTypedArray = ComponentDatatype.createTypedArray(
             instanceComponentDatatype,
-            transformsCount * transformElements
+            transformsCount * transformElements,
           );
           instanceTransformsBuffer.getBufferData(transformsTypedArray);
         }
@@ -148,21 +148,21 @@ export default function pickModel(
             0,
             0,
             0,
-            1
+            1,
           );
 
           if (instances.transformInWorldSpace) {
             Matrix4.multiplyTransformation(
               transform,
               nodeComputedTransform,
-              transform
+              transform,
             );
             Matrix4.multiplyTransformation(modelMatrix, transform, transform);
           } else {
             Matrix4.multiplyTransformation(
               transform,
               computedModelMatrix,
-              transform
+              transform,
             );
           }
           transforms.push(transform);
@@ -183,11 +183,11 @@ export default function pickModel(
         const boundingSphere = BoundingSphere.transform(
           runtimePrimitive.boundingSphere,
           computedModelMatrix,
-          scratchBoundingSphere
+          scratchBoundingSphere,
         );
         const boundsIntersection = IntersectionTests.raySphere(
           ray,
-          boundingSphere
+          boundingSphere,
         );
         if (!defined(boundsIntersection)) {
           continue;
@@ -196,7 +196,7 @@ export default function pickModel(
 
       const positionAttribute = ModelUtility.getAttributeBySemantic(
         primitive,
-        VertexAttributeSemantic.POSITION
+        VertexAttributeSemantic.POSITION,
       );
       const byteOffset = positionAttribute.byteOffset;
       const byteStride = positionAttribute.byteStride;
@@ -256,13 +256,13 @@ export default function pickModel(
         if (defined(verticesBuffer) && frameState.context.webgl2) {
           vertices = ComponentDatatype.createTypedArray(
             componentDatatype,
-            elementCount
+            elementCount,
           );
           verticesBuffer.getBufferData(
             vertices,
             isInterleaved ? 0 : byteOffset,
             0,
-            elementCount
+            elementCount,
           );
         }
 
@@ -271,7 +271,7 @@ export default function pickModel(
             vertices,
             componentDatatype,
             attributeType,
-            vertexCount
+            vertexCount,
           );
         }
       }
@@ -301,7 +301,7 @@ export default function pickModel(
             verticalExaggeration,
             relativeHeight,
             ellipsoid,
-            scratchV0
+            scratchV0,
           );
           const v1 = getVertexPosition(
             vertices,
@@ -313,7 +313,7 @@ export default function pickModel(
             verticalExaggeration,
             relativeHeight,
             ellipsoid,
-            scratchV1
+            scratchV1,
           );
           const v2 = getVertexPosition(
             vertices,
@@ -325,7 +325,7 @@ export default function pickModel(
             verticalExaggeration,
             relativeHeight,
             ellipsoid,
-            scratchV2
+            scratchV2,
           );
 
           const t = IntersectionTests.rayTriangleParametric(
@@ -333,7 +333,7 @@ export default function pickModel(
             v0,
             v1,
             v2,
-            defaultValue(model.backFaceCulling, true)
+            defaultValue(model.backFaceCulling, true),
           );
 
           if (defined(t)) {
@@ -374,7 +374,7 @@ function getVertexPosition(
   verticalExaggeration,
   relativeHeight,
   ellipsoid,
-  result
+  result,
 ) {
   const i = offset + index * numElements;
   result.x = vertices[i];
@@ -386,7 +386,7 @@ function getVertexPosition(
       result = AttributeCompression.octDecodeInRange(
         result,
         quantization.normalizationRange,
-        result
+        result,
       );
 
       if (quantization.octEncodedZXY) {
@@ -399,13 +399,13 @@ function getVertexPosition(
       result = Cartesian3.multiplyComponents(
         result,
         quantization.quantizedVolumeStepSize,
-        result
+        result,
       );
 
       result = Cartesian3.add(
         result,
         quantization.quantizedVolumeOffset,
-        result
+        result,
       );
     }
   }
@@ -418,7 +418,7 @@ function getVertexPosition(
       ellipsoid,
       verticalExaggeration,
       relativeHeight,
-      result
+      result,
     );
   }
 

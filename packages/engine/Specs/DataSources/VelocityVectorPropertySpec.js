@@ -138,11 +138,11 @@ describe("DataSources/VelocityVectorProperty", function () {
     const expectedVelocity = new Cartesian3(20.0, 0.0, 0.0);
     expect(property.getValue(times[0])).toEqualEpsilon(
       expectedVelocity,
-      CesiumMath.EPSILON13
+      CesiumMath.EPSILON13,
     );
     expect(property.getValue(times[1])).toEqualEpsilon(
       expectedVelocity,
-      CesiumMath.EPSILON13
+      CesiumMath.EPSILON13,
     );
   });
 
@@ -168,7 +168,7 @@ describe("DataSources/VelocityVectorProperty", function () {
 
   it("produces normalized value of undefined with constant position", function () {
     const position = new ConstantPositionProperty(
-      new Cartesian3(1.0, 2.0, 3.0)
+      new Cartesian3(1.0, 2.0, 3.0),
     );
 
     const property = new VelocityVectorProperty(position);
@@ -177,7 +177,7 @@ describe("DataSources/VelocityVectorProperty", function () {
 
   it("produces unnormalized value of zero with constant position", function () {
     const position = new ConstantPositionProperty(
-      new Cartesian3(1.0, 2.0, 3.0)
+      new Cartesian3(1.0, 2.0, 3.0),
     );
 
     const property = new VelocityVectorProperty(position, false);

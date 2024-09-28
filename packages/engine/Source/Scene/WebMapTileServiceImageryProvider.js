@@ -131,7 +131,7 @@ function WebMapTileServiceImageryProvider(options) {
   }
   if (defined(options.times) && !defined(options.clock)) {
     throw new DeveloperError(
-      "options.times was specified, so options.clock is required."
+      "options.times was specified, so options.clock is required.",
     );
   }
   //>>includeEnd('debug');
@@ -190,7 +190,7 @@ function WebMapTileServiceImageryProvider(options) {
 
   this._rectangle = defaultValue(
     options.rectangle,
-    this._tilingScheme.rectangle
+    this._tilingScheme.rectangle,
   );
   this._dimensions = options.dimensions;
 
@@ -216,18 +216,18 @@ function WebMapTileServiceImageryProvider(options) {
   // level will cause too many tiles to be downloaded and rendered.
   const swTile = this._tilingScheme.positionToTileXY(
     Rectangle.southwest(this._rectangle),
-    this._minimumLevel
+    this._minimumLevel,
   );
   const neTile = this._tilingScheme.positionToTileXY(
     Rectangle.northeast(this._rectangle),
-    this._minimumLevel
+    this._minimumLevel,
   );
   const tileCount =
     (Math.abs(neTile.x - swTile.x) + 1) * (Math.abs(neTile.y - swTile.y) + 1);
   //>>includeStart('debug', pragmas.debug);
   if (tileCount > 4) {
     throw new DeveloperError(
-      `The imagery provider's rectangle and minimumLevel indicate that there are ${tileCount} tiles at the minimum level. Imagery providers with more than four tiles at the minimum level are not supported.`
+      `The imagery provider's rectangle and minimumLevel indicate that there are ${tileCount} tiles at the minimum level. Imagery providers with more than four tiles at the minimum level are not supported.`,
     );
   }
   //>>includeEnd('debug');
@@ -533,7 +533,7 @@ Object.defineProperties(WebMapTileServiceImageryProvider.prototype, {
 WebMapTileServiceImageryProvider.prototype.getTileCredits = function (
   x,
   y,
-  level
+  level,
 ) {
   return undefined;
 };
@@ -552,7 +552,7 @@ WebMapTileServiceImageryProvider.prototype.requestImage = function (
   x,
   y,
   level,
-  request
+  request,
 ) {
   let result;
   const timeDynamicImagery = this._timeDynamicImagery;
@@ -593,7 +593,7 @@ WebMapTileServiceImageryProvider.prototype.pickFeatures = function (
   y,
   level,
   longitude,
-  latitude
+  latitude,
 ) {
   return undefined;
 };

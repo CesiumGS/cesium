@@ -22,21 +22,21 @@ function computeEllipse(options) {
   boundingSphereCenter = Cartesian3.multiplyByScalar(
     options.ellipsoid.geodeticSurfaceNormal(center, boundingSphereCenter),
     options.height,
-    boundingSphereCenter
+    boundingSphereCenter,
   );
   boundingSphereCenter = Cartesian3.add(
     center,
     boundingSphereCenter,
-    boundingSphereCenter
+    boundingSphereCenter,
   );
   const boundingSphere = new BoundingSphere(
     boundingSphereCenter,
-    options.semiMajorAxis
+    options.semiMajorAxis,
   );
   const positions = EllipseGeometryLibrary.computeEllipsePositions(
     options,
     false,
-    true
+    true,
   ).outerPositions;
 
   const attributes = new GeometryAttributes({
@@ -46,7 +46,7 @@ function computeEllipse(options) {
       values: EllipseGeometryLibrary.raisePositionsToHeight(
         positions,
         options,
-        false
+        false,
       ),
     }),
   });
@@ -75,31 +75,31 @@ function computeExtrudedEllipse(options) {
   let scaledNormal = Cartesian3.multiplyByScalar(
     ellipsoid.geodeticSurfaceNormal(center, scratchCartesian1),
     options.height,
-    scratchCartesian1
+    scratchCartesian1,
   );
   topBoundingSphere.center = Cartesian3.add(
     center,
     scaledNormal,
-    topBoundingSphere.center
+    topBoundingSphere.center,
   );
   topBoundingSphere.radius = semiMajorAxis;
 
   scaledNormal = Cartesian3.multiplyByScalar(
     ellipsoid.geodeticSurfaceNormal(center, scaledNormal),
     options.extrudedHeight,
-    scaledNormal
+    scaledNormal,
   );
   bottomBoundingSphere.center = Cartesian3.add(
     center,
     scaledNormal,
-    bottomBoundingSphere.center
+    bottomBoundingSphere.center,
   );
   bottomBoundingSphere.radius = semiMajorAxis;
 
   let positions = EllipseGeometryLibrary.computeEllipsePositions(
     options,
     false,
-    true
+    true,
   ).outerPositions;
   const attributes = new GeometryAttributes({
     position: new GeometryAttribute({
@@ -108,7 +108,7 @@ function computeExtrudedEllipse(options) {
       values: EllipseGeometryLibrary.raisePositionsToHeight(
         positions,
         options,
-        true
+        true,
       ),
     }),
   });
@@ -116,7 +116,7 @@ function computeExtrudedEllipse(options) {
   positions = attributes.position.values;
   const boundingSphere = BoundingSphere.union(
     topBoundingSphere,
-    bottomBoundingSphere
+    bottomBoundingSphere,
   );
   let length = positions.length / 3;
 
@@ -141,12 +141,12 @@ function computeExtrudedEllipse(options) {
   numberOfVerticalLines = CesiumMath.clamp(
     numberOfVerticalLines,
     0,
-    length / 2
+    length / 2,
   );
 
   const indices = IndexDatatype.createTypedArray(
     length,
-    length * 2 + numberOfVerticalLines * 2
+    length * 2 + numberOfVerticalLines * 2,
   );
 
   length /= 2;
@@ -219,7 +219,7 @@ function EllipseOutlineGeometry(options) {
   const semiMinorAxis = options.semiMinorAxis;
   const granularity = defaultValue(
     options.granularity,
-    CesiumMath.RADIANS_PER_DEGREE
+    CesiumMath.RADIANS_PER_DEGREE,
   );
 
   //>>includeStart('debug', pragmas.debug);
@@ -234,7 +234,7 @@ function EllipseOutlineGeometry(options) {
   }
   if (semiMajorAxis < semiMinorAxis) {
     throw new DeveloperError(
-      "semiMajorAxis must be greater than or equal to the semiMinorAxis."
+      "semiMajorAxis must be greater than or equal to the semiMinorAxis.",
     );
   }
   if (granularity <= 0.0) {
@@ -255,7 +255,7 @@ function EllipseOutlineGeometry(options) {
   this._extrudedHeight = Math.min(extrudedHeight, height);
   this._numberOfVerticalLines = Math.max(
     defaultValue(options.numberOfVerticalLines, 16),
-    0
+    0,
   );
   this._offsetAttribute = options.offsetAttribute;
   this._workerName = "createEllipseOutlineGeometry";
@@ -403,12 +403,12 @@ EllipseOutlineGeometry.createGeometry = function (ellipseGeometry) {
     height,
     extrudedHeight,
     0,
-    CesiumMath.EPSILON2
+    CesiumMath.EPSILON2,
   );
 
   ellipseGeometry._center = ellipseGeometry._ellipsoid.scaleToGeodeticSurface(
     ellipseGeometry._center,
-    ellipseGeometry._center
+    ellipseGeometry._center,
   );
   const options = {
     center: ellipseGeometry._center,

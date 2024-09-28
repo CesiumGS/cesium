@@ -59,7 +59,7 @@ function GridImageryProvider(options) {
   this._glowWidth = defaultValue(options.glowWidth, 6);
   this._backgroundColor = defaultValue(
     options.backgroundColor,
-    defaultBackgroundColor
+    defaultBackgroundColor,
   );
   this._errorEvent = new Event();
 
@@ -318,7 +318,7 @@ GridImageryProvider.prototype.pickFeatures = function (
   y,
   level,
   longitude,
-  latitude
+  latitude,
 ) {
   return undefined;
 };

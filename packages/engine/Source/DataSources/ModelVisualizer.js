@@ -59,7 +59,7 @@ function ModelVisualizer(scene, entityCollection) {
 
   entityCollection.collectionChanged.addEventListener(
     ModelVisualizer.prototype._onCollectionChanged,
-    this
+    this,
   );
 
   this._scene = scene;
@@ -75,7 +75,7 @@ async function createModelPrimitive(
   visualizer,
   entity,
   resource,
-  incrementallyLoadTextures
+  incrementallyLoadTextures,
 ) {
   const primitives = visualizer._primitives;
   const modelHash = visualizer._modelHash;
@@ -150,7 +150,7 @@ ModelVisualizer.prototype.update = function (time) {
     if (show) {
       modelMatrix = entity.computeModelMatrix(time, modelMatrixScratch);
       resource = Resource.createIfNeeded(
-        Property.getValueOrUndefined(modelGraphics._uri, time)
+        Property.getValueOrUndefined(modelGraphics._uri, time),
       );
       show = defined(modelMatrix) && defined(resource);
     }
@@ -182,7 +182,7 @@ ModelVisualizer.prototype.update = function (time) {
       const incrementallyLoadTextures = Property.getValueOrDefault(
         modelGraphics._incrementallyLoadTextures,
         time,
-        defaultIncrementallyLoadTextures
+        defaultIncrementallyLoadTextures,
       );
 
       createModelPrimitive(this, entity, resource, incrementallyLoadTextures);
@@ -197,83 +197,84 @@ ModelVisualizer.prototype.update = function (time) {
     model.scale = Property.getValueOrDefault(
       modelGraphics._scale,
       time,
-      defaultScale
+      defaultScale,
     );
 
     model.enableVerticalExaggeration = Property.getValueOrDefault(
       modelGraphics._enableVerticalExaggeration,
       time,
-      defaultEnableVerticalExaggeration
+      defaultEnableVerticalExaggeration,
     );
 
     model.minimumPixelSize = Property.getValueOrDefault(
       modelGraphics._minimumPixelSize,
       time,
-      defaultMinimumPixelSize
+      defaultMinimumPixelSize,
     );
     model.maximumScale = Property.getValueOrUndefined(
       modelGraphics._maximumScale,
-      time
+      time,
     );
     model.modelMatrix = Matrix4.clone(modelMatrix, model.modelMatrix);
     model.shadows = Property.getValueOrDefault(
       modelGraphics._shadows,
       time,
-      defaultShadows
+      defaultShadows,
     );
     model.heightReference = Property.getValueOrDefault(
       modelGraphics._heightReference,
       time,
-      defaultHeightReference
+      defaultHeightReference,
     );
     model.distanceDisplayCondition = Property.getValueOrUndefined(
       modelGraphics._distanceDisplayCondition,
-      time
+      time,
     );
     model.silhouetteColor = Property.getValueOrDefault(
       modelGraphics._silhouetteColor,
       time,
       defaultSilhouetteColor,
-      scratchColor
+      scratchColor,
     );
     model.silhouetteSize = Property.getValueOrDefault(
       modelGraphics._silhouetteSize,
       time,
-      defaultSilhouetteSize
+      defaultSilhouetteSize,
     );
     model.color = Property.getValueOrDefault(
       modelGraphics._color,
       time,
       defaultColor,
-      scratchColor
+      scratchColor,
     );
     model.colorBlendMode = Property.getValueOrDefault(
       modelGraphics._colorBlendMode,
       time,
-      defaultColorBlendMode
+      defaultColorBlendMode,
     );
     model.colorBlendAmount = Property.getValueOrDefault(
       modelGraphics._colorBlendAmount,
       time,
-      defaultColorBlendAmount
+      defaultColorBlendAmount,
     );
     model.clippingPlanes = Property.getValueOrUndefined(
       modelGraphics._clippingPlanes,
-      time
+      time,
     );
     model.clampAnimations = Property.getValueOrDefault(
       modelGraphics._clampAnimations,
       time,
-      defaultClampAnimations
+      defaultClampAnimations,
     );
-    model.imageBasedLighting.imageBasedLightingFactor = Property.getValueOrDefault(
-      modelGraphics._imageBasedLightingFactor,
-      time,
-      defaultImageBasedLightingFactor
-    );
+    model.imageBasedLighting.imageBasedLightingFactor =
+      Property.getValueOrDefault(
+        modelGraphics._imageBasedLightingFactor,
+        time,
+        defaultImageBasedLightingFactor,
+      );
     let lightColor = Property.getValueOrUndefined(
       modelGraphics._lightColor,
-      time
+      time,
     );
 
     // Convert from Color to Cartesian3
@@ -285,7 +286,7 @@ ModelVisualizer.prototype.update = function (time) {
     model.lightColor = lightColor;
     model.customShader = Property.getValueOrUndefined(
       modelGraphics._customShader,
-      time
+      time,
     );
 
     // It's possible for getBoundingSphere to run before
@@ -296,7 +297,7 @@ ModelVisualizer.prototype.update = function (time) {
       const runAnimations = Property.getValueOrDefault(
         modelGraphics._runAnimations,
         time,
-        true
+        true,
       );
       if (modelData.animationsRunning !== runAnimations) {
         if (runAnimations) {
@@ -313,7 +314,7 @@ ModelVisualizer.prototype.update = function (time) {
       const nodeTransformations = Property.getValueOrUndefined(
         modelGraphics._nodeTransformations,
         time,
-        modelData.nodeTransformationsScratch
+        modelData.nodeTransformationsScratch,
       );
       if (defined(nodeTransformations)) {
         const nodeNames = Object.keys(nodeTransformations);
@@ -336,12 +337,12 @@ ModelVisualizer.prototype.update = function (time) {
 
           const transformationMatrix = Matrix4.fromTranslationRotationScale(
             nodeTransformation,
-            nodeMatrixScratch
+            nodeMatrixScratch,
           );
           modelNode.matrix = Matrix4.multiply(
             modelNode.originalMatrix,
             transformationMatrix,
-            transformationMatrix
+            transformationMatrix,
           );
         }
       }
@@ -351,7 +352,7 @@ ModelVisualizer.prototype.update = function (time) {
       const articulations = Property.getValueOrUndefined(
         modelGraphics._articulations,
         time,
-        modelData.articulationsScratch
+        modelData.articulationsScratch,
       );
       if (defined(articulations)) {
         const articulationStageKeys = Object.keys(articulations);
@@ -396,7 +397,7 @@ ModelVisualizer.prototype.isDestroyed = function () {
 ModelVisualizer.prototype.destroy = function () {
   this._entityCollection.collectionChanged.removeEventListener(
     ModelVisualizer.prototype._onCollectionChanged,
-    this
+    this,
   );
   const entities = this._entitiesToVisualize.values;
   const modelHash = this._modelHash;
@@ -459,7 +460,7 @@ ModelVisualizer.prototype.getBoundingSphere = function (entity, result) {
     scratchPosition.z = modelMatrix[14];
     const cartoPosition = ellipsoid.cartesianToCartographic(
       scratchPosition,
-      scratchCartographic
+      scratchCartographic,
     );
 
     const height = scene.getHeight(cartoPosition, model.heightReference);
@@ -487,7 +488,7 @@ ModelVisualizer.prototype._onCollectionChanged = function (
   entityCollection,
   added,
   removed,
-  changed
+  changed,
 ) {
   let i;
   let entity;

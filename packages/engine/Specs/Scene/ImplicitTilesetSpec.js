@@ -76,16 +76,16 @@ describe("Scene/ImplicitTileset", function () {
     const implicitTileset = new ImplicitTileset(
       baseResource,
       implicitTileJson,
-      metadataSchema
+      metadataSchema,
     );
     expect(implicitTileset.metadataSchema).toBeUndefined();
     expect(implicitTileset.subtreeLevels).toEqual(3);
     expect(implicitTileset.availableLevels).toEqual(5);
     expect(implicitTileset.subdivisionScheme).toEqual(
-      ImplicitSubdivisionScheme.QUADTREE
+      ImplicitSubdivisionScheme.QUADTREE,
     );
     expect(implicitTileset.boundingVolume).toEqual(
-      implicitTileJson.boundingVolume
+      implicitTileJson.boundingVolume,
     );
     expect(implicitTileset.refine).toEqual(implicitTileJson.refine);
     expect(implicitTileset.geometricError).toEqual(500);
@@ -98,7 +98,7 @@ describe("Scene/ImplicitTileset", function () {
     const implicitTileset = new ImplicitTileset(
       baseResource,
       implicitTileJson,
-      metadataSchema
+      metadataSchema,
     );
     const deep = true;
     const expected = clone(implicitTileJson, deep);
@@ -117,7 +117,7 @@ describe("Scene/ImplicitTileset", function () {
     const implicitTileset = new ImplicitTileset(
       baseResource,
       withExtensions,
-      metadataSchema
+      metadataSchema,
     );
     const expected = clone(withExtensions, deep);
     delete expected.content;
@@ -130,7 +130,7 @@ describe("Scene/ImplicitTileset", function () {
     const implicitTileset = new ImplicitTileset(
       baseResource,
       implicitTileJson,
-      metadataSchema
+      metadataSchema,
     );
     expect(implicitTileset.contentHeaders[0]).toEqual(implicitTileJson.content);
   });
@@ -142,7 +142,7 @@ describe("Scene/ImplicitTileset", function () {
     const implicitTileset = new ImplicitTileset(
       baseResource,
       noContentJson,
-      metadataSchema
+      metadataSchema,
     );
     expect(implicitTileset.contentUriTemplates).toEqual([]);
   });
@@ -165,7 +165,7 @@ describe("Scene/ImplicitTileset", function () {
     const implicitTileset = new ImplicitTileset(
       baseResource,
       tileJson,
-      metadataSchema
+      metadataSchema,
     );
     const implicitTilesetS2 =
       implicitTileset.boundingVolume.extensions["3DTILES_bounding_volume_S2"];
@@ -193,16 +193,16 @@ describe("Scene/ImplicitTileset", function () {
       const implicitTileset = new ImplicitTileset(
         baseResource,
         implicitTileLegacyJson,
-        metadataSchema
+        metadataSchema,
       );
       expect(implicitTileset.metadataSchema).toBeUndefined();
       expect(implicitTileset.subtreeLevels).toEqual(3);
       expect(implicitTileset.availableLevels).toEqual(5);
       expect(implicitTileset.subdivisionScheme).toEqual(
-        ImplicitSubdivisionScheme.QUADTREE
+        ImplicitSubdivisionScheme.QUADTREE,
       );
       expect(implicitTileset.boundingVolume).toEqual(
-        implicitTileJson.boundingVolume
+        implicitTileJson.boundingVolume,
       );
       expect(implicitTileset.refine).toEqual(implicitTileJson.refine);
       expect(implicitTileset.geometricError).toEqual(500);
@@ -215,7 +215,7 @@ describe("Scene/ImplicitTileset", function () {
       const implicitTileset = new ImplicitTileset(
         baseResource,
         implicitTileLegacyJson,
-        metadataSchema
+        metadataSchema,
       );
       expect(implicitTileset.availableLevels).toEqual(5);
     });
@@ -225,7 +225,7 @@ describe("Scene/ImplicitTileset", function () {
       const implicitTileset = new ImplicitTileset(
         baseResource,
         implicitTileLegacyJson,
-        metadataSchema
+        metadataSchema,
       );
       const deep = true;
       const expected = clone(implicitTileLegacyJson, deep);
@@ -243,7 +243,7 @@ describe("Scene/ImplicitTileset", function () {
       const implicitTileset = new ImplicitTileset(
         baseResource,
         withExtensions,
-        metadataSchema
+        metadataSchema,
       );
       const expected = clone(withExtensions, deep);
       delete expected.content;
@@ -256,10 +256,10 @@ describe("Scene/ImplicitTileset", function () {
       const implicitTileset = new ImplicitTileset(
         baseResource,
         implicitTileLegacyJson,
-        metadataSchema
+        metadataSchema,
       );
       expect(implicitTileset.contentHeaders[0]).toEqual(
-        implicitTileJson.content
+        implicitTileJson.content,
       );
     });
 
@@ -270,7 +270,7 @@ describe("Scene/ImplicitTileset", function () {
       const implicitTileset = new ImplicitTileset(
         baseResource,
         noContentJson,
-        metadataSchema
+        metadataSchema,
       );
       expect(implicitTileset.contentUriTemplates).toEqual([]);
     });
@@ -326,7 +326,7 @@ describe("Scene/ImplicitTileset", function () {
       const implicitTileset = new ImplicitTileset(
         baseResource,
         multipleContentTile,
-        metadataSchema
+        metadataSchema,
       );
       expect(implicitTileset.contentUriTemplates).toEqual([
         new Resource({ url: b3dmPattern }),
@@ -351,7 +351,7 @@ describe("Scene/ImplicitTileset", function () {
       const implicitTileset = new ImplicitTileset(
         baseResource,
         withProperties,
-        metadataSchema
+        metadataSchema,
       );
       for (i = 0; i < implicitTileset.contentHeaders.length; i++) {
         expect(implicitTileset.contentHeaders[i]).toEqual(contents[i]);
@@ -363,7 +363,7 @@ describe("Scene/ImplicitTileset", function () {
       const implicitTileset = new ImplicitTileset(
         baseResource,
         multipleContentTile,
-        metadataSchema
+        metadataSchema,
       );
       expect(implicitTileset.tileHeader.extensions).not.toBeDefined();
     });
@@ -406,7 +406,7 @@ describe("Scene/ImplicitTileset", function () {
       const implicitTileset = new ImplicitTileset(
         baseResource,
         multipleContentLegacyTile,
-        metadataSchema
+        metadataSchema,
       );
       expect(implicitTileset.contentUriTemplates).toEqual([
         new Resource({ url: b3dmPattern }),
@@ -432,7 +432,7 @@ describe("Scene/ImplicitTileset", function () {
       const implicitTileset = new ImplicitTileset(
         baseResource,
         withProperties,
-        metadataSchema
+        metadataSchema,
       );
       for (i = 0; i < implicitTileset.contentHeaders.length; i++) {
         expect(implicitTileset.contentHeaders[i]).toEqual(contents[i]);
@@ -460,7 +460,7 @@ describe("Scene/ImplicitTileset", function () {
       const implicitTileset = new ImplicitTileset(
         baseResource,
         implicitTileJson,
-        metadataSchema
+        metadataSchema,
       );
 
       expect(implicitTileset.metadataSchema).toBeDefined();

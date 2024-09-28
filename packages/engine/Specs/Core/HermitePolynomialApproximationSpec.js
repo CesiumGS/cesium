@@ -6,40 +6,14 @@ describe("Core/HermitePolynomialApproximation", function () {
 
   const xTable = [0, 60, 120, 180, 240, 300, 360, 420];
   const yTable = [
-    13378137.0,
-    0,
-    13374128.3576279,
-    0,
-    13362104.8328212,
-    0,
-    13342073.6310691,
-    0,
-    13314046.7567223,
-    0,
-    13278041.005799,
-    0,
-    13234077.9559193,
-    0,
-    13182183.953374,
-    0,
+    13378137.0, 0, 13374128.3576279, 0, 13362104.8328212, 0, 13342073.6310691,
+    0, 13314046.7567223, 0, 13278041.005799, 0, 13234077.9559193, 0,
+    13182183.953374, 0,
   ];
   const dyTable = [
-    0.0,
-    0,
-    -133.614738921601,
-    0,
-    -267.149404854867,
-    0,
-    -400.523972797808,
-    0,
-    -533.658513692378,
-    0,
-    -666.473242324565,
-    0,
-    -798.888565138278,
-    0,
-    -930.82512793439,
-    0,
+    0.0, 0, -133.614738921601, 0, -267.149404854867, 0, -400.523972797808, 0,
+    -533.658513692378, 0, -666.473242324565, 0, -798.888565138278, 0,
+    -930.82512793439, 0,
   ];
 
   const yTableCombined = new Array(yTable.length * 2);
@@ -59,7 +33,7 @@ describe("Core/HermitePolynomialApproximation", function () {
       x,
       xTable,
       yTableCombined,
-      4
+      4,
     );
     const expectedResult = 13367002.870928625;
     //The accuracy is lower because we are no longer using derivative info
@@ -74,7 +48,7 @@ describe("Core/HermitePolynomialApproximation", function () {
       xTable,
       yTableCombined,
       4,
-      result
+      result,
     );
     const expectedResult = 13367002.870928625;
     expect(result).toBe(returnedResult);
@@ -88,13 +62,13 @@ describe("Core/HermitePolynomialApproximation", function () {
     expect(HermitePolynomialApproximation.getRequiredDataPoints(2)).toEqual(3);
     expect(HermitePolynomialApproximation.getRequiredDataPoints(3)).toEqual(4);
     expect(HermitePolynomialApproximation.getRequiredDataPoints(3, 1)).toEqual(
-      2
+      2,
     );
     expect(HermitePolynomialApproximation.getRequiredDataPoints(5, 1)).toEqual(
-      3
+      3,
     );
     expect(HermitePolynomialApproximation.getRequiredDataPoints(7, 1)).toEqual(
-      4
+      4,
     );
   });
 
@@ -105,7 +79,7 @@ describe("Core/HermitePolynomialApproximation", function () {
       yTableCombined,
       2,
       1,
-      1
+      1,
     );
     const expectedResult = [13367002.870928625, 0.0, -222.65168787012135, 0.0];
     expect(result).toEqualEpsilon(expectedResult, 1e-8);

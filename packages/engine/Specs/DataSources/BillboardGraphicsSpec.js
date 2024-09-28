@@ -53,7 +53,7 @@ describe("DataSources/BillboardGraphics", function () {
     expect(billboard.scaleByDistance).toBeInstanceOf(ConstantProperty);
     expect(billboard.translucencyByDistance).toBeInstanceOf(ConstantProperty);
     expect(billboard.pixelOffsetScaleByDistance).toBeInstanceOf(
-      ConstantProperty
+      ConstantProperty,
     );
     expect(billboard.sizeInMeters).toBeInstanceOf(ConstantProperty);
     expect(billboard.distanceDisplayCondition).toBeInstanceOf(ConstantProperty);
@@ -65,10 +65,10 @@ describe("DataSources/BillboardGraphics", function () {
     expect(billboard.alignedAxis.getValue()).toEqual(options.alignedAxis);
     expect(billboard.color.getValue()).toEqual(options.color);
     expect(billboard.heightReference.getValue()).toEqual(
-      options.heightReference
+      options.heightReference,
     );
     expect(billboard.horizontalOrigin.getValue()).toEqual(
-      options.horizontalOrigin
+      options.horizontalOrigin,
     );
     expect(billboard.verticalOrigin.getValue()).toEqual(options.verticalOrigin);
     expect(billboard.eyeOffset.getValue()).toEqual(options.eyeOffset);
@@ -77,20 +77,20 @@ describe("DataSources/BillboardGraphics", function () {
     expect(billboard.width.getValue()).toEqual(options.width);
     expect(billboard.height.getValue()).toEqual(options.height);
     expect(billboard.scaleByDistance.getValue()).toEqual(
-      options.scaleByDistance
+      options.scaleByDistance,
     );
     expect(billboard.translucencyByDistance.getValue()).toEqual(
-      options.translucencyByDistance
+      options.translucencyByDistance,
     );
     expect(billboard.pixelOffsetScaleByDistance.getValue()).toEqual(
-      options.pixelOffsetScaleByDistance
+      options.pixelOffsetScaleByDistance,
     );
     expect(billboard.sizeInMeters.getValue()).toEqual(options.sizeInMeters);
     expect(billboard.distanceDisplayCondition.getValue()).toEqual(
-      options.distanceDisplayCondition
+      options.distanceDisplayCondition,
     );
     expect(billboard.disableDepthTestDistance.getValue()).toEqual(
-      options.disableDepthTestDistance
+      options.disableDepthTestDistance,
     );
     expect(billboard.splitDirection.getValue()).toEqual(options.splitDirection);
   });
@@ -103,7 +103,7 @@ describe("DataSources/BillboardGraphics", function () {
     source.alignedAxis = new ConstantProperty(new Cartesian3());
     source.color = new ConstantProperty(Color.BLACK);
     source.heightReference = new ConstantProperty(
-      HeightReference.CLAMP_TO_GROUND
+      HeightReference.CLAMP_TO_GROUND,
     );
     source.horizontalOrigin = new ConstantProperty(HorizontalOrigin.LEFT);
     source.verticalOrigin = new ConstantProperty(VerticalOrigin.BOTTOM);
@@ -116,11 +116,11 @@ describe("DataSources/BillboardGraphics", function () {
     source.scaleByDistance = new ConstantProperty(new NearFarScalar());
     source.translucencyByDistance = new ConstantProperty(new NearFarScalar());
     source.pixelOffsetScaleByDistance = new ConstantProperty(
-      new NearFarScalar(1.0, 0.0, 3.0e9, 0.0)
+      new NearFarScalar(1.0, 0.0, 3.0e9, 0.0),
     );
     source.sizeInMeters = new ConstantProperty(true);
     source.distanceDisplayCondition = new ConstantProperty(
-      new DistanceDisplayCondition(10.0, 100.0)
+      new DistanceDisplayCondition(10.0, 100.0),
     );
     source.disableDepthTestDistance = new ConstantProperty(10.0);
     source.splitDirection = new ConstantProperty(SplitDirection.LEFT);
@@ -145,14 +145,14 @@ describe("DataSources/BillboardGraphics", function () {
     expect(target.scaleByDistance).toBe(source.scaleByDistance);
     expect(target.translucencyByDistance).toBe(source.translucencyByDistance);
     expect(target.pixelOffsetScaleByDistance).toBe(
-      source.pixelOffsetScaleByDistance
+      source.pixelOffsetScaleByDistance,
     );
     expect(target.sizeInMeters).toBe(source.sizeInMeters);
     expect(target.distanceDisplayCondition).toBe(
-      source.distanceDisplayCondition
+      source.distanceDisplayCondition,
     );
     expect(target.disableDepthTestDistance).toBe(
-      source.disableDepthTestDistance
+      source.disableDepthTestDistance,
     );
     expect(target.splitDirection).toBe(source.splitDirection);
   });
@@ -165,7 +165,7 @@ describe("DataSources/BillboardGraphics", function () {
     source.alignedAxis = new ConstantProperty(new Cartesian3());
     source.color = new ConstantProperty(Color.BLACK);
     source.heightReference = new ConstantProperty(
-      HeightReference.CLAMP_TO_GROUND
+      HeightReference.CLAMP_TO_GROUND,
     );
     source.horizontalOrigin = new ConstantProperty(HorizontalOrigin.LEFT);
     source.verticalOrigin = new ConstantProperty(VerticalOrigin.BOTTOM);
@@ -178,11 +178,11 @@ describe("DataSources/BillboardGraphics", function () {
     source.scaleByDistance = new ConstantProperty(new NearFarScalar());
     source.translucencyByDistance = new ConstantProperty(new NearFarScalar());
     source.pixelOffsetScaleByDistance = new ConstantProperty(
-      new NearFarScalar(1.0, 0.0, 3.0e9, 0.0)
+      new NearFarScalar(1.0, 0.0, 3.0e9, 0.0),
     );
     source.sizeInMeters = new ConstantProperty(true);
     source.distanceDisplayCondition = new ConstantProperty(
-      new DistanceDisplayCondition(10.0, 100.0)
+      new DistanceDisplayCondition(10.0, 100.0),
     );
     source.disableDepthTestDistance = new ConstantProperty(10.0);
     source.splitDirection = new ConstantProperty(SplitDirection.LEFT);
@@ -193,7 +193,7 @@ describe("DataSources/BillboardGraphics", function () {
     const alignedAxis = new ConstantProperty(new Cartesian3());
     const color = new ConstantProperty(Color.BLACK);
     const heightReference = new ConstantProperty(
-      HeightReference.CLAMP_TO_GROUND
+      HeightReference.CLAMP_TO_GROUND,
     );
     const horizontalOrigin = new ConstantProperty(HorizontalOrigin.LEFT);
     const verticalOrigin = new ConstantProperty(VerticalOrigin.BOTTOM);
@@ -206,11 +206,11 @@ describe("DataSources/BillboardGraphics", function () {
     const scaleByDistance = new ConstantProperty(new NearFarScalar());
     const translucencyByDistance = new ConstantProperty(new NearFarScalar());
     const pixelOffsetScaleByDistance = new ConstantProperty(
-      new NearFarScalar()
+      new NearFarScalar(),
     );
     const sizeInMeters = new ConstantProperty(true);
     const distanceDisplayCondition = new ConstantProperty(
-      new DistanceDisplayCondition()
+      new DistanceDisplayCondition(),
     );
     const disableDepthTestDistance = new ConstantProperty(10.0);
     const splitDirection = new ConstantProperty(SplitDirection.LEFT);
@@ -271,7 +271,7 @@ describe("DataSources/BillboardGraphics", function () {
     source.alignedAxis = new ConstantProperty(new Cartesian3());
     source.color = new ConstantProperty(Color.BLACK);
     source.heightReference = new ConstantProperty(
-      HeightReference.CLAMP_TO_GROUND
+      HeightReference.CLAMP_TO_GROUND,
     );
     source.horizontalOrigin = new ConstantProperty(HorizontalOrigin.LEFT);
     source.verticalOrigin = new ConstantProperty(VerticalOrigin.BOTTOM);
@@ -284,11 +284,11 @@ describe("DataSources/BillboardGraphics", function () {
     source.scaleByDistance = new ConstantProperty(new NearFarScalar());
     source.translucencyByDistance = new ConstantProperty(new NearFarScalar());
     source.pixelOffsetScaleByDistance = new ConstantProperty(
-      new NearFarScalar(1.0, 0.0, 3.0e9, 0.0)
+      new NearFarScalar(1.0, 0.0, 3.0e9, 0.0),
     );
     source.sizeInMeters = new ConstantProperty(true);
     source.distanceDisplayCondition = new ConstantProperty(
-      new DistanceDisplayCondition(10.0, 100.0)
+      new DistanceDisplayCondition(10.0, 100.0),
     );
     source.disableDepthTestDistance = new ConstantProperty(10.0);
     source.splitDirection = new ConstantProperty(SplitDirection.LEFT);
@@ -311,14 +311,14 @@ describe("DataSources/BillboardGraphics", function () {
     expect(result.scaleByDistance).toBe(source.scaleByDistance);
     expect(result.translucencyByDistance).toBe(source.translucencyByDistance);
     expect(result.pixelOffsetScaleByDistance).toBe(
-      source.pixelOffsetScaleByDistance
+      source.pixelOffsetScaleByDistance,
     );
     expect(result.sizeInMeters).toBe(source.sizeInMeters);
     expect(result.distanceDisplayCondition).toBe(
-      source.distanceDisplayCondition
+      source.distanceDisplayCondition,
     );
     expect(result.disableDepthTestDistance).toBe(
-      source.disableDepthTestDistance
+      source.disableDepthTestDistance,
     );
     expect(result.splitDirection).toBe(source.splitDirection);
   });

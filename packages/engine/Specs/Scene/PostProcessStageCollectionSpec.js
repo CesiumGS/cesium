@@ -47,7 +47,7 @@ describe(
         new PostProcessStage({
           fragmentShader:
             "void main() { out_FragColor = vec4(1.0, 1.0, 0.0, 1.0); }",
-        })
+        }),
       );
       expect(scene.postProcessStages.length).toEqual(1);
 
@@ -63,7 +63,7 @@ describe(
             "    vec4 color = texture(colorTexture, v_textureCoordinates);\n" +
             "    out_FragColor = vec4(color.r, 0.0, 1.0, 1.0);\n" +
             "}",
-        })
+        }),
       );
       expect(scene.postProcessStages.length).toEqual(2);
 
@@ -87,7 +87,7 @@ describe(
         new PostProcessStage({
           fragmentShader:
             "void main() { out_FragColor = vec4(1.0, 1.0, 0.0, 1.0); }",
-        })
+        }),
       );
       scene.renderForSpecs();
       expect(scene).toRender([255, 255, 0, 255]);
@@ -104,7 +104,7 @@ describe(
         new PostProcessStage({
           fragmentShader:
             "void main() { out_FragColor = vec4(1.0, 1.0, 0.0, 1.0); }",
-        })
+        }),
       );
       const stage2 = scene.postProcessStages.add(
         new PostProcessStage({
@@ -115,7 +115,7 @@ describe(
             "    vec4 color = texture(colorTexture, v_textureCoordinates);\n" +
             "    out_FragColor = vec4(color.r, 0.0, 1.0, 1.0);\n" +
             "}",
-        })
+        }),
       );
       expect(scene.postProcessStages.length).toEqual(2);
 
@@ -147,7 +147,7 @@ describe(
         new PostProcessStage({
           fragmentShader:
             "void main() { out_FragColor = vec4(1.0, 1.0, 0.0, 1.0); }",
-        })
+        }),
       );
       const stage2 = scene.postProcessStages.add(
         new PostProcessStage({
@@ -158,7 +158,7 @@ describe(
             "    vec4 color = texture(colorTexture, v_textureCoordinates);\n" +
             "    out_FragColor = vec4(color.r, 0.0, 1.0, 1.0);\n" +
             "}",
-        })
+        }),
       );
       expect(scene.postProcessStages.length).toEqual(2);
 
@@ -177,7 +177,7 @@ describe(
         new PostProcessStage({
           fragmentShader:
             "void main() { out_FragColor = vec4(1.0, 1.0, 0.0, 1.0); }",
-        })
+        }),
       );
       expect(function () {
         return scene.postProcessStages.get(-1);
@@ -194,7 +194,7 @@ describe(
         new PostProcessStage({
           fragmentShader:
             "void main() { out_FragColor = vec4(1.0, 1.0, 0.0, 1.0); }",
-        })
+        }),
       );
       const stage2 = scene.postProcessStages.add(
         new PostProcessStage({
@@ -205,7 +205,7 @@ describe(
             "    vec4 color = texture(colorTexture, v_textureCoordinates);\n" +
             "    out_FragColor = vec4(color.r, 0.0, 1.0, 1.0);\n" +
             "}",
-        })
+        }),
       );
       expect(scene.postProcessStages.length).toEqual(2);
 
@@ -230,7 +230,7 @@ describe(
         new PostProcessStage({
           fragmentShader:
             "void main() { out_FragColor = vec4(1.0, 1.0, 0.0, 1.0); }",
-        })
+        }),
       );
       const stage2 = scene.postProcessStages.add(
         new PostProcessStage({
@@ -241,17 +241,17 @@ describe(
             "    vec4 color = texture(colorTexture, v_textureCoordinates);\n" +
             "    out_FragColor = vec4(color.r, 0.0, 1.0, 1.0);\n" +
             "}",
-        })
+        }),
       );
 
       expect(scene.postProcessStages.getStageByName(stage1.name)).toEqual(
-        stage1
+        stage1,
       );
       expect(scene.postProcessStages.getStageByName(stage2.name)).toEqual(
-        stage2
+        stage2,
       );
       expect(
-        scene.postProcessStages.getStageByName("invalid")
+        scene.postProcessStages.getStageByName("invalid"),
       ).not.toBeDefined();
     });
 
@@ -260,7 +260,7 @@ describe(
         new PostProcessStage({
           fragmentShader:
             "void main() { out_FragColor = vec4(1.0, 1.0, 0.0, 1.0); }",
-        })
+        }),
       );
       const stage2 = scene.postProcessStages.add(
         new PostProcessStage({
@@ -271,32 +271,32 @@ describe(
             "    vec4 color = texture(colorTexture, v_textureCoordinates);\n" +
             "    out_FragColor = vec4(color.r, 0.0, 1.0, 1.0);\n" +
             "}",
-        })
+        }),
       );
       scene.postProcessStages.fxaa.enabled = true;
 
       scene.renderForSpecs();
 
       expect(
-        scene.postProcessStages.getOutputTexture(stage1.name)
+        scene.postProcessStages.getOutputTexture(stage1.name),
       ).toBeDefined();
       expect(
-        scene.postProcessStages.getOutputTexture(stage2.name)
-      ).toBeDefined();
-      expect(
-        scene.postProcessStages.getOutputTexture(
-          scene.postProcessStages.fxaa.name
-        )
+        scene.postProcessStages.getOutputTexture(stage2.name),
       ).toBeDefined();
       expect(
         scene.postProcessStages.getOutputTexture(
-          scene.postProcessStages.fxaa.name
-        )
+          scene.postProcessStages.fxaa.name,
+        ),
+      ).toBeDefined();
+      expect(
+        scene.postProcessStages.getOutputTexture(
+          scene.postProcessStages.fxaa.name,
+        ),
       ).toEqual(scene.postProcessStages.getOutputTexture(stage1.name));
 
       scene.postProcessStages.remove(stage1);
       expect(
-        scene.postProcessStages.getOutputTexture(stage1.name)
+        scene.postProcessStages.getOutputTexture(stage1.name),
       ).not.toBeDefined();
     });
 
@@ -305,7 +305,7 @@ describe(
         new PostProcessStage({
           fragmentShader:
             "void main() { out_FragColor = vec4(1.0, 0.0, 1.0, 1.0); }",
-        })
+        }),
       );
       scene.renderForSpecs();
       expect(scene).toRender([255, 0, 255, 255]);
@@ -321,7 +321,7 @@ describe(
         new PostProcessStage({
           fragmentShader:
             "void main() { out_FragColor = vec4(1.0, 0.0, 1.0, 1.0); }",
-        })
+        }),
       );
       stage.enabled = false;
 
@@ -339,13 +339,13 @@ describe(
         new PostProcessStage({
           fragmentShader:
             "void main() { out_FragColor = vec4(1.0, 0.0, 1.0, 1.0); }",
-        })
+        }),
       );
       const stage = scene.postProcessStages.add(
         new PostProcessStage({
           fragmentShader:
             "void main() { out_FragColor = vec4(0.0, 1.0, 1.0, 1.0); }",
-        })
+        }),
       );
 
       scene.renderForSpecs();
@@ -362,13 +362,13 @@ describe(
         new PostProcessStage({
           fragmentShader:
             "void main() { out_FragColor = vec4(1.0, 0.0, 1.0, 1.0); }",
-        })
+        }),
       );
       const stage = scene.postProcessStages.add(
         new PostProcessStage({
           fragmentShader:
             "void main() { out_FragColor = vec4(0.0, 1.0, 1.0, 1.0); }",
-        })
+        }),
       );
       stage.enabled = false;
 
@@ -402,7 +402,7 @@ describe(
         scene.postProcessStages.tonemapper = tonemapper;
 
         const inputColorRgb = inputFragColor.map((n) =>
-          Math.floor(Math.min(Math.max(n * 255, 0), 255))
+          Math.floor(Math.min(Math.max(n * 255, 0), 255)),
         );
         const fs =
           "void main() { \n" +
@@ -488,28 +488,28 @@ describe(
           validateTonemapper(
             Tonemapper.MODIFIED_REINHARD,
             [0.5, 0.5, 0.5, 1.0],
-            [186, 186, 186, 255]
+            [186, 186, 186, 255],
           );
         });
         it("red", () => {
           validateTonemapper(
             Tonemapper.MODIFIED_REINHARD,
             [0.5, 0.0, 0.0, 1.0],
-            [186, 0, 0, 255]
+            [186, 0, 0, 255],
           );
         });
         it("green", () => {
           validateTonemapper(
             Tonemapper.MODIFIED_REINHARD,
             [0.0, 0.5, 0.0, 1.0],
-            [0, 186, 0, 255]
+            [0, 186, 0, 255],
           );
         });
         it("blue", () => {
           validateTonemapper(
             Tonemapper.MODIFIED_REINHARD,
             [0.0, 0.0, 0.5, 1.0],
-            [0, 0, 186, 255]
+            [0, 0, 186, 255],
           );
         });
       });
@@ -552,39 +552,35 @@ describe(
 
       describe("PBR Neutral", () => {
         it("white", () => {
-          validateTonemapper(Tonemapper.PBR_NEUTRAL, white, [
-            253,
-            253,
-            253,
-            255,
-          ]);
+          validateTonemapper(
+            Tonemapper.PBR_NEUTRAL,
+            white,
+            [253, 253, 253, 255],
+          );
         });
         it("grey", () => {
-          validateTonemapper(Tonemapper.PBR_NEUTRAL, grey, [
-            179,
-            179,
-            179,
-            255,
-          ]);
+          validateTonemapper(
+            Tonemapper.PBR_NEUTRAL,
+            grey,
+            [179, 179, 179, 255],
+          );
         });
         it("red", () => {
           validateTonemapper(Tonemapper.PBR_NEUTRAL, red, [253, 149, 149, 255]);
         });
         it("green", () => {
-          validateTonemapper(Tonemapper.PBR_NEUTRAL, green, [
-            149,
-            253,
-            149,
-            255,
-          ]);
+          validateTonemapper(
+            Tonemapper.PBR_NEUTRAL,
+            green,
+            [149, 253, 149, 255],
+          );
         });
         it("blue", () => {
-          validateTonemapper(Tonemapper.PBR_NEUTRAL, blue, [
-            149,
-            149,
-            253,
-            255,
-          ]);
+          validateTonemapper(
+            Tonemapper.PBR_NEUTRAL,
+            blue,
+            [149, 149, 253, 255],
+          );
         });
       });
     });
@@ -594,7 +590,7 @@ describe(
       const stage = stages.add(
         new PostProcessStage({
           fragmentShader: "void main() { out_FragColor = vec4(1.0); }",
-        })
+        }),
       );
       expect(stages.isDestroyed()).toEqual(false);
       stages.destroy();
@@ -602,5 +598,5 @@ describe(
       expect(stage.isDestroyed()).toEqual(true);
     });
   },
-  "WebGL"
+  "WebGL",
 );

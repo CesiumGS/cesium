@@ -106,7 +106,7 @@ Cesium3DTilesetGraphics.prototype.merge = function (source) {
   this.uri = defaultValue(this.uri, source.uri);
   this.maximumScreenSpaceError = defaultValue(
     this.maximumScreenSpaceError,
-    source.maximumScreenSpaceError
+    source.maximumScreenSpaceError,
   );
 };
 

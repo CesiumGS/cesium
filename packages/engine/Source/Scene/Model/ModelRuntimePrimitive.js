@@ -213,7 +213,7 @@ ModelRuntimePrimitive.prototype.configurePipeline = function (frameState) {
     !hasCustomFragmentShader ||
     customShader.mode !== CustomShaderMode.REPLACE_MATERIAL;
   const hasQuantization = ModelUtility.hasQuantizedAttributes(
-    primitive.attributes
+    primitive.attributes,
   );
   const generateWireframeIndices =
     model.debugWireframe &&
@@ -318,7 +318,7 @@ function inspectFeatureIds(model, node, primitive) {
   if (defined(node.instances)) {
     featureIds = ModelUtility.getFeatureIdsByLabel(
       node.instances.featureIds,
-      model.instanceFeatureIdLabel
+      model.instanceFeatureIdLabel,
     );
 
     if (defined(featureIds)) {
@@ -331,7 +331,7 @@ function inspectFeatureIds(model, node, primitive) {
 
   featureIds = ModelUtility.getFeatureIdsByLabel(
     primitive.featureIds,
-    model.featureIdLabel
+    model.featureIdLabel,
   );
   if (defined(featureIds)) {
     return {

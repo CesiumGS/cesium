@@ -104,7 +104,7 @@ PositionPropertyArray.prototype.getValue = function (time, result) {
 PositionPropertyArray.prototype.getValueInReferenceFrame = function (
   time,
   referenceFrame,
-  result
+  result,
 ) {
   //>>includeStart('debug', pragmas.debug);
   if (!defined(time)) {
@@ -131,7 +131,7 @@ PositionPropertyArray.prototype.getValueInReferenceFrame = function (
     const itemValue = property.getValueInReferenceFrame(
       time,
       referenceFrame,
-      result[i]
+      result[i],
     );
     if (defined(itemValue)) {
       result[x] = itemValue;
@@ -161,7 +161,7 @@ PositionPropertyArray.prototype.setValue = function (value) {
         eventHelper.add(
           property.definitionChanged,
           PositionPropertyArray.prototype._raiseDefinitionChanged,
-          this
+          this,
         );
       }
     }

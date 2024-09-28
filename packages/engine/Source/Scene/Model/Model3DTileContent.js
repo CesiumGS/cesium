@@ -159,7 +159,7 @@ Model3DTileContent.prototype.getFeature = function (featureId) {
   //>>includeStart('debug', pragmas.debug);
   if (!defined(featureTableId)) {
     throw new DeveloperError(
-      "No feature ID set is selected. Make sure Cesium3DTileset.featureIdLabel or Cesium3DTileset.instanceFeatureIdLabel is defined"
+      "No feature ID set is selected. Make sure Cesium3DTileset.featureIdLabel or Cesium3DTileset.instanceFeatureIdLabel is defined",
     );
   }
   //>>includeEnd('debug');
@@ -169,7 +169,7 @@ Model3DTileContent.prototype.getFeature = function (featureId) {
   //>>includeStart('debug', pragmas.debug);
   if (!defined(featureTable)) {
     throw new DeveloperError(
-      "No feature table found for the selected feature ID set"
+      "No feature table found for the selected feature ID set",
     );
   }
   //>>includeEnd('debug');
@@ -180,7 +180,7 @@ Model3DTileContent.prototype.getFeature = function (featureId) {
     throw new DeveloperError(
       `featureId is required and must be between 0 and featuresLength - 1 (${
         featuresLength - 1
-      }).`
+      }).`,
     );
   }
   //>>includeEnd('debug');
@@ -309,7 +309,7 @@ Model3DTileContent.fromGltf = async function (tileset, tile, resource, gltf) {
     tileset,
     tile,
     content,
-    additionalOptions
+    additionalOptions,
   );
 
   const classificationType = tileset.vectorClassificationOnly
@@ -329,7 +329,7 @@ Model3DTileContent.fromB3dm = async function (
   tile,
   resource,
   arrayBuffer,
-  byteOffset
+  byteOffset,
 ) {
   const content = new Model3DTileContent(tileset, tile, resource);
 
@@ -343,7 +343,7 @@ Model3DTileContent.fromB3dm = async function (
     tileset,
     tile,
     content,
-    additionalOptions
+    additionalOptions,
   );
 
   const classificationType = tileset.vectorClassificationOnly
@@ -363,7 +363,7 @@ Model3DTileContent.fromI3dm = async function (
   tile,
   resource,
   arrayBuffer,
-  byteOffset
+  byteOffset,
 ) {
   const content = new Model3DTileContent(tileset, tile, resource);
 
@@ -377,7 +377,7 @@ Model3DTileContent.fromI3dm = async function (
     tileset,
     tile,
     content,
-    additionalOptions
+    additionalOptions,
   );
 
   const model = await Model.fromI3dm(modelOptions);
@@ -391,7 +391,7 @@ Model3DTileContent.fromPnts = async function (
   tile,
   resource,
   arrayBuffer,
-  byteOffset
+  byteOffset,
 ) {
   const content = new Model3DTileContent(tileset, tile, resource);
 
@@ -405,7 +405,7 @@ Model3DTileContent.fromPnts = async function (
     tileset,
     tile,
     content,
-    additionalOptions
+    additionalOptions,
   );
   const model = await Model.fromPnts(modelOptions);
   content._model = model;
@@ -417,7 +417,7 @@ Model3DTileContent.fromGeoJson = async function (
   tileset,
   tile,
   resource,
-  geoJson
+  geoJson,
 ) {
   const content = new Model3DTileContent(tileset, tile, resource);
 
@@ -430,7 +430,7 @@ Model3DTileContent.fromGeoJson = async function (
     tileset,
     tile,
     content,
-    additionalOptions
+    additionalOptions,
   );
   const model = await Model.fromGeoJson(modelOptions);
   content._model = model;
@@ -463,7 +463,7 @@ Model3DTileContent.prototype.pick = function (ray, frameState, result) {
     verticalExaggeration,
     relativeHeight,
     Ellipsoid.WGS84,
-    result
+    result,
   );
 };
 

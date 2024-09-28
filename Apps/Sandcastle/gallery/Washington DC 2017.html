@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -21,10 +21,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -39,7 +36,7 @@
         const viewer = new Cesium.Viewer("cesiumContainer");
 
         const imageryLayer = Cesium.ImageryLayer.fromProviderAsync(
-          Cesium.IonImageryProvider.fromAssetId(3827)
+          Cesium.IonImageryProvider.fromAssetId(3827),
         );
 
         viewer.imageryLayers.add(imageryLayer);
