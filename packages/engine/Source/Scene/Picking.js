@@ -637,7 +637,7 @@ Picking.prototype.pickPositionWorldCoordinates = function (
     frustum = camera.frustum.clone(scratchOrthographicOffCenterFrustum);
   }
 
-  const frustumCommandsList = defaultView.frustumCommandsList;
+  const { frustumCommandsList } = defaultView;
   const numFrustums = frustumCommandsList.length;
   for (let i = 0; i < numFrustums; ++i) {
     const pickDepth = this.getPickDepth(scene, i);
@@ -1003,7 +1003,8 @@ function getRayIntersection(
   const object = view.pickFramebuffer.end(drawingBufferRectangle);
 
   if (scene.context.depthTexture) {
-    const numFrustums = view.frustumCommandsList.length;
+    const { frustumCommandsList } = view;
+    const numFrustums = frustumCommandsList.length;
     for (let i = 0; i < numFrustums; ++i) {
       const pickDepth = picking.getPickDepth(scene, i);
       const depth = pickDepth.getDepth(context, 0, 0);
@@ -1011,7 +1012,7 @@ function getRayIntersection(
         continue;
       }
       if (depth > 0.0 && depth < 1.0) {
-        const renderedFrustum = view.frustumCommandsList[i];
+        const renderedFrustum = frustumCommandsList[i];
         const near =
           renderedFrustum.near *
           (i !== 0 ? scene.opaqueFrustumNearOffset : 1.0);
