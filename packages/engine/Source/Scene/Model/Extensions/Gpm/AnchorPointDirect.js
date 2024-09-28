@@ -3,7 +3,6 @@ import Check from "../../../../Core/Check.js";
 /**
  * Metadata for one stored anchor point using direct storage
  *
- * @private
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
 function AnchorPointDirect(options) {
@@ -23,7 +22,6 @@ Object.defineProperties(AnchorPointDirect.prototype, {
    * @memberof AnchorPointDirect.prototype
    * @type {Cartesian3}
    * @readonly
-   * @private
    */
   position: {
     get: function () {
@@ -38,7 +36,6 @@ Object.defineProperties(AnchorPointDirect.prototype, {
    * @memberof AnchorPointDirect.prototype
    * @type {Cartesian3}
    * @readonly
-   * @private
    */
   adjustmentParams: {
     get: function () {

@@ -3,7 +3,6 @@ import Check from "../../../../Core/Check.js";
 /**
  * Metadata related to the stored PPE data.
  *
- * @private
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
 function PpeMetadata(options) {
@@ -25,7 +24,6 @@ Object.defineProperties(PpeMetadata.prototype, {
    * @memberof PpeMetadata.prototype
    * @type {number|undefined}
    * @readonly
-   * @private
    */
   min: {
     get: function () {
@@ -41,7 +39,6 @@ Object.defineProperties(PpeMetadata.prototype, {
    * @memberof PpeMetadata.prototype
    * @type {number|undefined}
    * @readonly
-   * @private
    */
   max: {
     get: function () {
@@ -55,7 +52,6 @@ Object.defineProperties(PpeMetadata.prototype, {
    * @memberof PpeMetadata.prototype
    * @type {PpeSource}
    * @readonly
-   * @private
    */
   source: {
     get: function () {

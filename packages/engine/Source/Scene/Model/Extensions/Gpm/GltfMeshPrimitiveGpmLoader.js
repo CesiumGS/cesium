@@ -37,7 +37,6 @@ import MeshPrimitiveGpmLocal from "./MeshPrimitiveGpmLocal.js";
  * @param {boolean} [options.asynchronous=true] Determines if WebGL resource creation will be spread out over several frames or block until all WebGL resources are created.
  *
  * @private
- * @experimental This feature is subject to change without Cesium's standard deprecation policy.
  */
 function GltfMeshPrimitiveGpmLoader(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);

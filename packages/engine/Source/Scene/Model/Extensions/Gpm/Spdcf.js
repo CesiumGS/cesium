@@ -6,7 +6,6 @@ import Check from "../../../../Core/Check.js";
  * Parameters (A, alpha, beta, T) used to describe the correlation decrease
  * between points as a function of delta time.
  *
- * @private
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
 function Spdcf(options) {
@@ -33,7 +32,6 @@ Object.defineProperties(Spdcf.prototype, {
    * @memberof Spdcf.prototype
    * @type {number}
    * @readonly
-   * @private
    */
   A: {
     get: function () {
@@ -47,7 +45,6 @@ Object.defineProperties(Spdcf.prototype, {
    * @memberof Spdcf.prototype
    * @type {number}
    * @readonly
-   * @private
    */
   alpha: {
     get: function () {
@@ -61,7 +58,6 @@ Object.defineProperties(Spdcf.prototype, {
    * @memberof Spdcf.prototype
    * @type {number}
    * @readonly
-   * @private
    */
   beta: {
     get: function () {
@@ -75,7 +71,6 @@ Object.defineProperties(Spdcf.prototype, {
    * @memberof Spdcf.prototype
    * @type {number}
    * @readonly
-   * @private
    */
   T: {
     get: function () {

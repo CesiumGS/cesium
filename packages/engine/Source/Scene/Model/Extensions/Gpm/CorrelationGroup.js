@@ -4,7 +4,6 @@ import Check from "../../../../Core/Check.js";
  * Metadata identifying parameters using same correlation modeling and
  * associated correlation parameters.
  *
- * @private
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
 function CorrelationGroup(options) {
@@ -27,7 +26,6 @@ Object.defineProperties(CorrelationGroup.prototype, {
    * @memberof CorrelationGroup.prototype
    * @type {boolean[]}
    * @readonly
-   * @private
    */
   groupFlags: {
     get: function () {
@@ -41,7 +39,6 @@ Object.defineProperties(CorrelationGroup.prototype, {
    * @memberof CorrelationGroup.prototype
    * @type {Cartesian3}
    * @readonly
-   * @private
    */
   rotationThetas: {
     get: function () {
@@ -55,7 +52,6 @@ Object.defineProperties(CorrelationGroup.prototype, {
    * @memberof CorrelationGroup.prototype
    * @type {Spdcf[]}
    * @readonly
-   * @private
    */
   params: {
     get: function () {

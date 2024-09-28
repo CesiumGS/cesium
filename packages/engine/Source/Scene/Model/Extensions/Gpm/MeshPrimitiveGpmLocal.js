@@ -1,7 +1,6 @@
 /**
  * Local Generic Point-cloud Model information about a glTF primitive.
  *
- * @private
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
 function MeshPrimitiveGpmLocal(options) {
@@ -15,7 +14,6 @@ Object.defineProperties(MeshPrimitiveGpmLocal.prototype, {
    * @memberof MeshPrimitiveGpmLocal.prototype
    * @type {PpeTexture[]|undefined}
    * @readonly
-   * @private
    */
   ppeTextures: {
     get: function () {

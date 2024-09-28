@@ -7,7 +7,6 @@ import StorageType from "./StorageType.js";
  * The GPM metadata for a Ground-Space Indirect implementation stored
  * locally (i.e. a tile and/or leaf node).
  *
- * @private
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
 function GltfGpmLocal(options) {
@@ -76,7 +75,6 @@ Object.defineProperties(GltfGpmLocal.prototype, {
    * @memberof GltfGpmLocal.prototype
    * @type {StorageType}
    * @readonly
-   * @private
    */
   storageType: {
     get: function () {
@@ -88,9 +86,8 @@ Object.defineProperties(GltfGpmLocal.prototype, {
    * Array of stored indirect anchor points
    *
    * @memberof GltfGpmLocal.prototype
-   * @type {AnchorPointIndirect[]}
+   * @type {AnchorPointIndirect[]|undefined}
    * @readonly
-   * @private
    */
   anchorPointsIndirect: {
     get: function () {
@@ -102,9 +99,8 @@ Object.defineProperties(GltfGpmLocal.prototype, {
    * Array of stored direct anchor points
    *
    * @memberof GltfGpmLocal.prototype
-   * @type {AnchorPointDirect[]}
+   * @type {AnchorPointDirect[]|undefined}
    * @readonly
-   * @private
    */
   anchorPointsDirect: {
     get: function () {
@@ -117,9 +113,8 @@ Object.defineProperties(GltfGpmLocal.prototype, {
    * associated correlation parameters
    *
    * @memberof GltfGpmLocal.prototype
-   * @type {CorrelationGroup[]}
+   * @type {CorrelationGroup[]|undefined}
    * @readonly
-   * @private
    */
   intraTileCorrelationGroups: {
     get: function () {
@@ -131,9 +126,8 @@ Object.defineProperties(GltfGpmLocal.prototype, {
    * The full covariance of anchor point parameters
    *
    * @memberof GltfGpmLocal.prototype
-   * @type {Matrix3}
+   * @type {Matrix3|undefined}
    * @readonly
-   * @private
    */
   covarianceDirect: {
     get: function () {

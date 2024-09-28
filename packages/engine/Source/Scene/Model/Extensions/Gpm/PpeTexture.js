@@ -7,7 +7,6 @@ import Check from "../../../../Core/Check.js";
  * and an optional `texCoord)`, with additional properties that
  * describe the structure of the metdata that is stored in the texture.
  *
- * @private
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
 function PpeTexture(options) {
@@ -32,7 +31,6 @@ Object.defineProperties(PpeTexture.prototype, {
    * @memberof PpeTexture.prototype
    * @type {PpeMetadata}
    * @readonly
-   * @private
    */
   traits: {
     get: function () {
@@ -47,7 +45,6 @@ Object.defineProperties(PpeTexture.prototype, {
    * @memberof PpeTexture.prototype
    * @type {number|undefined}
    * @readonly
-   * @private
    */
   noData: {
     get: function () {
@@ -61,7 +58,6 @@ Object.defineProperties(PpeTexture.prototype, {
    * @memberof PpeTexture.prototype
    * @type {number|undefined}
    * @readonly
-   * @private
    */
   offset: {
     get: function () {
@@ -75,7 +71,6 @@ Object.defineProperties(PpeTexture.prototype, {
    * @memberof PpeTexture.prototype
    * @type {number|undefined}
    * @readonly
-   * @private
    */
   scale: {
     get: function () {
@@ -89,7 +84,6 @@ Object.defineProperties(PpeTexture.prototype, {
    * @memberof PpeTexture.prototype
    * @type {number}
    * @readonly
-   * @private
    */
   index: {
     get: function () {
@@ -103,7 +97,6 @@ Object.defineProperties(PpeTexture.prototype, {
    * @memberof PpeTexture.prototype
    * @type {number|undefined}
    * @readonly
-   * @private
    */
   texCoord: {
     get: function () {

@@ -20,7 +20,6 @@ import StorageType from "./StorageType.js";
  * @param {string} [options.extension] The <code>NGA_gpm_local</code> extension object.
  *
  * @private
- * @experimental This feature is subject to change without Cesium's standard deprecation policy.
  */
 function GltfGpmLoader() {}
 

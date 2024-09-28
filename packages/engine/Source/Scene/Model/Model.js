@@ -106,7 +106,7 @@ import pickModel from "./pickModel.js";
  *  {@link https://github.com/KhronosGroup/glTF/blob/main/extensions/1.0/Vendor/WEB3D_quantized_attributes/README.md|WEB3D_quantized_attributes}
  *  </li>
  *  <li>
- *  {@link https://nsgreg.nga.mil/csmwg.jsp|NGA_gpm_local}
+ *  {@link https://nsgreg.nga.mil/csmwg.jsp|NGA_gpm_local (experimental)}
  *  </li>
  * </ul>
  * </p>
@@ -1786,7 +1786,7 @@ Model.prototype.applyArticulations = function () {
  * @returns {object|undefined} The object, or `undefined`
  * @exception {DeveloperError} The model is not loaded. Use Model.readyEvent or wait for Model.ready to be true.
  *
- * @private
+ * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
 Model.prototype.getExtension = function (extensionName) {
   //>>includeStart('debug', pragmas.debug);
