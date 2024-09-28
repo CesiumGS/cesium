@@ -402,6 +402,14 @@ FramebufferManager.prototype.setDepthStencilTexture = function (texture) {
   this._depthStencilTexture = texture;
 };
 
+/**
+ * If using MSAA, resolve the stencil.
+ *
+ * @param {Context} context
+ * @param {boolean} blitStencil
+ *
+ * @private
+ */
 FramebufferManager.prototype.prepareTextures = function (context, blitStencil) {
   if (this._numSamples > 1) {
     this._multisampleFramebuffer.blitFramebuffers(context, blitStencil);
@@ -427,28 +435,26 @@ FramebufferManager.prototype.destroyFramebuffer = function () {
 
 FramebufferManager.prototype.destroy = function () {
   if (this._color) {
-    let i;
-    const length = this._colorTextures.length;
-    for (i = 0; i < length; ++i) {
-      const texture = this._colorTextures[i];
+    const colorTextures = this._colorTextures;
+    const colorRenderbuffers = this._colorRenderbuffers;
+    for (let i = 0; i < colorTextures.length; ++i) {
+      const texture = colorTextures[i];
       if (this._createColorAttachments) {
         if (defined(texture) && !texture.isDestroyed()) {
-          this._colorTextures[i].destroy();
-          this._colorTextures[i] = undefined;
+          texture.destroy();
         }
       }
       if (defined(texture) && texture.isDestroyed()) {
-        this._colorTextures[i] = undefined;
+        colorTextures[i] = undefined;
       }
-      const renderbuffer = this._colorRenderbuffers[i];
+      const renderbuffer = colorRenderbuffers[i];
       if (this._createColorAttachments) {
         if (defined(renderbuffer) && !renderbuffer.isDestroyed()) {
-          this._colorRenderbuffers[i].destroy();
-          this._colorRenderbuffers[i] = undefined;
+          renderbuffer.destroy();
         }
       }
       if (defined(renderbuffer) && renderbuffer.isDestroyed()) {
-        this._colorRenderbuffers[i] = undefined;
+        colorRenderbuffers[i] = undefined;
       }
     }
   }
