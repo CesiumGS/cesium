@@ -25,7 +25,7 @@ import Check from "../../../../Core/Check.js";
  *
  * @param {PpeTexture.ConstructorOptions} options An object describing initialization options
  *
- * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
+ * @private
  */
 function PpeTexture(options) {
   //>>includeStart('debug', pragmas.debug);
