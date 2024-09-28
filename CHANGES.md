@@ -7,6 +7,12 @@
 ##### Additions :tada:
 
 - Added `enableVerticalExaggeration` option to models. Set this value to `false` to prevent model exaggeration when `Scene.verticalExaggeration` is set to a value other than `1.0`. [#12141](https://github.com/CesiumGS/cesium/pull/12141)
+- Added `CallbackPositionProperty` to allow lazy entity position evaluation. [#12170](https://github.com/CesiumGS/cesium/pull/12170)
+
+##### Fixes :wrench:
+
+- Use first geometryBuffer if no best match found in I3SNode [#12132](https://github.com/CesiumGS/cesium/pull/12132)
+- Update type definitions to allow undefined for optional parameters [#12193](https://github.com/CesiumGS/cesium/pull/12193)
 
 ### 1.121.1 - 2024-09-04
 

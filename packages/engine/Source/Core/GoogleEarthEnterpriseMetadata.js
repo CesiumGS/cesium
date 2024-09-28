@@ -54,7 +54,7 @@ function GoogleEarthEnterpriseMetadata(resourceOrUrl) {
 
   /**
    * True if imagery is sent as a protocol buffer, false if sent as plain images. If undefined we will try both.
-   * @type {boolean}
+   * @type {boolean|undefined}
    * @default undefined
    */
   this.protoImagery = undefined;

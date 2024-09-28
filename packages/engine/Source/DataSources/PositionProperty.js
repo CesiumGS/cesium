@@ -14,6 +14,7 @@ import Transforms from "../Core/Transforms.js";
  * @constructor
  * @abstract
  *
+ * @see CallbackPositionProperty
  * @see CompositePositionProperty
  * @see ConstantPositionProperty
  * @see SampledPositionProperty
