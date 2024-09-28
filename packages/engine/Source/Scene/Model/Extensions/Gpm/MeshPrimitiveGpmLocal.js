@@ -1,10 +1,12 @@
 /**
  * Local Generic Point-cloud Model information about a glTF primitive.
  *
- * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
+ * @param {PpeTexture[]} ppeTextures The Per-Point Error textures
+ *
+ * @private
  */
-function MeshPrimitiveGpmLocal(options) {
-  this._ppeTextures = options.ppeTextures;
+function MeshPrimitiveGpmLocal(ppeTextures) {
+  this._ppeTextures = ppeTextures;
 }
 
 Object.defineProperties(MeshPrimitiveGpmLocal.prototype, {
