@@ -7,6 +7,26 @@ import StorageType from "./StorageType.js";
  * The GPM metadata for a Ground-Space Indirect implementation stored
  * locally (i.e. a tile and/or leaf node).
  *
+ * This reflects the root extension object of the {@link https://nsgreg.nga.mil/csmwg.jsp|NGA_gpm_local}
+ * glTF extension. When a model that contains this extension was loaded,
+ * then an object of this type can be obtained by calling
+ * ```
+ * const gltfGpmLocal = model.getExtension("NGA_gpm_local");
+ * ```
+ *
+ * The storage type determines the presence of the optional properties:
+ * <ul>
+ *  <li>
+ *   When the storage type is `StorageType.Indirect`, then the
+ *   `anchorPointsIndirect` and `intraTileCorrelationGroups`
+ *   are present.
+ *  </li>
+ *  <li>
+ *   When the storage type is `StorageType.Direct`, then the
+ *   `anchorPointsDirect` and `covarianceDirect` are present.
+ *  </li>
+ * </ul>
+ *
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
 function GltfGpmLocal(options) {

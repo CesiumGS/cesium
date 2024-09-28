@@ -3,6 +3,9 @@ import Check from "../../../../Core/Check.js";
 /**
  * Metadata for one stored anchor point.
  *
+ * This reflects the `anchronPointIndirect` definition of the
+ * {@link https://nsgreg.nga.mil/csmwg.jsp|NGA_gpm_local} glTF extension.
+ *
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
 function AnchorPointIndirect(options) {

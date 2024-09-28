@@ -3,6 +3,9 @@ import Check from "../../../../Core/Check.js";
 /**
  * PPE (Per-Point Error) texture in `NGA_gpm_local`.
  *
+ * This reflects the `ppeTexture` definition of the
+ * {@link https://nsgreg.nga.mil/csmwg.jsp|NGA_gpm_local} glTF extension.
+ *
  * This is a valid glTF `TextureInfo` object (with a required `index`
  * and an optional `texCoord)`, with additional properties that
  * describe the structure of the metdata that is stored in the texture.

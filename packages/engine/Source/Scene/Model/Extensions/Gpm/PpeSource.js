@@ -1,5 +1,8 @@
 /**
- * An enum of per-point error sources
+ * An enum of per-point error sources.
+ *
+ * This reflects the `ppeMetadata.source` definition of the
+ * {@link https://nsgreg.nga.mil/csmwg.jsp|NGA_gpm_local} glTF extension.
  *
  * @enum {string}
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.

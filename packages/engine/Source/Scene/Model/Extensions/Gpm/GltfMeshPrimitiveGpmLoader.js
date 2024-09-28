@@ -232,7 +232,7 @@ GltfMeshPrimitiveGpmLoader.ppeTexturesMetadataSchemaCache = new Map();
 
 /**
  * Create the JSON description of a metadata class that treats
- * the given PPE texture as a property texture property(!).
+ * the given PPE texture as a property texture property.
  *
  * @param {any} ppeTexture - The PPE texture
  * @param {number} index - The index of the texture in the extension
@@ -346,7 +346,7 @@ GltfMeshPrimitiveGpmLoader.obtainPpeTexturesMetadataSchema = function (
  *
  * Each glTF may define multiple `ppeTexture` objects within the
  * `NGA_gpm_local` extensions. Each of these textures corresponds
- * to one 'property texture property(!)' in a metadata schema.
+ * to one 'property texture property' in a metadata schema.
  *
  * This method will create an array where each element is a (JSON)
  * string representation of the parts of a GPM PPE texture definition
