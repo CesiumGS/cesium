@@ -1,12 +1,27 @@
 import Check from "../../../../Core/Check.js";
 
 /**
+ * @typedef {object} CorrelationGroup.ConstructorOptions
+ *
+ * Initialization options for the CorrelationGroup constructor
+ *
+ * @property {boolean[]} groupFlags Array of 3 booleans indicating if
+ * parameters delta-x delta-y delta-z used in the correlation group
+ * @property {Cartesian3} rotationThetas Rotations in milliradians
+ * about X, Y, Z axes, respectively
+ * @property {Spdcf[]} params Array of `Spdcf` (Strictly Positive-Definite
+ * Correlation Function) parameters, for the U, V, W directions, respectively
+ */
+
+/**
  * Metadata identifying parameters using same correlation modeling and
  * associated correlation parameters.
  *
  * This reflects the `correlationGroup` definition of the
  * {@link https://nsgreg.nga.mil/csmwg.jsp|NGA_gpm_local} glTF extension.
  *
+ * @constructor
+ * @param {CorrelationGroup.ConstructorOptions} options An object describing initialization options
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
 function CorrelationGroup(options) {

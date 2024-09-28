@@ -1,11 +1,23 @@
 import Check from "../../../../Core/Check.js";
 
 /**
+ * @typedef {object} AnchorPointIndirect.ConstructorOptions
+ *
+ * Initialization options for the AnchorPointIndirect constructor
+ *
+ * @property {Cartesian3} position  Anchor point geographic coordinates
+ * @property {Cartesian3} adjustmentParams The adjustment values in meters
+ * @property {Matrix3} covarianceMatrix The 3x3 covariance matrix
+ */
+
+/**
  * Metadata for one stored anchor point.
  *
  * This reflects the `anchronPointIndirect` definition of the
  * {@link https://nsgreg.nga.mil/csmwg.jsp|NGA_gpm_local} glTF extension.
  *
+ * @constructor
+ * @param {AnchorPointIndirect.ConstructorOptions} options An object describing initialization options
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
 function AnchorPointIndirect(options) {

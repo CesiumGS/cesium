@@ -16,6 +16,7 @@ import Check from "../../../../Core/Check.js";
  * This reflects the `ppeMetadata` definition of the
  * {@link https://nsgreg.nga.mil/csmwg.jsp|NGA_gpm_local} glTF extension.
  *
+ * @constructor
  * @param {PpeMetadata.ConstructorOptions} options An object describing initialization options
  *
  * @private

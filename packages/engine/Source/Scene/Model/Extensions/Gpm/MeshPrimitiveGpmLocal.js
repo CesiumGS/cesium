@@ -3,6 +3,7 @@
  *
  * @param {PpeTexture[]} ppeTextures The Per-Point Error textures
  *
+ * @constructor
  * @private
  */
 function MeshPrimitiveGpmLocal(ppeTextures) {

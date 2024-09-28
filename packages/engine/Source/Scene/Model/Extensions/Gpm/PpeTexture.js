@@ -23,6 +23,7 @@ import Check from "../../../../Core/Check.js";
  * and an optional `texCoord)`, with additional properties that
  * describe the structure of the metdata that is stored in the texture.
  *
+ * @constructor
  * @param {PpeTexture.ConstructorOptions} options An object describing initialization options
  *
  * @private
