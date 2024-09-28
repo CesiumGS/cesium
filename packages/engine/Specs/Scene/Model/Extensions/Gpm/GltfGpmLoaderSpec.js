@@ -12,7 +12,7 @@ describe("Scene/Model/Extensions/Gpm/GltfGpmLoader", function () {
     };
     expect(function () {
       GltfGpmLoader.load(gltfGpmLocalJson);
-    }).toThrowDeveloperError();
+    }).toThrowError();
   });
 
   it("load throws for storageType Direct without anchorPointsDirect", async function () {
@@ -21,7 +21,7 @@ describe("Scene/Model/Extensions/Gpm/GltfGpmLoader", function () {
     };
     expect(function () {
       GltfGpmLoader.load(gltfGpmLocalJson);
-    }).toThrowDeveloperError();
+    }).toThrowError();
   });
 
   it("load throws for storageType Direct without covarianceDirectUpperTriangle", async function () {
@@ -36,7 +36,7 @@ describe("Scene/Model/Extensions/Gpm/GltfGpmLoader", function () {
     };
     expect(function () {
       GltfGpmLoader.load(gltfGpmLocalJson);
-    }).toThrowDeveloperError();
+    }).toThrowError();
   });
 
   it("load returns result for valid JSON for storageType Direct", async function () {
