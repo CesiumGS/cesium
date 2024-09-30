@@ -105,6 +105,9 @@ import pickModel from "./pickModel.js";
  *  <li>
  *  {@link https://github.com/KhronosGroup/glTF/blob/main/extensions/1.0/Vendor/WEB3D_quantized_attributes/README.md|WEB3D_quantized_attributes}
  *  </li>
+ *  <li>
+ *  {@link https://nsgreg.nga.mil/csmwg.jsp|NGA_gpm_local (experimental)}
+ *  </li>
  * </ul>
  * </p>
  * <p>
@@ -1769,6 +1772,33 @@ Model.prototype.applyArticulations = function () {
   //>>includeEnd('debug');
 
   this._sceneGraph.applyArticulations();
+};
+
+/**
+ * Returns the object that was created for the given extension.
+ *
+ * The given name may be the name of a glTF extension, like `"EXT_example_extension"`.
+ * If the specified extension was present in the root of the underlying glTF asset,
+ * and a loder for the specified extension has processed the extension data, then
+ * this will return the model representation of the extension.
+ *
+ * @param {string} extensionName The name of the extension
+ * @returns {object|undefined} The object, or `undefined`
+ * @exception {DeveloperError} The model is not loaded. Use Model.readyEvent or wait for Model.ready to be true.
+ *
+ * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
+ */
+Model.prototype.getExtension = function (extensionName) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("extensionName", extensionName);
+  if (!this._ready) {
+    throw new DeveloperError(
+      "The model is not loaded. Use Model.readyEvent or wait for Model.ready to be true.",
+    );
+  }
+  //>>includeEnd('debug');
+  const components = this._loader.components;
+  return components.extensions[extensionName];
 };
 
 /**

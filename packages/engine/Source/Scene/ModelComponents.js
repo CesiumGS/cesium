@@ -1141,6 +1141,15 @@ function Components() {
    * @private
    */
   this.transform = Matrix4.clone(Matrix4.IDENTITY);
+
+  /**
+   * A mapping from extension names like `"EXT_example_extension"` to
+   * the object that was created from the extension input
+   *
+   * @type {object}
+   * @private
+   */
+  this.extensions = {};
 }
 
 /**
