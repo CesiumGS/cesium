@@ -236,26 +236,26 @@ MetadataPicking.convertToObjectType = function (type, value) {
     return value;
   }
   if (
-    type === "SCALAR" ||
-    type === "STRING" ||
-    type === "BOOLEAN" ||
-    type === "ENUM"
+    type === MetadataType.SCALAR ||
+    type === MetadataType.STRING ||
+    type === MetadataType.BOOLEAN ||
+    type === MetadataType.ENUM
   ) {
     return value;
   }
   const numbers = value.map((n) => Number(n));
   switch (type) {
-    case "VEC2":
+    case MetadataType.VEC2:
       return Cartesian2.unpack(numbers, 0, new Cartesian2());
-    case "VEC3":
+    case MetadataType.VEC3:
       return Cartesian3.unpack(numbers, 0, new Cartesian3());
-    case "VEC4":
+    case MetadataType.VEC4:
       return Cartesian4.unpack(numbers, 0, new Cartesian3());
-    case "MAT2":
+    case MetadataType.MAT2:
       return Matrix2.unpack(numbers, 0, new Matrix2());
-    case "MAT3":
+    case MetadataType.MAT3:
       return Matrix3.unpack(numbers, 0, new Matrix3());
-    case "MAT4":
+    case MetadataType.MAT4:
       return Matrix4.unpack(numbers, 0, new Matrix4());
   }
   // Should never happen:
