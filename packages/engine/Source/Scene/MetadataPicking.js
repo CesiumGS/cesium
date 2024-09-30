@@ -16,8 +16,6 @@ import MetadataType from "./MetadataType.js";
  * into the actual metadata values, according to the structure
  * defined by the `MetadataClassProperty`.
  *
- * This is marked as 'private', but supposed to be used in Picking.js.
- *
  * @private
  */
 const MetadataPicking = {};
