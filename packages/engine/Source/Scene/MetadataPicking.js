@@ -5,6 +5,7 @@ import defined from "../Core/defined.js";
 import Matrix2 from "../Core/Matrix2.js";
 import Matrix3 from "../Core/Matrix3.js";
 import Matrix4 from "../Core/Matrix4.js";
+import RuntimeError from "../Core/RuntimeError.js";
 import MetadataComponentType from "./MetadataComponentType.js";
 import MetadataType from "./MetadataType.js";
 
@@ -58,8 +59,7 @@ MetadataPicking.decodeRawMetadataValue = function (
     case MetadataComponentType.FLOAT64:
       return dataView.getFloat64(index);
   }
-  // Appropriate error handling?
-  return undefined;
+  throw new RuntimeError(`Invalid component type: ${componentType}`);
 };
 
 /**
