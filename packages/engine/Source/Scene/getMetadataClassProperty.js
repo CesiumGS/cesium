@@ -14,7 +14,7 @@ import defined from "../Core/defined.js";
  * Otherwise, the `MetadataClassProperty` is returned.
  *
  * @param {object} schema The schema object
- * @param {string|undefined} schemaId The ID of the metadata schema
+ * @param {string} [schemaId] The ID of the metadata schema
  * @param {string} className The name of the metadata class
  * @param {string} propertyName The name of the metadata property
  * @returns {MetadataClassProperty|undefined}
