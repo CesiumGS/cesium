@@ -239,11 +239,11 @@ const scratchColorZero = new Color(0.0, 0.0, 0.0, 0.0);
  * Compute the rectangle that describes the part of the drawing buffer
  * that is relevant for picking.
  *
- * @param {number} drawingBufferHeight - The height of the drawing buffer
- * @param {Cartesian2} position - The position inside the drawing buffer
- * @param {number|undefined} width - The width of the rectangle, asssumed to
- * be an odd integer number, default: 3.0
- * @param {number|undefined} height - The height of the rectangle, default: width
+ * @param {number} drawingBufferHeight The height of the drawing buffer
+ * @param {Cartesian2} position The position inside the drawing buffer
+ * @param {number} [width=3.0] The width of the rectangle, assumed to
+ * be an odd integer number.
+ * @param {number} [height] The height of the rectangle. If unspecified, height will default to the value of <code>width</code>
  * @param {BoundingRectangle} result The result rectangle
  * @returns {BoundingRectangle} The result rectangle
  */
