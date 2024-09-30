@@ -80,7 +80,8 @@
           highlighted.feature = pickedFeature;
           Cesium.Color.clone(pickedFeature.color, highlighted.originalColor);
           pickedFeature.color = Cesium.Color.YELLOW;
-        }, Cesium.ScreenSpaceEventType.MOUSE_MOVE); //Sandcastle_End
+        }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+        //Sandcastle_End
       };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;

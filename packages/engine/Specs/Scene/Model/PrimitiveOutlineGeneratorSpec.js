@@ -263,7 +263,7 @@ describe(
         4, 8, 11
       ]);
       // prettier-ignore
-      let expectedOutlineCoordinates = new Float32Array([ 
+      let expectedOutlineCoordinates = new Float32Array([
         0, 1, 0,
         0, 1, 0,
         0, 1, 0,

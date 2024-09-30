@@ -54,7 +54,7 @@
               if (czm_selected()) {
                   vec3 highlighted = highlight.a * highlight.rgb + (1.0 - highlight.a) * color.rgb;
                   out_FragColor = vec4(highlighted, 1.0);
-              } else { 
+              } else {
                   out_FragColor = color;
               }
           }
