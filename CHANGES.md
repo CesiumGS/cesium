@@ -8,6 +8,7 @@
 
 - Added `enableVerticalExaggeration` option to models. Set this value to `false` to prevent model exaggeration when `Scene.verticalExaggeration` is set to a value other than `1.0`. [#12141](https://github.com/CesiumGS/cesium/pull/12141)
 - Added `CallbackPositionProperty` to allow lazy entity position evaluation. [#12170](https://github.com/CesiumGS/cesium/pull/12170)
+- Added `Scene.prototype.pickMetadata` and `Scene.prototype.pickMetadataSchema`, enabling experimental support for picking property textures or property attributes [#12075](https://github.com/CesiumGS/cesium/pull/12075)
 - Added experimental support for the `NGA_gpm_local` glTF extension, for GPM 1.2 [#12204](https://github.com/CesiumGS/cesium/pull/12204)
 
 ##### Fixes :wrench:
