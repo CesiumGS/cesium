@@ -815,14 +815,12 @@ Texture.prototype.copyFrom = function (options) {
   const arrayBufferView = source.arrayBufferView;
 
   // Make sure we are using the element's intrinsic width and height where available
-  if (defined(source.naturalWidth) && defined(source.naturalHeight)) {
-    width = source.naturalWidth;
-    height = source.naturalHeight;
-  }
-
   if (defined(source.videoWidth) && defined(source.videoHeight)) {
     width = source.videoWidth;
     height = source.videoHeight;
+  } else if (defined(source.naturalWidth) && defined(source.naturalHeight)) {
+    width = source.naturalWidth;
+    height = source.naturalHeight;
   }
 
   const textureWidth = this._width;
