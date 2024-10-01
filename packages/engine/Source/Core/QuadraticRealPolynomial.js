@@ -136,7 +136,7 @@ QuadraticRealPolynomial.computeRealRoots = function (a, b, c) {
     addWithCancellationCheck(
       b,
       CesiumMath.sign(b) * Math.sqrt(radicand),
-      CesiumMath.EPSILON14
+      CesiumMath.EPSILON14,
     );
   if (b > 0.0) {
     return [q / a, c / q];

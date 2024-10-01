@@ -48,9 +48,10 @@ describe("Core/ScreenSpaceEventHandler", function () {
     return cloningSpy;
   }
 
-  const eventsToStop = "pointerdown pointerup pointermove pointercancel mousedown mouseup mousemove touchstart touchend touchmove touchcancel dblclick wheel mousewheel DOMMouseScroll".split(
-    " "
-  );
+  const eventsToStop =
+    "pointerdown pointerup pointermove pointercancel mousedown mouseup mousemove touchstart touchend touchmove touchcancel dblclick wheel mousewheel DOMMouseScroll".split(
+      " ",
+    );
 
   function stop(event) {
     event.stopPropagation();
@@ -140,7 +141,7 @@ describe("Core/ScreenSpaceEventHandler", function () {
     if (defined(modifier)) {
       specName += ` with ${keyForValue(
         KeyboardEventModifier,
-        modifier
+        modifier,
       )} modifier`;
     }
     it(specName, function () {
@@ -158,7 +159,7 @@ describe("Core/ScreenSpaceEventHandler", function () {
     specFunction,
     possibleButtons,
     possibleModifiers,
-    possibleEventTypes
+    possibleEventTypes,
   ) {
     for (let i = 0; i < possibleButtons.length; ++i) {
       const eventType = possibleEventTypes[i];
@@ -176,7 +177,7 @@ describe("Core/ScreenSpaceEventHandler", function () {
         element,
         combine(options, {
           pointerType: "mouse",
-        })
+        }),
       );
     } else {
       DomEventSimulator.fireMouseDown(element, options);
@@ -189,7 +190,7 @@ describe("Core/ScreenSpaceEventHandler", function () {
         element,
         combine(options, {
           pointerType: "mouse",
-        })
+        }),
       );
     } else {
       DomEventSimulator.fireMouseUp(element, options);
@@ -202,7 +203,7 @@ describe("Core/ScreenSpaceEventHandler", function () {
         element,
         combine(options, {
           pointerType: "mouse",
-        })
+        }),
       );
     } else {
       DomEventSimulator.fireMouseMove(element, options);
@@ -224,8 +225,8 @@ describe("Core/ScreenSpaceEventHandler", function () {
               clientX: 1,
               clientY: 2,
             },
-            eventOptions
-          )
+            eventOptions,
+          ),
         );
       }
 
@@ -266,7 +267,7 @@ describe("Core/ScreenSpaceEventHandler", function () {
       testMouseDownEvent,
       possibleButtons,
       possibleModifiers,
-      possibleEventTypes
+      possibleEventTypes,
     );
   });
 
@@ -286,8 +287,8 @@ describe("Core/ScreenSpaceEventHandler", function () {
               clientX: 1,
               clientY: 2,
             },
-            eventOptions
-          )
+            eventOptions,
+          ),
         );
         simulateMouseUp(
           element,
@@ -296,8 +297,8 @@ describe("Core/ScreenSpaceEventHandler", function () {
               clientX: 1,
               clientY: 2,
             },
-            eventOptions
-          )
+            eventOptions,
+          ),
         );
       }
 
@@ -319,8 +320,8 @@ describe("Core/ScreenSpaceEventHandler", function () {
               clientX: 1,
               clientY: 2,
             },
-            eventOptions
-          )
+            eventOptions,
+          ),
         );
         simulateMouseMove(
           element,
@@ -329,8 +330,8 @@ describe("Core/ScreenSpaceEventHandler", function () {
               clientX: 10,
               clientY: 11,
             },
-            eventOptions
-          )
+            eventOptions,
+          ),
         );
         simulateMouseUp(
           element,
@@ -339,8 +340,8 @@ describe("Core/ScreenSpaceEventHandler", function () {
               clientX: 10,
               clientY: 11,
             },
-            eventOptions
-          )
+            eventOptions,
+          ),
         );
       }
 
@@ -382,7 +383,7 @@ describe("Core/ScreenSpaceEventHandler", function () {
       testMouseUpEvent,
       possibleButtons,
       possibleModifiers,
-      possibleEventTypes
+      possibleEventTypes,
     );
   });
 
@@ -402,8 +403,8 @@ describe("Core/ScreenSpaceEventHandler", function () {
               clientX: 1,
               clientY: 2,
             },
-            eventOptions
-          )
+            eventOptions,
+          ),
         );
         simulateMouseUp(
           element,
@@ -412,8 +413,8 @@ describe("Core/ScreenSpaceEventHandler", function () {
               clientX: 1,
               clientY: 2,
             },
-            eventOptions
-          )
+            eventOptions,
+          ),
         );
       }
 
@@ -433,8 +434,8 @@ describe("Core/ScreenSpaceEventHandler", function () {
             clientX: 1,
             clientY: 2,
           },
-          eventOptions
-        )
+          eventOptions,
+        ),
       );
       simulateMouseUp(
         element,
@@ -443,8 +444,8 @@ describe("Core/ScreenSpaceEventHandler", function () {
             clientX: 10,
             clientY: 11,
           },
-          eventOptions
-        )
+          eventOptions,
+        ),
       );
 
       expect(action).not.toHaveBeenCalled();
@@ -479,7 +480,7 @@ describe("Core/ScreenSpaceEventHandler", function () {
       testMouseClickEvent,
       possibleButtons,
       possibleModifiers,
-      possibleEventTypes
+      possibleEventTypes,
     );
   });
 
@@ -498,8 +499,8 @@ describe("Core/ScreenSpaceEventHandler", function () {
               clientX: 1,
               clientY: 2,
             },
-            eventOptions
-          )
+            eventOptions,
+          ),
         );
       }
 
@@ -532,7 +533,7 @@ describe("Core/ScreenSpaceEventHandler", function () {
       testMouseDoubleClickEvent,
       possibleButtons,
       possibleModifiers,
-      possibleEventTypes
+      possibleEventTypes,
     );
   });
 
@@ -551,8 +552,8 @@ describe("Core/ScreenSpaceEventHandler", function () {
               clientX: 1,
               clientY: 2,
             },
-            eventOptions
-          )
+            eventOptions,
+          ),
         );
         simulateMouseMove(
           element,
@@ -561,8 +562,8 @@ describe("Core/ScreenSpaceEventHandler", function () {
               clientX: 2,
               clientY: 3,
             },
-            eventOptions
-          )
+            eventOptions,
+          ),
         );
       }
 
@@ -596,7 +597,7 @@ describe("Core/ScreenSpaceEventHandler", function () {
       testMouseMoveEvent,
       possibleButtons,
       possibleModifiers,
-      possibleEventTypes
+      possibleEventTypes,
     );
   });
 
@@ -616,8 +617,8 @@ describe("Core/ScreenSpaceEventHandler", function () {
                 {
                   deltaY: 120,
                 },
-                eventOptions
-              )
+                eventOptions,
+              ),
             );
           }
 
@@ -650,7 +651,7 @@ describe("Core/ScreenSpaceEventHandler", function () {
           testWheelEvent,
           possibleButtons,
           possibleModifiers,
-          possibleEventTypes
+          possibleEventTypes,
         );
       });
     } else if (document.onmousewheel !== undefined) {
@@ -668,8 +669,8 @@ describe("Core/ScreenSpaceEventHandler", function () {
                 {
                   wheelDelta: -120,
                 },
-                eventOptions
-              )
+                eventOptions,
+              ),
             );
           }
 
@@ -700,7 +701,7 @@ describe("Core/ScreenSpaceEventHandler", function () {
           testMouseWheelEvent,
           possibleButtons,
           possibleModifiers,
-          possibleEventTypes
+          possibleEventTypes,
         );
       });
     }
@@ -728,8 +729,8 @@ describe("Core/ScreenSpaceEventHandler", function () {
               pointerType: "touch",
               pointerId: 1,
             },
-            touchStartPosition
-          )
+            touchStartPosition,
+          ),
         );
       } else {
         DomEventSimulator.fireTouchStart(element, {
@@ -738,7 +739,7 @@ describe("Core/ScreenSpaceEventHandler", function () {
               {
                 identifier: 0,
               },
-              touchStartPosition
+              touchStartPosition,
             ),
           ],
         });
@@ -789,8 +790,8 @@ describe("Core/ScreenSpaceEventHandler", function () {
               pointerType: "touch",
               pointerId: 1,
             },
-            touchStartPosition
-          )
+            touchStartPosition,
+          ),
         );
         DomEventSimulator.firePointerMove(
           element,
@@ -799,8 +800,8 @@ describe("Core/ScreenSpaceEventHandler", function () {
               pointerType: "touch",
               pointerId: 1,
             },
-            touchMovePosition
-          )
+            touchMovePosition,
+          ),
         );
       } else {
         DomEventSimulator.fireTouchStart(element, {
@@ -809,7 +810,7 @@ describe("Core/ScreenSpaceEventHandler", function () {
               {
                 identifier: 0,
               },
-              touchStartPosition
+              touchStartPosition,
             ),
           ],
         });
@@ -819,7 +820,7 @@ describe("Core/ScreenSpaceEventHandler", function () {
               {
                 identifier: 0,
               },
-              touchMovePosition
+              touchMovePosition,
             ),
           ],
         });
@@ -871,8 +872,8 @@ describe("Core/ScreenSpaceEventHandler", function () {
               pointerType: "touch",
               pointerId: 1,
             },
-            touchStartPosition
-          )
+            touchStartPosition,
+          ),
         );
         DomEventSimulator.firePointerUp(
           element,
@@ -881,8 +882,8 @@ describe("Core/ScreenSpaceEventHandler", function () {
               pointerType: "touch",
               pointerId: 1,
             },
-            touchEndPosition
-          )
+            touchEndPosition,
+          ),
         );
       } else {
         DomEventSimulator.fireTouchStart(element, {
@@ -891,7 +892,7 @@ describe("Core/ScreenSpaceEventHandler", function () {
               {
                 identifier: 0,
               },
-              touchStartPosition
+              touchStartPosition,
             ),
           ],
         });
@@ -901,7 +902,7 @@ describe("Core/ScreenSpaceEventHandler", function () {
               {
                 identifier: 0,
               },
-              touchEndPosition
+              touchEndPosition,
             ),
           ],
         });
@@ -940,8 +941,8 @@ describe("Core/ScreenSpaceEventHandler", function () {
               pointerType: "touch",
               pointerId: 1,
             },
-            touchStartPosition
-          )
+            touchStartPosition,
+          ),
         );
         DomEventSimulator.firePointerMove(
           element,
@@ -950,8 +951,8 @@ describe("Core/ScreenSpaceEventHandler", function () {
               pointerType: "touch",
               pointerId: 1,
             },
-            touchMovePosition
-          )
+            touchMovePosition,
+          ),
         );
         DomEventSimulator.firePointerUp(
           element,
@@ -960,8 +961,8 @@ describe("Core/ScreenSpaceEventHandler", function () {
               pointerType: "touch",
               pointerId: 1,
             },
-            touchEndPosition
-          )
+            touchEndPosition,
+          ),
         );
       } else {
         DomEventSimulator.fireTouchStart(element, {
@@ -970,7 +971,7 @@ describe("Core/ScreenSpaceEventHandler", function () {
               {
                 identifier: 0,
               },
-              touchStartPosition
+              touchStartPosition,
             ),
           ],
         });
@@ -980,7 +981,7 @@ describe("Core/ScreenSpaceEventHandler", function () {
               {
                 identifier: 0,
               },
-              touchMovePosition
+              touchMovePosition,
             ),
           ],
         });
@@ -990,7 +991,7 @@ describe("Core/ScreenSpaceEventHandler", function () {
               {
                 identifier: 0,
               },
-              touchEndPosition
+              touchEndPosition,
             ),
           ],
         });
@@ -1042,8 +1043,8 @@ describe("Core/ScreenSpaceEventHandler", function () {
               pointerType: "touch",
               pointerId: 1,
             },
-            touchStartPosition
-          )
+            touchStartPosition,
+          ),
         );
         DomEventSimulator.firePointerCancel(
           element,
@@ -1052,8 +1053,8 @@ describe("Core/ScreenSpaceEventHandler", function () {
               pointerType: "touch",
               pointerId: 1,
             },
-            touchEndPosition
-          )
+            touchEndPosition,
+          ),
         );
       } else {
         DomEventSimulator.fireTouchStart(element, {
@@ -1062,7 +1063,7 @@ describe("Core/ScreenSpaceEventHandler", function () {
               {
                 identifier: 0,
               },
-              touchStartPosition
+              touchStartPosition,
             ),
           ],
         });
@@ -1072,7 +1073,7 @@ describe("Core/ScreenSpaceEventHandler", function () {
               {
                 identifier: 0,
               },
-              touchEndPosition
+              touchEndPosition,
             ),
           ],
         });
@@ -1111,8 +1112,8 @@ describe("Core/ScreenSpaceEventHandler", function () {
               pointerType: "touch",
               pointerId: 1,
             },
-            touchStartPosition
-          )
+            touchStartPosition,
+          ),
         );
         DomEventSimulator.firePointerMove(
           element,
@@ -1121,8 +1122,8 @@ describe("Core/ScreenSpaceEventHandler", function () {
               pointerType: "touch",
               pointerId: 1,
             },
-            touchMovePosition
-          )
+            touchMovePosition,
+          ),
         );
         DomEventSimulator.firePointerCancel(
           element,
@@ -1131,8 +1132,8 @@ describe("Core/ScreenSpaceEventHandler", function () {
               pointerType: "touch",
               pointerId: 1,
             },
-            touchEndPosition
-          )
+            touchEndPosition,
+          ),
         );
       } else {
         DomEventSimulator.fireTouchStart(element, {
@@ -1141,7 +1142,7 @@ describe("Core/ScreenSpaceEventHandler", function () {
               {
                 identifier: 0,
               },
-              touchStartPosition
+              touchStartPosition,
             ),
           ],
         });
@@ -1151,7 +1152,7 @@ describe("Core/ScreenSpaceEventHandler", function () {
               {
                 identifier: 0,
               },
-              touchMovePosition
+              touchMovePosition,
             ),
           ],
         });
@@ -1161,7 +1162,7 @@ describe("Core/ScreenSpaceEventHandler", function () {
               {
                 identifier: 0,
               },
-              touchEndPosition
+              touchEndPosition,
             ),
           ],
         });
@@ -1213,8 +1214,8 @@ describe("Core/ScreenSpaceEventHandler", function () {
               pointerType: "touch",
               pointerId: 1,
             },
-            touch1StartPosition
-          )
+            touch1StartPosition,
+          ),
         );
         DomEventSimulator.firePointerDown(
           element,
@@ -1223,8 +1224,8 @@ describe("Core/ScreenSpaceEventHandler", function () {
               pointerType: "touch",
               pointerId: 2,
             },
-            touch2StartPosition
-          )
+            touch2StartPosition,
+          ),
         );
       } else {
         DomEventSimulator.fireTouchStart(element, {
@@ -1233,7 +1234,7 @@ describe("Core/ScreenSpaceEventHandler", function () {
               {
                 identifier: 0,
               },
-              touch1StartPosition
+              touch1StartPosition,
             ),
           ],
         });
@@ -1243,13 +1244,13 @@ describe("Core/ScreenSpaceEventHandler", function () {
               {
                 identifier: 0,
               },
-              touch1StartPosition
+              touch1StartPosition,
             ),
             combine(
               {
                 identifier: 1,
               },
-              touch2StartPosition
+              touch2StartPosition,
             ),
           ],
         });
@@ -1309,8 +1310,8 @@ describe("Core/ScreenSpaceEventHandler", function () {
               pointerType: "touch",
               pointerId: 1,
             },
-            touch1StartPosition
-          )
+            touch1StartPosition,
+          ),
         );
         DomEventSimulator.firePointerDown(
           element,
@@ -1319,8 +1320,8 @@ describe("Core/ScreenSpaceEventHandler", function () {
               pointerType: "touch",
               pointerId: 2,
             },
-            touch2StartPosition
-          )
+            touch2StartPosition,
+          ),
         );
         DomEventSimulator.firePointerMove(
           element,
@@ -1329,8 +1330,8 @@ describe("Core/ScreenSpaceEventHandler", function () {
               pointerType: "touch",
               pointerId: 1,
             },
-            touch1MovePosition
-          )
+            touch1MovePosition,
+          ),
         );
         DomEventSimulator.firePointerMove(
           element,
@@ -1339,8 +1340,8 @@ describe("Core/ScreenSpaceEventHandler", function () {
               pointerType: "touch",
               pointerId: 2,
             },
-            touch2MovePosition
-          )
+            touch2MovePosition,
+          ),
         );
       } else {
         DomEventSimulator.fireTouchStart(element, {
@@ -1349,7 +1350,7 @@ describe("Core/ScreenSpaceEventHandler", function () {
               {
                 identifier: 0,
               },
-              touch1StartPosition
+              touch1StartPosition,
             ),
           ],
         });
@@ -1359,13 +1360,13 @@ describe("Core/ScreenSpaceEventHandler", function () {
               {
                 identifier: 0,
               },
-              touch1StartPosition
+              touch1StartPosition,
             ),
             combine(
               {
                 identifier: 1,
               },
-              touch2StartPosition
+              touch2StartPosition,
             ),
           ],
         });
@@ -1375,13 +1376,13 @@ describe("Core/ScreenSpaceEventHandler", function () {
               {
                 identifier: 0,
               },
-              touch1MovePosition
+              touch1MovePosition,
             ),
             combine(
               {
                 identifier: 1,
               },
-              touch2MovePosition
+              touch2MovePosition,
             ),
           ],
         });
@@ -1475,8 +1476,8 @@ describe("Core/ScreenSpaceEventHandler", function () {
             pointerType: "touch",
             pointerId: 1,
           },
-          touch1Position
-        )
+          touch1Position,
+        ),
       );
       DomEventSimulator.firePointerDown(
         element,
@@ -1485,8 +1486,8 @@ describe("Core/ScreenSpaceEventHandler", function () {
             pointerType: "touch",
             pointerId: 2,
           },
-          touch2Position
-        )
+          touch2Position,
+        ),
       );
 
       // Releasing one of two fingers should not trigger
@@ -1499,8 +1500,8 @@ describe("Core/ScreenSpaceEventHandler", function () {
             pointerType: "touch",
             pointerId: 1,
           },
-          touch1Position
-        )
+          touch1Position,
+        ),
       );
       expect(pinchEndAction).not.toHaveBeenCalled();
       expect(leftDownAction).not.toHaveBeenCalled();
@@ -1516,8 +1517,8 @@ describe("Core/ScreenSpaceEventHandler", function () {
             pointerType: "touch",
             pointerId: 1,
           },
-          touch2Position
-        )
+          touch2Position,
+        ),
       );
       expect(pinchStartAction).not.toHaveBeenCalled();
 
@@ -1529,8 +1530,8 @@ describe("Core/ScreenSpaceEventHandler", function () {
             pointerType: "touch",
             pointerId: 1,
           },
-          touch2Position
-        )
+          touch2Position,
+        ),
       );
       DomEventSimulator.firePointerUp(
         element,
@@ -1539,8 +1540,8 @@ describe("Core/ScreenSpaceEventHandler", function () {
             pointerType: "touch",
             pointerId: 2,
           },
-          touch2Position
-        )
+          touch2Position,
+        ),
       );
       expect(pinchEndAction).toHaveBeenCalled();
     } else {
@@ -1597,8 +1598,8 @@ describe("Core/ScreenSpaceEventHandler", function () {
               pointerType: "touch",
               pointerId: 1,
             },
-            touchStartPosition
-          )
+            touchStartPosition,
+          ),
         );
         DomEventSimulator.firePointerUp(
           element,
@@ -1607,8 +1608,8 @@ describe("Core/ScreenSpaceEventHandler", function () {
               pointerType: "touch",
               pointerId: 1,
             },
-            touchEndPosition
-          )
+            touchEndPosition,
+          ),
         );
       } else {
         DomEventSimulator.fireTouchStart(element, {
@@ -1617,7 +1618,7 @@ describe("Core/ScreenSpaceEventHandler", function () {
               {
                 identifier: 0,
               },
-              touchStartPosition
+              touchStartPosition,
             ),
           ],
         });
@@ -1627,7 +1628,7 @@ describe("Core/ScreenSpaceEventHandler", function () {
               {
                 identifier: 0,
               },
-              touchEndPosition
+              touchEndPosition,
             ),
           ],
         });
@@ -1682,8 +1683,8 @@ describe("Core/ScreenSpaceEventHandler", function () {
               pointerType: "touch",
               pointerId: 1,
             },
-            touchStartPosition
-          )
+            touchStartPosition,
+          ),
         );
         jasmine.clock().tick(timeout);
         DomEventSimulator.firePointerUp(
@@ -1693,8 +1694,8 @@ describe("Core/ScreenSpaceEventHandler", function () {
               pointerType: "touch",
               pointerId: 1,
             },
-            touchEndPosition
-          )
+            touchEndPosition,
+          ),
         );
       } else {
         DomEventSimulator.fireTouchStart(element, {
@@ -1703,7 +1704,7 @@ describe("Core/ScreenSpaceEventHandler", function () {
               {
                 identifier: 0,
               },
-              touchStartPosition
+              touchStartPosition,
             ),
           ],
         });
@@ -1714,7 +1715,7 @@ describe("Core/ScreenSpaceEventHandler", function () {
               {
                 identifier: 0,
               },
-              touchEndPosition
+              touchEndPosition,
             ),
           ],
         });
@@ -1783,8 +1784,8 @@ describe("Core/ScreenSpaceEventHandler", function () {
               pointerType: "touch",
               pointerId: 1,
             },
-            touchStartPosition
-          )
+            touchStartPosition,
+          ),
         );
         DomEventSimulator.firePointerCancel(
           element,
@@ -1793,8 +1794,8 @@ describe("Core/ScreenSpaceEventHandler", function () {
               pointerType: "touch",
               pointerId: 1,
             },
-            touchEndPosition
-          )
+            touchEndPosition,
+          ),
         );
       } else {
         DomEventSimulator.fireTouchStart(element, {
@@ -1803,7 +1804,7 @@ describe("Core/ScreenSpaceEventHandler", function () {
               {
                 identifier: 0,
               },
-              touchStartPosition
+              touchStartPosition,
             ),
           ],
         });
@@ -1813,7 +1814,7 @@ describe("Core/ScreenSpaceEventHandler", function () {
               {
                 identifier: 0,
               },
-              touchEndPosition
+              touchEndPosition,
             ),
           ],
         });
@@ -1857,7 +1858,7 @@ describe("Core/ScreenSpaceEventHandler", function () {
     handler.destroy();
 
     expect(element.removeEventListener.calls.count()).toEqual(
-      element.addEventListener.calls.count()
+      element.addEventListener.calls.count(),
     );
   });
 });

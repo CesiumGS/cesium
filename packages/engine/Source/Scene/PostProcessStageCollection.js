@@ -347,29 +347,32 @@ Object.defineProperties(PostProcessStageCollection.prototype, {
 
       switch (value) {
         case Tonemapper.REINHARD:
-          tonemapping = PostProcessStageLibrary.createReinhardTonemappingStage(
-            useAutoExposure
-          );
+          tonemapping =
+            PostProcessStageLibrary.createReinhardTonemappingStage(
+              useAutoExposure,
+            );
           break;
         case Tonemapper.MODIFIED_REINHARD:
-          tonemapping = PostProcessStageLibrary.createModifiedReinhardTonemappingStage(
-            useAutoExposure
-          );
+          tonemapping =
+            PostProcessStageLibrary.createModifiedReinhardTonemappingStage(
+              useAutoExposure,
+            );
           break;
         case Tonemapper.FILMIC:
-          tonemapping = PostProcessStageLibrary.createFilmicTonemappingStage(
-            useAutoExposure
-          );
+          tonemapping =
+            PostProcessStageLibrary.createFilmicTonemappingStage(
+              useAutoExposure,
+            );
           break;
         case Tonemapper.PBR_NEUTRAL:
-          tonemapping = PostProcessStageLibrary.createPbrNeutralTonemappingStage(
-            useAutoExposure
-          );
+          tonemapping =
+            PostProcessStageLibrary.createPbrNeutralTonemappingStage(
+              useAutoExposure,
+            );
           break;
         default:
-          tonemapping = PostProcessStageLibrary.createAcesTonemappingStage(
-            useAutoExposure
-          );
+          tonemapping =
+            PostProcessStageLibrary.createAcesTonemappingStage(useAutoExposure);
           break;
       }
 
@@ -423,8 +426,7 @@ function removeStages(collection) {
 
   const newStages = [];
   const stages = collection._stages;
-  const length = stages.length;
-  for (let i = 0, j = 0; i < length; ++i) {
+  for (let i = 0, j = 0; i < stages.length; ++i) {
     const stage = stages[i];
     if (stage) {
       stage._index = j++;
@@ -457,7 +459,7 @@ PostProcessStageCollection.prototype.add = function (stage) {
     //>>includeStart('debug', pragmas.debug);
     if (defined(stageNames[currentStage.name])) {
       throw new DeveloperError(
-        `${currentStage.name} has already been added to the collection or does not have a unique name.`
+        `${currentStage.name} has already been added to the collection or does not have a unique name.`,
       );
     }
     //>>includeEnd('debug');
@@ -582,7 +584,7 @@ PostProcessStageCollection.prototype.getStageByName = function (name) {
 PostProcessStageCollection.prototype.update = function (
   context,
   useLogDepth,
-  useHdr
+  useHdr,
 ) {
   removeStages(this);
 
@@ -591,23 +593,20 @@ PostProcessStageCollection.prototype.update = function (
   this._previousActiveStages = previousActiveStages;
 
   const stages = this._stages;
-  let length = (activeStages.length = stages.length);
+  activeStages.length = stages.length;
 
-  let i;
-  let stage;
   let count = 0;
-  for (i = 0; i < length; ++i) {
-    stage = stages[i];
+  for (let i = 0; i < stages.length; ++i) {
+    const stage = stages[i];
     if (stage.ready && stage.enabled && stage._isSupported(context)) {
       activeStages[count++] = stage;
     }
   }
-
   activeStages.length = count;
 
   let activeStagesChanged = count !== previousActiveStages.length;
   if (!activeStagesChanged) {
-    for (i = 0; i < count; ++i) {
+    for (let i = 0; i < count; ++i) {
       if (activeStages[i] !== previousActiveStages[i]) {
         activeStagesChanged = true;
         break;
@@ -654,9 +653,9 @@ PostProcessStageCollection.prototype.update = function (
   }
 
   if (!defined(this._randomTexture) && aoEnabled) {
-    length = 256 * 256 * 3;
+    const length = 256 * 256 * 3;
     const random = new Uint8Array(length);
-    for (i = 0; i < length; i += 3) {
+    for (let i = 0; i < length; i += 3) {
       random[i] = Math.floor(Math.random() * 255.0);
     }
 
@@ -689,19 +688,17 @@ PostProcessStageCollection.prototype.update = function (
     autoexposure.update(context, useLogDepth);
   }
 
-  length = stages.length;
-  for (i = 0; i < length; ++i) {
+  for (let i = 0; i < stages.length; ++i) {
     stages[i].update(context, useLogDepth);
   }
 
   count = 0;
-  for (i = 0; i < length; ++i) {
-    stage = stages[i];
+  for (let i = 0; i < stages.length; ++i) {
+    const stage = stages[i];
     if (stage.ready && stage.enabled && stage._isSupported(context)) {
       count++;
     }
   }
-
   activeStagesChanged = count !== activeStages.length;
   if (activeStagesChanged) {
     this.update(context, useLogDepth, useHdr);
@@ -752,22 +749,19 @@ function execute(stage, context, colorTexture, depthTexture, idTexture) {
     return;
   }
 
-  const length = stage.length;
-  let i;
-
   if (stage.inputPreviousStageTexture) {
     execute(stage.get(0), context, colorTexture, depthTexture, idTexture);
-    for (i = 1; i < length; ++i) {
+    for (let i = 1; i < stage.length; ++i) {
       execute(
         stage.get(i),
         context,
         getOutputTexture(stage.get(i - 1)),
         depthTexture,
-        idTexture
+        idTexture,
       );
     }
   } else {
-    for (i = 0; i < length; ++i) {
+    for (let i = 0; i < stage.length; ++i) {
       execute(stage.get(i), context, colorTexture, depthTexture, idTexture);
     }
   }
@@ -787,7 +781,7 @@ PostProcessStageCollection.prototype.execute = function (
   context,
   colorTexture,
   depthTexture,
-  idTexture
+  idTexture,
 ) {
   const activeStages = this._activeStages;
   const length = activeStages.length;
@@ -841,7 +835,7 @@ PostProcessStageCollection.prototype.execute = function (
         context,
         getOutputTexture(activeStages[i - 1]),
         depthTexture,
-        idTexture
+        idTexture,
       );
     }
     lastTexture = getOutputTexture(activeStages[length - 1]);

@@ -162,11 +162,11 @@ function updateAndPushChildren(tile, stack, frameState) {
         : tile; // This is where priority dependency chains are wired up or started anew.
     priorityHolder._foveatedFactor = Math.min(
       minPriorityChild._foveatedFactor,
-      priorityHolder._foveatedFactor
+      priorityHolder._foveatedFactor,
     );
     priorityHolder._distanceToCamera = Math.min(
       minPriorityChild._distanceToCamera,
-      priorityHolder._distanceToCamera
+      priorityHolder._distanceToCamera,
     );
 
     for (let i = 0; i < children.length; ++i) {
@@ -189,19 +189,15 @@ function updateAndPushChildren(tile, stack, frameState) {
 function executeTraversal(root, frameState) {
   const { tileset } = root;
 
-  const {
-    canTraverse,
-    loadTile,
-    visitTile,
-    touchTile,
-  } = Cesium3DTilesetTraversal;
+  const { canTraverse, loadTile, visitTile, touchTile } =
+    Cesium3DTilesetTraversal;
   const stack = traversal.stack;
   stack.push(root);
 
   while (stack.length > 0) {
     traversal.stackMaximumLength = Math.max(
       traversal.stackMaximumLength,
-      stack.length
+      stack.length,
     );
 
     const tile = stack.pop();
@@ -249,12 +245,8 @@ function executeTraversal(root, frameState) {
  * @returns {boolean}
  */
 function executeEmptyTraversal(root, frameState) {
-  const {
-    canTraverse,
-    updateTile,
-    loadTile,
-    touchTile,
-  } = Cesium3DTilesetTraversal;
+  const { canTraverse, updateTile, loadTile, touchTile } =
+    Cesium3DTilesetTraversal;
   let allDescendantsLoaded = true;
   const stack = emptyTraversal.stack;
   stack.push(root);
@@ -262,7 +254,7 @@ function executeEmptyTraversal(root, frameState) {
   while (stack.length > 0) {
     emptyTraversal.stackMaximumLength = Math.max(
       emptyTraversal.stackMaximumLength,
-      stack.length
+      stack.length,
     );
 
     const tile = stack.pop();

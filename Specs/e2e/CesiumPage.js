@@ -17,11 +17,4 @@ export class CesiumPage {
         : `window.CESIUM_BASE_URL = "../../Build/CesiumUnminified/";`,
     });
   }
-
-  /**
-   * Updates the system time by 1 second. Useful for testing animations or other time-based actions.
-   */
-  async tick() {
-    await this.page.evaluate(() => window.__clock.tickAsync(1000));
-  }
 }

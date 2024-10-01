@@ -27,7 +27,7 @@ function convertUtcToTai(julianDate) {
   let index = binarySearch(
     leapSeconds,
     binarySearchScratchLeapSecond,
-    compareLeapSecondDates
+    compareLeapSecondDates,
   );
 
   if (index < 0) {
@@ -46,7 +46,7 @@ function convertUtcToTai(julianDate) {
     //the previous leap second.
     const difference = JulianDate.secondsDifference(
       leapSeconds[index].julianDate,
-      julianDate
+      julianDate,
     );
     if (difference > offset) {
       index--;
@@ -63,7 +63,7 @@ function convertTaiToUtc(julianDate, result) {
   let index = binarySearch(
     leapSeconds,
     binarySearchScratchLeapSecond,
-    compareLeapSecondDates
+    compareLeapSecondDates,
   );
   if (index < 0) {
     index = ~index;
@@ -79,14 +79,14 @@ function convertTaiToUtc(julianDate, result) {
     return JulianDate.addSeconds(
       julianDate,
       -leapSeconds[index - 1].offset,
-      result
+      result,
     );
   }
 
   //Compute the difference between the found leap second and the time we are converting.
   const difference = JulianDate.secondsDifference(
     leapSeconds[index].julianDate,
-    julianDate
+    julianDate,
   );
 
   if (difference === 0) {
@@ -94,7 +94,7 @@ function convertTaiToUtc(julianDate, result) {
     return JulianDate.addSeconds(
       julianDate,
       -leapSeconds[index].offset,
-      result
+      result,
     );
   }
 
@@ -108,7 +108,7 @@ function convertTaiToUtc(julianDate, result) {
   return JulianDate.addSeconds(
     julianDate,
     -leapSeconds[--index].offset,
-    result
+    result,
   );
 }
 
@@ -134,7 +134,7 @@ function computeJulianDateComponents(
   hour,
   minute,
   second,
-  millisecond
+  millisecond,
 ) {
   // Algorithm from page 604 of the Explanatory Supplement to the
   // Astronomical Almanac (Seidelmann 1992).
@@ -256,7 +256,7 @@ JulianDate.fromGregorianDate = function (date, result) {
     date.hour,
     date.minute,
     date.second,
-    date.millisecond
+    date.millisecond,
   );
   if (!defined(result)) {
     return new JulianDate(components[0], components[1], TimeStandard.UTC);
@@ -289,7 +289,7 @@ JulianDate.fromDate = function (date, result) {
     date.getUTCHours(),
     date.getUTCMinutes(),
     date.getUTCSeconds(),
-    date.getUTCMilliseconds()
+    date.getUTCMilliseconds(),
   );
   if (!defined(result)) {
     return new JulianDate(components[0], components[1], TimeStandard.UTC);
@@ -514,7 +514,7 @@ JulianDate.fromIso8601 = function (iso8601String, result) {
         minute =
           minute +
           new Date(
-            Date.UTC(year, month - 1, day, hour, minute)
+            Date.UTC(year, month - 1, day, hour, minute),
           ).getTimezoneOffset();
         break;
     }
@@ -587,7 +587,7 @@ JulianDate.fromIso8601 = function (iso8601String, result) {
     hour,
     minute,
     second,
-    millisecond
+    millisecond,
   );
 
   if (!defined(result)) {
@@ -692,7 +692,7 @@ JulianDate.toGregorianDate = function (julianDate, result) {
       minute,
       second,
       millisecond,
-      isLeapSecond
+      isLeapSecond,
     );
   }
 
@@ -736,8 +736,8 @@ JulianDate.toDate = function (julianDate) {
       gDate.hour,
       gDate.minute,
       second,
-      gDate.millisecond
-    )
+      gDate.millisecond,
+    ),
   );
 };
 
@@ -788,13 +788,9 @@ JulianDate.toIso8601 = function (julianDate, precision) {
     millisecondStr = (millisecond * 0.01).toString().replace(".", "");
     return `${year.toString().padStart(4, "0")}-${month
       .toString()
-      .padStart(2, "0")}-${day
+      .padStart(2, "0")}-${day.toString().padStart(2, "0")}T${hour
       .toString()
-      .padStart(2, "0")}T${hour
-      .toString()
-      .padStart(2, "0")}:${minute
-      .toString()
-      .padStart(2, "0")}:${second
+      .padStart(2, "0")}:${minute.toString().padStart(2, "0")}:${second
       .toString()
       .padStart(2, "0")}.${millisecondStr}Z`;
   }
@@ -803,9 +799,7 @@ JulianDate.toIso8601 = function (julianDate, precision) {
   if (!defined(precision) || precision === 0) {
     return `${year.toString().padStart(4, "0")}-${month
       .toString()
-      .padStart(2, "0")}-${day
-      .toString()
-      .padStart(2, "0")}T${hour
+      .padStart(2, "0")}-${day.toString().padStart(2, "0")}T${hour
       .toString()
       .padStart(2, "0")}:${minute
       .toString()
@@ -819,13 +813,9 @@ JulianDate.toIso8601 = function (julianDate, precision) {
     .slice(0, precision);
   return `${year.toString().padStart(4, "0")}-${month
     .toString()
-    .padStart(2, "0")}-${day
+    .padStart(2, "0")}-${day.toString().padStart(2, "0")}T${hour
     .toString()
-    .padStart(2, "0")}T${hour
-    .toString()
-    .padStart(2, "0")}:${minute
-    .toString()
-    .padStart(2, "0")}:${second
+    .padStart(2, "0")}:${minute.toString().padStart(2, "0")}:${second
     .toString()
     .padStart(2, "0")}.${millisecondStr}Z`;
 };
@@ -845,7 +835,7 @@ JulianDate.clone = function (julianDate, result) {
     return new JulianDate(
       julianDate.dayNumber,
       julianDate.secondsOfDay,
-      TimeStandard.TAI
+      TimeStandard.TAI,
     );
   }
   result.dayNumber = julianDate.dayNumber;
@@ -991,7 +981,7 @@ JulianDate.computeTaiMinusUtc = function (julianDate) {
   let index = binarySearch(
     leapSeconds,
     binarySearchScratchLeapSecond,
-    compareLeapSecondDates
+    compareLeapSecondDates,
   );
   if (index < 0) {
     index = ~index;
@@ -1027,7 +1017,7 @@ JulianDate.addSeconds = function (julianDate, seconds, result) {
   return setComponents(
     julianDate.dayNumber,
     julianDate.secondsOfDay + seconds,
-    result
+    result,
   );
 };
 

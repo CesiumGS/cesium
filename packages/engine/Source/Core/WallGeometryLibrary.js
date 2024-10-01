@@ -117,13 +117,13 @@ WallGeometryLibrary.computePositions = function (
   maximumHeights,
   minimumHeights,
   granularity,
-  duplicateCorners
+  duplicateCorners,
 ) {
   const o = removeDuplicates(
     ellipsoid,
     wallPositions,
     maximumHeights,
-    minimumHeights
+    minimumHeights,
   );
 
   if (!defined(o)) {
@@ -141,7 +141,7 @@ WallGeometryLibrary.computePositions = function (
 
   const minDistance = CesiumMath.chordLength(
     granularity,
-    ellipsoid.maximumRadius
+    ellipsoid.maximumRadius,
   );
 
   const generateArcOptions = generateArcOptionsScratch;
@@ -157,7 +157,7 @@ WallGeometryLibrary.computePositions = function (
         PolylinePipeline.numberOfPoints(
           wallPositions[i],
           wallPositions[i + 1],
-          minDistance
+          minDistance,
         ) + 1;
     }
 
@@ -185,7 +185,7 @@ WallGeometryLibrary.computePositions = function (
 
       bottomPositions.set(
         PolylinePipeline.generateArc(generateArcOptions),
-        offset
+        offset,
       );
 
       offset += pos.length;
@@ -194,12 +194,12 @@ WallGeometryLibrary.computePositions = function (
     generateArcOptions.positions = wallPositions;
     generateArcOptions.height = maximumHeights;
     topPositions = new Float64Array(
-      PolylinePipeline.generateArc(generateArcOptions)
+      PolylinePipeline.generateArc(generateArcOptions),
     );
 
     generateArcOptions.height = minimumHeights;
     bottomPositions = new Float64Array(
-      PolylinePipeline.generateArc(generateArcOptions)
+      PolylinePipeline.generateArc(generateArcOptions),
     );
   }
 

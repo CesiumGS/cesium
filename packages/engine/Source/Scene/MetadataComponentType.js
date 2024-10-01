@@ -295,7 +295,7 @@ MetadataComponentType.normalize = function (value, type) {
 
   return Math.max(
     Number(value) / Number(MetadataComponentType.getMaximum(type)),
-    -1.0
+    -1.0,
   );
 };
 

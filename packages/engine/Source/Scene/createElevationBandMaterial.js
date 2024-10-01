@@ -126,7 +126,7 @@ function preprocess(layers) {
       const height = CesiumMath.clamp(
         entryOrig.height,
         createElevationBandMaterial._minimumHeight,
-        createElevationBandMaterial._maximumHeight
+        createElevationBandMaterial._maximumHeight,
       );
 
       // premultiplied alpha
@@ -174,8 +174,8 @@ function preprocess(layers) {
         0,
         createNewEntry(
           createElevationBandMaterial._minimumHeight,
-          entries[0].color
-        )
+          entries[0].color,
+        ),
       );
     }
     if (extendUpwards) {
@@ -184,8 +184,8 @@ function preprocess(layers) {
         0,
         createNewEntry(
           createElevationBandMaterial._maximumHeight,
-          entries[entries.length - 1].color
-        )
+          entries[entries.length - 1].color,
+        ),
       );
     }
 
@@ -325,7 +325,7 @@ function createLayeredEntries(layers) {
           entry.height,
           prevEntryAccum,
           entryAccum,
-          scratchColorBelow
+          scratchColorBelow,
         );
 
         if (!defined(prevEntry)) {
@@ -349,7 +349,7 @@ function createLayeredEntries(layers) {
           entryAccum.height,
           prevEntry,
           entry,
-          scratchColorAbove
+          scratchColorAbove,
         );
 
         if (!defined(prevEntryAccum)) {
@@ -384,7 +384,7 @@ function createLayeredEntries(layers) {
           // Insert blank gap between last accum entry and first entry
           addEntry(
             prevEntryAccum.height,
-            createElevationBandMaterial._emptyColor
+            createElevationBandMaterial._emptyColor,
           );
           addEntry(entry.height, createElevationBandMaterial._emptyColor);
           addEntry(entry.height, entry.color);

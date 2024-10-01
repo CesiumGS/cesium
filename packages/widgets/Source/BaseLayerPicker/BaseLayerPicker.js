@@ -111,7 +111,7 @@ function BaseLayerPicker(container, options) {
     "data-bind",
     "\
 attr: { title: buttonTooltip },\
-click: toggleDropDown"
+click: toggleDropDown",
   );
   container.appendChild(element);
 
@@ -121,7 +121,7 @@ click: toggleDropDown"
   imgElement.setAttribute(
     "data-bind",
     "\
-attr: { src: buttonImageUrl }, visible: !!buttonImageUrl"
+attr: { src: buttonImageUrl }, visible: !!buttonImageUrl",
   );
   element.appendChild(imgElement);
 
@@ -130,7 +130,7 @@ attr: { src: buttonImageUrl }, visible: !!buttonImageUrl"
   dropPanel.setAttribute(
     "data-bind",
     '\
-css: { "cesium-baseLayerPicker-dropDown-visible" : dropDownVisible }'
+css: { "cesium-baseLayerPicker-dropDown-visible" : dropDownVisible }',
   );
   container.appendChild(dropPanel);
 
@@ -138,7 +138,7 @@ css: { "cesium-baseLayerPicker-dropDown-visible" : dropDownVisible }'
   imageryTitle.className = "cesium-baseLayerPicker-sectionTitle";
   imageryTitle.setAttribute(
     "data-bind",
-    "visible: imageryProviderViewModels.length > 0"
+    "visible: imageryProviderViewModels.length > 0",
   );
   imageryTitle.innerHTML = "Imagery";
   dropPanel.appendChild(imageryTitle);
@@ -170,7 +170,7 @@ css: { "cesium-baseLayerPicker-dropDown-visible" : dropDownVisible }'
 css: { "cesium-baseLayerPicker-selectedItem" : $data === $parents[1].selectedImagery },\
 attr: { title: tooltip },\
 visible: creationCommand.canExecute,\
-click: function($data) { $parents[1].selectedImagery = $data; }'
+click: function($data) { $parents[1].selectedImagery = $data; }',
   );
   imageryChoices.appendChild(imageryProvider);
 
@@ -189,7 +189,7 @@ click: function($data) { $parents[1].selectedImagery = $data; }'
   terrainTitle.className = "cesium-baseLayerPicker-sectionTitle";
   terrainTitle.setAttribute(
     "data-bind",
-    "visible: terrainProviderViewModels.length > 0"
+    "visible: terrainProviderViewModels.length > 0",
   );
   terrainTitle.innerHTML = "Terrain";
   dropPanel.appendChild(terrainTitle);
@@ -221,7 +221,7 @@ click: function($data) { $parents[1].selectedImagery = $data; }'
 css: { "cesium-baseLayerPicker-selectedItem" : $data === $parents[1].selectedTerrain },\
 attr: { title: tooltip },\
 visible: creationCommand.canExecute,\
-click: function($data) { $parents[1].selectedTerrain = $data; }'
+click: function($data) { $parents[1].selectedTerrain = $data; }',
   );
   terrainChoices.appendChild(terrainProvider);
 

@@ -91,7 +91,7 @@ CullingVolume.fromBoundingSphere = function (boundingSphere, result) {
     plane1.z = -faceNormal.z;
     plane1.w = -Cartesian3.dot(
       Cartesian3.negate(faceNormal, scratchPlaneNormal),
-      scratchPlaneCenter
+      scratchPlaneCenter,
     );
 
     planeIndex += 2;
@@ -117,7 +117,7 @@ CullingVolume.prototype.computeVisibility = function (boundingVolume) {
   let intersecting = false;
   for (let k = 0, len = planes.length; k < len; ++k) {
     const result = boundingVolume.intersectPlane(
-      Plane.fromCartesian4(planes[k], scratchPlane)
+      Plane.fromCartesian4(planes[k], scratchPlane),
     );
     if (result === Intersect.OUTSIDE) {
       return Intersect.OUTSIDE;
@@ -143,7 +143,7 @@ CullingVolume.prototype.computeVisibility = function (boundingVolume) {
  */
 CullingVolume.prototype.computeVisibilityWithPlaneMask = function (
   boundingVolume,
-  parentPlaneMask
+  parentPlaneMask,
 ) {
   //>>includeStart('debug', pragmas.debug);
   if (!defined(boundingVolume)) {
@@ -176,7 +176,7 @@ CullingVolume.prototype.computeVisibilityWithPlaneMask = function (
     }
 
     const result = boundingVolume.intersectPlane(
-      Plane.fromCartesian4(planes[k], scratchPlane)
+      Plane.fromCartesian4(planes[k], scratchPlane),
     );
     if (result === Intersect.OUTSIDE) {
       return CullingVolume.MASK_OUTSIDE;

@@ -7,7 +7,7 @@ describe("Core/ShowGeometryInstanceAttribute", function () {
   it("constructor", function () {
     const attribute = new ShowGeometryInstanceAttribute(false);
     expect(attribute.componentDatatype).toEqual(
-      ComponentDatatype.UNSIGNED_BYTE
+      ComponentDatatype.UNSIGNED_BYTE,
     );
     expect(attribute.componentsPerAttribute).toEqual(1);
     expect(attribute.normalize).toEqual(false);

@@ -48,7 +48,7 @@ function getBinaryAccessor(accessor) {
         componentDatatype,
         buffer,
         byteOffset,
-        componentsPerAttribute * length
+        componentsPerAttribute * length,
       );
     },
   };

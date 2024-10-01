@@ -12,21 +12,21 @@ describe("Core/barycentricCoordinates", function () {
   it("evaluates to p0", function () {
     const point = Cartesian3.clone(p0);
     expect(barycentricCoordinates(point, p0, p1, p2)).toEqual(
-      Cartesian3.UNIT_X
+      Cartesian3.UNIT_X,
     );
   });
 
   it("evaluates to p1", function () {
     const point = Cartesian3.clone(p1);
     expect(barycentricCoordinates(point, p0, p1, p2)).toEqual(
-      Cartesian3.UNIT_Y
+      Cartesian3.UNIT_Y,
     );
   });
 
   it("evaluates to p2", function () {
     const point = Cartesian3.clone(p2);
     expect(barycentricCoordinates(point, p0, p1, p2)).toEqual(
-      Cartesian3.UNIT_Z
+      Cartesian3.UNIT_Z,
     );
   });
 
@@ -34,10 +34,10 @@ describe("Core/barycentricCoordinates", function () {
     const point = Cartesian3.multiplyByScalar(
       Cartesian3.add(p1, p0, new Cartesian3()),
       0.5,
-      new Cartesian3()
+      new Cartesian3(),
     );
     expect(barycentricCoordinates(point, p0, p1, p2)).toEqual(
-      new Cartesian3(0.5, 0.5, 0.0)
+      new Cartesian3(0.5, 0.5, 0.0),
     );
   });
 
@@ -45,10 +45,10 @@ describe("Core/barycentricCoordinates", function () {
     const point = Cartesian3.multiplyByScalar(
       Cartesian3.add(p2, p0, new Cartesian3()),
       0.5,
-      new Cartesian3()
+      new Cartesian3(),
     );
     expect(barycentricCoordinates(point, p0, p1, p2)).toEqual(
-      new Cartesian3(0.5, 0.0, 0.5)
+      new Cartesian3(0.5, 0.0, 0.5),
     );
   });
 
@@ -56,10 +56,10 @@ describe("Core/barycentricCoordinates", function () {
     const point = Cartesian3.multiplyByScalar(
       Cartesian3.add(p2, p1, new Cartesian3()),
       0.5,
-      new Cartesian3()
+      new Cartesian3(),
     );
     expect(barycentricCoordinates(point, p0, p1, p2)).toEqual(
-      new Cartesian3(0.0, 0.5, 0.5)
+      new Cartesian3(0.0, 0.5, 0.5),
     );
   });
 
@@ -69,14 +69,14 @@ describe("Core/barycentricCoordinates", function () {
       Cartesian3.add(
         Cartesian3.add(p0, p1, new Cartesian3()),
         p2,
-        new Cartesian3()
+        new Cartesian3(),
       ),
       scalar,
-      new Cartesian3()
+      new Cartesian3(),
     );
     expect(barycentricCoordinates(point, p0, p1, p2)).toEqualEpsilon(
       new Cartesian3(scalar, scalar, scalar),
-      CesiumMath.EPSILON14
+      CesiumMath.EPSILON14,
     );
   });
 
@@ -93,17 +93,17 @@ describe("Core/barycentricCoordinates", function () {
     const p0 = new Cartesian3(
       9635312487071484,
       13827945400273020,
-      -16479219993905144
+      -16479219993905144,
     );
     const p1 = new Cartesian3(
       12832234.180639317,
       -10455085.701705107,
-      750010.7274386138
+      750010.7274386138,
     );
     const p2 = new Cartesian3(
       -9689011.10628853,
       -13420063.892507521,
-      750010.7274386119
+      750010.7274386119,
     );
     expect(barycentricCoordinates(p0, p0, p1, p2)).toEqual(Cartesian3.UNIT_X);
     expect(barycentricCoordinates(p1, p0, p1, p2)).toEqual(Cartesian3.UNIT_Y);
@@ -133,7 +133,7 @@ describe("Core/barycentricCoordinates", function () {
       barycentricCoordinates(
         new Cartesian3(),
         new Cartesian3(),
-        new Cartesian3()
+        new Cartesian3(),
       );
     }).toThrowDeveloperError();
   });

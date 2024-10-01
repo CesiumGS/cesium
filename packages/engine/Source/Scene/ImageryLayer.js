@@ -174,7 +174,7 @@ function ImageryLayer(imageryProvider, options) {
    */
   this.alpha = defaultValue(
     options.alpha,
-    defaultValue(imageryProvider._defaultAlpha, 1.0)
+    defaultValue(imageryProvider._defaultAlpha, 1.0),
   );
 
   /**
@@ -186,7 +186,7 @@ function ImageryLayer(imageryProvider, options) {
    */
   this.nightAlpha = defaultValue(
     options.nightAlpha,
-    defaultValue(imageryProvider._defaultNightAlpha, 1.0)
+    defaultValue(imageryProvider._defaultNightAlpha, 1.0),
   );
 
   /**
@@ -198,7 +198,7 @@ function ImageryLayer(imageryProvider, options) {
    */
   this.dayAlpha = defaultValue(
     options.dayAlpha,
-    defaultValue(imageryProvider._defaultDayAlpha, 1.0)
+    defaultValue(imageryProvider._defaultDayAlpha, 1.0),
   );
 
   /**
@@ -212,8 +212,8 @@ function ImageryLayer(imageryProvider, options) {
     options.brightness,
     defaultValue(
       imageryProvider._defaultBrightness,
-      ImageryLayer.DEFAULT_BRIGHTNESS
-    )
+      ImageryLayer.DEFAULT_BRIGHTNESS,
+    ),
   );
 
   /**
@@ -227,8 +227,8 @@ function ImageryLayer(imageryProvider, options) {
     options.contrast,
     defaultValue(
       imageryProvider._defaultContrast,
-      ImageryLayer.DEFAULT_CONTRAST
-    )
+      ImageryLayer.DEFAULT_CONTRAST,
+    ),
   );
 
   /**
@@ -239,7 +239,7 @@ function ImageryLayer(imageryProvider, options) {
    */
   this.hue = defaultValue(
     options.hue,
-    defaultValue(imageryProvider._defaultHue, ImageryLayer.DEFAULT_HUE)
+    defaultValue(imageryProvider._defaultHue, ImageryLayer.DEFAULT_HUE),
   );
 
   /**
@@ -253,8 +253,8 @@ function ImageryLayer(imageryProvider, options) {
     options.saturation,
     defaultValue(
       imageryProvider._defaultSaturation,
-      ImageryLayer.DEFAULT_SATURATION
-    )
+      ImageryLayer.DEFAULT_SATURATION,
+    ),
   );
 
   /**
@@ -265,7 +265,7 @@ function ImageryLayer(imageryProvider, options) {
    */
   this.gamma = defaultValue(
     options.gamma,
-    defaultValue(imageryProvider._defaultGamma, ImageryLayer.DEFAULT_GAMMA)
+    defaultValue(imageryProvider._defaultGamma, ImageryLayer.DEFAULT_GAMMA),
   );
 
   /**
@@ -276,7 +276,7 @@ function ImageryLayer(imageryProvider, options) {
    */
   this.splitDirection = defaultValue(
     options.splitDirection,
-    ImageryLayer.DEFAULT_SPLIT
+    ImageryLayer.DEFAULT_SPLIT,
   );
 
   /**
@@ -294,8 +294,8 @@ function ImageryLayer(imageryProvider, options) {
     options.minificationFilter,
     defaultValue(
       imageryProvider._defaultMinificationFilter,
-      ImageryLayer.DEFAULT_MINIFICATION_FILTER
-    )
+      ImageryLayer.DEFAULT_MINIFICATION_FILTER,
+    ),
   );
 
   /**
@@ -313,8 +313,8 @@ function ImageryLayer(imageryProvider, options) {
     options.magnificationFilter,
     defaultValue(
       imageryProvider._defaultMagnificationFilter,
-      ImageryLayer.DEFAULT_MAGNIFICATION_FILTER
-    )
+      ImageryLayer.DEFAULT_MAGNIFICATION_FILTER,
+    ),
   );
 
   /**
@@ -369,7 +369,7 @@ function ImageryLayer(imageryProvider, options) {
    */
   this.colorToAlphaThreshold = defaultValue(
     options.colorToAlphaThreshold,
-    ImageryLayer.DEFAULT_APPLY_COLOR_TO_ALPHA_THRESHOLD
+    ImageryLayer.DEFAULT_APPLY_COLOR_TO_ALPHA_THRESHOLD,
   );
 }
 
@@ -610,7 +610,7 @@ ImageryLayer.fromWorldImagery = function (options) {
     createWorldImageryAsync({
       style: options.style,
     }),
-    options
+    options,
   );
 };
 
@@ -700,7 +700,7 @@ ImageryLayer.prototype.getImageryRectangle = function () {
 ImageryLayer.prototype._createTileImagerySkeletons = function (
   tile,
   terrainProvider,
-  insertionPoint
+  insertionPoint,
 ) {
   const surfaceTile = tile.data;
 
@@ -747,12 +747,12 @@ ImageryLayer.prototype._createTileImagerySkeletons = function (
   const imageryBounds = Rectangle.intersection(
     imageryProvider.rectangle,
     this._rectangle,
-    imageryBoundsScratch
+    imageryBoundsScratch,
   );
   let rectangle = Rectangle.intersection(
     tile.rectangle,
     imageryBounds,
-    tileImageryBoundsScratch
+    tileImageryBoundsScratch,
   );
 
   if (!defined(rectangle)) {
@@ -774,11 +774,11 @@ ImageryLayer.prototype._createTileImagerySkeletons = function (
     } else {
       rectangle.south = Math.max(
         baseTerrainRectangle.south,
-        baseImageryRectangle.south
+        baseImageryRectangle.south,
       );
       rectangle.north = Math.min(
         baseTerrainRectangle.north,
-        baseImageryRectangle.north
+        baseImageryRectangle.north,
       );
     }
 
@@ -789,11 +789,11 @@ ImageryLayer.prototype._createTileImagerySkeletons = function (
     } else {
       rectangle.west = Math.max(
         baseTerrainRectangle.west,
-        baseImageryRectangle.west
+        baseImageryRectangle.west,
       );
       rectangle.east = Math.min(
         baseTerrainRectangle.east,
-        baseImageryRectangle.east
+        baseImageryRectangle.east,
       );
     }
   }
@@ -815,7 +815,7 @@ ImageryLayer.prototype._createTileImagerySkeletons = function (
   let imageryLevel = getLevelWithMaximumTexelSpacing(
     this,
     targetGeometricError,
-    latitudeClosestToEquator
+    latitudeClosestToEquator,
   );
   imageryLevel = Math.max(0, imageryLevel);
   const maximumLevel = imageryProvider.maximumLevel;
@@ -833,11 +833,11 @@ ImageryLayer.prototype._createTileImagerySkeletons = function (
   const imageryTilingScheme = imageryProvider.tilingScheme;
   const northwestTileCoordinates = imageryTilingScheme.positionToTileXY(
     Rectangle.northwest(rectangle),
-    imageryLevel
+    imageryLevel,
   );
   const southeastTileCoordinates = imageryTilingScheme.positionToTileXY(
     Rectangle.southeast(rectangle),
-    imageryLevel
+    imageryLevel,
   );
 
   // If the southeast corner of the rectangle lies very close to the north or west side
@@ -853,7 +853,7 @@ ImageryLayer.prototype._createTileImagerySkeletons = function (
   const northwestTileRectangle = imageryTilingScheme.tileXYToRectangle(
     northwestTileCoordinates.x,
     northwestTileCoordinates.y,
-    imageryLevel
+    imageryLevel,
   );
   if (
     Math.abs(northwestTileRectangle.south - tile.rectangle.north) <
@@ -872,7 +872,7 @@ ImageryLayer.prototype._createTileImagerySkeletons = function (
   const southeastTileRectangle = imageryTilingScheme.tileXYToRectangle(
     southeastTileCoordinates.x,
     southeastTileCoordinates.y,
-    imageryLevel
+    imageryLevel,
   );
   if (
     Math.abs(southeastTileRectangle.north - tile.rectangle.south) <
@@ -893,46 +893,44 @@ ImageryLayer.prototype._createTileImagerySkeletons = function (
 
   const terrainRectangle = Rectangle.clone(
     tile.rectangle,
-    terrainRectangleScratch
+    terrainRectangleScratch,
   );
   let imageryRectangle = imageryTilingScheme.tileXYToRectangle(
     northwestTileCoordinates.x,
     northwestTileCoordinates.y,
-    imageryLevel
+    imageryLevel,
   );
   let clippedImageryRectangle = Rectangle.intersection(
     imageryRectangle,
     imageryBounds,
-    clippedRectangleScratch
+    clippedRectangleScratch,
   );
 
   let imageryTileXYToRectangle;
   if (useWebMercatorT) {
     imageryTilingScheme.rectangleToNativeRectangle(
       terrainRectangle,
-      terrainRectangle
+      terrainRectangle,
     );
     imageryTilingScheme.rectangleToNativeRectangle(
       imageryRectangle,
-      imageryRectangle
+      imageryRectangle,
     );
     imageryTilingScheme.rectangleToNativeRectangle(
       clippedImageryRectangle,
-      clippedImageryRectangle
+      clippedImageryRectangle,
     );
     imageryTilingScheme.rectangleToNativeRectangle(
       imageryBounds,
-      imageryBounds
+      imageryBounds,
     );
-    imageryTileXYToRectangle = imageryTilingScheme.tileXYToNativeRectangle.bind(
-      imageryTilingScheme
-    );
+    imageryTileXYToRectangle =
+      imageryTilingScheme.tileXYToNativeRectangle.bind(imageryTilingScheme);
     veryCloseX = terrainRectangle.width / 512.0;
     veryCloseY = terrainRectangle.height / 512.0;
   } else {
-    imageryTileXYToRectangle = imageryTilingScheme.tileXYToRectangle.bind(
-      imageryTilingScheme
-    );
+    imageryTileXYToRectangle =
+      imageryTilingScheme.tileXYToRectangle.bind(imageryTilingScheme);
   }
 
   let minU;
@@ -951,7 +949,7 @@ ImageryLayer.prototype._createTileImagerySkeletons = function (
     maxU = Math.min(
       1.0,
       (clippedImageryRectangle.west - terrainRectangle.west) /
-        terrainRectangle.width
+        terrainRectangle.width,
     );
   }
 
@@ -963,7 +961,7 @@ ImageryLayer.prototype._createTileImagerySkeletons = function (
     minV = Math.max(
       0.0,
       (clippedImageryRectangle.north - terrainRectangle.south) /
-        terrainRectangle.height
+        terrainRectangle.height,
     );
   }
 
@@ -979,12 +977,12 @@ ImageryLayer.prototype._createTileImagerySkeletons = function (
     imageryRectangle = imageryTileXYToRectangle(
       i,
       northwestTileCoordinates.y,
-      imageryLevel
+      imageryLevel,
     );
     clippedImageryRectangle = Rectangle.simpleIntersection(
       imageryRectangle,
       imageryBounds,
-      clippedRectangleScratch
+      clippedRectangleScratch,
     );
 
     if (!defined(clippedImageryRectangle)) {
@@ -994,7 +992,7 @@ ImageryLayer.prototype._createTileImagerySkeletons = function (
     maxU = Math.min(
       1.0,
       (clippedImageryRectangle.east - terrainRectangle.west) /
-        terrainRectangle.width
+        terrainRectangle.width,
     );
 
     // If this is the eastern-most imagery tile mapped to this terrain tile,
@@ -1023,7 +1021,7 @@ ImageryLayer.prototype._createTileImagerySkeletons = function (
       clippedImageryRectangle = Rectangle.simpleIntersection(
         imageryRectangle,
         imageryBounds,
-        clippedRectangleScratch
+        clippedRectangleScratch,
       );
 
       if (!defined(clippedImageryRectangle)) {
@@ -1033,7 +1031,7 @@ ImageryLayer.prototype._createTileImagerySkeletons = function (
       minV = Math.max(
         0.0,
         (clippedImageryRectangle.south - terrainRectangle.south) /
-          terrainRectangle.height
+          terrainRectangle.height,
       );
 
       // If this is the southern-most imagery tile mapped to this terrain tile,
@@ -1054,7 +1052,7 @@ ImageryLayer.prototype._createTileImagerySkeletons = function (
       surfaceTile.imagery.splice(
         insertionPoint,
         0,
-        new TileImagery(imagery, texCoordsRectangle, useWebMercatorT)
+        new TileImagery(imagery, texCoordsRectangle, useWebMercatorT),
       );
       ++insertionPoint;
     }
@@ -1076,7 +1074,7 @@ ImageryLayer.prototype._createTileImagerySkeletons = function (
  */
 ImageryLayer.prototype._calculateTextureTranslationAndScale = function (
   tile,
-  tileImagery
+  tileImagery,
 ) {
   let imageryRectangle = tileImagery.readyImagery.rectangle;
   let terrainRectangle = tile.rectangle;
@@ -1086,11 +1084,11 @@ ImageryLayer.prototype._calculateTextureTranslationAndScale = function (
       tileImagery.readyImagery.imageryLayer.imageryProvider.tilingScheme;
     imageryRectangle = tilingScheme.rectangleToNativeRectangle(
       imageryRectangle,
-      imageryBoundsScratch
+      imageryBoundsScratch,
     );
     terrainRectangle = tilingScheme.rectangleToNativeRectangle(
       terrainRectangle,
-      terrainRectangleScratch
+      terrainRectangleScratch,
     );
   }
 
@@ -1104,7 +1102,7 @@ ImageryLayer.prototype._calculateTextureTranslationAndScale = function (
     (scaleY * (terrainRectangle.south - imageryRectangle.south)) /
       terrainHeight,
     scaleX,
-    scaleY
+    scaleY,
   );
 };
 
@@ -1155,7 +1153,7 @@ ImageryLayer.prototype._requestImagery = function (imagery) {
       imagery.x,
       imagery.y,
       imagery.level,
-      e
+      e,
     );
     if (that._requestImageError.retry) {
       doRequest();
@@ -1174,7 +1172,7 @@ ImageryLayer.prototype._requestImagery = function (imagery) {
       imagery.x,
       imagery.y,
       imagery.level,
-      request
+      request,
     );
 
     if (!defined(imagePromise)) {
@@ -1188,7 +1186,7 @@ ImageryLayer.prototype._requestImagery = function (imagery) {
       imagery.credits = imageryProvider.getTileCredits(
         imagery.x,
         imagery.y,
-        imagery.level
+        imagery.level,
       );
     }
 
@@ -1272,7 +1270,7 @@ ImageryLayer.prototype._createTexture = function (context, imagery) {
     this.minificationFilter !== TextureMinificationFilter.LINEAR
   ) {
     throw new DeveloperError(
-      "ImageryLayer minification filter must be NEAREST or LINEAR"
+      "ImageryLayer minification filter must be NEAREST or LINEAR",
     );
   }
   //>>includeEnd('debug');
@@ -1294,7 +1292,7 @@ ImageryLayer.prototype._createTexture = function (context, imagery) {
 function getSamplerKey(
   minificationFilter,
   magnificationFilter,
-  maximumAnisotropy
+  maximumAnisotropy,
 ) {
   return `${minificationFilter}:${magnificationFilter}:${maximumAnisotropy}`;
 }
@@ -1318,12 +1316,12 @@ ImageryLayer.prototype._finalizeReprojectTexture = function (context, texture) {
       ContextLimits.maximumTextureFilterAnisotropy;
     const maximumAnisotropy = Math.min(
       maximumSupportedAnisotropy,
-      defaultValue(this._maximumAnisotropy, maximumSupportedAnisotropy)
+      defaultValue(this._maximumAnisotropy, maximumSupportedAnisotropy),
     );
     const mipmapSamplerKey = getSamplerKey(
       minificationFilter,
       magnificationFilter,
-      maximumAnisotropy
+      maximumAnisotropy,
     );
     let mipmapSamplers = context.cache.imageryLayerMipmapSamplers;
     if (!defined(mipmapSamplers)) {
@@ -1346,7 +1344,7 @@ ImageryLayer.prototype._finalizeReprojectTexture = function (context, texture) {
     const nonMipmapSamplerKey = getSamplerKey(
       minificationFilter,
       magnificationFilter,
-      0
+      0,
     );
     let nonMipmapSamplers = context.cache.imageryLayerNonMipmapSamplers;
     if (!defined(nonMipmapSamplers)) {
@@ -1379,7 +1377,7 @@ ImageryLayer.prototype._finalizeReprojectTexture = function (context, texture) {
 ImageryLayer.prototype._reprojectTexture = function (
   frameState,
   imagery,
-  needGeographicProjection
+  needGeographicProjection,
 ) {
   const texture = imagery.textureWebMercator || imagery.texture;
   const rectangle = imagery.rectangle;
@@ -1464,7 +1462,7 @@ ImageryLayer.prototype.getImageryFromCache = function (
   x,
   y,
   level,
-  imageryRectangle
+  imageryRectangle,
 ) {
   const cacheKey = getImageryCacheKey(x, y, level);
   let imagery = this._imageryCache[cacheKey];
@@ -1698,7 +1696,7 @@ function reprojectToGeographic(command, context, texture, rectangle) {
 function getLevelWithMaximumTexelSpacing(
   layer,
   texelSpacing,
-  latitudeClosestToEquator
+  latitudeClosestToEquator,
 ) {
   // PERFORMANCE_IDEA: factor out the stuff that doesn't change.
   const imageryProvider = layer._imageryProvider;

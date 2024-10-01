@@ -9,7 +9,7 @@ function getMagic(uint8Array, byteOffset) {
   return getStringFromTypedArray(
     uint8Array,
     byteOffset,
-    Math.min(4, uint8Array.length)
+    Math.min(4, uint8Array.length),
   );
 }
 export default getMagic;

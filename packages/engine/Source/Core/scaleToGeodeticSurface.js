@@ -27,7 +27,7 @@ function scaleToGeodeticSurface(
   oneOverRadii,
   oneOverRadiiSquared,
   centerToleranceSquared,
-  result
+  result,
 ) {
   //>>includeStart('debug', pragmas.debug);
   if (!defined(cartesian)) {
@@ -64,7 +64,7 @@ function scaleToGeodeticSurface(
   const intersection = Cartesian3.multiplyByScalar(
     cartesian,
     ratio,
-    scaleToGeodeticSurfaceIntersection
+    scaleToGeodeticSurfaceIntersection,
   );
 
   // If the position is near the center, the iteration will not converge.
@@ -136,7 +136,7 @@ function scaleToGeodeticSurface(
     return new Cartesian3(
       positionX * xMultiplier,
       positionY * yMultiplier,
-      positionZ * zMultiplier
+      positionZ * zMultiplier,
     );
   }
   result.x = positionX * xMultiplier;

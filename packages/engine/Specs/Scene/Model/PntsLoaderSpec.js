@@ -101,7 +101,7 @@ describe(
 
     async function expectLoadError(arrayBuffer) {
       await expectAsync(loadPntsArrayBuffer(arrayBuffer)).toBeRejectedWithError(
-        RuntimeError
+        RuntimeError,
       );
     }
 
@@ -119,7 +119,7 @@ describe(
 
       const expectedPropertyTableCount = isBatched ? 1 : 0;
       expect(structuralMetadata.propertyTableCount).toEqual(
-        expectedPropertyTableCount
+        expectedPropertyTableCount,
       );
       const propertyTable = structuralMetadata.getPropertyTable(0);
 
@@ -140,7 +140,7 @@ describe(
             // Check the property declaration is expected
             expect(property.type).toEqual(expectedProperty.type);
             expect(property.componentType).toEqual(
-              expectedProperty.componentType
+              expectedProperty.componentType,
             );
 
             // if batched, binary properties will appear in the property table.
@@ -157,12 +157,12 @@ describe(
       // (batched points) or the property attribute (per-point properties)
       if (isBatched) {
         expect(propertyTable.getPropertyIds(0).sort()).toEqual(
-          tablePropertyNames.sort()
+          tablePropertyNames.sort(),
         );
       } else {
         const propertyAttribute = structuralMetadata.getPropertyAttribute(0);
         expect(Object.keys(propertyAttribute.properties).sort()).toEqual(
-          attributePropertyNames.sort()
+          attributePropertyNames.sort(),
         );
       }
     }
@@ -189,7 +189,7 @@ describe(
 
       const quantization = attribute.quantization;
       expect(quantization.componentDatatype).toBe(
-        ComponentDatatype.UNSIGNED_SHORT
+        ComponentDatatype.UNSIGNED_SHORT,
       );
       expect(quantization.normalizationRange).toBeDefined();
       expect(quantization.octEncoded).toBe(false);
@@ -388,7 +388,7 @@ describe(
         expectNormalOctEncoded(
           attributes[1],
           ComponentDatatype.UNSIGNED_BYTE,
-          false
+          false,
         );
         expectColorRGB(attributes[2]);
       });
@@ -421,7 +421,7 @@ describe(
         expectNormalOctEncoded(
           attributes[1],
           ComponentDatatype.UNSIGNED_BYTE,
-          false
+          false,
         );
         expectColorRGB(attributes[2]);
       });
@@ -448,7 +448,7 @@ describe(
               componentType: MetadataComponentType.UINT16,
             },
           },
-          isBatched
+          isBatched,
         );
 
         const primitive = components.nodes[0].primitives[0];
@@ -459,7 +459,7 @@ describe(
         expectNormalOctEncoded(
           attributes[1],
           ComponentDatatype.UNSIGNED_BYTE,
-          true
+          true,
         );
         expectColorRGB(attributes[2]);
       });
@@ -486,7 +486,7 @@ describe(
               componentType: MetadataComponentType.UINT16,
             },
           },
-          isBatched
+          isBatched,
         );
 
         const primitive = components.nodes[0].primitives[0];
@@ -520,7 +520,7 @@ describe(
               componentType: MetadataComponentType.UINT32,
             },
           },
-          isBatched
+          isBatched,
         );
 
         const primitive = components.nodes[0].primitives[0];
@@ -531,7 +531,7 @@ describe(
         expectNormalOctEncoded(
           attributes[1],
           ComponentDatatype.UNSIGNED_BYTE,
-          true
+          true,
         );
         expectColorRGB(attributes[2]);
         expectBatchId(attributes[3], ComponentDatatype.UNSIGNED_BYTE);
@@ -573,7 +573,7 @@ describe(
               componentType: MetadataComponentType.UINT32,
             },
           },
-          isBatched
+          isBatched,
         );
 
         const primitive = components.nodes[0].primitives[0];
@@ -632,74 +632,74 @@ describe(
     });
 
     it("loads PointCloudWithPerPointProperties", function () {
-      return loadPnts(pointCloudWithPerPointPropertiesUrl).then(function (
-        loader
-      ) {
-        const components = loader.components;
-        expect(components).toBeDefined();
-        const isBatched = false;
-        expectMetadata(
-          components.structuralMetadata,
-          {
-            temperature: {
-              type: MetadataType.SCALAR,
-              componentType: MetadataComponentType.FLOAT32,
+      return loadPnts(pointCloudWithPerPointPropertiesUrl).then(
+        function (loader) {
+          const components = loader.components;
+          expect(components).toBeDefined();
+          const isBatched = false;
+          expectMetadata(
+            components.structuralMetadata,
+            {
+              temperature: {
+                type: MetadataType.SCALAR,
+                componentType: MetadataComponentType.FLOAT32,
+              },
+              secondaryColor: {
+                type: MetadataType.VEC3,
+                componentType: MetadataComponentType.FLOAT32,
+              },
+              id: {
+                type: MetadataType.SCALAR,
+                componentType: MetadataComponentType.UINT16,
+              },
             },
-            secondaryColor: {
-              type: MetadataType.VEC3,
-              componentType: MetadataComponentType.FLOAT32,
-            },
-            id: {
-              type: MetadataType.SCALAR,
-              componentType: MetadataComponentType.UINT16,
-            },
-          },
-          isBatched
-        );
+            isBatched,
+          );
 
-        const primitive = components.nodes[0].primitives[0];
-        const attributes = primitive.attributes;
-        // 2 geometry attributes + 3 metadata attributes
-        expect(attributes.length).toBe(5);
-        expectPosition(attributes[0]);
-        expectColorRGB(attributes[1]);
-      });
+          const primitive = components.nodes[0].primitives[0];
+          const attributes = primitive.attributes;
+          // 2 geometry attributes + 3 metadata attributes
+          expect(attributes.length).toBe(5);
+          expectPosition(attributes[0]);
+          expectColorRGB(attributes[1]);
+        },
+      );
     });
 
     it("loads PointCloudWithUnicodePropertyIds", function () {
-      return loadPnts(pointCloudWithUnicodePropertyIdsUrl).then(function (
-        loader
-      ) {
-        const components = loader.components;
-        expect(components).toBeDefined();
-        const isBatched = false;
-        expectMetadata(
-          components.structuralMetadata,
-          {
-            // Originally "temperature ℃", but sanitized for GLSL
-            temperature_: {
-              type: MetadataType.SCALAR,
-              componentType: MetadataComponentType.FLOAT32,
+      return loadPnts(pointCloudWithUnicodePropertyIdsUrl).then(
+        function (loader) {
+          const components = loader.components;
+          expect(components).toBeDefined();
+          const isBatched = false;
+          expectMetadata(
+            components.structuralMetadata,
+            {
+              // Originally "temperature ℃", but sanitized for GLSL
+              temperature_: {
+                type: MetadataType.SCALAR,
+                componentType: MetadataComponentType.FLOAT32,
+              },
+              secondaryColor: {
+                type: MetadataType.VEC3,
+                componentType: MetadataComponentType.FLOAT32,
+              },
+              id: {
+                type: MetadataType.SCALAR,
+                componentType: MetadataComponentType.UINT16,
+              },
             },
-            secondaryColor: {
-              type: MetadataType.VEC3,
-              componentType: MetadataComponentType.FLOAT32,
-            },
-            id: {
-              type: MetadataType.SCALAR,
-              componentType: MetadataComponentType.UINT16,
-            },
-          },
-          isBatched
-        );
+            isBatched,
+          );
 
-        const primitive = components.nodes[0].primitives[0];
-        const attributes = primitive.attributes;
-        // 2 geometry attributes + 3 metadata attributes
-        expect(attributes.length).toBe(5);
-        expectPosition(attributes[0]);
-        expectColorRGB(attributes[1]);
-      });
+          const primitive = components.nodes[0].primitives[0];
+          const attributes = primitive.attributes;
+          // 2 geometry attributes + 3 metadata attributes
+          expect(attributes.length).toBe(5);
+          expectPosition(attributes[0]);
+          expectColorRGB(attributes[1]);
+        },
+      );
     });
 
     it("loads attributes for 2D", function () {
@@ -718,7 +718,7 @@ describe(
           expect(positionAttribute.typedArray).toBeDefined();
 
           expectColorRGB(attributes[1]);
-        }
+        },
       );
     });
 
@@ -744,7 +744,7 @@ describe(
                 componentType: MetadataComponentType.UINT16,
               },
             },
-            isBatched
+            isBatched,
           );
 
           const primitive = components.nodes[0].primitives[0];
@@ -759,10 +759,10 @@ describe(
           expectNormalOctEncoded(
             attributes[1],
             ComponentDatatype.UNSIGNED_BYTE,
-            true
+            true,
           );
           expectColorRGB(attributes[2]);
-        }
+        },
       );
     });
 
@@ -850,7 +850,7 @@ describe(
 
       await expectAsync(loadPnts(pointCloudDracoUrl)).toBeRejectedWithError(
         RuntimeError,
-        "Failed to load Draco pnts\nmy error"
+        "Failed to load Draco pnts\nmy error",
       );
     });
 
@@ -866,5 +866,5 @@ describe(
       });
     });
   },
-  "WebGL"
+  "WebGL",
 );

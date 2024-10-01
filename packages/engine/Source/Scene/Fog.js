@@ -54,48 +54,15 @@ function Fog() {
 
 // These values were found by sampling the density at certain views and finding at what point culled tiles impacted the view at the horizon.
 const heightsTable = [
-  359.393,
-  800.749,
-  1275.6501,
-  2151.1192,
-  3141.7763,
-  4777.5198,
-  6281.2493,
-  12364.307,
-  15900.765,
-  49889.0549,
-  78026.8259,
-  99260.7344,
-  120036.3873,
-  151011.0158,
-  156091.1953,
-  203849.3112,
-  274866.9803,
-  319916.3149,
-  493552.0528,
+  359.393, 800.749, 1275.6501, 2151.1192, 3141.7763, 4777.5198, 6281.2493,
+  12364.307, 15900.765, 49889.0549, 78026.8259, 99260.7344, 120036.3873,
+  151011.0158, 156091.1953, 203849.3112, 274866.9803, 319916.3149, 493552.0528,
   628733.5874,
 ];
 const densityTable = [
-  2.0e-5,
-  2.0e-4,
-  1.0e-4,
-  7.0e-5,
-  5.0e-5,
-  4.0e-5,
-  3.0e-5,
-  1.9e-5,
-  1.0e-5,
-  8.5e-6,
-  6.2e-6,
-  5.8e-6,
-  5.3e-6,
-  5.2e-6,
-  5.1e-6,
-  4.2e-6,
-  4.0e-6,
-  3.4e-6,
-  2.6e-6,
-  2.2e-6,
+  2.0e-5, 2.0e-4, 1.0e-4, 7.0e-5, 5.0e-5, 4.0e-5, 3.0e-5, 1.9e-5, 1.0e-5,
+  8.5e-6, 6.2e-6, 5.8e-6, 5.3e-6, 5.2e-6, 5.1e-6, 4.2e-6, 4.0e-6, 3.4e-6,
+  2.6e-6, 2.2e-6,
 ];
 
 // Scale densities by 1e6 to bring lowest value to ~1. Prevents divide by zero.
@@ -182,7 +149,7 @@ Fog.prototype.update = function (frameState) {
   const t = CesiumMath.clamp(
     (height - heightsTable[i]) / (heightsTable[i + 1] - heightsTable[i]),
     0.0,
-    1.0
+    1.0,
   );
   let density = CesiumMath.lerp(densityTable[i], densityTable[i + 1], t);
 
@@ -194,7 +161,7 @@ Fog.prototype.update = function (frameState) {
   // Fade fog in as the camera tilts toward the horizon.
   const positionNormal = Cartesian3.normalize(
     camera.positionWC,
-    scratchPositionNormal
+    scratchPositionNormal,
   );
   const dot = Math.abs(Cartesian3.dot(camera.directionWC, positionNormal));
   density *= 1.0 - dot;

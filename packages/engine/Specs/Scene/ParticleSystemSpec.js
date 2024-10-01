@@ -18,11 +18,11 @@ describe("Scene/ParticleSystem", function () {
 
   beforeAll(function () {
     scene = createScene();
-    return Resource.fetchImage("./Data/Images/Green2x2.png").then(function (
-      result
-    ) {
-      greenImage = result;
-    });
+    return Resource.fetchImage("./Data/Images/Green2x2.png").then(
+      function (result) {
+        greenImage = result;
+      },
+    );
   });
 
   afterAll(function () {
@@ -77,7 +77,7 @@ describe("Scene/ParticleSystem", function () {
         15.0,
         16.0,
         17.0,
-        18.0
+        18.0,
       ),
       startColor: Color.MAGENTA,
       endColor: Color.LAVENDAR_BLUSH,
@@ -143,7 +143,7 @@ describe("Scene/ParticleSystem", function () {
       6.0,
       7.0,
       8.0,
-      9.0
+      9.0,
     );
     const emitterModelMatrix = new Matrix4(
       10.0,
@@ -154,7 +154,7 @@ describe("Scene/ParticleSystem", function () {
       15.0,
       16.0,
       17.0,
-      18.0
+      18.0,
     );
     const startColor = Color.MAGENTA;
     const endColor = Color.LAVENDAR_BLUSH;
@@ -372,7 +372,7 @@ describe("Scene/ParticleSystem", function () {
         emitter: new CircleEmitter(1.0),
         emissionRate: 10000,
         imageSize: new Cartesian2(100, 100),
-      })
+      }),
     );
     scene.camera.position = new Cartesian3(0.0, 0.0, 20.0);
     scene.camera.direction = new Cartesian3(0.0, 0.0, -1.0);

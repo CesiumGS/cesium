@@ -81,14 +81,14 @@ IauOrientationAxes.prototype.evaluate = function (date, result) {
   const precMtx = computeRotationMatrix(
     alphaDeltaW.rightAscension,
     alphaDeltaW.declination,
-    result
+    result,
   );
 
   const rot = CesiumMath.zeroToTwoPi(alphaDeltaW.rotation);
   const quat = Quaternion.fromAxisAngle(Cartesian3.UNIT_Z, rot, quatScratch);
   const rotMtx = Matrix3.fromQuaternion(
     Quaternion.conjugate(quat, quat),
-    rotMtxScratch
+    rotMtxScratch,
   );
 
   const cbi2cbf = Matrix3.multiply(rotMtx, precMtx, precMtx);

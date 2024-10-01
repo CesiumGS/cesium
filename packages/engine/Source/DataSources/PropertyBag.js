@@ -99,7 +99,7 @@ function createConstantProperty(value) {
 PropertyBag.prototype.addProperty = function (
   propertyName,
   value,
-  createPropertyCallback
+  createPropertyCallback,
 ) {
   const propertyNames = this._propertyNames;
 
@@ -109,7 +109,7 @@ PropertyBag.prototype.addProperty = function (
   }
   if (propertyNames.indexOf(propertyName) !== -1) {
     throw new DeveloperError(
-      `${propertyName} is already a registered property.`
+      `${propertyName} is already a registered property.`,
     );
   }
   //>>includeEnd('debug');
@@ -121,8 +121,8 @@ PropertyBag.prototype.addProperty = function (
     createPropertyDescriptor(
       propertyName,
       true,
-      defaultValue(createPropertyCallback, createConstantProperty)
-    )
+      defaultValue(createPropertyCallback, createConstantProperty),
+    ),
   );
 
   if (defined(value)) {
@@ -184,7 +184,7 @@ PropertyBag.prototype.getValue = function (time, result) {
     result[propertyName] = Property.getValueOrUndefined(
       this[propertyName],
       time,
-      result[propertyName]
+      result[propertyName],
     );
   }
   return result;

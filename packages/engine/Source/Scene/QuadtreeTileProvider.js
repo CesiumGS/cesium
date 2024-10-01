@@ -22,7 +22,7 @@ function QuadtreeTileProvider() {
  * @returns {number} The maximum geometric error at level zero, in meters.
  */
 QuadtreeTileProvider.computeDefaultLevelZeroMaximumGeometricError = function (
-  tilingScheme
+  tilingScheme,
 ) {
   return (
     (tilingScheme.ellipsoid.maximumRadius * 2 * Math.PI * 0.25) /
