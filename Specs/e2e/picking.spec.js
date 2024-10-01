@@ -48,13 +48,13 @@ test("Shows cartographic position on mouse over", async ({ cesiumPage }) => {
     }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
   });
 
-  await cesiumPage.tick();
+  await cesiumPage.page.clock.runFor(1000);
   await cesiumPage.page.waitForLoadState("networkidle");
 
   const { width, height } = cesiumPage.page.viewportSize();
   await cesiumPage.page.mouse.move(width / 2, height / 2);
 
-  await cesiumPage.tick();
+  await cesiumPage.page.clock.runFor(1000);
 
   await expect(cesiumPage.page).toHaveScreenshot();
 });
