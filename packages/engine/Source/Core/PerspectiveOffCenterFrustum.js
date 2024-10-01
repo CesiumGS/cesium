@@ -41,7 +41,7 @@ function PerspectiveOffCenterFrustum(options) {
 
   /**
    * Defines the left clipping plane.
-   * @type {number}
+   * @type {number|undefined}
    * @default undefined
    */
   this.left = options.left;
@@ -49,7 +49,7 @@ function PerspectiveOffCenterFrustum(options) {
 
   /**
    * Defines the right clipping plane.
-   * @type {number}
+   * @type {number|undefined}
    * @default undefined
    */
   this.right = options.right;
@@ -57,7 +57,7 @@ function PerspectiveOffCenterFrustum(options) {
 
   /**
    * Defines the top clipping plane.
-   * @type {number}
+   * @type {number|undefined}
    * @default undefined
    */
   this.top = options.top;
@@ -65,7 +65,7 @@ function PerspectiveOffCenterFrustum(options) {
 
   /**
    * Defines the bottom clipping plane.
-   * @type {number}
+   * @type {number|undefined}
    * @default undefined
    */
   this.bottom = options.bottom;
