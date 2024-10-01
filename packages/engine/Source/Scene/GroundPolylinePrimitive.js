@@ -147,7 +147,7 @@ function GroundPolylinePrimitive(options) {
    */
   this.classificationType = defaultValue(
     options.classificationType,
-    ClassificationType.BOTH
+    ClassificationType.BOTH,
   );
 
   /**
@@ -162,13 +162,13 @@ function GroundPolylinePrimitive(options) {
    */
   this.debugShowBoundingVolume = defaultValue(
     options.debugShowBoundingVolume,
-    false
+    false,
   );
 
   // Shadow volume is shown by removing a discard in the shader, so this isn't toggleable.
   this._debugShowShadowVolume = defaultValue(
     options.debugShowShadowVolume,
-    false
+    false,
   );
 
   this._primitiveOptions = {
@@ -178,7 +178,7 @@ function GroundPolylinePrimitive(options) {
     interleave: defaultValue(options.interleave, false),
     releaseGeometryInstances: defaultValue(
       options.releaseGeometryInstances,
-      true
+      true,
     ),
     allowPicking: defaultValue(options.allowPicking, true),
     asynchronous: defaultValue(options.asynchronous, true),
@@ -331,39 +331,39 @@ function createShaderProgram(groundPolylinePrimitive, frameState, appearance) {
   const attributeLocations = primitive._attributeLocations;
 
   let vs = primitive._batchTable.getVertexShaderCallback()(
-    PolylineShadowVolumeVS
+    PolylineShadowVolumeVS,
   );
   vs = Primitive._appendShowToShader(primitive, vs);
   vs = Primitive._appendDistanceDisplayConditionToShader(primitive, vs);
   vs = Primitive._modifyShaderPosition(
     groundPolylinePrimitive,
     vs,
-    frameState.scene3DOnly
+    frameState.scene3DOnly,
   );
 
   let vsMorph = primitive._batchTable.getVertexShaderCallback()(
-    PolylineShadowVolumeMorphVS
+    PolylineShadowVolumeMorphVS,
   );
   vsMorph = Primitive._appendShowToShader(primitive, vsMorph);
   vsMorph = Primitive._appendDistanceDisplayConditionToShader(
     primitive,
-    vsMorph
+    vsMorph,
   );
   vsMorph = Primitive._modifyShaderPosition(
     groundPolylinePrimitive,
     vsMorph,
-    frameState.scene3DOnly
+    frameState.scene3DOnly,
   );
 
   // Access pick color from fragment shader.
   // Helps with varying budget.
   let fs = primitive._batchTable.getVertexShaderCallback()(
-    PolylineShadowVolumeFS
+    PolylineShadowVolumeFS,
   );
 
   const vsDefines = [
     `GLOBE_MINIMUM_ALTITUDE ${frameState.mapProjection.ellipsoid.minimumRadius.toFixed(
-      1
+      1,
     )}`,
   ];
   let colorDefine = "";
@@ -409,7 +409,7 @@ function createShaderProgram(groundPolylinePrimitive, frameState, appearance) {
   // Derive 2D/CV
   let colorProgram2D = context.shaderCache.getDerivedShaderProgram(
     groundPolylinePrimitive._sp,
-    "2dColor"
+    "2dColor",
   );
   if (!defined(colorProgram2D)) {
     const vsColor2D = new ShaderSource({
@@ -425,7 +425,7 @@ function createShaderProgram(groundPolylinePrimitive, frameState, appearance) {
         vertexShaderSource: vsColor2D,
         fragmentShaderSource: fsColor3D,
         attributeLocations: attributeLocations,
-      }
+      },
     );
   }
   groundPolylinePrimitive._sp2D = colorProgram2D;
@@ -433,20 +433,20 @@ function createShaderProgram(groundPolylinePrimitive, frameState, appearance) {
   // Derive Morph
   let colorProgramMorph = context.shaderCache.getDerivedShaderProgram(
     groundPolylinePrimitive._sp,
-    "MorphColor"
+    "MorphColor",
   );
   if (!defined(colorProgramMorph)) {
     const vsColorMorph = new ShaderSource({
       defines: vsDefines.concat([
         `MAX_TERRAIN_HEIGHT ${ApproximateTerrainHeights._defaultMaxTerrainHeight.toFixed(
-          1
+          1,
         )}`,
       ]),
       sources: [vsMorph],
     });
 
     fs = primitive._batchTable.getVertexShaderCallback()(
-      PolylineShadowVolumeMorphFS
+      PolylineShadowVolumeMorphFS,
     );
     const fsColorMorph = new ShaderSource({
       defines: fsDefines,
@@ -461,7 +461,7 @@ function createShaderProgram(groundPolylinePrimitive, frameState, appearance) {
         vertexShaderSource: vsColorMorph,
         fragmentShaderSource: fsColorMorph,
         attributeLocations: attributeLocations,
-      }
+      },
     );
   }
   groundPolylinePrimitive._spMorph = colorProgramMorph;
@@ -500,7 +500,7 @@ function createCommands(
   material,
   translucent,
   colorCommands,
-  pickCommands
+  pickCommands,
 ) {
   const primitive = groundPolylinePrimitive._primitive;
   const length = primitive._va.length;
@@ -511,9 +511,8 @@ function createCommands(
     appearance instanceof PolylineColorAppearance;
 
   const materialUniforms = isPolylineColorAppearance ? {} : material._uniforms;
-  const uniformMap = primitive._batchTable.getUniformMapCallback()(
-    materialUniforms
-  );
+  const uniformMap =
+    primitive._batchTable.getUniformMapCallback()(materialUniforms);
 
   for (let i = 0; i < length; i++) {
     const vertexArray = primitive._va[i];
@@ -535,7 +534,7 @@ function createCommands(
 
     const derivedTilesetCommand = DrawCommand.shallowClone(
       command,
-      command.derivedCommands.tileset
+      command.derivedCommands.tileset,
     );
     derivedTilesetCommand.renderState =
       groundPolylinePrimitive._renderState3DTiles;
@@ -545,14 +544,14 @@ function createCommands(
     // derive for 2D
     const derived2DCommand = DrawCommand.shallowClone(
       command,
-      command.derivedCommands.color2D
+      command.derivedCommands.color2D,
     );
     derived2DCommand.shaderProgram = groundPolylinePrimitive._sp2D;
     command.derivedCommands.color2D = derived2DCommand;
 
     const derived2DTilesetCommand = DrawCommand.shallowClone(
       derivedTilesetCommand,
-      derivedTilesetCommand.derivedCommands.color2D
+      derivedTilesetCommand.derivedCommands.color2D,
     );
     derived2DTilesetCommand.shaderProgram = groundPolylinePrimitive._sp2D;
     derivedTilesetCommand.derivedCommands.color2D = derived2DTilesetCommand;
@@ -560,7 +559,7 @@ function createCommands(
     // derive for Morph
     const derivedMorphCommand = DrawCommand.shallowClone(
       command,
-      command.derivedCommands.colorMorph
+      command.derivedCommands.colorMorph,
     );
     derivedMorphCommand.renderState = groundPolylinePrimitive._renderStateMorph;
     derivedMorphCommand.shaderProgram = groundPolylinePrimitive._spMorph;
@@ -576,7 +575,7 @@ function updateAndQueueCommand(
   modelMatrix,
   cull,
   boundingVolume,
-  debugShowBoundingVolume
+  debugShowBoundingVolume,
 ) {
   // Use derived appearance command for morph and 2D
   if (frameState.mode === SceneMode.MORPHING) {
@@ -599,7 +598,7 @@ function updateAndQueueCommands(
   pickCommands,
   modelMatrix,
   cull,
-  debugShowBoundingVolume
+  debugShowBoundingVolume,
 ) {
   const primitive = groundPolylinePrimitive._primitive;
 
@@ -641,7 +640,7 @@ function updateAndQueueCommands(
           modelMatrix,
           cull,
           boundingVolume,
-          debugShowBoundingVolume
+          debugShowBoundingVolume,
         );
       }
       if (queue3DTilesCommands) {
@@ -653,7 +652,7 @@ function updateAndQueueCommands(
           modelMatrix,
           cull,
           boundingVolume,
-          debugShowBoundingVolume
+          debugShowBoundingVolume,
         );
       }
     }
@@ -680,7 +679,7 @@ GroundPolylinePrimitive.prototype.update = function (frameState) {
     //>>includeStart('debug', pragmas.debug);
     if (!this.asynchronous) {
       throw new DeveloperError(
-        "For synchronous GroundPolylinePrimitives, you must call GroundPolylinePrimitives.initializeTerrainHeights() and wait for the returned promise to resolve."
+        "For synchronous GroundPolylinePrimitives, you must call GroundPolylinePrimitives.initializeTerrainHeights() and wait for the returned promise to resolve.",
       );
     }
     //>>includeEnd('debug');
@@ -734,7 +733,7 @@ GroundPolylinePrimitive.prototype.update = function (frameState) {
       geometryInstance.geometry._scene3DOnly = frameState.scene3DOnly;
       GroundPolylineGeometry.setProjectionAndEllipsoid(
         geometryInstance.geometry,
-        frameState.mapProjection
+        frameState.mapProjection,
       );
 
       groundInstances[i] = new GeometryInstance({
@@ -751,7 +750,7 @@ GroundPolylinePrimitive.prototype.update = function (frameState) {
     primitiveOptions._createShaderProgramFunction = function (
       primitive,
       frameState,
-      appearance
+      appearance,
     ) {
       createShaderProgram(that, frameState, appearance);
     };
@@ -762,7 +761,7 @@ GroundPolylinePrimitive.prototype.update = function (frameState) {
       translucent,
       twoPasses,
       colorCommands,
-      pickCommands
+      pickCommands,
     ) {
       createCommands(
         that,
@@ -770,7 +769,7 @@ GroundPolylinePrimitive.prototype.update = function (frameState) {
         material,
         translucent,
         colorCommands,
-        pickCommands
+        pickCommands,
       );
     };
     primitiveOptions._updateAndQueueCommandsFunction = function (
@@ -781,7 +780,7 @@ GroundPolylinePrimitive.prototype.update = function (frameState) {
       modelMatrix,
       cull,
       debugShowBoundingVolume,
-      twoPasses
+      twoPasses,
     ) {
       updateAndQueueCommands(
         that,
@@ -790,7 +789,7 @@ GroundPolylinePrimitive.prototype.update = function (frameState) {
         pickCommands,
         modelMatrix,
         cull,
-        debugShowBoundingVolume
+        debugShowBoundingVolume,
       );
     };
 
@@ -802,7 +801,7 @@ GroundPolylinePrimitive.prototype.update = function (frameState) {
     !this._hasPerInstanceColors
   ) {
     throw new DeveloperError(
-      "All GeometryInstances must have color attributes to use PolylineColorAppearance with GroundPolylinePrimitive."
+      "All GeometryInstances must have color attributes to use PolylineColorAppearance with GroundPolylinePrimitive.",
     );
   }
 
@@ -835,12 +834,12 @@ GroundPolylinePrimitive.prototype.update = function (frameState) {
  * attributes.show = Cesium.ShowGeometryInstanceAttribute.toValue(true);
  */
 GroundPolylinePrimitive.prototype.getGeometryInstanceAttributes = function (
-  id
+  id,
 ) {
   //>>includeStart('debug', pragmas.debug);
   if (!defined(this._primitive)) {
     throw new DeveloperError(
-      "must call update before calling getGeometryInstanceAttributes"
+      "must call update before calling getGeometryInstanceAttributes",
     );
   }
   //>>includeEnd('debug');

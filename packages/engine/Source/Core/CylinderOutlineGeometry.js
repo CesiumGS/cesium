@@ -55,7 +55,7 @@ function CylinderOutlineGeometry(options) {
   const slices = defaultValue(options.slices, 128);
   const numberOfVerticalLines = Math.max(
     defaultValue(options.numberOfVerticalLines, 16),
-    0
+    0,
   );
 
   //>>includeStart('debug', pragmas.debug);
@@ -68,7 +68,7 @@ function CylinderOutlineGeometry(options) {
     options.offsetAttribute === GeometryOffsetAttribute.TOP
   ) {
     throw new DeveloperError(
-      "GeometryOffsetAttribute.TOP is not a supported options.offsetAttribute for this geometry."
+      "GeometryOffsetAttribute.TOP is not a supported options.offsetAttribute for this geometry.",
     );
   }
   //>>includeEnd('debug');
@@ -197,7 +197,7 @@ CylinderOutlineGeometry.createGeometry = function (cylinderGeometry) {
     topRadius,
     bottomRadius,
     slices,
-    false
+    false,
   );
   let numIndices = slices * 2;
   let numSide;
@@ -241,7 +241,7 @@ CylinderOutlineGeometry.createGeometry = function (cylinderGeometry) {
 
   const boundingSphere = new BoundingSphere(
     Cartesian3.ZERO,
-    Cartesian2.magnitude(radiusScratch)
+    Cartesian2.magnitude(radiusScratch),
   );
 
   if (defined(cylinderGeometry._offsetAttribute)) {

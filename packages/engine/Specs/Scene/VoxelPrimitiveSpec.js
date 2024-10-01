@@ -22,7 +22,7 @@ describe(
       camera.direction = Cartesian3.fromElements(1, 1, 1);
 
       provider = await Cesium3DTilesVoxelProvider.fromUrl(
-        "./Data/Cesium3DTiles/Voxel/VoxelEllipsoid3DTiles/tileset.json"
+        "./Data/Cesium3DTiles/Voxel/VoxelEllipsoid3DTiles/tileset.json",
       );
       return provider;
     });
@@ -140,7 +140,7 @@ describe(
 
     it("applies vertical exaggeration to box-shaped voxels by scaling the model matrix", async function () {
       const boxProvider = await Cesium3DTilesVoxelProvider.fromUrl(
-        "./Data/Cesium3DTiles/Voxel/VoxelBox3DTiles/tileset.json"
+        "./Data/Cesium3DTiles/Voxel/VoxelBox3DTiles/tileset.json",
       );
       const primitive = new VoxelPrimitive({ provider: boxProvider });
       scene.primitives.add(primitive);
@@ -156,7 +156,7 @@ describe(
       const expectedModelMatrix = Matrix4.multiplyByScale(
         modelMatrix,
         scalar,
-        new Matrix4()
+        new Matrix4(),
       );
       expect(primitive._exaggeratedModelMatrix).toEqual(expectedModelMatrix);
     });
@@ -220,5 +220,5 @@ describe(
       expect(primitive._traversal).toBeUndefined();
     });
   },
-  "WebGL"
+  "WebGL",
 );

@@ -101,7 +101,7 @@ ImageryProviderBuilder.prototype.build = function (provider) {
         CesiumMath.toRadians(bbox[1]),
         CesiumMath.toRadians(bbox[0]),
         CesiumMath.toRadians(bbox[3]),
-        CesiumMath.toRadians(bbox[2])
+        CesiumMath.toRadians(bbox[2]),
       );
     }
   }
@@ -110,7 +110,7 @@ ImageryProviderBuilder.prototype.build = function (provider) {
 function metadataSuccess(data, imageryProviderBuilder) {
   if (data.resourceSets.length !== 1) {
     throw new RuntimeError(
-      "metadata does not specify one resource in resourceSets"
+      "metadata does not specify one resource in resourceSets",
     );
   }
 
@@ -126,7 +126,7 @@ function metadataSuccess(data, imageryProviderBuilder) {
     // prevent issues with the imagery API from crashing the viewer when the expected properties are not there
     // See https://github.com/CesiumGS/cesium/issues/12088
     validProviders = resource.imageryProviders.filter((provider) =>
-      provider.coverageAreas?.some((area) => defined(area.bbox))
+      provider.coverageAreas?.some((area) => defined(area.bbox)),
     );
   }
   imageryProviderBuilder.attributionList = validProviders;
@@ -146,7 +146,7 @@ function metadataFailure(metadataResource, error, provider) {
     undefined,
     undefined,
     undefined,
-    error
+    error,
   );
 
   throw new RuntimeError(message);
@@ -155,7 +155,7 @@ function metadataFailure(metadataResource, error, provider) {
 async function requestMetadata(
   metadataResource,
   imageryProviderBuilder,
-  provider
+  provider,
 ) {
   const cacheKey = metadataResource.url;
   let promise = BingMapsImageryProvider._metadataCache[cacheKey];
@@ -230,7 +230,7 @@ function BingMapsImageryProvider(options) {
 
   this._proxy = options.proxy;
   this._credit = new Credit(
-    `<a href="https://www.microsoft.com/en-us/maps/product/enduserterms"><img src="${BingMapsImageryProvider.logoUrl}" title="Bing Imagery"/></a>`
+    `<a href="https://www.microsoft.com/en-us/maps/product/enduserterms"><img src="${BingMapsImageryProvider.logoUrl}" title="Bing Imagery"/></a>`,
   );
 
   this._tilingScheme = new WebMercatorTilingScheme({
@@ -541,12 +541,12 @@ BingMapsImageryProvider.prototype.getTileCredits = function (x, y, level) {
     x,
     y,
     level,
-    rectangleScratch
+    rectangleScratch,
   );
   const result = getRectangleAttribution(
     this._attributionList,
     level,
-    rectangle
+    rectangle,
   );
 
   return result;
@@ -566,11 +566,11 @@ BingMapsImageryProvider.prototype.requestImage = function (
   x,
   y,
   level,
-  request
+  request,
 ) {
   const promise = ImageryProvider.loadImage(
     this,
-    buildImageResource(this, x, y, level, request)
+    buildImageResource(this, x, y, level, request),
   );
 
   if (defined(promise)) {
@@ -604,7 +604,7 @@ BingMapsImageryProvider.prototype.pickFeatures = function (
   y,
   level,
   longitude,
-  latitude
+  latitude,
 ) {
   return undefined;
 };
@@ -683,7 +683,7 @@ Object.defineProperties(BingMapsImageryProvider, {
     get: function () {
       if (!defined(BingMapsImageryProvider._logoUrl)) {
         BingMapsImageryProvider._logoUrl = buildModuleUrl(
-          "Assets/Images/bing_maps_credit.png"
+          "Assets/Images/bing_maps_credit.png",
         );
       }
       return BingMapsImageryProvider._logoUrl;
@@ -748,7 +748,7 @@ function getRectangleAttribution(attributionList, level, rectangle) {
         const intersection = Rectangle.intersection(
           rectangle,
           area.bbox,
-          intersectionScratch
+          intersectionScratch,
         );
         if (defined(intersection)) {
           included = true;

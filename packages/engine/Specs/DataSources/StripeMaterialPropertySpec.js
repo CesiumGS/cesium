@@ -83,35 +83,35 @@ describe("DataSources/StripeMaterialProperty", function () {
         start: start,
         stop: stop,
         data: false,
-      })
+      }),
     );
     property.evenColor.intervals.addInterval(
       new TimeInterval({
         start: start,
         stop: stop,
         data: Color.RED,
-      })
+      }),
     );
     property.oddColor.intervals.addInterval(
       new TimeInterval({
         start: start,
         stop: stop,
         data: Color.BLUE,
-      })
+      }),
     );
     property.offset.intervals.addInterval(
       new TimeInterval({
         start: start,
         stop: stop,
         data: 10,
-      })
+      }),
     );
     property.repeat.intervals.addInterval(
       new TimeInterval({
         start: start,
         stop: stop,
         data: 20,
-      })
+      }),
     );
 
     expect(property.isConstant).toBe(false);

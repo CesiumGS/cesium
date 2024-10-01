@@ -91,7 +91,7 @@ describe(
         data,
         headers,
         deferred,
-        overrideMimeType
+        overrideMimeType,
       ) {
         Resource._DefaultImplementations.loadWithXhr(
           path,
@@ -99,14 +99,14 @@ describe(
           method,
           data,
           headers,
-          deferred
+          deferred,
         );
       };
     }
 
     function returnQuantizedMeshTileJson() {
       return returnTileJson(
-        "Data/CesiumTerrainTileJson/QuantizedMesh.tile.json"
+        "Data/CesiumTerrainTileJson/QuantizedMesh.tile.json",
       );
     }
 
@@ -136,7 +136,7 @@ describe(
         expect(scene.primitives).toBeInstanceOf(PrimitiveCollection);
         expect(scene.camera).toBeInstanceOf(Camera);
         expect(scene.screenSpaceCameraController).toBeInstanceOf(
-          ScreenSpaceCameraController
+          ScreenSpaceCameraController,
         );
         expect(scene.mapProjection).toBeInstanceOf(GeographicProjection);
         expect(scene.frameState).toBeInstanceOf(FrameState);
@@ -188,14 +188,14 @@ describe(
         expect(contextAttributes.stencil).toEqual(webglOptions.stencil);
         expect(contextAttributes.antialias).toEqual(webglOptions.antialias);
         expect(contextAttributes.premultipliedAlpha).toEqual(
-          webglOptions.premultipliedAlpha
+          webglOptions.premultipliedAlpha,
         );
         expect(contextAttributes.preserveDrawingBuffer).toEqual(
-          webglOptions.preserveDrawingBuffer
+          webglOptions.preserveDrawingBuffer,
         );
         expect(s.mapProjection).toEqual(mapProjection);
         expect(s._depthPlane._ellipsoidOffset).toEqual(
-          Number.POSITIVE_INFINITY
+          Number.POSITIVE_INFINITY,
         );
 
         s.destroyForSpecs();
@@ -295,7 +295,7 @@ describe(
       const center = Cartesian3.add(
         scene.camera.position,
         scene.camera.direction,
-        new Cartesian3()
+        new Cartesian3(),
       );
 
       const c = new DrawCommand({
@@ -329,16 +329,15 @@ describe(
       c.execute = function () {};
 
       const originalShallowClone = DrawCommand.shallowClone;
-      spyOn(DrawCommand, "shallowClone").and.callFake(function (
-        command,
-        result
-      ) {
-        result = originalShallowClone(command, result);
-        result.execute = function () {
-          result.uniformMap.debugShowCommandsColor();
-        };
-        return result;
-      });
+      spyOn(DrawCommand, "shallowClone").and.callFake(
+        function (command, result) {
+          result = originalShallowClone(command, result);
+          result.execute = function () {
+            result.uniformMap.debugShowCommandsColor();
+          };
+          return result;
+        },
+      );
 
       scene.primitives.add(new CommandMockPrimitive(c));
 
@@ -365,7 +364,7 @@ describe(
         1.0,
         0.0,
         0.0,
-        1.0
+        1.0,
       );
 
       const rectanglePrimitive2 = createRectangle(rectangle, 1000.0);
@@ -373,7 +372,7 @@ describe(
         0.0,
         1.0,
         0.0,
-        0.5
+        0.5,
       );
 
       const primitives = scene.primitives;
@@ -403,7 +402,7 @@ describe(
         1.0,
         0.0,
         0.0,
-        1.0
+        1.0,
       );
 
       const rectanglePrimitive2 = createRectangle(rectangle);
@@ -411,7 +410,7 @@ describe(
         0.0,
         1.0,
         0.0,
-        0.5
+        0.5,
       );
 
       const primitives = scene.primitives;
@@ -441,7 +440,7 @@ describe(
         1.0,
         0.0,
         0.0,
-        0.5
+        0.5,
       );
 
       const primitives = scene.primitives;
@@ -504,7 +503,7 @@ describe(
         1.0,
         0.0,
         0.0,
-        1.0
+        1.0,
       );
 
       const primitives = scene.primitives;
@@ -565,7 +564,7 @@ describe(
         s.camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
         s.camera.direction = Cartesian3.negate(
           Cartesian3.normalize(s.camera.position, new Cartesian3()),
-          new Cartesian3()
+          new Cartesian3(),
         );
 
         return expect(s).toRenderAndCall(function () {
@@ -583,7 +582,7 @@ describe(
         s.camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
         s.camera.direction = Cartesian3.negate(
           Cartesian3.normalize(s.camera.position, new Cartesian3()),
-          new Cartesian3()
+          new Cartesian3(),
         );
 
         return expect(s).toRenderAndCall(function () {
@@ -601,7 +600,7 @@ describe(
         s.camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
         s.camera.direction = Cartesian3.negate(
           Cartesian3.normalize(s.camera.position, new Cartesian3()),
-          new Cartesian3()
+          new Cartesian3(),
         );
 
         return expect(s).toRenderAndCall(function () {
@@ -619,7 +618,7 @@ describe(
         s.camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
         s.camera.direction = Cartesian3.negate(
           Cartesian3.normalize(s.camera.position, new Cartesian3()),
-          new Cartesian3()
+          new Cartesian3(),
         );
 
         return expect(s).toRenderAndCall(function () {
@@ -637,7 +636,7 @@ describe(
         s.camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
         s.camera.direction = Cartesian3.negate(
           Cartesian3.normalize(s.camera.position, new Cartesian3()),
-          new Cartesian3()
+          new Cartesian3(),
         );
         return expect(s).toRenderAndCall(function () {
           render(s.frameState, s.globe);
@@ -654,7 +653,7 @@ describe(
         s.camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
         s.camera.direction = Cartesian3.negate(
           Cartesian3.normalize(s.camera.position, new Cartesian3()),
-          new Cartesian3()
+          new Cartesian3(),
         );
 
         return expect(s).toRenderAndCall(function () {
@@ -672,7 +671,7 @@ describe(
         s.camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
         s.camera.direction = Cartesian3.negate(
           Cartesian3.normalize(s.camera.position, new Cartesian3()),
-          new Cartesian3()
+          new Cartesian3(),
         );
 
         return expect(s).toRenderAndCall(function () {
@@ -698,7 +697,7 @@ describe(
         1.0,
         0.0,
         0.0,
-        0.5
+        0.5,
       );
 
       const primitives = scene.primitives;
@@ -727,7 +726,7 @@ describe(
         1.0,
         0.0,
         0.0,
-        0.5
+        0.5,
       );
 
       const primitives = scene.primitives;
@@ -752,7 +751,7 @@ describe(
         1.0,
         0.0,
         0.0,
-        1.0
+        1.0,
       );
 
       const primitives = scene.primitives;
@@ -762,7 +761,7 @@ describe(
         destination: new Cartesian3(
           Ellipsoid.WGS84.maximumRadius * Math.PI + 10000.0,
           0.0,
-          10.0
+          10.0,
         ),
         convert: false,
       });
@@ -787,7 +786,7 @@ describe(
         1.0,
         0.0,
         0.0,
-        1.0
+        1.0,
       );
 
       const primitives = s.primitives;
@@ -797,7 +796,7 @@ describe(
         destination: new Cartesian3(
           Ellipsoid.WGS84.maximumRadius * Math.PI,
           0.0,
-          10.0
+          10.0,
         ),
         convert: false,
       });
@@ -825,7 +824,7 @@ describe(
         4.0,
         0.0,
         0.0,
-        1.0
+        1.0,
       );
 
       const primitives = scene.primitives;
@@ -852,7 +851,7 @@ describe(
         1.0,
         0.0,
         0.0,
-        0.5
+        0.5,
       );
 
       const primitives = scene.primitives;
@@ -878,7 +877,7 @@ describe(
       const canvas = scene.canvas;
       const windowPosition = new Cartesian2(
         canvas.clientWidth / 2,
-        canvas.clientHeight / 2
+        canvas.clientHeight / 2,
       );
 
       expect(scene).toRenderAndCall(function () {
@@ -890,7 +889,7 @@ describe(
           1.0,
           0.0,
           0.0,
-          1.0
+          1.0,
         );
 
         const primitives = scene.primitives;
@@ -918,7 +917,7 @@ describe(
       const canvas = scene.canvas;
       const windowPosition = new Cartesian2(
         canvas.clientWidth / 2,
-        canvas.clientHeight / 2
+        canvas.clientHeight / 2,
       );
 
       expect(scene).toRenderAndCall(function () {
@@ -930,7 +929,7 @@ describe(
           1.0,
           0.0,
           0.0,
-          1.0
+          1.0,
         );
 
         const primitives = scene.primitives;
@@ -958,7 +957,7 @@ describe(
       const canvas = scene.canvas;
       const windowPosition = new Cartesian2(
         canvas.clientWidth / 2,
-        canvas.clientHeight / 2
+        canvas.clientHeight / 2,
       );
 
       expect(scene).toRenderAndCall(function () {
@@ -970,7 +969,7 @@ describe(
           1.0,
           0.0,
           0.0,
-          1.0
+          1.0,
         );
 
         const primitives = scene.primitives;
@@ -998,7 +997,7 @@ describe(
       const canvas = scene.canvas;
       const windowPosition = new Cartesian2(
         canvas.clientWidth / 2,
-        canvas.clientHeight / 2
+        canvas.clientHeight / 2,
       );
 
       const rectanglePrimitive = createRectangle(rectangle);
@@ -1006,7 +1005,7 @@ describe(
         1.0,
         0.0,
         0.0,
-        1.0
+        1.0,
       );
 
       const primitives = scene.primitives;
@@ -1038,17 +1037,17 @@ describe(
       const canvas = scene.canvas;
       const windowPosition = new Cartesian2(
         canvas.clientWidth / 2,
-        canvas.clientHeight / 2
+        canvas.clientHeight / 2,
       );
 
       const rectanglePrimitive = scene.primitives.add(
-        createRectangle(rectangle)
+        createRectangle(rectangle),
       );
       rectanglePrimitive.appearance.material.uniforms.color = new Color(
         1.0,
         0.0,
         0.0,
-        0.5
+        0.5,
       );
 
       scene.useDepthPicking = true;
@@ -1076,22 +1075,22 @@ describe(
       const canvas = scene.canvas;
       const windowPosition = new Cartesian2(
         canvas.clientWidth / 2,
-        canvas.clientHeight / 2
+        canvas.clientHeight / 2,
       );
       spyOn(
         SceneTransforms,
-        "transformWindowToDrawingBuffer"
+        "transformWindowToDrawingBuffer",
       ).and.callThrough();
 
       expect(scene).toRenderAndCall(function () {
         scene.pickPosition(windowPosition);
         expect(
-          SceneTransforms.transformWindowToDrawingBuffer
+          SceneTransforms.transformWindowToDrawingBuffer,
         ).toHaveBeenCalled();
 
         scene.pickPosition(windowPosition);
         expect(
-          SceneTransforms.transformWindowToDrawingBuffer.calls.count()
+          SceneTransforms.transformWindowToDrawingBuffer.calls.count(),
         ).toEqual(1);
 
         const rectanglePrimitive = createRectangle(rectangle);
@@ -1099,7 +1098,7 @@ describe(
           1.0,
           0.0,
           0.0,
-          1.0
+          1.0,
         );
 
         const primitives = scene.primitives;
@@ -1109,12 +1108,12 @@ describe(
       expect(scene).toRenderAndCall(function () {
         scene.pickPosition(windowPosition);
         expect(
-          SceneTransforms.transformWindowToDrawingBuffer.calls.count()
+          SceneTransforms.transformWindowToDrawingBuffer.calls.count(),
         ).toEqual(2);
 
         scene.pickPosition(windowPosition);
         expect(
-          SceneTransforms.transformWindowToDrawingBuffer.calls.count()
+          SceneTransforms.transformWindowToDrawingBuffer.calls.count(),
         ).toEqual(2);
       });
     });
@@ -1272,7 +1271,7 @@ describe(
       scene.render();
 
       scene.camera.lookLeft(
-        scene.camera.frustum.fov * (scene.camera.percentageChanged + 0.1)
+        scene.camera.frustum.fov * (scene.camera.percentageChanged + 0.1),
       );
 
       scene.initializeFrame();
@@ -1296,7 +1295,7 @@ describe(
       scene.render();
 
       scene.camera.twistLeft(
-        CesiumMath.PI * (scene.camera.percentageChanged + 0.1)
+        CesiumMath.PI * (scene.camera.percentageChanged + 0.1),
       );
 
       scene.initializeFrame();
@@ -1317,7 +1316,7 @@ describe(
       scene.render();
 
       scene.camera.twistLeft(
-        CesiumMath.PI * (scene.camera.percentageChanged + 0.1)
+        CesiumMath.PI * (scene.camera.percentageChanged + 0.1),
       );
 
       scene.initializeFrame();
@@ -1339,7 +1338,7 @@ describe(
 
       scene.camera.moveUp(
         scene.camera.positionCartographic.height *
-          (scene.camera.percentageChanged + 0.1)
+          (scene.camera.percentageChanged + 0.1),
       );
 
       scene.initializeFrame();
@@ -1364,7 +1363,7 @@ describe(
 
       scene.camera.moveLeft(
         scene.camera.positionCartographic.height *
-          (scene.camera.percentageChanged + 0.1)
+          (scene.camera.percentageChanged + 0.1),
       );
 
       scene.initializeFrame();
@@ -1399,7 +1398,7 @@ describe(
         1.0,
         0.0,
         0.0,
-        0.5
+        0.5,
       );
 
       const primitives = scene.primitives;
@@ -1425,7 +1424,7 @@ describe(
         1.0,
         0.0,
         0.0,
-        0.5
+        0.5,
       );
 
       const primitives = scene.primitives;
@@ -1452,7 +1451,7 @@ describe(
       expect(SceneTransforms.worldToWindowCoordinates).toHaveBeenCalledWith(
         scene,
         mockPosition,
-        undefined
+        undefined,
       );
     });
 
@@ -1465,7 +1464,7 @@ describe(
       expect(SceneTransforms.worldToWindowCoordinates).toHaveBeenCalledWith(
         scene,
         mockPosition,
-        result
+        result,
       );
     });
 
@@ -1489,15 +1488,13 @@ describe(
       returnQuantizedMeshTileJson();
 
       const globe = (scene.globe = new Globe(Ellipsoid.UNIT_SPHERE));
-      scene.terrainProvider = await CesiumTerrainProvider.fromUrl(
-        "//terrain/tiles"
-      );
+      scene.terrainProvider =
+        await CesiumTerrainProvider.fromUrl("//terrain/tiles");
 
       expect(scene.terrainProvider).toBe(globe.terrainProvider);
       scene.globe = undefined;
-      const newProvider = await CesiumTerrainProvider.fromUrl(
-        "//newTerrain/tiles"
-      );
+      const newProvider =
+        await CesiumTerrainProvider.fromUrl("//newTerrain/tiles");
       expect(function () {
         scene.terrainProvider = newProvider;
       }).not.toThrow();
@@ -1772,7 +1769,7 @@ describe(
 
       scene.morphTo2D(1.0);
       scene.renderForSpecs(
-        JulianDate.addSeconds(lastRenderTime, 0.5, new JulianDate())
+        JulianDate.addSeconds(lastRenderTime, 0.5, new JulianDate()),
       );
       expect(scene.frameState.frameNumber).not.toEqual(lastFrameNumber);
 
@@ -1787,7 +1784,7 @@ describe(
 
       scene.morphToColumbusView(1.0);
       scene.renderForSpecs(
-        JulianDate.addSeconds(lastRenderTime, 0.5, new JulianDate())
+        JulianDate.addSeconds(lastRenderTime, 0.5, new JulianDate()),
       );
       expect(scene.frameState.frameNumber).not.toEqual(lastFrameNumber);
 
@@ -1802,7 +1799,7 @@ describe(
 
       scene.morphTo3D(1.0);
       scene.renderForSpecs(
-        JulianDate.addSeconds(lastRenderTime, 0.5, new JulianDate())
+        JulianDate.addSeconds(lastRenderTime, 0.5, new JulianDate()),
       );
       expect(scene.frameState.frameNumber).not.toEqual(lastFrameNumber);
 
@@ -1820,7 +1817,7 @@ describe(
       const lastFrameNumber = scene.frameState.frameNumber;
       const lastRenderTime = JulianDate.clone(
         scene.lastRenderTime,
-        scratchTime
+        scratchTime,
       );
       expect(lastRenderTime).toBeDefined();
       expect(scene._renderRequested).toBe(false);
@@ -1833,12 +1830,12 @@ describe(
       scene.maximumRenderTimeChange = 100.0;
 
       scene.renderForSpecs(
-        JulianDate.addSeconds(lastRenderTime, 50.0, new JulianDate())
+        JulianDate.addSeconds(lastRenderTime, 50.0, new JulianDate()),
       );
       expect(scene.frameState.frameNumber).toEqual(lastFrameNumber);
 
       scene.renderForSpecs(
-        JulianDate.addSeconds(lastRenderTime, 150.0, new JulianDate())
+        JulianDate.addSeconds(lastRenderTime, 150.0, new JulianDate()),
       );
       expect(scene.frameState.frameNumber).not.toEqual(lastFrameNumber);
     });
@@ -1849,7 +1846,7 @@ describe(
       const lastFrameNumber = scene.frameState.frameNumber;
       const lastRenderTime = JulianDate.clone(
         scene.lastRenderTime,
-        scratchTime
+        scratchTime,
       );
       expect(lastRenderTime).toBeDefined();
       expect(scene._renderRequested).toBe(false);
@@ -1860,7 +1857,7 @@ describe(
       const farFuture = JulianDate.addDays(
         lastRenderTime,
         10000,
-        new JulianDate()
+        new JulianDate(),
       );
 
       scene.renderForSpecs();
@@ -1908,12 +1905,12 @@ describe(
         destination: new Cartesian3(
           -588536.1057451078,
           -10512475.371849751,
-          6737159.100747835
+          6737159.100747835,
         ),
         orientation: new HeadingPitchRoll(
           6.283185307179586,
           -1.5688261558859757,
-          0.0
+          0.0,
         ),
       });
       scene.renderForSpecs();
@@ -1923,12 +1920,12 @@ describe(
         destination: new Cartesian3(
           -5754647.167415793,
           14907694.100240812,
-          -483807.2406259497
+          -483807.2406259497,
         ),
         orientation: new HeadingPitchRoll(
           6.283185307179586,
           -1.5698869547885104,
-          0.0
+          0.0,
         ),
       });
       scene.renderForSpecs();
@@ -1954,12 +1951,12 @@ describe(
         destination: new Cartesian3(
           -5754647.167415793,
           14907694.100240812,
-          -483807.2406259497
+          -483807.2406259497,
         ),
         orientation: new HeadingPitchRoll(
           6.283185307179586,
           -1.5698869547885104,
-          0.0
+          0.0,
         ),
       });
       scene.renderForSpecs();
@@ -2030,12 +2027,12 @@ describe(
         destination: new Cartesian3(
           -746658.0557573901,
           -5644191.0002196245,
-          2863585.099969967
+          2863585.099969967,
         ),
         orientation: new HeadingPitchRoll(
           0.3019699121236403,
           0.07316306869231592,
-          0.0007089903642230055
+          0.0007089903642230055,
         ),
       });
       await updateGlobeUntilDone(scene);
@@ -2070,12 +2067,12 @@ describe(
         destination: new Cartesian3(
           -4643042.379120885,
           4314056.579506199,
-          -451828.8968118975
+          -451828.8968118975,
         ),
         orientation: new HeadingPitchRoll(
           6.283185307179586,
           -0.7855491933100796,
-          6.283185307179586
+          6.283185307179586,
         ),
       });
       scene.morphToColumbusView(0.0);
@@ -2094,7 +2091,7 @@ describe(
         2.3929070618374535,
         -0.07149851443375346,
         -25000.0,
-        globe.ellipsoid
+        globe.ellipsoid,
       );
       const radius = 10.0;
 
@@ -2117,12 +2114,12 @@ describe(
         destination: new Cartesian3(
           -4643042.379120885,
           4314056.579506199,
-          -451828.8968118975
+          -451828.8968118975,
         ),
         orientation: new HeadingPitchRoll(
           6.283185307179586,
           -0.7855491933100796,
-          6.283185307179586
+          6.283185307179586,
         ),
       });
       await updateGlobeUntilDone(scene);
@@ -2139,7 +2136,7 @@ describe(
         2.3929070618374535,
         -0.07149851443375346,
         -25000.0,
-        globe.ellipsoid
+        globe.ellipsoid,
       );
       const radius = 10.0;
 
@@ -2174,18 +2171,18 @@ describe(
         destination: new Cartesian3(
           2838477.9315700866,
           -4939120.816857662,
-          1978094.4576285738
+          1978094.4576285738,
         ),
         orientation: new HeadingPitchRoll(
           5.955798516387474,
           -1.0556025616093283,
-          0.39098563693868016
+          0.39098563693868016,
         ),
       });
 
       await updateGlobeUntilDone(scene);
       const time = JulianDate.fromIso8601(
-        "2020-04-25T03:07:26.04924034334544558Z"
+        "2020-04-25T03:07:26.04924034334544558Z",
       );
       globe.translucency.enabled = true;
       globe.translucency.frontFaceAlpha = 0.5;
@@ -2205,12 +2202,12 @@ describe(
         destination: new Cartesian3(
           2764681.3022502237,
           -20999839.371941473,
-          14894754.464869803
+          14894754.464869803,
         ),
         orientation: new HeadingPitchRoll(
           6.283185307179586,
           -1.5687983447998315,
-          0
+          0,
         ),
       });
 
@@ -2239,12 +2236,12 @@ describe(
         destination: new Cartesian3(
           -557278.4840232887,
           -6744284.200717078,
-          2794079.461722868
+          2794079.461722868,
         ),
         orientation: new HeadingPitchRoll(
           6.283185307179586,
           -1.5687983448015541,
-          0
+          0,
         ),
       });
 
@@ -2255,7 +2252,7 @@ describe(
         }),
         attributes: {
           color: ColorGeometryInstanceAttribute.fromColor(
-            new Color(1.0, 0.0, 0.0, 0.5)
+            new Color(1.0, 0.0, 0.0, 0.5),
           ),
         },
       });
@@ -2267,7 +2264,7 @@ describe(
             closed: true,
           }),
           asynchronous: false,
-        })
+        }),
       );
 
       await updateGlobeUntilDone(scene);
@@ -2287,12 +2284,12 @@ describe(
         destination: new Cartesian3(
           -557278.4840232887,
           -6744284.200717078,
-          2794079.461722868
+          2794079.461722868,
         ),
         orientation: new HeadingPitchRoll(
           6.283185307179586,
           -1.5687983448015541,
-          0
+          0,
         ),
       });
 
@@ -2303,7 +2300,7 @@ describe(
         }),
         attributes: {
           color: ColorGeometryInstanceAttribute.fromColor(
-            new Color(1.0, 0.0, 0.0, 0.5)
+            new Color(1.0, 0.0, 0.0, 0.5),
           ),
         },
       });
@@ -2315,7 +2312,7 @@ describe(
             closed: true,
           }),
           asynchronous: false,
-        })
+        }),
       );
 
       await updateGlobeUntilDone(scene);
@@ -2370,5 +2367,5 @@ describe(
     });
   },
 
-  "WebGL"
+  "WebGL",
 );

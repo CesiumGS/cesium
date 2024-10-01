@@ -27,11 +27,11 @@ if (/\.0$/.test(version)) {
 
 const copyrightHeaderTemplate = readFileSync(
   path.join("Source", "copyrightHeader.js"),
-  "utf8"
+  "utf8",
 );
 const combinedCopyrightHeader = copyrightHeaderTemplate.replace(
   "${version}",
-  version
+  version,
 );
 
 function escapeCharacters(token) {
@@ -294,7 +294,7 @@ export async function createCesiumJs() {
   for (const workspace of Object.keys(workspaceSourceFiles)) {
     const files = await globby(workspaceSourceFiles[workspace]);
     const declarations = files.map((file) =>
-      generateDeclaration(workspace, file)
+      generateDeclaration(workspace, file),
     );
     contents += declarations.join(`${EOL}`);
     contents += "\n";
@@ -434,7 +434,7 @@ export async function glslToJavaScript(
   minify,
   minifyStateFilePath,
   workspace,
-  specificFiles
+  specificFiles,
 ) {
   if (
     !existsSync(minifyStateFilePath) ||
@@ -490,7 +490,7 @@ export async function glslToJavaScript(
 
       let copyrightComments = "";
       const extractedCopyrightComments = contents.match(
-        /\/\*\*(?:[^*\/]|\*(?!\/)|\n)*?@license(?:.|\n)*?\*\//gm
+        /\/\*\*(?:[^*\/]|\*(?!\/)|\n)*?@license(?:.|\n)*?\*\//gm,
       );
       if (extractedCopyrightComments) {
         copyrightComments = `${extractedCopyrightComments.join("\n")}\n`;
@@ -511,7 +511,7 @@ export async function glslToJavaScript(
 export default "${contents}";\n`;
 
       return writeFile(jsFile, contents);
-    })
+    }),
   );
 
   if (!specificFiles) {
@@ -546,7 +546,7 @@ export default "${contents}";\n`;
   }
 
   const fileContents = `//This file is automatically rebuilt by the Cesium build process.\n${contents.imports.join(
-    "\n"
+    "\n",
   )}\n\nexport default {\n    ${contents.exports.join(",\n    ")}\n};\n`;
 
   return writeFile(
@@ -555,9 +555,9 @@ export default "${contents}";\n`;
       "Source",
       "Shaders",
       "Builtin",
-      "CzmBuiltins.js"
+      "CzmBuiltins.js",
     ),
-    fileContents
+    fileContents,
   );
 }
 
@@ -592,7 +592,7 @@ const externalResolvePlugin = {
         return {
           contents,
         };
-      }
+      },
     );
   },
 };
@@ -626,7 +626,7 @@ export async function createGalleryList(noDevelopmentGallery) {
     newDemos = child_process
       .execSync(
         `git diff --name-only --diff-filter=A ${tagVersion} Apps/Sandcastle/gallery/*.html`,
-        { stdio: ["pipe", "pipe", "ignore"] }
+        { stdio: ["pipe", "pipe", "ignore"] },
       )
       .toString()
       .trim()
@@ -639,7 +639,7 @@ export async function createGalleryList(noDevelopmentGallery) {
   const files = await globby(fileList);
   files.forEach(function (file) {
     const demo = filePathToModuleId(
-      path.relative("Apps/Sandcastle/gallery", file)
+      path.relative("Apps/Sandcastle/gallery", file),
     );
 
     const demoObject = {
@@ -689,8 +689,7 @@ const has_new_gallery_demos = ${newDemos.length > 0 ? "true;" : "false;"}\n`;
     ],
     minify: true,
     banner: {
-      css:
-        "/* This file is automatically rebuilt by the Cesium build process. */\n",
+      css: "/* This file is automatically rebuilt by the Cesium build process. */\n",
     },
     outfile: path.join("Apps", "Sandcastle", "templates", "bucket.css"),
   });
@@ -737,7 +736,7 @@ export async function copyEngineAssets(destination) {
   await copyFiles(
     ["packages/engine/Source/Widget/**", "!packages/engine/Source/Widget/*.js"],
     path.join(destination, "Widgets/CesiumWidget"),
-    "packages/engine/Source/Widget"
+    "packages/engine/Source/Widget",
   );
 }
 
@@ -768,7 +767,7 @@ export async function createJsHintOptions() {
   const jshintrc = JSON.parse(
     await readFile(path.join("Apps", "Sandcastle", ".jshintrc"), {
       encoding: "utf8",
-    })
+    }),
   );
 
   const contents = `\
@@ -777,7 +776,7 @@ export async function createJsHintOptions() {
 
   await writeFile(
     path.join("Apps", "Sandcastle", "jsHintOptions.js"),
-    contents
+    contents,
   );
 
   return contents;
@@ -890,7 +889,7 @@ async function createSpecListForWorkspace(files, workspace, outputPath) {
   files.forEach(function (file) {
     contents += `import './${filePathToModuleId(file).replace(
       `packages/${workspace}/Specs/`,
-      ""
+      "",
     )}.js';\n`;
   });
 
@@ -997,7 +996,7 @@ export const buildEngine = async (options) => {
   await glslToJavaScript(
     minify,
     "packages/engine/Build/minifyShaders.state",
-    "engine"
+    "engine",
   );
 
   // Create index.js
@@ -1093,7 +1092,7 @@ export async function buildCesium(options) {
     JSON.stringify({
       type: "commonjs",
     }),
-    "utf8"
+    "utf8",
   );
 
   // Create Cesium.js
@@ -1171,14 +1170,14 @@ export async function buildCesium(options) {
   await copyFiles(
     ["packages/engine/Source/ThirdParty/**/*.js"],
     "Source/ThirdParty",
-    "packages/engine/Source/ThirdParty"
+    "packages/engine/Source/ThirdParty",
   );
 
   await copyWidgetsAssets("Source/Widgets");
   await copyFiles(
     ["packages/widgets/Source/**/*.css"],
     "Source/Widgets",
-    "packages/widgets/Source"
+    "packages/widgets/Source",
   );
 
   // WORKAROUND:

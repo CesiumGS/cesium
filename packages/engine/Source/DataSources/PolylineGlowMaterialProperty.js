@@ -116,19 +116,19 @@ PolylineGlowMaterialProperty.prototype.getValue = function (time, result) {
     this._color,
     time,
     defaultColor,
-    result.color
+    result.color,
   );
   result.glowPower = Property.getValueOrDefault(
     this._glowPower,
     time,
     defaultGlowPower,
-    result.glowPower
+    result.glowPower,
   );
   result.taperPower = Property.getValueOrDefault(
     this._taperPower,
     time,
     defaultTaperPower,
-    result.taperPower
+    result.taperPower,
   );
   return result;
 };

@@ -115,7 +115,7 @@ describe("DataSources/CompositePositionProperty", function () {
       stop: new JulianDate(12, 0),
       data: new ConstantPositionProperty(
         new Cartesian3(1, 2, 3),
-        ReferenceFrame.INERTIAL
+        ReferenceFrame.INERTIAL,
       ),
     });
     const interval2 = new TimeInterval({
@@ -124,7 +124,7 @@ describe("DataSources/CompositePositionProperty", function () {
       isStartIncluded: false,
       data: new ConstantPositionProperty(
         new Cartesian3(4, 5, 6),
-        ReferenceFrame.FIXED
+        ReferenceFrame.FIXED,
       ),
     });
 
@@ -137,7 +137,7 @@ describe("DataSources/CompositePositionProperty", function () {
       interval1.start,
       valueInertial,
       ReferenceFrame.INERTIAL,
-      ReferenceFrame.FIXED
+      ReferenceFrame.FIXED,
     );
 
     const result1 = property.getValue(interval1.start);
@@ -153,7 +153,7 @@ describe("DataSources/CompositePositionProperty", function () {
       stop: new JulianDate(12, 0),
       data: new ConstantPositionProperty(
         new Cartesian3(1, 2, 3),
-        ReferenceFrame.INERTIAL
+        ReferenceFrame.INERTIAL,
       ),
     });
     const interval2 = new TimeInterval({
@@ -162,7 +162,7 @@ describe("DataSources/CompositePositionProperty", function () {
       isStartIncluded: false,
       data: new ConstantPositionProperty(
         new Cartesian3(4, 5, 6),
-        ReferenceFrame.FIXED
+        ReferenceFrame.FIXED,
       ),
     });
 
@@ -174,27 +174,27 @@ describe("DataSources/CompositePositionProperty", function () {
     const result1 = property.getValueInReferenceFrame(
       interval1.start,
       ReferenceFrame.INERTIAL,
-      expected
+      expected,
     );
     expect(result1).toBe(expected);
     expect(result1).toEqual(
       interval1.data.getValueInReferenceFrame(
         interval1.start,
-        ReferenceFrame.INERTIAL
-      )
+        ReferenceFrame.INERTIAL,
+      ),
     );
 
     const result2 = property.getValueInReferenceFrame(
       interval2.stop,
       ReferenceFrame.FIXED,
-      expected
+      expected,
     );
     expect(result2).toBe(expected);
     expect(result2).toEqual(
       interval2.data.getValueInReferenceFrame(
         interval2.stop,
-        ReferenceFrame.FIXED
-      )
+        ReferenceFrame.FIXED,
+      ),
     );
   });
 
@@ -204,7 +204,7 @@ describe("DataSources/CompositePositionProperty", function () {
       stop: new JulianDate(12, 0),
       data: new ConstantPositionProperty(
         new Cartesian3(1, 2, 3),
-        ReferenceFrame.INERTIAL
+        ReferenceFrame.INERTIAL,
       ),
     });
     const interval2 = new TimeInterval({
@@ -213,7 +213,7 @@ describe("DataSources/CompositePositionProperty", function () {
       isStartIncluded: false,
       data: new ConstantPositionProperty(
         new Cartesian3(4, 5, 6),
-        ReferenceFrame.FIXED
+        ReferenceFrame.FIXED,
       ),
     });
 
@@ -223,24 +223,24 @@ describe("DataSources/CompositePositionProperty", function () {
 
     const result1 = property.getValueInReferenceFrame(
       interval1.start,
-      ReferenceFrame.INERTIAL
+      ReferenceFrame.INERTIAL,
     );
     expect(result1).toEqual(
       interval1.data.getValueInReferenceFrame(
         interval1.start,
-        ReferenceFrame.INERTIAL
-      )
+        ReferenceFrame.INERTIAL,
+      ),
     );
 
     const result2 = property.getValueInReferenceFrame(
       interval2.stop,
-      ReferenceFrame.FIXED
+      ReferenceFrame.FIXED,
     );
     expect(result2).toEqual(
       interval2.data.getValueInReferenceFrame(
         interval2.stop,
-        ReferenceFrame.FIXED
-      )
+        ReferenceFrame.FIXED,
+      ),
     );
   });
 

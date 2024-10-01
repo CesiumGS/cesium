@@ -19,20 +19,20 @@ function getKey(type, modifier) {
 function clonePinchMovement(pinchMovement, result) {
   Cartesian2.clone(
     pinchMovement.distance.startPosition,
-    result.distance.startPosition
+    result.distance.startPosition,
   );
   Cartesian2.clone(
     pinchMovement.distance.endPosition,
-    result.distance.endPosition
+    result.distance.endPosition,
   );
 
   Cartesian2.clone(
     pinchMovement.angleAndHeight.startPosition,
-    result.angleAndHeight.startPosition
+    result.angleAndHeight.startPosition,
   );
   Cartesian2.clone(
     pinchMovement.angleAndHeight.endPosition,
-    result.angleAndHeight.endPosition
+    result.angleAndHeight.endPosition,
   );
 }
 
@@ -74,11 +74,11 @@ function listenToPinch(aggregator, modifier, canvas) {
         event.position1,
         event.position2,
         0.5,
-        eventStartPosition[key]
+        eventStartPosition[key],
       );
     },
     ScreenSpaceEventType.PINCH_START,
-    modifier
+    modifier,
   );
 
   aggregator._eventHandler.setInputAction(
@@ -88,7 +88,7 @@ function listenToPinch(aggregator, modifier, canvas) {
       releaseTime[key] = new Date();
     },
     ScreenSpaceEventType.PINCH_END,
-    modifier
+    modifier,
   );
 
   aggregator._eventHandler.setInputAction(
@@ -98,11 +98,11 @@ function listenToPinch(aggregator, modifier, canvas) {
         if (!update[key]) {
           Cartesian2.clone(
             mouseMovement.distance.endPosition,
-            movement.distance.endPosition
+            movement.distance.endPosition,
           );
           Cartesian2.clone(
             mouseMovement.angleAndHeight.endPosition,
-            movement.angleAndHeight.endPosition
+            movement.angleAndHeight.endPosition,
           );
         } else {
           clonePinchMovement(mouseMovement, movement);
@@ -126,7 +126,7 @@ function listenToPinch(aggregator, modifier, canvas) {
       }
     },
     ScreenSpaceEventType.PINCH_MOVE,
-    modifier
+    modifier,
   );
 }
 
@@ -168,7 +168,7 @@ function listenToWheel(aggregator, modifier) {
       update[key] = false;
     },
     ScreenSpaceEventType.WHEEL,
-    modifier
+    modifier,
   );
 }
 
@@ -213,7 +213,7 @@ function listenMouseButtonDownUp(aggregator, modifier, type) {
       Cartesian2.clone(event.position, eventStartPosition[key]);
     },
     down,
-    modifier
+    modifier,
   );
 
   aggregator._eventHandler.setInputAction(
@@ -225,7 +225,7 @@ function listenMouseButtonDownUp(aggregator, modifier, type) {
       }
     },
     up,
-    modifier
+    modifier,
   );
 }
 
@@ -319,7 +319,7 @@ function listenMouseMove(aggregator, modifier) {
               if (!update[key]) {
                 Cartesian2.clone(
                   mouseMovement.endPosition,
-                  movement[key].endPosition
+                  movement[key].endPosition,
                 );
               } else {
                 cloneMouseMovement(movement[key], lastMovement[key]);
@@ -334,11 +334,11 @@ function listenMouseMove(aggregator, modifier) {
 
       Cartesian2.clone(
         mouseMovement.endPosition,
-        aggregator._currentMousePosition
+        aggregator._currentMousePosition,
       );
     },
     ScreenSpaceEventType.MOUSE_MOVE,
-    modifier
+    modifier,
   );
 }
 
@@ -517,7 +517,7 @@ CameraEventAggregator.prototype.isButtonDown = function (type, modifier) {
  */
 CameraEventAggregator.prototype.getStartMousePosition = function (
   type,
-  modifier
+  modifier,
 ) {
   //>>includeStart('debug', pragmas.debug);
   if (!defined(type)) {
@@ -560,7 +560,7 @@ CameraEventAggregator.prototype.getButtonPressTime = function (type, modifier) {
  */
 CameraEventAggregator.prototype.getButtonReleaseTime = function (
   type,
-  modifier
+  modifier,
 ) {
   //>>includeStart('debug', pragmas.debug);
   if (!defined(type)) {

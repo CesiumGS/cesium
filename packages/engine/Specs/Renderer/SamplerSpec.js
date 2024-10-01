@@ -24,10 +24,10 @@ describe(
       expect(sampler.wrapS).toEqual(TextureWrap.CLAMP_TO_EDGE);
       expect(sampler.wrapT).toEqual(TextureWrap.CLAMP_TO_EDGE);
       expect(sampler.minificationFilter).toEqual(
-        TextureMinificationFilter.LINEAR
+        TextureMinificationFilter.LINEAR,
       );
       expect(sampler.magnificationFilter).toEqual(
-        TextureMinificationFilter.LINEAR
+        TextureMinificationFilter.LINEAR,
       );
       expect(sampler.maximumAnisotropy).toEqual(1.0);
     });
@@ -72,5 +72,5 @@ describe(
       }).toThrowDeveloperError();
     });
   },
-  "WebGL"
+  "WebGL",
 );

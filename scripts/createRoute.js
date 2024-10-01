@@ -21,7 +21,7 @@ function serveResult(result, fileName, res, next) {
     next(
       new Error(`Failed to generate bundle: ${fileName}`, {
         cause: error,
-      })
+      }),
     );
     return;
   }
@@ -47,12 +47,12 @@ function createRoute(app, name, route, context, dependantCaches) {
               if (!dependantCache.isBuilt()) {
                 return dependantCache.rebuild();
               }
-            })
+            }),
           );
         }
         await cache.rebuild();
         console.log(
-          `Built ${name} in ${formatTimeSinceInSeconds(start)} seconds.`
+          `Built ${name} in ${formatTimeSinceInSeconds(start)} seconds.`,
         );
       } catch (e) {
         next(e);

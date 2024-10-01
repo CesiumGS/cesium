@@ -39,7 +39,7 @@ describe(
       expect(a.vertexShaderSource).toBeDefined();
       expect(a.fragmentShaderSource).toBeDefined();
       expect(a.renderState).toEqual(
-        Appearance.getDefaultRenderState(true, false)
+        Appearance.getDefaultRenderState(true, false),
       );
       expect(a.vertexFormat).toEqual(PolylineMaterialAppearance.VERTEX_FORMAT);
       expect(a.translucent).toEqual(true);
@@ -72,5 +72,5 @@ describe(
       expect(scene).notToRender([0, 0, 0, 255]);
     });
   },
-  "WebGL"
+  "WebGL",
 );
