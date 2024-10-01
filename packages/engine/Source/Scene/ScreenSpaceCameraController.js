@@ -274,6 +274,10 @@ function ScreenSpaceCameraController(scene) {
   /**
    * If set, the camera will not be able to tilt past this angle, expressed in radians.
    * @type {number}
+   *
+   * @example
+   * // prevent camera from tilting below ellipsoid surface
+   * controller.maximumTiltAngle = Math.PI / 2
    */
   this.maximumTiltAngle = undefined;
 
