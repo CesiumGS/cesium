@@ -1,5 +1,17 @@
 # Change Log
 
+### 1.123 - 2024-11-01
+
+#### @cesium/engine
+
+##### Additions :tada:
+
+- Use rendering rate to adjust zoom rate so zoom speed appears consistent on high or low refresh rate browsers. Use `zoomFactor` to adjust zoomRate. Added `averageFramesPerSecond` and `averageFrameRateWindow` to `FrameRateMonitor` class for getting the frame rendering rate.
+
+##### Fixes :wrench:
+
+##### Deprecated :hourglass_flowing_sand:
+
 ### 1.122 - 2024-10-01
 
 #### @cesium/engine
@@ -10,7 +22,6 @@
 - Added `enableVerticalExaggeration` option to models. Set this value to `false` to prevent model exaggeration when `Scene.verticalExaggeration` is set to a value other than `1.0`. [#12141](https://github.com/CesiumGS/cesium/pull/12141)
 - Added `Scene.prototype.pickMetadata` and `Scene.prototype.pickMetadataSchema`, enabling experimental support for picking property textures or property attributes [#12075](https://github.com/CesiumGS/cesium/pull/12075)
 - Added experimental support for the `NGA_gpm_local` glTF extension, for GPM 1.2 [#12204](https://github.com/CesiumGS/cesium/pull/12204)
-- Use rendering rate to adjust zoom rate so zoom speed appears consistent on high or low refresh rate browsers. Use `zoomFactor` to adjust zoomRate. Added `averageFramesPerSecond` and `averageFrameRateWindow` to `FrameRateMonitor` class for getting the frame rendering rate.
 
 ##### Fixes :wrench:
 
