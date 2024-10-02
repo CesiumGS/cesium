@@ -1,5 +1,17 @@
 # Change Log
 
+### 1.123 - 2024-11-01
+
+#### @cesium/engine
+
+##### Additions :tada:
+
+- Use rendering rate to adjust zoom rate so zoom speed appears consistent on high or low refresh rate browsers. Use `zoomFactor` to adjust zoomRate. Added `averageFramesPerSecond` and `averageFrameRateWindow` to `FrameRateMonitor` class for getting the frame rendering rate.
+
+##### Fixes :wrench:
+
+##### Deprecated :hourglass_flowing_sand:
+
 ### 1.122 - 2024-10-01
 
 #### @cesium/engine

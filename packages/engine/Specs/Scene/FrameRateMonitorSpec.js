@@ -58,6 +58,7 @@ describe(
       monitor = new FrameRateMonitor({
         scene: scene,
         samplingWindow: 3.0,
+        averageFrameRateWindow: 20,
         quietPeriod: 1.0,
         warmupPeriod: 6.0,
         minimumFrameRateDuringWarmup: 1,
@@ -65,6 +66,7 @@ describe(
       });
 
       expect(monitor.samplingWindow).toBe(3.0);
+      expect(monitor.averageFrameRateWindow).toBe(20);
       expect(monitor.quietPeriod).toBe(1.0);
       expect(monitor.warmupPeriod).toBe(6.0);
       expect(monitor.minimumFrameRateDuringWarmup).toBe(1);
@@ -250,6 +252,43 @@ describe(
       // The nominalFrameRate event should have been raised.
       expect(monitor.lastFramesPerSecond).toBeGreaterThanOrEqual(10);
       expect(nominalListener).toHaveBeenCalled();
+    });
+
+    it("returns averageFrameRate, irrespective of quiet period and pauses", function () {
+      monitor = new FrameRateMonitor({
+        scene: scene,
+        quietPeriod: 3,
+        warmupPeriod: 1,
+        samplingWindow: 1,
+        averageFrameRateWindow: 20,
+        minimumFrameRateDuringWarmup: 10,
+        minimumFrameRateAfterWarmup: 10,
+      });
+
+      // Rendering once starts the quiet period
+      scene.render();
+
+      // Render 10 frames at 100 millisecond interval
+      let numFramesRendered = 0;
+      while (numFramesRendered < 10) {
+        scene.render();
+        spinWait(100);
+        numFramesRendered++;
+      }
+
+      monitor.pause();
+
+      // Render 15 more frames at 100 millisecond interval
+      while (numFramesRendered < 25) {
+        scene.render();
+        spinWait(100);
+        numFramesRendered++;
+      }
+
+      monitor.unpause();
+
+      expect(getTimestamp()).toBeLessThan(monitor._quietPeriodEndTime);
+      expect(monitor.averageFramesPerSecond).toBeCloseTo(10, 1);
     });
   },
   "WebGL",

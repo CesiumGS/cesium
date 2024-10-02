@@ -17,7 +17,8 @@ import TimeConstants from "../Core/TimeConstants.js";
  *
  * @param {object} [options] Object with the following properties:
  * @param {Scene} options.scene The Scene instance for which to monitor performance.
- * @param {number} [options.samplingWindow=5.0] The length of the sliding window over which to compute the average frame rate, in seconds.
+ * @param {number} [options.samplingWindow=5.0] The length of the sliding window over which to compute the average frame rate, in seconds,
+ *        for the purpose of calculating if the frame rate is lower or higher than the minimum frame rate threshold.
  * @param {number} [options.quietPeriod=2.0] The length of time to wait at startup and each time the page becomes visible (i.e. when the user
  *        switches back to the tab) before starting to measure performance, in seconds.
  * @param {number} [options.warmupPeriod=5.0] The length of the warmup period, in seconds.  During the warmup period, a separate
@@ -28,6 +29,8 @@ import TimeConstants from "../Core/TimeConstants.js";
  * @param {number} [options.minimumFrameRateAfterWarmup=8] The minimum frames-per-second that are required for acceptable performance after
  *        the end of the warmup period.  If the frame rate averages less than this during any samplingWindow after the warmupPeriod, the
  *        lowFrameRate event will be raised and the page will redirect to the redirectOnLowFrameRateUrl, if any.
+ * @param {number} [options.averageFrameRateWindow=10] The length of the sliding window over which to compute the average frame rate, in
+ *        number of frames, for the purpose of calculating and displaying <code>averageFramesPerSecond</code>.
  */
 function FrameRateMonitor(options) {
   //>>includeStart('debug', pragmas.debug);
@@ -39,12 +42,23 @@ function FrameRateMonitor(options) {
   this._scene = options.scene;
 
   /**
-   * Gets or sets the length of the sliding window over which to compute the average frame rate, in seconds.
+   * Gets or sets the length of the sliding window over which to compute the average frame rate, in seconds, for the
+   * purpose of calculating if the frame rate is lower or higher than the minimum frame rate threshold.
    * @type {number}
    */
   this.samplingWindow = defaultValue(
     options.samplingWindow,
     FrameRateMonitor.defaultSettings.samplingWindow,
+  );
+
+  /**
+   * Gets or sets the length of the sliding window over which to compute the average frame rate, in number of frames,
+   * for the purpose of calculating and displaying <code>averageFramesPerSecond</code>.
+   * @type {number}
+   */
+  this.averageFrameRateWindow = defaultValue(
+    options.averageFrameRateWindow,
+    FrameRateMonitor.defaultSettings.averageFrameRateWindow,
   );
 
   /**
@@ -93,6 +107,7 @@ function FrameRateMonitor(options) {
   this._nominalFrameRate = new Event();
 
   this._frameTimes = [];
+  this._averageFrameRateTimes = [];
   this._needsQuietPeriod = true;
   this._quietPeriodEndTime = 0.0;
   this._warmupPeriodEndTime = 0.0;
@@ -165,6 +180,7 @@ FrameRateMonitor.defaultSettings = {
   warmupPeriod: 5.0,
   minimumFrameRateDuringWarmup: 4,
   minimumFrameRateAfterWarmup: 8,
+  averageFrameRateWindow: 10,
 };
 
 /**
@@ -233,6 +249,9 @@ Object.defineProperties(FrameRateMonitor.prototype, {
 
   /**
    * Gets the most recently computed average frames-per-second over the last <code>samplingWindow</code>.
+   * The <code>samplingWindow</code> begins after the expiration of the <code>quietPeriod</code>, and restarts
+   * each time the <code>minimumFrameRateDuringWarmup</code> or <code>minimumFrameRateAfterWarmup</code> threshold
+   * is crossed, or <code>pause</code> is invoked.
    * This property may be undefined if the frame rate has not been computed.
    * @memberof FrameRateMonitor.prototype
    * @type {number}
@@ -240,6 +259,31 @@ Object.defineProperties(FrameRateMonitor.prototype, {
   lastFramesPerSecond: {
     get: function () {
       return this._lastFramesPerSecond;
+    },
+  },
+
+  /**
+   * Gets the most recently computed average frames-per-second over the last number of frames specified
+   * in <code>averageFrameRateWindow</code>.
+   * This property may be undefined when the scene first loads until <code>averageFrameRateWindow</code>
+   * has passed. After <code>averageFrameRateWindow</code> has passed the property will be continuously
+   * available, the limitations specified for <code>lastFramesPerSecond</code> do not apply to it.
+   * @memberof FrameRateMonitor.prototype
+   * @type {number|undefined}
+   */
+  averageFramesPerSecond: {
+    get: function () {
+      if (this._averageFrameRateTimes.length !== this.averageFrameRateWindow) {
+        return undefined;
+      }
+      const windowSize = this.averageFrameRateWindow - 1;
+      const averageTimePerFrame =
+        (this._averageFrameRateTimes[0] -
+          this._averageFrameRateTimes[windowSize]) /
+        windowSize;
+      const fps =
+        1.0 / (averageTimePerFrame * TimeConstants.SECONDS_PER_MILLISECOND);
+      return fps;
     },
   },
 });
@@ -310,11 +354,16 @@ FrameRateMonitor.prototype.destroy = function () {
 };
 
 function update(monitor, time) {
+  const timeStamp = getTimestamp();
+
+  monitor._averageFrameRateTimes.unshift(timeStamp);
+  if (monitor._averageFrameRateTimes.length > monitor.averageFrameRateWindow) {
+    monitor._averageFrameRateTimes.pop();
+  }
+
   if (monitor._pauseCount > 0) {
     return;
   }
-
-  const timeStamp = getTimestamp();
 
   if (monitor._needsQuietPeriod) {
     monitor._needsQuietPeriod = false;
