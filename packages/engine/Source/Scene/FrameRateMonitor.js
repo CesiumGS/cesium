@@ -30,7 +30,7 @@ import TimeConstants from "../Core/TimeConstants.js";
  *        the end of the warmup period.  If the frame rate averages less than this during any samplingWindow after the warmupPeriod, the
  *        lowFrameRate event will be raised and the page will redirect to the redirectOnLowFrameRateUrl, if any.
  * @param {number} [options.averageFrameRateWindow=10] The length of the sliding window over which to compute the average frame rate, in
- *        number of frames, for the purpose of calculating and displaying <code>averageFramesPerSecond</code>
+ *        number of frames, for the purpose of calculating and displaying <code>averageFramesPerSecond</code>.
  */
 function FrameRateMonitor(options) {
   //>>includeStart('debug', pragmas.debug);
@@ -52,7 +52,7 @@ function FrameRateMonitor(options) {
   );
 
   /**
-   * Gets or sets the length of the sliding window over which to compute the average frame rate, in number of frame,
+   * Gets or sets the length of the sliding window over which to compute the average frame rate, in number of frames,
    * for the purpose of calculating and displaying <code>averageFramesPerSecond</code>.
    * @type {number}
    */
@@ -113,7 +113,6 @@ function FrameRateMonitor(options) {
   this._warmupPeriodEndTime = 0.0;
   this._frameRateIsLow = false;
   this._lastFramesPerSecond = undefined;
-  this._averageFramesPerSecond = undefined;
   this._pauseCount = 0;
 
   const that = this;
@@ -270,23 +269,21 @@ Object.defineProperties(FrameRateMonitor.prototype, {
    * has passed. After <code>averageFrameRateWindow</code> has passed the property will be continuously
    * available, the limitations specified for <code>lastFramesPerSecond</code> do not apply to it.
    * @memberof FrameRateMonitor.prototype
-   * @type {number}
+   * @type {number|undefined}
    */
   averageFramesPerSecond: {
     get: function () {
       if (this._averageFrameRateTimes.length !== this.averageFrameRateWindow) {
-        this._averageFramesPerSecond = undefined;
-      } else {
-        const windowSize = this.averageFrameRateWindow - 1;
-        const averageTimePerFrame =
-          (this._averageFrameRateTimes[0] -
-            this._averageFrameRateTimes[windowSize]) /
-          windowSize;
-        const fps =
-          1 / (averageTimePerFrame * TimeConstants.SECONDS_PER_MILLISECOND);
-        this._averageFramesPerSecond = fps;
+        return undefined;
       }
-      return this._averageFramesPerSecond;
+      const windowSize = this.averageFrameRateWindow - 1;
+      const averageTimePerFrame =
+        (this._averageFrameRateTimes[0] -
+          this._averageFrameRateTimes[windowSize]) /
+        windowSize;
+      const fps =
+        1.0 / (averageTimePerFrame * TimeConstants.SECONDS_PER_MILLISECOND);
+      return fps;
     },
   },
 });

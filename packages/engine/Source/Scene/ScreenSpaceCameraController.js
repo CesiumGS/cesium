@@ -577,11 +577,11 @@ function handleZoom(
 
   const minDistance = distanceMeasure - minHeight;
 
-  let fpsMultiplier = 1;
+  let fpsMultiplier = 1.0;
   const fps = object.frameRateMonitor.averageFramesPerSecond;
-  // we set the ideal browser refresh rate to 30hz
-  if (fps) {
-    fpsMultiplier = 30 / fps;
+  // we set the ideal browser refresh rate to 60hz
+  if (defined(fps) && fps > 0) {
+    fpsMultiplier = 60.0 / fps;
   }
 
   let zoomRate = zoomFactor * minDistance * fpsMultiplier;
