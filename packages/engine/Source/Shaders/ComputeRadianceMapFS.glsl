@@ -95,5 +95,5 @@ void main() {
     color.rgb = pow(color.rgb, vec3(gamma)); // Normally this would be in the ifdef above, but there is a precision issue with the atmmopshere scattering transmittance (alpha) which this loine works around, even when gamma is 1.0.
     color.rgb = czm_gammaCorrect(color.rgb);
 
-    out_FragColor = color;
+    out_FragColor = vec4(u_faceDirection, 1.0);
 }
