@@ -79,8 +79,6 @@ import VoxelCell from "./VoxelCell.js";
 import VoxelPrimitive from "./VoxelPrimitive.js";
 import getMetadataClassProperty from "./getMetadataClassProperty.js";
 import PickedMetadataInfo from "./PickedMetadataInfo.js";
-import getTimestamp from "../Core/getTimestamp.js";
-import FpsTracker from "../Core/FpsTracker.js";
 
 const requestRenderAfterFrame = function (scene) {
   return function () {
