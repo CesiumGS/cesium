@@ -10,7 +10,7 @@ describe("Core/arrayRemoveDuplicates", function () {
     const positions = [Cartesian3.ZERO];
     const noDuplicates = arrayRemoveDuplicates(
       positions,
-      Cartesian3.equalsEpsilon
+      Cartesian3.equalsEpsilon,
     );
     expect(noDuplicates).toBe(positions);
   });
@@ -24,7 +24,7 @@ describe("Core/arrayRemoveDuplicates", function () {
     ];
     const noDuplicates = arrayRemoveDuplicates(
       positions,
-      Cartesian3.equalsEpsilon
+      Cartesian3.equalsEpsilon,
     );
     expect(noDuplicates).toBe(positions);
   });
@@ -39,7 +39,7 @@ describe("Core/arrayRemoveDuplicates", function () {
     const noDuplicates = arrayRemoveDuplicates(
       positions,
       Cartesian3.equalsEpsilon,
-      true
+      true,
     );
     expect(noDuplicates).toBe(positions);
   });
@@ -61,7 +61,7 @@ describe("Core/arrayRemoveDuplicates", function () {
     ];
     const noDuplicates = arrayRemoveDuplicates(
       positions,
-      Cartesian3.equalsEpsilon
+      Cartesian3.equalsEpsilon,
     );
     expect(noDuplicates).toEqual(expectedPositions);
   });
@@ -85,7 +85,7 @@ describe("Core/arrayRemoveDuplicates", function () {
     ];
     const noDuplicates = arrayRemoveDuplicates(
       positions,
-      Cartesian3.equalsEpsilon
+      Cartesian3.equalsEpsilon,
     );
     expect(noDuplicates).toEqual(expectedPositions);
   });
@@ -107,7 +107,7 @@ describe("Core/arrayRemoveDuplicates", function () {
     ];
     const noDuplicates = arrayRemoveDuplicates(
       positions,
-      Cartesian3.equalsEpsilon
+      Cartesian3.equalsEpsilon,
     );
     expect(noDuplicates).toEqual(expectedPositions);
   });
@@ -130,7 +130,7 @@ describe("Core/arrayRemoveDuplicates", function () {
     ];
     const noDuplicates = arrayRemoveDuplicates(
       positions,
-      Spherical.equalsEpsilon
+      Spherical.equalsEpsilon,
     );
     expect(noDuplicates).toEqual(expectedPositions);
   });
@@ -139,7 +139,7 @@ describe("Core/arrayRemoveDuplicates", function () {
     const positions = [];
     const noDuplicates = arrayRemoveDuplicates(
       positions,
-      Cartesian3.equalsEpsilon
+      Cartesian3.equalsEpsilon,
     );
     expect(noDuplicates).toEqual(positions);
   });
@@ -156,7 +156,7 @@ describe("Core/arrayRemoveDuplicates", function () {
     ];
     const noDuplicates = arrayRemoveDuplicates(
       positions,
-      Cartesian3.equalsEpsilon
+      Cartesian3.equalsEpsilon,
     );
     expect(noDuplicates).toEqual(expectedPositions);
   });
@@ -173,7 +173,7 @@ describe("Core/arrayRemoveDuplicates", function () {
     ];
     const noDuplicates = arrayRemoveDuplicates(
       positions,
-      Cartesian3.equalsEpsilon
+      Cartesian3.equalsEpsilon,
     );
     expect(noDuplicates).toEqual(expectedPositions);
   });
@@ -192,7 +192,7 @@ describe("Core/arrayRemoveDuplicates", function () {
     ];
     const noDuplicates = arrayRemoveDuplicates(
       positions,
-      Cartesian3.equalsEpsilon
+      Cartesian3.equalsEpsilon,
     );
     expect(noDuplicates).toEqual(expectedPositions);
   });
@@ -200,7 +200,7 @@ describe("Core/arrayRemoveDuplicates", function () {
   it("removeDuplicates returns undefined", function () {
     const noDuplicates = arrayRemoveDuplicates(
       undefined,
-      Cartesian3.equalsEpsilon
+      Cartesian3.equalsEpsilon,
     );
     expect(noDuplicates).toBe(undefined);
   });
@@ -214,7 +214,7 @@ describe("Core/arrayRemoveDuplicates", function () {
     ];
     const noDuplicates = arrayRemoveDuplicates(
       positions,
-      Cartesian3.equalsEpsilon
+      Cartesian3.equalsEpsilon,
     );
 
     expect(noDuplicates).toBe(positions);
@@ -237,7 +237,7 @@ describe("Core/arrayRemoveDuplicates", function () {
     const noDuplicates = arrayRemoveDuplicates(
       positions,
       Cartesian3.equalsEpsilon,
-      true
+      true,
     );
 
     expect(noDuplicates).toEqual(expectedPositions);
@@ -263,7 +263,7 @@ describe("Core/arrayRemoveDuplicates", function () {
     const noDuplicates = arrayRemoveDuplicates(
       positions,
       Cartesian3.equalsEpsilon,
-      true
+      true,
     );
 
     expect(noDuplicates).toEqual(expectedPositions);
@@ -291,7 +291,7 @@ describe("Core/arrayRemoveDuplicates", function () {
     const noDuplicates = arrayRemoveDuplicates(
       positions,
       Cartesian3.equalsEpsilon,
-      true
+      true,
     );
 
     expect(noDuplicates).toEqual(expectedPositions);
@@ -316,7 +316,7 @@ describe("Core/arrayRemoveDuplicates", function () {
     const noDuplicates = arrayRemoveDuplicates(
       positions,
       Cartesian3.equalsEpsilon,
-      true
+      true,
     );
 
     expect(noDuplicates).toEqual(expectedPositions);
@@ -331,7 +331,7 @@ describe("Core/arrayRemoveDuplicates", function () {
       positions,
       Cartesian3.equalsEpsilon,
       false,
-      removedIndices
+      removedIndices,
     );
 
     expect(noDuplicates).toBe(positions);
@@ -352,7 +352,7 @@ describe("Core/arrayRemoveDuplicates", function () {
       positions,
       Cartesian3.equalsEpsilon,
       false,
-      removedIndices
+      removedIndices,
     );
 
     expect(noDuplicates).toBe(positions);
@@ -382,7 +382,7 @@ describe("Core/arrayRemoveDuplicates", function () {
       positions,
       Cartesian3.equalsEpsilon,
       false,
-      removedIndices
+      removedIndices,
     );
 
     expect(noDuplicates).toEqual(expectedPositions);
@@ -403,7 +403,7 @@ describe("Core/arrayRemoveDuplicates", function () {
       positions,
       Cartesian3.equalsEpsilon,
       false,
-      removedIndices
+      removedIndices,
     );
 
     expect(noDuplicates).toBe(positions);
@@ -432,7 +432,7 @@ describe("Core/arrayRemoveDuplicates", function () {
       positions,
       Cartesian3.equalsEpsilon,
       true,
-      removedIndices
+      removedIndices,
     );
 
     expect(noDuplicates).toEqual(expectedPositions);
@@ -463,7 +463,7 @@ describe("Core/arrayRemoveDuplicates", function () {
       positions,
       Cartesian3.equalsEpsilon,
       true,
-      removedIndices
+      removedIndices,
     );
 
     expect(noDuplicates).toEqual(expectedPositions);
@@ -494,7 +494,7 @@ describe("Core/arrayRemoveDuplicates", function () {
       positions,
       Cartesian3.equalsEpsilon,
       true,
-      removedIndices
+      removedIndices,
     );
 
     expect(noDuplicates).toEqual(expectedPositions);
@@ -530,7 +530,7 @@ describe("Core/arrayRemoveDuplicates", function () {
       positions,
       Cartesian3.equalsEpsilon,
       true,
-      removedIndices
+      removedIndices,
     );
 
     expect(noDuplicates).toEqual(expectedPositions);

@@ -238,7 +238,7 @@ OIT.prototype.update = function (
   passState,
   framebuffer,
   useHDR,
-  numSamples
+  numSamples,
 ) {
   if (!this.isSupported()) {
     return;
@@ -365,7 +365,7 @@ OIT.prototype.update = function (
 
   const useScissorTest = !BoundingRectangle.equals(
     this._viewport,
-    passState.viewport
+    passState.viewport,
   );
   let updateScissor = useScissorTest !== this._useScissorTest;
   this._useScissorTest = useScissorTest;
@@ -373,7 +373,7 @@ OIT.prototype.update = function (
   if (!BoundingRectangle.equals(this._scissorRectangle, passState.viewport)) {
     this._scissorRectangle = BoundingRectangle.clone(
       passState.viewport,
-      this._scissorRectangle
+      this._scissorRectangle,
     );
     updateScissor = true;
   }
@@ -442,7 +442,7 @@ function getTranslucentRenderState(
   context,
   translucentBlending,
   cache,
-  renderState
+  renderState,
 ) {
   let translucentState = cache[renderState.id];
   if (!defined(translucentState)) {
@@ -462,7 +462,7 @@ function getTranslucentMRTRenderState(oit, context, renderState) {
     context,
     translucentMRTBlend,
     oit._translucentRenderStateCache,
-    renderState
+    renderState,
   );
 }
 
@@ -471,7 +471,7 @@ function getTranslucentColorRenderState(oit, context, renderState) {
     context,
     translucentColorBlend,
     oit._translucentRenderStateCache,
-    renderState
+    renderState,
   );
 }
 
@@ -480,7 +480,7 @@ function getTranslucentAlphaRenderState(oit, context, renderState) {
     context,
     translucentAlphaBlend,
     oit._alphaRenderStateCache,
-    renderState
+    renderState,
   );
 }
 
@@ -523,7 +523,7 @@ function getTranslucentShaderProgram(context, shaderProgram, keyword, source) {
       .replace(/out_FragColor/g, "czm_out_FragColor")
       .replace(
         /layout\s*\(location\s*=\s*0\)\s*out\s+vec4\s+out_FragColor;/g,
-        ""
+        "",
       )
       .replace(/\bdiscard\b/g, "czm_discard = true")
       .replace(/czm_phong/g, "czm_translucentPhong");
@@ -534,7 +534,7 @@ function getTranslucentShaderProgram(context, shaderProgram, keyword, source) {
   fs.sources.splice(
     0,
     0,
-    `vec4 czm_out_FragColor;\n` + `bool czm_discard = false;\n`
+    `vec4 czm_out_FragColor;\n` + `bool czm_discard = false;\n`,
   );
 
   const fragDataMatches = [...source.matchAll(/out_FragData_(\d+)/g)];
@@ -554,7 +554,7 @@ function getTranslucentShaderProgram(context, shaderProgram, keyword, source) {
       "    {\n" +
       "        discard;\n" +
       "    }\n"
-    }${source}}\n`
+    }${source}}\n`,
   );
 
   return shaderCache.createDerivedShaderProgram(shaderProgram, keyword, {
@@ -569,7 +569,7 @@ function getTranslucentMRTShaderProgram(context, shaderProgram) {
     context,
     shaderProgram,
     "translucentMRT",
-    mrtShaderSource
+    mrtShaderSource,
   );
 }
 
@@ -578,7 +578,7 @@ function getTranslucentColorShaderProgram(context, shaderProgram) {
     context,
     shaderProgram,
     "translucentMultipass",
-    colorShaderSource
+    colorShaderSource,
   );
 }
 
@@ -587,7 +587,7 @@ function getTranslucentAlphaShaderProgram(context, shaderProgram) {
     context,
     shaderProgram,
     "alphaMultipass",
-    alphaShaderSource
+    alphaShaderSource,
   );
 }
 
@@ -613,7 +613,7 @@ OIT.prototype.createDerivedCommands = function (command, context, result) {
 
     result.translucentCommand = DrawCommand.shallowClone(
       command,
-      result.translucentCommand
+      result.translucentCommand,
     );
 
     if (
@@ -622,12 +622,12 @@ OIT.prototype.createDerivedCommands = function (command, context, result) {
     ) {
       result.translucentCommand.shaderProgram = getTranslucentMRTShaderProgram(
         context,
-        command.shaderProgram
+        command.shaderProgram,
       );
       result.translucentCommand.renderState = getTranslucentMRTRenderState(
         this,
         context,
-        command.renderState
+        command.renderState,
       );
       result.shaderProgramId = command.shaderProgram.id;
     } else {
@@ -650,7 +650,7 @@ OIT.prototype.createDerivedCommands = function (command, context, result) {
 
   result.translucentCommand = DrawCommand.shallowClone(
     command,
-    result.translucentCommand
+    result.translucentCommand,
   );
   result.alphaCommand = DrawCommand.shallowClone(command, result.alphaCommand);
 
@@ -660,21 +660,21 @@ OIT.prototype.createDerivedCommands = function (command, context, result) {
   ) {
     result.translucentCommand.shaderProgram = getTranslucentColorShaderProgram(
       context,
-      command.shaderProgram
+      command.shaderProgram,
     );
     result.translucentCommand.renderState = getTranslucentColorRenderState(
       this,
       context,
-      command.renderState
+      command.renderState,
     );
     result.alphaCommand.shaderProgram = getTranslucentAlphaShaderProgram(
       context,
-      command.shaderProgram
+      command.shaderProgram,
     );
     result.alphaCommand.renderState = getTranslucentAlphaRenderState(
       this,
       context,
-      command.renderState
+      command.renderState,
     );
     result.shaderProgramId = command.shaderProgram.id;
   } else {
@@ -702,12 +702,8 @@ function executeTranslucentCommandsSortedMultipass(
   executeFunction,
   passState,
   commands,
-  invertClassification
+  invertClassification,
 ) {
-  let command;
-  let derivedCommand;
-  let j;
-
   const { context, frameState } = scene;
   const { useLogDepth, shadowState } = frameState;
   const useHdr = scene._hdr;
@@ -723,70 +719,46 @@ function executeTranslucentCommandsSortedMultipass(
   const debugFramebuffer = oit._opaqueFBO.framebuffer;
   passState.framebuffer = oit._translucentFBO.framebuffer;
 
-  for (j = 0; j < commands.length; ++j) {
-    command = commands[j];
+  for (let j = 0; j < commands.length; ++j) {
+    let command = commands[j];
     command = useLogDepth ? command.derivedCommands.logDepth.command : command;
     command = useHdr ? command.derivedCommands.hdr.command : command;
-    derivedCommand =
+    const derivedCommand =
       lightShadowsEnabled && command.receiveShadows
         ? command.derivedCommands.oit.shadows.translucentCommand
         : command.derivedCommands.oit.translucentCommand;
-    executeFunction(
-      derivedCommand,
-      scene,
-      context,
-      passState,
-      debugFramebuffer
-    );
+    executeFunction(derivedCommand, scene, passState, debugFramebuffer);
   }
 
   if (defined(invertClassification)) {
-    command = invertClassification.unclassifiedCommand;
-    derivedCommand =
+    const command = invertClassification.unclassifiedCommand;
+    const derivedCommand =
       lightShadowsEnabled && command.receiveShadows
         ? command.derivedCommands.oit.shadows.translucentCommand
         : command.derivedCommands.oit.translucentCommand;
-    executeFunction(
-      derivedCommand,
-      scene,
-      context,
-      passState,
-      debugFramebuffer
-    );
+    executeFunction(derivedCommand, scene, passState, debugFramebuffer);
   }
 
   passState.framebuffer = oit._alphaFBO.framebuffer;
 
-  for (j = 0; j < commands.length; ++j) {
-    command = commands[j];
+  for (let j = 0; j < commands.length; ++j) {
+    let command = commands[j];
     command = useLogDepth ? command.derivedCommands.logDepth.command : command;
     command = useHdr ? command.derivedCommands.hdr.command : command;
-    derivedCommand =
+    const derivedCommand =
       lightShadowsEnabled && command.receiveShadows
         ? command.derivedCommands.oit.shadows.alphaCommand
         : command.derivedCommands.oit.alphaCommand;
-    executeFunction(
-      derivedCommand,
-      scene,
-      context,
-      passState,
-      debugFramebuffer
-    );
+    executeFunction(derivedCommand, scene, passState, debugFramebuffer);
   }
 
   if (defined(invertClassification)) {
-    command = invertClassification.unclassifiedCommand;
-    derivedCommand =
+    const command = invertClassification.unclassifiedCommand;
+    const derivedCommand =
       lightShadowsEnabled && command.receiveShadows
         ? command.derivedCommands.oit.shadows.alphaCommand
         : command.derivedCommands.oit.alphaCommand;
-    executeFunction(
-      derivedCommand,
-      scene,
-      context,
-      passState,
-      debugFramebuffer
-    );
+    executeFunction(derivedCommand, scene, passState, debugFramebuffer);
   }
 
   passState.framebuffer = framebuffer;
@@ -807,7 +779,7 @@ function executeTranslucentCommandsSortedMRT(
   executeFunction,
   passState,
   commands,
-  invertClassification
+  invertClassification,
 ) {
   const { context, frameState } = scene;
   const { useLogDepth, shadowState } = frameState;
@@ -822,39 +794,24 @@ function executeTranslucentCommandsSortedMRT(
   const debugFramebuffer = oit._opaqueFBO.framebuffer;
   passState.framebuffer = oit._translucentFBO.framebuffer;
 
-  let command;
-  let derivedCommand;
-
   for (let j = 0; j < commands.length; ++j) {
-    command = commands[j];
+    let command = commands[j];
     command = useLogDepth ? command.derivedCommands.logDepth.command : command;
     command = useHdr ? command.derivedCommands.hdr.command : command;
-    derivedCommand =
+    const derivedCommand =
       lightShadowsEnabled && command.receiveShadows
         ? command.derivedCommands.oit.shadows.translucentCommand
         : command.derivedCommands.oit.translucentCommand;
-    executeFunction(
-      derivedCommand,
-      scene,
-      context,
-      passState,
-      debugFramebuffer
-    );
+    executeFunction(derivedCommand, scene, passState, debugFramebuffer);
   }
 
   if (defined(invertClassification)) {
-    command = invertClassification.unclassifiedCommand;
-    derivedCommand =
+    const command = invertClassification.unclassifiedCommand;
+    const derivedCommand =
       lightShadowsEnabled && command.receiveShadows
         ? command.derivedCommands.oit.shadows.translucentCommand
         : command.derivedCommands.oit.translucentCommand;
-    executeFunction(
-      derivedCommand,
-      scene,
-      context,
-      passState,
-      debugFramebuffer
-    );
+    executeFunction(derivedCommand, scene, passState, debugFramebuffer);
   }
 
   passState.framebuffer = framebuffer;
@@ -873,7 +830,7 @@ OIT.prototype.executeCommands = function (
   executeFunction,
   passState,
   commands,
-  invertClassification
+  invertClassification,
 ) {
   if (this._translucentMRTSupport) {
     executeTranslucentCommandsSortedMRT(
@@ -882,7 +839,7 @@ OIT.prototype.executeCommands = function (
       executeFunction,
       passState,
       commands,
-      invertClassification
+      invertClassification,
     );
     return;
   }
@@ -893,7 +850,7 @@ OIT.prototype.executeCommands = function (
     executeFunction,
     passState,
     commands,
-    invertClassification
+    invertClassification,
   );
 };
 

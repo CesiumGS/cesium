@@ -82,7 +82,7 @@ function metadataSuccess(text, imageryProviderBuilder) {
   } catch (e) {
     // Quote object strings manually, then try parsing again
     data = JSON.parse(
-      text.replace(/([\[\{,])[\n\r ]*([A-Za-z0-9]+)[\n\r ]*:/g, '$1"$2":')
+      text.replace(/([\[\{,])[\n\r ]*([A-Za-z0-9]+)[\n\r ]*:/g, '$1"$2":'),
     );
   }
 
@@ -138,7 +138,7 @@ function metadataFailure(error, metadataResource, provider) {
     undefined,
     provider,
     defined(provider) ? provider._errorEvent : undefined,
-    message
+    message,
   );
 
   throw new RuntimeError(message);
@@ -147,7 +147,7 @@ function metadataFailure(error, metadataResource, provider) {
 async function requestMetadata(
   metadataResource,
   imageryProviderBuilder,
-  provider
+  provider,
 ) {
   try {
     const text = await metadataResource.fetchText();
@@ -218,7 +218,7 @@ function GoogleEarthEnterpriseMapsProvider(options) {
   this._channel = options.channel;
   this._requestType = "ImageryMaps";
   this._credit = new Credit(
-    `<a href="http://www.google.com/enterprise/mapsearth/products/earthenterprise.html"><img src="${GoogleEarthEnterpriseMapsProvider.logoUrl}" title="Google Imagery"/></a>`
+    `<a href="http://www.google.com/enterprise/mapsearth/products/earthenterprise.html"><img src="${GoogleEarthEnterpriseMapsProvider.logoUrl}" title="Google Imagery"/></a>`,
   );
 
   this._tilingScheme = undefined;
@@ -451,7 +451,7 @@ Object.defineProperties(GoogleEarthEnterpriseMapsProvider.prototype, {
 GoogleEarthEnterpriseMapsProvider.fromUrl = async function (
   url,
   channel,
-  options
+  options,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("url", url);
@@ -503,7 +503,7 @@ GoogleEarthEnterpriseMapsProvider.fromUrl = async function (
 GoogleEarthEnterpriseMapsProvider.prototype.getTileCredits = function (
   x,
   y,
-  level
+  level,
 ) {
   return undefined;
 };
@@ -522,7 +522,7 @@ GoogleEarthEnterpriseMapsProvider.prototype.requestImage = function (
   x,
   y,
   level,
-  request
+  request,
 ) {
   const resource = this._resource.getDerivedResource({
     url: "query",
@@ -556,7 +556,7 @@ GoogleEarthEnterpriseMapsProvider.prototype.pickFeatures = function (
   y,
   level,
   longitude,
-  latitude
+  latitude,
 ) {
   return undefined;
 };
@@ -573,7 +573,7 @@ Object.defineProperties(GoogleEarthEnterpriseMapsProvider, {
     get: function () {
       if (!defined(GoogleEarthEnterpriseMapsProvider._logoUrl)) {
         GoogleEarthEnterpriseMapsProvider._logoUrl = buildModuleUrl(
-          "Assets/Images/google_earth_credit.png"
+          "Assets/Images/google_earth_credit.png",
         );
       }
       return GoogleEarthEnterpriseMapsProvider._logoUrl;

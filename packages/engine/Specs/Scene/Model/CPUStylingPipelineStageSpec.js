@@ -51,7 +51,7 @@ describe("Scene/Model/CPUStylingPipelineStage", function () {
     renderResources.model.colorBlendMode = ColorBlendMode.MIX;
     const colorBlend = ColorBlendMode.getColorBlend(
       renderResources.model.colorBlendMode,
-      renderResources.model.colorBlendAmount
+      renderResources.model.colorBlendAmount,
     );
 
     CPUStylingPipelineStage.process(renderResources);

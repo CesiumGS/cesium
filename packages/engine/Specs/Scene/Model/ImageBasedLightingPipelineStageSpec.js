@@ -35,7 +35,7 @@ describe("Scene/Model/ImageBasedLightingPipelineStage", function () {
     ImageBasedLightingPipelineStage.process(
       renderResources,
       mockModel,
-      mockFrameState
+      mockFrameState,
     );
 
     ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
@@ -56,19 +56,19 @@ describe("Scene/Model/ImageBasedLightingPipelineStage", function () {
     expect(
       Cartesian2.equals(
         uniformMap.model_iblFactor(),
-        imageBasedLighting.imageBasedLightingFactor
-      )
+        imageBasedLighting.imageBasedLightingFactor,
+      ),
     ).toBe(true);
 
     expect(
       Matrix3.equals(
         uniformMap.model_iblReferenceFrameMatrix(),
-        mockModel._iblReferenceFrameMatrix
-      )
+        mockModel._iblReferenceFrameMatrix,
+      ),
     ).toBe(true);
 
     expect(uniformMap.model_luminanceAtZenith()).toEqual(
-      imageBasedLighting.luminanceAtZenith
+      imageBasedLighting.luminanceAtZenith,
     );
   });
 
@@ -106,7 +106,7 @@ describe("Scene/Model/ImageBasedLightingPipelineStage", function () {
     ImageBasedLightingPipelineStage.process(
       renderResources,
       mockModel,
-      mockFrameState
+      mockFrameState,
     );
 
     ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
@@ -124,19 +124,19 @@ describe("Scene/Model/ImageBasedLightingPipelineStage", function () {
     expect(
       Cartesian2.equals(
         uniformMap.model_iblFactor(),
-        imageBasedLighting.imageBasedLightingFactor
-      )
+        imageBasedLighting.imageBasedLightingFactor,
+      ),
     ).toBe(true);
 
     expect(
       Matrix3.equals(
         uniformMap.model_iblReferenceFrameMatrix(),
-        mockModel._iblReferenceFrameMatrix
-      )
+        mockModel._iblReferenceFrameMatrix,
+      ),
     ).toBe(true);
 
     expect(uniformMap.model_sphericalHarmonicCoefficients()).toBe(
-      testCoefficients
+      testCoefficients,
     );
   });
 
@@ -169,7 +169,7 @@ describe("Scene/Model/ImageBasedLightingPipelineStage", function () {
     ImageBasedLightingPipelineStage.process(
       renderResources,
       mockModel,
-      mockFrameState
+      mockFrameState,
     );
 
     ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
@@ -188,15 +188,15 @@ describe("Scene/Model/ImageBasedLightingPipelineStage", function () {
     expect(
       Cartesian2.equals(
         uniformMap.model_iblFactor(),
-        imageBasedLighting.imageBasedLightingFactor
-      )
+        imageBasedLighting.imageBasedLightingFactor,
+      ),
     ).toBe(true);
 
     expect(
       Matrix3.equals(
         uniformMap.model_iblReferenceFrameMatrix(),
-        mockModel._iblReferenceFrameMatrix
-      )
+        mockModel._iblReferenceFrameMatrix,
+      ),
     ).toBe(true);
 
     expect(uniformMap.model_specularEnvironmentMaps()).toBeDefined();

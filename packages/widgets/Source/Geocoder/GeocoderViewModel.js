@@ -161,7 +161,7 @@ function GeocoderViewModel(options) {
    */
   this.destinationFound = defaultValue(
     options.destinationFound,
-    GeocoderViewModel.flyToDestination
+    GeocoderViewModel.flyToDestination,
   );
 
   this._focusTextbox = false;
@@ -318,7 +318,7 @@ function handleArrowUp(viewModel) {
     return;
   }
   const currentIndex = viewModel._suggestions.indexOf(
-    viewModel._selectedSuggestion
+    viewModel._selectedSuggestion,
   );
   if (currentIndex === -1 || currentIndex === 0) {
     viewModel._selectedSuggestion = undefined;
@@ -335,7 +335,7 @@ function handleArrowDown(viewModel) {
   }
   const numberOfSuggestions = viewModel._suggestions.length;
   const currentIndex = viewModel._suggestions.indexOf(
-    viewModel._selectedSuggestion
+    viewModel._selectedSuggestion,
   );
   const next = (currentIndex + 1) % numberOfSuggestions;
   viewModel._selectedSuggestion = viewModel._suggestions[next];
@@ -358,7 +358,7 @@ function computeFlyToLocationForCartographic(cartographic, terrainProvider) {
       cartographic = positionOnTerrain[0];
       cartographic.height += DEFAULT_HEIGHT;
       return cartographic;
-    }
+    },
   );
 }
 
@@ -377,12 +377,12 @@ function flyToDestination(viewModel, destination) {
       CesiumMath.equalsEpsilon(
         destination.south,
         destination.north,
-        CesiumMath.EPSILON7
+        CesiumMath.EPSILON7,
       ) &&
       CesiumMath.equalsEpsilon(
         destination.east,
         destination.west,
-        CesiumMath.EPSILON7
+        CesiumMath.EPSILON7,
       )
     ) {
       // destination is now a Cartographic
@@ -474,7 +474,7 @@ async function geocode(viewModel, geocoderServices, geocodeType) {
     viewModel.destinationFound(viewModel, geocoderResults[0].destination);
     const credits = updateCredits(
       viewModel,
-      GeocoderService.getCreditsFromResult(geocoderResults[0])
+      GeocoderService.getCreditsFromResult(geocoderResults[0]),
     );
     // If the result does not contain any credits, default to the service credit.
     if (!defined(credits)) {

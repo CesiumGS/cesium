@@ -10,7 +10,9 @@
   padding: 0 32px 0 0;
   border-radius: 0;
   box-sizing: border-box;
-  transition: width ease-in-out 0.25s, background-color 0.2s ease-in-out;
+  transition:
+    width ease-in-out 0.25s,
+    background-color 0.2s ease-in-out;
   -webkit-appearance: none;
 }
 

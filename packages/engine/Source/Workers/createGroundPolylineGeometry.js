@@ -7,7 +7,7 @@ function createGroundPolylineGeometry(groundPolylineGeometry, offset) {
     if (defined(offset)) {
       groundPolylineGeometry = GroundPolylineGeometry.unpack(
         groundPolylineGeometry,
-        offset
+        offset,
       );
     }
     return GroundPolylineGeometry.createGeometry(groundPolylineGeometry);

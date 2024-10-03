@@ -144,7 +144,7 @@ describe(
     async function loadI3dm(i3dmPath) {
       const arrayBuffer = await Resource.fetchArrayBuffer(i3dmPath);
       const i3dmLoader = new I3dmLoader(
-        getI3dmOptions(i3dmPath, { arrayBuffer: arrayBuffer })
+        getI3dmOptions(i3dmPath, { arrayBuffer: arrayBuffer }),
       );
       gltfLoaders.push(i3dmLoader);
       await i3dmLoader.load();
@@ -170,17 +170,17 @@ describe(
         InstancingPipelineStage.process(
           renderResources,
           node,
-          scene.frameState
+          scene.frameState,
         );
 
         expect(renderResources.attributes.length).toBe(4);
 
         const runtimeNode = renderResources.runtimeNode;
         expect(runtimeNode.instancingTranslationMin).toEqual(
-          new Cartesian3(-2, -2, 0)
+          new Cartesian3(-2, -2, 0),
         );
         expect(runtimeNode.instancingTranslationMax).toEqual(
-          new Cartesian3(2, 2, 0)
+          new Cartesian3(2, 2, 0),
         );
 
         // Ensure that the max / min are only computed once by checking if
@@ -188,56 +188,56 @@ describe(
         InstancingPipelineStage.process(
           renderResources,
           node,
-          scene.frameState
+          scene.frameState,
         );
 
         expect(runtimeNode.instancingTranslationMin).toEqual(
-          new Cartesian3(-2, -2, 0)
+          new Cartesian3(-2, -2, 0),
         );
         expect(runtimeNode.instancingTranslationMax).toEqual(
-          new Cartesian3(2, 2, 0)
+          new Cartesian3(2, 2, 0),
         );
       });
     });
 
     it("sets instancing TRANSLATION min and max from attributes", function () {
-      return loadGltf(boxInstancedTranslationMinMax).then(function (
-        gltfLoader
-      ) {
-        const components = gltfLoader.components;
-        const node = components.nodes[0];
-        const renderResources = mockRenderResources(node);
+      return loadGltf(boxInstancedTranslationMinMax).then(
+        function (gltfLoader) {
+          const components = gltfLoader.components;
+          const node = components.nodes[0];
+          const renderResources = mockRenderResources(node);
 
-        InstancingPipelineStage.process(
-          renderResources,
-          node,
-          scene.frameState
-        );
+          InstancingPipelineStage.process(
+            renderResources,
+            node,
+            scene.frameState,
+          );
 
-        expect(renderResources.attributes.length).toBe(1);
+          expect(renderResources.attributes.length).toBe(1);
 
-        const runtimeNode = renderResources.runtimeNode;
-        expect(runtimeNode.instancingTranslationMax).toEqual(
-          new Cartesian3(2, 2, 0)
-        );
-        expect(runtimeNode.instancingTranslationMin).toEqual(
-          new Cartesian3(-2, -2, 0)
-        );
+          const runtimeNode = renderResources.runtimeNode;
+          expect(runtimeNode.instancingTranslationMax).toEqual(
+            new Cartesian3(2, 2, 0),
+          );
+          expect(runtimeNode.instancingTranslationMin).toEqual(
+            new Cartesian3(-2, -2, 0),
+          );
 
-        // Ensure that the max / min are still defined after the stage is re-run.
-        InstancingPipelineStage.process(
-          renderResources,
-          node,
-          scene.frameState
-        );
+          // Ensure that the max / min are still defined after the stage is re-run.
+          InstancingPipelineStage.process(
+            renderResources,
+            node,
+            scene.frameState,
+          );
 
-        expect(runtimeNode.instancingTranslationMin).toEqual(
-          new Cartesian3(-2, -2, 0)
-        );
-        expect(runtimeNode.instancingTranslationMax).toEqual(
-          new Cartesian3(2, 2, 0)
-        );
-      });
+          expect(runtimeNode.instancingTranslationMin).toEqual(
+            new Cartesian3(-2, -2, 0),
+          );
+          expect(runtimeNode.instancingTranslationMax).toEqual(
+            new Cartesian3(2, 2, 0),
+          );
+        },
+      );
     });
 
     it("creates instancing matrices vertex attributes when ROTATION is present", function () {
@@ -252,7 +252,7 @@ describe(
         InstancingPipelineStage.process(
           renderResources,
           node,
-          scene.frameState
+          scene.frameState,
         );
 
         expect(renderResources.attributes.length).toBe(4);
@@ -295,7 +295,7 @@ describe(
         InstancingPipelineStage.process(
           renderResources,
           node,
-          scene2D.frameState
+          scene2D.frameState,
         );
 
         expect(renderResources.attributes.length).toBe(7);
@@ -332,12 +332,12 @@ describe(
 
         const translationMatrix = Matrix4.fromTranslation(
           runtimeNode.instancingReferencePoint2D,
-          scratchMatrix4
+          scratchMatrix4,
         );
         const expectedMatrix = Matrix4.multiplyTransformation(
           scene2D.context.uniformState.view,
           translationMatrix,
-          scratchMatrix4
+          scratchMatrix4,
         );
         const uniformMap = renderResources.uniformMap;
         expect(uniformMap.u_modelView2D()).toEqual(expectedMatrix);
@@ -357,71 +357,33 @@ describe(
         const renderResources = mockRenderResources(node);
 
         const expectedTransformsTypedArray = new Float32Array([
-          0.5999999642372131,
-          0,
-          0,
-          -2,
-          0,
-          0.4949747323989868,
-          -0.7071067094802856,
-          2,
-          0,
-          0.49497467279434204,
-          0.7071067690849304,
-          0,
-          0.7071068286895752,
-          4.174155421310388e-8,
-          0.3535534143447876,
-          -2,
-          0.5,
-          0.7071068286895752,
-          -0.2500000298023224,
-          -2,
-          -0.5000000596046448,
-          0.7071068286895752,
-          0.25,
-          0,
-          0.375,
-          -0.10000001639127731,
-          0.3535534143447876,
-          2,
-          0.6401650905609131,
-          0.029289301484823227,
-          -0.2500000298023224,
-          -2,
-          0.10983504354953766,
-          0.1707106977701187,
-          0.25,
-          0,
-          0.4898979365825653,
-          -0.3674234449863434,
-          0.44999992847442627,
-          2,
-          0.5277916193008423,
-          0.028420301154255867,
-          -0.6749999523162842,
-          2,
-          0.3484765887260437,
-          0.4734894633293152,
-          0.3897113800048828,
-          0,
+          0.5999999642372131, 0, 0, -2, 0, 0.4949747323989868,
+          -0.7071067094802856, 2, 0, 0.49497467279434204, 0.7071067690849304, 0,
+          0.7071068286895752, 4.174155421310388e-8, 0.3535534143447876, -2, 0.5,
+          0.7071068286895752, -0.2500000298023224, -2, -0.5000000596046448,
+          0.7071068286895752, 0.25, 0, 0.375, -0.10000001639127731,
+          0.3535534143447876, 2, 0.6401650905609131, 0.029289301484823227,
+          -0.2500000298023224, -2, 0.10983504354953766, 0.1707106977701187,
+          0.25, 0, 0.4898979365825653, -0.3674234449863434, 0.44999992847442627,
+          2, 0.5277916193008423, 0.028420301154255867, -0.6749999523162842, 2,
+          0.3484765887260437, 0.4734894633293152, 0.3897113800048828, 0,
         ]);
-        const transforms = InstancingPipelineStage._getInstanceTransformsAsMatrices(
-          node.instances,
-          node.instances.attributes[0].count,
-          renderResources
-        );
-        const transformsTypedArray = InstancingPipelineStage._transformsToTypedArray(
-          transforms
-        );
+        const transforms =
+          InstancingPipelineStage._getInstanceTransformsAsMatrices(
+            node.instances,
+            node.instances.attributes[0].count,
+            renderResources,
+          );
+        const transformsTypedArray =
+          InstancingPipelineStage._transformsToTypedArray(transforms);
 
         expect(transformsTypedArray.length).toEqual(
-          expectedTransformsTypedArray.length
+          expectedTransformsTypedArray.length,
         );
         for (let i = 0; i < expectedTransformsTypedArray.length; i++) {
           expect(transformsTypedArray[i]).toEqualEpsilon(
             expectedTransformsTypedArray[i],
-            CesiumMath.EPSILON10
+            CesiumMath.EPSILON10,
           );
         }
       });
@@ -433,96 +395,85 @@ describe(
         return;
       }
 
-      return loadGltf(instancedWithNormalizedRotation).then(function (
-        gltfLoader
-      ) {
-        const components = gltfLoader.components;
-        const node = components.nodes[0];
-        const renderResources = mockRenderResources(node);
+      return loadGltf(instancedWithNormalizedRotation).then(
+        function (gltfLoader) {
+          const components = gltfLoader.components;
+          const node = components.nodes[0];
+          const renderResources = mockRenderResources(node);
 
-        // Check that the first two matrices are dequantized correctly. The
-        // first matrix is the identity matrix, and the second matrix has a
-        // slight translation, rotation and scale.
-        const secondMatrixComponents = [
-          1.1007905724243354,
-          0.07140440309598281,
-          -0.1331359457080602,
-          0,
-          -0.04344372372420601,
-          1.0874251248973055,
-          0.22401538735190446,
-          0,
-          0.1446942006095891,
-          -0.21672946758564085,
-          1.0801183172918447,
-          0,
-          1.1111111640930176,
-          1.1111111640930176,
-          1.1111111640930176,
-          1,
-        ];
-        const expectedTransforms = [
-          Matrix4.IDENTITY,
-          Matrix4.unpack(secondMatrixComponents),
-        ];
+          // Check that the first two matrices are dequantized correctly. The
+          // first matrix is the identity matrix, and the second matrix has a
+          // slight translation, rotation and scale.
+          const secondMatrixComponents = [
+            1.1007905724243354, 0.07140440309598281, -0.1331359457080602, 0,
+            -0.04344372372420601, 1.0874251248973055, 0.22401538735190446, 0,
+            0.1446942006095891, -0.21672946758564085, 1.0801183172918447, 0,
+            1.1111111640930176, 1.1111111640930176, 1.1111111640930176, 1,
+          ];
+          const expectedTransforms = [
+            Matrix4.IDENTITY,
+            Matrix4.unpack(secondMatrixComponents),
+          ];
 
-        const transforms = InstancingPipelineStage._getInstanceTransformsAsMatrices(
-          node.instances,
-          node.instances.attributes[0].count,
-          renderResources
-        );
+          const transforms =
+            InstancingPipelineStage._getInstanceTransformsAsMatrices(
+              node.instances,
+              node.instances.attributes[0].count,
+              renderResources,
+            );
 
-        expect(transforms.length).toBe(10);
+          expect(transforms.length).toBe(10);
 
-        const length = expectedTransforms.length;
-        for (let i = 0; i < length; i++) {
-          expect(transforms[i]).toEqualEpsilon(
-            expectedTransforms[i],
-            CesiumMath.EPSILON10
-          );
-        }
-      });
+          const length = expectedTransforms.length;
+          for (let i = 0; i < length; i++) {
+            expect(transforms[i]).toEqualEpsilon(
+              expectedTransforms[i],
+              CesiumMath.EPSILON10,
+            );
+          }
+        },
+      );
     });
 
     it("creates TRANSLATION vertex attributes with min/max present", function () {
-      return loadGltf(boxInstancedTranslationMinMax).then(function (
-        gltfLoader
-      ) {
-        const components = gltfLoader.components;
-        const node = components.nodes[0];
-        const renderResources = mockRenderResources(node);
+      return loadGltf(boxInstancedTranslationMinMax).then(
+        function (gltfLoader) {
+          const components = gltfLoader.components;
+          const node = components.nodes[0];
+          const renderResources = mockRenderResources(node);
 
-        scene.renderForSpecs();
-        InstancingPipelineStage.process(
-          renderResources,
-          node,
-          scene.frameState
-        );
+          scene.renderForSpecs();
+          InstancingPipelineStage.process(
+            renderResources,
+            node,
+            scene.frameState,
+          );
 
-        expect(renderResources.attributes.length).toBe(1);
+          expect(renderResources.attributes.length).toBe(1);
 
-        const shaderBuilder = renderResources.shaderBuilder;
-        ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
-          "HAS_INSTANCING",
-          "HAS_INSTANCE_TRANSLATION",
-        ]);
-        ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
-          "HAS_INSTANCING",
-          "HAS_INSTANCE_TRANSLATION",
-        ]);
+          const shaderBuilder = renderResources.shaderBuilder;
+          ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
+            "HAS_INSTANCING",
+            "HAS_INSTANCE_TRANSLATION",
+          ]);
+          ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
+            "HAS_INSTANCING",
+            "HAS_INSTANCE_TRANSLATION",
+          ]);
 
-        ShaderBuilderTester.expectHasAttributes(shaderBuilder, undefined, [
-          "in vec3 a_instanceTranslation;",
-        ]);
+          ShaderBuilderTester.expectHasAttributes(shaderBuilder, undefined, [
+            "in vec3 a_instanceTranslation;",
+          ]);
 
-        // No additional buffer was created.
-        expect(renderResources.model._pipelineResources.length).toEqual(0);
-        expect(renderResources.model._modelResources.length).toEqual(0);
+          // No additional buffer was created.
+          expect(renderResources.model._pipelineResources.length).toEqual(0);
+          expect(renderResources.model._modelResources.length).toEqual(0);
 
-        // Attributes with buffers already loaded in will be counted
-        // in NodeStatisticsPipelineStage.
-        expect(renderResources.model.statistics.geometryByteLength).toBe(0);
-      });
+          // Attributes with buffers already loaded in will be counted
+          // in NodeStatisticsPipelineStage.
+          expect(renderResources.model.statistics.geometryByteLength).toBe(0);
+        },
+      );
     });
 
     it("creates TRANSLATION vertex attributes without min/max present", function () {
@@ -536,14 +487,14 @@ describe(
         InstancingPipelineStage.process(
           renderResources,
           node,
-          scene.frameState
+          scene.frameState,
         );
 
         expect(renderResources.attributes.length).toBe(1);
 
         const translationAttribute = ModelUtility.getAttributeBySemantic(
           instances,
-          InstanceAttributeSemantic.TRANSLATION
+          InstanceAttributeSemantic.TRANSLATION,
         );
         // Expect the typed array to be unloaded.
         expect(translationAttribute.typedArray).toBeUndefined();
@@ -591,14 +542,14 @@ describe(
         InstancingPipelineStage.process(
           renderResources,
           node,
-          scene2D.frameState
+          scene2D.frameState,
         );
 
         expect(renderResources.attributes.length).toBe(2);
 
         const translationAttribute = ModelUtility.getAttributeBySemantic(
           instances,
-          InstanceAttributeSemantic.TRANSLATION
+          InstanceAttributeSemantic.TRANSLATION,
         );
         // Expect the typed array to be unloaded.
         expect(translationAttribute.typedArray).toBeUndefined();
@@ -627,12 +578,12 @@ describe(
 
         const translationMatrix = Matrix4.fromTranslation(
           runtimeNode.instancingReferencePoint2D,
-          scratchMatrix4
+          scratchMatrix4,
         );
         const expectedMatrix = Matrix4.multiplyTransformation(
           scene2D.context.uniformState.view,
           translationMatrix,
-          scratchMatrix4
+          scratchMatrix4,
         );
         const uniformMap = renderResources.uniformMap;
         expect(uniformMap.u_modelView2D()).toEqual(expectedMatrix);
@@ -662,14 +613,14 @@ describe(
             axisCorrectionMatrix: ModelUtility.getAxisCorrectionMatrix(
               Axis.Y,
               Axis.Z,
-              new Matrix4()
+              new Matrix4(),
             ),
           },
         },
         uniformMap: {},
         runtimeNode: {
           computedTransform: Matrix4.fromTranslation(
-            new Cartesian3(0.0, 2.0, 0.0)
+            new Cartesian3(0.0, 2.0, 0.0),
           ),
         },
       };
@@ -690,7 +641,7 @@ describe(
         InstancingPipelineStage.process(
           renderResources,
           node,
-          scene.frameState
+          scene.frameState,
         );
 
         ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
@@ -722,18 +673,18 @@ describe(
         let expectedModelView = Matrix4.multiplyTransformation(
           view,
           modelMatrix,
-          new Matrix4()
+          new Matrix4(),
         );
         expectedModelView = Matrix4.multiplyTransformation(
           expectedModelView,
           rtcTransform,
-          expectedModelView
+          expectedModelView,
         );
 
         const uniformMap = renderResources.uniformMap;
         expect(uniformMap.u_instance_modifiedModelView()).toEqualEpsilon(
           expectedModelView,
-          CesiumMath.EPSILON8
+          CesiumMath.EPSILON8,
         );
 
         // The second part of the matrix.
@@ -744,11 +695,11 @@ describe(
         const expectedNodeTransform = Matrix4.multiplyTransformation(
           axisCorrection,
           computedTransform,
-          new Matrix4()
+          new Matrix4(),
         );
         expect(uniformMap.u_instance_nodeTransform()).toEqualEpsilon(
           expectedNodeTransform,
-          CesiumMath.EPSILON8
+          CesiumMath.EPSILON8,
         );
 
         // The matrix transforms buffer will be counted by NodeStatisticsPipelineStage.
@@ -756,5 +707,5 @@ describe(
       });
     });
   },
-  "WebGL"
+  "WebGL",
 );

@@ -57,15 +57,15 @@ function getHeatmapValue(tileValue, tilePropertyName) {
 Cesium3DTilesetHeatmap.prototype.setReferenceMinimumMaximum = function (
   minimum,
   maximum,
-  tilePropertyName
+  tilePropertyName,
 ) {
   this._referenceMinimum[tilePropertyName] = getHeatmapValue(
     minimum,
-    tilePropertyName
+    tilePropertyName,
   );
   this._referenceMaximum[tilePropertyName] = getHeatmapValue(
     maximum,
-    tilePropertyName
+    tilePropertyName,
   );
 };
 
@@ -74,7 +74,7 @@ function getHeatmapValueAndUpdateMinimumMaximum(heatmap, tile) {
   if (defined(tilePropertyName)) {
     const heatmapValue = getHeatmapValue(
       tile[tilePropertyName],
-      tilePropertyName
+      tilePropertyName,
     );
     if (!defined(heatmapValue)) {
       heatmap.tilePropertyName = undefined;
@@ -123,7 +123,7 @@ Cesium3DTilesetHeatmap.prototype.colorize = function (tile, frameState) {
   const shiftedValue = CesiumMath.clamp(
     heatmapValue - minimum,
     0.0,
-    shiftedMax
+    shiftedMax,
   );
 
   // Get position between minimum and maximum and convert that to a position in the color array

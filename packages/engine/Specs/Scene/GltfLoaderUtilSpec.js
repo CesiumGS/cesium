@@ -173,7 +173,7 @@ describe(
       expect(sampler.wrapT).toBe(TextureWrap.REPEAT);
       expect(sampler.minificationFilter).toBe(TextureMinificationFilter.LINEAR);
       expect(sampler.magnificationFilter).toBe(
-        TextureMagnificationFilter.LINEAR
+        TextureMagnificationFilter.LINEAR,
       );
     });
 
@@ -203,10 +203,10 @@ describe(
       expect(sampler.wrapS).toBe(TextureWrap.REPEAT);
       expect(sampler.wrapT).toBe(TextureWrap.REPEAT);
       expect(sampler.minificationFilter).toBe(
-        TextureMinificationFilter.NEAREST
+        TextureMinificationFilter.NEAREST,
       );
       expect(sampler.magnificationFilter).toBe(
-        TextureMagnificationFilter.LINEAR
+        TextureMagnificationFilter.LINEAR,
       );
     });
 
@@ -237,7 +237,7 @@ describe(
       expect(sampler.wrapT).toBe(TextureWrap.REPEAT);
       expect(sampler.minificationFilter).toBe(TextureMinificationFilter.LINEAR);
       expect(sampler.magnificationFilter).toBe(
-        TextureMagnificationFilter.LINEAR
+        TextureMagnificationFilter.LINEAR,
       );
     });
 
@@ -284,7 +284,7 @@ describe(
       expect(sampler.wrapT).toBe(TextureWrap.REPEAT);
       expect(sampler.minificationFilter).toBe(TextureMinificationFilter.LINEAR);
       expect(sampler.magnificationFilter).toBe(
-        TextureMagnificationFilter.LINEAR
+        TextureMagnificationFilter.LINEAR,
       );
     });
 
@@ -402,5 +402,5 @@ describe(
       }).toThrowDeveloperError();
     });
   },
-  "WebGL"
+  "WebGL",
 );

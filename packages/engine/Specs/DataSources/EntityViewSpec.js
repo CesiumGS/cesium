@@ -56,7 +56,7 @@ describe(
       EntityView.defaultOffset3D = sampleOffset;
       const entity = new Entity();
       entity.position = new ConstantPositionProperty(
-        Cartesian3.fromDegrees(0.0, 0.0)
+        Cartesian3.fromDegrees(0.0, 0.0),
       );
       const view = new EntityView(entity, scene);
       view.update(JulianDate.now());
@@ -68,7 +68,7 @@ describe(
       const sampleOffset = new Cartesian3(1, 2, 3);
       const entity = new Entity();
       entity.position = new ConstantPositionProperty(
-        Cartesian3.fromDegrees(0.0, 0.0)
+        Cartesian3.fromDegrees(0.0, 0.0),
       );
       entity.viewFrom = sampleOffset;
       const view = new EntityView(entity, scene);
@@ -80,16 +80,16 @@ describe(
       const sampleOffset = new Cartesian3(
         -1.3322676295501878e-15,
         -7.348469228349534,
-        7.3484692283495345
+        7.3484692283495345,
       );
       const entity = new Entity();
       entity.position = new ConstantPositionProperty(
-        Cartesian3.fromDegrees(0.0, 0.0)
+        Cartesian3.fromDegrees(0.0, 0.0),
       );
       const view = new EntityView(entity, scene, undefined);
       view.update(
         JulianDate.now(),
-        new BoundingSphere(new Cartesian3(3, 4, 5), 6)
+        new BoundingSphere(new Cartesian3(3, 4, 5), 6),
       );
       expect(view.scene.camera.position).toEqualEpsilon(sampleOffset, 1e-10);
     });
@@ -98,14 +98,14 @@ describe(
       const sampleOffset = new Cartesian3(1, 2, 3);
       const entity = new Entity();
       entity.position = new ConstantPositionProperty(
-        Cartesian3.fromDegrees(0.0, 0.0)
+        Cartesian3.fromDegrees(0.0, 0.0),
       );
       entity.viewFrom = sampleOffset;
       const view = new EntityView(
         entity,
         scene,
         undefined,
-        new BoundingSphere(new Cartesian3(3, 4, 5), 6)
+        new BoundingSphere(new Cartesian3(3, 4, 5), 6),
       );
       view.update(JulianDate.now());
       expect(view.scene.camera.position).toEqualEpsilon(sampleOffset, 1e-10);
@@ -126,5 +126,5 @@ describe(
       view.update(JulianDate.now());
     });
   },
-  "WebGL"
+  "WebGL",
 );

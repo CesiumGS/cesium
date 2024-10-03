@@ -68,7 +68,7 @@ function WallOutlineGeometry(options) {
     maximumHeights.length !== wallPositions.length
   ) {
     throw new DeveloperError(
-      "options.positions and options.maximumHeights must have the same length."
+      "options.positions and options.maximumHeights must have the same length.",
     );
   }
   if (
@@ -76,14 +76,14 @@ function WallOutlineGeometry(options) {
     minimumHeights.length !== wallPositions.length
   ) {
     throw new DeveloperError(
-      "options.positions and options.minimumHeights must have the same length."
+      "options.positions and options.minimumHeights must have the same length.",
     );
   }
   //>>includeEnd('debug');
 
   const granularity = defaultValue(
     options.granularity,
-    CesiumMath.RADIANS_PER_DEGREE
+    CesiumMath.RADIANS_PER_DEGREE,
   );
   const ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.default);
 
@@ -338,7 +338,7 @@ WallOutlineGeometry.createGeometry = function (wallGeometry) {
     maximumHeights,
     minimumHeights,
     granularity,
-    false
+    false,
   );
   if (!defined(pos)) {
     return;
@@ -362,12 +362,12 @@ WallOutlineGeometry.createGeometry = function (wallGeometry) {
     const topPosition = Cartesian3.fromArray(
       topPositions,
       i3,
-      scratchCartesian3Position1
+      scratchCartesian3Position1,
     );
     const bottomPosition = Cartesian3.fromArray(
       bottomPositions,
       i3,
-      scratchCartesian3Position2
+      scratchCartesian3Position2,
     );
 
     // insert the lower point
@@ -400,12 +400,12 @@ WallOutlineGeometry.createGeometry = function (wallGeometry) {
     const pl = Cartesian3.fromArray(
       positions,
       LL * 3,
-      scratchCartesian3Position1
+      scratchCartesian3Position1,
     );
     const pr = Cartesian3.fromArray(
       positions,
       LR * 3,
-      scratchCartesian3Position2
+      scratchCartesian3Position2,
     );
     if (Cartesian3.equalsEpsilon(pl, pr, CesiumMath.EPSILON10)) {
       continue;

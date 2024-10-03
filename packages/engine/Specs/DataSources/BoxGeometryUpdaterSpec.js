@@ -38,7 +38,7 @@ describe(
       box.dimensions = new ConstantProperty(new Cartesian3(1, 2, 3));
       const entity = new Entity();
       entity.position = new ConstantPositionProperty(
-        Cartesian3.fromDegrees(0, 0, 0)
+        Cartesian3.fromDegrees(0, 0, 0),
       );
       entity.box = box;
       return entity;
@@ -74,14 +74,14 @@ describe(
       instance = updater.createFillGeometryInstance(time);
       geometry = instance.geometry;
       expect(geometry._maximum).toEqual(
-        Cartesian3.multiplyByScalar(dimensions, 0.5, new Cartesian3())
+        Cartesian3.multiplyByScalar(dimensions, 0.5, new Cartesian3()),
       );
       expect(geometry._offsetAttribute).toBeUndefined();
 
       instance = updater.createOutlineGeometryInstance(time);
       geometry = instance.geometry;
       expect(geometry._max).toEqual(
-        Cartesian3.multiplyByScalar(dimensions, 0.5, new Cartesian3())
+        Cartesian3.multiplyByScalar(dimensions, 0.5, new Cartesian3()),
       );
       expect(geometry._offsetAttribute).toBeUndefined();
     });
@@ -111,29 +111,29 @@ describe(
       expect(instance.geometry._offsetAttribute).toBeUndefined();
 
       graphics.heightReference = new ConstantProperty(
-        HeightReference.CLAMP_TO_GROUND
+        HeightReference.CLAMP_TO_GROUND,
       );
       updater._onEntityPropertyChanged(entity, "box");
       instance = updater.createFillGeometryInstance(time);
       expect(instance.geometry._offsetAttribute).toEqual(
-        GeometryOffsetAttribute.ALL
+        GeometryOffsetAttribute.ALL,
       );
       instance = updater.createOutlineGeometryInstance(time);
       expect(instance.geometry._offsetAttribute).toEqual(
-        GeometryOffsetAttribute.ALL
+        GeometryOffsetAttribute.ALL,
       );
 
       graphics.heightReference = new ConstantProperty(
-        HeightReference.RELATIVE_TO_GROUND
+        HeightReference.RELATIVE_TO_GROUND,
       );
       updater._onEntityPropertyChanged(entity, "box");
       instance = updater.createFillGeometryInstance(time);
       expect(instance.geometry._offsetAttribute).toEqual(
-        GeometryOffsetAttribute.ALL
+        GeometryOffsetAttribute.ALL,
       );
       instance = updater.createOutlineGeometryInstance(time);
       expect(instance.geometry._offsetAttribute).toEqual(
-        GeometryOffsetAttribute.ALL
+        GeometryOffsetAttribute.ALL,
       );
     });
 
@@ -143,12 +143,12 @@ describe(
       const updater = new BoxGeometryUpdater(entity, scene);
       const dynamicUpdater = updater.createDynamicUpdater(
         new PrimitiveCollection(),
-        new PrimitiveCollection()
+        new PrimitiveCollection(),
       );
       dynamicUpdater.update(JulianDate.now());
 
       expect(dynamicUpdater._options.dimensions).toEqual(
-        entity.box.dimensions.getValue()
+        entity.box.dimensions.getValue(),
       );
       expect(dynamicUpdater._options.offsetAttribute).toBeUndefined();
     });
@@ -186,7 +186,7 @@ describe(
       const updater = new BoxGeometryUpdater(entity, scene);
 
       expect(updater._computeCenter(time)).toEqual(
-        entity.position.getValue(time)
+        entity.position.getValue(time),
       );
     });
 
@@ -198,15 +198,15 @@ describe(
       BoxGeometryUpdater,
       "box",
       createBasicBox,
-      getScene
+      getScene,
     );
 
     createDynamicGeometryUpdaterSpecs(
       BoxGeometryUpdater,
       "box",
       createDynamicBox,
-      getScene
+      getScene,
     );
   },
-  "WebGL"
+  "WebGL",
 );

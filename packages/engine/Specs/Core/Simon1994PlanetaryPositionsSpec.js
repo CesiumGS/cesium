@@ -84,14 +84,15 @@ describe("Core/Simon1994PlanetaryPositions", function () {
     for (i = 0; i < 24; i++) {
       transformMatrix = Transforms.computeIcrfToCentralBodyFixedMatrix(
         timesOfDay[i],
-        transformMatrix
+        transformMatrix,
       );
-      const position = PlanetaryPositions.computeSunPositionInEarthInertialFrame(
-        timesOfDay[i]
-      );
+      const position =
+        PlanetaryPositions.computeSunPositionInEarthInertialFrame(
+          timesOfDay[i],
+        );
       Matrix3.multiplyByVector(transformMatrix, position, position);
       angles.push(
-        CesiumMath.convertLongitudeRange(Math.atan2(position.y, position.x))
+        CesiumMath.convertLongitudeRange(Math.atan2(position.y, position.x)),
       );
     }
     //Expect a clockwise motion.

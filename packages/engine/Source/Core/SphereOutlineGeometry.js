@@ -65,7 +65,7 @@ SphereOutlineGeometry.pack = function (value, array, startingIndex) {
   return EllipsoidOutlineGeometry.pack(
     value._ellipsoidGeometry,
     array,
-    startingIndex
+    startingIndex,
   );
 };
 
@@ -90,7 +90,7 @@ SphereOutlineGeometry.unpack = function (array, startingIndex, result) {
   const ellipsoidGeometry = EllipsoidOutlineGeometry.unpack(
     array,
     startingIndex,
-    scratchEllipsoidGeometry
+    scratchEllipsoidGeometry,
   );
   scratchOptions.stackPartitions = ellipsoidGeometry._stackPartitions;
   scratchOptions.slicePartitions = ellipsoidGeometry._slicePartitions;
@@ -114,7 +114,7 @@ SphereOutlineGeometry.unpack = function (array, startingIndex, result) {
  */
 SphereOutlineGeometry.createGeometry = function (sphereGeometry) {
   return EllipsoidOutlineGeometry.createGeometry(
-    sphereGeometry._ellipsoidGeometry
+    sphereGeometry._ellipsoidGeometry,
   );
 };
 export default SphereOutlineGeometry;

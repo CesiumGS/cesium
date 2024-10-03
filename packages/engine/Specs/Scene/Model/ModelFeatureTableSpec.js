@@ -131,7 +131,7 @@ describe("Scene/Model/ModelFeatureTable", function () {
         for (let i = 0; i < modelFeatures.length; i++) {
           const feature = modelFeatures[i];
           expect(feature.getProperty(propertyName)).toEqual(
-            propertyValues[propertyName][i]
+            propertyValues[propertyName][i],
           );
         }
       }
@@ -154,7 +154,7 @@ describe("Scene/Model/ModelFeatureTable", function () {
     for (i = 0; i < modelFeatures.length; i++) {
       feature = modelFeatures[i];
       expect(feature.getPropertyInherited("height")).toEqual(
-        propertyValues["height"][i]
+        propertyValues["height"][i],
       );
       expect(feature.getPropertyInherited("_height")).toBeUndefined();
     }
@@ -163,7 +163,7 @@ describe("Scene/Model/ModelFeatureTable", function () {
     for (i = 0; i < modelFeatures.length; i++) {
       feature = modelFeatures[i];
       expect(feature.getPropertyInherited("HEIGHT_SEMANTIC")).toEqual(
-        propertyValues["height"][i]
+        propertyValues["height"][i],
       );
       expect(feature.getPropertyInherited("_HEIGHT_")).toBeUndefined();
     }

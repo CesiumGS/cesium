@@ -252,5 +252,5 @@ describe(
       expect(nominalListener).toHaveBeenCalled();
     });
   },
-  "WebGL"
+  "WebGL",
 );
