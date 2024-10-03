@@ -1575,11 +1575,11 @@ describe("Scene/ScreenSpaceCameraController", function () {
     controller.maximumTiltAngle = 0;
     const startPosition = new Cartesian2(
       canvas.clientWidth / 2,
-      canvas.clientHeight / 2
+      canvas.clientHeight / 2,
     );
     const endPosition = new Cartesian2(
       canvas.clientWidth / 2,
-      canvas.clientHeight / 4
+      canvas.clientHeight / 4,
     );
 
     moveMouse(MouseButtons.MIDDLE, startPosition, endPosition);
@@ -1587,16 +1587,16 @@ describe("Scene/ScreenSpaceCameraController", function () {
 
     expect(camera.position).toEqualEpsilon(
       originalCameraPosition,
-      CesiumMath.EPSILON8
+      CesiumMath.EPSILON8,
     );
     expect(camera.position).not.toEqualEpsilon(
       originalCameraDirection,
-      CesiumMath.EPSILON8
+      CesiumMath.EPSILON8,
     );
 
     const dotProduct = Cartesian3.dot(
       camera.direction,
-      originalCameraDirection
+      originalCameraDirection,
     );
     const acos = Math.acos(dotProduct);
     const angle = (acos * 180) / Math.PI;
@@ -1610,11 +1610,11 @@ describe("Scene/ScreenSpaceCameraController", function () {
     controller.maximumTiltAngle = (45 * Math.PI) / 180;
     const startPosition = new Cartesian2(
       canvas.clientWidth / 2,
-      canvas.clientHeight / 2
+      canvas.clientHeight / 2,
     );
     const endPosition = new Cartesian2(
       canvas.clientWidth / 2,
-      canvas.clientHeight / 4
+      canvas.clientHeight / 4,
     );
 
     moveMouse(MouseButtons.MIDDLE, startPosition, endPosition);
@@ -1624,16 +1624,16 @@ describe("Scene/ScreenSpaceCameraController", function () {
 
     expect(camera.position).not.toEqualEpsilon(
       originalCameraPosition,
-      CesiumMath.EPSILON8
+      CesiumMath.EPSILON8,
     );
     expect(camera.position).not.toEqualEpsilon(
       originalCameraDirection,
-      CesiumMath.EPSILON8
+      CesiumMath.EPSILON8,
     );
 
     const dotProduct = Cartesian3.dot(
       camera.direction,
-      originalCameraDirection
+      originalCameraDirection,
     );
     const acos = Math.acos(dotProduct);
     const angle = (acos * 180) / Math.PI;
