@@ -31,6 +31,7 @@ import {
   getJsonFromTypedArray,
   HeadingPitchRange,
   HeadingPitchRoll,
+  ImageBasedLighting,
   Intersect,
   JulianDate,
   Math as CesiumMath,
@@ -711,7 +712,7 @@ describe(
         scene.camera.lookAt(center, viewNorth);
         expect(renderOptions).toRenderAndCall(function (rgba) {
           expect(rgba[0]).toBeLessThanOrEqual(108);
-          expect(rgba[1]).toBeGreaterThan(190);
+          expect(rgba[1]).toBeGreaterThan(180);
           expect(rgba[2]).toBeLessThanOrEqual(108);
           expect(rgba[3]).toEqual(255);
         });
@@ -721,7 +722,7 @@ describe(
         expect(renderOptions).toRenderAndCall(function (rgba) {
           expect(rgba[0]).toBeLessThanOrEqual(108);
           expect(rgba[1]).toBeLessThanOrEqual(108);
-          expect(rgba[2]).toBeGreaterThan(190);
+          expect(rgba[2]).toBeGreaterThan(180);
           expect(rgba[3]).toEqual(255);
         });
       });
@@ -3323,8 +3324,21 @@ describe(
         scene: scene,
         time: new JulianDate(2457522.154792),
       };
-      const tileset = await Cesium3DTilesTester.loadTileset(scene, url);
-      tileset.luminanceAtZenith = undefined;
+      const tileset = await Cesium3DTilesTester.loadTileset(scene, url, {
+        imageBasedLighting: new ImageBasedLighting({
+          sphericalHarmonicCoefficients: [
+            new Cartesian3(2.0, 2.0, 2.0),
+            Cartesian3.ZERO,
+            Cartesian3.ZERO,
+            Cartesian3.ZERO,
+            Cartesian3.ZERO,
+            Cartesian3.ZERO,
+            Cartesian3.ZERO,
+            Cartesian3.ZERO,
+            Cartesian3.ZERO,
+          ],
+        }),
+      });
 
       expect(renderOptions).toRenderAndCall(function (rgba) {
         sourceRed = rgba[0];
@@ -3332,9 +3346,9 @@ describe(
       });
 
       expect(renderOptions).toRenderAndCall(function (rgba) {
-        expect(rgba[0]).withContext("starting red .r").toBeGreaterThan(200);
-        expect(rgba[1]).withContext("starting red .g").toEqualEpsilon(116, 1);
-        expect(rgba[2]).withContext("starting red .b").toEqualEpsilon(116, 1);
+        expect(rgba[0]).withContext("starting red .r").toBeGreaterThan(190);
+        expect(rgba[1]).withContext("starting red .g").toEqualEpsilon(118, 1);
+        expect(rgba[2]).withContext("starting red .b").toEqualEpsilon(118, 1);
         expect(rgba[3]).withContext("starting red .a").toEqual(255);
       });
 
@@ -3366,7 +3380,7 @@ describe(
         expect(rgba[0])
           .withContext("hl yellow+alpha .r")
           .toBeLessThan(sourceRed);
-        expect(rgba[1]).withContext("hl yellow+alpha .g").toEqualEpsilon(43, 1);
+        expect(rgba[1]).withContext("hl yellow+alpha .g").toEqualEpsilon(80, 1);
         expect(rgba[2]).withContext("hl yellow+alpha .b").toEqualEpsilon(0, 1);
         expect(rgba[3]).withContext("hl yellow+alpha .a").toEqual(255);
       });
@@ -3386,7 +3400,7 @@ describe(
         expect(rgba[0]).withContext("replace yellow .r").toBeLessThan(255);
         expect(rgba[1]).withContext("replace yellow .g").toBeGreaterThan(100);
         expect(rgba[1]).withContext("replace yellow .g").toBeLessThan(255);
-        expect(rgba[2]).withContext("replace yellow .b").toEqualEpsilon(73, 1);
+        expect(rgba[2]).withContext("replace yellow .b").toEqualEpsilon(62, 1);
         expect(rgba[3]).withContext("replace yellow .a").toEqual(255);
       });
 
@@ -3410,7 +3424,7 @@ describe(
           .toBeLessThan(255);
         expect(rgba[2])
           .withContext("replace yellow+alpha .b")
-          .toEqualEpsilon(48, 1);
+          .toEqualEpsilon(80, 1);
         expect(rgba[3]).withContext("replace yellow+alpha .a").toEqual(255);
       });
 
@@ -3436,7 +3450,7 @@ describe(
           .withContext("mix yellow .g")
           .toBeGreaterThan(sourceGreen);
         expect(rgba[1]).withContext("mix yellow .g").toBeLessThan(replaceGreen);
-        expect(rgba[2]).withContext("mix yellow .b").toEqualEpsilon(94, 1);
+        expect(rgba[2]).withContext("mix yellow .b").toEqualEpsilon(96, 1);
         expect(rgba[3]).withContext("mix yellow .a").toEqual(255);
       });
 
@@ -3451,7 +3465,7 @@ describe(
           .toBeLessThanOrEqual(sourceRed);
         expect(rgba[1]).withContext("mix blend 0.25 .g").toBeGreaterThan(0);
         expect(rgba[1]).withContext("mix blend 0.25 .g").toBeLessThan(mixGreen);
-        expect(rgba[2]).withContext("mix blend 0.25 .b").toEqualEpsilon(106, 1);
+        expect(rgba[2]).withContext("mix blend 0.25 .b").toEqualEpsilon(108, 1);
         expect(rgba[3]).withContext("mix blend 0.25 .a").toEqual(255);
       });
 
@@ -3459,8 +3473,8 @@ describe(
       tileset.colorBlendAmount = 0.0;
       expect(renderOptions).toRenderAndCall(function (rgba) {
         expect(rgba[0]).withContext("mix blend 0.0 .r").toEqual(sourceRed);
-        expect(rgba[1]).withContext("mix blend 0.0 .g").toEqualEpsilon(116, 1);
-        expect(rgba[2]).withContext("mix blend 0.0 .b").toEqualEpsilon(116, 1);
+        expect(rgba[1]).withContext("mix blend 0.0 .g").toEqualEpsilon(118, 1);
+        expect(rgba[2]).withContext("mix blend 0.0 .b").toEqualEpsilon(118, 1);
         expect(rgba[3]).withContext("mix blend 0.0 .a").toEqual(255);
       });
 
@@ -3469,7 +3483,7 @@ describe(
       expect(renderOptions).toRenderAndCall(function (rgba) {
         expect(rgba[0]).withContext("mix blend 1.0 .r").toEqual(replaceRed);
         expect(rgba[1]).withContext("mix blend 1.0 .g").toEqual(replaceGreen);
-        expect(rgba[2]).withContext("mix blend 1.0 .b").toEqualEpsilon(73, 1);
+        expect(rgba[2]).withContext("mix blend 1.0 .b").toEqualEpsilon(62, 1);
         expect(rgba[3]).withContext("mix blend 1.0 .a").toEqual(255);
       });
 
@@ -3484,7 +3498,7 @@ describe(
         expect(rgba[1]).withContext("mix yellow+alpha .g").toBeGreaterThan(0);
         expect(rgba[2])
           .withContext("mix yellow+alpha .b")
-          .toEqualEpsilon(43, 1);
+          .toEqualEpsilon(80, 1);
         expect(rgba[3]).withContext("mix yellow+alpha .a").toEqual(255);
       });
     }

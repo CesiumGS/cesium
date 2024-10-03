@@ -8,7 +8,7 @@ import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import JulianDate from "../Core/JulianDate.js";
 import Matrix4 from "../Core/Matrix4.js";
-import PixelFormat from "../Core/PixelFormat";
+import PixelFormat from "../Core/PixelFormat.js";
 import SceneMode from "./SceneMode.js";
 import Transforms from "../Core/Transforms.js";
 import ComputeCommand from "../Renderer/ComputeCommand.js";

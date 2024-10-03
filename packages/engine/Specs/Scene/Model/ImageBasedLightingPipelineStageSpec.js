@@ -84,7 +84,6 @@ describe("Scene/Model/ImageBasedLightingPipelineStage", function () {
     const imageBasedLighting = new ImageBasedLighting({
       sphericalHarmonicCoefficients: testCoefficients,
     });
-    imageBasedLighting.luminanceAtZenith = undefined;
 
     const mockModel = {
       imageBasedLighting: imageBasedLighting,
@@ -147,7 +146,6 @@ describe("Scene/Model/ImageBasedLightingPipelineStage", function () {
     const imageBasedLighting = new ImageBasedLighting({
       specularEnvironmentMaps: "example.ktx2",
     });
-    imageBasedLighting.luminanceAtZenith = undefined;
     imageBasedLighting._specularEnvironmentCubeMap = mockCubeMap;
 
     const mockModel = {

@@ -17,9 +17,9 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
 
     expect(manager.enabled).toBeTrue();
     expect(manager.shouldUpdate).toBeTrue();
-    expect(manager.maximumSecondsDifference).toBe(1800);
-    expect(manager.maximumPositionEpsilon).toBe(1.0);
-    expect(manager.intensity).toBe(2.0);
+    expect(manager.maximumSecondsDifference).toBe(3600);
+    expect(manager.maximumPositionEpsilon).toBe(1000.0);
+    expect(manager.atmosphereScatteringIntensity).toBe(2.0);
     expect(manager.gamma).toBe(1.0);
     expect(manager.brightness).toBe(1.0);
     expect(manager.saturation).toBe(1.0);
@@ -658,7 +658,7 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
 
     // TODO: Ground color
 
-    // TODO: Intensity
+    // TODO: atmosphereScatteringIntensity
 
     // TODO: gamma
 

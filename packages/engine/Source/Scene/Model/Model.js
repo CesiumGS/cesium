@@ -2025,7 +2025,8 @@ function updateCustomShader(model, frameState) {
 
 function updateEnvironmentMap(model, frameState) {
   const environmentMapManager = model._environmentMapManager;
-  if (model._ready && environmentMapManager.owner === model) {
+  const picking = frameState.passes.pick || frameState.passes.pickVoxel;
+  if (model._ready && environmentMapManager.owner === model && !picking) {
     environmentMapManager.position = model._boundingSphere.center;
     environmentMapManager.shouldUpdate =
       !defined(model._imageBasedLighting.sphericalHarmonicCoefficients) ||
