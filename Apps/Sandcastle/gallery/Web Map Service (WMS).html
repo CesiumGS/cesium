@@ -7,10 +7,7 @@
       name="viewport"
       content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
     />
-    <meta
-      name="description"
-      content="Add imagery from a Web Map Service (WMS) server."
-    />
+    <meta name="description" content="Add imagery from a Web Map Service (WMS) server." />
     <meta name="cesium-sandcastle-labels" content="Beginner" />
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
@@ -21,10 +18,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -53,12 +47,7 @@
 
         // Start off looking at Australia.
         viewer.camera.setView({
-          destination: Cesium.Rectangle.fromDegrees(
-            114.591,
-            -45.837,
-            148.97,
-            -5.73
-          ),
+          destination: Cesium.Rectangle.fromDegrees(114.591, -45.837, 148.97, -5.73),
         }); //Sandcastle_End
       };
       if (typeof Cesium !== "undefined") {

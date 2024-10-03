@@ -18,10 +18,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
       #toolbar input[type="range"] {
@@ -164,9 +161,7 @@
           return new Cesium.Texture({
             context: context,
             pixelFormat: Cesium.PixelFormat.RGBA,
-            pixelDataType: Cesium.ComponentDatatype.fromTypedArray(
-              textureTypedArray
-            ),
+            pixelDataType: Cesium.ComponentDatatype.fromTypedArray(textureTypedArray),
             source: {
               width: width,
               height: 1,
@@ -255,15 +250,12 @@
             ),
           };
 
-          const indexCount =
-            primitive.faceResolution * primitive.faceResolution * 6;
+          const indexCount = primitive.faceResolution * primitive.faceResolution * 6;
           const indexTypedArray = generateIndices(primitive.faceResolution);
           const indexBuffer = Cesium.Buffer.createIndexBuffer({
             context: context,
             typedArray: indexTypedArray,
-            indexDatatype: Cesium.ComponentDatatype.fromTypedArray(
-              indexTypedArray
-            ),
+            indexDatatype: Cesium.ComponentDatatype.fromTypedArray(indexTypedArray),
             usage: Cesium.BufferUsage.STATIC_DRAW,
           });
 
@@ -315,9 +307,7 @@
         };
 
         const position = new Cesium.Cartographic(0, 0, 1000.0);
-        const primitive = viewer.scene.primitives.add(
-          new CustomPrimitive(position)
-        );
+        const primitive = viewer.scene.primitives.add(new CustomPrimitive(position));
         viewer.camera.flyTo({
           destination: Cesium.Cartesian3.fromDegrees(0, 0, 50000),
           duration: 0.1,

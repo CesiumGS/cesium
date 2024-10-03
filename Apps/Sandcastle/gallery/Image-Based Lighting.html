@@ -7,10 +7,7 @@
       name="viewport"
       content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
     />
-    <meta
-      name="description"
-      content="Use image-based lighting to light a model."
-    />
+    <meta name="description" content="Use image-based lighting to light a model." />
     <meta name="cesium-sandcastle-labels" content="Showcases" />
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
@@ -21,10 +18,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -43,11 +37,7 @@
                 step="0.01"
                 data-bind="value: luminanceAtZenith, valueUpdate: 'input'"
               />
-              <input
-                type="text"
-                size="4"
-                data-bind="value: luminanceAtZenith"
-              />
+              <input type="text" size="4" data-bind="value: luminanceAtZenith" />
             </td>
           </tr>
         </tbody>
@@ -60,9 +50,7 @@
         const viewer = new Cesium.Viewer("cesiumContainer");
 
         if (!viewer.scene.specularEnvironmentMapsSupported) {
-          window.alert(
-            "This browser does not support specular environment maps."
-          );
+          window.alert("This browser does not support specular environment maps.");
         }
 
         const modelURL = "../../SampleData/models/Pawns/Pawns.glb";
@@ -127,15 +115,8 @@
 
         const height = 0.0;
         const hpr = new Cesium.HeadingPitchRoll(0.0, 0.0, 0.0);
-        const origin = Cesium.Cartesian3.fromDegrees(
-          -123.0744619,
-          44.0503706,
-          height
-        );
-        const modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(
-          origin,
-          hpr
-        );
+        const origin = Cesium.Cartesian3.fromDegrees(-123.0744619, 44.0503706, height);
+        const modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(origin, hpr);
 
         try {
           const model = viewer.scene.primitives.add(
@@ -151,17 +132,13 @@
 
             // Zoom to model
             const controller = viewer.scene.screenSpaceCameraController;
-            const r =
-              2.0 * Math.max(model.boundingSphere.radius, camera.frustum.near);
+            const r = 2.0 * Math.max(model.boundingSphere.radius, camera.frustum.near);
             controller.minimumZoomDistance = r * 0.5;
 
             const center = model.boundingSphere.center;
             const heading = Cesium.Math.toRadians(230.0);
             const pitch = Cesium.Math.toRadians(-20.0);
-            camera.lookAt(
-              center,
-              new Cesium.HeadingPitchRange(heading, pitch, r * 2.0)
-            );
+            camera.lookAt(center, new Cesium.HeadingPitchRange(heading, pitch, r * 2.0));
             camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
 
             const ibl = model.imageBasedLighting;

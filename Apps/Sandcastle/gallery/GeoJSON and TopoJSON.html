@@ -11,10 +11,7 @@
       name="description"
       content="Load GeoJSON or TopoJSON data and apply custom styling."
     />
-    <meta
-      name="cesium-sandcastle-labels"
-      content="Showcases, Tutorials, DataSources"
-    />
+    <meta name="cesium-sandcastle-labels" content="Showcases, Tutorials, DataSources" />
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script
@@ -24,10 +21,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -43,23 +37,18 @@
         //Example 1: Load with default styling.
         Sandcastle.addDefaultToolbarButton("Default styling", function () {
           viewer.dataSources.add(
-            Cesium.GeoJsonDataSource.load(
-              "../../SampleData/ne_10m_us_states.topojson"
-            )
+            Cesium.GeoJsonDataSource.load("../../SampleData/ne_10m_us_states.topojson")
           );
         });
 
         //Example 2: Load with basic styling options.
         Sandcastle.addToolbarButton("Basic styling", function () {
           viewer.dataSources.add(
-            Cesium.GeoJsonDataSource.load(
-              "../../SampleData/ne_10m_us_states.topojson",
-              {
-                stroke: Cesium.Color.HOTPINK,
-                fill: Cesium.Color.PINK.withAlpha(0.5),
-                strokeWidth: 3,
-              }
-            )
+            Cesium.GeoJsonDataSource.load("../../SampleData/ne_10m_us_states.topojson", {
+              stroke: Cesium.Color.HOTPINK,
+              fill: Cesium.Color.PINK.withAlpha(0.5),
+              strokeWidth: 3,
+            })
           );
         });
 
@@ -101,8 +90,7 @@
                 //Extrude the polygon based on the state's population.  Each entity
                 //stores the properties for the GeoJSON feature it was created from
                 //Since the population is a huge number, we divide by 50.
-                entity.polygon.extrudedHeight =
-                  entity.properties.Population / 50.0;
+                entity.polygon.extrudedHeight = entity.properties.Population / 50.0;
               }
             })
             .catch(function (error) {

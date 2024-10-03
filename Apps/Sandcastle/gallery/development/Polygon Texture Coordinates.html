@@ -21,10 +21,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -64,8 +61,7 @@
         const smallFlatInstance = new Cesium.GeometryInstance({
           geometry: Cesium.PolygonGeometry.fromPositions({
             positions: positions,
-            vertexFormat:
-              Cesium.MaterialAppearance.MaterialSupport.TEXTURED.vertexFormat,
+            vertexFormat: Cesium.MaterialAppearance.MaterialSupport.TEXTURED.vertexFormat,
             textureCoordinates: textureCoordinates,
           }),
         });
@@ -186,8 +182,7 @@
         const smallHoleyFlatInstance = new Cesium.GeometryInstance({
           geometry: new Cesium.PolygonGeometry({
             polygonHierarchy: polygonHierarchy,
-            vertexFormat:
-              Cesium.MaterialAppearance.MaterialSupport.TEXTURED.vertexFormat,
+            vertexFormat: Cesium.MaterialAppearance.MaterialSupport.TEXTURED.vertexFormat,
             textureCoordinates: textureCoordinates,
           }),
         });
@@ -253,8 +248,7 @@
           geometry: new Cesium.PolygonGeometry({
             polygonHierarchy: polygonHierarchy,
             perPositionHeight: true,
-            vertexFormat:
-              Cesium.MaterialAppearance.MaterialSupport.TEXTURED.vertexFormat,
+            vertexFormat: Cesium.MaterialAppearance.MaterialSupport.TEXTURED.vertexFormat,
             textureCoordinates: textureCoordinates,
           }),
         });
@@ -284,8 +278,7 @@
         const largeFlatInstance = new Cesium.GeometryInstance({
           geometry: Cesium.PolygonGeometry.fromPositions({
             positions: positions,
-            vertexFormat:
-              Cesium.MaterialAppearance.MaterialSupport.TEXTURED.vertexFormat,
+            vertexFormat: Cesium.MaterialAppearance.MaterialSupport.TEXTURED.vertexFormat,
             textureCoordinates: textureCoordinates,
             arcType: Cesium.ArcType.RHUMB,
           }),
@@ -317,8 +310,7 @@
           geometry: Cesium.PolygonGeometry.fromPositions({
             positions: positions,
             extrudedHeight: 50000,
-            vertexFormat:
-              Cesium.MaterialAppearance.MaterialSupport.TEXTURED.vertexFormat,
+            vertexFormat: Cesium.MaterialAppearance.MaterialSupport.TEXTURED.vertexFormat,
             textureCoordinates: textureCoordinates,
           }),
         });
@@ -354,8 +346,7 @@
           geometry: Cesium.PolygonGeometry.fromPositions({
             positions: positions,
             extrudedHeight: 0,
-            vertexFormat:
-              Cesium.MaterialAppearance.MaterialSupport.TEXTURED.vertexFormat,
+            vertexFormat: Cesium.MaterialAppearance.MaterialSupport.TEXTURED.vertexFormat,
             perPositionHeight: true,
             textureCoordinates: textureCoordinates,
           }),
@@ -381,8 +372,7 @@
                   },
                 },
               }),
-              materialSupport:
-                Cesium.MaterialAppearance.MaterialSupport.TEXTURED,
+              materialSupport: Cesium.MaterialAppearance.MaterialSupport.TEXTURED,
               translucent: false,
             }),
           })

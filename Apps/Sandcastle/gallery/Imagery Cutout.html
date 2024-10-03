@@ -21,10 +21,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -66,12 +63,7 @@
 
         const scene = viewer.scene;
 
-        const defaultImageryLayerCutout = Cesium.Rectangle.fromDegrees(
-          -90,
-          20,
-          -70,
-          40
-        );
+        const defaultImageryLayerCutout = Cesium.Rectangle.fromDegrees(-90, 20, -70, 40);
 
         // Cut a rectangle out of the base layer
         const layers = viewer.imageryLayers;
@@ -81,12 +73,9 @@
 
         // Fit a SingleTileImageryProvider inside the cutout on the lowest layer
         const logo = Cesium.ImageryLayer.fromProviderAsync(
-          Cesium.SingleTileImageryProvider.fromUrl(
-            "../images/Cesium_Logo_overlay.png",
-            {
-              rectangle: defaultImageryLayerCutout,
-            }
-          )
+          Cesium.SingleTileImageryProvider.fromUrl("../images/Cesium_Logo_overlay.png", {
+            rectangle: defaultImageryLayerCutout,
+          })
         );
         layers.add(logo);
 
@@ -94,12 +83,7 @@
         const earthAtNight = Cesium.ImageryLayer.fromProviderAsync(
           Cesium.IonImageryProvider.fromAssetId(3812)
         );
-        earthAtNight.cutoutRectangle = Cesium.Rectangle.fromDegrees(
-          -100,
-          10,
-          -60,
-          50
-        );
+        earthAtNight.cutoutRectangle = Cesium.Rectangle.fromDegrees(-100, 10, -60, 50);
         earthAtNight.alpha = 0.9;
         layers.add(earthAtNight);
 

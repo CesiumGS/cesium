@@ -21,10 +21,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
       table,
@@ -220,9 +217,7 @@
         ];
 
         Sandcastle.addToolbarMenu(modes);
-        Sandcastle.addToggleButton("Enable picking", enablePicking, function (
-          checked
-        ) {
+        Sandcastle.addToggleButton("Enable picking", enablePicking, function (checked) {
           if (enablePicking) {
             metadataOverlay.style.display = "none";
           }

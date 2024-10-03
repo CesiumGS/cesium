@@ -18,10 +18,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
       #toolbar .cesium-button {
@@ -234,9 +231,7 @@
 
         Sandcastle.addToolbarMenu(entityToolbarOptions);
 
-        Sandcastle.addToggleButton("Shadows", viewer.shadows, function (
-          checked
-        ) {
+        Sandcastle.addToggleButton("Shadows", viewer.shadows, function (checked) {
           viewer.shadows = checked;
         });
 
@@ -261,13 +256,11 @@
           }
         );
 
-        Sandcastle.addToggleButton(
-          "Soft Shadows",
-          shadowMap.softShadows,
-          function (checked) {
-            shadowMap.softShadows = checked;
-          }
-        );
+        Sandcastle.addToggleButton("Soft Shadows", shadowMap.softShadows, function (
+          checked
+        ) {
+          shadowMap.softShadows = checked;
+        });
 
         Sandcastle.addToolbarMenu([
           {

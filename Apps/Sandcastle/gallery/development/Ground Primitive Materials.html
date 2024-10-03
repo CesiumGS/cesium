@@ -7,10 +7,7 @@
       name="viewport"
       content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
     />
-    <meta
-      name="description"
-      content="Demo for Materials on GroundPrimitives."
-    />
+    <meta name="description" content="Demo for Materials on GroundPrimitives." />
     <meta name="cesium-sandcastle-labels" content="Development" />
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
@@ -21,10 +18,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -43,9 +37,7 @@
         });
 
         if (!Cesium.GroundPrimitive.supportsMaterials(viewer.scene)) {
-          window.alert(
-            "GroundPrimitive materials are not supported on this platform."
-          );
+          window.alert("GroundPrimitive materials are not supported on this platform.");
         }
 
         let rectangle;
@@ -102,9 +94,7 @@
 
         function applyCheckerboardMaterial(primitive, scene) {
           Sandcastle.declare(applyCheckerboardMaterial); // For highlighting in Sandcastle.
-          primitive.appearance.material = Cesium.Material.fromType(
-            "Checkerboard"
-          );
+          primitive.appearance.material = Cesium.Material.fromType("Checkerboard");
         }
 
         function applyColorMaterial(primitive, scene) {
@@ -198,9 +188,7 @@
               type: "Water",
               uniforms: {
                 specularMap: "../images/earthspec1k.jpg",
-                normalMap: Cesium.buildModuleUrl(
-                  "Assets/Textures/waterNormals.jpg"
-                ),
+                normalMap: Cesium.buildModuleUrl("Assets/Textures/waterNormals.jpg"),
                 frequency: 10000.0,
                 animationSpeed: 0.01,
                 amplitude: 1.0,
@@ -290,9 +278,7 @@
 
         function applyRimLightingMaterial(primitive, scene) {
           Sandcastle.declare(applyRimLightingMaterial); // For highlighting in Sandcastle.
-          primitive.appearance.material = Cesium.Material.fromType(
-            "RimLighting"
-          );
+          primitive.appearance.material = Cesium.Material.fromType("RimLighting");
         }
 
         function createButtons(scene) {
@@ -508,12 +494,7 @@
             new Cesium.GroundPrimitive({
               geometryInstances: new Cesium.GeometryInstance({
                 geometry: new Cesium.RectangleGeometry({
-                  rectangle: Cesium.Rectangle.fromDegrees(
-                    -179.99,
-                    -89.99,
-                    179.99,
-                    89.99
-                  ),
+                  rectangle: Cesium.Rectangle.fromDegrees(-179.99, -89.99, 179.99, 89.99),
                   vertexFormat: Cesium.EllipsoidSurfaceAppearance.VERTEX_FORMAT,
                 }),
               }),

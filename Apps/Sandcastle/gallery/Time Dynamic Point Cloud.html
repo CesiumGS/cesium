@@ -21,10 +21,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -89,10 +86,7 @@
         clock.stopTime = stop;
         clock.clockRange = Cesium.ClockRange.LOOP_STOP;
 
-        viewer.zoomTo(
-          pointCloud,
-          new Cesium.HeadingPitchRange(0.0, -0.5, 50.0)
-        );
+        viewer.zoomTo(pointCloud, new Cesium.HeadingPitchRange(0.0, -0.5, 50.0));
         //Sandcastle_End
       };
       if (typeof Cesium !== "undefined") {

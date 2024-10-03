@@ -18,10 +18,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -59,9 +56,7 @@
 
         const scratchColor = new Cesium.Color();
 
-        ProceduralSingleTileVoxelProvider.prototype.requestData = function (
-          options
-        ) {
+        ProceduralSingleTileVoxelProvider.prototype.requestData = function (options) {
           if (options.tileLevel >= 1) {
             return undefined;
           }
@@ -78,8 +73,7 @@
 
           for (let z = 0; z < dimensions.z; z++) {
             for (let y = 0; y < dimensions.y; y++) {
-              const indexZY =
-                z * dimensions.y * dimensions.x + y * dimensions.x;
+              const indexZY = z * dimensions.y * dimensions.x + y * dimensions.x;
               for (let x = 0; x < dimensions.x; x++) {
                 const lerperX = x / (dimensions.x - 1);
                 const lerperY = y / (dimensions.y - 1);
@@ -117,9 +111,7 @@
           this._allVoxelData = new Array(this._levelCount);
 
           const allVoxelData = this._allVoxelData;
-          const channelCount = Cesium.MetadataType.getComponentCount(
-            this.types[0]
-          );
+          const channelCount = Cesium.MetadataType.getComponentCount(this.types[0]);
           const { dimensions } = this;
 
           for (let level = 0; level < this._levelCount; level++) {
@@ -147,9 +139,7 @@
           }
         }
 
-        ProceduralMultiTileVoxelProvider.prototype.requestData = function (
-          options
-        ) {
+        ProceduralMultiTileVoxelProvider.prototype.requestData = function (options) {
           const { tileLevel, tileX, tileY, tileZ } = options;
 
           if (tileLevel >= this._levelCount) {
@@ -180,10 +170,7 @@
 
           const dataGlobal = this._allVoxelData;
           const dataTile = new Float32Array(
-            paddedDimensions.x *
-              paddedDimensions.y *
-              paddedDimensions.z *
-              channelCount
+            paddedDimensions.x * paddedDimensions.y * paddedDimensions.z * channelCount
           );
 
           for (let z = 0; z < paddedDimensions.z; z++) {
@@ -276,11 +263,7 @@
               );
               provider.minBounds.z = 0.0;
               provider.maxBounds.z = 1000000.0;
-              const primitive = createPrimitive(
-                provider,
-                customShaderColor,
-                modelMatrix
-              );
+              const primitive = createPrimitive(provider, customShaderColor, modelMatrix);
             },
           },
           {
@@ -289,11 +272,7 @@
               const provider = new ProceduralSingleTileVoxelProvider(
                 Cesium.VoxelShapeType.CYLINDER
               );
-              const primitive = createPrimitive(
-                provider,
-                customShaderColor,
-                modelMatrix
-              );
+              const primitive = createPrimitive(provider, customShaderColor, modelMatrix);
             },
           },
           {
@@ -302,11 +281,7 @@
               const provider = new ProceduralSingleTileVoxelProvider(
                 Cesium.VoxelShapeType.BOX
               );
-              const primitive = createPrimitive(
-                provider,
-                customShaderColor,
-                modelMatrix
-              );
+              const primitive = createPrimitive(provider, customShaderColor, modelMatrix);
             },
           },
           {
@@ -315,11 +290,7 @@
               const provider = new ProceduralMultiTileVoxelProvider(
                 Cesium.VoxelShapeType.BOX
               );
-              const primitive = createPrimitive(
-                provider,
-                customShaderColor,
-                modelMatrix
-              );
+              const primitive = createPrimitive(provider, customShaderColor, modelMatrix);
             },
           },
           {
@@ -328,11 +299,7 @@
               const provider = await Cesium.Cesium3DTilesVoxelProvider.fromUrl(
                 "../../SampleData/Cesium3DTiles/Voxel/VoxelBox3DTiles/tileset.json"
               );
-              const primitive = createPrimitive(
-                provider,
-                customShaderWhite,
-                modelMatrix
-              );
+              const primitive = createPrimitive(provider, customShaderWhite, modelMatrix);
             },
           },
           {
@@ -343,11 +310,7 @@
               );
               provider.minBounds.z = 0.0;
               provider.maxBounds.z = 1000000.0;
-              const primitive = createPrimitive(
-                provider,
-                customShaderColor,
-                modelMatrix
-              );
+              const primitive = createPrimitive(provider, customShaderColor, modelMatrix);
             },
           },
           {
@@ -369,11 +332,7 @@
               const provider = new ProceduralMultiTileVoxelProvider(
                 Cesium.VoxelShapeType.CYLINDER
               );
-              const primitive = createPrimitive(
-                provider,
-                customShaderColor,
-                modelMatrix
-              );
+              const primitive = createPrimitive(provider, customShaderColor, modelMatrix);
             },
           },
           {
@@ -382,11 +341,7 @@
               const provider = await Cesium.Cesium3DTilesVoxelProvider.fromUrl(
                 "../../SampleData/Cesium3DTiles/Voxel/VoxelCylinder3DTiles/tileset.json"
               );
-              const primitive = createPrimitive(
-                provider,
-                customShaderWhite,
-                modelMatrix
-              );
+              const primitive = createPrimitive(provider, customShaderWhite, modelMatrix);
             },
           },
         ]);

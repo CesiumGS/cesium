@@ -21,10 +21,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -51,9 +48,7 @@
           terrain: Cesium.Terrain.fromWorldTerrain(),
         });
 
-        Sandcastle.addToggleButton("Shadows", viewer.shadows, function (
-          checked
-        ) {
+        Sandcastle.addToggleButton("Shadows", viewer.shadows, function (checked) {
           viewer.shadows = checked;
         });
 
@@ -69,10 +64,7 @@
         const pitch = Cesium.Math.toRadians(2);
         const roll = Cesium.Math.toRadians(-6);
         const hpr = new Cesium.HeadingPitchRoll(heading, pitch, roll);
-        const orientation = Cesium.Transforms.headingPitchRollQuaternion(
-          position,
-          hpr
-        );
+        const orientation = Cesium.Transforms.headingPitchRollQuaternion(position, hpr);
 
         const entity = viewer.entities.add({
           name: "truck",

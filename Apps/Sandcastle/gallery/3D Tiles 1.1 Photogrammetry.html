@@ -22,10 +22,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
 
@@ -83,9 +80,7 @@
       <div id="slider"></div>
       <div id="statsContainer">
         <div id="left" class="statsPane panel">
-          <div id="leftTitle" class="statsTitle">
-            3D Tiles 1.0 (JPEG textures)
-          </div>
+          <div id="leftTitle" class="statsTitle">3D Tiles 1.0 (JPEG textures)</div>
           <div id="leftStats">
             Tiles Loaded: <span id="leftTilesLoaded">---</span> /
             <span id="leftTilesTotal">---</span>
@@ -99,9 +94,7 @@
           </div>
         </div>
         <div id="right" class="statsPane panel">
-          <div id="rightTitle" class="statsTitle">
-            3D Tiles 1.1 (KTX2 textures)
-          </div>
+          <div id="rightTitle" class="statsTitle">3D Tiles 1.1 (KTX2 textures)</div>
           <div id="rightStats">
             Tiles Loaded: <span id="rightTilesLoaded">---</span> /
             <span id="rightTilesTotal">---</span>
@@ -128,11 +121,7 @@
           step="0.1"
           data-bind="value: maximumScreenSpaceError, valueUpdate: 'input'"
         />
-        <input
-          type="text"
-          size="5"
-          data-bind="value: maximumScreenSpaceError"
-        />
+        <input type="text" size="5" data-bind="value: maximumScreenSpaceError" />
       </div>
     </div>
     <script id="cesium_sandcastle_script">
@@ -204,8 +193,7 @@
             return;
           }
 
-          const side =
-            splitDirection === Cesium.SplitDirection.LEFT ? "left" : "right";
+          const side = splitDirection === Cesium.SplitDirection.LEFT ? "left" : "right";
 
           collection.removeAll();
           const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(assetId);
@@ -237,8 +225,7 @@
         }
 
         async function benchmarkTileset(tilesetName, splitDirection) {
-          const side =
-            splitDirection === Cesium.SplitDirection.LEFT ? "left" : "right";
+          const side = splitDirection === Cesium.SplitDirection.LEFT ? "left" : "right";
           clearStatsPanel(side);
 
           const startMilliseconds = performance.now();
@@ -247,8 +234,7 @@
           return new Promise((resolve) => {
             tileset.initialTilesLoaded.addEventListener(() => {
               const endMilliseconds = performance.now();
-              const deltaSeconds =
-                (endMilliseconds - startMilliseconds) / 1000.0;
+              const deltaSeconds = (endMilliseconds - startMilliseconds) / 1000.0;
               updateLoadTime(side, deltaSeconds);
               resolve();
             });
@@ -331,8 +317,7 @@
           document.getElementById(`${side}TilesTotal`).innerHTML =
             stats.numberOfTilesTotal;
 
-          const gpuMemoryBytes =
-            stats.geometryByteLength + stats.texturesByteLength;
+          const gpuMemoryBytes = stats.geometryByteLength + stats.texturesByteLength;
           const gpuMemoryMB = gpuMemoryBytes / 1024 / 1024;
           document.getElementById(
             `${side}GpuMemoryMB`
@@ -370,8 +355,7 @@
 
         // Sync the position of the slider with the split position
         const slider = document.getElementById("slider");
-        viewer.scene.splitPosition =
-          slider.offsetLeft / slider.parentElement.offsetWidth;
+        viewer.scene.splitPosition = slider.offsetLeft / slider.parentElement.offsetWidth;
 
         const handler = new Cesium.ScreenSpaceEventHandler(slider);
 
@@ -384,8 +368,7 @@
 
           const relativeOffset = movement.endPosition.x;
           const splitPosition =
-            (slider.offsetLeft + relativeOffset) /
-            slider.parentElement.offsetWidth;
+            (slider.offsetLeft + relativeOffset) / slider.parentElement.offsetWidth;
           slider.style.left = `${100.0 * splitPosition}%`;
           viewer.scene.splitPosition = splitPosition;
         }

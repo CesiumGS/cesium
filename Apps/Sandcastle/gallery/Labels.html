@@ -18,10 +18,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -63,11 +60,7 @@
         function setProperties() {
           Sandcastle.declare(setProperties);
           const entity = viewer.entities.add({
-            position: Cesium.Cartesian3.fromDegrees(
-              -75.1641667,
-              39.9522222,
-              300000.0
-            ),
+            position: Cesium.Cartesian3.fromDegrees(-75.1641667, 39.9522222, 300000.0),
             label: {
               text: "Philadelphia",
             },
@@ -84,16 +77,8 @@
             viewer.entities.add({
               position: Cesium.Cartesian3.fromDegrees(-75.1641667, 39.9522222),
               billboard: {
-                position: Cesium.Cartesian3.fromDegrees(
-                  -75.1641667,
-                  39.9522222
-                ),
-                scaleByDistance: new Cesium.NearFarScalar(
-                  1.5e2,
-                  5.0,
-                  1.5e7,
-                  0.5
-                ),
+                position: Cesium.Cartesian3.fromDegrees(-75.1641667, 39.9522222),
+                scaleByDistance: new Cesium.NearFarScalar(1.5e2, 5.0, 1.5e7, 0.5),
                 image: image,
               },
               label: {
@@ -120,24 +105,14 @@
             position: Cesium.Cartesian3.fromDegrees(-73.94, 40.67),
             label: {
               text: "New York",
-              translucencyByDistance: new Cesium.NearFarScalar(
-                1.5e2,
-                1.0,
-                1.5e8,
-                0.0
-              ),
+              translucencyByDistance: new Cesium.NearFarScalar(1.5e2, 1.0, 1.5e8, 0.0),
             },
           });
           viewer.entities.add({
             position: Cesium.Cartesian3.fromDegrees(-84.39, 33.75),
             label: {
               text: "Atlanta",
-              translucencyByDistance: new Cesium.NearFarScalar(
-                1.5e5,
-                1.0,
-                1.5e7,
-                0.0
-              ),
+              translucencyByDistance: new Cesium.NearFarScalar(1.5e5, 1.0, 1.5e7, 0.0),
             },
           });
         }
@@ -183,23 +158,21 @@
           const minFontSize = 1.0;
           const maxFontSize = 48.0;
 
-          labelListenerCallback = viewer.scene.preUpdate.addEventListener(
-            function (scene, time) {
-              entity.label.outlineWidth += outlineDelta;
-              if (
-                entity.label.outlineWidth >= 4.0 ||
-                entity.label.outlineWidth <= 0.0
-              ) {
-                outlineDelta *= -1.0;
-              }
-
-              fontSize += fontDelta;
-              if (fontSize >= maxFontSize || fontSize <= minFontSize) {
-                fontDelta *= -1.0;
-              }
-              entity.label.font = `${fontSize}px Calibri`;
+          labelListenerCallback = viewer.scene.preUpdate.addEventListener(function (
+            scene,
+            time
+          ) {
+            entity.label.outlineWidth += outlineDelta;
+            if (entity.label.outlineWidth >= 4.0 || entity.label.outlineWidth <= 0.0) {
+              outlineDelta *= -1.0;
             }
-          );
+
+            fontSize += fontDelta;
+            if (fontSize >= maxFontSize || fontSize <= minFontSize) {
+              fontDelta *= -1.0;
+            }
+            entity.label.font = `${fontSize}px Calibri`;
+          });
         }
 
         Sandcastle.addToolbarMenu([

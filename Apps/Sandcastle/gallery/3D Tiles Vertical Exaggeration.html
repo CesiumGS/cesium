@@ -7,19 +7,13 @@
       name="viewport"
       content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
     />
-    <meta
-      name="description"
-      content="Apply Vertical Exaggeration to 3D Tiles"
-    />
+    <meta name="description" content="Apply Vertical Exaggeration to 3D Tiles" />
     <meta name="cesium-sandcastle-labels" content="Beginner, Showcases" />
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
 
@@ -124,9 +118,7 @@
 
         function updateExaggeration() {
           scene.verticalExaggeration = Number(viewModel.exaggeration);
-          scene.verticalExaggerationRelativeHeight = Number(
-            viewModel.relativeHeight
-          );
+          scene.verticalExaggerationRelativeHeight = Number(viewModel.relativeHeight);
         }
 
         Cesium.knockout.track(viewModel);
@@ -134,9 +126,7 @@
         Cesium.knockout.applyBindings(viewModel, toolbar);
         for (const name in viewModel) {
           if (viewModel.hasOwnProperty(name)) {
-            Cesium.knockout
-              .getObservable(viewModel, name)
-              .subscribe(updateExaggeration);
+            Cesium.knockout.getObservable(viewModel, name).subscribe(updateExaggeration);
           }
         }
         //Sandcastle_End

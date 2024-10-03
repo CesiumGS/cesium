@@ -19,10 +19,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -102,9 +99,7 @@
           }
           // A feature was picked, so show its overlay content
           nameOverlay.style.display = "block";
-          nameOverlay.style.bottom = `${
-            viewer.canvas.clientHeight - position.y
-          }px`;
+          nameOverlay.style.bottom = `${viewer.canvas.clientHeight - position.y}px`;
           nameOverlay.style.left = `${position.x}px`;
           const name = pickedFeature.getProperty("BIN");
           nameOverlay.textContent = name;
@@ -130,9 +125,7 @@
             `<tr><th>Latitude</th><td>${pickedFeature.getProperty(
               "Latitude"
             )}</td></tr>` +
-            `<tr><th>Height</th><td>${pickedFeature.getProperty(
-              "Height"
-            )}</td></tr>` +
+            `<tr><th>Height</th><td>${pickedFeature.getProperty("Height")}</td></tr>` +
             `<tr><th>Terrain Height (Ellipsoid)</th><td>${pickedFeature.getProperty(
               "TerrainHeight"
             )}</td></tr>` +
@@ -142,9 +135,7 @@
 
         // If silhouettes are supported, silhouette features in blue on mouse over and silhouette green on mouse click.
         // If silhouettes are not supported, change the feature color to yellow on mouse over and green on mouse click.
-        if (
-          Cesium.PostProcessStageLibrary.isSilhouetteSupported(viewer.scene)
-        ) {
+        if (Cesium.PostProcessStageLibrary.isSilhouetteSupported(viewer.scene)) {
           // Silhouettes are supported
           const silhouetteBlue = Cesium.PostProcessStageLibrary.createEdgeDetectionStage();
           silhouetteBlue.uniforms.color = Cesium.Color.BLUE;
@@ -164,9 +155,7 @@
           );
 
           // Silhouette a feature blue on hover.
-          viewer.screenSpaceEventHandler.setInputAction(function onMouseMove(
-            movement
-          ) {
+          viewer.screenSpaceEventHandler.setInputAction(function onMouseMove(movement) {
             // If a feature was previously highlighted, undo the highlight
             silhouetteBlue.selected = [];
 
@@ -183,13 +172,10 @@
             if (pickedFeature !== selected.feature) {
               silhouetteBlue.selected = [pickedFeature];
             }
-          },
-          Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+          }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
 
           // Silhouette a feature on selection and show metadata in the InfoBox.
-          viewer.screenSpaceEventHandler.setInputAction(function onLeftClick(
-            movement
-          ) {
+          viewer.screenSpaceEventHandler.setInputAction(function onLeftClick(movement) {
             // If a feature was previously selected, undo the highlight
             silhouetteGreen.selected = [];
 
@@ -216,11 +202,8 @@
 
             // Set feature infobox description
             viewer.selectedEntity = selectedEntity;
-            selectedEntity.description = createPickedFeatureDescription(
-              pickedFeature
-            );
-          },
-          Cesium.ScreenSpaceEventType.LEFT_CLICK);
+            selectedEntity.description = createPickedFeatureDescription(pickedFeature);
+          }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
         } else {
           // Silhouettes are not supported. Instead, change the feature color.
 
@@ -231,9 +214,7 @@
           };
 
           // Color a feature yellow on hover.
-          viewer.screenSpaceEventHandler.setInputAction(function onMouseMove(
-            movement
-          ) {
+          viewer.screenSpaceEventHandler.setInputAction(function onMouseMove(movement) {
             // If a feature was previously highlighted, undo the highlight
             if (Cesium.defined(highlighted.feature)) {
               highlighted.feature.color = highlighted.originalColor;
@@ -250,19 +231,13 @@
             // Highlight the feature if it's not already selected.
             if (pickedFeature !== selected.feature) {
               highlighted.feature = pickedFeature;
-              Cesium.Color.clone(
-                pickedFeature.color,
-                highlighted.originalColor
-              );
+              Cesium.Color.clone(pickedFeature.color, highlighted.originalColor);
               pickedFeature.color = Cesium.Color.YELLOW;
             }
-          },
-          Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+          }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
 
           // Color a feature on selection and show metadata in the InfoBox.
-          viewer.screenSpaceEventHandler.setInputAction(function onLeftClick(
-            movement
-          ) {
+          viewer.screenSpaceEventHandler.setInputAction(function onLeftClick(movement) {
             // If a feature was previously selected, undo the highlight
             if (Cesium.defined(selected.feature)) {
               selected.feature.color = selected.originalColor;
@@ -281,10 +256,7 @@
             selected.feature = pickedFeature;
             // Save the selected feature's original color
             if (pickedFeature === highlighted.feature) {
-              Cesium.Color.clone(
-                highlighted.originalColor,
-                selected.originalColor
-              );
+              Cesium.Color.clone(highlighted.originalColor, selected.originalColor);
               highlighted.feature = undefined;
             } else {
               Cesium.Color.clone(pickedFeature.color, selected.originalColor);
@@ -294,11 +266,8 @@
 
             // Set feature infobox description
             viewer.selectedEntity = selectedEntity;
-            selectedEntity.description = createPickedFeatureDescription(
-              pickedFeature
-            );
-          },
-          Cesium.ScreenSpaceEventType.LEFT_CLICK);
+            selectedEntity.description = createPickedFeatureDescription(pickedFeature);
+          }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
         } //Sandcastle_End
       };
       if (typeof Cesium !== "undefined") {

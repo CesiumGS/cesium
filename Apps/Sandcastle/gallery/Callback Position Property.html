@@ -21,10 +21,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -77,11 +74,7 @@
 
         // Prepare point samples. Before and after points are used to
         // calculate the first and last tangents for the spline.
-        const before = Cesium.Cartesian3.fromDegrees(
-          -112.87962,
-          36.27375,
-          620.01
-        );
+        const before = Cesium.Cartesian3.fromDegrees(-112.87962, 36.27375, 620.01);
         const points = [
           Cesium.Cartesian3.fromDegrees(-112.87709, 36.27782, 620.01),
           Cesium.Cartesian3.fromDegrees(-112.87351, 36.27992, 617.9),
@@ -93,11 +86,7 @@
           Cesium.Cartesian3.fromDegrees(-112.84086, 36.27739, 638.81),
           Cesium.Cartesian3.fromDegrees(-112.83682, 36.27995, 643.31),
         ];
-        const after = Cesium.Cartesian3.fromDegrees(
-          -112.83506,
-          36.2822,
-          643.31
-        );
+        const after = Cesium.Cartesian3.fromDegrees(-112.83506, 36.2822, 643.31);
 
         // Calculate first and last tangents.
         const firstTangent = Cesium.Cartesian3.subtract(
@@ -120,19 +109,14 @@
         });
 
         // Create the callback position property and make it return spline evaluations.
-        const position = new Cesium.CallbackPositionProperty(function (
-          time,
-          result
-        ) {
+        const position = new Cesium.CallbackPositionProperty(function (time, result) {
           const splineTime =
-            (delta * Cesium.JulianDate.secondsDifference(time, start)) /
-            duration;
+            (delta * Cesium.JulianDate.secondsDifference(time, start)) / duration;
           if (splineTime < firstTime || splineTime > lastTime) {
             return undefined;
           }
           return positionSpline.evaluate(splineTime, result);
-        },
-        false);
+        }, false);
 
         const orientation = new Cesium.VelocityOrientationProperty(position);
 
@@ -191,10 +175,7 @@
           }
           const time = clock.currentTime;
           const entityPosition = position.getValue(time, scratchPosition);
-          const entityOrientation = orientation.getValue(
-            time,
-            scratchOrientation
-          );
+          const entityOrientation = orientation.getValue(time, scratchOrientation);
           if (entityPosition === undefined || entityOrientation === undefined) {
             return;
           }

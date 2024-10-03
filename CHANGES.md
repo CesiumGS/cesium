@@ -1,22 +1,44 @@
 # Change Log
 
+### 1.122 - 2024-11-01
+
+#### @cesium/engine
+
+##### Breaking Changes :mega:
+
+-
+- `ImageBasedLighting.luminanceAtZenith` has been removed. Use `DynamicEnvironmentMapManager.atmosphereScatteringIntensity` instead. [#12129](https://github.com/CesiumGS/cesium/pull/12129)
+
+##### Additions :tada:
+
+- Updated default 3D Tiles and Model lighting when using PBR in order to create a more realistic appearance. Added `DynamicEnvironmentMapManager` to control lighting parameters. These can be accessed via `Cesium3DTileset.environmentMapManager` and `Model.environmentMapManager`. [#12129](https://github.com/CesiumGS/cesium/pull/12129)
+
+##### Fixes :wrench:
+
+- Fixed `ImageBasedLighting.imageBasedLightingFactor` not affecting lighting. [#12129](https://github.com/CesiumGS/cesium/pull/12129)
+
 ### 1.122 - 2024-10-01
 
 #### @cesium/engine
 
 ##### Additions :tada:
 
-- Updated default 3D Tiles and Model lighting when using PBR in order to create a more realistic appearance. Added `DynamicEnvironmentMapManager` to control lighting parameters. These can be accessed via `Cesium3DTileset.environmentMapManager` and `Model.environmentMapManager`. [#12129](https://github.com/CesiumGS/cesium/pull/12129)
-- Added `enableVerticalExaggeration` option to models. Set this value to `false` to prevent model exaggeration when `Scene.verticalExaggeration` is set to a value other than `1.0`. [#12141](https://github.com/CesiumGS/cesium/pull/12141)
 - Added `CallbackPositionProperty` to allow lazy entity position evaluation. [#12170](https://github.com/CesiumGS/cesium/pull/12170)
+- Added `enableVerticalExaggeration` option to models. Set this value to `false` to prevent model exaggeration when `Scene.verticalExaggeration` is set to a value other than `1.0`. [#12141](https://github.com/CesiumGS/cesium/pull/12141)
+- Added `Scene.prototype.pickMetadata` and `Scene.prototype.pickMetadataSchema`, enabling experimental support for picking property textures or property attributes [#12075](https://github.com/CesiumGS/cesium/pull/12075)
+- Added experimental support for the `NGA_gpm_local` glTF extension, for GPM 1.2 [#12204](https://github.com/CesiumGS/cesium/pull/12204)
 
 ##### Fixes :wrench:
 
-- Use first geometryBuffer if no best match found in I3SNode [#12132](https://github.com/CesiumGS/cesium/pull/12132)
-- Fixed `ImageBasedLighting.imageBasedLightingFactor` not affecting lighting. [#12129](https://github.com/CesiumGS/cesium/pull/12129)
-- Update type definitions to allow undefined for optional parameters [#12193](https://github.com/CesiumGS/cesium/pull/12193)
-- Reverts Firefox OIT temporary fix [#4815] and Firefox test failure fix [#5047]
+- Fix `Texture` errors when using a `HTMLVideoElement`. [#12219](https://github.com/CesiumGS/cesium/issues/12219)
 - Fixed noise in ambient occlusion post process. [#12201](https://github.com/CesiumGS/cesium/pull/12201)
+- Use first `geometryBuffer` if no best match found in I3SNode. [#12132](https://github.com/CesiumGS/cesium/pull/12132)
+- Update type definitions throughout `Core/` to allow undefined for optional parameters. [#12193](https://github.com/CesiumGS/cesium/pull/12193)
+- Reverts Firefox OIT temporary fix. [#4815](https://github.com/CesiumGS/cesium/pull/4815)
+
+##### Deprecated :hourglass_flowing_sand:
+
+- `Rectangle.validate` has been deprecated. It will be removed in 1.124.
 
 ### 1.121.1 - 2024-09-04
 
@@ -54,7 +76,6 @@ This is an npm-only release to extra source maps included in 1.121
 - `SceneTransforms.wgs84ToDrawingBufferCoordinates` has been removed. Use `SceneTransforms.worldToDrawingBufferCoordinates` instead.
 - Removed `jitter` option from `VoxelPrimitive.js`, `VoxelRenderResources.js`, and related test code in `VoxelPrimitiveSpec.js`. [#11913](https://github.com/CesiumGS/cesium/issues/11913)
 - Custom specular environment maps in `ImageBasedLighting` now require either a WebGL2 context or a WebGL1 context that supports the [`EXT_shader_texture_lod` extension](https://registry.khronos.org/webgl/extensions/EXT_shader_texture_lod/).
-- `ImageBasedLighting.luminanceAtZenith` has been removed. Use `DynamicEnvironmentMapManager` instead. [#12129](https://github.com/CesiumGS/cesium/pull/12129)
 
 ### 1.120 - 2024-08-01
 

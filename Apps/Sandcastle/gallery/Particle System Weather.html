@@ -8,10 +8,7 @@
       content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
     />
     <meta name="description" content="Particle systems for rain and snow." />
-    <meta
-      name="cesium-sandcastle-labels"
-      content="Beginner, Showcases, Tutorials"
-    />
+    <meta name="cesium-sandcastle-labels" content="Beginner, Showcases, Tutorials" />
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script
@@ -21,10 +18,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -139,9 +133,7 @@
           scene.primitives.removeAll();
           scene.primitives.add(
             new Cesium.ParticleSystem({
-              modelMatrix: new Cesium.Matrix4.fromTranslation(
-                scene.camera.position
-              ),
+              modelMatrix: new Cesium.Matrix4.fromTranslation(scene.camera.position),
               minimumSpeed: -1.0,
               maximumSpeed: 0.0,
               lifetime: 15.0,
@@ -177,9 +169,7 @@
               scene.primitives.removeAll();
               scene.primitives.add(
                 new Cesium.ParticleSystem({
-                  modelMatrix: new Cesium.Matrix4.fromTranslation(
-                    scene.camera.position
-                  ),
+                  modelMatrix: new Cesium.Matrix4.fromTranslation(scene.camera.position),
                   speed: -1.0,
                   lifetime: 15.0,
                   emitter: new Cesium.SphereEmitter(rainRadius),

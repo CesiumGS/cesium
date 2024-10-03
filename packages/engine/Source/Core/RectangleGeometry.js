@@ -1020,7 +1020,7 @@ function RectangleGeometry(options) {
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("rectangle", rectangle);
-  Rectangle.validate(rectangle);
+  Rectangle._validate(rectangle);
   if (rectangle.north < rectangle.south) {
     throw new DeveloperError(
       "options.rectangle.north must be greater than or equal to options.rectangle.south"
@@ -1199,7 +1199,7 @@ RectangleGeometry.computeRectangle = function (options, result) {
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("rectangle", rectangle);
-  Rectangle.validate(rectangle);
+  Rectangle._validate(rectangle);
   if (rectangle.north < rectangle.south) {
     throw new DeveloperError(
       "options.rectangle.north must be greater than or equal to options.rectangle.south"

@@ -21,10 +21,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -41,9 +38,7 @@
         const scene = viewer.scene;
 
         if (!scene.clampToHeightSupported) {
-          window.alert(
-            "This browser does not support clampToHeightMostDetailed."
-          );
+          window.alert("This browser does not support clampToHeightMostDetailed.");
         }
 
         scene.camera.setView({
@@ -93,9 +88,7 @@
             );
           }
 
-          const clampedCartesians = await scene.clampToHeightMostDetailed(
-            cartesians
-          );
+          const clampedCartesians = await scene.clampToHeightMostDetailed(cartesians);
 
           for (let i = 0; i < count; ++i) {
             viewer.entities.add({

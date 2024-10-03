@@ -16,10 +16,7 @@
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -80,12 +77,10 @@
             800.0
           );
           viewer.zoomTo(footprint, cameraOffset);
-          viewer.homeButton.viewModel.command.beforeExecute.addEventListener(
-            (e) => {
-              e.cancel = true;
-              viewer.zoomTo(footprint, cameraOffset);
-            }
-          );
+          viewer.homeButton.viewModel.command.beforeExecute.addEventListener((e) => {
+            e.cancel = true;
+            viewer.zoomTo(footprint, cameraOffset);
+          });
         } catch (error) {
           console.log(`Error loading geojson. ${error}`);
         }
@@ -104,18 +99,14 @@
         // Add tileset of proposed project design
         let buildingTileset;
         try {
-          buildingTileset = await Cesium.Cesium3DTileset.fromIonAssetId(
-            2533124
-          );
+          buildingTileset = await Cesium.Cesium3DTileset.fromIonAssetId(2533124);
           viewer.scene.primitives.add(buildingTileset);
         } catch (error) {
           console.log(`Error loading design tileset.
   ${error}`);
         }
 
-        Sandcastle.addToggleButton("Show proposed design", true, function (
-          checked
-        ) {
+        Sandcastle.addToggleButton("Show proposed design", true, function (checked) {
           buildingTileset.show = checked;
         });
 
@@ -123,9 +114,7 @@
           footprint.show = checked;
         });
 
-        Sandcastle.addToggleButton("Clip target location", true, function (
-          checked
-        ) {
+        Sandcastle.addToggleButton("Clip target location", true, function (checked) {
           clippingPolygons.enabled = checked;
         });
 

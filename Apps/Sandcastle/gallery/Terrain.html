@@ -7,10 +7,7 @@
       name="viewport"
       content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
     />
-    <meta
-      name="description"
-      content="Visualize worldwide, high-resolution terrain."
-    />
+    <meta name="description" content="Visualize worldwide, high-resolution terrain." />
     <meta name="cesium-sandcastle-labels" content="Tutorials, Showcases" />
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
@@ -21,10 +18,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -50,9 +44,7 @@
         viewer.scene.globe.enableLighting = true;
 
         // adjust time so scene is lit by sun
-        viewer.clock.currentTime = Cesium.JulianDate.fromIso8601(
-          "2023-01-01T00:00:00"
-        );
+        viewer.clock.currentTime = Cesium.JulianDate.fromIso8601("2023-01-01T00:00:00");
 
         // setup alternative terrain providers
         const ellipsoidProvider = new Cesium.EllipsoidTerrainProvider();
@@ -60,31 +52,29 @@
         // Sine wave
         const customHeightmapWidth = 32;
         const customHeightmapHeight = 32;
-        const customHeightmapProvider = new Cesium.CustomHeightmapTerrainProvider(
-          {
-            width: customHeightmapWidth,
-            height: customHeightmapHeight,
-            callback: function (x, y, level) {
-              const width = customHeightmapWidth;
-              const height = customHeightmapHeight;
-              const buffer = new Float32Array(width * height);
+        const customHeightmapProvider = new Cesium.CustomHeightmapTerrainProvider({
+          width: customHeightmapWidth,
+          height: customHeightmapHeight,
+          callback: function (x, y, level) {
+            const width = customHeightmapWidth;
+            const height = customHeightmapHeight;
+            const buffer = new Float32Array(width * height);
 
-              for (let yy = 0; yy < height; yy++) {
-                for (let xx = 0; xx < width; xx++) {
-                  const u = (x + xx / (width - 1)) / Math.pow(2, level);
-                  const v = (y + yy / (height - 1)) / Math.pow(2, level);
+            for (let yy = 0; yy < height; yy++) {
+              for (let xx = 0; xx < width; xx++) {
+                const u = (x + xx / (width - 1)) / Math.pow(2, level);
+                const v = (y + yy / (height - 1)) / Math.pow(2, level);
 
-                  const heightValue = 4000 * (Math.sin(8000 * v) * 0.5 + 0.5);
+                const heightValue = 4000 * (Math.sin(8000 * v) * 0.5 + 0.5);
 
-                  const index = yy * width + xx;
-                  buffer[index] = heightValue;
-                }
+                const index = yy * width + xx;
+                buffer[index] = heightValue;
               }
+            }
 
-              return buffer;
-            },
-          }
-        );
+            return buffer;
+          },
+        });
 
         Sandcastle.addToolbarMenu(
           [
@@ -284,16 +274,8 @@
           const terrainSamplePositions = [];
           for (let y = 0; y < gridHeight; ++y) {
             for (let x = 0; x < gridWidth; ++x) {
-              const longitude = Cesium.Math.lerp(
-                e.west,
-                e.east,
-                x / (gridWidth - 1)
-              );
-              const latitude = Cesium.Math.lerp(
-                e.south,
-                e.north,
-                y / (gridHeight - 1)
-              );
+              const longitude = Cesium.Math.lerp(e.west, e.east, x / (gridWidth - 1));
+              const latitude = Cesium.Math.lerp(e.south, e.north, y / (gridHeight - 1));
               const position = new Cesium.Cartographic(longitude, latitude);
               terrainSamplePositions.push(position);
             }
@@ -309,24 +291,18 @@
           }
         );
 
-        Sandcastle.addToggleButton(
-          "Enable fog",
-          viewer.scene.fog.enabled,
-          function (checked) {
-            viewer.scene.fog.enabled = checked;
-          }
-        );
+        Sandcastle.addToggleButton("Enable fog", viewer.scene.fog.enabled, function (
+          checked
+        ) {
+          viewer.scene.fog.enabled = checked;
+        });
 
         Sandcastle.addToolbarButton(
           "Sample Everest Terrain at Level 9",
           function () {
             const terrainSamplePositions = createGrid(0.005);
             Promise.resolve(
-              Cesium.sampleTerrain(
-                viewer.terrainProvider,
-                9,
-                terrainSamplePositions
-              )
+              Cesium.sampleTerrain(viewer.terrainProvider, 9, terrainSamplePositions)
             ).then(sampleTerrainSuccess);
             lookAtMtEverest();
           },

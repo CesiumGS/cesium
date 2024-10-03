@@ -19,10 +19,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -47,12 +44,9 @@
               onselect: function () {
                 viewer.dataSources
                   .add(
-                    Cesium.GpxDataSource.load(
-                      "../../SampleData/gpx/lamina.gpx",
-                      {
-                        clampToGround: true,
-                      }
-                    )
+                    Cesium.GpxDataSource.load("../../SampleData/gpx/lamina.gpx", {
+                      clampToGround: true,
+                    })
                   )
                   .then(function (dataSource) {
                     viewer.zoomTo(dataSource.entities);
@@ -64,12 +58,9 @@
               onselect: function () {
                 viewer.dataSources
                   .add(
-                    Cesium.GpxDataSource.load(
-                      "../../SampleData/gpx/route.gpx",
-                      {
-                        clampToGround: true,
-                      }
-                    )
+                    Cesium.GpxDataSource.load("../../SampleData/gpx/route.gpx", {
+                      clampToGround: true,
+                    })
                   )
                   .then(function (dataSource) {
                     viewer.zoomTo(dataSource.entities);
@@ -95,10 +86,9 @@
               onselect: function () {
                 viewer.dataSources
                   .add(
-                    Cesium.GpxDataSource.load(
-                      "../../SampleData/gpx/complexTrk.gpx",
-                      { clampToGround: true }
-                    )
+                    Cesium.GpxDataSource.load("../../SampleData/gpx/complexTrk.gpx", {
+                      clampToGround: true,
+                    })
                   )
                   .then(function (dataSource) {
                     viewer.zoomTo(dataSource.entities);
@@ -110,18 +100,15 @@
               onselect: function () {
                 viewer.dataSources
                   .add(
-                    Cesium.GpxDataSource.load(
-                      "../../SampleData/gpx/lamina.gpx",
-                      {
-                        clampToGround: true,
-                        trackColor: Cesium.Color.YELLOW,
-                        waypointImage: pinBuilder.fromMakiIconId(
-                          "bicycle",
-                          Cesium.Color.BLUE,
-                          48
-                        ),
-                      }
-                    )
+                    Cesium.GpxDataSource.load("../../SampleData/gpx/lamina.gpx", {
+                      clampToGround: true,
+                      trackColor: Cesium.Color.YELLOW,
+                      waypointImage: pinBuilder.fromMakiIconId(
+                        "bicycle",
+                        Cesium.Color.BLUE,
+                        48
+                      ),
+                    })
                   )
                   .then(function (dataSource) {
                     viewer.zoomTo(dataSource.entities);

@@ -22,10 +22,7 @@
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
 
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -171,12 +168,8 @@
             viewer.selectedEntity = undefined;
             const pickedBuilding = viewer.scene.pick(movement.position);
             if (pickedBuilding) {
-              const pickedLatitude = pickedBuilding.getProperty(
-                "cesium#latitude"
-              );
-              const pickedLongitude = pickedBuilding.getProperty(
-                "cesium#longitude"
-              );
+              const pickedLatitude = pickedBuilding.getProperty("cesium#latitude");
+              const pickedLongitude = pickedBuilding.getProperty("cesium#longitude");
               colorByDistanceToCoordinate(pickedLatitude, pickedLongitude);
             }
           }, Cesium.ScreenSpaceEventType.LEFT_CLICK);

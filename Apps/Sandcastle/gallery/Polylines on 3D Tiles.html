@@ -21,10 +21,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -39,9 +36,7 @@
         const viewer = new Cesium.Viewer("cesiumContainer");
         const scene = viewer.scene;
 
-        viewer.clock.currentTime = Cesium.JulianDate.fromIso8601(
-          "2022-08-01T00:00:00Z"
-        );
+        viewer.clock.currentTime = Cesium.JulianDate.fromIso8601("2022-08-01T00:00:00Z");
 
         scene.camera.setView({
           destination: new Cesium.Cartesian3(

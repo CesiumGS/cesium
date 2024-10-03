@@ -18,10 +18,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -59,9 +56,7 @@
           geometry: sphereGeometry,
           modelMatrix: modelMatrix,
           attributes: {
-            color: Cesium.ColorGeometryInstanceAttribute.fromColor(
-              Cesium.Color.RED
-            ),
+            color: Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.RED),
           },
         });
         // Add the sphere instance to primitives

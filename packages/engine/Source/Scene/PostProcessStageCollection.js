@@ -423,8 +423,7 @@ function removeStages(collection) {
 
   const newStages = [];
   const stages = collection._stages;
-  const length = stages.length;
-  for (let i = 0, j = 0; i < length; ++i) {
+  for (let i = 0, j = 0; i < stages.length; ++i) {
     const stage = stages[i];
     if (stage) {
       stage._index = j++;
@@ -591,23 +590,20 @@ PostProcessStageCollection.prototype.update = function (
   this._previousActiveStages = previousActiveStages;
 
   const stages = this._stages;
-  let length = (activeStages.length = stages.length);
+  activeStages.length = stages.length;
 
-  let i;
-  let stage;
   let count = 0;
-  for (i = 0; i < length; ++i) {
-    stage = stages[i];
+  for (let i = 0; i < stages.length; ++i) {
+    const stage = stages[i];
     if (stage.ready && stage.enabled && stage._isSupported(context)) {
       activeStages[count++] = stage;
     }
   }
-
   activeStages.length = count;
 
   let activeStagesChanged = count !== previousActiveStages.length;
   if (!activeStagesChanged) {
-    for (i = 0; i < count; ++i) {
+    for (let i = 0; i < count; ++i) {
       if (activeStages[i] !== previousActiveStages[i]) {
         activeStagesChanged = true;
         break;
@@ -654,9 +650,9 @@ PostProcessStageCollection.prototype.update = function (
   }
 
   if (!defined(this._randomTexture) && aoEnabled) {
-    length = 256 * 256 * 3;
+    const length = 256 * 256 * 3;
     const random = new Uint8Array(length);
-    for (i = 0; i < length; i += 3) {
+    for (let i = 0; i < length; i += 3) {
       random[i] = Math.floor(Math.random() * 255.0);
     }
 
@@ -689,19 +685,17 @@ PostProcessStageCollection.prototype.update = function (
     autoexposure.update(context, useLogDepth);
   }
 
-  length = stages.length;
-  for (i = 0; i < length; ++i) {
+  for (let i = 0; i < stages.length; ++i) {
     stages[i].update(context, useLogDepth);
   }
 
   count = 0;
-  for (i = 0; i < length; ++i) {
-    stage = stages[i];
+  for (let i = 0; i < stages.length; ++i) {
+    const stage = stages[i];
     if (stage.ready && stage.enabled && stage._isSupported(context)) {
       count++;
     }
   }
-
   activeStagesChanged = count !== activeStages.length;
   if (activeStagesChanged) {
     this.update(context, useLogDepth, useHdr);
@@ -752,12 +746,9 @@ function execute(stage, context, colorTexture, depthTexture, idTexture) {
     return;
   }
 
-  const length = stage.length;
-  let i;
-
   if (stage.inputPreviousStageTexture) {
     execute(stage.get(0), context, colorTexture, depthTexture, idTexture);
-    for (i = 1; i < length; ++i) {
+    for (let i = 1; i < stage.length; ++i) {
       execute(
         stage.get(i),
         context,
@@ -767,7 +758,7 @@ function execute(stage, context, colorTexture, depthTexture, idTexture) {
       );
     }
   } else {
-    for (i = 0; i < length; ++i) {
+    for (let i = 0; i < stage.length; ++i) {
       execute(stage.get(i), context, colorTexture, depthTexture, idTexture);
     }
   }

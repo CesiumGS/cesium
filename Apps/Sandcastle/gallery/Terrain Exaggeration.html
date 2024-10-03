@@ -18,10 +18,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
       #toolbar {
@@ -161,9 +158,7 @@
 
         function updateExaggeration() {
           scene.verticalExaggeration = Number(viewModel.exaggeration);
-          scene.verticalExaggerationRelativeHeight = Number(
-            viewModel.relativeHeight
-          );
+          scene.verticalExaggerationRelativeHeight = Number(viewModel.relativeHeight);
           updateMaterial();
         }
 
@@ -172,9 +167,7 @@
         Cesium.knockout.applyBindings(viewModel, toolbar);
         for (const name in viewModel) {
           if (viewModel.hasOwnProperty(name)) {
-            Cesium.knockout
-              .getObservable(viewModel, name)
-              .subscribe(updateExaggeration);
+            Cesium.knockout.getObservable(viewModel, name).subscribe(updateExaggeration);
           }
         }
 

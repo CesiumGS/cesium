@@ -18,10 +18,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -42,20 +39,13 @@
         // the heights of the top and bottom of the wall.
         const redWallInstance = new Cesium.GeometryInstance({
           geometry: Cesium.WallGeometry.fromConstantHeights({
-            positions: Cesium.Cartesian3.fromDegreesArray([
-              -115.0,
-              44.0,
-              -90.0,
-              44.0,
-            ]),
+            positions: Cesium.Cartesian3.fromDegreesArray([-115.0, 44.0, -90.0, 44.0]),
             maximumHeight: 200000.0,
             minimumHeight: 100000.0,
             vertexFormat: Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
           }),
           attributes: {
-            color: Cesium.ColorGeometryInstanceAttribute.fromColor(
-              Cesium.Color.RED
-            ),
+            color: Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.RED),
           },
         });
 
@@ -81,9 +71,7 @@
             vertexFormat: Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
           }),
           attributes: {
-            color: Cesium.ColorGeometryInstanceAttribute.fromColor(
-              Cesium.Color.GREEN
-            ),
+            color: Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.GREEN),
           },
         });
 
@@ -128,19 +116,7 @@
           200000,
           100000,
         ];
-        const minimumHeights = [
-          0,
-          100000,
-          0,
-          100000,
-          0,
-          100000,
-          0,
-          100000,
-          0,
-          100000,
-          0,
-        ];
+        const minimumHeights = [0, 100000, 0, 100000, 0, 100000, 0, 100000, 0, 100000, 0];
 
         const blueWallInstance = new Cesium.GeometryInstance({
           geometry: new Cesium.WallGeometry({
@@ -150,20 +126,14 @@
             vertexFormat: Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
           }),
           attributes: {
-            color: Cesium.ColorGeometryInstanceAttribute.fromColor(
-              Cesium.Color.BLUE
-            ),
+            color: Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.BLUE),
           },
         });
 
         // Add all wall instances to primitives.
         scene.primitives.add(
           new Cesium.Primitive({
-            geometryInstances: [
-              blueWallInstance,
-              redWallInstance,
-              greenWallInstance,
-            ],
+            geometryInstances: [blueWallInstance, redWallInstance, greenWallInstance],
             appearance: new Cesium.PerInstanceColorAppearance({
               translucent: false,
             }),

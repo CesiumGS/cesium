@@ -18,10 +18,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
 
@@ -75,9 +72,7 @@
         viewer.trackedEntity = sphere;
 
         let synchronizer;
-        Sandcastle.addToggleButton("Clock synchronization", false, function (
-          checked
-        ) {
+        Sandcastle.addToggleButton("Clock synchronization", false, function (checked) {
           // By default, the video plays normally and simply shows
           // whatever frame the video is currently on.
           // We can synchronize the video with the scene clock
@@ -98,28 +93,27 @@
         // Since it's just an image material, we can modify the number
         // of times the video repeats in each direction..
         let isRepeating = true;
-        Sandcastle.addToggleButton("Image Repeat", isRepeating, function (
-          checked
-        ) {
+        Sandcastle.addToggleButton("Image Repeat", isRepeating, function (checked) {
           isRepeating = checked;
         });
 
-        sphere.ellipsoid.material.repeat = new Cesium.CallbackProperty(
-          function (time, result) {
-            if (!Cesium.defined(result)) {
-              result = new Cesium.Cartesian2();
-            }
-            if (isRepeating) {
-              result.x = 8;
-              result.y = 8;
-            } else {
-              result.x = 1;
-              result.y = 1;
-            }
-            return result;
-          },
-          false
-        );
+        sphere.ellipsoid.material.repeat = new Cesium.CallbackProperty(function (
+          time,
+          result
+        ) {
+          if (!Cesium.defined(result)) {
+            result = new Cesium.Cartesian2();
+          }
+          if (isRepeating) {
+            result.x = 8;
+            result.y = 8;
+          } else {
+            result.x = 1;
+            result.y = 1;
+          }
+          return result;
+        },
+        false);
 
         // Like Image, the video element doesn't have to be part of the DOM or
         // otherwise on the screen to be used as a texture.

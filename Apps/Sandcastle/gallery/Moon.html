@@ -11,10 +11,7 @@
       name="description"
       content="Moon terrain visualized using 3D Tiles, tiled and hosted by Cesium ion, and shown with points of interest and additional data layers."
     />
-    <meta
-      name="cesium-sandcastle-labels"
-      content="Showcases, ion Assets, 3D Tiles"
-    />
+    <meta name="cesium-sandcastle-labels" content="Showcases, ion Assets, 3D Tiles" />
     <title>Cesium Moon Terrain</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script
@@ -24,10 +21,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
       #toolbar {
@@ -68,41 +62,30 @@
 
         // Add Moon Terrain 3D Tiles
         try {
-          const tileset1 = await Cesium.Cesium3DTileset.fromIonAssetId(
-            2684829,
-            {
-              // Allow clamp to 3D Tiles
-              enableCollision: true,
-            }
-          );
+          const tileset1 = await Cesium.Cesium3DTileset.fromIonAssetId(2684829, {
+            // Allow clamp to 3D Tiles
+            enableCollision: true,
+          });
           viewer.scene.primitives.add(tileset1);
         } catch (error) {
           console.log(`Error loading tileset: ${error}`);
         }
 
         // Boundary data from https://wms.lroc.asu.edu/lroc/view_rdr/SHAPEFILE_LROC_GLOBAL_MARE
-        const boundariesResource = await Cesium.IonResource.fromAssetId(
-          2683530
-        );
-        const boundarySource = await Cesium.GeoJsonDataSource.load(
-          boundariesResource,
-          {
-            clampToGround: true,
-            fill: Cesium.Color.fromBytes(26, 106, 113).withAlpha(0.6),
-          }
-        );
+        const boundariesResource = await Cesium.IonResource.fromAssetId(2683530);
+        const boundarySource = await Cesium.GeoJsonDataSource.load(boundariesResource, {
+          clampToGround: true,
+          fill: Cesium.Color.fromBytes(26, 106, 113).withAlpha(0.6),
+        });
         boundarySource.show = false;
         viewer.dataSources.add(boundarySource);
 
         // Possible Artemis 3 landing locations. data from https://files.actgate.com/lunar/A3_Named_regions.geojson
         const artemis3resource = await Cesium.IonResource.fromAssetId(2683531);
-        const artemis3Source = await Cesium.GeoJsonDataSource.load(
-          artemis3resource,
-          {
-            clampToGround: true,
-            fill: Cesium.Color.fromBytes(243, 242, 99).withAlpha(0.6),
-          }
-        );
+        const artemis3Source = await Cesium.GeoJsonDataSource.load(artemis3resource, {
+          clampToGround: true,
+          fill: Cesium.Color.fromBytes(243, 242, 99).withAlpha(0.6),
+        });
         artemis3Source.show = false;
         viewer.dataSources.add(artemis3Source);
 
@@ -137,10 +120,7 @@
 
         for (const poi of pointsOfInterest) {
           viewer.entities.add({
-            position: Cesium.Cartesian3.fromDegrees(
-              poi.longitude,
-              poi.latitude
-            ),
+            position: Cesium.Cartesian3.fromDegrees(poi.longitude, poi.latitude),
             label: {
               text: poi.text,
               font: "14pt Verdana",
@@ -149,12 +129,7 @@
               style: Cesium.LabelStyle.FILL_AND_OUTLINE,
               pixelOffset: new Cesium.Cartesian2(0, -22),
               scaleByDistance: new Cesium.NearFarScalar(1.5e2, 1.0, 1.5e7, 0.5),
-              translucencyByDistance: new Cesium.NearFarScalar(
-                2.5e7,
-                1.0,
-                4.0e7,
-                0.0
-              ),
+              translucencyByDistance: new Cesium.NearFarScalar(2.5e7, 1.0, 4.0e7, 0.0),
               heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
               disableDepthTestDistance: new Cesium.CallbackProperty(() => {
                 return Cesium.Cartesian3.magnitude(scene.camera.positionWC);
@@ -286,11 +261,12 @@
 
         const camera = viewer.scene.camera;
         const rotationSpeed = Cesium.Math.toRadians(0.1);
-        const removeRotation = viewer.scene.postRender.addEventListener(
-          function (scene, time) {
-            viewer.scene.camera.rotateRight(rotationSpeed);
-          }
-        );
+        const removeRotation = viewer.scene.postRender.addEventListener(function (
+          scene,
+          time
+        ) {
+          viewer.scene.camera.rotateRight(rotationSpeed);
+        });
 
         const options1 = [
           {
@@ -330,8 +306,7 @@
             },
           },
           {
-            text:
-              "Shackleton Crater (South Pole) and Artemis 3 landing options",
+            text: "Shackleton Crater (South Pole) and Artemis 3 landing options",
             onselect: () => {
               removeRotation();
               scene.camera.flyTo(shackleton);
@@ -341,9 +316,7 @@
         ];
         Sandcastle.addToolbarMenu(options1);
 
-        Sandcastle.addToggleButton("Show Mare Boundaries", false, function (
-          checked
-        ) {
+        Sandcastle.addToggleButton("Show Mare Boundaries", false, function (checked) {
           boundarySource.show = checked;
         });
 
@@ -361,10 +334,7 @@
           () => removeRotation(),
           Cesium.ScreenSpaceEventType.MIDDLE_DOWN
         );
-        handler.setInputAction(
-          () => removeRotation(),
-          Cesium.ScreenSpaceEventType.WHEEL
-        );
+        handler.setInputAction(() => removeRotation(), Cesium.ScreenSpaceEventType.WHEEL);
 
         //Sandcastle_End
       };

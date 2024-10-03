@@ -7,10 +7,7 @@
       name="viewport"
       content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
     />
-    <meta
-      name="description"
-      content="User-defined clipping planes applied to terrain."
-    />
+    <meta name="description" content="User-defined clipping planes applied to terrain." />
     <meta name="cesium-sandcastle-labels" content="Showcases" />
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
@@ -21,10 +18,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
       #toolbar {
@@ -41,9 +35,7 @@
     <div id="cesiumContainer" class="fullSize"></div>
     <div id="loadingOverlay"><h1>Loading...</h1></div>
     <div id="toolbar">
-      <select
-        data-bind="options: exampleTypes, value: currentExampleType"
-      ></select>
+      <select data-bind="options: exampleTypes, value: currentExampleType"></select>
       <input
         type="checkbox"
         value="false"
@@ -70,11 +62,7 @@
         });
         const globe = viewer.scene.globe;
 
-        const exampleTypes = [
-          "Cesium Man",
-          "St. Helens",
-          "Grand Canyon Isolated",
-        ];
+        const exampleTypes = ["Cesium Man", "St. Helens", "Grand Canyon Isolated"];
         const viewModel = {
           exampleTypes: exampleTypes,
           currentExampleType: exampleTypes[0],
@@ -128,22 +116,10 @@
           globe.clippingPlanes = new Cesium.ClippingPlaneCollection({
             modelMatrix: entity.computeModelMatrix(Cesium.JulianDate.now()),
             planes: [
-              new Cesium.ClippingPlane(
-                new Cesium.Cartesian3(1.0, 0.0, 0.0),
-                -700.0
-              ),
-              new Cesium.ClippingPlane(
-                new Cesium.Cartesian3(-1.0, 0.0, 0.0),
-                -700.0
-              ),
-              new Cesium.ClippingPlane(
-                new Cesium.Cartesian3(0.0, 1.0, 0.0),
-                -700.0
-              ),
-              new Cesium.ClippingPlane(
-                new Cesium.Cartesian3(0.0, -1.0, 0.0),
-                -700.0
-              ),
+              new Cesium.ClippingPlane(new Cesium.Cartesian3(1.0, 0.0, 0.0), -700.0),
+              new Cesium.ClippingPlane(new Cesium.Cartesian3(-1.0, 0.0, 0.0), -700.0),
+              new Cesium.ClippingPlane(new Cesium.Cartesian3(0.0, 1.0, 0.0), -700.0),
+              new Cesium.ClippingPlane(new Cesium.Cartesian3(0.0, -1.0, 0.0), -700.0),
             ],
             edgeWidth: edgeStylingEnabled ? 1.0 : 0.0,
             edgeColor: Cesium.Color.WHITE,
@@ -241,16 +217,9 @@
               points[nextIndex],
               new Cesium.Cartesian3()
             );
-            midpoint = Cesium.Cartesian3.multiplyByScalar(
-              midpoint,
-              0.5,
-              midpoint
-            );
+            midpoint = Cesium.Cartesian3.multiplyByScalar(midpoint, 0.5, midpoint);
 
-            const up = Cesium.Cartesian3.normalize(
-              midpoint,
-              new Cesium.Cartesian3()
-            );
+            const up = Cesium.Cartesian3.normalize(midpoint, new Cesium.Cartesian3());
             let right = Cesium.Cartesian3.subtract(
               points[nextIndex],
               midpoint,
@@ -258,19 +227,12 @@
             );
             right = Cesium.Cartesian3.normalize(right, right);
 
-            let normal = Cesium.Cartesian3.cross(
-              right,
-              up,
-              new Cesium.Cartesian3()
-            );
+            let normal = Cesium.Cartesian3.cross(right, up, new Cesium.Cartesian3());
             normal = Cesium.Cartesian3.normalize(normal, normal);
 
             // Compute distance by pretending the plane is at the origin
             const originCenteredPlane = new Cesium.Plane(normal, 0.0);
-            const distance = Cesium.Plane.getPointDistance(
-              originCenteredPlane,
-              midpoint
-            );
+            const distance = Cesium.Plane.getPointDistance(originCenteredPlane, midpoint);
 
             clippingPlanes.push(new Cesium.ClippingPlane(normal, distance));
           }
@@ -341,22 +303,10 @@
           globe.clippingPlanes = new Cesium.ClippingPlaneCollection({
             modelMatrix: Cesium.Transforms.eastNorthUpToFixedFrame(position),
             planes: [
-              new Cesium.ClippingPlane(
-                new Cesium.Cartesian3(1.0, 0.0, 0.0),
-                distance
-              ),
-              new Cesium.ClippingPlane(
-                new Cesium.Cartesian3(-1.0, 0.0, 0.0),
-                distance
-              ),
-              new Cesium.ClippingPlane(
-                new Cesium.Cartesian3(0.0, 1.0, 0.0),
-                distance
-              ),
-              new Cesium.ClippingPlane(
-                new Cesium.Cartesian3(0.0, -1.0, 0.0),
-                distance
-              ),
+              new Cesium.ClippingPlane(new Cesium.Cartesian3(1.0, 0.0, 0.0), distance),
+              new Cesium.ClippingPlane(new Cesium.Cartesian3(-1.0, 0.0, 0.0), distance),
+              new Cesium.ClippingPlane(new Cesium.Cartesian3(0.0, 1.0, 0.0), distance),
+              new Cesium.ClippingPlane(new Cesium.Cartesian3(0.0, -1.0, 0.0), distance),
             ],
             unionClippingRegions: true,
             edgeWidth: edgeStylingEnabled ? 1.0 : 0.0,

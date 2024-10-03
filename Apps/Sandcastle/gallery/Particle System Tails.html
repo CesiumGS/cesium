@@ -7,14 +7,8 @@
       name="viewport"
       content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
     />
-    <meta
-      name="description"
-      content="Particle systems for rocket and comet tails."
-    />
-    <meta
-      name="cesium-sandcastle-labels"
-      content="Beginner, Showcases, Tutorials"
-    />
+    <meta name="description" content="Particle systems for rocket and comet tails." />
+    <meta name="cesium-sandcastle-labels" content="Beginner, Showcases, Tutorials" />
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script
@@ -24,10 +18,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -41,11 +32,7 @@
         const viewer = new Cesium.Viewer("cesiumContainer", {
           shouldAnimate: true,
         });
-        const planePosition = Cesium.Cartesian3.fromDegrees(
-          -75.59777,
-          40.03883,
-          800.0
-        );
+        const planePosition = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883, 800.0);
         const particlesOffset = new Cesium.Cartesian3(
           -8.950115473940969,
           34.852766731753945,
@@ -57,10 +44,7 @@
           new Cesium.Cartesian3()
         );
         const resetCamera = function () {
-          viewer.camera.lookAt(
-            cameraLocation,
-            new Cesium.Cartesian3(-450, -300, 200)
-          );
+          viewer.camera.lookAt(cameraLocation, new Cesium.Cartesian3(-450, -300, 200));
         };
         resetCamera();
 
@@ -82,11 +66,7 @@
         }
 
         // Add plane to scene
-        const hpr = new Cesium.HeadingPitchRoll(
-          0.0,
-          Cesium.Math.PI_OVER_TWO,
-          0.0
-        );
+        const hpr = new Cesium.HeadingPitchRoll(0.0, Cesium.Math.PI_OVER_TWO, 0.0);
         const orientation = Cesium.Transforms.headingPitchRollQuaternion(
           planePosition,
           hpr
@@ -206,17 +186,14 @@
               scratchCartographic
             );
 
-            const angle =
-              (Cesium.Math.PI * 2.0 * iteration) / options.numberOfSystems;
+            const angle = (Cesium.Math.PI * 2.0 * iteration) / options.numberOfSystems;
             iteration += options.iterationOffset;
             scratchCartographic.longitude +=
               Math.cos(angle) * options.cartographicStep * 30.0 * dt;
             scratchCartographic.latitude +=
               Math.sin(angle) * options.cartographicStep * 30.0 * dt;
 
-            particle.position = Cesium.Cartographic.toCartesian(
-              scratchCartographic
-            );
+            particle.position = Cesium.Cartographic.toCartesian(scratchCartographic);
           };
         };
 
@@ -227,12 +204,9 @@
         function createParticleSystems(options, systemsArray) {
           const length = options.numberOfSystems;
           for (let i = 0; i < length; ++i) {
-            scratchAngleForOffset =
-              (Math.PI * 2.0 * i) / options.numberOfSystems;
-            scratchOffset.x +=
-              options.baseRadius * Math.cos(scratchAngleForOffset);
-            scratchOffset.y +=
-              options.baseRadius * Math.sin(scratchAngleForOffset);
+            scratchAngleForOffset = (Math.PI * 2.0 * i) / options.numberOfSystems;
+            scratchOffset.x += options.baseRadius * Math.cos(scratchAngleForOffset);
+            scratchOffset.y += options.baseRadius * Math.sin(scratchAngleForOffset);
 
             const emitterModelMatrix = Cesium.Matrix4.fromTranslation(
               scratchOffset,

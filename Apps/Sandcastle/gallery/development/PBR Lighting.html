@@ -7,19 +7,13 @@
       name="viewport"
       content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
     />
-    <meta
-      name="description"
-      content="Use glTF extensions for physically-based rendering."
-    />
+    <meta name="description" content="Lighting options for physically-based rendering." />
     <meta name="cesium-sandcastle-labels" content="Showcases" />
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
 
@@ -69,26 +63,18 @@
             step="0.5"
             data-bind="value: directionalLightIntensity, valueUpdate: 'input'"
           />
-          <input
-            type="text"
-            size="5"
-            data-bind="value: directionalLightIntensity"
-          />
+          <input type="text" size="5" data-bind="value: directionalLightIntensity" />
         </div>
         <div class="cesium-button">
           <label>Atmospheric Intensity</label>
           <input
             type="range"
             min="0.0"
-            max="3.0"
+            max="5.0"
             step="0.5"
             data-bind="value: atmosphereScatteringIntensity, valueUpdate: 'input'"
           />
-          <input
-            type="text"
-            size="5"
-            data-bind="value: atmosphereScatteringIntensity"
-          />
+          <input type="text" size="5" data-bind="value: atmosphereScatteringIntensity" />
         </div>
         <div class="cesium-button">
           <label>Gamma</label>
@@ -136,9 +122,7 @@
 
         const scene = viewer.scene;
         if (!scene.specularEnvironmentMapsSupported) {
-          window.alert(
-            "This browser does not support specular environment maps."
-          );
+          window.alert("This browser does not support specular environment maps.");
         }
 
         //     ***    MODELS    ***
@@ -154,11 +138,7 @@
           }
 
           const hpr = new Cesium.HeadingPitchRoll(0.0, 0.0, 0.0);
-          const origin = Cesium.Cartesian3.fromDegrees(
-            -123.0744619,
-            44.0503706,
-            height
-          );
+          const origin = Cesium.Cartesian3.fromDegrees(-123.0744619, 44.0503706, height);
           return Cesium.Transforms.headingPitchRollToFixedFrame(origin, hpr);
         }
 
@@ -167,27 +147,25 @@
         Cesium.knockout.applyBindings(modelViewModel, modelsToolbar);
 
         let model;
-        Cesium.knockout
-          .getObservable(modelViewModel, "height")
-          .subscribe(function () {
-            const modelMatrix = computeModelMatrixFromHeight();
+        Cesium.knockout.getObservable(modelViewModel, "height").subscribe(function () {
+          const modelMatrix = computeModelMatrixFromHeight();
 
-            if (!Cesium.defined(modelMatrix)) {
-              return;
-            }
+          if (!Cesium.defined(modelMatrix)) {
+            return;
+          }
 
-            model.modelMatrix = modelMatrix;
-            const camera = scene.camera;
-            const boundingSphere = model.boundingSphere;
-            camera.lookAt(
-              boundingSphere.center,
-              new Cesium.HeadingPitchRange(
-                camera.heading,
-                camera.pitch,
-                boundingSphere.radius * 2.0
-              )
-            );
-          });
+          model.modelMatrix = modelMatrix;
+          const camera = scene.camera;
+          const boundingSphere = model.boundingSphere;
+          camera.lookAt(
+            boundingSphere.center,
+            new Cesium.HeadingPitchRange(
+              camera.heading,
+              camera.pitch,
+              boundingSphere.radius * 2.0
+            )
+          );
+        });
 
         const modelOptions = [
           {
@@ -269,29 +247,25 @@
           {
             text: "Dynamic environment maps - Diffuse and specular",
             onselect: () => {
-              imageBasedLighting.imageBasedLightingFactor =
-                Cesium.Cartesian2.ONE;
+              imageBasedLighting.imageBasedLightingFactor = Cesium.Cartesian2.ONE;
             },
           },
           {
             text: "Dynamic environment maps - Diffuse only",
             onselect: () => {
-              imageBasedLighting.imageBasedLightingFactor =
-                Cesium.Cartesian2.UNIT_X;
+              imageBasedLighting.imageBasedLightingFactor = Cesium.Cartesian2.UNIT_X;
             },
           },
           {
             text: "Dynamic environment maps intensity - Specular only",
             onselect: () => {
-              imageBasedLighting.imageBasedLightingFactor =
-                Cesium.Cartesian2.UNIT_Y;
+              imageBasedLighting.imageBasedLightingFactor = Cesium.Cartesian2.UNIT_Y;
             },
           },
           {
             text: "Dynamic environment maps - None",
             onselect: () => {
-              imageBasedLighting.imageBasedLightingFactor =
-                Cesium.Cartesian2.ZERO;
+              imageBasedLighting.imageBasedLightingFactor = Cesium.Cartesian2.ZERO;
             },
           },
         ];
@@ -424,15 +398,11 @@
           }
         );
 
-        Sandcastle.addToggleButton("Shadows", viewer.shadows, function (
-          checked
-        ) {
+        Sandcastle.addToggleButton("Shadows", viewer.shadows, function (checked) {
           viewer.shadows = checked;
         });
 
-        Sandcastle.addToggleButton("HDR", scene.highDynamicRange, function (
-          checked
-        ) {
+        Sandcastle.addToggleButton("HDR", scene.highDynamicRange, function (checked) {
           scene.highDynamicRange = checked;
         });
 

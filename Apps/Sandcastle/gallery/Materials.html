@@ -21,10 +21,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -90,9 +87,7 @@
 
         function applyCheckerboardMaterial(primitive, scene) {
           Sandcastle.declare(applyCheckerboardMaterial); // For highlighting in Sandcastle.
-          primitive.appearance.material = Cesium.Material.fromType(
-            "Checkerboard"
-          );
+          primitive.appearance.material = Cesium.Material.fromType("Checkerboard");
         }
 
         function applyColorMaterial(primitive, scene) {
@@ -117,19 +112,19 @@
                 },
               },
               source: `
-                czm_material czm_getMaterial(czm_materialInput materialInput) { 
-                    czm_material material = czm_getDefaultMaterial(materialInput); 
-                    vec4 color; 
-                    float heightValue = texture(heightField, materialInput.st).r; 
-                    color.rgb = mix(vec3(0.2, 0.6, 0.2), vec3(1.0, 0.5, 0.2), heightValue); 
-                    color.a = (1.0 - texture(image, materialInput.st).r) * 0.7; 
-                    color = czm_gammaCorrect(color); 
-                    material.diffuse = color.rgb; 
-                    material.alpha = color.a; 
-                    material.normal = bumpMap.normal; 
+                czm_material czm_getMaterial(czm_materialInput materialInput) {
+                    czm_material material = czm_getDefaultMaterial(materialInput);
+                    vec4 color;
+                    float heightValue = texture(heightField, materialInput.st).r;
+                    color.rgb = mix(vec3(0.2, 0.6, 0.2), vec3(1.0, 0.5, 0.2), heightValue);
+                    color.a = (1.0 - texture(image, materialInput.st).r) * 0.7;
+                    color = czm_gammaCorrect(color);
+                    material.diffuse = color.rgb;
+                    material.alpha = color.a;
+                    material.normal = bumpMap.normal;
                     material.specular = step(0.1, heightValue);  // Specular mountain tops
                     material.shininess = 8.0;  // Sharpen highlight
-                    return material; 
+                    return material;
                 }
                 `,
             },
@@ -191,9 +186,7 @@
               type: "Water",
               uniforms: {
                 specularMap: "../images/earthspec1k.jpg",
-                normalMap: Cesium.buildModuleUrl(
-                  "Assets/Textures/waterNormals.jpg"
-                ),
+                normalMap: Cesium.buildModuleUrl("Assets/Textures/waterNormals.jpg"),
                 frequency: 10000.0,
                 animationSpeed: 0.01,
                 amplitude: 1.0,
@@ -297,9 +290,7 @@
 
         function applyRimLightingMaterial(primitive, scene) {
           Sandcastle.declare(applyRimLightingMaterial); // For highlighting in Sandcastle.
-          primitive.appearance.material = Cesium.Material.fromType(
-            "RimLighting"
-          );
+          primitive.appearance.material = Cesium.Material.fromType("RimLighting");
         }
 
         function applyPolylineArrowMaterial(primitive, scene) {
@@ -559,12 +550,7 @@
             new Cesium.Primitive({
               geometryInstances: new Cesium.GeometryInstance({
                 geometry: new Cesium.RectangleGeometry({
-                  rectangle: Cesium.Rectangle.fromDegrees(
-                    -120.0,
-                    20.0,
-                    -60.0,
-                    40.0
-                  ),
+                  rectangle: Cesium.Rectangle.fromDegrees(-120.0, 20.0, -60.0, 40.0),
                   vertexFormat: Cesium.EllipsoidSurfaceAppearance.VERTEX_FORMAT,
                 }),
               }),
@@ -578,12 +564,7 @@
             new Cesium.Primitive({
               geometryInstances: new Cesium.GeometryInstance({
                 geometry: new Cesium.RectangleGeometry({
-                  rectangle: Cesium.Rectangle.fromDegrees(
-                    -180.0,
-                    -90.0,
-                    180.0,
-                    90.0
-                  ),
+                  rectangle: Cesium.Rectangle.fromDegrees(-180.0, -90.0, 180.0, 90.0),
                   vertexFormat: Cesium.EllipsoidSurfaceAppearance.VERTEX_FORMAT,
                 }),
               }),
@@ -594,9 +575,7 @@
             })
           );
 
-          const polylines = scene.primitives.add(
-            new Cesium.PolylineCollection()
-          );
+          const polylines = scene.primitives.add(new Cesium.PolylineCollection());
           polyline = polylines.add({
             positions: Cesium.PolylinePipeline.generateCartesianArc({
               positions: Cesium.Cartesian3.fromDegreesArray([

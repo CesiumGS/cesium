@@ -8,10 +8,7 @@
       content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
     />
     <meta name="description" content="A custom DataSource implementation." />
-    <meta
-      name="cesium-sandcastle-labels"
-      content="Showcases, DataSources, Tutorials"
-    />
+    <meta name="cesium-sandcastle-labels" content="Showcases, DataSources, Tutorials" />
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script
@@ -21,10 +18,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -337,9 +331,7 @@
               const polyline = new Cesium.PolylineGraphics();
               polyline.material = new Cesium.ColorMaterialProperty(color);
               polyline.width = new Cesium.ConstantProperty(2);
-              polyline.arcType = new Cesium.ConstantProperty(
-                Cesium.ArcType.NONE
-              );
+              polyline.arcType = new Cesium.ConstantProperty(Cesium.ArcType.NONE);
               polyline.positions = new Cesium.ConstantProperty([
                 surfacePosition,
                 heightPosition,
@@ -374,24 +366,19 @@
         //Now that we've defined our own DataSource, we can use it to load
         //any JSON data formatted for WebGL Globe.
         const dataSource = new WebGLGlobeDataSource();
-        dataSource
-          .loadUrl("../../SampleData/population909500.json")
-          .then(function () {
-            //After the initial load, create buttons to let the user switch among series.
-            function createSeriesSetter(seriesName) {
-              return function () {
-                dataSource.seriesToDisplay = seriesName;
-              };
-            }
+        dataSource.loadUrl("../../SampleData/population909500.json").then(function () {
+          //After the initial load, create buttons to let the user switch among series.
+          function createSeriesSetter(seriesName) {
+            return function () {
+              dataSource.seriesToDisplay = seriesName;
+            };
+          }
 
-            for (let i = 0; i < dataSource.seriesNames.length; i++) {
-              const seriesName = dataSource.seriesNames[i];
-              Sandcastle.addToolbarButton(
-                seriesName,
-                createSeriesSetter(seriesName)
-              );
-            }
-          });
+          for (let i = 0; i < dataSource.seriesNames.length; i++) {
+            const seriesName = dataSource.seriesNames[i];
+            Sandcastle.addToolbarButton(seriesName, createSeriesSetter(seriesName));
+          }
+        });
 
         //Create a Viewer instances and add the DataSource.
         const viewer = new Cesium.Viewer("cesiumContainer", {

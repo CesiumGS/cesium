@@ -21,10 +21,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -36,10 +33,7 @@
           <tr>
             <td>Scale with Max Size</td>
             <td>
-              <input
-                type="checkbox"
-                data-bind="checked: scaleWithMaximumSize"
-              />
+              <input type="checkbox" data-bind="checked: scaleWithMaximumSize" />
             </td>
           </tr>
           <tr>
@@ -131,11 +125,7 @@
                 step="0.01"
                 data-bind="value: slice, valueUpdate: 'input', enable: renderSlice"
               />
-              <input
-                type="text"
-                size="1"
-                data-bind="value: slice, enable: renderSlice"
-              />
+              <input type="text" size="1" data-bind="value: slice, enable: renderSlice" />
             </td>
           </tr>
           <tr>
@@ -164,11 +154,7 @@
         //Sandcastle_Begin
         const viewer = new Cesium.Viewer("cesiumContainer");
         const scene = viewer.scene;
-        const position = Cesium.Cartesian3.fromDegrees(
-          -123.0744619,
-          44.0503706,
-          50
-        );
+        const position = Cesium.Cartesian3.fromDegrees(-123.0744619, 44.0503706, 50);
 
         function getColor(colorName) {
           return Cesium.Color[colorName.toUpperCase()];
@@ -199,10 +185,7 @@
 
         const cloud = clouds.add({
           position: position,
-          scale: new Cesium.Cartesian2(
-            cloudParameters.scaleX,
-            cloudParameters.scaleY
-          ),
+          scale: new Cesium.Cartesian2(cloudParameters.scaleX, cloudParameters.scaleY),
           maximumSize: new Cesium.Cartesian3(
             cloudParameters.maximumSizeX,
             cloudParameters.maximumSizeY,

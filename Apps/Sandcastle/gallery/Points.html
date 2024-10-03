@@ -18,10 +18,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -65,11 +62,7 @@
           Sandcastle.declare(changePointProperties);
 
           const entity = viewer.entities.add({
-            position: Cesium.Cartesian3.fromDegrees(
-              -75.59777,
-              40.03883,
-              300000.0
-            ),
+            position: Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883, 300000.0),
             point: {
               pixelSize: 2,
             },
@@ -127,12 +120,7 @@
             position: Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
             point: {
               pixelSize: 20,
-              translucencyByDistance: new Cesium.NearFarScalar(
-                1.5e2,
-                1.0,
-                1.5e7,
-                0.2
-              ),
+              translucencyByDistance: new Cesium.NearFarScalar(1.5e2, 1.0, 1.5e7, 0.2),
             },
           });
         }

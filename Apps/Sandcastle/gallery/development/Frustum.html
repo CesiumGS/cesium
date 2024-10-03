@@ -18,10 +18,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -36,15 +33,9 @@
         const viewer = new Cesium.Viewer("cesiumContainer");
         const scene = viewer.scene;
 
-        const positionOnEllipsoid = Cesium.Cartesian3.fromDegrees(
-          -105.0,
-          45.0,
-          20.0
-        );
+        const positionOnEllipsoid = Cesium.Cartesian3.fromDegrees(-105.0, 45.0, 20.0);
 
-        const enu = Cesium.Transforms.eastNorthUpToFixedFrame(
-          positionOnEllipsoid
-        );
+        const enu = Cesium.Transforms.eastNorthUpToFixedFrame(positionOnEllipsoid);
         const rotation = Cesium.Matrix4.getMatrix3(enu, new Cesium.Matrix3());
         Cesium.Matrix3.multiply(
           rotation,

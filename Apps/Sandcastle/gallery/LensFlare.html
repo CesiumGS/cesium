@@ -8,10 +8,7 @@
       content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
     />
     <meta name="description" content="Lens Flare." />
-    <meta
-      name="cesium-sandcastle-labels"
-      content="Showcases, Post Processing"
-    />
+    <meta name="cesium-sandcastle-labels" content="Showcases, Post Processing" />
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script
@@ -21,10 +18,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -120,9 +114,7 @@
         Cesium.knockout.applyBindings(viewModel, toolbar);
         for (const name in viewModel) {
           if (viewModel.hasOwnProperty(name)) {
-            Cesium.knockout
-              .getObservable(viewModel, name)
-              .subscribe(updatePostProcess);
+            Cesium.knockout.getObservable(viewModel, name).subscribe(updatePostProcess);
           }
         }
 
@@ -163,10 +155,7 @@
           new Cesium.Cartesian3()
         );
 
-        viewer.clock.currentTime = new Cesium.JulianDate(
-          2458047,
-          27399.860215000022
-        );
+        viewer.clock.currentTime = new Cesium.JulianDate(2458047, 27399.860215000022);
         //Sandcastle_End
       };
       if (typeof Cesium !== "undefined") {

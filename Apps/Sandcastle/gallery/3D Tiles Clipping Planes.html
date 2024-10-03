@@ -21,10 +21,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
       #toolbar {
@@ -44,9 +41,7 @@
     <div id="cesiumContainer" class="fullSize"></div>
     <div id="loadingOverlay"><h1>Loading...</h1></div>
     <div id="toolbar">
-      <select
-        data-bind="options: exampleTypes, value: currentExampleType"
-      ></select>
+      <select data-bind="options: exampleTypes, value: currentExampleType"></select>
       <input
         type="checkbox"
         value="false"
@@ -74,9 +69,7 @@
         });
         const scene = viewer.scene;
 
-        viewer.clock.currentTime = Cesium.JulianDate.fromIso8601(
-          "2022-08-01T00:00:00Z"
-        );
+        viewer.clock.currentTime = Cesium.JulianDate.fromIso8601("2022-08-01T00:00:00Z");
 
         const clipObjects = ["BIM", "Point Cloud", "Instanced", "Model"];
         const viewModel = {
@@ -92,9 +85,7 @@
         let clippingPlanes;
 
         // Select plane when mouse down
-        const downHandler = new Cesium.ScreenSpaceEventHandler(
-          viewer.scene.canvas
-        );
+        const downHandler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
         downHandler.setInputAction(function (movement) {
           const pickedObject = scene.pick(movement.position);
           if (
@@ -110,9 +101,7 @@
         }, Cesium.ScreenSpaceEventType.LEFT_DOWN);
 
         // Release plane on mouse up
-        const upHandler = new Cesium.ScreenSpaceEventHandler(
-          viewer.scene.canvas
-        );
+        const upHandler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
         upHandler.setInputAction(function () {
           if (Cesium.defined(selectedPlane)) {
             selectedPlane.material = Cesium.Color.WHITE.withAlpha(0.1);
@@ -124,9 +113,7 @@
         }, Cesium.ScreenSpaceEventType.LEFT_UP);
 
         // Update plane on mouse move
-        const moveHandler = new Cesium.ScreenSpaceEventHandler(
-          viewer.scene.canvas
-        );
+        const moveHandler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
         moveHandler.setInputAction(function (movement) {
           if (Cesium.defined(selectedPlane)) {
             const deltaY = movement.startPosition.y - movement.endPosition.y;
@@ -147,10 +134,7 @@
 
           clippingPlanes = new Cesium.ClippingPlaneCollection({
             planes: [
-              new Cesium.ClippingPlane(
-                new Cesium.Cartesian3(0.0, 0.0, -1.0),
-                0.0
-              ),
+              new Cesium.ClippingPlane(new Cesium.Cartesian3(0.0, 0.0, -1.0), 0.0),
             ],
             edgeWidth: viewModel.edgeStylingEnabled ? 1.0 : 0.0,
           });
@@ -172,22 +156,13 @@
 
             viewer.scene.primitives.add(tileset);
 
-            tileset.debugShowBoundingVolume =
-              viewModel.debugBoundingVolumesEnabled;
+            tileset.debugShowBoundingVolume = viewModel.debugBoundingVolumesEnabled;
             const boundingSphere = tileset.boundingSphere;
             const radius = boundingSphere.radius;
 
-            viewer.zoomTo(
-              tileset,
-              new Cesium.HeadingPitchRange(0.5, -0.2, radius * 4.0)
-            );
+            viewer.zoomTo(tileset, new Cesium.HeadingPitchRange(0.5, -0.2, radius * 4.0));
 
-            if (
-              !Cesium.Matrix4.equals(
-                tileset.root.transform,
-                Cesium.Matrix4.IDENTITY
-              )
-            ) {
+            if (!Cesium.Matrix4.equals(tileset.root.transform, Cesium.Matrix4.IDENTITY)) {
               // The clipping plane is initially positioned at the tileset's root transform.
               // Apply an additional matrix to center the clipping plane on the bounding sphere center.
               const transformCenter = Cesium.Matrix4.getTranslation(
@@ -201,8 +176,7 @@
                 tileset.boundingSphere.center
               );
               const height =
-                boundingSphereCartographic.height -
-                transformCartographic.height;
+                boundingSphereCartographic.height - transformCartographic.height;
               clippingPlanes.modelMatrix = Cesium.Matrix4.fromTranslation(
                 new Cesium.Cartesian3(0.0, 0.0, height)
               );
@@ -235,27 +209,17 @@
         function loadModel(url) {
           clippingPlanes = new Cesium.ClippingPlaneCollection({
             planes: [
-              new Cesium.ClippingPlane(
-                new Cesium.Cartesian3(0.0, 0.0, -1.0),
-                0.0
-              ),
+              new Cesium.ClippingPlane(new Cesium.Cartesian3(0.0, 0.0, -1.0), 0.0),
             ],
             edgeWidth: viewModel.edgeStylingEnabled ? 1.0 : 0.0,
           });
 
-          const position = Cesium.Cartesian3.fromDegrees(
-            -123.0744619,
-            44.0503706,
-            300.0
-          );
+          const position = Cesium.Cartesian3.fromDegrees(-123.0744619, 44.0503706, 300.0);
           const heading = Cesium.Math.toRadians(135.0);
           const pitch = 0.0;
           const roll = 0.0;
           const hpr = new Cesium.HeadingPitchRoll(heading, pitch, roll);
-          const orientation = Cesium.Transforms.headingPitchRollQuaternion(
-            position,
-            hpr
-          );
+          const orientation = Cesium.Transforms.headingPitchRollQuaternion(position, hpr);
           const entity = viewer.entities.add({
             name: url,
             position: position,
@@ -317,9 +281,7 @@
               // Position the instanced tileset above terrain
               loadTileset(
                 instancedUrl,
-                Cesium.Matrix4.fromTranslation(
-                  new Cesium.Cartesian3(15.0, -58.6, 50.825)
-                )
+                Cesium.Matrix4.fromTranslation(new Cesium.Cartesian3(15.0, -58.6, 50.825))
               );
             } else {
               loadModel(modelUrl);

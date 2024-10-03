@@ -18,10 +18,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -33,9 +30,7 @@
       <table class="infoPanel">
         <tbody>
           <tr>
-            <td>
-              Click on the 3D window then use the keyboard to change settings.
-            </td>
+            <td>Click on the 3D window then use the keyboard to change settings.</td>
           </tr>
           <tr>
             <td>Heading: <span id="heading"></span>°</td>
@@ -114,11 +109,7 @@
         let speed = 10;
         const deltaRadians = Cesium.Math.toRadians(3.0);
 
-        let position = Cesium.Cartesian3.fromDegrees(
-          -123.0744619,
-          44.0503706,
-          5000.0
-        );
+        let position = Cesium.Cartesian3.fromDegrees(-123.0744619, 44.0503706, 5000.0);
         let speedVector = new Cesium.Cartesian3();
         const fixedFrameTransform = Cesium.Transforms.localFrameToFixedFrameGenerator(
           "north",
@@ -153,12 +144,7 @@
             });
 
             // Zoom to model
-            r =
-              2.0 *
-              Math.max(
-                planePrimitive.boundingSphere.radius,
-                camera.frustum.near
-              );
+            r = 2.0 * Math.max(planePrimitive.boundingSphere.radius, camera.frustum.near);
             controller.minimumZoomDistance = r * 0.5;
             const center = planePrimitive.boundingSphere.center;
             const heading = Cesium.Math.toRadians(230.0);
@@ -262,9 +248,7 @@
         }
 
         viewer.scene.preRender.addEventListener(function (scene, time) {
-          headingSpan.innerHTML = Cesium.Math.toDegrees(hpRoll.heading).toFixed(
-            1
-          );
+          headingSpan.innerHTML = Cesium.Math.toDegrees(hpRoll.heading).toFixed(1);
           pitchSpan.innerHTML = Cesium.Math.toDegrees(hpRoll.pitch).toFixed(1);
           rollSpan.innerHTML = Cesium.Math.toDegrees(hpRoll.roll).toFixed(1);
           speedSpan.innerHTML = speed.toFixed(1);

@@ -2521,10 +2521,8 @@ function rectangleCameraPosition3D(camera, rectangle, result, updateCamera) {
   const ellipsoid = camera._projection.ellipsoid;
   const cameraRF = updateCamera ? camera : defaultRF;
 
-  const north = rectangle.north;
-  const south = rectangle.south;
-  let east = rectangle.east;
-  const west = rectangle.west;
+  const { north, south, west } = rectangle;
+  let { east } = rectangle;
 
   // If we go across the International Date Line
   if (west > east) {
