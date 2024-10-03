@@ -50,26 +50,26 @@ describe(
       promises.push(
         Resource.fetchImage("./Data/Images/Green.png").then(function (image) {
           greenImage = image;
-        })
+        }),
       );
       promises.push(
         Resource.fetchImage("./Data/Images/Blue.png").then(function (image) {
           blueImage = image;
-        })
+        }),
       );
       promises.push(
-        Resource.fetchImage("./Data/Images/BlueAlpha.png").then(function (
-          image
-        ) {
-          blueAlphaImage = image;
-        })
+        Resource.fetchImage("./Data/Images/BlueAlpha.png").then(
+          function (image) {
+            blueAlphaImage = image;
+          },
+        ),
       );
       promises.push(
-        Resource.fetchImage("./Data/Images/BlueOverRed.png").then(function (
-          image
-        ) {
-          blueOverRedImage = image;
-        })
+        Resource.fetchImage("./Data/Images/BlueOverRed.png").then(
+          function (image) {
+            blueOverRedImage = image;
+          },
+        ),
       );
       // Load this image as an ImageBitmap
       promises.push(
@@ -78,14 +78,14 @@ describe(
           preferImageBitmap: true,
         }).then(function (image) {
           blueOverRedFlippedImage = image;
-        })
+        }),
       );
       promises.push(
-        Resource.fetchImage("./Data/Images/Red16x16.png").then(function (
-          image
-        ) {
-          red16x16Image = image;
-        })
+        Resource.fetchImage("./Data/Images/Red16x16.png").then(
+          function (image) {
+            red16x16Image = image;
+          },
+        ),
       );
 
       const resource = Resource.createIfNeeded("./Data/Images/Green4x4.ktx2");
@@ -96,14 +96,14 @@ describe(
           return promise.then(function (result) {
             greenKTX2Image = result;
           });
-        })
+        }),
       );
 
       if (context.supportsBasis) {
         promises.push(
           loadKTX2("./Data/Images/Green4x4_ETC1S.ktx2").then(function (image) {
             greenBasisKTX2Image = image;
-          })
+          }),
         );
       }
 
@@ -154,7 +154,7 @@ describe(
       expect(texture.sizeInBytes).toEqual(
         expectedWidth *
           expectedHeight *
-          PixelFormat.componentsLength(texture.pixelFormat)
+          PixelFormat.componentsLength(texture.pixelFormat),
       );
 
       command.color = Color.WHITE;
@@ -198,7 +198,7 @@ describe(
       expect(texture.sizeInBytes).toEqual(
         expectedWidth *
           expectedHeight *
-          PixelFormat.componentsLength(texture.pixelFormat)
+          PixelFormat.componentsLength(texture.pixelFormat),
       );
 
       // Clear to white
@@ -232,41 +232,41 @@ describe(
       const topColor = new Color(0.0, 0.0, 1.0, 1.0);
       let bottomColor = new Color(1.0, 0.0, 0.0, 1.0);
 
-      return Resource.supportsImageBitmapOptions().then(function (
-        supportsImageBitmapOptions
-      ) {
-        if (supportsImageBitmapOptions) {
-          // When imageBitmapOptions is supported, flipY on texture upload is ignored.
-          bottomColor = topColor;
-        }
+      return Resource.supportsImageBitmapOptions().then(
+        function (supportsImageBitmapOptions) {
+          if (supportsImageBitmapOptions) {
+            // When imageBitmapOptions is supported, flipY on texture upload is ignored.
+            bottomColor = topColor;
+          }
 
-        texture = new Texture({
-          context: context,
-          source: blueOverRedFlippedImage,
-          pixelFormat: PixelFormat.RGBA,
-          flipY: false,
-        });
+          texture = new Texture({
+            context: context,
+            source: blueOverRedFlippedImage,
+            pixelFormat: PixelFormat.RGBA,
+            flipY: false,
+          });
 
-        expect({
-          context: context,
-          fragmentShader: fs,
-          uniformMap: uniformMap,
-        }).contextToRender(topColor.toBytes());
+          expect({
+            context: context,
+            fragmentShader: fs,
+            uniformMap: uniformMap,
+          }).contextToRender(topColor.toBytes());
 
-        // Flip the texture.
-        texture = new Texture({
-          context: context,
-          source: blueOverRedFlippedImage,
-          pixelFormat: PixelFormat.RGBA,
-          flipY: true,
-        });
+          // Flip the texture.
+          texture = new Texture({
+            context: context,
+            source: blueOverRedFlippedImage,
+            pixelFormat: PixelFormat.RGBA,
+            flipY: true,
+          });
 
-        expect({
-          context: context,
-          fragmentShader: fs,
-          uniformMap: uniformMap,
-        }).contextToRender(bottomColor.toBytes());
-      });
+          expect({
+            context: context,
+            fragmentShader: fs,
+            uniformMap: uniformMap,
+          }).contextToRender(bottomColor.toBytes());
+        },
+      );
     });
 
     it("draws the expected floating-point texture color", function () {
@@ -399,14 +399,7 @@ describe(
       const color0 = new Color(0.2, 0.4, 0.6, 1.0);
       const color1 = new Color(0.1, 0.3, 0.5, 1.0);
       const floats = new Uint16Array([
-        12902,
-        13926,
-        14541,
-        15360,
-        11878,
-        13517,
-        14336,
-        15360,
+        12902, 13926, 14541, 15360, 11878, 13517, 14336, 15360,
       ]);
 
       texture = new Texture({
@@ -783,7 +776,7 @@ describe(
       texture.generateMipmap();
       expect(texture.sizeInBytes).toEqualEpsilon(
         (16 * 16 + 8 * 8 + 4 * 4 + 2 * 2 + 1) * 4,
-        1
+        1,
       );
 
       expect({
@@ -876,7 +869,7 @@ describe(
       height,
       pixelFormat,
       pixelDatatype,
-      expectedSize
+      expectedSize,
     ) {
       texture = new Texture({
         context: context,
@@ -897,21 +890,21 @@ describe(
           16,
           PixelFormat.DEPTH_COMPONENT,
           PixelDatatype.UNSIGNED_SHORT,
-          256 * 2
+          256 * 2,
         );
         expectTextureByteSize(
           16,
           16,
           PixelFormat.DEPTH_COMPONENT,
           PixelDatatype.UNSIGNED_INT,
-          256 * 4
+          256 * 4,
         );
         expectTextureByteSize(
           16,
           16,
           PixelFormat.DEPTH_STENCIL,
           PixelDatatype.UNSIGNED_INT_24_8,
-          256 * 4
+          256 * 4,
         );
       }
 
@@ -921,35 +914,35 @@ describe(
         16,
         PixelFormat.ALPHA,
         PixelDatatype.UNSIGNED_BYTE,
-        256
+        256,
       );
       expectTextureByteSize(
         16,
         16,
         PixelFormat.RGB,
         PixelDatatype.UNSIGNED_BYTE,
-        256 * 3
+        256 * 3,
       );
       expectTextureByteSize(
         16,
         16,
         PixelFormat.RGBA,
         PixelDatatype.UNSIGNED_BYTE,
-        256 * 4
+        256 * 4,
       );
       expectTextureByteSize(
         16,
         16,
         PixelFormat.LUMINANCE,
         PixelDatatype.UNSIGNED_BYTE,
-        256
+        256,
       );
       expectTextureByteSize(
         16,
         16,
         PixelFormat.LUMINANCE_ALPHA,
         PixelDatatype.UNSIGNED_BYTE,
-        256 * 2
+        256 * 2,
       );
     });
 
@@ -1562,5 +1555,5 @@ describe(
       }).toThrowDeveloperError();
     });
   },
-  "WebGL"
+  "WebGL",
 );

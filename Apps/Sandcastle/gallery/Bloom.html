@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -162,12 +162,12 @@
         const target = Cesium.Cartesian3.fromDegrees(
           initialLon + lonIncrement,
           lat,
-          height + 7.5
+          height + 7.5,
         );
         const offset = new Cesium.Cartesian3(
           -37.048378684557974,
           -24.852967044804245,
-          4.352023653686047
+          4.352023653686047,
         );
         viewer.scene.camera.lookAt(target, offset);
         //Sandcastle_End

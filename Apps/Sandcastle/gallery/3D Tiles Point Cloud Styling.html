@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -39,7 +39,7 @@
         let tileset;
         try {
           tileset = await Cesium.Cesium3DTileset.fromUrl(
-            "../../SampleData/Cesium3DTiles/PointCloud/PointCloudWithPerPointProperties/tileset.json"
+            "../../SampleData/Cesium3DTiles/PointCloud/PointCloudWithPerPointProperties/tileset.json",
           );
           viewer.scene.primitives.add(tileset);
           viewer.zoomTo(tileset, new Cesium.HeadingPitchRange(0.0, -1.0, 50.0));

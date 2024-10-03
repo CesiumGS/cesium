@@ -54,7 +54,7 @@ void main()
           },
         },
         owner: pickDepth,
-      }
+      },
     );
   }
 
@@ -72,7 +72,7 @@ const packedDepthScale = new Cartesian4(
   1.0,
   1.0 / 255.0,
   1.0 / 65025.0,
-  1.0 / 16581375.0
+  1.0 / 16581375.0,
 );
 
 /**

@@ -23,7 +23,7 @@ const offScreen = "-1000px";
 function SelectionIndicatorViewModel(
   scene,
   selectionIndicatorElement,
-  container
+  container,
 ) {
   //>>includeStart('debug', pragmas.debug);
   if (!defined(scene)) {
@@ -110,7 +110,7 @@ SelectionIndicatorViewModel.prototype.update = function () {
   if (this.showSelection && defined(this.position)) {
     const screenPosition = this.computeScreenSpacePosition(
       this.position,
-      screenSpacePos
+      screenSpacePos,
     );
     if (!defined(screenPosition)) {
       this._screenPositionX = offScreen;
@@ -125,12 +125,12 @@ SelectionIndicatorViewModel.prototype.update = function () {
       screenPosition.x =
         Math.min(
           Math.max(screenPosition.x, -indicatorSize),
-          containerWidth + indicatorSize
+          containerWidth + indicatorSize,
         ) - halfSize;
       screenPosition.y =
         Math.min(
           Math.max(screenPosition.y, -indicatorSize),
-          containerHeight + indicatorSize
+          containerHeight + indicatorSize,
         ) - halfSize;
 
       this._screenPositionX = `${Math.floor(screenPosition.x + 0.25)}px`;

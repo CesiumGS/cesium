@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -38,18 +38,17 @@
             new Cesium.Resource({
               url: "http://www.earthenterprise.org/3d",
               proxy: new Cesium.DefaultProxy("/proxy/"),
-            })
+            }),
           );
 
-          viewer.scene.terrainProvider = Cesium.GoogleEarthEnterpriseTerrainProvider.fromMetadata(
-            geeMetadata
-          );
+          viewer.scene.terrainProvider =
+            Cesium.GoogleEarthEnterpriseTerrainProvider.fromMetadata(geeMetadata);
 
           const layers = viewer.scene.imageryLayers;
           const blackMarble = new Cesium.ImageryLayer(
             new Cesium.GoogleEarthEnterpriseImageryProvider({
               metadata: geeMetadata,
-            })
+            }),
           );
           layers.add(blackMarble);
         } catch (error) {

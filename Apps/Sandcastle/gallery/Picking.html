@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -63,15 +63,15 @@
             handler.setInputAction(function (movement) {
               const cartesian = viewer.camera.pickEllipsoid(
                 movement.endPosition,
-                scene.globe.ellipsoid
+                scene.globe.ellipsoid,
               );
               if (cartesian) {
                 const cartographic = Cesium.Cartographic.fromCartesian(cartesian);
                 const longitudeString = Cesium.Math.toDegrees(
-                  cartographic.longitude
+                  cartographic.longitude,
                 ).toFixed(2);
                 const latitudeString = Cesium.Math.toDegrees(
-                  cartographic.latitude
+                  cartographic.latitude,
                 ).toFixed(2);
 
                 entity.position = cartesian;
@@ -83,7 +83,7 @@
                 entity.label.show = false;
               }
             }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
-          }
+          },
         );
 
         Sandcastle.addToolbarButton("Pick Entity", function () {
@@ -125,14 +125,7 @@
           const red = viewer.entities.add({
             polygon: {
               hierarchy: Cesium.Cartesian3.fromDegreesArray([
-                -70.0,
-                30.0,
-                -60.0,
-                30.0,
-                -60.0,
-                40.0,
-                -70.0,
-                40.0,
+                -70.0, 30.0, -60.0, 30.0, -60.0, 40.0, -70.0, 40.0,
               ]),
               height: 0,
             },
@@ -142,14 +135,7 @@
           const blue = viewer.entities.add({
             polygon: {
               hierarchy: Cesium.Cartesian3.fromDegreesArray([
-                -75.0,
-                34.0,
-                -63.0,
-                34.0,
-                -63.0,
-                40.0,
-                -75.0,
-                40.0,
+                -75.0, 34.0, -63.0, 34.0, -63.0, 40.0, -75.0, 40.0,
               ]),
               height: 0,
             },
@@ -159,14 +145,7 @@
           const green = viewer.entities.add({
             polygon: {
               hierarchy: Cesium.Cartesian3.fromDegreesArray([
-                -67.0,
-                36.0,
-                -55.0,
-                36.0,
-                -55.0,
-                30.0,
-                -67.0,
-                30.0,
+                -67.0, 36.0, -55.0, 36.0, -55.0, 30.0, -67.0, 30.0,
               ]),
               height: 0,
             },
@@ -223,10 +202,10 @@
                 if (Cesium.defined(cartesian)) {
                   const cartographic = Cesium.Cartographic.fromCartesian(cartesian);
                   const longitudeString = Cesium.Math.toDegrees(
-                    cartographic.longitude
+                    cartographic.longitude,
                   ).toFixed(2);
                   const latitudeString = Cesium.Math.toDegrees(
-                    cartographic.latitude
+                    cartographic.latitude,
                   ).toFixed(2);
                   const heightString = cartographic.height.toFixed(2);
 
@@ -241,7 +220,7 @@
                     0.0,
                     0.0,
                     -cartographic.height *
-                      (scene.mode === Cesium.SceneMode.SCENE2D ? 1.5 : 1.0)
+                      (scene.mode === Cesium.SceneMode.SCENE2D ? 1.5 : 1.0),
                   );
 
                   foundPosition = true;

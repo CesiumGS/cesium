@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -37,12 +37,7 @@
         // Create the corridor outline geometry.
         let corridorOutlineGeometry = new Cesium.CorridorOutlineGeometry({
           positions: Cesium.Cartesian3.fromDegreesArray([
-            -100.0,
-            40.0,
-            -105.0,
-            40.0,
-            -105.0,
-            35.0,
+            -100.0, 40.0, -105.0, 40.0, -105.0, 35.0,
           ]),
           width: 200000.0,
         });
@@ -59,12 +54,7 @@
         // height of the geometry with the extrudedHeight option.
         corridorOutlineGeometry = new Cesium.CorridorOutlineGeometry({
           positions: Cesium.Cartesian3.fromDegreesArray([
-            -90.0,
-            40.0,
-            -95.0,
-            40.0,
-            -95.0,
-            35.0,
+            -90.0, 40.0, -95.0, 40.0, -95.0, 35.0,
           ]),
           width: 200000.0,
           cornerType: Cesium.CornerType.MITERED,
@@ -88,7 +78,7 @@
                 lineWidth: Math.min(2.0, scene.maximumAliasedLineWidth),
               },
             }),
-          })
+          }),
         );
         //Sandcastle_End
       };

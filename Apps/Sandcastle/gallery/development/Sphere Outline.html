@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -41,7 +41,7 @@
         const modelMatrix = Cesium.Matrix4.multiplyByTranslation(
           Cesium.Transforms.eastNorthUpToFixedFrame(positionOnEllipsoid),
           new Cesium.Cartesian3(0.0, 0.0, radius),
-          new Cesium.Matrix4()
+          new Cesium.Matrix4(),
         );
         // Create the sphere outline geometry instance. Use the
         // stackPartitions and slicePartitions options to determine
@@ -67,7 +67,7 @@
                 lineWidth: Math.min(2.0, scene.maximumAliasedLineWidth),
               },
             }),
-          })
+          }),
         );
         //Sandcastle_End
       };

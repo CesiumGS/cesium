@@ -68,7 +68,7 @@ function EllipsoidOutlineGeometry(options) {
   }
   if (subdivisions < 0) {
     throw new DeveloperError(
-      "options.subdivisions must be greater than or equal to zero."
+      "options.subdivisions must be greater than or equal to zero.",
     );
   }
   if (
@@ -76,7 +76,7 @@ function EllipsoidOutlineGeometry(options) {
     options.offsetAttribute === GeometryOffsetAttribute.TOP
   ) {
     throw new DeveloperError(
-      "GeometryOffsetAttribute.TOP is not a supported options.offsetAttribute for this geometry."
+      "GeometryOffsetAttribute.TOP is not a supported options.offsetAttribute for this geometry.",
     );
   }
   //>>includeEnd('debug');
@@ -244,10 +244,10 @@ EllipsoidOutlineGeometry.createGeometry = function (ellipsoidGeometry) {
 
   slicePartitions = Math.round(
     (slicePartitions * Math.abs(maximumClock - minimumClock)) /
-      CesiumMath.TWO_PI
+      CesiumMath.TWO_PI,
   );
   stackPartitions = Math.round(
-    (stackPartitions * Math.abs(maximumCone - minimumCone)) / CesiumMath.PI
+    (stackPartitions * Math.abs(maximumCone - minimumCone)) / CesiumMath.PI,
   );
 
   if (slicePartitions < 2) {

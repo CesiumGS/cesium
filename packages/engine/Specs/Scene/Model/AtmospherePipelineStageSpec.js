@@ -27,7 +27,7 @@ describe(
           url: boxTexturedGlbUrl,
           modelMatrix: Transforms.eastNorthUpToFixedFrame(center),
         },
-        scene
+        scene,
       );
     });
 
@@ -85,7 +85,7 @@ describe(
       const frameState = scene.frameState;
       frameState.camera.position = Cartesian3.clone(
         model.boundingSphere.center,
-        frameState.camera.position
+        frameState.camera.position,
       );
       scene.renderForSpecs();
 
@@ -116,5 +116,5 @@ describe(
       expect(uniformMap.u_isInFog()).toBe(true);
     });
   },
-  "WebGL"
+  "WebGL",
 );

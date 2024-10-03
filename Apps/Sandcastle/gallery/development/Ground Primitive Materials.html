@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -462,22 +462,22 @@
                     new Cesium.Cartesian3(
                       -2358138.847340281,
                       -3744072.459541374,
-                      4581158.5714175375
+                      4581158.5714175375,
                     ),
                     new Cesium.Cartesian3(
                       -2357231.4925370603,
                       -3745103.7886602185,
-                      4580702.9757762635
+                      4580702.9757762635,
                     ),
                     new Cesium.Cartesian3(
                       -2355912.902205431,
                       -3744249.029778454,
-                      4582402.154378103
+                      4582402.154378103,
                     ),
                     new Cesium.Cartesian3(
                       -2357208.0209552636,
                       -3743553.4420488174,
-                      4581961.863286629
+                      4581961.863286629,
                     ),
                   ]),
                   vertexFormat: Cesium.EllipsoidSurfaceAppearance.VERTEX_FORMAT,
@@ -487,7 +487,7 @@
                 aboveGround: false,
               }),
               classificationType: Cesium.ClassificationType.TERRAIN,
-            })
+            }),
           );
 
           worldRectangle = scene.primitives.add(
@@ -503,18 +503,18 @@
               }),
               show: false,
               classificationType: Cesium.ClassificationType.TERRAIN,
-            })
+            }),
           );
 
           const initialPosition = Cesium.Cartesian3.fromRadians(
             -2.1344873183780484,
             0.8071380277370774,
-            5743.394497982162
+            5743.394497982162,
           );
           const initialOrientation = new Cesium.HeadingPitchRoll.fromDegrees(
             112.99596671210358,
             -21.34390550872461,
-            0.0716951918898415
+            0.0716951918898415,
           );
           viewer.scene.camera.setView({
             destination: initialPosition,

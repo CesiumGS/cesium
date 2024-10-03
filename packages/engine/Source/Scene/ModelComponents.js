@@ -1246,7 +1246,7 @@ function MetallicRoughness() {
    * @private
    */
   this.baseColorFactor = Cartesian4.clone(
-    MetallicRoughness.DEFAULT_BASE_COLOR_FACTOR
+    MetallicRoughness.DEFAULT_BASE_COLOR_FACTOR,
   );
 
   /**
@@ -1316,7 +1316,7 @@ function SpecularGlossiness() {
    * @private
    */
   this.diffuseFactor = Cartesian4.clone(
-    SpecularGlossiness.DEFAULT_DIFFUSE_FACTOR
+    SpecularGlossiness.DEFAULT_DIFFUSE_FACTOR,
   );
 
   /**
@@ -1327,7 +1327,7 @@ function SpecularGlossiness() {
    * @private
    */
   this.specularFactor = Cartesian3.clone(
-    SpecularGlossiness.DEFAULT_SPECULAR_FACTOR
+    SpecularGlossiness.DEFAULT_SPECULAR_FACTOR,
   );
 
   /**
@@ -1381,7 +1381,7 @@ function Specular() {
    * @private
    */
   this.specularColorFactor = Cartesian3.clone(
-    Specular.DEFAULT_SPECULAR_COLOR_FACTOR
+    Specular.DEFAULT_SPECULAR_COLOR_FACTOR,
   );
 
   /**

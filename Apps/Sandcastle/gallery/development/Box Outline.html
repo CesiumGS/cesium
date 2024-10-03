@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -44,7 +44,7 @@
         const boxModelMatrix = Cesium.Matrix4.multiplyByTranslation(
           Cesium.Transforms.eastNorthUpToFixedFrame(positionOnEllipsoid),
           new Cesium.Cartesian3(0.0, 0.0, dimensions.z * 0.5),
-          new Cesium.Matrix4()
+          new Cesium.Matrix4(),
         );
 
         // Create a box outline geometry.
@@ -72,7 +72,7 @@
                 lineWidth: Math.min(2.0, scene.maximumAliasedLineWidth),
               },
             }),
-          })
+          }),
         );
         //Sandcastle_End
       };

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -149,7 +149,7 @@
             Cesium.Cartesian3.normalize(dir, dir);
             const newPlane = new Cesium.ClippingPlane(
               dir,
-              cylinderRadius * radiusMultiplier
+              cylinderRadius * radiusMultiplier,
             );
             modelEntityClippingPlanes.add(newPlane);
             clippingPlanes.push(newPlane);
@@ -222,24 +222,24 @@
           const surface = Cesium.Cartesian3.fromRadians(
             cartographic.longitude,
             cartographic.latitude,
-            0.0
+            0.0,
           );
           const offset = Cesium.Cartesian3.fromRadians(
             cartographic.longitude,
             cartographic.latitude,
-            height
+            height,
           );
           const translation = Cesium.Cartesian3.subtract(
             offset,
             surface,
-            new Cesium.Cartesian3()
+            new Cesium.Cartesian3(),
           );
           tileset.modelMatrix = Cesium.Matrix4.fromTranslation(translation);
 
           const radius = boundingSphere.radius;
           viewer.camera.viewBoundingSphere(
             boundingSphere,
-            new Cesium.HeadingPitchRange(0.5, -0.2, radius * 4.0)
+            new Cesium.HeadingPitchRange(0.5, -0.2, radius * 4.0),
           );
           viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
         }
@@ -272,7 +272,7 @@
                 // eslint-disable-next-line no-loss-of-precision
                 -2.0872979473351286,
                 0.6596620013036164,
-                2380.0
+                2380.0,
               );
               const entity = viewer.entities.add({
                 position: position,

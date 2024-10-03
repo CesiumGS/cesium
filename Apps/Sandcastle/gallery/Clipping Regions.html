@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -81,7 +81,7 @@
         const cameraOffset = new Cesium.HeadingPitchRange(
           Cesium.Math.toRadians(95.0),
           Cesium.Math.toRadians(-18.0),
-          600.0
+          600.0,
         );
         viewer.zoomTo(buildingTileset, cameraOffset);
 
@@ -103,7 +103,7 @@
                 [-105.00715641889735, 39.751312128419926],
                 [-105.00715641889735, 39.75135429046085],
                 [-105.0077102972673, 39.75198671798765],
-              ].flat(2)
+              ].flat(2),
             ),
           }),
         ];
@@ -153,20 +153,20 @@
         Sandcastle.addToolbarButton("Remove last polygon", () => {
           if (worldTileset.clippingPolygons.length > 0) {
             worldTileset.clippingPolygons.remove(
-              worldTileset.clippingPolygons.get(worldTileset.clippingPolygons.length - 1)
+              worldTileset.clippingPolygons.get(worldTileset.clippingPolygons.length - 1),
             );
           }
 
           if (scene.globe.clippingPolygons.length > 0) {
             scene.globe.clippingPolygons.remove(
-              scene.globe.clippingPolygons.get(scene.globe.clippingPolygons.length - 1)
+              scene.globe.clippingPolygons.get(scene.globe.clippingPolygons.length - 1),
             );
           }
         });
 
         // Allow clicking new positions to
         viewer.cesiumWidget.screenSpaceEventHandler.removeInputAction(
-          Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK
+          Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK,
         );
         function createPoint(worldPosition) {
           const point = viewer.entities.add({
@@ -183,7 +183,7 @@
             polygon: {
               hierarchy: positionData,
               material: new Cesium.ColorMaterialProperty(
-                Cesium.Color.WHITE.withAlpha(0.7)
+                Cesium.Color.WHITE.withAlpha(0.7),
               ),
             },
           });
@@ -236,13 +236,13 @@
           worldTileset.clippingPolygons.add(
             new Cesium.ClippingPolygon({
               positions: positions,
-            })
+            }),
           );
 
           scene.globe.clippingPolygons.add(
             new Cesium.ClippingPolygon({
               positions: positions,
-            })
+            }),
           );
         }
 

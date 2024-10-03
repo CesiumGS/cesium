@@ -32,8 +32,7 @@ ArcGisMapService.defaultAccessToken = defaultAccessToken;
  * @default https://ibasemaps-api.arcgis.com/arcgis/rest/services/World_Imagery/MapServer
  */
 ArcGisMapService.defaultWorldImageryServer = new Resource({
-  url:
-    "https://ibasemaps-api.arcgis.com/arcgis/rest/services/World_Imagery/MapServer",
+  url: "https://ibasemaps-api.arcgis.com/arcgis/rest/services/World_Imagery/MapServer",
 });
 
 /**
@@ -43,8 +42,7 @@ ArcGisMapService.defaultWorldImageryServer = new Resource({
  * @default https://ibasemaps-api.arcgis.com/arcgis/rest/services/Elevation/World_Hillshade/MapServer
  */
 ArcGisMapService.defaultWorldHillshadeServer = new Resource({
-  url:
-    "https://ibasemaps-api.arcgis.com/arcgis/rest/services/Elevation/World_Hillshade/MapServer",
+  url: "https://ibasemaps-api.arcgis.com/arcgis/rest/services/Elevation/World_Hillshade/MapServer",
 });
 
 /**
@@ -54,8 +52,7 @@ ArcGisMapService.defaultWorldHillshadeServer = new Resource({
  * @default https://ibasemaps-api.arcgis.com/arcgis/rest/services/Ocean/World_Ocean_Base/MapServer
  */
 ArcGisMapService.defaultWorldOceanServer = new Resource({
-  url:
-    "https://ibasemaps-api.arcgis.com/arcgis/rest/services/Ocean/World_Ocean_Base/MapServer",
+  url: "https://ibasemaps-api.arcgis.com/arcgis/rest/services/Ocean/World_Ocean_Base/MapServer",
 });
 
 /**

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -38,16 +38,7 @@
 
         // Example 1: Small textured polygon.
         let positions = Cesium.Cartesian3.fromDegreesArray([
-          -117.4,
-          37.4,
-          -117.4,
-          37,
-          -117.2,
-          37.1,
-          -117.0,
-          37,
-          -117.0,
-          37.4,
+          -117.4, 37.4, -117.4, 37, -117.2, 37.1, -117.0, 37, -117.0, 37.4,
         ]);
         let textureCoordinates = {
           positions: [
@@ -69,62 +60,27 @@
         // Example 2: Small textured polygon with holes.
         let polygonHierarchy = {
           positions: Cesium.Cartesian3.fromDegreesArray([
-            -116.5,
-            37.5,
-            -116.5,
-            37,
-            -116,
-            37,
-            -116,
-            37.5,
+            -116.5, 37.5, -116.5, 37, -116, 37, -116, 37.5,
           ]),
           holes: [
             {
               positions: Cesium.Cartesian3.fromDegreesArray([
-                -116.1,
-                37.2,
-                -116.1,
-                37.15,
-                -116.05,
-                37.15,
-                -116.05,
-                37.2,
+                -116.1, 37.2, -116.1, 37.15, -116.05, 37.15, -116.05, 37.2,
               ]),
             },
             {
               positions: Cesium.Cartesian3.fromDegreesArray([
-                -116.35,
-                37.35,
-                -116.35,
-                37.15,
-                -116.15,
-                37.15,
-                -116.15,
-                37.35,
+                -116.35, 37.35, -116.35, 37.15, -116.15, 37.15, -116.15, 37.35,
               ]),
               holes: [
                 {
                   positions: Cesium.Cartesian3.fromDegreesArray([
-                    -116.3,
-                    37.3,
-                    -116.3,
-                    37.2,
-                    -116.2,
-                    37.2,
-                    -116.2,
-                    37.3,
+                    -116.3, 37.3, -116.3, 37.2, -116.2, 37.2, -116.2, 37.3,
                   ]),
                   holes: [
                     {
                       positions: Cesium.Cartesian3.fromDegreesArray([
-                        -116.27,
-                        37.27,
-                        -116.27,
-                        37.23,
-                        -116.23,
-                        37.23,
-                        -116.23,
-                        37.27,
+                        -116.27, 37.27, -116.27, 37.23, -116.23, 37.23, -116.23, 37.27,
                       ]),
                     },
                   ],
@@ -190,37 +146,14 @@
         // Example 3: Large (subdivided) textured polygon with perPositionHeights.
         polygonHierarchy = {
           positions: Cesium.Cartesian3.fromDegreesArrayHeights([
-            -115,
-            38.0,
-            50000,
-            -115,
-            36.0,
-            30000,
-            -114,
-            36.5,
-            35000,
-            -113,
-            36.0,
-            30000,
-            -113,
-            38.0,
-            50000,
+            -115, 38.0, 50000, -115, 36.0, 30000, -114, 36.5, 35000, -113, 36.0, 30000,
+            -113, 38.0, 50000,
           ]),
           holes: [
             {
               positions: Cesium.Cartesian3.fromDegreesArrayHeights([
-                -114.6,
-                37.6,
-                46000,
-                -114.6,
-                37.2,
-                42000,
-                -114.2,
-                37.2,
-                42000,
-                -114.2,
-                37.6,
-                46000,
+                -114.6, 37.6, 46000, -114.6, 37.2, 42000, -114.2, 37.2, 42000, -114.2,
+                37.6, 46000,
               ]),
             },
           ],
@@ -255,16 +188,7 @@
 
         // Example 4: Large (subdivided) textured polygon with RHUMB arc type.
         positions = Cesium.Cartesian3.fromDegreesArray([
-          -112,
-          38,
-          -112,
-          36,
-          -111,
-          36.5,
-          -110,
-          36,
-          -110,
-          38,
+          -112, 38, -112, 36, -111, 36.5, -110, 36, -110, 38,
         ]);
         textureCoordinates = {
           positions: [
@@ -286,16 +210,7 @@
 
         // Example 5: Textured extruded polygon.
         positions = Cesium.Cartesian3.fromDegreesArray([
-          -109.4,
-          37.4,
-          -109.4,
-          37,
-          -109.2,
-          37.1,
-          -109.0,
-          37,
-          -109.0,
-          37.4,
+          -109.4, 37.4, -109.4, 37, -109.2, 37.1, -109.0, 37, -109.0, 37.4,
         ]);
         textureCoordinates = {
           positions: [
@@ -317,21 +232,8 @@
 
         // Example 6: Textured extruded polygon with perPositionHeights.
         positions = Cesium.Cartesian3.fromDegreesArrayHeights([
-          -108.4,
-          37.4,
-          50000,
-          -108.4,
-          37,
-          30000,
-          -108.2,
-          37.1,
-          35000,
-          -108.0,
-          37,
-          30000,
-          -108.0,
-          37.4,
-          50000,
+          -108.4, 37.4, 50000, -108.4, 37, 30000, -108.2, 37.1, 35000, -108.0, 37, 30000,
+          -108.0, 37.4, 50000,
         ]);
         textureCoordinates = {
           positions: [
@@ -375,20 +277,13 @@
               materialSupport: Cesium.MaterialAppearance.MaterialSupport.TEXTURED,
               translucent: false,
             }),
-          })
+          }),
         );
 
         // Example 7: Ground primitive - custom texture coordinates are not expected to work, but the polygon should render.
 
         positions = Cesium.Cartesian3.fromDegreesArray([
-          -105,
-          37.5,
-          -105,
-          37.0,
-          -100,
-          37.0,
-          -100,
-          37.5,
+          -105, 37.5, -105, 37.0, -100, 37.0, -100, 37.5,
         ]);
         textureCoordinates = {
           positions: [
@@ -419,7 +314,7 @@
               }),
             }),
             classificationType: Cesium.ClassificationType.TERRAIN,
-          })
+          }),
         );
         //Sandcastle_End
       };

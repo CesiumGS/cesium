@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -88,18 +88,7 @@
             polygon: {
               positions: {
                 cartographicDegrees: [
-                  -109.03,
-                  41,
-                  0,
-                  -102.03,
-                  41,
-                  0,
-                  -102.03,
-                  37,
-                  0,
-                  -109.03,
-                  37,
-                  0,
+                  -109.03, 41, 0, -102.03, 41, 0, -102.03, 37, 0, -109.03, 37, 0,
                 ],
               },
               material: {
@@ -134,7 +123,7 @@
         function setExtrudedHeight(propertyName) {
           loadedPromise.then(function () {
             const customPropertyObject = dataSource.entities.getById(
-              "custom_property_object"
+              "custom_property_object",
             );
             const property = customPropertyObject.properties[propertyName];
             const colorado = dataSource.entities.getById("colorado");
@@ -164,7 +153,7 @@
               },
             },
           ],
-          "propertiesMenu"
+          "propertiesMenu",
         );
 
         viewer.dataSources.add(dataSource);

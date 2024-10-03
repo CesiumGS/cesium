@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -112,16 +112,16 @@
 
         const stages = viewer.scene.postProcessStages;
         const silhouette = stages.add(
-          Cesium.PostProcessStageLibrary.createSilhouetteStage()
+          Cesium.PostProcessStageLibrary.createSilhouetteStage(),
         );
         const blackAndWhite = stages.add(
-          Cesium.PostProcessStageLibrary.createBlackAndWhiteStage()
+          Cesium.PostProcessStageLibrary.createBlackAndWhiteStage(),
         );
         const brightness = stages.add(
-          Cesium.PostProcessStageLibrary.createBrightnessStage()
+          Cesium.PostProcessStageLibrary.createBrightnessStage(),
         );
         const nightVision = stages.add(
-          Cesium.PostProcessStageLibrary.createNightVisionStage()
+          Cesium.PostProcessStageLibrary.createNightVisionStage(),
         );
 
         function updatePostProcess() {

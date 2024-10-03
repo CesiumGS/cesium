@@ -66,7 +66,7 @@ function Multiple3DTileContent(tileset, tile, tilesetResource, contentsJson) {
     });
 
     const serverKey = RequestScheduler.getServerKey(
-      contentResource.getUrlComponent()
+      contentResource.getUrlComponent(),
     );
 
     this._innerContentResources[i] = contentResource;
@@ -301,7 +301,7 @@ Object.defineProperties(Multiple3DTileContent.prototype, {
     set: function () {
       //>>includeStart('debug', pragmas.debug);
       throw new DeveloperError(
-        "Multiple3DTileContent cannot have group metadata"
+        "Multiple3DTileContent cannot have group metadata",
       );
       //>>includeEnd('debug');
     },
@@ -328,7 +328,8 @@ Object.defineProperties(Multiple3DTileContent.prototype, {
 
 function updatePendingRequests(multipleContents, deltaRequestCount) {
   multipleContents._requestsInFlight += deltaRequestCount;
-  multipleContents.tileset.statistics.numberOfPendingRequests += deltaRequestCount;
+  multipleContents.tileset.statistics.numberOfPendingRequests +=
+    deltaRequestCount;
 }
 
 function cancelPendingRequests(multipleContents, originalContentState) {
@@ -366,7 +367,8 @@ Multiple3DTileContent.prototype.requestInnerContents = function () {
   // if we can schedule all the requests at once. If not, no requests are
   // scheduled
   if (!canScheduleAllRequests(this._serverKeys)) {
-    this.tileset.statistics.numberOfAttemptedRequests += this._serverKeys.length;
+    this.tileset.statistics.numberOfAttemptedRequests +=
+      this._serverKeys.length;
     return;
   }
 
@@ -381,7 +383,7 @@ Multiple3DTileContent.prototype.requestInnerContents = function () {
       this,
       i,
       originalCancelCount,
-      this._tile._contentState
+      this._tile._contentState,
     );
   }
 
@@ -420,13 +422,12 @@ function requestInnerContent(
   multipleContents,
   index,
   originalCancelCount,
-  originalContentState
+  originalContentState,
 ) {
   // it is important to clone here. The fetchArrayBuffer() below here uses
   // throttling, but other uses of the resources do not.
-  const contentResource = multipleContents._innerContentResources[
-    index
-  ].clone();
+  const contentResource =
+    multipleContents._innerContentResources[index].clone();
   const tile = multipleContents.tile;
 
   // Always create a new request. If the tile gets canceled, this
@@ -496,7 +497,7 @@ async function createInnerContents(multipleContents) {
   }
 
   const promises = arrayBuffers.map((arrayBuffer, i) =>
-    createInnerContent(multipleContents, arrayBuffer, i)
+    createInnerContent(multipleContents, arrayBuffer, i),
   );
 
   // Even if we had a partial success (in which case the inner promise will be handled, but the content will not be returned), mark that we finished creating
@@ -519,7 +520,7 @@ async function createInnerContent(multipleContents, arrayBuffer, index) {
 
     if (preprocessed.contentType === Cesium3DTileContentType.EXTERNAL_TILESET) {
       throw new RuntimeError(
-        "External tilesets are disallowed inside multiple contents"
+        "External tilesets are disallowed inside multiple contents",
       );
     }
 
@@ -541,13 +542,13 @@ async function createInnerContent(multipleContents, arrayBuffer, index) {
           tile,
           resource,
           preprocessed.binaryPayload.buffer,
-          0
-        )
+          0,
+        ),
       );
     } else {
       // JSON formats
       content = await Promise.resolve(
-        contentFactory(tileset, tile, resource, preprocessed.jsonPayload)
+        contentFactory(tileset, tile, resource, preprocessed.jsonPayload),
       );
     }
 

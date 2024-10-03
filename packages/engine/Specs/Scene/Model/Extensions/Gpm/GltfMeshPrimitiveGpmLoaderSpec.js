@@ -103,8 +103,7 @@ function createEmbeddedGltf(gpmExtension) {
     },
     buffers: [
       {
-        uri:
-          "data:application/gltf-buffer;base64,AAABAAIAAQADAAIAAAAAAAAAAAAAAAAAAACAPwAAAAAAAAAAAAAAAAAAgD8AAAAAAACAPwAAgD8AAAAAAAAAAAAAAAAAAIA/AAAAAAAAAAAAAIA/AAAAAAAAAAAAAIA/AAAAAAAAAAAAAIA/AAAAAAAAgD8AAAAAAACAPwAAgD8AAAAAAAAAAAAAAAAAAAAAAACAPwAAAAAAAAAA",
+        uri: "data:application/gltf-buffer;base64,AAABAAIAAQADAAIAAAAAAAAAAAAAAAAAAACAPwAAAAAAAAAAAAAAAAAAgD8AAAAAAACAPwAAgD8AAAAAAAAAAAAAAAAAAIA/AAAAAAAAAAAAAIA/AAAAAAAAAAAAAIA/AAAAAAAAAAAAAIA/AAAAAAAAgD8AAAAAAACAPwAAgD8AAAAAAAAAAAAAAAAAAAAAAACAPwAAAAAAAAAA",
         byteLength: 156,
       },
     ],
@@ -125,8 +124,7 @@ function createEmbeddedGltf(gpmExtension) {
     ],
     images: [
       {
-        uri:
-          "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAABs0lEQVR42hXMUwCWBwBA0b8Wlo1lLHNt2a4tLZtbrdZatm1jWcu2bSxrtWq1Zds438O5jzcUCoU+hSEsXxCO8EQgIl8SichEISrRiE4MQjElFrGJQ1ziEZ8EJOQrEpGYJCQlGcmDQQpJSSpS8zVpSEs60pOBjGQiM1nISrZgkF2+IQff8h05yUVu8pCXfOSnAAUpROFgUESKUozilKAkpShNGcryPT9QjvJUoGIwqCQ/UpkqVKUa1alBTWpRmzrUpR71aRAMGkojGtOEn/iZpjTjF5rTgl9pyW+04vdg0Fra0JZ2tKcDHelEZ7rQlW50pwc96RUMeksf+tKP/gxgIIMYzBCGMozhjGAko4LBaBnDWMYxnglMZBJ/MJkpTGUa05nBzGAwS2Yzh7n8yTzms4CFLGIxS1jKMpazIhislFWsZg1rWcd6NrCRTWxmC1vZxnZ2BIOdsovd7GEv+9jPAQ5yiMMc4Sh/cYzjweCEnOQUpznDWc5xngv8zUUu8Q+XucLVYPCvXOM6//E/N7jJLW5zh7vc4z4PeMijYPBYnvCUZzznBS95xWve8JZ3vOcDH/nEZ7gvfpBCxLDKAAAAAElFTkSuQmCC",
+        uri: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAABs0lEQVR42hXMUwCWBwBA0b8Wlo1lLHNt2a4tLZtbrdZatm1jWcu2bSxrtWq1Zds438O5jzcUCoU+hSEsXxCO8EQgIl8SichEISrRiE4MQjElFrGJQ1ziEZ8EJOQrEpGYJCQlGcmDQQpJSSpS8zVpSEs60pOBjGQiM1nISrZgkF2+IQff8h05yUVu8pCXfOSnAAUpROFgUESKUozilKAkpShNGcryPT9QjvJUoGIwqCQ/UpkqVKUa1alBTWpRmzrUpR71aRAMGkojGtOEn/iZpjTjF5rTgl9pyW+04vdg0Fra0JZ2tKcDHelEZ7rQlW50pwc96RUMeksf+tKP/gxgIIMYzBCGMozhjGAko4LBaBnDWMYxnglMZBJ/MJkpTGUa05nBzGAwS2Yzh7n8yTzms4CFLGIxS1jKMpazIhislFWsZg1rWcd6NrCRTWxmC1vZxnZ2BIOdsovd7GEv+9jPAQ5yiMMc4Sh/cYzjweCEnOQUpznDWc5xngv8zUUu8Q+XucLVYPCvXOM6//E/N7jJLW5zh7vc4z4PeMijYPBYnvCUZzznBS95xWve8JZ3vOcDH/nEZ7gvfpBCxLDKAAAAAElFTkSuQmCC",
         mimeType: "image/png",
       },
     ],
@@ -363,7 +361,7 @@ describe(
 
       const destroyTexture = spyOn(
         GltfTextureLoader.prototype,
-        "destroy"
+        "destroy",
       ).and.callThrough();
 
       const loader = new GltfMeshPrimitiveGpmLoader({
@@ -395,7 +393,7 @@ describe(
 
       const destroyTexture = spyOn(
         GltfTextureLoader.prototype,
-        "destroy"
+        "destroy",
       ).and.callThrough();
 
       const loader = new GltfMeshPrimitiveGpmLoader({
@@ -425,5 +423,5 @@ describe(
       return resolveAfterDestroy(true);
     });
   },
-  "WebGL"
+  "WebGL",
 );

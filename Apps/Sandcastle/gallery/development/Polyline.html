@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -40,22 +40,19 @@
             geometryInstances: new Cesium.GeometryInstance({
               geometry: new Cesium.PolylineGeometry({
                 positions: Cesium.Cartesian3.fromDegreesArray([
-                  -124.0,
-                  40.0,
-                  -80.0,
-                  40.0,
+                  -124.0, 40.0, -80.0, 40.0,
                 ]),
                 width: 5.0,
                 vertexFormat: Cesium.PolylineColorAppearance.VERTEX_FORMAT,
               }),
               attributes: {
                 color: Cesium.ColorGeometryInstanceAttribute.fromColor(
-                  new Cesium.Color(1.0, 0.0, 0.0, 0.8)
+                  new Cesium.Color(1.0, 0.0, 0.0, 0.8),
                 ),
               },
             }),
             appearance: new Cesium.PolylineColorAppearance(),
-          })
+          }),
         );
 
         // Example 2: Draw a straight blue polyline
@@ -68,12 +65,7 @@
             geometryInstances: new Cesium.GeometryInstance({
               geometry: new Cesium.PolylineGeometry({
                 positions: Cesium.Cartesian3.fromDegreesArrayHeights([
-                  -84.0,
-                  50.0,
-                  0.0,
-                  -100.0,
-                  30.0,
-                  1000000.0,
+                  -84.0, 50.0, 0.0, -100.0, 30.0, 1000000.0,
                 ]),
                 width: 5.0,
                 vertexFormat: Cesium.PolylineColorAppearance.VERTEX_FORMAT,
@@ -84,7 +76,7 @@
               },
             }),
             appearance: new Cesium.PolylineColorAppearance(),
-          })
+          }),
         );
         //Sandcastle_End
       };

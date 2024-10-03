@@ -108,7 +108,7 @@ function PerInstanceColorAppearance(options) {
   this._renderState = Appearance.getDefaultRenderState(
     translucent,
     closed,
-    options.renderState
+    options.renderState,
   );
   this._closed = closed;
 

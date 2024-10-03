@@ -105,7 +105,7 @@ function PostProcessStage(options) {
   Check.typeOf.number.lessThanOrEquals(
     "options.textureScale",
     textureScale,
-    1.0
+    1.0,
   );
   if (!PixelFormat.isColorFormat(pixelFormat)) {
     throw new DeveloperError("options.pixelFormat must be a color format.");
@@ -118,12 +118,12 @@ function PostProcessStage(options) {
   this._forcePowerOfTwo = defaultValue(options.forcePowerOfTwo, false);
   this._sampleMode = defaultValue(
     options.sampleMode,
-    PostProcessStageSampleMode.NEAREST
+    PostProcessStageSampleMode.NEAREST,
   );
   this._pixelFormat = pixelFormat;
   this._pixelDatatype = defaultValue(
     options.pixelDatatype,
-    PixelDatatype.UNSIGNED_BYTE
+    PixelDatatype.UNSIGNED_BYTE,
   );
   this._clearColor = defaultValue(options.clearColor, Color.BLACK);
 
@@ -509,7 +509,7 @@ function createUniformMap(stage) {
     ) {
       uniformMap[`${name}Dimensions`] = getUniformMapDimensionsFunction(
         uniformMap,
-        name
+        name,
       );
     }
   }
@@ -673,13 +673,12 @@ function updateUniformTextures(stage, context) {
   for (let i = 0; i < dirtyUniforms.length; ++i) {
     const name = dirtyUniforms[i];
     const stageNameUrlOrImage = uniforms[name];
-    const stageWithName = stage._textureCache.getStageByName(
-      stageNameUrlOrImage
-    );
+    const stageWithName =
+      stage._textureCache.getStageByName(stageNameUrlOrImage);
     if (defined(stageWithName)) {
       stage._actualUniforms[name] = createStageOutputTextureFunction(
         stage,
-        stageNameUrlOrImage
+        stageNameUrlOrImage,
       );
     } else if (typeof stageNameUrlOrImage === "string") {
       const resource = new Resource({
@@ -687,7 +686,7 @@ function updateUniformTextures(stage, context) {
       });
 
       promises.push(
-        resource.fetchImage().then(createLoadImageFunction(stage, name))
+        resource.fetchImage().then(createLoadImageFunction(stage, name)),
       );
     } else {
       stage._texturesToCreate.push({
@@ -918,7 +917,7 @@ PostProcessStage.prototype.update = function (context, useLogDepth) {
           0,
           0,
           colorTexture.width,
-          colorTexture.height
+          colorTexture.height,
         ),
       });
     }
@@ -939,7 +938,7 @@ PostProcessStage.prototype.execute = function (
   context,
   colorTexture,
   depthTexture,
-  idTexture
+  idTexture,
 ) {
   if (
     !defined(this._command) ||

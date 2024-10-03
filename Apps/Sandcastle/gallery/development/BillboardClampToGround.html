@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -43,7 +43,7 @@
         const billboardCollection = viewer.scene.primitives.add(
           new Cesium.BillboardCollection({
             scene: viewer.scene,
-          })
+          }),
         );
 
         // seneca
@@ -58,7 +58,7 @@
           centerLongitude - rectangleHalfSize,
           centerLatitude - rectangleHalfSize,
           centerLongitude + rectangleHalfSize,
-          centerLatitude + rectangleHalfSize
+          centerLatitude + rectangleHalfSize,
         );
 
         for (let y = 0; y < gridHeight; ++y) {
@@ -81,7 +81,7 @@
           if (!Cesium.defined(billboard)) {
             billboard = billboardCollection.add({
               position: ellipsoid.cartographicToCartesian(
-                new Cesium.Cartographic(centerLongitude, centerLatitude, 1000.0)
+                new Cesium.Cartographic(centerLongitude, centerLatitude, 1000.0),
               ),
               image: "../images/Cesium_Logo_overlay.png",
               scale: 0.7,

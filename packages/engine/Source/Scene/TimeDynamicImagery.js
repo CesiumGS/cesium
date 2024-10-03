@@ -26,7 +26,7 @@ function TimeDynamicImagery(options) {
   Check.typeOf.object("options.times", options.times);
   Check.typeOf.func(
     "options.requestImageFunction",
-    options.requestImageFunction
+    options.requestImageFunction,
   );
   Check.typeOf.func("options.reloadFunction", options.reloadFunction);
   //>>includeEnd('debug');
@@ -144,7 +144,7 @@ TimeDynamicImagery.prototype.checkApproachingInterval = function (
   x,
   y,
   level,
-  request
+  request,
 ) {
   const key = getKey(x, y, level);
   const tilesRequestedForInterval = this._tilesRequestedForInterval;
@@ -292,7 +292,7 @@ function addToCache(that, tile, interval) {
     keyElements.y,
     keyElements.level,
     request,
-    interval
+    interval,
   );
   if (!defined(promise)) {
     return false;

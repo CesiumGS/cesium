@@ -30,7 +30,7 @@ const PrimitiveStatisticsPipelineStage = {
 PrimitiveStatisticsPipelineStage.process = function (
   renderResources,
   primitive,
-  frameState
+  frameState,
 ) {
   const model = renderResources.model;
   const statistics = model.statistics;

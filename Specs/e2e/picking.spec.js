@@ -26,15 +26,15 @@ test("Shows cartographic position on mouse over", async ({ cesiumPage }) => {
     handler.setInputAction(function (movement) {
       const cartesian = viewer.camera.pickEllipsoid(
         movement.endPosition,
-        scene.globe.ellipsoid
+        scene.globe.ellipsoid,
       );
       if (cartesian) {
         const cartographic = Cesium.Cartographic.fromCartesian(cartesian);
         const longitudeString = Cesium.Math.toDegrees(
-          cartographic.longitude
+          cartographic.longitude,
         ).toFixed(2);
         const latitudeString = Cesium.Math.toDegrees(
-          cartographic.latitude
+          cartographic.latitude,
         ).toFixed(2);
 
         entity.position = cartesian;

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -123,12 +123,7 @@
               const id = "line";
               const line = polylines.add({
                 positions: Cesium.Cartesian3.fromDegreesArrayHeights([
-                  -84.0,
-                  50.0,
-                  0.0,
-                  -100.0,
-                  30.0,
-                  0.0,
+                  -84.0, 50.0, 0.0, -100.0, 30.0, 0.0,
                 ]),
                 width: 5.0,
                 id: id,
@@ -154,43 +149,32 @@
                   geometryInstances: new Cesium.GeometryInstance({
                     geometry: new Cesium.PolylineGeometry({
                       positions: Cesium.Cartesian3.fromDegreesArrayHeights([
-                        -84.0,
-                        50.0,
-                        0.0,
-                        -100.0,
-                        30.0,
-                        0.0,
+                        -84.0, 50.0, 0.0, -100.0, 30.0, 0.0,
                       ]),
                       width: 5.0,
                       vertexFormat: Cesium.PolylineColorAppearance.VERTEX_FORMAT,
                     }),
                     attributes: {
                       color: Cesium.ColorGeometryInstanceAttribute.fromColor(
-                        Cesium.Color.WHITE
+                        Cesium.Color.WHITE,
                       ),
                     },
                     id: id,
                   }),
                   appearance: new Cesium.PolylineColorAppearance(),
                   asynchronous: false,
-                })
+                }),
               );
 
               handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
               handler.setInputAction(function (movement) {
                 const pickedObject = scene.pick(movement.endPosition);
                 if (Cesium.defined(pickedObject) && pickedObject.id === id) {
-                  primitive.getGeometryInstanceAttributes(
-                    id
-                  ).color = Cesium.ColorGeometryInstanceAttribute.toValue(
-                    Cesium.Color.YELLOW
-                  );
+                  primitive.getGeometryInstanceAttributes(id).color =
+                    Cesium.ColorGeometryInstanceAttribute.toValue(Cesium.Color.YELLOW);
                 } else {
-                  primitive.getGeometryInstanceAttributes(
-                    id
-                  ).color = Cesium.ColorGeometryInstanceAttribute.toValue(
-                    Cesium.Color.WHITE
-                  );
+                  primitive.getGeometryInstanceAttributes(id).color =
+                    Cesium.ColorGeometryInstanceAttribute.toValue(Cesium.Color.WHITE);
                 }
               }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
             },
@@ -235,31 +219,25 @@
                     }),
                     attributes: {
                       color: Cesium.ColorGeometryInstanceAttribute.fromColor(
-                        Cesium.Color.WHITE
+                        Cesium.Color.WHITE,
                       ),
                     },
                     id: id,
                   }),
                   asynchronous: false,
                   classificationType: Cesium.ClassificationType.TERRAIN,
-                })
+                }),
               );
 
               handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
               handler.setInputAction(function (movement) {
                 const pickedObject = scene.pick(movement.endPosition);
                 if (Cesium.defined(pickedObject) && pickedObject.id === id) {
-                  primitive.getGeometryInstanceAttributes(
-                    id
-                  ).color = Cesium.ColorGeometryInstanceAttribute.toValue(
-                    Cesium.Color.YELLOW
-                  );
+                  primitive.getGeometryInstanceAttributes(id).color =
+                    Cesium.ColorGeometryInstanceAttribute.toValue(Cesium.Color.YELLOW);
                 } else {
-                  primitive.getGeometryInstanceAttributes(
-                    id
-                  ).color = Cesium.ColorGeometryInstanceAttribute.toValue(
-                    Cesium.Color.WHITE
-                  );
+                  primitive.getGeometryInstanceAttributes(id).color =
+                    Cesium.ColorGeometryInstanceAttribute.toValue(Cesium.Color.WHITE);
                 }
               }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
             },
@@ -271,7 +249,7 @@
               const hpr = new Cesium.HeadingPitchRoll(Cesium.Math.toRadians(135), 0, 0);
               const orientation = Cesium.Transforms.headingPitchRollQuaternion(
                 position,
-                hpr
+                hpr,
               );
 
               const entity = viewer.entities.add({
@@ -310,8 +288,8 @@
                 new Cesium.HeadingPitchRange(
                   0,
                   -2.0,
-                  Math.max(100.0 - tileset.boundingSphere.radius, 0.0)
-                )
+                  Math.max(100.0 - tileset.boundingSphere.radius, 0.0),
+                ),
               );
 
               handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
@@ -348,8 +326,8 @@
                 new Cesium.HeadingPitchRange(
                   0,
                   -2.0,
-                  Math.max(100.0 - tileset.boundingSphere.radius, 0.0)
-                )
+                  Math.max(100.0 - tileset.boundingSphere.radius, 0.0),
+                ),
               );
 
               handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
@@ -386,8 +364,8 @@
                 new Cesium.HeadingPitchRange(
                   0,
                   -2.0,
-                  Math.max(100.0 - tileset.boundingSphere.radius, 0.0)
-                )
+                  Math.max(100.0 - tileset.boundingSphere.radius, 0.0),
+                ),
               );
 
               tileset.style = new Cesium.Cesium3DTileStyle({
@@ -432,22 +410,22 @@
               camera.position = new Cesium.Cartesian3(
                 6382696.762766026,
                 20.61495686957654,
-                -83.83598213685399
+                -83.83598213685399,
               );
               camera.direction = new Cesium.Cartesian3(
                 -0.9999999739409788,
                 0.00022792812935066512,
-                0.000012915478344419502
+                0.000012915478344419502,
               );
               camera.up = new Cesium.Cartesian3(
                 0.00001291547800893194,
                 -2.9438010410026854e-9,
-                0.9999999999165953
+                0.9999999999165953,
               );
               camera.right = new Cesium.Cartesian3.cross(
                 camera.direction,
                 camera.up,
-                camera.right
+                camera.right,
               );
 
               handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
@@ -484,22 +462,22 @@
               camera.position = new Cesium.Cartesian3(
                 6382696.762766026,
                 20.61495686957654,
-                -83.83598213685399
+                -83.83598213685399,
               );
               camera.direction = new Cesium.Cartesian3(
                 -0.9999999739409788,
                 0.00022792812935066512,
-                0.000012915478344419502
+                0.000012915478344419502,
               );
               camera.up = new Cesium.Cartesian3(
                 0.00001291547800893194,
                 -2.9438010410026854e-9,
-                0.9999999999165953
+                0.9999999999165953,
               );
               camera.right = new Cesium.Cartesian3.cross(
                 camera.direction,
                 camera.up,
-                camera.right
+                camera.right,
               );
 
               handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);

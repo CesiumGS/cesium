@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -46,8 +46,8 @@
         const viewer = new Cesium.Viewer("cesiumContainer", {
           baseLayer: Cesium.ImageryLayer.fromProviderAsync(
             Cesium.TileMapServiceImageryProvider.fromUrl(
-              Cesium.buildModuleUrl("Assets/Textures/NaturalEarthII")
-            )
+              Cesium.buildModuleUrl("Assets/Textures/NaturalEarthII"),
+            ),
           ),
           baseLayerPicker: false,
           geocoder: false,
@@ -157,8 +157,8 @@
           Cesium.Cartesian3.fromElements(
             Cesium.Ellipsoid.WGS84.maximumRadius,
             Cesium.Ellipsoid.WGS84.maximumRadius,
-            Cesium.Ellipsoid.WGS84.maximumRadius
-          )
+            Cesium.Ellipsoid.WGS84.maximumRadius,
+          ),
         );
 
         const voxelPrimitive = scene.primitives.add(
@@ -166,7 +166,7 @@
             provider: provider,
             customShader: customShader,
             modelMatrix: modelMatrix,
-          })
+          }),
         );
 
         voxelPrimitive.nearestSampling = true;

@@ -64,44 +64,44 @@ function GltfGpmLocal(options) {
   if (this.storageType === StorageType.Indirect) {
     if (!defined(this.anchorPointsIndirect)) {
       throw new RuntimeError(
-        "The anchorPointsIndirect are required for 'Indirect' storage"
+        "The anchorPointsIndirect are required for 'Indirect' storage",
       );
     }
     if (!defined(this.intraTileCorrelationGroups)) {
       throw new RuntimeError(
-        "The intraTileCorrelationGroups are required for 'Indirect' storage"
+        "The intraTileCorrelationGroups are required for 'Indirect' storage",
       );
     }
     if (defined(this.anchorPointsDirect)) {
       throw new RuntimeError(
-        "The anchorPointsDirect must be omitted for 'Indirect' storage"
+        "The anchorPointsDirect must be omitted for 'Indirect' storage",
       );
     }
     if (defined(this.covarianceDirect)) {
       throw new RuntimeError(
-        "The covarianceDirect must be omitted for 'Indirect' storage"
+        "The covarianceDirect must be omitted for 'Indirect' storage",
       );
     }
   } else {
     // Direct storage
     if (!defined(this.anchorPointsDirect)) {
       throw new RuntimeError(
-        "The anchorPointsDirect are required for 'Direct' storage"
+        "The anchorPointsDirect are required for 'Direct' storage",
       );
     }
     if (!defined(this.covarianceDirect)) {
       throw new RuntimeError(
-        "The covarianceDirect is required for 'Direct' storage"
+        "The covarianceDirect is required for 'Direct' storage",
       );
     }
     if (defined(this.anchorPointsIndirect)) {
       throw new RuntimeError(
-        "The anchorPointsIndirect must be omitted for 'Direct' storage"
+        "The anchorPointsIndirect must be omitted for 'Direct' storage",
       );
     }
     if (defined(this.intraTileCorrelationGroups)) {
       throw new RuntimeError(
-        "The intraTileCorrelationGroups must be omitted for 'Direct' storage"
+        "The intraTileCorrelationGroups must be omitted for 'Direct' storage",
       );
     }
   }

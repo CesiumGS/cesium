@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -42,7 +42,7 @@
         const stop = Cesium.JulianDate.addSeconds(
           start,
           totalSeconds,
-          new Cesium.JulianDate()
+          new Cesium.JulianDate(),
         );
         viewer.clock.startTime = start.clone();
         viewer.clock.stopTime = stop.clone();
@@ -55,12 +55,12 @@
         const startPosition = new Cesium.Cartesian3(
           -2379556.799372864,
           -4665528.205030263,
-          3628013.106599678
+          3628013.106599678,
         );
         const endPosition = new Cesium.Cartesian3(
           -2379603.7074103747,
           -4665623.48990283,
-          3627860.82704567
+          3627860.82704567,
         );
         // A velocity vector property will give us the entity's speed and direction at any given time.
         const velocityVectorProperty = new Cesium.VelocityVectorProperty(position, false);
@@ -75,7 +75,7 @@
           const time = Cesium.JulianDate.addSeconds(
             start,
             factor * totalSeconds,
-            new Cesium.JulianDate()
+            new Cesium.JulianDate(),
           );
 
           // Lerp using a non-linear factor so that the vehicle accelerates.
@@ -84,7 +84,7 @@
             startPosition,
             endPosition,
             locationFactor,
-            new Cesium.Cartesian3()
+            new Cesium.Cartesian3(),
           );
           position.addSample(time, location);
           // Rotate the wheels based on how fast the vehicle is moving at each timestep.
@@ -111,7 +111,7 @@
           return Cesium.Quaternion.fromAxisAngle(
             Cesium.Cartesian3.UNIT_X,
             wheelAngleProperty.getValue(time),
-            result
+            result,
           );
         }, false);
 

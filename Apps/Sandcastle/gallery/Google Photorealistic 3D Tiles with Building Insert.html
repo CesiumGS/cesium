@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -67,7 +67,7 @@
                 [-105.00715641889735, 39.751312128419926],
                 [-105.00715641889735, 39.75135429046085],
                 [-105.0077102972673, 39.75198671798765],
-              ].flat(2)
+              ].flat(2),
             ),
             material: Cesium.Color.YELLOW.withAlpha(0.6),
             classificationType: Cesium.ClassificationType.CESIUM_3D_TILE,
@@ -89,7 +89,7 @@
         const cameraOffset = new Cesium.HeadingPitchRange(
           Cesium.Math.toRadians(95.0),
           Cesium.Math.toRadians(-18.0),
-          600.0
+          600.0,
         );
         viewer.zoomTo(buildingTileset, cameraOffset);
 

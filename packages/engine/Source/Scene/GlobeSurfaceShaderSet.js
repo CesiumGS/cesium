@@ -11,7 +11,7 @@ function GlobeSurfaceShader(
   material,
   shaderProgram,
   clippingShaderState,
-  clippingPolygonShaderState
+  clippingPolygonShaderState,
 ) {
   this.numberOfDayTextures = numberOfDayTextures;
   this.flags = flags;
@@ -243,7 +243,7 @@ GlobeSurfaceShaderSet.prototype.getShaderProgram = function (options) {
     // Need to go before GlobeFS
     if (currentClippingShaderState !== 0) {
       fs.sources.unshift(
-        getClippingFunction(clippingPlanes, frameState.context)
+        getClippingFunction(clippingPlanes, frameState.context),
       );
     }
 
@@ -257,7 +257,7 @@ GlobeSurfaceShaderSet.prototype.getShaderProgram = function (options) {
     fs.defines.push(
       `TEXTURE_UNITS ${numberOfDayTextures}`,
       cartographicLimitRectangleDefine,
-      imageryCutoutDefine
+      imageryCutoutDefine,
     );
 
     if (applyBrightness) {
@@ -355,10 +355,10 @@ GlobeSurfaceShaderSet.prototype.getShaderProgram = function (options) {
       }
 
       fs.defines.push(
-        `CLIPPING_POLYGON_REGIONS_LENGTH ${clippingPolygons.extentsCount}`
+        `CLIPPING_POLYGON_REGIONS_LENGTH ${clippingPolygons.extentsCount}`,
       );
       vs.defines.push(
-        `CLIPPING_POLYGON_REGIONS_LENGTH ${clippingPolygons.extentsCount}`
+        `CLIPPING_POLYGON_REGIONS_LENGTH ${clippingPolygons.extentsCount}`,
       );
     }
 
@@ -398,7 +398,8 @@ GlobeSurfaceShaderSet.prototype.getShaderProgram = function (options) {
         texelUnclipped = v_textureCoordinates.x < cutoutAndColorResult.x || cutoutAndColorResult.z < v_textureCoordinates.x || v_textureCoordinates.y < cutoutAndColorResult.y || cutoutAndColorResult.w < v_textureCoordinates.y;\n\
         cutoutAndColorResult = sampleAndBlend(\n`;
       } else {
-        computeDayColor += "\
+        computeDayColor +=
+          "\
         color = sampleAndBlend(\n";
       }
       computeDayColor += `\
@@ -409,8 +410,8 @@ GlobeSurfaceShaderSet.prototype.getShaderProgram = function (options) {
             u_dayTextureTranslationAndScale[${i}],\n\
             ${applyAlpha ? `u_dayTextureAlpha[${i}]` : "1.0"},\n\
             ${applyDayNightAlpha ? `u_dayTextureNightAlpha[${i}]` : "1.0"},\n${
-        applyDayNightAlpha ? `u_dayTextureDayAlpha[${i}]` : "1.0"
-      },\n${applyBrightness ? `u_dayTextureBrightness[${i}]` : "0.0"},\n\
+              applyDayNightAlpha ? `u_dayTextureDayAlpha[${i}]` : "1.0"
+            },\n${applyBrightness ? `u_dayTextureBrightness[${i}]` : "0.0"},\n\
             ${applyContrast ? `u_dayTextureContrast[${i}]` : "0.0"},\n\
             ${applyHue ? `u_dayTextureHue[${i}]` : "0.0"},\n\
             ${applySaturation ? `u_dayTextureSaturation[${i}]` : "0.0"},\n\
@@ -426,7 +427,8 @@ GlobeSurfaceShaderSet.prototype.getShaderProgram = function (options) {
       }
     }
 
-    computeDayColor += "\
+    computeDayColor +=
+      "\
         return color;\n\
     }";
 
@@ -448,7 +450,7 @@ GlobeSurfaceShaderSet.prototype.getShaderProgram = function (options) {
       this.material,
       shader,
       currentClippingShaderState,
-      currentClippingPolygonsShaderState
+      currentClippingPolygonsShaderState,
     );
   }
 

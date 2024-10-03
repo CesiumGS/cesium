@@ -38,7 +38,7 @@ describe("Core/Fullscreen", function () {
 
       Fullscreen.requestFullscreen(document.body);
       expect(
-        document.body[Fullscreen._names.requestFullscreen]
+        document.body[Fullscreen._names.requestFullscreen],
       ).toHaveBeenCalled();
 
       Fullscreen.exitFullscreen();

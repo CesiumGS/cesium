@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -158,13 +158,13 @@
             "Bing Maps Road",
             Cesium.createWorldImageryAsync({
               style: Cesium.IonWorldImageryStyle.ROAD,
-            })
+            }),
           );
           addBaseLayerOption(
             "ArcGIS World Street Maps",
             Cesium.ArcGisMapServerImageryProvider.fromUrl(
-              "https://services.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer"
-            )
+              "https://services.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer",
+            ),
           );
           addBaseLayerOption("OpenStreetMaps", new Cesium.OpenStreetMapImageryProvider());
           addBaseLayerOption(
@@ -174,26 +174,25 @@
               fileExtension: "jpg",
               credit:
                 "Map tiles by Stamen Design, under CC BY 3.0. Data by OpenStreetMap, under CC BY SA.",
-            })
+            }),
           );
           addBaseLayerOption(
             "Natural Earth II (local)",
             Cesium.TileMapServiceImageryProvider.fromUrl(
-              Cesium.buildModuleUrl("Assets/Textures/NaturalEarthII")
-            )
+              Cesium.buildModuleUrl("Assets/Textures/NaturalEarthII"),
+            ),
           );
           addBaseLayerOption(
             "USGS Shaded Relief (via WMTS)",
             new Cesium.WebMapTileServiceImageryProvider({
-              url:
-                "https://basemap.nationalmap.gov/arcgis/rest/services/USGSShadedReliefOnly/MapServer/WMTS",
+              url: "https://basemap.nationalmap.gov/arcgis/rest/services/USGSShadedReliefOnly/MapServer/WMTS",
               layer: "USGSShadedReliefOnly",
               style: "default",
               format: "image/jpeg",
               tileMatrixSetID: "default028mm",
               maximumLevel: 19,
               credit: "U. S. Geological Survey",
-            })
+            }),
           );
 
           // Create the additional layers
@@ -207,7 +206,7 @@
                 transparent: "true",
                 format: "image/png",
               },
-            })
+            }),
           );
           addAdditionalLayerOption(
             "United States Weather Radar",
@@ -219,14 +218,14 @@
                 transparent: "true",
                 format: "image/png",
               },
-            })
+            }),
           );
           addAdditionalLayerOption(
             "TileMapService Image",
             Cesium.TileMapServiceImageryProvider.fromUrl(
-              "../images/cesium_maptiler/Cesium_Logo_Color"
+              "../images/cesium_maptiler/Cesium_Logo_Color",
             ),
-            0.2
+            0.2,
           );
           addAdditionalLayerOption(
             "Single Image",
@@ -234,16 +233,16 @@
               "../images/Cesium_Logo_overlay.png",
               {
                 rectangle: Cesium.Rectangle.fromDegrees(-115.0, 38.0, -107, 39.75),
-              }
+              },
             ),
-            1.0
+            1.0,
           );
           addAdditionalLayerOption("Grid", new Cesium.GridImageryProvider(), 1.0, false);
           addAdditionalLayerOption(
             "Tile Coordinates",
             new Cesium.TileCoordinatesImageryProvider(),
             1.0,
-            false
+            false,
           );
         }
 
@@ -264,7 +263,7 @@
           name,
           imageryProviderPromise,
           alpha,
-          show
+          show,
         ) {
           try {
             const imageryProvider = await Promise.resolve(imageryProviderPromise);

@@ -114,19 +114,19 @@ NodeTransformationProperty.prototype.getValue = function (time, result) {
     this._translation,
     time,
     defaultNodeTransformation.translation,
-    result.translation
+    result.translation,
   );
   result.rotation = Property.getValueOrClonedDefault(
     this._rotation,
     time,
     defaultNodeTransformation.rotation,
-    result.rotation
+    result.rotation,
   );
   result.scale = Property.getValueOrClonedDefault(
     this._scale,
     time,
     defaultNodeTransformation.scale,
-    result.scale
+    result.scale,
   );
   return result;
 };

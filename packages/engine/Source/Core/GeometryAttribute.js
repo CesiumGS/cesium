@@ -52,7 +52,7 @@ function GeometryAttribute(options) {
     options.componentsPerAttribute > 4
   ) {
     throw new DeveloperError(
-      "options.componentsPerAttribute must be between 1 and 4."
+      "options.componentsPerAttribute must be between 1 and 4.",
     );
   }
   if (!defined(options.values)) {

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -75,7 +75,7 @@
               destination: Cesium.Cartesian3.fromDegrees(
                 position.coords.longitude,
                 position.coords.latitude,
-                1000.0
+                1000.0,
               ),
             });
           }
@@ -143,7 +143,7 @@
           camera.constrainedAxis = Cesium.Cartesian3.UNIT_Z;
           camera.lookAtTransform(
             transform,
-            new Cesium.Cartesian3(-120000.0, -120000.0, 120000.0)
+            new Cesium.Cartesian3(-120000.0, -120000.0, 120000.0),
           );
 
           // Show reference frame.  Not required.
@@ -151,7 +151,7 @@
             new Cesium.DebugModelMatrixPrimitive({
               modelMatrix: transform,
               length: 100000.0,
-            })
+            }),
           );
         }
 
@@ -233,7 +233,7 @@
             destination: Cesium.Cartesian3.fromDegrees(
               -73.98580932617188,
               40.74843406689482,
-              363.34038727246224
+              363.34038727246224,
             ),
             complete: function () {
               setTimeout(function () {
@@ -241,7 +241,7 @@
                   destination: Cesium.Cartesian3.fromDegrees(
                     -73.98585975679403,
                     40.75759944127251,
-                    186.50838555841779
+                    186.50838555841779,
                   ),
                   orientation: {
                     heading: Cesium.Math.toRadians(200.0),

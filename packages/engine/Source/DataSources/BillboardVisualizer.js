@@ -63,7 +63,7 @@ function BillboardVisualizer(entityCluster, entityCollection) {
 
   entityCollection.collectionChanged.addEventListener(
     BillboardVisualizer.prototype._onCollectionChanged,
-    this
+    this,
   );
 
   this._cluster = entityCluster;
@@ -104,11 +104,11 @@ BillboardVisualizer.prototype.update = function (time) {
       position = Property.getValueOrUndefined(
         entity._position,
         time,
-        positionScratch
+        positionScratch,
       );
       textureValue = Property.getValueOrUndefined(
         billboardGraphics._image,
-        time
+        time,
       );
       show = defined(position) && defined(textureValue);
     }
@@ -140,97 +140,97 @@ BillboardVisualizer.prototype.update = function (time) {
       billboardGraphics._color,
       time,
       defaultColor,
-      colorScratch
+      colorScratch,
     );
     billboard.eyeOffset = Property.getValueOrDefault(
       billboardGraphics._eyeOffset,
       time,
       defaultEyeOffset,
-      eyeOffsetScratch
+      eyeOffsetScratch,
     );
     billboard.heightReference = Property.getValueOrDefault(
       billboardGraphics._heightReference,
       time,
-      defaultHeightReference
+      defaultHeightReference,
     );
     billboard.pixelOffset = Property.getValueOrDefault(
       billboardGraphics._pixelOffset,
       time,
       defaultPixelOffset,
-      pixelOffsetScratch
+      pixelOffsetScratch,
     );
     billboard.scale = Property.getValueOrDefault(
       billboardGraphics._scale,
       time,
-      defaultScale
+      defaultScale,
     );
     billboard.rotation = Property.getValueOrDefault(
       billboardGraphics._rotation,
       time,
-      defaultRotation
+      defaultRotation,
     );
     billboard.alignedAxis = Property.getValueOrDefault(
       billboardGraphics._alignedAxis,
       time,
-      defaultAlignedAxis
+      defaultAlignedAxis,
     );
     billboard.horizontalOrigin = Property.getValueOrDefault(
       billboardGraphics._horizontalOrigin,
       time,
-      defaultHorizontalOrigin
+      defaultHorizontalOrigin,
     );
     billboard.verticalOrigin = Property.getValueOrDefault(
       billboardGraphics._verticalOrigin,
       time,
-      defaultVerticalOrigin
+      defaultVerticalOrigin,
     );
     billboard.width = Property.getValueOrUndefined(
       billboardGraphics._width,
-      time
+      time,
     );
     billboard.height = Property.getValueOrUndefined(
       billboardGraphics._height,
-      time
+      time,
     );
     billboard.scaleByDistance = Property.getValueOrUndefined(
       billboardGraphics._scaleByDistance,
       time,
-      scaleByDistanceScratch
+      scaleByDistanceScratch,
     );
     billboard.translucencyByDistance = Property.getValueOrUndefined(
       billboardGraphics._translucencyByDistance,
       time,
-      translucencyByDistanceScratch
+      translucencyByDistanceScratch,
     );
     billboard.pixelOffsetScaleByDistance = Property.getValueOrUndefined(
       billboardGraphics._pixelOffsetScaleByDistance,
       time,
-      pixelOffsetScaleByDistanceScratch
+      pixelOffsetScaleByDistanceScratch,
     );
     billboard.sizeInMeters = Property.getValueOrDefault(
       billboardGraphics._sizeInMeters,
       time,
-      defaultSizeInMeters
+      defaultSizeInMeters,
     );
     billboard.distanceDisplayCondition = Property.getValueOrUndefined(
       billboardGraphics._distanceDisplayCondition,
       time,
-      distanceDisplayConditionScratch
+      distanceDisplayConditionScratch,
     );
     billboard.disableDepthTestDistance = Property.getValueOrUndefined(
       billboardGraphics._disableDepthTestDistance,
-      time
+      time,
     );
     billboard.splitDirection = Property.getValueOrDefault(
       billboardGraphics._splitDirection,
       time,
-      defaultSplitDirection
+      defaultSplitDirection,
     );
 
     const subRegion = Property.getValueOrUndefined(
       billboardGraphics._imageSubRegion,
       time,
-      boundingRectangleScratch
+      boundingRectangleScratch,
     );
     if (defined(subRegion)) {
       billboard.setImageSubRegion(billboard._imageId, subRegion);
@@ -293,7 +293,7 @@ BillboardVisualizer.prototype.isDestroyed = function () {
 BillboardVisualizer.prototype.destroy = function () {
   this._entityCollection.collectionChanged.removeEventListener(
     BillboardVisualizer.prototype._onCollectionChanged,
-    this
+    this,
   );
   const entities = this._entityCollection.values;
   for (let i = 0; i < entities.length; i++) {
@@ -306,7 +306,7 @@ BillboardVisualizer.prototype._onCollectionChanged = function (
   entityCollection,
   added,
   removed,
-  changed
+  changed,
 ) {
   let i;
   let entity;

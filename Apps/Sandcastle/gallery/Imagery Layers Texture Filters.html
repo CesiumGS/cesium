@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -60,15 +60,15 @@
 
         const layerLinear = Cesium.ImageryLayer.fromProviderAsync(
           Cesium.TileMapServiceImageryProvider.fromUrl(
-            Cesium.buildModuleUrl("Assets/Textures/NaturalEarthII")
-          )
+            Cesium.buildModuleUrl("Assets/Textures/NaturalEarthII"),
+          ),
         );
         layers.add(layerLinear);
 
         const layerNearest = Cesium.ImageryLayer.fromProviderAsync(
           Cesium.TileMapServiceImageryProvider.fromUrl(
-            Cesium.buildModuleUrl("Assets/Textures/NaturalEarthII")
-          )
+            Cesium.buildModuleUrl("Assets/Textures/NaturalEarthII"),
+          ),
         );
         layers.add(layerNearest);
 

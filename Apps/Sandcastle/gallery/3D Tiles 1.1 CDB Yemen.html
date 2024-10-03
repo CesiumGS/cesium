@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -41,7 +41,7 @@
 
         const viewer = new Cesium.Viewer("cesiumContainer", {});
         viewer.clock.currentTime = Cesium.JulianDate.fromIso8601(
-          "2021-11-09T07:27:37.016064475348684937Z"
+          "2021-11-09T07:27:37.016064475348684937Z",
         );
         const scene = viewer.scene;
         scene.light.intensity = 7.0;
@@ -51,68 +51,68 @@
             destination: new Cesium.Cartesian3(
               4397999.822774582,
               4404502.67774069,
-              1397782.4709840622
+              1397782.4709840622,
             ),
             direction: new Cesium.Cartesian3(
               -0.29335588497705106,
               -0.6066709587467911,
-              0.7388454997917905
+              0.7388454997917905,
             ),
             up: new Cesium.Cartesian3(
               0.6240972421637774,
               0.46391380837591956,
-              0.6287182283994301
+              0.6287182283994301,
             ),
           },
           airport: {
             destination: new Cesium.Cartesian3(
               4394719.151490939,
               4402317.401942875,
-              1406608.6602404779
+              1406608.6602404779,
             ),
             direction: new Cesium.Cartesian3(
               0.4146699515908668,
               -0.8887814163588482,
-              0.1952342828060377
+              0.1952342828060377,
             ),
             up: new Cesium.Cartesian3(
               0.8415067525520951,
               0.4561872920946922,
-              0.28941240460723
+              0.28941240460723,
             ),
           },
           crater: {
             destination: new Cesium.Cartesian3(
               4398179.160380196,
               4402518.469409466,
-              1399161.7612076725
+              1399161.7612076725,
             ),
             direction: new Cesium.Cartesian3(
               -0.2800903637088597,
               -0.6348021519070498,
-              0.7201219452923355
+              0.7201219452923355,
             ),
             up: new Cesium.Cartesian3(
               0.6319189548885261,
               0.4427783126727723,
-              0.6361020360596605
+              0.6361020360596605,
             ),
           },
           port: {
             destination: new Cesium.Cartesian3(
               4399698.85724341,
               4399019.639078034,
-              1405153.7766045567
+              1405153.7766045567,
             ),
             direction: new Cesium.Cartesian3(
               -0.5651458936543287,
               0.17696574231117793,
-              -0.8057873447342694
+              -0.8057873447342694,
             ),
             up: new Cesium.Cartesian3(
               0.4886488937394081,
               0.8587605935024302,
-              -0.15411846642958343
+              -0.15411846642958343,
             ),
           },
         };
@@ -221,7 +221,7 @@
               metadataOverlay.style.left = `${movement.endPosition.x}px`;
 
               tableHtmlScratch = `<table><thead><tr><td>Material:</td><th><tt>${feature.getProperty(
-                "name"
+                "name",
               )}</tt></tr></thead><tbody>`;
 
               materialsScratch = feature.getProperty("substrates");
@@ -231,7 +231,7 @@
 
               for (i = 0; i < materialsScratch.length; i++) {
                 tableHtmlScratch += `<tr><td><tt>${materialsScratch[i].slice(
-                  3
+                  3,
                 )}</tt></td><td style='text-align: right;'><tt>${
                   weightsScratch[i]
                 }%</tt></td></tr>`;
@@ -303,7 +303,7 @@
 
               const propertyType = Cesium.defaultValue(
                 property.componentType,
-                property.type
+                property.type,
               );
               tableHtmlScratch += `<tr style='font-family: monospace;' title='${property.description}'><th>${property.name}</th><th><b>${property.id}</b></th><td>${propertyType}</td><td>${propertyValue}</td></tr>`;
             }
@@ -411,15 +411,17 @@
         }
 
         Sandcastle.addToolbarMenu(locations);
-        Sandcastle.addToggleButton("Enable terrain picking", enablePicking, function (
-          checked
-        ) {
-          if (enablePicking) {
-            metadataOverlay.style.display = "none";
-          }
+        Sandcastle.addToggleButton(
+          "Enable terrain picking",
+          enablePicking,
+          function (checked) {
+            if (enablePicking) {
+              metadataOverlay.style.display = "none";
+            }
 
-          enablePicking = checked;
-        });
+            enablePicking = checked;
+          },
+        );
 
         //Sandcastle_End
       };

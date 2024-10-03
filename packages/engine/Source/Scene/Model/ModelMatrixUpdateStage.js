@@ -42,7 +42,7 @@ ModelMatrixUpdateStage.update = function (runtimeNode, sceneGraph, frameState) {
       runtimeNode,
       sceneGraph,
       modelMatrix,
-      runtimeNode.transformToRoot
+      runtimeNode.transformToRoot,
     );
     runtimeNode._transformDirty = false;
   }
@@ -57,11 +57,11 @@ function updateDrawCommand(drawCommand, modelMatrix, transformToRoot) {
   drawCommand.modelMatrix = Matrix4.multiplyTransformation(
     modelMatrix,
     transformToRoot,
-    drawCommand.modelMatrix
+    drawCommand.modelMatrix,
   );
   drawCommand.cullFace = ModelUtility.getCullFace(
     drawCommand.modelMatrix,
-    drawCommand.primitiveType
+    drawCommand.primitiveType,
   );
 }
 
@@ -74,7 +74,7 @@ function updateRuntimeNode(
   runtimeNode,
   sceneGraph,
   modelMatrix,
-  transformToRoot
+  transformToRoot,
 ) {
   let i;
 
@@ -82,7 +82,7 @@ function updateRuntimeNode(
   transformToRoot = Matrix4.multiplyTransformation(
     transformToRoot,
     runtimeNode.transform,
-    new Matrix4()
+    new Matrix4(),
   );
 
   runtimeNode.updateComputedTransform();
@@ -93,7 +93,7 @@ function updateRuntimeNode(
     updateDrawCommand(
       runtimePrimitive.drawCommand,
       modelMatrix,
-      transformToRoot
+      transformToRoot,
     );
   }
 
@@ -104,14 +104,14 @@ function updateRuntimeNode(
     // Update transformToRoot to accommodate changes in the transforms of this node and its ancestors
     childRuntimeNode._transformToRoot = Matrix4.clone(
       transformToRoot,
-      childRuntimeNode._transformToRoot
+      childRuntimeNode._transformToRoot,
     );
 
     updateRuntimeNode(
       childRuntimeNode,
       sceneGraph,
       modelMatrix,
-      transformToRoot
+      transformToRoot,
     );
     childRuntimeNode._transformDirty = false;
   }

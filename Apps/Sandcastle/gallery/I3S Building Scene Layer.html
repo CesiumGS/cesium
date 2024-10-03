@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -44,8 +44,8 @@
         const viewer = new Cesium.Viewer("cesiumContainer", {
           terrain: new Cesium.Terrain(
             Cesium.ArcGISTiledElevationTerrainProvider.fromUrl(
-              "https://elevation3d.arcgis.com/arcgis/rest/services/WorldElevation3D/Terrain3D/ImageServer"
-            )
+              "https://elevation3d.arcgis.com/arcgis/rest/services/WorldElevation3D/Terrain3D/ImageServer",
+            ),
           ),
           animation: false,
           timeline: false,
@@ -71,7 +71,7 @@
           // Create I3S data provider
           const i3sProvider = await Cesium.I3SDataProvider.fromUrl(
             tours["Turanga Library"],
-            i3sOptions
+            i3sOptions,
           );
 
           Cesium.I3SBuildingSceneLayerExplorer("toolbar", i3sProvider);

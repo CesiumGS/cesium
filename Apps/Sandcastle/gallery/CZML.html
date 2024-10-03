@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -39,7 +39,7 @@
 
         Sandcastle.addDefaultToolbarButton("Satellites", function () {
           viewer.dataSources.add(
-            Cesium.CzmlDataSource.load("../../SampleData/simple.czml")
+            Cesium.CzmlDataSource.load("../../SampleData/simple.czml"),
           );
 
           viewer.camera.flyHome(0);
@@ -47,7 +47,7 @@
 
         Sandcastle.addToolbarButton("Vehicle", function () {
           viewer.dataSources.add(
-            Cesium.CzmlDataSource.load("../../SampleData/Vehicle.czml")
+            Cesium.CzmlDataSource.load("../../SampleData/Vehicle.czml"),
           );
 
           viewer.scene.camera.setView({

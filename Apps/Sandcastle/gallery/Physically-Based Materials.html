@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -58,7 +58,7 @@
         const position = new Cesium.Cartesian3(
           -1371108.6511167218,
           -5508684.080096612,
-          2901825.449865087
+          2901825.449865087,
         );
         const heading = Cesium.Math.toRadians(180);
         const pitch = Cesium.Math.toRadians(2);
@@ -84,7 +84,7 @@
           destination: new Cesium.Cartesian3(
             -1371203.1456494154,
             -5508700.033950869,
-            2901802.2749172337
+            2901802.2749172337,
           ),
           orientation: {
             heading: Cesium.Math.toRadians(67.64973594265429),
@@ -98,7 +98,7 @@
           destination: new Cesium.Cartesian3(
             -1371214.9554156072,
             -5508700.8494476415,
-            2901826.794611029
+            2901826.794611029,
           ),
           orientation: {
             heading: Cesium.Math.toRadians(80.5354269423926),
@@ -112,7 +112,7 @@
           destination: new Cesium.Cartesian3(
             -1371190.7755780201,
             -5508732.668834588,
-            2901827.2625979027
+            2901827.2625979027,
           ),
           orientation: {
             heading: Cesium.Math.toRadians(68.29411482061157),
@@ -126,7 +126,7 @@
           destination: new Cesium.Cartesian3(
             -1371052.4616855076,
             -5508691.745389906,
-            2901861.440673151
+            2901861.440673151,
           ),
           orientation: {
             heading: Cesium.Math.toRadians(236.4536374528137),
@@ -148,40 +148,36 @@
               text: "Front reflection",
               onselect: function () {
                 viewer.scene.camera.flyTo(frontView);
-                viewer.clockViewModel.clock.currentTime = Cesium.JulianDate.fromIso8601(
-                  "2017-07-11T20:00:00Z"
-                );
+                viewer.clockViewModel.clock.currentTime =
+                  Cesium.JulianDate.fromIso8601("2017-07-11T20:00:00Z");
               },
             },
             {
               text: "Three quarters sunrise",
               onselect: function () {
                 viewer.scene.camera.flyTo(threeQuartersView);
-                viewer.clockViewModel.clock.currentTime = Cesium.JulianDate.fromIso8601(
-                  "2017-07-11T11:00:00Z"
-                );
+                viewer.clockViewModel.clock.currentTime =
+                  Cesium.JulianDate.fromIso8601("2017-07-11T11:00:00Z");
               },
             },
             {
               text: "Top reflection",
               onselect: function () {
                 viewer.scene.camera.flyTo(topView);
-                viewer.clockViewModel.clock.currentTime = Cesium.JulianDate.fromIso8601(
-                  "2017-07-11T12:00:00Z"
-                );
+                viewer.clockViewModel.clock.currentTime =
+                  Cesium.JulianDate.fromIso8601("2017-07-11T12:00:00Z");
               },
             },
             {
               text: "Upward angle side reflection",
               onselect: function () {
                 viewer.scene.camera.flyTo(upwardsView);
-                viewer.clockViewModel.clock.currentTime = Cesium.JulianDate.fromIso8601(
-                  "2017-07-11T23:00:00Z"
-                );
+                viewer.clockViewModel.clock.currentTime =
+                  Cesium.JulianDate.fromIso8601("2017-07-11T23:00:00Z");
               },
             },
           ],
-          "toolbar"
+          "toolbar",
         );
         //Sandcastle_End
       };

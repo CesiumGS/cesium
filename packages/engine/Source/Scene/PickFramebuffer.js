@@ -34,7 +34,7 @@ PickFramebuffer.prototype.begin = function (screenSpaceRectangle, viewport) {
 
   BoundingRectangle.clone(
     screenSpaceRectangle,
-    this._passState.scissorTest.rectangle
+    this._passState.scissorTest.rectangle,
   );
 
   // Create or recreate renderbuffers and framebuffer used for picking
@@ -96,17 +96,17 @@ PickFramebuffer.prototype.end = function (screenSpaceRectangle) {
 
       colorScratchForPickFramebuffer.red = Color.byteToFloat(pixels[index]);
       colorScratchForPickFramebuffer.green = Color.byteToFloat(
-        pixels[index + 1]
+        pixels[index + 1],
       );
       colorScratchForPickFramebuffer.blue = Color.byteToFloat(
-        pixels[index + 2]
+        pixels[index + 2],
       );
       colorScratchForPickFramebuffer.alpha = Color.byteToFloat(
-        pixels[index + 3]
+        pixels[index + 3],
       );
 
       const object = context.getObjectByPickColor(
-        colorScratchForPickFramebuffer
+        colorScratchForPickFramebuffer,
       );
       if (defined(object)) {
         return object;

@@ -34,11 +34,11 @@ function WebMercatorTilingScheme(options) {
   this._ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.default);
   this._numberOfLevelZeroTilesX = defaultValue(
     options.numberOfLevelZeroTilesX,
-    1
+    1,
   );
   this._numberOfLevelZeroTilesY = defaultValue(
     options.numberOfLevelZeroTilesY,
-    1
+    1,
   );
 
   this._projection = new WebMercatorProjection(this._ellipsoid);
@@ -53,25 +53,25 @@ function WebMercatorTilingScheme(options) {
     const semimajorAxisTimesPi = this._ellipsoid.maximumRadius * Math.PI;
     this._rectangleSouthwestInMeters = new Cartesian2(
       -semimajorAxisTimesPi,
-      -semimajorAxisTimesPi
+      -semimajorAxisTimesPi,
     );
     this._rectangleNortheastInMeters = new Cartesian2(
       semimajorAxisTimesPi,
-      semimajorAxisTimesPi
+      semimajorAxisTimesPi,
     );
   }
 
   const southwest = this._projection.unproject(
-    this._rectangleSouthwestInMeters
+    this._rectangleSouthwestInMeters,
   );
   const northeast = this._projection.unproject(
-    this._rectangleNortheastInMeters
+    this._rectangleNortheastInMeters,
   );
   this._rectangle = new Rectangle(
     southwest.longitude,
     southwest.latitude,
     northeast.longitude,
-    northeast.latitude
+    northeast.latitude,
   );
 }
 
@@ -142,7 +142,7 @@ WebMercatorTilingScheme.prototype.getNumberOfYTilesAtLevel = function (level) {
  */
 WebMercatorTilingScheme.prototype.rectangleToNativeRectangle = function (
   rectangle,
-  result
+  result,
 ) {
   const projection = this._projection;
   const southwest = projection.project(Rectangle.southwest(rectangle));
@@ -175,7 +175,7 @@ WebMercatorTilingScheme.prototype.tileXYToNativeRectangle = function (
   x,
   y,
   level,
-  result
+  result,
 ) {
   const xTiles = this.getNumberOfXTilesAtLevel(level);
   const yTiles = this.getNumberOfYTilesAtLevel(level);
@@ -218,16 +218,16 @@ WebMercatorTilingScheme.prototype.tileXYToRectangle = function (
   x,
   y,
   level,
-  result
+  result,
 ) {
   const nativeRectangle = this.tileXYToNativeRectangle(x, y, level, result);
 
   const projection = this._projection;
   const southwest = projection.unproject(
-    new Cartesian2(nativeRectangle.west, nativeRectangle.south)
+    new Cartesian2(nativeRectangle.west, nativeRectangle.south),
   );
   const northeast = projection.unproject(
-    new Cartesian2(nativeRectangle.east, nativeRectangle.north)
+    new Cartesian2(nativeRectangle.east, nativeRectangle.north),
   );
 
   nativeRectangle.west = southwest.longitude;
@@ -251,7 +251,7 @@ WebMercatorTilingScheme.prototype.tileXYToRectangle = function (
 WebMercatorTilingScheme.prototype.positionToTileXY = function (
   position,
   level,
-  result
+  result,
 ) {
   const rectangle = this._rectangle;
   if (!Rectangle.contains(rectangle, position)) {

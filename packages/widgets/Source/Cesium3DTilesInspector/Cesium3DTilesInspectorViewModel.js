@@ -112,13 +112,13 @@ function getStatistics(tileset, isPick) {
     s +=
       // --- Memory statistics
       `<li><strong>Geometry Memory (MB): </strong>${formatMemoryString(
-        statistics.geometryByteLength
+        statistics.geometryByteLength,
       )}</li>` +
       `<li><strong>Texture Memory (MB): </strong>${formatMemoryString(
-        statistics.texturesByteLength
+        statistics.texturesByteLength,
       )}</li>` +
       `<li><strong>Batch Table Memory (MB): </strong>${formatMemoryString(
-        statistics.batchTableByteLength
+        statistics.batchTableByteLength,
       )}</li>`;
     s += "</ul>";
   }
@@ -131,10 +131,10 @@ function getResourceCacheStatistics() {
   return `
   <ul class="cesium-cesiumInspector-statistics">
     <li><strong>Geometry Memory (MB): </strong>${formatMemoryString(
-      statistics.geometryByteLength
+      statistics.geometryByteLength,
     )}</li>
     <li><strong>Texture Memory (MB): </strong>${formatMemoryString(
-      statistics.texturesByteLength
+      statistics.texturesByteLength,
     )}</li>
   </ul>
   `;
@@ -782,7 +782,7 @@ function Cesium3DTilesInspectorViewModel(scene, performanceContainer) {
       if (value) {
         that._eventHandler.setInputAction(
           pickTileset,
-          ScreenSpaceEventType.LEFT_CLICK
+          ScreenSpaceEventType.LEFT_CLICK,
         );
       } else {
         that._eventHandler.removeInputAction(ScreenSpaceEventType.LEFT_CLICK);
@@ -1487,7 +1487,7 @@ Cesium3DTilesInspectorViewModel.prototype.compileStyle = function () {
  */
 Cesium3DTilesInspectorViewModel.prototype.styleEditorKeyPress = function (
   sender,
-  event
+  event,
 ) {
   if (event.keyCode === 9) {
     //tab

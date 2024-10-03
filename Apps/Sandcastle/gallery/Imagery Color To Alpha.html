@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -64,7 +64,7 @@
         const singleTileLayer = Cesium.ImageryLayer.fromProviderAsync(
           Cesium.SingleTileImageryProvider.fromUrl("../images/earthbump1k.jpg", {
             rectangle: Cesium.Rectangle.fromDegrees(-180.0, -90.0, 180.0, 90.0),
-          })
+          }),
         );
         layers.add(singleTileLayer);
 

@@ -28,7 +28,7 @@ function ShaderProgram(options) {
 
   const modifiedFS = handleUniformPrecisionMismatches(
     vertexShaderText,
-    fragmentShaderText
+    fragmentShaderText,
   );
 
   this._gl = options.gl;
@@ -143,7 +143,7 @@ function extractUniforms(shaderText) {
 
 function handleUniformPrecisionMismatches(
   vertexShaderText,
-  fragmentShaderText
+  fragmentShaderText,
 ) {
   // If a uniform exists in both the vertex and fragment shader but with different precision qualifiers,
   // give the fragment shader uniform a different name. This fixes shader compilation errors on devices
@@ -204,7 +204,7 @@ function createAndLinkProgram(gl, shader) {
         gl.bindAttribLocation(
           program,
           attributeLocations[attribute],
-          attribute
+          attribute,
         );
       }
     }
@@ -275,7 +275,7 @@ function createAndLinkProgram(gl, shader) {
       return;
     }
     console.error(
-      `${consolePrefix}Translated ${name} shaderSource:\n${translation}`
+      `${consolePrefix}Translated ${name} shaderSource:\n${translation}`,
     );
   }
 }
@@ -309,7 +309,7 @@ function findUniforms(gl, program) {
     const uniformName =
       activeUniform.name.indexOf(
         suffix,
-        activeUniform.name.length - suffix.length
+        activeUniform.name.length - suffix.length,
       ) !== -1
         ? activeUniform.name.slice(0, activeUniform.name.length - 3)
         : activeUniform.name;
@@ -328,7 +328,7 @@ function findUniforms(gl, program) {
             gl,
             activeUniform,
             uniformName,
-            location
+            location,
           );
 
           uniformsByName[uniformName] = uniform;
@@ -388,7 +388,7 @@ function findUniforms(gl, program) {
             gl,
             activeUniform,
             uniformName,
-            locations
+            locations,
           );
 
           uniformsByName[uniformName] = uniformArray;
@@ -470,12 +470,12 @@ function reinitialize(shader) {
   const program = createAndLinkProgram(gl, shader, shader._debugShaders);
   const numberOfVertexAttributes = gl.getProgramParameter(
     program,
-    gl.ACTIVE_ATTRIBUTES
+    gl.ACTIVE_ATTRIBUTES,
   );
   const uniforms = findUniforms(gl, program);
   const partitionedUniforms = partitionUniforms(
     shader,
-    uniforms.uniformsByName
+    uniforms.uniformsByName,
   );
 
   shader._program = program;
@@ -483,7 +483,7 @@ function reinitialize(shader) {
   shader._vertexAttributes = findVertexAttributes(
     gl,
     program,
-    numberOfVertexAttributes
+    numberOfVertexAttributes,
   );
   shader._uniformsByName = uniforms.uniformsByName;
   shader._uniforms = uniforms.uniforms;
@@ -493,7 +493,7 @@ function reinitialize(shader) {
   shader.maximumTextureUnitIndex = setSamplerUniforms(
     gl,
     program,
-    uniforms.samplerUniforms
+    uniforms.samplerUniforms,
   );
 
   if (oldProgram) {
@@ -507,7 +507,7 @@ function reinitialize(shader) {
       vertexSourceCode, // The new vertex shader source
       fragmentSourceCode, // The new fragment shader source
       onCompiled, // Callback triggered by your engine when the compilation is successful. It needs to send back the new linked program.
-      onError // Callback triggered by your engine in case of error. It needs to send the WebGL error to allow the editor to display the error in the gutter.
+      onError, // Callback triggered by your engine in case of error. It needs to send the WebGL error to allow the editor to display the error in the gutter.
     ) {
       const originalVS = shader._vertexShaderText;
       const originalFS = shader._fragmentShaderText;
@@ -546,7 +546,7 @@ ShaderProgram.prototype._bind = function () {
 ShaderProgram.prototype._setUniforms = function (
   uniformMap,
   uniformState,
-  validate
+  validate,
 ) {
   let len;
   let i;
@@ -595,8 +595,8 @@ ShaderProgram.prototype._setUniforms = function (
     if (!gl.getProgramParameter(program, gl.VALIDATE_STATUS)) {
       throw new DeveloperError(
         `Program validation failed.  Program info log: ${gl.getProgramInfoLog(
-          program
-        )}`
+          program,
+        )}`,
       );
     }
     //>>includeEnd('debug');

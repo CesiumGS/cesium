@@ -103,7 +103,7 @@ function update(frustum) {
     !defined(frustum.far)
   ) {
     throw new DeveloperError(
-      "right, left, top, bottom, near, or far parameters are not set."
+      "right, left, top, bottom, near, or far parameters are not set.",
     );
   }
   //>>includeEnd('debug');
@@ -124,7 +124,7 @@ function update(frustum) {
   //>>includeStart('debug', pragmas.debug);
   if (frustum.near <= 0 || frustum.near > frustum.far) {
     throw new DeveloperError(
-      "near must be greater than zero and less than far."
+      "near must be greater than zero and less than far.",
     );
   }
   //>>includeEnd('debug');
@@ -142,7 +142,7 @@ function update(frustum) {
     top,
     near,
     far,
-    frustum._perspectiveMatrix
+    frustum._perspectiveMatrix,
   );
   frustum._infinitePerspective = Matrix4.computeInfinitePerspectiveOffCenter(
     left,
@@ -150,7 +150,7 @@ function update(frustum) {
     bottom,
     top,
     near,
-    frustum._infinitePerspective
+    frustum._infinitePerspective,
   );
 }
 
@@ -208,7 +208,7 @@ const getPlanesNormal = new Cartesian3();
 PerspectiveOffCenterFrustum.prototype.computeCullingVolume = function (
   position,
   direction,
-  up
+  up,
 ) {
   //>>includeStart('debug', pragmas.debug);
   if (!defined(position)) {
@@ -370,14 +370,14 @@ PerspectiveOffCenterFrustum.prototype.getPixelDimensions = function (
   drawingBufferHeight,
   distance,
   pixelRatio,
-  result
+  result,
 ) {
   update(this);
 
   //>>includeStart('debug', pragmas.debug);
   if (!defined(drawingBufferWidth) || !defined(drawingBufferHeight)) {
     throw new DeveloperError(
-      "Both drawingBufferWidth and drawingBufferHeight are required."
+      "Both drawingBufferWidth and drawingBufferHeight are required.",
     );
   }
   if (drawingBufferWidth <= 0) {
@@ -475,7 +475,7 @@ PerspectiveOffCenterFrustum.prototype.equals = function (other) {
 PerspectiveOffCenterFrustum.prototype.equalsEpsilon = function (
   other,
   relativeEpsilon,
-  absoluteEpsilon
+  absoluteEpsilon,
 ) {
   return (
     other === this ||
@@ -485,37 +485,37 @@ PerspectiveOffCenterFrustum.prototype.equalsEpsilon = function (
         this.right,
         other.right,
         relativeEpsilon,
-        absoluteEpsilon
+        absoluteEpsilon,
       ) &&
       CesiumMath.equalsEpsilon(
         this.left,
         other.left,
         relativeEpsilon,
-        absoluteEpsilon
+        absoluteEpsilon,
       ) &&
       CesiumMath.equalsEpsilon(
         this.top,
         other.top,
         relativeEpsilon,
-        absoluteEpsilon
+        absoluteEpsilon,
       ) &&
       CesiumMath.equalsEpsilon(
         this.bottom,
         other.bottom,
         relativeEpsilon,
-        absoluteEpsilon
+        absoluteEpsilon,
       ) &&
       CesiumMath.equalsEpsilon(
         this.near,
         other.near,
         relativeEpsilon,
-        absoluteEpsilon
+        absoluteEpsilon,
       ) &&
       CesiumMath.equalsEpsilon(
         this.far,
         other.far,
         relativeEpsilon,
-        absoluteEpsilon
+        absoluteEpsilon,
       ))
   );
 };

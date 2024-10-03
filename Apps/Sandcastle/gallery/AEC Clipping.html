@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -41,7 +41,7 @@
         viewer.scene.skyAtmosphere.show = true;
 
         const currentTime = Cesium.JulianDate.fromIso8601(
-          "2020-01-09T23:00:39.018261982600961346Z"
+          "2020-01-09T23:00:39.018261982600961346Z",
         );
         viewer.clock.currentTime = currentTime;
 
@@ -66,7 +66,7 @@
           viewer.dataSources.add(dataSource);
 
           footprint = dataSource.entities.values.find((entity) =>
-            Cesium.defined(entity.polygon)
+            Cesium.defined(entity.polygon),
           );
           footprint.polygon.outline = false;
 
@@ -74,7 +74,7 @@
           const cameraOffset = new Cesium.HeadingPitchRange(
             Cesium.Math.toRadians(95.0),
             Cesium.Math.toRadians(-75.0),
-            800.0
+            800.0,
           );
           viewer.zoomTo(footprint, cameraOffset);
           viewer.homeButton.viewModel.command.beforeExecute.addEventListener((e) => {

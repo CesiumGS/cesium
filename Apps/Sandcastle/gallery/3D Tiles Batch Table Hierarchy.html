@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -95,7 +95,7 @@
         let tileset;
         try {
           tileset = await Cesium.Cesium3DTileset.fromUrl(
-            "../../SampleData/Cesium3DTiles/Hierarchy/BatchTableHierarchy/tileset.json"
+            "../../SampleData/Cesium3DTiles/Hierarchy/BatchTableHierarchy/tileset.json",
           );
 
           viewer.scene.primitives.add(tileset);

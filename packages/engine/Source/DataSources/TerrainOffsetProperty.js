@@ -21,7 +21,7 @@ function TerrainOffsetProperty(
   scene,
   positionProperty,
   heightReferenceProperty,
-  extrudedHeightReferenceProperty
+  extrudedHeightReferenceProperty,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("scene", scene);
@@ -48,19 +48,19 @@ function TerrainOffsetProperty(
     this._removeEventListener = scene.terrainProviderChanged.addEventListener(
       function () {
         that._updateClamping();
-      }
+      },
     );
     this._removeModeListener = scene.morphComplete.addEventListener(
       function () {
         that._updateClamping();
-      }
+      },
     );
   }
 
   if (positionProperty.isConstant) {
     const position = positionProperty.getValue(
       Iso8601.MINIMUM_VALUE,
-      scratchPosition
+      scratchPosition,
     );
     if (
       !defined(position) ||
@@ -75,7 +75,7 @@ function TerrainOffsetProperty(
 
     this._normal = scene.ellipsoid.geodeticSurfaceNormal(
       position,
-      this._normal
+      this._normal,
     );
   }
 }
@@ -125,7 +125,7 @@ TerrainOffsetProperty.prototype._updateClamping = function () {
   const ellipsoid = scene.ellipsoid;
   const cartographicPosition = ellipsoid.cartesianToCartographic(
     position,
-    this._cartographicPosition
+    this._cartographicPosition,
   );
 
   const height = scene.getHeight(cartographicPosition, this._heightReference);
@@ -143,7 +143,7 @@ TerrainOffsetProperty.prototype._updateClamping = function () {
   this._removeCallbackFunc = scene.updateHeight(
     cartographicPosition,
     updateFunction,
-    this._heightReference
+    this._heightReference,
   );
 };
 
@@ -164,12 +164,12 @@ TerrainOffsetProperty.prototype.getValue = function (time, result) {
   const heightReference = Property.getValueOrDefault(
     this._heightReference,
     time,
-    HeightReference.NONE
+    HeightReference.NONE,
   );
   const extrudedHeightReference = Property.getValueOrDefault(
     this._extrudedHeightReference,
     time,
-    HeightReference.NONE
+    HeightReference.NONE,
   );
 
   if (
@@ -184,7 +184,7 @@ TerrainOffsetProperty.prototype.getValue = function (time, result) {
     return Cartesian3.multiplyByScalar(
       this._normal,
       this._terrainHeight,
-      result
+      result,
     );
   }
 
@@ -204,7 +204,7 @@ TerrainOffsetProperty.prototype.getValue = function (time, result) {
     return Cartesian3.multiplyByScalar(
       this._normal,
       this._terrainHeight,
-      result
+      result,
     );
   }
 

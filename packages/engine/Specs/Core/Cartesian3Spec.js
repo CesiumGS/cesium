@@ -40,7 +40,7 @@ describe("Core/Cartesian3", function () {
     const existing = new Cartesian3();
     expect(cartesian).toEqualEpsilon(
       Cartesian3.fromSpherical(spherical, existing),
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
     expect(cartesian).toEqualEpsilon(existing, CesiumMath.EPSILON15);
   });
@@ -118,42 +118,42 @@ describe("Core/Cartesian3", function () {
     second = new Cartesian3(1.0, 0.0, 0.0);
     expected = new Cartesian3(1.0, 0.0, 0.0);
     expect(Cartesian3.minimumByComponent(first, second, result)).toEqual(
-      expected
+      expected,
     );
 
     first = new Cartesian3(1.0, 0.0, 0.0);
     second = new Cartesian3(2.0, 0.0, 0.0);
     expected = new Cartesian3(1.0, 0.0, 0.0);
     expect(Cartesian3.minimumByComponent(first, second, result)).toEqual(
-      expected
+      expected,
     );
 
     first = new Cartesian3(2.0, -15.0, 0.0);
     second = new Cartesian3(1.0, -20.0, 0.0);
     expected = new Cartesian3(1.0, -20.0, 0.0);
     expect(Cartesian3.minimumByComponent(first, second, result)).toEqual(
-      expected
+      expected,
     );
 
     first = new Cartesian3(2.0, -20.0, 0.0);
     second = new Cartesian3(1.0, -15.0, 0.0);
     expected = new Cartesian3(1.0, -20.0, 0.0);
     expect(Cartesian3.minimumByComponent(first, second, result)).toEqual(
-      expected
+      expected,
     );
 
     first = new Cartesian3(2.0, -15.0, 26.4);
     second = new Cartesian3(1.0, -20.0, 26.5);
     expected = new Cartesian3(1.0, -20.0, 26.4);
     expect(Cartesian3.minimumByComponent(first, second, result)).toEqual(
-      expected
+      expected,
     );
 
     first = new Cartesian3(2.0, -15.0, 26.5);
     second = new Cartesian3(1.0, -20.0, 26.4);
     expected = new Cartesian3(1.0, -20.0, 26.4);
     expect(Cartesian3.minimumByComponent(first, second, result)).toEqual(
-      expected
+      expected,
     );
   });
 
@@ -172,13 +172,13 @@ describe("Core/Cartesian3", function () {
     const second = new Cartesian3(1.0, 0.0, 0.0);
     const expected = new Cartesian3(1.0, 0.0, 0.0);
     expect(Cartesian3.minimumByComponent(first, second, first)).toEqual(
-      expected
+      expected,
     );
 
     first.x = 1.0;
     second.x = 2.0;
     expect(Cartesian3.minimumByComponent(first, second, second)).toEqual(
-      expected
+      expected,
     );
   });
 
@@ -200,13 +200,13 @@ describe("Core/Cartesian3", function () {
     const expected = new Cartesian3(1.0, 0.0, 0.0);
     const result = new Cartesian3();
     expect(Cartesian3.minimumByComponent(first, second, result)).toEqual(
-      expected
+      expected,
     );
 
     second.x = 3.0;
     expected.x = 2.0;
     expect(Cartesian3.minimumByComponent(first, second, result)).toEqual(
-      expected
+      expected,
     );
   });
 
@@ -216,13 +216,13 @@ describe("Core/Cartesian3", function () {
     const expected = new Cartesian3(0.0, 1.0, 0.0);
     const result = new Cartesian3();
     expect(Cartesian3.minimumByComponent(first, second, result)).toEqual(
-      expected
+      expected,
     );
 
     second.y = 3.0;
     expected.y = 2.0;
     expect(Cartesian3.minimumByComponent(first, second, result)).toEqual(
-      expected
+      expected,
     );
   });
 
@@ -232,13 +232,13 @@ describe("Core/Cartesian3", function () {
     const expected = new Cartesian3(0.0, 0.0, 1.0);
     const result = new Cartesian3();
     expect(Cartesian3.minimumByComponent(first, second, result)).toEqual(
-      expected
+      expected,
     );
 
     second.z = 3.0;
     expected.z = 2.0;
     expect(Cartesian3.minimumByComponent(first, second, result)).toEqual(
-      expected
+      expected,
     );
   });
 
@@ -252,42 +252,42 @@ describe("Core/Cartesian3", function () {
     second = new Cartesian3(1.0, 0.0, 0.0);
     expected = new Cartesian3(2.0, 0.0, 0.0);
     expect(Cartesian3.maximumByComponent(first, second, result)).toEqual(
-      expected
+      expected,
     );
 
     first = new Cartesian3(1.0, 0.0, 0.0);
     second = new Cartesian3(2.0, 0.0, 0.0);
     expected = new Cartesian3(2.0, 0.0, 0.0);
     expect(Cartesian3.maximumByComponent(first, second, result)).toEqual(
-      expected
+      expected,
     );
 
     first = new Cartesian3(2.0, -15.0, 0.0);
     second = new Cartesian3(1.0, -20.0, 0.0);
     expected = new Cartesian3(2.0, -15.0, 0.0);
     expect(Cartesian3.maximumByComponent(first, second, result)).toEqual(
-      expected
+      expected,
     );
 
     first = new Cartesian3(2.0, -20.0, 0.0);
     second = new Cartesian3(1.0, -15.0, 0.0);
     expected = new Cartesian3(2.0, -15.0, 0.0);
     expect(Cartesian3.maximumByComponent(first, second, result)).toEqual(
-      expected
+      expected,
     );
 
     first = new Cartesian3(2.0, -15.0, 26.4);
     second = new Cartesian3(1.0, -20.0, 26.5);
     expected = new Cartesian3(2.0, -15.0, 26.5);
     expect(Cartesian3.maximumByComponent(first, second, result)).toEqual(
-      expected
+      expected,
     );
 
     first = new Cartesian3(2.0, -15.0, 26.5);
     second = new Cartesian3(1.0, -20.0, 26.4);
     expected = new Cartesian3(2.0, -15.0, 26.5);
     expect(Cartesian3.maximumByComponent(first, second, result)).toEqual(
-      expected
+      expected,
     );
   });
 
@@ -306,13 +306,13 @@ describe("Core/Cartesian3", function () {
     const second = new Cartesian3(1.0, 0.0, 0.0);
     const expected = new Cartesian3(2.0, 0.0, 0.0);
     expect(Cartesian3.maximumByComponent(first, second, first)).toEqual(
-      expected
+      expected,
     );
 
     first.x = 1.0;
     second.x = 2.0;
     expect(Cartesian3.maximumByComponent(first, second, second)).toEqual(
-      expected
+      expected,
     );
   });
 
@@ -334,13 +334,13 @@ describe("Core/Cartesian3", function () {
     const expected = new Cartesian3(2.0, 0.0, 0.0);
     const result = new Cartesian3();
     expect(Cartesian3.maximumByComponent(first, second, result)).toEqual(
-      expected
+      expected,
     );
 
     second.x = 3.0;
     expected.x = 3.0;
     expect(Cartesian3.maximumByComponent(first, second, result)).toEqual(
-      expected
+      expected,
     );
   });
 
@@ -350,13 +350,13 @@ describe("Core/Cartesian3", function () {
     const expected = new Cartesian3(0.0, 2.0, 0.0);
     const result = new Cartesian3();
     expect(Cartesian3.maximumByComponent(first, second, result)).toEqual(
-      expected
+      expected,
     );
 
     second.y = 3.0;
     expected.y = 3.0;
     expect(Cartesian3.maximumByComponent(first, second, result)).toEqual(
-      expected
+      expected,
     );
   });
 
@@ -366,13 +366,13 @@ describe("Core/Cartesian3", function () {
     const expected = new Cartesian3(0.0, 0.0, 2.0);
     const result = new Cartesian3();
     expect(Cartesian3.maximumByComponent(first, second, result)).toEqual(
-      expected
+      expected,
     );
 
     second.z = 3.0;
     expected.z = 3.0;
     expect(Cartesian3.maximumByComponent(first, second, result)).toEqual(
-      expected
+      expected,
     );
   });
 
@@ -488,7 +488,7 @@ describe("Core/Cartesian3", function () {
   it("distance", function () {
     const distance = Cartesian3.distance(
       new Cartesian3(1.0, 0.0, 0.0),
-      new Cartesian3(2.0, 0.0, 0.0)
+      new Cartesian3(2.0, 0.0, 0.0),
     );
     expect(distance).toEqual(1.0);
   });
@@ -508,7 +508,7 @@ describe("Core/Cartesian3", function () {
   it("distanceSquared", function () {
     const distanceSquared = Cartesian3.distanceSquared(
       new Cartesian3(1.0, 0.0, 0.0),
-      new Cartesian3(3.0, 0.0, 0.0)
+      new Cartesian3(3.0, 0.0, 0.0),
     );
     expect(distanceSquared).toEqual(4.0);
   });
@@ -640,7 +640,7 @@ describe("Core/Cartesian3", function () {
     const returnedResult = Cartesian3.multiplyByScalar(
       cartesian,
       scalar,
-      result
+      result,
     );
     expect(result).toBe(returnedResult);
     expect(result).toEqual(expectedResult);
@@ -653,7 +653,7 @@ describe("Core/Cartesian3", function () {
     const returnedResult = Cartesian3.multiplyByScalar(
       cartesian,
       scalar,
-      cartesian
+      cartesian,
     );
     expect(cartesian).toBe(returnedResult);
     expect(cartesian).toEqual(expectedResult);
@@ -676,7 +676,7 @@ describe("Core/Cartesian3", function () {
     const returnedResult = Cartesian3.divideByScalar(
       cartesian,
       scalar,
-      cartesian
+      cartesian,
     );
     expect(cartesian).toBe(returnedResult);
     expect(cartesian).toEqual(expectedResult);
@@ -781,11 +781,11 @@ describe("Core/Cartesian3", function () {
     const y = new Cartesian3(1.0, 1.0, 0.0);
     expect(Cartesian3.angleBetween(x, y)).toEqualEpsilon(
       CesiumMath.PI_OVER_FOUR,
-      CesiumMath.EPSILON14
+      CesiumMath.EPSILON14,
     );
     expect(Cartesian3.angleBetween(y, x)).toEqualEpsilon(
       CesiumMath.PI_OVER_FOUR,
-      CesiumMath.EPSILON14
+      CesiumMath.EPSILON14,
     );
   });
 
@@ -794,11 +794,11 @@ describe("Core/Cartesian3", function () {
     const y = new Cartesian3(0.0, -1.0, -1.0);
     expect(Cartesian3.angleBetween(x, y)).toEqualEpsilon(
       (CesiumMath.PI * 3.0) / 4.0,
-      CesiumMath.EPSILON14
+      CesiumMath.EPSILON14,
     );
     expect(Cartesian3.angleBetween(y, x)).toEqualEpsilon(
       (CesiumMath.PI * 3.0) / 4.0,
-      CesiumMath.EPSILON14
+      CesiumMath.EPSILON14,
     );
   });
 
@@ -810,42 +810,42 @@ describe("Core/Cartesian3", function () {
   it("most orthogonal angle is x", function () {
     const v = new Cartesian3(0.0, 1.0, 2.0);
     expect(Cartesian3.mostOrthogonalAxis(v, new Cartesian3())).toEqual(
-      Cartesian3.UNIT_X
+      Cartesian3.UNIT_X,
     );
   });
 
   it("most orthogonal angle is y", function () {
     const v = new Cartesian3(1.0, 0.0, 2.0);
     expect(Cartesian3.mostOrthogonalAxis(v, new Cartesian3())).toEqual(
-      Cartesian3.UNIT_Y
+      Cartesian3.UNIT_Y,
     );
   });
 
   it("most orthogonal angle is z", function () {
     let v = new Cartesian3(1.0, 3.0, 0.0);
     expect(Cartesian3.mostOrthogonalAxis(v, new Cartesian3())).toEqual(
-      Cartesian3.UNIT_Z
+      Cartesian3.UNIT_Z,
     );
 
     v = new Cartesian3(3.0, 1.0, 0.0);
     expect(Cartesian3.mostOrthogonalAxis(v, new Cartesian3())).toEqual(
-      Cartesian3.UNIT_Z
+      Cartesian3.UNIT_Z,
     );
   });
 
   it("equals", function () {
     const cartesian = new Cartesian3(1.0, 2.0, 3.0);
     expect(Cartesian3.equals(cartesian, new Cartesian3(1.0, 2.0, 3.0))).toEqual(
-      true
+      true,
     );
     expect(Cartesian3.equals(cartesian, new Cartesian3(2.0, 2.0, 3.0))).toEqual(
-      false
+      false,
     );
     expect(Cartesian3.equals(cartesian, new Cartesian3(2.0, 1.0, 3.0))).toEqual(
-      false
+      false,
     );
     expect(Cartesian3.equals(cartesian, new Cartesian3(1.0, 2.0, 4.0))).toEqual(
-      false
+      false,
     );
     expect(Cartesian3.equals(cartesian, undefined)).toEqual(false);
   });
@@ -853,37 +853,37 @@ describe("Core/Cartesian3", function () {
   it("equalsEpsilon", function () {
     let cartesian = new Cartesian3(1.0, 2.0, 3.0);
     expect(cartesian.equalsEpsilon(new Cartesian3(1.0, 2.0, 3.0), 0.0)).toEqual(
-      true
+      true,
     );
     expect(cartesian.equalsEpsilon(new Cartesian3(1.0, 2.0, 3.0), 1.0)).toEqual(
-      true
+      true,
     );
     expect(cartesian.equalsEpsilon(new Cartesian3(2.0, 2.0, 3.0), 1.0)).toEqual(
-      true
+      true,
     );
     expect(cartesian.equalsEpsilon(new Cartesian3(1.0, 3.0, 3.0), 1.0)).toEqual(
-      true
+      true,
     );
     expect(cartesian.equalsEpsilon(new Cartesian3(1.0, 2.0, 4.0), 1.0)).toEqual(
-      true
+      true,
     );
     expect(
       cartesian.equalsEpsilon(
         new Cartesian3(2.0, 2.0, 3.0),
-        CesiumMath.EPSILON6
-      )
+        CesiumMath.EPSILON6,
+      ),
     ).toEqual(false);
     expect(
       cartesian.equalsEpsilon(
         new Cartesian3(1.0, 3.0, 3.0),
-        CesiumMath.EPSILON6
-      )
+        CesiumMath.EPSILON6,
+      ),
     ).toEqual(false);
     expect(
       cartesian.equalsEpsilon(
         new Cartesian3(1.0, 2.0, 4.0),
-        CesiumMath.EPSILON6
-      )
+        CesiumMath.EPSILON6,
+      ),
     ).toEqual(false);
     expect(cartesian.equalsEpsilon(undefined, 1)).toEqual(false);
 
@@ -891,38 +891,38 @@ describe("Core/Cartesian3", function () {
     expect(
       cartesian.equalsEpsilon(
         new Cartesian3(3000000.0, 4000000.0, 5000000.0),
-        0.0
-      )
+        0.0,
+      ),
     ).toEqual(true);
     expect(
       cartesian.equalsEpsilon(
         new Cartesian3(3000000.2, 4000000.0, 5000000.0),
-        CesiumMath.EPSILON7
-      )
+        CesiumMath.EPSILON7,
+      ),
     ).toEqual(true);
     expect(
       cartesian.equalsEpsilon(
         new Cartesian3(3000000.0, 4000000.2, 5000000.0),
-        CesiumMath.EPSILON7
-      )
+        CesiumMath.EPSILON7,
+      ),
     ).toEqual(true);
     expect(
       cartesian.equalsEpsilon(
         new Cartesian3(3000000.0, 4000000.0, 5000000.2),
-        CesiumMath.EPSILON7
-      )
+        CesiumMath.EPSILON7,
+      ),
     ).toEqual(true);
     expect(
       cartesian.equalsEpsilon(
         new Cartesian3(3000000.2, 4000000.2, 5000000.2),
-        CesiumMath.EPSILON7
-      )
+        CesiumMath.EPSILON7,
+      ),
     ).toEqual(true);
     expect(
       cartesian.equalsEpsilon(
         new Cartesian3(3000000.2, 4000000.2, 5000000.2),
-        CesiumMath.EPSILON9
-      )
+        CesiumMath.EPSILON9,
+      ),
     ).toEqual(false);
     expect(cartesian.equalsEpsilon(undefined, 1)).toEqual(false);
 
@@ -1208,7 +1208,7 @@ describe("Core/Cartesian3", function () {
     const ellipsoid = Ellipsoid.WGS84;
     const actual = Cartesian3.fromDegrees(lon, lat);
     const expected = ellipsoid.cartographicToCartesian(
-      Cartographic.fromDegrees(lon, lat)
+      Cartographic.fromDegrees(lon, lat),
     );
     expect(actual).toEqual(expected);
   });
@@ -1220,7 +1220,7 @@ describe("Core/Cartesian3", function () {
     const ellipsoid = Ellipsoid.WGS84;
     const actual = Cartesian3.fromDegrees(lon, lat, height);
     const expected = ellipsoid.cartographicToCartesian(
-      Cartographic.fromDegrees(lon, lat, height)
+      Cartographic.fromDegrees(lon, lat, height),
     );
     expect(actual).toEqual(expected);
   });
@@ -1233,7 +1233,7 @@ describe("Core/Cartesian3", function () {
     const result = new Cartesian3();
     const actual = Cartesian3.fromDegrees(lon, lat, height, ellipsoid, result);
     const expected = ellipsoid.cartographicToCartesian(
-      Cartographic.fromDegrees(lon, lat, height)
+      Cartographic.fromDegrees(lon, lat, height),
     );
     expect(actual).toEqual(expected);
     expect(actual).toBe(result);
@@ -1257,7 +1257,7 @@ describe("Core/Cartesian3", function () {
     const expectedPosition = new Cartesian3(
       1593514.338295244,
       691991.9979835141,
-      20442.318221152018
+      20442.318221152018,
     );
 
     const position = Cartesian3.fromDegrees(23.47315, 0.67416);
@@ -1270,7 +1270,7 @@ describe("Core/Cartesian3", function () {
     const ellipsoid = Ellipsoid.WGS84;
     const actual = Cartesian3.fromRadians(lon, lat);
     const expected = ellipsoid.cartographicToCartesian(
-      new Cartographic(lon, lat)
+      new Cartographic(lon, lat),
     );
     expect(actual).toEqual(expected);
   });
@@ -1282,7 +1282,7 @@ describe("Core/Cartesian3", function () {
     const ellipsoid = Ellipsoid.WGS84;
     const actual = Cartesian3.fromRadians(lon, lat, height);
     const expected = ellipsoid.cartographicToCartesian(
-      new Cartographic(lon, lat, height)
+      new Cartographic(lon, lat, height),
     );
     expect(actual).toEqual(expected);
   });
@@ -1295,7 +1295,7 @@ describe("Core/Cartesian3", function () {
     const result = new Cartesian3();
     const actual = Cartesian3.fromRadians(lon, lat, height, ellipsoid, result);
     const expected = ellipsoid.cartographicToCartesian(
-      new Cartographic(lon, lat, height)
+      new Cartographic(lon, lat, height),
     );
     expect(actual).toEqual(expected);
     expect(actual).toBe(result);
@@ -1307,7 +1307,7 @@ describe("Core/Cartesian3", function () {
     const expectedPosition = new Cartesian3(
       1593514.3406204558,
       691991.9927155221,
-      20442.315293410087
+      20442.315293410087,
     );
 
     const position = Cartesian3.fromRadians(0.40968375, 0.01176631);
@@ -1349,18 +1349,13 @@ describe("Core/Cartesian3", function () {
       new Cartesian3(
         1653831.6133167143,
         -520773.6558050613,
-        -110428.9555038242
+        -110428.9555038242,
       ),
       new Cartesian3(1556660.3478111108, 98714.16930719782, 765259.9782626687),
     ];
 
     const positions = Cartesian3.fromDegreesArray([
-      23.47315,
-      0.67416,
-      342.52135,
-      -3.64417,
-      3.6285,
-      26.13341,
+      23.47315, 0.67416, 342.52135, -3.64417, 3.6285, 26.13341,
     ]);
     expect(positions).toEqualEpsilon(expectedPositions, CesiumMath.EPSILON8);
   });
@@ -1409,7 +1404,7 @@ describe("Core/Cartesian3", function () {
     const actual = Cartesian3.fromRadiansArray(
       [lon1, lat1, lon2, lat2],
       ellipsoid,
-      result
+      result,
     );
     const expected = ellipsoid.cartographicArrayToCartesianArray([
       new Cartographic(lon1, lat1),
@@ -1427,18 +1422,13 @@ describe("Core/Cartesian3", function () {
       new Cartesian3(
         1653831.6107836158,
         -520773.6656886929,
-        -110428.94683022468
+        -110428.94683022468,
       ),
       new Cartesian3(1556660.3474447567, 98714.16630095398, 765259.9793956806),
     ];
 
     const positions = Cartesian3.fromRadiansArray([
-      0.40968375,
-      0.01176631,
-      5.97812531,
-      -0.06360276,
-      0.06332927,
-      0.45611405,
+      0.40968375, 0.01176631, 5.97812531, -0.06360276, 0.06332927, 0.45611405,
     ]);
     expect(positions).toEqualEpsilon(expectedPositions, CesiumMath.EPSILON8);
   });
@@ -1493,21 +1483,13 @@ describe("Core/Cartesian3", function () {
       new Cartesian3(
         1653926.8033485617,
         -520803.63011470815,
-        -110435.31149297487
+        -110435.31149297487,
       ),
       new Cartesian3(1556749.9449302435, 98719.85102524245, 765304.0245374623),
     ];
 
     const positions = Cartesian3.fromDegreesArrayHeights([
-      23.47315,
-      0.67416,
-      100,
-      342.52135,
-      -3.64417,
-      100,
-      3.6285,
-      26.13341,
-      100,
+      23.47315, 0.67416, 100, 342.52135, -3.64417, 100, 3.6285, 26.13341, 100,
     ]);
     expect(positions).toEqualEpsilon(expectedPositions, CesiumMath.EPSILON8);
   });
@@ -1567,7 +1549,7 @@ describe("Core/Cartesian3", function () {
     const actual = Cartesian3.fromRadiansArrayHeights(
       [lon1, lat1, alt1, lon2, lat2, alt2],
       ellipsoid,
-      result
+      result,
     );
     const expected = ellipsoid.cartographicArrayToCartesianArray([
       new Cartographic(lon1, lat1, alt1),
@@ -1585,21 +1567,14 @@ describe("Core/Cartesian3", function () {
       new Cartesian3(
         1653926.8008153175,
         -520803.6399989086,
-        -110435.30281887612
+        -110435.30281887612,
       ),
       new Cartesian3(1556749.9445638682, 98719.84801882556, 765304.0256705394),
     ];
 
     const positions = Cartesian3.fromRadiansArrayHeights([
-      0.40968375,
-      0.01176631,
-      100,
-      5.97812531,
-      -0.06360276,
-      100,
-      0.06332927,
-      0.45611405,
-      100,
+      0.40968375, 0.01176631, 100, 5.97812531, -0.06360276, 100, 0.06332927,
+      0.45611405, 100,
     ]);
     expect(positions).toEqualEpsilon(expectedPositions, CesiumMath.EPSILON8);
   });
@@ -1729,21 +1704,21 @@ describe("Core/Cartesian3", function () {
       return Cartesian3.projectVector(
         undefined,
         new Cartesian3(),
-        new Cartesian3()
+        new Cartesian3(),
       );
     }).toThrowDeveloperError();
     expect(function () {
       return Cartesian3.projectVector(
         new Cartesian3(),
         undefined,
-        new Cartesian3()
+        new Cartesian3(),
       );
     }).toThrowDeveloperError();
     expect(function () {
       return Cartesian3.projectVector(
         new Cartesian3(),
         new Cartesian3(),
-        undefined
+        undefined,
       );
     }).toThrowDeveloperError();
   });
@@ -1753,6 +1728,6 @@ describe("Core/Cartesian3", function () {
     Cartesian3,
     [new Cartesian3(1, 2, 3), new Cartesian3(4, 5, 6)],
     [1, 2, 3, 4, 5, 6],
-    3
+    3,
   );
 });

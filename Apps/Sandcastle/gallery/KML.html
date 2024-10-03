@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -46,8 +46,8 @@
                 viewer.dataSources.add(
                   Cesium.KmlDataSource.load(
                     "../../SampleData/kml/facilities/facilities.kml",
-                    options
-                  )
+                    options,
+                  ),
                 );
               },
             },
@@ -58,8 +58,8 @@
                 viewer.dataSources.add(
                   Cesium.KmlDataSource.load(
                     "../../SampleData/kml/gdpPerCapita2008.kmz",
-                    options
-                  )
+                    options,
+                  ),
                 );
               },
             },
@@ -70,8 +70,8 @@
                   .add(
                     Cesium.KmlDataSource.load(
                       "../../SampleData/kml/bikeRide.kml",
-                      options
-                    )
+                      options,
+                    ),
                   )
                   .then(function (dataSource) {
                     viewer.clock.shouldAnimate = false;
@@ -86,7 +86,7 @@
               },
             },
           ],
-          "toolbar"
+          "toolbar",
         );
 
         Sandcastle.reset = function () {

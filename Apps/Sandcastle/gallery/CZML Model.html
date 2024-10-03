@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -55,7 +55,7 @@
         });
 
         const dataSourcePromise = viewer.dataSources.add(
-          Cesium.CzmlDataSource.load(czml)
+          Cesium.CzmlDataSource.load(czml),
         );
 
         dataSourcePromise

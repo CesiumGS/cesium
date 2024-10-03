@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -167,18 +167,17 @@
               // Apply an additional matrix to center the clipping plane on the bounding sphere center.
               const transformCenter = Cesium.Matrix4.getTranslation(
                 tileset.root.transform,
-                new Cesium.Cartesian3()
+                new Cesium.Cartesian3(),
               );
-              const transformCartographic = Cesium.Cartographic.fromCartesian(
-                transformCenter
-              );
+              const transformCartographic =
+                Cesium.Cartographic.fromCartesian(transformCenter);
               const boundingSphereCartographic = Cesium.Cartographic.fromCartesian(
-                tileset.boundingSphere.center
+                tileset.boundingSphere.center,
               );
               const height =
                 boundingSphereCartographic.height - transformCartographic.height;
               clippingPlanes.modelMatrix = Cesium.Matrix4.fromTranslation(
-                new Cesium.Cartesian3(0.0, 0.0, height)
+                new Cesium.Cartesian3(0.0, 0.0, height),
               );
             }
 
@@ -191,7 +190,7 @@
                   material: Cesium.Color.WHITE.withAlpha(0.1),
                   plane: new Cesium.CallbackProperty(
                     createPlaneUpdateFunction(plane),
-                    false
+                    false,
                   ),
                   outline: true,
                   outlineColor: Cesium.Color.WHITE,
@@ -243,7 +242,7 @@
                 material: Cesium.Color.WHITE.withAlpha(0.1),
                 plane: new Cesium.CallbackProperty(
                   createPlaneUpdateFunction(plane),
-                  false
+                  false,
                 ),
                 outline: true,
                 outlineColor: Cesium.Color.WHITE,
@@ -281,7 +280,9 @@
               // Position the instanced tileset above terrain
               loadTileset(
                 instancedUrl,
-                Cesium.Matrix4.fromTranslation(new Cesium.Cartesian3(15.0, -58.6, 50.825))
+                Cesium.Matrix4.fromTranslation(
+                  new Cesium.Cartesian3(15.0, -58.6, 50.825),
+                ),
               );
             } else {
               loadModel(modelUrl);

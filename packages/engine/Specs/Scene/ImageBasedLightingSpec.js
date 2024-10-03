@@ -19,8 +19,8 @@ describe("Scene/ImageBasedLighting", function () {
     expect(
       Cartesian2.equals(
         imageBasedLighting.imageBasedLightingFactor,
-        new Cartesian2(1.0, 1.0)
-      )
+        new Cartesian2(1.0, 1.0),
+      ),
     ).toBe(true);
     expect(imageBasedLighting.sphericalHarmonicCoefficients).toBeUndefined();
     expect(imageBasedLighting.specularEnvironmentMaps).toBeUndefined();
@@ -72,14 +72,14 @@ describe("Scene/ImageBasedLighting", function () {
     expect(
       Cartesian2.equals(
         imageBasedLighting.imageBasedLightingFactor,
-        new Cartesian2(1.0, 1.0)
-      )
+        new Cartesian2(1.0, 1.0),
+      ),
     ).toBe(true);
     expect(
       Cartesian2.equals(
         imageBasedLighting._previousImageBasedLightingFactor,
-        Cartesian2.ZERO
-      )
+        Cartesian2.ZERO,
+      ),
     ).toBe(true);
   });
 
@@ -91,7 +91,7 @@ describe("Scene/ImageBasedLighting", function () {
     imageBasedLighting.sphericalHarmonicCoefficients = undefined;
     expect(imageBasedLighting.sphericalHarmonicCoefficients).toBeUndefined();
     expect(imageBasedLighting._previousSphericalHarmonicCoefficients).toBe(
-      testCoefficients
+      testCoefficients,
     );
   });
 

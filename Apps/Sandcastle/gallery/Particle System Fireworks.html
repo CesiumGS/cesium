@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -39,7 +39,7 @@
         Cesium.Math.setRandomNumberSeed(315);
 
         const modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(
-          Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883)
+          Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
         );
         const emitterInitialLocation = new Cesium.Cartesian3(0.0, 0.0, 100.0);
 
@@ -73,32 +73,32 @@
           const position = Cesium.Cartesian3.add(
             emitterInitialLocation,
             offset,
-            new Cesium.Cartesian3()
+            new Cesium.Cartesian3(),
           );
           const emitterModelMatrix = Cesium.Matrix4.fromTranslation(
             position,
-            emitterModelMatrixScratch
+            emitterModelMatrixScratch,
           );
           const particleToWorld = Cesium.Matrix4.multiply(
             modelMatrix,
             emitterModelMatrix,
-            new Cesium.Matrix4()
+            new Cesium.Matrix4(),
           );
           const worldToParticle = Cesium.Matrix4.inverseTransformation(
             particleToWorld,
-            particleToWorld
+            particleToWorld,
           );
 
           const size = Cesium.Math.randomBetween(
             minimumExplosionSize,
-            maximumExplosionSize
+            maximumExplosionSize,
           );
           const particlePositionScratch = new Cesium.Cartesian3();
           const force = function (particle) {
             const position = Cesium.Matrix4.multiplyByPoint(
               worldToParticle,
               particle.position,
-              particlePositionScratch
+              particlePositionScratch,
             );
             if (Cesium.Cartesian3.magnitudeSquared(position) >= size * size) {
               Cesium.Cartesian3.clone(Cesium.Cartesian3.ZERO, particle.velocity);
@@ -126,7 +126,7 @@
               updateCallback: force,
               modelMatrix: modelMatrix,
               emitterModelMatrix: emitterModelMatrix,
-            })
+            }),
           );
         }
 
@@ -178,7 +178,7 @@
                 time: Cesium.Math.nextRandomNumber() * lifetime,
                 minimum: burstSize,
                 maximum: burstSize,
-              })
+              }),
             );
           }
 
@@ -193,7 +193,7 @@
         const toFireworks = Cesium.Cartesian3.subtract(
           emitterInitialLocation,
           cameraOffset,
-          new Cesium.Cartesian3()
+          new Cesium.Cartesian3(),
         );
         Cesium.Cartesian3.normalize(toFireworks, toFireworks);
         const angle =

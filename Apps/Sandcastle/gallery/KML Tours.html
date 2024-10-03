@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -41,8 +41,8 @@
           .add(
             Cesium.KmlDataSource.load(
               "../../SampleData/kml/eiffel-tower-flyto.kml",
-              options
-            )
+              options,
+            ),
           )
           .then(function (dataSource) {
             tour = dataSource.kmlTours[0];

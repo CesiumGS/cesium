@@ -89,7 +89,7 @@ function updatePointAndFeatureCounts(statistics, content, decrement, load) {
 }
 
 Cesium3DTilesetStatistics.prototype.incrementSelectionCounts = function (
-  content
+  content,
 ) {
   updatePointAndFeatureCounts(this, content, false, false);
 };

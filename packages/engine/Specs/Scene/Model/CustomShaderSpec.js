@@ -25,7 +25,7 @@ describe("Scene/Model/CustomShader", function () {
     expect(customShader.mode).toBe(CustomShaderMode.MODIFY_MATERIAL);
     expect(customShader.lightingModel).not.toBeDefined();
     expect(customShader.translucencyMode).toBe(
-      CustomShaderTranslucencyMode.INHERIT
+      CustomShaderTranslucencyMode.INHERIT,
     );
     expect(customShader.uniforms).toEqual({});
     expect(customShader.varyings).toEqual({});
@@ -46,7 +46,7 @@ describe("Scene/Model/CustomShader", function () {
     expect(customShader.mode).toBe(CustomShaderMode.REPLACE_MATERIAL);
     expect(customShader.lightingModel).toBe(LightingModel.PBR);
     expect(customShader.translucencyMode).toBe(
-      CustomShaderTranslucencyMode.TRANSLUCENT
+      CustomShaderTranslucencyMode.TRANSLUCENT,
     );
     expect(customShader.uniforms).toEqual({});
     expect(customShader.varyings).toEqual({});
@@ -225,7 +225,7 @@ describe("Scene/Model/CustomShader", function () {
 
     expect(customShader.usedVariablesVertex).toEqual(expectedVertexVariables);
     expect(customShader.usedVariablesFragment).toEqual(
-      expectedFragmentVariables
+      expectedFragmentVariables,
     );
   });
 
@@ -408,13 +408,13 @@ describe("Scene/Model/CustomShader", function () {
         expect(customShader.uniformMap.u_blue).toBeDefined();
         expect(customShader.uniformMap.u_blue()).not.toBeDefined();
 
-        return waitForTextureLoad(customShader, "u_blue").then(function (
-          texture
-        ) {
-          expect(customShader.uniformMap.u_blue()).toBe(texture);
-          expect(texture.width).toBe(2);
-          expect(texture.height).toBe(2);
-        });
+        return waitForTextureLoad(customShader, "u_blue").then(
+          function (texture) {
+            expect(customShader.uniformMap.u_blue()).toBe(texture);
+            expect(texture.width).toBe(2);
+            expect(texture.height).toBe(2);
+          },
+        );
       });
 
       it("can change texture uniform value", function () {
@@ -432,28 +432,28 @@ describe("Scene/Model/CustomShader", function () {
         });
         shaders.push(customShader);
 
-        return waitForTextureLoad(customShader, "u_testTexture").then(function (
-          blueTexture
-        ) {
-          expect(customShader.uniformMap.u_testTexture()).toBe(blueTexture);
-          expect(blueTexture.width).toBe(2);
-          expect(blueTexture.height).toBe(2);
-          customShader.setUniform(
-            "u_testTexture",
-            new TextureUniform({
-              url: greenUrl,
-            })
-          );
-          return waitForTextureLoad(customShader, "u_testTexture").then(
-            function (greenTexture) {
-              expect(customShader.uniformMap.u_testTexture()).toBe(
-                greenTexture
-              );
-              expect(greenTexture.width).toBe(1);
-              expect(greenTexture.height).toBe(4);
-            }
-          );
-        });
+        return waitForTextureLoad(customShader, "u_testTexture").then(
+          function (blueTexture) {
+            expect(customShader.uniformMap.u_testTexture()).toBe(blueTexture);
+            expect(blueTexture.width).toBe(2);
+            expect(blueTexture.height).toBe(2);
+            customShader.setUniform(
+              "u_testTexture",
+              new TextureUniform({
+                url: greenUrl,
+              }),
+            );
+            return waitForTextureLoad(customShader, "u_testTexture").then(
+              function (greenTexture) {
+                expect(customShader.uniformMap.u_testTexture()).toBe(
+                  greenTexture,
+                );
+                expect(greenTexture.width).toBe(1);
+                expect(greenTexture.height).toBe(4);
+              },
+            );
+          },
+        );
       });
 
       it("destroys", function () {
@@ -471,19 +471,19 @@ describe("Scene/Model/CustomShader", function () {
         });
         shaders.push(customShader);
 
-        return waitForTextureLoad(customShader, "u_blue").then(function (
-          texture
-        ) {
-          expect(customShader.isDestroyed()).toBe(false);
-          expect(texture.isDestroyed()).toBe(false);
+        return waitForTextureLoad(customShader, "u_blue").then(
+          function (texture) {
+            expect(customShader.isDestroyed()).toBe(false);
+            expect(texture.isDestroyed()).toBe(false);
 
-          customShader.destroy();
+            customShader.destroy();
 
-          expect(customShader.isDestroyed()).toBe(true);
-          expect(texture.isDestroyed()).toBe(true);
-        });
+            expect(customShader.isDestroyed()).toBe(true);
+            expect(texture.isDestroyed()).toBe(true);
+          },
+        );
       });
     },
-    "WebGL"
+    "WebGL",
   );
 });

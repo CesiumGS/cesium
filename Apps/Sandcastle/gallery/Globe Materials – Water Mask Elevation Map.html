@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -110,12 +110,12 @@
         scene.preRender.addEventListener(function (scene, time) {
           const surfaceNormal = globe.ellipsoid.geodeticSurfaceNormal(
             scene.camera.positionWC,
-            scratchNormal
+            scratchNormal,
           );
           const negativeNormal = Cesium.Cartesian3.negate(surfaceNormal, surfaceNormal);
           scene.light.direction = Cesium.Cartesian3.normalize(
             Cesium.Cartesian3.add(negativeNormal, scene.camera.rightWC, surfaceNormal),
-            scene.light.direction
+            scene.light.direction,
           );
         });
         //Sandcastle_End

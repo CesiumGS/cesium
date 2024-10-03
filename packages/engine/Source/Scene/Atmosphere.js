@@ -126,28 +126,24 @@ function Atmosphere() {
 }
 
 /**
- * Returns <code>true</code> if the atmosphere shader requires a color correct step. 
+ * Returns <code>true</code> if the atmosphere shader requires a color correct step.
  * @param {Atmosphere} atmosphere The atmosphere instance to check
  * @returns {boolean} true if the atmosphere shader requires a color correct step
  */
 Atmosphere.requiresColorCorrect = function (atmosphere) {
   return !(
-    CesiumMath.equalsEpsilon(
-      atmosphere.hueShift,
-      0.0,
-      CesiumMath.EPSILON7
-    ) &&
+    CesiumMath.equalsEpsilon(atmosphere.hueShift, 0.0, CesiumMath.EPSILON7) &&
     CesiumMath.equalsEpsilon(
       atmosphere.saturationShift,
       0.0,
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     ) &&
     CesiumMath.equalsEpsilon(
       atmosphere.brightnessShift,
       0.0,
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     )
   );
-}
+};
 
 export default Atmosphere;

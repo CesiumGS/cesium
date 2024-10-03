@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -84,7 +84,7 @@
               scene.primitives.remove(tileset);
               try {
                 tileset = await Cesium.Cesium3DTileset.fromUrl(
-                  "../../SampleData/Cesium3DTiles/Instanced/InstancedWithBatchTable/tileset.json"
+                  "../../SampleData/Cesium3DTiles/Instanced/InstancedWithBatchTable/tileset.json",
                 );
                 scene.primitives.add(tileset);
                 viewer.zoomTo(tileset);

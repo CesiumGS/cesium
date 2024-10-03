@@ -38,7 +38,7 @@ function CumulusCloud(options, cloudCollection) {
   this._show = defaultValue(options.show, true);
 
   this._position = Cartesian3.clone(
-    defaultValue(options.position, Cartesian3.ZERO)
+    defaultValue(options.position, Cartesian3.ZERO),
   );
 
   if (!defined(options.scale) && defined(options.maximumSize)) {
@@ -46,16 +46,16 @@ function CumulusCloud(options, cloudCollection) {
     this._scale = new Cartesian2(this._maximumSize.x, this._maximumSize.y);
   } else {
     this._scale = Cartesian2.clone(
-      defaultValue(options.scale, new Cartesian2(20.0, 12.0))
+      defaultValue(options.scale, new Cartesian2(20.0, 12.0)),
     );
 
     const defaultMaxSize = new Cartesian3(
       this._scale.x,
       this._scale.y,
-      Math.min(this._scale.x, this._scale.y) / 1.5
+      Math.min(this._scale.x, this._scale.y) / 1.5,
     );
     this._maximumSize = Cartesian3.clone(
-      defaultValue(options.maximumSize, defaultMaxSize)
+      defaultValue(options.maximumSize, defaultMaxSize),
     );
   }
 

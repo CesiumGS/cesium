@@ -116,16 +116,17 @@ Moon.prototype.update = function (frameState) {
   Matrix3.transpose(rotation, rotation);
   Matrix3.multiply(icrfToFixed, rotation, rotation);
 
-  const translation = Simon1994PlanetaryPositions.computeMoonPositionInEarthInertialFrame(
-    date,
-    translationScratch
-  );
+  const translation =
+    Simon1994PlanetaryPositions.computeMoonPositionInEarthInertialFrame(
+      date,
+      translationScratch,
+    );
   Matrix3.multiplyByVector(icrfToFixed, translation, translation);
 
   Matrix4.fromRotationTranslation(
     rotation,
     translation,
-    ellipsoidPrimitive.modelMatrix
+    ellipsoidPrimitive.modelMatrix,
   );
 
   const savedCommandList = frameState.commandList;

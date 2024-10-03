@@ -101,5 +101,5 @@ describe(
       }).toThrowDeveloperError();
     });
   },
-  "WebGL"
+  "WebGL",
 );

@@ -113,7 +113,7 @@ function DynamicEnvironmentMapManager(options) {
    */
   this.maximumSecondsDifference = defaultValue(
     options.maximumSecondsDifference,
-    60 * 60
+    60 * 60,
   );
 
   /**
@@ -123,7 +123,7 @@ function DynamicEnvironmentMapManager(options) {
    */
   this.maximumPositionEpsilon = defaultValue(
     options.maximumPositionEpsilon,
-    1000.0
+    1000.0,
   );
 
   /**
@@ -135,7 +135,7 @@ function DynamicEnvironmentMapManager(options) {
    */
   this.atmosphereScatteringIntensity = defaultValue(
     options.atmosphereScatteringIntensity,
-    2.0
+    2.0,
   );
 
   /**
@@ -168,7 +168,7 @@ function DynamicEnvironmentMapManager(options) {
    */
   this.groundColor = defaultValue(
     options.groundColor,
-    DynamicEnvironmentMapManager.AVERAGE_EARTH_GROUND_COLOR
+    DynamicEnvironmentMapManager.AVERAGE_EARTH_GROUND_COLOR,
   );
 }
 
@@ -213,7 +213,7 @@ Object.defineProperties(DynamicEnvironmentMapManager.prototype, {
         Cartesian3.equalsEpsilon(
           value,
           this._position,
-          this.maximumPositionEpsilon
+          this.maximumPositionEpsilon,
         )
       ) {
         return;
@@ -280,7 +280,7 @@ Object.defineProperties(DynamicEnvironmentMapManager.prototype, {
 DynamicEnvironmentMapManager.setOwner = function (
   environmentMapManager,
   owner,
-  key
+  key,
 ) {
   // Don't destroy the DynamicEnvironmentMapManager if it's already owned by newOwner
   if (environmentMapManager === owner[key]) {
@@ -292,7 +292,7 @@ DynamicEnvironmentMapManager.setOwner = function (
     //>>includeStart('debug', pragmas.debug);
     if (defined(environmentMapManager._owner)) {
       throw new DeveloperError(
-        "DynamicEnvironmentMapManager should only be assigned to one object"
+        "DynamicEnvironmentMapManager should only be assigned to one object",
       );
     }
     //>>includeEnd('debug');
@@ -341,7 +341,7 @@ function atmosphereNeedsUpdate(manager, frameState) {
   const ellipsoid = frameState.mapProjection.ellipsoid;
   const surfacePosition = ellipsoid.scaleToGeodeticSurface(
     position,
-    scratchSurfacePosition
+    scratchSurfacePosition,
   );
   const outerEllipsoidScale = 1.025;
 
@@ -357,14 +357,14 @@ function atmosphereNeedsUpdate(manager, frameState) {
   if (
     !Cartesian3.equalsEpsilon(
       manager._radiiAndDynamicAtmosphereColor,
-      radiiAndDynamicAtmosphereColor
+      radiiAndDynamicAtmosphereColor,
     ) ||
     frameState.environmentMap !== manager._sceneEnvironmentMap ||
     frameState.backgroundColor !== manager._backgroundColor
   ) {
     Cartesian3.clone(
       radiiAndDynamicAtmosphereColor,
-      manager._radiiAndDynamicAtmosphereColor
+      manager._radiiAndDynamicAtmosphereColor,
     );
     manager._sceneEnvironmentMap = frameState.environmentMap;
     manager._backgroundColor = frameState.backgroundColor;
@@ -419,7 +419,7 @@ function updateRadianceMap(manager, frameState) {
     const enuToFixedFrame = Transforms.eastNorthUpToFixedFrame(
       position,
       ellipsoid,
-      scratchMatrix
+      scratchMatrix,
     );
 
     const adjustments = scratchAdjustments;
@@ -678,7 +678,7 @@ function updateSphericalHarmonicCoefficients(manager, frameState) {
     Cartesian3.multiplyByScalar(
       manager._sphericalHarmonicCoefficients[i],
       manager.atmosphereScatteringIntensity,
-      manager._sphericalHarmonicCoefficients[i]
+      manager._sphericalHarmonicCoefficients[i],
     );
   }
 
@@ -714,7 +714,7 @@ DynamicEnvironmentMapManager.prototype.update = function (frameState) {
       !JulianDate.equalsEpsilon(
         frameState.time,
         this._lastTime,
-        this.maximumSecondsDifference
+        this.maximumSecondsDifference,
       ));
 
   if (regenerateEnvironmentMap) {
@@ -815,7 +815,7 @@ DynamicEnvironmentMapManager.prototype.destroy = function () {
  * @type {Color}
  */
 DynamicEnvironmentMapManager.AVERAGE_EARTH_GROUND_COLOR = Object.freeze(
-  Color.fromCssColorString("#423c35")
+  Color.fromCssColorString("#423c35"),
 );
 
 export default DynamicEnvironmentMapManager;

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -37,7 +37,7 @@
         //Example 1: Load with default styling.
         Sandcastle.addDefaultToolbarButton("Default styling", function () {
           viewer.dataSources.add(
-            Cesium.GeoJsonDataSource.load("../../SampleData/ne_10m_us_states.topojson")
+            Cesium.GeoJsonDataSource.load("../../SampleData/ne_10m_us_states.topojson"),
           );
         });
 
@@ -48,7 +48,7 @@
               stroke: Cesium.Color.HOTPINK,
               fill: Cesium.Color.PINK.withAlpha(0.5),
               strokeWidth: 3,
-            })
+            }),
           );
         });
 
@@ -58,7 +58,7 @@
           Cesium.Math.setRandomNumberSeed(0);
 
           const promise = Cesium.GeoJsonDataSource.load(
-            "../../SampleData/ne_10m_us_states.topojson"
+            "../../SampleData/ne_10m_us_states.topojson",
           );
           promise
             .then(function (dataSource) {
@@ -106,7 +106,7 @@
           //Set the camera to a US centered tilted view and switch back to moving in world coordinates.
           viewer.camera.lookAt(
             Cesium.Cartesian3.fromDegrees(-98.0, 40.0),
-            new Cesium.Cartesian3(0.0, -4790000.0, 3930000.0)
+            new Cesium.Cartesian3(0.0, -4790000.0, 3930000.0),
           );
           viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
         };

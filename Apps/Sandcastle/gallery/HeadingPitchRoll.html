@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -113,7 +113,7 @@
         let speedVector = new Cesium.Cartesian3();
         const fixedFrameTransform = Cesium.Transforms.localFrameToFixedFrameGenerator(
           "north",
-          "west"
+          "west",
         );
 
         const headingSpan = document.getElementById("heading");
@@ -130,10 +130,10 @@
                 position,
                 hpRoll,
                 Cesium.Ellipsoid.WGS84,
-                fixedFrameTransform
+                fixedFrameTransform,
               ),
               minimumPixelSize: 128,
-            })
+            }),
           );
 
           planePrimitive.readyEvent.addEventListener(() => {
@@ -219,12 +219,12 @@
             speedVector = Cesium.Cartesian3.multiplyByScalar(
               Cesium.Cartesian3.UNIT_X,
               speed / 10,
-              speedVector
+              speedVector,
             );
             position = Cesium.Matrix4.multiplyByPoint(
               planePrimitive.modelMatrix,
               speedVector,
-              position
+              position,
             );
             pathPosition.addSample(Cesium.JulianDate.now(), position);
             Cesium.Transforms.headingPitchRollToFixedFrame(
@@ -232,7 +232,7 @@
               hpRoll,
               Cesium.Ellipsoid.WGS84,
               fixedFrameTransform,
-              planePrimitive.modelMatrix
+              planePrimitive.modelMatrix,
             );
 
             if (fromBehind.checked) {

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -49,11 +49,11 @@
 
         const stages = viewer.scene.postProcessStages;
         const silhouette = stages.add(
-          Cesium.PostProcessStageLibrary.createSilhouetteStage()
+          Cesium.PostProcessStageLibrary.createSilhouetteStage(),
         );
         silhouette.uniforms.color = Cesium.Color.LIME;
         const blackAndWhite = stages.add(
-          Cesium.PostProcessStageLibrary.createBlackAndWhiteStage()
+          Cesium.PostProcessStageLibrary.createBlackAndWhiteStage(),
         );
         blackAndWhite.uniforms.gradations = 5.0;
 

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -234,7 +234,7 @@
           viewModel.maximumRenderTimeChange = 10.0;
 
           viewer.dataSources.add(
-            Cesium.CzmlDataSource.load("../../SampleData/simple.czml")
+            Cesium.CzmlDataSource.load("../../SampleData/simple.czml"),
           );
           viewer.clock.shouldAnimate = true;
         }

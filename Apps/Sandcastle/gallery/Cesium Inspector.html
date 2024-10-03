@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -56,21 +56,21 @@
               }),
               modelMatrix: Cesium.Matrix4.multiplyByTranslation(
                 Cesium.Transforms.eastNorthUpToFixedFrame(
-                  Cesium.Cartesian3.fromDegrees(-105.0, 45.0)
+                  Cesium.Cartesian3.fromDegrees(-105.0, 45.0),
                 ),
                 new Cesium.Cartesian3(0.0, 0.0, 250000),
-                new Cesium.Matrix4()
+                new Cesium.Matrix4(),
               ),
               attributes: {
                 color: Cesium.ColorGeometryInstanceAttribute.fromColor(
-                  Cesium.Color.RED.withAlpha(0.5)
+                  Cesium.Color.RED.withAlpha(0.5),
                 ),
               },
             }),
             appearance: new Cesium.PerInstanceColorAppearance({
               closed: true,
             }),
-          })
+          }),
         );
 
         scene.primitives.add(
@@ -86,7 +86,7 @@
               },
             }),
             appearance: new Cesium.PerInstanceColorAppearance(),
-          })
+          }),
         );
 
         const billboards = scene.primitives.add(new Cesium.BillboardCollection());

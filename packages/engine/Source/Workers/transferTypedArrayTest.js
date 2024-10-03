@@ -8,7 +8,7 @@ self.onmessage = function (event) {
       {
         array: array,
       },
-      [array.buffer]
+      [array.buffer],
     );
   } catch (e) {
     postMessage({});

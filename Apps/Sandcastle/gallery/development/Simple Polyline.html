@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -48,7 +48,7 @@
         const colors = [];
         for (let j = 0; j <= 50; j += 5) {
           positions.push(
-            Cesium.Cartesian3.fromDegrees(-124.0 + j, 40, 50000.0 * (j % 10))
+            Cesium.Cartesian3.fromDegrees(-124.0 + j, 40, 50000.0 * (j % 10)),
           );
           colors.push(Cesium.Color.fromRandom({ alpha: 1.0 }));
         }
@@ -87,7 +87,7 @@
                 lineWidth: Math.min(2.0, scene.maximumAliasedLineWidth),
               },
             }),
-          })
+          }),
         );
 
         // Add perSegment and perVertex polyline instances to primitives.
@@ -100,7 +100,7 @@
                 lineWidth: Math.min(2.0, scene.maximumAliasedLineWidth),
               },
             }),
-          })
+          }),
         );
 
         //Sandcastle_End

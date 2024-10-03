@@ -347,29 +347,32 @@ Object.defineProperties(PostProcessStageCollection.prototype, {
 
       switch (value) {
         case Tonemapper.REINHARD:
-          tonemapping = PostProcessStageLibrary.createReinhardTonemappingStage(
-            useAutoExposure
-          );
+          tonemapping =
+            PostProcessStageLibrary.createReinhardTonemappingStage(
+              useAutoExposure,
+            );
           break;
         case Tonemapper.MODIFIED_REINHARD:
-          tonemapping = PostProcessStageLibrary.createModifiedReinhardTonemappingStage(
-            useAutoExposure
-          );
+          tonemapping =
+            PostProcessStageLibrary.createModifiedReinhardTonemappingStage(
+              useAutoExposure,
+            );
           break;
         case Tonemapper.FILMIC:
-          tonemapping = PostProcessStageLibrary.createFilmicTonemappingStage(
-            useAutoExposure
-          );
+          tonemapping =
+            PostProcessStageLibrary.createFilmicTonemappingStage(
+              useAutoExposure,
+            );
           break;
         case Tonemapper.PBR_NEUTRAL:
-          tonemapping = PostProcessStageLibrary.createPbrNeutralTonemappingStage(
-            useAutoExposure
-          );
+          tonemapping =
+            PostProcessStageLibrary.createPbrNeutralTonemappingStage(
+              useAutoExposure,
+            );
           break;
         default:
-          tonemapping = PostProcessStageLibrary.createAcesTonemappingStage(
-            useAutoExposure
-          );
+          tonemapping =
+            PostProcessStageLibrary.createAcesTonemappingStage(useAutoExposure);
           break;
       }
 
@@ -456,7 +459,7 @@ PostProcessStageCollection.prototype.add = function (stage) {
     //>>includeStart('debug', pragmas.debug);
     if (defined(stageNames[currentStage.name])) {
       throw new DeveloperError(
-        `${currentStage.name} has already been added to the collection or does not have a unique name.`
+        `${currentStage.name} has already been added to the collection or does not have a unique name.`,
       );
     }
     //>>includeEnd('debug');
@@ -581,7 +584,7 @@ PostProcessStageCollection.prototype.getStageByName = function (name) {
 PostProcessStageCollection.prototype.update = function (
   context,
   useLogDepth,
-  useHdr
+  useHdr,
 ) {
   removeStages(this);
 
@@ -754,7 +757,7 @@ function execute(stage, context, colorTexture, depthTexture, idTexture) {
         context,
         getOutputTexture(stage.get(i - 1)),
         depthTexture,
-        idTexture
+        idTexture,
       );
     }
   } else {
@@ -778,7 +781,7 @@ PostProcessStageCollection.prototype.execute = function (
   context,
   colorTexture,
   depthTexture,
-  idTexture
+  idTexture,
 ) {
   const activeStages = this._activeStages;
   const length = activeStages.length;
@@ -832,7 +835,7 @@ PostProcessStageCollection.prototype.execute = function (
         context,
         getOutputTexture(activeStages[i - 1]),
         depthTexture,
-        idTexture
+        idTexture,
       );
     }
     lastTexture = getOutputTexture(activeStages[length - 1]);
