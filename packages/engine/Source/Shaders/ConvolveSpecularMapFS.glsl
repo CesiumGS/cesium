@@ -35,7 +35,7 @@ vec2 hammersley2D(int i, int N)
 vec3 importanceSampleGGX(vec2 xi, float alphaRoughness, vec3 N)
 {
     float alphaRoughnessSquared = alphaRoughness * alphaRoughness;
-    float phi = 2.0 * czm_pi * xi.x;
+    float phi = czm_twoPi * xi.x;
     float cosTheta = sqrt((1.0 - xi.y) / (1.0 + (alphaRoughnessSquared - 1.0) * xi.y));
     float sinTheta = sqrt(1.0 - cosTheta * cosTheta);
     vec3 H = vec3(sinTheta * cos(phi), sinTheta * sin(phi), cosTheta);
@@ -45,16 +45,19 @@ vec3 importanceSampleGGX(vec2 xi, float alphaRoughness, vec3 N)
     return tangentX * H.x + tangentY * H.y + N * H.z;
 }
 
+// Sample count is relatively low for the sake of performance, but should still be enough to prevent artifacting in lower roughnesses
+const int samples = 128;
+
 void main() {
     vec3 normal = u_faceDirection;
     vec3 V = normalize(v_textureCoordinates);
+    float roughness = u_roughness;
 
     vec4 color = vec4(0.0);
-    int samples = 1024;
     float weight = 0.0;
     for (int i = 0; i < samples; ++i) {
             vec2 xi = hammersley2D(i, samples);
-            vec3 H = importanceSampleGGX(xi, u_roughness * u_roughness, V);
+            vec3 H = importanceSampleGGX(xi, roughness, V);
             vec3 L = 2.0 * dot(V, H) * H - V; // reflected vector
 
             float NdotL = max(dot(V, L), 0.0);

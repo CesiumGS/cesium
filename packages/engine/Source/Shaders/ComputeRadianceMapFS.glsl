@@ -71,7 +71,7 @@ void main() {
 
     // Interpolate the ground color based on distance and sun exposure
     vec3 up = normalize(u_positionWC);
-    float occlusion = max(dot(lightDirectionWC, up), 0.15); // Ensure a low-level of ambiant light
+    float occlusion = max(dot(lightDirectionWC, up), 0.15); // Ensure a low-level of ambiant light reflected from the ground.
     vec3 groundColor = mix(vec3(0.0), u_groundColor.rgb, occlusion * u_groundColor.a * (1.0 - d / radius));
 
     // Only show the stars when not obscured by the ellipsoid
@@ -92,8 +92,8 @@ void main() {
     color.rgb = mix(vec3(0.0), color.rgb, brightness);
     color.rgb = czm_saturation(color.rgb, saturation);
 #endif
-    color.rgb = pow(color.rgb, vec3(gamma)); // Normally this would be in the ifdef above, but there is a precision issue with the atmmopshere scattering transmittance (alpha) which this loine works around, even when gamma is 1.0.
+    color.rgb = pow(color.rgb, vec3(gamma)); // Normally this would be in the ifdef above, but there is a precision issue with the atmopshere scattering transmittance (alpha). Having this line is a workaround for that issue, even when gamma is 1.0.
     color.rgb = czm_gammaCorrect(color.rgb);
 
-    out_FragColor = vec4(u_faceDirection, 1.0);
+    out_FragColor = color;
 }

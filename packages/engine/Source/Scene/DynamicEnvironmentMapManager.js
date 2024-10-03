@@ -8,37 +8,37 @@ import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import JulianDate from "../Core/JulianDate.js";
 import Matrix4 from "../Core/Matrix4.js";
+import PixelFormat from "../Core/PixelFormat";
 import SceneMode from "./SceneMode.js";
 import Transforms from "../Core/Transforms.js";
 import ComputeCommand from "../Renderer/ComputeCommand.js";
+import CubeMap from "../Renderer/CubeMap.js";
 import Framebuffer from "../Renderer/Framebuffer.js";
 import Texture from "../Renderer/Texture.js";
 import PixelDatatype from "../Renderer/PixelDatatype";
-import PixelFormat from "../Core/PixelFormat";
 import Sampler from "../Renderer/Sampler.js";
 import ShaderProgram from "../Renderer/ShaderProgram.js";
 import ShaderSource from "../Renderer/ShaderSource.js";
 import TextureMinificationFilter from "../Renderer/TextureMinificationFilter.js";
 import Atmosphere from "./Atmosphere.js";
+import DynamicAtmosphereLightingType from "./DynamicAtmosphereLightingType.js";
 import AtmosphereCommon from "../Shaders/AtmosphereCommon.js";
-import ComputeIrradianceMapFS from "../Shaders/ComputeIrradianceMapFS.js";
+import ComputeIrradianceFS from "../Shaders/ComputeIrradianceFS.js";
 import ComputeRadianceMapFS from "../Shaders/ComputeRadianceMapFS.js";
 import ConvolveSpecularMapFS from "../Shaders/ConvolveSpecularMapFS.js";
 import ConvolveSpecularMapVS from "../Shaders/ConvolveSpecularMapVS.js";
-import CubeMap from "../Renderer/CubeMap.js";
-import DynamicAtmosphereLightingType from "./DynamicAtmosphereLightingType.js";
 
 /**
  * @typedef {object} DynamicEnvironmentMapManager.ConstructorOptions
  * Options for the DynamicEnvironmentMapManager constructor
  * @property {boolean} [enabled=true] If true, the environment map and related properties will continue to update.
  * @property {number} [mipmapLevels=10] The number of mipmap levels to generate for specular maps. More mipmap levels will produce a higher resolution specular reflection.
- * @property {number} [maximumSecondsDifference=1800] The maximum amount of elapsed seconds before a new environment map is created
- * @property {number} [maximumPositionEpsilon=CesiumMath.EPSILON1] The maximum difference in position before a new environment map is created. Small differences in position will not visibly affect results.
- * @property {number} [intensity=2.0] The intensity of the light. This should be adjusted relative to the value of {@link Scene.light} intensity.
- * @property {number} [gamma=1.0] The gamma correction to apply to the range of light. 1.0 uses the unmodified incoming light color.
- * @property {number} [brightness=1.0] The brightness of light. 1.0 uses the unmodified incoming environment color. Less than 1.0 makes the light darker while greater than 1.0 makes it brighter.
- * @property {number} [saturation=0.8] The saturation of the light. 1.0 uses the unmodified incoming environment color. Less than 1.0 reduces the saturation while greater than 1.0 increases it.
+ * @property {number} [maximumSecondsDifference=3600] The maximum amount of elapsed seconds before a new environment map is created.
+ * @property {number} [maximumPositionEpsilon=1000] The maximum difference in position before a new environment map is created, in meters. Small differences in position will not visibly affect results.
+ * @property {number} [atmosphereScatteringIntensity=2.0] The intensity of the scattered light emitted from the atmosphere. This should be adjusted relative to the value of {@link Scene.light} intensity.
+ * @property {number} [gamma=1.0] The gamma correction to apply to the range of light emitted from the environment. 1.0 uses the unmodified emitted light color.
+ * @property {number} [brightness=1.0] The brightness of light emitted from the environment. 1.0 uses the unmodified emitted environment color. Less than 1.0 makes the light darker while greater than 1.0 makes it brighter.
+ * @property {number} [saturation=1.0] The saturation of the light emitted from the environment. 1.0 uses the unmodified emitted environment color. Less than 1.0 reduces the saturation while greater than 1.0 increases it.
  * @property {Color} [groundColor=DynamicEnvironmentMapManager.AVERAGE_EARTH_GROUND_COLOR] Solid color used to represent the ground.
  */
 
@@ -109,41 +109,44 @@ function DynamicEnvironmentMapManager(options) {
   /**
    * The maximum amount of elapsed seconds before a new environment map is created.
    * @type {number}
-   * @default 1800
+   * @default 3600
    */
   this.maximumSecondsDifference = defaultValue(
     options.maximumSecondsDifference,
-    60 * 30
+    60 * 60
   );
 
   /**
-   * The maximum difference in position before a new environment map is created. Small differences in position will not visibly affect results.
+   * The maximum difference in position before a new environment map is created, in meters. Small differences in position will not visibly affect results.
    * @type {number}
-   * @default 1.0
+   * @default 1000
    */
   this.maximumPositionEpsilon = defaultValue(
     options.maximumPositionEpsilon,
-    1.0
+    1000.0
   );
 
   /**
-   * The intensity of the light. This should be adjusted relative to the value of {@link Scene.light} intensity.
+   * The intensity of the scattered light emitted from the atmosphere. This should be adjusted relative to the value of {@link Scene.light} intensity.
    * @type {number}
    * @default 2.0
    * @see {DirectionalLight.intensity}
    * @see {SunLight.intensity}
    */
-  this.intensity = defaultValue(options.intensity, 2.0);
+  this.atmosphereScatteringIntensity = defaultValue(
+    options.atmosphereScatteringIntensity,
+    2.0
+  );
 
   /**
-   * The gamma correction to apply to the range of light. 1.0 uses the unmodified incoming light color.
+   * The gamma correction to apply to the range of light emitted from the environment. 1.0 uses the unmodified incoming light color.
    * @type {number}
    * @default 1.0
    */
   this.gamma = defaultValue(options.gamma, 1.0);
 
   /**
-   * The brightness of light. 1.0 uses the unmodified incoming environment color. Less than 1.0
+   * The brightness of light emitted from the environment. 1.0 uses the unmodified emitted environment color. Less than 1.0
    * makes the light darker while greater than 1.0 makes it brighter.
    * @type {number}
    * @default 1.0
@@ -151,7 +154,7 @@ function DynamicEnvironmentMapManager(options) {
   this.brightness = defaultValue(options.brightness, 1.0);
 
   /**
-   * The saturation of the light. 1.0 uses the unmodified incoming environment color. Less than 1.0 reduces the
+   * The saturation of the light emitted from the environment. 1.0 uses the unmodified emitted environment color. Less than 1.0 reduces the
    * saturation while greater than 1.0 increases it.
    * @type {number}
    * @default 1.0
@@ -161,7 +164,7 @@ function DynamicEnvironmentMapManager(options) {
   /**
    * Solid color used to represent the ground.
    * @type {Color}
-   * @default Color.fromCssColorString("#6E6259").withAlpha(0.3) average ground color on earth, a warm grey
+   * @default DynamicEnvironmentMapManager.AVERAGE_EARTH_GROUND_COLOR
    */
   this.groundColor = defaultValue(
     options.groundColor,
@@ -217,7 +220,7 @@ Object.defineProperties(DynamicEnvironmentMapManager.prototype, {
       }
 
       this._position = Cartesian3.clone(value, this._position);
-      this._reset();
+      this.reset();
     },
   },
 
@@ -248,14 +251,14 @@ Object.defineProperties(DynamicEnvironmentMapManager.prototype, {
   },
 
   /**
-   * The third order spherical harmonic coefficients used for the diffuse color of image-based lighting, or <code>undefined</code> if they have not yet been computed.
+   * The third order spherical harmonic coefficients used for the diffuse color of image-based lighting.
    * <p>
    * There are nine <code>Cartesian3</code> coefficients.
    * The order of the coefficients is: L<sub>0,0</sub>, L<sub>1,-1</sub>, L<sub>1,0</sub>, L<sub>1,1</sub>, L<sub>2,-2</sub>, L<sub>2,-1</sub>, L<sub>2,0</sub>, L<sub>2,1</sub>, L<sub>2,2</sub>
    * </p>
    * @memberof DynamicEnvironmentMapManager.prototype
    * @readonly
-   * @type {Cartesian3[]|undefined}
+   * @type {Cartesian3[]}
    * @see {@link https://graphics.stanford.edu/papers/envmap/envmap.pdf|An Efficient Representation for Irradiance Environment Maps}
    * @private
    */
@@ -279,7 +282,7 @@ DynamicEnvironmentMapManager.setOwner = function (
   owner,
   key
 ) {
-  // Don't destroy the DynamicEnvironmentMapManager if it is already owned by newOwner
+  // Don't destroy the DynamicEnvironmentMapManager if it's already owned by newOwner
   if (environmentMapManager === owner[key]) {
     return;
   }
@@ -302,7 +305,7 @@ DynamicEnvironmentMapManager.setOwner = function (
  * Cancels any in-progress commands and marks the environment map as dirty.
  * @private
  */
-DynamicEnvironmentMapManager.prototype._reset = function () {
+DynamicEnvironmentMapManager.prototype.reset = function () {
   let length = this._radianceMapComputeCommands.length;
   for (let i = 0; i < length; ++i) {
     this._radianceMapComputeCommands[i] = undefined;
@@ -424,9 +427,13 @@ function updateRadianceMap(manager, frameState) {
     adjustments.x = manager.brightness;
     adjustments.y = manager.saturation;
     adjustments.z = manager.gamma;
-    adjustments.w = manager.intensity;
+    adjustments.w = manager.atmosphereScatteringIntensity;
 
-    if (manager.brightness !== 1.0 || manager.saturation !== 1.0 || manager.gamma !== 1.0) {
+    if (
+      manager.brightness !== 1.0 ||
+      manager.saturation !== 1.0 ||
+      manager.gamma !== 1.0
+    ) {
       fs.defines.push("ENVIRONMENT_COLOR_CORRECT");
     }
 
@@ -589,14 +596,17 @@ function updateSpecularMaps(manager, frameState) {
   }
 }
 
+const irradianceTextureDimensions = new Cartesian2(3, 3); // 9 coefficients
+
 /**
- * Computes spherical harmonic coefficients by convolving the environment map
+ * Computes spherical harmonic coefficients by convolving the environment map.
  * @param {DynamicEnvironmentMapManager} manager this manager
  * @param {FrameState} frameState the current frameState
+ * @private
  */
 function updateIrradianceResources(manager, frameState) {
   const context = frameState.context;
-  const dimensions = new Cartesian2(3, 3); // 9 coefficients
+  const dimensions = irradianceTextureDimensions;
 
   let texture = manager._irradianceMapTexture;
   if (!defined(texture)) {
@@ -613,7 +623,7 @@ function updateIrradianceResources(manager, frameState) {
   let fs = manager._irradianceMapFS;
   if (!defined(fs)) {
     fs = new ShaderSource({
-      sources: [ComputeIrradianceMapFS],
+      sources: [ComputeIrradianceFS],
     });
     manager._irradianceMapFS = fs;
   }
@@ -643,6 +653,7 @@ function updateIrradianceResources(manager, frameState) {
  * Copies coefficients from the output texture using readPixels.
  * @param {DynamicEnvironmentMapManager} manager this manager
  * @param {FrameState} frameState the current frameState
+ * @private
  */
 function updateSphericalHarmonicCoefficients(manager, frameState) {
   const context = frameState.context;
@@ -653,16 +664,22 @@ function updateSphericalHarmonicCoefficients(manager, frameState) {
     destroyAttachments: false,
   });
 
+  const dimensions = irradianceTextureDimensions;
   const data = context.readPixels({
     x: 0,
     y: 0,
-    width: 3,
-    height: 3,
+    width: dimensions.x,
+    height: dimensions.y,
     framebuffer: framebuffer,
   });
 
   for (let i = 0; i < 9; ++i) {
     manager._sphericalHarmonicCoefficients[i] = Cartesian3.unpack(data, i * 4);
+    Cartesian3.multiplyByScalar(
+      manager._sphericalHarmonicCoefficients[i],
+      manager.atmosphereScatteringIntensity,
+      manager._sphericalHarmonicCoefficients[i]
+    );
   }
 
   framebuffer.destroy();
@@ -701,7 +718,7 @@ DynamicEnvironmentMapManager.prototype.update = function (frameState) {
       ));
 
   if (regenerateEnvironmentMap) {
-    this._reset();
+    this.reset();
     this._lastTime = JulianDate.clone(frameState.time, this._lastTime);
   }
 
@@ -794,7 +811,7 @@ DynamicEnvironmentMapManager.prototype.destroy = function () {
 };
 
 /**
- * Average hue of ground color on earth.
+ * Average hue of ground color on earth, a warm gray.
  * @type {Color}
  */
 DynamicEnvironmentMapManager.AVERAGE_EARTH_GROUND_COLOR = Object.freeze(
