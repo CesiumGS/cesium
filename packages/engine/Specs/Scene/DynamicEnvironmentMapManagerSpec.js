@@ -28,10 +28,6 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
     );
   });
 
-  // TODO: Mipmap/resolution
-
-  // TODO: OWnership
-
   describe("render tests", () => {
     let scene;
 
@@ -664,7 +660,7 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
 
     // TODO: brightness
 
-    // TODO: satursation
+    // TODO: saturation
 
     // TODO: Cancelled in progress updates
 
