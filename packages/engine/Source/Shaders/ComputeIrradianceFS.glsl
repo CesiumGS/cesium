@@ -39,7 +39,7 @@ float computeShBasis(int index, vec3 s) {
         return -sqrt(15.0) * s.x * s.z / twoSqrtPi;
     }
 
-    if (index == 9) { // l = 2, m = 2
+    if (index == 8) { // l = 2, m = 2
         return sqrt(15.0) * (s.x * s.x - s.y * s.y) / 2.0 / twoSqrtPi;
     }
 
@@ -93,7 +93,7 @@ void main() {
 
         vec3 lookupDirection = -direction.xyz;
         lookupDirection.z = -lookupDirection.z;
-        
+
         vec4 color = czm_textureCube(u_radianceMap, lookupDirection, 0.0);
 
         // Use the relevant function for this coefficient
