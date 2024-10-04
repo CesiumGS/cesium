@@ -17,6 +17,7 @@ To some extent, this guide can be summarized as _make new code similar to existi
 - [Coding Guide](#coding-guide)
   - [Naming](#naming)
   - [Formatting](#formatting)
+  - [Spelling](#spelling)
   - [Linting](#linting)
   - [Units](#units)
   - [Basic Code Construction](#basic-code-construction)
@@ -123,7 +124,7 @@ A few more naming conventions are introduced below along with their design patte
   - Run `npm run cspell` to check all files
   - Run `npx cspell -c .vscode/cspell.json [file path]` to check a specific file
 - If you are using VSCode you can use the [Code Spell Checker](https://marketplace.visualstudio.com/items?itemName=streetsidesoftware.code-spell-checker) extension to highlight misspelled words and add them to our wordlist if they are valid.
-- Using cspell optional while we build up the wordlist but may eventually be required as part of our git hooks and CI. See [this issue](https://github.com/CesiumGS/cesium/issues/11954) for an active status on that.
+- Using cspell is optional while we build up the wordlist but may eventually be required as part of our git hooks and CI. See [this issue](https://github.com/CesiumGS/cesium/issues/11954) for an active status on that.
 
 ## Linting
 
@@ -189,7 +190,6 @@ Cartesian3.fromDegrees(); // Not Cartesin3.fromAngle()
 
 ```javascript
 "use strict";
-
 ```
 
 - :speedboat: To avoid type coercion (implicit type conversion), test for equality with `===` and `!==`, e.g.,
@@ -377,7 +377,7 @@ function getTransform(node) {
     return Matrix4.fromTranslationQuaternionRotationScale(
       node.translation,
       node.rotation,
-      node.scale
+      node.scale,
     );
   }
 }
@@ -394,7 +394,7 @@ function getTransform(node) {
   return Matrix4.fromTranslationQuaternionRotationScale(
     node.translation,
     node.rotation,
-    node.scale
+    node.scale,
   );
 }
 ```
@@ -452,7 +452,7 @@ Cartesian3.fromRadians = function (longitude, latitude, height) {
 ```javascript
 this._mapProjection = defaultValue(
   options.mapProjection,
-  new GeographicProjection()
+  new GeographicProjection(),
 );
 ```
 
@@ -828,7 +828,7 @@ When the overhead of getter/setter functions is prohibitive or reference-type se
 ```javascript
 function Model(options) {
   this.modelMatrix = Matrix4.clone(
-    defaultValue(options.modelMatrix, Matrix4.IDENTITY)
+    defaultValue(options.modelMatrix, Matrix4.IDENTITY),
   );
   this._modelMatrix = Matrix4.clone(this.modelMatrix);
 }
@@ -930,7 +930,7 @@ A public identifier (class, function, property) should be deprecated before bein
 function Foo() {
   deprecationWarning(
     "Foo",
-    "Foo was deprecated in CesiumJS 1.01.  It will be removed in 1.03.  Use newFoo instead."
+    "Foo was deprecated in CesiumJS 1.01.  It will be removed in 1.03.  Use newFoo instead.",
   );
   // ...
 }
