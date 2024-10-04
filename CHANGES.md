@@ -1,5 +1,33 @@
 # Change Log
 
+### 1.122 - 2024-11-01
+
+#### @cesium/engine
+
+##### Breaking Changes :mega:
+
+- Updated default 3D Tiles and Model lighting when using PBR in order to create a more realistic appearance. To approximate previous default lighting, use the following settings:
+
+  ```js
+  const environmentMapManager = model.environmentMapManager; // or tileset.environmentMapManager;
+  environmentMapManager.saturation = 0.35;
+  environmentMapManager.brightness = 1.4;
+  environmentMapManager.gamma = 0.8;
+  environmentMapManager.atmosphereScatteringIntensity = 5.0;
+  environmentMapManager.groundColor =
+    Cesium.Color.fromCssColorString("#001850");
+  ```
+
+- `ImageBasedLighting.luminanceAtZenith` has been removed. Use `DynamicEnvironmentMapManager.atmosphereScatteringIntensity` instead. [#12129](https://github.com/CesiumGS/cesium/pull/12129)
+
+##### Additions :tada:
+
+- Updated default 3D Tiles and Model lighting when using PBR in order to create a more realistic appearance. Added `DynamicEnvironmentMapManager` to control lighting parameters. These can be accessed via `Cesium3DTileset.environmentMapManager` and `Model.environmentMapManager`. [#12129](https://github.com/CesiumGS/cesium/pull/12129)
+
+##### Fixes :wrench:
+
+- Fixed `ImageBasedLighting.imageBasedLightingFactor` not affecting lighting. [#12129](https://github.com/CesiumGS/cesium/pull/12129)
+
 ### 1.122 - 2024-10-01
 
 #### @cesium/engine
