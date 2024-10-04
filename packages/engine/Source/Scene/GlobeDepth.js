@@ -97,7 +97,7 @@ function updateCopyCommands(globeDepth, context, width, height, passState) {
 
   const useScissorTest = !BoundingRectangle.equals(
     globeDepth._viewport,
-    passState.viewport
+    passState.viewport,
   );
   let updateScissor = useScissorTest !== globeDepth._useScissorTest;
   globeDepth._useScissorTest = useScissorTest;
@@ -107,7 +107,7 @@ function updateCopyCommands(globeDepth, context, width, height, passState) {
   ) {
     globeDepth._scissorRectangle = BoundingRectangle.clone(
       passState.viewport,
-      globeDepth._scissorRectangle
+      globeDepth._scissorRectangle,
     );
     updateScissor = true;
   }
@@ -165,7 +165,7 @@ function updateCopyCommands(globeDepth, context, width, height, passState) {
           },
         },
         owner: globeDepth,
-      }
+      },
     );
   }
 
@@ -183,7 +183,7 @@ function updateCopyCommands(globeDepth, context, width, height, passState) {
           },
         },
         owner: globeDepth,
-      }
+      },
     );
   }
 
@@ -199,7 +199,7 @@ function updateCopyCommands(globeDepth, context, width, height, passState) {
           },
         },
         owner: globeDepth,
-      }
+      },
     );
   }
 
@@ -217,7 +217,7 @@ function updateCopyCommands(globeDepth, context, width, height, passState) {
           },
         },
         owner: globeDepth,
-      }
+      },
     );
   }
 
@@ -242,7 +242,7 @@ GlobeDepth.prototype.update = function (
   viewport,
   numSamples,
   hdr,
-  clearGlobeDepth
+  clearGlobeDepth,
 ) {
   const width = viewport.width;
   const height = viewport.height;
@@ -261,7 +261,7 @@ GlobeDepth.prototype.update = function (
       width,
       height,
       numSamples,
-      pixelDatatype
+      pixelDatatype,
     );
   }
   this._copyDepthFramebuffer.update(context, width, height);
@@ -282,7 +282,8 @@ GlobeDepth.prototype.executeCopyDepth = function (context, passState) {
   if (defined(this._copyDepthCommand)) {
     this.prepareColorTextures(context);
     this._copyDepthCommand.execute(context, passState);
-    context.uniformState.globeDepthTexture = this._copyDepthFramebuffer.getColorTexture();
+    context.uniformState.globeDepthTexture =
+      this._copyDepthFramebuffer.getColorTexture();
   }
 };
 
@@ -290,7 +291,7 @@ GlobeDepth.prototype.executeUpdateDepth = function (
   context,
   passState,
   clearGlobeDepth,
-  depthTexture
+  depthTexture,
 ) {
   const depthTextureToCopy = defined(depthTexture)
     ? depthTexture
@@ -358,19 +359,23 @@ GlobeDepth.prototype.destroy = function () {
   destroyFramebuffers(this);
 
   if (defined(this._copyColorCommand)) {
-    this._copyColorCommand.shaderProgram = this._copyColorCommand.shaderProgram.destroy();
+    this._copyColorCommand.shaderProgram =
+      this._copyColorCommand.shaderProgram.destroy();
   }
 
   if (defined(this._copyDepthCommand)) {
-    this._copyDepthCommand.shaderProgram = this._copyDepthCommand.shaderProgram.destroy();
+    this._copyDepthCommand.shaderProgram =
+      this._copyDepthCommand.shaderProgram.destroy();
   }
 
   if (defined(this._tempCopyDepthCommand)) {
-    this._tempCopyDepthCommand.shaderProgram = this._tempCopyDepthCommand.shaderProgram.destroy();
+    this._tempCopyDepthCommand.shaderProgram =
+      this._tempCopyDepthCommand.shaderProgram.destroy();
   }
 
   if (defined(this._updateDepthCommand)) {
-    this._updateDepthCommand.shaderProgram = this._updateDepthCommand.shaderProgram.destroy();
+    this._updateDepthCommand.shaderProgram =
+      this._updateDepthCommand.shaderProgram.destroy();
   }
 
   return destroyObject(this);

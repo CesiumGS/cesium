@@ -44,7 +44,7 @@ function FrameRateMonitor(options) {
    */
   this.samplingWindow = defaultValue(
     options.samplingWindow,
-    FrameRateMonitor.defaultSettings.samplingWindow
+    FrameRateMonitor.defaultSettings.samplingWindow,
   );
 
   /**
@@ -54,7 +54,7 @@ function FrameRateMonitor(options) {
    */
   this.quietPeriod = defaultValue(
     options.quietPeriod,
-    FrameRateMonitor.defaultSettings.quietPeriod
+    FrameRateMonitor.defaultSettings.quietPeriod,
   );
 
   /**
@@ -64,7 +64,7 @@ function FrameRateMonitor(options) {
    */
   this.warmupPeriod = defaultValue(
     options.warmupPeriod,
-    FrameRateMonitor.defaultSettings.warmupPeriod
+    FrameRateMonitor.defaultSettings.warmupPeriod,
   );
 
   /**
@@ -75,7 +75,7 @@ function FrameRateMonitor(options) {
    */
   this.minimumFrameRateDuringWarmup = defaultValue(
     options.minimumFrameRateDuringWarmup,
-    FrameRateMonitor.defaultSettings.minimumFrameRateDuringWarmup
+    FrameRateMonitor.defaultSettings.minimumFrameRateDuringWarmup,
   );
 
   /**
@@ -86,7 +86,7 @@ function FrameRateMonitor(options) {
    */
   this.minimumFrameRateAfterWarmup = defaultValue(
     options.minimumFrameRateAfterWarmup,
-    FrameRateMonitor.defaultSettings.minimumFrameRateAfterWarmup
+    FrameRateMonitor.defaultSettings.minimumFrameRateAfterWarmup,
   );
 
   this._lowFrameRate = new Event();
@@ -104,30 +104,30 @@ function FrameRateMonitor(options) {
   this._preUpdateRemoveListener = this._scene.preUpdate.addEventListener(
     function (scene, time) {
       update(that, time);
-    }
+    },
   );
 
   this._hiddenPropertyName =
     document.hidden !== undefined
       ? "hidden"
       : document.mozHidden !== undefined
-      ? "mozHidden"
-      : document.msHidden !== undefined
-      ? "msHidden"
-      : document.webkitHidden !== undefined
-      ? "webkitHidden"
-      : undefined;
+        ? "mozHidden"
+        : document.msHidden !== undefined
+          ? "msHidden"
+          : document.webkitHidden !== undefined
+            ? "webkitHidden"
+            : undefined;
 
   const visibilityChangeEventName =
     document.hidden !== undefined
       ? "visibilitychange"
       : document.mozHidden !== undefined
-      ? "mozvisibilitychange"
-      : document.msHidden !== undefined
-      ? "msvisibilitychange"
-      : document.webkitHidden !== undefined
-      ? "webkitvisibilitychange"
-      : undefined;
+        ? "mozvisibilitychange"
+        : document.msHidden !== undefined
+          ? "msvisibilitychange"
+          : document.webkitHidden !== undefined
+            ? "webkitvisibilitychange"
+            : undefined;
 
   function visibilityChangeListener() {
     visibilityChanged(that);
@@ -138,14 +138,14 @@ function FrameRateMonitor(options) {
     document.addEventListener(
       visibilityChangeEventName,
       visibilityChangeListener,
-      false
+      false,
     );
 
     this._visibilityChangeRemoveListener = function () {
       document.removeEventListener(
         visibilityChangeEventName,
         visibilityChangeListener,
-        false
+        false,
       );
     };
   }
@@ -359,7 +359,7 @@ function update(monitor, time) {
           monitor._needsQuietPeriod = true;
           monitor.lowFrameRate.raiseEvent(
             monitor.scene,
-            monitor._lastFramesPerSecond
+            monitor._lastFramesPerSecond,
           );
         }
       } else if (monitor._frameRateIsLow) {
@@ -367,7 +367,7 @@ function update(monitor, time) {
         monitor._needsQuietPeriod = true;
         monitor.nominalFrameRate.raiseEvent(
           monitor.scene,
-          monitor._lastFramesPerSecond
+          monitor._lastFramesPerSecond,
         );
       }
     }

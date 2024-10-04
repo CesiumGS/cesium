@@ -46,7 +46,7 @@ function Cesium3DTilePointFeature(
   batchId,
   billboard,
   label,
-  polyline
+  polyline,
 ) {
   this._content = content;
   this._billboard = billboard;
@@ -416,7 +416,7 @@ Object.defineProperties(Cesium3DTilePointFeature.prototype, {
       const ellipsoid = this._content.tileset.ellipsoid;
       const cart = ellipsoid.cartesianToCartographic(
         this._billboard.position,
-        scratchCartographic
+        scratchCartographic,
       );
       cart.height = cart.height - offset + value;
       const newPosition = ellipsoid.cartographicToCartesian(cart);
@@ -465,7 +465,7 @@ Object.defineProperties(Cesium3DTilePointFeature.prototype, {
     set: function (value) {
       this._polyline.material.uniforms.color = Color.clone(
         value,
-        this._polyline.material.uniforms.color
+        this._polyline.material.uniforms.color,
       );
     },
   },
@@ -654,19 +654,19 @@ function setBillboardImage(feature) {
 
   const newColor = defaultValue(
     feature._color,
-    Cesium3DTilePointFeature.defaultColor
+    Cesium3DTilePointFeature.defaultColor,
   );
   const newOutlineColor = defaultValue(
     feature._pointOutlineColor,
-    Cesium3DTilePointFeature.defaultPointOutlineColor
+    Cesium3DTilePointFeature.defaultPointOutlineColor,
   );
   const newOutlineWidth = defaultValue(
     feature._pointOutlineWidth,
-    Cesium3DTilePointFeature.defaultPointOutlineWidth
+    Cesium3DTilePointFeature.defaultPointOutlineWidth,
   );
   const newPointSize = defaultValue(
     feature._pointSize,
-    Cesium3DTilePointFeature.defaultPointSize
+    Cesium3DTilePointFeature.defaultPointSize,
   );
 
   const currentColor = feature._billboardColor;
@@ -686,7 +686,7 @@ function setBillboardImage(feature) {
   feature._billboardColor = Color.clone(newColor, feature._billboardColor);
   feature._billboardOutlineColor = Color.clone(
     newOutlineColor,
-    feature._billboardOutlineColor
+    feature._billboardOutlineColor,
   );
   feature._billboardOutlineWidth = newOutlineWidth;
   feature._billboardSize = newPointSize;
@@ -708,8 +708,8 @@ function setBillboardImage(feature) {
       cssColor,
       cssOutlineColor,
       newOutlineWidth,
-      newPointSize
-    )
+      newPointSize,
+    ),
   );
 }
 
@@ -781,7 +781,7 @@ Cesium3DTilePointFeature.prototype.getPropertyInherited = function (name) {
   return Cesium3DTileFeature.getPropertyInherited(
     this._content,
     this._batchId,
-    name
+    name,
   );
 };
 

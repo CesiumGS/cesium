@@ -2,9 +2,10 @@ import { defined } from "@cesium/engine";
 import knockout from "../ThirdParty/knockout.js";
 
 function expandItemsHandler(data, event) {
-  const nestedList = event.currentTarget.parentElement.parentElement.querySelector(
-    `#${data.name}-expander`
-  );
+  const nestedList =
+    event.currentTarget.parentElement.parentElement.querySelector(
+      `#${data.name}-expander`,
+    );
   nestedList.classList.toggle("active");
   event.currentTarget.textContent =
     event.currentTarget.textContent === "+" ? "-" : "+";

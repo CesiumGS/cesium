@@ -76,7 +76,7 @@ ComputeEngine.prototype.execute = function (computeCommand) {
     !defined(computeCommand.shaderProgram)
   ) {
     throw new DeveloperError(
-      "computeCommand.fragmentShaderSource or computeCommand.shaderProgram is required."
+      "computeCommand.fragmentShaderSource or computeCommand.shaderProgram is required.",
     );
   }
 

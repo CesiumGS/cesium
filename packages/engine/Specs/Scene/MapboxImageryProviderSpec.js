@@ -51,20 +51,18 @@ describe("Scene/MapboxImageryProvider", function () {
       mapId: "test-id",
     });
 
-    spyOn(Resource._Implementations, "createImage").and.callFake(function (
-      request,
-      crossOrigin,
-      deferred
-    ) {
-      expect(request.url).not.toContain("//");
+    spyOn(Resource._Implementations, "createImage").and.callFake(
+      function (request, crossOrigin, deferred) {
+        expect(request.url).not.toContain("//");
 
-      // Just return any old image.
-      Resource._DefaultImplementations.createImage(
-        new Request({ url: "Data/Images/Red16x16.png" }),
-        crossOrigin,
-        deferred
-      );
-    });
+        // Just return any old image.
+        Resource._DefaultImplementations.createImage(
+          new Request({ url: "Data/Images/Red16x16.png" }),
+          crossOrigin,
+          deferred,
+        );
+      },
+    );
 
     return provider.requestImage(0, 0, 0).then(function (image) {
       expect(Resource._Implementations.createImage).toHaveBeenCalled();
@@ -79,20 +77,18 @@ describe("Scene/MapboxImageryProvider", function () {
       mapId: "test-id",
     });
 
-    spyOn(Resource._Implementations, "createImage").and.callFake(function (
-      request,
-      crossOrigin,
-      deferred
-    ) {
-      expect(request.url).toContain("made/up/mapbox/server/");
+    spyOn(Resource._Implementations, "createImage").and.callFake(
+      function (request, crossOrigin, deferred) {
+        expect(request.url).toContain("made/up/mapbox/server/");
 
-      // Just return any old image.
-      Resource._DefaultImplementations.createImage(
-        new Request({ url: "Data/Images/Red16x16.png" }),
-        crossOrigin,
-        deferred
-      );
-    });
+        // Just return any old image.
+        Resource._DefaultImplementations.createImage(
+          new Request({ url: "Data/Images/Red16x16.png" }),
+          crossOrigin,
+          deferred,
+        );
+      },
+    );
 
     return provider.requestImage(0, 0, 0).then(function (image) {
       expect(Resource._Implementations.createImage).toHaveBeenCalled();
@@ -108,7 +104,7 @@ describe("Scene/MapboxImageryProvider", function () {
     });
 
     expect(provider.url).toEqual(
-      "made/up/mapbox/server/test-id/{z}/{x}/{y}.png?access_token=test-token"
+      "made/up/mapbox/server/test-id/{z}/{x}/{y}.png?access_token=test-token",
     );
     expect(provider.tileWidth).toEqual(256);
     expect(provider.tileHeight).toEqual(256);
@@ -116,18 +112,16 @@ describe("Scene/MapboxImageryProvider", function () {
     expect(provider.tilingScheme).toBeInstanceOf(WebMercatorTilingScheme);
     expect(provider.rectangle).toEqual(new WebMercatorTilingScheme().rectangle);
 
-    spyOn(Resource._Implementations, "createImage").and.callFake(function (
-      request,
-      crossOrigin,
-      deferred
-    ) {
-      // Just return any old image.
-      Resource._DefaultImplementations.createImage(
-        new Request({ url: "Data/Images/Red16x16.png" }),
-        crossOrigin,
-        deferred
-      );
-    });
+    spyOn(Resource._Implementations, "createImage").and.callFake(
+      function (request, crossOrigin, deferred) {
+        // Just return any old image.
+        Resource._DefaultImplementations.createImage(
+          new Request({ url: "Data/Images/Red16x16.png" }),
+          crossOrigin,
+          deferred,
+        );
+      },
+    );
 
     return provider.requestImage(0, 0, 0).then(function (image) {
       expect(Resource._Implementations.createImage).toHaveBeenCalled();
@@ -151,20 +145,18 @@ describe("Scene/MapboxImageryProvider", function () {
     expect(provider.rectangle).toEqualEpsilon(rectangle, CesiumMath.EPSILON14);
     expect(provider.tileDiscardPolicy).toBeUndefined();
 
-    spyOn(Resource._Implementations, "createImage").and.callFake(function (
-      request,
-      crossOrigin,
-      deferred
-    ) {
-      expect(request.url).toContain("/0/0/0");
+    spyOn(Resource._Implementations, "createImage").and.callFake(
+      function (request, crossOrigin, deferred) {
+        expect(request.url).toContain("/0/0/0");
 
-      // Just return any old image.
-      Resource._DefaultImplementations.createImage(
-        new Request({ url: "Data/Images/Red16x16.png" }),
-        crossOrigin,
-        deferred
-      );
-    });
+        // Just return any old image.
+        Resource._DefaultImplementations.createImage(
+          new Request({ url: "Data/Images/Red16x16.png" }),
+          crossOrigin,
+          deferred,
+        );
+      },
+    );
 
     return provider.requestImage(0, 0, 0).then(function (image) {
       expect(Resource._Implementations.createImage).toHaveBeenCalled();
@@ -236,14 +228,14 @@ describe("Scene/MapboxImageryProvider", function () {
     Resource._Implementations.createImage = function (
       request,
       crossOrigin,
-      deferred
+      deferred,
     ) {
       if (tries === 2) {
         // Succeed after 2 tries
         Resource._DefaultImplementations.createImage(
           new Request({ url: "Data/Images/Red16x16.png" }),
           crossOrigin,
-          deferred
+          deferred,
         );
       } else {
         // fail
@@ -275,24 +267,22 @@ describe("Scene/MapboxImageryProvider", function () {
       format: "@2x.png",
     });
 
-    spyOn(Resource._Implementations, "createImage").and.callFake(function (
-      request,
-      crossOrigin,
-      deferred
-    ) {
-      expect(
-        /made\/up\/mapbox\/server\/test-id\/0\/0\/0@2x\.png\?access_token=/.test(
-          request.url
-        )
-      ).toBe(true);
+    spyOn(Resource._Implementations, "createImage").and.callFake(
+      function (request, crossOrigin, deferred) {
+        expect(
+          /made\/up\/mapbox\/server\/test-id\/0\/0\/0@2x\.png\?access_token=/.test(
+            request.url,
+          ),
+        ).toBe(true);
 
-      // Just return any old image.
-      Resource._DefaultImplementations.createImage(
-        new Request({ url: "Data/Images/Red16x16.png" }),
-        crossOrigin,
-        deferred
-      );
-    });
+        // Just return any old image.
+        Resource._DefaultImplementations.createImage(
+          new Request({ url: "Data/Images/Red16x16.png" }),
+          crossOrigin,
+          deferred,
+        );
+      },
+    );
 
     return provider.requestImage(0, 0, 0).then(function (image) {
       expect(Resource._Implementations.createImage).toHaveBeenCalled();
@@ -307,24 +297,22 @@ describe("Scene/MapboxImageryProvider", function () {
       format: "png",
     });
 
-    spyOn(Resource._Implementations, "createImage").and.callFake(function (
-      request,
-      crossOrigin,
-      deferred
-    ) {
-      expect(
-        /made\/up\/mapbox\/server\/test-id\/0\/0\/0\.png\?access_token=/.test(
-          request.url
-        )
-      ).toBe(true);
+    spyOn(Resource._Implementations, "createImage").and.callFake(
+      function (request, crossOrigin, deferred) {
+        expect(
+          /made\/up\/mapbox\/server\/test-id\/0\/0\/0\.png\?access_token=/.test(
+            request.url,
+          ),
+        ).toBe(true);
 
-      // Just return any old image.
-      Resource._DefaultImplementations.createImage(
-        new Request({ url: "Data/Images/Red16x16.png" }),
-        crossOrigin,
-        deferred
-      );
-    });
+        // Just return any old image.
+        Resource._DefaultImplementations.createImage(
+          new Request({ url: "Data/Images/Red16x16.png" }),
+          crossOrigin,
+          deferred,
+        );
+      },
+    );
 
     return provider.requestImage(0, 0, 0).then(function (image) {
       expect(Resource._Implementations.createImage).toHaveBeenCalled();

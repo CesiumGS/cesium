@@ -9,16 +9,9 @@ import {
 describe("Scene/ClippingPolygon", function () {
   it("constructs", function () {
     const positions = Cartesian3.fromRadiansArray([
-      -1.3194369277314022,
-      0.6988062530900625,
-      -1.31941,
-      0.69879,
-      -1.3193955980204217,
-      0.6988091578771254,
-      -1.3193931220959367,
-      0.698743632490865,
-      -1.3194358224045408,
-      0.6987471965556998,
+      -1.3194369277314022, 0.6988062530900625, -1.31941, 0.69879,
+      -1.3193955980204217, 0.6988091578771254, -1.3193931220959367,
+      0.698743632490865, -1.3194358224045408, 0.6987471965556998,
     ]);
 
     const polygon = new ClippingPolygon({
@@ -37,10 +30,7 @@ describe("Scene/ClippingPolygon", function () {
     }).toThrowDeveloperError();
 
     const positions = Cartesian3.fromRadiansArray([
-      -1.3194369277314022,
-      0.6988062530900625,
-      -1.31941,
-      0.69879,
+      -1.3194369277314022, 0.6988062530900625, -1.31941, 0.69879,
     ]);
 
     expect(() => {
@@ -53,16 +43,9 @@ describe("Scene/ClippingPolygon", function () {
 
   it("clones", function () {
     const positions = Cartesian3.fromRadiansArray([
-      -1.3194369277314022,
-      0.6988062530900625,
-      -1.31941,
-      0.69879,
-      -1.3193955980204217,
-      0.6988091578771254,
-      -1.3193931220959367,
-      0.698743632490865,
-      -1.3194358224045408,
-      0.6987471965556998,
+      -1.3194369277314022, 0.6988062530900625, -1.31941, 0.69879,
+      -1.3193955980204217, 0.6988091578771254, -1.3193931220959367,
+      0.698743632490865, -1.3194358224045408, 0.6987471965556998,
     ]);
 
     const polygon = new ClippingPolygon({
@@ -91,16 +74,9 @@ describe("Scene/ClippingPolygon", function () {
 
   it("equals verifies equality", function () {
     const positions = Cartesian3.fromRadiansArray([
-      -1.3194369277314022,
-      0.6988062530900625,
-      -1.31941,
-      0.69879,
-      -1.3193955980204217,
-      0.6988091578771254,
-      -1.3193931220959367,
-      0.698743632490865,
-      -1.3194358224045408,
-      0.6987471965556998,
+      -1.3194369277314022, 0.6988062530900625, -1.31941, 0.69879,
+      -1.3193955980204217, 0.6988091578771254, -1.3193931220959367,
+      0.698743632490865, -1.3194358224045408, 0.6987471965556998,
     ]);
 
     const polygonA = new ClippingPolygon({
@@ -117,16 +93,9 @@ describe("Scene/ClippingPolygon", function () {
     polygonB = new ClippingPolygon({
       ellipsoid: Ellipsoid.MOON,
       positions: Cartesian3.fromRadiansArray([
-        -1.3194369277314022,
-        0.6988062530900625,
-        -1.31941,
-        0.69879,
-        -1.3193955980204217,
-        0.6988091578771254,
-        -1.3193931220959367,
-        0.698743632490865,
-        -1.3194358224045408,
-        0.6987471965556998,
+        -1.3194369277314022, 0.6988062530900625, -1.31941, 0.69879,
+        -1.3193955980204217, 0.6988091578771254, -1.3193931220959367,
+        0.698743632490865, -1.3194358224045408, 0.6987471965556998,
       ]),
     });
 
@@ -142,16 +111,9 @@ describe("Scene/ClippingPolygon", function () {
 
   it("equals throws without arguments", function () {
     const positions = Cartesian3.fromRadiansArray([
-      -1.3194369277314022,
-      0.6988062530900625,
-      -1.31941,
-      0.69879,
-      -1.3193955980204217,
-      0.6988091578771254,
-      -1.3193931220959367,
-      0.698743632490865,
-      -1.3194358224045408,
-      0.6987471965556998,
+      -1.3194369277314022, 0.6988062530900625, -1.31941, 0.69879,
+      -1.3193955980204217, 0.6988091578771254, -1.3193931220959367,
+      0.698743632490865, -1.3194358224045408, 0.6987471965556998,
     ]);
 
     const polygon = new ClippingPolygon({
@@ -168,16 +130,9 @@ describe("Scene/ClippingPolygon", function () {
 
   it("computeRectangle returns rectangle enclosing the polygon", function () {
     const positions = Cartesian3.fromRadiansArray([
-      -1.3194369277314022,
-      0.6988062530900625,
-      -1.31941,
-      0.69879,
-      -1.3193955980204217,
-      0.6988091578771254,
-      -1.3193931220959367,
-      0.698743632490865,
-      -1.3194358224045408,
-      0.6987471965556998,
+      -1.3194369277314022, 0.6988062530900625, -1.31941, 0.69879,
+      -1.3193955980204217, 0.6988091578771254, -1.3193931220959367,
+      0.698743632490865, -1.3194358224045408, 0.6987471965556998,
     ]);
 
     const polygon = new ClippingPolygon({
@@ -188,34 +143,27 @@ describe("Scene/ClippingPolygon", function () {
     expect(result).toBeInstanceOf(Rectangle);
     expect(result.west).toEqualEpsilon(
       -1.3194369277314024,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
     expect(result.south).toEqualEpsilon(
       0.6987436324908647,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
     expect(result.east).toEqualEpsilon(
       -1.3193931220959367,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
     expect(result.north).toEqualEpsilon(
       0.6988091578771254,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
   });
 
   it("computeRectangle uses result parameter", function () {
     const positions = Cartesian3.fromRadiansArray([
-      -1.3194369277314022,
-      0.6988062530900625,
-      -1.31941,
-      0.69879,
-      -1.3193955980204217,
-      0.6988091578771254,
-      -1.3193931220959367,
-      0.698743632490865,
-      -1.3194358224045408,
-      0.6987471965556998,
+      -1.3194369277314022, 0.6988062530900625, -1.31941, 0.69879,
+      -1.3193955980204217, 0.6988091578771254, -1.3193931220959367,
+      0.698743632490865, -1.3194358224045408, 0.6987471965556998,
     ]);
 
     const polygon = new ClippingPolygon({
@@ -227,34 +175,27 @@ describe("Scene/ClippingPolygon", function () {
     expect(returnedValue).toBe(result);
     expect(result.west).toEqualEpsilon(
       -1.3194369277314024,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
     expect(result.south).toEqualEpsilon(
       0.6987436324908647,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
     expect(result.east).toEqualEpsilon(
       -1.3193931220959367,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
     expect(result.north).toEqualEpsilon(
       0.6988091578771254,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
   });
 
   it("computeSphericalExtents returns rectangle enclosing the polygon defined in spherical coordinates", function () {
     const positions = Cartesian3.fromRadiansArray([
-      -1.3194369277314022,
-      0.6988062530900625,
-      -1.31941,
-      0.69879,
-      -1.3193955980204217,
-      0.6988091578771254,
-      -1.3193931220959367,
-      0.698743632490865,
-      -1.3194358224045408,
-      0.6987471965556998,
+      -1.3194369277314022, 0.6988062530900625, -1.31941, 0.69879,
+      -1.3193955980204217, 0.6988091578771254, -1.3193931220959367,
+      0.698743632490865, -1.3194358224045408, 0.6987471965556998,
     ]);
 
     const polygon = new ClippingPolygon({
@@ -265,34 +206,27 @@ describe("Scene/ClippingPolygon", function () {
     expect(result).toBeInstanceOf(Rectangle);
     expect(result.west).toEqualEpsilon(
       -1.3191630776640944,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
     expect(result.south).toEqualEpsilon(
       0.6968641167123716,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
     expect(result.east).toEqualEpsilon(
       -1.3191198686316543,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
     expect(result.north).toEqualEpsilon(
       0.6969300470954187,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
   });
 
   it("computeSphericalExtents uses result parameter", function () {
     const positions = Cartesian3.fromRadiansArray([
-      -1.3194369277314022,
-      0.6988062530900625,
-      -1.31941,
-      0.69879,
-      -1.3193955980204217,
-      0.6988091578771254,
-      -1.3193931220959367,
-      0.698743632490865,
-      -1.3194358224045408,
-      0.6987471965556998,
+      -1.3194369277314022, 0.6988062530900625, -1.31941, 0.69879,
+      -1.3193955980204217, 0.6988091578771254, -1.3193931220959367,
+      0.698743632490865, -1.3194358224045408, 0.6987471965556998,
     ]);
 
     const polygon = new ClippingPolygon({
@@ -304,19 +238,19 @@ describe("Scene/ClippingPolygon", function () {
     expect(returnedValue).toBe(result);
     expect(result.west).toEqualEpsilon(
       -1.3191630776640944,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
     expect(result.south).toEqualEpsilon(
       0.6968641167123716,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
     expect(result.east).toEqualEpsilon(
       -1.3191198686316543,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
     expect(result.north).toEqualEpsilon(
       0.6969300470954187,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
   });
 });

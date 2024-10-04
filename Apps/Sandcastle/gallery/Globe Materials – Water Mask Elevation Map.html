@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -18,10 +18,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -92,8 +89,7 @@
 
         const globe = viewer.scene.globe;
         const material = customElevationMaterial;
-        const shadingUniforms =
-          material.materials.elevationRampMaterial.uniforms;
+        const shadingUniforms = material.materials.elevationRampMaterial.uniforms;
         shadingUniforms.minimumHeight = minHeight;
         shadingUniforms.maximumHeight = maxHeight;
         shadingUniforms.image = getColorRamp();
@@ -114,19 +110,12 @@
         scene.preRender.addEventListener(function (scene, time) {
           const surfaceNormal = globe.ellipsoid.geodeticSurfaceNormal(
             scene.camera.positionWC,
-            scratchNormal
+            scratchNormal,
           );
-          const negativeNormal = Cesium.Cartesian3.negate(
-            surfaceNormal,
-            surfaceNormal
-          );
+          const negativeNormal = Cesium.Cartesian3.negate(surfaceNormal, surfaceNormal);
           scene.light.direction = Cesium.Cartesian3.normalize(
-            Cesium.Cartesian3.add(
-              negativeNormal,
-              scene.camera.rightWC,
-              surfaceNormal
-            ),
-            scene.light.direction
+            Cesium.Cartesian3.add(negativeNormal, scene.camera.rightWC, surfaceNormal),
+            scene.light.direction,
           );
         });
         //Sandcastle_End

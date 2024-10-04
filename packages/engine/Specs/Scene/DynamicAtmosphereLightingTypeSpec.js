@@ -13,19 +13,19 @@ describe("Scene/DynamicAtmosphereLightingType", function () {
     const globe = mockGlobe();
 
     expect(DynamicAtmosphereLightingType.fromGlobeFlags(globe)).toBe(
-      DynamicAtmosphereLightingType.NONE
+      DynamicAtmosphereLightingType.NONE,
     );
 
     globe.enableLighting = true;
 
     expect(DynamicAtmosphereLightingType.fromGlobeFlags(globe)).toBe(
-      DynamicAtmosphereLightingType.NONE
+      DynamicAtmosphereLightingType.NONE,
     );
 
     globe.enableLighting = false;
     globe.dynamicAtmosphereLighting = true;
     expect(DynamicAtmosphereLightingType.fromGlobeFlags(globe)).toBe(
-      DynamicAtmosphereLightingType.NONE
+      DynamicAtmosphereLightingType.NONE,
     );
   });
 
@@ -36,12 +36,12 @@ describe("Scene/DynamicAtmosphereLightingType", function () {
 
     globe.dynamicAtmosphereLightingFromSun = true;
     expect(DynamicAtmosphereLightingType.fromGlobeFlags(globe)).toBe(
-      DynamicAtmosphereLightingType.SUNLIGHT
+      DynamicAtmosphereLightingType.SUNLIGHT,
     );
 
     globe.dynamicAtmosphereLightingFromSun = false;
     expect(DynamicAtmosphereLightingType.fromGlobeFlags(globe)).toBe(
-      DynamicAtmosphereLightingType.SCENE_LIGHT
+      DynamicAtmosphereLightingType.SCENE_LIGHT,
     );
   });
 });

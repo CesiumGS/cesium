@@ -220,7 +220,7 @@ ImageryProvider.prototype.pickFeatures = function (
   y,
   level,
   longitude,
-  latitude
+  latitude,
 ) {
   DeveloperError.throwInstantiationError();
 };

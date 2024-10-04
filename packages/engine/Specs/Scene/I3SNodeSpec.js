@@ -30,11 +30,11 @@ describe("Scene/I3SNode", function () {
         -20037508.342787e7,
         -20037508.342787e7,
         20037508.342787e7,
-        20037508.342787e7
+        20037508.342787e7,
       ),
       offset: 0,
       projection: new WebMercatorProjection(
-        new Ellipsoid(6378137, 6378137, 6356752.314245179)
+        new Ellipsoid(6378137, 6378137, 6356752.314245179),
       ),
       projectionType: "WebMercator",
       scale: 1,
@@ -370,7 +370,7 @@ describe("Scene/I3SNode", function () {
 
   async function createMockProvider(url, layerData, geoidDataList, options) {
     spyOn(Resource.prototype, "fetchJson").and.returnValue(
-      Promise.resolve(layerData)
+      Promise.resolve(layerData),
     );
     spyOn(Cesium3DTileset, "fromUrl").and.callFake(async () => {
       const tileset = new Cesium3DTileset();
@@ -387,13 +387,13 @@ describe("Scene/I3SNode", function () {
     providerUrl,
     layerData,
     geoidDataList,
-    options
+    options,
   ) {
     const provider = await createMockProvider(
       providerUrl,
       layerData,
       geoidDataList,
-      options
+      options,
     );
     const mockI3SLayer = provider.layers[0];
     mockI3SLayer._geometryDefinitions = [
@@ -420,15 +420,15 @@ describe("Scene/I3SNode", function () {
   it("constructs nodes", async function () {
     const mockI3SLayerWithoutNodePages = await createMockLayer(
       "mockProviderUrl",
-      layerDataWithoutNodePages
+      layerDataWithoutNodePages,
     );
     const rootNode = new I3SNode(
       mockI3SLayerWithoutNodePages,
       "mockRootUrl",
-      true
+      true,
     );
     expect(rootNode.resource.url).toContain(
-      "mockProviderUrl/mockLayerUrl/mockRootUrl/"
+      "mockProviderUrl/mockLayerUrl/mockRootUrl/",
     );
     expect(rootNode.parent).toEqual(mockI3SLayerWithoutNodePages);
     expect(rootNode.layer).toEqual(mockI3SLayerWithoutNodePages);
@@ -444,74 +444,23 @@ describe("Scene/I3SNode", function () {
 
   const customAttributes = {
     cartesianCenter: Ellipsoid.WGS84.cartographicToCartesian(
-      new Cartographic(-90, 45, 0)
+      new Cartographic(-90, 45, 0),
     ),
     featureIndex: new Uint32Array([0, 0, 1, 1]),
     positions: new Float32Array([
-      -20,
-      -20,
-      0,
-      20,
-      0,
-      0,
-      -20,
-      0,
-      0,
-      -20,
-      -20,
-      0,
-      20,
-      -20,
-      0,
-      20,
-      0,
-      0,
-      -20,
-      0,
-      0,
-      20,
-      20,
-      0,
-      -20,
-      20,
-      0,
-      -20,
-      0,
-      0,
-      20,
-      0,
-      0,
-      20,
-      20,
-      0,
+      -20, -20, 0, 20, 0, 0, -20, 0, 0, -20, -20, 0, 20, -20, 0, 20, 0, 0, -20,
+      0, 0, 20, 20, 0, -20, 20, 0, -20, 0, 0, 20, 0, 0, 20, 20, 0,
     ]),
     parentRotation: [1, 0, 0, 0, 1, 0, 0, 0, 1],
   };
   const customAttributesIndexed = {
     cartesianCenter: Ellipsoid.WGS84.cartographicToCartesian(
-      new Cartographic(-90, 45, 0)
+      new Cartographic(-90, 45, 0),
     ),
     featureIndex: new Uint32Array([0, 0, 1, 1]),
     indices: new Uint32Array([0, 1, 2, 0, 3, 1, 2, 4, 5, 2, 1, 4]),
     positions: new Float32Array([
-      -20,
-      -20,
-      0,
-      20,
-      0,
-      0,
-      -20,
-      0,
-      0,
-      20,
-      -20,
-      0,
-      20,
-      20,
-      0,
-      -20,
-      20,
-      0,
+      -20, -20, 0, 20, 0, 0, -20, 0, 0, 20, -20, 0, 20, 20, 0, -20, 20, 0,
     ]),
     parentRotation: [1, 0, 0, 0, 1, 0, 0, 0, 1],
   };
@@ -521,25 +470,25 @@ describe("Scene/I3SNode", function () {
   const intersectPoint = new Cartesian3(
     -19 + customAttributes.cartesianCenter.x,
     -19 + customAttributes.cartesianCenter.y,
-    0 + customAttributes.cartesianCenter.z
+    0 + customAttributes.cartesianCenter.z,
   );
   // On triangle edge
   const borderPoint = new Cartesian3(
     20 + customAttributes.cartesianCenter.x,
     15 + customAttributes.cartesianCenter.y,
-    0 + customAttributes.cartesianCenter.z
+    0 + customAttributes.cartesianCenter.z,
   );
   // Above triangle
   const floatingIntersectPoint = new Cartesian3(
     -19 + customAttributes.cartesianCenter.x,
     19 + customAttributes.cartesianCenter.y,
-    2 + customAttributes.cartesianCenter.z
+    2 + customAttributes.cartesianCenter.z,
   );
   // No intersection
   const noIntersectPoint = new Cartesian3(
     -21 + customAttributes.cartesianCenter.x,
     -21 + customAttributes.cartesianCenter.y,
-    0 + customAttributes.cartesianCenter.z
+    0 + customAttributes.cartesianCenter.z,
   );
 
   const i3sGeometryData = {
@@ -634,12 +583,12 @@ describe("Scene/I3SNode", function () {
   it("loads root node from uri", async function () {
     const mockI3SLayerWithoutNodePages = await createMockLayer(
       "mockProviderUrl",
-      layerDataWithoutNodePages
+      layerDataWithoutNodePages,
     );
     const rootNode = new I3SNode(mockI3SLayerWithoutNodePages, "mockUrl", true);
 
     const spy = spyOn(I3SDataProvider, "loadJson").and.returnValue(
-      Promise.resolve(rootNodeWithChildren)
+      Promise.resolve(rootNodeWithChildren),
     );
 
     return rootNode.load().then(function () {
@@ -651,12 +600,12 @@ describe("Scene/I3SNode", function () {
   it("loads child node from uri", async function () {
     const mockI3SLayerWithoutNodePages = await createMockLayer(
       "mockProviderUrl",
-      layerDataWithoutNodePages
+      layerDataWithoutNodePages,
     );
     const rootNode = new I3SNode(mockI3SLayerWithoutNodePages, "mockUrl", true);
     const childNode = new I3SNode(rootNode, "mockUrlChild", false);
     const spy = spyOn(I3SDataProvider, "loadJson").and.returnValue(
-      Promise.resolve(nodeWithContent)
+      Promise.resolve(nodeWithContent),
     );
 
     return rootNode
@@ -674,12 +623,12 @@ describe("Scene/I3SNode", function () {
 
   it("loads root from node pages", async function () {
     spyOn(I3SLayer.prototype, "_loadNodePage").and.returnValue(
-      Promise.resolve(nodeData)
+      Promise.resolve(nodeData),
     );
 
     const mockI3SLayerWithNodePages = await createMockLayer(
       "mockProviderUrl?testQuery=test",
-      layerData
+      layerData,
     );
     const rootNode = new I3SNode(mockI3SLayerWithNodePages, 0, true);
 
@@ -691,12 +640,12 @@ describe("Scene/I3SNode", function () {
 
   it("loads node from node pages", async function () {
     spyOn(I3SLayer.prototype, "_loadNodePage").and.returnValue(
-      Promise.resolve(nodeData)
+      Promise.resolve(nodeData),
     );
 
     const mockI3SLayerWithNodePages = await createMockLayer(
       "mockProviderUrl?testQuery=test",
-      layerData
+      layerData,
     );
     const rootNode = new I3SNode(mockI3SLayerWithNodePages, 0, true);
     const childNode = new I3SNode(rootNode, 1, false);
@@ -714,13 +663,13 @@ describe("Scene/I3SNode", function () {
 
   it("loads node with geoid conversion", async function () {
     spyOn(I3SLayer.prototype, "_loadNodePage").and.returnValue(
-      Promise.resolve(nodeData)
+      Promise.resolve(nodeData),
     );
 
     const mockI3SLayerGeoid = await createMockLayer(
       "mockProviderUrl?testQuery=test",
       layerData,
-      geoidDataList
+      geoidDataList,
     );
     const rootNode = new I3SNode(mockI3SLayerGeoid, 0, true);
     const childNode = new I3SNode(rootNode, 1, false);
@@ -737,42 +686,41 @@ describe("Scene/I3SNode", function () {
         const nodeOrigin = new Cartesian3(
           childNode._globalTransform[3],
           childNode._globalTransform[7],
-          childNode._globalTransform[11]
+          childNode._globalTransform[11],
         );
-        const cartographicOrigin = Ellipsoid.WGS84.cartesianToCartographic(
-          nodeOrigin
-        );
+        const cartographicOrigin =
+          Ellipsoid.WGS84.cartesianToCartographic(nodeOrigin);
 
         const expectedHeight = 10;
         const expectedPosition = new Cartographic(
           CesiumMath.toRadians(-90),
           CesiumMath.toRadians(45),
-          expectedHeight
+          expectedHeight,
         );
 
         expect(cartographicOrigin.longitude).toBeCloseTo(
           expectedPosition.longitude,
-          -3
+          -3,
         );
         expect(cartographicOrigin.latitude).toBeCloseTo(
           expectedPosition.latitude,
-          -3
+          -3,
         );
         expect(cartographicOrigin.height).toBeCloseTo(
           expectedPosition.height,
-          -3
+          -3,
         );
       });
   });
 
   it("loads children", async function () {
     spyOn(I3SLayer.prototype, "_loadNodePage").and.returnValue(
-      Promise.resolve(nodeData)
+      Promise.resolve(nodeData),
     );
 
     const mockI3SLayerWithNodePages = await createMockLayer(
       "mockProviderUrl?testQuery=test",
-      layerData
+      layerData,
     );
     const rootNode = new I3SNode(mockI3SLayerWithNodePages, 0, true);
 
@@ -800,12 +748,12 @@ describe("Scene/I3SNode", function () {
 
   it("loads children for leaf node", async function () {
     spyOn(I3SLayer.prototype, "_loadNodePage").and.returnValue(
-      Promise.resolve(nodeData)
+      Promise.resolve(nodeData),
     );
 
     const mockI3SLayerWithNodePages = await createMockLayer(
       "mockProviderUrl?testQuery=test",
-      layerData
+      layerData,
     );
     const nodeWithoutChildren = new I3SNode(mockI3SLayerWithNodePages, 1, true);
 
@@ -822,49 +770,49 @@ describe("Scene/I3SNode", function () {
 
   it("loads not existing fields", async function () {
     spyOn(I3SLayer.prototype, "_loadNodePage").and.returnValue(
-      Promise.resolve(nodeData)
+      Promise.resolve(nodeData),
     );
 
     const mockI3SLayerWithNodePages = await createMockLayer(
       "mockProviderUrl?testQuery=test",
-      layerData
+      layerData,
     );
     const rootNode = new I3SNode(mockI3SLayerWithNodePages, 1, true);
 
-    spyOn(rootNode._dataProvider, "_loadBinary").and.callFake(function (
-      resource
-    ) {
-      return new Promise(function (resolve, reject) {
-        let resultBuffer = "";
-        if (resource.url.includes("f_0/") || resource.url.includes("f_1/")) {
-          resultBuffer = int8AttrBufferBase64;
-        } else if (
-          resource.url.includes("f_2/") ||
-          resource.url.includes("f_3/")
-        ) {
-          resultBuffer = int16AttrBufferBase64;
-        } else if (
-          resource.url.includes("f_4/") ||
-          resource.url.includes("f_5/") ||
-          resource.url.includes("f_6/")
-        ) {
-          resultBuffer = int32AttrBufferBase64;
-        } else if (
-          resource.url.includes("f_7/") ||
-          resource.url.includes("f_8/")
-        ) {
-          resultBuffer = int64AttrBufferBase64;
-        } else if (resource.url.includes("f_9/")) {
-          resultBuffer = float32AttrBufferBase64;
-        } else if (resource.url.includes("f_10/")) {
-          resultBuffer = float64AttrBufferBase64;
-        } else if (resource.url.includes("f_11/")) {
-          resultBuffer = stringAttrBufferBase64;
-        }
+    spyOn(rootNode._dataProvider, "_loadBinary").and.callFake(
+      function (resource) {
+        return new Promise(function (resolve, reject) {
+          let resultBuffer = "";
+          if (resource.url.includes("f_0/") || resource.url.includes("f_1/")) {
+            resultBuffer = int8AttrBufferBase64;
+          } else if (
+            resource.url.includes("f_2/") ||
+            resource.url.includes("f_3/")
+          ) {
+            resultBuffer = int16AttrBufferBase64;
+          } else if (
+            resource.url.includes("f_4/") ||
+            resource.url.includes("f_5/") ||
+            resource.url.includes("f_6/")
+          ) {
+            resultBuffer = int32AttrBufferBase64;
+          } else if (
+            resource.url.includes("f_7/") ||
+            resource.url.includes("f_8/")
+          ) {
+            resultBuffer = int64AttrBufferBase64;
+          } else if (resource.url.includes("f_9/")) {
+            resultBuffer = float32AttrBufferBase64;
+          } else if (resource.url.includes("f_10/")) {
+            resultBuffer = float64AttrBufferBase64;
+          } else if (resource.url.includes("f_11/")) {
+            resultBuffer = stringAttrBufferBase64;
+          }
 
-        resolve(base64ToArrayBuffer(resultBuffer));
-      });
-    });
+          resolve(base64ToArrayBuffer(resultBuffer));
+        });
+      },
+    );
 
     return rootNode
       .load()
@@ -874,10 +822,10 @@ describe("Scene/I3SNode", function () {
       .then(function () {
         expect(rootNode.fields.testInt8.name).toEqual("testInt8");
         expect(rootNode.fields.testInt8.resource.url).toContain(
-          "mockProviderUrl/mockLayerUrl/nodes/1/attributes/f_1/0"
+          "mockProviderUrl/mockLayerUrl/nodes/1/attributes/f_1/0",
         );
         expect(
-          rootNode.fields.testInt8.resource.queryParameters.testQuery
+          rootNode.fields.testInt8.resource.queryParameters.testQuery,
         ).toEqual("test");
 
         expect(rootNode.fields.testInt8.header.count).toEqual(2);
@@ -897,7 +845,7 @@ describe("Scene/I3SNode", function () {
 
         expect(rootNode.fields.testString.header.count).toEqual(2);
         expect(
-          rootNode.fields.testString.header.attributeValuesByteCount
+          rootNode.fields.testString.header.attributeValuesByteCount,
         ).toEqual(16);
 
         const featureFields0 = rootNode.getFieldsForFeature(0);
@@ -926,11 +874,11 @@ describe("Scene/I3SNode", function () {
 
   it("loads existing fields", async function () {
     spyOn(I3SLayer.prototype, "_loadNodePage").and.returnValue(
-      Promise.resolve(nodeData)
+      Promise.resolve(nodeData),
     );
 
     spyOn(I3SField.prototype, "load").and.returnValue(
-      Promise.resolve({ mockResult: "success" })
+      Promise.resolve({ mockResult: "success" }),
     );
 
     const mockLayerData = clone(layerData, true);
@@ -938,7 +886,7 @@ describe("Scene/I3SNode", function () {
 
     const mockI3SLayerWithNodePages = await createMockLayer(
       "mockProviderUrl?testQuery=test",
-      mockLayerData
+      mockLayerData,
     );
     const rootNode = new I3SNode(mockI3SLayerWithNodePages, 1, true);
     rootNode._data = {
@@ -955,7 +903,7 @@ describe("Scene/I3SNode", function () {
 
   it("loads existing fields without storageInfo", async function () {
     spyOn(I3SLayer.prototype, "_loadNodePage").and.returnValue(
-      Promise.resolve(nodeData)
+      Promise.resolve(nodeData),
     );
 
     const mockLayerData = clone(layerData, true);
@@ -963,7 +911,7 @@ describe("Scene/I3SNode", function () {
 
     const mockI3SLayerWithNodePages = await createMockLayer(
       "mockProviderUrl?testQuery=test",
-      mockLayerData
+      mockLayerData,
     );
     const rootNode = new I3SNode(mockI3SLayerWithNodePages, 1, true);
 
@@ -974,11 +922,11 @@ describe("Scene/I3SNode", function () {
 
   it("loads existing field", async function () {
     spyOn(I3SLayer.prototype, "_loadNodePage").and.returnValue(
-      Promise.resolve(nodeData)
+      Promise.resolve(nodeData),
     );
 
     spyOn(I3SField.prototype, "load").and.returnValue(
-      Promise.resolve({ mockResult: "success" })
+      Promise.resolve({ mockResult: "success" }),
     );
 
     const mockLayerData = clone(layerData, true);
@@ -986,7 +934,7 @@ describe("Scene/I3SNode", function () {
 
     const mockI3SLayerWithNodePages = await createMockLayer(
       "mockProviderUrl?testQuery=test",
-      mockLayerData
+      mockLayerData,
     );
     const rootNode = new I3SNode(mockI3SLayerWithNodePages, 1, true);
     rootNode._data = {
@@ -1003,7 +951,7 @@ describe("Scene/I3SNode", function () {
 
   it("loads not existing field without storageInfo for the layer", async function () {
     spyOn(I3SLayer.prototype, "_loadNodePage").and.returnValue(
-      Promise.resolve(nodeData)
+      Promise.resolve(nodeData),
     );
 
     const mockLayerData = clone(layerData, true);
@@ -1011,7 +959,7 @@ describe("Scene/I3SNode", function () {
 
     const mockI3SLayerWithNodePages = await createMockLayer(
       "mockProviderUrl?testQuery=test",
-      mockLayerData
+      mockLayerData,
     );
     const rootNode = new I3SNode(mockI3SLayerWithNodePages, 1, true);
 
@@ -1022,7 +970,7 @@ describe("Scene/I3SNode", function () {
 
   it("loads not existing field without storageInfo for the field", async function () {
     spyOn(I3SLayer.prototype, "_loadNodePage").and.returnValue(
-      Promise.resolve(nodeData)
+      Promise.resolve(nodeData),
     );
 
     const mockLayerData = clone(layerData, true);
@@ -1030,7 +978,7 @@ describe("Scene/I3SNode", function () {
 
     const mockI3SLayerWithNodePages = await createMockLayer(
       "mockProviderUrl?testQuery=test",
-      mockLayerData
+      mockLayerData,
     );
     const rootNode = new I3SNode(mockI3SLayerWithNodePages, 1, true);
 
@@ -1041,17 +989,17 @@ describe("Scene/I3SNode", function () {
 
   it("loads geometry from node pages", async function () {
     spyOn(I3SLayer.prototype, "_loadNodePage").and.returnValue(
-      Promise.resolve(nodeData)
+      Promise.resolve(nodeData),
     );
 
     const mockI3SLayerWithNodePages = await createMockLayer(
       "mockProviderUrl?testQuery=test",
-      layerData
+      layerData,
     );
     const nodeWithMesh = new I3SNode(mockI3SLayerWithNodePages, 1, true);
 
     spyOn(nodeWithMesh._dataProvider, "_loadBinary").and.returnValue(
-      Promise.resolve(new ArrayBuffer())
+      Promise.resolve(new ArrayBuffer()),
     );
 
     return nodeWithMesh
@@ -1063,18 +1011,18 @@ describe("Scene/I3SNode", function () {
         expect(nodeWithMesh.geometryData.length).toEqual(1);
 
         expect(nodeWithMesh.geometryData[0].resource.url).toContain(
-          "mockProviderUrl/mockLayerUrl/nodes/1/geometries/1"
+          "mockProviderUrl/mockLayerUrl/nodes/1/geometries/1",
         );
         expect(
-          nodeWithMesh.geometryData[0].resource.queryParameters.testQuery
+          nodeWithMesh.geometryData[0].resource.queryParameters.testQuery,
         ).toEqual("test");
 
         //Expect geometry 1 to have been picked because geometry 0 didn't have all the required properties
         expect(nodeWithMesh._dataProvider._loadBinary).toHaveBeenCalledWith(
-          nodeWithMesh.geometryData[0].resource
+          nodeWithMesh.geometryData[0].resource,
         );
         expect(nodeWithMesh.geometryData[0]._geometryBufferInfo.index).toEqual(
-          1
+          1,
         );
         expect(nodeWithMesh.geometryData[0]._geometryDefinitions).toBeDefined();
 
@@ -1086,19 +1034,19 @@ describe("Scene/I3SNode", function () {
   it("loads geometry from url", async function () {
     const mockI3SLayerWithoutNodePages = await createMockLayer(
       "mockProviderUrl",
-      layerDataWithoutNodePages
+      layerDataWithoutNodePages,
     );
     const nodeWithMesh = new I3SNode(
       mockI3SLayerWithoutNodePages,
       "mockNodeUrl",
-      true
+      true,
     );
 
     spyOn(I3SDataProvider, "loadJson").and.returnValue(
-      Promise.resolve(nodeWithContent)
+      Promise.resolve(nodeWithContent),
     );
     spyOn(nodeWithMesh._dataProvider, "_loadBinary").and.returnValue(
-      Promise.resolve(new ArrayBuffer())
+      Promise.resolve(new ArrayBuffer()),
     );
 
     return nodeWithMesh
@@ -1110,10 +1058,10 @@ describe("Scene/I3SNode", function () {
         expect(nodeWithMesh.geometryData.length).toEqual(1);
 
         expect(nodeWithMesh.geometryData[0].resource.url).toContain(
-          "mockProviderUrl/mockLayerUrl/mockNodeUrl/mockGeometryDataUrl"
+          "mockProviderUrl/mockLayerUrl/mockNodeUrl/mockGeometryDataUrl",
         );
         expect(nodeWithMesh._dataProvider._loadBinary).toHaveBeenCalledWith(
-          nodeWithMesh.geometryData[0].resource
+          nodeWithMesh.geometryData[0].resource,
         );
 
         //Expect data to match the empty data returned by our spy
@@ -1123,12 +1071,12 @@ describe("Scene/I3SNode", function () {
 
   it("loads not existing geometry", async function () {
     spyOn(I3SLayer.prototype, "_loadNodePage").and.returnValue(
-      Promise.resolve(nodeData)
+      Promise.resolve(nodeData),
     );
 
     const mockI3SLayerWithNodePages = await createMockLayer(
       "mockProviderUrl?testQuery=test",
-      layerData
+      layerData,
     );
     const rootNode = new I3SNode(mockI3SLayerWithNodePages, 1, true);
     rootNode._data = {};
@@ -1140,21 +1088,21 @@ describe("Scene/I3SNode", function () {
 
   it("generate geometry from node pages", async function () {
     spyOn(I3SLayer.prototype, "_loadNodePage").and.returnValue(
-      Promise.resolve(nodeData)
+      Promise.resolve(nodeData),
     );
 
     const mockI3SLayerWithNodePages = await createMockLayer(
       "mockProviderUrl?testQuery=test",
-      layerData
+      layerData,
     );
     const nodeWithTexturedMesh = new I3SNode(
       mockI3SLayerWithNodePages,
       1,
-      true
+      true,
     );
 
     spyOn(nodeWithTexturedMesh._dataProvider, "_loadBinary").and.returnValue(
-      Promise.resolve(new ArrayBuffer())
+      Promise.resolve(new ArrayBuffer()),
     );
 
     return nodeWithTexturedMesh
@@ -1169,7 +1117,7 @@ describe("Scene/I3SNode", function () {
           i3sGeometryData.meshData.meshes,
           i3sGeometryData.meshData.buffers,
           i3sGeometryData.meshData.bufferViews,
-          i3sGeometryData.meshData.accessors
+          i3sGeometryData.meshData.accessors,
         );
 
         expect(rawGltf.scene).toEqual(0);
@@ -1179,7 +1127,7 @@ describe("Scene/I3SNode", function () {
         expect(rawGltf.meshes).toEqual(i3sGeometryData.meshData.meshes);
         expect(rawGltf.buffers).toEqual(i3sGeometryData.meshData.buffers);
         expect(rawGltf.bufferViews).toEqual(
-          i3sGeometryData.meshData.bufferViews
+          i3sGeometryData.meshData.bufferViews,
         );
         expect(rawGltf.accessors).toEqual(i3sGeometryData.meshData.accessors);
 
@@ -1192,21 +1140,21 @@ describe("Scene/I3SNode", function () {
 
   it("generate geometry from node pages with transparent material", async function () {
     spyOn(I3SLayer.prototype, "_loadNodePage").and.returnValue(
-      Promise.resolve(nodeData)
+      Promise.resolve(nodeData),
     );
 
     const mockI3SLayerWithNodePages = await createMockLayer(
       "mockProviderUrl?testQuery=test",
-      layerData
+      layerData,
     );
     const nodeWithTexturedMesh = new I3SNode(
       mockI3SLayerWithNodePages,
       1,
-      true
+      true,
     );
 
     spyOn(nodeWithTexturedMesh._dataProvider, "_loadBinary").and.returnValue(
-      Promise.resolve(new ArrayBuffer())
+      Promise.resolve(new ArrayBuffer()),
     );
 
     return nodeWithTexturedMesh
@@ -1234,26 +1182,26 @@ describe("Scene/I3SNode", function () {
           transparentI3sGeometryData.meshData.meshes,
           transparentI3sGeometryData.meshData.buffers,
           transparentI3sGeometryData.meshData.bufferViews,
-          transparentI3sGeometryData.meshData.accessors
+          transparentI3sGeometryData.meshData.accessors,
         );
 
         expect(rawGltf.scene).toEqual(0);
         expect(rawGltf.scenes.length).toEqual(1);
 
         expect(rawGltf.nodes).toEqual(
-          transparentI3sGeometryData.meshData.nodes
+          transparentI3sGeometryData.meshData.nodes,
         );
         expect(rawGltf.meshes).toEqual(
-          transparentI3sGeometryData.meshData.meshes
+          transparentI3sGeometryData.meshData.meshes,
         );
         expect(rawGltf.buffers).toEqual(
-          transparentI3sGeometryData.meshData.buffers
+          transparentI3sGeometryData.meshData.buffers,
         );
         expect(rawGltf.bufferViews).toEqual(
-          transparentI3sGeometryData.meshData.bufferViews
+          transparentI3sGeometryData.meshData.bufferViews,
         );
         expect(rawGltf.accessors).toEqual(
-          transparentI3sGeometryData.meshData.accessors
+          transparentI3sGeometryData.meshData.accessors,
         );
 
         expect(rawGltf.textures).toEqual([]);
@@ -1262,7 +1210,7 @@ describe("Scene/I3SNode", function () {
         expect(rawGltf.materials[0].alphaMode).toEqual("BLEND");
         expect(rawGltf.materials[0].emissiveFactor).toEqual([0, 0, 0]);
         expect(
-          rawGltf.materials[0].pbrMetallicRoughness.baseColorFactor
+          rawGltf.materials[0].pbrMetallicRoughness.baseColorFactor,
         ).toEqual([1, 1, 1, 1]);
         expect(rawGltf.materials[1].alphaMode).toBeUndefined();
       });
@@ -1270,23 +1218,23 @@ describe("Scene/I3SNode", function () {
 
   it("generate geometry from node pages with transparent material when alpha mode is defined", async function () {
     spyOn(I3SLayer.prototype, "_loadNodePage").and.returnValue(
-      Promise.resolve(nodeData)
+      Promise.resolve(nodeData),
     );
 
     const mockI3SLayerWithNodePages = await createMockLayer(
       "mockProviderUrl?testQuery=test",
-      layerData
+      layerData,
     );
     mockI3SLayerWithNodePages._data.materialDefinitions[0].alphaMode = "blend";
     mockI3SLayerWithNodePages._data.materialDefinitions[1].alphaMode = "blend";
     const nodeWithTexturedMesh = new I3SNode(
       mockI3SLayerWithNodePages,
       1,
-      true
+      true,
     );
 
     spyOn(nodeWithTexturedMesh._dataProvider, "_loadBinary").and.returnValue(
-      Promise.resolve(new ArrayBuffer())
+      Promise.resolve(new ArrayBuffer()),
     );
 
     return nodeWithTexturedMesh
@@ -1314,26 +1262,26 @@ describe("Scene/I3SNode", function () {
           transparentI3sGeometryData.meshData.meshes,
           transparentI3sGeometryData.meshData.buffers,
           transparentI3sGeometryData.meshData.bufferViews,
-          transparentI3sGeometryData.meshData.accessors
+          transparentI3sGeometryData.meshData.accessors,
         );
 
         expect(rawGltf.scene).toEqual(0);
         expect(rawGltf.scenes.length).toEqual(1);
 
         expect(rawGltf.nodes).toEqual(
-          transparentI3sGeometryData.meshData.nodes
+          transparentI3sGeometryData.meshData.nodes,
         );
         expect(rawGltf.meshes).toEqual(
-          transparentI3sGeometryData.meshData.meshes
+          transparentI3sGeometryData.meshData.meshes,
         );
         expect(rawGltf.buffers).toEqual(
-          transparentI3sGeometryData.meshData.buffers
+          transparentI3sGeometryData.meshData.buffers,
         );
         expect(rawGltf.bufferViews).toEqual(
-          transparentI3sGeometryData.meshData.bufferViews
+          transparentI3sGeometryData.meshData.bufferViews,
         );
         expect(rawGltf.accessors).toEqual(
-          transparentI3sGeometryData.meshData.accessors
+          transparentI3sGeometryData.meshData.accessors,
         );
 
         expect(rawGltf.textures).toEqual([]);
@@ -1346,21 +1294,21 @@ describe("Scene/I3SNode", function () {
 
   it("generate geometry from node pages without material", async function () {
     spyOn(I3SLayer.prototype, "_loadNodePage").and.returnValue(
-      Promise.resolve(nodeData)
+      Promise.resolve(nodeData),
     );
 
     const mockI3SLayerWithNodePages = await createMockLayer(
       "mockProviderUrl?testQuery=test",
-      layerData
+      layerData,
     );
     const nodeWithTexturedMesh = new I3SNode(
       mockI3SLayerWithNodePages,
       1,
-      true
+      true,
     );
 
     spyOn(nodeWithTexturedMesh._dataProvider, "_loadBinary").and.returnValue(
-      Promise.resolve(new ArrayBuffer())
+      Promise.resolve(new ArrayBuffer()),
     );
 
     return nodeWithTexturedMesh
@@ -1377,7 +1325,7 @@ describe("Scene/I3SNode", function () {
           copyI3sGeometryData.meshData.meshes,
           copyI3sGeometryData.meshData.buffers,
           copyI3sGeometryData.meshData.bufferViews,
-          copyI3sGeometryData.meshData.accessors
+          copyI3sGeometryData.meshData.accessors,
         );
 
         expect(rawGltf.scene).toEqual(0);
@@ -1387,10 +1335,10 @@ describe("Scene/I3SNode", function () {
         expect(rawGltf.meshes).toEqual(copyI3sGeometryData.meshData.meshes);
         expect(rawGltf.buffers).toEqual(copyI3sGeometryData.meshData.buffers);
         expect(rawGltf.bufferViews).toEqual(
-          copyI3sGeometryData.meshData.bufferViews
+          copyI3sGeometryData.meshData.bufferViews,
         );
         expect(rawGltf.accessors).toEqual(
-          copyI3sGeometryData.meshData.accessors
+          copyI3sGeometryData.meshData.accessors,
         );
 
         expect(rawGltf.textures).toEqual([]);
@@ -1402,21 +1350,21 @@ describe("Scene/I3SNode", function () {
 
   it("generate textured geometry from node pages", async function () {
     spyOn(I3SLayer.prototype, "_loadNodePage").and.returnValue(
-      Promise.resolve(nodeData)
+      Promise.resolve(nodeData),
     );
 
     const mockI3SLayerWithNodePages = await createMockLayer(
       "mockProviderUrl?testQuery=test",
-      layerData
+      layerData,
     );
     const nodeWithTexturedMesh = new I3SNode(
       mockI3SLayerWithNodePages,
       2,
-      true
+      true,
     );
 
     spyOn(nodeWithTexturedMesh._dataProvider, "_loadBinary").and.returnValue(
-      Promise.resolve(new ArrayBuffer())
+      Promise.resolve(new ArrayBuffer()),
     );
 
     return nodeWithTexturedMesh
@@ -1431,7 +1379,7 @@ describe("Scene/I3SNode", function () {
           i3sGeometryData.meshData.meshes,
           i3sGeometryData.meshData.buffers,
           i3sGeometryData.meshData.bufferViews,
-          i3sGeometryData.meshData.accessors
+          i3sGeometryData.meshData.accessors,
         );
 
         expect(rawGltf.textures).toBeDefined();
@@ -1445,7 +1393,7 @@ describe("Scene/I3SNode", function () {
         expect(rawGltf.images).toBeDefined();
         expect(rawGltf.images.length).toEqual(1);
         expect(rawGltf.images[0].uri).toContain(
-          "mockProviderUrl/mockLayerUrl/nodes/2/textures/1?testQuery=test"
+          "mockProviderUrl/mockLayerUrl/nodes/2/textures/1?testQuery=test",
         );
       });
   });
@@ -1453,19 +1401,19 @@ describe("Scene/I3SNode", function () {
   it("generate textured geometry from url", async function () {
     const mockI3SLayerWithoutNodePages = await createMockLayer(
       "mockProviderUrl",
-      layerDataWithoutNodePages
+      layerDataWithoutNodePages,
     );
     const nodeWithTexturedMesh = new I3SNode(
       mockI3SLayerWithoutNodePages,
       "mockNodeUrl",
-      true
+      true,
     );
 
     spyOn(I3SDataProvider, "loadJson").and.returnValue(
-      Promise.resolve(nodeWithTexturedContent)
+      Promise.resolve(nodeWithTexturedContent),
     );
     spyOn(nodeWithTexturedMesh._dataProvider, "_loadBinary").and.returnValue(
-      Promise.resolve(new ArrayBuffer())
+      Promise.resolve(new ArrayBuffer()),
     );
 
     return nodeWithTexturedMesh
@@ -1480,7 +1428,7 @@ describe("Scene/I3SNode", function () {
           i3sGeometryData.meshData.meshes,
           i3sGeometryData.meshData.buffers,
           i3sGeometryData.meshData.bufferViews,
-          i3sGeometryData.meshData.accessors
+          i3sGeometryData.meshData.accessors,
         );
 
         expect(rawGltf.textures).toBeDefined();
@@ -1494,19 +1442,19 @@ describe("Scene/I3SNode", function () {
         expect(rawGltf.images).toBeDefined();
         expect(rawGltf.images.length).toEqual(1);
         expect(rawGltf.images[0].uri).toContain(
-          "mockProviderUrl/mockLayerUrl/mockNodeUrl/mockTextureDataUrl"
+          "mockProviderUrl/mockLayerUrl/mockNodeUrl/mockTextureDataUrl",
         );
       });
   });
 
   it("load geometry rejects invalid url", async function () {
     spyOn(I3SLayer.prototype, "_loadNodePage").and.returnValue(
-      Promise.resolve(nodeData)
+      Promise.resolve(nodeData),
     );
 
     const mockI3SLayerWithNodePages = await createMockLayer(
       "mockProviderUrl?testQuery=test",
-      layerData
+      layerData,
     );
     const nodeWithMesh = new I3SNode(mockI3SLayerWithNodePages, 1, true);
 
@@ -1526,36 +1474,36 @@ describe("Scene/I3SNode", function () {
   it("loads feature data from uri", async function () {
     const mockI3SLayerWithoutNodePages = await createMockLayer(
       "mockProviderUrl",
-      layerDataWithoutNodePages
+      layerDataWithoutNodePages,
     );
     const nodeWithMesh = new I3SNode(
       mockI3SLayerWithoutNodePages,
       "mockNodeUrl",
-      true
+      true,
     );
 
-    const spy = spyOn(I3SDataProvider, "loadJson").and.callFake(function (
-      resource
-    ) {
-      if (
-        resource
-          .getUrlComponent()
-          .endsWith(
-            "mockProviderUrl/mockLayerUrl/mockNodeUrl/mockFeatureDataUrl"
-          )
-      ) {
-        return Promise.resolve({ featureData: [], geometryData: [] });
-      }
-      if (
-        resource
-          .getUrlComponent()
-          .endsWith("mockProviderUrl/mockLayerUrl/mockNodeUrl/")
-      ) {
-        return Promise.resolve(nodeWithContent);
-      }
+    const spy = spyOn(I3SDataProvider, "loadJson").and.callFake(
+      function (resource) {
+        if (
+          resource
+            .getUrlComponent()
+            .endsWith(
+              "mockProviderUrl/mockLayerUrl/mockNodeUrl/mockFeatureDataUrl",
+            )
+        ) {
+          return Promise.resolve({ featureData: [], geometryData: [] });
+        }
+        if (
+          resource
+            .getUrlComponent()
+            .endsWith("mockProviderUrl/mockLayerUrl/mockNodeUrl/")
+        ) {
+          return Promise.resolve(nodeWithContent);
+        }
 
-      return Promise.reject("invalid i3s node");
-    });
+        return Promise.reject("invalid i3s node");
+      },
+    );
 
     return nodeWithMesh
       .load()
@@ -1565,7 +1513,7 @@ describe("Scene/I3SNode", function () {
       .then(function (result) {
         expect(nodeWithMesh.featureData.length).toEqual(1);
         expect(nodeWithMesh.featureData[0].resource.url).toContain(
-          "mockProviderUrl/mockLayerUrl/mockNodeUrl/mockFeatureDataUrl"
+          "mockProviderUrl/mockLayerUrl/mockNodeUrl/mockFeatureDataUrl",
         );
         expect(nodeWithMesh.featureData[0].data.featureData).toEqual([]);
         expect(nodeWithMesh.featureData[0].data.geometryData).toEqual([]);
@@ -1576,12 +1524,12 @@ describe("Scene/I3SNode", function () {
 
   it("loads feature data from node pages", async function () {
     spyOn(I3SLayer.prototype, "_loadNodePage").and.returnValue(
-      Promise.resolve(nodeData)
+      Promise.resolve(nodeData),
     );
 
     const mockI3SLayerWithNodePages = await createMockLayer(
       "mockProviderUrl?testQuery=test",
-      layerData
+      layerData,
     );
     const nodeWithMesh = new I3SNode(mockI3SLayerWithNodePages, 1, true);
 
@@ -1600,12 +1548,12 @@ describe("Scene/I3SNode", function () {
   it("load feature data rejects invalid url", async function () {
     const mockI3SLayerWithoutNodePages = await createMockLayer(
       "mockProviderUrl",
-      layerDataWithoutNodePages
+      layerDataWithoutNodePages,
     );
     const nodeWithMesh = new I3SNode(
       mockI3SLayerWithoutNodePages,
       "mockNodeUrl",
-      true
+      true,
     );
 
     spyOn(I3SDataProvider, "loadJson").and.callFake(function (resource) {
@@ -1613,7 +1561,7 @@ describe("Scene/I3SNode", function () {
         resource
           .getUrlComponent()
           .endsWith(
-            "mockProviderUrl/mockLayerUrl/mockNodeUrl/mockFeatureDataUrl"
+            "mockProviderUrl/mockLayerUrl/mockNodeUrl/mockFeatureDataUrl",
           )
       ) {
         return Promise.reject({ statusCode: 404 });
@@ -1635,22 +1583,22 @@ describe("Scene/I3SNode", function () {
 
   it("creates 3d tile content", async function () {
     spyOn(I3SLayer.prototype, "_loadNodePage").and.returnValue(
-      Promise.resolve(nodeData)
+      Promise.resolve(nodeData),
     );
 
     const mockI3SLayerWithNodePages = await createMockLayer(
       "mockProviderUrl?testQuery=test",
-      layerData
+      layerData,
     );
     const rootNode = new I3SNode(mockI3SLayerWithNodePages, 0, true);
     const nodeWithMesh = new I3SNode(rootNode, 1, false);
 
     spyOn(nodeWithMesh._dataProvider, "_loadBinary").and.returnValue(
-      Promise.resolve(new ArrayBuffer())
+      Promise.resolve(new ArrayBuffer()),
     );
     spyOn(nodeWithMesh, "_loadFeatureData").and.returnValue(Promise.all([]));
     spyOn(I3SDecoder, "decode").and.returnValue(
-      Promise.resolve(i3sGeometryData)
+      Promise.resolve(i3sGeometryData),
     );
 
     await rootNode.load();
@@ -1660,12 +1608,12 @@ describe("Scene/I3SNode", function () {
     expect(nodeWithMesh.tile).toBeDefined();
     expect(I3SDecoder.decode).toHaveBeenCalledWith(
       jasmine.stringContaining(
-        "mockProviderUrl/mockLayerUrl/nodes/1/geometries/1/?testQuery=test"
+        "mockProviderUrl/mockLayerUrl/nodes/1/geometries/1/?testQuery=test",
       ),
       jasmine.any(Object),
       jasmine.any(I3SGeometry),
       undefined,
-      undefined
+      undefined,
     );
 
     //Test fetching the blob url that was created
@@ -1694,17 +1642,17 @@ describe("Scene/I3SNode", function () {
 
   it("picks closest point in geometry", async function () {
     spyOn(I3SLayer.prototype, "_loadNodePage").and.returnValue(
-      Promise.resolve(nodeData)
+      Promise.resolve(nodeData),
     );
 
     const mockI3SLayerWithNodePages = await createMockLayer(
       "mockProviderUrl?testQuery=test",
-      layerData
+      layerData,
     );
     const nodeWithMesh = new I3SNode(mockI3SLayerWithNodePages, 1, true);
 
     spyOn(nodeWithMesh._dataProvider, "_loadBinary").and.returnValue(
-      Promise.resolve(new ArrayBuffer())
+      Promise.resolve(new ArrayBuffer()),
     );
 
     return nodeWithMesh
@@ -1721,46 +1669,46 @@ describe("Scene/I3SNode", function () {
           geometryData.getClosestPointIndexOnTriangle(
             intersectPoint.x,
             intersectPoint.y,
-            intersectPoint.z
-          ).index
+            intersectPoint.z,
+          ).index,
         ).toEqual(0);
         expect(
           geometryData.getClosestPointIndexOnTriangle(
             borderPoint.x,
             borderPoint.y,
-            borderPoint.z
-          ).index
+            borderPoint.z,
+          ).index,
         ).toEqual(11);
         expect(
           geometryData.getClosestPointIndexOnTriangle(
             floatingIntersectPoint.x,
             floatingIntersectPoint.y,
-            floatingIntersectPoint.z
-          ).index
+            floatingIntersectPoint.z,
+          ).index,
         ).toEqual(8);
         expect(
           geometryData.getClosestPointIndexOnTriangle(
             noIntersectPoint.x,
             noIntersectPoint.y,
-            noIntersectPoint.z
-          ).index
+            noIntersectPoint.z,
+          ).index,
         ).toEqual(-1);
       });
   });
 
   it("picks closest point in indexed geometry", async function () {
     spyOn(I3SLayer.prototype, "_loadNodePage").and.returnValue(
-      Promise.resolve(nodeData)
+      Promise.resolve(nodeData),
     );
 
     const mockI3SLayerWithNodePages = await createMockLayer(
       "mockProviderUrl?testQuery=test",
-      layerData
+      layerData,
     );
     const nodeWithMesh = new I3SNode(mockI3SLayerWithNodePages, 1, true);
 
     spyOn(nodeWithMesh._dataProvider, "_loadBinary").and.returnValue(
-      Promise.resolve(new ArrayBuffer())
+      Promise.resolve(new ArrayBuffer()),
     );
 
     return nodeWithMesh
@@ -1777,41 +1725,41 @@ describe("Scene/I3SNode", function () {
           geometryData.getClosestPointIndexOnTriangle(
             intersectPoint.x,
             intersectPoint.y,
-            intersectPoint.z
-          ).index
+            intersectPoint.z,
+          ).index,
         ).toEqual(0);
         expect(
           geometryData.getClosestPointIndexOnTriangle(
             borderPoint.x,
             borderPoint.y,
-            borderPoint.z
-          ).index
+            borderPoint.z,
+          ).index,
         ).toEqual(4);
         expect(
           geometryData.getClosestPointIndexOnTriangle(
             floatingIntersectPoint.x,
             floatingIntersectPoint.y,
-            floatingIntersectPoint.z
-          ).index
+            floatingIntersectPoint.z,
+          ).index,
         ).toEqual(5);
         expect(
           geometryData.getClosestPointIndexOnTriangle(
             noIntersectPoint.x,
             noIntersectPoint.y,
-            noIntersectPoint.z
-          ).index
+            noIntersectPoint.z,
+          ).index,
         ).toEqual(-1);
       });
   });
 
   it("requests content", async function () {
     spyOn(I3SLayer.prototype, "_loadNodePage").and.returnValue(
-      Promise.resolve(nodeData)
+      Promise.resolve(nodeData),
     );
 
     const mockI3SLayerWithNodePages = await createMockLayer(
       "mockProviderUrl?testQuery=test",
-      layerData
+      layerData,
     );
     const rootNode = new I3SNode(mockI3SLayerWithNodePages, 0, true);
     const childNode = new I3SNode(rootNode, 1, false);
@@ -1836,12 +1784,12 @@ describe("Scene/I3SNode", function () {
 
   it("requests content without url", async function () {
     spyOn(I3SLayer.prototype, "_loadNodePage").and.returnValue(
-      Promise.resolve(nodeData)
+      Promise.resolve(nodeData),
     );
 
     const mockI3SLayerWithNodePages = await createMockLayer(
       "mockProviderUrl?testQuery=test",
-      layerData
+      layerData,
     );
     const rootNode = new I3SNode(mockI3SLayerWithNodePages, 0, true);
     const childNode = new I3SNode(rootNode, 1, false);
@@ -1866,7 +1814,7 @@ describe("Scene/I3SNode", function () {
 
   it("can filter by attributes", async function () {
     spyOn(I3SLayer.prototype, "_loadNodePage").and.returnValue(
-      Promise.resolve(nodeData)
+      Promise.resolve(nodeData),
     );
 
     spyOn(I3SField.prototype, "load").and.callFake(function () {
@@ -1876,7 +1824,7 @@ describe("Scene/I3SNode", function () {
 
     const mockI3SLayerWithNodePages = await createMockLayer(
       "mockProviderUrl?testQuery=test",
-      layerData
+      layerData,
     );
     const rootNode = new I3SNode(mockI3SLayerWithNodePages, 0, true);
     const childNode = new I3SNode(rootNode, 1, false);
@@ -1919,7 +1867,7 @@ describe("Scene/I3SNode", function () {
           function () {
             childNode._tile._content = content;
             return Promise.resolve(content);
-          }
+          },
         );
         return childNode.tile.requestContent();
       })
@@ -1938,7 +1886,7 @@ describe("Scene/I3SNode", function () {
 
   it("can filter by not existing attributes", async function () {
     spyOn(I3SLayer.prototype, "_loadNodePage").and.returnValue(
-      Promise.resolve(nodeData)
+      Promise.resolve(nodeData),
     );
 
     spyOn(I3SField.prototype, "load").and.callFake(function () {
@@ -1948,7 +1896,7 @@ describe("Scene/I3SNode", function () {
 
     const mockI3SLayerWithNodePages = await createMockLayer(
       "mockProviderUrl?testQuery=test",
-      layerData
+      layerData,
     );
     const rootNode = new I3SNode(mockI3SLayerWithNodePages, 0, true);
     const childNode = new I3SNode(rootNode, 1, false);
@@ -1994,7 +1942,7 @@ describe("Scene/I3SNode", function () {
 
   it("filtering by attributes can handle filters without values", async function () {
     spyOn(I3SLayer.prototype, "_loadNodePage").and.returnValue(
-      Promise.resolve(nodeData)
+      Promise.resolve(nodeData),
     );
 
     spyOn(I3SField.prototype, "load").and.callFake(function () {
@@ -2004,7 +1952,7 @@ describe("Scene/I3SNode", function () {
 
     const mockI3SLayerWithNodePages = await createMockLayer(
       "mockProviderUrl?testQuery=test",
-      layerData
+      layerData,
     );
     const rootNode = new I3SNode(mockI3SLayerWithNodePages, 0, true);
     const childNode = new I3SNode(rootNode, 1, false);
@@ -2050,12 +1998,12 @@ describe("Scene/I3SNode", function () {
 
   it("filtering by attributes can handle content with zero features length", async function () {
     spyOn(I3SLayer.prototype, "_loadNodePage").and.returnValue(
-      Promise.resolve(nodeData)
+      Promise.resolve(nodeData),
     );
 
     const mockI3SLayerWithNodePages = await createMockLayer(
       "mockProviderUrl?testQuery=test",
-      layerData
+      layerData,
     );
     const rootNode = new I3SNode(mockI3SLayerWithNodePages, 0, true);
     const childNode = new I3SNode(rootNode, 1, false);
@@ -2100,14 +2048,14 @@ describe("Scene/I3SNode", function () {
 
   it("filtering by attributes without filters", async function () {
     spyOn(I3SLayer.prototype, "_loadNodePage").and.returnValue(
-      Promise.resolve(nodeData)
+      Promise.resolve(nodeData),
     );
 
     spyOn(I3SField.prototype, "load").and.returnValue(Promise.resolve());
 
     const mockI3SLayerWithNodePages = await createMockLayer(
       "mockProviderUrl?testQuery=test",
-      layerData
+      layerData,
     );
     const rootNode = new I3SNode(mockI3SLayerWithNodePages, 0, true);
     const childNode = new I3SNode(rootNode, 1, false);
@@ -2151,14 +2099,14 @@ describe("Scene/I3SNode", function () {
 
   it("filtering by attributes can handle fields without values", async function () {
     spyOn(I3SLayer.prototype, "_loadNodePage").and.returnValue(
-      Promise.resolve(nodeData)
+      Promise.resolve(nodeData),
     );
 
     spyOn(I3SField.prototype, "load").and.returnValue(Promise.resolve());
 
     const mockI3SLayerWithNodePages = await createMockLayer(
       "mockProviderUrl?testQuery=test",
-      layerData
+      layerData,
     );
     const rootNode = new I3SNode(mockI3SLayerWithNodePages, 0, true);
     const childNode = new I3SNode(rootNode, 1, false);
@@ -2214,14 +2162,14 @@ describe("Scene/I3SNode", function () {
     const i3sFeature = new I3SFeature(i3sNode, "testNode");
     expect(
       i3sFeature._resource.url.endsWith(
-        `nodes/${attributeResource.url}/testNode`
-      )
+        `nodes/${attributeResource.url}/testNode`,
+      ),
     ).toEqual(true);
   });
 
   it("can clear node geometry data", async function () {
     spyOn(I3SLayer.prototype, "_loadNodePage").and.returnValue(
-      Promise.resolve(nodeData)
+      Promise.resolve(nodeData),
     );
 
     spyOn(I3SField.prototype, "load").and.callFake(function () {
@@ -2231,7 +2179,7 @@ describe("Scene/I3SNode", function () {
 
     const mockI3SLayerWithNodePages = await createMockLayer(
       "mockProviderUrl?testQuery=test",
-      layerData
+      layerData,
     );
     const rootNode = new I3SNode(mockI3SLayerWithNodePages, 0, true);
     return rootNode.load().then(function () {
@@ -2243,7 +2191,7 @@ describe("Scene/I3SNode", function () {
 
   it("creates 3d tile content with symbology", async function () {
     spyOn(I3SLayer.prototype, "_loadNodePage").and.returnValue(
-      Promise.resolve(nodeData)
+      Promise.resolve(nodeData),
     );
 
     const mockI3SLayerWithNodePages = await createMockLayer(
@@ -2252,17 +2200,17 @@ describe("Scene/I3SNode", function () {
       undefined,
       {
         applySymbology: true,
-      }
+      },
     );
     const rootNode = new I3SNode(mockI3SLayerWithNodePages, 0, true);
     const nodeWithMesh = new I3SNode(rootNode, 1, false);
 
     spyOn(nodeWithMesh._dataProvider, "_loadBinary").and.returnValue(
-      Promise.resolve(new ArrayBuffer())
+      Promise.resolve(new ArrayBuffer()),
     );
     spyOn(nodeWithMesh, "_loadFeatureData").and.returnValue(Promise.all([]));
     spyOn(I3SDecoder, "decode").and.returnValue(
-      Promise.resolve(i3sGeometryData)
+      Promise.resolve(i3sGeometryData),
     );
 
     await rootNode.load();
@@ -2273,12 +2221,12 @@ describe("Scene/I3SNode", function () {
     expect(I3SDecoder.decode).toHaveBeenCalledTimes(2);
     expect(I3SDecoder.decode).toHaveBeenCalledWith(
       jasmine.stringContaining(
-        "mockProviderUrl/mockLayerUrl/nodes/1/geometries/1/?testQuery=test"
+        "mockProviderUrl/mockLayerUrl/nodes/1/geometries/1/?testQuery=test",
       ),
       jasmine.any(Object),
       jasmine.any(I3SGeometry),
       undefined,
-      jasmine.any(Object)
+      jasmine.any(Object),
     );
   });
 
@@ -2289,23 +2237,23 @@ describe("Scene/I3SNode", function () {
       undefined,
       {
         applySymbology: true,
-      }
+      },
     );
     const nodeWithMesh = new I3SNode(
       mockI3SLayerWithoutNodePages,
       "mockNodeUrl",
-      true
+      true,
     );
 
     spyOn(I3SDataProvider, "loadJson").and.returnValue(
-      Promise.resolve(nodeWithContent)
+      Promise.resolve(nodeWithContent),
     );
     spyOn(nodeWithMesh._dataProvider, "_loadBinary").and.returnValue(
-      Promise.resolve(new ArrayBuffer())
+      Promise.resolve(new ArrayBuffer()),
     );
     spyOn(nodeWithMesh, "_loadFeatureData").and.returnValue(Promise.all([]));
     spyOn(I3SDecoder, "decode").and.returnValue(
-      Promise.resolve(i3sGeometryData)
+      Promise.resolve(i3sGeometryData),
     );
 
     await nodeWithMesh.load();
@@ -2313,12 +2261,12 @@ describe("Scene/I3SNode", function () {
 
     expect(I3SDecoder.decode).toHaveBeenCalledWith(
       jasmine.stringContaining(
-        "mockProviderUrl/mockLayerUrl/mockNodeUrl/mockGeometryDataUrl?testQuery=test"
+        "mockProviderUrl/mockLayerUrl/mockNodeUrl/mockGeometryDataUrl?testQuery=test",
       ),
       jasmine.any(Object),
       jasmine.any(I3SGeometry),
       undefined,
-      jasmine.any(Object)
+      jasmine.any(Object),
     );
   });
 });

@@ -11,7 +11,7 @@ function DracoLoader() {}
 // Maximum concurrency to use when decoding draco models
 DracoLoader._maxDecodingConcurrency = Math.max(
   FeatureDetection.hardwareConcurrency - 1,
-  1
+  1,
 );
 
 // Exposed for testing purposes
@@ -22,7 +22,7 @@ DracoLoader._getDecoderTaskProcessor = function () {
   if (!defined(DracoLoader._decoderTaskProcessor)) {
     const processor = new TaskProcessor(
       "decodeDraco",
-      DracoLoader._maxDecodingConcurrency
+      DracoLoader._maxDecodingConcurrency,
     );
     processor
       .initWebAssemblyModule({
@@ -33,7 +33,7 @@ DracoLoader._getDecoderTaskProcessor = function () {
           DracoLoader._taskProcessorReady = true;
         } else {
           DracoLoader._error = new RuntimeError(
-            "Draco decoder could not be initialized."
+            "Draco decoder could not be initialized.",
           );
         }
       })

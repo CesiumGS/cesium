@@ -236,7 +236,7 @@ describe("Core/JulianDate", function () {
 
   it("Construct from ISO8601 UTC calendar date and time, basic format", function () {
     const expectedDate = JulianDate.fromDate(
-      new Date(Date.UTC(2009, 7, 1, 12, 30, 25))
+      new Date(Date.UTC(2009, 7, 1, 12, 30, 25)),
     );
     const computedDate = JulianDate.fromIso8601("20090801T123025Z");
     expect(computedDate).toEqual(expectedDate);
@@ -244,7 +244,7 @@ describe("Core/JulianDate", function () {
 
   it("Construct from ISO8601 UTC calendar date and time, extended format", function () {
     const expectedDate = JulianDate.fromDate(
-      new Date(Date.UTC(2009, 7, 1, 12, 30, 25))
+      new Date(Date.UTC(2009, 7, 1, 12, 30, 25)),
     );
     const computedDate = JulianDate.fromIso8601("2009-08-01T12:30:25Z");
     expect(computedDate).toEqual(expectedDate);
@@ -257,7 +257,7 @@ describe("Core/JulianDate", function () {
     const expectedDate = new JulianDate(
       2455045,
       1825.5125423,
-      TimeStandard.UTC
+      TimeStandard.UTC,
     );
     const computedDate = JulianDate.fromIso8601("20090801T123025.5125423Z");
     expect(computedDate).toEqual(expectedDate);
@@ -269,7 +269,7 @@ describe("Core/JulianDate", function () {
     const expectedDate = new JulianDate(
       2455045,
       1825.5125423,
-      TimeStandard.UTC
+      TimeStandard.UTC,
     );
     const computedDate = JulianDate.fromIso8601("2009-08-01T12:30:25.5125423Z");
     expect(computedDate).toEqual(expectedDate);
@@ -282,7 +282,7 @@ describe("Core/JulianDate", function () {
     const expectedDate = new JulianDate(
       2455045,
       1825.5125423,
-      TimeStandard.UTC
+      TimeStandard.UTC,
     );
     const computedDate = JulianDate.fromIso8601("20090801T123025,5125423Z");
     expect(computedDate).toEqual(expectedDate);
@@ -294,7 +294,7 @@ describe("Core/JulianDate", function () {
     const expectedDate = new JulianDate(
       2455045,
       1825.5125423,
-      TimeStandard.UTC
+      TimeStandard.UTC,
     );
     const computedDate = JulianDate.fromIso8601("2009-08-01T12:30:25,5125423Z");
     expect(computedDate).toEqual(expectedDate);
@@ -302,7 +302,7 @@ describe("Core/JulianDate", function () {
 
   it("Construct from ISO8601 UTC calendar date and time no seconds, basic format", function () {
     const expectedDate = JulianDate.fromDate(
-      new Date(Date.UTC(2009, 7, 1, 12, 30, 0))
+      new Date(Date.UTC(2009, 7, 1, 12, 30, 0)),
     );
     const computedDate = JulianDate.fromIso8601("20090801T1230Z");
     expect(computedDate).toEqual(expectedDate);
@@ -310,7 +310,7 @@ describe("Core/JulianDate", function () {
 
   it("Construct from ISO8601 UTC calendar date and time no seconds, extended format", function () {
     const expectedDate = JulianDate.fromDate(
-      new Date(Date.UTC(2009, 7, 1, 12, 30, 0))
+      new Date(Date.UTC(2009, 7, 1, 12, 30, 0)),
     );
     const computedDate = JulianDate.fromIso8601("2009-08-01T12:30Z");
     expect(computedDate).toEqual(expectedDate);
@@ -318,7 +318,7 @@ describe("Core/JulianDate", function () {
 
   it("Construct from ISO8601 UTC calendar date and time fractional minutes, basic format", function () {
     const expectedDate = JulianDate.fromDate(
-      new Date(Date.UTC(2009, 7, 1, 12, 30, 30))
+      new Date(Date.UTC(2009, 7, 1, 12, 30, 30)),
     );
     const computedDate = JulianDate.fromIso8601("20090801T1230.5Z");
     expect(computedDate).toEqual(expectedDate);
@@ -326,7 +326,7 @@ describe("Core/JulianDate", function () {
 
   it("Construct from ISO8601 UTC calendar date and time fractional minutes, extended format", function () {
     const expectedDate = JulianDate.fromDate(
-      new Date(Date.UTC(2009, 7, 1, 12, 30, 30))
+      new Date(Date.UTC(2009, 7, 1, 12, 30, 30)),
     );
     const computedDate = JulianDate.fromIso8601("2009-08-01T12:30.5Z");
     expect(computedDate).toEqual(expectedDate);
@@ -334,7 +334,7 @@ describe("Core/JulianDate", function () {
 
   it('Construct from ISO8601 UTC calendar date and time fractional minutes, basic format, "," instead of "."', function () {
     const expectedDate = JulianDate.fromDate(
-      new Date(Date.UTC(2009, 7, 1, 12, 30, 30))
+      new Date(Date.UTC(2009, 7, 1, 12, 30, 30)),
     );
     const computedDate = JulianDate.fromIso8601("20090801T1230,5Z");
     expect(computedDate).toEqual(expectedDate);
@@ -342,7 +342,7 @@ describe("Core/JulianDate", function () {
 
   it('Construct from ISO8601 UTC calendar date and time fractional minutes, extended format, "," instead of "."', function () {
     const expectedDate = JulianDate.fromDate(
-      new Date(Date.UTC(2009, 7, 1, 12, 30, 30))
+      new Date(Date.UTC(2009, 7, 1, 12, 30, 30)),
     );
     const computedDate = JulianDate.fromIso8601("2009-08-01T12:30,5Z");
     expect(computedDate).toEqual(expectedDate);
@@ -350,7 +350,7 @@ describe("Core/JulianDate", function () {
 
   it("Construct from ISO8601 UTC calendar date and time no minutes/seconds, basic format", function () {
     const expectedDate = JulianDate.fromDate(
-      new Date(Date.UTC(2009, 7, 1, 12, 0, 0))
+      new Date(Date.UTC(2009, 7, 1, 12, 0, 0)),
     );
     const computedDate = JulianDate.fromIso8601("20090801T12Z");
     expect(computedDate).toEqual(expectedDate);
@@ -358,7 +358,7 @@ describe("Core/JulianDate", function () {
 
   it("Construct from ISO8601 UTC calendar date and time no minutes/seconds, extended format", function () {
     const expectedDate = JulianDate.fromDate(
-      new Date(Date.UTC(2009, 7, 1, 12, 0, 0))
+      new Date(Date.UTC(2009, 7, 1, 12, 0, 0)),
     );
     const computedDate = JulianDate.fromIso8601("2009-08-01T12Z");
     expect(computedDate).toEqual(expectedDate);
@@ -366,7 +366,7 @@ describe("Core/JulianDate", function () {
 
   it("Construct from ISO8601 UTC calendar date and time fractional hours, basic format", function () {
     const expectedDate = JulianDate.fromDate(
-      new Date(Date.UTC(2009, 7, 1, 12, 30, 0))
+      new Date(Date.UTC(2009, 7, 1, 12, 30, 0)),
     );
     const computedDate = JulianDate.fromIso8601("20090801T12.5Z");
     expect(computedDate).toEqual(expectedDate);
@@ -374,7 +374,7 @@ describe("Core/JulianDate", function () {
 
   it("Construct from ISO8601 UTC calendar date and time fractional hours, extended format", function () {
     const expectedDate = JulianDate.fromDate(
-      new Date(Date.UTC(2009, 7, 1, 12, 30, 0))
+      new Date(Date.UTC(2009, 7, 1, 12, 30, 0)),
     );
     const computedDate = JulianDate.fromIso8601("2009-08-01T12.5Z");
     expect(computedDate).toEqual(expectedDate);
@@ -382,7 +382,7 @@ describe("Core/JulianDate", function () {
 
   it('Construct from ISO8601 UTC calendar date and time fractional hours, basic format, "," instead of "."', function () {
     const expectedDate = JulianDate.fromDate(
-      new Date(Date.UTC(2009, 7, 1, 12, 30, 0))
+      new Date(Date.UTC(2009, 7, 1, 12, 30, 0)),
     );
     const computedDate = JulianDate.fromIso8601("20090801T12,5Z");
     expect(computedDate).toEqual(expectedDate);
@@ -390,7 +390,7 @@ describe("Core/JulianDate", function () {
 
   it('Construct from ISO8601 UTC calendar date and time fractional hours, extended format, "," instead of "."', function () {
     const expectedDate = JulianDate.fromDate(
-      new Date(Date.UTC(2009, 7, 1, 12, 30, 0))
+      new Date(Date.UTC(2009, 7, 1, 12, 30, 0)),
     );
     const computedDate = JulianDate.fromIso8601("2009-08-01T12,5Z");
     expect(computedDate).toEqual(expectedDate);
@@ -404,12 +404,12 @@ describe("Core/JulianDate", function () {
 
   it("Construct from an ISO8601 UTC calendar date and time within a leap second", function () {
     const computedDate = JulianDate.fromIso8601(
-      "2008-12-31T23:59:60.123456789Z"
+      "2008-12-31T23:59:60.123456789Z",
     );
     const expectedDate = new JulianDate(
       2454832,
       43233.123456789,
-      TimeStandard.TAI
+      TimeStandard.TAI,
     );
     expect(computedDate).toEqual(expectedDate);
   });
@@ -428,7 +428,7 @@ describe("Core/JulianDate", function () {
 
   it("Construct from an ISO8601 calendar date and time using 24:00:00 midnight notation", function () {
     const expectedDate = JulianDate.fromDate(
-      new Date(Date.UTC(2009, 7, 2, 0, 0, 0))
+      new Date(Date.UTC(2009, 7, 2, 0, 0, 0)),
     );
     const computedDate = JulianDate.fromIso8601("2009-08-01T24:00:00Z");
     expect(computedDate).toEqual(expectedDate);
@@ -436,7 +436,7 @@ describe("Core/JulianDate", function () {
 
   it("Construct from an ISO8601 local calendar date with UTC offset that crosses into previous month", function () {
     const expectedDate = JulianDate.fromDate(
-      new Date(Date.UTC(1985, 2, 31, 23, 59, 0))
+      new Date(Date.UTC(1985, 2, 31, 23, 59, 0)),
     );
     const computedDate = JulianDate.fromIso8601("1985-04-01T00:59:00+01");
     expect(computedDate).toEqual(expectedDate);
@@ -444,7 +444,7 @@ describe("Core/JulianDate", function () {
 
   it("Construct from an ISO8601 local calendar date with UTC offset that crosses into next month", function () {
     const expectedDate = JulianDate.fromDate(
-      new Date(Date.UTC(1985, 3, 1, 0, 59, 0))
+      new Date(Date.UTC(1985, 3, 1, 0, 59, 0)),
     );
     const computedDate = JulianDate.fromIso8601("1985-03-31T23:59:00-01");
     expect(computedDate).toEqual(expectedDate);
@@ -452,7 +452,7 @@ describe("Core/JulianDate", function () {
 
   it("Construct from an ISO8601 local calendar date with UTC offset that crosses into next year", function () {
     const expectedDate = JulianDate.fromDate(
-      new Date(Date.UTC(2008, 11, 31, 23, 0, 0))
+      new Date(Date.UTC(2008, 11, 31, 23, 0, 0)),
     );
     const julianDate = JulianDate.fromIso8601("2009-01-01T01:00:00+02");
     expect(julianDate).toEqual(expectedDate);
@@ -460,7 +460,7 @@ describe("Core/JulianDate", function () {
 
   it("Construct from an ISO8601 local calendar date with UTC offset that crosses into previous year", function () {
     const expectedDate = JulianDate.fromDate(
-      new Date(Date.UTC(2009, 0, 1, 1, 0, 0))
+      new Date(Date.UTC(2009, 0, 1, 1, 0, 0)),
     );
     const julianDate = JulianDate.fromIso8601("2008-12-31T23:00:00-02");
     expect(julianDate).toEqual(expectedDate);
@@ -468,7 +468,7 @@ describe("Core/JulianDate", function () {
 
   it("Construct from an ISO8601 local calendar date with UTC offset", function () {
     const expectedDate = JulianDate.fromDate(
-      new Date(Date.UTC(2008, 10, 10, 12, 0, 0))
+      new Date(Date.UTC(2008, 10, 10, 12, 0, 0)),
     );
     const julianDate = JulianDate.fromIso8601("2008-11-10T14:00:00+02");
     expect(julianDate).toEqual(expectedDate);
@@ -476,7 +476,7 @@ describe("Core/JulianDate", function () {
 
   it("Construct from an ISO8601 local calendar date with UTC offset in extended format", function () {
     const expectedDate = JulianDate.fromDate(
-      new Date(Date.UTC(2008, 10, 10, 11, 30, 0))
+      new Date(Date.UTC(2008, 10, 10, 11, 30, 0)),
     );
     const julianDate = JulianDate.fromIso8601("2008-11-10T14:00:00+02:30");
     expect(julianDate).toEqual(expectedDate);
@@ -484,7 +484,7 @@ describe("Core/JulianDate", function () {
 
   it("Construct from an ISO8601 local calendar date with zero UTC offset in extended format", function () {
     const expectedDate = JulianDate.fromDate(
-      new Date(Date.UTC(2008, 10, 10, 14, 0, 0))
+      new Date(Date.UTC(2008, 10, 10, 14, 0, 0)),
     );
     const julianDate = JulianDate.fromIso8601("2008-11-10T14:00:00+00:00");
     expect(julianDate).toEqual(expectedDate);
@@ -492,7 +492,7 @@ describe("Core/JulianDate", function () {
 
   it("Construct from an ISO8601 local calendar date with zero UTC offset in extended format", function () {
     const expectedDate = JulianDate.fromDate(
-      new Date(Date.UTC(2008, 10, 10, 14, 0, 0))
+      new Date(Date.UTC(2008, 10, 10, 14, 0, 0)),
     );
     const julianDate = JulianDate.fromIso8601("2008-11-10T14:00:00+00");
     expect(julianDate).toEqual(expectedDate);
@@ -500,7 +500,7 @@ describe("Core/JulianDate", function () {
 
   it("Construct from ISO8601 local calendar date and time with no seconds and UTC offset in basic format", function () {
     const expectedDate = JulianDate.fromDate(
-      new Date(Date.UTC(2009, 7, 1, 12, 30, 0))
+      new Date(Date.UTC(2009, 7, 1, 12, 30, 0)),
     );
     const computedDate = JulianDate.fromIso8601("20090801T0730-0500");
     expect(computedDate).toEqual(expectedDate);
@@ -508,7 +508,7 @@ describe("Core/JulianDate", function () {
 
   it("Construct from ISO8601 local calendar date and time with no seconds and UTC offset in extended format", function () {
     const expectedDate = JulianDate.fromDate(
-      new Date(Date.UTC(2009, 7, 1, 12, 30, 0))
+      new Date(Date.UTC(2009, 7, 1, 12, 30, 0)),
     );
     const computedDate = JulianDate.fromIso8601("2009-08-01T07:30-05:00");
     expect(computedDate).toEqual(expectedDate);
@@ -559,7 +559,7 @@ describe("Core/JulianDate", function () {
   it("Fails to construct an ISO8601 date from a valid ISO8601 interval", function () {
     expect(function () {
       return JulianDate.fromIso8601(
-        "2007-03-01T13:00:00Z/2008-05-11T15:30:00Z"
+        "2007-03-01T13:00:00Z/2008-05-11T15:30:00Z",
       );
     }).toThrowDeveloperError();
   });
@@ -771,7 +771,7 @@ describe("Core/JulianDate", function () {
   it("toDate works a second before a leap second", function () {
     const expectedDate = new Date("6/30/1997 11:59:59 PM UTC");
     const date = JulianDate.toDate(
-      new JulianDate(2450630, 43229.0, TimeStandard.TAI)
+      new JulianDate(2450630, 43229.0, TimeStandard.TAI),
     );
     expect(date).toEqual(expectedDate);
   });
@@ -779,7 +779,7 @@ describe("Core/JulianDate", function () {
   it("toDate works on a leap second", function () {
     const expectedDate = new Date("6/30/1997 11:59:59 PM UTC");
     const date = JulianDate.toDate(
-      new JulianDate(2450630, 43230.0, TimeStandard.TAI)
+      new JulianDate(2450630, 43230.0, TimeStandard.TAI),
     );
     expect(date).toEqual(expectedDate);
   });
@@ -787,7 +787,7 @@ describe("Core/JulianDate", function () {
   it("toDate works a second after a leap second", function () {
     const expectedDate = new Date("7/1/1997 12:00:00 AM UTC");
     const date = JulianDate.toDate(
-      new JulianDate(2450630, 43231.0, TimeStandard.TAI)
+      new JulianDate(2450630, 43231.0, TimeStandard.TAI),
     );
     expect(date).toEqual(expectedDate);
   });
@@ -795,7 +795,7 @@ describe("Core/JulianDate", function () {
   it("toDate works on date before any leap seconds", function () {
     const expectedDate = new Date("09/10/1968 12:00:00 AM UTC");
     const date = JulianDate.toDate(
-      new JulianDate(2440109, 43210.0, TimeStandard.TAI)
+      new JulianDate(2440109, 43210.0, TimeStandard.TAI),
     );
     expect(date).toEqual(expectedDate);
   });
@@ -803,7 +803,7 @@ describe("Core/JulianDate", function () {
   it("toDate works on date later than all leap seconds", function () {
     const expectedDate = new Date("11/17/2039 12:00:00 AM UTC");
     const date = JulianDate.toDate(
-      new JulianDate(2466109, 43237.0, TimeStandard.TAI)
+      new JulianDate(2466109, 43237.0, TimeStandard.TAI),
     );
     expect(date).toEqual(expectedDate);
   });
@@ -892,7 +892,7 @@ describe("Core/JulianDate", function () {
     const end = JulianDate.fromDate(new Date("July 5, 2011 12:01:00 UTC"));
     expect(JulianDate.secondsDifference(end, start)).toEqualEpsilon(
       TimeConstants.SECONDS_PER_DAY + TimeConstants.SECONDS_PER_MINUTE,
-      CesiumMath.EPSILON5
+      CesiumMath.EPSILON5,
     );
   });
 
@@ -901,7 +901,7 @@ describe("Core/JulianDate", function () {
     const end = JulianDate.fromDate(new Date("July 5, 2011 12:01:00 UTC"));
     expect(JulianDate.secondsDifference(end, start)).toEqualEpsilon(
       TimeConstants.SECONDS_PER_DAY + TimeConstants.SECONDS_PER_MINUTE,
-      CesiumMath.EPSILON5
+      CesiumMath.EPSILON5,
     );
   });
 
@@ -910,7 +910,7 @@ describe("Core/JulianDate", function () {
     const end = JulianDate.fromDate(new Date("July 5, 2011 12:01:00 UTC"));
     expect(JulianDate.secondsDifference(end, start)).toEqualEpsilon(
       TimeConstants.SECONDS_PER_DAY + TimeConstants.SECONDS_PER_MINUTE,
-      CesiumMath.EPSILON5
+      CesiumMath.EPSILON5,
     );
   });
 
@@ -933,11 +933,11 @@ describe("Core/JulianDate", function () {
     const end = JulianDate.addSeconds(start, 95, new JulianDate());
     expect(JulianDate.toDate(end).getUTCSeconds()).toEqualEpsilon(
       5,
-      CesiumMath.EPSILON5
+      CesiumMath.EPSILON5,
     );
     expect(JulianDate.toDate(end).getUTCMinutes()).toEqualEpsilon(
       2,
-      CesiumMath.EPSILON5
+      CesiumMath.EPSILON5,
     );
   });
 
@@ -951,7 +951,7 @@ describe("Core/JulianDate", function () {
     const start = JulianDate.fromDate(new Date("August 11 2011 6:00:00 UTC"));
     const end = JulianDate.addSeconds(start, 0.5, new JulianDate());
     expect(JulianDate.secondsDifference(end, start, new JulianDate())).toEqual(
-      0.5
+      0.5,
     );
   });
 
@@ -959,7 +959,7 @@ describe("Core/JulianDate", function () {
     const start = JulianDate.fromDate(new Date("August 11 2011 11:59:59 UTC"));
     const end = JulianDate.addSeconds(start, 1.25, new JulianDate());
     expect(JulianDate.secondsDifference(end, start, new JulianDate())).toEqual(
-      1.25
+      1.25,
     );
   });
 
@@ -987,7 +987,7 @@ describe("Core/JulianDate", function () {
       return JulianDate.addSeconds(
         JulianDate.now(),
         undefined,
-        new JulianDate()
+        new JulianDate(),
       );
     }).toThrowDeveloperError();
   });
@@ -996,11 +996,11 @@ describe("Core/JulianDate", function () {
     const end = JulianDate.addMinutes(start, 65, new JulianDate());
     expect(JulianDate.toDate(end).getUTCMinutes()).toEqualEpsilon(
       5,
-      CesiumMath.EPSILON5
+      CesiumMath.EPSILON5,
     );
     expect(JulianDate.toDate(end).getUTCHours()).toEqualEpsilon(
       13,
-      CesiumMath.EPSILON5
+      CesiumMath.EPSILON5,
     );
   });
 
@@ -1009,11 +1009,11 @@ describe("Core/JulianDate", function () {
     const end = JulianDate.addMinutes(start, -35, new JulianDate());
     expect(JulianDate.toDate(end).getUTCMinutes()).toEqualEpsilon(
       25,
-      CesiumMath.EPSILON5
+      CesiumMath.EPSILON5,
     );
     expect(JulianDate.toDate(end).getUTCHours()).toEqualEpsilon(
       11,
-      CesiumMath.EPSILON5
+      CesiumMath.EPSILON5,
     );
   });
 
@@ -1022,7 +1022,7 @@ describe("Core/JulianDate", function () {
       return JulianDate.addMinutes(
         JulianDate.now(),
         undefined,
-        new JulianDate()
+        new JulianDate(),
       );
     }).toThrowDeveloperError();
   });
@@ -1032,7 +1032,7 @@ describe("Core/JulianDate", function () {
     const end = JulianDate.addHours(start, 6, new JulianDate());
     expect(JulianDate.toDate(end).getUTCHours()).toEqualEpsilon(
       18,
-      CesiumMath.EPSILON5
+      CesiumMath.EPSILON5,
     );
   });
 
@@ -1041,7 +1041,7 @@ describe("Core/JulianDate", function () {
     const end = JulianDate.addHours(start, -6, new JulianDate());
     expect(JulianDate.toDate(end).getUTCHours()).toEqualEpsilon(
       6,
-      CesiumMath.EPSILON5
+      CesiumMath.EPSILON5,
     );
   });
   it("addHours fails with undefined input", function () {
@@ -1055,11 +1055,11 @@ describe("Core/JulianDate", function () {
     const end = JulianDate.addDays(start, 32, new JulianDate());
     expect(JulianDate.toDate(end).getUTCDate()).toEqualEpsilon(
       5,
-      CesiumMath.EPSILON5
+      CesiumMath.EPSILON5,
     );
     expect(JulianDate.toDate(end).getUTCMonth()).toEqualEpsilon(
       7,
-      CesiumMath.EPSILON5
+      CesiumMath.EPSILON5,
     );
   });
 
@@ -1068,11 +1068,11 @@ describe("Core/JulianDate", function () {
     const end = JulianDate.addDays(start, -4, new JulianDate());
     expect(JulianDate.toDate(end).getUTCDate()).toEqualEpsilon(
       30,
-      CesiumMath.EPSILON5
+      CesiumMath.EPSILON5,
     );
     expect(JulianDate.toDate(end).getUTCMonth()).toEqualEpsilon(
       5,
-      CesiumMath.EPSILON5
+      CesiumMath.EPSILON5,
     );
   });
 
@@ -1095,8 +1095,8 @@ describe("Core/JulianDate", function () {
     expect(
       JulianDate.lessThan(
         start,
-        JulianDate.addSeconds(end, 1, new JulianDate())
-      )
+        JulianDate.addSeconds(end, 1, new JulianDate()),
+      ),
     ).toEqual(true);
   });
 
@@ -1113,14 +1113,14 @@ describe("Core/JulianDate", function () {
     expect(
       JulianDate.lessThanOrEquals(
         JulianDate.addSeconds(start, 1, new JulianDate()),
-        end
-      )
+        end,
+      ),
     ).toEqual(false);
     expect(
       JulianDate.lessThanOrEquals(
         JulianDate.addSeconds(start, -1, new JulianDate()),
-        end
-      )
+        end,
+      ),
     ).toEqual(true);
   });
 
@@ -1137,8 +1137,8 @@ describe("Core/JulianDate", function () {
     expect(
       JulianDate.greaterThan(
         start,
-        JulianDate.addSeconds(end, -1, new JulianDate())
-      )
+        JulianDate.addSeconds(end, -1, new JulianDate()),
+      ),
     ).toEqual(true);
   });
 
@@ -1155,20 +1155,20 @@ describe("Core/JulianDate", function () {
     expect(
       JulianDate.greaterThanOrEquals(
         JulianDate.addSeconds(start, -1, new JulianDate()),
-        end
-      )
+        end,
+      ),
     ).toEqual(false);
     expect(
       JulianDate.greaterThanOrEquals(
         JulianDate.addSeconds(start, 1, new JulianDate()),
-        end
-      )
+        end,
+      ),
     ).toEqual(true);
   });
 
   it("can be equal to within an epsilon of another JulianDate", function () {
     const original = JulianDate.fromDate(
-      new Date("September 7, 2011 12:55:00 UTC")
+      new Date("September 7, 2011 12:55:00 UTC"),
     );
     let clone = JulianDate.fromDate(new Date("September 7, 2011 12:55:00 UTC"));
     clone = JulianDate.addSeconds(clone, 1, new JulianDate());

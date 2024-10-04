@@ -350,7 +350,7 @@ function transcodeAttributeType(componentsPerAttribute) {
     //>>includeStart('debug', pragmas.debug);
     default:
       throw new DeveloperError(
-        "componentsPerAttribute must be a number from 1-4"
+        "componentsPerAttribute must be a number from 1-4",
       );
     //>>includeEnd('debug');
   }
@@ -404,7 +404,7 @@ function makeAttribute(loader, attributeInfo, context) {
     quantization.quantizedVolumeStepSize = Cartesian3.divideByScalar(
       quantizedVolumeDimensions,
       normalizationRange,
-      new Cartesian3()
+      new Cartesian3(),
     );
     quantization.componentDatatype = attributeInfo.quantizedComponentDatatype;
     quantization.type = attributeInfo.quantizedType;
@@ -628,7 +628,7 @@ function makeComponents(loader, context) {
   const customAttributeOutput = [];
   components.structuralMetadata = makeStructuralMetadata(
     parsedContent,
-    customAttributeOutput
+    customAttributeOutput,
   );
 
   if (customAttributeOutput.length > 0) {
@@ -636,7 +636,7 @@ function makeComponents(loader, context) {
       loader,
       primitive,
       customAttributeOutput,
-      context
+      context,
     );
   }
 
@@ -644,7 +644,7 @@ function makeComponents(loader, context) {
     components.transform = Matrix4.multiplyByTranslation(
       components.transform,
       parsedContent.rtcCenter,
-      components.transform
+      components.transform,
     );
   }
 
@@ -655,7 +655,7 @@ function makeComponents(loader, context) {
     components.transform = Matrix4.multiplyByTranslation(
       components.transform,
       positions.quantizedVolumeOffset,
-      components.transform
+      components.transform,
     );
   }
 
@@ -670,7 +670,7 @@ function addPropertyAttributesToPrimitive(
   loader,
   primitive,
   customAttributes,
-  context
+  context,
 ) {
   const attributes = primitive.attributes;
 

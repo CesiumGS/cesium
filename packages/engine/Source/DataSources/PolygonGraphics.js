@@ -137,7 +137,7 @@ Object.defineProperties(PolygonGraphics.prototype, {
   hierarchy: createPropertyDescriptor(
     "hierarchy",
     undefined,
-    createPolygonHierarchyProperty
+    createPolygonHierarchyProperty,
   ),
 
   /**
@@ -278,7 +278,7 @@ Object.defineProperties(PolygonGraphics.prototype, {
    * @type {Property|undefined}
    */
   distanceDisplayCondition: createPropertyDescriptor(
-    "distanceDisplayCondition"
+    "distanceDisplayCondition",
   ),
 
   /**
@@ -358,15 +358,15 @@ PolygonGraphics.prototype.merge = function (source) {
   this.height = defaultValue(this.height, source.height);
   this.heightReference = defaultValue(
     this.heightReference,
-    source.heightReference
+    source.heightReference,
   );
   this.extrudedHeight = defaultValue(
     this.extrudedHeight,
-    source.extrudedHeight
+    source.extrudedHeight,
   );
   this.extrudedHeightReference = defaultValue(
     this.extrudedHeightReference,
-    source.extrudedHeightReference
+    source.extrudedHeightReference,
   );
   this.stRotation = defaultValue(this.stRotation, source.stRotation);
   this.granularity = defaultValue(this.granularity, source.granularity);
@@ -377,7 +377,7 @@ PolygonGraphics.prototype.merge = function (source) {
   this.outlineWidth = defaultValue(this.outlineWidth, source.outlineWidth);
   this.perPositionHeight = defaultValue(
     this.perPositionHeight,
-    source.perPositionHeight
+    source.perPositionHeight,
   );
   this.closeTop = defaultValue(this.closeTop, source.closeTop);
   this.closeBottom = defaultValue(this.closeBottom, source.closeBottom);
@@ -385,16 +385,16 @@ PolygonGraphics.prototype.merge = function (source) {
   this.shadows = defaultValue(this.shadows, source.shadows);
   this.distanceDisplayCondition = defaultValue(
     this.distanceDisplayCondition,
-    source.distanceDisplayCondition
+    source.distanceDisplayCondition,
   );
   this.classificationType = defaultValue(
     this.classificationType,
-    source.classificationType
+    source.classificationType,
   );
   this.zIndex = defaultValue(this.zIndex, source.zIndex);
   this.textureCoordinates = defaultValue(
     this.textureCoordinates,
-    source.textureCoordinates
+    source.textureCoordinates,
   );
 };
 export default PolygonGraphics;

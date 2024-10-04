@@ -117,7 +117,7 @@ describe(
 
       const testObject = entityCollection.getOrCreateEntity("test");
       testObject.position = new ConstantProperty(
-        new Cartesian3(1234, 5678, 9101112)
+        new Cartesian3(1234, 5678, 9101112),
       );
       visualizer.update(JulianDate.now());
       expect(scene.primitives.length).toEqual(0);
@@ -167,23 +167,23 @@ describe(
       expect(pointPrimitive.show).toEqual(point.show.getValue(time));
       expect(pointPrimitive.position).toEqual(entity.position.getValue(time));
       expect(pointPrimitive.scaleByDistance).toEqual(
-        point.scaleByDistance.getValue(time)
+        point.scaleByDistance.getValue(time),
       );
       expect(pointPrimitive.color).toEqual(point.color.getValue(time));
       expect(pointPrimitive.outlineColor).toEqual(
-        point.outlineColor.getValue(time)
+        point.outlineColor.getValue(time),
       );
       expect(pointPrimitive.outlineWidth).toEqual(
-        point.outlineWidth.getValue(time)
+        point.outlineWidth.getValue(time),
       );
       expect(pointPrimitive.distanceDisplayCondition).toEqual(
-        point.distanceDisplayCondition.getValue(time)
+        point.distanceDisplayCondition.getValue(time),
       );
       expect(pointPrimitive.disableDepthTestDistance).toEqual(
-        point.disableDepthTestDistance.getValue(time)
+        point.disableDepthTestDistance.getValue(time),
       );
       expect(pointPrimitive.splitDirection).toEqual(
-        point.splitDirection.getValue(time)
+        point.splitDirection.getValue(time),
       );
 
       point.color = new Color(0.15, 0.16, 0.17, 0.18);
@@ -193,7 +193,7 @@ describe(
       point.scaleByDistance = new NearFarScalar(25, 26, 27, 28);
       point.distanceDisplayCondition = new DistanceDisplayCondition(
         1000.0,
-        1000000.0
+        1000000.0,
       );
       point.disableDepthTestDistance = 20.0;
       point.splitDirection = SplitDirection.RIGHT;
@@ -203,23 +203,23 @@ describe(
       expect(pointPrimitive.show).toEqual(point.show.getValue(time));
       expect(pointPrimitive.position).toEqual(entity.position.getValue(time));
       expect(pointPrimitive.scaleByDistance).toEqual(
-        point.scaleByDistance.getValue(time)
+        point.scaleByDistance.getValue(time),
       );
       expect(pointPrimitive.color).toEqual(point.color.getValue(time));
       expect(pointPrimitive.outlineColor).toEqual(
-        point.outlineColor.getValue(time)
+        point.outlineColor.getValue(time),
       );
       expect(pointPrimitive.outlineWidth).toEqual(
-        point.outlineWidth.getValue(time)
+        point.outlineWidth.getValue(time),
       );
       expect(pointPrimitive.distanceDisplayCondition).toEqual(
-        point.distanceDisplayCondition.getValue(time)
+        point.distanceDisplayCondition.getValue(time),
       );
       expect(pointPrimitive.disableDepthTestDistance).toEqual(
-        point.disableDepthTestDistance.getValue(time)
+        point.disableDepthTestDistance.getValue(time),
       );
       expect(pointPrimitive.splitDirection).toEqual(
-        point.splitDirection.getValue(time)
+        point.splitDirection.getValue(time),
       );
 
       point.show = false;
@@ -260,16 +260,16 @@ describe(
       expect(billboard.show).toEqual(point.show.getValue(time));
       expect(billboard.position).toEqual(entity.position.getValue(time));
       expect(billboard.scaleByDistance).toEqual(
-        point.scaleByDistance.getValue(time)
+        point.scaleByDistance.getValue(time),
       );
       expect(billboard.distanceDisplayCondition).toEqual(
-        point.distanceDisplayCondition.getValue(time)
+        point.distanceDisplayCondition.getValue(time),
       );
       expect(billboard.disableDepthTestDistance).toEqual(
-        point.disableDepthTestDistance.getValue(time)
+        point.disableDepthTestDistance.getValue(time),
       );
       expect(billboard.splitDirection).toEqual(
-        point.splitDirection.getValue(time)
+        point.splitDirection.getValue(time),
       );
       //expect(billboard.color).toEqual(point.color.getValue(time));
       //expect(billboard.outlineColor).toEqual(point.outlineColor.getValue(time));
@@ -282,7 +282,7 @@ describe(
       point.scaleByDistance = new NearFarScalar(25, 26, 27, 28);
       point.distanceDisplayCondition = new DistanceDisplayCondition(
         1000.0,
-        1000000.0
+        1000000.0,
       );
       point.disableDepthTestDistance = 20.0;
 
@@ -291,13 +291,13 @@ describe(
       expect(billboard.show).toEqual(point.show.getValue(time));
       expect(billboard.position).toEqual(entity.position.getValue(time));
       expect(billboard.scaleByDistance).toEqual(
-        point.scaleByDistance.getValue(time)
+        point.scaleByDistance.getValue(time),
       );
       expect(billboard.distanceDisplayCondition).toEqual(
-        point.distanceDisplayCondition.getValue(time)
+        point.distanceDisplayCondition.getValue(time),
       );
       expect(billboard.disableDepthTestDistance).toEqual(
-        point.disableDepthTestDistance.getValue(time)
+        point.disableDepthTestDistance.getValue(time),
       );
       //expect(billboard.color).toEqual(point.color.getValue(time));
       //expect(billboard.outlineColor).toEqual(point.outlineColor.getValue(time));
@@ -315,7 +315,7 @@ describe(
 
       const testObject = entityCollection.getOrCreateEntity("test");
       testObject.position = new ConstantProperty(
-        new Cartesian3(1234, 5678, 9101112)
+        new Cartesian3(1234, 5678, 9101112),
       );
       testObject.point = new PointGraphics();
       testObject.point.show = new ConstantProperty(true);
@@ -333,7 +333,7 @@ describe(
 
       const testObject2 = entityCollection.getOrCreateEntity("test2");
       testObject2.position = new ConstantProperty(
-        new Cartesian3(1234, 5678, 9101112)
+        new Cartesian3(1234, 5678, 9101112),
       );
       testObject2.point = new PointGraphics();
       testObject2.point.show = new ConstantProperty(true);
@@ -349,7 +349,7 @@ describe(
       const time = JulianDate.now();
 
       testObject.position = new ConstantProperty(
-        new Cartesian3(1234, 5678, 9101112)
+        new Cartesian3(1234, 5678, 9101112),
       );
       const point = (testObject.point = new PointGraphics());
       point.show = new ConstantProperty(true);
@@ -376,7 +376,7 @@ describe(
       const point = (testObject.point = new PointGraphics());
 
       testObject.position = new ConstantProperty(
-        new Cartesian3(1234, 5678, 9101112)
+        new Cartesian3(1234, 5678, 9101112),
       );
       point.show = new ConstantProperty(true);
 
@@ -397,7 +397,7 @@ describe(
       const point = (testObject.point = new PointGraphics());
 
       testObject.position = new ConstantProperty(
-        new Cartesian3(1234, 5678, 9101112)
+        new Cartesian3(1234, 5678, 9101112),
       );
       point.show = new ConstantProperty(true);
 
@@ -439,5 +439,5 @@ describe(
       }).toThrowDeveloperError();
     });
   },
-  "WebGL"
+  "WebGL",
 );

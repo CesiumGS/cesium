@@ -60,7 +60,7 @@ IndexDatatype.getSizeInBytes = function (indexDatatype) {
 
   //>>includeStart('debug', pragmas.debug);
   throw new DeveloperError(
-    "indexDatatype is required and must be a valid IndexDatatype constant."
+    "indexDatatype is required and must be a valid IndexDatatype constant.",
   );
   //>>includeEnd('debug');
 };
@@ -82,7 +82,7 @@ IndexDatatype.fromSizeInBytes = function (sizeInBytes) {
     //>>includeStart('debug', pragmas.debug);
     default:
       throw new DeveloperError(
-        "Size in bytes cannot be mapped to an IndexDatatype"
+        "Size in bytes cannot be mapped to an IndexDatatype",
       );
     //>>includeEnd('debug');
   }
@@ -121,7 +121,7 @@ IndexDatatype.validate = function (indexDatatype) {
  */
 IndexDatatype.createTypedArray = function (
   numberOfVertices,
-  indicesLengthOrArray
+  indicesLengthOrArray,
 ) {
   //>>includeStart('debug', pragmas.debug);
   if (!defined(numberOfVertices)) {
@@ -151,7 +151,7 @@ IndexDatatype.createTypedArrayFromArrayBuffer = function (
   numberOfVertices,
   sourceArray,
   byteOffset,
-  length
+  length,
 ) {
   //>>includeStart('debug', pragmas.debug);
   if (!defined(numberOfVertices)) {
@@ -191,7 +191,7 @@ IndexDatatype.fromTypedArray = function (array) {
 
   //>>includeStart('debug', pragmas.debug);
   throw new DeveloperError(
-    "array must be a Uint8Array, Uint16Array, or Uint32Array."
+    "array must be a Uint8Array, Uint16Array, or Uint32Array.",
   );
   //>>includeEnd('debug');
 };

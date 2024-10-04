@@ -90,10 +90,10 @@ describe(
         version: 2,
       });
       await expectAsync(
-        Cesium3DTilesTester.createContentForMockTile(arrayBuffer, "cmpt")
+        Cesium3DTilesTester.createContentForMockTile(arrayBuffer, "cmpt"),
       ).toBeRejectedWithError(
         RuntimeError,
-        "Only Composite Tile version 1 is supported. Version 2 is not."
+        "Only Composite Tile version 1 is supported. Version 2 is not.",
       );
     });
 
@@ -106,17 +106,17 @@ describe(
         ],
       });
       await expectAsync(
-        Cesium3DTilesTester.createContentForMockTile(arrayBuffer, "cmpt")
+        Cesium3DTilesTester.createContentForMockTile(arrayBuffer, "cmpt"),
       ).toBeRejectedWithError(
         RuntimeError,
-        "Unknown tile content type, xxxx, inside Composite tile"
+        "Unknown tile content type, xxxx, inside Composite tile",
       );
     });
 
     it("becomes ready", async function () {
       const tileset = await Cesium3DTilesTester.loadTileset(
         scene,
-        compositeUrl
+        compositeUrl,
       );
       expect(tileset.root.contentReady).toBeTrue();
       expect(tileset.root.content).toBeDefined();
@@ -134,25 +134,25 @@ describe(
       });
 
       await expectAsync(
-        Cesium3DTilesTester.createContentForMockTile(arrayBuffer, "cmpt")
+        Cesium3DTilesTester.createContentForMockTile(arrayBuffer, "cmpt"),
       ).toBeRejectedWithError(RuntimeError);
     });
 
     it("renders composite", function () {
       return Cesium3DTilesTester.loadTileset(scene, compositeUrl).then(
-        expectRenderComposite
+        expectRenderComposite,
       );
     });
 
     it("renders composite of composite", function () {
       return Cesium3DTilesTester.loadTileset(scene, compositeOfComposite).then(
-        expectRenderComposite
+        expectRenderComposite,
       );
     });
 
     it("renders multiple instanced tilesets", function () {
       return Cesium3DTilesTester.loadTileset(scene, compositeOfInstanced).then(
-        expectRenderComposite
+        expectRenderComposite,
       );
     });
 
@@ -240,7 +240,7 @@ describe(
             for (let i = 0; i < innerContents.length; i++) {
               expect(innerContents[i].group.metadata).toBe(groupMetadata);
             }
-          }
+          },
         );
       });
 
@@ -255,7 +255,7 @@ describe(
             for (let i = 0; i < innerContents.length; i++) {
               expect(innerContents[i].metadata).toBe(explicitMetadata);
             }
-          }
+          },
         );
       });
 
@@ -270,10 +270,10 @@ describe(
             for (let i = 0; i < innerContents.length; i++) {
               expect(innerContents[i].metadata).toBe(implicitMetadata);
             }
-          }
+          },
         );
       });
     });
   },
-  "WebGL"
+  "WebGL",
 );

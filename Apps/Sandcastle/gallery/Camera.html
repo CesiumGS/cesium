@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -21,10 +21,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
 
@@ -78,7 +75,7 @@
               destination: Cesium.Cartesian3.fromDegrees(
                 position.coords.longitude,
                 position.coords.latitude,
-                1000.0
+                1000.0,
               ),
             });
           }
@@ -95,12 +92,7 @@
           const east = -72.0;
           const north = 42.0;
 
-          const rectangle = Cesium.Rectangle.fromDegrees(
-            west,
-            south,
-            east,
-            north
-          );
+          const rectangle = Cesium.Rectangle.fromDegrees(west, south, east, north);
           viewer.camera.setView({
             destination: rectangle,
           });
@@ -123,12 +115,7 @@
           const south = 38.0;
           const east = -87.0;
           const north = 40.0;
-          const rectangle = Cesium.Rectangle.fromDegrees(
-            west,
-            south,
-            east,
-            north
-          );
+          const rectangle = Cesium.Rectangle.fromDegrees(west, south, east, north);
 
           viewer.camera.flyTo({
             destination: rectangle,
@@ -156,7 +143,7 @@
           camera.constrainedAxis = Cesium.Cartesian3.UNIT_Z;
           camera.lookAtTransform(
             transform,
-            new Cesium.Cartesian3(-120000.0, -120000.0, 120000.0)
+            new Cesium.Cartesian3(-120000.0, -120000.0, 120000.0),
           );
 
           // Show reference frame.  Not required.
@@ -164,7 +151,7 @@
             new Cesium.DebugModelMatrixPrimitive({
               modelMatrix: transform,
               length: 100000.0,
-            })
+            }),
           );
         }
 
@@ -173,11 +160,7 @@
 
           const camera = viewer.camera;
           camera.setView({
-            destination: Cesium.Cartesian3.fromDegrees(
-              -75.5847,
-              40.0397,
-              1000.0
-            ),
+            destination: Cesium.Cartesian3.fromDegrees(-75.5847, 40.0397, 1000.0),
             orientation: {
               heading: -Cesium.Math.PI_OVER_TWO,
               pitch: -Cesium.Math.PI_OVER_FOUR,
@@ -195,9 +178,7 @@
           if (Cesium.defined(icrfToFixed)) {
             const camera = viewer.camera;
             const offset = Cesium.Cartesian3.clone(camera.position);
-            const transform = Cesium.Matrix4.fromRotationTranslation(
-              icrfToFixed
-            );
+            const transform = Cesium.Matrix4.fromRotationTranslation(icrfToFixed);
             camera.lookAtTransform(transform, offset);
           }
         }
@@ -237,13 +218,9 @@
           Sandcastle.declare(cameraChanges);
 
           let i = 0;
-          removeChanged = viewer.camera.changed.addEventListener(function (
-            percentage
-          ) {
+          removeChanged = viewer.camera.changed.addEventListener(function (percentage) {
             ++i;
-            cameraChanged.innerText = `Camera Changed: ${i}, ${percentage.toFixed(
-              6
-            )}`;
+            cameraChanged.innerText = `Camera Changed: ${i}, ${percentage.toFixed(6)}`;
             cameraChanged.style.display = "block";
           });
         }
@@ -256,7 +233,7 @@
             destination: Cesium.Cartesian3.fromDegrees(
               -73.98580932617188,
               40.74843406689482,
-              363.34038727246224
+              363.34038727246224,
             ),
             complete: function () {
               setTimeout(function () {
@@ -264,7 +241,7 @@
                   destination: Cesium.Cartesian3.fromDegrees(
                     -73.98585975679403,
                     40.75759944127251,
-                    186.50838555841779
+                    186.50838555841779,
                   ),
                   orientation: {
                     heading: Cesium.Math.toRadians(200.0),
@@ -281,11 +258,7 @@
           const camera = scene.camera;
 
           const tokyoOptions = {
-            destination: Cesium.Cartesian3.fromDegrees(
-              139.8148,
-              35.7142,
-              20000.0
-            ),
+            destination: Cesium.Cartesian3.fromDegrees(139.8148, 35.7142, 20000.0),
             orientation: {
               heading: Cesium.Math.toRadians(15.0),
               pitch: Cesium.Math.toRadians(-60),
@@ -296,11 +269,7 @@
           };
 
           const laOptions = {
-            destination: Cesium.Cartesian3.fromDegrees(
-              -117.729,
-              34.457,
-              10000.0
-            ),
+            destination: Cesium.Cartesian3.fromDegrees(-117.729, 34.457, 10000.0),
             duration: 5,
             orientation: {
               heading: Cesium.Math.toRadians(-15.0),

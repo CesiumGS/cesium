@@ -20,12 +20,12 @@ describe("DataSources/GroundGeometryUpdater", function () {
     const height = expected;
     let heightReference = HeightReference.NONE;
     expect(
-      GroundGeometryUpdater.getGeometryHeight(height, heightReference)
+      GroundGeometryUpdater.getGeometryHeight(height, heightReference),
     ).toEqual(expected);
 
     heightReference = HeightReference.RELATIVE_TO_GROUND;
     expect(
-      GroundGeometryUpdater.getGeometryHeight(height, heightReference)
+      GroundGeometryUpdater.getGeometryHeight(height, heightReference),
     ).toEqual(expected);
   });
 
@@ -33,7 +33,7 @@ describe("DataSources/GroundGeometryUpdater", function () {
     const height = 50;
     const heightReference = HeightReference.CLAMP_TO_GROUND;
     expect(
-      GroundGeometryUpdater.getGeometryHeight(height, heightReference)
+      GroundGeometryUpdater.getGeometryHeight(height, heightReference),
     ).toEqual(0);
   });
 
@@ -42,12 +42,12 @@ describe("DataSources/GroundGeometryUpdater", function () {
     const height = expected;
     let heightReference = HeightReference.NONE;
     expect(
-      GroundGeometryUpdater.getGeometryExtrudedHeight(height, heightReference)
+      GroundGeometryUpdater.getGeometryExtrudedHeight(height, heightReference),
     ).toEqual(expected);
 
     heightReference = HeightReference.RELATIVE_TO_GROUND;
     expect(
-      GroundGeometryUpdater.getGeometryExtrudedHeight(height, heightReference)
+      GroundGeometryUpdater.getGeometryExtrudedHeight(height, heightReference),
     ).toEqual(expected);
   });
 
@@ -55,7 +55,7 @@ describe("DataSources/GroundGeometryUpdater", function () {
     const height = 50;
     const heightReference = HeightReference.CLAMP_TO_GROUND;
     expect(
-      GroundGeometryUpdater.getGeometryExtrudedHeight(height, heightReference)
+      GroundGeometryUpdater.getGeometryExtrudedHeight(height, heightReference),
     ).toEqual(GroundGeometryUpdater.CLAMP_TO_GROUND);
   });
 
@@ -68,7 +68,7 @@ describe("DataSources/GroundGeometryUpdater", function () {
       height,
       heightReference,
       extrudedHeight,
-      extrudedHeightReference
+      extrudedHeightReference,
     );
     expect(result).toBeUndefined();
 
@@ -78,7 +78,7 @@ describe("DataSources/GroundGeometryUpdater", function () {
       height,
       heightReference,
       extrudedHeight,
-      extrudedHeightReference
+      extrudedHeightReference,
     );
     expect(result).toBeUndefined();
 
@@ -88,7 +88,7 @@ describe("DataSources/GroundGeometryUpdater", function () {
       height,
       heightReference,
       extrudedHeight,
-      extrudedHeightReference
+      extrudedHeightReference,
     );
     expect(result).toBeUndefined();
 
@@ -98,7 +98,7 @@ describe("DataSources/GroundGeometryUpdater", function () {
       height,
       heightReference,
       extrudedHeight,
-      extrudedHeightReference
+      extrudedHeightReference,
     );
     expect(result).toBe(GeometryOffsetAttribute.TOP);
 
@@ -108,7 +108,7 @@ describe("DataSources/GroundGeometryUpdater", function () {
       height,
       heightReference,
       extrudedHeight,
-      extrudedHeightReference
+      extrudedHeightReference,
     );
     expect(result).toBe(GeometryOffsetAttribute.TOP);
 
@@ -118,7 +118,7 @@ describe("DataSources/GroundGeometryUpdater", function () {
       height,
       heightReference,
       extrudedHeight,
-      extrudedHeightReference
+      extrudedHeightReference,
     );
     expect(result).toBe(GeometryOffsetAttribute.TOP);
 
@@ -128,7 +128,7 @@ describe("DataSources/GroundGeometryUpdater", function () {
       height,
       heightReference,
       extrudedHeight,
-      extrudedHeightReference
+      extrudedHeightReference,
     );
     expect(result).toBe(GeometryOffsetAttribute.ALL);
 
@@ -138,7 +138,7 @@ describe("DataSources/GroundGeometryUpdater", function () {
       height,
       heightReference,
       extrudedHeight,
-      extrudedHeightReference
+      extrudedHeightReference,
     );
     expect(result).toBe(GeometryOffsetAttribute.TOP);
 
@@ -148,7 +148,7 @@ describe("DataSources/GroundGeometryUpdater", function () {
       height,
       heightReference,
       extrudedHeight,
-      extrudedHeightReference
+      extrudedHeightReference,
     );
     expect(result).toBe(GeometryOffsetAttribute.TOP);
 
@@ -158,7 +158,7 @@ describe("DataSources/GroundGeometryUpdater", function () {
       height,
       heightReference,
       extrudedHeight,
-      extrudedHeightReference
+      extrudedHeightReference,
     );
     expect(result).toBe(GeometryOffsetAttribute.ALL);
 
@@ -166,7 +166,7 @@ describe("DataSources/GroundGeometryUpdater", function () {
       undefined,
       heightReference,
       undefined,
-      extrudedHeightReference
+      extrudedHeightReference,
     );
     expect(result).toBeUndefined();
   });

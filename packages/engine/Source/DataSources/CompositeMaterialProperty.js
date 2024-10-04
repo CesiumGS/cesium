@@ -16,7 +16,7 @@ function CompositeMaterialProperty() {
   this._composite = new CompositeProperty();
   this._composite.definitionChanged.addEventListener(
     CompositeMaterialProperty.prototype._raiseDefinitionChanged,
-    this
+    this,
   );
 }
 
@@ -74,9 +74,8 @@ CompositeMaterialProperty.prototype.getType = function (time) {
   }
   //>>includeEnd('debug');
 
-  const innerProperty = this._composite._intervals.findDataForIntervalContainingDate(
-    time
-  );
+  const innerProperty =
+    this._composite._intervals.findDataForIntervalContainingDate(time);
   if (defined(innerProperty)) {
     return innerProperty.getType(time);
   }
@@ -97,9 +96,8 @@ CompositeMaterialProperty.prototype.getValue = function (time, result) {
     time = JulianDate.now(timeScratch);
   }
 
-  const innerProperty = this._composite._intervals.findDataForIntervalContainingDate(
-    time
-  );
+  const innerProperty =
+    this._composite._intervals.findDataForIntervalContainingDate(time);
   if (defined(innerProperty)) {
     return innerProperty.getValue(time, result);
   }

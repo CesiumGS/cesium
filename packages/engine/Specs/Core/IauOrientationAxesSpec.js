@@ -27,7 +27,7 @@ describe("Core/IauOrientationAxes", function () {
       0.31035675134719942,
       -0.022608671404182448,
       -0.41183090094261243,
-      0.91097977859342938
+      0.91097977859342938,
     );
 
     const mtx = axes.evaluate(date);

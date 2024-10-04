@@ -87,7 +87,7 @@ describe("Core/TimeInterval", function () {
         isStopIncluded: isStopIncluded,
         data: data,
       },
-      expectedResult
+      expectedResult,
     );
 
     expect(expectedResult).toBe(interval);
@@ -112,7 +112,7 @@ describe("Core/TimeInterval", function () {
       stop: JulianDate.fromIso8601(isoDate2),
     });
     expect(TimeInterval.toIso8601(interval)).toEqual(
-      "0950-01-02T03:04:05Z/0950-01-03T03:04:05Z"
+      "0950-01-02T03:04:05Z/0950-01-03T03:04:05Z",
     );
   });
 
@@ -124,7 +124,7 @@ describe("Core/TimeInterval", function () {
     expect(
       TimeInterval.fromIso8601({
         iso8601: TimeInterval.toIso8601(interval),
-      })
+      }),
     ).toEqual(interval);
   });
 
@@ -136,10 +136,10 @@ describe("Core/TimeInterval", function () {
       stop: JulianDate.fromIso8601(isoDate2),
     });
     expect(TimeInterval.toIso8601(interval, 0)).toEqual(
-      "0950-01-02T03:04:05Z/0950-01-03T03:04:05Z"
+      "0950-01-02T03:04:05Z/0950-01-03T03:04:05Z",
     );
     expect(TimeInterval.toIso8601(interval, 7)).toEqual(
-      "0950-01-02T03:04:05.0123450Z/0950-01-03T03:04:05.0123450Z"
+      "0950-01-02T03:04:05.0123450Z/0950-01-03T03:04:05.0123450Z",
     );
   });
 
@@ -223,16 +223,16 @@ describe("Core/TimeInterval", function () {
       stop: new JulianDate(2451546),
     });
     expect(TimeInterval.contains(interval, new JulianDate(2451545.5))).toEqual(
-      true
+      true,
     );
     expect(TimeInterval.contains(interval, new JulianDate(2451546.5))).toEqual(
-      false
+      false,
     );
   });
 
   it("contains works for an empty interval.", function () {
     expect(TimeInterval.contains(TimeInterval.EMPTY, new JulianDate())).toEqual(
-      false
+      false,
     );
   });
 
@@ -244,10 +244,10 @@ describe("Core/TimeInterval", function () {
       isStopIncluded: true,
     });
     expect(TimeInterval.contains(interval, new JulianDate(2451545))).toEqual(
-      true
+      true,
     );
     expect(TimeInterval.contains(interval, new JulianDate(2451546))).toEqual(
-      true
+      true,
     );
   });
 
@@ -259,10 +259,10 @@ describe("Core/TimeInterval", function () {
       isStopIncluded: false,
     });
     expect(TimeInterval.contains(interval, new JulianDate(2451545))).toEqual(
-      false
+      false,
     );
     expect(TimeInterval.contains(interval, new JulianDate(2451546))).toEqual(
-      false
+      false,
     );
   });
 
@@ -571,12 +571,12 @@ describe("Core/TimeInterval", function () {
       const intersect1 = TimeInterval.intersect(
         first,
         second,
-        new TimeInterval()
+        new TimeInterval(),
       );
       const intersect2 = TimeInterval.intersect(
         second,
         first,
-        new TimeInterval()
+        new TimeInterval(),
       );
       expect(intersect1).toEqual(intersect2);
       expect(intersect2).toEqual(intersect1);
@@ -590,7 +590,7 @@ describe("Core/TimeInterval", function () {
       stop: new JulianDate(2),
     });
     expect(
-      TimeInterval.intersect(interval, undefined, new TimeInterval())
+      TimeInterval.intersect(interval, undefined, new TimeInterval()),
     ).toEqual(TimeInterval.EMPTY);
   });
 
@@ -611,7 +611,7 @@ describe("Core/TimeInterval", function () {
       new TimeInterval(),
       function (left, right) {
         return left + right;
-      }
+      },
     );
     expect(twoToThree.start).toEqual(twoToFour.start);
     expect(twoToThree.stop).toEqual(oneToThree.stop);

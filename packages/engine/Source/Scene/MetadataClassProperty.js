@@ -81,7 +81,7 @@ function MetadataClassProperty(options) {
   this._isArray = defaultValue(options.isArray, false);
   this._isVariableLengthArray = defaultValue(
     options.isVariableLengthArray,
-    false
+    false,
   );
   this._arrayLength = options.arrayLength;
 
@@ -668,7 +668,7 @@ function parseType(property, enums) {
 
   //>>includeStart('debug', pragmas.debug);
   throw new DeveloperError(
-    `unknown metadata type {type: ${type}, componentType: ${componentType})`
+    `unknown metadata type {type: ${type}, componentType: ${componentType})`,
   );
   //>>includeEnd('debug');
 }
@@ -702,7 +702,7 @@ MetadataClassProperty.prototype.normalize = function (value) {
   return normalizeInPlace(
     value,
     this._valueType,
-    MetadataComponentType.normalize
+    MetadataComponentType.normalize,
   );
 };
 
@@ -735,7 +735,7 @@ MetadataClassProperty.prototype.unnormalize = function (value) {
   return normalizeInPlace(
     value,
     this._valueType,
-    MetadataComponentType.unnormalize
+    MetadataComponentType.unnormalize,
   );
 };
 
@@ -753,7 +753,7 @@ MetadataClassProperty.prototype.applyValueTransform = function (value) {
     value,
     this._offset,
     this._scale,
-    MetadataComponentType.applyValueTransform
+    MetadataComponentType.applyValueTransform,
   );
 };
 
@@ -771,7 +771,7 @@ MetadataClassProperty.prototype.unapplyValueTransform = function (value) {
     value,
     this._offset,
     this._scale,
-    MetadataComponentType.unapplyValueTransform
+    MetadataComponentType.unapplyValueTransform,
   );
 };
 
@@ -780,7 +780,7 @@ MetadataClassProperty.prototype.unapplyValueTransform = function (value) {
  */
 MetadataClassProperty.prototype.expandConstant = function (
   constant,
-  enableNestedArrays
+  enableNestedArrays,
 ) {
   enableNestedArrays = defaultValue(enableNestedArrays, false);
   const isArray = this._isArray;
@@ -871,7 +871,7 @@ function arrayEquals(left, right) {
  */
 MetadataClassProperty.prototype.unpackVectorAndMatrixTypes = function (
   value,
-  enableNestedArrays
+  enableNestedArrays,
 ) {
   enableNestedArrays = defaultValue(enableNestedArrays, false);
   const MathType = MetadataType.getMathType(this._type);
@@ -910,7 +910,7 @@ MetadataClassProperty.prototype.unpackVectorAndMatrixTypes = function (
  */
 MetadataClassProperty.prototype.packVectorAndMatrixTypes = function (
   value,
-  enableNestedArrays
+  enableNestedArrays,
 ) {
   enableNestedArrays = defaultValue(enableNestedArrays, false);
   const MathType = MetadataType.getMathType(this._type);
@@ -1145,7 +1145,7 @@ MetadataClassProperty.valueTransformInPlace = function (
   values,
   offsets,
   scales,
-  transformationFunction
+  transformationFunction,
 ) {
   if (!Array.isArray(values)) {
     // transform a single value
@@ -1158,7 +1158,7 @@ MetadataClassProperty.valueTransformInPlace = function (
       values[i],
       offsets[i],
       scales[i],
-      transformationFunction
+      transformationFunction,
     );
   }
 

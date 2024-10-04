@@ -16,8 +16,8 @@ DynamicGeometryBatch.prototype.add = function (time, updater) {
     updater.id,
     updater.createDynamicUpdater(
       this._primitives,
-      this._orderedGroundPrimitives
-    )
+      this._orderedGroundPrimitives,
+    ),
   );
 };
 

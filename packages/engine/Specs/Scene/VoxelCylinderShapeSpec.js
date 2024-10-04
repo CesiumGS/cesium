@@ -31,7 +31,7 @@ describe("Scene/VoxelCylinderShape", function () {
     const modelMatrix = Matrix4.fromTranslationQuaternionRotationScale(
       translation,
       rotation,
-      scale
+      scale,
     );
     const minBounds = VoxelCylinderShape.DefaultMinBounds;
     const maxBounds = VoxelCylinderShape.DefaultMaxBounds;
@@ -50,19 +50,19 @@ describe("Scene/VoxelCylinderShape", function () {
         0.0,
         0.0,
         scale.z,
-      ])
+      ]),
     );
     const expectedBoundingSphere = new BoundingSphere(
       translation,
-      Cartesian3.magnitude(scale)
+      Cartesian3.magnitude(scale),
     );
 
     expect(shape.orientedBoundingBox.center).toEqual(
-      expectedOrientedBoundingBox.center
+      expectedOrientedBoundingBox.center,
     );
     expect(shape.orientedBoundingBox.halfAxes).toEqualEpsilon(
       expectedOrientedBoundingBox.halfAxes,
-      CesiumMath.EPSILON12
+      CesiumMath.EPSILON12,
     );
     expect(shape.boundingSphere).toEqual(expectedBoundingSphere);
     expect(shape.boundTransform).toEqual(modelMatrix);
@@ -79,7 +79,7 @@ describe("Scene/VoxelCylinderShape", function () {
       translation,
       rotation,
       scale,
-      new Matrix4()
+      new Matrix4(),
     );
 
     // Half revolution
@@ -104,50 +104,50 @@ describe("Scene/VoxelCylinderShape", function () {
     const expectedScale = new Cartesian3(
       0.5 * (expectedMaxY - expectedMinY),
       0.5 * (expectedMaxX - expectedMinX),
-      0.5 * (expectedMaxZ - expectedMinZ)
+      0.5 * (expectedMaxZ - expectedMinZ),
     );
     const expectedTranslation = new Cartesian3(
       0.5 * (expectedMaxX + expectedMinX),
       0.5 * (expectedMaxY + expectedMinY),
-      0.5 * (expectedMaxZ + expectedMinZ)
+      0.5 * (expectedMaxZ + expectedMinZ),
     );
 
     const expectedRotation = Matrix3.fromRotationZ(-CesiumMath.PI_OVER_TWO);
     const expectedHalfAxes = Matrix3.multiplyByScale(
       expectedRotation,
       expectedScale,
-      new Matrix3()
+      new Matrix3(),
     );
 
     const expectedOrientedBoundingBox = new OrientedBoundingBox(
       expectedTranslation,
-      expectedHalfAxes
+      expectedHalfAxes,
     );
     const expectedBoundingSphere = new BoundingSphere(
       expectedTranslation,
-      Cartesian3.magnitude(expectedScale)
+      Cartesian3.magnitude(expectedScale),
     );
     const expectedBoundTransform = Matrix4.setTranslation(
       Matrix4.fromRotation(expectedHalfAxes),
       expectedTranslation,
-      new Matrix4()
+      new Matrix4(),
     );
 
     expect(shape.orientedBoundingBox.center).toEqualEpsilon(
       expectedOrientedBoundingBox.center,
-      CesiumMath.EPSILON12
+      CesiumMath.EPSILON12,
     );
     expect(shape.orientedBoundingBox.halfAxes).toEqualEpsilon(
       expectedOrientedBoundingBox.halfAxes,
-      CesiumMath.EPSILON12
+      CesiumMath.EPSILON12,
     );
     expect(shape.boundingSphere).toEqualEpsilon(
       expectedBoundingSphere,
-      CesiumMath.EPSILON12
+      CesiumMath.EPSILON12,
     );
     expect(shape.boundTransform).toEqualEpsilon(
       expectedBoundTransform,
-      CesiumMath.EPSILON12
+      CesiumMath.EPSILON12,
     );
     expect(shape.shapeTransform).toEqual(modelMatrix);
     expect(visible).toBeTrue();
@@ -162,7 +162,7 @@ describe("Scene/VoxelCylinderShape", function () {
       translation,
       rotation,
       scale,
-      new Matrix4()
+      new Matrix4(),
     );
 
     // Half revolution around 180th meridian
@@ -173,12 +173,12 @@ describe("Scene/VoxelCylinderShape", function () {
     const minBounds = new Cartesian3(
       defaultMinBounds.x,
       defaultMinBounds.y,
-      minAngle
+      minAngle,
     );
     const maxBounds = new Cartesian3(
       defaultMaxBounds.x,
       defaultMaxBounds.y,
-      maxAngle
+      maxAngle,
     );
     const visible = shape.update(modelMatrix, minBounds, maxBounds);
 
@@ -188,38 +188,38 @@ describe("Scene/VoxelCylinderShape", function () {
     const expectedHalfAxes = Matrix3.multiplyByScale(
       expectedRotation,
       expectedScale,
-      new Matrix3()
+      new Matrix3(),
     );
 
     const expectedOrientedBoundingBox = new OrientedBoundingBox(
       expectedTranslation,
-      expectedHalfAxes
+      expectedHalfAxes,
     );
     const expectedBoundingSphere = new BoundingSphere(
       expectedTranslation,
-      Cartesian3.magnitude(expectedScale)
+      Cartesian3.magnitude(expectedScale),
     );
     const expectedBoundTransform = Matrix4.setTranslation(
       Matrix4.fromRotation(expectedHalfAxes),
       expectedTranslation,
-      new Matrix4()
+      new Matrix4(),
     );
 
     expect(shape.orientedBoundingBox.center).toEqualEpsilon(
       expectedOrientedBoundingBox.center,
-      CesiumMath.EPSILON12
+      CesiumMath.EPSILON12,
     );
     expect(shape.orientedBoundingBox.halfAxes).toEqualEpsilon(
       expectedOrientedBoundingBox.halfAxes,
-      CesiumMath.EPSILON12
+      CesiumMath.EPSILON12,
     );
     expect(shape.boundingSphere).toEqualEpsilon(
       expectedBoundingSphere,
-      CesiumMath.EPSILON12
+      CesiumMath.EPSILON12,
     );
     expect(shape.boundTransform).toEqualEpsilon(
       expectedBoundTransform,
-      CesiumMath.EPSILON12
+      CesiumMath.EPSILON12,
     );
     expect(shape.shapeTransform).toEqual(modelMatrix);
     expect(visible).toBeTrue();
@@ -235,7 +235,7 @@ describe("Scene/VoxelCylinderShape", function () {
       translation,
       rotation,
       scale,
-      new Matrix4()
+      new Matrix4(),
     );
 
     // Half revolution
@@ -254,7 +254,7 @@ describe("Scene/VoxelCylinderShape", function () {
     expect(result.center.z).toEqual(3.0);
     expect(result.halfAxes).toEqualEpsilon(
       new Matrix3(0, 1.5, 0, -1.125, 0, 0, 0, 0, 2),
-      CesiumMath.EPSILON12
+      CesiumMath.EPSILON12,
     );
   });
 
@@ -266,7 +266,7 @@ describe("Scene/VoxelCylinderShape", function () {
     const modelMatrix = Matrix4.fromTranslationQuaternionRotationScale(
       translation,
       rotation,
-      scale
+      scale,
     );
     const minBounds = VoxelCylinderShape.DefaultMinBounds;
     const maxBounds = VoxelCylinderShape.DefaultMaxBounds;
@@ -298,7 +298,7 @@ describe("Scene/VoxelCylinderShape", function () {
     const modelMatrix = Matrix4.fromTranslationQuaternionRotationScale(
       translation,
       rotation,
-      scale
+      scale,
     );
     const minBounds = VoxelCylinderShape.DefaultMinBounds;
     const maxBounds = VoxelCylinderShape.DefaultMaxBounds;
@@ -317,7 +317,7 @@ describe("Scene/VoxelCylinderShape", function () {
       tileZ,
       undefined,
       shape,
-      paddedDimensions
+      paddedDimensions,
     );
 
     const tileUv = new Cartesian3(0.5, 0.5, 0.5);
@@ -325,18 +325,18 @@ describe("Scene/VoxelCylinderShape", function () {
       spatialNode,
       tileDimensions,
       tileUv,
-      new OrientedBoundingBox()
+      new OrientedBoundingBox(),
     );
     const centerAngle = Math.PI / 8.0;
     const centerRadius = 0.5434699;
     const expectedCenter = new Cartesian3(
       centerRadius * Math.cos(centerAngle),
       centerRadius * Math.sin(centerAngle),
-      0.125
+      0.125,
     );
     expect(sampleBoundingBox.center).toEqualEpsilon(
       expectedCenter,
-      CesiumMath.EPSILON6
+      CesiumMath.EPSILON6,
     );
     const expectedHalfAxes = new Matrix3(
       0.075324,
@@ -347,11 +347,11 @@ describe("Scene/VoxelCylinderShape", function () {
       0.0,
       0.0,
       0.0,
-      0.125
+      0.125,
     );
     expect(sampleBoundingBox.halfAxes).toEqualEpsilon(
       expectedHalfAxes,
-      CesiumMath.EPSILON6
+      CesiumMath.EPSILON6,
     );
   });
 
@@ -363,7 +363,7 @@ describe("Scene/VoxelCylinderShape", function () {
     const modelMatrix = Matrix4.fromTranslationQuaternionRotationScale(
       translation,
       rotation,
-      scale
+      scale,
     );
     const minBounds = VoxelCylinderShape.DefaultMinBounds;
     const maxBounds = VoxelCylinderShape.DefaultMaxBounds;
@@ -382,7 +382,7 @@ describe("Scene/VoxelCylinderShape", function () {
       tileZ,
       undefined,
       shape,
-      paddedDimensions
+      paddedDimensions,
     );
     const tileUv = new Cartesian3(0.5, 0.5, 0.5);
 
@@ -391,7 +391,7 @@ describe("Scene/VoxelCylinderShape", function () {
         undefined,
         tileDimensions,
         tileUv,
-        new OrientedBoundingBox()
+        new OrientedBoundingBox(),
       );
     }).toThrowDeveloperError();
     expect(function () {
@@ -399,7 +399,7 @@ describe("Scene/VoxelCylinderShape", function () {
         spatialNode,
         undefined,
         tileUv,
-        new OrientedBoundingBox()
+        new OrientedBoundingBox(),
       );
     }).toThrowDeveloperError();
     expect(function () {
@@ -407,7 +407,7 @@ describe("Scene/VoxelCylinderShape", function () {
         spatialNode,
         tileDimensions,
         undefined,
-        new OrientedBoundingBox()
+        new OrientedBoundingBox(),
       );
     }).toThrowDeveloperError();
     expect(function () {
@@ -415,7 +415,7 @@ describe("Scene/VoxelCylinderShape", function () {
         spatialNode,
         tileDimensions,
         tileUv,
-        undefined
+        undefined,
       );
     }).toThrowDeveloperError();
   });

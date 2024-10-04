@@ -64,7 +64,7 @@ describe("DataSources/EllipseGraphics", function () {
     expect(ellipse.rotation.getValue()).toEqual(options.rotation);
     expect(ellipse.stRotation.getValue()).toEqual(options.stRotation);
     expect(ellipse.numberOfVerticalLines.getValue()).toEqual(
-      options.numberOfVerticalLines
+      options.numberOfVerticalLines,
     );
     expect(ellipse.fill.getValue()).toEqual(options.fill);
     expect(ellipse.outline.getValue()).toEqual(options.outline);
@@ -72,10 +72,10 @@ describe("DataSources/EllipseGraphics", function () {
     expect(ellipse.outlineWidth.getValue()).toEqual(options.outlineWidth);
     expect(ellipse.shadows.getValue()).toEqual(options.shadows);
     expect(ellipse.distanceDisplayCondition.getValue()).toEqual(
-      options.distanceDisplayCondition
+      options.distanceDisplayCondition,
     );
     expect(ellipse.classificationType.getValue()).toEqual(
-      options.classificationType
+      options.classificationType,
     );
     expect(ellipse.zIndex.getValue()).toEqual(options.zIndex);
   });
@@ -98,10 +98,10 @@ describe("DataSources/EllipseGraphics", function () {
     source.numberOfVerticalLines = new ConstantProperty();
     source.shadows = new ConstantProperty(ShadowMode.ENABLED);
     source.distanceDisplayCondition = new ConstantProperty(
-      new DistanceDisplayCondition(10.0, 100.0)
+      new DistanceDisplayCondition(10.0, 100.0),
     );
     source.classificationType = new ConstantProperty(
-      ClassificationType.TERRAIN
+      ClassificationType.TERRAIN,
     );
     source.zIndex = new ConstantProperty(3);
 
@@ -124,7 +124,7 @@ describe("DataSources/EllipseGraphics", function () {
     expect(target.numberOfVerticalLines).toBe(source.numberOfVerticalLines);
     expect(target.shadows).toBe(source.shadows);
     expect(target.distanceDisplayCondition).toBe(
-      source.distanceDisplayCondition
+      source.distanceDisplayCondition,
     );
     expect(target.classificationType).toBe(source.classificationType);
     expect(target.zIndex).toBe(source.zIndex);
@@ -232,7 +232,7 @@ describe("DataSources/EllipseGraphics", function () {
     expect(result.numberOfVerticalLines).toBe(source.numberOfVerticalLines);
     expect(result.shadows).toBe(source.shadows);
     expect(result.distanceDisplayCondition).toBe(
-      source.distanceDisplayCondition
+      source.distanceDisplayCondition,
     );
     expect(result.classificationType).toBe(source.classificationType);
     expect(result.zIndex).toBe(source.zIndex);
@@ -265,19 +265,19 @@ describe("DataSources/EllipseGraphics", function () {
       property,
       "shadows",
       ShadowMode.ENABLED,
-      ShadowMode.DISABLED
+      ShadowMode.DISABLED,
     );
     testDefinitionChanged(
       property,
       "distanceDisplayCondition",
       new DistanceDisplayCondition(),
-      new DistanceDisplayCondition(10.0, 100.0)
+      new DistanceDisplayCondition(10.0, 100.0),
     );
     testDefinitionChanged(
       property,
       "classificationType",
       ClassificationType.TERRAIN,
-      ClassificationType.BOTH
+      ClassificationType.BOTH,
     );
     testDefinitionChanged(property, "zIndex", 4, 0);
   });

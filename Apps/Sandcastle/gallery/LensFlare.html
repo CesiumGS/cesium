@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+﻿<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -8,10 +8,7 @@
       content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
     />
     <meta name="description" content="Lens Flare." />
-    <meta
-      name="cesium-sandcastle-labels"
-      content="Showcases, Post Processing"
-    />
+    <meta name="cesium-sandcastle-labels" content="Showcases, Post Processing" />
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script
@@ -21,10 +18,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -120,14 +114,12 @@
         Cesium.knockout.applyBindings(viewModel, toolbar);
         for (const name in viewModel) {
           if (viewModel.hasOwnProperty(name)) {
-            Cesium.knockout
-              .getObservable(viewModel, name)
-              .subscribe(updatePostProcess);
+            Cesium.knockout.getObservable(viewModel, name).subscribe(updatePostProcess);
           }
         }
 
         const lensFlare = viewer.scene.postProcessStages.add(
-          Cesium.PostProcessStageLibrary.createLensFlareStage()
+          Cesium.PostProcessStageLibrary.createLensFlareStage(),
         );
 
         function updatePostProcess() {
@@ -145,28 +137,25 @@
         camera.position = new Cesium.Cartesian3(
           40010447.97500168,
           56238683.46406788,
-          20776576.752223067
+          20776576.752223067,
         );
         camera.direction = new Cesium.Cartesian3(
           -0.5549701431494752,
           -0.7801872010801355,
-          -0.2886452346452218
+          -0.2886452346452218,
         );
         camera.up = new Cesium.Cartesian3(
           -0.3016252360948521,
           -0.13464820558887716,
-          0.9438707950150912
+          0.9438707950150912,
         );
         camera.right = Cesium.Cartesian3.cross(
           camera.direction,
           camera.up,
-          new Cesium.Cartesian3()
+          new Cesium.Cartesian3(),
         );
 
-        viewer.clock.currentTime = new Cesium.JulianDate(
-          2458047,
-          27399.860215000022
-        );
+        viewer.clock.currentTime = new Cesium.JulianDate(2458047, 27399.860215000022);
         //Sandcastle_End
       };
       if (typeof Cesium !== "undefined") {

@@ -14,7 +14,7 @@ const discardRegex = /\bdiscard\b/;
 function getDepthOnlyShaderProgram(context, shaderProgram) {
   let shader = context.shaderCache.getDerivedShaderProgram(
     shaderProgram,
-    "depthOnly"
+    "depthOnly",
   );
   if (!defined(shader)) {
     const attributeLocations = shaderProgram._attributeLocations;
@@ -71,7 +71,7 @@ function getDepthOnlyShaderProgram(context, shaderProgram) {
         vertexShaderSource: shaderProgram.vertexShaderSource,
         fragmentShaderSource: fs,
         attributeLocations: attributeLocations,
-      }
+      },
     );
   }
 
@@ -102,7 +102,7 @@ DerivedCommand.createDepthOnlyDerivedCommand = function (
   scene,
   command,
   context,
-  result
+  result,
 ) {
   // For a depth only pass, we bind a framebuffer with only a depth attachment (no color attachments),
   // do not write color, and write depth. If the fragment shader doesn't modify the fragment depth
@@ -122,17 +122,17 @@ DerivedCommand.createDepthOnlyDerivedCommand = function (
 
   result.depthOnlyCommand = DrawCommand.shallowClone(
     command,
-    result.depthOnlyCommand
+    result.depthOnlyCommand,
   );
 
   if (!defined(shader) || result.shaderProgramId !== command.shaderProgram.id) {
     result.depthOnlyCommand.shaderProgram = getDepthOnlyShaderProgram(
       context,
-      command.shaderProgram
+      command.shaderProgram,
     );
     result.depthOnlyCommand.renderState = getDepthOnlyRenderState(
       scene,
-      command.renderState
+      command.renderState,
     );
     result.shaderProgramId = command.shaderProgram.id;
   } else {
@@ -156,7 +156,7 @@ function getLogDepthShaderProgram(context, shaderProgram) {
 
   let shader = context.shaderCache.getDerivedShaderProgram(
     shaderProgram,
-    "logDepth"
+    "logDepth",
   );
   if (!defined(shader)) {
     const attributeLocations = shaderProgram._attributeLocations;
@@ -234,7 +234,7 @@ function getLogDepthShaderProgram(context, shaderProgram) {
         vertexShaderSource: vs,
         fragmentShaderSource: fs,
         attributeLocations: attributeLocations,
-      }
+      },
     );
   }
 
@@ -256,7 +256,7 @@ DerivedCommand.createLogDepthCommand = function (command, context, result) {
   if (!defined(shader) || result.shaderProgramId !== command.shaderProgram.id) {
     result.command.shaderProgram = getLogDepthShaderProgram(
       context,
-      command.shaderProgram
+      command.shaderProgram,
     );
     result.shaderProgramId = command.shaderProgram.id;
   } else {
@@ -269,7 +269,7 @@ DerivedCommand.createLogDepthCommand = function (command, context, result) {
 function getPickShaderProgram(context, shaderProgram, pickId) {
   let shader = context.shaderCache.getDerivedShaderProgram(
     shaderProgram,
-    "pick"
+    "pick",
   );
   if (!defined(shader)) {
     const attributeLocations = shaderProgram._attributeLocations;
@@ -279,18 +279,18 @@ function getPickShaderProgram(context, shaderProgram, pickId) {
     const length = sources.length;
 
     const hasFragData = sources.some((source) =>
-      source.includes("out_FragData")
+      source.includes("out_FragData"),
     );
     const outputColorVariable = hasFragData
       ? "out_FragData_0"
       : "out_FragColor";
-    const newMain = `void main () 
-{ 
-    czm_non_pick_main(); 
-    if (${outputColorVariable}.a == 0.0) { 
-        discard; 
-    } 
-    ${outputColorVariable} = ${pickId}; 
+    const newMain = `void main ()
+{
+    czm_non_pick_main();
+    if (${outputColorVariable}.a == 0.0) {
+        discard;
+    }
+    ${outputColorVariable} = ${pickId};
 } `;
 
     const newSources = new Array(length + 1);
@@ -309,7 +309,7 @@ function getPickShaderProgram(context, shaderProgram, pickId) {
         vertexShaderSource: shaderProgram.vertexShaderSource,
         fragmentShaderSource: fs,
         attributeLocations: attributeLocations,
-      }
+      },
     );
   }
 
@@ -341,7 +341,7 @@ DerivedCommand.createPickDerivedCommand = function (
   scene,
   command,
   context,
-  result
+  result,
 ) {
   if (!defined(result)) {
     result = {};
@@ -360,11 +360,11 @@ DerivedCommand.createPickDerivedCommand = function (
     result.pickCommand.shaderProgram = getPickShaderProgram(
       context,
       command.shaderProgram,
-      command.pickId
+      command.pickId,
     );
     result.pickCommand.renderState = getPickRenderState(
       scene,
-      command.renderState
+      command.renderState,
     );
     result.shaderProgramId = command.shaderProgram.id;
   } else {
@@ -378,7 +378,7 @@ DerivedCommand.createPickDerivedCommand = function (
 function getHdrShaderProgram(context, shaderProgram) {
   let shader = context.shaderCache.getDerivedShaderProgram(
     shaderProgram,
-    "HDR"
+    "HDR",
   );
   if (!defined(shader)) {
     const attributeLocations = shaderProgram._attributeLocations;
@@ -397,7 +397,7 @@ function getHdrShaderProgram(context, shaderProgram) {
         vertexShaderSource: vs,
         fragmentShaderSource: fs,
         attributeLocations: attributeLocations,
-      }
+      },
     );
   }
 
@@ -419,7 +419,7 @@ DerivedCommand.createHdrCommand = function (command, context, result) {
   if (!defined(shader) || result.shaderProgramId !== command.shaderProgram.id) {
     result.command.shaderProgram = getHdrShaderProgram(
       context,
-      command.shaderProgram
+      command.shaderProgram,
     );
     result.shaderProgramId = command.shaderProgram.id;
   } else {
