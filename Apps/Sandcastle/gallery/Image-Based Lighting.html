@@ -127,6 +127,9 @@
             ibl.sphericalHarmonicCoefficients = coefficients;
             ibl.specularEnvironmentMaps = environmentMapURL;
 
+            model.environmentMapManager.groundColor =
+              Cesium.Color.fromCssColorString("#292817");
+
             Sandcastle.addToggleButton(
               "Use procedural environment lighting",
               false,

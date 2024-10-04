@@ -146,8 +146,8 @@ function DynamicEnvironmentMapManager(options) {
    * The intensity of the scattered light emitted from the atmosphere. This should be adjusted relative to the value of {@link Scene.light} intensity.
    * @type {number}
    * @default 2.0
-   * @see {DirectionalLight.intensity}
-   * @see {SunLight.intensity}
+   * @see DirectionalLight.intensity
+   * @see SunLight.intensity
    */
   this.atmosphereScatteringIntensity = defaultValue(
     options.atmosphereScatteringIntensity,
