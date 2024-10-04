@@ -211,6 +211,9 @@ describe(
 
       options = {
         cullRequestsWhileMoving: false,
+        environmentMapOptions: {
+          enabled: scene.highDynamicRangeSupported,
+        },
       };
     });
 
@@ -5785,7 +5788,10 @@ describe(
 
         viewNothing();
 
-        const tileset = await Cesium3DTileset.fromUrl(multipleContentsUrl);
+        const tileset = await Cesium3DTileset.fromUrl(
+          multipleContentsUrl,
+          options,
+        );
         scene.primitives.add(tileset);
         viewAllTiles();
         scene.renderForSpecs();
@@ -5964,7 +5970,10 @@ describe(
         viewNothing();
         let errorCount = 0;
 
-        const tileset = await Cesium3DTileset.fromUrl(multipleContentsUrl);
+        const tileset = await Cesium3DTileset.fromUrl(
+          multipleContentsUrl,
+          options,
+        );
         tileset.tileFailed.addEventListener(function (event) {
           errorCount++;
           expect(endsWith(event.url, ".json")).toBe(true);

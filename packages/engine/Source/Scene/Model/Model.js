@@ -1457,6 +1457,12 @@ Object.defineProperties(Model.prototype, {
    * The properties for managing dynamic environment maps on this model. Affects lighting.
    * @memberof Model.prototype
    * @readonly
+   *
+   * @example
+   * // Change the ground color used for a model's environment map to a forest green
+   * const environmentMapManager = model.environmentMapManager;
+   * environmentMapManager.groundColor = Cesium.Color.fromCssColorString("#203b34");
+   *
    * @type {DynamicEnvironmentMapManager}
    */
   environmentMapManager: {

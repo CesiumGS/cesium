@@ -1871,6 +1871,11 @@ Object.defineProperties(Cesium3DTileset.prototype, {
    * @memberof Cesium3DTileset.prototype
    * @readonly
    *
+   * * @example
+   * // Change the ground color used for a tileset's environment map to a forest green
+   * const environmentMapManager = tileset.environmentMapManager;
+   * environmentMapManager.groundColor = Cesium.Color.fromCssColorString("#203b34");
+   *
    * @type {DynamicEnvironmentMapManager}
    */
   environmentMapManager: {

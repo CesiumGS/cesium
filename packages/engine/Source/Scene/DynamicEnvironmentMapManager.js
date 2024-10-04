@@ -47,6 +47,22 @@ import ConvolveSpecularMapVS from "../Shaders/ConvolveSpecularMapVS.js";
  * @alias DynamicEnvironmentMapManager
  * @constructor
  * @param {DynamicEnvironmentMapManager.ConstructorOptions} [options] An object describing initialization options.
+ *
+ * @example
+ * // Enable time-of-day environment mapping in a scene
+ * scene.atmosphere.dynamicLighting = Cesium.DynamicAtmosphereLightingType.SUNLIGHT;
+ *
+ * // Decrease the directional lighting contribution
+ * scene.light.intensity = 0.5
+ *
+ * // Increase the intensity of of the environment map lighting contribution
+ * const environmentMapManager = tileset.environmentMapManager;
+ * environmentMapManager.atmosphereScatteringIntensity = 3.0;
+ *
+ * @example
+ * // Change the ground color used for a model's environment map to a forest green
+ * const environmentMapManager = model.environmentMapManager;
+ * environmentMapManager.groundColor = Cesium.Color.fromCssColorString("#203b34");
  */
 function DynamicEnvironmentMapManager(options) {
   this._position = undefined;
