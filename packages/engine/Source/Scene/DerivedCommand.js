@@ -1,3 +1,4 @@
+import { MetadataComponentType } from "@cesium/engine";
 import defined from "../Core/defined.js";
 import DrawCommand from "../Renderer/DrawCommand.js";
 import RenderState from "../Renderer/RenderState.js";
@@ -416,6 +417,55 @@ function getGlslType(classProperty) {
   return `ivec${componentCount}`;
 }
 
+function unapplyValueTransform(input, offset, scale) {
+  return `((${input} - float(${offset})) / float(${scale}))`;
+}
+function unnormalize(input, componentType) {
+  const max = MetadataComponentType.getMaximum(componentType);
+  return `(${input}) / float(${max})`;
+}
+
+function getSourceValueStringScalar(classProperty) {
+  let result = `float(value)`;
+
+  // The 'hasValueTransform' indicates whether the class property
+  // did define an 'offset' or 'scale'. Even when they had not
+  // been defined, they receive default values in the constructor
+  // of MetadataClassProperty
+  if (classProperty.hasValueTransform) {
+    const offset = classProperty.offset;
+    const scale = classProperty.scale;
+    result = unapplyValueTransform(result, offset, scale);
+  }
+  if (!classProperty.normalized) {
+    result = unnormalize(result, classProperty.componentType);
+  }
+  return result;
+}
+
+function getSourceValueStringComponent(
+  classProperty,
+  componentIndex,
+  componentName,
+) {
+  const valueString = `value.${componentName}`;
+  let result = `float(${valueString})`;
+
+  // The 'hasValueTransform' indicates whether the class property
+  // did define an 'offset' or 'scale'. Even when they had not
+  // been defined, they receive default values in the constructor
+  // of MetadataClassProperty
+  if (classProperty.hasValueTransform) {
+    const offset = classProperty.offset[componentIndex];
+    const scale = classProperty.scale[componentIndex];
+    result = unapplyValueTransform(result, offset, scale);
+  }
+  if (!classProperty.normalized) {
+    result = unnormalize(result, classProperty.componentType);
+  }
+  return result;
+}
+
 /**
  * Creates a new `ShaderProgram` from the given input that renders metadata
  * values into the frame buffer, according to the given picked metadata info.
@@ -460,28 +510,27 @@ function getPickMetadataShaderProgram(
   const sourceValueStrings = ["0.0", "0.0", "0.0", "0.0"];
   const componentCount = getComponentCount(classProperty);
   if (componentCount === 1) {
-    // When the property is a scalar, store its value directly
-    // in `metadataValues.x`
-    sourceValueStrings[0] = `float(value)`;
+    // When the property is a scalar, store the source value
+    // string directly in `metadataValues.x`
+    sourceValueStrings[0] = getSourceValueStringScalar(classProperty);
   } else {
     // When the property is an array, store the array elements
     // in `metadataValues.x/y/z/w`
-    const components = ["x", "y", "z", "w"];
+    const componentNames = ["x", "y", "z", "w"];
     for (let i = 0; i < componentCount; i++) {
-      const component = components[i];
-      const valueString = `value.${component}`;
-      sourceValueStrings[i] = `float(${valueString})`;
+      sourceValueStrings[i] = getSourceValueStringComponent(
+        classProperty,
+        i,
+        componentNames[i],
+      );
     }
   }
 
-  // Make sure that the `metadataValues` components are all in
-  // the range [0, 1] (which will result in RGBA components
-  // in [0, 255] during rendering)
-  if (!classProperty.normalized) {
-    for (let i = 0; i < componentCount; i++) {
-      sourceValueStrings[i] += " / 255.0";
-    }
+  // XXX_DEBUG
+  for (let i = 0; i < componentCount; i++) {
+    console.log(`At ${i} source value string is "${sourceValueStrings[i]}"`);
   }
+  // XXX_DEBUG
 
   const newDefines = shaderProgram.fragmentShaderSource.defines.slice();
   newDefines.push(MetadataPickingPipelineStage.METADATA_PICKING_ENABLED);

@@ -295,11 +295,12 @@ MetadataPicking.decodeMetadataValues = function (
     }
     return result;
   }
-  const result = MetadataPicking.convertToObjectType(
+  const basicResult = MetadataPicking.convertToObjectType(
     classProperty.type,
     arrayBasedResult,
   );
-  return result;
+  const transformedResult = classProperty.applyValueTransform(basicResult);
+  return transformedResult;
 };
 
 export default Object.freeze(MetadataPicking);
