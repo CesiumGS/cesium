@@ -474,16 +474,16 @@ describe(
 
       expect(widget.clock.canAnimate).toBe(true);
 
-      widget.render();
+      widget.clock.tick();
       expect(widget.clock.canAnimate).toBe(true);
 
       updateResult = false;
-      widget.render();
+      widget.clock.tick();
       expect(widget.clock.canAnimate).toBe(false);
 
       widget.clock.canAnimate = true;
       widget.allowDataSourcesToSuspendAnimation = false;
-      widget.render();
+      widget.clock.tick();
       expect(widget.clock.canAnimate).toBe(true);
     });
 

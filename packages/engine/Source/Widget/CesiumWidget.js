@@ -446,10 +446,8 @@ function CesiumWidget(container, options) {
 
     const eventHelper = new EventHelper();
     this._dataSourceChangedListeners = {};
-    this._automaticallyTrackDataSourceClocks = defaultValue(
-      options.automaticallyTrackDataSourceClocks,
-      true,
-    );
+    this._automaticallyTrackDataSourceClocks =
+      options.automaticallyTrackDataSourceClocks ?? true;
 
     this._dataSourceCollection = dataSourceCollection;
     this._destroyDataSourceCollection = destroyDataSourceCollection;
@@ -1366,7 +1364,7 @@ function zoomToOrFly(that, zoomTarget, options, isFlight) {
     }
 
     //If zoomTarget is an EntityCollection, this will retrieve the array
-    zoomTarget = defaultValue(zoomTarget.values, zoomTarget);
+    zoomTarget = zoomTarget.values ?? zoomTarget;
 
     //If zoomTarget is a DataSource, this will retrieve the array.
     if (defined(zoomTarget.entities)) {
@@ -1416,7 +1414,7 @@ function updateZoomTarget(widget) {
 
   const scene = widget.scene;
   const camera = scene.camera;
-  const zoomOptions = defaultValue(widget._zoomOptions, {});
+  const zoomOptions = widget._zoomOptions ?? {};
   let options;
   function zoomToBoundingSphere(boundingSphere) {
     // If offset was originally undefined then give it base value instead of empty object
