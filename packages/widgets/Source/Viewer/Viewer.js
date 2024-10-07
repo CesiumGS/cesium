@@ -125,7 +125,7 @@ function pickEntity(viewer, e) {
 
 const scratchStopTime = new JulianDate();
 
-function trackDataSourceClock(timeline, dataSource) {
+function linkTimelineToDataSourceClock(timeline, dataSource) {
   if (defined(dataSource)) {
     const dataSourceClock = dataSource.clock;
     if (defined(dataSourceClock) && defined(timeline)) {
@@ -1487,7 +1487,7 @@ Object.defineProperties(Viewer.prototype, {
     set: function (value) {
       if (this._cesiumWidget.clockTrackedDataSource !== value) {
         this._cesiumWidget.clockTrackedDataSource = value;
-        trackDataSourceClock(this._timeline, value);
+        linkTimelineToDataSourceClock(this._timeline, value);
       }
     },
   },
@@ -1907,7 +1907,7 @@ Viewer.prototype._clearObjects = function () {
  */
 Viewer.prototype._onDataSourceChanged = function (dataSource) {
   if (this.clockTrackedDataSource === dataSource) {
-    trackDataSourceClock(this.timeline, dataSource);
+    linkTimelineToDataSourceClock(this.timeline, dataSource);
   }
 };
 
