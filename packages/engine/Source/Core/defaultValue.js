@@ -26,13 +26,13 @@ function defaultValue(a, b) {
 /**
  * @type {object}
  * @constant
- * @deprecated This property is deprecated and will be removed in Cesium 1.122. See <a href="https://github.com/CesiumGS/cesium/issues/11326">Issue 113216</a>
+ * @deprecated This property is deprecated and will be removed in Cesium 1.125. See <a href="https://github.com/CesiumGS/cesium/issues/11326">Issue 113216</a>
  */
 Object.defineProperty(defaultValue, "EMPTY_OBJECT", {
   get: function () {
     deprecationWarning(
       "defaultValue.EMPTY_OBJECT",
-      "defaultValue.EMPTY_OBJECT is deprecated and will be removed in Cesium 1.122. See https://github.com/CesiumGS/cesium/issues/11326",
+      "defaultValue.EMPTY_OBJECT is deprecated and will be removed in Cesium 1.125. See https://github.com/CesiumGS/cesium/issues/11326",
     );
     return EmptyObject;
   },
