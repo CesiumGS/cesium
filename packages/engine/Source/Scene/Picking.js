@@ -517,6 +517,7 @@ Picking.prototype.pickMetadata = function (
 
   const metadataValue = MetadataPicking.decodeMetadataValues(
     pickedMetadataInfo.classProperty,
+    pickedMetadataInfo.metadataProperty,
     rawMetadataPixel,
   );
 

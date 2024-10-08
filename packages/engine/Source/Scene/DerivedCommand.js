@@ -466,6 +466,26 @@ function getSourceValueStringComponent(
   return result;
 }
 
+function debugPrintOverriddenOffsetScale(shaderProgram, propertyName) {
+  // Check for the presence of the value transform uniforms that may have
+  // been inserted by MetadataPipelineStage.addValueTransformUniforms.
+  // These MAY be different from the offset/scale of the class property,
+  // when they have been overridden by the property texture property.
+  const allUniforms = shaderProgram.allUniforms;
+  const offsetUniformName = `u_${propertyName}_offset`;
+  const scaleUniformName = `u_${propertyName}_scale`;
+  const offsetUniform = allUniforms[offsetUniformName];
+  const scaleUniform = allUniforms[scaleUniformName];
+  if (defined(offsetUniform) && defined(scaleUniform)) {
+    const offset = offsetUniform.value;
+    const scale = scaleUniform.value;
+    console.log("Now there they are, ", offset, scale);
+  } else {
+    console.log("Nope, not there");
+  }
+  //return `czm_valueTransform(${offsetUniformName}, ${scaleUniformName}, ${valueExpression})`;
+}
+
 /**
  * Creates a new `ShaderProgram` from the given input that renders metadata
  * values into the frame buffer, according to the given picked metadata info.
@@ -501,6 +521,8 @@ function getPickMetadataShaderProgram(
   if (defined(shader)) {
     return shader;
   }
+
+  debugPrintOverriddenOffsetScale(shaderProgram, propertyName);
 
   const classProperty = pickedMetadataInfo.classProperty;
   const glslType = getGlslType(classProperty);

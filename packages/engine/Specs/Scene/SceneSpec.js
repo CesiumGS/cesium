@@ -391,7 +391,10 @@ function createPropertyTextureGltfVec2() {
  *
  * @returns The glTF
  */
-function createPropertyTextureGltfNormalizedVec2() {
+function createPropertyTextureGltfNormalizedVec2(
+  classPropertyOffset,
+  classPropertyScale,
+) {
   const schema = {
     id: "ExampleSchema",
     classes: {
@@ -403,6 +406,8 @@ function createPropertyTextureGltfNormalizedVec2() {
             type: "VEC2",
             componentType: "UINT8",
             normalized: true,
+            offset: classPropertyOffset,
+            scale: classPropertyScale,
           },
         },
       },
@@ -3439,7 +3444,12 @@ describe(
       const schemaId = undefined;
       const className = "exampleClass";
       const propertyName = "example_normalized_UINT8_VEC2";
-      const gltf = createPropertyTextureGltfNormalizedVec2();
+      const classPropertyOffset = undefined;
+      const classPropertyScale = undefined;
+      const gltf = createPropertyTextureGltfNormalizedVec2(
+        classPropertyOffset,
+        classPropertyScale,
+      );
 
       const canvasSizeX = textureSizeX * canvasScaling;
       const canvasSizeY = textureSizeY * canvasScaling;
@@ -3484,6 +3494,89 @@ describe(
       const expectedMetadataValue0 = new Cartesian2(0.0, 0.0);
       const expectedMetadataValue1 = new Cartesian2(0.5, 0.0);
       const expectedMetadataValue2 = new Cartesian2(1.0, 0.0);
+
+      expect(actualMetadataValue0).toEqualEpsilon(
+        expectedMetadataValue0,
+        propertyValueEpsilon,
+      );
+      expect(actualMetadataValue1).toEqualEpsilon(
+        expectedMetadataValue1,
+        propertyValueEpsilon,
+      );
+      expect(actualMetadataValue2).toEqualEpsilon(
+        expectedMetadataValue2,
+        propertyValueEpsilon,
+      );
+      scene.destroyForSpecs();
+    });
+
+    it("picks normalized UINT8 VEC2 with offset and scale from a property texture", async function () {
+      if (webglStub) {
+        return;
+      }
+
+      const schemaId = undefined;
+      const className = "exampleClass";
+      const propertyName = "example_normalized_UINT8_VEC2";
+      const classPropertyOffset = [100, 200];
+      const classPropertyScale = [2, 3];
+      const gltf = createPropertyTextureGltfNormalizedVec2(
+        classPropertyOffset,
+        classPropertyScale,
+      );
+
+      const canvasSizeX = textureSizeX * canvasScaling;
+      const canvasSizeY = textureSizeY * canvasScaling;
+      const scene = createScene({
+        canvas: createCanvas(canvasSizeX, canvasSizeY),
+        contextOptions: {
+          requestWebgl1: true,
+        },
+      });
+
+      await loadAsModel(scene, gltf);
+      fitCameraToUnitSquare(scene.camera);
+
+      scene.initializeFrame();
+      scene.render(defaultDate);
+
+      const actualMetadataValue0 = pickMetadataAt(
+        scene,
+        schemaId,
+        className,
+        propertyName,
+        0,
+        0,
+      );
+      const actualMetadataValue1 = pickMetadataAt(
+        scene,
+        schemaId,
+        className,
+        propertyName,
+        1,
+        1,
+      );
+      const actualMetadataValue2 = pickMetadataAt(
+        scene,
+        schemaId,
+        className,
+        propertyName,
+        2,
+        2,
+      );
+
+      const expectedMetadataValue0 = new Cartesian2(
+        classPropertyOffset[0] + classPropertyScale[0] * 0.0,
+        classPropertyOffset[1] + classPropertyScale[1] * 0.0,
+      );
+      const expectedMetadataValue1 = new Cartesian2(
+        classPropertyOffset[0] + classPropertyScale[0] * 0.5,
+        classPropertyOffset[1] + classPropertyScale[1] * 0.0,
+      );
+      const expectedMetadataValue2 = new Cartesian2(
+        classPropertyOffset[0] + classPropertyScale[0] * 1.0,
+        classPropertyOffset[1] + classPropertyScale[1] * 0.0,
+      );
 
       expect(actualMetadataValue0).toEqualEpsilon(
         expectedMetadataValue0,

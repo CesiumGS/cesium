@@ -79,6 +79,7 @@ import VoxelCell from "./VoxelCell.js";
 import VoxelPrimitive from "./VoxelPrimitive.js";
 import getMetadataClassProperty from "./getMetadataClassProperty.js";
 import PickedMetadataInfo from "./PickedMetadataInfo.js";
+import getMetadataProperty from "./getMetadataProperty.js";
 
 const requestRenderAfterFrame = function (scene) {
   return function () {
@@ -4426,7 +4427,11 @@ Scene.prototype.pickMetadata = function (
   // Check if the picked object is a model that has structural
   // metadata, with a schema that contains the specified
   // property.
-  const schema = pickedObject.detail?.model?.structuralMetadata?.schema;
+  const structuralMetadata = pickedObject.detail?.model?.structuralMetadata;
+  if (!defined(structuralMetadata)) {
+    return undefined;
+  }
+  const schema = structuralMetadata.schema;
   const classProperty = getMetadataClassProperty(
     schema,
     schemaId,
@@ -4436,12 +4441,25 @@ Scene.prototype.pickMetadata = function (
   if (!defined(classProperty)) {
     return undefined;
   }
+  const metadataProperty = getMetadataProperty(
+    structuralMetadata,
+    className,
+    propertyName,
+  );
+  if (!defined(metadataProperty)) {
+    return undefined;
+  }
+
+  // XXX DEBUG
+  console.log("Using metadata property ", metadataProperty);
+  // XXX DEBUG
 
   const pickedMetadataInfo = new PickedMetadataInfo(
     schemaId,
     className,
     propertyName,
     classProperty,
+    metadataProperty,
   );
 
   const pickedMetadataValues = this._picking.pickMetadata(
