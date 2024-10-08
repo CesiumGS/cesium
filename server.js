@@ -46,27 +46,6 @@ import {
   buildCesium,
 } from "./scripts/build.js";
 
-const sourceFiles = [
-  "packages/engine/Source/**/*.js",
-  "!packages/engine/Source/*.js",
-  "packages/widgets/Source/**/*.js",
-  "!packages/widgets/Source/*.js",
-  "!packages/engine/Source/Shaders/**",
-  "!packages/engine/Source/ThirdParty/Workers/**",
-  "!packages/engine/Source/ThirdParty/google-earth-dbroot-parser.js",
-  "!packages/engine/Source/ThirdParty/_*",
-];
-const specFiles = [
-  "packages/engine/Specs/**/*Spec.js",
-  "!packages/engine/Specs/SpecList.js",
-  "packages/widgets/Specs/**/*Spec.js",
-  "!packages/widgets/Specs/SpecList.js",
-  "Specs/*.js",
-  "!Specs/SpecList.js",
-  "!Specs/e2e/**",
-];
-const shaderFiles = ["packages/engine/Source/Shaders/**/*.glsl"];
-
 const outputDirectory = path.join("Build", "CesiumDev");
 
 function formatTimeSinceInSeconds(start) {
@@ -208,7 +187,12 @@ async function generateDevelopmentBuild() {
       contexts.workers,
     );
 
-    const glslWatcher = chokidar.watch(shaderFiles, { ignoreInitial: true });
+    const glslWatcher = chokidar.watch("packages/engine/Source/Shaders", {
+      ignored: (path, stats) => {
+        return !!stats?.isFile() && !path.endsWith(".glsl");
+      },
+      ignoreInitial: true,
+    });
     glslWatcher.on("all", async () => {
       await glslToJavaScript(false, "Build/minifyShaders.state", "engine");
       esmCache.clear();
@@ -216,9 +200,20 @@ async function generateDevelopmentBuild() {
     });
 
     let jsHintOptionsCache;
-    const sourceCodeWatcher = chokidar.watch(sourceFiles, {
-      ignoreInitial: true,
-    });
+    const sourceCodeWatcher = chokidar.watch(
+      ["packages/engine/Source", "packages/widgets/Source"],
+      {
+        ignored: [
+          "packages/engine/Source/Shaders",
+          "packages/engine/Source/ThirdParty",
+          "packages/widgets/Source/ThirdParty",
+          (path, stats) => {
+            return !!stats?.isFile() && !path.endsWith(".js");
+          },
+        ],
+        ignoreInitial: true,
+      },
+    );
     sourceCodeWatcher.on("all", async () => {
       esmCache.clear();
       iifeCache.clear();
@@ -244,7 +239,21 @@ async function generateDevelopmentBuild() {
       "/Build/Specs/*",
       contexts.specs,
     );
-    const specWatcher = chokidar.watch(specFiles, { ignoreInitial: true });
+    const specWatcher = chokidar.watch(
+      ["packages/engine/Specs", "packages/widgets/Specs", "Specs"],
+      {
+        ignored: [
+          "packages/engine/Specs/SpecList.js",
+          "packages/widgets/Specs/SpecList.js",
+          "Specs/SpecList.js",
+          "Specs/e2e",
+          (path, stats) => {
+            return !!stats?.isFile() && !path.endsWith("Spec.js");
+          },
+        ],
+        ignoreInitial: true,
+      },
+    );
     specWatcher.on("all", async (event) => {
       if (event === "add" || event === "unlink") {
         await createCombinedSpecList();
@@ -408,7 +417,6 @@ async function generateDevelopmentBuild() {
 
   server.on("close", function () {
     console.log("Cesium development server stopped.");
-    // eslint-disable-next-line n/no-process-exit
     process.exit(0);
   });
 
