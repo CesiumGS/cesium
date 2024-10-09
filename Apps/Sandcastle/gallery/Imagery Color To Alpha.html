@@ -7,10 +7,7 @@
       name="viewport"
       content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
     />
-    <meta
-      name="description"
-      content="Apply simple color-to-alpha on imagery layers."
-    />
+    <meta name="description" content="Apply simple color-to-alpha on imagery layers." />
     <meta name="cesium-sandcastle-labels" content="Beginner, Tutorials" />
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
@@ -21,10 +18,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
       #toolbar {
@@ -68,17 +62,9 @@
 
         // Add a bump layer with adjustable threshold
         const singleTileLayer = Cesium.ImageryLayer.fromProviderAsync(
-          Cesium.SingleTileImageryProvider.fromUrl(
-            "../images/earthbump1k.jpg",
-            {
-              rectangle: Cesium.Rectangle.fromDegrees(
-                -180.0,
-                -90.0,
-                180.0,
-                90.0
-              ),
-            }
-          )
+          Cesium.SingleTileImageryProvider.fromUrl("../images/earthbump1k.jpg", {
+            rectangle: Cesium.Rectangle.fromDegrees(-180.0, -90.0, 180.0, 90.0),
+          })
         );
         layers.add(singleTileLayer);
 
@@ -97,9 +83,7 @@
         Cesium.knockout
           .getObservable(viewModel, "threshold")
           .subscribe(function (newValue) {
-            singleTileLayer.colorToAlphaThreshold = parseFloat(
-              viewModel.threshold
-            );
+            singleTileLayer.colorToAlphaThreshold = parseFloat(viewModel.threshold);
           }); //Sandcastle_End
       };
       if (typeof Cesium !== "undefined") {

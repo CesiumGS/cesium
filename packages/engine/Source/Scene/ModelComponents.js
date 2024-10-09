@@ -1141,6 +1141,15 @@ function Components() {
    * @private
    */
   this.transform = Matrix4.clone(Matrix4.IDENTITY);
+
+  /**
+   * A mapping from extension names like `"EXT_example_extension"` to
+   * the object that was created from the extension input
+   *
+   * @type {object}
+   * @private
+   */
+  this.extensions = {};
 }
 
 /**
@@ -1186,6 +1195,15 @@ function TextureReader() {
    * @default Matrix3.IDENTITY
    */
   this.transform = Matrix3.clone(Matrix3.IDENTITY);
+
+  /**
+   * Scale to apply to texture values.
+   *
+   * @type {number}
+   * @default 1.0
+   * @private
+   */
+  this.scale = 1.0;
 
   /**
    * The texture channels to read from. When undefined all channels are read.

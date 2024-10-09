@@ -163,112 +163,102 @@ function styleLightboxContainer(that) {
   }
 }
 
-function addStyle(selector, styles) {
-  let style = `${selector} {`;
-  for (const attribute in styles) {
-    if (styles.hasOwnProperty(attribute)) {
-      style += `${attribute}: ${styles[attribute]}; `;
-    }
-  }
-  style += " }\n";
-  return style;
+function appendCss(container) {
+  const style = /*css*/ `
+.cesium-credit-lightbox-overlay {
+  display: none;
+  z-index: 1;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(80, 80, 80, 0.8);
 }
 
-function appendCss(container) {
-  let style = "";
-  style += addStyle(".cesium-credit-lightbox-overlay", {
-    display: "none",
-    "z-index": "1", //must be at least 1 to draw over top other Cesium widgets
-    position: "absolute",
-    top: "0",
-    left: "0",
-    width: "100%",
-    height: "100%",
-    "background-color": "rgba(80, 80, 80, 0.8)",
-  });
+.cesium-credit-lightbox {
+  background-color: #303336;
+  color: ${textColor};
+  position: relative;
+  min-height: ${lightboxHeight}px;
+  margin: auto;
+}
+.cesium-credit-lightbox > ul > li a,
+.cesium-credit-lightbox > ul > li a:visited,
+.cesium-credit-wrapper a,
+.cesium-credit-wrapper a:visited {
+  color: ${textColor};
+}
+.cesium-credit-lightbox > ul > li a:hover {
+  color: ${highlightColor};
+}
+.cesium-credit-lightbox.cesium-credit-lightbox-expanded {
+  border: 1px solid #444;
+  border-radius: 5px;
+  max-width: 370px;
+}
+.cesium-credit-lightbox.cesium-credit-lightbox-mobile {
+  height: 100%;
+  width: 100%;
+}
+.cesium-credit-lightbox-title {
+  padding: 20px 20px 0 20px;
+}
+.cesium-credit-lightbox-close {
+  font-size: 18pt;
+  cursor: pointer;
+  position: absolute;
+  top: 0;
+  right: 6px;
+  color: ${textColor};
+}
+.cesium-credit-lightbox-close:hover {
+  color: ${highlightColor};
+}
+.cesium-credit-lightbox > ul {
+  margin: 0;
+  padding: 12px 20px 12px 40px;
+  font-size: 13px;
+}
+.cesium-credit-lightbox > ul > li {
+  padding-bottom: 6px;
+}
+.cesium-credit-lightbox > ul > li * {
+  padding: 0;
+  margin: 0;
+}
 
-  style += addStyle(".cesium-credit-lightbox", {
-    "background-color": "#303336",
-    color: textColor,
-    position: "relative",
-    "min-height": `${lightboxHeight}px`,
-    margin: "auto",
-  });
+.cesium-credit-expand-link {
+  padding-left: 5px;
+  cursor: pointer;
+  text-decoration: underline;
+  color: ${textColor};
+}
+.cesium-credit-expand-link:hover {
+  color: ${highlightColor};
+}
 
-  style += addStyle(
-    ".cesium-credit-lightbox > ul > li a, .cesium-credit-lightbox > ul > li a:visited",
-    {
-      color: textColor,
-    }
-  );
+.cesium-credit-text {
+  color: ${textColor};
+}
 
-  style += addStyle(".cesium-credit-lightbox > ul > li a:hover", {
-    color: highlightColor,
-  });
+.cesium-credit-delimiter {
+  padding: 0 5px;
+}
 
-  style += addStyle(".cesium-credit-lightbox.cesium-credit-lightbox-expanded", {
-    border: "1px solid #444",
-    "border-radius": "5px",
-    "max-width": "370px",
-  });
+.cesium-credit-textContainer *,
+.cesium-credit-logoContainer * {
+  display: inline;
+}
 
-  style += addStyle(".cesium-credit-lightbox.cesium-credit-lightbox-mobile", {
-    height: "100%",
-    width: "100%",
-  });
+.cesium-credit-textContainer a:hover {
+  color: ${highlightColor}
+}
 
-  style += addStyle(".cesium-credit-lightbox-title", {
-    padding: "20px 20px 0 20px",
-  });
-
-  style += addStyle(".cesium-credit-lightbox-close", {
-    "font-size": "18pt",
-    cursor: "pointer",
-    position: "absolute",
-    top: "0",
-    right: "6px",
-    color: textColor,
-  });
-
-  style += addStyle(".cesium-credit-lightbox-close:hover", {
-    color: highlightColor,
-  });
-
-  style += addStyle(".cesium-credit-lightbox > ul", {
-    margin: "0",
-    padding: "12px 20px 12px 40px",
-    "font-size": "13px",
-  });
-
-  style += addStyle(".cesium-credit-lightbox > ul > li", {
-    "padding-bottom": "6px",
-  });
-
-  style += addStyle(".cesium-credit-lightbox > ul > li *", {
-    padding: "0",
-    margin: "0",
-  });
-
-  style += addStyle(".cesium-credit-expand-link", {
-    "padding-left": "5px",
-    cursor: "pointer",
-    "text-decoration": "underline",
-    color: textColor,
-  });
-  style += addStyle(".cesium-credit-expand-link:hover", {
-    color: highlightColor,
-  });
-
-  style += addStyle(".cesium-credit-text", {
-    color: textColor,
-  });
-
-  style += addStyle(
-    ".cesium-credit-textContainer *, .cesium-credit-logoContainer *",
-    {
-      display: "inline",
-    }
-  );
+.cesium-credit-textContainer .cesium-credit-wrapper:first-of-type {
+  padding-left: 5px;
+}
+`;
 
   function getShadowRoot(container) {
     if (container.shadowRoot) {
@@ -287,16 +277,16 @@ function appendCss(container) {
     getShadowRoot(container),
     document.head
   );
-  const css = document.createElement("style");
-  css.innerHTML = style;
-  shadowRootOrDocumentHead.appendChild(css);
+  const styleElem = document.createElement("style");
+  styleElem.innerHTML = style;
+  shadowRootOrDocumentHead.appendChild(styleElem);
 }
 
 /**
  * The credit display is responsible for displaying credits on screen.
  *
  * @param {HTMLElement} container The HTML element where credits will be displayed
- * @param {string} [delimiter= ' • '] The string to separate text credits
+ * @param {string} [delimiter= '•'] The string to separate text credits
  * @param {HTMLElement} [viewport=document.body] The HTML element that will contain the credits popup
  *
  * @alias CreditDisplay
@@ -369,7 +359,7 @@ function CreditDisplay(container, delimiter, viewport) {
   appendCss(container);
   const cesiumCredit = Credit.clone(CreditDisplay.cesiumCredit);
 
-  this._delimiter = defaultValue(delimiter, " • ");
+  this._delimiter = defaultValue(delimiter, "•");
   this._screenContainer = screenContainer;
   this._cesiumCreditContainer = cesiumCreditContainer;
   this._lastViewportHeight = undefined;
@@ -634,7 +624,7 @@ function getDefaultCredit() {
     }
 
     defaultCredit = new Credit(
-      `<a href="https://cesium.com/" target="_blank"><img src="${logo}" title="Cesium ion"/></a>`,
+      `<a href="https://cesium.com/" target="_blank"><img src="${logo}" style="vertical-align: -7px" title="Cesium ion"/></a>`,
       true
     );
   }

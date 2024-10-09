@@ -8,10 +8,7 @@
       content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
     />
     <meta name="description" content="Ambient Occlusion." />
-    <meta
-      name="cesium-sandcastle-labels"
-      content="Showcases, Post Processing"
-    />
+    <meta name="cesium-sandcastle-labels" content="Showcases, Post Processing" />
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script
@@ -21,10 +18,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -40,10 +34,7 @@
           <tr>
             <td>Ambient Occlusion Only</td>
             <td>
-              <input
-                type="checkbox"
-                data-bind="checked: ambientOcclusionOnly"
-              />
+              <input type="checkbox" data-bind="checked: ambientOcclusionOnly" />
             </td>
           </tr>
           <tr>
@@ -115,15 +106,9 @@
         //Sandcastle_Begin
         const viewer = new Cesium.Viewer("cesiumContainer");
 
-        viewer.clock.currentTime = Cesium.JulianDate.fromIso8601(
-          "2022-08-01T00:00:00Z"
-        );
+        viewer.clock.currentTime = Cesium.JulianDate.fromIso8601("2022-08-01T00:00:00Z");
 
-        if (
-          !Cesium.PostProcessStageLibrary.isAmbientOcclusionSupported(
-            viewer.scene
-          )
-        ) {
+        if (!Cesium.PostProcessStageLibrary.isAmbientOcclusionSupported(viewer.scene)) {
           window.alert(
             "This browser does not support the ambient occlusion post process."
           );
@@ -144,15 +129,12 @@
         Cesium.knockout.applyBindings(viewModel, toolbar);
         for (const name in viewModel) {
           if (viewModel.hasOwnProperty(name)) {
-            Cesium.knockout
-              .getObservable(viewModel, name)
-              .subscribe(updatePostProcess);
+            Cesium.knockout.getObservable(viewModel, name).subscribe(updatePostProcess);
           }
         }
 
         function updatePostProcess() {
-          const ambientOcclusion =
-            viewer.scene.postProcessStages.ambientOcclusion;
+          const ambientOcclusion = viewer.scene.postProcessStages.ambientOcclusion;
           ambientOcclusion.enabled =
             Boolean(viewModel.show) || Boolean(viewModel.ambientOcclusionOnly);
           ambientOcclusion.uniforms.ambientOcclusionOnly = Boolean(
@@ -162,9 +144,7 @@
           ambientOcclusion.uniforms.bias = Number(viewModel.bias);
           ambientOcclusion.uniforms.lengthCap = Number(viewModel.lengthCap);
           ambientOcclusion.uniforms.stepSize = Number(viewModel.stepSize);
-          ambientOcclusion.uniforms.blurStepSize = Number(
-            viewModel.blurStepSize
-          );
+          ambientOcclusion.uniforms.blurStepSize = Number(viewModel.blurStepSize);
         }
         updatePostProcess();
 

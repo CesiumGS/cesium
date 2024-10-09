@@ -31,11 +31,11 @@ import {
   JobScheduler,
   JulianDate,
   Math as CesiumMath,
+  Matrix3,
   Matrix4,
   Model,
   ModelFeature,
   ModelSceneGraph,
-  OctahedralProjectedCubeMap,
   ModelUtility,
   Pass,
   PrimitiveType,
@@ -44,6 +44,7 @@ import {
   RuntimeError,
   ShaderProgram,
   ShadowMode,
+  SpecularEnvironmentCubeMap,
   SplitDirection,
   StyleCommandsNeeded,
   SunLight,
@@ -515,6 +516,8 @@ describe(
 
       expect(model.id).toBeUndefined();
       expect(model.allowPicking).toEqual(true);
+
+      expect(model.enableVerticalExaggeration).toEqual(true);
 
       expect(model.activeAnimations).toBeDefined();
       expect(model.clampAnimations).toEqual(true);
@@ -1750,6 +1753,48 @@ describe(
         expect(boundingSphere.radius).toEqualEpsilon(
           2.0 * expectedRadius,
           CesiumMath.EPSILON8
+        );
+      });
+    });
+
+    describe("reference matrices", function () {
+      it("sets IBL transform matrix", async function () {
+        if (!scene.highDynamicRangeSupported) {
+          return;
+        }
+        const resource = Resource.createIfNeeded(boxTexturedGlbUrl);
+        const buffer = await resource.fetchArrayBuffer();
+        const imageBasedLighting = new ImageBasedLighting({
+          specularEnvironmentMaps:
+            "./Data/EnvironmentMap/kiara_6_afternoon_2k_ibl.ktx2",
+        });
+        const model = await loadAndZoomToModelAsync(
+          {
+            gltf: new Uint8Array(buffer),
+            imageBasedLighting: imageBasedLighting,
+          },
+          scene
+        );
+        await pollToPromise(function () {
+          scene.render();
+          return (
+            defined(imageBasedLighting.specularEnvironmentCubeMap) &&
+            imageBasedLighting.specularEnvironmentCubeMap.ready
+          );
+        });
+        expect(model.modelMatrix).toEqual(Matrix4.IDENTITY);
+        const { view3D } = scene.context.uniformState;
+        const viewRotation = Matrix4.getRotation(view3D, new Matrix3());
+        Matrix3.transpose(viewRotation, viewRotation);
+        const yUpToZUp = new Matrix3(1, 0, 0, 0, 0, 1, 0, -1, 0);
+        const expectedIblTransform = Matrix3.multiply(
+          yUpToZUp,
+          viewRotation,
+          new Matrix3()
+        );
+        expect(model._iblReferenceFrameMatrix).toEqualEpsilon(
+          expectedIblTransform,
+          CesiumMath.EPSILON14
         );
       });
     });
@@ -3320,8 +3365,8 @@ describe(
         await pollToPromise(function () {
           scene.render();
           return (
-            defined(ibl.specularEnvironmentMapAtlas) &&
-            ibl.specularEnvironmentMapAtlas.ready
+            defined(ibl.specularEnvironmentCubeMap) &&
+            ibl.specularEnvironmentCubeMap.ready
           );
         });
         scene.highDynamicRange = true;
@@ -3344,7 +3389,7 @@ describe(
       });
 
       it("renders when specularEnvironmentMaps aren't supported", async function () {
-        spyOn(OctahedralProjectedCubeMap, "isSupported").and.returnValue(false);
+        spyOn(SpecularEnvironmentCubeMap, "isSupported").and.returnValue(false);
 
         const model = await loadAndZoomToModelAsync(
           {
@@ -3726,7 +3771,28 @@ describe(
       scene.verticalExaggeration = 2.0;
       scene.renderForSpecs();
       expect(resetDrawCommands).toHaveBeenCalled();
-      scene.verticalExaggeration = 1.0;
+    });
+
+    it("resets draw commands when enableVerticalExaggeration changes", async function () {
+      scene.verticalExaggeration = 2.0;
+      const model = await loadAndZoomToModelAsync(
+        {
+          gltf: boxTexturedGltfUrl,
+        },
+        scene
+      );
+      const resetDrawCommands = spyOn(
+        model,
+        "resetDrawCommands"
+      ).and.callThrough();
+      expect(model.ready).toBe(true);
+      expect(model.hasVerticalExaggeration).toBe(true);
+
+      model.enableVerticalExaggeration = false;
+
+      scene.renderForSpecs();
+      expect(resetDrawCommands).toHaveBeenCalled();
+      expect(model.hasVerticalExaggeration).toBe(false);
     });
 
     it("does not issue draw commands when ignoreCommands is true", async function () {

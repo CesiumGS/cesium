@@ -18,10 +18,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -38,27 +35,18 @@
         function addBillboardAndPrimitive() {
           Sandcastle.declare(addBillboardAndPrimitive);
 
-          const billboards = scene.primitives.add(
-            new Cesium.BillboardCollection()
-          );
+          const billboards = scene.primitives.add(new Cesium.BillboardCollection());
           billboards.add({
             image: "../images/facility.gif",
             position: Cesium.Cartesian3.fromDegrees(-77, 40.5),
-            distanceDisplayCondition: new Cesium.DistanceDisplayCondition(
-              5.5e6
-            ),
+            distanceDisplayCondition: new Cesium.DistanceDisplayCondition(5.5e6),
           });
 
           scene.primitives.add(
             new Cesium.Primitive({
               geometryInstances: new Cesium.GeometryInstance({
                 geometry: new Cesium.RectangleGeometry({
-                  rectangle: Cesium.Rectangle.fromDegrees(
-                    -80.5,
-                    39.7,
-                    -75.1,
-                    42.0
-                  ),
+                  rectangle: Cesium.Rectangle.fromDegrees(-80.5, 39.7, -75.1, 42.0),
                   vertexFormat: Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
                 }),
                 attributes: {
@@ -89,22 +77,15 @@
           pointPrimitives.add({
             color: Cesium.Color.YELLOW,
             position: position,
-            distanceDisplayCondition: new Cesium.DistanceDisplayCondition(
-              250.5
-            ),
+            distanceDisplayCondition: new Cesium.DistanceDisplayCondition(250.5),
           });
 
           try {
             scene.primitives.add(
               await Cesium.Model.fromGltfAsync({
                 url: "../../SampleData/models/GroundVehicle/GroundVehicle.glb",
-                modelMatrix: Cesium.Transforms.eastNorthUpToFixedFrame(
-                  position
-                ),
-                distanceDisplayCondition: new Cesium.DistanceDisplayCondition(
-                  0.0,
-                  250.5
-                ),
+                modelMatrix: Cesium.Transforms.eastNorthUpToFixedFrame(position),
+                distanceDisplayCondition: new Cesium.DistanceDisplayCondition(0.0, 250.5),
               })
             );
           } catch (error) {

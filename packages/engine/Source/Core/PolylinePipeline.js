@@ -311,7 +311,7 @@ PolylinePipeline.wrapLongitude = function (positions, modelMatrix) {
  * @param {Cartesian3[]} options.positions The array of type {Cartesian3} representing positions.
  * @param {number|number[]} [options.height=0.0] A number or array of numbers representing the heights of each position.
  * @param {number} [options.granularity = CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
- * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the positions lie.
+ * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.default] The ellipsoid on which the positions lie.
  * @returns {number[]} A new array of positions of type {number} that have been subdivided and raised to the surface of the ellipsoid.
  *
  * @example
@@ -337,7 +337,7 @@ PolylinePipeline.generateArc = function (options) {
   //>>includeEnd('debug');
 
   const length = positions.length;
-  const ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
+  const ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.default);
   let height = defaultValue(options.height, 0);
   const hasHeightArray = Array.isArray(height);
 
@@ -418,7 +418,7 @@ const scratchCartographic1 = new Cartographic();
  * @param {Cartesian3[]} options.positions The array of type {Cartesian3} representing positions.
  * @param {number|number[]} [options.height=0.0] A number or array of numbers representing the heights of each position.
  * @param {number} [options.granularity = CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
- * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the positions lie.
+ * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.default] The ellipsoid on which the positions lie.
  * @returns {number[]} A new array of positions of type {number} that have been subdivided and raised to the surface of the ellipsoid.
  *
  * @example
@@ -444,7 +444,7 @@ PolylinePipeline.generateRhumbArc = function (options) {
   //>>includeEnd('debug');
 
   const length = positions.length;
-  const ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
+  const ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.default);
   let height = defaultValue(options.height, 0);
   const hasHeightArray = Array.isArray(height);
 
@@ -524,7 +524,7 @@ PolylinePipeline.generateRhumbArc = function (options) {
  * @param {Cartesian3[]} options.positions The array of type {Cartesian3} representing positions.
  * @param {number|number[]} [options.height=0.0] A number or array of numbers representing the heights of each position.
  * @param {number} [options.granularity = CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
- * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the positions lie.
+ * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.default] The ellipsoid on which the positions lie.
  * @returns {Cartesian3[]} A new array of cartesian3 positions that have been subdivided and raised to the surface of the ellipsoid.
  *
  * @example
@@ -554,7 +554,7 @@ PolylinePipeline.generateCartesianArc = function (options) {
  * @param {Cartesian3[]} options.positions The array of type {Cartesian3} representing positions.
  * @param {number|number[]} [options.height=0.0] A number or array of numbers representing the heights of each position.
  * @param {number} [options.granularity = CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
- * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the positions lie.
+ * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.default] The ellipsoid on which the positions lie.
  * @returns {Cartesian3[]} A new array of cartesian3 positions that have been subdivided and raised to the surface of the ellipsoid.
  *
  * @example

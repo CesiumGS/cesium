@@ -38,6 +38,7 @@ const DISTANCE_DISPLAY_CONDITION_INDEX =
   PointPrimitive.DISTANCE_DISPLAY_CONDITION_INDEX;
 const DISABLE_DEPTH_DISTANCE_INDEX =
   PointPrimitive.DISABLE_DEPTH_DISTANCE_INDEX;
+const SPLIT_DIRECTION_INDEX = PointPrimitive.SPLIT_DIRECTION_INDEX;
 const NUMBER_OF_PROPERTIES = PointPrimitive.NUMBER_OF_PROPERTIES;
 
 const attributeLocations = {
@@ -46,7 +47,7 @@ const attributeLocations = {
   compressedAttribute0: 2, // color, outlineColor, pick color
   compressedAttribute1: 3, // show, translucency by distance, some free space
   scaleByDistance: 4,
-  distanceDisplayConditionAndDisableDepth: 5,
+  distanceDisplayConditionAndDisableDepthAndSplitDirection: 5,
 };
 
 /**
@@ -492,8 +493,9 @@ function createVAF(context, numberOfPointPrimitives, buffersUsage) {
         usage: buffersUsage[SCALE_BY_DISTANCE_INDEX],
       },
       {
-        index: attributeLocations.distanceDisplayConditionAndDisableDepth,
-        componentsPerAttribute: 3,
+        index:
+          attributeLocations.distanceDisplayConditionAndDisableDepthAndSplitDirection,
+        componentsPerAttribute: 4,
         componentDatatype: ComponentDatatype.FLOAT,
         usage: buffersUsage[DISTANCE_DISPLAY_CONDITION_INDEX],
       },
@@ -665,7 +667,7 @@ function writeScaleByDistance(
   writer(i, near, nearValue, far, farValue);
 }
 
-function writeDistanceDisplayConditionAndDepthDisable(
+function writeDistanceDisplayConditionAndDepthDisableAndSplitDirection(
   pointPrimitiveCollection,
   context,
   vafWriters,
@@ -673,7 +675,10 @@ function writeDistanceDisplayConditionAndDepthDisable(
 ) {
   const i = pointPrimitive._index;
   const writer =
-    vafWriters[attributeLocations.distanceDisplayConditionAndDisableDepth];
+    vafWriters[
+      attributeLocations
+        .distanceDisplayConditionAndDisableDepthAndSplitDirection
+    ];
   let near = 0.0;
   let far = Number.MAX_VALUE;
 
@@ -697,7 +702,12 @@ function writeDistanceDisplayConditionAndDepthDisable(
     }
   }
 
-  writer(i, near, far, disableDepthTestDistance);
+  let direction = 0.0;
+  const split = pointPrimitive.splitDirection;
+  if (defined(split)) {
+    direction = split;
+  }
+  writer(i, near, far, disableDepthTestDistance, direction);
 }
 
 function writePointPrimitive(
@@ -730,7 +740,7 @@ function writePointPrimitive(
     vafWriters,
     pointPrimitive
   );
-  writeDistanceDisplayConditionAndDepthDisable(
+  writeDistanceDisplayConditionAndDepthDisableAndSplitDirection(
     pointPrimitiveCollection,
     context,
     vafWriters,
@@ -925,9 +935,12 @@ PointPrimitiveCollection.prototype.update = function (frameState) {
 
     if (
       properties[DISTANCE_DISPLAY_CONDITION_INDEX] ||
-      properties[DISABLE_DEPTH_DISTANCE_INDEX]
+      properties[DISABLE_DEPTH_DISTANCE_INDEX] ||
+      properties[SPLIT_DIRECTION_INDEX]
     ) {
-      writers.push(writeDistanceDisplayConditionAndDepthDisable);
+      writers.push(
+        writeDistanceDisplayConditionAndDepthDisableAndSplitDirection
+      );
     }
 
     const numWriters = writers.length;

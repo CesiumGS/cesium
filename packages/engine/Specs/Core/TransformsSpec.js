@@ -1220,6 +1220,79 @@ describe("Core/Transforms", function () {
     expect(tAngle).toEqualEpsilon(uAngle, CesiumMath.EPSILON6);
   });
 
+  describe("computeIcrfToMoonFixedMatrix", function () {
+    it("throws if the date parameter is not specified", function () {
+      expect(function () {
+        Transforms.computeIcrfToMoonFixedMatrix(undefined);
+      }).toThrowDeveloperError();
+
+      expect(function () {
+        Transforms.computeFixedToIcrfMatrix(undefined);
+      }).toThrowDeveloperError();
+    });
+
+    it("works", async function () {
+      // 2011-07-03 00:00:00 UTC
+      let time = new JulianDate(2455745, 43200);
+
+      const resultT = new Matrix3();
+      const t = Transforms.computeIcrfToMoonFixedMatrix(time, resultT);
+      expect(t).toBe(resultT);
+
+      // rotation matrix determinants are 1.0
+      const det =
+        t[0] * t[4] * t[8] +
+        t[3] * t[7] * t[2] +
+        t[6] * t[1] * t[5] -
+        t[6] * t[4] * t[2] -
+        t[3] * t[1] * t[8] -
+        t[0] * t[7] * t[5];
+      expect(det).toEqualEpsilon(1.0, CesiumMath.EPSILON14);
+
+      // rotation matrix inverses are equal to its transpose
+      const t4 = Matrix4.fromRotationTranslation(t);
+      expect(Matrix4.inverse(t4, new Matrix4())).toEqualEpsilon(
+        Matrix4.inverseTransformation(t4, new Matrix4()),
+        CesiumMath.EPSILON14
+      );
+
+      time = JulianDate.addHours(time, 27.321661 * 24, new JulianDate()); // add one sidereal month
+      const resultU = new Matrix3();
+      const u = Transforms.computeIcrfToMoonFixedMatrix(time, resultU);
+      expect(u).toBe(resultU);
+      const tAngle = Quaternion.computeAngle(Quaternion.fromRotationMatrix(t));
+      const uAngle = Quaternion.computeAngle(Quaternion.fromRotationMatrix(u));
+      expect(tAngle).toEqualEpsilon(uAngle, CesiumMath.EPSILON3);
+
+      const expectedMtx = new Matrix3(
+        -0.44796811269393627,
+        0.8934634849604557,
+        0.03236620230657612,
+        0.8184479558129512,
+        0.3952490953922868,
+        0.4170384828971786,
+        0.3598159441089767,
+        0.2133099942194372,
+        -0.9083123541662688
+      );
+
+      const testInverse = Matrix3.multiply(
+        Matrix3.transpose(t, new Matrix3()),
+        expectedMtx,
+        new Matrix3()
+      );
+      const testDiff = new Matrix3();
+      for (let i = 0; i < 9; i++) {
+        testDiff[i] = t[i] - expectedMtx[i];
+      }
+      expect(testInverse).toEqualEpsilon(
+        Matrix3.IDENTITY,
+        CesiumMath.EPSILON14
+      );
+      expect(testDiff).toEqualEpsilon(new Matrix3(), CesiumMath.EPSILON14);
+    });
+  });
+
   describe("computeIcrfToFixedMatrix", function () {
     async function preloadTransformationData(start, stop, eopUrl) {
       if (defined(eopUrl)) {
@@ -1890,12 +1963,12 @@ describe("Core/Transforms", function () {
     expect(rotation2D).toEqualEpsilon(expected, CesiumMath.EPSILON3);
   });
 
-  it("wgs84To2DModelMatrix creates a model matrix to transform vertices centered origin to 2D", function () {
+  it("ellipsoidTo2DModelMatrix creates a model matrix to transform vertices centered origin to 2D", function () {
     const ellipsoid = Ellipsoid.WGS84;
     const projection = new GeographicProjection(ellipsoid);
     const origin = Cartesian3.fromDegrees(-72.0, 40.0, 100.0, ellipsoid);
 
-    const actual = Transforms.wgs84To2DModelMatrix(
+    const actual = Transforms.ellipsoidTo2DModelMatrix(
       projection,
       origin,
       new Matrix4()
@@ -2053,9 +2126,9 @@ describe("Core/Transforms", function () {
     }).toThrowDeveloperError();
   });
 
-  it("wgs84To2DModelMatrix throws without projection", function () {
+  it("ellipsoidTo2DModelMatrix throws without projection", function () {
     expect(function () {
-      Transforms.wgs84To2DModelMatrix(
+      Transforms.ellipsoidTo2DModelMatrix(
         undefined,
         Cartesian3.UNIT_X,
         new Matrix4()
@@ -2063,9 +2136,9 @@ describe("Core/Transforms", function () {
     }).toThrowDeveloperError();
   });
 
-  it("wgs84To2DModelMatrix throws without center", function () {
+  it("ellipsoidTo2DModelMatrix throws without center", function () {
     expect(function () {
-      Transforms.wgs84To2DModelMatrix(
+      Transforms.ellipsoidTo2DModelMatrix(
         new GeographicProjection(),
         undefined,
         new Matrix4()
@@ -2073,9 +2146,9 @@ describe("Core/Transforms", function () {
     }).toThrowDeveloperError();
   });
 
-  it("wgs84To2DModelMatrix throws without result", function () {
+  it("ellipsoidTo2DModelMatrix throws without result", function () {
     expect(function () {
-      Transforms.wgs84To2DModelMatrix(
+      Transforms.ellipsoidTo2DModelMatrix(
         new GeographicProjection(),
         Cartesian3.UNIT_X,
         undefined

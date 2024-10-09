@@ -90,15 +90,15 @@ function SelectionIndicatorViewModel(
    *
    * @member
    * @type {SelectionIndicatorViewModel.ComputeScreenSpacePosition}
-   * @default SceneTransforms.wgs84ToWindowCoordinates
+   * @default SceneTransforms.worldToWindowCoordinates
    *
    * @example
    * selectionIndicatorViewModel.computeScreenSpacePosition = function(position, result) {
-   *     return Cesium.SceneTransforms.wgs84ToWindowCoordinates(scene, position, result);
+   *     return Cesium.SceneTransforms.worldToWindowCoordinates(scene, position, result);
    * };
    */
   this.computeScreenSpacePosition = function (position, result) {
-    return SceneTransforms.wgs84ToWindowCoordinates(scene, position, result);
+    return SceneTransforms.worldToWindowCoordinates(scene, position, result);
   };
 }
 

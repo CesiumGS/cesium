@@ -46,6 +46,10 @@ void main()
     MetadataStatistics metadataStatistics;
     metadataStage(metadata, metadataClass, metadataStatistics, attributes);
 
+    //========================================================================
+    // When not picking metadata START
+    #ifndef METADATA_PICKING_ENABLED
+
     #ifdef HAS_SELECTED_FEATURE_ID
     selectedFeatureIdStage(selectedFeature, featureIds);
     #endif
@@ -74,6 +78,20 @@ void main()
 
     vec4 color = handleAlpha(material.diffuse, material.alpha);
 
+    // When not picking metadata END
+    //========================================================================
+    #else
+    //========================================================================
+    // When picking metadata START
+
+    vec4 metadataValues = vec4(0.0, 0.0, 0.0, 0.0);
+    metadataPickingStage(metadata, metadataClass, metadataValues);
+    vec4 color = metadataValues;
+
+    #endif
+    // When picking metadata END
+    //========================================================================
+
     #ifdef HAS_CLIPPING_PLANES
     modelClippingPlanesStage(color);
     #endif
@@ -81,6 +99,10 @@ void main()
     #ifdef ENABLE_CLIPPING_POLYGONS
     modelClippingPolygonsStage();
     #endif
+
+    //========================================================================
+    // When not picking metadata START
+    #ifndef METADATA_PICKING_ENABLED
 
     #if defined(HAS_SILHOUETTE) && defined(HAS_NORMALS)
     silhouetteStage(color);
@@ -93,6 +115,10 @@ void main()
     #ifdef HAS_GAUSSIAN_SPLATS
     gaussianSplatStage(color, attributes);
     #endif
+
+    #endif
+    // When not picking metadata END
+    //========================================================================
 
     out_FragColor = color;
 }

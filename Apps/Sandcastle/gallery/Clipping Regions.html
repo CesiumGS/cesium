@@ -16,10 +16,7 @@
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -73,9 +70,7 @@
         // Add tileset of proposed new building
         let buildingTileset;
         try {
-          buildingTileset = await Cesium.Cesium3DTileset.fromIonAssetId(
-            1670818
-          );
+          buildingTileset = await Cesium.Cesium3DTileset.fromIonAssetId(1670818);
           scene.primitives.add(buildingTileset);
         } catch (error) {
           console.log(`Error loading building tileset.
@@ -150,9 +145,7 @@
         });
 
         // Toggle between default and inverse clipping
-        Sandcastle.addToggleButton("Inverse clipping", false, function (
-          checked
-        ) {
+        Sandcastle.addToggleButton("Inverse clipping", false, function (checked) {
           worldTileset.clippingPolygons.inverse = checked;
           scene.globe.clippingPolygons.inverse = checked;
         });
@@ -160,17 +153,13 @@
         Sandcastle.addToolbarButton("Remove last polygon", () => {
           if (worldTileset.clippingPolygons.length > 0) {
             worldTileset.clippingPolygons.remove(
-              worldTileset.clippingPolygons.get(
-                worldTileset.clippingPolygons.length - 1
-              )
+              worldTileset.clippingPolygons.get(worldTileset.clippingPolygons.length - 1)
             );
           }
 
           if (scene.globe.clippingPolygons.length > 0) {
             scene.globe.clippingPolygons.remove(
-              scene.globe.clippingPolygons.get(
-                scene.globe.clippingPolygons.length - 1
-              )
+              scene.globe.clippingPolygons.get(scene.globe.clippingPolygons.length - 1)
             );
           }
         });

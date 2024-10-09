@@ -41,17 +41,12 @@ import CubeMap from "./CubeMap.js";
 function loadCubeMap(context, urls, skipColorSpaceConversion) {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("context", context);
+  Check.defined("urls", urls);
   if (
-    !defined(urls) ||
-    !defined(urls.positiveX) ||
-    !defined(urls.negativeX) ||
-    !defined(urls.positiveY) ||
-    !defined(urls.negativeY) ||
-    !defined(urls.positiveZ) ||
-    !defined(urls.negativeZ)
+    Object.values(CubeMap.FaceName).some((faceName) => !defined(urls[faceName]))
   ) {
     throw new DeveloperError(
-      "urls is required and must have positiveX, negativeX, positiveY, negativeY, positiveZ, and negativeZ properties."
+      "urls must have positiveX, negativeX, positiveY, negativeY, positiveZ, and negativeZ properties."
     );
   }
   //>>includeEnd('debug');

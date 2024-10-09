@@ -19,10 +19,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
       #toolbar {
@@ -55,19 +52,13 @@
         />Print metadata
       </div>
       <div>
-        <input
-          type="radio"
-          value="zoom"
-          data-bind="checked: rightClickAction"
-        />Zoom to feature
+        <input type="radio" value="zoom" data-bind="checked: rightClickAction" />Zoom to
+        feature
       </div>
       <div class="header">Middle click action:</div>
       <div>
-        <input
-          type="radio"
-          value="hide"
-          data-bind="checked: middleClickAction"
-        />Hide feature
+        <input type="radio" value="hide" data-bind="checked: middleClickAction" />Hide
+        feature
       </div>
     </div>
     <script id="cesium_sandcastle_script">
@@ -192,18 +183,12 @@
           if (!Cesium.defined(style)) {
             return;
           }
-          console.log(
-            `Description : ${style.meta.description.evaluate(feature)}`
-          );
+          console.log(`Description : ${style.meta.description.evaluate(feature)}`);
         }
 
         function zoom(movement, feature) {
-          const longitude = Cesium.Math.toRadians(
-            feature.getProperty("Longitude")
-          );
-          const latitude = Cesium.Math.toRadians(
-            feature.getProperty("Latitude")
-          );
+          const longitude = Cesium.Math.toRadians(feature.getProperty("Longitude"));
+          const latitude = Cesium.Math.toRadians(feature.getProperty("Latitude"));
           const height = feature.getProperty("Height");
 
           const positionCartographic = new Cesium.Cartographic(
@@ -219,11 +204,7 @@
           const heading = camera.heading;
           const pitch = camera.pitch;
 
-          const offset = offsetFromHeadingPitchRange(
-            heading,
-            pitch,
-            height * 2.0
-          );
+          const offset = offsetFromHeadingPitchRange(heading, pitch, height * 2.0);
 
           const transform = Cesium.Transforms.eastNorthUpToFixedFrame(position);
           Cesium.Matrix4.multiplyByPoint(transform, offset, position);
@@ -254,11 +235,7 @@
             Cesium.Cartesian3.UNIT_Z,
             -heading
           );
-          const rotQuat = Cesium.Quaternion.multiply(
-            headingQuat,
-            pitchQuat,
-            headingQuat
-          );
+          const rotQuat = Cesium.Quaternion.multiply(headingQuat, pitchQuat, headingQuat);
           const rotMatrix = Cesium.Matrix3.fromQuaternion(rotQuat);
 
           const offset = Cesium.Cartesian3.clone(Cesium.Cartesian3.UNIT_X);

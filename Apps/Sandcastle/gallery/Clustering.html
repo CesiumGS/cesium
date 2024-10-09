@@ -18,10 +18,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
       #toolbar {
@@ -63,11 +60,7 @@
                 step="1"
                 data-bind="value: minimumClusterSize, valueUpdate: 'input'"
               />
-              <input
-                type="text"
-                size="2"
-                data-bind="value: minimumClusterSize"
-              />
+              <input type="text" size="2" data-bind="value: minimumClusterSize" />
             </td>
           </tr>
         </tbody>
@@ -101,21 +94,11 @@
           let removeListener;
 
           const pinBuilder = new Cesium.PinBuilder();
-          const pin50 = pinBuilder
-            .fromText("50+", Cesium.Color.RED, 48)
-            .toDataURL();
-          const pin40 = pinBuilder
-            .fromText("40+", Cesium.Color.ORANGE, 48)
-            .toDataURL();
-          const pin30 = pinBuilder
-            .fromText("30+", Cesium.Color.YELLOW, 48)
-            .toDataURL();
-          const pin20 = pinBuilder
-            .fromText("20+", Cesium.Color.GREEN, 48)
-            .toDataURL();
-          const pin10 = pinBuilder
-            .fromText("10+", Cesium.Color.BLUE, 48)
-            .toDataURL();
+          const pin50 = pinBuilder.fromText("50+", Cesium.Color.RED, 48).toDataURL();
+          const pin40 = pinBuilder.fromText("40+", Cesium.Color.ORANGE, 48).toDataURL();
+          const pin30 = pinBuilder.fromText("30+", Cesium.Color.YELLOW, 48).toDataURL();
+          const pin20 = pinBuilder.fromText("20+", Cesium.Color.GREEN, 48).toDataURL();
+          const pin10 = pinBuilder.fromText("10+", Cesium.Color.BLUE, 48).toDataURL();
 
           const singleDigitPins = new Array(8);
           for (let i = 0; i < singleDigitPins.length; ++i) {
@@ -134,8 +117,7 @@
                   cluster.label.show = false;
                   cluster.billboard.show = true;
                   cluster.billboard.id = cluster.label.id;
-                  cluster.billboard.verticalOrigin =
-                    Cesium.VerticalOrigin.BOTTOM;
+                  cluster.billboard.verticalOrigin = Cesium.VerticalOrigin.BOTTOM;
 
                   if (clusteredEntities.length >= 50) {
                     cluster.billboard.image = pin50;
@@ -174,11 +156,9 @@
           Cesium.knockout.applyBindings(viewModel, toolbar);
 
           function subscribeParameter(name) {
-            Cesium.knockout
-              .getObservable(viewModel, name)
-              .subscribe(function (newValue) {
-                dataSource.clustering[name] = newValue;
-              });
+            Cesium.knockout.getObservable(viewModel, name).subscribe(function (newValue) {
+              dataSource.clustering[name] = newValue;
+            });
           }
 
           subscribeParameter("pixelRange");
@@ -188,15 +168,11 @@
             dataSource.clustering.enabled = checked;
           });
 
-          Sandcastle.addToggleButton("Custom Styling", true, function (
-            checked
-          ) {
+          Sandcastle.addToggleButton("Custom Styling", true, function (checked) {
             customStyle();
           });
 
-          const handler = new Cesium.ScreenSpaceEventHandler(
-            viewer.scene.canvas
-          );
+          const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
           handler.setInputAction(function (movement) {
             const pickedLabel = viewer.scene.pick(movement.position);
             if (Cesium.defined(pickedLabel)) {

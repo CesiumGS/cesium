@@ -21,10 +21,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -94,10 +91,7 @@
           endCartographic = Cesium.Cartographic.fromCartesian(endPoint);
 
           geodesic.setEndPoints(startCartographic, endCartographic);
-          const midpointCartographic = geodesic.interpolateUsingFraction(
-            0.5,
-            scratch
-          );
+          const midpointCartographic = geodesic.interpolateUsingFraction(0.5, scratch);
           return Cesium.Cartesian3.fromRadians(
             midpointCartographic.longitude,
             midpointCartographic.latitude

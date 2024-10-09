@@ -381,110 +381,212 @@ describe(
       expect(scene).toRender([0, 255, 255, 255]);
     });
 
-    it("uses Reinhard tonemapping", function () {
-      if (!scene.highDynamicRangeSupported) {
-        return;
+    describe("HDR tonemapping", () => {
+      const black = [0, 0, 0, 255];
+      const grey = [0.5, 0.5, 0.5, 1.0];
+      const white = [4.0, 4.0, 4.0, 1.0];
+      const red = [4.0, 0.0, 0.0, 1.0];
+      const green = [0.0, 4.0, 0.0, 1.0];
+      const blue = [0.0, 0.0, 4.0, 1.0];
+
+      /**
+       * @param {Tonemapper} tonemapper
+       * @param {number[]} inputFragColor rgba in float values to use in fragment shader
+       * @param {number[]} expectedColor rgba in rgb 0-255 to use for expected rendered colors
+       */
+      function validateTonemapper(tonemapper, inputFragColor, expectedColor) {
+        if (!scene.highDynamicRangeSupported) {
+          return;
+        }
+
+        scene.postProcessStages.tonemapper = tonemapper;
+
+        const inputColorRgb = inputFragColor.map((n) =>
+          Math.floor(Math.min(Math.max(n * 255, 0), 255))
+        );
+        const fs =
+          "void main() { \n" +
+          `    out_FragColor = vec4(${inputFragColor.join(", ")}); \n` +
+          "} \n";
+        scene.primitives.add(new ViewportPrimitive(fs));
+
+        // validate we start by rendering the expected color
+        expect(scene)
+          .withContext(`without HDR`)
+          .toRenderAndCall((rgba) => {
+            expect(rgba[0])
+              .withContext("r")
+              .toEqualEpsilon(inputColorRgb[0], 1);
+            expect(rgba[1])
+              .withContext("g")
+              .toEqualEpsilon(inputColorRgb[1], 1);
+            expect(rgba[2])
+              .withContext("b")
+              .toEqualEpsilon(inputColorRgb[2], 1);
+            expect(rgba[3]).withContext("a").toEqual(inputColorRgb[3]);
+          });
+        // toggle HDR on
+        scene.highDynamicRange = true;
+        // validate we render a DIFFERENT color, not black, and that it matches the expected color
+        expect(scene).toRenderAndCall(function (rgba) {
+          expect(rgba).not.toEqual(black);
+          expect(rgba).withContext(`with HDR`).not.toEqual(inputColorRgb);
+          expect(rgba[0]).withContext("r").toEqual(expectedColor[0]);
+          expect(rgba[1]).withContext("g").toEqual(expectedColor[1]);
+          expect(rgba[2]).withContext("b").toEqual(expectedColor[2]);
+          expect(rgba[3]).withContext("a").toEqual(expectedColor[3]);
+        });
       }
 
-      const fs =
-        "void main() { \n" +
-        "    out_FragColor = vec4(4.0, 0.0, 0.0, 1.0); \n" +
-        "} \n";
-      scene.primitives.add(new ViewportPrimitive(fs));
-
-      scene.postProcessStages.tonemapper = Tonemapper.REINHARD;
-
-      expect(scene).toRender([255, 0, 0, 255]);
-      scene.highDynamicRange = true;
-      expect(scene).toRenderAndCall(function (rgba) {
-        expect(rgba).not.toEqual([0, 0, 0, 255]);
-        expect(rgba).not.toEqual([255, 0, 0, 255]);
-        expect(rgba[0]).toBeGreaterThan(0);
-        expect(rgba[1]).toEqual(0);
-        expect(rgba[2]).toEqual(0);
-        expect(rgba[3]).toEqual(255);
+      describe("Reinhard", () => {
+        it("white", () => {
+          validateTonemapper(Tonemapper.REINHARD, white, [230, 230, 230, 255]);
+        });
+        it("grey", () => {
+          validateTonemapper(Tonemapper.REINHARD, grey, [155, 155, 155, 255]);
+        });
+        it("red", () => {
+          validateTonemapper(Tonemapper.REINHARD, red, [230, 0, 0, 255]);
+        });
+        it("green", () => {
+          validateTonemapper(Tonemapper.REINHARD, green, [0, 230, 0, 255]);
+        });
+        it("blue", () => {
+          validateTonemapper(Tonemapper.REINHARD, blue, [0, 0, 230, 255]);
+        });
       });
-      scene.highDynamicRange = false;
-    });
 
-    it("uses modified Reinhard tonemapping", function () {
-      if (!scene.highDynamicRangeSupported) {
-        return;
-      }
+      describe("Modified Reinhard", () => {
+        it("white", () => {
+          // our white point is currently set to 1.0 which means pure white in = pure white out
+          // this is a special check the helper cannot account for
+          if (!scene.highDynamicRangeSupported) {
+            return;
+          }
 
-      const fs =
-        "void main() { \n" +
-        "    out_FragColor = vec4(0.5, 0.0, 0.0, 1.0); \n" +
-        "} \n";
-      scene.primitives.add(new ViewportPrimitive(fs));
+          const fs =
+            "void main() { \n" +
+            "    out_FragColor = vec4(4.0, 4.0, 4.0, 1.0); \n" +
+            "} \n";
+          scene.primitives.add(new ViewportPrimitive(fs));
 
-      scene.postProcessStages.tonemapper = Tonemapper.MODIFIED_REINHARD;
+          scene.postProcessStages.tonemapper = Tonemapper.MODIFIED_REINHARD;
 
-      expect(scene).toRenderAndCall(function (rgba) {
-        expect(rgba).toEqualEpsilon([127, 0, 0, 255], 5);
+          expect(scene).toRender([255, 255, 255, 255]);
+          scene.highDynamicRange = true;
+          expect(scene).toRenderAndCall(function (rgba) {
+            expect(rgba).not.toEqual(black);
+            expect(rgba).toEqual([255, 255, 255, 255]);
+            expect(rgba[0]).withContext("r").toEqual(255);
+            expect(rgba[1]).withContext("g").toEqual(255);
+            expect(rgba[2]).withContext("b").toEqual(255);
+            expect(rgba[3]).withContext("a").toEqual(255);
+          });
+          scene.highDynamicRange = false;
+        });
+        it("grey", () => {
+          validateTonemapper(
+            Tonemapper.MODIFIED_REINHARD,
+            [0.5, 0.5, 0.5, 1.0],
+            [186, 186, 186, 255]
+          );
+        });
+        it("red", () => {
+          validateTonemapper(
+            Tonemapper.MODIFIED_REINHARD,
+            [0.5, 0.0, 0.0, 1.0],
+            [186, 0, 0, 255]
+          );
+        });
+        it("green", () => {
+          validateTonemapper(
+            Tonemapper.MODIFIED_REINHARD,
+            [0.0, 0.5, 0.0, 1.0],
+            [0, 186, 0, 255]
+          );
+        });
+        it("blue", () => {
+          validateTonemapper(
+            Tonemapper.MODIFIED_REINHARD,
+            [0.0, 0.0, 0.5, 1.0],
+            [0, 0, 186, 255]
+          );
+        });
       });
-      scene.highDynamicRange = true;
-      expect(scene).toRenderAndCall(function (rgba) {
-        expect(rgba).not.toEqual([0, 0, 0, 255]);
-        expect(rgba).not.toEqual([127, 0, 0, 255]);
-        expect(rgba[0]).toBeGreaterThan(0);
-        expect(rgba[1]).toEqual(0);
-        expect(rgba[2]).toEqual(0);
-        expect(rgba[3]).toEqual(255);
+
+      describe("Filmic", () => {
+        it("white", () => {
+          validateTonemapper(Tonemapper.FILMIC, white, [236, 236, 236, 255]);
+        });
+        it("grey", () => {
+          validateTonemapper(Tonemapper.FILMIC, grey, [142, 142, 142, 255]);
+        });
+        it("red", () => {
+          validateTonemapper(Tonemapper.FILMIC, red, [236, 0, 0, 255]);
+        });
+        it("green", () => {
+          validateTonemapper(Tonemapper.FILMIC, green, [0, 236, 0, 255]);
+        });
+        it("blue", () => {
+          validateTonemapper(Tonemapper.FILMIC, blue, [0, 0, 236, 255]);
+        });
       });
-      scene.highDynamicRange = false;
-    });
 
-    it("uses filmic tonemapping", function () {
-      if (!scene.highDynamicRangeSupported) {
-        return;
-      }
-
-      const fs =
-        "void main() { \n" +
-        "    out_FragColor = vec4(4.0, 0.0, 0.0, 1.0); \n" +
-        "} \n";
-      scene.primitives.add(new ViewportPrimitive(fs));
-
-      scene.postProcessStages.tonemapper = Tonemapper.FILMIC;
-
-      expect(scene).toRender([255, 0, 0, 255]);
-      scene.highDynamicRange = true;
-      expect(scene).toRenderAndCall(function (rgba) {
-        expect(rgba).not.toEqual([0, 0, 0, 255]);
-        expect(rgba).not.toEqual([255, 0, 0, 255]);
-        expect(rgba[0]).toBeGreaterThan(0);
-        expect(rgba[1]).toEqual(0);
-        expect(rgba[2]).toEqual(0);
-        expect(rgba[3]).toEqual(255);
+      describe("ACES", () => {
+        it("white", () => {
+          validateTonemapper(Tonemapper.ACES, white, [245, 245, 245, 255]);
+        });
+        it("grey", () => {
+          validateTonemapper(Tonemapper.ACES, grey, [169, 169, 169, 255]);
+        });
+        it("red", () => {
+          validateTonemapper(Tonemapper.ACES, red, [245, 0, 0, 255]);
+        });
+        it("green", () => {
+          validateTonemapper(Tonemapper.ACES, green, [0, 245, 0, 255]);
+        });
+        it("blue", () => {
+          validateTonemapper(Tonemapper.ACES, blue, [0, 0, 245, 255]);
+        });
       });
-      scene.highDynamicRange = false;
-    });
 
-    it("uses ACES tonemapping", function () {
-      if (!scene.highDynamicRangeSupported) {
-        return;
-      }
-
-      const fs =
-        "void main() { \n" +
-        "    out_FragColor = vec4(4.0, 0.0, 0.0, 1.0); \n" +
-        "} \n";
-      scene.primitives.add(new ViewportPrimitive(fs));
-
-      scene.postProcessStages.tonemapper = Tonemapper.ACES;
-
-      expect(scene).toRender([255, 0, 0, 255]);
-      scene.highDynamicRange = true;
-      expect(scene).toRenderAndCall(function (rgba) {
-        expect(rgba).not.toEqual([0, 0, 0, 255]);
-        expect(rgba).not.toEqual([255, 0, 0, 255]);
-        expect(rgba[0]).toBeGreaterThan(0);
-        expect(rgba[1]).toEqual(0);
-        expect(rgba[2]).toEqual(0);
-        expect(rgba[3]).toEqual(255);
+      describe("PBR Neutral", () => {
+        it("white", () => {
+          validateTonemapper(Tonemapper.PBR_NEUTRAL, white, [
+            253,
+            253,
+            253,
+            255,
+          ]);
+        });
+        it("grey", () => {
+          validateTonemapper(Tonemapper.PBR_NEUTRAL, grey, [
+            179,
+            179,
+            179,
+            255,
+          ]);
+        });
+        it("red", () => {
+          validateTonemapper(Tonemapper.PBR_NEUTRAL, red, [253, 149, 149, 255]);
+        });
+        it("green", () => {
+          validateTonemapper(Tonemapper.PBR_NEUTRAL, green, [
+            149,
+            253,
+            149,
+            255,
+          ]);
+        });
+        it("blue", () => {
+          validateTonemapper(Tonemapper.PBR_NEUTRAL, blue, [
+            149,
+            149,
+            253,
+            255,
+          ]);
+        });
       });
-      scene.highDynamicRange = false;
     });
 
     it("destroys", function () {

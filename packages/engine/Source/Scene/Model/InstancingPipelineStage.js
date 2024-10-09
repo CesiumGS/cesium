@@ -276,7 +276,7 @@ function projectPositionTo2D(
     projectedPositionScratch
   );
 
-  result = SceneTransforms.computeActualWgs84Position(
+  result = SceneTransforms.computeActualEllipsoidPosition(
     frameState,
     finalPosition,
     result
@@ -432,7 +432,7 @@ function computeReferencePoint2D(renderResources, frameState) {
     scratchProjectedMin
   );
 
-  const projectedMin = SceneTransforms.computeActualWgs84Position(
+  const projectedMin = SceneTransforms.computeActualEllipsoidPosition(
     frameState,
     transformedPositionMin,
     transformedPositionMin
@@ -444,7 +444,7 @@ function computeReferencePoint2D(renderResources, frameState) {
     scratchProjectedMax
   );
 
-  const projectedMax = SceneTransforms.computeActualWgs84Position(
+  const projectedMax = SceneTransforms.computeActualEllipsoidPosition(
     frameState,
     transformedPositionMax,
     transformedPositionMax

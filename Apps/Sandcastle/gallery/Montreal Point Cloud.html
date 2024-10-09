@@ -21,10 +21,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
       #toolbar {
@@ -321,14 +318,8 @@
             const key = styleKeys[i];
             const id = classificationDictionary[key];
 
-            const colorCondition = [
-              `\${Classification} === ${id}`,
-              styles[key].color,
-            ];
-            const showCondition = [
-              `\${Classification} === ${id}`,
-              styles[key].show,
-            ];
+            const colorCondition = [`\${Classification} === ${id}`, styles[key].color];
+            const showCondition = [`\${Classification} === ${id}`, styles[key].show];
 
             if (id === -1) {
               colorCondition[0] = true;
@@ -375,14 +366,12 @@
         Cesium.knockout.applyBindings(viewModel, toolbar);
 
         // Set up the checkboxes.
-        Cesium.knockout
-          .getObservable(viewModel, "ground")
-          .subscribe(function (show) {
-            pointStyles.ground.show = show;
-            pointStyles.not_awarded.show = show;
+        Cesium.knockout.getObservable(viewModel, "ground").subscribe(function (show) {
+          pointStyles.ground.show = show;
+          pointStyles.not_awarded.show = show;
 
-            applyStyle(tileset, pointStyles);
-          });
+          applyStyle(tileset, pointStyles);
+        });
 
         Cesium.knockout
           .getObservable(viewModel, "low_vegetation")
@@ -408,23 +397,19 @@
             applyStyle(tileset, pointStyles);
           });
 
-        Cesium.knockout
-          .getObservable(viewModel, "buildings")
-          .subscribe(function (show) {
-            pointStyles.buildings.show = show;
+        Cesium.knockout.getObservable(viewModel, "buildings").subscribe(function (show) {
+          pointStyles.buildings.show = show;
 
-            applyStyle(tileset, pointStyles);
-          });
+          applyStyle(tileset, pointStyles);
+        });
 
-        Cesium.knockout
-          .getObservable(viewModel, "other")
-          .subscribe(function (show) {
-            pointStyles.low_point.show = show;
-            pointStyles.reserved_city_diffusion.show = show;
-            pointStyles.unclassified.show = show;
+        Cesium.knockout.getObservable(viewModel, "other").subscribe(function (show) {
+          pointStyles.low_point.show = show;
+          pointStyles.reserved_city_diffusion.show = show;
+          pointStyles.unclassified.show = show;
 
-            applyStyle(tileset, pointStyles);
-          });
+          applyStyle(tileset, pointStyles);
+        });
         //Sandcastle_End
       };
       if (typeof Cesium !== "undefined") {

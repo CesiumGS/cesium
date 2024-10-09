@@ -49,9 +49,9 @@ import DeveloperError from "../Core/DeveloperError.js";
  *                    a tiled layer.
  * @property {TilingScheme} [tilingScheme=new GeographicTilingScheme()] The tiling scheme to use to divide the world into tiles.
  *                       This parameter is ignored when accessing a tiled server.
- * @property {Ellipsoid} [ellipsoid] The ellipsoid.  If the tilingScheme is specified and used,
+ * @property {Ellipsoid} [ellipsoid=Ellipsoid.default] The ellipsoid.  If the tilingScheme is specified and used,
  *                    this parameter is ignored and the tiling scheme's ellipsoid is used instead. If neither
- *                    parameter is specified, the WGS84 ellipsoid is used.
+ *                    parameter is specified, the default ellipsoid is used.
  * @property {Credit|string} [credit] A credit for the data source, which is displayed on the canvas.  This parameter is ignored when accessing a tiled server.
  * @property {number} [tileWidth=256] The width of each tile in pixels.  This parameter is ignored when accessing a tiled server.
  * @property {number} [tileHeight=256] The height of each tile in pixels.  This parameter is ignored when accessing a tiled server.
@@ -260,9 +260,9 @@ async function requestMetadata(resource, imageryProviderBuilder) {
  *
  * Provides tiled imagery hosted by an ArcGIS MapServer.  By default, the server's pre-cached tiles are
  * used, if available.
- * 
+ *
  * <br/>
- * 
+ *
  * An {@link https://developers.arcgis.com/documentation/mapping-apis-and-services/security| ArcGIS Access Token } is required to authenticate requests to an ArcGIS Image Tile service.
  * To access secure ArcGIS resources, it's required to create an ArcGIS developer
  * account or an ArcGIS online account, then implement an authentication method to obtain an access token.
@@ -278,7 +278,7 @@ async function requestMetadata(resource, imageryProviderBuilder) {
  * @example
  * // Set the default access token for accessing ArcGIS Image Tile service
  * Cesium.ArcGisMapService.defaultAccessToken = "<ArcGIS Access Token>";
- * 
+ *
  * // Add a base layer from a default ArcGIS basemap
  * const viewer = new Cesium.Viewer("cesiumContainer", {
  *   baseLayer: Cesium.ImageryLayer.fromProviderAsync(

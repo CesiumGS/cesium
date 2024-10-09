@@ -18,10 +18,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -135,11 +132,7 @@
           entity.billboard.eyeOffset = eyeOffset;
           if (Cesium.defined(entity.label)) {
             labelOffset = entity.label.eyeOffset;
-            entity.label.eyeOffset = new Cesium.Cartesian3(
-              offset.x,
-              offset.y,
-              -10.0
-            );
+            entity.label.eyeOffset = new Cesium.Cartesian3(offset.x, offset.y, -10.0);
           }
 
           const endPoint = Cesium.Matrix4.multiplyByPoint(
@@ -148,11 +141,7 @@
             new Cesium.Cartesian3()
           );
           Cesium.Cartesian3.add(eyeOffset, endPoint, endPoint);
-          Cesium.Matrix4.multiplyByPoint(
-            camera.inverseViewMatrix,
-            endPoint,
-            endPoint
-          );
+          Cesium.Matrix4.multiplyByPoint(camera.inverseViewMatrix, endPoint, endPoint);
           lines.push(endPoint);
 
           billboardEyeOffsets.push(billboardOffset);
@@ -206,9 +195,7 @@
           while (i < length) {
             let object = billboardEntities[i];
             if (pickedEntities.length === 0) {
-              starBurstState.center = Cesium.Cartesian3.clone(
-                object.primitive.position
-              );
+              starBurstState.center = Cesium.Cartesian3.clone(object.primitive.position);
             }
 
             if (!Cesium.defined(angleIncrease)) {
@@ -252,10 +239,7 @@
             }
 
             angle += angleIncrease;
-            if (
-              reflectedAngle - angleIncrease * 0.5 <
-              angle + angleIncrease * 0.5
-            ) {
+            if (reflectedAngle - angleIncrease * 0.5 < angle + angleIncrease * 0.5) {
               magnitude += magIncrease;
               angle = angleStart;
               angleIncrease = maxDimension / magnitude;
@@ -320,7 +304,7 @@
 
           // Remove the star burst if the mouse exits the screen space circle.
           // If the mouse is inside the circle, show the label of the billboard the mouse is hovering over.
-          const screenPosition = Cesium.SceneTransforms.wgs84ToWindowCoordinates(
+          const screenPosition = Cesium.SceneTransforms.worldToWindowCoordinates(
             scene,
             starBurstState.center
           );
@@ -390,10 +374,7 @@
           }
 
           if (pickedObject !== currentObject) {
-            if (
-              Cesium.defined(pickedObject) &&
-              Cesium.defined(pickedObject.id.label)
-            ) {
+            if (Cesium.defined(pickedObject) && Cesium.defined(pickedObject.id.label)) {
               if (Cesium.defined(currentObject)) {
                 currentObject.id.label.show = false;
               }

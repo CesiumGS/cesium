@@ -18,10 +18,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -50,9 +47,7 @@
           const icrfToFixed = scratchIcrfToFixed;
           const date = viewer.clock.currentTime;
           if (
-            !Cesium.defined(
-              Cesium.Transforms.computeIcrfToFixedMatrix(date, icrfToFixed)
-            )
+            !Cesium.defined(Cesium.Transforms.computeIcrfToFixedMatrix(date, icrfToFixed))
           ) {
             Cesium.Transforms.computeTemeToPseudoFixedMatrix(date, icrfToFixed);
           }
@@ -60,11 +55,7 @@
             date,
             scratchMoonPosition
           );
-          Cesium.Matrix3.multiplyByVector(
-            icrfToFixed,
-            moonPosition,
-            moonPosition
-          );
+          Cesium.Matrix3.multiplyByVector(icrfToFixed, moonPosition, moonPosition);
           const moonDirection = Cesium.Cartesian3.normalize(
             moonPosition,
             scratchMoonDirection

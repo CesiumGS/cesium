@@ -140,7 +140,8 @@
                         "index": 0
                     },
                     "clearcoatNormalTexture": {
-                        "index": 0
+                        "index": 0,
+                        "scale": 0.5
                     }
                 }
             }

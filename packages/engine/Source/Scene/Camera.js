@@ -1436,7 +1436,7 @@ const scratchHpr = new HeadingPitchRoll();
  * Sets the camera position, orientation and transform.
  *
  * @param {object} options Object with the following properties:
- * @param {Cartesian3|Rectangle} [options.destination] The final position of the camera in WGS84 (world) coordinates or a rectangle that would be visible from a top-down view.
+ * @param {Cartesian3|Rectangle} [options.destination] The final position of the camera in world coordinates or a rectangle that would be visible from a top-down view.
  * @param {HeadingPitchRollValues|DirectionUp} [options.orientation] An object that contains either direction and up properties or heading, pitch and roll properties. By default, the direction will point
  * towards the center of the frame in 3D and in the negative z direction in Columbus view. The up direction will point towards local north in 3D and in the positive
  * y direction in Columbus view. Orientation is not used in 2D when in infinite scrolling mode.
@@ -2343,9 +2343,12 @@ Camera.prototype.lookAt = function (target, offset) {
   }
   //>>includeEnd('debug');
 
+  const scene = this._scene;
+  const ellipsoid = defaultValue(scene.ellipsoid, Ellipsoid.default);
+
   const transform = Transforms.eastNorthUpToFixedFrame(
     target,
-    Ellipsoid.WGS84,
+    ellipsoid,
     scratchLookAtMatrix4
   );
   this.lookAtTransform(transform, offset);
@@ -2518,10 +2521,8 @@ function rectangleCameraPosition3D(camera, rectangle, result, updateCamera) {
   const ellipsoid = camera._projection.ellipsoid;
   const cameraRF = updateCamera ? camera : defaultRF;
 
-  const north = rectangle.north;
-  const south = rectangle.south;
-  let east = rectangle.east;
-  const west = rectangle.west;
+  const { north, south, west } = rectangle;
+  let { east } = rectangle;
 
   // If we go across the International Date Line
   if (west > east) {
@@ -2841,7 +2842,7 @@ Camera.prototype.getRectangleCameraCoordinates = function (rectangle, result) {
 
 const pickEllipsoid3DRay = new Ray();
 function pickEllipsoid3D(camera, windowPosition, ellipsoid, result) {
-  ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
+  ellipsoid = defaultValue(ellipsoid, Ellipsoid.default);
   const ray = camera.getPickRay(windowPosition, pickEllipsoid3DRay);
   const intersection = IntersectionTests.rayEllipsoid(ray, ellipsoid);
   if (!intersection) {
@@ -2893,7 +2894,7 @@ function pickMapColumbusView(camera, windowPosition, projection, result) {
  * Pick an ellipsoid or map.
  *
  * @param {Cartesian2} windowPosition The x and y coordinates of a pixel.
- * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid to pick.
+ * @param {Ellipsoid} [ellipsoid=Ellipsoid.default] The ellipsoid to pick.
  * @param {Cartesian3} [result] The object onto which to store the result.
  * @returns {Cartesian3 | undefined} If the ellipsoid or map was picked,
  * returns the point on the surface of the ellipsoid or map in world
@@ -2902,7 +2903,7 @@ function pickMapColumbusView(camera, windowPosition, projection, result) {
  * @example
  * const canvas = viewer.scene.canvas;
  * const center = new Cesium.Cartesian2(canvas.clientWidth / 2.0, canvas.clientHeight / 2.0);
- * const ellipsoid = viewer.scene.globe.ellipsoid;
+ * const ellipsoid = viewer.scene.ellipsoid;
  * const result = viewer.camera.pickEllipsoid(center, ellipsoid);
  */
 Camera.prototype.pickEllipsoid = function (windowPosition, ellipsoid, result) {
@@ -2921,7 +2922,7 @@ Camera.prototype.pickEllipsoid = function (windowPosition, ellipsoid, result) {
     result = new Cartesian3();
   }
 
-  ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
+  ellipsoid = defaultValue(ellipsoid, Ellipsoid.default);
 
   if (this._mode === SceneMode.SCENE3D) {
     result = pickEllipsoid3D(this, windowPosition, ellipsoid, result);
@@ -3316,7 +3317,7 @@ Camera.prototype.completeFlight = function () {
  * Flies the camera from its current position to a new position.
  *
  * @param {object} options Object with the following properties:
- * @param {Cartesian3|Rectangle} options.destination The final position of the camera in WGS84 (world) coordinates or a rectangle that would be visible from a top-down view.
+ * @param {Cartesian3|Rectangle} options.destination The final position of the camera in world coordinates or a rectangle that would be visible from a top-down view.
  * @param {object} [options.orientation] An object that contains either direction and up properties or heading, pitch and roll properties. By default, the direction will point
  * towards the center of the frame in 3D and in the negative z direction in Columbus view. The up direction will point towards local north in 3D and in the positive
  * y direction in Columbus view.  Orientation is not used in 2D when in infinite scrolling mode.
@@ -3632,9 +3633,12 @@ Camera.prototype.flyToBoundingSphere = function (boundingSphere, options) {
     );
   }
 
+  const scene = this._scene;
+  const ellipsoid = defaultValue(scene.ellipsoid, Ellipsoid.default);
+
   const transform = Transforms.eastNorthUpToFixedFrame(
     boundingSphere.center,
-    Ellipsoid.WGS84,
+    ellipsoid,
     scratchflyToBoundingSphereTransform
   );
   Matrix4.multiplyByPoint(transform, position, position);
@@ -3814,13 +3818,13 @@ function addToResult(x, y, index, camera, ellipsoid, computedHorizonQuad) {
 /**
  * Computes the approximate visible rectangle on the ellipsoid.
  *
- * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid that you want to know the visible region.
+ * @param {Ellipsoid} [ellipsoid=Ellipsoid.default] The ellipsoid that you want to know the visible region.
  * @param {Rectangle} [result] The rectangle in which to store the result
  *
  * @returns {Rectangle|undefined} The visible rectangle or undefined if the ellipsoid isn't visible at all.
  */
 Camera.prototype.computeViewRectangle = function (ellipsoid, result) {
-  ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
+  ellipsoid = defaultValue(ellipsoid, Ellipsoid.default);
   const cullingVolume = this.frustum.computeCullingVolume(
     this.positionWC,
     this.directionWC,

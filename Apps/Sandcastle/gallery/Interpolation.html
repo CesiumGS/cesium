@@ -21,10 +21,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -55,11 +52,7 @@
 
         //Set bounds of our simulation time
         const start = Cesium.JulianDate.fromDate(new Date(2015, 2, 25, 16));
-        const stop = Cesium.JulianDate.addSeconds(
-          start,
-          360,
-          new Cesium.JulianDate()
-        );
+        const stop = Cesium.JulianDate.addSeconds(start, 360, new Cesium.JulianDate());
 
         //Make sure viewer is at the desired time.
         viewer.clock.startTime = start.clone();
@@ -76,11 +69,7 @@
           const property = new Cesium.SampledPositionProperty();
           for (let i = 0; i <= 360; i += 45) {
             const radians = Cesium.Math.toRadians(i);
-            const time = Cesium.JulianDate.addSeconds(
-              start,
-              i,
-              new Cesium.JulianDate()
-            );
+            const time = Cesium.JulianDate.addSeconds(start, i, new Cesium.JulianDate());
             const position = Cesium.Cartesian3.fromDegrees(
               lon + radius * 1.5 * Math.cos(radians),
               lat + radius * Math.sin(radians),
@@ -182,8 +171,7 @@
               onselect: function () {
                 entity.position.setInterpolationOptions({
                   interpolationDegree: 5,
-                  interpolationAlgorithm:
-                    Cesium.LagrangePolynomialApproximation,
+                  interpolationAlgorithm: Cesium.LagrangePolynomialApproximation,
                 });
               },
             },

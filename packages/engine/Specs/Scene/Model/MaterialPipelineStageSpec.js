@@ -82,6 +82,8 @@ describe(
     const boxUnlit = "./Data/Models/glTF-2.0/UnlitTest/glTF/UnlitTest.gltf";
     const boxNoNormals =
       "./Data/Models/glTF-2.0/BoxNoNormals/glTF/BoxNoNormals.gltf";
+    const boxScaledNormalTexture =
+      "./Data/Models/glTF-2.0/BoxScaledNormalTexture/glTF/BoxScaledNormalTexture.gltf";
     const triangle = "./Data/Models/glTF-2.0/Triangle/glTF/Triangle.gltf";
     const twoSidedPlane =
       "./Data/Models/glTF-2.0/TwoSidedPlane/glTF/TwoSidedPlane.gltf";
@@ -498,6 +500,7 @@ describe(
       ShaderBuilderTester.expectHasFragmentUniforms(shaderBuilder, [
         "uniform float u_metallicFactor;",
         "uniform float u_clearcoatFactor;",
+        "uniform float u_clearcoatNormalTextureScale;",
         "uniform float u_clearcoatRoughnessFactor;",
         "uniform sampler2D u_baseColorTexture;",
         "uniform sampler2D u_clearcoatTexture;",
@@ -510,6 +513,7 @@ describe(
         "HAS_BASE_COLOR_TEXTURE",
         "HAS_CLEARCOAT_FACTOR",
         "HAS_CLEARCOAT_NORMAL_TEXTURE",
+        "HAS_CLEARCOAT_NORMAL_TEXTURE_SCALE",
         "HAS_CLEARCOAT_ROUGHNESS_FACTOR",
         "HAS_CLEARCOAT_ROUGHNESS_TEXTURE",
         "HAS_CLEARCOAT_TEXTURE",
@@ -535,6 +539,41 @@ describe(
         u_clearcoatTexture: clearcoatTexture.texture,
         u_clearcoatRoughnessTexture: clearcoatRoughnessTexture.texture,
         u_clearcoatNormalTexture: clearcoatNormalTexture.texture,
+        u_clearcoatNormalTextureScale: clearcoatNormalTexture.scale,
+      };
+      expectUniformMap(uniformMap, expectedUniforms);
+    });
+
+    it("adds uniforms and defines for a normal texture scalar", async function () {
+      const gltfLoader = await loadGltf(boxScaledNormalTexture);
+
+      const primitive = gltfLoader.components.nodes[1].primitives[0];
+      const renderResources = mockRenderResources();
+      MaterialPipelineStage.process(renderResources, primitive, mockFrameState);
+      const { shaderBuilder, uniformMap } = renderResources;
+
+      ShaderBuilderTester.expectHasVertexUniforms(shaderBuilder, []);
+      ShaderBuilderTester.expectHasFragmentUniforms(shaderBuilder, [
+        "uniform float u_metallicFactor;",
+        "uniform float u_normalTextureScale;",
+        "uniform sampler2D u_baseColorTexture;",
+        "uniform sampler2D u_normalTexture;",
+      ]);
+
+      ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, []);
+      ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
+        "HAS_BASE_COLOR_TEXTURE",
+        "HAS_METALLIC_FACTOR",
+        "HAS_NORMAL_TEXTURE",
+        "HAS_NORMAL_TEXTURE_SCALE",
+        "TEXCOORD_BASE_COLOR v_texCoord_0",
+        "TEXCOORD_NORMAL v_texCoord_0",
+        "USE_METALLIC_ROUGHNESS",
+      ]);
+
+      const { scale } = primitive.material.normalTexture;
+      const expectedUniforms = {
+        u_normalTextureScale: scale,
       };
       expectUniformMap(uniformMap, expectedUniforms);
     });

@@ -21,10 +21,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -532,12 +529,7 @@
             minimumHeights: minimumHeights,
           }),
           attributes: {
-            color: new Cesium.ColorGeometryInstanceAttribute(
-              0.7,
-              0.7,
-              0.7,
-              1.0
-            ),
+            color: new Cesium.ColorGeometryInstanceAttribute(0.7, 0.7, 0.7, 1.0),
           },
         });
 
@@ -977,9 +969,7 @@
               }),
             }),
             appearance: new Cesium.PolylineMaterialAppearance({
-              material: Cesium.Material.fromType(
-                Cesium.Material.PolylineGlowType
-              ),
+              material: Cesium.Material.fromType(Cesium.Material.PolylineGlowType),
             }),
           })
         );
@@ -1253,11 +1243,7 @@
 
         primitives.add(
           new Cesium.Primitive({
-            geometryInstances: [
-              tubeGeometry,
-              polylineVolume,
-              polylineVolumeFill,
-            ],
+            geometryInstances: [tubeGeometry, polylineVolume, polylineVolumeFill],
             appearance: new Cesium.PerInstanceColorAppearance({
               translucent: false,
               closed: true,

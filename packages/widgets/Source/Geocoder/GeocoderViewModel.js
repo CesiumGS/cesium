@@ -364,8 +364,7 @@ function computeFlyToLocationForCartographic(cartographic, terrainProvider) {
 
 function flyToDestination(viewModel, destination) {
   const scene = viewModel._scene;
-  const mapProjection = scene.mapProjection;
-  const ellipsoid = mapProjection.ellipsoid;
+  const ellipsoid = scene.ellipsoid;
 
   const camera = scene.camera;
   const terrainProvider = scene.terrainProvider;

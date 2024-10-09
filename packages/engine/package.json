@@ -1,6 +1,6 @@
 {
   "name": "@cesium/engine",
-  "version": "9.2.0",
+  "version": "11.1.0",
   "description": "CesiumJS is a JavaScript library for creating 3D globes and 2D maps in a web browser without a plugin.",
   "keywords": [
     "3D",
@@ -32,23 +32,23 @@
     "./Specs/**/*"
   ],
   "dependencies": {
-    "@tweenjs/tween.js": "^23.1.1",
+    "@tweenjs/tween.js": "^25.0.0",
     "@zip.js/zip.js": "^2.7.34",
     "autolinker": "^4.0.0",
     "bitmap-sdf": "^1.0.3",
     "dompurify": "^3.0.2",
     "draco3d": "^1.5.1",
-    "earcut": "^2.2.4",
+    "earcut": "^3.0.0",
     "grapheme-splitter": "^1.0.4",
     "jsep": "^1.3.8",
     "kdbush": "^4.0.1",
     "ktx-parse": "^0.7.0",
     "lerc": "^2.0.0",
     "mersenne-twister": "^1.1.0",
-    "meshoptimizer": "^0.20.0",
+    "meshoptimizer": "^0.21.0",
     "pako": "^2.0.4",
     "protobufjs": "^7.1.0",
-    "rbush": "^3.0.1",
+    "rbush": "3.0.1",
     "topojson-client": "^3.1.0",
     "urijs": "^1.19.7"
   },

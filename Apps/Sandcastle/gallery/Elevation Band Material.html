@@ -7,10 +7,7 @@
       name="viewport"
       content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
     />
-    <meta
-      name="description"
-      content="Apply elevation band material to the globe."
-    />
+    <meta name="description" content="Apply elevation band material to the globe." />
     <meta name="cesium-sandcastle-labels" content="Showcases" />
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
@@ -21,10 +18,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -152,9 +146,7 @@
         Cesium.knockout.applyBindings(viewModel, toolbar);
         for (const name in viewModel) {
           if (viewModel.hasOwnProperty(name)) {
-            Cesium.knockout
-              .getObservable(viewModel, name)
-              .subscribe(updateMaterial);
+            Cesium.knockout.getObservable(viewModel, name).subscribe(updateMaterial);
           }
         }
 
@@ -165,9 +157,7 @@
           const band3Position = Number(viewModel.band3Position);
           const bandThickness = Number(viewModel.bandThickness);
           const bandTransparency = Number(viewModel.bandTransparency);
-          const backgroundTransparency = Number(
-            viewModel.backgroundTransparency
-          );
+          const backgroundTransparency = Number(viewModel.backgroundTransparency);
 
           const layers = [];
           const backgroundLayer = {
@@ -195,14 +185,9 @@
           const gridCount = 50;
           for (let i = 0; i < gridCount; i++) {
             const lerper = i / (gridCount - 1);
-            const heightBelow = Cesium.Math.lerp(
-              gridStartHeight,
-              gridEndHeight,
-              lerper
-            );
+            const heightBelow = Cesium.Math.lerp(gridStartHeight, gridEndHeight, lerper);
             const heightAbove = heightBelow + 10.0;
-            const alpha =
-              Cesium.Math.lerp(0.2, 0.4, lerper) * backgroundTransparency;
+            const alpha = Cesium.Math.lerp(0.2, 0.4, lerper) * backgroundTransparency;
             layers.push({
               entries: [
                 {

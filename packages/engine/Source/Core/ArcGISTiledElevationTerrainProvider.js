@@ -27,9 +27,9 @@ const ALL_CHILDREN = 15;
  * Initialization options for the ArcGISTiledElevationTerrainProvider constructor
  *
  * @property {string} [token] The authorization token to use to connect to the service.
- * @property {Ellipsoid} [ellipsoid] The ellipsoid.  If the tilingScheme is specified,
+ * @property {Ellipsoid} [ellipsoid=Ellipsoid.default] The ellipsoid.  If the tilingScheme is specified,
  *                    this parameter is ignored and the tiling scheme's ellipsoid is used instead.
- *                    If neither parameter is specified, the WGS84 ellipsoid is used.
+ *                    If neither parameter is specified, the default ellipsoid is used.
  */
 
 /**
@@ -41,7 +41,7 @@ const ALL_CHILDREN = 15;
  * @param {ArcGISTiledElevationTerrainProvider.ConstructorOptions} [options] An object describing initialization options.
  */
 function TerrainProviderBuilder(options) {
-  this.ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
+  this.ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.default);
 
   this.credit = undefined;
   this.tilingScheme = undefined;
@@ -446,7 +446,7 @@ ArcGISTiledElevationTerrainProvider.prototype.requestTileGeometry = function (
         encoding: that._encoding,
       });
     })
-    .catch(function (error) {
+    .catch(async function (error) {
       if (
         defined(availabilityRequest) &&
         availabilityRequest.state === RequestState.CANCELLED
@@ -455,10 +455,14 @@ ArcGISTiledElevationTerrainProvider.prototype.requestTileGeometry = function (
 
         // Don't reject the promise till the request is actually cancelled
         // Otherwise it will think the request failed, but it didn't.
-        return request.deferred.promise.finally(function () {
-          request.state = RequestState.CANCELLED;
-          return Promise.reject(error);
-        });
+        try {
+          await request.deferred?.promise;
+        } catch {
+          // Eat this error
+        }
+
+        request.state = RequestState.CANCELLED;
+        return Promise.reject(error);
       }
       return Promise.reject(error);
     });

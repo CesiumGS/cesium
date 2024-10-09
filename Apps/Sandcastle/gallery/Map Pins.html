@@ -18,10 +18,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -86,11 +83,11 @@
         });
 
         //Since some of the pins are created asynchronously, wait for them all to load before zooming/
-        Promise.all([bluePin, questionPin, groceryPin, hospitalPin]).then(
-          function (pins) {
-            viewer.zoomTo(pins);
-          }
-        );
+        Promise.all([bluePin, questionPin, groceryPin, hospitalPin]).then(function (
+          pins
+        ) {
+          viewer.zoomTo(pins);
+        });
 
         //Sandcastle_End
       };

@@ -18,10 +18,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -36,9 +33,7 @@
           terrain: Cesium.Terrain.fromWorldTerrain(),
         });
 
-        viewer.clock.currentTime = Cesium.JulianDate.fromIso8601(
-          "2022-08-01T00:00:00Z"
-        );
+        viewer.clock.currentTime = Cesium.JulianDate.fromIso8601("2022-08-01T00:00:00Z");
 
         const scene = viewer.scene;
         if (!scene.msaaSupported) {
@@ -56,10 +51,7 @@
           const pitch = 0;
           const roll = 0;
           const hpr = new Cesium.HeadingPitchRoll(heading, pitch, roll);
-          const orientation = Cesium.Transforms.headingPitchRollQuaternion(
-            position,
-            hpr
-          );
+          const orientation = Cesium.Transforms.headingPitchRollQuaternion(position, hpr);
 
           const entity = viewer.entities.add({
             name: url,
@@ -85,9 +77,7 @@
           currentAssetId = assetId;
 
           try {
-            const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(
-              assetId
-            );
+            const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(assetId);
 
             if (currentAssetId !== assetId) {
               // Another scenario was loaded. Discard the result.

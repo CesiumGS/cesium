@@ -8,7 +8,7 @@ There is no release manager; instead, our community shares the responsibility. A
 
 1. Check for any outdated dependencies with `npm outdated`.
 2. If one or more dependencies are outdated, checkout a new branch and run `npm install <packagename>@latest` for each package to increment the version.
-3. Verify each update. If an update can be resolved, open a PR with your changes. If an update is incompatible, open an issue.
+3. Verify each update. If an update can be resolved, open a PR with your changes. If an update is incompatible, open an issue. Check the [`dependencies` label](https://github.com/CesiumGS/cesium/issues?q=is%3Aissue+is%3Aopen+label%3Adependencies) for any open issues pinning versions.
 4. Check the [`priority - next release` issues and PRs](https://github.com/CesiumGS/cesium/labels/priority%20-%20next%20release). If there are any outstanding items, post a message to the `#cesiumjs` channel in Slack to figure out what needs to be addressed before we can release.
 5. Ensure you've generated valid [end to end testing snapshots](../TestingGuide/README.md) against a previous release tag with `npm run test-e2e-update`.
 
@@ -22,10 +22,19 @@ There is no release manager; instead, our community shares the responsibility. A
 4. Ensure you've generated valid [end to end testing snapshots](../TestingGuide/README.md) against a previous release tag with `npm run test-e2e-update`.
 5. Pull down the latest `main` branch and run `npm install`.
 6. Update the Cesium ion demo token in `Ion.js` with a new token from the CesiumJS ion team account with read and geocode permissions. These tokens are named like this: `1.85 Release - Delete on November 1st, 2021`. Delete the token from 2 releases ago.
-7. Update the ArcGIS Developer API key in `ArcGisMapService.js` with a new API key from the CesiumJS ArcGIS Developer account. These API keys are named like this: `1.85 Release - Delete on November 1st, 2021`. Delete the API key from the last release.
+7. Update the ArcGIS Developer API key in `ArcGisMapService.js` with a new API key from the [CesiumJS ArcGIS Developer](https://links.esri.com/agol-sign-in) account. These API keys are named like this: `1.85 Release - Delete on November 1st, 2021`. Delete the API key from the last release.
+   1. Sign in with LastPass
+   2. Go to Content at the top
+   3. Click "New Item" -> Developer Credentials -> API Key credentials
+   4. Set the expiration date to the day after the next release (no referrer URLs)
+   5. Only turn on "Basemaps" permissions
+   6. Skip adding items
+   7. Set the title and copy the API key on the last screen
+   8. Open the previous release's item and Delete it
 8. Proofread [`CHANGES.md`](../../../CHANGES.md) with the date of the release. Adjust the order of changes so that prominent/popular changes come first. Ensure each change is in the section for the relevant workspace.
 9. Based on `CHANGES.md`, update each workspace version following the rules of [semantic versioning](https://semver.org/), e.g.,
-   - `npm version minor -w @cesium/engine --no-git-tag-version`
+   `npm version minor -w @cesium/engine --no-git-tag-version`.
+   Changes in one workspace may require version updates in other workspaces that depend on it. For example, if `CHANGES.md` reports changes in `@cesium/engine` only, the version for `@cesium/widgets` should also be incremented to reflect the updated dependency.
 10. Update the version in `package.json` to match, e.g. `1.115.0` -> `1.116.0`.
 11. Commit these changes.
 12. Make sure the repository is clean `git clean -d -x -f --exclude="/Specs/e2e/*-snapshots/"`. **This will delete all files not already in the repository, excluding end to end testing snapshots.**
@@ -44,8 +53,8 @@ There is no release manager; instead, our community shares the responsibility. A
 25. Push your commits to main
     - `git push`
 26. Create and push a [tag](https://git-scm.com/book/en/v2/Git-Basics-Tagging), e.g.,
-    - `git tag -a 1.1 -m "1.1 release"`
-    - `git push origin 1.1` (this assumes origin is the primary cesium repository, do not use `git push --tags` as it pushes all tags from all remotes you have on your system.)
+    - `git tag -a 1.121 -m "1.121 release"`
+    - `git push origin 1.121` (this assumes origin is the primary cesium repository, do not use `git push --tags` as it pushes all tags from all remotes you have on your system.)
 27. Publish the release zip file to GitHub
     - https://github.com/CesiumGS/cesium/releases/new
     - Select the tag you use pushed
@@ -54,10 +63,10 @@ There is no release manager; instead, our community shares the responsibility. A
       - Look at a [previous release](https://github.com/CesiumGS/cesium/releases/tag/1.79) for an example. Don't use emoji, headings, or other formatting
     - Attach the `Cesium-1.xx` release zip file
     - Publish the release
-28. Publish to npm by running `npm publish` in the repository root (not the unzipped file directory) (the first time you do this, you will need to authorize the machine using `npm adduser`)
-29. Use `npm publish -w <WORKSPACE>` in the repository root (not the unzipped file directory) to publish the workspace. Repeat this step for each **updated** workspace, in the following order:
+28. Use `npm publish -w <WORKSPACE>` in the repository root (not the unzipped file directory) to publish the workspaces. Repeat this step for each **updated** workspace, in the following order:
     - `npm publish -w @cesium/engine`
     - `npm publish -w @cesium/widgets`
+29. Publish the top-level `cesium` package to npm by running `npm publish` in the repository root (not the unzipped file directory) (the first time you do this, you will need to authorize the machine using `npm adduser`).
 30. Check out the `cesium.com` branch. Merge the new release tag into the `cesium.com` branch `git merge origin <tag-name>`. CI will deploy the hosted release, Sandcastle, and the updated doc when you push the branch up.
 31. After the `cesium.com` branch is live on cesium.com, comment in the `#comms-chat` slack channel to notify comms that the release is done so they can add these highlights and publish the monthly blog post
     - Note, it may take a little while for the new version of CesiumJS to be live on cesium.com (~30 minutes after the branch builds). You can check the version of Cesium in [sandcastle](https://sandcastle.cesium.com/) by looking at the tab above the cesium pane.

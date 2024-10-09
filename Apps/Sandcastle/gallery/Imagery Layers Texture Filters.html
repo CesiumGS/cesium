@@ -11,10 +11,7 @@
       name="description"
       content="Set the texture minification and magnification filters of an imagery layer."
     />
-    <meta
-      name="cesium-sandcastle-labels"
-      content="Beginner, Tutorials, Showcases"
-    />
+    <meta name="cesium-sandcastle-labels" content="Beginner, Tutorials, Showcases" />
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script
@@ -24,10 +21,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
 
@@ -79,24 +73,19 @@
         layers.add(layerNearest);
 
         // Set the texture minification and magnification filters of layerNearest. Default is LINEAR.
-        layerNearest.minificationFilter =
-          Cesium.TextureMinificationFilter.NEAREST;
-        layerNearest.magnificationFilter =
-          Cesium.TextureMagnificationFilter.NEAREST;
+        layerNearest.minificationFilter = Cesium.TextureMinificationFilter.NEAREST;
+        layerNearest.magnificationFilter = Cesium.TextureMagnificationFilter.NEAREST;
 
         // The remaining code installs a split layer so the effect of the texture filters becomes apparent.
 
         layerNearest.splitDirection = Cesium.SplitDirection.RIGHT;
 
         const slider = document.getElementById("slider");
-        viewer.scene.splitPosition =
-          slider.offsetLeft / slider.parentElement.offsetWidth;
+        viewer.scene.splitPosition = slider.offsetLeft / slider.parentElement.offsetWidth;
 
         let dragStartX = 0;
 
-        document
-          .getElementById("slider")
-          .addEventListener("mousedown", mouseDown, false);
+        document.getElementById("slider").addEventListener("mousedown", mouseDown, false);
         window.addEventListener("mouseup", mouseUp, false);
 
         function mouseUp() {

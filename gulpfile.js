@@ -1683,7 +1683,7 @@ async function buildSandcastle() {
 
   if (isProduction) {
     const fileStream = gulp
-      .src(["ThirdParty/**"])
+      .src(["ThirdParty/**"], { encoding: false })
       .pipe(gulp.dest("Build/Sandcastle/ThirdParty"));
     streams.push(fileStream);
 

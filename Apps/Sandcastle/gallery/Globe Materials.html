@@ -7,7 +7,7 @@
       name="viewport"
       content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
     />
-    <meta name="description" content="Apply materials to the globe." />
+    <meta name="description" content="Apply an elevation map to the globe." />
     <meta name="cesium-sandcastle-labels" content="Showcases" />
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
@@ -18,10 +18,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
       .demo-container {
@@ -80,8 +77,8 @@
       <div class="demo-container">
         <div>
           <label
-            ><input type="checkbox" data-bind="checked: enableContour" />Enable
-            Contour Lines</label
+            ><input type="checkbox" data-bind="checked: enableContour" />Enable Contour
+            Lines</label
           >
         </div>
         <div>
@@ -109,10 +106,7 @@
           <span data-bind="text: contourWidth"></span>px
         </div>
         <div>
-          <button
-            type="button"
-            data-bind="click: changeColor, enable: enableContour"
-          >
+          <button type="button" data-bind="click: changeColor, enable: enableContour">
             Change contour color
           </button>
         </div>
@@ -144,8 +138,7 @@
               components: {
                 diffuse:
                   "contourMaterial.alpha == 0.0 ? elevationRampMaterial.diffuse : contourMaterial.diffuse",
-                alpha:
-                  "max(contourMaterial.alpha, elevationRampMaterial.alpha)",
+                alpha: "max(contourMaterial.alpha, elevationRampMaterial.alpha)",
               },
             },
             translucent: false,
@@ -244,10 +237,7 @@
           contourWidth: 2.0,
           selectedShading: "elevation",
           changeColor: function () {
-            contourUniforms.color = Cesium.Color.fromRandom(
-              { alpha: 1.0 },
-              contourColor
-            );
+            contourUniforms.color = Cesium.Color.fromRandom({ alpha: 1.0 }, contourColor);
           },
         };
 
@@ -266,8 +256,7 @@
           if (hasContour) {
             if (selectedShading === "elevation") {
               material = getElevationContourMaterial();
-              shadingUniforms =
-                material.materials.elevationRampMaterial.uniforms;
+              shadingUniforms = material.materials.elevationRampMaterial.uniforms;
               shadingUniforms.minimumHeight = minHeight;
               shadingUniforms.maximumHeight = maxHeight;
               contourUniforms = material.materials.contourMaterial.uniforms;

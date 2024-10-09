@@ -1,7 +1,7 @@
 import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
 import Event from "../Core/Event.js";
 import EventHelper from "../Core/EventHelper.js";
+import JulianDate from "../Core/JulianDate.js";
 import Property from "./Property.js";
 
 /**
@@ -60,19 +60,19 @@ Object.defineProperties(PropertyArray.prototype, {
   },
 });
 
+const timeScratch = new JulianDate();
+
 /**
  * Gets the value of the property.
  *
- * @param {JulianDate} time The time for which to retrieve the value.
+ * @param {JulianDate} [time=JulianDate.now()] The time for which to retrieve the value. If omitted, the current system time is used.
  * @param {Object[]} [result] The object to store the value into, if omitted, a new instance is created and returned.
  * @returns {Object[]} The modified result parameter, which is an array of values produced by evaluating each of the contained properties at the given time or a new instance if the result parameter was not supplied.
  */
 PropertyArray.prototype.getValue = function (time, result) {
-  //>>includeStart('debug', pragmas.debug);
   if (!defined(time)) {
-    throw new DeveloperError("time is required.");
+    time = JulianDate.now(timeScratch);
   }
-  //>>includeEnd('debug');
 
   const value = this._value;
   if (!defined(value)) {

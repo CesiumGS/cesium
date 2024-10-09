@@ -21,10 +21,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
       #toolbar {
@@ -102,11 +99,7 @@
         const longitude = -3.82518;
         const latitude = 53.11728;
         const height = 72.8;
-        const position = Cesium.Cartesian3.fromDegrees(
-          longitude,
-          latitude,
-          height
-        );
+        const position = Cesium.Cartesian3.fromDegrees(longitude, latitude, height);
         const url = "../../SampleData/models/ParcLeadMine/ParcLeadMine.glb";
 
         const entity = viewer.entities.add({

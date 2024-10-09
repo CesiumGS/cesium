@@ -18,10 +18,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -78,21 +75,9 @@
           const gridSize = Math.sqrt(billboardCount);
           for (let y = 0; y < gridSize; ++y) {
             for (let x = 0; x < gridSize; ++x) {
-              const longitude = Cesium.Math.lerp(
-                e.west,
-                e.east,
-                x / (gridSize - 1)
-              );
-              const latitude = Cesium.Math.lerp(
-                e.south,
-                e.north,
-                y / (gridSize - 1)
-              );
-              const position = new Cesium.Cartographic(
-                longitude,
-                latitude,
-                10000.0
-              );
+              const longitude = Cesium.Math.lerp(e.west, e.east, x / (gridSize - 1));
+              const latitude = Cesium.Math.lerp(e.south, e.north, y / (gridSize - 1));
+              const position = new Cesium.Cartographic(longitude, latitude, 10000.0);
 
               billboardCollection.add({
                 position: ellipsoid.cartographicToCartesian(position),

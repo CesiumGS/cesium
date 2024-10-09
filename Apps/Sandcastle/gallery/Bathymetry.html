@@ -7,10 +7,7 @@
       name="viewport"
       content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
     />
-    <meta
-      name="description"
-      content="Visualize worldwide, high-resolution bathymetry."
-    />
+    <meta name="description" content="Visualize worldwide, high-resolution bathymetry." />
     <meta name="cesium-sandcastle-labels" content="Tutorials, Showcases" />
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
@@ -21,10 +18,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
 
@@ -106,16 +100,11 @@
 
         const scene = viewer.scene;
 
-        // prevent aliasing from countour lines
-        scene.msaaSamples = 4;
-
         const globe = scene.globe;
         globe.enableLighting = true;
         globe.maximumScreenSpaceError = 1.0; // Load higher resolution tiles for better seafloor shading
 
-        Sandcastle.addToggleButton("Lighting enabled", true, function (
-          checked
-        ) {
+        Sandcastle.addToggleButton("Lighting enabled", true, function (checked) {
           globe.enableLighting = checked;
         });
 
@@ -132,16 +121,9 @@
             camera.positionWC,
             scratchNormal
           );
-          const negativeNormal = Cesium.Cartesian3.negate(
-            surfaceNormal,
-            surfaceNormal
-          );
+          const negativeNormal = Cesium.Cartesian3.negate(surfaceNormal, surfaceNormal);
           scene.light.direction = Cesium.Cartesian3.normalize(
-            Cesium.Cartesian3.add(
-              negativeNormal,
-              camera.rightWC,
-              surfaceNormal
-            ),
+            Cesium.Cartesian3.add(negativeNormal, camera.rightWC, surfaceNormal),
             scene.light.direction
           );
 
@@ -212,8 +194,7 @@
               components: {
                 diffuse:
                   "(1.0 - contourMaterial.alpha) * elevationRampMaterial.diffuse + contourMaterial.alpha * contourMaterial.diffuse",
-                alpha:
-                  "max(contourMaterial.alpha, elevationRampMaterial.alpha)",
+                alpha: "max(contourMaterial.alpha, elevationRampMaterial.alpha)",
               },
             },
             translucent: false,
@@ -250,17 +231,13 @@
           if (showContourLines) {
             if (showElevationColorRamp) {
               material = getElevationContourMaterial();
-              let shadingUniforms =
-                material.materials.elevationRampMaterial.uniforms;
+              let shadingUniforms = material.materials.elevationRampMaterial.uniforms;
               shadingUniforms.image = getColorRamp();
-              shadingUniforms.minimumHeight =
-                minHeight * scene.verticalExaggeration;
-              shadingUniforms.maximumHeight =
-                maxHeight * scene.verticalExaggeration;
+              shadingUniforms.minimumHeight = minHeight * scene.verticalExaggeration;
+              shadingUniforms.maximumHeight = maxHeight * scene.verticalExaggeration;
               shadingUniforms = material.materials.contourMaterial.uniforms;
               shadingUniforms.width = 1.0;
-              shadingUniforms.spacing =
-                countourLineSpacing * scene.verticalExaggeration;
+              shadingUniforms.spacing = countourLineSpacing * scene.verticalExaggeration;
               shadingUniforms.color = invertContourLines
                 ? Cesium.Color.WHITE.withAlpha(0.5)
                 : Cesium.Color.BLACK.withAlpha(0.5);
@@ -271,8 +248,7 @@
             material = Cesium.Material.fromType("ElevationContour");
             const shadingUniforms = material.uniforms;
             shadingUniforms.width = 1.0;
-            shadingUniforms.spacing =
-              countourLineSpacing * scene.verticalExaggeration;
+            shadingUniforms.spacing = countourLineSpacing * scene.verticalExaggeration;
             shadingUniforms.color = invertContourLines
               ? Cesium.Color.WHITE
               : Cesium.Color.BLACK;
@@ -284,10 +260,8 @@
             material = Cesium.Material.fromType("ElevationRamp");
             const shadingUniforms = material.uniforms;
             shadingUniforms.image = getColorRamp();
-            shadingUniforms.minimumHeight =
-              minHeight * scene.verticalExaggeration;
-            shadingUniforms.maximumHeight =
-              maxHeight * scene.verticalExaggeration;
+            shadingUniforms.minimumHeight = minHeight * scene.verticalExaggeration;
+            shadingUniforms.maximumHeight = maxHeight * scene.verticalExaggeration;
             globe.material = material;
             return;
           }
@@ -306,14 +280,12 @@
           }
         );
 
-        Sandcastle.addToggleButton(
-          "Contour lines enabled",
-          showContourLines,
-          function (checked) {
-            showContourLines = checked;
-            updateGlobeMaterial();
-          }
-        );
+        Sandcastle.addToggleButton("Contour lines enabled", showContourLines, function (
+          checked
+        ) {
+          showContourLines = checked;
+          updateGlobeMaterial();
+        });
 
         Sandcastle.addToggleButton(
           "Invert contour line color",
@@ -340,9 +312,7 @@
         Cesium.knockout.applyBindings(viewModel, toolbar);
         for (const name in viewModel) {
           if (viewModel.hasOwnProperty(name)) {
-            Cesium.knockout
-              .getObservable(viewModel, name)
-              .subscribe(updateExaggeration);
+            Cesium.knockout.getObservable(viewModel, name).subscribe(updateExaggeration);
           }
         }
 

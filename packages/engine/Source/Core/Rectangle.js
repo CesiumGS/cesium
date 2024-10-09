@@ -7,6 +7,7 @@ import Ellipsoid from "./Ellipsoid.js";
 import CesiumMath from "./Math.js";
 import Transforms from "./Transforms.js";
 import Matrix4 from "./Matrix4.js";
+import deprecationWarning from "./deprecationWarning.js";
 
 /**
  * A two dimensional region specified as longitude and latitude coordinates.
@@ -285,7 +286,7 @@ Rectangle.fromCartographicArray = function (cartographics, result) {
  * Creates the smallest possible Rectangle that encloses all positions in the provided array.
  *
  * @param {Cartesian3[]} cartesians The list of Cartesian instances.
- * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid the cartesians are on.
+ * @param {Ellipsoid} [ellipsoid=Ellipsoid.default] The ellipsoid the cartesians are on.
  * @param {Rectangle} [result] The object onto which to store the result, or undefined if a new instance should be created.
  * @returns {Rectangle} The modified result parameter or a new Rectangle instance if none was provided.
  */
@@ -293,7 +294,7 @@ Rectangle.fromCartesianArray = function (cartesians, ellipsoid, result) {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("cartesians", cartesians);
   //>>includeEnd('debug');
-  ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
+  ellipsoid = defaultValue(ellipsoid, Ellipsoid.default);
 
   let west = Number.MAX_VALUE;
   let east = -Number.MAX_VALUE;
@@ -354,7 +355,7 @@ for (let n = 0; n < fromBoundingSpherePositionsScratch.length; ++n) {
  *
  *
  * @param {BoundingSphere} boundingSphere The bounding sphere.
- * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid.
+ * @param {Ellipsoid} [ellipsoid=Ellipsoid.default] The ellipsoid.
  * @param {Rectangle} [result] The object onto which to store the result, or undefined if a new instance should be created.
  * @returns {Rectangle} The modified result parameter or a new Rectangle instance if none was provided.
  */
@@ -367,7 +368,7 @@ Rectangle.fromBoundingSphere = function (boundingSphere, ellipsoid, result) {
   const radius = boundingSphere.radius;
 
   if (!defined(ellipsoid)) {
-    ellipsoid = Ellipsoid.WGS84;
+    ellipsoid = Ellipsoid.default;
   }
 
   if (!defined(result)) {
@@ -541,8 +542,28 @@ Rectangle.prototype.equalsEpsilon = function (other, epsilon) {
  * @exception {DeveloperError} <code>south</code> must be in the interval [<code>-Pi/2</code>, <code>Pi/2</code>].
  * @exception {DeveloperError} <code>east</code> must be in the interval [<code>-Pi</code>, <code>Pi</code>].
  * @exception {DeveloperError} <code>west</code> must be in the interval [<code>-Pi</code>, <code>Pi</code>].
+ * @deprecated This function is deprecated and will be removed in Cesium 1.124. See <a href="https://github.com/CesiumGS/cesium/issues/4921">Issue 4921</a>
  */
 Rectangle.validate = function (rectangle) {
+  deprecationWarning(
+    "Rectangle.validate",
+    "Rectangle.validate is a no-op and has been deprecated. It will be removed in Cesium 1.124."
+  );
+  return Rectangle._validate(rectangle);
+};
+
+/**
+ * Checks a Rectangle's properties and throws if they are not in valid ranges.
+ *
+ * @param {Rectangle} rectangle The rectangle to validate
+ *
+ * @exception {DeveloperError} <code>north</code> must be in the interval [<code>-Pi/2</code>, <code>Pi/2</code>].
+ * @exception {DeveloperError} <code>south</code> must be in the interval [<code>-Pi/2</code>, <code>Pi/2</code>].
+ * @exception {DeveloperError} <code>east</code> must be in the interval [<code>-Pi</code>, <code>Pi</code>].
+ * @exception {DeveloperError} <code>west</code> must be in the interval [<code>-Pi</code>, <code>Pi</code>].
+ * @private
+ */
+Rectangle._validate = function (rectangle) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("rectangle", rectangle);
 
@@ -912,7 +933,7 @@ const subsampleLlaScratch = new Cartographic();
  * for rectangles that cover the poles or cross the equator.
  *
  * @param {Rectangle} rectangle The rectangle to subsample.
- * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid to use.
+ * @param {Ellipsoid} [ellipsoid=Ellipsoid.default] The ellipsoid to use.
  * @param {number} [surfaceHeight=0.0] The height of the rectangle above the ellipsoid.
  * @param {Cartesian3[]} [result] The array of Cartesians onto which to store the result.
  * @returns {Cartesian3[]} The modified result parameter or a new Array of Cartesians instances if none was provided.
@@ -922,7 +943,7 @@ Rectangle.subsample = function (rectangle, ellipsoid, surfaceHeight, result) {
   Check.typeOf.object("rectangle", rectangle);
   //>>includeEnd('debug');
 
-  ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
+  ellipsoid = defaultValue(ellipsoid, Ellipsoid.default);
   surfaceHeight = defaultValue(surfaceHeight, 0.0);
 
   if (!defined(result)) {

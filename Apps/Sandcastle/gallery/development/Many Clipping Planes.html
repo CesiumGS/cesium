@@ -21,10 +21,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -59,9 +56,7 @@
           </tr>
         </tbody>
       </table>
-      <select
-        data-bind="options: exampleTypes, value: currentExampleType"
-      ></select>
+      <select data-bind="options: exampleTypes, value: currentExampleType"></select>
     </div>
     <script id="cesium_sandcastle_script">
       window.startup = async function (Cesium) {
@@ -186,19 +181,12 @@
 
         function loadModel(url) {
           createClippingPlanes();
-          const position = Cesium.Cartesian3.fromDegrees(
-            -123.0744619,
-            44.0503706,
-            300.0
-          );
+          const position = Cesium.Cartesian3.fromDegrees(-123.0744619, 44.0503706, 300.0);
           const heading = 0.0;
           const pitch = 0.0;
           const roll = 0.0;
           const hpr = new Cesium.HeadingPitchRoll(heading, pitch, roll);
-          const orientation = Cesium.Transforms.headingPitchRollQuaternion(
-            position,
-            hpr
-          );
+          const orientation = Cesium.Transforms.headingPitchRollQuaternion(position, hpr);
           const entity = viewer.entities.add({
             name: url,
             position: position,
@@ -207,10 +195,7 @@
               uri: url,
               scale: 20,
               minimumPixelSize: 100.0,
-              clippingPlanes: new Cesium.CallbackProperty(
-                updateClippingPlanes,
-                false
-              ),
+              clippingPlanes: new Cesium.CallbackProperty(updateClippingPlanes, false),
             },
           });
           viewer.trackedEntity = entity;
@@ -233,9 +218,7 @@
 
           const boundingSphere = tileset.boundingSphere;
 
-          const cartographic = Cesium.Cartographic.fromCartesian(
-            boundingSphere.center
-          );
+          const cartographic = Cesium.Cartographic.fromCartesian(boundingSphere.center);
           const surface = Cesium.Cartesian3.fromRadians(
             cartographic.longitude,
             cartographic.latitude,
@@ -300,9 +283,7 @@
                 },
               });
               viewer.trackedEntity = entity;
-              createClippingPlanes(
-                entity.computeModelMatrix(Cesium.JulianDate.now())
-              );
+              createClippingPlanes(entity.computeModelMatrix(Cesium.JulianDate.now()));
               globe.clippingPlanes = modelEntityClippingPlanes;
             }
             updatePlanes();
@@ -317,9 +298,7 @@
           modelEntityClippingPlanes = undefined;
         }
 
-        Sandcastle.addToggleButton("union", clippingModeUnion, function (
-          checked
-        ) {
+        Sandcastle.addToggleButton("union", clippingModeUnion, function (checked) {
           clippingModeUnion = checked;
           modelEntityClippingPlanes.unionClippingRegions = clippingModeUnion;
         });

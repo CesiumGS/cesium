@@ -16,10 +16,7 @@
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -42,26 +39,13 @@
         const { scene, camera, clock } = viewer;
 
         if (!scene.specularEnvironmentMapsSupported) {
-          window.alert(
-            "This browser does not support specular environment maps."
-          );
+          window.alert("This browser does not support specular environment maps.");
         }
-
-        scene.msaaSamples = 4;
 
         const height = 20.0;
         const hpr = new Cesium.HeadingPitchRoll(0.0, 0.0, 0.0);
-        const origin = Cesium.Cartesian3.fromDegrees(
-          -123.0744619,
-          44.0503706,
-          height
-        );
-        const modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(
-          origin,
-          hpr
-        );
-
-        scene.globe.enableLighting = true;
+        const origin = Cesium.Cartesian3.fromDegrees(-123.0744619, 44.0503706, height);
+        const modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(origin, hpr);
 
         scene.light = new Cesium.DirectionalLight({
           direction: new Cesium.Cartesian3(
@@ -69,6 +53,7 @@
             0.8842635425193919,
             0.39729481195458805
           ),
+          intensity: 0.0,
         });
 
         // This environment map was processed using Khronos's glTF IBL Sampler. To process your own:
@@ -79,52 +64,53 @@
 
         // To generate the spherical harmonic coefficients below, use Google's Filament project:
         // 1 - Download the Filament release (https://github.com/google/filament/releases).
-        // 2 - Run `cmgen --type=ktx --deploy=/path/to/output /path/to/image.hdr`. Other formats are also supported. Run `cmgen --help` for all options.
+        // 2 - Run `cmgen --no-mirror --type=ktx --deploy=/path/to/output /path/to/image.hdr`.
+        //     Other formats are also supported. Run `cmgen --help` for all options.
         // 3 - Take the generated coefficients and load them in CesiumJS as shown below.
         const L00 = new Cesium.Cartesian3(
-          1.234709620475769,
-          1.221461296081543,
-          1.273156881332397
+          1.234897375106812,
+          1.221635103225708,
+          1.273374080657959
         );
         const L1_1 = new Cesium.Cartesian3(
-          1.135921120643616,
-          1.171217799186707,
-          1.287644743919373
+          1.136140108108521,
+          1.171419978141785,
+          1.287894368171692
         );
         const L10 = new Cesium.Cartesian3(
-          1.245193719863892,
-          1.245591878890991,
-          1.282818794250488
+          1.245410919189453,
+          1.245791077613831,
+          1.283067107200623
         );
         const L11 = new Cesium.Cartesian3(
-          -1.106930732727051,
-          -1.112522482872009,
-          -1.153198838233948
+          1.107124328613281,
+          1.112697005271912,
+          1.153419137001038
         );
         const L2_2 = new Cesium.Cartesian3(
-          -1.086226940155029,
-          -1.079731941223145,
-          -1.101912498474121
+          1.08641505241394,
+          1.079904079437256,
+          1.10212504863739
         );
         const L2_1 = new Cesium.Cartesian3(
-          1.189834713935852,
-          1.185906887054443,
-          1.214385271072388
+          1.190043210983276,
+          1.186099290847778,
+          1.214627981185913
         );
         const L20 = new Cesium.Cartesian3(
-          0.01778045296669,
-          0.02013735473156,
-          0.025313569232821
+          0.017783647403121,
+          0.020140396431088,
+          0.025317270308733
         );
         const L21 = new Cesium.Cartesian3(
-          -1.086826920509338,
-          -1.084611177444458,
-          -1.111204028129578
+          1.087014317512512,
+          1.084779262542725,
+          1.111417651176453
         );
         const L22 = new Cesium.Cartesian3(
-          -0.05241484940052,
-          -0.048303380608559,
-          -0.041960217058659
+          -0.052426788955927,
+          -0.048315055668354,
+          -0.041973855346441
         );
         const coefficients = [L00, L1_1, L10, L11, L2_2, L2_1, L20, L21, L22];
 
@@ -140,6 +126,8 @@
             onselect: () => {
               imageBasedLighting.sphericalHarmonicCoefficients = coefficients;
               imageBasedLighting.specularEnvironmentMaps = environmentMapURL;
+              imageBasedLighting.imageBasedLightingFactor = Cesium.Cartesian2.ONE;
+              scene.light.intensity = 0.0;
             },
           },
           {
@@ -147,6 +135,15 @@
             onselect: () => {
               imageBasedLighting.sphericalHarmonicCoefficients = undefined;
               imageBasedLighting.specularEnvironmentMaps = undefined;
+              imageBasedLighting.imageBasedLightingFactor = Cesium.Cartesian2.ONE;
+              scene.light.intensity = 1.0;
+            },
+          },
+          {
+            text: "Direct lighting only",
+            onselect: () => {
+              imageBasedLighting.imageBasedLightingFactor = Cesium.Cartesian2.ZERO;
+              scene.light.intensity = 1.0;
             },
           },
         ];
@@ -157,6 +154,46 @@
           {
             text: "Clear Coat Wicker",
             onselect: () => loadModel(2584329),
+          },
+          {
+            text: "Damaged Helmet",
+            onselect: () => loadModel(2681021),
+          },
+          {
+            text: "Water Bottle",
+            onselect: () => loadModel(2654597),
+          },
+          {
+            text: "Antique Camera",
+            onselect: () => loadModel(2681022),
+          },
+          {
+            text: "Toy Car",
+            onselect: () => loadModel(2584331),
+          },
+          {
+            text: "Pot of Coals",
+            onselect: () => loadModel(2584330),
+          },
+          {
+            text: "Barn Lamp",
+            onselect: () => loadModel(2583726),
+          },
+          {
+            text: "Duck",
+            onselect: () => loadModel(2681027),
+          },
+          {
+            text: "Environment Test",
+            onselect: () => loadModel(2681028),
+          },
+          {
+            text: "Mirror Ball",
+            onselect: () => loadModel(2674524),
+          },
+          {
+            text: "Metal-Roughness Spheres",
+            onselect: () => loadModel(2635364),
           },
           {
             text: "Specular Test",
@@ -181,18 +218,6 @@
           {
             text: "Clear Coat Car Paint",
             onselect: () => loadModel(2584328),
-          },
-          {
-            text: "Toy Car",
-            onselect: () => loadModel(2584331),
-          },
-          {
-            text: "Pot of Coals",
-            onselect: () => loadModel(2584330),
-          },
-          {
-            text: "Barn Lamp",
-            onselect: () => loadModel(2583726),
           },
         ];
         Sandcastle.addToolbarMenu(modelOptions, "modelsToolbar");

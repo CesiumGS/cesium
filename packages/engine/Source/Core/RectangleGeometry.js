@@ -978,7 +978,7 @@ function computeRectangle(rectangle, granularity, rotation, ellipsoid, result) {
  * @param {object} options Object with the following properties:
  * @param {Rectangle} options.rectangle A cartographic rectangle with north, south, east and west properties in radians.
  * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
- * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the rectangle lies.
+ * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.default] The ellipsoid on which the rectangle lies.
  * @param {number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
  * @param {number} [options.height=0.0] The distance in meters between the rectangle and the ellipsoid surface.
  * @param {number} [options.rotation=0.0] The rotation of the rectangle, in radians. A positive rotation is counter-clockwise.
@@ -998,7 +998,7 @@ function computeRectangle(rectangle, granularity, rotation, ellipsoid, result) {
  * @example
  * // 1. create a rectangle
  * const rectangle = new Cesium.RectangleGeometry({
- *   ellipsoid : Cesium.Ellipsoid.WGS84,
+ *   ellipsoid : Cesium.Ellipsoid.default,
  *   rectangle : Cesium.Rectangle.fromDegrees(-80.0, 39.0, -74.0, 42.0),
  *   height : 10000.0
  * });
@@ -1006,7 +1006,7 @@ function computeRectangle(rectangle, granularity, rotation, ellipsoid, result) {
  *
  * // 2. create an extruded rectangle without a top
  * const rectangle = new Cesium.RectangleGeometry({
- *   ellipsoid : Cesium.Ellipsoid.WGS84,
+ *   ellipsoid : Cesium.Ellipsoid.default,
  *   rectangle : Cesium.Rectangle.fromDegrees(-80.0, 39.0, -74.0, 42.0),
  *   height : 10000.0,
  *   extrudedHeight: 300000
@@ -1020,7 +1020,7 @@ function RectangleGeometry(options) {
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("rectangle", rectangle);
-  Rectangle.validate(rectangle);
+  Rectangle._validate(rectangle);
   if (rectangle.north < rectangle.south) {
     throw new DeveloperError(
       "options.rectangle.north must be greater than or equal to options.rectangle.south"
@@ -1037,7 +1037,7 @@ function RectangleGeometry(options) {
     CesiumMath.RADIANS_PER_DEGREE
   );
   this._ellipsoid = Ellipsoid.clone(
-    defaultValue(options.ellipsoid, Ellipsoid.WGS84)
+    defaultValue(options.ellipsoid, Ellipsoid.default)
   );
   this._surfaceHeight = Math.max(height, extrudedHeight);
   this._rotation = defaultValue(options.rotation, 0.0);
@@ -1185,7 +1185,7 @@ RectangleGeometry.unpack = function (array, startingIndex, result) {
  *
  * @param {object} options Object with the following properties:
  * @param {Rectangle} options.rectangle A cartographic rectangle with north, south, east and west properties in radians.
- * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the rectangle lies.
+ * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.default] The ellipsoid on which the rectangle lies.
  * @param {number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
  * @param {number} [options.rotation=0.0] The rotation of the rectangle, in radians. A positive rotation is counter-clockwise.
  * @param {Rectangle} [result] An object in which to store the result.
@@ -1199,7 +1199,7 @@ RectangleGeometry.computeRectangle = function (options, result) {
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("rectangle", rectangle);
-  Rectangle.validate(rectangle);
+  Rectangle._validate(rectangle);
   if (rectangle.north < rectangle.south) {
     throw new DeveloperError(
       "options.rectangle.north must be greater than or equal to options.rectangle.south"
@@ -1211,7 +1211,7 @@ RectangleGeometry.computeRectangle = function (options, result) {
     options.granularity,
     CesiumMath.RADIANS_PER_DEGREE
   );
-  const ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
+  const ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.default);
   const rotation = defaultValue(options.rotation, 0.0);
 
   return computeRectangle(rectangle, granularity, rotation, ellipsoid, result);

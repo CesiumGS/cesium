@@ -5,6 +5,7 @@ import Check from "./Check.js";
 import Credit from "./Credit.js";
 import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
+import Ellipsoid from "./Ellipsoid.js";
 import Event from "./Event.js";
 import GeographicTilingScheme from "./GeographicTilingScheme.js";
 import WebMercatorTilingScheme from "./WebMercatorTilingScheme.js";
@@ -45,7 +46,7 @@ function LayerInformation(layer) {
  * @property {boolean} [requestVertexNormals=false] Flag that indicates if the client should request additional lighting information from the server, in the form of per vertex normals if available.
  * @property {boolean} [requestWaterMask=false] Flag that indicates if the client should request per tile water masks from the server, if available.
  * @property {boolean} [requestMetadata=true] Flag that indicates if the client should request per tile metadata from the server, if available.
- * @property {Ellipsoid} [ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
+ * @property {Ellipsoid} [ellipsoid=Ellipsoid.default] The ellipsoid.  If not specified, the default ellipsoid is used.
  * @property {Credit|string} [credit] A credit for the data source, which is displayed on the canvas.
  */
 
@@ -61,7 +62,7 @@ function TerrainProviderBuilder(options) {
   this.requestVertexNormals = defaultValue(options.requestVertexNormals, false);
   this.requestWaterMask = defaultValue(options.requestWaterMask, false);
   this.requestMetadata = defaultValue(options.requestMetadata, true);
-  this.ellipsoid = options.ellipsoid;
+  this.ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.default);
 
   this.heightmapWidth = 65;
   this.heightmapStructure = undefined;

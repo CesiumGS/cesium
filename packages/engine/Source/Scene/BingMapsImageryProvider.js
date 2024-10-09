@@ -28,7 +28,7 @@ import ImageryProvider from "./ImageryProvider.js";
  * @property {string} [culture=''] The culture to use when requesting Bing Maps imagery. Not
  *        all cultures are supported. See {@link http://msdn.microsoft.com/en-us/library/hh441729.aspx}
  *        for information on the supported cultures.
- * @property {Ellipsoid} [ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
+ * @property {Ellipsoid} [ellipsoid=Ellipsoid.default] The ellipsoid.  If not specified, the default ellipsoid is used.
  * @property {TileDiscardPolicy} [tileDiscardPolicy] The policy that determines if a tile
  *        is invalid and should be discarded.  By default, a {@link DiscardEmptyTileImagePolicy}
  *        will be used, with the expectation that the Bing Maps server will send a zero-length response for missing tiles.
@@ -120,7 +120,16 @@ function metadataSuccess(data, imageryProviderBuilder) {
   imageryProviderBuilder.maximumLevel = resource.zoomMax - 1;
   imageryProviderBuilder.imageUrlSubdomains = resource.imageUrlSubdomains;
   imageryProviderBuilder.imageUrlTemplate = resource.imageUrl;
-  imageryProviderBuilder.attributionList = resource.imageryProviders;
+
+  let validProviders = resource.imageryProviders;
+  if (defined(resource.imageryProviders)) {
+    // prevent issues with the imagery API from crashing the viewer when the expected properties are not there
+    // See https://github.com/CesiumGS/cesium/issues/12088
+    validProviders = resource.imageryProviders.filter((provider) =>
+      provider.coverageAreas?.some((area) => defined(area.bbox))
+    );
+  }
+  imageryProviderBuilder.attributionList = validProviders;
 }
 
 function metadataFailure(metadataResource, error, provider) {

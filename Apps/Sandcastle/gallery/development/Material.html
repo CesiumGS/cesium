@@ -18,10 +18,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -49,14 +46,12 @@
                   300000.0,
                 ]),
                 vertexFormat:
-                  Cesium.MaterialAppearance.MaterialSupport.TEXTURED
-                    .vertexFormat,
+                  Cesium.MaterialAppearance.MaterialSupport.TEXTURED.vertexFormat,
               }),
             }),
             appearance: new Cesium.MaterialAppearance({
               material: Cesium.Material.fromType("Checkerboard"),
-              materialSupport:
-                Cesium.MaterialAppearance.MaterialSupport.TEXTURED,
+              materialSupport: Cesium.MaterialAppearance.MaterialSupport.TEXTURED,
             }),
           })
         );
@@ -75,14 +70,12 @@
                   300000.0,
                 ]),
                 vertexFormat:
-                  Cesium.MaterialAppearance.MaterialSupport.TEXTURED
-                    .vertexFormat,
+                  Cesium.MaterialAppearance.MaterialSupport.TEXTURED.vertexFormat,
               }),
             }),
             appearance: new Cesium.MaterialAppearance({
               material: Cesium.Material.fromType("Stripe"),
-              materialSupport:
-                Cesium.MaterialAppearance.MaterialSupport.TEXTURED,
+              materialSupport: Cesium.MaterialAppearance.MaterialSupport.TEXTURED,
             }),
           })
         );

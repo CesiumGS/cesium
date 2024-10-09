@@ -18,10 +18,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -112,18 +109,14 @@
         const polygonInstance1 = new Cesium.GeometryInstance({
           geometry: polygonGeometry1,
           attributes: {
-            color: Cesium.ColorGeometryInstanceAttribute.fromColor(
-              Cesium.Color.BLUE
-            ),
+            color: Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.BLUE),
           },
         });
 
         const polygonInstance2 = new Cesium.GeometryInstance({
           geometry: polygonGeometry2,
           attributes: {
-            color: Cesium.ColorGeometryInstanceAttribute.fromColor(
-              Cesium.Color.RED
-            ),
+            color: Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.RED),
           },
         });
 
@@ -165,8 +158,7 @@
             geometryInstances: polygonInstance,
             appearance: new Cesium.MaterialAppearance({
               material: Cesium.Material.fromType("Checkerboard"),
-              materialSupport:
-                Cesium.MaterialAppearance.MaterialSupport.TEXTURED,
+              materialSupport: Cesium.MaterialAppearance.MaterialSupport.TEXTURED,
             }),
           })
         ); //Sandcastle_End

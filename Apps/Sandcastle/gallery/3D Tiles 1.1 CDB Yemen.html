@@ -7,10 +7,7 @@
       name="viewport"
       content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
     />
-    <meta
-      name="description"
-      content="Load a 3D Tiles 1.1 tileset converted from CDB."
-    />
+    <meta name="description" content="Load a 3D Tiles 1.1 tileset converted from CDB." />
     <meta name="cesium-sandcastle-labels" content="3D Tiles" />
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
@@ -21,10 +18,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
       table,
@@ -142,18 +136,9 @@
           color: {
             conditions: [
               ["${HGT} !== undefined && ${HGT} < 5", "color('#f5fd2d')"],
-              [
-                "${HGT} !== undefined && ${HGT} >= 5 && ${HGT} < 10",
-                "color('#d3a34a')",
-              ],
-              [
-                "${HGT} !== undefined && ${HGT} >= 10 && ${HGT} < 15",
-                "color('#947e75')",
-              ],
-              [
-                "${HGT} !== undefined && ${HGT} >= 15 && ${HGT} < 20",
-                "color('#565a9f')",
-              ],
+              ["${HGT} !== undefined && ${HGT} >= 5 && ${HGT} < 10", "color('#d3a34a')"],
+              ["${HGT} !== undefined && ${HGT} >= 10 && ${HGT} < 15", "color('#947e75')"],
+              ["${HGT} !== undefined && ${HGT} >= 15 && ${HGT} < 20", "color('#565a9f')"],
               ["${HGT} !== undefined && ${HGT} > 20", "color('#223bc3')"],
               ["true", "color('white')"],
             ],
@@ -225,10 +210,8 @@
             const feature = scene.pick(movement.endPosition);
             const featurePicked = feature instanceof Cesium.Cesium3DTileFeature;
 
-            const isTerrainFeature =
-              featurePicked && feature.hasProperty("substrates");
-            const isBuildingFeature =
-              featurePicked && feature.hasProperty("HGT");
+            const isTerrainFeature = featurePicked && feature.hasProperty("substrates");
+            const isBuildingFeature = featurePicked && feature.hasProperty("HGT");
 
             if (isTerrainFeature) {
               metadataOverlay.style.display = "block";
@@ -290,10 +273,7 @@
 
             // Save the selected feature's original color
             if (feature === highlighted.feature) {
-              Cesium.Color.clone(
-                highlighted.originalColor,
-                selected.originalColor
-              );
+              Cesium.Color.clone(highlighted.originalColor, selected.originalColor);
               highlighted.feature = undefined;
             } else {
               Cesium.Color.clone(feature.color, selected.originalColor);
@@ -303,8 +283,7 @@
             tableHtmlScratch = "<table class='cesium-infoBox-defaultTable'>";
             tableHtmlScratch +=
               "<tr><th>Property Name</th><th>ID</th><th>Type</th><th>Value</th></tr><tbody>";
-            const metadataClass =
-              feature.content.batchTable._propertyTable.class;
+            const metadataClass = feature.content.batchTable._propertyTable.class;
             const propertyIds = feature.getPropertyIds();
             const length = propertyIds.length;
             for (let i = 0; i < length; ++i) {
@@ -384,22 +363,13 @@
 
         try {
           // 3D Tiles 1.1 converted from CDB of Aden, Yemen (CDB provided by Presagis)
-          const terrainTileset = await Cesium.Cesium3DTileset.fromIonAssetId(
-            2389063
-          );
+          const terrainTileset = await Cesium.Cesium3DTileset.fromIonAssetId(2389063);
           viewer.scene.primitives.add(terrainTileset);
-          const buildingsTileset = await Cesium.Cesium3DTileset.fromIonAssetId(
-            2389064,
-            {
-              maximumScreenSpaceError: 12,
-            }
-          );
+          const buildingsTileset = await Cesium.Cesium3DTileset.fromIonAssetId(2389064, {
+            maximumScreenSpaceError: 12,
+          });
           viewer.scene.primitives.add(buildingsTileset);
-          const center = Cesium.Cartesian3.fromDegrees(
-            45.04192,
-            12.753525,
-            2000
-          );
+          const center = Cesium.Cartesian3.fromDegrees(45.04192, 12.753525, 2000);
 
           viewer.camera.flyTo({
             duration: 0,
@@ -441,17 +411,15 @@
         }
 
         Sandcastle.addToolbarMenu(locations);
-        Sandcastle.addToggleButton(
-          "Enable terrain picking",
-          enablePicking,
-          function (checked) {
-            if (enablePicking) {
-              metadataOverlay.style.display = "none";
-            }
-
-            enablePicking = checked;
+        Sandcastle.addToggleButton("Enable terrain picking", enablePicking, function (
+          checked
+        ) {
+          if (enablePicking) {
+            metadataOverlay.style.display = "none";
           }
-        );
+
+          enablePicking = checked;
+        });
 
         //Sandcastle_End
       };

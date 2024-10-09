@@ -789,8 +789,9 @@ DynamicGeometryUpdater.prototype.update = function (time) {
   arcType = Property.getValueOrDefault(polyline._arcType, time, arcType);
 
   const globe = geometryUpdater._scene.globe;
+  const ellipsoid = geometryUpdater._scene.ellipsoid;
   if (arcType !== ArcType.NONE && defined(globe)) {
-    generateCartesianArcOptions.ellipsoid = globe.ellipsoid;
+    generateCartesianArcOptions.ellipsoid = ellipsoid;
     generateCartesianArcOptions.positions = positions;
     generateCartesianArcOptions.granularity = Property.getValueOrUndefined(
       polyline._granularity,
@@ -798,7 +799,7 @@ DynamicGeometryUpdater.prototype.update = function (time) {
     );
     generateCartesianArcOptions.height = PolylinePipeline.extractHeights(
       positions,
-      globe.ellipsoid
+      ellipsoid
     );
     if (arcType === ArcType.GEODESIC) {
       positions = PolylinePipeline.generateCartesianArc(

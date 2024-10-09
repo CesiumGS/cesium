@@ -21,10 +21,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
 
@@ -105,18 +102,13 @@
         viewer.zoomTo(imageryLayer);
 
         // Add a button to toggle the display of the Bing Maps Labels Only layer
-        Sandcastle.addToggleButton(
-          "Show Bing Maps Labels Only",
-          true,
-          (checked) => {
-            bingMapsLabelsOnly.show = checked;
-          }
-        );
+        Sandcastle.addToggleButton("Show Bing Maps Labels Only", true, (checked) => {
+          bingMapsLabelsOnly.show = checked;
+        });
 
         // The remaining code synchronizes the position of the slider with the split position
         const slider = document.getElementById("slider");
-        viewer.scene.splitPosition =
-          slider.offsetLeft / slider.parentElement.offsetWidth;
+        viewer.scene.splitPosition = slider.offsetLeft / slider.parentElement.offsetWidth;
 
         const handler = new Cesium.ScreenSpaceEventHandler(slider);
 
@@ -129,8 +121,7 @@
 
           const relativeOffset = movement.endPosition.x;
           const splitPosition =
-            (slider.offsetLeft + relativeOffset) /
-            slider.parentElement.offsetWidth;
+            (slider.offsetLeft + relativeOffset) / slider.parentElement.offsetWidth;
           slider.style.left = `${100.0 * splitPosition}%`;
           viewer.scene.splitPosition = splitPosition;
         }

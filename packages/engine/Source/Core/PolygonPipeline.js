@@ -587,7 +587,7 @@ PolygonPipeline.computeRhumbLineSubdivision = function (
  *
  * @param {number[]} positions The array of numbers representing the positions to be scaled
  * @param {number} [height=0.0] The desired height to add to the positions
- * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the positions lie.
+ * @param {Ellipsoid} [ellipsoid=Ellipsoid.default] The ellipsoid on which the positions lie.
  * @param {boolean} [scaleToSurface=true] <code>true</code> if the positions need to be scaled to the surface before the height is added.
  * @returns {number[]} The input array of positions, scaled to height
  */
@@ -597,7 +597,7 @@ PolygonPipeline.scaleToGeodeticHeight = function (
   ellipsoid,
   scaleToSurface
 ) {
-  ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
+  ellipsoid = defaultValue(ellipsoid, Ellipsoid.default);
 
   let n = scaleToGeodeticHeightN;
   let p = scaleToGeodeticHeightP;

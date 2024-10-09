@@ -432,7 +432,7 @@ describe(
         /*[
             Cesium3DTileStyle option,
              Cesium3DTileStyle default value,
-             Cesium3DTileFeature property, 
+             Cesium3DTileFeature property,
              expected Cesium3DTileFeature value,
              expected undefined Cesium3DTileFeature value
            ]*/

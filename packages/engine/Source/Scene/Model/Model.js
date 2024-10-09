@@ -106,6 +106,9 @@ import pickModel from "./pickModel.js";
  *  <li>
  *  {@link https://github.com/KhronosGroup/glTF/blob/main/extensions/1.0/Vendor/WEB3D_quantized_attributes/README.md|WEB3D_quantized_attributes}
  *  </li>
+ *  <li>
+ *  {@link https://nsgreg.nga.mil/csmwg.jsp|NGA_gpm_local (experimental)}
+ *  </li>
  * </ul>
  * </p>
  * <p>
@@ -124,6 +127,7 @@ import pickModel from "./pickModel.js";
  * @privateParam {boolean} [options.show=true] Whether or not to render the model.
  * @privateParam {Matrix4} [options.modelMatrix=Matrix4.IDENTITY]  The 4x4 transformation matrix that transforms the model from model to world coordinates.
  * @privateParam {number} [options.scale=1.0] A uniform scale applied to this model.
+ * @privateParam {boolean} [options.enableVerticalExaggeration=true] If <code>true</code>, the model is exaggerated along the ellipsoid normal when {@link Scene.verticalExaggeration} is set to a value other than <code>1.0</code>.
  * @privateParam {number} [options.minimumPixelSize=0.0] The approximate minimum pixel size of the model regardless of zoom.
  * @privateParam {number} [options.maximumScale] The maximum scale size of a model. An upper limit for minimumPixelSize.
  * @privateParam {object} [options.id] A user-defined object to return when the model is picked with {@link Scene#pick}.
@@ -162,7 +166,7 @@ import pickModel from "./pickModel.js";
  * @privateParam {string|number} [options.instanceFeatureIdLabel="instanceFeatureId_0"] Label of the instance feature ID set used for picking and styling. If instanceFeatureIdLabel is set to an integer N, it is converted to the string "instanceFeatureId_N" automatically. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
  * @privateParam {object} [options.pointCloudShading] Options for constructing a {@link PointCloudShading} object to control point attenuation based on geometric error and lighting.
  * @privateParam {ClassificationType} [options.classificationType] Determines whether terrain, 3D Tiles or both will be classified by this model. This cannot be set after the model has loaded.
-
+ *
  *
  * @see Model.fromGltfAsync
  *
@@ -341,7 +345,11 @@ function Model(options) {
   this._heightDirty = this._heightReference !== HeightReference.NONE;
   this._removeUpdateHeightCallback = undefined;
 
-  this._verticalExaggerationOn = false;
+  this._enableVerticalExaggeration = defaultValue(
+    options.enableVerticalExaggeration,
+    true
+  );
+  this._hasVerticalExaggeration = false;
 
   this._clampedModelMatrix = undefined; // For use with height reference
 
@@ -1386,6 +1394,45 @@ Object.defineProperties(Model.prototype, {
   },
 
   /**
+   * If <code>true</code>, the model is exaggerated along the ellipsoid normal when {@link Scene.verticalExaggeration} is set to a value other than <code>1.0</code>.
+   *
+   * @memberof Model.prototype
+   * @type {boolean}
+   * @default true
+   *
+   * @example
+   * // Exaggerate terrain by a factor of 2, but prevent model exaggeration
+   * scene.verticalExaggeration = 2.0;
+   * model.enableVerticalExaggeration = false;
+   */
+  enableVerticalExaggeration: {
+    get: function () {
+      return this._enableVerticalExaggeration;
+    },
+    set: function (value) {
+      if (value !== this._enableVerticalExaggeration) {
+        this.resetDrawCommands();
+      }
+      this._enableVerticalExaggeration = value;
+    },
+  },
+
+  /**
+   * If <code>true</code>, the model is vertically exaggerated along the ellipsoid normal.
+   *
+   * @memberof Model.prototype
+   * @type {boolean}
+   * @default true
+   * @readonly
+   * @private
+   */
+  hasVerticalExaggeration: {
+    get: function () {
+      return this._hasVerticalExaggeration;
+    },
+  },
+
+  /**
    * The light color when shading the model. When <code>undefined</code> the scene's light color is used instead.
    * <p>
    * Disabling additional light sources by setting
@@ -1775,6 +1822,33 @@ Model.prototype.applyArticulations = function () {
 };
 
 /**
+ * Returns the object that was created for the given extension.
+ *
+ * The given name may be the name of a glTF extension, like `"EXT_example_extension"`.
+ * If the specified extension was present in the root of the underlying glTF asset,
+ * and a loder for the specified extension has processed the extension data, then
+ * this will return the model representation of the extension.
+ *
+ * @param {string} extensionName The name of the extension
+ * @returns {object|undefined} The object, or `undefined`
+ * @exception {DeveloperError} The model is not loaded. Use Model.readyEvent or wait for Model.ready to be true.
+ *
+ * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
+ */
+Model.prototype.getExtension = function (extensionName) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("extensionName", extensionName);
+  if (!this._ready) {
+    throw new DeveloperError(
+      "The model is not loaded. Use Model.readyEvent or wait for Model.ready to be true."
+    );
+  }
+  //>>includeEnd('debug');
+  const components = this._loader.components;
+  return components.extensions[extensionName];
+};
+
+/**
  * Marks the model's {@link Model#style} as dirty, which forces all features
  * to re-evaluate the style in the next frame the model is visible.
  */
@@ -2134,10 +2208,15 @@ function updateFog(model, frameState) {
 }
 
 function updateVerticalExaggeration(model, frameState) {
-  const verticalExaggerationNeeded = frameState.verticalExaggeration !== 1.0;
-  if (model._verticalExaggerationOn !== verticalExaggerationNeeded) {
-    model.resetDrawCommands();
-    model._verticalExaggerationOn = verticalExaggerationNeeded;
+  if (model.enableVerticalExaggeration) {
+    const verticalExaggerationNeeded = frameState.verticalExaggeration !== 1.0;
+    if (model.hasVerticalExaggeration !== verticalExaggerationNeeded) {
+      model.resetDrawCommands();
+      model._hasVerticalExaggeration = verticalExaggerationNeeded;
+    }
+  } else if (model.hasVerticalExaggeration) {
+    model.resetDrawCommands(); //if verticalExaggeration was on, reset.
+    model._hasVerticalExaggeration = false;
   }
 }
 
@@ -2195,8 +2274,7 @@ function updateClamping(model) {
     return;
   }
 
-  const globe = scene.globe;
-  const ellipsoid = defaultValue(globe?.ellipsoid, Ellipsoid.WGS84);
+  const ellipsoid = defaultValue(scene.ellipsoid, Ellipsoid.default);
 
   // Compute cartographic position so we don't recompute every update
   const modelMatrix = model.modelMatrix;
@@ -2278,7 +2356,7 @@ function updateComputedScale(model, modelMatrix, frameState) {
     Matrix4.getTranslation(modelMatrix, scratchPosition);
 
     if (model._sceneMode !== SceneMode.SCENE3D) {
-      SceneTransforms.computeActualWgs84Position(
+      SceneTransforms.computeActualEllipsoidPosition(
         frameState,
         scratchPosition,
         scratchPosition
@@ -2324,7 +2402,7 @@ function updatePickIds(model) {
 
 // Matrix3 is a row-major constructor.
 // The same constructor in GLSL will produce the transpose of this.
-const yUpToZUp = new Matrix3(-1, 0, 0, 0, 0, 1, 0, -1, 0);
+const yUpToZUp = new Matrix3(1, 0, 0, 0, 0, 1, 0, -1, 0);
 
 function updateReferenceMatrices(model, frameState) {
   const modelMatrix = defined(model._clampedModelMatrix)
@@ -2537,7 +2615,11 @@ function passesDistanceDisplayCondition(model, frameState) {
 
     // This will project the position if the scene is in Columbus View,
     // but leave the position as-is in 3D mode.
-    SceneTransforms.computeActualWgs84Position(frameState, position, position);
+    SceneTransforms.computeActualEllipsoidPosition(
+      frameState,
+      position,
+      position
+    );
 
     distanceSquared = Cartesian3.distanceSquared(
       position,
@@ -2817,6 +2899,7 @@ Model.prototype.destroyModelResources = function () {
  * @param {boolean} [options.show=true] Whether or not to render the model.
  * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the model from model to world coordinates.
  * @param {number} [options.scale=1.0] A uniform scale applied to this model.
+ * @param {boolean} [options.enableVerticalExaggeration=true] If <code>true</code>, the model is exaggerated along the ellipsoid normal when {@link Scene.verticalExaggeration} is set to a value other than <code>1.0</code>.
  * @param {number} [options.minimumPixelSize=0.0] The approximate minimum pixel size of the model regardless of zoom.
  * @param {number} [options.maximumScale] The maximum scale size of a model. An upper limit for minimumPixelSize.
  * @param {object} [options.id] A user-defined object to return when the model is picked with {@link Scene#pick}.
@@ -3186,6 +3269,7 @@ function makeModelOptions(loader, modelType, options) {
     show: options.show,
     modelMatrix: options.modelMatrix,
     scale: options.scale,
+    enableVerticalExaggeration: options.enableVerticalExaggeration,
     minimumPixelSize: options.minimumPixelSize,
     maximumScale: options.maximumScale,
     id: options.id,

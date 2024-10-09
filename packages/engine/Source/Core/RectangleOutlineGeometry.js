@@ -247,7 +247,7 @@ function constructExtrudedRectangle(rectangleGeometry, computedOptions) {
  *
  * @param {object} options Object with the following properties:
  * @param {Rectangle} options.rectangle A cartographic rectangle with north, south, east and west properties in radians.
- * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the rectangle lies.
+ * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.default] The ellipsoid on which the rectangle lies.
  * @param {number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
  * @param {number} [options.height=0.0] The distance in meters between the rectangle and the ellipsoid surface.
  * @param {number} [options.rotation=0.0] The rotation of the rectangle, in radians. A positive rotation is counter-clockwise.
@@ -277,14 +277,14 @@ function RectangleOutlineGeometry(options) {
     options.granularity,
     CesiumMath.RADIANS_PER_DEGREE
   );
-  const ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
+  const ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.default);
   const rotation = defaultValue(options.rotation, 0.0);
 
   //>>includeStart('debug', pragmas.debug);
   if (!defined(rectangle)) {
     throw new DeveloperError("rectangle is required.");
   }
-  Rectangle.validate(rectangle);
+  Rectangle._validate(rectangle);
   if (rectangle.north < rectangle.south) {
     throw new DeveloperError(
       "options.rectangle.north must be greater than options.rectangle.south"

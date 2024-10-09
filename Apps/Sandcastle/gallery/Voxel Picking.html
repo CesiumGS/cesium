@@ -13,10 +13,7 @@
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
       #pickReport {
@@ -73,9 +70,7 @@
           this._levelCount = 3;
         }
 
-        ProceduralMultiTileVoxelProvider.prototype.requestData = function (
-          options
-        ) {
+        ProceduralMultiTileVoxelProvider.prototype.requestData = function (options) {
           const { tileLevel, tileX, tileY, tileZ } = options;
 
           if (tileLevel >= this._levelCount) {
@@ -86,11 +81,7 @@
           const type = this.types[0];
           const randomSeed =
             tileZ * dimensions.y * dimensions.x + tileY * dimensions.x + tileX;
-          const dataTile = constructRandomTileData(
-            dimensions,
-            type,
-            randomSeed
-          );
+          const dataTile = constructRandomTileData(dimensions, type, randomSeed);
 
           return Promise.resolve([dataTile]);
         };
@@ -130,9 +121,7 @@
           return dataColor;
         }
 
-        const provider = new ProceduralMultiTileVoxelProvider(
-          Cesium.VoxelShapeType.BOX
-        );
+        const provider = new ProceduralMultiTileVoxelProvider(Cesium.VoxelShapeType.BOX);
 
         const customShader = new Cesium.CustomShader({
           fragmentShaderText: `void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
@@ -196,9 +185,7 @@
             return;
           }
           const { tileIndex, sampleIndex, orientedBoundingBox } = voxelCell;
-          const [x, y, z] = Object.values(orientedBoundingBox.center).map(
-            Math.round
-          );
+          const [x, y, z] = Object.values(orientedBoundingBox.center).map(Math.round);
           pickedCoordinate.innerHTML = `Sample center x = ${x}, y = ${y}, z = ${z}`;
           const rgbaValues = voxelCell.getProperty("color");
           const color = new Cesium.Color(...rgbaValues);

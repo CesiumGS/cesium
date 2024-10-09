@@ -18,10 +18,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -47,9 +44,7 @@
         let circleOutlineInstance = new Cesium.GeometryInstance({
           geometry: circleOutlineGeometry,
           attributes: {
-            color: Cesium.ColorGeometryInstanceAttribute.fromColor(
-              Cesium.Color.WHITE
-            ),
+            color: Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.WHITE),
           },
         });
         // Add the geometry instance to primitives.
@@ -81,9 +76,7 @@
         circleOutlineInstance = new Cesium.GeometryInstance({
           geometry: circleOutlineGeometry,
           attributes: {
-            color: Cesium.ColorGeometryInstanceAttribute.fromColor(
-              Cesium.Color.WHITE
-            ),
+            color: Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.WHITE),
           },
         });
         // Add the geometry instance to primitives.

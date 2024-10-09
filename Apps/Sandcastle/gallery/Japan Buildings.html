@@ -11,10 +11,7 @@
       name="description"
       content="Worldwide 3D buildings with rich metadata from OpenStreetMap."
     />
-    <meta
-      name="cesium-sandcastle-labels"
-      content="Beginner, Showcases, ion Assets"
-    />
+    <meta name="cesium-sandcastle-labels" content="Beginner, Showcases, ion Assets" />
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script
@@ -24,10 +21,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -45,7 +39,6 @@
           sceneModePicker: false,
           animation: false,
           timeline: false,
-          msaaSamples: 4,
         });
         const scene = viewer.scene;
         scene.globe.depthTestAgainstTerrain = true;
@@ -262,12 +255,10 @@
           );
         });
 
-        viewer.homeButton.viewModel.command.beforeExecute.addEventListener(
-          (e) => {
-            e.cancel = true;
-            scene.camera.flyTo(hiroshima);
-          }
-        );
+        viewer.homeButton.viewModel.command.beforeExecute.addEventListener((e) => {
+          e.cancel = true;
+          scene.camera.flyTo(hiroshima);
+        });
 
         //Sandcastle_End
       };

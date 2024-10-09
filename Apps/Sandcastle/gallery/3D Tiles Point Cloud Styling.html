@@ -8,10 +8,7 @@
       name="viewport"
       content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
     />
-    <meta
-      name="description"
-      content="Example styles for a point cloud tileset."
-    />
+    <meta name="description" content="Example styles for a point cloud tileset." />
     <meta name="cesium-sandcastle-labels" content="3D Tiles" />
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
@@ -22,10 +19,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
       #toolbar button {
@@ -67,8 +61,7 @@
         });
 
         addStyle("Interpolate Red/Blue", {
-          color:
-            "color('red') * ${temperature} + color('blue') * (1.0 - ${temperature})",
+          color: "color('red') * ${temperature} + color('blue') * (1.0 - ${temperature})",
         });
 
         addStyle("Red", {
@@ -168,15 +161,9 @@
           color: {
             conditions: [
               ["${id} < 250", "vec4(${secondaryColor}, 1.0)"],
-              [
-                "${id} < 500",
-                "vec4(${secondaryColor} * ${secondaryColor}, 1.0)",
-              ],
+              ["${id} < 500", "vec4(${secondaryColor} * ${secondaryColor}, 1.0)"],
               ["${id} < 750", "vec4(${secondaryColor} / 5.0, 1.0)"],
-              [
-                "${id} < 1000",
-                "rgb(0, 0, Number(${secondaryColor}.x < 0.5) * 255)",
-              ],
+              ["${id} < 1000", "rgb(0, 0, Number(${secondaryColor}.x < 0.5) * 255)"],
             ],
           },
         });
@@ -186,8 +173,7 @@
         });
 
         addStyle("Use point positions", {
-          show:
-            "${POSITION}[0] > 0.5 || ${POSITION}[1] > 0.5 || ${POSITION}[2] > 0.5",
+          show: "${POSITION}[0] > 0.5 || ${POSITION}[1] > 0.5 || ${POSITION}[2] > 0.5",
         });
 
         // POSITION contains 0 as its last component, so add 1.0 to make the point cloud opaque
@@ -208,10 +194,7 @@
           color: {
             conditions: [
               ["${length} < 0.5", "${length} * color('red')"],
-              [
-                "${length} < 1.0",
-                "vec4(vec3(${temperature} * fract(${time})), 1.0)",
-              ],
+              ["${length} < 1.0", "vec4(vec3(${temperature} * fract(${time})), 1.0)"],
               ["true", "${COLOR}"],
             ],
           },

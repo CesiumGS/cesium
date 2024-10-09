@@ -21,10 +21,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -43,18 +40,14 @@
         viewer.extend(Cesium.viewerCesiumInspectorMixin);
 
         function offsetPositions(positions, degreeOffset) {
-          positions = scene.globe.ellipsoid.cartesianArrayToCartographicArray(
-            positions
-          );
+          positions = scene.globe.ellipsoid.cartesianArrayToCartographicArray(positions);
           const delta = Cesium.Math.toRadians(degreeOffset);
           for (let i = 0; i < positions.length; ++i) {
             const position = positions[i];
             position.latitude += delta;
             position.longitude += delta;
           }
-          return scene.globe.ellipsoid.cartographicArrayToCartesianArray(
-            positions
-          );
+          return scene.globe.ellipsoid.cartographicArrayToCartesianArray(positions);
         }
 
         function createOverlappingPolygons(withAlpha) {
@@ -179,10 +172,7 @@
           handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
           handler.setInputAction(function (movement) {
             const pickedObject = scene.pick(movement.endPosition);
-            if (
-              Cesium.defined(pickedObject) &&
-              pickedObject !== currentObject
-            ) {
+            if (Cesium.defined(pickedObject) && pickedObject !== currentObject) {
               if (Cesium.defined(currentObject)) {
                 currentObject.primitive.getGeometryInstanceAttributes(
                   currentObject.id
@@ -196,10 +186,7 @@
               );
               lastColor = attributes.color;
               attributes.color = [255, 255, 0, 128];
-            } else if (
-              !Cesium.defined(pickedObject) &&
-              Cesium.defined(currentObject)
-            ) {
+            } else if (!Cesium.defined(pickedObject) && Cesium.defined(currentObject)) {
               currentObject.primitive.getGeometryInstanceAttributes(
                 currentObject.id
               ).color = lastColor;
@@ -247,12 +234,7 @@
             instances.push(
               new Cesium.GeometryInstance({
                 geometry: new Cesium.RectangleGeometry({
-                  rectangle: Cesium.Rectangle.fromDegrees(
-                    west,
-                    south,
-                    east,
-                    north
-                  ),
+                  rectangle: Cesium.Rectangle.fromDegrees(west, south, east, north),
                 }),
                 attributes: {
                   color: color,
@@ -267,12 +249,7 @@
         }
 
         Sandcastle.addToolbarButton("Batching", function () {
-          const color = new Cesium.ColorGeometryInstanceAttribute(
-            0.0,
-            1.0,
-            1.0,
-            0.5
-          );
+          const color = new Cesium.ColorGeometryInstanceAttribute(0.0, 1.0, 1.0, 0.5);
           const show = new Cesium.ShowGeometryInstanceAttribute(true);
           const instances = createBatchedInstances(color, show);
           scene.groundPrimitives.add(
@@ -286,12 +263,7 @@
         });
 
         Sandcastle.addToolbarButton("Batch Picking", function () {
-          let color = new Cesium.ColorGeometryInstanceAttribute(
-            0.0,
-            1.0,
-            1.0,
-            0.5
-          );
+          let color = new Cesium.ColorGeometryInstanceAttribute(0.0, 1.0, 1.0, 0.5);
           let show = new Cesium.ShowGeometryInstanceAttribute(true);
           let instances = createBatchedInstances(color, show);
 
@@ -332,9 +304,7 @@
               pickedObject.id.indexOf(pickIdPrefix) === -1
             ) {
               if (Cesium.defined(currentObject)) {
-                primitive.getGeometryInstanceAttributes(
-                  currentObject.id
-                ).show = [1];
+                primitive.getGeometryInstanceAttributes(currentObject.id).show = [1];
                 pickPrimitive.getGeometryInstanceAttributes(
                   pickIdPrefix + currentObject.id
                 ).show = [0];
@@ -342,19 +312,12 @@
 
               currentObject = pickedObject;
 
-              primitive.getGeometryInstanceAttributes(currentObject.id).show = [
-                0,
-              ];
+              primitive.getGeometryInstanceAttributes(currentObject.id).show = [0];
               pickPrimitive.getGeometryInstanceAttributes(
                 pickIdPrefix + currentObject.id
               ).show = [1];
-            } else if (
-              !Cesium.defined(pickedObject) &&
-              Cesium.defined(currentObject)
-            ) {
-              primitive.getGeometryInstanceAttributes(currentObject.id).show = [
-                1,
-              ];
+            } else if (!Cesium.defined(pickedObject) && Cesium.defined(currentObject)) {
+              primitive.getGeometryInstanceAttributes(currentObject.id).show = [1];
               pickPrimitive.getGeometryInstanceAttributes(
                 pickIdPrefix + currentObject.id
               ).show = [0];
@@ -434,12 +397,7 @@
             new Cesium.GroundPrimitive({
               geometryInstances: new Cesium.GeometryInstance({
                 geometry: new Cesium.RectangleGeometry({
-                  rectangle: Cesium.Rectangle.fromDegrees(
-                    -100.0,
-                    30.0,
-                    -90.0,
-                    40.0
-                  ),
+                  rectangle: Cesium.Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0),
                   rotation: Cesium.Math.toRadians(45),
                 }),
                 attributes: {

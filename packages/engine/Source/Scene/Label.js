@@ -102,8 +102,8 @@ function parseFont(label) {
  * @property {Cartesian2} [backgroundPadding=new Cartesian2(7, 5)] A {@link Cartesian2} Specifying the horizontal and vertical background padding in pixels.
  * @property {Cartesian2} [pixelOffset=Cartesian2.ZERO] A {@link Cartesian2} specifying the pixel offset in screen space from the origin of this label.
  * @property {Cartesian3} [eyeOffset=Cartesian3.ZERO] A {@link Cartesian3} specifying the 3D Cartesian offset applied to this label in eye coordinates.
- * @property {HorizontalOrigin} [horizontalOrigin=HorizontalOrigin.CENTER] A {@link HorizontalOrigin} specifying the horizontal origin of this label.
- * @property {VerticalOrigin} [verticalOrigin=VerticalOrigin.CENTER] A {@link VerticalOrigin} specifying the vertical origin of this label.
+ * @property {HorizontalOrigin} [horizontalOrigin=HorizontalOrigin.LEFT] A {@link HorizontalOrigin} specifying the horizontal origin of this label.
+ * @property {VerticalOrigin} [verticalOrigin=VerticalOrigin.BASELINE] A {@link VerticalOrigin} specifying the vertical origin of this label.
  * @property {HeightReference} [heightReference=HeightReference.NONE] A {@link HeightReference} specifying the height reference of this label.
  * @property {Color} [fillColor=Color.WHITE] A {@link Color} specifying the fill color of the label.
  * @property {Color} [outlineColor=Color.BLACK] A {@link Color} specifying the outline color of the label.

@@ -21,10 +21,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -113,12 +110,7 @@
 
         entities.add({
           rectangle: {
-            coordinates: Cesium.Rectangle.fromDegrees(
-              -118.0,
-              38.0,
-              -116.0,
-              40.0
-            ),
+            coordinates: Cesium.Rectangle.fromDegrees(-118.0, 38.0, -116.0, 40.0),
             extrudedHeight: 500000.0,
             outline: true,
             outlineColor: Cesium.Color.WHITE,
@@ -335,12 +327,7 @@
 
         entities.add({
           rectangle: {
-            coordinates: Cesium.Rectangle.fromDegrees(
-              -110.0,
-              38.0,
-              -107.0,
-              40.0
-            ),
+            coordinates: Cesium.Rectangle.fromDegrees(-110.0, 38.0, -107.0, 40.0),
             height: 700000.0,
             extrudedHeight: 1000000.0,
             rotation: Cesium.Math.toRadians(45),
@@ -418,12 +405,7 @@
 
           entities.add({
             rectangle: {
-              coordinates: Cesium.Rectangle.fromDegrees(
-                -67.0,
-                27.0,
-                -63.0,
-                32.0
-              ),
+              coordinates: Cesium.Rectangle.fromDegrees(-67.0, 27.0, -63.0, 32.0),
               height: height,
               material: Cesium.Color.fromRandom({ alpha: 0.5 }),
             },

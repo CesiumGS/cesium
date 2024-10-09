@@ -21,10 +21,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
       #toolbar {
@@ -135,14 +132,12 @@
 
         // Make the active imagery layer a subscriber of the viewModel.
         function subscribeLayerParameter(name) {
-          Cesium.knockout
-            .getObservable(viewModel, name)
-            .subscribe(function (newValue) {
-              if (imageryLayers.length > 0) {
-                const layer = imageryLayers.get(0);
-                layer[name] = newValue;
-              }
-            });
+          Cesium.knockout.getObservable(viewModel, name).subscribe(function (newValue) {
+            if (imageryLayers.length > 0) {
+              const layer = imageryLayers.get(0);
+              layer[name] = newValue;
+            }
+          });
         }
         subscribeLayerParameter("brightness");
         subscribeLayerParameter("contrast");

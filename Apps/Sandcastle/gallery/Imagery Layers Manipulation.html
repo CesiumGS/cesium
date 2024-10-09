@@ -21,10 +21,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
 
@@ -133,9 +130,7 @@
           lower: function (layer, index) {
             imageryLayers.lower(layer);
             viewModel.upLayer =
-              viewModel.layers[
-                Math.min(viewModel.layers.length - 1, index + 1)
-              ];
+              viewModel.layers[Math.min(viewModel.layers.length - 1, index + 1)];
             viewModel.downLayer = layer;
             updateLayerList();
             window.setTimeout(function () {
@@ -158,10 +153,7 @@
           // These base layers aren't really special.  It's possible to have multiple of them
           // enabled at once, just like the other layers, but it doesn't make much sense because
           // all of these layers cover the entire globe and are opaque.
-          addBaseLayerOption(
-            "Bing Maps Aerial",
-            Cesium.createWorldImageryAsync()
-          );
+          addBaseLayerOption("Bing Maps Aerial", Cesium.createWorldImageryAsync());
           addBaseLayerOption(
             "Bing Maps Road",
             Cesium.createWorldImageryAsync({
@@ -174,10 +166,7 @@
               "https://services.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer"
             )
           );
-          addBaseLayerOption(
-            "OpenStreetMaps",
-            new Cesium.OpenStreetMapImageryProvider()
-          );
+          addBaseLayerOption("OpenStreetMaps", new Cesium.OpenStreetMapImageryProvider());
           addBaseLayerOption(
             "Stamen Maps",
             new Cesium.OpenStreetMapImageryProvider({
@@ -211,8 +200,7 @@
           addAdditionalLayerOption(
             "United States GOES Infrared",
             new Cesium.WebMapServiceImageryProvider({
-              url:
-                "https://mesonet.agron.iastate.edu/cgi-bin/wms/goes/conus_ir.cgi?",
+              url: "https://mesonet.agron.iastate.edu/cgi-bin/wms/goes/conus_ir.cgi?",
               layers: "goes_conus_ir",
               credit: "Infrared data courtesy Iowa Environmental Mesonet",
               parameters: {
@@ -224,8 +212,7 @@
           addAdditionalLayerOption(
             "United States Weather Radar",
             new Cesium.WebMapServiceImageryProvider({
-              url:
-                "https://mesonet.agron.iastate.edu/cgi-bin/wms/nexrad/n0r.cgi?",
+              url: "https://mesonet.agron.iastate.edu/cgi-bin/wms/nexrad/n0r.cgi?",
               layers: "nexrad-n0r",
               credit: "Radar data courtesy Iowa Environmental Mesonet",
               parameters: {
@@ -246,22 +233,12 @@
             Cesium.SingleTileImageryProvider.fromUrl(
               "../images/Cesium_Logo_overlay.png",
               {
-                rectangle: Cesium.Rectangle.fromDegrees(
-                  -115.0,
-                  38.0,
-                  -107,
-                  39.75
-                ),
+                rectangle: Cesium.Rectangle.fromDegrees(-115.0, 38.0, -107, 39.75),
               }
             ),
             1.0
           );
-          addAdditionalLayerOption(
-            "Grid",
-            new Cesium.GridImageryProvider(),
-            1.0,
-            false
-          );
+          addAdditionalLayerOption("Grid", new Cesium.GridImageryProvider(), 1.0, false);
           addAdditionalLayerOption(
             "Tile Coordinates",
             new Cesium.TileCoordinatesImageryProvider(),
@@ -272,18 +249,14 @@
 
         async function addBaseLayerOption(name, imageryProviderPromise) {
           try {
-            const imageryProvider = await Promise.resolve(
-              imageryProviderPromise
-            );
+            const imageryProvider = await Promise.resolve(imageryProviderPromise);
 
             const layer = new Cesium.ImageryLayer(imageryProvider);
             layer.name = name;
             baseLayers.push(layer);
             updateLayerList();
           } catch (error) {
-            console.error(
-              `There was an error while creating ${name}. ${error}`
-            );
+            console.error(`There was an error while creating ${name}. ${error}`);
           }
         }
 
@@ -294,9 +267,7 @@
           show
         ) {
           try {
-            const imageryProvider = await Promise.resolve(
-              imageryProviderPromise
-            );
+            const imageryProvider = await Promise.resolve(imageryProviderPromise);
             const layer = new Cesium.ImageryLayer(imageryProvider);
             layer.alpha = Cesium.defaultValue(alpha, 0.5);
             layer.show = Cesium.defaultValue(show, true);
@@ -305,9 +276,7 @@
             Cesium.knockout.track(layer, ["alpha", "show", "name"]);
             updateLayerList();
           } catch (error) {
-            console.error(
-              `There was an error while creating ${name}. ${error}`
-            );
+            console.error(`There was an error while creating ${name}. ${error}`);
           }
         }
 

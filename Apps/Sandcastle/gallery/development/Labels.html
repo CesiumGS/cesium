@@ -18,10 +18,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -70,11 +67,7 @@
             text: "Philadelphia",
           });
 
-          l.position = Cesium.Cartesian3.fromDegrees(
-            -75.1641667,
-            39.9522222,
-            300000.0
-          );
+          l.position = Cesium.Cartesian3.fromDegrees(-75.1641667, 39.9522222, 300000.0);
           l.scale = 2.0;
         }
 
@@ -83,9 +76,7 @@
           scene.primitives.removeAll();
           const center = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883);
           const labels = scene.primitives.add(new Cesium.LabelCollection());
-          labels.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(
-            center
-          );
+          labels.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(center);
           labels.add({
             position: new Cesium.Cartesian3(0.0, 0.0, 0.0),
             text: "Center",
@@ -117,9 +108,7 @@
           scene.primitives.removeAll();
           const image = new Image();
           image.onload = function () {
-            const billboards = scene.primitives.add(
-              new Cesium.BillboardCollection()
-            );
+            const billboards = scene.primitives.add(new Cesium.BillboardCollection());
             billboards.add({
               position: Cesium.Cartesian3.fromDegrees(-75.1641667, 39.9522222),
               scaleByDistance: new Cesium.NearFarScalar(1.5e2, 5.0, 1.5e7, 0.5),
@@ -152,22 +141,12 @@
           labels.add({
             position: Cesium.Cartesian3.fromDegrees(-73.94, 40.67),
             text: "New York",
-            translucencyByDistance: new Cesium.NearFarScalar(
-              1.5e2,
-              1.0,
-              1.5e8,
-              0.0
-            ),
+            translucencyByDistance: new Cesium.NearFarScalar(1.5e2, 1.0, 1.5e8, 0.0),
           });
           labels.add({
             position: Cesium.Cartesian3.fromDegrees(-84.39, 33.75),
             text: "Atlanta",
-            translucencyByDistance: new Cesium.NearFarScalar(
-              1.5e5,
-              1.0,
-              1.5e7,
-              0.0
-            ),
+            translucencyByDistance: new Cesium.NearFarScalar(1.5e5, 1.0, 1.5e7, 0.0),
           });
         }
 

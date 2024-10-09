@@ -21,10 +21,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -36,9 +33,7 @@
       <table class="infoPanel">
         <tbody>
           <tr>
-            <td>
-              Click on the 3D window then use the keyboard to change settings.
-            </td>
+            <td>Click on the 3D window then use the keyboard to change settings.</td>
           </tr>
           <tr>
             <td>Heading: <span id="heading"></span>°</td>
@@ -90,34 +85,22 @@
           },
           {
             pos: Cesium.Cartesian3.fromDegrees(-123.075, 44.05, 5500.0),
-            converter: Cesium.Transforms.localFrameToFixedFrameGenerator(
-              "north",
-              "west"
-            ),
+            converter: Cesium.Transforms.localFrameToFixedFrameGenerator("north", "west"),
             comments: "North West Up\nlocal Frame",
           },
           {
             pos: Cesium.Cartesian3.fromDegrees(-123.075, 44.04, 4500.0),
-            converter: Cesium.Transforms.localFrameToFixedFrameGenerator(
-              "south",
-              "up"
-            ),
+            converter: Cesium.Transforms.localFrameToFixedFrameGenerator("south", "up"),
             comments: "South Up West\nlocal Frame",
           },
           {
             pos: Cesium.Cartesian3.fromDegrees(-123.075, 44.05, 4500.0),
-            converter: Cesium.Transforms.localFrameToFixedFrameGenerator(
-              "up",
-              "east"
-            ),
+            converter: Cesium.Transforms.localFrameToFixedFrameGenerator("up", "east"),
             comments: "Up East North\nlocal Frame",
           },
           {
             pos: Cesium.Cartesian3.fromDegrees(-123.075, 44.04, 5500.0),
-            converter: Cesium.Transforms.localFrameToFixedFrameGenerator(
-              "down",
-              "east"
-            ),
+            converter: Cesium.Transforms.localFrameToFixedFrameGenerator("down", "east"),
             comments: "Down East South\nlocal Frame",
           },
         ];
@@ -265,9 +248,7 @@
         });
 
         viewer.scene.preRender.addEventListener(function (scene, time) {
-          headingSpan.innerHTML = Cesium.Math.toDegrees(hpRoll.heading).toFixed(
-            1
-          );
+          headingSpan.innerHTML = Cesium.Math.toDegrees(hpRoll.heading).toFixed(1);
           pitchSpan.innerHTML = Cesium.Math.toDegrees(hpRoll.pitch).toFixed(1);
           rollSpan.innerHTML = Cesium.Math.toDegrees(hpRoll.roll).toFixed(1);
         });

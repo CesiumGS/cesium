@@ -11,6 +11,7 @@ import Matrix4 from "../Core/Matrix4.js";
 import NearFarScalar from "../Core/NearFarScalar.js";
 import SceneMode from "./SceneMode.js";
 import SceneTransforms from "./SceneTransforms.js";
+import SplitDirection from "./SplitDirection.js";
 
 /**
  * <div class="notice">
@@ -117,6 +118,11 @@ function PointPrimitive(options, pointPrimitiveCollection) {
   this._pointPrimitiveCollection = pointPrimitiveCollection;
   this._dirty = false;
   this._index = -1; //Used only by PointPrimitiveCollection
+
+  this._splitDirection = defaultValue(
+    options.splitDirection,
+    SplitDirection.NONE
+  );
 }
 
 const SHOW_INDEX = (PointPrimitive.SHOW_INDEX = 0);
@@ -129,7 +135,8 @@ const SCALE_BY_DISTANCE_INDEX = (PointPrimitive.SCALE_BY_DISTANCE_INDEX = 6);
 const TRANSLUCENCY_BY_DISTANCE_INDEX = (PointPrimitive.TRANSLUCENCY_BY_DISTANCE_INDEX = 7);
 const DISTANCE_DISPLAY_CONDITION_INDEX = (PointPrimitive.DISTANCE_DISPLAY_CONDITION_INDEX = 8);
 const DISABLE_DEPTH_DISTANCE_INDEX = (PointPrimitive.DISABLE_DEPTH_DISTANCE_INDEX = 9);
-PointPrimitive.NUMBER_OF_PROPERTIES = 10;
+const SPLIT_DIRECTION_INDEX = (PointPrimitive.SPLIT_DIRECTION_INDEX = 10);
+PointPrimitive.NUMBER_OF_PROPERTIES = 11;
 
 function makeDirty(pointPrimitive, propertyChanged) {
   const pointPrimitiveCollection = pointPrimitive._pointPrimitiveCollection;
@@ -486,6 +493,24 @@ Object.defineProperties(PointPrimitive.prototype, {
       }
     },
   },
+
+  /**
+   * The {@link SplitDirection} to apply to this point.
+   * @memberof PointPrimitive.prototype
+   * @type {SplitDirection}
+   * @default {@link SplitDirection.NONE}
+   */
+  splitDirection: {
+    get: function () {
+      return this._splitDirection;
+    },
+    set: function (value) {
+      if (this._splitDirection !== value) {
+        this._splitDirection = value;
+        makeDirty(this, SPLIT_DIRECTION_INDEX);
+      }
+    },
+  },
 });
 
 PointPrimitive.prototype.getPickId = function (context) {
@@ -520,7 +545,10 @@ PointPrimitive._computeActualPosition = function (
   }
 
   Matrix4.multiplyByPoint(modelMatrix, position, tempCartesian3);
-  return SceneTransforms.computeActualWgs84Position(frameState, tempCartesian3);
+  return SceneTransforms.computeActualEllipsoidPosition(
+    frameState,
+    tempCartesian3
+  );
 };
 
 const scratchCartesian4 = new Cartesian4();
@@ -544,7 +572,7 @@ PointPrimitive._computeScreenSpacePosition = function (
     ),
     scratchCartesian4
   );
-  const positionWC = SceneTransforms.wgs84ToWindowCoordinates(
+  const positionWC = SceneTransforms.worldToWindowCoordinates(
     scene,
     positionWorld,
     result
@@ -657,7 +685,8 @@ PointPrimitive.prototype.equals = function (other) {
         this._distanceDisplayCondition,
         other._distanceDisplayCondition
       ) &&
-      this._disableDepthTestDistance === other._disableDepthTestDistance)
+      this._disableDepthTestDistance === other._disableDepthTestDistance &&
+      this._splitDirection === other._splitDirection)
   );
 };
 

@@ -65,7 +65,11 @@ NormalInfo getNormalInfo(ProcessedAttributes attributes)
     #ifdef HAS_NORMAL_TEXTURE
         mat3 tbn = mat3(tangent, bitangent, geometryNormal);
         vec3 normalSample = texture(u_normalTexture, normalTexCoords).rgb;
-        vec3 normal = normalize(tbn * (2.0 * normalSample - 1.0));
+        normalSample = 2.0 * normalSample - 1.0;
+        #ifdef HAS_NORMAL_TEXTURE_SCALE
+            normalSample.xy *= u_normalTextureScale;
+        #endif
+        vec3 normal = normalize(tbn * normalSample);
     #else
         vec3 normal = geometryNormal;
     #endif
@@ -105,10 +109,12 @@ vec3 getNormalFromTexture(ProcessedAttributes attributes, vec3 geometryNormal)
     #endif
 
     mat3 tbn = mat3(t, b, geometryNormal);
-    vec3 n = texture(u_normalTexture, normalTexCoords).rgb;
-    vec3 textureNormal = normalize(tbn * (2.0 * n - 1.0));
-
-    return textureNormal;
+    vec3 normalSample = texture(u_normalTexture, normalTexCoords).rgb;
+    normalSample = 2.0 * normalSample - 1.0;
+    #ifdef HAS_NORMAL_TEXTURE_SCALE
+        normalSample.xy *= u_normalTextureScale;
+    #endif
+    return normalize(tbn * normalSample);
 }
 #endif
 
@@ -131,10 +137,12 @@ vec3 getClearcoatNormalFromTexture(ProcessedAttributes attributes, vec3 geometry
     #endif
 
     mat3 tbn = mat3(t, b, geometryNormal);
-    vec3 n = texture(u_clearcoatNormalTexture, normalTexCoords).rgb;
-    vec3 textureNormal = normalize(tbn * (2.0 * n - 1.0));
-
-    return textureNormal;
+    vec3 normalSample = texture(u_clearcoatNormalTexture, normalTexCoords).rgb;
+    normalSample = 2.0 * normalSample - 1.0;
+    #ifdef HAS_CLEARCOAT_NORMAL_TEXTURE_SCALE
+        normalSample.xy *= u_clearcoatNormalTextureScale;
+    #endif
+    return normalize(tbn * normalSample);
 }
 #endif
 
@@ -250,8 +258,7 @@ void setSpecularGlossiness(inout czm_modelMaterial material)
     material.specular = specular;
 
     // glossiness is the opposite of roughness, but easier for artists to use.
-    float roughness = 1.0 - glossiness;
-    material.roughness = roughness * roughness;
+    material.roughness = 1.0 - glossiness;
 }
 #elif defined(LIGHTING_PBR)
 float setMetallicRoughness(inout czm_modelMaterial material)
@@ -264,7 +271,7 @@ float setMetallicRoughness(inout czm_modelMaterial material)
 
         vec3 metallicRoughness = texture(u_metallicRoughnessTexture, metallicRoughnessTexCoords).rgb;
         float metalness = clamp(metallicRoughness.b, 0.0, 1.0);
-        float roughness = clamp(metallicRoughness.g, 0.04, 1.0);
+        float roughness = clamp(metallicRoughness.g, 0.0, 1.0);
         #ifdef HAS_METALLIC_FACTOR
             metalness = clamp(metalness * u_metallicFactor, 0.0, 1.0);
         #endif
@@ -280,7 +287,7 @@ float setMetallicRoughness(inout czm_modelMaterial material)
         #endif
 
         #ifdef HAS_ROUGHNESS_FACTOR
-            float roughness = clamp(u_roughnessFactor, 0.04, 1.0);
+            float roughness = clamp(u_roughnessFactor, 0.0, 1.0);
         #else
             float roughness = 1.0;
         #endif
@@ -288,16 +295,15 @@ float setMetallicRoughness(inout czm_modelMaterial material)
 
     // dielectrics use f0 = 0.04, metals use albedo as f0
     const vec3 REFLECTANCE_DIELECTRIC = vec3(0.04);
-    vec3 f0 = mix(REFLECTANCE_DIELECTRIC, material.diffuse, metalness);
+    vec3 f0 = mix(REFLECTANCE_DIELECTRIC, material.baseColor.rgb, metalness);
 
     material.specular = f0;
 
     // diffuse only applies to dielectrics.
-    material.diffuse = material.diffuse * (1.0 - f0) * (1.0 - metalness);
+    material.diffuse = mix(material.baseColor.rgb, vec3(0.0), metalness);
 
-    // roughness is authored as perceptual roughness
-    // square it to get material roughness
-    material.roughness = roughness * roughness;
+    // This is perceptual roughness. The square of this value is used for direct lighting
+    material.roughness = roughness;
 
     return metalness;
 }
@@ -341,7 +347,7 @@ void setSpecular(inout czm_modelMaterial material, in float metalness)
     material.specularWeight = specularWeight;
     vec3 f0 = material.specular;
     vec3 dielectricSpecularF0 = min(f0 * specularColorFactor, vec3(1.0));
-    material.specular = mix(dielectricSpecularF0, material.diffuse, metalness);
+    material.specular = mix(dielectricSpecularF0, material.baseColor.rgb, metalness);
 }
 #endif
 #ifdef USE_ANISOTROPY
@@ -410,9 +416,8 @@ void setClearcoat(inout czm_modelMaterial material, in ProcessedAttributes attri
     #endif
 
     material.clearcoatFactor = clearcoatFactor;
-    // roughness is authored as perceptual roughness
-    // square it to get material roughness
-    material.clearcoatRoughness = clearcoatRoughness * clearcoatRoughness;
+    // This is perceptual roughness. The square of this value is used for direct lighting
+    material.clearcoatRoughness = clearcoatRoughness;
     #ifdef HAS_CLEARCOAT_NORMAL_TEXTURE
         material.clearcoatNormal = getClearcoatNormalFromTexture(attributes, attributes.normalEC);
     #else
@@ -450,12 +455,12 @@ void materialStage(inout czm_modelMaterial material, ProcessedAttributes attribu
         baseColorWithAlpha *= color;
     #endif
 
+    #ifdef USE_CPU_STYLING
+        baseColorWithAlpha.rgb = blend(baseColorWithAlpha.rgb, feature.color.rgb, model_colorBlend);
+    #endif
+    material.baseColor = baseColorWithAlpha;
     material.diffuse = baseColorWithAlpha.rgb;
     material.alpha = baseColorWithAlpha.a;
-
-    #ifdef USE_CPU_STYLING
-        material.diffuse = blend(material.diffuse, feature.color.rgb, model_colorBlend);
-    #endif
 
     #ifdef HAS_OCCLUSION_TEXTURE
         vec2 occlusionTexCoords = TEXCOORD_OCCLUSION;

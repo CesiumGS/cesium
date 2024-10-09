@@ -255,6 +255,40 @@ Ellipsoid.MOON = Object.freeze(
   )
 );
 
+Ellipsoid._default = Ellipsoid.WGS84;
+Object.defineProperties(Ellipsoid, {
+  /**
+   * The default ellipsoid used when not otherwise specified.
+   * @memberof Ellipsoid
+   * @type {Ellipsoid}
+   * @example
+   * Cesium.Ellipsoid.default = Cesium.Ellipsoid.MOON;
+   *
+   * // Apollo 11 landing site
+   * const position = Cesium.Cartesian3.fromRadians(
+   *   0.67416,
+   *   23.47315,
+   * );
+   */
+  default: {
+    get: function () {
+      return Ellipsoid._default;
+    },
+    set: function (value) {
+      //>>includeStart('debug', pragmas.debug);
+      Check.typeOf.object("value", value);
+      //>>includeEnd('debug');
+
+      Ellipsoid._default = value;
+      Cartesian3._ellipsoidRadiiSquared = value.radiiSquared;
+      Cartographic._ellipsoidOneOverRadii = value.oneOverRadii;
+      Cartographic._ellipsoidOneOverRadiiSquared = value.oneOverRadiiSquared;
+      Cartographic._ellipsoidCenterToleranceSquared =
+        value._centerToleranceSquared;
+    },
+  },
+});
+
 /**
  * Duplicates an Ellipsoid instance.
  *

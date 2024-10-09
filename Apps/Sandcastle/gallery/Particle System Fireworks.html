@@ -18,10 +18,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -104,16 +101,12 @@
               particlePositionScratch
             );
             if (Cesium.Cartesian3.magnitudeSquared(position) >= size * size) {
-              Cesium.Cartesian3.clone(
-                Cesium.Cartesian3.ZERO,
-                particle.velocity
-              );
+              Cesium.Cartesian3.clone(Cesium.Cartesian3.ZERO, particle.velocity);
             }
           };
 
           const normalSize =
-            (size - minimumExplosionSize) /
-            (maximumExplosionSize - minimumExplosionSize);
+            (size - minimumExplosionSize) / (maximumExplosionSize - minimumExplosionSize);
           const minLife = 0.3;
           const maxLife = 1.0;
           const life = normalSize * (maxLife - minLife) + minLife;
@@ -176,9 +169,7 @@
           const y = Cesium.Math.randomBetween(yMin, yMax);
           const z = Cesium.Math.randomBetween(zMin, zMax);
           const offset = new Cesium.Cartesian3(x, y, z);
-          const color = Cesium.Color.fromRandom(
-            colorOptions[i % colorOptions.length]
-          );
+          const color = Cesium.Color.fromRandom(colorOptions[i % colorOptions.length]);
 
           const bursts = [];
           for (let j = 0; j < 3; ++j) {
@@ -207,9 +198,7 @@
         Cesium.Cartesian3.normalize(toFireworks, toFireworks);
         const angle =
           Cesium.Math.PI_OVER_TWO -
-          Math.acos(
-            Cesium.Cartesian3.dot(toFireworks, Cesium.Cartesian3.UNIT_Z)
-          );
+          Math.acos(Cesium.Cartesian3.dot(toFireworks, Cesium.Cartesian3.UNIT_Z));
         camera.lookUp(angle);
         //Sandcastle_End
       };

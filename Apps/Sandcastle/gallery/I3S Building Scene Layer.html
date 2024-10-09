@@ -7,10 +7,7 @@
       name="viewport"
       content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
     />
-    <meta
-      name="description"
-      content="Add I3S Building Scene Layer from a service."
-    />
+    <meta name="description" content="Add I3S Building Scene Layer from a service." />
     <meta name="cesium-sandcastle-labels" content="DataSources" />
     <title>I3S Building Scene Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
@@ -22,10 +19,7 @@
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
 
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
       #toolbar {
@@ -56,7 +50,6 @@
           animation: false,
           timeline: false,
           orderIndependentTranslucency: false,
-          msaaSamples: 4, // enables multisample antialiasing for improved visual quality
         });
 
         // More datasets to tour can be added here...
@@ -100,25 +93,19 @@
           ) {
             center.height += bslLayer.fullExtent.zmax;
           }
-          const destination = Cesium.Ellipsoid.WGS84.cartographicToCartesian(
-            center
-          );
+          const destination = Cesium.Ellipsoid.WGS84.cartographicToCartesian(center);
           viewer.camera.setView({
             destination: destination,
           });
 
           // Override home button to center the camera on I3S
-          viewer.homeButton.viewModel._command = Cesium.createCommand(
-            function () {
-              viewer.camera.flyTo({
-                destination: destination,
-              });
-            }
-          );
+          viewer.homeButton.viewModel._command = Cesium.createCommand(function () {
+            viewer.camera.flyTo({
+              destination: destination,
+            });
+          });
         } catch (error) {
-          console.error(
-            `There was an error creating the I3S Data Provider: ${error}`
-          );
+          console.error(`There was an error creating the I3S Data Provider: ${error}`);
         }
 
         // Information about the currently selected feature
@@ -130,9 +117,7 @@
         // An entity object which will hold info about the currently selected feature for infobox display
         const selectedEntity = new Cesium.Entity();
         // Show metadata in the InfoBox.
-        viewer.screenSpaceEventHandler.setInputAction(function onLeftClick(
-          movement
-        ) {
+        viewer.screenSpaceEventHandler.setInputAction(function onLeftClick(movement) {
           const selectedFeature = selected.feature;
 
           // Pick a new feature
@@ -168,8 +153,7 @@
 
             const fields = i3sNode.getFieldsForFeature(pickedFeature.featureId);
             if (Object.keys(fields).length > 0) {
-              description =
-                '<table class="cesium-infoBox-defaultTable"><tbody>';
+              description = '<table class="cesium-infoBox-defaultTable"><tbody>';
               for (const fieldName in fields) {
                 if (i3sNode.fields.hasOwnProperty(fieldName)) {
                   description += `<tr><th>${fieldName}</th><td>`;
@@ -188,8 +172,7 @@
             selectedEntity.description = description;
             viewer.selectedEntity = selectedEntity;
           });
-        },
-        Cesium.ScreenSpaceEventType.LEFT_CLICK);
+        }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
         function isNameProperty(propertyName) {
           const name = propertyName.toLowerCase();

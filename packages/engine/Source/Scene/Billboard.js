@@ -21,6 +21,7 @@ import HorizontalOrigin from "./HorizontalOrigin.js";
 import SceneMode from "./SceneMode.js";
 import SceneTransforms from "./SceneTransforms.js";
 import VerticalOrigin from "./VerticalOrigin.js";
+import SplitDirection from "./SplitDirection.js";
 
 /**
  * @typedef {object} Billboard.ConstructorOptions
@@ -49,6 +50,7 @@ import VerticalOrigin from "./VerticalOrigin.js";
  * @property {BoundingRectangle} [imageSubRegion] A {@link BoundingRectangle} Specifying the sub-region of the image to use for the billboard, rather than the entire image.
  * @property {DistanceDisplayCondition} [distanceDisplayCondition] A {@link DistanceDisplayCondition} Specifying the distance from the camera at which this billboard will be displayed.
  * @property {number} [disableDepthTestDistance] A number specifying the distance from the camera at which to disable the depth test to, for example, prevent clipping against terrain.
+ * @property {SplitDirection} [splitDirection] A {@link SplitDirection} Specifying the split property of the billboard.
  */
 
 /**
@@ -250,6 +252,11 @@ function Billboard(options, billboardCollection) {
   this._outlineWidth = defaultValue(options.outlineWidth, 0.0);
 
   this._updateClamping();
+
+  this._splitDirection = defaultValue(
+    options.splitDirection,
+    SplitDirection.NONE
+  );
 }
 
 const SHOW_INDEX = (Billboard.SHOW_INDEX = 0);
@@ -270,7 +277,8 @@ const DISTANCE_DISPLAY_CONDITION = (Billboard.DISTANCE_DISPLAY_CONDITION = 14);
 const DISABLE_DEPTH_DISTANCE = (Billboard.DISABLE_DEPTH_DISTANCE = 15);
 Billboard.TEXTURE_COORDINATE_BOUNDS = 16;
 const SDF_INDEX = (Billboard.SDF_INDEX = 17);
-Billboard.NUMBER_OF_PROPERTIES = 18;
+const SPLIT_DIRECTION_INDEX = (Billboard.SPLIT_DIRECTION_INDEX = 18);
+Billboard.NUMBER_OF_PROPERTIES = 19;
 
 function makeDirty(billboard, propertyChanged) {
   const billboardCollection = billboard._billboardCollection;
@@ -1072,6 +1080,24 @@ Object.defineProperties(Billboard.prototype, {
       }
     },
   },
+
+  /**
+   * Gets or sets the {@link SplitDirection} of this billboard.
+   * @memberof Billboard.prototype
+   * @type {SplitDirection}
+   * @default {@link SplitDirection.NONE}
+   */
+  splitDirection: {
+    get: function () {
+      return this._splitDirection;
+    },
+    set: function (value) {
+      if (this._splitDirection !== value) {
+        this._splitDirection = value;
+        makeDirty(this, SPLIT_DIRECTION_INDEX);
+      }
+    },
+  },
 });
 
 Billboard.prototype.getPickId = function (context) {
@@ -1104,8 +1130,7 @@ Billboard._updateClamping = function (collection, owner) {
     return;
   }
 
-  const globe = scene.globe;
-  const ellipsoid = defaultValue(globe?.ellipsoid, Ellipsoid.WGS84);
+  const ellipsoid = defaultValue(scene.ellipsoid, Ellipsoid.default);
 
   const mode = scene.frameState.mode;
 
@@ -1375,7 +1400,10 @@ Billboard._computeActualPosition = function (
   }
 
   Matrix4.multiplyByPoint(modelMatrix, position, tempCartesian3);
-  return SceneTransforms.computeActualWgs84Position(frameState, tempCartesian3);
+  return SceneTransforms.computeActualEllipsoidPosition(
+    frameState,
+    tempCartesian3
+  );
 };
 
 const scratchCartesian3 = new Cartesian3();
@@ -1397,7 +1425,7 @@ Billboard._computeScreenSpacePosition = function (
   );
 
   // World to window coordinates
-  const positionWC = SceneTransforms.wgs84WithEyeOffsetToWindowCoordinates(
+  const positionWC = SceneTransforms.worldWithEyeOffsetToWindowCoordinates(
     scene,
     positionWorld,
     eyeOffset,
@@ -1565,7 +1593,8 @@ Billboard.prototype.equals = function (other) {
         this._distanceDisplayCondition,
         other._distanceDisplayCondition
       ) &&
-      this._disableDepthTestDistance === other._disableDepthTestDistance)
+      this._disableDepthTestDistance === other._disableDepthTestDistance &&
+      this._splitDirection === other._splitDirection)
   );
 };
 

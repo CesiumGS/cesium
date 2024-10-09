@@ -1,5 +1,6 @@
 import CesiumTerrainProvider from "./CesiumTerrainProvider.js";
 import defaultValue from "./defaultValue.js";
+import Ellipsoid from "./Ellipsoid.js";
 
 /**
  * Creates a {@link CesiumTerrainProvider} instance for the {@link https://cesium.com/content/#cesium-world-terrain|Cesium World Terrain}.
@@ -43,6 +44,7 @@ function createWorldTerrainAsync(options) {
   return CesiumTerrainProvider.fromIonAssetId(1, {
     requestVertexNormals: defaultValue(options.requestVertexNormals, false),
     requestWaterMask: defaultValue(options.requestWaterMask, false),
+    ellipsoid: Ellipsoid.WGS84,
   });
 }
 export default createWorldTerrainAsync;

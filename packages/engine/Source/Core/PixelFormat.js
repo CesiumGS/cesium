@@ -415,21 +415,7 @@ PixelFormat.createTypedArray = function (
   width,
   height
 ) {
-  let constructor;
-  const sizeInBytes = PixelDatatype.sizeInBytes(pixelDatatype);
-  if (sizeInBytes === Uint8Array.BYTES_PER_ELEMENT) {
-    constructor = Uint8Array;
-  } else if (sizeInBytes === Uint16Array.BYTES_PER_ELEMENT) {
-    constructor = Uint16Array;
-  } else if (
-    sizeInBytes === Float32Array.BYTES_PER_ELEMENT &&
-    pixelDatatype === PixelDatatype.FLOAT
-  ) {
-    constructor = Float32Array;
-  } else {
-    constructor = Uint32Array;
-  }
-
+  const constructor = PixelDatatype.getTypedArrayConstructor(pixelDatatype);
   const size = PixelFormat.componentsLength(pixelFormat) * width * height;
   return new constructor(size);
 };

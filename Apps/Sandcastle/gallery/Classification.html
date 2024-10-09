@@ -21,10 +21,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
       #toolbar {
@@ -47,10 +44,7 @@
           </tr>
           <tr>
             <td>
-              <button
-                class="cesium-button"
-                data-bind="click: highlightBuilding"
-              >
+              <button class="cesium-button" data-bind="click: highlightBuilding">
                 Highlight building face
               </button>
             </td>
@@ -283,12 +277,7 @@
           }
 
           scene.invertClassification = checked;
-          scene.invertClassificationColor = new Cesium.Color(
-            0.25,
-            0.25,
-            0.25,
-            1.0
-          );
+          scene.invertClassificationColor = new Cesium.Color(0.25, 0.25, 0.25, 1.0);
 
           buildingHighlight.getGeometryInstanceAttributes(
             "volume"
@@ -330,9 +319,7 @@
         Cesium.knockout
           .getObservable(viewModel, "inverted")
           .subscribe(invertClassification);
-        Cesium.knockout
-          .getObservable(viewModel, "invertedAlpha")
-          .subscribe(updateAlpha);
+        Cesium.knockout.getObservable(viewModel, "invertedAlpha").subscribe(updateAlpha);
 
         highlightTrees();
 
@@ -371,9 +358,7 @@
           ) {
             currentObjectId = pickedObject.id;
             currentPrimitive = pickedObject.primitive;
-            attributes = currentPrimitive.getGeometryInstanceAttributes(
-              currentObjectId
-            );
+            attributes = currentPrimitive.getGeometryInstanceAttributes(currentObjectId);
             currentColor = attributes.color;
             currentShow = attributes.show;
             if (!scene.invertClassification) {
@@ -381,9 +366,7 @@
             }
             attributes.show = [1];
           } else if (Cesium.defined(currentObjectId)) {
-            attributes = currentPrimitive.getGeometryInstanceAttributes(
-              currentObjectId
-            );
+            attributes = currentPrimitive.getGeometryInstanceAttributes(currentObjectId);
             attributes.color = currentColor;
             attributes.show = currentShow;
             currentObjectId = undefined;

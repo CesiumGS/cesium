@@ -18,10 +18,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
       #toolbar input[type="range"] {
@@ -76,8 +73,7 @@
             try {
               const model = scene.primitives.add(
                 await Cesium.Model.fromGltfAsync({
-                  url:
-                    "../../SampleData/models/ShadowTester/Shadow_Tester_Point.glb",
+                  url: "../../SampleData/models/ShadowTester/Shadow_Tester_Point.glb",
                   modelMatrix: Cesium.Transforms.headingPitchRollToFixedFrame(
                     center,
                     new Cesium.HeadingPitchRoll(heading, 0.0, 0.0)
@@ -104,18 +100,8 @@
         const latitude = 0.6954224325279967;
         const height = 200.0;
 
-        const shadowMap1 = addPrimitive(
-          longitude + 0.00005,
-          latitude,
-          height,
-          0.0
-        );
-        const shadowMap2 = addPrimitive(
-          longitude - 0.00005,
-          latitude,
-          height,
-          Math.PI
-        );
+        const shadowMap1 = addPrimitive(longitude + 0.00005, latitude, height, 0.0);
+        const shadowMap2 = addPrimitive(longitude - 0.00005, latitude, height, Math.PI);
 
         shadowMap1.debugShow = true;
         shadowMap2.debugShow = false;

@@ -7,10 +7,7 @@
       name="viewport"
       content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
     />
-    <meta
-      name="description"
-      content="Modify atmospheric scattering parameters."
-    />
+    <meta name="description" content="Modify atmospheric scattering parameters." />
     <meta name="cesium-sandcastle-labels" content="Beginner" />
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
@@ -21,10 +18,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
       #toolbar {
@@ -67,10 +61,7 @@
     <div id="loadingOverlay"><h1>Loading...</h1></div>
     <div id="toolbar">
       <div class="tab">
-        <button
-          class="tablinks active"
-          onclick="setActiveTab(event, 'ground-table')"
-        >
+        <button class="tablinks active" onclick="setActiveTab(event, 'ground-table')">
           Ground Atmosphere
         </button>
         <button class="tablinks" onclick="setActiveTab(event, 'sky-table')">
@@ -136,10 +127,7 @@
           <tr>
             <td>Ground Atmosphere</td>
             <td>
-              <input
-                type="checkbox"
-                data-bind="checked: showGroundAtmosphere"
-              />
+              <input type="checkbox" data-bind="checked: showGroundAtmosphere" />
             </td>
           </tr>
           <tr>
@@ -309,11 +297,7 @@
                 step="0.01"
                 data-bind="value: groundSaturationShift, valueUpdate: 'input', enable: (showGroundAtmosphere || showFog)"
               />
-              <input
-                type="text"
-                size="5"
-                data-bind="value: groundSaturationShift"
-              />
+              <input type="text" size="5" data-bind="value: groundSaturationShift" />
             </td>
           </tr>
           <tr>
@@ -326,11 +310,7 @@
                 step="0.01"
                 data-bind="value: skyBrightnessShift, valueUpdate: 'input', enable: (showGroundAtmosphere || showFog)"
               />
-              <input
-                type="text"
-                size="5"
-                data-bind="value: skyBrightnessShift"
-              />
+              <input type="text" size="5" data-bind="value: skyBrightnessShift" />
             </td>
           </tr>
           <tr>
@@ -352,11 +332,7 @@
                 step="1e6"
                 data-bind="value: lightingFadeOutDistance, valueUpdate: 'input', enable: showGroundAtmosphere"
               />
-              <input
-                type="text"
-                size="10"
-                data-bind="value: lightingFadeOutDistance"
-              />
+              <input type="text" size="10" data-bind="value: lightingFadeOutDistance" />
             </td>
           </tr>
           <tr>
@@ -369,11 +345,7 @@
                 step="1e6"
                 data-bind="value: lightingFadeInDistance, valueUpdate: 'input', enable: showGroundAtmosphere"
               />
-              <input
-                type="text"
-                size="10"
-                data-bind="value: lightingFadeInDistance"
-              />
+              <input type="text" size="10" data-bind="value: lightingFadeInDistance" />
             </td>
           </tr>
           <tr>
@@ -386,11 +358,7 @@
                 step="1e6"
                 data-bind="value: nightFadeOutDistance, valueUpdate: 'input', enable: (showGroundAtmosphere && enableLighting)"
               />
-              <input
-                type="text"
-                size="10"
-                data-bind="value: nightFadeOutDistance"
-              />
+              <input type="text" size="10" data-bind="value: nightFadeOutDistance" />
             </td>
           </tr>
           <tr>
@@ -403,11 +371,7 @@
                 step="1e6"
                 data-bind="value: nightFadeInDistance, valueUpdate: 'input', enable: (showGroundAtmosphere && enableLighting)"
               />
-              <input
-                type="text"
-                size="10"
-                data-bind="value: nightFadeInDistance"
-              />
+              <input type="text" size="10" data-bind="value: nightFadeInDistance" />
             </td>
           </tr>
           <tr>
@@ -622,11 +586,7 @@
                 step="0.01"
                 data-bind="value: skySaturationShift, valueUpdate: 'input', enable: (showSkyAtmosphere)"
               />
-              <input
-                type="text"
-                size="5"
-                data-bind="value: skySaturationShift"
-              />
+              <input type="text" size="5" data-bind="value: skySaturationShift" />
             </td>
           </tr>
           <tr>
@@ -639,11 +599,7 @@
                 step="0.01"
                 data-bind="value: skyBrightnessShift, valueUpdate: 'input', enable: (showSkyAtmosphere)"
               />
-              <input
-                type="text"
-                size="5"
-                data-bind="value: skyBrightnessShift"
-              />
+              <input type="text" size="5" data-bind="value: skyBrightnessShift" />
             </td>
           </tr>
           <tr>
@@ -687,45 +643,33 @@
           canvas.focus();
         };
 
-        const defaultGroundAtmosphereLightIntensity =
-          globe.atmosphereLightIntensity;
+        const defaultGroundAtmosphereLightIntensity = globe.atmosphereLightIntensity;
         const defaultGroundAtmosphereRayleighCoefficient =
           globe.atmosphereRayleighCoefficient;
-        const defaultGroundAtmosphereMieCoefficient =
-          globe.atmosphereMieCoefficient;
-        const defaultGroundAtmosphereMieAnisotropy =
-          globe.atmosphereMieAnisotropy;
+        const defaultGroundAtmosphereMieCoefficient = globe.atmosphereMieCoefficient;
+        const defaultGroundAtmosphereMieAnisotropy = globe.atmosphereMieAnisotropy;
         const defaultGroundAtmosphereRayleighScaleHeight =
           globe.atmosphereRayleighScaleHeight;
-        const defaultGroundAtmosphereMieScaleHeight =
-          globe.atmosphereMieScaleHeight;
+        const defaultGroundAtmosphereMieScaleHeight = globe.atmosphereMieScaleHeight;
         const defaultGroundAtmosphereHueShift = globe.atmosphereHueShift;
-        const defaultGroundAtmosphereSaturationShift =
-          globe.atmosphereSaturationShift;
-        const defaultGroundAtmosphereBrightnessShift =
-          globe.atmosphereBrightnessShift;
+        const defaultGroundAtmosphereSaturationShift = globe.atmosphereSaturationShift;
+        const defaultGroundAtmosphereBrightnessShift = globe.atmosphereBrightnessShift;
         const defaultLightFadeOut = globe.lightingFadeOutDistance;
         const defaultLightFadeIn = globe.lightingFadeInDistance;
         const defaultNightFadeOut = globe.nightFadeOutDistance;
         const defaultNightFadeIn = globe.nightFadeInDistance;
 
-        const defaultSkyAtmosphereLightIntensity =
-          skyAtmosphere.atmosphereLightIntensity;
+        const defaultSkyAtmosphereLightIntensity = skyAtmosphere.atmosphereLightIntensity;
         const defaultSkyAtmosphereRayleighCoefficient =
           skyAtmosphere.atmosphereRayleighCoefficient;
-        const defaultSkyAtmosphereMieCoefficient =
-          skyAtmosphere.atmosphereMieCoefficient;
-        const defaultSkyAtmosphereMieAnisotropy =
-          skyAtmosphere.atmosphereMieAnisotropy;
+        const defaultSkyAtmosphereMieCoefficient = skyAtmosphere.atmosphereMieCoefficient;
+        const defaultSkyAtmosphereMieAnisotropy = skyAtmosphere.atmosphereMieAnisotropy;
         const defaultSkyAtmosphereRayleighScaleHeight =
           skyAtmosphere.atmosphereRayleighScaleHeight;
-        const defaultSkyAtmosphereMieScaleHeight =
-          skyAtmosphere.atmosphereMieScaleHeight;
+        const defaultSkyAtmosphereMieScaleHeight = skyAtmosphere.atmosphereMieScaleHeight;
         const defaultSkyAtmosphereHueShift = skyAtmosphere.hueShift;
-        const defaultSkyAtmosphereSaturationShift =
-          skyAtmosphere.saturationShift;
-        const defaultSkyAtmosphereBrightnessShift =
-          skyAtmosphere.brightnessShift;
+        const defaultSkyAtmosphereSaturationShift = skyAtmosphere.saturationShift;
+        const defaultSkyAtmosphereBrightnessShift = skyAtmosphere.brightnessShift;
 
         const viewModel = {
           // Globe settings
@@ -744,8 +688,7 @@
             defaultGroundAtmosphereRayleighCoefficient.y / 1e-6,
           groundAtmosphereRayleighCoefficientB:
             defaultGroundAtmosphereRayleighCoefficient.z / 1e-6,
-          groundAtmosphereMieCoefficient:
-            defaultGroundAtmosphereMieCoefficient.x / 1e-6,
+          groundAtmosphereMieCoefficient: defaultGroundAtmosphereMieCoefficient.x / 1e-6,
           groundAtmosphereRayleighScaleHeight: defaultGroundAtmosphereRayleighScaleHeight,
           groundAtmosphereMieScaleHeight: defaultGroundAtmosphereMieScaleHeight,
           groundAtmosphereMieAnisotropy: defaultGroundAtmosphereMieAnisotropy,
@@ -767,8 +710,7 @@
             defaultSkyAtmosphereRayleighCoefficient.y / 1e-6,
           skyAtmosphereRayleighCoefficientB:
             defaultSkyAtmosphereRayleighCoefficient.z / 1e-6,
-          skyAtmosphereMieCoefficient:
-            defaultSkyAtmosphereMieCoefficient.x / 1e-6,
+          skyAtmosphereMieCoefficient: defaultSkyAtmosphereMieCoefficient.x / 1e-6,
           skyAtmosphereRayleighScaleHeight: defaultSkyAtmosphereRayleighScaleHeight,
           skyAtmosphereMieScaleHeight: defaultSkyAtmosphereMieScaleHeight,
           skyAtmosphereMieAnisotropy: defaultSkyAtmosphereMieAnisotropy,
@@ -933,30 +875,23 @@
         Cesium.knockout
           .getObservable(viewModel, "skyAtmosphereRayleighCoefficientR")
           .subscribe(function (newValue) {
-            skyAtmosphere.atmosphereRayleighCoefficient.x =
-              parseFloat(newValue) * 1e-6;
+            skyAtmosphere.atmosphereRayleighCoefficient.x = parseFloat(newValue) * 1e-6;
           });
         Cesium.knockout
           .getObservable(viewModel, "skyAtmosphereRayleighCoefficientG")
           .subscribe(function (newValue) {
-            skyAtmosphere.atmosphereRayleighCoefficient.y =
-              parseFloat(newValue) * 1e-6;
+            skyAtmosphere.atmosphereRayleighCoefficient.y = parseFloat(newValue) * 1e-6;
           });
         Cesium.knockout
           .getObservable(viewModel, "skyAtmosphereRayleighCoefficientB")
           .subscribe(function (newValue) {
-            skyAtmosphere.atmosphereRayleighCoefficient.z =
-              parseFloat(newValue) * 1e-6;
+            skyAtmosphere.atmosphereRayleighCoefficient.z = parseFloat(newValue) * 1e-6;
           });
         Cesium.knockout
           .getObservable(viewModel, "skyAtmosphereMieCoefficient")
           .subscribe(function (newValue) {
             const v = parseFloat(newValue) * 1e-6;
-            skyAtmosphere.atmosphereMieCoefficient = new Cesium.Cartesian3(
-              v,
-              v,
-              v
-            );
+            skyAtmosphere.atmosphereMieCoefficient = new Cesium.Cartesian3(v, v, v);
           });
         Cesium.knockout
           .getObservable(viewModel, "skyAtmosphereRayleighScaleHeight")
@@ -993,11 +928,9 @@
           .subscribe(function (newValue) {
             scene.skyAtmosphere.perFragmentAtmosphere = newValue;
           });
-        Cesium.knockout
-          .getObservable(viewModel, "hdr")
-          .subscribe(function (newValue) {
-            scene.highDynamicRange = newValue;
-          });
+        Cesium.knockout.getObservable(viewModel, "hdr").subscribe(function (newValue) {
+          scene.highDynamicRange = newValue;
+        });
         Cesium.knockout
           .getObservable(viewModel, "groundTranslucency")
           .subscribe(function (newValue) {
@@ -1014,10 +947,7 @@
           }
           const tablinks = document.getElementsByClassName("tablinks");
           for (i = 0; i < tablinks.length; i++) {
-            tablinks[i].className = tablinks[i].className.replace(
-              " active",
-              ""
-            );
+            tablinks[i].className = tablinks[i].className.replace(" active", "");
           }
           document.getElementById(tableId).style.display = "block";
           event.currentTarget.className += " active";

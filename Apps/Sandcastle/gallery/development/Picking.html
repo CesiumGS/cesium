@@ -18,10 +18,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -68,10 +65,7 @@
               handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
               handler.setInputAction(function (movement) {
                 const pickedObject = scene.pick(movement.endPosition);
-                if (
-                  Cesium.defined(pickedObject) &&
-                  pickedObject.id === entity
-                ) {
+                if (Cesium.defined(pickedObject) && pickedObject.id === entity) {
                   entity.billboard.color = Cesium.Color.YELLOW;
                 } else {
                   entity.billboard.color = Cesium.Color.WHITE;
@@ -92,10 +86,7 @@
               handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
               handler.setInputAction(function (movement) {
                 const pickedObject = scene.pick(movement.endPosition);
-                if (
-                  Cesium.defined(pickedObject) &&
-                  pickedObject.id === entity
-                ) {
+                if (Cesium.defined(pickedObject) && pickedObject.id === entity) {
                   entity.label.fillColor = Cesium.Color.YELLOW;
                 } else {
                   entity.label.fillColor = Cesium.Color.WHITE;
@@ -117,10 +108,7 @@
               handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
               handler.setInputAction(function (movement) {
                 const pickedObject = scene.pick(movement.endPosition);
-                if (
-                  Cesium.defined(pickedObject) &&
-                  pickedObject.id === entity
-                ) {
+                if (Cesium.defined(pickedObject) && pickedObject.id === entity) {
                   entity.point.color = Cesium.Color.YELLOW;
                 } else {
                   entity.point.color = Cesium.Color.WHITE;
@@ -174,8 +162,7 @@
                         0.0,
                       ]),
                       width: 5.0,
-                      vertexFormat:
-                        Cesium.PolylineColorAppearance.VERTEX_FORMAT,
+                      vertexFormat: Cesium.PolylineColorAppearance.VERTEX_FORMAT,
                     }),
                     attributes: {
                       color: Cesium.ColorGeometryInstanceAttribute.fromColor(
@@ -216,28 +203,18 @@
                 name: "box",
                 position: Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
                 box: {
-                  dimensions: new Cesium.Cartesian3(
-                    400000.0,
-                    300000.0,
-                    500000.0
-                  ),
+                  dimensions: new Cesium.Cartesian3(400000.0, 300000.0, 500000.0),
                   material: Cesium.Color.WHITE,
                 },
               });
-              entity.box.material.color = new Cesium.CallbackProperty(
-                function () {
-                  return color;
-                },
-                false
-              );
+              entity.box.material.color = new Cesium.CallbackProperty(function () {
+                return color;
+              }, false);
 
               handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
               handler.setInputAction(function (movement) {
                 const pickedObject = scene.pick(movement.endPosition);
-                if (
-                  Cesium.defined(pickedObject) &&
-                  pickedObject.id === entity
-                ) {
+                if (Cesium.defined(pickedObject) && pickedObject.id === entity) {
                   color = Cesium.Color.YELLOW;
                 } else {
                   color = Cesium.Color.WHITE;
@@ -253,12 +230,7 @@
                 new Cesium.GroundPrimitive({
                   geometryInstances: new Cesium.GeometryInstance({
                     geometry: new Cesium.RectangleGeometry({
-                      rectangle: Cesium.Rectangle.fromDegrees(
-                        -100.0,
-                        30.0,
-                        -90.0,
-                        40.0
-                      ),
+                      rectangle: Cesium.Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0),
                       rotation: Cesium.Math.toRadians(45),
                     }),
                     attributes: {
@@ -295,15 +267,8 @@
           {
             text: "Model",
             onselect: function () {
-              const position = Cesium.Cartesian3.fromDegrees(
-                -75.59777,
-                40.03883
-              );
-              const hpr = new Cesium.HeadingPitchRoll(
-                Cesium.Math.toRadians(135),
-                0,
-                0
-              );
+              const position = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883);
+              const hpr = new Cesium.HeadingPitchRoll(Cesium.Math.toRadians(135), 0, 0);
               const orientation = Cesium.Transforms.headingPitchRollQuaternion(
                 position,
                 hpr
@@ -321,10 +286,7 @@
               handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
               handler.setInputAction(function (movement) {
                 const pickedObject = scene.pick(movement.endPosition);
-                if (
-                  Cesium.defined(pickedObject) &&
-                  pickedObject.id === entity
-                ) {
+                if (Cesium.defined(pickedObject) && pickedObject.id === entity) {
                   entity.model.color = Cesium.Color.YELLOW;
                 } else {
                   entity.model.color = Cesium.Color.WHITE;
@@ -335,8 +297,7 @@
           {
             text: "Batched 3D Model",
             onselect: async function () {
-              const url =
-                "../../SampleData/Cesium3DTiles/Tilesets/Tileset/tileset.json";
+              const url = "../../SampleData/Cesium3DTiles/Tilesets/Tileset/tileset.json";
               loadedResource = url;
               tileset = await Cesium.Cesium3DTileset.fromUrl(url);
               if (loadedResource !== url) {
@@ -364,10 +325,7 @@
                   return;
                 }
                 highlighted.feature = pickedFeature;
-                Cesium.Color.clone(
-                  pickedFeature.color,
-                  highlighted.originalColor
-                );
+                Cesium.Color.clone(pickedFeature.color, highlighted.originalColor);
                 pickedFeature.color = Cesium.Color.YELLOW;
               }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
             },
@@ -405,10 +363,7 @@
                   return;
                 }
                 highlighted.feature = pickedFeature;
-                Cesium.Color.clone(
-                  pickedFeature.color,
-                  highlighted.originalColor
-                );
+                Cesium.Color.clone(pickedFeature.color, highlighted.originalColor);
                 pickedFeature.color = Cesium.Color.YELLOW;
               }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
             },
@@ -442,11 +397,9 @@
               handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
               handler.setInputAction(function (movement) {
                 if (Cesium.defined(highlighted.feature)) {
-                  highlighted.feature.primitive.style = new Cesium.Cesium3DTileStyle(
-                    {
-                      pointSize: 10.0,
-                    }
-                  );
+                  highlighted.feature.primitive.style = new Cesium.Cesium3DTileStyle({
+                    pointSize: 10.0,
+                  });
                   highlighted.feature = undefined;
                 }
                 const pickedFeature = viewer.scene.pick(movement.endPosition);
@@ -508,10 +461,7 @@
                   return;
                 }
                 highlighted.feature = pickedFeature;
-                Cesium.Color.clone(
-                  pickedFeature.color,
-                  highlighted.originalColor
-                );
+                Cesium.Color.clone(pickedFeature.color, highlighted.originalColor);
                 pickedFeature.color = Cesium.Color.YELLOW;
               }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
             },
@@ -563,10 +513,7 @@
                   return;
                 }
                 highlighted.feature = pickedFeature;
-                Cesium.Color.clone(
-                  pickedFeature.color,
-                  highlighted.originalColor
-                );
+                Cesium.Color.clone(pickedFeature.color, highlighted.originalColor);
                 pickedFeature.color = Cesium.Color.YELLOW;
               }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
             },

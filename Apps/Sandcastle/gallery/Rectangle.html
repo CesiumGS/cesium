@@ -21,10 +21,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -40,12 +37,7 @@
         const redRectangle = viewer.entities.add({
           name: "Red translucent rectangle",
           rectangle: {
-            coordinates: Cesium.Rectangle.fromDegrees(
-              -110.0,
-              20.0,
-              -80.0,
-              25.0
-            ),
+            coordinates: Cesium.Rectangle.fromDegrees(-110.0, 20.0, -80.0, 25.0),
             material: Cesium.Color.RED.withAlpha(0.5),
           },
         });
@@ -54,12 +46,7 @@
           name:
             "Green translucent, rotated, and extruded rectangle at height with outline",
           rectangle: {
-            coordinates: Cesium.Rectangle.fromDegrees(
-              -110.0,
-              30.0,
-              -100.0,
-              40.0
-            ),
+            coordinates: Cesium.Rectangle.fromDegrees(-110.0, 30.0, -100.0, 40.0),
             material: Cesium.Color.GREEN.withAlpha(0.5),
             rotation: Cesium.Math.toRadians(45),
             extrudedHeight: 300000.0,

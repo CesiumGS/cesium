@@ -1,5 +1,119 @@
 # Change Log
 
+### 1.122 - 2024-10-01
+
+#### @cesium/engine
+
+##### Additions :tada:
+
+- Added `CallbackPositionProperty` to allow lazy entity position evaluation. [#12170](https://github.com/CesiumGS/cesium/pull/12170)
+- Added `enableVerticalExaggeration` option to models. Set this value to `false` to prevent model exaggeration when `Scene.verticalExaggeration` is set to a value other than `1.0`. [#12141](https://github.com/CesiumGS/cesium/pull/12141)
+- Added `Scene.prototype.pickMetadata` and `Scene.prototype.pickMetadataSchema`, enabling experimental support for picking property textures or property attributes [#12075](https://github.com/CesiumGS/cesium/pull/12075)
+- Added experimental support for the `NGA_gpm_local` glTF extension, for GPM 1.2 [#12204](https://github.com/CesiumGS/cesium/pull/12204)
+
+##### Fixes :wrench:
+
+- Fix `Texture` errors when using a `HTMLVideoElement`. [#12219](https://github.com/CesiumGS/cesium/issues/12219)
+- Fixed noise in ambient occlusion post process. [#12201](https://github.com/CesiumGS/cesium/pull/12201)
+- Use first `geometryBuffer` if no best match found in I3SNode. [#12132](https://github.com/CesiumGS/cesium/pull/12132)
+- Update type definitions throughout `Core/` to allow undefined for optional parameters. [#12193](https://github.com/CesiumGS/cesium/pull/12193)
+- Reverts Firefox OIT temporary fix. [#4815](https://github.com/CesiumGS/cesium/pull/4815)
+
+##### Deprecated :hourglass_flowing_sand:
+
+- `Rectangle.validate` has been deprecated. It will be removed in 1.124.
+
+### 1.121.1 - 2024-09-04
+
+This is an npm-only release to extra source maps included in 1.121
+
+### 1.121 - 2024-09-03
+
+#### @cesium/engine
+
+##### Additions :tada:
+
+- Enable MSAA by default with 4 samples. To turn MSAA off set `scene.msaaSamples = 1` [#12158](https://github.com/CesiumGS/cesium/pull/12158)
+- Expose the `tonemapper` property of `PostProcessStageCollection` to allow changing the tonemap used when HDR is turned on. This defaults to the [PBR Neutral Tonemap from Khronos](https://github.com/KhronosGroup/ToneMapping/tree/main/PBR_Neutral) [#12160](https://github.com/CesiumGS/cesium/pull/12160)
+  - The enum `Tonemapper` contains the list of valid tonemap options to use with the `tonemapper` setting
+- Expose the `exposure` property of `PostProcessStageCollection` to allow changing the exposure used for the current HDR tonemap [#12160](https://github.com/CesiumGS/cesium/pull/12160)
+- Added `WaterMask` globe material, which visualizes areas of water or land based on the terrain's water mask. [#12149](https://github.com/CesiumGS/cesium/pull/12149)
+- Made the `time` parameter optional for `Property`, using `JulianDate.now()` as default. [#12099](https://github.com/CesiumGS/cesium/pull/12099)
+- Exposes `ScreenSpaceCameraController.zoomFactor` to allow adjusting the zoom factor (speed). [#9145](https://github.com/CesiumGS/cesium/pull/9145)
+
+##### Fixes :wrench:
+
+- Update `CameraEventAggregator` to only trigger events for the currently held modifier while dragging. Events are canceled for all modifiers when the mouse is lifted. [#11903](https://github.com/CesiumGS/cesium/pull/11903)
+- Fixed cube-mapping artifacts in image-based lighting. [#12100](https://github.com/CesiumGS/cesium/pull/12100)
+- Fixed specular reflection artifact in PBR direct lighting. [#12116](https://github.com/CesiumGS/cesium/pull/12116)
+- Added multiscattering terms to diffuse BRDF in image-based lighting. [#12118](https://github.com/CesiumGS/cesium/pull/12118)
+- Fixed `CallbackProperty` type not being present on entity position. [#12120](https://github.com/CesiumGS/cesium/pull/12120)
+- Additional TypeScript types export in `package.json` to assist some project configurations using Cesium. [#12122](https://github.com/CesiumGS/cesium/pull/12122)
+- Fixed documentation about default values for Label origins [#12139](https://github.com/CesiumGS/cesium/pull/12139)
+
+##### Breaking Changes :mega:
+
+- Switched the default (non-HDR) tonemapping for models, atmosphere, and globe from ACES to [PBR Neutral Tonemap from Khronos](https://github.com/KhronosGroup/ToneMapping/tree/main/PBR_Neutral). The widens the gamut of possible colors, and provides more consistent color appearances across renderers. [#12160](https://github.com/CesiumGS/cesium/pull/12160)
+- Switched the default tonemapper when HDR is turned _on_ from ACES to [PBR Neutral Tonemap from Khronos](https://github.com/KhronosGroup/ToneMapping/tree/main/PBR_Neutral). To preserve the previous behavior set `viewer.scene.postProcessStages.tonemapper = Cesium.Tonemapper.ACES;` [#12160](https://github.com/CesiumGS/cesium/pull/12160)
+- `SceneTransforms.wgs84ToWindowCoordinates` has been removed. Use `SceneTransforms.worldToWindowCoordinates` instead.
+- `SceneTransforms.wgs84ToDrawingBufferCoordinates` has been removed. Use `SceneTransforms.worldToDrawingBufferCoordinates` instead.
+- Removed `jitter` option from `VoxelPrimitive.js`, `VoxelRenderResources.js`, and related test code in `VoxelPrimitiveSpec.js`. [#11913](https://github.com/CesiumGS/cesium/issues/11913)
+- Custom specular environment maps in `ImageBasedLighting` now require either a WebGL2 context or a WebGL1 context that supports the [`EXT_shader_texture_lod` extension](https://registry.khronos.org/webgl/extensions/EXT_shader_texture_lod/).
+
+### 1.120 - 2024-08-01
+
+#### @cesium/engine
+
+##### Additions :tada:
+
+- Added `Transforms.computeIcrfToMoonFixedMatrix` and `Transforms.computeMoonFixedToIcrfMatrix` to compute the transformations between the Moon's fixed frame and ICRF at a given time.
+- Added `Transforms.computeIcrfToCentralBodyFixedMatrix` to specific the default ICRF to fixed frame transformation to use internally, including for lighting calculations.
+- Added SplitDirection property for display PointPrimitive and Billboard relative to the `Scene.splitPosition`. [#11982](https://github.com/CesiumGS/cesium/pull/11982)
+
+##### Fixes :wrench:
+
+- Fixed environment map LOD selection in image-based lighting. [#12070](https://github.com/CesiumGS/cesium/pull/12070)
+- Corrected calculation of diffuse component in image-based lighting. [#12082](https://github.com/CesiumGS/cesium/pull/12082)
+- Updated specular BRDF for image-based lighting. [#12083](https://github.com/CesiumGS/cesium/pull/12083)
+- Fixed environment map transform for image-based lighting. [#12091](https://github.com/CesiumGS/cesium/pull/12091)
+- Updated geometric self-shadowing function to improve direct lighting on models using physically-based rendering. [#12063](https://github.com/CesiumGS/cesium/pull/12063)
+- Prevent Bing Imagery API format issues from throwing errors [#12094](https://github.com/CesiumGS/cesium/pull/12094)
+
+### 1.119 - 2024-07-01
+
+#### @cesium/engine
+
+##### Additions :tada:
+
+- Added `Ellipsoid.default` to allow a central place to specify a default ellipsoid value to be used throughout the API where an ellipsoid is not otherwise specified. [#4245](https://github.com/CesiumGS/cesium/issues/4245)
+- Various defaults have been updated to adjust when `Ellipsoid.default` is changed to a value other than the WGS84 ellipsoid.
+- Added `Scene.ellipsoid`, `CesiumWidget.ellipsoid`, and `Viewer.ellipsoid` to set the default ellipsoid used for rendering.
+- Added `SkyBox.createEarthSkyBox` which creates a skybox instance with the default starmap for the Earth.
+- Added support for the `scale` property of a normal texture in a glTF material. [#12018](https://github.com/CesiumGS/cesium/pull/12018)
+
+##### Fixes :wrench:
+
+- Fixed diffuse color calculation for PBR materials. Many models will now appear slightly brighter. [#12043](https://github.com/CesiumGS/cesium/pull/12043)
+- Fixed the calculation of base color in materials using the KHR_materials_specular extension [#12041](https://github.com/CesiumGS/cesium/issues/12041).
+- Fixed issue where Entities would not use a custom ellipsoid. [#3543](https://github.com/CesiumGS/cesium/issues/3543)
+- Adjusted spacing for on screen Credits and updated recommendations for positioning custom ones. [#11912](https://github.com/CesiumGS/cesium/issues/11912)
+- Fixed issue where Property 'availability' is missing in type 'CustomHeightmapTerrainProvider' but required in type 'TerrainProvider' when using with typescript
+
+##### Breaking Changes :mega:
+
+- `CircleGeometry.unpack` now defaults to `Ellipsoid.default` rather than `Ellipsoid.UNIT_SPHERE`.
+
+##### Deprecated :hourglass_flowing_sand:
+
+- `SceneTransforms.wgs84ToDrawingBufferCoordinates` has been deprecated. It will be removed in 1.121. Use `SceneTransforms.worldToDrawingBufferCoordinates` instead.
+- `SceneTransforms.wgs84ToWindowCoordinates` has been deprecated. It will be removed in 1.121. Use `SceneTransforms.worldToWindowCoordinates` instead.
+
+#### @cesium/widgets
+
+##### Breaking Changes :mega:
+
+- `BaseLayerPicker` no longer overrides the default imagery or terrain unless `options.selectedImageryProviderViewModel` or `options.selectedTerrainProviderViewModel` is provided respectively.
+
 ### 1.118.2 - 2024-06-03
 
 This is an npm-only release to fix a dependency issue published in 1.118.1
@@ -12,13 +126,13 @@ This is an npm-only release to fix a dependency issue published in 1.118
 
 #### @cesium/engine
 
-###### Additions :tada:
+##### Additions :tada:
 
 - Added support for glTF models with the [KHR_materials_specular extension](https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Khronos/KHR_materials_specular). [#11970](https://github.com/CesiumGS/cesium/pull/11970)
 - Added support for glTF models with the [KHR_materials_anisotropy extension](https://github.com/KhronosGroup/glTF/blob/main/extensions/2.0/Khronos/KHR_materials_anisotropy/README.md). [#11988](https://github.com/CesiumGS/cesium/pull/11988)
 - Added support for glTF models with the [KHR_materials_clearcoat extension](https://github.com/KhronosGroup/glTF/blob/main/extensions/2.0/Khronos/KHR_materials_clearcoat/README.md). [#12006](https://github.com/CesiumGS/cesium/pull/12006)
 
-#### Fixes :wrench:
+##### Fixes :wrench:
 
 - Fixed a bug where `scene.pickPosition` returned incorrect results against the globe when `depthTestAgainstTerrain` is `false`. [#4368](https://github.com/CesiumGS/cesium/issues/4368)
 - Fixed a bug where `TaskProcessor` worker loading would check the worker module ID rather than the absolute URL when determining if it is cross-origin. [#11833](https://github.com/CesiumGS/cesium/pull/11833)

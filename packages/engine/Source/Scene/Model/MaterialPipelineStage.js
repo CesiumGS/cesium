@@ -217,6 +217,44 @@ function processTextureTransform(
 }
 
 /**
+ * Process a single texture scale and add it to the shader and uniform map.
+ *
+ * @param {ShaderBuilder} shaderBuilder The shader builder to modify
+ * @param {Object<string, Function>} uniformMap The uniform map to modify.
+ * @param {ModelComponents.TextureReader} textureReader The texture to add to the shader
+ * @param {string} uniformName The name of the sampler uniform such as <code>u_baseColorTexture</code>
+ * @param {string} defineName The name of the texture for use in the defines, minus any prefix or suffix. For example, "BASE_COLOR" or "EMISSIVE"
+ *
+ * @private
+ */
+function processTextureScale(
+  shaderBuilder,
+  uniformMap,
+  textureReader,
+  uniformName,
+  defineName
+) {
+  // Add a define to enable the texture transformation code in the shader.
+  const transformDefine = `HAS_${defineName}_TEXTURE_SCALE`;
+  shaderBuilder.addDefine(
+    transformDefine,
+    undefined,
+    ShaderDestination.FRAGMENT
+  );
+
+  // Add a uniform for the transformation matrix
+  const scaleUniformName = `${uniformName}Scale`;
+  shaderBuilder.addUniform(
+    "float",
+    scaleUniformName,
+    ShaderDestination.FRAGMENT
+  );
+  uniformMap[scaleUniformName] = function () {
+    return textureReader.scale;
+  };
+}
+
+/**
  * Process a single texture and add it to the shader and uniform map.
  *
  * @param {ShaderBuilder} shaderBuilder The shader builder to modify
@@ -267,6 +305,17 @@ function processTexture(
     !Matrix3.equals(textureTransform, Matrix3.IDENTITY)
   ) {
     processTextureTransform(
+      shaderBuilder,
+      uniformMap,
+      textureReader,
+      uniformName,
+      defineName
+    );
+  }
+
+  const { scale } = textureReader;
+  if (defined(scale) && scale !== 1.0) {
+    processTextureScale(
       shaderBuilder,
       uniformMap,
       textureReader,

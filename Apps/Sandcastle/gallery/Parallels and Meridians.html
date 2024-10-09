@@ -21,10 +21,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -101,18 +98,8 @@
         }
 
         function makeGrid(numberOfDivisions, color, show) {
-          const parallels = makeParallelsRecursive(
-            -90,
-            90,
-            numberOfDivisions,
-            color
-          );
-          const meridians = makeMeridiansRecursive(
-            -180,
-            180,
-            numberOfDivisions,
-            color
-          );
+          const parallels = makeParallelsRecursive(-90, 90, numberOfDivisions, color);
+          const meridians = makeMeridiansRecursive(-180, 180, numberOfDivisions, color);
           meridians.push(meridian(180, color));
 
           const allLines = parallels.concat(meridians);
@@ -123,12 +110,7 @@
           return allLines;
         }
 
-        function makeParallelsRecursive(
-          minLatitude,
-          maxLatitude,
-          depth,
-          color
-        ) {
+        function makeParallelsRecursive(minLatitude, maxLatitude, depth, color) {
           let result = [];
           const midpoint = (minLatitude + maxLatitude) / 2;
           result.push(parallel(midpoint, color));
@@ -152,12 +134,7 @@
           return result;
         }
 
-        function makeMeridiansRecursive(
-          minLongitude,
-          maxLongitude,
-          depth,
-          color
-        ) {
+        function makeMeridiansRecursive(minLongitude, maxLongitude, depth, color) {
           let result = [];
           const midpoint = (minLongitude + maxLongitude) / 2;
           result.push(meridian(midpoint, color));
@@ -238,16 +215,8 @@
             antipodeLatitude,
             0
           );
-          antipodalPoint.parallel = parallel(
-            antipodeLatitude,
-            cyan,
-            finerGranularity
-          );
-          antipodalPoint.meridian = meridian(
-            antipodeLongitude,
-            cyan,
-            finerGranularity
-          );
+          antipodalPoint.parallel = parallel(antipodeLatitude, cyan, finerGranularity);
+          antipodalPoint.meridian = meridian(antipodeLongitude, cyan, finerGranularity);
           antipodalPoint.label = labelCoordinates(antipode);
 
           antipodalPoint.parallel.show = showAntipodalPoint;
@@ -274,33 +243,25 @@
           primitives.equator.show = checked;
         });
 
-        Sandcastle.addToggleButton("Show prime meridian", true, function (
-          checked
-        ) {
+        Sandcastle.addToggleButton("Show prime meridian", true, function (checked) {
           primitives.primeMeridian.show = checked;
         });
 
-        Sandcastle.addToggleButton("Show low-resolution grid", false, function (
-          checked
-        ) {
+        Sandcastle.addToggleButton("Show low-resolution grid", false, function (checked) {
           primitives.lowResolutionGrid.forEach(function (line) {
             line.show = checked;
           });
         });
 
-        Sandcastle.addToggleButton(
-          "Show higher-resolution grid",
-          false,
-          function (checked) {
-            primitives.higherResolutionGrid.forEach(function (line) {
-              line.show = checked;
-            });
-          }
-        );
-
-        Sandcastle.addToggleButton("Show antipodal point", false, function (
+        Sandcastle.addToggleButton("Show higher-resolution grid", false, function (
           checked
         ) {
+          primitives.higherResolutionGrid.forEach(function (line) {
+            line.show = checked;
+          });
+        });
+
+        Sandcastle.addToggleButton("Show antipodal point", false, function (checked) {
           showAntipodalPoint = checked;
           const antipodalPoint = primitives.antipodalPoint;
 

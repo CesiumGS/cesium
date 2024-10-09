@@ -7,7 +7,6 @@ import Matrix4 from "../../Core/Matrix4.js";
 import Transforms from "../../Core/Transforms.js";
 import SceneMode from "../SceneMode.js";
 import SplitDirection from "../SplitDirection.js";
-import buildDrawCommand from "./buildDrawCommand.js";
 import TilesetPipelineStage from "./TilesetPipelineStage.js";
 import AtmospherePipelineStage from "./AtmospherePipelineStage.js";
 import ImageBasedLightingPipelineStage from "./ImageBasedLightingPipelineStage.js";
@@ -26,6 +25,7 @@ import ModelSplitterPipelineStage from "./ModelSplitterPipelineStage.js";
 import ModelType from "./ModelType.js";
 import NodeRenderResources from "./NodeRenderResources.js";
 import PrimitiveRenderResources from "./PrimitiveRenderResources.js";
+import ModelDrawCommands from "./ModelDrawCommands.js";
 
 /**
  * An in memory representation of the scene graph for a {@link Model}
@@ -351,7 +351,7 @@ function computeModelMatrix2D(sceneGraph, frameState) {
     );
   } else {
     const center = sceneGraph.boundingSphere.center;
-    const to2D = Transforms.wgs84To2DModelMatrix(
+    const to2D = Transforms.ellipsoidTo2DModelMatrix(
       frameState.mapProjection,
       center,
       sceneGraph._computedModelMatrix2D
@@ -560,7 +560,7 @@ ModelSceneGraph.prototype.buildDrawCommands = function (frameState) {
         modelPositionMax
       );
 
-      const drawCommand = buildDrawCommand(
+      const drawCommand = ModelDrawCommands.buildModelDrawCommand(
         primitiveRenderResources,
         frameState
       );
@@ -922,7 +922,6 @@ function pushPrimitiveDrawCommands(runtimePrimitive, options) {
   const passes = frameState.passes;
   const silhouetteCommands = scratchSilhouetteCommands;
   const primitiveDrawCommand = runtimePrimitive.drawCommand;
-
   primitiveDrawCommand.pushCommands(frameState, frameState.commandList);
 
   // If a model has silhouettes, the commands that draw the silhouettes for

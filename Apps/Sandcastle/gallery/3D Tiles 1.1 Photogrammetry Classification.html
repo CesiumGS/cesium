@@ -21,10 +21,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -298,28 +295,17 @@
         handler.setInputAction(function (movement) {
           if (enablePicking) {
             const pickedObject = scene.pick(movement.position);
-            if (
-              Cesium.defined(pickedObject) &&
-              Cesium.defined(pickedObject.featureId)
-            ) {
-              selectFeatureShader.setUniform(
-                "u_selectedFeature",
-                pickedObject.featureId
-              );
+            if (Cesium.defined(pickedObject) && Cesium.defined(pickedObject.featureId)) {
+              selectFeatureShader.setUniform("u_selectedFeature", pickedObject.featureId);
             } else {
-              selectFeatureShader.setUniform(
-                "u_selectedFeature",
-                NOTHING_SELECTED
-              );
+              selectFeatureShader.setUniform("u_selectedFeature", NOTHING_SELECTED);
             }
           }
         }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
         // UI ============================================================================
 
-        Sandcastle.addToggleButton("Enable picking", enablePicking, function (
-          checked
-        ) {
+        Sandcastle.addToggleButton("Enable picking", enablePicking, function (checked) {
           enablePicking = checked;
         });
 

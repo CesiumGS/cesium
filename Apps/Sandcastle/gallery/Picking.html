@@ -21,10 +21,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -69,9 +66,7 @@
                 scene.globe.ellipsoid
               );
               if (cartesian) {
-                const cartographic = Cesium.Cartographic.fromCartesian(
-                  cartesian
-                );
+                const cartographic = Cesium.Cartographic.fromCartesian(cartesian);
                 const longitudeString = Cesium.Math.toDegrees(
                   cartographic.longitude
                 ).toFixed(2);
@@ -117,20 +112,14 @@
           const pickedEntities = new Cesium.EntityCollection();
           const pickColor = Cesium.Color.YELLOW.withAlpha(0.5);
           function makeProperty(entity, color) {
-            const colorProperty = new Cesium.CallbackProperty(function (
-              time,
-              result
-            ) {
+            const colorProperty = new Cesium.CallbackProperty(function (time, result) {
               if (pickedEntities.contains(entity)) {
                 return pickColor.clone(result);
               }
               return color.clone(result);
-            },
-            false);
+            }, false);
 
-            entity.polygon.material = new Cesium.ColorMaterialProperty(
-              colorProperty
-            );
+            entity.polygon.material = new Cesium.ColorMaterialProperty(colorProperty);
           }
 
           const red = viewer.entities.add({
@@ -205,8 +194,7 @@
             name: "milktruck",
             position: Cesium.Cartesian3.fromDegrees(-123.0744619, 44.0503706),
             model: {
-              uri:
-                "../../SampleData/models/CesiumMilkTruck/CesiumMilkTruck.glb",
+              uri: "../../SampleData/models/CesiumMilkTruck/CesiumMilkTruck.glb",
             },
           });
           viewer.zoomTo(modelEntity);
@@ -230,14 +218,10 @@
             const scene = viewer.scene;
             if (scene.mode !== Cesium.SceneMode.MORPHING) {
               if (scene.pickPositionSupported) {
-                const cartesian = viewer.scene.pickPosition(
-                  movement.endPosition
-                );
+                const cartesian = viewer.scene.pickPosition(movement.endPosition);
 
                 if (Cesium.defined(cartesian)) {
-                  const cartographic = Cesium.Cartographic.fromCartesian(
-                    cartesian
-                  );
+                  const cartographic = Cesium.Cartographic.fromCartesian(cartesian);
                   const longitudeString = Cesium.Math.toDegrees(
                     cartographic.longitude
                   ).toFixed(2);

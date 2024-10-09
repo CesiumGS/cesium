@@ -33,6 +33,7 @@ describe("Scene/ScreenSpaceCameraController", function () {
   function MockScene(canvas, camera, ellipsoid) {
     this.canvas = canvas;
     this.camera = camera;
+    this.ellipsoid = ellipsoid;
     this.globe = undefined;
     this.verticalExaggeration = 1.0;
     this.verticalExaggerationRelativeHeight = 0.0;
@@ -270,7 +271,7 @@ describe("Scene/ScreenSpaceCameraController", function () {
 
   function setUp3DUnderground() {
     setUp3D();
-    scene.globe = new MockGlobe(scene.mapProjection.ellipsoid);
+    scene.globe = new MockGlobe(scene.ellipsoid);
     scene.cameraUnderground = true;
     controller.enableCollisionDetection = false;
 
@@ -1197,7 +1198,7 @@ describe("Scene/ScreenSpaceCameraController", function () {
   it("zooms in on an object in 3D", function () {
     setUp3D();
 
-    scene.globe = new MockGlobe(scene.mapProjection.ellipsoid);
+    scene.globe = new MockGlobe(scene.ellipsoid);
 
     updateController();
 
@@ -1228,7 +1229,7 @@ describe("Scene/ScreenSpaceCameraController", function () {
   it("zooms in on an object in 3D when transform is set", function () {
     setUp3D();
 
-    scene.globe = new MockGlobe(scene.mapProjection.ellipsoid);
+    scene.globe = new MockGlobe(scene.ellipsoid);
 
     updateController();
 
@@ -1260,7 +1261,7 @@ describe("Scene/ScreenSpaceCameraController", function () {
 
   it("zoom in 3D to point 0,0", function () {
     setUp3D();
-    scene.globe = new MockGlobe(scene.mapProjection.ellipsoid);
+    scene.globe = new MockGlobe(scene.ellipsoid);
 
     updateController();
 
@@ -1481,10 +1482,7 @@ describe("Scene/ScreenSpaceCameraController", function () {
     ).toEqualEpsilon(camera.up, CesiumMath.EPSILON14);
 
     const ray = new Ray(camera.positionWC, camera.directionWC);
-    const intersection = IntersectionTests.rayEllipsoid(
-      ray,
-      scene.mapProjection.ellipsoid
-    );
+    const intersection = IntersectionTests.rayEllipsoid(ray, scene.ellipsoid);
     expect(intersection).toBeDefined();
   });
 
@@ -1809,7 +1807,7 @@ describe("Scene/ScreenSpaceCameraController", function () {
 
   it("camera does not go below the terrain in 3D", function () {
     setUp3D();
-    scene.globe = new MockGlobe(scene.mapProjection.ellipsoid);
+    scene.globe = new MockGlobe(scene.ellipsoid);
 
     updateController();
 
@@ -1838,7 +1836,7 @@ describe("Scene/ScreenSpaceCameraController", function () {
 
   it("camera does not go below the terrain in CV", function () {
     setUpCV();
-    scene.globe = new MockGlobe(scene.mapProjection.ellipsoid);
+    scene.globe = new MockGlobe(scene.ellipsoid);
 
     updateController();
 
@@ -1867,7 +1865,7 @@ describe("Scene/ScreenSpaceCameraController", function () {
 
   it("camera does go below the terrain in 3D when collision detection is disabled", function () {
     setUp3D();
-    scene.globe = new MockGlobe(scene.mapProjection.ellipsoid);
+    scene.globe = new MockGlobe(scene.ellipsoid);
     controller.enableCollisionDetection = false;
 
     updateController();
@@ -1896,7 +1894,7 @@ describe("Scene/ScreenSpaceCameraController", function () {
 
   it("camera does go below the terrain in CV when collision detection is disabled", function () {
     setUpCV();
-    scene.globe = new MockGlobe(scene.mapProjection.ellipsoid);
+    scene.globe = new MockGlobe(scene.ellipsoid);
     controller.enableCollisionDetection = false;
 
     updateController();
@@ -1923,7 +1921,7 @@ describe("Scene/ScreenSpaceCameraController", function () {
 
   it("camera does not go below the terrain in 3D with the transform set", function () {
     setUp3D();
-    scene.globe = new MockGlobe(scene.mapProjection.ellipsoid);
+    scene.globe = new MockGlobe(scene.ellipsoid);
 
     updateController();
 
@@ -1952,7 +1950,7 @@ describe("Scene/ScreenSpaceCameraController", function () {
 
   it("camera does not go below the terrain in CV with the transform set", function () {
     setUpCV();
-    scene.globe = new MockGlobe(scene.mapProjection.ellipsoid);
+    scene.globe = new MockGlobe(scene.ellipsoid);
 
     updateController();
 
@@ -1978,6 +1976,40 @@ describe("Scene/ScreenSpaceCameraController", function () {
       controller.minimumZoomDistance,
       CesiumMath.EPSILON8
     );
+  });
+
+  it("can adjust zoom factor", function () {
+    setUp3D();
+
+    // Zoom out
+    const mouseWheelMovement = -120;
+
+    // Slow zoom
+    const initialPosition = Cartesian3.clone(camera.position);
+    controller.zoomFactor = 1.0;
+    simulateMouseWheel(mouseWheelMovement);
+    updateController();
+    const slowZoomPosition = Cartesian3.clone(camera.position);
+    const slowZoomMagnitude = Cartesian3.magnitude(slowZoomPosition);
+
+    // Medium zoom
+    camera.position = Cartesian3.clone(initialPosition);
+    controller.zoomFactor = 5.0;
+    simulateMouseWheel(mouseWheelMovement);
+    updateController();
+    const mediumZoomPosition = Cartesian3.clone(camera.position);
+    const mediumZoomMagnitude = Cartesian3.magnitude(mediumZoomPosition);
+
+    // Fast zoom
+    camera.position = Cartesian3.clone(initialPosition);
+    controller.zoomFactor = 10.0;
+    simulateMouseWheel(mouseWheelMovement);
+    updateController();
+    const fastZoomPosition = Cartesian3.clone(camera.position);
+    const fastZoomMagnitude = Cartesian3.magnitude(fastZoomPosition);
+
+    expect(fastZoomMagnitude).toBeGreaterThan(mediumZoomMagnitude);
+    expect(mediumZoomMagnitude).toBeGreaterThan(slowZoomMagnitude);
   });
 
   it("is destroyed", function () {

@@ -21,10 +21,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -62,9 +59,7 @@
             vertexFormat: Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
           }),
           attributes: {
-            color: Cesium.ColorGeometryInstanceAttribute.fromColor(
-              Cesium.Color.RED
-            ),
+            color: Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.RED),
           },
         });
 
@@ -134,9 +129,7 @@
             vertexFormat: Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
           }),
           attributes: {
-            color: Cesium.ColorGeometryInstanceAttribute.fromColor(
-              Cesium.Color.BLUE
-            ),
+            color: Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.BLUE),
           },
         });
 
@@ -159,9 +152,7 @@
             vertexFormat: Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
           }),
           attributes: {
-            color: Cesium.ColorGeometryInstanceAttribute.fromColor(
-              Cesium.Color.GREEN
-            ),
+            color: Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.GREEN),
           },
         });
 
@@ -194,9 +185,7 @@
             perPositionHeight: true,
           }),
           attributes: {
-            color: Cesium.ColorGeometryInstanceAttribute.fromColor(
-              Cesium.Color.ORANGE
-            ),
+            color: Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.ORANGE),
           },
         });
 
@@ -265,8 +254,7 @@
           geometry: new Cesium.PolygonGeometry({
             polygonHierarchy: hierarchy,
             perPositionHeight: true,
-            vertexFormat:
-              Cesium.MaterialAppearance.MaterialSupport.TEXTURED.vertexFormat,
+            vertexFormat: Cesium.MaterialAppearance.MaterialSupport.TEXTURED.vertexFormat,
             textureCoordinates: textureCoordinates,
           }),
         });
@@ -309,8 +297,7 @@
             polygonHierarchy: hierarchy,
             perPositionHeight: true,
             extrudedHeight: 0,
-            vertexFormat:
-              Cesium.MaterialAppearance.MaterialSupport.TEXTURED.vertexFormat,
+            vertexFormat: Cesium.MaterialAppearance.MaterialSupport.TEXTURED.vertexFormat,
             textureCoordinates: textureCoordinates,
           }),
         });
