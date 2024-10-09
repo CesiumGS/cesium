@@ -12,6 +12,15 @@ import yargs from "yargs";
 import ContextCache from "./scripts/ContextCache.js";
 import createRoute from "./scripts/createRoute.js";
 
+import {
+  createCesiumJs,
+  createJsHintOptions,
+  createCombinedSpecList,
+  glslToJavaScript,
+  createIndexJs,
+  buildCesium,
+} from "./scripts/build.js";
+
 const argv = yargs(process.argv)
   .options({
     port: {
@@ -36,15 +45,6 @@ const argv = yargs(process.argv)
     },
   })
   .help().argv;
-
-import {
-  createCesiumJs,
-  createJsHintOptions,
-  createCombinedSpecList,
-  glslToJavaScript,
-  createIndexJs,
-  buildCesium,
-} from "./scripts/build.js";
 
 const outputDirectory = path.join("Build", "CesiumDev");
 
@@ -214,12 +214,22 @@ async function generateDevelopmentBuild() {
         ignoreInitial: true,
       },
     );
-    sourceCodeWatcher.on("all", async () => {
+
+    // eslint-disable-next-line no-unused-vars
+    sourceCodeWatcher.on("all", async (action, path) => {
       esmCache.clear();
       iifeCache.clear();
       workersCache.clear();
       iifeWorkersCache.clear();
       jsHintOptionsCache = undefined;
+
+      // Get the workspace token from the path, and rebuild that workspace's index.js
+      const workspaceRegex = /packages\/(.+?)\/.+\.js/;
+      const result = path.match(workspaceRegex);
+      if (result) {
+        await createIndexJs(result[1]);
+      }
+
       await createCesiumJs();
     });
 
