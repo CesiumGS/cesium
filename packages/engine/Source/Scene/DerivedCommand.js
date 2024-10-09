@@ -528,6 +528,9 @@ function getPickMetadataShaderProgram(
   const glslType = getGlslType(classProperty);
 
   // Define the components that will go into the output `metadataValues`.
+  // This will be the 'color' that is written into the frame buffer,
+  // meaning that the values should be in [0.0, 1.0], and will become
+  // values in [0, 255] in the frame buffer.
   // By default, all of them are 0.0.
   const sourceValueStrings = ["0.0", "0.0", "0.0", "0.0"];
   const componentCount = getComponentCount(classProperty);
