@@ -1,5 +1,9 @@
 # Change Log
 
+##### Deprecated :hourglass_flowing_sand:
+
+- `defaultValue.EMPTY_OBJECT` has been deprecated and will be removed in 1.125. Use `EmptyObject` instead.
+
 ### 1.122 - 2024-10-01
 
 #### @cesium/engine
