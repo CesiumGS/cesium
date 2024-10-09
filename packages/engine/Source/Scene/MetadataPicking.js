@@ -264,17 +264,16 @@ MetadataPicking.convertToObjectType = function (type, value) {
 };
 
 /**
- * Converts the given type into an object representation where appropriate.
+ * Converts the given type into an raw value or array representation.
  *
  * For `VECn/MATn` types, the given value is converted into an array.
- * For other types, an array containing the given value is
- * returned.
+ * For other types, the value is returned directly
  *
  * @param {string} type The `ClassProperty` type
  * @param {any} value The input value
  * @returns {any} The array representation
  */
-MetadataPicking.convertToArray = function (type, value) {
+MetadataPicking.convertFromObjectType = function (type, value) {
   if (!defined(value)) {
     return value;
   }
@@ -284,7 +283,7 @@ MetadataPicking.convertToArray = function (type, value) {
     type === MetadataType.BOOLEAN ||
     type === MetadataType.ENUM
   ) {
-    return [value];
+    return value;
   }
   switch (type) {
     case MetadataType.VEC2:
@@ -328,11 +327,11 @@ MetadataPicking.decodeMetadataValues = function (
   );
 
   if (metadataProperty.hasValueTransform) {
-    const offset = MetadataPicking.convertToArray(
+    const offset = MetadataPicking.convertFromObjectType(
       classProperty.type,
       metadataProperty.offset,
     );
-    const scale = MetadataPicking.convertToArray(
+    const scale = MetadataPicking.convertFromObjectType(
       classProperty.type,
       metadataProperty.scale,
     );

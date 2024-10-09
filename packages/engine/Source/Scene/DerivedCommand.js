@@ -417,24 +417,51 @@ function getGlslType(classProperty) {
   return `ivec${componentCount}`;
 }
 
+/**
+ * Returns a shader statement that applies the inverse of the
+ * value transform to the given value, based on the given offset
+ * and scale.
+ *
+ * @param {string} input The input value
+ * @param {string} offset The offset
+ * @param {string} scale The scale
+ * @returns {string} The statement
+ */
 function unapplyValueTransform(input, offset, scale) {
   return `((${input} - float(${offset})) / float(${scale}))`;
 }
+
+/**
+ * Returns a shader statement that applies the inverse of the
+ * normalization, based on the given component type
+ *
+ * @param {string} input The input value
+ * @param {string} componentType The component type
+ * @returns {string} The statement
+ */
 function unnormalize(input, componentType) {
   const max = MetadataComponentType.getMaximum(componentType);
   return `(${input}) / float(${max})`;
 }
 
-function getSourceValueStringScalar(classProperty) {
+/**
+ * Creates a shader statement that returns the value of the specified
+ * property, normalized to the range [0, 1].
+ *
+ * @param {MetadataClassProperty} classProperty The class property
+ * @param {PropertyTextureProperty|PropertyAttributeProperty} metadataProperty The metadata property
+ * @returns The string
+ */
+function getSourceValueStringScalar(classProperty, metadataProperty) {
   let result = `float(value)`;
 
-  // The 'hasValueTransform' indicates whether the class property
-  // did define an 'offset' or 'scale'. Even when they had not
-  // been defined, they receive default values in the constructor
-  // of MetadataClassProperty
-  if (classProperty.hasValueTransform) {
-    const offset = classProperty.offset;
-    const scale = classProperty.scale;
+  // The 'hasValueTransform' indicates whether the property
+  // (or its class property) did define an 'offset' or 'scale'.
+  // Even when they had not been defined in the JSON, they are
+  // defined in the object, with default values.
+  if (metadataProperty.hasValueTransform) {
+    const offset = metadataProperty.offset;
+    const scale = metadataProperty.scale;
     result = unapplyValueTransform(result, offset, scale);
   }
   if (!classProperty.normalized) {
@@ -443,47 +470,41 @@ function getSourceValueStringScalar(classProperty) {
   return result;
 }
 
+/**
+ * Creates a shader statement that returns the value of the specified
+ * component of the given property, normalized to the range [0, 1].
+ *
+ * @param {MetadataClassProperty} classProperty The class property
+ * @param {PropertyTextureProperty|PropertyAttributeProperty} metadataProperty The metadata property
+ * @param {string} componentName The name, in ["x", "y", "z", "w"]
+ * @returns The string
+ */
 function getSourceValueStringComponent(
   classProperty,
-  componentIndex,
+  metadataProperty,
   componentName,
 ) {
   const valueString = `value.${componentName}`;
   let result = `float(${valueString})`;
 
-  // The 'hasValueTransform' indicates whether the class property
-  // did define an 'offset' or 'scale'. Even when they had not
-  // been defined, they receive default values in the constructor
-  // of MetadataClassProperty
-  if (classProperty.hasValueTransform) {
-    const offset = classProperty.offset[componentIndex];
-    const scale = classProperty.scale[componentIndex];
+  // The 'hasValueTransform' indicates whether the property
+  // (or its class property) did define an 'offset' or 'scale'.
+  // Even when they had not been defined in the JSON, they are
+  // defined in the object, with default values
+  // Note that in the 'PropertyTextureProperty' and the
+  // 'PropertyAttributeProperty', these values are
+  // stored as "object types" (like 'Cartesian2'), whereas
+  // in the 'MetadataClassProperty', they are stored as
+  // "array types", e.g. a `[number, number]`
+  if (metadataProperty.hasValueTransform) {
+    const offset = metadataProperty.offset[componentName];
+    const scale = metadataProperty.scale[componentName];
     result = unapplyValueTransform(result, offset, scale);
   }
   if (!classProperty.normalized) {
     result = unnormalize(result, classProperty.componentType);
   }
   return result;
-}
-
-function debugPrintOverriddenOffsetScale(shaderProgram, propertyName) {
-  // Check for the presence of the value transform uniforms that may have
-  // been inserted by MetadataPipelineStage.addValueTransformUniforms.
-  // These MAY be different from the offset/scale of the class property,
-  // when they have been overridden by the property texture property.
-  const allUniforms = shaderProgram.allUniforms;
-  const offsetUniformName = `u_${propertyName}_offset`;
-  const scaleUniformName = `u_${propertyName}_scale`;
-  const offsetUniform = allUniforms[offsetUniformName];
-  const scaleUniform = allUniforms[scaleUniformName];
-  if (defined(offsetUniform) && defined(scaleUniform)) {
-    const offset = offsetUniform.value;
-    const scale = scaleUniform.value;
-    console.log("Now there they are, ", offset, scale);
-  } else {
-    console.log("Nope, not there");
-  }
-  //return `czm_valueTransform(${offsetUniformName}, ${scaleUniformName}, ${valueExpression})`;
 }
 
 /**
@@ -522,8 +543,7 @@ function getPickMetadataShaderProgram(
     return shader;
   }
 
-  debugPrintOverriddenOffsetScale(shaderProgram, propertyName);
-
+  const metadataProperty = pickedMetadataInfo.metadataProperty;
   const classProperty = pickedMetadataInfo.classProperty;
   const glslType = getGlslType(classProperty);
 
@@ -537,7 +557,10 @@ function getPickMetadataShaderProgram(
   if (componentCount === 1) {
     // When the property is a scalar, store the source value
     // string directly in `metadataValues.x`
-    sourceValueStrings[0] = getSourceValueStringScalar(classProperty);
+    sourceValueStrings[0] = getSourceValueStringScalar(
+      classProperty,
+      metadataProperty,
+    );
   } else {
     // When the property is an array, store the array elements
     // in `metadataValues.x/y/z/w`
@@ -545,7 +568,7 @@ function getPickMetadataShaderProgram(
     for (let i = 0; i < componentCount; i++) {
       sourceValueStrings[i] = getSourceValueStringComponent(
         classProperty,
-        i,
+        metadataProperty,
         componentNames[i],
       );
     }
