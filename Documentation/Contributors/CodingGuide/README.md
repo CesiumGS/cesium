@@ -17,6 +17,7 @@ To some extent, this guide can be summarized as _make new code similar to existi
 - [Coding Guide](#coding-guide)
   - [Naming](#naming)
   - [Formatting](#formatting)
+  - [Spelling](#spelling)
   - [Linting](#linting)
   - [Units](#units)
   - [Basic Code Construction](#basic-code-construction)
@@ -116,6 +117,14 @@ A few more naming conventions are introduced below along with their design patte
 - We use [prettier](https://prettier.io/) to automatically re-format all JS code at commit time, so all of the work is done for you. Code is automatically reformatted when you commit.
 - For HTML code, keep the existing style. Use double quotes.
 - Text files, end with a newline to minimize the noise in diffs.
+
+## Spelling
+
+- We have a basic setup for `cspell` to spellcheck our files. This is currently not enforced but recommended to use and check while programming. This is especially true for JSDoc comments that well end up in our documentation or Readme files
+  - Run `npm run cspell` to check all files
+  - Run `npx cspell -c .vscode/cspell.json [file path]` to check a specific file
+- If you are using VSCode you can use the [Code Spell Checker](https://marketplace.visualstudio.com/items?itemName=streetsidesoftware.code-spell-checker) extension to highlight misspelled words and add them to our wordlist if they are valid.
+- Using cspell is optional while we build up the wordlist but may eventually be required as part of our git hooks and CI. See [this issue](https://github.com/CesiumGS/cesium/issues/11954) for an active status on that.
 
 ## Linting
 

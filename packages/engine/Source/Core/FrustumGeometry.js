@@ -45,7 +45,7 @@ function FrustumGeometry(options) {
   const vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
 
   // This is private because it is used by DebugCameraPrimitive to draw a multi-frustum by
-  // creating multiple FrustumGeometrys. This way the near plane of one frustum doesn't overlap
+  // creating multiple FrustumGeometry objects. This way the near plane of one frustum doesn't overlap
   // the far plane of another.
   const drawNearPlane = defaultValue(options._drawNearPlane, true);
 

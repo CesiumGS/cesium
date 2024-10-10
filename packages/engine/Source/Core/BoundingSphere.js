@@ -1381,7 +1381,7 @@ BoundingSphere.projectTo2D = function (sphere, projection, result) {
 /**
  * Determines whether or not a sphere is hidden from view by the occluder.
  *
- * @param {BoundingSphere} sphere The bounding sphere surrounding the occludee object.
+ * @param {BoundingSphere} sphere The bounding sphere surrounding the occluded object.
  * @param {Occluder} occluder The occluder.
  * @returns {boolean} <code>true</code> if the sphere is not visible; otherwise <code>false</code>.
  */

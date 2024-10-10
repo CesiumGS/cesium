@@ -51,7 +51,7 @@ function decodeGoogleEarthEnterpriseData(key, data) {
   // while we have a full uint64 (8 bytes) left to do
   // assumes buffer is 64bit aligned (or processor doesn't care)
   while (dp < dpend64) {
-    // rotate the key each time through by using the offets 16,0,8,16,0,8,...
+    // rotate the key each time through by using the offsets 16,0,8,16,0,8,...
     off = (off + 8) % 24;
     kp = off;
 
