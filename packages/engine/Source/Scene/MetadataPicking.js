@@ -6,6 +6,7 @@ import Matrix2 from "../Core/Matrix2.js";
 import Matrix3 from "../Core/Matrix3.js";
 import Matrix4 from "../Core/Matrix4.js";
 import RuntimeError from "../Core/RuntimeError.js";
+import MetadataClassProperty from "./MetadataClassProperty.js";
 import MetadataComponentType from "./MetadataComponentType.js";
 import MetadataType from "./MetadataType.js";
 
@@ -250,7 +251,7 @@ MetadataPicking.convertToObjectType = function (type, value) {
     case MetadataType.VEC3:
       return Cartesian3.unpack(numbers, 0, new Cartesian3());
     case MetadataType.VEC4:
-      return Cartesian4.unpack(numbers, 0, new Cartesian3());
+      return Cartesian4.unpack(numbers, 0, new Cartesian4());
     case MetadataType.MAT2:
       return Matrix2.unpack(numbers, 0, new Matrix2());
     case MetadataType.MAT3:
@@ -263,10 +264,51 @@ MetadataPicking.convertToObjectType = function (type, value) {
 };
 
 /**
+ * Converts the given type into an raw value or array representation.
+ *
+ * For `VECn/MATn` types, the given value is converted into an array.
+ * For other types, the value is returned directly
+ *
+ * @param {string} type The `ClassProperty` type
+ * @param {any} value The input value
+ * @returns {any} The array representation
+ */
+MetadataPicking.convertFromObjectType = function (type, value) {
+  if (!defined(value)) {
+    return value;
+  }
+  if (
+    type === MetadataType.SCALAR ||
+    type === MetadataType.STRING ||
+    type === MetadataType.BOOLEAN ||
+    type === MetadataType.ENUM
+  ) {
+    return value;
+  }
+  switch (type) {
+    case MetadataType.VEC2:
+      return Cartesian2.pack(value, Array(2));
+    case MetadataType.VEC3:
+      return Cartesian3.pack(value, Array(3));
+    case MetadataType.VEC4:
+      return Cartesian4.pack(value, Array(4));
+    case MetadataType.MAT2:
+      return Matrix2.unpack(value, Array(4));
+    case MetadataType.MAT3:
+      return Matrix3.unpack(value, Array(9));
+    case MetadataType.MAT4:
+      return Matrix4.unpack(value, Array(16));
+  }
+  // Should never happen:
+  return value;
+};
+
+/**
  * Decode the given raw values into a metadata property value.
  *
- * This just converts the result of `decodeRawMetadataValues`
- * from array-based types into object types like `CartesianN`.
+ * This applies the value transform (offset/scale) to the result
+ * of `decodeRawMetadataValues`, and converts this from array-based
+ * types into object types like `CartesianN`.
  *
  * @param {MetadataClassProperty} classProperty The `MetadataClassProperty`
  * @param {Uint8Array} rawPixelValues The raw values
@@ -276,12 +318,31 @@ MetadataPicking.convertToObjectType = function (type, value) {
  */
 MetadataPicking.decodeMetadataValues = function (
   classProperty,
+  metadataProperty,
   rawPixelValues,
 ) {
-  const arrayBasedResult = MetadataPicking.decodeRawMetadataValues(
+  let arrayBasedResult = MetadataPicking.decodeRawMetadataValues(
     classProperty,
     rawPixelValues,
   );
+
+  if (metadataProperty.hasValueTransform) {
+    const offset = MetadataPicking.convertFromObjectType(
+      classProperty.type,
+      metadataProperty.offset,
+    );
+    const scale = MetadataPicking.convertFromObjectType(
+      classProperty.type,
+      metadataProperty.scale,
+    );
+    arrayBasedResult = MetadataClassProperty.valueTransformInPlace(
+      arrayBasedResult,
+      offset,
+      scale,
+      MetadataComponentType.applyValueTransform,
+    );
+  }
+
   if (classProperty.isArray) {
     const arrayLength = classProperty.arrayLength;
     const result = Array(arrayLength);
@@ -295,11 +356,11 @@ MetadataPicking.decodeMetadataValues = function (
     }
     return result;
   }
-  const result = MetadataPicking.convertToObjectType(
+  const objectResult = MetadataPicking.convertToObjectType(
     classProperty.type,
     arrayBasedResult,
   );
-  return result;
+  return objectResult;
 };
 
 export default Object.freeze(MetadataPicking);
