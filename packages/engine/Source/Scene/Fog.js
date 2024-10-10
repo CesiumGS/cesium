@@ -35,6 +35,11 @@ function Fog() {
    */
   this.density = 2.0e-4;
   /**
+   * A scalar that impacts the visual density of fog. This value does _not_ impact the culling of terrain.
+   * Use in combination with the `density` to make fog appear more or less dense.
+   */
+  this.visualDensityScalar = 0.4;
+  /**
    * A factor used to increase the screen space error of terrain tiles when they are partially in fog. The effect is to reduce
    * the number of terrain tiles requested for rendering. If set to zero, the feature will be disabled. If the value is increased
    * for mountainous regions, less tiles will need to be requested, but the terrain meshes near the horizon may be a noticeably
@@ -122,6 +127,9 @@ function findInterval(height) {
 
 const scratchPositionNormal = new Cartesian3();
 
+/**
+ * @param {FrameState} frameState
+ */
 Fog.prototype.update = function (frameState) {
   const enabled = (frameState.fog.enabled = this.enabled);
   if (!enabled) {
@@ -167,6 +175,7 @@ Fog.prototype.update = function (frameState) {
   density *= 1.0 - dot;
 
   frameState.fog.density = density;
+  frameState.fog.visualDensityScalar = this.visualDensityScalar;
   frameState.fog.sse = this.screenSpaceErrorFactor;
   frameState.fog.minimumBrightness = this.minimumBrightness;
 };

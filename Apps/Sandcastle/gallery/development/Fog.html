@@ -21,6 +21,22 @@
   <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
+      #toolbar {
+        background: rgba(42, 42, 42, 0.8);
+        padding: 4px;
+        border-radius: 4px;
+      }
+      #zoomButtons {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      input[type="range"] {
+        width: 6em;
+      }
+      input[type="number"] {
+        width: 5em;
+      }
     </style>
     <div id="cesiumContainer" class="fullSize"></div>
     <div id="loadingOverlay"><h1>Loading...</h1></div>
@@ -33,7 +49,60 @@
           </tr>
           <tr>
             <td>density</td>
-            <td><input type="text" size="5" data-bind="value: density" /></td>
+            <td>
+              <input
+                type="range"
+                data-bind="value: density, valueUpdate: 'input'"
+                min="0.0001"
+                max="0.002"
+                step="0.0001"
+              />
+              <input
+                type="number"
+                min="0.0001"
+                max="0.002"
+                step="0.0001"
+                data-bind="value: density"
+              />
+            </td>
+          </tr>
+          <tr>
+            <td>visual density scalar</td>
+            <td>
+              <input
+                type="range"
+                min="0.01"
+                max="2"
+                step="0.01"
+                data-bind="value: visualDensityScalar, valueUpdate: 'input'"
+              />
+              <input
+                type="number"
+                min="0.01"
+                max="2"
+                step="0.01"
+                data-bind="value: visualDensityScalar"
+              />
+            </td>
+          </tr>
+          <tr>
+            <td for="input-fogminbrightness">Fog min brightness</td>
+            <td>
+              <input
+                type="range"
+                data-bind="value: minimumBrightness, valueUpdate: 'input'"
+                min="0"
+                max="1"
+                step="0.01"
+              />
+              <input
+                type="number"
+                data-bind="value: minimumBrightness"
+                min="0"
+                max="1"
+                step="0.01"
+              />
+            </td>
           </tr>
           <tr>
             <td>sse increase factor</td>
@@ -57,7 +126,9 @@
         const viewModel = {
           enabled: true,
           density: 0,
+          visualDensityScalar: 0,
           sse: 0,
+          minimumBrightness: 0,
         };
         // Convert the viewModel members into knockout observables.
         Cesium.knockout.track(viewModel);
@@ -78,60 +149,105 @@
             viewer.scene.fog.density = newValue;
           });
 
+        Cesium.knockout
+          .getObservable(viewModel, "visualDensityScalar")
+          .subscribe(function (newValue) {
+            viewer.scene.fog.visualDensityScalar = newValue;
+          });
+
+        Cesium.knockout
+          .getObservable(viewModel, "minimumBrightness")
+          .subscribe(function (newValue) {
+            viewer.scene.fog.minimumBrightness = newValue;
+          });
         Cesium.knockout.getObservable(viewModel, "sse").subscribe(function (newValue) {
           viewer.scene.fog.screenSpaceErrorFactor = newValue;
         });
 
         viewModel.enabled = viewer.scene.fog.enabled;
         viewModel.density = viewer.scene.fog.density;
+        viewModel.visualDensityScalar = viewer.scene.fog.visualDensityScalar;
         viewModel.sse = viewer.scene.fog.screenSpaceErrorFactor;
+        viewModel.minimumBrightness = viewer.scene.fog.minimumBrightness;
 
-        Sandcastle.addToolbarButton("Horizon high altitude", function () {
-          viewer.camera.setView({
-            destination: new Cesium.Cartesian3(
-              -2467730.5740817646,
-              -4390507.315824514,
-              3906155.113316938,
-            ),
-            orientation: {
-              heading: 4.492211521856625,
-              pitch: -0.2687139437696304,
-            },
-          });
+        Sandcastle.addToolbarButton(
+          "Horizon high altitude",
+          function () {
+            viewer.camera.setView({
+              destination: new Cesium.Cartesian3(
+                -2467730.5740817646,
+                -4390507.315824514,
+                3906155.113316938,
+              ),
+              orientation: {
+                heading: 4.492211521856625,
+                pitch: -0.2687139437696304,
+              },
+            });
+          },
+          "zoomButtons",
+        );
+        // default to the high altitude camera
+        viewer.camera.setView({
+          destination: new Cesium.Cartesian3(
+            -2467730.5740817646,
+            -4390507.315824514,
+            3906155.113316938,
+          ),
+          orientation: {
+            heading: 4.492211521856625,
+            pitch: -0.2687139437696304,
+          },
         });
 
-        Sandcastle.addToolbarButton("Horizon low altitude", function () {
-          viewer.camera.setView({
-            destination: new Cesium.Cartesian3(
-              -734001.9511656855,
-              -4214090.596769834,
-              4715898.125886317,
-            ),
-            orientation: {
-              heading: 5.634257362559497,
-              pitch: -0.019548505785381032,
-            },
-          });
-        });
+        Sandcastle.addToolbarButton(
+          "Horizon low altitude",
+          function () {
+            viewer.camera.setView({
+              destination: new Cesium.Cartesian3(
+                -734001.9511656855,
+                -4214090.596769834,
+                4715898.125886317,
+              ),
+              orientation: {
+                heading: 5.634257362559497,
+                pitch: -0.019548505785381032,
+              },
+            });
+          },
+          "zoomButtons",
+        );
 
         viewer.scene.globe._surface._debug.enableDebugOutput = true;
 
-        Sandcastle.addToolbarButton("Snap", function () {
-          const container = document.getElementById("cesiumContainer");
-          const tmpH = container.style.height;
-          const tmpW = container.style.width;
+        Sandcastle.addToolbarButton(
+          "Snapshot",
+          function () {
+            const container = document.getElementById("cesiumContainer");
+            const tmpH = container.style.height;
+            const tmpW = container.style.width;
 
-          container.style.height = "600px";
-          container.style.width = "800px";
+            // resize for screenshot
+            container.style.height = "600px";
+            container.style.width = "800px";
+            viewer.resize();
+            viewer.render();
 
-          viewer.resize();
-          viewer.render();
-          window.open(viewer.canvas.toDataURL("image/png"));
-          container.style.height = tmpH;
-          container.style.width = tmpW;
-          viewer.resize();
-          viewer.render();
-        });
+            // chrome blocks opening data urls directly, add an image to a new window instead
+            // https://stackoverflow.com/questions/45778720/window-open-opens-a-blank-screen-in-chrome
+            const win = window.open();
+            win.document.write(`<img src="${viewer.canvas.toDataURL("image/png")}" />`);
+            // stop the browser from trying to load "nothing" forever
+            win.stop();
+
+            // reset viewer size
+            container.style.height = tmpH;
+            container.style.width = tmpW;
+            viewer.resize();
+            viewer.render();
+          },
+          "zoomButtons",
+        );
         //Sandcastle_End
       };
       if (typeof Cesium !== "undefined") {
