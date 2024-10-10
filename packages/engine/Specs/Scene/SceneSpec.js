@@ -244,7 +244,7 @@ function createEmbeddedGltfWithPropertyTexture(
  */
 function createPropertyTextureGltf(schema, properties) {
   const gltf = createEmbeddedGltfWithPropertyTexture(schema, properties);
-  /*/
+  //*/
   // Copy-and-paste this into a file to have the actual glTF:
   console.log("SPEC GLTF:");
   console.log("-".repeat(80));
@@ -3590,94 +3590,6 @@ describe(
       );
       scene.destroyForSpecs();
     });
-
-    // XXX TODO Shader compilation error that seems to be unrelated
-    // to metadata picking. Test this in isolation!
-    /*
-    it("picks fixed length normalized UINT8 SCALAR array from a property texture with offset and scale in class property", async function () {
-      if (webglStub) {
-        return;
-      }
-      const schemaId = undefined;
-      const className = "exampleClass";
-      const propertyName = "example_fixed_length_normalized_UINT8_SCALAR_array";
-      const classPropertyOffset = [100, 200, 300 ];
-      const classPropertyScale = [2, 3, 4];
-      const metadataPropertyOffset = undefined;
-      const metadataPropertyScale = undefined;
-      const gltf = createPropertyTextureGltfNormalizedScalarArray(
-        classPropertyOffset,
-        classPropertyScale,
-        metadataPropertyOffset,
-        metadataPropertyScale,
-      );
-
-      const canvasSizeX = textureSizeX * canvasScaling;
-      const canvasSizeY = textureSizeY * canvasScaling;
-      const scene = createScene({
-        canvas: createCanvas(canvasSizeX, canvasSizeY),
-        contextOptions: {
-          requestWebgl1: true,
-        },
-      });
-
-      await loadAsModel(scene, gltf);
-      fitCameraToUnitSquare(scene.camera);
-
-      scene.initializeFrame();
-      scene.render(defaultDate);
-
-      const actualMetadataValue0 = pickMetadataAt(
-        scene,
-        schemaId,
-        className,
-        propertyName,
-        0,
-        0,
-      );
-      const actualMetadataValue1 = pickMetadataAt(
-        scene,
-        schemaId,
-        className,
-        propertyName,
-        1,
-        1,
-      );
-      const actualMetadataValue2 = pickMetadataAt(
-        scene,
-        schemaId,
-        className,
-        propertyName,
-        2,
-        2,
-      );
-      const expectedMetadataValue0 = [100 + 2 * 0, 200 + 3 * 0.0, 300 + 4 * 0];
-      const expectedMetadataValue1 = [
-        100 + 2 * 0.5,
-        200 + 3 * 0.0,
-        300 + 4 * 0.5,
-      ];
-      const expectedMetadataValue2 = [
-        100 + 2 * 1.0,
-        200 + 3 * 0.0,
-        300 + 4 * 1.0,
-      ];
-
-      expect(actualMetadataValue0).toEqualEpsilon(
-        expectedMetadataValue0,
-        propertyValueEpsilon,
-      );
-      expect(actualMetadataValue1).toEqualEpsilon(
-        expectedMetadataValue1,
-        propertyValueEpsilon,
-      );
-      expect(actualMetadataValue2).toEqualEpsilon(
-        expectedMetadataValue2,
-        propertyValueEpsilon,
-      );
-      scene.destroyForSpecs();
-    });
-    */
 
     it("picks UINT8 VEC2 from a property texture", async function () {
       if (webglStub) {
