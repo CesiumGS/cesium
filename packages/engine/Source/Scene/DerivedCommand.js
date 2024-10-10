@@ -449,8 +449,9 @@ function unnormalize(input, componentType) {
  * property, normalized to the range [0, 1].
  *
  * @param {MetadataClassProperty} classProperty The class property
- * @param {PropertyTextureProperty|PropertyAttributeProperty} metadataProperty The metadata property
- * @returns The string
+ * @param {object} metadataProperty The metadata property, either
+ * a `PropertyTextureProperty` or a `PropertyAttributeProperty`
+ * @returns {string} The string
  */
 function getSourceValueStringScalar(classProperty, metadataProperty) {
   let result = `float(value)`;
@@ -475,9 +476,10 @@ function getSourceValueStringScalar(classProperty, metadataProperty) {
  * component of the given property, normalized to the range [0, 1].
  *
  * @param {MetadataClassProperty} classProperty The class property
- * @param {PropertyTextureProperty|PropertyAttributeProperty} metadataProperty The metadata property
+ * @param {object} metadataProperty The metadata property, either
+ * a `PropertyTextureProperty` or a `PropertyAttributeProperty`
  * @param {string} componentName The name, in ["x", "y", "z", "w"]
- * @returns The string
+ * @returns {string} The string
  */
 function getSourceValueStringComponent(
   classProperty,
