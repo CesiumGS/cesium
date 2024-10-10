@@ -244,7 +244,7 @@ function createEmbeddedGltfWithPropertyTexture(
  */
 function createPropertyTextureGltf(schema, properties) {
   const gltf = createEmbeddedGltfWithPropertyTexture(schema, properties);
-  //*/
+  /*/
   // Copy-and-paste this into a file to have the actual glTF:
   console.log("SPEC GLTF:");
   console.log("-".repeat(80));
