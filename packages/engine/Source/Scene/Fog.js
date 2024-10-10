@@ -129,6 +129,7 @@ const scratchPositionNormal = new Cartesian3();
 
 /**
  * @param {FrameState} frameState
+ * @private
  */
 Fog.prototype.update = function (frameState) {
   const enabled = (frameState.fog.enabled = this.enabled);
