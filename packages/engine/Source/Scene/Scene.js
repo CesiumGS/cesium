@@ -4450,10 +4450,6 @@ Scene.prototype.pickMetadata = function (
     return undefined;
   }
 
-  // XXX DEBUG
-  console.log("Using metadata property ", metadataProperty);
-  // XXX DEBUG
-
   const pickedMetadataInfo = new PickedMetadataInfo(
     schemaId,
     className,

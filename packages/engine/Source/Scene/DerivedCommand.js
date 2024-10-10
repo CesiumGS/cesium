@@ -576,12 +576,6 @@ function getPickMetadataShaderProgram(
     }
   }
 
-  // XXX_DEBUG
-  for (let i = 0; i < componentCount; i++) {
-    console.log(`At ${i} source value string is "${sourceValueStrings[i]}"`);
-  }
-  // XXX_DEBUG
-
   const newDefines = shaderProgram.fragmentShaderSource.defines.slice();
   newDefines.push(MetadataPickingPipelineStage.METADATA_PICKING_ENABLED);
 
