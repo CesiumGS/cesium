@@ -8,6 +8,10 @@
 
 - Added `ScreenSpaceCameraController.maximumTiltAngle` to limit how much the camera can tilt. [#12169](https://github.com/CesiumGS/cesium/pull/12169)
 
+##### Fixes :wrench:
+
+- Properly handle `offset` and `scale` properties when picking metadata from property textures. [#12237](https://github.com/CesiumGS/cesium/pull/12237)
+
 ### 1.122 - 2024-10-01
 
 #### @cesium/engine
