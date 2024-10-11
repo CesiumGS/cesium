@@ -7,6 +7,9 @@ import SceneMode from "./SceneMode.js";
  * Blends the atmosphere to geometry far from the camera for horizon views. Allows for additional
  * performance improvements by rendering less geometry and dispatching less terrain requests.
  *
+ * View the {@link http://localhost:8080/Apps/Sandcastle/index.html?src=development%2FFog.html|Fog Sandcastle}
+ * to explore the effects of the properties below
+ *
  * @alias Fog
  * @constructor
  */
@@ -15,6 +18,9 @@ function Fog() {
    * <code>true</code> if fog is enabled, <code>false</code> otherwise.
    * @type {boolean}
    * @default true
+   * @example
+   * // Disable fog in the scene
+   * viewer.scene.fog.enabled = false;
    */
   this.enabled = true;
   /**
@@ -22,6 +28,10 @@ function Fog() {
    * This allows to benefits from optimized tile loading strategy based on fog density without the actual visual rendering.
    * @type {boolean}
    * @default true
+   * @example
+   * // Use fog culling but do't render it
+   * viewer.scene.fog.enabled = true;
+   * viewer.scene.fog.renderable = false;
    */
   this.renderable = true;
   /**
@@ -32,11 +42,20 @@ function Fog() {
    * Decreasing the value will push the fog further from the viewer, but decrease performance as more of the terrain is rendered.
    * @type {number}
    * @default 2.0e-4
+   * @example
+   * // Double the default fog density
+   * viewer.scene.fog.density = 0.0004;
    */
   this.density = 2.0e-4;
   /**
-   * A scalar that impacts the visual density of fog. This value does _not_ impact the culling of terrain.
-   * Use in combination with the `density` to make fog appear more or less dense.
+   * A scalar that impacts the visual density of fog. This value does not impact the culling of terrain.
+   * Use in combination with the {@link Fog.density} to make fog appear more or less dense. Values above ~3-4 will
+   * have very diminishing effects.
+   * @type {number}
+   * @default 0.4
+   * @example
+   * // Increase fog appearance effect
+   * viewer.scene.fog.visualDensityScalar = 0.6;
    */
   this.visualDensityScalar = 0.4;
   /**

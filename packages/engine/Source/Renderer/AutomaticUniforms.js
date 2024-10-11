@@ -1587,7 +1587,6 @@ const AutomaticUniforms = {
     datatype: WebGLConstants.FLOAT,
     getValue: function (uniformState) {
       return uniformState.fogVisualDensityScalar;
-      // return 4.0;
     },
   }),
 
