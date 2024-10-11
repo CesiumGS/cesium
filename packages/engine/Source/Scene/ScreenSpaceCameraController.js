@@ -271,6 +271,16 @@ function ScreenSpaceCameraController(scene) {
    * @default true
    */
   this.enableCollisionDetection = true;
+  /**
+   * The angle, relative to the ellipsoid normal, restricting the maximum amount that the user can tilt the camera. If <code>undefined</code>, the angle of the camera tilt is unrestricted.
+   * @type {number|undefined}
+   * @default undefined
+   *
+   * @example
+   * // Prevent the camera from tilting below the ellipsoid surface
+   * viewer.scene.screenSpaceCameraController.maximumTiltAngle = Math.PI / 2.0;
+   */
+  this.maximumTiltAngle = undefined;
 
   this._scene = scene;
   this._globe = undefined;
@@ -2063,7 +2073,16 @@ function rotate3D(
   );
 
   const deltaPhi = rotateRate * phiWindowRatio * Math.PI * 2.0;
-  const deltaTheta = rotateRate * thetaWindowRatio * Math.PI;
+  let deltaTheta = rotateRate * thetaWindowRatio * Math.PI;
+
+  if (defined(constrainedAxis) && defined(controller.maximumTiltAngle)) {
+    const maximumTiltAngle = controller.maximumTiltAngle;
+    const dotProduct = Cartesian3.dot(camera.direction, constrainedAxis);
+    const tilt = Math.PI - Math.acos(dotProduct) + deltaTheta;
+    if (tilt > maximumTiltAngle) {
+      deltaTheta -= tilt - maximumTiltAngle;
+    }
+  }
 
   if (!rotateOnlyVertical) {
     camera.rotateRight(deltaPhi);
