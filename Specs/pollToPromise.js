@@ -15,6 +15,8 @@ function pollToPromise(f, options) {
       try {
         result = f();
       } catch (e) {
+        console.error(`Error '${e}' thrown in polled function ${f}`);
+        console.trace();
         reject(e);
         return;
       }

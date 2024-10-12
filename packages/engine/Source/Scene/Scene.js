@@ -4170,6 +4170,11 @@ function tryAndCatchError(scene, functionToExecute) {
   try {
     functionToExecute(scene);
   } catch (error) {
+    console.error(
+      `Error '${error}' thrown in delegate function ${functionToExecute}`,
+    );
+    console.trace();
+
     scene._renderError.raiseEvent(scene, error);
 
     if (scene.rethrowRenderErrors) {
