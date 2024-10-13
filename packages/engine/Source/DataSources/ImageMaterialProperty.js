@@ -23,7 +23,7 @@ const defaultColor = Color.WHITE;
  * @param {Property|boolean} [options.transparent=false] Set to true when the image has transparency (for example, when a png has transparent sections)
  */
 function ImageMaterialProperty(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
 
   this._definitionChanged = new Event();
   this._image = undefined;

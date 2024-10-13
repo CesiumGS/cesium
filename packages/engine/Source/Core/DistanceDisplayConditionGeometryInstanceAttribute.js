@@ -1,5 +1,4 @@
 import ComponentDatatype from "./ComponentDatatype.js";
-import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 
@@ -33,8 +32,8 @@ import DeveloperError from "./DeveloperError.js";
  * @see GeometryInstanceAttribute
  */
 function DistanceDisplayConditionGeometryInstanceAttribute(near, far) {
-  near = defaultValue(near, 0.0);
-  far = defaultValue(far, Number.MAX_VALUE);
+  near = near ?? 0.0;
+  far = far ?? Number.MAX_VALUE;
 
   //>>includeStart('debug', pragmas.debug);
   if (far <= near) {

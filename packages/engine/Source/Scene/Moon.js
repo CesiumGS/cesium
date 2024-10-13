@@ -30,7 +30,7 @@ import Material from "./Material.js";
  * @see Scene#moon
  */
 function Moon(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
 
   let url = options.textureUrl;
   if (!defined(url)) {
@@ -43,7 +43,7 @@ function Moon(options) {
    * @type {boolean}
    * @default true
    */
-  this.show = defaultValue(options.show, true);
+  this.show = options.show ?? true;
 
   /**
    * The moon texture.
@@ -52,14 +52,14 @@ function Moon(options) {
    */
   this.textureUrl = url;
 
-  this._ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.MOON);
+  this._ellipsoid = options.ellipsoid ?? Ellipsoid.MOON;
 
   /**
    * Use the sun as the only light source.
    * @type {boolean}
    * @default true
    */
-  this.onlySunLighting = defaultValue(options.onlySunLighting, true);
+  this.onlySunLighting = options.onlySunLighting ?? true;
 
   this._ellipsoidPrimitive = new EllipsoidPrimitive({
     radii: this.ellipsoid.radii,

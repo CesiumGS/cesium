@@ -1,6 +1,5 @@
 import {
   Credit,
-  defaultValue,
   IonResource,
   RequestScheduler,
   Resource,
@@ -19,12 +18,12 @@ import {
 
 describe("Scene/IonImageryProvider", function () {
   async function createTestProviderAsync(endpointData) {
-    endpointData = defaultValue(endpointData, {
+    endpointData = endpointData ?? {
       type: "IMAGERY",
       url: "http://test.invalid/layer",
       accessToken: "not_really_a_refresh_token",
       attributions: [],
-    });
+    };
 
     const assetId = 12335;
     const options = {};

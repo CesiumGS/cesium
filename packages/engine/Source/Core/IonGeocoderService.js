@@ -19,13 +19,13 @@ import Resource from "./Resource.js";
  * @see Ion
  */
 function IonGeocoderService(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.scene", options.scene);
   //>>includeEnd('debug');
 
-  const accessToken = defaultValue(options.accessToken, Ion.defaultAccessToken);
+  const accessToken = options.accessToken ?? Ion.defaultAccessToken;
   const server = Resource.createIfNeeded(
     defaultValue(options.server, Ion.defaultServer),
   );

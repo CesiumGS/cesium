@@ -3,7 +3,6 @@ import Check from "../Core/Check.js";
 import Color from "../Core/Color.js";
 import combine from "../Core/combine.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
-import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import getJsonFromTypedArray from "../Core/getJsonFromTypedArray.js";
 import RuntimeError from "../Core/RuntimeError.js";
@@ -31,7 +30,7 @@ const sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
  * @returns {object} An object containing a parsed representation of the point cloud
  */
 PntsParser.parse = function (arrayBuffer, byteOffset) {
-  byteOffset = defaultValue(byteOffset, 0);
+  byteOffset = byteOffset ?? 0;
   //>>includeStart('debug', pragmas.debug);
   Check.defined("arrayBuffer", arrayBuffer);
   //>>includeEnd('debug');

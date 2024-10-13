@@ -1070,7 +1070,7 @@ function computeRectangle(positions, ellipsoid, width, cornerType, result) {
  * });
  */
 function CorridorGeometry(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
   const positions = options.positions;
   const width = options.width;
 
@@ -1079,8 +1079,8 @@ function CorridorGeometry(options) {
   Check.defined("options.width", width);
   //>>includeEnd('debug');
 
-  const height = defaultValue(options.height, 0.0);
-  const extrudedHeight = defaultValue(options.extrudedHeight, height);
+  const height = options.height ?? 0.0;
+  const extrudedHeight = options.extrudedHeight ?? height;
 
   this._positions = positions;
   this._ellipsoid = Ellipsoid.clone(
@@ -1092,12 +1092,9 @@ function CorridorGeometry(options) {
   this._width = width;
   this._height = Math.max(height, extrudedHeight);
   this._extrudedHeight = Math.min(height, extrudedHeight);
-  this._cornerType = defaultValue(options.cornerType, CornerType.ROUNDED);
-  this._granularity = defaultValue(
-    options.granularity,
-    CesiumMath.RADIANS_PER_DEGREE,
-  );
-  this._shadowVolume = defaultValue(options.shadowVolume, false);
+  this._cornerType = options.cornerType ?? CornerType.ROUNDED;
+  this._granularity = options.granularity ?? CesiumMath.RADIANS_PER_DEGREE;
+  this._shadowVolume = options.shadowVolume ?? false;
   this._workerName = "createCorridorGeometry";
   this._offsetAttribute = options.offsetAttribute;
   this._rectangle = undefined;
@@ -1129,7 +1126,7 @@ CorridorGeometry.pack = function (value, array, startingIndex) {
   Check.defined("array", array);
   //>>includeEnd('debug');
 
-  startingIndex = defaultValue(startingIndex, 0);
+  startingIndex = startingIndex ?? 0;
 
   const positions = value._positions;
   const length = positions.length;
@@ -1184,7 +1181,7 @@ CorridorGeometry.unpack = function (array, startingIndex, result) {
   Check.defined("array", array);
   //>>includeEnd('debug');
 
-  startingIndex = defaultValue(startingIndex, 0);
+  startingIndex = startingIndex ?? 0;
 
   const length = array[startingIndex++];
   const positions = new Array(length);
@@ -1253,7 +1250,7 @@ CorridorGeometry.unpack = function (array, startingIndex, result) {
  * @returns {Rectangle} The result rectangle.
  */
 CorridorGeometry.computeRectangle = function (options, result) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
   const positions = options.positions;
   const width = options.width;
 
@@ -1262,8 +1259,8 @@ CorridorGeometry.computeRectangle = function (options, result) {
   Check.defined("options.width", width);
   //>>includeEnd('debug');
 
-  const ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.default);
-  const cornerType = defaultValue(options.cornerType, CornerType.ROUNDED);
+  const ellipsoid = options.ellipsoid ?? Ellipsoid.default;
+  const cornerType = options.cornerType ?? CornerType.ROUNDED;
 
   return computeRectangle(positions, ellipsoid, width, cornerType, result);
 };

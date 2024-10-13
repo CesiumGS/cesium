@@ -4,7 +4,6 @@ import clone from "../Core/clone.js";
 import combine from "../Core/combine.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
 import defined from "../Core/defined.js";
-import defaultValue from "../Core/defaultValue.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import getBinaryAccessor from "./getBinaryAccessor.js";
 import RuntimeError from "../Core/RuntimeError.js";
@@ -74,10 +73,8 @@ function initialize(hierarchy, hierarchyJson, binaryBody) {
   let byteLength = 0;
 
   if (defined(classIds.byteOffset)) {
-    classIds.componentType = defaultValue(
-      classIds.componentType,
-      ComponentDatatype.UNSIGNED_SHORT,
-    );
+    classIds.componentType =
+      classIds.componentType ?? ComponentDatatype.UNSIGNED_SHORT;
     classIds.type = AttributeType.SCALAR;
     binaryAccessor = getBinaryAccessor(classIds);
     classIds = binaryAccessor.createArrayBufferView(
@@ -91,10 +88,8 @@ function initialize(hierarchy, hierarchyJson, binaryBody) {
   let parentIndexes;
   if (defined(parentCounts)) {
     if (defined(parentCounts.byteOffset)) {
-      parentCounts.componentType = defaultValue(
-        parentCounts.componentType,
-        ComponentDatatype.UNSIGNED_SHORT,
-      );
+      parentCounts.componentType =
+        parentCounts.componentType ?? ComponentDatatype.UNSIGNED_SHORT;
       parentCounts.type = AttributeType.SCALAR;
       binaryAccessor = getBinaryAccessor(parentCounts);
       parentCounts = binaryAccessor.createArrayBufferView(
@@ -115,10 +110,8 @@ function initialize(hierarchy, hierarchyJson, binaryBody) {
   }
 
   if (defined(parentIds) && defined(parentIds.byteOffset)) {
-    parentIds.componentType = defaultValue(
-      parentIds.componentType,
-      ComponentDatatype.UNSIGNED_SHORT,
-    );
+    parentIds.componentType =
+      parentIds.componentType ?? ComponentDatatype.UNSIGNED_SHORT;
     parentIds.type = AttributeType.SCALAR;
     binaryAccessor = getBinaryAccessor(parentIds);
     parentIds = binaryAccessor.createArrayBufferView(

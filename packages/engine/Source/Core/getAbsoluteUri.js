@@ -1,5 +1,4 @@
 import Uri from "urijs";
-import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 
@@ -35,7 +34,7 @@ getAbsoluteUri._implementation = function (relative, base, documentObject) {
     if (typeof documentObject === "undefined") {
       return relative;
     }
-    base = defaultValue(documentObject.baseURI, documentObject.location.href);
+    base = documentObject.baseURI ?? documentObject.location.href;
   }
 
   const relativeUri = new Uri(relative);

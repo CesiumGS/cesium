@@ -39,7 +39,7 @@ import MeshPrimitiveGpmLocal from "./MeshPrimitiveGpmLocal.js";
  * @private
  */
 function GltfMeshPrimitiveGpmLoader(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
   const gltf = options.gltf;
   const extension = options.extension;
   const gltfResource = options.gltfResource;
@@ -47,7 +47,7 @@ function GltfMeshPrimitiveGpmLoader(options) {
   const supportedImageFormats = options.supportedImageFormats;
   const frameState = options.frameState;
   const cacheKey = options.cacheKey;
-  const asynchronous = defaultValue(options.asynchronous, true);
+  const asynchronous = options.asynchronous ?? true;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.gltf", gltf);

@@ -139,7 +139,7 @@ TileMapServiceImageryProvider.fromUrl = async function (url, options) {
     url: "tilemapresource.xml",
   });
 
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
   const metadata = await TileMapServiceImageryProvider._requestMetadata(
     options,
     tmsResource,
@@ -326,7 +326,7 @@ TileMapServiceImageryProvider._metadataSuccess = function (
 
     // In older versions of gdal x and y values were flipped, which is why we check for an option to flip
     // the values here as well. Unfortunately there is no way to autodetect whether flipping is needed.
-    const flipXY = defaultValue(options.flipXY, false);
+    const flipXY = options.flipXY ?? false;
     if (flipXY) {
       swXY = new Cartesian2(
         parseFloat(bbox.getAttribute("miny")),
@@ -412,15 +412,15 @@ TileMapServiceImageryProvider._metadataFailure = function (
   tmsResource,
 ) {
   // Can't load XML, still allow options and defaults
-  const fileExtension = defaultValue(options.fileExtension, "png");
-  const tileWidth = defaultValue(options.tileWidth, 256);
-  const tileHeight = defaultValue(options.tileHeight, 256);
+  const fileExtension = options.fileExtension ?? "png";
+  const tileWidth = options.tileWidth ?? 256;
+  const tileHeight = options.tileHeight ?? 256;
   const maximumLevel = options.maximumLevel;
   const tilingScheme = defined(options.tilingScheme)
     ? options.tilingScheme
     : new WebMercatorTilingScheme({ ellipsoid: options.ellipsoid });
 
-  let rectangle = defaultValue(options.rectangle, tilingScheme.rectangle);
+  let rectangle = options.rectangle ?? tilingScheme.rectangle;
   // The rectangle must not be outside the bounds allowed by the tiling scheme.
   rectangle = confineRectangleToTilingScheme(rectangle, tilingScheme);
 

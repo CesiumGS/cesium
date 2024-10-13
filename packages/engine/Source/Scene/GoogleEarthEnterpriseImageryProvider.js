@@ -86,7 +86,7 @@ GoogleEarthEnterpriseDiscardPolicy.prototype.shouldDiscardImage = function (
  * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
  */
 function GoogleEarthEnterpriseImageryProvider(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
   this._defaultAlpha = undefined;
   this._defaultNightAlpha = undefined;
   this._defaultDayAlpha = undefined;

@@ -36,7 +36,7 @@ import defaultValue from "./defaultValue.js";
  *
  */
 function createWorldBathymetryAsync(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
 
   return CesiumTerrainProvider.fromIonAssetId(2426648, {
     requestVertexNormals: defaultValue(options.requestVertexNormals, false),

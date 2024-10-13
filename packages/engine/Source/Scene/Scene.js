@@ -126,7 +126,7 @@ const requestRenderAfterFrame = function (scene) {
  * });
  */
 function Scene(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
   const canvas = options.canvas;
   let creditContainer = options.creditContainer;
   let creditViewport = options.creditViewport;
@@ -161,7 +161,7 @@ function Scene(options) {
     new CreditDisplay(creditContainer, "•", creditViewport),
     this._jobScheduler,
   );
-  this._frameState.scene3DOnly = defaultValue(options.scene3DOnly, false);
+  this._frameState.scene3DOnly = options.scene3DOnly ?? false;
   this._removeCreditContainer = !hasCreditContainer;
   this._creditContainer = creditContainer;
 
@@ -169,7 +169,7 @@ function Scene(options) {
   this._context = context;
   this._computeEngine = new ComputeEngine(context);
 
-  this._ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.default);
+  this._ellipsoid = options.ellipsoid ?? Ellipsoid.default;
   this._globe = undefined;
   this._globeTranslucencyState = new GlobeTranslucencyState();
   this._primitives = new PrimitiveCollection();
@@ -192,7 +192,7 @@ function Scene(options) {
   this._computeCommandList = [];
   this._overlayCommandList = [];
 
-  this._useOIT = defaultValue(options.orderIndependentTranslucency, true);
+  this._useOIT = options.orderIndependentTranslucency ?? true;
   /**
    * The function that will be used for executing translucent commands when
    * useOIT is true. This is created once in
@@ -236,7 +236,7 @@ function Scene(options) {
   this._minimumDisableDepthTestDistance = 0.0;
   this._debugInspector = new DebugInspector();
 
-  this._msaaSamples = defaultValue(options.msaaSamples, 4);
+  this._msaaSamples = options.msaaSamples ?? 4;
 
   /**
    * Exceptions occurring in <code>render</code> are always caught in order to raise the
@@ -618,7 +618,7 @@ function Scene(options) {
 
   this._screenSpaceCameraController = new ScreenSpaceCameraController(this);
   this._cameraUnderground = false;
-  this._mapMode2D = defaultValue(options.mapMode2D, MapMode2D.INFINITE_SCROLL);
+  this._mapMode2D = options.mapMode2D ?? MapMode2D.INFINITE_SCROLL;
 
   // Keeps track of the state of a frame. FrameState is the state across
   // the primitives of the scene. This state is for internally keeping track
@@ -666,7 +666,7 @@ function Scene(options) {
    * @type {boolean}
    * @default false
    */
-  this.requestRenderMode = defaultValue(options.requestRenderMode, false);
+  this.requestRenderMode = options.requestRenderMode ?? false;
   this._renderRequested = true;
 
   /**
@@ -683,10 +683,7 @@ function Scene(options) {
    * @type {number}
    * @default 0.0
    */
-  this.maximumRenderTimeChange = defaultValue(
-    options.maximumRenderTimeChange,
-    0.0,
-  );
+  this.maximumRenderTimeChange = options.maximumRenderTimeChange ?? 0.0;
   this._lastRenderTime = undefined;
   this._frameRateMonitor = undefined;
 
@@ -3105,7 +3102,7 @@ function executeWebVRCommands(scene, passState) {
 
   const near = camera.frustum.near;
   const fo = near * defaultValue(scene.focalLength, 5.0);
-  const eyeSeparation = defaultValue(scene.eyeSeparation, fo / 30.0);
+  const eyeSeparation = scene.eyeSeparation ?? fo / 30.0;
   const eyeTranslation = Cartesian3.multiplyByScalar(
     savedCamera.right,
     eyeSeparation * 0.5,
@@ -4101,7 +4098,7 @@ function render(scene) {
   frameState.passes.postProcess = scene.postProcessStages.hasSelected;
   frameState.tilesetPassState = renderTilesetPassState;
 
-  let backgroundColor = defaultValue(scene.backgroundColor, Color.BLACK);
+  let backgroundColor = scene.backgroundColor ?? Color.BLACK;
   if (scene._hdr) {
     backgroundColor = Color.clone(backgroundColor, scratchBackgroundColor);
     backgroundColor.red = Math.pow(backgroundColor.red, scene.gamma);
@@ -4880,7 +4877,7 @@ Scene.prototype.completeMorph = function () {
  * @param {number} [duration=2.0] The amount of time, in seconds, for transition animations to complete.
  */
 Scene.prototype.morphTo2D = function (duration) {
-  duration = defaultValue(duration, 2.0);
+  duration = duration ?? 2.0;
   this._transitioner.morphTo2D(duration, this._ellipsoid);
 };
 
@@ -4889,7 +4886,7 @@ Scene.prototype.morphTo2D = function (duration) {
  * @param {number} [duration=2.0] The amount of time, in seconds, for transition animations to complete.
  */
 Scene.prototype.morphToColumbusView = function (duration) {
-  duration = defaultValue(duration, 2.0);
+  duration = duration ?? 2.0;
   this._transitioner.morphToColumbusView(duration, this._ellipsoid);
 };
 
@@ -4898,7 +4895,7 @@ Scene.prototype.morphToColumbusView = function (duration) {
  * @param {number} [duration=2.0] The amount of time, in seconds, for transition animations to complete.
  */
 Scene.prototype.morphTo3D = function (duration) {
-  duration = defaultValue(duration, 2.0);
+  duration = duration ?? 2.0;
   this._transitioner.morphTo3D(duration, this._ellipsoid);
 };
 

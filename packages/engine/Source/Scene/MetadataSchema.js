@@ -26,10 +26,10 @@ import MetadataEnum from "./MetadataEnum.js";
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 function MetadataSchema(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
 
-  const classes = defaultValue(options.classes, {});
-  const enums = defaultValue(options.enums, {});
+  const classes = options.classes ?? {};
+  const enums = options.enums ?? {};
 
   this._classes = classes;
   this._enums = enums;

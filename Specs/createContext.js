@@ -8,7 +8,7 @@ function createContext(options, canvasWidth, canvasHeight) {
   // clone options so we can change properties
   options = clone(defaultValue(options, {}));
   options.webgl = clone(defaultValue(options.webgl, {}));
-  options.webgl.antialias = defaultValue(options.webgl.antialias, false);
+  options.webgl.antialias = options.webgl.antialias ?? false;
   if (!!window.webglStub) {
     options.getWebGLStub = getWebGLStub;
   }

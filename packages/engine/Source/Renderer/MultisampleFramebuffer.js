@@ -29,7 +29,7 @@ import Framebuffer from "./Framebuffer.js";
  * @constructor
  */
 function MultisampleFramebuffer(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
 
   const {
     context,

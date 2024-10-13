@@ -48,7 +48,7 @@ function Cesium3DTileBatchTable(
   if (defined(batchTableJson)) {
     extensions = batchTableJson.extensions;
   }
-  this._extensions = defaultValue(extensions, {});
+  this._extensions = extensions ?? {};
 
   const properties = initializeProperties(batchTableJson);
   this._properties = properties;

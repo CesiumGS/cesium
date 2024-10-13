@@ -35,7 +35,7 @@ import Ellipsoid from "./Ellipsoid.js";
  * const geometry = Cesium.CircleOutlineGeometry.createGeometry(circle);
  */
 function CircleOutlineGeometry(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
   const radius = options.radius;
 
   //>>includeStart('debug', pragmas.debug);

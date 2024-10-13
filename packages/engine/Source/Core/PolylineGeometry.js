@@ -98,11 +98,11 @@ function interpolateColors(p0, p1, color0, color1, numPoints) {
  * const geometry = Cesium.PolylineGeometry.createGeometry(polyline);
  */
 function PolylineGeometry(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
   const positions = options.positions;
   const colors = options.colors;
-  const width = defaultValue(options.width, 1.0);
-  const colorsPerVertex = defaultValue(options.colorsPerVertex, false);
+  const width = options.width ?? 1.0;
+  const colorsPerVertex = options.colorsPerVertex ?? false;
 
   //>>includeStart('debug', pragmas.debug);
   if (!defined(positions) || positions.length < 2) {
@@ -128,11 +128,8 @@ function PolylineGeometry(options) {
     defaultValue(options.vertexFormat, VertexFormat.DEFAULT),
   );
 
-  this._arcType = defaultValue(options.arcType, ArcType.GEODESIC);
-  this._granularity = defaultValue(
-    options.granularity,
-    CesiumMath.RADIANS_PER_DEGREE,
-  );
+  this._arcType = options.arcType ?? ArcType.GEODESIC;
+  this._granularity = options.granularity ?? CesiumMath.RADIANS_PER_DEGREE;
   this._ellipsoid = Ellipsoid.clone(
     defaultValue(options.ellipsoid, Ellipsoid.default),
   );
@@ -168,7 +165,7 @@ PolylineGeometry.pack = function (value, array, startingIndex) {
   }
   //>>includeEnd('debug');
 
-  startingIndex = defaultValue(startingIndex, 0);
+  startingIndex = startingIndex ?? 0;
 
   let i;
 
@@ -230,7 +227,7 @@ PolylineGeometry.unpack = function (array, startingIndex, result) {
   }
   //>>includeEnd('debug');
 
-  startingIndex = defaultValue(startingIndex, 0);
+  startingIndex = startingIndex ?? 0;
 
   let i;
 

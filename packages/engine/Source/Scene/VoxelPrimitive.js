@@ -45,7 +45,7 @@ import VerticalExaggeration from "../Core/VerticalExaggeration.js";
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
 function VoxelPrimitive(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
 
   /**
    * @type {boolean}
@@ -57,10 +57,7 @@ function VoxelPrimitive(options) {
    * @type {VoxelProvider}
    * @private
    */
-  this._provider = defaultValue(
-    options.provider,
-    VoxelPrimitive.DefaultProvider,
-  );
+  this._provider = options.provider ?? VoxelPrimitive.DefaultProvider;
 
   /**
    * This member is not created until the provider and shape are ready.
@@ -264,10 +261,8 @@ function VoxelPrimitive(options) {
    * @type {CustomShader}
    * @private
    */
-  this._customShader = defaultValue(
-    options.customShader,
-    VoxelPrimitive.DefaultCustomShader,
-  );
+  this._customShader =
+    options.customShader ?? VoxelPrimitive.DefaultCustomShader;
 
   /**
    * @type {Event}
@@ -1307,14 +1302,8 @@ function initFromProvider(primitive, provider, context) {
  * @private
  */
 function checkTransformAndBounds(primitive, provider) {
-  const shapeTransform = defaultValue(
-    provider.shapeTransform,
-    Matrix4.IDENTITY,
-  );
-  const globalTransform = defaultValue(
-    provider.globalTransform,
-    Matrix4.IDENTITY,
-  );
+  const shapeTransform = provider.shapeTransform ?? Matrix4.IDENTITY;
+  const globalTransform = provider.globalTransform ?? Matrix4.IDENTITY;
 
   // Compound model matrix = global transform * model matrix * shape transform
   Matrix4.multiplyTransformation(
@@ -1457,7 +1446,7 @@ function setupTraversal(primitive, provider, context) {
       )
     : undefined;
 
-  const keyframeCount = defaultValue(provider.keyframeCount, 1);
+  const keyframeCount = provider.keyframeCount ?? 1;
 
   return new VoxelTraversal(
     primitive,

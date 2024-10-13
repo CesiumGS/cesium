@@ -187,7 +187,7 @@ const pickFeaturesTags = combine(tags, {
  * @see WebMapTileServiceImageryProvider
  */
 function UrlTemplateImageryProvider(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
 
   this._errorEvent = new Event();
 
@@ -213,19 +213,16 @@ function UrlTemplateImageryProvider(options) {
   }
   this._subdomains = subdomains;
 
-  this._tileWidth = defaultValue(options.tileWidth, 256);
-  this._tileHeight = defaultValue(options.tileHeight, 256);
-  this._minimumLevel = defaultValue(options.minimumLevel, 0);
+  this._tileWidth = options.tileWidth ?? 256;
+  this._tileHeight = options.tileHeight ?? 256;
+  this._minimumLevel = options.minimumLevel ?? 0;
   this._maximumLevel = options.maximumLevel;
   this._tilingScheme = defaultValue(
     options.tilingScheme,
     new WebMercatorTilingScheme({ ellipsoid: options.ellipsoid }),
   );
 
-  this._rectangle = defaultValue(
-    options.rectangle,
-    this._tilingScheme.rectangle,
-  );
+  this._rectangle = options.rectangle ?? this._tilingScheme.rectangle;
   this._rectangle = Rectangle.intersection(
     this._rectangle,
     this._tilingScheme.rectangle,
@@ -238,7 +235,7 @@ function UrlTemplateImageryProvider(options) {
     credit = new Credit(credit);
   }
   this._credit = credit;
-  this._hasAlphaChannel = defaultValue(options.hasAlphaChannel, true);
+  this._hasAlphaChannel = options.hasAlphaChannel ?? true;
 
   const customTags = options.customTags;
   const allTags = combine(tags, customTags);
@@ -266,7 +263,7 @@ function UrlTemplateImageryProvider(options) {
    * @type {boolean}
    * @default true
    */
-  this.enablePickFeatures = defaultValue(options.enablePickFeatures, true);
+  this.enablePickFeatures = options.enablePickFeatures ?? true;
 }
 
 Object.defineProperties(UrlTemplateImageryProvider.prototype, {

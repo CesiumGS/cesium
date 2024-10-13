@@ -383,63 +383,31 @@ ModelGraphics.prototype.merge = function (source) {
   }
   //>>includeEnd('debug');
 
-  this.show = defaultValue(this.show, source.show);
-  this.uri = defaultValue(this.uri, source.uri);
-  this.scale = defaultValue(this.scale, source.scale);
-  this.enableVerticalExaggeration = defaultValue(
-    this.enableVerticalExaggeration,
-    source.enableVerticalExaggeration,
-  );
-  this.minimumPixelSize = defaultValue(
-    this.minimumPixelSize,
-    source.minimumPixelSize,
-  );
-  this.maximumScale = defaultValue(this.maximumScale, source.maximumScale);
-  this.incrementallyLoadTextures = defaultValue(
-    this.incrementallyLoadTextures,
-    source.incrementallyLoadTextures,
-  );
-  this.runAnimations = defaultValue(this.runAnimations, source.runAnimations);
-  this.clampAnimations = defaultValue(
-    this.clampAnimations,
-    source.clampAnimations,
-  );
-  this.shadows = defaultValue(this.shadows, source.shadows);
-  this.heightReference = defaultValue(
-    this.heightReference,
-    source.heightReference,
-  );
-  this.silhouetteColor = defaultValue(
-    this.silhouetteColor,
-    source.silhouetteColor,
-  );
-  this.silhouetteSize = defaultValue(
-    this.silhouetteSize,
-    source.silhouetteSize,
-  );
-  this.color = defaultValue(this.color, source.color);
-  this.colorBlendMode = defaultValue(
-    this.colorBlendMode,
-    source.colorBlendMode,
-  );
-  this.colorBlendAmount = defaultValue(
-    this.colorBlendAmount,
-    source.colorBlendAmount,
-  );
-  this.imageBasedLightingFactor = defaultValue(
-    this.imageBasedLightingFactor,
-    source.imageBasedLightingFactor,
-  );
-  this.lightColor = defaultValue(this.lightColor, source.lightColor);
-  this.distanceDisplayCondition = defaultValue(
-    this.distanceDisplayCondition,
-    source.distanceDisplayCondition,
-  );
-  this.clippingPlanes = defaultValue(
-    this.clippingPlanes,
-    source.clippingPlanes,
-  );
-  this.customShader = defaultValue(this.customShader, source.customShader);
+  this.show = this.show ?? source.show;
+  this.uri = this.uri ?? source.uri;
+  this.scale = this.scale ?? source.scale;
+  this.enableVerticalExaggeration =
+    this.enableVerticalExaggeration ?? source.enableVerticalExaggeration;
+  this.minimumPixelSize = this.minimumPixelSize ?? source.minimumPixelSize;
+  this.maximumScale = this.maximumScale ?? source.maximumScale;
+  this.incrementallyLoadTextures =
+    this.incrementallyLoadTextures ?? source.incrementallyLoadTextures;
+  this.runAnimations = this.runAnimations ?? source.runAnimations;
+  this.clampAnimations = this.clampAnimations ?? source.clampAnimations;
+  this.shadows = this.shadows ?? source.shadows;
+  this.heightReference = this.heightReference ?? source.heightReference;
+  this.silhouetteColor = this.silhouetteColor ?? source.silhouetteColor;
+  this.silhouetteSize = this.silhouetteSize ?? source.silhouetteSize;
+  this.color = this.color ?? source.color;
+  this.colorBlendMode = this.colorBlendMode ?? source.colorBlendMode;
+  this.colorBlendAmount = this.colorBlendAmount ?? source.colorBlendAmount;
+  this.imageBasedLightingFactor =
+    this.imageBasedLightingFactor ?? source.imageBasedLightingFactor;
+  this.lightColor = this.lightColor ?? source.lightColor;
+  this.distanceDisplayCondition =
+    this.distanceDisplayCondition ?? source.distanceDisplayCondition;
+  this.clippingPlanes = this.clippingPlanes ?? source.clippingPlanes;
+  this.customShader = this.customShader ?? source.customShader;
 
   const sourceNodeTransformations = source.nodeTransformations;
   if (defined(sourceNodeTransformations)) {

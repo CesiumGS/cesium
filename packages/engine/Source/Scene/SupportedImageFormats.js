@@ -10,9 +10,9 @@ import defaultValue from "../Core/defaultValue.js";
  * @private
  */
 function SupportedImageFormats(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  this.webp = defaultValue(options.webp, false);
-  this.basis = defaultValue(options.basis, false);
+  options = options ?? defaultValue.EMPTY_OBJECT;
+  this.webp = options.webp ?? false;
+  this.basis = options.basis ?? false;
 }
 
 export default SupportedImageFormats;

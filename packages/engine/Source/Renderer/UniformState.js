@@ -1428,7 +1428,7 @@ UniformState.prototype.update = function (frameState) {
 
   setSunAndMoonDirections(this, frameState);
 
-  const light = defaultValue(frameState.light, defaultLight);
+  const light = frameState.light ?? defaultLight;
   if (light instanceof SunLight) {
     this._lightDirectionWC = Cartesian3.clone(
       this._sunDirectionWC,
@@ -1479,17 +1479,13 @@ UniformState.prototype.update = function (frameState) {
     : undefined;
   this._brdfLut = brdfLut;
 
-  this._environmentMap = defaultValue(
-    frameState.environmentMap,
-    frameState.context.defaultCubeMap,
-  );
+  this._environmentMap =
+    frameState.environmentMap ?? frameState.context.defaultCubeMap;
 
   // IE 11 doesn't optimize out uniforms that are #ifdef'd out. So undefined values for the spherical harmonic
   // coefficients cause a crash.
-  this._sphericalHarmonicCoefficients = defaultValue(
-    frameState.sphericalHarmonicCoefficients,
-    EMPTY_ARRAY,
-  );
+  this._sphericalHarmonicCoefficients =
+    frameState.sphericalHarmonicCoefficients ?? EMPTY_ARRAY;
   this._specularEnvironmentMaps = frameState.specularEnvironmentMaps;
   this._specularEnvironmentMapsMaximumLOD =
     frameState.specularEnvironmentMapsMaximumLOD;

@@ -25,14 +25,14 @@ const defaultSize = new Cartesian2(1.0, 1.0);
  * @param {Cartesian2} [options.imageSize=new Cartesian2(1.0, 1.0)] The dimensions, width by height, to scale the particle image in pixels.
  */
 function Particle(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
 
   /**
    * The mass of the particle in kilograms.
    * @type {number}
    * @default 1.0
    */
-  this.mass = defaultValue(options.mass, 1.0);
+  this.mass = options.mass ?? 1.0;
   /**
    * The positon of the particle in world coordinates.
    * @type {Cartesian3}
@@ -54,7 +54,7 @@ function Particle(options) {
    * @type {number}
    * @default Number.MAX_VALUE
    */
-  this.life = defaultValue(options.life, Number.MAX_VALUE);
+  this.life = options.life ?? Number.MAX_VALUE;
   /**
    * The image to use for the particle.
    * @type {object}
@@ -78,13 +78,13 @@ function Particle(options) {
    * @type {number}
    * @default 1.0
    */
-  this.startScale = defaultValue(options.startScale, 1.0);
+  this.startScale = options.startScale ?? 1.0;
   /**
    * The scale of the particle when it dies.
    * @type {number}
    * @default 1.0
    */
-  this.endScale = defaultValue(options.endScale, 1.0);
+  this.endScale = options.endScale ?? 1.0;
   /**
    * The dimensions, width by height, to scale the particle image in pixels.
    * @type {Cartesian2}

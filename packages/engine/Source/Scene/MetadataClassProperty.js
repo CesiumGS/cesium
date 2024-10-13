@@ -45,7 +45,7 @@ import MetadataComponentType from "./MetadataComponentType.js";
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 function MetadataClassProperty(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
   const id = options.id;
   const type = options.type;
 
@@ -78,11 +78,8 @@ function MetadataClassProperty(options) {
   this._valueType = defined(enumType) ? enumType.valueType : componentType;
 
   // Details about arrays
-  this._isArray = defaultValue(options.isArray, false);
-  this._isVariableLengthArray = defaultValue(
-    options.isVariableLengthArray,
-    false,
-  );
+  this._isArray = options.isArray ?? false;
+  this._isVariableLengthArray = options.isVariableLengthArray ?? false;
   this._arrayLength = options.arrayLength;
 
   // min and max allowed values
@@ -115,7 +112,7 @@ function MetadataClassProperty(options) {
   // For vector and array types, this is stored as an array of values.
   this._default = clone(options.default, true);
 
-  this._required = defaultValue(options.required, true);
+  this._required = options.required ?? true;
 
   // extras and extensions
   this._extras = clone(options.extras, true);
@@ -136,7 +133,7 @@ function MetadataClassProperty(options) {
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 MetadataClassProperty.fromJson = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
   const id = options.id;
   const property = options.property;
 
@@ -164,7 +161,7 @@ MetadataClassProperty.fromJson = function (options) {
   } else if (isLegacyExtension) {
     required = defined(property.optional) ? !property.optional : true;
   } else {
-    required = defaultValue(property.required, false);
+    required = property.required ?? false;
   }
 
   return new MetadataClassProperty({
@@ -782,7 +779,7 @@ MetadataClassProperty.prototype.expandConstant = function (
   constant,
   enableNestedArrays,
 ) {
-  enableNestedArrays = defaultValue(enableNestedArrays, false);
+  enableNestedArrays = enableNestedArrays ?? false;
   const isArray = this._isArray;
   const arrayLength = this._arrayLength;
   const componentCount = MetadataType.getComponentCount(this._type);
@@ -873,7 +870,7 @@ MetadataClassProperty.prototype.unpackVectorAndMatrixTypes = function (
   value,
   enableNestedArrays,
 ) {
-  enableNestedArrays = defaultValue(enableNestedArrays, false);
+  enableNestedArrays = enableNestedArrays ?? false;
   const MathType = MetadataType.getMathType(this._type);
   const isArray = this._isArray;
   const componentCount = MetadataType.getComponentCount(this._type);
@@ -912,7 +909,7 @@ MetadataClassProperty.prototype.packVectorAndMatrixTypes = function (
   value,
   enableNestedArrays,
 ) {
-  enableNestedArrays = defaultValue(enableNestedArrays, false);
+  enableNestedArrays = enableNestedArrays ?? false;
   const MathType = MetadataType.getMathType(this._type);
   const isArray = this._isArray;
   const componentCount = MetadataType.getComponentCount(this._type);

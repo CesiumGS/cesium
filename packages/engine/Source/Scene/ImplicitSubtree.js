@@ -207,7 +207,7 @@ ImplicitSubtree.prototype.contentIsAvailableAtIndex = function (
   index,
   contentIndex,
 ) {
-  contentIndex = defaultValue(contentIndex, 0);
+  contentIndex = contentIndex ?? 0;
   //>>includeStart('debug', pragmas.debug);
   if (
     contentIndex < 0 ||
@@ -644,19 +644,15 @@ function markActiveMetadataBufferViews(propertyTableJson, bufferViewHeaders) {
       const metadataHeader = properties[key];
 
       // An older spec used bufferView
-      const valuesBufferView = defaultValue(
-        metadataHeader.values,
-        metadataHeader.bufferView,
-      );
+      const valuesBufferView =
+        metadataHeader.values ?? metadataHeader.bufferView;
       header = bufferViewHeaders[valuesBufferView];
       header.isActive = true;
       header.bufferHeader.isActive = true;
 
       // An older spec used stringOffsetBufferView
-      const stringOffsetBufferView = defaultValue(
-        metadataHeader.stringOffsets,
-        metadataHeader.stringOffsetBufferView,
-      );
+      const stringOffsetBufferView =
+        metadataHeader.stringOffsets ?? metadataHeader.stringOffsetBufferView;
       if (defined(stringOffsetBufferView)) {
         header = bufferViewHeaders[stringOffsetBufferView];
         header.isActive = true;
@@ -664,10 +660,8 @@ function markActiveMetadataBufferViews(propertyTableJson, bufferViewHeaders) {
       }
 
       // an older spec used arrayOffsetBufferView
-      const arrayOffsetBufferView = defaultValue(
-        metadataHeader.arrayOffsets,
-        metadataHeader.arrayOffsetBufferView,
-      );
+      const arrayOffsetBufferView =
+        metadataHeader.arrayOffsets ?? metadataHeader.arrayOffsetBufferView;
       if (defined(arrayOffsetBufferView)) {
         header = bufferViewHeaders[arrayOffsetBufferView];
         header.isActive = true;

@@ -91,7 +91,7 @@ const xhrBlobSupported = (function () {
  * });
  */
 function Resource(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
   if (typeof options === "string") {
     options = {
       url: options,
@@ -139,10 +139,10 @@ function Resource(options) {
    *
    * @type {number}
    */
-  this.retryAttempts = defaultValue(options.retryAttempts, 0);
+  this.retryAttempts = options.retryAttempts ?? 0;
   this._retryCount = 0;
 
-  const parseUrl = defaultValue(options.parseUrl, true);
+  const parseUrl = options.parseUrl ?? true;
   if (parseUrl) {
     this.parseUrl(options.url, true, true);
   } else {
@@ -664,7 +664,7 @@ Resource.prototype.getDerivedResource = function (options) {
   resource._retryCount = 0;
 
   if (defined(options.url)) {
-    const preserveQuery = defaultValue(options.preserveQueryParameters, false);
+    const preserveQuery = options.preserveQueryParameters ?? false;
     resource.parseUrl(options.url, true, preserveQuery, this._url);
   }
 
@@ -897,14 +897,11 @@ Resource.fetchBlob = function (options) {
  * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
  */
 Resource.prototype.fetchImage = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  const preferImageBitmap = defaultValue(options.preferImageBitmap, false);
-  const preferBlob = defaultValue(options.preferBlob, false);
-  const flipY = defaultValue(options.flipY, false);
-  const skipColorSpaceConversion = defaultValue(
-    options.skipColorSpaceConversion,
-    false,
-  );
+  options = options ?? defaultValue.EMPTY_OBJECT;
+  const preferImageBitmap = options.preferImageBitmap ?? false;
+  const preferBlob = options.preferBlob ?? false;
+  const flipY = options.flipY ?? false;
+  const skipColorSpaceConversion = options.skipColorSpaceConversion ?? false;
 
   checkAndResetRequest(this.request);
   // We try to load the image normally if
@@ -1270,7 +1267,7 @@ Resource.fetchXML = function (options) {
  * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
  */
 Resource.prototype.fetchJsonp = function (callbackParameterName) {
-  callbackParameterName = defaultValue(callbackParameterName, "callback");
+  callbackParameterName = callbackParameterName ?? "callback";
 
   checkAndResetRequest(this.request);
 
@@ -1461,7 +1458,7 @@ function decodeDataUriArrayBuffer(isBase64, data) {
 }
 
 function decodeDataUri(dataUriRegexResult, responseType) {
-  responseType = defaultValue(responseType, "");
+  responseType = responseType ?? "";
   const mimeType = dataUriRegexResult[1];
   const isBase64 = !!dataUriRegexResult[2];
   const data = dataUriRegexResult[3];

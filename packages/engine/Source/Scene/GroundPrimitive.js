@@ -112,7 +112,7 @@ const GroundPrimitiveUniformMap = {
  * @see Appearance
  */
 function GroundPrimitive(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
 
   let appearance = options.appearance;
   const geometryInstances = options.geometryInstances;
@@ -165,7 +165,7 @@ function GroundPrimitive(options) {
    *
    * @default true
    */
-  this.show = defaultValue(options.show, true);
+  this.show = options.show ?? true;
   /**
    * Determines whether terrain, 3D Tiles or both will be classified.
    *
@@ -173,10 +173,8 @@ function GroundPrimitive(options) {
    *
    * @default ClassificationType.BOTH
    */
-  this.classificationType = defaultValue(
-    options.classificationType,
-    ClassificationType.BOTH,
-  );
+  this.classificationType =
+    options.classificationType ?? ClassificationType.BOTH;
   /**
    * This property is for debugging only; it is not for production use nor is it optimized.
    * <p>
@@ -187,10 +185,7 @@ function GroundPrimitive(options) {
    *
    * @default false
    */
-  this.debugShowBoundingVolume = defaultValue(
-    options.debugShowBoundingVolume,
-    false,
-  );
+  this.debugShowBoundingVolume = options.debugShowBoundingVolume ?? false;
 
   /**
    * This property is for debugging only; it is not for production use nor is it optimized.
@@ -202,10 +197,7 @@ function GroundPrimitive(options) {
    *
    * @default false
    */
-  this.debugShowShadowVolume = defaultValue(
-    options.debugShowShadowVolume,
-    false,
-  );
+  this.debugShowShadowVolume = options.debugShowShadowVolume ?? false;
 
   this._boundingVolumes = [];
   this._boundingVolumes2D = [];

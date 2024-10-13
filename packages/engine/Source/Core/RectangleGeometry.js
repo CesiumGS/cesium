@@ -1014,7 +1014,7 @@ function computeRectangle(rectangle, granularity, rotation, ellipsoid, result) {
  * const geometry = Cesium.RectangleGeometry.createGeometry(rectangle);
  */
 function RectangleGeometry(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
 
   const rectangle = options.rectangle;
 
@@ -1028,25 +1028,22 @@ function RectangleGeometry(options) {
   }
   //>>includeEnd('debug');
 
-  const height = defaultValue(options.height, 0.0);
-  const extrudedHeight = defaultValue(options.extrudedHeight, height);
+  const height = options.height ?? 0.0;
+  const extrudedHeight = options.extrudedHeight ?? height;
 
   this._rectangle = Rectangle.clone(rectangle);
-  this._granularity = defaultValue(
-    options.granularity,
-    CesiumMath.RADIANS_PER_DEGREE,
-  );
+  this._granularity = options.granularity ?? CesiumMath.RADIANS_PER_DEGREE;
   this._ellipsoid = Ellipsoid.clone(
     defaultValue(options.ellipsoid, Ellipsoid.default),
   );
   this._surfaceHeight = Math.max(height, extrudedHeight);
-  this._rotation = defaultValue(options.rotation, 0.0);
-  this._stRotation = defaultValue(options.stRotation, 0.0);
+  this._rotation = options.rotation ?? 0.0;
+  this._stRotation = options.stRotation ?? 0.0;
   this._vertexFormat = VertexFormat.clone(
     defaultValue(options.vertexFormat, VertexFormat.DEFAULT),
   );
   this._extrudedHeight = Math.min(height, extrudedHeight);
-  this._shadowVolume = defaultValue(options.shadowVolume, false);
+  this._shadowVolume = options.shadowVolume ?? false;
   this._workerName = "createRectangleGeometry";
   this._offsetAttribute = options.offsetAttribute;
   this._rotatedRectangle = undefined;
@@ -1079,7 +1076,7 @@ RectangleGeometry.pack = function (value, array, startingIndex) {
   Check.defined("array", array);
   //>>includeEnd('debug');
 
-  startingIndex = defaultValue(startingIndex, 0);
+  startingIndex = startingIndex ?? 0;
 
   Rectangle.pack(value._rectangle, array, startingIndex);
   startingIndex += Rectangle.packedLength;
@@ -1129,7 +1126,7 @@ RectangleGeometry.unpack = function (array, startingIndex, result) {
   Check.defined("array", array);
   //>>includeEnd('debug');
 
-  startingIndex = defaultValue(startingIndex, 0);
+  startingIndex = startingIndex ?? 0;
 
   const rectangle = Rectangle.unpack(array, startingIndex, scratchRectangle);
   startingIndex += Rectangle.packedLength;
@@ -1193,7 +1190,7 @@ RectangleGeometry.unpack = function (array, startingIndex, result) {
  * @returns {Rectangle} The result rectangle
  */
 RectangleGeometry.computeRectangle = function (options, result) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
 
   const rectangle = options.rectangle;
 
@@ -1207,12 +1204,9 @@ RectangleGeometry.computeRectangle = function (options, result) {
   }
   //>>includeEnd('debug');
 
-  const granularity = defaultValue(
-    options.granularity,
-    CesiumMath.RADIANS_PER_DEGREE,
-  );
-  const ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.default);
-  const rotation = defaultValue(options.rotation, 0.0);
+  const granularity = options.granularity ?? CesiumMath.RADIANS_PER_DEGREE;
+  const ellipsoid = options.ellipsoid ?? Ellipsoid.default;
+  const rotation = options.rotation ?? 0.0;
 
   return computeRectangle(rectangle, granularity, rotation, ellipsoid, result);
 };

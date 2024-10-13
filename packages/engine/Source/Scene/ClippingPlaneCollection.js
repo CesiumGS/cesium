@@ -66,7 +66,7 @@ import ClippingPlane from "./ClippingPlane.js";
  * viewer.zoomTo(entity);
  */
 function ClippingPlaneCollection(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
 
   this._planes = [];
 
@@ -75,7 +75,7 @@ function ClippingPlaneCollection(options) {
   this._dirtyIndex = -1;
   this._multipleDirtyPlanes = false;
 
-  this._enabled = defaultValue(options.enabled, true);
+  this._enabled = options.enabled ?? true;
 
   /**
    * The 4x4 transformation matrix specifying an additional transform relative to the clipping planes
@@ -102,7 +102,7 @@ function ClippingPlaneCollection(options) {
    * @type {number}
    * @default 0.0
    */
-  this.edgeWidth = defaultValue(options.edgeWidth, 0.0);
+  this.edgeWidth = options.edgeWidth ?? 0.0;
 
   /**
    * An event triggered when a new clipping plane is added to the collection.  Event handlers
@@ -124,10 +124,7 @@ function ClippingPlaneCollection(options) {
   // This is because in a Cesium3DTileset multiple models may reference the tileset's ClippingPlaneCollection.
   this._owner = undefined;
 
-  const unionClippingRegions = defaultValue(
-    options.unionClippingRegions,
-    false,
-  );
+  const unionClippingRegions = options.unionClippingRegions ?? false;
   this._unionClippingRegions = unionClippingRegions;
   this._testIntersection = unionClippingRegions
     ? unionIntersectFunction

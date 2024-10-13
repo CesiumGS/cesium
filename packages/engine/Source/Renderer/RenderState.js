@@ -89,43 +89,31 @@ function validateStencilOperation(stencilOperation) {
  * @private
  */
 function RenderState(renderState) {
-  const rs = defaultValue(renderState, defaultValue.EMPTY_OBJECT);
-  const cull = defaultValue(rs.cull, defaultValue.EMPTY_OBJECT);
-  const polygonOffset = defaultValue(
-    rs.polygonOffset,
-    defaultValue.EMPTY_OBJECT,
-  );
-  const scissorTest = defaultValue(rs.scissorTest, defaultValue.EMPTY_OBJECT);
-  const scissorTestRectangle = defaultValue(
-    scissorTest.rectangle,
-    defaultValue.EMPTY_OBJECT,
-  );
-  const depthRange = defaultValue(rs.depthRange, defaultValue.EMPTY_OBJECT);
-  const depthTest = defaultValue(rs.depthTest, defaultValue.EMPTY_OBJECT);
-  const colorMask = defaultValue(rs.colorMask, defaultValue.EMPTY_OBJECT);
-  const blending = defaultValue(rs.blending, defaultValue.EMPTY_OBJECT);
-  const blendingColor = defaultValue(blending.color, defaultValue.EMPTY_OBJECT);
-  const stencilTest = defaultValue(rs.stencilTest, defaultValue.EMPTY_OBJECT);
-  const stencilTestFrontOperation = defaultValue(
-    stencilTest.frontOperation,
-    defaultValue.EMPTY_OBJECT,
-  );
-  const stencilTestBackOperation = defaultValue(
-    stencilTest.backOperation,
-    defaultValue.EMPTY_OBJECT,
-  );
-  const sampleCoverage = defaultValue(
-    rs.sampleCoverage,
-    defaultValue.EMPTY_OBJECT,
-  );
+  const rs = renderState ?? defaultValue.EMPTY_OBJECT;
+  const cull = rs.cull ?? defaultValue.EMPTY_OBJECT;
+  const polygonOffset = rs.polygonOffset ?? defaultValue.EMPTY_OBJECT;
+  const scissorTest = rs.scissorTest ?? defaultValue.EMPTY_OBJECT;
+  const scissorTestRectangle =
+    scissorTest.rectangle ?? defaultValue.EMPTY_OBJECT;
+  const depthRange = rs.depthRange ?? defaultValue.EMPTY_OBJECT;
+  const depthTest = rs.depthTest ?? defaultValue.EMPTY_OBJECT;
+  const colorMask = rs.colorMask ?? defaultValue.EMPTY_OBJECT;
+  const blending = rs.blending ?? defaultValue.EMPTY_OBJECT;
+  const blendingColor = blending.color ?? defaultValue.EMPTY_OBJECT;
+  const stencilTest = rs.stencilTest ?? defaultValue.EMPTY_OBJECT;
+  const stencilTestFrontOperation =
+    stencilTest.frontOperation ?? defaultValue.EMPTY_OBJECT;
+  const stencilTestBackOperation =
+    stencilTest.backOperation ?? defaultValue.EMPTY_OBJECT;
+  const sampleCoverage = rs.sampleCoverage ?? defaultValue.EMPTY_OBJECT;
   const viewport = rs.viewport;
 
-  this.frontFace = defaultValue(rs.frontFace, WindingOrder.COUNTER_CLOCKWISE);
+  this.frontFace = rs.frontFace ?? WindingOrder.COUNTER_CLOCKWISE;
   this.cull = {
     enabled: defaultValue(cull.enabled, false),
     face: defaultValue(cull.face, WebGLConstants.BACK),
   };
-  this.lineWidth = defaultValue(rs.lineWidth, 1.0);
+  this.lineWidth = rs.lineWidth ?? 1.0;
   this.polygonOffset = {
     enabled: defaultValue(polygonOffset.enabled, false),
     factor: defaultValue(polygonOffset.factor, 0),
@@ -149,8 +137,8 @@ function RenderState(renderState) {
     blue: defaultValue(colorMask.blue, true),
     alpha: defaultValue(colorMask.alpha, true),
   };
-  this.depthMask = defaultValue(rs.depthMask, true);
-  this.stencilMask = defaultValue(rs.stencilMask, ~0);
+  this.depthMask = rs.depthMask ?? true;
+  this.stencilMask = rs.stencilMask ?? ~0;
   this.blending = {
     enabled: defaultValue(blending.enabled, false),
     color: new Color(
@@ -737,7 +725,7 @@ function applySampleCoverage(gl, renderState) {
 const scratchViewport = new BoundingRectangle();
 
 function applyViewport(gl, renderState, passState) {
-  let viewport = defaultValue(renderState.viewport, passState.viewport);
+  let viewport = renderState.viewport ?? passState.viewport;
   if (!defined(viewport)) {
     viewport = scratchViewport;
     viewport.width = passState.context.drawingBufferWidth;

@@ -39,7 +39,7 @@ import Ellipsoid from "./Ellipsoid.js";
  *
  */
 function createWorldTerrainAsync(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
 
   return CesiumTerrainProvider.fromIonAssetId(1, {
     requestVertexNormals: defaultValue(options.requestVertexNormals, false),

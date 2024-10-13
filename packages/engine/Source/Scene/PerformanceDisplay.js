@@ -9,7 +9,7 @@ import getElement from "../DataSources/getElement.js";
  * @private
  */
 function PerformanceDisplay(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
 
   const container = getElement(options.container);
   //>>includeStart('debug', pragmas.debug);
@@ -82,7 +82,7 @@ Object.defineProperties(PerformanceDisplay.prototype, {
  */
 PerformanceDisplay.prototype.update = function (renderedThisFrame) {
   const time = getTimestamp();
-  const updateDisplay = defaultValue(renderedThisFrame, true);
+  const updateDisplay = renderedThisFrame ?? true;
 
   this._fpsFrameCount++;
   const fpsElapsedTime = time - this._lastFpsSampleTime;

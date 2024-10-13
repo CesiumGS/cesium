@@ -184,7 +184,7 @@ function CesiumWidget(container, options) {
 
   container = getElement(container);
 
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
 
   //Configure the widget DOM elements
   const element = document.createElement("div");
@@ -220,10 +220,8 @@ function CesiumWidget(container, options) {
     }
   }
 
-  const blurActiveElementOnCanvasFocus = defaultValue(
-    options.blurActiveElementOnCanvasFocus,
-    true,
-  );
+  const blurActiveElementOnCanvasFocus =
+    options.blurActiveElementOnCanvasFocus ?? true;
 
   if (blurActiveElementOnCanvasFocus) {
     canvas.addEventListener("mousedown", blurActiveElement);
@@ -244,12 +242,10 @@ function CesiumWidget(container, options) {
     ? getElement(options.creditViewport)
     : element;
 
-  const showRenderLoopErrors = defaultValue(options.showRenderLoopErrors, true);
+  const showRenderLoopErrors = options.showRenderLoopErrors ?? true;
 
-  const useBrowserRecommendedResolution = defaultValue(
-    options.useBrowserRecommendedResolution,
-    true,
-  );
+  const useBrowserRecommendedResolution =
+    options.useBrowserRecommendedResolution ?? true;
 
   this._element = element;
   this._container = container;
@@ -271,7 +267,7 @@ function CesiumWidget(container, options) {
   configureCanvasSize(this);
 
   try {
-    const ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.default);
+    const ellipsoid = options.ellipsoid ?? Ellipsoid.default;
 
     const scene = new Scene({
       canvas: canvas,
@@ -302,10 +298,7 @@ function CesiumWidget(container, options) {
     }
     if (globe !== false) {
       scene.globe = globe;
-      scene.globe.shadows = defaultValue(
-        options.terrainShadows,
-        ShadowMode.RECEIVE_ONLY,
-      );
+      scene.globe.shadows = options.terrainShadows ?? ShadowMode.RECEIVE_ONLY;
     }
 
     let skyBox = options.skyBox;
@@ -369,10 +362,7 @@ function CesiumWidget(container, options) {
     }
 
     this._useDefaultRenderLoop = undefined;
-    this.useDefaultRenderLoop = defaultValue(
-      options.useDefaultRenderLoop,
-      true,
-    );
+    this.useDefaultRenderLoop = options.useDefaultRenderLoop ?? true;
 
     this._targetFrameRate = undefined;
     this.targetFrameRate = options.targetFrameRate;

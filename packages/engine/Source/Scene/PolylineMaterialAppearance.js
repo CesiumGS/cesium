@@ -48,9 +48,9 @@ if (!FeatureDetection.isInternetExplorer()) {
  * });
  */
 function PolylineMaterialAppearance(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
 
-  const translucent = defaultValue(options.translucent, true);
+  const translucent = options.translucent ?? true;
   const closed = false;
   const vertexFormat = PolylineMaterialAppearance.VERTEX_FORMAT;
 
@@ -78,14 +78,10 @@ function PolylineMaterialAppearance(options) {
    */
   this.translucent = translucent;
 
-  this._vertexShaderSource = defaultValue(
-    options.vertexShaderSource,
-    defaultVertexShaderSource,
-  );
-  this._fragmentShaderSource = defaultValue(
-    options.fragmentShaderSource,
-    defaultFragmentShaderSource,
-  );
+  this._vertexShaderSource =
+    options.vertexShaderSource ?? defaultVertexShaderSource;
+  this._fragmentShaderSource =
+    options.fragmentShaderSource ?? defaultFragmentShaderSource;
   this._renderState = Appearance.getDefaultRenderState(
     translucent,
     closed,

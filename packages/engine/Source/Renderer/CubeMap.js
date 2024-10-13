@@ -62,7 +62,7 @@ import TextureMinificationFilter from "./TextureMinificationFilter.js";
  * @private
  */
 function CubeMap(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
 
   //>>includeStart('debug', pragmas.debug);
   Check.defined("options.context", options.context);
@@ -285,7 +285,7 @@ CubeMap.getFaceNames = function () {
  * @private
  */
 function loadFace(cubeMapFace, source, mipLevel) {
-  mipLevel = defaultValue(mipLevel, 0);
+  mipLevel = mipLevel ?? 0;
   const targetFace = cubeMapFace._targetFace;
   const size = Math.max(Math.floor(cubeMapFace._size / 2 ** mipLevel), 1);
   const pixelFormat = cubeMapFace._pixelFormat;
@@ -518,7 +518,7 @@ CubeMap.prototype.loadMipmaps = function (source, skipColorSpaceConversion) {
   }
   //>>includeEnd('debug');
 
-  skipColorSpaceConversion = defaultValue(skipColorSpaceConversion, false);
+  skipColorSpaceConversion = skipColorSpaceConversion ?? false;
   const gl = this._context._gl;
   const texture = this._texture;
   const textureTarget = this._textureTarget;
@@ -568,7 +568,7 @@ CubeMap.prototype.loadMipmaps = function (source, skipColorSpaceConversion) {
  * });
  */
 CubeMap.prototype.generateMipmap = function (hint) {
-  hint = defaultValue(hint, MipmapHint.DONT_CARE);
+  hint = hint ?? MipmapHint.DONT_CARE;
 
   //>>includeStart('debug', pragmas.debug);
   if (this._size > 1 && !CesiumMath.isPowerOfTwo(this._size)) {

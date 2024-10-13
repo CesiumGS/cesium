@@ -275,7 +275,7 @@ function createPoint(dataSource, geoJson, crsFunction, coordinates, options) {
       color = Color.fromCssColorString(cssColor);
     }
 
-    size = defaultValue(sizes[properties["marker-size"]], size);
+    size = sizes[properties["marker-size"]] ?? size;
     const markerSymbol = properties["marker-symbol"];
     if (defined(markerSymbol)) {
       symbol = markerSymbol;
@@ -914,7 +914,7 @@ function preload(that, data, options, clear) {
   //>>includeEnd('debug');
 
   DataSource.setLoading(that, true);
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
 
   // User specified credit
   let credit = options.credit;

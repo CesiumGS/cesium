@@ -212,7 +212,7 @@ Object.defineProperties(TweenCollection.prototype, {
  * @exception {DeveloperError} options.duration must be positive.
  */
 TweenCollection.prototype.add = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
 
   //>>includeStart('debug', pragmas.debug);
   if (!defined(options.startObject) || !defined(options.stopObject)) {
@@ -236,12 +236,9 @@ TweenCollection.prototype.add = function (options) {
   }
 
   const duration = options.duration / TimeConstants.SECONDS_PER_MILLISECOND;
-  const delayInSeconds = defaultValue(options.delay, 0.0);
+  const delayInSeconds = options.delay ?? 0.0;
   const delay = delayInSeconds / TimeConstants.SECONDS_PER_MILLISECOND;
-  const easingFunction = defaultValue(
-    options.easingFunction,
-    EasingFunction.LINEAR_NONE,
-  );
+  const easingFunction = options.easingFunction ?? EasingFunction.LINEAR_NONE;
 
   const value = options.startObject;
   const tweenjs = new TweenJS(value);
@@ -293,7 +290,7 @@ TweenCollection.prototype.add = function (options) {
  * @exception {DeveloperError} options.duration must be positive.
  */
 TweenCollection.prototype.addProperty = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
 
   const object = options.object;
   const property = options.property;
@@ -359,7 +356,7 @@ TweenCollection.prototype.addProperty = function (options) {
  * @exception {DeveloperError} options.duration must be positive.
  */
 TweenCollection.prototype.addAlpha = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
 
   const material = options.material;
 
@@ -431,7 +428,7 @@ TweenCollection.prototype.addAlpha = function (options) {
  * @exception {DeveloperError} options.duration must be positive.
  */
 TweenCollection.prototype.addOffsetIncrement = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
 
   const material = options.material;
 

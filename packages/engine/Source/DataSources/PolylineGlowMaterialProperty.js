@@ -21,7 +21,7 @@ const defaultTaperPower = 1.0;
  * @param {Property|number} [options.taperPower=1.0] A numeric Property specifying the strength of the tapering effect, as a percentage of the total line length.  If 1.0 or higher, no taper effect is used.
  */
 function PolylineGlowMaterialProperty(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
 
   this._definitionChanged = new Event();
   this._color = undefined;

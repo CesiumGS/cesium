@@ -19,7 +19,7 @@ import RequestType from "../Core/RequestType.js";
  * @param {Function} options.reloadFunction A function that will be called when all imagery tiles need to be reloaded.
  */
 function TimeDynamicImagery(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.clock", options.clock);

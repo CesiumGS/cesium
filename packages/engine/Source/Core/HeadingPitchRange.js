@@ -1,4 +1,3 @@
-import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 
 /**
@@ -19,7 +18,7 @@ function HeadingPitchRange(heading, pitch, range) {
    * @type {number}
    * @default 0.0
    */
-  this.heading = defaultValue(heading, 0.0);
+  this.heading = heading ?? 0.0;
 
   /**
    * Pitch is the rotation from the local xy-plane. Positive pitch angles
@@ -27,14 +26,14 @@ function HeadingPitchRange(heading, pitch, range) {
    * @type {number}
    * @default 0.0
    */
-  this.pitch = defaultValue(pitch, 0.0);
+  this.pitch = pitch ?? 0.0;
 
   /**
    * Range is the distance from the center of the local frame.
    * @type {number}
    * @default 0.0
    */
-  this.range = defaultValue(range, 0.0);
+  this.range = range ?? 0.0;
 }
 
 /**

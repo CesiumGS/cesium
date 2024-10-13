@@ -63,7 +63,7 @@ function ShaderProgram(options) {
 }
 
 ShaderProgram.fromCache = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
 
   //>>includeStart('debug', pragmas.debug);
   Check.defined("options.context", options.context);
@@ -73,7 +73,7 @@ ShaderProgram.fromCache = function (options) {
 };
 
 ShaderProgram.replaceCache = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
 
   //>>includeStart('debug', pragmas.debug);
   Check.defined("options.context", options.context);

@@ -28,7 +28,7 @@ import StencilOperation from "../StencilOperation.js";
  * @private
  */
 function ClassificationModelDrawCommand(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
 
   const command = options.command;
   const renderResources = options.primitiveRenderResources;

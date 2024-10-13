@@ -40,7 +40,7 @@ import ModelDrawCommands from "./ModelDrawCommands.js";
  * @private
  */
 function ModelSceneGraph(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
   const components = options.modelComponents;
 
   //>>includeStart('debug', pragmas.debug);

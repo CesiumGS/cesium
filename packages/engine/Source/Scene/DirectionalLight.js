@@ -44,7 +44,7 @@ function DirectionalLight(options) {
    * @type {number}
    * @default 1.0
    */
-  this.intensity = defaultValue(options.intensity, 1.0);
+  this.intensity = options.intensity ?? 1.0;
 }
 
 export default DirectionalLight;

@@ -34,8 +34,8 @@ import defined from "../Core/defined.js";
  * @demo {@link https://sandcastle.cesium.com/index.html?src=Cloud%20Parameters.html|Cesium Sandcastle Cloud Parameters Demo}
  */
 function CumulusCloud(options, cloudCollection) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  this._show = defaultValue(options.show, true);
+  options = options ?? defaultValue.EMPTY_OBJECT;
+  this._show = options.show ?? true;
 
   this._position = Cartesian3.clone(
     defaultValue(options.position, Cartesian3.ZERO),
@@ -59,9 +59,9 @@ function CumulusCloud(options, cloudCollection) {
     );
   }
 
-  this._slice = defaultValue(options.slice, -1.0);
+  this._slice = options.slice ?? -1.0;
   this._color = Color.clone(defaultValue(options.color, Color.WHITE));
-  this._brightness = defaultValue(options.brightness, 1.0);
+  this._brightness = options.brightness ?? 1.0;
   this._cloudCollection = cloudCollection;
   this._index = -1; // Used by CloudCollection
 }

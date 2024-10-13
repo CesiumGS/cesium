@@ -119,7 +119,7 @@ function setup(that, styleJson) {
   const meta = {};
   if (defined(styleJson.meta)) {
     const defines = styleJson.defines;
-    const metaJson = defaultValue(styleJson.meta, defaultValue.EMPTY_OBJECT);
+    const metaJson = styleJson.meta ?? defaultValue.EMPTY_OBJECT;
     for (const property in metaJson) {
       if (metaJson.hasOwnProperty(property)) {
         meta[property] = new Expression(metaJson[property], defines);

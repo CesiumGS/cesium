@@ -1,5 +1,4 @@
 import {
-  defaultValue,
   defined,
   destroyObject,
   DeveloperError,
@@ -36,7 +35,7 @@ function SceneModePickerViewModel(scene, duration) {
   this._eventHelper = new EventHelper();
   this._eventHelper.add(scene.morphStart, morphStart);
 
-  this._duration = defaultValue(duration, 2.0);
+  this._duration = duration ?? 2.0;
 
   /**
    * Gets or sets the current SceneMode.  This property is observable.

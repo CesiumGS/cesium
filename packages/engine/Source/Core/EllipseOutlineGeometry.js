@@ -137,7 +137,7 @@ function computeExtrudedEllipse(options) {
     });
   }
 
-  let numberOfVerticalLines = defaultValue(options.numberOfVerticalLines, 16);
+  let numberOfVerticalLines = options.numberOfVerticalLines ?? 16;
   numberOfVerticalLines = CesiumMath.clamp(
     numberOfVerticalLines,
     0,
@@ -211,16 +211,13 @@ function computeExtrudedEllipse(options) {
  * const geometry = Cesium.EllipseOutlineGeometry.createGeometry(ellipse);
  */
 function EllipseOutlineGeometry(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
 
   const center = options.center;
-  const ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.default);
+  const ellipsoid = options.ellipsoid ?? Ellipsoid.default;
   const semiMajorAxis = options.semiMajorAxis;
   const semiMinorAxis = options.semiMinorAxis;
-  const granularity = defaultValue(
-    options.granularity,
-    CesiumMath.RADIANS_PER_DEGREE,
-  );
+  const granularity = options.granularity ?? CesiumMath.RADIANS_PER_DEGREE;
 
   //>>includeStart('debug', pragmas.debug);
   if (!defined(center)) {
@@ -242,14 +239,14 @@ function EllipseOutlineGeometry(options) {
   }
   //>>includeEnd('debug');
 
-  const height = defaultValue(options.height, 0.0);
-  const extrudedHeight = defaultValue(options.extrudedHeight, height);
+  const height = options.height ?? 0.0;
+  const extrudedHeight = options.extrudedHeight ?? height;
 
   this._center = Cartesian3.clone(center);
   this._semiMajorAxis = semiMajorAxis;
   this._semiMinorAxis = semiMinorAxis;
   this._ellipsoid = Ellipsoid.clone(ellipsoid);
-  this._rotation = defaultValue(options.rotation, 0.0);
+  this._rotation = options.rotation ?? 0.0;
   this._height = Math.max(extrudedHeight, height);
   this._granularity = granularity;
   this._extrudedHeight = Math.min(extrudedHeight, height);
@@ -287,7 +284,7 @@ EllipseOutlineGeometry.pack = function (value, array, startingIndex) {
   }
   //>>includeEnd('debug');
 
-  startingIndex = defaultValue(startingIndex, 0);
+  startingIndex = startingIndex ?? 0;
 
   Cartesian3.pack(value._center, array, startingIndex);
   startingIndex += Cartesian3.packedLength;
@@ -337,7 +334,7 @@ EllipseOutlineGeometry.unpack = function (array, startingIndex, result) {
   }
   //>>includeEnd('debug');
 
-  startingIndex = defaultValue(startingIndex, 0);
+  startingIndex = startingIndex ?? 0;
 
   const center = Cartesian3.unpack(array, startingIndex, scratchCenter);
   startingIndex += Cartesian3.packedLength;

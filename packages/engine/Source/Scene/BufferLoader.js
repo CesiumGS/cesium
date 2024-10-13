@@ -24,7 +24,7 @@ import ResourceLoaderState from "./ResourceLoaderState.js";
  * @private
  */
 function BufferLoader(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
   const typedArray = options.typedArray;
   const resource = options.resource;
   const cacheKey = options.cacheKey;

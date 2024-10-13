@@ -57,7 +57,7 @@ const defaultCredit = new Credit(
  * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
  */
 function OpenStreetMapImageryProvider(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
 
   const resource = Resource.createIfNeeded(
     defaultValue(options.url, "https://tile.openstreetmap.org/"),
@@ -74,10 +74,10 @@ function OpenStreetMapImageryProvider(options) {
   const tileWidth = 256;
   const tileHeight = 256;
 
-  const minimumLevel = defaultValue(options.minimumLevel, 0);
+  const minimumLevel = options.minimumLevel ?? 0;
   const maximumLevel = options.maximumLevel;
 
-  const rectangle = defaultValue(options.rectangle, tilingScheme.rectangle);
+  const rectangle = options.rectangle ?? tilingScheme.rectangle;
 
   // Check the number of tiles at the minimum level.  If it's more than four,
   // throw an exception, because starting at the higher minimum
@@ -100,7 +100,7 @@ function OpenStreetMapImageryProvider(options) {
   }
   //>>includeEnd('debug');
 
-  let credit = defaultValue(options.credit, defaultCredit);
+  let credit = options.credit ?? defaultCredit;
   if (typeof credit === "string") {
     credit = new Credit(credit);
   }

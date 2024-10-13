@@ -19,8 +19,8 @@ function TextureAtlasNode(
   childNode2,
   imageIndex,
 ) {
-  this.bottomLeft = defaultValue(bottomLeft, Cartesian2.ZERO);
-  this.topRight = defaultValue(topRight, Cartesian2.ZERO);
+  this.bottomLeft = bottomLeft ?? Cartesian2.ZERO;
+  this.topRight = topRight ?? Cartesian2.ZERO;
   this.childNode1 = childNode1;
   this.childNode2 = childNode2;
   this.imageIndex = imageIndex;
@@ -50,9 +50,9 @@ const defaultInitialSize = new Cartesian2(16.0, 16.0);
  * @private
  */
 function TextureAtlas(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  const borderWidthInPixels = defaultValue(options.borderWidthInPixels, 1.0);
-  const initialSize = defaultValue(options.initialSize, defaultInitialSize);
+  options = options ?? defaultValue.EMPTY_OBJECT;
+  const borderWidthInPixels = options.borderWidthInPixels ?? 1.0;
+  const initialSize = options.initialSize ?? defaultInitialSize;
 
   //>>includeStart('debug', pragmas.debug);
   if (!defined(options.context)) {
@@ -69,7 +69,7 @@ function TextureAtlas(options) {
   //>>includeEnd('debug');
 
   this._context = options.context;
-  this._pixelFormat = defaultValue(options.pixelFormat, PixelFormat.RGBA);
+  this._pixelFormat = options.pixelFormat ?? PixelFormat.RGBA;
   this._borderWidthInPixels = borderWidthInPixels;
   this._textureCoordinates = [];
   this._guid = createGuid();

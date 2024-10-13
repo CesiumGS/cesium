@@ -1,6 +1,5 @@
 import Cartesian3 from "../Core/Cartesian3.js";
 import Check from "../Core/Check.js";
-import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Event from "../Core/Event.js";
@@ -20,7 +19,7 @@ import SampledProperty from "./SampledProperty.js";
  * @param {number} [numberOfDerivatives=0] The number of derivatives that accompany each position; i.e. velocity, acceleration, etc...
  */
 function SampledPositionProperty(referenceFrame, numberOfDerivatives) {
-  numberOfDerivatives = defaultValue(numberOfDerivatives, 0);
+  numberOfDerivatives = numberOfDerivatives ?? 0;
 
   let derivativeTypes;
   if (numberOfDerivatives > 0) {
@@ -33,7 +32,7 @@ function SampledPositionProperty(referenceFrame, numberOfDerivatives) {
   this._numberOfDerivatives = numberOfDerivatives;
   this._property = new SampledProperty(Cartesian3, derivativeTypes);
   this._definitionChanged = new Event();
-  this._referenceFrame = defaultValue(referenceFrame, ReferenceFrame.FIXED);
+  this._referenceFrame = referenceFrame ?? ReferenceFrame.FIXED;
 
   this._property._definitionChanged.addEventListener(function () {
     this._definitionChanged.raiseEvent(this);

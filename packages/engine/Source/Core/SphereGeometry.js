@@ -1,6 +1,5 @@
 import Cartesian3 from "./Cartesian3.js";
 import Check from "./Check.js";
-import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 import EllipsoidGeometry from "./EllipsoidGeometry.js";
 import VertexFormat from "./VertexFormat.js";
@@ -30,7 +29,7 @@ import VertexFormat from "./VertexFormat.js";
  * const geometry = Cesium.SphereGeometry.createGeometry(sphere);
  */
 function SphereGeometry(options) {
-  const radius = defaultValue(options.radius, 1.0);
+  const radius = options.radius ?? 1.0;
   const radii = new Cartesian3(radius, radius, radius);
   const ellipsoidOptions = {
     radii: radii,

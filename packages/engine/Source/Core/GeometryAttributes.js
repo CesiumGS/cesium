@@ -11,7 +11,7 @@ import defaultValue from "./defaultValue.js";
  * @constructor
  */
 function GeometryAttributes(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
 
   /**
    * The 3D position attribute.

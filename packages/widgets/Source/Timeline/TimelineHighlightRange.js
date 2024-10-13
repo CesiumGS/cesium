@@ -1,4 +1,4 @@
-import { defaultValue, JulianDate } from "@cesium/engine";
+import { JulianDate } from "@cesium/engine";
 
 /**
  * @private
@@ -6,7 +6,7 @@ import { defaultValue, JulianDate } from "@cesium/engine";
 function TimelineHighlightRange(color, heightInPx, base) {
   this._color = color;
   this._height = heightInPx;
-  this._base = defaultValue(base, 0);
+  this._base = base ?? 0;
 }
 
 TimelineHighlightRange.prototype.getHeight = function () {

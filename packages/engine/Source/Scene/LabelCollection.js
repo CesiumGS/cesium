@@ -593,7 +593,7 @@ function destroyLabel(labelCollection, label) {
  * });
  */
 function LabelCollection(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
 
   this._scene = options.scene;
   this._batchTable = options.batchTable;
@@ -627,7 +627,7 @@ function LabelCollection(options) {
    * @type {boolean}
    * @default true
    */
-  this.show = defaultValue(options.show, true);
+  this.show = options.show ?? true;
 
   /**
    * The 4x4 transformation matrix that transforms each label in this collection from model to world coordinates.
@@ -672,10 +672,7 @@ function LabelCollection(options) {
    *
    * @default false
    */
-  this.debugShowBoundingVolume = defaultValue(
-    options.debugShowBoundingVolume,
-    false,
-  );
+  this.debugShowBoundingVolume = options.debugShowBoundingVolume ?? false;
 
   /**
    * The label blending option. The default is used for rendering both opaque and translucent labels.
@@ -685,10 +682,7 @@ function LabelCollection(options) {
    * @type {BlendOption}
    * @default BlendOption.OPAQUE_AND_TRANSLUCENT
    */
-  this.blendOption = defaultValue(
-    options.blendOption,
-    BlendOption.OPAQUE_AND_TRANSLUCENT,
-  );
+  this.blendOption = options.blendOption ?? BlendOption.OPAQUE_AND_TRANSLUCENT;
 }
 
 Object.defineProperties(LabelCollection.prototype, {

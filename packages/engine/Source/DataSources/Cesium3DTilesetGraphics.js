@@ -102,12 +102,10 @@ Cesium3DTilesetGraphics.prototype.merge = function (source) {
   }
   //>>includeEnd('debug');
 
-  this.show = defaultValue(this.show, source.show);
-  this.uri = defaultValue(this.uri, source.uri);
-  this.maximumScreenSpaceError = defaultValue(
-    this.maximumScreenSpaceError,
-    source.maximumScreenSpaceError,
-  );
+  this.show = this.show ?? source.show;
+  this.uri = this.uri ?? source.uri;
+  this.maximumScreenSpaceError =
+    this.maximumScreenSpaceError ?? source.maximumScreenSpaceError;
 };
 
 export default Cesium3DTilesetGraphics;

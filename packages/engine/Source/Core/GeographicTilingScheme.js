@@ -25,19 +25,13 @@ import Rectangle from "./Rectangle.js";
  * the tile tree.
  */
 function GeographicTilingScheme(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
 
-  this._ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.default);
-  this._rectangle = defaultValue(options.rectangle, Rectangle.MAX_VALUE);
+  this._ellipsoid = options.ellipsoid ?? Ellipsoid.default;
+  this._rectangle = options.rectangle ?? Rectangle.MAX_VALUE;
   this._projection = new GeographicProjection(this._ellipsoid);
-  this._numberOfLevelZeroTilesX = defaultValue(
-    options.numberOfLevelZeroTilesX,
-    2,
-  );
-  this._numberOfLevelZeroTilesY = defaultValue(
-    options.numberOfLevelZeroTilesY,
-    1,
-  );
+  this._numberOfLevelZeroTilesX = options.numberOfLevelZeroTilesX ?? 2;
+  this._numberOfLevelZeroTilesY = options.numberOfLevelZeroTilesY ?? 1;
 }
 
 Object.defineProperties(GeographicTilingScheme.prototype, {

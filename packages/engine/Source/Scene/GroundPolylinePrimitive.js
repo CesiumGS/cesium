@@ -94,7 +94,7 @@ import StencilOperation from "./StencilOperation.js";
  * }));
  */
 function GroundPolylinePrimitive(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
 
   /**
    * The geometry instances rendered with this primitive. This may
@@ -136,7 +136,7 @@ function GroundPolylinePrimitive(options) {
    *
    * @default true
    */
-  this.show = defaultValue(options.show, true);
+  this.show = options.show ?? true;
 
   /**
    * Determines whether terrain, 3D Tiles or both will be classified.
@@ -145,10 +145,8 @@ function GroundPolylinePrimitive(options) {
    *
    * @default ClassificationType.BOTH
    */
-  this.classificationType = defaultValue(
-    options.classificationType,
-    ClassificationType.BOTH,
-  );
+  this.classificationType =
+    options.classificationType ?? ClassificationType.BOTH;
 
   /**
    * This property is for debugging only; it is not for production use nor is it optimized.
@@ -160,16 +158,10 @@ function GroundPolylinePrimitive(options) {
    *
    * @default false
    */
-  this.debugShowBoundingVolume = defaultValue(
-    options.debugShowBoundingVolume,
-    false,
-  );
+  this.debugShowBoundingVolume = options.debugShowBoundingVolume ?? false;
 
   // Shadow volume is shown by removing a discard in the shader, so this isn't toggleable.
-  this._debugShowShadowVolume = defaultValue(
-    options.debugShowShadowVolume,
-    false,
-  );
+  this._debugShowShadowVolume = options.debugShowShadowVolume ?? false;
 
   this._primitiveOptions = {
     geometryInstances: undefined,

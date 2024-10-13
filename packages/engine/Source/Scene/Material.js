@@ -308,14 +308,10 @@ function Material(options) {
    */
   this.translucent = undefined;
 
-  this._minificationFilter = defaultValue(
-    options.minificationFilter,
-    TextureMinificationFilter.LINEAR,
-  );
-  this._magnificationFilter = defaultValue(
-    options.magnificationFilter,
-    TextureMagnificationFilter.LINEAR,
-  );
+  this._minificationFilter =
+    options.minificationFilter ?? TextureMinificationFilter.LINEAR;
+  this._magnificationFilter =
+    options.magnificationFilter ?? TextureMagnificationFilter.LINEAR;
 
   this._strict = undefined;
   this._template = undefined;
@@ -586,9 +582,9 @@ Material.prototype.destroy = function () {
 };
 
 function initializeMaterial(options, result) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  result._strict = defaultValue(options.strict, false);
-  result._count = defaultValue(options.count, 0);
+  options = options ?? defaultValue.EMPTY_OBJECT;
+  result._strict = options.strict ?? false;
+  result._count = options.count ?? 0;
   result._template = clone(
     defaultValue(options.fabric, defaultValue.EMPTY_OBJECT),
   );
@@ -633,8 +629,8 @@ function initializeMaterial(options, result) {
 
   const defaultTranslucent =
     result._translucentFunctions.length === 0 ? true : undefined;
-  translucent = defaultValue(translucent, defaultTranslucent);
-  translucent = defaultValue(options.translucent, translucent);
+  translucent = translucent ?? defaultTranslucent;
+  translucent = options.translucent ?? translucent;
 
   if (defined(translucent)) {
     if (typeof translucent === "function") {
@@ -1185,7 +1181,7 @@ function createSubMaterials(material) {
 // If excludePeriod is true, do not accept tokens that are preceded by periods.
 // http://stackoverflow.com/questions/641407/javascript-negative-lookbehind-equivalent
 function replaceToken(material, token, newToken, excludePeriod) {
-  excludePeriod = defaultValue(excludePeriod, true);
+  excludePeriod = excludePeriod ?? true;
   let count = 0;
   const suffixChars = "([\\w])?";
   const prefixChars = `([\\w${excludePeriod ? "." : ""}])?`;

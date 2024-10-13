@@ -1,4 +1,3 @@
-import defaultValue from "../Core/defaultValue.js";
 import Pass from "../Renderer/Pass.js";
 
 /**
@@ -12,8 +11,8 @@ import Pass from "../Renderer/Pass.js";
  * @private
  */
 function FrustumCommands(near, far) {
-  this.near = defaultValue(near, 0.0);
-  this.far = defaultValue(far, 0.0);
+  this.near = near ?? 0.0;
+  this.far = far ?? 0.0;
 
   const numPasses = Pass.NUMBER_OF_PASSES;
   const commands = new Array(numPasses);

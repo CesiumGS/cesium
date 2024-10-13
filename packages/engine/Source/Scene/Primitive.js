@@ -152,7 +152,7 @@ import ShadowMode from "./ShadowMode.js";
  * @see GroundPrimitive
  */
 function Primitive(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
 
   /**
    * The geometry instances rendered with this primitive.  This may
@@ -237,17 +237,14 @@ function Primitive(options) {
    *
    * @default true
    */
-  this.show = defaultValue(options.show, true);
+  this.show = options.show ?? true;
 
-  this._vertexCacheOptimize = defaultValue(options.vertexCacheOptimize, false);
-  this._interleave = defaultValue(options.interleave, false);
-  this._releaseGeometryInstances = defaultValue(
-    options.releaseGeometryInstances,
-    true,
-  );
-  this._allowPicking = defaultValue(options.allowPicking, true);
-  this._asynchronous = defaultValue(options.asynchronous, true);
-  this._compressVertices = defaultValue(options.compressVertices, true);
+  this._vertexCacheOptimize = options.vertexCacheOptimize ?? false;
+  this._interleave = options.interleave ?? false;
+  this._releaseGeometryInstances = options.releaseGeometryInstances ?? true;
+  this._allowPicking = options.allowPicking ?? true;
+  this._asynchronous = options.asynchronous ?? true;
+  this._compressVertices = options.compressVertices ?? true;
 
   /**
    * When <code>true</code>, the renderer frustum culls and horizon culls the primitive's commands
@@ -258,7 +255,7 @@ function Primitive(options) {
    *
    * @default true
    */
-  this.cull = defaultValue(options.cull, true);
+  this.cull = options.cull ?? true;
 
   /**
    * This property is for debugging only; it is not for production use nor is it optimized.
@@ -270,10 +267,7 @@ function Primitive(options) {
    *
    * @default false
    */
-  this.debugShowBoundingVolume = defaultValue(
-    options.debugShowBoundingVolume,
-    false,
-  );
+  this.debugShowBoundingVolume = options.debugShowBoundingVolume ?? false;
 
   /**
    * @private
@@ -300,7 +294,7 @@ function Primitive(options) {
    *
    * @default ShadowMode.DISABLED
    */
-  this.shadows = defaultValue(options.shadows, ShadowMode.DISABLED);
+  this.shadows = options.shadows ?? ShadowMode.DISABLED;
 
   this._translucent = undefined;
 
@@ -2201,26 +2195,17 @@ Primitive.prototype.update = function (frameState) {
   const twoPasses = appearance.closed && translucent;
 
   if (createRS) {
-    const rsFunc = defaultValue(
-      this._createRenderStatesFunction,
-      createRenderStates,
-    );
+    const rsFunc = this._createRenderStatesFunction ?? createRenderStates;
     rsFunc(this, context, appearance, twoPasses);
   }
 
   if (createSP) {
-    const spFunc = defaultValue(
-      this._createShaderProgramFunction,
-      createShaderProgram,
-    );
+    const spFunc = this._createShaderProgramFunction ?? createShaderProgram;
     spFunc(this, frameState, appearance);
   }
 
   if (createRS || createSP) {
-    const commandFunc = defaultValue(
-      this._createCommandsFunction,
-      createCommands,
-    );
+    const commandFunc = this._createCommandsFunction ?? createCommands;
     commandFunc(
       this,
       appearance,
@@ -2233,10 +2218,8 @@ Primitive.prototype.update = function (frameState) {
     );
   }
 
-  const updateAndQueueCommandsFunc = defaultValue(
-    this._updateAndQueueCommandsFunction,
-    updateAndQueueCommands,
-  );
+  const updateAndQueueCommandsFunc =
+    this._updateAndQueueCommandsFunction ?? updateAndQueueCommands;
   updateAndQueueCommandsFunc(
     this,
     frameState,

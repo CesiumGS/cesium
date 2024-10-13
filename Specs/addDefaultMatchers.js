@@ -555,8 +555,8 @@ function createDefaultMatchers(debug) {
         compare: function (actual, expected, x, y) {
           const scene = actual;
           const canvas = scene.canvas;
-          x = defaultValue(x, canvas.clientWidth / 2);
-          y = defaultValue(y, canvas.clientHeight / 2);
+          x = x ?? canvas.clientWidth / 2;
+          y = y ?? canvas.clientHeight / 2;
           const result = scene.pickPosition(new Cartesian2(x, y));
 
           const webglStub = !!window.webglStub;
@@ -586,7 +586,7 @@ function createDefaultMatchers(debug) {
             // options were passed to to a framebuffer
             context = options.context;
             framebuffer = options.framebuffer;
-            epsilon = defaultValue(options.epsilon, epsilon);
+            epsilon = options.epsilon ?? epsilon;
           } else {
             context = options;
           }
@@ -873,8 +873,8 @@ function contextRenderAndReadPixels(options) {
   let sp = options.shaderProgram;
   const uniformMap = options.uniformMap;
   const modelMatrix = options.modelMatrix;
-  const depth = defaultValue(options.depth, 0.0);
-  const clear = defaultValue(options.clear, true);
+  const depth = options.depth ?? 0.0;
+  const clear = options.clear ?? true;
   let clearColor;
 
   if (!defined(context)) {
@@ -957,8 +957,8 @@ function contextRenderAndReadPixels(options) {
 function expectContextToRender(actual, expected, expectEqual) {
   const options = actual;
   const context = options.context;
-  const clear = defaultValue(options.clear, true);
-  const epsilon = defaultValue(options.epsilon, 0);
+  const clear = options.clear ?? true;
+  const epsilon = options.epsilon ?? 0;
 
   if (!defined(expected)) {
     expected = [255, 255, 255, 255];

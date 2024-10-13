@@ -1,5 +1,4 @@
 import Color from "../Core/Color.js";
-import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import srgbToLinear from "../Core/srgbToLinear.js";
 
@@ -166,8 +165,8 @@ function buildClassBreaksHash(renderer, isColorCaptured) {
   if (defined(renderer.classBreakInfos)) {
     const classBreakInfos = [...renderer.classBreakInfos];
     classBreakInfos.sort(function (a, b) {
-      const aMax = defaultValue(a.classMaxValue, a.classMinValue);
-      const bMax = defaultValue(b.classMaxValue, b.classMinValue);
+      const aMax = a.classMaxValue ?? a.classMinValue;
+      const bMax = b.classMaxValue ?? b.classMinValue;
       return aMax - bMax;
     });
     const valueHash = {
