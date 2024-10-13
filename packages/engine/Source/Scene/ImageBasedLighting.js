@@ -25,7 +25,7 @@ import SpecularEnvironmentCubeMap from "./SpecularEnvironmentCubeMap.js";
  * @param {string} [options.specularEnvironmentMaps] A URL to a KTX2 file that contains a cube map of the specular lighting and the convoluted specular mipmaps.
  */
 function ImageBasedLighting(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
   const imageBasedLightingFactor = defined(options.imageBasedLightingFactor)
     ? Cartesian2.clone(options.imageBasedLightingFactor)
     : new Cartesian2(1.0, 1.0);
@@ -59,7 +59,7 @@ function ImageBasedLighting(options) {
 
   this._imageBasedLightingFactor = imageBasedLightingFactor;
 
-  const luminanceAtZenith = defaultValue(options.luminanceAtZenith, 0.2);
+  const luminanceAtZenith = options.luminanceAtZenith ?? 0.2;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.number("options.luminanceAtZenith", luminanceAtZenith);

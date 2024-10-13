@@ -172,7 +172,7 @@ import pickModel from "./pickModel.js";
  * @demo {@link https://sandcastle.cesium.com/index.html?src=3D%20Models.html|Cesium Sandcastle Models Demo}
  */
 function Model(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.loader", options.loader);
   Check.typeOf.object("options.resource", options.resource);
@@ -196,7 +196,7 @@ function Model(options) {
    *
    * @private
    */
-  this.type = defaultValue(options.type, ModelType.GLTF);
+  this.type = options.type ?? ModelType.GLTF;
 
   /**
    * The 4x4 transformation matrix that transforms the model from model to world coordinates.
@@ -216,9 +216,9 @@ function Model(options) {
     defaultValue(options.modelMatrix, Matrix4.IDENTITY),
   );
   this._modelMatrix = Matrix4.clone(this.modelMatrix);
-  this._scale = defaultValue(options.scale, 1.0);
+  this._scale = options.scale ?? 1.0;
 
-  this._minimumPixelSize = defaultValue(options.minimumPixelSize, 0.0);
+  this._minimumPixelSize = options.minimumPixelSize ?? 0.0;
 
   this._maximumScale = options.maximumScale;
 
@@ -267,7 +267,7 @@ function Model(options) {
   this._defaultTexture = undefined;
 
   this._activeAnimations = new ModelAnimationCollection(this);
-  this._clampAnimations = defaultValue(options.clampAnimations, true);
+  this._clampAnimations = options.clampAnimations ?? true;
 
   // This flag is true when the Cesium API, not a glTF animation, changes
   // the transform of a node in the model.
@@ -277,15 +277,12 @@ function Model(options) {
   this._idDirty = false;
 
   this._color = Color.clone(options.color);
-  this._colorBlendMode = defaultValue(
-    options.colorBlendMode,
-    ColorBlendMode.HIGHLIGHT,
-  );
-  this._colorBlendAmount = defaultValue(options.colorBlendAmount, 0.5);
+  this._colorBlendMode = options.colorBlendMode ?? ColorBlendMode.HIGHLIGHT;
+  this._colorBlendAmount = options.colorBlendAmount ?? 0.5;
 
-  const silhouetteColor = defaultValue(options.silhouetteColor, Color.RED);
+  const silhouetteColor = options.silhouetteColor ?? Color.RED;
   this._silhouetteColor = Color.clone(silhouetteColor);
-  this._silhouetteSize = defaultValue(options.silhouetteSize, 0.0);
+  this._silhouetteSize = options.silhouetteSize ?? 0.0;
   this._silhouetteDirty = false;
 
   // If silhouettes are used for the model, this will be set to the number
@@ -293,25 +290,23 @@ function Model(options) {
   // by ModelSilhouettePipelineStage, not by Model itself.
   this._silhouetteId = undefined;
 
-  this._cull = defaultValue(options.cull, true);
-  this._opaquePass = defaultValue(options.opaquePass, Pass.OPAQUE);
-  this._allowPicking = defaultValue(options.allowPicking, true);
-  this._show = defaultValue(options.show, true);
+  this._cull = options.cull ?? true;
+  this._opaquePass = options.opaquePass ?? Pass.OPAQUE;
+  this._allowPicking = options.allowPicking ?? true;
+  this._show = options.show ?? true;
 
   this._style = undefined;
   this._styleDirty = false;
   this._styleCommandsNeeded = undefined;
 
-  let featureIdLabel = defaultValue(options.featureIdLabel, "featureId_0");
+  let featureIdLabel = options.featureIdLabel ?? "featureId_0";
   if (typeof featureIdLabel === "number") {
     featureIdLabel = `featureId_${featureIdLabel}`;
   }
   this._featureIdLabel = featureIdLabel;
 
-  let instanceFeatureIdLabel = defaultValue(
-    options.instanceFeatureIdLabel,
-    "instanceFeatureId_0",
-  );
+  let instanceFeatureIdLabel =
+    options.instanceFeatureIdLabel ?? "instanceFeatureId_0";
   if (typeof instanceFeatureIdLabel === "number") {
     instanceFeatureIdLabel = `instanceFeatureId_${instanceFeatureIdLabel}`;
   }
@@ -337,17 +332,11 @@ function Model(options) {
   this._boundingSphere = new BoundingSphere();
   this._initialRadius = undefined;
 
-  this._heightReference = defaultValue(
-    options.heightReference,
-    HeightReference.NONE,
-  );
+  this._heightReference = options.heightReference ?? HeightReference.NONE;
   this._heightDirty = this._heightReference !== HeightReference.NONE;
   this._removeUpdateHeightCallback = undefined;
 
-  this._enableVerticalExaggeration = defaultValue(
-    options.enableVerticalExaggeration,
-    true,
-  );
+  this._enableVerticalExaggeration = options.enableVerticalExaggeration ?? true;
   this._hasVerticalExaggeration = false;
 
   this._clampedModelMatrix = undefined; // For use with height reference
@@ -400,24 +389,18 @@ function Model(options) {
     : new ImageBasedLighting();
   this._shouldDestroyImageBasedLighting = !defined(options.imageBasedLighting);
 
-  this._backFaceCulling = defaultValue(options.backFaceCulling, true);
+  this._backFaceCulling = options.backFaceCulling ?? true;
   this._backFaceCullingDirty = false;
 
-  this._shadows = defaultValue(options.shadows, ShadowMode.ENABLED);
+  this._shadows = options.shadows ?? ShadowMode.ENABLED;
   this._shadowsDirty = false;
 
   this._debugShowBoundingVolumeDirty = false;
-  this._debugShowBoundingVolume = defaultValue(
-    options.debugShowBoundingVolume,
-    false,
-  );
+  this._debugShowBoundingVolume = options.debugShowBoundingVolume ?? false;
 
-  this._enableDebugWireframe = defaultValue(
-    options.enableDebugWireframe,
-    false,
-  );
-  this._enableShowOutline = defaultValue(options.enableShowOutline, true);
-  this._debugWireframe = defaultValue(options.debugWireframe, false);
+  this._enableDebugWireframe = options.enableDebugWireframe ?? false;
+  this._enableShowOutline = options.enableShowOutline ?? true;
+  this._debugWireframe = options.debugWireframe ?? false;
 
   // Warning for improper setup of debug wireframe
   if (
@@ -446,15 +429,12 @@ function Model(options) {
   // Credits parsed from the glTF by GltfLoader.
   this._gltfCredits = [];
 
-  this._showCreditsOnScreen = defaultValue(options.showCreditsOnScreen, false);
+  this._showCreditsOnScreen = options.showCreditsOnScreen ?? false;
   this._showCreditsOnScreenDirty = true;
 
-  this._splitDirection = defaultValue(
-    options.splitDirection,
-    SplitDirection.NONE,
-  );
+  this._splitDirection = options.splitDirection ?? SplitDirection.NONE;
 
-  this._enableShowOutline = defaultValue(options.enableShowOutline, true);
+  this._enableShowOutline = options.enableShowOutline ?? true;
 
   /**
    * Whether to display the outline for models using the
@@ -465,7 +445,7 @@ function Model(options) {
    *
    * @default true
    */
-  this.showOutline = defaultValue(options.showOutline, true);
+  this.showOutline = options.showOutline ?? true;
 
   /**
    * The color to use when rendering outlines.
@@ -474,20 +454,20 @@ function Model(options) {
    *
    * @default Color.BLACK
    */
-  this.outlineColor = defaultValue(options.outlineColor, Color.BLACK);
+  this.outlineColor = options.outlineColor ?? Color.BLACK;
 
   this._classificationType = options.classificationType;
 
   this._statistics = new ModelStatistics();
 
   this._sceneMode = undefined;
-  this._projectTo2D = defaultValue(options.projectTo2D, false);
-  this._enablePick = defaultValue(options.enablePick, false);
+  this._projectTo2D = options.projectTo2D ?? false;
+  this._enablePick = options.enablePick ?? false;
 
   this._fogRenderable = undefined;
 
   this._skipLevelOfDetail = false;
-  this._ignoreCommands = defaultValue(options.ignoreCommands, false);
+  this._ignoreCommands = options.ignoreCommands ?? false;
 
   this._errorEvent = new Event();
   this._readyEvent = new Event();
@@ -2201,7 +2181,7 @@ function updateClamping(model) {
     return;
   }
 
-  const ellipsoid = defaultValue(scene.ellipsoid, Ellipsoid.default);
+  const ellipsoid = scene.ellipsoid ?? Ellipsoid.default;
 
   // Compute cartographic position so we don't recompute every update
   const modelMatrix = model.modelMatrix;
@@ -2335,7 +2315,7 @@ function updateReferenceMatrices(model, frameState) {
   const modelMatrix = defined(model._clampedModelMatrix)
     ? model._clampedModelMatrix
     : model.modelMatrix;
-  const referenceMatrix = defaultValue(model.referenceMatrix, modelMatrix);
+  const referenceMatrix = model.referenceMatrix ?? modelMatrix;
   const context = frameState.context;
 
   const ibl = model._imageBasedLighting;
@@ -2940,7 +2920,7 @@ Model.prototype.destroyModelResources = function () {
  * }
  */
 Model.fromGltfAsync = async function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
 
   //>>includeStart('debug', pragmas.debug);
   if (!defined(options.url) && !defined(options.gltf)) {
@@ -2951,7 +2931,7 @@ Model.fromGltfAsync = async function (options) {
   // options.gltf is used internally for 3D Tiles. It can be a Resource, a URL
   // to a glTF/glb file, a binary glTF buffer, or a JSON object containing the
   // glTF contents.
-  const gltf = defaultValue(options.url, options.gltf);
+  const gltf = options.url ?? options.gltf;
 
   const loaderOptions = {
     releaseGltfJson: options.releaseGltfJson,
@@ -2966,7 +2946,7 @@ Model.fromGltfAsync = async function (options) {
     loadForClassification: defined(options.classificationType),
   };
 
-  const basePath = defaultValue(options.basePath, "");
+  const basePath = options.basePath ?? "";
   const baseResource = Resource.createIfNeeded(basePath);
 
   if (defined(gltf.asset)) {

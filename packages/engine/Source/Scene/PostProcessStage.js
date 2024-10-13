@@ -92,7 +92,7 @@ import PostProcessStageSampleMode from "./PostProcessStageSampleMode.js";
  * stage.selected = [cesium3DTileFeature];
  */
 function PostProcessStage(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
   const {
     fragmentShader,
     textureScale = 1.0,
@@ -115,17 +115,11 @@ function PostProcessStage(options) {
   this._fragmentShader = fragmentShader;
   this._uniforms = options.uniforms;
   this._textureScale = textureScale;
-  this._forcePowerOfTwo = defaultValue(options.forcePowerOfTwo, false);
-  this._sampleMode = defaultValue(
-    options.sampleMode,
-    PostProcessStageSampleMode.NEAREST,
-  );
+  this._forcePowerOfTwo = options.forcePowerOfTwo ?? false;
+  this._sampleMode = options.sampleMode ?? PostProcessStageSampleMode.NEAREST;
   this._pixelFormat = pixelFormat;
-  this._pixelDatatype = defaultValue(
-    options.pixelDatatype,
-    PixelDatatype.UNSIGNED_BYTE,
-  );
-  this._clearColor = defaultValue(options.clearColor, Color.BLACK);
+  this._pixelDatatype = options.pixelDatatype ?? PixelDatatype.UNSIGNED_BYTE;
+  this._clearColor = options.clearColor ?? Color.BLACK;
 
   this._uniformMap = undefined;
   this._command = undefined;

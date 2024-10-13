@@ -280,9 +280,9 @@ export default function pickModel(
         return;
       }
 
-      ellipsoid = defaultValue(ellipsoid, Ellipsoid.default);
-      verticalExaggeration = defaultValue(verticalExaggeration, 1.0);
-      relativeHeight = defaultValue(relativeHeight, 0.0);
+      ellipsoid = ellipsoid ?? Ellipsoid.default;
+      verticalExaggeration = verticalExaggeration ?? 1.0;
+      relativeHeight = relativeHeight ?? 0.0;
 
       const indicesLength = indices.length;
       for (let i = 0; i < indicesLength; i += 3) {

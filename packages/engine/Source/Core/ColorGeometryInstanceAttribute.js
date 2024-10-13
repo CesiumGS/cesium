@@ -1,6 +1,5 @@
 import Color from "./Color.js";
 import ComponentDatatype from "./ComponentDatatype.js";
-import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 
@@ -33,10 +32,10 @@ import DeveloperError from "./DeveloperError.js";
  * @see GeometryInstanceAttribute
  */
 function ColorGeometryInstanceAttribute(red, green, blue, alpha) {
-  red = defaultValue(red, 1.0);
-  green = defaultValue(green, 1.0);
-  blue = defaultValue(blue, 1.0);
-  alpha = defaultValue(alpha, 1.0);
+  red = red ?? 1.0;
+  green = green ?? 1.0;
+  blue = blue ?? 1.0;
+  alpha = alpha ?? 1.0;
 
   /**
    * The values for the attributes stored in a typed array.

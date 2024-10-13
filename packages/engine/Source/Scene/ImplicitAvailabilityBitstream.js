@@ -1,6 +1,5 @@
 import Check from "../Core/Check.js";
 import defined from "../Core/defined.js";
-import defaultValue from "../Core/defaultValue.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import RuntimeError from "../Core/RuntimeError.js";
 
@@ -44,10 +43,8 @@ function ImplicitAvailabilityBitstream(options) {
 
     // Only compute the available count if requested, as this involves looping
     // over the bitstream.
-    const computeAvailableCountEnabled = defaultValue(
-      options.computeAvailableCountEnabled,
-      false,
-    );
+    const computeAvailableCountEnabled =
+      options.computeAvailableCountEnabled ?? false;
     if (!defined(availableCount) && computeAvailableCountEnabled) {
       availableCount = count1Bits(bitstream, lengthBits);
     }

@@ -35,11 +35,11 @@ import Material from "./Material.js";
  *
  */
 function Polyline(options, polylineCollection) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
 
-  this._show = defaultValue(options.show, true);
-  this._width = defaultValue(options.width, 1.0);
-  this._loop = defaultValue(options.loop, false);
+  this._show = options.show ?? true;
+  this._width = options.width ?? 1.0;
+  this._loop = options.loop ?? false;
   this._distanceDisplayCondition = options.distanceDisplayCondition;
 
   this._material = options.material;

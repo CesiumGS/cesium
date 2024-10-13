@@ -668,7 +668,7 @@ function metadataChanged(old, current) {
 }
 
 function load(dataSource, entityCollection, data, options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
   let promise = data;
   if (typeof data === "string" || data instanceof Resource) {
     data = Resource.createIfNeeded(data);
@@ -947,7 +947,7 @@ GpxDataSource.prototype.load = function (data, options) {
     throw new DeveloperError("data is required.");
   }
 
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
   DataSource.setLoading(this, true);
   const oldName = this._name;
   const that = this;

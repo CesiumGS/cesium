@@ -101,7 +101,7 @@ const excludesReverseAxis = [
  * viewer.imageryLayers.add(imageryLayer);
  */
 function WebMapServiceImageryProvider(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
 
   //>>includeStart('debug', pragmas.debug);
   if (!defined(options.url)) {
@@ -129,10 +129,7 @@ function WebMapServiceImageryProvider(options) {
   this._defaultMinificationFilter = undefined;
   this._defaultMagnificationFilter = undefined;
 
-  this._getFeatureInfoUrl = defaultValue(
-    options.getFeatureInfoUrl,
-    options.url,
-  );
+  this._getFeatureInfoUrl = options.getFeatureInfoUrl ?? options.url;
 
   const resource = Resource.createIfNeeded(options.url);
   const pickFeatureResource = Resource.createIfNeeded(this._getFeatureInfoUrl);

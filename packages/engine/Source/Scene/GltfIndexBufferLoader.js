@@ -35,7 +35,7 @@ import ResourceLoaderState from "./ResourceLoaderState.js";
  * @private
  */
 function GltfIndexBufferLoader(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
   const resourceCache = options.resourceCache;
   const gltf = options.gltf;
   const accessorId = options.accessorId;
@@ -43,9 +43,9 @@ function GltfIndexBufferLoader(options) {
   const baseResource = options.baseResource;
   const draco = options.draco;
   const cacheKey = options.cacheKey;
-  const asynchronous = defaultValue(options.asynchronous, true);
-  const loadBuffer = defaultValue(options.loadBuffer, false);
-  const loadTypedArray = defaultValue(options.loadTypedArray, false);
+  const asynchronous = options.asynchronous ?? true;
+  const loadBuffer = options.loadBuffer ?? false;
+  const loadTypedArray = options.loadTypedArray ?? false;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.func("options.resourceCache", resourceCache);

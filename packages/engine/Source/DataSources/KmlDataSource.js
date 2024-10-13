@@ -401,10 +401,8 @@ function loadXmlFromZip(entry, uriResolver) {
 }
 
 function loadDataUriFromZip(entry, uriResolver) {
-  const mimeType = defaultValue(
-    MimeTypes.detectFromFilename(entry.filename),
-    "application/octet-stream",
-  );
+  const mimeType =
+    MimeTypes.detectFromFilename(entry.filename) ?? "application/octet-stream";
   return Promise.resolve(entry.getData(new zip.Data64URIWriter(mimeType))).then(
     function (dataUri) {
       uriResolver[entry.filename] = dataUri;
@@ -982,7 +980,7 @@ function processBillboardIcon(
   //The hotspot origin is the lower left, but we leave
   //our billboard origin at the center and simply
   //modify the pixel offset to take this into account
-  scale = defaultValue(scale, 1.0);
+  scale = scale ?? 1.0;
 
   let xOffset;
   let yOffset;
@@ -1660,7 +1658,7 @@ function processLineStringOrLinearRing(
       polylineGraphics.material = defined(polyline.material)
         ? polyline.material.color.getValue(Iso8601.MINIMUM_VALUE)
         : Color.WHITE;
-      polylineGraphics.width = defaultValue(polyline.width, 1.0);
+      polylineGraphics.width = polyline.width ?? 1.0;
     } else {
       polylineGraphics.material = Color.WHITE;
       polylineGraphics.width = 1.0;
@@ -2123,19 +2121,16 @@ function processDescription(
   const extendedData = kmlData.extendedData;
   const description = queryStringValue(node, "description", namespaces.kml);
 
-  const balloonStyle = defaultValue(
-    entity.balloonStyle,
-    styleEntity.balloonStyle,
-  );
+  const balloonStyle = entity.balloonStyle ?? styleEntity.balloonStyle;
 
   let background = Color.WHITE;
   let foreground = Color.BLACK;
   let text = description;
 
   if (defined(balloonStyle)) {
-    background = defaultValue(balloonStyle.bgColor, Color.WHITE);
-    foreground = defaultValue(balloonStyle.textColor, Color.BLACK);
-    text = defaultValue(balloonStyle.text, description);
+    background = balloonStyle.bgColor ?? Color.WHITE;
+    foreground = balloonStyle.textColor ?? Color.BLACK;
+    text = balloonStyle.text ?? description;
   }
 
   let value;
@@ -2909,7 +2904,7 @@ function processNetworkLinkQueryString(
     let centerCartesian;
     let centerCartographic;
 
-    bbox = defaultValue(bbox, zeroRectangle);
+    bbox = bbox ?? zeroRectangle;
     if (defined(canvas)) {
       scratchCartesian2.x = canvas.clientWidth * 0.5;
       scratchCartesian2.y = canvas.clientHeight * 0.5;
@@ -3422,7 +3417,7 @@ function loadKmz(
 }
 
 function load(dataSource, entityCollection, data, options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
   let sourceUri = options.sourceUri;
   const uriResolver = options.uriResolver;
   const context = options.context;
@@ -3600,7 +3595,7 @@ function load(dataSource, entityCollection, data, options) {
  * );
  */
 function KmlDataSource(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
   const camera = options.camera;
   const canvas = options.canvas;
 
@@ -3647,7 +3642,7 @@ function KmlDataSource(options) {
       : Rectangle.clone(Rectangle.MAX_VALUE),
   };
 
-  this._ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.default);
+  this._ellipsoid = options.ellipsoid ?? Ellipsoid.default;
 
   // User specified credit
   let credit = options.credit;
@@ -3673,7 +3668,7 @@ function KmlDataSource(options) {
  * @returns {Promise<KmlDataSource>} A promise that will resolve to a new KmlDataSource instance once the KML is loaded.
  */
 KmlDataSource.load = function (data, options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
   const dataSource = new KmlDataSource(options);
   return dataSource.load(data, options);
 };
@@ -3848,12 +3843,12 @@ KmlDataSource.prototype.load = function (data, options) {
   }
   //>>includeEnd('debug');
 
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
   DataSource.setLoading(this, true);
 
   const oldName = this._name;
   this._name = undefined;
-  this._clampToGround = defaultValue(options.clampToGround, false);
+  this._clampToGround = options.clampToGround ?? false;
 
   const that = this;
   return load(this, this._entityCollection, data, options)
@@ -4204,7 +4199,7 @@ KmlDataSource.prototype.update = function (time) {
         const href = networkLink.href.clone();
 
         href.setQueryParameters(networkLink.cookie);
-        const ellipsoid = defaultValue(that._ellipsoid, Ellipsoid.default);
+        const ellipsoid = that._ellipsoid ?? Ellipsoid.default;
         processNetworkLinkQueryString(
           href,
           that.camera,

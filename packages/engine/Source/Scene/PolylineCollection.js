@@ -115,7 +115,7 @@ const attributeLocations = {
  * });
  */
 function PolylineCollection(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
 
   /**
    * Determines if polylines in this collection will be shown.
@@ -123,7 +123,7 @@ function PolylineCollection(options) {
    * @type {boolean}
    * @default true
    */
-  this.show = defaultValue(options.show, true);
+  this.show = options.show ?? true;
 
   /**
    * The 4x4 transformation matrix that transforms each polyline in this collection from model to world coordinates.
@@ -149,10 +149,7 @@ function PolylineCollection(options) {
    *
    * @default false
    */
-  this.debugShowBoundingVolume = defaultValue(
-    options.debugShowBoundingVolume,
-    false,
-  );
+  this.debugShowBoundingVolume = options.debugShowBoundingVolume ?? false;
 
   this._opaqueRS = undefined;
   this._translucentRS = undefined;

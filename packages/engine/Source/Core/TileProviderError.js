@@ -1,4 +1,3 @@
-import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 import formatError from "./formatError.js";
 
@@ -66,7 +65,7 @@ function TileProviderError(
    * @type {number}
    * @default 0
    */
-  this.timesRetried = defaultValue(timesRetried, 0);
+  this.timesRetried = timesRetried ?? 0;
 
   /**
    * True if the failed operation should be retried; otherwise, false.  The imagery or terrain provider

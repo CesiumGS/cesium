@@ -21,7 +21,7 @@ function VertexArrayFacade(context, attributes, sizeInVertices, instanced) {
   //>>includeEnd('debug');
 
   const attrs = VertexArrayFacade._verifyAttributes(attributes);
-  sizeInVertices = defaultValue(sizeInVertices, 0);
+  sizeInVertices = sizeInVertices ?? 0;
   const precreatedAttributes = [];
   const attributesByUsage = {};
   let attributesForUsage;
@@ -86,7 +86,7 @@ function VertexArrayFacade(context, attributes, sizeInVertices, instanced) {
   }
 
   this._size = 0;
-  this._instanced = defaultValue(instanced, false);
+  this._instanced = instanced ?? false;
 
   this._precreated = precreatedAttributes;
   this._context = context;

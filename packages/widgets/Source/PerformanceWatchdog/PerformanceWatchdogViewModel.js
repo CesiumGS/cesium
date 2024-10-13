@@ -1,5 +1,4 @@
 import {
-  defaultValue,
   defined,
   destroyObject,
   DeveloperError,
@@ -33,10 +32,9 @@ function PerformanceWatchdogViewModel(options) {
    * Gets or sets the message to display when a low frame rate is detected.  This string will be interpreted as HTML.
    * @type {string}
    */
-  this.lowFrameRateMessage = defaultValue(
-    options.lowFrameRateMessage,
-    "This application appears to be performing poorly on your system.  Please try using a different web browser or updating your video drivers.",
-  );
+  this.lowFrameRateMessage =
+    options.lowFrameRateMessage ??
+    "This application appears to be performing poorly on your system.  Please try using a different web browser or updating your video drivers.";
 
   /**
    * Gets or sets a value indicating whether the low frame rate message has previously been dismissed by the user.  If it has

@@ -1,5 +1,4 @@
 import Cartesian3 from "../Core/Cartesian3.js";
-import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
@@ -41,7 +40,7 @@ import SceneMode from "./SceneMode.js";
  * @see Scene.skyAtmosphere
  */
 function SkyAtmosphere(ellipsoid) {
-  ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
+  ellipsoid = ellipsoid ?? Ellipsoid.WGS84;
 
   /**
    * Determines if the atmosphere is shown.

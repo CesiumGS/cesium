@@ -47,7 +47,7 @@ const attributeLocations = {
  * @private
  */
 function EllipsoidPrimitive(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
 
   /**
    * The center of the ellipsoid in the ellipsoid's model coordinates.
@@ -111,7 +111,7 @@ function EllipsoidPrimitive(options) {
    * @type {boolean}
    * @default true
    */
-  this.show = defaultValue(options.show, true);
+  this.show = options.show ?? true;
 
   /**
    * The surface appearance of the ellipsoid.  This can be one of several built-in {@link Material} objects or a custom material, scripted with
@@ -162,21 +162,18 @@ function EllipsoidPrimitive(options) {
    *
    * @default false
    */
-  this.debugShowBoundingVolume = defaultValue(
-    options.debugShowBoundingVolume,
-    false,
-  );
+  this.debugShowBoundingVolume = options.debugShowBoundingVolume ?? false;
 
   /**
    * @private
    */
-  this.onlySunLighting = defaultValue(options.onlySunLighting, false);
+  this.onlySunLighting = options.onlySunLighting ?? false;
   this._onlySunLighting = false;
 
   /**
    * @private
    */
-  this._depthTestEnabled = defaultValue(options.depthTestEnabled, true);
+  this._depthTestEnabled = options.depthTestEnabled ?? true;
 
   this._useLogDepth = false;
 

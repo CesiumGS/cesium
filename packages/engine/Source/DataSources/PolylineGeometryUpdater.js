@@ -511,22 +511,18 @@ PolylineGeometryUpdater.prototype._onEntityPropertyChanged = function (
   }
 
   const zIndex = polyline.zIndex;
-  const material = defaultValue(polyline.material, defaultMaterial);
+  const material = polyline.material ?? defaultMaterial;
   const isColorMaterial = material instanceof ColorMaterialProperty;
   this._materialProperty = material;
   this._depthFailMaterialProperty = polyline.depthFailMaterial;
-  this._showProperty = defaultValue(show, defaultShow);
-  this._shadowsProperty = defaultValue(polyline.shadows, defaultShadows);
-  this._distanceDisplayConditionProperty = defaultValue(
-    polyline.distanceDisplayCondition,
-    defaultDistanceDisplayCondition,
-  );
-  this._classificationTypeProperty = defaultValue(
-    polyline.classificationType,
-    defaultClassificationType,
-  );
+  this._showProperty = show ?? defaultShow;
+  this._shadowsProperty = polyline.shadows ?? defaultShadows;
+  this._distanceDisplayConditionProperty =
+    polyline.distanceDisplayCondition ?? defaultDistanceDisplayCondition;
+  this._classificationTypeProperty =
+    polyline.classificationType ?? defaultClassificationType;
   this._fillEnabled = true;
-  this._zIndex = defaultValue(zIndex, defaultZIndex);
+  this._zIndex = zIndex ?? defaultZIndex;
 
   const width = polyline.width;
   const arcType = polyline.arcType;

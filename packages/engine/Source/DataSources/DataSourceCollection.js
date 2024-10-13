@@ -1,4 +1,3 @@
-import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
@@ -107,7 +106,7 @@ DataSourceCollection.prototype.add = function (dataSource) {
  *                    false if the data source was not in the collection.
  */
 DataSourceCollection.prototype.remove = function (dataSource, destroy) {
-  destroy = defaultValue(destroy, false);
+  destroy = destroy ?? false;
 
   const index = this._dataSources.indexOf(dataSource);
   if (index !== -1) {
@@ -130,7 +129,7 @@ DataSourceCollection.prototype.remove = function (dataSource, destroy) {
  * @param {boolean} [destroy=false] whether to destroy the data sources in addition to removing them.
  */
 DataSourceCollection.prototype.removeAll = function (destroy) {
-  destroy = defaultValue(destroy, false);
+  destroy = destroy ?? false;
 
   const dataSources = this._dataSources;
   for (let i = 0, len = dataSources.length; i < len; ++i) {

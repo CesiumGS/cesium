@@ -37,7 +37,7 @@ import VertexFormat from "./VertexFormat.js";
  * const geometry = Cesium.CircleGeometry.createGeometry(circle);
  */
 function CircleGeometry(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
   const radius = options.radius;
 
   //>>includeStart('debug', pragmas.debug);

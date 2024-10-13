@@ -234,7 +234,7 @@ CesiumMath.signNotZero = function (value) {
  * @see CesiumMath.fromSNorm
  */
 CesiumMath.toSNorm = function (value, rangeMaximum) {
-  rangeMaximum = defaultValue(rangeMaximum, 255);
+  rangeMaximum = rangeMaximum ?? 255;
   return Math.round(
     (CesiumMath.clamp(value, -1.0, 1.0) * 0.5 + 0.5) * rangeMaximum,
   );
@@ -249,7 +249,7 @@ CesiumMath.toSNorm = function (value, rangeMaximum) {
  * @see CesiumMath.toSNorm
  */
 CesiumMath.fromSNorm = function (value, rangeMaximum) {
-  rangeMaximum = defaultValue(rangeMaximum, 255);
+  rangeMaximum = rangeMaximum ?? 255;
   return (
     (CesiumMath.clamp(value, 0.0, rangeMaximum) / rangeMaximum) * 2.0 - 1.0
   );
@@ -621,8 +621,8 @@ CesiumMath.equalsEpsilon = function (
   }
   //>>includeEnd('debug');
 
-  relativeEpsilon = defaultValue(relativeEpsilon, 0.0);
-  absoluteEpsilon = defaultValue(absoluteEpsilon, relativeEpsilon);
+  relativeEpsilon = relativeEpsilon ?? 0.0;
+  absoluteEpsilon = absoluteEpsilon ?? relativeEpsilon;
   const absDiff = Math.abs(left - right);
   return (
     absDiff <= absoluteEpsilon ||
@@ -785,7 +785,7 @@ CesiumMath.factorial = function (n) {
  * const m = Cesium.Math.incrementWrap(10, 10, 0); // returns 0
  */
 CesiumMath.incrementWrap = function (n, maximumValue, minimumValue) {
-  minimumValue = defaultValue(minimumValue, 0.0);
+  minimumValue = minimumValue ?? 0.0;
 
   //>>includeStart('debug', pragmas.debug);
   if (!defined(n)) {

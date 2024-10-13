@@ -30,7 +30,7 @@ import Primitive from "./Primitive.js";
  * }));
  */
 function createTangentSpaceDebugPrimitive(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
   const instances = [];
   let geometry = options.geometry;
 
@@ -50,7 +50,7 @@ function createTangentSpaceDebugPrimitive(options) {
   const modelMatrix = Matrix4.clone(
     defaultValue(options.modelMatrix, Matrix4.IDENTITY),
   );
-  const length = defaultValue(options.length, 10000.0);
+  const length = options.length ?? 10000.0;
 
   if (defined(attributes.normal)) {
     instances.push(

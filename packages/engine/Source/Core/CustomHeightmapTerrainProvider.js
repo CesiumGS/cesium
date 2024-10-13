@@ -54,7 +54,7 @@ import TerrainProvider from "./TerrainProvider.js";
  * @see TerrainProvider
  */
 function CustomHeightmapTerrainProvider(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
 
   //>>includeStart('debug', pragmas.debug);
   Check.defined("options.callback", options.callback);

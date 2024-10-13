@@ -56,14 +56,14 @@ const defaultImageSize = new Cartesian2(1.0, 1.0);
  * @demo {@link https://sandcastle.cesium.com/?src=Particle%20System%20Fireworks.html&label=Showcases|Particle Systems Fireworks Demo}
  */
 function ParticleSystem(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
 
   /**
    * Whether to display the particle system.
    * @type {boolean}
    * @default true
    */
-  this.show = defaultValue(options.show, true);
+  this.show = options.show ?? true;
 
   /**
    * An array of force callbacks. The callback is passed a {@link Particle} and the difference from the last time
@@ -77,14 +77,14 @@ function ParticleSystem(options) {
    * @type {boolean}
    * @default true
    */
-  this.loop = defaultValue(options.loop, true);
+  this.loop = options.loop ?? true;
 
   /**
    * The URI, HTMLImageElement, or HTMLCanvasElement to use for the billboard.
    * @type {object}
    * @default undefined
    */
-  this.image = defaultValue(options.image, undefined);
+  this.image = options.image ?? undefined;
 
   let emitter = options.emitter;
   if (!defined(emitter)) {
@@ -119,7 +119,7 @@ function ParticleSystem(options) {
     defaultValue(options.endScale, 1.0),
   );
 
-  this._emissionRate = defaultValue(options.emissionRate, 5.0);
+  this._emissionRate = options.emissionRate ?? 5.0;
 
   this._minimumSpeed = defaultValue(
     options.speed,
@@ -161,9 +161,9 @@ function ParticleSystem(options) {
     ),
   );
 
-  this._sizeInMeters = defaultValue(options.sizeInMeters, false);
+  this._sizeInMeters = options.sizeInMeters ?? false;
 
-  this._lifetime = defaultValue(options.lifetime, Number.MAX_VALUE);
+  this._lifetime = options.lifetime ?? Number.MAX_VALUE;
 
   this._billboardCollection = undefined;
   this._particles = [];

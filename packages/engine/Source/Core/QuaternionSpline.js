@@ -50,7 +50,7 @@ function createEvaluateFunction(spline) {
  * @see MorphWeightSpline
  */
 function QuaternionSpline(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
 
   const points = options.points;
   const times = options.times;

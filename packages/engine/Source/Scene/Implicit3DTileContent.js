@@ -216,7 +216,7 @@ Implicit3DTileContent.fromSubtreeJson = async function (
   }
   //>>includeEnd('debug');
 
-  byteOffset = defaultValue(byteOffset, 0);
+  byteOffset = byteOffset ?? 0;
   let uint8Array;
   if (defined(arrayBuffer)) {
     uint8Array = new Uint8Array(arrayBuffer, byteOffset);

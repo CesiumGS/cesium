@@ -23,7 +23,7 @@ const defaultDashPattern = 255.0;
  * @param {Property|number} [options.dashPattern=255.0] A numeric Property specifying a 16 bit pattern for the dash
  */
 function PolylineDashMaterialProperty(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
 
   this._definitionChanged = new Event();
   this._color = undefined;

@@ -1,4 +1,4 @@
-import { defaultValue, defined, DeveloperError } from "@cesium/engine";
+import { defined, DeveloperError } from "@cesium/engine";
 import knockout from "../ThirdParty/knockout.js";
 import createCommand from "../createCommand.js";
 
@@ -61,7 +61,7 @@ function ProviderViewModel(options) {
    */
   this.iconUrl = options.iconUrl;
 
-  this._category = defaultValue(options.category, "");
+  this._category = options.category ?? "";
 
   knockout.track(this, ["name", "tooltip", "iconUrl"]);
 }

@@ -1485,11 +1485,8 @@ const scratchHpr = new HeadingPitchRoll();
  * });
  */
 Camera.prototype.setView = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  let orientation = defaultValue(
-    options.orientation,
-    defaultValue.EMPTY_OBJECT,
-  );
+  options = options ?? defaultValue.EMPTY_OBJECT;
+  let orientation = options.orientation ?? defaultValue.EMPTY_OBJECT;
 
   const mode = this._mode;
   if (mode === SceneMode.MORPHING) {
@@ -1500,7 +1497,7 @@ Camera.prototype.setView = function (options) {
     this._setTransform(options.endTransform);
   }
 
-  let convert = defaultValue(options.convert, true);
+  let convert = options.convert ?? true;
   let destination = defaultValue(
     options.destination,
     Cartesian3.clone(this.positionWC, scratchSetViewCartesian),
@@ -1528,9 +1525,9 @@ Camera.prototype.setView = function (options) {
     );
   }
 
-  scratchHpr.heading = defaultValue(orientation.heading, 0.0);
-  scratchHpr.pitch = defaultValue(orientation.pitch, -CesiumMath.PI_OVER_TWO);
-  scratchHpr.roll = defaultValue(orientation.roll, 0.0);
+  scratchHpr.heading = orientation.heading ?? 0.0;
+  scratchHpr.pitch = orientation.pitch ?? -CesiumMath.PI_OVER_TWO;
+  scratchHpr.roll = orientation.roll ?? 0.0;
 
   if (mode === SceneMode.SCENE3D) {
     setView3D(this, destination, scratchHpr);
@@ -1803,7 +1800,7 @@ Camera.prototype.move = function (direction, amount) {
  * @see Camera#moveBackward
  */
 Camera.prototype.moveForward = function (amount) {
-  amount = defaultValue(amount, this.defaultMoveAmount);
+  amount = amount ?? this.defaultMoveAmount;
 
   if (this._mode === SceneMode.SCENE2D) {
     // 2D mode
@@ -1824,7 +1821,7 @@ Camera.prototype.moveForward = function (amount) {
  * @see Camera#moveForward
  */
 Camera.prototype.moveBackward = function (amount) {
-  amount = defaultValue(amount, this.defaultMoveAmount);
+  amount = amount ?? this.defaultMoveAmount;
 
   if (this._mode === SceneMode.SCENE2D) {
     // 2D mode
@@ -1843,7 +1840,7 @@ Camera.prototype.moveBackward = function (amount) {
  * @see Camera#moveDown
  */
 Camera.prototype.moveUp = function (amount) {
-  amount = defaultValue(amount, this.defaultMoveAmount);
+  amount = amount ?? this.defaultMoveAmount;
   this.move(this.up, amount);
 };
 
@@ -1856,7 +1853,7 @@ Camera.prototype.moveUp = function (amount) {
  * @see Camera#moveUp
  */
 Camera.prototype.moveDown = function (amount) {
-  amount = defaultValue(amount, this.defaultMoveAmount);
+  amount = amount ?? this.defaultMoveAmount;
   this.move(this.up, -amount);
 };
 
@@ -1868,7 +1865,7 @@ Camera.prototype.moveDown = function (amount) {
  * @see Camera#moveLeft
  */
 Camera.prototype.moveRight = function (amount) {
-  amount = defaultValue(amount, this.defaultMoveAmount);
+  amount = amount ?? this.defaultMoveAmount;
   this.move(this.right, amount);
 };
 
@@ -1881,7 +1878,7 @@ Camera.prototype.moveRight = function (amount) {
  * @see Camera#moveRight
  */
 Camera.prototype.moveLeft = function (amount) {
-  amount = defaultValue(amount, this.defaultMoveAmount);
+  amount = amount ?? this.defaultMoveAmount;
   this.move(this.right, -amount);
 };
 
@@ -1894,7 +1891,7 @@ Camera.prototype.moveLeft = function (amount) {
  * @see Camera#lookRight
  */
 Camera.prototype.lookLeft = function (amount) {
-  amount = defaultValue(amount, this.defaultLookAmount);
+  amount = amount ?? this.defaultLookAmount;
 
   // only want view of map to change in 3D mode, 2D visual is incorrect when look changes
   if (this._mode !== SceneMode.SCENE2D) {
@@ -1911,7 +1908,7 @@ Camera.prototype.lookLeft = function (amount) {
  * @see Camera#lookLeft
  */
 Camera.prototype.lookRight = function (amount) {
-  amount = defaultValue(amount, this.defaultLookAmount);
+  amount = amount ?? this.defaultLookAmount;
 
   // only want view of map to change in 3D mode, 2D visual is incorrect when look changes
   if (this._mode !== SceneMode.SCENE2D) {
@@ -1928,7 +1925,7 @@ Camera.prototype.lookRight = function (amount) {
  * @see Camera#lookDown
  */
 Camera.prototype.lookUp = function (amount) {
-  amount = defaultValue(amount, this.defaultLookAmount);
+  amount = amount ?? this.defaultLookAmount;
 
   // only want view of map to change in 3D mode, 2D visual is incorrect when look changes
   if (this._mode !== SceneMode.SCENE2D) {
@@ -1945,7 +1942,7 @@ Camera.prototype.lookUp = function (amount) {
  * @see Camera#lookUp
  */
 Camera.prototype.lookDown = function (amount) {
-  amount = defaultValue(amount, this.defaultLookAmount);
+  amount = amount ?? this.defaultLookAmount;
 
   // only want view of map to change in 3D mode, 2D visual is incorrect when look changes
   if (this._mode !== SceneMode.SCENE2D) {
@@ -1973,7 +1970,7 @@ Camera.prototype.look = function (axis, angle) {
   }
   //>>includeEnd('debug');
 
-  const turnAngle = defaultValue(angle, this.defaultLookAmount);
+  const turnAngle = angle ?? this.defaultLookAmount;
   const quaternion = Quaternion.fromAxisAngle(
     axis,
     -turnAngle,
@@ -1998,7 +1995,7 @@ Camera.prototype.look = function (axis, angle) {
  * @see Camera#twistRight
  */
 Camera.prototype.twistLeft = function (amount) {
-  amount = defaultValue(amount, this.defaultLookAmount);
+  amount = amount ?? this.defaultLookAmount;
   this.look(this.direction, amount);
 };
 
@@ -2010,7 +2007,7 @@ Camera.prototype.twistLeft = function (amount) {
  * @see Camera#twistLeft
  */
 Camera.prototype.twistRight = function (amount) {
-  amount = defaultValue(amount, this.defaultLookAmount);
+  amount = amount ?? this.defaultLookAmount;
   this.look(this.direction, -amount);
 };
 
@@ -2035,7 +2032,7 @@ Camera.prototype.rotate = function (axis, angle) {
   }
   //>>includeEnd('debug');
 
-  const turnAngle = defaultValue(angle, this.defaultRotateAmount);
+  const turnAngle = angle ?? this.defaultRotateAmount;
   const quaternion = Quaternion.fromAxisAngle(
     axis,
     -turnAngle,
@@ -2060,7 +2057,7 @@ Camera.prototype.rotate = function (axis, angle) {
  * @see Camera#rotate
  */
 Camera.prototype.rotateDown = function (angle) {
-  angle = defaultValue(angle, this.defaultRotateAmount);
+  angle = angle ?? this.defaultRotateAmount;
   rotateVertical(this, angle);
 };
 
@@ -2073,7 +2070,7 @@ Camera.prototype.rotateDown = function (angle) {
  * @see Camera#rotate
  */
 Camera.prototype.rotateUp = function (angle) {
-  angle = defaultValue(angle, this.defaultRotateAmount);
+  angle = angle ?? this.defaultRotateAmount;
   rotateVertical(this, -angle);
 };
 
@@ -2146,7 +2143,7 @@ function rotateVertical(camera, angle) {
  * @see Camera#rotate
  */
 Camera.prototype.rotateRight = function (angle) {
-  angle = defaultValue(angle, this.defaultRotateAmount);
+  angle = angle ?? this.defaultRotateAmount;
   rotateHorizontal(this, -angle);
 };
 
@@ -2159,7 +2156,7 @@ Camera.prototype.rotateRight = function (angle) {
  * @see Camera#rotate
  */
 Camera.prototype.rotateLeft = function (angle) {
-  angle = defaultValue(angle, this.defaultRotateAmount);
+  angle = angle ?? this.defaultRotateAmount;
   rotateHorizontal(this, angle);
 };
 
@@ -2256,7 +2253,7 @@ function zoom3D(camera, amount) {
  * @see Camera#zoomOut
  */
 Camera.prototype.zoomIn = function (amount) {
-  amount = defaultValue(amount, this.defaultZoomAmount);
+  amount = amount ?? this.defaultZoomAmount;
   if (this._mode === SceneMode.SCENE2D) {
     zoom2D(this, amount);
   } else {
@@ -2273,7 +2270,7 @@ Camera.prototype.zoomIn = function (amount) {
  * @see Camera#zoomIn
  */
 Camera.prototype.zoomOut = function (amount) {
-  amount = defaultValue(amount, this.defaultZoomAmount);
+  amount = amount ?? this.defaultZoomAmount;
   if (this._mode === SceneMode.SCENE2D) {
     zoom2D(this, -amount);
   } else {
@@ -2345,7 +2342,7 @@ Camera.prototype.lookAt = function (target, offset) {
   //>>includeEnd('debug');
 
   const scene = this._scene;
-  const ellipsoid = defaultValue(scene.ellipsoid, Ellipsoid.default);
+  const ellipsoid = scene.ellipsoid ?? Ellipsoid.default;
 
   const transform = Transforms.eastNorthUpToFixedFrame(
     target,
@@ -2840,7 +2837,7 @@ Camera.prototype.getRectangleCameraCoordinates = function (rectangle, result) {
 
 const pickEllipsoid3DRay = new Ray();
 function pickEllipsoid3D(camera, windowPosition, ellipsoid, result) {
-  ellipsoid = defaultValue(ellipsoid, Ellipsoid.default);
+  ellipsoid = ellipsoid ?? Ellipsoid.default;
   const ray = camera.getPickRay(windowPosition, pickEllipsoid3DRay);
   const intersection = IntersectionTests.rayEllipsoid(ray, ellipsoid);
   if (!intersection) {
@@ -2920,7 +2917,7 @@ Camera.prototype.pickEllipsoid = function (windowPosition, ellipsoid, result) {
     result = new Cartesian3();
   }
 
-  ellipsoid = defaultValue(ellipsoid, Ellipsoid.default);
+  ellipsoid = ellipsoid ?? Ellipsoid.default;
 
   if (this._mode === SceneMode.SCENE3D) {
     result = pickEllipsoid3D(this, windowPosition, ellipsoid, result);
@@ -3363,7 +3360,7 @@ Camera.prototype.completeFlight = function () {
  * });
  */
 Camera.prototype.flyTo = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
   let destination = options.destination;
   //>>includeStart('debug', pragmas.debug);
   if (!defined(destination)) {
@@ -3386,10 +3383,7 @@ Camera.prototype.flyTo = function (options) {
     );
   }
 
-  let orientation = defaultValue(
-    options.orientation,
-    defaultValue.EMPTY_OBJECT,
-  );
+  let orientation = options.orientation ?? defaultValue.EMPTY_OBJECT;
   if (defined(orientation.direction)) {
     orientation = directionUpToHeadingPitchRoll(
       this,
@@ -3607,7 +3601,7 @@ Camera.prototype.flyToBoundingSphere = function (boundingSphere, options) {
   }
   //>>includeEnd('debug');
 
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
   const scene2D =
     this._mode === SceneMode.SCENE2D || this._mode === SceneMode.COLUMBUS_VIEW;
   this._setTransform(Matrix4.IDENTITY);
@@ -3633,7 +3627,7 @@ Camera.prototype.flyToBoundingSphere = function (boundingSphere, options) {
   }
 
   const scene = this._scene;
-  const ellipsoid = defaultValue(scene.ellipsoid, Ellipsoid.default);
+  const ellipsoid = scene.ellipsoid ?? Ellipsoid.default;
 
   const transform = Transforms.eastNorthUpToFixedFrame(
     boundingSphere.center,
@@ -3823,7 +3817,7 @@ function addToResult(x, y, index, camera, ellipsoid, computedHorizonQuad) {
  * @returns {Rectangle|undefined} The visible rectangle or undefined if the ellipsoid isn't visible at all.
  */
 Camera.prototype.computeViewRectangle = function (ellipsoid, result) {
-  ellipsoid = defaultValue(ellipsoid, Ellipsoid.default);
+  ellipsoid = ellipsoid ?? Ellipsoid.default;
   const cullingVolume = this.frustum.computeCullingVolume(
     this.positionWC,
     this.directionWC,

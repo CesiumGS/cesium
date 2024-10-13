@@ -28,7 +28,7 @@ function viewerPerformanceWatchdogMixin(viewer, options) {
   }
   //>>includeEnd('debug');
 
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
 
   const performanceWatchdog = new PerformanceWatchdog({
     scene: viewer.scene,

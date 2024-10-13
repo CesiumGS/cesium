@@ -193,9 +193,9 @@ function getBatchIds(featureTableJson, featureTableBinary) {
   let pointBatchIds;
   let i;
 
-  const numberOfPolygons = defaultValue(featureTableJson.POLYGONS_LENGTH, 0);
-  const numberOfPolylines = defaultValue(featureTableJson.POLYLINES_LENGTH, 0);
-  const numberOfPoints = defaultValue(featureTableJson.POINTS_LENGTH, 0);
+  const numberOfPolygons = featureTableJson.POLYGONS_LENGTH ?? 0;
+  const numberOfPolylines = featureTableJson.POLYLINES_LENGTH ?? 0;
+  const numberOfPoints = featureTableJson.POINTS_LENGTH ?? 0;
 
   if (numberOfPolygons > 0 && defined(featureTableJson.POLYGON_BATCH_IDS)) {
     const polygonBatchIdsByteOffset =
@@ -289,7 +289,7 @@ function createClampedPolylines(options) {
 }
 
 function initialize(content, arrayBuffer, byteOffset) {
-  byteOffset = defaultValue(byteOffset, 0);
+  byteOffset = byteOffset ?? 0;
 
   const uint8Array = new Uint8Array(arrayBuffer);
   const view = new DataView(arrayBuffer);
@@ -377,9 +377,9 @@ function initialize(content, arrayBuffer, byteOffset) {
     }
   }
 
-  const numberOfPolygons = defaultValue(featureTableJson.POLYGONS_LENGTH, 0);
-  const numberOfPolylines = defaultValue(featureTableJson.POLYLINES_LENGTH, 0);
-  const numberOfPoints = defaultValue(featureTableJson.POINTS_LENGTH, 0);
+  const numberOfPolygons = featureTableJson.POLYGONS_LENGTH ?? 0;
+  const numberOfPolylines = featureTableJson.POLYLINES_LENGTH ?? 0;
+  const numberOfPoints = featureTableJson.POINTS_LENGTH ?? 0;
   const totalPrimitives = numberOfPolygons + numberOfPolylines + numberOfPoints;
 
   const batchTable = new Cesium3DTileBatchTable(

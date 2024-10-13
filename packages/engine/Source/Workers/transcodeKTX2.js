@@ -1,4 +1,3 @@
-import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import Check from "../Core/Check.js";
 import PixelFormat from "../Core/PixelFormat.js";
@@ -285,7 +284,7 @@ function transcodeCompressed(
 async function initWorker(parameters, transferableObjects) {
   // Require and compile WebAssembly module, or use fallback if not supported
   const wasmConfig = parameters.webAssemblyConfig;
-  const basisTranscoder = defaultValue(basis, self.BASIS);
+  const basisTranscoder = basis ?? self.BASIS;
   if (defined(wasmConfig.wasmBinaryFile)) {
     transcoderModule = await basisTranscoder(wasmConfig);
   } else {

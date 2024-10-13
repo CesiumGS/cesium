@@ -167,7 +167,7 @@ function addAnimation(collection, animation, options) {
  * });
  */
 ModelAnimationCollection.prototype.add = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
 
   const model = this._model;
 
@@ -251,7 +251,7 @@ ModelAnimationCollection.prototype.add = function (options) {
  * });
  */
 ModelAnimationCollection.prototype.addAll = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
 
   const model = this._model;
 

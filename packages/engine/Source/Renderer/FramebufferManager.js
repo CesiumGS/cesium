@@ -32,20 +32,14 @@ import PixelFormat from "../Core/PixelFormat.js";
  * @constructor
  */
 function FramebufferManager(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  this._numSamples = defaultValue(options.numSamples, 1);
-  this._colorAttachmentsLength = defaultValue(
-    options.colorAttachmentsLength,
-    1,
-  );
+  options = options ?? defaultValue.EMPTY_OBJECT;
+  this._numSamples = options.numSamples ?? 1;
+  this._colorAttachmentsLength = options.colorAttachmentsLength ?? 1;
 
-  this._color = defaultValue(options.color, true);
-  this._depth = defaultValue(options.depth, false);
-  this._depthStencil = defaultValue(options.depthStencil, false);
-  this._supportsDepthTexture = defaultValue(
-    options.supportsDepthTexture,
-    false,
-  );
+  this._color = options.color ?? true;
+  this._depth = options.depth ?? false;
+  this._depthStencil = options.depthStencil ?? false;
+  this._supportsDepthTexture = options.supportsDepthTexture ?? false;
   //>>includeStart('debug', pragmas.debug);
   if (!this._color && !this._depth && !this._depthStencil) {
     throw new DeveloperError(
@@ -59,14 +53,8 @@ function FramebufferManager(options) {
   }
   //>>includeEnd('debug');
 
-  this._createColorAttachments = defaultValue(
-    options.createColorAttachments,
-    true,
-  );
-  this._createDepthAttachments = defaultValue(
-    options.createDepthAttachments,
-    true,
-  );
+  this._createColorAttachments = options.createColorAttachments ?? true;
+  this._createDepthAttachments = options.createDepthAttachments ?? true;
 
   this._pixelDatatype = options.pixelDatatype;
   this._pixelFormat = options.pixelFormat;
@@ -118,7 +106,7 @@ FramebufferManager.prototype.isDirty = function (
   pixelDatatype,
   pixelFormat,
 ) {
-  numSamples = defaultValue(numSamples, 1);
+  numSamples = numSamples ?? 1;
   const dimensionChanged = this._width !== width || this._height !== height;
   const samplesChanged = this._numSamples !== numSamples;
   const pixelChanged =
@@ -274,7 +262,7 @@ FramebufferManager.prototype.update = function (
 };
 
 FramebufferManager.prototype.getColorTexture = function (index) {
-  index = defaultValue(index, 0);
+  index = index ?? 0;
   //>>includeStart('debug', pragmas.debug);
   if (index >= this._colorAttachmentsLength) {
     throw new DeveloperError(
@@ -286,7 +274,7 @@ FramebufferManager.prototype.getColorTexture = function (index) {
 };
 
 FramebufferManager.prototype.setColorTexture = function (texture, index) {
-  index = defaultValue(index, 0);
+  index = index ?? 0;
   //>>includeStart('debug', pragmas.debug);
   if (this._createColorAttachments) {
     throw new DeveloperError(
@@ -304,7 +292,7 @@ FramebufferManager.prototype.setColorTexture = function (texture, index) {
 };
 
 FramebufferManager.prototype.getColorRenderbuffer = function (index) {
-  index = defaultValue(index, 0);
+  index = index ?? 0;
   //>>includeStart('debug', pragmas.debug);
   if (index >= this._colorAttachmentsLength) {
     throw new DeveloperError(
@@ -319,7 +307,7 @@ FramebufferManager.prototype.setColorRenderbuffer = function (
   renderbuffer,
   index,
 ) {
-  index = defaultValue(index, 0);
+  index = index ?? 0;
   //>>includeStart('debug', pragmas.debug);
   if (this._createColorAttachments) {
     throw new DeveloperError(

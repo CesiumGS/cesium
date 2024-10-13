@@ -1,5 +1,4 @@
 import Check from "./Check.js";
-import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import CesiumMath from "./Math.js";
@@ -24,28 +23,28 @@ function Cartesian4(x, y, z, w) {
    * @type {number}
    * @default 0.0
    */
-  this.x = defaultValue(x, 0.0);
+  this.x = x ?? 0.0;
 
   /**
    * The Y component.
    * @type {number}
    * @default 0.0
    */
-  this.y = defaultValue(y, 0.0);
+  this.y = y ?? 0.0;
 
   /**
    * The Z component.
    * @type {number}
    * @default 0.0
    */
-  this.z = defaultValue(z, 0.0);
+  this.z = z ?? 0.0;
 
   /**
    * The W component.
    * @type {number}
    * @default 0.0
    */
-  this.w = defaultValue(w, 0.0);
+  this.w = w ?? 0.0;
 }
 
 /**
@@ -137,7 +136,7 @@ Cartesian4.pack = function (value, array, startingIndex) {
   Check.defined("array", array);
   //>>includeEnd('debug');
 
-  startingIndex = defaultValue(startingIndex, 0);
+  startingIndex = startingIndex ?? 0;
 
   array[startingIndex++] = value.x;
   array[startingIndex++] = value.y;
@@ -160,7 +159,7 @@ Cartesian4.unpack = function (array, startingIndex, result) {
   Check.defined("array", array);
   //>>includeEnd('debug');
 
-  startingIndex = defaultValue(startingIndex, 0);
+  startingIndex = startingIndex ?? 0;
 
   if (!defined(result)) {
     result = new Cartesian4();

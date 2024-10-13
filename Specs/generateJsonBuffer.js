@@ -1,11 +1,9 @@
-import { defaultValue } from "@cesium/engine";
-
 function generateJsonBuffer(json, byteOffset, boundary) {
   let i;
   const jsonString = JSON.stringify(json);
 
-  byteOffset = defaultValue(byteOffset, 0);
-  boundary = defaultValue(boundary, 1);
+  byteOffset = byteOffset ?? 0;
+  boundary = boundary ?? 1;
 
   const byteLength = jsonString.length;
   const remainder = (byteOffset + byteLength) % boundary;

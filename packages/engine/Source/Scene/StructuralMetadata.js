@@ -25,7 +25,7 @@ import defined from "../Core/defined.js";
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 function StructuralMetadata(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.schema", options.schema);
   //>>includeEnd('debug');

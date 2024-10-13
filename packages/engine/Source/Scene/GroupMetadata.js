@@ -20,7 +20,7 @@ import MetadataEntity from "./MetadataEntity.js";
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 function GroupMetadata(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
   const id = options.id;
   const group = options.group;
   const metadataClass = options.class;

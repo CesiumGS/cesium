@@ -17,7 +17,7 @@ import defaultValue from "../../Core/defaultValue.js";
  * @private
  */
 function ModelSkin(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.skin", options.skin);
   Check.typeOf.object("options.sceneGraph", options.sceneGraph);

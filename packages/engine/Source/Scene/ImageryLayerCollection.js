@@ -1,4 +1,3 @@
-import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
@@ -158,7 +157,7 @@ ImageryLayerCollection.prototype.addImageryProvider = function (
  *                    false if the layer was not in the collection.
  */
 ImageryLayerCollection.prototype.remove = function (layer, destroy) {
-  destroy = defaultValue(destroy, true);
+  destroy = destroy ?? true;
 
   const index = this._layers.indexOf(layer);
   if (index !== -1) {
@@ -184,7 +183,7 @@ ImageryLayerCollection.prototype.remove = function (layer, destroy) {
  * @param {boolean} [destroy=true] whether to destroy the layers in addition to removing them.
  */
 ImageryLayerCollection.prototype.removeAll = function (destroy) {
-  destroy = defaultValue(destroy, true);
+  destroy = destroy ?? true;
 
   const layers = this._layers;
   for (let i = 0, len = layers.length; i < len; i++) {

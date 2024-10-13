@@ -65,7 +65,7 @@ const MAX_GLTF_UINT8_INDEX = 255;
  * @private
  */
 function PrimitiveOutlineGenerator(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
   const triangleIndices = options.triangleIndices;
   const outlineIndices = options.outlineIndices;
   const originalVertexCount = options.originalVertexCount;

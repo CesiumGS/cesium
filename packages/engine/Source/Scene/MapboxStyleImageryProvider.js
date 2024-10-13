@@ -49,7 +49,7 @@ const defaultCredit = new Credit(
  * @see {@link https://docs.mapbox.com/api/#access-tokens-and-token-scopes}
  */
 function MapboxStyleImageryProvider(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
   const styleId = options.styleId;
   //>>includeStart('debug', pragmas.debug);
   if (!defined(styleId)) {
@@ -82,10 +82,10 @@ function MapboxStyleImageryProvider(options) {
   this._styleId = styleId;
   this._accessToken = accessToken;
 
-  const tilesize = defaultValue(options.tilesize, 512);
+  const tilesize = options.tilesize ?? 512;
   this._tilesize = tilesize;
 
-  const username = defaultValue(options.username, "mapbox");
+  const username = options.username ?? "mapbox";
   this._username = username;
 
   const scaleFactor = defined(options.scaleFactor) ? "@2x" : "";

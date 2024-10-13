@@ -40,8 +40,8 @@ function TileBoundingRegion(options) {
   //>>includeEnd('debug');
 
   this.rectangle = Rectangle.clone(options.rectangle);
-  this.minimumHeight = defaultValue(options.minimumHeight, 0.0);
-  this.maximumHeight = defaultValue(options.maximumHeight, 0.0);
+  this.minimumHeight = options.minimumHeight ?? 0.0;
+  this.maximumHeight = options.maximumHeight ?? 0.0;
 
   /**
    * The world coordinates of the southwest corner of the tile's rectangle.
@@ -99,7 +99,7 @@ function TileBoundingRegion(options) {
    */
   this.northNormal = new Cartesian3();
 
-  const ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
+  const ellipsoid = options.ellipsoid ?? Ellipsoid.WGS84;
   computeBox(this, options.rectangle, ellipsoid);
 
   this._orientedBoundingBox = undefined;

@@ -159,8 +159,8 @@ function preprocess(layers) {
       });
     }
 
-    let extendDownwards = defaultValue(layer.extendDownwards, false);
-    let extendUpwards = defaultValue(layer.extendUpwards, false);
+    let extendDownwards = layer.extendDownwards ?? false;
+    let extendUpwards = layer.extendUpwards ?? false;
 
     // Interpret a single entry to extend all the way up and down.
     if (entries.length === 1 && !extendDownwards && !extendUpwards) {

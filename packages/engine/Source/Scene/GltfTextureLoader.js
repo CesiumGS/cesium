@@ -35,7 +35,7 @@ import resizeImageToNextPowerOfTwo from "../Core/resizeImageToNextPowerOfTwo.js"
  * @private
  */
 function GltfTextureLoader(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
   const resourceCache = options.resourceCache;
   const gltf = options.gltf;
   const textureInfo = options.textureInfo;
@@ -43,7 +43,7 @@ function GltfTextureLoader(options) {
   const baseResource = options.baseResource;
   const supportedImageFormats = options.supportedImageFormats;
   const cacheKey = options.cacheKey;
-  const asynchronous = defaultValue(options.asynchronous, true);
+  const asynchronous = options.asynchronous ?? true;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.func("options.resourceCache", resourceCache);

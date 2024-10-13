@@ -12,7 +12,7 @@ import defaultValue from "../Core/defaultValue.js";
  * @constructor
  */
 function SunLight(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
   /**
    * The color of the light.
    * @type {Color}
@@ -25,7 +25,7 @@ function SunLight(options) {
    * @type {number}
    * @default 2.0
    */
-  this.intensity = defaultValue(options.intensity, 2.0);
+  this.intensity = options.intensity ?? 2.0;
 }
 
 export default SunLight;

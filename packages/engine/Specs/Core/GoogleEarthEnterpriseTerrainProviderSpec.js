@@ -1,5 +1,4 @@
 import {
-  defaultValue,
   Ellipsoid,
   GeographicTilingScheme,
   GoogleEarthEnterpriseMetadata,
@@ -22,7 +21,7 @@ describe("Core/GoogleEarthEnterpriseTerrainProvider", function () {
       GoogleEarthEnterpriseMetadata.prototype,
       "getQuadTreePacket",
     ).and.callFake(function (quadKey, version) {
-      quadKey = defaultValue(quadKey, "");
+      quadKey = quadKey ?? "";
       let t = new GoogleEarthEnterpriseTileInformation(0xff, 1, 1, 1);
       t.ancestorHasTerrain = true;
       this._tileInfo[`${quadKey}0`] = t;

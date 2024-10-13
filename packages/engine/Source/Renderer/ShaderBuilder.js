@@ -1,7 +1,6 @@
 import Check from "../Core/Check.js";
 import clone from "../Core/clone.js";
 import defined from "../Core/defined.js";
-import defaultValue from "../Core/defaultValue.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import ShaderDestination from "./ShaderDestination.js";
 import ShaderProgram from "./ShaderProgram.js";
@@ -122,7 +121,7 @@ ShaderBuilder.prototype.addDefine = function (identifier, value, destination) {
   Check.typeOf.string("identifier", identifier);
   //>>includeEnd('debug');
 
-  destination = defaultValue(destination, ShaderDestination.BOTH);
+  destination = destination ?? ShaderDestination.BOTH;
 
   // The ShaderSource created in build() will add the #define part
   let line = identifier;
@@ -281,7 +280,7 @@ ShaderBuilder.prototype.addUniform = function (type, identifier, destination) {
   Check.typeOf.string("identifier", identifier);
   //>>includeEnd('debug');
 
-  destination = defaultValue(destination, ShaderDestination.BOTH);
+  destination = destination ?? ShaderDestination.BOTH;
   const line = `uniform ${type} ${identifier};`;
 
   if (ShaderDestination.includesVertexShader(destination)) {

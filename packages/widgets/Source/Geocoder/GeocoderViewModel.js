@@ -1,6 +1,5 @@
 import {
   computeFlyToLocationForRectangle,
-  defaultValue,
   defined,
   DeveloperError,
   destroyObject,
@@ -71,7 +70,7 @@ function GeocoderViewModel(options) {
   });
 
   this._searchCommand = createCommand(function (geocodeType) {
-    geocodeType = defaultValue(geocodeType, GeocodeType.SEARCH);
+    geocodeType = geocodeType ?? GeocodeType.SEARCH;
     that._focusTextbox = false;
     if (defined(that._selectedSuggestion)) {
       that.activateSuggestion(that._selectedSuggestion);
@@ -153,16 +152,14 @@ function GeocoderViewModel(options) {
    * @type {boolean}
    * @default true
    */
-  this.autoComplete = defaultValue(options.autocomplete, true);
+  this.autoComplete = options.autocomplete ?? true;
 
   /**
    * Gets and sets the command called when a geocode destination is found
    * @type {Geocoder.DestinationFoundFunction}
    */
-  this.destinationFound = defaultValue(
-    options.destinationFound,
-    GeocoderViewModel.flyToDestination,
-  );
+  this.destinationFound =
+    options.destinationFound ?? GeocoderViewModel.flyToDestination;
 
   this._focusTextbox = false;
 

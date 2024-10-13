@@ -17,7 +17,6 @@ import VertexArray from "../Renderer/VertexArray.js";
 import DepthPlaneFS from "../Shaders/DepthPlaneFS.js";
 import DepthPlaneVS from "../Shaders/DepthPlaneVS.js";
 import SceneMode from "./SceneMode.js";
-import defaultValue from "../Core/defaultValue.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
 
 /**
@@ -30,7 +29,7 @@ function DepthPlane(depthPlaneEllipsoidOffset) {
   this._command = undefined;
   this._mode = undefined;
   this._useLogDepth = false;
-  this._ellipsoidOffset = defaultValue(depthPlaneEllipsoidOffset, 0);
+  this._ellipsoidOffset = depthPlaneEllipsoidOffset ?? 0;
 }
 
 const depthQuadScratch = FeatureDetection.supportsTypedArrays()

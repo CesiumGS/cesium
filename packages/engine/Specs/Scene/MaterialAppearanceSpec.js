@@ -1,7 +1,6 @@
 import {
   Color,
   ColorGeometryInstanceAttribute,
-  defaultValue,
   GeometryInstance,
   Rectangle,
   RectangleGeometry,
@@ -38,10 +37,8 @@ describe(
     });
 
     function createPrimitive(vertexFormat) {
-      vertexFormat = defaultValue(
-        vertexFormat,
-        MaterialAppearance.MaterialSupport.ALL.vertexFormat,
-      );
+      vertexFormat =
+        vertexFormat ?? MaterialAppearance.MaterialSupport.ALL.vertexFormat;
       primitive = new Primitive({
         geometryInstances: new GeometryInstance({
           geometry: new RectangleGeometry({

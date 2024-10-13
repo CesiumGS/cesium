@@ -2,7 +2,6 @@ import buildModuleUrl from "../Core/buildModuleUrl.js";
 import BoxGeometry from "../Core/BoxGeometry.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Check from "../Core/Check.js";
-import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
@@ -71,7 +70,7 @@ function SkyBox(options) {
    * @type {boolean}
    * @default true
    */
-  this.show = defaultValue(options.show, true);
+  this.show = options.show ?? true;
 
   this._command = new DrawCommand({
     modelMatrix: Matrix4.clone(Matrix4.IDENTITY),

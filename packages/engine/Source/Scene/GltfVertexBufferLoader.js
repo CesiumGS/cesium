@@ -41,7 +41,7 @@ import ResourceLoaderState from "./ResourceLoaderState.js";
  * @private
  */
 function GltfVertexBufferLoader(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
   const resourceCache = options.resourceCache;
   const gltf = options.gltf;
   const gltfResource = options.gltfResource;
@@ -51,9 +51,9 @@ function GltfVertexBufferLoader(options) {
   const attributeSemantic = options.attributeSemantic;
   const accessorId = options.accessorId;
   const cacheKey = options.cacheKey;
-  const asynchronous = defaultValue(options.asynchronous, true);
-  const loadBuffer = defaultValue(options.loadBuffer, false);
-  const loadTypedArray = defaultValue(options.loadTypedArray, false);
+  const asynchronous = options.asynchronous ?? true;
+  const loadBuffer = options.loadBuffer ?? false;
+  const loadTypedArray = options.loadTypedArray ?? false;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.func("options.resourceCache", resourceCache);

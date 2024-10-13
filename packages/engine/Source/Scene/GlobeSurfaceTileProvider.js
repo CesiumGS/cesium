@@ -1440,10 +1440,7 @@ function getTileReadyCallback(tileImageriesToFree, layer, terrainProvider) {
     let i;
     for (i = 0; i < length; ++i) {
       tileImagery = tileImageryCollection[i];
-      imagery = defaultValue(
-        tileImagery.readyImagery,
-        tileImagery.loadingImagery,
-      );
+      imagery = tileImagery.readyImagery ?? tileImagery.loadingImagery;
       if (imagery.imageryLayer === layer) {
         startIndex = i;
         break;
@@ -1506,10 +1503,8 @@ GlobeSurfaceTileProvider.prototype._onLayerAdded = function (layer, index) {
         let tileImageriesToFree = 0;
         for (i = 0; i < length; ++i) {
           const tileImagery = tileImageryCollection[i];
-          const imagery = defaultValue(
-            tileImagery.readyImagery,
-            tileImagery.loadingImagery,
-          );
+          const imagery =
+            tileImagery.readyImagery ?? tileImagery.loadingImagery;
           if (imagery.imageryLayer === layer) {
             if (startIndex === -1) {
               startIndex = i;
@@ -2166,14 +2161,11 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
     globeTranslucencyState.backFaceAlphaByDistance;
   const translucencyRectangle = globeTranslucencyState.rectangle;
 
-  const undergroundColor = defaultValue(
-    tileProvider.undergroundColor,
-    defaultUndergroundColor,
-  );
-  const undergroundColorAlphaByDistance = defaultValue(
-    tileProvider.undergroundColorAlphaByDistance,
-    defaultUndergroundColorAlphaByDistance,
-  );
+  const undergroundColor =
+    tileProvider.undergroundColor ?? defaultUndergroundColor;
+  const undergroundColorAlphaByDistance =
+    tileProvider.undergroundColorAlphaByDistance ??
+    defaultUndergroundColorAlphaByDistance;
   const showUndergroundColor =
     isUndergroundVisible(tileProvider, frameState) &&
     frameState.mode === SceneMode.SCENE3D &&

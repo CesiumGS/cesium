@@ -97,7 +97,7 @@ TerrainCache.prototype.tidy = function () {
  * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
  */
 function GoogleEarthEnterpriseTerrainProvider(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
 
   this._tilingScheme = new GeographicTilingScheme({
     numberOfLevelZeroTilesX: 2,

@@ -1,5 +1,4 @@
 import Cartesian3 from "../Core/Cartesian3.js";
-import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import Event from "../Core/Event.js";
 import JulianDate from "../Core/JulianDate.js";
@@ -31,7 +30,7 @@ function VelocityVectorProperty(position, normalize) {
   this._position = undefined;
   this._subscription = undefined;
   this._definitionChanged = new Event();
-  this._normalize = defaultValue(normalize, true);
+  this._normalize = normalize ?? true;
 
   this.position = position;
 }

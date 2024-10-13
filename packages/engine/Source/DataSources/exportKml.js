@@ -274,9 +274,9 @@ IdManager.prototype.get = function (id) {
  *
  */
 function exportKml(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
   const entities = options.entities;
-  const kmz = defaultValue(options.kmz, false);
+  const kmz = options.kmz ?? false;
 
   //>>includeStart('debug', pragmas.debug);
   if (!defined(entities)) {
@@ -372,11 +372,8 @@ exportKml._createState = function (options) {
   const time = defined(options.time) ? options.time : entityAvailability.start;
 
   // Figure out how we will sample dynamic position properties
-  let defaultAvailability = defaultValue(
-    options.defaultAvailability,
-    entityAvailability,
-  );
-  const sampleDuration = defaultValue(options.sampleDuration, 60);
+  let defaultAvailability = options.defaultAvailability ?? entityAvailability;
+  const sampleDuration = options.sampleDuration ?? 60;
 
   // Make sure we don't have infinite availability if we need to sample
   if (defaultAvailability.start === Iso8601.MINIMUM_VALUE) {
@@ -591,7 +588,7 @@ function createPoint(state, entity, geometries, styles) {
   const ellipsoid = state.ellipsoid;
   const valueGetter = state.valueGetter;
 
-  const pointGraphics = defaultValue(entity.billboard, entity.point);
+  const pointGraphics = entity.billboard ?? entity.point;
   if (!defined(pointGraphics) && !defined(entity.path)) {
     return;
   }
@@ -642,7 +639,7 @@ function createTracks(state, entity, pointGraphics, geometries, styles) {
     intervals = entityPositionProperty.intervals;
     useEntityPositionProperty = false;
   } else {
-    intervals = defaultValue(entity.availability, state.defaultAvailability);
+    intervals = entity.availability ?? state.defaultAvailability;
   }
 
   const isModel = pointGraphics instanceof ModelGraphics;
@@ -888,7 +885,7 @@ function createIconStyleFromBillboard(state, billboardGraphics) {
 
   const pixelOffset = valueGetter.get(billboardGraphics.pixelOffset);
   if (defined(pixelOffset)) {
-    scale = defaultValue(scale, 1.0);
+    scale = scale ?? 1.0;
 
     Cartesian2.divideByScalar(pixelOffset, scale, pixelOffset);
 
@@ -1475,7 +1472,7 @@ function createBasicElementWithText(
   elementValue,
   namespace,
 ) {
-  elementValue = defaultValue(elementValue, "");
+  elementValue = elementValue ?? "";
 
   if (typeof elementValue === "boolean") {
     elementValue = elementValue ? "1" : "0";

@@ -13,7 +13,6 @@ import {
   Color,
   ColorGeometryInstanceAttribute,
   ContentMetadata,
-  defaultValue,
   destroyObject,
   Ellipsoid,
   GeometryInstance,
@@ -200,7 +199,7 @@ describe(
       });
 
       function picksGeoJson(url, hasProperties, expectedFeatureId) {
-        expectedFeatureId = defaultValue(expectedFeatureId, 0);
+        expectedFeatureId = expectedFeatureId ?? 0;
         return Cesium3DTilesTester.loadTileset(scene, url).then(
           function (tileset) {
             const content = tileset.root.content;

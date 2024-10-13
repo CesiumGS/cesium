@@ -162,8 +162,8 @@ function ImageryLayer(imageryProvider, options) {
   this._readyEvent = new Event();
   this._errorEvent = new Event();
 
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  imageryProvider = defaultValue(imageryProvider, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
+  imageryProvider = imageryProvider ?? defaultValue.EMPTY_OBJECT;
 
   /**
    * The alpha blending value of this layer, with 0.0 representing fully transparent and
@@ -274,10 +274,7 @@ function ImageryLayer(imageryProvider, options) {
    * @type {SplitDirection}
    * @default {@link ImageryLayer.DEFAULT_SPLIT}
    */
-  this.splitDirection = defaultValue(
-    options.splitDirection,
-    ImageryLayer.DEFAULT_SPLIT,
-  );
+  this.splitDirection = options.splitDirection ?? ImageryLayer.DEFAULT_SPLIT;
 
   /**
    * The {@link TextureMinificationFilter} to apply to this layer.
@@ -323,12 +320,12 @@ function ImageryLayer(imageryProvider, options) {
    * @type {boolean}
    * @default true
    */
-  this.show = defaultValue(options.show, true);
+  this.show = options.show ?? true;
 
   this._minimumTerrainLevel = options.minimumTerrainLevel;
   this._maximumTerrainLevel = options.maximumTerrainLevel;
 
-  this._rectangle = defaultValue(options.rectangle, Rectangle.MAX_VALUE);
+  this._rectangle = options.rectangle ?? Rectangle.MAX_VALUE;
   this._maximumAnisotropy = options.maximumAnisotropy;
 
   this._imageryCache = {};
@@ -367,10 +364,9 @@ function ImageryLayer(imageryProvider, options) {
    *
    * @type {number}
    */
-  this.colorToAlphaThreshold = defaultValue(
-    options.colorToAlphaThreshold,
-    ImageryLayer.DEFAULT_APPLY_COLOR_TO_ALPHA_THRESHOLD,
-  );
+  this.colorToAlphaThreshold =
+    options.colorToAlphaThreshold ??
+    ImageryLayer.DEFAULT_APPLY_COLOR_TO_ALPHA_THRESHOLD;
 }
 
 Object.defineProperties(ImageryLayer.prototype, {
@@ -604,7 +600,7 @@ ImageryLayer.fromProviderAsync = function (imageryProviderPromise, options) {
  * @see ImageryLayer.provider
  */
 ImageryLayer.fromWorldImagery = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
 
   return ImageryLayer.fromProviderAsync(
     createWorldImageryAsync({
@@ -1383,7 +1379,7 @@ ImageryLayer.prototype._reprojectTexture = function (
   const rectangle = imagery.rectangle;
   const context = frameState.context;
 
-  needGeographicProjection = defaultValue(needGeographicProjection, true);
+  needGeographicProjection = needGeographicProjection ?? true;
 
   // Reproject this texture if it is not already in a geographic projection and
   // the pixels are more than 1e-5 radians apart.  The pixel spacing cutoff

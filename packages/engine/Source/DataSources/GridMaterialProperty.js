@@ -27,7 +27,7 @@ const defaultLineThickness = new Cartesian2(1, 1);
  * @constructor
  */
 function GridMaterialProperty(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
 
   this._definitionChanged = new Event();
   this._color = undefined;

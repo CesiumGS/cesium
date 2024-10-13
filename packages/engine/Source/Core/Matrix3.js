@@ -79,7 +79,7 @@ Matrix3.pack = function (value, array, startingIndex) {
   Check.defined("array", array);
   //>>includeEnd('debug');
 
-  startingIndex = defaultValue(startingIndex, 0);
+  startingIndex = startingIndex ?? 0;
 
   array[startingIndex++] = value[0];
   array[startingIndex++] = value[1];
@@ -107,7 +107,7 @@ Matrix3.unpack = function (array, startingIndex, result) {
   Check.defined("array", array);
   //>>includeEnd('debug');
 
-  startingIndex = defaultValue(startingIndex, 0);
+  startingIndex = startingIndex ?? 0;
 
   if (!defined(result)) {
     result = new Matrix3();
@@ -1648,7 +1648,7 @@ Matrix3.equals = function (left, right) {
  * @returns {boolean} <code>true</code> if left and right are within the provided epsilon, <code>false</code> otherwise.
  */
 Matrix3.equalsEpsilon = function (left, right, epsilon) {
-  epsilon = defaultValue(epsilon, 0);
+  epsilon = epsilon ?? 0;
 
   return (
     left === right ||

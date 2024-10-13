@@ -18,7 +18,7 @@ const url = "https://dev.virtualearth.net/REST/v1/Locations";
  * @param {string} [options.culture] A Bing Maps {@link https://docs.microsoft.com/en-us/bingmaps/rest-services/common-parameters-and-types/supported-culture-codes|Culture Code} to return results in a specific culture and language.
  */
 function BingMapsGeocoderService(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
   const key = options.key;
   //>>includeStart('debug', pragmas.debug);
   if (!defined(key)) {

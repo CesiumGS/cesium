@@ -19,7 +19,7 @@ import ModelArticulationStage from "./ModelArticulationStage.js";
  * @private
  */
 function ModelArticulation(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
 
   const articulation = options.articulation;
   const sceneGraph = options.sceneGraph;

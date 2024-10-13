@@ -21,7 +21,7 @@ import MetadataTable from "./MetadataTable.js";
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 function parseStructuralMetadata(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
   const extension = options.extension;
 
   // The calling code is responsible for loading the schema.

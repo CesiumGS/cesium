@@ -1,4 +1,3 @@
-import defaultValue from "../../Core/defaultValue.js";
 import defined from "../../Core/defined.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import BlendingState from "../BlendingState.js";
@@ -20,7 +19,7 @@ AlphaPipelineStage.process = function (renderResources, primitive, frameState) {
 
   // Ensure the pass is defined
   const model = renderResources.model;
-  alphaOptions.pass = defaultValue(alphaOptions.pass, model.opaquePass);
+  alphaOptions.pass = alphaOptions.pass ?? model.opaquePass;
 
   const renderStateOptions = renderResources.renderStateOptions;
   if (alphaOptions.pass === Pass.TRANSLUCENT) {

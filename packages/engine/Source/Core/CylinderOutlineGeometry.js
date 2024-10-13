@@ -47,12 +47,12 @@ const radiusScratch = new Cartesian2();
  * const geometry = Cesium.CylinderOutlineGeometry.createGeometry(cylinder);
  */
 function CylinderOutlineGeometry(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
 
   const length = options.length;
   const topRadius = options.topRadius;
   const bottomRadius = options.bottomRadius;
-  const slices = defaultValue(options.slices, 128);
+  const slices = options.slices ?? 128;
   const numberOfVerticalLines = Math.max(
     defaultValue(options.numberOfVerticalLines, 16),
     0,
@@ -103,7 +103,7 @@ CylinderOutlineGeometry.pack = function (value, array, startingIndex) {
   Check.defined("array", array);
   //>>includeEnd('debug');
 
-  startingIndex = defaultValue(startingIndex, 0);
+  startingIndex = startingIndex ?? 0;
 
   array[startingIndex++] = value._length;
   array[startingIndex++] = value._topRadius;
@@ -137,7 +137,7 @@ CylinderOutlineGeometry.unpack = function (array, startingIndex, result) {
   Check.defined("array", array);
   //>>includeEnd('debug');
 
-  startingIndex = defaultValue(startingIndex, 0);
+  startingIndex = startingIndex ?? 0;
 
   const length = array[startingIndex++];
   const topRadius = array[startingIndex++];

@@ -274,7 +274,7 @@ ComponentDatatype.createArrayBufferView = function (
   }
   //>>includeEnd('debug');
 
-  byteOffset = defaultValue(byteOffset, 0);
+  byteOffset = byteOffset ?? 0;
   length = defaultValue(
     length,
     (buffer.byteLength - byteOffset) /

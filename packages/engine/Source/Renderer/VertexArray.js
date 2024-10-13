@@ -287,7 +287,7 @@ function bind(gl, attributes, indexBuffer) {
  * @private
  */
 function VertexArray(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
 
   //>>includeStart('debug', pragmas.debug);
   Check.defined("options.context", options.context);
@@ -571,25 +571,20 @@ function interleaveAttributes(attributes) {
  * @see ShaderProgram
  */
 VertexArray.fromGeometry = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
 
   //>>includeStart('debug', pragmas.debug);
   Check.defined("options.context", options.context);
   //>>includeEnd('debug');
 
   const context = options.context;
-  const geometry = defaultValue(options.geometry, defaultValue.EMPTY_OBJECT);
+  const geometry = options.geometry ?? defaultValue.EMPTY_OBJECT;
 
-  const bufferUsage = defaultValue(
-    options.bufferUsage,
-    BufferUsage.DYNAMIC_DRAW,
-  );
+  const bufferUsage = options.bufferUsage ?? BufferUsage.DYNAMIC_DRAW;
 
-  const attributeLocations = defaultValue(
-    options.attributeLocations,
-    defaultValue.EMPTY_OBJECT,
-  );
-  const interleave = defaultValue(options.interleave, false);
+  const attributeLocations =
+    options.attributeLocations ?? defaultValue.EMPTY_OBJECT;
+  const interleave = options.interleave ?? false;
   const createdVAAttributes = options.vertexArrayAttributes;
 
   let name;

@@ -42,10 +42,10 @@ import Material from "./Material.js";
  * });
  */
 function EllipsoidSurfaceAppearance(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
 
-  const translucent = defaultValue(options.translucent, true);
-  const aboveGround = defaultValue(options.aboveGround, false);
+  const translucent = options.translucent ?? true;
+  const aboveGround = options.aboveGround ?? false;
 
   /**
    * The material used to determine the fragment color.  Unlike other {@link EllipsoidSurfaceAppearance}
@@ -68,16 +68,12 @@ function EllipsoidSurfaceAppearance(options) {
    *
    * @default true
    */
-  this.translucent = defaultValue(options.translucent, true);
+  this.translucent = options.translucent ?? true;
 
-  this._vertexShaderSource = defaultValue(
-    options.vertexShaderSource,
-    EllipsoidSurfaceAppearanceVS,
-  );
-  this._fragmentShaderSource = defaultValue(
-    options.fragmentShaderSource,
-    EllipsoidSurfaceAppearanceFS,
-  );
+  this._vertexShaderSource =
+    options.vertexShaderSource ?? EllipsoidSurfaceAppearanceVS;
+  this._fragmentShaderSource =
+    options.fragmentShaderSource ?? EllipsoidSurfaceAppearanceFS;
   this._renderState = Appearance.getDefaultRenderState(
     translucent,
     !aboveGround,
@@ -87,8 +83,8 @@ function EllipsoidSurfaceAppearance(options) {
 
   // Non-derived members
 
-  this._flat = defaultValue(options.flat, false);
-  this._faceForward = defaultValue(options.faceForward, aboveGround);
+  this._flat = options.flat ?? false;
+  this._faceForward = options.faceForward ?? aboveGround;
   this._aboveGround = aboveGround;
 }
 

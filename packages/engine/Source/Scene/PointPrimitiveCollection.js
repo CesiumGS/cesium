@@ -91,7 +91,7 @@ const attributeLocations = {
  * @see PointPrimitive
  */
 function PointPrimitiveCollection(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
 
   this._sp = undefined;
   this._spTranslucent = undefined;
@@ -135,7 +135,7 @@ function PointPrimitiveCollection(options) {
    * @type {boolean}
    * @default true
    */
-  this.show = defaultValue(options.show, true);
+  this.show = options.show ?? true;
 
   /**
    * The 4x4 transformation matrix that transforms each point in this collection from model to world coordinates.
@@ -184,10 +184,7 @@ function PointPrimitiveCollection(options) {
    *
    * @default false
    */
-  this.debugShowBoundingVolume = defaultValue(
-    options.debugShowBoundingVolume,
-    false,
-  );
+  this.debugShowBoundingVolume = options.debugShowBoundingVolume ?? false;
 
   /**
    * The point blending option. The default is used for rendering both opaque and translucent points.
@@ -197,10 +194,7 @@ function PointPrimitiveCollection(options) {
    * @type {BlendOption}
    * @default BlendOption.OPAQUE_AND_TRANSLUCENT
    */
-  this.blendOption = defaultValue(
-    options.blendOption,
-    BlendOption.OPAQUE_AND_TRANSLUCENT,
-  );
+  this.blendOption = options.blendOption ?? BlendOption.OPAQUE_AND_TRANSLUCENT;
   this._blendOption = undefined;
 
   this._mode = SceneMode.SCENE3D;

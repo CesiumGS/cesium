@@ -77,7 +77,7 @@ OrientedBoundingBox.pack = function (value, array, startingIndex) {
   Check.defined("array", array);
   //>>includeEnd('debug');
 
-  startingIndex = defaultValue(startingIndex, 0);
+  startingIndex = startingIndex ?? 0;
 
   Cartesian3.pack(value.center, array, startingIndex);
   Matrix3.pack(value.halfAxes, array, startingIndex + Cartesian3.packedLength);
@@ -98,7 +98,7 @@ OrientedBoundingBox.unpack = function (array, startingIndex, result) {
   Check.defined("array", array);
   //>>includeEnd('debug');
 
-  startingIndex = defaultValue(startingIndex, 0);
+  startingIndex = startingIndex ?? 0;
 
   if (!defined(result)) {
     result = new OrientedBoundingBox();
@@ -371,9 +371,9 @@ OrientedBoundingBox.fromRectangle = function (
   }
   //>>includeEnd('debug');
 
-  minimumHeight = defaultValue(minimumHeight, 0.0);
-  maximumHeight = defaultValue(maximumHeight, 0.0);
-  ellipsoid = defaultValue(ellipsoid, Ellipsoid.default);
+  minimumHeight = minimumHeight ?? 0.0;
+  maximumHeight = maximumHeight ?? 0.0;
+  ellipsoid = ellipsoid ?? Ellipsoid.default;
 
   let minX, maxX, minY, maxY, minZ, maxZ, plane;
 

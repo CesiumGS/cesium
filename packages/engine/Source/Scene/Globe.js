@@ -41,7 +41,7 @@ import CesiumMath from "../Core/Math.js";
  * globe.
  */
 function Globe(ellipsoid) {
-  ellipsoid = defaultValue(ellipsoid, Ellipsoid.default);
+  ellipsoid = ellipsoid ?? Ellipsoid.default;
   const terrainProvider = new EllipsoidTerrainProvider({
     ellipsoid: ellipsoid,
   });
@@ -716,7 +716,7 @@ Globe.prototype.pickWorldCoordinates = function (
   }
   //>>includeEnd('debug');
 
-  cullBackFaces = defaultValue(cullBackFaces, true);
+  cullBackFaces = cullBackFaces ?? true;
 
   const mode = scene.mode;
   const projection = scene.mapProjection;

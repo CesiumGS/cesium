@@ -180,7 +180,7 @@ function unwrapColorInterval(czmlInterval) {
 }
 
 function unwrapUriInterval(czmlInterval, sourceUri) {
-  const uri = defaultValue(czmlInterval.uri, czmlInterval);
+  const uri = czmlInterval.uri ?? czmlInterval;
   if (defined(sourceUri)) {
     return sourceUri.getDerivedResource({
       url: uri,
@@ -736,8 +736,8 @@ function processProperty(
       // not a known value type, bail
       return;
     }
-    packedLength = defaultValue(type.packedLength, 1);
-    unwrappedIntervalLength = defaultValue(unwrappedInterval.length, 1);
+    packedLength = type.packedLength ?? 1;
+    unwrappedIntervalLength = unwrappedInterval.length ?? 1;
     isSampled =
       !defined(packetData.array) &&
       typeof unwrappedInterval !== "string" &&
@@ -969,9 +969,9 @@ function processPositionProperty(
     if (defined(packetData.referenceFrame)) {
       referenceFrame = ReferenceFrame[packetData.referenceFrame];
     }
-    referenceFrame = defaultValue(referenceFrame, ReferenceFrame.FIXED);
+    referenceFrame = referenceFrame ?? ReferenceFrame.FIXED;
     unwrappedInterval = unwrapCartesianInterval(packetData);
-    unwrappedIntervalLength = defaultValue(unwrappedInterval.length, 1);
+    unwrappedIntervalLength = unwrappedInterval.length ?? 1;
     isSampled = unwrappedIntervalLength > packedLength;
   }
 
@@ -2674,14 +2674,11 @@ function processDocument(packet, dataSource) {
         multiplier: clockPacket.multiplier,
       };
     } else {
-      clock.interval = defaultValue(clockPacket.interval, clock.interval);
-      clock.currentTime = defaultValue(
-        clockPacket.currentTime,
-        clock.currentTime,
-      );
-      clock.range = defaultValue(clockPacket.range, clock.range);
-      clock.step = defaultValue(clockPacket.step, clock.step);
-      clock.multiplier = defaultValue(clockPacket.multiplier, clock.multiplier);
+      clock.interval = clockPacket.interval ?? clock.interval;
+      clock.currentTime = clockPacket.currentTime ?? clock.currentTime;
+      clock.range = clockPacket.range ?? clock.range;
+      clock.step = clockPacket.step ?? clock.step;
+      clock.multiplier = clockPacket.multiplier ?? clock.multiplier;
     }
   }
 }
@@ -4707,16 +4704,11 @@ function updateClock(dataSource) {
     clock.currentTime = JulianDate.fromIso8601(clockPacket.currentTime);
   }
   if (defined(clockPacket.range)) {
-    clock.clockRange = defaultValue(
-      ClockRange[clockPacket.range],
-      ClockRange.LOOP_STOP,
-    );
+    clock.clockRange = ClockRange[clockPacket.range] ?? ClockRange.LOOP_STOP;
   }
   if (defined(clockPacket.step)) {
-    clock.clockStep = defaultValue(
-      ClockStep[clockPacket.step],
-      ClockStep.SYSTEM_CLOCK_MULTIPLIER,
-    );
+    clock.clockStep =
+      ClockStep[clockPacket.step] ?? ClockStep.SYSTEM_CLOCK_MULTIPLIER;
   }
   if (defined(clockPacket.multiplier)) {
     clock.multiplier = clockPacket.multiplier;
@@ -4737,7 +4729,7 @@ function load(dataSource, czml, options, clear) {
   }
   //>>includeEnd('debug');
 
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
 
   let promise = czml;
   let sourceUri = options.sourceUri;
@@ -5143,7 +5135,7 @@ CzmlDataSource._processCzml = function (
   updaterFunctions,
   dataSource,
 ) {
-  updaterFunctions = defaultValue(updaterFunctions, CzmlDataSource.updaters);
+  updaterFunctions = updaterFunctions ?? CzmlDataSource.updaters;
 
   if (Array.isArray(czml)) {
     for (let i = 0, len = czml.length; i < len; ++i) {

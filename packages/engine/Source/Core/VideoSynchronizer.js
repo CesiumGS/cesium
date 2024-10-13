@@ -19,7 +19,7 @@ import JulianDate from "./JulianDate.js";
  * @demo {@link https://sandcastle.cesium.com/index.html?src=Video.html|Video Material Demo}
  */
 function VideoSynchronizer(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
 
   this._clock = undefined;
   this._element = undefined;
@@ -35,7 +35,7 @@ function VideoSynchronizer(options) {
    * @type {JulianDate}
    * @default Iso8601.MINIMUM_VALUE
    */
-  this.epoch = defaultValue(options.epoch, Iso8601.MINIMUM_VALUE);
+  this.epoch = options.epoch ?? Iso8601.MINIMUM_VALUE;
 
   /**
    * Gets or sets the amount of time in seconds the video's currentTime
@@ -46,7 +46,7 @@ function VideoSynchronizer(options) {
    * @type {number}
    * @default 1.0
    */
-  this.tolerance = defaultValue(options.tolerance, 1.0);
+  this.tolerance = options.tolerance ?? 1.0;
 
   this._seeking = false;
   this._seekFunction = undefined;
@@ -184,7 +184,7 @@ VideoSynchronizer.prototype._onTick = function (clock) {
   this._trySetPlaybackRate(clock);
 
   const clockTime = clock.currentTime;
-  const epoch = defaultValue(this.epoch, Iso8601.MINIMUM_VALUE);
+  const epoch = this.epoch ?? Iso8601.MINIMUM_VALUE;
   let videoTime = JulianDate.secondsDifference(clockTime, epoch);
 
   const duration = element.duration;
