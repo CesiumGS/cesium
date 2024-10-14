@@ -3,7 +3,6 @@ import Cartesian3 from "./Cartesian3.js";
 import Cartesian4 from "./Cartesian4.js";
 import Cartographic from "./Cartographic.js";
 import Check from "./Check.js";
-import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import EarthOrientationParameters from "./EarthOrientationParameters.js";
@@ -1099,10 +1098,11 @@ Transforms.rotationMatrixFromPositionVelocity = function (
   }
   //>>includeEnd('debug');
 
-  const normal = defaultValue(
-    ellipsoid,
-    Ellipsoid.default,
-  ).geodeticSurfaceNormal(position, normalScratch);
+  const normal = (ellipsoid ?? Ellipsoid.default).geodeticSurfaceNormal(
+    position,
+    normalScratch,
+  );
+
   let right = Cartesian3.cross(velocity, normal, rightScratch);
 
   if (Cartesian3.equalsEpsilon(right, Cartesian3.ZERO, CesiumMath.EPSILON6)) {

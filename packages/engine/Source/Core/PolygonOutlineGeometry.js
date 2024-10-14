@@ -441,7 +441,7 @@ PolygonOutlineGeometry.pack = function (value, array, startingIndex) {
   array[startingIndex++] = value._perPositionHeightExtrude ? 1.0 : 0.0;
   array[startingIndex++] = value._perPositionHeight ? 1.0 : 0.0;
   array[startingIndex++] = value._arcType;
-  array[startingIndex++] = defaultValue(value._offsetAttribute, -1);
+  array[startingIndex++] = value._offsetAttribute ?? -1;
   array[startingIndex] = value.packedLength;
 
   return array;

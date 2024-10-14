@@ -846,7 +846,7 @@ PolygonGeometry.pack = function (value, array, startingIndex) {
   array[startingIndex++] = value._closeTop ? 1.0 : 0.0;
   array[startingIndex++] = value._closeBottom ? 1.0 : 0.0;
   array[startingIndex++] = value._shadowVolume ? 1.0 : 0.0;
-  array[startingIndex++] = defaultValue(value._offsetAttribute, -1);
+  array[startingIndex++] = value._offsetAttribute ?? -1;
   array[startingIndex++] = value._arcType;
   if (defined(value._textureCoordinates)) {
     startingIndex = PolygonGeometryLibrary.packPolygonHierarchy(

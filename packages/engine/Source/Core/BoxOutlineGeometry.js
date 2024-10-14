@@ -153,10 +153,8 @@ BoxOutlineGeometry.pack = function (value, array, startingIndex) {
 
   Cartesian3.pack(value._min, array, startingIndex);
   Cartesian3.pack(value._max, array, startingIndex + Cartesian3.packedLength);
-  array[startingIndex + Cartesian3.packedLength * 2] = defaultValue(
-    value._offsetAttribute,
-    -1,
-  );
+  array[startingIndex + Cartesian3.packedLength * 2] =
+    value._offsetAttribute ?? -1;
 
   return array;
 };

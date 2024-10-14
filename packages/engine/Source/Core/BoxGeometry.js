@@ -176,7 +176,7 @@ BoxGeometry.pack = function (value, array, startingIndex) {
   );
   array[
     startingIndex + 2 * Cartesian3.packedLength + VertexFormat.packedLength
-  ] = defaultValue(value._offsetAttribute, -1);
+  ] = value._offsetAttribute ?? -1;
 
   return array;
 };

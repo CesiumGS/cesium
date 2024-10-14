@@ -54,7 +54,7 @@ function CylinderOutlineGeometry(options) {
   const bottomRadius = options.bottomRadius;
   const slices = options.slices ?? 128;
   const numberOfVerticalLines = Math.max(
-    defaultValue(options.numberOfVerticalLines, 16),
+    options.numberOfVerticalLines ?? 16,
     0,
   );
 
@@ -110,7 +110,7 @@ CylinderOutlineGeometry.pack = function (value, array, startingIndex) {
   array[startingIndex++] = value._bottomRadius;
   array[startingIndex++] = value._slices;
   array[startingIndex++] = value._numberOfVerticalLines;
-  array[startingIndex] = defaultValue(value._offsetAttribute, -1);
+  array[startingIndex] = value._offsetAttribute ?? -1;
 
   return array;
 };

@@ -39,7 +39,7 @@ function createWorldBathymetryAsync(options) {
   options = options ?? defaultValue.EMPTY_OBJECT;
 
   return CesiumTerrainProvider.fromIonAssetId(2426648, {
-    requestVertexNormals: defaultValue(options.requestVertexNormals, false),
+    requestVertexNormals: options.requestVertexNormals ?? false,
   });
 }
 export default createWorldBathymetryAsync;

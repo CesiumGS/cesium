@@ -1,6 +1,5 @@
 import Cartesian2 from "./Cartesian2.js";
 import Check from "./Check.js";
-import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 
@@ -26,10 +25,10 @@ import DeveloperError from "./DeveloperError.js";
  * @see Matrix4
  */
 function Matrix2(column0Row0, column1Row0, column0Row1, column1Row1) {
-  this[0] = defaultValue(column0Row0, 0.0);
-  this[1] = defaultValue(column0Row1, 0.0);
-  this[2] = defaultValue(column1Row0, 0.0);
-  this[3] = defaultValue(column1Row1, 0.0);
+  this[0] = column0Row0 ?? 0.0;
+  this[1] = column0Row1 ?? 0.0;
+  this[2] = column1Row0 ?? 0.0;
+  this[3] = column1Row1 ?? 0.0;
 }
 
 /**

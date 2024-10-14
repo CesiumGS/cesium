@@ -1083,11 +1083,9 @@ function CorridorGeometry(options) {
   const extrudedHeight = options.extrudedHeight ?? height;
 
   this._positions = positions;
-  this._ellipsoid = Ellipsoid.clone(
-    defaultValue(options.ellipsoid, Ellipsoid.default),
-  );
+  this._ellipsoid = Ellipsoid.clone(options.ellipsoid ?? Ellipsoid.default);
   this._vertexFormat = VertexFormat.clone(
-    defaultValue(options.vertexFormat, VertexFormat.DEFAULT),
+    options.vertexFormat ?? VertexFormat.DEFAULT,
   );
   this._width = width;
   this._height = Math.max(height, extrudedHeight);
@@ -1148,7 +1146,7 @@ CorridorGeometry.pack = function (value, array, startingIndex) {
   array[startingIndex++] = value._cornerType;
   array[startingIndex++] = value._granularity;
   array[startingIndex++] = value._shadowVolume ? 1.0 : 0.0;
-  array[startingIndex] = defaultValue(value._offsetAttribute, -1);
+  array[startingIndex] = value._offsetAttribute ?? -1;
 
   return array;
 };
