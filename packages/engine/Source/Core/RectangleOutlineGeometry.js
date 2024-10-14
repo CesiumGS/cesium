@@ -341,7 +341,7 @@ RectangleOutlineGeometry.pack = function (value, array, startingIndex) {
   array[startingIndex++] = value._surfaceHeight;
   array[startingIndex++] = value._rotation;
   array[startingIndex++] = value._extrudedHeight;
-  array[startingIndex] = defaultValue(value._offsetAttribute, -1);
+  array[startingIndex] = value._offsetAttribute ?? -1;
 
   return array;
 };

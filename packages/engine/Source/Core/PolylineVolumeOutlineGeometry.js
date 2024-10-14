@@ -123,9 +123,7 @@ function PolylineVolumeOutlineGeometry(options) {
 
   this._positions = positions;
   this._shape = shape;
-  this._ellipsoid = Ellipsoid.clone(
-    defaultValue(options.ellipsoid, Ellipsoid.default),
-  );
+  this._ellipsoid = Ellipsoid.clone(options.ellipsoid ?? Ellipsoid.default);
   this._cornerType = options.cornerType ?? CornerType.ROUNDED;
   this._granularity = options.granularity ?? CesiumMath.RADIANS_PER_DEGREE;
   this._workerName = "createPolylineVolumeOutlineGeometry";

@@ -29,7 +29,7 @@ function EllipsoidTerrainProvider(options) {
   this._tilingScheme = options.tilingScheme;
   if (!defined(this._tilingScheme)) {
     this._tilingScheme = new GeographicTilingScheme({
-      ellipsoid: defaultValue(options.ellipsoid, Ellipsoid.default),
+      ellipsoid: options.ellipsoid ?? Ellipsoid.default,
     });
   }
 

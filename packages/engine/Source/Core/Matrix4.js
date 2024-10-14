@@ -71,22 +71,22 @@ function Matrix4(
   column2Row3,
   column3Row3,
 ) {
-  this[0] = defaultValue(column0Row0, 0.0);
-  this[1] = defaultValue(column0Row1, 0.0);
-  this[2] = defaultValue(column0Row2, 0.0);
-  this[3] = defaultValue(column0Row3, 0.0);
-  this[4] = defaultValue(column1Row0, 0.0);
-  this[5] = defaultValue(column1Row1, 0.0);
-  this[6] = defaultValue(column1Row2, 0.0);
-  this[7] = defaultValue(column1Row3, 0.0);
-  this[8] = defaultValue(column2Row0, 0.0);
-  this[9] = defaultValue(column2Row1, 0.0);
-  this[10] = defaultValue(column2Row2, 0.0);
-  this[11] = defaultValue(column2Row3, 0.0);
-  this[12] = defaultValue(column3Row0, 0.0);
-  this[13] = defaultValue(column3Row1, 0.0);
-  this[14] = defaultValue(column3Row2, 0.0);
-  this[15] = defaultValue(column3Row3, 0.0);
+  this[0] = column0Row0 ?? 0.0;
+  this[1] = column0Row1 ?? 0.0;
+  this[2] = column0Row2 ?? 0.0;
+  this[3] = column0Row3 ?? 0.0;
+  this[4] = column1Row0 ?? 0.0;
+  this[5] = column1Row1 ?? 0.0;
+  this[6] = column1Row2 ?? 0.0;
+  this[7] = column1Row3 ?? 0.0;
+  this[8] = column2Row0 ?? 0.0;
+  this[9] = column2Row1 ?? 0.0;
+  this[10] = column2Row2 ?? 0.0;
+  this[11] = column2Row3 ?? 0.0;
+  this[12] = column3Row0 ?? 0.0;
+  this[13] = column3Row1 ?? 0.0;
+  this[14] = column3Row2 ?? 0.0;
+  this[15] = column3Row3 ?? 0.0;
 }
 
 /**

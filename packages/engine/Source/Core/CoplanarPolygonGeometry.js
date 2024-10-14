@@ -258,9 +258,7 @@ function CoplanarPolygonGeometry(options) {
   this._vertexFormat = VertexFormat.clone(vertexFormat);
   this._polygonHierarchy = polygonHierarchy;
   this._stRotation = options.stRotation ?? 0.0;
-  this._ellipsoid = Ellipsoid.clone(
-    defaultValue(options.ellipsoid, Ellipsoid.default),
-  );
+  this._ellipsoid = Ellipsoid.clone(options.ellipsoid ?? Ellipsoid.default);
   this._workerName = "createCoplanarPolygonGeometry";
   this._textureCoordinates = textureCoordinates;
 

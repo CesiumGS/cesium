@@ -63,8 +63,8 @@ function EllipsoidGeometry(options) {
   const maximumClock = options.maximumClock ?? CesiumMath.TWO_PI;
   const minimumCone = options.minimumCone ?? 0.0;
   const maximumCone = options.maximumCone ?? CesiumMath.PI;
-  const stackPartitions = Math.round(defaultValue(options.stackPartitions, 64));
-  const slicePartitions = Math.round(defaultValue(options.slicePartitions, 64));
+  const stackPartitions = Math.round(options.stackPartitions ?? 64);
+  const slicePartitions = Math.round(options.slicePartitions ?? 64);
   const vertexFormat = options.vertexFormat ?? VertexFormat.DEFAULT;
 
   //>>includeStart('debug', pragmas.debug);
@@ -136,7 +136,7 @@ EllipsoidGeometry.pack = function (value, array, startingIndex) {
   array[startingIndex++] = value._maximumCone;
   array[startingIndex++] = value._stackPartitions;
   array[startingIndex++] = value._slicePartitions;
-  array[startingIndex] = defaultValue(value._offsetAttribute, -1);
+  array[startingIndex] = value._offsetAttribute ?? -1;
 
   return array;
 };

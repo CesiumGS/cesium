@@ -55,9 +55,9 @@ function EllipsoidOutlineGeometry(options) {
   const maximumClock = options.maximumClock ?? CesiumMath.TWO_PI;
   const minimumCone = options.minimumCone ?? 0.0;
   const maximumCone = options.maximumCone ?? CesiumMath.PI;
-  const stackPartitions = Math.round(defaultValue(options.stackPartitions, 10));
-  const slicePartitions = Math.round(defaultValue(options.slicePartitions, 8));
-  const subdivisions = Math.round(defaultValue(options.subdivisions, 128));
+  const stackPartitions = Math.round(options.stackPartitions ?? 10);
+  const slicePartitions = Math.round(options.slicePartitions ?? 8);
+  const subdivisions = Math.round(options.subdivisions ?? 128);
 
   //>>includeStart('debug', pragmas.debug);
   if (stackPartitions < 1) {
@@ -134,7 +134,7 @@ EllipsoidOutlineGeometry.pack = function (value, array, startingIndex) {
   array[startingIndex++] = value._stackPartitions;
   array[startingIndex++] = value._slicePartitions;
   array[startingIndex++] = value._subdivisions;
-  array[startingIndex] = defaultValue(value._offsetAttribute, -1);
+  array[startingIndex] = value._offsetAttribute ?? -1;
 
   return array;
 };

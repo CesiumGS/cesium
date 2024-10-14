@@ -1,6 +1,5 @@
 import Cartesian3 from "./Cartesian3.js";
 import Check from "./Check.js";
-import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import CesiumMath from "./Math.js";
@@ -47,15 +46,15 @@ function Matrix3(
   column1Row2,
   column2Row2,
 ) {
-  this[0] = defaultValue(column0Row0, 0.0);
-  this[1] = defaultValue(column0Row1, 0.0);
-  this[2] = defaultValue(column0Row2, 0.0);
-  this[3] = defaultValue(column1Row0, 0.0);
-  this[4] = defaultValue(column1Row1, 0.0);
-  this[5] = defaultValue(column1Row2, 0.0);
-  this[6] = defaultValue(column2Row0, 0.0);
-  this[7] = defaultValue(column2Row1, 0.0);
-  this[8] = defaultValue(column2Row2, 0.0);
+  this[0] = column0Row0 ?? 0.0;
+  this[1] = column0Row1 ?? 0.0;
+  this[2] = column0Row2 ?? 0.0;
+  this[3] = column1Row0 ?? 0.0;
+  this[4] = column1Row1 ?? 0.0;
+  this[5] = column1Row2 ?? 0.0;
+  this[6] = column2Row0 ?? 0.0;
+  this[7] = column2Row1 ?? 0.0;
+  this[8] = column2Row2 ?? 0.0;
 }
 
 /**

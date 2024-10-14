@@ -118,7 +118,7 @@ function Resource(options) {
    *
    * @type {Request}
    */
-  this.request = defaultValue(options.request, new Request());
+  this.request = options.request ?? new Request();
 
   /**
    * A proxy to be used when loading the resource.

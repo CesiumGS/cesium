@@ -26,9 +26,7 @@ function IonGeocoderService(options) {
   //>>includeEnd('debug');
 
   const accessToken = options.accessToken ?? Ion.defaultAccessToken;
-  const server = Resource.createIfNeeded(
-    defaultValue(options.server, Ion.defaultServer),
-  );
+  const server = Resource.createIfNeeded(options.server ?? Ion.defaultServer);
   server.appendForwardSlash();
 
   const defaultTokenCredit = Ion.getDefaultTokenCredit(accessToken);

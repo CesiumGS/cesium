@@ -251,7 +251,7 @@ function EllipseOutlineGeometry(options) {
   this._granularity = granularity;
   this._extrudedHeight = Math.min(extrudedHeight, height);
   this._numberOfVerticalLines = Math.max(
-    defaultValue(options.numberOfVerticalLines, 16),
+    options.numberOfVerticalLines ?? 16,
     0,
   );
   this._offsetAttribute = options.offsetAttribute;
@@ -299,7 +299,7 @@ EllipseOutlineGeometry.pack = function (value, array, startingIndex) {
   array[startingIndex++] = value._granularity;
   array[startingIndex++] = value._extrudedHeight;
   array[startingIndex++] = value._numberOfVerticalLines;
-  array[startingIndex] = defaultValue(value._offsetAttribute, -1);
+  array[startingIndex] = value._offsetAttribute ?? -1;
 
   return array;
 };

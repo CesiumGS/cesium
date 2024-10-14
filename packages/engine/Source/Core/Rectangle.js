@@ -1,7 +1,6 @@
 import Cartesian3 from "./Cartesian3.js";
 import Cartographic from "./Cartographic.js";
 import Check from "./Check.js";
-import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 import Ellipsoid from "./Ellipsoid.js";
 import CesiumMath from "./Math.js";
@@ -182,10 +181,10 @@ Rectangle.computeHeight = function (rectangle) {
  * const rectangle = Cesium.Rectangle.fromDegrees(0.0, 20.0, 10.0, 30.0);
  */
 Rectangle.fromDegrees = function (west, south, east, north, result) {
-  west = CesiumMath.toRadians(defaultValue(west, 0.0));
-  south = CesiumMath.toRadians(defaultValue(south, 0.0));
-  east = CesiumMath.toRadians(defaultValue(east, 0.0));
-  north = CesiumMath.toRadians(defaultValue(north, 0.0));
+  west = CesiumMath.toRadians(west ?? 0.0);
+  south = CesiumMath.toRadians(south ?? 0.0);
+  east = CesiumMath.toRadians(east ?? 0.0);
+  north = CesiumMath.toRadians(north ?? 0.0);
 
   if (!defined(result)) {
     return new Rectangle(west, south, east, north);

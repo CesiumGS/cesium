@@ -1006,7 +1006,7 @@ EllipseGeometry.pack = function (value, array, startingIndex) {
   array[startingIndex++] = value._granularity;
   array[startingIndex++] = value._extrudedHeight;
   array[startingIndex++] = value._shadowVolume ? 1.0 : 0.0;
-  array[startingIndex] = defaultValue(value._offsetAttribute, -1);
+  array[startingIndex] = value._offsetAttribute ?? -1;
 
   return array;
 };

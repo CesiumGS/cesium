@@ -206,7 +206,7 @@ VideoSynchronizer.prototype._onTick = function (clock) {
 
   //If the playing video's time and the scene's clock time
   //ever drift too far apart, we want to set the video to match
-  const tolerance = shouldAnimate ? defaultValue(this.tolerance, 1.0) : 0.001;
+  const tolerance = shouldAnimate ? (this.tolerance ?? 1.0) : 0.001;
   if (Math.abs(desiredTime - currentTime) > tolerance) {
     this._seeking = true;
     element.currentTime = desiredTime;

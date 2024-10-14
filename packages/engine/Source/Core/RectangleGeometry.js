@@ -1033,14 +1033,12 @@ function RectangleGeometry(options) {
 
   this._rectangle = Rectangle.clone(rectangle);
   this._granularity = options.granularity ?? CesiumMath.RADIANS_PER_DEGREE;
-  this._ellipsoid = Ellipsoid.clone(
-    defaultValue(options.ellipsoid, Ellipsoid.default),
-  );
+  this._ellipsoid = Ellipsoid.clone(options.ellipsoid ?? Ellipsoid.default);
   this._surfaceHeight = Math.max(height, extrudedHeight);
   this._rotation = options.rotation ?? 0.0;
   this._stRotation = options.stRotation ?? 0.0;
   this._vertexFormat = VertexFormat.clone(
-    defaultValue(options.vertexFormat, VertexFormat.DEFAULT),
+    options.vertexFormat ?? VertexFormat.DEFAULT,
   );
   this._extrudedHeight = Math.min(height, extrudedHeight);
   this._shadowVolume = options.shadowVolume ?? false;
@@ -1093,7 +1091,7 @@ RectangleGeometry.pack = function (value, array, startingIndex) {
   array[startingIndex++] = value._stRotation;
   array[startingIndex++] = value._extrudedHeight;
   array[startingIndex++] = value._shadowVolume ? 1.0 : 0.0;
-  array[startingIndex] = defaultValue(value._offsetAttribute, -1);
+  array[startingIndex] = value._offsetAttribute ?? -1;
 
   return array;
 };

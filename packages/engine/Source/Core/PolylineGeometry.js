@@ -125,14 +125,12 @@ function PolylineGeometry(options) {
   this._width = width;
   this._colorsPerVertex = colorsPerVertex;
   this._vertexFormat = VertexFormat.clone(
-    defaultValue(options.vertexFormat, VertexFormat.DEFAULT),
+    options.vertexFormat ?? VertexFormat.DEFAULT,
   );
 
   this._arcType = options.arcType ?? ArcType.GEODESIC;
   this._granularity = options.granularity ?? CesiumMath.RADIANS_PER_DEGREE;
-  this._ellipsoid = Ellipsoid.clone(
-    defaultValue(options.ellipsoid, Ellipsoid.default),
-  );
+  this._ellipsoid = Ellipsoid.clone(options.ellipsoid ?? Ellipsoid.default);
   this._workerName = "createPolylineGeometry";
 
   let numComponents = 1 + positions.length * Cartesian3.packedLength;
