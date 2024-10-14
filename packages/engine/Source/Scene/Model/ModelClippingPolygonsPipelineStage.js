@@ -35,7 +35,7 @@ const ModelClippingPolygonsPipelineStage = {
 ModelClippingPolygonsPipelineStage.process = function (
   renderResources,
   model,
-  frameState
+  frameState,
 ) {
   const clippingPolygons = model.clippingPolygons;
   const shaderBuilder = renderResources.shaderBuilder;
@@ -43,33 +43,33 @@ ModelClippingPolygonsPipelineStage.process = function (
   shaderBuilder.addDefine(
     "ENABLE_CLIPPING_POLYGONS",
     undefined,
-    ShaderDestination.BOTH
+    ShaderDestination.BOTH,
   );
 
   if (clippingPolygons.inverse) {
     shaderBuilder.addDefine(
       "CLIPPING_INVERSE",
       undefined,
-      ShaderDestination.FRAGMENT
+      ShaderDestination.FRAGMENT,
     );
   }
 
   shaderBuilder.addDefine(
     "CLIPPING_POLYGON_REGIONS_LENGTH",
     clippingPolygons.extentsCount,
-    ShaderDestination.BOTH
+    ShaderDestination.BOTH,
   );
 
   shaderBuilder.addUniform(
     "sampler2D",
     "model_clippingDistance",
-    ShaderDestination.FRAGMENT
+    ShaderDestination.FRAGMENT,
   );
 
   shaderBuilder.addUniform(
     "sampler2D",
     "model_clippingExtents",
-    ShaderDestination.VERTEX
+    ShaderDestination.VERTEX,
   );
 
   shaderBuilder.addVarying("vec2", "v_clippingPosition");

@@ -7,6 +7,7 @@ import Ellipsoid from "./Ellipsoid.js";
 import CesiumMath from "./Math.js";
 import Transforms from "./Transforms.js";
 import Matrix4 from "./Matrix4.js";
+import deprecationWarning from "./deprecationWarning.js";
 
 /**
  * A two dimensional region specified as longitude and latitude coordinates.
@@ -382,18 +383,18 @@ Rectangle.fromBoundingSphere = function (boundingSphere, ellipsoid, result) {
   const fromENU = Transforms.eastNorthUpToFixedFrame(
     center,
     ellipsoid,
-    fromBoundingSphereMatrixScratch
+    fromBoundingSphereMatrixScratch,
   );
   const east = Matrix4.multiplyByPointAsVector(
     fromENU,
     Cartesian3.UNIT_X,
-    fromBoundingSphereEastScratch
+    fromBoundingSphereEastScratch,
   );
   Cartesian3.normalize(east, east);
   const north = Matrix4.multiplyByPointAsVector(
     fromENU,
     Cartesian3.UNIT_Y,
-    fromBoundingSphereNorthScratch
+    fromBoundingSphereNorthScratch,
   );
   Cartesian3.normalize(north, north);
 
@@ -443,7 +444,7 @@ Rectangle.clone = function (rectangle, result) {
       rectangle.west,
       rectangle.south,
       rectangle.east,
-      rectangle.north
+      rectangle.north,
     );
   }
 
@@ -541,8 +542,28 @@ Rectangle.prototype.equalsEpsilon = function (other, epsilon) {
  * @exception {DeveloperError} <code>south</code> must be in the interval [<code>-Pi/2</code>, <code>Pi/2</code>].
  * @exception {DeveloperError} <code>east</code> must be in the interval [<code>-Pi</code>, <code>Pi</code>].
  * @exception {DeveloperError} <code>west</code> must be in the interval [<code>-Pi</code>, <code>Pi</code>].
+ * @deprecated This function is deprecated and will be removed in Cesium 1.124. See <a href="https://github.com/CesiumGS/cesium/issues/4921">Issue 4921</a>
  */
 Rectangle.validate = function (rectangle) {
+  deprecationWarning(
+    "Rectangle.validate",
+    "Rectangle.validate is a no-op and has been deprecated. It will be removed in Cesium 1.124.",
+  );
+  return Rectangle._validate(rectangle);
+};
+
+/**
+ * Checks a Rectangle's properties and throws if they are not in valid ranges.
+ *
+ * @param {Rectangle} rectangle The rectangle to validate
+ *
+ * @exception {DeveloperError} <code>north</code> must be in the interval [<code>-Pi/2</code>, <code>Pi/2</code>].
+ * @exception {DeveloperError} <code>south</code> must be in the interval [<code>-Pi/2</code>, <code>Pi/2</code>].
+ * @exception {DeveloperError} <code>east</code> must be in the interval [<code>-Pi</code>, <code>Pi</code>].
+ * @exception {DeveloperError} <code>west</code> must be in the interval [<code>-Pi</code>, <code>Pi</code>].
+ * @private
+ */
+Rectangle._validate = function (rectangle) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("rectangle", rectangle);
 
@@ -550,7 +571,7 @@ Rectangle.validate = function (rectangle) {
   Check.typeOf.number.greaterThanOrEquals(
     "north",
     north,
-    -CesiumMath.PI_OVER_TWO
+    -CesiumMath.PI_OVER_TWO,
   );
   Check.typeOf.number.lessThanOrEquals("north", north, CesiumMath.PI_OVER_TWO);
 
@@ -558,7 +579,7 @@ Rectangle.validate = function (rectangle) {
   Check.typeOf.number.greaterThanOrEquals(
     "south",
     south,
-    -CesiumMath.PI_OVER_TWO
+    -CesiumMath.PI_OVER_TWO,
   );
   Check.typeOf.number.lessThanOrEquals("south", south, CesiumMath.PI_OVER_TWO);
 
@@ -725,10 +746,10 @@ Rectangle.intersection = function (rectangle, otherRectangle, result) {
   }
 
   const west = CesiumMath.negativePiToPi(
-    Math.max(rectangleWest, otherRectangleWest)
+    Math.max(rectangleWest, otherRectangleWest),
   );
   const east = CesiumMath.negativePiToPi(
-    Math.min(rectangleEast, otherRectangleEast)
+    Math.min(rectangleEast, otherRectangleEast),
   );
 
   if (
@@ -830,10 +851,10 @@ Rectangle.union = function (rectangle, otherRectangle, result) {
   }
 
   const west = CesiumMath.negativePiToPi(
-    Math.min(rectangleWest, otherRectangleWest)
+    Math.min(rectangleWest, otherRectangleWest),
   );
   const east = CesiumMath.negativePiToPi(
-    Math.max(rectangleEast, otherRectangleEast)
+    Math.max(rectangleEast, otherRectangleEast),
   );
 
   result.west = west;
@@ -1000,7 +1021,7 @@ Rectangle.subsection = function (
   southLerp,
   eastLerp,
   northLerp,
-  result
+  result,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("rectangle", rectangle);
@@ -1065,7 +1086,7 @@ Rectangle.MAX_VALUE = Object.freeze(
     -Math.PI,
     -CesiumMath.PI_OVER_TWO,
     Math.PI,
-    CesiumMath.PI_OVER_TWO
-  )
+    CesiumMath.PI_OVER_TWO,
+  ),
 );
 export default Rectangle;

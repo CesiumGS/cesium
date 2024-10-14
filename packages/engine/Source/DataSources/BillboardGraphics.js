@@ -302,7 +302,7 @@ Object.defineProperties(BillboardGraphics.prototype, {
    * @type {Property|undefined}
    */
   pixelOffsetScaleByDistance: createPropertyDescriptor(
-    "pixelOffsetScaleByDistance"
+    "pixelOffsetScaleByDistance",
   ),
 
   /**
@@ -320,7 +320,7 @@ Object.defineProperties(BillboardGraphics.prototype, {
    * @type {Property|undefined}
    */
   distanceDisplayCondition: createPropertyDescriptor(
-    "distanceDisplayCondition"
+    "distanceDisplayCondition",
   ),
 
   /**
@@ -330,7 +330,7 @@ Object.defineProperties(BillboardGraphics.prototype, {
    * @type {Property|undefined}
    */
   disableDepthTestDistance: createPropertyDescriptor(
-    "disableDepthTestDistance"
+    "disableDepthTestDistance",
   ),
 
   /**
@@ -388,7 +388,6 @@ BillboardGraphics.prototype.merge = function (source) {
     throw new DeveloperError("source is required.");
   }
   //>>includeEnd('debug');
-
   this.show = this._show ?? source.show;
   this.image = this._image ?? source.image;
   this.scale = this._scale ?? source.scale;

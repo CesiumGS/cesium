@@ -131,25 +131,25 @@ PolylineDashMaterialProperty.prototype.getValue = function (time, result) {
     this._color,
     time,
     defaultColor,
-    result.color
+    result.color,
   );
   result.gapColor = Property.getValueOrClonedDefault(
     this._gapColor,
     time,
     defaultGapColor,
-    result.gapColor
+    result.gapColor,
   );
   result.dashLength = Property.getValueOrDefault(
     this._dashLength,
     time,
     defaultDashLength,
-    result.dashLength
+    result.dashLength,
   );
   result.dashPattern = Property.getValueOrDefault(
     this._dashPattern,
     time,
     defaultDashPattern,
-    result.dashPattern
+    result.dashPattern,
   );
   return result;
 };

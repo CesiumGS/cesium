@@ -143,8 +143,8 @@ describe("Core/S2Cell", function () {
 
     cellIdValidity = S2Cell.isValidId(
       BigInt(
-        "0b0010101000000000000000000000000000000000000000000000000000000000"
-      )
+        "0b0010101000000000000000000000000000000000000000000000000000000000",
+      ),
     );
     expect(cellIdValidity).toBe(false);
   });
@@ -162,7 +162,7 @@ describe("Core/S2Cell", function () {
     expect(S2Cell.getIdFromToken("04")).toEqual(BigInt("288230376151711744"));
     expect(S2Cell.getIdFromToken("3")).toEqual(BigInt("3458764513820540928"));
     expect(S2Cell.getIdFromToken("2ef59bd352b93ac3")).toEqual(
-      BigInt("3383782026967071427")
+      BigInt("3383782026967071427"),
     );
   });
 
@@ -170,7 +170,7 @@ describe("Core/S2Cell", function () {
     expect(S2Cell.getTokenFromId(BigInt("288230376151711744"))).toEqual("04");
     expect(S2Cell.getTokenFromId(BigInt("3458764513820540928"))).toEqual("3");
     expect(S2Cell.getTokenFromId(BigInt("3383782026967071427"))).toEqual(
-      "2ef59bd352b93ac3"
+      "2ef59bd352b93ac3",
     );
   });
 
@@ -269,35 +269,35 @@ describe("Core/S2Cell", function () {
   it("gets correct center of cell", function () {
     expect(S2Cell.fromToken("1").getCenter()).toEqualEpsilon(
       Cartesian3.fromDegrees(0.0, 0.0),
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
     expect(S2Cell.fromToken("3").getCenter()).toEqualEpsilon(
       Cartesian3.fromDegrees(90.0, 0.0),
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
     expect(S2Cell.fromToken("5").getCenter()).toEqualEpsilon(
       Cartesian3.fromDegrees(-180.0, 90.0),
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
     expect(S2Cell.fromToken("7").getCenter()).toEqualEpsilon(
       Cartesian3.fromDegrees(-180.0, 0.0),
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
     expect(S2Cell.fromToken("9").getCenter()).toEqualEpsilon(
       Cartesian3.fromDegrees(-90.0, 0.0),
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
     expect(S2Cell.fromToken("b").getCenter()).toEqualEpsilon(
       Cartesian3.fromDegrees(0.0, -90.0),
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
     expect(S2Cell.fromToken("2ef59bd352b93ac3").getCenter()).toEqualEpsilon(
       Cartesian3.fromDegrees(105.64131803774308, -10.490091033598308),
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
     expect(S2Cell.fromToken("1234567").getCenter()).toEqualEpsilon(
       Cartesian3.fromDegrees(9.868307318504081, 27.468392925827605),
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
   });
 
@@ -316,19 +316,19 @@ describe("Core/S2Cell", function () {
     const cell = S2Cell.fromToken("2ef59bd352b93ac3");
     expect(cell.getVertex(0)).toEqualEpsilon(
       Cartesian3.fromDegrees(105.64131799299665, -10.490091077431977),
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
     expect(cell.getVertex(1)).toEqualEpsilon(
       Cartesian3.fromDegrees(105.64131808248949, -10.490091072946313),
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
     expect(cell.getVertex(2)).toEqualEpsilon(
       Cartesian3.fromDegrees(105.64131808248948, -10.490090989764633),
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
     expect(cell.getVertex(3)).toEqualEpsilon(
       Cartesian3.fromDegrees(105.64131799299665, -10.4900909942503),
-      CesiumMath.EPSILON15
+      CesiumMath.EPSILON15,
     );
   });
 });

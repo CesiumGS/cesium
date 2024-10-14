@@ -31,7 +31,7 @@ const PolygonGeometryLibrary = {};
 
 PolygonGeometryLibrary.computeHierarchyPackedLength = function (
   polygonHierarchy,
-  CartesianX
+  CartesianX,
 ) {
   let numComponents = 0;
   const stack = [polygonHierarchy];
@@ -65,7 +65,7 @@ PolygonGeometryLibrary.packPolygonHierarchy = function (
   polygonHierarchy,
   array,
   startingIndex,
-  CartesianX
+  CartesianX,
 ) {
   const stack = [polygonHierarchy];
   while (stack.length > 0) {
@@ -105,7 +105,7 @@ PolygonGeometryLibrary.packPolygonHierarchy = function (
 PolygonGeometryLibrary.unpackPolygonHierarchy = function (
   array,
   startingIndex,
-  CartesianX
+  CartesianX,
 ) {
   const positionsLength = array[startingIndex++];
   const holesLength = array[startingIndex++];
@@ -125,7 +125,7 @@ PolygonGeometryLibrary.unpackPolygonHierarchy = function (
     holes[j] = PolygonGeometryLibrary.unpackPolygonHierarchy(
       array,
       startingIndex,
-      CartesianX
+      CartesianX,
     );
     startingIndex = holes[j].startingIndex;
     delete holes[j].startingIndex;
@@ -144,7 +144,7 @@ function getPointAtDistance2D(p0, p1, distance, length) {
   Cartesian2.multiplyByScalar(
     distance2DScratch,
     distance / length,
-    distance2DScratch
+    distance2DScratch,
   );
   Cartesian2.add(p0, distance2DScratch, distance2DScratch);
   return [distance2DScratch.x, distance2DScratch.y];
@@ -156,7 +156,7 @@ function getPointAtDistance(p0, p1, distance, length) {
   Cartesian3.multiplyByScalar(
     distanceScratch,
     distance / length,
-    distanceScratch
+    distanceScratch,
   );
   Cartesian3.add(p0, distanceScratch, distanceScratch);
   return [distanceScratch.x, distanceScratch.y, distanceScratch.z];
@@ -178,7 +178,7 @@ PolygonGeometryLibrary.subdivideRhumbLineCount = function (
   ellipsoid,
   p0,
   p1,
-  minDistance
+  minDistance,
 ) {
   const c0 = ellipsoid.cartesianToCartographic(p0, scratchCartographic0);
   const c1 = ellipsoid.cartesianToCartographic(p1, scratchCartographic1);
@@ -206,13 +206,13 @@ PolygonGeometryLibrary.subdivideTexcoordLine = function (
   p0,
   p1,
   minDistance,
-  result
+  result,
 ) {
   // Compute the number of subdivisions.
   const subdivisions = PolygonGeometryLibrary.subdivideLineCount(
     p0,
     p1,
-    minDistance
+    minDistance,
   );
 
   // Compute the distance between each subdivided point.
@@ -238,7 +238,7 @@ PolygonGeometryLibrary.subdivideLine = function (p0, p1, minDistance, result) {
   const numVertices = PolygonGeometryLibrary.subdivideLineCount(
     p0,
     p1,
-    minDistance
+    minDistance,
   );
   const length = Cartesian3.distance(p0, p1);
   const distanceBetweenVertices = length / numVertices;
@@ -281,7 +281,7 @@ PolygonGeometryLibrary.subdivideTexcoordRhumbLine = function (
   p0,
   p1,
   minDistance,
-  result
+  result,
 ) {
   // Compute the surface distance.
   const c0 = ellipsoid.cartesianToCartographic(p0, scratchCartographic0);
@@ -317,7 +317,7 @@ PolygonGeometryLibrary.subdivideRhumbLine = function (
   p0,
   p1,
   minDistance,
-  result
+  result,
 ) {
   const c0 = ellipsoid.cartesianToCartographic(p0, scratchCartographic0);
   const c1 = ellipsoid.cartesianToCartographic(p1, scratchCartographic1);
@@ -339,7 +339,7 @@ PolygonGeometryLibrary.subdivideRhumbLine = function (
   for (let i = 0; i < numVertices; i++) {
     const c = rhumb.interpolateUsingSurfaceDistance(
       i * distanceBetweenVertices,
-      scratchCartographic2
+      scratchCartographic2,
     );
     const p = ellipsoid.cartographicToCartesian(c, scratchCartesian0);
     positions[index++] = p.x;
@@ -360,7 +360,7 @@ PolygonGeometryLibrary.scaleToGeodeticHeightExtruded = function (
   maxHeight,
   minHeight,
   ellipsoid,
-  perPositionHeight
+  perPositionHeight,
 ) {
   ellipsoid = defaultValue(ellipsoid, Ellipsoid.default);
 
@@ -404,7 +404,7 @@ PolygonGeometryLibrary.scaleToGeodeticHeightExtruded = function (
 PolygonGeometryLibrary.polygonOutlinesFromHierarchy = function (
   polygonHierarchy,
   scaleToEllipsoidSurface,
-  ellipsoid
+  ellipsoid,
 ) {
   // create from a polygon hierarchy
   // Algorithm adapted from http://www.geometrictools.com/Documentation/TriangulationByEarClipping.pdf
@@ -426,7 +426,7 @@ PolygonGeometryLibrary.polygonOutlinesFromHierarchy = function (
     outerRing = arrayRemoveDuplicates(
       outerRing,
       Cartesian3.equalsEpsilon,
-      true
+      true,
     );
     if (outerRing.length < 3) {
       continue;
@@ -446,7 +446,7 @@ PolygonGeometryLibrary.polygonOutlinesFromHierarchy = function (
       holePositions = arrayRemoveDuplicates(
         holePositions,
         Cartesian3.equalsEpsilon,
-        true
+        true,
       );
       if (holePositions.length < 3) {
         continue;
@@ -482,7 +482,7 @@ function computeEquatorIntersectionRhumb(start, end, ellipsoid) {
 
   const intersection = scratchRhumbLine.findIntersectionWithLatitude(
     0,
-    scratchRhumbIntersection
+    scratchRhumbIntersection,
   );
 
   if (!defined(intersection)) {
@@ -517,7 +517,7 @@ function computeEquatorIntersection(start, end, ellipsoid, arcType) {
   const intersection = IntersectionTests.lineSegmentPlane(
     start,
     end,
-    Plane.ORIGIN_XY_PLANE
+    Plane.ORIGIN_XY_PLANE,
   );
 
   if (!defined(intersection)) {
@@ -546,7 +546,7 @@ function computeEdgesOnPlane(positions, ellipsoid, arcType) {
     const getLongitude = (position) => {
       const cartographic = ellipsoid.cartesianToCartographic(
         position,
-        scratchCartographic
+        scratchCartographic,
       );
       return cartographic.longitude;
     };
@@ -565,7 +565,7 @@ function computeEdgesOnPlane(positions, ellipsoid, arcType) {
         startPoint,
         endPoint,
         ellipsoid,
-        arcType
+        arcType,
       );
 
       ++i;
@@ -598,7 +598,7 @@ function wirePolygon(
   edgesOnPlane,
   toDelete,
   startIndex,
-  abovePlane
+  abovePlane,
 ) {
   const polygon = [];
   let i = startIndex;
@@ -678,7 +678,7 @@ function wirePolygon(
       edgesOnPlane,
       0,
       index,
-      !abovePlane
+      !abovePlane,
     );
   }
 
@@ -699,7 +699,7 @@ PolygonGeometryLibrary.splitPolygonsOnEquator = function (
   outerRings,
   ellipsoid,
   arcType,
-  result
+  result,
 ) {
   if (!defined(result)) {
     result = [];
@@ -743,7 +743,7 @@ PolygonGeometryLibrary.splitPolygonsOnEquator = function (
       edgesOnPlane,
       1,
       0,
-      north
+      north,
     );
   }
 
@@ -756,7 +756,7 @@ PolygonGeometryLibrary.polygonsFromHierarchy = function (
   projectPointsTo2D,
   scaleToEllipsoidSurface,
   ellipsoid,
-  splitPolygons
+  splitPolygons,
 ) {
   // create from a polygon hierarchy
   // Algorithm adapted from http://www.geometrictools.com/Documentation/TriangulationByEarClipping.pdf
@@ -786,7 +786,7 @@ PolygonGeometryLibrary.polygonsFromHierarchy = function (
       outerRing = arrayRemoveDuplicates(
         outerRing,
         Cartesian3.equalsEpsilon,
-        true
+        true,
       );
     }
     if (outerRing.length < 3) {
@@ -799,9 +799,8 @@ PolygonGeometryLibrary.polygonsFromHierarchy = function (
     }
     const holeIndices = [];
 
-    let originalWindingOrder = PolygonPipeline.computeWindingOrder2D(
-      positions2D
-    );
+    let originalWindingOrder =
+      PolygonPipeline.computeWindingOrder2D(positions2D);
     if (originalWindingOrder === WindingOrder.CLOCKWISE) {
       positions2D.reverse();
       outerRing = outerRing.slice().reverse();
@@ -840,7 +839,7 @@ PolygonGeometryLibrary.polygonsFromHierarchy = function (
         holePositions = arrayRemoveDuplicates(
           holePositions,
           Cartesian3.equalsEpsilon,
-          true
+          true,
         );
       }
       if (holePositions.length < 3) {
@@ -852,9 +851,8 @@ PolygonGeometryLibrary.polygonsFromHierarchy = function (
         continue;
       }
 
-      originalWindingOrder = PolygonPipeline.computeWindingOrder2D(
-        holePositions2D
-      );
+      originalWindingOrder =
+        PolygonPipeline.computeWindingOrder2D(holePositions2D);
       if (originalWindingOrder === WindingOrder.CLOCKWISE) {
         holePositions2D.reverse();
         holePositions = holePositions.slice().reverse();
@@ -901,16 +899,16 @@ PolygonGeometryLibrary.computeBoundingRectangle = function (
   projectPointTo2D,
   positions,
   angle,
-  result
+  result,
 ) {
   const rotation = Quaternion.fromAxisAngle(
     planeNormal,
     angle,
-    computeBoundingRectangleQuaternion
+    computeBoundingRectangleQuaternion,
   );
   const textureMatrix = Matrix3.fromQuaternion(
     rotation,
-    computeBoundingRectangleMatrix3
+    computeBoundingRectangleMatrix3,
   );
 
   let minX = Number.POSITIVE_INFINITY;
@@ -922,7 +920,7 @@ PolygonGeometryLibrary.computeBoundingRectangle = function (
   for (let i = 0; i < length; ++i) {
     const p = Cartesian3.clone(
       positions[i],
-      computeBoundingRectangleCartesian3
+      computeBoundingRectangleCartesian3,
     );
     Matrix3.multiplyByVector(textureMatrix, p, p);
     const st = projectPointTo2D(p, computeBoundingRectangleCartesian2);
@@ -950,7 +948,7 @@ PolygonGeometryLibrary.createGeometryFromPositions = function (
   granularity,
   perPositionHeight,
   vertexFormat,
-  arcType
+  arcType,
 ) {
   let indices = PolygonPipeline.triangulate(polygon.positions2D, polygon.holes);
 
@@ -1010,7 +1008,7 @@ PolygonGeometryLibrary.createGeometryFromPositions = function (
       positions,
       indices,
       texcoords,
-      granularity
+      granularity,
     );
   } else if (arcType === ArcType.RHUMB) {
     return PolygonPipeline.computeRhumbLineSubdivision(
@@ -1018,7 +1016,7 @@ PolygonGeometryLibrary.createGeometryFromPositions = function (
       positions,
       indices,
       texcoords,
-      granularity
+      granularity,
     );
   }
 };
@@ -1034,7 +1032,7 @@ PolygonGeometryLibrary.computeWallGeometry = function (
   ellipsoid,
   granularity,
   perPositionHeight,
-  arcType
+  arcType,
 ) {
   let edgePositions;
   let topEdgeLength;
@@ -1056,7 +1054,7 @@ PolygonGeometryLibrary.computeWallGeometry = function (
   if (!perPositionHeight) {
     const minDistance = CesiumMath.chordLength(
       granularity,
-      ellipsoid.maximumRadius
+      ellipsoid.maximumRadius,
     );
 
     let numVertices = 0;
@@ -1065,7 +1063,7 @@ PolygonGeometryLibrary.computeWallGeometry = function (
         numVertices += PolygonGeometryLibrary.subdivideLineCount(
           positions[i],
           positions[(i + 1) % length],
-          minDistance
+          minDistance,
         );
       }
     } else if (arcType === ArcType.RHUMB) {
@@ -1074,7 +1072,7 @@ PolygonGeometryLibrary.computeWallGeometry = function (
           ellipsoid,
           positions[i],
           positions[(i + 1) % length],
-          minDistance
+          minDistance,
         );
       }
     }
@@ -1104,7 +1102,7 @@ PolygonGeometryLibrary.computeWallGeometry = function (
           p1,
           p2,
           minDistance,
-          computeWallIndicesSubdivided
+          computeWallIndicesSubdivided,
         );
         if (hasTexcoords) {
           tempTexcoords = PolygonGeometryLibrary.subdivideTexcoordLine(
@@ -1113,7 +1111,7 @@ PolygonGeometryLibrary.computeWallGeometry = function (
             p1,
             p2,
             minDistance,
-            computeWallTexcoordsSubdivided
+            computeWallTexcoordsSubdivided,
           );
         }
       } else if (arcType === ArcType.RHUMB) {
@@ -1122,7 +1120,7 @@ PolygonGeometryLibrary.computeWallGeometry = function (
           p1,
           p2,
           minDistance,
-          computeWallIndicesSubdivided
+          computeWallIndicesSubdivided,
         );
         if (hasTexcoords) {
           tempTexcoords = PolygonGeometryLibrary.subdivideTexcoordRhumbLine(
@@ -1132,7 +1130,7 @@ PolygonGeometryLibrary.computeWallGeometry = function (
             p1,
             p2,
             minDistance,
-            computeWallTexcoordsSubdivided
+            computeWallTexcoordsSubdivided,
           );
         }
       }
@@ -1222,7 +1220,7 @@ PolygonGeometryLibrary.computeWallGeometry = function (
   length = edgePositions.length;
   const indices = IndexDatatype.createTypedArray(
     length / 3,
-    length - positions.length * 6
+    length - positions.length * 6,
   );
   let edgeIndex = 0;
   length /= 6;
@@ -1240,7 +1238,7 @@ PolygonGeometryLibrary.computeWallGeometry = function (
         p1,
         p2,
         CesiumMath.EPSILON10,
-        CesiumMath.EPSILON10
+        CesiumMath.EPSILON10,
       )
     ) {
       //skip corner

@@ -51,7 +51,7 @@ describe(
       shaderBuilder.addStruct(
         SelectedFeatureIdPipelineStage.STRUCT_ID_SELECTED_FEATURE,
         SelectedFeatureIdPipelineStage.STRUCT_NAME_SELECTED_FEATURE,
-        ShaderDestination.BOTH
+        ShaderDestination.BOTH,
       );
       return shaderBuilder;
     }
@@ -61,14 +61,14 @@ describe(
         shaderBuilder,
         SelectedFeatureIdPipelineStage.STRUCT_ID_SELECTED_FEATURE,
         SelectedFeatureIdPipelineStage.STRUCT_NAME_SELECTED_FEATURE,
-        ["    int id;", "    vec2 st;", "    vec4 color;"]
+        ["    int id;", "    vec2 st;", "    vec4 color;"],
       );
 
       ShaderBuilderTester.expectHasFragmentStruct(
         shaderBuilder,
         SelectedFeatureIdPipelineStage.STRUCT_ID_SELECTED_FEATURE,
         SelectedFeatureIdPipelineStage.STRUCT_NAME_SELECTED_FEATURE,
-        ["    int id;", "    vec2 st;", "    vec4 color;"]
+        ["    int id;", "    vec2 st;", "    vec4 color;"],
       );
     }
 
@@ -118,7 +118,7 @@ describe(
         SelectedFeatureIdPipelineStage.process(
           renderResources,
           primitive,
-          frameState
+          frameState,
         );
 
         expect(renderResources.hasPropertyTable).toBe(true);
@@ -156,7 +156,7 @@ describe(
         SelectedFeatureIdPipelineStage.process(
           renderResources,
           primitive,
-          frameState
+          frameState,
         );
         expect(renderResources.hasPropertyTable).toBe(true);
 
@@ -187,7 +187,7 @@ describe(
         SelectedFeatureIdPipelineStage.process(
           renderResources,
           primitive,
-          frameState
+          frameState,
         );
         expect(renderResources.hasPropertyTable).toBe(true);
 
@@ -224,7 +224,7 @@ describe(
         SelectedFeatureIdPipelineStage.process(
           renderResources,
           primitive,
-          frameState
+          frameState,
         );
         expect(renderResources.hasPropertyTable).toBe(true);
 
@@ -247,5 +247,5 @@ describe(
       });
     });
   },
-  "WebGL"
+  "WebGL",
 );

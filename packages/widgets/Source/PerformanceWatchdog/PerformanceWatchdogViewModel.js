@@ -32,6 +32,7 @@ function PerformanceWatchdogViewModel(options) {
    * Gets or sets the message to display when a low frame rate is detected.  This string will be interpreted as HTML.
    * @type {string}
    */
+
   this.lowFrameRateMessage =
     options.lowFrameRateMessage ??
     "This application appears to be performing poorly on your system.  " +
@@ -69,13 +70,13 @@ function PerformanceWatchdogViewModel(options) {
       if (!that.lowFrameRateMessageDismissed) {
         that.showingLowFrameRateMessage = true;
       }
-    }
+    },
   );
 
   this._unsubscribeNominalFrameRate = monitor.nominalFrameRate.addEventListener(
     function () {
       that.showingLowFrameRateMessage = false;
-    }
+    },
   );
 }
 

@@ -21,7 +21,7 @@ describe("Core/VRTheWorldTerrainProvider", function () {
       data,
       headers,
       deferred,
-      overrideMimeType
+      overrideMimeType,
     ) {
       if (url === imageUrl) {
         Resource._DefaultImplementations.loadWithXhr(
@@ -31,7 +31,7 @@ describe("Core/VRTheWorldTerrainProvider", function () {
           data,
           headers,
           deferred,
-          overrideMimeType
+          overrideMimeType,
         );
         return;
       }
@@ -90,9 +90,9 @@ describe("Core/VRTheWorldTerrainProvider", function () {
 
   it("fromUrl rejects without url", async function () {
     await expectAsync(
-      VRTheWorldTerrainProvider.fromUrl()
+      VRTheWorldTerrainProvider.fromUrl(),
     ).toBeRejectedWithDeveloperError(
-      "url is required, actual value was undefined"
+      "url is required, actual value was undefined",
     );
   });
 
@@ -131,11 +131,11 @@ describe("Core/VRTheWorldTerrainProvider", function () {
     expect(provider.getLevelMaximumGeometricError(0)).toBeGreaterThan(0.0);
     expect(provider.getLevelMaximumGeometricError(0)).toEqualEpsilon(
       provider.getLevelMaximumGeometricError(1) * 2.0,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
     expect(provider.getLevelMaximumGeometricError(1)).toEqualEpsilon(
       provider.getLevelMaximumGeometricError(2) * 2.0,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
   });
 
@@ -168,7 +168,7 @@ describe("Core/VRTheWorldTerrainProvider", function () {
       data,
       headers,
       deferred,
-      overrideMimeType
+      overrideMimeType,
     ) {
       setTimeout(function () {
         const parser = new DOMParser();
@@ -198,10 +198,10 @@ describe("Core/VRTheWorldTerrainProvider", function () {
     };
 
     await expectAsync(
-      VRTheWorldTerrainProvider.fromUrl("made/up/url")
+      VRTheWorldTerrainProvider.fromUrl("made/up/url"),
     ).toBeRejectedWithError(
       RuntimeError,
-      "An error occurred while accessing made/up/url: SRS EPSG:foo is not supported"
+      "An error occurred while accessing made/up/url: SRS EPSG:foo is not supported",
     );
   });
 
@@ -214,24 +214,24 @@ describe("Core/VRTheWorldTerrainProvider", function () {
       Resource._Implementations.createImage = function (
         request,
         crossOrigin,
-        deferred
+        deferred,
       ) {
         expect(request.url.indexOf(".tif?cesium=true")).toBeGreaterThanOrEqual(
-          0
+          0,
         );
 
         // Just return any old image.
         Resource._DefaultImplementations.createImage(
           new Request({ url: imageUrl }),
           crossOrigin,
-          deferred
+          deferred,
         );
       };
 
       const terrainProvider = await VRTheWorldTerrainProvider.fromUrl(baseUrl);
 
       expect(terrainProvider.tilingScheme).toBeInstanceOf(
-        GeographicTilingScheme
+        GeographicTilingScheme,
       );
       const loadedData = await terrainProvider.requestTileGeometry(0, 0, 0);
       expect(loadedData).toBeInstanceOf(HeightmapTerrainData);
@@ -244,7 +244,7 @@ describe("Core/VRTheWorldTerrainProvider", function () {
       RequestScheduler.maximumRequestsPerServer = 0;
 
       expect(
-        terrainProvider.requestTileGeometry(0, 0, 0, createRequest())
+        terrainProvider.requestTileGeometry(0, 0, 0, createRequest()),
       ).toBeUndefined();
     });
   });

@@ -74,7 +74,7 @@ function DebugModelMatrixPrimitive(options) {
    * @default {@link Matrix4.IDENTITY}
    */
   this.modelMatrix = Matrix4.clone(
-    defaultValue(options.modelMatrix, Matrix4.IDENTITY)
+    defaultValue(options.modelMatrix, Matrix4.IDENTITY),
   );
   this._modelMatrix = new Matrix4();
 
@@ -136,7 +136,7 @@ DebugModelMatrixPrimitive.prototype.update = function (frameState) {
       modelMatrix: Matrix4.multiplyByUniformScale(
         this.modelMatrix,
         this.length,
-        new Matrix4()
+        new Matrix4(),
       ),
       id: this.id,
       pickPrimitive: this,
@@ -152,7 +152,7 @@ DebugModelMatrixPrimitive.prototype.update = function (frameState) {
       modelMatrix: Matrix4.multiplyByUniformScale(
         this.modelMatrix,
         this.length,
-        new Matrix4()
+        new Matrix4(),
       ),
       id: this.id,
       pickPrimitive: this,
@@ -168,7 +168,7 @@ DebugModelMatrixPrimitive.prototype.update = function (frameState) {
       modelMatrix: Matrix4.multiplyByUniformScale(
         this.modelMatrix,
         this.length,
-        new Matrix4()
+        new Matrix4(),
       ),
       id: this.id,
       pickPrimitive: this,

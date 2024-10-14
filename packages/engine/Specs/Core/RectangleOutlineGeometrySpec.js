@@ -19,7 +19,7 @@ describe("Core/RectangleOutlineGeometry", function () {
       new RectangleOutlineGeometry({
         rectangle: rectangle,
         granularity: 1.0,
-      })
+      }),
     );
     const positions = m.attributes.position.values;
 
@@ -27,10 +27,10 @@ describe("Core/RectangleOutlineGeometry", function () {
     expect(m.indices.length).toEqual(8 * 2);
 
     const expectedNWCorner = Ellipsoid.WGS84.cartographicToCartesian(
-      Rectangle.northwest(rectangle)
+      Rectangle.northwest(rectangle),
     );
     expect(
-      new Cartesian3(positions[0], positions[1], positions[2])
+      new Cartesian3(positions[0], positions[1], positions[2]),
     ).toEqualEpsilon(expectedNWCorner, CesiumMath.EPSILON9);
   });
 
@@ -39,7 +39,7 @@ describe("Core/RectangleOutlineGeometry", function () {
     const m = RectangleOutlineGeometry.createGeometry(
       new RectangleOutlineGeometry({
         rectangle: rectangle,
-      })
+      }),
     );
     const positions = m.attributes.position.values;
 
@@ -47,10 +47,10 @@ describe("Core/RectangleOutlineGeometry", function () {
     expect(m.indices.length).toEqual(8 * 2);
 
     const expectedNWCorner = Ellipsoid.WGS84.cartographicToCartesian(
-      Rectangle.northwest(rectangle)
+      Rectangle.northwest(rectangle),
     );
     expect(
-      new Cartesian3(positions[0], positions[1], positions[2])
+      new Cartesian3(positions[0], positions[1], positions[2]),
     ).toEqualEpsilon(expectedNWCorner, CesiumMath.EPSILON9);
   });
 
@@ -59,7 +59,7 @@ describe("Core/RectangleOutlineGeometry", function () {
     const m = RectangleOutlineGeometry.createGeometry(
       new RectangleOutlineGeometry({
         rectangle: rectangle,
-      })
+      }),
     );
     const positions = m.attributes.position.values;
 
@@ -72,7 +72,7 @@ describe("Core/RectangleOutlineGeometry", function () {
     const m = RectangleOutlineGeometry.createGeometry(
       new RectangleOutlineGeometry({
         rectangle: rectangle,
-      })
+      }),
     );
     const positions = m.attributes.position.values;
 
@@ -88,7 +88,7 @@ describe("Core/RectangleOutlineGeometry", function () {
         rectangle: rectangle,
         rotation: angle,
         granularity: 1.0,
-      })
+      }),
     );
     const positions = m.attributes.position.values;
 
@@ -100,10 +100,10 @@ describe("Core/RectangleOutlineGeometry", function () {
     const projectedNWCorner = projection.project(unrotatedNWCorner);
     const rotation = Matrix2.fromRotation(angle);
     const rotatedNWCornerCartographic = projection.unproject(
-      Matrix2.multiplyByVector(rotation, projectedNWCorner, new Cartesian2())
+      Matrix2.multiplyByVector(rotation, projectedNWCorner, new Cartesian2()),
     );
     const rotatedNWCorner = Ellipsoid.WGS84.cartographicToCartesian(
-      rotatedNWCornerCartographic
+      rotatedNWCornerCartographic,
     );
     const actual = new Cartesian3(positions[0], positions[1], positions[2]);
     expect(actual).toEqualEpsilon(rotatedNWCorner, CesiumMath.EPSILON6);
@@ -123,10 +123,10 @@ describe("Core/RectangleOutlineGeometry", function () {
             -CesiumMath.PI_OVER_TWO,
             1,
             CesiumMath.PI_OVER_TWO,
-            CesiumMath.PI_OVER_TWO
+            CesiumMath.PI_OVER_TWO,
           ),
           rotation: CesiumMath.PI_OVER_TWO,
-        })
+        }),
       );
     }).toThrowDeveloperError();
   });
@@ -138,7 +138,7 @@ describe("Core/RectangleOutlineGeometry", function () {
           -CesiumMath.PI_OVER_TWO,
           CesiumMath.PI_OVER_TWO,
           CesiumMath.PI_OVER_TWO,
-          -CesiumMath.PI_OVER_TWO
+          -CesiumMath.PI_OVER_TWO,
         ),
       });
     }).toThrowDeveloperError();
@@ -151,7 +151,7 @@ describe("Core/RectangleOutlineGeometry", function () {
         rectangle: rectangle,
         granularity: 1.0,
         extrudedHeight: 2,
-      })
+      }),
     );
     const positions = m.attributes.position.values;
 
@@ -165,7 +165,7 @@ describe("Core/RectangleOutlineGeometry", function () {
       new RectangleOutlineGeometry({
         rectangle: rectangle,
         extrudedHeight: 2,
-      })
+      }),
     );
     const positions = m.attributes.position.values;
 
@@ -179,7 +179,7 @@ describe("Core/RectangleOutlineGeometry", function () {
       new RectangleOutlineGeometry({
         rectangle: rectangle,
         extrudedHeight: 2,
-      })
+      }),
     );
     const positions = m.attributes.position.values;
 
@@ -196,7 +196,7 @@ describe("Core/RectangleOutlineGeometry", function () {
         rotation: angle,
         granularity: 1.0,
         extrudedHeight: 2,
-      })
+      }),
     );
     const positions = m.attributes.position.values;
 
@@ -208,11 +208,11 @@ describe("Core/RectangleOutlineGeometry", function () {
     const projectedNWCorner = projection.project(unrotatedNWCorner);
     const rotation = Matrix2.fromRotation(angle);
     const rotatedNWCornerCartographic = projection.unproject(
-      Matrix2.multiplyByVector(rotation, projectedNWCorner, new Cartesian2())
+      Matrix2.multiplyByVector(rotation, projectedNWCorner, new Cartesian2()),
     );
     rotatedNWCornerCartographic.height = 2;
     const rotatedNWCorner = Ellipsoid.WGS84.cartographicToCartesian(
-      rotatedNWCornerCartographic
+      rotatedNWCornerCartographic,
     );
     const actual = new Cartesian3(positions[0], positions[1], positions[2]);
     expect(actual).toEqualEpsilon(rotatedNWCorner, CesiumMath.EPSILON6);
@@ -225,7 +225,7 @@ describe("Core/RectangleOutlineGeometry", function () {
         rectangle: rectangle,
         granularity: 1.0,
         extrudedHeight: CesiumMath.EPSILON14,
-      })
+      }),
     );
     const positions = m.attributes.position.values;
 
@@ -244,15 +244,12 @@ describe("Core/RectangleOutlineGeometry", function () {
       rectangle: Rectangle.fromDegrees(-80.0, 39.0, -80.0, 39.0),
     });
 
-    const geometry0 = RectangleOutlineGeometry.createGeometry(
-      rectangleOutline0
-    );
-    const geometry1 = RectangleOutlineGeometry.createGeometry(
-      rectangleOutline1
-    );
-    const geometry2 = RectangleOutlineGeometry.createGeometry(
-      rectangleOutline2
-    );
+    const geometry0 =
+      RectangleOutlineGeometry.createGeometry(rectangleOutline0);
+    const geometry1 =
+      RectangleOutlineGeometry.createGeometry(rectangleOutline1);
+    const geometry2 =
+      RectangleOutlineGeometry.createGeometry(rectangleOutline2);
 
     expect(geometry0).toBeUndefined();
     expect(geometry1).toBeUndefined();
@@ -266,7 +263,7 @@ describe("Core/RectangleOutlineGeometry", function () {
         rectangle: rectangle,
         granularity: 1.0,
         offsetAttribute: GeometryOffsetAttribute.TOP,
-      })
+      }),
     );
     const positions = m.attributes.position.values;
 
@@ -287,7 +284,7 @@ describe("Core/RectangleOutlineGeometry", function () {
         granularity: 1.0,
         extrudedHeight: 2,
         offsetAttribute: GeometryOffsetAttribute.TOP,
-      })
+      }),
     );
     const positions = m.attributes.position.values;
 
@@ -308,7 +305,7 @@ describe("Core/RectangleOutlineGeometry", function () {
         granularity: 1.0,
         extrudedHeight: 2,
         offsetAttribute: GeometryOffsetAttribute.ALL,
-      })
+      }),
     );
     const positions = m.attributes.position.values;
 
@@ -334,7 +331,7 @@ describe("Core/RectangleOutlineGeometry", function () {
     RectangleOutlineGeometry,
     rectangle,
     packedInstance,
-    "extruded"
+    "extruded",
   );
 
   rectangle = new RectangleOutlineGeometry({
@@ -349,6 +346,6 @@ describe("Core/RectangleOutlineGeometry", function () {
     RectangleOutlineGeometry,
     rectangle,
     packedInstance,
-    "at height"
+    "at height",
   );
 });

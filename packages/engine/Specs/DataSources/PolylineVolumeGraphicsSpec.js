@@ -41,7 +41,7 @@ describe("DataSources/PolylineVolumeGraphics", function () {
     expect(polylineVolume.cornerType).toBeInstanceOf(ConstantProperty);
     expect(polylineVolume.shadows).toBeInstanceOf(ConstantProperty);
     expect(polylineVolume.distanceDisplayCondition).toBeInstanceOf(
-      ConstantProperty
+      ConstantProperty,
     );
 
     expect(polylineVolume.material.color.getValue()).toEqual(options.material);
@@ -52,15 +52,15 @@ describe("DataSources/PolylineVolumeGraphics", function () {
     expect(polylineVolume.fill.getValue()).toEqual(options.fill);
     expect(polylineVolume.outline.getValue()).toEqual(options.outline);
     expect(polylineVolume.outlineColor.getValue()).toEqual(
-      options.outlineColor
+      options.outlineColor,
     );
     expect(polylineVolume.outlineWidth.getValue()).toEqual(
-      options.outlineWidth
+      options.outlineWidth,
     );
     expect(polylineVolume.cornerType.getValue()).toEqual(options.cornerType);
     expect(polylineVolume.shadows.getValue()).toEqual(options.shadows);
     expect(polylineVolume.distanceDisplayCondition.getValue()).toEqual(
-      options.distanceDisplayCondition
+      options.distanceDisplayCondition,
     );
   });
 
@@ -78,7 +78,7 @@ describe("DataSources/PolylineVolumeGraphics", function () {
     source.cornerType = new ConstantProperty();
     source.shadows = new ConstantProperty(ShadowMode.ENABLED);
     source.distanceDisplayCondition = new ConstantProperty(
-      new DistanceDisplayCondition()
+      new DistanceDisplayCondition(),
     );
 
     const target = new PolylineVolumeGraphics();
@@ -96,7 +96,7 @@ describe("DataSources/PolylineVolumeGraphics", function () {
     expect(target.cornerType).toBe(source.cornerType);
     expect(target.shadows).toBe(source.shadows);
     expect(target.distanceDisplayCondition).toBe(
-      source.distanceDisplayCondition
+      source.distanceDisplayCondition,
     );
   });
 
@@ -174,7 +174,7 @@ describe("DataSources/PolylineVolumeGraphics", function () {
     expect(result.cornerType).toBe(source.cornerType);
     expect(result.shadows).toBe(source.shadows);
     expect(result.distanceDisplayCondition).toBe(
-      source.distanceDisplayCondition
+      source.distanceDisplayCondition,
     );
   });
 
@@ -200,19 +200,19 @@ describe("DataSources/PolylineVolumeGraphics", function () {
       property,
       "cornerType",
       CornerType.BEVELED,
-      CornerType.MITERED
+      CornerType.MITERED,
     );
     testDefinitionChanged(
       property,
       "shadows",
       ShadowMode.ENABLED,
-      ShadowMode.DISABLED
+      ShadowMode.DISABLED,
     );
     testDefinitionChanged(
       property,
       "distanceDisplayCondition",
       new DistanceDisplayCondition(),
-      new DistanceDisplayCondition(10.0, 100.0)
+      new DistanceDisplayCondition(10.0, 100.0),
     );
   });
 });

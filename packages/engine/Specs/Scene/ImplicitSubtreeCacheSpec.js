@@ -55,7 +55,7 @@ describe("Scene/ImplicitSubtreeCache", function () {
     implicitOctree = new ImplicitTileset(
       tilesetResource,
       implicitOctreeJson,
-      metadataSchema
+      metadataSchema,
     );
   });
 
@@ -80,7 +80,7 @@ describe("Scene/ImplicitSubtreeCache", function () {
       subtreeConstantJson,
       undefined,
       implicitOctree,
-      octreeCoordinates
+      octreeCoordinates,
     );
     cache.addSubtree(subtree);
     expect(cache._subtreeRequestCounter).toBe(1);
@@ -101,7 +101,7 @@ describe("Scene/ImplicitSubtreeCache", function () {
       subtreeConstantJson,
       undefined,
       implicitOctree,
-      octreeCoordinates
+      octreeCoordinates,
     );
     expect(() => cache.addSubtree(subtree)).toThrowDeveloperError();
   });
@@ -123,17 +123,17 @@ describe("Scene/ImplicitSubtreeCache", function () {
     await Promise.all(
       octreeCoordArray.map(async (octreeCoord) => {
         const octreeCoordinates = new ImplicitTileCoordinates(
-          Object.assign({}, octreeCoordParams, octreeCoord)
+          Object.assign({}, octreeCoordParams, octreeCoord),
         );
         const subtree = await ImplicitSubtree.fromSubtreeJson(
           subtreeResource,
           subtreeConstantJson,
           undefined,
           implicitOctree,
-          octreeCoordinates
+          octreeCoordinates,
         );
         cache.addSubtree(subtree);
-      })
+      }),
     );
     expect(cache._subtreeRequestCounter).toBe(4);
     expect(cache._queue.length).toBe(3);

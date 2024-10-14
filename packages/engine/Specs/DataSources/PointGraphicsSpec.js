@@ -43,10 +43,10 @@ describe("DataSources/PointGraphics", function () {
     expect(point.scaleByDistance.getValue()).toEqual(options.scaleByDistance);
     expect(point.heightReference.getValue()).toEqual(options.heightReference);
     expect(point.distanceDisplayCondition.getValue()).toEqual(
-      options.distanceDisplayCondition
+      options.distanceDisplayCondition,
     );
     expect(point.disableDepthTestDistance.getValue()).toEqual(
-      options.disableDepthTestDistance
+      options.disableDepthTestDistance,
     );
     expect(point.splitDirection.getValue()).toEqual(options.splitDirection);
   });
@@ -60,10 +60,10 @@ describe("DataSources/PointGraphics", function () {
     source.show = new ConstantProperty(true);
     source.scaleByDistance = new ConstantProperty(new NearFarScalar());
     source.heightReference = new ConstantProperty(
-      HeightReference.RELATIVE_TO_GROUND
+      HeightReference.RELATIVE_TO_GROUND,
     );
     source.distanceDisplayCondition = new ConstantProperty(
-      new DistanceDisplayCondition(10.0, 100.0)
+      new DistanceDisplayCondition(10.0, 100.0),
     );
     source.disableDepthTestDistance = new ConstantProperty(10.0);
     source.splitDirection = new ConstantProperty(SplitDirection.LEFT);
@@ -78,10 +78,10 @@ describe("DataSources/PointGraphics", function () {
     expect(target.scaleByDistance).toBe(source.scaleByDistance);
     expect(target.heightReference).toBe(source.heightReference);
     expect(target.distanceDisplayCondition).toBe(
-      source.distanceDisplayCondition
+      source.distanceDisplayCondition,
     );
     expect(target.disableDepthTestDistance).toBe(
-      source.disableDepthTestDistance
+      source.disableDepthTestDistance,
     );
     expect(target.splitDirection).toBe(source.splitDirection);
   });
@@ -95,10 +95,10 @@ describe("DataSources/PointGraphics", function () {
     source.show = new ConstantProperty(true);
     source.scaleByDistance = new ConstantProperty(new NearFarScalar());
     source.heightReference = new ConstantProperty(
-      HeightReference.RELATIVE_TO_GROUND
+      HeightReference.RELATIVE_TO_GROUND,
     );
     source.distanceDisplayCondition = new ConstantProperty(
-      new DistanceDisplayCondition(10.0, 100.0)
+      new DistanceDisplayCondition(10.0, 100.0),
     );
     source.disableDepthTestDistance = new ConstantProperty(10.0);
     source.splitDirection = new ConstantProperty(SplitDirection.LEFT);
@@ -109,10 +109,10 @@ describe("DataSources/PointGraphics", function () {
     const outlineWidth = new ConstantProperty(1);
     const show = new ConstantProperty(true);
     const heightReference = new ConstantProperty(
-      HeightReference.CLAMP_TO_GROUND
+      HeightReference.CLAMP_TO_GROUND,
     );
     const distanDisplayCondition = new ConstantProperty(
-      new DistanceDisplayCondition(10.0, 100.0)
+      new DistanceDisplayCondition(10.0, 100.0),
     );
     const disableDepthTestDistance = new ConstantProperty(20.0);
     const splitDirection = new ConstantProperty(SplitDirection.RIGHT);
@@ -151,10 +151,10 @@ describe("DataSources/PointGraphics", function () {
     source.show = new ConstantProperty(true);
     source.scaleByDistance = new ConstantProperty(new NearFarScalar());
     source.heightReference = new ConstantProperty(
-      HeightReference.RELATIVE_TO_GROUND
+      HeightReference.RELATIVE_TO_GROUND,
     );
     source.distanceDisplayCondition = new ConstantProperty(
-      new DistanceDisplayCondition(10.0, 100.0)
+      new DistanceDisplayCondition(10.0, 100.0),
     );
     source.disableDepthTestDistance = new ConstantProperty(10.0);
     source.splitDirection = new ConstantProperty(SplitDirection.LEFT);
@@ -168,10 +168,10 @@ describe("DataSources/PointGraphics", function () {
     expect(result.scaleByDistance).toBe(source.scaleByDistance);
     expect(result.heightReference).toBe(source.heightReference);
     expect(result.distanceDisplayCondition).toBe(
-      source.distanceDisplayCondition
+      source.distanceDisplayCondition,
     );
     expect(result.disableDepthTestDistance).toBe(
-      source.disableDepthTestDistance
+      source.disableDepthTestDistance,
     );
     expect(result.splitDirection).toBe(source.splitDirection);
   });

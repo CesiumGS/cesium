@@ -22,7 +22,7 @@ CoplanarPolygonGeometryLibrary.validOutline = function (positions) {
 
   const orientedBoundingBox = OrientedBoundingBox.fromPoints(
     positions,
-    obbScratch
+    obbScratch,
   );
   const halfAxes = orientedBoundingBox.halfAxes;
   const xAxis = Matrix3.getColumn(halfAxes, 0, scratchXAxis);
@@ -45,7 +45,7 @@ CoplanarPolygonGeometryLibrary.computeProjectTo2DArguments = function (
   positions,
   centerResult,
   planeAxis1Result,
-  planeAxis2Result
+  planeAxis2Result,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("positions", positions);
@@ -56,7 +56,7 @@ CoplanarPolygonGeometryLibrary.computeProjectTo2DArguments = function (
 
   const orientedBoundingBox = OrientedBoundingBox.fromPoints(
     positions,
-    obbScratch
+    obbScratch,
   );
   const halfAxes = orientedBoundingBox.halfAxes;
   const xAxis = Matrix3.getColumn(halfAxes, 0, scratchXAxis);
@@ -108,7 +108,7 @@ function projectTo2D(position, center, axis1, axis2, result) {
 CoplanarPolygonGeometryLibrary.createProjectPointsTo2DFunction = function (
   center,
   axis1,
-  axis2
+  axis2,
 ) {
   return function (positions) {
     const positionResults = new Array(positions.length);
@@ -123,7 +123,7 @@ CoplanarPolygonGeometryLibrary.createProjectPointsTo2DFunction = function (
 CoplanarPolygonGeometryLibrary.createProjectPointTo2DFunction = function (
   center,
   axis1,
-  axis2
+  axis2,
 ) {
   return function (position, result) {
     return projectTo2D(position, center, axis1, axis2, result);

@@ -23,7 +23,7 @@ describe("Core/QuadraticRealPolynomial", function () {
     const discriminant = QuadraticRealPolynomial.computeDiscriminant(
       1.0,
       2.0,
-      3.0
+      3.0,
     );
     expect(discriminant).toEqual(-8.0);
   });
@@ -64,7 +64,7 @@ describe("Core/QuadraticRealPolynomial", function () {
     const roots = QuadraticRealPolynomial.computeRealRoots(
       2.0,
       -3.999999999999999,
-      2
+      2,
     );
     expect(roots.length).toEqual(2);
     expect(roots[0]).toEqualEpsilon(1.0, CesiumMath.EPSILON15);

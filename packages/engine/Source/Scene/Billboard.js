@@ -101,7 +101,7 @@ function Billboard(options, billboardCollection) {
     options.disableDepthTestDistance < 0.0
   ) {
     throw new DeveloperError(
-      "disableDepthTestDistance must be greater than or equal to 0.0."
+      "disableDepthTestDistance must be greater than or equal to 0.0.",
     );
   }
   //>>includeEnd('debug');
@@ -114,7 +114,7 @@ function Billboard(options, billboardCollection) {
     //>>includeStart('debug', pragmas.debug);
     if (translucencyByDistance.far <= translucencyByDistance.near) {
       throw new DeveloperError(
-        "translucencyByDistance.far must be greater than translucencyByDistance.near."
+        "translucencyByDistance.far must be greater than translucencyByDistance.near.",
       );
     }
     //>>includeEnd('debug');
@@ -124,19 +124,19 @@ function Billboard(options, billboardCollection) {
     //>>includeStart('debug', pragmas.debug);
     if (pixelOffsetScaleByDistance.far <= pixelOffsetScaleByDistance.near) {
       throw new DeveloperError(
-        "pixelOffsetScaleByDistance.far must be greater than pixelOffsetScaleByDistance.near."
+        "pixelOffsetScaleByDistance.far must be greater than pixelOffsetScaleByDistance.near.",
       );
     }
     //>>includeEnd('debug');
     pixelOffsetScaleByDistance = NearFarScalar.clone(
-      pixelOffsetScaleByDistance
+      pixelOffsetScaleByDistance,
     );
   }
   if (defined(scaleByDistance)) {
     //>>includeStart('debug', pragmas.debug);
     if (scaleByDistance.far <= scaleByDistance.near) {
       throw new DeveloperError(
-        "scaleByDistance.far must be greater than scaleByDistance.near."
+        "scaleByDistance.far must be greater than scaleByDistance.near.",
       );
     }
     //>>includeEnd('debug');
@@ -146,44 +146,44 @@ function Billboard(options, billboardCollection) {
     //>>includeStart('debug', pragmas.debug);
     if (distanceDisplayCondition.far <= distanceDisplayCondition.near) {
       throw new DeveloperError(
-        "distanceDisplayCondition.far must be greater than distanceDisplayCondition.near."
+        "distanceDisplayCondition.far must be greater than distanceDisplayCondition.near.",
       );
     }
     //>>includeEnd('debug');
     distanceDisplayCondition = DistanceDisplayCondition.clone(
-      distanceDisplayCondition
+      distanceDisplayCondition,
     );
   }
 
   this._show = defaultValue(options.show, true);
   this._position = Cartesian3.clone(
-    defaultValue(options.position, Cartesian3.ZERO)
+    defaultValue(options.position, Cartesian3.ZERO),
   );
   this._actualPosition = Cartesian3.clone(this._position); // For columbus view and 2D
   this._pixelOffset = Cartesian2.clone(
-    defaultValue(options.pixelOffset, Cartesian2.ZERO)
+    defaultValue(options.pixelOffset, Cartesian2.ZERO),
   );
   this._translate = new Cartesian2(0.0, 0.0); // used by labels for glyph vertex translation
   this._eyeOffset = Cartesian3.clone(
-    defaultValue(options.eyeOffset, Cartesian3.ZERO)
+    defaultValue(options.eyeOffset, Cartesian3.ZERO),
   );
   this._heightReference = defaultValue(
     options.heightReference,
-    HeightReference.NONE
+    HeightReference.NONE,
   );
   this._verticalOrigin = defaultValue(
     options.verticalOrigin,
-    VerticalOrigin.CENTER
+    VerticalOrigin.CENTER,
   );
   this._horizontalOrigin = defaultValue(
     options.horizontalOrigin,
-    HorizontalOrigin.CENTER
+    HorizontalOrigin.CENTER,
   );
   this._scale = defaultValue(options.scale, 1.0);
   this._color = Color.clone(defaultValue(options.color, Color.WHITE));
   this._rotation = defaultValue(options.rotation, 0.0);
   this._alignedAxis = Cartesian3.clone(
-    defaultValue(options.alignedAxis, Cartesian3.ZERO)
+    defaultValue(options.alignedAxis, Cartesian3.ZERO),
   );
   this._width = options.width;
   this._height = options.height;
@@ -247,7 +247,7 @@ function Billboard(options, billboardCollection) {
 
   this._clusterShow = true;
   this._outlineColor = Color.clone(
-    defaultValue(options.outlineColor, Color.BLACK)
+    defaultValue(options.outlineColor, Color.BLACK),
   );
   this._outlineWidth = defaultValue(options.outlineWidth, 0.0);
 
@@ -255,7 +255,7 @@ function Billboard(options, billboardCollection) {
 
   this._splitDirection = defaultValue(
     options.splitDirection,
-    SplitDirection.NONE
+    SplitDirection.NONE,
   );
 }
 
@@ -271,8 +271,10 @@ const COLOR_INDEX = (Billboard.COLOR_INDEX = 8);
 const ROTATION_INDEX = (Billboard.ROTATION_INDEX = 9);
 const ALIGNED_AXIS_INDEX = (Billboard.ALIGNED_AXIS_INDEX = 10);
 const SCALE_BY_DISTANCE_INDEX = (Billboard.SCALE_BY_DISTANCE_INDEX = 11);
-const TRANSLUCENCY_BY_DISTANCE_INDEX = (Billboard.TRANSLUCENCY_BY_DISTANCE_INDEX = 12);
-const PIXEL_OFFSET_SCALE_BY_DISTANCE_INDEX = (Billboard.PIXEL_OFFSET_SCALE_BY_DISTANCE_INDEX = 13);
+const TRANSLUCENCY_BY_DISTANCE_INDEX =
+  (Billboard.TRANSLUCENCY_BY_DISTANCE_INDEX = 12);
+const PIXEL_OFFSET_SCALE_BY_DISTANCE_INDEX =
+  (Billboard.PIXEL_OFFSET_SCALE_BY_DISTANCE_INDEX = 13);
 const DISTANCE_DISPLAY_CONDITION = (Billboard.DISTANCE_DISPLAY_CONDITION = 14);
 const DISABLE_DEPTH_DISTANCE = (Billboard.DISABLE_DEPTH_DISTANCE = 15);
 Billboard.TEXTURE_COORDINATE_BOUNDS = 16;
@@ -425,7 +427,7 @@ Object.defineProperties(Billboard.prototype, {
         Check.typeOf.object("value", value);
         if (value.far <= value.near) {
           throw new DeveloperError(
-            "far distance must be greater than near distance."
+            "far distance must be greater than near distance.",
           );
         }
       }
@@ -471,7 +473,7 @@ Object.defineProperties(Billboard.prototype, {
         Check.typeOf.object("value", value);
         if (value.far <= value.near) {
           throw new DeveloperError(
-            "far distance must be greater than near distance."
+            "far distance must be greater than near distance.",
           );
         }
       }
@@ -481,7 +483,7 @@ Object.defineProperties(Billboard.prototype, {
       if (!NearFarScalar.equals(translucencyByDistance, value)) {
         this._translucencyByDistance = NearFarScalar.clone(
           value,
-          translucencyByDistance
+          translucencyByDistance,
         );
         makeDirty(this, TRANSLUCENCY_BY_DISTANCE_INDEX);
       }
@@ -521,7 +523,7 @@ Object.defineProperties(Billboard.prototype, {
         Check.typeOf.object("value", value);
         if (value.far <= value.near) {
           throw new DeveloperError(
-            "far distance must be greater than near distance."
+            "far distance must be greater than near distance.",
           );
         }
       }
@@ -531,7 +533,7 @@ Object.defineProperties(Billboard.prototype, {
       if (!NearFarScalar.equals(pixelOffsetScaleByDistance, value)) {
         this._pixelOffsetScaleByDistance = NearFarScalar.clone(
           value,
-          pixelOffsetScaleByDistance
+          pixelOffsetScaleByDistance,
         );
         makeDirty(this, PIXEL_OFFSET_SCALE_BY_DISTANCE_INDEX);
       }
@@ -855,14 +857,14 @@ Object.defineProperties(Billboard.prototype, {
           Check.typeOf.object("value", value);
           if (value.far <= value.near) {
             throw new DeveloperError(
-              "far distance must be greater than near distance."
+              "far distance must be greater than near distance.",
             );
           }
         }
         //>>includeEnd('debug');
         this._distanceDisplayCondition = DistanceDisplayCondition.clone(
           value,
-          this._distanceDisplayCondition
+          this._distanceDisplayCondition,
         );
         makeDirty(this, DISTANCE_DISPLAY_CONDITION);
       }
@@ -885,7 +887,7 @@ Object.defineProperties(Billboard.prototype, {
         Check.typeOf.number("value", value);
         if (value < 0.0) {
           throw new DeveloperError(
-            "disableDepthTestDistance must be greater than or equal to 0.0."
+            "disableDepthTestDistance must be greater than or equal to 0.0.",
           );
         }
       }
@@ -1014,7 +1016,7 @@ Object.defineProperties(Billboard.prototype, {
     set: function (value) {
       this._actualClampedPosition = Cartesian3.clone(
         value,
-        this._actualClampedPosition
+        this._actualClampedPosition,
       );
       makeDirty(this, POSITION_INDEX);
     },
@@ -1123,7 +1125,7 @@ Billboard._updateClamping = function (collection, owner) {
     //>>includeStart('debug', pragmas.debug);
     if (owner._heightReference !== HeightReference.NONE) {
       throw new DeveloperError(
-        "Height reference is not supported without a scene."
+        "Height reference is not supported without a scene.",
       );
     }
     //>>includeEnd('debug');
@@ -1166,7 +1168,7 @@ Billboard._updateClamping = function (collection, owner) {
   function updateFunction(clampedPosition) {
     const updatedClampedPosition = ellipsoid.cartographicToCartesian(
       clampedPosition,
-      owner._clampedPosition
+      owner._clampedPosition,
     );
 
     if (isHeightReferenceRelative(owner._heightReference)) {
@@ -1174,7 +1176,7 @@ Billboard._updateClamping = function (collection, owner) {
         clampedPosition.height += position.height;
         ellipsoid.cartographicToCartesian(
           clampedPosition,
-          updatedClampedPosition
+          updatedClampedPosition,
         );
       } else {
         updatedClampedPosition.x += position.height;
@@ -1187,7 +1189,7 @@ Billboard._updateClamping = function (collection, owner) {
   owner._removeCallbackFunc = scene.updateHeight(
     position,
     updateFunction,
-    owner._heightReference
+    owner._heightReference,
   );
 
   Cartographic.clone(position, scratchCartographic);
@@ -1388,7 +1390,7 @@ Billboard._computeActualPosition = function (
   billboard,
   position,
   frameState,
-  modelMatrix
+  modelMatrix,
 ) {
   if (defined(billboard._clampedPosition)) {
     if (frameState.mode !== billboard._mode) {
@@ -1402,7 +1404,7 @@ Billboard._computeActualPosition = function (
   Matrix4.multiplyByPoint(modelMatrix, position, tempCartesian3);
   return SceneTransforms.computeActualEllipsoidPosition(
     frameState,
-    tempCartesian3
+    tempCartesian3,
   );
 };
 
@@ -1415,13 +1417,13 @@ Billboard._computeScreenSpacePosition = function (
   eyeOffset,
   pixelOffset,
   scene,
-  result
+  result,
 ) {
   // Model to world coordinates
   const positionWorld = Matrix4.multiplyByPoint(
     modelMatrix,
     position,
-    scratchCartesian3
+    scratchCartesian3,
   );
 
   // World to window coordinates
@@ -1429,7 +1431,7 @@ Billboard._computeScreenSpacePosition = function (
     scene,
     positionWorld,
     eyeOffset,
-    result
+    result,
   );
   if (!defined(positionWC)) {
     return undefined;
@@ -1469,7 +1471,7 @@ Billboard.prototype.computeScreenSpacePosition = function (scene, result) {
   //>>includeStart('debug', pragmas.debug);
   if (!defined(billboardCollection)) {
     throw new DeveloperError(
-      "Billboard must be in a collection.  Was it removed?"
+      "Billboard must be in a collection.  Was it removed?",
     );
   }
   if (!defined(scene)) {
@@ -1501,7 +1503,7 @@ Billboard.prototype.computeScreenSpacePosition = function (scene, result) {
     this._eyeOffset,
     scratchPixelOffset,
     scene,
-    result
+    result,
   );
   return windowCoordinates;
 };
@@ -1518,7 +1520,7 @@ Billboard.prototype.computeScreenSpacePosition = function (scene, result) {
 Billboard.getScreenSpaceBoundingBox = function (
   billboard,
   screenSpacePosition,
-  result
+  result,
 ) {
   let width = billboard.width;
   let height = billboard.height;
@@ -1583,15 +1585,15 @@ Billboard.prototype.equals = function (other) {
       NearFarScalar.equals(this._scaleByDistance, other._scaleByDistance) &&
       NearFarScalar.equals(
         this._translucencyByDistance,
-        other._translucencyByDistance
+        other._translucencyByDistance,
       ) &&
       NearFarScalar.equals(
         this._pixelOffsetScaleByDistance,
-        other._pixelOffsetScaleByDistance
+        other._pixelOffsetScaleByDistance,
       ) &&
       DistanceDisplayCondition.equals(
         this._distanceDisplayCondition,
-        other._distanceDisplayCondition
+        other._distanceDisplayCondition,
       ) &&
       this._disableDepthTestDistance === other._disableDepthTestDistance &&
       this._splitDirection === other._splitDirection)
@@ -1601,7 +1603,7 @@ Billboard.prototype.equals = function (other) {
 Billboard.prototype._destroy = function () {
   if (defined(this._customData)) {
     this._billboardCollection._scene.globe._surface.removeTileCustomData(
-      this._customData
+      this._customData,
     );
     this._customData = undefined;
   }
