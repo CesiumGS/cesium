@@ -4,7 +4,7 @@ import defined from "../Core/defined.js";
 import defaultValue from "../Core/defaultValue.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
-import OctahedralProjectedCubeMap from "./OctahedralProjectedCubeMap.js";
+import SpecularEnvironmentCubeMap from "./SpecularEnvironmentCubeMap.js";
 
 /**
  * Properties for managing image-based lighting on tilesets and models.
@@ -33,27 +33,27 @@ function ImageBasedLighting(options) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object(
     "options.imageBasedLightingFactor",
-    imageBasedLightingFactor
+    imageBasedLightingFactor,
   );
   Check.typeOf.number.greaterThanOrEquals(
     "options.imageBasedLightingFactor.x",
     imageBasedLightingFactor.x,
-    0.0
+    0.0,
   );
   Check.typeOf.number.lessThanOrEquals(
     "options.imageBasedLightingFactor.x",
     imageBasedLightingFactor.x,
-    1.0
+    1.0,
   );
   Check.typeOf.number.greaterThanOrEquals(
     "options.imageBasedLightingFactor.y",
     imageBasedLightingFactor.y,
-    0.0
+    0.0,
   );
   Check.typeOf.number.lessThanOrEquals(
     "options.imageBasedLightingFactor.y",
     imageBasedLightingFactor.y,
-    1.0
+    1.0,
   );
   //>>includeEnd('debug');
 
@@ -76,7 +76,7 @@ function ImageBasedLighting(options) {
       sphericalHarmonicCoefficients.length !== 9)
   ) {
     throw new DeveloperError(
-      "options.sphericalHarmonicCoefficients must be an array of 9 Cartesian3 values."
+      "options.sphericalHarmonicCoefficients must be an array of 9 Cartesian3 values.",
     );
   }
   //>>includeEnd('debug');
@@ -84,8 +84,8 @@ function ImageBasedLighting(options) {
 
   // The specular environment map texture is created in update();
   this._specularEnvironmentMaps = options.specularEnvironmentMaps;
-  this._specularEnvironmentMapAtlas = undefined;
-  this._specularEnvironmentMapAtlasDirty = true;
+  this._specularEnvironmentCubeMap = undefined;
+  this._specularEnvironmentCubeMapDirty = true;
   this._specularEnvironmentMapLoaded = false;
   this._previousSpecularEnvironmentMapLoaded = false;
 
@@ -98,7 +98,7 @@ function ImageBasedLighting(options) {
 
   // Keeps track of the last values for use during update logic
   this._previousImageBasedLightingFactor = Cartesian2.clone(
-    imageBasedLightingFactor
+    imageBasedLightingFactor,
   );
   this._previousLuminanceAtZenith = luminanceAtZenith;
   this._previousSphericalHarmonicCoefficients = sphericalHarmonicCoefficients;
@@ -127,31 +127,31 @@ Object.defineProperties(ImageBasedLighting.prototype, {
       Check.typeOf.number.greaterThanOrEquals(
         "imageBasedLightingFactor.x",
         value.x,
-        0.0
+        0.0,
       );
       Check.typeOf.number.lessThanOrEquals(
         "imageBasedLightingFactor.x",
         value.x,
-        1.0
+        1.0,
       );
       Check.typeOf.number.greaterThanOrEquals(
         "imageBasedLightingFactor.y",
         value.y,
-        0.0
+        0.0,
       );
       Check.typeOf.number.lessThanOrEquals(
         "imageBasedLightingFactor.y",
         value.y,
-        1.0
+        1.0,
       );
       //>>includeEnd('debug');
       this._previousImageBasedLightingFactor = Cartesian2.clone(
         this._imageBasedLightingFactor,
-        this._previousImageBasedLightingFactor
+        this._previousImageBasedLightingFactor,
       );
       this._imageBasedLightingFactor = Cartesian2.clone(
         value,
-        this._imageBasedLightingFactor
+        this._imageBasedLightingFactor,
       );
     },
   },
@@ -203,11 +203,12 @@ Object.defineProperties(ImageBasedLighting.prototype, {
       //>>includeStart('debug', pragmas.debug);
       if (defined(value) && (!Array.isArray(value) || value.length !== 9)) {
         throw new DeveloperError(
-          "sphericalHarmonicCoefficients must be an array of 9 Cartesian3 values."
+          "sphericalHarmonicCoefficients must be an array of 9 Cartesian3 values.",
         );
       }
       //>>includeEnd('debug');
-      this._previousSphericalHarmonicCoefficients = this._sphericalHarmonicCoefficients;
+      this._previousSphericalHarmonicCoefficients =
+        this._sphericalHarmonicCoefficients;
       this._sphericalHarmonicCoefficients = value;
     },
   },
@@ -226,8 +227,8 @@ Object.defineProperties(ImageBasedLighting.prototype, {
     },
     set: function (value) {
       if (value !== this._specularEnvironmentMaps) {
-        this._specularEnvironmentMapAtlasDirty =
-          this._specularEnvironmentMapAtlasDirty ||
+        this._specularEnvironmentCubeMapDirty =
+          this._specularEnvironmentCubeMapDirty ||
           value !== this._specularEnvironmentMaps;
         this._specularEnvironmentMapLoaded = false;
       }
@@ -299,16 +300,16 @@ Object.defineProperties(ImageBasedLighting.prototype, {
   },
 
   /**
-   * The texture atlas for the specular environment maps.
+   * The cube map for the specular environment maps.
    *
    * @memberof ImageBasedLighting.prototype
-   * @type {OctahedralProjectedCubeMap}
+   * @type {SpecularEnvironmentCubeMap}
    *
    * @private
    */
-  specularEnvironmentMapAtlas: {
+  specularEnvironmentCubeMap: {
     get: function () {
-      return this._specularEnvironmentMapAtlas;
+      return this._specularEnvironmentCubeMap;
     },
   },
 
@@ -337,34 +338,33 @@ Object.defineProperties(ImageBasedLighting.prototype, {
   useSpecularEnvironmentMaps: {
     get: function () {
       return (
-        (defined(this._specularEnvironmentMapAtlas) &&
-          this._specularEnvironmentMapAtlas.ready) ||
+        (defined(this._specularEnvironmentCubeMap) &&
+          this._specularEnvironmentCubeMap.ready) ||
         this._useDefaultSpecularMaps
       );
     },
   },
 });
 
-function createSpecularEnvironmentMapAtlas(imageBasedLighting, context) {
-  if (!OctahedralProjectedCubeMap.isSupported(context)) {
+function createSpecularEnvironmentCubeMap(imageBasedLighting, context) {
+  if (!SpecularEnvironmentCubeMap.isSupported(context)) {
     return;
   }
 
-  imageBasedLighting._specularEnvironmentMapAtlas =
-    imageBasedLighting._specularEnvironmentMapAtlas &&
-    imageBasedLighting._specularEnvironmentMapAtlas.destroy();
+  imageBasedLighting._specularEnvironmentCubeMap =
+    imageBasedLighting._specularEnvironmentCubeMap &&
+    imageBasedLighting._specularEnvironmentCubeMap.destroy();
 
   if (defined(imageBasedLighting._specularEnvironmentMaps)) {
-    const atlas = new OctahedralProjectedCubeMap(
-      imageBasedLighting._specularEnvironmentMaps
+    const cubeMap = new SpecularEnvironmentCubeMap(
+      imageBasedLighting._specularEnvironmentMaps,
     );
-    imageBasedLighting._specularEnvironmentMapAtlas = atlas;
+    imageBasedLighting._specularEnvironmentCubeMap = cubeMap;
 
-    imageBasedLighting._removeErrorListener = atlas.errorEvent.addEventListener(
-      (error) => {
+    imageBasedLighting._removeErrorListener =
+      cubeMap.errorEvent.addEventListener((error) => {
         console.error(`Error loading specularEnvironmentMaps: ${error}`);
-      }
-    );
+      });
   }
 
   // Regenerate shaders so they do not use an environment map.
@@ -396,7 +396,7 @@ ImageBasedLighting.prototype.update = function (frameState) {
 
     this._previousImageBasedLightingFactor = Cartesian2.clone(
       this._imageBasedLightingFactor,
-      this._previousImageBasedLightingFactor
+      this._previousImageBasedLightingFactor,
     );
   }
 
@@ -418,7 +418,8 @@ ImageBasedLighting.prototype.update = function (frameState) {
       defined(this._previousSphericalHarmonicCoefficients) !==
         defined(this._sphericalHarmonicCoefficients);
 
-    this._previousSphericalHarmonicCoefficients = this._sphericalHarmonicCoefficients;
+    this._previousSphericalHarmonicCoefficients =
+      this._sphericalHarmonicCoefficients;
   }
 
   this._shouldRegenerateShaders =
@@ -426,25 +427,26 @@ ImageBasedLighting.prototype.update = function (frameState) {
     this._previousSpecularEnvironmentMapLoaded !==
       this._specularEnvironmentMapLoaded;
 
-  this._previousSpecularEnvironmentMapLoaded = this._specularEnvironmentMapLoaded;
+  this._previousSpecularEnvironmentMapLoaded =
+    this._specularEnvironmentMapLoaded;
 
-  if (this._specularEnvironmentMapAtlasDirty) {
-    createSpecularEnvironmentMapAtlas(this, context);
-    this._specularEnvironmentMapAtlasDirty = false;
+  if (this._specularEnvironmentCubeMapDirty) {
+    createSpecularEnvironmentCubeMap(this, context);
+    this._specularEnvironmentCubeMapDirty = false;
   }
 
-  if (defined(this._specularEnvironmentMapAtlas)) {
-    this._specularEnvironmentMapAtlas.update(frameState);
-    if (this._specularEnvironmentMapAtlas.ready) {
+  if (defined(this._specularEnvironmentCubeMap)) {
+    this._specularEnvironmentCubeMap.update(frameState);
+    if (this._specularEnvironmentCubeMap.ready) {
       this._specularEnvironmentMapLoaded = true;
     }
   }
 
-  const recompileWithDefaultAtlas =
-    !defined(this._specularEnvironmentMapAtlas) &&
+  const recompileWithDefaultCubeMap =
+    !defined(this._specularEnvironmentCubeMap) &&
     defined(frameState.specularEnvironmentMaps) &&
     !this._useDefaultSpecularMaps;
-  const recompileWithoutDefaultAtlas =
+  const recompileWithoutDefaultCubeMap =
     !defined(frameState.specularEnvironmentMaps) &&
     this._useDefaultSpecularMaps;
 
@@ -458,13 +460,13 @@ ImageBasedLighting.prototype.update = function (frameState) {
 
   this._shouldRegenerateShaders =
     this._shouldRegenerateShaders ||
-    recompileWithDefaultAtlas ||
-    recompileWithoutDefaultAtlas ||
+    recompileWithDefaultCubeMap ||
+    recompileWithoutDefaultCubeMap ||
     recompileWithDefaultSHCoeffs ||
     recompileWithoutDefaultSHCoeffs;
 
   this._useDefaultSpecularMaps =
-    !defined(this._specularEnvironmentMapAtlas) &&
+    !defined(this._specularEnvironmentCubeMap) &&
     defined(frameState.specularEnvironmentMaps);
   this._useDefaultSphericalHarmonics =
     !defined(this._sphericalHarmonicCoefficients) &&
@@ -503,9 +505,9 @@ ImageBasedLighting.prototype.isDestroyed = function () {
  * @private
  */
 ImageBasedLighting.prototype.destroy = function () {
-  this._specularEnvironmentMapAtlas =
-    this._specularEnvironmentMapAtlas &&
-    this._specularEnvironmentMapAtlas.destroy();
+  this._specularEnvironmentCubeMap =
+    this._specularEnvironmentCubeMap &&
+    this._specularEnvironmentCubeMap.destroy();
   this._removeErrorListener =
     this._removeErrorListener && this._removeErrorListener();
   return destroyObject(this);

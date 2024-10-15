@@ -7,7 +7,7 @@ describe("Core/PlaneGeometry", function () {
     const m = PlaneGeometry.createGeometry(
       new PlaneGeometry({
         vertexFormat: VertexFormat.POSITION_ONLY,
-      })
+      }),
     );
 
     expect(m.attributes.position.values.length).toEqual(4 * 3); // 4 corners
@@ -18,7 +18,7 @@ describe("Core/PlaneGeometry", function () {
     const m = PlaneGeometry.createGeometry(
       new PlaneGeometry({
         vertexFormat: VertexFormat.ALL,
-      })
+      }),
     );
 
     const numVertices = 4;
@@ -40,6 +40,6 @@ describe("Core/PlaneGeometry", function () {
     new PlaneGeometry({
       vertexFormat: VertexFormat.POSITION_AND_NORMAL,
     }),
-    [1.0, 1.0, 0.0, 0.0, 0.0, 0.0]
+    [1.0, 1.0, 0.0, 0.0, 0.0, 0.0],
   );
 });

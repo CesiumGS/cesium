@@ -124,7 +124,7 @@ MetadataTable.prototype.hasPropertyBySemantic = function (semantic) {
   return MetadataEntity.hasPropertyBySemantic(
     semantic,
     this._properties,
-    this._class
+    this._class,
   );
 };
 
@@ -270,7 +270,7 @@ MetadataTable.prototype.getPropertyBySemantic = function (index, semantic) {
 MetadataTable.prototype.setPropertyBySemantic = function (
   index,
   semantic,
-  value
+  value,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.string("semantic", semantic);

@@ -90,7 +90,7 @@ function computeDeltaLambda(
   sigma,
   sineSigma,
   cosineSigma,
-  cosineTwiceSigmaMidpoint
+  cosineTwiceSigmaMidpoint,
 ) {
   const C = computeC(f, cosineSquaredAlpha);
 
@@ -115,7 +115,7 @@ function vincentyInverseFormula(
   firstLongitude,
   firstLatitude,
   secondLongitude,
-  secondLatitude
+  secondLatitude,
 ) {
   const eff = (major - minor) / major;
   const l = secondLongitude - firstLongitude;
@@ -151,7 +151,7 @@ function vincentyInverseFormula(
 
     const temp = cs - sc * cosineLambda;
     sineSigma = Math.sqrt(
-      cosineU2 * cosineU2 * sineLambda * sineLambda + temp * temp
+      cosineU2 * cosineU2 * sineLambda * sineLambda + temp * temp,
     );
     cosineSigma = ss + cc * cosineLambda;
 
@@ -184,7 +184,7 @@ function vincentyInverseFormula(
         sigma,
         sineSigma,
         cosineSigma,
-        cosineTwiceSigmaMidpoint
+        cosineTwiceSigmaMidpoint,
       );
   } while (Math.abs(lambda - lambdaDot) > CesiumMath.EPSILON12);
 
@@ -219,7 +219,7 @@ function vincentyInverseFormula(
 
   const startHeading = Math.atan2(
     cosineU2 * sineLambda,
-    cs - sc * cosineLambda
+    cs - sc * cosineLambda,
   );
   const endHeading = Math.atan2(cosineU1 * sineLambda, cs * cosineLambda - sc);
 
@@ -234,20 +234,21 @@ const scratchCart2 = new Cartesian3();
 function computeProperties(ellipsoidGeodesic, start, end, ellipsoid) {
   const firstCartesian = Cartesian3.normalize(
     ellipsoid.cartographicToCartesian(start, scratchCart2),
-    scratchCart1
+    scratchCart1,
   );
   const lastCartesian = Cartesian3.normalize(
     ellipsoid.cartographicToCartesian(end, scratchCart2),
-    scratchCart2
+    scratchCart2,
   );
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.number.greaterThanOrEquals(
     "value",
     Math.abs(
-      Math.abs(Cartesian3.angleBetween(firstCartesian, lastCartesian)) - Math.PI
+      Math.abs(Cartesian3.angleBetween(firstCartesian, lastCartesian)) -
+        Math.PI,
     ),
-    0.0125
+    0.0125,
   );
   //>>includeEnd('debug');
 
@@ -258,12 +259,12 @@ function computeProperties(ellipsoidGeodesic, start, end, ellipsoid) {
     start.longitude,
     start.latitude,
     end.longitude,
-    end.latitude
+    end.latitude,
   );
 
   ellipsoidGeodesic._start = Cartographic.clone(
     start,
-    ellipsoidGeodesic._start
+    ellipsoidGeodesic._start,
   );
   ellipsoidGeodesic._end = Cartographic.clone(end, ellipsoidGeodesic._end);
   ellipsoidGeodesic._start.height = 0;
@@ -409,18 +410,18 @@ EllipsoidGeodesic.prototype.setEndPoints = function (start, end) {
  */
 EllipsoidGeodesic.prototype.interpolateUsingFraction = function (
   fraction,
-  result
+  result,
 ) {
   return this.interpolateUsingSurfaceDistance(
     this._distance * fraction,
-    result
+    result,
   );
 };
 
 /**
  * Provides the location of a point at the indicated distance along the geodesic.
  *
- * @param {number} distance The distance from the inital point to the point of interest along the geodesic
+ * @param {number} distance The distance from the initial point to the point of interest along the geodesic
  * @param {Cartographic} [result] The object in which to store the result.
  * @returns {Cartographic} The location of the point along the geodesic.
  *
@@ -428,7 +429,7 @@ EllipsoidGeodesic.prototype.interpolateUsingFraction = function (
  */
 EllipsoidGeodesic.prototype.interpolateUsingSurfaceDistance = function (
   distance,
-  result
+  result,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("distance", this._distance);
@@ -496,7 +497,7 @@ EllipsoidGeodesic.prototype.interpolateUsingSurfaceDistance = function (
 
   const lambda = Math.atan2(
     sineSigma * constants.sineHeading,
-    cc - ss * constants.cosineHeading
+    cc - ss * constants.cosineHeading,
   );
 
   const l =
@@ -508,7 +509,7 @@ EllipsoidGeodesic.prototype.interpolateUsingSurfaceDistance = function (
       sigma,
       sineSigma,
       cosineSigma,
-      cosineTwiceSigmaMidpoint
+      cosineTwiceSigmaMidpoint,
     );
 
   if (defined(result)) {

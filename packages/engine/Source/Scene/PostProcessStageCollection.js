@@ -12,7 +12,7 @@ import TextureWrap from "../Renderer/TextureWrap.js";
 import PassThrough from "../Shaders/PostProcessStages/PassThrough.js";
 import PostProcessStageLibrary from "./PostProcessStageLibrary.js";
 import PostProcessStageTextureCache from "./PostProcessStageTextureCache.js";
-import Tonemapper from "./Tonemapper.js";
+import Tonemapper, { validateTonemapper } from "./Tonemapper.js";
 
 const stackScratch = [];
 
@@ -41,11 +41,12 @@ function PostProcessStageCollection() {
   // Some shaders, such as the atmosphere and ground atmosphere, output values slightly over 1.0.
   this._autoExposureEnabled = false;
   this._autoExposure = PostProcessStageLibrary.createAutoExposureStage();
+  this._exposure = 1.0;
   this._tonemapping = undefined;
   this._tonemapper = undefined;
 
-  // set tonemapper and tonemapping
-  this.tonemapper = Tonemapper.ACES;
+  // set tonemapper and tonemapping using the setter
+  this.tonemapper = Tonemapper.PBR_NEUTRAL;
 
   const tonemapping = this._tonemapping;
 
@@ -313,11 +314,14 @@ Object.defineProperties(PostProcessStageCollection.prototype, {
   },
 
   /**
-   * Gets and sets the tonemapping algorithm used when rendering with high dynamic range.
+   * Specifies the tonemapping algorithm used when rendering with high dynamic range.
+   * {@link https://sandcastle.cesium.com/?src=High%20Dynamic%20Range.html|Sandcastle Demo}
    *
+   * @example viewer.scene.postProcessStages.tonemapper = Cesium.Tonemapper.ACES;
+   *
+   * @default Tonemapper.PBR_NEUTRAL
    * @memberof PostProcessStageCollection.prototype
    * @type {Tonemapper}
-   * @private
    */
   tonemapper: {
     get: function () {
@@ -328,7 +332,7 @@ Object.defineProperties(PostProcessStageCollection.prototype, {
         return;
       }
       //>>includeStart('debug', pragmas.debug);
-      if (!Tonemapper.validate(value)) {
+      if (!validateTonemapper(value)) {
         throw new DeveloperError("tonemapper was set to an invalid value.");
       }
       //>>includeEnd('debug');
@@ -339,47 +343,76 @@ Object.defineProperties(PostProcessStageCollection.prototype, {
       }
 
       const useAutoExposure = this._autoExposureEnabled;
-      let tonemapper;
+      let tonemapping;
 
       switch (value) {
         case Tonemapper.REINHARD:
-          tonemapper = PostProcessStageLibrary.createReinhardTonemappingStage(
-            useAutoExposure
-          );
+          tonemapping =
+            PostProcessStageLibrary.createReinhardTonemappingStage(
+              useAutoExposure,
+            );
           break;
         case Tonemapper.MODIFIED_REINHARD:
-          tonemapper = PostProcessStageLibrary.createModifiedReinhardTonemappingStage(
-            useAutoExposure
-          );
+          tonemapping =
+            PostProcessStageLibrary.createModifiedReinhardTonemappingStage(
+              useAutoExposure,
+            );
           break;
         case Tonemapper.FILMIC:
-          tonemapper = PostProcessStageLibrary.createFilmicTonemappingStage(
-            useAutoExposure
-          );
+          tonemapping =
+            PostProcessStageLibrary.createFilmicTonemappingStage(
+              useAutoExposure,
+            );
+          break;
+        case Tonemapper.PBR_NEUTRAL:
+          tonemapping =
+            PostProcessStageLibrary.createPbrNeutralTonemappingStage(
+              useAutoExposure,
+            );
           break;
         default:
-          tonemapper = PostProcessStageLibrary.createAcesTonemappingStage(
-            useAutoExposure
-          );
+          tonemapping =
+            PostProcessStageLibrary.createAcesTonemappingStage(useAutoExposure);
           break;
       }
 
       if (useAutoExposure) {
         const autoexposure = this._autoExposure;
-        tonemapper.uniforms.autoExposure = function () {
+        tonemapping.uniforms.autoExposure = function () {
           return autoexposure.outputTexture;
         };
+      } else {
+        tonemapping.uniforms.exposure = this._exposure;
       }
 
       this._tonemapper = value;
-      this._tonemapping = tonemapper;
+      this._tonemapping = tonemapping;
 
       if (defined(this._stageNames)) {
-        this._stageNames[tonemapper.name] = tonemapper;
-        tonemapper._textureCache = this._textureCache;
+        this._stageNames[tonemapping.name] = tonemapping;
+        tonemapping._textureCache = this._textureCache;
       }
 
       this._textureCacheDirty = true;
+    },
+  },
+
+  /**
+   * Control the exposure when HDR is on. Less than 1.0 makes the tonemapping darker while greater than 1.0 makes it brighter.
+   *
+   * @example viewer.scene.postProcessStages.exposure = 1.0;
+   *
+   * @default 1.0
+   * @memberof PostProcessStageCollection.prototype
+   * @type {number}
+   */
+  exposure: {
+    get: function () {
+      return this._exposure;
+    },
+    set: function (value) {
+      this._tonemapping.uniforms.exposure = value;
+      this._exposure = value;
     },
   },
 });
@@ -393,8 +426,7 @@ function removeStages(collection) {
 
   const newStages = [];
   const stages = collection._stages;
-  const length = stages.length;
-  for (let i = 0, j = 0; i < length; ++i) {
+  for (let i = 0, j = 0; i < stages.length; ++i) {
     const stage = stages[i];
     if (stage) {
       stage._index = j++;
@@ -427,7 +459,7 @@ PostProcessStageCollection.prototype.add = function (stage) {
     //>>includeStart('debug', pragmas.debug);
     if (defined(stageNames[currentStage.name])) {
       throw new DeveloperError(
-        `${currentStage.name} has already been added to the collection or does not have a unique name.`
+        `${currentStage.name} has already been added to the collection or does not have a unique name.`,
       );
     }
     //>>includeEnd('debug');
@@ -552,7 +584,7 @@ PostProcessStageCollection.prototype.getStageByName = function (name) {
 PostProcessStageCollection.prototype.update = function (
   context,
   useLogDepth,
-  useHdr
+  useHdr,
 ) {
   removeStages(this);
 
@@ -561,23 +593,20 @@ PostProcessStageCollection.prototype.update = function (
   this._previousActiveStages = previousActiveStages;
 
   const stages = this._stages;
-  let length = (activeStages.length = stages.length);
+  activeStages.length = stages.length;
 
-  let i;
-  let stage;
   let count = 0;
-  for (i = 0; i < length; ++i) {
-    stage = stages[i];
+  for (let i = 0; i < stages.length; ++i) {
+    const stage = stages[i];
     if (stage.ready && stage.enabled && stage._isSupported(context)) {
       activeStages[count++] = stage;
     }
   }
-
   activeStages.length = count;
 
   let activeStagesChanged = count !== previousActiveStages.length;
   if (!activeStagesChanged) {
-    for (i = 0; i < count; ++i) {
+    for (let i = 0; i < count; ++i) {
       if (activeStages[i] !== previousActiveStages[i]) {
         activeStagesChanged = true;
         break;
@@ -624,9 +653,9 @@ PostProcessStageCollection.prototype.update = function (
   }
 
   if (!defined(this._randomTexture) && aoEnabled) {
-    length = 256 * 256 * 3;
+    const length = 256 * 256 * 3;
     const random = new Uint8Array(length);
-    for (i = 0; i < length; i += 3) {
+    for (let i = 0; i < length; i += 3) {
       random[i] = Math.floor(Math.random() * 255.0);
     }
 
@@ -659,19 +688,17 @@ PostProcessStageCollection.prototype.update = function (
     autoexposure.update(context, useLogDepth);
   }
 
-  length = stages.length;
-  for (i = 0; i < length; ++i) {
+  for (let i = 0; i < stages.length; ++i) {
     stages[i].update(context, useLogDepth);
   }
 
   count = 0;
-  for (i = 0; i < length; ++i) {
-    stage = stages[i];
+  for (let i = 0; i < stages.length; ++i) {
+    const stage = stages[i];
     if (stage.ready && stage.enabled && stage._isSupported(context)) {
       count++;
     }
   }
-
   activeStagesChanged = count !== activeStages.length;
   if (activeStagesChanged) {
     this.update(context, useLogDepth, useHdr);
@@ -722,22 +749,19 @@ function execute(stage, context, colorTexture, depthTexture, idTexture) {
     return;
   }
 
-  const length = stage.length;
-  let i;
-
   if (stage.inputPreviousStageTexture) {
     execute(stage.get(0), context, colorTexture, depthTexture, idTexture);
-    for (i = 1; i < length; ++i) {
+    for (let i = 1; i < stage.length; ++i) {
       execute(
         stage.get(i),
         context,
         getOutputTexture(stage.get(i - 1)),
         depthTexture,
-        idTexture
+        idTexture,
       );
     }
   } else {
-    for (i = 0; i < length; ++i) {
+    for (let i = 0; i < stage.length; ++i) {
       execute(stage.get(i), context, colorTexture, depthTexture, idTexture);
     }
   }
@@ -757,7 +781,7 @@ PostProcessStageCollection.prototype.execute = function (
   context,
   colorTexture,
   depthTexture,
-  idTexture
+  idTexture,
 ) {
   const activeStages = this._activeStages;
   const length = activeStages.length;
@@ -811,7 +835,7 @@ PostProcessStageCollection.prototype.execute = function (
         context,
         getOutputTexture(activeStages[i - 1]),
         depthTexture,
-        idTexture
+        idTexture,
       );
     }
     lastTexture = getOutputTexture(activeStages[length - 1]);

@@ -116,7 +116,7 @@ PropertyArray.prototype.setValue = function (value) {
         eventHelper.add(
           property.definitionChanged,
           PropertyArray.prototype._raiseDefinitionChanged,
-          this
+          this,
         );
       }
     }

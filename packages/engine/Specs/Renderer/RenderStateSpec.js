@@ -108,16 +108,16 @@ describe(
       expect(rs.polygonOffset.units).toEqual(defaultRS.polygonOffset.units);
       expect(rs.scissorTest.enabled).toEqual(defaultRS.scissorTest.enabled);
       expect(rs.scissorTest.rectangle.x).toEqual(
-        defaultRS.scissorTest.rectangle.x
+        defaultRS.scissorTest.rectangle.x,
       );
       expect(rs.scissorTest.rectangle.y).toEqual(
-        defaultRS.scissorTest.rectangle.y
+        defaultRS.scissorTest.rectangle.y,
       );
       expect(rs.scissorTest.rectangle.width).toEqual(
-        defaultRS.scissorTest.rectangle.width
+        defaultRS.scissorTest.rectangle.width,
       );
       expect(rs.scissorTest.rectangle.height).toEqual(
-        defaultRS.scissorTest.rectangle.height
+        defaultRS.scissorTest.rectangle.height,
       );
       expect(rs.depthRange.near).toEqual(defaultRS.depthRange.near);
       expect(rs.depthRange.far).toEqual(defaultRS.depthRange.far);
@@ -136,49 +136,49 @@ describe(
       expect(rs.blending.color.alpha).toEqual(defaultRS.blending.color.alpha);
       expect(rs.blending.equationRgb).toEqual(defaultRS.blending.equationRgb);
       expect(rs.blending.equationAlpha).toEqual(
-        defaultRS.blending.equationAlpha
+        defaultRS.blending.equationAlpha,
       );
       expect(rs.blending.functionSourceRgb).toEqual(
-        defaultRS.blending.functionSourceRgb
+        defaultRS.blending.functionSourceRgb,
       );
       expect(rs.blending.functionSourceAlpha).toEqual(
-        defaultRS.blending.functionSourceAlpha
+        defaultRS.blending.functionSourceAlpha,
       );
       expect(rs.blending.functionDestinationRgb).toEqual(
-        defaultRS.blending.functionDestinationRgb
+        defaultRS.blending.functionDestinationRgb,
       );
       expect(rs.blending.functionDestinationAlpha).toEqual(
-        defaultRS.blending.functionDestinationAlpha
+        defaultRS.blending.functionDestinationAlpha,
       );
       expect(rs.stencilTest.enabled).toEqual(defaultRS.stencilTest.enabled);
       expect(rs.stencilTest.frontFunction).toEqual(
-        defaultRS.stencilTest.frontFunction
+        defaultRS.stencilTest.frontFunction,
       );
       expect(rs.stencilTest.backFunction).toEqual(
-        defaultRS.stencilTest.backFunction
+        defaultRS.stencilTest.backFunction,
       );
       expect(rs.stencilTest.reference).toEqual(defaultRS.stencilTest.reference);
       expect(rs.stencilTest.mask).toEqual(defaultRS.stencilTest.mask);
       expect(rs.stencilTest.frontOperation.fail).toEqual(
-        defaultRS.stencilTest.frontOperation.fail
+        defaultRS.stencilTest.frontOperation.fail,
       );
       expect(rs.stencilTest.frontOperation.zFail).toEqual(
-        defaultRS.stencilTest.frontOperation.zFail
+        defaultRS.stencilTest.frontOperation.zFail,
       );
       expect(rs.stencilTest.frontOperation.zPass).toEqual(
-        defaultRS.stencilTest.frontOperation.zPass
+        defaultRS.stencilTest.frontOperation.zPass,
       );
       expect(rs.stencilTest.backOperation.fail).toEqual(
-        defaultRS.stencilTest.backOperation.fail
+        defaultRS.stencilTest.backOperation.fail,
       );
       expect(rs.stencilTest.backOperation.zFail).toEqual(
-        defaultRS.stencilTest.backOperation.zFail
+        defaultRS.stencilTest.backOperation.zFail,
       );
       expect(rs.stencilTest.backOperation.zPass).toEqual(
-        defaultRS.stencilTest.backOperation.zPass
+        defaultRS.stencilTest.backOperation.zPass,
       );
       expect(rs.sampleCoverage.enabled).toEqual(
-        defaultRS.sampleCoverage.enabled
+        defaultRS.sampleCoverage.enabled,
       );
       expect(rs.sampleCoverage.value).toEqual(defaultRS.sampleCoverage.value);
       expect(rs.sampleCoverage.invert).toEqual(defaultRS.sampleCoverage.invert);
@@ -274,10 +274,10 @@ describe(
       expect(rs.scissorTest.rectangle.x).toEqual(r.scissorTest.rectangle.x);
       expect(rs.scissorTest.rectangle.y).toEqual(r.scissorTest.rectangle.y);
       expect(rs.scissorTest.rectangle.width).toEqual(
-        r.scissorTest.rectangle.width
+        r.scissorTest.rectangle.width,
       );
       expect(rs.scissorTest.rectangle.height).toEqual(
-        r.scissorTest.rectangle.height
+        r.scissorTest.rectangle.height,
       );
       expect(rs.depthRange.near).toEqual(r.depthRange.near);
       expect(rs.depthRange.far).toEqual(r.depthRange.far);
@@ -297,16 +297,16 @@ describe(
       expect(rs.blending.equationRgb).toEqual(r.blending.equationRgb);
       expect(rs.blending.equationAlpha).toEqual(r.blending.equationAlpha);
       expect(rs.blending.functionSourceRgb).toEqual(
-        r.blending.functionSourceRgb
+        r.blending.functionSourceRgb,
       );
       expect(rs.blending.functionSourceAlpha).toEqual(
-        r.blending.functionSourceAlpha
+        r.blending.functionSourceAlpha,
       );
       expect(rs.blending.functionDestinationRgb).toEqual(
-        r.blending.functionDestinationRgb
+        r.blending.functionDestinationRgb,
       );
       expect(rs.blending.functionDestinationAlpha).toEqual(
-        r.blending.functionDestinationAlpha
+        r.blending.functionDestinationAlpha,
       );
       expect(rs.stencilTest.enabled).toEqual(r.stencilTest.enabled);
       expect(rs.stencilTest.frontFunction).toEqual(r.stencilTest.frontFunction);
@@ -314,22 +314,22 @@ describe(
       expect(rs.stencilTest.reference).toEqual(r.stencilTest.reference);
       expect(rs.stencilTest.mask).toEqual(r.stencilTest.mask);
       expect(rs.stencilTest.frontOperation.fail).toEqual(
-        r.stencilTest.frontOperation.fail
+        r.stencilTest.frontOperation.fail,
       );
       expect(rs.stencilTest.frontOperation.zFail).toEqual(
-        r.stencilTest.frontOperation.zFail
+        r.stencilTest.frontOperation.zFail,
       );
       expect(rs.stencilTest.frontOperation.zPass).toEqual(
-        r.stencilTest.frontOperation.zPass
+        r.stencilTest.frontOperation.zPass,
       );
       expect(rs.stencilTest.backOperation.fail).toEqual(
-        r.stencilTest.backOperation.fail
+        r.stencilTest.backOperation.fail,
       );
       expect(rs.stencilTest.backOperation.zFail).toEqual(
-        r.stencilTest.backOperation.zFail
+        r.stencilTest.backOperation.zFail,
       );
       expect(rs.stencilTest.backOperation.zPass).toEqual(
-        r.stencilTest.backOperation.zPass
+        r.stencilTest.backOperation.zPass,
       );
       expect(rs.sampleCoverage.enabled).toEqual(r.sampleCoverage.enabled);
       expect(rs.sampleCoverage.value).toEqual(r.sampleCoverage.value);
@@ -359,16 +359,16 @@ describe(
       expect(rs.polygonOffset.units).toEqual(defaultRS.polygonOffset.units);
       expect(rs.scissorTest.enabled).toEqual(defaultRS.scissorTest.enabled);
       expect(rs.scissorTest.rectangle.x).toEqual(
-        defaultRS.scissorTest.rectangle.x
+        defaultRS.scissorTest.rectangle.x,
       );
       expect(rs.scissorTest.rectangle.y).toEqual(
-        defaultRS.scissorTest.rectangle.y
+        defaultRS.scissorTest.rectangle.y,
       );
       expect(rs.scissorTest.rectangle.width).toEqual(
-        defaultRS.scissorTest.rectangle.width
+        defaultRS.scissorTest.rectangle.width,
       );
       expect(rs.scissorTest.rectangle.height).toEqual(
-        defaultRS.scissorTest.rectangle.height
+        defaultRS.scissorTest.rectangle.height,
       );
       expect(rs.depthTest.enabled).toEqual(defaultRS.depthTest.enabled);
       expect(rs.depthTest.func).toEqual(defaultRS.depthTest.func);
@@ -385,49 +385,49 @@ describe(
       expect(rs.blending.color.alpha).toEqual(defaultRS.blending.color.alpha);
       expect(rs.blending.equationRgb).toEqual(defaultRS.blending.equationRgb);
       expect(rs.blending.equationAlpha).toEqual(
-        defaultRS.blending.equationAlpha
+        defaultRS.blending.equationAlpha,
       );
       expect(rs.blending.functionSourceRgb).toEqual(
-        defaultRS.blending.functionSourceRgb
+        defaultRS.blending.functionSourceRgb,
       );
       expect(rs.blending.functionSourceAlpha).toEqual(
-        defaultRS.blending.functionSourceAlpha
+        defaultRS.blending.functionSourceAlpha,
       );
       expect(rs.blending.functionDestinationRgb).toEqual(
-        defaultRS.blending.functionDestinationRgb
+        defaultRS.blending.functionDestinationRgb,
       );
       expect(rs.blending.functionDestinationAlpha).toEqual(
-        defaultRS.blending.functionDestinationAlpha
+        defaultRS.blending.functionDestinationAlpha,
       );
       expect(rs.stencilTest.enabled).toEqual(defaultRS.stencilTest.enabled);
       expect(rs.stencilTest.frontFunction).toEqual(
-        defaultRS.stencilTest.frontFunction
+        defaultRS.stencilTest.frontFunction,
       );
       expect(rs.stencilTest.backFunction).toEqual(
-        defaultRS.stencilTest.backFunction
+        defaultRS.stencilTest.backFunction,
       );
       expect(rs.stencilTest.reference).toEqual(defaultRS.stencilTest.reference);
       expect(rs.stencilTest.mask).toEqual(defaultRS.stencilTest.mask);
       expect(rs.stencilTest.frontOperation.fail).toEqual(
-        defaultRS.stencilTest.frontOperation.fail
+        defaultRS.stencilTest.frontOperation.fail,
       );
       expect(rs.stencilTest.frontOperation.zFail).toEqual(
-        defaultRS.stencilTest.frontOperation.zFail
+        defaultRS.stencilTest.frontOperation.zFail,
       );
       expect(rs.stencilTest.frontOperation.zPass).toEqual(
-        defaultRS.stencilTest.frontOperation.zPass
+        defaultRS.stencilTest.frontOperation.zPass,
       );
       expect(rs.stencilTest.backOperation.fail).toEqual(
-        defaultRS.stencilTest.backOperation.fail
+        defaultRS.stencilTest.backOperation.fail,
       );
       expect(rs.stencilTest.backOperation.zFail).toEqual(
-        defaultRS.stencilTest.backOperation.zFail
+        defaultRS.stencilTest.backOperation.zFail,
       );
       expect(rs.stencilTest.backOperation.zPass).toEqual(
-        defaultRS.stencilTest.backOperation.zPass
+        defaultRS.stencilTest.backOperation.zPass,
       );
       expect(rs.sampleCoverage.enabled).toEqual(
-        defaultRS.sampleCoverage.enabled
+        defaultRS.sampleCoverage.enabled,
       );
       expect(rs.sampleCoverage.value).toEqual(defaultRS.sampleCoverage.value);
       expect(rs.sampleCoverage.invert).toEqual(defaultRS.sampleCoverage.invert);
@@ -889,10 +889,10 @@ describe(
       expect(rs.scissorTest.rectangle.x).toEqual(r.scissorTest.rectangle.x);
       expect(rs.scissorTest.rectangle.y).toEqual(r.scissorTest.rectangle.y);
       expect(rs.scissorTest.rectangle.width).toEqual(
-        r.scissorTest.rectangle.width
+        r.scissorTest.rectangle.width,
       );
       expect(rs.scissorTest.rectangle.height).toEqual(
-        r.scissorTest.rectangle.height
+        r.scissorTest.rectangle.height,
       );
       expect(rs.depthRange.near).toEqual(r.depthRange.near);
       expect(rs.depthRange.far).toEqual(r.depthRange.far);
@@ -912,16 +912,16 @@ describe(
       expect(rs.blending.equationRgb).toEqual(r.blending.equationRgb);
       expect(rs.blending.equationAlpha).toEqual(r.blending.equationAlpha);
       expect(rs.blending.functionSourceRgb).toEqual(
-        r.blending.functionSourceRgb
+        r.blending.functionSourceRgb,
       );
       expect(rs.blending.functionSourceAlpha).toEqual(
-        r.blending.functionSourceAlpha
+        r.blending.functionSourceAlpha,
       );
       expect(rs.blending.functionDestinationRgb).toEqual(
-        r.blending.functionDestinationRgb
+        r.blending.functionDestinationRgb,
       );
       expect(rs.blending.functionDestinationAlpha).toEqual(
-        r.blending.functionDestinationAlpha
+        r.blending.functionDestinationAlpha,
       );
       expect(rs.stencilTest.enabled).toEqual(r.stencilTest.enabled);
       expect(rs.stencilTest.frontFunction).toEqual(r.stencilTest.frontFunction);
@@ -929,27 +929,27 @@ describe(
       expect(rs.stencilTest.reference).toEqual(r.stencilTest.reference);
       expect(rs.stencilTest.mask).toEqual(r.stencilTest.mask);
       expect(rs.stencilTest.frontOperation.fail).toEqual(
-        r.stencilTest.frontOperation.fail
+        r.stencilTest.frontOperation.fail,
       );
       expect(rs.stencilTest.frontOperation.zFail).toEqual(
-        r.stencilTest.frontOperation.zFail
+        r.stencilTest.frontOperation.zFail,
       );
       expect(rs.stencilTest.frontOperation.zPass).toEqual(
-        r.stencilTest.frontOperation.zPass
+        r.stencilTest.frontOperation.zPass,
       );
       expect(rs.stencilTest.backOperation.fail).toEqual(
-        r.stencilTest.backOperation.fail
+        r.stencilTest.backOperation.fail,
       );
       expect(rs.stencilTest.backOperation.zFail).toEqual(
-        r.stencilTest.backOperation.zFail
+        r.stencilTest.backOperation.zFail,
       );
       expect(rs.stencilTest.backOperation.zPass).toEqual(
-        r.stencilTest.backOperation.zPass
+        r.stencilTest.backOperation.zPass,
       );
       expect(rs.sampleCoverage.enabled).toEqual(r.sampleCoverage.enabled);
       expect(rs.sampleCoverage.value).toEqual(r.sampleCoverage.value);
       expect(rs.sampleCoverage.invert).toEqual(r.sampleCoverage.invert);
     });
   },
-  "WebGL"
+  "WebGL",
 );

@@ -14,6 +14,7 @@ import DepthOfField from "../Shaders/PostProcessStages/DepthOfField.js";
 import DepthView from "../Shaders/PostProcessStages/DepthView.js";
 import EdgeDetection from "../Shaders/PostProcessStages/EdgeDetection.js";
 import FilmicTonemapping from "../Shaders/PostProcessStages/FilmicTonemapping.js";
+import PbrNeutralTonemapping from "../Shaders/PostProcessStages/PbrNeutralTonemapping.js";
 import FXAA from "../Shaders/PostProcessStages/FXAA.js";
 import GaussianBlur1D from "../Shaders/PostProcessStages/GaussianBlur1D.js";
 import LensFlare from "../Shaders/PostProcessStages/LensFlare.js";
@@ -660,7 +661,7 @@ PostProcessStageLibrary.createFXAAStage = function () {
  * @private
  */
 PostProcessStageLibrary.createAcesTonemappingStage = function (
-  useAutoExposure
+  useAutoExposure,
 ) {
   let fs = useAutoExposure ? "#define AUTO_EXPOSURE\n" : "";
   fs += AcesTonemapping;
@@ -669,6 +670,7 @@ PostProcessStageLibrary.createAcesTonemappingStage = function (
     fragmentShader: fs,
     uniforms: {
       autoExposure: undefined,
+      exposure: 1.0,
     },
   });
 };
@@ -680,7 +682,7 @@ PostProcessStageLibrary.createAcesTonemappingStage = function (
  * @private
  */
 PostProcessStageLibrary.createFilmicTonemappingStage = function (
-  useAutoExposure
+  useAutoExposure,
 ) {
   let fs = useAutoExposure ? "#define AUTO_EXPOSURE\n" : "";
   fs += FilmicTonemapping;
@@ -689,6 +691,28 @@ PostProcessStageLibrary.createFilmicTonemappingStage = function (
     fragmentShader: fs,
     uniforms: {
       autoExposure: undefined,
+      exposure: 1.0,
+    },
+  });
+};
+
+/**
+ * Creates a post-process stage that applies filmic tonemapping operator.
+ * @param {boolean} useAutoExposure Whether or not to use auto-exposure.
+ * @return {PostProcessStage} A post-process stage that applies filmic tonemapping operator.
+ * @private
+ */
+PostProcessStageLibrary.createPbrNeutralTonemappingStage = function (
+  useAutoExposure,
+) {
+  let fs = useAutoExposure ? "#define AUTO_EXPOSURE\n" : "";
+  fs += PbrNeutralTonemapping;
+  return new PostProcessStage({
+    name: "czm_pbr_neutral",
+    fragmentShader: fs,
+    uniforms: {
+      autoExposure: undefined,
+      exposure: 1.0,
     },
   });
 };
@@ -700,7 +724,7 @@ PostProcessStageLibrary.createFilmicTonemappingStage = function (
  * @private
  */
 PostProcessStageLibrary.createReinhardTonemappingStage = function (
-  useAutoExposure
+  useAutoExposure,
 ) {
   let fs = useAutoExposure ? "#define AUTO_EXPOSURE\n" : "";
   fs += ReinhardTonemapping;
@@ -709,6 +733,7 @@ PostProcessStageLibrary.createReinhardTonemappingStage = function (
     fragmentShader: fs,
     uniforms: {
       autoExposure: undefined,
+      exposure: 1.0,
     },
   });
 };
@@ -720,7 +745,7 @@ PostProcessStageLibrary.createReinhardTonemappingStage = function (
  * @private
  */
 PostProcessStageLibrary.createModifiedReinhardTonemappingStage = function (
-  useAutoExposure
+  useAutoExposure,
 ) {
   let fs = useAutoExposure ? "#define AUTO_EXPOSURE\n" : "";
   fs += ModifiedReinhardTonemapping;
@@ -730,6 +755,7 @@ PostProcessStageLibrary.createModifiedReinhardTonemappingStage = function (
     uniforms: {
       white: Color.WHITE,
       autoExposure: undefined,
+      exposure: 1.0,
     },
   });
 };

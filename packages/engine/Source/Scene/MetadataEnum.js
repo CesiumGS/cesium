@@ -45,7 +45,7 @@ function MetadataEnum(options) {
 
   const valueType = defaultValue(
     options.valueType,
-    MetadataComponentType.UINT16
+    MetadataComponentType.UINT16,
   );
 
   this._values = values;

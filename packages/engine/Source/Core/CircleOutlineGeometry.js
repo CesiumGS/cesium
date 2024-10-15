@@ -78,7 +78,7 @@ CircleOutlineGeometry.pack = function (value, array, startingIndex) {
   return EllipseOutlineGeometry.pack(
     value._ellipseGeometry,
     array,
-    startingIndex
+    startingIndex,
   );
 };
 
@@ -111,15 +111,15 @@ CircleOutlineGeometry.unpack = function (array, startingIndex, result) {
   const ellipseGeometry = EllipseOutlineGeometry.unpack(
     array,
     startingIndex,
-    scratchEllipseGeometry
+    scratchEllipseGeometry,
   );
   scratchOptions.center = Cartesian3.clone(
     ellipseGeometry._center,
-    scratchOptions.center
+    scratchOptions.center,
   );
   scratchOptions.ellipsoid = Ellipsoid.clone(
     ellipseGeometry._ellipsoid,
-    scratchOptions.ellipsoid
+    scratchOptions.ellipsoid,
   );
   scratchOptions.height = ellipseGeometry._height;
   scratchOptions.extrudedHeight = ellipseGeometry._extrudedHeight;

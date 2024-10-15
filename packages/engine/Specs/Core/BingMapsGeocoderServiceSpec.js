@@ -34,7 +34,7 @@ describe("Core/BingMapsGeocoderService", function () {
     Resource._Implementations.loadAndExecuteScript = function (
       url,
       functionName,
-      deferred
+      deferred,
     ) {
       const parsedUrl = new URL(url);
       expect(parsedUrl.searchParams.get("query")).toEqual(query);
@@ -67,7 +67,7 @@ describe("Core/BingMapsGeocoderService", function () {
     Resource._Implementations.loadAndExecuteScript = function (
       url,
       functionName,
-      deferred
+      deferred,
     ) {
       const parsedUrl = new URL(url);
       expect(parsedUrl.searchParams.get("query")).toEqual(query);
@@ -90,7 +90,7 @@ describe("Core/BingMapsGeocoderService", function () {
     Resource._Implementations.loadAndExecuteScript = function (
       url,
       functionName,
-      deferred
+      deferred,
     ) {
       deferred.resolve(data);
     };
@@ -111,7 +111,7 @@ describe("Core/BingMapsGeocoderService", function () {
     Resource._Implementations.loadAndExecuteScript = function (
       url,
       functionName,
-      deferred
+      deferred,
     ) {
       deferred.resolve(data);
     };
@@ -125,7 +125,7 @@ describe("Core/BingMapsGeocoderService", function () {
 
     expect(service.credit).toBeInstanceOf(Credit);
     expect(service.credit.html).toEqual(
-      `<img src="http:\/\/dev.virtualearth.net\/Branding\/logo_powered_by.png"/>`
+      `<img src="http:\/\/dev.virtualearth.net\/Branding\/logo_powered_by.png"/>`,
     );
     expect(service.credit.showOnScreen).toBe(false);
   });

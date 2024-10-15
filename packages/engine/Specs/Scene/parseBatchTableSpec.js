@@ -137,28 +137,28 @@ describe("Scene/parseBatchTable", function () {
     const properties = metadata.schema.classes[className].properties;
 
     expect(properties.uint8Property.componentType).toBe(
-      MetadataComponentType.UINT8
+      MetadataComponentType.UINT8,
     );
     expect(properties.uint16Property.componentType).toBe(
-      MetadataComponentType.UINT16
+      MetadataComponentType.UINT16,
     );
     expect(properties.uint32Property.componentType).toBe(
-      MetadataComponentType.UINT32
+      MetadataComponentType.UINT32,
     );
     expect(properties.int8Property.componentType).toBe(
-      MetadataComponentType.INT8
+      MetadataComponentType.INT8,
     );
     expect(properties.int16Property.componentType).toBe(
-      MetadataComponentType.INT16
+      MetadataComponentType.INT16,
     );
     expect(properties.int32Property.componentType).toBe(
-      MetadataComponentType.INT32
+      MetadataComponentType.INT32,
     );
     expect(properties.floatProperty.componentType).toBe(
-      MetadataComponentType.FLOAT32
+      MetadataComponentType.FLOAT32,
     );
     expect(properties.doubleProperty.componentType).toBe(
-      MetadataComponentType.FLOAT64
+      MetadataComponentType.FLOAT64,
     );
 
     const propertyTable = metadata.getPropertyTable(0);
@@ -204,24 +204,24 @@ describe("Scene/parseBatchTable", function () {
     expect(properties.uvec3Property.type).toBe(MetadataType.VEC3);
     expect(properties.dvec4Property.type).toBe(MetadataType.VEC4);
     expect(properties.vec2Property.componentType).toBe(
-      MetadataComponentType.FLOAT32
+      MetadataComponentType.FLOAT32,
     );
     expect(properties.uvec3Property.componentType).toBe(
-      MetadataComponentType.UINT32
+      MetadataComponentType.UINT32,
     );
     expect(properties.dvec4Property.componentType).toBe(
-      MetadataComponentType.FLOAT64
+      MetadataComponentType.FLOAT64,
     );
 
     const propertyTable = metadata.getPropertyTable(0);
     expect(propertyTable.getProperty(0, "vec2Property")).toEqual(
-      new Cartesian2(0.0, 0.0)
+      new Cartesian2(0.0, 0.0),
     );
     expect(propertyTable.getProperty(0, "uvec3Property")).toEqual(
-      new Cartesian3(0, 0, 0)
+      new Cartesian3(0, 0, 0),
     );
     expect(propertyTable.getProperty(0, "dvec4Property")).toEqual(
-      new Cartesian4(0.0, 0.0, 0.0, 0.0)
+      new Cartesian4(0.0, 0.0, 0.0, 0.0),
     );
   });
 
@@ -255,16 +255,16 @@ describe("Scene/parseBatchTable", function () {
 
     const propertyTable = metadata.getPropertyTable(0);
     expect(propertyTable.getProperty(0, "location")).toEqual(
-      jsonBatchTable.location[0]
+      jsonBatchTable.location[0],
     );
     expect(propertyTable.getProperty(1, "location")).toEqual(
-      jsonBatchTable.location[1]
+      jsonBatchTable.location[1],
     );
     expect(propertyTable.getProperty(0, "payload")).toEqual(
-      jsonBatchTable.payload[0]
+      jsonBatchTable.payload[0],
     );
     expect(propertyTable.getProperty(1, "payload")).toEqual(
-      jsonBatchTable.payload[1]
+      jsonBatchTable.payload[1],
     );
   });
 
@@ -476,9 +476,8 @@ describe("Scene/parseBatchTable", function () {
 
     // Since the original properties is an unordered collection, sort
     // to be sure of the order
-    const [heightAttribute, windDirectionAttribute] = customAttributes.sort(
-      sortByName
-    );
+    const [heightAttribute, windDirectionAttribute] =
+      customAttributes.sort(sortByName);
     expect(heightAttribute.name).toBe("_HEIGHT");
     expect(heightAttribute.count).toBe(3);
     expect(heightAttribute.type).toBe("SCALAR");
@@ -489,7 +488,7 @@ describe("Scene/parseBatchTable", function () {
     expect(windDirectionAttribute.count).toBe(3);
     expect(windDirectionAttribute.type).toBe("VEC2");
     expect(windDirectionAttribute.componentDatatype).toBe(
-      ComponentDatatype.FLOAT
+      ComponentDatatype.FLOAT,
     );
     expect(windDirectionAttribute.typedArray).toEqual(values.slice(3));
 
@@ -505,7 +504,7 @@ describe("Scene/parseBatchTable", function () {
     expect(heightClassProperty.name).toBe("height");
     expect(heightClassProperty.type).toBe(MetadataType.SCALAR);
     expect(heightClassProperty.componentType).toBe(
-      MetadataComponentType.FLOAT32
+      MetadataComponentType.FLOAT32,
     );
     const windClassProperty = metadataClass.properties["windDirection"];
     expect(windClassProperty.name).toBe("windDirection");
@@ -559,9 +558,8 @@ describe("Scene/parseBatchTable", function () {
 
     // Since the original properties is an unordered collection, sort
     // to be sure of the order.
-    const [numericAttribute, unicodeAttribute] = customAttributes.sort(
-      sortByName
-    );
+    const [numericAttribute, unicodeAttribute] =
+      customAttributes.sort(sortByName);
 
     // Attributes are converted to upper-case like glTF attributes.
     expect(numericAttribute.name).toBe("_1234");
@@ -644,7 +642,7 @@ describe("Scene/parseBatchTable", function () {
       return classProperty.name;
     });
     expect(classPropertyNames.sort()).toEqual(
-      Object.keys(binaryBatchTable).sort()
+      Object.keys(binaryBatchTable).sort(),
     );
 
     const properties = propertyAttribute.properties;
@@ -698,25 +696,24 @@ describe("Scene/parseBatchTable", function () {
 
     // Since the original properties is an unordered collection, sort
     // to be sure of the order
-    const [heightAttribute, windDirectionAttribute] = customAttributes.sort(
-      sortByName
-    );
+    const [heightAttribute, windDirectionAttribute] =
+      customAttributes.sort(sortByName);
     expect(heightAttribute.name).toBe("_HEIGHT");
     expect(heightAttribute.count).toBe(3);
     expect(heightAttribute.type).toBe("SCALAR");
     expect(heightAttribute.componentDatatype).toBe(ComponentDatatype.FLOAT);
     expect(heightAttribute.typedArray).toEqual(
-      binaryBatchTable.height.typedArray
+      binaryBatchTable.height.typedArray,
     );
 
     expect(windDirectionAttribute.name).toBe("_WINDDIRECTION");
     expect(windDirectionAttribute.count).toBe(3);
     expect(windDirectionAttribute.type).toBe("VEC2");
     expect(windDirectionAttribute.componentDatatype).toBe(
-      ComponentDatatype.FLOAT
+      ComponentDatatype.FLOAT,
     );
     expect(windDirectionAttribute.typedArray).toEqual(
-      binaryBatchTable.windDirection.typedArray
+      binaryBatchTable.windDirection.typedArray,
     );
 
     // No property table will be created.
@@ -731,7 +728,7 @@ describe("Scene/parseBatchTable", function () {
     expect(heightClassProperty.name).toBe("height");
     expect(heightClassProperty.type).toBe(MetadataType.SCALAR);
     expect(heightClassProperty.componentType).toBe(
-      MetadataComponentType.FLOAT32
+      MetadataComponentType.FLOAT32,
     );
     const windClassProperty = metadataClass.properties["windDirection"];
     expect(windClassProperty.name).toBe("windDirection");

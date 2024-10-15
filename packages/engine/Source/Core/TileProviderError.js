@@ -26,7 +26,7 @@ function TileProviderError(
   y,
   level,
   timesRetried,
-  error
+  error,
 ) {
   /**
    * The {@link ImageryProvider} or {@link TerrainProvider} that experienced the error.
@@ -114,7 +114,7 @@ TileProviderError.reportError = function (
   x,
   y,
   level,
-  errorDetails
+  errorDetails,
 ) {
   let error = previousError;
   if (!defined(previousError)) {
@@ -125,7 +125,7 @@ TileProviderError.reportError = function (
       y,
       level,
       0,
-      errorDetails
+      errorDetails,
     );
   } else {
     error.provider = provider;
@@ -143,8 +143,8 @@ TileProviderError.reportError = function (
   } else if (defined(provider)) {
     console.log(
       `An error occurred in "${provider.constructor.name}": ${formatError(
-        message
-      )}`
+        message,
+      )}`,
     );
   }
 

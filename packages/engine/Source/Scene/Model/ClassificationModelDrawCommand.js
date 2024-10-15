@@ -173,7 +173,7 @@ function initialize(drawCommand) {
     drawCommand._commandListDebugWireframe = createBatchCommands(
       drawCommand,
       derivedCommands,
-      drawCommand._commandListDebugWireframe
+      drawCommand._commandListDebugWireframe,
     );
 
     const commandList = drawCommand._commandListDebugWireframe;
@@ -204,14 +204,14 @@ function initialize(drawCommand) {
     drawCommand._commandListTerrain = createBatchCommands(
       drawCommand,
       derivedCommands,
-      drawCommand._commandListTerrain
+      drawCommand._commandListTerrain,
     );
 
     if (allowPicking) {
       drawCommand._commandListTerrainPicking = createPickCommands(
         drawCommand,
         derivedCommands,
-        drawCommand._commandListTerrainPicking
+        drawCommand._commandListTerrainPicking,
       );
     }
   }
@@ -227,14 +227,14 @@ function initialize(drawCommand) {
     drawCommand._commandList3DTiles = createBatchCommands(
       drawCommand,
       derivedCommands,
-      drawCommand._commandList3DTiles
+      drawCommand._commandList3DTiles,
     );
 
     if (allowPicking) {
       drawCommand._commandList3DTilesPicking = createPickCommands(
         drawCommand,
         derivedCommands,
-        drawCommand._commandList3DTilesPicking
+        drawCommand._commandList3DTilesPicking,
       );
     }
   }
@@ -423,7 +423,7 @@ Object.defineProperties(ClassificationModelDrawCommand.prototype, {
       this._boundingVolume = BoundingSphere.transform(
         boundingSphere,
         this._modelMatrix,
-        this._boundingVolume
+        this._boundingVolume,
       );
     },
   },
@@ -477,7 +477,7 @@ Object.defineProperties(ClassificationModelDrawCommand.prototype, {
  */
 ClassificationModelDrawCommand.prototype.pushCommands = function (
   frameState,
-  result
+  result,
 ) {
   const passes = frameState.passes;
   if (passes.render) {
@@ -509,7 +509,7 @@ ClassificationModelDrawCommand.prototype.pushCommands = function (
         this._commandListIgnoreShow = createBatchCommands(
           this,
           derivedCommands,
-          this._commandListIgnoreShow
+          this._commandListIgnoreShow,
         );
       }
 

@@ -278,7 +278,7 @@ DataSourceCollection.prototype.raiseToTop = function (dataSource) {
   this.dataSourceMoved.raiseEvent(
     dataSource,
     this._dataSources.length - 1,
-    index
+    index,
   );
 };
 

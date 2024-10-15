@@ -81,14 +81,14 @@ function PostProcessStageComposite(options) {
   Check.typeOf.number.greaterThan(
     "options.stages.length",
     options.stages.length,
-    0
+    0,
   );
   //>>includeEnd('debug');
 
   this._stages = options.stages;
   this._inputPreviousStageTexture = defaultValue(
     options.inputPreviousStageTexture,
-    true
+    true,
   );
 
   let name = options.name;

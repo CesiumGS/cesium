@@ -102,8 +102,8 @@ function parseFont(label) {
  * @property {Cartesian2} [backgroundPadding=new Cartesian2(7, 5)] A {@link Cartesian2} Specifying the horizontal and vertical background padding in pixels.
  * @property {Cartesian2} [pixelOffset=Cartesian2.ZERO] A {@link Cartesian2} specifying the pixel offset in screen space from the origin of this label.
  * @property {Cartesian3} [eyeOffset=Cartesian3.ZERO] A {@link Cartesian3} specifying the 3D Cartesian offset applied to this label in eye coordinates.
- * @property {HorizontalOrigin} [horizontalOrigin=HorizontalOrigin.CENTER] A {@link HorizontalOrigin} specifying the horizontal origin of this label.
- * @property {VerticalOrigin} [verticalOrigin=VerticalOrigin.CENTER] A {@link VerticalOrigin} specifying the vertical origin of this label.
+ * @property {HorizontalOrigin} [horizontalOrigin=HorizontalOrigin.LEFT] A {@link HorizontalOrigin} specifying the horizontal origin of this label.
+ * @property {VerticalOrigin} [verticalOrigin=VerticalOrigin.BASELINE] A {@link VerticalOrigin} specifying the vertical origin of this label.
  * @property {HeightReference} [heightReference=HeightReference.NONE] A {@link HeightReference} specifying the height reference of this label.
  * @property {Color} [fillColor=Color.WHITE] A {@link Color} specifying the fill color of the label.
  * @property {Color} [outlineColor=Color.BLACK] A {@link Color} specifying the outline color of the label.
@@ -145,7 +145,7 @@ function Label(options, labelCollection) {
     options.disableDepthTestDistance < 0.0
   ) {
     throw new DeveloperError(
-      "disableDepthTestDistance must be greater than 0.0."
+      "disableDepthTestDistance must be greater than 0.0.",
     );
   }
   //>>includeEnd('debug');
@@ -158,7 +158,7 @@ function Label(options, labelCollection) {
     //>>includeStart('debug', pragmas.debug);
     if (translucencyByDistance.far <= translucencyByDistance.near) {
       throw new DeveloperError(
-        "translucencyByDistance.far must be greater than translucencyByDistance.near."
+        "translucencyByDistance.far must be greater than translucencyByDistance.near.",
       );
     }
     //>>includeEnd('debug');
@@ -168,19 +168,19 @@ function Label(options, labelCollection) {
     //>>includeStart('debug', pragmas.debug);
     if (pixelOffsetScaleByDistance.far <= pixelOffsetScaleByDistance.near) {
       throw new DeveloperError(
-        "pixelOffsetScaleByDistance.far must be greater than pixelOffsetScaleByDistance.near."
+        "pixelOffsetScaleByDistance.far must be greater than pixelOffsetScaleByDistance.near.",
       );
     }
     //>>includeEnd('debug');
     pixelOffsetScaleByDistance = NearFarScalar.clone(
-      pixelOffsetScaleByDistance
+      pixelOffsetScaleByDistance,
     );
   }
   if (defined(scaleByDistance)) {
     //>>includeStart('debug', pragmas.debug);
     if (scaleByDistance.far <= scaleByDistance.near) {
       throw new DeveloperError(
-        "scaleByDistance.far must be greater than scaleByDistance.near."
+        "scaleByDistance.far must be greater than scaleByDistance.near.",
       );
     }
     //>>includeEnd('debug');
@@ -190,12 +190,12 @@ function Label(options, labelCollection) {
     //>>includeStart('debug', pragmas.debug);
     if (distanceDisplayCondition.far <= distanceDisplayCondition.near) {
       throw new DeveloperError(
-        "distanceDisplayCondition.far must be greater than distanceDisplayCondition.near."
+        "distanceDisplayCondition.far must be greater than distanceDisplayCondition.near.",
       );
     }
     //>>includeEnd('debug');
     distanceDisplayCondition = DistanceDisplayCondition.clone(
-      distanceDisplayCondition
+      distanceDisplayCondition,
     );
   }
 
@@ -205,33 +205,33 @@ function Label(options, labelCollection) {
   this._font = defaultValue(options.font, "30px sans-serif");
   this._fillColor = Color.clone(defaultValue(options.fillColor, Color.WHITE));
   this._outlineColor = Color.clone(
-    defaultValue(options.outlineColor, Color.BLACK)
+    defaultValue(options.outlineColor, Color.BLACK),
   );
   this._outlineWidth = defaultValue(options.outlineWidth, 1.0);
   this._showBackground = defaultValue(options.showBackground, false);
   this._backgroundColor = Color.clone(
-    defaultValue(options.backgroundColor, defaultBackgroundColor)
+    defaultValue(options.backgroundColor, defaultBackgroundColor),
   );
   this._backgroundPadding = Cartesian2.clone(
-    defaultValue(options.backgroundPadding, defaultBackgroundPadding)
+    defaultValue(options.backgroundPadding, defaultBackgroundPadding),
   );
   this._style = defaultValue(options.style, LabelStyle.FILL);
   this._verticalOrigin = defaultValue(
     options.verticalOrigin,
-    VerticalOrigin.BASELINE
+    VerticalOrigin.BASELINE,
   );
   this._horizontalOrigin = defaultValue(
     options.horizontalOrigin,
-    HorizontalOrigin.LEFT
+    HorizontalOrigin.LEFT,
   );
   this._pixelOffset = Cartesian2.clone(
-    defaultValue(options.pixelOffset, Cartesian2.ZERO)
+    defaultValue(options.pixelOffset, Cartesian2.ZERO),
   );
   this._eyeOffset = Cartesian3.clone(
-    defaultValue(options.eyeOffset, Cartesian3.ZERO)
+    defaultValue(options.eyeOffset, Cartesian3.ZERO),
   );
   this._position = Cartesian3.clone(
-    defaultValue(options.position, Cartesian3.ZERO)
+    defaultValue(options.position, Cartesian3.ZERO),
   );
   this._scale = defaultValue(options.scale, 1.0);
   this._id = options.id;
@@ -240,7 +240,7 @@ function Label(options, labelCollection) {
   this._scaleByDistance = scaleByDistance;
   this._heightReference = defaultValue(
     options.heightReference,
-    HeightReference.NONE
+    HeightReference.NONE,
   );
   this._distanceDisplayCondition = distanceDisplayCondition;
   this._disableDepthTestDistance = options.disableDepthTestDistance;
@@ -693,7 +693,7 @@ Object.defineProperties(Label.prototype, {
       //>>includeStart('debug', pragmas.debug);
       if (defined(value) && value.far <= value.near) {
         throw new DeveloperError(
-          "far distance must be greater than near distance."
+          "far distance must be greater than near distance.",
         );
       }
       //>>includeEnd('debug');
@@ -702,7 +702,7 @@ Object.defineProperties(Label.prototype, {
       if (!NearFarScalar.equals(translucencyByDistance, value)) {
         this._translucencyByDistance = NearFarScalar.clone(
           value,
-          translucencyByDistance
+          translucencyByDistance,
         );
 
         const glyphs = this._glyphs;
@@ -751,7 +751,7 @@ Object.defineProperties(Label.prototype, {
       //>>includeStart('debug', pragmas.debug);
       if (defined(value) && value.far <= value.near) {
         throw new DeveloperError(
-          "far distance must be greater than near distance."
+          "far distance must be greater than near distance.",
         );
       }
       //>>includeEnd('debug');
@@ -760,7 +760,7 @@ Object.defineProperties(Label.prototype, {
       if (!NearFarScalar.equals(pixelOffsetScaleByDistance, value)) {
         this._pixelOffsetScaleByDistance = NearFarScalar.clone(
           value,
-          pixelOffsetScaleByDistance
+          pixelOffsetScaleByDistance,
         );
 
         const glyphs = this._glyphs;
@@ -808,7 +808,7 @@ Object.defineProperties(Label.prototype, {
       //>>includeStart('debug', pragmas.debug);
       if (defined(value) && value.far <= value.near) {
         throw new DeveloperError(
-          "far distance must be greater than near distance."
+          "far distance must be greater than near distance.",
         );
       }
       //>>includeEnd('debug');
@@ -1047,7 +1047,7 @@ Object.defineProperties(Label.prototype, {
       ) {
         this._distanceDisplayCondition = DistanceDisplayCondition.clone(
           value,
-          this._distanceDisplayCondition
+          this._distanceDisplayCondition,
         );
 
         const glyphs = this._glyphs;
@@ -1080,7 +1080,7 @@ Object.defineProperties(Label.prototype, {
         //>>includeStart('debug', pragmas.debug);
         if (defined(value) && value < 0.0) {
           throw new DeveloperError(
-            "disableDepthTestDistance must be greater than 0.0."
+            "disableDepthTestDistance must be greater than 0.0.",
           );
         }
         //>>includeEnd('debug');
@@ -1154,7 +1154,7 @@ Object.defineProperties(Label.prototype, {
     set: function (value) {
       this._actualClampedPosition = Cartesian3.clone(
         value,
-        this._actualClampedPosition
+        this._actualClampedPosition,
       );
 
       const glyphs = this._glyphs;
@@ -1247,7 +1247,7 @@ Label.prototype.computeScreenSpacePosition = function (scene, result) {
     this._eyeOffset,
     this._pixelOffset,
     scene,
-    result
+    result,
   );
   return windowCoordinates;
 };
@@ -1264,7 +1264,7 @@ Label.prototype.computeScreenSpacePosition = function (scene, result) {
 Label.getScreenSpaceBoundingBox = function (
   label,
   screenSpacePosition,
-  result
+  result,
 ) {
   let x = 0;
   let y = 0;
@@ -1376,16 +1376,16 @@ Label.prototype.equals = function (other) {
       Cartesian3.equals(this._eyeOffset, other._eyeOffset) &&
       NearFarScalar.equals(
         this._translucencyByDistance,
-        other._translucencyByDistance
+        other._translucencyByDistance,
       ) &&
       NearFarScalar.equals(
         this._pixelOffsetScaleByDistance,
-        other._pixelOffsetScaleByDistance
+        other._pixelOffsetScaleByDistance,
       ) &&
       NearFarScalar.equals(this._scaleByDistance, other._scaleByDistance) &&
       DistanceDisplayCondition.equals(
         this._distanceDisplayCondition,
-        other._distanceDisplayCondition
+        other._distanceDisplayCondition,
       ) &&
       this._disableDepthTestDistance === other._disableDepthTestDistance &&
       this._id === other._id)

@@ -85,7 +85,7 @@ function GroundPolylineGeometry(options) {
     options.arcType !== ArcType.RHUMB
   ) {
     throw new DeveloperError(
-      "Valid options for arcType are ArcType.GEODESIC and ArcType.RHUMB."
+      "Valid options for arcType are ArcType.GEODESIC and ArcType.RHUMB.",
     );
   }
   //>>includeEnd('debug');
@@ -165,7 +165,7 @@ Object.defineProperties(GroundPolylineGeometry.prototype, {
  */
 GroundPolylineGeometry.setProjectionAndEllipsoid = function (
   groundPolylineGeometry,
-  mapProjection
+  mapProjection,
 ) {
   let projectionIndex = 0;
   for (let i = 0; i < PROJECTION_COUNT; i++) {
@@ -209,7 +209,7 @@ function interpolateSegment(
   normalsArray,
   bottomPositionsArray,
   topPositionsArray,
-  cartographicsArray
+  cartographicsArray,
 ) {
   if (granularity === 0.0) {
     return;
@@ -233,7 +233,7 @@ function interpolateSegment(
     end,
     maxHeight,
     ellipsoid,
-    interpolatedNormalScratch
+    interpolatedNormalScratch,
   );
 
   const segments = Math.ceil(surfaceDistance / granularity);
@@ -242,21 +242,22 @@ function interpolateSegment(
   const pointsToAdd = segments - 1;
   let packIndex = normalsArray.length;
   for (let i = 0; i < pointsToAdd; i++) {
-    const interpolatedCartographic = ellipsoidLine.interpolateUsingSurfaceDistance(
-      distanceFromStart,
-      interpolatedCartographicScratch
-    );
+    const interpolatedCartographic =
+      ellipsoidLine.interpolateUsingSurfaceDistance(
+        distanceFromStart,
+        interpolatedCartographicScratch,
+      );
     const interpolatedBottom = getPosition(
       ellipsoid,
       interpolatedCartographic,
       minHeight,
-      interpolatedBottomScratch
+      interpolatedBottomScratch,
     );
     const interpolatedTop = getPosition(
       ellipsoid,
       interpolatedCartographic,
       maxHeight,
-      interpolatedTopScratch
+      interpolatedTopScratch,
     );
 
     Cartesian3.pack(interpolatedNormal, normalsArray, packIndex);
@@ -277,7 +278,7 @@ function getPosition(ellipsoid, cartographic, height, result) {
   return Cartographic.toCartesian(
     heightlessCartographicScratch,
     ellipsoid,
-    result
+    result,
   );
 }
 
@@ -397,7 +398,7 @@ function computeVertexMiterNormal(
   vertexBottom,
   vertexTop,
   nextBottom,
-  result
+  result,
 ) {
   const up = direction(vertexTop, vertexBottom, vertexUpScratch);
 
@@ -406,7 +407,7 @@ function computeVertexMiterNormal(
     previousBottom,
     vertexBottom,
     up,
-    toPreviousScratch
+    toPreviousScratch,
   );
   const toNext = tangentDirection(nextBottom, vertexBottom, up, toNextScratch);
 
@@ -415,7 +416,7 @@ function computeVertexMiterNormal(
     CesiumMath.equalsEpsilon(
       Cartesian3.dot(toPrevious, toNext),
       cosine180,
-      CesiumMath.EPSILON5
+      CesiumMath.EPSILON5,
     )
   ) {
     result = Cartesian3.cross(up, toPrevious, result);
@@ -462,7 +463,7 @@ GroundPolylineGeometry.createGeometry = function (groundPolylineGeometry) {
   const granularity = groundPolylineGeometry.granularity;
   const arcType = groundPolylineGeometry.arcType;
   const projection = new PROJECTIONS[groundPolylineGeometry._projectionIndex](
-    ellipsoid
+    ellipsoid,
   );
 
   const minHeight = WALL_INITIAL_MIN_HEIGHT;
@@ -497,7 +498,7 @@ GroundPolylineGeometry.createGeometry = function (groundPolylineGeometry) {
       p0,
       p1,
       XZ_PLANE,
-      intersectionScratch
+      intersectionScratch,
     );
     if (
       defined(intersection) &&
@@ -509,18 +510,18 @@ GroundPolylineGeometry.createGeometry = function (groundPolylineGeometry) {
       } else if (groundPolylineGeometry.arcType === ArcType.RHUMB) {
         intersectionLongitude = ellipsoid.cartesianToCartographic(
           intersection,
-          cartographicScratch0
+          cartographicScratch0,
         ).longitude;
         c0 = ellipsoid.cartesianToCartographic(p0, cartographicScratch0);
         c1 = ellipsoid.cartesianToCartographic(p1, cartographicScratch1);
         rhumbLine.setEndPoints(c0, c1);
         intersectionCartographic = rhumbLine.findIntersectionWithLongitude(
           intersectionLongitude,
-          cartographicIntersectionScratch
+          cartographicIntersectionScratch,
         );
         intersection = ellipsoid.cartographicToCartesian(
           intersectionCartographic,
-          intersectionScratch
+          intersectionScratch,
         );
         if (
           defined(intersection) &&
@@ -541,7 +542,7 @@ GroundPolylineGeometry.createGeometry = function (groundPolylineGeometry) {
       p0,
       p1,
       XZ_PLANE,
-      intersectionScratch
+      intersectionScratch,
     );
     if (
       defined(intersection) &&
@@ -553,18 +554,18 @@ GroundPolylineGeometry.createGeometry = function (groundPolylineGeometry) {
       } else if (groundPolylineGeometry.arcType === ArcType.RHUMB) {
         intersectionLongitude = ellipsoid.cartesianToCartographic(
           intersection,
-          cartographicScratch0
+          cartographicScratch0,
         ).longitude;
         c0 = ellipsoid.cartesianToCartographic(p0, cartographicScratch0);
         c1 = ellipsoid.cartesianToCartographic(p1, cartographicScratch1);
         rhumbLine.setEndPoints(c0, c1);
         intersectionCartographic = rhumbLine.findIntersectionWithLongitude(
           intersectionLongitude,
-          cartographicIntersectionScratch
+          cartographicIntersectionScratch,
         );
         intersection = ellipsoid.cartographicToCartesian(
           intersectionCartographic,
-          intersectionScratch
+          intersectionScratch,
         );
         if (
           defined(intersection) &&
@@ -582,7 +583,7 @@ GroundPolylineGeometry.createGeometry = function (groundPolylineGeometry) {
   for (i = 0; i < cartographicsLength; i++) {
     const cartographic = Cartographic.fromCartesian(
       splitPositions[i],
-      ellipsoid
+      ellipsoid,
     );
     cartographic.height = 0.0;
     cartographics[i] = cartographic;
@@ -590,7 +591,7 @@ GroundPolylineGeometry.createGeometry = function (groundPolylineGeometry) {
 
   cartographics = arrayRemoveDuplicates(
     cartographics,
-    Cartographic.equalsEpsilon
+    Cartographic.equalsEpsilon,
   );
   cartographicsLength = cartographics.length;
 
@@ -623,14 +624,14 @@ GroundPolylineGeometry.createGeometry = function (groundPolylineGeometry) {
     ellipsoid,
     prestartCartographic,
     minHeight,
-    previousBottom
+    previousBottom,
   );
   nextBottom = getPosition(ellipsoid, nextCartographic, minHeight, nextBottom);
   vertexBottom = getPosition(
     ellipsoid,
     startCartographic,
     minHeight,
-    vertexBottom
+    vertexBottom,
   );
   vertexTop = getPosition(ellipsoid, startCartographic, maxHeight, vertexTop);
 
@@ -640,7 +641,7 @@ GroundPolylineGeometry.createGeometry = function (groundPolylineGeometry) {
       vertexBottom,
       vertexTop,
       nextBottom,
-      vertexNormal
+      vertexNormal,
     );
   } else {
     vertexNormal = computeRightNormal(
@@ -648,7 +649,7 @@ GroundPolylineGeometry.createGeometry = function (groundPolylineGeometry) {
       nextCartographic,
       maxHeight,
       ellipsoid,
-      vertexNormal
+      vertexNormal,
     );
   }
 
@@ -669,7 +670,7 @@ GroundPolylineGeometry.createGeometry = function (groundPolylineGeometry) {
     normalsArray,
     bottomPositionsArray,
     topPositionsArray,
-    cartographicsArray
+    cartographicsArray,
   );
 
   // All inbetween points
@@ -685,7 +686,7 @@ GroundPolylineGeometry.createGeometry = function (groundPolylineGeometry) {
       vertexBottom,
       vertexTop,
       nextBottom,
-      vertexNormal
+      vertexNormal,
     );
 
     index = normalsArray.length;
@@ -706,7 +707,7 @@ GroundPolylineGeometry.createGeometry = function (groundPolylineGeometry) {
       normalsArray,
       bottomPositionsArray,
       topPositionsArray,
-      cartographicsArray
+      cartographicsArray,
     );
   }
 
@@ -718,7 +719,7 @@ GroundPolylineGeometry.createGeometry = function (groundPolylineGeometry) {
     ellipsoid,
     endCartographic,
     minHeight,
-    vertexBottom
+    vertexBottom,
   );
   vertexTop = getPosition(ellipsoid, endCartographic, maxHeight, vertexTop);
 
@@ -728,13 +729,13 @@ GroundPolylineGeometry.createGeometry = function (groundPolylineGeometry) {
       ellipsoid,
       preEndCartographic,
       minHeight,
-      previousBottom
+      previousBottom,
     );
     nextBottom = getPosition(
       ellipsoid,
       postEndCartographic,
       minHeight,
-      nextBottom
+      nextBottom,
     );
 
     vertexNormal = computeVertexMiterNormal(
@@ -742,7 +743,7 @@ GroundPolylineGeometry.createGeometry = function (groundPolylineGeometry) {
       vertexBottom,
       vertexTop,
       nextBottom,
-      vertexNormal
+      vertexNormal,
     );
   } else {
     vertexNormal = computeRightNormal(
@@ -750,7 +751,7 @@ GroundPolylineGeometry.createGeometry = function (groundPolylineGeometry) {
       endCartographic,
       maxHeight,
       ellipsoid,
-      vertexNormal
+      vertexNormal,
     );
   }
 
@@ -773,7 +774,7 @@ GroundPolylineGeometry.createGeometry = function (groundPolylineGeometry) {
       normalsArray,
       bottomPositionsArray,
       topPositionsArray,
-      cartographicsArray
+      cartographicsArray,
     );
     index = normalsArray.length;
     for (i = 0; i < 3; ++i) {
@@ -792,7 +793,7 @@ GroundPolylineGeometry.createGeometry = function (groundPolylineGeometry) {
     topPositionsArray,
     normalsArray,
     cartographicsArray,
-    compute2dAttributes
+    compute2dAttributes,
   );
 };
 
@@ -815,13 +816,13 @@ function breakMiter(endGeometryNormal, startBottom, endBottom, endTop) {
     const quaternion = Quaternion.fromAxisAngle(
       vertexUp,
       angle,
-      quaternionScratch
+      quaternionScratch,
     );
     const rotationMatrix = Matrix3.fromQuaternion(quaternion, matrix3Scratch);
     Matrix3.multiplyByVector(
       rotationMatrix,
       endGeometryNormal,
-      endGeometryNormal
+      endGeometryNormal,
     );
     return true;
   }
@@ -836,12 +837,12 @@ function projectNormal(
   cartographic,
   normal,
   projectedPosition,
-  result
+  result,
 ) {
   const position = Cartographic.toCartesian(
     cartographic,
     projection._ellipsoid,
-    normalStartpointScratch
+    normalStartpointScratch,
   );
   let normalEndpoint = Cartesian3.add(position, normal, normalEndpointScratch);
   let flipNormal = false;
@@ -849,7 +850,7 @@ function projectNormal(
   const ellipsoid = projection._ellipsoid;
   let normalEndpointCartographic = ellipsoid.cartesianToCartographic(
     normalEndpoint,
-    endPosCartographicScratch
+    endPosCartographicScratch,
   );
   // If normal crosses the IDL, go the other way and flip the result.
   // In practice this almost never happens because the cartographic start
@@ -863,23 +864,23 @@ function projectNormal(
     normalEndpoint = Cartesian3.subtract(
       position,
       normal,
-      normalEndpointScratch
+      normalEndpointScratch,
     );
     normalEndpointCartographic = ellipsoid.cartesianToCartographic(
       normalEndpoint,
-      endPosCartographicScratch
+      endPosCartographicScratch,
     );
   }
 
   normalEndpointCartographic.height = 0.0;
   const normalEndpointProjected = projection.project(
     normalEndpointCartographic,
-    result
+    result,
   );
   result = Cartesian3.subtract(
     normalEndpointProjected,
     projectedPosition,
-    result
+    result,
   );
   result.z = 0.0;
   result = Cartesian3.normalize(result, result);
@@ -897,13 +898,13 @@ function adjustHeights(
   minHeight,
   maxHeight,
   adjustHeightBottom,
-  adjustHeightTop
+  adjustHeightTop,
 ) {
   // bottom and top should be at WALL_INITIAL_MIN_HEIGHT and WALL_INITIAL_MAX_HEIGHT, respectively
   const adjustHeightNormal = Cartesian3.subtract(
     top,
     bottom,
-    adjustHeightNormalScratch
+    adjustHeightNormalScratch,
   );
   Cartesian3.normalize(adjustHeightNormal, adjustHeightNormal);
 
@@ -911,7 +912,7 @@ function adjustHeights(
   let adjustHeightOffset = Cartesian3.multiplyByScalar(
     adjustHeightNormal,
     distanceForBottom,
-    adjustHeightOffsetScratch
+    adjustHeightOffsetScratch,
   );
   Cartesian3.add(bottom, adjustHeightOffset, adjustHeightBottom);
 
@@ -919,7 +920,7 @@ function adjustHeights(
   adjustHeightOffset = Cartesian3.multiplyByScalar(
     adjustHeightNormal,
     distanceForTop,
-    adjustHeightOffsetScratch
+    adjustHeightOffsetScratch,
   );
   Cartesian3.add(top, adjustHeightOffset, adjustHeightTop);
 }
@@ -1059,7 +1060,7 @@ function generateGeometryAttributes(
   topPositionsArray,
   normalsArray,
   cartographicsArray,
-  compute2dAttributes
+  compute2dAttributes,
 ) {
   let i;
   let index;
@@ -1081,10 +1082,10 @@ function generateGeometryAttributes(
   const startLoAndForwardOffsetY = new Float32Array(arraySizeVec4);
   const startNormalAndForwardOffsetZ = new Float32Array(arraySizeVec4);
   const endNormalAndTextureCoordinateNormalizationX = new Float32Array(
-    arraySizeVec4
+    arraySizeVec4,
   );
   const rightNormalAndTextureCoordinateNormalizationY = new Float32Array(
-    arraySizeVec4
+    arraySizeVec4,
   );
 
   let startHiLo2D;
@@ -1123,15 +1124,15 @@ function generateGeometryAttributes(
 
       segmentStartCartesian = projection.project(
         startCartographic,
-        segmentStartCartesian
+        segmentStartCartesian,
       );
       segmentEndCartesian = projection.project(
         endCartographic,
-        segmentEndCartesian
+        segmentEndCartesian,
       );
       length2D += Cartesian3.distance(
         segmentStartCartesian,
-        segmentEndCartesian
+        segmentEndCartesian,
       );
       index += 2;
     }
@@ -1142,7 +1143,7 @@ function generateGeometryAttributes(
   segmentEndCartesian = Cartesian3.unpack(
     topPositionsArray,
     0,
-    segmentEndCartesian
+    segmentEndCartesian,
   );
   let length3D = 0.0;
 
@@ -1150,12 +1151,12 @@ function generateGeometryAttributes(
   for (i = 1; i < positionsLength; i++) {
     segmentStartCartesian = Cartesian3.clone(
       segmentEndCartesian,
-      segmentStartCartesian
+      segmentStartCartesian,
     );
     segmentEndCartesian = Cartesian3.unpack(
       topPositionsArray,
       index,
-      segmentEndCartesian
+      segmentEndCartesian,
     );
     length3D += Cartesian3.distance(segmentStartCartesian, segmentEndCartesian);
     index += 3;
@@ -1173,26 +1174,26 @@ function generateGeometryAttributes(
   let endBottom = Cartesian3.unpack(
     bottomPositionsArray,
     0,
-    segmentEndBottomScratch
+    segmentEndBottomScratch,
   );
   let endTop = Cartesian3.unpack(topPositionsArray, 0, segmentEndTopScratch);
   let endGeometryNormal = Cartesian3.unpack(
     normalsArray,
     0,
-    segmentEndNormalScratch
+    segmentEndNormalScratch,
   );
 
   if (loop) {
     const preEndBottom = Cartesian3.unpack(
       bottomPositionsArray,
       bottomPositionsArray.length - 6,
-      segmentStartBottomScratch
+      segmentStartBottomScratch,
     );
     if (breakMiter(endGeometryNormal, preEndBottom, endBottom, endTop)) {
       // Miter broken as if for the last point in the loop, needs to be inverted for first point (clone of endBottom)
       endGeometryNormal = Cartesian3.negate(
         endGeometryNormal,
-        endGeometryNormal
+        endGeometryNormal,
       );
     }
   }
@@ -1208,26 +1209,26 @@ function generateGeometryAttributes(
     const startTop = Cartesian3.clone(endTop, segmentStartTopScratch);
     let startGeometryNormal = Cartesian3.clone(
       endGeometryNormal,
-      segmentStartNormalScratch
+      segmentStartNormalScratch,
     );
 
     if (miterBroken) {
       startGeometryNormal = Cartesian3.negate(
         startGeometryNormal,
-        startGeometryNormal
+        startGeometryNormal,
       );
     }
 
     endBottom = Cartesian3.unpack(
       bottomPositionsArray,
       index,
-      segmentEndBottomScratch
+      segmentEndBottomScratch,
     );
     endTop = Cartesian3.unpack(topPositionsArray, index, segmentEndTopScratch);
     endGeometryNormal = Cartesian3.unpack(
       normalsArray,
       index,
-      segmentEndNormalScratch
+      segmentEndNormalScratch,
     );
 
     miterBroken = breakMiter(endGeometryNormal, startBottom, endBottom, endTop);
@@ -1263,14 +1264,14 @@ function generateGeometryAttributes(
           startCartographic,
           startGeometryNormal,
           start2D,
-          segmentStartNormal2DScratch
+          segmentStartNormal2DScratch,
         );
         endGeometryNormal2D = projectNormal(
           projection,
           endCartographic,
           endGeometryNormal,
           end2D,
-          segmentEndNormal2DScratch
+          segmentEndNormal2DScratch,
         );
       } else if (nudgeResult === 1) {
         // Start is close to IDL - snap start normal to align with IDL
@@ -1279,13 +1280,13 @@ function generateGeometryAttributes(
           endCartographic,
           endGeometryNormal,
           end2D,
-          segmentEndNormal2DScratch
+          segmentEndNormal2DScratch,
         );
         startGeometryNormal2D.x = 0.0;
         // If start longitude is negative and end longitude is less negative, relative right is unit -Y
         // If start longitude is positive and end longitude is less positive, relative right is unit +Y
         startGeometryNormal2D.y = CesiumMath.sign(
-          startCartographic.longitude - Math.abs(endCartographic.longitude)
+          startCartographic.longitude - Math.abs(endCartographic.longitude),
         );
         startGeometryNormal2D.z = 0.0;
       } else {
@@ -1295,13 +1296,13 @@ function generateGeometryAttributes(
           startCartographic,
           startGeometryNormal,
           start2D,
-          segmentStartNormal2DScratch
+          segmentStartNormal2DScratch,
         );
         endGeometryNormal2D.x = 0.0;
         // If end longitude is negative and start longitude is less negative, relative right is unit Y
         // If end longitude is positive and start longitude is less positive, relative right is unit -Y
         endGeometryNormal2D.y = CesiumMath.sign(
-          startCartographic.longitude - endCartographic.longitude
+          startCartographic.longitude - endCartographic.longitude,
         );
         endGeometryNormal2D.z = 0.0;
       }
@@ -1321,12 +1322,12 @@ function generateGeometryAttributes(
 
     const encodedStart = EncodedCartesian3.fromCartesian(
       startBottom,
-      encodeScratch
+      encodeScratch,
     );
     const forwardOffset = Cartesian3.subtract(
       endBottom,
       startBottom,
-      offsetScratch
+      offsetScratch,
     );
     const forward = Cartesian3.normalize(forwardOffset, rightScratch);
 
@@ -1338,7 +1339,7 @@ function generateGeometryAttributes(
     let startPlaneNormal = Cartesian3.cross(
       startUp,
       startGeometryNormal,
-      startPlaneNormalScratch
+      startPlaneNormalScratch,
     );
     startPlaneNormal = Cartesian3.normalize(startPlaneNormal, startPlaneNormal);
 
@@ -1347,7 +1348,7 @@ function generateGeometryAttributes(
     let endPlaneNormal = Cartesian3.cross(
       endGeometryNormal,
       endUp,
-      endPlaneNormalScratch
+      endPlaneNormalScratch,
     );
     endPlaneNormal = Cartesian3.normalize(endPlaneNormal, endPlaneNormal);
 
@@ -1366,12 +1367,12 @@ function generateGeometryAttributes(
 
       encodedStart2D = EncodedCartesian3.fromCartesian(
         start2D,
-        encodeScratch2D
+        encodeScratch2D,
       );
       forwardOffset2D = Cartesian3.subtract(
         end2D,
         start2D,
-        forwardOffset2DScratch
+        forwardOffset2DScratch,
       );
 
       // Right direction is just forward direction rotated by -90 degrees around Z
@@ -1406,14 +1407,14 @@ function generateGeometryAttributes(
       Cartesian3.pack(
         startPlaneNormal,
         startNormalAndForwardOffsetZ,
-        vec4Index
+        vec4Index,
       );
       startNormalAndForwardOffsetZ[wIndex] = forwardOffset.z;
 
       Cartesian3.pack(
         endPlaneNormal,
         endNormalAndTextureCoordinateNormalizationX,
-        vec4Index
+        vec4Index,
       );
       endNormalAndTextureCoordinateNormalizationX[wIndex] =
         texcoordNormalization3DX * rightPlaneSide;
@@ -1421,16 +1422,15 @@ function generateGeometryAttributes(
       Cartesian3.pack(
         rightNormal,
         rightNormalAndTextureCoordinateNormalizationY,
-        vec4Index
+        vec4Index,
       );
 
       let texcoordNormalization = texcoordNormalization3DY * topBottomSide;
       if (texcoordNormalization === 0.0 && topBottomSide < 0.0) {
         texcoordNormalization = 9.0; // some value greater than 1.0
       }
-      rightNormalAndTextureCoordinateNormalizationY[
-        wIndex
-      ] = texcoordNormalization;
+      rightNormalAndTextureCoordinateNormalizationY[wIndex] =
+        texcoordNormalization;
 
       // 2D
       if (compute2dAttributes) {
@@ -1468,11 +1468,11 @@ function generateGeometryAttributes(
 
     const getHeightsRectangle = Rectangle.fromCartographicArray(
       getHeightCartographics,
-      getHeightRectangleScratch
+      getHeightRectangleScratch,
     );
     const minMaxHeights = ApproximateTerrainHeights.getMinimumMaximumHeights(
       getHeightsRectangle,
-      ellipsoid
+      ellipsoid,
     );
     const minHeight = minMaxHeights.minimumTerrainHeight;
     const maxHeight = minMaxHeights.maximumTerrainHeight;
@@ -1487,7 +1487,7 @@ function generateGeometryAttributes(
       minHeight,
       maxHeight,
       adjustHeightStartBottom,
-      adjustHeightStartTop
+      adjustHeightStartTop,
     );
     adjustHeights(
       endBottom,
@@ -1495,19 +1495,19 @@ function generateGeometryAttributes(
       minHeight,
       maxHeight,
       adjustHeightEndBottom,
-      adjustHeightEndTop
+      adjustHeightEndTop,
     );
 
     // Nudge the positions away from the "polyline" a little bit to prevent errors in GeometryPipeline
     let normalNudge = Cartesian3.multiplyByScalar(
       rightNormal,
       CesiumMath.EPSILON5,
-      normalNudgeScratch
+      normalNudgeScratch,
     );
     Cartesian3.add(
       adjustHeightStartBottom,
       normalNudge,
-      adjustHeightStartBottom
+      adjustHeightStartBottom,
     );
     Cartesian3.add(adjustHeightEndBottom, normalNudge, adjustHeightEndBottom);
     Cartesian3.add(adjustHeightStartTop, normalNudge, adjustHeightStartTop);
@@ -1525,12 +1525,12 @@ function generateGeometryAttributes(
     normalNudge = Cartesian3.multiplyByScalar(
       rightNormal,
       -2.0 * CesiumMath.EPSILON5,
-      normalNudgeScratch
+      normalNudgeScratch,
     );
     Cartesian3.add(
       adjustHeightStartBottom,
       normalNudge,
-      adjustHeightStartBottom
+      adjustHeightStartBottom,
     );
     Cartesian3.add(adjustHeightEndBottom, normalNudge, adjustHeightEndBottom);
     Cartesian3.add(adjustHeightStartTop, normalNudge, adjustHeightStartTop);
@@ -1542,12 +1542,12 @@ function generateGeometryAttributes(
     Cartesian3.pack(
       adjustHeightStartBottom,
       positionsArray,
-      vec3sWriteIndex + 12
+      vec3sWriteIndex + 12,
     );
     Cartesian3.pack(
       adjustHeightEndBottom,
       positionsArray,
-      vec3sWriteIndex + 15
+      vec3sWriteIndex + 15,
     );
     Cartesian3.pack(adjustHeightEndTop, positionsArray, vec3sWriteIndex + 18);
     Cartesian3.pack(adjustHeightStartTop, positionsArray, vec3sWriteIndex + 21);
@@ -1578,13 +1578,13 @@ function generateGeometryAttributes(
     bottomPositionsArray,
     Cartesian3.ZERO,
     3,
-    boundingSpheres[0]
+    boundingSpheres[0],
   );
   BoundingSphere.fromVertices(
     topPositionsArray,
     Cartesian3.ZERO,
     3,
-    boundingSpheres[1]
+    boundingSpheres[1],
   );
   const boundingSphere = BoundingSphere.fromBoundingSpheres(boundingSpheres);
 
@@ -1599,19 +1599,19 @@ function generateGeometryAttributes(
       values: positionsArray,
     }),
     startHiAndForwardOffsetX: getVec4GeometryAttribute(
-      startHiAndForwardOffsetX
+      startHiAndForwardOffsetX,
     ),
     startLoAndForwardOffsetY: getVec4GeometryAttribute(
-      startLoAndForwardOffsetY
+      startLoAndForwardOffsetY,
     ),
     startNormalAndForwardOffsetZ: getVec4GeometryAttribute(
-      startNormalAndForwardOffsetZ
+      startNormalAndForwardOffsetZ,
     ),
     endNormalAndTextureCoordinateNormalizationX: getVec4GeometryAttribute(
-      endNormalAndTextureCoordinateNormalizationX
+      endNormalAndTextureCoordinateNormalizationX,
     ),
     rightNormalAndTextureCoordinateNormalizationY: getVec4GeometryAttribute(
-      rightNormalAndTextureCoordinateNormalizationY
+      rightNormalAndTextureCoordinateNormalizationY,
     ),
   };
 

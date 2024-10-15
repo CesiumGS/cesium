@@ -143,7 +143,7 @@ function configureCameraFrustum(widget) {
  * @param {boolean} [options.blurActiveElementOnCanvasFocus=true] If true, the active element will blur when the viewer's canvas is clicked. Setting this to false is useful for cases when the canvas is clicked only for retrieving position or an entity data without actually meaning to set the canvas to be the active element.
  * @param {boolean} [options.requestRenderMode=false] If true, rendering a frame will only occur when needed as determined by changes within the scene. Enabling improves performance of the application, but requires using {@link Scene#requestRender} to render a new frame explicitly in this mode. This will be necessary in many cases after making changes to the scene in other parts of the API. See {@link https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/|Improving Performance with Explicit Rendering}.
  * @param {number} [options.maximumRenderTimeChange=0.0] If requestRenderMode is true, this value defines the maximum change in simulation time allowed before a render is requested. See {@link https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/|Improving Performance with Explicit Rendering}.
- * @param {number} [options.msaaSamples=1] If provided, this value controls the rate of multisample antialiasing. Typical multisampling rates are 2, 4, and sometimes 8 samples per pixel. Higher sampling rates of MSAA may impact performance in exchange for improved visual quality. This value only applies to WebGL2 contexts that support multisample render targets.
+ * @param {number} [options.msaaSamples=4] If provided, this value controls the rate of multisample antialiasing. Typical multisampling rates are 2, 4, and sometimes 8 samples per pixel. Higher sampling rates of MSAA may impact performance in exchange for improved visual quality. This value only applies to WebGL2 contexts that support multisample render targets. Set to 1 to disable MSAA.
  *
  * @exception {DeveloperError} Element with id "container" does not exist in the document.
  *
@@ -192,7 +192,8 @@ function CesiumWidget(container, options) {
   container.appendChild(element);
 
   const canvas = document.createElement("canvas");
-  const supportsImageRenderingPixelated = FeatureDetection.supportsImageRenderingPixelated();
+  const supportsImageRenderingPixelated =
+    FeatureDetection.supportsImageRenderingPixelated();
   this._supportsImageRenderingPixelated = supportsImageRenderingPixelated;
   if (supportsImageRenderingPixelated) {
     canvas.style.imageRendering = FeatureDetection.imageRenderingValue();
@@ -221,7 +222,7 @@ function CesiumWidget(container, options) {
 
   const blurActiveElementOnCanvasFocus = defaultValue(
     options.blurActiveElementOnCanvasFocus,
-    true
+    true,
   );
 
   if (blurActiveElementOnCanvasFocus) {
@@ -247,7 +248,7 @@ function CesiumWidget(container, options) {
 
   const useBrowserRecommendedResolution = defaultValue(
     options.useBrowserRecommendedResolution,
-    true
+    true,
   );
 
   this._element = element;
@@ -303,7 +304,7 @@ function CesiumWidget(container, options) {
       scene.globe = globe;
       scene.globe.shadows = defaultValue(
         options.terrainShadows,
-        ShadowMode.RECEIVE_ONLY
+        ShadowMode.RECEIVE_ONLY,
       );
     }
 
@@ -348,7 +349,7 @@ function CesiumWidget(container, options) {
       //>>includeStart('debug', pragmas.debug);
       if (defined(options.terrainProvider)) {
         throw new DeveloperError(
-          "Specify either options.terrainProvider or options.terrain."
+          "Specify either options.terrainProvider or options.terrain.",
         );
       }
       //>>includeEnd('debug')
@@ -370,7 +371,7 @@ function CesiumWidget(container, options) {
     this._useDefaultRenderLoop = undefined;
     this.useDefaultRenderLoop = defaultValue(
       options.useDefaultRenderLoop,
-      true
+      true,
     );
 
     this._targetFrameRate = undefined;
@@ -573,7 +574,7 @@ Object.defineProperties(CesiumWidget.prototype, {
       //>>includeStart('debug', pragmas.debug);
       if (value <= 0) {
         throw new DeveloperError(
-          "targetFrameRate must be greater than 0, or undefined."
+          "targetFrameRate must be greater than 0, or undefined.",
         );
       }
       //>>includeEnd('debug');
@@ -693,7 +694,7 @@ CesiumWidget.prototype.showErrorPanel = function (title, message, error) {
   function resizeCallback() {
     errorPanelScroller.style.maxHeight = `${Math.max(
       Math.round(element.clientHeight * 0.9 - 100),
-      30
+      30,
     )}px`;
   }
   resizeCallback();

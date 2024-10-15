@@ -29,7 +29,7 @@ describe("DataSources/TerrainOffsetProperty", function () {
       scene,
       position,
       height,
-      extrudedHeight
+      extrudedHeight,
     );
     expect(property.isConstant).toBe(false);
     expect(property.getValue(time)).toEqual(Cartesian3.ZERO);
@@ -46,7 +46,7 @@ describe("DataSources/TerrainOffsetProperty", function () {
         undefined,
         position,
         height,
-        extrudedHeight
+        extrudedHeight,
       );
     }).toThrowDeveloperError();
   });
@@ -59,7 +59,7 @@ describe("DataSources/TerrainOffsetProperty", function () {
         scene,
         undefined,
         height,
-        extrudedHeight
+        extrudedHeight,
       );
     }).toThrowDeveloperError();
   });

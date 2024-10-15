@@ -67,7 +67,7 @@ async function createOsmBuildingsAsync(options) {
   if (!defined(style)) {
     const color = defaultValue(
       options.defaultColor,
-      Color.WHITE
+      Color.WHITE,
     ).toCssColorString();
     style = new Cesium3DTileStyle({
       color: `Boolean(\${feature['cesium#color']}) ? color(\${feature['cesium#color']}) : ${color}`,

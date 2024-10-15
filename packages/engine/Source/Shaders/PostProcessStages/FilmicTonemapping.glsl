@@ -4,6 +4,8 @@ in vec2 v_textureCoordinates;
 
 #ifdef AUTO_EXPOSURE
 uniform sampler2D autoExposure;
+#else
+uniform float exposure;
 #endif
 
 // See slides 142 and 143:
@@ -17,6 +19,8 @@ void main()
 #ifdef AUTO_EXPOSURE
     float exposure = texture(autoExposure, vec2(0.5)).r;
     color /= exposure;
+#else
+    color *= vec3(exposure);
 #endif
 
 	const float A = 0.22; // shoulder strength
