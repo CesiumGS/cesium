@@ -7,7 +7,14 @@ import { onMounted } from 'vue'
 import * as Cesium from 'cesium'
 
 onMounted(() => {
-  const viewer = new Cesium.Viewer("viewer");
+  const viewer = new Cesium.Viewer("viewer", {
+    baseLayerPicker: false,
+    useBrowserRecommendedResolution: true,
+    timeline: false,
+    animation: false,
+    sceneMode: Cesium.SceneMode.SCENE3D
+  });
+  console.log(viewer)
 })
 </script>
 

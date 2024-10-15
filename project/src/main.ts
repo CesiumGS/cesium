@@ -39,6 +39,6 @@ pinia.use(piniaPluginPersistedState)
 app.use(pinia)
 app.use(router)
 app.use(VxeTable)
-app.use(VxeUI)
+// app.use(VxeUI)
 
 app.mount('#app')
