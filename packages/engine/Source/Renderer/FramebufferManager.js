@@ -140,15 +140,15 @@ FramebufferManager.prototype.update = function (
     throw new DeveloperError("width and height must be defined.");
   }
   //>>includeEnd('debug');
-  numSamples = context.msaa ? (numSamples ?? 1) : 1;
+  numSamples = context.msaa ? defaultValue(numSamples, 1) : 1;
   pixelDatatype =
-    (pixelDatatype ?? this._color)
+    pixelDatatype ??
+    (this._color
       ? (this._pixelDatatype ?? PixelDatatype.UNSIGNED_BYTE)
-      : undefined;
+      : undefined);
   pixelFormat =
-    (pixelFormat ?? this._color)
-      ? (this._pixelFormat ?? PixelFormat.RGBA)
-      : undefined;
+    pixelFormat ??
+    (this._color ? (this._pixelFormat ?? PixelFormat.RGBA) : undefined);
 
   if (this.isDirty(width, height, numSamples, pixelDatatype, pixelFormat)) {
     this.destroy();

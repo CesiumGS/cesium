@@ -2454,7 +2454,7 @@ function processLookAt(featureNode, entity, ellipsoid) {
     let tilt = queryNumericValue(lookAt, "tilt", namespaces.kml);
     const range = queryNumericValue(lookAt, "range", namespaces.kml) ?? 0.0;
 
-    tilt = CesiumMath.toRadians((tilt, 0.0));
+    tilt = CesiumMath.toRadians(tilt ?? 0.0);
     heading = CesiumMath.toRadians(heading ?? 0.0);
 
     const hpr = new HeadingPitchRange(
