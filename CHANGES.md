@@ -1,6 +1,6 @@
 # Change Log
 
-### 1.122 - 2024-11-01
+### 1.123 - 2024-11-01
 
 #### @cesium/engine
 
@@ -23,9 +23,11 @@
 ##### Additions :tada:
 
 - Updated default 3D Tiles and Model lighting when using PBR in order to create a more realistic appearance. Added `DynamicEnvironmentMapManager` to control lighting parameters. These can be accessed via `Cesium3DTileset.environmentMapManager` and `Model.environmentMapManager`. [#12129](https://github.com/CesiumGS/cesium/pull/12129)
+- Added `ScreenSpaceCameraController.maximumTiltAngle` to limit how much the camera can tilt. [#12169](https://github.com/CesiumGS/cesium/pull/12169)
 
 ##### Fixes :wrench:
 
+- Fix flickering issue caused by bounding sphere retrieval being blocked by the bounding sphere of another entity. [#12230](https://github.com/CesiumGS/cesium/pull/12230)
 - Fixed `ImageBasedLighting.imageBasedLightingFactor` not affecting lighting. [#12129](https://github.com/CesiumGS/cesium/pull/12129)
 
 ### 1.122 - 2024-10-01
