@@ -658,9 +658,7 @@ function LabelCollection(options) {
    *   text     : 'Up'
    * });
    */
-  this.modelMatrix = Matrix4.clone(
-    defaultValue(options.modelMatrix, Matrix4.IDENTITY),
-  );
+  this.modelMatrix = Matrix4.clone(options.modelMatrix ?? Matrix4.IDENTITY);
 
   /**
    * This property is for debugging only; it is not for production use nor is it optimized.

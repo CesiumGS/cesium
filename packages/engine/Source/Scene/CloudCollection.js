@@ -167,9 +167,7 @@ function CloudCollection(options) {
    *
    * @default Cartesian3.ZERO
    */
-  this.noiseOffset = Cartesian3.clone(
-    defaultValue(options.noiseOffset, Cartesian3.ZERO),
-  );
+  this.noiseOffset = Cartesian3.clone(options.noiseOffset ?? Cartesian3.ZERO);
 
   this._loading = false;
   this._ready = false;

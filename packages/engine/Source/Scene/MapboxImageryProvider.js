@@ -74,7 +74,7 @@ function MapboxImageryProvider(options) {
   this._defaultMagnificationFilter = undefined;
 
   const resource = Resource.createIfNeeded(
-    defaultValue(options.url, "https://{s}.tiles.mapbox.com/v4/"),
+    options.url ?? "https://{s}.tiles.mapbox.com/v4/",
   );
 
   this._mapId = mapId;

@@ -38,17 +38,13 @@ function Particle(options) {
    * @type {Cartesian3}
    * @default Cartesian3.ZERO
    */
-  this.position = Cartesian3.clone(
-    defaultValue(options.position, Cartesian3.ZERO),
-  );
+  this.position = Cartesian3.clone(options.position ?? Cartesian3.ZERO);
   /**
    * The velocity of the particle in world coordinates.
    * @type {Cartesian3}
    * @default Cartesian3.ZERO
    */
-  this.velocity = Cartesian3.clone(
-    defaultValue(options.velocity, Cartesian3.ZERO),
-  );
+  this.velocity = Cartesian3.clone(options.velocity ?? Cartesian3.ZERO);
   /**
    * The life of the particle in seconds.
    * @type {number}
@@ -66,13 +62,13 @@ function Particle(options) {
    * @type {Color}
    * @default Color.WHITE
    */
-  this.startColor = Color.clone(defaultValue(options.startColor, Color.WHITE));
+  this.startColor = Color.clone(options.startColor ?? Color.WHITE);
   /**
    * The color of the particle when it dies.
    * @type {Color}
    * @default Color.WHITE
    */
-  this.endColor = Color.clone(defaultValue(options.endColor, Color.WHITE));
+  this.endColor = Color.clone(options.endColor ?? Color.WHITE);
   /**
    * the scale of the particle when it is born.
    * @type {number}
@@ -90,9 +86,7 @@ function Particle(options) {
    * @type {Cartesian2}
    * @default new Cartesian(1.0, 1.0)
    */
-  this.imageSize = Cartesian2.clone(
-    defaultValue(options.imageSize, defaultSize),
-  );
+  this.imageSize = Cartesian2.clone(options.imageSize ?? defaultSize);
 
   this._age = 0.0;
   this._normalizedAge = 0.0;

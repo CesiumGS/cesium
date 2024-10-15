@@ -653,14 +653,12 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
   let baseLayerPicker;
   let baseLayerPickerDropDown;
   if (createBaseLayerPicker) {
-    const imageryProviderViewModels = defaultValue(
-      options.imageryProviderViewModels,
-      createDefaultImageryProviderViewModels(),
-    );
-    const terrainProviderViewModels = defaultValue(
-      options.terrainProviderViewModels,
-      createDefaultTerrainProviderViewModels(),
-    );
+    const imageryProviderViewModels =
+      options.imageryProviderViewModels ??
+      createDefaultImageryProviderViewModels();
+    const terrainProviderViewModels =
+      options.terrainProviderViewModels ??
+      createDefaultTerrainProviderViewModels();
 
     baseLayerPicker = new BaseLayerPicker(toolbar, {
       globe: scene.globe,
@@ -737,10 +735,8 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
     }
     navigationHelpButton = new NavigationHelpButton({
       container: toolbar,
-      instructionsInitiallyVisible: defaultValue(
-        options.navigationInstructionsInitiallyVisible,
-        showNavHelp,
-      ),
+      instructionsInitiallyVisible:
+        options.navigationInstructionsInitiallyVisible ?? showNavHelp,
     });
   }
 

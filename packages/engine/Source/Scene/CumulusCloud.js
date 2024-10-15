@@ -37,30 +37,24 @@ function CumulusCloud(options, cloudCollection) {
   options = options ?? defaultValue.EMPTY_OBJECT;
   this._show = options.show ?? true;
 
-  this._position = Cartesian3.clone(
-    defaultValue(options.position, Cartesian3.ZERO),
-  );
+  this._position = Cartesian3.clone(options.position ?? Cartesian3.ZERO);
 
   if (!defined(options.scale) && defined(options.maximumSize)) {
     this._maximumSize = Cartesian3.clone(options.maximumSize);
     this._scale = new Cartesian2(this._maximumSize.x, this._maximumSize.y);
   } else {
-    this._scale = Cartesian2.clone(
-      defaultValue(options.scale, new Cartesian2(20.0, 12.0)),
-    );
+    this._scale = Cartesian2.clone(options.scale ?? new Cartesian2(20.0, 12.0));
 
     const defaultMaxSize = new Cartesian3(
       this._scale.x,
       this._scale.y,
       Math.min(this._scale.x, this._scale.y) / 1.5,
     );
-    this._maximumSize = Cartesian3.clone(
-      defaultValue(options.maximumSize, defaultMaxSize),
-    );
+    this._maximumSize = Cartesian3.clone(options.maximumSize ?? defaultMaxSize);
   }
 
   this._slice = options.slice ?? -1.0;
-  this._color = Color.clone(defaultValue(options.color, Color.WHITE));
+  this._color = Color.clone(options.color ?? Color.WHITE);
   this._brightness = options.brightness ?? 1.0;
   this._cloudCollection = cloudCollection;
   this._index = -1; // Used by CloudCollection

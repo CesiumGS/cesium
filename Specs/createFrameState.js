@@ -1,6 +1,5 @@
 import {
   Atmosphere,
-  defaultValue,
   GeographicProjection,
   JulianDate,
   Camera,
@@ -24,19 +23,16 @@ function createFrameState(context, camera, frameNumber, time) {
   const projection = new GeographicProjection();
   frameState.mapProjection = projection;
   frameState.frameNumber = frameNumber ?? 1.0;
-  frameState.time = defaultValue(
-    time,
-    JulianDate.fromDate(new Date("January 1, 2011 12:00:00 EST")),
-  );
+  frameState.time =
+    time ?? JulianDate.fromDate(new Date("January 1, 2011 12:00:00 EST"));
 
-  camera = defaultValue(
-    camera,
+  camera =
+    camera ??
     new Camera({
       drawingBufferWidth: 1,
       drawingBufferHeight: 1,
       mapProjection: projection,
-    }),
-  );
+    });
   frameState.camera = camera;
   frameState.cullingVolume = camera.frustum.computeCullingVolume(
     camera.position,

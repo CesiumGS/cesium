@@ -3,7 +3,6 @@ import Cartesian3 from "../Core/Cartesian3.js";
 import Cartographic from "../Core/Cartographic.js";
 import Check from "../Core/Check.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
-import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import EncodedCartesian3 from "../Core/EncodedCartesian3.js";
 import GeometryInstanceAttribute from "../Core/GeometryInstanceAttribute.js";
@@ -704,7 +703,7 @@ ShadowVolumeAppearance.getPlanarTextureCoordinateAttributes = function (
   computeRectangleBounds(
     boundingRectangle,
     ellipsoid,
-    defaultValue(height, 0.0),
+    height ?? 0.0,
     corner,
     eastward,
     northward,

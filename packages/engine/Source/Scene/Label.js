@@ -203,30 +203,22 @@ function Label(options, labelCollection) {
   this._text = undefined;
   this._show = options.show ?? true;
   this._font = options.font ?? "30px sans-serif";
-  this._fillColor = Color.clone(defaultValue(options.fillColor, Color.WHITE));
-  this._outlineColor = Color.clone(
-    defaultValue(options.outlineColor, Color.BLACK),
-  );
+  this._fillColor = Color.clone(options.fillColor ?? Color.WHITE);
+  this._outlineColor = Color.clone(options.outlineColor ?? Color.BLACK);
   this._outlineWidth = options.outlineWidth ?? 1.0;
   this._showBackground = options.showBackground ?? false;
   this._backgroundColor = Color.clone(
-    defaultValue(options.backgroundColor, defaultBackgroundColor),
+    options.backgroundColor ?? defaultBackgroundColor,
   );
   this._backgroundPadding = Cartesian2.clone(
-    defaultValue(options.backgroundPadding, defaultBackgroundPadding),
+    options.backgroundPadding ?? defaultBackgroundPadding,
   );
   this._style = options.style ?? LabelStyle.FILL;
   this._verticalOrigin = options.verticalOrigin ?? VerticalOrigin.BASELINE;
   this._horizontalOrigin = options.horizontalOrigin ?? HorizontalOrigin.LEFT;
-  this._pixelOffset = Cartesian2.clone(
-    defaultValue(options.pixelOffset, Cartesian2.ZERO),
-  );
-  this._eyeOffset = Cartesian3.clone(
-    defaultValue(options.eyeOffset, Cartesian3.ZERO),
-  );
-  this._position = Cartesian3.clone(
-    defaultValue(options.position, Cartesian3.ZERO),
-  );
+  this._pixelOffset = Cartesian2.clone(options.pixelOffset ?? Cartesian2.ZERO);
+  this._eyeOffset = Cartesian3.clone(options.eyeOffset ?? Cartesian3.ZERO);
+  this._position = Cartesian3.clone(options.position ?? Cartesian3.ZERO);
   this._scale = options.scale ?? 1.0;
   this._id = options.id;
   this._translucencyByDistance = translucencyByDistance;

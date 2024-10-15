@@ -33,7 +33,7 @@ function Cesium3DTilesetGraphics(options) {
   this._maximumScreenSpaceError = undefined;
   this._maximumScreenSpaceErrorSubscription = undefined;
 
-  this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
+  this.merge(options ?? defaultValue.EMPTY_OBJECT);
 }
 
 Object.defineProperties(Cesium3DTilesetGraphics.prototype, {

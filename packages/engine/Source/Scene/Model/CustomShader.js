@@ -271,9 +271,9 @@ function buildUniformMap(customShader) {
 
 function createUniformTexture2DFunction(customShader, uniformName) {
   return function () {
-    return defaultValue(
-      customShader._textureManager.getTexture(uniformName),
-      customShader._defaultTexture,
+    return (
+      customShader._textureManager.getTexture(uniformName) ??
+      customShader._defaultTexture
     );
   };
 }

@@ -224,9 +224,7 @@ function Primitive(options) {
    * const origin = Cesium.Cartesian3.fromDegrees(-95.0, 40.0, 200000.0);
    * p.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(origin);
    */
-  this.modelMatrix = Matrix4.clone(
-    defaultValue(options.modelMatrix, Matrix4.IDENTITY),
-  );
+  this.modelMatrix = Matrix4.clone(options.modelMatrix ?? Matrix4.IDENTITY);
   this._modelMatrix = new Matrix4();
 
   /**
@@ -642,7 +640,7 @@ function createBatchTable(primitive, context) {
     }
 
     const pickObject = {
-      primitive: defaultValue(instance.pickPrimitive, primitive),
+      primitive: instance.pickPrimitive ?? primitive,
     };
 
     if (defined(instance.id)) {
@@ -1205,10 +1203,8 @@ function loadAsynchronous(primitive, frameState) {
         geometry = subTask.geometry;
         if (defined(geometry.constructor.pack)) {
           subTask.offset = packedLength;
-          packedLength += defaultValue(
-            geometry.constructor.packedLength,
-            geometry.packedLength,
-          );
+          packedLength +=
+            geometry.constructor.packedLength ?? geometry.packedLength;
         }
       }
 

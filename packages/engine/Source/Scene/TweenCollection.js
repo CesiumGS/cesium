@@ -250,8 +250,8 @@ TweenCollection.prototype.add = function (options) {
       options.update(value);
     });
   }
-  tweenjs.onComplete(defaultValue(options.complete, null));
-  tweenjs.repeat(defaultValue(options._repeat, 0.0));
+  tweenjs.onComplete(options.complete ?? null);
+  tweenjs.repeat(options._repeat ?? 0.0);
 
   const tween = new Tween(
     this,
@@ -326,7 +326,7 @@ TweenCollection.prototype.addProperty = function (options) {
     stopObject: {
       value: stopValue,
     },
-    duration: defaultValue(options.duration, 3.0),
+    duration: options.duration ?? 3.0,
     delay: options.delay,
     easingFunction: options.easingFunction,
     update: update,
@@ -395,12 +395,12 @@ TweenCollection.prototype.addAlpha = function (options) {
 
   return this.add({
     startObject: {
-      alpha: defaultValue(options.startValue, 0.0), // Default to fade in
+      alpha: options.startValue ?? 0.0, // Default to fade in
     },
     stopObject: {
-      alpha: defaultValue(options.stopValue, 1.0),
+      alpha: options.stopValue ?? 1.0,
     },
-    duration: defaultValue(options.duration, 3.0),
+    duration: options.duration ?? 3.0,
     delay: options.delay,
     easingFunction: options.easingFunction,
     update: update,

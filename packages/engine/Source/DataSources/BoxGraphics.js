@@ -55,8 +55,7 @@ function BoxGraphics(options) {
   this._shadowsSubscription = undefined;
   this._distanceDisplayCondition = undefined;
   this._distanceDisplayConditionSubscription = undefined;
-
-  this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
+  this.merge(options ?? defaultValue.EMPTY_OBJECT);
 }
 
 Object.defineProperties(BoxGraphics.prototype, {

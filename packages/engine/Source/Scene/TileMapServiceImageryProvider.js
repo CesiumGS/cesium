@@ -262,26 +262,17 @@ TileMapServiceImageryProvider._metadataSuccess = function (
     throw new RuntimeError(message);
   }
 
-  const fileExtension = defaultValue(
-    options.fileExtension,
-    format.getAttribute("extension"),
-  );
-  const tileWidth = defaultValue(
-    options.tileWidth,
-    parseInt(format.getAttribute("width"), 10),
-  );
-  const tileHeight = defaultValue(
-    options.tileHeight,
-    parseInt(format.getAttribute("height"), 10),
-  );
-  let minimumLevel = defaultValue(
-    options.minimumLevel,
-    parseInt(tilesetsList[0].getAttribute("order"), 10),
-  );
-  const maximumLevel = defaultValue(
-    options.maximumLevel,
-    parseInt(tilesetsList[tilesetsList.length - 1].getAttribute("order"), 10),
-  );
+  const fileExtension =
+    options.fileExtension ?? format.getAttribute("extension");
+  const tileWidth =
+    options.tileWidth ?? parseInt(format.getAttribute("width"), 10);
+  const tileHeight =
+    options.tileHeight ?? parseInt(format.getAttribute("height"), 10);
+  let minimumLevel =
+    options.minimumLevel ?? parseInt(tilesetsList[0].getAttribute("order"), 10);
+  const maximumLevel =
+    options.maximumLevel ??
+    parseInt(tilesetsList[tilesetsList.length - 1].getAttribute("order"), 10);
   const tilingSchemeName = tilesets.getAttribute("profile");
   let tilingScheme = options.tilingScheme;
 

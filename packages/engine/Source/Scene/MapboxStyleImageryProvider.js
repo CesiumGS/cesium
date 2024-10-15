@@ -76,7 +76,7 @@ function MapboxStyleImageryProvider(options) {
   this._defaultMagnificationFilter = undefined;
 
   const resource = Resource.createIfNeeded(
-    defaultValue(options.url, "https://api.mapbox.com/styles/v1/"),
+    options.url ?? "https://api.mapbox.com/styles/v1/",
   );
 
   this._styleId = styleId;

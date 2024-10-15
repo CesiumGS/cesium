@@ -1,6 +1,5 @@
 import binarySearch from "../Core/binarySearch.js";
 import Check from "../Core/Check.js";
-import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Event from "../Core/Event.js";
@@ -181,10 +180,8 @@ function SampledProperty(type, derivativeTypes) {
       }
       const derivativePackedLength = derivativeType.packedLength;
       packedLength += derivativePackedLength;
-      packedInterpolationLength += defaultValue(
-        derivativeType.packedInterpolationLength,
-        derivativePackedLength,
-      );
+      packedInterpolationLength +=
+        derivativeType.packedInterpolationLength ?? derivativePackedLength;
       innerDerivativeTypes[i] = derivativeType;
     }
     inputOrder = length;

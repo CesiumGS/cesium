@@ -1,5 +1,4 @@
 import Check from "../Core/Check.js";
-import defaultValue from "../Core/defaultValue.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
@@ -401,7 +400,7 @@ ImplicitSubtree.fromSubtreeJson = async function (
     subtreeJson.contentAvailabilityHeaders = subtreeJson.contentAvailability;
   } else {
     subtreeJson.contentAvailabilityHeaders.push(
-      defaultValue(subtreeJson.contentAvailability, defaultContentAvailability),
+      subtreeJson.contentAvailability ?? defaultContentAvailability,
     );
   }
 

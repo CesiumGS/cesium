@@ -3,7 +3,6 @@ import BoundingSphere from "../Core/BoundingSphere.js";
 import Check from "../Core/Check.js";
 import Color from "../Core/Color.js";
 import ColorGeometryInstanceAttribute from "../Core/ColorGeometryInstanceAttribute.js";
-import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
@@ -347,7 +346,7 @@ PolylineGeometryUpdater.prototype.isFilled = function (time) {
     this._fillEnabled &&
     entity.isAvailable(time) &&
     this._showProperty.getValue(time);
-  return defaultValue(visible, false);
+  return visible ?? false;
 };
 
 /**

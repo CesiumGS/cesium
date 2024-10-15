@@ -6,7 +6,6 @@ import {
   ClassificationType,
   clone,
   Color,
-  defaultValue,
   DepthFunction,
   DrawCommand,
   Matrix4,
@@ -81,10 +80,7 @@ describe(
         boundingSphere,
       );
 
-      options.renderState = defaultValue(
-        options.renderState,
-        RenderState.fromCache(),
-      );
+      options.renderState = options.renderState ?? RenderState.fromCache();
 
       options.pass = Pass.OPAQUE;
       options.uniformMap = {};

@@ -1,5 +1,4 @@
 import Check from "../Core/Check.js";
-import defaultValue from "../Core/defaultValue.js";
 import deprecationWarning from "../Core/deprecationWarning.js";
 import getJsonFromTypedArray from "../Core/getJsonFromTypedArray.js";
 import RuntimeError from "../Core/RuntimeError.js";
@@ -96,7 +95,7 @@ B3dmParser.parse = function (arrayBuffer, byteOffset) {
   let featureTableJson;
   if (featureTableJsonByteLength === 0) {
     featureTableJson = {
-      BATCH_LENGTH: defaultValue(batchLength, 0),
+      BATCH_LENGTH: batchLength ?? 0,
     };
   } else {
     featureTableJson = getJsonFromTypedArray(

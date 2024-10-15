@@ -27,7 +27,7 @@ function createCamera(options) {
   camera.frustum.near = options.near ?? 0.01;
   camera.frustum.far = options.far ?? 10.0;
 
-  const offset = defaultValue(options.offset, new Cartesian3(-1.0, 0.0, 0.0));
+  const offset = options.offset ?? new Cartesian3(-1.0, 0.0, 0.0);
 
   if (defined(options.target)) {
     camera.lookAt(options.target, offset);

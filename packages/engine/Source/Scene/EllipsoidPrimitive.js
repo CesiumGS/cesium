@@ -60,7 +60,7 @@ function EllipsoidPrimitive(options) {
    *
    * @see EllipsoidPrimitive#modelMatrix
    */
-  this.center = Cartesian3.clone(defaultValue(options.center, Cartesian3.ZERO));
+  this.center = Cartesian3.clone(options.center ?? Cartesian3.ZERO);
   this._center = new Cartesian3();
 
   /**
@@ -99,9 +99,7 @@ function EllipsoidPrimitive(options) {
    * const origin = Cesium.Cartesian3.fromDegrees(-95.0, 40.0, 200000.0);
    * e.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(origin);
    */
-  this.modelMatrix = Matrix4.clone(
-    defaultValue(options.modelMatrix, Matrix4.IDENTITY),
-  );
+  this.modelMatrix = Matrix4.clone(options.modelMatrix ?? Matrix4.IDENTITY);
   this._modelMatrix = new Matrix4();
   this._computedModelMatrix = new Matrix4();
 
@@ -133,10 +131,7 @@ function EllipsoidPrimitive(options) {
    *
    * @see {@link https://github.com/CesiumGS/cesium/wiki/Fabric|Fabric}
    */
-  this.material = defaultValue(
-    options.material,
-    Material.fromType(Material.ColorType),
-  );
+  this.material = options.material ?? Material.fromType(Material.ColorType);
   this._material = undefined;
   this._translucent = undefined;
 
@@ -185,10 +180,10 @@ function EllipsoidPrimitive(options) {
   this._pickId = undefined;
 
   this._colorCommand = new DrawCommand({
-    owner: defaultValue(options._owner, this),
+    owner: options._owner ?? this,
   });
   this._pickCommand = new DrawCommand({
-    owner: defaultValue(options._owner, this),
+    owner: options._owner ?? this,
     pickOnly: true,
   });
 

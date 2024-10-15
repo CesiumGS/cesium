@@ -3,7 +3,6 @@ import {
   Cartesian3,
   Cesium3DTileRefine,
   Cesium3DTileStyle,
-  defaultValue,
   Math as CesiumMath,
   Matrix4,
   ModelType,
@@ -78,10 +77,8 @@ describe(
     }
 
     function mockPntsRenderResources(options) {
-      const pointCloudShading = defaultValue(
-        options.pointCloudShading,
-        new PointCloudShading(),
-      );
+      const pointCloudShading =
+        options.pointCloudShading ?? new PointCloudShading();
       const shaderBuilder = new ShaderBuilder();
       const uniformMap = {};
       const mockModel = {

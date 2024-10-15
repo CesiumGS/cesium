@@ -94,71 +94,41 @@ function ParticleSystem(options) {
 
   this._bursts = options.bursts;
 
-  this._modelMatrix = Matrix4.clone(
-    defaultValue(options.modelMatrix, Matrix4.IDENTITY),
-  );
+  this._modelMatrix = Matrix4.clone(options.modelMatrix ?? Matrix4.IDENTITY);
   this._emitterModelMatrix = Matrix4.clone(
-    defaultValue(options.emitterModelMatrix, Matrix4.IDENTITY),
+    options.emitterModelMatrix ?? Matrix4.IDENTITY,
   );
   this._matrixDirty = true;
   this._combinedMatrix = new Matrix4();
 
   this._startColor = Color.clone(
-    defaultValue(options.color, defaultValue(options.startColor, Color.WHITE)),
+    options.color ?? options.startColor ?? Color.WHITE,
   );
   this._endColor = Color.clone(
-    defaultValue(options.color, defaultValue(options.endColor, Color.WHITE)),
+    options.color ?? options.endColor ?? Color.WHITE,
   );
 
-  this._startScale = defaultValue(
-    options.scale,
-    defaultValue(options.startScale, 1.0),
-  );
-  this._endScale = defaultValue(
-    options.scale,
-    defaultValue(options.endScale, 1.0),
-  );
+  this._startScale = options.scale ?? options.startScale ?? 1.0;
+  this._endScale = options.scale ?? options.endScale ?? 1.0;
 
   this._emissionRate = options.emissionRate ?? 5.0;
 
-  this._minimumSpeed = defaultValue(
-    options.speed,
-    defaultValue(options.minimumSpeed, 1.0),
-  );
-  this._maximumSpeed = defaultValue(
-    options.speed,
-    defaultValue(options.maximumSpeed, 1.0),
-  );
+  this._minimumSpeed = options.speed ?? options.minimumSpeed ?? 1.0;
+  this._maximumSpeed = options.speed ?? options.maximumSpeed ?? 1.0;
 
-  this._minimumParticleLife = defaultValue(
-    options.particleLife,
-    defaultValue(options.minimumParticleLife, 5.0),
-  );
-  this._maximumParticleLife = defaultValue(
-    options.particleLife,
-    defaultValue(options.maximumParticleLife, 5.0),
-  );
+  this._minimumParticleLife =
+    options.particleLife ?? options.minimumParticleLife ?? 5.0;
+  this._maximumParticleLife =
+    options.particleLife ?? options.maximumParticleLife ?? 5.0;
 
-  this._minimumMass = defaultValue(
-    options.mass,
-    defaultValue(options.minimumMass, 1.0),
-  );
-  this._maximumMass = defaultValue(
-    options.mass,
-    defaultValue(options.maximumMass, 1.0),
-  );
+  this._minimumMass = options.mass ?? options.minimumMass ?? 1.0;
+  this._maximumMass = options.mass ?? options.maximumMass ?? 1.0;
 
   this._minimumImageSize = Cartesian2.clone(
-    defaultValue(
-      options.imageSize,
-      defaultValue(options.minimumImageSize, defaultImageSize),
-    ),
+    options.imageSize ?? options.minimumImageSize ?? defaultImageSize,
   );
   this._maximumImageSize = Cartesian2.clone(
-    defaultValue(
-      options.imageSize,
-      defaultValue(options.maximumImageSize, defaultImageSize),
-    ),
+    options.imageSize ?? options.maximumImageSize ?? defaultImageSize,
   );
 
   this._sizeInMeters = options.sizeInMeters ?? false;

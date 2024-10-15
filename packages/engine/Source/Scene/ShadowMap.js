@@ -210,10 +210,10 @@ function ShadowMap(options) {
 
   this._cascadesEnabled = this._isPointLight
     ? false
-    : defaultValue(options.cascadesEnabled, true);
+    : (options.cascadesEnabled ?? true);
   this._numberOfCascades = !this._cascadesEnabled
     ? 0
-    : defaultValue(options.numberOfCascades, 4);
+    : (options.numberOfCascades ?? 4);
   this._fitNearFar = true;
   this._maximumCascadeDistances = [25.0, 150.0, 700.0, Number.MAX_VALUE];
 

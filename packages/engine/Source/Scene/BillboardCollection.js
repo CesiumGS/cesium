@@ -245,9 +245,7 @@ function BillboardCollection(options) {
    *
    * @see Transforms.eastNorthUpToFixedFrame
    */
-  this.modelMatrix = Matrix4.clone(
-    defaultValue(options.modelMatrix, Matrix4.IDENTITY),
-  );
+  this.modelMatrix = Matrix4.clone(options.modelMatrix ?? Matrix4.IDENTITY);
   this._modelMatrix = Matrix4.clone(Matrix4.IDENTITY);
 
   /**
@@ -1093,9 +1091,7 @@ function writeCompressedAttrib1(
   }
 
   const textureWidth = billboardCollection._textureAtlas.texture.width;
-  const imageWidth = Math.round(
-    defaultValue(billboard.width, textureWidth * width),
-  );
+  const imageWidth = Math.round(billboard.width ?? textureWidth * width);
   billboardCollection._maxSize = Math.max(
     billboardCollection._maxSize,
     imageWidth,
@@ -1169,9 +1165,7 @@ function writeCompressedAttrib2(
   }
 
   const dimensions = billboardCollection._textureAtlas.texture.dimensions;
-  const imageHeight = Math.round(
-    defaultValue(billboard.height, dimensions.y * height),
-  );
+  const imageHeight = Math.round(billboard.height ?? dimensions.y * height);
   billboardCollection._maxSize = Math.max(
     billboardCollection._maxSize,
     imageHeight,
@@ -1403,16 +1397,12 @@ function writeCompressedAttribute3(
     }
 
     imageHeight = Math.round(
-      defaultValue(
-        billboard.height,
+      billboard.height ??
         billboardCollection._textureAtlas.texture.dimensions.y * height,
-      ),
     );
 
     const textureWidth = billboardCollection._textureAtlas.texture.width;
-    imageWidth = Math.round(
-      defaultValue(billboard.width, textureWidth * width),
-    );
+    imageWidth = Math.round(billboard.width ?? textureWidth * width);
   } else {
     imageWidth = billboard._labelDimensions.x;
     imageHeight = billboard._labelDimensions.y;

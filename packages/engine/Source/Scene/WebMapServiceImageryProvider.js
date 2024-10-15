@@ -182,13 +182,12 @@ function WebMapServiceImageryProvider(options) {
     // Use CRS with 1.3.0 and going forward.
     // For GeographicTilingScheme, use CRS:84 vice EPSG:4326 to specify lon, lat (x, y) ordering for
     // bbox requests.
-    parameters.crs = defaultValue(
-      options.crs,
-      options.tilingScheme &&
-        options.tilingScheme.projection instanceof WebMercatorProjection
+    parameters.crs =
+      options.crs ??
+      (options.tilingScheme &&
+      options.tilingScheme.projection instanceof WebMercatorProjection
         ? "EPSG:3857"
-        : "CRS:84",
-    );
+        : "CRS:84");
 
     // The axis order in previous versions of the WMS specifications was to always use easting (x or lon ) and northing (y or
     // lat). WMS 1.3.0 specifies that, depending on the particular CRS, the x axis may or may not be oriented West-to-East,
@@ -210,13 +209,12 @@ function WebMapServiceImageryProvider(options) {
     }
   } else {
     // SRS for WMS 1.1.0 or 1.1.1.
-    parameters.srs = defaultValue(
-      options.srs,
-      options.tilingScheme &&
-        options.tilingScheme.projection instanceof WebMercatorProjection
+    parameters.srs =
+      options.srs ??
+      (options.tilingScheme &&
+      options.tilingScheme.projection instanceof WebMercatorProjection
         ? "EPSG:3857"
-        : "EPSG:4326",
-    );
+        : "EPSG:4326");
   }
 
   resource.setQueryParameters(parameters, true);
@@ -244,10 +242,9 @@ function WebMapServiceImageryProvider(options) {
   this._tileProvider = new UrlTemplateImageryProvider({
     url: resource,
     pickFeaturesUrl: pickFeatureResource,
-    tilingScheme: defaultValue(
-      options.tilingScheme,
+    tilingScheme:
+      options.tilingScheme ??
       new GeographicTilingScheme({ ellipsoid: options.ellipsoid }),
-    ),
     rectangle: options.rectangle,
     tileWidth: options.tileWidth,
     tileHeight: options.tileHeight,
@@ -256,10 +253,9 @@ function WebMapServiceImageryProvider(options) {
     subdomains: options.subdomains,
     tileDiscardPolicy: options.tileDiscardPolicy,
     credit: options.credit,
-    getFeatureInfoFormats: defaultValue(
-      options.getFeatureInfoFormats,
+    getFeatureInfoFormats:
+      options.getFeatureInfoFormats ??
       WebMapServiceImageryProvider.DefaultGetFeatureInfoFormats,
-    ),
     enablePickFeatures: options.enablePickFeatures,
   });
 }

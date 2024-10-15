@@ -84,8 +84,8 @@ function moveTechniqueRenderStates(gltf) {
             defined(blendFunctions.blendFuncSeparate))
         ) {
           blendingForTechnique[techniqueIndex] = {
-            blendEquation: defaultValue(
-              blendFunctions.blendEquationSeparate,
+            blendEquation: (
+              blendFunctions.blendEquationSeparate ??
               defaultBlendEquation
             ),
             blendFactors: getSupportedBlendFactors(

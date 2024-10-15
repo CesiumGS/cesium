@@ -1,6 +1,5 @@
 import {
   Cartesian2,
-  defaultValue,
   defined,
   DeveloperError,
   FeatureDetection,
@@ -377,7 +376,7 @@ function createDefaultMatchers(debug) {
       return {
         compare: function (actual, expected, args) {
           const scene = actual;
-          const result = scene.pick(defaultValue(args, new Cartesian2(0, 0)));
+          const result = scene.pick(args ?? new Cartesian2(0, 0));
 
           const webglStub = !!window.webglStub;
           if (!webglStub) {
@@ -398,9 +397,7 @@ function createDefaultMatchers(debug) {
       return {
         compare: function (actual, expected, args) {
           const scene = actual;
-          const result = scene.pickVoxel(
-            defaultValue(args, new Cartesian2(0, 0)),
-          );
+          const result = scene.pickVoxel(args ?? new Cartesian2(0, 0));
 
           const webglStub = !!window.webglStub;
           if (!webglStub) {

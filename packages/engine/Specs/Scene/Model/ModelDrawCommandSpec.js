@@ -133,10 +133,8 @@ describe(
     function createDrawCommand(options) {
       options = options ?? {};
 
-      options.modelMatrix = defaultValue(
-        options.modelMatrix,
-        Matrix4.clone(Matrix4.IDENTITY),
-      );
+      options.modelMatrix =
+        options.modelMatrix ?? Matrix4.clone(Matrix4.IDENTITY);
 
       const boundingSphere = new BoundingSphere(Cartesian3.ZERO, 1.0);
       options.boundingVolume = BoundingSphere.transform(
@@ -145,15 +143,14 @@ describe(
         boundingSphere,
       );
 
-      options.renderState = defaultValue(
-        options.renderState,
+      options.renderState =
+        options.renderState ??
         RenderState.fromCache({
           depthTest: {
             enabled: true,
             func: DepthFunction.LESS_OR_EQUAL,
           },
-        }),
-      );
+        });
 
       options.pass = options.pass ?? Pass.OPAQUE;
       options.uniformMap = {};

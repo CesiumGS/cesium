@@ -521,11 +521,11 @@ function unwrapInterval(type, czmlInterval, sourceUri) {
   // associations in getPropertyType
   switch (type) {
     case ArcType:
-      return ArcType[defaultValue(czmlInterval.arcType, czmlInterval)];
+      return ArcType[czmlInterval.arcType ?? czmlInterval];
     case Array:
       return czmlInterval.array;
     case Boolean:
-      return defaultValue(czmlInterval["boolean"], czmlInterval);
+      return czmlInterval["boolean"] ?? czmlInterval;
     case BoundingRectangle:
       return czmlInterval.boundingRectangle;
     case Cartesian2:
@@ -538,70 +538,52 @@ function unwrapInterval(type, czmlInterval, sourceUri) {
       return unwrapColorInterval(czmlInterval);
     case ClassificationType:
       return ClassificationType[
-        defaultValue(czmlInterval.classificationType, czmlInterval)
+        czmlInterval.classificationType ?? czmlInterval
       ];
     case ColorBlendMode:
-      return ColorBlendMode[
-        defaultValue(czmlInterval.colorBlendMode, czmlInterval)
-      ];
+      return ColorBlendMode[czmlInterval.colorBlendMode ?? czmlInterval];
     case CornerType:
-      return CornerType[defaultValue(czmlInterval.cornerType, czmlInterval)];
+      return CornerType[czmlInterval.cornerType ?? czmlInterval];
     case HeightReference:
-      return HeightReference[
-        defaultValue(czmlInterval.heightReference, czmlInterval)
-      ];
+      return HeightReference[czmlInterval.heightReference ?? czmlInterval];
     case HorizontalOrigin:
-      return HorizontalOrigin[
-        defaultValue(czmlInterval.horizontalOrigin, czmlInterval)
-      ];
+      return HorizontalOrigin[czmlInterval.horizontalOrigin ?? czmlInterval];
     case Image:
       return unwrapUriInterval(czmlInterval, sourceUri);
     case JulianDate:
-      return JulianDate.fromIso8601(
-        defaultValue(czmlInterval.date, czmlInterval),
-      );
+      return JulianDate.fromIso8601(czmlInterval.date ?? czmlInterval);
     case LabelStyle:
-      return LabelStyle[defaultValue(czmlInterval.labelStyle, czmlInterval)];
+      return LabelStyle[czmlInterval.labelStyle ?? czmlInterval];
     case Number:
-      return defaultValue(czmlInterval.number, czmlInterval);
+      return czmlInterval.number ?? czmlInterval;
     case NearFarScalar:
       return czmlInterval.nearFarScalar;
     case DistanceDisplayCondition:
       return czmlInterval.distanceDisplayCondition;
     case Object:
-      return defaultValue(
-        defaultValue(czmlInterval.object, czmlInterval.value),
-        czmlInterval,
-      );
+      return czmlInterval.object ?? czmlInterval.value ?? czmlInterval;
     case Quaternion:
       return unwrapQuaternionInterval(czmlInterval);
     case Rotation:
-      return defaultValue(czmlInterval.number, czmlInterval);
+      return czmlInterval.number ?? czmlInterval;
     case SensorVolumePortionToDisplay:
       return SensorVolumePortionToDisplay[
-        defaultValue(czmlInterval.portionToDisplay, czmlInterval)
+        czmlInterval.portionToDisplay ?? czmlInterval
       ];
     case ShadowMode:
       return ShadowMode[
-        defaultValue(
-          defaultValue(czmlInterval.shadowMode, czmlInterval.shadows),
-          czmlInterval,
-        )
+        czmlInterval.shadowMode ?? czmlInterval.shadows ?? czmlInterval
       ];
     case String:
-      return defaultValue(czmlInterval.string, czmlInterval);
+      return czmlInterval.string ?? czmlInterval;
     case StripeOrientation:
-      return StripeOrientation[
-        defaultValue(czmlInterval.stripeOrientation, czmlInterval)
-      ];
+      return StripeOrientation[czmlInterval.stripeOrientation ?? czmlInterval];
     case Rectangle:
       return unwrapRectangleInterval(czmlInterval);
     case Uri:
       return unwrapUriInterval(czmlInterval, sourceUri);
     case VerticalOrigin:
-      return VerticalOrigin[
-        defaultValue(czmlInterval.verticalOrigin, czmlInterval)
-      ];
+      return VerticalOrigin[czmlInterval.verticalOrigin ?? czmlInterval];
     default:
       throw new RuntimeError(`Unknown CzmlDataSource interval type: ${type}`);
   }
@@ -4745,7 +4727,7 @@ function load(dataSource, czml, options, clear) {
   if (typeof czml === "string" || czml instanceof Resource) {
     czml = Resource.createIfNeeded(czml);
     promise = czml.fetchJson();
-    sourceUri = defaultValue(sourceUri, czml.clone());
+    sourceUri = sourceUri ?? czml.clone();
 
     // Add resource credits to our list of credits to display
     const resourceCredits = dataSource._resourceCredits;

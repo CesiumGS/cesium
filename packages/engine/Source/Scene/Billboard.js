@@ -156,26 +156,18 @@ function Billboard(options, billboardCollection) {
   }
 
   this._show = options.show ?? true;
-  this._position = Cartesian3.clone(
-    defaultValue(options.position, Cartesian3.ZERO),
-  );
+  this._position = Cartesian3.clone(options.position ?? Cartesian3.ZERO);
   this._actualPosition = Cartesian3.clone(this._position); // For columbus view and 2D
-  this._pixelOffset = Cartesian2.clone(
-    defaultValue(options.pixelOffset, Cartesian2.ZERO),
-  );
+  this._pixelOffset = Cartesian2.clone(options.pixelOffset ?? Cartesian2.ZERO);
   this._translate = new Cartesian2(0.0, 0.0); // used by labels for glyph vertex translation
-  this._eyeOffset = Cartesian3.clone(
-    defaultValue(options.eyeOffset, Cartesian3.ZERO),
-  );
+  this._eyeOffset = Cartesian3.clone(options.eyeOffset ?? Cartesian3.ZERO);
   this._heightReference = options.heightReference ?? HeightReference.NONE;
   this._verticalOrigin = options.verticalOrigin ?? VerticalOrigin.CENTER;
   this._horizontalOrigin = options.horizontalOrigin ?? HorizontalOrigin.CENTER;
   this._scale = options.scale ?? 1.0;
-  this._color = Color.clone(defaultValue(options.color, Color.WHITE));
+  this._color = Color.clone(options.color ?? Color.WHITE);
   this._rotation = options.rotation ?? 0.0;
-  this._alignedAxis = Cartesian3.clone(
-    defaultValue(options.alignedAxis, Cartesian3.ZERO),
-  );
+  this._alignedAxis = Cartesian3.clone(options.alignedAxis ?? Cartesian3.ZERO);
   this._width = options.width;
   this._height = options.height;
   this._scaleByDistance = scaleByDistance;
@@ -237,9 +229,7 @@ function Billboard(options, billboardCollection) {
   this._mode = SceneMode.SCENE3D;
 
   this._clusterShow = true;
-  this._outlineColor = Color.clone(
-    defaultValue(options.outlineColor, Color.BLACK),
-  );
+  this._outlineColor = Color.clone(options.outlineColor ?? Color.BLACK);
   this._outlineWidth = options.outlineWidth ?? 0.0;
 
   this._updateClamping();
@@ -767,7 +757,7 @@ Object.defineProperties(Billboard.prototype, {
    */
   width: {
     get: function () {
-      return defaultValue(this._width, this._imageWidth);
+      return this._width ?? this._imageWidth;
     },
     set: function (value) {
       //>>includeStart('debug', pragmas.debug);
@@ -789,7 +779,7 @@ Object.defineProperties(Billboard.prototype, {
    */
   height: {
     get: function () {
-      return defaultValue(this._height, this._imageHeight);
+      return this._height ?? this._imageHeight;
     },
     set: function (value) {
       //>>includeStart('debug', pragmas.debug);
