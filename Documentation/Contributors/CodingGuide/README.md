@@ -51,7 +51,7 @@ To some extent, this guide can be summarized as _make new code similar to existi
 
 - Directory names are `PascalCase`, e.g., `Source/Scene`.
 - Constructor functions are `PascalCase`, e.g., `Cartesian3`.
-- Functions are `camelCase`, e.g., `defaultValue()`, `Cartesian3.equalsEpsilon()`.
+- Functions are `camelCase`, e.g. `Cartesian3.equalsEpsilon()`.
 - Files end in `.js` and have the same name as the JavaScript identifier, e.g., `Cartesian3.js` and `defaultValue.js`.
 - Variables, including class properties, are `camelCase`, e.g.,
 

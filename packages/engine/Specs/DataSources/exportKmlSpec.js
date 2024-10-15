@@ -4,7 +4,6 @@ import {
   Cartesian3,
   Cartographic,
   Color,
-  defaultValue,
   defined,
   Iso8601,
   JulianDate,
@@ -28,7 +27,7 @@ import {
 describe("DataSources/exportKml", function () {
   let kmlDoc;
   function checkKmlDoc(entities, properties, options) {
-    options = defaultValue(options, {});
+    options = options ?? {};
     options.entities = entities;
     const promise = exportKml(options);
     const kml = kmlDoc.documentElement;

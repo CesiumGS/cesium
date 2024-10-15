@@ -1,7 +1,6 @@
 import Check from "../Core/Check.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Cartographic from "../Core/Cartographic.js";
-import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
 import CesiumMath from "../Core/Math.js";
@@ -46,7 +45,7 @@ function ClippingPolygon(options) {
   );
   //>>includeEnd('debug');
 
-  this._ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.default);
+  this._ellipsoid = options.ellipsoid ?? Ellipsoid.default;
   this._positions = [...options.positions];
 }
 

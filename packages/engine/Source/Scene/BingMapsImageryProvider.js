@@ -205,7 +205,7 @@ async function requestMetadata(
  * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
  */
 function BingMapsImageryProvider(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
 
   this._defaultAlpha = undefined;
   this._defaultNightAlpha = undefined;
@@ -218,9 +218,9 @@ function BingMapsImageryProvider(options) {
   this._defaultMinificationFilter = undefined;
   this._defaultMagnificationFilter = undefined;
 
-  this._mapStyle = defaultValue(options.mapStyle, BingMapsStyle.AERIAL);
+  this._mapStyle = options.mapStyle ?? BingMapsStyle.AERIAL;
   this._mapLayer = options.mapLayer;
-  this._culture = defaultValue(options.culture, "");
+  this._culture = options.culture ?? "";
   this._key = options.key;
 
   this._tileDiscardPolicy = options.tileDiscardPolicy;
@@ -471,7 +471,7 @@ Object.defineProperties(BingMapsImageryProvider.prototype, {
  * @exception {RuntimeError} metadata does not specify one resource in resourceSets
  */
 BingMapsImageryProvider.fromUrl = async function (url, options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
 
   //>>includeStart('debug', pragmas.debug);
   Check.defined("url", url);
@@ -495,7 +495,7 @@ BingMapsImageryProvider.fromUrl = async function (url, options) {
     tileProtocol = documentProtocol === "http:" ? "http" : "https";
   }
 
-  const mapStyle = defaultValue(options.mapStyle, BingMapsStyle.AERIAL);
+  const mapStyle = options.mapStyle ?? BingMapsStyle.AERIAL;
   const resource = Resource.createIfNeeded(url);
   resource.appendForwardSlash();
 

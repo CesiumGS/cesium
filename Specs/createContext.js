@@ -1,4 +1,4 @@
-import { clone, defaultValue, Context } from "@cesium/engine";
+import { clone, Context } from "@cesium/engine";
 
 import createCanvas from "./createCanvas.js";
 import createFrameState from "./createFrameState.js";
@@ -6,9 +6,9 @@ import getWebGLStub from "./getWebGLStub.js";
 
 function createContext(options, canvasWidth, canvasHeight) {
   // clone options so we can change properties
-  options = clone(defaultValue(options, {}));
-  options.webgl = clone(defaultValue(options.webgl, {}));
-  options.webgl.antialias = defaultValue(options.webgl.antialias, false);
+  options = clone(options ?? {});
+  options.webgl = clone(options.webgl ?? {});
+  options.webgl.antialias = options.webgl.antialias ?? false;
   if (!!window.webglStub) {
     options.getWebGLStub = getWebGLStub;
   }

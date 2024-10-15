@@ -82,7 +82,7 @@ const ImageryProviderAsyncMapping = {
  * @see IonImageryProvider.fromAssetId
  */
 function IonImageryProvider(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
 
   this._defaultAlpha = undefined;
   this._defaultNightAlpha = undefined;
@@ -266,7 +266,7 @@ IonImageryProvider.fromAssetId = async function (assetId, options) {
   Check.typeOf.number("assetId", assetId);
   //>>includeEnd('debug');
 
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
   const endpointResource = IonResource._createEndpointResource(
     assetId,
     options,

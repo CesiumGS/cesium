@@ -1,4 +1,3 @@
-import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Event from "../Core/Event.js";
@@ -21,7 +20,7 @@ import PositionProperty from "./PositionProperty.js";
 function CallbackPositionProperty(callback, isConstant, referenceFrame) {
   this._callback = undefined;
   this._isConstant = undefined;
-  this._referenceFrame = defaultValue(referenceFrame, ReferenceFrame.FIXED);
+  this._referenceFrame = referenceFrame ?? ReferenceFrame.FIXED;
   this._definitionChanged = new Event();
   this.setCallback(callback, isConstant);
 }

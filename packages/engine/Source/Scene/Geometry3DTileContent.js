@@ -1,5 +1,4 @@
 import Cartesian3 from "../Core/Cartesian3.js";
-import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
@@ -171,13 +170,10 @@ function getBatchIds(featureTableJson, featureTableBinary) {
   let sphereBatchIds;
   let i;
 
-  const numberOfBoxes = defaultValue(featureTableJson.BOXES_LENGTH, 0);
-  const numberOfCylinders = defaultValue(featureTableJson.CYLINDERS_LENGTH, 0);
-  const numberOfEllipsoids = defaultValue(
-    featureTableJson.ELLIPSOIDS_LENGTH,
-    0,
-  );
-  const numberOfSpheres = defaultValue(featureTableJson.SPHERES_LENGTH, 0);
+  const numberOfBoxes = featureTableJson.BOXES_LENGTH ?? 0;
+  const numberOfCylinders = featureTableJson.CYLINDERS_LENGTH ?? 0;
+  const numberOfEllipsoids = featureTableJson.ELLIPSOIDS_LENGTH ?? 0;
+  const numberOfSpheres = featureTableJson.SPHERES_LENGTH ?? 0;
 
   if (numberOfBoxes > 0 && defined(featureTableJson.BOX_BATCH_IDS)) {
     const boxBatchIdsByteOffset =
@@ -283,7 +279,7 @@ function getBatchIds(featureTableJson, featureTableBinary) {
 const sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
 
 function initialize(content, arrayBuffer, byteOffset) {
-  byteOffset = defaultValue(byteOffset, 0);
+  byteOffset = byteOffset ?? 0;
 
   const uint8Array = new Uint8Array(arrayBuffer);
   const view = new DataView(arrayBuffer);
@@ -362,13 +358,10 @@ function initialize(content, arrayBuffer, byteOffset) {
     }
   }
 
-  const numberOfBoxes = defaultValue(featureTableJson.BOXES_LENGTH, 0);
-  const numberOfCylinders = defaultValue(featureTableJson.CYLINDERS_LENGTH, 0);
-  const numberOfEllipsoids = defaultValue(
-    featureTableJson.ELLIPSOIDS_LENGTH,
-    0,
-  );
-  const numberOfSpheres = defaultValue(featureTableJson.SPHERES_LENGTH, 0);
+  const numberOfBoxes = featureTableJson.BOXES_LENGTH ?? 0;
+  const numberOfCylinders = featureTableJson.CYLINDERS_LENGTH ?? 0;
+  const numberOfEllipsoids = featureTableJson.ELLIPSOIDS_LENGTH ?? 0;
+  const numberOfSpheres = featureTableJson.SPHERES_LENGTH ?? 0;
 
   const totalPrimitives =
     numberOfBoxes + numberOfCylinders + numberOfEllipsoids + numberOfSpheres;

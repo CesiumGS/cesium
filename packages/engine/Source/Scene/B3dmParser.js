@@ -1,5 +1,4 @@
 import Check from "../Core/Check.js";
-import defaultValue from "../Core/defaultValue.js";
 import deprecationWarning from "../Core/deprecationWarning.js";
 import getJsonFromTypedArray from "../Core/getJsonFromTypedArray.js";
 import RuntimeError from "../Core/RuntimeError.js";
@@ -25,7 +24,7 @@ const sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
  * @returns {object} Returns an object with the batch length, feature table (binary and json), batch table (binary and json) and glTF parts of the b3dm.
  */
 B3dmParser.parse = function (arrayBuffer, byteOffset) {
-  const byteStart = defaultValue(byteOffset, 0);
+  const byteStart = byteOffset ?? 0;
   //>>includeStart('debug', pragmas.debug);
   Check.defined("arrayBuffer", arrayBuffer);
   //>>includeEnd('debug');
@@ -96,7 +95,7 @@ B3dmParser.parse = function (arrayBuffer, byteOffset) {
   let featureTableJson;
   if (featureTableJsonByteLength === 0) {
     featureTableJson = {
-      BATCH_LENGTH: defaultValue(batchLength, 0),
+      BATCH_LENGTH: batchLength ?? 0,
     };
   } else {
     featureTableJson = getJsonFromTypedArray(

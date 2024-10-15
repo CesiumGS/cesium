@@ -16,7 +16,7 @@ import defaultValue from "../Core/defaultValue.js";
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 function Cesium3DContentGroup(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.metadata", options.metadata);
   //>>includeEnd('debug');

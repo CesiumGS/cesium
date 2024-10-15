@@ -1,4 +1,3 @@
-import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 
@@ -35,7 +34,7 @@ function oneTimeWarning(identifier, message) {
 
   if (!defined(warnings[identifier])) {
     warnings[identifier] = true;
-    console.warn(defaultValue(message, identifier));
+    console.warn(message ?? identifier);
   }
 }
 

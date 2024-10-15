@@ -143,7 +143,7 @@ const attributeLocationsInstanced = {
  * });
  */
 function BillboardCollection(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
 
   this._scene = options.scene;
   this._batchTable = options.batchTable;
@@ -211,7 +211,7 @@ function BillboardCollection(options) {
    * @type {boolean}
    * @default true
    */
-  this.show = defaultValue(options.show, true);
+  this.show = options.show ?? true;
 
   /**
    * The 4x4 transformation matrix that transforms each billboard in this collection from model to world coordinates.
@@ -245,9 +245,7 @@ function BillboardCollection(options) {
    *
    * @see Transforms.eastNorthUpToFixedFrame
    */
-  this.modelMatrix = Matrix4.clone(
-    defaultValue(options.modelMatrix, Matrix4.IDENTITY),
-  );
+  this.modelMatrix = Matrix4.clone(options.modelMatrix ?? Matrix4.IDENTITY);
   this._modelMatrix = Matrix4.clone(Matrix4.IDENTITY);
 
   /**
@@ -260,10 +258,7 @@ function BillboardCollection(options) {
    *
    * @default false
    */
-  this.debugShowBoundingVolume = defaultValue(
-    options.debugShowBoundingVolume,
-    false,
-  );
+  this.debugShowBoundingVolume = options.debugShowBoundingVolume ?? false;
 
   /**
    * This property is for debugging only; it is not for production use nor is it optimized.
@@ -275,10 +270,7 @@ function BillboardCollection(options) {
    *
    * @default false
    */
-  this.debugShowTextureAtlas = defaultValue(
-    options.debugShowTextureAtlas,
-    false,
-  );
+  this.debugShowTextureAtlas = options.debugShowTextureAtlas ?? false;
 
   /**
    * The billboard blending option. The default is used for rendering both opaque and translucent billboards.
@@ -288,10 +280,7 @@ function BillboardCollection(options) {
    * @type {BlendOption}
    * @default BlendOption.OPAQUE_AND_TRANSLUCENT
    */
-  this.blendOption = defaultValue(
-    options.blendOption,
-    BlendOption.OPAQUE_AND_TRANSLUCENT,
-  );
+  this.blendOption = options.blendOption ?? BlendOption.OPAQUE_AND_TRANSLUCENT;
   this._blendOption = undefined;
 
   this._mode = SceneMode.SCENE3D;
@@ -1102,9 +1091,7 @@ function writeCompressedAttrib1(
   }
 
   const textureWidth = billboardCollection._textureAtlas.texture.width;
-  const imageWidth = Math.round(
-    defaultValue(billboard.width, textureWidth * width),
-  );
+  const imageWidth = Math.round(billboard.width ?? textureWidth * width);
   billboardCollection._maxSize = Math.max(
     billboardCollection._maxSize,
     imageWidth,
@@ -1178,17 +1165,12 @@ function writeCompressedAttrib2(
   }
 
   const dimensions = billboardCollection._textureAtlas.texture.dimensions;
-  const imageHeight = Math.round(
-    defaultValue(billboard.height, dimensions.y * height),
-  );
+  const imageHeight = Math.round(billboard.height ?? dimensions.y * height);
   billboardCollection._maxSize = Math.max(
     billboardCollection._maxSize,
     imageHeight,
   );
-  let labelHorizontalOrigin = defaultValue(
-    billboard._labelHorizontalOrigin,
-    -2,
-  );
+  let labelHorizontalOrigin = billboard._labelHorizontalOrigin ?? -2;
   labelHorizontalOrigin += 2;
   const compressed3 = imageHeight * LEFT_SHIFT2 + labelHorizontalOrigin;
 
@@ -1415,16 +1397,12 @@ function writeCompressedAttribute3(
     }
 
     imageHeight = Math.round(
-      defaultValue(
-        billboard.height,
+      billboard.height ??
         billboardCollection._textureAtlas.texture.dimensions.y * height,
-      ),
     );
 
     const textureWidth = billboardCollection._textureAtlas.texture.width;
-    imageWidth = Math.round(
-      defaultValue(billboard.width, textureWidth * width),
-    );
+    imageWidth = Math.round(billboard.width ?? textureWidth * width);
   } else {
     imageWidth = billboard._labelDimensions.x;
     imageHeight = billboard._labelDimensions.y;

@@ -1,4 +1,3 @@
-import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Event from "../Core/Event.js";
@@ -121,7 +120,7 @@ PropertyBag.prototype.addProperty = function (
     createPropertyDescriptor(
       propertyName,
       true,
-      defaultValue(createPropertyCallback, createConstantProperty),
+      createPropertyCallback ?? createConstantProperty,
     ),
   );
 

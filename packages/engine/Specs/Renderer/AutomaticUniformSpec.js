@@ -3,7 +3,6 @@ import {
   Cartesian3,
   Cartographic,
   Color,
-  defaultValue,
   DirectionalLight,
   DynamicAtmosphereLightingType,
   Ellipsoid,
@@ -44,9 +43,9 @@ describe(
       up,
     ) {
       return {
-        viewMatrix: defaultValue(view, Matrix4.clone(Matrix4.IDENTITY)),
+        viewMatrix: view ?? Matrix4.clone(Matrix4.IDENTITY),
         inverseViewMatrix: Matrix4.inverseTransformation(
-          defaultValue(view, Matrix4.clone(Matrix4.IDENTITY)),
+          view ?? Matrix4.clone(Matrix4.IDENTITY),
           new Matrix4(),
         ),
         frustum: {
@@ -56,14 +55,9 @@ describe(
           bottom: -2.0,
           left: -1.0,
           right: 1.0,
-          projectionMatrix: defaultValue(
-            projection,
-            Matrix4.clone(Matrix4.IDENTITY),
-          ),
-          infiniteProjectionMatrix: defaultValue(
-            infiniteProjection,
-            Matrix4.clone(Matrix4.IDENTITY),
-          ),
+          projectionMatrix: projection ?? Matrix4.clone(Matrix4.IDENTITY),
+          infiniteProjectionMatrix:
+            infiniteProjection ?? Matrix4.clone(Matrix4.IDENTITY),
           computeCullingVolume: function () {
             return undefined;
           },
@@ -71,14 +65,11 @@ describe(
             return new Cartesian2(1.0, 0.1);
           },
         },
-        position: defaultValue(position, Cartesian3.clone(Cartesian3.ZERO)),
-        positionWC: defaultValue(position, Cartesian3.clone(Cartesian3.ZERO)),
-        directionWC: defaultValue(
-          direction,
-          Cartesian3.clone(Cartesian3.UNIT_Z),
-        ),
-        rightWC: defaultValue(right, Cartesian3.clone(Cartesian3.UNIT_X)),
-        upWC: defaultValue(up, Cartesian3.clone(Cartesian3.UNIT_Y)),
+        position: position ?? Cartesian3.clone(Cartesian3.ZERO),
+        positionWC: position ?? Cartesian3.clone(Cartesian3.ZERO),
+        directionWC: direction ?? Cartesian3.clone(Cartesian3.UNIT_Z),
+        rightWC: right ?? Cartesian3.clone(Cartesian3.UNIT_X),
+        upWC: up ?? Cartesian3.clone(Cartesian3.UNIT_Y),
         positionCartographic: new Cartographic(0.0, 0.0, 10.0),
       };
     }

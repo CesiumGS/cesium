@@ -34,10 +34,7 @@ function findContentMetadata(tileset, contentHeader) {
     return undefined;
   }
 
-  const classes = defaultValue(
-    tileset.schema.classes,
-    defaultValue.EMPTY_OBJECT,
-  );
+  const classes = tileset.schema.classes ?? defaultValue.EMPTY_OBJECT;
   if (defined(metadataJson.class)) {
     const contentClass = classes[metadataJson.class];
     return new ContentMetadata({

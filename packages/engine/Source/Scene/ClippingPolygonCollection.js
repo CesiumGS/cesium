@@ -58,7 +58,7 @@ import PolygonSignedDistanceFS from "../Shaders/PolygonSignedDistanceFS.js";
  * });
  */
 function ClippingPolygonCollection(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
 
   this._polygons = [];
   this._totalPositions = 0;
@@ -70,7 +70,7 @@ function ClippingPolygonCollection(options) {
    * @type {boolean}
    * @default true
    */
-  this.enabled = defaultValue(options.enabled, true);
+  this.enabled = options.enabled ?? true;
 
   /**
    * If true, a region will be clipped if it is outside of every polygon in the
@@ -81,7 +81,7 @@ function ClippingPolygonCollection(options) {
    * @type {boolean}
    * @default false
    */
-  this.inverse = defaultValue(options.inverse, false);
+  this.inverse = options.inverse ?? false;
 
   /**
    * An event triggered when a new clipping polygon is added to the collection.  Event handlers

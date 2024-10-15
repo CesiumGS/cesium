@@ -3,7 +3,6 @@ import Cartesian3 from "../Core/Cartesian3.js";
 import Cartographic from "../Core/Cartographic.js";
 import Check from "../Core/Check.js";
 import ColorGeometryInstanceAttribute from "../Core/ColorGeometryInstanceAttribute.js";
-import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
 import GeometryInstance from "../Core/GeometryInstance.js";
@@ -40,8 +39,8 @@ function TileBoundingRegion(options) {
   //>>includeEnd('debug');
 
   this.rectangle = Rectangle.clone(options.rectangle);
-  this.minimumHeight = defaultValue(options.minimumHeight, 0.0);
-  this.maximumHeight = defaultValue(options.maximumHeight, 0.0);
+  this.minimumHeight = options.minimumHeight ?? 0.0;
+  this.maximumHeight = options.maximumHeight ?? 0.0;
 
   /**
    * The world coordinates of the southwest corner of the tile's rectangle.
@@ -99,13 +98,13 @@ function TileBoundingRegion(options) {
    */
   this.northNormal = new Cartesian3();
 
-  const ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
+  const ellipsoid = options.ellipsoid ?? Ellipsoid.WGS84;
   computeBox(this, options.rectangle, ellipsoid);
 
   this._orientedBoundingBox = undefined;
   this._boundingSphere = undefined;
 
-  if (defaultValue(options.computeBoundingVolumes, true)) {
+  if (options.computeBoundingVolumes ?? true) {
     this.computeBoundingVolumes(ellipsoid);
   }
 }

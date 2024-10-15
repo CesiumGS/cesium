@@ -1,6 +1,5 @@
 import BoundingRectangle from "../Core/BoundingRectangle.js";
 import Color from "../Core/Color.js";
-import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import FramebufferManager from "../Renderer/FramebufferManager.js";
@@ -58,8 +57,8 @@ const colorScratchForPickFramebuffer = new Color();
  * @returns {object|undefined} The object rendered in the middle of the rectangle, or undefined if nothing was rendered.
  */
 PickFramebuffer.prototype.end = function (screenSpaceRectangle) {
-  const width = defaultValue(screenSpaceRectangle.width, 1.0);
-  const height = defaultValue(screenSpaceRectangle.height, 1.0);
+  const width = screenSpaceRectangle.width ?? 1.0;
+  const height = screenSpaceRectangle.height ?? 1.0;
 
   const context = this._context;
   const pixels = context.readPixels({
@@ -140,8 +139,8 @@ PickFramebuffer.prototype.end = function (screenSpaceRectangle) {
  * @returns {Uint8Array} The RGBA components
  */
 PickFramebuffer.prototype.readCenterPixel = function (screenSpaceRectangle) {
-  const width = defaultValue(screenSpaceRectangle.width, 1.0);
-  const height = defaultValue(screenSpaceRectangle.height, 1.0);
+  const width = screenSpaceRectangle.width ?? 1.0;
+  const height = screenSpaceRectangle.height ?? 1.0;
 
   const context = this._context;
   const pixels = context.readPixels({

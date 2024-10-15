@@ -45,7 +45,7 @@ import VerticalExaggeration from "../Core/VerticalExaggeration.js";
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
 function VoxelPrimitive(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
 
   /**
    * @type {boolean}
@@ -57,10 +57,7 @@ function VoxelPrimitive(options) {
    * @type {VoxelProvider}
    * @private
    */
-  this._provider = defaultValue(
-    options.provider,
-    VoxelPrimitive.DefaultProvider,
-  );
+  this._provider = options.provider ?? VoxelPrimitive.DefaultProvider;
 
   /**
    * This member is not created until the provider and shape are ready.
@@ -230,9 +227,7 @@ function VoxelPrimitive(options) {
    * @type {Matrix4}
    * @private
    */
-  this._modelMatrix = Matrix4.clone(
-    defaultValue(options.modelMatrix, Matrix4.IDENTITY),
-  );
+  this._modelMatrix = Matrix4.clone(options.modelMatrix ?? Matrix4.IDENTITY);
 
   /**
    * Model matrix with vertical exaggeration applied. Only used for BOX shape type.
@@ -264,10 +259,8 @@ function VoxelPrimitive(options) {
    * @type {CustomShader}
    * @private
    */
-  this._customShader = defaultValue(
-    options.customShader,
-    VoxelPrimitive.DefaultCustomShader,
-  );
+  this._customShader =
+    options.customShader ?? VoxelPrimitive.DefaultCustomShader;
 
   /**
    * @type {Event}
@@ -1278,7 +1271,7 @@ function initFromProvider(primitive, provider, context) {
     uniforms.dimensions,
   );
   primitive._paddingBefore = Cartesian3.clone(
-    defaultValue(provider.paddingBefore, Cartesian3.ZERO),
+    provider.paddingBefore ?? Cartesian3.ZERO,
     primitive._paddingBefore,
   );
   uniforms.paddingBefore = Cartesian3.clone(
@@ -1286,7 +1279,7 @@ function initFromProvider(primitive, provider, context) {
     uniforms.paddingBefore,
   );
   primitive._paddingAfter = Cartesian3.clone(
-    defaultValue(provider.paddingAfter, Cartesian3.ZERO),
+    provider.paddingAfter ?? Cartesian3.ZERO,
     primitive._paddingBefore,
   );
   uniforms.paddingAfter = Cartesian3.clone(
@@ -1307,14 +1300,8 @@ function initFromProvider(primitive, provider, context) {
  * @private
  */
 function checkTransformAndBounds(primitive, provider) {
-  const shapeTransform = defaultValue(
-    provider.shapeTransform,
-    Matrix4.IDENTITY,
-  );
-  const globalTransform = defaultValue(
-    provider.globalTransform,
-    Matrix4.IDENTITY,
-  );
+  const shapeTransform = provider.shapeTransform ?? Matrix4.IDENTITY;
+  const globalTransform = provider.globalTransform ?? Matrix4.IDENTITY;
 
   // Compound model matrix = global transform * model matrix * shape transform
   Matrix4.multiplyTransformation(
@@ -1457,7 +1444,7 @@ function setupTraversal(primitive, provider, context) {
       )
     : undefined;
 
-  const keyframeCount = defaultValue(provider.keyframeCount, 1);
+  const keyframeCount = provider.keyframeCount ?? 1;
 
   return new VoxelTraversal(
     primitive,
@@ -1950,7 +1937,7 @@ function DefaultVoxelProvider() {
 }
 
 DefaultVoxelProvider.prototype.requestData = function (options) {
-  const tileLevel = defined(options) ? defaultValue(options.tileLevel, 0) : 0;
+  const tileLevel = defined(options) ? (options.tileLevel ?? 0) : 0;
   if (tileLevel >= 1) {
     return undefined;
   }

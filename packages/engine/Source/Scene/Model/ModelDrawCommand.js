@@ -34,7 +34,7 @@ import StyleCommandsNeeded from "./StyleCommandsNeeded.js";
  * @private
  */
 function ModelDrawCommand(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
 
   const command = options.command;
   const renderResources = options.primitiveRenderResources;
@@ -124,7 +124,7 @@ function ModelDerivedCommand(options) {
   this.updateDebugShowBoundingVolume = options.updateDebugShowBoundingVolume;
 
   // Whether this ModelDerivedCommand is in 2D.
-  this.is2D = defaultValue(options.is2D, false);
+  this.is2D = options.is2D ?? false;
 
   // A ModelDerivedCommand that is the 2D version of this one.
   this.derivedCommand2D = undefined;

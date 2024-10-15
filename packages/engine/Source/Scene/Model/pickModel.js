@@ -4,7 +4,6 @@ import Cartesian3 from "../../Core/Cartesian3.js";
 import Cartographic from "../../Core/Cartographic.js";
 import Check from "../../Core/Check.js";
 import ComponentDatatype from "../../Core/ComponentDatatype.js";
-import defaultValue from "../../Core/defaultValue.js";
 import defined from "../../Core/defined.js";
 import Ellipsoid from "../../Core/Ellipsoid.js";
 import IndexDatatype from "../../Core/IndexDatatype.js";
@@ -280,9 +279,9 @@ export default function pickModel(
         return;
       }
 
-      ellipsoid = defaultValue(ellipsoid, Ellipsoid.default);
-      verticalExaggeration = defaultValue(verticalExaggeration, 1.0);
-      relativeHeight = defaultValue(relativeHeight, 0.0);
+      ellipsoid = ellipsoid ?? Ellipsoid.default;
+      verticalExaggeration = verticalExaggeration ?? 1.0;
+      relativeHeight = relativeHeight ?? 0.0;
 
       const indicesLength = indices.length;
       for (let i = 0; i < indicesLength; i += 3) {
@@ -333,7 +332,7 @@ export default function pickModel(
             v0,
             v1,
             v2,
-            defaultValue(model.backFaceCulling, true),
+            model.backFaceCulling ?? true,
           );
 
           if (defined(t)) {

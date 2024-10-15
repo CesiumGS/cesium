@@ -42,7 +42,7 @@ import SplitDirection from "./SplitDirection.js";
  * @demo {@link https://sandcastle.cesium.com/index.html?src=Points.html|Cesium Sandcastle Points Demo}
  */
 function PointPrimitive(options, pointPrimitiveCollection) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
 
   //>>includeStart('debug', pragmas.debug);
   if (
@@ -91,26 +91,19 @@ function PointPrimitive(options, pointPrimitiveCollection) {
     );
   }
 
-  this._show = defaultValue(options.show, true);
-  this._position = Cartesian3.clone(
-    defaultValue(options.position, Cartesian3.ZERO),
-  );
+  this._show = options.show ?? true;
+  this._position = Cartesian3.clone(options.position ?? Cartesian3.ZERO);
   this._actualPosition = Cartesian3.clone(this._position); // For columbus view and 2D
-  this._color = Color.clone(defaultValue(options.color, Color.WHITE));
-  this._outlineColor = Color.clone(
-    defaultValue(options.outlineColor, Color.TRANSPARENT),
-  );
-  this._outlineWidth = defaultValue(options.outlineWidth, 0.0);
-  this._pixelSize = defaultValue(options.pixelSize, 10.0);
+  this._color = Color.clone(options.color ?? Color.WHITE);
+  this._outlineColor = Color.clone(options.outlineColor ?? Color.TRANSPARENT);
+  this._outlineWidth = options.outlineWidth ?? 0.0;
+  this._pixelSize = options.pixelSize ?? 10.0;
   this._scaleByDistance = scaleByDistance;
   this._translucencyByDistance = translucencyByDistance;
   this._distanceDisplayCondition = distanceDisplayCondition;
-  this._disableDepthTestDistance = defaultValue(
-    options.disableDepthTestDistance,
-    0.0,
-  );
+  this._disableDepthTestDistance = options.disableDepthTestDistance ?? 0.0;
   this._id = options.id;
-  this._collection = defaultValue(options.collection, pointPrimitiveCollection);
+  this._collection = options.collection ?? pointPrimitiveCollection;
 
   this._clusterShow = true;
 
@@ -119,10 +112,7 @@ function PointPrimitive(options, pointPrimitiveCollection) {
   this._dirty = false;
   this._index = -1; //Used only by PointPrimitiveCollection
 
-  this._splitDirection = defaultValue(
-    options.splitDirection,
-    SplitDirection.NONE,
-  );
+  this._splitDirection = options.splitDirection ?? SplitDirection.NONE;
 }
 
 const SHOW_INDEX = (PointPrimitive.SHOW_INDEX = 0);

@@ -13,7 +13,7 @@ import LightingModel from "./LightingModel.js";
  * @private
  */
 function ModelLightingOptions(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
 
   /**
    * The lighting model to use, such as UNLIT or PBR. This is determined by
@@ -23,7 +23,7 @@ function ModelLightingOptions(options) {
    *
    * @private
    */
-  this.lightingModel = defaultValue(options.lightingModel, LightingModel.UNLIT);
+  this.lightingModel = options.lightingModel ?? LightingModel.UNLIT;
 }
 
 export default ModelLightingOptions;

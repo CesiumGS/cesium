@@ -93,7 +93,7 @@ import SplitDirection from "./SplitDirection.js";
  * @demo {@link https://sandcastle.cesium.com/index.html?src=Billboards.html|Cesium Sandcastle Billboard Demo}
  */
 function Billboard(options, billboardCollection) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
 
   //>>includeStart('debug', pragmas.debug);
   if (
@@ -155,49 +155,32 @@ function Billboard(options, billboardCollection) {
     );
   }
 
-  this._show = defaultValue(options.show, true);
-  this._position = Cartesian3.clone(
-    defaultValue(options.position, Cartesian3.ZERO),
-  );
+  this._show = options.show ?? true;
+  this._position = Cartesian3.clone(options.position ?? Cartesian3.ZERO);
   this._actualPosition = Cartesian3.clone(this._position); // For columbus view and 2D
-  this._pixelOffset = Cartesian2.clone(
-    defaultValue(options.pixelOffset, Cartesian2.ZERO),
-  );
+  this._pixelOffset = Cartesian2.clone(options.pixelOffset ?? Cartesian2.ZERO);
   this._translate = new Cartesian2(0.0, 0.0); // used by labels for glyph vertex translation
-  this._eyeOffset = Cartesian3.clone(
-    defaultValue(options.eyeOffset, Cartesian3.ZERO),
-  );
-  this._heightReference = defaultValue(
-    options.heightReference,
-    HeightReference.NONE,
-  );
-  this._verticalOrigin = defaultValue(
-    options.verticalOrigin,
-    VerticalOrigin.CENTER,
-  );
-  this._horizontalOrigin = defaultValue(
-    options.horizontalOrigin,
-    HorizontalOrigin.CENTER,
-  );
-  this._scale = defaultValue(options.scale, 1.0);
-  this._color = Color.clone(defaultValue(options.color, Color.WHITE));
-  this._rotation = defaultValue(options.rotation, 0.0);
-  this._alignedAxis = Cartesian3.clone(
-    defaultValue(options.alignedAxis, Cartesian3.ZERO),
-  );
+  this._eyeOffset = Cartesian3.clone(options.eyeOffset ?? Cartesian3.ZERO);
+  this._heightReference = options.heightReference ?? HeightReference.NONE;
+  this._verticalOrigin = options.verticalOrigin ?? VerticalOrigin.CENTER;
+  this._horizontalOrigin = options.horizontalOrigin ?? HorizontalOrigin.CENTER;
+  this._scale = options.scale ?? 1.0;
+  this._color = Color.clone(options.color ?? Color.WHITE);
+  this._rotation = options.rotation ?? 0.0;
+  this._alignedAxis = Cartesian3.clone(options.alignedAxis ?? Cartesian3.ZERO);
   this._width = options.width;
   this._height = options.height;
   this._scaleByDistance = scaleByDistance;
   this._translucencyByDistance = translucencyByDistance;
   this._pixelOffsetScaleByDistance = pixelOffsetScaleByDistance;
-  this._sizeInMeters = defaultValue(options.sizeInMeters, false);
+  this._sizeInMeters = options.sizeInMeters ?? false;
   this._distanceDisplayCondition = distanceDisplayCondition;
   this._disableDepthTestDistance = options.disableDepthTestDistance;
   this._id = options.id;
-  this._collection = defaultValue(options.collection, billboardCollection);
+  this._collection = options.collection ?? billboardCollection;
 
   this._pickId = undefined;
-  this._pickPrimitive = defaultValue(options._pickPrimitive, this);
+  this._pickPrimitive = options._pickPrimitive ?? this;
   this._billboardCollection = billboardCollection;
   this._dirty = false;
   this._index = -1; //Used only by BillboardCollection
@@ -246,17 +229,12 @@ function Billboard(options, billboardCollection) {
   this._mode = SceneMode.SCENE3D;
 
   this._clusterShow = true;
-  this._outlineColor = Color.clone(
-    defaultValue(options.outlineColor, Color.BLACK),
-  );
-  this._outlineWidth = defaultValue(options.outlineWidth, 0.0);
+  this._outlineColor = Color.clone(options.outlineColor ?? Color.BLACK);
+  this._outlineWidth = options.outlineWidth ?? 0.0;
 
   this._updateClamping();
 
-  this._splitDirection = defaultValue(
-    options.splitDirection,
-    SplitDirection.NONE,
-  );
+  this._splitDirection = options.splitDirection ?? SplitDirection.NONE;
 }
 
 const SHOW_INDEX = (Billboard.SHOW_INDEX = 0);
@@ -779,7 +757,7 @@ Object.defineProperties(Billboard.prototype, {
    */
   width: {
     get: function () {
-      return defaultValue(this._width, this._imageWidth);
+      return this._width ?? this._imageWidth;
     },
     set: function (value) {
       //>>includeStart('debug', pragmas.debug);
@@ -801,7 +779,7 @@ Object.defineProperties(Billboard.prototype, {
    */
   height: {
     get: function () {
-      return defaultValue(this._height, this._imageHeight);
+      return this._height ?? this._imageHeight;
     },
     set: function (value) {
       //>>includeStart('debug', pragmas.debug);
@@ -1132,7 +1110,7 @@ Billboard._updateClamping = function (collection, owner) {
     return;
   }
 
-  const ellipsoid = defaultValue(scene.ellipsoid, Ellipsoid.default);
+  const ellipsoid = scene.ellipsoid ?? Ellipsoid.default;
 
   const mode = scene.frameState.mode;
 

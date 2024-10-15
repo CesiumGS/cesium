@@ -22,7 +22,7 @@ const defaultRepeat = new Cartesian2(2.0, 2.0);
  * @param {Property|Cartesian2} [options.repeat=new Cartesian2(2.0, 2.0)] A {@link Cartesian2} Property specifying how many times the tiles repeat in each direction.
  */
 function CheckerboardMaterialProperty(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
 
   this._definitionChanged = new Event();
   this._evenColor = undefined;

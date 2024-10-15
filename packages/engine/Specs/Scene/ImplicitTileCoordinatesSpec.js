@@ -1,5 +1,4 @@
 import {
-  defaultValue,
   ImplicitSubdivisionScheme,
   ImplicitTileCoordinates,
 } from "../../index.js";
@@ -16,7 +15,7 @@ describe("Scene/ImplicitTileCoordinates", function () {
   function quadtreeCoordinates(level, x, y, subtreeLevels) {
     return new ImplicitTileCoordinates({
       subdivisionScheme: ImplicitSubdivisionScheme.QUADTREE,
-      subtreeLevels: defaultValue(subtreeLevels, 2),
+      subtreeLevels: subtreeLevels ?? 2,
       level: level,
       x: x,
       y: y,
@@ -35,7 +34,7 @@ describe("Scene/ImplicitTileCoordinates", function () {
   function octreeCoordinates(level, x, y, z, subtreeLevels) {
     return new ImplicitTileCoordinates({
       subdivisionScheme: ImplicitSubdivisionScheme.OCTREE,
-      subtreeLevels: defaultValue(subtreeLevels, 2),
+      subtreeLevels: subtreeLevels ?? 2,
       level: level,
       x: x,
       y: y,

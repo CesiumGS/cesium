@@ -33,7 +33,7 @@ function Cesium3DTilesetGraphics(options) {
   this._maximumScreenSpaceError = undefined;
   this._maximumScreenSpaceErrorSubscription = undefined;
 
-  this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
+  this.merge(options ?? defaultValue.EMPTY_OBJECT);
 }
 
 Object.defineProperties(Cesium3DTilesetGraphics.prototype, {
@@ -102,12 +102,10 @@ Cesium3DTilesetGraphics.prototype.merge = function (source) {
   }
   //>>includeEnd('debug');
 
-  this.show = defaultValue(this.show, source.show);
-  this.uri = defaultValue(this.uri, source.uri);
-  this.maximumScreenSpaceError = defaultValue(
-    this.maximumScreenSpaceError,
-    source.maximumScreenSpaceError,
-  );
+  this.show = this.show ?? source.show;
+  this.uri = this.uri ?? source.uri;
+  this.maximumScreenSpaceError =
+    this.maximumScreenSpaceError ?? source.maximumScreenSpaceError;
 };
 
 export default Cesium3DTilesetGraphics;

@@ -10,7 +10,7 @@ import TextureWrap from "./TextureWrap.js";
  * @private
  */
 function Sampler(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
 
   const {
     wrapS = TextureWrap.CLAMP_TO_EDGE,

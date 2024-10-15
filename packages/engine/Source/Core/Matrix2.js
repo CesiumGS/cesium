@@ -1,6 +1,5 @@
 import Cartesian2 from "./Cartesian2.js";
 import Check from "./Check.js";
-import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 
@@ -26,10 +25,10 @@ import DeveloperError from "./DeveloperError.js";
  * @see Matrix4
  */
 function Matrix2(column0Row0, column1Row0, column0Row1, column1Row1) {
-  this[0] = defaultValue(column0Row0, 0.0);
-  this[1] = defaultValue(column0Row1, 0.0);
-  this[2] = defaultValue(column1Row0, 0.0);
-  this[3] = defaultValue(column1Row1, 0.0);
+  this[0] = column0Row0 ?? 0.0;
+  this[1] = column0Row1 ?? 0.0;
+  this[2] = column1Row0 ?? 0.0;
+  this[3] = column1Row1 ?? 0.0;
 }
 
 /**
@@ -53,7 +52,7 @@ Matrix2.pack = function (value, array, startingIndex) {
   Check.defined("array", array);
   //>>includeEnd('debug');
 
-  startingIndex = defaultValue(startingIndex, 0);
+  startingIndex = startingIndex ?? 0;
 
   array[startingIndex++] = value[0];
   array[startingIndex++] = value[1];
@@ -76,7 +75,7 @@ Matrix2.unpack = function (array, startingIndex, result) {
   Check.defined("array", array);
   //>>includeEnd('debug');
 
-  startingIndex = defaultValue(startingIndex, 0);
+  startingIndex = startingIndex ?? 0;
 
   if (!defined(result)) {
     result = new Matrix2();
@@ -957,7 +956,7 @@ Matrix2.equalsArray = function (matrix, array, offset) {
  * @returns {boolean} <code>true</code> if left and right are within the provided epsilon, <code>false</code> otherwise.
  */
 Matrix2.equalsEpsilon = function (left, right, epsilon) {
-  epsilon = defaultValue(epsilon, 0);
+  epsilon = epsilon ?? 0;
   return (
     left === right ||
     (defined(left) &&

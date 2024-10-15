@@ -55,7 +55,7 @@ import TerrainMesh from "./TerrainMesh.js";
  * @see QuantizedMeshTerrainData
  */
 function GoogleEarthEnterpriseTerrainData(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.buffer", options.buffer);
   Check.typeOf.number(
@@ -76,14 +76,14 @@ function GoogleEarthEnterpriseTerrainData(options) {
   // Convert from google layout to layout of other providers
   // 3 2 -> 2 3
   // 0 1 -> 0 1
-  const googleChildTileMask = defaultValue(options.childTileMask, 15);
+  const googleChildTileMask = options.childTileMask ?? 15;
   let childTileMask = googleChildTileMask & 3; // Bottom row is identical
   childTileMask |= googleChildTileMask & 4 ? 8 : 0; // NE
   childTileMask |= googleChildTileMask & 8 ? 4 : 0; // NW
 
   this._childTileMask = childTileMask;
 
-  this._createdByUpsampling = defaultValue(options.createdByUpsampling, false);
+  this._createdByUpsampling = options.createdByUpsampling ?? false;
 
   this._skirtHeight = undefined;
   this._bufferType = this._buffer.constructor;
@@ -145,7 +145,7 @@ const rectangleScratch = new Rectangle();
  *          be retried later.
  */
 GoogleEarthEnterpriseTerrainData.prototype.createMesh = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.tilingScheme", options.tilingScheme);
@@ -158,12 +158,9 @@ GoogleEarthEnterpriseTerrainData.prototype.createMesh = function (options) {
   const x = options.x;
   const y = options.y;
   const level = options.level;
-  const exaggeration = defaultValue(options.exaggeration, 1.0);
-  const exaggerationRelativeHeight = defaultValue(
-    options.exaggerationRelativeHeight,
-    0.0,
-  );
-  const throttle = defaultValue(options.throttle, true);
+  const exaggeration = options.exaggeration ?? 1.0;
+  const exaggerationRelativeHeight = options.exaggerationRelativeHeight ?? 0.0;
+  const throttle = options.throttle ?? true;
 
   const ellipsoid = tilingScheme.ellipsoid;
   tilingScheme.tileXYToNativeRectangle(x, y, level, nativeRectangleScratch);

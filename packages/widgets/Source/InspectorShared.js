@@ -1,4 +1,4 @@
-import { Check, defaultValue, defined } from "@cesium/engine";
+import { Check, defined } from "@cesium/engine";
 
 /**
  * A static class with helper functions used by CesiumInspector, Cesium3DTilesInspector, and VoxelInspector
@@ -109,7 +109,7 @@ InspectorShared.createRangeInput = function (
   Check.typeOf.number("max", max);
   //>>includeEnd('debug');
 
-  inputValueBinding = defaultValue(inputValueBinding, sliderValueBinding);
+  inputValueBinding = inputValueBinding ?? sliderValueBinding;
   const input = document.createElement("input");
   input.setAttribute("data-bind", `value: ${inputValueBinding}`);
   input.type = "number";
@@ -118,7 +118,7 @@ InspectorShared.createRangeInput = function (
   slider.type = "range";
   slider.min = min;
   slider.max = max;
-  slider.step = defaultValue(step, "any");
+  slider.step = step ?? "any";
   slider.setAttribute(
     "data-bind",
     `valueUpdate: "input", value: ${sliderValueBinding}`,

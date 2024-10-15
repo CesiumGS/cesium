@@ -148,7 +148,7 @@ const lastTangentScratch = new Cartesian3();
  * @see MorphWeightSpline
  */
 function CatmullRomSpline(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
 
   const points = options.points;
   const times = options.times;

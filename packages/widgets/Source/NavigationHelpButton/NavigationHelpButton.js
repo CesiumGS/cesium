@@ -1,6 +1,5 @@
 import {
   buildModuleUrl,
-  defaultValue,
   defined,
   destroyObject,
   DeveloperError,
@@ -42,10 +41,7 @@ function NavigationHelpButton(options) {
 
   const viewModel = new NavigationHelpButtonViewModel();
 
-  const showInsructionsDefault = defaultValue(
-    options.instructionsInitiallyVisible,
-    false,
-  );
+  const showInsructionsDefault = options.instructionsInitiallyVisible ?? false;
   viewModel.showInstructions = showInsructionsDefault;
 
   viewModel._svgPath =

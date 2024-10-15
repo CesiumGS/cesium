@@ -1,5 +1,4 @@
 import ComponentDatatype from "../Core/ComponentDatatype.js";
-import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 
 /**
@@ -55,8 +54,8 @@ Cesium3DTileFeatureTable.prototype.getGlobalProperty = function (
   }
 
   if (defined(jsonValue.byteOffset)) {
-    componentType = defaultValue(componentType, ComponentDatatype.UNSIGNED_INT);
-    componentLength = defaultValue(componentLength, 1);
+    componentType = componentType ?? ComponentDatatype.UNSIGNED_INT;
+    componentLength = componentLength ?? 1;
     return getTypedArrayFromBinary(
       this,
       semantic,

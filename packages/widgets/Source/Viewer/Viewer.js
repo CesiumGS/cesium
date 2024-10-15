@@ -116,7 +116,7 @@ function getCesium3DTileFeatureName(feature) {
 function pickEntity(viewer, e) {
   const picked = viewer.scene.pick(e.position);
   if (defined(picked)) {
-    const id = defaultValue(picked.id, picked.primitive.id);
+    const id = picked.id ?? picked.primitive.id;
     if (id instanceof Entity) {
       return id;
     }
@@ -416,7 +416,7 @@ function Viewer(container, options) {
   //>>includeEnd('debug');
 
   container = getElement(container);
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
 
   const createBaseLayerPicker =
     (!defined(options.globe) || options.globe !== false) &&
@@ -463,7 +463,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
 
   viewerContainer.appendChild(bottomContainer);
 
-  const scene3DOnly = defaultValue(options.scene3DOnly, false);
+  const scene3DOnly = options.scene3DOnly ?? false;
 
   let clock;
   let clockViewModel;
@@ -653,14 +653,12 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
   let baseLayerPicker;
   let baseLayerPickerDropDown;
   if (createBaseLayerPicker) {
-    const imageryProviderViewModels = defaultValue(
-      options.imageryProviderViewModels,
-      createDefaultImageryProviderViewModels(),
-    );
-    const terrainProviderViewModels = defaultValue(
-      options.terrainProviderViewModels,
-      createDefaultTerrainProviderViewModels(),
-    );
+    const imageryProviderViewModels =
+      options.imageryProviderViewModels ??
+      createDefaultImageryProviderViewModels();
+    const terrainProviderViewModels =
+      options.terrainProviderViewModels ??
+      createDefaultTerrainProviderViewModels();
 
     baseLayerPicker = new BaseLayerPicker(toolbar, {
       globe: scene.globe,
@@ -737,10 +735,8 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
     }
     navigationHelpButton = new NavigationHelpButton({
       container: toolbar,
-      instructionsInitiallyVisible: defaultValue(
-        options.navigationInstructionsInitiallyVisible,
-        showNavHelp,
-      ),
+      instructionsInitiallyVisible:
+        options.navigationInstructionsInitiallyVisible ?? showNavHelp,
     });
   }
 
@@ -841,10 +837,8 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
   this._vrSubscription = vrSubscription;
   this._vrModeSubscription = vrModeSubscription;
   this._dataSourceChangedListeners = {};
-  this._automaticallyTrackDataSourceClocks = defaultValue(
-    options.automaticallyTrackDataSourceClocks,
-    true,
-  );
+  this._automaticallyTrackDataSourceClocks =
+    options.automaticallyTrackDataSourceClocks ?? true;
   this._container = container;
   this._bottomContainer = bottomContainer;
   this._element = viewerContainer;
@@ -1948,10 +1942,7 @@ Viewer.prototype._onTick = function (clock) {
       this.trackedEntity === this.selectedEntity;
 
     if (showSelection) {
-      infoBoxViewModel.titleText = defaultValue(
-        selectedEntity.name,
-        selectedEntity.id,
-      );
+      infoBoxViewModel.titleText = selectedEntity.name ?? selectedEntity.id;
       infoBoxViewModel.description = Property.getValueOrDefault(
         selectedEntity.description,
         time,
@@ -2213,7 +2204,7 @@ function zoomToOrFly(that, zoomTarget, options, isFlight) {
     }
 
     //If zoomTarget is an EntityCollection, this will retrieve the array
-    zoomTarget = defaultValue(zoomTarget.values, zoomTarget);
+    zoomTarget = zoomTarget.values ?? zoomTarget;
 
     //If zoomTarget is a DataSource, this will retrieve the array.
     if (defined(zoomTarget.entities)) {
@@ -2263,7 +2254,7 @@ function updateZoomTarget(viewer) {
 
   const scene = viewer.scene;
   const camera = scene.camera;
-  const zoomOptions = defaultValue(viewer._zoomOptions, {});
+  const zoomOptions = viewer._zoomOptions ?? {};
   let options;
   function zoomToBoundingSphere(boundingSphere) {
     // If offset was originally undefined then give it base value instead of empty object
