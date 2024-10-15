@@ -100,6 +100,9 @@
 
         const scene = viewer.scene;
 
+        // Prevent the user from tilting beyond the ellipsoid surface
+        scene.screenSpaceCameraController.maximumTiltAngle = Math.PI / 2.0;
+
         const globe = scene.globe;
         globe.enableLighting = true;
         globe.maximumScreenSpaceError = 1.0; // Load higher resolution tiles for better seafloor shading

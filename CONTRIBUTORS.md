@@ -186,6 +186,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
   - [Tang Xiaofei](https://github.com/vtxf)
 - [Maxar](https://www.maxar.com)
   - [Erik Dahlström](https://github.com/erikdahlstrom)
+  - [Albin Ekberg](https://github.com/albek446)
 - [Novatron Oy](https://novatron.fi/en/)
   - [Jussi Hirvonen](https://github.com/VsKatshuma)
 - [Sierra Nevada Corp](https://www.sncorp.com/)

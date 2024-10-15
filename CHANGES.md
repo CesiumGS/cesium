@@ -1,5 +1,13 @@
 # Change Log
 
+### 1.123 - 2024-11-01
+
+#### @cesium/engine
+
+##### Additions :tada:
+
+- Added `ScreenSpaceCameraController.maximumTiltAngle` to limit how much the camera can tilt. [#12169](https://github.com/CesiumGS/cesium/pull/12169)
+
 ### 1.122 - 2024-10-01
 
 #### @cesium/engine
