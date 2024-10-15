@@ -263,6 +263,11 @@ Model3DTileContent.prototype.update = function (tileset, frameState) {
         : undefined;
   }
 
+  const tilesetEnvironmentMapManager = tileset.environmentMapManager;
+  if (model.environmentMapManager !== tilesetClippingPlanes) {
+    model._environmentMapManager = tilesetEnvironmentMapManager;
+  }
+
   // If the model references a different ClippingPlaneCollection from the tileset,
   // update the model to use the new ClippingPlaneCollection.
   if (

@@ -1,8 +1,10 @@
 import {
+  Cartesian3,
   Color,
   defaultValue,
   defined,
   JulianDate,
+  ImageBasedLighting,
   Resource,
   Cesium3DTileContentFactory,
   Cesium3DTileset,
@@ -102,12 +104,35 @@ Cesium3DTilesTester.waitForTilesLoaded = function (scene, tileset) {
   });
 };
 
+// A white ambient light with low intensity
+const defaultIbl = new ImageBasedLighting({
+  sphericalHarmonicCoefficients: [
+    new Cartesian3(0.4, 0.4, 0.4),
+    Cartesian3.ZERO,
+    Cartesian3.ZERO,
+    Cartesian3.ZERO,
+    Cartesian3.ZERO,
+    Cartesian3.ZERO,
+    Cartesian3.ZERO,
+    Cartesian3.ZERO,
+    Cartesian3.ZERO,
+  ],
+});
+
 Cesium3DTilesTester.loadTileset = async function (scene, url, options) {
   options = defaultValue(options, {});
   options.cullRequestsWhileMoving = defaultValue(
     options.cullRequestsWhileMoving,
     false,
   );
+  options.imageBasedLighting = defaultValue(
+    options.imageBasedLighting,
+    defaultIbl,
+  );
+  options.environmentMapOptions = {
+    enabled: false, // disable other diffuse lighting by default
+    ...options.environmentMapOptions,
+  };
 
   const tileset = await Cesium3DTileset.fromUrl(url, options);
 
