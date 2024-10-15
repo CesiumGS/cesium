@@ -83,6 +83,7 @@ void main(void)
         sampleDirection = rotateStep * sampleDirection;
 
         float localAO = 0.0;
+        float accumulatedWindowWeights = 0.0;
         vec2 radialStep = stepSize * sampleDirection;
 
         for (int j = 0; j < RADIAL_STEPS; j++)
@@ -96,9 +97,15 @@ void main(void)
                 break;
             }
 
+            // Compute distance along geometry, for weighting AO contribution
             vec3 stepPositionEC = pixelToEye(newCoords);
             vec3 stepVector = stepPositionEC - positionEC;
             float stepLength = length(stepVector);
+
+            // Compute lateral distance from output point, for weight normalization
+            vec3 inPlaneStepEC = vec3(stepPositionEC.x, stepPositionEC.y, positionEC.z);
+            vec3 windowVector = inPlaneStepEC - positionEC;
+            float windowLength = length(windowVector);
 
             float dotVal = clamp(dot(normalEC, normalize(stepVector)), 0.0, 1.0);
             if (dotVal < bias)
@@ -108,11 +115,13 @@ void main(void)
 
             float weight = gaussian(stepLength, samplingRadius);
             localAO += weight * dotVal;
+            // TODO: This is slow! Better to analytically compute window scales
+            accumulatedWindowWeights += gaussian(windowLength, samplingRadius);
         }
-        ao += localAO;
+        ao += 24.0 * localAO / accumulatedWindowWeights;
     }
 
-    ao *= angleStepScale * radialStepScale * sqrt(-positionEC.z);
+    ao *= angleStepScale * radialStepScale;
     ao = 1.0 - clamp(ao, 0.0, 1.0);
     ao = pow(ao, intensity);
     out_FragColor = vec4(vec3(ao), 1.0);
