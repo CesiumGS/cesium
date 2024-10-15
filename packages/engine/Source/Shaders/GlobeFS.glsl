@@ -499,8 +499,7 @@ void main()
                 fogColor.rgb = czm_inverseGamma(fogColor.rgb);
             #endif
 
-            const float modifier = 0.15;
-            finalColor = vec4(czm_fog(v_distance, finalColor.rgb, fogColor.rgb, modifier), finalColor.a);
+            finalColor = vec4(czm_fog(v_distance, finalColor.rgb, fogColor.rgb, czm_fogVisualDensityScalar), finalColor.a);
 
         #else
             // Apply ground atmosphere. This happens when the camera is far away from the earth.
