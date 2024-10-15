@@ -110,6 +110,28 @@ describe("DataSources/SampledProperty", function () {
     expect(property.getValue(new JulianDate(0.5, 0))).toEqual(7.5);
   });
 
+  it("getSample works", function () {
+    const times = [
+      new JulianDate(0, 0),
+      new JulianDate(1, 0),
+      new JulianDate(2, 0),
+    ];
+    const values = [7, 8, 9];
+
+    const property = new SampledProperty(Number);
+    property.addSamples(times, values);
+
+    expect(property.getSample(0)).toEqual(times[0]);
+    expect(property.getSample(1)).toEqual(times[1]);
+    expect(property.getSample(2)).toEqual(times[2]);
+    expect(property.getSample(3)).toBe(undefined);
+
+    expect(property.getSample(-1)).toBe(times[2]);
+    expect(property.getSample(-2)).toBe(times[1]);
+    expect(property.getSample(-3)).toBe(times[0]);
+    expect(property.getSample(-4)).toBe(undefined);
+  });
+
   it("can remove a sample at a date", function () {
     const times = [
       new JulianDate(0, 0),
