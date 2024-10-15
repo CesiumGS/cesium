@@ -40,6 +40,7 @@ import ConvolveSpecularMapVS from "../Shaders/ConvolveSpecularMapVS.js";
  * @property {number} [brightness=1.0] The brightness of light emitted from the environment. 1.0 uses the unmodified emitted environment color. Less than 1.0 makes the light darker while greater than 1.0 makes it brighter.
  * @property {number} [saturation=1.0] The saturation of the light emitted from the environment. 1.0 uses the unmodified emitted environment color. Less than 1.0 reduces the saturation while greater than 1.0 increases it.
  * @property {Color} [groundColor=DynamicEnvironmentMapManager.AVERAGE_EARTH_GROUND_COLOR] Solid color used to represent the ground.
+ * @property {number} [groundAlbedo=0.31] The percentage of light reflected from the ground. The average earth albedo is 0.31.
  */
 
 /**
@@ -186,6 +187,13 @@ function DynamicEnvironmentMapManager(options) {
     options.groundColor,
     DynamicEnvironmentMapManager.AVERAGE_EARTH_GROUND_COLOR,
   );
+
+  /**
+   * The percentage of light reflected from the ground. The average earth albedo is 0.31.
+   * @type {number}
+   * @default 0.31
+   */
+  this.groundAlbedo = defaultValue(options.groundAlbedo, 0.31);
 }
 
 Object.defineProperties(DynamicEnvironmentMapManager.prototype, {
@@ -480,7 +488,8 @@ function updateRadianceMap(manager, frameState) {
           u_faceDirection: () => CubeMap.getDirection(face, scratchCartesian),
           u_positionWC: () => position,
           u_brightnessSaturationGammaIntensity: () => adjustments,
-          u_groundColor: () => manager.groundColor,
+          u_groundColor: () =>
+            manager.groundColor.withAlpha(manager.groundAlbedo),
         },
         persists: true,
         owner: manager,
@@ -827,11 +836,11 @@ DynamicEnvironmentMapManager.prototype.destroy = function () {
 };
 
 /**
- * Average hue of ground color on earth, a warm gray.
+ * Average hue of ground color on earth, a warm green-gray.
  * @type {Color}
  */
 DynamicEnvironmentMapManager.AVERAGE_EARTH_GROUND_COLOR = Object.freeze(
-  Color.fromCssColorString("#423c35"),
+  Color.fromCssColorString("#717145"),
 );
 
 export default DynamicEnvironmentMapManager;

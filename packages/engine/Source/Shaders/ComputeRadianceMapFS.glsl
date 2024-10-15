@@ -6,7 +6,7 @@ uniform vec3 u_faceDirection; // Current cubemap face
 uniform vec3 u_positionWC;
 uniform mat4 u_enuToFixedFrame;
 uniform vec4 u_brightnessSaturationGammaIntensity;
-uniform vec4 u_groundColor;
+uniform vec4 u_groundColor; // alpha component represent albedo
 
 vec4 getCubeMapDirection(vec2 uv, vec3 faceDir) {
     vec2 scaledUV = uv * 2.0 - 1.0;
@@ -69,18 +69,21 @@ void main() {
     vec4 sceneSkyBoxColor = czm_textureCube(czm_environmentMap, lookupDirection);
     vec3 skyBackgroundColor = mix(czm_backgroundColor.rgb, sceneSkyBoxColor.rgb, sceneSkyBoxColor.a);
 
-    // Interpolate the ground color based on distance and sun exposure
-    vec3 up = normalize(u_positionWC);
-    float occlusion = max(dot(lightDirectionWC, up), 0.15); // Ensure a low-level of ambiant light reflected from the ground.
-    vec3 groundColor = mix(vec3(0.0), u_groundColor.rgb, occlusion * u_groundColor.a * (1.0 - d / radius));
-
-    // Only show the stars when not obscured by the ellipsoid
-    vec3 backgroundColor = czm_branchFreeTernary(czm_isEmpty(intersection), skyBackgroundColor, groundColor);
-
-    // Apply intensity to sky only
+    // Apply intensity to sky light
     float intensity = u_brightnessSaturationGammaIntensity.w;
     vec4 adjustedSkyColor = skyColor;
     adjustedSkyColor.rgb = skyColor.rgb * intensity;
+
+    // Compute ground color based on amount of reflected light
+    vec3 groundColor = u_groundColor.rgb * u_groundColor.a * adjustedSkyColor.rgb;
+
+    // Interpolate the ground color based on angle of sun exposure and distance from the ground
+    vec3 up = normalize(u_positionWC);
+    float occlusion = max(dot(lightDirectionWC, up), 0.15);
+    groundColor = mix(vec3(0.0), u_groundColor.rgb, occlusion * (1.0 - d / radius));
+
+    // Only show the stars when not obscured by the ellipsoid
+    vec3 backgroundColor = czm_branchFreeTernary(czm_isEmpty(intersection), skyBackgroundColor, groundColor);
 
     vec4 color = vec4(mix(backgroundColor, adjustedSkyColor.rgb, adjustedSkyColor.a), 1.0);
 
