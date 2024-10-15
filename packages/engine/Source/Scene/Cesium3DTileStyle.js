@@ -86,7 +86,7 @@ function Cesium3DTileStyle(style) {
 }
 
 function setup(that, styleJson) {
-  styleJson = defaultValue(clone(styleJson, true), that._style);
+  styleJson = clone(styleJson, true) ?? that._style;
   that._style = styleJson;
 
   that.show = styleJson.show;
@@ -133,10 +133,7 @@ function setup(that, styleJson) {
 }
 
 function getExpression(tileStyle, value) {
-  const defines = defaultValue(
-    tileStyle._style,
-    defaultValue.EMPTY_OBJECT,
-  ).defines;
+  const defines = (tileStyle._style ?? defaultValue.EMPTY_OBJECT).defines;
 
   if (!defined(value)) {
     return undefined;

@@ -88,7 +88,7 @@ function EllipseGraphics(options) {
   this._zIndex = undefined;
   this._zIndexSubscription = undefined;
 
-  this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
+  this.merge(options ?? defaultValue.EMPTY_OBJECT);
 }
 
 Object.defineProperties(EllipseGraphics.prototype, {

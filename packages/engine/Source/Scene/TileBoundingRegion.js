@@ -3,7 +3,6 @@ import Cartesian3 from "../Core/Cartesian3.js";
 import Cartographic from "../Core/Cartographic.js";
 import Check from "../Core/Check.js";
 import ColorGeometryInstanceAttribute from "../Core/ColorGeometryInstanceAttribute.js";
-import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
 import GeometryInstance from "../Core/GeometryInstance.js";
@@ -105,7 +104,7 @@ function TileBoundingRegion(options) {
   this._orientedBoundingBox = undefined;
   this._boundingSphere = undefined;
 
-  if (defaultValue(options.computeBoundingVolumes, true)) {
+  if (options.computeBoundingVolumes ?? true) {
     this.computeBoundingVolumes(ellipsoid);
   }
 }

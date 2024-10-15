@@ -462,7 +462,7 @@ function createLayeredEntries(layers) {
  * });
  */
 function createElevationBandMaterial(options) {
-  const { scene, layers } = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  const { scene, layers } = options ?? defaultValue.EMPTY_OBJECT;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.scene", scene);

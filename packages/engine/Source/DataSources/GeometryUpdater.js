@@ -1,6 +1,5 @@
 import Check from "../Core/Check.js";
 import Color from "../Core/Color.js";
-import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
@@ -296,7 +295,7 @@ GeometryUpdater.prototype.isOutlineVisible = function (time) {
     entity.isAvailable(time) &&
     this._showProperty.getValue(time) &&
     this._showOutlineProperty.getValue(time);
-  return defaultValue(visible, false);
+  return visible ?? false;
 };
 
 /**
@@ -312,7 +311,7 @@ GeometryUpdater.prototype.isFilled = function (time) {
     entity.isAvailable(time) &&
     this._showProperty.getValue(time) &&
     this._fillProperty.getValue(time);
-  return defaultValue(visible, false);
+  return visible ?? false;
 };
 
 /**
@@ -464,7 +463,7 @@ GeometryUpdater.prototype._onEntityPropertyChanged = function (
   this._showProperty = show ?? defaultShow;
   this._showOutlineProperty = geometry.outline ?? defaultOutline;
   this._outlineColorProperty = outlineEnabled
-    ? defaultValue(geometry.outlineColor, defaultOutlineColor)
+    ? (geometry.outlineColor ?? defaultOutlineColor)
     : undefined;
   this._shadowsProperty = geometry.shadows ?? defaultShadows;
   this._distanceDisplayConditionProperty =

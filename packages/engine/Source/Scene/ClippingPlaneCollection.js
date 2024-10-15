@@ -84,9 +84,7 @@ function ClippingPlaneCollection(options) {
    * @type {Matrix4}
    * @default Matrix4.IDENTITY
    */
-  this.modelMatrix = Matrix4.clone(
-    defaultValue(options.modelMatrix, Matrix4.IDENTITY),
-  );
+  this.modelMatrix = Matrix4.clone(options.modelMatrix ?? Matrix4.IDENTITY);
 
   /**
    * The color applied to highlight the edge along which an object is clipped.
@@ -94,7 +92,7 @@ function ClippingPlaneCollection(options) {
    * @type {Color}
    * @default Color.WHITE
    */
-  this.edgeColor = Color.clone(defaultValue(options.edgeColor, Color.WHITE));
+  this.edgeColor = Color.clone(options.edgeColor ?? Color.WHITE);
 
   /**
    * The width, in pixels, of the highlight applied to the edge along which an object is clipped.

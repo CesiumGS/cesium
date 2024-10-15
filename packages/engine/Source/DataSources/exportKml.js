@@ -145,7 +145,7 @@ ValueGetter.prototype.get = function (property, defaultVal, result) {
       : property;
   }
 
-  return defaultValue(value, defaultVal);
+  return value ?? defaultVal;
 };
 
 ValueGetter.prototype.getColor = function (property, defaultVal) {
@@ -402,7 +402,7 @@ exportKml._createState = function (options) {
   const kmlDoc = document.implementation.createDocument(kmlNamespace, "kml");
   return {
     kmlDoc: kmlDoc,
-    ellipsoid: defaultValue(options.ellipsoid, Ellipsoid.default),
+    ellipsoid: options.ellipsoid ?? Ellipsoid.default,
     idManager: new IdManager(),
     styleCache: styleCache,
     externalFileHandler: externalFileHandler,

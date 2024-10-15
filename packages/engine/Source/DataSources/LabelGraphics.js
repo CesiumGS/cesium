@@ -93,7 +93,7 @@ function LabelGraphics(options) {
   this._disableDepthTestDistance = undefined;
   this._disableDepthTestDistanceSubscription = undefined;
 
-  this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
+  this.merge(options ?? defaultValue.EMPTY_OBJECT);
 }
 
 Object.defineProperties(LabelGraphics.prototype, {

@@ -172,10 +172,7 @@ function ImageryLayer(imageryProvider, options) {
    * @type {number}
    * @default 1.0
    */
-  this.alpha = defaultValue(
-    options.alpha,
-    defaultValue(imageryProvider._defaultAlpha, 1.0),
-  );
+  this.alpha = options.alpha ?? imageryProvider._defaultAlpha ?? 1.0;
 
   /**
    * The alpha blending value of this layer on the night side of the globe, with 0.0 representing fully transparent and
@@ -184,10 +181,8 @@ function ImageryLayer(imageryProvider, options) {
    * @type {number}
    * @default 1.0
    */
-  this.nightAlpha = defaultValue(
-    options.nightAlpha,
-    defaultValue(imageryProvider._defaultNightAlpha, 1.0),
-  );
+  this.nightAlpha =
+    options.nightAlpha ?? imageryProvider._defaultNightAlpha ?? 1.0;
 
   /**
    * The alpha blending value of this layer on the day side of the globe, with 0.0 representing fully transparent and
@@ -196,10 +191,7 @@ function ImageryLayer(imageryProvider, options) {
    * @type {number}
    * @default 1.0
    */
-  this.dayAlpha = defaultValue(
-    options.dayAlpha,
-    defaultValue(imageryProvider._defaultDayAlpha, 1.0),
-  );
+  this.dayAlpha = options.dayAlpha ?? imageryProvider._defaultDayAlpha ?? 1.0;
 
   /**
    * The brightness of this layer.  1.0 uses the unmodified imagery color.  Less than 1.0
@@ -208,13 +200,10 @@ function ImageryLayer(imageryProvider, options) {
    * @type {number}
    * @default {@link ImageryLayer.DEFAULT_BRIGHTNESS}
    */
-  this.brightness = defaultValue(
-    options.brightness,
-    defaultValue(
-      imageryProvider._defaultBrightness,
-      ImageryLayer.DEFAULT_BRIGHTNESS,
-    ),
-  );
+  this.brightness =
+    options.brightness ??
+    imageryProvider._defaultBrightness ??
+    ImageryLayer.DEFAULT_BRIGHTNESS;
 
   /**
    * The contrast of this layer.  1.0 uses the unmodified imagery color.  Less than 1.0 reduces
@@ -223,13 +212,10 @@ function ImageryLayer(imageryProvider, options) {
    * @type {number}
    * @default {@link ImageryLayer.DEFAULT_CONTRAST}
    */
-  this.contrast = defaultValue(
-    options.contrast,
-    defaultValue(
-      imageryProvider._defaultContrast,
-      ImageryLayer.DEFAULT_CONTRAST,
-    ),
-  );
+  this.contrast =
+    options.contrast ??
+    imageryProvider._defaultContrast ??
+    ImageryLayer.DEFAULT_CONTRAST;
 
   /**
    * The hue of this layer in radians. 0.0 uses the unmodified imagery color.
@@ -237,10 +223,8 @@ function ImageryLayer(imageryProvider, options) {
    * @type {number}
    * @default {@link ImageryLayer.DEFAULT_HUE}
    */
-  this.hue = defaultValue(
-    options.hue,
-    defaultValue(imageryProvider._defaultHue, ImageryLayer.DEFAULT_HUE),
-  );
+  this.hue =
+    options.hue ?? imageryProvider._defaultHue ?? ImageryLayer.DEFAULT_HUE;
 
   /**
    * The saturation of this layer. 1.0 uses the unmodified imagery color. Less than 1.0 reduces the
@@ -249,13 +233,10 @@ function ImageryLayer(imageryProvider, options) {
    * @type {number}
    * @default {@link ImageryLayer.DEFAULT_SATURATION}
    */
-  this.saturation = defaultValue(
-    options.saturation,
-    defaultValue(
-      imageryProvider._defaultSaturation,
-      ImageryLayer.DEFAULT_SATURATION,
-    ),
-  );
+  this.saturation =
+    options.saturation ??
+    imageryProvider._defaultSaturation ??
+    ImageryLayer.DEFAULT_SATURATION;
 
   /**
    * The gamma correction to apply to this layer.  1.0 uses the unmodified imagery color.
@@ -263,10 +244,10 @@ function ImageryLayer(imageryProvider, options) {
    * @type {number}
    * @default {@link ImageryLayer.DEFAULT_GAMMA}
    */
-  this.gamma = defaultValue(
-    options.gamma,
-    defaultValue(imageryProvider._defaultGamma, ImageryLayer.DEFAULT_GAMMA),
-  );
+  this.gamma =
+    options.gamma ??
+    imageryProvider._defaultGamma ??
+    ImageryLayer.DEFAULT_GAMMA;
 
   /**
    * The {@link SplitDirection} to apply to this layer.
@@ -287,13 +268,10 @@ function ImageryLayer(imageryProvider, options) {
    * @type {TextureMinificationFilter}
    * @default {@link ImageryLayer.DEFAULT_MINIFICATION_FILTER}
    */
-  this.minificationFilter = defaultValue(
-    options.minificationFilter,
-    defaultValue(
-      imageryProvider._defaultMinificationFilter,
-      ImageryLayer.DEFAULT_MINIFICATION_FILTER,
-    ),
-  );
+  this.minificationFilter =
+    options.minificationFilter ??
+    imageryProvider._defaultMinificationFilter ??
+    ImageryLayer.DEFAULT_MINIFICATION_FILTER;
 
   /**
    * The {@link TextureMagnificationFilter} to apply to this layer.
@@ -306,13 +284,10 @@ function ImageryLayer(imageryProvider, options) {
    * @type {TextureMagnificationFilter}
    * @default {@link ImageryLayer.DEFAULT_MAGNIFICATION_FILTER}
    */
-  this.magnificationFilter = defaultValue(
-    options.magnificationFilter,
-    defaultValue(
-      imageryProvider._defaultMagnificationFilter,
-      ImageryLayer.DEFAULT_MAGNIFICATION_FILTER,
-    ),
-  );
+  this.magnificationFilter =
+    options.magnificationFilter ??
+    imageryProvider._defaultMagnificationFilter ??
+    ImageryLayer.DEFAULT_MAGNIFICATION_FILTER;
 
   /**
    * Determines if this layer is shown.
@@ -1312,7 +1287,7 @@ ImageryLayer.prototype._finalizeReprojectTexture = function (context, texture) {
       ContextLimits.maximumTextureFilterAnisotropy;
     const maximumAnisotropy = Math.min(
       maximumSupportedAnisotropy,
-      defaultValue(this._maximumAnisotropy, maximumSupportedAnisotropy),
+      this._maximumAnisotropy ?? maximumSupportedAnisotropy,
     );
     const mipmapSamplerKey = getSamplerKey(
       minificationFilter,

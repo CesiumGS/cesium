@@ -60,12 +60,12 @@ function OpenStreetMapImageryProvider(options) {
   options = options ?? defaultValue.EMPTY_OBJECT;
 
   const resource = Resource.createIfNeeded(
-    defaultValue(options.url, "https://tile.openstreetmap.org/"),
+    options.url ?? "https://tile.openstreetmap.org/",
   );
   resource.appendForwardSlash();
   resource.url += `{z}/{x}/{y}${
     options.retinaTiles ? "@2x" : ""
-  }.${defaultValue(options.fileExtension, "png")}`;
+  }.${options.fileExtension ?? "png"}`;
 
   const tilingScheme = new WebMercatorTilingScheme({
     ellipsoid: options.ellipsoid,

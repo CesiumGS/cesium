@@ -114,7 +114,7 @@ function ModelGraphics(options) {
   this._customShader = undefined;
   this._customShaderSubscription = undefined;
 
-  this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
+  this.merge(options ?? defaultValue.EMPTY_OBJECT);
 }
 
 Object.defineProperties(ModelGraphics.prototype, {

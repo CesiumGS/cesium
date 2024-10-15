@@ -246,10 +246,7 @@ function processDescription(node, entity) {
   for (i = 0; i < length; i++) {
     const infoTypeName = infoTypeNames[i];
     const infoType = descriptiveInfoTypes[infoTypeName];
-    infoType.value = defaultValue(
-      queryStringValue(node, infoType.tag, namespaces.gpx),
-      "",
-    );
+    infoType.value = queryStringValue(node, infoType.tag, namespaces.gpx) ?? "";
     if (defined(infoType.value) && infoType.value !== "") {
       text = `${text}<p>${infoType.text}: ${infoType.value}</p>`;
     }

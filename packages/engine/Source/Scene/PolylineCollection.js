@@ -134,9 +134,7 @@ function PolylineCollection(options) {
    * @type {Matrix4}
    * @default {@link Matrix4.IDENTITY}
    */
-  this.modelMatrix = Matrix4.clone(
-    defaultValue(options.modelMatrix, Matrix4.IDENTITY),
-  );
+  this.modelMatrix = Matrix4.clone(options.modelMatrix ?? Matrix4.IDENTITY);
   this._modelMatrix = Matrix4.clone(Matrix4.IDENTITY);
 
   /**

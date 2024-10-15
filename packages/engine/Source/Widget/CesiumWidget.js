@@ -277,7 +277,7 @@ function CesiumWidget(container, options) {
       ellipsoid: ellipsoid,
       mapProjection: options.mapProjection,
       orderIndependentTranslucency: options.orderIndependentTranslucency,
-      scene3DOnly: defaultValue(options.scene3DOnly, false),
+      scene3DOnly: options.scene3DOnly ?? false,
       shadows: options.shadows,
       mapMode2D: options.mapMode2D,
       requestRenderMode: options.requestRenderMode,

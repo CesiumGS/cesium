@@ -48,7 +48,7 @@ function Context(canvas, options) {
     requestWebgl1,
     webgl: webglOptions = {},
     allowTextureFilterAnisotropic = true,
-  } = defaultValue(options, {});
+  } = options ?? {};
 
   // Override select WebGL defaults
   webglOptions.alpha = webglOptions.alpha ?? false; // WebGL default is true
@@ -1450,8 +1450,8 @@ Context.prototype.readPixels = function (readState) {
   const gl = this._gl;
 
   readState = readState ?? defaultValue.EMPTY_OBJECT;
-  const x = Math.max(defaultValue(readState.x, 0), 0);
-  const y = Math.max(defaultValue(readState.y, 0), 0);
+  const x = Math.max(readState.x ?? 0, 0);
+  const y = Math.max(readState.y ?? 0, 0);
   const width = readState.width ?? gl.drawingBufferWidth;
   const height = readState.height ?? gl.drawingBufferHeight;
   const framebuffer = readState.framebuffer;

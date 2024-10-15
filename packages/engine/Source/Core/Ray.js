@@ -1,6 +1,5 @@
 import Cartesian3 from "./Cartesian3.js";
 import Check from "./Check.js";
-import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 
 /**
@@ -22,7 +21,7 @@ function Ray(origin, direction) {
    * @type {Cartesian3}
    * @default {@link Cartesian3.ZERO}
    */
-  this.origin = Cartesian3.clone(defaultValue(origin, Cartesian3.ZERO));
+  this.origin = Cartesian3.clone(origin ?? Cartesian3.ZERO);
 
   /**
    * The direction of the ray.

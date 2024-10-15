@@ -55,7 +55,7 @@ function PlaneGraphics(options) {
   this._distanceDisplayCondition = undefined;
   this._distanceDisplayConditionSubscription = undefined;
 
-  this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
+  this.merge(options ?? defaultValue.EMPTY_OBJECT);
 }
 
 Object.defineProperties(PlaneGraphics.prototype, {

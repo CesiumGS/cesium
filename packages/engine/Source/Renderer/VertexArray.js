@@ -88,19 +88,16 @@ function addAttribute(attributes, attribute, index, context) {
 
   // Shallow copy the attribute; we do not want to copy the vertex buffer.
   const attr = {
-    index: defaultValue(attribute.index, index),
-    enabled: defaultValue(attribute.enabled, true),
+    index: attribute.index ?? index,
+    enabled: attribute.enabled ?? true,
     vertexBuffer: attribute.vertexBuffer,
     value: hasValue ? attribute.value.slice(0) : undefined,
     componentsPerAttribute: componentsPerAttribute,
-    componentDatatype: defaultValue(
-      attribute.componentDatatype,
-      ComponentDatatype.FLOAT,
-    ),
-    normalize: defaultValue(attribute.normalize, false),
-    offsetInBytes: defaultValue(attribute.offsetInBytes, 0),
-    strideInBytes: defaultValue(attribute.strideInBytes, 0),
-    instanceDivisor: defaultValue(attribute.instanceDivisor, 0),
+    componentDatatype: attribute.componentDatatype ?? ComponentDatatype.FLOAT,
+    normalize: attribute.normalize ?? false,
+    offsetInBytes: attribute.offsetInBytes ?? 0,
+    strideInBytes: attribute.strideInBytes ?? 0,
+    instanceDivisor: attribute.instanceDivisor ?? 0,
   };
 
   if (hasVertexBuffer) {

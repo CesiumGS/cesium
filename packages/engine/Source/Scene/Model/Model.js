@@ -212,9 +212,7 @@ function Model(options) {
    * const origin = Cesium.Cartesian3.fromDegrees(-95.0, 40.0, 200000.0);
    * m.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(origin);
    */
-  this.modelMatrix = Matrix4.clone(
-    defaultValue(options.modelMatrix, Matrix4.IDENTITY),
-  );
+  this.modelMatrix = Matrix4.clone(options.modelMatrix ?? Matrix4.IDENTITY);
   this._modelMatrix = Matrix4.clone(this.modelMatrix);
   this._scale = options.scale ?? 1.0;
 
@@ -646,7 +644,7 @@ Object.defineProperties(Model.prototype, {
    */
   incrementallyLoadTextures: {
     get: function () {
-      return defaultValue(this._loader.incrementallyLoadTextures, false);
+      return this._loader.incrementallyLoadTextures ?? false;
     },
   },
 

@@ -152,10 +152,10 @@
           });
 
         async function createModel(url, height, heading, pitch, roll) {
-          height = Cesium.defaultValue(height, 0.0);
-          heading = Cesium.defaultValue(heading, 0.0);
-          pitch = Cesium.defaultValue(pitch, 0.0);
-          roll = Cesium.defaultValue(roll, 0.0);
+          height = height ?? 0.0;
+          heading = heading ?? 0.0;
+          pitch = pitch ?? 0.0;
+          roll = roll ?? 0.0;
           const hpr = new Cesium.HeadingPitchRoll(heading, pitch, roll);
 
           const origin = Cesium.Cartesian3.fromDegrees(-123.0744619, 44.0503706, height);

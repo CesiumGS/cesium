@@ -426,7 +426,7 @@ ModelAnimationCollection.prototype.update = function (frameState) {
 
     if (!defined(runtimeAnimation._computedStartTime)) {
       runtimeAnimation._computedStartTime = JulianDate.addSeconds(
-        defaultValue(runtimeAnimation.startTime, sceneTime),
+        runtimeAnimation.startTime ?? sceneTime,
         runtimeAnimation.delay,
         new JulianDate(),
       );

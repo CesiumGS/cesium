@@ -104,7 +104,7 @@ function PolygonGraphics(options) {
   this._textureCoordinates = undefined;
   this._textureCoordinatesSubscription = undefined;
 
-  this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
+  this.merge(options ?? defaultValue.EMPTY_OBJECT);
 }
 
 Object.defineProperties(PolygonGraphics.prototype, {

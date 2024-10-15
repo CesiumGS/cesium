@@ -568,7 +568,7 @@ function Scene(options) {
   this.shadowMap = new ShadowMap({
     context: context,
     lightCamera: this._shadowMapCamera,
-    enabled: defaultValue(options.shadows, false),
+    enabled: options.shadows ?? false,
   });
 
   /**
@@ -3101,7 +3101,7 @@ function executeWebVRCommands(scene, passState) {
   savedCamera.frustum = camera.frustum;
 
   const near = camera.frustum.near;
-  const fo = near * defaultValue(scene.focalLength, 5.0);
+  const fo = near * (scene.focalLength ?? 5.0);
   const eyeSeparation = scene.eyeSeparation ?? fo / 30.0;
   const eyeTranslation = Cartesian3.multiplyByScalar(
     savedCamera.right,
@@ -3765,9 +3765,8 @@ Scene.prototype.resolveFramebuffers = function (passState) {
     const postProcess = this.postProcessStages;
     const colorTexture = inputFramebuffer.getColorTexture(0);
     const idTexture = idFramebuffer.getColorTexture(0);
-    const depthTexture = defaultValue(
-      globeFramebuffer,
-      sceneFramebuffer,
+    const depthTexture = (
+      globeFramebuffer ?? sceneFramebuffer
     ).getDepthStencilTexture();
     postProcess.execute(context, colorTexture, depthTexture, idTexture);
     postProcess.copy(context, originalFramebuffer);

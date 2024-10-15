@@ -2,7 +2,6 @@ import Cartesian2 from "../Core/Cartesian2.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Cartesian4 from "../Core/Cartesian4.js";
 import Cartographic from "../Core/Cartographic.js";
-import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
@@ -631,10 +630,9 @@ function handleZoom(
     return;
   }
 
-  const sameStartPosition = defaultValue(
-    movement.inertiaEnabled,
-    Cartesian2.equals(startPosition, object._zoomMouseStart),
-  );
+  const sameStartPosition =
+    movement.inertiaEnabled ??
+    Cartesian2.equals(startPosition, object._zoomMouseStart);
   let zoomingOnVector = object._zoomingOnVector;
   let rotatingZoom = object._rotatingZoom;
   let pickedPosition;

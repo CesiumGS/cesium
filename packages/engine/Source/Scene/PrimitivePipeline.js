@@ -1,6 +1,5 @@
 import BoundingSphere from "../Core/BoundingSphere.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
-import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
@@ -472,7 +471,7 @@ PrimitivePipeline.packCreateGeometryResults = function (
 
     packedData[count++] = geometry.primitiveType;
     packedData[count++] = geometry.geometryType;
-    packedData[count++] = defaultValue(geometry.offsetAttribute, -1);
+    packedData[count++] = geometry.offsetAttribute ?? -1;
 
     const validBoundingSphere = defined(geometry.boundingSphere) ? 1.0 : 0.0;
     packedData[count++] = validBoundingSphere;

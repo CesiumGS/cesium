@@ -49,7 +49,7 @@ function updateVersion(gltf, options) {
   };
 
   gltf.asset.version = gltf.asset.version ?? "1.0";
-  version = defaultValue(version, gltf.asset.version).toString();
+  version = (version ?? gltf.asset.version).toString();
 
   // Invalid version
   if (!Object.prototype.hasOwnProperty.call(updateFunctions, version)) {
@@ -760,7 +760,7 @@ function requireByteLength(gltf) {
       const accessorByteEnd =
         accessor.byteOffset + accessor.count * accessorByteStride;
       bufferView.byteLength = Math.max(
-        defaultValue(bufferView.byteLength, 0),
+        (bufferView.byteLength ?? 0),
         accessorByteEnd
       );
     }
@@ -785,8 +785,8 @@ function moveByteStrideToBufferView(gltf) {
   const bufferViewMap = {};
   ForEach.accessor(gltf, function (accessor) {
     if (defined(accessor.bufferView)) {
-      bufferViewMap[accessor.bufferView] = defaultValue(
-        bufferViewMap[accessor.bufferView],
+      bufferViewMap[accessor.bufferView] = (
+        bufferViewMap[accessor.bufferView] ??
         []
       );
       bufferViewMap[accessor.bufferView].push(accessor);
@@ -1090,8 +1090,8 @@ function assignAsEmissive(material, emissive) {
 function convertMaterialsCommonToPbr(gltf) {
   // Future work: convert KHR_materials_common lights to KHR_lights_punctual
   ForEach.material(gltf, function (material) {
-    const materialsCommon = defaultValue(
-      material.extensions,
+    const materialsCommon = (
+      material.extensions ??
       defaultValue.EMPTY_OBJECT
     ).KHR_materials_common;
     if (!defined(materialsCommon)) {

@@ -314,7 +314,7 @@ function Cesium3DTileset(options) {
    * @default 0.3
    */
   this.progressiveResolutionHeightFraction = CesiumMath.clamp(
-    defaultValue(options.progressiveResolutionHeightFraction, 0.3),
+    options.progressiveResolutionHeightFraction ?? 0.3,
     0.0,
     0.5,
   );

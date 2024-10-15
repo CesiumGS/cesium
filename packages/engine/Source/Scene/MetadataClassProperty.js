@@ -60,7 +60,7 @@ function MetadataClassProperty(options) {
   const normalized =
     defined(componentType) &&
     MetadataComponentType.isIntegerType(componentType) &&
-    defaultValue(options.normalized, false);
+    (options.normalized ?? false);
 
   // Basic information about this property
   this._id = id;

@@ -73,10 +73,9 @@ function ImageryProviderBuilder(options) {
   this.useTiles = options.usePreCachedTilesIfAvailable ?? true;
 
   const ellipsoid = options.ellipsoid;
-  this.tilingScheme = defaultValue(
-    options.tilingScheme,
-    new GeographicTilingScheme({ ellipsoid: ellipsoid }),
-  );
+  this.tilingScheme =
+    options.tilingScheme ??
+    new GeographicTilingScheme({ ellipsoid: ellipsoid });
   this.rectangle = options.rectangle ?? this.tilingScheme.rectangle;
   this.ellipsoid = ellipsoid;
 
@@ -317,10 +316,9 @@ function ArcGisMapServerImageryProvider(options) {
   this._tileWidth = options.tileWidth ?? 256;
   this._tileHeight = options.tileHeight ?? 256;
   this._maximumLevel = options.maximumLevel;
-  this._tilingScheme = defaultValue(
-    options.tilingScheme,
-    new GeographicTilingScheme({ ellipsoid: options.ellipsoid }),
-  );
+  this._tilingScheme =
+    options.tilingScheme ??
+    new GeographicTilingScheme({ ellipsoid: options.ellipsoid });
   this._useTiles = options.usePreCachedTilesIfAvailable ?? true;
   this._rectangle = options.rectangle ?? this._tilingScheme.rectangle;
   this._layers = options.layers;

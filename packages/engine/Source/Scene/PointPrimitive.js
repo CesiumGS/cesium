@@ -92,14 +92,10 @@ function PointPrimitive(options, pointPrimitiveCollection) {
   }
 
   this._show = options.show ?? true;
-  this._position = Cartesian3.clone(
-    defaultValue(options.position, Cartesian3.ZERO),
-  );
+  this._position = Cartesian3.clone(options.position ?? Cartesian3.ZERO);
   this._actualPosition = Cartesian3.clone(this._position); // For columbus view and 2D
-  this._color = Color.clone(defaultValue(options.color, Color.WHITE));
-  this._outlineColor = Color.clone(
-    defaultValue(options.outlineColor, Color.TRANSPARENT),
-  );
+  this._color = Color.clone(options.color ?? Color.WHITE);
+  this._outlineColor = Color.clone(options.outlineColor ?? Color.TRANSPARENT);
   this._outlineWidth = options.outlineWidth ?? 0.0;
   this._pixelSize = options.pixelSize ?? 10.0;
   this._scaleByDistance = scaleByDistance;

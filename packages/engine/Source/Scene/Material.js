@@ -585,14 +585,12 @@ function initializeMaterial(options, result) {
   options = options ?? defaultValue.EMPTY_OBJECT;
   result._strict = options.strict ?? false;
   result._count = options.count ?? 0;
-  result._template = clone(
-    defaultValue(options.fabric, defaultValue.EMPTY_OBJECT),
-  );
+  result._template = clone(options.fabric ?? defaultValue.EMPTY_OBJECT);
   result._template.uniforms = clone(
-    defaultValue(result._template.uniforms, defaultValue.EMPTY_OBJECT),
+    result._template.uniforms ?? defaultValue.EMPTY_OBJECT,
   );
   result._template.materials = clone(
-    defaultValue(result._template.materials, defaultValue.EMPTY_OBJECT),
+    result._template.materials ?? defaultValue.EMPTY_OBJECT,
   );
 
   result.type = defined(result._template.type)

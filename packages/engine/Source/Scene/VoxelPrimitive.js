@@ -227,9 +227,7 @@ function VoxelPrimitive(options) {
    * @type {Matrix4}
    * @private
    */
-  this._modelMatrix = Matrix4.clone(
-    defaultValue(options.modelMatrix, Matrix4.IDENTITY),
-  );
+  this._modelMatrix = Matrix4.clone(options.modelMatrix ?? Matrix4.IDENTITY);
 
   /**
    * Model matrix with vertical exaggeration applied. Only used for BOX shape type.
@@ -1273,7 +1271,7 @@ function initFromProvider(primitive, provider, context) {
     uniforms.dimensions,
   );
   primitive._paddingBefore = Cartesian3.clone(
-    defaultValue(provider.paddingBefore, Cartesian3.ZERO),
+    provider.paddingBefore ?? Cartesian3.ZERO,
     primitive._paddingBefore,
   );
   uniforms.paddingBefore = Cartesian3.clone(
@@ -1281,7 +1279,7 @@ function initFromProvider(primitive, provider, context) {
     uniforms.paddingBefore,
   );
   primitive._paddingAfter = Cartesian3.clone(
-    defaultValue(provider.paddingAfter, Cartesian3.ZERO),
+    provider.paddingAfter ?? Cartesian3.ZERO,
     primitive._paddingBefore,
   );
   uniforms.paddingAfter = Cartesian3.clone(
@@ -1939,7 +1937,7 @@ function DefaultVoxelProvider() {
 }
 
 DefaultVoxelProvider.prototype.requestData = function (options) {
-  const tileLevel = defined(options) ? defaultValue(options.tileLevel, 0) : 0;
+  const tileLevel = defined(options) ? (options.tileLevel ?? 0) : 0;
   if (tileLevel >= 1) {
     return undefined;
   }

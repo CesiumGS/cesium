@@ -203,10 +203,7 @@ Cesium3DTilesTester.generateInstancedTileBuffer = function (options) {
   featureTableJsonString = padStringToByteAlignment(featureTableJsonString, 8);
   const featureTableJsonByteLength = featureTableJsonString.length;
 
-  const featureTableBinary = defaultValue(
-    options.featureTableBinary,
-    new Uint8Array(0),
-  );
+  const featureTableBinary = options.featureTableBinary ?? new Uint8Array(0);
   const featureTableBinaryByteLength = featureTableBinary.length;
 
   const batchTableJson = options.batchTableJson;
@@ -217,10 +214,7 @@ Cesium3DTilesTester.generateInstancedTileBuffer = function (options) {
   batchTableJsonString = padStringToByteAlignment(batchTableJsonString, 8);
   const batchTableJsonByteLength = batchTableJsonString.length;
 
-  const batchTableBinary = defaultValue(
-    options.batchTableBinary,
-    new Uint8Array(0),
-  );
+  const batchTableBinary = options.batchTableBinary ?? new Uint8Array(0);
   const batchTableBinaryByteLength = batchTableBinary.length;
 
   const headerByteLength = 32;
@@ -374,9 +368,9 @@ Cesium3DTilesTester.generateVectorTileBuffer = function (options) {
     const defineRegion = options.defineRegion ?? true;
     const featureTableJson = {
       REGION: defineRegion ? [-1.0, -1.0, 1.0, 1.0, -1.0, 1.0] : undefined,
-      POLYGONS_LENGTH: defaultValue(options.polygonsLength, 0),
-      POLYLINES_LENGTH: defaultValue(options.polylinesLength, 0),
-      POINTS_LENGTH: defaultValue(options.pointsLength, 0),
+      POLYGONS_LENGTH: options.polygonsLength ?? 0,
+      POLYLINES_LENGTH: options.polylinesLength ?? 0,
+      POINTS_LENGTH: options.pointsLength ?? 0,
       POLYGON_BATCH_IDS: options.polygonBatchIds,
       POLYLINE_BATCH_IDS: options.polylineBatchIds,
       POINT_BATCH_IDS: options.pointBatchIds,
@@ -425,10 +419,10 @@ Cesium3DTilesTester.generateGeometryTileBuffer = function (options) {
   const defineFeatureTable = options.defineFeatureTable ?? true;
   if (defineFeatureTable) {
     const featureTableJson = {
-      BOXES_LENGTH: defaultValue(options.boxesLength, 0),
-      CYLINDERS_LENGTH: defaultValue(options.cylindersLength, 0),
-      ELLIPSOIDS_LENGTH: defaultValue(options.ellipsoidsLength, 0),
-      SPHERES_LENGTH: defaultValue(options.spheresLength, 0),
+      BOXES_LENGTH: options.boxesLength ?? 0,
+      CYLINDERS_LENGTH: options.cylindersLength ?? 0,
+      ELLIPSOIDS_LENGTH: options.ellipsoidsLength ?? 0,
+      SPHERES_LENGTH: options.spheresLength ?? 0,
       BOX_BATCH_IDS: options.boxBatchIds,
       CYLINDER_BATCH_IDS: options.cylinderBatchIds,
       ELLIPSOID_BATCH_IDS: options.ellipsoidBatchIds,

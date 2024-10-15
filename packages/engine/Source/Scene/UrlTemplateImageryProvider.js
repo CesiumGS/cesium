@@ -217,10 +217,9 @@ function UrlTemplateImageryProvider(options) {
   this._tileHeight = options.tileHeight ?? 256;
   this._minimumLevel = options.minimumLevel ?? 0;
   this._maximumLevel = options.maximumLevel;
-  this._tilingScheme = defaultValue(
-    options.tilingScheme,
-    new WebMercatorTilingScheme({ ellipsoid: options.ellipsoid }),
-  );
+  this._tilingScheme =
+    options.tilingScheme ??
+    new WebMercatorTilingScheme({ ellipsoid: options.ellipsoid });
 
   this._rectangle = options.rectangle ?? this._tilingScheme.rectangle;
   this._rectangle = Rectangle.intersection(

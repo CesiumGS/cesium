@@ -1498,10 +1498,9 @@ Camera.prototype.setView = function (options) {
   }
 
   let convert = options.convert ?? true;
-  let destination = defaultValue(
-    options.destination,
-    Cartesian3.clone(this.positionWC, scratchSetViewCartesian),
-  );
+  let destination =
+    options.destination ??
+    Cartesian3.clone(this.positionWC, scratchSetViewCartesian);
   if (defined(destination) && defined(destination.west)) {
     destination = this.getRectangleCameraCoordinates(
       destination,

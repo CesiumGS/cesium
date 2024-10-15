@@ -8,7 +8,6 @@ import clone from "../Core/clone.js";
 import Color from "../Core/Color.js";
 import ColorGeometryInstanceAttribute from "../Core/ColorGeometryInstanceAttribute.js";
 import combine from "../Core/combine.js";
-import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
@@ -1451,7 +1450,7 @@ function getTileReadyCallback(tileImageriesToFree, layer, terrainProvider) {
       const endIndex = startIndex + tileImageriesToFree;
       tileImagery = tileImageryCollection[endIndex];
       imagery = defined(tileImagery)
-        ? defaultValue(tileImagery.readyImagery, tileImagery.loadingImagery)
+        ? (tileImagery.readyImagery ?? tileImagery.loadingImagery)
         : undefined;
       if (!defined(imagery) || imagery.imageryLayer !== layer) {
         // Return false to keep the callback if we have to wait on the skeletons

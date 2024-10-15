@@ -1,5 +1,4 @@
 import Cartesian3 from "../Core/Cartesian3.js";
-import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
@@ -431,18 +430,17 @@ function initialize(content, arrayBuffer, byteOffset) {
   if (numberOfPolygons > 0) {
     featureTable.featuresLength = numberOfPolygons;
 
-    const polygonCounts = defaultValue(
+    const polygonCounts =
       featureTable.getPropertyArray(
         "POLYGON_COUNTS",
         ComponentDatatype.UNSIGNED_INT,
         1,
-      ),
+      ) ??
       featureTable.getPropertyArray(
         "POLYGON_COUNT",
         ComponentDatatype.UNSIGNED_INT,
         1,
-      ), // Workaround for old vector tilesets using the non-plural name
-    );
+      ); // Workaround for old vector tilesets using the non-plural name
 
     if (!defined(polygonCounts)) {
       throw new RuntimeError(
@@ -450,18 +448,17 @@ function initialize(content, arrayBuffer, byteOffset) {
       );
     }
 
-    const polygonIndexCounts = defaultValue(
+    const polygonIndexCounts =
       featureTable.getPropertyArray(
         "POLYGON_INDEX_COUNTS",
         ComponentDatatype.UNSIGNED_INT,
         1,
-      ),
+      ) ??
       featureTable.getPropertyArray(
         "POLYGON_INDEX_COUNT",
         ComponentDatatype.UNSIGNED_INT,
         1,
-      ), // Workaround for old vector tilesets using the non-plural name
-    );
+      ); // Workaround for old vector tilesets using the non-plural name
 
     if (!defined(polygonIndexCounts)) {
       throw new RuntimeError(
@@ -531,18 +528,17 @@ function initialize(content, arrayBuffer, byteOffset) {
   if (numberOfPolylines > 0) {
     featureTable.featuresLength = numberOfPolylines;
 
-    const polylineCounts = defaultValue(
+    const polylineCounts =
       featureTable.getPropertyArray(
         "POLYLINE_COUNTS",
         ComponentDatatype.UNSIGNED_INT,
         1,
-      ),
+      ) ??
       featureTable.getPropertyArray(
         "POLYLINE_COUNT",
         ComponentDatatype.UNSIGNED_INT,
         1,
-      ), // Workaround for old vector tilesets using the non-plural name
-    );
+      ); // Workaround for old vector tilesets using the non-plural name
 
     if (!defined(polylineCounts)) {
       throw new RuntimeError(

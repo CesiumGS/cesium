@@ -1,4 +1,3 @@
-import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import ConstantProperty from "./ConstantProperty.js";
 
@@ -65,8 +64,8 @@ function createPropertyDescriptor(name, configurable, createPropertyCallback) {
     name,
     `_${name.toString()}`,
     `_${name.toString()}Subscription`,
-    defaultValue(configurable, false),
-    defaultValue(createPropertyCallback, createConstantProperty),
+    configurable ?? false,
+    createPropertyCallback ?? createConstantProperty,
   );
 }
 export default createPropertyDescriptor;

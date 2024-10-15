@@ -173,15 +173,12 @@ function ClassificationPrimitive(options) {
   this._primitiveOptions = {
     geometryInstances: undefined,
     appearance: undefined,
-    vertexCacheOptimize: defaultValue(options.vertexCacheOptimize, false),
-    interleave: defaultValue(options.interleave, false),
-    releaseGeometryInstances: defaultValue(
-      options.releaseGeometryInstances,
-      true,
-    ),
-    allowPicking: defaultValue(options.allowPicking, true),
-    asynchronous: defaultValue(options.asynchronous, true),
-    compressVertices: defaultValue(options.compressVertices, true),
+    vertexCacheOptimize: options.vertexCacheOptimize ?? false,
+    interleave: options.interleave ?? false,
+    releaseGeometryInstances: options.releaseGeometryInstances ?? true,
+    allowPicking: options.allowPicking ?? true,
+    asynchronous: options.asynchronous ?? true,
+    compressVertices: options.compressVertices ?? true,
     _createBoundingVolumeFunction: undefined,
     _createRenderStatesFunction: undefined,
     _createShaderProgramFunction: undefined,
@@ -1156,7 +1153,7 @@ ClassificationPrimitive.prototype.update = function (frameState) {
         attributes: instance.attributes,
         modelMatrix: instance.modelMatrix,
         id: instance.id,
-        pickPrimitive: defaultValue(this._pickPrimitive, that),
+        pickPrimitive: this._pickPrimitive ?? that,
       });
     }
 

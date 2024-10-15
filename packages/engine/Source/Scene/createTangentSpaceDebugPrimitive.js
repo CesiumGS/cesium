@@ -47,9 +47,7 @@ function createTangentSpaceDebugPrimitive(options) {
   }
 
   const attributes = geometry.attributes;
-  const modelMatrix = Matrix4.clone(
-    defaultValue(options.modelMatrix, Matrix4.IDENTITY),
-  );
+  const modelMatrix = Matrix4.clone(options.modelMatrix ?? Matrix4.IDENTITY);
   const length = options.length ?? 10000.0;
 
   if (defined(attributes.normal)) {

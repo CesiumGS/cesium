@@ -1,6 +1,5 @@
 import Check from "../Core/Check.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
-import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
@@ -103,18 +102,15 @@ VertexArrayFacade._verifyAttributes = function (attributes) {
     const attribute = attributes[i];
 
     const attr = {
-      index: defaultValue(attribute.index, i),
-      enabled: defaultValue(attribute.enabled, true),
+      index: attribute.index ?? i,
+      enabled: attribute.enabled ?? true,
       componentsPerAttribute: attribute.componentsPerAttribute,
-      componentDatatype: defaultValue(
-        attribute.componentDatatype,
-        ComponentDatatype.FLOAT,
-      ),
-      normalize: defaultValue(attribute.normalize, false),
+      componentDatatype: attribute.componentDatatype ?? ComponentDatatype.FLOAT,
+      normalize: attribute.normalize ?? false,
 
       // There will be either a vertexBuffer or an [optional] usage.
       vertexBuffer: attribute.vertexBuffer,
-      usage: defaultValue(attribute.usage, BufferUsage.STATIC_DRAW),
+      usage: attribute.usage ?? BufferUsage.STATIC_DRAW,
     };
     attrs.push(attr);
 
