@@ -256,10 +256,6 @@ CorridorGeometryLibrary.computePositions = function (params) {
       Cartesian3.subtract(nextPosition, position, forward),
       forward,
     );
-    cornerDirection = Cartesian3.normalize(
-      Cartesian3.add(forward, backward, cornerDirection),
-      cornerDirection,
-    );
 
     const forwardProjection = Cartesian3.multiplyByScalar(
       normal,
@@ -284,6 +280,10 @@ CorridorGeometryLibrary.computePositions = function (params) {
     );
 
     if (doCorner) {
+      cornerDirection = Cartesian3.normalize(
+        Cartesian3.add(forward, backward, cornerDirection),
+        cornerDirection,
+      );
       cornerDirection = Cartesian3.cross(
         cornerDirection,
         normal,
