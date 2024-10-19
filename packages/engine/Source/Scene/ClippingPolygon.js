@@ -132,6 +132,24 @@ ClippingPolygon.equals = function (left, right) {
   );
 };
 
+function equalArrayCartesian3(a, b) {
+  if (defined(a) !== defined(b)) {
+    return false;
+  }
+  if (a.length !== b.length) {
+    return false;
+  }
+  const n = a.length;
+  for (let i = 0; i < n; i++) {
+    const ca = a[i];
+    const cb = b[i];
+    if (!Cartesian3.equals(ca, cb)) {
+      return false;
+    }
+  }
+  return true;
+}
+
 /**
  * Computes a cartographic rectangle which encloses the polygon defined by the list of positions, including cases over the international date line and the poles.
  *
@@ -139,12 +157,29 @@ ClippingPolygon.equals = function (left, right) {
  * @returns {Rectangle} The result rectangle
  */
 ClippingPolygon.prototype.computeRectangle = function (result) {
-  return PolygonGeometry.computeRectangleFromPositions(
+  // XXX EXPERIMENT!!!
+  if (ClippingPolygon.hackyCaching) {
+    if (equalArrayCartesian3(this.positions, this._cachedPositions)) {
+      return this._cachedRectangle;
+    }
+    this._cachedPositions = this.positions.map((c) => Cartesian3.clone(c));
+    const rectangle = PolygonGeometry.computeRectangleFromPositions(
+      this.positions,
+      this.ellipsoid,
+      undefined,
+      result,
+    );
+    this._cachedRectangle = rectangle;
+    return rectangle;
+  }
+  // XXX EXPERIMENT!!!
+  const rectangle = PolygonGeometry.computeRectangleFromPositions(
     this.positions,
     this.ellipsoid,
     undefined,
     result,
   );
+  return rectangle;
 };
 
 const scratchRectangle = new Rectangle();
