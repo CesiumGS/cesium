@@ -14,11 +14,8 @@ describe("Core/CorridorGeometryLibrary", () => {
         ellipsoid: Ellipsoid.WGS84,
       };
 
-      let result;
-
-      expect(
-        () => (result = CorridorGeometryLibrary.computePositions(options)),
-      ).not.toThrowDeveloperError(); // Tests the fix #12255
+      // The fact it doesn't throw an error also verifies the fix #12255
+      const result = CorridorGeometryLibrary.computePositions(options);
       expect(result.corners.length).toEqual(0);
     });
 
