@@ -72,8 +72,7 @@ function parseGlbVersion1(glb, header) {
   const buffers = gltf.buffers;
   if (defined(buffers) && Object.keys(buffers).length > 0) {
     // In some older models, the binary glTF buffer is named KHR_binary_glTF
-    const binaryGltfBuffer = buffers.binary_glTF ?? buffers.KHR_binary_glTF
-    ;
+    const binaryGltfBuffer = buffers.binary_glTF ?? buffers.KHR_binary_glTF;
     if (defined(binaryGltfBuffer)) {
       binaryGltfBuffer.extras._pipeline.source = binaryBuffer;
       delete binaryGltfBuffer.uri;

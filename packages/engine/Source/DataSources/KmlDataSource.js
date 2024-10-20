@@ -2155,7 +2155,7 @@ function processDescription(
         value = extendedData[key];
         text += `<tr><th>${
           value.displayName ?? key
-        }</th><td>${(value.value, "")}</td></tr>`;
+        }</th><td>${value.value ?? ""}</td></tr>`;
       }
       text += "</tbody></table>";
     }

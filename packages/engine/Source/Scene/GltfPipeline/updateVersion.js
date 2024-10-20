@@ -107,8 +107,7 @@ function setPrimitiveModes(gltf) {
         const primitivesLength = primitives.length;
         for (let i = 0; i < primitivesLength; ++i) {
           const primitive = primitives[i];
-          const defaultMode = primitive.primitive ?? WebGLConstants.TRIANGLES
-          ;
+          const defaultMode = primitive.primitive ?? WebGLConstants.TRIANGLES;
           primitive.mode = primitive.mode ?? defaultMode;
           delete primitive.primitive;
         }
@@ -207,12 +206,9 @@ function removeTechniquePasses(gltf) {
         if (Object.prototype.hasOwnProperty.call(passes, passName)) {
           const pass = passes[passName];
           const instanceProgram = pass.instanceProgram;
-          technique.attributes = technique.attributes ?? instanceProgram.attributes
-          ;
-          technique.program = technique.program ?? instanceProgram.program
-          ;
-          technique.uniforms = technique.uniforms ?? instanceProgram.uniforms
-          ;
+          technique.attributes = technique.attributes ?? instanceProgram.attributes;
+          technique.program = technique.program ?? instanceProgram.program;
+          technique.uniforms = technique.uniforms ?? instanceProgram.uniforms;
           technique.states = technique.states ?? pass.states;
         }
         delete technique.passes;
@@ -1045,10 +1041,8 @@ function srgbToLinear(srgb) {
 
 function convertTechniquesToPbr(gltf, options) {
   options = options ?? defaultValue.EMPTY_OBJECT;
-  const baseColorTextureNames = options.baseColorTextureNames ?? defaultBaseColorTextureNames
-  ;
-  const baseColorFactorNames = options.baseColorFactorNames ?? defaultBaseColorFactorNames
-  ;
+  const baseColorTextureNames = options.baseColorTextureNames ?? defaultBaseColorTextureNames;
+  const baseColorFactorNames = options.baseColorFactorNames ?? defaultBaseColorFactorNames;
 
   // Future work: convert other values like emissive, specular, etc. Only handling diffuse right now.
   ForEach.material(gltf, function (material) {
