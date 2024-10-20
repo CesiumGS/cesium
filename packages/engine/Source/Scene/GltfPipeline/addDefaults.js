@@ -62,8 +62,7 @@ function addDefaults(gltf) {
   });
 
   ForEach.material(gltf, function (material) {
-    const extensions = material.extensions ?? defaultValue.EMPTY_OBJECT
-    ;
+    const extensions = material.extensions ?? defaultValue.EMPTY_OBJECT;
     const materialsCommon = extensions.KHR_materials_common;
     if (defined(materialsCommon)) {
       const technique = materialsCommon.technique;
@@ -94,16 +93,13 @@ function addDefaults(gltf) {
       }
 
       // These actually exist on the extension object, not the values object despite what's shown in the spec
-      materialsCommon.transparent = materialsCommon.transparent ?? false
-      ;
-      materialsCommon.doubleSided = materialsCommon.doubleSided ?? false
-      ;
+      materialsCommon.transparent = materialsCommon.transparent ?? false;
+      materialsCommon.doubleSided = materialsCommon.doubleSided ?? false;
 
       return;
     }
 
-    material.emissiveFactor = material.emissiveFactor ?? [0.0, 0.0, 0.0]
-    ;
+    material.emissiveFactor = material.emissiveFactor ?? [0.0, 0.0, 0.0];
     material.alphaMode = material.alphaMode ?? "OPAQUE";
     material.doubleSided = material.doubleSided ?? false;
 
@@ -127,12 +123,9 @@ function addDefaults(gltf) {
 
     const pbrMetallicRoughness = material.pbrMetallicRoughness;
     if (defined(pbrMetallicRoughness)) {
-      pbrMetallicRoughness.baseColorFactor = pbrMetallicRoughness.baseColorFactor ?? [1.0, 1.0, 1.0, 1.0]
-      ;
-      pbrMetallicRoughness.metallicFactor = pbrMetallicRoughness.metallicFactor ?? 1.0
-      ;
-      pbrMetallicRoughness.roughnessFactor = pbrMetallicRoughness.roughnessFactor ?? 1.0
-      ;
+      pbrMetallicRoughness.baseColorFactor = pbrMetallicRoughness.baseColorFactor ?? [1.0, 1.0, 1.0, 1.0];
+      pbrMetallicRoughness.metallicFactor = pbrMetallicRoughness.metallicFactor ?? 1.0;
+      pbrMetallicRoughness.roughnessFactor = pbrMetallicRoughness.roughnessFactor ?? 1.0;
       addTextureDefaults(pbrMetallicRoughness.baseColorTexture);
       addTextureDefaults(pbrMetallicRoughness.metallicRoughnessTexture);
     }
@@ -140,12 +133,9 @@ function addDefaults(gltf) {
     const pbrSpecularGlossiness =
       extensions.KHR_materials_pbrSpecularGlossiness;
     if (defined(pbrSpecularGlossiness)) {
-      pbrSpecularGlossiness.diffuseFactor = pbrSpecularGlossiness.diffuseFactor ?? [1.0, 1.0, 1.0, 1.0]
-      ;
-      pbrSpecularGlossiness.specularFactor = pbrSpecularGlossiness.specularFactor ?? [1.0, 1.0, 1.0]
-      ;
-      pbrSpecularGlossiness.glossinessFactor = pbrSpecularGlossiness.glossinessFactor ?? 1.0
-      ;
+      pbrSpecularGlossiness.diffuseFactor = pbrSpecularGlossiness.diffuseFactor ?? [1.0, 1.0, 1.0, 1.0];
+      pbrSpecularGlossiness.specularFactor = pbrSpecularGlossiness.specularFactor ?? [1.0, 1.0, 1.0];
+      pbrSpecularGlossiness.glossinessFactor = pbrSpecularGlossiness.glossinessFactor ?? 1.0;
       addTextureDefaults(pbrSpecularGlossiness.specularGlossinessTexture);
     }
   });
@@ -172,8 +162,7 @@ function addDefaults(gltf) {
       node.matrix = node.matrix ?? [
           1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0,
           0.0, 1.0,
-        ]
-      ;
+        ];
     }
   });
 
