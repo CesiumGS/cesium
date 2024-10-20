@@ -8,6 +8,10 @@
 
 - Added `ScreenSpaceCameraController.maximumTiltAngle` to limit how much the camera can tilt. [#12169](https://github.com/CesiumGS/cesium/pull/12169)
 
+##### Fixes :wrench:
+
+- Fix flickering issue caused by bounding sphere retrieval being blocked by the bounding sphere of another entity. [#12230](https://github.com/CesiumGS/cesium/pull/12230)
+
 ### 1.122 - 2024-10-01
 
 #### @cesium/engine
