@@ -165,7 +165,7 @@ Object.defineProperties(PolylineGraphics.prototype, {
    * @type {Property|undefined}
    */
   distanceDisplayCondition: createPropertyDescriptor(
-    "distanceDisplayCondition"
+    "distanceDisplayCondition",
   ),
 
   /**
@@ -230,18 +230,18 @@ PolylineGraphics.prototype.merge = function (source) {
   this.material = defaultValue(this.material, source.material);
   this.depthFailMaterial = defaultValue(
     this.depthFailMaterial,
-    source.depthFailMaterial
+    source.depthFailMaterial,
   );
   this.arcType = defaultValue(this.arcType, source.arcType);
   this.clampToGround = defaultValue(this.clampToGround, source.clampToGround);
   this.shadows = defaultValue(this.shadows, source.shadows);
   this.distanceDisplayCondition = defaultValue(
     this.distanceDisplayCondition,
-    source.distanceDisplayCondition
+    source.distanceDisplayCondition,
   );
   this.classificationType = defaultValue(
     this.classificationType,
-    source.classificationType
+    source.classificationType,
   );
   this.zIndex = defaultValue(this.zIndex, source.zIndex);
 };

@@ -172,5 +172,5 @@ describe(
       expect(s.isDestroyed()).toEqual(true);
     });
   },
-  "WebGL"
+  "WebGL",
 );

@@ -167,6 +167,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
   - [jjspace](https://github.com/jjspace)
   - [Siddhesh Ranade](https://github.com/siddheshranade)
   - [Adam Morris](https://github.com/weegeekps)
+  - [Luke McKinstry](https://github.com/lukemckinstry)
 - [Northrop Grumman](http://www.northropgrumman.com)
   - [Joseph Stein](https://github.com/nahgrin)
 - [EOX IT Services GmbH](https://eox.at)
@@ -185,6 +186,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
   - [Tang Xiaofei](https://github.com/vtxf)
 - [Maxar](https://www.maxar.com)
   - [Erik Dahlström](https://github.com/erikdahlstrom)
+  - [Albin Ekberg](https://github.com/albek446)
 - [Novatron Oy](https://novatron.fi/en/)
   - [Jussi Hirvonen](https://github.com/VsKatshuma)
 - [Sierra Nevada Corp](https://www.sncorp.com/)
@@ -197,6 +199,8 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [T2 Software](http://t2.com.tr/)
   - [Hüseyin ATEŞ](https://github.com/ateshuseyin)
   - [İbrahim Furkan Aygar](https://github.com/furkanaygar)
+- MSA
+  - [Timothy Eichfeld](https://github.com/timeichfeld-msa)
 - [EMapGis](http://emapgis.com)
   - [IKangXu](https://github.com/IKangXu)
   - [EMapGIS](https://github.com/EMapGIS)
@@ -204,6 +208,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 
 ## [Individual CLA](Documentation/Contributors/CLAs/individual-contributor-license-agreement-v1.0.pdf)
 
+- [Brandon Landry](https://github.com/hotpocket)
 - [Victor Berchet](https://github.com/vicb)
 - [Caleb Morse](https://github.com/cmorse)
 - [Ravi Agrawal](https://github.com/macoda)
@@ -405,5 +410,8 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [Vladislav Yunev](https://github.com/YunVlad)
 - [Levi Montgomery](https://github.com/Levi-Montgomery)
 - [Brandon Berisford](https://github.com/BeyondBelief96)
-- [Adam Wirth](https://https://github.com/adamwirth)
+- [Lawrence Owen](https://github.com/ljowen)
+- [Adam Wirth](https://github.com/adamwirth)
 - [Javier Sanchez](https://github.com/jvrjsanchez)
+- [Jérôme Fayot](https://github.com/jfayot)
+- [Kirn Kim](https://github.com/squrki)

@@ -10,7 +10,7 @@ async function loadAndZoomToModelAsync(options, scene) {
       scene.renderForSpecs();
       return model.ready;
     },
-    { timeout: 10000 }
+    { timeout: 10000 },
   );
 
   scene.camera.flyToBoundingSphere(model.boundingSphere, {

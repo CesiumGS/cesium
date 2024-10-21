@@ -32,7 +32,7 @@ describe("Scene/VoxelBoxShape", function () {
     const modelMatrix = Matrix4.fromTranslationQuaternionRotationScale(
       translation,
       rotation,
-      scale
+      scale,
     );
     const minBounds = VoxelBoxShape.DefaultMinBounds;
     const maxBounds = VoxelBoxShape.DefaultMaxBounds;
@@ -49,22 +49,22 @@ describe("Scene/VoxelBoxShape", function () {
         0.0,
         0.0,
         scale.z,
-      ])
+      ]),
     );
 
     const expectedBoundingSphere = new BoundingSphere(
       translation,
-      Cartesian3.magnitude(scale)
+      Cartesian3.magnitude(scale),
     );
 
     const visible = shape.update(modelMatrix, minBounds, maxBounds);
 
     expect(shape.orientedBoundingBox.center).toEqual(
-      expectedOrientedBoundingBox.center
+      expectedOrientedBoundingBox.center,
     );
     expect(shape.orientedBoundingBox.halfAxes).toEqualEpsilon(
       expectedOrientedBoundingBox.halfAxes,
-      CesiumMath.EPSILON12
+      CesiumMath.EPSILON12,
     );
     expect(shape.boundingSphere).toEqual(expectedBoundingSphere);
     expect(shape.boundTransform).toEqual(modelMatrix);
@@ -81,7 +81,7 @@ describe("Scene/VoxelBoxShape", function () {
       translation,
       rotation,
       scale,
-      new Matrix4()
+      new Matrix4(),
     );
     const minBounds = new Cartesian3(-0.75, -0.75, -0.75);
     const maxBounds = new Cartesian3(-0.25, -0.25, -0.25);
@@ -90,7 +90,7 @@ describe("Scene/VoxelBoxShape", function () {
       minBounds,
       maxBounds,
       minBounds,
-      maxBounds
+      maxBounds,
     );
 
     const expectedTranslation = new Cartesian3(0.0, 0.5, 1);
@@ -100,15 +100,15 @@ describe("Scene/VoxelBoxShape", function () {
       expectedTranslation,
       expectedRotation,
       expectedScale,
-      new Matrix4()
+      new Matrix4(),
     );
     const expectedOrientedBoundingBox = new OrientedBoundingBox(
       expectedTranslation,
-      Matrix3.fromScale(expectedScale)
+      Matrix3.fromScale(expectedScale),
     );
     const expectedBoundingSphere = new BoundingSphere(
       expectedTranslation,
-      Cartesian3.magnitude(expectedScale)
+      Cartesian3.magnitude(expectedScale),
     );
 
     expect(shape.orientedBoundingBox).toEqual(expectedOrientedBoundingBox);
@@ -135,7 +135,7 @@ describe("Scene/VoxelBoxShape", function () {
     modelMatrix = Matrix4.fromTranslationQuaternionRotationScale(
       translation,
       rotation,
-      scale
+      scale,
     );
     visible = shape.update(modelMatrix, minBounds, maxBounds);
     expect(visible).toBeTrue();
@@ -145,7 +145,7 @@ describe("Scene/VoxelBoxShape", function () {
     modelMatrix = Matrix4.fromTranslationQuaternionRotationScale(
       translation,
       rotation,
-      scale
+      scale,
     );
     visible = shape.update(modelMatrix, minBounds, maxBounds);
     expect(visible).toBeTrue();
@@ -155,7 +155,7 @@ describe("Scene/VoxelBoxShape", function () {
     modelMatrix = Matrix4.fromTranslationQuaternionRotationScale(
       translation,
       rotation,
-      scale
+      scale,
     );
     visible = shape.update(modelMatrix, minBounds, maxBounds);
     expect(visible).toBeTrue();
@@ -177,7 +177,7 @@ describe("Scene/VoxelBoxShape", function () {
     modelMatrix = Matrix4.fromTranslationQuaternionRotationScale(
       translation,
       rotation,
-      scale
+      scale,
     );
     visible = shape.update(modelMatrix, minBounds, maxBounds);
     expect(visible).toBeFalse();
@@ -187,7 +187,7 @@ describe("Scene/VoxelBoxShape", function () {
     modelMatrix = Matrix4.fromTranslationQuaternionRotationScale(
       translation,
       rotation,
-      scale
+      scale,
     );
     visible = shape.update(modelMatrix, minBounds, maxBounds);
     expect(visible).toBeFalse();
@@ -197,7 +197,7 @@ describe("Scene/VoxelBoxShape", function () {
     modelMatrix = Matrix4.fromTranslationQuaternionRotationScale(
       translation,
       rotation,
-      scale
+      scale,
     );
     visible = shape.update(modelMatrix, minBounds, maxBounds);
     expect(visible).toBeFalse();
@@ -207,7 +207,7 @@ describe("Scene/VoxelBoxShape", function () {
     modelMatrix = Matrix4.fromTranslationQuaternionRotationScale(
       translation,
       rotation,
-      scale
+      scale,
     );
     visible = shape.update(modelMatrix, minBounds, maxBounds);
     expect(visible).toBeFalse();
@@ -221,7 +221,7 @@ describe("Scene/VoxelBoxShape", function () {
     const modelMatrix = Matrix4.fromTranslationQuaternionRotationScale(
       translation,
       rotation,
-      scale
+      scale,
     );
 
     let minBounds;
@@ -244,12 +244,12 @@ describe("Scene/VoxelBoxShape", function () {
       minBounds,
       maxBounds,
       clipMinBounds,
-      clipMaxBounds
+      clipMaxBounds,
     );
     actualScale = Matrix4.getScale(shape.boundTransform, new Cartesian3());
     actualTranslation = Matrix4.getTranslation(
       shape.shapeTransform,
-      new Cartesian3()
+      new Cartesian3(),
     );
     expect(visible).toBeTrue();
     expect(actualScale).toEqual(expectedScale);
@@ -265,12 +265,12 @@ describe("Scene/VoxelBoxShape", function () {
       minBounds,
       maxBounds,
       clipMinBounds,
-      clipMaxBounds
+      clipMaxBounds,
     );
     actualScale = Matrix4.getScale(shape.boundTransform, new Cartesian3());
     actualTranslation = Matrix4.getTranslation(
       shape.shapeTransform,
-      new Cartesian3()
+      new Cartesian3(),
     );
     expect(visible).toBeTrue();
     expect(actualScale).toEqual(expectedScale);
@@ -286,12 +286,12 @@ describe("Scene/VoxelBoxShape", function () {
       minBounds,
       maxBounds,
       clipMinBounds,
-      clipMaxBounds
+      clipMaxBounds,
     );
     actualScale = Matrix4.getScale(shape.boundTransform, new Cartesian3());
     actualTranslation = Matrix4.getTranslation(
       shape.shapeTransform,
-      new Cartesian3()
+      new Cartesian3(),
     );
     expect(visible).toBeTrue();
     expect(actualScale).toEqual(expectedScale);
@@ -306,7 +306,7 @@ describe("Scene/VoxelBoxShape", function () {
     const modelMatrix = Matrix4.fromTranslationQuaternionRotationScale(
       translation,
       rotation,
-      scale
+      scale,
     );
 
     let minBounds;
@@ -327,7 +327,7 @@ describe("Scene/VoxelBoxShape", function () {
       minBounds,
       maxBounds,
       minBounds,
-      maxBounds
+      maxBounds,
     );
     expect(visible).toBeFalse();
 
@@ -352,7 +352,7 @@ describe("Scene/VoxelBoxShape", function () {
     const modelMatrix = Matrix4.fromTranslationQuaternionRotationScale(
       translation,
       rotation,
-      scale
+      scale,
     );
 
     let visible;
@@ -370,7 +370,7 @@ describe("Scene/VoxelBoxShape", function () {
       minBounds,
       maxBounds,
       clipMinBounds,
-      clipMaxBounds
+      clipMaxBounds,
     );
     expect(visible).toBeFalse();
 
@@ -382,7 +382,7 @@ describe("Scene/VoxelBoxShape", function () {
       minBounds,
       maxBounds,
       clipMinBounds,
-      clipMaxBounds
+      clipMaxBounds,
     );
     expect(visible).toBeFalse();
 
@@ -394,7 +394,7 @@ describe("Scene/VoxelBoxShape", function () {
       minBounds,
       maxBounds,
       clipMinBounds,
-      clipMaxBounds
+      clipMaxBounds,
     );
     expect(visible).toBeFalse();
   });
@@ -417,7 +417,7 @@ describe("Scene/VoxelBoxShape", function () {
     const modelMatrix = Matrix4.fromTranslationQuaternionRotationScale(
       translation,
       rotation,
-      scale
+      scale,
     );
     const maxBounds = VoxelBoxShape.DefaultMaxBounds;
 
@@ -434,7 +434,7 @@ describe("Scene/VoxelBoxShape", function () {
     const modelMatrix = Matrix4.fromTranslationQuaternionRotationScale(
       translation,
       rotation,
-      scale
+      scale,
     );
     const minBounds = VoxelBoxShape.DefaultMinBounds;
 
@@ -451,7 +451,7 @@ describe("Scene/VoxelBoxShape", function () {
     const modelMatrix = Matrix4.fromTranslationQuaternionRotationScale(
       translation,
       rotation,
-      scale
+      scale,
     );
     const minBounds = VoxelBoxShape.DefaultMinBounds;
     const maxBounds = VoxelBoxShape.DefaultMaxBounds;
@@ -466,7 +466,7 @@ describe("Scene/VoxelBoxShape", function () {
       tileX,
       tileY,
       tileZ,
-      new OrientedBoundingBox()
+      new OrientedBoundingBox(),
     );
 
     const expectedOrientedBoundingBox = shape.orientedBoundingBox;
@@ -481,7 +481,7 @@ describe("Scene/VoxelBoxShape", function () {
     const modelMatrix = Matrix4.fromTranslationQuaternionRotationScale(
       translation,
       rotation,
-      scale
+      scale,
     );
     const minBounds = VoxelBoxShape.DefaultMinBounds;
     const maxBounds = VoxelBoxShape.DefaultMaxBounds;
@@ -506,14 +506,14 @@ describe("Scene/VoxelBoxShape", function () {
       tileX,
       tileY,
       tileZ,
-      new OrientedBoundingBox()
+      new OrientedBoundingBox(),
     );
     expectedTranslation = new Cartesian3(-0.5, -0.5, -0.5);
     expect(orientedBoundingBox).toEqual(
       new OrientedBoundingBox(
         expectedTranslation,
-        Matrix3.fromScale(expectedScale, new Matrix3())
-      )
+        Matrix3.fromScale(expectedScale, new Matrix3()),
+      ),
     );
 
     // Child (1, 0, 0)
@@ -525,14 +525,14 @@ describe("Scene/VoxelBoxShape", function () {
       tileX,
       tileY,
       tileZ,
-      new OrientedBoundingBox()
+      new OrientedBoundingBox(),
     );
     expectedTranslation = new Cartesian3(+0.5, -0.5, -0.5);
     expect(orientedBoundingBox).toEqual(
       new OrientedBoundingBox(
         expectedTranslation,
-        Matrix3.fromScale(expectedScale, new Matrix3())
-      )
+        Matrix3.fromScale(expectedScale, new Matrix3()),
+      ),
     );
 
     // Child (0, 1, 0)
@@ -544,14 +544,14 @@ describe("Scene/VoxelBoxShape", function () {
       tileX,
       tileY,
       tileZ,
-      new OrientedBoundingBox()
+      new OrientedBoundingBox(),
     );
     expectedTranslation = new Cartesian3(-0.5, +0.5, -0.5);
     expect(orientedBoundingBox).toEqual(
       new OrientedBoundingBox(
         expectedTranslation,
-        Matrix3.fromScale(expectedScale, new Matrix3())
-      )
+        Matrix3.fromScale(expectedScale, new Matrix3()),
+      ),
     );
 
     // Child (0, 0, 1)
@@ -563,14 +563,14 @@ describe("Scene/VoxelBoxShape", function () {
       tileX,
       tileY,
       tileZ,
-      new OrientedBoundingBox()
+      new OrientedBoundingBox(),
     );
     expectedTranslation = new Cartesian3(-0.5, -0.5, +0.5);
     expect(orientedBoundingBox).toEqual(
       new OrientedBoundingBox(
         expectedTranslation,
-        Matrix3.fromScale(expectedScale, new Matrix3())
-      )
+        Matrix3.fromScale(expectedScale, new Matrix3()),
+      ),
     );
 
     // Child (1, 1, 0)
@@ -582,14 +582,14 @@ describe("Scene/VoxelBoxShape", function () {
       tileX,
       tileY,
       tileZ,
-      new OrientedBoundingBox()
+      new OrientedBoundingBox(),
     );
     expectedTranslation = new Cartesian3(+0.5, +0.5, -0.5);
     expect(orientedBoundingBox).toEqual(
       new OrientedBoundingBox(
         expectedTranslation,
-        Matrix3.fromScale(expectedScale, new Matrix3())
-      )
+        Matrix3.fromScale(expectedScale, new Matrix3()),
+      ),
     );
 
     // Child (1, 0, 1)
@@ -601,14 +601,14 @@ describe("Scene/VoxelBoxShape", function () {
       tileX,
       tileY,
       tileZ,
-      new OrientedBoundingBox()
+      new OrientedBoundingBox(),
     );
     expectedTranslation = new Cartesian3(+0.5, -0.5, +0.5);
     expect(orientedBoundingBox).toEqual(
       new OrientedBoundingBox(
         expectedTranslation,
-        Matrix3.fromScale(expectedScale, new Matrix3())
-      )
+        Matrix3.fromScale(expectedScale, new Matrix3()),
+      ),
     );
 
     // Child (1, 1, 1)
@@ -620,14 +620,14 @@ describe("Scene/VoxelBoxShape", function () {
       tileX,
       tileY,
       tileZ,
-      new OrientedBoundingBox()
+      new OrientedBoundingBox(),
     );
     expectedTranslation = new Cartesian3(+0.5, +0.5, +0.5);
     expect(orientedBoundingBox).toEqual(
       new OrientedBoundingBox(
         expectedTranslation,
-        Matrix3.fromScale(expectedScale, new Matrix3())
-      )
+        Matrix3.fromScale(expectedScale, new Matrix3()),
+      ),
     );
   });
 
@@ -639,7 +639,7 @@ describe("Scene/VoxelBoxShape", function () {
     const modelMatrix = Matrix4.fromTranslationQuaternionRotationScale(
       translation,
       rotation,
-      scale
+      scale,
     );
     const minBounds = VoxelBoxShape.DefaultMinBounds;
     const maxBounds = VoxelBoxShape.DefaultMaxBounds;
@@ -656,7 +656,7 @@ describe("Scene/VoxelBoxShape", function () {
         tileX,
         tileY,
         tileZ,
-        new OrientedBoundingBox()
+        new OrientedBoundingBox(),
       );
     }).toThrowDeveloperError();
 
@@ -666,7 +666,7 @@ describe("Scene/VoxelBoxShape", function () {
         undefined,
         tileY,
         tileZ,
-        new OrientedBoundingBox()
+        new OrientedBoundingBox(),
       );
     }).toThrowDeveloperError();
 
@@ -676,7 +676,7 @@ describe("Scene/VoxelBoxShape", function () {
         tileX,
         undefined,
         tileZ,
-        new OrientedBoundingBox()
+        new OrientedBoundingBox(),
       );
     }).toThrowDeveloperError();
 
@@ -686,7 +686,7 @@ describe("Scene/VoxelBoxShape", function () {
         tileX,
         tileY,
         undefined,
-        new OrientedBoundingBox()
+        new OrientedBoundingBox(),
       );
     }).toThrowDeveloperError();
   });
@@ -699,7 +699,7 @@ describe("Scene/VoxelBoxShape", function () {
     const modelMatrix = Matrix4.fromTranslationQuaternionRotationScale(
       translation,
       rotation,
-      scale
+      scale,
     );
     const minBounds = VoxelBoxShape.DefaultMinBounds;
     const maxBounds = VoxelBoxShape.DefaultMaxBounds;
@@ -716,7 +716,7 @@ describe("Scene/VoxelBoxShape", function () {
         tileX,
         tileY,
         tileZ,
-        undefined
+        undefined,
       );
     }).toThrowDeveloperError();
   });
@@ -729,7 +729,7 @@ describe("Scene/VoxelBoxShape", function () {
     const modelMatrix = Matrix4.fromTranslationQuaternionRotationScale(
       translation,
       rotation,
-      scale
+      scale,
     );
     const minBounds = VoxelBoxShape.DefaultMinBounds;
     const maxBounds = VoxelBoxShape.DefaultMaxBounds;
@@ -748,7 +748,7 @@ describe("Scene/VoxelBoxShape", function () {
       tileZ,
       undefined,
       shape,
-      paddedDimensions
+      paddedDimensions,
     );
 
     const tileUv = new Cartesian3(0.5, 0.5, 0.5);
@@ -756,12 +756,12 @@ describe("Scene/VoxelBoxShape", function () {
       spatialNode,
       tileDimensions,
       tileUv,
-      new OrientedBoundingBox()
+      new OrientedBoundingBox(),
     );
     const expectedCenter = new Cartesian3(0.125, 0.125, 0.125);
     expect(sampleBoundingBox.center).toEqual(expectedCenter);
     expect(sampleBoundingBox.halfAxes).toEqual(
-      Matrix3.fromScale(new Cartesian3(0.125, 0.125, 0.125))
+      Matrix3.fromScale(new Cartesian3(0.125, 0.125, 0.125)),
     );
   });
 
@@ -773,7 +773,7 @@ describe("Scene/VoxelBoxShape", function () {
     const modelMatrix = Matrix4.fromTranslationQuaternionRotationScale(
       translation,
       rotation,
-      scale
+      scale,
     );
     const minBounds = VoxelBoxShape.DefaultMinBounds;
     const maxBounds = VoxelBoxShape.DefaultMaxBounds;
@@ -792,7 +792,7 @@ describe("Scene/VoxelBoxShape", function () {
       tileZ,
       undefined,
       shape,
-      paddedDimensions
+      paddedDimensions,
     );
     const tileUv = new Cartesian3(0.5, 0.5, 0.5);
 
@@ -801,7 +801,7 @@ describe("Scene/VoxelBoxShape", function () {
         undefined,
         tileDimensions,
         tileUv,
-        new OrientedBoundingBox()
+        new OrientedBoundingBox(),
       );
     }).toThrowDeveloperError();
     expect(function () {
@@ -809,7 +809,7 @@ describe("Scene/VoxelBoxShape", function () {
         spatialNode,
         undefined,
         tileUv,
-        new OrientedBoundingBox()
+        new OrientedBoundingBox(),
       );
     }).toThrowDeveloperError();
     expect(function () {
@@ -817,7 +817,7 @@ describe("Scene/VoxelBoxShape", function () {
         spatialNode,
         tileDimensions,
         undefined,
-        new OrientedBoundingBox()
+        new OrientedBoundingBox(),
       );
     }).toThrowDeveloperError();
     expect(function () {
@@ -825,7 +825,7 @@ describe("Scene/VoxelBoxShape", function () {
         spatialNode,
         tileDimensions,
         tileUv,
-        undefined
+        undefined,
       );
     }).toThrowDeveloperError();
   });

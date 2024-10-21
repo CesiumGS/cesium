@@ -1,6 +1,45 @@
 # Change Log
 
-- Fixed the PointCloudShading.normalShading parameter. Now it disables shading using normals if point cloud contains normals, but the parameter is set to false. [#12066](https://github.com/CesiumGS/cesium/pull/12066)
+- Fixed the PointCloudShading.normalShading parameter. Now it disables shading using normals if point cloud contains normals, but the parameter is set to false. [#12066]
+
+### 1.123 - 2024-11-01
+
+#### @cesium/engine
+
+##### Additions :tada:
+
+- Added `ScreenSpaceCameraController.maximumTiltAngle` to limit how much the camera can tilt. [#12169](https://github.com/CesiumGS/cesium/pull/12169)
+
+##### Fixes :wrench:
+
+- Fix flickering issue caused by bounding sphere retrieval being blocked by the bounding sphere of another entity. [#12230](https://github.com/CesiumGS/cesium/pull/12230)
+
+### 1.122 - 2024-10-01
+
+#### @cesium/engine
+
+##### Additions :tada:
+
+- Added `CallbackPositionProperty` to allow lazy entity position evaluation. [#12170](https://github.com/CesiumGS/cesium/pull/12170)
+- Added `enableVerticalExaggeration` option to models. Set this value to `false` to prevent model exaggeration when `Scene.verticalExaggeration` is set to a value other than `1.0`. [#12141](https://github.com/CesiumGS/cesium/pull/12141)
+- Added `Scene.prototype.pickMetadata` and `Scene.prototype.pickMetadataSchema`, enabling experimental support for picking property textures or property attributes [#12075](https://github.com/CesiumGS/cesium/pull/12075)
+- Added experimental support for the `NGA_gpm_local` glTF extension, for GPM 1.2 [#12204](https://github.com/CesiumGS/cesium/pull/12204)
+
+##### Fixes :wrench:
+
+- Fix `Texture` errors when using a `HTMLVideoElement`. [#12219](https://github.com/CesiumGS/cesium/issues/12219)
+- Fixed noise in ambient occlusion post process. [#12201](https://github.com/CesiumGS/cesium/pull/12201)
+- Use first `geometryBuffer` if no best match found in I3SNode. [#12132](https://github.com/CesiumGS/cesium/pull/12132)
+- Update type definitions throughout `Core/` to allow undefined for optional parameters. [#12193](https://github.com/CesiumGS/cesium/pull/12193)
+- Reverts Firefox OIT temporary fix. [#4815](https://github.com/CesiumGS/cesium/pull/4815)
+
+##### Deprecated :hourglass_flowing_sand:
+
+- `Rectangle.validate` has been deprecated. It will be removed in 1.124.
+
+### 1.121.1 - 2024-09-04
+
+This is an npm-only release to extra source maps included in 1.121
 
 ### 1.121 - 2024-09-03
 
@@ -2130,7 +2169,7 @@ _This is an npm-only release to fix a publishing issue_.
   - This is to make clipping planes' coordinates always relative to the object they're attached to. So if you were positioning the clipping planes as in the example below, this is no longer necessary:
   ```javascript
   clippingPlanes.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(
-    tileset.boundingSphere.center
+    tileset.boundingSphere.center,
   );
   ```
   - This also fixes several issues with clipping planes not using the correct transform for tilesets with children.

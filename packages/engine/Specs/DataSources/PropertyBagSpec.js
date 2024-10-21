@@ -103,7 +103,7 @@ describe("DataSources/PropertyBag", function () {
         a: 1,
         b: 2,
       },
-      createFakeProperty
+      createFakeProperty,
     );
 
     expect(property.propertyNames).toContain("a");

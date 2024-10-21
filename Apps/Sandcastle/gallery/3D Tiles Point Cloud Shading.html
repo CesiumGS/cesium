@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -21,10 +21,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
       #toolbar {
@@ -44,9 +41,7 @@
     <div id="cesiumContainer" class="fullSize"></div>
     <div id="loadingOverlay"><h1>Loading...</h1></div>
     <div id="toolbar">
-      <select
-        data-bind="options: exampleTypes, value: currentExampleType"
-      ></select>
+      <select data-bind="options: exampleTypes, value: currentExampleType"></select>
       <table>
         <tbody>
           <tr>
@@ -59,11 +54,7 @@
                 step="0.1"
                 data-bind="value: maximumScreenSpaceError, valueUpdate: 'input'"
               />
-              <input
-                type="text"
-                size="5"
-                data-bind="value: maximumScreenSpaceError"
-              />
+              <input type="text" size="5" data-bind="value: maximumScreenSpaceError" />
             </td>
           </tr>
           <tr>
@@ -79,11 +70,7 @@
                 step="0.1"
                 data-bind="value: geometricErrorScale, valueUpdate: 'input'"
               />
-              <input
-                type="text"
-                size="5"
-                data-bind="value: geometricErrorScale"
-              />
+              <input type="text" size="5" data-bind="value: geometricErrorScale" />
             </td>
           </tr>
           <tr>
@@ -96,11 +83,7 @@
                 step="1.0"
                 data-bind="value: maximumAttenuation, valueUpdate: 'input'"
               />
-              <input
-                type="text"
-                size="5"
-                data-bind="value: maximumAttenuation"
-              />
+              <input type="text" size="5" data-bind="value: maximumAttenuation" />
             </td>
           </tr>
           <tr>
@@ -129,11 +112,7 @@
                 step="0.1"
                 data-bind="value: eyeDomeLightingStrength, valueUpdate: 'input'"
               />
-              <input
-                type="text"
-                size="5"
-                data-bind="value: eyeDomeLightingStrength"
-              />
+              <input type="text" size="5" data-bind="value: eyeDomeLightingStrength" />
             </td>
           </tr>
           <tr>
@@ -146,11 +125,7 @@
                 step="0.1"
                 data-bind="value: eyeDomeLightingRadius, valueUpdate: 'input'"
               />
-              <input
-                type="text"
-                size="5"
-                data-bind="value: eyeDomeLightingRadius"
-              />
+              <input type="text" size="5" data-bind="value: eyeDomeLightingRadius" />
             </td>
           </tr>
         </tbody>
@@ -201,10 +176,8 @@
           viewModel.baseResolution = pointCloudShading.baseResolution
             ? pointCloudShading.baseResolution
             : 0;
-          viewModel.eyeDomeLightingStrength =
-            pointCloudShading.eyeDomeLightingStrength;
-          viewModel.eyeDomeLightingRadius =
-            pointCloudShading.eyeDomeLightingRadius;
+          viewModel.eyeDomeLightingStrength = pointCloudShading.eyeDomeLightingStrength;
+          viewModel.eyeDomeLightingRadius = pointCloudShading.eyeDomeLightingRadius;
         }
 
         async function loadStHelens() {
@@ -213,12 +186,12 @@
             const initialPosition = Cesium.Cartesian3.fromRadians(
               -2.1344873183780484,
               0.8071380277370774,
-              5743.394497982162
+              5743.394497982162,
             );
             const initialOrientation = new Cesium.HeadingPitchRoll.fromDegrees(
               112.99596671210358,
               -21.34390550872461,
-              0.0716951918898415
+              0.0716951918898415,
             );
             viewer.scene.camera.setView({
               destination: initialPosition,
@@ -271,12 +244,12 @@
               destination: new Cesium.Cartesian3(
                 4401744.644145314,
                 225051.41078911052,
-                4595420.374784433
+                4595420.374784433,
               ),
               orientation: new Cesium.HeadingPitchRoll(
                 5.646733805039757,
                 -0.276607153839886,
-                6.281110875400085
+                6.281110875400085,
               ),
             });
 
@@ -323,9 +296,8 @@
           .getObservable(viewModel, "geometricErrorScale")
           .subscribe(function (newValue) {
             if (Cesium.defined(viewModelTileset)) {
-              viewModelTileset.pointCloudShading.geometricErrorScale = parseFloat(
-                newValue
-              );
+              viewModelTileset.pointCloudShading.geometricErrorScale =
+                parseFloat(newValue);
             }
           });
 
@@ -333,9 +305,7 @@
           .getObservable(viewModel, "maximumAttenuation")
           .subscribe(function (newValue) {
             if (Cesium.defined(viewModelTileset)) {
-              viewModelTileset.pointCloudShading.maximumAttenuation = checkZero(
-                newValue
-              );
+              viewModelTileset.pointCloudShading.maximumAttenuation = checkZero(newValue);
             }
           });
 
@@ -343,9 +313,7 @@
           .getObservable(viewModel, "baseResolution")
           .subscribe(function (newValue) {
             if (Cesium.defined(viewModelTileset)) {
-              viewModelTileset.pointCloudShading.baseResolution = checkZero(
-                newValue
-              );
+              viewModelTileset.pointCloudShading.baseResolution = checkZero(newValue);
             }
           });
 
@@ -353,9 +321,8 @@
           .getObservable(viewModel, "eyeDomeLightingStrength")
           .subscribe(function (newValue) {
             if (Cesium.defined(viewModelTileset)) {
-              viewModelTileset.pointCloudShading.eyeDomeLightingStrength = parseFloat(
-                newValue
-              );
+              viewModelTileset.pointCloudShading.eyeDomeLightingStrength =
+                parseFloat(newValue);
             }
           });
 
@@ -363,27 +330,23 @@
           .getObservable(viewModel, "eyeDomeLightingRadius")
           .subscribe(function (newValue) {
             if (Cesium.defined(viewModelTileset)) {
-              viewModelTileset.pointCloudShading.eyeDomeLightingRadius = parseFloat(
-                newValue
-              );
+              viewModelTileset.pointCloudShading.eyeDomeLightingRadius =
+                parseFloat(newValue);
             }
           });
 
-        Sandcastle.addToggleButton("Enable Attenuation", true, function (
-          checked
-        ) {
+        Sandcastle.addToggleButton("Enable Attenuation", true, function (checked) {
           if (Cesium.defined(viewModelTileset)) {
             viewModelTileset.pointCloudShading.attenuation = checked;
           }
         });
 
-        Sandcastle.addToggleButton("Enable Eye Dome Lighting", true, function (
-          checked
-        ) {
+        Sandcastle.addToggleButton("Enable Eye Dome Lighting", true, function (checked) {
           if (Cesium.defined(viewModelTileset)) {
             viewModelTileset.pointCloudShading.eyeDomeLighting = checked;
           }
-        }); //Sandcastle_End
+        });
+        //Sandcastle_End
       };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;

@@ -63,7 +63,7 @@ function getDracoCacheKey(gltf, draco, gltfResource, baseResource) {
     buffer,
     bufferId,
     gltfResource,
-    baseResource
+    baseResource,
   );
 
   const bufferViewCacheKey = getBufferViewCacheKey(bufferView);
@@ -91,7 +91,7 @@ function getImageCacheKey(gltf, imageId, gltfResource, baseResource) {
     buffer,
     bufferId,
     gltfResource,
-    baseResource
+    baseResource,
   );
 
   const bufferViewCacheKey = getBufferViewCacheKey(bufferView);
@@ -126,7 +126,7 @@ ResourceCacheKey.getSchemaCacheKey = function (options) {
   //>>includeStart('debug', pragmas.debug);
   if (defined(schema) === defined(resource)) {
     throw new DeveloperError(
-      "One of options.schema and options.resource must be defined."
+      "One of options.schema and options.resource must be defined.",
     );
   }
   //>>includeEnd('debug');
@@ -179,7 +179,7 @@ ResourceCacheKey.getEmbeddedBufferCacheKey = function (options) {
 
   return `embedded-buffer:${getEmbeddedBufferCacheKey(
     parentResource,
-    bufferId
+    bufferId,
   )}`;
 };
 
@@ -238,7 +238,7 @@ ResourceCacheKey.getBufferViewCacheKey = function (options) {
     buffer,
     bufferId,
     gltfResource,
-    baseResource
+    baseResource,
   );
 
   const bufferViewCacheKey = getBufferViewCacheKey(bufferView);
@@ -319,13 +319,13 @@ ResourceCacheKey.getVertexBufferCacheKey = function (options) {
 
   if (hasBufferViewId === hasDraco) {
     throw new DeveloperError(
-      "One of options.bufferViewId and options.draco must be defined."
+      "One of options.bufferViewId and options.draco must be defined.",
     );
   }
 
   if (hasDraco && !hasAttributeSemantic) {
     throw new DeveloperError(
-      "When options.draco is defined options.attributeSemantic must also be defined."
+      "When options.draco is defined options.attributeSemantic must also be defined.",
     );
   }
 
@@ -336,7 +336,7 @@ ResourceCacheKey.getVertexBufferCacheKey = function (options) {
 
   if (!loadBuffer && !loadTypedArray) {
     throw new DeveloperError(
-      "At least one of loadBuffer and loadTypedArray must be true."
+      "At least one of loadBuffer and loadTypedArray must be true.",
     );
   }
   //>>includeEnd('debug');
@@ -360,7 +360,7 @@ ResourceCacheKey.getVertexBufferCacheKey = function (options) {
       gltf,
       draco,
       gltfResource,
-      baseResource
+      baseResource,
     );
     return `vertex-buffer:${dracoCacheKey}-draco-${attributeSemantic}${cacheKeySuffix}`;
   }
@@ -373,7 +373,7 @@ ResourceCacheKey.getVertexBufferCacheKey = function (options) {
     buffer,
     bufferId,
     gltfResource,
-    baseResource
+    baseResource,
   );
 
   const bufferViewCacheKey = getBufferViewCacheKey(bufferView);
@@ -427,7 +427,7 @@ ResourceCacheKey.getIndexBufferCacheKey = function (options) {
 
   if (!loadBuffer && !loadTypedArray) {
     throw new DeveloperError(
-      "At least one of loadBuffer and loadTypedArray must be true."
+      "At least one of loadBuffer and loadTypedArray must be true.",
     );
   }
   //>>includeEnd('debug');
@@ -447,7 +447,7 @@ ResourceCacheKey.getIndexBufferCacheKey = function (options) {
       gltf,
       draco,
       gltfResource,
-      baseResource
+      baseResource,
     );
     return `index-buffer:${dracoCacheKey}-draco${cacheKeySuffix}`;
   }
@@ -462,7 +462,7 @@ ResourceCacheKey.getIndexBufferCacheKey = function (options) {
     buffer,
     bufferId,
     gltfResource,
-    baseResource
+    baseResource,
   );
 
   const accessorCacheKey = getAccessorCacheKey(accessor, bufferView);
@@ -497,7 +497,7 @@ ResourceCacheKey.getImageCacheKey = function (options) {
     gltf,
     imageId,
     gltfResource,
-    baseResource
+    baseResource,
   );
 
   return `image:${imageCacheKey}`;
@@ -549,7 +549,7 @@ ResourceCacheKey.getTextureCacheKey = function (options) {
     gltf,
     imageId,
     gltfResource,
-    baseResource
+    baseResource,
   );
 
   // Include the sampler cache key in the texture cache key since textures and

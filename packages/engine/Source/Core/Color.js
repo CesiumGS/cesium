@@ -173,7 +173,7 @@ Color.fromRgba = function (rgba, result) {
     scratchUint8Array[1],
     scratchUint8Array[2],
     scratchUint8Array[3],
-    result
+    result,
   );
 };
 
@@ -293,7 +293,7 @@ Color.fromRandom = function (options, result) {
     Check.typeOf.number.lessThanOrEquals(
       "minimumGreen",
       minimumGreen,
-      maximumGreen
+      maximumGreen,
     );
     //>>includeEnd('debug');
     green =
@@ -310,7 +310,7 @@ Color.fromRandom = function (options, result) {
     Check.typeOf.number.lessThanOrEquals(
       "minimumBlue",
       minimumBlue,
-      maximumBlue
+      maximumBlue,
     );
     //>>includeEnd('debug');
 
@@ -325,9 +325,9 @@ Color.fromRandom = function (options, result) {
 
     //>>includeStart('debug', pragmas.debug);
     Check.typeOf.number.lessThanOrEquals(
-      "minumumAlpha",
+      "minimumAlpha",
       minimumAlpha,
-      maximumAlpha
+      maximumAlpha,
     );
     //>>includeEnd('debug');
 
@@ -350,11 +350,14 @@ Color.fromRandom = function (options, result) {
 //#rgba
 const rgbaMatcher = /^#([0-9a-f])([0-9a-f])([0-9a-f])([0-9a-f])?$/i;
 //#rrggbbaa
-const rrggbbaaMatcher = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})?$/i;
+const rrggbbaaMatcher =
+  /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})?$/i;
 //rgb(), rgba(), or rgb%()
-const rgbParenthesesMatcher = /^rgba?\s*\(\s*([0-9.]+%?)\s*[,\s]+\s*([0-9.]+%?)\s*[,\s]+\s*([0-9.]+%?)(?:\s*[,\s/]+\s*([0-9.]+))?\s*\)$/i;
+const rgbParenthesesMatcher =
+  /^rgba?\s*\(\s*([0-9.]+%?)\s*[,\s]+\s*([0-9.]+%?)\s*[,\s]+\s*([0-9.]+%?)(?:\s*[,\s/]+\s*([0-9.]+))?\s*\)$/i;
 //hsl() or hsla()
-const hslParenthesesMatcher = /^hsla?\s*\(\s*([0-9.]+)\s*[,\s]+\s*([0-9.]+%)\s*[,\s]+\s*([0-9.]+%)(?:\s*[,\s/]+\s*([0-9.]+))?\s*\)$/i;
+const hslParenthesesMatcher =
+  /^hsla?\s*\(\s*([0-9.]+)\s*[,\s]+\s*([0-9.]+%)\s*[,\s]+\s*([0-9.]+%)(?:\s*[,\s/]+\s*([0-9.]+))?\s*\)$/i;
 
 /**
  * Creates a Color instance from a CSS color value.
@@ -425,7 +428,7 @@ Color.fromCssColorString = function (color, result) {
       parseFloat(matches[2]) / 100.0,
       parseFloat(matches[3]) / 100.0,
       parseFloat(defaultValue(matches[4], "1.0")),
-      result
+      result,
     );
   }
 

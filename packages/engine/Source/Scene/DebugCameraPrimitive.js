@@ -151,7 +151,7 @@ DebugCameraPrimitive.prototype.update = function (frameState) {
 
     const orientation = Quaternion.fromRotationMatrix(
       rotation,
-      scratchOrientation
+      scratchOrientation,
     );
 
     planesPrimitives.length = outlinePrimitives.length = numFrustums;
@@ -170,7 +170,7 @@ DebugCameraPrimitive.prototype.update = function (frameState) {
           }),
           attributes: {
             color: ColorGeometryInstanceAttribute.fromColor(
-              Color.fromAlpha(this._color, 0.1, scratchColor)
+              Color.fromAlpha(this._color, 0.1, scratchColor),
             ),
           },
           id: this.id,

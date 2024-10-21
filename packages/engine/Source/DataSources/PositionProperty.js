@@ -14,6 +14,7 @@ import Transforms from "../Core/Transforms.js";
  * @constructor
  * @abstract
  *
+ * @see CallbackPositionProperty
  * @see CompositePositionProperty
  * @see ConstantPositionProperty
  * @see SampledPositionProperty
@@ -99,7 +100,7 @@ PositionProperty.convertToReferenceFrame = function (
   value,
   inputFrame,
   outputFrame,
-  result
+  result,
 ) {
   if (!defined(value)) {
     return value;
@@ -114,7 +115,7 @@ PositionProperty.convertToReferenceFrame = function (
 
   const icrfToFixed = Transforms.computeIcrfToCentralBodyFixedMatrix(
     time,
-    scratchMatrix3
+    scratchMatrix3,
   );
   if (inputFrame === ReferenceFrame.INERTIAL) {
     return Matrix3.multiplyByVector(icrfToFixed, value, result);
@@ -123,7 +124,7 @@ PositionProperty.convertToReferenceFrame = function (
     return Matrix3.multiplyByVector(
       Matrix3.transpose(icrfToFixed, scratchMatrix3),
       value,
-      result
+      result,
     );
   }
 };

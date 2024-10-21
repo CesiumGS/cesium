@@ -93,7 +93,7 @@ const Rotation = {
     packedArray,
     startingIndex,
     lastIndex,
-    result
+    result,
   ) {
     //>>includeStart('debug', pragmas.debug);
     if (!defined(packedArray)) {
@@ -135,7 +135,7 @@ const Rotation = {
     sourceArray,
     firstIndex,
     lastIndex,
-    result
+    result,
   ) {
     //>>includeStart('debug', pragmas.debug);
     if (!defined(array)) {

@@ -105,14 +105,14 @@ describe(
       const visualizer1 = new MockVisualizer();
       visualizer1.getBoundingSphereResult = new BoundingSphere(
         new Cartesian3(1, 2, 3),
-        456
+        456,
       );
       visualizer1.getBoundingSphereState = BoundingSphereState.DONE;
 
       const visualizer2 = new MockVisualizer();
       visualizer2.getBoundingSphereResult = new BoundingSphere(
         new Cartesian3(7, 8, 9),
-        1011
+        1011,
       );
       visualizer2.getBoundingSphereState = BoundingSphereState.DONE;
 
@@ -135,7 +135,7 @@ describe(
 
         const expected = BoundingSphere.union(
           visualizer1.getBoundingSphereResult,
-          visualizer2.getBoundingSphereResult
+          visualizer2.getBoundingSphereResult,
         );
 
         expect(state).toBe(BoundingSphereState.DONE);
@@ -143,18 +143,54 @@ describe(
       });
     });
 
-    it("Computes partial bounding sphere.", function () {
+    it("should not return PENDING when this._ready is false and allowPartial is true", function () {
       const visualizer1 = new MockVisualizer();
       visualizer1.getBoundingSphereResult = new BoundingSphere(
         new Cartesian3(1, 2, 3),
-        456
+        456,
       );
       visualizer1.getBoundingSphereState = BoundingSphereState.PENDING;
 
       const visualizer2 = new MockVisualizer();
       visualizer2.getBoundingSphereResult = new BoundingSphere(
         new Cartesian3(7, 8, 9),
-        1011
+        1011,
+      );
+      visualizer2.getBoundingSphereState = BoundingSphereState.DONE;
+
+      display = new DataSourceDisplay({
+        scene: scene,
+        dataSourceCollection: dataSourceCollection,
+        visualizersCallback: function () {
+          return [visualizer1, visualizer2];
+        },
+      });
+
+      const entity = new Entity();
+      const dataSource = new MockDataSource();
+      dataSource.entities.add(entity);
+      return display.dataSources.add(dataSource).then(function () {
+        display.update(Iso8601.MINIMUM_VALUE);
+
+        const result = new BoundingSphere();
+        const state = display.getBoundingSphere(entity, true, result);
+
+        expect(state).toBe(BoundingSphereState.DONE);
+      });
+    });
+
+    it("Computes partial bounding sphere.", function () {
+      const visualizer1 = new MockVisualizer();
+      visualizer1.getBoundingSphereResult = new BoundingSphere(
+        new Cartesian3(1, 2, 3),
+        456,
+      );
+      visualizer1.getBoundingSphereState = BoundingSphereState.PENDING;
+
+      const visualizer2 = new MockVisualizer();
+      visualizer2.getBoundingSphereResult = new BoundingSphere(
+        new Cartesian3(7, 8, 9),
+        1011,
       );
       visualizer2.getBoundingSphereState = BoundingSphereState.DONE;
 
@@ -184,14 +220,14 @@ describe(
       const visualizer1 = new MockVisualizer();
       visualizer1.getBoundingSphereResult = new BoundingSphere(
         new Cartesian3(1, 2, 3),
-        456
+        456,
       );
       visualizer1.getBoundingSphereState = BoundingSphereState.PENDING;
 
       const visualizer2 = new MockVisualizer();
       visualizer2.getBoundingSphereResult = new BoundingSphere(
         new Cartesian3(7, 8, 9),
-        1011
+        1011,
       );
       visualizer2.getBoundingSphereState = BoundingSphereState.DONE;
 
@@ -470,7 +506,7 @@ describe(
 
         expect(display._primitives.contains(source._primitives)).toBe(true);
         expect(
-          display._groundPrimitives.contains(source._groundPrimitives)
+          display._groundPrimitives.contains(source._groundPrimitives),
         ).toBe(true);
       });
     });
@@ -487,7 +523,7 @@ describe(
       return dataSourceCollection.add(source).then(function () {
         expect(display._primitives.contains(source._primitives)).toBe(true);
         expect(
-          display._groundPrimitives.contains(source._groundPrimitives)
+          display._groundPrimitives.contains(source._groundPrimitives),
         ).toBe(true);
 
         dataSourceCollection.remove(source);
@@ -601,13 +637,13 @@ describe(
       });
       expect(scene.primitives.contains(display._primitives)).toBe(false);
       expect(scene.groundPrimitives.contains(display._groundPrimitives)).toBe(
-        false
+        false,
       );
 
       return dataSourceCollection.add(new MockDataSource()).then(function () {
         expect(scene.primitives.contains(display._primitives)).toBe(true);
         expect(scene.groundPrimitives.contains(display._groundPrimitives)).toBe(
-          true
+          true,
         );
       });
     });
@@ -622,7 +658,7 @@ describe(
 
         expect(scene.primitives.contains(display._primitives)).toBe(true);
         expect(scene.groundPrimitives.contains(display._groundPrimitives)).toBe(
-          true
+          true,
         );
       });
     });
@@ -635,14 +671,14 @@ describe(
       });
       expect(scene.primitives.contains(display._primitives)).toBe(false);
       expect(scene.groundPrimitives.contains(display._groundPrimitives)).toBe(
-        false
+        false,
       );
 
       display.defaultDataSource.entities.add(new Entity());
 
       expect(scene.primitives.contains(display._primitives)).toBe(true);
       expect(scene.groundPrimitives.contains(display._groundPrimitives)).toBe(
-        true
+        true,
       );
     });
 
@@ -652,7 +688,7 @@ describe(
       const callback = DataSourceDisplay.defaultVisualizersCallback(
         scene,
         entityCluster,
-        dataSource
+        dataSource,
       );
       expect(callback.length).toEqual(8);
       expect(callback[0]).toBeInstanceOf(BillboardVisualizer);
@@ -673,7 +709,7 @@ describe(
       const callback = DataSourceDisplay.defaultVisualizersCallback(
         scene,
         entityCluster,
-        dataSource
+        dataSource,
       );
       expect(callback.length).withContext("length before register").toEqual(8);
 
@@ -681,7 +717,7 @@ describe(
       const callback2 = DataSourceDisplay.defaultVisualizersCallback(
         scene,
         entityCluster,
-        dataSource
+        dataSource,
       );
       expect(callback2.length).withContext("length after register").toEqual(9);
       expect(callback2[8]).toBeInstanceOf(FakeVisualizer);
@@ -690,12 +726,12 @@ describe(
       const callback3 = DataSourceDisplay.defaultVisualizersCallback(
         scene,
         entityCluster,
-        dataSource
+        dataSource,
       );
       expect(callback3.length)
         .withContext("length after unregister")
         .toEqual(8);
     });
   },
-  "WebGL"
+  "WebGL",
 );

@@ -46,7 +46,7 @@ function createResources(pickDepth, context) {
 PickDepthFramebuffer.prototype.update = function (
   context,
   drawingBufferPosition,
-  viewport
+  viewport,
 ) {
   const width = viewport.width;
   const height = viewport.height;

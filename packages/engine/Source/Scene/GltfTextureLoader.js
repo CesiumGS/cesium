@@ -180,7 +180,7 @@ CreateTextureJob.prototype.set = function (
   textureInfo,
   image,
   mipLevels,
-  context
+  context,
 ) {
   this.gltf = gltf;
   this.textureInfo = textureInfo;
@@ -195,7 +195,7 @@ CreateTextureJob.prototype.execute = function () {
     this.textureInfo,
     this.image,
     this.mipLevels,
-    this.context
+    this.context,
   );
 };
 
@@ -256,7 +256,7 @@ function createTexture(gltf, textureInfo, image, mipLevels, context) {
       requiresPowerOfTwo
     ) {
       console.warn(
-        "Compressed texture uses REPEAT or MIRRORED_REPEAT texture wrap mode and dimensions are not powers of two. The texture may be rendered incorrectly."
+        "Compressed texture uses REPEAT or MIRRORED_REPEAT texture wrap mode and dimensions are not powers of two. The texture may be rendered incorrectly.",
       );
     }
 
@@ -334,7 +334,7 @@ GltfTextureLoader.prototype.process = function (frameState) {
       this._textureInfo,
       this._image,
       this._mipLevels,
-      frameState.context
+      frameState.context,
     );
     const jobScheduler = frameState.jobScheduler;
     if (!jobScheduler.execute(textureJob, JobType.TEXTURE)) {
@@ -348,7 +348,7 @@ GltfTextureLoader.prototype.process = function (frameState) {
       this._textureInfo,
       this._image,
       this._mipLevels,
-      frameState.context
+      frameState.context,
     );
   }
 

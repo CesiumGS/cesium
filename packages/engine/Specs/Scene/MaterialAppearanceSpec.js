@@ -40,7 +40,7 @@ describe(
     function createPrimitive(vertexFormat) {
       vertexFormat = defaultValue(
         vertexFormat,
-        MaterialAppearance.MaterialSupport.ALL.vertexFormat
+        MaterialAppearance.MaterialSupport.ALL.vertexFormat,
       );
       primitive = new Primitive({
         geometryInstances: new GeometryInstance({
@@ -60,21 +60,21 @@ describe(
       const a = new MaterialAppearance();
 
       expect(a.materialSupport).toEqual(
-        MaterialAppearance.MaterialSupport.TEXTURED
+        MaterialAppearance.MaterialSupport.TEXTURED,
       );
       expect(a.material).toBeDefined();
       expect(a.material.type).toEqual(Material.ColorType);
       expect(a.vertexShaderSource).toEqual(
-        MaterialAppearance.MaterialSupport.TEXTURED.vertexShaderSource
+        MaterialAppearance.MaterialSupport.TEXTURED.vertexShaderSource,
       );
       expect(a.fragmentShaderSource).toEqual(
-        MaterialAppearance.MaterialSupport.TEXTURED.fragmentShaderSource
+        MaterialAppearance.MaterialSupport.TEXTURED.fragmentShaderSource,
       );
       expect(a.renderState).toEqual(
-        Appearance.getDefaultRenderState(true, false)
+        Appearance.getDefaultRenderState(true, false),
       );
       expect(a.vertexFormat).toEqual(
-        MaterialAppearance.MaterialSupport.TEXTURED.vertexFormat
+        MaterialAppearance.MaterialSupport.TEXTURED.vertexFormat,
       );
       expect(a.flat).toEqual(false);
       expect(a.faceForward).toEqual(true);
@@ -129,5 +129,5 @@ describe(
       expect(scene).notToRender(backgroundColor);
     });
   },
-  "WebGL"
+  "WebGL",
 );

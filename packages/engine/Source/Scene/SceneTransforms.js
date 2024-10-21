@@ -48,7 +48,7 @@ SceneTransforms.worldToWindowCoordinates = function (scene, position, result) {
     scene,
     position,
     Cartesian3.ZERO,
-    result
+    result,
   );
 };
 
@@ -65,15 +65,15 @@ function worldToClip(position, eyeOffset, camera, result) {
       position.y,
       position.z,
       1,
-      scratchCartesian4
+      scratchCartesian4,
     ),
-    scratchCartesian4
+    scratchCartesian4,
   );
 
   const zEyeOffset = Cartesian3.multiplyComponents(
     eyeOffset,
     Cartesian3.normalize(positionEC, scratchEyeOffset),
-    scratchEyeOffset
+    scratchEyeOffset,
   );
   positionEC.x += eyeOffset.x + zEyeOffset.x;
   positionEC.y += eyeOffset.y + zEyeOffset.y;
@@ -82,13 +82,13 @@ function worldToClip(position, eyeOffset, camera, result) {
   return Matrix4.multiplyByVector(
     camera.frustum.projectionMatrix,
     positionEC,
-    result
+    result,
   );
 }
 
 const scratchMaxCartographic = new Cartographic(
   Math.PI,
-  CesiumMath.PI_OVER_TWO
+  CesiumMath.PI_OVER_TWO,
 );
 const scratchProjectedCartesian = new Cartesian3();
 const scratchCameraPosition = new Cartesian3();
@@ -100,7 +100,7 @@ SceneTransforms.worldWithEyeOffsetToWindowCoordinates = function (
   scene,
   position,
   eyeOffset,
-  result
+  result,
 ) {
   //>>includeStart('debug', pragmas.debug);
   if (!defined(scene)) {
@@ -116,7 +116,7 @@ SceneTransforms.worldWithEyeOffsetToWindowCoordinates = function (
   const actualPosition = SceneTransforms.computeActualEllipsoidPosition(
     frameState,
     position,
-    actualPositionScratch
+    actualPositionScratch,
   );
 
   if (!defined(actualPosition)) {
@@ -139,12 +139,12 @@ SceneTransforms.worldWithEyeOffsetToWindowCoordinates = function (
     const maxCartographic = scratchMaxCartographic;
     const maxCoord = projection.project(
       maxCartographic,
-      scratchProjectedCartesian
+      scratchProjectedCartesian,
     );
 
     const cameraPosition = Cartesian3.clone(
       camera.position,
-      scratchCameraPosition
+      scratchCameraPosition,
     );
     const frustum = camera.frustum.clone();
 
@@ -152,7 +152,7 @@ SceneTransforms.worldWithEyeOffsetToWindowCoordinates = function (
       viewport,
       0.0,
       1.0,
-      new Matrix4()
+      new Matrix4(),
     );
     const projectionMatrix = camera.frustum.projectionMatrix;
 
@@ -160,12 +160,12 @@ SceneTransforms.worldWithEyeOffsetToWindowCoordinates = function (
     const eyePoint = Cartesian3.fromElements(
       CesiumMath.sign(x) * maxCoord.x - x,
       0.0,
-      -camera.positionWC.x
+      -camera.positionWC.x,
     );
     const windowCoordinates = Transforms.pointToGLWindowCoordinates(
       projectionMatrix,
       viewportTransformation,
-      eyePoint
+      eyePoint,
     );
 
     if (
@@ -184,7 +184,7 @@ SceneTransforms.worldWithEyeOffsetToWindowCoordinates = function (
         SceneTransforms.clipToGLWindowCoordinates(
           viewport,
           positionCC,
-          scratchWindowCoord0
+          scratchWindowCoord0,
         );
 
         viewport.x += windowCoordinates.x;
@@ -199,7 +199,7 @@ SceneTransforms.worldWithEyeOffsetToWindowCoordinates = function (
         SceneTransforms.clipToGLWindowCoordinates(
           viewport,
           positionCC,
-          scratchWindowCoord1
+          scratchWindowCoord1,
         );
       } else {
         viewport.x += windowCoordinates.x;
@@ -211,7 +211,7 @@ SceneTransforms.worldWithEyeOffsetToWindowCoordinates = function (
         SceneTransforms.clipToGLWindowCoordinates(
           viewport,
           positionCC,
-          scratchWindowCoord0
+          scratchWindowCoord0,
         );
 
         viewport.x = viewport.x - viewport.width;
@@ -226,7 +226,7 @@ SceneTransforms.worldWithEyeOffsetToWindowCoordinates = function (
         SceneTransforms.clipToGLWindowCoordinates(
           viewport,
           positionCC,
-          scratchWindowCoord1
+          scratchWindowCoord1,
         );
       }
 
@@ -254,7 +254,7 @@ SceneTransforms.worldWithEyeOffsetToWindowCoordinates = function (
     result = SceneTransforms.clipToGLWindowCoordinates(
       viewport,
       positionCC,
-      result
+      result,
     );
   }
 
@@ -282,7 +282,7 @@ SceneTransforms.worldWithEyeOffsetToWindowCoordinates = function (
 SceneTransforms.worldToDrawingBufferCoordinates = function (
   scene,
   position,
-  result
+  result,
 ) {
   result = SceneTransforms.worldToWindowCoordinates(scene, position, result);
   if (!defined(result)) {
@@ -301,7 +301,7 @@ const positionInCartographic = new Cartographic();
 SceneTransforms.computeActualEllipsoidPosition = function (
   frameState,
   position,
-  result
+  result,
 ) {
   const mode = frameState.mode;
 
@@ -312,7 +312,7 @@ SceneTransforms.computeActualEllipsoidPosition = function (
   const projection = frameState.mapProjection;
   const cartographic = projection.ellipsoid.cartesianToCartographic(
     position,
-    positionInCartographic
+    positionInCartographic,
   );
   if (!defined(cartographic)) {
     return undefined;
@@ -325,7 +325,7 @@ SceneTransforms.computeActualEllipsoidPosition = function (
       projectedPosition.z,
       projectedPosition.x,
       projectedPosition.y,
-      result
+      result,
     );
   }
 
@@ -334,7 +334,7 @@ SceneTransforms.computeActualEllipsoidPosition = function (
       0.0,
       projectedPosition.x,
       projectedPosition.y,
-      result
+      result,
     );
   }
 
@@ -344,7 +344,7 @@ SceneTransforms.computeActualEllipsoidPosition = function (
     CesiumMath.lerp(projectedPosition.z, position.x, morphTime),
     CesiumMath.lerp(projectedPosition.x, position.y, morphTime),
     CesiumMath.lerp(projectedPosition.y, position.z, morphTime),
-    result
+    result,
   );
 };
 
@@ -358,7 +358,7 @@ const viewportTransform = new Matrix4();
 SceneTransforms.clipToGLWindowCoordinates = function (
   viewport,
   position,
-  result
+  result,
 ) {
   // Perspective divide to transform from clip coordinates to normalized device coordinates
   Cartesian3.divideByScalar(position, position.w, positionNDC);
@@ -376,7 +376,7 @@ SceneTransforms.clipToGLWindowCoordinates = function (
 SceneTransforms.transformWindowToDrawingBuffer = function (
   scene,
   windowPosition,
-  result
+  result,
 ) {
   const canvas = scene.canvas;
   const xScale = scene.drawingBufferWidth / canvas.clientWidth;
@@ -384,7 +384,7 @@ SceneTransforms.transformWindowToDrawingBuffer = function (
   return Cartesian2.fromElements(
     windowPosition.x * xScale,
     windowPosition.y * yScale,
-    result
+    result,
   );
 };
 
@@ -398,7 +398,7 @@ SceneTransforms.drawingBufferToWorldCoordinates = function (
   scene,
   drawingBufferPosition,
   depth,
-  result
+  result,
 ) {
   const context = scene.context;
   const uniformState = context.uniformState;
@@ -445,13 +445,13 @@ SceneTransforms.drawingBufferToWorldCoordinates = function (
     worldCoords = Matrix4.multiplyByVector(
       uniformState.inverseView,
       worldCoords,
-      worldCoords
+      worldCoords,
     );
   } else {
     worldCoords = Matrix4.multiplyByVector(
       uniformState.inverseViewProjection,
       ndc,
-      scratchWorldCoords
+      scratchWorldCoords,
     );
 
     // Reverse perspective divide

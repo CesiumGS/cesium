@@ -21,7 +21,7 @@ describe("Core/OrthographicFrustum", function () {
     planes = frustum.computeCullingVolume(
       new Cartesian3(),
       Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3()),
-      Cartesian3.UNIT_Y
+      Cartesian3.UNIT_Y,
     ).planes;
   });
 
@@ -145,7 +145,7 @@ describe("Core/OrthographicFrustum", function () {
       frustum.top,
       frustum.near,
       frustum.far,
-      new Matrix4()
+      new Matrix4(),
     );
     const projectionMatrix = frustum.projectionMatrix;
     expect(projectionMatrix).toEqualEpsilon(expected, CesiumMath.EPSILON6);
@@ -158,7 +158,7 @@ describe("Core/OrthographicFrustum", function () {
         undefined,
         0.0,
         1.0,
-        new Cartesian2()
+        new Cartesian2(),
       );
     }).toThrowDeveloperError();
   });
@@ -170,7 +170,7 @@ describe("Core/OrthographicFrustum", function () {
         1.0,
         0.0,
         1.0,
-        new Cartesian2()
+        new Cartesian2(),
       );
     }).toThrowDeveloperError();
   });
@@ -194,7 +194,7 @@ describe("Core/OrthographicFrustum", function () {
         1.0,
         0.0,
         undefined,
-        new Cartesian2()
+        new Cartesian2(),
       );
     }).toThrowDeveloperError();
   });
@@ -214,14 +214,14 @@ describe("Core/OrthographicFrustum", function () {
       dimensions.y,
       distance,
       pixelRatio,
-      new Cartesian2()
+      new Cartesian2(),
     );
     const expected = frustum.offCenterFrustum.getPixelDimensions(
       dimensions.x,
       dimensions.y,
       distance,
       pixelRatio,
-      new Cartesian2()
+      new Cartesian2(),
     );
     expect(pixelSize.x).toEqual(expected.x);
     expect(pixelSize.y).toEqual(expected.y);
@@ -236,14 +236,14 @@ describe("Core/OrthographicFrustum", function () {
       dimensions.y,
       distance,
       pixelRatio,
-      new Cartesian2()
+      new Cartesian2(),
     );
     const expected = frustum.offCenterFrustum.getPixelDimensions(
       dimensions.x,
       dimensions.y,
       distance,
       pixelRatio,
-      new Cartesian2()
+      new Cartesian2(),
     );
     expect(pixelSize.x).toEqual(expected.x);
     expect(pixelSize.y).toEqual(expected.y);
@@ -312,6 +312,6 @@ describe("Core/OrthographicFrustum", function () {
       near: 3.0,
       far: 4.0,
     }),
-    [1.0, 2.0, 3.0, 4.0]
+    [1.0, 2.0, 3.0, 4.0],
   );
 });

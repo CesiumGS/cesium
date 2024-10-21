@@ -27,14 +27,14 @@ function IonGeocoderService(options) {
 
   const accessToken = defaultValue(options.accessToken, Ion.defaultAccessToken);
   const server = Resource.createIfNeeded(
-    defaultValue(options.server, Ion.defaultServer)
+    defaultValue(options.server, Ion.defaultServer),
   );
   server.appendForwardSlash();
 
   const defaultTokenCredit = Ion.getDefaultTokenCredit(accessToken);
   if (defined(defaultTokenCredit)) {
     options.scene.frameState.creditDisplay.addStaticCredit(
-      Credit.clone(defaultTokenCredit)
+      Credit.clone(defaultTokenCredit),
     );
   }
 

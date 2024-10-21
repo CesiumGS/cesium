@@ -21,7 +21,7 @@ describe("Core/PerspectiveOffCenterFrustum", function () {
     planes = frustum.computeCullingVolume(
       new Cartesian3(),
       Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3()),
-      Cartesian3.UNIT_Y
+      Cartesian3.UNIT_Y,
     ).planes;
   });
 
@@ -139,7 +139,7 @@ describe("Core/PerspectiveOffCenterFrustum", function () {
       top,
       near,
       far,
-      new Matrix4()
+      new Matrix4(),
     );
 
     expect(projectionMatrix).toEqualEpsilon(expected, CesiumMath.EPSILON6);
@@ -158,7 +158,7 @@ describe("Core/PerspectiveOffCenterFrustum", function () {
       bottom,
       top,
       near,
-      new Matrix4()
+      new Matrix4(),
     );
     expect(expected).toEqual(frustum.infiniteProjectionMatrix);
   });
@@ -170,7 +170,7 @@ describe("Core/PerspectiveOffCenterFrustum", function () {
         undefined,
         1.0,
         1.0,
-        new Cartesian2()
+        new Cartesian2(),
       );
     }).toThrowDeveloperError();
   });
@@ -182,7 +182,7 @@ describe("Core/PerspectiveOffCenterFrustum", function () {
         1.0,
         1.0,
         1.0,
-        new Cartesian2()
+        new Cartesian2(),
       );
     }).toThrowDeveloperError();
   });
@@ -206,7 +206,7 @@ describe("Core/PerspectiveOffCenterFrustum", function () {
         1.0,
         1.0,
         undefined,
-        new Cartesian2()
+        new Cartesian2(),
       );
     }).toThrowDeveloperError();
   });
@@ -223,7 +223,7 @@ describe("Core/PerspectiveOffCenterFrustum", function () {
       1.0,
       1.0,
       1.0,
-      new Cartesian2()
+      new Cartesian2(),
     );
     expect(pixelSize.x).toEqual(2.0);
     expect(pixelSize.y).toEqual(2.0);
@@ -235,7 +235,7 @@ describe("Core/PerspectiveOffCenterFrustum", function () {
       1.0,
       1.0,
       2.0,
-      new Cartesian2()
+      new Cartesian2(),
     );
     expect(pixelSize.x).toEqual(4.0);
     expect(pixelSize.y).toEqual(4.0);

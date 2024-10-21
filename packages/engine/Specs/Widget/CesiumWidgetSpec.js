@@ -46,7 +46,7 @@ describe(
       options.contextOptions = defaultValue(options.contextOptions, {});
       options.contextOptions.webgl = defaultValue(
         options.contextOptions.webgl,
-        {}
+        {},
       );
       if (!!window.webglStub) {
         options.contextOptions.getWebGLStub = getWebGLStub;
@@ -69,7 +69,7 @@ describe(
       expect(widget.camera).toBeInstanceOf(Camera);
       expect(widget.clock).toBeInstanceOf(Clock);
       expect(widget.screenSpaceEventHandler).toBeInstanceOf(
-        ScreenSpaceEventHandler
+        ScreenSpaceEventHandler,
       );
       expect(widget.useBrowserRecommendedResolution).toBe(true);
       widget.render();
@@ -233,13 +233,13 @@ describe(
       expect(contextAttributes.stencil).toEqual(webglOptions.stencil);
       expect(contextAttributes.antialias).toEqual(webglOptions.antialias);
       expect(contextAttributes.premultipliedAlpha).toEqual(
-        webglOptions.premultipliedAlpha
+        webglOptions.premultipliedAlpha,
       );
       expect(contextAttributes.powerPreference).toEqual(
-        webglOptions.powerPreference
+        webglOptions.powerPreference,
       );
       expect(contextAttributes.preserveDrawingBuffer).toEqual(
-        webglOptions.preserveDrawingBuffer
+        webglOptions.preserveDrawingBuffer,
       );
     });
 
@@ -264,7 +264,7 @@ describe(
       });
 
       expect(widget.scene.maximumRenderTimeChange).toBe(
-        Number.POSITIVE_INFINITY
+        Number.POSITIVE_INFINITY,
       );
     });
 
@@ -374,11 +374,11 @@ describe(
         return !widget.useDefaultRenderLoop;
       }).then(function () {
         expect(
-          widget._element.querySelector(".cesium-widget-errorPanel")
+          widget._element.querySelector(".cesium-widget-errorPanel"),
         ).not.toBeNull();
 
         const messages = widget._element.querySelectorAll(
-          ".cesium-widget-errorPanel-message"
+          ".cesium-widget-errorPanel-message",
         );
 
         let found = false;
@@ -392,11 +392,11 @@ describe(
 
         // click the OK button to dismiss the panel
         DomEventSimulator.fireClick(
-          widget._element.querySelector(".cesium-button")
+          widget._element.querySelector(".cesium-button"),
         );
 
         expect(
-          widget._element.querySelector(".cesium-widget-errorPanel")
+          widget._element.querySelector(".cesium-widget-errorPanel"),
         ).toBeNull();
       });
     });
@@ -415,10 +415,10 @@ describe(
         return !widget.useDefaultRenderLoop;
       }).then(function () {
         expect(
-          widget._element.querySelector(".cesium-widget-errorPanel")
+          widget._element.querySelector(".cesium-widget-errorPanel"),
         ).toBeNull();
       });
     });
   },
-  "WebGL"
+  "WebGL",
 );

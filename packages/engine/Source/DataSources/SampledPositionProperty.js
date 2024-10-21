@@ -206,7 +206,7 @@ SampledPositionProperty.prototype.getValue = function (time, result) {
 SampledPositionProperty.prototype.getValueInReferenceFrame = function (
   time,
   referenceFrame,
-  result
+  result,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("time", time);
@@ -220,7 +220,7 @@ SampledPositionProperty.prototype.getValueInReferenceFrame = function (
       result,
       this._referenceFrame,
       referenceFrame,
-      result
+      result,
     );
   }
   return undefined;
@@ -247,7 +247,7 @@ SampledPositionProperty.prototype.setInterpolationOptions = function (options) {
 SampledPositionProperty.prototype.addSample = function (
   time,
   position,
-  derivatives
+  derivatives,
 ) {
   const numberOfDerivatives = this._numberOfDerivatives;
   //>>includeStart('debug', pragmas.debug);
@@ -256,7 +256,7 @@ SampledPositionProperty.prototype.addSample = function (
     (!defined(derivatives) || derivatives.length !== numberOfDerivatives)
   ) {
     throw new DeveloperError(
-      "derivatives length must be equal to the number of derivatives."
+      "derivatives length must be equal to the number of derivatives.",
     );
   }
   //>>includeEnd('debug');
@@ -275,7 +275,7 @@ SampledPositionProperty.prototype.addSample = function (
 SampledPositionProperty.prototype.addSamples = function (
   times,
   positions,
-  derivatives
+  derivatives,
 ) {
   this._property.addSamples(times, positions, derivatives);
 };
@@ -289,7 +289,7 @@ SampledPositionProperty.prototype.addSamples = function (
  */
 SampledPositionProperty.prototype.addSamplesPackedArray = function (
   packedSamples,
-  epoch
+  epoch,
 ) {
   this._property.addSamplesPackedArray(packedSamples, epoch);
 };

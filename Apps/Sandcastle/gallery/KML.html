@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -18,10 +18,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -49,8 +46,8 @@
                 viewer.dataSources.add(
                   Cesium.KmlDataSource.load(
                     "../../SampleData/kml/facilities/facilities.kml",
-                    options
-                  )
+                    options,
+                  ),
                 );
               },
             },
@@ -61,8 +58,8 @@
                 viewer.dataSources.add(
                   Cesium.KmlDataSource.load(
                     "../../SampleData/kml/gdpPerCapita2008.kmz",
-                    options
-                  )
+                    options,
+                  ),
                 );
               },
             },
@@ -73,8 +70,8 @@
                   .add(
                     Cesium.KmlDataSource.load(
                       "../../SampleData/kml/bikeRide.kml",
-                      options
-                    )
+                      options,
+                    ),
                   )
                   .then(function (dataSource) {
                     viewer.clock.shouldAnimate = false;
@@ -89,7 +86,7 @@
               },
             },
           ],
-          "toolbar"
+          "toolbar",
         );
 
         Sandcastle.reset = function () {

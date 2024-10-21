@@ -145,7 +145,7 @@ Object.defineProperties(PointGraphics.prototype, {
    * @type {Property|undefined}
    */
   distanceDisplayCondition: createPropertyDescriptor(
-    "distanceDisplayCondition"
+    "distanceDisplayCondition",
   ),
 
   /**
@@ -155,7 +155,7 @@ Object.defineProperties(PointGraphics.prototype, {
    * @type {Property|undefined}
    */
   disableDepthTestDistance: createPropertyDescriptor(
-    "disableDepthTestDistance"
+    "disableDepthTestDistance",
   ),
 
   /**
@@ -208,31 +208,31 @@ PointGraphics.prototype.merge = function (source) {
   this.pixelSize = defaultValue(this.pixelSize, source.pixelSize);
   this.heightReference = defaultValue(
     this.heightReference,
-    source.heightReference
+    source.heightReference,
   );
   this.color = defaultValue(this.color, source.color);
   this.outlineColor = defaultValue(this.outlineColor, source.outlineColor);
   this.outlineWidth = defaultValue(this.outlineWidth, source.outlineWidth);
   this.scaleByDistance = defaultValue(
     this.scaleByDistance,
-    source.scaleByDistance
+    source.scaleByDistance,
   );
   this.translucencyByDistance = defaultValue(
     this._translucencyByDistance,
-    source.translucencyByDistance
+    source.translucencyByDistance,
   );
   this.distanceDisplayCondition = defaultValue(
     this.distanceDisplayCondition,
-    source.distanceDisplayCondition
+    source.distanceDisplayCondition,
   );
   this.disableDepthTestDistance = defaultValue(
     this.disableDepthTestDistance,
-    source.disableDepthTestDistance
+    source.disableDepthTestDistance,
   );
 
   this.splitDirection = defaultValue(
     this.splitDirection,
-    source.splitDirection
+    source.splitDirection,
   );
 };
 export default PointGraphics;

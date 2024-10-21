@@ -18,7 +18,7 @@ describe("Scene/VertexAttributeSemantic", function () {
     const semanticsLength = semantics.length;
     for (let i = 0; i < semanticsLength; ++i) {
       expect(VertexAttributeSemantic.hasSetIndex(semantics[i])).toBe(
-        hasSetIndex[i]
+        hasSetIndex[i],
       );
     }
   });
@@ -73,7 +73,7 @@ describe("Scene/VertexAttributeSemantic", function () {
     const semanticsLength = gltfSemantics.length;
     for (let i = 0; i < semanticsLength; ++i) {
       expect(VertexAttributeSemantic.fromGltfSemantic(gltfSemantics[i])).toBe(
-        expectedSemantics[i]
+        expectedSemantics[i],
       );
     }
   });
@@ -110,7 +110,7 @@ describe("Scene/VertexAttributeSemantic", function () {
     const semanticsLength = pntsSemantics.length;
     for (let i = 0; i < semanticsLength; ++i) {
       expect(VertexAttributeSemantic.fromPntsSemantic(pntsSemantics[i])).toBe(
-        expectedSemantics[i]
+        expectedSemantics[i],
       );
     }
   });
@@ -153,7 +153,7 @@ describe("Scene/VertexAttributeSemantic", function () {
     const semanticsLength = semantics.length;
     for (let i = 0; i < semanticsLength; ++i) {
       expect(VertexAttributeSemantic.getGlslType(semantics[i])).toBe(
-        expectedShaderTypes[i]
+        expectedShaderTypes[i],
       );
     }
   });
@@ -196,7 +196,7 @@ describe("Scene/VertexAttributeSemantic", function () {
     const semanticsLength = semantics.length;
     for (let i = 0; i < semanticsLength; ++i) {
       expect(VertexAttributeSemantic.getVariableName(semantics[i])).toBe(
-        expectedVariableName[i]
+        expectedVariableName[i],
       );
     }
   });
@@ -205,8 +205,8 @@ describe("Scene/VertexAttributeSemantic", function () {
     expect(
       VertexAttributeSemantic.getVariableName(
         VertexAttributeSemantic.FEATURE_ID,
-        0
-      )
+        0,
+      ),
     ).toBe("featureId_0");
   });
 

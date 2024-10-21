@@ -138,13 +138,13 @@ ImageMaterialProperty.prototype.getValue = function (time, result) {
     this._repeat,
     time,
     defaultRepeat,
-    result.repeat
+    result.repeat,
   );
   result.color = Property.getValueOrClonedDefault(
     this._color,
     time,
     defaultColor,
-    result.color
+    result.color,
   );
   if (Property.getValueOrDefault(this._transparent, time, defaultTransparent)) {
     result.color.alpha = Math.min(0.99, result.color.alpha);
