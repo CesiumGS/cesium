@@ -7,8 +7,7 @@ import SceneMode from "./SceneMode.js";
  * Blends the atmosphere to geometry far from the camera for horizon views. Allows for additional
  * performance improvements by rendering less geometry and dispatching less terrain requests.
  *
- * View the {@link http://localhost:8080/Apps/Sandcastle/index.html?src=development%2FFog.html|Fog Sandcastle}
- * to explore the effects of the properties below
+ * @demo {@link https://sandcastle.cesium.com/index.html?src=Fog.html|Cesium Sandcastle Fog Demo}
  *
  * @alias Fog
  * @constructor
@@ -29,7 +28,7 @@ function Fog() {
    * @type {boolean}
    * @default true
    * @example
-   * // Use fog culling but do't render it
+   * // Use fog culling but don't render it
    * viewer.scene.fog.enabled = true;
    * viewer.scene.fog.renderable = false;
    */
