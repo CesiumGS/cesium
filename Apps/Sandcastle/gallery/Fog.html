@@ -120,8 +120,6 @@
           terrain: Cesium.Terrain.fromWorldTerrain(),
         });
 
-        viewer.extend(Cesium.viewerCesiumInspectorMixin);
-
         //The viewModel tracks the state of our mini application.
         const viewModel = {
           enabled: true,
@@ -217,8 +215,6 @@
           },
           "zoomButtons",
         );
-
-        viewer.scene.globe._surface._debug.enableDebugOutput = true;
 
         Sandcastle.addToolbarButton(
           "Snapshot",
