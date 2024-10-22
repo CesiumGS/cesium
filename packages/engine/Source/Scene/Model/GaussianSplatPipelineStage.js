@@ -13,7 +13,7 @@ const GaussianSplatPipelineStage = {
 GaussianSplatPipelineStage.process = function (
   renderResources,
   primitive,
-  frameState
+  frameState,
 ) {
   const { shaderBuilder } = renderResources;
 
@@ -28,7 +28,7 @@ GaussianSplatPipelineStage.process = function (
   shaderBuilder.addDefine(
     "HAS_GAUSSIAN_SPLATS",
     undefined,
-    ShaderDestination.BOTH
+    ShaderDestination.BOTH,
   );
 
   shaderBuilder.addAttribute("vec2", "a_screenQuadPosition");
@@ -86,19 +86,19 @@ GaussianSplatPipelineStage.process = function (
     const scaleAttr = attributes.find((a) => a.name === "_SCALE");
     const rotAttr = attributes.find((a) => a.name === "_ROTATION");
     const clrAttr = attributes.find((a) => a.name === "COLOR_0");
-    const opAttr = attributes.find((a) => a.name === "_OPACITY");
+    // const opAttr = attributes.find((a) => a.name === "_OPACITY");
 
     const posArray = posAttr.typedArray;
     const scaleArray = scaleAttr.typedArray;
     const rotArray = rotAttr.typedArray;
     const clrArray = clrAttr.typedArray;
-    const opArray = opAttr.typedArray;
+    //  const opArray = opAttr.typedArray;
 
     const newPosArray = new posArray.constructor(posArray.length);
     const newScaleArray = new scaleArray.constructor(scaleArray.length);
     const newRotArray = new rotArray.constructor(rotArray.length);
     const newClrArray = new clrArray.constructor(clrArray.length);
-    const newOpArray = new opArray.constructor(opArray.length);
+    //  const newOpArray = new opArray.constructor(opArray.length);
 
     const calcDepth = (i) =>
       posArray[i * 3] * modelView[2] +
@@ -153,7 +153,7 @@ GaussianSplatPipelineStage.process = function (
       newClrArray[i * 3 + 1] = clrArray[j * 3 + 1];
       newClrArray[i * 3 + 2] = clrArray[j * 3 + 2];
 
-      newOpArray[i] = opArray[j];
+      //    newOpArray[i] = opArray[j];
     }
 
     posAttr.typedArray = newPosArray;

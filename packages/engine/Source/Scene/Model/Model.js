@@ -214,7 +214,7 @@ function Model(options) {
    * m.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(origin);
    */
   this.modelMatrix = Matrix4.clone(
-    defaultValue(options.modelMatrix, Matrix4.IDENTITY)
+    defaultValue(options.modelMatrix, Matrix4.IDENTITY),
   );
   this._modelMatrix = Matrix4.clone(this.modelMatrix);
   this._scale = defaultValue(options.scale, 1.0);
@@ -280,7 +280,7 @@ function Model(options) {
   this._color = Color.clone(options.color);
   this._colorBlendMode = defaultValue(
     options.colorBlendMode,
-    ColorBlendMode.HIGHLIGHT
+    ColorBlendMode.HIGHLIGHT,
   );
   this._colorBlendAmount = defaultValue(options.colorBlendAmount, 0.5);
 
@@ -311,7 +311,7 @@ function Model(options) {
 
   let instanceFeatureIdLabel = defaultValue(
     options.instanceFeatureIdLabel,
-    "instanceFeatureId_0"
+    "instanceFeatureId_0",
   );
   if (typeof instanceFeatureIdLabel === "number") {
     instanceFeatureIdLabel = `instanceFeatureId_${instanceFeatureIdLabel}`;
@@ -340,14 +340,14 @@ function Model(options) {
 
   this._heightReference = defaultValue(
     options.heightReference,
-    HeightReference.NONE
+    HeightReference.NONE,
   );
   this._heightDirty = this._heightReference !== HeightReference.NONE;
   this._removeUpdateHeightCallback = undefined;
 
   this._enableVerticalExaggeration = defaultValue(
     options.enableVerticalExaggeration,
-    true
+    true,
   );
   this._hasVerticalExaggeration = false;
 
@@ -355,11 +355,10 @@ function Model(options) {
 
   const scene = options.scene;
   if (defined(scene) && defined(scene.terrainProviderChanged)) {
-    this._terrainProviderChangedCallback = scene.terrainProviderChanged.addEventListener(
-      () => {
+    this._terrainProviderChangedCallback =
+      scene.terrainProviderChanged.addEventListener(() => {
         this._heightDirty = true;
-      }
-    );
+      });
   }
   this._scene = scene;
 
@@ -388,7 +387,7 @@ function Model(options) {
     ClippingPolygonCollection.setOwner(
       clippingPolygons,
       this,
-      "_clippingPolygons"
+      "_clippingPolygons",
     );
   } else {
     this._clippingPolygons = clippingPolygons;
@@ -411,12 +410,12 @@ function Model(options) {
   this._debugShowBoundingVolumeDirty = false;
   this._debugShowBoundingVolume = defaultValue(
     options.debugShowBoundingVolume,
-    false
+    false,
   );
 
   this._enableDebugWireframe = defaultValue(
     options.enableDebugWireframe,
-    false
+    false,
   );
   this._enableShowOutline = defaultValue(options.enableShowOutline, true);
   this._debugWireframe = defaultValue(options.debugWireframe, false);
@@ -429,7 +428,7 @@ function Model(options) {
   ) {
     oneTimeWarning(
       "model-debug-wireframe-ignored",
-      "enableDebugWireframe must be set to true in Model.fromGltf, otherwise debugWireframe will be ignored."
+      "enableDebugWireframe must be set to true in Model.fromGltf, otherwise debugWireframe will be ignored.",
     );
   }
 
@@ -453,7 +452,7 @@ function Model(options) {
 
   this._splitDirection = defaultValue(
     options.splitDirection,
-    SplitDirection.NONE
+    SplitDirection.NONE,
   );
 
   this._enableShowOutline = defaultValue(options.enableShowOutline, true);
@@ -469,14 +468,15 @@ function Model(options) {
    */
   this.showOutline = defaultValue(options.showOutline, true);
 
+  //JASON TODO -- load proper extension, remove extensionsUsed check
   this._enableShowGaussianSplatting = defaultValue(
     options.loader.gltfJson.extensionsUsed.includes("KHR_gaussian_splatting"),
-    false
+    false,
   );
 
   this.showGaussianSplatting = defaultValue(
     options.showGaussianSplatting,
-    true
+    true,
   );
 
   //track last camera view to determine if gaussian splats need to be re-sorted
@@ -561,7 +561,7 @@ function selectFeatureTableId(components, model) {
     if (defined(node.instances)) {
       featureIdAttribute = ModelUtility.getFeatureIdsByLabel(
         node.instances.featureIds,
-        instanceFeatureIdLabel
+        instanceFeatureIdLabel,
       );
       if (
         defined(featureIdAttribute) &&
@@ -580,7 +580,7 @@ function selectFeatureTableId(components, model) {
       const primitive = node.primitives[j];
       const featureIds = ModelUtility.getFeatureIdsByLabel(
         primitive.featureIds,
-        featureIdLabel
+        featureIdLabel,
       );
 
       if (defined(featureIds)) {
@@ -821,6 +821,7 @@ Object.defineProperties(Model.prototype, {
    *
    * @type {PointCloudShading}
    */
+  //JASON TODO -- replace extensionsUsed logic
   enableShowGaussianSplatting: {
     get: function () {
       return this._enableShowGaussianSplatting;
@@ -839,7 +840,7 @@ Object.defineProperties(Model.prototype, {
       ) {
         oneTimeWarning(
           "model-enable-show-gaussian-splatting-ignored",
-          "enableShowGaussian splatting must be used with a glTF model that has the KHR_gaussian_splatting extension"
+          "enableShowGaussian splatting must be used with a glTF model that has the KHR_gaussian_splatting extension",
         );
       }
     },
@@ -941,7 +942,7 @@ Object.defineProperties(Model.prototype, {
       //>>includeEnd('debug');
       this._distanceDisplayCondition = DistanceDisplayCondition.clone(
         value,
-        this._distanceDisplayCondition
+        this._distanceDisplayCondition,
       );
     },
   },
@@ -1181,7 +1182,7 @@ Object.defineProperties(Model.prototype, {
       //>>includeStart('debug', pragmas.debug);
       if (!this._ready) {
         throw new DeveloperError(
-          "The model is not loaded. Use Model.readyEvent or wait for Model.ready to be true."
+          "The model is not loaded. Use Model.readyEvent or wait for Model.ready to be true.",
         );
       }
       //>>includeEnd('debug');
@@ -1249,7 +1250,7 @@ Object.defineProperties(Model.prototype, {
       ) {
         oneTimeWarning(
           "model-debug-wireframe-ignored",
-          "enableDebugWireframe must be set to true in Model.fromGltfAsync, otherwise debugWireframe will be ignored."
+          "enableDebugWireframe must be set to true in Model.fromGltfAsync, otherwise debugWireframe will be ignored.",
         );
       }
     },
@@ -1764,7 +1765,7 @@ Model.prototype.getNode = function (name) {
   //>>includeStart('debug', pragmas.debug);
   if (!this._ready) {
     throw new DeveloperError(
-      "The model is not loaded. Use Model.readyEvent or wait for Model.ready to be true."
+      "The model is not loaded. Use Model.readyEvent or wait for Model.ready to be true.",
     );
   }
   Check.typeOf.string("name", name);
@@ -1794,7 +1795,7 @@ Model.prototype.setArticulationStage = function (articulationStageKey, value) {
   Check.typeOf.number("value", value);
   if (!this._ready) {
     throw new DeveloperError(
-      "The model is not loaded. Use Model.readyEvent or wait for Model.ready to be true."
+      "The model is not loaded. Use Model.readyEvent or wait for Model.ready to be true.",
     );
   }
   //>>includeEnd('debug');
@@ -1813,7 +1814,7 @@ Model.prototype.applyArticulations = function () {
   //>>includeStart('debug', pragmas.debug);
   if (!this._ready) {
     throw new DeveloperError(
-      "The model is not loaded. Use Model.readyEvent or wait for Model.ready to be true."
+      "The model is not loaded. Use Model.readyEvent or wait for Model.ready to be true.",
     );
   }
   //>>includeEnd('debug');
@@ -1840,7 +1841,7 @@ Model.prototype.getExtension = function (extensionName) {
   Check.typeOf.string("extensionName", extensionName);
   if (!this._ready) {
     throw new DeveloperError(
-      "The model is not loaded. Use Model.readyEvent or wait for Model.ready to be true."
+      "The model is not loaded. Use Model.readyEvent or wait for Model.ready to be true.",
     );
   }
   //>>includeEnd('debug');
@@ -1896,7 +1897,7 @@ Model.prototype.update = function (frameState) {
       const runtimeError = ModelUtility.getError(
         "model",
         this._resource,
-        error
+        error,
       );
       handleError(this, runtimeError);
     }
@@ -1921,7 +1922,7 @@ Model.prototype.update = function (frameState) {
       const error = ModelUtility.getError(
         "model",
         this._resource,
-        new RuntimeError("Failed to load model.")
+        new RuntimeError("Failed to load model."),
       );
       handleError(error);
       this._rejectLoad = this._rejectLoad && this._rejectLoad(error);
@@ -2090,7 +2091,7 @@ function updateStyleCommandsNeeded(model) {
   const featureTable = model.featureTables[model.featureTableId];
   model._styleCommandsNeeded = StyleCommandsNeeded.getStyleCommandsNeeded(
     featureTable.featuresLength,
-    featureTable.batchTexture.translucentFeaturesLength
+    featureTable.batchTexture.translucentFeaturesLength,
   );
 }
 
@@ -2116,7 +2117,7 @@ function updateGaussianSplatting(model, frameState) {
   Matrix4.multiply(
     frameState.camera.frustum.projectionMatrix,
     frameState.camera.viewMatrix,
-    viewProj
+    viewProj,
   );
 
   if (model._previousViewProj === undefined) {
@@ -2235,7 +2236,7 @@ function updateModelMatrix(model, frameState) {
     //>>includeStart('debug', pragmas.debug);
     if (frameState.mode !== SceneMode.SCENE3D && model._projectTo2D) {
       throw new DeveloperError(
-        "Model.modelMatrix cannot be changed in 2D or Columbus View if projectTo2D is true."
+        "Model.modelMatrix cannot be changed in 2D or Columbus View if projectTo2D is true.",
       );
     }
     //>>includeEnd('debug');
@@ -2266,7 +2267,7 @@ function updateClamping(model) {
     //>>includeStart('debug', pragmas.debug);
     if (model.heightReference !== HeightReference.NONE) {
       throw new DeveloperError(
-        "Height reference is not supported without a scene."
+        "Height reference is not supported without a scene.",
       );
     }
     //>>includeEnd('debug');
@@ -2291,7 +2292,7 @@ function updateClamping(model) {
   model._removeUpdateHeightCallback = scene.updateHeight(
     cartoPosition,
     getUpdateHeightCallback(model, ellipsoid, cartoPosition),
-    model.heightReference
+    model.heightReference,
   );
 
   // Set the correct height now
@@ -2331,14 +2332,14 @@ function updateBoundingSphere(model, modelMatrix) {
   model._boundingSphere.center = Cartesian3.multiplyByScalar(
     model._sceneGraph.boundingSphere.center,
     model._clampedScale,
-    model._boundingSphere.center
+    model._boundingSphere.center,
   );
   model._boundingSphere.radius = model._initialRadius * model._clampedScale;
 
   model._boundingSphere = BoundingSphere.transform(
     model._boundingSphere,
     modelMatrix,
-    model._boundingSphere
+    model._boundingSphere,
   );
 }
 
@@ -2350,7 +2351,7 @@ function updateComputedScale(model, modelMatrix, frameState) {
     const context = frameState.context;
     const maxPixelSize = Math.max(
       context.drawingBufferWidth,
-      context.drawingBufferHeight
+      context.drawingBufferHeight,
     );
 
     Matrix4.getTranslation(modelMatrix, scratchPosition);
@@ -2359,7 +2360,7 @@ function updateComputedScale(model, modelMatrix, frameState) {
       SceneTransforms.computeActualEllipsoidPosition(
         frameState,
         scratchPosition,
-        scratchPosition
+        scratchPosition,
       );
     }
 
@@ -2370,7 +2371,7 @@ function updateComputedScale(model, modelMatrix, frameState) {
     const pixelsPerMeter = 1.0 / metersPerPixel;
     const diameterInPixels = Math.min(
       pixelsPerMeter * (2.0 * radius),
-      maxPixelSize
+      maxPixelSize,
     );
 
     // Maintain model's minimum pixel size
@@ -2419,20 +2420,20 @@ function updateReferenceMatrices(model, frameState) {
     iblReferenceFrameMatrix4 = Matrix4.multiply(
       context.uniformState.view3D,
       referenceMatrix,
-      iblReferenceFrameMatrix4
+      iblReferenceFrameMatrix4,
     );
     iblReferenceFrameMatrix3 = Matrix4.getRotation(
       iblReferenceFrameMatrix4,
-      iblReferenceFrameMatrix3
+      iblReferenceFrameMatrix3,
     );
     iblReferenceFrameMatrix3 = Matrix3.transpose(
       iblReferenceFrameMatrix3,
-      iblReferenceFrameMatrix3
+      iblReferenceFrameMatrix3,
     );
     model._iblReferenceFrameMatrix = Matrix3.multiply(
       yUpToZUp,
       iblReferenceFrameMatrix3,
-      model._iblReferenceFrameMatrix
+      model._iblReferenceFrameMatrix,
     );
   }
 
@@ -2441,16 +2442,16 @@ function updateReferenceMatrices(model, frameState) {
     clippingPlanesMatrix = Matrix4.multiply(
       context.uniformState.view3D,
       referenceMatrix,
-      clippingPlanesMatrix
+      clippingPlanesMatrix,
     );
     clippingPlanesMatrix = Matrix4.multiply(
       clippingPlanesMatrix,
       model._clippingPlanes.modelMatrix,
-      clippingPlanesMatrix
+      clippingPlanesMatrix,
     );
     model._clippingPlanesMatrix = Matrix4.inverseTranspose(
       clippingPlanesMatrix,
-      model._clippingPlanesMatrix
+      model._clippingPlanesMatrix,
     );
   }
 }
@@ -2528,7 +2529,7 @@ function submitDrawCommands(model, frameState) {
 
   const displayConditionPassed = passesDistanceDisplayCondition(
     model,
-    frameState
+    frameState,
   );
 
   const invisible = model.isInvisible();
@@ -2561,7 +2562,7 @@ function scaleInPixels(positionWC, radius, frameState) {
   return frameState.camera.getPixelSize(
     scratchBoundingSphere,
     frameState.context.drawingBufferWidth,
-    frameState.context.drawingBufferHeight
+    frameState.context.drawingBufferHeight,
   );
 }
 
@@ -2574,7 +2575,7 @@ function getUpdateHeightCallback(model, ellipsoid, originalPostition) {
 
     ellipsoid.cartographicToCartesian(
       clampedPosition,
-      scratchUpdateHeightCartesian
+      scratchUpdateHeightCartesian,
     );
 
     const clampedModelMatrix = model._clampedModelMatrix;
@@ -2610,7 +2611,7 @@ function passesDistanceDisplayCondition(model, frameState) {
     // Distance to center of primitive's reference frame
     const position = Matrix4.getTranslation(
       model.modelMatrix,
-      scratchDisplayConditionCartesian
+      scratchDisplayConditionCartesian,
     );
 
     // This will project the position if the scene is in Columbus View,
@@ -2618,12 +2619,12 @@ function passesDistanceDisplayCondition(model, frameState) {
     SceneTransforms.computeActualEllipsoidPosition(
       frameState,
       position,
-      position
+      position,
     );
 
     distanceSquared = Cartesian3.distanceSquared(
       position,
-      frameState.camera.positionWC
+      frameState.camera.positionWC,
     );
   }
 
@@ -2739,7 +2740,7 @@ Model.prototype.pick = function (
   frameState,
   verticalExaggeration,
   relativeHeight,
-  result
+  result,
 ) {
   return pickModel(
     this,
@@ -2747,7 +2748,7 @@ Model.prototype.pick = function (
     frameState,
     verticalExaggeration,
     relativeHeight,
-    result
+    result,
   );
 };
 
@@ -3196,7 +3197,7 @@ Model.fromGeoJson = async function (options) {
   const modelOptions = makeModelOptions(
     loader,
     ModelType.TILE_GEOJSON,
-    options
+    options,
   );
   const model = new Model(modelOptions);
   return model;

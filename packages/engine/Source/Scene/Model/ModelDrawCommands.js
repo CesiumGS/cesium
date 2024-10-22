@@ -42,19 +42,19 @@ import BufferUsage from "../../Renderer/BufferUsage.js";
  */
 ModelDrawCommands.buildModelDrawCommand = function (
   primitiveRenderResources,
-  frameState
+  frameState,
 ) {
   const shaderBuilder = primitiveRenderResources.shaderBuilder;
   const shaderProgram = createShaderProgram(
     primitiveRenderResources,
     shaderBuilder,
-    frameState
+    frameState,
   );
 
   const command = buildDrawCommandForModel(
     primitiveRenderResources,
     shaderProgram,
-    frameState
+    frameState,
   );
 
   const model = primitiveRenderResources.model;
@@ -78,7 +78,7 @@ ModelDrawCommands.buildModelDrawCommand = function (
 function createShaderProgram(
   primitiveRenderResources,
   shaderBuilder,
-  frameState
+  frameState,
 ) {
   shaderBuilder.addVertexLines(ModelVS);
   shaderBuilder.addFragmentLines(ModelFS);
@@ -105,13 +105,14 @@ function createShaderProgram(
 function buildDrawCommandForModel(
   primitiveRenderResources,
   shaderProgram,
-  frameState
+  frameState,
 ) {
   const indexBuffer = getIndexBuffer(primitiveRenderResources);
   const model = primitiveRenderResources.model;
 
   const vertexArray = (() => {
     if (
+      //JASON TODO -- revisit this after other changes
       model.enableShowGaussianSplatting &&
       (model?.style?.showGaussianSplatting ?? true)
     ) {
@@ -138,25 +139,25 @@ function buildDrawCommandForModel(
           ...primitiveRenderResources.runtimePrimitive.primitive.attributes,
           splatPosition: {
             ...primitiveRenderResources.runtimePrimitive.primitive.attributes.find(
-              (a) => a.name === "POSITION"
+              (a) => a.name === "POSITION",
             ),
             name: "_SPLAT_POSITION",
             variableName: "splatPosition",
           },
           splatColor: {
             ...primitiveRenderResources.runtimePrimitive.primitive.attributes.find(
-              (a) => a.name === "COLOR_0"
+              (a) => a.name === "COLOR_0",
             ),
             name: "_SPLAT_COLOR",
             variableName: "splatColor",
           },
-          splatOpacity: {
-            ...primitiveRenderResources.runtimePrimitive.primitive.attributes.find(
-              (a) => a.name === "_OPACITY"
-            ),
-            name: "_SPLAT_OPACITY",
-            variableName: "splatOpacity",
-          },
+          // splatOpacity: {
+          //   ...primitiveRenderResources.runtimePrimitive.primitive.attributes.find(
+          //     (a) => a.name === "_OPACITY"
+          //   ),
+          //   name: "_SPLAT_OPACITY",
+          //   variableName: "splatOpacity",
+          // },
         },
         indices: indexBuffer,
         primitiveType: PrimitiveType.TRIANGLE_STRIP,
@@ -190,7 +191,7 @@ function buildDrawCommandForModel(
     modelMatrix = Matrix4.multiplyTransformation(
       sceneGraph._computedModelMatrix,
       primitiveRenderResources.runtimeNode.computedTransform,
-      new Matrix4()
+      new Matrix4(),
     );
 
     const runtimePrimitive = primitiveRenderResources.runtimePrimitive;
@@ -203,24 +204,24 @@ function buildDrawCommandForModel(
     modelMatrix = Matrix4.multiplyTransformation(
       computedModelMatrix,
       primitiveRenderResources.runtimeNode.computedTransform,
-      new Matrix4()
+      new Matrix4(),
     );
 
     boundingSphere = BoundingSphere.transform(
       primitiveRenderResources.boundingSphere,
-      modelMatrix
+      modelMatrix,
     );
   }
 
   // Initialize render state with default values
   let renderState = clone(
     RenderState.fromCache(primitiveRenderResources.renderStateOptions),
-    true
+    true,
   );
 
   renderState.cull.face = ModelUtility.getCullFace(
     modelMatrix,
-    primitiveRenderResources.primitiveType
+    primitiveRenderResources.primitiveType,
   );
   renderState = RenderState.fromCache(renderState);
 
