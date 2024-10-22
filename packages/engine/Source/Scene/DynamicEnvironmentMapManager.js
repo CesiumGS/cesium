@@ -237,6 +237,7 @@ Object.defineProperties(DynamicEnvironmentMapManager.prototype, {
         Cartesian3.equalsEpsilon(
           value,
           this._position,
+          0.0,
           this.maximumPositionEpsilon,
         )
       ) {

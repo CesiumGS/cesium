@@ -26,26 +26,30 @@ void main() {
     float ellipsoidHeight = height - atmosphereInnerRadius;
     float atmosphereOuterRadius = u_radiiAndDynamicAtmosphereColor.x;
     float atmosphereHeight = atmosphereOuterRadius - atmosphereInnerRadius;
-    float radius = max(atmosphereOuterRadius - height, 2.0 * ellipsoidHeight);
 
     vec3 direction = (u_enuToFixedFrame * getCubeMapDirection(v_textureCoordinates, u_faceDirection)).xyz;
     vec3 normalizedDirection = normalize(direction);
 
     czm_ray ray = czm_ray(u_positionWC, normalizedDirection);
     czm_raySegment intersection = czm_raySphereIntersectionInterval(ray, vec3(0.0), atmosphereInnerRadius);
-    float d = czm_branchFreeTernary(czm_isEmpty(intersection), radius, clamp(intersection.start, ellipsoidHeight, radius));
+    if (!czm_isEmpty(intersection)) {
+        intersection = czm_rayEllipsoidIntersectionInterval(ray, vec3(0.0), czm_ellipsoidInverseRadii);
+    }
+
+    bool onEllipsoid = intersection.start >= 0.0;
+    float rayLength = czm_branchFreeTernary(onEllipsoid, intersection.start, atmosphereOuterRadius);
 
     // Compute sky color for each position on a sphere at radius centered around the provided position's origin
-    vec3 skyPositionWC = u_positionWC + normalizedDirection * d;
+    vec3 skyPositionWC = u_positionWC + normalizedDirection * rayLength;
 
     float lightEnum = u_radiiAndDynamicAtmosphereColor.z;
-    vec3 lightDirectionWC = czm_getDynamicAtmosphereLightDirection(skyPositionWC, lightEnum);
+    vec3 lightDirectionWC = normalize(czm_getDynamicAtmosphereLightDirection(skyPositionWC, lightEnum));
     vec3 mieColor;
     vec3 rayleighColor;
     float opacity;
     czm_computeScattering(
         ray,
-        d,
+        rayLength,
         lightDirectionWC,
         atmosphereInnerRadius, 
         rayleighColor,
@@ -53,11 +57,11 @@ void main() {
         opacity
     );
 
-    vec4 skyColor = czm_computeAtmosphereColor(ray, lightDirectionWC, rayleighColor, mieColor, opacity);
+    vec4 atmopshereColor = czm_computeAtmosphereColor(ray, lightDirectionWC, rayleighColor, mieColor, opacity);
 
 #ifdef ATMOSPHERE_COLOR_CORRECT
     const bool ignoreBlackPixels = true;
-    skyColor.rgb = czm_applyHSBShift(skyColor.rgb, czm_atmosphereHsbShift, ignoreBlackPixels);
+    atmopshereColor.rgb = czm_applyHSBShift(atmopshereColor.rgb, czm_atmosphereHsbShift, ignoreBlackPixels);
 #endif
 
     vec3 lookupDirection = -normalizedDirection;
@@ -66,26 +70,23 @@ void main() {
     lookupDirection = -normalize(czm_temeToPseudoFixed * lookupDirection);
     lookupDirection.x = -lookupDirection.x;
 
+    // Values outside the atmopshere are rendered as black, when they should be treated as transparent
+    float skyAlpha = clamp((1.0 - ellipsoidHeight / atmosphereHeight) * atmopshereColor.a, 0.0, 1.0);
+    skyAlpha = czm_branchFreeTernary(length(atmopshereColor.rgb) <= czm_epsilon7, 0.0, skyAlpha); // Treat black as transparent
+
+    // Blend starmap with atmopshere scattering
+    float intensity = u_brightnessSaturationGammaIntensity.w;
     vec4 sceneSkyBoxColor = czm_textureCube(czm_environmentMap, lookupDirection);
     vec3 skyBackgroundColor = mix(czm_backgroundColor.rgb, sceneSkyBoxColor.rgb, sceneSkyBoxColor.a);
+    vec4 combinedSkyColor = vec4(mix(skyBackgroundColor, atmopshereColor.rgb * intensity, skyAlpha), 1.0);
 
-    // Apply intensity to sky light
-    float intensity = u_brightnessSaturationGammaIntensity.w;
-    vec4 adjustedSkyColor = skyColor;
-    adjustedSkyColor.rgb = skyColor.rgb * intensity;
-
-    // Compute ground color based on amount of reflected light
-    vec3 groundColor = u_groundColor.rgb * u_groundColor.a * adjustedSkyColor.rgb;
-
-    // Interpolate the ground color based on angle of sun exposure and distance from the ground
+    // Compute ground color based on amount of reflected light, then blend it with ground atmosphere based on height
     vec3 up = normalize(u_positionWC);
-    float occlusion = max(dot(lightDirectionWC, up), 0.15);
-    groundColor = mix(vec3(0.0), u_groundColor.rgb, occlusion * (1.0 - d / radius));
+    float occlusion = max(dot(lightDirectionWC, up), 0.05);
+    vec4 groundColor = vec4(u_groundColor.rgb * u_groundColor.a * (vec3(intensity * occlusion) + atmopshereColor.rgb), 1.0);
+    vec4 blendedGroundColor = mix(groundColor, atmopshereColor, clamp(ellipsoidHeight / atmosphereHeight, 0.0, 1.0));
 
-    // Only show the stars when not obscured by the ellipsoid
-    vec3 backgroundColor = czm_branchFreeTernary(czm_isEmpty(intersection), skyBackgroundColor, groundColor);
-
-    vec4 color = vec4(mix(backgroundColor, adjustedSkyColor.rgb, adjustedSkyColor.a), 1.0);
+    vec4 color = czm_branchFreeTernary(onEllipsoid, blendedGroundColor, combinedSkyColor);
 
     float brightness = u_brightnessSaturationGammaIntensity.x;
     float saturation = u_brightnessSaturationGammaIntensity.y;
