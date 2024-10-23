@@ -50,7 +50,7 @@
             step="200"
             data-bind="value: height, valueUpdate: 'input'"
           />
-          <input type="text" size="5" data-bind="value: height" />
+          <input type="number" size="5" data-bind="value: height" />
         </div>
       </div>
       <div id="lightingToolbar">
@@ -63,7 +63,7 @@
             step="0.5"
             data-bind="value: directionalLightIntensity, valueUpdate: 'input'"
           />
-          <input type="text" size="5" data-bind="value: directionalLightIntensity" />
+          <input type="number" size="5" data-bind="value: directionalLightIntensity" />
         </div>
         <div class="cesium-button">
           <label>Atmospheric Intensity</label>
@@ -74,7 +74,11 @@
             step="0.5"
             data-bind="value: atmosphereScatteringIntensity, valueUpdate: 'input'"
           />
-          <input type="text" size="5" data-bind="value: atmosphereScatteringIntensity" />
+          <input
+            type="number"
+            size="5"
+            data-bind="value: atmosphereScatteringIntensity"
+          />
         </div>
         <div class="cesium-button">
           <label>Gamma</label>
@@ -85,7 +89,7 @@
             step="0.5"
             data-bind="value: gamma, valueUpdate: 'input'"
           />
-          <input type="text" size="5" data-bind="value: gamma" />
+          <input type="number" size="5" data-bind="value: gamma" />
         </div>
         <div class="cesium-button">
           <label>Brightness</label>
@@ -96,7 +100,7 @@
             step="0.5"
             data-bind="value: brightness, valueUpdate: 'input'"
           />
-          <input type="text" size="5" data-bind="value: brightness" />
+          <input type="number" size="5" data-bind="value: brightness" />
         </div>
         <div class="cesium-button">
           <label>Saturation</label>
@@ -107,7 +111,7 @@
             step="0.5"
             data-bind="value: saturation, valueUpdate: 'input'"
           />
-          <input type="text" size="5" data-bind="value: saturation" />
+          <input type="number" size="5" data-bind="value: saturation" />
         </div>
       </div>
       <div id="environmentToolbar"></div>

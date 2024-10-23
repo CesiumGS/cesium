@@ -463,7 +463,7 @@ function updateRadianceMap(manager, frameState) {
     }
 
     let i = 0;
-    for (const face of CubeMap.faces()) {
+    for (const face of CubeMap.faceNames()) {
       let texture = manager._radianceMapTextures[i];
       if (defined(texture)) {
         texture.destroy();
@@ -569,7 +569,7 @@ function updateSpecularMaps(manager, frameState) {
 
   let index = 0;
   for (let level = 1; level < mipmapLevels; ++level) {
-    for (const face of CubeMap.faces()) {
+    for (const face of CubeMap.faceNames()) {
       const texture = (manager._specularMapTextures[index] = new Texture({
         context: context,
         width: width,

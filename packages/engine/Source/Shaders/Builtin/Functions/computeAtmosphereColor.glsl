@@ -51,7 +51,7 @@ vec4 czm_computeAtmosphereColor(
  * @name czm_computeAtmosphereColor
  * @glslFunction
  *
- * @param {czm_rat} primaryRay Ray from the origin to sky fragment to in world coords (low precision)
+ * @param {czm_ray} primaryRay Ray from the origin to sky fragment to in world coords (low precision)
  * @param {vec3} lightDirection Light direction from the sun or other light source.
  * @param {vec3} rayleighColor The Rayleigh scattering color computed by a scattering function
  * @param {vec3} mieColor The Mie scattering color computed by a scattering function

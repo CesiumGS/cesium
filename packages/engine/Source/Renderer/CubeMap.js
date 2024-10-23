@@ -112,7 +112,7 @@ function CubeMap(options) {
     ({ width, height } = source.positiveX);
 
     //>>includeStart('debug', pragmas.debug);
-    for (const faceName of CubeMap.faces()) {
+    for (const faceName of CubeMap.faceNames()) {
       const face = source[faceName];
       if (Number(face.width) !== width || Number(face.height) !== height) {
         throw new DeveloperError(
@@ -238,7 +238,7 @@ function CubeMap(options) {
     );
   }
 
-  for (const faceName of CubeMap.faces()) {
+  for (const faceName of CubeMap.faceNames()) {
     loadFace(this[faceName], source?.[faceName], 0);
   }
 
@@ -288,7 +288,7 @@ CubeMap.FaceName = Object.freeze({
   NEGATIVEZ: "negativeZ",
 });
 
-function* makeFacesIterator() {
+function* makeFaceNamesIterator() {
   yield CubeMap.FaceName.POSITIVEX;
   yield CubeMap.FaceName.NEGATIVEX;
   yield CubeMap.FaceName.POSITIVEY;
@@ -299,11 +299,11 @@ function* makeFacesIterator() {
 
 /**
  * Creates an iterator for looping over the cubemap faces.
- * @type {iterable<CubeMap.FaceName>}
+ * @type {Iterable<CubeMap.FaceName>}
  * @private
  */
-CubeMap.faces = function () {
-  return makeFacesIterator();
+CubeMap.faceNames = function () {
+  return makeFaceNamesIterator();
 };
 
 /**
@@ -593,7 +593,7 @@ CubeMap.prototype.loadMipmaps = function (source, skipColorSpaceConversion) {
     const mipSource = source[i];
     // mipLevel 0 was the base layer, already loaded when the CubeMap was constructed.
     const mipLevel = i + 1;
-    for (const faceName of CubeMap.faces()) {
+    for (const faceName of CubeMap.faceNames()) {
       loadFace(this[faceName], mipSource[faceName], mipLevel);
     }
   }
