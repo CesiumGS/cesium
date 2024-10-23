@@ -140,7 +140,7 @@ FramebufferManager.prototype.update = function (
     throw new DeveloperError("width and height must be defined.");
   }
   //>>includeEnd('debug');
-  numSamples = context.msaa ? defaultValue(numSamples, 1) : 1;
+  numSamples = context.msaa ? (numSamples ?? 1) : 1;
   pixelDatatype =
     pixelDatatype ??
     (this._color

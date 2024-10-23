@@ -1,5 +1,11 @@
 # Change Log
 
+### 1.124 - 2024-12-01
+
+##### Deprecated :hourglass_flowing_sand:
+
+- defaultValue() has been deprecated. All uses have been changed to the nullish coalescing operator (??)
+
 ### 1.123 - 2024-11-01
 
 #### @cesium/engine
