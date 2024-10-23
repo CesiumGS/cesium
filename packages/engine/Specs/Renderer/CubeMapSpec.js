@@ -246,6 +246,16 @@ describe(
       expect(cubeMap.flipY).toEqual(true);
     });
 
+    it("faceNames returns an iterator over each of the faces by name", () => {
+      let count = 0;
+      for (const faceName of CubeMap.faceNames()) {
+        expect(Object.values(CubeMap.FaceName).includes(faceName)).toBeTrue();
+        count++;
+      }
+
+      expect(count).toBe(6);
+    });
+
     it("draws with a cube map", function () {
       cubeMap = new CubeMap({
         context: webgl2Context,
