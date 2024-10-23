@@ -167,7 +167,7 @@ function generateNatural(points) {
  * @see MorphWeightSpline
  */
 function HermiteSpline(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
 
   const points = options.points;
   const times = options.times;
@@ -320,7 +320,7 @@ Object.defineProperties(HermiteSpline.prototype, {
  * });
  */
 HermiteSpline.createC1 = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
 
   const times = options.times;
   const points = options.points;
@@ -380,7 +380,7 @@ HermiteSpline.createC1 = function (options) {
  * });
  */
 HermiteSpline.createNaturalCubic = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
 
   const times = options.times;
   const points = options.points;
@@ -450,7 +450,7 @@ HermiteSpline.createNaturalCubic = function (options) {
  * });
  */
 HermiteSpline.createClampedCubic = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
 
   const times = options.times;
   const points = options.points;

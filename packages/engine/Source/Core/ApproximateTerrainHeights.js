@@ -4,7 +4,6 @@ import Cartesian2 from "./Cartesian2.js";
 import Cartesian3 from "./Cartesian3.js";
 import Cartographic from "./Cartographic.js";
 import Check from "./Check.js";
-import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import Ellipsoid from "./Ellipsoid.js";
@@ -71,7 +70,7 @@ ApproximateTerrainHeights.getMinimumMaximumHeights = function (
     );
   }
   //>>includeEnd('debug');
-  ellipsoid = defaultValue(ellipsoid, Ellipsoid.default);
+  ellipsoid = ellipsoid ?? Ellipsoid.default;
 
   const xyLevel = getTileXYLevel(rectangle);
 
@@ -142,7 +141,7 @@ ApproximateTerrainHeights.getBoundingSphere = function (rectangle, ellipsoid) {
     );
   }
   //>>includeEnd('debug');
-  ellipsoid = defaultValue(ellipsoid, Ellipsoid.default);
+  ellipsoid = ellipsoid ?? Ellipsoid.default;
 
   const xyLevel = getTileXYLevel(rectangle);
 

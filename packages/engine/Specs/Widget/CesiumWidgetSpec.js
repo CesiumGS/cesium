@@ -2,7 +2,6 @@ import {
   CesiumWidget,
   Clock,
   CreditDisplay,
-  defaultValue,
   EllipsoidTerrainProvider,
   ScreenSpaceEventHandler,
   WebMercatorProjection,
@@ -42,12 +41,9 @@ describe(
     });
 
     function createCesiumWidget(container, options) {
-      options = defaultValue(options, {});
-      options.contextOptions = defaultValue(options.contextOptions, {});
-      options.contextOptions.webgl = defaultValue(
-        options.contextOptions.webgl,
-        {},
-      );
+      options = options ?? {};
+      options.contextOptions = options.contextOptions ?? {};
+      options.contextOptions.webgl = options.contextOptions.webgl ?? {};
       if (!!window.webglStub) {
         options.contextOptions.getWebGLStub = getWebGLStub;
       }

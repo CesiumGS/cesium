@@ -80,7 +80,7 @@ describe(
     });
 
     async function loadPntsArrayBuffer(arrayBuffer, options) {
-      options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+      options = options ?? defaultValue.EMPTY_OBJECT;
       const loader = new PntsLoader({
         arrayBuffer: arrayBuffer,
         loadAttributesFor2D: options.loadAttributesFor2D,

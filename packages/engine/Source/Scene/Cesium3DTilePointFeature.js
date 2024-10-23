@@ -1,6 +1,5 @@
 import Cartographic from "../Core/Cartographic.js";
 import Color from "../Core/Color.js";
-import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import Cesium3DTileFeature from "./Cesium3DTileFeature.js";
 import createBillboardPointCallback from "./createBillboardPointCallback.js";
@@ -411,7 +410,7 @@ Object.defineProperties(Cesium3DTilePointFeature.prototype, {
       return this._heightOffset;
     },
     set: function (value) {
-      const offset = defaultValue(this._heightOffset, 0.0);
+      const offset = this._heightOffset ?? 0.0;
 
       const ellipsoid = this._content.tileset.ellipsoid;
       const cart = ellipsoid.cartesianToCartographic(
@@ -652,22 +651,15 @@ function setBillboardImage(feature) {
     return;
   }
 
-  const newColor = defaultValue(
-    feature._color,
-    Cesium3DTilePointFeature.defaultColor,
-  );
-  const newOutlineColor = defaultValue(
-    feature._pointOutlineColor,
-    Cesium3DTilePointFeature.defaultPointOutlineColor,
-  );
-  const newOutlineWidth = defaultValue(
-    feature._pointOutlineWidth,
-    Cesium3DTilePointFeature.defaultPointOutlineWidth,
-  );
-  const newPointSize = defaultValue(
-    feature._pointSize,
-    Cesium3DTilePointFeature.defaultPointSize,
-  );
+  const newColor = feature._color ?? Cesium3DTilePointFeature.defaultColor;
+  const newOutlineColor =
+    feature._pointOutlineColor ??
+    Cesium3DTilePointFeature.defaultPointOutlineColor;
+  const newOutlineWidth =
+    feature._pointOutlineWidth ??
+    Cesium3DTilePointFeature.defaultPointOutlineWidth;
+  const newPointSize =
+    feature._pointSize ?? Cesium3DTilePointFeature.defaultPointSize;
 
   const currentColor = feature._billboardColor;
   const currentOutlineColor = feature._billboardOutlineColor;

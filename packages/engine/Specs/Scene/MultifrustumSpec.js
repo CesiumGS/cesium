@@ -4,7 +4,6 @@ import {
   Cartesian2,
   Cartesian3,
   Color,
-  defaultValue,
   defined,
   destroyObject,
   GeometryPipeline,
@@ -207,8 +206,8 @@ describe(
     });
 
     function createPrimitive(bounded, closestFrustum) {
-      bounded = defaultValue(bounded, true);
-      closestFrustum = defaultValue(closestFrustum, false);
+      bounded = bounded ?? true;
+      closestFrustum = closestFrustum ?? false;
 
       function Primitive() {
         this._va = undefined;

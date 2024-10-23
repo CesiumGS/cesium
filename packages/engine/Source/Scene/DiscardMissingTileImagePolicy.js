@@ -20,7 +20,7 @@ import Resource from "../Core/Resource.js";
  *                  discard check will proceed no matter the values of the pixelsToCheck.
  */
 function DiscardMissingTileImagePolicy(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
 
   //>>includeStart('debug', pragmas.debug);
   if (!defined(options.missingImageUrl)) {

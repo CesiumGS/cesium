@@ -1,6 +1,5 @@
 import Cartesian3 from "./Cartesian3.js";
 import Check from "./Check.js";
-import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 import Intersect from "./Intersect.js";
 
@@ -22,14 +21,14 @@ function AxisAlignedBoundingBox(minimum, maximum, center) {
    * @type {Cartesian3}
    * @default {@link Cartesian3.ZERO}
    */
-  this.minimum = Cartesian3.clone(defaultValue(minimum, Cartesian3.ZERO));
+  this.minimum = Cartesian3.clone(minimum ?? Cartesian3.ZERO);
 
   /**
    * The maximum point defining the bounding box.
    * @type {Cartesian3}
    * @default {@link Cartesian3.ZERO}
    */
-  this.maximum = Cartesian3.clone(defaultValue(maximum, Cartesian3.ZERO));
+  this.maximum = Cartesian3.clone(maximum ?? Cartesian3.ZERO);
 
   // If center was not defined, compute it.
   if (!defined(center)) {

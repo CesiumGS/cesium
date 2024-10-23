@@ -25,17 +25,11 @@ import createCommand from "../createCommand.js";
  * @exception {DeveloperError} terrainProviderViewModels must be an array.
  */
 function BaseLayerPickerViewModel(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
 
   const globe = options.globe;
-  const imageryProviderViewModels = defaultValue(
-    options.imageryProviderViewModels,
-    [],
-  );
-  const terrainProviderViewModels = defaultValue(
-    options.terrainProviderViewModels,
-    [],
-  );
+  const imageryProviderViewModels = options.imageryProviderViewModels ?? [];
+  const terrainProviderViewModels = options.terrainProviderViewModels ?? [];
 
   //>>includeStart('debug', pragmas.debug);
   if (!defined(globe)) {
@@ -302,10 +296,8 @@ function BaseLayerPickerViewModel(options) {
     that.dropDownVisible = !that.dropDownVisible;
   });
 
-  this.selectedImagery = defaultValue(
-    options.selectedImageryProviderViewModel,
-    imageryProviderViewModels[0],
-  );
+  this.selectedImagery =
+    options.selectedImageryProviderViewModel ?? imageryProviderViewModels[0];
   this.selectedTerrain = options.selectedTerrainProviderViewModel;
 }
 

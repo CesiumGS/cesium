@@ -49,7 +49,7 @@
 
         const styles = [];
         function addStyle(name, style) {
-          style.pointSize = Cesium.defaultValue(style.pointSize, 5.0);
+          style.pointSize = style.pointSize ?? 5.0;
           styles.push({
             name: name,
             style: style,

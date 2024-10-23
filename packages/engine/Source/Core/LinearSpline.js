@@ -42,7 +42,7 @@ import Spline from "./Spline.js";
  * @see MorphWeightSpline
  */
 function LinearSpline(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
 
   const points = options.points;
   const times = options.times;

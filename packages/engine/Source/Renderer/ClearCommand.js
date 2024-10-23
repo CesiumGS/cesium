@@ -8,7 +8,7 @@ import defaultValue from "../Core/defaultValue.js";
  * @constructor
  */
 function ClearCommand(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
 
   /**
    * The value to clear the color buffer to.  When <code>undefined</code>, the color buffer is not cleared.

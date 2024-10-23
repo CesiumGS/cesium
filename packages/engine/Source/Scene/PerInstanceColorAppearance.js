@@ -68,11 +68,11 @@ import Appearance from "./Appearance.js";
  * });
  */
 function PerInstanceColorAppearance(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
 
-  const translucent = defaultValue(options.translucent, true);
-  const closed = defaultValue(options.closed, false);
-  const flat = defaultValue(options.flat, false);
+  const translucent = options.translucent ?? true;
+  const closed = options.closed ?? false;
+  const flat = options.flat ?? false;
   const vs = flat
     ? PerInstanceFlatColorAppearanceVS
     : PerInstanceColorAppearanceVS;
@@ -103,8 +103,8 @@ function PerInstanceColorAppearance(options) {
    */
   this.translucent = translucent;
 
-  this._vertexShaderSource = defaultValue(options.vertexShaderSource, vs);
-  this._fragmentShaderSource = defaultValue(options.fragmentShaderSource, fs);
+  this._vertexShaderSource = options.vertexShaderSource ?? vs;
+  this._fragmentShaderSource = options.fragmentShaderSource ?? fs;
   this._renderState = Appearance.getDefaultRenderState(
     translucent,
     closed,
@@ -116,7 +116,7 @@ function PerInstanceColorAppearance(options) {
 
   this._vertexFormat = vertexFormat;
   this._flat = flat;
-  this._faceForward = defaultValue(options.faceForward, !closed);
+  this._faceForward = options.faceForward ?? !closed;
 }
 
 Object.defineProperties(PerInstanceColorAppearance.prototype, {

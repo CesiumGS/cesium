@@ -2,7 +2,6 @@ import Cartesian2 from "../Core/Cartesian2.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
 import ContextLimits from "../Renderer/ContextLimits.js";
-import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
@@ -75,7 +74,7 @@ function Megatexture(
   const maximumTextureMemoryByteLength = 512 * 1024 * 1024;
   const defaultTextureMemoryByteLength = 128 * 1024 * 1024;
   textureMemoryByteLength = Math.min(
-    defaultValue(textureMemoryByteLength, defaultTextureMemoryByteLength),
+    textureMemoryByteLength ?? defaultTextureMemoryByteLength,
     maximumTextureMemoryByteLength,
   );
   const maximumTextureDimensionContext = ContextLimits.maximumTextureSize;

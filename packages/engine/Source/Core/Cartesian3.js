@@ -1,5 +1,4 @@
 import Check from "./Check.js";
-import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import CesiumMath from "./Math.js";
@@ -23,21 +22,21 @@ function Cartesian3(x, y, z) {
    * @type {number}
    * @default 0.0
    */
-  this.x = defaultValue(x, 0.0);
+  this.x = x ?? 0.0;
 
   /**
    * The Y component.
    * @type {number}
    * @default 0.0
    */
-  this.y = defaultValue(y, 0.0);
+  this.y = y ?? 0.0;
 
   /**
    * The Z component.
    * @type {number}
    * @default 0.0
    */
-  this.z = defaultValue(z, 0.0);
+  this.z = z ?? 0.0;
 }
 
 /**
@@ -58,7 +57,7 @@ Cartesian3.fromSpherical = function (spherical, result) {
 
   const clock = spherical.clock;
   const cone = spherical.cone;
-  const magnitude = defaultValue(spherical.magnitude, 1.0);
+  const magnitude = spherical.magnitude ?? 1.0;
   const radial = magnitude * Math.sin(cone);
   result.x = radial * Math.cos(clock);
   result.y = radial * Math.sin(clock);
@@ -139,7 +138,7 @@ Cartesian3.pack = function (value, array, startingIndex) {
   Check.defined("array", array);
   //>>includeEnd('debug');
 
-  startingIndex = defaultValue(startingIndex, 0);
+  startingIndex = startingIndex ?? 0;
 
   array[startingIndex++] = value.x;
   array[startingIndex++] = value.y;
@@ -161,7 +160,7 @@ Cartesian3.unpack = function (array, startingIndex, result) {
   Check.defined("array", array);
   //>>includeEnd('debug');
 
-  startingIndex = defaultValue(startingIndex, 0);
+  startingIndex = startingIndex ?? 0;
 
   if (!defined(result)) {
     result = new Cartesian3();
@@ -925,7 +924,7 @@ Cartesian3.fromRadians = function (
   Check.typeOf.number("latitude", latitude);
   //>>includeEnd('debug');
 
-  height = defaultValue(height, 0.0);
+  height = height ?? 0.0;
 
   const radiiSquared = !defined(ellipsoid)
     ? Cartesian3._ellipsoidRadiiSquared

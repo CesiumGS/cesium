@@ -10,7 +10,7 @@ import RenderbufferFormat from "./RenderbufferFormat.js";
  * @private
  */
 function Renderbuffer(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
 
   //>>includeStart('debug', pragmas.debug);
   Check.defined("options.context", options.context);
@@ -20,12 +20,12 @@ function Renderbuffer(options) {
   const gl = context._gl;
   const maximumRenderbufferSize = ContextLimits.maximumRenderbufferSize;
 
-  const format = defaultValue(options.format, RenderbufferFormat.RGBA4);
+  const format = options.format ?? RenderbufferFormat.RGBA4;
   const width = defined(options.width) ? options.width : gl.drawingBufferWidth;
   const height = defined(options.height)
     ? options.height
     : gl.drawingBufferHeight;
-  const numSamples = defaultValue(options.numSamples, 1);
+  const numSamples = options.numSamples ?? 1;
 
   //>>includeStart('debug', pragmas.debug);
   if (!RenderbufferFormat.validate(format)) {

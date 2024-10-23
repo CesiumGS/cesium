@@ -1,4 +1,3 @@
-import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import CesiumMath from "./Math.js";
@@ -20,19 +19,19 @@ function HeadingPitchRoll(heading, pitch, roll) {
    * @type {number}
    * @default 0.0
    */
-  this.heading = defaultValue(heading, 0.0);
+  this.heading = heading ?? 0.0;
   /**
    * Gets or sets the pitch.
    * @type {number}
    * @default 0.0
    */
-  this.pitch = defaultValue(pitch, 0.0);
+  this.pitch = pitch ?? 0.0;
   /**
    * Gets or sets the roll.
    * @type {number}
    * @default 0.0
    */
-  this.roll = defaultValue(roll, 0.0);
+  this.roll = roll ?? 0.0;
 }
 
 /**

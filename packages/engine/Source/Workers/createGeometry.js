@@ -1,5 +1,4 @@
 import DeveloperError from "../Core/DeveloperError.js";
-import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import PrimitivePipeline from "../Scene/PrimitivePipeline.js";
 import createTaskProcessorWorker from "./createTaskProcessorWorker.js";
@@ -8,7 +7,7 @@ import createTaskProcessorWorker from "./createTaskProcessorWorker.js";
 const moduleCache = {};
 
 async function getModule(moduleName, modulePath) {
-  let module = defaultValue(moduleCache[modulePath], moduleCache[moduleName]);
+  let module = moduleCache[modulePath] ?? moduleCache[moduleName];
 
   if (defined(module)) {
     return module;

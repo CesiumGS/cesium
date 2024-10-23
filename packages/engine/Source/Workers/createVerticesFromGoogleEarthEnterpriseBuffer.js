@@ -3,7 +3,6 @@ import BoundingSphere from "../Core/BoundingSphere.js";
 import Cartesian2 from "../Core/Cartesian2.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Cartographic from "../Core/Cartographic.js";
-import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
 import EllipsoidalOccluder from "../Core/EllipsoidalOccluder.js";
@@ -24,7 +23,7 @@ const sizeOfFloat = Float32Array.BYTES_PER_ELEMENT;
 const sizeOfDouble = Float64Array.BYTES_PER_ELEMENT;
 
 function indexOfEpsilon(arr, elem, elemType) {
-  elemType = defaultValue(elemType, CesiumMath);
+  elemType = elemType ?? CesiumMath;
   const count = arr.length;
   for (let i = 0; i < count; ++i) {
     if (elemType.equalsEpsilon(arr[i], elem, CesiumMath.EPSILON12)) {

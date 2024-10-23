@@ -1,7 +1,6 @@
 import AssociativeArray from "../Core/AssociativeArray.js";
 import BoundingSphere from "../Core/BoundingSphere.js";
 import Check from "../Core/Check.js";
-import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import ClassificationType from "../Scene/ClassificationType.js";
@@ -89,8 +88,8 @@ function PolylineVisualizer(
   Check.defined("entityCollection", entityCollection);
   //>>includeEnd('debug');
 
-  groundPrimitives = defaultValue(groundPrimitives, scene.groundPrimitives);
-  primitives = defaultValue(primitives, scene.primitives);
+  groundPrimitives = groundPrimitives ?? scene.groundPrimitives;
+  primitives = primitives ?? scene.primitives;
 
   this._scene = scene;
   this._primitives = primitives;

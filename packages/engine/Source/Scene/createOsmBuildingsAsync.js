@@ -60,15 +60,12 @@ import Cesium3DTileStyle from "./Cesium3DTileStyle.js";
 async function createOsmBuildingsAsync(options) {
   const tileset = await Cesium3DTileset.fromIonAssetId(96188, options);
 
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
 
   let style = options.style;
 
   if (!defined(style)) {
-    const color = defaultValue(
-      options.defaultColor,
-      Color.WHITE,
-    ).toCssColorString();
+    const color = (options.defaultColor ?? Color.WHITE).toCssColorString();
     style = new Cesium3DTileStyle({
       color: `Boolean(\${feature['cesium#color']}) ? color(\${feature['cesium#color']}) : ${color}`,
     });

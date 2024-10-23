@@ -42,7 +42,7 @@ import TextureMinificationFilter from "./TextureMinificationFilter.js";
  * @private
  */
 function Texture(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
 
   //>>includeStart('debug', pragmas.debug);
   Check.defined("options.context", options.context);
@@ -527,7 +527,7 @@ Texture.create = function (options) {
  * @private
  */
 Texture.fromFramebuffer = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
 
   //>>includeStart('debug', pragmas.debug);
   Check.defined("options.context", options.context);
@@ -974,12 +974,12 @@ Texture.prototype.copyFromFramebuffer = function (
   width,
   height,
 ) {
-  xOffset = defaultValue(xOffset, 0);
-  yOffset = defaultValue(yOffset, 0);
-  framebufferXOffset = defaultValue(framebufferXOffset, 0);
-  framebufferYOffset = defaultValue(framebufferYOffset, 0);
-  width = defaultValue(width, this._width);
-  height = defaultValue(height, this._height);
+  xOffset = xOffset ?? 0;
+  yOffset = yOffset ?? 0;
+  framebufferXOffset = framebufferXOffset ?? 0;
+  framebufferYOffset = framebufferYOffset ?? 0;
+  width = width ?? this._width;
+  height = height ?? this._height;
 
   //>>includeStart('debug', pragmas.debug);
   if (PixelFormat.isDepthFormat(this._pixelFormat)) {
@@ -1057,7 +1057,7 @@ Texture.prototype.copyFromFramebuffer = function (
  * @exception {DeveloperError} This texture was destroyed, i.e., destroy() was called.
  */
 Texture.prototype.generateMipmap = function (hint) {
-  hint = defaultValue(hint, MipmapHint.DONT_CARE);
+  hint = hint ?? MipmapHint.DONT_CARE;
 
   //>>includeStart('debug', pragmas.debug);
   if (PixelFormat.isDepthFormat(this._pixelFormat)) {

@@ -404,7 +404,7 @@ function wrapCallback(controller, cb) {
 }
 
 CameraFlightPath.createTween = function (scene, options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
   let destination = options.destination;
 
   //>>includeStart('debug', pragmas.debug);
@@ -421,7 +421,7 @@ CameraFlightPath.createTween = function (scene, options) {
     return emptyFlight();
   }
 
-  const convert = defaultValue(options.convert, true);
+  const convert = options.convert ?? true;
   const projection = scene.mapProjection;
   const ellipsoid = projection.ellipsoid;
   const maximumHeight = options.maximumHeight;
@@ -449,9 +449,9 @@ CameraFlightPath.createTween = function (scene, options) {
     duration = Math.min(duration, 3.0);
   }
 
-  const heading = defaultValue(options.heading, 0.0);
-  const pitch = defaultValue(options.pitch, -CesiumMath.PI_OVER_TWO);
-  const roll = defaultValue(options.roll, 0.0);
+  const heading = options.heading ?? 0.0;
+  const pitch = options.pitch ?? -CesiumMath.PI_OVER_TWO;
+  const roll = options.roll ?? 0.0;
 
   const controller = scene.screenSpaceCameraController;
   controller.enableInputs = false;
