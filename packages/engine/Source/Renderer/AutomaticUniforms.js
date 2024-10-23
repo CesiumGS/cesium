@@ -1578,6 +1578,19 @@ const AutomaticUniforms = {
   }),
 
   /**
+   * An automatic GLSL uniform scalar used to mix a color with the fog color based on the distance to the camera.
+   *
+   * @see czm_fog
+   */
+  czm_fogVisualDensityScalar: new AutomaticUniform({
+    size: 1,
+    datatype: WebGLConstants.FLOAT,
+    getValue: function (uniformState) {
+      return uniformState.fogVisualDensityScalar;
+    },
+  }),
+
+  /**
    * An automatic GLSL uniform scalar used to set a minimum brightness when dynamic lighting is applied to fog.
    *
    * @see czm_fog

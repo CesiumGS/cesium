@@ -4,9 +4,14 @@
 
 #### @cesium/engine
 
+##### Breaking Changes :mega:
+
+- Changed the default Fog density scalar from `0.15` to `0.4` to make fog appear more dense. Set `viewer.scene.fog.visualDensityScalar = 0.15` to get the previous behavior. [#12248](https://github.com/CesiumGS/cesium/pull/12248)
+
 ##### Additions :tada:
 
 - Added `ScreenSpaceCameraController.maximumTiltAngle` to limit how much the camera can tilt. [#12169](https://github.com/CesiumGS/cesium/pull/12169)
+- Exposed `Fog.visualDensityScalar` to allow modifying the visual density of fog without affecting the culling aspects. This defaults to `0.4` but previously had an internal default value of `0.15`. Set `viewer.scene.fog.visualDensityScalar = 0.15` to get the previous behavior. [#12248](https://github.com/CesiumGS/cesium/pull/12248)
 
 ##### Fixes :wrench:
 
