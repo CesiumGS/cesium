@@ -34,7 +34,8 @@
         //Sandcastle_Begin
 
         const viewer = new Cesium.Viewer("cesiumContainer", {
-          terrain: Cesium.Terrain.fromWorldTerrain(),
+          // Load Japan Regional Terrain
+          terrainProvider: await Cesium.CesiumTerrainProvider.fromIonAssetId(2767062),
           baseLayerPicker: false,
           sceneModePicker: false,
           animation: false,
