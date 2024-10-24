@@ -13,6 +13,8 @@
 
 - Fix flickering issue caused by bounding sphere retrieval being blocked by the bounding sphere of another entity. [#12230](https://github.com/CesiumGS/cesium/pull/12230)
 
+- Fix error with normalization of corner points for lines and corridors with collinear points. [#12255](https://github.com/CesiumGS/cesium/pull/12255)
+
 ### 1.122 - 2024-10-01
 
 #### @cesium/engine
