@@ -1,5 +1,7 @@
 import Cartesian3 from "../Core/Cartesian3.js";
 import defined from "../Core/defined.js";
+import DeveloperError from "../Core/DeveloperError.js";
+import CesiumMath from "../Core/Math.js";
 import SceneMode from "./SceneMode.js";
 
 /**
@@ -50,15 +52,8 @@ function Fog() {
    * @type {number}
    * @default 0.001
    */
-  this.fogScalar = 0.001;
-  /**
-   * Exponent factor used in the function to adjust density based on the height of the camera. Higher values will lead
-   * to more dense fog at lower heights and a slower falloff as you get higher.
-   * Positive values only, if the value is negative it will be clamped to 0;
-   * @type {number}
-   * @default 0.52
-   */
-  this.heightFalloff = 0.52;
+  this.heightScalar = 0.001;
+  this._heightFalloff = 0.52;
   /**
    * The maximum height fog is applied. If the camera is above this height fog will be disabled.
    * @type {number}
@@ -93,6 +88,30 @@ function Fog() {
   this.minimumBrightness = 0.03;
 }
 
+Object.defineProperties(Fog.prototype, {
+  /**
+   * Exponent factor used in the function to adjust how density changes based on the height of the camera above the ellipsoid. Smaller values produce a more gradual transition as camera height increases.
+   * Value must be greater than 0.
+   * @memberof Fog.prototype
+   * @type {number}
+   * @default 0.52
+   */
+  heightFalloff: {
+    get: function () {
+      return this._heightFalloff;
+    },
+    set: function (value) {
+      //>>includeStart('debug', pragmas.debug);
+      if (defined(value) && value < 0) {
+        throw new DeveloperError("value must be positive.");
+      }
+      //>>includeEnd('debug');
+
+      this._heightFalloff = value;
+    },
+  },
+});
+
 const scratchPositionNormal = new Cartesian3();
 
 /**
@@ -124,10 +143,10 @@ Fog.prototype.update = function (frameState) {
   const height = positionCartographic.height;
   let density =
     this.density *
-    this.fogScalar *
+    this.heightScalar *
     Math.pow(
-      Math.max(height / this.maxHeight, 1e-6),
-      -Math.max(this.heightFalloff, 0),
+      Math.max(height / this.maxHeight, CesiumMath.EPSILON6),
+      -Math.max(this._heightFalloff, 0.0),
     );
 
   // Fade fog in as the camera tilts toward the horizon.

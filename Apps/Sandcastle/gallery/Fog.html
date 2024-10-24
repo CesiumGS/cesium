@@ -109,14 +109,14 @@
             <td><input type="number" data-bind="value: sse" /></td>
           </tr>
           <tr>
-            <td>fogScalar</td>
+            <td>heightScalar</td>
             <td>
               <input
                 type="number"
                 min="0.001"
                 max="2"
                 step="0.001"
-                data-bind="value: fogScalar"
+                data-bind="value: heightScalar"
               />
             </td>
           </tr>
@@ -157,7 +157,7 @@
           visualDensityScalar: 0,
           sse: 0,
           minimumBrightness: 0,
-          fogScalar: 0,
+          heightScalar: 0,
           heightFalloff: 0,
           maxHeight: 0,
         };
@@ -195,9 +195,9 @@
           viewer.scene.fog.screenSpaceErrorFactor = newValue;
         });
         Cesium.knockout
-          .getObservable(viewModel, "fogScalar")
+          .getObservable(viewModel, "heightScalar")
           .subscribe(function (newValue) {
-            viewer.scene.fog.fogScalar = newValue;
+            viewer.scene.fog.heightScalar = newValue;
           });
         Cesium.knockout
           .getObservable(viewModel, "heightFalloff")
@@ -215,7 +215,7 @@
         viewModel.visualDensityScalar = viewer.scene.fog.visualDensityScalar;
         viewModel.sse = viewer.scene.fog.screenSpaceErrorFactor;
         viewModel.minimumBrightness = viewer.scene.fog.minimumBrightness;
-        viewModel.fogScalar = viewer.scene.fog.fogScalar;
+        viewModel.heightScalar = viewer.scene.fog.heightScalar;
         viewModel.heightFalloff = viewer.scene.fog.heightFalloff;
         viewModel.maxHeight = viewer.scene.fog.maxHeight;
 
