@@ -148,9 +148,6 @@ GeometryPipelineStage.process = function (
         showSplats ? 1 : 0;
       primitive.attributes.find((a) => a.name === "COLOR_0").instanceDivisor =
         showSplats ? 1 : 0;
-      // primitive.attributes.find(
-      //   (a) => a.name === "_OPACITY"
-      // ).instanceDivisor = showSplats ? 1 : 0;
 
       if (!showSplats) {
         shaderBuilder.addDefine("PRIMITIVE_TYPE_POINTS");

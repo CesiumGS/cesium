@@ -125,7 +125,9 @@ function buildDrawCommandForModel(
         screenQuadPosition: 0,
         splatPosition: 6,
         splatColor: 7,
-        splatOpacity: 8,
+        // splatScale:8,
+        // splatRot:9
+        //      splatOpacity: 8,
       };
       const geometry = new Geometry({
         attributes: {
@@ -151,6 +153,20 @@ function buildDrawCommandForModel(
             name: "_SPLAT_COLOR",
             variableName: "splatColor",
           },
+          // splatScale: {
+          //   ...primitiveRenderResources.runtimePrimitive.primitive.attributes.find(
+          //     (a) => a.name === "_SCALE",
+          //   ),
+          //   name: "_SPLAT_SCALE",
+          //   variableName: "splatScale"
+          // },
+          // splatRot: {
+          //   ...primitiveRenderResources.runtimePrimitive.primitive.attributes.find(
+          //     (a) => a.name === "_ROTATION",
+          //   ),
+          //   name: "_SPLAT_ROTATION",
+          //   variableName: "splatRot"
+          // }
           // splatOpacity: {
           //   ...primitiveRenderResources.runtimePrimitive.primitive.attributes.find(
           //     (a) => a.name === "_OPACITY"

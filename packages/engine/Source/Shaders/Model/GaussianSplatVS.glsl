@@ -68,7 +68,7 @@ vec3 calcCov2D(vec3 worldPos, float focal_x, float focal_y, float tan_fovx, floa
 void gaussianSplatStage(ProcessedAttributes attributes, inout vec4 positionClip) {
     mat4 viewMatrix = czm_modelView;
 
-    vec4 clipPosition = czm_modelViewProjection * vec4(a_splatPosition,1.0);
+    vec4 clipPosition = czm_modelViewProjection * vec4(a_splatPosition ,1.0);
     positionClip = clipPosition;
 
     float[6] cov3D;
@@ -85,12 +85,10 @@ void gaussianSplatStage(ProcessedAttributes attributes, inout vec4 positionClip)
     vec2 minorAxis = min(sqrt(2.0 * lambda2), 1024.0) * vec2(diagonalVector.y, -diagonalVector.x);
 
     vec2 corner = vec2((gl_VertexID << 1) & 2, gl_VertexID & 2) - 1.;
-    corner *= 2.0;
 
-    vec2 deltaScreenPos = (corner.x * majorAxis + corner.y * minorAxis) * 2.0 / czm_viewport.zw;
-    positionClip.xy += deltaScreenPos * positionClip.w;
-    v_vertPos = corner;
+    positionClip += vec4((corner.x * majorAxis + corner.y * minorAxis) * 4.0 / czm_viewport.zw * positionClip.w, 0, 0);
+    positionClip.z = clamp(positionClip.z, -abs(positionClip.w), abs(positionClip.w));
+    v_vertPos = corner ;
     v_splatColor = a_splatColor;
-    v_splatOpacity = a_splatOpacity;
 }
 
