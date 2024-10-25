@@ -12,6 +12,7 @@
 
 - Added `ScreenSpaceCameraController.maximumTiltAngle` to limit how much the camera can tilt. [#12169](https://github.com/CesiumGS/cesium/pull/12169)
 - Exposed `Fog.visualDensityScalar` to allow modifying the visual density of fog without affecting the culling aspects. This defaults to `0.4` but previously had an internal default value of `0.15`. Set `viewer.scene.fog.visualDensityScalar = 0.15` to get the previous behavior. [#12248](https://github.com/CesiumGS/cesium/pull/12248)
+- Update Japan Buildings sandcastle to use Japan Regional Terrain [#12259](https://github.com/CesiumGS/cesium/pull/12259)
 
 ##### Fixes :wrench:
 
