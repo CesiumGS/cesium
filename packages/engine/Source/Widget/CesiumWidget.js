@@ -453,6 +453,7 @@ function CesiumWidget(container, options) {
     this._destroyDataSourceCollection = destroyDataSourceCollection;
     this._dataSourceDisplay = dataSourceDisplay;
     this._eventHelper = eventHelper;
+    this._canAnimateUpdateCallback = this._updateCanAnimate;
 
     eventHelper.add(this._clock.onTick, CesiumWidget.prototype._onTick, this);
     eventHelper.add(
@@ -1126,6 +1127,13 @@ CesiumWidget.prototype._dataSourceRemoved = function (
   }
 };
 
+/**
+ * @private
+ */
+CesiumWidget.prototype._updateCanAnimate = function (isUpdated) {
+  this._clock.canAnimate = isUpdated;
+};
+
 const boundingSphereScratch = new BoundingSphere();
 
 /**
@@ -1136,7 +1144,7 @@ CesiumWidget.prototype._onTick = function (clock) {
 
   const isUpdated = this._dataSourceDisplay.update(time);
   if (this._allowDataSourcesToSuspendAnimation) {
-    this._clock.canAnimate = isUpdated;
+    this._canAnimateUpdateCallback(isUpdated);
   }
 
   const entityView = this._entityView;

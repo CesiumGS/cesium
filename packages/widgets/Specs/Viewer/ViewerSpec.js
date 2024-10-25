@@ -865,30 +865,29 @@ describe(
       expect(viewer.trackedEntity).toBeUndefined();
     });
 
-    // TO BE REMOVED BEFORE MERGE
-    // fit("suspends animation by dataSources if allowed", function () {
-    //   viewer = createViewer(container);
+    it("suspends animation by dataSources if allowed", function () {
+      viewer = createViewer(container);
 
-    //   let updateResult = true;
-    //   spyOn(viewer.dataSourceDisplay, "update").and.callFake(function () {
-    //     viewer.dataSourceDisplay._ready = updateResult;
-    //     return updateResult;
-    //   });
+      let updateResult = true;
+      spyOn(viewer.dataSourceDisplay, "update").and.callFake(function () {
+        viewer.dataSourceDisplay._ready = updateResult;
+        return updateResult;
+      });
 
-    //   expect(viewer.clockViewModel.canAnimate).toBe(true);
+      expect(viewer.clockViewModel.canAnimate).toBe(true);
 
-    //   viewer.clock.tick();
-    //   expect(viewer.clockViewModel.canAnimate).toBe(true);
+      viewer.clock.tick();
+      expect(viewer.clockViewModel.canAnimate).toBe(true);
 
-    //   updateResult = false;
-    //   viewer.clock.tick();
-    //   expect(viewer.clockViewModel.canAnimate).toBe(false);
+      updateResult = false;
+      viewer.clock.tick();
+      expect(viewer.clockViewModel.canAnimate).toBe(false);
 
-    //   viewer.clockViewModel.canAnimate = true;
-    //   viewer.allowDataSourcesToSuspendAnimation = false;
-    //   viewer.clock.tick();
-    //   expect(viewer.clockViewModel.canAnimate).toBe(true);
-    // });
+      viewer.clockViewModel.canAnimate = true;
+      viewer.allowDataSourcesToSuspendAnimation = false;
+      viewer.clock.tick();
+      expect(viewer.clockViewModel.canAnimate).toBe(true);
+    });
   },
   "WebGL",
 );

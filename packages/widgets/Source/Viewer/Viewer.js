@@ -906,6 +906,10 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
     pickAndTrackObject,
     ScreenSpaceEventType.LEFT_DOUBLE_CLICK,
   );
+
+  // This allows to update the Viewer's _clockViewModel instead of the CesiumWidget's _clock
+  // when CesiumWidget is created from the Viewer.
+  cesiumWidget._canAnimateUpdateCallback = this._updateCanAnimate(this);
 }
 
 Object.defineProperties(Viewer.prototype, {
@@ -1774,13 +1778,17 @@ Viewer.prototype._dataSourceRemoved = function (
 /**
  * @private
  */
+Viewer.prototype._updateCanAnimate = function (that) {
+  return function (isUpdated) {
+    that._clockViewModel.canAnimate = isUpdated;
+  };
+};
+
+/**
+ * @private
+ */
 Viewer.prototype._onTick = function (clock) {
   const time = clock.currentTime;
-
-  const isUpdated = this._cesiumWidget.dataSourceDisplay.ready;
-  if (this.allowDataSourcesToSuspendAnimation) {
-    this._clockViewModel.canAnimate = isUpdated;
-  }
 
   let position;
   let enableCamera = false;
