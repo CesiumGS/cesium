@@ -23,14 +23,18 @@ vec4 getCubeMapDirection(vec2 uv, vec3 faceDir) {
 void main() {    
     float height = length(u_positionWC);
     float atmosphereInnerRadius = u_radiiAndDynamicAtmosphereColor.y;
-    float ellipsoidHeight = height - atmosphereInnerRadius;
+    float ellipsoidHeight = max(height - atmosphereInnerRadius, 0.0);
+
+    // Scale the position to ensure the sky color is present, even when underground.
+    vec3 positionWC = u_positionWC / height * (ellipsoidHeight + atmosphereInnerRadius);
+
     float atmosphereOuterRadius = u_radiiAndDynamicAtmosphereColor.x;
     float atmosphereHeight = atmosphereOuterRadius - atmosphereInnerRadius;
 
     vec3 direction = (u_enuToFixedFrame * getCubeMapDirection(v_textureCoordinates, u_faceDirection)).xyz;
     vec3 normalizedDirection = normalize(direction);
 
-    czm_ray ray = czm_ray(u_positionWC, normalizedDirection);
+    czm_ray ray = czm_ray(positionWC, normalizedDirection);
     czm_raySegment intersection = czm_raySphereIntersectionInterval(ray, vec3(0.0), atmosphereInnerRadius);
     if (!czm_isEmpty(intersection)) {
         intersection = czm_rayEllipsoidIntersectionInterval(ray, vec3(0.0), czm_ellipsoidInverseRadii);
@@ -40,7 +44,7 @@ void main() {
     float rayLength = czm_branchFreeTernary(onEllipsoid, intersection.start, atmosphereOuterRadius);
 
     // Compute sky color for each position on a sphere at radius centered around the provided position's origin
-    vec3 skyPositionWC = u_positionWC + normalizedDirection * rayLength;
+    vec3 skyPositionWC = positionWC + normalizedDirection * rayLength;
 
     float lightEnum = u_radiiAndDynamicAtmosphereColor.z;
     vec3 lightDirectionWC = normalize(czm_getDynamicAtmosphereLightDirection(skyPositionWC, lightEnum));
@@ -81,7 +85,7 @@ void main() {
     vec4 combinedSkyColor = vec4(mix(skyBackgroundColor, atmopshereColor.rgb * intensity, skyAlpha), 1.0);
 
     // Compute ground color based on amount of reflected light, then blend it with ground atmosphere based on height
-    vec3 up = normalize(u_positionWC);
+    vec3 up = normalize(positionWC);
     float occlusion = max(dot(lightDirectionWC, up), 0.05);
     vec4 groundColor = vec4(u_groundColor.rgb * u_groundColor.a * (vec3(intensity * occlusion) + atmopshereColor.rgb), 1.0);
     vec4 blendedGroundColor = mix(groundColor, atmopshereColor, clamp(ellipsoidHeight / atmosphereHeight, 0.0, 1.0));

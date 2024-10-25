@@ -402,6 +402,7 @@ function atmosphereNeedsUpdate(manager, frameState) {
 const scratchCartesian = new Cartesian3();
 const scratchMatrix = new Matrix4();
 const scratchAdjustments = new Cartesian4();
+const scratchColor = new Color();
 
 /**
  * Renders the highest resolution specular map by creating compute commands for each cube face
@@ -489,8 +490,12 @@ function updateRadianceMap(manager, frameState) {
           u_faceDirection: () => CubeMap.getDirection(face, scratchCartesian),
           u_positionWC: () => position,
           u_brightnessSaturationGammaIntensity: () => adjustments,
-          u_groundColor: () =>
-            manager.groundColor.withAlpha(manager.groundAlbedo),
+          u_groundColor: () => {
+            return manager.groundColor.withAlpha(
+              manager.groundAlbedo,
+              scratchColor,
+            );
+          },
         },
         persists: true,
         owner: manager,

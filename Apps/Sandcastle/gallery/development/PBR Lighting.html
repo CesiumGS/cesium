@@ -19,7 +19,7 @@
 
       #toolbar > div {
         display: flex;
-        width: 30em;
+        width: 34em;
       }
 
       #modelsToolbar,
@@ -36,6 +36,11 @@
       #toolbar input[type="range"] {
         flex-grow: 1;
       }
+
+      #toolbar label {
+        margin-right: 0.5em;
+        flex-shrink: 0;
+      }
     </style>
     <div id="cesiumContainer" class="fullSize"></div>
     <div id="loadingOverlay"><h1>Loading...</h1></div>
@@ -50,7 +55,7 @@
             step="200"
             data-bind="value: height, valueUpdate: 'input'"
           />
-          <input type="number" size="5" data-bind="value: height" />
+          <input type="number" size="5" step="200" data-bind="value: height" />
         </div>
       </div>
       <div id="lightingToolbar">
@@ -63,7 +68,12 @@
             step="0.5"
             data-bind="value: directionalLightIntensity, valueUpdate: 'input'"
           />
-          <input type="number" size="5" data-bind="value: directionalLightIntensity" />
+          <input
+            type="number"
+            size="5"
+            step="0.5"
+            data-bind="value: directionalLightIntensity"
+          />
         </div>
         <div class="cesium-button">
           <label>Atmospheric Intensity</label>
@@ -77,6 +87,7 @@
           <input
             type="number"
             size="5"
+            step="0.5"
             data-bind="value: atmosphereScatteringIntensity"
           />
         </div>
@@ -89,7 +100,7 @@
             step="0.5"
             data-bind="value: gamma, valueUpdate: 'input'"
           />
-          <input type="number" size="5" data-bind="value: gamma" />
+          <input type="number" size="5" step="0.5" data-bind="value: gamma" />
         </div>
         <div class="cesium-button">
           <label>Brightness</label>
@@ -100,7 +111,7 @@
             step="0.5"
             data-bind="value: brightness, valueUpdate: 'input'"
           />
-          <input type="number" size="5" data-bind="value: brightness" />
+          <input type="number" size="5" step="0.5" data-bind="value: brightness" />
         </div>
         <div class="cesium-button">
           <label>Saturation</label>
@@ -111,7 +122,18 @@
             step="0.5"
             data-bind="value: saturation, valueUpdate: 'input'"
           />
-          <input type="number" size="5" data-bind="value: saturation" />
+          <input type="number" size="5" step="0.5" data-bind="value: saturation" />
+        </div>
+        <div class="cesium-button">
+          <label>Ground Albedo</label>
+          <input
+            type="range"
+            min="0.0"
+            max="1.0"
+            step="0.01"
+            data-bind="value: groundAlbedo, valueUpdate: 'input'"
+          />
+          <input type="number" step="0.01" size="5" data-bind="value: groundAlbedo" />
         </div>
       </div>
       <div id="environmentToolbar"></div>
@@ -277,16 +299,42 @@
         Sandcastle.addToolbarMenu(environmentMapOptions, "environmentToolbar");
 
         const lightingViewModel = {
-          directionalLightIntensity: 1.0,
+          directionalLightIntensity: 2.0,
           atmosphereScatteringIntensity: 2.0,
           gamma: 1.0,
           brightness: 1.0,
           saturation: 1.0,
+          groundAlbedo: 0.31,
         };
 
         Cesium.knockout.track(lightingViewModel);
         const lightingToolbar = document.getElementById("lightingToolbar");
         Cesium.knockout.applyBindings(lightingViewModel, lightingToolbar);
+
+        Sandcastle.addToolbarButton("Random Ground Color", function () {
+          model.environmentMapManager.groundColor = Cesium.Color.fromRandom({
+            alpha: 1.0,
+            minimumRed: 0.1,
+            maximumRed: 0.5,
+            minimumGreen: 0.1,
+            maximumGreen: 0.5,
+            minimumBlue: 0.0,
+            maximumBlue: 0.4,
+          });
+          model.environmentMapManager.reset();
+        });
+
+        Sandcastle.addToolbarButton("Reset Lighting", function () {
+          lightingViewModel.directionalLightIntensity = 1.0;
+          lightingViewModel.atmosphereScatteringIntensity = 2.0;
+          lightingViewModel.gamma = 1.0;
+          lightingViewModel.brightness = 1.0;
+          lightingViewModel.saturation = 1.0;
+          lightingViewModel.groundAlbedo = 0.31;
+          model.environmentMapManager.groundColor =
+            Cesium.DynamicEnvironmentMapManager.AVERAGE_EARTH_GROUND_COLOR;
+          updateModelLightingProperties();
+        });
 
         Cesium.knockout
           .getObservable(lightingViewModel, "directionalLightIntensity")
@@ -315,6 +363,10 @@
           .getObservable(lightingViewModel, "saturation")
           .subscribe(updateModelLightingProperties);
 
+        Cesium.knockout
+          .getObservable(lightingViewModel, "groundAlbedo")
+          .subscribe(updateModelLightingProperties);
+
         function updateModelLightingProperties() {
           const atmosphereScatteringIntensity = Number(
             lightingViewModel.atmosphereScatteringIntensity,
@@ -337,6 +389,11 @@
           const saturation = Number(lightingViewModel.saturation);
           if (!isNaN(saturation)) {
             model.environmentMapManager.saturation = saturation;
+          }
+
+          const groundAlbedo = Number(lightingViewModel.groundAlbedo);
+          if (!isNaN(groundAlbedo)) {
+            model.environmentMapManager.groundAlbedo = groundAlbedo;
           }
 
           model.environmentMapManager.reset();
