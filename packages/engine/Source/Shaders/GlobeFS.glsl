@@ -486,12 +486,12 @@ void main()
 
         // Fog is applied to tiles selected for fog, close to the Earth.
         #ifdef FOG
-            vec3 fogColor = groundAtmosphereColor.rgb;
+            vec4 fogColor = groundAtmosphereColor;
 
             // If there is lighting, apply that to the fog.
             #if defined(DYNAMIC_ATMOSPHERE_LIGHTING) && (defined(ENABLE_VERTEX_LIGHTING) || defined(ENABLE_DAYNIGHT_SHADING))
                 float darken = clamp(dot(normalize(czm_viewerPositionWC), atmosphereLightDirection), u_minimumBrightness, 1.0);
-                fogColor *= darken;
+                fogColor.rgb *= darken;
             #endif
 
             #ifndef HDR
@@ -500,7 +500,7 @@ void main()
             #endif
 
             const float modifier = 0.15;
-            finalColor = vec4(czm_fog(v_distance, finalColor.rgb, fogColor.rgb, modifier), finalColor.a);
+            finalColor = vec4(czm_fog(v_distance, finalColor.rgb, fogColor, modifier), finalColor.a);
 
         #else
             // Apply ground atmosphere. This happens when the camera is far away from the earth.

@@ -40,9 +40,9 @@ function Atmosphere() {
    * The intensity of the light that is used for computing the ground atmosphere color.
    *
    * @type {number}
-   * @default 10.0
+   * @default 50.0
    */
-  this.lightIntensity = 10.0;
+  this.lightIntensity = 50.0;
 
   /**
    * The Rayleigh scattering coefficient used in the atmospheric scattering equations for the ground atmosphere.

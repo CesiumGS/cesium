@@ -152,7 +152,7 @@ void computeScattering(
     mieColor = u_atmosphereMieCoefficient * mieAccumulation;
 
     // Compute the transmittance i.e. how much light is passing through the atmosphere.
-    opacity = length(exp(-((u_atmosphereMieCoefficient * opticalDepth.y) + (u_atmosphereRayleighCoefficient * opticalDepth.x))));
+    opacity = 1.0 - exp(-length((u_atmosphereMieCoefficient * opticalDepth.y) + (u_atmosphereRayleighCoefficient * opticalDepth.x)));
 }
 
 vec4 computeAtmosphereColor(

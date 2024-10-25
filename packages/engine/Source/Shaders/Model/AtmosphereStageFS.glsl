@@ -41,13 +41,13 @@ vec3 computeEllipsoidPositionWC(vec3 positionMC) {
 
 void applyFog(inout vec4 color, vec4 groundAtmosphereColor, vec3 lightDirection, float distanceToCamera) {
 
-    vec3 fogColor = groundAtmosphereColor.rgb;
+    vec4 fogColor = groundAtmosphereColor;
 
     // If there is dynamic lighting, apply that to the fog.
     const float NONE = 0.0;
     if (czm_atmosphereDynamicLighting != NONE) {
         float darken = clamp(dot(normalize(czm_viewerPositionWC), lightDirection), czm_fogMinimumBrightness, 1.0);
-        fogColor *= darken;
+        fogColor.rgb *= darken;
     }
 
     // Tonemap if HDR rendering is disabled

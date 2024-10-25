@@ -10,11 +10,11 @@
  *
  * @returns {vec3} The color adjusted for fog at the distance from the camera.
  */
-vec3 czm_fog(float distanceToCamera, vec3 color, vec3 fogColor)
+vec3 czm_fog(float distanceToCamera, vec3 color, vec4 fogColor)
 {
     float scalar = distanceToCamera * czm_fogDensity;
     float fog = 1.0 - exp(-(scalar * scalar));
-    return mix(color, fogColor, fog);
+    return mix(color, fogColor.rgb, fog * fogColor.a);
 }
 
 /**
@@ -30,9 +30,9 @@ vec3 czm_fog(float distanceToCamera, vec3 color, vec3 fogColor)
  *
  * @returns {vec3} The color adjusted for fog at the distance from the camera.
  */
-vec3 czm_fog(float distanceToCamera, vec3 color, vec3 fogColor, float fogModifierConstant)
+vec3 czm_fog(float distanceToCamera, vec3 color, vec4 fogColor, float fogModifierConstant)
 {
     float scalar = distanceToCamera * czm_fogDensity;
     float fog = 1.0 - exp(-((fogModifierConstant * scalar + fogModifierConstant) * (scalar * (1.0 + fogModifierConstant))));
-    return mix(color, fogColor, fog);
+    return mix(color, fogColor.rgb, fog * fogColor.a);
 }

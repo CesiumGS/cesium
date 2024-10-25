@@ -146,5 +146,5 @@ void czm_computeScattering(
     mieColor = czm_atmosphereMieCoefficient * mieAccumulation;
 
     // Compute the transmittance i.e. how much light is passing through the atmosphere.
-    opacity = length(exp(-((czm_atmosphereMieCoefficient * opticalDepth.y) + (czm_atmosphereRayleighCoefficient * opticalDepth.x))));
+    opacity = 1.0 - exp(-length((czm_atmosphereMieCoefficient * opticalDepth.y) + (czm_atmosphereRayleighCoefficient * opticalDepth.x)));
 }

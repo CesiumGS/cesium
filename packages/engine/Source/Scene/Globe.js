@@ -197,12 +197,12 @@ function Globe(ellipsoid) {
   this.showGroundAtmosphere = Ellipsoid.WGS84.equals(ellipsoid);
 
   /**
-   * The intensity of the light that is used for computing the ground atmosphere color.
+   * The intensity of the light that is used for computing the ground atmosphere color from space.
    *
    * @type {number}
-   * @default 10.0
+   * @default 50.0
    */
-  this.atmosphereLightIntensity = 10.0;
+  this.atmosphereLightIntensity = 50.0;
 
   /**
    * The Rayleigh scattering coefficient used in the atmospheric scattering equations for the ground atmosphere.
