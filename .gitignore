@@ -3,10 +3,12 @@
 /Cesium-*.zip
 /cesium-*.tgz
 /packages/**/*.tgz
+/packages/**/node_modules
 .directory
 .DS_Store
 Thumbs.db
 .eslintcache
+.idea
 
 /Apps/CesiumViewer/Gallery/gallery-index.js
 

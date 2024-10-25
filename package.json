@@ -162,6 +162,8 @@
   },
   "workspaces": [
     "packages/engine",
-    "packages/widgets"
+    "packages/widgets",
+    "project",
+    "./"
   ]
 }
