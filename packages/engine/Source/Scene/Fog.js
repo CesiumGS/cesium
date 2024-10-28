@@ -64,13 +64,13 @@ function Fog() {
    * A scalar that impacts the visual density of fog. This value does not impact the culling of terrain.
    * Use in combination with the {@link Fog.density} to make fog appear more or less dense.
    * @type {number}
-   * @default 1.0
+   * @default 0.15
    * @experimental The value of this scalar may not be final and is subject to change.
    * @example
    * // Increase fog appearance effect
    * viewer.scene.fog.visualDensityScalar = 0.6;
    */
-  this.visualDensityScalar = 1.0;
+  this.visualDensityScalar = 0.15;
   /**
    * A factor used to increase the screen space error of terrain tiles when they are partially in fog. The effect is to reduce
    * the number of terrain tiles requested for rendering. If set to zero, the feature will be disabled. If the value is increased
