@@ -487,6 +487,8 @@ void main()
         // Fog is applied to tiles selected for fog, close to the Earth.
         #ifdef FOG
             vec4 fogColor = groundAtmosphereColor;
+            // Adjust light intensity to match the sky rather than the ground atmopshere
+            fogColor.rgb *= czm_atmosphereLightIntensity / u_atmosphereLightIntensity;
 
             // If there is lighting, apply that to the fog.
             #if defined(DYNAMIC_ATMOSPHERE_LIGHTING) && (defined(ENABLE_VERTEX_LIGHTING) || defined(ENABLE_DAYNIGHT_SHADING))
