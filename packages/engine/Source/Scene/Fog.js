@@ -41,19 +41,19 @@ function Fog() {
    * 1000.0m above the ellipsoid, increasing the value to 3.0e-3 will cause many tiles close to the viewer be culled.
    * Decreasing the value will push the fog further from the viewer, but decrease performance as more of the terrain is rendered.
    * @type {number}
-   * @default 2.0e-4
+   * @default 0.0006
    * @example
    * // Double the default fog density
    * viewer.scene.fog.density = 0.0004;
    */
-  this.density = 2.0e-4;
+  this.density = 0.0006;
   /**
    * A scalar used in the function to adjust density based on the height of the camera above the terrain.
    * @type {number}
    * @default 0.001
    */
   this.heightScalar = 0.001;
-  this._heightFalloff = 0.52;
+  this._heightFalloff = 0.59;
   /**
    * The maximum height fog is applied. If the camera is above this height fog will be disabled.
    * @type {number}
@@ -65,6 +65,7 @@ function Fog() {
    * Use in combination with the {@link Fog.density} to make fog appear more or less dense.
    * @type {number}
    * @default 1.0
+   * @experimental The value of this scalar may not be final and is subject to change.
    * @example
    * // Increase fog appearance effect
    * viewer.scene.fog.visualDensityScalar = 0.6;
@@ -94,7 +95,7 @@ Object.defineProperties(Fog.prototype, {
    * Value must be greater than 0.
    * @memberof Fog.prototype
    * @type {number}
-   * @default 0.52
+   * @default 0.59
    */
   heightFalloff: {
     get: function () {

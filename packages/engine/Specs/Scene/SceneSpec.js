@@ -2557,6 +2557,8 @@ describe(
     it("does not occlude primitives when camera is underground", async function () {
       const globe = new Globe();
       scene.globe = globe;
+      // disable fog to skip fog culling
+      scene.fog.enabled = false;
 
       // A primitive at height -25000.0 is less than the minor axis for WGS84 and will get culled unless the camera is underground
       const center = Cartesian3.fromRadians(
