@@ -30,6 +30,10 @@ const MetadataPicking = {};
  * @param {DataView} dataView The data view
  * @param {number} index The index (byte offset)
  * @returns {number|bigint|undefined} The value
+ * @throws RuntimeError If the given component type is not a valid
+ * `MetadataComponentType`
+ * @throws RangeError If reading the data from the given data view would
+ * cause an out-of-bounds access
  *
  * @private
  */
@@ -44,21 +48,21 @@ MetadataPicking.decodeRawMetadataValue = function (
     case MetadataComponentType.UINT8:
       return dataView.getUint8(index);
     case MetadataComponentType.INT16:
-      return dataView.getInt16(index);
+      return dataView.getInt16(index, true);
     case MetadataComponentType.UINT16:
-      return dataView.getUint16(index);
+      return dataView.getUint16(index, true);
     case MetadataComponentType.INT32:
-      return dataView.getInt32(index);
+      return dataView.getInt32(index, true);
     case MetadataComponentType.UINT32:
-      return dataView.getUint32(index);
+      return dataView.getUint32(index, true);
     case MetadataComponentType.INT64:
-      return dataView.getBigInt64(index);
+      return dataView.getBigInt64(index, true);
     case MetadataComponentType.UINT64:
-      return dataView.getBigUint64(index);
+      return dataView.getBigUint64(index, true);
     case MetadataComponentType.FLOAT32:
-      return dataView.getFloat32(index);
+      return dataView.getFloat32(index, true);
     case MetadataComponentType.FLOAT64:
-      return dataView.getFloat64(index);
+      return dataView.getFloat64(index, true);
   }
   throw new RuntimeError(`Invalid component type: ${componentType}`);
 };
@@ -78,6 +82,10 @@ MetadataPicking.decodeRawMetadataValue = function (
  * @param {number} dataViewOffset The byte offset within the data view from
  * which the component should be read
  * @returns {number|bigint|undefined} The metadata value component
+ * @throws RuntimeError If the component o the given property is not
+ * a valid `MetadataComponentType`
+ * @throws RangeError If reading the data from the given data view would
+ * cause an out-of-bounds access
  */
 MetadataPicking.decodeRawMetadataValueComponent = function (
   classProperty,
@@ -293,11 +301,11 @@ MetadataPicking.convertFromObjectType = function (type, value) {
     case MetadataType.VEC4:
       return Cartesian4.pack(value, Array(4));
     case MetadataType.MAT2:
-      return Matrix2.unpack(value, Array(4));
+      return Matrix2.pack(value, Array(4));
     case MetadataType.MAT3:
-      return Matrix3.unpack(value, Array(9));
+      return Matrix3.pack(value, Array(9));
     case MetadataType.MAT4:
-      return Matrix4.unpack(value, Array(16));
+      return Matrix4.pack(value, Array(16));
   }
   // Should never happen:
   throw new RuntimeError(`Invalid metadata object type: ${type}`);
