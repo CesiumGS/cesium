@@ -12,7 +12,6 @@ import Quaternion from "../Core/Quaternion.js";
 import TrackingReferenceFrame from "../Core/TrackingReferenceFrame.js";
 import Transforms from "../Core/Transforms.js";
 import SceneMode from "../Scene/SceneMode.js";
-import VelocityOrientationProperty from "./VelocityOrientationProperty.js";
 import VelocityVectorProperty from "./VelocityVectorProperty.js";
 
 const updateTransformMatrix3Scratch1 = new Matrix3();
@@ -243,7 +242,7 @@ function updateTransform(
     if (defined(orientationProperty)) {
       orientation = orientationProperty.getValue(
         time,
-        updateTransformOrientationScratch
+        updateTransformOrientationScratch,
       );
     }
 
@@ -257,7 +256,7 @@ function updateTransform(
         cartesian,
         orientation,
         Cartesian3.ONE,
-        transform
+        transform,
       );
     } else if (
       trackingReferenceFrame === TrackingReferenceFrame.VELOCITY &&
@@ -267,7 +266,7 @@ function updateTransform(
         cartesian,
         velocity,
         ellipsoid,
-        rotationScratch
+        rotationScratch,
       );
       Matrix4.fromRotationTranslation(rotation, cartesian, transform);
     } else if (hasBasis) {
@@ -412,13 +411,7 @@ EntityView.prototype.update = function (time, boundingSphere) {
     return;
   }
   const velocityProperty = this._velocityProperty;
-  let orientationProperty = entity.orientation;
-  if (
-    trackingReferenceFrame === TrackingReferenceFrame.INERTIAL &&
-    !defined(orientationProperty)
-  ) {
-    orientationProperty = new VelocityOrientationProperty(positionProperty);
-  }
+  const orientationProperty = entity.orientation;
   const objectChanged = entity !== this._lastEntity;
   const sceneModeChanged = sceneMode !== this._mode;
 
