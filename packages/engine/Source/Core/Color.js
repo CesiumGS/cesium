@@ -325,7 +325,7 @@ Color.fromRandom = function (options, result) {
 
     //>>includeStart('debug', pragmas.debug);
     Check.typeOf.number.lessThanOrEquals(
-      "minumumAlpha",
+      "minimumAlpha",
       minimumAlpha,
       maximumAlpha,
     );
