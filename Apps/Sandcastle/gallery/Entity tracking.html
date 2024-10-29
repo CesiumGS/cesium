@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -21,10 +21,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -45,16 +42,12 @@
 
         const startTime = Cesium.JulianDate.fromIso8601("2012-03-15T10:00:00Z");
 
-        const satelliteStopTime = Cesium.JulianDate.fromIso8601(
-          "2012-03-16T10:00:00Z"
-        );
+        const satelliteStopTime = Cesium.JulianDate.fromIso8601("2012-03-16T10:00:00Z");
 
-        const droneStopTime = Cesium.JulianDate.fromIso8601(
-          "2012-03-15T10:00:30Z"
-        );
+        const droneStopTime = Cesium.JulianDate.fromIso8601("2012-03-15T10:00:30Z");
 
         const dataSource = await viewer.dataSources.add(
-          Cesium.CzmlDataSource.load("../../SampleData/tracking.czml")
+          Cesium.CzmlDataSource.load("../../SampleData/tracking.czml"),
         );
 
         const satellite = dataSource.entities.getById("Satellite/ISS");
@@ -83,28 +76,22 @@
           {
             text: "Tracking reference frame: Auto-detect",
             onselect: function () {
-              satellite.trackingReferenceFrame =
-                Cesium.TrackingReferenceFrame.AUTODETECT;
-              drone.trackingReferenceFrame =
-                Cesium.TrackingReferenceFrame.AUTODETECT;
+              satellite.trackingReferenceFrame = Cesium.TrackingReferenceFrame.AUTODETECT;
+              drone.trackingReferenceFrame = Cesium.TrackingReferenceFrame.AUTODETECT;
             },
           },
           {
             text: "Tracking reference frame: Inertial",
             onselect: function () {
-              satellite.trackingReferenceFrame =
-                Cesium.TrackingReferenceFrame.INERTIAL;
-              drone.trackingReferenceFrame =
-                Cesium.TrackingReferenceFrame.INERTIAL;
+              satellite.trackingReferenceFrame = Cesium.TrackingReferenceFrame.INERTIAL;
+              drone.trackingReferenceFrame = Cesium.TrackingReferenceFrame.INERTIAL;
             },
           },
           {
             text: "Tracking reference frame: Velocity",
             onselect: function () {
-              satellite.trackingReferenceFrame =
-                Cesium.TrackingReferenceFrame.VELOCITY;
-              drone.trackingReferenceFrame =
-                Cesium.TrackingReferenceFrame.VELOCITY;
+              satellite.trackingReferenceFrame = Cesium.TrackingReferenceFrame.VELOCITY;
+              drone.trackingReferenceFrame = Cesium.TrackingReferenceFrame.VELOCITY;
             },
           },
         ]);

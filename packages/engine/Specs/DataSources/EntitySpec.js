@@ -56,7 +56,7 @@ describe("DataSources/Entity", function () {
     expect(entity.wall).toBeUndefined();
     expect(entity.entityCollection).toBeUndefined();
     expect(entity.trackingReferenceFrame).toBe(
-      TrackingReferenceFrame.AUTODETECT
+      TrackingReferenceFrame.AUTODETECT,
     );
 
     const options = {

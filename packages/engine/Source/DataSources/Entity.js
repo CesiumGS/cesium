@@ -129,7 +129,7 @@ function Entity(options) {
   this._show = defaultValue(options.show, true);
   this._trackingReferenceFrame = defaultValue(
     options.trackingReferenceFrame,
-    TrackingReferenceFrame.AUTODETECT
+    TrackingReferenceFrame.AUTODETECT,
   );
   this._parent = undefined;
   this._propertyNames = [
