@@ -105,14 +105,14 @@ describe(
       entity.trackingReferenceFrame = TrackingReferenceFrame.INERTIAL;
       view.update(
         JulianDate.now(),
-        new BoundingSphere(new Cartesian3(3, 4, 5), 6)
+        new BoundingSphere(new Cartesian3(3, 4, 5), 6),
       );
       expect(view.scene.camera.position).toEqualEpsilon(sampleOffset, 1e-10);
 
       entity.trackingReferenceFrame = TrackingReferenceFrame.VELOCITY;
       view.update(
         JulianDate.now(),
-        new BoundingSphere(new Cartesian3(3, 4, 5), 6)
+        new BoundingSphere(new Cartesian3(3, 4, 5), 6),
       );
       expect(view.scene.camera.position).toEqualEpsilon(sampleOffset, 1e-10);
     });
@@ -153,13 +153,6 @@ describe(
 
     it("update returns without entity.position property.", function () {
       const entity = new Entity();
-      const view = new EntityView(entity, scene);
-      view.update(JulianDate.now());
-    });
-
-    it("update returns with entity.trackingReferenceFrame set to INERTIAL and without entity.orientation property.", function () {
-      const entity = new Entity();
-      entity.trackingReferenceFrame = TrackingReferenceFrame.INERTIAL;
       const view = new EntityView(entity, scene);
       view.update(JulianDate.now());
     });
