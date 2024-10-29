@@ -82,7 +82,7 @@ MetadataPicking.decodeRawMetadataValue = function (
  * @param {number} dataViewOffset The byte offset within the data view from
  * which the component should be read
  * @returns {number|bigint|undefined} The metadata value component
- * @throws RuntimeError If the component o the given property is not
+ * @throws RuntimeError If the component of the given property is not
  * a valid `MetadataComponentType`
  * @throws RangeError If reading the data from the given data view would
  * cause an out-of-bounds access
@@ -123,6 +123,13 @@ MetadataPicking.decodeRawMetadataValueComponent = function (
  * @param {number} elementIndex The index of the element. This is the index
  * inside the array for array-typed properties, and 0 for non-array types.
  * @returns {number|number[]|bigint|bigint[]|undefined} The decoded metadata value element
+ * @throws DeveloperError If the type of the given property is not
+ * a valid `MetadataType`
+ * @throws RuntimeError If the component of the given property is not
+ * a valid `MetadataComponentType`
+ * @throws RangeError If reading the data from the given data view would
+ * cause an out-of-bounds access
+ *
  */
 MetadataPicking.decodeRawMetadataValueElement = function (
   classProperty,
@@ -192,6 +199,8 @@ MetadataPicking.decodeRawMetadataValueElement = function (
  * @param {MetadataClassProperty} classProperty The `MetadataClassProperty`
  * @param {Uint8Array} rawPixelValues The raw values
  * @returns {number|bigint|number[]|bigint[]|undefined} The value
+ * @throws RuntimeError If the class property has an invalid type
+ * or component type
  *
  * @private
  */
@@ -239,6 +248,7 @@ MetadataPicking.decodeRawMetadataValues = function (
  * @param {string} type The `ClassProperty` type
  * @param {number|bigint|number[]|bigint[]|undefined} value The input value
  * @returns {any} The object representation
+ * @throws RuntimeError If the type is not a valid `MetadataType`
  */
 MetadataPicking.convertToObjectType = function (type, value) {
   if (!defined(value)) {
@@ -268,7 +278,7 @@ MetadataPicking.convertToObjectType = function (type, value) {
       return Matrix4.unpack(numbers, 0, new Matrix4());
   }
   // Should never happen:
-  return value;
+  throw new RuntimeError(`Invalid metadata object type: ${type}`);
 };
 
 /**
@@ -280,6 +290,7 @@ MetadataPicking.convertToObjectType = function (type, value) {
  * @param {string} type The `ClassProperty` type
  * @param {any} value The input value
  * @returns {any} The array representation
+ * @throws RuntimeError If the type is not a valid `MetadataType`
  */
 MetadataPicking.convertFromObjectType = function (type, value) {
   if (!defined(value)) {
@@ -319,8 +330,14 @@ MetadataPicking.convertFromObjectType = function (type, value) {
  * types into object types like `CartesianN`.
  *
  * @param {MetadataClassProperty} classProperty The `MetadataClassProperty`
+ * @param {MetadataClassProperty} metadataProperty The
+ * `PropertyTextureProperty` or `PropertyAttributeProperty`
  * @param {Uint8Array} rawPixelValues The raw values
  * @returns {any} The value
+ * @throws RuntimeError If the class property has an invalid type
+ * or component type
+ * @throws RangeError If the given pixel values do not have sufficient
+ * size to contain the expected value type
  *
  * @private
  */
