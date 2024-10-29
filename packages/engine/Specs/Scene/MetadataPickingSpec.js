@@ -649,28 +649,6 @@ describe("Scene/MetadataPicking", function () {
       }).toThrowError();
     });
 
-    it("throws for invalid type", function () {
-      expect(function () {
-        const classProperty = {
-          type: "NOT_A_TYPE",
-          componentType: MetadataComponentType.INT8,
-          normalized: false,
-        };
-        const array = new Int8Array([12, 23]);
-        const dataView = new DataView(
-          array.buffer,
-          array.byteOffset,
-          array.byteLength,
-        );
-        const elementIndex = 0;
-        MetadataPicking.decodeRawMetadataValueElement(
-          classProperty,
-          dataView,
-          elementIndex,
-        );
-      }).toThrowError();
-    });
-
     it("throws for invalid element index", function () {
       expect(function () {
         const classProperty = {
@@ -1008,17 +986,6 @@ describe("Scene/MetadataPicking", function () {
         const classProperty = {
           type: "SCALAR",
           componentType: "NOT_A_COMPONENT_TYPE",
-          normalized: false,
-        };
-        const rawPixelValues = new Uint8Array([0, 1, 2, 3]);
-        MetadataPicking.decodeRawMetadataValues(classProperty, rawPixelValues);
-      }).toThrowError();
-    });
-    it("throws for invalid type", function () {
-      expect(function () {
-        const classProperty = {
-          type: "NOT_A_TYPE",
-          componentType: MetadataComponentType.UINT8,
           normalized: false,
         };
         const rawPixelValues = new Uint8Array([0, 1, 2, 3]);

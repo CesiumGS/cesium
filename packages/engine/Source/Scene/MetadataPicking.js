@@ -123,8 +123,6 @@ MetadataPicking.decodeRawMetadataValueComponent = function (
  * @param {number} elementIndex The index of the element. This is the index
  * inside the array for array-typed properties, and 0 for non-array types.
  * @returns {number|number[]|bigint|bigint[]|undefined} The decoded metadata value element
- * @throws DeveloperError If the type of the given property is not
- * a valid `MetadataType`
  * @throws RuntimeError If the component of the given property is not
  * a valid `MetadataComponentType`
  * @throws RangeError If reading the data from the given data view would
@@ -199,8 +197,7 @@ MetadataPicking.decodeRawMetadataValueElement = function (
  * @param {MetadataClassProperty} classProperty The `MetadataClassProperty`
  * @param {Uint8Array} rawPixelValues The raw values
  * @returns {number|bigint|number[]|bigint[]|undefined} The value
- * @throws RuntimeError If the class property has an invalid type
- * or component type
+ * @throws RuntimeError If the class property has an invalid component type
  *
  * @private
  */
