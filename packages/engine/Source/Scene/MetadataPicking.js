@@ -272,7 +272,7 @@ MetadataPicking.convertToObjectType = function (type, value) {
 };
 
 /**
- * Converts the given type into an raw value or array representation.
+ * Converts the given type into a raw value or array representation.
  *
  * For `VECn/MATn` types, the given value is converted into an array.
  * For other types, the value is returned directly
