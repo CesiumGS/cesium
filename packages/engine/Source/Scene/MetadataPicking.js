@@ -300,7 +300,7 @@ MetadataPicking.convertFromObjectType = function (type, value) {
       return Matrix4.unpack(value, Array(16));
   }
   // Should never happen:
-  return value;
+  throw new RuntimeError(`Invalid metadata object type: ${type}`);
 };
 
 /**
