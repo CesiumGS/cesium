@@ -1160,6 +1160,9 @@ function normalizeInPlace(values, valueType, normalizeFunction) {
  * @param {number|number[]|number[][]} values The input values
  * @param {number|number[]|number[][]} offsets The offsets
  * @param {number|number[]|number[][]} scales The scales
+ * @param {Function} transformationFunction The function with the signature
+ * `(value:number, offset:number, scale:number) : number` that will be
+ * applied to the innermost elements
  * @returns The input values (or the result of applying the transformation
  * function to a single value if the values have not been an array).
  * @private
