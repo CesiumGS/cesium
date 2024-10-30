@@ -434,8 +434,6 @@ PolylineVolumeGeometryLibrary.computePositions = function (
     }
     forward = Cartesian3.subtract(nextPosition, position, forward);
     forward = Cartesian3.normalize(forward, forward);
-    cornerDirection = Cartesian3.add(forward, backward, cornerDirection);
-    cornerDirection = Cartesian3.normalize(cornerDirection, cornerDirection);
     surfaceNormal = ellipsoid.geodeticSurfaceNormal(position, surfaceNormal);
 
     const forwardProjection = Cartesian3.multiplyByScalar(
@@ -461,6 +459,8 @@ PolylineVolumeGeometryLibrary.computePositions = function (
     );
 
     if (doCorner) {
+      cornerDirection = Cartesian3.add(forward, backward, cornerDirection);
+      cornerDirection = Cartesian3.normalize(cornerDirection, cornerDirection);
       cornerDirection = Cartesian3.cross(
         cornerDirection,
         surfaceNormal,
