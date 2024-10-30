@@ -8,10 +8,10 @@
 
 - Added `ScreenSpaceCameraController.maximumTiltAngle` to limit how much the camera can tilt. [#12169](https://github.com/CesiumGS/cesium/pull/12169)
 - Update Japan Buildings sandcastle to use Japan Regional Terrain [#12259](https://github.com/CesiumGS/cesium/pull/12259)
-- Moved Viewer functionality to CesiumWidget to increase usability. [#12202](https://github.com/CesiumGS/cesium/pull/12202). Following new `CesiumWidget` constructor options are available:
-  - `options.shouldAnimate=false`
-  - `options.automaticallyTrackDataSourceClocks=true`
-  - `options.dataSources=new DataSourceCollection`
+- Moved `Viewer` functionality to `CesiumWidget` to increase usability, see the full list added to the `CesiumWidget` below. No functionality was removed from the `Viewer` but convenience helpers like the `entities` collection were added to the `CesiumWidget`. The `CesiumWidget` should be closer to a drop in replacement for the `Viewer` when not utilizing the extra Viewer widgets. [#11967](https://github.com/CesiumGS/cesium/issues/11967).
+  - New constructor options: `options.shouldAnimate`, `options.automaticallyTrackDataSourceClocks`, `options.dataSources`
+  - New properties: `dataSourceDisplay`, `entities`, `dataSources`, `allowDataSourcesToSuspendAnimation`, `trackedEntity`, `trackedEntityChanged`, `clockTrackedDataSource`
+  - New functions: `zoomTo()`, `flyTo()`
 
 ##### Fixes :wrench:
 
