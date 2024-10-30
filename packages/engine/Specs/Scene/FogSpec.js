@@ -115,10 +115,10 @@ describe("Fog", () => {
       }
 
       it("default density, close to the ground", () => {
-        testDensityAtHeight(1, 2.3e-9, CesiumMath.EPSILON10);
-        testDensityAtHeight(10, 5.9e-10, CesiumMath.EPSILON11);
-        testDensityAtHeight(20, 3.9e-10, CesiumMath.EPSILON11);
-        testDensityAtHeight(50, 2.2e-10, CesiumMath.EPSILON11);
+        testDensityAtHeight(1, 1.7e-10, CesiumMath.EPSILON11);
+        testDensityAtHeight(10, 1.7e-10, CesiumMath.EPSILON11);
+        testDensityAtHeight(20, 1.7e-10, CesiumMath.EPSILON11);
+        testDensityAtHeight(50, 1.7e-10, CesiumMath.EPSILON11);
       });
 
       it("default density, mid heights", () => {
@@ -137,10 +137,10 @@ describe("Fog", () => {
 
       it("higher density, close to the ground", () => {
         fog.density = 0.005; // over double the default
-        testDensityAtHeight(1, 1.9e-8, CesiumMath.EPSILON9);
-        testDensityAtHeight(10, 4.9e-9, CesiumMath.EPSILON10);
-        testDensityAtHeight(20, 3.2e-9, CesiumMath.EPSILON10);
-        testDensityAtHeight(50, 1.9e-9, CesiumMath.EPSILON10);
+        testDensityAtHeight(1, 1.4e-9, CesiumMath.EPSILON10);
+        testDensityAtHeight(10, 1.4e-9, CesiumMath.EPSILON10);
+        testDensityAtHeight(20, 1.4e-9, CesiumMath.EPSILON10);
+        testDensityAtHeight(50, 1.4e-9, CesiumMath.EPSILON10);
       });
 
       it("higher density, mid heights", () => {

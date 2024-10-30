@@ -146,7 +146,7 @@ Fog.prototype.update = function (frameState) {
     this.density *
     this.heightScalar *
     Math.pow(
-      Math.max(height / this.maxHeight, CesiumMath.EPSILON6),
+      Math.max(height / this.maxHeight, CesiumMath.EPSILON4),
       -Math.max(this._heightFalloff, 0.0),
     );
 
