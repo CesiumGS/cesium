@@ -45,19 +45,11 @@ function PickedMetadataInfo(
   this.classProperty = classProperty;
 
   /**
-   * The the `PropertyTextureProperty` or `PropertyAttributeProperty`
-   * that is described by this structure, as obtained from the
-   * property texture or property attribute of the `StructuralMetadata`
-   * that matches the class name and property name.
+   * The metadata property that is described by this structure, as
+   * obtained from the property texture or property attribute of the
+   * `StructuralMetadata` that matches the class name and property name.
    *
-   * The `PropertyTextureProperty` and `PropertyAttributeProperty`
-   * types are not public and do not share a common base type.
-   * But they both define the getters
-   * - `hasValueTransform` (`boolean`)
-   * - `offset` (`any`)
-   * - `scale` (`any`)
-   *
-   * @type {object}
+   * @type {PropertyTextureProperty|PropertyAttributeProperty}
    */
   this.metadataProperty = metadataProperty;
 }
