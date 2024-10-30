@@ -19,12 +19,13 @@
   ```
 
 - `ImageBasedLighting.luminanceAtZenith` has been removed. Use `DynamicEnvironmentMapManager.atmosphereScatteringIntensity` instead. [#12129](https://github.com/CesiumGS/cesium/pull/12129)
+- Changed the default `Fog.density` from `0.0002` to `0.0006`. Set `viewer.scene.fog.density = 0.002` to return to the previous behavior. [#12248](https://github.com/CesiumGS/cesium/pull/12248)
 
 ##### Additions :tada:
 
 - Updated default 3D Tiles and Model lighting when using PBR in order to create a more realistic appearance. Added `DynamicEnvironmentMapManager` to control lighting parameters. These can be accessed via `Cesium3DTileset.environmentMapManager` and `Model.environmentMapManager`. [#12129](https://github.com/CesiumGS/cesium/pull/12129)
 - Added `ScreenSpaceCameraController.maximumTiltAngle` to limit how much the camera can tilt. [#12169](https://github.com/CesiumGS/cesium/pull/12169)
-- Exposed `Fog.visualDensityScalar` to allow modifying the visual density of fog without affecting the culling aspects. Alongside this the density calculation was adjusted to make it more smooth across heights [#12248](https://github.com/CesiumGS/cesium/pull/12248)
+- Exposed `Fog.visualDensityScalar` to allow modifying the visual density of fog without affecting the culling aspects. Alongside this, the density calculation was adjusted to make it more smooth across heights. [#12248](https://github.com/CesiumGS/cesium/pull/12248)
 - Update Japan Buildings sandcastle to use Japan Regional Terrain [#12259](https://github.com/CesiumGS/cesium/pull/12259)
 - Update Bing Maps attribution link [#12229] (https://github.com/CesiumGS/cesium/pull/12265)
 

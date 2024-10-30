@@ -1,5 +1,4 @@
 import { Fog, Math as CesiumMath, SceneMode } from "../../index.js";
-import createCanvas from "../../../../Specs/createCanvas.js";
 import createScene from "../../../../Specs/createScene.js";
 
 describe("Fog", () => {
@@ -11,9 +10,7 @@ describe("Fog", () => {
 
     beforeEach(() => {
       fog = new Fog();
-      scene = createScene({
-        canvas: createCanvas(10, 10),
-      });
+      scene = createScene();
     });
 
     afterEach(function () {
@@ -113,6 +110,14 @@ describe("Fog", () => {
           .withContext(`at height ${height}`)
           .toEqualEpsilon(expectedDensity, epsilon);
       }
+
+      it("default density, underground", () => {
+        testDensityAtHeight(-1, 1.7e-10, CesiumMath.EPSILON11);
+        testDensityAtHeight(-10, 1.7e-10, CesiumMath.EPSILON11);
+        testDensityAtHeight(-100, 1.7e-10, CesiumMath.EPSILON11);
+        testDensityAtHeight(-1000, 1.7e-10, CesiumMath.EPSILON11);
+        testDensityAtHeight(-10000, 1.7e-10, CesiumMath.EPSILON11);
+      });
 
       it("default density, close to the ground", () => {
         testDensityAtHeight(1, 1.7e-10, CesiumMath.EPSILON11);

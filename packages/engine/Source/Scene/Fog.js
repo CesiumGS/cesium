@@ -44,7 +44,7 @@ function Fog() {
    * @default 0.0006
    * @example
    * // Double the default fog density
-   * viewer.scene.fog.density = 0.0004;
+   * viewer.scene.fog.density = 0.0012;
    */
   this.density = 0.0006;
   /**
