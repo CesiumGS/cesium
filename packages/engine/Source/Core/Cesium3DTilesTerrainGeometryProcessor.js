@@ -699,6 +699,8 @@ Cesium3DTilesTerrainGeometryProcessor.createMesh = function (options) {
           scratchNormal
         );
 
+        normal = Cartesian3.normalize(normal, scratchNormal);
+
         normalOct = AttributeCompression.octEncode(normal, scratchNormalOct);
       }
 

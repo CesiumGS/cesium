@@ -345,6 +345,10 @@ Cesium3DTilesTerrainProvider.fromUrl = async function (url, options) {
 };
 
 async function loadWaterMask(gltf, gltfResource) {
+  if (!defined(gltf.extensions)) {
+    return;
+  }
+
   const extension = gltf.extensions["EXT_structural_metadata"];
   if (!defined(extension)) {
     return;
