@@ -38,6 +38,8 @@
 
 - Fix error with normalization of corner points for lines and corridors with collinear points. [#12255](https://github.com/CesiumGS/cesium/pull/12255)
 
+- Added a `DeveloperError` when `globe` is set to `false` and a `baseLayer` is provided in `Viewer` options. This prevents errors caused by attempting to use a `baseLayer` without a globe.[#12274](https://github.com/CesiumGS/cesium/pull/12274)
+
 ### 1.122 - 2024-10-01
 
 #### @cesium/engine
