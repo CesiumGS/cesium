@@ -295,7 +295,7 @@ function enableVRUI(viewer, enabled) {
  * @property {ProviderViewModel[]} [imageryProviderViewModels=createDefaultImageryProviderViewModels()] The array of ProviderViewModels to be selectable from the BaseLayerPicker.  This value is only valid if `baseLayerPicker` is set to true.
  * @property {ProviderViewModel} [selectedTerrainProviderViewModel] The view model for the current base terrain layer, if not supplied the first available base layer is used.  This value is only valid if `baseLayerPicker` is set to true.
  * @property {ProviderViewModel[]} [terrainProviderViewModels=createDefaultTerrainProviderViewModels()] The array of ProviderViewModels to be selectable from the BaseLayerPicker.  This value is only valid if `baseLayerPicker` is set to true.
- * @property {ImageryLayer|false} [baseLayer=ImageryLayer.fromWorldImagery()] The bottommost imagery layer applied to the globe. If set to <code>false</code>, no imagery provider will be added. This value is only valid if `baseLayerPicker` is set to false.
+ * @property {ImageryLayer|false} [baseLayer=ImageryLayer.fromWorldImagery()] The bottommost imagery layer applied to the globe. If set to <code>false</code>, no imagery provider will be added. This value is only valid if `baseLayerPicker` is set to false. Cannot be used when `globe` is set to false.
  * @property {Ellipsoid} [ellipsoid = Ellipsoid.default] The default ellipsoid.
  * @property {TerrainProvider} [terrainProvider=new EllipsoidTerrainProvider()] The terrain provider to use
  * @property {Terrain} [terrain] A terrain object which handles asynchronous terrain provider. Can only specify if options.terrainProvider is undefined.
@@ -402,6 +402,16 @@ function Viewer(container, options) {
   container = getElement(container);
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
+  //>>includeStart('debug', pragmas.debug);
+  if (
+    options.globe === false &&
+    options.baseLayer !== undefined &&
+    options.baseLayer !== false
+  ) {
+    throw new DeveloperError("Cannot use baseLayer when globe is disabled.");
+  }
+  //>>includeEnd('debug');
+
   const createBaseLayerPicker =
     (!defined(options.globe) || options.globe !== false) &&
     (!defined(options.baseLayerPicker) || options.baseLayerPicker !== false);
@@ -503,16 +513,6 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
   });
 
   const scene = cesiumWidget.scene;
-
-  //>>includeStart('debug', pragmas.debug);
-  if (
-    options.globe === false &&
-    options.baseLayer !== undefined &&
-    options.baseLayer !== false
-  ) {
-    throw new DeveloperError("Cannot use baseLayer when globe is disabled.");
-  }
-  //>>includeEnd('debug');
 
   const eventHelper = new EventHelper();
 
