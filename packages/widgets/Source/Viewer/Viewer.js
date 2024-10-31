@@ -504,6 +504,16 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
 
   const scene = cesiumWidget.scene;
 
+  //>>includeStart('debug', pragmas.debug);
+  if (
+    options.globe === false &&
+    options.baseLayer !== undefined &&
+    options.baseLayer !== false
+  ) {
+    throw new DeveloperError("Cannot use baseLayer when globe is disabled.");
+  }
+  //>>includeEnd('debug');
+
   const eventHelper = new EventHelper();
 
   eventHelper.add(clock.onTick, Viewer.prototype._onTick, this);
