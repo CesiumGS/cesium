@@ -21,10 +21,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -43,20 +40,9 @@
         // start with orthographic projection
         viewer.projectionPicker.viewModel.switchToOrthographic();
 
-        const position = Cesium.Cartesian3.fromDegrees(
-          -123.0744619,
-          44.0503706,
-          0.0
-        );
-        const hpr = new Cesium.HeadingPitchRoll(
-          Cesium.Math.toRadians(135),
-          0.0,
-          0.0
-        );
-        const orientation = Cesium.Transforms.headingPitchRollQuaternion(
-          position,
-          hpr
-        );
+        const position = Cesium.Cartesian3.fromDegrees(-123.0744619, 44.0503706, 0.0);
+        const hpr = new Cesium.HeadingPitchRoll(Cesium.Math.toRadians(135), 0.0, 0.0);
+        const orientation = Cesium.Transforms.headingPitchRollQuaternion(position, hpr);
 
         const entity = viewer.entities.add({
           position: position,

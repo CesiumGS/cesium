@@ -386,7 +386,7 @@ DataSourceDisplay.prototype.getBoundingSphere = function (
   Check.defined("result", result);
   //>>includeEnd('debug');
 
-  if (!this._ready) {
+  if (!this._ready && !allowPartial) {
     return BoundingSphereState.PENDING;
   }
 

@@ -284,7 +284,7 @@ function RectangleOutlineGeometry(options) {
   if (!defined(rectangle)) {
     throw new DeveloperError("rectangle is required.");
   }
-  Rectangle.validate(rectangle);
+  Rectangle._validate(rectangle);
   if (rectangle.north < rectangle.south) {
     throw new DeveloperError(
       "options.rectangle.north must be greater than options.rectangle.south"

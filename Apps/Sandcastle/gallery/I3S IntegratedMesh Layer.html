@@ -7,10 +7,7 @@
       name="viewport"
       content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
     />
-    <meta
-      name="description"
-      content="Add I3S IntegratedMesh Layer from a service."
-    />
+    <meta name="description" content="Add I3S IntegratedMesh Layer from a service." />
     <meta name="cesium-sandcastle-labels" content="DataSources" />
     <title>I3S Consumption Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
@@ -22,10 +19,7 @@
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
 
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -82,9 +76,7 @@
             destination: Cesium.Ellipsoid.WGS84.cartographicToCartesian(center),
           });
         } catch (error) {
-          console.log(
-            `There was an error creating the I3S Data Provider: ${error}`
-          );
+          console.log(`There was an error creating the I3S Data Provider: ${error}`);
         } //Sandcastle_End
       };
       if (typeof Cesium !== "undefined") {

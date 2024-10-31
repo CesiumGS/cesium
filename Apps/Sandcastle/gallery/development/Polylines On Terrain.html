@@ -21,10 +21,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -61,9 +58,7 @@
         });
 
         if (!Cesium.GroundPolylinePrimitive.isSupported(viewer.scene)) {
-          window.alert(
-            "Polylines on terrain are not supported on this platform."
-          );
+          window.alert("Polylines on terrain are not supported on this platform.");
         }
 
         const polylineIds = ["polyline1", "polyline2"];
@@ -216,45 +211,35 @@
           polylineOnTerrainPrimitive.appearance = new Cesium.PolylineColorAppearance();
         }
         function applyColorMaterial() {
-          polylineOnTerrainPrimitive.appearance = new Cesium.PolylineMaterialAppearance(
-            {
-              material: Cesium.Material.fromType("Color", {
-                color: new Cesium.Color(0.7, 0.0, 1.0, 1.0),
-              }),
-            }
-          );
+          polylineOnTerrainPrimitive.appearance = new Cesium.PolylineMaterialAppearance({
+            material: Cesium.Material.fromType("Color", {
+              color: new Cesium.Color(0.7, 0.0, 1.0, 1.0),
+            }),
+          });
         }
         function applyGlowMaterial() {
-          polylineOnTerrainPrimitive.appearance = new Cesium.PolylineMaterialAppearance(
-            {
-              material: Cesium.Material.fromType("PolylineGlow", {
-                innerWidth: 1.0,
-              }),
-            }
-          );
+          polylineOnTerrainPrimitive.appearance = new Cesium.PolylineMaterialAppearance({
+            material: Cesium.Material.fromType("PolylineGlow", {
+              innerWidth: 1.0,
+            }),
+          });
         }
         function applyArrow() {
-          polylineOnTerrainPrimitive.appearance = new Cesium.PolylineMaterialAppearance(
-            {
-              material: Cesium.Material.fromType("PolylineArrow"),
-            }
-          );
+          polylineOnTerrainPrimitive.appearance = new Cesium.PolylineMaterialAppearance({
+            material: Cesium.Material.fromType("PolylineArrow"),
+          });
         }
         function applyDash() {
-          polylineOnTerrainPrimitive.appearance = new Cesium.PolylineMaterialAppearance(
-            {
-              material: Cesium.Material.fromType("PolylineDash", {
-                color: Cesium.Color.YELLOW,
-              }),
-            }
-          );
+          polylineOnTerrainPrimitive.appearance = new Cesium.PolylineMaterialAppearance({
+            material: Cesium.Material.fromType("PolylineDash", {
+              color: Cesium.Color.YELLOW,
+            }),
+          });
         }
         function applyOutline() {
-          polylineOnTerrainPrimitive.appearance = new Cesium.PolylineMaterialAppearance(
-            {
-              material: Cesium.Material.fromType("PolylineOutline"),
-            }
-          );
+          polylineOnTerrainPrimitive.appearance = new Cesium.PolylineMaterialAppearance({
+            material: Cesium.Material.fromType("PolylineOutline"),
+          });
         }
 
         Sandcastle.addToolbarButton("Toggle instance show", function () {
@@ -279,16 +264,13 @@
           }
         });
 
-        Sandcastle.addToolbarButton(
-          "Toggle debugShowShadowVolume",
-          function () {
-            const debugShowShadowVolume = !polylineOnTerrainPrimitive.debugShowShadowVolume;
-            const appearance = polylineOnTerrainPrimitive.appearance;
-            scene.groundPrimitives.remove(polylineOnTerrainPrimitive);
-            createPolylines(debugShowShadowVolume);
-            polylineOnTerrainPrimitive.appearance = appearance;
-          }
-        );
+        Sandcastle.addToolbarButton("Toggle debugShowShadowVolume", function () {
+          const debugShowShadowVolume = !polylineOnTerrainPrimitive.debugShowShadowVolume;
+          const appearance = polylineOnTerrainPrimitive.appearance;
+          scene.groundPrimitives.remove(polylineOnTerrainPrimitive);
+          createPolylines(debugShowShadowVolume);
+          polylineOnTerrainPrimitive.appearance = appearance;
+        });
 
         Sandcastle.addToolbarButton("Toggle z-index", function () {
           if (groundPrimitiveOnTop) {

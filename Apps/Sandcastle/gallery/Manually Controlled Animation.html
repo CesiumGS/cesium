@@ -18,10 +18,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -64,10 +61,7 @@
           3627860.82704567
         );
         // A velocity vector property will give us the entity's speed and direction at any given time.
-        const velocityVectorProperty = new Cesium.VelocityVectorProperty(
-          position,
-          false
-        );
+        const velocityVectorProperty = new Cesium.VelocityVectorProperty(position, false);
         const velocityVector = new Cesium.Cartesian3();
 
         const numberOfSamples = 100;
@@ -92,10 +86,7 @@
           position.addSample(time, location);
           distance.addSample(
             time,
-            (totalDistance += Cesium.Cartesian3.distance(
-              location,
-              prevLocation
-            ))
+            (totalDistance += Cesium.Cartesian3.distance(location, prevLocation))
           );
           prevLocation = location;
         }
@@ -156,10 +147,7 @@
             text: new Cesium.CallbackProperty(updateSpeedLabel, false),
             font: "20px sans-serif",
             showBackground: true,
-            distanceDisplayCondition: new Cesium.DistanceDisplayCondition(
-              0.0,
-              100.0
-            ),
+            distanceDisplayCondition: new Cesium.DistanceDisplayCondition(0.0, 100.0),
             eyeOffset: new Cesium.Cartesian3(0, 7.2, 0),
           },
         });

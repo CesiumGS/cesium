@@ -18,10 +18,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -96,8 +93,7 @@
                 const u = (x + xx / (width - 1)) / Math.pow(2, level);
                 const v = (y + yy / (height - 1)) / Math.pow(2, level);
 
-                const heightValue =
-                  9000 * terrainNoise(u * 1750 - 10, v * 1500);
+                const heightValue = 9000 * terrainNoise(u * 1750 - 10, v * 1500);
 
                 const index = yy * width + xx;
                 buffer[index] = heightValue;

@@ -22,10 +22,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -73,9 +70,7 @@
           });
           viewer.scene.primitives.add(nonClassificationTileset);
 
-          Sandcastle.addToggleButton("Show classification", true, function (
-            checked
-          ) {
+          Sandcastle.addToggleButton("Show classification", true, function (checked) {
             classificationTileset.show = checked;
             nonClassificationTileset.show = !checked;
           });

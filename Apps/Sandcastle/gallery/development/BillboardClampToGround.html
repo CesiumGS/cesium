@@ -18,10 +18,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -66,16 +63,8 @@
 
         for (let y = 0; y < gridHeight; ++y) {
           for (let x = 0; x < gridWidth; ++x) {
-            const longitude = Cesium.Math.lerp(
-              e.west,
-              e.east,
-              x / (gridWidth - 1)
-            );
-            const latitude = Cesium.Math.lerp(
-              e.south,
-              e.north,
-              y / (gridHeight - 1)
-            );
+            const longitude = Cesium.Math.lerp(e.west, e.east, x / (gridWidth - 1));
+            const latitude = Cesium.Math.lerp(e.south, e.north, y / (gridHeight - 1));
             const position = new Cesium.Cartographic(longitude, latitude);
 
             billboardCollection.add({
@@ -113,8 +102,7 @@
             text: "Relative to ground",
             onselect: function () {
               if (Cesium.defined(billboard)) {
-                billboard.heightReference =
-                  Cesium.HeightReference.RELATIVE_TO_GROUND;
+                billboard.heightReference = Cesium.HeightReference.RELATIVE_TO_GROUND;
               }
             },
           },
@@ -122,8 +110,7 @@
             text: "Clamp to ground",
             onselect: function () {
               if (Cesium.defined(billboard)) {
-                billboard.heightReference =
-                  Cesium.HeightReference.CLAMP_TO_GROUND;
+                billboard.heightReference = Cesium.HeightReference.CLAMP_TO_GROUND;
               }
             },
           },
@@ -141,25 +128,17 @@
 
         Sandcastle.addToolbarButton("Increase longitude", function () {
           if (Cesium.defined(billboard)) {
-            const cartographic = ellipsoid.cartesianToCartographic(
-              billboard.position
-            );
+            const cartographic = ellipsoid.cartesianToCartographic(billboard.position);
             cartographic.longitude += lonGran;
-            billboard.position = ellipsoid.cartographicToCartesian(
-              cartographic
-            );
+            billboard.position = ellipsoid.cartographicToCartesian(cartographic);
           }
         });
 
         Sandcastle.addToolbarButton("Decrease longitude", function () {
           if (Cesium.defined(billboard)) {
-            const cartographic = ellipsoid.cartesianToCartographic(
-              billboard.position
-            );
+            const cartographic = ellipsoid.cartesianToCartographic(billboard.position);
             cartographic.longitude -= lonGran;
-            billboard.position = ellipsoid.cartographicToCartesian(
-              cartographic
-            );
+            billboard.position = ellipsoid.cartographicToCartesian(cartographic);
           }
         });
         //Sandcastle_End

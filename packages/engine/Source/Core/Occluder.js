@@ -301,8 +301,6 @@ const tempScratch = new Cartesian3();
  * const cameraPosition = new Cesium.Cartesian3(0, 0, 0);
  * const occluder = new Cesium.Occluder(sphere1, cameraPosition);
  * occluder.computeVisibility(sphere2); //returns Visibility.NONE
- *
- * @see Occluder#isVisible
  */
 Occluder.prototype.computeVisibility = function (occludeeBS) {
   //>>includeStart('debug', pragmas.debug);

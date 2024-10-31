@@ -60,11 +60,12 @@ function Texture(options) {
 
   let { width, height } = options;
   if (defined(source)) {
+    // Make sure we are using the element's intrinsic width and height where available
     if (!defined(width)) {
-      width = defaultValue(source.videoWidth, source.width);
+      width = source.videoWidth ?? source.naturalWidth ?? source.width;
     }
     if (!defined(height)) {
-      height = defaultValue(source.videoHeight, source.height);
+      height = source.videoHeight ?? source.naturalHeight ?? source.height;
     }
   }
 
@@ -810,7 +811,17 @@ Texture.prototype.copyFrom = function (options) {
   gl.activeTexture(gl.TEXTURE0);
   gl.bindTexture(target, this._texture);
 
-  const { width, height, arrayBufferView } = source;
+  let { width, height } = source;
+  const arrayBufferView = source.arrayBufferView;
+
+  // Make sure we are using the element's intrinsic width and height where available
+  if (defined(source.videoWidth) && defined(source.videoHeight)) {
+    width = source.videoWidth;
+    height = source.videoHeight;
+  } else if (defined(source.naturalWidth) && defined(source.naturalHeight)) {
+    width = source.naturalWidth;
+    height = source.naturalHeight;
+  }
 
   const textureWidth = this._width;
   const textureHeight = this._height;

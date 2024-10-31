@@ -114,7 +114,15 @@ describe(
       context.destroyForSpecs();
     });
 
+    let blueImageHeight, blueImageWidth;
+    beforeEach(function () {
+      blueImageHeight = blueImage.height;
+      blueImageWidth = blueImage.width;
+    });
+
     afterEach(function () {
+      blueImage.height = blueImageHeight;
+      blueImage.width = blueImageWidth;
       texture = texture && texture.destroy();
     });
 
@@ -663,6 +671,29 @@ describe(
         pixelDatatype: PixelDatatype.UNSIGNED_BYTE,
         width: blueImage.width,
         height: blueImage.height,
+      });
+
+      texture.copyFrom({
+        source: blueImage,
+      });
+
+      expect({
+        context: context,
+        fragmentShader: fs,
+        uniformMap: uniformMap,
+        epsilon: 1,
+      }).contextToRender([0, 0, 255, 255]);
+    });
+
+    it("can copy from a DOM element when display dimensions are 0", function () {
+      blueImage.height = 0;
+      blueImage.width = 0;
+
+      texture = new Texture({
+        context: context,
+        pixelFormat: PixelFormat.RGB,
+        pixelDatatype: PixelDatatype.UNSIGNED_BYTE,
+        source: blueImage,
       });
 
       texture.copyFrom({

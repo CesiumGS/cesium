@@ -18,10 +18,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -81,11 +78,9 @@
             viewer.scene.fog.density = newValue;
           });
 
-        Cesium.knockout
-          .getObservable(viewModel, "sse")
-          .subscribe(function (newValue) {
-            viewer.scene.fog.screenSpaceErrorFactor = newValue;
-          });
+        Cesium.knockout.getObservable(viewModel, "sse").subscribe(function (newValue) {
+          viewer.scene.fog.screenSpaceErrorFactor = newValue;
+        });
 
         viewModel.enabled = viewer.scene.fog.enabled;
         viewModel.density = viewer.scene.fog.density;

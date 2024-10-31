@@ -21,10 +21,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -46,11 +43,7 @@
           const boundingSphere = tileset.boundingSphere;
           viewer.camera.viewBoundingSphere(
             boundingSphere,
-            new Cesium.HeadingPitchRange(
-              0.0,
-              -0.5,
-              boundingSphere.radius + 500.0
-            )
+            new Cesium.HeadingPitchRange(0.0, -0.5, boundingSphere.radius + 500.0)
           );
           viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
         } catch (error) {
@@ -116,19 +109,15 @@
           {
             text: "Classify Both",
             onselect: function () {
-              polygon.polygon.classificationType =
-                Cesium.ClassificationType.BOTH;
-              polyline.polyline.classificationType =
-                Cesium.ClassificationType.BOTH;
+              polygon.polygon.classificationType = Cesium.ClassificationType.BOTH;
+              polyline.polyline.classificationType = Cesium.ClassificationType.BOTH;
             },
           },
           {
             text: "Classify Terrain",
             onselect: function () {
-              polygon.polygon.classificationType =
-                Cesium.ClassificationType.TERRAIN;
-              polyline.polyline.classificationType =
-                Cesium.ClassificationType.TERRAIN;
+              polygon.polygon.classificationType = Cesium.ClassificationType.TERRAIN;
+              polyline.polyline.classificationType = Cesium.ClassificationType.TERRAIN;
             },
           },
           {
@@ -152,11 +141,7 @@
           {
             text: "Textured Material",
             onselect: function () {
-              if (
-                !Cesium.Entity.supportsMaterialsforEntitiesOnTerrain(
-                  viewer.scene
-                )
-              ) {
+              if (!Cesium.Entity.supportsMaterialsforEntitiesOnTerrain(viewer.scene)) {
                 window.alert(
                   "Terrain Entity materials are not supported on this platform"
                 );

@@ -16,10 +16,7 @@
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -42,22 +39,13 @@
         const { scene, camera, clock } = viewer;
 
         if (!scene.specularEnvironmentMapsSupported) {
-          window.alert(
-            "This browser does not support specular environment maps."
-          );
+          window.alert("This browser does not support specular environment maps.");
         }
 
         const height = 20.0;
         const hpr = new Cesium.HeadingPitchRoll(0.0, 0.0, 0.0);
-        const origin = Cesium.Cartesian3.fromDegrees(
-          -123.0744619,
-          44.0503706,
-          height
-        );
-        const modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(
-          origin,
-          hpr
-        );
+        const origin = Cesium.Cartesian3.fromDegrees(-123.0744619, 44.0503706, height);
+        const modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(origin, hpr);
 
         scene.light = new Cesium.DirectionalLight({
           direction: new Cesium.Cartesian3(
@@ -127,7 +115,6 @@
         const coefficients = [L00, L1_1, L10, L11, L2_2, L2_1, L20, L21, L22];
 
         const imageBasedLighting = new Cesium.ImageBasedLighting({
-          luminanceAtZenith: 0.7,
           sphericalHarmonicCoefficients: coefficients,
           specularEnvironmentMaps: environmentMapURL,
         });
@@ -138,8 +125,7 @@
             onselect: () => {
               imageBasedLighting.sphericalHarmonicCoefficients = coefficients;
               imageBasedLighting.specularEnvironmentMaps = environmentMapURL;
-              imageBasedLighting.imageBasedLightingFactor =
-                Cesium.Cartesian2.ONE;
+              imageBasedLighting.imageBasedLightingFactor = Cesium.Cartesian2.ONE;
               scene.light.intensity = 0.0;
             },
           },
@@ -148,16 +134,14 @@
             onselect: () => {
               imageBasedLighting.sphericalHarmonicCoefficients = undefined;
               imageBasedLighting.specularEnvironmentMaps = undefined;
-              imageBasedLighting.imageBasedLightingFactor =
-                Cesium.Cartesian2.ONE;
-              scene.light.intensity = 1.0;
+              imageBasedLighting.imageBasedLightingFactor = Cesium.Cartesian2.ONE;
+              scene.light.intensity = 2.0;
             },
           },
           {
             text: "Direct lighting only",
             onselect: () => {
-              imageBasedLighting.imageBasedLightingFactor =
-                Cesium.Cartesian2.ZERO;
+              imageBasedLighting.imageBasedLightingFactor = Cesium.Cartesian2.ZERO;
               scene.light.intensity = 1.0;
             },
           },

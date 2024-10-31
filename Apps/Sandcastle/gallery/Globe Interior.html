@@ -21,10 +21,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -129,11 +126,7 @@
           name: "Mantle",
           position: Cesium.Cartesian3.ZERO,
           ellipsoid: {
-            radii: new Cesium.Cartesian3(
-              mantleRadius,
-              mantleRadius,
-              mantleRadius
-            ),
+            radii: new Cesium.Cartesian3(mantleRadius, mantleRadius, mantleRadius),
             material: Cesium.Color.RED,
           },
         });

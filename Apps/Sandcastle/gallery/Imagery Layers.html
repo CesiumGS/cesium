@@ -7,14 +7,8 @@
       name="viewport"
       content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
     />
-    <meta
-      name="description"
-      content="Create imagery layers from multiple sources."
-    />
-    <meta
-      name="cesium-sandcastle-labels"
-      content="Beginner, Tutorials, Showcases"
-    />
+    <meta name="description" content="Create imagery layers from multiple sources." />
+    <meta name="cesium-sandcastle-labels" content="Beginner, Tutorials, Showcases" />
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script
@@ -24,10 +18,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -54,17 +45,9 @@
         layers.add(blackMarble);
 
         const cesiumLogo = Cesium.ImageryLayer.fromProviderAsync(
-          Cesium.SingleTileImageryProvider.fromUrl(
-            "../images/Cesium_Logo_overlay.png",
-            {
-              rectangle: Cesium.Rectangle.fromDegrees(
-                -75.0,
-                28.0,
-                -67.0,
-                29.75
-              ),
-            }
-          )
+          Cesium.SingleTileImageryProvider.fromUrl("../images/Cesium_Logo_overlay.png", {
+            rectangle: Cesium.Rectangle.fromDegrees(-75.0, 28.0, -67.0, 29.75),
+          })
         );
         layers.add(cesiumLogo);
         //Sandcastle_End

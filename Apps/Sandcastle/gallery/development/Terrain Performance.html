@@ -21,10 +21,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -211,18 +208,13 @@
             0.456584868959543
           );
 
-          const startCartographic = Cesium.Cartographic.fromCartesian(
-            camera.position
-          );
+          const startCartographic = Cesium.Cartographic.fromCartesian(camera.position);
           let longitude = startCartographic.longitude;
           const endLongitude = longitude + 0.01;
           const latitude = startCartographic.latitude;
           const height = startCartographic.height;
           let startTime = window.performance.now();
-          const removeCallback = scene.preRender.addEventListener(function (
-            scene,
-            time
-          ) {
+          const removeCallback = scene.preRender.addEventListener(function (scene, time) {
             const endTime = window.performance.now();
             const delta = endTime - startTime;
             startTime = endTime;
@@ -231,11 +223,7 @@
               flightComplete = true;
               removeCallback();
             }
-            camera.position = Cesium.Cartesian3.fromRadians(
-              longitude,
-              latitude,
-              height
-            );
+            camera.position = Cesium.Cartesian3.fromRadians(longitude, latitude, height);
           });
         }
 

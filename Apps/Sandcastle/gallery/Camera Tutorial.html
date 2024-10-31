@@ -21,10 +21,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -46,9 +43,7 @@
             <td>q/e - move up/down</td>
           </tr>
           <tr>
-            <td>
-              left mouse button down plus mouse move changes the look direction
-            </td>
+            <td>left mouse button down plus mouse move changes the look direction</td>
           </tr>
         </tbody>
       </table>
@@ -90,9 +85,7 @@
 
         handler.setInputAction(function (movement) {
           flags.looking = true;
-          mousePosition = startMousePosition = Cesium.Cartesian3.clone(
-            movement.position
-          );
+          mousePosition = startMousePosition = Cesium.Cartesian3.clone(movement.position);
         }, Cesium.ScreenSpaceEventType.LEFT_DOWN);
 
         handler.setInputAction(function (movement) {
@@ -161,9 +154,7 @@
           }
 
           // Change movement speed based on the distance of the camera to the surface of the ellipsoid.
-          const cameraHeight = ellipsoid.cartesianToCartographic(
-            camera.position
-          ).height;
+          const cameraHeight = ellipsoid.cartesianToCartographic(camera.position).height;
           const moveRate = cameraHeight / 100.0;
 
           if (flags.moveForward) {

@@ -8,10 +8,7 @@
       name="viewport"
       content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
     />
-    <meta
-      name="description"
-      content="Showcase of different 3D Tiles formats."
-    />
+    <meta name="description" content="Showcase of different 3D Tiles formats." />
     <meta name="cesium-sandcastle-labels" content="3D Tiles" />
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
@@ -22,10 +19,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -56,8 +50,7 @@
           tilesets: [
             {
               name: "Tileset",
-              resource:
-                "../../SampleData/Cesium3DTiles/Tilesets/Tileset/tileset.json",
+              resource: "../../SampleData/Cesium3DTiles/Tilesets/Tileset/tileset.json",
             },
             {
               name: "Translucent",
@@ -96,8 +89,7 @@
             },
             {
               name: "Composite",
-              resource:
-                "../../SampleData/Cesium3DTiles/Composite/Composite/tileset.json",
+              resource: "../../SampleData/Cesium3DTiles/Composite/Composite/tileset.json",
             },
             {
               name: "PointCloud",
@@ -134,11 +126,9 @@
         const toolbar = document.getElementById("toolbar");
         Cesium.knockout.applyBindings(viewModel, toolbar);
 
-        Cesium.knockout
-          .getObservable(viewModel, "shadows")
-          .subscribe(function (enabled) {
-            viewer.shadows = enabled;
-          });
+        Cesium.knockout.getObservable(viewModel, "shadows").subscribe(function (enabled) {
+          viewer.shadows = enabled;
+        });
 
         let resourceToLoad;
         Cesium.knockout
@@ -175,10 +165,7 @@
               );
 
               const properties = tileset.properties;
-              if (
-                Cesium.defined(properties) &&
-                Cesium.defined(properties.Height)
-              ) {
+              if (Cesium.defined(properties) && Cesium.defined(properties.Height)) {
                 tileset.style = new Cesium.Cesium3DTileStyle({
                   color: {
                     conditions: [

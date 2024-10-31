@@ -41,7 +41,7 @@ function PerspectiveOffCenterFrustum(options) {
 
   /**
    * Defines the left clipping plane.
-   * @type {number}
+   * @type {number|undefined}
    * @default undefined
    */
   this.left = options.left;
@@ -49,7 +49,7 @@ function PerspectiveOffCenterFrustum(options) {
 
   /**
    * Defines the right clipping plane.
-   * @type {number}
+   * @type {number|undefined}
    * @default undefined
    */
   this.right = options.right;
@@ -57,7 +57,7 @@ function PerspectiveOffCenterFrustum(options) {
 
   /**
    * Defines the top clipping plane.
-   * @type {number}
+   * @type {number|undefined}
    * @default undefined
    */
   this.top = options.top;
@@ -65,7 +65,7 @@ function PerspectiveOffCenterFrustum(options) {
 
   /**
    * Defines the bottom clipping plane.
-   * @type {number}
+   * @type {number|undefined}
    * @default undefined
    */
   this.bottom = options.bottom;
@@ -108,58 +108,57 @@ function update(frustum) {
   }
   //>>includeEnd('debug');
 
-  const t = frustum.top;
-  const b = frustum.bottom;
-  const r = frustum.right;
-  const l = frustum.left;
-  const n = frustum.near;
-  const f = frustum.far;
+  const { top, bottom, right, left, near, far } = frustum;
 
-  if (
-    t !== frustum._top ||
-    b !== frustum._bottom ||
-    l !== frustum._left ||
-    r !== frustum._right ||
-    n !== frustum._near ||
-    f !== frustum._far
-  ) {
-    //>>includeStart('debug', pragmas.debug);
-    if (frustum.near <= 0 || frustum.near > frustum.far) {
-      throw new DeveloperError(
-        "near must be greater than zero and less than far."
-      );
-    }
-    //>>includeEnd('debug');
+  const changed =
+    top !== frustum._top ||
+    bottom !== frustum._bottom ||
+    left !== frustum._left ||
+    right !== frustum._right ||
+    near !== frustum._near ||
+    far !== frustum._far;
+  if (!changed) {
+    return;
+  }
 
-    frustum._left = l;
-    frustum._right = r;
-    frustum._top = t;
-    frustum._bottom = b;
-    frustum._near = n;
-    frustum._far = f;
-    frustum._perspectiveMatrix = Matrix4.computePerspectiveOffCenter(
-      l,
-      r,
-      b,
-      t,
-      n,
-      f,
-      frustum._perspectiveMatrix
-    );
-    frustum._infinitePerspective = Matrix4.computeInfinitePerspectiveOffCenter(
-      l,
-      r,
-      b,
-      t,
-      n,
-      frustum._infinitePerspective
+  //>>includeStart('debug', pragmas.debug);
+  if (frustum.near <= 0 || frustum.near > frustum.far) {
+    throw new DeveloperError(
+      "near must be greater than zero and less than far."
     );
   }
+  //>>includeEnd('debug');
+
+  frustum._left = left;
+  frustum._right = right;
+  frustum._top = top;
+  frustum._bottom = bottom;
+  frustum._near = near;
+  frustum._far = far;
+  frustum._perspectiveMatrix = Matrix4.computePerspectiveOffCenter(
+    left,
+    right,
+    bottom,
+    top,
+    near,
+    far,
+    frustum._perspectiveMatrix
+  );
+  frustum._infinitePerspective = Matrix4.computeInfinitePerspectiveOffCenter(
+    left,
+    right,
+    bottom,
+    top,
+    near,
+    frustum._infinitePerspective
+  );
 }
 
 Object.defineProperties(PerspectiveOffCenterFrustum.prototype, {
   /**
    * Gets the perspective projection matrix computed from the view frustum.
+   * The projection matrix will be recomputed if any frustum parameters have changed.
+   *
    * @memberof PerspectiveOffCenterFrustum.prototype
    * @type {Matrix4}
    * @readonly

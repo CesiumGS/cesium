@@ -18,10 +18,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -50,9 +47,7 @@
           const icrfToFixed = scratchIcrfToFixed;
           const date = viewer.clock.currentTime;
           if (
-            !Cesium.defined(
-              Cesium.Transforms.computeIcrfToFixedMatrix(date, icrfToFixed)
-            )
+            !Cesium.defined(Cesium.Transforms.computeIcrfToFixedMatrix(date, icrfToFixed))
           ) {
             Cesium.Transforms.computeTemeToPseudoFixedMatrix(date, icrfToFixed);
           }
@@ -60,11 +55,7 @@
             date,
             scratchMoonPosition
           );
-          Cesium.Matrix3.multiplyByVector(
-            icrfToFixed,
-            moonPosition,
-            moonPosition
-          );
+          Cesium.Matrix3.multiplyByVector(icrfToFixed, moonPosition, moonPosition);
           const moonDirection = Cesium.Cartesian3.normalize(
             moonPosition,
             scratchMoonDirection
@@ -78,10 +69,12 @@
             0.8842635425193919,
             0.39729481195458805
           ),
+          intensity: 2.0,
         });
 
         const flashlight = new Cesium.DirectionalLight({
           direction: scene.camera.directionWC, // Updated every frame
+          intensity: 3.0,
         });
 
         const moonLight = new Cesium.DirectionalLight({
@@ -167,6 +160,7 @@
           scene.light = sunLight;
           scene.globe.dynamicAtmosphereLighting = true;
           scene.globe.dynamicAtmosphereLightingFromSun = false;
+          scene.atmosphere.dynamicLighting = Cesium.DynamicAtmosphereLightingType.NONE;
           setTime("2020-01-09T23:00:39.018261982600961346Z");
         }
 
@@ -206,6 +200,8 @@
               reset();
               scene.light = moonLight;
               scene.globe.dynamicAtmosphereLightingFromSun = true;
+              scene.atmosphere.dynamicLighting =
+                Cesium.DynamicAtmosphereLightingType.SCENE_LIGHT;
               setTime("2020-01-10T05:29:41.17946898164518643Z");
             },
           },
@@ -213,6 +209,8 @@
             text: "Sunlight",
             onselect: function () {
               reset();
+              scene.atmosphere.dynamicLighting =
+                Cesium.DynamicAtmosphereLightingType.SUNLIGHT;
             },
           },
           {

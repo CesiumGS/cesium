@@ -16,10 +16,7 @@
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -81,9 +78,7 @@
         // Add tileset of proposed new building
         let buildingTileset;
         try {
-          buildingTileset = await Cesium.Cesium3DTileset.fromIonAssetId(
-            1670818
-          );
+          buildingTileset = await Cesium.Cesium3DTileset.fromIonAssetId(1670818);
           viewer.scene.primitives.add(buildingTileset);
         } catch (error) {
           console.log(`Error loading building tileset.
@@ -99,16 +94,12 @@
         viewer.zoomTo(buildingTileset, cameraOffset);
 
         // Enable toggling of new building visibility
-        Sandcastle.addToggleButton("Show proposed building", true, function (
-          checked
-        ) {
+        Sandcastle.addToggleButton("Show proposed building", true, function (checked) {
           buildingTileset.show = checked;
         });
 
         // Enable toggling of target location highlight
-        Sandcastle.addToggleButton("Highlight target location", true, function (
-          checked
-        ) {
+        Sandcastle.addToggleButton("Highlight target location", true, function (checked) {
           if (checked) {
             viewer.entities.add(targetHighlight);
           } else {

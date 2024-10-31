@@ -8,10 +8,7 @@
       content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
     />
     <meta name="description" content="Post processing effects." />
-    <meta
-      name="cesium-sandcastle-labels"
-      content="Showcases, Post Processing"
-    />
+    <meta name="cesium-sandcastle-labels" content="Showcases, Post Processing" />
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script
@@ -21,10 +18,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -84,10 +78,7 @@
           shouldAnimate: true,
         });
 
-        const position = Cesium.Cartesian3.fromDegrees(
-          -123.0744619,
-          44.0503706
-        );
+        const position = Cesium.Cartesian3.fromDegrees(-123.0744619, 44.0503706);
         const url = "../../SampleData/models/CesiumMan/Cesium_Man.glb";
         viewer.trackedEntity = viewer.entities.add({
           name: url,
@@ -111,18 +102,12 @@
         Cesium.knockout.applyBindings(viewModel, toolbar);
         for (const name in viewModel) {
           if (viewModel.hasOwnProperty(name)) {
-            Cesium.knockout
-              .getObservable(viewModel, name)
-              .subscribe(updatePostProcess);
+            Cesium.knockout.getObservable(viewModel, name).subscribe(updatePostProcess);
           }
         }
 
-        if (
-          !Cesium.PostProcessStageLibrary.isSilhouetteSupported(viewer.scene)
-        ) {
-          window.alert(
-            "This browser does not support the silhouette post process."
-          );
+        if (!Cesium.PostProcessStageLibrary.isSilhouetteSupported(viewer.scene)) {
+          window.alert("This browser does not support the silhouette post process.");
         }
 
         const stages = viewer.scene.postProcessStages;
@@ -143,9 +128,7 @@
           silhouette.enabled = Boolean(viewModel.silhouette);
           silhouette.uniforms.color = Cesium.Color.YELLOW;
           blackAndWhite.enabled = Boolean(viewModel.blackAndWhiteShow);
-          blackAndWhite.uniforms.gradations = Number(
-            viewModel.blackAndWhiteGradations
-          );
+          blackAndWhite.uniforms.gradations = Number(viewModel.blackAndWhiteGradations);
           brightness.enabled = Boolean(viewModel.brightnessShow);
           brightness.uniforms.brightness = Number(viewModel.brightnessValue);
           nightVision.enabled = Boolean(viewModel.nightVisionShow);

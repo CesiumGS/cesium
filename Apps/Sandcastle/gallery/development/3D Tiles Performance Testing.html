@@ -21,10 +21,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -83,11 +80,7 @@ The heatmapTileProperty will colorize the tile property in a heatmap. Booleans s
               heatmapTileProperty
             );
           } else if (heatmapTileProperty === "_priorityDeferred") {
-            tileset._heatmap.setReferenceMinimumMaximum(
-              -1,
-              1,
-              heatmapTileProperty
-            );
+            tileset._heatmap.setReferenceMinimumMaximum(-1, 1, heatmapTileProperty);
           }
         }
 
@@ -224,10 +217,7 @@ The heatmapTileProperty will colorize the tile property in a heatmap. Booleans s
             lastTotalLoaded = totalLoaded;
             tourTime += currentDestination === 0 ? 0 : duration;
             tourLoads += currentDestination === 0 ? 0 : flightLoads;
-            if (
-              doTour &&
-              currentDestination < destinationFunctions.length - 1
-            ) {
+            if (doTour && currentDestination < destinationFunctions.length - 1) {
               destinationFunctions[++currentDestination]();
             }
             tileset.allTilesLoaded.removeEventListener(timerListener);

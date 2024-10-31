@@ -21,10 +21,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -40,9 +37,7 @@
             new Cesium.EllipsoidPrimitive({
               center: Cesium.Cartesian3.fromDegrees(-75.0, 40.0, 500000.0),
               radii: new Cesium.Cartesian3(500000.0, 500000.0, 500000.0),
-              material: Cesium.Material.fromType(
-                Cesium.Material.RimLightingType
-              ),
+              material: Cesium.Material.fromType(Cesium.Material.RimLightingType),
             })
           );
           Sandcastle.declare(e); // For Sandcastle highlighting.

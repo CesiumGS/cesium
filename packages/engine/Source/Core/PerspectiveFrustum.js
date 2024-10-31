@@ -41,7 +41,7 @@ function PerspectiveFrustum(options) {
    * The angle of the field of view (FOV), in radians.  This angle will be used
    * as the horizontal FOV if the width is greater than the height, otherwise
    * it will be the vertical FOV.
-   * @type {number}
+   * @type {number|undefined}
    * @default undefined
    */
   this.fov = options.fov;
@@ -52,7 +52,7 @@ function PerspectiveFrustum(options) {
 
   /**
    * The aspect ratio of the frustum's width to it's height.
-   * @type {number}
+   * @type {number|undefined}
    * @default undefined
    */
   this.aspectRatio = options.aspectRatio;
@@ -167,65 +167,71 @@ function update(frustum) {
   }
   //>>includeEnd('debug');
 
-  const f = frustum._offCenterFrustum;
-
-  if (
+  const changed =
     frustum.fov !== frustum._fov ||
     frustum.aspectRatio !== frustum._aspectRatio ||
     frustum.near !== frustum._near ||
     frustum.far !== frustum._far ||
     frustum.xOffset !== frustum._xOffset ||
-    frustum.yOffset !== frustum._yOffset
-  ) {
-    //>>includeStart('debug', pragmas.debug);
-    if (frustum.fov < 0 || frustum.fov >= Math.PI) {
-      throw new DeveloperError("fov must be in the range [0, PI).");
-    }
+    frustum.yOffset !== frustum._yOffset;
 
-    if (frustum.aspectRatio < 0) {
-      throw new DeveloperError("aspectRatio must be positive.");
-    }
-
-    if (frustum.near < 0 || frustum.near > frustum.far) {
-      throw new DeveloperError(
-        "near must be greater than zero and less than far."
-      );
-    }
-    //>>includeEnd('debug');
-
-    frustum._aspectRatio = frustum.aspectRatio;
-    frustum._fov = frustum.fov;
-    frustum._fovy =
-      frustum.aspectRatio <= 1
-        ? frustum.fov
-        : Math.atan(Math.tan(frustum.fov * 0.5) / frustum.aspectRatio) * 2.0;
-    frustum._near = frustum.near;
-    frustum._far = frustum.far;
-    frustum._sseDenominator = 2.0 * Math.tan(0.5 * frustum._fovy);
-    frustum._xOffset = frustum.xOffset;
-    frustum._yOffset = frustum.yOffset;
-
-    f.top = frustum.near * Math.tan(0.5 * frustum._fovy);
-    f.bottom = -f.top;
-    f.right = frustum.aspectRatio * f.top;
-    f.left = -f.right;
-    f.near = frustum.near;
-    f.far = frustum.far;
-
-    f.right += frustum.xOffset;
-    f.left += frustum.xOffset;
-    f.top += frustum.yOffset;
-    f.bottom += frustum.yOffset;
+  if (!changed) {
+    return;
   }
+
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number.greaterThanOrEquals("fov", frustum.fov, 0.0);
+  Check.typeOf.number.lessThan("fov", frustum.fov, Math.PI);
+
+  Check.typeOf.number.greaterThanOrEquals(
+    "aspectRatio",
+    frustum.aspectRatio,
+    0.0
+  );
+
+  Check.typeOf.number.greaterThanOrEquals("near", frustum.near, 0.0);
+  if (frustum.near > frustum.far) {
+    throw new DeveloperError("near must be less than far.");
+  }
+  //>>includeEnd('debug');
+
+  frustum._aspectRatio = frustum.aspectRatio;
+  frustum._fov = frustum.fov;
+  frustum._fovy =
+    frustum.aspectRatio <= 1
+      ? frustum.fov
+      : Math.atan(Math.tan(frustum.fov * 0.5) / frustum.aspectRatio) * 2.0;
+  frustum._near = frustum.near;
+  frustum._far = frustum.far;
+  frustum._sseDenominator = 2.0 * Math.tan(0.5 * frustum._fovy);
+  frustum._xOffset = frustum.xOffset;
+  frustum._yOffset = frustum.yOffset;
+
+  const f = frustum._offCenterFrustum;
+
+  f.top = frustum.near * Math.tan(0.5 * frustum._fovy);
+  f.bottom = -f.top;
+  f.right = frustum.aspectRatio * f.top;
+  f.left = -f.right;
+  f.near = frustum.near;
+  f.far = frustum.far;
+
+  f.right += frustum.xOffset;
+  f.left += frustum.xOffset;
+  f.top += frustum.yOffset;
+  f.bottom += frustum.yOffset;
 }
 
 Object.defineProperties(PerspectiveFrustum.prototype, {
   /**
    * Gets the perspective projection matrix computed from the view frustum.
+   * If necessary, the projection matrix will be recomputed.
+   *
    * @memberof PerspectiveFrustum.prototype
    * @type {Matrix4}
    * @readonly
    *
+   * @see PerspectiveOffCenterFrustum#projectionMatrix.
    * @see PerspectiveFrustum#infiniteProjectionMatrix
    */
   projectionMatrix: {
@@ -253,7 +259,7 @@ Object.defineProperties(PerspectiveFrustum.prototype, {
   /**
    * Gets the angle of the vertical field of view, in radians.
    * @memberof PerspectiveFrustum.prototype
-   * @type {number}
+   * @type {number|undefined}
    * @readonly
    * @default undefined
    */

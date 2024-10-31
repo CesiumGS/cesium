@@ -636,7 +636,6 @@ describe("Scene/GlobeTranslucencyState", function () {
     expect(executeCommand).toHaveBeenCalledWith(
       command.derivedCommands.globeTranslucency.opaqueBackFaceCommand,
       scene,
-      context,
       passState
     );
     expect(
@@ -645,7 +644,6 @@ describe("Scene/GlobeTranslucencyState", function () {
   });
 
   it("does not execute globe commands if there are no commands", function () {
-    const frameState = scene.frameState;
     const context = frameState.context;
     const passState = new PassState(context);
 
@@ -703,13 +701,11 @@ describe("Scene/GlobeTranslucencyState", function () {
     expect(executeCommand).toHaveBeenCalledWith(
       classificationCommand,
       scene,
-      context,
       passState
     );
     expect(executeCommand).toHaveBeenCalledWith(
       command.derivedCommands.globeTranslucency.depthOnlyFrontFaceCommand,
       scene,
-      context,
       passState
     );
 

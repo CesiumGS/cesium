@@ -31,6 +31,7 @@ import {
   getJsonFromTypedArray,
   HeadingPitchRange,
   HeadingPitchRoll,
+  ImageBasedLighting,
   Intersect,
   JulianDate,
   Math as CesiumMath,
@@ -210,6 +211,9 @@ describe(
 
       options = {
         cullRequestsWhileMoving: false,
+        environmentMapOptions: {
+          enabled: scene.highDynamicRangeSupported,
+        },
       };
     });
 
@@ -514,6 +518,8 @@ describe(
       expect(statistics.numberOfPendingRequests).toBe(0);
       expect(statistics.numberOfTilesProcessing).toBe(0);
       expect(statistics.numberOfTilesWithContentReady).toBe(0);
+
+      await Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
     });
 
     it("handles failed tile processing", async function () {
@@ -550,6 +556,8 @@ describe(
       expect(statistics.numberOfPendingRequests).toBe(0);
       expect(statistics.numberOfTilesProcessing).toBe(0);
       expect(statistics.numberOfTilesWithContentReady).toBe(0);
+
+      await Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
     });
 
     it("renders tileset", function () {
@@ -664,7 +672,7 @@ describe(
       );
     });
 
-    it("renders tileset with custom up and forward axes", function () {
+    it("renders tileset with custom up and forward axes", async function () {
       const center = Cartesian3.fromRadians(
         centerLongitude,
         centerLatitude,
@@ -693,42 +701,43 @@ describe(
       // make sure we can see the cube so it loads
       scene.camera.lookAt(center, viewEast);
 
-      return Cesium3DTilesTester.loadTileset(
+      const tileset = await Cesium3DTilesTester.loadTileset(
         scene,
         tilesetEastNorthUpUrl,
         tilesetOptions
-      ).then(function (tileset) {
-        // The east (+x) face of the cube is red
-        scene.camera.lookAt(center, viewEast);
-        expect(renderOptions).toRenderAndCall(function (rgba) {
-          expect(rgba[0]).toBeGreaterThan(190);
-          expect(rgba[1]).toBeLessThanOrEqual(108);
-          expect(rgba[2]).toBeLessThanOrEqual(108);
-          expect(rgba[3]).toEqual(255);
-        });
+      );
 
-        // The north (+y) face of the cube is green
-        scene.camera.lookAt(center, viewNorth);
-        expect(renderOptions).toRenderAndCall(function (rgba) {
-          expect(rgba[0]).toBeLessThanOrEqual(108);
-          expect(rgba[1]).toBeGreaterThan(190);
-          expect(rgba[2]).toBeLessThanOrEqual(108);
-          expect(rgba[3]).toEqual(255);
-        });
-
-        // The up (+z) face of the cube is blue
-        scene.camera.lookAt(center, viewUp);
-        expect(renderOptions).toRenderAndCall(function (rgba) {
-          expect(rgba[0]).toBeLessThanOrEqual(108);
-          expect(rgba[1]).toBeLessThanOrEqual(108);
-          expect(rgba[2]).toBeGreaterThan(190);
-          expect(rgba[3]).toEqual(255);
-        });
+      // The east (+x) face of the cube is red
+      scene.camera.lookAt(center, viewEast);
+      expect(renderOptions).toRenderAndCall(function (rgba) {
+        expect(rgba[0]).toBeGreaterThan(190);
+        expect(rgba[1]).toBeLessThanOrEqual(108);
+        expect(rgba[2]).toBeLessThanOrEqual(108);
+        expect(rgba[3]).toEqual(255);
       });
+
+      // The north (+y) face of the cube is green
+      scene.camera.lookAt(center, viewNorth);
+      expect(renderOptions).toRenderAndCall(function (rgba) {
+        expect(rgba[0]).toBeLessThanOrEqual(108);
+        expect(rgba[1]).toBeGreaterThan(180);
+        expect(rgba[2]).toBeLessThanOrEqual(108);
+        expect(rgba[3]).toEqual(255);
+      });
+
+      // The up (+z) face of the cube is blue
+      scene.camera.lookAt(center, viewUp);
+      expect(renderOptions).toRenderAndCall(function (rgba) {
+        expect(rgba[0]).toBeLessThanOrEqual(108);
+        expect(rgba[1]).toBeLessThanOrEqual(108);
+        expect(rgba[2]).toBeGreaterThan(180);
+        expect(rgba[3]).toEqual(255);
+      });
+
+      await Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
     });
 
-    xit("verify statistics", async function () {
-      // Excluded due to frequent CI errors https://github.com/CesiumGS/cesium/issues/11958
+    it("verify statistics", async function () {
       const tileset = await Cesium3DTileset.fromUrl(tilesetUrl, options);
 
       // Verify initial values after root and children are requested
@@ -2695,25 +2704,21 @@ describe(
       );
     });
 
-    it("renders with lightColor", function () {
+    it("renders with lightColor", async function () {
       const renderOptions = {
         scene: scene,
         time: new JulianDate(2457522.154792),
       };
-      return Cesium3DTilesTester.loadTileset(scene, withoutBatchTableUrl).then(
-        function (tileset) {
-          const ibl = tileset.imageBasedLighting;
-          expect(renderOptions).toRenderAndCall(function (rgba) {
-            expect(rgba).not.toEqual([0, 0, 0, 255]);
-            ibl.imageBasedLightingFactor = new Cartesian2(0.0, 0.0);
-            expect(renderOptions).toRenderAndCall(function (rgba2) {
-              expect(rgba2).not.toEqual(rgba);
-              tileset.lightColor = new Cartesian3(5.0, 5.0, 5.0);
-              expect(renderOptions).notToRender(rgba2);
-            });
-          });
-        }
+      const tileset = await Cesium3DTilesTester.loadTileset(
+        scene,
+        withoutBatchTableUrl
       );
+      const ibl = tileset.imageBasedLighting;
+      ibl.imageBasedLightingFactor = new Cartesian2(0.0, 0.0);
+      expect(renderOptions).toRenderAndCall(function (rgba) {
+        tileset.lightColor = new Cartesian3(5.0, 5.0, 5.0);
+        expect(renderOptions).notToRender(rgba);
+      });
     });
 
     function testBackFaceCulling(url, setViewOptions) {
@@ -3323,8 +3328,21 @@ describe(
         scene: scene,
         time: new JulianDate(2457522.154792),
       };
-      const tileset = await Cesium3DTilesTester.loadTileset(scene, url);
-      tileset.luminanceAtZenith = undefined;
+      const tileset = await Cesium3DTilesTester.loadTileset(scene, url, {
+        imageBasedLighting: new ImageBasedLighting({
+          sphericalHarmonicCoefficients: [
+            new Cartesian3(2.0, 2.0, 2.0),
+            Cartesian3.ZERO,
+            Cartesian3.ZERO,
+            Cartesian3.ZERO,
+            Cartesian3.ZERO,
+            Cartesian3.ZERO,
+            Cartesian3.ZERO,
+            Cartesian3.ZERO,
+            Cartesian3.ZERO,
+          ],
+        }),
+      });
 
       expect(renderOptions).toRenderAndCall(function (rgba) {
         sourceRed = rgba[0];
@@ -3332,9 +3350,9 @@ describe(
       });
 
       expect(renderOptions).toRenderAndCall(function (rgba) {
-        expect(rgba[0]).withContext("starting red .r").toBeGreaterThan(200);
-        expect(rgba[1]).withContext("starting red .g").toEqualEpsilon(116, 1);
-        expect(rgba[2]).withContext("starting red .b").toEqualEpsilon(116, 1);
+        expect(rgba[0]).withContext("starting red .r").toBeGreaterThan(190);
+        expect(rgba[1]).withContext("starting red .g").toEqualEpsilon(118, 1);
+        expect(rgba[2]).withContext("starting red .b").toEqualEpsilon(118, 1);
         expect(rgba[3]).withContext("starting red .a").toEqual(255);
       });
 
@@ -3366,7 +3384,7 @@ describe(
         expect(rgba[0])
           .withContext("hl yellow+alpha .r")
           .toBeLessThan(sourceRed);
-        expect(rgba[1]).withContext("hl yellow+alpha .g").toEqualEpsilon(43, 1);
+        expect(rgba[1]).withContext("hl yellow+alpha .g").toEqualEpsilon(80, 1);
         expect(rgba[2]).withContext("hl yellow+alpha .b").toEqualEpsilon(0, 1);
         expect(rgba[3]).withContext("hl yellow+alpha .a").toEqual(255);
       });
@@ -3386,7 +3404,7 @@ describe(
         expect(rgba[0]).withContext("replace yellow .r").toBeLessThan(255);
         expect(rgba[1]).withContext("replace yellow .g").toBeGreaterThan(100);
         expect(rgba[1]).withContext("replace yellow .g").toBeLessThan(255);
-        expect(rgba[2]).withContext("replace yellow .b").toEqualEpsilon(73, 1);
+        expect(rgba[2]).withContext("replace yellow .b").toEqualEpsilon(62, 1);
         expect(rgba[3]).withContext("replace yellow .a").toEqual(255);
       });
 
@@ -3410,7 +3428,7 @@ describe(
           .toBeLessThan(255);
         expect(rgba[2])
           .withContext("replace yellow+alpha .b")
-          .toEqualEpsilon(48, 1);
+          .toEqualEpsilon(80, 1);
         expect(rgba[3]).withContext("replace yellow+alpha .a").toEqual(255);
       });
 
@@ -3436,7 +3454,7 @@ describe(
           .withContext("mix yellow .g")
           .toBeGreaterThan(sourceGreen);
         expect(rgba[1]).withContext("mix yellow .g").toBeLessThan(replaceGreen);
-        expect(rgba[2]).withContext("mix yellow .b").toEqualEpsilon(94, 1);
+        expect(rgba[2]).withContext("mix yellow .b").toEqualEpsilon(96, 1);
         expect(rgba[3]).withContext("mix yellow .a").toEqual(255);
       });
 
@@ -3451,7 +3469,7 @@ describe(
           .toBeLessThanOrEqual(sourceRed);
         expect(rgba[1]).withContext("mix blend 0.25 .g").toBeGreaterThan(0);
         expect(rgba[1]).withContext("mix blend 0.25 .g").toBeLessThan(mixGreen);
-        expect(rgba[2]).withContext("mix blend 0.25 .b").toEqualEpsilon(106, 1);
+        expect(rgba[2]).withContext("mix blend 0.25 .b").toEqualEpsilon(108, 1);
         expect(rgba[3]).withContext("mix blend 0.25 .a").toEqual(255);
       });
 
@@ -3459,8 +3477,8 @@ describe(
       tileset.colorBlendAmount = 0.0;
       expect(renderOptions).toRenderAndCall(function (rgba) {
         expect(rgba[0]).withContext("mix blend 0.0 .r").toEqual(sourceRed);
-        expect(rgba[1]).withContext("mix blend 0.0 .g").toEqualEpsilon(116, 1);
-        expect(rgba[2]).withContext("mix blend 0.0 .b").toEqualEpsilon(116, 1);
+        expect(rgba[1]).withContext("mix blend 0.0 .g").toEqualEpsilon(118, 1);
+        expect(rgba[2]).withContext("mix blend 0.0 .b").toEqualEpsilon(118, 1);
         expect(rgba[3]).withContext("mix blend 0.0 .a").toEqual(255);
       });
 
@@ -3469,7 +3487,7 @@ describe(
       expect(renderOptions).toRenderAndCall(function (rgba) {
         expect(rgba[0]).withContext("mix blend 1.0 .r").toEqual(replaceRed);
         expect(rgba[1]).withContext("mix blend 1.0 .g").toEqual(replaceGreen);
-        expect(rgba[2]).withContext("mix blend 1.0 .b").toEqualEpsilon(73, 1);
+        expect(rgba[2]).withContext("mix blend 1.0 .b").toEqualEpsilon(62, 1);
         expect(rgba[3]).withContext("mix blend 1.0 .a").toEqual(255);
       });
 
@@ -3484,7 +3502,7 @@ describe(
         expect(rgba[1]).withContext("mix yellow+alpha .g").toBeGreaterThan(0);
         expect(rgba[2])
           .withContext("mix yellow+alpha .b")
-          .toEqualEpsilon(43, 1);
+          .toEqualEpsilon(80, 1);
         expect(rgba[3]).withContext("mix yellow+alpha .a").toEqual(255);
       });
     }
@@ -5772,7 +5790,10 @@ describe(
 
         viewNothing();
 
-        const tileset = await Cesium3DTileset.fromUrl(multipleContentsUrl);
+        const tileset = await Cesium3DTileset.fromUrl(
+          multipleContentsUrl,
+          options
+        );
         scene.primitives.add(tileset);
         viewAllTiles();
         scene.renderForSpecs();
@@ -5950,7 +5971,10 @@ describe(
         viewNothing();
         let errorCount = 0;
 
-        const tileset = await Cesium3DTileset.fromUrl(multipleContentsUrl);
+        const tileset = await Cesium3DTileset.fromUrl(
+          multipleContentsUrl,
+          options
+        );
         tileset.tileFailed.addEventListener(function (event) {
           errorCount++;
           expect(endsWith(event.url, ".json")).toBe(true);

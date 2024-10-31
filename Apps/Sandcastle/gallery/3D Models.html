@@ -18,10 +18,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -51,10 +48,7 @@
           const pitch = 0;
           const roll = 0;
           const hpr = new Cesium.HeadingPitchRoll(heading, pitch, roll);
-          const orientation = Cesium.Transforms.headingPitchRollQuaternion(
-            position,
-            hpr
-          );
+          const orientation = Cesium.Transforms.headingPitchRollQuaternion(position, hpr);
 
           const entity = viewer.entities.add({
             name: url,
@@ -73,28 +67,19 @@
           {
             text: "Aircraft",
             onselect: function () {
-              createModel(
-                "../../SampleData/models/CesiumAir/Cesium_Air.glb",
-                5000.0
-              );
+              createModel("../../SampleData/models/CesiumAir/Cesium_Air.glb", 5000.0);
             },
           },
           {
             text: "Drone",
             onselect: function () {
-              createModel(
-                "../../SampleData/models/CesiumDrone/CesiumDrone.glb",
-                150.0
-              );
+              createModel("../../SampleData/models/CesiumDrone/CesiumDrone.glb", 150.0);
             },
           },
           {
             text: "Ground Vehicle",
             onselect: function () {
-              createModel(
-                "../../SampleData/models/GroundVehicle/GroundVehicle.glb",
-                0
-              );
+              createModel("../../SampleData/models/GroundVehicle/GroundVehicle.glb", 0);
             },
           },
           {
@@ -118,19 +103,13 @@
           {
             text: "Skinned Character",
             onselect: function () {
-              createModel(
-                "../../SampleData/models/CesiumMan/Cesium_Man.glb",
-                0
-              );
+              createModel("../../SampleData/models/CesiumMan/Cesium_Man.glb", 0);
             },
           },
           {
             text: "Unlit Box",
             onselect: function () {
-              createModel(
-                "../../SampleData/models/BoxUnlit/BoxUnlit.gltf",
-                10.0
-              );
+              createModel("../../SampleData/models/BoxUnlit/BoxUnlit.gltf", 10.0);
             },
           },
           {
@@ -159,10 +138,7 @@
           {
             text: "Instanced Box",
             onselect: function () {
-              createModel(
-                "../../SampleData/models/BoxInstanced/BoxInstanced.gltf",
-                15
-              );
+              createModel("../../SampleData/models/BoxInstanced/BoxInstanced.gltf", 15);
             },
           },
         ];

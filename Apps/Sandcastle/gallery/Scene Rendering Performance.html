@@ -21,10 +21,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
 
@@ -95,8 +92,8 @@
                 <code>requestRenderMode</code> enabled
               </h3>
               <i
-                >When enabled, a new frame is only rendered when scene updates
-                occur, or a new frame is explicitly rendered.</i
+                >When enabled, a new frame is only rendered when scene updates occur, or a
+                new frame is explicitly rendered.</i
               >
             </td>
           </tr>
@@ -111,9 +108,9 @@
                 Render when simulation time changes
               </h4>
               <i
-                >Automatically render when the simulation time changes by "Max
-                delta time". Adjust the simulation time on the animation widget
-                and "Max delta time" value to see their relationship.</i
+                >Automatically render when the simulation time changes by "Max delta
+                time". Adjust the simulation time on the animation widget and "Max delta
+                time" value to see their relationship.</i
               >
             </td>
           </tr>
@@ -214,11 +211,7 @@
 
           const entity = viewer.entities.add({
             name: "Aircraft",
-            position: Cesium.Cartesian3.fromDegrees(
-              -123.0744619,
-              44.0503706,
-              5000.0
-            ),
+            position: Cesium.Cartesian3.fromDegrees(-123.0744619, 44.0503706, 5000.0),
             model: {
               uri: "../../SampleData/models/CesiumAir/Cesium_Air.glb",
               minimumPixelSize: 128,

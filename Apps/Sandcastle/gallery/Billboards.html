@@ -7,10 +7,7 @@
       name="viewport"
       content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
     />
-    <meta
-      name="description"
-      content="Add billboard images and markers to the scene."
-    />
+    <meta name="description" content="Add billboard images and markers to the scene." />
     <meta name="cesium-sandcastle-labels" content="Beginner, Showcases" />
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
@@ -21,10 +18,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -74,11 +68,7 @@
           Sandcastle.declare(changeBillboardProperties);
 
           const entity = viewer.entities.add({
-            position: Cesium.Cartesian3.fromDegrees(
-              -75.59777,
-              40.03883,
-              300000.0
-            ),
+            position: Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883, 300000.0),
             billboard: {
               image: "../images/Cesium_Logo_overlay.png",
             },
@@ -148,12 +138,7 @@
             position: Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
             billboard: {
               image: "../images/Cesium_Logo_overlay.png",
-              translucencyByDistance: new Cesium.NearFarScalar(
-                1.5e2,
-                2.0,
-                1.5e7,
-                0.5
-              ),
+              translucencyByDistance: new Cesium.NearFarScalar(1.5e2, 2.0, 1.5e7, 0.5),
             },
           });
         }
@@ -190,12 +175,7 @@
                   1.5e6,
                   0.0
                 ),
-                translucencyByDistance: new Cesium.NearFarScalar(
-                  1.0e3,
-                  1.0,
-                  1.5e6,
-                  0.1
-                ),
+                translucencyByDistance: new Cesium.NearFarScalar(1.0e3, 1.0, 1.5e6, 0.1),
               },
             });
           });

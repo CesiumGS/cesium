@@ -7,10 +7,7 @@
       name="viewport"
       content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
     />
-    <meta
-      name="description"
-      content="Explore node transformations of 3D models."
-    />
+    <meta name="description" content="Explore node transformations of 3D models." />
     <meta name="cesium-sandcastle-labels" content="Development" />
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
@@ -21,10 +18,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
       #toolbar {
@@ -139,10 +133,7 @@
             </td>
           </tr>
           <tr>
-            <td
-              colspan="2"
-              data-bind="click: function() { showScale = !showScale }"
-            >
+            <td colspan="2" data-bind="click: function() { showScale = !showScale }">
               <span data-bind="text: showScale ? '-' : '+'">+</span> Scale
             </td>
           </tr>
@@ -206,29 +197,25 @@
         Cesium.knockout.track(viewModel);
 
         // transformation is a computed property returning the values storage for the current node name
-        Cesium.knockout.defineProperty(
-          viewModel,
-          "transformation",
-          function () {
-            const transformations = viewModel.transformations;
-            const nodeName = viewModel.nodeName;
-            if (!Cesium.defined(transformations[nodeName])) {
-              transformations[nodeName] = {
-                translationX: 0.0,
-                translationY: 0.0,
-                translationZ: 0.0,
-                rotationHeading: 0.0,
-                rotationPitch: 0.0,
-                rotationRoll: 0.0,
-                scaleX: 1.0,
-                scaleY: 1.0,
-                scaleZ: 1.0,
-              };
-              Cesium.knockout.track(transformations[nodeName]);
-            }
-            return transformations[nodeName];
+        Cesium.knockout.defineProperty(viewModel, "transformation", function () {
+          const transformations = viewModel.transformations;
+          const nodeName = viewModel.nodeName;
+          if (!Cesium.defined(transformations[nodeName])) {
+            transformations[nodeName] = {
+              translationX: 0.0,
+              translationY: 0.0,
+              translationZ: 0.0,
+              rotationHeading: 0.0,
+              rotationPitch: 0.0,
+              rotationRoll: 0.0,
+              scaleX: 1.0,
+              scaleY: 1.0,
+              scaleZ: 1.0,
+            };
+            Cesium.knockout.track(transformations[nodeName]);
           }
-        );
+          return transformations[nodeName];
+        });
 
         // these writable computed properties produce individual values for use in the UI
         [
@@ -292,11 +279,7 @@
         const scene = viewer.scene;
 
         const height = 250000.0;
-        const origin = Cesium.Cartesian3.fromDegrees(
-          -123.0744619,
-          44.0503706,
-          height
-        );
+        const origin = Cesium.Cartesian3.fromDegrees(-123.0744619, 44.0503706, height);
         const modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(
           origin,
           new Cesium.HeadingPitchRoll()
@@ -316,22 +299,16 @@
 
             // Zoom to model
             const controller = scene.screenSpaceCameraController;
-            const r =
-              2.0 * Math.max(model.boundingSphere.radius, camera.frustum.near);
+            const r = 2.0 * Math.max(model.boundingSphere.radius, camera.frustum.near);
             controller.minimumZoomDistance = r * 0.5;
 
             const center = model.boundingSphere.center;
             const heading = Cesium.Math.toRadians(230.0);
             const pitch = Cesium.Math.toRadians(-20.0);
-            camera.lookAt(
-              center,
-              new Cesium.HeadingPitchRange(heading, pitch, r * 2.0)
-            );
+            camera.lookAt(center, new Cesium.HeadingPitchRange(heading, pitch, r * 2.0));
 
             // enumerate nodes and add options
-            const options = Object.keys(model._nodesByName).map(function (
-              nodeName
-            ) {
+            const options = Object.keys(model._nodesByName).map(function (nodeName) {
               return {
                 text: nodeName,
                 onselect: function () {

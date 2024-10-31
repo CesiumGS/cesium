@@ -11,10 +11,7 @@
       name="description"
       content="Worldwide 3D buildings with rich metadata from OpenStreetMap."
     />
-    <meta
-      name="cesium-sandcastle-labels"
-      content="Beginner, Showcases, ion Assets"
-    />
+    <meta name="cesium-sandcastle-labels" content="Beginner, Showcases, ion Assets" />
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script
@@ -24,10 +21,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -40,7 +34,8 @@
         //Sandcastle_Begin
 
         const viewer = new Cesium.Viewer("cesiumContainer", {
-          terrain: Cesium.Terrain.fromWorldTerrain(),
+          // Load Japan Regional Terrain
+          terrainProvider: await Cesium.CesiumTerrainProvider.fromIonAssetId(2767062),
           baseLayerPicker: false,
           sceneModePicker: false,
           animation: false,
@@ -248,6 +243,7 @@
         // Set up a light to come from the camera to always highlight the buildings
         const cameraLight = new Cesium.DirectionalLight({
           direction: scene.camera.directionWC, // Updated every frame
+          intensity: 2.0,
         });
         scene.globe.enableLighting = true;
         scene.globe.dynamicAtmosphereLightingFromSun = false;
@@ -261,12 +257,10 @@
           );
         });
 
-        viewer.homeButton.viewModel.command.beforeExecute.addEventListener(
-          (e) => {
-            e.cancel = true;
-            scene.camera.flyTo(hiroshima);
-          }
-        );
+        viewer.homeButton.viewModel.command.beforeExecute.addEventListener((e) => {
+          e.cancel = true;
+          scene.camera.flyTo(hiroshima);
+        });
 
         //Sandcastle_End
       };

@@ -18,10 +18,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -33,19 +30,12 @@
         "use strict";
         //Sandcastle_Begin
         function createPrimitives(scene) {
-          const polylines = scene.primitives.add(
-            new Cesium.PolylineCollection()
-          );
+          const polylines = scene.primitives.add(new Cesium.PolylineCollection());
 
           // A simple polyline with two points.
           const polyline = polylines.add({
             positions: Cesium.PolylinePipeline.generateCartesianArc({
-              positions: Cesium.Cartesian3.fromDegreesArray([
-                -120.0,
-                40.0,
-                -110.0,
-                30.0,
-              ]),
+              positions: Cesium.Cartesian3.fromDegreesArray([-120.0, 40.0, -110.0, 30.0]),
             }),
             material: Cesium.Material.fromType("Color", {
               color: new Cesium.Color(1.0, 1.0, 1.0, 1.0),
@@ -67,12 +57,9 @@
                 32.0,
               ]),
             }),
-            material: Cesium.Material.fromType(
-              Cesium.Material.PolylineOutlineType,
-              {
-                outlineWidth: 5.0,
-              }
-            ),
+            material: Cesium.Material.fromType(Cesium.Material.PolylineOutlineType, {
+              outlineWidth: 5.0,
+            }),
             width: 10.0,
           });
           Sandcastle.declare(widePolyline); // For highlighting on mouseover in Sandcastle.
@@ -80,21 +67,13 @@
           // Apply a polyline glow material
           const coloredPolyline = polylines.add({
             positions: Cesium.PolylinePipeline.generateCartesianArc({
-              positions: Cesium.Cartesian3.fromDegreesArray([
-                -95.0,
-                30.0,
-                -85.0,
-                40.0,
-              ]),
+              positions: Cesium.Cartesian3.fromDegreesArray([-95.0, 30.0, -85.0, 40.0]),
             }),
-            material: Cesium.Material.fromType(
-              Cesium.Material.PolylineGlowType,
-              {
-                glowPower: 0.2,
-                taperPower: 0.2,
-                color: new Cesium.Color(1.0, 0.5, 0.0, 1.0),
-              }
-            ),
+            material: Cesium.Material.fromType(Cesium.Material.PolylineGlowType, {
+              glowPower: 0.2,
+              taperPower: 0.2,
+              color: new Cesium.Color(1.0, 0.5, 0.0, 1.0),
+            }),
             width: 10.0,
           });
           Sandcastle.declare(coloredPolyline); // For highlighting on mouseover in Sandcastle.
@@ -120,13 +99,9 @@
 
           // Draw a line in a local reference frame
           // The arrow points to the east, i.e. along the local x-axis.
-          const localPolylines = scene.primitives.add(
-            new Cesium.PolylineCollection()
-          );
+          const localPolylines = scene.primitives.add(new Cesium.PolylineCollection());
           const center = Cesium.Cartesian3.fromDegrees(-80.0, 35.0);
-          localPolylines.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(
-            center
-          );
+          localPolylines.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(center);
 
           const localPolyline = localPolylines.add({
             positions: [
@@ -134,9 +109,7 @@
               new Cesium.Cartesian3(1000000.0, 0.0, 0.0),
             ],
             width: 10.0,
-            material: Cesium.Material.fromType(
-              Cesium.Material.PolylineArrowType
-            ),
+            material: Cesium.Material.fromType(Cesium.Material.PolylineArrowType),
           });
           Sandcastle.declare(localPolyline); // For highlighting on mouseover in Sandcastle.
 
@@ -169,12 +142,7 @@
           // A rhumb line with two points.
           const rhumbLine = polylines.add({
             positions: Cesium.PolylinePipeline.generateCartesianRhumbArc({
-              positions: Cesium.Cartesian3.fromDegreesArray([
-                -130.0,
-                30.0,
-                -75.0,
-                30.0,
-              ]),
+              positions: Cesium.Cartesian3.fromDegreesArray([-130.0, 30.0, -75.0, 30.0]),
             }),
             width: 5,
             material: Cesium.Material.fromType("Color", {

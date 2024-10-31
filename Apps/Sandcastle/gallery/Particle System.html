@@ -18,10 +18,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
 
@@ -84,11 +81,7 @@
                 step="1"
                 data-bind="value: minimumParticleLife, valueUpdate: 'input'"
               />
-              <input
-                type="text"
-                size="5"
-                data-bind="value: minimumParticleLife"
-              />
+              <input type="text" size="5" data-bind="value: minimumParticleLife" />
             </td>
           </tr>
 
@@ -102,11 +95,7 @@
                 step="1"
                 data-bind="value: maximumParticleLife, valueUpdate: 'input'"
               />
-              <input
-                type="text"
-                size="5"
-                data-bind="value: maximumParticleLife"
-              />
+              <input type="text" size="5" data-bind="value: maximumParticleLife" />
             </td>
           </tr>
 
@@ -194,11 +183,7 @@
 
         //Set bounds of our simulation time
         const start = Cesium.JulianDate.fromDate(new Date(2015, 2, 25, 16));
-        const stop = Cesium.JulianDate.addSeconds(
-          start,
-          120,
-          new Cesium.JulianDate()
-        );
+        const stop = Cesium.JulianDate.addSeconds(start, 120, new Cesium.JulianDate());
 
         //Make sure viewer is at the desired time.
         viewer.clock.startTime = start.clone();
@@ -244,28 +229,14 @@
 
         function computeEmitterModelMatrix() {
           hpr = Cesium.HeadingPitchRoll.fromDegrees(0.0, 0.0, 0.0, hpr);
-          trs.translation = Cesium.Cartesian3.fromElements(
-            -4.0,
-            0.0,
-            1.4,
-            translation
-          );
+          trs.translation = Cesium.Cartesian3.fromElements(-4.0, 0.0, 1.4, translation);
           trs.rotation = Cesium.Quaternion.fromHeadingPitchRoll(hpr, rotation);
 
-          return Cesium.Matrix4.fromTranslationRotationScale(
-            trs,
-            emitterModelMatrix
-          );
+          return Cesium.Matrix4.fromTranslationRotationScale(trs, emitterModelMatrix);
         }
 
-        const pos1 = Cesium.Cartesian3.fromDegrees(
-          -75.15787310614596,
-          39.97862668312678
-        );
-        const pos2 = Cesium.Cartesian3.fromDegrees(
-          -75.1633691390455,
-          39.95355089912078
-        );
+        const pos1 = Cesium.Cartesian3.fromDegrees(-75.15787310614596, 39.97862668312678);
+        const pos2 = Cesium.Cartesian3.fromDegrees(-75.1633691390455, 39.95355089912078);
         const position = new Cesium.SampledPositionProperty();
 
         position.addSample(start, pos1);
@@ -354,11 +325,7 @@
             gravityScratch
           );
 
-          p.velocity = Cesium.Cartesian3.add(
-            p.velocity,
-            gravityScratch,
-            p.velocity
-          );
+          p.velocity = Cesium.Cartesian3.add(p.velocity, gravityScratch, p.velocity);
         }
 
         viewer.scene.preUpdate.addEventListener(function (scene, time) {

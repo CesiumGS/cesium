@@ -18,10 +18,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -48,9 +45,7 @@
 
         Cesium.Math.setRandomNumberSeed(2.5);
         function getRandomNumberInRange(minValue, maxValue) {
-          return (
-            minValue + Cesium.Math.nextRandomNumber() * (maxValue - minValue)
-          );
+          return minValue + Cesium.Math.nextRandomNumber() * (maxValue - minValue);
         }
 
         const clouds = new Cesium.CloudCollection();
@@ -107,15 +102,7 @@
           });
         }
 
-        let long,
-          lat,
-          height,
-          scaleX,
-          scaleY,
-          aspectRatio,
-          cloudHeight,
-          depth,
-          slice;
+        let long, lat, height, scaleX, scaleY, aspectRatio, cloudHeight, depth, slice;
 
         // randomly generate clouds in a certain area
         function createRandomClouds(
@@ -181,35 +168,15 @@
         ///////////////////////////
 
         const start = Cesium.JulianDate.fromDate(new Date(2021, 7, 21, 12));
-        const stop = Cesium.JulianDate.addSeconds(
-          start,
-          90,
-          new Cesium.JulianDate()
-        );
+        const stop = Cesium.JulianDate.addSeconds(start, 90, new Cesium.JulianDate());
 
         function computeBalloonFlight(long, lat, height0, height1) {
           const property = new Cesium.SampledPositionProperty();
           const time0 = start.clone();
-          const time1 = Cesium.JulianDate.addSeconds(
-            time0,
-            30,
-            new Cesium.JulianDate()
-          );
-          const time2 = Cesium.JulianDate.addSeconds(
-            time1,
-            15,
-            new Cesium.JulianDate()
-          );
-          const time3 = Cesium.JulianDate.addSeconds(
-            time2,
-            30,
-            new Cesium.JulianDate()
-          );
-          const time4 = Cesium.JulianDate.addSeconds(
-            time3,
-            15,
-            new Cesium.JulianDate()
-          );
+          const time1 = Cesium.JulianDate.addSeconds(time0, 30, new Cesium.JulianDate());
+          const time2 = Cesium.JulianDate.addSeconds(time1, 15, new Cesium.JulianDate());
+          const time3 = Cesium.JulianDate.addSeconds(time2, 30, new Cesium.JulianDate());
+          const time4 = Cesium.JulianDate.addSeconds(time3, 15, new Cesium.JulianDate());
 
           const position0 = Cesium.Cartesian3.fromDegrees(long, lat, height0);
           const position1 = Cesium.Cartesian3.fromDegrees(long, lat, height1);

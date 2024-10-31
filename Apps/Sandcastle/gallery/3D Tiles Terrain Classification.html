@@ -22,10 +22,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -66,9 +63,7 @@
         };
 
         // Color a feature yellow on hover.
-        viewer.screenSpaceEventHandler.setInputAction(function onMouseMove(
-          movement
-        ) {
+        viewer.screenSpaceEventHandler.setInputAction(function onMouseMove(movement) {
           // If a feature was previously highlighted, undo the highlight
           if (Cesium.defined(highlighted.feature)) {
             highlighted.feature.color = highlighted.originalColor;
@@ -85,8 +80,8 @@
           highlighted.feature = pickedFeature;
           Cesium.Color.clone(pickedFeature.color, highlighted.originalColor);
           pickedFeature.color = Cesium.Color.YELLOW;
-        },
-        Cesium.ScreenSpaceEventType.MOUSE_MOVE); //Sandcastle_End
+        }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+        //Sandcastle_End
       };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;

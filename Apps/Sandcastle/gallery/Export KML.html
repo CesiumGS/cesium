@@ -21,10 +21,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
     </style>
@@ -55,8 +52,7 @@
               cartographicDegrees: [-77, 37, 0],
             },
             model: {
-              gltf:
-                "../../SampleData/models/CesiumMilkTruck/CesiumMilkTruck.glb",
+              gltf: "../../SampleData/models/CesiumMilkTruck/CesiumMilkTruck.glb",
             },
           },
         ];
@@ -128,13 +124,9 @@
                 reset();
                 filenameToSave = "Model.kmz";
                 dataSourcePromise = Cesium.CzmlDataSource.load(modelCzml);
-                viewer.dataSources
-                  .add(dataSourcePromise)
-                  .then(function (dataSource) {
-                    viewer.trackedEntity = dataSource.entities.getById(
-                      "truck model"
-                    );
-                  });
+                viewer.dataSources.add(dataSourcePromise).then(function (dataSource) {
+                  viewer.trackedEntity = dataSource.entities.getById("truck model");
+                });
               },
             },
           ],

@@ -7,10 +7,7 @@
       name="viewport"
       content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
     />
-    <meta
-      name="description"
-      content="Explore node transformations of 3D models."
-    />
+    <meta name="description" content="Explore node transformations of 3D models." />
     <meta name="cesium-sandcastle-labels" content="Development" />
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
@@ -21,10 +18,7 @@
     ></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
-  <body
-    class="sandcastle-loading"
-    data-sandcastle-bucket="bucket-requirejs.html"
-  >
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
     <style>
       @import url(../templates/bucket.css);
       #toolbar {
@@ -121,8 +115,7 @@
 
             // Zoom to model
             const controller = scene.screenSpaceCameraController;
-            const r =
-              2.0 * Math.max(model.boundingSphere.radius, camera.frustum.near);
+            const r = 2.0 * Math.max(model.boundingSphere.radius, camera.frustum.near);
             controller.minimumZoomDistance = r * 0.2;
 
             const center = Cesium.Matrix4.multiplyByPoint(
@@ -132,10 +125,7 @@
             );
             const heading = Cesium.Math.toRadians(0.0);
             const pitch = Cesium.Math.toRadians(-10.0);
-            camera.lookAt(
-              center,
-              new Cesium.HeadingPitchRange(heading, pitch, r * 0.8)
-            );
+            camera.lookAt(center, new Cesium.HeadingPitchRange(heading, pitch, r * 0.8));
 
             const articulations = model.sceneGraph._runtimeArticulations;
             viewModel.articulations = Object.keys(articulations).map(function (
@@ -143,36 +133,36 @@
             ) {
               return {
                 name: articulationName,
-                stages: articulations[articulationName]._runtimeStages.map(
-                  function (stage) {
-                    const stageModel = {
-                      name: stage.name,
-                      minimum: stage.minimumValue,
-                      maximum: stage.maximumValue,
-                      current: stage.currentValue,
-                    };
-                    Cesium.knockout.track(stageModel);
-                    Cesium.knockout.defineProperty(stageModel, "currentText", {
-                      get: function () {
-                        return stageModel.current.toString();
-                      },
-                      set: function (value) {
-                        // coerce values to number
-                        stageModel.current = +value;
-                      },
+                stages: articulations[articulationName]._runtimeStages.map(function (
+                  stage
+                ) {
+                  const stageModel = {
+                    name: stage.name,
+                    minimum: stage.minimumValue,
+                    maximum: stage.maximumValue,
+                    current: stage.currentValue,
+                  };
+                  Cesium.knockout.track(stageModel);
+                  Cesium.knockout.defineProperty(stageModel, "currentText", {
+                    get: function () {
+                      return stageModel.current.toString();
+                    },
+                    set: function (value) {
+                      // coerce values to number
+                      stageModel.current = +value;
+                    },
+                  });
+                  Cesium.knockout
+                    .getObservable(stageModel, "current")
+                    .subscribe(function (newValue) {
+                      model.setArticulationStage(
+                        `${articulationName} ${stage.name}`,
+                        +stageModel.current
+                      );
+                      model.applyArticulations();
                     });
-                    Cesium.knockout
-                      .getObservable(stageModel, "current")
-                      .subscribe(function (newValue) {
-                        model.setArticulationStage(
-                          `${articulationName} ${stage.name}`,
-                          +stageModel.current
-                        );
-                        model.applyArticulations();
-                      });
-                    return stageModel;
-                  }
-                ),
+                  return stageModel;
+                }),
               };
             });
             viewModel.selectedArticulation = viewModel.articulations[0];
