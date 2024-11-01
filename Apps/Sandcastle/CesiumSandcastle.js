@@ -26,6 +26,7 @@ require({
       location: "../Apps/Sandcastle/ThirdParty",
     },
   ],
+  // @ts-expect-error
 }, [
   "CodeMirror/lib/codemirror",
   "dijit/Dialog",
