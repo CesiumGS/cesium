@@ -1926,6 +1926,14 @@ Viewer.prototype._onDataSourceAdded = function (
   dataSourceCollection,
   dataSource,
 ) {
+  if (
+    this._cesiumWidget._automaticallyTrackDataSourceClocks &&
+    dataSource === this.clockTrackedDataSource
+  ) {
+    // When data sources are added to the CesiumWidget they may be automatically
+    // tracked in that class but we also need to update the timeline in this class
+    linkTimelineToDataSourceClock(this._timeline, dataSource);
+  }
   const id = dataSource.entities.id;
   const removalFunc = this._eventHelper.add(
     dataSource.changedEvent,
