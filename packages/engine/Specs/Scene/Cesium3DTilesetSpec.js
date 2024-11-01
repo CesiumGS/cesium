@@ -518,6 +518,8 @@ describe(
       expect(statistics.numberOfPendingRequests).toBe(0);
       expect(statistics.numberOfTilesProcessing).toBe(0);
       expect(statistics.numberOfTilesWithContentReady).toBe(0);
+
+      await Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
     });
 
     it("handles failed tile processing", async function () {
@@ -554,6 +556,8 @@ describe(
       expect(statistics.numberOfPendingRequests).toBe(0);
       expect(statistics.numberOfTilesProcessing).toBe(0);
       expect(statistics.numberOfTilesWithContentReady).toBe(0);
+
+      await Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
     });
 
     it("renders tileset", function () {
@@ -668,7 +672,7 @@ describe(
       );
     });
 
-    it("renders tileset with custom up and forward axes", function () {
+    it("renders tileset with custom up and forward axes", async function () {
       const center = Cartesian3.fromRadians(
         centerLongitude,
         centerLatitude,
@@ -697,42 +701,43 @@ describe(
       // make sure we can see the cube so it loads
       scene.camera.lookAt(center, viewEast);
 
-      return Cesium3DTilesTester.loadTileset(
+      const tileset = await Cesium3DTilesTester.loadTileset(
         scene,
         tilesetEastNorthUpUrl,
         tilesetOptions,
-      ).then(function (tileset) {
-        // The east (+x) face of the cube is red
-        scene.camera.lookAt(center, viewEast);
-        expect(renderOptions).toRenderAndCall(function (rgba) {
-          expect(rgba[0]).toBeGreaterThan(190);
-          expect(rgba[1]).toBeLessThanOrEqual(108);
-          expect(rgba[2]).toBeLessThanOrEqual(108);
-          expect(rgba[3]).toEqual(255);
-        });
+      );
 
-        // The north (+y) face of the cube is green
-        scene.camera.lookAt(center, viewNorth);
-        expect(renderOptions).toRenderAndCall(function (rgba) {
-          expect(rgba[0]).toBeLessThanOrEqual(108);
-          expect(rgba[1]).toBeGreaterThan(180);
-          expect(rgba[2]).toBeLessThanOrEqual(108);
-          expect(rgba[3]).toEqual(255);
-        });
-
-        // The up (+z) face of the cube is blue
-        scene.camera.lookAt(center, viewUp);
-        expect(renderOptions).toRenderAndCall(function (rgba) {
-          expect(rgba[0]).toBeLessThanOrEqual(108);
-          expect(rgba[1]).toBeLessThanOrEqual(108);
-          expect(rgba[2]).toBeGreaterThan(180);
-          expect(rgba[3]).toEqual(255);
-        });
+      // The east (+x) face of the cube is red
+      scene.camera.lookAt(center, viewEast);
+      expect(renderOptions).toRenderAndCall(function (rgba) {
+        expect(rgba[0]).toBeGreaterThan(190);
+        expect(rgba[1]).toBeLessThanOrEqual(108);
+        expect(rgba[2]).toBeLessThanOrEqual(108);
+        expect(rgba[3]).toEqual(255);
       });
+
+      // The north (+y) face of the cube is green
+      scene.camera.lookAt(center, viewNorth);
+      expect(renderOptions).toRenderAndCall(function (rgba) {
+        expect(rgba[0]).toBeLessThanOrEqual(108);
+        expect(rgba[1]).toBeGreaterThan(180);
+        expect(rgba[2]).toBeLessThanOrEqual(108);
+        expect(rgba[3]).toEqual(255);
+      });
+
+      // The up (+z) face of the cube is blue
+      scene.camera.lookAt(center, viewUp);
+      expect(renderOptions).toRenderAndCall(function (rgba) {
+        expect(rgba[0]).toBeLessThanOrEqual(108);
+        expect(rgba[1]).toBeLessThanOrEqual(108);
+        expect(rgba[2]).toBeGreaterThan(180);
+        expect(rgba[3]).toEqual(255);
+      });
+
+      await Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
     });
 
-    xit("verify statistics", async function () {
-      // Excluded due to frequent CI errors https://github.com/CesiumGS/cesium/issues/11958
+    it("verify statistics", async function () {
       const tileset = await Cesium3DTileset.fromUrl(tilesetUrl, options);
 
       // Verify initial values after root and children are requested
