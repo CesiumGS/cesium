@@ -31,7 +31,7 @@
   - New constructor options: `options.shouldAnimate`, `options.automaticallyTrackDataSourceClocks`, `options.dataSources`
   - New properties: `dataSourceDisplay`, `entities`, `dataSources`, `allowDataSourcesToSuspendAnimation`, `trackedEntity`, `trackedEntityChanged`, `clockTrackedDataSource`
   - New functions: `zoomTo()`, `flyTo()`
-- Update Bing Maps attribution link [#12229] (https://github.com/CesiumGS/cesium/pull/12265)
+- Update Bing Maps attribution link [#12265](https://github.com/CesiumGS/cesium/pull/12265)
 
 ##### Fixes :wrench:
 
