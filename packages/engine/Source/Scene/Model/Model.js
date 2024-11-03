@@ -18,6 +18,7 @@ import RuntimeError from "../../Core/RuntimeError.js";
 import Pass from "../../Renderer/Pass.js";
 import ClippingPlaneCollection from "../ClippingPlaneCollection.js";
 import ClippingPolygonCollection from "../ClippingPolygonCollection.js";
+import DynamicEnvironmentMapManager from "../DynamicEnvironmentMapManager.js";
 import ColorBlendMode from "../ColorBlendMode.js";
 import GltfLoader from "../GltfLoader.js";
 import HeightReference, {
@@ -155,6 +156,7 @@ import pickModel from "./pickModel.js";
  * @privateParam {ClippingPolygonCollection} [options.clippingPolygons] The {@link ClippingPolygonCollection} used to selectively disable rendering the model.
  * @privateParam {Cartesian3} [options.lightColor] The light color when shading the model. When <code>undefined</code> the scene's light color is used instead.
  * @privateParam {ImageBasedLighting} [options.imageBasedLighting] The properties for managing image-based lighting on this model.
+ * @privateParam {DynamicEnvironmentMapManager.ConstructorOptions} [options.environmentMapOptions] The properties for managing dynamic environment maps on this model. Affects lighting.
  * @privateParam {boolean} [options.backFaceCulling=true] Whether to cull back-facing geometry. When true, back face culling is determined by the material's doubleSided property; when false, back face culling is disabled. Back faces are not culled if the model's color is translucent.
  * @privateParam {Credit|string} [options.credit] A credit for the data source, which is displayed on the canvas.
  * @privateParam {boolean} [options.showCreditsOnScreen=false] Whether to display the credits of this model on screen.
@@ -386,6 +388,16 @@ function Model(options) {
     ? options.imageBasedLighting
     : new ImageBasedLighting();
   this._shouldDestroyImageBasedLighting = !defined(options.imageBasedLighting);
+
+  this._environmentMapManager = undefined;
+  const environmentMapManager = new DynamicEnvironmentMapManager(
+    options.environmentMapOptions,
+  );
+  DynamicEnvironmentMapManager.setOwner(
+    environmentMapManager,
+    this,
+    "_environmentMapManager",
+  );
 
   this._backFaceCulling = options.backFaceCulling ?? true;
   this._backFaceCullingDirty = false;
@@ -1364,7 +1376,7 @@ Object.defineProperties(Model.prototype, {
   },
 
   /**
-   * The light color when shading the model. When <code>undefined</code> the scene's light color is used instead.
+   * The directional light color when shading the model. When <code>undefined</code> the scene's light color is used instead.
    * <p>
    * Disabling additional light sources by setting
    * <code>model.imageBasedLighting.imageBasedLightingFactor = new Cartesian2(0.0, 0.0)</code>
@@ -1402,7 +1414,7 @@ Object.defineProperties(Model.prototype, {
     },
     set: function (value) {
       //>>includeStart('debug', pragmas.debug);
-      Check.typeOf.object("imageBasedLighting", this._imageBasedLighting);
+      Check.typeOf.object("imageBasedLighting", value);
       //>>includeEnd('debug');
 
       if (value !== this._imageBasedLighting) {
@@ -1414,6 +1426,38 @@ Object.defineProperties(Model.prototype, {
         }
         this._imageBasedLighting = value;
         this._shouldDestroyImageBasedLighting = false;
+        this.resetDrawCommands();
+      }
+    },
+  },
+
+  /**
+   * The properties for managing dynamic environment maps on this model. Affects lighting.
+   * @memberof Model.prototype
+   * @readonly
+   *
+   * @example
+   * // Change the ground color used for a model's environment map to a forest green
+   * const environmentMapManager = model.environmentMapManager;
+   * environmentMapManager.groundColor = Cesium.Color.fromCssColorString("#203b34");
+   *
+   * @type {DynamicEnvironmentMapManager}
+   */
+  environmentMapManager: {
+    get: function () {
+      return this._environmentMapManager;
+    },
+    set: function (value) {
+      //>>includeStart('debug', pragmas.debug);
+      Check.typeOf.object("environmentMapManager", value);
+      //>>includeEnd('debug');
+
+      if (value !== this.environmentMapManager) {
+        DynamicEnvironmentMapManager.setOwner(
+          value,
+          this,
+          "_environmentMapManager",
+        );
         this.resetDrawCommands();
       }
     },
@@ -1836,6 +1880,9 @@ Model.prototype.update = function (frameState) {
   // A custom shader may have to load texture uniforms.
   updateCustomShader(this, frameState);
 
+  // Environment maps, specular maps, and spherical harmonics may need to be updated or regenerated
+  updateEnvironmentMap(this, frameState);
+
   // The image-based lighting may have to load texture uniforms
   // for specular maps.
   updateImageBasedLighting(this, frameState);
@@ -1957,6 +2004,23 @@ function processLoader(model, frameState) {
 function updateCustomShader(model, frameState) {
   if (defined(model._customShader)) {
     model._customShader.update(frameState);
+  }
+}
+
+function updateEnvironmentMap(model, frameState) {
+  const environmentMapManager = model._environmentMapManager;
+  const picking = frameState.passes.pick || frameState.passes.pickVoxel;
+  if (model._ready && environmentMapManager.owner === model && !picking) {
+    environmentMapManager.position = model._boundingSphere.center;
+    environmentMapManager.shouldUpdate =
+      !defined(model._imageBasedLighting.sphericalHarmonicCoefficients) ||
+      !defined(model._imageBasedLighting.specularEnvironmentMaps);
+
+    environmentMapManager.update(frameState);
+
+    if (environmentMapManager.shouldRegenerateShaders) {
+      model.resetDrawCommands();
+    }
   }
 }
 
@@ -2316,30 +2380,27 @@ function updateReferenceMatrices(model, frameState) {
   const referenceMatrix = model.referenceMatrix ?? modelMatrix;
   const context = frameState.context;
 
-  const ibl = model._imageBasedLighting;
-  if (ibl.useSphericalHarmonicCoefficients || ibl.useSpecularEnvironmentMaps) {
-    let iblReferenceFrameMatrix3 = scratchIBLReferenceFrameMatrix3;
-    let iblReferenceFrameMatrix4 = scratchIBLReferenceFrameMatrix4;
+  let iblReferenceFrameMatrix3 = scratchIBLReferenceFrameMatrix3;
+  let iblReferenceFrameMatrix4 = scratchIBLReferenceFrameMatrix4;
 
-    iblReferenceFrameMatrix4 = Matrix4.multiply(
-      context.uniformState.view3D,
-      referenceMatrix,
-      iblReferenceFrameMatrix4,
-    );
-    iblReferenceFrameMatrix3 = Matrix4.getRotation(
-      iblReferenceFrameMatrix4,
-      iblReferenceFrameMatrix3,
-    );
-    iblReferenceFrameMatrix3 = Matrix3.transpose(
-      iblReferenceFrameMatrix3,
-      iblReferenceFrameMatrix3,
-    );
-    model._iblReferenceFrameMatrix = Matrix3.multiply(
-      yUpToZUp,
-      iblReferenceFrameMatrix3,
-      model._iblReferenceFrameMatrix,
-    );
-  }
+  iblReferenceFrameMatrix4 = Matrix4.multiply(
+    context.uniformState.view3D,
+    referenceMatrix,
+    iblReferenceFrameMatrix4,
+  );
+  iblReferenceFrameMatrix3 = Matrix4.getRotation(
+    iblReferenceFrameMatrix4,
+    iblReferenceFrameMatrix3,
+  );
+  iblReferenceFrameMatrix3 = Matrix3.transpose(
+    iblReferenceFrameMatrix3,
+    iblReferenceFrameMatrix3,
+  );
+  model._iblReferenceFrameMatrix = Matrix3.multiply(
+    yUpToZUp,
+    iblReferenceFrameMatrix3,
+    model._iblReferenceFrameMatrix,
+  );
 
   if (model.isClippingEnabled()) {
     let clippingPlanesMatrix = scratchClippingPlanesMatrix;
@@ -2760,6 +2821,16 @@ Model.prototype.destroy = function () {
   }
   this._imageBasedLighting = undefined;
 
+  // Only destroy the environment map manager if this is the owner.
+  const environmentMapManager = this._environmentMapManager;
+  if (
+    !environmentMapManager.isDestroyed() &&
+    environmentMapManager.owner === this
+  ) {
+    environmentMapManager.destroy();
+  }
+  this._environmentMapManager = undefined;
+
   destroyObject(this);
 };
 
@@ -2838,6 +2909,7 @@ Model.prototype.destroyModelResources = function () {
  * @param {ClippingPolygonCollection} [options.clippingPolygons] The {@link ClippingPolygonCollection} used to selectively disable rendering the model.
  * @param {Cartesian3} [options.lightColor] The light color when shading the model. When <code>undefined</code> the scene's light color is used instead.
  * @param {ImageBasedLighting} [options.imageBasedLighting] The properties for managing image-based lighting on this model.
+ * @param {DynamicEnvironmentMapManager.ConstructorOptions} [options.environmentMapOptions] The properties for managing dynamic environment maps on this model.
  * @param {boolean} [options.backFaceCulling=true] Whether to cull back-facing geometry. When true, back face culling is determined by the material's doubleSided property; when false, back face culling is disabled. Back faces are not culled if the model's color is translucent.
  * @param {Credit|string} [options.credit] A credit for the data source, which is displayed on the canvas.
  * @param {boolean} [options.showCreditsOnScreen=false] Whether to display the credits of this model on screen.
@@ -2968,6 +3040,7 @@ Model.fromGltfAsync = async function (options) {
 
   const modelOptions = makeModelOptions(loader, type, options);
   modelOptions.resource = resource;
+  modelOptions.environmentMapOptions = options.environmentMapOptions;
 
   try {
     // This load the gltf JSON and ensures the gltf is valid

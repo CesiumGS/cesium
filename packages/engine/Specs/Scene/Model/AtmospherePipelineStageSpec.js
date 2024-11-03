@@ -41,7 +41,7 @@ describe(
       scene.frameState.camera.direction = new Cartesian3(0, -1, 0);
 
       // Reset the fog density
-      scene.fog.density = 2e-4;
+      scene.fog.density = 0.0006;
     });
 
     afterAll(async function () {

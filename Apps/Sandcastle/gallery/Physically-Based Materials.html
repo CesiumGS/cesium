@@ -54,6 +54,8 @@
 
         viewer.scene.globe.enableLighting = true;
         viewer.scene.globe.depthTestAgainstTerrain = true;
+        viewer.scene.atmosphere.dynamicLighting =
+          Cesium.DynamicAtmosphereLightingType.SUNLIGHT;
 
         const position = new Cesium.Cartesian3(
           -1371108.6511167218,

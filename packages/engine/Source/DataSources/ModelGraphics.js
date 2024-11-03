@@ -382,16 +382,13 @@ ModelGraphics.prototype.merge = function (source) {
     throw new DeveloperError("source is required.");
   }
   //>>includeEnd('debug');
-
   this.show = this.show ?? source.show;
   this.uri = this.uri ?? source.uri;
   this.scale = this.scale ?? source.scale;
-  this.enableVerticalExaggeration =
-    this.enableVerticalExaggeration ?? source.enableVerticalExaggeration;
+  this.enableVerticalExaggeration = this.enableVerticalExaggeration ?? source.enableVerticalExaggeration;
   this.minimumPixelSize = this.minimumPixelSize ?? source.minimumPixelSize;
   this.maximumScale = this.maximumScale ?? source.maximumScale;
-  this.incrementallyLoadTextures =
-    this.incrementallyLoadTextures ?? source.incrementallyLoadTextures;
+  this.incrementallyLoadTextures = this.incrementallyLoadTextures ?? source.incrementallyLoadTextures;
   this.runAnimations = this.runAnimations ?? source.runAnimations;
   this.clampAnimations = this.clampAnimations ?? source.clampAnimations;
   this.shadows = this.shadows ?? source.shadows;
@@ -401,12 +398,11 @@ ModelGraphics.prototype.merge = function (source) {
   this.color = this.color ?? source.color;
   this.colorBlendMode = this.colorBlendMode ?? source.colorBlendMode;
   this.colorBlendAmount = this.colorBlendAmount ?? source.colorBlendAmount;
-  this.imageBasedLightingFactor =
-    this.imageBasedLightingFactor ?? source.imageBasedLightingFactor;
+  this.imageBasedLightingFactor = this.imageBasedLightingFactor ?? source.imageBasedLightingFactor;
   this.lightColor = this.lightColor ?? source.lightColor;
-  this.distanceDisplayCondition =
-    this.distanceDisplayCondition ?? source.distanceDisplayCondition;
-  this.clippingPlanes = this.clippingPlanes ?? source.clippingPlanes;
+  this.distanceDisplayCondition = this.distanceDisplayCondition ??
+    source.distanceDisplayCondition;
+  this.clippingPlanes = this.clippingPlanes ??source.clippingPlanes;
   this.customShader = this.customShader ?? source.customShader;
 
   const sourceNodeTransformations = source.nodeTransformations;

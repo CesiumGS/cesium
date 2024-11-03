@@ -2557,6 +2557,7 @@ describe(
     it("does not occlude primitives when camera is underground", async function () {
       const globe = new Globe();
       scene.globe = globe;
+      scene.fog.density = 0.0004;
 
       // A primitive at height -25000.0 is less than the minor axis for WGS84 and will get culled unless the camera is underground
       const center = Cartesian3.fromRadians(
@@ -2581,7 +2582,7 @@ describe(
       await updateGlobeUntilDone(scene);
       expect(getFrustumCommandsLength(scene, Pass.OPAQUE)).toBe(0);
 
-      // Look underground at the primitive
+      // Look underground at the primitive, camera height ~-24,000
       scene.camera.setView({
         destination: new Cartesian3(
           -4643042.379120885,

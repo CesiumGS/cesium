@@ -1,17 +1,24 @@
+import BoxGeometry from "../Core/BoxGeometry.js";
+import Cartesian3 from "../Core/Cartesian3.js";
 import Check from "../Core/Check.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
+import GeometryPipeline from "../Core/GeometryPipeline.js";
 import CesiumMath from "../Core/Math.js";
 import PixelFormat from "../Core/PixelFormat.js";
+import VertexFormat from "../Core/VertexFormat.js";
+import BufferUsage from "./BufferUsage.js";
 import ContextLimits from "./ContextLimits.js";
 import CubeMapFace from "./CubeMapFace.js";
+import Framebuffer from "./Framebuffer.js";
 import MipmapHint from "./MipmapHint.js";
 import PixelDatatype from "./PixelDatatype.js";
 import Sampler from "./Sampler.js";
 import TextureMagnificationFilter from "./TextureMagnificationFilter.js";
 import TextureMinificationFilter from "./TextureMinificationFilter.js";
+import VertexArray from "./VertexArray.js";
 
 /**
  * @typedef CubeMap.BufferSource
@@ -105,7 +112,7 @@ function CubeMap(options) {
     ({ width, height } = source.positiveX);
 
     //>>includeStart('debug', pragmas.debug);
-    for (const faceName of CubeMap.getFaceNames()) {
+    for (const faceName of CubeMap.faceNames()) {
       const face = source[faceName];
       if (Number(face.width) !== width || Number(face.height) !== height) {
         throw new DeveloperError(
@@ -231,7 +238,7 @@ function CubeMap(options) {
     );
   }
 
-  for (const faceName of CubeMap.getFaceNames()) {
+  for (const faceName of CubeMap.faceNames()) {
     loadFace(this[faceName], source?.[faceName], 0);
   }
 
@@ -239,11 +246,37 @@ function CubeMap(options) {
 }
 
 /**
+ * Copy an existing texture to a cubemap face.
+ * @param {FrameState} frameState The current rendering frameState
+ * @param {Texture} texture Texture being copied
+ * @param {CubeMap.FaceName} face The face to which to copy
+ * @param {number} [mipLevel=0] The mip level at which to copy
+ */
+CubeMap.prototype.copyFace = function (frameState, texture, face, mipLevel) {
+  const context = frameState.context;
+  const framebuffer = new Framebuffer({
+    context: context,
+    colorTextures: [texture],
+    destroyAttachments: false,
+  });
+
+  framebuffer._bind();
+
+  this[face].copyMipmapFromFramebuffer(
+    0,
+    0,
+    texture.width,
+    texture.height,
+    defaultValue(mipLevel, 0),
+  );
+  framebuffer._unBind();
+  framebuffer.destroy();
+};
+
+/**
  * An enum defining the names of the faces of a cube map.
- *
  * @alias {CubeMap.FaceName}
  * @enum {string}
- *
  * @private
  */
 CubeMap.FaceName = Object.freeze({
@@ -255,7 +288,7 @@ CubeMap.FaceName = Object.freeze({
   NEGATIVEZ: "negativeZ",
 });
 
-function* makeFacesIterator() {
+function* makeFaceNamesIterator() {
   yield CubeMap.FaceName.POSITIVEX;
   yield CubeMap.FaceName.NEGATIVEX;
   yield CubeMap.FaceName.POSITIVEY;
@@ -266,22 +299,18 @@ function* makeFacesIterator() {
 
 /**
  * Creates an iterator for looping over the cubemap faces.
- *
  * @type {Iterable<CubeMap.FaceName>}
- *
  * @private
  */
-CubeMap.getFaceNames = function () {
-  return makeFacesIterator();
+CubeMap.faceNames = function () {
+  return makeFaceNamesIterator();
 };
 
 /**
  * Load texel data into one face of a cube map.
- *
  * @param {CubeMapFace} cubeMapFace The face to which texel values will be loaded.
  * @param {ImageData|HTMLImageElement|HTMLCanvasElement|HTMLVideoElement|CubeMap.BufferSource} [source] The source for texel values to be loaded into the texture.
  * @param {number} [mipLevel=0] The mip level to which the texel values will be loaded.
- *
  * @private
  */
 function loadFace(cubeMapFace, source, mipLevel) {
@@ -360,6 +389,8 @@ function loadFace(cubeMapFace, source, mipLevel) {
     );
   }
 }
+
+CubeMap.loadFace = loadFace;
 
 Object.defineProperties(CubeMap.prototype, {
   positiveX: {
@@ -446,6 +477,29 @@ Object.defineProperties(CubeMap.prototype, {
     },
   },
 });
+
+/**
+ * Get a vector representing the cubemap face direction
+ * @param {CubeMap.FaceName} face The relevant face
+ * @param {Cartesian3} [result] The object onto which to store the result.
+ * @returns {Cartesian3} The vector representing the cubemap face direction
+ */
+CubeMap.getDirection = function (face, result) {
+  switch (face) {
+    case CubeMap.FaceName.POSITIVEX:
+      return Cartesian3.clone(Cartesian3.UNIT_X, result);
+    case CubeMap.FaceName.NEGATIVEX:
+      return Cartesian3.negate(Cartesian3.UNIT_X, result);
+    case CubeMap.FaceName.POSITIVEY:
+      return Cartesian3.clone(Cartesian3.UNIT_Y, result);
+    case CubeMap.FaceName.NEGATIVEY:
+      return Cartesian3.negate(Cartesian3.UNIT_Y, result);
+    case CubeMap.FaceName.POSITIVEZ:
+      return Cartesian3.clone(Cartesian3.UNIT_Z, result);
+    case CubeMap.FaceName.NEGATIVEZ:
+      return Cartesian3.negate(Cartesian3.UNIT_Z, result);
+  }
+};
 
 /**
  * Set up a sampler for use with a cube map.
@@ -539,7 +593,7 @@ CubeMap.prototype.loadMipmaps = function (source, skipColorSpaceConversion) {
     const mipSource = source[i];
     // mipLevel 0 was the base layer, already loaded when the CubeMap was constructed.
     const mipLevel = i + 1;
-    for (const faceName of CubeMap.getFaceNames()) {
+    for (const faceName of CubeMap.faceNames()) {
       loadFace(this[faceName], mipSource[faceName], mipLevel);
     }
   }
@@ -590,6 +644,29 @@ CubeMap.prototype.generateMipmap = function (hint) {
   gl.bindTexture(target, this._texture);
   gl.generateMipmap(target);
   gl.bindTexture(target, null);
+};
+
+/**
+ * Create a vertex array that can be used for cubemap shaders.
+ * @param {Context} context The rendering context
+ * @returns {VertexArray} The created vertex array
+ */
+CubeMap.createVertexArray = function (context) {
+  const geometry = BoxGeometry.createGeometry(
+    BoxGeometry.fromDimensions({
+      dimensions: new Cartesian3(2.0, 2.0, 2.0),
+      vertexFormat: VertexFormat.POSITION_ONLY,
+    }),
+  );
+  const attributeLocations = (this._attributeLocations =
+    GeometryPipeline.createAttributeLocations(geometry));
+
+  return VertexArray.fromGeometry({
+    context: context,
+    geometry: geometry,
+    attributeLocations: attributeLocations,
+    bufferUsage: BufferUsage.STATIC_DRAW,
+  });
 };
 
 CubeMap.prototype.isDestroyed = function () {

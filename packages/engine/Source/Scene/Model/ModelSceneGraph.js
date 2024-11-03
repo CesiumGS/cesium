@@ -601,6 +601,7 @@ ModelSceneGraph.prototype.buildDrawCommands = function (frameState) {
  * this method again to ensure the correct sequence of pipeline stages are
  * used.
  *
+ * @param {FrameState} frameState
  * @private
  */
 ModelSceneGraph.prototype.configurePipeline = function (frameState) {
