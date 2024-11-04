@@ -52,7 +52,9 @@
   ],
   "dependencies": {
     "@cesium/engine": "^11.1.0",
-    "@cesium/widgets": "^8.1.0"
+    "@cesium/widgets": "^8.1.0",
+    "cesiumjs-gsplat-utils": "file:../gsplat-wasm/cesiumjs-gsplat-utils/pkg",
+    "esbuild-plugin-wasm": "^1.1.0"
   },
   "devDependencies": {
     "@playwright/test": "^1.41.1",

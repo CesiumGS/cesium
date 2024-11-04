@@ -45,8 +45,7 @@ vec3 calcCov2D(vec3 worldPos, float focal_x, float focal_y, float tan_fovx, floa
         0, 0, 0
     );
 
-   // mat3 W = mat3(viewmatrix);
-       mat3 W =  mat3(
+    mat3 W =  mat3(
         viewmatrix[0][0], viewmatrix[1][0], viewmatrix[2][0],
         viewmatrix[0][1], viewmatrix[1][1], viewmatrix[2][1],
         viewmatrix[0][2], viewmatrix[1][2], viewmatrix[2][2]
@@ -85,7 +84,6 @@ void gaussianSplatStage(ProcessedAttributes attributes, inout vec4 positionClip)
     vec2 minorAxis = min(sqrt(2.0 * lambda2), 1024.0) * vec2(diagonalVector.y, -diagonalVector.x);
 
     vec2 corner = vec2((gl_VertexID << 1) & 2, gl_VertexID & 2) - 1.;
-
     positionClip += vec4((corner.x * majorAxis + corner.y * minorAxis) * 4.0 / czm_viewport.zw * positionClip.w, 0, 0);
     positionClip.z = clamp(positionClip.z, -abs(positionClip.w), abs(positionClip.w));
     v_vertPos = corner ;

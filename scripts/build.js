@@ -14,6 +14,7 @@ import { rimraf } from "rimraf";
 
 import { mkdirp } from "mkdirp";
 
+
 // Determines the scope of the workspace packages. If the scope is set to cesium, the workspaces should be @cesium/engine.
 // This should match the scope of the dependencies of the root level package.json.
 const scope = "cesium";
@@ -80,6 +81,7 @@ const stripPragmaPlugin = {
   },
 };
 
+
 // Print an esbuild warning
 function printBuildWarning({ location, text }) {
   const { column, file, line, lineText, suggestion } = location;
@@ -111,7 +113,7 @@ export const defaultESBuildOptions = () => {
     color: true,
     legalComments: `inline`,
     logLimit: 0,
-    target: `es2020`,
+    target: `es2020`
   };
 };
 
@@ -200,7 +202,6 @@ export async function bundleCesiumJs(options) {
       incremental: incremental,
       write: options.write,
     });
-
     const iife = await build({
       ...buildConfig,
       format: "iife",
@@ -329,6 +330,9 @@ export async function createCombinedSpecList() {
 
   return contents;
 }
+
+
+
 
 /**
  * @param {object} options
@@ -1132,6 +1136,7 @@ export async function buildCesium(options) {
     outdir: path.join(outputDirectory, "Widgets"),
     outbase: "packages/widgets/Source",
   });
+
 
   const workersContext = await bundleWorkers({
     iife: false,

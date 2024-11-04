@@ -5,6 +5,9 @@ import Pass from "../../Renderer/Pass.js";
 import PrimitiveType from "../../Core/PrimitiveType.js";
 import BlendingState from "../BlendingState.js";
 import Matrix4 from "../../Core/Matrix4.js";
+// import GaussianSplatSorter from "../GaussianSplatSorter.js";
+// import DracoLoader from "../DracoLoader.js";
+// import Cesium3DContentGroup from "../Cesium3DContentGroup.js";
 
 const GaussianSplatPipelineStage = {
   name: "GaussianSplatPipelineStage",
@@ -167,6 +170,15 @@ GaussianSplatPipelineStage.process = function (
 
   countSort();
 
+  // const buf = primitive.attributes.find((a) => a.name === "_SCALE").typedArray.buffer;
+  // const gsprom = GaussianSplatSorter.courtSortSplats({splatIndexes: { buffer: buf}}, "foo");
+
+  // if(!Cesium.defined(gsprom)) {
+  //   console.log("gssort not ready");
+  // } else {
+  //   gsprom.then(result => console.log("gssort running"))
+  //   .catch(error => console.log("gssort running but not happy :: ", error));
+  // }
   renderResources.instanceCount = renderResources.count;
   renderResources.count = 4;
   renderResources.primitiveType = PrimitiveType.TRIANGLE_STRIP;

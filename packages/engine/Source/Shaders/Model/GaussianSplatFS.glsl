@@ -1,9 +1,9 @@
 void gaussianSplatStage(inout vec4 color, in ProcessedAttributes attributes) {
     float A = dot(v_vertPos, v_vertPos);
-    if(A > 2.0)
+    if(A > 1.0)
         discard;
-
-    float B = exp(-A * 2.5) * v_splatColor.a;
+    float alpha = clamp(v_splatColor.a * 1.5, 0., 1.);
+    float B = exp(-A * 4.0) *alpha;
     color = vec4(v_splatColor.rgb * B, B);
 }
 

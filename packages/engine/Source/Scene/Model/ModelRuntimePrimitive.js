@@ -216,6 +216,7 @@ ModelRuntimePrimitive.prototype.configurePipeline = function (frameState) {
   const hasQuantization = ModelUtility.hasQuantizedAttributes(
     primitive.attributes,
   );
+
   const generateWireframeIndices =
     model.debugWireframe &&
     PrimitiveType.isTriangles(primitive.primitiveType) &&
@@ -244,7 +245,6 @@ ModelRuntimePrimitive.prototype.configurePipeline = function (frameState) {
   const hasGaussianSplats =
     model.enableShowGaussianSplatting &&
     (model?.style?.showGaussianSplatting ?? true);
-
   // Start of pipeline -----------------------------------------------------
   if (use2D) {
     pipelineStages.push(SceneMode2DPipelineStage);

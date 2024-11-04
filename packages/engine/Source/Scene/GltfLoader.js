@@ -1030,7 +1030,10 @@ function createAttribute(gltf, accessorId, name, semantic, setIndex) {
     attribute.semantic === VertexAttributeSemantic.POSITION ||
     attribute.semantic === VertexAttributeSemantic.NORMAL ||
     attribute.semantic === VertexAttributeSemantic.TANGENT ||
-    attribute.semantic === VertexAttributeSemantic.TEXCOORD;
+    attribute.semantic === VertexAttributeSemantic.TEXCOORD ||
+    attribute.semantic === VertexAttributeSemantic.FEATURE_ID ||
+    attribute.semantic === VertexAttributeSemantic.SCALE ||
+    attribute.semantic === VertexAttributeSemantic.ROTATION;
 
   // In the glTF 2.0 spec, min and max are not affected by the normalized flag.
   // However, for KHR_mesh_quantization, min and max must be dequantized for
@@ -1945,6 +1948,7 @@ function loadPrimitive(loader, gltfPrimitive, hasInstances, frameState) {
   const gaussianSplattingExtension = loader.gltfJson.extensionsUsed.includes(
     "KHR_gaussian_splatting",
   );
+
   if (loader._loadGaussianSplatting && defined(gaussianSplattingExtension)) {
     needsPostProcessing = true;
     primitivePlan.needsGaussianSplats = true;

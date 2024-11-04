@@ -7,6 +7,8 @@ import BufferUsage from "../Renderer/BufferUsage.js";
 import AttributeType from "./AttributeType.js";
 import ModelComponents from "./ModelComponents.js";
 import PrimitiveOutlineGenerator from "./Model/PrimitiveOutlineGenerator.js";
+//import GaussianSplatTextureGenerator from "./Model/GaussianSplatGenTexture.js";
+
 /**
  * Simple struct for tracking whether an attribute will be loaded as a buffer
  * or typed array after post-processing.
@@ -188,7 +190,11 @@ PrimitiveLoadPlan.prototype.postProcess = function (context) {
 
   //handle splat post-processing for point primitives
   if (this.needsGaussianSplats) {
-    setupGaussianSplatBuffers(this, context);
+    if (this.generateGaussianSplatTexture) {
+      generateSplatTexture(this, context);
+    } else {
+      setupGaussianSplatBuffers(this, context);
+    }
   }
 };
 
@@ -252,6 +258,8 @@ function setupGaussianSplatBuffers(loadPlan, context) {
     attributePlan.loadTypedArray = true;
   }
 }
+
+function generateSplatTexture(loadPlan, context) {}
 
 function generateBuffers(loadPlan, context) {
   generateAttributeBuffers(loadPlan.attributePlans, context);
