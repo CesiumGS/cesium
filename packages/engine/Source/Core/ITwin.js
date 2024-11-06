@@ -21,7 +21,7 @@ const ExportStatus = Object.freeze({
  */
 const ExportType = Object.freeze({
   "3DFT": "3DFT",
-  GLFT: "GLTF",
+  GLTF: "GLTF",
   IMODEL: "IMODEL",
   CESIUM: "CESIUM",
 });
@@ -75,17 +75,7 @@ const ExportType = Object.freeze({
 /**
  * Default settings for accessing the iTwin platform.
  *
- * Keys can be created using the iModels share routes {@link https://developer.bentley.com/apis/imodels-v2/operations/create-imodel-share/}
- *
- * An ion access token is only required if you are using any ion related APIs.
- * A default access token is provided for evaluation purposes only.
- * Sign up for a free ion account and get your own access token at {@link https://cesium.com}
- *
- * @see IonResource
- * @see IonImageryProvider
- * @see IonGeocoderService
- * @see createWorldImagery
- * @see createWorldTerrain
+ * @see createIModel3DTileset
  * @namespace ITwin
  */
 const ITwin = {};
@@ -99,7 +89,7 @@ const ITwin = {};
  * `mesh-export:read` for loading meshes GET /mesh-export(s)
  * `mesh-export:modify` if we want to include a function to create an export
  * `itwin-platform` if we want to use the iModel shares ourselves  GET /imodels/{id}/shares
- *
+ * Seems the `itwin-platform` scope should apply to everything but the docs are a little unclear
  *
  * @type {string|undefined}
  */
@@ -157,7 +147,7 @@ ITwin.getExport = async function (exportId) {
  * Get the list of exports for the given iModel + changeset
  *
  * @param {string} iModelId
- * @param {string} changesetId
+ * @param {string} [changesetId]
  */
 ITwin.getExports = async function (iModelId, changesetId) {
   if (!defined(ITwin.defaultAccessToken)) {
@@ -202,7 +192,7 @@ ITwin.getExports = async function (iModelId, changesetId) {
  * Start the export process for the given iModel + changeset.
  *
  * @param {string} iModelId
- * @param {string} changesetId
+ * @param {string} [changesetId]
  */
 ITwin.createExportForModelId = async function (iModelId, changesetId) {
   if (!defined(ITwin.defaultAccessToken)) {
@@ -227,7 +217,7 @@ ITwin.createExportForModelId = async function (iModelId, changesetId) {
 
   // initiate mesh export
   const response = await fetch(
-    `https://api.bentley.com/mesh-export/`,
+    `${ITwin.apiEndpoint}mesh-export/`,
     requestOptions,
   );
 
