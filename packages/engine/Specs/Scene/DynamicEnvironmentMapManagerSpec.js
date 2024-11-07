@@ -61,7 +61,7 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
 
     expect(manager.sphericalHarmonicCoefficients.length).toBe(9);
     expect(manager.sphericalHarmonicCoefficients).toEqual(
-      DynamicEnvironmentMapManager.DEAFULT_SPHERICAL_HARMONIC_COEFFICIENTS,
+      DynamicEnvironmentMapManager.DEFAULT_SPHERICAL_HARMONIC_COEFFICIENTS,
     );
   });
 
@@ -111,7 +111,7 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
         scene.renderForSpecs();
 
         expect(manager.sphericalHarmonicCoefficients).toEqual(
-          DynamicEnvironmentMapManager.DEAFULT_SPHERICAL_HARMONIC_COEFFICIENTS,
+          DynamicEnvironmentMapManager.DEFAULT_SPHERICAL_HARMONIC_COEFFICIENTS,
         );
       });
 
@@ -133,7 +133,7 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
         scene.renderForSpecs();
 
         expect(manager.sphericalHarmonicCoefficients).toEqual(
-          DynamicEnvironmentMapManager.DEAFULT_SPHERICAL_HARMONIC_COEFFICIENTS,
+          DynamicEnvironmentMapManager.DEFAULT_SPHERICAL_HARMONIC_COEFFICIENTS,
         );
       });
 
@@ -159,7 +159,7 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
         scene.renderForSpecs();
 
         expect(manager.sphericalHarmonicCoefficients).toEqual(
-          DynamicEnvironmentMapManager.DEAFULT_SPHERICAL_HARMONIC_COEFFICIENTS,
+          DynamicEnvironmentMapManager.DEFAULT_SPHERICAL_HARMONIC_COEFFICIENTS,
         );
       });
 

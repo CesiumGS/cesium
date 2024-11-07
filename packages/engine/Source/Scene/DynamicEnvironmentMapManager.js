@@ -96,7 +96,7 @@ function DynamicEnvironmentMapManager(options) {
   this._irradianceMapTexture = undefined;
 
   this._sphericalHarmonicCoefficients =
-    DynamicEnvironmentMapManager.DEAFULT_SPHERICAL_HARMONIC_COEFFICIENTS.slice();
+    DynamicEnvironmentMapManager.DEFAULT_SPHERICAL_HARMONIC_COEFFICIENTS.slice();
 
   this._lastTime = new JulianDate();
   const width = Math.pow(2, mipmapLevels - 1);
@@ -849,7 +849,7 @@ DynamicEnvironmentMapManager.prototype.destroy = function () {
  * Returns <code>true</code> if dynamic updates are supported in the current WebGL rendering context.
  * Dynamic updates requires the EXT_color_buffer_float or EXT_color_buffer_half_float extension.
  *
- * @param {Scene|FrameState} contextOption The object containing the rendering context
+ * @param {Scene} contextOption The object containing the rendering context
  * @returns {boolean} true if supported
  */
 DynamicEnvironmentMapManager.isDynamicUpdateSupported = function (
@@ -878,7 +878,7 @@ DynamicEnvironmentMapManager.AVERAGE_EARTH_GROUND_COLOR = Object.freeze(
  * @type {Cartesian3[]}
  * @see {@link https://graphics.stanford.edu/papers/envmap/envmap.pdf|An Efficient Representation for Irradiance Environment Maps}
  */
-DynamicEnvironmentMapManager.DEAFULT_SPHERICAL_HARMONIC_COEFFICIENTS =
+DynamicEnvironmentMapManager.DEFAULT_SPHERICAL_HARMONIC_COEFFICIENTS =
   Object.freeze([
     Object.freeze(new Cartesian3(0.35449, 0.35449, 0.35449)),
     Cartesian3.ZERO,
