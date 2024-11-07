@@ -11,7 +11,6 @@ import {
   HeadingPitchRange,
   HeadingPitchRoll,
   HeightmapTerrainData,
-  ImageBasedLighting,
   JulianDate,
   Math as CesiumMath,
   Matrix4,
@@ -282,26 +281,11 @@ describe(
     }
 
     async function loadModel(options) {
-      // A white ambient light with low intensity
-      const defaultIbl = new ImageBasedLighting({
-        sphericalHarmonicCoefficients: [
-          new Cartesian3(0.35449, 0.35449, 0.35449),
-          Cartesian3.ZERO,
-          Cartesian3.ZERO,
-          Cartesian3.ZERO,
-          Cartesian3.ZERO,
-          Cartesian3.ZERO,
-          Cartesian3.ZERO,
-          Cartesian3.ZERO,
-          Cartesian3.ZERO,
-        ],
-      });
       const model = scene.primitives.add(
         await Model.fromGltfAsync({
           environmentMapOptions: {
             enabled: false,
           },
-          imageBasedLighting: defaultIbl,
           ...options,
         }),
       );
