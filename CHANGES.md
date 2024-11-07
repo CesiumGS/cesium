@@ -1,5 +1,14 @@
 # Change Log
 
+### 1.123.1 - 2024-11-07
+
+#### @cesium/engine
+
+##### Additions :tada:
+
+- Added fallback diffuse lighting, `DynamicEnvironmentMapManager.DEFAULT_SPHERICAL_HARMONIC_COEFFICIENTS`, that is used when `DynamicEnvironmentMapManager` is disabled or unsupported. [#12292](https://github.com/CesiumGS/cesium/pull/12292)
+- Added `DynamicEnvironmentMapManager.isDynamicUpdateSupported` to check if dynamic environment map updates are supported. [#12292](https://github.com/CesiumGS/cesium/pull/12292)
+
 ### 1.123 - 2024-11-01
 
 #### @cesium/engine
