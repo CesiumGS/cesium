@@ -729,6 +729,8 @@ function updateSphericalHarmonicCoefficients(manager, frameState) {
 DynamicEnvironmentMapManager.prototype.update = function (frameState) {
   const mode = frameState.mode;
   const isSupported =
+    // A FrameState type works here because the function only references the context parameter.
+    // @ts-ignore
     DynamicEnvironmentMapManager.isDynamicUpdateSupported(frameState);
 
   if (
@@ -849,13 +851,11 @@ DynamicEnvironmentMapManager.prototype.destroy = function () {
  * Returns <code>true</code> if dynamic updates are supported in the current WebGL rendering context.
  * Dynamic updates requires the EXT_color_buffer_float or EXT_color_buffer_half_float extension.
  *
- * @param {Scene} contextOption The object containing the rendering context
+ * @param {Scene} scene The object containing the rendering context
  * @returns {boolean} true if supported
  */
-DynamicEnvironmentMapManager.isDynamicUpdateSupported = function (
-  contextOption,
-) {
-  const context = contextOption.context;
+DynamicEnvironmentMapManager.isDynamicUpdateSupported = function (scene) {
+  const context = scene.context;
   return context.halfFloatingPointTexture || context.colorBufferFloat;
 };
 
