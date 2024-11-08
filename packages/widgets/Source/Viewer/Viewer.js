@@ -410,6 +410,7 @@ function Viewer(container, options) {
   ) {
     throw new DeveloperError("Cannot use baseLayer when globe is disabled.");
   }
+  //>>includeEnd('debug')
 
   const createBaseLayerPicker =
     (!defined(options.globe) || options.globe !== false) &&
