@@ -1,10 +1,19 @@
 # Change Log
 
-### 1.124 - 2024-12-01
+### 1.123.2 - 2024-11-10
 
 ##### Deprecated :hourglass_flowing_sand:
 
 - defaultValue() has been deprecated. All uses have been changed to the nullish coalescing operator (??)
+
+### 1.123.1 - 2024-11-07
+
+#### @cesium/engine
+
+##### Additions :tada:
+
+- Added fallback diffuse lighting, `DynamicEnvironmentMapManager.DEFAULT_SPHERICAL_HARMONIC_COEFFICIENTS`, that is used when `DynamicEnvironmentMapManager` is disabled or unsupported. [#12292](https://github.com/CesiumGS/cesium/pull/12292)
+- Added `DynamicEnvironmentMapManager.isDynamicUpdateSupported` to check if dynamic environment map updates are supported. [#12292](https://github.com/CesiumGS/cesium/pull/12292)
 
 ### 1.123 - 2024-11-01
 

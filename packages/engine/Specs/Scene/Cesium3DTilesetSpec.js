@@ -211,9 +211,6 @@ describe(
 
       options = {
         cullRequestsWhileMoving: false,
-        environmentMapOptions: {
-          enabled: scene.highDynamicRangeSupported,
-        },
       };
     });
 
