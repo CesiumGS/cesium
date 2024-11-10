@@ -95,7 +95,8 @@ function DynamicEnvironmentMapManager(options) {
   this._radianceCubeMap = undefined;
   this._irradianceMapTexture = undefined;
 
-  this._sphericalHarmonicCoefficients = new Array(9);
+  this._sphericalHarmonicCoefficients =
+    DynamicEnvironmentMapManager.DEFAULT_SPHERICAL_HARMONIC_COEFFICIENTS.slice();
 
   this._lastTime = new JulianDate();
   const width = Math.pow(2, mipmapLevels - 1);
@@ -727,8 +728,13 @@ function updateSphericalHarmonicCoefficients(manager, frameState) {
  */
 DynamicEnvironmentMapManager.prototype.update = function (frameState) {
   const mode = frameState.mode;
+  const isSupported =
+    // A FrameState type works here because the function only references the context parameter.
+    // @ts-ignore
+    DynamicEnvironmentMapManager.isDynamicUpdateSupported(frameState);
 
   if (
+    !isSupported ||
     !this.enabled ||
     !this.shouldUpdate ||
     !defined(this._position) ||
@@ -842,11 +848,47 @@ DynamicEnvironmentMapManager.prototype.destroy = function () {
 };
 
 /**
+ * Returns <code>true</code> if dynamic updates are supported in the current WebGL rendering context.
+ * Dynamic updates requires the EXT_color_buffer_float or EXT_color_buffer_half_float extension.
+ *
+ * @param {Scene} scene The object containing the rendering context
+ * @returns {boolean} true if supported
+ */
+DynamicEnvironmentMapManager.isDynamicUpdateSupported = function (scene) {
+  const context = scene.context;
+  return context.halfFloatingPointTexture || context.colorBufferFloat;
+};
+
+/**
  * Average hue of ground color on earth, a warm green-gray.
  * @type {Color}
+ * @readonly
  */
 DynamicEnvironmentMapManager.AVERAGE_EARTH_GROUND_COLOR = Object.freeze(
   Color.fromCssColorString("#717145"),
 );
+
+/**
+ * The default third order spherical harmonic coefficients used for the diffuse color of image-based lighting, a white ambient light with low intensity.
+ * <p>
+ * There are nine <code>Cartesian3</code> coefficients.
+ * The order of the coefficients is: L<sub>0,0</sub>, L<sub>1,-1</sub>, L<sub>1,0</sub>, L<sub>1,1</sub>, L<sub>2,-2</sub>, L<sub>2,-1</sub>, L<sub>2,0</sub>, L<sub>2,1</sub>, L<sub>2,2</sub>
+ * </p>
+ * @readonly
+ * @type {Cartesian3[]}
+ * @see {@link https://graphics.stanford.edu/papers/envmap/envmap.pdf|An Efficient Representation for Irradiance Environment Maps}
+ */
+DynamicEnvironmentMapManager.DEFAULT_SPHERICAL_HARMONIC_COEFFICIENTS =
+  Object.freeze([
+    Object.freeze(new Cartesian3(0.35449, 0.35449, 0.35449)),
+    Cartesian3.ZERO,
+    Cartesian3.ZERO,
+    Cartesian3.ZERO,
+    Cartesian3.ZERO,
+    Cartesian3.ZERO,
+    Cartesian3.ZERO,
+    Cartesian3.ZERO,
+    Cartesian3.ZERO,
+  ]);
 
 export default DynamicEnvironmentMapManager;
