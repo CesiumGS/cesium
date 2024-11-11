@@ -80,9 +80,6 @@ function IonGeocoderService(options) {
 
   const searchEndpoint = server.getDerivedResource({
     url: "v1/geocode",
-    queryParameters: {
-      geocoder: providerToQueryParameter(geocodeProvider),
-    },
   });
 
   if (defined(accessToken)) {
@@ -92,6 +89,7 @@ function IonGeocoderService(options) {
   this._accessToken = accessToken;
   this._server = server;
   this._pelias = new PeliasGeocoderService(searchEndpoint);
+  this.geocodeProvider = geocodeProvider;
 }
 
 Object.defineProperties(IonGeocoderService.prototype, {
@@ -123,6 +121,10 @@ Object.defineProperties(IonGeocoderService.prototype, {
         ...this._pelias.url.queryParameters,
         geocoder: providerToQueryParameter(geocodeProvider),
       };
+      // Delete the geocoder parameter to prevent sending &geocoder=undefined in the query
+      if (!defined(query.geocoder)) {
+        delete query.geocoder;
+      }
       this._pelias.url.setQueryParameters(query);
     },
   },

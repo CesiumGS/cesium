@@ -98,7 +98,10 @@ describe("Core/IonGeocoderService", function () {
     });
 
     service.geocodeProvider = IonGeocodeProvider.DEFAULT;
-    expect(service._pelias.url.queryParameters["geocoder"]).toBeUndefined();
+    const queryParameters = service._pelias.url.queryParameters;
+    expect(queryParameters.geocoder).toBeUndefined();
+    // Make sure that it isn't 'geocoder: undefined'
+    expect(queryParameters.hasOwnProperty("geocoder")).toBeFalse();
   });
 
   it("throws if setting invalid geocodeProvider", function () {
