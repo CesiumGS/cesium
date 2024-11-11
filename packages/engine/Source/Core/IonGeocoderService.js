@@ -2,9 +2,42 @@ import Check from "./Check.js";
 import Credit from "./Credit.js";
 import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
+import DeveloperError from "./DeveloperError.js";
 import Ion from "./Ion.js";
+import IonGeocodeProvider from "./IonGeocodeProvider.js";
 import PeliasGeocoderService from "./PeliasGeocoderService.js";
 import Resource from "./Resource.js";
+
+/**
+ * @param {*} geocodeProvider
+ * @throws {DeveloperError}
+ * @private
+ */
+function validateIonGeocodeProvider(geocodeProvider) {
+  if (
+    !Object.values(IonGeocodeProvider).some(
+      (value) => value === geocodeProvider,
+    )
+  ) {
+    throw new DeveloperError(`Invalid geocodeProvider: "${geocodeProvider}"`);
+  }
+}
+
+const providerToParameterMap = Object.freeze({
+  [IonGeocodeProvider.GOOGLE]: "google",
+  [IonGeocodeProvider.BING]: "bing",
+  [IonGeocodeProvider.DEFAULT]: undefined,
+});
+
+function providerToQueryParameter(provider) {
+  return providerToParameterMap[provider];
+}
+
+function queryParameterToProvider(parameter) {
+  return Object.entries(providerToParameterMap).find(
+    (entry) => entry[1] === parameter,
+  )[0];
+}
 
 /**
  * Provides geocoding through Cesium ion.
@@ -15,6 +48,7 @@ import Resource from "./Resource.js";
  * @param {Scene} options.scene The scene
  * @param {string} [options.accessToken=Ion.defaultAccessToken] The access token to use.
  * @param {string|Resource} [options.server=Ion.defaultServer] The resource to the Cesium ion API server.
+ * @param {IonGeocodeProvider} [options.geocodeProvider=IonGeocodeProvider.DEFAULT] The geocoder the Cesium ion API server should use to fulfill this request.
  *
  * @see Ion
  */
@@ -24,6 +58,12 @@ function IonGeocoderService(options) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.scene", options.scene);
   //>>includeEnd('debug');
+
+  const geocodeProvider = defaultValue(
+    options.geocodeProvider,
+    IonGeocodeProvider.DEFAULT,
+  );
+  validateIonGeocodeProvider(geocodeProvider);
 
   const accessToken = defaultValue(options.accessToken, Ion.defaultAccessToken);
   const server = Resource.createIfNeeded(
@@ -40,6 +80,9 @@ function IonGeocoderService(options) {
 
   const searchEndpoint = server.getDerivedResource({
     url: "v1/geocode",
+    queryParameters: {
+      geocoder: providerToQueryParameter(geocodeProvider),
+    },
   });
 
   if (defined(accessToken)) {
@@ -62,6 +105,25 @@ Object.defineProperties(IonGeocoderService.prototype, {
   credit: {
     get: function () {
       return undefined;
+    },
+  },
+  /**
+   * @memberof IonGeocoderService.prototype
+   * @type {IonGeocodeProvider}
+   */
+  geocodeProvider: {
+    get: function () {
+      return queryParameterToProvider(
+        this._pelias.url.queryParameters["geocoder"],
+      );
+    },
+    set: function (geocodeProvider) {
+      validateIonGeocodeProvider(geocodeProvider);
+      const query = {
+        ...this._pelias.url.queryParameters,
+        geocoder: providerToQueryParameter(geocodeProvider),
+      };
+      this._pelias.url.setQueryParameters(query);
     },
   },
 });

@@ -1,7 +1,9 @@
 import {
+  DeveloperError,
   GeocoderService,
   GeocodeType,
   Ion,
+  IonGeocodeProvider,
   IonGeocoderService,
 } from "../../index.js";
 
@@ -26,20 +28,24 @@ describe("Core/IonGeocoderService", function () {
 
     expect(service._accessToken).toEqual(Ion.defaultAccessToken);
     expect(service._server.url).toEqual(Ion.defaultServer.url);
+    expect(service.geocodeProvider).toEqual(IonGeocodeProvider.DEFAULT);
   });
 
   it("creates with specified parameters", function () {
     const accessToken = "123456";
     const server = "http://not.ion.invalid/";
+    const geocodeProvider = IonGeocodeProvider.GOOGLE;
 
     const service = new IonGeocoderService({
       accessToken: accessToken,
       server: server,
       scene: scene,
+      geocodeProvider,
     });
 
     expect(service._accessToken).toEqual(accessToken);
     expect(service._server.url).toEqual(server);
+    expect(service.geocodeProvider).toEqual(geocodeProvider);
   });
 
   it("calls inner geocoder and returns result", async function () {
@@ -63,5 +69,45 @@ describe("Core/IonGeocoderService", function () {
     const service = new IonGeocoderService({ scene: scene });
 
     expect(service.credit).toBeUndefined();
+  });
+
+  it("setting geocodeProvider updates _pelias.url for GOOGLE", function () {
+    const service = new IonGeocoderService({
+      scene,
+      geocoder: IonGeocodeProvider.DEFAULT,
+    });
+
+    service.geocodeProvider = IonGeocodeProvider.GOOGLE;
+    expect(service._pelias.url.queryParameters["geocoder"]).toEqual("google");
+  });
+
+  it("setting geocodeProvider updates _pelias.url for BING", function () {
+    const service = new IonGeocoderService({
+      scene,
+      geocoder: IonGeocodeProvider.DEFAULT,
+    });
+
+    service.geocodeProvider = IonGeocodeProvider.BING;
+    expect(service._pelias.url.queryParameters["geocoder"]).toEqual("bing");
+  });
+
+  it("setting geocodeProvider updates _pelias.url for DEFAULT", function () {
+    const service = new IonGeocoderService({
+      scene,
+      geocoder: IonGeocodeProvider.GOOGLE,
+    });
+
+    service.geocodeProvider = IonGeocodeProvider.DEFAULT;
+    expect(service._pelias.url.queryParameters["geocoder"]).toBeUndefined();
+  });
+
+  it("throws if setting invalid geocodeProvider", function () {
+    expect(
+      () => new IonGeocoderService({ scene, geocodeProvider: "junk" }),
+    ).toThrowError(DeveloperError, /Invalid geocodeProvider/);
+    expect(() => {
+      const service = new IonGeocoderService({ scene });
+      service.geocodeProvider = "junk";
+    }).toThrowError(DeveloperError, /Invalid geocodeProvider/);
   });
 });
