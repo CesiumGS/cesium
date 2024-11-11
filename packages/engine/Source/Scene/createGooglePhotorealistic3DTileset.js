@@ -17,7 +17,9 @@ import Resource from "../Core/Resource.js";
  * @see GoogleMaps
  *
  * @example
- * const viewer = new Cesium.Viewer("cesiumContainer");
+ * const viewer = new Cesium.Viewer("cesiumContainer", {
+ *   geocoder: Cesium.IonGeocodeProvider.GOOGLE
+ * });
  *
  * try {
  *   const tileset = await Cesium.createGooglePhotorealistic3DTileset();
@@ -30,7 +32,9 @@ import Resource from "../Core/Resource.js";
  * // Use your own Google Maps API key
  * Cesium.GoogleMaps.defaultApiKey = "your-api-key";
  *
- * const viewer = new Cesium.Viewer("cesiumContainer");
+ * const viewer = new Cesium.Viewer("cesiumContainer". {
+ *   geocoder: Cesium.IonGeocodeProvider.GOOGLE
+ * });
  *
  * try {
  *   const tileset = await Cesium.createGooglePhotorealistic3DTileset();
