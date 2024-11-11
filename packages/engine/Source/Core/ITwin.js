@@ -161,7 +161,7 @@ ITwin.getExports = async function (iModelId, changesetId) {
   };
 
   // obtain export for specified export id
-  let url = `${ITwin.apiEndpoint}mesh-export/?iModelId=${iModelId}`;
+  let url = `${ITwin.apiEndpoint}mesh-export/?iModelId=${iModelId}&exportType=CESIUM&$top=1`;
   if (defined(changesetId) && changesetId !== "") {
     url += `&changesetId=${changesetId}`;
   }
@@ -173,6 +173,9 @@ ITwin.getExports = async function (iModelId, changesetId) {
       throw new RuntimeError(
         `Unauthorized, bad token, wrong scopes or headers bad. ${result.error.details[0].code}`,
       );
+    } else if (response.status === 403) {
+      console.error(result.error.code, result.error.message);
+      throw new RuntimeError("Not allowed, forbidden");
     } else if (response.status === 422) {
       throw new RuntimeError(
         `Unprocessable Entity:${result.error.code} ${result.error.message}`,

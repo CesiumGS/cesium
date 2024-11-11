@@ -30,15 +30,87 @@
       window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
+        const popup = (url) => {
+          // based on https://gist.github.com/gauravtiwari/2ae9f44aee281c759fe5a66d5c2721a2
+          const windowArea = {
+            width: 500,
+            height: 600,
+          };
+
+          windowArea.left = Math.floor(
+            window.screenX + (window.outerWidth - windowArea.width) / 2,
+          );
+          windowArea.top = Math.floor(
+            window.screenY + (window.outerHeight - windowArea.height) / 8,
+          );
+
+          const sep = url.indexOf("?") !== -1 ? "&" : "?";
+          const fullUrl = `${url}${sep}`;
+          const windowOpts = `toolbar=0,scrollbars=1,status=1,resizable=1,location=1,menuBar=0,
+    width=${windowArea.width},height=${windowArea.height},
+    left=${windowArea.left},top=${windowArea.top}`;
+
+          const authWindow = window.open(fullUrl, "popup", windowOpts);
+
+          // Listen to message from child window
+          const authPromise = new Promise((resolve, reject) => {
+            window.addEventListener(
+              "message",
+              (e) => {
+                console.log("message", e);
+                // TODO: if we go this route we may want this back to make sure
+                // it's coming from wherever we host this
+                // if (e.origin !== window.SITE_DOMAIN) {
+                //   authWindow.close();
+                //   reject("Not allowed");
+                // }
+
+                if (e.data.auth) {
+                  resolve(e.data.auth);
+                  authWindow.close();
+                } else {
+                  authWindow.close();
+                  reject("Unauthorised");
+                }
+              },
+              false,
+            );
+          });
+          return authPromise;
+        };
+
+        // ===== Web app oauth flow =====
+
+        // const clientId = "webapp-0MsbOTn56gKXMoI1WsJ0SoVEn";
+        // const redirectUri = "http://localhost:3000";
+
+        // const result = await popup(
+        //   `https://ims.bentley.com/connect/authorize?response_type=code&client_id=${clientId}&redirect_uri=${redirectUri}&scope=itwin-platform`,
+        // ).catch((error) => {
+        //   console.error(error);
+        //   throw new Error("OAuth failed");
+        // });
+        // const accessCode = result.code;
+        // console.log("popup returned", result);
+
+        // ===== Service app request =====
+
+        const serviceResponse = await fetch("http://localhost:3000/service");
+        const serviceResult = await serviceResponse.json();
+        const { token: accessCode } = serviceResult;
+
         // must be created for the Start export route if you want to create new exports
         // Needs to have the mesh-export:modify scope not just mesh-export:read
-        const accessToken =
+        let accessToken =
           "Bearer eyJhbGciOiJSUzI1NiIsImtpZCI6IkJlbnRsZXlJTVNfMjAyNCIsInBpLmF0bSI6ImE4bWUifQ.eyJzY29wZSI6WyJtZXNoLWV4cG9ydDpyZWFkIiwibWVzaC1leHBvcnQ6bW9kaWZ5Il0sImNsaWVudF9pZCI6Iml0d2luLWRldmVsb3Blci1jb25zb2xlIiwiYXVkIjpbImh0dHBzOi8vaW1zLmJlbnRsZXkuY29tL2FzL3Rva2VuLm9hdXRoMiIsImh0dHBzOi8vaW1zb2lkYy5iZW50bGV5LmNvbS9hcy90b2tlbi5vYXV0aDIiLCJodHRwczovL2ltc29pZGMuYmVudGxleS5jb20vcmVzb3VyY2VzIiwiYmVudGxleS1hcGktbWFuYWdlbWVudCJdLCJzdWIiOiJjMWM1MzRhNy0zZDk2LTQ2MzMtYjY5ZC1jMGEzNzE5OWQwZGUiLCJyb2xlIjoiQkVOVExFWV9FTVBMT1lFRSIsIm9yZyI6ImZhYjk3NzRiLWIzMzgtNGNjMi1hNmM5LTQ1OGJkZjdmOTY2YSIsInN1YmplY3QiOiJjMWM1MzRhNy0zZDk2LTQ2MzMtYjY5ZC1jMGEzNzE5OWQwZGUiLCJpc3MiOiJodHRwczovL2ltcy5iZW50bGV5LmNvbSIsImVudGl0bGVtZW50IjpbIkJFTlRMRVlfTEVBUk4iLCJJTlRFUk5BTCIsIlNFTEVDVF8yMDA2IiwiQkVOIiwiQkROIl0sInByZWZlcnJlZF91c2VybmFtZSI6Ikpvc2guUm91emVyQGJlbnRsZXkuY29tIiwiZ2l2ZW5fbmFtZSI6Ikpvc2giLCJzaWQiOiJHMGZTamlOXzBMRjE1Vy1IYnRTaWtoeDNuSXMuU1UxVExVSmxiblJzWlhrdFZWTS5LbWlWLlF2UExVcGJyc2R3engwWGxPbkF3eTFTT0IiLCJuYmYiOjE3MzA4MzgyNDIsInVsdGltYXRlX3NpdGUiOiIxMDAxMzg5MTE3IiwidXNhZ2VfY291bnRyeV9pc28iOiJVUyIsImF1dGhfdGltZSI6MTczMDgzODU0MiwibmFtZSI6Ikpvc2guUm91emVyQGJlbnRsZXkuY29tIiwib3JnX25hbWUiOiJCZW50bGV5IFN5c3RlbXMgSW5jIiwiZmFtaWx5X25hbWUiOiJSb3V6ZXIiLCJlbWFpbCI6Ikpvc2guUm91emVyQGJlbnRsZXkuY29tIiwiZXhwIjoxNzMwODQyMTQyfQ.N_WrgjL2bqxdNLEM5nHh4Fg-FzeA-qxxpryaoaMKz8onnpgzmp-X8dyQ1TyMRqKQY99iLypE9bU45DwRJs7vBgNQ73d53SkC9TKGYn8AAOTJz8c_oEHgkoTEDaaLsMPCw88tqZ34pY0e0oIHIofVDTCvwlzwaJPADfkIxz-8GzhIt2WrXR7f6LWBFSlWNrtNhIr9Tz7UNaLOh97_3fS9KVU1I084CpBga9cj_mjGBeki7mIEQvpqMj8x2bJPae_c6WrPEjKLayrOzq4q0X0Kvle0ZFAm-Se9MFCusTFS51bYrI3IsjagGeIP2U06zzcMJ22NylomE60hz6GK_4uB3g";
+
+        accessToken = `Bearer ${accessCode}`;
+
         Cesium.ITwin.defaultAccessToken = accessToken;
         // this is the iModel in the "Hello iTwinCesium" iTwin that we should all have access to
         // https://developer.bentley.com/my-itwins/b4a30036-0456-49ea-a439-3fcd9365e24e/home/
-        const imodelId = "2852c3d7-00c3-4b5d-a0ce-82bbde4f061e";
-        // const imodelId = "88673c1d-12b8-48f1-8beb-5000d0edbd0b";
+        // const imodelId = "2852c3d7-00c3-4b5d-a0ce-82bbde4f061e";
+        const imodelId = "88673c1d-12b8-48f1-8beb-5000d0edbd0b";
 
         const changesetId = "";
 
@@ -107,7 +179,7 @@
           const subcategory = feature.getProperty("subcategory");
           const message = `
       Element ID: ${element}
-      Subcategory: ${classes[subcategory] ?? subcategory}
+      Subcategory: ${classes[subcategory] || subcategory}
       Feature ID: ${feature.featureId}`;
           nameOverlay.textContent = message;
         }
