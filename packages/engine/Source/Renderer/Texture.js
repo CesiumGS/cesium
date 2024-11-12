@@ -898,7 +898,6 @@ Texture.prototype.copyFrom = function (options) {
   gl.bindTexture(target, this._texture);
 
   let { width, height } = source;
-  const { arrayBufferView } = source;
 
   // Make sure we are using the element's intrinsic width and height where available
   if (defined(source.videoWidth) && defined(source.videoHeight)) {
@@ -927,8 +926,8 @@ Texture.prototype.copyFrom = function (options) {
       height === this._height
     ) {
       // initialize the entire texture
-      if (defined(arrayBufferView)) {
-        loadBufferSource(this, arrayBufferView);
+      if (defined(source.arrayBufferView)) {
+        loadBufferSource(this, source);
       } else {
         loadImageSource(this, source);
       }
@@ -942,7 +941,7 @@ Texture.prototype.copyFrom = function (options) {
   }
 
   if (!uploaded) {
-    if (defined(arrayBufferView)) {
+    if (defined(source.arrayBufferView)) {
       loadPartialBufferSource(this, source, xOffset, yOffset, width, height);
     } else {
       loadPartialImageSource(this, source, xOffset, yOffset);
