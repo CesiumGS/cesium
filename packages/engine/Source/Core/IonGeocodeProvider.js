@@ -3,7 +3,7 @@
  *
  * @enum {string}
  */
-const IonGeocodeProvider = Object.freeze({
+const IonGeocodeProvider = {
   /**
    * Google geocoder, for use with Google data.
    *
@@ -28,6 +28,6 @@ const IonGeocodeProvider = Object.freeze({
    * @constant
    */
   DEFAULT: "DEFAULT",
-});
+};
 
-export default IonGeocodeProvider;
+export default Object.freeze(IonGeocodeProvider);
