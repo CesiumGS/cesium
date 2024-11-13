@@ -341,7 +341,7 @@ PixelFormat.isBC7Format = function (pixelFormat) {
 PixelFormat.compressedTextureSizeInBytes = function (
   pixelFormat,
   width,
-  height
+  height,
 ) {
   switch (pixelFormat) {
     case PixelFormat.RGB_DXT1:
@@ -363,7 +363,7 @@ PixelFormat.compressedTextureSizeInBytes = function (
     case PixelFormat.RGB_PVRTC_2BPPV1:
     case PixelFormat.RGBA_PVRTC_2BPPV1:
       return Math.floor(
-        (Math.max(width, 16) * Math.max(height, 8) * 2 + 7) / 8
+        (Math.max(width, 16) * Math.max(height, 8) * 2 + 7) / 8,
       );
 
     case PixelFormat.RGBA_BC7:
@@ -381,7 +381,7 @@ PixelFormat.textureSizeInBytes = function (
   pixelFormat,
   pixelDatatype,
   width,
-  height
+  height,
 ) {
   let componentsLength = PixelFormat.componentsLength(pixelFormat);
   if (PixelDatatype.isPacked(pixelDatatype)) {
@@ -413,7 +413,7 @@ PixelFormat.createTypedArray = function (
   pixelFormat,
   pixelDatatype,
   width,
-  height
+  height,
 ) {
   const constructor = PixelDatatype.getTypedArrayConstructor(pixelDatatype);
   const size = PixelFormat.componentsLength(pixelFormat) * width * height;
@@ -428,7 +428,7 @@ PixelFormat.flipY = function (
   pixelFormat,
   pixelDatatype,
   width,
-  height
+  height,
 ) {
   if (height === 1) {
     return bufferView;
@@ -437,7 +437,7 @@ PixelFormat.flipY = function (
     pixelFormat,
     pixelDatatype,
     width,
-    height
+    height,
   );
   const numberOfComponents = PixelFormat.componentsLength(pixelFormat);
   const textureWidth = width * numberOfComponents;
@@ -496,6 +496,32 @@ PixelFormat.toInternalFormat = function (pixelFormat, pixelDatatype, context) {
         return WebGLConstants.RG16F;
       case PixelFormat.RED:
         return WebGLConstants.R16F;
+    }
+  }
+
+  if (pixelDatatype === PixelDatatype.INT) {
+    switch (pixelFormat) {
+      case PixelFormat.RGBA:
+        return WebGLConstants.RGBA32UI;
+      case PixelFormat.RGB:
+        return WebGLConstants.RGB32UI;
+      case PixelFormat.RG:
+        return WebGLConstants.RG32UI;
+      case PixelFormat.RED:
+        return WebGLConstants.R32UI;
+    }
+  }
+
+  if (pixelDatatype === PixelDatatype.UNSIGNED_INT) {
+    switch (pixelFormat) {
+      case PixelFormat.RGBA:
+        return WebGLConstants.RGBA32UI;
+      case PixelFormat.RGB:
+        return WebGLConstants.RGB32UI;
+      case PixelFormat.RG:
+        return WebGLConstants.RG32UI;
+      case PixelFormat.RED:
+        return WebGLConstants.R32UI;
     }
   }
 
