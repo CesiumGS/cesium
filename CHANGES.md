@@ -1,5 +1,13 @@
 # Change Log
 
+### 1.124.0
+
+#### @cesium/engine
+
+##### Fixes :wrench:
+
+- Handle uncaught promise rejection in `Skybox.update` that could cause tests to fail[#12307](https://github.com/CesiumGS/cesium/pull/12307)
+
 ### 1.123.1 - 2024-11-07
 
 #### @cesium/engine
