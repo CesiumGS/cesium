@@ -141,10 +141,15 @@ SkyBox.prototype.update = function (frameState, useHdr) {
 
     if (typeof sources.positiveX === "string") {
       // Given urls for cube-map images.  Load them.
-      loadCubeMap(context, this._sources).then(function (cubeMap) {
-        that._cubeMap = that._cubeMap && that._cubeMap.destroy();
-        that._cubeMap = cubeMap;
-      });
+      loadCubeMap(context, this._sources).then(
+        function (cubeMap) {
+          that._cubeMap = that._cubeMap && that._cubeMap.destroy();
+          that._cubeMap = cubeMap;
+        },
+        function (error) {
+          console.error("Skybox cube map failed to load", error);
+        },
+      );
     } else {
       this._cubeMap = this._cubeMap && this._cubeMap.destroy();
       this._cubeMap = new CubeMap({

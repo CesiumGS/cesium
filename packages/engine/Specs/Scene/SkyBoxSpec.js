@@ -355,6 +355,31 @@ describe(
         return scene.render();
       }).toThrowDeveloperError();
     });
+
+    it("handles error when Resources fail to load", async () => {
+      spyOn(Resource.prototype, "fetchImage").and.rejectWith(
+        "intentional error for test",
+      );
+
+      skyBox = new SkyBox({
+        sources: {
+          positiveX: "./Data/Images/Blue.png",
+          negativeX: "./Data/Images/Blue.png",
+          positiveY: "./Data/Images/Blue.png",
+          negativeY: "./Data/Images/Blue.png",
+          positiveZ: "./Data/Images/Blue.png",
+          negativeZ: "./Data/Images/Blue.png",
+        },
+      });
+
+      scene.frameState.passes.render = true;
+      scene.skyBox = skyBox;
+      skyBox.update(scene.frameState);
+
+      // Flush macro task queue to allow the rejections to be throw in this
+      // function, otherwise the error ends up happening in `afterAll`
+      await new Promise((resolve) => window.setTimeout(resolve, 1));
+    });
   },
   "WebGL",
 );
