@@ -82,7 +82,7 @@ function SkyBox(options) {
   this._attributeLocations = undefined;
   this._useHdr = undefined;
   this._hasError = false;
-  this._error = false;
+  this._error = undefined;
 }
 
 /**
