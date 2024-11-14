@@ -356,10 +356,9 @@ describe(
       }).toThrowDeveloperError();
     });
 
-    it("handles error when Resources fail to load", async () => {
-      spyOn(Resource.prototype, "fetchImage").and.rejectWith(
-        "intentional error for test",
-      );
+    it("defers throwing error when Resources fail to load until next call to update", async () => {
+      const error = new Error("intentional error for test");
+      spyOn(Resource.prototype, "fetchImage").and.rejectWith(error);
 
       skyBox = new SkyBox({
         sources: {
@@ -376,9 +375,12 @@ describe(
       scene.skyBox = skyBox;
       skyBox.update(scene.frameState);
 
-      // Flush macro task queue to allow the rejections to be throw in this
-      // function, otherwise the error ends up happening in `afterAll`
-      await new Promise((resolve) => window.setTimeout(resolve, 1));
+      // Flush macro task queue to allow the rejections to be thrown
+      await new Promise((resolve) => window.setTimeout(resolve, 0));
+
+      expect(skyBox._hasError).toBeTrue();
+      expect(skyBox._error).toEqual(error);
+      expect(() => skyBox.update(scene.frameState)).toThrow(error);
     });
   },
   "WebGL",
