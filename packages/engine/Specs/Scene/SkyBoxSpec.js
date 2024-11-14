@@ -18,10 +18,6 @@ describe(
       );
     });
 
-    afterAll(function () {
-      scene.destroyForSpecs();
-    });
-
     beforeEach(function () {
       scene = createScene();
       scene.mode = SceneMode.SCENE3D;
@@ -30,6 +26,7 @@ describe(
     afterEach(function () {
       skyBox = skyBox && skyBox.destroy();
       scene.skyBox = undefined;
+      scene.destroyForSpecs();
     });
 
     it("draws a sky box from Images", function () {
