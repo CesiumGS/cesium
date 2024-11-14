@@ -51,11 +51,18 @@ ModelDrawCommands.buildModelDrawCommand = function (
     frameState,
   );
 
-  const command = buildDrawCommandForModel(
-    primitiveRenderResources,
-    shaderProgram,
-    frameState,
-  );
+  const command = primitiveRenderResources.runtimePrimitive.primitive
+    .isGaussianSplatPrimitive
+    ? buildDrawCommandForGaussianSplatModel(
+        primitiveRenderResources,
+        shaderProgram,
+        frameState,
+      )
+    : buildDrawCommandForModel(
+        primitiveRenderResources,
+        shaderProgram,
+        frameState,
+      );
 
   const model = primitiveRenderResources.model;
   const hasClassification = defined(model.classificationType);
@@ -110,12 +117,116 @@ function buildDrawCommandForModel(
   const indexBuffer = getIndexBuffer(primitiveRenderResources);
   const model = primitiveRenderResources.model;
 
+  const vertexArray = new VertexArray({
+    context: frameState.context,
+    indexBuffer: indexBuffer,
+    attributes: primitiveRenderResources.attributes,
+  });
+
+  model._pipelineResources.push(vertexArray);
+
+  const pass = primitiveRenderResources.alphaOptions.pass;
+  const sceneGraph = model.sceneGraph;
+
+  const is3D = frameState.mode === SceneMode.SCENE3D;
+  let modelMatrix, boundingSphere;
+
+  if (!is3D && !frameState.scene3DOnly && model._projectTo2D) {
+    modelMatrix = Matrix4.multiplyTransformation(
+      sceneGraph._computedModelMatrix,
+      primitiveRenderResources.runtimeNode.computedTransform,
+      new Matrix4(),
+    );
+
+    const runtimePrimitive = primitiveRenderResources.runtimePrimitive;
+    boundingSphere = runtimePrimitive.boundingSphere2D;
+  } else {
+    const computedModelMatrix = is3D
+      ? sceneGraph._computedModelMatrix
+      : sceneGraph._computedModelMatrix2D;
+
+    modelMatrix = Matrix4.multiplyTransformation(
+      computedModelMatrix,
+      primitiveRenderResources.runtimeNode.computedTransform,
+      new Matrix4(),
+    );
+
+    boundingSphere = BoundingSphere.transform(
+      primitiveRenderResources.boundingSphere,
+      modelMatrix,
+    );
+  }
+
+  // Initialize render state with default values
+  let renderState = clone(
+    RenderState.fromCache(primitiveRenderResources.renderStateOptions),
+    true,
+  );
+
+  renderState.cull.face = ModelUtility.getCullFace(
+    modelMatrix,
+    primitiveRenderResources.primitiveType,
+  );
+  renderState = RenderState.fromCache(renderState);
+
+  const hasClassification = defined(model.classificationType);
+  const castShadows = hasClassification
+    ? false
+    : ShadowMode.castShadows(model.shadows);
+  const receiveShadows = hasClassification
+    ? false
+    : ShadowMode.receiveShadows(model.shadows);
+  // Pick IDs are only added to specific draw commands for classification.
+  // This behavior is handled by ClassificationModelDrawCommand.
+  const pickId = hasClassification
+    ? undefined
+    : primitiveRenderResources.pickId;
+
+  const command = new DrawCommand({
+    boundingVolume: boundingSphere,
+    modelMatrix: modelMatrix,
+    uniformMap: primitiveRenderResources.uniformMap,
+    renderState: renderState,
+    vertexArray: vertexArray,
+    shaderProgram: shaderProgram,
+    cull: model.cull,
+    pass: pass,
+    count: primitiveRenderResources.count,
+    owner: model,
+    pickId: pickId,
+    pickMetadataAllowed: true,
+    instanceCount: primitiveRenderResources.instanceCount,
+    primitiveType: primitiveRenderResources.primitiveType,
+    debugShowBoundingVolume: model.debugShowBoundingVolume,
+    castShadows: castShadows,
+    receiveShadows: receiveShadows,
+  });
+  return command;
+}
+
+/**
+ * Builds the {@link DrawCommand} that serves as the basis for either creating
+ * a {@link ModelDrawCommand} or a {@link ModelRuntimePrimitive}
+ *
+ * @param {PrimitiveRenderResources} primitiveRenderResources The render resources for a primitive.
+ * @param {ShaderProgram} shaderProgram The shader program
+ * @param {FrameState} frameState The frame state for creating GPU resources.
+ *
+ * @returns {DrawCommand} The generated DrawCommand, to be passed to
+ * the ModelDrawCommand or ClassificationModelDrawCommand
+ *
+ * @private
+ */
+function buildDrawCommandForGaussianSplatModel(
+  primitiveRenderResources,
+  shaderProgram,
+  frameState,
+) {
+  const indexBuffer = getIndexBuffer(primitiveRenderResources);
+  const model = primitiveRenderResources.model;
+
   const vertexArray = (() => {
-    if (
-      //JASON TODO -- revisit this after other changes
-      model.enableShowGaussianSplatting &&
-      (model?.style?.showGaussianSplatting ?? true)
-    ) {
+    if (model.enableShowGaussianSplatting && model.showGaussianSplatting) {
       const splatQuadAttrLocations = {
         0: 5,
         1: 1,
@@ -125,9 +236,6 @@ function buildDrawCommandForModel(
         screenQuadPosition: 0,
         splatPosition: 6,
         splatColor: 7,
-        // splatScale:8,
-        // splatRot:9
-        //      splatOpacity: 8,
       };
       const geometry = new Geometry({
         attributes: {
@@ -153,27 +261,6 @@ function buildDrawCommandForModel(
             name: "_SPLAT_COLOR",
             variableName: "splatColor",
           },
-          // splatScale: {
-          //   ...primitiveRenderResources.runtimePrimitive.primitive.attributes.find(
-          //     (a) => a.name === "_SCALE",
-          //   ),
-          //   name: "_SPLAT_SCALE",
-          //   variableName: "splatScale"
-          // },
-          // splatRot: {
-          //   ...primitiveRenderResources.runtimePrimitive.primitive.attributes.find(
-          //     (a) => a.name === "_ROTATION",
-          //   ),
-          //   name: "_SPLAT_ROTATION",
-          //   variableName: "splatRot"
-          // }
-          // splatOpacity: {
-          //   ...primitiveRenderResources.runtimePrimitive.primitive.attributes.find(
-          //     (a) => a.name === "_OPACITY"
-          //   ),
-          //   name: "_SPLAT_OPACITY",
-          //   variableName: "splatOpacity",
-          // },
         },
         indices: indexBuffer,
         primitiveType: PrimitiveType.TRIANGLE_STRIP,

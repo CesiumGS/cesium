@@ -1944,10 +1944,8 @@ function loadPrimitive(loader, gltfPrimitive, hasInstances, frameState) {
       primitivePlan,
     );
   }
-  //JASON TODO -- remove extensionsUsed Logic
-  const gaussianSplattingExtension = loader.gltfJson.extensionsUsed.includes(
-    "KHR_gaussian_splatting",
-  );
+
+  const gaussianSplattingExtension = extensions.KHR_gaussian_splatting;
 
   if (loader._loadGaussianSplatting && defined(gaussianSplattingExtension)) {
     needsPostProcessing = true;

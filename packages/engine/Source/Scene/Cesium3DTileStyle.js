@@ -139,8 +139,10 @@ function setup(that, styleJson) {
 }
 
 function getExpression(tileStyle, value) {
-  const defines = defaultValue(tileStyle._style, defaultValue.EMPTY_OBJECT)
-    .defines;
+  const defines = defaultValue(
+    tileStyle._style,
+    defaultValue.EMPTY_OBJECT,
+  ).defines;
 
   if (!defined(value)) {
     return undefined;
@@ -398,7 +400,7 @@ Object.defineProperties(Cesium3DTileStyle.prototype, {
     set: function (value) {
       this._pointOutlineColor = getExpression(this, value);
       this._style.pointOutlineColor = getJsonFromExpression(
-        this._pointOutlineColor
+        this._pointOutlineColor,
       );
     },
   },
@@ -441,7 +443,7 @@ Object.defineProperties(Cesium3DTileStyle.prototype, {
     set: function (value) {
       this._pointOutlineWidth = getExpression(this, value);
       this._style.pointOutlineWidth = getJsonFromExpression(
-        this._pointOutlineWidth
+        this._pointOutlineWidth,
       );
     },
   },
@@ -525,7 +527,7 @@ Object.defineProperties(Cesium3DTileStyle.prototype, {
     set: function (value) {
       this._labelOutlineColor = getExpression(this, value);
       this._style.labelOutlineColor = getJsonFromExpression(
-        this._labelOutlineColor
+        this._labelOutlineColor,
       );
     },
   },
@@ -568,7 +570,7 @@ Object.defineProperties(Cesium3DTileStyle.prototype, {
     set: function (value) {
       this._labelOutlineWidth = getExpression(this, value);
       this._style.labelOutlineWidth = getJsonFromExpression(
-        this._labelOutlineWidth
+        this._labelOutlineWidth,
       );
     },
   },
@@ -734,7 +736,7 @@ Object.defineProperties(Cesium3DTileStyle.prototype, {
     set: function (value) {
       this._backgroundColor = getExpression(this, value);
       this._style.backgroundColor = getJsonFromExpression(
-        this._backgroundColor
+        this._backgroundColor,
       );
     },
   },
@@ -768,7 +770,7 @@ Object.defineProperties(Cesium3DTileStyle.prototype, {
     set: function (value) {
       this._backgroundPadding = getExpression(this, value);
       this._style.backgroundPadding = getJsonFromExpression(
-        this._backgroundPadding
+        this._backgroundPadding,
       );
     },
   },
@@ -811,7 +813,7 @@ Object.defineProperties(Cesium3DTileStyle.prototype, {
     set: function (value) {
       this._backgroundEnabled = getExpression(this, value);
       this._style.backgroundEnabled = getJsonFromExpression(
-        this._backgroundEnabled
+        this._backgroundEnabled,
       );
     },
   },
@@ -845,7 +847,7 @@ Object.defineProperties(Cesium3DTileStyle.prototype, {
     set: function (value) {
       this._scaleByDistance = getExpression(this, value);
       this._style.scaleByDistance = getJsonFromExpression(
-        this._scaleByDistance
+        this._scaleByDistance,
       );
     },
   },
@@ -879,7 +881,7 @@ Object.defineProperties(Cesium3DTileStyle.prototype, {
     set: function (value) {
       this._translucencyByDistance = getExpression(this, value);
       this._style.translucencyByDistance = getJsonFromExpression(
-        this._translucencyByDistance
+        this._translucencyByDistance,
       );
     },
   },
@@ -913,7 +915,7 @@ Object.defineProperties(Cesium3DTileStyle.prototype, {
     set: function (value) {
       this._distanceDisplayCondition = getExpression(this, value);
       this._style.distanceDisplayCondition = getJsonFromExpression(
-        this._distanceDisplayCondition
+        this._distanceDisplayCondition,
       );
     },
   },
@@ -997,7 +999,7 @@ Object.defineProperties(Cesium3DTileStyle.prototype, {
     set: function (value) {
       this._anchorLineEnabled = getExpression(this, value);
       this._style.anchorLineEnabled = getJsonFromExpression(
-        this._anchorLineEnabled
+        this._anchorLineEnabled,
       );
     },
   },
@@ -1040,7 +1042,7 @@ Object.defineProperties(Cesium3DTileStyle.prototype, {
     set: function (value) {
       this._anchorLineColor = getExpression(this, value);
       this._style.anchorLineColor = getJsonFromExpression(
-        this._anchorLineColor
+        this._anchorLineColor,
       );
     },
   },
@@ -1115,7 +1117,7 @@ Object.defineProperties(Cesium3DTileStyle.prototype, {
     set: function (value) {
       this._disableDepthTestDistance = getExpression(this, value);
       this._style.disableDepthTestDistance = getJsonFromExpression(
-        this._disableDepthTestDistance
+        this._disableDepthTestDistance,
       );
     },
   },
@@ -1158,7 +1160,7 @@ Object.defineProperties(Cesium3DTileStyle.prototype, {
     set: function (value) {
       this._horizontalOrigin = getExpression(this, value);
       this._style.horizontalOrigin = getJsonFromExpression(
-        this._horizontalOrigin
+        this._horizontalOrigin,
       );
     },
   },
@@ -1242,7 +1244,7 @@ Object.defineProperties(Cesium3DTileStyle.prototype, {
     set: function (value) {
       this._labelHorizontalOrigin = getExpression(this, value);
       this._style.labelHorizontalOrigin = getJsonFromExpression(
-        this._labelHorizontalOrigin
+        this._labelHorizontalOrigin,
       );
     },
   },
@@ -1285,7 +1287,7 @@ Object.defineProperties(Cesium3DTileStyle.prototype, {
     set: function (value) {
       this._labelVerticalOrigin = getExpression(this, value);
       this._style.labelVerticalOrigin = getJsonFromExpression(
-        this._labelVerticalOrigin
+        this._labelVerticalOrigin,
       );
     },
   },
@@ -1370,7 +1372,7 @@ Cesium3DTileStyle.fromUrl = function (url) {
 Cesium3DTileStyle.prototype.getColorShaderFunction = function (
   functionSignature,
   variableSubstitutionMap,
-  shaderState
+  shaderState,
 ) {
   if (this._colorShaderFunctionReady) {
     shaderState.translucent = this._colorShaderTranslucent;
@@ -1384,7 +1386,7 @@ Cesium3DTileStyle.prototype.getColorShaderFunction = function (
       functionSignature,
       variableSubstitutionMap,
       shaderState,
-      "vec4"
+      "vec4",
     );
   } else {
     this._colorShaderFunction = undefined;
@@ -1408,7 +1410,7 @@ Cesium3DTileStyle.prototype.getColorShaderFunction = function (
 Cesium3DTileStyle.prototype.getShowShaderFunction = function (
   functionSignature,
   variableSubstitutionMap,
-  shaderState
+  shaderState,
 ) {
   if (this._showShaderFunctionReady) {
     // Return the cached result, may be undefined
@@ -1422,7 +1424,7 @@ Cesium3DTileStyle.prototype.getShowShaderFunction = function (
       functionSignature,
       variableSubstitutionMap,
       shaderState,
-      "bool"
+      "bool",
     );
   } else {
     this._showShaderFunction = undefined;
@@ -1444,7 +1446,7 @@ Cesium3DTileStyle.prototype.getShowShaderFunction = function (
 Cesium3DTileStyle.prototype.getPointSizeShaderFunction = function (
   functionSignature,
   variableSubstitutionMap,
-  shaderState
+  shaderState,
 ) {
   if (this._pointSizeShaderFunctionReady) {
     // Return the cached result, may be undefined
@@ -1457,7 +1459,7 @@ Cesium3DTileStyle.prototype.getPointSizeShaderFunction = function (
       functionSignature,
       variableSubstitutionMap,
       shaderState,
-      "float"
+      "float",
     );
   } else {
     this._pointSizeShaderFunction = undefined;

@@ -135,11 +135,12 @@ GeometryPipelineStage.process = function (
     );
   }
 
-  //JASON TODO -- just use glTF extension to determine
   if (primitive.primitiveType === PrimitiveType.POINTS) {
-    const gaussianSplatsEnabled = model.enableShowGaussianSplatting;
+    const gaussianSplatsEnabled =
+      (primitive?.isGaussianSplatPrimitive ?? false) &&
+      model.enableShowGaussianSplatting;
     if (gaussianSplatsEnabled) {
-      const showSplats = model?.style?.showGaussianSplatting ?? true;
+      const showSplats = model.showGaussianSplatting;
       primitive.attributes.find((a) => a.name === "POSITION").instanceDivisor =
         showSplats ? 1 : 0;
       primitive.attributes.find((a) => a.name === "_SCALE").instanceDivisor =

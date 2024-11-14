@@ -468,12 +468,16 @@ function Model(options) {
    */
   this.showOutline = defaultValue(options.showOutline, true);
 
-  //JASON TODO -- load proper extension, remove extensionsUsed check
   this._enableShowGaussianSplatting = defaultValue(
-    options.loader.gltfJson.extensionsUsed.includes("KHR_gaussian_splatting"),
+    options.enableShowGaussianSplatting,
     false,
   );
 
+  /**
+   * Whether to display Gaussing Splatting (will fall back to point cloud rendering if false)
+   *
+   * @type {boolean}
+   */
   this.showGaussianSplatting = defaultValue(
     options.showGaussianSplatting,
     true,
@@ -821,7 +825,6 @@ Object.defineProperties(Model.prototype, {
    *
    * @type {PointCloudShading}
    */
-  //JASON TODO -- replace extensionsUsed logic
   enableShowGaussianSplatting: {
     get: function () {
       return this._enableShowGaussianSplatting;
@@ -833,9 +836,7 @@ Object.defineProperties(Model.prototype, {
       this._enableShowGaussianSplatting = value;
       // Warning for improper setup of gaussian splatting
       if (
-        (this._enableShowGaussianSplatting === true &&
-          this._loader.extensionsUsed.includes("KHR_gaussian_splatting") ===
-            false) ||
+        this._enableShowGaussianSplatting === true ||
         this.type !== ModelType.GLTF
       ) {
         oneTimeWarning(

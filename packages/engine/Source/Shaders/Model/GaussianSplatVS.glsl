@@ -1,3 +1,17 @@
+#if !defined(HAS_SPLAT_TEXTURE)
+
+// Dequantize a float that was quantized with EXPONENTIAL filter
+float meshopt_dequantize_exponential(uint quantized, float min_value, float max_value) {
+    // Convert from 16-bit normalized to [0,1]
+    float normalized = float(quantized) / 65535.0;
+
+    // Apply exponential curve
+    float exponential = exp2(normalized * 19.0 - 9.0); // Assuming 10-bit precision
+
+    // Rescale to original range
+    return min_value + (max_value - min_value) * exponential;
+}
+
 void calcCov3D(vec3 scale, vec4 rot, out float[6] cov3D)
 {
     mat3 S = mat3(
@@ -90,3 +104,19 @@ void gaussianSplatStage(ProcessedAttributes attributes, inout vec4 positionClip)
     v_splatColor = a_splatColor;
 }
 
+#else
+
+void gaussianSplatStage(ProcessedAttributes attributes, inout vec4 positionClip) {
+
+    //unpack data index from indices texture
+    //g_vertexID is our index here
+
+    //unpack position
+
+    //unpack color
+
+    //unpack covariance
+
+    //
+}
+#endif

@@ -5,7 +5,6 @@ import Pass from "../../Renderer/Pass.js";
 import PrimitiveType from "../../Core/PrimitiveType.js";
 import BlendingState from "../BlendingState.js";
 import Matrix4 from "../../Core/Matrix4.js";
-
 import __wbg_init, {
   initSync,
   radix_sort_gaussians,
@@ -13,6 +12,8 @@ import __wbg_init, {
   GSplatData,
 } from "cesiumjs-gsplat-utils";
 //import __wbg_init from "cesiumjs-gsplat-utils";
+
+import GaussianSplatTextureGenerator from "./GaussianSplatTextureGenerator.js";
 
 import buildModuleUrl from "../../Core/buildModuleUrl.js";
 
@@ -51,15 +52,18 @@ class CesiumPerformanceTimer {
   }
 }
 
-const GaussianSplatPipelineStage = {
-  name: "GaussianSplatPipelineStage",
+const GaussianSplatTexturePipelineStage = {
+  name: "GaussianSplatTexturePipelineStage",
 };
 
-GaussianSplatPipelineStage.process = function (
+GaussianSplatTexturePipelineStage.process = function (
   renderResources,
   primitive,
   frameState,
 ) {
+  if (GaussianSplatTextureGenerator.wasmInitialized === false) {
+    return;
+  }
   const { shaderBuilder } = renderResources;
 
   const renderStateOptions = renderResources.renderStateOptions;
@@ -76,18 +80,15 @@ GaussianSplatPipelineStage.process = function (
     ShaderDestination.BOTH,
   );
 
-  if (primitive.hasAttributeTexture) {
-    shaderBuilder.addDefine(
-      "HAS_SPLAT_TEXTURE",
-      undefined,
-      ShaderDestination.BOTH,
-    );
-  }
+  shaderBuilder.addDefine(
+    "HAS_SPLAT_TEXTURE",
+    undefined,
+    ShaderDestination.BOTH,
+  );
 
   shaderBuilder.addAttribute("vec2", "a_screenQuadPosition");
   shaderBuilder.addAttribute("vec3", "a_splatPosition");
   shaderBuilder.addAttribute("vec4", "a_splatColor");
-  //shaderBuilder.addAttribute("float", "a_splatOpacity");
 
   shaderBuilder.addVarying("vec4", "v_splatColor");
   shaderBuilder.addVarying("vec2", "v_vertPos");
@@ -133,7 +134,6 @@ GaussianSplatPipelineStage.process = function (
 
   // Usage example:
   const timer = new CesiumPerformanceTimer();
-
   /*
   const countSort = () => {
     const attributes = primitive.attributes;
@@ -481,4 +481,4 @@ GaussianSplatPipelineStage.process = function (
   shaderBuilder.addFragmentLines(GaussianSplatFS);
 };
 
-export default GaussianSplatPipelineStage;
+export default GaussianSplatTexturePipelineStage;

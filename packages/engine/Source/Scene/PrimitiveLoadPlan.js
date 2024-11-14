@@ -7,8 +7,11 @@ import BufferUsage from "../Renderer/BufferUsage.js";
 import AttributeType from "./AttributeType.js";
 import ModelComponents from "./ModelComponents.js";
 import PrimitiveOutlineGenerator from "./Model/PrimitiveOutlineGenerator.js";
-//import GaussianSplatTextureGenerator from "./Model/GaussianSplatGenTexture.js";
-
+import GaussianSplatTextureGenerator from "./Model/GaussianSplatTextureGenerator.js";
+import Texture from "../Renderer/Texture.js";
+import PixelFormat from "../Core/PixelFormat.js";
+import PixelDatatype from "../Renderer/PixelDatatype.js";
+import Sampler from "../Renderer/Sampler.js";
 /**
  * Simple struct for tracking whether an attribute will be loaded as a buffer
  * or typed array after post-processing.
@@ -166,10 +169,15 @@ function PrimitiveLoadPlan(primitive) {
    * @type {boolean}
    * @private
    */
-  //JASON TODO -- not needed if building textures up front
   this.needsGaussianSplats = false;
 
-  //JASON TODO -- new usingGaussianTextureProps flag here?
+  /**
+   * Set this to true if generating textures for Gaussian Splat rendering
+   *
+   * @type {boolean}
+   * @private
+   */
+  this.generateGaussianSplatTexture = true;
 }
 
 /**
@@ -190,6 +198,7 @@ PrimitiveLoadPlan.prototype.postProcess = function (context) {
 
   //handle splat post-processing for point primitives
   if (this.needsGaussianSplats) {
+    this.primitive.isGaussianSplatPrimitive = true;
     if (this.generateGaussianSplatTexture) {
       generateSplatTexture(this, context);
     } else {
@@ -259,7 +268,29 @@ function setupGaussianSplatBuffers(loadPlan, context) {
   }
 }
 
-function generateSplatTexture(loadPlan, context) {}
+function generateSplatTexture(loadPlan, context) {
+  GaussianSplatTextureGenerator.generateFromAttrs(
+    loadPlan.primitive.attributes,
+    loadPlan.primitive.attributes[0].count,
+  ).then((splatTextureData) => {
+    const splatTex = new Texture({
+      context,
+      source: {
+        width: splatTextureData.width,
+        height: splatTextureData.height,
+        arrayBufferView: splatTextureData.data,
+      },
+      preMultiplyAlpha: false,
+      skipColorSpaceConversion: true,
+      pixelFormat: PixelFormat.RGBA,
+      pixelDatatype: PixelDatatype.UNSIGNED_INT,
+      flipY: false,
+      sampler: Sampler.NEAREST,
+    });
+    loadPlan.primitive.gaussianSplatTexture = splatTex;
+    loadPlan.primitive.hasGaussianSplatTexture = true;
+  });
+}
 
 function generateBuffers(loadPlan, context) {
   generateAttributeBuffers(loadPlan.attributePlans, context);

@@ -43,7 +43,7 @@ GaussianSplatSorter._getSorterTaskProcessor = function () {
   return GaussianSplatSorter._sorterTaskProcessor;
 };
 
-GaussianSplatSorter.courtSortSplats = function (parameters) {
+GaussianSplatSorter.countSortSplats = function (parameters) {
   const sorterTaskProcessor = GaussianSplatSorter._getSorterTaskProcessor();
   if (defined(GaussianSplatSorter._error)) {
     throw GaussianSplatSorter._error;

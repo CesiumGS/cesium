@@ -28,6 +28,7 @@ import SkinningPipelineStage from "./SkinningPipelineStage.js";
 import VerticalExaggerationPipelineStage from "./VerticalExaggerationPipelineStage.js";
 import WireframePipelineStage from "./WireframePipelineStage.js";
 import GaussianSplatPipelineStage from "./GaussianSplatPipelineStage.js";
+import GaussianSplatTexturePipelineStage from "./GaussianSplatTexturePipelineStage.js";
 
 /**
  * In memory representation of a single primitive, that is, a primitive
@@ -241,10 +242,8 @@ ModelRuntimePrimitive.prototype.configurePipeline = function (frameState) {
 
   const hasClassification = defined(model.classificationType);
 
-  //JASON TODO -- just revisit this after other changes
   const hasGaussianSplats =
-    model.enableShowGaussianSplatting &&
-    (model?.style?.showGaussianSplatting ?? true);
+    model.enableShowGaussianSplatting && model.showGaussianSplatting;
   // Start of pipeline -----------------------------------------------------
   if (use2D) {
     pipelineStages.push(SceneMode2DPipelineStage);
@@ -315,7 +314,11 @@ ModelRuntimePrimitive.prototype.configurePipeline = function (frameState) {
   pipelineStages.push(PrimitiveStatisticsPipelineStage);
 
   if (hasGaussianSplats) {
-    pipelineStages.push(GaussianSplatPipelineStage);
+    if (primitive?.hasGaussianSplatTexture ?? false) {
+      pipelineStages.push(GaussianSplatTexturePipelineStage);
+    } else {
+      pipelineStages.push(GaussianSplatPipelineStage);
+    }
   }
 
   return;

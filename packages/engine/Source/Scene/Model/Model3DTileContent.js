@@ -337,11 +337,6 @@ Model3DTileContent.fromGltf = async function (tileset, tile, resource, gltf) {
 
   modelOptions.classificationType = classificationType;
 
-  //JASON TODO -- get rid of extensionsUsed logic
-  modelOptions.enableShowGaussianSplatting = gltf.extensionsUsed.includes(
-    "KHR_gaussian_splatting",
-  );
-
   const model = await Model.fromGltfAsync(modelOptions);
   content._model = model;
 
@@ -521,6 +516,7 @@ function makeModelOptions(tileset, tile, content, additionalOptions) {
     enableShowOutline: tileset._enableShowOutline,
     showOutline: tileset.showOutline,
     outlineColor: tileset.outlineColor,
+    showGaussianSplatting: tileset.showGaussianSplatting,
   };
 
   return combine(additionalOptions, mainOptions);
