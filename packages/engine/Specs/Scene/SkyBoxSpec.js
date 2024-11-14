@@ -11,8 +11,6 @@ describe(
     let loadedImage;
 
     beforeAll(function () {
-      scene = createScene();
-
       return Resource.fetchImage("./Data/Images/Blue.png").then(
         function (image) {
           loadedImage = image;
@@ -25,6 +23,7 @@ describe(
     });
 
     beforeEach(function () {
+      scene = createScene();
       scene.mode = SceneMode.SCENE3D;
     });
 
