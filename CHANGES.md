@@ -1,11 +1,12 @@
 # Change Log
 
-### 1.124 - 2024-12-01
+### 1.124 - 2024-12-02
 
 #### @cesium/engine
 
-##### Additions :tada:
+##### Fixes :wrench:
 
+- Fix label rendering bug in WebGL1 contexts. [#12301](https://github.com/CesiumGS/cesium/pull/12301)
 - Added `GoogleGeocoderService` for standalone usage of Google geocoder. [#12299](https://github.com/CesiumGS/cesium/pull/12299)
 
 #### @cesium/widgets
