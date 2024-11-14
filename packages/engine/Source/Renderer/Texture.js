@@ -941,7 +941,14 @@ Texture.prototype.copyFrom = function (options) {
 
   if (!uploaded) {
     if (defined(source.arrayBufferView)) {
-      loadPartialBufferSource(this, source, xOffset, yOffset, width, height);
+      loadPartialBufferSource(
+        this,
+        source.arrayBufferView,
+        xOffset,
+        yOffset,
+        width,
+        height,
+      );
     } else {
       loadPartialImageSource(this, source, xOffset, yOffset);
     }
