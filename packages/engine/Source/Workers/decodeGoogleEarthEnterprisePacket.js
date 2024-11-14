@@ -201,7 +201,7 @@ function processMetadata(buffer, totalSize, quadKey) {
 const numMeshesPerPacket = 5;
 const numSubMeshesPerMesh = 4;
 
-// Each terrain packet will have 5 meshes - each containg 4 sub-meshes:
+// Each terrain packet will have 5 meshes - each contain 4 sub-meshes:
 //    1 even level mesh and its 4 odd level children.
 // Any remaining bytes after the 20 sub-meshes contains water surface meshes,
 // which are ignored.

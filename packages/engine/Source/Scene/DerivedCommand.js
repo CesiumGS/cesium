@@ -2,6 +2,8 @@ import defined from "../Core/defined.js";
 import DrawCommand from "../Renderer/DrawCommand.js";
 import RenderState from "../Renderer/RenderState.js";
 import ShaderSource from "../Renderer/ShaderSource.js";
+import MetadataType from "./MetadataType.js";
+import MetadataPickingPipelineStage from "./Model/MetadataPickingPipelineStage.js";
 
 /**
  * @private
@@ -339,6 +341,227 @@ DerivedCommand.createPickDerivedCommand = function (
     result.pickCommand.shaderProgram = shader;
     result.pickCommand.renderState = renderState;
   }
+
+  return result;
+};
+
+/**
+ * Replaces the value of the specified 'define' directive identifier
+ * with the given value.
+ *
+ * The given defines are the parts of the define directives that are
+ * stored in the `ShaderSource`. For example, the defines may be
+ * `["EXAMPLE", "EXAMPLE_VALUE 123"]`
+ *
+ * Calling `replaceDefine(defines, "EXAMPLE", 999)` will result in
+ * the defines being
+ * `["EXAMPLE 999", "EXAMPLE_VALUE 123"]`
+ *
+ * @param {string[]} defines The define directive identifiers
+ * @param {string} defineName The name (identifier) of the define directive
+ * @param {any} newDefineValue The new value whose string representation
+ * will become the token string for the define directive
+ * @private
+ */
+function replaceDefine(defines, defineName, newDefineValue) {
+  const n = defines.length;
+  for (let i = 0; i < n; i++) {
+    const define = defines[i];
+    const tokens = define.trimStart().split(/\s+/);
+    if (tokens[0] === defineName) {
+      defines[i] = `${defineName} ${newDefineValue}`;
+    }
+  }
+}
+
+/**
+ * Returns the component count for the given class property, or
+ * its array length if it is an array.
+ *
+ * This will be
+ * `[1, 2, 3, 4]` for `[SCALAR, VEC2, VEC3, VEC4`] types,
+ * or the array length if it is an array.
+ *
+ * @param {MetadataClassProperty} classProperty The class property
+ * @returns {number} The component count
+ * @private
+ */
+function getComponentCount(classProperty) {
+  if (!classProperty.isArray) {
+    return MetadataType.getComponentCount(classProperty.type);
+  }
+  return classProperty.arrayLength;
+}
+
+/**
+ * Returns the type that the given class property has in a GLSL shader.
+ *
+ * It returns the same string as `PropertyTextureProperty.prototype.getGlslType`
+ * for a property texture property with the given class property
+ *
+ * @param {MetadataClassProperty} classProperty The class property
+ * @returns {string} The GLSL shader type string for the property
+ */
+function getGlslType(classProperty) {
+  const componentCount = getComponentCount(classProperty);
+  if (classProperty.normalized) {
+    if (componentCount === 1) {
+      return "float";
+    }
+    return `vec${componentCount}`;
+  }
+  if (componentCount === 1) {
+    return "int";
+  }
+  return `ivec${componentCount}`;
+}
+
+/**
+ * Creates a new `ShaderProgram` from the given input that renders metadata
+ * values into the frame buffer, according to the given picked metadata info.
+ *
+ * This will update the `defines` of the fragment shader of the given shader
+ * program, by setting `METADATA_PICKING_ENABLED`, and updating the
+ * `METADATA_PICKING_VALUE_*` defines so that they reflect the components
+ * of the metadata that should be written into the RGBA (vec4) that
+ * ends up as the 'color' in the frame buffer.
+ *
+ * The RGBA values will eventually be converted back into an actual metadata
+ * value in `Picking.js`, by calling `MetadataPicking.decodeMetadataValues`.
+ *
+ * @param {Context} context The context
+ * @param {ShaderProgram} shaderProgram The shader program
+ * @param {PickedMetadataInfo} pickedMetadataInfo The picked metadata info
+ * @returns {ShaderProgram} The new shader program
+ * @private
+ */
+function getPickMetadataShaderProgram(
+  context,
+  shaderProgram,
+  pickedMetadataInfo,
+) {
+  const schemaId = pickedMetadataInfo.schemaId;
+  const className = pickedMetadataInfo.className;
+  const propertyName = pickedMetadataInfo.propertyName;
+  const keyword = `pickMetadata-${schemaId}-${className}-${propertyName}`;
+  const shader = context.shaderCache.getDerivedShaderProgram(
+    shaderProgram,
+    keyword,
+  );
+  if (defined(shader)) {
+    return shader;
+  }
+
+  const classProperty = pickedMetadataInfo.classProperty;
+  const glslType = getGlslType(classProperty);
+
+  // Define the components that will go into the output `metadataValues`.
+  // By default, all of them are 0.0.
+  const sourceValueStrings = ["0.0", "0.0", "0.0", "0.0"];
+  const componentCount = getComponentCount(classProperty);
+  if (componentCount === 1) {
+    // When the property is a scalar, store its value directly
+    // in `metadataValues.x`
+    sourceValueStrings[0] = `float(value)`;
+  } else {
+    // When the property is an array, store the array elements
+    // in `metadataValues.x/y/z/w`
+    const components = ["x", "y", "z", "w"];
+    for (let i = 0; i < componentCount; i++) {
+      const component = components[i];
+      const valueString = `value.${component}`;
+      sourceValueStrings[i] = `float(${valueString})`;
+    }
+  }
+
+  // Make sure that the `metadataValues` components are all in
+  // the range [0, 1] (which will result in RGBA components
+  // in [0, 255] during rendering)
+  if (!classProperty.normalized) {
+    for (let i = 0; i < componentCount; i++) {
+      sourceValueStrings[i] += " / 255.0";
+    }
+  }
+
+  const newDefines = shaderProgram.fragmentShaderSource.defines.slice();
+  newDefines.push(MetadataPickingPipelineStage.METADATA_PICKING_ENABLED);
+
+  // Replace the defines of the shader, using the type, property
+  // access, and value components  that have been determined
+  replaceDefine(
+    newDefines,
+    MetadataPickingPipelineStage.METADATA_PICKING_VALUE_TYPE,
+    glslType,
+  );
+  replaceDefine(
+    newDefines,
+    MetadataPickingPipelineStage.METADATA_PICKING_VALUE_STRING,
+    `metadata.${propertyName}`,
+  );
+  replaceDefine(
+    newDefines,
+    MetadataPickingPipelineStage.METADATA_PICKING_VALUE_COMPONENT_X,
+    sourceValueStrings[0],
+  );
+  replaceDefine(
+    newDefines,
+    MetadataPickingPipelineStage.METADATA_PICKING_VALUE_COMPONENT_Y,
+    sourceValueStrings[1],
+  );
+  replaceDefine(
+    newDefines,
+    MetadataPickingPipelineStage.METADATA_PICKING_VALUE_COMPONENT_Z,
+    sourceValueStrings[2],
+  );
+  replaceDefine(
+    newDefines,
+    MetadataPickingPipelineStage.METADATA_PICKING_VALUE_COMPONENT_W,
+    sourceValueStrings[3],
+  );
+
+  const newFragmentShaderSource = new ShaderSource({
+    sources: shaderProgram.fragmentShaderSource.sources,
+    defines: newDefines,
+  });
+  const newShader = context.shaderCache.createDerivedShaderProgram(
+    shaderProgram,
+    keyword,
+    {
+      vertexShaderSource: shaderProgram.vertexShaderSource,
+      fragmentShaderSource: newFragmentShaderSource,
+      attributeLocations: shaderProgram._attributeLocations,
+    },
+  );
+  return newShader;
+}
+
+/**
+ * @private
+ */
+DerivedCommand.createPickMetadataDerivedCommand = function (
+  scene,
+  command,
+  context,
+  result,
+) {
+  if (!defined(result)) {
+    result = {};
+  }
+  result.pickMetadataCommand = DrawCommand.shallowClone(
+    command,
+    result.pickMetadataCommand,
+  );
+
+  result.pickMetadataCommand.shaderProgram = getPickMetadataShaderProgram(
+    context,
+    command.shaderProgram,
+    command.pickedMetadataInfo,
+  );
+  result.pickMetadataCommand.renderState = getPickRenderState(
+    scene,
+    command.renderState,
+  );
+  result.shaderProgramId = command.shaderProgram.id;
 
   return result;
 };

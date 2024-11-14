@@ -17,10 +17,6 @@ const SelectedFeatureIdPipelineStage = {
 
   STRUCT_ID_SELECTED_FEATURE: "SelectedFeature",
   STRUCT_NAME_SELECTED_FEATURE: "SelectedFeature",
-  FUNCTION_ID_FEATURE_VARYINGS_VS: "updateFeatureStructVS",
-  FUNCTION_ID_FEATURE_VARYINGS_FS: "updateFeatureStructFS",
-  FUNCTION_SIGNATURE_UPDATE_FEATURE:
-    "void updateFeatureStruct(inout SelectedFeature feature)",
 };
 
 /**

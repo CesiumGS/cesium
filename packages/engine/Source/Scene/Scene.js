@@ -77,6 +77,8 @@ import View from "./View.js";
 import DebugInspector from "./DebugInspector.js";
 import VoxelCell from "./VoxelCell.js";
 import VoxelPrimitive from "./VoxelPrimitive.js";
+import getMetadataClassProperty from "./getMetadataClassProperty.js";
+import PickedMetadataInfo from "./PickedMetadataInfo.js";
 
 const requestRenderAfterFrame = function (scene) {
   return function () {
@@ -1721,6 +1723,23 @@ Scene.prototype.getCompressedTextureFormatSupported = function (format) {
   );
 };
 
+function pickedMetadataInfoChanged(command, frameState) {
+  const oldPickedMetadataInfo = command.pickedMetadataInfo;
+  const newPickedMetadataInfo = frameState.pickedMetadataInfo;
+  if (oldPickedMetadataInfo?.schemaId !== newPickedMetadataInfo?.schemaId) {
+    return true;
+  }
+  if (oldPickedMetadataInfo?.className !== newPickedMetadataInfo?.className) {
+    return true;
+  }
+  if (
+    oldPickedMetadataInfo?.propertyName !== newPickedMetadataInfo?.propertyName
+  ) {
+    return true;
+  }
+  return false;
+}
+
 function updateDerivedCommands(scene, command, shadowsDirty) {
   const frameState = scene._frameState;
   const context = scene._context;
@@ -1737,7 +1756,18 @@ function updateDerivedCommands(scene, command, shadowsDirty) {
       derivedCommands.picking,
     );
   }
-
+  if (frameState.pickingMetadata && command.pickMetadataAllowed) {
+    command.pickedMetadataInfo = frameState.pickedMetadataInfo;
+    if (defined(command.pickedMetadataInfo)) {
+      derivedCommands.pickingMetadata =
+        DerivedCommand.createPickMetadataDerivedCommand(
+          scene,
+          command,
+          context,
+          derivedCommands.pickingMetadata,
+        );
+    }
+  }
   if (!command.pickOnly) {
     derivedCommands.depth = DerivedCommand.createDepthOnlyDerivedCommand(
       scene,
@@ -1799,6 +1829,7 @@ Scene.prototype.updateDerivedCommands = function (command) {
     return;
   }
 
+  const frameState = this._frameState;
   const { shadowState, useLogDepth } = this._frameState;
   const context = this._context;
 
@@ -1819,11 +1850,15 @@ Scene.prototype.updateDerivedCommands = function (command) {
     useLogDepth && !hasLogDepthDerivedCommands;
   const needsHdrCommands = useHdr && !hasHdrCommands;
   const needsDerivedCommands = (!useLogDepth || !useHdr) && !hasDerivedCommands;
+  const needsUpdateForMetadataPicking =
+    frameState.pickingMetadata &&
+    pickedMetadataInfoChanged(command, frameState);
   command.dirty =
     command.dirty ||
     needsLogDepthDerivedCommands ||
     needsHdrCommands ||
-    needsDerivedCommands;
+    needsDerivedCommands ||
+    needsUpdateForMetadataPicking;
 
   if (!command.dirty) {
     return;
@@ -2195,14 +2230,23 @@ function executeCommand(command, scene, passState, debugFramebuffer) {
   }
 
   if (passes.pick || passes.depth) {
-    if (
-      passes.pick &&
-      !passes.depth &&
-      defined(command.derivedCommands.picking)
-    ) {
-      command = command.derivedCommands.picking.pickCommand;
-      command.execute(context, passState);
-      return;
+    if (passes.pick && !passes.depth) {
+      if (
+        frameState.pickingMetadata &&
+        defined(command.derivedCommands.pickingMetadata)
+      ) {
+        command = command.derivedCommands.pickingMetadata.pickMetadataCommand;
+        command.execute(context, passState);
+        return;
+      }
+      if (
+        !frameState.pickingMetadata &&
+        defined(command.derivedCommands.picking)
+      ) {
+        command = command.derivedCommands.picking.pickCommand;
+        command.execute(context, passState);
+        return;
+      }
     } else if (defined(command.derivedCommands.depth)) {
       command = command.derivedCommands.depth.depthOnlyCommand;
       command.execute(context, passState);
@@ -2255,7 +2299,11 @@ function executeIdCommand(command, scene, passState) {
     command = derivedCommands.logDepth.command;
   }
 
-  const { picking, depth } = command.derivedCommands;
+  const { picking, pickingMetadata, depth } = command.derivedCommands;
+  if (defined(pickingMetadata)) {
+    command = derivedCommands.pickingMetadata.pickMetadataCommand;
+    command.execute(context, passState);
+  }
   if (defined(picking)) {
     command = picking.pickCommand;
     command.execute(context, passState);
@@ -4341,6 +4389,90 @@ Scene.prototype.pickVoxel = function (windowPosition, width, height) {
     sampleIndex,
     keyframeNode,
   );
+};
+
+/**
+ * Pick a metadata value at the given window position.
+ *
+ * @param {Cartesian2} windowPosition Window coordinates to perform picking on.
+ * @param {string|undefined} schemaId The ID of the metadata schema to pick values
+ * from. If this is `undefined`, then it will pick the values from the object
+ * that match the given class- and property name, regardless of the schema ID.
+ * @param {string} className The name of the metadata class to pick
+ * values from
+ * @param {string} propertyName The name of the metadata property to pick
+ * values from
+ * @returns The metadata value
+ *
+ * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
+ */
+Scene.prototype.pickMetadata = function (
+  windowPosition,
+  schemaId,
+  className,
+  propertyName,
+) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("windowPosition", windowPosition);
+  Check.typeOf.string("className", className);
+  Check.typeOf.string("propertyName", propertyName);
+  //>>includeEnd('debug');
+
+  const pickedObject = this.pick(windowPosition);
+  if (!defined(pickedObject)) {
+    return undefined;
+  }
+
+  // Check if the picked object is a model that has structural
+  // metadata, with a schema that contains the specified
+  // property.
+  const schema = pickedObject.detail?.model?.structuralMetadata?.schema;
+  const classProperty = getMetadataClassProperty(
+    schema,
+    schemaId,
+    className,
+    propertyName,
+  );
+  if (!defined(classProperty)) {
+    return undefined;
+  }
+
+  const pickedMetadataInfo = new PickedMetadataInfo(
+    schemaId,
+    className,
+    propertyName,
+    classProperty,
+  );
+
+  const pickedMetadataValues = this._picking.pickMetadata(
+    this,
+    windowPosition,
+    pickedMetadataInfo,
+  );
+
+  return pickedMetadataValues;
+};
+
+/**
+ * Pick the schema of the metadata of the object at the given position
+ *
+ * @param {Cartesian2} windowPosition Window coordinates to perform picking on.
+ * @returns {MetadataSchema} The metadata schema, or `undefined` if there is no object with
+ * associated metadata at the given position.
+ *
+ * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
+ */
+Scene.prototype.pickMetadataSchema = function (windowPosition) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("windowPosition", windowPosition);
+  //>>includeEnd('debug');
+
+  const pickedObject = this.pick(windowPosition);
+  if (!defined(pickedObject)) {
+    return undefined;
+  }
+  const schema = pickedObject.detail?.model?.structuralMetadata?.schema;
+  return schema;
 };
 
 /**

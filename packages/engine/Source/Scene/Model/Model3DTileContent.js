@@ -152,6 +152,25 @@ Object.defineProperties(Model3DTileContent.prototype, {
   },
 });
 
+/**
+ * Returns the object that was created for the given extension.
+ *
+ * The given name may be the name of a glTF extension, like `"EXT_example_extension"`.
+ * If the specified extension was present in the root of the underlying glTF asset,
+ * and a loder for the specified extension has processed the extension data, then
+ * this will return the model representation of the extension.
+ *
+ * @param {string} extensionName The name of the extension
+ * @returns {object|undefined} The object, or `undefined`
+ *
+ * @private
+ */
+Model3DTileContent.prototype.getExtension = function (extensionName) {
+  const model = this._model;
+  const extension = model.getExtension(extensionName);
+  return extension;
+};
+
 Model3DTileContent.prototype.getFeature = function (featureId) {
   const model = this._model;
   const featureTableId = model.featureTableId;
@@ -242,6 +261,11 @@ Model3DTileContent.prototype.update = function (tileset, frameState) {
       tilesetClippingPlanes.enabled && tile._isClipped
         ? tilesetClippingPlanes
         : undefined;
+  }
+
+  const tilesetEnvironmentMapManager = tileset.environmentMapManager;
+  if (model.environmentMapManager !== tilesetClippingPlanes) {
+    model._environmentMapManager = tilesetEnvironmentMapManager;
   }
 
   // If the model references a different ClippingPlaneCollection from the tileset,
