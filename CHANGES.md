@@ -2,9 +2,17 @@
 
 ### 1.124 - 2024-12-01
 
+#### @cesium/engine
+
 ##### Additions :tada:
 
-- Ability to choose between Bing and Google geocoders. Adds `GoogleGeocoderService` for standalone usage of Google geocoder. Updates `Viewer` constructor to also accept `IonGeocoderProvider` [#12299](https://github.com/CesiumGS/cesium/pull/12299)
+- Added `GoogleGeocoderService` for standalone usage of Google geocoder.   [#12299](https://github.com/CesiumGS/cesium/pull/12299)
+
+#### @cesium/widgets
+
+##### Additions :tada:
+
+- Added the ability to choose between Bing and Google geocoders. Updated `Viewer` constructor to also accept `IonGeocoderProvider` [#12299](https://github.com/CesiumGS/cesium/pull/12299)
 
 ### 1.123.1 - 2024-11-07
 
