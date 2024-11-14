@@ -16,7 +16,7 @@ function delay(ms) {
 async function loadExport(exportObj, options) {
   let status = exportObj.status;
 
-  if (exportObj.request.exportType !== ExportType.CESIUM) {
+  if (exportObj.request.exportType !== ExportType["3DTILES"]) {
     // This is an undocumented value but I think it's the only one we want to load
     // TODO: should we even be checking this?
     throw new Error(`Wrong export type ${exportObj.request.exportType}`);
@@ -55,6 +55,7 @@ const createIModel3DTileset = {};
  * Creates a {@link Cesium3DTileset} instance for the Google Photorealistic 3D Tiles tileset.
  *
  * @function
+ * @experimental
  *
  * @param {string} exportId
  * @param {Cesium3DTileset.ConstructorOptions} [options] An object describing initialization options.
@@ -63,17 +64,7 @@ const createIModel3DTileset = {};
  * @see ITwin
  *
  * @example
- * // Use your own iTwin API key for mesh export
- * Cesium.ITwin.defaultApiKey = "your-api-key";
- *
- * const viewer = new Cesium.Viewer("cesiumContainer");
- *
- * try {
- *   const tileset = await Cesium.createIModel3DTileset();
- *   viewer.scene.primitives.add(tileset));
- * } catch (error) {
- *   console.log(`Error creating tileset: ${error}`);
- * }
+ * TODO: example after API finalized
  */
 createIModel3DTileset.fromExportId = async function (exportId, options) {
   if (!defined(ITwin.defaultAccessToken)) {
@@ -98,12 +89,9 @@ createIModel3DTileset.fromExportId = async function (exportId, options) {
  * with the export id directly
  *
  * @example
- * // Try to load the corresponding tileset export or create it if it doesn't exist
- * let tileset = await Cesium.createIModel3DTileset.fromModelIdimodelId, changesetId);
- * if (!Cesium.defined(tileset)) {
- *   const exportId = await Cesium.ITwin.createExportForModelId(imodelId, changesetId, accessToken);
- *   tileset = await Cesium.createIModel3DTileset(exportId);
- * }
+ * TODO: example after API finalized
+ *
+ * @experimental
  *
  * @param {string} iModelId
  * @param {string} changesetId
@@ -116,7 +104,7 @@ createIModel3DTileset.fromModelId = async function (
 ) {
   const { exports } = await ITwin.getExports(iModelId, changesetId);
   const cesiumExport = exports.find(
-    (exportObj) => exportObj.request?.exportType === ExportType.CESIUM,
+    (exportObj) => exportObj.request?.exportType === ExportType["3DTILES"],
   );
   if (!defined(cesiumExport)) {
     return;

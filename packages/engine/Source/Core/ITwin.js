@@ -20,10 +20,9 @@ const ExportStatus = Object.freeze({
  * @enum {string}
  */
 const ExportType = Object.freeze({
-  "3DFT": "3DFT",
-  GLTF: "GLTF",
   IMODEL: "IMODEL",
   CESIUM: "CESIUM",
+  "3DTILES": "3DTILES",
 });
 
 /**
@@ -75,6 +74,8 @@ const ExportType = Object.freeze({
 /**
  * Default settings for accessing the iTwin platform.
  *
+ * @experimental
+ *
  * @see createIModel3DTileset
  * @namespace ITwin
  */
@@ -91,12 +92,16 @@ const ITwin = {};
  * `itwin-platform` if we want to use the iModel shares ourselves  GET /imodels/{id}/shares
  * Seems the `itwin-platform` scope should apply to everything but the docs are a little unclear
  *
+ * @experimental
+ *
  * @type {string|undefined}
  */
 ITwin.defaultAccessToken = undefined;
 
 /**
  * Gets or sets the default iTwin API endpoint.
+ *
+ * @experimental
  *
  * @type {string|Resource}
  * @default https://api.bentley.com
@@ -106,6 +111,10 @@ ITwin.apiEndpoint = new Resource({
 });
 
 /**
+ * Get the export object for the specified export id
+ *
+ * @experimental
+ *
  * @param {string} exportId
  */
 ITwin.getExport = async function (exportId) {
@@ -146,6 +155,8 @@ ITwin.getExport = async function (exportId) {
 /**
  * Get the list of exports for the given iModel + changeset
  *
+ * @experimental
+ *
  * @param {string} iModelId
  * @param {string} [changesetId]
  */
@@ -161,7 +172,8 @@ ITwin.getExports = async function (iModelId, changesetId) {
   };
 
   // obtain export for specified export id
-  let url = `${ITwin.apiEndpoint}mesh-export/?iModelId=${iModelId}&exportType=CESIUM&$top=1`;
+  // TODO: if we do include the clientVersion what should it be set to? can we sync it with the package.json?
+  let url = `${ITwin.apiEndpoint}mesh-export/?iModelId=${iModelId}&exportType=${ExportType["3DTILES"]}&$top=1&client=CesiumJS&clientVersion=1.123`;
   if (defined(changesetId) && changesetId !== "") {
     url += `&changesetId=${changesetId}`;
   }
@@ -194,6 +206,12 @@ ITwin.getExports = async function (iModelId, changesetId) {
 /**
  * Start the export process for the given iModel + changeset.
  *
+ * TODO: REMOVE THIS FUNCTION! Auto generation of exports for the 3DTILES type is planned very soon
+ * and will be the desired way of interacting with iModels through exports. This function is here
+ * just while we continue testing during the PR process.
+ *
+ * @experimental
+ *
  * @param {string} iModelId
  * @param {string} [changesetId]
  */
@@ -214,7 +232,7 @@ ITwin.createExportForModelId = async function (iModelId, changesetId) {
     body: JSON.stringify({
       iModelId,
       changesetId,
-      exportType: "CESIUM",
+      exportType: ExportType["3DTILES"],
     }),
   };
 
@@ -252,47 +270,6 @@ ITwin.createExportForModelId = async function (iModelId, changesetId) {
   /** @type {ExportResponse} */
   const result = await response.json();
   return result.export.id;
-};
-
-/**
- * Delete the specified export
- *
- * TODO: I'm not sure if we want this or not. Might belong better as an APP level function
- * I just started creating helpers for all the routes under the `mesh-export` API
- * for ease of access during testing
- *
- * @param {string} exportId
- */
-ITwin.deleteExport = async function (exportId) {
-  if (!defined(ITwin.defaultAccessToken)) {
-    throw new DeveloperError("Must set ITwin.defaultAccessToken first");
-  }
-  const headers = {
-    Authorization: ITwin.defaultAccessToken,
-    Accept: "application/vnd.bentley.itwin-platform.v1+json",
-  };
-
-  // obtain export for specified export id
-  const url = `${ITwin.apiEndpoint}mesh-export/${exportId}`;
-
-  const response = await fetch(url, { method: "DELETE", headers });
-  if (!response.ok) {
-    const result = await response.json();
-    if (response.status === 401) {
-      throw new RuntimeError(
-        `Unauthorized, bad token, wrong scopes or headers bad. ${result.error.details[0].code}`,
-      );
-    } else if (response.status === 404) {
-      throw new RuntimeError("Export not found");
-    } else if (response.status === 422) {
-      throw new RuntimeError(
-        `Unprocessable Entity: ${result.error.code} ${result.error.message}`,
-      );
-    } else if (response.status === 429) {
-      throw new RuntimeError("Too many requests");
-    }
-    throw new RuntimeError(`Unknown request failure ${response.status}`);
-  }
 };
 
 export default ITwin;
