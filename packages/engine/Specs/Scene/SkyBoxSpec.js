@@ -1,6 +1,7 @@
-import { Resource, SceneMode, SkyBox } from "../../index.js";
+import { defined, Resource, SceneMode, SkyBox } from "../../index.js";
 
 import createScene from "../../../../Specs/createScene.js";
+import pollToPromise from "../../../../Specs/pollToPromise.js";
 
 describe(
   "Scene/SkyBox",
@@ -375,8 +376,7 @@ describe(
       scene.skyBox = skyBox;
       skyBox.update(scene.frameState);
 
-      // Flush macro task queue to allow the rejections to be thrown
-      await new Promise((resolve) => window.setTimeout(resolve, 0));
+      await pollToPromise(() => defined(skyBox._cubeMap) || skyBox._hasError);
 
       expect(skyBox._hasError).toBeTrue();
       expect(skyBox._error).toEqual(error);
