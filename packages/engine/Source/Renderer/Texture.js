@@ -390,7 +390,7 @@ function loadBufferSource(texture, source) {
  * Load texel data from a buffer into part of a texture
  *
  * @param {Texture} texture The texture to which texel values will be loaded.
- * @param {object} source The source for texel values to be loaded into the texture.
+ * @param {TypedArray} arrayBufferView The texel values to be loaded into the texture.
  * @param {number} xOffset The texel x coordinate of the lower left corner of the subregion of the texture to be updated.
  * @param {number} yOffset The texel y coordinate of the lower left corner of the subregion of the texture to be updated.
  * @param {number} width The width of the source data, in pixels.
@@ -400,7 +400,7 @@ function loadBufferSource(texture, source) {
  */
 function loadPartialBufferSource(
   texture,
-  source,
+  arrayBufferView,
   xOffset,
   yOffset,
   width,
@@ -420,7 +420,6 @@ function loadPartialBufferSource(
   gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
   gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
 
-  let { arrayBufferView } = source;
   if (texture.flipY) {
     arrayBufferView = PixelFormat.flipY(
       arrayBufferView,
