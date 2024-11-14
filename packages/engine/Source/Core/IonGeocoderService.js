@@ -106,8 +106,10 @@ Object.defineProperties(IonGeocoderService.prototype, {
     },
   },
   /**
+   * The geocoding service that Cesium ion API server should use to fulfill geocding requests.
    * @memberof IonGeocoderService.prototype
    * @type {IonGeocodeProvider}
+   * @default IonGeocodeProvider.DEFAULT
    */
   geocodeProvider: {
     get: function () {

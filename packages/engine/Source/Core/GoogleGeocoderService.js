@@ -5,6 +5,7 @@ import Rectangle from "./Rectangle.js";
 import Resource from "./Resource.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
+import RuntimeError from "./RuntimeError.js";
 
 const API_URL = "https://maps.googleapis.com/maps/api/geocode/json";
 const CREDIT_HTML = `<img alt="Google" src="https://assets.ion.cesium.com/google-credit.png" style="vertical-align:-5px">`;
@@ -52,11 +53,13 @@ Object.defineProperties(GoogleGeocoderService.prototype, {
 });
 
 /**
+ * Get a list of possible locations that match a search string.
+ *
  * @function
  *
  * @param {string} query The query to be sent to the geocoder service
  * @returns {Promise<GeocoderService.Result[]>}
- * @throws {Error} If the services returns a status other than <code>OK</code> or <code>ZERO_RESULTS</code>
+ * @throws {RuntimeError} If the services returns a status other than <code>OK</code> or <code>ZERO_RESULTS</code>
  */
 GoogleGeocoderService.prototype.geocode = async function (query) {
   // See API documentation at https://developers.google.com/maps/documentation/geocoding/requests-geocoding
@@ -78,7 +81,7 @@ GoogleGeocoderService.prototype.geocode = async function (query) {
   }
 
   if (response.status !== "OK") {
-    throw new Error(
+    throw new RuntimeError(
       `GoogleGeocoderService got a bad response ${response.status}: ${response.error_message}`,
     );
   }

@@ -6,7 +6,7 @@
 
 ##### Additions :tada:
 
-- Added `GoogleGeocoderService` for standalone usage of Google geocoder.   [#12299](https://github.com/CesiumGS/cesium/pull/12299)
+- Added `GoogleGeocoderService` for standalone usage of Google geocoder. [#12299](https://github.com/CesiumGS/cesium/pull/12299)
 
 #### @cesium/widgets
 
