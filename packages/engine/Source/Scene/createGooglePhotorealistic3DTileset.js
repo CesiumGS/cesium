@@ -18,7 +18,7 @@ import Resource from "../Core/Resource.js";
  *
  * @example
  * const viewer = new Cesium.Viewer("cesiumContainer", {
- *   geocoder: Cesium.IonGeocodeProvider.GOOGLE
+ *   geocoder: Cesium.IonGeocodeProviderType.GOOGLE
  * });
  *
  * try {
@@ -33,7 +33,7 @@ import Resource from "../Core/Resource.js";
  * Cesium.GoogleMaps.defaultApiKey = "your-api-key";
  *
  * const viewer = new Cesium.Viewer("cesiumContainer". {
- *   geocoder: Cesium.IonGeocodeProvider.GOOGLE
+ *   geocoder: Cesium.IonGeocodeProviderType.GOOGLE
  * });
  *
  * try {

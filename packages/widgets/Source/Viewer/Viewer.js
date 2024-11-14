@@ -281,7 +281,7 @@ function enableVRUI(viewer, enabled) {
  * @property {boolean} [baseLayerPicker=true] If set to false, the BaseLayerPicker widget will not be created.
  * @property {boolean} [fullscreenButton=true] If set to false, the FullscreenButton widget will not be created.
  * @property {boolean} [vrButton=false] If set to true, the VRButton widget will be created.
- * @property {boolean|IonGeocodeProvider|GeocoderService[]} [geocoder=IonGeocodeProvider.DEFAULT] The geocoding service or services to use when searching with the Geocoder widget. If set to false, the Geocoder widget will not be created.
+ * @property {boolean|IonGeocodeProviderType|GeocoderService[]} [geocoder=IonGeocodeProviderType.DEFAULT] The geocoding service or services to use when searching with the Geocoder widget. If set to false, the Geocoder widget will not be created.
  * @property {boolean} [homeButton=true] If set to false, the HomeButton widget will not be created.
  * @property {boolean} [infoBox=true] If set to false, the InfoBox widget will not be created.
  * @property {boolean} [sceneModePicker=true] If set to false, the SceneModePicker widget will not be created.

@@ -3,7 +3,7 @@
  *
  * @enum {string}
  */
-const IonGeocodeProvider = {
+const IonGeocodeProviderType = {
   /**
    * Google geocoder, for use with Google data.
    *
@@ -30,4 +30,4 @@ const IonGeocodeProvider = {
   DEFAULT: "DEFAULT",
 };
 
-export default Object.freeze(IonGeocodeProvider);
+export default Object.freeze(IonGeocodeProviderType);

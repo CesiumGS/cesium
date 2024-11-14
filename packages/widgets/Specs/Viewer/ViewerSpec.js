@@ -18,7 +18,7 @@ import {
   ImageryLayerCollection,
   SceneMode,
   ShadowMode,
-  IonGeocodeProvider,
+  IonGeocodeProviderType,
   IonGeocoderService,
 } from "@cesium/engine";
 
@@ -356,16 +356,16 @@ describe(
       expect(viewer.geocoder.viewModel._geocoderServices.length).toBe(1);
     });
 
-    it("constructs geocoder with IonGeocodeProvider", function () {
+    it("constructs geocoder with IonGeocodeProviderType", function () {
       viewer = createViewer(container, {
-        geocoder: IonGeocodeProvider.GOOGLE,
+        geocoder: IonGeocodeProviderType.GOOGLE,
       });
       expect(viewer.geocoder).toBeDefined();
       expect(viewer.geocoder.viewModel._geocoderServices.length).toBe(1);
       const geocoderService = viewer.geocoder.viewModel._geocoderServices[0];
       expect(geocoderService).toBeInstanceOf(IonGeocoderService);
       expect(geocoderService.geocodeProvider).toEqual(
-        IonGeocodeProvider.GOOGLE,
+        IonGeocodeProviderType.GOOGLE,
       );
     });
 
