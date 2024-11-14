@@ -1,5 +1,13 @@
 # Change Log
 
+### 1.124 - 2024-12-02
+
+#### @cesium/engine
+
+##### Fixes :wrench:
+
+- Fix label rendering bug in WebGL1 contexts. [#12301](https://github.com/CesiumGS/cesium/pull/12301)
+
 ### 1.123.1 - 2024-11-07
 
 #### @cesium/engine

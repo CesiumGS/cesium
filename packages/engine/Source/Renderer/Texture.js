@@ -343,7 +343,7 @@ function loadBufferSource(texture, source) {
   gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
   gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
 
-  let arrayBufferView = source.arrayBufferView;
+  let { arrayBufferView } = source;
   if (flipY) {
     arrayBufferView = PixelFormat.flipY(
       arrayBufferView,
@@ -384,6 +384,62 @@ function loadBufferSource(texture, source) {
       );
     }
   }
+}
+
+/**
+ * Load texel data from a buffer into part of a texture
+ *
+ * @param {Texture} texture The texture to which texel values will be loaded.
+ * @param {TypedArray} arrayBufferView The texel values to be loaded into the texture.
+ * @param {number} xOffset The texel x coordinate of the lower left corner of the subregion of the texture to be updated.
+ * @param {number} yOffset The texel y coordinate of the lower left corner of the subregion of the texture to be updated.
+ * @param {number} width The width of the source data, in pixels.
+ * @param {number} width The height of the source data, in pixels.
+ *
+ * @private
+ */
+function loadPartialBufferSource(
+  texture,
+  arrayBufferView,
+  xOffset,
+  yOffset,
+  width,
+  height,
+) {
+  const context = texture._context;
+  const gl = context._gl;
+
+  const { pixelFormat, pixelDatatype } = texture;
+
+  const unpackAlignment = PixelFormat.alignmentInBytes(
+    pixelFormat,
+    pixelDatatype,
+    width,
+  );
+  gl.pixelStorei(gl.UNPACK_ALIGNMENT, unpackAlignment);
+  gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+
+  if (texture.flipY) {
+    arrayBufferView = PixelFormat.flipY(
+      arrayBufferView,
+      pixelFormat,
+      pixelDatatype,
+      width,
+      height,
+    );
+  }
+  gl.texSubImage2D(
+    texture._textureTarget,
+    0,
+    xOffset,
+    yOffset,
+    width,
+    height,
+    pixelFormat,
+    PixelDatatype.toWebGLConstant(pixelDatatype, context),
+    arrayBufferView,
+  );
 }
 
 /**
@@ -442,6 +498,35 @@ function loadImageSource(texture, source) {
     texture._textureTarget,
     0,
     texture._internalFormat,
+    texture.pixelFormat,
+    PixelDatatype.toWebGLConstant(texture.pixelDatatype, context),
+    source,
+  );
+}
+
+/**
+ * Load texel data from an Image into part of a texture
+ *
+ * @param {Texture} texture The texture to which texel values will be loaded.
+ * @param {ImageData|HTMLImageElement|HTMLCanvasElement|HTMLVideoElement} source The source for texel values to be loaded into the texture.
+ * @param {number} xOffset The texel x coordinate of the lower left corner of the subregion of the texture to be updated.
+ * @param {number} yOffset The texel y coordinate of the lower left corner of the subregion of the texture to be updated.
+ *
+ * @private
+ */
+function loadPartialImageSource(texture, source, xOffset, yOffset) {
+  const context = texture._context;
+  const gl = context._gl;
+
+  gl.pixelStorei(gl.UNPACK_ALIGNMENT, 4);
+  gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, texture.preMultiplyAlpha);
+  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, texture.flipY);
+
+  gl.texSubImage2D(
+    texture._textureTarget,
+    0,
+    xOffset,
+    yOffset,
     texture.pixelFormat,
     PixelDatatype.toWebGLConstant(texture.pixelDatatype, context),
     source,
@@ -812,7 +897,6 @@ Texture.prototype.copyFrom = function (options) {
   gl.bindTexture(target, this._texture);
 
   let { width, height } = source;
-  const arrayBufferView = source.arrayBufferView;
 
   // Make sure we are using the element's intrinsic width and height where available
   if (defined(source.videoWidth) && defined(source.videoHeight)) {
@@ -822,25 +906,6 @@ Texture.prototype.copyFrom = function (options) {
     width = source.naturalWidth;
     height = source.naturalHeight;
   }
-
-  const textureWidth = this._width;
-  const textureHeight = this._height;
-  const internalFormat = this._internalFormat;
-  const pixelFormat = this._pixelFormat;
-  const pixelDatatype = this._pixelDatatype;
-
-  const preMultiplyAlpha = this._preMultiplyAlpha;
-  const flipY = this._flipY;
-
-  let unpackAlignment = 4;
-  if (defined(arrayBufferView)) {
-    unpackAlignment = PixelFormat.alignmentInBytes(
-      pixelFormat,
-      pixelDatatype,
-      width,
-    );
-  }
-  gl.pixelStorei(gl.UNPACK_ALIGNMENT, unpackAlignment);
 
   if (skipColorSpaceConversion) {
     gl.pixelStorei(gl.UNPACK_COLORSPACE_CONVERSION_WEBGL, gl.NONE);
@@ -853,94 +918,40 @@ Texture.prototype.copyFrom = function (options) {
 
   let uploaded = false;
   if (!this._initialized) {
-    let pixels;
     if (
       xOffset === 0 &&
       yOffset === 0 &&
-      width === textureWidth &&
-      height === textureHeight
+      width === this._width &&
+      height === this._height
     ) {
       // initialize the entire texture
-      if (defined(arrayBufferView)) {
-        gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
-        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
-        if (flipY) {
-          pixels = PixelFormat.flipY(
-            arrayBufferView,
-            pixelFormat,
-            pixelDatatype,
-            textureWidth,
-            textureHeight,
-          );
-        } else {
-          pixels = arrayBufferView;
-        }
+      if (defined(source.arrayBufferView)) {
+        loadBufferSource(this, source);
       } else {
-        // Only valid for DOM-Element uploads
-        gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, preMultiplyAlpha);
-        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, flipY);
-        pixels = source;
+        loadImageSource(this, source);
       }
       uploaded = true;
     } else {
       gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
       gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
-      // initialize the entire texture to zero
-      pixels = PixelFormat.createTypedArray(
-        pixelFormat,
-        pixelDatatype,
-        textureWidth,
-        textureHeight,
-      );
+      loadNull(this);
     }
-    gl.texImage2D(
-      target,
-      0,
-      internalFormat,
-      textureWidth,
-      textureHeight,
-      0,
-      pixelFormat,
-      PixelDatatype.toWebGLConstant(pixelDatatype, context),
-      pixels,
-    );
     this._initialized = true;
   }
 
   if (!uploaded) {
-    let pixels;
-    if (defined(arrayBufferView)) {
-      gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
-      gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
-
-      if (flipY) {
-        pixels = PixelFormat.flipY(
-          arrayBufferView,
-          pixelFormat,
-          pixelDatatype,
-          width,
-          height,
-        );
-      } else {
-        pixels = arrayBufferView;
-      }
+    if (defined(source.arrayBufferView)) {
+      loadPartialBufferSource(
+        this,
+        source.arrayBufferView,
+        xOffset,
+        yOffset,
+        width,
+        height,
+      );
     } else {
-      // Only valid for DOM-Element uploads
-      gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, preMultiplyAlpha);
-      gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, flipY);
-      pixels = source;
+      loadPartialImageSource(this, source, xOffset, yOffset);
     }
-    gl.texSubImage2D(
-      target,
-      0,
-      xOffset,
-      yOffset,
-      width,
-      height,
-      pixelFormat,
-      PixelDatatype.toWebGLConstant(pixelDatatype, context),
-      pixels,
-    );
   }
 
   gl.bindTexture(target, null);
