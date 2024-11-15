@@ -1,7 +1,7 @@
 import Cesium3DTileset from "./Cesium3DTileset.js";
 import defined from "../Core/defined.js";
 import Resource from "../Core/Resource.js";
-import ITwin from "../Core/ITwin.js";
+import ITwinPlatform from "../Core/ITwinPlatform.js";
 import RuntimeError from "../Core/RuntimeError.js";
 import Check from "../Core/Check.js";
 
@@ -20,16 +20,16 @@ async function loadExport(exportObj, options) {
 
   let status = exportObj.status;
 
-  if (exportObj.request.exportType !== ITwin.ExportType["3DTILES"]) {
+  if (exportObj.request.exportType !== ITwinPlatform.ExportType["3DTILES"]) {
     throw new RuntimeError(`Wrong export type ${exportObj.request.exportType}`);
   }
 
   const timeoutAfter = 300000;
   const start = Date.now();
   // wait until the export is complete
-  while (status !== ITwin.ExportStatus.Complete) {
+  while (status !== ITwinPlatform.ExportStatus.Complete) {
     await delay(5000);
-    exportObj = (await ITwin.getExport(exportObj.id)).export;
+    exportObj = (await ITwinPlatform.getExport(exportObj.id)).export;
     status = exportObj.status;
     console.log(`Export is ${status}`);
 
@@ -51,7 +51,7 @@ async function loadExport(exportObj, options) {
   return Cesium3DTileset.fromUrl(resource, options);
 }
 
-const createIModel3DTileset = {};
+const ITwinData = {};
 
 /**
  * Creates a {@link Cesium3DTileset} instance for the Google Photorealistic 3D Tiles tileset.
@@ -69,10 +69,10 @@ const createIModel3DTileset = {};
  * @example
  * TODO: example after API finalized
  */
-createIModel3DTileset.fromExportId = async function (exportId, options) {
+ITwinData.createTilesetFromExportId = async function (exportId, options) {
   options = options ?? {};
 
-  const result = await ITwin.getExport(exportId);
+  const result = await ITwinPlatform.getExport(exportId);
   const tileset = await loadExport(result.export, options);
   return tileset;
 };
@@ -81,10 +81,10 @@ createIModel3DTileset.fromExportId = async function (exportId, options) {
  * Check the exports for the given iModel + changeset combination for any that
  * have the desired CESIUM type and returns the first one that matches as a new tileset.
  *
- * If there is not a CESIUM export you can create it using {@link ITwin.createExportForModelId}
+ * If there is not a CESIUM export you can create it using {@link ITwinPlatform.createExportForModelId}
  *
  * This function assumes one export per type per "iModel id + changeset id". If you need to create
- * multiple exports per "iModel id + changeset id" you should switch to using {@link createIModel3DTileset}
+ * multiple exports per "iModel id + changeset id" you should switch to using {@link ITwinData}
  * with the export id directly
  *
  * @example
@@ -99,15 +99,15 @@ createIModel3DTileset.fromExportId = async function (exportId, options) {
  * @throws {RuntimeError} Wrong export type
  * @throws {RuntimeError} Export did not complete in time.
  */
-createIModel3DTileset.fromModelId = async function (
+ITwinData.createTilesetFromModelId = async function (
   iModelId,
   changesetId,
   options,
 ) {
-  const { exports } = await ITwin.getExports(iModelId, changesetId);
+  const { exports } = await ITwinPlatform.getExports(iModelId, changesetId);
   const cesiumExport = exports.find(
     (exportObj) =>
-      exportObj.request?.exportType === ITwin.ExportType["3DTILES"],
+      exportObj.request?.exportType === ITwinPlatform.ExportType["3DTILES"],
   );
   if (!defined(cesiumExport)) {
     return;
@@ -115,4 +115,4 @@ createIModel3DTileset.fromModelId = async function (
   return loadExport(cesiumExport, options);
 };
 
-export default createIModel3DTileset;
+export default ITwinData;

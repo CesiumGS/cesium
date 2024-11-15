@@ -33,7 +33,7 @@
         const serviceResponse = await fetch("http://localhost:3000/service");
         const { token } = await serviceResponse.json();
 
-        Cesium.ITwin.defaultAccessToken = token;
+        Cesium.ITwinPlatform.defaultAccessToken = token;
         // this is the iModel in the "Hello iTwinCesium" iTwin that we should all have access to
         // https://developer.bentley.com/my-itwins/b4a30036-0456-49ea-a439-3fcd9365e24e/home/
         // const imodelId = "2852c3d7-00c3-4b5d-a0ce-82bbde4f061e";
@@ -123,7 +123,7 @@
 
           statusOutput.innerText = "Creating Tileset";
 
-          let tileset = await Cesium.createIModel3DTileset.fromModelId(
+          let tileset = await Cesium.ITwinData.createTilesetFromModelId(
             imodelId,
             changesetId,
           );
@@ -131,12 +131,12 @@
             // TODO: this is temporary, we should not have to call the Start Export route ever after
             // auto generation is set up
             statusOutput.innerText = "Starting export";
-            const exportId = await Cesium.ITwin.createExportForModelId(
+            const exportId = await Cesium.ITwinPlatform.createExportForModelId(
               imodelId,
               changesetId,
             );
             statusOutput.innerText = "Creating Tileset from export";
-            tileset = await Cesium.createIModel3DTileset.fromExportId(exportId);
+            tileset = await Cesium.ITwinData.createTilesetFromExportId(exportId);
           }
 
           scene.primitives.add(tileset);

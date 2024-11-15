@@ -26,7 +26,7 @@ import RuntimeError from "./RuntimeError.js";
  * @typedef {Object} StartExport
  * @property {string} iModelId
  * @property {string} changesetId
- * @property {ITwin.ExportType} exportType Type of mesh to create. Currently, only GLTF and 3DFT are supported and undocumented CESIUM option
+ * @property {ITwinPlatform.ExportType} exportType Type of mesh to create. Currently, only GLTF and 3DFT are supported and undocumented CESIUM option
  * @property {GeometryOptions} geometryOptions
  * @property {ViewDefinitionFilter} viewDefinitionFilter
  */
@@ -40,7 +40,7 @@ import RuntimeError from "./RuntimeError.js";
  * @typedef {Object} Export
  * @property {string} id
  * @property {string} displayName
- * @property {ITwin.ExportStatus} status
+ * @property {ITwinPlatform.ExportStatus} status
  * @property {StartExport} request
  * @property {{mesh: Link}} _links
  */
@@ -55,15 +55,15 @@ import RuntimeError from "./RuntimeError.js";
  *
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  *
- * @see createIModel3DTileset
- * @namespace ITwin
+ * @see ITwinData for ways to import data
+ * @namespace ITwinPlatform
  */
-const ITwin = {};
+const ITwinPlatform = {};
 
 /**
  * @enum {string}
  */
-ITwin.ExportStatus = Object.freeze({
+ITwinPlatform.ExportStatus = Object.freeze({
   NotStarted: "NotStarted",
   InProgress: "InProgress",
   Complete: "Complete",
@@ -73,7 +73,7 @@ ITwin.ExportStatus = Object.freeze({
 /**
  * @enum {string}
  */
-ITwin.ExportType = Object.freeze({
+ITwinPlatform.ExportType = Object.freeze({
   IMODEL: "IMODEL",
   CESIUM: "CESIUM",
   "3DTILES": "3DTILES",
@@ -94,7 +94,7 @@ ITwin.ExportType = Object.freeze({
  *
  * @type {string|undefined}
  */
-ITwin.defaultAccessToken = undefined;
+ITwinPlatform.defaultAccessToken = undefined;
 
 /**
  * Gets or sets the default iTwin API endpoint.
@@ -104,7 +104,7 @@ ITwin.defaultAccessToken = undefined;
  * @type {string|Resource}
  * @default https://api.bentley.com
  */
-ITwin.apiEndpoint = new Resource({
+ITwinPlatform.apiEndpoint = new Resource({
   url: "https://api.bentley.com",
 });
 
@@ -120,21 +120,21 @@ ITwin.apiEndpoint = new Resource({
  * @throws {RuntimeError} Too many requests
  * @throws {RuntimeError} Unknown request failure
  */
-ITwin.getExport = async function (exportId) {
+ITwinPlatform.getExport = async function (exportId) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.string("exportId", exportId);
-  if (!defined(ITwin.defaultAccessToken)) {
+  if (!defined(ITwinPlatform.defaultAccessToken)) {
     throw new DeveloperError("Must set ITwin.defaultAccessToken first");
   }
   //>>includeEnd('debug')
 
   const headers = {
-    Authorization: `Bearer ${ITwin.defaultAccessToken}`,
+    Authorization: `Bearer ${ITwinPlatform.defaultAccessToken}`,
     Accept: "application/vnd.bentley.itwin-platform.v1+json",
   };
 
   // obtain export for specified export id
-  const url = `${ITwin.apiEndpoint}mesh-export/${exportId}`;
+  const url = `${ITwinPlatform.apiEndpoint}mesh-export/${exportId}`;
 
   // TODO: this request is _really_ slow, like 7 whole second alone for me
   // Arun said this was kinda normal but to keep track of the `x-correlation-id` of any that take EXTRA long
@@ -172,31 +172,31 @@ ITwin.getExport = async function (exportId) {
  * @throws {RuntimeError} Too many requests
  * @throws {RuntimeError} Unknown request failure
  */
-ITwin.getExports = async function (iModelId, changesetId) {
+ITwinPlatform.getExports = async function (iModelId, changesetId) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.string("iModelId", iModelId);
   if (defined(changesetId)) {
     Check.typeOf.string("changesetId", changesetId);
   }
-  if (!defined(ITwin.defaultAccessToken)) {
+  if (!defined(ITwinPlatform.defaultAccessToken)) {
     throw new DeveloperError("Must set ITwin.defaultAccessToken first");
   }
   //>>includeEnd('debug')
 
   const headers = {
-    Authorization: `Bearer ${ITwin.defaultAccessToken}`,
+    Authorization: `Bearer ${ITwinPlatform.defaultAccessToken}`,
     Accept: "application/vnd.bentley.itwin-platform.v1+json",
     Prefer: "return=representation", // or return=minimal (the default)
   };
 
   // obtain export for specified export id
   // TODO: if we do include the clientVersion what should it be set to? can we sync it with the package.json?
-  const url = new URL(`${ITwin.apiEndpoint}mesh-export`);
+  const url = new URL(`${ITwinPlatform.apiEndpoint}mesh-export`);
   url.searchParams.set("iModelId", iModelId);
   if (defined(changesetId) && changesetId !== "") {
     url.searchParams.set("changesetId", changesetId);
   }
-  url.searchParams.set("exportType", ITwin.ExportType["3DTILES"]);
+  url.searchParams.set("exportType", ITwinPlatform.ExportType["3DTILES"]);
   url.searchParams.set("$top", "1");
   url.searchParams.set("client", "CesiumJS");
   /* global CESIUM_VERSION */
@@ -247,13 +247,13 @@ ITwin.getExports = async function (iModelId, changesetId) {
  * @throws {RuntimeError} Too many requests
  * @throws {RuntimeError} Unknown request failure
  */
-ITwin.createExportForModelId = async function (iModelId, changesetId) {
+ITwinPlatform.createExportForModelId = async function (iModelId, changesetId) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.string("iModelId", iModelId);
   if (defined(changesetId)) {
     Check.typeOf.string("changesetId", changesetId);
   }
-  if (!defined(ITwin.defaultAccessToken)) {
+  if (!defined(ITwinPlatform.defaultAccessToken)) {
     throw new DeveloperError("Must set ITwin.defaultAccessToken first");
   }
   //>>includeEnd('debug')
@@ -263,20 +263,20 @@ ITwin.createExportForModelId = async function (iModelId, changesetId) {
   const requestOptions = {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${ITwin.defaultAccessToken}`,
+      Authorization: `Bearer ${ITwinPlatform.defaultAccessToken}`,
       Accept: "application/vnd.bentley.itwin-platform.v1+json",
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
       iModelId,
       changesetId,
-      exportType: ITwin.ExportType["3DTILES"],
+      exportType: ITwinPlatform.ExportType["3DTILES"],
     }),
   };
 
   // initiate mesh export
   const response = await fetch(
-    `${ITwin.apiEndpoint}mesh-export/`,
+    `${ITwinPlatform.apiEndpoint}mesh-export/`,
     requestOptions,
   );
 
@@ -310,4 +310,4 @@ ITwin.createExportForModelId = async function (iModelId, changesetId) {
   return result.export.id;
 };
 
-export default ITwin;
+export default ITwinPlatform;
