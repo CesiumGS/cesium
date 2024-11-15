@@ -1,29 +1,8 @@
+import Check from "./Check.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import Resource from "./Resource.js";
 import RuntimeError from "./RuntimeError.js";
-
-/**
- * @enum {string}
- */
-const ExportStatus = Object.freeze({
-  NotStarted: "NotStarted",
-  InProgress: "InProgress",
-  Complete: "Complete",
-  Invalid: "Invalid",
-});
-
-/**
- * Type of an export currently, only GLTF and 3DFT are documented
- * The CESIUM option is what we were told to use with Sandcastle
- * I've also seen the IMODEL one but don't know where it's from
- * @enum {string}
- */
-const ExportType = Object.freeze({
-  IMODEL: "IMODEL",
-  CESIUM: "CESIUM",
-  "3DTILES": "3DTILES",
-});
 
 /**
  * @typedef {Object} GeometryOptions
@@ -47,7 +26,7 @@ const ExportType = Object.freeze({
  * @typedef {Object} StartExport
  * @property {string} iModelId
  * @property {string} changesetId
- * @property {ExportType} exportType Type of mesh to create. Currently, only GLTF and 3DFT are supported and undocumented CESIUM option
+ * @property {ITwin.ExportType} exportType Type of mesh to create. Currently, only GLTF and 3DFT are supported and undocumented CESIUM option
  * @property {GeometryOptions} geometryOptions
  * @property {ViewDefinitionFilter} viewDefinitionFilter
  */
@@ -61,7 +40,7 @@ const ExportType = Object.freeze({
  * @typedef {Object} Export
  * @property {string} id
  * @property {string} displayName
- * @property {ExportStatus} status
+ * @property {ITwin.ExportStatus} status
  * @property {StartExport} request
  * @property {{mesh: Link}} _links
  */
@@ -74,12 +53,31 @@ const ExportType = Object.freeze({
 /**
  * Default settings for accessing the iTwin platform.
  *
- * @experimental
+ * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  *
  * @see createIModel3DTileset
  * @namespace ITwin
  */
 const ITwin = {};
+
+/**
+ * @enum {string}
+ */
+ITwin.ExportStatus = Object.freeze({
+  NotStarted: "NotStarted",
+  InProgress: "InProgress",
+  Complete: "Complete",
+  Invalid: "Invalid",
+});
+
+/**
+ * @enum {string}
+ */
+ITwin.ExportType = Object.freeze({
+  IMODEL: "IMODEL",
+  CESIUM: "CESIUM",
+  "3DTILES": "3DTILES",
+});
 
 /**
  * Gets or sets the default iTwin access token.
@@ -92,7 +90,7 @@ const ITwin = {};
  * `itwin-platform` if we want to use the iModel shares ourselves  GET /imodels/{id}/shares
  * Seems the `itwin-platform` scope should apply to everything but the docs are a little unclear
  *
- * @experimental
+ * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  *
  * @type {string|undefined}
  */
@@ -101,7 +99,7 @@ ITwin.defaultAccessToken = undefined;
 /**
  * Gets or sets the default iTwin API endpoint.
  *
- * @experimental
+ * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  *
  * @type {string|Resource}
  * @default https://api.bentley.com
@@ -113,17 +111,25 @@ ITwin.apiEndpoint = new Resource({
 /**
  * Get the export object for the specified export id
  *
- * @experimental
+ * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  *
  * @param {string} exportId
+ *
+ * @throws {RuntimeError} Unauthorized, bad token, wrong scopes or headers bad.
+ * @throws {RuntimeError} Requested export is not available
+ * @throws {RuntimeError} Too many requests
+ * @throws {RuntimeError} Unknown request failure
  */
 ITwin.getExport = async function (exportId) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("exportId", exportId);
   if (!defined(ITwin.defaultAccessToken)) {
     throw new DeveloperError("Must set ITwin.defaultAccessToken first");
   }
+  //>>includeEnd('debug')
 
   const headers = {
-    Authorization: ITwin.defaultAccessToken,
+    Authorization: `Bearer ${ITwin.defaultAccessToken}`,
     Accept: "application/vnd.bentley.itwin-platform.v1+json",
   };
 
@@ -155,27 +161,47 @@ ITwin.getExport = async function (exportId) {
 /**
  * Get the list of exports for the given iModel + changeset
  *
- * @experimental
+ * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  *
  * @param {string} iModelId
  * @param {string} [changesetId]
+ *
+ * @throws {RuntimeError} Unauthorized, bad token, wrong scopes or headers bad.
+ * @throws {RuntimeError} Not allowed, forbidden
+ * @throws {RuntimeError} Unprocessable Entity
+ * @throws {RuntimeError} Too many requests
+ * @throws {RuntimeError} Unknown request failure
  */
 ITwin.getExports = async function (iModelId, changesetId) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("iModelId", iModelId);
+  if (defined(changesetId)) {
+    Check.typeOf.string("changesetId", changesetId);
+  }
   if (!defined(ITwin.defaultAccessToken)) {
     throw new DeveloperError("Must set ITwin.defaultAccessToken first");
   }
+  //>>includeEnd('debug')
 
   const headers = {
-    Authorization: ITwin.defaultAccessToken,
+    Authorization: `Bearer ${ITwin.defaultAccessToken}`,
     Accept: "application/vnd.bentley.itwin-platform.v1+json",
     Prefer: "return=representation", // or return=minimal (the default)
   };
 
   // obtain export for specified export id
   // TODO: if we do include the clientVersion what should it be set to? can we sync it with the package.json?
-  let url = `${ITwin.apiEndpoint}mesh-export/?iModelId=${iModelId}&exportType=${ExportType["3DTILES"]}&$top=1&client=CesiumJS&clientVersion=1.123`;
+  const url = new URL(`${ITwin.apiEndpoint}mesh-export`);
+  url.searchParams.set("iModelId", iModelId);
   if (defined(changesetId) && changesetId !== "") {
-    url += `&changesetId=${changesetId}`;
+    url.searchParams.set("changesetId", changesetId);
+  }
+  url.searchParams.set("exportType", ITwin.ExportType["3DTILES"]);
+  url.searchParams.set("$top", "1");
+  url.searchParams.set("client", "CesiumJS");
+  /* global CESIUM_VERSION */
+  if (typeof CESIUM_VERSION !== "undefined") {
+    url.searchParams.set("clientVersion", CESIUM_VERSION);
   }
 
   const response = await fetch(url, { headers });
@@ -210,29 +236,41 @@ ITwin.getExports = async function (iModelId, changesetId) {
  * and will be the desired way of interacting with iModels through exports. This function is here
  * just while we continue testing during the PR process.
  *
- * @experimental
+ * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  *
  * @param {string} iModelId
  * @param {string} [changesetId]
+ *
+ * @throws {RuntimeError} Unauthorized, bad token, wrong scopes or headers bad.
+ * @throws {RuntimeError} Not allowed, forbidden
+ * @throws {RuntimeError} Unprocessable: Cannot create export job
+ * @throws {RuntimeError} Too many requests
+ * @throws {RuntimeError} Unknown request failure
  */
 ITwin.createExportForModelId = async function (iModelId, changesetId) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("iModelId", iModelId);
+  if (defined(changesetId)) {
+    Check.typeOf.string("changesetId", changesetId);
+  }
   if (!defined(ITwin.defaultAccessToken)) {
     throw new DeveloperError("Must set ITwin.defaultAccessToken first");
   }
+  //>>includeEnd('debug')
 
   changesetId = changesetId ?? "";
 
   const requestOptions = {
     method: "POST",
     headers: {
-      Authorization: ITwin.defaultAccessToken,
+      Authorization: `Bearer ${ITwin.defaultAccessToken}`,
       Accept: "application/vnd.bentley.itwin-platform.v1+json",
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
       iModelId,
       changesetId,
-      exportType: ExportType["3DTILES"],
+      exportType: ITwin.ExportType["3DTILES"],
     }),
   };
 
@@ -273,4 +311,3 @@ ITwin.createExportForModelId = async function (iModelId, changesetId) {
 };
 
 export default ITwin;
-export { ExportStatus, ExportType };

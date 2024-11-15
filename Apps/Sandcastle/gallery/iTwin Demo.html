@@ -32,9 +32,8 @@
         //Sandcastle_Begin
         const serviceResponse = await fetch("http://localhost:3000/service");
         const { token } = await serviceResponse.json();
-        const accessToken = `Bearer ${token}`;
 
-        Cesium.ITwin.defaultAccessToken = accessToken;
+        Cesium.ITwin.defaultAccessToken = token;
         // this is the iModel in the "Hello iTwinCesium" iTwin that we should all have access to
         // https://developer.bentley.com/my-itwins/b4a30036-0456-49ea-a439-3fcd9365e24e/home/
         // const imodelId = "2852c3d7-00c3-4b5d-a0ce-82bbde4f061e";
@@ -135,7 +134,6 @@
             const exportId = await Cesium.ITwin.createExportForModelId(
               imodelId,
               changesetId,
-              accessToken,
             );
             statusOutput.innerText = "Creating Tileset from export";
             tileset = await Cesium.createIModel3DTileset.fromExportId(exportId);
