@@ -3113,10 +3113,13 @@ describe(
           {
             gltf: boxTexturedGltfUrl,
             lightColor: Cartesian3.ZERO,
-            imageBasedLighting: undefined,
           },
           scene,
         );
+
+        // ignore any image-based lighting– Test directional light only
+        model.imageBasedLighting.imageBasedLightingFactor = Cartesian2.ZERO;
+
         verifyRender(model, false);
       });
 
@@ -3125,6 +3128,10 @@ describe(
           { gltf: boxTexturedGltfUrl, imageBasedLighting: undefined },
           scene,
         );
+
+        // ignore any image-based lighting– Test directional light only
+        model.imageBasedLighting.imageBasedLightingFactor = Cartesian2.ZERO;
+
         model.lightColor = Cartesian3.ZERO;
         verifyRender(model, false);
 
@@ -3193,7 +3200,7 @@ describe(
       it("changing imageBasedLighting works", async function () {
         const imageBasedLighting = new ImageBasedLighting({
           sphericalHarmonicCoefficients: [
-            new Cartesian3(0.35449, 0.35449, 0.35449),
+            new Cartesian3(1.0, 0.0, 0.0),
             Cartesian3.ZERO,
             Cartesian3.ZERO,
             Cartesian3.ZERO,
