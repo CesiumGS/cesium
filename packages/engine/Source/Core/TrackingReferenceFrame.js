@@ -19,7 +19,7 @@ const TrackingReferenceFrame = {
   /**
    * The entity's inertial reference frame. If entity has no defined orientation
    * property, a {@link VelocityOrientationProperty} is used instead, thus
-   * falling back to TrackingReferenceFrame.VELOCITY.
+   * falling back to <code>TrackingReferenceFrame.VELOCITY</code>.
    * When selected, the auto-detect algorithm is overridden.
    *
    * @type {number}
