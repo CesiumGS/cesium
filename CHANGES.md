@@ -4,6 +4,10 @@
 
 #### @cesium/engine
 
+##### Additions :tada:
+
+- Added `Entity.trackingReferenceFrame` property to allow tracking entities in their own inertial reference frame. [#12194](https://github.com/CesiumGS/cesium/pull/12194)
+
 ##### Fixes :wrench:
 
 - Fix label rendering bug in WebGL1 contexts. [#12301](https://github.com/CesiumGS/cesium/pull/12301)
