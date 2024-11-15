@@ -8,6 +8,12 @@
 
 - Fix label rendering bug in WebGL1 contexts. [#12301](https://github.com/CesiumGS/cesium/pull/12301)
 
+#### @cesium/widgets
+
+##### Fixes :wrench:
+
+- Added a `DeveloperError` when `globe` is set to `false` and a `baseLayer` is provided in `Viewer` options. This prevents errors caused by attempting to use a `baseLayer` without a globe. [#12274](https://github.com/CesiumGS/cesium/pull/12274)
+
 ### 1.123.1 - 2024-11-07
 
 #### @cesium/engine
@@ -54,7 +60,6 @@
 
 - Fix flickering issue caused by bounding sphere retrieval being blocked by the bounding sphere of another entity. [#12230](https://github.com/CesiumGS/cesium/pull/12230)
 - Fixed `ImageBasedLighting.imageBasedLightingFactor` not affecting lighting. [#12129](https://github.com/CesiumGS/cesium/pull/12129)
-
 - Fix error with normalization of corner points for lines and corridors with collinear points. [#12255](https://github.com/CesiumGS/cesium/pull/12255)
 
 ### 1.122 - 2024-10-01
