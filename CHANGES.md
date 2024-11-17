@@ -1,18 +1,70 @@
 # Change Log
 
-### 1.123 - 2024-11-01
+### 1.124 - 2024-12-02
 
 #### @cesium/engine
 
 ##### Additions :tada:
 
+- Added `Entity.trackingReferenceFrame` property to allow tracking entities in their own inertial reference frame. [#12194](https://github.com/CesiumGS/cesium/pull/12194)
+
+##### Fixes :wrench:
+
+- Fix label rendering bug in WebGL1 contexts. [#12301](https://github.com/CesiumGS/cesium/pull/12301)
+
+#### @cesium/widgets
+
+##### Fixes :wrench:
+
+- Added a `DeveloperError` when `globe` is set to `false` and a `baseLayer` is provided in `Viewer` options. This prevents errors caused by attempting to use a `baseLayer` without a globe. [#12274](https://github.com/CesiumGS/cesium/pull/12274)
+
+### 1.123.1 - 2024-11-07
+
+#### @cesium/engine
+
+##### Additions :tada:
+
+- Added fallback diffuse lighting, `DynamicEnvironmentMapManager.DEFAULT_SPHERICAL_HARMONIC_COEFFICIENTS`, that is used when `DynamicEnvironmentMapManager` is disabled or unsupported. [#12292](https://github.com/CesiumGS/cesium/pull/12292)
+- Added `DynamicEnvironmentMapManager.isDynamicUpdateSupported` to check if dynamic environment map updates are supported. [#12292](https://github.com/CesiumGS/cesium/pull/12292)
+
+### 1.123 - 2024-11-01
+
+#### @cesium/engine
+
+##### Breaking Changes :mega:
+
+- Updated default 3D Tiles and Model lighting when using PBR in order to create a more realistic appearance. To approximate previous default lighting, use the following settings:
+
+  ```js
+  const environmentMapManager = model.environmentMapManager; // or tileset.environmentMapManager;
+  environmentMapManager.saturation = 0.35;
+  environmentMapManager.brightness = 1.4;
+  environmentMapManager.gamma = 0.8;
+  environmentMapManager.atmosphereScatteringIntensity = 5.0;
+  environmentMapManager.groundColor =
+    Cesium.Color.fromCssColorString("#001850");
+  ```
+
+- `ImageBasedLighting.luminanceAtZenith` has been removed. Use `DynamicEnvironmentMapManager.atmosphereScatteringIntensity` instead. [#12129](https://github.com/CesiumGS/cesium/pull/12129)
+- Changed the default `Fog.density` from `0.0002` to `0.0006`. Set `viewer.scene.fog.density = 0.002` to return to the previous behavior. [#12248](https://github.com/CesiumGS/cesium/pull/12248)
+
+##### Additions :tada:
+
+- Updated default 3D Tiles and Model lighting when using PBR in order to create a more realistic appearance. Added `DynamicEnvironmentMapManager` to control lighting parameters. These can be accessed via `Cesium3DTileset.environmentMapManager` and `Model.environmentMapManager`. [#12129](https://github.com/CesiumGS/cesium/pull/12129)
 - Added `ScreenSpaceCameraController.maximumTiltAngle` to limit how much the camera can tilt. [#12169](https://github.com/CesiumGS/cesium/pull/12169)
+- Exposed `Fog.visualDensityScalar` to allow modifying the visual density of fog without affecting the culling aspects. Alongside this, the density calculation was adjusted to make it more smooth across heights. [#12248](https://github.com/CesiumGS/cesium/pull/12248)
 - Update Japan Buildings sandcastle to use Japan Regional Terrain [#12259](https://github.com/CesiumGS/cesium/pull/12259)
-- Update Bing Maps attribution link [#12229] (https://github.com/CesiumGS/cesium/pull/12265)
+- Moved `Viewer` functionality to `CesiumWidget` to increase usability, see the full list added to the `CesiumWidget` below. No functionality was removed from the `Viewer` but convenience helpers like the `entities` collection were added to the `CesiumWidget`. The `CesiumWidget` should be closer to a drop in replacement for the `Viewer` when not utilizing the extra Viewer widgets. [#11967](https://github.com/CesiumGS/cesium/issues/11967).
+  - New constructor options: `options.shouldAnimate`, `options.automaticallyTrackDataSourceClocks`, `options.dataSources`
+  - New properties: `dataSourceDisplay`, `entities`, `dataSources`, `allowDataSourcesToSuspendAnimation`, `trackedEntity`, `trackedEntityChanged`, `clockTrackedDataSource`
+  - New functions: `zoomTo()`, `flyTo()`
+- Update Bing Maps attribution link [#12265](https://github.com/CesiumGS/cesium/pull/12265)
 
 ##### Fixes :wrench:
 
 - Fix flickering issue caused by bounding sphere retrieval being blocked by the bounding sphere of another entity. [#12230](https://github.com/CesiumGS/cesium/pull/12230)
+- Fixed `ImageBasedLighting.imageBasedLightingFactor` not affecting lighting. [#12129](https://github.com/CesiumGS/cesium/pull/12129)
+- Fix error with normalization of corner points for lines and corridors with collinear points. [#12255](https://github.com/CesiumGS/cesium/pull/12255)
 
 ##### Fixes :wrench:
 

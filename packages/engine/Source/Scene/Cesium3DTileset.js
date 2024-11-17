@@ -61,6 +61,7 @@ import Cesium3DTilesetMostDetailedTraversal from "./Cesium3DTilesetMostDetailedT
 import Cesium3DTilesetBaseTraversal from "./Cesium3DTilesetBaseTraversal.js";
 import Cesium3DTilesetSkipTraversal from "./Cesium3DTilesetSkipTraversal.js";
 import Ray from "../Core/Ray.js";
+import DynamicEnvironmentMapManager from "./DynamicEnvironmentMapManager.js";
 
 /**
  * @typedef {Object} Cesium3DTileset.ConstructorOptions
@@ -104,6 +105,7 @@ import Ray from "../Core/Ray.js";
  * @property {object} [pointCloudShading] Options for constructing a {@link PointCloudShading} object to control point attenuation based on geometric error and lighting.
  * @property {Cartesian3} [lightColor] The light color when shading models. When <code>undefined</code> the scene's light color is used instead.
  * @property {ImageBasedLighting} [imageBasedLighting] The properties for managing image-based lighting for this tileset.
+ * @param {DynamicEnvironmentMapManager.ConstructorOptions} [options.environmentMapOptions] The properties for managing dynamic environment maps on this model.
  * @property {boolean} [backFaceCulling=true] Whether to cull back-facing geometry. When true, back face culling is determined by the glTF material's doubleSided property; when false, back face culling is disabled.
  * @property {boolean} [enableShowOutline=true] Whether to enable outlines for models using the {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension. This can be set to false to avoid the additional processing of geometry at load time. When false, the showOutlines and outlineColor options are ignored.
  * @property {boolean} [showOutline=true] Whether to display the outline for models using the {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension. When true, outlines are displayed. When false, outlines are not displayed.
@@ -826,6 +828,10 @@ function Cesium3DTileset(options) {
     this._imageBasedLighting = new ImageBasedLighting();
     this._shouldDestroyImageBasedLighting = true;
   }
+
+  this._environmentMapManager = new DynamicEnvironmentMapManager(
+    options.environmentMapOptions,
+  );
 
   /**
    * The light color when shading models. When <code>undefined</code> the scene's light color is used instead.
@@ -1860,6 +1866,25 @@ Object.defineProperties(Cesium3DTileset.prototype, {
   },
 
   /**
+   * The properties for managing dynamic environment maps on this model. Affects lighting.
+   *
+   * @memberof Cesium3DTileset.prototype
+   * @readonly
+   *
+   * @example
+   * // Change the ground color used for a tileset's environment map to a forest green
+   * const environmentMapManager = tileset.environmentMapManager;
+   * environmentMapManager.groundColor = Cesium.Color.fromCssColorString("#203b34");
+   *
+   * @type {DynamicEnvironmentMapManager}
+   */
+  environmentMapManager: {
+    get: function () {
+      return this._environmentMapManager;
+    },
+  },
+
+  /**
    * Indicates that only the tileset's vector tiles should be used for classification.
    *
    * @memberof Cesium3DTileset.prototype
@@ -2644,6 +2669,7 @@ function handleTileFailure(error, tileset, tile) {
   } else {
     console.log(`A 3D tile failed to load: ${url}`);
     console.log(`Error: ${message}`);
+    console.log(error.stack);
   }
 }
 
@@ -3409,6 +3435,14 @@ Cesium3DTileset.prototype.updateForPass = function (
     originalCullingVolume,
   );
 
+  if (passOptions.isRender) {
+    const environmentMapManager = this._environmentMapManager;
+    if (defined(this._root)) {
+      environmentMapManager.position = this.boundingSphere.center;
+    }
+    environmentMapManager.update(frameState);
+  }
+
   // Update clipping polygons
   const clippingPolygons = this._clippingPolygons;
   if (defined(clippingPolygons) && clippingPolygons.enabled) {
@@ -3510,6 +3544,11 @@ Cesium3DTileset.prototype.destroy = function () {
     this._imageBasedLighting.destroy();
   }
   this._imageBasedLighting = undefined;
+
+  if (!this._environmentMapManager.isDestroyed()) {
+    this._environmentMapManager.destroy();
+  }
+  this._environmentMapManager = undefined;
 
   return destroyObject(this);
 };
