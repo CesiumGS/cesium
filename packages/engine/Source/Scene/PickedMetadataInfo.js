@@ -45,11 +45,12 @@ function PickedMetadataInfo(
   this.classProperty = classProperty;
 
   /**
-   * The metadata property that is described by this structure, as
-   * obtained from the property texture or property attribute of the
-   * `StructuralMetadata` that matches the class name and property name.
+   * The `PropertyTextureProperty` or `PropertyAttributeProperty` that
+   * is described by this structure, as obtained from the property texture
+   * or property attribute of the `StructuralMetadata` that matches the
+   * class name and property name.
    *
-   * @type {PropertyTextureProperty|PropertyAttributeProperty}
+   * @type {object}
    */
   this.metadataProperty = metadataProperty;
 }
