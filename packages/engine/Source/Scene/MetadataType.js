@@ -7,6 +7,111 @@ import Matrix2 from "../Core/Matrix2.js";
 import Matrix3 from "../Core/Matrix3.js";
 import Matrix4 from "../Core/Matrix4.js";
 
+// Numeric Component types
+/**
+ * @typedef {number} INT8
+ */
+/**
+ * @typedef {number} UINT8
+ */
+/**
+ * @typedef {number} INT16
+ */
+/**
+ * @typedef {number} UINT16
+ */
+/**
+ * @typedef {number} INT32
+ */
+/**
+ * @typedef {number} UINT32
+ */
+/**
+ * @typedef {bigint} INT64
+ */
+/**
+ * @typedef {bigint} UINT64
+ */
+/**
+ * @typedef {number} FLOAT32
+ */
+/**
+ * @typedef {number} FLOAT64
+ */
+
+// Non-numeric component types
+/**
+ * @typedef {string} STRING
+ */
+/**
+ * @typedef {boolean} BOOLEAN
+ */
+/**
+ * @typedef {string} ENUM
+ */
+
+// Numeric types
+/**
+ * @typedef {(UINT8 | UINT16 | UINT32 | UINT64)} UnsignedInteger
+ */
+/**
+ * @typedef {(INT8 | INT16 | INT32 | INT64)} SignedInteger
+ */
+/**
+ * @typedef {(UnsignedInteger | SignedInteger)} Integer
+ */
+/**
+ * @typedef {(FLOAT32 | FLOAT64)} FloatingPoint
+ */
+/**
+ * @typedef {(Integer | FloatingPoint)} Numeric
+ */
+
+// NOTE: The vector and matrix types could (and should) theoretically
+// be documented with their respective lengths, like
+//  {[Numeric, Numeric]} VEC2
+// But this is not possible due to https://github.com/jsdoc/jsdoc/issues/1703
+// Workarounds could be considered by manually tweaking the type information
+// in the gulpfile.js.
+
+// Vector types
+/**
+ * @typedef {Numeric[]} VEC2
+ */
+/**
+ * @typedef {Numeric[]} VEC3
+ */
+/**
+ * @typedef {Numeric[]} VEC4
+ */
+/**
+ * @typedef {(VEC2 | VEC3 | VEC4)} Vector
+ */
+
+// Matrix types
+/**
+ * @typedef {Numeric[]} MAT2
+ */
+/**
+ * @typedef {Numeric[]} MAT3
+ */
+/**
+ * @typedef {Numeric[]} MAT4
+ */
+/**
+ * @typedef {(MAT2 | MAT3 | MAT4)} Matrix
+ */
+
+// Helper types
+/**
+ * @typedef {(STRING | BOOLEAN | ENUM)} NonNumeric
+ */
+
+// The final, public types
+/**
+ * @typedef {(Numeric | NonNumeric | Vector | Matrix)} MetadataValue
+ */
+
 /**
  * An enum of metadata types. These metadata types are containers containing
  * one or more components of type {@link MetadataComponentType}
