@@ -244,7 +244,7 @@ MetadataPicking.decodeRawMetadataValues = function (
  *
  * @param {string} type The `ClassProperty` type
  * @param {number|bigint|number[]|bigint[]|undefined} value The input value
- * @returns {any} The object representation
+ * @returns {undefined|number|bigint|string|boolean|Cartesian2|Cartesian3|Cartesian4|Matrix2|Matrix3|Matrix4} The object representation
  * @throws RuntimeError If the type is not a valid `MetadataType`
  */
 MetadataPicking.convertToObjectType = function (type, value) {
@@ -285,8 +285,8 @@ MetadataPicking.convertToObjectType = function (type, value) {
  * For other types, the value is returned directly
  *
  * @param {string} type The `ClassProperty` type
- * @param {any} value The input value
- * @returns {any} The array representation
+ * @param {undefined|number|bigint|string|boolean|Cartesian2|Cartesian3|Cartesian4|Matrix2|Matrix3|Matrix4} value The input value
+ * @returns {undefined|number|bigint|string|boolean|number[]} The array representation
  * @throws RuntimeError If the type is not a valid `MetadataType`
  */
 MetadataPicking.convertFromObjectType = function (type, value) {
@@ -327,10 +327,10 @@ MetadataPicking.convertFromObjectType = function (type, value) {
  * types into object types like `CartesianN`.
  *
  * @param {MetadataClassProperty} classProperty The `MetadataClassProperty`
- * @param {MetadataClassProperty} metadataProperty The
+ * @param {object} metadataProperty The
  * `PropertyTextureProperty` or `PropertyAttributeProperty`
  * @param {Uint8Array} rawPixelValues The raw values
- * @returns {any} The value
+ * @returns {MetadataValue} The value
  * @throws RuntimeError If the class property has an invalid type
  * or component type
  * @throws RangeError If the given pixel values do not have sufficient
@@ -349,6 +349,14 @@ MetadataPicking.decodeMetadataValues = function (
   );
 
   if (metadataProperty.hasValueTransform) {
+    // In the MetadataClassProperty, these offset/scale are always in
+    // their array-based form (e.g. a number[3] for `VEC3`). But for
+    // the PropertyTextureProperty and PropertyAttributeProperty,
+    // the type of the offset/scale is defined to be
+    // number|Cartesian2|Cartesian3|Cartesian4|Matrix2|Matrix3|Matrix4
+    // So these types are converted into their array-based form here, before
+    // applying them with `MetadataClassProperty.valueTransformInPlace`
+
     const offset = MetadataPicking.convertFromObjectType(
       classProperty.type,
       metadataProperty.offset,

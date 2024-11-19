@@ -234,7 +234,7 @@ GltfMeshPrimitiveGpmLoader.ppeTexturesMetadataSchemaCache = new Map();
  * Create the JSON description of a metadata class that treats
  * the given PPE texture as a property texture property.
  *
- * @param {any} ppeTexture - The PPE texture
+ * @param {PpeTexture} ppeTexture - The PPE texture
  * @param {number} index - The index of the texture in the extension
  * @returns The class JSON
  */
