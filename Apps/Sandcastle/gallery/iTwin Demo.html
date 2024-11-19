@@ -122,15 +122,7 @@
 
           statusOutput.innerText = "Creating Tileset";
 
-          let tileset = await Cesium.ITwinData.createTilesetFromModelId(imodelId);
-          if (!Cesium.defined(tileset)) {
-            // TODO: this is temporary, we should not have to call the Start Export route ever after
-            // auto generation is set up
-            statusOutput.innerText = "Starting export";
-            const exportId = await Cesium.ITwinPlatform.createExportForModelId(imodelId);
-            statusOutput.innerText = "Creating Tileset from export";
-            tileset = await Cesium.ITwinData.createTilesetFromExportId(exportId);
-          }
+          const tileset = await Cesium.ITwinData.createTilesetFromModelId(imodelId);
 
           scene.primitives.add(tileset);
           tileset.colorBlendMode = Cesium.Cesium3DTileColorBlendMode.REPLACE;

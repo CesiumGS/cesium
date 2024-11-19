@@ -103,60 +103,10 @@ ITwinPlatform.apiEndpoint = new Resource({
 });
 
 /**
- * Get the export object for the specified export id
- *
- * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
- *
- * @param {string} exportId
- *
- * @throws {RuntimeError} Unauthorized, bad token, wrong scopes or headers bad.
- * @throws {RuntimeError} Requested export is not available
- * @throws {RuntimeError} Too many requests
- * @throws {RuntimeError} Unknown request failure
- * TODO: remove? this is used when we're looping to wait for jobs to finish
- */
-ITwinPlatform.getExport = async function (exportId) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.string("exportId", exportId);
-  if (!defined(ITwinPlatform.defaultAccessToken)) {
-    throw new DeveloperError("Must set ITwin.defaultAccessToken first");
-  }
-  //>>includeEnd('debug')
-
-  const headers = {
-    Authorization: `Bearer ${ITwinPlatform.defaultAccessToken}`,
-    Accept: "application/vnd.bentley.itwin-platform.v1+json",
-  };
-
-  // obtain export for specified export id
-  const url = `${ITwinPlatform.apiEndpoint}mesh-export/${exportId}`;
-
-  // TODO: this request is _really_ slow, like 7 whole second alone for me
-  // Arun said this was kinda normal but to keep track of the `x-correlation-id` of any that take EXTRA long
-  const response = await fetch(url, { headers });
-  if (!response.ok) {
-    const result = await response.json();
-    if (response.status === 401) {
-      throw new RuntimeError(
-        `Unauthorized, bad token, wrong scopes or headers bad. ${result.error.details[0].code}`,
-      );
-    } else if (response.status === 404) {
-      throw new RuntimeError(`Requested export is not available ${exportId}`);
-    } else if (response.status === 429) {
-      throw new RuntimeError("Too many requests");
-    }
-    throw new RuntimeError(`Unknown request failure ${response.status}`);
-  }
-
-  /** @type {ExportResponse} */
-  const result = await response.json();
-  return result;
-};
-
-/**
  * Get the list of exports for the specified iModel at it's most current version. This will only return exports with {@link ITwinPlatform.ExportType} of <code>3DTILES</code>.
  *
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
+ * @private
  *
  * @param {string} iModelId iModel id
  *
@@ -215,69 +165,6 @@ ITwinPlatform.getExports = async function (iModelId) {
   /** @type {{exports: Export[]}} */
   const result = await response.json();
   return result;
-};
-
-/**
- * TODO: REMOVE THIS FUNCTION! Auto generation of exports for the 3DTILES type is planned very soon
- * and will be the desired way of interacting with iModels through exports. This function is here
- * just while we continue testing during the PR process.
- * @deprecated
- */
-ITwinPlatform.createExportForModelId = async function (iModelId) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.string("iModelId", iModelId);
-  if (!defined(ITwinPlatform.defaultAccessToken)) {
-    throw new DeveloperError("Must set ITwin.defaultAccessToken first");
-  }
-  //>>includeEnd('debug')
-
-  const requestOptions = {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${ITwinPlatform.defaultAccessToken}`,
-      Accept: "application/vnd.bentley.itwin-platform.v1+json",
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      iModelId,
-      exportType: ITwinPlatform.ExportType["3DTILES"],
-    }),
-  };
-
-  // initiate mesh export
-  const response = await fetch(
-    `${ITwinPlatform.apiEndpoint}mesh-export/`,
-    requestOptions,
-  );
-
-  if (!response.ok) {
-    const result = await response.json();
-    if (response.status === 401) {
-      console.error(
-        result.error.code,
-        result.error.message,
-        result.error.details,
-      );
-      throw new RuntimeError(
-        "Unauthorized, bad token, wrong scopes or headers bad",
-      );
-    } else if (response.status === 403) {
-      console.error(result.error.code, result.error.message);
-      throw new RuntimeError("Not allowed, forbidden");
-    } else if (response.status === 422) {
-      console.error(result.error.code, result.error.message);
-      console.error(result.error.details);
-      throw new RuntimeError("Unprocessable: Cannot create export job");
-    } else if (response.status === 429) {
-      throw new RuntimeError("Too many requests");
-    }
-
-    throw new RuntimeError(`Unknown request failure ${response.status}`);
-  }
-
-  /** @type {ExportResponse} */
-  const result = await response.json();
-  return result.export.id;
 };
 
 export default ITwinPlatform;

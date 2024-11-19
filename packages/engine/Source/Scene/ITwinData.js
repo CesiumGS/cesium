@@ -5,10 +5,6 @@ import ITwinPlatform from "../Core/ITwinPlatform.js";
 import RuntimeError from "../Core/RuntimeError.js";
 import Check from "../Core/Check.js";
 
-function delay(ms) {
-  return new Promise((res) => setTimeout(res, ms));
-}
-
 /**
  * @param {Export} exportObj
  * @param {Cesium3DTileset.ConstructorOptions} [options] Object containing options to pass to an internally created {@link Cesium3DTileset}.
@@ -19,24 +15,13 @@ async function loadExport(exportObj, options) {
   Check.defined("exportObj", exportObj);
   //>>includeEnd('debug')
 
-  let status = exportObj.status;
-
   if (exportObj.request.exportType !== ITwinPlatform.ExportType["3DTILES"]) {
     throw new RuntimeError(`Wrong export type ${exportObj.request.exportType}`);
   }
-
-  const timeoutAfter = 300000;
-  const start = Date.now();
-  // wait until the export is complete
-  while (status !== ITwinPlatform.ExportStatus.Complete) {
-    await delay(5000);
-    exportObj = (await ITwinPlatform.getExport(exportObj.id)).export;
-    status = exportObj.status;
-    console.log(`Export is ${status}`);
-
-    if (Date.now() - start > timeoutAfter) {
-      throw new RuntimeError("Export did not complete in time.");
-    }
+  if (exportObj.status !== ITwinPlatform.ExportStatus.Complete) {
+    throw new RuntimeError(
+      `Export is not completed. ${exportObj.id} - ${exportObj.status}`,
+    );
   }
 
   // Convert the link to the tileset url while preserving the search paramaters
@@ -63,31 +48,11 @@ async function loadExport(exportObj, options) {
 const ITwinData = {};
 
 /**
- * Creates a {@link Cesium3DTileset} instance for the given export id.
- *
- * @function
- * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
- *
- * @param {string} exportId
- * @param {Cesium3DTileset.ConstructorOptions} [options] Object containing options to pass to an internally created {@link Cesium3DTileset}.
- * @returns {Promise<Cesium3DTileset>}
- *
- * @throws {RuntimeError} Wrong export type
- * @throws {RuntimeError} Export did not complete in time.
- *
- * @example
- * TODO: example after API finalized
- * @deprecated
- */
-ITwinData.createTilesetFromExportId = async function (exportId, options) {
-  const result = await ITwinPlatform.getExport(exportId);
-  const tileset = await loadExport(result.export, options);
-  return tileset;
-};
-
-/**
  * Loads the export for the specified iModel with the export type that CesiumJS can load and returns
  * a tileset created from that export.
+ *
+ * If the export is not finished processing this will throw an error. It is up to the caller
+ * to re-attempt loading at a later time
  *
  * @example
  * TODO: example after API finalized
@@ -98,8 +63,8 @@ ITwinData.createTilesetFromExportId = async function (exportId, options) {
  * @param {Cesium3DTileset.ConstructorOptions} [options] Object containing options to pass to an internally created {@link Cesium3DTileset}.
  * @returns {Promise<Cesium3DTileset | undefined>} Will return <code>undefined</code> if there is no export for the given iModel id
  *
- * @throws {RuntimeError} Wrong export type
- * @throws {RuntimeError} Export did not complete in time.
+ * @throws {RuntimeError} Wrong export type [type]
+ * @throws {RuntimeError} Export is not completed. [id] - [status]
  */
 ITwinData.createTilesetFromModelId = async function (iModelId, options) {
   const { exports } = await ITwinPlatform.getExports(iModelId);
