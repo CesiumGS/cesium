@@ -687,7 +687,7 @@ SampledProperty.prototype.getSample = function (index) {
 
   const times = this._times;
   const len = times.length;
-  if (!len) {
+  if (!defined(len)) {
     return undefined;
   }
 
