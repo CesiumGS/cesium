@@ -61,6 +61,7 @@ import RuntimeError from "./RuntimeError.js";
 const ITwinPlatform = {};
 
 /**
+ * Status states for a mesh-export export
  * @enum {string}
  */
 ITwinPlatform.ExportStatus = Object.freeze({
@@ -71,6 +72,7 @@ ITwinPlatform.ExportStatus = Object.freeze({
 });
 
 /**
+ * Types of mesh-export exports. CesiumJS only supports loading <code>3DTILES</code> type exports
  * @enum {string}
  */
 ITwinPlatform.ExportType = Object.freeze({
@@ -80,15 +82,7 @@ ITwinPlatform.ExportType = Object.freeze({
 });
 
 /**
- * Gets or sets the default iTwin access token.
- *
- * TODO: I'm not sure we can even do this kind of access token. Each route seems to need it's own scopes
- * and we may not be able to guarantee this "top level token" has them all
- * So far we use
- * `mesh-export:read` for loading meshes GET /mesh-export(s)
- * `mesh-export:modify` if we want to include a function to create an export
- * `itwin-platform` if we want to use the iModel shares ourselves  GET /imodels/{id}/shares
- * Seems the `itwin-platform` scope should apply to everything but the docs are a little unclear
+ * Gets or sets the default iTwin access token. This token should have the <code>itwin-platform</code> scope.
  *
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  *
@@ -119,6 +113,7 @@ ITwinPlatform.apiEndpoint = new Resource({
  * @throws {RuntimeError} Requested export is not available
  * @throws {RuntimeError} Too many requests
  * @throws {RuntimeError} Unknown request failure
+ * TODO: remove? this is used when we're looping to wait for jobs to finish
  */
 ITwinPlatform.getExport = async function (exportId) {
   //>>includeStart('debug', pragmas.debug);
@@ -159,25 +154,22 @@ ITwinPlatform.getExport = async function (exportId) {
 };
 
 /**
- * Get the list of exports for the given iModel + changeset
+ * Get the list of exports for the specified iModel at it's most current version. This will only return exports with {@link ITwinPlatform.ExportType} of <code>3DTILES</code>.
  *
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  *
- * @param {string} iModelId
- * @param {string} [changesetId]
+ * @param {string} iModelId iModel id
  *
  * @throws {RuntimeError} Unauthorized, bad token, wrong scopes or headers bad.
  * @throws {RuntimeError} Not allowed, forbidden
  * @throws {RuntimeError} Unprocessable Entity
  * @throws {RuntimeError} Too many requests
  * @throws {RuntimeError} Unknown request failure
+ * @returns {Promise<{exports: Export[]}>}
  */
-ITwinPlatform.getExports = async function (iModelId, changesetId) {
+ITwinPlatform.getExports = async function (iModelId) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.string("iModelId", iModelId);
-  if (defined(changesetId)) {
-    Check.typeOf.string("changesetId", changesetId);
-  }
   if (!defined(ITwinPlatform.defaultAccessToken)) {
     throw new DeveloperError("Must set ITwin.defaultAccessToken first");
   }
@@ -190,12 +182,8 @@ ITwinPlatform.getExports = async function (iModelId, changesetId) {
   };
 
   // obtain export for specified export id
-  // TODO: if we do include the clientVersion what should it be set to? can we sync it with the package.json?
   const url = new URL(`${ITwinPlatform.apiEndpoint}mesh-export`);
   url.searchParams.set("iModelId", iModelId);
-  if (defined(changesetId) && changesetId !== "") {
-    url.searchParams.set("changesetId", changesetId);
-  }
   url.searchParams.set("exportType", ITwinPlatform.ExportType["3DTILES"]);
   url.searchParams.set("$top", "1");
   url.searchParams.set("client", "CesiumJS");
@@ -230,35 +218,18 @@ ITwinPlatform.getExports = async function (iModelId, changesetId) {
 };
 
 /**
- * Start the export process for the given iModel + changeset.
- *
  * TODO: REMOVE THIS FUNCTION! Auto generation of exports for the 3DTILES type is planned very soon
  * and will be the desired way of interacting with iModels through exports. This function is here
  * just while we continue testing during the PR process.
- *
- * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
- *
- * @param {string} iModelId
- * @param {string} [changesetId]
- *
- * @throws {RuntimeError} Unauthorized, bad token, wrong scopes or headers bad.
- * @throws {RuntimeError} Not allowed, forbidden
- * @throws {RuntimeError} Unprocessable: Cannot create export job
- * @throws {RuntimeError} Too many requests
- * @throws {RuntimeError} Unknown request failure
+ * @deprecated
  */
-ITwinPlatform.createExportForModelId = async function (iModelId, changesetId) {
+ITwinPlatform.createExportForModelId = async function (iModelId) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.string("iModelId", iModelId);
-  if (defined(changesetId)) {
-    Check.typeOf.string("changesetId", changesetId);
-  }
   if (!defined(ITwinPlatform.defaultAccessToken)) {
     throw new DeveloperError("Must set ITwin.defaultAccessToken first");
   }
   //>>includeEnd('debug')
-
-  changesetId = changesetId ?? "";
 
   const requestOptions = {
     method: "POST",
@@ -269,7 +240,6 @@ ITwinPlatform.createExportForModelId = async function (iModelId, changesetId) {
     },
     body: JSON.stringify({
       iModelId,
-      changesetId,
       exportType: ITwinPlatform.ExportType["3DTILES"],
     }),
   };

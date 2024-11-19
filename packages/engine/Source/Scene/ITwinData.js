@@ -11,7 +11,8 @@ function delay(ms) {
 
 /**
  * @param {Export} exportObj
- * @param {Cesium3DTileset.ConstructorOptions} [options]
+ * @param {Cesium3DTileset.ConstructorOptions} [options] Object containing options to pass to an internally created {@link Cesium3DTileset}.
+ * @returns {Promise<Cesium3DTileset>}
  */
 async function loadExport(exportObj, options) {
   //>>includeStart('debug', pragmas.debug);
@@ -51,16 +52,24 @@ async function loadExport(exportObj, options) {
   return Cesium3DTileset.fromUrl(resource, options);
 }
 
+/**
+ * Methods for loading iTwin platform data into CesiumJS
+ *
+ * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
+ *
+ * @see ITwinPlatform to set the API token and access api functions
+ * @namespace ITwinData
+ */
 const ITwinData = {};
 
 /**
- * Creates a {@link Cesium3DTileset} instance for the Google Photorealistic 3D Tiles tileset.
+ * Creates a {@link Cesium3DTileset} instance for the given export id.
  *
  * @function
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  *
  * @param {string} exportId
- * @param {Cesium3DTileset.ConstructorOptions} [options] An object describing initialization options.
+ * @param {Cesium3DTileset.ConstructorOptions} [options] Object containing options to pass to an internally created {@link Cesium3DTileset}.
  * @returns {Promise<Cesium3DTileset>}
  *
  * @throws {RuntimeError} Wrong export type
@@ -68,47 +77,33 @@ const ITwinData = {};
  *
  * @example
  * TODO: example after API finalized
+ * @deprecated
  */
 ITwinData.createTilesetFromExportId = async function (exportId, options) {
-  options = options ?? {};
-
   const result = await ITwinPlatform.getExport(exportId);
   const tileset = await loadExport(result.export, options);
   return tileset;
 };
 
 /**
- * Check the exports for the given iModel + changeset combination for any that
- * have the desired CESIUM type and returns the first one that matches as a new tileset.
- *
- * If there is not a CESIUM export you can create it using {@link ITwinPlatform.createExportForModelId}
- *
- * This function assumes one export per type per "iModel id + changeset id". If you need to create
- * multiple exports per "iModel id + changeset id" you should switch to using {@link ITwinData}
- * with the export id directly
+ * Loads the export for the specified iModel with the export type that CesiumJS can load and returns
+ * a tileset created from that export.
  *
  * @example
  * TODO: example after API finalized
  *
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  *
- * @param {string} iModelId
- * @param {string} changesetId
- * @param {Cesium3DTileset.ConstructorOptions} options
+ * @param {string} iModelId The id of the iModel to load
+ * @param {Cesium3DTileset.ConstructorOptions} [options] Object containing options to pass to an internally created {@link Cesium3DTileset}.
+ * @returns {Promise<Cesium3DTileset | undefined>} Will return <code>undefined</code> if there is no export for the given iModel id
  *
  * @throws {RuntimeError} Wrong export type
  * @throws {RuntimeError} Export did not complete in time.
  */
-ITwinData.createTilesetFromModelId = async function (
-  iModelId,
-  changesetId,
-  options,
-) {
-  const { exports } = await ITwinPlatform.getExports(iModelId, changesetId);
-  const cesiumExport = exports.find(
-    (exportObj) =>
-      exportObj.request?.exportType === ITwinPlatform.ExportType["3DTILES"],
-  );
+ITwinData.createTilesetFromModelId = async function (iModelId, options) {
+  const { exports } = await ITwinPlatform.getExports(iModelId);
+  const cesiumExport = exports[0];
   if (!defined(cesiumExport)) {
     return;
   }

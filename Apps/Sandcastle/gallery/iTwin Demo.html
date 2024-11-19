@@ -38,7 +38,6 @@
         // https://developer.bentley.com/my-itwins/b4a30036-0456-49ea-a439-3fcd9365e24e/home/
         // const imodelId = "2852c3d7-00c3-4b5d-a0ce-82bbde4f061e";
         const imodelId = "88673c1d-12b8-48f1-8beb-5000d0edbd0b";
-        const changesetId = "";
 
         // Grabbed mapping from the iTwin Viewer
         const classes = {
@@ -123,18 +122,12 @@
 
           statusOutput.innerText = "Creating Tileset";
 
-          let tileset = await Cesium.ITwinData.createTilesetFromModelId(
-            imodelId,
-            changesetId,
-          );
+          let tileset = await Cesium.ITwinData.createTilesetFromModelId(imodelId);
           if (!Cesium.defined(tileset)) {
             // TODO: this is temporary, we should not have to call the Start Export route ever after
             // auto generation is set up
             statusOutput.innerText = "Starting export";
-            const exportId = await Cesium.ITwinPlatform.createExportForModelId(
-              imodelId,
-              changesetId,
-            );
+            const exportId = await Cesium.ITwinPlatform.createExportForModelId(imodelId);
             statusOutput.innerText = "Creating Tileset from export";
             tileset = await Cesium.ITwinData.createTilesetFromExportId(exportId);
           }
