@@ -4404,7 +4404,7 @@ Scene.prototype.pickVoxel = function (windowPosition, width, height) {
  * @param {string} propertyName The name of the metadata property to pick
  * values from
  * @returns {MetadataValue|undefined} The metadata value, or `undefined` when
- * to matching metadata was found at the given position
+ * no matching metadata was found at the given position
  *
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
