@@ -135,6 +135,8 @@ ITwinPlatform.getExports = async function (iModelId) {
   const url = new URL(`${ITwinPlatform.apiEndpoint}mesh-export`);
   url.searchParams.set("iModelId", iModelId);
   url.searchParams.set("exportType", ITwinPlatform.ExportType["3DTILES"]);
+  // TODO: If we're only requesting the top 1 is there a chance it's `Invalid` instead of `Complete`
+  // and never possible to load it?
   url.searchParams.set("$top", "1");
   url.searchParams.set("client", "CesiumJS");
   /* global CESIUM_VERSION */

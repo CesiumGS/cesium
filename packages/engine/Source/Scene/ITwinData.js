@@ -55,7 +55,8 @@ const ITwinData = {};
  * to re-attempt loading at a later time
  *
  * @example
- * TODO: example after API finalized
+ * const tileset = await Cesium.ITwinData.createTilesetFromModelId(imodelId);
+ * viewer.scene.primitives.add(tileset);
  *
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  *

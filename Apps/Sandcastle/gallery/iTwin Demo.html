@@ -119,10 +119,33 @@
           statusOutput.innerText = "Starting export";
 
           const start = Date.now();
+          const delay = (ms) => new Promise((res) => setTimeout(res, ms));
 
           statusOutput.innerText = "Creating Tileset";
+          let tileset;
+          try {
+            tileset = await Cesium.ITwinData.createTilesetFromModelId(imodelId);
+          } catch (error) {
+            if (!error.message.includes("not completed")) {
+              throw error;
+            }
+            statusOutput.innerText = "Tileset not completed, retrying...";
 
-          const tileset = await Cesium.ITwinData.createTilesetFromModelId(imodelId);
+            const timeoutAfter = 300000;
+            // wait until the export is complete
+            while (Date.now() - start > timeoutAfter) {
+              await delay(5000);
+              try {
+                tileset = await Cesium.ITwinData.createTilesetFromModelId(imodelId);
+                break;
+              } catch (error) {
+                if (!error.message.includes("not completed")) {
+                  throw error;
+                }
+              }
+            }
+            throw new Cesium.RuntimeError("Export did not complete in time.");
+          }
 
           scene.primitives.add(tileset);
           tileset.colorBlendMode = Cesium.Cesium3DTileColorBlendMode.REPLACE;
