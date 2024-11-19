@@ -682,7 +682,7 @@ SampledProperty.prototype.addSamples = function (
  */
 SampledProperty.prototype.getSample = function (index) {
   //>>includeStart('debug', pragmas.debug);
-  Check.defined("index", index);
+  Check.typeOf.number("index", index);
   //>>includeEnd('debug');
 
   const times = this._times;
