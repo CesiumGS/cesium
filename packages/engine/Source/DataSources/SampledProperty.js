@@ -675,7 +675,7 @@ SampledProperty.prototype.addSamples = function (
 };
 
 /**
- * Gets the time of the sample. Negative for backward.
+ * Retrieves the time of the provided sample associated with the index. A negative index accesses the list of samples in reverse order.
  *
  * @param {number} index The index of samples list.
  * @returns {JulianDate | undefined} The JulianDate time of the sample, or undefined if failed.
