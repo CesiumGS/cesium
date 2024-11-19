@@ -36,5 +36,14 @@ const TrackingReferenceFrame = {
    * @constant
    */
   VELOCITY: 2,
+
+  /**
+   * The entity's local East-North-Up reference frame.
+   * When selected, the auto-detect algorithm is overridden.
+   *
+   * @type {number}
+   * @constant
+   */
+  ENU: 3,
 };
 export default Object.freeze(TrackingReferenceFrame);
