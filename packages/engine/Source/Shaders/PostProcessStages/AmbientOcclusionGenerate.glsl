@@ -97,25 +97,25 @@ void main(void)
                 break;
             }
 
-            // Compute distance along geometry, for weighting AO contribution
+            // Compute step vector from output point to sampled point
             vec3 stepPositionEC = pixelToEye(newCoords);
             vec3 stepVector = stepPositionEC - positionEC;
-            float stepLength = length(stepVector);
 
-            // Compute lateral distance from output point, for weight normalization
-            vec3 inPlaneStepEC = vec3(stepPositionEC.x, stepPositionEC.y, positionEC.z);
-            vec3 windowVector = inPlaneStepEC - positionEC;
-            float windowLength = length(windowVector);
-
+            // Estimate the angle from the surface normal.
             float dotVal = clamp(dot(normalEC, normalize(stepVector)), 0.0, 1.0);
             if (dotVal < bias)
             {
                 dotVal = 0.0;
             }
 
+            // Weight contribution based on the distance from the output point
+            float stepLength = length(stepVector);
             float weight = gaussian(stepLength, samplingRadius);
             localAO += weight * dotVal;
+
+            // Compute lateral distance from output point, for weight normalization
             // TODO: This is slow! Better to analytically compute window scales
+            float windowLength = length(stepPositionEC.xy - positionEC.xy);
             accumulatedWindowWeights += gaussian(windowLength, samplingRadius);
         }
         ao += 24.0 * localAO / accumulatedWindowWeights;
