@@ -416,3 +416,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [Jérôme Fayot](https://github.com/jfayot)
 - [Kirn Kim](https://github.com/squrki)
 - [Emanuele Mastaglia](https://github.com/Masty88)
+- [Connor Manning](https://github.com/connormanning)
