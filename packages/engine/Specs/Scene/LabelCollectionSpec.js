@@ -2627,8 +2627,8 @@ describe(
     });
 
     it("filterUnsupportedCharacters removes unicode characters from text only if they cause render issues", function () {
-      const text = "test \u000A - with Line Feed (LF)";
-      const expectedText = "test  - with Line Feed (LF)";
+      const text = "test \u000E - with Shift Out (SO)";
+      const expectedText = "test  - with Shift Out (SO)";
       expect(Label.filterUnsupportedCharacters(text)).toEqual(expectedText);
     });
 
