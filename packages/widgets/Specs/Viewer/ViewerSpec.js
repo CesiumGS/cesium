@@ -542,6 +542,23 @@ describe(
       );
     });
 
+    it("throws when baseLayer is provided with globe: false", function () {
+      expect(function () {
+        viewer = createViewer(container, {
+          globe: false,
+          baseLayer: new ImageryLayer(testProvider),
+        });
+      }).toThrowDeveloperError();
+    });
+
+    it("does not throw when globe is false and baseLayer is not provided", function () {
+      expect(function () {
+        viewer = createViewer(container, {
+          globe: false,
+        });
+      }).not.toThrowDeveloperError();
+    });
+
     it("can set baseLayer to false when BaseLayerPicker is disabled", function () {
       viewer = createViewer(container, {
         baseLayerPicker: false,
