@@ -391,6 +391,7 @@ Object.defineProperties(Label.prototype, {
       return this._text;
     },
     set: function (value) {
+      value = Label.filterUnsupportedCharacters(value);
       //>>includeStart('debug', pragmas.debug);
       if (!defined(value)) {
         throw new DeveloperError("value is required.");
@@ -1344,6 +1345,21 @@ Label.getScreenSpaceBoundingBox = function (
   result.height = height;
 
   return result;
+};
+
+/**
+ * Removes control characters, which will cause an error when rendering a glyph.
+ * @private
+ * @param {string} text The original label text
+ * @returns {string} The renderable filtered text
+ */
+Label.filterUnsupportedCharacters = function (text) {
+  const problematicCharactersRegex = new RegExp(
+    // eslint-disable-next-line no-control-regex
+    /[\u0000-\u001F\u202a-\u206f\u200b-\u200f]/,
+    "g",
+  );
+  return text.replace(problematicCharactersRegex, "");
 };
 
 /**
