@@ -10,7 +10,7 @@ import Check from "../Core/Check.js";
  *
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  *
- * @see ITwinPlatform to set the API token and base api url
+ * @see ITwinPlatform to set the API token and base API URL
  * @namespace ITwinData
  */
 const ITwinData = {};
@@ -55,7 +55,7 @@ async function loadExport(exportObj, options) {
  * to re-attempt loading at a later time
  *
  * @example
- * const tileset = await Cesium.ITwinData.createTilesetFromModelId(imodelId);
+ * const tileset = await Cesium.ITwinData.createTilesetFromIModelId(iModelId);
  * viewer.scene.primitives.add(tileset);
  *
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
@@ -67,7 +67,7 @@ async function loadExport(exportObj, options) {
  * @throws {RuntimeError} Wrong export type [type]
  * @throws {RuntimeError} Export is not completed. [id] - [status]
  */
-ITwinData.createTilesetFromModelId = async function (iModelId, options) {
+ITwinData.createTilesetFromIModelId = async function (iModelId, options) {
   const { exports } = await ITwinPlatform.getExports(iModelId);
   const cesiumExport = exports[0];
   if (!defined(cesiumExport)) {
