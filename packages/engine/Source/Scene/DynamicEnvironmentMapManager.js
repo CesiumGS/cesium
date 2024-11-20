@@ -12,6 +12,7 @@ import PixelFormat from "../Core/PixelFormat.js";
 import SceneMode from "./SceneMode.js";
 import Transforms from "../Core/Transforms.js";
 import ComputeCommand from "../Renderer/ComputeCommand.js";
+import ContextLimits from "../Renderer/ContextLimits.js";
 import CubeMap from "../Renderer/CubeMap.js";
 import Framebuffer from "../Renderer/Framebuffer.js";
 import Texture from "../Renderer/Texture.js";
@@ -79,7 +80,11 @@ function DynamicEnvironmentMapManager(options) {
 
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-  const mipmapLevels = defaultValue(options.mipmapLevels, 10);
+  const mipmapLevels = Math.min(
+    defaultValue(options.mipmapLevels, 10),
+    Math.log2(ContextLimits.maximumCubeMapSize),
+  );
+
   this._mipmapLevels = mipmapLevels;
   this._radianceMapComputeCommands = new Array(6);
   this._convolutionComputeCommands = new Array((mipmapLevels - 1) * 6);
@@ -295,6 +300,62 @@ Object.defineProperties(DynamicEnvironmentMapManager.prototype, {
   },
 });
 
+console.log(ContextLimits);
+
+// Internally manage a queue of commands across all instances to prevent too many commands from being added in a single frame and using too much memory at once.
+DynamicEnvironmentMapManager._maximumComputeCommandCount =
+  Math.log2(ContextLimits.maximumCubeMapSize) * 6; // Scale relative to GPU resources available
+DynamicEnvironmentMapManager._activeComputeCommandCount = 0;
+DynamicEnvironmentMapManager._nextFrameCommandQueue = [];
+/**
+ * Add a command to the queue. If possible, it will be added to the list of commands for the next frame. Otherwise, it will be added to a backlog
+ * and attempted next frame.
+ * @private
+ * @param {ComputeCommand} command The created command
+ * @param {FrameState} frameState The current frame state
+ */
+DynamicEnvironmentMapManager._queueCommand = (command, frameState) => {
+  if (
+    DynamicEnvironmentMapManager._activeComputeCommandCount >=
+    DynamicEnvironmentMapManager._maximumComputeCommandCount
+  ) {
+    // Command will instead be scheduled next frame
+    DynamicEnvironmentMapManager._nextFrameCommandQueue.push(command);
+    return;
+  }
+
+  frameState.commandList.push(command);
+  DynamicEnvironmentMapManager._activeComputeCommandCount++;
+};
+/**
+ * If there are any backlogged commands, queue up as many as possible for the next frame.
+ * @private
+ * @param {FrameState} frameState The current frame state
+ */
+DynamicEnvironmentMapManager._updateCommandQueue = (frameState) => {
+  if (
+    DynamicEnvironmentMapManager._nextFrameCommandQueue.length > 0 &&
+    DynamicEnvironmentMapManager._activeComputeCommandCount <
+      DynamicEnvironmentMapManager._maximumComputeCommandCount
+  ) {
+    let command = DynamicEnvironmentMapManager._nextFrameCommandQueue.pop();
+    while (
+      defined(command) &&
+      DynamicEnvironmentMapManager._activeComputeCommandCount <
+        DynamicEnvironmentMapManager._maximumComputeCommandCount
+    ) {
+      if (command.canceled) {
+        command = DynamicEnvironmentMapManager._nextFrameCommandQueue.pop();
+        continue;
+      }
+
+      frameState.commandList.push(command);
+      DynamicEnvironmentMapManager._activeComputeCommandCount++;
+      command = DynamicEnvironmentMapManager._nextFrameCommandQueue.pop();
+    }
+  }
+};
+
 /**
  * Sets the owner for the input DynamicEnvironmentMapManager if there wasn't another owner.
  * Destroys the owner's previous DynamicEnvironmentMapManager if setting is successful.
@@ -334,15 +395,25 @@ DynamicEnvironmentMapManager.setOwner = function (
 DynamicEnvironmentMapManager.prototype.reset = function () {
   let length = this._radianceMapComputeCommands.length;
   for (let i = 0; i < length; ++i) {
+    if (defined(this._radianceMapComputeCommands[i])) {
+      this._radianceMapComputeCommands[i].canceled = true;
+      DynamicEnvironmentMapManager._activeComputeCommandCount--;
+    }
     this._radianceMapComputeCommands[i] = undefined;
   }
 
   length = this._convolutionComputeCommands.length;
   for (let i = 0; i < length; ++i) {
+    if (defined(this._convolutionComputeCommands[i])) {
+      this._convolutionComputeCommands[i].canceled = true;
+      DynamicEnvironmentMapManager._activeComputeCommandCount--;
+    }
     this._convolutionComputeCommands[i] = undefined;
   }
 
   if (defined(this._irradianceComputeCommand)) {
+    this._irradianceComputeCommand.canceled = true;
+    DynamicEnvironmentMapManager._activeComputeCommandCount--;
     this._irradianceComputeCommand = undefined;
   }
 
@@ -520,14 +591,17 @@ function updateRadianceMap(manager, frameState) {
           framebuffer._unBind();
           framebuffer.destroy();
 
+          DynamicEnvironmentMapManager._activeComputeCommandCount--;
+
           if (!commands.some(defined)) {
             manager._convolutionsCommandsDirty = true;
             manager._shouldRegenerateShaders = true;
           }
         },
       });
-      frameState.commandList.push(command);
+
       manager._radianceMapComputeCommands[i] = command;
+      DynamicEnvironmentMapManager._queueCommand(command, frameState);
       i++;
     }
     manager._radianceCommandsDirty = false;
@@ -554,7 +628,7 @@ function updateSpecularMaps(manager, frameState) {
   const getPostExecute = (index, texture, face, level) => () => {
     // Copy output texture to corresponding face and mipmap level
     const commands = manager._convolutionComputeCommands;
-    if (!defined(commands[index])) {
+    if (!defined(commands[index]) || commands[index].canceled) {
       // This command was cancelled
       return;
     }
@@ -562,6 +636,7 @@ function updateSpecularMaps(manager, frameState) {
 
     radianceCubeMap.copyFace(frameState, texture, face, level);
     facesCopied++;
+    DynamicEnvironmentMapManager._activeComputeCommandCount--;
 
     // All faces and levels have been copied
     if (facesCopied === manager._specularMapTextures.length) {
@@ -619,7 +694,7 @@ function updateSpecularMaps(manager, frameState) {
         postExecute: getPostExecute(index, texture, face, level),
       });
       manager._convolutionComputeCommands[index] = command;
-      frameState.commandList.push(command);
+      DynamicEnvironmentMapManager._queueCommand(command, frameState);
       ++index;
     }
 
@@ -674,10 +749,12 @@ function updateIrradianceResources(manager, frameState) {
       manager._irradianceTextureDirty = false;
       manager._irradianceComputeCommand = undefined;
       manager._sphericalHarmonicCoefficientsDirty = true;
+
+      DynamicEnvironmentMapManager._activeComputeCommandCount--;
     },
   });
   manager._irradianceComputeCommand = command;
-  frameState.commandList.push(command);
+  DynamicEnvironmentMapManager._queueCommand(command, frameState);
   manager._irradianceTextureDirty = true;
 }
 
@@ -743,6 +820,8 @@ DynamicEnvironmentMapManager.prototype.update = function (frameState) {
     this._shouldRegenerateShaders = false;
     return;
   }
+
+  DynamicEnvironmentMapManager._updateCommandQueue(frameState);
 
   const dynamicLighting = frameState.atmosphere.dynamicLighting;
   const regenerateEnvironmentMap =
