@@ -675,6 +675,30 @@ SampledProperty.prototype.addSamples = function (
 };
 
 /**
+ * Retrieves the time of the provided sample associated with the index. A negative index accesses the list of samples in reverse order.
+ *
+ * @param {number} index The index of samples list.
+ * @returns {JulianDate | undefined} The JulianDate time of the sample, or undefined if failed.
+ */
+SampledProperty.prototype.getSample = function (index) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number("index", index);
+  //>>includeEnd('debug');
+
+  const times = this._times;
+  const len = times.length;
+  if (!defined(len)) {
+    return undefined;
+  }
+
+  if (index < 0) {
+    index += len;
+  }
+
+  return times[index];
+};
+
+/**
  * Adds samples as a single packed array where each new sample is represented as a date,
  * followed by the packed representation of the corresponding value and derivatives.
  *
