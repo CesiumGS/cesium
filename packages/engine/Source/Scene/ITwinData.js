@@ -6,7 +6,17 @@ import RuntimeError from "../Core/RuntimeError.js";
 import Check from "../Core/Check.js";
 
 /**
- * @param {Export} exportObj
+ * Methods for loading iTwin platform data into CesiumJS
+ *
+ * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
+ *
+ * @see ITwinPlatform to set the API token and base api url
+ * @namespace ITwinData
+ */
+const ITwinData = {};
+
+/**
+ * @param {ExportRepresentation} exportObj
  * @param {Cesium3DTileset.ConstructorOptions} [options] Object containing options to pass to an internally created {@link Cesium3DTileset}.
  * @returns {Promise<Cesium3DTileset>}
  */
@@ -36,16 +46,6 @@ async function loadExport(exportObj, options) {
 
   return Cesium3DTileset.fromUrl(resource, options);
 }
-
-/**
- * Methods for loading iTwin platform data into CesiumJS
- *
- * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
- *
- * @see ITwinPlatform to set the API token and access api functions
- * @namespace ITwinData
- */
-const ITwinData = {};
 
 /**
  * Loads the export for the specified iModel with the export type that CesiumJS can load and returns

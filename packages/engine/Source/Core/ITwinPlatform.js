@@ -5,52 +5,6 @@ import Resource from "./Resource.js";
 import RuntimeError from "./RuntimeError.js";
 
 /**
- * @typedef {Object} GeometryOptions
- * @property {boolean} includeLines
- * @property {number} chordTol
- * @property {number} angleTol
- * @property {number} decimationTol
- * @property {number} maxEdgeLength
- * @property {number} minBRepFeatureSize
- * @property {number} minLineStyleComponentSize
- */
-
-/**
- * @typedef {Object} ViewDefinitionFilter
- * @property {string[]} models Array of included model IDs.
- * @property {string[]} categories Array of included category IDs.
- * @property {string[]} neverDrawn Array of element IDs to filter out.
- */
-
-/**
- * @typedef {Object} StartExport
- * @property {string} iModelId
- * @property {string} changesetId
- * @property {ITwinPlatform.ExportType} exportType Type of mesh to create. Currently, only GLTF and 3DFT are supported and undocumented CESIUM option
- * @property {GeometryOptions} geometryOptions
- * @property {ViewDefinitionFilter} viewDefinitionFilter
- */
-
-/**
- * @typedef {Object} Link
- * @property {string} href
- */
-
-/**
- * @typedef {Object} Export
- * @property {string} id
- * @property {string} displayName
- * @property {ITwinPlatform.ExportStatus} status
- * @property {StartExport} request
- * @property {{mesh: Link}} _links
- */
-
-/**
- * @typedef {Object} ExportResponse
- * @property {Export} export
- */
-
-/**
  * Default settings for accessing the iTwin platform.
  *
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
@@ -63,6 +17,7 @@ const ITwinPlatform = {};
 /**
  * Status states for a mesh-export export
  * @enum {string}
+ * @private
  */
 ITwinPlatform.ExportStatus = Object.freeze({
   NotStarted: "NotStarted",
@@ -74,6 +29,7 @@ ITwinPlatform.ExportStatus = Object.freeze({
 /**
  * Types of mesh-export exports. CesiumJS only supports loading <code>3DTILES</code> type exports
  * @enum {string}
+ * @private
  */
 ITwinPlatform.ExportType = Object.freeze({
   IMODEL: "IMODEL",
@@ -103,6 +59,35 @@ ITwinPlatform.apiEndpoint = new Resource({
 });
 
 /**
+ * @typedef {Object} ExportRequest
+ * @property {string} iModelId
+ * @property {string} changesetId
+ * @property {ITwinPlatform.ExportType} exportType Type of the export. CesiumJS only supports the 3DTILES type
+ */
+
+/**
+ * @typedef {Object} Link
+ * @property {string} href
+ */
+
+/**
+ * @typedef {Object} ExportRepresentation
+ * The export objects from get-exports when using return=representation
+ * @property {string} id Export id
+ * @property {string} displayName Name of the iModel
+ * @property {ITwinPlatform.ExportStatus} status Status of this export
+ * @property {string} lastModified
+ * @property {ExportRequest} request Object containing info about the export itself
+ * @property {{mesh: Link}} _links Object containing relevant links. For Exports this includes the access url for the mesh itself
+ */
+
+/**
+ * @typedef {Object} GetExportsResponse
+ * @property {ExportRepresentation[]} exports The list of exports for the current page
+ * @property {{self: Link, next: Link | undefined, prev: Link | undefined}} _links Pagination links
+ */
+
+/**
  * Get the list of exports for the specified iModel at it's most current version. This will only return exports with {@link ITwinPlatform.ExportType} of <code>3DTILES</code>.
  *
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
@@ -115,7 +100,7 @@ ITwinPlatform.apiEndpoint = new Resource({
  * @throws {RuntimeError} Unprocessable Entity
  * @throws {RuntimeError} Too many requests
  * @throws {RuntimeError} Unknown request failure
- * @returns {Promise<{exports: Export[]}>}
+ * @returns {Promise<GetExportsResponse>}
  */
 ITwinPlatform.getExports = async function (iModelId) {
   //>>includeStart('debug', pragmas.debug);
@@ -125,48 +110,48 @@ ITwinPlatform.getExports = async function (iModelId) {
   }
   //>>includeEnd('debug')
 
-  const headers = {
-    Authorization: `Bearer ${ITwinPlatform.defaultAccessToken}`,
-    Accept: "application/vnd.bentley.itwin-platform.v1+json",
-    Prefer: "return=representation", // or return=minimal (the default)
-  };
-
-  // obtain export for specified export id
-  const url = new URL(`${ITwinPlatform.apiEndpoint}mesh-export`);
-  url.searchParams.set("iModelId", iModelId);
-  url.searchParams.set("exportType", ITwinPlatform.ExportType["3DTILES"]);
-  // TODO: If we're only requesting the top 1 is there a chance it's `Invalid` instead of `Complete`
-  // and never possible to load it?
-  url.searchParams.set("$top", "1");
-  url.searchParams.set("client", "CesiumJS");
+  const resource = new Resource({
+    url: `${ITwinPlatform.apiEndpoint}mesh-export`,
+    headers: {
+      Authorization: `Bearer ${ITwinPlatform.defaultAccessToken}`,
+      Accept: "application/vnd.bentley.itwin-platform.v1+json",
+      Prefer: "return=representation",
+    },
+    queryParameters: {
+      iModelId: iModelId,
+      exportType: ITwinPlatform.ExportType["3DTILES"],
+      // TODO: If we're only requesting the top 1 is there a chance it's `Invalid` instead of `Complete`
+      // and never possible to load it?
+      $top: "1",
+      client: "CesiumJS",
+    },
+  });
   /* global CESIUM_VERSION */
   if (typeof CESIUM_VERSION !== "undefined") {
-    url.searchParams.set("clientVersion", CESIUM_VERSION);
+    resource.appendQueryParameters({ clientVersion: CESIUM_VERSION });
   }
 
-  const response = await fetch(url, { headers });
-  if (!response.ok) {
-    const result = await response.json();
-    if (response.status === 401) {
+  try {
+    const response = await resource.fetchJson();
+    return response;
+  } catch (error) {
+    const result = JSON.parse(error.response);
+    if (error.statusCode === 401) {
       throw new RuntimeError(
         `Unauthorized, bad token, wrong scopes or headers bad. ${result.error.details[0].code}`,
       );
-    } else if (response.status === 403) {
+    } else if (error.statusCode === 403) {
       console.error(result.error.code, result.error.message);
       throw new RuntimeError("Not allowed, forbidden");
-    } else if (response.status === 422) {
+    } else if (error.statusCode === 422) {
       throw new RuntimeError(
         `Unprocessable Entity:${result.error.code} ${result.error.message}`,
       );
-    } else if (response.status === 429) {
+    } else if (error.statusCode === 429) {
       throw new RuntimeError("Too many requests");
     }
-    throw new RuntimeError(`Unknown request failure ${response.status}`);
+    throw new RuntimeError(`Unknown request failure ${error.statusCode}`);
   }
-
-  /** @type {{exports: Export[]}} */
-  const result = await response.json();
-  return result;
 };
 
 export default ITwinPlatform;

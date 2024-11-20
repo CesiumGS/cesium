@@ -134,7 +134,7 @@
             const timeoutAfter = 300000;
             // wait until the export is complete
             while (Date.now() - start > timeoutAfter) {
-              await delay(5000);
+              await delay(15000);
               try {
                 tileset = await Cesium.ITwinData.createTilesetFromModelId(imodelId);
                 break;
