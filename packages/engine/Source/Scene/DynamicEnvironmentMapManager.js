@@ -300,11 +300,8 @@ Object.defineProperties(DynamicEnvironmentMapManager.prototype, {
   },
 });
 
-console.log(ContextLimits);
-
 // Internally manage a queue of commands across all instances to prevent too many commands from being added in a single frame and using too much memory at once.
-DynamicEnvironmentMapManager._maximumComputeCommandCount =
-  Math.log2(ContextLimits.maximumCubeMapSize) * 6; // Scale relative to GPU resources available
+DynamicEnvironmentMapManager._maximumComputeCommandCount = 8; // This value is updated once a context is created.
 DynamicEnvironmentMapManager._activeComputeCommandCount = 0;
 DynamicEnvironmentMapManager._nextFrameCommandQueue = [];
 /**
@@ -686,7 +683,7 @@ function updateSpecularMaps(manager, frameState) {
         owner: manager,
         uniformMap: {
           u_roughness: () => level / (mipmapLevels - 1),
-          u_radianceTexture: () => radianceCubeMap,
+          u_radianceTexture: () => radianceCubeMap ?? context.defaultTexture,
           u_faceDirection: () => {
             return CubeMap.getDirection(face, scratchCartesian);
           },
@@ -739,7 +736,7 @@ function updateIrradianceResources(manager, frameState) {
     fragmentShaderSource: fs,
     outputTexture: texture,
     uniformMap: {
-      u_radianceMap: () => manager._radianceCubeMap,
+      u_radianceMap: () => manager._radianceCubeMap ?? context.defaultTexture,
     },
     postExecute: () => {
       if (!defined(manager._irradianceComputeCommand)) {
@@ -821,6 +818,8 @@ DynamicEnvironmentMapManager.prototype.update = function (frameState) {
     return;
   }
 
+  DynamicEnvironmentMapManager._maximumComputeCommandCount =
+    Math.log2(ContextLimits.maximumCubeMapSize) * 6; // Scale relative to GPU resources available
   DynamicEnvironmentMapManager._updateCommandQueue(frameState);
 
   const dynamicLighting = frameState.atmosphere.dynamicLighting;

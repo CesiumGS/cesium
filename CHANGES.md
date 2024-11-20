@@ -12,6 +12,7 @@
 ##### Fixes :wrench:
 
 - Fix label rendering bug in WebGL1 contexts. [#12301](https://github.com/CesiumGS/cesium/pull/12301)
+- Fixed lag or crashes when loading many models in the same frame. [#12320](https://github.com/CesiumGS/cesium/pull/12320)
 
 #### @cesium/widgets
 
