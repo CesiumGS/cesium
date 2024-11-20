@@ -364,7 +364,7 @@ describe(
       expect(viewer.geocoder.viewModel._geocoderServices.length).toBe(1);
       const geocoderService = viewer.geocoder.viewModel._geocoderServices[0];
       expect(geocoderService).toBeInstanceOf(IonGeocoderService);
-      expect(geocoderService.geocodeProvider).toEqual(
+      expect(geocoderService.geocodeProviderType).toEqual(
         IonGeocodeProviderType.GOOGLE,
       );
     });

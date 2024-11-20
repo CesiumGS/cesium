@@ -570,7 +570,10 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
     let geocoderService;
     if (typeof options.geocoder === "string") {
       geocoderService = [
-        new IonGeocoderService({ scene, geocodeProvider: options.geocoder }),
+        new IonGeocoderService({
+          scene,
+          geocodeProviderType: options.geocoder,
+        }),
       ];
     } else if (
       defined(options.geocoder) &&

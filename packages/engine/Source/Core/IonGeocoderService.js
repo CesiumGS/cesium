@@ -9,17 +9,19 @@ import PeliasGeocoderService from "./PeliasGeocoderService.js";
 import Resource from "./Resource.js";
 
 /**
- * @param {*} geocodeProvider
+ * @param {*} geocodeProviderType
  * @throws {DeveloperError}
  * @private
  */
-function validateIonGeocodeProviderType(geocodeProvider) {
+function validateIonGeocodeProviderType(geocodeProviderType) {
   if (
     !Object.values(IonGeocodeProviderType).some(
-      (value) => value === geocodeProvider,
+      (value) => value === geocodeProviderType,
     )
   ) {
-    throw new DeveloperError(`Invalid geocodeProvider: "${geocodeProvider}"`);
+    throw new DeveloperError(
+      `Invalid geocodeProviderType: "${geocodeProviderType}"`,
+    );
   }
 }
 
@@ -48,7 +50,7 @@ function queryParameterToProvider(parameter) {
  * @param {Scene} options.scene The scene
  * @param {string} [options.accessToken=Ion.defaultAccessToken] The access token to use.
  * @param {string|Resource} [options.server=Ion.defaultServer] The resource to the Cesium ion API server.
- * @param {IonGeocodeProviderType} [options.geocodeProvider=IonGeocodeProviderType.DEFAULT] The geocoder the Cesium ion API server should use to fulfill this request.
+ * @param {IonGeocodeProviderType} [options.geocodeProviderType=IonGeocodeProviderType.DEFAULT] The geocoder the Cesium ion API server should use to fulfill this request.
  *
  * @see Ion
  */
@@ -59,11 +61,11 @@ function IonGeocoderService(options) {
   Check.typeOf.object("options.scene", options.scene);
   //>>includeEnd('debug');
 
-  const geocodeProvider = defaultValue(
-    options.geocodeProvider,
+  const geocodeProviderType = defaultValue(
+    options.geocodeProviderType,
     IonGeocodeProviderType.DEFAULT,
   );
-  validateIonGeocodeProviderType(geocodeProvider);
+  validateIonGeocodeProviderType(geocodeProviderType);
 
   const accessToken = defaultValue(options.accessToken, Ion.defaultAccessToken);
   const server = Resource.createIfNeeded(
@@ -89,7 +91,9 @@ function IonGeocoderService(options) {
   this._accessToken = accessToken;
   this._server = server;
   this._pelias = new PeliasGeocoderService(searchEndpoint);
-  this.geocodeProvider = geocodeProvider;
+  // geocoderProviderType isn't stored here directly but instead relies on the
+  // query parameters of this._pelias.url.  Use the setter logic to update value.
+  this.geocodeProviderType = geocodeProviderType;
 }
 
 Object.defineProperties(IonGeocoderService.prototype, {
@@ -111,17 +115,17 @@ Object.defineProperties(IonGeocoderService.prototype, {
    * @type {IonGeocodeProviderType}
    * @default IonGeocodeProviderType.DEFAULT
    */
-  geocodeProvider: {
+  geocodeProviderType: {
     get: function () {
       return queryParameterToProvider(
         this._pelias.url.queryParameters["geocoder"],
       );
     },
-    set: function (geocodeProvider) {
-      validateIonGeocodeProviderType(geocodeProvider);
+    set: function (geocodeProviderType) {
+      validateIonGeocodeProviderType(geocodeProviderType);
       const query = {
         ...this._pelias.url.queryParameters,
-        geocoder: providerToQueryParameter(geocodeProvider),
+        geocoder: providerToQueryParameter(geocodeProviderType),
       };
       // Delete the geocoder parameter to prevent sending &geocoder=undefined in the query
       if (!defined(query.geocoder)) {
