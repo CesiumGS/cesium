@@ -6,6 +6,7 @@
 
 ##### Additions :tada:
 
+- Added `getSample` to `SampledProperty` to get the time of samples. [#12253](https://github.com/CesiumGS/cesium/pull/12253)
 - Added `Entity.trackingReferenceFrame` property to allow tracking entities in their own inertial reference frame. [#12194](https://github.com/CesiumGS/cesium/pull/12194)
 
 ##### Fixes :wrench:
