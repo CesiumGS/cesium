@@ -226,7 +226,12 @@ function buildDrawCommandForGaussianSplatModel(
   const model = primitiveRenderResources.model;
 
   const vertexArray = (() => {
-    if (model.enableShowGaussianSplatting && model.showGaussianSplatting) {
+    if (
+      !(
+        primitiveRenderResources.runtimePrimitive.primitive
+          ?.hasGaussianSplatTexture ?? false
+      )
+    ) {
       const splatQuadAttrLocations = {
         0: 5,
         1: 1,
@@ -274,11 +279,33 @@ function buildDrawCommandForGaussianSplatModel(
         interleave: false,
       });
     }
+    const splatQuadAttrLocations = {
+      screenQuadPosition: 0,
+      0: 4,
+      1: 1,
+      2: 2,
+      3: 3,
+    };
+    const geometry = new Geometry({
+      attributes: {
+        screenQuadPosition: new GeometryAttribute({
+          componentDatatype: ComponentDatatype.FLOAT,
+          componentsPerAttribute: 2,
+          values: [-2, -2, 2, -2, 2, 2, -2, 2],
+          name: "_SCREEN_QUAD_POS",
+          variableName: "screenQuadPos",
+        }),
+      },
+      indices: indexBuffer,
+      primitiveType: PrimitiveType.TRIANGLE_STRIP,
+    });
 
-    return new VertexArray({
+    return VertexArray.fromGeometry({
       context: frameState.context,
-      indexBuffer: indexBuffer,
-      attributes: primitiveRenderResources.attributes,
+      geometry: geometry,
+      attributeLocations: splatQuadAttrLocations,
+      bufferUsage: BufferUsage.STATIC_DRAW,
+      interleave: false,
     });
   })();
 

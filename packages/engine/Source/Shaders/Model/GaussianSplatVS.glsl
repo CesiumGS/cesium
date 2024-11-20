@@ -1,4 +1,4 @@
-#if !defined(HAS_SPLAT_TEXTURE)
+#ifndef HAS_SPLAT_TEXTURE
 
 // Dequantize a float that was quantized with EXPONENTIAL filter
 float meshopt_dequantize_exponential(uint quantized, float min_value, float max_value) {
@@ -27,9 +27,15 @@ void calcCov3D(vec3 scale, vec4 rot, out float[6] cov3D)
 
     // Compute rotation matrix from quaternion
     mat3 R = mat3(
-        1. - 2. * (y * y + z * z), 2. * (x * y - r * z), 2. * (x * z + r * y),
-        2. * (x * y + r * z), 1. - 2. * (x * x + z * z), 2. * (y * z - r * x),
-        2. * (x * z - r * y), 2. * (y * z + r * x), 1. - 2. * (x * x + y * y)
+        1. - 2. * (y * y + z * z),
+        2. * (x * y - r * z),
+        2. * (x * z + r * y),
+        2. * (x * y + r * z),
+        1. - 2. * (x * x + z * z),
+        2. * (y * z - r * x),
+        2. * (x * z - r * y),
+        2. * (y * z + r * x),
+        1. - 2. * (x * x + y * y)
     );
 
     mat3 M = S * R;
@@ -94,11 +100,11 @@ void gaussianSplatStage(ProcessedAttributes attributes, inout vec4 positionClip)
 
     if(lambda2 < 0.0) return;
     vec2 diagonalVector = normalize(vec2(cov.y, lambda1 - cov.x));
-    vec2 majorAxis = min(sqrt(2.0 * lambda1), 1024.0) * diagonalVector;
-    vec2 minorAxis = min(sqrt(2.0 * lambda2), 1024.0) * vec2(diagonalVector.y, -diagonalVector.x);
+    vec2 v1 = min(sqrt(2.0 * lambda1), 1024.0) * diagonalVector;
+    vec2 v2 = min(sqrt(2.0 * lambda2), 1024.0) * vec2(diagonalVector.y, -diagonalVector.x);
 
     vec2 corner = vec2((gl_VertexID << 1) & 2, gl_VertexID & 2) - 1.;
-    positionClip += vec4((corner.x * majorAxis + corner.y * minorAxis) * 4.0 / czm_viewport.zw * positionClip.w, 0, 0);
+    positionClip += vec4((corner.x * v1 + corner.y * v2) * 1.0 / czm_viewport.zw * positionClip.w, 0, 0);
     positionClip.z = clamp(positionClip.z, -abs(positionClip.w), abs(positionClip.w));
     v_vertPos = corner ;
     v_splatColor = a_splatColor;
@@ -106,17 +112,97 @@ void gaussianSplatStage(ProcessedAttributes attributes, inout vec4 positionClip)
 
 #else
 
-void gaussianSplatStage(ProcessedAttributes attributes, inout vec4 positionClip) {
+vec4 calcCovVectors(vec3 worldPos, float focal_x, float focal_y, float tan_fovx, float tan_fovy, mat3 Vrk/*float[6] cov3D*/, mat3 viewmatrix) {
+    vec4 t = vec4(worldPos, 1.0);
 
-    //unpack data index from indices texture
-    //g_vertexID is our index here
+    float limx = 1.3 * tan_fovx;
+    float limy = 1.3 * tan_fovy;
+    float txtz = t.x / t.z;
+    float tytz = t.y / t.z;
+    t.x = min(limx, max(-limx, txtz)) * t.z;
+    t.y = min(limy, max(-limy, tytz)) * t.z;
 
-    //unpack position
+    mat3 J = mat3(
+        focal_x / t.z, 0, -(focal_x * t.x) / (t.z * t.z),
+        0, focal_y / t.z, -(focal_y * t.y) / (t.z * t.z),
+        0, 0, 0
+    );
 
-    //unpack color
+    mat3 T = viewmatrix * J;
+    mat3 cov = transpose(T) * transpose(Vrk) * T;
 
-    //unpack covariance
+    float diag1 = cov[0][0] + .3;
+    float offDiag = cov[0][1];
+    float diag2 = cov[1][1] + .3;
 
-    //
+    float mid = (diag1 + diag2) * 0.5;
+    float radius = length(vec2((diag1 - diag2) * 0.5, offDiag));
+    float lambda1 = mid + radius;
+    float lambda2 = mid - radius;
+
+    if(lambda2 < 0.0) {
+        return vec4(0.0);
+    }
+
+    vec2 diagonalVector = normalize(vec2(offDiag, lambda1 - diag1));
+    vec2 v1 = min(sqrt(2.0 * lambda1), 1024.0) * diagonalVector;
+    vec2 v2 = min(sqrt(2.0 * lambda2), 1024.0) * vec2(diagonalVector.y, -diagonalVector.x);
+
+    return vec4(v1, v2);
 }
+
+highp vec4 discardVec = vec4(0.0, 0.0, 2.0, 1.0);
+
+void gaussianSplatStage(ProcessedAttributes attributes, inout vec4 positionClip) {
+    uint index = uint(gl_InstanceID);
+
+    ivec2 idxCoord = ivec2(index & 0x3ffu, index >> 10);
+    uint sortedIndex = uint(texelFetch(u_splatIndexTexture, idxCoord, 0).r);
+
+    ivec2 posCoord = ivec2((sortedIndex & 0x3ffu) << 1, sortedIndex >> 10);
+    vec4 splatPosition = vec4( uintBitsToFloat(uvec4(texelFetch(u_splatAttributeTexture, posCoord, 0))) );
+    vec4 splatViewPos = czm_modelView * vec4(splatPosition.xyz, 1.0);
+    vec4 clipPosition = czm_projection * splatViewPos;
+
+    float clip = 1.2 * clipPosition.w;
+    if (clipPosition.z < -clip || clipPosition.x < -clip || clipPosition.x > clip ||
+        clipPosition.y < -clip || clipPosition.y > clip) {
+        positionClip = vec4(0.0, 0.0, 2.0, 1.0);
+        return;
+    }
+
+    ivec2 covCoord = ivec2(((sortedIndex & 0x3ffu) << 1) | 1u, sortedIndex >> 10);
+    uvec4 covariance = uvec4(texelFetch(u_splatAttributeTexture, covCoord, 0));
+
+    positionClip = clipPosition;
+
+    vec2 u1 = unpackHalf2x16(covariance.x);
+    vec2 u2 = unpackHalf2x16(covariance.y);
+    vec2 u3 = unpackHalf2x16(covariance.z);
+    mat3 Vrk = mat3(u1.x, u1.y, u2.x, u1.y, u2.y, u3.x, u2.x, u3.x, u3.y);
+
+    vec4 covVectors = calcCovVectors(
+        splatViewPos.xyz,
+        u_focalX,
+        u_focalY,
+        u_tan_fovX,
+        u_tan_fovY,
+        Vrk,
+       transpose(mat3(czm_modelView))// czm_modelView
+    );
+
+    if (dot(covVectors.xy, covVectors.xy) < 4.0 && dot(covVectors.zw, covVectors.zw) < 4.0) {
+        gl_Position = discardVec;
+        return;
+    }
+
+    vec2 corner = vec2((gl_VertexID << 1) & 2, gl_VertexID & 2) - 1.;
+
+    positionClip += vec4((corner.x * covVectors.xy + corner.y * covVectors.zw)  / czm_viewport.zw * positionClip.w, 0, 0);
+    positionClip.z = clamp(positionClip.z, -abs(positionClip.w), abs(positionClip.w));
+
+    v_vertPos = corner ;
+    v_splatColor = vec4(covariance.w & 0xffu, (covariance.w >> 8) & 0xffu, (covariance.w >> 16) & 0xffu, (covariance.w >> 24) & 0xffu) / 255.0;
+}
+
 #endif

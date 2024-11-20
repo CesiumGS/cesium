@@ -136,9 +136,9 @@ GeometryPipelineStage.process = function (
   }
 
   if (primitive.primitiveType === PrimitiveType.POINTS) {
-    const gaussianSplatsEnabled =
-      (primitive?.isGaussianSplatPrimitive ?? false) &&
-      model.enableShowGaussianSplatting;
+    //JASON - enableShowGaussianSplatting is coming in false. disable for now
+    const gaussianSplatsEnabled = primitive?.isGaussianSplatPrimitive ?? false;
+    // && model.enableShowGaussianSplatting;
     if (gaussianSplatsEnabled) {
       const showSplats = model.showGaussianSplatting;
       primitive.attributes.find((a) => a.name === "POSITION").instanceDivisor =

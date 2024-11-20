@@ -242,8 +242,13 @@ ModelRuntimePrimitive.prototype.configurePipeline = function (frameState) {
 
   const hasClassification = defined(model.classificationType);
 
+  // const hasGaussianSplats =
+  //   model.enableShowGaussianSplatting
+  //   && model.showGaussianSplatting
+  //   && (primitive?.isGaussianSplatPrimitive ?? false);
   const hasGaussianSplats =
-    model.enableShowGaussianSplatting && model.showGaussianSplatting;
+    model.showGaussianSplatting &&
+    (primitive?.isGaussianSplatPrimitive ?? false);
   // Start of pipeline -----------------------------------------------------
   if (use2D) {
     pipelineStages.push(SceneMode2DPipelineStage);

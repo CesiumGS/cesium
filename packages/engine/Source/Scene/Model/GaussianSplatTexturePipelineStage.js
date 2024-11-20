@@ -16,6 +16,11 @@ import GaussianSplatTextureGenerator from "./GaussianSplatTextureGenerator.js";
 
 import buildModuleUrl from "../../Core/buildModuleUrl.js";
 
+import PixelFormat from "../../Core/PixelFormat.js";
+import PixelDatatype from "../../Renderer/PixelDatatype.js";
+import Sampler from "../../Renderer/Sampler.js";
+import Texture from "../../Renderer/Texture.js";
+
 let wasmInitialized = false;
 let initPromise = null;
 let wasmMod;
@@ -86,13 +91,20 @@ GaussianSplatTexturePipelineStage.process = function (
   );
 
   shaderBuilder.addAttribute("vec2", "a_screenQuadPosition");
-  shaderBuilder.addAttribute("int", "a_splatIndex"); //actual index, not gl_vertexID
 
   shaderBuilder.addVarying("vec4", "v_splatColor");
   shaderBuilder.addVarying("vec2", "v_vertPos");
-  shaderBuilder.addVarying("float", "v_splatOpacity");
-  shaderBuilder.addVarying("vec4", "v_splatScale");
-  shaderBuilder.addVarying("vec4", "v_splatRot");
+
+  shaderBuilder.addUniform(
+    "highp usampler2D",
+    "u_splatAttributeTexture",
+    ShaderDestination.VERTEX,
+  );
+  shaderBuilder.addUniform(
+    "highp usampler2D",
+    "u_splatIndexTexture",
+    ShaderDestination.VERTEX,
+  );
 
   shaderBuilder.addUniform("float", "u_tan_fovX", ShaderDestination.VERTEX);
   shaderBuilder.addUniform("float", "u_tan_fovY", ShaderDestination.VERTEX);
@@ -131,122 +143,6 @@ GaussianSplatTexturePipelineStage.process = function (
   };
 
   const timer = new CesiumPerformanceTimer();
-
-  const radixSort = () => {
-    const attributes = primitive.attributes;
-    const modelView = new Matrix4();
-    const modelMat = renderResources.model.modelMatrix;
-    Matrix4.multiply(cam.viewMatrix, modelMat, modelView);
-
-    const posAttr = attributes.find((a) => a.name === "POSITION");
-    const scaleAttr = attributes.find((a) => a.name === "_SCALE");
-    const rotAttr = attributes.find((a) => a.name === "_ROTATION");
-    const clrAttr = attributes.find((a) => a.name === "COLOR_0");
-
-    const posArray = posAttr.typedArray;
-    const scaleArray = scaleAttr.typedArray;
-    const rotArray = rotAttr.typedArray;
-    const clrArray = clrAttr.typedArray;
-
-    const newPosArray = new posArray.constructor(posArray.length);
-    const newScaleArray = new scaleArray.constructor(scaleArray.length);
-    const newRotArray = new rotArray.constructor(rotArray.length);
-    const newClrArray = new clrArray.constructor(clrArray.length);
-
-    const calcDepth = (i) =>
-      posArray[i * 3] * modelView[2] +
-      posArray[i * 3 + 1] * modelView[6] +
-      posArray[i * 3 + 2] * modelView[10];
-
-    // Calculate depths and store as integers
-    const depthValues = new Int32Array(renderResources.count);
-    let maxDepth = -Infinity;
-    let minDepth = Infinity;
-
-    for (let i = 0; i < renderResources.count; i++) {
-      const depth = (calcDepth(i) * 4096) | 0;
-      depthValues[i] = depth;
-      maxDepth = Math.max(maxDepth, depth);
-      minDepth = Math.min(minDepth, depth);
-    }
-
-    // Normalize depths to positive values
-    const depthOffset = -minDepth;
-    for (let i = 0; i < renderResources.count; i++) {
-      depthValues[i] += depthOffset;
-    }
-
-    // Create index array to track original positions
-    const indices = new Uint32Array(renderResources.count);
-    for (let i = 0; i < renderResources.count; i++) {
-      indices[i] = i;
-    }
-
-    // Temporary arrays for radix sort
-    const tempDepths = new Int32Array(renderResources.count);
-    const tempIndices = new Uint32Array(renderResources.count);
-
-    // Sort for each byte (4 bytes for 32-bit integer)
-    for (let shift = 0; shift < 32; shift += 8) {
-      const counts = new Uint32Array(256);
-
-      // Count frequencies
-      for (let i = 0; i < renderResources.count; i++) {
-        const byte = (depthValues[i] >> shift) & 0xff;
-        counts[byte]++;
-      }
-
-      // Calculate starting positions
-      let total = 0;
-      for (let i = 0; i < 256; i++) {
-        const count = counts[i];
-        counts[i] = total;
-        total += count;
-      }
-
-      // Move items to correct position
-      for (let i = 0; i < renderResources.count; i++) {
-        const byte = (depthValues[i] >> shift) & 0xff;
-        const pos = counts[byte]++;
-
-        tempDepths[pos] = depthValues[i];
-        tempIndices[pos] = indices[i];
-      }
-
-      // Copy back
-      depthValues.set(tempDepths);
-      indices.set(tempIndices);
-    }
-
-    // Rearrange attribute arrays based on sorted indices
-    for (let i = 0; i < renderResources.count; i++) {
-      const j = indices[i];
-
-      newPosArray[i * 3] = posArray[j * 3];
-      newPosArray[i * 3 + 1] = posArray[j * 3 + 1];
-      newPosArray[i * 3 + 2] = posArray[j * 3 + 2];
-
-      newScaleArray[i * 3] = scaleArray[j * 3];
-      newScaleArray[i * 3 + 1] = scaleArray[j * 3 + 1];
-      newScaleArray[i * 3 + 2] = scaleArray[j * 3 + 2];
-
-      newRotArray[i * 4] = rotArray[j * 4];
-      newRotArray[i * 4 + 1] = rotArray[j * 4 + 1];
-      newRotArray[i * 4 + 2] = rotArray[j * 4 + 2];
-      newRotArray[i * 4 + 3] = rotArray[j * 4 + 3];
-
-      newClrArray[i * 4] = clrArray[j * 4];
-      newClrArray[i * 4 + 1] = clrArray[j * 4 + 1];
-      newClrArray[i * 4 + 2] = clrArray[j * 4 + 2];
-      newClrArray[i * 4 + 3] = clrArray[j * 4 + 3];
-    }
-
-    posAttr.typedArray = newPosArray;
-    scaleAttr.typedArray = newScaleArray;
-    rotAttr.typedArray = newRotArray;
-    clrAttr.typedArray = newClrArray;
-  };
-
   const radixWasmSimd = async () => {
     async function ensureWasmInitialized() {
       if (!initPromise) {
@@ -362,10 +258,117 @@ GaussianSplatTexturePipelineStage.process = function (
     clrAttr.typedArray = newColors;
   };
 
-  timer.start();
-  radixSort();
+  const radixSortToTexture = () => {
+    const modelView = new Matrix4();
+    const modelMat = renderResources.model.modelMatrix;
+    Matrix4.multiply(cam.viewMatrix, modelMat, modelView);
 
+    const posAttr = primitive.attributes.find((a) => a.name === "POSITION");
+    const posArray = posAttr.typedArray;
+
+    const calcDepth = (i) =>
+      posArray[i * 3] * modelView[2] +
+      posArray[i * 3 + 1] * modelView[6] +
+      posArray[i * 3 + 2] * modelView[10];
+
+    // Calculate depths and store as integers
+    const depthValues = new Int32Array(renderResources.count);
+    let maxDepth = -Infinity;
+    let minDepth = Infinity;
+
+    for (let i = 0; i < renderResources.count; i++) {
+      const depth = (calcDepth(i) * 4096) | 0;
+      depthValues[i] = depth;
+      maxDepth = Math.max(maxDepth, depth);
+      minDepth = Math.min(minDepth, depth);
+    }
+
+    const depthOffset = -minDepth;
+    for (let i = 0; i < renderResources.count; i++) {
+      depthValues[i] += depthOffset;
+    }
+
+    const texWidth = 1024;
+    const texHeight = Math.ceil(renderResources.count / texWidth);
+    const paddedSize = texWidth * texHeight;
+
+    // Initialize indices with padding
+    const indices = new Uint32Array(paddedSize);
+    for (let i = 0; i < renderResources.count; i++) {
+      indices[i] = i;
+    }
+    // Fill padding with last valid index to avoid artifacts
+    for (let i = renderResources.count; i < paddedSize; i++) {
+      indices[i] = renderResources.count - 1;
+    }
+
+    // Temporary arrays for sorting
+    const tempDepths = new Int32Array(renderResources.count);
+    const tempIndices = new Uint32Array(renderResources.count);
+
+    // Sort for each byte (4 bytes for 32-bit integer)
+    for (let shift = 0; shift < 32; shift += 8) {
+      const counts = new Uint32Array(256);
+
+      for (let i = 0; i < renderResources.count; i++) {
+        const byte = (depthValues[i] >> shift) & 0xff;
+        counts[byte]++;
+      }
+
+      let total = 0;
+      for (let i = 0; i < 256; i++) {
+        const count = counts[i];
+        counts[i] = total;
+        total += count;
+      }
+
+      for (let i = 0; i < renderResources.count; i++) {
+        const byte = (depthValues[i] >> shift) & 0xff;
+        const pos = counts[byte]++;
+
+        tempDepths[pos] = depthValues[i];
+        tempIndices[pos] = indices[i];
+      }
+
+      // Copy sorted values back
+      depthValues.set(tempDepths);
+      indices.set(tempIndices.subarray(0, renderResources.count));
+    }
+
+    const indexTex = new Texture({
+      context: frameState.context,
+      source: {
+        width: texWidth,
+        height: texHeight,
+        arrayBufferView: indices, // Using full padded array for GL compatibility
+      },
+      preMultiplyAlpha: false,
+      skipColorSpaceConversion: true,
+      pixelFormat: PixelFormat.RED_INTEGER,
+      pixelDatatype: PixelDatatype.UNSIGNED_INT,
+      flipY: false,
+      sampler: Sampler.NEAREST,
+    });
+
+    return indexTex;
+  };
+
+  timer.start();
+  primitive.gaussianSplatIndexTexture = radixSortToTexture();
   timer.end();
+
+  uniformMap.u_splatAttributeTexture = function () {
+    return primitive.gaussianSplatTexture;
+  };
+
+  uniformMap.u_splatIndexTexture = function () {
+    return primitive.gaussianSplatIndexTexture;
+  };
+
+  // timer.start();
+  // radixSort();
+
+  // timer.end();
 
   const useWasm = false;
   if (useWasm) {
@@ -380,8 +383,8 @@ GaussianSplatTexturePipelineStage.process = function (
     timer.end();
   }
 
-  const rExecTime = timer.getExecutionTime();
-  console.log(`RadixSort Execution time: ${rExecTime.milliseconds}ms`);
+  // const rExecTime = timer.getExecutionTime();
+  // console.log(`RadixSort Execution time: ${rExecTime.milliseconds}ms`);
 
   renderResources.instanceCount = renderResources.count;
   renderResources.count = 4;

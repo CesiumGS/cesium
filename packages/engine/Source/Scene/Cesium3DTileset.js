@@ -872,6 +872,11 @@ function Cesium3DTileset(options) {
     true,
   );
 
+  this._enableShowGaussianSplatting = defaultValue(
+    options.enableShowGaussianSplatting,
+    true,
+  );
+
   /**
    * The color to use when rendering outlines.
    *

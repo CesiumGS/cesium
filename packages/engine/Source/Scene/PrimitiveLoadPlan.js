@@ -282,7 +282,7 @@ function generateSplatTexture(loadPlan, context) {
       },
       preMultiplyAlpha: false,
       skipColorSpaceConversion: true,
-      pixelFormat: PixelFormat.RGBA,
+      pixelFormat: PixelFormat.RGBA_INTEGER,
       pixelDatatype: PixelDatatype.UNSIGNED_INT,
       flipY: false,
       sampler: Sampler.NEAREST,
