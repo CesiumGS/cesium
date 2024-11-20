@@ -17,7 +17,6 @@ const ITwinPlatform = {};
 /**
  * Status states for a mesh-export export
  * @enum {string}
- * @private
  */
 ITwinPlatform.ExportStatus = Object.freeze({
   NotStarted: "NotStarted",
@@ -29,7 +28,6 @@ ITwinPlatform.ExportStatus = Object.freeze({
 /**
  * Types of mesh-export exports. CesiumJS only supports loading <code>3DTILES</code> type exports
  * @enum {string}
- * @private
  */
 ITwinPlatform.ExportType = Object.freeze({
   IMODEL: "IMODEL",
