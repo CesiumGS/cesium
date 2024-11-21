@@ -159,13 +159,13 @@ const pickFeaturesTags = combine(tags, {
  * });
  * // Access a Web Map Service (WMS) server.
  * const wms = new Cesium.UrlTemplateImageryProvider({
- *    url : 'https://programs.communications.gov.au/geoserver/ows?tiled=true&' +
- *          'transparent=true&format=image%2Fpng&exceptions=application%2Fvnd.ogc.se_xml&' +
- *          'styles=&service=WMS&version=1.1.1&request=GetMap&' +
- *          'layers=public%3AMyBroadband_Availability&srs=EPSG%3A3857&' +
+ *    url : 'https://services.ga.gov.au/gis/services/NM_Hydrology_and_Marine_Points/MapServer/WMSServer?' +
+ *          'tiled=true&transparent=true&format=image%2Fpng&exceptions=application%2Fvnd.ogc.se_xml&' +
+ *          'styles=&service=WMS&version=1.3.0&request=GetMap&' +
+ *          'layers=Bores&crs=EPSG%3A3857&' +
  *          'bbox={westProjected}%2C{southProjected}%2C{eastProjected}%2C{northProjected}&' +
  *          'width=256&height=256',
- *    rectangle : Cesium.Rectangle.fromDegrees(96.799393, -43.598214999057824, 153.63925700000001, -9.2159219997013)
+ *    rectangle : Cesium.Rectangle.fromDegrees(95.0, -55.0, 170.0, -1.0)  // From GetCapabilities EX_GeographicBoundingBox
  * });
  * // Using custom tags in your template url.
  * const custom = new Cesium.UrlTemplateImageryProvider({
