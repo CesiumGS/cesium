@@ -12,6 +12,7 @@
 ##### Fixes :wrench:
 
 - Fix label rendering bug in WebGL1 contexts. [#12301](https://github.com/CesiumGS/cesium/pull/12301)
+- Fix point cloud filtering performance on certain hardware [#12317](https://github.com/CesiumGS/cesium/pull/12317)
 
 #### @cesium/widgets
 
