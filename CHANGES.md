@@ -12,6 +12,7 @@
 ##### Fixes :wrench:
 
 - Fix label rendering bug in WebGL1 contexts. [#12301](https://github.com/CesiumGS/cesium/pull/12301)
+- Fix TypeError on setting the Viewer selectedEntity. [#12322](https://github.com/CesiumGS/cesium/pull/12322)
 
 #### @cesium/widgets
 
