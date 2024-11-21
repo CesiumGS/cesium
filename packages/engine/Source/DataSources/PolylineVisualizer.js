@@ -300,6 +300,11 @@ PolylineVisualizer.prototype.getBoundingSphere = function (entity, result) {
   const batches = this._batches;
   const batchesLength = batches.length;
   const updater = this._updaters.get(entity.id);
+
+  if (!defined(updater)) {
+    return BoundingSphereState.FAILED;
+  }
+
   for (let i = 0; i < batchesLength; i++) {
     state = batches[i].getBoundingSphere(updater, tmp);
     if (state === BoundingSphereState.PENDING) {
