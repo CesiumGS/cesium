@@ -10,13 +10,13 @@ uniform float frustumLength;
 uniform int stepCount;
 uniform int directionCount;
 
-vec3 pixelToEye(vec2 screenCoordinate)
+vec4 pixelToEye(vec2 screenCoordinate)
 {
     vec2 uv = screenCoordinate / czm_viewport.zw;
     float depth = czm_readDepth(depthTexture, uv);
     vec2 xy = 2.0 * uv - vec2(1.0);
     vec4 posEC = czm_inverseProjection * vec4(xy, depth, 1.0);
-    return posEC.xyz / posEC.w;
+    return posEC / posEC.w;
 }
 
 // Reconstruct surface normal in eye coordinates, avoiding edges
@@ -24,10 +24,10 @@ vec3 getNormalXEdge(vec3 positionEC)
 {
     // Find the 3D surface positions at adjacent screen pixels
     vec2 centerCoord = gl_FragCoord.xy;
-    vec3 positionLeft = pixelToEye(centerCoord + vec2(-1.0, 0.0));
-    vec3 positionRight = pixelToEye(centerCoord + vec2(1.0, 0.0));
-    vec3 positionUp = pixelToEye(centerCoord + vec2(0.0, 1.0));
-    vec3 positionDown = pixelToEye(centerCoord + vec2(0.0, -1.0));
+    vec3 positionLeft = pixelToEye(centerCoord + vec2(-1.0, 0.0)).xyz;
+    vec3 positionRight = pixelToEye(centerCoord + vec2(1.0, 0.0)).xyz;
+    vec3 positionUp = pixelToEye(centerCoord + vec2(0.0, 1.0)).xyz;
+    vec3 positionDown = pixelToEye(centerCoord + vec2(0.0, -1.0)).xyz;
 
     // Compute potential tangent vectors
     vec3 dx0 = positionEC - positionLeft;
@@ -51,7 +51,7 @@ float gaussian(float x, float standardDeviation) {
 
 void main(void)
 {
-    vec3 positionEC = pixelToEye(gl_FragCoord.xy);
+    vec4 positionEC = pixelToEye(gl_FragCoord.xy);
 
     if (positionEC.z > frustumLength)
     {
@@ -59,10 +59,11 @@ void main(void)
         return;
     }
 
-    vec3 normalEC = getNormalXEdge(positionEC);
+    vec3 normalEC = getNormalXEdge(positionEC.xyz);
     float gaussianVariance = lengthCap * sqrt(-positionEC.z);
-    // TODO: mix of units. Steps are in pixels; variance is in meters.
-    //float stepLength = max(1.0, 3.0 * gaussianVariance / (float(stepCount) + 1.0));
+    // Choose a step length such that the marching stops just before 3 * variance.
+    float stepLength = 3.0 * gaussianVariance / (float(stepCount) + 1.0);
+    float pixelsPerStep = max(stepLength / czm_metersPerPixel(positionEC, 1.0), 1.0);
 
     float angleStepScale = 1.0 / float(directionCount);
     float angleStep = angleStepScale * czm_twoPi;
@@ -92,8 +93,7 @@ void main(void)
 
         float localAO = 0.0;
         float accumulatedWindowWeights = 0.0;
-        //vec2 radialStep = stepLength * sampleDirection;
-        vec2 radialStep = stepSize * sampleDirection;
+        vec2 radialStep = pixelsPerStep * sampleDirection;
 
 #if __VERSION__ == 300
         for (int j = 0; j < stepCount; j++)
@@ -106,17 +106,17 @@ void main(void)
             }
 #endif
             // Step along sampling direction, away from output pixel
-            vec2 newCoords = floor(gl_FragCoord.xy + float(j + 1) * radialStep) + vec2(0.5);
+            vec2 samplePixel = floor(gl_FragCoord.xy + float(j + 1) * radialStep) + vec2(0.5);
 
             // Exit if we stepped off the screen
-            if (clamp(newCoords, vec2(0.0), czm_viewport.zw) != newCoords)
+            if (clamp(samplePixel, vec2(0.0), czm_viewport.zw) != samplePixel)
             {
                 break;
             }
 
             // Compute step vector from output point to sampled point
-            vec3 stepPositionEC = pixelToEye(newCoords);
-            vec3 stepVector = stepPositionEC - positionEC;
+            vec4 samplePositionEC = pixelToEye(samplePixel);
+            vec3 stepVector = samplePositionEC.xyz - positionEC.xyz;
 
             // Estimate the angle from the surface normal.
             float dotVal = clamp(dot(normalEC, normalize(stepVector)), 0.0, 1.0);
@@ -132,7 +132,7 @@ void main(void)
 
             // Compute lateral distance from output point, for weight normalization
             // TODO: This is slow! Better to analytically compute window scales
-            float lateralDistance = length(stepPositionEC.xy - positionEC.xy);
+            float lateralDistance = length(stepVector.xy);
             accumulatedWindowWeights += gaussian(lateralDistance, gaussianVariance);
         }
         ao += localAO / accumulatedWindowWeights;
