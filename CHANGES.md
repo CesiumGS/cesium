@@ -6,11 +6,13 @@
 
 ##### Additions :tada:
 
+- Added `getSample` to `SampledProperty` to get the time of samples. [#12253](https://github.com/CesiumGS/cesium/pull/12253)
 - Added `Entity.trackingReferenceFrame` property to allow tracking entities in their own inertial reference frame. [#12194](https://github.com/CesiumGS/cesium/pull/12194)
 
 ##### Fixes :wrench:
 
 - Fix label rendering bug in WebGL1 contexts. [#12301](https://github.com/CesiumGS/cesium/pull/12301)
+- Fix point cloud filtering performance on certain hardware [#12317](https://github.com/CesiumGS/cesium/pull/12317)
 
 #### @cesium/widgets
 
