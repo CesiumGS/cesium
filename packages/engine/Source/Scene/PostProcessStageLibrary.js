@@ -509,6 +509,8 @@ PostProcessStageLibrary.createAmbientOcclusionStage = function () {
       intensity: 3.0,
       bias: 0.1,
       lengthCap: 0.26,
+      directionCount: 16,
+      stepCount: 64,
       stepSize: 1.95,
       frustumLength: 1000.0,
       randomTexture: undefined,
@@ -554,6 +556,22 @@ PostProcessStageLibrary.createAmbientOcclusionStage = function () {
       },
       set: function (value) {
         generate.uniforms.lengthCap = value;
+      },
+    },
+    directionCount: {
+      get: function () {
+        return generate.uniforms.directionCount;
+      },
+      set: function (value) {
+        generate.uniforms.directionCount = value;
+      },
+    },
+    stepCount: {
+      get: function () {
+        return generate.uniforms.stepCount;
+      },
+      set: function (value) {
+        generate.uniforms.stepCount = value;
       },
     },
     stepSize: {

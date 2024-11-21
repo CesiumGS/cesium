@@ -7,6 +7,8 @@ uniform float bias;
 uniform float lengthCap;
 uniform float stepSize;
 uniform float frustumLength;
+uniform int stepCount;
+uniform int directionCount;
 
 vec3 pixelToEye(vec2 screenCoordinate)
 {
@@ -58,17 +60,17 @@ void main(void)
     }
 
     vec3 normalEC = getNormalXEdge(positionEC);
-    float samplingRadius = lengthCap * sqrt(-positionEC.z);
+    float gaussianVariance = lengthCap * sqrt(-positionEC.z);
+    // TODO: mix of units. Steps are in pixels; variance is in meters.
+    //float stepLength = max(1.0, 3.0 * gaussianVariance / (float(stepCount) + 1.0));
 
-    const int ANGLE_STEPS = 16;
-    float angleStepScale = 1.0 / float(ANGLE_STEPS);
+    float angleStepScale = 1.0 / float(directionCount);
     float angleStep = angleStepScale * czm_twoPi;
     float cosStep = cos(angleStep);
     float sinStep = sin(angleStep);
     mat2 rotateStep = mat2(cosStep, sinStep, -sinStep, cosStep);
 
-    const int RADIAL_STEPS = 64;
-    float radialStepScale = 1.0 / float(RADIAL_STEPS);
+    float radialStepScale = 1.0 / float(stepCount);
 
     // Initial sampling direction (different for each pixel)
     const float randomTextureSize = 255.0;
@@ -78,16 +80,33 @@ void main(void)
 
     float ao = 0.0;
     // Loop over sampling directions
-    for (int i = 0; i < ANGLE_STEPS; i++)
+//#if __VERSION__ == 300
+//    for (int i = 0; i < directionCount; i++)
+//    {
+//#else
+    for (int i = 0; i < 64; i++)
     {
+        if (i >= directionCount) {
+            break;
+        }
+//#endif
         sampleDirection = rotateStep * sampleDirection;
 
         float localAO = 0.0;
         float accumulatedWindowWeights = 0.0;
+        //vec2 radialStep = stepLength * sampleDirection;
         vec2 radialStep = stepSize * sampleDirection;
 
-        for (int j = 0; j < RADIAL_STEPS; j++)
+//#if __VERSION__ == 300
+//        for (int j = 0; j < stepCount; j++)
+//        {
+//#else
+        for (int j = 0; j < 128; j++)
         {
+            if (j >= stepCount) {
+                break;
+            }
+//#endif
             // Step along sampling direction, away from output pixel
             vec2 newCoords = floor(gl_FragCoord.xy + float(j + 1) * radialStep) + vec2(0.5);
 
@@ -109,14 +128,14 @@ void main(void)
             }
 
             // Weight contribution based on the distance from the output point
-            float stepLength = length(stepVector);
-            float weight = gaussian(stepLength, samplingRadius);
+            float sampleDistance = length(stepVector);
+            float weight = gaussian(sampleDistance, gaussianVariance);
             localAO += weight * dotVal;
 
             // Compute lateral distance from output point, for weight normalization
             // TODO: This is slow! Better to analytically compute window scales
-            float windowLength = length(stepPositionEC.xy - positionEC.xy);
-            accumulatedWindowWeights += gaussian(windowLength, samplingRadius);
+            float lateralDistance = length(stepPositionEC.xy - positionEC.xy);
+            accumulatedWindowWeights += gaussian(lateralDistance, gaussianVariance);
         }
         ao += 24.0 * localAO / accumulatedWindowWeights;
     }
