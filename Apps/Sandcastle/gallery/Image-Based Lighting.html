@@ -24,25 +24,7 @@
     </style>
     <div id="cesiumContainer" class="fullSize"></div>
     <div id="loadingOverlay"><h1>Loading...</h1></div>
-    <div id="toolbar">
-      <table>
-        <tbody>
-          <tr>
-            <td>Luminance at Zenith</td>
-            <td>
-              <input
-                type="range"
-                min="0.0"
-                max="2.0"
-                step="0.01"
-                data-bind="value: luminanceAtZenith, valueUpdate: 'input'"
-              />
-              <input type="text" size="4" data-bind="value: luminanceAtZenith" />
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+    <div id="toolbar"></div>
     <script id="cesium_sandcastle_script">
       window.startup = async function (Cesium) {
         "use strict";
@@ -145,26 +127,8 @@
             ibl.sphericalHarmonicCoefficients = coefficients;
             ibl.specularEnvironmentMaps = environmentMapURL;
 
-            // The viewModel tracks the state of our mini application.
-            const viewModel = {
-              luminanceAtZenith: ibl.luminanceAtZenith,
-            };
-            // Convert the viewModel members into knockout observables.
-            Cesium.knockout.track(viewModel);
-
-            // Bind the viewModel to the DOM elements of the UI that call for it.
-            const toolbar = document.getElementById("toolbar");
-            Cesium.knockout.applyBindings(viewModel, toolbar);
-
-            function subscribeParameter(name) {
-              Cesium.knockout
-                .getObservable(viewModel, name)
-                .subscribe(function (newValue) {
-                  ibl[name] = newValue;
-                });
-            }
-
-            subscribeParameter("luminanceAtZenith");
+            model.environmentMapManager.groundColor =
+              Cesium.Color.fromCssColorString("#292817");
 
             Sandcastle.addToggleButton(
               "Use procedural environment lighting",

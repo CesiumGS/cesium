@@ -143,6 +143,42 @@ describe(
       });
     });
 
+    it("should not return PENDING when this._ready is false and allowPartial is true", function () {
+      const visualizer1 = new MockVisualizer();
+      visualizer1.getBoundingSphereResult = new BoundingSphere(
+        new Cartesian3(1, 2, 3),
+        456,
+      );
+      visualizer1.getBoundingSphereState = BoundingSphereState.PENDING;
+
+      const visualizer2 = new MockVisualizer();
+      visualizer2.getBoundingSphereResult = new BoundingSphere(
+        new Cartesian3(7, 8, 9),
+        1011,
+      );
+      visualizer2.getBoundingSphereState = BoundingSphereState.DONE;
+
+      display = new DataSourceDisplay({
+        scene: scene,
+        dataSourceCollection: dataSourceCollection,
+        visualizersCallback: function () {
+          return [visualizer1, visualizer2];
+        },
+      });
+
+      const entity = new Entity();
+      const dataSource = new MockDataSource();
+      dataSource.entities.add(entity);
+      return display.dataSources.add(dataSource).then(function () {
+        display.update(Iso8601.MINIMUM_VALUE);
+
+        const result = new BoundingSphere();
+        const state = display.getBoundingSphere(entity, true, result);
+
+        expect(state).toBe(BoundingSphereState.DONE);
+      });
+    });
+
     it("Computes partial bounding sphere.", function () {
       const visualizer1 = new MockVisualizer();
       visualizer1.getBoundingSphereResult = new BoundingSphere(
