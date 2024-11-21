@@ -70,8 +70,6 @@ void main(void)
     float sinStep = sin(angleStep);
     mat2 rotateStep = mat2(cosStep, sinStep, -sinStep, cosStep);
 
-    float radialStepScale = 1.0 / float(stepCount);
-
     // Initial sampling direction (different for each pixel)
     const float randomTextureSize = 255.0;
     vec2 randomTexCoord = fract(gl_FragCoord.xy / randomTextureSize);
@@ -80,16 +78,16 @@ void main(void)
 
     float ao = 0.0;
     // Loop over sampling directions
-//#if __VERSION__ == 300
-//    for (int i = 0; i < directionCount; i++)
-//    {
-//#else
+#if __VERSION__ == 300
+    for (int i = 0; i < directionCount; i++)
+    {
+#else
     for (int i = 0; i < 64; i++)
     {
         if (i >= directionCount) {
             break;
         }
-//#endif
+#endif
         sampleDirection = rotateStep * sampleDirection;
 
         float localAO = 0.0;
@@ -97,16 +95,16 @@ void main(void)
         //vec2 radialStep = stepLength * sampleDirection;
         vec2 radialStep = stepSize * sampleDirection;
 
-//#if __VERSION__ == 300
-//        for (int j = 0; j < stepCount; j++)
-//        {
-//#else
+#if __VERSION__ == 300
+        for (int j = 0; j < stepCount; j++)
+        {
+#else
         for (int j = 0; j < 128; j++)
         {
             if (j >= stepCount) {
                 break;
             }
-//#endif
+#endif
             // Step along sampling direction, away from output pixel
             vec2 newCoords = floor(gl_FragCoord.xy + float(j + 1) * radialStep) + vec2(0.5);
 
@@ -137,10 +135,10 @@ void main(void)
             float lateralDistance = length(stepPositionEC.xy - positionEC.xy);
             accumulatedWindowWeights += gaussian(lateralDistance, gaussianVariance);
         }
-        ao += 24.0 * localAO / accumulatedWindowWeights;
+        ao += localAO / accumulatedWindowWeights;
     }
 
-    ao *= angleStepScale * radialStepScale;
+    ao *= angleStepScale;
     ao = 1.0 - clamp(ao, 0.0, 1.0);
     ao = pow(ao, intensity);
     out_FragColor = vec4(vec3(ao), 1.0);
