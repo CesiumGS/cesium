@@ -438,6 +438,10 @@ Object.defineProperties(MetadataClassProperty.prototype, {
   /**
    * The offset to be added to property values as part of the value transform.
    *
+   * This is always defined, even when `hasValueTransform` is `false`. If
+   * the class property JSON itself did not define it, then it will be
+   * initialized to the default value.
+   *
    * @memberof MetadataClassProperty.prototype
    * @type {number|number[]|number[][]}
    * @readonly
@@ -450,6 +454,10 @@ Object.defineProperties(MetadataClassProperty.prototype, {
 
   /**
    * The scale to be multiplied to property values as part of the value transform.
+   *
+   * This is always defined, even when `hasValueTransform` is `false`. If
+   * the class property JSON itself did not define it, then it will be
+   * initialized to the default value.
    *
    * @memberof MetadataClassProperty.prototype
    * @type {number|number[]|number[][]}
@@ -1139,6 +1147,24 @@ function normalizeInPlace(values, valueType, normalizeFunction) {
 }
 
 /**
+ * Applies the value transform that is defined with the given offsets
+ * and scales to the given values.
+ *
+ * If the given values are not an array, then the given transformation
+ * function will be applied directly.
+ *
+ * If the values are an array, then this function will be called recursively
+ * with the array elements, boiling down to a component-wise application
+ * of the transformation function to the innermost array elements.
+ *
+ * @param {number|number[]|number[][]} values The input values
+ * @param {number|number[]|number[][]} offsets The offsets
+ * @param {number|number[]|number[][]} scales The scales
+ * @param {Function} transformationFunction The function with the signature
+ * `(value:number, offset:number, scale:number) : number` that will be
+ * applied to the innermost elements
+ * @returns The input values (or the result of applying the transformation
+ * function to a single value if the values have not been an array).
  * @private
  */
 MetadataClassProperty.valueTransformInPlace = function (
