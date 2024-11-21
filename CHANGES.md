@@ -14,6 +14,10 @@
 - Fix label rendering bug in WebGL1 contexts. [#12301](https://github.com/CesiumGS/cesium/pull/12301)
 - Added `GoogleGeocoderService` for standalone usage of Google geocoder. [#12299](https://github.com/CesiumGS/cesium/pull/12299)
 
+##### Deprecated :hourglass_flowing_sand:
+
+- `createGooglePhotorealistic3DTileset(key)` has been deprecated. Use `createGooglePhotorealistic3DTileset({key})` instead. It will be removed in 1.126.
+
 #### @cesium/widgets
 
 ##### Additions :tada:

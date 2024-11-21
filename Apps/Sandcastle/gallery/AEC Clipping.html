@@ -49,7 +49,10 @@
         // Add Photorealistic 3D Tiles
         let googleTileset;
         try {
-          googleTileset = await Cesium.createGooglePhotorealistic3DTileset();
+          googleTileset = await Cesium.createGooglePhotorealistic3DTileset({
+            // Only the Google Geocoder can be used with Google Photorealistic 3D Tiles.  Set the `geocode` property of the viewer constructor options to IonGeocodeProviderType.GOOGLE.
+            onlyUsingWithGoogleGeocoder: true,
+          });
           viewer.scene.primitives.add(googleTileset);
         } catch (error) {
           console.log(`Error loading Photorealistic 3D Tiles tileset.
