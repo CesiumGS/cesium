@@ -65,7 +65,9 @@ function IonGeocoderService(options) {
     options.geocodeProviderType,
     IonGeocodeProviderType.DEFAULT,
   );
+  //>>includeStart('debug', pragmas.debug);
   validateIonGeocodeProviderType(geocodeProviderType);
+  //>>includeEnd('debug');
 
   const accessToken = defaultValue(options.accessToken, Ion.defaultAccessToken);
   const server = Resource.createIfNeeded(
