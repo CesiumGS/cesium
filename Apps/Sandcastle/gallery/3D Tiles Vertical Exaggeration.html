@@ -78,6 +78,7 @@
           animation: false,
           sceneModePicker: false,
           baseLayerPicker: false,
+          geocoder: Cesium.IonGeocodeProviderType.GOOGLE,
           // The globe does not need to be displayed,
           // since the Photorealistic 3D Tiles include terrain
           globe: false,
@@ -104,7 +105,10 @@
 
         // Add Photorealistic 3D Tiles
         try {
-          const tileset = await Cesium.createGooglePhotorealistic3DTileset();
+          const tileset = await Cesium.createGooglePhotorealistic3DTileset({
+            // Only the Google Geocoder can be used with Google Photorealistic 3D Tiles.  Set the `geocode` property of the viewer constructor options to IonGeocodeProviderType.GOOGLE.
+            onlyUsingWithGoogleGeocoder: true,
+          });
           scene.primitives.add(tileset);
         } catch (error) {
           console.log(`Error loading Photorealistic 3D Tiles tileset.
