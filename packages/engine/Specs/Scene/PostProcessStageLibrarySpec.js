@@ -392,7 +392,8 @@ describe(
       expect(ao.uniforms.intensity).toEqual(3.0);
       expect(ao.uniforms.bias).toEqual(0.1);
       expect(ao.uniforms.lengthCap).toEqual(0.26);
-      expect(ao.uniforms.stepSize).toEqual(1.95);
+      expect(ao.uniforms.directionCount).toEqual(16);
+      expect(ao.uniforms.stepCount).toEqual(64);
       expect(ao.uniforms.frustumLength).toEqual(1000.0);
       expect(ao.uniforms.randomTexture).not.toBeDefined();
       expect(ao.uniforms.delta).toEqual(1.0);
