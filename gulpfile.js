@@ -1209,7 +1209,7 @@ function generateTypeScriptDefinitions(
       /\/\*\*[\*\s\w]*?\*\/\nexport const Check: any;/m,
       `\n${readFileSync("./packages/engine/Source/Core/Check.d.ts")
         .toString()
-        .replace(/export default.*\n/, "")
+        .replace(/export default.*\n?/, "")
         .replace("const Check", "export const Check")}`,
     )
     // Fix https://github.com/CesiumGS/cesium/issues/10498 so we can use the rest parameter expand tuple
@@ -1423,7 +1423,7 @@ function createTypeScriptDefinitions() {
       /\/\*\*[\*\s\w]*?\*\/\nexport const Check: any;/m,
       `\n${readFileSync("./packages/engine/Source/Core/Check.d.ts")
         .toString()
-        .replace(/export default.*\n/, "")
+        .replace(/export default.*\n?/, "")
         .replace("const Check", "export const Check")}`,
     )
     // Fix https://github.com/CesiumGS/cesium/issues/10498 to have rest parameter expand tuple
