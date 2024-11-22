@@ -12,6 +12,7 @@ import Texture from "../Renderer/Texture.js";
 import PixelFormat from "../Core/PixelFormat.js";
 import PixelDatatype from "../Renderer/PixelDatatype.js";
 import Sampler from "../Renderer/Sampler.js";
+
 /**
  * Simple struct for tracking whether an attribute will be loaded as a buffer
  * or typed array after post-processing.
@@ -269,6 +270,7 @@ function setupGaussianSplatBuffers(loadPlan, context) {
 }
 
 function generateSplatTexture(loadPlan, context) {
+  loadPlan.primitive.gaussianSplatTexturePending = true;
   GaussianSplatTextureGenerator.generateFromAttrs(
     loadPlan.primitive.attributes,
     loadPlan.primitive.attributes[0].count,
@@ -287,6 +289,19 @@ function generateSplatTexture(loadPlan, context) {
       flipY: false,
       sampler: Sampler.NEAREST,
     });
+    const count = loadPlan.primitive.attributes[0].count;
+    const attribute = new ModelComponents.Attribute();
+
+    attribute.name = "_SPLAT_INDEXES";
+    attribute.typedArray = new Uint32Array([...Array(count).keys()]);
+    attribute.componentDatatype = ComponentDatatype.UNSIGNED_INT;
+    attribute.type = AttributeType.SCALAR;
+    attribute.normalized = false;
+    attribute.count = count;
+    attribute.constant = 0;
+    attribute.instanceDivisor = 1;
+
+    loadPlan.primitive.attributes.push(attribute);
     loadPlan.primitive.gaussianSplatTexture = splatTex;
     loadPlan.primitive.hasGaussianSplatTexture = true;
   });

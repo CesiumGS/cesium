@@ -44,6 +44,8 @@ import PntsLoader from "./PntsLoader.js";
 import StyleCommandsNeeded from "./StyleCommandsNeeded.js";
 import pickModel from "./pickModel.js";
 
+import GaussianSplatSorter from "../GaussianSplatSorter.js";
+
 /**
  * <div class="notice">
  * To construct a Model, call {@link Model.fromGltfAsync}. Do not call the constructor directly.
@@ -470,7 +472,7 @@ function Model(options) {
 
   this._enableShowGaussianSplatting = defaultValue(
     options.enableShowGaussianSplatting,
-    false,
+    true,
   );
 
   /**
@@ -2126,13 +2128,56 @@ function updateGaussianSplatting(model, frameState) {
     return;
   }
 
+  const sg = model._sceneGraph;
+  const prim = sg._components.nodes[0].primitives[0]; //walk more primitives
+  //texture generation is done and we have one ready to use
+  //rebuild our draw  commands this one time
+  if (prim.gaussianSplatTexturePending && prim.hasGaussianSplatTexture) {
+    prim.gaussianSplatTexturePending = false;
+    model.resetDrawCommands();
+  }
+
   const dot =
     model._previousViewProj[2] * viewProj[2] +
     model._previousViewProj[6] * viewProj[6] +
     model._previousViewProj[10] * viewProj[10];
 
   if (Math.abs(dot - 1) > CesiumMath.EPSILON2) {
-    model.resetDrawCommands();
+    if (prim?.isGaussianSplatPrimitive ?? false) {
+      const idxAttr = prim.attributes.find((a) => a.name === "_SPLAT_INDEXES");
+      const posAttr = prim.attributes.find((a) => a.name === "POSITION");
+      const modelView = new Matrix4();
+      Matrix4.multiply(
+        frameState.camera.viewMatrix,
+        model.modelMatrix,
+        modelView,
+      );
+      try {
+        const promise = GaussianSplatSorter.radixSortIndexes({
+          primitive: {
+            positions: new Float32Array(posAttr.typedArray),
+            modelView: Float32Array.from(modelView),
+            count: idxAttr.count,
+          },
+          sortType: "Index",
+        });
+
+        if (promise === undefined) {
+          return;
+        }
+
+        promise.catch((err) => {
+          console.error(`${err}`);
+        });
+        promise.then((sortedData) => {
+          idxAttr.typedArray = sortedData;
+          model.resetDrawCommands();
+        });
+      } catch (e) {
+        console.log(`${e}`);
+      }
+    }
+    //model.resetDrawCommands();
     model._previousViewProj = viewProj;
   }
 }

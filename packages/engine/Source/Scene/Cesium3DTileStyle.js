@@ -76,6 +76,11 @@ function Cesium3DTileStyle(style) {
   this._splatScale = undefined;
   this._showGaussianSplatting = true;
 
+  //gaussian splatting debugging
+  this._debugSplatSortAlgo = 0;
+  this._useTexturePipeline = true;
+  this._useWebAssembly = true;
+
   this._colorShaderFunction = undefined;
   this._showShaderFunction = undefined;
   this._pointSizeShaderFunction = undefined;

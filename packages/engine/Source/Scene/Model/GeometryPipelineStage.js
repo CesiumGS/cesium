@@ -136,9 +136,9 @@ GeometryPipelineStage.process = function (
   }
 
   if (primitive.primitiveType === PrimitiveType.POINTS) {
-    //JASON - enableShowGaussianSplatting is coming in false. disable for now
-    const gaussianSplatsEnabled = primitive?.isGaussianSplatPrimitive ?? false;
-    // && model.enableShowGaussianSplatting;
+    const gaussianSplatsEnabled =
+      (primitive?.isGaussianSplatPrimitive ?? false) &&
+      model.enableShowGaussianSplatting;
     if (gaussianSplatsEnabled) {
       const showSplats = model.showGaussianSplatting;
       primitive.attributes.find((a) => a.name === "POSITION").instanceDivisor =
@@ -149,6 +149,12 @@ GeometryPipelineStage.process = function (
         showSplats ? 1 : 0;
       primitive.attributes.find((a) => a.name === "COLOR_0").instanceDivisor =
         showSplats ? 1 : 0;
+
+      if (primitive.hasGaussianSplatTexture) {
+        primitive.attributes.find(
+          (a) => a.name === "_SPLAT_INDEXES",
+        ).instanceDivisor = showSplats ? 1 : 0;
+      }
 
       if (!showSplats) {
         shaderBuilder.addDefine("PRIMITIVE_TYPE_POINTS");

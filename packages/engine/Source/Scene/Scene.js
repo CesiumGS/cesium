@@ -2393,7 +2393,7 @@ function performGaussianSplatPass(scene, passState, frustumCommands) {
   commands.length = frustumCommands.indices[Pass.GAUSSIAN_SPLATS];
 
   //still necessary?
-  mergeSort(commands, backToFront, scene.camera.positionWC);
+  mergeSort(commands, frontToBack, scene.camera.positionWC);
 
   for (let i = 0; i < commands.length; ++i) {
     executeCommand(commands[i], scene, passState);

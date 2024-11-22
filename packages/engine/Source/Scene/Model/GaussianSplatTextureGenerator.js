@@ -4,6 +4,8 @@ import __wbg_init, {
 } from "cesiumjs-gsplat-utils";
 import buildModuleUrl from "../../Core/buildModuleUrl.js";
 
+//TODO: move to TaskProcessor
+
 GaussianSplatTextureGenerator.wasmModule = undefined;
 GaussianSplatTextureGenerator.wasmInitialized = false;
 GaussianSplatTextureGenerator.initPromise = null;

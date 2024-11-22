@@ -53,7 +53,7 @@ ModelDrawCommands.buildModelDrawCommand = function (
 
   const command = primitiveRenderResources.runtimePrimitive.primitive
     .isGaussianSplatPrimitive
-    ? buildDrawCommandForGaussianSplatModel(
+    ? buildDrawCommandForGaussianSplatPrimitive(
         primitiveRenderResources,
         shaderProgram,
         frameState,
@@ -217,7 +217,7 @@ function buildDrawCommandForModel(
  *
  * @private
  */
-function buildDrawCommandForGaussianSplatModel(
+function buildDrawCommandForGaussianSplatPrimitive(
   primitiveRenderResources,
   shaderProgram,
   frameState,
@@ -233,12 +233,11 @@ function buildDrawCommandForGaussianSplatModel(
       )
     ) {
       const splatQuadAttrLocations = {
-        0: 5,
+        0: 8,
         1: 1,
         2: 2,
         3: 3,
         4: 4,
-        screenQuadPosition: 0,
         splatPosition: 6,
         splatColor: 7,
       };
@@ -280,21 +279,23 @@ function buildDrawCommandForGaussianSplatModel(
       });
     }
     const splatQuadAttrLocations = {
-      screenQuadPosition: 0,
-      0: 4,
-      1: 1,
-      2: 2,
-      3: 3,
+      5: 5,
+      splatIndex: 7,
     };
     const geometry = new Geometry({
       attributes: {
         screenQuadPosition: new GeometryAttribute({
           componentDatatype: ComponentDatatype.FLOAT,
           componentsPerAttribute: 2,
-          values: [-2, -2, 2, -2, 2, 2, -2, 2],
+          values: [-1, -1, 1, -1, 1, 1, -1, 1],
           name: "_SCREEN_QUAD_POS",
-          variableName: "screenQuadPos",
+          variableName: "screenQuadPosition",
         }),
+        splatIndex: {
+          ...primitiveRenderResources.runtimePrimitive.primitive.attributes.find(
+            (a) => a.name === "_SPLAT_INDEXES",
+          ),
+        },
       },
       indices: indexBuffer,
       primitiveType: PrimitiveType.TRIANGLE_STRIP,

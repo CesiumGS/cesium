@@ -3,8 +3,6 @@ import FeatureDetection from "../Core/FeatureDetection.js";
 import RuntimeError from "../Core/RuntimeError.js";
 import TaskProcessor from "../Core/TaskProcessor.js";
 
-//should probably rename to Utils and include texture gen
-
 function GaussianSplatSorter() {}
 
 GaussianSplatSorter._maxSortingConcurrency = Math.max(
@@ -18,7 +16,7 @@ GaussianSplatSorter._error = undefined;
 GaussianSplatSorter._getSorterTaskProcessor = function () {
   if (!defined(GaussianSplatSorter._sorterTaskProcessor)) {
     const processor = new TaskProcessor(
-      "gaussianSplatSort",
+      "gaussianSplatSorter",
       GaussianSplatSorter._maxSortingConcurrency,
     );
     processor
@@ -43,7 +41,7 @@ GaussianSplatSorter._getSorterTaskProcessor = function () {
   return GaussianSplatSorter._sorterTaskProcessor;
 };
 
-GaussianSplatSorter.countSortSplats = function (parameters) {
+GaussianSplatSorter.radixSort = function (parameters) {
   const sorterTaskProcessor = GaussianSplatSorter._getSorterTaskProcessor();
   if (defined(GaussianSplatSorter._error)) {
     throw GaussianSplatSorter._error;
@@ -54,7 +52,25 @@ GaussianSplatSorter.countSortSplats = function (parameters) {
   }
 
   return sorterTaskProcessor.scheduleTask(parameters, [
-    parameters.splatIndexes.buffer,
+    parameters.primitive.attributes,
+    parameters.primitive.modelView,
+    parameters.primitive.count,
+    parameters.sortType,
+  ]);
+};
+
+GaussianSplatSorter.radixSortIndexes = function (parameters) {
+  const sorterTaskProcessor = GaussianSplatSorter._getSorterTaskProcessor();
+  if (defined(GaussianSplatSorter._error)) {
+    throw GaussianSplatSorter._error;
+  }
+
+  if (!GaussianSplatSorter._taskProcessorReady) {
+    return;
+  }
+
+  return sorterTaskProcessor.scheduleTask(parameters, [
+    parameters.primitive.positions.buffer,
   ]);
 };
 
