@@ -400,8 +400,7 @@ Object.defineProperties(Label.prototype, {
       if (this._text !== value) {
         this._text = value;
 
-        // Strip soft-hyphen (auto-wrap) characters from input string
-        const renderedValue = value.replace(/\u00ad/g, "");
+        const renderedValue = Label.filterUnsupportedCharacters(value);
         this._renderedText = Label.enableRightToLeftDetection
           ? reverseRtl(renderedValue)
           : renderedValue;
@@ -1347,6 +1346,21 @@ Label.getScreenSpaceBoundingBox = function (
 };
 
 /**
+ * Removes control characters and soft hyphon (auto-wrap) characters, which will cause an error when rendering a glyph. This does not remove tabs, carriage returns, or newlines.
+ * @private
+ * @param {string} text The original label text
+ * @returns {string} The renderable filtered text
+ */
+Label.filterUnsupportedCharacters = function (text) {
+  const problematicCharactersRegex = new RegExp(
+    // eslint-disable-next-line no-control-regex
+    /[\u0000-\u0008\u000E-\u001F\u00ad\u202a-\u206f\u200b-\u200f]/,
+    "g",
+  );
+  return text.replace(problematicCharactersRegex, "");
+};
+
+/**
  * Determines if this label equals another label.  Labels are equal if all their properties
  * are equal.  Labels in different collections can be equal.
  *
@@ -1502,7 +1516,7 @@ function reverseBrackets(bracket) {
   }
 }
 
-//To add another language, simply add its Unicode block range(s) to the below regex.
+// To add another language, add its Unicode block range(s) to the below regex.
 const hebrew = "\u05D0-\u05EA";
 const arabic = "\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF";
 const rtlChars = new RegExp(`[${hebrew}${arabic}]`);

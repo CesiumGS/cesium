@@ -17,24 +17,29 @@ const TrackingReferenceFrame = {
   AUTODETECT: 0,
 
   /**
-   * The entity's inertial reference frame. If entity has no defined orientation
-   * property, a {@link VelocityOrientationProperty} is used instead, thus
-   * falling back to <code>TrackingReferenceFrame.VELOCITY</code>.
-   * When selected, the auto-detect algorithm is overridden.
+   * The entity's local East-North-Up reference frame.
    *
    * @type {number}
    * @constant
    */
-  INERTIAL: 1,
+  ENU: 1,
+
+  /**
+   * The entity's inertial reference frame. If entity has no defined orientation
+   * property, it falls back to auto-detect algorithm.
+   *
+   * @type {number}
+   * @constant
+   */
+  INERTIAL: 2,
 
   /**
    * The entity's inertial reference frame with orientation fixed to its
    * {@link VelocityOrientationProperty}, ignoring its own orientation.
-   * When selected, the auto-detect algorithm is overridden.
    *
    * @type {number}
    * @constant
    */
-  VELOCITY: 2,
+  VELOCITY: 3,
 };
 export default Object.freeze(TrackingReferenceFrame);
