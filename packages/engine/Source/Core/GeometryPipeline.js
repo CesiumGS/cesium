@@ -2928,6 +2928,41 @@ function updateAdjacencyAfterSplit(geometry) {
   }
 }
 
+function updateLineLength(geometry) {
+  const attributes = geometry.attributes;
+  const sts = attributes.st.values;
+  
+  if(!sts || !attributes.length) {
+    return;
+  }
+  const lineLengths = attributes.length.values;  
+  const positions = attributes.position.values;
+  let prevS = -1;
+  let prevPosition = null;
+  let polylineLength = 0;
+
+  const length = positions.length;
+  for (let j = 0; (j*3) < length; j++) {
+    const s = sts[j*2];
+    const t = sts[j*2+1];
+    if(s <= prevS || t != 0) {
+        lineLengths.push(polylineLength);
+        continue;
+    }
+    prevS = s;
+    const position = Cartesian3.unpack(positions, j*3, cartesian3Scratch0);
+    if(prevPosition == null) {
+        // first point
+        prevPosition = position.clone();
+        lineLengths.push(0);
+        continue;
+    }
+    polylineLength+= Cartesian3.distance(prevPosition, position);
+    lineLengths.push(polylineLength);
+    prevPosition = position.clone();
+  }
+}
+
 const offsetScalar = 5.0 * CesiumMath.EPSILON9;
 const coplanarOffset = CesiumMath.EPSILON6;
 
@@ -3228,6 +3263,9 @@ function splitLongitudePolyline(instance) {
     updateAdjacencyAfterSplit(westGeometry);
     updateAdjacencyAfterSplit(eastGeometry);
   }
+
+  updateLineLength(westGeometry);
+  updateLineLength(eastGeometry);
 
   updateInstanceAfterSplit(instance, westGeometry, eastGeometry);
 }
