@@ -1251,10 +1251,10 @@
            * @param {Cesium3DTileset|undefined} newCurrentTileset The new tileset
            */
           updateForCurrentTilesetChanged(oldCurrentTileset, newCurrentTileset) {
-            if (oldCurrentTileset !== undefined) {
+            if (Cesium.defined(oldCurrentTileset)) {
               oldCurrentTileset.tileVisible.removeEventListener(this.tileVisibleListener);
             }
-            if (newCurrentTileset !== undefined) {
+            if (Cesium.defined(newCurrentTileset)) {
               newCurrentTileset.tileVisible.addEventListener(this.tileVisibleListener);
             }
           }
