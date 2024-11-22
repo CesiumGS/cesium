@@ -18,6 +18,7 @@ import {
   Math as CesiumMath,
   Property,
   ScreenSpaceEventType,
+  IonGeocoderService,
 } from "@cesium/engine";
 import Animation from "../Animation/Animation.js";
 import AnimationViewModel from "../Animation/AnimationViewModel.js";
@@ -280,7 +281,7 @@ function enableVRUI(viewer, enabled) {
  * @property {boolean} [baseLayerPicker=true] If set to false, the BaseLayerPicker widget will not be created.
  * @property {boolean} [fullscreenButton=true] If set to false, the FullscreenButton widget will not be created.
  * @property {boolean} [vrButton=false] If set to true, the VRButton widget will be created.
- * @property {boolean|GeocoderService[]} [geocoder=true] If set to false, the Geocoder widget will not be created.
+ * @property {boolean|IonGeocodeProviderType|GeocoderService[]} [geocoder=IonGeocodeProviderType.DEFAULT] The geocoding service or services to use when searching with the Geocoder widget. If set to false, the Geocoder widget will not be created.
  * @property {boolean} [homeButton=true] If set to false, the HomeButton widget will not be created.
  * @property {boolean} [infoBox=true] If set to false, the InfoBox widget will not be created.
  * @property {boolean} [sceneModePicker=true] If set to false, the SceneModePicker widget will not be created.
@@ -567,7 +568,17 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
     geocoderContainer.className = "cesium-viewer-geocoderContainer";
     toolbar.appendChild(geocoderContainer);
     let geocoderService;
-    if (defined(options.geocoder) && typeof options.geocoder !== "boolean") {
+    if (typeof options.geocoder === "string") {
+      geocoderService = [
+        new IonGeocoderService({
+          scene,
+          geocodeProviderType: options.geocoder,
+        }),
+      ];
+    } else if (
+      defined(options.geocoder) &&
+      typeof options.geocoder !== "boolean"
+    ) {
       geocoderService = Array.isArray(options.geocoder)
         ? options.geocoder
         : [options.geocoder];
