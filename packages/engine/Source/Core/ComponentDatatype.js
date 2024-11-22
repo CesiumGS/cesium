@@ -1,4 +1,3 @@
-import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import WebGLConstants from "./WebGLConstants.js";
@@ -274,12 +273,11 @@ ComponentDatatype.createArrayBufferView = function (
   }
   //>>includeEnd('debug');
 
-  byteOffset = defaultValue(byteOffset, 0);
-  length = defaultValue(
-    length,
+  byteOffset = byteOffset ?? 0;
+  length =
+    length ??
     (buffer.byteLength - byteOffset) /
-      ComponentDatatype.getSizeInBytes(componentDatatype),
-  );
+      ComponentDatatype.getSizeInBytes(componentDatatype);
 
   switch (componentDatatype) {
     case ComponentDatatype.BYTE:

@@ -29,7 +29,7 @@ const AnimatedPropertyType = ModelComponents.AnimatedPropertyType;
  * @private
  */
 function ModelAnimationChannel(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
 
   const channel = options.channel;
   const runtimeAnimation = options.runtimeAnimation;

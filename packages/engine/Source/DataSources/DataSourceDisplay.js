@@ -1,7 +1,6 @@
 import ApproximateTerrainHeights from "../Core/ApproximateTerrainHeights.js";
 import BoundingSphere from "../Core/BoundingSphere.js";
 import Check from "../Core/Check.js";
-import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import EventHelper from "../Core/EventHelper.js";
@@ -68,10 +67,8 @@ function DataSourceDisplay(options) {
 
   this._dataSourceCollection = dataSourceCollection;
   this._scene = scene;
-  this._visualizersCallback = defaultValue(
-    options.visualizersCallback,
-    DataSourceDisplay.defaultVisualizersCallback,
-  );
+  this._visualizersCallback =
+    options.visualizersCallback ?? DataSourceDisplay.defaultVisualizersCallback;
 
   let primitivesAdded = false;
   const primitives = new PrimitiveCollection();

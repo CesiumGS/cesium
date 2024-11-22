@@ -1,4 +1,3 @@
-import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 
@@ -20,25 +19,25 @@ function NearFarScalar(near, nearValue, far, farValue) {
    * @type {number}
    * @default 0.0
    */
-  this.near = defaultValue(near, 0.0);
+  this.near = near ?? 0.0;
   /**
    * The value at the lower bound of the camera range.
    * @type {number}
    * @default 0.0
    */
-  this.nearValue = defaultValue(nearValue, 0.0);
+  this.nearValue = nearValue ?? 0.0;
   /**
    * The upper bound of the camera range.
    * @type {number}
    * @default 1.0
    */
-  this.far = defaultValue(far, 1.0);
+  this.far = far ?? 1.0;
   /**
    * The value at the upper bound of the camera range.
    * @type {number}
    * @default 0.0
    */
-  this.farValue = defaultValue(farValue, 0.0);
+  this.farValue = farValue ?? 0.0;
 }
 
 /**
@@ -94,7 +93,7 @@ NearFarScalar.pack = function (value, array, startingIndex) {
   }
   //>>includeEnd('debug');
 
-  startingIndex = defaultValue(startingIndex, 0);
+  startingIndex = startingIndex ?? 0;
 
   array[startingIndex++] = value.near;
   array[startingIndex++] = value.nearValue;
@@ -119,7 +118,7 @@ NearFarScalar.unpack = function (array, startingIndex, result) {
   }
   //>>includeEnd('debug');
 
-  startingIndex = defaultValue(startingIndex, 0);
+  startingIndex = startingIndex ?? 0;
 
   if (!defined(result)) {
     result = new NearFarScalar();

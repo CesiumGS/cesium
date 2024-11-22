@@ -26,7 +26,7 @@ import NodeStatisticsPipelineStage from "./NodeStatisticsPipelineStage.js";
  * @private
  */
 function ModelRuntimeNode(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
 
   const node = options.node;
   const transform = options.transform;

@@ -1,7 +1,6 @@
 import Cartesian2 from "./Cartesian2.js";
 import Cartographic from "./Cartographic.js";
 import Check from "./Check.js";
-import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 import Ellipsoid from "./Ellipsoid.js";
 import GeographicProjection from "./GeographicProjection.js";
@@ -27,28 +26,28 @@ function BoundingRectangle(x, y, width, height) {
    * @type {number}
    * @default 0.0
    */
-  this.x = defaultValue(x, 0.0);
+  this.x = x ?? 0.0;
 
   /**
    * The y coordinate of the rectangle.
    * @type {number}
    * @default 0.0
    */
-  this.y = defaultValue(y, 0.0);
+  this.y = y ?? 0.0;
 
   /**
    * The width of the rectangle.
    * @type {number}
    * @default 0.0
    */
-  this.width = defaultValue(width, 0.0);
+  this.width = width ?? 0.0;
 
   /**
    * The height of the rectangle.
    * @type {number}
    * @default 0.0
    */
-  this.height = defaultValue(height, 0.0);
+  this.height = height ?? 0.0;
 }
 
 /**
@@ -72,7 +71,7 @@ BoundingRectangle.pack = function (value, array, startingIndex) {
   Check.defined("array", array);
   //>>includeEnd('debug');
 
-  startingIndex = defaultValue(startingIndex, 0);
+  startingIndex = startingIndex ?? 0;
 
   array[startingIndex++] = value.x;
   array[startingIndex++] = value.y;
@@ -95,7 +94,7 @@ BoundingRectangle.unpack = function (array, startingIndex, result) {
   Check.defined("array", array);
   //>>includeEnd('debug');
 
-  startingIndex = defaultValue(startingIndex, 0);
+  startingIndex = startingIndex ?? 0;
 
   if (!defined(result)) {
     result = new BoundingRectangle();
@@ -179,7 +178,7 @@ BoundingRectangle.fromRectangle = function (rectangle, projection, result) {
   }
 
   defaultProjection._ellipsoid = Ellipsoid.default;
-  projection = defaultValue(projection, defaultProjection);
+  projection = projection ?? defaultProjection;
 
   const lowerLeft = projection.project(
     Rectangle.southwest(rectangle, fromRectangleLowerLeft),

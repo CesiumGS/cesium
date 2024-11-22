@@ -1,4 +1,3 @@
-import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Event from "../Core/Event.js";
@@ -23,7 +22,7 @@ function TimeIntervalCollectionPositionProperty(referenceFrame) {
     TimeIntervalCollectionPositionProperty.prototype._intervalsChanged,
     this,
   );
-  this._referenceFrame = defaultValue(referenceFrame, ReferenceFrame.FIXED);
+  this._referenceFrame = referenceFrame ?? ReferenceFrame.FIXED;
 }
 
 Object.defineProperties(TimeIntervalCollectionPositionProperty.prototype, {

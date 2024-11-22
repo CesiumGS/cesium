@@ -1,7 +1,6 @@
 import {
   AlphaPipelineStage,
   BlendingState,
-  defaultValue,
   ModelAlphaOptions,
   Pass,
   RenderState,
@@ -22,7 +21,7 @@ describe(
       return {
         model: mockModel,
         shaderBuilder: new ShaderBuilder(),
-        alphaOptions: defaultValue(alphaOptions, new ModelAlphaOptions()),
+        alphaOptions: alphaOptions ?? new ModelAlphaOptions(),
         uniformMap: {},
         renderStateOptions: RenderState.getState(RenderState.fromCache()),
       };

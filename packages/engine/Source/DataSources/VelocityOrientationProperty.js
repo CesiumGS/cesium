@@ -1,5 +1,4 @@
 import Cartesian3 from "../Core/Cartesian3.js";
-import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
 import Event from "../Core/Event.js";
@@ -35,7 +34,7 @@ function VelocityOrientationProperty(position, ellipsoid) {
   this._ellipsoid = undefined;
   this._definitionChanged = new Event();
 
-  this.ellipsoid = defaultValue(ellipsoid, Ellipsoid.default);
+  this.ellipsoid = ellipsoid ?? Ellipsoid.default;
 
   const that = this;
   this._velocityVectorProperty.definitionChanged.addEventListener(function () {

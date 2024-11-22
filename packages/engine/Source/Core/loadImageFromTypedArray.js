@@ -1,5 +1,4 @@
 import Check from "./Check.js";
-import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 import Resource from "./Resource.js";
 
@@ -10,11 +9,8 @@ function loadImageFromTypedArray(options) {
   const uint8Array = options.uint8Array;
   const format = options.format;
   const request = options.request;
-  const flipY = defaultValue(options.flipY, false);
-  const skipColorSpaceConversion = defaultValue(
-    options.skipColorSpaceConversion,
-    false,
-  );
+  const flipY = options.flipY ?? false;
+  const skipColorSpaceConversion = options.skipColorSpaceConversion ?? false;
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("uint8Array", uint8Array);
   Check.typeOf.string("format", format);

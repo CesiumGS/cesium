@@ -1,5 +1,4 @@
 import Check from "../Core/Check.js";
-import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import GeometryOffsetAttribute from "../Core/GeometryOffsetAttribute.js";
@@ -111,7 +110,7 @@ GroundGeometryUpdater.prototype._onEntityPropertyChanged = function (
     oneTimeWarning(oneTimeWarning.geometryZIndex);
   }
 
-  this._zIndex = defaultValue(geometry.zIndex, defaultZIndex);
+  this._zIndex = geometry.zIndex ?? defaultZIndex;
 
   if (defined(this._terrainOffsetProperty)) {
     this._terrainOffsetProperty.destroy();

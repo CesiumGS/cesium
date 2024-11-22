@@ -1,5 +1,4 @@
 import Cesium3DTileset from "./Cesium3DTileset.js";
-import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import IonResource from "../Core/IonResource.js";
 import GoogleMaps from "../Core/GoogleMaps.js";
@@ -40,15 +39,13 @@ import Resource from "../Core/Resource.js";
  * }
  */
 async function createGooglePhotorealistic3DTileset(key, options) {
-  options = defaultValue(options, {});
-  options.cacheBytes = defaultValue(options.cacheBytes, 1536 * 1024 * 1024);
-  options.maximumCacheOverflowBytes = defaultValue(
-    options.maximumCacheOverflowBytes,
-    1024 * 1024 * 1024,
-  );
-  options.enableCollision = defaultValue(options.enableCollision, true);
+  options = options ?? {};
+  options.cacheBytes = options.cacheBytes ?? 1536 * 1024 * 1024;
+  options.maximumCacheOverflowBytes =
+    options.maximumCacheOverflowBytes ?? 1024 * 1024 * 1024;
+  options.enableCollision = options.enableCollision ?? true;
 
-  key = defaultValue(key, GoogleMaps.defaultApiKey);
+  key = key ?? GoogleMaps.defaultApiKey;
   if (!defined(key)) {
     return requestCachedIonTileset(options);
   }

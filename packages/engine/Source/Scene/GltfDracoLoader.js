@@ -26,7 +26,7 @@ import ResourceLoaderState from "./ResourceLoaderState.js";
  * @private
  */
 function GltfDracoLoader(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
   const resourceCache = options.resourceCache;
   const gltf = options.gltf;
   const draco = options.draco;

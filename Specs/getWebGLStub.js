@@ -1,10 +1,4 @@
-import {
-  clone,
-  defaultValue,
-  defined,
-  DeveloperError,
-  WebGLConstants,
-} from "@cesium/engine";
+import { clone, defined, DeveloperError, WebGLConstants } from "@cesium/engine";
 
 function getWebGLStub(canvas, options) {
   const stub = clone(WebGLConstants);
@@ -184,17 +178,14 @@ function checkFramebufferStatusStub(target) {
 
 function getContextAttributesStub(options) {
   const contextAttributes = {
-    alpha: defaultValue(options.alpha, true),
-    depth: defaultValue(options.depth, true),
-    stencil: defaultValue(options.stencil, false),
-    antialias: defaultValue(options.antialias, true),
-    premultipliedAlpha: defaultValue(options.premultipliedAlpha, true),
-    preserveDrawingBuffer: defaultValue(options.preserveDrawingBuffer, false),
-    powerPreference: defaultValue(options.powerPreference, false),
-    failIfMajorPerformanceCaveat: defaultValue(
-      options.failIfMajorPerformanceCaveat,
-      false,
-    ),
+    alpha: options.alpha ?? true,
+    depth: options.depth ?? true,
+    stencil: options.stencil ?? false,
+    antialias: options.antialias ?? true,
+    premultipliedAlpha: options.premultipliedAlpha ?? true,
+    preserveDrawingBuffer: options.preserveDrawingBuffer ?? false,
+    powerPreference: options.powerPreference ?? false,
+    failIfMajorPerformanceCaveat: options.failIfMajorPerformanceCaveat ?? false,
   };
 
   return function () {

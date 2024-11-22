@@ -1,4 +1,3 @@
-import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Event from "../Core/Event.js";
@@ -21,7 +20,7 @@ function PositionPropertyArray(value, referenceFrame) {
   this._value = undefined;
   this._definitionChanged = new Event();
   this._eventHelper = new EventHelper();
-  this._referenceFrame = defaultValue(referenceFrame, ReferenceFrame.FIXED);
+  this._referenceFrame = referenceFrame ?? ReferenceFrame.FIXED;
   this.setValue(value);
 }
 

@@ -1,5 +1,6 @@
 # Change Log
 
+
 ### 1.124 - 2024-12-02
 
 #### @cesium/engine
@@ -20,6 +21,12 @@
 ##### Fixes :wrench:
 
 - Added a `DeveloperError` when `globe` is set to `false` and a `baseLayer` is provided in `Viewer` options. This prevents errors caused by attempting to use a `baseLayer` without a globe. [#12274](https://github.com/CesiumGS/cesium/pull/12274)
+
+### 1.123.2 - 2024-11-10
+
+##### Deprecated :hourglass_flowing_sand:
+
+- defaultValue() has been deprecated. All uses have been changed to the nullish coalescing operator (??)
 
 ### 1.123.1 - 2024-11-07
 

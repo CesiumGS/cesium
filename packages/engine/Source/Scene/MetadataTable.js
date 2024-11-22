@@ -26,7 +26,7 @@ import MetadataTableProperty from "./MetadataTableProperty.js";
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 function MetadataTable(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
   const count = options.count;
   const metadataClass = options.class;
 

@@ -36,7 +36,7 @@ import Matrix4 from "./Matrix4.js";
  * frustum.far = 50.0 * maxRadii;
  */
 function OrthographicOffCenterFrustum(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
 
   /**
    * The left clipping plane.
@@ -75,7 +75,7 @@ function OrthographicOffCenterFrustum(options) {
    * @type {number}
    * @default 1.0
    */
-  this.near = defaultValue(options.near, 1.0);
+  this.near = options.near ?? 1.0;
   this._near = this.near;
 
   /**
@@ -83,7 +83,7 @@ function OrthographicOffCenterFrustum(options) {
    * @type {number}
    * @default 500000000.0;
    */
-  this.far = defaultValue(options.far, 500000000.0);
+  this.far = options.far ?? 500000000.0;
   this._far = this.far;
 
   this._cullingVolume = new CullingVolume();

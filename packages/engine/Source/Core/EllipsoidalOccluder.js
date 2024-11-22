@@ -1,7 +1,6 @@
 import BoundingSphere from "./BoundingSphere.js";
 import Cartesian3 from "./Cartesian3.js";
 import Check from "./Check.js";
-import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 import Ellipsoid from "./Ellipsoid.js";
 import Rectangle from "./Rectangle.js";
@@ -418,8 +417,8 @@ function computeHorizonCullingPointFromVertices(
     result = new Cartesian3();
   }
 
-  stride = defaultValue(stride, 3);
-  center = defaultValue(center, Cartesian3.ZERO);
+  stride = stride ?? 3;
+  center = center ?? Cartesian3.ZERO;
   const scaledSpaceDirectionToPoint = computeScaledSpaceDirectionToPoint(
     ellipsoid,
     directionToPoint,

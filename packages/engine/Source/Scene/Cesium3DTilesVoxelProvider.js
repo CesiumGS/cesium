@@ -45,7 +45,7 @@ import VoxelShapeType from "./VoxelShapeType.js";
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
 function Cesium3DTilesVoxelProvider(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
 
   /** @inheritdoc */
   this.shapeTransform = undefined;
@@ -404,12 +404,12 @@ async function getSubtreePromise(provider, subtreeCoord) {
 
 /** @inheritdoc */
 Cesium3DTilesVoxelProvider.prototype.requestData = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  const tileLevel = defaultValue(options.tileLevel, 0);
-  const tileX = defaultValue(options.tileX, 0);
-  const tileY = defaultValue(options.tileY, 0);
-  const tileZ = defaultValue(options.tileZ, 0);
-  const keyframe = defaultValue(options.keyframe, 0);
+  options = options ?? defaultValue.EMPTY_OBJECT;
+  const tileLevel = options.tileLevel ?? 0;
+  const tileX = options.tileX ?? 0;
+  const tileY = options.tileY ?? 0;
+  const tileZ = options.tileZ ?? 0;
+  const keyframe = options.keyframe ?? 0;
 
   // 3D Tiles currently doesn't support time-dynamic data.
   if (keyframe !== 0) {

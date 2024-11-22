@@ -1,4 +1,3 @@
-import defaultValue from "../../Core/defaultValue.js";
 import defined from "../../Core/defined.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import SelectedFeatureIdStageCommon from "../../Shaders/Model/SelectedFeatureIdStageCommon.js";
@@ -121,7 +120,7 @@ function getSelectedFeatureIds(model, node, primitive) {
     if (defined(featureIds)) {
       // Either label could be used here, but prefer label as it may be more
       // meaningful when debugging
-      variableName = defaultValue(featureIds.label, featureIds.positionalLabel);
+      variableName = featureIds.label ?? featureIds.positionalLabel;
       return {
         featureIds: featureIds,
         variableName: variableName,
@@ -136,7 +135,7 @@ function getSelectedFeatureIds(model, node, primitive) {
     model.featureIdLabel,
   );
   // again, prefer label for being more descriptive
-  variableName = defaultValue(featureIds.label, featureIds.positionalLabel);
+  variableName = featureIds.label ?? featureIds.positionalLabel;
   return {
     featureIds: featureIds,
     variableName: variableName,

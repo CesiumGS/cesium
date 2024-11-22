@@ -1,6 +1,5 @@
 import binarySearch from "../Core/binarySearch.js";
 import Check from "../Core/Check.js";
-import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Event from "../Core/Event.js";
@@ -11,11 +10,11 @@ import LinearApproximation from "../Core/LinearApproximation.js";
 const PackableNumber = {
   packedLength: 1,
   pack: function (value, array, startingIndex) {
-    startingIndex = defaultValue(startingIndex, 0);
+    startingIndex = startingIndex ?? 0;
     array[startingIndex] = value;
   },
   unpack: function (array, startingIndex, result) {
-    startingIndex = defaultValue(startingIndex, 0);
+    startingIndex = startingIndex ?? 0;
     return array[startingIndex];
   },
 };
@@ -166,10 +165,8 @@ function SampledProperty(type, derivativeTypes) {
     innerType = PackableNumber;
   }
   let packedLength = innerType.packedLength;
-  let packedInterpolationLength = defaultValue(
-    innerType.packedInterpolationLength,
-    packedLength,
-  );
+  let packedInterpolationLength =
+    innerType.packedInterpolationLength ?? packedLength;
 
   let inputOrder = 0;
   let innerDerivativeTypes;
@@ -183,10 +180,8 @@ function SampledProperty(type, derivativeTypes) {
       }
       const derivativePackedLength = derivativeType.packedLength;
       packedLength += derivativePackedLength;
-      packedInterpolationLength += defaultValue(
-        derivativeType.packedInterpolationLength,
-        derivativePackedLength,
-      );
+      packedInterpolationLength +=
+        derivativeType.packedInterpolationLength ?? derivativePackedLength;
       innerDerivativeTypes[i] = derivativeType;
     }
     inputOrder = length;

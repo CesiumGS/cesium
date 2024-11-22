@@ -2,7 +2,6 @@ import * as protobuf from "protobufjs/dist/minimal/protobuf.js";
 import buildModuleUrl from "./buildModuleUrl.js";
 import Check from "./Check.js";
 import Credit from "./Credit.js";
-import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 import GoogleEarthEnterpriseTileInformation from "./GoogleEarthEnterpriseTileInformation.js";
 import isBitSet from "./isBitSet.js";
@@ -304,8 +303,8 @@ GoogleEarthEnterpriseMetadata.prototype.getQuadTreePacket = function (
   version,
   request,
 ) {
-  version = defaultValue(version, 1);
-  quadKey = defaultValue(quadKey, "");
+  version = version ?? 1;
+  quadKey = quadKey ?? "";
   const resource = getMetadataResource(this, quadKey, version, request);
 
   const promise = resource.fetchArrayBuffer();
@@ -549,34 +548,24 @@ function requestDbRoot(that) {
       const dbRoot = dbrootParser.DbRootProto.decode(
         new Uint8Array(result.buffer),
       );
-      that.imageryPresent = defaultValue(
-        dbRoot.imageryPresent,
-        that.imageryPresent,
-      );
+      that.imageryPresent = dbRoot.imageryPresent ?? that.imageryPresent;
       that.protoImagery = dbRoot.protoImagery;
-      that.terrainPresent = defaultValue(
-        dbRoot.terrainPresent,
-        that.terrainPresent,
-      );
+      that.terrainPresent = dbRoot.terrainPresent ?? that.terrainPresent;
       if (defined(dbRoot.endSnippet) && defined(dbRoot.endSnippet.model)) {
         const model = dbRoot.endSnippet.model;
-        that.negativeAltitudeExponentBias = defaultValue(
-          model.negativeAltitudeExponentBias,
-          that.negativeAltitudeExponentBias,
-        );
-        that.negativeAltitudeThreshold = defaultValue(
-          model.compressedNegativeAltitudeThreshold,
-          that.negativeAltitudeThreshold,
-        );
+        that.negativeAltitudeExponentBias =
+          model.negativeAltitudeExponentBias ??
+          that.negativeAltitudeExponentBias;
+        that.negativeAltitudeThreshold =
+          model.compressedNegativeAltitudeThreshold ??
+          that.negativeAltitudeThreshold;
       }
       if (defined(dbRoot.databaseVersion)) {
-        that._quadPacketVersion = defaultValue(
-          dbRoot.databaseVersion.quadtreeVersion,
-          that._quadPacketVersion,
-        );
+        that._quadPacketVersion =
+          dbRoot.databaseVersion.quadtreeVersion ?? that._quadPacketVersion;
       }
       const providers = that.providers;
-      const providerInfo = defaultValue(dbRoot.providerInfo, []);
+      const providerInfo = dbRoot.providerInfo ?? [];
       const count = providerInfo.length;
       for (let i = 0; i < count; ++i) {
         const provider = providerInfo[i];

@@ -49,7 +49,7 @@ import Matrix4 from "./Matrix4.js";
  * @see Geometry
  */
 function GeometryInstance(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
 
   //>>includeStart('debug', pragmas.debug);
   if (!defined(options.geometry)) {
@@ -75,9 +75,7 @@ function GeometryInstance(options) {
    *
    * @default Matrix4.IDENTITY
    */
-  this.modelMatrix = Matrix4.clone(
-    defaultValue(options.modelMatrix, Matrix4.IDENTITY),
-  );
+  this.modelMatrix = Matrix4.clone(options.modelMatrix ?? Matrix4.IDENTITY);
 
   /**
    * User-defined object returned when the instance is picked or used to get/set per-instance attributes.
@@ -106,7 +104,7 @@ function GeometryInstance(options) {
    *
    * @default {}
    */
-  this.attributes = defaultValue(options.attributes, {});
+  this.attributes = options.attributes ?? {};
 
   /**
    * @private

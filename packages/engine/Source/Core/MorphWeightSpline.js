@@ -40,7 +40,7 @@ import Spline from "./Spline.js";
  * @see QuaternionSpline
  */
 function MorphWeightSpline(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
 
   const weights = options.weights;
   const times = options.times;

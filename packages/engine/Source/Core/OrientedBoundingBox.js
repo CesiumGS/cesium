@@ -3,7 +3,6 @@ import Cartesian2 from "./Cartesian2.js";
 import Cartesian3 from "./Cartesian3.js";
 import Cartographic from "./Cartographic.js";
 import Check from "./Check.js";
-import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import Ellipsoid from "./Ellipsoid.js";
@@ -44,7 +43,7 @@ function OrientedBoundingBox(center, halfAxes) {
    * @type {Cartesian3}
    * @default {@link Cartesian3.ZERO}
    */
-  this.center = Cartesian3.clone(defaultValue(center, Cartesian3.ZERO));
+  this.center = Cartesian3.clone(center ?? Cartesian3.ZERO);
   /**
    * The three orthogonal half-axes of the bounding box. Equivalently, the
    * transformation matrix, to rotate and scale a 2x2x2 cube centered at the
@@ -52,7 +51,7 @@ function OrientedBoundingBox(center, halfAxes) {
    * @type {Matrix3}
    * @default {@link Matrix3.ZERO}
    */
-  this.halfAxes = Matrix3.clone(defaultValue(halfAxes, Matrix3.ZERO));
+  this.halfAxes = Matrix3.clone(halfAxes ?? Matrix3.ZERO);
 }
 
 /**
@@ -77,7 +76,7 @@ OrientedBoundingBox.pack = function (value, array, startingIndex) {
   Check.defined("array", array);
   //>>includeEnd('debug');
 
-  startingIndex = defaultValue(startingIndex, 0);
+  startingIndex = startingIndex ?? 0;
 
   Cartesian3.pack(value.center, array, startingIndex);
   Matrix3.pack(value.halfAxes, array, startingIndex + Cartesian3.packedLength);
@@ -98,7 +97,7 @@ OrientedBoundingBox.unpack = function (array, startingIndex, result) {
   Check.defined("array", array);
   //>>includeEnd('debug');
 
-  startingIndex = defaultValue(startingIndex, 0);
+  startingIndex = startingIndex ?? 0;
 
   if (!defined(result)) {
     result = new OrientedBoundingBox();
@@ -371,9 +370,9 @@ OrientedBoundingBox.fromRectangle = function (
   }
   //>>includeEnd('debug');
 
-  minimumHeight = defaultValue(minimumHeight, 0.0);
-  maximumHeight = defaultValue(maximumHeight, 0.0);
-  ellipsoid = defaultValue(ellipsoid, Ellipsoid.default);
+  minimumHeight = minimumHeight ?? 0.0;
+  maximumHeight = maximumHeight ?? 0.0;
+  ellipsoid = ellipsoid ?? Ellipsoid.default;
 
   let minX, maxX, minY, maxY, minZ, maxZ, plane;
 

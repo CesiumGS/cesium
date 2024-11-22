@@ -1,6 +1,5 @@
 import Check from "./Check.js";
 import ComponentDatatype from "./ComponentDatatype.js";
-import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 
 /**
@@ -19,9 +18,9 @@ import defined from "./defined.js";
  * @see GeometryInstanceAttribute
  */
 function OffsetGeometryInstanceAttribute(x, y, z) {
-  x = defaultValue(x, 0);
-  y = defaultValue(y, 0);
-  z = defaultValue(z, 0);
+  x = x ?? 0;
+  y = y ?? 0;
+  z = z ?? 0;
 
   /**
    * The values for the attributes stored in a typed array.

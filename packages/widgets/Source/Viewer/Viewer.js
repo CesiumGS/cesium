@@ -103,7 +103,7 @@ function getCesium3DTileFeatureName(feature) {
 function pickEntity(viewer, e) {
   const picked = viewer.scene.pick(e.position);
   if (defined(picked)) {
-    const id = defaultValue(picked.id, picked.primitive.id);
+    const id = picked.id ?? picked.primitive.id;
     if (id instanceof Entity) {
       return id;
     }
@@ -400,7 +400,7 @@ function Viewer(container, options) {
   //>>includeEnd('debug');
 
   container = getElement(container);
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  options = options ?? defaultValue.EMPTY_OBJECT;
 
   //>>includeStart('debug', pragmas.debug);
   if (
@@ -457,7 +457,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
 
   viewerContainer.appendChild(bottomContainer);
 
-  const scene3DOnly = defaultValue(options.scene3DOnly, false);
+  const scene3DOnly = options.scene3DOnly ?? false;
 
   let clock;
   let clockViewModel;
@@ -634,14 +634,12 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
   let baseLayerPicker;
   let baseLayerPickerDropDown;
   if (createBaseLayerPicker) {
-    const imageryProviderViewModels = defaultValue(
-      options.imageryProviderViewModels,
-      createDefaultImageryProviderViewModels(),
-    );
-    const terrainProviderViewModels = defaultValue(
-      options.terrainProviderViewModels,
-      createDefaultTerrainProviderViewModels(),
-    );
+    const imageryProviderViewModels =
+      options.imageryProviderViewModels ??
+      createDefaultImageryProviderViewModels();
+    const terrainProviderViewModels =
+      options.terrainProviderViewModels ??
+      createDefaultTerrainProviderViewModels();
 
     baseLayerPicker = new BaseLayerPicker(toolbar, {
       globe: scene.globe,
@@ -718,10 +716,8 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
     }
     navigationHelpButton = new NavigationHelpButton({
       container: toolbar,
-      instructionsInitiallyVisible: defaultValue(
-        options.navigationInstructionsInitiallyVisible,
-        showNavHelp,
-      ),
+      instructionsInitiallyVisible:
+        options.navigationInstructionsInitiallyVisible ?? showNavHelp,
     });
   }
 
@@ -822,6 +818,8 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
   this._vrSubscription = vrSubscription;
   this._vrModeSubscription = vrModeSubscription;
   this._dataSourceChangedListeners = {};
+  this._automaticallyTrackDataSourceClocks =
+    options.automaticallyTrackDataSourceClocks ?? true;
   this._container = container;
   this._bottomContainer = bottomContainer;
   this._element = viewerContainer;
@@ -1845,10 +1843,7 @@ Viewer.prototype._onTick = function (clock) {
       this.trackedEntity === this.selectedEntity;
 
     if (showSelection) {
-      infoBoxViewModel.titleText = defaultValue(
-        selectedEntity.name,
-        selectedEntity.id,
-      );
+      infoBoxViewModel.titleText = selectedEntity.name ?? selectedEntity.id;
       infoBoxViewModel.description = Property.getValueOrDefault(
         selectedEntity.description,
         time,
@@ -2014,6 +2009,322 @@ Viewer.prototype.flyTo = function (target, options) {
   return this._cesiumWidget.flyTo(target, options);
 };
 
+function zoomToOrFly(that, zoomTarget, options, isFlight) {
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(zoomTarget)) {
+    throw new DeveloperError("zoomTarget is required.");
+  }
+  //>>includeEnd('debug');
+
+  cancelZoom(that);
+
+  //We can't actually perform the zoom until all visualization is ready and
+  //bounding spheres have been computed.  Therefore we create and return
+  //a deferred which will be resolved as part of the post-render step in the
+  //frame that actually performs the zoom.
+  const zoomPromise = new Promise((resolve) => {
+    that._completeZoom = function (value) {
+      resolve(value);
+    };
+  });
+  that._zoomPromise = zoomPromise;
+  that._zoomIsFlight = isFlight;
+  that._zoomOptions = options;
+
+  Promise.resolve(zoomTarget).then(function (zoomTarget) {
+    //Only perform the zoom if it wasn't cancelled before the promise resolved.
+    if (that._zoomPromise !== zoomPromise) {
+      return;
+    }
+
+    //If the zoom target is a rectangular imagery in an ImageLayer
+    if (zoomTarget instanceof ImageryLayer) {
+      let rectanglePromise;
+
+      if (defined(zoomTarget.imageryProvider)) {
+        rectanglePromise = Promise.resolve(zoomTarget.getImageryRectangle());
+      } else {
+        rectanglePromise = new Promise((resolve) => {
+          const removeListener = zoomTarget.readyEvent.addEventListener(() => {
+            removeListener();
+            resolve(zoomTarget.getImageryRectangle());
+          });
+        });
+      }
+      rectanglePromise
+        .then(function (rectangle) {
+          return computeFlyToLocationForRectangle(rectangle, that.scene);
+        })
+        .then(function (position) {
+          //Only perform the zoom if it wasn't cancelled before the promise was resolved
+          if (that._zoomPromise === zoomPromise) {
+            that._zoomTarget = position;
+          }
+        });
+      return;
+    }
+
+    if (
+      zoomTarget instanceof Cesium3DTileset ||
+      zoomTarget instanceof TimeDynamicPointCloud ||
+      zoomTarget instanceof VoxelPrimitive
+    ) {
+      that._zoomTarget = zoomTarget;
+      return;
+    }
+
+    //If the zoom target is a data source, and it's in the middle of loading, wait for it to finish loading.
+    if (zoomTarget.isLoading && defined(zoomTarget.loadingEvent)) {
+      const removeEvent = zoomTarget.loadingEvent.addEventListener(function () {
+        removeEvent();
+
+        //Only perform the zoom if it wasn't cancelled before the data source finished.
+        if (that._zoomPromise === zoomPromise) {
+          that._zoomTarget = zoomTarget.entities.values.slice(0);
+        }
+      });
+      return;
+    }
+
+    //Zoom target is already an array, just copy it and return.
+    if (Array.isArray(zoomTarget)) {
+      that._zoomTarget = zoomTarget.slice(0);
+      return;
+    }
+
+    //If zoomTarget is an EntityCollection, this will retrieve the array
+    zoomTarget = zoomTarget.values ?? zoomTarget;
+
+    //If zoomTarget is a DataSource, this will retrieve the array.
+    if (defined(zoomTarget.entities)) {
+      zoomTarget = zoomTarget.entities.values;
+    }
+
+    //Zoom target is already an array, just copy it and return.
+    if (Array.isArray(zoomTarget)) {
+      that._zoomTarget = zoomTarget.slice(0);
+    } else {
+      //Single entity
+      that._zoomTarget = [zoomTarget];
+    }
+  });
+
+  that.scene.requestRender();
+  return zoomPromise;
+}
+
+function clearZoom(viewer) {
+  viewer._zoomPromise = undefined;
+  viewer._zoomTarget = undefined;
+  viewer._zoomOptions = undefined;
+}
+
+function cancelZoom(viewer) {
+  const zoomPromise = viewer._zoomPromise;
+  if (defined(zoomPromise)) {
+    clearZoom(viewer);
+    viewer._completeZoom(false);
+  }
+}
+
+/**
+ * @private
+ */
+Viewer.prototype._postRender = function () {
+  updateZoomTarget(this);
+  updateTrackedEntity(this);
+};
+
+function updateZoomTarget(viewer) {
+  const target = viewer._zoomTarget;
+  if (!defined(target) || viewer.scene.mode === SceneMode.MORPHING) {
+    return;
+  }
+
+  const scene = viewer.scene;
+  const camera = scene.camera;
+  const zoomOptions = viewer._zoomOptions ?? {};
+  let options;
+  function zoomToBoundingSphere(boundingSphere) {
+    // If offset was originally undefined then give it base value instead of empty object
+    if (!defined(zoomOptions.offset)) {
+      zoomOptions.offset = new HeadingPitchRange(
+        0.0,
+        -0.5,
+        boundingSphere.radius,
+      );
+    }
+
+    options = {
+      offset: zoomOptions.offset,
+      duration: zoomOptions.duration,
+      maximumHeight: zoomOptions.maximumHeight,
+      complete: function () {
+        viewer._completeZoom(true);
+      },
+      cancel: function () {
+        viewer._completeZoom(false);
+      },
+    };
+
+    if (viewer._zoomIsFlight) {
+      camera.flyToBoundingSphere(target.boundingSphere, options);
+    } else {
+      camera.viewBoundingSphere(boundingSphere, zoomOptions.offset);
+      camera.lookAtTransform(Matrix4.IDENTITY);
+
+      // Finish the promise
+      viewer._completeZoom(true);
+    }
+
+    clearZoom(viewer);
+  }
+
+  if (target instanceof TimeDynamicPointCloud) {
+    if (defined(target.boundingSphere)) {
+      zoomToBoundingSphere(target.boundingSphere);
+      return;
+    }
+
+    // Otherwise, the first "frame" needs to have been rendered
+    const removeEventListener = target.frameChanged.addEventListener(
+      function (timeDynamicPointCloud) {
+        zoomToBoundingSphere(timeDynamicPointCloud.boundingSphere);
+        removeEventListener();
+      },
+    );
+    return;
+  }
+
+  if (target instanceof Cesium3DTileset || target instanceof VoxelPrimitive) {
+    zoomToBoundingSphere(target.boundingSphere);
+    return;
+  }
+
+  // If zoomTarget was an ImageryLayer
+  if (target instanceof Cartographic) {
+    options = {
+      destination: scene.ellipsoid.cartographicToCartesian(target),
+      duration: zoomOptions.duration,
+      maximumHeight: zoomOptions.maximumHeight,
+      complete: function () {
+        viewer._completeZoom(true);
+      },
+      cancel: function () {
+        viewer._completeZoom(false);
+      },
+    };
+
+    if (viewer._zoomIsFlight) {
+      camera.flyTo(options);
+    } else {
+      camera.setView(options);
+      viewer._completeZoom(true);
+    }
+    clearZoom(viewer);
+    return;
+  }
+
+  const entities = target;
+
+  const boundingSpheres = [];
+  for (let i = 0, len = entities.length; i < len; i++) {
+    const state = viewer._dataSourceDisplay.getBoundingSphere(
+      entities[i],
+      false,
+      boundingSphereScratch,
+    );
+
+    if (state === BoundingSphereState.PENDING) {
+      return;
+    } else if (state !== BoundingSphereState.FAILED) {
+      boundingSpheres.push(BoundingSphere.clone(boundingSphereScratch));
+    }
+  }
+
+  if (boundingSpheres.length === 0) {
+    cancelZoom(viewer);
+    return;
+  }
+
+  // Stop tracking the current entity.
+  viewer.trackedEntity = undefined;
+
+  const boundingSphere = BoundingSphere.fromBoundingSpheres(boundingSpheres);
+
+  if (!viewer._zoomIsFlight) {
+    camera.viewBoundingSphere(boundingSphere, zoomOptions.offset);
+    camera.lookAtTransform(Matrix4.IDENTITY);
+    clearZoom(viewer);
+    viewer._completeZoom(true);
+  } else {
+    clearZoom(viewer);
+    camera.flyToBoundingSphere(boundingSphere, {
+      duration: zoomOptions.duration,
+      maximumHeight: zoomOptions.maximumHeight,
+      complete: function () {
+        viewer._completeZoom(true);
+      },
+      cancel: function () {
+        viewer._completeZoom(false);
+      },
+      offset: zoomOptions.offset,
+    });
+  }
+}
+
+function updateTrackedEntity(viewer) {
+  if (!viewer._needTrackedEntityUpdate) {
+    return;
+  }
+
+  const trackedEntity = viewer._trackedEntity;
+  const currentTime = viewer.clock.currentTime;
+
+  //Verify we have a current position at this time. This is only triggered if a position
+  //has become undefined after trackedEntity is set but before the boundingSphere has been
+  //computed. In this case, we will track the entity once it comes back into existence.
+  const currentPosition = Property.getValueOrUndefined(
+    trackedEntity.position,
+    currentTime,
+  );
+
+  if (!defined(currentPosition)) {
+    return;
+  }
+
+  const scene = viewer.scene;
+
+  const state = viewer._dataSourceDisplay.getBoundingSphere(
+    trackedEntity,
+    false,
+    boundingSphereScratch,
+  );
+  if (state === BoundingSphereState.PENDING) {
+    return;
+  }
+
+  const sceneMode = scene.mode;
+  if (
+    sceneMode === SceneMode.COLUMBUS_VIEW ||
+    sceneMode === SceneMode.SCENE2D
+  ) {
+    scene.screenSpaceCameraController.enableTranslate = false;
+  }
+
+  if (
+    sceneMode === SceneMode.COLUMBUS_VIEW ||
+    sceneMode === SceneMode.SCENE3D
+  ) {
+    scene.screenSpaceCameraController.enableTilt = false;
+  }
+
+  const bs =
+    state !== BoundingSphereState.FAILED ? boundingSphereScratch : undefined;
+  viewer._entityView = new EntityView(trackedEntity, scene, scene.ellipsoid);
+  viewer._entityView.update(currentTime, bs);
+  viewer._needTrackedEntityUpdate = false;
+}
 /**
  * A function that augments a Viewer instance with additional functionality.
  * @callback Viewer.ViewerMixin

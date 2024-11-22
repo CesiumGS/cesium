@@ -1,5 +1,4 @@
 import Check from "../Core/Check.js";
-import defaultValue from "../Core/defaultValue.js";
 import deprecationWarning from "../Core/deprecationWarning.js";
 import getJsonFromTypedArray from "../Core/getJsonFromTypedArray.js";
 import RuntimeError from "../Core/RuntimeError.js";
@@ -29,7 +28,7 @@ I3dmParser.parse = function (arrayBuffer, byteOffset) {
   Check.defined("arrayBuffer", arrayBuffer);
   //>>includeEnd('debug');
 
-  const byteStart = defaultValue(byteOffset, 0);
+  const byteStart = byteOffset ?? 0;
   byteOffset = byteStart;
 
   const uint8Array = new Uint8Array(arrayBuffer);
