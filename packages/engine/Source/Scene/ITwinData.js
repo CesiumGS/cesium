@@ -40,6 +40,7 @@ ITwinData.createTilesetFromIModelId = async function (iModelId, options) {
   const { exports } = await ITwinPlatform.getExports(iModelId);
 
   if (
+    exports.length > 0 &&
     exports.every((exportObj) => {
       return exportObj.status === ITwinPlatform.ExportStatus.Invalid;
     })

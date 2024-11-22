@@ -24,24 +24,22 @@
     <div id="loadingOverlay"><h1>Loading...</h1></div>
     <div id="toolbar">
       <div id="checkbox"></div>
-      <output id="status">Initializing</output>
+      <div id="layers"></div>
+      <div id="camera-shortcuts"></div>
     </div>
     <script id="cesium_sandcastle_script">
       window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
+        // TODO: swap this out with the ion route when it's ready
         const serviceResponse = await fetch("http://localhost:3000/service");
-        const { token } = await serviceResponse.json();
+        const { access_token: token } = await serviceResponse.json();
 
         Cesium.ITwinPlatform.defaultAccessToken = token;
-        // TODO: remove/clean up when we pick the final sample iTwin we want to use
-        // this is the iModel in the "Hello iTwinCesium" iTwin that we should all have access to
-        // https://developer.bentley.com/my-itwins/b4a30036-0456-49ea-a439-3fcd9365e24e/home/
-        // const iModelId = "2852c3d7-00c3-4b5d-a0ce-82bbde4f061e";
-        const iModelId = "88673c1d-12b8-48f1-8beb-5000d0edbd0b";
 
         // Grabbed mapping from the iTwin Viewer
-        const classes = {
+        // TODO: grab updated categories for the new models
+        const knownSubCategories = {
           2199023255632: "Building Roof",
           2199023255694: "Building Wall",
           2199023255696: "Building Window",
@@ -98,9 +96,8 @@
           nameOverlay.style.left = `${movement.endPosition.x}px`;
           const element = feature.getProperty("element");
           const subcategory = feature.getProperty("subcategory");
-          const message = `
-      Element ID: ${element}
-      Subcategory: ${classes[subcategory] || subcategory}
+          const message = `Element ID: ${element}
+      Subcategory: ${knownSubCategories[subcategory] || subcategory}
       Feature ID: ${feature.featureId}`;
           nameOverlay.textContent = message;
         }
@@ -115,46 +112,95 @@
           nameOverlay.style.display = "none";
         }
 
-        const statusOutput = document.querySelector("#status");
-        async function init() {
-          statusOutput.innerText = "Starting export";
-          const start = Date.now();
+        // Create tilesets using the iModel ids
+        const surroundingArea = await Cesium.ITwinData.createTilesetFromIModelId(
+          "f856f57d-3d28-4265-9c4f-5e60c0662c15",
+        );
+        const station = await Cesium.ITwinData.createTilesetFromIModelId(
+          "669dde67-eb69-4e0b-bcf2-f722eee94746",
+        );
+        // Change how highlighting with the feature selection changes the color
+        surroundingArea.colorBlendMode = Cesium.Cesium3DTileColorBlendMode.REPLACE;
+        station.colorBlendMode = Cesium.Cesium3DTileColorBlendMode.REPLACE;
+        // Add the tilesets to the viewer
+        scene.primitives.add(surroundingArea);
+        scene.primitives.add(station);
 
-          statusOutput.innerText = "Creating Tileset";
+        Sandcastle.addToggleButton(
+          "Surrounding Area",
+          surroundingArea.show,
+          function (checked) {
+            surroundingArea.show = checked;
+          },
+          "layers",
+        );
+        Sandcastle.addToggleButton(
+          "Station",
+          station.show,
+          function (checked) {
+            station.show = checked;
+          },
+          "layers",
+        );
 
-          const tileset = await Cesium.ITwinData.createTilesetFromIModelId(iModelId);
-          scene.primitives.add(tileset);
-          tileset.colorBlendMode = Cesium.Cesium3DTileColorBlendMode.REPLACE;
-
-          statusOutput.innerText = "Loaded";
-
-          viewer.zoomTo(tileset);
-          console.log(`Finished in ${((Date.now() - start) / 1000).toString()} seconds`);
-
-          const handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
-          handler.setInputAction(function (movement) {
-            if (!picking) {
-              return;
-            }
-            unselectFeature(selectedFeature);
-
-            const feature = scene.pick(movement.endPosition);
-
-            if (feature instanceof Cesium.Cesium3DTileFeature) {
-              selectFeature(feature, movement);
-            }
-          }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
-        }
-
-        init().catch((error) => {
-          statusOutput.style.color = "red";
-          if (error.message.includes("Unauthorized")) {
-            statusOutput.innerText = "Error: Unauthorized";
-          } else {
-            statusOutput.innerText = "Error";
+        const handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
+        handler.setInputAction(function (movement) {
+          if (!picking) {
+            return;
           }
-          console.error(error);
-        });
+          unselectFeature(selectedFeature);
+
+          const feature = scene.pick(movement.endPosition);
+
+          if (feature instanceof Cesium.Cesium3DTileFeature) {
+            selectFeature(feature, movement);
+          }
+        }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+
+        const birdsEyeView = {
+          destination: new Cesium.Cartesian3(
+            1255923.367096007,
+            -4734564.543879414,
+            4072623.4624344883,
+          ),
+          orientation: new Cesium.HeadingPitchRoll(
+            6.283185307179586,
+            -0.5002442676148875,
+            6.283185307179586,
+          ),
+          duration: 0,
+          easingFunction: Cesium.EasingFunction.LINEAR_NONE,
+        };
+        viewer.scene.camera.flyTo(birdsEyeView);
+        Sandcastle.addToolbarButton(
+          "Birdseye view",
+          function () {
+            viewer.scene.camera.flyTo(birdsEyeView);
+          },
+          "camera-shortcuts",
+        );
+
+        const stationView = {
+          destination: new Cesium.Cartesian3(
+            1255783.605894154,
+            -4732864.394472763,
+            4073433.975291202,
+          ),
+          orientation: new Cesium.HeadingPitchRoll(
+            5.646321670432638,
+            -0.4736439399770642,
+            0.00001691713303575426,
+          ),
+          duration: 0,
+          easingFunction: Cesium.EasingFunction.LINEAR_NONE,
+        };
+        Sandcastle.addToolbarButton(
+          "Focus station",
+          function () {
+            viewer.scene.camera.flyTo(stationView);
+          },
+          "camera-shortcuts",
+        );
         //Sandcastle_End
         Sandcastle.finishedLoading();
       };
