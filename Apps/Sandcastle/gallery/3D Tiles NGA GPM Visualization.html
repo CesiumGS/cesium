@@ -1232,12 +1232,12 @@
             const content = tile?.content;
             const modelContent =
               content instanceof Cesium.Model3DTileContent ? content : undefined;
-            if (!modelContent) {
+            if (!Cesium.defined(modelContent)) {
               return undefined;
             }
 
             const extensionObject = modelContent.getExtension("NGA_gpm_local");
-            if (!extensionObject) {
+            if (!Cesium.defined(extensionObject)) {
               return undefined;
             }
             return extensionObject.anchorPointsIndirect;
