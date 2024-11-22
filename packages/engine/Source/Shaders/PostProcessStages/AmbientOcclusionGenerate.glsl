@@ -5,7 +5,6 @@ uniform sampler2D depthTexture;
 uniform float intensity;
 uniform float bias;
 uniform float lengthCap;
-uniform float stepSize;
 uniform float frustumLength;
 uniform int stepCount;
 uniform int directionCount;
@@ -63,7 +62,10 @@ void main(void)
     float gaussianVariance = lengthCap * sqrt(-positionEC.z);
     // Choose a step length such that the marching stops just before 3 * variance.
     float stepLength = 3.0 * gaussianVariance / (float(stepCount) + 1.0);
-    float pixelsPerStep = max(stepLength / czm_metersPerPixel(positionEC, 1.0), 1.0);
+    float metersPerPixel = czm_metersPerPixel(positionEC, 1.0);
+    // Minimum step is 1 pixel to avoid double sampling
+    float pixelsPerStep = max(stepLength / metersPerPixel, 1.0);
+    stepLength = pixelsPerStep * metersPerPixel;
 
     float angleStepScale = 1.0 / float(directionCount);
     float angleStep = angleStepScale * czm_twoPi;
@@ -83,7 +85,7 @@ void main(void)
     for (int i = 0; i < directionCount; i++)
     {
 #else
-    for (int i = 0; i < 64; i++)
+    for (int i = 0; i < 16; i++)
     {
         if (i >= directionCount) {
             break;
@@ -92,14 +94,13 @@ void main(void)
         sampleDirection = rotateStep * sampleDirection;
 
         float localAO = 0.0;
-        float accumulatedWindowWeights = 0.0;
         vec2 radialStep = pixelsPerStep * sampleDirection;
 
 #if __VERSION__ == 300
         for (int j = 0; j < stepCount; j++)
         {
 #else
-        for (int j = 0; j < 128; j++)
+        for (int j = 0; j < 64; j++)
         {
             if (j >= stepCount) {
                 break;
@@ -129,16 +130,11 @@ void main(void)
             float sampleDistance = length(stepVector);
             float weight = gaussian(sampleDistance, gaussianVariance);
             localAO += weight * dotVal;
-
-            // Compute lateral distance from output point, for weight normalization
-            // TODO: This is slow! Better to analytically compute window scales
-            float lateralDistance = length(stepVector.xy);
-            accumulatedWindowWeights += gaussian(lateralDistance, gaussianVariance);
         }
-        ao += localAO / accumulatedWindowWeights;
+        ao += localAO;
     }
 
-    ao *= angleStepScale;
+    ao *= angleStepScale * stepLength;
     ao = 1.0 - clamp(ao, 0.0, 1.0);
     ao = pow(ao, intensity);
     out_FragColor = vec4(vec3(ao), 1.0);

@@ -511,7 +511,6 @@ PostProcessStageLibrary.createAmbientOcclusionStage = function () {
       lengthCap: 0.26,
       directionCount: 16,
       stepCount: 64,
-      stepSize: 1.95,
       frustumLength: 1000.0,
       randomTexture: undefined,
     },
