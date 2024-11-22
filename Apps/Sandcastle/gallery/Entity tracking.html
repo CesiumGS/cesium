@@ -94,6 +94,13 @@
               drone.trackingReferenceFrame = Cesium.TrackingReferenceFrame.VELOCITY;
             },
           },
+          {
+            text: "Tracking reference frame: East-North-Up",
+            onselect: function () {
+              satellite.trackingReferenceFrame = Cesium.TrackingReferenceFrame.ENU;
+              drone.trackingReferenceFrame = Cesium.TrackingReferenceFrame.ENU;
+            },
+          },
         ]);
         //Sandcastle_End
       };
