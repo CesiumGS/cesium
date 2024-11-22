@@ -1,0 +1,18 @@
+{
+  "name": "cesiumjs-gsplat-utils",
+  "type": "module",
+  "collaborators": [
+    "Jason Sobotka <jason.sobotka@cesium.com>"
+  ],
+  "version": "0.1.0",
+  "files": [
+    "cesiumjs_gsplat_utils_bg.wasm",
+    "cesiumjs_gsplat_utils.js",
+    "cesiumjs_gsplat_utils.d.ts"
+  ],
+  "main": "cesiumjs_gsplat_utils.js",
+  "types": "cesiumjs_gsplat_utils.d.ts",
+  "sideEffects": [
+    "./snippets/*"
+  ]
+}
