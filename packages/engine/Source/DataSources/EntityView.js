@@ -269,7 +269,12 @@ function updateTransform(
         rotationScratch,
       );
       Matrix4.fromRotationTranslation(rotation, cartesian, transform);
-    } else if (hasBasis) {
+    } else if (
+      trackingReferenceFrame === TrackingReferenceFrame.ENU ||
+      !hasBasis
+    ) {
+      Transforms.eastNorthUpToFixedFrame(cartesian, ellipsoid, transform);
+    } else {
       transform[0] = xBasis.x;
       transform[1] = xBasis.y;
       transform[2] = xBasis.z;
@@ -286,9 +291,6 @@ function updateTransform(
       transform[13] = cartesian.y;
       transform[14] = cartesian.z;
       transform[15] = 0.0;
-    } else {
-      // Stationary or slow-moving, low-altitude objects use East-North-Up.
-      Transforms.eastNorthUpToFixedFrame(cartesian, ellipsoid, transform);
     }
 
     camera._setTransform(transform);

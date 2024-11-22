@@ -7,7 +7,11 @@
 ##### Additions :tada:
 
 - Added `getSample` to `SampledProperty` to get the time of samples. [#12253](https://github.com/CesiumGS/cesium/pull/12253)
-- Added `Entity.trackingReferenceFrame` property to allow tracking entities in their own inertial reference frame. [#12194](https://github.com/CesiumGS/cesium/pull/12194)
+- Added `Entity.trackingReferenceFrame` property to allow tracking entities in various reference frames. [#12194](https://github.com/CesiumGS/cesium/pull/12194), [#12314](https://github.com/CesiumGS/cesium/pull/12314)
+  - `TrackingReferenceFrame.AUTODETECT` (default): uses either VVLH or ENU dependeding on entity's dynamic. Use `TrackingReferenceFrame.ENU` if your camera orientation flips abruptly from time to time.
+  - `TrackingReferenceFrame.ENU`: uses the entity's local East-North-Up reference frame.
+  - `TrackingReferenceFrame.INERTIAL`: uses the entity's inertial reference frame.
+  - `TrackingReferenceFrame.VELOCITY`: uses entity's `VelocityOrientationProperty` as orientation.
 - Added `GoogleGeocoderService` for standalone usage of Google geocoder. [#12299](https://github.com/CesiumGS/cesium/pull/12299)
 
 ##### Fixes :wrench:
