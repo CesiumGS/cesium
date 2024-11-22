@@ -7,6 +7,7 @@
 ##### Additions :tada:
 
 - Added `Entity.trackingReferenceFrame` property to allow tracking entities in their own inertial reference frame. [#12194](https://github.com/CesiumGS/cesium/pull/12194)
+- Added a new integration with the iTwin Platform to easily load iModels directly in the viewer. Use `ITwinPlatform.defaultAccessToken` to set the access token then use `ITwinData.createTilesetFromIModelId(iModelId)` to load the iModel as a `Cesium3DTileset`. [#12289](https://github.com/CesiumGS/cesium/pull/12289)
 
 ##### Fixes :wrench:
 
