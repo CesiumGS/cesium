@@ -45,7 +45,8 @@ import StyleCommandsNeeded from "./StyleCommandsNeeded.js";
 import pickModel from "./pickModel.js";
 
 import GaussianSplatSorter from "../GaussianSplatSorter.js";
-
+//import Buffer from "../../Renderer/Buffer.js";
+//import BufferUsage from "../../Renderer/BufferUsage.js";
 /**
  * <div class="notice">
  * To construct a Model, call {@link Model.fromGltfAsync}. Do not call the constructor directly.
@@ -2146,6 +2147,7 @@ function updateGaussianSplatting(model, frameState) {
     if (prim?.isGaussianSplatPrimitive ?? false) {
       const idxAttr = prim.attributes.find((a) => a.name === "_SPLAT_INDEXES");
       const posAttr = prim.attributes.find((a) => a.name === "POSITION");
+
       const modelView = new Matrix4();
       Matrix4.multiply(
         frameState.camera.viewMatrix,

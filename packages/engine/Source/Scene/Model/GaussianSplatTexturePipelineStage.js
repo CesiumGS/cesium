@@ -120,7 +120,9 @@ GaussianSplatTexturePipelineStage.process = function (
     async function ensureWasmInitialized() {
       if (!initPromise) {
         initPromise = await __wbg_init(
-          buildModuleUrl("ThirdParty/cesiumjs_gsplat_utils_bg.wasm"),
+          buildModuleUrl(
+            "ThirdParty/cesium-gsplat/cesiumjs_gsplat_utils_bg.wasm",
+          ),
         )
           .then((wasm) => {
             wasmInitialized = true;
@@ -336,7 +338,9 @@ GaussianSplatTexturePipelineStage.process = function (
     async function ensureWasmInitialized() {
       if (!initPromise) {
         initPromise = await __wbg_init(
-          buildModuleUrl("ThirdParty/cesiumjs_gsplat_utils_bg.wasm"),
+          buildModuleUrl(
+            "ThirdParty/cesium-gsplat/cesiumjs_gsplat_utils_bg.wasm",
+          ),
         )
           .then((wasm) => {
             wasmInitialized = true;

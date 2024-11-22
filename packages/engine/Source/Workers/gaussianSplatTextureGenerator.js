@@ -21,12 +21,12 @@ async function generateSplatTextureWorker(parameters, transferableObjects) {
     return initWorker(parameters, transferableObjects);
   }
 
-  const { positions, scales, rotations, colors, count } = parameters;
+  const { attributes, count } = parameters;
   return generate_texture_from_attrs(
-    positions,
-    scales,
-    rotations,
-    colors,
+    attributes.positions,
+    attributes.scales,
+    attributes.rotations,
+    attributes.colors,
     count,
   );
 }

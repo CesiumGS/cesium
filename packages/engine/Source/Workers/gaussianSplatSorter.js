@@ -41,6 +41,13 @@ function generateGaussianSortWorker(parameters, transferableObjects) {
       2048,
       primitive.count,
     );
+  } else if (sortType === "SIMD Index") {
+    return radix_sort_gaussians_indexes(
+      primitive.positions,
+      primitive.modelView,
+      2048,
+      primitive.count,
+    );
   }
 }
 

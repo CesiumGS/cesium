@@ -233,13 +233,13 @@ function buildDrawCommandForGaussianSplatPrimitive(
       )
     ) {
       const splatQuadAttrLocations = {
-        0: 8,
+        0: 9,
         1: 1,
         2: 2,
         3: 3,
         4: 4,
-        splatPosition: 6,
-        splatColor: 7,
+        splatPosition: 7,
+        splatColor: 8,
       };
       const geometry = new Geometry({
         attributes: {

@@ -84,6 +84,7 @@ GaussianSplatPipelineStage.process = function (
   }
 
   shaderBuilder.addAttribute("vec2", "a_screenQuadPosition");
+  shaderBuilder.addAttribute("float", "a_dummy");
   shaderBuilder.addAttribute("vec3", "a_splatPosition");
   shaderBuilder.addAttribute("vec4", "a_splatColor");
   //shaderBuilder.addAttribute("float", "a_splatOpacity");
@@ -245,7 +246,9 @@ GaussianSplatPipelineStage.process = function (
     async function ensureWasmInitialized() {
       if (!initPromise) {
         initPromise = await __wbg_init(
-          buildModuleUrl("ThirdParty/cesiumjs_gsplat_utils_bg.wasm"),
+          buildModuleUrl(
+            "ThirdParty/cesium-gsplat/cesiumjs_gsplat_utils_bg.wasm",
+          ),
         )
           .then((wasm) => {
             wasmInitialized = true;

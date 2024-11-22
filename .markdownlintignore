@@ -1,6 +1,7 @@
 /node_modules
 /ThirdParty
 /Tools/**
+temp_wasm/*
 
-CHANGES.md 
+CHANGES.md
 LICENSE.md
