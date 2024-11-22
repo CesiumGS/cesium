@@ -418,3 +418,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [Kirn Kim](https://github.com/squrki)
 - [Emanuele Mastaglia](https://github.com/Masty88)
 - [Connor Manning](https://github.com/connormanning)
+- [Michael Musset](https://github.com/mickae1)
