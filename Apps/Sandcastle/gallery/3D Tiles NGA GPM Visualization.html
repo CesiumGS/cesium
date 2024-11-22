@@ -285,7 +285,7 @@
            * @private
            */
           updateCustomShaderInTileset() {
-            if (this.currentTileset === undefined) {
+            if (!Cesium.defined(this.currentTileset)) {
               return;
             }
             this.currentTileset.customShader = this.currentCustomShader;
@@ -307,7 +307,7 @@
            * @private
            */
           updateTextureThresholdInShader() {
-            if (this.currentCustomShader === undefined) {
+            if (!Cesium.defined(this.currentCustomShader)) {
               return;
             }
             const hasTextureThreshold = Object.keys(
@@ -347,7 +347,7 @@
            * Zoom to the current tileset, with a small, unspecified offset...
            */
           zoomToCurrentTileset() {
-            if (this.currentTileset === undefined) {
+            if (!Cesium.defined(this.currentTileset)) {
               return;
             }
             const offset = new Cesium.HeadingPitchRange(
@@ -407,10 +407,10 @@
             propertyNameY,
           );
 
-          if (!metadataValueX) {
+          if (!Cesium.defined(metadataValueX)) {
             metadataValueX = 0;
           }
-          if (!metadataValueY) {
+          if (!Cesium.defined(metadataValueY)) {
             metadataValueY = 0;
           }
           result.x = metadataValueX;
@@ -678,7 +678,6 @@
            * properties.
            *
            * @param {string} title The title to be displayed in the combo box
-           * @param {string} title The title to be displayed in the combo box
            * @param {string|undefined} propertyName0 The property name 0
            * @param {number} sourceMin0 The minimum source value 0
            * @param {number} sourceMax0 The maximum source value 0
@@ -840,7 +839,7 @@
                 return;
               }
               const worldPosition = viewer.scene.pickPosition(movement.position);
-              if (worldPosition === undefined) {
+              if (!Cesium.defined(worldPosition)) {
                 that.clear();
               } else {
                 const uncertainty = pickUncertaintyFromTexture(movement.position);
