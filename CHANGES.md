@@ -20,9 +20,12 @@
 - Updated WMS example URL in UrlTemplateImageryProvider documentation to use an active service. [#12323](https://github.com/CesiumGS/cesium/pull/12323)
 - Fix point cloud filtering performance on certain hardware [#12317](https://github.com/CesiumGS/cesium/pull/12317)
 
-##### Deprecated :hourglass_flowing_sand:
 
-- `createGooglePhotorealistic3DTileset(key)` has been deprecated. Use `createGooglePhotorealistic3DTileset({key})` instead. It will be removed in 1.126.
+
+##### Removed :x:
+
+- `createGooglePhotorealistic3DTileset(key)` has been removed. Use `createGooglePhotorealistic3DTileset({key})` instead.
+
 
 #### @cesium/widgets
 
