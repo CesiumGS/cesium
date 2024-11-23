@@ -104,7 +104,7 @@ ITwinPlatform.getExports = async function (iModelId) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.string("iModelId", iModelId);
   if (!defined(ITwinPlatform.defaultAccessToken)) {
-    throw new DeveloperError("Must set ITwin.defaultAccessToken first");
+    throw new DeveloperError("Must set ITwinPlatform.defaultAccessToken first");
   }
   //>>includeEnd('debug')
 
