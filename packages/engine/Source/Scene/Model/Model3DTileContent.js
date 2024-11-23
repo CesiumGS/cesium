@@ -152,6 +152,16 @@ Object.defineProperties(Model3DTileContent.prototype, {
   },
 });
 
+// XXX TODO COMMENT
+Model3DTileContent.prototype.getTextureIds = function () {
+  return this._model.statistics.getTextureIds();
+};
+
+// XXX TODO COMMENT
+Model3DTileContent.prototype.getTextureByteLengthById = function (textureId) {
+  return this._model.statistics.getTextureByteLengthById(textureId);
+};
+
 /**
  * Returns the object that was created for the given extension.
  *

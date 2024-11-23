@@ -216,7 +216,7 @@ function Texture(options) {
     ? PixelFormat.compressedTextureSizeInBytes(pixelFormat, width, height)
     : PixelFormat.textureSizeInBytes(pixelFormat, pixelDatatype, width, height);
 
-  this._id = createGuid();
+  this._id = options.id ?? createGuid();
   this._context = context;
   this._textureFilterAnisotropic = context._textureFilterAnisotropic;
   this._textureTarget = gl.TEXTURE_2D;

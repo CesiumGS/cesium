@@ -61,7 +61,7 @@ function ModelStatistics() {
   // Sets of buffers and textures that have already been counted.
   // This is to prevent double-counting cached assets.
   this._bufferIdSet = {};
-  this._textureIdSet = {};
+  this._textureIdByteLengths = {};
 
   // Associated array of batch textures that have already been counted.
   // This allows for quick look-up to check if a texture has been counted,
@@ -111,7 +111,7 @@ ModelStatistics.prototype.clear = function () {
   this.propertyTablesByteLength = 0;
 
   this._bufferIdSet = {};
-  this._textureIdSet = {};
+  this._textureIdByteLengths = {};
   this._batchTextureIdMap.removeAll();
 };
 
@@ -160,12 +160,26 @@ ModelStatistics.prototype.addTexture = function (texture) {
   Check.typeOf.object("texture", texture);
   //>>includeEnd('debug');
 
-  if (!this._textureIdSet.hasOwnProperty(texture._id)) {
+  if (!this._textureIdByteLengths.hasOwnProperty(texture._id)) {
     this.texturesByteLength += texture.sizeInBytes;
+    this._textureIdByteLengths[texture._id] = texture.sizeInBytes;
+  } else {
+    // XXX TODO Only a sanity check. It looks like
+    // this function can be called several times
+    // with the same texture (hence the check above)
+    // but that should be OK...
+    //console.log(`XXX ModelStatistics: Texture already tracked ${texture._id}`);
   }
+};
 
-  // Simulate set insertion.
-  this._textureIdSet[texture._id] = true;
+// XXX TODO COMMENT
+ModelStatistics.prototype.getTextureIds = function () {
+  return Object.keys(this._textureIdByteLengths);
+};
+
+// XXX TODO COMMENT
+ModelStatistics.prototype.getTextureByteLengthById = function (textureId) {
+  return this._textureIdByteLengths[textureId];
 };
 
 /**
