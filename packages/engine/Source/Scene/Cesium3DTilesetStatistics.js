@@ -170,11 +170,12 @@ function updatePointAndFeatureCounts(statistics, content, decrement, load) {
       `After ${decrement ? "unload" : "load  "} statistics.texturesByteLength now ${statistics.texturesByteLength}`,
     );
 
-    /*/
+    //*/
     console.log("Details:");
     const textureIds = Object.keys(statistics.texturesReferenceCounterById);
     for (const textureId of textureIds) {
-      const referenceCounter = statistics.texturesReferenceCounterById[textureId];
+      const referenceCounter =
+        statistics.texturesReferenceCounterById[textureId];
       console.log(`  referenceCounter ${referenceCounter} for ${textureId}`);
     }
     //*/
@@ -224,7 +225,6 @@ Cesium3DTilesetStatistics.clone = function (statistics, result) {
     statistics.numberOfTilesCulledWithChildrenUnion;
   result.geometryByteLength = statistics.geometryByteLength;
   result.texturesByteLength = statistics.texturesByteLength;
-  result.texturesByteLengthById = { ...statistics.texturesByteLengthById };
   result.texturesReferenceCounterById = {
     ...statistics.texturesReferenceCounterById,
   };
