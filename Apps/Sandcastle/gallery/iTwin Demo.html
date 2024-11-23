@@ -37,6 +37,18 @@
 
         Cesium.ITwinPlatform.defaultAccessToken = token;
 
+        // Set up viewer
+        const viewer = new Cesium.Viewer("cesiumContainer", {
+          terrain: Cesium.Terrain.fromWorldTerrain(),
+          animation: false,
+          sceneModePicker: false,
+          geocoder: false,
+          homeButton: false,
+        });
+        const scene = viewer.scene;
+        scene.globe.show = true;
+        scene.debugShowFramesPerSecond = true;
+
         // Grabbed mapping from the iTwin Viewer
         // TODO: grab updated categories for the new models
         const knownSubCategories = {
@@ -49,7 +61,7 @@
         let picking = false;
 
         Sandcastle.addToggleButton(
-          "Per-feature selection",
+          "Feature selection on hover",
           false,
           function (checked) {
             picking = checked;
@@ -59,14 +71,6 @@
           },
           "checkbox",
         );
-
-        // Set up viewer
-        const viewer = new Cesium.Viewer("cesiumContainer", {
-          terrain: Cesium.Terrain.fromWorldTerrain(),
-        });
-        const scene = viewer.scene;
-        scene.globe.show = true;
-        scene.debugShowFramesPerSecond = true;
 
         // HTML overlay for showing feature name on mouseover
         const nameOverlay = document.createElement("div");
@@ -126,19 +130,17 @@
         scene.primitives.add(surroundingArea);
         scene.primitives.add(station);
 
-        Sandcastle.addToggleButton(
-          "Surrounding Area",
-          surroundingArea.show,
-          function (checked) {
-            surroundingArea.show = checked;
+        Sandcastle.addToolbarButton(
+          "Toggle Surrounding Area",
+          function () {
+            surroundingArea.show = !surroundingArea.show;
           },
           "layers",
         );
-        Sandcastle.addToggleButton(
-          "Station",
-          station.show,
-          function (checked) {
-            station.show = checked;
+        Sandcastle.addToolbarButton(
+          "Toggle Station Model",
+          function () {
+            station.show = !station.show;
           },
           "layers",
         );
@@ -175,7 +177,9 @@
         Sandcastle.addToolbarButton(
           "Birdseye view",
           function () {
+            surroundingArea.show = true;
             viewer.scene.camera.flyTo(birdsEyeView);
+            togglePhotosphere(false);
           },
           "camera-shortcuts",
         );
@@ -198,6 +202,108 @@
           "Focus station",
           function () {
             viewer.scene.camera.flyTo(stationView);
+            togglePhotosphere(false);
+          },
+          "camera-shortcuts",
+        );
+
+        let photoSphereModeEnabled = false;
+        function togglePhotosphere(forceMode) {
+          const shouldBeEnabled = forceMode ?? !photoSphereModeEnabled;
+          if (shouldBeEnabled) {
+            // enable photosphere mode
+            scene.screenSpaceCameraController.enableRotate = false;
+            scene.screenSpaceCameraController.enableZoom = false;
+            scene.screenSpaceCameraController.enableTranslate = false;
+            scene.screenSpaceCameraController.enableTilt = false;
+            scene.screenSpaceCameraController.lookEventTypes = {
+              eventType: Cesium.CameraEventType.LEFT_DRAG,
+            };
+            photoSphereModeEnabled = true;
+          } else {
+            // disable photosphere mode
+            scene.screenSpaceCameraController.enableRotate = true;
+            scene.screenSpaceCameraController.enableZoom = true;
+            scene.screenSpaceCameraController.enableTranslate = true;
+            scene.screenSpaceCameraController.enableTilt = true;
+            scene.screenSpaceCameraController.lookEventTypes = {
+              eventType: Cesium.CameraEventType.LEFT_DRAG,
+              modifier: Cesium.KeyboardEventModifier.SHIFT,
+            };
+            photoSphereModeEnabled = false;
+          }
+        }
+        document
+          .querySelector("#camera-shortcuts")
+          .appendChild(document.createElement("br"));
+        const stationPlatform = {
+          destination: new Cesium.Cartesian3(
+            1255658.5108288145,
+            -4732744.54716761,
+            4073467.5995740294,
+          ),
+          orientation: new Cesium.HeadingPitchRoll(
+            0.08605615778136055,
+            -0.08195800893456417,
+            3.644617292408725e-7,
+          ),
+          duration: 0,
+          easingFunction: Cesium.EasingFunction.LINEAR_NONE,
+        };
+        Sandcastle.addToolbarButton(
+          "Station Platform",
+          function () {
+            surroundingArea.show = false;
+            viewer.scene.camera.flyTo(stationPlatform);
+            togglePhotosphere(true);
+          },
+          "camera-shortcuts",
+        );
+
+        const stationAtrium = {
+          destination: new Cesium.Cartesian3(
+            1255653.7753397836,
+            -4732735.669421007,
+            4073492.4182837387,
+          ),
+          orientation: new Cesium.HeadingPitchRoll(
+            0.27348916684631064,
+            -0.1626949521764165,
+            6.2831852466344875,
+          ),
+          duration: 0,
+          easingFunction: Cesium.EasingFunction.LINEAR_NONE,
+        };
+        Sandcastle.addToolbarButton(
+          "Station Atrium",
+          function () {
+            surroundingArea.show = false;
+            viewer.scene.camera.flyTo(stationAtrium);
+            togglePhotosphere(true);
+          },
+          "camera-shortcuts",
+        );
+
+        const stationRoof = {
+          destination: new Cesium.Cartesian3(
+            1255656.4324382306,
+            -4732754.952130925,
+            4073483.76683067,
+          ),
+          orientation: new Cesium.HeadingPitchRoll(
+            0.16147447018420547,
+            -0.015285346878300077,
+            6.28297051403236,
+          ),
+          duration: 0,
+          easingFunction: Cesium.EasingFunction.LINEAR_NONE,
+        };
+        Sandcastle.addToolbarButton(
+          "Station Roof",
+          function () {
+            surroundingArea.show = false;
+            viewer.scene.camera.flyTo(stationRoof);
+            togglePhotosphere(true);
           },
           "camera-shortcuts",
         );
