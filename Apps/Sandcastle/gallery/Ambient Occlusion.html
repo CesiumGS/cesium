@@ -62,14 +62,26 @@
             </td>
           </tr>
           <tr>
-            <td>Step Size</td>
+            <td>Step Count</td>
             <td>
               <input
                 type="range"
                 min="1"
-                max="10"
-                step="0.01"
-                data-bind="value: stepSize, valueUpdate: 'input'"
+                max="64"
+                step="1"
+                data-bind="value: stepCount, valueUpdate: 'input'"
+              />
+            </td>
+          </tr>
+          <tr>
+            <td>Direction Count</td>
+            <td>
+              <input
+                type="range"
+                min="1"
+                max="16"
+                step="1"
+                data-bind="value: directionCount, valueUpdate: 'input'"
               />
             </td>
           </tr>
@@ -119,9 +131,10 @@
           ambientOcclusionOnly: false,
           intensity: 3.0,
           bias: 0.1,
-          lengthCap: 0.03,
-          stepSize: 1.0,
-          blurStepSize: 0.86,
+          lengthCap: 0.26,
+          directionCount: 8,
+          stepCount: 32,
+          blurStepSize: 0.0,
         };
 
         Cesium.knockout.track(viewModel);
@@ -143,7 +156,8 @@
           ambientOcclusion.uniforms.intensity = Number(viewModel.intensity);
           ambientOcclusion.uniforms.bias = Number(viewModel.bias);
           ambientOcclusion.uniforms.lengthCap = Number(viewModel.lengthCap);
-          ambientOcclusion.uniforms.stepSize = Number(viewModel.stepSize);
+          ambientOcclusion.uniforms.directionCount = Number(viewModel.directionCount);
+          ambientOcclusion.uniforms.stepCount = Number(viewModel.stepCount);
           ambientOcclusion.uniforms.blurStepSize = Number(viewModel.blurStepSize);
         }
         updatePostProcess();

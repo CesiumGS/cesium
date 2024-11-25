@@ -5,7 +5,6 @@ uniform sampler2D depthTexture;
 uniform float intensity;
 uniform float bias;
 uniform float lengthCap;
-uniform float frustumLength;
 uniform int stepCount;
 uniform int directionCount;
 
@@ -15,7 +14,12 @@ vec4 pixelToEye(vec2 screenCoordinate)
     float depth = czm_readDepth(depthTexture, uv);
     vec2 xy = 2.0 * uv - vec2(1.0);
     vec4 posEC = czm_inverseProjection * vec4(xy, depth, 1.0);
-    return posEC / posEC.w;
+    posEC = posEC / posEC.w;
+    // Avoid numerical error at far plane
+    if (depth >= 1.0) {
+        posEC.z = czm_currentFrustum.y;
+    }
+    return posEC;
 }
 
 // Reconstruct surface normal in eye coordinates, avoiding edges
@@ -52,7 +56,9 @@ void main(void)
 {
     vec4 positionEC = pixelToEye(gl_FragCoord.xy);
 
-    if (positionEC.z > frustumLength)
+    // Exit if we are too close to the back of the frustum, where the depth value is invalid.
+    float maxValidDepth = czm_currentFrustum.y - lengthCap;
+    if (-positionEC.z > maxValidDepth)
     {
         out_FragColor = vec4(1.0);
         return;
@@ -110,8 +116,7 @@ void main(void)
             vec2 samplePixel = floor(gl_FragCoord.xy + float(j + 1) * radialStep) + vec2(0.5);
 
             // Exit if we stepped off the screen
-            if (clamp(samplePixel, vec2(0.0), czm_viewport.zw) != samplePixel)
-            {
+            if (clamp(samplePixel, vec2(0.0), czm_viewport.zw) != samplePixel) {
                 break;
             }
 
@@ -121,10 +126,8 @@ void main(void)
 
             // Estimate the angle from the surface normal.
             float dotVal = clamp(dot(normalEC, normalize(stepVector)), 0.0, 1.0);
-            if (dotVal < bias)
-            {
-                dotVal = 0.0;
-            }
+            dotVal = czm_branchFreeTernary(dotVal > bias, dotVal, 0.0);
+            dotVal = czm_branchFreeTernary(-samplePositionEC.z <= maxValidDepth, dotVal, 0.0);
 
             // Weight contribution based on the distance from the output point
             float sampleDistance = length(stepVector);

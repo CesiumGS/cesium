@@ -477,7 +477,7 @@ PostProcessStageLibrary.createBloomStage = function () {
  * </p>
  * <p>
  * The uniforms have the following properties: <code>intensity</code>, <code>bias</code>, <code>lengthCap</code>,
- * <code>stepSize</code>, <code>frustumLength</code>, <code>randomTexture</code>, <code>ambientOcclusionOnly</code>,
+ * <code>directionCount</code>, <code>stepCount</code>, <code>randomTexture</code>, <code>ambientOcclusionOnly</code>,
  * <code>delta</code>, <code>sigma</code>, and <code>blurStepSize</code>.
  * </p>
  * <ul>
@@ -486,9 +486,8 @@ PostProcessStageLibrary.createBloomStage = function () {
  * sampling stops in the current direction. This is used to remove shadows from near planar edges. The default value is <code>0.1</code>.</li>
  * <li><code>lengthCap</code> is a scalar value representing a length in meters. If the distance from the current sample to first sample is greater than this value,
  * sampling stops in the current direction. The default value is <code>0.26</code>.</li>
- * <li><code>stepSize</code> is a scalar value indicating the distance to the next texel sample in the current direction. The default value is <code>1.95</code>.</li>
- * <li><code>frustumLength</code> is a scalar value in meters. If the current fragment has a distance from the camera greater than this value, ambient occlusion is not computed for the fragment.
- * The default value is <code>1000.0</code>.</li>
+ * <li><code>directionCount</code> is the number of directions along which the ray marching will search for occluders. The default value is <code>8</code>.</li>
+ * <li><code>stepCount</code> is the number of steps the ray marching will take along each direction. The default value is <code>32</code>.</li>
  * <li><code>randomTexture</code> is a texture where the red channel is a random value in [0.0, 1.0]. The default value is <code>undefined</code>. This texture needs to be set.</li>
  * <li><code>ambientOcclusionOnly</code> is a boolean value. When <code>true</code>, only the shadows generated are written to the output. When <code>false</code>, the input texture is modulated
  * with the ambient occlusion. This is a useful debug option for seeing the effects of changing the uniform values. The default value is <code>false</code>.</li>
@@ -509,14 +508,13 @@ PostProcessStageLibrary.createAmbientOcclusionStage = function () {
       intensity: 3.0,
       bias: 0.1,
       lengthCap: 0.26,
-      directionCount: 16,
-      stepCount: 64,
-      frustumLength: 1000.0,
+      directionCount: 8,
+      stepCount: 32,
       randomTexture: undefined,
     },
   });
   const blur = createBlur("czm_ambient_occlusion_blur");
-  blur.uniforms.stepSize = 0.86;
+  blur.uniforms.stepSize = 0.0;
   const generateAndBlur = new PostProcessStageComposite({
     name: "czm_ambient_occlusion_generate_blur",
     stages: [generate, blur],
@@ -571,22 +569,6 @@ PostProcessStageLibrary.createAmbientOcclusionStage = function () {
       },
       set: function (value) {
         generate.uniforms.stepCount = value;
-      },
-    },
-    stepSize: {
-      get: function () {
-        return generate.uniforms.stepSize;
-      },
-      set: function (value) {
-        generate.uniforms.stepSize = value;
-      },
-    },
-    frustumLength: {
-      get: function () {
-        return generate.uniforms.frustumLength;
-      },
-      set: function (value) {
-        generate.uniforms.frustumLength = value;
       },
     },
     randomTexture: {
