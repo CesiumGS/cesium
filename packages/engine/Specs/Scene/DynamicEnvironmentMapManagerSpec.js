@@ -2,6 +2,7 @@ import {
   Cartesian3,
   Cartographic,
   Color,
+  ContextLimits,
   CubeMap,
   DynamicAtmosphereLightingType,
   DynamicEnvironmentMapManager,
@@ -70,16 +71,20 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
     () => {
       const time = JulianDate.fromIso8601("2024-08-30T10:45:00Z");
 
-      let scene;
+      let scene, orginalMaximumCubeMapSize;
 
       beforeAll(() => {
         scene = createScene({
           skyBox: false,
         });
+        orginalMaximumCubeMapSize = ContextLimits.maximumCubeMapSize;
+        // To keep tests fast, don't throttle
+        ContextLimits._maximumCubeMapSize = Number.POSITIVE_INFINITY;
       });
 
       afterAll(() => {
         scene.destroyForSpecs();
+        ContextLimits._maximumCubeMapSize = orginalMaximumCubeMapSize;
       });
 
       afterEach(() => {
