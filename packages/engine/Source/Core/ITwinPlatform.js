@@ -215,14 +215,14 @@ ITwinPlatform.getExports = async function (iModelId) {
 
 /**
  * @typedef {Object} RealityDataExtent
- * @privage
+ * @private
  * @property {{latitude: number, longitude: number}} southWest
  * @property {{latitude: number, longitude: number}} northEast
  */
 
 /**
  * @typedef {Object} RealityDataRepresentation
- * @privage
+ * @private
  * @property {string} id "95d8dccd-d89e-4287-bb5f-3219acbc71ae",
  * @property {string} displayName "Name of reality data",
  * @property {string} dataset "Dataset",
@@ -243,6 +243,10 @@ ITwinPlatform.getExports = async function (iModelId) {
  */
 
 /**
+ * Load the full metadata for the given iTwin id and reality data id.
+ *
+ * @private
+ *
  * @param {string} iTwinId
  * @param {string} realityDataId
  * @returns {Promise<RealityDataRepresentation>}
@@ -292,6 +296,18 @@ ITwinPlatform.getRealityDataMetadata = async function (iTwinId, realityDataId) {
   }
 };
 
+/**
+ * Request the access url for the given iTwin id, reality data id and root document.
+ * The root document can be requested from the list using <code>return=representation</code>
+ * or the metadata route from {@link ITwinPlatform.getRealityDataMetadata}
+ *
+ * @private
+ *
+ * @param {string} iTwinId
+ * @param {string} realityDataId
+ * @param {string} rootDocument
+ * @returns {Promise<string>}
+ */
 ITwinPlatform.getRealityDataURL = async function (
   iTwinId,
   realityDataId,
@@ -314,13 +330,6 @@ ITwinPlatform.getRealityDataURL = async function (
     tilesetUrl.pathname = `${tilesetUrl.pathname}/${rootDocument}`;
 
     return tilesetUrl.toString();
-    // console.log("container url", tilesetUrl.toString());
-    // if (rootDocument.includes(".geojson")) {
-    //   await loadGeoJson(tilesetUrl.toString());
-    //   return;
-    // }
-    // await loadTileset(tilesetUrl.toString());
-    // return result.realityData;
   } catch (error) {
     const result = JSON.parse(error.response);
     if (error.statusCode === 401) {
