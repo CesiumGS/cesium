@@ -171,12 +171,6 @@ ModelStatistics.prototype.addTexture = function (texture) {
   if (!this._textureIdByteLengths.hasOwnProperty(texture._id)) {
     this.texturesByteLength += texture.sizeInBytes;
     this._textureIdByteLengths[texture._id] = texture.sizeInBytes;
-  } else {
-    // XXX TODO Only a sanity check. It looks like
-    // this function can be called several times
-    // with the same texture (hence the check above)
-    // but that should be OK...
-    //console.log(`XXX ModelStatistics: Texture already tracked ${texture._id}`);
   }
 };
 
