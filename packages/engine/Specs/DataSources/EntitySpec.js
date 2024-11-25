@@ -4,6 +4,7 @@ import {
   Matrix3,
   Matrix4,
   Quaternion,
+  TrackingReferenceFrame,
   TimeInterval,
   TimeIntervalCollection,
   Transforms,
@@ -54,11 +55,15 @@ describe("DataSources/Entity", function () {
     expect(entity.viewFrom).toBeUndefined();
     expect(entity.wall).toBeUndefined();
     expect(entity.entityCollection).toBeUndefined();
+    expect(entity.trackingReferenceFrame).toBe(
+      TrackingReferenceFrame.AUTODETECT,
+    );
 
     const options = {
       id: "someId",
       name: "bob",
       show: false,
+      trackingReferenceFrame: TrackingReferenceFrame.INERTIAL,
       availability: new TimeIntervalCollection(),
       parent: new Entity(),
       customProperty: {},
@@ -88,6 +93,7 @@ describe("DataSources/Entity", function () {
     expect(entity.id).toEqual(options.id);
     expect(entity.name).toEqual(options.name);
     expect(entity.show).toBe(options.show);
+    expect(entity.trackingReferenceFrame).toBe(options.trackingReferenceFrame);
     expect(entity.availability).toBe(options.availability);
     expect(entity.parent).toBe(options.parent);
     expect(entity.customProperty).toBe(options.customProperty);
@@ -114,6 +120,7 @@ describe("DataSources/Entity", function () {
     expect(entity.wall).toBeInstanceOf(WallGraphics);
 
     expect(entity.entityCollection).toBeUndefined();
+    expect(entity.trackingReferenceFrame).toBe(TrackingReferenceFrame.INERTIAL);
   });
 
   it("isAvailable is always true if no availability defined.", function () {

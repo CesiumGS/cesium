@@ -18,6 +18,7 @@ import {
   Math as CesiumMath,
   Property,
   ScreenSpaceEventType,
+  IonGeocoderService,
 } from "@cesium/engine";
 import Animation from "../Animation/Animation.js";
 import AnimationViewModel from "../Animation/AnimationViewModel.js";
@@ -280,7 +281,7 @@ function enableVRUI(viewer, enabled) {
  * @property {boolean} [baseLayerPicker=true] If set to false, the BaseLayerPicker widget will not be created.
  * @property {boolean} [fullscreenButton=true] If set to false, the FullscreenButton widget will not be created.
  * @property {boolean} [vrButton=false] If set to true, the VRButton widget will be created.
- * @property {boolean|GeocoderService[]} [geocoder=true] If set to false, the Geocoder widget will not be created.
+ * @property {boolean|IonGeocodeProviderType|GeocoderService[]} [geocoder=IonGeocodeProviderType.DEFAULT] The geocoding service or services to use when searching with the Geocoder widget. If set to false, the Geocoder widget will not be created.
  * @property {boolean} [homeButton=true] If set to false, the HomeButton widget will not be created.
  * @property {boolean} [infoBox=true] If set to false, the InfoBox widget will not be created.
  * @property {boolean} [sceneModePicker=true] If set to false, the SceneModePicker widget will not be created.
@@ -295,7 +296,7 @@ function enableVRUI(viewer, enabled) {
  * @property {ProviderViewModel[]} [imageryProviderViewModels=createDefaultImageryProviderViewModels()] The array of ProviderViewModels to be selectable from the BaseLayerPicker.  This value is only valid if `baseLayerPicker` is set to true.
  * @property {ProviderViewModel} [selectedTerrainProviderViewModel] The view model for the current base terrain layer, if not supplied the first available base layer is used.  This value is only valid if `baseLayerPicker` is set to true.
  * @property {ProviderViewModel[]} [terrainProviderViewModels=createDefaultTerrainProviderViewModels()] The array of ProviderViewModels to be selectable from the BaseLayerPicker.  This value is only valid if `baseLayerPicker` is set to true.
- * @property {ImageryLayer|false} [baseLayer=ImageryLayer.fromWorldImagery()] The bottommost imagery layer applied to the globe. If set to <code>false</code>, no imagery provider will be added. This value is only valid if `baseLayerPicker` is set to false.
+ * @property {ImageryLayer|false} [baseLayer=ImageryLayer.fromWorldImagery()] The bottommost imagery layer applied to the globe. If set to <code>false</code>, no imagery provider will be added. This value is only valid if `baseLayerPicker` is set to false. Cannot be used when `globe` is set to false.
  * @property {Ellipsoid} [ellipsoid = Ellipsoid.default] The default ellipsoid.
  * @property {TerrainProvider} [terrainProvider=new EllipsoidTerrainProvider()] The terrain provider to use
  * @property {Terrain} [terrain] A terrain object which handles asynchronous terrain provider. Can only specify if options.terrainProvider is undefined.
@@ -401,6 +402,16 @@ function Viewer(container, options) {
 
   container = getElement(container);
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
+  //>>includeStart('debug', pragmas.debug);
+  if (
+    options.globe === false &&
+    defined(options.baseLayer) &&
+    options.baseLayer !== false
+  ) {
+    throw new DeveloperError("Cannot use baseLayer when globe is disabled.");
+  }
+  //>>includeEnd('debug')
 
   const createBaseLayerPicker =
     (!defined(options.globe) || options.globe !== false) &&
@@ -557,7 +568,17 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
     geocoderContainer.className = "cesium-viewer-geocoderContainer";
     toolbar.appendChild(geocoderContainer);
     let geocoderService;
-    if (defined(options.geocoder) && typeof options.geocoder !== "boolean") {
+    if (typeof options.geocoder === "string") {
+      geocoderService = [
+        new IonGeocoderService({
+          scene,
+          geocodeProviderType: options.geocoder,
+        }),
+      ];
+    } else if (
+      defined(options.geocoder) &&
+      typeof options.geocoder !== "boolean"
+    ) {
       geocoderService = Array.isArray(options.geocoder)
         ? options.geocoder
         : [options.geocoder];

@@ -18,6 +18,8 @@ import {
   ImageryLayerCollection,
   SceneMode,
   ShadowMode,
+  IonGeocodeProviderType,
+  IonGeocoderService,
 } from "@cesium/engine";
 
 import {
@@ -354,6 +356,19 @@ describe(
       expect(viewer.geocoder.viewModel._geocoderServices.length).toBe(1);
     });
 
+    it("constructs geocoder with IonGeocodeProviderType", function () {
+      viewer = createViewer(container, {
+        geocoder: IonGeocodeProviderType.GOOGLE,
+      });
+      expect(viewer.geocoder).toBeDefined();
+      expect(viewer.geocoder.viewModel._geocoderServices.length).toBe(1);
+      const geocoderService = viewer.geocoder.viewModel._geocoderServices[0];
+      expect(geocoderService).toBeInstanceOf(IonGeocoderService);
+      expect(geocoderService.geocodeProviderType).toEqual(
+        IonGeocodeProviderType.GOOGLE,
+      );
+    });
+
     it("constructs geocoder with geocoder service option", function () {
       const service = new CartographicGeocoderService();
       viewer = createViewer(container, {
@@ -540,6 +555,23 @@ describe(
       expect(viewer.scene.imageryLayers.get(0).imageryProvider).toBe(
         testProvider,
       );
+    });
+
+    it("throws when baseLayer is provided with globe: false", function () {
+      expect(function () {
+        viewer = createViewer(container, {
+          globe: false,
+          baseLayer: new ImageryLayer(testProvider),
+        });
+      }).toThrowDeveloperError();
+    });
+
+    it("does not throw when globe is false and baseLayer is not provided", function () {
+      expect(function () {
+        viewer = createViewer(container, {
+          globe: false,
+        });
+      }).not.toThrowDeveloperError();
     });
 
     it("can set baseLayer to false when BaseLayerPicker is disabled", function () {

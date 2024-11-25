@@ -333,9 +333,10 @@ function addShaderFunctionsAndDefines(shaderBuilder, shaderFunctionInfo) {
     shaderBuilder.addDefine(
       "HAS_POINT_CLOUD_SHOW_STYLE",
       undefined,
-      ShaderDestination.VERTEX,
+      ShaderDestination.BOTH,
     );
     shaderBuilder.addVertexLines(showStyleFunction);
+    shaderBuilder.addVarying("float", "v_pointCloudShow");
   }
 
   const pointSizeStyleFunction = shaderFunctionInfo.pointSizeStyleFunction;

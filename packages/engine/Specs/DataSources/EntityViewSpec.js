@@ -6,6 +6,7 @@ import {
   ConstantPositionProperty,
   Entity,
   EntityView,
+  TrackingReferenceFrame,
 } from "../../index.js";
 
 import createScene from "../../../../Specs/createScene.js";
@@ -74,6 +75,18 @@ describe(
       const view = new EntityView(entity, scene);
       view.update(JulianDate.now());
       expect(view.scene.camera.position).toEqualEpsilon(sampleOffset, 1e-10);
+
+      entity.trackingReferenceFrame = TrackingReferenceFrame.INERTIAL;
+      view.update(JulianDate.now());
+      expect(view.scene.camera.position).toEqualEpsilon(sampleOffset, 1e-10);
+
+      entity.trackingReferenceFrame = TrackingReferenceFrame.VELOCITY;
+      view.update(JulianDate.now());
+      expect(view.scene.camera.position).toEqualEpsilon(sampleOffset, 1e-10);
+
+      entity.trackingReferenceFrame = TrackingReferenceFrame.ENU;
+      view.update(JulianDate.now());
+      expect(view.scene.camera.position).toEqualEpsilon(sampleOffset, 1e-10);
     });
 
     it("uses entity bounding sphere", function () {
@@ -87,6 +100,27 @@ describe(
         Cartesian3.fromDegrees(0.0, 0.0),
       );
       const view = new EntityView(entity, scene, undefined);
+      view.update(
+        JulianDate.now(),
+        new BoundingSphere(new Cartesian3(3, 4, 5), 6),
+      );
+      expect(view.scene.camera.position).toEqualEpsilon(sampleOffset, 1e-10);
+
+      entity.trackingReferenceFrame = TrackingReferenceFrame.INERTIAL;
+      view.update(
+        JulianDate.now(),
+        new BoundingSphere(new Cartesian3(3, 4, 5), 6),
+      );
+      expect(view.scene.camera.position).toEqualEpsilon(sampleOffset, 1e-10);
+
+      entity.trackingReferenceFrame = TrackingReferenceFrame.VELOCITY;
+      view.update(
+        JulianDate.now(),
+        new BoundingSphere(new Cartesian3(3, 4, 5), 6),
+      );
+      expect(view.scene.camera.position).toEqualEpsilon(sampleOffset, 1e-10);
+
+      entity.trackingReferenceFrame = TrackingReferenceFrame.ENU;
       view.update(
         JulianDate.now(),
         new BoundingSphere(new Cartesian3(3, 4, 5), 6),
@@ -107,6 +141,18 @@ describe(
         undefined,
         new BoundingSphere(new Cartesian3(3, 4, 5), 6),
       );
+      view.update(JulianDate.now());
+      expect(view.scene.camera.position).toEqualEpsilon(sampleOffset, 1e-10);
+
+      entity.trackingReferenceFrame = TrackingReferenceFrame.INERTIAL;
+      view.update(JulianDate.now());
+      expect(view.scene.camera.position).toEqualEpsilon(sampleOffset, 1e-10);
+
+      entity.trackingReferenceFrame = TrackingReferenceFrame.VELOCITY;
+      view.update(JulianDate.now());
+      expect(view.scene.camera.position).toEqualEpsilon(sampleOffset, 1e-10);
+
+      entity.trackingReferenceFrame = TrackingReferenceFrame.ENU;
       view.update(JulianDate.now());
       expect(view.scene.camera.position).toEqualEpsilon(sampleOffset, 1e-10);
     });

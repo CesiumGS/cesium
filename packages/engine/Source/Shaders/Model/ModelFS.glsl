@@ -28,6 +28,13 @@ SelectedFeature selectedFeature;
 
 void main()
 {
+    #ifdef HAS_POINT_CLOUD_SHOW_STYLE
+        if (v_pointCloudShow == 0.0)
+        {
+            discard;
+        }
+    #endif
+
     #ifdef HAS_MODEL_SPLITTER
     modelSplitterStage();
     #endif

@@ -2560,6 +2560,84 @@ describe(
       });
     });
 
+    it("filterUnsupportedCharacters removes unicode characters from text only if they cause render issues", function () {
+      const text = "a😀b";
+      const expectedText = "a😀b";
+      expect(Label.filterUnsupportedCharacters(text)).toEqual(expectedText);
+    });
+
+    it("filterUnsupportedCharacters removes unicode characters from text only if they cause render issues", function () {
+      const text = "awe2!$34f❤️b";
+      const expectedText = "awe2!$34f❤️b";
+      expect(Label.filterUnsupportedCharacters(text)).toEqual(expectedText);
+    });
+
+    it("filterUnsupportedCharacters removes unicode characters from text only if they cause render issues", function () {
+      const text = "lakneklf\u200fsldknfklf";
+      const expectedText = "lakneklfsldknfklf";
+      expect(Label.filterUnsupportedCharacters(text)).toEqual(expectedText);
+    });
+
+    it("filterUnsupportedCharacters removes unicode characters from text only if they cause render issues", function () {
+      const text = "test \u200f - with Right-to-Left Mark (RLM)";
+      const expectedText = "test  - with Right-to-Left Mark (RLM)";
+      expect(Label.filterUnsupportedCharacters(text)).toEqual(expectedText);
+    });
+
+    it("filterUnsupportedCharacters removes unicode characters from text only if they cause render issues", function () {
+      const text = "test \u200b - with Zero-Width Space";
+      const expectedText = "test  - with Zero-Width Space";
+      expect(Label.filterUnsupportedCharacters(text)).toEqual(expectedText);
+    });
+
+    it("filterUnsupportedCharacters removes unicode characters from text only if they cause render issues", function () {
+      const text = "test \u202a - with Left-to-Right Embedding";
+      const expectedText = "test  - with Left-to-Right Embedding";
+      expect(Label.filterUnsupportedCharacters(text)).toEqual(expectedText);
+    });
+
+    it("filterUnsupportedCharacters removes unicode characters from text only if they cause render issues", function () {
+      const text = "test 😀 - Emoji";
+      const expectedText = "test 😀 - Emoji";
+      expect(Label.filterUnsupportedCharacters(text)).toEqual(expectedText);
+    });
+
+    it("filterUnsupportedCharacters removes unicode characters from text only if they cause render issues", function () {
+      const text = "test ❤️ - Emoji";
+      const expectedText = "test ❤️ - Emoji";
+      expect(Label.filterUnsupportedCharacters(text)).toEqual(expectedText);
+    });
+
+    it("filterUnsupportedCharacters removes unicode characters from text only if they cause render issues", function () {
+      const text = "test 🌍 - Emoji";
+      const expectedText = "test 🌍 - Emoji";
+      expect(Label.filterUnsupportedCharacters(text)).toEqual(expectedText);
+    });
+
+    it("filterUnsupportedCharacters removes unicode characters from text only if they cause render issues", function () {
+      const text = "test \u2060 - with Word Joiner";
+      const expectedText = "test  - with Word Joiner";
+      expect(Label.filterUnsupportedCharacters(text)).toEqual(expectedText);
+    });
+
+    it("filterUnsupportedCharacters removes unicode characters from text only if they cause render issues", function () {
+      const text = "test \u0000 - with Null Character";
+      const expectedText = "test  - with Null Character";
+      expect(Label.filterUnsupportedCharacters(text)).toEqual(expectedText);
+    });
+
+    it("filterUnsupportedCharacters removes unicode characters from text only if they cause render issues", function () {
+      const text = "test \u000E - with Shift Out (SO)";
+      const expectedText = "test  - with Shift Out (SO)";
+      expect(Label.filterUnsupportedCharacters(text)).toEqual(expectedText);
+    });
+
+    it("filterUnsupportedCharacters removes unicode characters from text only if they cause render issues", function () {
+      const text = "test \u001F - with Unit Separator (US)";
+      const expectedText = "test  - with Unit Separator (US)";
+      expect(Label.filterUnsupportedCharacters(text)).toEqual(expectedText);
+    });
+
     describe("height referenced labels", function () {
       beforeEach(function () {
         scene.globe = new Globe();
