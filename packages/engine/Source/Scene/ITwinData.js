@@ -3,7 +3,7 @@ import defined from "../Core/defined.js";
 import Resource from "../Core/Resource.js";
 import ITwinPlatform from "../Core/ITwinPlatform.js";
 import RuntimeError from "../Core/RuntimeError.js";
-import { Check } from "../Core/Check.js";
+import Check from "../Core/Check.js";
 
 /**
  * Methods for loading iTwin platform data into CesiumJS
