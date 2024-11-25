@@ -38,6 +38,66 @@ ITwinPlatform.ExportType = Object.freeze({
 });
 
 /**
+ * Types of Reality data
+ * https://developer.bentley.com/apis/reality-management/rm-rd-details/#types
+ * @enum {string}
+ */
+ITwinPlatform.RealityDataType = Object.freeze({
+  Cesium3DTiles: "Cesium3DTiles",
+  PNTS: "PNTS",
+  OPC: "OPC",
+  RealityMesh3DTiles: "RealityMesh3DTiles",
+  Terrain3DTiles: "Terrain3DTiles",
+  "3MX": "3MX",
+  "3SM": "3SM",
+  CCCloudProject: "CCCloudProject",
+  CCImageCollection: "CCImageCollection",
+  CCOrientations: "CCOrientations",
+  ContextCaptureInputs: "ContextCaptureInputs",
+  ContextDetector: "ContextDetector",
+  ContextScene: "ContextScene",
+  DAE: "DAE",
+  DGN: "DGN",
+  DSM: "DSM",
+  FBX: "FBX",
+  GLB: "GLB",
+  GLTF: "GLTF",
+  KML: "KML",
+  LAS: "LAS",
+  LAZ: "LAZ",
+  LOD: "LOD",
+  LodTree: "LodTree",
+  OBJ: "OBJ",
+  OMI: "OMI",
+  OMR: "OMR",
+  Orthophoto: "Orthophoto",
+  OrthophotoDSM: "OrthophotoDSM",
+  OSGB: "OSGB",
+  OVF: "OVF",
+  OBT: "OBT",
+  PLY: "PLY",
+  PointCloud: "PointCloud",
+  S3C: "S3C",
+  ScanCollection: "ScanCollection",
+  SHP: "SHP",
+  SLPK: "SLPK",
+  SpaceEyes3D: "SpaceEyes3D",
+  STL: "STL",
+  TSM: "TSM",
+  Unstructured: "Unstructured",
+  Other: "Other",
+});
+
+ITwinPlatform.SupportedRealityDataTypes = [
+  ITwinPlatform.RealityDataType.Cesium3DTiles,
+  ITwinPlatform.RealityDataType.PNTS,
+  ITwinPlatform.RealityDataType.RealityMesh3DTiles,
+  ITwinPlatform.RealityDataType.Terrain3DTiles,
+  ITwinPlatform.RealityDataType.KML,
+  ITwinPlatform.RealityDataType.Unstructured,
+];
+
+/**
  * Gets or sets the default iTwin access token. This token should have the <code>itwin-platform</code> scope.
  *
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
@@ -144,6 +204,138 @@ ITwinPlatform.getExports = async function (iModelId) {
     } else if (error.statusCode === 403) {
       console.error(result.error.code, result.error.message);
       throw new RuntimeError("Not allowed, forbidden");
+    } else if (error.statusCode === 422) {
+      throw new RuntimeError(
+        `Unprocessable Entity:${result.error.code} ${result.error.message}`,
+      );
+    } else if (error.statusCode === 429) {
+      throw new RuntimeError("Too many requests");
+    }
+    throw new RuntimeError(`Unknown request failure ${error.statusCode}`);
+  }
+};
+
+/**
+ * @typedef {Object} RealityDataExtent
+ * @privage
+ * @property {{latitude: number, longitude: number}} southWest
+ * @property {{latitude: number, longitude: number}} northEast
+ */
+
+/**
+ * @typedef {Object} RealityDataRepresentation
+ * @privage
+ * @property {string} id "95d8dccd-d89e-4287-bb5f-3219acbc71ae",
+ * @property {string} displayName "Name of reality data",
+ * @property {string} dataset "Dataset",
+ * @property {string} group "73d09423-28c3-4fdb-ab4a-03a47a5b04f8",
+ * @property {string} description "Description of reality data",
+ * @property {string} rootDocument "Directory/SubDirectory/realityData.3mx",
+ * @property {number} size 6521212,
+ * @property {string} classification "Model",
+ * @property {ITwinPlatform.RealityDataType} type "3MX",
+ * @property {{startDateTime: string, endDateTime: string, acquirer: string}} acquisition
+ * @property {RealityDataExtent} extent
+ * @property {boolean} authoring false,
+ * @property {string} dataCenterLocation "North Europe",
+ * @property {string} modifiedDateTime "2021-04-09T19:03:12Z",
+ * @property {string} lastAccessedDateTime "2021-04-09T00:00:00Z",
+ * @property {string} createdDateTime "2021-02-22T20:03:40Z",
+ * @property {string} ownerId "f1d49cc7-f9b3-494f-9c67-563ea5597063",
+ */
+
+/**
+ * @param {string} iTwinId
+ * @param {string} realityDataId
+ * @returns {Promise<RealityDataRepresentation>}
+ */
+ITwinPlatform.getRealityDataMetadata = async function (iTwinId, realityDataId) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("iTwinId", iTwinId);
+  Check.typeOf.string("realityDataId", realityDataId);
+  if (!defined(ITwinPlatform.defaultAccessToken)) {
+    throw new DeveloperError("Must set ITwinPlatform.defaultAccessToken first");
+  }
+  //>>includeEnd('debug')
+
+  const resource = new Resource({
+    url: `${ITwinPlatform.apiEndpoint}reality-management/reality-data/${realityDataId}`,
+    headers: {
+      Authorization: `Bearer ${ITwinPlatform.defaultAccessToken}`,
+      Accept: "application/vnd.bentley.itwin-platform.v1+json",
+    },
+    queryParameters: { iTwinId: iTwinId },
+  });
+
+  try {
+    const response = await resource.fetchJson();
+    return response.realityData;
+  } catch (error) {
+    const result = JSON.parse(error.response);
+    if (error.statusCode === 401) {
+      throw new RuntimeError(
+        `Unauthorized, bad token, wrong scopes or headers bad. ${result.error.details[0].code}`,
+      );
+    } else if (error.statusCode === 403) {
+      console.error(result.error.code, result.error.message);
+      throw new RuntimeError("Not allowed, forbidden");
+    } else if (error.statusCode === 404) {
+      throw new RuntimeError(
+        `Reality data not found: ${iTwinId}, ${realityDataId}`,
+      );
+    } else if (error.statusCode === 422) {
+      throw new RuntimeError(
+        `Unprocessable Entity:${result.error.code} ${result.error.message}`,
+      );
+    } else if (error.statusCode === 429) {
+      throw new RuntimeError("Too many requests");
+    }
+    throw new RuntimeError(`Unknown request failure ${error.statusCode}`);
+  }
+};
+
+ITwinPlatform.getRealityDataURL = async function (
+  iTwinId,
+  realityDataId,
+  rootDocument,
+) {
+  const resource = new Resource({
+    url: `${ITwinPlatform.apiEndpoint}reality-management/reality-data/${realityDataId}/readaccess`,
+    headers: {
+      Authorization: `Bearer ${ITwinPlatform.defaultAccessToken}`,
+      Accept: "application/vnd.bentley.itwin-platform.v1+json",
+    },
+    queryParameters: { iTwinId: iTwinId },
+  });
+
+  try {
+    const result = await resource.fetchJson();
+
+    const containerUrl = result._links.containerUrl.href;
+    const tilesetUrl = new URL(containerUrl);
+    tilesetUrl.pathname = `${tilesetUrl.pathname}/${rootDocument}`;
+
+    return tilesetUrl.toString();
+    // console.log("container url", tilesetUrl.toString());
+    // if (rootDocument.includes(".geojson")) {
+    //   await loadGeoJson(tilesetUrl.toString());
+    //   return;
+    // }
+    // await loadTileset(tilesetUrl.toString());
+    // return result.realityData;
+  } catch (error) {
+    const result = JSON.parse(error.response);
+    if (error.statusCode === 401) {
+      throw new RuntimeError(
+        `Unauthorized, bad token, wrong scopes or headers bad. ${result.error.details[0].code}`,
+      );
+    } else if (error.statusCode === 403) {
+      console.error(result.error.code, result.error.message);
+      throw new RuntimeError("Not allowed, forbidden");
+    } else if (error.statusCode === 404) {
+      throw new RuntimeError(
+        `Reality data not found: ${iTwinId}, ${realityDataId}`,
+      );
     } else if (error.statusCode === 422) {
       throw new RuntimeError(
         `Unprocessable Entity:${result.error.code} ${result.error.message}`,
