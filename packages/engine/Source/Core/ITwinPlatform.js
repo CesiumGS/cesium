@@ -15,7 +15,8 @@ import RuntimeError from "./RuntimeError.js";
 const ITwinPlatform = {};
 
 /**
- * Status states for a mesh-export export
+ * Status states for a mesh-export export.
+ * Valid values are: <code>NotStarted</code>, <code>InProgress</code>, <code>Complete</code>, <code>Invalid</code>
  * @enum {string}
  */
 ITwinPlatform.ExportStatus = Object.freeze({
@@ -26,7 +27,8 @@ ITwinPlatform.ExportStatus = Object.freeze({
 });
 
 /**
- * Types of mesh-export exports. CesiumJS only supports loading <code>3DTILES</code> type exports
+ * Types of mesh-export exports. CesiumJS only supports loading <code>3DTILES</code> type exports.
+ * Valid values are: <code>IMODEL</code>, <code>CESIUM</code>, <code>3DTILES</code>
  * @enum {string}
  */
 ITwinPlatform.ExportType = Object.freeze({
