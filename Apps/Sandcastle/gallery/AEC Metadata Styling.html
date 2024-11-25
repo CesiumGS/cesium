@@ -111,7 +111,7 @@
 
         // Add the architectural tileset as a semi-transparent ghost
         try {
-          const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(2722768);
+          const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(2864367);
           viewer.scene.primitives.add(tileset);
           tileset.style = new Cesium.Cesium3DTileStyle({
             color: "color('lightblue', 0.05)",
@@ -122,7 +122,7 @@
 
         // Add the site tileset
         try {
-          const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(2733046);
+          const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(2864374);
           viewer.scene.primitives.add(tileset);
         } catch (error) {
           console.log(`Error loading tileset: ${error}`);
@@ -131,7 +131,8 @@
         // Add the pipe tileset which will be styled by metadata
         let pipeTileset;
         try {
-          pipeTileset = await Cesium.Cesium3DTileset.fromIonAssetId(2722772);
+          pipeTileset = await Cesium.Cesium3DTileset.fromIonAssetId(2864372);
+          pipeTileset.maximumScreenSpaceError = 4;
           viewer.scene.primitives.add(pipeTileset);
         } catch (error) {
           console.log(`Error loading tileset: ${error}`);
@@ -168,7 +169,10 @@
           pipeTileset.style = new Cesium.Cesium3DTileStyle({
             color: {
               conditions: [
-                [`(\${length} >= ${min}) && (\${length} <= ${max})`, 'color("red")'],
+                [
+                  `(\${length} !== undefined && \${length} >= ${min}) && (\${length} <= ${max})`,
+                  'color("red")',
+                ],
               ],
             },
           });

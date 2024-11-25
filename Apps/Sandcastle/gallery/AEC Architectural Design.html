@@ -90,13 +90,13 @@
 
         // The Architectural Design is comprised of multiple tilesets
         const tilesetData = [
-          { title: "Architecture", assetId: 2722768 },
-          { title: "Facade", assetId: 2722771 },
-          { title: "Structural", assetId: 2722775 },
-          { title: "Electrical", assetId: 2722770 },
-          { title: "HVAC", assetId: 2722772 },
-          { title: "Plumbing", assetId: 2722773 },
-          { title: "Site", assetId: 2733046 },
+          { title: "Architecture", assetId: 2864367 },
+          { title: "Facade", assetId: 2864370 },
+          { title: "Structural", assetId: 2864375 },
+          { title: "Electrical", assetId: 2864368 },
+          { title: "HVAC", assetId: 2864372 },
+          { title: "Plumbing", assetId: 2864373 },
+          { title: "Site", assetId: 2864374 },
         ];
 
         // Load each tileset and create a corresponding visibility toggle button
@@ -134,7 +134,7 @@
             const propertyValue = pickedFeature.getProperty(propertyId);
 
             // Reject properties with default values
-            if (propertyValue !== "") {
+            if (propertyValue !== "" && propertyValue !== undefined) {
               description += `<tr><th>${propertyId}</th><td>${propertyValue}</td></tr>`;
             }
           }
