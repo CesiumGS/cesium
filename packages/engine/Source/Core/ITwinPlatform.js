@@ -93,8 +93,6 @@ ITwinPlatform.SupportedRealityDataTypes = [
   ITwinPlatform.RealityDataType.PNTS,
   ITwinPlatform.RealityDataType.RealityMesh3DTiles,
   ITwinPlatform.RealityDataType.Terrain3DTiles,
-  ITwinPlatform.RealityDataType.KML,
-  ITwinPlatform.RealityDataType.Unstructured,
 ];
 
 /**

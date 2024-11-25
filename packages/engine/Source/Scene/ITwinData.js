@@ -3,8 +3,6 @@ import defined from "../Core/defined.js";
 import Resource from "../Core/Resource.js";
 import ITwinPlatform from "../Core/ITwinPlatform.js";
 import RuntimeError from "../Core/RuntimeError.js";
-import KmlDataSource from "../DataSources/KmlDataSource.js";
-import GeoJsonDataSource from "../DataSources/GeoJsonDataSource.js";
 
 /**
  * Methods for loading iTwin platform data into CesiumJS
@@ -73,50 +71,6 @@ ITwinData.createTilesetFromIModelId = async function (iModelId, options) {
   return Cesium3DTileset.fromUrl(resource, options);
 };
 
-/** @type {ITwinPlatform.RealityDataType[]} */
-const realityDataMeshTypes = [
-  ITwinPlatform.RealityDataType.Cesium3DTiles,
-  ITwinPlatform.RealityDataType.PNTS,
-  ITwinPlatform.RealityDataType.RealityMesh3DTiles,
-  ITwinPlatform.RealityDataType.Terrain3DTiles,
-];
-
-ITwinData.createAssetForRealitydataId = async function loadRealityData(
-  iTwinId,
-  realityDataId,
-  type,
-  rootDocument,
-) {
-  if (!defined(type) || !defined(rootDocument)) {
-    const metadata = await ITwinPlatform.getRealityDataMetadata(
-      iTwinId,
-      realityDataId,
-    );
-    rootDocument = metadata.rootDocument;
-    type = metadata.type;
-  }
-
-  if (realityDataMeshTypes.includes(type)) {
-    return ITwinData.createTilesetForRealityDataId(
-      iTwinId,
-      realityDataId,
-      type,
-      rootDocument,
-    );
-  }
-
-  return ITwinData.createDataSourceForRealityDataId(
-    iTwinId,
-    realityDataId,
-    type,
-    rootDocument,
-  );
-};
-
-ITwinData.isRealityDataAMeshType = function (type) {
-  return realityDataMeshTypes.includes(type);
-};
-
 /**
  * Create a tileset for the specified reality data id. This function only works
  * with 3D Tiles meshes and pointclouds
@@ -142,7 +96,7 @@ ITwinData.createTilesetForRealityDataId = async function (
     type = metadata.type;
   }
 
-  if (!realityDataMeshTypes.includes(type)) {
+  if (!ITwinPlatform.SupportedRealityDataTypes.includes(type)) {
     throw new RuntimeError(`Reality data type is not a mesh type: ${type}`);
   }
 
@@ -153,68 +107,6 @@ ITwinData.createTilesetForRealityDataId = async function (
   );
 
   return Cesium3DTileset.fromUrl(tilesetAccessUrl);
-};
-
-/** @type {ITwinPlatform.RealityDataType[]} */
-const realityDataDataSourceTypes = [
-  ITwinPlatform.RealityDataType.KML,
-  ITwinPlatform.RealityDataType.Unstructured,
-];
-/**
- * Create a data source of the correct type for the specified reality data id
- *
- * @param {string} iTwinId
- * @param {string} realityDataId
- * @param {ITwinPlatform.RealityDataType} type
- * @param {string} rootDocument
- * @returns {Promise<GeoJsonDataSource | KmlDataSource | undefined>}
- */
-ITwinData.createDataSourceForRealityDataId = async function loadRealityData(
-  iTwinId,
-  realityDataId,
-  type,
-  rootDocument,
-) {
-  if (!defined(type) || !defined(rootDocument)) {
-    const metadata = await ITwinPlatform.getRealityDataMetadata(
-      iTwinId,
-      realityDataId,
-    );
-    rootDocument = metadata.rootDocument;
-    type = metadata.type;
-  }
-
-  if (!realityDataDataSourceTypes.includes(type)) {
-    throw new RuntimeError(
-      `Reality data type is not a data source type: ${type}`,
-    );
-  }
-
-  if (type === ITwinPlatform.RealityDataType.Unstructured) {
-    if (!rootDocument.includes(".geojson")) {
-      // In testing some Unstructured data was GEOJSONs so we might want to support that
-      throw new RuntimeError(`Reality data type is not supported`);
-    }
-  }
-
-  const tilesetAccessUrl = await ITwinPlatform.getRealityDataURL(
-    iTwinId,
-    realityDataId,
-    rootDocument,
-  );
-
-  console.log("container url", tilesetAccessUrl);
-
-  if (
-    type === ITwinPlatform.RealityDataType.Unstructured &&
-    rootDocument.includes(".geojson")
-  ) {
-    return GeoJsonDataSource.load(tilesetAccessUrl);
-  }
-
-  if (type === ITwinPlatform.RealityDataType.KML) {
-    return KmlDataSource.load(tilesetAccessUrl);
-  }
 };
 
 export default ITwinData;
