@@ -163,7 +163,6 @@
           duration: 0,
           easingFunction: Cesium.EasingFunction.LINEAR_NONE,
         };
-        viewer.scene.camera.flyTo(birdsEyeView);
         Sandcastle.addToolbarButton(
           "Birdseye view",
           function () {
@@ -188,6 +187,7 @@
           duration: 0,
           easingFunction: Cesium.EasingFunction.LINEAR_NONE,
         };
+        viewer.scene.camera.flyTo(stationView);
         Sandcastle.addToolbarButton(
           "Focus station",
           function () {
