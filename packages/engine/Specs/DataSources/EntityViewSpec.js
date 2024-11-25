@@ -83,6 +83,10 @@ describe(
       entity.trackingReferenceFrame = TrackingReferenceFrame.VELOCITY;
       view.update(JulianDate.now());
       expect(view.scene.camera.position).toEqualEpsilon(sampleOffset, 1e-10);
+
+      entity.trackingReferenceFrame = TrackingReferenceFrame.ENU;
+      view.update(JulianDate.now());
+      expect(view.scene.camera.position).toEqualEpsilon(sampleOffset, 1e-10);
     });
 
     it("uses entity bounding sphere", function () {
@@ -115,6 +119,13 @@ describe(
         new BoundingSphere(new Cartesian3(3, 4, 5), 6),
       );
       expect(view.scene.camera.position).toEqualEpsilon(sampleOffset, 1e-10);
+
+      entity.trackingReferenceFrame = TrackingReferenceFrame.ENU;
+      view.update(
+        JulianDate.now(),
+        new BoundingSphere(new Cartesian3(3, 4, 5), 6),
+      );
+      expect(view.scene.camera.position).toEqualEpsilon(sampleOffset, 1e-10);
     });
 
     it("uses entity viewFrom if available and boundingsphere is supplied", function () {
@@ -138,6 +149,10 @@ describe(
       expect(view.scene.camera.position).toEqualEpsilon(sampleOffset, 1e-10);
 
       entity.trackingReferenceFrame = TrackingReferenceFrame.VELOCITY;
+      view.update(JulianDate.now());
+      expect(view.scene.camera.position).toEqualEpsilon(sampleOffset, 1e-10);
+
+      entity.trackingReferenceFrame = TrackingReferenceFrame.ENU;
       view.update(JulianDate.now());
       expect(view.scene.camera.position).toEqualEpsilon(sampleOffset, 1e-10);
     });
