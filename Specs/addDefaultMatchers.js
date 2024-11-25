@@ -46,7 +46,13 @@ function makeAsyncThrowFunction(debug, Type, name) {
             .catch((e) => {
               let result = e instanceof Type || e.name === name;
               if (defined(message)) {
-                result = result && util.equals(e.message, message);
+                if (message instanceof RegExp) {
+                  // if the expected message is a regular expression check it against the error message
+                  // this matches how the builtin .toRejectWithError(Error, /message/) works
+                  result = result && message.test(e.message);
+                } else {
+                  result = result && util.equals(e.message, message);
+                }
               }
               return {
                 pass: result,
@@ -92,7 +98,7 @@ function makeThrowFunction(debug, Type, name) {
   if (debug) {
     return function (util) {
       return {
-        compare: function (actual, expected) {
+        compare: function (actual, message) {
           // based on the built-in Jasmine toThrow matcher
           let result = false;
           let exception;
@@ -110,20 +116,29 @@ function makeThrowFunction(debug, Type, name) {
           if (exception) {
             result = exception instanceof Type || exception.name === name;
           }
+          if (defined(message)) {
+            if (message instanceof RegExp) {
+              // if the expected message is a regular expression check it against the error message
+              // this matches how the builtin .toRejectWithError(Error, /message/) works
+              result = result && message.test(exception.message);
+            } else {
+              result = result && util.equals(exception.message, message);
+            }
+          }
 
-          let message;
+          let testMessage;
           if (result) {
-            message = [
+            testMessage = [
               `Expected function not to throw ${name} , but it threw`,
               exception.message || exception,
             ].join(" ");
           } else {
-            message = `Expected function to throw ${name}.`;
+            testMessage = `Expected function to throw ${name}.`;
           }
 
           return {
             pass: result,
-            message: message,
+            message: testMessage,
           };
         },
       };
