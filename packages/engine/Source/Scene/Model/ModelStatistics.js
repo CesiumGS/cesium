@@ -61,6 +61,14 @@ function ModelStatistics() {
   // Sets of buffers and textures that have already been counted.
   // This is to prevent double-counting cached assets.
   this._bufferIdSet = {};
+
+  /**
+   * The mapping from `texture.id` strings to the byte length of the
+   * respective texture
+   *
+   * @type {object}
+   * @private
+   */
   this._textureIdByteLengths = {};
 
   // Associated array of batch textures that have already been counted.
@@ -172,12 +180,24 @@ ModelStatistics.prototype.addTexture = function (texture) {
   }
 };
 
-// XXX TODO COMMENT
+/**
+ * Returns an array containing the `texture.id` values for all textures
+ * that are part of the model.
+ *
+ * @returns {string[]} The texture IDs
+ */
 ModelStatistics.prototype.getTextureIds = function () {
   return Object.keys(this._textureIdByteLengths);
 };
 
-// XXX TODO COMMENT
+/**
+ * Returns the length, in bytes, of the texture data for the texture with
+ * the given ID that is part of the model, or `undefined` if the model
+ * does not contain the texture with the given ID.
+ *
+ * @param {string} textureId The texture ID
+ * @returns {number|undefined} The texture byte length
+ */
 ModelStatistics.prototype.getTextureByteLengthById = function (textureId) {
   return this._textureIdByteLengths[textureId];
 };

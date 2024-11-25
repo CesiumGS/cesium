@@ -27,6 +27,7 @@ import TextureMinificationFilter from "./TextureMinificationFilter.js";
  * @property {number} [width] The pixel width of the texture. If not supplied, must be available from the source.
  * @property {number} [height] The pixel height of the texture. If not supplied, must be available from the source.
  * @property {boolean} [preMultiplyAlpha] If true, the alpha channel will be multiplied into the other channels.
+ * @property {string} [id] A unique identifier for the texture. If this is not given, then a GUID will be created.
  *
  * @private
  */

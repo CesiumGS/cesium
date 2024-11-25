@@ -345,7 +345,7 @@ GltfTextureLoader.prototype.process = function (frameState) {
     textureJob.set(
       this._gltf,
       this._textureInfo,
-      this.cacheKey,
+      this._cacheKey,
       this._image,
       this._mipLevels,
       frameState.context,
@@ -360,7 +360,7 @@ GltfTextureLoader.prototype.process = function (frameState) {
     texture = createTexture(
       this._gltf,
       this._textureInfo,
-      this.cacheKey,
+      this._cacheKey,
       this._image,
       this._mipLevels,
       frameState.context,
