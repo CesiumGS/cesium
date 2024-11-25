@@ -9,17 +9,17 @@ import RuntimeError from "../Core/RuntimeError.js";
  *
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  *
- * @see ITwinPlatform to set the API token and base API URL
+ * @see ITwinPlatform
  * @namespace ITwinData
  */
 const ITwinData = {};
 
 /**
- * Create a {@link Cesium3DTileset} for the given iModel id using the mesh export service.
+ * Create a {@link Cesium3DTileset} for the given iModel id using iTwin's Mesh Export API.
  *
- * If there is not a completed export available for the given iModel id this function will return <code>undefined</code>.
+ * If there is not a completed export available for the given iModel id, the returned promise will resolve to <code>undefined</code>.
  * We recommend waiting 10-20 seconds and trying to load the tileset again.
- * If all exports are Invalid this will throw an error. In that case there's likely something wrong with the iModel itself
+ * If all exports are Invalid this will throw an error.
  *
  * @example
  * const tileset = await Cesium.ITwinData.createTilesetFromIModelId(iModelId);
@@ -31,7 +31,7 @@ const ITwinData = {};
  *
  * @param {string} iModelId The id of the iModel to load
  * @param {Cesium3DTileset.ConstructorOptions} [options] Object containing options to pass to the internally created {@link Cesium3DTileset}.
- * @returns {Promise<Cesium3DTileset | undefined>} Will return <code>undefined</code> if there is no completed export for the given iModel id
+ * @returns {Promise<Cesium3DTileset | undefined>} A promise that will resolve to the created 3D tileset or <code>undefined</code> if there is no completed export for the given iModel id
  *
  * @throws {RuntimeError} If all exports for the given iModel are Invalid
  * @throws {RuntimeError} If the iTwin API request is not successful

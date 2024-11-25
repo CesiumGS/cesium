@@ -103,12 +103,4 @@ export default [
       "n/no-missing-import": "off",
     },
   },
-  {
-    files: ["itwin-oauth-demo/*"],
-    languageOptions: {
-      ...configCesium.configs.node.languageOptions,
-      sourceType: "module",
-      ecmaVersion: 2022,
-    },
-  },
 ];

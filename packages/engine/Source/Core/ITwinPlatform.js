@@ -9,7 +9,7 @@ import RuntimeError from "./RuntimeError.js";
  *
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  *
- * @see ITwinData for ways to import data
+ * @see ITwinData
  * @namespace ITwinPlatform
  */
 const ITwinPlatform = {};
@@ -19,9 +19,29 @@ const ITwinPlatform = {};
  * @enum {string}
  */
 ITwinPlatform.ExportStatus = Object.freeze({
+  /**
+   * A status indicating the export has not yet started.
+   * @type {string}
+   * @constant
+   */
   NotStarted: "NotStarted",
+  /**
+   * A status indicating the export is currently processing.
+   * @type {string}
+   * @constant
+   */
   InProgress: "InProgress",
+  /**
+   * A status indicating the export has completed.
+   * @type {string}
+   * @constant
+   */
   Complete: "Complete",
+  /**
+   * A status indicating the export has failed.
+   * @type {string}
+   * @constant
+   */
   Invalid: "Invalid",
 });
 
@@ -30,8 +50,23 @@ ITwinPlatform.ExportStatus = Object.freeze({
  * @enum {string}
  */
 ITwinPlatform.ExportType = Object.freeze({
+  /**
+   * An internal type for imodel exports.
+   * @type {string}
+   * @constant
+   */
   IMODEL: "IMODEL",
+  /**
+   * An export type for Cesium engines. This is an alias for 3D Tiles.
+   * @type {string}
+   * @constant
+   */
   CESIUM: "CESIUM",
+  /**
+   * An export that is 3D Tiles.
+   * @type {string}
+   * @constant
+   */
   "3DTILES": "3DTILES",
 });
 
@@ -50,7 +85,7 @@ ITwinPlatform.defaultAccessToken = undefined;
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  *
  * @type {string|Resource}
- * @default https://api.bentley.com
+ * @default "https://api.bentley.com"
  */
 ITwinPlatform.apiEndpoint = new Resource({
   url: "https://api.bentley.com",
