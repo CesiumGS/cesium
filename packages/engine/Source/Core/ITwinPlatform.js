@@ -306,6 +306,15 @@ ITwinPlatform.getRealityDataURL = async function (
   realityDataId,
   rootDocument,
 ) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("iTwinId", iTwinId);
+  Check.typeOf.string("realityDataId", realityDataId);
+  Check.typeOf.string("rootDocument", rootDocument);
+  if (!defined(ITwinPlatform.defaultAccessToken)) {
+    throw new DeveloperError("Must set ITwinPlatform.defaultAccessToken first");
+  }
+  //>>includeEnd('debug')
+
   const resource = new Resource({
     url: `${ITwinPlatform.apiEndpoint}reality-management/reality-data/${realityDataId}/readaccess`,
     headers: {
