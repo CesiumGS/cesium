@@ -1,5 +1,4 @@
 import {
-  DeveloperError,
   ITwinPlatform,
   RequestErrorEvent,
   Resource,
@@ -25,17 +24,15 @@ describe("ITwinPlatform", () => {
 
     it("rejects with no iModelId", async () => {
       await expectAsync(
-        // @ts-expect-error
         ITwinPlatform.getExports(undefined),
-      ).toBeRejectedWithError(DeveloperError, /iModelId/);
+      ).toBeRejectedWithDeveloperError(/iModelId/);
     });
 
     it("rejects with no default access token set", async () => {
       ITwinPlatform.defaultAccessToken = undefined;
       await expectAsync(
         ITwinPlatform.getExports("imodel-id-1"),
-      ).toBeRejectedWithError(
-        DeveloperError,
+      ).toBeRejectedWithDeveloperError(
         /Must set ITwinPlatform.defaultAccessToken/,
       );
     });
@@ -129,24 +126,21 @@ describe("ITwinPlatform", () => {
 
     it("rejects with no iTwinId", async () => {
       await expectAsync(
-        // @ts-expect-error
         ITwinPlatform.getRealityDataMetadata(undefined),
-      ).toBeRejectedWithError(DeveloperError, /iTwinId/);
+      ).toBeRejectedWithDeveloperError(/iTwinId/);
     });
 
     it("rejects with no realityDataId", async () => {
       await expectAsync(
-        // @ts-expect-error
         ITwinPlatform.getRealityDataMetadata("itwin-id-1", undefined),
-      ).toBeRejectedWithError(DeveloperError, /realityDataId/);
+      ).toBeRejectedWithDeveloperError(/realityDataId/);
     });
 
     it("rejects with no default access token set", async () => {
       ITwinPlatform.defaultAccessToken = undefined;
       await expectAsync(
         ITwinPlatform.getRealityDataMetadata("itwin-id-1", "reality-data-id-1"),
-      ).toBeRejectedWithError(
-        DeveloperError,
+      ).toBeRejectedWithDeveloperError(
         /Must set ITwinPlatform.defaultAccessToken/,
       );
     });
@@ -246,26 +240,23 @@ describe("ITwinPlatform", () => {
 
     it("rejects with no iTwinId", async () => {
       await expectAsync(
-        // @ts-expect-error
         ITwinPlatform.getRealityDataURL(undefined),
-      ).toBeRejectedWithError(DeveloperError, /iTwinId/);
+      ).toBeRejectedWithDeveloperError(/iTwinId/);
     });
 
     it("rejects with no realityDataId", async () => {
       await expectAsync(
-        // @ts-expect-error
         ITwinPlatform.getRealityDataURL("itwin-id-1", undefined),
-      ).toBeRejectedWithError(DeveloperError, /realityDataId/);
+      ).toBeRejectedWithDeveloperError(/realityDataId/);
     });
     it("rejects with no rootDocument", async () => {
       await expectAsync(
         ITwinPlatform.getRealityDataURL(
           "itwin-id-1",
           "reality-data-id-1",
-          // @ts-expect-error
           undefined,
         ),
-      ).toBeRejectedWithError(DeveloperError, /rootDocument/);
+      ).toBeRejectedWithDeveloperError(/rootDocument/);
     });
 
     it("rejects with no default access token set", async () => {
@@ -276,8 +267,7 @@ describe("ITwinPlatform", () => {
           "reality-data-id-1",
           "root/document/path.json",
         ),
-      ).toBeRejectedWithError(
-        DeveloperError,
+      ).toBeRejectedWithDeveloperError(
         /Must set ITwinPlatform.defaultAccessToken/,
       );
     });
