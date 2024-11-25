@@ -330,25 +330,29 @@ DynamicEnvironmentMapManager._queueCommand = (command, frameState) => {
  * @param {FrameState} frameState The current frame state
  */
 DynamicEnvironmentMapManager._updateCommandQueue = (frameState) => {
+  DynamicEnvironmentMapManager._maximumComputeCommandCount = Math.log2(
+    ContextLimits.maximumCubeMapSize,
+  ); // Scale relative to GPU resources available
+
   if (
     DynamicEnvironmentMapManager._nextFrameCommandQueue.length > 0 &&
     DynamicEnvironmentMapManager._activeComputeCommandCount <
       DynamicEnvironmentMapManager._maximumComputeCommandCount
   ) {
-    let command = DynamicEnvironmentMapManager._nextFrameCommandQueue.pop();
+    let command = DynamicEnvironmentMapManager._nextFrameCommandQueue.shift();
     while (
       defined(command) &&
       DynamicEnvironmentMapManager._activeComputeCommandCount <
         DynamicEnvironmentMapManager._maximumComputeCommandCount
     ) {
       if (command.canceled) {
-        command = DynamicEnvironmentMapManager._nextFrameCommandQueue.pop();
+        command = DynamicEnvironmentMapManager._nextFrameCommandQueue.shift();
         continue;
       }
 
       frameState.commandList.push(command);
       DynamicEnvironmentMapManager._activeComputeCommandCount++;
-      command = DynamicEnvironmentMapManager._nextFrameCommandQueue.pop();
+      command = DynamicEnvironmentMapManager._nextFrameCommandQueue.shift();
     }
   }
 };
@@ -818,8 +822,6 @@ DynamicEnvironmentMapManager.prototype.update = function (frameState) {
     return;
   }
 
-  DynamicEnvironmentMapManager._maximumComputeCommandCount =
-    Math.log2(ContextLimits.maximumCubeMapSize) * 6; // Scale relative to GPU resources available
   DynamicEnvironmentMapManager._updateCommandQueue(frameState);
 
   const dynamicLighting = frameState.atmosphere.dynamicLighting;
