@@ -51,7 +51,9 @@
       window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
-        const viewer = new Cesium.Viewer("cesiumContainer");
+        const viewer = new Cesium.Viewer("cesiumContainer", {
+          geocoder: Cesium.IonGeocodeProviderType.BING,
+        });
 
         const layers = viewer.scene.imageryLayers;
 
