@@ -31,8 +31,7 @@
       window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
-        // TODO: swap this out with the ion route when it's ready
-        const serviceResponse = await fetch("http://localhost:3000/service");
+        const serviceResponse = await fetch("https://api.cesium.com/itwin/token");
         const { access_token: token } = await serviceResponse.json();
 
         Cesium.ITwinPlatform.defaultAccessToken = token;
@@ -47,14 +46,6 @@
         });
         const scene = viewer.scene;
         scene.globe.show = true;
-
-        // Grabbed mapping from the iTwin Viewer
-        // TODO: grab updated categories for the new models
-        const knownSubCategories = {
-          2199023255632: "Building Roof",
-          2199023255694: "Building Wall",
-          2199023255696: "Building Window",
-        };
 
         let selectedFeature;
         let picking = false;
@@ -100,7 +91,7 @@
           const element = feature.getProperty("element");
           const subcategory = feature.getProperty("subcategory");
           const message = `Element ID: ${element}
-      Subcategory: ${knownSubCategories[subcategory] || subcategory}
+      Subcategory: ${subcategory}
       Feature ID: ${feature.featureId}`;
           nameOverlay.textContent = message;
         }
