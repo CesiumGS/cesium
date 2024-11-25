@@ -134,7 +134,7 @@
             const propertyValue = pickedFeature.getProperty(propertyId);
 
             // Reject properties with default values
-            if (propertyValue !== "" && propertyValue !== undefined) {
+            if (Cesium.defined(propertyValue) && propertyValue !== "") {
               description += `<tr><th>${propertyId}</th><td>${propertyValue}</td></tr>`;
             }
           }
