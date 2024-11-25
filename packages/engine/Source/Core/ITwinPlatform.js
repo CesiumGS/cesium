@@ -39,7 +39,7 @@ ITwinPlatform.ExportType = Object.freeze({
 
 /**
  * Types of Reality data
- * https://developer.bentley.com/apis/reality-management/rm-rd-details/#types
+ * @see https://developer.bentley.com/apis/reality-management/rm-rd-details/#types
  * @enum {string}
  */
 ITwinPlatform.RealityDataType = Object.freeze({
@@ -87,13 +87,6 @@ ITwinPlatform.RealityDataType = Object.freeze({
   Unstructured: "Unstructured",
   Other: "Other",
 });
-
-ITwinPlatform.SupportedRealityDataTypes = [
-  ITwinPlatform.RealityDataType.Cesium3DTiles,
-  ITwinPlatform.RealityDataType.PNTS,
-  ITwinPlatform.RealityDataType.RealityMesh3DTiles,
-  ITwinPlatform.RealityDataType.Terrain3DTiles,
-];
 
 /**
  * Gets or sets the default iTwin access token. This token should have the <code>itwin-platform</code> scope.
@@ -247,8 +240,8 @@ ITwinPlatform.getExports = async function (iModelId) {
  *
  * @private
  *
- * @param {string} iTwinId
- * @param {string} realityDataId
+ * @param {string} iTwinId The id of the iTwin to load data from
+ * @param {string} realityDataId The id of the reality data to load
  * @returns {Promise<RealityDataRepresentation>}
  */
 ITwinPlatform.getRealityDataMetadata = async function (iTwinId, realityDataId) {
@@ -303,9 +296,9 @@ ITwinPlatform.getRealityDataMetadata = async function (iTwinId, realityDataId) {
  *
  * @private
  *
- * @param {string} iTwinId
- * @param {string} realityDataId
- * @param {string} rootDocument
+ * @param {string} iTwinId The id of the iTwin to load data from
+ * @param {string} realityDataId The id of the reality data to load
+ * @param {string} rootDocument The path of the root document for this reality data
  * @returns {Promise<string>}
  */
 ITwinPlatform.getRealityDataURL = async function (
