@@ -91,6 +91,10 @@ describe(
     const tilesetOfTilesetsUrl =
       "Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tileset.json";
 
+    // A tileset that refers to 4 GLB files which share two (external) textures
+    const tilesetUrlWithSharedTextures =
+      "Data/Cesium3DTiles/Tilesets/TilesetWithSharedTextures/tileset.json";
+
     const withoutBatchTableUrl =
       "Data/Cesium3DTiles/Batched/BatchedWithoutBatchTable/tileset.json";
     const withBatchTableUrl =
@@ -961,6 +965,45 @@ describe(
           );
         },
       );
+    });
+
+    it("verify memory usage statistics for shared textures", function () {
+      // Basic camera setup
+      const camera = scene.camera;
+      camera.position = new Cartesian3(0, -1, 0);
+      camera.direction = Cartesian3.clone(Cartesian3.UNIT_Y);
+      camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
+      camera.frustum.near = 0.01;
+      camera.frustum.far = 100.0;
+
+      // Move the camera to see no tiles
+      camera.position = new Cartesian3(100, -1, 100);
+
+      return Cesium3DTilesTester.loadTileset(
+        scene,
+        tilesetUrlWithSharedTextures,
+      ).then(function (tileset) {
+        const statistics = tileset._statistics;
+
+        // No tiles loaded
+        expect(statistics.geometryByteLength).toEqual(0);
+        expect(statistics.texturesByteLength).toEqual(0);
+
+        // Move the camera to stare at the center of the first tile
+        camera.position = new Cartesian3(0.5, -13, 0.5);
+
+        return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(
+          function () {
+            console.log("Statistics ", JSON.stringify(statistics, null, 2));
+            // TODO
+            expect(statistics.geometryByteLength).toEqual(123);
+            expect(statistics.texturesByteLength).toEqual(234);
+
+            // TODO Eventually, trim
+            //tileset.trimLoadedTiles();
+          },
+        );
+      });
     });
 
     it("verify memory usage statistics for shared resources", function () {
