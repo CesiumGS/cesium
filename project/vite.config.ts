@@ -31,7 +31,7 @@ export default defineConfig(config => ({
   envDir: './env',
   envPrefix: 'MT_',
   server: {
-    host: true,
+    host: '0.0.0.0',
     open: false,
     proxy,
     fs: {
