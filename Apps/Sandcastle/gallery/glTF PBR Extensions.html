@@ -115,7 +115,6 @@
         const coefficients = [L00, L1_1, L10, L11, L2_2, L2_1, L20, L21, L22];
 
         const imageBasedLighting = new Cesium.ImageBasedLighting({
-          luminanceAtZenith: 0.7,
           sphericalHarmonicCoefficients: coefficients,
           specularEnvironmentMaps: environmentMapURL,
         });
@@ -136,7 +135,7 @@
               imageBasedLighting.sphericalHarmonicCoefficients = undefined;
               imageBasedLighting.specularEnvironmentMaps = undefined;
               imageBasedLighting.imageBasedLightingFactor = Cesium.Cartesian2.ONE;
-              scene.light.intensity = 1.0;
+              scene.light.intensity = 2.0;
             },
           },
           {

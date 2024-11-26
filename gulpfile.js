@@ -1006,7 +1006,7 @@ export async function test() {
     workspace = workspace.replaceAll(`@${scope}/`, ``);
   }
 
-  if (!isProduction) {
+  if (!isProduction && !release) {
     console.log("Building specs...");
     await buildCesium({
       iife: true,
