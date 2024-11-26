@@ -140,7 +140,7 @@ Cesium3DTilesetStatistics.prototype.decrementLoadCounts = function (content) {
   if (!(content instanceof Model3DTileContent)) {
     this.texturesByteLength -= content.texturesByteLength;
   } else {
-    // When the content is a `Model3DTileContent`, then increment the
+    // When the content is a `Model3DTileContent`, then decrement the
     // reference counter for all its textures. The byte length of any
     // texture that is no longer references is subtracted from the
     // total textures byte length
@@ -150,7 +150,7 @@ Cesium3DTilesetStatistics.prototype.decrementLoadCounts = function (content) {
       if (referenceCounter === 1) {
         delete this.texturesReferenceCounterById[textureId];
         const textureByteLength = content.getTextureByteLengthById(textureId);
-        this.texturesByteLength += textureByteLength;
+        this.texturesByteLength -= textureByteLength;
       } else {
         this.texturesReferenceCounterById[textureId] = referenceCounter - 1;
       }
@@ -164,8 +164,6 @@ Cesium3DTilesetStatistics.prototype.decrementLoadCounts = function (content) {
       this.decrementLoadCounts(contents[i]);
     }
   }
-
-  console.log("after decrementLoadCounts", JSON.stringify(this, null, 2));
 };
 
 Cesium3DTilesetStatistics.clone = function (statistics, result) {
