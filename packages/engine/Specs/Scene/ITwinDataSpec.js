@@ -216,7 +216,9 @@ describe("ITwinData", () => {
         "root/document/path.json",
       );
 
-      expect(tilesetSpy).toHaveBeenCalledOnceWith(tilesetUrl);
+      expect(tilesetSpy).toHaveBeenCalledOnceWith(tilesetUrl, {
+        maximumScreenSpaceError: 4,
+      });
     });
   });
 });
