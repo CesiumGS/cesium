@@ -395,9 +395,6 @@ describe(
       expect(ao.uniforms.directionCount).toEqual(8);
       expect(ao.uniforms.stepCount).toEqual(32);
       expect(ao.uniforms.randomTexture).not.toBeDefined();
-      expect(ao.uniforms.delta).toEqual(1.0);
-      expect(ao.uniforms.sigma).toEqual(2.0);
-      expect(ao.uniforms.blurStepSize).toEqual(0.0);
 
       ao.uniforms.ambientOcclusionOnly = true;
       ao.uniforms.intensity = 4.0;
@@ -405,9 +402,6 @@ describe(
       ao.uniforms.lengthCap = 0.3;
       ao.uniforms.directionCount = 9;
       ao.uniforms.stepCount = 33;
-      ao.uniforms.delta = 2.0;
-      ao.uniforms.sigma = 3.0;
-      ao.uniforms.blurStepSize = 2.0;
 
       expect(ao.uniforms.ambientOcclusionOnly).toEqual(true);
       expect(ao.uniforms.intensity).toEqual(4.0);
@@ -415,9 +409,6 @@ describe(
       expect(ao.uniforms.lengthCap).toEqual(0.3);
       expect(ao.uniforms.directionCount).toEqual(9);
       expect(ao.uniforms.stepCount).toEqual(33);
-      expect(ao.uniforms.delta).toEqual(2.0);
-      expect(ao.uniforms.sigma).toEqual(3.0);
-      expect(ao.uniforms.blurStepSize).toEqual(2.0);
     });
 
     it("bloom", function () {

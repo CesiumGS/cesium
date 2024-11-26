@@ -172,10 +172,6 @@ Object.defineProperties(PostProcessStageCollection.prototype, {
    * with the ambient occlusion. This is a useful debug option for seeing the effects of changing the uniform values. The default value is <code>false</code>.</li>
    * </ul>
    * <p>
-   * <code>delta</code>, <code>sigma</code>, and <code>blurStepSize</code> are the same properties as {@link PostProcessStageLibrary#createBlurStage}.
-   * The blur is applied to the shadows generated from the image to make them smoother.
-   * </p>
-   * <p>
    * When enabled, this stage will execute before all others.
    * </p>
    *

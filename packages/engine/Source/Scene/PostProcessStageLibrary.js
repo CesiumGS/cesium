@@ -492,10 +492,6 @@ PostProcessStageLibrary.createBloomStage = function () {
  * <li><code>ambientOcclusionOnly</code> is a boolean value. When <code>true</code>, only the shadows generated are written to the output. When <code>false</code>, the input texture is modulated
  * with the ambient occlusion. This is a useful debug option for seeing the effects of changing the uniform values. The default value is <code>false</code>.</li>
  * </ul>
- * <p>
- * <code>delta</code>, <code>sigma</code>, and <code>blurStepSize</code> are the same properties as {@link PostProcessStageLibrary#createBlurStage}.
- * The blur is applied to the shadows generated from the image to make them smoother.
- * </p>
  * @return {PostProcessStageComposite} A post-process stage that applies an ambient occlusion effect.
  *
  * @private
@@ -513,19 +509,13 @@ PostProcessStageLibrary.createAmbientOcclusionStage = function () {
       randomTexture: undefined,
     },
   });
-  const blur = createBlur("czm_ambient_occlusion_blur");
-  blur.uniforms.stepSize = 0.0;
-  const generateAndBlur = new PostProcessStageComposite({
-    name: "czm_ambient_occlusion_generate_blur",
-    stages: [generate, blur],
-  });
 
   const ambientOcclusionModulate = new PostProcessStage({
     name: "czm_ambient_occlusion_composite",
     fragmentShader: AmbientOcclusionModulate,
     uniforms: {
       ambientOcclusionOnly: false,
-      ambientOcclusionTexture: generateAndBlur.name,
+      ambientOcclusionTexture: generate.name,
     },
   });
 
@@ -579,30 +569,6 @@ PostProcessStageLibrary.createAmbientOcclusionStage = function () {
         generate.uniforms.randomTexture = value;
       },
     },
-    delta: {
-      get: function () {
-        return blur.uniforms.delta;
-      },
-      set: function (value) {
-        blur.uniforms.delta = value;
-      },
-    },
-    sigma: {
-      get: function () {
-        return blur.uniforms.sigma;
-      },
-      set: function (value) {
-        blur.uniforms.sigma = value;
-      },
-    },
-    blurStepSize: {
-      get: function () {
-        return blur.uniforms.stepSize;
-      },
-      set: function (value) {
-        blur.uniforms.stepSize = value;
-      },
-    },
     ambientOcclusionOnly: {
       get: function () {
         return ambientOcclusionModulate.uniforms.ambientOcclusionOnly;
@@ -615,7 +581,7 @@ PostProcessStageLibrary.createAmbientOcclusionStage = function () {
 
   return new PostProcessStageComposite({
     name: "czm_ambient_occlusion",
-    stages: [generateAndBlur, ambientOcclusionModulate],
+    stages: [generate, ambientOcclusionModulate],
     inputPreviousStageTexture: false,
     uniforms: uniforms,
   });
