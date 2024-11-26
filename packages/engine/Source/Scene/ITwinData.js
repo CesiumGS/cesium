@@ -3,6 +3,7 @@ import defined from "../Core/defined.js";
 import Resource from "../Core/Resource.js";
 import ITwinPlatform from "../Core/ITwinPlatform.js";
 import RuntimeError from "../Core/RuntimeError.js";
+import Check from "../Core/Check.js";
 
 /**
  * Methods for loading iTwin platform data into CesiumJS
@@ -69,6 +70,69 @@ ITwinData.createTilesetFromIModelId = async function (iModelId, options) {
   });
 
   return Cesium3DTileset.fromUrl(resource, options);
+};
+
+/**
+ * Create a tileset for the specified reality data id. This function only works
+ * with 3D Tiles meshes and point clouds.
+ *
+ * If the <code>type</code> or <code>rootDocument</code> are not provided this function
+ * will first request the full metadata for the specified reality data to fill these values.
+ *
+ * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
+ *
+ * @param {string} iTwinId The id of the iTwin to load data from
+ * @param {string} realityDataId The id of the reality data to load
+ * @param {ITwinPlatform.RealityDataType} [type] The type of this reality data
+ * @param {string} [rootDocument] The path of the root document for this reality data
+ * @returns {Promise<Cesium3DTileset>}
+ */
+ITwinData.createTilesetForRealityDataId = async function (
+  iTwinId,
+  realityDataId,
+  type,
+  rootDocument,
+) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("iTwinId", iTwinId);
+  Check.typeOf.string("realityDataId", realityDataId);
+  if (defined(type)) {
+    Check.typeOf.string("type", type);
+  }
+  if (defined(rootDocument)) {
+    Check.typeOf.string("rootDocument", rootDocument);
+  }
+  //>>includeEnd('debug')
+
+  if (!defined(type) || !defined(rootDocument)) {
+    const metadata = await ITwinPlatform.getRealityDataMetadata(
+      iTwinId,
+      realityDataId,
+    );
+    rootDocument = metadata.rootDocument;
+    type = metadata.type;
+  }
+
+  const supportedRealityDataTypes = [
+    ITwinPlatform.RealityDataType.Cesium3DTiles,
+    ITwinPlatform.RealityDataType.PNTS,
+    ITwinPlatform.RealityDataType.RealityMesh3DTiles,
+    ITwinPlatform.RealityDataType.Terrain3DTiles,
+  ];
+
+  if (!supportedRealityDataTypes.includes(type)) {
+    throw new RuntimeError(`Reality data type is not a mesh type: ${type}`);
+  }
+
+  const tilesetAccessUrl = await ITwinPlatform.getRealityDataURL(
+    iTwinId,
+    realityDataId,
+    rootDocument,
+  );
+
+  return Cesium3DTileset.fromUrl(tilesetAccessUrl, {
+    maximumScreenSpaceError: 4,
+  });
 };
 
 export default ITwinData;
