@@ -426,9 +426,14 @@ Picking.prototype.pickVoxelCoordinate = function (
  * - For `VEC3`, the return type will be a `Cartesian3`
  * - For `VEC4`, the return type will be a `Cartesian4`
  *
+ * Future implementations may additionally return `string`- or
+ * `boolean` types, and `MATn` values as `MatrixN` objects,
+ * and arrays of the respective types.
+ *
  * @param {Cartesian2} windowPosition Window coordinates to perform picking on.
  * @param {PickedMetadataInfo} pickedMetadataInfo Information about the picked metadata.
- * @returns {any} The metadata values
+ * @returns {MetadataValue|undefined} The metadata value, or `undefined`
+ * when no matching metadata value could be picked at the given position
  *
  * @private
  */
@@ -517,6 +522,7 @@ Picking.prototype.pickMetadata = function (
 
   const metadataValue = MetadataPicking.decodeMetadataValues(
     pickedMetadataInfo.classProperty,
+    pickedMetadataInfo.metadataProperty,
     rawMetadataPixel,
   );
 
