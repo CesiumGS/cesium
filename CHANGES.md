@@ -6,6 +6,7 @@
 
 ##### Additions :tada:
 
+- Added an integration with the [iTwin Platform](https://developer.bentley.com/) to load iModels as 3D Tiles. Use `ITwinPlatform.defaultAccessToken` to set the access token. Use `ITwinData.createTilesetFromIModelId(iModelId)` to load the iModel as a `Cesium3DTileset`. [#12289](https://github.com/CesiumGS/cesium/pull/12289)
 - Added `getSample` to `SampledProperty` to get the time of samples. [#12253](https://github.com/CesiumGS/cesium/pull/12253)
 - Added `Entity.trackingReferenceFrame` property to allow tracking entities in various reference frames. [#12194](https://github.com/CesiumGS/cesium/pull/12194), [#12314](https://github.com/CesiumGS/cesium/pull/12314)
   - `TrackingReferenceFrame.AUTODETECT` (default): uses either VVLH or ENU dependeding on entity's dynamic. Use `TrackingReferenceFrame.ENU` if your camera orientation flips abruptly from time to time.
@@ -14,9 +15,14 @@
   - `TrackingReferenceFrame.VELOCITY`: uses entity's `VelocityOrientationProperty` as orientation.
 - Added `GoogleGeocoderService` for standalone usage of Google geocoder. [#12299](https://github.com/CesiumGS/cesium/pull/12299)
 
+##### Breaking Changes :mega:
+
+- `Rectangle.validate` has been removed.
+
 ##### Fixes :wrench:
 
 - Fix label rendering bug in WebGL1 contexts. [#12301](https://github.com/CesiumGS/cesium/pull/12301)
+- Fixed lag or crashes when loading many models in the same frame. [#12320](https://github.com/CesiumGS/cesium/pull/12320)
 - Updated WMS example URL in UrlTemplateImageryProvider documentation to use an active service. [#12323](https://github.com/CesiumGS/cesium/pull/12323)
 - Fix point cloud filtering performance on certain hardware [#12317](https://github.com/CesiumGS/cesium/pull/12317)
 
