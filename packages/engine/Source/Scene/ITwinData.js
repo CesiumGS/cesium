@@ -79,6 +79,8 @@ ITwinData.createTilesetFromIModelId = async function (iModelId, options) {
  * If the <code>type</code> or <code>rootDocument</code> are not provided this function
  * will first request the full metadata for the specified reality data to fill these values.
  *
+ * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
+ *
  * @param {string} iTwinId The id of the iTwin to load data from
  * @param {string} realityDataId The id of the reality data to load
  * @param {ITwinPlatform.RealityDataType} [type] The type of this reality data
@@ -128,7 +130,9 @@ ITwinData.createTilesetForRealityDataId = async function (
     rootDocument,
   );
 
-  return Cesium3DTileset.fromUrl(tilesetAccessUrl);
+  return Cesium3DTileset.fromUrl(tilesetAccessUrl, {
+    maximumScreenSpaceError: 4,
+  });
 };
 
 export default ITwinData;
