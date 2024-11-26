@@ -116,4 +116,109 @@ describe("ITwinData", () => {
       expect(tilesetSpy.calls.mostRecent().args[1]).toEqual(tilesetOptions);
     });
   });
+
+  describe("createTilesetForRealityDataId", () => {
+    let getMetadataSpy;
+    let getUrlSpy;
+    let tilesetSpy;
+    beforeEach(() => {
+      getMetadataSpy = spyOn(ITwinPlatform, "getRealityDataMetadata");
+      getUrlSpy = spyOn(ITwinPlatform, "getRealityDataURL");
+      tilesetSpy = spyOn(Cesium3DTileset, "fromUrl");
+    });
+
+    it("rejects if the type is not supported", async () => {
+      await expectAsync(
+        ITwinData.createTilesetForRealityDataId(
+          "imodel-id-1",
+          "reality-data-id-1",
+          ITwinPlatform.RealityDataType.DGN,
+          "root/path.json",
+        ),
+      ).toBeRejectedWithError(RuntimeError, /type is not/);
+    });
+
+    it("does not fetch metadata if type and rootDocument are defined", async () => {
+      await ITwinData.createTilesetForRealityDataId(
+        "itwin-id-1",
+        "reality-data-id-1",
+        ITwinPlatform.RealityDataType.Cesium3DTiles,
+        "root/document/path.json",
+      );
+
+      expect(getMetadataSpy).not.toHaveBeenCalled();
+      expect(getUrlSpy).toHaveBeenCalledOnceWith(
+        "itwin-id-1",
+        "reality-data-id-1",
+        "root/document/path.json",
+      );
+    });
+
+    it("fetches metadata if type is undefined", async () => {
+      getMetadataSpy.and.resolveTo({
+        iModelId: "itwin-id-1",
+        id: "reality-data-id-1",
+        type: ITwinPlatform.RealityDataType.Cesium3DTiles,
+        rootDocument: "root/document/path.json",
+      });
+      await ITwinData.createTilesetForRealityDataId(
+        "itwin-id-1",
+        "reality-data-id-1",
+        undefined,
+        "root/document/path.json",
+      );
+
+      expect(getMetadataSpy).toHaveBeenCalledOnceWith(
+        "itwin-id-1",
+        "reality-data-id-1",
+      );
+      expect(getUrlSpy).toHaveBeenCalledOnceWith(
+        "itwin-id-1",
+        "reality-data-id-1",
+        "root/document/path.json",
+      );
+    });
+
+    it("fetches metadata if rootDocument is undefined", async () => {
+      getMetadataSpy.and.resolveTo({
+        iModelId: "itwin-id-1",
+        id: "reality-data-id-1",
+        type: ITwinPlatform.RealityDataType.Cesium3DTiles,
+        rootDocument: "root/document/path.json",
+      });
+      await ITwinData.createTilesetForRealityDataId(
+        "itwin-id-1",
+        "reality-data-id-1",
+        ITwinPlatform.RealityDataType.Cesium3DTiles,
+        undefined,
+      );
+
+      expect(getMetadataSpy).toHaveBeenCalledOnceWith(
+        "itwin-id-1",
+        "reality-data-id-1",
+      );
+      expect(getUrlSpy).toHaveBeenCalledOnceWith(
+        "itwin-id-1",
+        "reality-data-id-1",
+        "root/document/path.json",
+      );
+    });
+
+    it("creates a tileset from the constructed blob url", async () => {
+      const tilesetUrl =
+        "https://example.com/root/document/path.json?auth=token";
+      getUrlSpy.and.resolveTo(tilesetUrl);
+
+      await ITwinData.createTilesetForRealityDataId(
+        "itwin-id-1",
+        "reality-data-id-1",
+        ITwinPlatform.RealityDataType.Cesium3DTiles,
+        "root/document/path.json",
+      );
+
+      expect(tilesetSpy).toHaveBeenCalledOnceWith(tilesetUrl, {
+        maximumScreenSpaceError: 4,
+      });
+    });
+  });
 });
