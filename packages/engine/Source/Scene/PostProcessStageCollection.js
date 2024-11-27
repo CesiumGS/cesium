@@ -155,10 +155,7 @@ Object.defineProperties(PostProcessStageCollection.prototype, {
    * surface receives light and regardless of the light's position.
    * </p>
    * <p>
-   * The uniforms have the following properties: <code>intensity</code>, <code>bias</code>, <code>lengthCap</code>,
-   * <code>directionCount</code>, <code>stepCount</code>, <code>ambientOcclusionOnly</code>,
-   * <code>delta</code>, <code>sigma</code>, and <code>blurStepSize</code>.
-   * </p>
+   * The uniforms have the following properties:
    * <ul>
    * <li><code>intensity</code> is a scalar value used to lighten or darken the shadows exponentially. Higher values make the shadows darker. The default value is <code>3.0</code>.</li>
    * <li><code>bias</code> is a scalar value representing an angle in radians. If the dot product between the normal of the sample and the vector to the camera is less than this value,
