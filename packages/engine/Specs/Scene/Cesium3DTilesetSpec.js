@@ -91,6 +91,10 @@ describe(
     const tilesetOfTilesetsUrl =
       "Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tileset.json";
 
+    // A tileset that refers to 4 GLB files which share two (external) textures
+    const tilesetUrlWithSharedTextures =
+      "Data/Cesium3DTiles/Tilesets/TilesetWithSharedTextures/tileset.json";
+
     const withoutBatchTableUrl =
       "Data/Cesium3DTiles/Batched/BatchedWithoutBatchTable/tileset.json";
     const withBatchTableUrl =
@@ -961,6 +965,78 @@ describe(
           );
         },
       );
+    });
+
+    it("verify memory usage statistics for shared textures", async function () {
+      // One buffer view with 4 positions, 4 normals, and 4 texture coordinates,
+      // using a common byte stride of 12 (resulting in 144 bytes)
+      // and 2*3 unsigned short indices, resulting in a total of 156 bytes
+      const singleGeometryByteLength = 156;
+
+      // One texture with 128x128 * RGBA pixels = 65536 bytes
+      const singleTexturesByteLength = 65536;
+
+      // Basic camera setup
+      const camera = scene.camera;
+
+      // NOTE: This is really, really important. There are some
+      // random calls in "beforeEach" and other parts of these
+      // specs that affect the camera transform. And the camera
+      // transform is NOT maintained to be consistent with the
+      // other properties in any way. So reset it here...
+      camera.lookAtTransform(Matrix4.IDENTITY);
+
+      camera.position = new Cartesian3(0, -1, 0);
+      camera.direction = Cartesian3.clone(Cartesian3.UNIT_Y);
+      camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
+      camera.frustum.near = 0.01;
+      camera.frustum.far = 100.0;
+
+      // Move the camera to see no tiles
+      camera.position = new Cartesian3(100, -1, 100);
+
+      const tileset = await Cesium3DTilesTester.loadTileset(
+        scene,
+        tilesetUrlWithSharedTextures,
+      );
+
+      const statistics = tileset._statistics;
+
+      // No tiles loaded
+      expect(statistics.geometryByteLength).toEqual(0);
+      expect(statistics.texturesByteLength).toEqual(0);
+
+      // Move the camera to stare at the center of the first tile
+      camera.position = new Cartesian3(0.5, -1, 0.5);
+      await Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
+
+      // A single tile and texture was loaded
+      expect(statistics.geometryByteLength).toEqual(singleGeometryByteLength);
+      expect(statistics.texturesByteLength).toEqual(singleTexturesByteLength);
+
+      // Move the camera back to see all tiles
+      camera.position = new Cartesian3(3.5, -14, 0.5);
+      await Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
+
+      // All tiles have been loaded: 4 times the geometry, BUT
+      // ONLY 2 times the texture
+      expect(statistics.geometryByteLength).toEqual(
+        singleGeometryByteLength * 4,
+      );
+      expect(statistics.texturesByteLength).toEqual(
+        singleTexturesByteLength * 2,
+      );
+
+      // Move the camera back to stare at the center of the first tile again
+      camera.position = new Cartesian3(0.5, -1, 0.5);
+
+      // Trim any previously loaded tiles
+      tileset.trimLoadedTiles();
+      await Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
+
+      // Again, only a single tile and texture should be loaded
+      expect(statistics.geometryByteLength).toEqual(singleGeometryByteLength);
+      expect(statistics.texturesByteLength).toEqual(singleTexturesByteLength);
     });
 
     it("verify memory usage statistics for shared resources", function () {
