@@ -2,7 +2,7 @@
  * Contains functions for checking that supplied arguments are of a specified type
  * or meet specified conditions
  */
-export const Check: {
+const Check: {
   /**
    * Throws if test is not defined
    *
@@ -125,3 +125,4 @@ export const Check: {
     };
   };
 };
+export default Check;
