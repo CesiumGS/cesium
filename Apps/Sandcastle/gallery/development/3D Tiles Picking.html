@@ -34,6 +34,7 @@
           animation: false,
           baseLayerPicker: false,
           globe: false,
+          geocoder: false,
         });
         const scene = viewer.scene;
 
@@ -44,7 +45,10 @@
             onselect: async () => {
               scene.primitives.remove(tileset);
               try {
-                tileset = await Cesium.createGooglePhotorealistic3DTileset();
+                tileset = await Cesium.createGooglePhotorealistic3DTileset({
+                  // Only the Google Geocoder can be used with Google Photorealistic 3D Tiles.  Set the `geocode` property of the viewer constructor options to IonGeocodeProviderType.GOOGLE.
+                  onlyUsingWithGoogleGeocoder: true,
+                });
                 scene.primitives.add(tileset);
               } catch (error) {
                 console.log(error);

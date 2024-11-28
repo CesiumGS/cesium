@@ -314,7 +314,9 @@ describe(
         "HAS_POINT_CLOUD_SHOW_STYLE",
         "COMPUTE_POSITION_WC_STYLE",
       ]);
-      ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, []);
+      ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
+        "HAS_POINT_CLOUD_SHOW_STYLE",
+      ]);
 
       ShaderBuilderTester.expectHasVertexUniforms(shaderBuilder, [
         "uniform vec4 model_pointCloudParameters;",
