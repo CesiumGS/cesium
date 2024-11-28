@@ -26,6 +26,7 @@
 - Fixed lag or crashes when loading many models in the same frame. [#12320](https://github.com/CesiumGS/cesium/pull/12320)
 - Updated WMS example URL in UrlTemplateImageryProvider documentation to use an active service. [#12323](https://github.com/CesiumGS/cesium/pull/12323)
 - Fix point cloud filtering performance on certain hardware [#12317](https://github.com/CesiumGS/cesium/pull/12317)
+- Fixed JulianDate to always generate valid ISO strings for fractional milliseconds [#12345](https://github.com/CesiumGS/cesium/pull/12345)
 
 ##### Deprecated :hourglass_flowing_sand:
 
