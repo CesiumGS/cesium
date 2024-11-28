@@ -877,6 +877,38 @@ describe("Core/JulianDate", function () {
     expect(date).toEqual("0950-01-02T03:04:05.0123450Z");
   });
 
+  it("toIso8601 works with very small milliseconds", function () {
+    let expectedDate, date;
+
+    expectedDate = new JulianDate(2450630, 1e-3);
+    date = JulianDate.fromIso8601(JulianDate.toIso8601(expectedDate));
+    expect(date).toEqual(expectedDate);
+    expectedDate = new JulianDate(2450630, 1e-4);
+    date = JulianDate.fromIso8601(JulianDate.toIso8601(expectedDate));
+    expect(date).toEqual(expectedDate);
+    expectedDate = new JulianDate(2450630, 1e-6);
+    date = JulianDate.fromIso8601(JulianDate.toIso8601(expectedDate));
+    expect(date).toEqual(expectedDate);
+    expectedDate = new JulianDate(2450630, 1e-7);
+    date = JulianDate.fromIso8601(JulianDate.toIso8601(expectedDate));
+    expect(date).toEqual(expectedDate);
+    expectedDate = new JulianDate(2450630, 1e-8);
+    date = JulianDate.fromIso8601(JulianDate.toIso8601(expectedDate));
+    expect(date).toEqual(expectedDate);
+    expectedDate = new JulianDate(2450630, 1e-10);
+    date = JulianDate.fromIso8601(JulianDate.toIso8601(expectedDate));
+    expect(date).toEqual(expectedDate);
+    expectedDate = new JulianDate(2450630, 1e-15);
+    date = JulianDate.fromIso8601(JulianDate.toIso8601(expectedDate));
+    expect(date).toEqual(expectedDate);
+    expectedDate = new JulianDate(2450630, 1e-18);
+    date = JulianDate.fromIso8601(JulianDate.toIso8601(expectedDate));
+    expect(date).toEqual(expectedDate);
+    expectedDate = new JulianDate(2450630, 1e-21);
+    date = JulianDate.fromIso8601(JulianDate.toIso8601(expectedDate));
+    expect(date).toEqual(expectedDate);
+  });
+
   it("can format Iso8601.MINIMUM_VALUE and MAXIMUM_VALUE to ISO strings", function () {
     const minString = Iso8601.MINIMUM_VALUE.toString();
     expect(minString).toEqual("0000-01-01T00:00:00Z");
