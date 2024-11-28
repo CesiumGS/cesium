@@ -78,7 +78,7 @@ describe(
 
     it("fromProviderAsync throws without provider promise", function () {
       expect(() => ImageryLayer.fromProviderAsync()).toThrowDeveloperError(
-        "expected",
+        /Expected imageryProviderPromise to be typeof object/,
       );
     });
 

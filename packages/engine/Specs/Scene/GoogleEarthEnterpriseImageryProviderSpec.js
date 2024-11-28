@@ -155,7 +155,7 @@ describe("Scene/GoogleEarthEnterpriseImageryProvider", function () {
   it("fromMetadata throws without metadata", function () {
     expect(() =>
       GoogleEarthEnterpriseImageryProvider.fromMetadata(),
-    ).toThrowDeveloperError("");
+    ).toThrowDeveloperError(/metadata is required/);
   });
 
   it("fromMetadata throws if there isn't imagery", async function () {
