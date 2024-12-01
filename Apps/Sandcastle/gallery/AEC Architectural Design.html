@@ -50,6 +50,17 @@
         // Enable rendering the sky
         viewer.scene.skyAtmosphere.show = true;
 
+        // Configure Ambient Occlusion
+        if (Cesium.PostProcessStageLibrary.isAmbientOcclusionSupported(viewer.scene)) {
+          const ambientOcclusion = viewer.scene.postProcessStages.ambientOcclusion;
+          ambientOcclusion.enabled = true;
+          ambientOcclusion.uniforms.intensity = 1.0;
+          ambientOcclusion.uniforms.bias = 0.25;
+          ambientOcclusion.uniforms.lengthCap = 0.95;
+          ambientOcclusion.uniforms.stepSize = 1.0;
+          ambientOcclusion.uniforms.blurStepSize = 0.86;
+        }
+
         // Set to 1 PM Philadelphia time in UTC
         viewer.clock.currentTime = Cesium.JulianDate.fromIso8601("2024-11-22T18:00:00Z");
 
@@ -90,24 +101,29 @@
 
         // The Architectural Design is comprised of multiple tilesets
         const tilesetData = [
-          { title: "Architecture", assetId: 2864367 },
-          { title: "Facade", assetId: 2864370 },
-          { title: "Structural", assetId: 2864375 },
-          { title: "Electrical", assetId: 2864368 },
-          { title: "HVAC", assetId: 2864372 },
-          { title: "Plumbing", assetId: 2864373 },
-          { title: "Site", assetId: 2864374 },
+          { title: "Architecture", assetId: 2884595, visible: true },
+          { title: "Facade", assetId: 2884587, visible: true },
+          { title: "Structural", assetId: 2884593, visible: false },
+          { title: "Electrical", assetId: 2884586, visible: true },
+          { title: "HVAC", assetId: 2884588, visible: true },
+          { title: "Plumbing", assetId: 2884589, visible: true },
+          { title: "Site", assetId: 2884592, visible: true },
         ];
 
         // Load each tileset and create a corresponding visibility toggle button
-        for (const { title, assetId } of tilesetData) {
+        for (const { title, assetId, visible } of tilesetData) {
           try {
             const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(assetId);
             viewer.scene.primitives.add(tileset);
+            tileset.show = visible;
 
-            Sandcastle.addToggleButton(title, true, function (checked) {
-              tileset.show = checked;
-            });
+            const toggleBtn = Sandcastle.addToggleButton(
+              title,
+              visible,
+              function (checked) {
+                tileset.show = checked;
+              },
+            );
           } catch (error) {
             console.log(`Error loading tileset (${title}): ${error}`);
           }
