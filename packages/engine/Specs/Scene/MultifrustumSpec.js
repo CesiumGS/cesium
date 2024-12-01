@@ -237,7 +237,7 @@ describe(
           vs += "in vec4 position;";
           vs += "void main()";
           vs += "{";
-          vs += "    gl_Position = czm_modelViewProjection * position;";
+          vs += "    vec4 positionEC = czm_modelView * positiong; l_Position = czm_projection * positionEC;";
           vs += closestFrustum
             ? "    gl_Position.z = clamp(gl_Position.z, gl_DepthRange.near, gl_DepthRange.far);"
             : "";
