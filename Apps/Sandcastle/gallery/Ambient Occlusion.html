@@ -106,7 +106,11 @@
         //Sandcastle_Begin
         const viewer = new Cesium.Viewer("cesiumContainer");
 
-        viewer.clock.currentTime = Cesium.JulianDate.fromIso8601("2022-08-01T00:00:00Z");
+        const { canvas, camera, clock, scene } = viewer;
+        camera.frustum.near = 1.0;
+        scene.debugShowFramesPerSecond = true;
+
+        clock.currentTime = Cesium.JulianDate.fromIso8601("2022-08-01T00:00:00Z");
 
         if (!Cesium.PostProcessStageLibrary.isAmbientOcclusionSupported(viewer.scene)) {
           window.alert(
@@ -134,7 +138,7 @@
         }
 
         function updatePostProcess() {
-          const ambientOcclusion = viewer.scene.postProcessStages.ambientOcclusion;
+          const ambientOcclusion = scene.postProcessStages.ambientOcclusion;
           ambientOcclusion.enabled =
             Boolean(viewModel.show) || Boolean(viewModel.ambientOcclusionOnly);
           ambientOcclusion.uniforms.ambientOcclusionOnly = Boolean(
@@ -148,7 +152,6 @@
         }
         updatePostProcess();
 
-        const camera = viewer.scene.camera;
         camera.position = new Cesium.Cartesian3(
           1234127.2294710164,
           -5086011.666443127,
@@ -173,7 +176,7 @@
         try {
           // Power Plant design model provided by Bentley Systems
           const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(2464651);
-          viewer.scene.primitives.add(tileset);
+          scene.primitives.add(tileset);
         } catch (error) {
           console.log(`Error loading tileset: ${error}`);
         } //Sandcastle_End
