@@ -18,6 +18,7 @@
 ##### Breaking Changes :mega:
 
 - `Rectangle.validate` has been removed.
+- `PostProcessStageCollection.ambientOcclusion` has been updated with a new algorithm to provide better results at all scales, with tunable performance cost. To approximate the appearance and performance of the old algorithm, set the following values for `scene.postProcessStages.ambientOcclusion.uniforms`: `{ lengthCap: 0.02, directionCount: 6, stepCount: 8 }`. For best results at long distances, consider setting `Viewer.camera.frustum.near` to `1.0` or more, to improve precision in the depth buffer.
 
 ##### Fixes :wrench:
 
