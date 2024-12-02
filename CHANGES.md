@@ -9,7 +9,7 @@
 - Added an integration with the [iTwin Platform](https://developer.bentley.com/) to load iModels as 3D Tiles. Use `ITwinPlatform.defaultAccessToken` to set the access token. Use `ITwinData.createTilesetFromIModelId(iModelId)` to load the iModel as a `Cesium3DTileset`. [#12289](https://github.com/CesiumGS/cesium/pull/12289)
 - Added `getSample` to `SampledProperty` to get the time of samples. [#12253](https://github.com/CesiumGS/cesium/pull/12253)
 - Added `Entity.trackingReferenceFrame` property to allow tracking entities in various reference frames. [#12194](https://github.com/CesiumGS/cesium/pull/12194), [#12314](https://github.com/CesiumGS/cesium/pull/12314)
-  - `TrackingReferenceFrame.AUTODETECT` (default): uses either VVLH or ENU dependeding on entity's dynamic. Use `TrackingReferenceFrame.ENU` if your camera orientation flips abruptly from time to time.
+  - `TrackingReferenceFrame.AUTODETECT` (default): uses either VVLH or ENU depending on entity's dynamic. Use `TrackingReferenceFrame.ENU` if your camera orientation flips abruptly from time to time.
   - `TrackingReferenceFrame.ENU`: uses the entity's local East-North-Up reference frame.
   - `TrackingReferenceFrame.INERTIAL`: uses the entity's inertial reference frame.
   - `TrackingReferenceFrame.VELOCITY`: uses entity's `VelocityOrientationProperty` as orientation.
@@ -17,16 +17,16 @@
 
 ##### Breaking Changes :mega:
 
+- `PostProcessStageCollection.ambientOcclusion` has been updated with a new algorithm to provide better results at all scales, with tunable performance cost. To approximate the appearance and performance of the old algorithm, set the following values for `scene.postProcessStages.ambientOcclusion.uniforms`: `{ lengthCap: 0.02, directionCount: 6, stepCount: 8 }`. For best results at long distances, consider setting `Viewer.camera.frustum.near` to `1.0` or more, to improve precision in the depth buffer. [#12316](https://github.com/CesiumGS/cesium/pull/12316)
 - `Rectangle.validate` has been removed.
-- `PostProcessStageCollection.ambientOcclusion` has been updated with a new algorithm to provide better results at all scales, with tunable performance cost. To approximate the appearance and performance of the old algorithm, set the following values for `scene.postProcessStages.ambientOcclusion.uniforms`: `{ lengthCap: 0.02, directionCount: 6, stepCount: 8 }`. For best results at long distances, consider setting `Viewer.camera.frustum.near` to `1.0` or more, to improve precision in the depth buffer.
 
 ##### Fixes :wrench:
 
 - Fixed bug where shared external textures from glTF files were not accounted for in resource statistics. [#12331](https://github.com/CesiumGS/cesium/pull/12331)
-- Fix label rendering bug in WebGL1 contexts. [#12301](https://github.com/CesiumGS/cesium/pull/12301)
 - Fixed lag or crashes when loading many models in the same frame. [#12320](https://github.com/CesiumGS/cesium/pull/12320)
-- Updated WMS example URL in UrlTemplateImageryProvider documentation to use an active service. [#12323](https://github.com/CesiumGS/cesium/pull/12323)
 - Fix point cloud filtering performance on certain hardware [#12317](https://github.com/CesiumGS/cesium/pull/12317)
+- Fix label rendering bug in WebGL1 contexts. [#12301](https://github.com/CesiumGS/cesium/pull/12301)
+- Updated WMS example URL in UrlTemplateImageryProvider documentation to use an active service. [#12323](https://github.com/CesiumGS/cesium/pull/12323)
 
 ##### Deprecated :hourglass_flowing_sand:
 
