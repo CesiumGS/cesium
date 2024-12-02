@@ -142,6 +142,17 @@ const postCommentOnPullRequest = async (hasSignedCLA, errorFoundOnCLACheck) => {
   );
 };
 
+const addLabelToPullRequest = async () => {
+  const octokit = new Octokit();
+
+  return octokit.request(
+    `POST /repos/${PULL_REQUST_INFO.owner}/${PULL_REQUST_INFO.repoName}/issues/${PULL_REQUST_INFO.id}/labels`,
+    {
+      labels: ["PR - Needs Signed CLA"],
+    },
+  );
+};
+
 const main = async () => {
   let hasSignedCLA;
   let errorFoundOnCLACheck;
@@ -153,6 +164,10 @@ const main = async () => {
   }
 
   await postCommentOnPullRequest(hasSignedCLA, errorFoundOnCLACheck);
+  // if (!hasSignedCLA) {
+  // TODO: make conditional
+  await addLabelToPullRequest();
+  // }
 };
 
 main();
