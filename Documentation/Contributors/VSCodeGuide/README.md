@@ -46,6 +46,10 @@ restart VSCode after you are done installing extensions.
 - **[Shader languages support for VS Code](https://marketplace.visualstudio.com/items?itemName=slevesque.shader)** by slevesque - This extension provides syntax highlighting for CesiumJS's shader code.
 - **[glTF Extension for VS Code](https://marketplace.visualstudio.com/items?itemName=cesium.gltf-vscode)** by CesiumJS.org - This extension adds features for previewing and editing 3D models in glTF files.
 
+## Snippets
+
+We have a small (but growing) collection of snippets to make it easier to write code in CesiumJS. For example, `pragdebug` which will expand to the debug pragma we use to strip out code in production builds. These are stored in `.vscode/cesiumjs.code-snippets`. Refer to that file for the full list available and feel free to add to it for common code constructs you find yourself writing.
+
 ## VSCode Tasks and Files
 
 You can launch any of CesiumJS's npm tasks from within VSCode by pressing

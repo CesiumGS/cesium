@@ -2,6 +2,7 @@ import {
   Cartesian3,
   Cartographic,
   Color,
+  ContextLimits,
   CubeMap,
   DynamicAtmosphereLightingType,
   DynamicEnvironmentMapManager,
@@ -31,21 +32,59 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
     expect(manager.groundAlbedo).toBe(0.31);
   });
 
+  it("constructs with options", function () {
+    const manager = new DynamicEnvironmentMapManager({
+      enabled: false,
+      maximumSecondsDifference: 0,
+      maximumPositionEpsilon: 0,
+      atmosphereScatteringIntensity: 0,
+      gamma: 0,
+      brightness: 0,
+      saturation: 0,
+      groundColor: Color.BLUE,
+      groundAlbedo: 0,
+    });
+
+    expect(manager.enabled).toBeFalse();
+    expect(manager.shouldUpdate).toBeTrue();
+    expect(manager.maximumSecondsDifference).toBe(0);
+    expect(manager.maximumPositionEpsilon).toBe(0);
+    expect(manager.atmosphereScatteringIntensity).toBe(0);
+    expect(manager.gamma).toBe(0);
+    expect(manager.brightness).toBe(0);
+    expect(manager.saturation).toBe(0);
+    expect(manager.groundColor).toEqual(Color.BLUE);
+    expect(manager.groundAlbedo).toBe(0);
+  });
+
+  it("uses default spherical harmonic coefficients", () => {
+    const manager = new DynamicEnvironmentMapManager();
+
+    expect(manager.sphericalHarmonicCoefficients.length).toBe(9);
+    expect(manager.sphericalHarmonicCoefficients).toEqual(
+      DynamicEnvironmentMapManager.DEFAULT_SPHERICAL_HARMONIC_COEFFICIENTS,
+    );
+  });
+
   describe(
     "render tests",
     () => {
       const time = JulianDate.fromIso8601("2024-08-30T10:45:00Z");
 
-      let scene;
+      let scene, orginalMaximumCubeMapSize;
 
       beforeAll(() => {
         scene = createScene({
           skyBox: false,
         });
+        orginalMaximumCubeMapSize = ContextLimits.maximumCubeMapSize;
+        // To keep tests fast, don't throttle
+        ContextLimits._maximumCubeMapSize = Number.POSITIVE_INFINITY;
       });
 
       afterAll(() => {
         scene.destroyForSpecs();
+        ContextLimits._maximumCubeMapSize = orginalMaximumCubeMapSize;
       });
 
       afterEach(() => {
@@ -53,7 +92,7 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
         scene.atmosphere = new Atmosphere();
       });
 
-      // Allows the compute commands to be added to the command list at the right point in the pipeline
+      // A pared-down Primitive. Allows the compute commands to be added to the command list at the right point in the pipeline.
       function EnvironmentMockPrimitive(manager) {
         this.update = function (frameState) {
           manager.update(frameState);
@@ -64,8 +103,74 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
         };
       }
 
+      it("does not update if position is undefined", async function () {
+        const manager = new DynamicEnvironmentMapManager();
+
+        const primitive = new EnvironmentMockPrimitive(manager);
+        scene.primitives.add(primitive);
+
+        scene.renderForSpecs();
+
+        expect(manager.radianceCubeMap).toBeUndefined();
+
+        scene.renderForSpecs();
+
+        expect(manager.sphericalHarmonicCoefficients).toEqual(
+          DynamicEnvironmentMapManager.DEFAULT_SPHERICAL_HARMONIC_COEFFICIENTS,
+        );
+      });
+
+      it("does not update if enabled is false", async function () {
+        const manager = new DynamicEnvironmentMapManager();
+
+        const cartographic = Cartographic.fromDegrees(-75.165222, 39.952583);
+        manager.position =
+          Ellipsoid.WGS84.cartographicToCartesian(cartographic);
+        manager.enabled = false;
+
+        const primitive = new EnvironmentMockPrimitive(manager);
+        scene.primitives.add(primitive);
+
+        scene.renderForSpecs();
+
+        expect(manager.radianceCubeMap).toBeUndefined();
+
+        scene.renderForSpecs();
+
+        expect(manager.sphericalHarmonicCoefficients).toEqual(
+          DynamicEnvironmentMapManager.DEFAULT_SPHERICAL_HARMONIC_COEFFICIENTS,
+        );
+      });
+
+      it("does not update if requires extensions are not available", async function () {
+        spyOn(
+          DynamicEnvironmentMapManager,
+          "isDynamicUpdateSupported",
+        ).and.returnValue(false);
+
+        const manager = new DynamicEnvironmentMapManager();
+
+        const cartographic = Cartographic.fromDegrees(-75.165222, 39.952583);
+        manager.position =
+          Ellipsoid.WGS84.cartographicToCartesian(cartographic);
+
+        const primitive = new EnvironmentMockPrimitive(manager);
+        scene.primitives.add(primitive);
+
+        scene.renderForSpecs();
+
+        expect(manager.radianceCubeMap).toBeUndefined();
+
+        scene.renderForSpecs();
+
+        expect(manager.sphericalHarmonicCoefficients).toEqual(
+          DynamicEnvironmentMapManager.DEFAULT_SPHERICAL_HARMONIC_COEFFICIENTS,
+        );
+      });
+
       it("creates environment map and spherical harmonics at surface in Philadelphia with static lighting", async function () {
-        if (!scene.highDynamicRangeSupported) {
+        // Skip if required WebGL extensions are not supported
+        if (!DynamicEnvironmentMapManager.isDynamicUpdateSupported(scene)) {
           return;
         }
 
@@ -146,7 +251,8 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
       });
 
       it("creates environment map and spherical harmonics at altitude in Philadelphia with static lighting", async function () {
-        if (!scene.highDynamicRangeSupported) {
+        // Skip if required WebGL extensions are not supported
+        if (!DynamicEnvironmentMapManager.isDynamicUpdateSupported(scene)) {
           return;
         }
 
@@ -231,7 +337,8 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
       });
 
       it("creates environment map and spherical harmonics above Earth's atmosphere with static lighting", async function () {
-        if (!scene.highDynamicRangeSupported) {
+        // Skip if required WebGL extensions are not supported
+        if (!DynamicEnvironmentMapManager.isDynamicUpdateSupported(scene)) {
           return;
         }
 
@@ -317,7 +424,8 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
       });
 
       it("creates environment map and spherical harmonics at surface in Philadelphia with dynamic lighting", async function () {
-        if (!scene.highDynamicRangeSupported) {
+        // Skip if required WebGL extensions are not supported
+        if (!DynamicEnvironmentMapManager.isDynamicUpdateSupported(scene)) {
           return;
         }
 
@@ -401,7 +509,8 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
       });
 
       it("creates environment map and spherical harmonics at surface in Sydney with dynamic lighting", async function () {
-        if (!scene.highDynamicRangeSupported) {
+        // Skip if required WebGL extensions are not supported
+        if (!DynamicEnvironmentMapManager.isDynamicUpdateSupported(scene)) {
           return;
         }
 
@@ -485,7 +594,8 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
       });
 
       it("lighting uses atmosphere properties", async function () {
-        if (!scene.highDynamicRangeSupported) {
+        // Skip if required WebGL extensions are not supported
+        if (!DynamicEnvironmentMapManager.isDynamicUpdateSupported(scene)) {
           return;
         }
 
@@ -572,10 +682,10 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
       });
 
       it("lighting uses atmosphereScatteringIntensity value", async function () {
-        if (!scene.highDynamicRangeSupported) {
+        // Skip if required WebGL extensions are not supported
+        if (!DynamicEnvironmentMapManager.isDynamicUpdateSupported(scene)) {
           return;
         }
-
         const manager = new DynamicEnvironmentMapManager();
         manager.atmosphereScatteringIntensity = 1.0;
 
@@ -654,7 +764,8 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
       });
 
       it("lighting uses gamma value", async function () {
-        if (!scene.highDynamicRangeSupported) {
+        // Skip if required WebGL extensions are not supported
+        if (!DynamicEnvironmentMapManager.isDynamicUpdateSupported(scene)) {
           return;
         }
 
@@ -736,7 +847,8 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
       });
 
       it("lighting uses brightness value", async function () {
-        if (!scene.highDynamicRangeSupported) {
+        // Skip if required WebGL extensions are not supported
+        if (!DynamicEnvironmentMapManager.isDynamicUpdateSupported(scene)) {
           return;
         }
 
@@ -818,7 +930,8 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
       });
 
       it("lighting uses saturation value", async function () {
-        if (!scene.highDynamicRangeSupported) {
+        // Skip if required WebGL extensions are not supported
+        if (!DynamicEnvironmentMapManager.isDynamicUpdateSupported(scene)) {
           return;
         }
 
@@ -900,7 +1013,8 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
       });
 
       it("lighting uses ground color value", async function () {
-        if (!scene.highDynamicRangeSupported) {
+        // Skip if required WebGL extensions are not supported
+        if (!DynamicEnvironmentMapManager.isDynamicUpdateSupported(scene)) {
           return;
         }
 
@@ -982,7 +1096,8 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
       });
 
       it("lighting uses ground albedo value", async function () {
-        if (!scene.highDynamicRangeSupported) {
+        // Skip if required WebGL extensions are not supported
+        if (!DynamicEnvironmentMapManager.isDynamicUpdateSupported(scene)) {
           return;
         }
 
@@ -1064,18 +1179,6 @@ describe("Scene/DynamicEnvironmentMapManager", function () {
       });
 
       it("destroys", function () {
-        if (!scene.highDynamicRangeSupported) {
-          const manager = new DynamicEnvironmentMapManager();
-          const cartographic = Cartographic.fromDegrees(-75.165222, 39.952583);
-          manager.position =
-            Ellipsoid.WGS84.cartographicToCartesian(cartographic);
-
-          manager.destroy();
-
-          expect(manager.isDestroyed()).toBe(true);
-          return;
-        }
-
         const manager = new DynamicEnvironmentMapManager();
         const cartographic = Cartographic.fromDegrees(-75.165222, 39.952583);
         manager.position =
