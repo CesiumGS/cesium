@@ -101,7 +101,7 @@
         // Add the architectural tileset
         let archTileset;
         try {
-          archTileset = await Cesium.Cesium3DTileset.fromIonAssetId(2884595);
+          archTileset = await Cesium.Cesium3DTileset.fromIonAssetId(2887123);
           viewer.scene.primitives.add(archTileset);
         } catch (error) {
           console.log(`Error loading tileset: ${error}`);
@@ -109,7 +109,7 @@
 
         // Add the site tileset
         try {
-          const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(2884592);
+          const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(2887129);
           viewer.scene.primitives.add(tileset);
         } catch (error) {
           console.log(`Error loading tileset: ${error}`);

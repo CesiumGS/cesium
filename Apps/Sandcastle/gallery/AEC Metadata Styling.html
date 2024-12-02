@@ -122,7 +122,7 @@
 
         // Add the architectural tileset as a semi-transparent ghost
         try {
-          const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(2884595);
+          const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(2887123);
           viewer.scene.primitives.add(tileset);
           tileset.style = new Cesium.Cesium3DTileStyle({
             color: "color('lightblue', 0.05)",
@@ -133,16 +133,16 @@
 
         // Add the site tileset
         try {
-          const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(2884592);
+          const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(2887129);
           viewer.scene.primitives.add(tileset);
         } catch (error) {
           console.log(`Error loading tileset: ${error}`);
         }
 
-        // Add the pipe tileset which will be styled by metadata
+        // Add the HVAC tileset which will be styled by metadata
         let pipeTileset;
         try {
-          pipeTileset = await Cesium.Cesium3DTileset.fromIonAssetId(2884588);
+          pipeTileset = await Cesium.Cesium3DTileset.fromIonAssetId(2887126);
           pipeTileset.maximumScreenSpaceError = 4;
           viewer.scene.primitives.add(pipeTileset);
         } catch (error) {
