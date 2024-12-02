@@ -94,9 +94,16 @@ import PostProcessStageSampleMode from "./PostProcessStageSampleMode.js";
 function PostProcessStage(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   const {
+    name = createGuid(),
     fragmentShader,
+    uniforms,
     textureScale = 1.0,
+    forcePowerOfTwo = false,
+    sampleMode = PostProcessStageSampleMode.NEAREST,
     pixelFormat = PixelFormat.RGBA,
+    pixelDatatype = PixelDatatype.UNSIGNED_BYTE,
+    clearColor = Color.BLACK,
+    scissorRectangle,
   } = options;
 
   //>>includeStart('debug', pragmas.debug);
@@ -113,19 +120,13 @@ function PostProcessStage(options) {
   //>>includeEnd('debug');
 
   this._fragmentShader = fragmentShader;
-  this._uniforms = options.uniforms;
+  this._uniforms = uniforms;
   this._textureScale = textureScale;
-  this._forcePowerOfTwo = defaultValue(options.forcePowerOfTwo, false);
-  this._sampleMode = defaultValue(
-    options.sampleMode,
-    PostProcessStageSampleMode.NEAREST,
-  );
+  this._forcePowerOfTwo = forcePowerOfTwo;
+  this._sampleMode = sampleMode;
   this._pixelFormat = pixelFormat;
-  this._pixelDatatype = defaultValue(
-    options.pixelDatatype,
-    PixelDatatype.UNSIGNED_BYTE,
-  );
-  this._clearColor = defaultValue(options.clearColor, Color.BLACK);
+  this._pixelDatatype = pixelDatatype;
+  this._clearColor = clearColor;
 
   this._uniformMap = undefined;
   this._command = undefined;
@@ -143,18 +144,14 @@ function PostProcessStage(options) {
   const passState = new PassState();
   passState.scissorTest = {
     enabled: true,
-    rectangle: defined(options.scissorRectangle)
-      ? BoundingRectangle.clone(options.scissorRectangle)
+    rectangle: defined(scissorRectangle)
+      ? BoundingRectangle.clone(scissorRectangle)
       : new BoundingRectangle(),
   };
   this._passState = passState;
 
   this._ready = false;
 
-  let name = options.name;
-  if (!defined(name)) {
-    name = createGuid();
-  }
   this._name = name;
 
   this._logDepthChanged = undefined;
