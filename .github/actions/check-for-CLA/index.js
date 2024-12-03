@@ -148,9 +148,6 @@ const addLabelToPullRequest = async () => {
   return octokit.request(
     `POST /repos/${PULL_REQUST_INFO.owner}/${PULL_REQUST_INFO.repoName}/issues/${PULL_REQUST_INFO.id}/labels`,
     {
-      owner: PULL_REQUST_INFO.username,
-      repo: PULL_REQUST_INFO.repoName,
-      issue_number: PULL_REQUST_INFO.id,
       labels: ["PR - Needs Signed CLA"],
       headers: {
         authorization: `bearer ${PULL_REQUST_INFO.gitHubToken}`,
