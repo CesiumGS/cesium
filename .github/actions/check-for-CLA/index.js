@@ -5,8 +5,6 @@ import fs from "fs-extra";
 import { dirname, join } from "path";
 import { fileURLToPath } from "url";
 
-/* eslint-disable no-unused-vars */
-
 const PULL_REQUST_INFO = {
   id: process.env.PULL_REQUEST_ID,
   owner: process.env.GITHUB_REPOSITORY.split("/")[0],
@@ -148,8 +146,7 @@ const addLabelToPullRequest = async () => {
   const octokit = new Octokit();
 
   return octokit.request(
-    // `POST /repos/${PULL_REQUST_INFO.owner}/${PULL_REQUST_INFO.repoName}/issues/${PULL_REQUST_INFO.id}/labels`,
-    `POST /repos/${PULL_REQUST_INFO.owner}/${PULL_REQUST_INFO.repoName}/issues/12354/labels`,
+    `POST /repos/${PULL_REQUST_INFO.owner}/${PULL_REQUST_INFO.repoName}/issues/${PULL_REQUST_INFO.id}/labels`,
     {
       labels: ["PR - Needs Signed CLA"],
       headers: {
@@ -171,11 +168,10 @@ const main = async () => {
     errorFoundOnCLACheck = error.toString();
   }
 
-  // await postCommentOnPullRequest(hasSignedCLA, errorFoundOnCLACheck);
-  // if (!hasSignedCLA) {
-  // TODO: make conditional
-  await addLabelToPullRequest();
-  // }
+  await postCommentOnPullRequest(hasSignedCLA, errorFoundOnCLACheck);
+  if (!hasSignedCLA) {
+    await addLabelToPullRequest();
+  }
 };
 
 main();
