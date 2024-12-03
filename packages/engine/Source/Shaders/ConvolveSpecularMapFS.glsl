@@ -62,7 +62,7 @@ void main() {
 
             float NdotL = max(dot(V, L), 0.0);
             if (NdotL > 0.0) {
-                color += vec4(texture(u_radianceTexture, L).rgb, 1.0) * NdotL;
+                color += vec4(czm_textureCube(u_radianceTexture, L).rgb, 1.0) * NdotL;
                 weight += NdotL;
             }
         }
