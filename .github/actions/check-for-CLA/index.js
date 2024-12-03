@@ -5,6 +5,8 @@ import fs from "fs-extra";
 import { dirname, join } from "path";
 import { fileURLToPath } from "url";
 
+/* eslint-disable no-unused-vars */
+
 const PULL_REQUST_INFO = {
   id: process.env.PULL_REQUEST_ID,
   owner: process.env.GITHUB_REPOSITORY.split("/")[0],
@@ -169,7 +171,7 @@ const main = async () => {
     errorFoundOnCLACheck = error.toString();
   }
 
-  await postCommentOnPullRequest(hasSignedCLA, errorFoundOnCLACheck);
+  // await postCommentOnPullRequest(hasSignedCLA, errorFoundOnCLACheck);
   // if (!hasSignedCLA) {
   // TODO: make conditional
   await addLabelToPullRequest();
