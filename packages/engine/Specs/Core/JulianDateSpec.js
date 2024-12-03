@@ -594,13 +594,13 @@ describe("Core/JulianDate", function () {
     }).toThrowDeveloperError();
   });
 
-  it("Fails to construct an ISO8601 Febuary date with more than 28 days", function () {
+  it("Fails to construct an ISO8601 February date with more than 28 days", function () {
     expect(function () {
       return JulianDate.fromIso8601("2009-02-29");
     }).toThrowDeveloperError();
   });
 
-  it("Fails to construct an ISO8601 Febuary leap year date with more than 29 days", function () {
+  it("Fails to construct an ISO8601 February leap year date with more than 29 days", function () {
     expect(function () {
       return JulianDate.fromIso8601("2000-02-30");
     }).toThrowDeveloperError();
