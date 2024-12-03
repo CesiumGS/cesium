@@ -146,7 +146,8 @@ const addLabelToPullRequest = async () => {
   const octokit = new Octokit();
 
   return octokit.request(
-    `POST /repos/${PULL_REQUST_INFO.owner}/${PULL_REQUST_INFO.repoName}/issues/${PULL_REQUST_INFO.id}/labels`,
+    // `POST /repos/${PULL_REQUST_INFO.owner}/${PULL_REQUST_INFO.repoName}/issues/${PULL_REQUST_INFO.id}/labels`,
+    `POST /repos/${PULL_REQUST_INFO.owner}/${PULL_REQUST_INFO.repoName}/issues/12354/labels`,
     {
       labels: ["PR - Needs Signed CLA"],
       headers: {
