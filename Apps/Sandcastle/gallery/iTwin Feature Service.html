@@ -36,7 +36,16 @@
 
         const iTwinId = "04ba725f-f3c0-4f30-8014-a4488cbd612d";
 
-        const viewer = new Cesium.Viewer("cesiumContainer");
+        const viewer = new Cesium.Viewer("cesiumContainer", {
+          geocoder: false,
+          sceneModePicker: false,
+          homeButton: false,
+          timeline: false,
+          animation: false,
+        });
+        viewer.baseLayerPicker.viewModel.selectedImagery =
+          viewer.baseLayerPicker.viewModel.imageryProviderViewModels[2];
+
         const birdsEyeView = {
           destination: new Cesium.Cartesian3(
             -1525359.4318772827,
@@ -88,7 +97,7 @@
         lines.entities.values.forEach((entity) => {
           const lineColorsByType = {
             Contours: Cesium.Color.CRIMSON,
-            Lane_Marking: Cesium.Color.WHITE,
+            Lane_Marking: Cesium.Color.CYAN,
             Kerb: Cesium.Color.BLUEVIOLET,
             Chevron_marking: Cesium.Color.DARKORANGE,
             Turning_pocket: Cesium.Color.DEEPPINK,
