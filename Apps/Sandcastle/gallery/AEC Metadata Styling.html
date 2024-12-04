@@ -71,6 +71,17 @@
         // Enable rendering the sky
         viewer.scene.skyAtmosphere.show = true;
 
+        // Configure Ambient Occlusion
+        if (Cesium.PostProcessStageLibrary.isAmbientOcclusionSupported(viewer.scene)) {
+          const ambientOcclusion = viewer.scene.postProcessStages.ambientOcclusion;
+          ambientOcclusion.enabled = true;
+          ambientOcclusion.uniforms.intensity = 2.0;
+          ambientOcclusion.uniforms.bias = 0.1;
+          ambientOcclusion.uniforms.lengthCap = 0.5;
+          ambientOcclusion.uniforms.directionCount = 16;
+          ambientOcclusion.uniforms.stepCount = 32;
+        }
+
         // Set to 1 PM Philadelphia time in UTC
         viewer.clock.currentTime = Cesium.JulianDate.fromIso8601("2024-11-22T18:00:00Z");
 
@@ -111,7 +122,7 @@
 
         // Add the architectural tileset as a semi-transparent ghost
         try {
-          const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(2864367);
+          const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(2887123);
           viewer.scene.primitives.add(tileset);
           tileset.style = new Cesium.Cesium3DTileStyle({
             color: "color('lightblue', 0.05)",
@@ -122,16 +133,16 @@
 
         // Add the site tileset
         try {
-          const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(2864374);
+          const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(2887129);
           viewer.scene.primitives.add(tileset);
         } catch (error) {
           console.log(`Error loading tileset: ${error}`);
         }
 
-        // Add the pipe tileset which will be styled by metadata
+        // Add the HVAC tileset which will be styled by metadata
         let pipeTileset;
         try {
-          pipeTileset = await Cesium.Cesium3DTileset.fromIonAssetId(2864372);
+          pipeTileset = await Cesium.Cesium3DTileset.fromIonAssetId(2887126);
           pipeTileset.maximumScreenSpaceError = 4;
           viewer.scene.primitives.add(pipeTileset);
         } catch (error) {
