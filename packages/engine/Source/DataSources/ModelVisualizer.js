@@ -35,6 +35,7 @@ const defaultColor = Color.WHITE;
 const defaultColorBlendMode = ColorBlendMode.HIGHLIGHT;
 const defaultColorBlendAmount = 0.5;
 const defaultImageBasedLightingFactor = new Cartesian2(1.0, 1.0);
+const defaultEnableEnvironmentMap = true;
 
 const modelMatrixScratch = new Matrix4();
 const nodeMatrixScratch = new Matrix4();
@@ -287,6 +288,12 @@ ModelVisualizer.prototype.update = function (time) {
     model.customShader = Property.getValueOrUndefined(
       modelGraphics._customShader,
       time,
+    );
+
+    model.environmentMapManager.enabled = Property.getValueOrDefault(
+      modelGraphics._enableEnvironmentMap,
+      time,
+      defaultEnableEnvironmentMap,
     );
 
     // It's possible for getBoundingSphere to run before

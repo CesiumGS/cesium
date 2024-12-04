@@ -46,6 +46,7 @@ function createArticulationStagePropertyBag(value) {
  * @property {PropertyBag | Object<string, number>} [articulations] An object, where keys are composed of an articulation name, a single space, and a stage name, and the values are numeric properties.
  * @property {Property | ClippingPlaneCollection} [clippingPlanes] A property specifying the {@link ClippingPlaneCollection} used to selectively disable rendering the model.
  * @property {Property | CustomShader} [customShader] A property specifying the {@link CustomShader} to apply to this model.
+ * @property {Property | boolean} [enableEnvironmentMap=true] A boolean Property specifying if the model has {@link DynamicEnvironmentMapManager} enabled.
  */
 
 /**
@@ -113,6 +114,8 @@ function ModelGraphics(options) {
   this._clippingPlanesSubscription = undefined;
   this._customShader = undefined;
   this._customShaderSubscription = undefined;
+  this._enableEnvironmentMap = undefined;
+  this._enableEnvironmentMapSubscription = undefined;
 
   this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
 }
@@ -333,6 +336,14 @@ Object.defineProperties(ModelGraphics.prototype, {
    * @type {Property|undefined}
    */
   customShader: createPropertyDescriptor("customShader"),
+
+  /**
+   * Gets or sets the boolean Property specifying if the model has {@link DynamicEnvironmentMapManager} enabled.
+   * @memberof ModelGraphics.prototype
+   * @type {Property|undefined}
+   * @default true
+   */
+  enableEnvironmentMap: createPropertyDescriptor("enableEnvironmentMap"),
 });
 
 /**
@@ -367,6 +378,7 @@ ModelGraphics.prototype.clone = function (result) {
   result.articulations = this.articulations;
   result.clippingPlanes = this.clippingPlanes;
   result.customShader = this.customShader;
+  result.enableEnvironmentMap = this.enableEnvironmentMap;
   return result;
 };
 
@@ -441,6 +453,10 @@ ModelGraphics.prototype.merge = function (source) {
     source.clippingPlanes,
   );
   this.customShader = defaultValue(this.customShader, source.customShader);
+  this.enableEnvironmentMap = defaultValue(
+    this.enableEnvironmentMap,
+    source.enableEnvironmentMap,
+  );
 
   const sourceNodeTransformations = source.nodeTransformations;
   if (defined(sourceNodeTransformations)) {
