@@ -1,5 +1,13 @@
 # Change Log
 
+### 1.125 - 2025-01-02
+
+#### @cesium/engine
+
+##### Fixes :wrench:
+
+- Added `enableEnvironmentMap` to `ModelGraphics` constructor options to allow long distance `Entity` movements without performance drop. [#12358](https://github.com/CesiumGS/cesium/pull/12358)
+
 ### 1.124 - 2024-12-02
 
 #### @cesium/engine
@@ -90,9 +98,6 @@
 - Fix flickering issue caused by bounding sphere retrieval being blocked by the bounding sphere of another entity. [#12230](https://github.com/CesiumGS/cesium/pull/12230)
 - Fixed `ImageBasedLighting.imageBasedLightingFactor` not affecting lighting. [#12129](https://github.com/CesiumGS/cesium/pull/12129)
 - Fix error with normalization of corner points for lines and corridors with collinear points. [#12255](https://github.com/CesiumGS/cesium/pull/12255)
-
-##### Fixes :wrench:
-
 - Properly handle `offset` and `scale` properties when picking metadata from property textures. [#12237](https://github.com/CesiumGS/cesium/pull/12237)
 
 ### 1.122 - 2024-10-01

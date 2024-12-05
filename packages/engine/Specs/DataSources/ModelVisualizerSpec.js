@@ -146,6 +146,7 @@ describe(
         new Cartesian2(0.5, 0.5),
       );
       model.lightColor = new ConstantProperty(new Color(1.0, 1.0, 0.0, 1.0));
+      model.enableEnvironmentMap = new ConstantProperty(false);
 
       const testObject = entityCollection.getOrCreateEntity("test");
       testObject.position = new ConstantPositionProperty(
@@ -195,6 +196,8 @@ describe(
       );
 
       expect(primitive.lightColor).toEqual(new Cartesian3(1.0, 1.0, 0.0));
+
+      expect(primitive.environmentMapManager.enabled).toEqual(false);
 
       // wait till the model is loaded before we can check node transformations
       await pollToPromise(function () {
