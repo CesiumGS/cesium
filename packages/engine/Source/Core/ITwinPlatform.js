@@ -38,54 +38,19 @@ ITwinPlatform.ExportType = Object.freeze({
 });
 
 /**
- * Types of Reality data
+ * Types of Reality data. This is a partial list of types we know we can support
+ *
  * @see https://developer.bentley.com/apis/reality-management/rm-rd-details/#types
  * @enum {string}
  */
 ITwinPlatform.RealityDataType = Object.freeze({
   Cesium3DTiles: "Cesium3DTiles",
   PNTS: "PNTS",
-  OPC: "OPC",
   RealityMesh3DTiles: "RealityMesh3DTiles",
   Terrain3DTiles: "Terrain3DTiles",
-  "3MX": "3MX",
-  "3SM": "3SM",
-  CCCloudProject: "CCCloudProject",
-  CCImageCollection: "CCImageCollection",
-  CCOrientations: "CCOrientations",
-  ContextCaptureInputs: "ContextCaptureInputs",
-  ContextDetector: "ContextDetector",
-  ContextScene: "ContextScene",
-  DAE: "DAE",
-  DGN: "DGN",
-  DSM: "DSM",
-  FBX: "FBX",
-  GLB: "GLB",
-  GLTF: "GLTF",
   KML: "KML",
-  LAS: "LAS",
-  LAZ: "LAZ",
-  LOD: "LOD",
-  LodTree: "LodTree",
-  OBJ: "OBJ",
-  OMI: "OMI",
-  OMR: "OMR",
-  Orthophoto: "Orthophoto",
-  OrthophotoDSM: "OrthophotoDSM",
-  OSGB: "OSGB",
-  OVF: "OVF",
-  OBT: "OBT",
-  PLY: "PLY",
-  PointCloud: "PointCloud",
-  S3C: "S3C",
-  ScanCollection: "ScanCollection",
-  SHP: "SHP",
-  SLPK: "SLPK",
-  SpaceEyes3D: "SpaceEyes3D",
-  STL: "STL",
-  TSM: "TSM",
+  GeoJSON: "GeoJSON",
   Unstructured: "Unstructured",
-  Other: "Other",
 });
 
 /**

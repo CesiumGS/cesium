@@ -3,6 +3,8 @@ import {
   RuntimeError,
   Cesium3DTileset,
   ITwinData,
+  GeoJsonDataSource,
+  KmlDataSource,
 } from "../../index.js";
 
 function createMockExport(
@@ -132,7 +134,7 @@ describe("ITwinData", () => {
         ITwinData.createTilesetForRealityDataId(
           "imodel-id-1",
           "reality-data-id-1",
-          ITwinPlatform.RealityDataType.DGN,
+          "DGN",
           "root/path.json",
         ),
       ).toBeRejectedWithError(RuntimeError, /type is not/);
@@ -219,6 +221,129 @@ describe("ITwinData", () => {
       expect(tilesetSpy).toHaveBeenCalledOnceWith(tilesetUrl, {
         maximumScreenSpaceError: 4,
       });
+    });
+  });
+
+  describe("createDataSourceForRealityDataId", () => {
+    let getMetadataSpy;
+    let getUrlSpy;
+    let geojsonSpy;
+    let kmlSpy;
+    beforeEach(() => {
+      getMetadataSpy = spyOn(ITwinPlatform, "getRealityDataMetadata");
+      getUrlSpy = spyOn(ITwinPlatform, "getRealityDataURL");
+      geojsonSpy = spyOn(GeoJsonDataSource, "load");
+      kmlSpy = spyOn(KmlDataSource, "load");
+    });
+
+    it("rejects if the type is not supported", async () => {
+      await expectAsync(
+        ITwinData.createDataSourceForRealityDataId(
+          "imodel-id-1",
+          "reality-data-id-1",
+          "DGN",
+          "root/path.json",
+        ),
+      ).toBeRejectedWithError(RuntimeError, /type is not/);
+    });
+
+    it("does not fetch metadata if type and rootDocument are defined", async () => {
+      await ITwinData.createDataSourceForRealityDataId(
+        "itwin-id-1",
+        "reality-data-id-1",
+        ITwinPlatform.RealityDataType.GeoJSON,
+        "root/document/path.json",
+      );
+
+      expect(getMetadataSpy).not.toHaveBeenCalled();
+      expect(getUrlSpy).toHaveBeenCalledOnceWith(
+        "itwin-id-1",
+        "reality-data-id-1",
+        "root/document/path.json",
+      );
+      expect(geojsonSpy).toHaveBeenCalled();
+    });
+
+    it("fetches metadata if type is undefined", async () => {
+      getMetadataSpy.and.resolveTo({
+        iModelId: "itwin-id-1",
+        id: "reality-data-id-1",
+        type: ITwinPlatform.RealityDataType.GeoJSON,
+        rootDocument: "root/document/path.json",
+      });
+      await ITwinData.createDataSourceForRealityDataId(
+        "itwin-id-1",
+        "reality-data-id-1",
+        undefined,
+        "root/document/path.json",
+      );
+
+      expect(getMetadataSpy).toHaveBeenCalledOnceWith(
+        "itwin-id-1",
+        "reality-data-id-1",
+      );
+      expect(getUrlSpy).toHaveBeenCalledOnceWith(
+        "itwin-id-1",
+        "reality-data-id-1",
+        "root/document/path.json",
+      );
+    });
+
+    it("fetches metadata if rootDocument is undefined", async () => {
+      getMetadataSpy.and.resolveTo({
+        iModelId: "itwin-id-1",
+        id: "reality-data-id-1",
+        type: ITwinPlatform.RealityDataType.GeoJSON,
+        rootDocument: "root/document/path.json",
+      });
+      await ITwinData.createDataSourceForRealityDataId(
+        "itwin-id-1",
+        "reality-data-id-1",
+        ITwinPlatform.RealityDataType.Cesium3DTiles,
+        undefined,
+      );
+
+      expect(getMetadataSpy).toHaveBeenCalledOnceWith(
+        "itwin-id-1",
+        "reality-data-id-1",
+      );
+      expect(getUrlSpy).toHaveBeenCalledOnceWith(
+        "itwin-id-1",
+        "reality-data-id-1",
+        "root/document/path.json",
+      );
+    });
+
+    it("creates a GeoJsonDataSource from the constructed blob url if the type is GeoJSON", async () => {
+      const tilesetUrl =
+        "https://example.com/root/document/path.json?auth=token";
+      getUrlSpy.and.resolveTo(tilesetUrl);
+
+      await ITwinData.createDataSourceForRealityDataId(
+        "itwin-id-1",
+        "reality-data-id-1",
+        ITwinPlatform.RealityDataType.GeoJSON,
+        "root/document/path.json",
+      );
+
+      expect(geojsonSpy).toHaveBeenCalledOnceWith(tilesetUrl);
+      expect(kmlSpy).not.toHaveBeenCalled();
+    });
+
+    it("creates a KmlDataSource from the constructed blob url if the type is KML", async () => {
+      const tilesetUrl =
+        "https://example.com/root/document/path.json?auth=token";
+      getUrlSpy.and.resolveTo(tilesetUrl);
+
+      await ITwinData.createDataSourceForRealityDataId(
+        "itwin-id-1",
+        "reality-data-id-1",
+        ITwinPlatform.RealityDataType.KML,
+        "root/document/path.json",
+      );
+
+      expect(kmlSpy).toHaveBeenCalledOnceWith(tilesetUrl);
+      expect(geojsonSpy).not.toHaveBeenCalled();
     });
   });
 });
