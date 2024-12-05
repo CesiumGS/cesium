@@ -8,6 +8,7 @@ import ShaderProgram from "./ShaderProgram.js";
 import ShaderSource from "./ShaderSource.js";
 import ShaderStruct from "./ShaderStruct.js";
 import ShaderFunction from "./ShaderFunction.js";
+import addAll from "../Core/addAll.js";
 
 /**
  * An object that makes it easier to build the text of a {@link ShaderProgram}. This tracks GLSL code for both the vertex shader and the fragment shader.
@@ -414,7 +415,7 @@ ShaderBuilder.prototype.addVertexLines = function (lines) {
 
   const vertexLines = this._vertexShaderParts.shaderLines;
   if (Array.isArray(lines)) {
-    vertexLines.push.apply(vertexLines, lines);
+    addAll(lines, vertexLines);
   } else {
     // Single string case
     vertexLines.push(lines);
@@ -449,7 +450,7 @@ ShaderBuilder.prototype.addFragmentLines = function (lines) {
 
   const fragmentLines = this._fragmentShaderParts.shaderLines;
   if (Array.isArray(lines)) {
-    fragmentLines.push.apply(fragmentLines, lines);
+    addAll(lines, fragmentLines);
   } else {
     // Single string case
     fragmentLines.push(lines);
@@ -534,7 +535,7 @@ function generateStructLines(shaderBuilder) {
     structId = structIds[i];
     struct = shaderBuilder._structs[structId];
     structLines = struct.generateGlslLines();
-    vertexLines.push.apply(vertexLines, structLines);
+    addAll(structLines, vertexLines);
   }
 
   structIds = shaderBuilder._fragmentShaderParts.structIds;
@@ -542,7 +543,7 @@ function generateStructLines(shaderBuilder) {
     structId = structIds[i];
     struct = shaderBuilder._structs[structId];
     structLines = struct.generateGlslLines();
-    fragmentLines.push.apply(fragmentLines, structLines);
+    addAll(structLines, fragmentLines);
   }
 
   return {
@@ -577,7 +578,7 @@ function generateFunctionLines(shaderBuilder) {
     functionId = functionIds[i];
     func = shaderBuilder._functions[functionId];
     functionLines = func.generateGlslLines();
-    vertexLines.push.apply(vertexLines, functionLines);
+    addAll(functionLines, vertexLines);
   }
 
   functionIds = shaderBuilder._fragmentShaderParts.functionIds;
@@ -585,7 +586,7 @@ function generateFunctionLines(shaderBuilder) {
     functionId = functionIds[i];
     func = shaderBuilder._functions[functionId];
     functionLines = func.generateGlslLines();
-    fragmentLines.push.apply(fragmentLines, functionLines);
+    addAll(functionLines, fragmentLines);
   }
 
   return {
