@@ -1,5 +1,13 @@
 # Change Log
 
+### 1.125 - 2025-01-02
+
+#### @cesium/engine
+
+##### Fixes :wrench:
+
+- Fix TypeError on setting the Viewer selectedEntity. [#12322](https://github.com/CesiumGS/cesium/pull/12322)
+
 ### 1.124 - 2024-12-02
 
 #### @cesium/engine
