@@ -24,6 +24,7 @@ if (!FeatureDetection.isInternetExplorer()) {
  * @param {object} [options] Object with the following properties:
  * @param {boolean} [options.translucent=true] When <code>true</code>, the geometry is expected to appear translucent so {@link PolylineMaterialAppearance#renderState} has alpha blending enabled.
  * @param {Material} [options.material=Material.ColorType] The material used to determine the fragment color.
+ * @param {boolean} [options.vertexShaderCommon] prepend PolylineCommon.glsl to vertexShaderSource
  * @param {string} [options.vertexShaderSource] Optional GLSL vertex shader source to override the default vertex shader.
  * @param {string} [options.fragmentShaderSource] Optional GLSL fragment shader source to override the default fragment shader.
  * @param {object} [options.renderState] Optional render state to override the default render state.
@@ -50,6 +51,7 @@ if (!FeatureDetection.isInternetExplorer()) {
 function PolylineMaterialAppearance(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
+  const vertexShaderCommon = defaultValue(options.vertexShaderCommon, false);
   const translucent = defaultValue(options.translucent, true);
   const closed = false;
   const vertexFormat = PolylineMaterialAppearance.VERTEX_FORMAT;
@@ -78,6 +80,9 @@ function PolylineMaterialAppearance(options) {
    */
   this.translucent = translucent;
 
+  if(vertexShaderCommon && options.vertexShaderSource) {
+	  options.vertexShaderSource = `${PolylineCommon}\n${options.vertexShaderSource}`
+  }
   this._vertexShaderSource = defaultValue(
     options.vertexShaderSource,
     defaultVertexShaderSource,
