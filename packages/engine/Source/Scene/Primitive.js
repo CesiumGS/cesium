@@ -957,6 +957,7 @@ Primitive._appendDistanceDisplayConditionToShader = function (
     "czm_non_distanceDisplayCondition_main",
   );
   let distanceDisplayConditionMain =
+    "out float v_distanceCamera; \n" +
     "void main() \n" +
     "{ \n" +
     "    czm_non_distanceDisplayCondition_main(); \n" +
@@ -1001,7 +1002,7 @@ Primitive._appendDistanceDisplayConditionToShader = function (
     "    { \n" +
     "        distanceSq = dot(centerRTE.xyz, centerRTE.xyz) - radiusSq; \n" +
     "    } \n" +
-    "    distanceSq = max(distanceSq, 0.0); \n" +
+    "    v_distanceCamera = distanceSq = max(distanceSq, 0.0); \n" +
     "    float nearSq = distanceDisplayCondition.x * distanceDisplayCondition.x; \n" +
     "    float farSq = distanceDisplayCondition.y * distanceDisplayCondition.y; \n" +
     "    float show = (distanceSq >= nearSq && distanceSq <= farSq) ? 1.0 : 0.0; \n" +
