@@ -2750,12 +2750,12 @@ function parse(loader, frameState) {
 
   // Gather promises and handle any errors
   const readyPromises = [];
-  addAll(readyPromises, loader._loaderPromises);
+  addAll(loader._loaderPromises, readyPromises);
 
   // When incrementallyLoadTextures is true, the errors are caught and thrown individually
   // since it doesn't affect the overall loader state
   if (!loader._incrementallyLoadTextures) {
-    addAll(readyPromises, loader._texturesPromises);
+    addAll(loader._texturesPromises, readyPromises);
   }
 
   return Promise.all(readyPromises);
