@@ -26,6 +26,7 @@ import ModelType from "./ModelType.js";
 import NodeRenderResources from "./NodeRenderResources.js";
 import PrimitiveRenderResources from "./PrimitiveRenderResources.js";
 import ModelDrawCommands from "./ModelDrawCommands.js";
+import addAll from "../../Core/addAll.js";
 
 /**
  * An in memory representation of the scene graph for a {@link Model}
@@ -912,7 +913,7 @@ ModelSceneGraph.prototype.pushDrawCommands = function (frameState) {
     pushDrawCommandOptions,
   );
 
-  frameState.commandList.push.apply(frameState.commandList, silhouetteCommands);
+  addAll(silhouetteCommands, frameState.commandList);
 };
 
 // Callback is defined here to avoid allocating a closure in the render loop
