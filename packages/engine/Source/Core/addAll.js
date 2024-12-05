@@ -1,4 +1,4 @@
-import defined from "./defined";
+import defined from "./defined.js";
 
 /**
  * Adds all elements from the given source array to the given target array.
