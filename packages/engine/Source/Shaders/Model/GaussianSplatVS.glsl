@@ -72,15 +72,25 @@ vec3 calcCov2D(vec3 worldPos, float focal_x, float focal_y, float tan_fovx, floa
     return vec3(cov[0][0], cov[0][1], cov[1][1]);
 }
 
+vec3 dequantizePos(uvec3 qPos) {
+    vec3 normalizedPos = vec3(qPos) / 65535.0;
+
+    vec4 worldPos = u_scalingMatrix * vec4(normalizedPos, 1.0);
+
+    return vec3(worldPos);
+}
+
+
 void gaussianSplatStage(ProcessedAttributes attributes, inout vec4 positionClip) {
     mat4 viewMatrix = czm_modelView;
 
-    vec4 clipPosition = czm_modelViewProjection * vec4(a_splatPosition ,1.0);
+    vec3 deqPos = dequantizePos(a_splatPosition);
+    vec4 clipPosition = czm_modelViewProjection * vec4(deqPos ,1.0);
     positionClip = clipPosition;
 
     float[6] cov3D;
     calcCov3D(attributes.scale, attributes.rotation, cov3D);
-    vec3 cov = calcCov2D(a_splatPosition, u_focalX, u_focalY, u_tan_fovX, u_tan_fovY, cov3D, viewMatrix);
+    vec3 cov = calcCov2D(deqPos, u_focalX, u_focalY, u_tan_fovX, u_tan_fovY, cov3D, viewMatrix);
 
     float mid = (cov.x + cov.z) / 2.0;
     float radius = length(vec2((cov.x - cov.z) / 2.0, cov.y));
@@ -134,10 +144,19 @@ vec4 calcCovVectors(vec3 worldPos, mat3 Vrk, mat3 viewmatrix) {
 
 highp vec4 discardVec = vec4(0.0, 0.0, 2.0, 1.0);
 
+vec4 dequantizePos(uvec4 qPos) {
+    vec3 normalizedPos = vec3(qPos) / 65535.0;
+
+    vec4 worldPos = u_scalingMatrix * vec4(normalizedPos, 1.0);
+
+    return worldPos;
+}
+
 void gaussianSplatStage(ProcessedAttributes attributes, inout vec4 positionClip) {
     uint texIdx = uint(a_splatIndex);
     ivec2 posCoord = ivec2((texIdx & 0x3ffu) << 1, texIdx >> 10);
     vec4 splatPosition = vec4( uintBitsToFloat(uvec4(texelFetch(u_splatAttributeTexture, posCoord, 0))) );
+    //vec4 splatPosition = dequantizePos(uvec4(texelFetch(u_splatAttributeTexture, posCoord, 0)));
 
     vec4 splatViewPos = czm_modelView * vec4(splatPosition.xyz, 1.0);
     vec4 clipPosition = czm_projection * splatViewPos;

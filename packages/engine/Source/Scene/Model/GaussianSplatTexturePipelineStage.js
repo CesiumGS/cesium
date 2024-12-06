@@ -102,6 +102,8 @@ GaussianSplatTexturePipelineStage.process = function (
     ShaderDestination.VERTEX,
   );
 
+  shaderBuilder.addUniform("mat4", "u_scalingMatrix", ShaderDestination.VERTEX);
+
   shaderBuilder.addUniform("float", "u_splatScale", ShaderDestination.VERTEX);
 
   const uniformMap = renderResources.uniformMap;
@@ -113,6 +115,10 @@ GaussianSplatTexturePipelineStage.process = function (
 
   uniformMap.u_splatAttributeTexture = function () {
     return primitive.gaussianSplatTexture;
+  };
+
+  uniformMap.u_scalingMatrix = function () {
+    return renderResources.model.sceneGraph.components.nodes[0].matrix;
   };
 
   const timer = new CesiumPerformanceTimer();

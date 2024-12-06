@@ -271,6 +271,7 @@ function setupGaussianSplatBuffers(loadPlan, context) {
 
 function generateSplatTexture(loadPlan, context) {
   loadPlan.primitive.gaussianSplatTexturePending = true;
+
   GaussianSplatTextureGenerator.generateFromAttrs(
     loadPlan.primitive.attributes,
     loadPlan.primitive.attributes[0].count,

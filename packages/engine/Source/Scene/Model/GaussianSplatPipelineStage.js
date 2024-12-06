@@ -85,7 +85,7 @@ GaussianSplatPipelineStage.process = function (
 
   shaderBuilder.addAttribute("vec2", "a_screenQuadPosition");
   shaderBuilder.addAttribute("float", "a_dummy");
-  shaderBuilder.addAttribute("vec3", "a_splatPosition");
+  shaderBuilder.addAttribute("uvec3", "a_splatPosition");
   shaderBuilder.addAttribute("vec4", "a_splatColor");
   //shaderBuilder.addAttribute("float", "a_splatOpacity");
 
@@ -100,6 +100,8 @@ GaussianSplatPipelineStage.process = function (
   shaderBuilder.addUniform("float", "u_focalX", ShaderDestination.VERTEX);
   shaderBuilder.addUniform("float", "u_focalY", ShaderDestination.VERTEX);
   shaderBuilder.addUniform("float", "u_splatScale", ShaderDestination.VERTEX);
+
+  shaderBuilder.addUniform("mat4", "u_scalingMatrix", ShaderDestination.VERTEX);
 
   const uniformMap = renderResources.uniformMap;
   const cam = frameState.camera;
@@ -129,6 +131,10 @@ GaussianSplatPipelineStage.process = function (
 
   uniformMap.u_splatScale = function () {
     return renderResources.model?.style?.splatScale ?? 1.0;
+  };
+
+  uniformMap.u_scalingMatrix = function () {
+    return renderResources.model.sceneGraph.components.nodes[0].matrix;
   };
 
   const timer = new CesiumPerformanceTimer();
