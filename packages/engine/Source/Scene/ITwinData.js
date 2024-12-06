@@ -3,6 +3,9 @@ import defined from "../Core/defined.js";
 import Resource from "../Core/Resource.js";
 import ITwinPlatform from "../Core/ITwinPlatform.js";
 import RuntimeError from "../Core/RuntimeError.js";
+import Check from "../Core/Check.js";
+import KmlDataSource from "../DataSources/KmlDataSource.js";
+import GeoJsonDataSource from "../DataSources/GeoJsonDataSource.js";
 
 /**
  * Methods for loading iTwin platform data into CesiumJS
@@ -69,6 +72,137 @@ ITwinData.createTilesetFromIModelId = async function (iModelId, options) {
   });
 
   return Cesium3DTileset.fromUrl(resource, options);
+};
+
+/**
+ * Create a tileset for the specified reality data id. This function only works
+ * with 3D Tiles meshes and point clouds.
+ *
+ * If the <code>type</code> or <code>rootDocument</code> are not provided this function
+ * will first request the full metadata for the specified reality data to fill these values.
+ *
+ * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
+ *
+ * @param {string} iTwinId The id of the iTwin to load data from
+ * @param {string} realityDataId The id of the reality data to load
+ * @param {ITwinPlatform.RealityDataType} [type] The type of this reality data
+ * @param {string} [rootDocument] The path of the root document for this reality data
+ * @returns {Promise<Cesium3DTileset>}
+ *
+ * @throws {RuntimeError} if the type of reality data is not supported by this function
+ */
+ITwinData.createTilesetForRealityDataId = async function (
+  iTwinId,
+  realityDataId,
+  type,
+  rootDocument,
+) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("iTwinId", iTwinId);
+  Check.typeOf.string("realityDataId", realityDataId);
+  if (defined(type)) {
+    Check.typeOf.string("type", type);
+  }
+  if (defined(rootDocument)) {
+    Check.typeOf.string("rootDocument", rootDocument);
+  }
+  //>>includeEnd('debug')
+
+  if (!defined(type) || !defined(rootDocument)) {
+    const metadata = await ITwinPlatform.getRealityDataMetadata(
+      iTwinId,
+      realityDataId,
+    );
+    rootDocument = metadata.rootDocument;
+    type = metadata.type;
+  }
+
+  const supportedRealityDataTypes = [
+    ITwinPlatform.RealityDataType.Cesium3DTiles,
+    ITwinPlatform.RealityDataType.PNTS,
+    ITwinPlatform.RealityDataType.RealityMesh3DTiles,
+    ITwinPlatform.RealityDataType.Terrain3DTiles,
+  ];
+
+  if (!supportedRealityDataTypes.includes(type)) {
+    throw new RuntimeError(`Reality data type is not a mesh type: ${type}`);
+  }
+
+  const tilesetAccessUrl = await ITwinPlatform.getRealityDataURL(
+    iTwinId,
+    realityDataId,
+    rootDocument,
+  );
+
+  return Cesium3DTileset.fromUrl(tilesetAccessUrl, {
+    maximumScreenSpaceError: 4,
+  });
+};
+
+/**
+ * Create a data source of the correct type for the specified reality data id.
+ * This function only works for KML and GeoJSON type data.
+ *
+ * If the <code>type</code> or <code>rootDocument</code> are not provided this function
+ * will first request the full metadata for the specified reality data to fill these values.
+ *
+ * @param {string} iTwinId The id of the iTwin to load data from
+ * @param {string} realityDataId The id of the reality data to load
+ * @param {ITwinPlatform.RealityDataType} [type] The type of this reality data
+ * @param {string} [rootDocument] The path of the root document for this reality data
+ * @returns {Promise<GeoJsonDataSource | KmlDataSource>}
+ *
+ * @throws {RuntimeError} if the type of reality data is not supported by this function
+ */
+ITwinData.createDataSourceForRealityDataId = async function loadRealityData(
+  iTwinId,
+  realityDataId,
+  type,
+  rootDocument,
+) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("iTwinId", iTwinId);
+  Check.typeOf.string("realityDataId", realityDataId);
+  if (defined(type)) {
+    Check.typeOf.string("type", type);
+  }
+  if (defined(rootDocument)) {
+    Check.typeOf.string("rootDocument", rootDocument);
+  }
+  //>>includeEnd('debug')
+
+  if (!defined(type) || !defined(rootDocument)) {
+    const metadata = await ITwinPlatform.getRealityDataMetadata(
+      iTwinId,
+      realityDataId,
+    );
+    rootDocument = metadata.rootDocument;
+    type = metadata.type;
+  }
+
+  const supportedRealityDataTypes = [
+    ITwinPlatform.RealityDataType.KML,
+    ITwinPlatform.RealityDataType.GeoJSON,
+  ];
+
+  if (!supportedRealityDataTypes.includes(type)) {
+    throw new RuntimeError(
+      `Reality data type is not a data source type: ${type}`,
+    );
+  }
+
+  const tilesetAccessUrl = await ITwinPlatform.getRealityDataURL(
+    iTwinId,
+    realityDataId,
+    rootDocument,
+  );
+
+  if (type === ITwinPlatform.RealityDataType.GeoJSON) {
+    return GeoJsonDataSource.load(tilesetAccessUrl);
+  }
+
+  // If we get here it's guaranteed to be a KML type
+  return KmlDataSource.load(tilesetAccessUrl);
 };
 
 export default ITwinData;

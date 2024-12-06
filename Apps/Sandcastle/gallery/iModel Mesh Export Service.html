@@ -12,7 +12,7 @@
       content="Demonstrate loading iModel data from the iTwin platform."
     />
     <meta name="cesium-sandcastle-labels" content="Showcases, 3D Tiles" />
-    <title>iTwin iModel demo</title>
+    <title>iModel Mesh Export Service</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script type="module" src="../load-cesium-es6.js"></script>
   </head>
@@ -120,18 +120,28 @@
         scene.primitives.add(surroundingArea);
         scene.primitives.add(station);
 
+        // Create tileset of the reality data mesh
+        const iTwinId = "535a24a3-9b29-4e23-bb5d-9cedb524c743";
+        const realityMeshId = "85897090-3bcc-470b-bec7-20bb639cc1b9";
+        const realityMesh = await Cesium.ITwinData.createTilesetForRealityDataId(
+          iTwinId,
+          realityMeshId,
+        );
+        scene.primitives.add(realityMesh);
+
         Sandcastle.addToolbarButton(
           "Toggle Surrounding Area",
-          function () {
-            surroundingArea.show = !surroundingArea.show;
-          },
+          () => (surroundingArea.show = !surroundingArea.show),
           "layers",
         );
         Sandcastle.addToolbarButton(
           "Toggle Station Model",
-          function () {
-            station.show = !station.show;
-          },
+          () => (station.show = !station.show),
+          "layers",
+        );
+        Sandcastle.addToolbarButton(
+          "Toggle Reality Mesh",
+          () => (realityMesh.show = !realityMesh.show),
           "layers",
         );
 
