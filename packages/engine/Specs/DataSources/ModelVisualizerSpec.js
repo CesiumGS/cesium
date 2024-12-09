@@ -196,6 +196,8 @@ describe(
 
       expect(primitive.lightColor).toEqual(new Cartesian3(1.0, 1.0, 0.0));
 
+      expect(primitive.environmentMapManager.enabled).toEqual(false);
+
       // wait till the model is loaded before we can check node transformations
       await pollToPromise(function () {
         scene.render();

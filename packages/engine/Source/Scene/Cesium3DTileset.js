@@ -105,7 +105,7 @@ import DynamicEnvironmentMapManager from "./DynamicEnvironmentMapManager.js";
  * @property {object} [pointCloudShading] Options for constructing a {@link PointCloudShading} object to control point attenuation based on geometric error and lighting.
  * @property {Cartesian3} [lightColor] The light color when shading models. When <code>undefined</code> the scene's light color is used instead.
  * @property {ImageBasedLighting} [imageBasedLighting] The properties for managing image-based lighting for this tileset.
- * @param {DynamicEnvironmentMapManager.ConstructorOptions} [options.environmentMapOptions] The properties for managing dynamic environment maps on this model.
+ * @property {DynamicEnvironmentMapManager.ConstructorOptions} [environmentMapOptions] The properties for managing dynamic environment maps on this tileset.
  * @property {boolean} [backFaceCulling=true] Whether to cull back-facing geometry. When true, back face culling is determined by the glTF material's doubleSided property; when false, back face culling is disabled.
  * @property {boolean} [enableShowOutline=true] Whether to enable outlines for models using the {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension. This can be set to false to avoid the additional processing of geometry at load time. When false, the showOutlines and outlineColor options are ignored.
  * @property {boolean} [showOutline=true] Whether to display the outline for models using the {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension. When true, outlines are displayed. When false, outlines are not displayed.

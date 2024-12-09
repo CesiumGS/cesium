@@ -1823,7 +1823,7 @@ Model.prototype.applyArticulations = function () {
  *
  * The given name may be the name of a glTF extension, like `"EXT_example_extension"`.
  * If the specified extension was present in the root of the underlying glTF asset,
- * and a loder for the specified extension has processed the extension data, then
+ * and a loader for the specified extension has processed the extension data, then
  * this will return the model representation of the extension.
  *
  * @param {string} extensionName The name of the extension
