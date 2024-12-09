@@ -1,3 +1,4 @@
+import addAll from "../../Core/addAll.js";
 import BoundingSphere from "../../Core/BoundingSphere.js";
 import Check from "../../Core/Check.js";
 import defaultValue from "../../Core/defaultValue.js";
@@ -482,16 +483,16 @@ ClassificationModelDrawCommand.prototype.pushCommands = function (
   const passes = frameState.passes;
   if (passes.render) {
     if (this._useDebugWireframe) {
-      result.push.apply(result, this._commandListDebugWireframe);
+      addAll(this._commandListDebugWireframe, result);
       return;
     }
 
     if (this._classifiesTerrain) {
-      result.push.apply(result, this._commandListTerrain);
+      addAll(this._commandListTerrain, result);
     }
 
     if (this._classifies3DTiles) {
-      result.push.apply(result, this._commandList3DTiles);
+      addAll(this._commandList3DTiles, result);
     }
 
     const useIgnoreShowCommands =
@@ -513,17 +514,17 @@ ClassificationModelDrawCommand.prototype.pushCommands = function (
         );
       }
 
-      result.push.apply(result, this._commandListIgnoreShow);
+      addAll(this._commandListIgnoreShow, result);
     }
   }
 
   if (passes.pick) {
     if (this._classifiesTerrain) {
-      result.push.apply(result, this._commandListTerrainPicking);
+      addAll(this._commandListTerrainPicking, result);
     }
 
     if (this._classifies3DTiles) {
-      result.push.apply(result, this._commandList3DTilesPicking);
+      addAll(this._commandList3DTilesPicking, result);
     }
   }
 

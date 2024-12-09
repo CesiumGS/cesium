@@ -32,6 +32,7 @@ import VertexAttributeSemantic from "./VertexAttributeSemantic.js";
 import GltfGpmLoader from "./Model/Extensions/Gpm/GltfGpmLoader.js";
 import GltfMeshPrimitiveGpmLoader from "./Model/Extensions/Gpm/GltfMeshPrimitiveGpmLoader.js";
 import oneTimeWarning from "../Core/oneTimeWarning.js";
+import addAll from "../Core/addAll.js";
 
 const {
   Attribute,
@@ -2749,12 +2750,12 @@ function parse(loader, frameState) {
 
   // Gather promises and handle any errors
   const readyPromises = [];
-  readyPromises.push.apply(readyPromises, loader._loaderPromises);
+  addAll(loader._loaderPromises, readyPromises);
 
   // When incrementallyLoadTextures is true, the errors are caught and thrown individually
   // since it doesn't affect the overall loader state
   if (!loader._incrementallyLoadTextures) {
-    readyPromises.push.apply(readyPromises, loader._texturesPromises);
+    addAll(loader._texturesPromises, readyPromises);
   }
 
   return Promise.all(readyPromises);

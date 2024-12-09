@@ -1,3 +1,4 @@
+import addAll from "../../Core/addAll.js";
 import AttributeCompression from "../../Core/AttributeCompression.js";
 import Cartesian3 from "../../Core/Cartesian3.js";
 import clone from "../../Core/clone.js";
@@ -210,10 +211,7 @@ InstancingPipelineStage.process = function (renderResources, node, frameState) {
   renderResources.uniformMap = combine(uniformMap, renderResources.uniformMap);
 
   renderResources.instanceCount = count;
-  renderResources.attributes.push.apply(
-    renderResources.attributes,
-    instancingVertexAttributes,
-  );
+  addAll(instancingVertexAttributes, renderResources.attributes);
 };
 
 const projectedTransformScratch = new Matrix4();
@@ -988,10 +986,7 @@ function processMatrixAttributes(
   shaderBuilder.addAttribute("vec4", `a_instancing${attributeString}Row1`);
   shaderBuilder.addAttribute("vec4", `a_instancing${attributeString}Row2`);
 
-  instancingVertexAttributes.push.apply(
-    instancingVertexAttributes,
-    matrixAttributes,
-  );
+  addAll(matrixAttributes, instancingVertexAttributes);
 }
 
 function processVec3Attribute(
