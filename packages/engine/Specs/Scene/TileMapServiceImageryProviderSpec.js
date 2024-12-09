@@ -586,7 +586,7 @@ describe("Scene/TileMapServiceImageryProvider", function () {
 
     expect(provider.rectangle.west).toEqual(expectedSW.longitude);
     expect(provider.rectangle.south).toEqual(expectedSW.latitude);
-    expect(provider.rectangle.east).toBeCloseTo(
+    expect(provider.rectangle.east).toEqualEpsilon(
       expectedNE.longitude,
       CesiumMath.EPSILON14,
     );
@@ -620,12 +620,12 @@ describe("Scene/TileMapServiceImageryProvider", function () {
     const expectedSW = Cartographic.fromDegrees(-123.0, -10.0);
     const expectedNE = Cartographic.fromDegrees(-110.0, 11.0);
 
-    expect(provider.rectangle.west).toBeCloseTo(
+    expect(provider.rectangle.west).toEqualEpsilon(
       expectedSW.longitude,
       CesiumMath.EPSILON14,
     );
     expect(provider.rectangle.south).toEqual(expectedSW.latitude);
-    expect(provider.rectangle.east).toBeCloseTo(
+    expect(provider.rectangle.east).toEqualEpsilon(
       expectedNE.longitude,
       CesiumMath.EPSILON14,
     );
@@ -663,12 +663,12 @@ describe("Scene/TileMapServiceImageryProvider", function () {
     const expectedSW = Cartographic.fromDegrees(-123.0, -10.0);
     const expectedNE = Cartographic.fromDegrees(-110.0, 11.0);
 
-    expect(provider.rectangle.west).toBeCloseTo(
+    expect(provider.rectangle.west).toEqualEpsilon(
       expectedSW.longitude,
       CesiumMath.EPSILON14,
     );
     expect(provider.rectangle.south).toEqual(expectedSW.latitude);
-    expect(provider.rectangle.east).toBeCloseTo(
+    expect(provider.rectangle.east).toEqualEpsilon(
       expectedNE.longitude,
       CesiumMath.EPSILON14,
     );
@@ -706,12 +706,12 @@ describe("Scene/TileMapServiceImageryProvider", function () {
     const expectedSW = Cartographic.fromDegrees(-123.0, -10.0);
     const expectedNE = Cartographic.fromDegrees(-110.0, 11.0);
 
-    expect(provider.rectangle.west).toBeCloseTo(
+    expect(provider.rectangle.west).toEqualEpsilon(
       expectedSW.longitude,
       CesiumMath.EPSILON14,
     );
     expect(provider.rectangle.south).toEqual(expectedSW.latitude);
-    expect(provider.rectangle.east).toBeCloseTo(
+    expect(provider.rectangle.east).toEqualEpsilon(
       expectedNE.longitude,
       CesiumMath.EPSILON14,
     );
