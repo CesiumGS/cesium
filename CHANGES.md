@@ -6,7 +6,7 @@
 
 ##### Fixes :wrench:
 
-- Added `enableEnvironmentMap` to `ModelGraphics` constructor options to allow long distance `Entity` movements without performance drop. [#12358](https://github.com/CesiumGS/cesium/pull/12358)
+- Added `environmentMapOptions` to `Entity`'s constructor options with EnvironmentMap disabled by default to allow long distance `Entity` jumps without performance drop. If EnvironmentMap needs to be enabled, ensure to provide a `maximumPositionEpsilon` threshold value large enough with your entity movements use case. [#12358](https://github.com/CesiumGS/cesium/pull/12358)
 
 ### 1.124 - 2024-12-02
 

@@ -49,7 +49,6 @@ describe("DataSources/ModelGraphics", function () {
       articulations: {
         "articulation1 stage1": 45,
       },
-      enableEnvironmentMap: false,
     };
 
     const model = new ModelGraphics(options);
@@ -105,9 +104,6 @@ describe("DataSources/ModelGraphics", function () {
     expect(model.lightColor.getValue()).toEqual(options.lightColor);
     expect(model.runAnimations.getValue()).toEqual(options.runAnimations);
     expect(model.clampAnimations.getValue()).toEqual(options.clampAnimations);
-    expect(model.enableEnvironmentMap.getValue()).toEqual(
-      options.enableEnvironmentMap,
-    );
 
     let actualNodeTransformations = model.nodeTransformations.getValue(
       new JulianDate(),
@@ -176,7 +172,6 @@ describe("DataSources/ModelGraphics", function () {
       "a1 s1": 10,
       "a2 s2": 20,
     };
-    source.enableEnvironmentMap = new ConstantProperty(true);
 
     const target = new ModelGraphics();
     target.merge(source);
@@ -209,7 +204,6 @@ describe("DataSources/ModelGraphics", function () {
     expect(target.clampAnimations).toBe(source.clampAnimations);
     expect(target.nodeTransformations).toEqual(source.nodeTransformations);
     expect(target.articulations).toEqual(source.articulations);
-    expect(target.enableEnvironmentMap).toBe(source.enableEnvironmentMap);
   });
 
   it("merge does not assign assigned properties", function () {
@@ -247,7 +241,6 @@ describe("DataSources/ModelGraphics", function () {
       "a1 s1": 10,
       "a2 s2": 20,
     };
-    source.enableEnvironmentMap = new ConstantProperty(true);
 
     const uri = new ConstantProperty("");
     const show = new ConstantProperty(true);
@@ -282,7 +275,6 @@ describe("DataSources/ModelGraphics", function () {
       "a1 s1": 10,
       "a2 s2": 20,
     });
-    const enableEnvironmentMap = new ConstantProperty(true);
 
     const target = new ModelGraphics();
     target.uri = uri;
@@ -307,7 +299,6 @@ describe("DataSources/ModelGraphics", function () {
     target.clampAnimations = clampAnimations;
     target.nodeTransformations = nodeTransformations;
     target.articulations = articulations;
-    target.enableEnvironmentMap = enableEnvironmentMap;
 
     target.merge(source);
 
@@ -333,7 +324,6 @@ describe("DataSources/ModelGraphics", function () {
     expect(target.clampAnimations).toBe(clampAnimations);
     expect(target.nodeTransformations).toBe(nodeTransformations);
     expect(target.articulations).toBe(articulations);
-    expect(target.enableEnvironmentMap).toBe(enableEnvironmentMap);
   });
 
   it("clone works", function () {
@@ -372,7 +362,6 @@ describe("DataSources/ModelGraphics", function () {
       "a1 s1": 10,
       "a2 s2": 20,
     };
-    source.enableEnvironmentMap = new ConstantProperty(true);
 
     const result = source.clone();
     expect(result.uri).toBe(source.uri);
@@ -403,7 +392,6 @@ describe("DataSources/ModelGraphics", function () {
     expect(result.clampAnimations).toBe(source.clampAnimations);
     expect(result.nodeTransformations).toEqual(source.nodeTransformations);
     expect(result.articulations).toEqual(source.articulations);
-    expect(result.enableEnvironmentMap).toEqual(source.enableEnvironmentMap);
   });
 
   it("merge throws if source undefined", function () {

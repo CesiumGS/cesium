@@ -146,7 +146,6 @@ describe(
         new Cartesian2(0.5, 0.5),
       );
       model.lightColor = new ConstantProperty(new Color(1.0, 1.0, 0.0, 1.0));
-      model.enableEnvironmentMap = new ConstantProperty(false);
 
       const testObject = entityCollection.getOrCreateEntity("test");
       testObject.position = new ConstantPositionProperty(

@@ -133,6 +133,7 @@ describe(
       visualizer.update(time);
       expect(primitive.show).toEqual(true);
       expect(primitive.maximumScreenSpaceError).toEqual(24.0);
+      expect(primitive.environmentMapManager.enabled).toEqual(false);
     });
 
     it("A Cesium3DTilesetGraphics with a Resource causes a primitive to be created.", async function () {
