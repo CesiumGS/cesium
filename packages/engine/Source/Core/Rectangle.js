@@ -7,7 +7,6 @@ import Ellipsoid from "./Ellipsoid.js";
 import CesiumMath from "./Math.js";
 import Transforms from "./Transforms.js";
 import Matrix4 from "./Matrix4.js";
-import deprecationWarning from "./deprecationWarning.js";
 
 /**
  * A two dimensional region specified as longitude and latitude coordinates.
@@ -531,25 +530,6 @@ Rectangle.equals = function (left, right) {
  */
 Rectangle.prototype.equalsEpsilon = function (other, epsilon) {
   return Rectangle.equalsEpsilon(this, other, epsilon);
-};
-
-/**
- * Checks a Rectangle's properties and throws if they are not in valid ranges.
- *
- * @param {Rectangle} rectangle The rectangle to validate
- *
- * @exception {DeveloperError} <code>north</code> must be in the interval [<code>-Pi/2</code>, <code>Pi/2</code>].
- * @exception {DeveloperError} <code>south</code> must be in the interval [<code>-Pi/2</code>, <code>Pi/2</code>].
- * @exception {DeveloperError} <code>east</code> must be in the interval [<code>-Pi</code>, <code>Pi</code>].
- * @exception {DeveloperError} <code>west</code> must be in the interval [<code>-Pi</code>, <code>Pi</code>].
- * @deprecated This function is deprecated and will be removed in Cesium 1.124. See <a href="https://github.com/CesiumGS/cesium/issues/4921">Issue 4921</a>
- */
-Rectangle.validate = function (rectangle) {
-  deprecationWarning(
-    "Rectangle.validate",
-    "Rectangle.validate is a no-op and has been deprecated. It will be removed in Cesium 1.124.",
-  );
-  return Rectangle._validate(rectangle);
 };
 
 /**
