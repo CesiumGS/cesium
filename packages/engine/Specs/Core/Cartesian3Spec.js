@@ -1241,14 +1241,16 @@ describe("Core/Cartesian3", function () {
 
   it("fromDegrees throws with no longitude", function () {
     expect(function () {
-      Cartesian3.fromDegrees();
-    }).toThrowDeveloperError();
+      Cartesian3.fromDegrees(undefined, undefined);
+    }).toThrowDeveloperError(/Expected longitude to be/);
   });
 
   it("fromDegrees throws with no latitude", function () {
     expect(function () {
-      Cartesian3.fromDegrees(1);
-    }).toThrowDeveloperError();
+      Cartesian3.fromDegrees(1, undefined);
+    }).toThrowDeveloperError(
+      "Expected latitude to be typeof number, actual typeof was undefined",
+    );
   });
 
   it("fromDegrees works works with default ellipsoid", function () {

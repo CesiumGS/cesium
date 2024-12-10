@@ -49,6 +49,17 @@
         // Enable rendering the sky
         viewer.scene.skyAtmosphere.show = true;
 
+        // Configure Ambient Occlusion
+        if (Cesium.PostProcessStageLibrary.isAmbientOcclusionSupported(viewer.scene)) {
+          const ambientOcclusion = viewer.scene.postProcessStages.ambientOcclusion;
+          ambientOcclusion.enabled = true;
+          ambientOcclusion.uniforms.intensity = 2.0;
+          ambientOcclusion.uniforms.bias = 0.1;
+          ambientOcclusion.uniforms.lengthCap = 0.5;
+          ambientOcclusion.uniforms.directionCount = 16;
+          ambientOcclusion.uniforms.stepCount = 32;
+        }
+
         // Set to 1 PM Philadelphia time in UTC
         viewer.clock.currentTime = Cesium.JulianDate.fromIso8601("2024-11-22T18:00:00Z");
 
@@ -87,10 +98,10 @@
 
         googleTileset.clippingPolygons = polygons;
 
-        // Add the architectural tileset as a semi-transparent ghost
+        // Add the architectural tileset
         let archTileset;
         try {
-          archTileset = await Cesium.Cesium3DTileset.fromIonAssetId(2864367);
+          archTileset = await Cesium.Cesium3DTileset.fromIonAssetId(2887123);
           viewer.scene.primitives.add(archTileset);
         } catch (error) {
           console.log(`Error loading tileset: ${error}`);
@@ -98,7 +109,7 @@
 
         // Add the site tileset
         try {
-          const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(2864374);
+          const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(2887129);
           viewer.scene.primitives.add(tileset);
         } catch (error) {
           console.log(`Error loading tileset: ${error}`);
