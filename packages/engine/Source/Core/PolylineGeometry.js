@@ -2,12 +2,14 @@ import ArcType from "./ArcType.js";
 import arrayRemoveDuplicates from "./arrayRemoveDuplicates.js";
 import BoundingSphere from "./BoundingSphere.js";
 import Cartesian3 from "./Cartesian3.js";
+import Cartographic from "../Core/Cartographic.js";
 import Color from "./Color.js";
 import ComponentDatatype from "./ComponentDatatype.js";
 import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import Ellipsoid from "./Ellipsoid.js";
+import EllipsoidGeodesic from "./EllipsoidGeodesic.js";
 import Geometry from "./Geometry.js";
 import GeometryAttribute from "./GeometryAttribute.js";
 import GeometryAttributes from "./GeometryAttributes.js";
@@ -76,6 +78,7 @@ function interpolateColors(p0, p1, color0, color1, numPoints) {
  * @param {number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude if options.arcType is not ArcType.NONE. Determines the number of positions in the buffer.
  * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
  * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.default] The ellipsoid to be used as a reference.
+ * @param {boolean} [options.computeLength=false] compute the length to send the parameter to the custom shader, usefull for dash polyline
  *
  * @exception {DeveloperError} At least two positions are required.
  * @exception {DeveloperError} width must be greater than or equal to one.
@@ -93,7 +96,7 @@ function interpolateColors(p0, p1, color0, color1, numPoints) {
  *     5.0, 0.0,
  *     5.0, 5.0
  *   ]),
- *   width : 10.0
+ *   width : 10.0,
  * });
  * const geometry = Cesium.PolylineGeometry.createGeometry(polyline);
  */
@@ -102,6 +105,7 @@ function PolylineGeometry(options) {
   const positions = options.positions;
   const colors = options.colors;
   const width = defaultValue(options.width, 1.0);
+  const computeLength =  defaultValue(options.computeLength, false);
   const colorsPerVertex = defaultValue(options.colorsPerVertex, false);
 
   //>>includeStart('debug', pragmas.debug);
@@ -124,6 +128,7 @@ function PolylineGeometry(options) {
   this._colors = colors;
   this._width = width;
   this._colorsPerVertex = colorsPerVertex;
+  this._computeLength = computeLength;
   this._vertexFormat = VertexFormat.clone(
     defaultValue(options.vertexFormat, VertexFormat.DEFAULT),
   );
@@ -146,7 +151,7 @@ function PolylineGeometry(options) {
    * @type {number}
    */
   this.packedLength =
-    numComponents + Ellipsoid.packedLength + VertexFormat.packedLength + 4;
+    numComponents + Ellipsoid.packedLength + VertexFormat.packedLength + 4 + 1;
 }
 
 /**
@@ -197,7 +202,8 @@ PolylineGeometry.pack = function (value, array, startingIndex) {
   array[startingIndex++] = value._width;
   array[startingIndex++] = value._colorsPerVertex ? 1.0 : 0.0;
   array[startingIndex++] = value._arcType;
-  array[startingIndex] = value._granularity;
+  array[startingIndex++] = value._granularity;
+  array[startingIndex] = value._computeLength;
 
   return array;
 };
@@ -213,6 +219,7 @@ const scratchOptions = {
   colorsPerVertex: undefined,
   arcType: undefined,
   granularity: undefined,
+  computeLength: false,
 };
 
 /**
@@ -261,7 +268,8 @@ PolylineGeometry.unpack = function (array, startingIndex, result) {
   const width = array[startingIndex++];
   const colorsPerVertex = array[startingIndex++] === 1.0;
   const arcType = array[startingIndex++];
-  const granularity = array[startingIndex];
+  const granularity = array[startingIndex++];
+  const computeLength = array[startingIndex++];
 
   if (!defined(result)) {
     scratchOptions.positions = positions;
@@ -270,6 +278,7 @@ PolylineGeometry.unpack = function (array, startingIndex, result) {
     scratchOptions.colorsPerVertex = colorsPerVertex;
     scratchOptions.arcType = arcType;
     scratchOptions.granularity = granularity;
+	scratchOptions.computeLength = computeLength;
     return new PolylineGeometry(scratchOptions);
   }
 
@@ -281,6 +290,7 @@ PolylineGeometry.unpack = function (array, startingIndex, result) {
   result._colorsPerVertex = colorsPerVertex;
   result._arcType = arcType;
   result._granularity = granularity;
+  result._computeLength = computeLength;
 
   return result;
 };
@@ -304,6 +314,7 @@ PolylineGeometry.createGeometry = function (polylineGeometry) {
   const arcType = polylineGeometry._arcType;
   const granularity = polylineGeometry._granularity;
   const ellipsoid = polylineGeometry._ellipsoid;
+  const computeLength = polylineGeometry._computeLength;
 
   let i;
   let j;
@@ -433,12 +444,15 @@ PolylineGeometry.createGeometry = function (polylineGeometry) {
   const expandAndWidth = new Float32Array(size * 2);
   const st = vertexFormat.st ? new Float32Array(size * 2) : undefined;
   const finalColors = defined(colors) ? new Uint8Array(size * 4) : undefined;
+  const lineLengths = computeLength ? new Float32Array(size) : undefined;
 
   let positionIndex = 0;
   let expandAndWidthIndex = 0;
   let stIndex = 0;
   let colorIndex = 0;
   let position;
+  let polylineLength = 0;
+  let polylineLengthIndex = 0;
 
   for (j = 0; j < positionsLength; ++j) {
     if (j === 0) {
@@ -446,6 +460,9 @@ PolylineGeometry.createGeometry = function (polylineGeometry) {
       Cartesian3.subtract(positions[0], positions[1], position);
       Cartesian3.add(positions[0], position, position);
     } else {
+	  if(computeLength){
+		  polylineLength+= Cartesian3.distance(positions[j-1], positions[j]);
+	  }
       position = positions[j - 1];
     }
 
@@ -487,6 +504,11 @@ PolylineGeometry.createGeometry = function (polylineGeometry) {
       Cartesian3.pack(scratchPrevPosition, prevPositions, positionIndex);
       Cartesian3.pack(scratchNextPosition, nextPositions, positionIndex);
       positionIndex += 3;
+	  
+	  if(computeLength) {
+		lineLengths[polylineLengthIndex++] = polylineLength;
+	  }
+	  
 
       const direction = k - 2 < 0 ? -1.0 : 1.0;
       expandAndWidth[expandAndWidthIndex++] = 2 * (k % 2) - 1; // expand direction
@@ -548,6 +570,15 @@ PolylineGeometry.createGeometry = function (polylineGeometry) {
       componentsPerAttribute: 4,
       values: finalColors,
       normalize: true,
+    });
+  }
+
+  if (computeLength) {
+    attributes.length = new GeometryAttribute({
+      componentDatatype: ComponentDatatype.FLOAT,
+      componentsPerAttribute: 1,
+      values: lineLengths,
+      normalize: false,
     });
   }
 
