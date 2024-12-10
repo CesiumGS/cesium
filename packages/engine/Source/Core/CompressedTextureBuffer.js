@@ -16,7 +16,7 @@ function CompressedTextureBuffer(
   pixelDatatype,
   width,
   height,
-  buffer
+  buffer,
 ) {
   this._format = internalFormat;
   this._datatype = pixelDatatype;
@@ -110,7 +110,7 @@ CompressedTextureBuffer.clone = function (object) {
     object._datatype,
     object._width,
     object._height,
-    object._buffer
+    object._buffer,
   );
 };
 

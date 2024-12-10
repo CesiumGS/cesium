@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -53,8 +53,8 @@
         const viewer = new Cesium.Viewer("cesiumContainer", {
           baseLayer: Cesium.ImageryLayer.fromProviderAsync(
             Cesium.ArcGisMapServerImageryProvider.fromUrl(
-              "https://services.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer"
-            )
+              "https://services.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer",
+            ),
           ),
           baseLayerPicker: false,
           infoBox: false,
@@ -62,7 +62,7 @@
 
         const layers = viewer.imageryLayers;
         const earthAtNight = Cesium.ImageryLayer.fromProviderAsync(
-          Cesium.IonImageryProvider.fromAssetId(3812)
+          Cesium.IonImageryProvider.fromAssetId(3812),
         );
         earthAtNight.splitDirection = Cesium.SplitDirection.LEFT; // Only show to the left of the slider.
         layers.add(earthAtNight);

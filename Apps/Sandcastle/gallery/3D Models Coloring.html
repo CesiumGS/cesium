@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -218,7 +218,7 @@
           const position = Cesium.Cartesian3.fromDegrees(
             -123.0744619,
             44.0503706,
-            height
+            height,
           );
           const heading = Cesium.Math.toRadians(135);
           const pitch = 0;
@@ -239,7 +239,7 @@
               colorBlendAmount: parseFloat(viewModel.colorBlendAmount),
               silhouetteColor: getColor(
                 viewModel.silhouetteColor,
-                viewModel.silhouetteAlpha
+                viewModel.silhouetteAlpha,
               ),
               silhouetteSize: parseFloat(viewModel.silhouetteSize),
             },
@@ -265,7 +265,7 @@
             onselect: function () {
               createModel(
                 "../../SampleData/models/CesiumBalloon/CesiumBalloon.glb",
-                1000.0
+                1000.0,
               );
             },
           },
@@ -274,7 +274,7 @@
             onselect: function () {
               createModel(
                 "../../SampleData/models/CesiumMilkTruck/CesiumMilkTruck.glb",
-                0
+                0,
               );
             },
           },

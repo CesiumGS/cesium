@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -43,12 +43,12 @@
         const initialPosition = Cesium.Cartesian3.fromDegrees(
           -74.01881302800248,
           40.69114333714821,
-          753
+          753,
         );
         const initialOrientation = new Cesium.HeadingPitchRoll.fromDegrees(
           21.27879878293835,
           -21.34390550872461,
-          0.0716951918898415
+          0.0716951918898415,
         );
         viewer.scene.camera.setView({
           destination: initialPosition,
@@ -87,7 +87,7 @@
 
         // Get default left click handler for when a feature is not picked on left click
         const clickHandler = viewer.screenSpaceEventHandler.getInputAction(
-          Cesium.ScreenSpaceEventType.LEFT_CLICK
+          Cesium.ScreenSpaceEventType.LEFT_CLICK,
         );
 
         // Update the 'nameOverlay' for the given picked feature,
@@ -114,20 +114,20 @@
               "<tr><th>BIN</th><td>"
             }${pickedFeature.getProperty("BIN")}</td></tr>` +
             `<tr><th>DOITT ID</th><td>${pickedFeature.getProperty(
-              "DOITT_ID"
+              "DOITT_ID",
             )}</td></tr>` +
             `<tr><th>SOURCE ID</th><td>${pickedFeature.getProperty(
-              "SOURCE_ID"
+              "SOURCE_ID",
             )}</td></tr>` +
             `<tr><th>Longitude</th><td>${pickedFeature.getProperty(
-              "Longitude"
+              "Longitude",
             )}</td></tr>` +
             `<tr><th>Latitude</th><td>${pickedFeature.getProperty(
-              "Latitude"
+              "Latitude",
             )}</td></tr>` +
             `<tr><th>Height</th><td>${pickedFeature.getProperty("Height")}</td></tr>` +
             `<tr><th>Terrain Height (Ellipsoid)</th><td>${pickedFeature.getProperty(
-              "TerrainHeight"
+              "TerrainHeight",
             )}</td></tr>` +
             `</tbody></table>`;
           return description;
@@ -137,12 +137,14 @@
         // If silhouettes are not supported, change the feature color to yellow on mouse over and green on mouse click.
         if (Cesium.PostProcessStageLibrary.isSilhouetteSupported(viewer.scene)) {
           // Silhouettes are supported
-          const silhouetteBlue = Cesium.PostProcessStageLibrary.createEdgeDetectionStage();
+          const silhouetteBlue =
+            Cesium.PostProcessStageLibrary.createEdgeDetectionStage();
           silhouetteBlue.uniforms.color = Cesium.Color.BLUE;
           silhouetteBlue.uniforms.length = 0.01;
           silhouetteBlue.selected = [];
 
-          const silhouetteGreen = Cesium.PostProcessStageLibrary.createEdgeDetectionStage();
+          const silhouetteGreen =
+            Cesium.PostProcessStageLibrary.createEdgeDetectionStage();
           silhouetteGreen.uniforms.color = Cesium.Color.LIME;
           silhouetteGreen.uniforms.length = 0.01;
           silhouetteGreen.selected = [];
@@ -151,7 +153,7 @@
             Cesium.PostProcessStageLibrary.createSilhouetteStage([
               silhouetteBlue,
               silhouetteGreen,
-            ])
+            ]),
           );
 
           // Silhouette a feature blue on hover.

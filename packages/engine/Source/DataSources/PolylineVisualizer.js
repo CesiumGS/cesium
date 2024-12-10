@@ -35,9 +35,8 @@ function insertUpdaterIntoBatch(that, time, updater) {
 
   if (updater.clampToGround && updater.fillEnabled) {
     // Also checks for support
-    const classificationType = updater.classificationTypeProperty.getValue(
-      time
-    );
+    const classificationType =
+      updater.classificationTypeProperty.getValue(time);
     that._groundBatches[classificationType].add(time, updater);
     return;
   }
@@ -83,7 +82,7 @@ function PolylineVisualizer(
   scene,
   entityCollection,
   primitives,
-  groundPrimitives
+  groundPrimitives,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("scene", scene);
@@ -111,14 +110,14 @@ function PolylineVisualizer(
       PolylineColorAppearance,
       undefined,
       false,
-      i
+      i,
     ); // no depth fail appearance
     this._materialBatches[i] = new StaticGeometryPerMaterialBatch(
       primitives,
       PolylineMaterialAppearance,
       undefined,
       false,
-      i
+      i,
     );
 
     this._colorBatches[i + numberOfShadowModes] = new StaticGeometryColorBatch(
@@ -126,36 +125,33 @@ function PolylineVisualizer(
       PolylineColorAppearance,
       PolylineColorAppearance,
       false,
-      i
+      i,
     ); //depth fail appearance variations
-    this._materialBatches[
-      i + numberOfShadowModes
-    ] = new StaticGeometryPerMaterialBatch(
-      primitives,
-      PolylineMaterialAppearance,
-      PolylineColorAppearance,
-      false,
-      i
-    );
+    this._materialBatches[i + numberOfShadowModes] =
+      new StaticGeometryPerMaterialBatch(
+        primitives,
+        PolylineMaterialAppearance,
+        PolylineColorAppearance,
+        false,
+        i,
+      );
 
-    this._colorBatches[
-      i + numberOfShadowModes * 2
-    ] = new StaticGeometryColorBatch(
-      primitives,
-      PolylineColorAppearance,
-      PolylineMaterialAppearance,
-      false,
-      i
-    );
-    this._materialBatches[
-      i + numberOfShadowModes * 2
-    ] = new StaticGeometryPerMaterialBatch(
-      primitives,
-      PolylineMaterialAppearance,
-      PolylineMaterialAppearance,
-      false,
-      i
-    );
+    this._colorBatches[i + numberOfShadowModes * 2] =
+      new StaticGeometryColorBatch(
+        primitives,
+        PolylineColorAppearance,
+        PolylineMaterialAppearance,
+        false,
+        i,
+      );
+    this._materialBatches[i + numberOfShadowModes * 2] =
+      new StaticGeometryPerMaterialBatch(
+        primitives,
+        PolylineMaterialAppearance,
+        PolylineMaterialAppearance,
+        false,
+        i,
+      );
   }
 
   this._dynamicBatch = new DynamicGeometryBatch(primitives, groundPrimitives);
@@ -167,14 +163,14 @@ function PolylineVisualizer(
   for (i = 0; i < numberOfClassificationTypes; ++i) {
     this._groundBatches[i] = new StaticGroundPolylinePerMaterialBatch(
       groundPrimitives,
-      i
+      i,
     );
   }
 
   this._batches = this._colorBatches.concat(
     this._materialBatches,
     this._dynamicBatch,
-    this._groundBatches
+    this._groundBatches,
   );
 
   this._subscriptions = new AssociativeArray();
@@ -183,12 +179,12 @@ function PolylineVisualizer(
   this._entityCollection = entityCollection;
   entityCollection.collectionChanged.addEventListener(
     PolylineVisualizer.prototype._onCollectionChanged,
-    this
+    this,
   );
   this._onCollectionChanged(
     entityCollection,
     entityCollection.values,
-    emptyArray
+    emptyArray,
   );
 }
 
@@ -257,8 +253,8 @@ PolylineVisualizer.prototype.update = function (time) {
       id,
       updater.geometryChanged.addEventListener(
         PolylineVisualizer._onGeometryChanged,
-        this
-      )
+        this,
+      ),
     );
   }
 
@@ -311,7 +307,7 @@ PolylineVisualizer.prototype.getBoundingSphere = function (entity, result) {
     } else if (state === BoundingSphereState.DONE) {
       boundingSpheres[count] = BoundingSphere.clone(
         tmp,
-        boundingSpheres[count]
+        boundingSpheres[count],
       );
       count++;
     }
@@ -341,7 +337,7 @@ PolylineVisualizer.prototype.isDestroyed = function () {
 PolylineVisualizer.prototype.destroy = function () {
   this._entityCollection.collectionChanged.removeEventListener(
     PolylineVisualizer.prototype._onCollectionChanged,
-    this
+    this,
   );
   this._addedObjects.removeAll();
   this._removedObjects.removeAll();
@@ -383,7 +379,7 @@ PolylineVisualizer._onGeometryChanged = function (updater) {
 PolylineVisualizer.prototype._onCollectionChanged = function (
   entityCollection,
   added,
-  removed
+  removed,
 ) {
   const addedObjects = this._addedObjects;
   const removedObjects = this._removedObjects;

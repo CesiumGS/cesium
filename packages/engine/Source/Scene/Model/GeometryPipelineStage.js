@@ -140,7 +140,8 @@ GeometryPipelineStage.process = function (
       (primitive?.isGaussianSplatPrimitive ?? false) &&
       model.enableShowGaussianSplatting;
     if (gaussianSplatsEnabled) {
-      const showSplats = model.showGaussianSplatting;
+      const showSplats =
+        model?.style?.showGaussianSplatting ?? model.showGaussianSplatting;
       primitive.attributes.find((a) => a.name === "POSITION").instanceDivisor =
         showSplats ? 1 : 0;
       primitive.attributes.find((a) => a.name === "_SCALE").instanceDivisor =

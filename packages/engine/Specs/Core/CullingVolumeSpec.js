@@ -19,7 +19,7 @@ describe("Core/CullingVolume", function () {
     cullingVolume = frustum.computeCullingVolume(
       new Cartesian3(),
       Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3()),
-      Cartesian3.UNIT_Y
+      Cartesian3.UNIT_Y,
     );
   });
 
@@ -33,7 +33,7 @@ describe("Core/CullingVolume", function () {
     expect(function () {
       return new CullingVolume().computeVisibilityWithPlaneMask(
         undefined,
-        CullingVolume.MASK_INDETERMINATE
+        CullingVolume.MASK_INDETERMINATE,
       );
     }).toThrowDeveloperError();
   });
@@ -42,7 +42,7 @@ describe("Core/CullingVolume", function () {
     expect(function () {
       return new CullingVolume().computeVisibilityWithPlaneMask(
         new BoundingSphere(),
-        undefined
+        undefined,
       );
     }).toThrowDeveloperError();
   });
@@ -52,7 +52,7 @@ describe("Core/CullingVolume", function () {
 
     const mask = culling.computeVisibilityWithPlaneMask(
       bound,
-      CullingVolume.MASK_INDETERMINATE
+      CullingVolume.MASK_INDETERMINATE,
     );
     if (intersect === Intersect.INSIDE) {
       expect(mask).toEqual(CullingVolume.MASK_INSIDE);
@@ -87,7 +87,7 @@ describe("Core/CullingVolume", function () {
         testWithAndWithoutPlaneMask(
           cullingVolume,
           box2,
-          Intersect.INTERSECTING
+          Intersect.INTERSECTING,
         );
       });
 
@@ -101,7 +101,7 @@ describe("Core/CullingVolume", function () {
         testWithAndWithoutPlaneMask(
           cullingVolume,
           box3,
-          Intersect.INTERSECTING
+          Intersect.INTERSECTING,
         );
       });
 
@@ -115,7 +115,7 @@ describe("Core/CullingVolume", function () {
         testWithAndWithoutPlaneMask(
           cullingVolume,
           box4,
-          Intersect.INTERSECTING
+          Intersect.INTERSECTING,
         );
       });
 
@@ -129,7 +129,7 @@ describe("Core/CullingVolume", function () {
         testWithAndWithoutPlaneMask(
           cullingVolume,
           box5,
-          Intersect.INTERSECTING
+          Intersect.INTERSECTING,
         );
       });
 
@@ -143,7 +143,7 @@ describe("Core/CullingVolume", function () {
         testWithAndWithoutPlaneMask(
           cullingVolume,
           box6,
-          Intersect.INTERSECTING
+          Intersect.INTERSECTING,
         );
       });
 
@@ -157,7 +157,7 @@ describe("Core/CullingVolume", function () {
         testWithAndWithoutPlaneMask(
           cullingVolume,
           box7,
-          Intersect.INTERSECTING
+          Intersect.INTERSECTING,
         );
       });
     });
@@ -243,7 +243,7 @@ describe("Core/CullingVolume", function () {
         testWithAndWithoutPlaneMask(
           cullingVolume,
           sphere2,
-          Intersect.INTERSECTING
+          Intersect.INTERSECTING,
         );
       });
 
@@ -255,7 +255,7 @@ describe("Core/CullingVolume", function () {
         testWithAndWithoutPlaneMask(
           cullingVolume,
           sphere3,
-          Intersect.INTERSECTING
+          Intersect.INTERSECTING,
         );
       });
 
@@ -267,7 +267,7 @@ describe("Core/CullingVolume", function () {
         testWithAndWithoutPlaneMask(
           cullingVolume,
           sphere4,
-          Intersect.INTERSECTING
+          Intersect.INTERSECTING,
         );
       });
 
@@ -279,7 +279,7 @@ describe("Core/CullingVolume", function () {
         testWithAndWithoutPlaneMask(
           cullingVolume,
           sphere5,
-          Intersect.INTERSECTING
+          Intersect.INTERSECTING,
         );
       });
 
@@ -291,7 +291,7 @@ describe("Core/CullingVolume", function () {
         testWithAndWithoutPlaneMask(
           cullingVolume,
           sphere6,
-          Intersect.INTERSECTING
+          Intersect.INTERSECTING,
         );
       });
 
@@ -303,7 +303,7 @@ describe("Core/CullingVolume", function () {
         testWithAndWithoutPlaneMask(
           cullingVolume,
           sphere7,
-          Intersect.INTERSECTING
+          Intersect.INTERSECTING,
         );
       });
     });
@@ -362,10 +362,10 @@ describe("Core/CullingVolume", function () {
   describe("construct from bounding sphere", function () {
     const boundingSphereCullingVolume = new BoundingSphere(
       new Cartesian3(1000.0, 2000.0, 3000.0),
-      100.0
+      100.0,
     );
     const cullingVolume = CullingVolume.fromBoundingSphere(
-      boundingSphereCullingVolume
+      boundingSphereCullingVolume,
     );
 
     it("throws without a boundingSphere", function () {
@@ -385,12 +385,12 @@ describe("Core/CullingVolume", function () {
         const offset = new Cartesian3(
           0.0,
           0.0,
-          boundingSphereCullingVolume.radius * 1.5
+          boundingSphereCullingVolume.radius * 1.5,
         );
         const center = Cartesian3.add(
           boundingSphereCullingVolume.center,
           offset,
-          new Cartesian3()
+          new Cartesian3(),
         );
         const radius = boundingSphereCullingVolume.radius * 0.5;
         const sphere2 = new BoundingSphere(center, radius);
@@ -398,7 +398,7 @@ describe("Core/CullingVolume", function () {
         testWithAndWithoutPlaneMask(
           cullingVolume,
           sphere2,
-          Intersect.INTERSECTING
+          Intersect.INTERSECTING,
         );
       });
 
@@ -406,12 +406,12 @@ describe("Core/CullingVolume", function () {
         const offset = new Cartesian3(
           0.0,
           0.0,
-          -boundingSphereCullingVolume.radius * 1.5
+          -boundingSphereCullingVolume.radius * 1.5,
         );
         const center = Cartesian3.add(
           boundingSphereCullingVolume.center,
           offset,
-          new Cartesian3()
+          new Cartesian3(),
         );
         const radius = boundingSphereCullingVolume.radius * 0.5;
         const sphere3 = new BoundingSphere(center, radius);
@@ -419,7 +419,7 @@ describe("Core/CullingVolume", function () {
         testWithAndWithoutPlaneMask(
           cullingVolume,
           sphere3,
-          Intersect.INTERSECTING
+          Intersect.INTERSECTING,
         );
       });
 
@@ -427,12 +427,12 @@ describe("Core/CullingVolume", function () {
         const offset = new Cartesian3(
           -boundingSphereCullingVolume.radius * 1.5,
           0.0,
-          0.0
+          0.0,
         );
         const center = Cartesian3.add(
           boundingSphereCullingVolume.center,
           offset,
-          new Cartesian3()
+          new Cartesian3(),
         );
         const radius = boundingSphereCullingVolume.radius * 0.5;
         const sphere4 = new BoundingSphere(center, radius);
@@ -440,7 +440,7 @@ describe("Core/CullingVolume", function () {
         testWithAndWithoutPlaneMask(
           cullingVolume,
           sphere4,
-          Intersect.INTERSECTING
+          Intersect.INTERSECTING,
         );
       });
 
@@ -448,12 +448,12 @@ describe("Core/CullingVolume", function () {
         const offset = new Cartesian3(
           boundingSphereCullingVolume.radius * 1.5,
           0.0,
-          0.0
+          0.0,
         );
         const center = Cartesian3.add(
           boundingSphereCullingVolume.center,
           offset,
-          new Cartesian3()
+          new Cartesian3(),
         );
         const radius = boundingSphereCullingVolume.radius * 0.5;
         const sphere5 = new BoundingSphere(center, radius);
@@ -461,7 +461,7 @@ describe("Core/CullingVolume", function () {
         testWithAndWithoutPlaneMask(
           cullingVolume,
           sphere5,
-          Intersect.INTERSECTING
+          Intersect.INTERSECTING,
         );
       });
 
@@ -469,12 +469,12 @@ describe("Core/CullingVolume", function () {
         const offset = new Cartesian3(
           0.0,
           boundingSphereCullingVolume.radius * 1.5,
-          0.0
+          0.0,
         );
         const center = Cartesian3.add(
           boundingSphereCullingVolume.center,
           offset,
-          new Cartesian3()
+          new Cartesian3(),
         );
         const radius = boundingSphereCullingVolume.radius * 0.5;
         const sphere6 = new BoundingSphere(center, radius);
@@ -482,7 +482,7 @@ describe("Core/CullingVolume", function () {
         testWithAndWithoutPlaneMask(
           cullingVolume,
           sphere6,
-          Intersect.INTERSECTING
+          Intersect.INTERSECTING,
         );
       });
 
@@ -490,12 +490,12 @@ describe("Core/CullingVolume", function () {
         const offset = new Cartesian3(
           0.0,
           -boundingSphereCullingVolume.radius * 1.5,
-          0.0
+          0.0,
         );
         const center = Cartesian3.add(
           boundingSphereCullingVolume.center,
           offset,
-          new Cartesian3()
+          new Cartesian3(),
         );
         const radius = boundingSphereCullingVolume.radius * 0.5;
         const sphere7 = new BoundingSphere(center, radius);
@@ -503,7 +503,7 @@ describe("Core/CullingVolume", function () {
         testWithAndWithoutPlaneMask(
           cullingVolume,
           sphere7,
-          Intersect.INTERSECTING
+          Intersect.INTERSECTING,
         );
       });
     });
@@ -513,12 +513,12 @@ describe("Core/CullingVolume", function () {
         const offset = new Cartesian3(
           0.0,
           0.0,
-          boundingSphereCullingVolume.radius * 2.0
+          boundingSphereCullingVolume.radius * 2.0,
         );
         const center = Cartesian3.add(
           boundingSphereCullingVolume.center,
           offset,
-          new Cartesian3()
+          new Cartesian3(),
         );
         const radius = boundingSphereCullingVolume.radius * 0.5;
         const sphere8 = new BoundingSphere(center, radius);
@@ -530,12 +530,12 @@ describe("Core/CullingVolume", function () {
         const offset = new Cartesian3(
           0.0,
           0.0,
-          -boundingSphereCullingVolume.radius * 2.0
+          -boundingSphereCullingVolume.radius * 2.0,
         );
         const center = Cartesian3.add(
           boundingSphereCullingVolume.center,
           offset,
-          new Cartesian3()
+          new Cartesian3(),
         );
         const radius = boundingSphereCullingVolume.radius * 0.5;
         const sphere9 = new BoundingSphere(center, radius);
@@ -547,12 +547,12 @@ describe("Core/CullingVolume", function () {
         const offset = new Cartesian3(
           -boundingSphereCullingVolume.radius * 2.0,
           0.0,
-          0.0
+          0.0,
         );
         const center = Cartesian3.add(
           boundingSphereCullingVolume.center,
           offset,
-          new Cartesian3()
+          new Cartesian3(),
         );
         const radius = boundingSphereCullingVolume.radius * 0.5;
         const sphere10 = new BoundingSphere(center, radius);
@@ -564,12 +564,12 @@ describe("Core/CullingVolume", function () {
         const offset = new Cartesian3(
           boundingSphereCullingVolume.radius * 2.0,
           0.0,
-          0.0
+          0.0,
         );
         const center = Cartesian3.add(
           boundingSphereCullingVolume.center,
           offset,
-          new Cartesian3()
+          new Cartesian3(),
         );
         const radius = boundingSphereCullingVolume.radius * 0.5;
         const sphere11 = new BoundingSphere(center, radius);
@@ -581,12 +581,12 @@ describe("Core/CullingVolume", function () {
         const offset = new Cartesian3(
           0.0,
           boundingSphereCullingVolume.radius * 2.0,
-          0.0
+          0.0,
         );
         const center = Cartesian3.add(
           boundingSphereCullingVolume.center,
           offset,
-          new Cartesian3()
+          new Cartesian3(),
         );
         const radius = boundingSphereCullingVolume.radius * 0.5;
         const sphere12 = new BoundingSphere(center, radius);
@@ -598,12 +598,12 @@ describe("Core/CullingVolume", function () {
         const offset = new Cartesian3(
           0.0,
           -boundingSphereCullingVolume.radius * 2.0,
-          0.0
+          0.0,
         );
         const center = Cartesian3.add(
           boundingSphereCullingVolume.center,
           offset,
-          new Cartesian3()
+          new Cartesian3(),
         );
         const radius = boundingSphereCullingVolume.radius * 0.5;
         const sphere13 = new BoundingSphere(center, radius);

@@ -20,7 +20,7 @@ function pointOnEllipsoid(
   bSqr,
   mag,
   unitPos,
-  result
+  result,
 ) {
   const azimuth = theta + rotation;
 
@@ -59,7 +59,7 @@ const scratchNormal = new Cartesian3();
 EllipseGeometryLibrary.raisePositionsToHeight = function (
   positions,
   options,
-  extrude
+  extrude,
 ) {
   const ellipsoid = options.ellipsoid;
   const height = options.height;
@@ -82,7 +82,7 @@ EllipseGeometryLibrary.raisePositionsToHeight = function (
     const scaledNormal = Cartesian3.multiplyByScalar(
       normal,
       height,
-      scratchCartesian3
+      scratchCartesian3,
     );
     Cartesian3.add(position, scaledNormal, position);
 
@@ -113,7 +113,7 @@ const northVecScratch = new Cartesian3();
 EllipseGeometryLibrary.computeEllipsePositions = function (
   options,
   addFillPositions,
-  addEdgePositions
+  addEdgePositions,
 ) {
   const semiMinorAxis = options.semiMinorAxis;
   const semiMajorAxis = options.semiMajorAxis;
@@ -193,7 +193,7 @@ EllipseGeometryLibrary.computeEllipsePositions = function (
     bSqr,
     mag,
     unitPos,
-    position
+    position,
   );
   if (addFillPositions) {
     positions[positionIndex++] = position.x;
@@ -217,7 +217,7 @@ EllipseGeometryLibrary.computeEllipsePositions = function (
       bSqr,
       mag,
       unitPos,
-      position
+      position,
     );
     reflectedPosition = pointOnEllipsoid(
       Math.PI - theta,
@@ -229,7 +229,7 @@ EllipseGeometryLibrary.computeEllipsePositions = function (
       bSqr,
       mag,
       unitPos,
-      reflectedPosition
+      reflectedPosition,
     );
 
     if (addFillPositions) {
@@ -244,7 +244,7 @@ EllipseGeometryLibrary.computeEllipsePositions = function (
           position,
           reflectedPosition,
           t,
-          scratchCartesian3
+          scratchCartesian3,
         );
         positions[positionIndex++] = interiorPosition.x;
         positions[positionIndex++] = interiorPosition.y;
@@ -282,7 +282,7 @@ EllipseGeometryLibrary.computeEllipsePositions = function (
       bSqr,
       mag,
       unitPos,
-      position
+      position,
     );
     reflectedPosition = pointOnEllipsoid(
       theta + Math.PI,
@@ -294,7 +294,7 @@ EllipseGeometryLibrary.computeEllipsePositions = function (
       bSqr,
       mag,
       unitPos,
-      reflectedPosition
+      reflectedPosition,
     );
 
     if (addFillPositions) {
@@ -309,7 +309,7 @@ EllipseGeometryLibrary.computeEllipsePositions = function (
           position,
           reflectedPosition,
           t,
-          scratchCartesian3
+          scratchCartesian3,
         );
         positions[positionIndex++] = interiorPosition.x;
         positions[positionIndex++] = interiorPosition.y;
@@ -342,7 +342,7 @@ EllipseGeometryLibrary.computeEllipsePositions = function (
     bSqr,
     mag,
     unitPos,
-    position
+    position,
   );
 
   const r = {};

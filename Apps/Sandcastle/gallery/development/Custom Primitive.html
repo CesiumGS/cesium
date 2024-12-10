@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -61,18 +61,18 @@
           const cartesianPosition = Cesium.Cartographic.toCartesian(
             cartographicPosition,
             Cesium.Ellipsoid.WGS84,
-            new Cesium.Cartesian3()
+            new Cesium.Cartesian3(),
           );
           this.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(
             cartesianPosition,
             Cesium.Ellipsoid.WGS84,
-            new Cesium.Matrix4()
+            new Cesium.Matrix4(),
           );
 
           this.halfWidthMeters = 10000;
           this.boundingSphere = new Cesium.BoundingSphere(
             cartesianPosition,
-            this.halfWidthMeters * Math.SQRT2
+            this.halfWidthMeters * Math.SQRT2,
           );
 
           this.time = undefined;
@@ -150,7 +150,7 @@
               bucket32 / width,
               (255 - bucket4) / width,
               1.0,
-              scratchColor
+              scratchColor,
             );
             textureTypedArray[4 * i] = 255 * color.red;
             textureTypedArray[4 * i + 1] = 255 * color.green;
@@ -233,7 +233,7 @@
 
           const positionTypedArray = generateVertices(
             primitive.faceResolution,
-            primitive.halfWidthMeters
+            primitive.halfWidthMeters,
           );
           const positionVertexBuffer = Cesium.Buffer.createVertexBuffer({
             context: context,
@@ -245,9 +245,8 @@
             index: positionLocation,
             vertexBuffer: positionVertexBuffer,
             componentsPerAttribute: 3,
-            componentDatatype: Cesium.ComponentDatatype.fromTypedArray(
-              positionTypedArray
-            ),
+            componentDatatype:
+              Cesium.ComponentDatatype.fromTypedArray(positionTypedArray),
           };
 
           const indexCount = primitive.faceResolution * primitive.faceResolution * 6;

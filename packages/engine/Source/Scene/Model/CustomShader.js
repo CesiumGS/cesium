@@ -180,7 +180,7 @@ function CustomShader(options) {
    */
   this.translucencyMode = defaultValue(
     options.translucencyMode,
-    CustomShaderTranslucencyMode.INHERIT
+    CustomShaderTranslucencyMode.INHERIT,
   );
 
   /**
@@ -249,7 +249,7 @@ function buildUniformMap(customShader) {
       //>>includeStart('debug', pragmas.debug);
       if (type === UniformType.SAMPLER_CUBE) {
         throw new DeveloperError(
-          "CustomShader does not support samplerCube uniforms"
+          "CustomShader does not support samplerCube uniforms",
         );
       }
       //>>includeEnd('debug');
@@ -258,12 +258,12 @@ function buildUniformMap(customShader) {
         customShader._textureManager.loadTexture2D(uniformName, uniform.value);
         uniformMap[uniformName] = createUniformTexture2DFunction(
           customShader,
-          uniformName
+          uniformName,
         );
       } else {
         uniformMap[uniformName] = createUniformFunction(
           customShader,
-          uniformName
+          uniformName,
         );
       }
     }
@@ -275,7 +275,7 @@ function createUniformTexture2DFunction(customShader, uniformName) {
   return function () {
     return defaultValue(
       customShader._textureManager.getTexture(uniformName),
-      customShader._defaultTexture
+      customShader._defaultTexture,
     );
   };
 }
@@ -357,13 +357,13 @@ function validateVariableUsage(
   variableSet,
   incorrectVariable,
   correctVariable,
-  vertexOrFragment
+  vertexOrFragment,
 ) {
   if (variableSet.hasOwnProperty(incorrectVariable)) {
     const message = `${expandCoordinateAbbreviations(
-      incorrectVariable
+      incorrectVariable,
     )} is not available in the ${vertexOrFragment} shader. Did you mean ${expandCoordinateAbbreviations(
-      correctVariable
+      correctVariable,
     )} instead?`;
     throw new DeveloperError(message);
   }
@@ -413,7 +413,7 @@ CustomShader.prototype.setUniform = function (uniformName, value) {
   Check.defined("value", value);
   if (!defined(this.uniforms[uniformName])) {
     throw new DeveloperError(
-      `Uniform ${uniformName} must be declared in the CustomShader constructor.`
+      `Uniform ${uniformName} must be declared in the CustomShader constructor.`,
     );
   }
   //>>includeEnd('debug');

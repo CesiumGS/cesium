@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -278,7 +278,7 @@
 
             imageSize: new Cesium.Cartesian2(
               viewModel.particleSize,
-              viewModel.particleSize
+              viewModel.particleSize,
             ),
 
             emissionRate: viewModel.emissionRate,
@@ -309,7 +309,7 @@
             emitterModelMatrix: computeEmitterModelMatrix(),
 
             updateCallback: applyGravity,
-          })
+          }),
         );
 
         const gravityScratch = new Cesium.Cartesian3();
@@ -322,7 +322,7 @@
           Cesium.Cartesian3.multiplyByScalar(
             gravityScratch,
             viewModel.gravity * dt,
-            gravityScratch
+            gravityScratch,
           );
 
           p.velocity = Cesium.Cartesian3.add(p.velocity, gravityScratch, p.velocity);
@@ -411,7 +411,7 @@
             text: "Cone Emitter",
             onselect: function () {
               particleSystem.emitter = new Cesium.ConeEmitter(
-                Cesium.Math.toRadians(45.0)
+                Cesium.Math.toRadians(45.0),
               );
             },
           },
@@ -419,7 +419,7 @@
             text: "Box Emitter",
             onselect: function () {
               particleSystem.emitter = new Cesium.BoxEmitter(
-                new Cesium.Cartesian3(10.0, 10.0, 10.0)
+                new Cesium.Cartesian3(10.0, 10.0, 10.0),
               );
             },
           },

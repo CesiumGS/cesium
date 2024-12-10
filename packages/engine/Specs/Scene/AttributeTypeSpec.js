@@ -59,7 +59,7 @@ describe("Scene/AttributeType", function () {
 
   it("getAttributeLocationCount works", function () {
     expect(AttributeType.getAttributeLocationCount(AttributeType.SCALAR)).toBe(
-      1
+      1,
     );
     expect(AttributeType.getAttributeLocationCount(AttributeType.VEC2)).toBe(1);
     expect(AttributeType.getAttributeLocationCount(AttributeType.VEC3)).toBe(1);

@@ -14,7 +14,7 @@ import getStringFromTypedArray from "./getStringFromTypedArray.js";
  */
 function getJsonFromTypedArray(uint8Array, byteOffset, byteLength) {
   return JSON.parse(
-    getStringFromTypedArray(uint8Array, byteOffset, byteLength)
+    getStringFromTypedArray(uint8Array, byteOffset, byteLength),
   );
 }
 

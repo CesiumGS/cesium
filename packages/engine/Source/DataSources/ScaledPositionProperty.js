@@ -59,7 +59,7 @@ ScaledPositionProperty.prototype.setValue = function (value) {
     if (defined(value)) {
       this._removeSubscription = value.definitionChanged.addEventListener(
         this._raiseDefinitionChanged,
-        this
+        this,
       );
     }
     this._definitionChanged.raiseEvent(this);
@@ -69,7 +69,7 @@ ScaledPositionProperty.prototype.setValue = function (value) {
 ScaledPositionProperty.prototype.getValueInReferenceFrame = function (
   time,
   referenceFrame,
-  result
+  result,
 ) {
   //>>includeStart('debug', pragmas.debug);
   if (!defined(time)) {

@@ -51,7 +51,7 @@ function createPositionPropertyDescriptor(name) {
   return createPropertyDescriptor(
     name,
     undefined,
-    createConstantPositionProperty
+    createConstantPositionProperty,
   );
 }
 
@@ -220,7 +220,7 @@ function updateShow(entity, children, isShowing) {
     entity,
     "isShowing",
     isShowing,
-    !isShowing
+    !isShowing,
   );
 }
 
@@ -461,7 +461,7 @@ Object.defineProperties(Entity.prototype, {
    */
   polylineVolume: createPropertyTypeDescriptor(
     "polylineVolume",
-    PolylineVolumeGraphics
+    PolylineVolumeGraphics,
   ),
   /**
    * Gets or sets the bag of arbitrary properties associated with this entity.
@@ -548,7 +548,7 @@ Entity.prototype.addProperty = function (propertyName) {
   }
   if (propertyNames.indexOf(propertyName) !== -1) {
     throw new DeveloperError(
-      `${propertyName} is already a registered property.`
+      `${propertyName} is already a registered property.`,
     );
   }
   if (propertyName in this) {
@@ -560,7 +560,7 @@ Entity.prototype.addProperty = function (propertyName) {
   Object.defineProperty(
     this,
     propertyName,
-    createRawPropertyDescriptor(propertyName, true)
+    createRawPropertyDescriptor(propertyName, true),
   );
 };
 
@@ -672,7 +672,7 @@ Entity.prototype.computeModelMatrix = function (time, result) {
   const position = Property.getValueOrUndefined(
     this._position,
     time,
-    positionScratch
+    positionScratch,
   );
   if (!defined(position)) {
     return undefined;
@@ -681,7 +681,7 @@ Entity.prototype.computeModelMatrix = function (time, result) {
   const orientation = Property.getValueOrUndefined(
     this._orientation,
     time,
-    orientationScratch
+    orientationScratch,
   );
   if (!defined(orientation)) {
     result = Transforms.eastNorthUpToFixedFrame(position, undefined, result);
@@ -689,7 +689,7 @@ Entity.prototype.computeModelMatrix = function (time, result) {
     result = Matrix4.fromRotationTranslation(
       Matrix3.fromQuaternion(orientation, matrix3Scratch),
       position,
-      result
+      result,
     );
   }
   return result;
@@ -703,7 +703,7 @@ Entity.prototype.computeModelMatrixForHeightReference = function (
   heightReferenceProperty,
   heightOffset,
   ellipsoid,
-  result
+  result,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("time", time);
@@ -711,12 +711,12 @@ Entity.prototype.computeModelMatrixForHeightReference = function (
   const heightReference = Property.getValueOrDefault(
     heightReferenceProperty,
     time,
-    HeightReference.NONE
+    HeightReference.NONE,
   );
   let position = Property.getValueOrUndefined(
     this._position,
     time,
-    positionScratch
+    positionScratch,
   );
   if (
     heightReference === HeightReference.NONE ||
@@ -737,7 +737,7 @@ Entity.prototype.computeModelMatrixForHeightReference = function (
   const orientation = Property.getValueOrUndefined(
     this._orientation,
     time,
-    orientationScratch
+    orientationScratch,
   );
   if (!defined(orientation)) {
     result = Transforms.eastNorthUpToFixedFrame(position, undefined, result);
@@ -745,7 +745,7 @@ Entity.prototype.computeModelMatrixForHeightReference = function (
     result = Matrix4.fromRotationTranslation(
       Matrix3.fromQuaternion(orientation, matrix3Scratch),
       position,
-      result
+      result,
     );
   }
   return result;

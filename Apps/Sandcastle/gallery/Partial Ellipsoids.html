@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -49,8 +49,8 @@
             new Cesium.HeadingPitchRoll(
               Cesium.Math.toRadians(30.0),
               Cesium.Math.toRadians(30.0),
-              0.0
-            )
+              0.0,
+            ),
           ),
           ellipsoid: {
             radii: new Cesium.Cartesian3(400000.0, 400000.0, 400000.0),
@@ -69,8 +69,8 @@
             new Cesium.HeadingPitchRoll(
               Cesium.Math.toRadians(30.0),
               Cesium.Math.toRadians(30.0),
-              0.0
-            )
+              0.0,
+            ),
           ),
           ellipsoid: {
             radii: new Cesium.Cartesian3(460000.0, 460000.0, 460000.0),
@@ -175,7 +175,7 @@
           position: Cesium.Cartesian3.fromDegrees(-102.0, 35.0, 20000.0),
           orientation: Cesium.Transforms.headingPitchRollQuaternion(
             Cesium.Cartesian3.fromDegrees(-102.0, 35.0, 20000.0),
-            new Cesium.HeadingPitchRoll(Cesium.Math.PI / 1.5, 0, 0.0)
+            new Cesium.HeadingPitchRoll(Cesium.Math.PI / 1.5, 0, 0.0),
           ),
           ellipsoid: {
             radii: new Cesium.Cartesian3(500000.0, 500000.0, 500000.0),

@@ -90,7 +90,7 @@ CallbackPositionProperty.prototype.getValue = function (time, result) {
  */
 CallbackPositionProperty.prototype.setCallback = function (
   callback,
-  isConstant
+  isConstant,
 ) {
   //>>includeStart('debug', pragmas.debug);
   if (!defined(callback)) {
@@ -123,7 +123,7 @@ CallbackPositionProperty.prototype.setCallback = function (
 CallbackPositionProperty.prototype.getValueInReferenceFrame = function (
   time,
   referenceFrame,
-  result
+  result,
 ) {
   //>>includeStart('debug', pragmas.debug);
   if (!defined(time)) {
@@ -141,7 +141,7 @@ CallbackPositionProperty.prototype.getValueInReferenceFrame = function (
     value,
     this._referenceFrame,
     referenceFrame,
-    result
+    result,
   );
 };
 

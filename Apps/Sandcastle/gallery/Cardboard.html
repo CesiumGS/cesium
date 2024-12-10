@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -66,12 +66,12 @@
             const time = Cesium.JulianDate.addSeconds(
               start,
               timeIncrement,
-              new Cesium.JulianDate()
+              new Cesium.JulianDate(),
             );
             const position = Cesium.Cartesian3.fromDegrees(
               lon + radius * 1.5 * Math.cos(radians),
               lat + radius * Math.sin(radians),
-              Cesium.Math.nextRandomNumber() * 500 + 1800
+              Cesium.Math.nextRandomNumber() * 500 + 1800,
             );
             property.addSample(time, position);
           }
@@ -126,7 +126,7 @@
 
             transform = Cesium.Matrix4.fromRotationTranslation(
               Cesium.Matrix3.fromQuaternion(orientation),
-              position
+              position,
             );
           }
 

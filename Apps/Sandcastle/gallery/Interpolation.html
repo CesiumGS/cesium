@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -73,7 +73,7 @@
             const position = Cesium.Cartesian3.fromDegrees(
               lon + radius * 1.5 * Math.cos(radians),
               lat + radius * Math.sin(radians),
-              Cesium.Math.nextRandomNumber() * 500 + 1750
+              Cesium.Math.nextRandomNumber() * 500 + 1750,
             );
             property.addSample(time, position);
 
@@ -132,7 +132,7 @@
           viewer.trackedEntity = undefined;
           viewer.zoomTo(
             viewer.entities,
-            new Cesium.HeadingPitchRange(0, Cesium.Math.toRadians(-90))
+            new Cesium.HeadingPitchRange(0, Cesium.Math.toRadians(-90)),
           );
         });
 
@@ -144,8 +144,8 @@
             new Cesium.HeadingPitchRange(
               Cesium.Math.toRadians(-90),
               Cesium.Math.toRadians(-15),
-              7500
-            )
+              7500,
+            ),
           );
         });
 
@@ -185,7 +185,7 @@
               },
             },
           ],
-          "interpolationMenu"
+          "interpolationMenu",
         );
         //Sandcastle_End
       };

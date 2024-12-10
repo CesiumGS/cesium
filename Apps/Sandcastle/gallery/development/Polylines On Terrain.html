@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -82,9 +82,8 @@
           .subscribe(function (newValue) {
             lineWidth = parseFloat(viewModel.lineWidth);
             if (Cesium.defined(selectedId)) {
-              const attributes = polylineOnTerrainPrimitive.getGeometryInstanceAttributes(
-                selectedId
-              );
+              const attributes =
+                polylineOnTerrainPrimitive.getGeometryInstanceAttributes(selectedId);
               lineWidth = parseFloat(viewModel.lineWidth);
               attributes.width = [lineWidth];
             }
@@ -101,7 +100,7 @@
                   -112.1340164450331,
                   36.05494287836128,
                   -112.0840164450331,
-                  36.10494287836128
+                  36.10494287836128,
                 ),
                 vertexFormat: Cesium.EllipsoidSurfaceAppearance.VERTEX_FORMAT,
               }),
@@ -112,7 +111,7 @@
               material: Cesium.Material.fromType("Color"),
             }),
             classificationType: Cesium.ClassificationType.TERRAIN,
-          })
+          }),
         );
 
         const leftHandler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
@@ -125,9 +124,8 @@
               selectedId = pickedObject.id;
 
               // Sync line width in toolbar with selected
-              const attributes = polylineOnTerrainPrimitive.getGeometryInstanceAttributes(
-                selectedId
-              );
+              const attributes =
+                polylineOnTerrainPrimitive.getGeometryInstanceAttributes(selectedId);
               viewModel.lineWidth = attributes.width[0];
             }
           } else {
@@ -157,16 +155,9 @@
         ]);
 
         const loopPositions = Cesium.Cartesian3.fromDegreesArray([
-          -111.94500779274114,
-          36.27638678884143,
-          -111.90983004392696,
-          36.07985366173454,
-          -111.80360100637773,
-          36.13694878292542,
-          -111.85510122419183,
-          36.26029588763386,
-          -111.69141601804614,
-          36.05128770351902,
+          -111.94500779274114, 36.27638678884143, -111.90983004392696, 36.07985366173454,
+          -111.80360100637773, 36.13694878292542, -111.85510122419183, 36.26029588763386,
+          -111.69141601804614, 36.05128770351902,
         ]);
 
         function createPolylines(debugShowShadowVolume) {
@@ -180,7 +171,7 @@
             attributes: {
               show: new Cesium.ShowGeometryInstanceAttribute(),
               color: Cesium.ColorGeometryInstanceAttribute.fromColor(
-                Cesium.Color.fromCssColorString("green").withAlpha(0.7)
+                Cesium.Color.fromCssColorString("green").withAlpha(0.7),
               ),
             },
           });
@@ -195,7 +186,7 @@
             attributes: {
               show: new Cesium.ShowGeometryInstanceAttribute(),
               color: Cesium.ColorGeometryInstanceAttribute.fromColor(
-                Cesium.Color.fromCssColorString("#67ADDF").withAlpha(0.7)
+                Cesium.Color.fromCssColorString("#67ADDF").withAlpha(0.7),
               ),
             },
           });
@@ -244,22 +235,19 @@
 
         Sandcastle.addToolbarButton("Toggle instance show", function () {
           if (Cesium.defined(selectedId)) {
-            const attributes = polylineOnTerrainPrimitive.getGeometryInstanceAttributes(
-              selectedId
-            );
+            const attributes =
+              polylineOnTerrainPrimitive.getGeometryInstanceAttributes(selectedId);
             attributes.show = [attributes.show[0] ? 0 : 1];
           }
         });
 
         Sandcastle.addToolbarButton("Show all", function () {
           if (Cesium.defined(selectedId)) {
-            let attributes = polylineOnTerrainPrimitive.getGeometryInstanceAttributes(
-              "polyline1"
-            );
+            let attributes =
+              polylineOnTerrainPrimitive.getGeometryInstanceAttributes("polyline1");
             attributes.show = [1];
-            attributes = polylineOnTerrainPrimitive.getGeometryInstanceAttributes(
-              "polyline2"
-            );
+            attributes =
+              polylineOnTerrainPrimitive.getGeometryInstanceAttributes("polyline2");
             attributes.show = [1];
           }
         });
@@ -284,7 +272,7 @@
         function lookAt() {
           viewer.camera.lookAt(
             polylinePositions[1],
-            new Cesium.Cartesian3(50000.0, 50000.0, 50000.0)
+            new Cesium.Cartesian3(50000.0, 50000.0, 50000.0),
           );
           viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
         }

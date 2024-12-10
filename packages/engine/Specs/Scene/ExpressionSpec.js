@@ -115,7 +115,7 @@ describe("Scene/Expression", function () {
     expect(expression.evaluate(feature)).toEqual("");
 
     expression = new Expression(
-      "abs(-${height}) + max(${height}, ${width}) + clamp(${height}, 0, 2)"
+      "abs(-${height}) + max(${height}, ${width}) + clamp(${height}, 0, 2)",
     );
     expect(expression.evaluate(feature)).toEqual(22);
 
@@ -360,82 +360,82 @@ describe("Scene/Expression", function () {
   it("evaluates literal color", function () {
     let expression = new Expression("color('#ffffff')");
     expect(expression.evaluate(undefined)).toEqual(
-      Cartesian4.fromColor(Color.WHITE)
+      Cartesian4.fromColor(Color.WHITE),
     );
 
     expression = new Expression("color('#00FFFF')");
     expect(expression.evaluate(undefined)).toEqual(
-      Cartesian4.fromColor(Color.CYAN)
+      Cartesian4.fromColor(Color.CYAN),
     );
 
     expression = new Expression("color('#fff')");
     expect(expression.evaluate(undefined)).toEqual(
-      Cartesian4.fromColor(Color.WHITE)
+      Cartesian4.fromColor(Color.WHITE),
     );
 
     expression = new Expression("color('#0FF')");
     expect(expression.evaluate(undefined)).toEqual(
-      Cartesian4.fromColor(Color.CYAN)
+      Cartesian4.fromColor(Color.CYAN),
     );
 
     expression = new Expression("color('white')");
     expect(expression.evaluate(undefined)).toEqual(
-      Cartesian4.fromColor(Color.WHITE)
+      Cartesian4.fromColor(Color.WHITE),
     );
 
     expression = new Expression("color('cyan')");
     expect(expression.evaluate(undefined)).toEqual(
-      Cartesian4.fromColor(Color.CYAN)
+      Cartesian4.fromColor(Color.CYAN),
     );
 
     expression = new Expression("color('white', 0.5)");
     expect(expression.evaluate(undefined)).toEqual(
-      Cartesian4.fromColor(Color.fromAlpha(Color.WHITE, 0.5))
+      Cartesian4.fromColor(Color.fromAlpha(Color.WHITE, 0.5)),
     );
 
     expression = new Expression("rgb(255, 255, 255)");
     expect(expression.evaluate(undefined)).toEqual(
-      Cartesian4.fromColor(Color.WHITE)
+      Cartesian4.fromColor(Color.WHITE),
     );
 
     expression = new Expression("rgb(100, 255, 190)");
     expect(expression.evaluate(undefined)).toEqual(
-      Cartesian4.fromColor(Color.fromBytes(100, 255, 190))
+      Cartesian4.fromColor(Color.fromBytes(100, 255, 190)),
     );
 
     expression = new Expression("hsl(0, 0, 1)");
     expect(expression.evaluate(undefined)).toEqual(
-      Cartesian4.fromColor(Color.WHITE)
+      Cartesian4.fromColor(Color.WHITE),
     );
 
     expression = new Expression("hsl(1.0, 0.6, 0.7)");
     expect(expression.evaluate(undefined)).toEqual(
-      Cartesian4.fromColor(Color.fromHsl(1.0, 0.6, 0.7))
+      Cartesian4.fromColor(Color.fromHsl(1.0, 0.6, 0.7)),
     );
 
     expression = new Expression("rgba(255, 255, 255, 0.5)");
     expect(expression.evaluate(undefined)).toEqual(
-      Cartesian4.fromColor(Color.fromAlpha(Color.WHITE, 0.5))
+      Cartesian4.fromColor(Color.fromAlpha(Color.WHITE, 0.5)),
     );
 
     expression = new Expression("rgba(100, 255, 190, 0.25)");
     expect(expression.evaluate(undefined)).toEqual(
-      Cartesian4.fromColor(Color.fromBytes(100, 255, 190, 0.25 * 255))
+      Cartesian4.fromColor(Color.fromBytes(100, 255, 190, 0.25 * 255)),
     );
 
     expression = new Expression("hsla(0, 0, 1, 0.5)");
     expect(expression.evaluate(undefined)).toEqual(
-      Cartesian4.fromColor(new Color(1.0, 1.0, 1.0, 0.5))
+      Cartesian4.fromColor(new Color(1.0, 1.0, 1.0, 0.5)),
     );
 
     expression = new Expression("hsla(1.0, 0.6, 0.7, 0.75)");
     expect(expression.evaluate(undefined)).toEqual(
-      Cartesian4.fromColor(Color.fromHsl(1.0, 0.6, 0.7, 0.75))
+      Cartesian4.fromColor(Color.fromHsl(1.0, 0.6, 0.7, 0.75)),
     );
 
     expression = new Expression("color()");
     expect(expression.evaluate(undefined)).toEqual(
-      Cartesian4.fromColor(Color.WHITE)
+      Cartesian4.fromColor(Color.WHITE),
     );
   });
 
@@ -456,7 +456,7 @@ describe("Scene/Expression", function () {
 
     expression = new Expression("color('white', 0.5)");
     expect(expression.evaluate(undefined, color)).toEqual(
-      new Color(1.0, 1.0, 1.0, 0.5)
+      new Color(1.0, 1.0, 1.0, 0.5),
     );
     expect(color).toEqual(new Color(1.0, 1.0, 1.0, 0.5));
 
@@ -470,13 +470,13 @@ describe("Scene/Expression", function () {
 
     expression = new Expression("rgba(255, 0, 255, 0.5)");
     expect(expression.evaluate(undefined, color)).toEqual(
-      new Color(1.0, 0, 1.0, 0.5)
+      new Color(1.0, 0, 1.0, 0.5),
     );
     expect(color).toEqual(new Color(1.0, 0, 1.0, 0.5));
 
     expression = new Expression("hsla(0, 0, 1, 0.5)");
     expect(expression.evaluate(undefined, color)).toEqual(
-      new Color(1.0, 1.0, 1.0, 0.5)
+      new Color(1.0, 1.0, 1.0, 0.5),
     );
     expect(color).toEqual(new Color(1.0, 1.0, 1.0, 0.5));
 
@@ -494,17 +494,17 @@ describe("Scene/Expression", function () {
 
     let expression = new Expression("color(${hex6})");
     expect(expression.evaluate(feature)).toEqual(
-      Cartesian4.fromColor(Color.WHITE)
+      Cartesian4.fromColor(Color.WHITE),
     );
 
     expression = new Expression("color(${hex3})");
     expect(expression.evaluate(feature)).toEqual(
-      Cartesian4.fromColor(Color.WHITE)
+      Cartesian4.fromColor(Color.WHITE),
     );
 
     expression = new Expression("color(${keyword})");
     expect(expression.evaluate(feature)).toEqual(
-      Cartesian4.fromColor(Color.WHITE)
+      Cartesian4.fromColor(Color.WHITE),
     );
 
     expression = new Expression("color(${keyword}, ${alpha} + 0.6)");
@@ -522,12 +522,12 @@ describe("Scene/Expression", function () {
 
     let expression = new Expression("rgb(${red}, ${green}, ${blue})");
     expect(expression.evaluate(feature)).toEqual(
-      Cartesian4.fromColor(Color.fromBytes(100, 200, 255))
+      Cartesian4.fromColor(Color.fromBytes(100, 200, 255)),
     );
 
     expression = new Expression("rgb(${red}/2, ${green}/2, ${blue})");
     expect(expression.evaluate(feature)).toEqual(
-      Cartesian4.fromColor(Color.fromBytes(50, 100, 255))
+      Cartesian4.fromColor(Color.fromBytes(50, 100, 255)),
     );
   });
 
@@ -539,12 +539,12 @@ describe("Scene/Expression", function () {
 
     let expression = new Expression("hsl(${h}, ${s}, ${l})");
     expect(expression.evaluate(feature)).toEqual(
-      Cartesian4.fromColor(Color.WHITE)
+      Cartesian4.fromColor(Color.WHITE),
     );
 
     expression = new Expression("hsl(${h} + 0.2, ${s} + 1.0, ${l} - 0.5)");
     expect(expression.evaluate(feature)).toEqual(
-      Cartesian4.fromColor(Color.fromHsl(0.2, 1.0, 0.5))
+      Cartesian4.fromColor(Color.fromHsl(0.2, 1.0, 0.5)),
     );
   });
 
@@ -557,14 +557,14 @@ describe("Scene/Expression", function () {
 
     let expression = new Expression("rgba(${red}, ${green}, ${blue}, ${a})");
     expect(expression.evaluate(feature)).toEqual(
-      Cartesian4.fromColor(Color.fromBytes(100, 200, 255, 0.3 * 255))
+      Cartesian4.fromColor(Color.fromBytes(100, 200, 255, 0.3 * 255)),
     );
 
     expression = new Expression(
-      "rgba(${red}/2, ${green}/2, ${blue}, ${a} * 2)"
+      "rgba(${red}/2, ${green}/2, ${blue}, ${a} * 2)",
     );
     expect(expression.evaluate(feature)).toEqual(
-      Cartesian4.fromColor(Color.fromBytes(50, 100, 255, 0.6 * 255))
+      Cartesian4.fromColor(Color.fromBytes(50, 100, 255, 0.6 * 255)),
     );
   });
 
@@ -577,14 +577,14 @@ describe("Scene/Expression", function () {
 
     let expression = new Expression("hsla(${h}, ${s}, ${l}, ${a})");
     expect(expression.evaluate(feature)).toEqual(
-      Cartesian4.fromColor(Color.WHITE)
+      Cartesian4.fromColor(Color.WHITE),
     );
 
     expression = new Expression(
-      "hsla(${h} + 0.2, ${s} + 1.0, ${l} - 0.5, ${a} / 4)"
+      "hsla(${h} + 0.2, ${s} + 1.0, ${l} - 0.5, ${a} / 4)",
     );
     expect(expression.evaluate(feature)).toEqual(
-      Cartesian4.fromColor(Color.fromHsl(0.2, 1.0, 0.5, 0.25))
+      Cartesian4.fromColor(Color.fromHsl(0.2, 1.0, 0.5, 0.25)),
     );
   });
 
@@ -596,17 +596,17 @@ describe("Scene/Expression", function () {
     feature.addProperty("alpha", 0.5);
 
     let expression = new Expression(
-      "rgba(${red}, ${green}, ${blue}, ${alpha})"
+      "rgba(${red}, ${green}, ${blue}, ${alpha})",
     );
     expect(expression.evaluate(feature)).toEqual(
-      Cartesian4.fromColor(Color.fromBytes(100, 200, 255, 0.5 * 255))
+      Cartesian4.fromColor(Color.fromBytes(100, 200, 255, 0.5 * 255)),
     );
 
     expression = new Expression(
-      "rgba(${red}/2, ${green}/2, ${blue}, ${alpha} + 0.1)"
+      "rgba(${red}/2, ${green}/2, ${blue}, ${alpha} + 0.1)",
     );
     expect(expression.evaluate(feature)).toEqual(
-      Cartesian4.fromColor(Color.fromBytes(50, 100, 255, 0.6 * 255))
+      Cartesian4.fromColor(Color.fromBytes(50, 100, 255, 0.6 * 255)),
     );
   });
 
@@ -742,32 +742,32 @@ describe("Scene/Expression", function () {
   it("evaluates vec3", function () {
     let expression = new Expression("vec3(2.0)");
     expect(expression.evaluate(undefined)).toEqual(
-      new Cartesian3(2.0, 2.0, 2.0)
+      new Cartesian3(2.0, 2.0, 2.0),
     );
 
     expression = new Expression("vec3(3.0, 4.0, 5.0)");
     expect(expression.evaluate(undefined)).toEqual(
-      new Cartesian3(3.0, 4.0, 5.0)
+      new Cartesian3(3.0, 4.0, 5.0),
     );
 
     expression = new Expression("vec3(vec2(3.0, 4.0), 5.0)");
     expect(expression.evaluate(undefined)).toEqual(
-      new Cartesian3(3.0, 4.0, 5.0)
+      new Cartesian3(3.0, 4.0, 5.0),
     );
 
     expression = new Expression("vec3(3.0, vec2(4.0, 5.0))");
     expect(expression.evaluate(undefined)).toEqual(
-      new Cartesian3(3.0, 4.0, 5.0)
+      new Cartesian3(3.0, 4.0, 5.0),
     );
 
     expression = new Expression("vec3(vec3(3.0, 4.0, 5.0))");
     expect(expression.evaluate(undefined)).toEqual(
-      new Cartesian3(3.0, 4.0, 5.0)
+      new Cartesian3(3.0, 4.0, 5.0),
     );
 
     expression = new Expression("vec3(vec4(3.0, 4.0, 5.0, 6.0))");
     expect(expression.evaluate(undefined)).toEqual(
-      new Cartesian3(3.0, 4.0, 5.0)
+      new Cartesian3(3.0, 4.0, 5.0),
     );
   });
 
@@ -808,42 +808,42 @@ describe("Scene/Expression", function () {
   it("evaluates vec4", function () {
     let expression = new Expression("vec4(2.0)");
     expect(expression.evaluate(undefined)).toEqual(
-      new Cartesian4(2.0, 2.0, 2.0, 2.0)
+      new Cartesian4(2.0, 2.0, 2.0, 2.0),
     );
 
     expression = new Expression("vec4(3.0, 4.0, 5.0, 6.0)");
     expect(expression.evaluate(undefined)).toEqual(
-      new Cartesian4(3.0, 4.0, 5.0, 6.0)
+      new Cartesian4(3.0, 4.0, 5.0, 6.0),
     );
 
     expression = new Expression("vec4(vec2(3.0, 4.0), 5.0, 6.0)");
     expect(expression.evaluate(undefined)).toEqual(
-      new Cartesian4(3.0, 4.0, 5.0, 6.0)
+      new Cartesian4(3.0, 4.0, 5.0, 6.0),
     );
 
     expression = new Expression("vec4(3.0, vec2(4.0, 5.0), 6.0)");
     expect(expression.evaluate(undefined)).toEqual(
-      new Cartesian4(3.0, 4.0, 5.0, 6.0)
+      new Cartesian4(3.0, 4.0, 5.0, 6.0),
     );
 
     expression = new Expression("vec4(3.0, 4.0, vec2(5.0, 6.0))");
     expect(expression.evaluate(undefined)).toEqual(
-      new Cartesian4(3.0, 4.0, 5.0, 6.0)
+      new Cartesian4(3.0, 4.0, 5.0, 6.0),
     );
 
     expression = new Expression("vec4(vec3(3.0, 4.0, 5.0), 6.0)");
     expect(expression.evaluate(undefined)).toEqual(
-      new Cartesian4(3.0, 4.0, 5.0, 6.0)
+      new Cartesian4(3.0, 4.0, 5.0, 6.0),
     );
 
     expression = new Expression("vec4(3.0, vec3(4.0, 5.0, 6.0))");
     expect(expression.evaluate(undefined)).toEqual(
-      new Cartesian4(3.0, 4.0, 5.0, 6.0)
+      new Cartesian4(3.0, 4.0, 5.0, 6.0),
     );
 
     expression = new Expression("vec4(vec4(3.0, 4.0, 5.0, 6.0))");
     expect(expression.evaluate(undefined)).toEqual(
-      new Cartesian4(3.0, 4.0, 5.0, 6.0)
+      new Cartesian4(3.0, 4.0, 5.0, 6.0),
     );
   });
 
@@ -889,19 +889,19 @@ describe("Scene/Expression", function () {
     feature.addProperty("scale", 1);
 
     const expression = new Expression(
-      "vec4(${height}, ${width}, ${depth}, ${scale})"
+      "vec4(${height}, ${width}, ${depth}, ${scale})",
     );
     expect(expression.evaluate(feature)).toEqual(
-      new Cartesian4(2.0, 4.0, 3.0, 1.0)
+      new Cartesian4(2.0, 4.0, 3.0, 1.0),
     );
   });
 
   it("evaluates expression with multiple nested vectors", function () {
     const expression = new Expression(
-      "vec4(vec2(1, 2)[vec3(6, 1, 5).y], 2, vec4(1.0).w, 5)"
+      "vec4(vec2(1, 2)[vec3(6, 1, 5).y], 2, vec4(1.0).w, 5)",
     );
     expect(expression.evaluate(undefined)).toEqual(
-      new Cartesian4(2.0, 2.0, 1.0, 5.0)
+      new Cartesian4(2.0, 2.0, 1.0, 5.0),
     );
   });
 
@@ -1396,53 +1396,53 @@ describe("Scene/Expression", function () {
   it("evaluates color operations", function () {
     let expression = new Expression("+rgba(255, 0, 0, 1.0)");
     expect(expression.evaluate(undefined)).toEqual(
-      Cartesian4.fromColor(Color.RED)
+      Cartesian4.fromColor(Color.RED),
     );
 
     expression = new Expression("rgba(255, 0, 0, 0.5) + rgba(0, 0, 255, 0.5)");
     expect(expression.evaluate(undefined)).toEqual(
-      Cartesian4.fromColor(Color.MAGENTA)
+      Cartesian4.fromColor(Color.MAGENTA),
     );
 
     expression = new Expression("rgba(0, 255, 255, 1.0) - rgba(0, 255, 0, 0)");
     expect(expression.evaluate(undefined)).toEqual(
-      Cartesian4.fromColor(Color.BLUE)
+      Cartesian4.fromColor(Color.BLUE),
     );
 
     expression = new Expression(
-      "rgba(255, 255, 255, 1.0) * rgba(255, 0, 0, 1.0)"
+      "rgba(255, 255, 255, 1.0) * rgba(255, 0, 0, 1.0)",
     );
     expect(expression.evaluate(undefined)).toEqual(
-      Cartesian4.fromColor(Color.RED)
+      Cartesian4.fromColor(Color.RED),
     );
 
     expression = new Expression("rgba(255, 255, 0, 1.0) * 1.0");
     expect(expression.evaluate(undefined)).toEqual(
-      Cartesian4.fromColor(Color.YELLOW)
+      Cartesian4.fromColor(Color.YELLOW),
     );
 
     expression = new Expression("1 * rgba(255, 255, 0, 1.0)");
     expect(expression.evaluate(undefined)).toEqual(
-      Cartesian4.fromColor(Color.YELLOW)
+      Cartesian4.fromColor(Color.YELLOW),
     );
 
     expression = new Expression(
-      "rgba(255, 255, 255, 1.0) / rgba(255, 255, 255, 1.0)"
+      "rgba(255, 255, 255, 1.0) / rgba(255, 255, 255, 1.0)",
     );
     expect(expression.evaluate(undefined)).toEqual(
-      Cartesian4.fromColor(Color.WHITE)
+      Cartesian4.fromColor(Color.WHITE),
     );
 
     expression = new Expression("rgba(255, 255, 255, 1.0) / 2");
     expect(expression.evaluate(undefined)).toEqual(
-      Cartesian4.fromColor(new Color(0.5, 0.5, 0.5, 0.5))
+      Cartesian4.fromColor(new Color(0.5, 0.5, 0.5, 0.5)),
     );
 
     expression = new Expression(
-      "rgba(255, 255, 255, 1.0) % rgba(255, 255, 255, 1.0)"
+      "rgba(255, 255, 255, 1.0) % rgba(255, 255, 255, 1.0)",
     );
     expect(expression.evaluate(undefined)).toEqual(
-      Cartesian4.fromColor(new Color(0, 0, 0, 0))
+      Cartesian4.fromColor(new Color(0, 0, 0, 0)),
     );
 
     expression = new Expression("color('green') === color('green')");
@@ -1470,7 +1470,7 @@ describe("Scene/Expression", function () {
 
     expression = new Expression("-vec4(1, 2, 3, 4)");
     expect(expression.evaluate(undefined)).toEqual(
-      new Cartesian4(-1, -2, -3, -4)
+      new Cartesian4(-1, -2, -3, -4),
     );
 
     expression = new Expression("vec2(1, 2) + vec2(3, 4)");
@@ -1490,7 +1490,7 @@ describe("Scene/Expression", function () {
 
     expression = new Expression("vec4(1, 2, 3, 4) - vec4(3, 4, 5, 6)");
     expect(expression.evaluate(undefined)).toEqual(
-      new Cartesian4(-2, -2, -2, -2)
+      new Cartesian4(-2, -2, -2, -2),
     );
 
     expression = new Expression("vec2(1, 2) * vec2(3, 4)");
@@ -1513,7 +1513,7 @@ describe("Scene/Expression", function () {
 
     expression = new Expression("vec4(1, 2, 3, 4) * vec4(3, 4, 5, 6)");
     expect(expression.evaluate(undefined)).toEqual(
-      new Cartesian4(3, 8, 15, 24)
+      new Cartesian4(3, 8, 15, 24),
     );
 
     expression = new Expression("vec4(1, 2, 3, 4) * 3.0");
@@ -1530,22 +1530,22 @@ describe("Scene/Expression", function () {
 
     expression = new Expression("vec3(1, 2, 3) / vec3(2, 5, 3)");
     expect(expression.evaluate(undefined)).toEqual(
-      new Cartesian3(0.5, 0.4, 1.0)
+      new Cartesian3(0.5, 0.4, 1.0),
     );
 
     expression = new Expression("vec3(1, 2, 3) / 2.0");
     expect(expression.evaluate(undefined)).toEqual(
-      new Cartesian3(0.5, 1.0, 1.5)
+      new Cartesian3(0.5, 1.0, 1.5),
     );
 
     expression = new Expression("vec4(1, 2, 3, 4) / vec4(2, 5, 3, 2)");
     expect(expression.evaluate(undefined)).toEqual(
-      new Cartesian4(0.5, 0.4, 1.0, 2.0)
+      new Cartesian4(0.5, 0.4, 1.0, 2.0),
     );
 
     expression = new Expression("vec4(1, 2, 3, 4) / 2.0");
     expect(expression.evaluate(undefined)).toEqual(
-      new Cartesian4(0.5, 1.0, 1.5, 2.0)
+      new Cartesian4(0.5, 1.0, 1.5, 2.0),
     );
 
     expression = new Expression("vec2(2, 3) % vec2(3, 3)");
@@ -1732,12 +1732,12 @@ describe("Scene/Expression", function () {
 
     expression = new Expression("abs(vec3(-1.0, 1.0, 0.0))");
     expect(expression.evaluate(undefined)).toEqual(
-      new Cartesian3(1.0, 1.0, 0.0)
+      new Cartesian3(1.0, 1.0, 0.0),
     );
 
     expression = new Expression("abs(vec4(-1.0, 1.0, 0.0, -1.2))");
     expect(expression.evaluate(undefined)).toEqual(
-      new Cartesian4(1.0, 1.0, 0.0, 1.2)
+      new Cartesian4(1.0, 1.0, 0.0, 1.2),
     );
   });
 
@@ -1758,19 +1758,19 @@ describe("Scene/Expression", function () {
     expression = new Expression("cos(vec2(0, Math.PI))");
     expect(expression.evaluate(undefined)).toEqualEpsilon(
       new Cartesian2(1.0, -1.0),
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     );
 
     expression = new Expression("cos(vec3(0, Math.PI, -Math.PI))");
     expect(expression.evaluate(undefined)).toEqualEpsilon(
       new Cartesian3(1.0, -1.0, -1.0),
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     );
 
     expression = new Expression("cos(vec4(0, Math.PI, -Math.PI, 0))");
     expect(expression.evaluate(undefined)).toEqualEpsilon(
       new Cartesian4(1.0, -1.0, -1.0, 1.0),
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     );
   });
 
@@ -1791,19 +1791,19 @@ describe("Scene/Expression", function () {
     expression = new Expression("sin(vec2(0, Math.PI/2))");
     expect(expression.evaluate(undefined)).toEqualEpsilon(
       new Cartesian2(0.0, 1.0),
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     );
 
     expression = new Expression("sin(vec3(0, Math.PI/2, -Math.PI/2))");
     expect(expression.evaluate(undefined)).toEqualEpsilon(
       new Cartesian3(0.0, 1.0, -1.0),
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     );
 
     expression = new Expression("sin(vec4(0, Math.PI/2, -Math.PI/2, 0))");
     expect(expression.evaluate(undefined)).toEqualEpsilon(
       new Cartesian4(0.0, 1.0, -1.0, 0.0),
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     );
   });
 
@@ -1824,19 +1824,19 @@ describe("Scene/Expression", function () {
     expression = new Expression("tan(vec2(0, Math.PI/4))");
     expect(expression.evaluate(undefined)).toEqualEpsilon(
       new Cartesian2(0.0, 1.0),
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     );
 
     expression = new Expression("tan(vec3(0, Math.PI/4, Math.PI))");
     expect(expression.evaluate(undefined)).toEqualEpsilon(
       new Cartesian3(0.0, 1.0, 0.0),
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     );
 
     expression = new Expression("tan(vec4(0, Math.PI/4, Math.PI, -Math.PI/4))");
     expect(expression.evaluate(undefined)).toEqualEpsilon(
       new Cartesian4(0.0, 1.0, 0.0, -1.0),
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     );
   });
 
@@ -1857,13 +1857,13 @@ describe("Scene/Expression", function () {
     expression = new Expression("acos(vec2(1, 0))");
     expect(expression.evaluate(undefined)).toEqualEpsilon(
       new Cartesian2(0.0, CesiumMath.PI_OVER_TWO),
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     );
 
     expression = new Expression("acos(vec3(1, 0, 1))");
     expect(expression.evaluate(undefined)).toEqualEpsilon(
       new Cartesian3(0.0, CesiumMath.PI_OVER_TWO, 0.0, CesiumMath.PI_OVER_TWO),
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     );
 
     expression = new Expression("acos(vec4(1, 0, 1, 0))");
@@ -1873,9 +1873,9 @@ describe("Scene/Expression", function () {
         CesiumMath.PI_OVER_TWO,
         0.0,
         CesiumMath.PI_OVER_TWO,
-        0.0
+        0.0,
       ),
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     );
   });
 
@@ -1896,13 +1896,13 @@ describe("Scene/Expression", function () {
     expression = new Expression("asin(vec2(0, 1))");
     expect(expression.evaluate(undefined)).toEqualEpsilon(
       new Cartesian2(0.0, CesiumMath.PI_OVER_TWO),
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     );
 
     expression = new Expression("asin(vec3(0, 1, 0))");
     expect(expression.evaluate(undefined)).toEqualEpsilon(
       new Cartesian3(0.0, CesiumMath.PI_OVER_TWO, 0.0, CesiumMath.PI_OVER_TWO),
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     );
 
     expression = new Expression("asin(vec4(0, 1, 0, 1))");
@@ -1912,9 +1912,9 @@ describe("Scene/Expression", function () {
         CesiumMath.PI_OVER_TWO,
         0.0,
         CesiumMath.PI_OVER_TWO,
-        0.0
+        0.0,
       ),
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     );
   });
 
@@ -1935,7 +1935,7 @@ describe("Scene/Expression", function () {
     expression = new Expression("atan(vec2(0, 1))");
     expect(expression.evaluate(undefined)).toEqualEpsilon(
       new Cartesian2(0.0, CesiumMath.PI_OVER_FOUR),
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     );
 
     expression = new Expression("atan(vec3(0, 1, 0))");
@@ -1944,9 +1944,9 @@ describe("Scene/Expression", function () {
         0.0,
         CesiumMath.PI_OVER_FOUR,
         0.0,
-        CesiumMath.PI_OVER_FOUR
+        CesiumMath.PI_OVER_FOUR,
       ),
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     );
 
     expression = new Expression("atan(vec4(0, 1, 0, 1))");
@@ -1956,9 +1956,9 @@ describe("Scene/Expression", function () {
         CesiumMath.PI_OVER_FOUR,
         0.0,
         CesiumMath.PI_OVER_FOUR,
-        0.0
+        0.0,
       ),
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     );
   });
 
@@ -1976,19 +1976,19 @@ describe("Scene/Expression", function () {
     let expression = new Expression("radians(180)");
     expect(expression.evaluate(undefined)).toEqualEpsilon(
       Math.PI,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
 
     expression = new Expression("radians(vec2(180, 90))");
     expect(expression.evaluate(undefined)).toEqualEpsilon(
       new Cartesian2(Math.PI, CesiumMath.PI_OVER_TWO),
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     );
 
     expression = new Expression("radians(vec3(180, 90, 180))");
     expect(expression.evaluate(undefined)).toEqualEpsilon(
       new Cartesian3(Math.PI, CesiumMath.PI_OVER_TWO, Math.PI),
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     );
 
     expression = new Expression("radians(vec4(180, 90, 180, 90))");
@@ -1997,9 +1997,9 @@ describe("Scene/Expression", function () {
         Math.PI,
         CesiumMath.PI_OVER_TWO,
         Math.PI,
-        CesiumMath.PI_OVER_TWO
+        CesiumMath.PI_OVER_TWO,
       ),
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     );
   });
 
@@ -2017,29 +2017,29 @@ describe("Scene/Expression", function () {
     let expression = new Expression("degrees(2 * Math.PI)");
     expect(expression.evaluate(undefined)).toEqualEpsilon(
       360,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
 
     expression = new Expression("degrees(vec2(2 * Math.PI, Math.PI))");
     expect(expression.evaluate(undefined)).toEqualEpsilon(
       new Cartesian2(360, 180),
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     );
 
     expression = new Expression(
-      "degrees(vec3(2 * Math.PI, Math.PI, 2 * Math.PI))"
+      "degrees(vec3(2 * Math.PI, Math.PI, 2 * Math.PI))",
     );
     expect(expression.evaluate(undefined)).toEqualEpsilon(
       new Cartesian3(360, 180, 360),
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     );
 
     expression = new Expression(
-      "degrees(vec4(2 * Math.PI, Math.PI, 2 * Math.PI, Math.PI))"
+      "degrees(vec4(2 * Math.PI, Math.PI, 2 * Math.PI, Math.PI))",
     );
     expect(expression.evaluate(undefined)).toEqualEpsilon(
       new Cartesian4(360, 180, 360, 180),
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     );
   });
 
@@ -2068,12 +2068,12 @@ describe("Scene/Expression", function () {
 
     expression = new Expression("sqrt(vec3(1.0, 4.0, 9.0))");
     expect(expression.evaluate(undefined)).toEqual(
-      new Cartesian3(1.0, 2.0, 3.0)
+      new Cartesian3(1.0, 2.0, 3.0),
     );
 
     expression = new Expression("sqrt(vec4(1.0, 4.0, 9.0, 16.0))");
     expect(expression.evaluate(undefined)).toEqual(
-      new Cartesian4(1.0, 2.0, 3.0, 4.0)
+      new Cartesian4(1.0, 2.0, 3.0, 4.0),
     );
   });
 
@@ -2102,12 +2102,12 @@ describe("Scene/Expression", function () {
 
     expression = new Expression("sign(vec3(5.0, -5.0, 0.0))");
     expect(expression.evaluate(undefined)).toEqual(
-      new Cartesian3(1.0, -1.0, 0.0)
+      new Cartesian3(1.0, -1.0, 0.0),
     );
 
     expression = new Expression("sign(vec4(5.0, -5.0, 0.0, 1.0))");
     expect(expression.evaluate(undefined)).toEqual(
-      new Cartesian4(1.0, -1.0, 0.0, 1.0)
+      new Cartesian4(1.0, -1.0, 0.0, 1.0),
     );
   });
 
@@ -2136,12 +2136,12 @@ describe("Scene/Expression", function () {
 
     expression = new Expression("floor(vec3(5.5, -1.2, 0.0))");
     expect(expression.evaluate(undefined)).toEqual(
-      new Cartesian3(5.0, -2.0, 0.0)
+      new Cartesian3(5.0, -2.0, 0.0),
     );
 
     expression = new Expression("floor(vec4(5.5, -1.2, 0.0, -2.9))");
     expect(expression.evaluate(undefined)).toEqual(
-      new Cartesian4(5.0, -2.0, 0.0, -3.0)
+      new Cartesian4(5.0, -2.0, 0.0, -3.0),
     );
   });
 
@@ -2170,12 +2170,12 @@ describe("Scene/Expression", function () {
 
     expression = new Expression("ceil(vec3(5.5, -1.2, 0.0))");
     expect(expression.evaluate(undefined)).toEqual(
-      new Cartesian3(6.0, -1.0, 0.0)
+      new Cartesian3(6.0, -1.0, 0.0),
     );
 
     expression = new Expression("ceil(vec4(5.5, -1.2, 0.0, -2.9))");
     expect(expression.evaluate(undefined)).toEqual(
-      new Cartesian4(6.0, -1.0, 0.0, -2.0)
+      new Cartesian4(6.0, -1.0, 0.0, -2.0),
     );
   });
 
@@ -2204,12 +2204,12 @@ describe("Scene/Expression", function () {
 
     expression = new Expression("round(vec3(5.5, -1.2, 0.0))");
     expect(expression.evaluate(undefined)).toEqual(
-      new Cartesian3(6.0, -1.0, 0.0)
+      new Cartesian3(6.0, -1.0, 0.0),
     );
 
     expression = new Expression("round(vec4(5.5, -1.2, 0.0, -2.9))");
     expect(expression.evaluate(undefined)).toEqual(
-      new Cartesian4(6.0, -1.0, 0.0, -3.0)
+      new Cartesian4(6.0, -1.0, 0.0, -3.0),
     );
   });
 
@@ -2227,31 +2227,31 @@ describe("Scene/Expression", function () {
     let expression = new Expression("exp(1.0)");
     expect(expression.evaluate(undefined)).toEqualEpsilon(
       Math.E,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
 
     expression = new Expression("exp(0.0)");
     expect(expression.evaluate(undefined)).toEqualEpsilon(
       1.0,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
 
     expression = new Expression("exp(vec2(1.0, 0.0))");
     expect(expression.evaluate(undefined)).toEqualEpsilon(
       new Cartesian2(Math.E, 1.0),
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
 
     expression = new Expression("exp(vec3(1.0, 0.0, 1.0))");
     expect(expression.evaluate(undefined)).toEqualEpsilon(
       new Cartesian3(Math.E, 1.0, Math.E),
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
 
     expression = new Expression("exp(vec4(1.0, 0.0, 1.0, 0.0))");
     expect(expression.evaluate(undefined)).toEqualEpsilon(
       new Cartesian4(Math.E, 1.0, Math.E, 1.0),
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
   });
 
@@ -2280,12 +2280,12 @@ describe("Scene/Expression", function () {
 
     expression = new Expression("exp2(vec3(1.0, 0.0, 2.0))");
     expect(expression.evaluate(undefined)).toEqual(
-      new Cartesian3(2.0, 1.0, 4.0)
+      new Cartesian3(2.0, 1.0, 4.0),
     );
 
     expression = new Expression("exp2(vec4(1.0, 0.0, 2.0, 3.0))");
     expect(expression.evaluate(undefined)).toEqual(
-      new Cartesian4(2.0, 1.0, 4.0, 8.0)
+      new Cartesian4(2.0, 1.0, 4.0, 8.0),
     );
   });
 
@@ -2306,7 +2306,7 @@ describe("Scene/Expression", function () {
     expression = new Expression("log(10.0)");
     expect(expression.evaluate(undefined)).toEqualEpsilon(
       2.302585092994046,
-      CesiumMath.EPSILON7
+      CesiumMath.EPSILON7,
     );
 
     expression = new Expression("log(vec2(1.0, Math.E))");
@@ -2314,12 +2314,12 @@ describe("Scene/Expression", function () {
 
     expression = new Expression("log(vec3(1.0, Math.E, 1.0))");
     expect(expression.evaluate(undefined)).toEqual(
-      new Cartesian3(0.0, 1.0, 0.0)
+      new Cartesian3(0.0, 1.0, 0.0),
     );
 
     expression = new Expression("log(vec4(1.0, Math.E, 1.0, Math.E))");
     expect(expression.evaluate(undefined)).toEqual(
-      new Cartesian4(0.0, 1.0, 0.0, 1.0)
+      new Cartesian4(0.0, 1.0, 0.0, 1.0),
     );
   });
 
@@ -2348,13 +2348,13 @@ describe("Scene/Expression", function () {
 
     expression = new Expression("log2(vec3(1.0, 2.0, 4.0))");
     expect(expression.evaluate(undefined)).toEqual(
-      new Cartesian3(0.0, 1.0, 2.0)
+      new Cartesian3(0.0, 1.0, 2.0),
     );
 
     expression = new Expression("log2(vec4(1.0, 2.0, 4.0, 8.0))");
     expect(expression.evaluate(undefined)).toEqualEpsilon(
       new Cartesian4(0.0, 1.0, 2.0, 3.0),
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
   });
 
@@ -2383,12 +2383,12 @@ describe("Scene/Expression", function () {
 
     expression = new Expression("fract(vec3(1.0, 2.25, -2.25))");
     expect(expression.evaluate(undefined)).toEqual(
-      new Cartesian3(0.0, 0.25, 0.75)
+      new Cartesian3(0.0, 0.25, 0.75),
     );
 
     expression = new Expression("fract(vec4(1.0, 2.25, -2.25, 1.0))");
     expect(expression.evaluate(undefined)).toEqual(
-      new Cartesian4(0.0, 0.25, 0.75, 0.0)
+      new Cartesian4(0.0, 0.25, 0.75, 0.0),
     );
   });
 
@@ -2437,14 +2437,14 @@ describe("Scene/Expression", function () {
     let length = Math.sqrt(2 * 2 + 3 * 3 + 4 * 4);
     expect(expression.evaluate(undefined)).toEqualEpsilon(
       new Cartesian3(2.0 / length, 3.0 / length, -4.0 / length),
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
 
     expression = new Expression("normalize(vec4(-2.0, 3.0, -4.0, 5.0))");
     length = Math.sqrt(2 * 2 + 3 * 3 + 4 * 4 + 5 * 5);
     expect(expression.evaluate(undefined)).toEqual(
       new Cartesian4(-2.0 / length, 3.0 / length, -4.0 / length, 5.0 / length),
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
   });
 
@@ -2469,27 +2469,27 @@ describe("Scene/Expression", function () {
     expect(expression.evaluate(undefined)).toEqual(75.0);
 
     expression = new Expression(
-      "clamp(vec2(50.0,50.0), vec2(0.0,75.0), 100.0)"
+      "clamp(vec2(50.0,50.0), vec2(0.0,75.0), 100.0)",
     );
     expect(expression.evaluate(undefined)).toEqual(new Cartesian2(50.0, 75.0));
 
     expression = new Expression(
-      "clamp(vec2(50.0,50.0), vec2(0.0,75.0), vec2(25.0,100.0))"
+      "clamp(vec2(50.0,50.0), vec2(0.0,75.0), vec2(25.0,100.0))",
     );
     expect(expression.evaluate(undefined)).toEqual(new Cartesian2(25.0, 75.0));
 
     expression = new Expression(
-      "clamp(vec3(50.0, 50.0, 50.0), vec3(0.0, 0.0, 75.0), vec3(100.0, 25.0, 100.0))"
+      "clamp(vec3(50.0, 50.0, 50.0), vec3(0.0, 0.0, 75.0), vec3(100.0, 25.0, 100.0))",
     );
     expect(expression.evaluate(undefined)).toEqual(
-      new Cartesian3(50.0, 25.0, 75.0)
+      new Cartesian3(50.0, 25.0, 75.0),
     );
 
     expression = new Expression(
-      "clamp(vec4(50.0, 50.0, 50.0, 100.0), vec4(0.0, 0.0, 75.0, 75.0), vec4(100.0, 25.0, 100.0, 85.0))"
+      "clamp(vec4(50.0, 50.0, 50.0, 100.0), vec4(0.0, 0.0, 75.0, 75.0), vec4(100.0, 25.0, 100.0, 85.0))",
     );
     expect(expression.evaluate(undefined)).toEqual(
-      new Cartesian4(50.0, 25.0, 75.0, 85.0)
+      new Cartesian4(50.0, 25.0, 75.0, 85.0),
     );
   });
 
@@ -2536,22 +2536,22 @@ describe("Scene/Expression", function () {
     expect(expression.evaluate(undefined)).toEqual(new Cartesian2(1.0, 2.0));
 
     expression = new Expression(
-      "mix(vec2(0.0,1.0), vec2(2.0,3.0), vec2(0.5,4.0))"
+      "mix(vec2(0.0,1.0), vec2(2.0,3.0), vec2(0.5,4.0))",
     );
     expect(expression.evaluate(undefined)).toEqual(new Cartesian2(1.0, 9.0));
 
     expression = new Expression(
-      "mix(vec3(0.0,1.0,2.0), vec3(2.0,3.0,4.0), vec3(0.5,4.0,5.0))"
+      "mix(vec3(0.0,1.0,2.0), vec3(2.0,3.0,4.0), vec3(0.5,4.0,5.0))",
     );
     expect(expression.evaluate(undefined)).toEqual(
-      new Cartesian3(1.0, 9.0, 12.0)
+      new Cartesian3(1.0, 9.0, 12.0),
     );
 
     expression = new Expression(
-      "mix(vec4(0.0,1.0,2.0,1.5), vec4(2.0,3.0,4.0,2.5), vec4(0.5,4.0,5.0,3.5))"
+      "mix(vec4(0.0,1.0,2.0,1.5), vec4(2.0,3.0,4.0,2.5), vec4(0.5,4.0,5.0,3.5))",
     );
     expect(expression.evaluate(undefined)).toEqual(
-      new Cartesian4(1.0, 9.0, 12.0, 5.0)
+      new Cartesian4(1.0, 9.0, 12.0, 5.0),
     );
   });
 
@@ -2594,31 +2594,31 @@ describe("Scene/Expression", function () {
     let expression = new Expression("atan2(0,1)");
     expect(expression.evaluate(undefined)).toEqualEpsilon(
       0.0,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
 
     expression = new Expression("atan2(1,0)");
     expect(expression.evaluate(undefined)).toEqualEpsilon(
       0.5 * Math.PI,
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
 
     expression = new Expression("atan2(vec2(0,1),vec2(1,0))");
     expect(expression.evaluate(undefined)).toEqualEpsilon(
       new Cartesian2(0.0, 0.5 * Math.PI),
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
 
     expression = new Expression("atan2(vec3(0,1,0.5),vec3(1,0,0.5))");
     expect(expression.evaluate(undefined)).toEqualEpsilon(
       new Cartesian3(0.0, 0.5 * Math.PI, 0.25 * Math.PI),
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
 
     expression = new Expression("atan2(vec4(0,1,0.5,1),vec4(1,0,0.5,0))");
     expect(expression.evaluate(undefined)).toEqualEpsilon(
       new Cartesian4(0.0, 0.5 * Math.PI, 0.25 * Math.PI, 0.5 * Math.PI),
-      CesiumMath.EPSILON10
+      CesiumMath.EPSILON10,
     );
   });
 
@@ -2661,12 +2661,12 @@ describe("Scene/Expression", function () {
 
     expression = new Expression("pow(vec3(5,4,3),vec3(0,2,3))");
     expect(expression.evaluate(undefined)).toEqual(
-      new Cartesian3(1.0, 16.0, 27.0)
+      new Cartesian3(1.0, 16.0, 27.0),
     );
 
     expression = new Expression("pow(vec4(5,4,3,2),vec4(0,2,3,5))");
     expect(expression.evaluate(undefined)).toEqual(
-      new Cartesian4(1.0, 16.0, 27.0, 32.0)
+      new Cartesian4(1.0, 16.0, 27.0, 32.0),
     );
   });
 
@@ -2712,12 +2712,12 @@ describe("Scene/Expression", function () {
 
     expression = new Expression("min(vec3(-1,2,1),vec3(0,1,2))");
     expect(expression.evaluate(undefined)).toEqual(
-      new Cartesian3(-1.0, 1.0, 1.0)
+      new Cartesian3(-1.0, 1.0, 1.0),
     );
 
     expression = new Expression("min(vec4(-1,2,1,4),vec4(0,1,2,3))");
     expect(expression.evaluate(undefined)).toEqual(
-      new Cartesian4(-1.0, 1.0, 1.0, 3.0)
+      new Cartesian4(-1.0, 1.0, 1.0, 3.0),
     );
   });
 
@@ -2761,7 +2761,7 @@ describe("Scene/Expression", function () {
 
     expression = new Expression("max(vec4(-1,2,1,4),vec4(0,1,2,3))");
     expect(expression.evaluate(undefined)).toEqual(
-      new Cartesian4(0, 2.0, 2.0, 4.0)
+      new Cartesian4(0, 2.0, 2.0, 4.0),
     );
   });
 
@@ -2795,12 +2795,12 @@ describe("Scene/Expression", function () {
     expect(expression.evaluate(undefined)).toEqual(1.0);
 
     expression = new Expression(
-      "distance(vec3(3.0, 2.0, 1.0), vec3(1.0, 0.0, 0.0))"
+      "distance(vec3(3.0, 2.0, 1.0), vec3(1.0, 0.0, 0.0))",
     );
     expect(expression.evaluate(undefined)).toEqual(3.0);
 
     expression = new Expression(
-      "distance(vec4(5.0, 5.0, 5.0, 5.0), vec4(0.0, 0.0, 0.0, 0.0))"
+      "distance(vec4(5.0, 5.0, 5.0, 5.0), vec4(0.0, 0.0, 0.0, 0.0))",
     );
     expect(expression.evaluate(undefined)).toEqual(10.0);
   });
@@ -2822,7 +2822,7 @@ describe("Scene/Expression", function () {
 
     expect(function () {
       return new Expression(
-        "distance(vec4(5.0, 2.0, 3.0, 1.0), vec3(4.0, 4.0, 4.0))"
+        "distance(vec4(5.0, 2.0, 3.0, 1.0), vec3(4.0, 4.0, 4.0))",
       ).evaluate(undefined);
     }).toThrowError(RuntimeError);
   });
@@ -2835,12 +2835,12 @@ describe("Scene/Expression", function () {
     expect(expression.evaluate(undefined)).toEqual(4.0);
 
     expression = new Expression(
-      "dot(vec3(1.0, 2.0, 3.0), vec3(2.0, 2.0, 1.0))"
+      "dot(vec3(1.0, 2.0, 3.0), vec3(2.0, 2.0, 1.0))",
     );
     expect(expression.evaluate(undefined)).toEqual(9.0);
 
     expression = new Expression(
-      "dot(vec4(5.0, 5.0, 2.0, 3.0), vec4(1.0, 2.0, 1.0, 1.0))"
+      "dot(vec4(5.0, 5.0, 2.0, 3.0), vec4(1.0, 2.0, 1.0, 1.0))",
     );
     expect(expression.evaluate(undefined)).toEqual(20.0);
   });
@@ -2862,31 +2862,31 @@ describe("Scene/Expression", function () {
 
     expect(function () {
       return new Expression(
-        "dot(vec4(5.0, 2.0, 3.0, 1.0), vec3(4.0, 4.0, 4.0))"
+        "dot(vec4(5.0, 2.0, 3.0, 1.0), vec3(4.0, 4.0, 4.0))",
       ).evaluate(undefined);
     }).toThrowError(RuntimeError);
   });
 
   it("evaluates the cross function", function () {
     let expression = new Expression(
-      "cross(vec3(1.0, 1.0, 1.0), vec3(2.0, 2.0, 2.0))"
+      "cross(vec3(1.0, 1.0, 1.0), vec3(2.0, 2.0, 2.0))",
     );
     expect(expression.evaluate(undefined)).toEqual(
-      new Cartesian3(0.0, 0.0, 0.0)
+      new Cartesian3(0.0, 0.0, 0.0),
     );
 
     expression = new Expression(
-      "cross(vec3(-1.0, -1.0, -1.0), vec3(0.0, -2.0, -5.0))"
+      "cross(vec3(-1.0, -1.0, -1.0), vec3(0.0, -2.0, -5.0))",
     );
     expect(expression.evaluate(undefined)).toEqual(
-      new Cartesian3(3.0, -5.0, 2.0)
+      new Cartesian3(3.0, -5.0, 2.0),
     );
 
     expression = new Expression(
-      "cross(vec3(5.0, -2.0, 1.0), vec3(-2.0, -6.0, -8.0))"
+      "cross(vec3(5.0, -2.0, 1.0), vec3(-2.0, -6.0, -8.0))",
     );
     expect(expression.evaluate(undefined)).toEqual(
-      new Cartesian3(22.0, 38.0, -34.0)
+      new Cartesian3(22.0, 38.0, -34.0),
     );
   });
 
@@ -2897,7 +2897,7 @@ describe("Scene/Expression", function () {
 
     expect(function () {
       return new Expression(
-        "cross(vec3(0.0, 0.0, 0.0), vec3(1.0, 1.0, 1.0), vec3(2.0, 2.0, 2.0))"
+        "cross(vec3(0.0, 0.0, 0.0), vec3(1.0, 1.0, 1.0), vec3(2.0, 2.0, 2.0))",
       );
     }).toThrowError(RuntimeError);
   });
@@ -2905,13 +2905,13 @@ describe("Scene/Expression", function () {
   it("throws if cross function does not take vec3 arguments", function () {
     expect(function () {
       return new Expression("cross(vec2(1.0, 2.0), vec2(3.0, 2.0)").evaluate(
-        undefined
+        undefined,
       );
     }).toThrowError(RuntimeError);
 
     expect(function () {
       return new Expression(
-        "cross(vec4(5.0, 2.0, 3.0, 1.0), vec3(4.0, 4.0, 4.0))"
+        "cross(vec4(5.0, 2.0, 3.0, 1.0), vec3(4.0, 4.0, 4.0))",
       ).evaluate(undefined);
     }).toThrowError(RuntimeError);
   });
@@ -2924,7 +2924,7 @@ describe("Scene/Expression", function () {
     expect(expression.evaluate(undefined)).toEqual("second");
 
     expression = new Expression(
-      "(!(1 + 2 > 3)) ? (2 > 1 ? 1 + 1 : 0) : (2 > 1 ? -1 + -1 : 0)"
+      "(!(1 + 2 > 3)) ? (2 > 1 ? 1 + 1 : 0) : (2 > 1 ? -1 + -1 : 0)",
     );
     expect(expression.evaluate(undefined)).toEqual(2);
   });
@@ -3092,13 +3092,13 @@ describe("Scene/Expression", function () {
     let expression = new Expression('regExp("a")');
     expect(expression.evaluate(undefined)).toEqual(/a/);
     expect(expression._runtimeAst._type).toEqual(
-      ExpressionNodeType.LITERAL_REGEX
+      ExpressionNodeType.LITERAL_REGEX,
     );
 
     expression = new Expression('regExp("\\w")');
     expect(expression.evaluate(undefined)).toEqual(/\w/);
     expect(expression._runtimeAst._type).toEqual(
-      ExpressionNodeType.LITERAL_REGEX
+      ExpressionNodeType.LITERAL_REGEX,
     );
 
     expression = new Expression("regExp(1 + 1)");
@@ -3108,13 +3108,13 @@ describe("Scene/Expression", function () {
     expression = new Expression("regExp(true)");
     expect(expression.evaluate(undefined)).toEqual(/true/);
     expect(expression._runtimeAst._type).toEqual(
-      ExpressionNodeType.LITERAL_REGEX
+      ExpressionNodeType.LITERAL_REGEX,
     );
 
     expression = new Expression("regExp()");
     expect(expression.evaluate(undefined)).toEqual(/(?:)/);
     expect(expression._runtimeAst._type).toEqual(
-      ExpressionNodeType.LITERAL_REGEX
+      ExpressionNodeType.LITERAL_REGEX,
     );
 
     expression = new Expression("regExp(${pattern})");
@@ -3126,7 +3126,7 @@ describe("Scene/Expression", function () {
     let expression = new Expression('regExp("a", "i")');
     expect(expression.evaluate(undefined)).toEqual(/a/i);
     expect(expression._runtimeAst._type).toEqual(
-      ExpressionNodeType.LITERAL_REGEX
+      ExpressionNodeType.LITERAL_REGEX,
     );
 
     expression = new Expression('regExp("a", "m" + "g")');
@@ -3167,7 +3167,7 @@ describe("Scene/Expression", function () {
     expect(expression.evaluate(undefined)).toEqual(false);
 
     expression = new Expression(
-      'regExp("quick\\s(brown).+?(jumps)", "ig").test("The Quick Brown Fox Jumps Over The Lazy Dog")'
+      'regExp("quick\\s(brown).+?(jumps)", "ig").test("The Quick Brown Fox Jumps Over The Lazy Dog")',
     );
     expect(expression.evaluate(undefined)).toEqual(true);
 
@@ -3205,12 +3205,12 @@ describe("Scene/Expression", function () {
     expect(expression.evaluate(undefined)).toEqual(null);
 
     expression = new Expression(
-      'regExp("quick\\s(b.*n).+?(jumps)", "ig").exec("The Quick Brown Fox Jumps Over The Lazy Dog")'
+      'regExp("quick\\s(b.*n).+?(jumps)", "ig").exec("The Quick Brown Fox Jumps Over The Lazy Dog")',
     );
     expect(expression.evaluate(undefined)).toEqual("Brown");
 
     expression = new Expression(
-      'regExp("(" + ${property} + ")").exec(${property})'
+      'regExp("(" + ${property} + ")").exec(${property})',
     );
     expect(expression.evaluate(feature)).toEqual("abc");
 
@@ -3247,7 +3247,7 @@ describe("Scene/Expression", function () {
     expect(expression.evaluate(undefined)).toEqual(false);
 
     expression = new Expression(
-      'regExp("quick\\s(brown).+?(jumps)", "ig") =~ "The Quick Brown Fox Jumps Over The Lazy Dog"'
+      'regExp("quick\\s(brown).+?(jumps)", "ig") =~ "The Quick Brown Fox Jumps Over The Lazy Dog"',
     );
     expect(expression.evaluate(undefined)).toEqual(true);
 
@@ -3292,7 +3292,7 @@ describe("Scene/Expression", function () {
     expect(expression.evaluate(undefined)).toEqual(true);
 
     expression = new Expression(
-      'regExp("quick\\s(brown).+?(jumps)", "ig") !~ "The Quick Brown Fox Jumps Over The Lazy Dog"'
+      'regExp("quick\\s(brown).+?(jumps)", "ig") !~ "The Quick Brown Fox Jumps Over The Lazy Dog"',
     );
     expect(expression.evaluate(undefined)).toEqual(false);
 
@@ -3378,7 +3378,7 @@ describe("Scene/Expression", function () {
     expect(expression.evaluate(undefined)).toEqual([1, 2, 3]);
 
     expression = new Expression(
-      '[1+2, "hello", 2 < 3, color("blue"), ${property}]'
+      '[1+2, "hello", 2 < 3, color("blue"), ${property}]',
     );
     expect(expression.evaluate(feature)).toEqual([
       3,
@@ -3422,7 +3422,7 @@ describe("Scene/Expression", function () {
       "getShow()",
       {},
       {},
-      "bool"
+      "bool",
     );
     const expected = "bool getShow()\n" + "{\n" + "    return true;\n" + "}\n";
     expect(shaderFunction).toEqual(expected);
@@ -3435,7 +3435,7 @@ describe("Scene/Expression", function () {
     };
     const shaderExpression = expression.getShaderExpression(
       variableSubstitutionMap,
-      {}
+      {},
     );
     const expected = "a_property";
     expect(shaderExpression).toEqual(expected);
@@ -3448,7 +3448,7 @@ describe("Scene/Expression", function () {
     };
     const shaderExpression = expression.getShaderExpression(
       variableSubstitutionMap,
-      {}
+      {},
     );
     const expected = "a_property";
     expect(shaderExpression).toEqual(expected);
@@ -3461,7 +3461,7 @@ describe("Scene/Expression", function () {
     };
     const shaderExpression = expression.getShaderExpression(
       variableSubstitutionMap,
-      {}
+      {},
     );
     const expected = "a_property";
     expect(shaderExpression).toEqual(expected);
@@ -3613,7 +3613,7 @@ describe("Scene/Expression", function () {
     let expression = new Expression("${property[0]}");
     let shaderExpression = expression.getShaderExpression(
       variableSubstitutionMap,
-      {}
+      {},
     );
     let expected = "property[0]";
     expect(shaderExpression).toEqual(expected);
@@ -3621,7 +3621,7 @@ describe("Scene/Expression", function () {
     expression = new Expression("${property[4 / 2]}");
     shaderExpression = expression.getShaderExpression(
       variableSubstitutionMap,
-      {}
+      {},
     );
     expected = "property[int((4.0 / 2.0))]";
     expect(shaderExpression).toEqual(expected);
@@ -3688,7 +3688,7 @@ describe("Scene/Expression", function () {
     let expression = new Expression("color()");
     let shaderExpression = expression.getShaderExpression(
       variableSubstitutionMap,
-      shaderState
+      shaderState,
     );
     let expected = "vec4(1.0)";
     expect(shaderExpression).toEqual(expected);
@@ -3698,7 +3698,7 @@ describe("Scene/Expression", function () {
     expression = new Expression('color("red")');
     shaderExpression = expression.getShaderExpression(
       variableSubstitutionMap,
-      shaderState
+      shaderState,
     );
     expected = "vec4(vec3(1.0, 0.0, 0.0), 1.0)";
     expect(shaderExpression).toEqual(expected);
@@ -3708,7 +3708,7 @@ describe("Scene/Expression", function () {
     expression = new Expression('color("#FFF")');
     shaderExpression = expression.getShaderExpression(
       variableSubstitutionMap,
-      shaderState
+      shaderState,
     );
     expected = "vec4(vec3(1.0, 1.0, 1.0), 1.0)";
     expect(shaderExpression).toEqual(expected);
@@ -3718,7 +3718,7 @@ describe("Scene/Expression", function () {
     expression = new Expression('color("#FF0000")');
     shaderExpression = expression.getShaderExpression(
       variableSubstitutionMap,
-      shaderState
+      shaderState,
     );
     expected = "vec4(vec3(1.0, 0.0, 0.0), 1.0)";
     expect(shaderExpression).toEqual(expected);
@@ -3728,7 +3728,7 @@ describe("Scene/Expression", function () {
     expression = new Expression('color("rgb(255, 0, 0)")');
     shaderExpression = expression.getShaderExpression(
       variableSubstitutionMap,
-      shaderState
+      shaderState,
     );
     expected = "vec4(vec3(1.0, 0.0, 0.0), 1.0)";
     expect(shaderExpression).toEqual(expected);
@@ -3738,7 +3738,7 @@ describe("Scene/Expression", function () {
     expression = new Expression('color("red", 0.5)');
     shaderExpression = expression.getShaderExpression(
       variableSubstitutionMap,
-      shaderState
+      shaderState,
     );
     expected = "vec4(vec3(1.0, 0.0, 0.0), 0.5)";
     expect(shaderExpression).toEqual(expected);
@@ -3748,7 +3748,7 @@ describe("Scene/Expression", function () {
     expression = new Expression("rgb(255, 0, 0)");
     shaderExpression = expression.getShaderExpression(
       variableSubstitutionMap,
-      shaderState
+      shaderState,
     );
     expected = "vec4(1.0, 0.0, 0.0, 1.0)";
     expect(shaderExpression).toEqual(expected);
@@ -3758,7 +3758,7 @@ describe("Scene/Expression", function () {
     expression = new Expression("rgb(255, ${property}, 0)");
     shaderExpression = expression.getShaderExpression(
       variableSubstitutionMap,
-      shaderState
+      shaderState,
     );
     expected = "vec4(255.0 / 255.0, property / 255.0, 0.0 / 255.0, 1.0)";
     expect(shaderExpression).toEqual(expected);
@@ -3768,7 +3768,7 @@ describe("Scene/Expression", function () {
     expression = new Expression("rgba(255, 0, 0, 0.5)");
     shaderExpression = expression.getShaderExpression(
       variableSubstitutionMap,
-      shaderState
+      shaderState,
     );
     expected = "vec4(1.0, 0.0, 0.0, 0.5)";
     expect(shaderExpression).toEqual(expected);
@@ -3778,7 +3778,7 @@ describe("Scene/Expression", function () {
     expression = new Expression("rgba(255, ${property}, 0, 0.5)");
     shaderExpression = expression.getShaderExpression(
       variableSubstitutionMap,
-      shaderState
+      shaderState,
     );
     expected = "vec4(255.0 / 255.0, property / 255.0, 0.0 / 255.0, 0.5)";
     expect(shaderExpression).toEqual(expected);
@@ -3788,7 +3788,7 @@ describe("Scene/Expression", function () {
     expression = new Expression("hsl(1.0, 0.5, 0.5)");
     shaderExpression = expression.getShaderExpression(
       variableSubstitutionMap,
-      shaderState
+      shaderState,
     );
     expected = "vec4(0.75, 0.25, 0.25, 1.0)";
     expect(shaderExpression).toEqual(expected);
@@ -3798,7 +3798,7 @@ describe("Scene/Expression", function () {
     expression = new Expression("hsla(1.0, 0.5, 0.5, 0.5)");
     shaderExpression = expression.getShaderExpression(
       variableSubstitutionMap,
-      shaderState
+      shaderState,
     );
     expected = "vec4(0.75, 0.25, 0.25, 0.5)";
     expect(shaderExpression).toEqual(expected);
@@ -3808,7 +3808,7 @@ describe("Scene/Expression", function () {
     expression = new Expression("hsl(1.0, ${property}, 0.5)");
     shaderExpression = expression.getShaderExpression(
       variableSubstitutionMap,
-      shaderState
+      shaderState,
     );
     expected = "vec4(czm_HSLToRGB(vec3(1.0, property, 0.5)), 1.0)";
     expect(shaderExpression).toEqual(expected);
@@ -3818,7 +3818,7 @@ describe("Scene/Expression", function () {
     expression = new Expression("hsla(1.0, ${property}, 0.5, 0.5)");
     shaderExpression = expression.getShaderExpression(
       variableSubstitutionMap,
-      shaderState
+      shaderState,
     );
     expected = "vec4(czm_HSLToRGB(vec3(1.0, property, 0.5)), 0.5)";
     expect(shaderExpression).toEqual(expected);
@@ -3828,7 +3828,7 @@ describe("Scene/Expression", function () {
   it("gets shader expression for color components", function () {
     // .r, .g, .b, .a
     let expression = new Expression(
-      "color().r + color().g + color().b + color().a"
+      "color().r + color().g + color().b + color().a",
     );
     let shaderExpression = expression.getShaderExpression({}, {});
     const expected =
@@ -3837,14 +3837,14 @@ describe("Scene/Expression", function () {
 
     // .x, .y, .z, .w
     expression = new Expression(
-      "color().x + color().y + color().z + color().w"
+      "color().x + color().y + color().z + color().w",
     );
     shaderExpression = expression.getShaderExpression({}, {});
     expect(shaderExpression).toEqual(expected);
 
     // [0], [1], [2], [3]
     expression = new Expression(
-      "color()[0] + color()[1] + color()[2] + color()[3]"
+      "color()[0] + color()[1] + color()[2] + color()[3]",
     );
     shaderExpression = expression.getShaderExpression({}, {});
     expect(shaderExpression).toEqual(expected);
@@ -3858,30 +3858,30 @@ describe("Scene/Expression", function () {
     let expression = new Expression("vec4(1, 2, 3, 4)");
     let shaderExpression = expression.getShaderExpression(
       variableSubstitutionMap,
-      {}
+      {},
     );
     expect(shaderExpression).toEqual("vec4(1.0, 2.0, 3.0, 4.0)");
 
     expression = new Expression("vec4(1) + vec4(2)");
     shaderExpression = expression.getShaderExpression(
       variableSubstitutionMap,
-      {}
+      {},
     );
     expect(shaderExpression).toEqual("(vec4(1.0) + vec4(2.0))");
 
     expression = new Expression("vec4(1, ${property}, vec2(1, 2).x, 0)");
     shaderExpression = expression.getShaderExpression(
       variableSubstitutionMap,
-      {}
+      {},
     );
     expect(shaderExpression).toEqual(
-      "vec4(1.0, property, vec2(1.0, 2.0)[0], 0.0)"
+      "vec4(1.0, property, vec2(1.0, 2.0)[0], 0.0)",
     );
 
     expression = new Expression("vec4(vec3(2), 1.0)");
     shaderExpression = expression.getShaderExpression(
       variableSubstitutionMap,
-      {}
+      {},
     );
     expect(shaderExpression).toEqual("vec4(vec3(2.0), 1.0)");
   });
@@ -3889,7 +3889,7 @@ describe("Scene/Expression", function () {
   it("gets shader expression for vector components", function () {
     // .x, .y, .z, .w
     let expression = new Expression(
-      "vec4(1).x + vec4(1).y + vec4(1).z + vec4(1).w"
+      "vec4(1).x + vec4(1).y + vec4(1).z + vec4(1).w",
     );
     let shaderExpression = expression.getShaderExpression({}, {});
     const expected =
@@ -3898,7 +3898,7 @@ describe("Scene/Expression", function () {
 
     // [0], [1], [2], [3]
     expression = new Expression(
-      "vec4(1)[0] + vec4(1)[1] + vec4(1)[2] + vec4(1)[3]"
+      "vec4(1)[0] + vec4(1)[1] + vec4(1)[2] + vec4(1)[3]",
     );
     shaderExpression = expression.getShaderExpression({}, {});
     expect(shaderExpression).toEqual(expected);
@@ -4102,7 +4102,7 @@ describe("Scene/Expression", function () {
 
   it("gets shader expression for cross", function () {
     const expression = new Expression(
-      "cross(vec3(1.0, 1.0, 1.0), vec3(2.0, 2.0, 2.0))"
+      "cross(vec3(1.0, 1.0, 1.0), vec3(2.0, 2.0, 2.0))",
     );
     const shaderExpression = expression.getShaderExpression({}, {});
     const expected = "cross(vec3(1.0, 1.0, 1.0), vec3(2.0, 2.0, 2.0))";
@@ -4139,7 +4139,7 @@ describe("Scene/Expression", function () {
 
   it("gets variables", function () {
     const expression = new Expression(
-      '${feature["w"]} + ${feature.x} + ${y} + ${y} + "${z}"'
+      '${feature["w"]} + ${feature.x} + ${y} + ${y} + "${z}"',
     );
     const variables = expression.getVariables();
     expect(variables.sort()).toEqual(["w", "x", "y", "z"]);

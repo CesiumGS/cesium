@@ -22,21 +22,21 @@ function createUniformArray(gl, activeUniform, uniformName, locations) {
         gl,
         activeUniform,
         uniformName,
-        locations
+        locations,
       );
     case gl.FLOAT_VEC3:
       return new UniformArrayFloatVec3(
         gl,
         activeUniform,
         uniformName,
-        locations
+        locations,
       );
     case gl.FLOAT_VEC4:
       return new UniformArrayFloatVec4(
         gl,
         activeUniform,
         uniformName,
-        locations
+        locations,
       );
     case gl.SAMPLER_2D:
     case gl.SAMPLER_CUBE:
@@ -61,7 +61,7 @@ function createUniformArray(gl, activeUniform, uniformName, locations) {
       return new UniformArrayMat4(gl, activeUniform, uniformName, locations);
     default:
       throw new RuntimeError(
-        `Unrecognized uniform type: ${activeUniform.type} for uniform "${uniformName}".`
+        `Unrecognized uniform type: ${activeUniform.type} for uniform "${uniformName}".`,
       );
   }
 }

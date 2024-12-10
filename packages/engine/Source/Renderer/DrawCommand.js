@@ -29,7 +29,7 @@ function DrawCommand(options) {
   this._modelMatrix = options.modelMatrix;
   this._primitiveType = defaultValue(
     options.primitiveType,
-    PrimitiveType.TRIANGLES
+    PrimitiveType.TRIANGLES,
   );
   this._vertexArray = options.vertexArray;
   this._count = options.count;
@@ -52,18 +52,18 @@ function DrawCommand(options) {
   this.occlude = defaultValue(options.occlude, true);
   this.executeInClosestFrustum = defaultValue(
     options.executeInClosestFrustum,
-    false
+    false,
   );
   this.debugShowBoundingVolume = defaultValue(
     options.debugShowBoundingVolume,
-    false
+    false,
   );
   this.castShadows = defaultValue(options.castShadows, false);
   this.receiveShadows = defaultValue(options.receiveShadows, false);
   this.pickOnly = defaultValue(options.pickOnly, false);
   this.depthForTranslucentClassification = defaultValue(
     options.depthForTranslucentClassification,
-    false
+    false,
   );
 
   this.dirty = true;

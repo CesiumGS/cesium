@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -50,12 +50,7 @@
         const boxOutline = new Cesium.GeometryInstance({
           geometry: new Cesium.PolylineVolumeOutlineGeometry({
             polylinePositions: Cesium.Cartesian3.fromDegreesArray([
-              -89.0,
-              32.0,
-              -89.0,
-              36.0,
-              -93.0,
-              36.0,
+              -89.0, 32.0, -89.0, 36.0, -93.0, 36.0,
             ]),
             shapePositions: boxPositions(),
             cornerType: Cesium.CornerType.MITERED,
@@ -75,7 +70,7 @@
             const r = i % 2 === 0 ? rOuter : rInner;
             const p = new Cesium.Cartesian2(
               Math.cos(i * angle) * r,
-              Math.sin(i * angle) * r
+              Math.sin(i * angle) * r,
             );
             pos.push(p);
           }
@@ -85,10 +80,7 @@
         const starOutline = new Cesium.GeometryInstance({
           geometry: new Cesium.PolylineVolumeOutlineGeometry({
             polylinePositions: Cesium.Cartesian3.fromDegreesArray([
-              -95.0,
-              32.0,
-              -95.0,
-              36.0,
+              -95.0, 32.0, -95.0, 36.0,
             ]),
             shapePositions: starPositions(5, 70000, 40000),
             cornerType: Cesium.CornerType.ROUNDED,
@@ -108,7 +100,7 @@
                 lineWidth: Math.min(2.0, scene.maximumAliasedLineWidth),
               },
             }),
-          })
+          }),
         );
         //Sandcastle_End
       };

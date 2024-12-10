@@ -45,7 +45,7 @@ function TimeIntervalCollectionProperty() {
   this._intervals = new TimeIntervalCollection();
   this._intervals.changedEvent.addEventListener(
     TimeIntervalCollectionProperty.prototype._intervalsChanged,
-    this
+    this,
   );
 }
 

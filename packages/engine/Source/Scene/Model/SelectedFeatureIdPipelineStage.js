@@ -33,7 +33,7 @@ const SelectedFeatureIdPipelineStage = {
 SelectedFeatureIdPipelineStage.process = function (
   renderResources,
   primitive,
-  frameState
+  frameState,
 ) {
   const shaderBuilder = renderResources.shaderBuilder;
 
@@ -47,7 +47,7 @@ SelectedFeatureIdPipelineStage.process = function (
   shaderBuilder.addDefine(
     "HAS_SELECTED_FEATURE_ID",
     undefined,
-    shaderDestination
+    shaderDestination,
   );
 
   // Add a define to insert the variable to use.
@@ -56,7 +56,7 @@ SelectedFeatureIdPipelineStage.process = function (
   shaderBuilder.addDefine(
     "SELECTED_FEATURE_ID",
     selectedFeatureIds.variableName,
-    shaderDestination
+    shaderDestination,
   );
 
   // Add a define to the shader to distinguish feature ID attributes from
@@ -65,7 +65,7 @@ SelectedFeatureIdPipelineStage.process = function (
   shaderBuilder.addDefine(
     selectedFeatureIds.featureIdDefine,
     undefined,
-    shaderDestination
+    shaderDestination,
   );
 
   updateFeatureStruct(shaderBuilder);
@@ -76,7 +76,7 @@ SelectedFeatureIdPipelineStage.process = function (
     shaderBuilder.addDefine(
       "HAS_NULL_FEATURE_ID",
       undefined,
-      shaderDestination
+      shaderDestination,
     );
     shaderBuilder.addUniform("int", "model_nullFeatureId", shaderDestination);
     uniformMap.model_nullFeatureId = function () {
@@ -115,7 +115,7 @@ function getSelectedFeatureIds(model, node, primitive) {
   if (defined(node.instances)) {
     featureIds = ModelUtility.getFeatureIdsByLabel(
       node.instances.featureIds,
-      model.instanceFeatureIdLabel
+      model.instanceFeatureIdLabel,
     );
 
     if (defined(featureIds)) {
@@ -133,7 +133,7 @@ function getSelectedFeatureIds(model, node, primitive) {
 
   featureIds = ModelUtility.getFeatureIdsByLabel(
     primitive.featureIds,
-    model.featureIdLabel
+    model.featureIdLabel,
   );
   // again, prefer label for being more descriptive
   variableName = defaultValue(featureIds.label, featureIds.positionalLabel);
@@ -162,19 +162,19 @@ function updateFeatureStruct(shaderBuilder) {
   shaderBuilder.addStructField(
     SelectedFeatureIdPipelineStage.STRUCT_ID_SELECTED_FEATURE,
     "int",
-    "id"
+    "id",
   );
 
   shaderBuilder.addStructField(
     SelectedFeatureIdPipelineStage.STRUCT_ID_SELECTED_FEATURE,
     "vec2",
-    "st"
+    "st",
   );
 
   shaderBuilder.addStructField(
     SelectedFeatureIdPipelineStage.STRUCT_ID_SELECTED_FEATURE,
     "vec4",
-    "color"
+    "color",
   );
 }
 

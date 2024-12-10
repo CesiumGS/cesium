@@ -76,7 +76,7 @@ function GltfMeshPrimitiveGpmLoader(options) {
 
 if (defined(Object.create)) {
   GltfMeshPrimitiveGpmLoader.prototype = Object.create(
-    ResourceLoader.prototype
+    ResourceLoader.prototype,
   );
   GltfMeshPrimitiveGpmLoader.prototype.constructor = GltfMeshPrimitiveGpmLoader;
 }
@@ -240,7 +240,7 @@ GltfMeshPrimitiveGpmLoader.ppeTexturesMetadataSchemaCache = new Map();
  */
 GltfMeshPrimitiveGpmLoader._createPpeTextureClassJson = function (
   ppeTexture,
-  index
+  index,
 ) {
   const traits = ppeTexture.traits;
   const ppePropertyName = traits.source;
@@ -301,15 +301,15 @@ GltfMeshPrimitiveGpmLoader._createPpeTextureClassJson = function (
  * @returns The `MetadataSchema`
  */
 GltfMeshPrimitiveGpmLoader._obtainPpeTexturesMetadataSchema = function (
-  meshPrimitiveGpmLocal
+  meshPrimitiveGpmLocal,
 ) {
-  const ppeTexturePropertyIdentifiers = GltfMeshPrimitiveGpmLoader._collectPpeTexturePropertyIdentifiers(
-    meshPrimitiveGpmLocal
-  );
+  const ppeTexturePropertyIdentifiers =
+    GltfMeshPrimitiveGpmLoader._collectPpeTexturePropertyIdentifiers(
+      meshPrimitiveGpmLocal,
+    );
   const key = ppeTexturePropertyIdentifiers.toString();
-  let ppeTexturesMetadataSchema = GltfMeshPrimitiveGpmLoader.ppeTexturesMetadataSchemaCache.get(
-    key
-  );
+  let ppeTexturesMetadataSchema =
+    GltfMeshPrimitiveGpmLoader.ppeTexturesMetadataSchemaCache.get(key);
   if (defined(ppeTexturesMetadataSchema)) {
     return ppeTexturesMetadataSchema;
   }
@@ -326,17 +326,17 @@ GltfMeshPrimitiveGpmLoader._obtainPpeTexturesMetadataSchema = function (
     const classId = `ppeTexture_${i}`;
     const classJson = GltfMeshPrimitiveGpmLoader._createPpeTextureClassJson(
       ppeTexture,
-      i
+      i,
     );
     ppeTexturesMetadataSchemaJson.classes[classId] = classJson;
   }
 
   ppeTexturesMetadataSchema = MetadataSchema.fromJson(
-    ppeTexturesMetadataSchemaJson
+    ppeTexturesMetadataSchemaJson,
   );
   GltfMeshPrimitiveGpmLoader.ppeTexturesMetadataSchemaCache.set(
     key,
-    ppeTexturesMetadataSchema
+    ppeTexturesMetadataSchema,
   );
   return ppeTexturesMetadataSchema;
 };
@@ -357,7 +357,7 @@ GltfMeshPrimitiveGpmLoader._obtainPpeTexturesMetadataSchema = function (
  * @returns The identifiers
  */
 GltfMeshPrimitiveGpmLoader._collectPpeTexturePropertyIdentifiers = function (
-  meshPrimitiveGpmLocal
+  meshPrimitiveGpmLocal,
 ) {
   const ppeTexturePropertyIdentifiers = [];
   const ppeTextures = meshPrimitiveGpmLocal.ppeTextures;
@@ -369,7 +369,7 @@ GltfMeshPrimitiveGpmLoader._collectPpeTexturePropertyIdentifiers = function (
     // schema.
     const classJson = GltfMeshPrimitiveGpmLoader._createPpeTextureClassJson(
       ppeTexture,
-      i
+      i,
     );
     const ppeTexturePropertyIdentifier = JSON.stringify(classJson);
     ppeTexturePropertyIdentifiers.push(ppeTexturePropertyIdentifier);
@@ -391,12 +391,13 @@ GltfMeshPrimitiveGpmLoader._collectPpeTexturePropertyIdentifiers = function (
  */
 GltfMeshPrimitiveGpmLoader._convertToStructuralMetadata = function (
   meshPrimitiveGpmLocal,
-  textures
+  textures,
 ) {
   const propertyTextures = [];
-  const ppeTexturesMetadataSchema = GltfMeshPrimitiveGpmLoader._obtainPpeTexturesMetadataSchema(
-    meshPrimitiveGpmLocal
-  );
+  const ppeTexturesMetadataSchema =
+    GltfMeshPrimitiveGpmLoader._obtainPpeTexturesMetadataSchema(
+      meshPrimitiveGpmLocal,
+    );
   const ppeTextures = meshPrimitiveGpmLocal.ppeTextures;
   for (let i = 0; i < ppeTextures.length; i++) {
     const ppeTexture = ppeTextures[i];
@@ -428,7 +429,7 @@ GltfMeshPrimitiveGpmLoader._convertToStructuralMetadata = function (
         propertyTexture: ppeTextureAsPropertyTexture,
         class: metadataClass,
         textures: textures,
-      })
+      }),
     );
   }
   const structuralMetadata = new StructuralMetadata({
@@ -512,10 +513,11 @@ GltfMeshPrimitiveGpmLoader.prototype.process = function (frameState) {
   const meshPrimitiveGpmLocal = new MeshPrimitiveGpmLocal(ppeTextures);
   this._meshPrimitiveGpmLocal = meshPrimitiveGpmLocal;
 
-  const structuralMetadata = GltfMeshPrimitiveGpmLoader._convertToStructuralMetadata(
-    meshPrimitiveGpmLocal,
-    textures
-  );
+  const structuralMetadata =
+    GltfMeshPrimitiveGpmLoader._convertToStructuralMetadata(
+      meshPrimitiveGpmLocal,
+      textures,
+    );
   this._structuralMetadata = structuralMetadata;
 
   this._state = ResourceLoaderState.READY;

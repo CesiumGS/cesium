@@ -328,7 +328,7 @@ Object.defineProperties(ModelRuntimeNode.prototype, {
       //>>includeStart('debug', pragmas.debug);
       if (!defined(transformParameters)) {
         throw new DeveloperError(
-          "The translation of a node cannot be set if it was defined using a matrix in the model."
+          "The translation of a node cannot be set if it was defined using a matrix in the model.",
         );
       }
       //>>includeEnd('debug');
@@ -340,7 +340,7 @@ Object.defineProperties(ModelRuntimeNode.prototype, {
 
       transformParameters.translation = Cartesian3.clone(
         value,
-        transformParameters.translation
+        transformParameters.translation,
       );
 
       updateTransformFromParameters(this, transformParameters);
@@ -372,7 +372,7 @@ Object.defineProperties(ModelRuntimeNode.prototype, {
       //>>includeStart('debug', pragmas.debug);
       if (!defined(transformParameters)) {
         throw new DeveloperError(
-          "The rotation of a node cannot be set if it was defined using a matrix in the model."
+          "The rotation of a node cannot be set if it was defined using a matrix in the model.",
         );
       }
       //>>includeEnd('debug');
@@ -384,7 +384,7 @@ Object.defineProperties(ModelRuntimeNode.prototype, {
 
       transformParameters.rotation = Quaternion.clone(
         value,
-        transformParameters.rotation
+        transformParameters.rotation,
       );
 
       updateTransformFromParameters(this, transformParameters);
@@ -415,7 +415,7 @@ Object.defineProperties(ModelRuntimeNode.prototype, {
       //>>includeStart('debug', pragmas.debug);
       if (!defined(transformParameters)) {
         throw new DeveloperError(
-          "The scale of a node cannot be set if it was defined using a matrix in the model."
+          "The scale of a node cannot be set if it was defined using a matrix in the model.",
         );
       }
       //>>includeEnd('debug');
@@ -426,7 +426,7 @@ Object.defineProperties(ModelRuntimeNode.prototype, {
 
       transformParameters.scale = Cartesian3.clone(
         value,
-        transformParameters.scale
+        transformParameters.scale,
       );
 
       updateTransformFromParameters(this, transformParameters);
@@ -451,7 +451,7 @@ Object.defineProperties(ModelRuntimeNode.prototype, {
       //>>includeStart('debug', pragmas.debug);
       if (this._morphWeights.length !== valueLength) {
         throw new DeveloperError(
-          "value must have the same length as the original weights array."
+          "value must have the same length as the original weights array.",
         );
       }
       //>>includeEnd('debug');
@@ -499,7 +499,7 @@ function initialize(runtimeNode) {
   runtimeNode._computedTransform = Matrix4.multiply(
     transformToRoot,
     transform,
-    computedTransform
+    computedTransform,
   );
 
   const node = runtimeNode.node;
@@ -507,7 +507,7 @@ function initialize(runtimeNode) {
     runtimeNode._transformParameters = new TranslationRotationScale(
       node.translation,
       node.rotation,
-      node.scale
+      node.scale,
     );
   }
 
@@ -534,7 +534,7 @@ function updateTransformFromParameters(runtimeNode, transformParameters) {
 
   runtimeNode._transform = Matrix4.fromTranslationRotationScale(
     transformParameters,
-    runtimeNode._transform
+    runtimeNode._transform,
   );
 }
 
@@ -559,7 +559,7 @@ ModelRuntimeNode.prototype.getChild = function (index) {
   Check.typeOf.number("index", index);
   if (index < 0 || index >= this.children.length) {
     throw new DeveloperError(
-      "index must be greater than or equal to 0 and less than the number of children."
+      "index must be greater than or equal to 0 and less than the number of children.",
     );
   }
   //>>includeEnd('debug');
@@ -599,7 +599,7 @@ ModelRuntimeNode.prototype.updateComputedTransform = function () {
   this._computedTransform = Matrix4.multiply(
     this._transformToRoot,
     this._transform,
-    this._computedTransform
+    this._computedTransform,
   );
 };
 
@@ -629,18 +629,18 @@ ModelRuntimeNode.prototype.updateJointMatrices = function () {
     const nodeWorldTransform = Matrix4.multiplyTransformation(
       this.transformToRoot,
       this.transform,
-      computedJointMatrices[i]
+      computedJointMatrices[i],
     );
 
     const inverseNodeWorldTransform = Matrix4.inverseTransformation(
       nodeWorldTransform,
-      computedJointMatrices[i]
+      computedJointMatrices[i],
     );
 
     computedJointMatrices[i] = Matrix4.multiplyTransformation(
       inverseNodeWorldTransform,
       skinJointMatrices[i],
-      computedJointMatrices[i]
+      computedJointMatrices[i],
     );
   }
 };

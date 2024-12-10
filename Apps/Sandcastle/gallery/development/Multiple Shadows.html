@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -76,9 +76,9 @@
                   url: "../../SampleData/models/ShadowTester/Shadow_Tester_Point.glb",
                   modelMatrix: Cesium.Transforms.headingPitchRollToFixedFrame(
                     center,
-                    new Cesium.HeadingPitchRoll(heading, 0.0, 0.0)
+                    new Cesium.HeadingPitchRoll(heading, 0.0, 0.0),
                   ),
-                })
+                }),
               );
 
               model.readyEvent.addEventListener(() => {

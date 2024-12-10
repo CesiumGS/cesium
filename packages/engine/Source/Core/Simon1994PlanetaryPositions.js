@@ -68,7 +68,7 @@ function elementsToCartesian(
   longitudeOfPerigee,
   longitudeOfNode,
   meanLongitude,
-  result
+  result,
 ) {
   if (inclination < 0.0) {
     inclination = -inclination;
@@ -78,7 +78,7 @@ function elementsToCartesian(
   //>>includeStart('debug', pragmas.debug);
   if (inclination < 0 || inclination > CesiumMath.PI) {
     throw new DeveloperError(
-      "The inclination is out of range. Inclination must be greater than or equal to zero and less than or equal to Pi radians."
+      "The inclination is out of range. Inclination must be greater than or equal to zero and less than or equal to Pi radians.",
     );
   }
   //>>includeEnd('debug')
@@ -88,7 +88,7 @@ function elementsToCartesian(
   const rightAscensionOfAscendingNode = longitudeOfNode;
   const trueAnomaly = meanAnomalyToTrueAnomaly(
     meanLongitude - longitudeOfPerigee,
-    eccentricity
+    eccentricity,
   );
   const type = chooseOrbit(eccentricity, 0.0);
 
@@ -99,7 +99,7 @@ function elementsToCartesian(
       Math.acos(-1.0 / eccentricity)
   ) {
     throw new DeveloperError(
-      "The true anomaly of the hyperbolic orbit lies outside of the bounds of the hyperbola."
+      "The true anomaly of the hyperbolic orbit lies outside of the bounds of the hyperbola.",
     );
   }
   //>>includeEnd('debug')
@@ -108,7 +108,7 @@ function elementsToCartesian(
     argumentOfPeriapsis,
     inclination,
     rightAscensionOfAscendingNode,
-    perifocalToEquatorial
+    perifocalToEquatorial,
   );
   const semilatus = radiusOfPeriapsis * (1.0 + eccentricity);
   const costheta = Math.cos(trueAnomaly);
@@ -161,7 +161,7 @@ function meanAnomalyToTrueAnomaly(meanAnomaly, eccentricity) {
 
   const eccentricAnomaly = meanAnomalyToEccentricAnomaly(
     meanAnomaly,
-    eccentricity
+    eccentricity,
   );
   return eccentricAnomalyToTrueAnomaly(eccentricAnomaly, eccentricity);
 }
@@ -257,7 +257,7 @@ function perifocalToCartesianMatrix(
   argumentOfPeriapsis,
   inclination,
   rightAscension,
-  result
+  result,
 ) {
   //>>includeStart('debug', pragmas.debug);
   if (inclination < 0 || inclination > CesiumMath.PI) {
@@ -285,7 +285,7 @@ function perifocalToCartesianMatrix(
 
       sinap * sini,
       cosap * sini,
-      cosi
+      cosi,
     );
   } else {
     result[0] = cosraan * cosap - sinraan * sinap * cosi;
@@ -427,7 +427,7 @@ function computeSimonEarthMoonBarycenter(date, result) {
     longitudeOfPerigee,
     longitudeOfNode,
     meanLongitude,
-    result
+    result,
   );
 }
 
@@ -598,7 +598,7 @@ function computeSimonMoon(date, result) {
     longitudeOfPerigee,
     longitudeOfNode,
     meanLongitude,
-    result
+    result,
   );
 }
 
@@ -624,7 +624,7 @@ const axesTransformation = new Matrix3(
   -0.39777715593191376,
   -2.23970096136568e-16,
   0.39777715593191376,
-  0.9174820620691819
+  0.9174820620691819,
 );
 let translation = new Cartesian3();
 
@@ -637,7 +637,7 @@ let translation = new Cartesian3();
  */
 Simon1994PlanetaryPositions.computeSunPositionInEarthInertialFrame = function (
   julianDate,
-  result
+  result,
 ) {
   if (!defined(julianDate)) {
     julianDate = JulianDate.now();
@@ -669,7 +669,7 @@ Simon1994PlanetaryPositions.computeSunPositionInEarthInertialFrame = function (
  */
 Simon1994PlanetaryPositions.computeMoonPositionInEarthInertialFrame = function (
   julianDate,
-  result
+  result,
 ) {
   if (!defined(julianDate)) {
     julianDate = JulianDate.now();

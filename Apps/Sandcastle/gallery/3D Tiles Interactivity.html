@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -92,12 +92,12 @@
         const initialPosition = Cesium.Cartesian3.fromDegrees(
           -74.01881302800248,
           40.69114333714821,
-          753
+          753,
         );
         const initialOrientation = new Cesium.HeadingPitchRoll.fromDegrees(
           21.27879878293835,
           -21.34390550872461,
-          0.0716951918898415
+          0.0716951918898415,
         );
         scene.camera.setView({
           destination: initialPosition,
@@ -194,11 +194,10 @@
           const positionCartographic = new Cesium.Cartographic(
             longitude,
             latitude,
-            height * 0.5
+            height * 0.5,
           );
-          const position = scene.globe.ellipsoid.cartographicToCartesian(
-            positionCartographic
-          );
+          const position =
+            scene.globe.ellipsoid.cartographicToCartesian(positionCartographic);
 
           const camera = scene.camera;
           const heading = camera.heading;
@@ -223,17 +222,17 @@
           pitch = Cesium.Math.clamp(
             pitch,
             -Cesium.Math.PI_OVER_TWO,
-            Cesium.Math.PI_OVER_TWO
+            Cesium.Math.PI_OVER_TWO,
           );
           heading = Cesium.Math.zeroToTwoPi(heading) - Cesium.Math.PI_OVER_TWO;
 
           const pitchQuat = Cesium.Quaternion.fromAxisAngle(
             Cesium.Cartesian3.UNIT_Y,
-            -pitch
+            -pitch,
           );
           const headingQuat = Cesium.Quaternion.fromAxisAngle(
             Cesium.Cartesian3.UNIT_Z,
-            -heading
+            -heading,
           );
           const rotQuat = Cesium.Quaternion.multiply(headingQuat, pitchQuat, headingQuat);
           const rotMatrix = Cesium.Matrix3.fromQuaternion(rotQuat);

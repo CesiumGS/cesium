@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -166,7 +166,7 @@
           new Cesium.CloudCollection({
             noiseDetail: 16.0,
             noiseOffset: Cesium.Cartesian3.ZERO,
-          })
+          }),
         );
 
         const cloudParameters = {
@@ -189,7 +189,7 @@
           maximumSize: new Cesium.Cartesian3(
             cloudParameters.maximumSizeX,
             cloudParameters.maximumSizeY,
-            cloudParameters.maximumSizeZ
+            cloudParameters.maximumSizeZ,
           ),
           color: getColor(cloudParameters.color),
           slice: cloudParameters.renderSlice ? cloudParameters.slice : -1.0,
@@ -230,7 +230,7 @@
             cloud.maximumSize = new Cesium.Cartesian3(
               value,
               cloud.maximumSize.y,
-              cloud.maximumSize.z
+              cloud.maximumSize.z,
             );
             if (cloudParameters.scaleWithMaximumSize) {
               cloud.scale = new Cesium.Cartesian2(value, cloud.scale.y);
@@ -244,7 +244,7 @@
             cloud.maximumSize = new Cesium.Cartesian3(
               cloud.maximumSize.x,
               value,
-              cloud.maximumSize.z
+              cloud.maximumSize.z,
             );
             if (cloudParameters.scaleWithMaximumSize) {
               cloud.scale = new Cesium.Cartesian2(cloud.scale.x, value);
@@ -258,7 +258,7 @@
             cloud.maximumSize = new Cesium.Cartesian3(
               cloud.maximumSize.x,
               cloud.maximumSize.y,
-              value
+              value,
             );
           });
 

@@ -29,7 +29,7 @@ function pointInsideTriangle(point, p0, p1, p2) {
     p0,
     p1,
     p2,
-    scratchBarycentricCoords
+    scratchBarycentricCoords,
   );
   if (!defined(coords)) {
     return false;

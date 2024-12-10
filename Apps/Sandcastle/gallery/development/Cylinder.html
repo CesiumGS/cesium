@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -44,7 +44,7 @@
         let modelMatrix = Cesium.Matrix4.multiplyByTranslation(
           Cesium.Transforms.eastNorthUpToFixedFrame(positionOnEllipsoid),
           new Cesium.Cartesian3(0.0, 0.0, length * 0.5),
-          new Cesium.Matrix4()
+          new Cesium.Matrix4(),
         );
         // Create the cylinder geometry.
         let cylinderGeometry = new Cesium.CylinderGeometry({
@@ -70,7 +70,7 @@
         modelMatrix = Cesium.Matrix4.multiplyByTranslation(
           Cesium.Transforms.eastNorthUpToFixedFrame(positionOnEllipsoid),
           new Cesium.Cartesian3(0.0, 0.0, length * 0.5),
-          new Cesium.Matrix4()
+          new Cesium.Matrix4(),
         );
         // Create the cylinder geometry.  To create a cone, set the
         // top radius to zero.
@@ -98,7 +98,7 @@
               closed: true,
               translucent: false,
             }),
-          })
+          }),
         );
         //Sandcastle_End
       };

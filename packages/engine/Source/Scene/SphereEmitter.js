@@ -60,7 +60,7 @@ SphereEmitter.prototype.emit = function (particle) {
   particle.position = Cartesian3.fromElements(x, y, z, particle.position);
   particle.velocity = Cartesian3.normalize(
     particle.position,
-    particle.velocity
+    particle.velocity,
   );
 };
 export default SphereEmitter;

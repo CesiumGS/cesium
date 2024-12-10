@@ -184,7 +184,7 @@ ModelArticulation.prototype.apply = function () {
 
   let articulationMatrix = Matrix4.clone(
     Matrix4.IDENTITY,
-    scratchArticulationMatrix
+    scratchArticulationMatrix,
   );
 
   let i;
@@ -205,7 +205,7 @@ ModelArticulation.prototype.apply = function () {
     const transform = Matrix4.multiplyTransformation(
       node.originalTransform,
       articulationMatrix,
-      scratchNodeMatrix
+      scratchNodeMatrix,
     );
     node.transform = transform;
   }

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -51,7 +51,7 @@
           geometry: circleGeometry,
           attributes: {
             color: Cesium.ColorGeometryInstanceAttribute.fromColor(
-              new Cesium.Color(1.0, 0.0, 0.0, 0.5)
+              new Cesium.Color(1.0, 0.0, 0.0, 0.5),
             ),
           },
         });
@@ -62,7 +62,7 @@
             appearance: new Cesium.PerInstanceColorAppearance({
               closed: true,
             }),
-          })
+          }),
         );
 
         // Example 2: Draw a green extruded circle.
@@ -82,7 +82,7 @@
           geometry: circleGeometry,
           attributes: {
             color: Cesium.ColorGeometryInstanceAttribute.fromColor(
-              new Cesium.Color(0.0, 1.0, 0.0, 0.5)
+              new Cesium.Color(0.0, 1.0, 0.0, 0.5),
             ),
           },
         });
@@ -93,7 +93,7 @@
             appearance: new Cesium.PerInstanceColorAppearance({
               closed: true,
             }),
-          })
+          }),
         );
 
         // Example 3: Draw a blue circle at a height.
@@ -122,7 +122,7 @@
               closed: true,
               translucent: false,
             }),
-          })
+          }),
         );
         //Sandcastle_End
       };

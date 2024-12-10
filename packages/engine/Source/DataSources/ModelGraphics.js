@@ -162,7 +162,7 @@ Object.defineProperties(ModelGraphics.prototype, {
    * @default true
    */
   enableVerticalExaggeration: createPropertyDescriptor(
-    "enableVerticalExaggeration"
+    "enableVerticalExaggeration",
   ),
 
   /**
@@ -192,7 +192,7 @@ Object.defineProperties(ModelGraphics.prototype, {
    * @type {Property|undefined}
    */
   incrementallyLoadTextures: createPropertyDescriptor(
-    "incrementallyLoadTextures"
+    "incrementallyLoadTextures",
   ),
 
   /**
@@ -276,7 +276,7 @@ Object.defineProperties(ModelGraphics.prototype, {
    * @type {Property|undefined}
    */
   imageBasedLightingFactor: createPropertyDescriptor(
-    "imageBasedLightingFactor"
+    "imageBasedLightingFactor",
   ),
 
   /**
@@ -292,7 +292,7 @@ Object.defineProperties(ModelGraphics.prototype, {
    * @type {Property|undefined}
    */
   distanceDisplayCondition: createPropertyDescriptor(
-    "distanceDisplayCondition"
+    "distanceDisplayCondition",
   ),
 
   /**
@@ -305,7 +305,7 @@ Object.defineProperties(ModelGraphics.prototype, {
   nodeTransformations: createPropertyDescriptor(
     "nodeTransformations",
     undefined,
-    createNodeTransformationPropertyBag
+    createNodeTransformationPropertyBag,
   ),
 
   /**
@@ -317,7 +317,7 @@ Object.defineProperties(ModelGraphics.prototype, {
   articulations: createPropertyDescriptor(
     "articulations",
     undefined,
-    createArticulationStagePropertyBag
+    createArticulationStagePropertyBag,
   ),
 
   /**
@@ -388,56 +388,56 @@ ModelGraphics.prototype.merge = function (source) {
   this.scale = defaultValue(this.scale, source.scale);
   this.enableVerticalExaggeration = defaultValue(
     this.enableVerticalExaggeration,
-    source.enableVerticalExaggeration
+    source.enableVerticalExaggeration,
   );
   this.minimumPixelSize = defaultValue(
     this.minimumPixelSize,
-    source.minimumPixelSize
+    source.minimumPixelSize,
   );
   this.maximumScale = defaultValue(this.maximumScale, source.maximumScale);
   this.incrementallyLoadTextures = defaultValue(
     this.incrementallyLoadTextures,
-    source.incrementallyLoadTextures
+    source.incrementallyLoadTextures,
   );
   this.runAnimations = defaultValue(this.runAnimations, source.runAnimations);
   this.clampAnimations = defaultValue(
     this.clampAnimations,
-    source.clampAnimations
+    source.clampAnimations,
   );
   this.shadows = defaultValue(this.shadows, source.shadows);
   this.heightReference = defaultValue(
     this.heightReference,
-    source.heightReference
+    source.heightReference,
   );
   this.silhouetteColor = defaultValue(
     this.silhouetteColor,
-    source.silhouetteColor
+    source.silhouetteColor,
   );
   this.silhouetteSize = defaultValue(
     this.silhouetteSize,
-    source.silhouetteSize
+    source.silhouetteSize,
   );
   this.color = defaultValue(this.color, source.color);
   this.colorBlendMode = defaultValue(
     this.colorBlendMode,
-    source.colorBlendMode
+    source.colorBlendMode,
   );
   this.colorBlendAmount = defaultValue(
     this.colorBlendAmount,
-    source.colorBlendAmount
+    source.colorBlendAmount,
   );
   this.imageBasedLightingFactor = defaultValue(
     this.imageBasedLightingFactor,
-    source.imageBasedLightingFactor
+    source.imageBasedLightingFactor,
   );
   this.lightColor = defaultValue(this.lightColor, source.lightColor);
   this.distanceDisplayCondition = defaultValue(
     this.distanceDisplayCondition,
-    source.distanceDisplayCondition
+    source.distanceDisplayCondition,
   );
   this.clippingPlanes = defaultValue(
     this.clippingPlanes,
-    source.clippingPlanes
+    source.clippingPlanes,
   );
   this.customShader = defaultValue(this.customShader, source.customShader);
 
@@ -449,7 +449,7 @@ ModelGraphics.prototype.merge = function (source) {
     } else {
       this.nodeTransformations = new PropertyBag(
         sourceNodeTransformations,
-        createNodeTransformationProperty
+        createNodeTransformationProperty,
       );
     }
   }

@@ -477,7 +477,7 @@ function Model(options) {
   );
 
   /**
-   * Whether to display Gaussing Splatting (will fall back to point cloud rendering if false)
+   * Whether to display Gaussian Splatting (will fall back to point cloud rendering if false)
    *
    * @type {boolean}
    */
@@ -2145,15 +2145,22 @@ function updateGaussianSplatting(model, frameState) {
 
   if (Math.abs(dot - 1) > CesiumMath.EPSILON2) {
     if (prim?.isGaussianSplatPrimitive ?? false) {
-      const idxAttr = prim.attributes.find((a) => a.name === "_SPLAT_INDEXES");
-      const posAttr = prim.attributes.find((a) => a.name === "POSITION");
-
       const modelView = new Matrix4();
       Matrix4.multiply(
         frameState.camera.viewMatrix,
         model.modelMatrix,
         modelView,
       );
+      model._previousViewProj = viewProj;
+
+      if (!prim?.hasGaussianSplatTexture) {
+        model.resetDrawCommands();
+        return;
+      }
+
+      const idxAttr = prim.attributes.find((a) => a.name === "_SPLAT_INDEXES");
+      const posAttr = prim.attributes.find((a) => a.name === "POSITION");
+
       try {
         const promise = GaussianSplatSorter.radixSortIndexes({
           primitive: {
@@ -2180,7 +2187,6 @@ function updateGaussianSplatting(model, frameState) {
       }
     }
     //model.resetDrawCommands();
-    model._previousViewProj = viewProj;
   }
 }
 

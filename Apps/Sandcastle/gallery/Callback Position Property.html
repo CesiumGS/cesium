@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -52,7 +52,7 @@
         const stop = Cesium.JulianDate.addSeconds(
           start,
           duration,
-          new Cesium.JulianDate()
+          new Cesium.JulianDate(),
         );
 
         // Make sure viewer is at the desired time.
@@ -92,12 +92,12 @@
         const firstTangent = Cesium.Cartesian3.subtract(
           points[0],
           before,
-          new Cesium.Cartesian3()
+          new Cesium.Cartesian3(),
         );
         const lastTangent = Cesium.Cartesian3.subtract(
           after,
           points[8],
-          new Cesium.Cartesian3()
+          new Cesium.Cartesian3(),
         );
 
         // Create the position spline.
@@ -183,7 +183,7 @@
             entityPosition,
             entityOrientation,
             Cesium.Cartesian3.ONE,
-            scratchTransform
+            scratchTransform,
           );
           camera.lookAtTransform(transform, offset);
         });

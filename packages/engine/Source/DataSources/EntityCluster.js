@@ -115,7 +115,7 @@ function getBoundingBox(item, coord, pixelRange, entityCluster, result) {
     const labelBBox = Label.getScreenSpaceBoundingBox(
       label,
       coord,
-      labelBoundingBoxScratch
+      labelBoundingBoxScratch,
     );
     expandBoundingBox(labelBBox, pixelRange);
     result = BoundingRectangle.union(result, labelBBox, result);
@@ -152,7 +152,10 @@ function addCluster(position, numPoints, ids, entityCluster) {
   cluster.label.show = true;
   cluster.label.text = numPoints.toLocaleString();
   cluster.label.id = ids;
-  cluster.billboard.position = cluster.label.position = cluster.point.position = position;
+  cluster.billboard.position =
+    cluster.label.position =
+    cluster.point.position =
+      position;
 
   entityCluster._clusterEvent.raiseEvent(ids, cluster);
 }
@@ -170,7 +173,7 @@ function getScreenSpacePositions(
   points,
   scene,
   occluder,
-  entityCluster
+  entityCluster,
 ) {
   if (!defined(collection)) {
     return;
@@ -248,27 +251,26 @@ function createDeclutterCallback(entityCluster) {
     if (defined(clusteredLabelCollection)) {
       clusteredLabelCollection.removeAll();
     } else {
-      clusteredLabelCollection = entityCluster._clusterLabelCollection = new LabelCollection(
-        {
+      clusteredLabelCollection = entityCluster._clusterLabelCollection =
+        new LabelCollection({
           scene: scene,
-        }
-      );
+        });
     }
 
     if (defined(clusteredBillboardCollection)) {
       clusteredBillboardCollection.removeAll();
     } else {
-      clusteredBillboardCollection = entityCluster._clusterBillboardCollection = new BillboardCollection(
-        {
+      clusteredBillboardCollection = entityCluster._clusterBillboardCollection =
+        new BillboardCollection({
           scene: scene,
-        }
-      );
+        });
     }
 
     if (defined(clusteredPointCollection)) {
       clusteredPointCollection.removeAll();
     } else {
-      clusteredPointCollection = entityCluster._clusterPointCollection = new PointPrimitiveCollection();
+      clusteredPointCollection = entityCluster._clusterPointCollection =
+        new PointPrimitiveCollection();
     }
 
     const pixelRange = entityCluster._pixelRange;
@@ -291,7 +293,7 @@ function createDeclutterCallback(entityCluster) {
         points,
         scene,
         occluder,
-        entityCluster
+        entityCluster,
       );
     }
     if (entityCluster._clusterBillboards) {
@@ -300,7 +302,7 @@ function createDeclutterCallback(entityCluster) {
         points,
         scene,
         occluder,
-        entityCluster
+        entityCluster,
       );
     }
     if (entityCluster._clusterPoints) {
@@ -309,7 +311,7 @@ function createDeclutterCallback(entityCluster) {
         points,
         scene,
         occluder,
-        entityCluster
+        entityCluster,
       );
     }
 
@@ -348,7 +350,7 @@ function createDeclutterCallback(entityCluster) {
             cluster.position,
             Cartesian3.ZERO,
             Cartesian2.ZERO,
-            scene
+            scene,
           );
           if (!defined(coord)) {
             continue;
@@ -412,18 +414,18 @@ function createDeclutterCallback(entityCluster) {
           point.coord,
           pixelRange,
           entityCluster,
-          pointBoundinRectangleScratch
+          pointBoundinRectangleScratch,
         );
         const totalBBox = BoundingRectangle.clone(
           bbox,
-          totalBoundingRectangleScratch
+          totalBoundingRectangleScratch,
         );
 
         neighbors = index.range(
           bbox.x,
           bbox.y,
           bbox.x + bbox.width,
-          bbox.y + bbox.height
+          bbox.y + bbox.height,
         );
         neighborLength = neighbors.length;
 
@@ -436,20 +438,20 @@ function createDeclutterCallback(entityCluster) {
           neighborPoint = points[neighborIndex];
           if (!neighborPoint.clustered) {
             const neighborItem = neighborPoint.collection.get(
-              neighborPoint.index
+              neighborPoint.index,
             );
             const neighborBBox = getBoundingBox(
               neighborItem,
               neighborPoint.coord,
               pixelRange,
               entityCluster,
-              neighborBoundingRectangleScratch
+              neighborBoundingRectangleScratch,
             );
 
             Cartesian3.add(
               neighborItem.position,
               clusterPosition,
-              clusterPosition
+              clusterPosition,
             );
 
             BoundingRectangle.union(totalBBox, neighborBBox, totalBBox);
@@ -463,7 +465,7 @@ function createDeclutterCallback(entityCluster) {
           const position = Cartesian3.multiplyByScalar(
             clusterPosition,
             1.0 / numPoints,
-            clusterPosition
+            clusterPosition,
           );
           addCluster(position, numPoints, ids, entityCluster);
           newClusters.push({
@@ -614,7 +616,7 @@ function createGetEntity(
   collectionProperty,
   CollectionConstructor,
   unusedIndicesProperty,
-  entityIndexProperty
+  entityIndexProperty,
 ) {
   return function (entity) {
     let collection = this[collectionProperty];
@@ -689,7 +691,7 @@ EntityCluster.prototype.getLabel = createGetEntity(
   "_labelCollection",
   LabelCollection,
   "_unusedLabelIndices",
-  "labelIndex"
+  "labelIndex",
 );
 
 /**
@@ -735,7 +737,7 @@ EntityCluster.prototype.getBillboard = createGetEntity(
   "_billboardCollection",
   BillboardCollection,
   "_unusedBillboardIndices",
-  "billboardIndex"
+  "billboardIndex",
 );
 
 /**
@@ -781,7 +783,7 @@ EntityCluster.prototype.getPoint = createGetEntity(
   "_pointCollection",
   PointPrimitiveCollection,
   "_unusedPointIndices",
-  "pointIndex"
+  "pointIndex",
 );
 
 /**

@@ -21,14 +21,14 @@ function demodernizeShader(input, isFragmentShader) {
   // Replace all texture calls with texture2D
   output = output.replaceAll(
     /(texture\()/g,
-    `texture2D(` // Trailing ')' is included in the match group.
+    `texture2D(`, // Trailing ')' is included in the match group.
   );
 
   if (isFragmentShader) {
     // Replace the in with varying.
     output = output.replaceAll(
       /\n\s*(in)\s+(vec\d|mat\d|float)/g,
-      `\nvarying $2`
+      `\nvarying $2`,
     );
 
     if (/out_FragData_(\d+)/.test(output)) {
@@ -37,7 +37,7 @@ function demodernizeShader(input, isFragmentShader) {
       // Remove all layout declarations for out_FragData.
       output = output.replaceAll(
         /layout\s+\(location\s*=\s*\d+\)\s*out\s+vec4\s+out_FragData_\d+;/g,
-        ``
+        ``,
       );
 
       // Replace out_FragData with gl_FragData.
@@ -47,7 +47,7 @@ function demodernizeShader(input, isFragmentShader) {
     // Remove all layout declarations for out_FragColor.
     output = output.replaceAll(
       /layout\s+\(location\s*=\s*0\)\s*out\s+vec4\s+out_FragColor;/g,
-      ``
+      ``,
     );
 
     // Replace out_FragColor with gl_FragColor.
@@ -71,7 +71,7 @@ function demodernizeShader(input, isFragmentShader) {
     // Replace the out with varying.
     output = output.replaceAll(
       /(out)\s+(vec\d|mat\d|float)\s+([\w]+);/g,
-      `varying $2 $3;`
+      `varying $2 $3;`,
     );
   }
 

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -46,7 +46,7 @@
           destination: Cesium.Cartesian3.fromRadians(
             -1.3193669086512454,
             0.698810888305128,
-            220
+            220,
           ),
           orientation: {
             heading: -1.3,
@@ -69,7 +69,7 @@
         let entity, positionProperty;
         try {
           const dataSource = await Cesium.CzmlDataSource.load(
-            "../../SampleData/ClampToGround.czml"
+            "../../SampleData/ClampToGround.czml",
           );
           viewer.dataSources.add(dataSource);
           entity = dataSource.entities.getById("CesiumMilkTruck");
@@ -156,7 +156,7 @@
           Cesium.defined(viewer.trackedEntity),
           (checked) => {
             viewer.trackedEntity = checked ? entity : undefined;
-          }
+          },
         );
         //Sandcastle_End
       };

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -85,7 +85,7 @@
                   Cesium.Terrain.fromWorldTerrain({
                     requestWaterMask: true,
                     requestVertexNormals: true,
-                  })
+                  }),
                 );
                 viewer.scene.globe.enableLighting = true;
               },
@@ -102,7 +102,7 @@
                 viewer.scene.setTerrain(
                   Cesium.Terrain.fromWorldTerrain({
                     requestVertexNormals: true,
-                  })
+                  }),
                 );
                 viewer.scene.globe.enableLighting = true;
               },
@@ -113,7 +113,7 @@
                 viewer.scene.setTerrain(
                   Cesium.Terrain.fromWorldTerrain({
                     requestWaterMask: true,
-                  })
+                  }),
                 );
               },
             },
@@ -138,9 +138,9 @@
                       "http://www.vr-theworld.com/vr-theworld/tiles1.0.0/73/",
                       {
                         credit: "Terrain data courtesy VT MÄK",
-                      }
-                    )
-                  )
+                      },
+                    ),
+                  ),
                 );
               },
             },
@@ -150,14 +150,14 @@
                 viewer.scene.setTerrain(
                   new Cesium.Terrain(
                     Cesium.ArcGISTiledElevationTerrainProvider.fromUrl(
-                      "https://elevation3d.arcgis.com/arcgis/rest/services/WorldElevation3D/Terrain3D/ImageServer"
-                    )
-                  )
+                      "https://elevation3d.arcgis.com/arcgis/rest/services/WorldElevation3D/Terrain3D/ImageServer",
+                    ),
+                  ),
                 );
               },
             },
           ],
-          "terrainMenu"
+          "terrainMenu",
         );
 
         Sandcastle.addDefaultToolbarMenu(
@@ -174,12 +174,12 @@
                 const target = new Cesium.Cartesian3(
                   -2489625.0836225147,
                   -4393941.44443024,
-                  3882535.9454173897
+                  3882535.9454173897,
                 );
                 const offset = new Cesium.Cartesian3(
                   -6857.40902037546,
                   412.3284835694358,
-                  2147.5545426812023
+                  2147.5545426812023,
                 );
                 viewer.camera.lookAt(target, offset);
                 viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
@@ -191,19 +191,19 @@
                 const target = new Cesium.Cartesian3(
                   -2708814.85583248,
                   -4254159.450845907,
-                  3891403.9457429945
+                  3891403.9457429945,
                 );
                 const offset = new Cesium.Cartesian3(
                   70642.66030209465,
                   -31661.517948317807,
-                  35505.179997143336
+                  35505.179997143336,
                 );
                 viewer.camera.lookAt(target, offset);
                 viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
               },
             },
           ],
-          "zoomButtons"
+          "zoomButtons",
         );
 
         let terrainSamplePositions;
@@ -212,12 +212,12 @@
           const target = new Cesium.Cartesian3(
             300770.50872389384,
             5634912.131394585,
-            2978152.2865545116
+            2978152.2865545116,
           );
           const offset = new Cesium.Cartesian3(
             6344.974098678562,
             -793.3419798081741,
-            2499.9508860763162
+            2499.9508860763162,
           );
           viewer.camera.lookAt(target, offset);
           viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
@@ -269,7 +269,7 @@
             everestLongitude - rectangleHalfSize,
             everestLatitude - rectangleHalfSize,
             everestLongitude + rectangleHalfSize,
-            everestLatitude + rectangleHalfSize
+            everestLatitude + rectangleHalfSize,
           );
           const terrainSamplePositions = [];
           for (let y = 0; y < gridHeight; ++y) {
@@ -288,25 +288,27 @@
           viewer.scene.globe.enableLighting,
           function (checked) {
             viewer.scene.globe.enableLighting = checked;
-          }
+          },
         );
 
-        Sandcastle.addToggleButton("Enable fog", viewer.scene.fog.enabled, function (
-          checked
-        ) {
-          viewer.scene.fog.enabled = checked;
-        });
+        Sandcastle.addToggleButton(
+          "Enable fog",
+          viewer.scene.fog.enabled,
+          function (checked) {
+            viewer.scene.fog.enabled = checked;
+          },
+        );
 
         Sandcastle.addToolbarButton(
           "Sample Everest Terrain at Level 9",
           function () {
             const terrainSamplePositions = createGrid(0.005);
             Promise.resolve(
-              Cesium.sampleTerrain(viewer.terrainProvider, 9, terrainSamplePositions)
+              Cesium.sampleTerrain(viewer.terrainProvider, 9, terrainSamplePositions),
             ).then(sampleTerrainSuccess);
             lookAtMtEverest();
           },
-          "sampleButtons"
+          "sampleButtons",
         );
 
         Sandcastle.addToolbarButton(
@@ -314,7 +316,7 @@
           function () {
             if (!Cesium.defined(viewer.terrainProvider.availability)) {
               window.alert(
-                "sampleTerrainMostDetailed is not supported for the selected terrain provider"
+                "sampleTerrainMostDetailed is not supported for the selected terrain provider",
               );
               return;
             }
@@ -322,12 +324,12 @@
             Promise.resolve(
               Cesium.sampleTerrainMostDetailed(
                 viewer.terrainProvider,
-                terrainSamplePositions
-              )
+                terrainSamplePositions,
+              ),
             ).then(sampleTerrainSuccess);
             lookAtMtEverest();
           },
-          "sampleButtons"
+          "sampleButtons",
         );
         //Sandcastle_End
       };

@@ -177,7 +177,7 @@ Object.defineProperties(WallGraphics.prototype, {
    * @type {Property|undefined}
    */
   distanceDisplayCondition: createPropertyDescriptor(
-    "distanceDisplayCondition"
+    "distanceDisplayCondition",
   ),
 });
 
@@ -223,11 +223,11 @@ WallGraphics.prototype.merge = function (source) {
   this.positions = defaultValue(this.positions, source.positions);
   this.minimumHeights = defaultValue(
     this.minimumHeights,
-    source.minimumHeights
+    source.minimumHeights,
   );
   this.maximumHeights = defaultValue(
     this.maximumHeights,
-    source.maximumHeights
+    source.maximumHeights,
   );
   this.granularity = defaultValue(this.granularity, source.granularity);
   this.fill = defaultValue(this.fill, source.fill);
@@ -238,7 +238,7 @@ WallGraphics.prototype.merge = function (source) {
   this.shadows = defaultValue(this.shadows, source.shadows);
   this.distanceDisplayCondition = defaultValue(
     this.distanceDisplayCondition,
-    source.distanceDisplayCondition
+    source.distanceDisplayCondition,
   );
 };
 export default WallGraphics;

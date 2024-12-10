@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -43,7 +43,7 @@
         const boxModelMatrix = Cesium.Matrix4.multiplyByTranslation(
           Cesium.Transforms.eastNorthUpToFixedFrame(positionOnEllipsoid),
           new Cesium.Cartesian3(0.0, 0.0, dimensions.z * 0.5),
-          new Cesium.Matrix4()
+          new Cesium.Matrix4(),
         );
         // Create a box geometry.
         const boxGeometry = Cesium.BoxGeometry.fromDimensions({
@@ -57,7 +57,7 @@
           modelMatrix: boxModelMatrix,
           attributes: {
             color: Cesium.ColorGeometryInstanceAttribute.fromColor(
-              new Cesium.Color(1.0, 0.0, 0.0, 0.5)
+              new Cesium.Color(1.0, 0.0, 0.0, 0.5),
             ),
           },
         });
@@ -68,7 +68,7 @@
             appearance: new Cesium.PerInstanceColorAppearance({
               closed: true,
             }),
-          })
+          }),
         );
         //Sandcastle_End
       };

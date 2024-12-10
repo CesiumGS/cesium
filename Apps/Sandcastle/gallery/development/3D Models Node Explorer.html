@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -245,14 +245,14 @@
           return new Cesium.Cartesian3(
             viewModel.translationX,
             viewModel.translationY,
-            viewModel.translationZ
+            viewModel.translationZ,
           );
         });
         Cesium.knockout.defineProperty(viewModel, "rotation", function () {
           const hpr = new Cesium.HeadingPitchRoll(
             viewModel.rotationHeading,
             viewModel.rotationPitch,
-            viewModel.rotationRoll
+            viewModel.rotationRoll,
           );
           return Cesium.Quaternion.fromHeadingPitchRoll(hpr);
         });
@@ -260,7 +260,7 @@
           return new Cesium.Cartesian3(
             viewModel.scaleX,
             viewModel.scaleY,
-            viewModel.scaleZ
+            viewModel.scaleZ,
           );
         });
         // this computed property combines the above properties into a single matrix to be applied to the node
@@ -268,7 +268,7 @@
           return Cesium.Matrix4.fromTranslationQuaternionRotationScale(
             viewModel.translation,
             viewModel.rotation,
-            viewModel.scale
+            viewModel.scale,
           );
         });
 
@@ -282,7 +282,7 @@
         const origin = Cesium.Cartesian3.fromDegrees(-123.0744619, 44.0503706, height);
         const modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(
           origin,
-          new Cesium.HeadingPitchRoll()
+          new Cesium.HeadingPitchRoll(),
         );
 
         try {
@@ -291,7 +291,7 @@
               url: modelUrl,
               modelMatrix: modelMatrix,
               minimumPixelSize: 128,
-            })
+            }),
           );
 
           model.readyEvent.addEventListener(() => {
@@ -337,7 +337,7 @@
                 node.matrix = Cesium.Matrix4.multiply(
                   node.originalMatrix,
                   newValue,
-                  new Cesium.Matrix4()
+                  new Cesium.Matrix4(),
                 );
               });
           });

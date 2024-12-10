@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -179,7 +179,7 @@
             entity.position = Cesium.Cartesian3.fromRadians(
               longitude,
               latitude,
-              height + entity.height
+              height + entity.height,
             );
           }
 
@@ -253,14 +253,16 @@
             viewer.terrainShadows = checked
               ? Cesium.ShadowMode.ENABLED
               : Cesium.ShadowMode.DISABLED;
-          }
+          },
         );
 
-        Sandcastle.addToggleButton("Soft Shadows", shadowMap.softShadows, function (
-          checked
-        ) {
-          shadowMap.softShadows = checked;
-        });
+        Sandcastle.addToggleButton(
+          "Soft Shadows",
+          shadowMap.softShadows,
+          function (checked) {
+            shadowMap.softShadows = checked;
+          },
+        );
 
         Sandcastle.addToolbarMenu([
           {

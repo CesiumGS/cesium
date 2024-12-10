@@ -6,49 +6,36 @@ import PrimitiveType from "../../Core/PrimitiveType.js";
 import BlendingState from "../BlendingState.js";
 import Matrix4 from "../../Core/Matrix4.js";
 
-import __wbg_init, {
-  initSync,
-  radix_sort_gaussians_attrs,
-  radix_sort_simd,
-  GSplatData,
-} from "cesiumjs-gsplat-utils";
+// class CesiumPerformanceTimer {
+//   constructor() {
+//     this.startTime = null;
+//     this.endTime = null;
+//   }
 
-import buildModuleUrl from "../../Core/buildModuleUrl.js";
+//   start() {
+//     this.startTime = performance.now();
+//   }
 
-let wasmInitialized = false;
-let initPromise = null;
-let wasmMod;
+//   end() {
+//     this.endTime = performance.now();
+//   }
 
-class CesiumPerformanceTimer {
-  constructor() {
-    this.startTime = null;
-    this.endTime = null;
-  }
+//   getExecutionTime() {
+//     if (!this.startTime || !this.endTime) {
+//       throw new Error(
+//         "Timer must be started and ended before getting execution time",
+//       );
+//     }
+//     return {
+//       milliseconds: this.endTime - this.startTime,
+//     };
+//   }
 
-  start() {
-    this.startTime = performance.now();
-  }
-
-  end() {
-    this.endTime = performance.now();
-  }
-
-  getExecutionTime() {
-    if (!this.startTime || !this.endTime) {
-      throw new Error(
-        "Timer must be started and ended before getting execution time",
-      );
-    }
-    return {
-      milliseconds: this.endTime - this.startTime,
-    };
-  }
-
-  reset() {
-    this.startTime = null;
-    this.endTime = null;
-  }
-}
+//   reset() {
+//     this.startTime = null;
+//     this.endTime = null;
+//   }
+// }
 
 const GaussianSplatPipelineStage = {
   name: "GaussianSplatPipelineStage",
@@ -84,10 +71,8 @@ GaussianSplatPipelineStage.process = function (
   }
 
   shaderBuilder.addAttribute("vec2", "a_screenQuadPosition");
-  shaderBuilder.addAttribute("float", "a_dummy");
-  shaderBuilder.addAttribute("uvec3", "a_splatPosition");
+  shaderBuilder.addAttribute("vec3", "a_splatPosition");
   shaderBuilder.addAttribute("vec4", "a_splatColor");
-  //shaderBuilder.addAttribute("float", "a_splatOpacity");
 
   shaderBuilder.addVarying("vec4", "v_splatColor");
   shaderBuilder.addVarying("vec2", "v_vertPos");
@@ -100,7 +85,6 @@ GaussianSplatPipelineStage.process = function (
   shaderBuilder.addUniform("float", "u_focalX", ShaderDestination.VERTEX);
   shaderBuilder.addUniform("float", "u_focalY", ShaderDestination.VERTEX);
   shaderBuilder.addUniform("float", "u_splatScale", ShaderDestination.VERTEX);
-
   shaderBuilder.addUniform("mat4", "u_scalingMatrix", ShaderDestination.VERTEX);
 
   const uniformMap = renderResources.uniformMap;
@@ -137,8 +121,6 @@ GaussianSplatPipelineStage.process = function (
     return renderResources.model.sceneGraph.components.nodes[0].matrix;
   };
 
-  const timer = new CesiumPerformanceTimer();
-
   const radixSort = () => {
     const attributes = primitive.attributes;
     const modelView = new Matrix4();
@@ -164,7 +146,7 @@ GaussianSplatPipelineStage.process = function (
       posArray[i * 3] * modelView[2] +
       posArray[i * 3 + 1] * modelView[6] +
       posArray[i * 3 + 2] * modelView[10];
-    timer.start();
+
     const depthValues = new Int32Array(renderResources.count);
     let maxDepth = -Infinity;
     let minDepth = Infinity;
@@ -242,146 +224,9 @@ GaussianSplatPipelineStage.process = function (
     scaleAttr.typedArray = newScaleArray;
     rotAttr.typedArray = newRotArray;
     clrAttr.typedArray = newClrArray;
-    timer.end();
-
-    const rExecTime = timer.getExecutionTime();
-    console.log(`RadixSort Execution time: ${rExecTime.milliseconds}ms`);
-  };
-
-  const radixWasmSimd = async () => {
-    async function ensureWasmInitialized() {
-      if (!initPromise) {
-        initPromise = await __wbg_init(
-          buildModuleUrl(
-            "ThirdParty/cesium-gsplat/cesiumjs_gsplat_utils_bg.wasm",
-          ),
-        )
-          .then((wasm) => {
-            wasmInitialized = true;
-            initSync(wasm);
-            wasmMod = wasm;
-          })
-          .catch((err) => {
-            console.error("Failed to initialize WASM module:", err);
-            throw err;
-          });
-      }
-      return initPromise;
-    }
-
-    if (!wasmMod) {
-      ensureWasmInitialized();
-    }
-
-    if (!wasmInitialized) {
-      return;
-    }
-
-    const attributes = primitive.attributes;
-    const modelView = new Matrix4();
-    const modelMat = renderResources.model.modelMatrix;
-    Matrix4.multiply(cam.viewMatrix, modelMat, modelView);
-
-    const posAttr = attributes.find((a) => a.name === "POSITION");
-    const scaleAttr = attributes.find((a) => a.name === "_SCALE");
-    const rotAttr = attributes.find((a) => a.name === "_ROTATION");
-    const clrAttr = attributes.find((a) => a.name === "COLOR_0");
-
-    initSync(wasmMod);
-    const gsData = GSplatData.fromFloat32Arrays(
-      posAttr.typedArray,
-      scaleAttr.typedArray,
-      rotAttr.typedArray,
-      clrAttr.typedArray,
-      modelView,
-      renderResources.count,
-    );
-
-    radix_sort_simd(gsData);
-
-    posAttr.typedArray = gsData.getPositions();
-    scaleAttr.typedArray = gsData.getScales();
-    rotAttr.typedArray = gsData.getRotations();
-    clrAttr.typedArray = gsData.getColors();
-  };
-
-  const radixWasm = () => {
-    async function ensureWasmInitialized() {
-      if (!initPromise) {
-        initPromise = await __wbg_init(
-          buildModuleUrl("ThirdParty/cesiumjs_gsplat_utils_bg.wasm"),
-        )
-          .then((wasm) => {
-            wasmInitialized = true;
-            initSync(wasm);
-            wasmMod = wasm;
-          })
-          .catch((err) => {
-            console.error("Failed to initialize WASM module:", err);
-            throw err;
-          });
-      }
-      return initPromise;
-    }
-
-    if (!wasmMod) {
-      ensureWasmInitialized();
-    }
-
-    if (!wasmInitialized) {
-      return;
-    }
-
-    const attributes = primitive.attributes;
-    const modelView = new Matrix4();
-    const modelMat = renderResources.model.modelMatrix;
-    Matrix4.multiply(cam.viewMatrix, modelMat, modelView);
-
-    const posAttr = attributes.find((a) => a.name === "POSITION");
-    const scaleAttr = attributes.find((a) => a.name === "_SCALE");
-    const rotAttr = attributes.find((a) => a.name === "_ROTATION");
-    const clrAttr = attributes.find((a) => a.name === "COLOR_0");
-
-    const posArray = posAttr.typedArray;
-    const scaleArray = scaleAttr.typedArray;
-    const rotArray = rotAttr.typedArray;
-    const clrArray = clrAttr.typedArray;
-
-    initSync(wasmMod);
-
-    const [newPositions, newScales, newRotations, newColors] =
-      radix_sort_gaussians_attrs(
-        posArray,
-        scaleArray,
-        rotArray,
-        clrArray,
-        modelView,
-        renderResources.count,
-      );
-
-    posAttr.typedArray = newPositions;
-    scaleAttr.typedArray = newScales;
-    rotAttr.typedArray = newRotations;
-    clrAttr.typedArray = newColors;
   };
 
   radixSort();
-
-  const useWasm = false;
-  if (useWasm) {
-    timer.start();
-    radixWasm();
-
-    timer.end();
-
-    timer.start();
-    radixWasmSimd();
-
-    timer.end();
-  }
-
-  const rExecTime = timer.getExecutionTime();
-  console.log(`RadixSort Execution time: ${rExecTime.milliseconds}ms`);
 
   renderResources.instanceCount = renderResources.count;
   renderResources.count = 4;

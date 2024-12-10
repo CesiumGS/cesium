@@ -106,7 +106,7 @@ function GoogleEarthEnterpriseTerrainProvider(options) {
       -CesiumMath.PI,
       -CesiumMath.PI,
       CesiumMath.PI,
-      CesiumMath.PI
+      CesiumMath.PI,
     ),
     ellipsoid: options.ellipsoid,
   });
@@ -249,7 +249,7 @@ Object.defineProperties(GoogleEarthEnterpriseTerrainProvider.prototype, {
  */
 GoogleEarthEnterpriseTerrainProvider.fromMetadata = function (
   metadata,
-  options
+  options,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("metadata", metadata);
@@ -275,7 +275,7 @@ function computeChildMask(quadKey, info, metadata) {
     childMask = 0;
     for (let i = 0; i < 4; ++i) {
       const child = metadata.getTileInformationFromQuadKey(
-        quadKey + i.toString()
+        quadKey + i.toString(),
       );
       if (defined(child) && child.hasTerrain()) {
         childMask |= 1 << i;
@@ -302,7 +302,7 @@ GoogleEarthEnterpriseTerrainProvider.prototype.requestTileGeometry = function (
   x,
   y,
   level,
-  request
+  request,
 ) {
   const quadKey = GoogleEarthEnterpriseMetadata.tileXYToQuadKey(x, y, level);
   const terrainCache = this._terrainCache;
@@ -331,7 +331,7 @@ GoogleEarthEnterpriseTerrainProvider.prototype.requestTileGeometry = function (
         credits: defined(credit) ? [credit] : undefined,
         negativeAltitudeExponentBias: metadata.negativeAltitudeExponentBias,
         negativeElevationThreshold: metadata.negativeAltitudeThreshold,
-      })
+      }),
     );
   }
 
@@ -346,7 +346,7 @@ GoogleEarthEnterpriseTerrainProvider.prototype.requestTileGeometry = function (
         buffer: new Uint8Array(16 * 16),
         width: 16,
         height: 16,
-      })
+      }),
     );
   } else if (terrainState === TerrainState.NONE) {
     // Already have info and there isn't any terrain here
@@ -400,7 +400,7 @@ GoogleEarthEnterpriseTerrainProvider.prototype.requestTileGeometry = function (
       this,
       q,
       terrainVersion,
-      sharedRequest
+      sharedRequest,
     ).fetchArrayBuffer();
 
     if (!defined(requestPromise)) {
@@ -416,7 +416,7 @@ GoogleEarthEnterpriseTerrainProvider.prototype.requestTileGeometry = function (
               type: "Terrain",
               key: metadata.key,
             },
-            [terrain]
+            [terrain],
           )
           .then(function (terrainTiles) {
             // Add requested tile and mark it as SELF
@@ -486,11 +486,10 @@ GoogleEarthEnterpriseTerrainProvider.prototype.requestTileGeometry = function (
  * @param {number} level The tile level for which to get the maximum geometric error.
  * @returns {number} The maximum geometric error.
  */
-GoogleEarthEnterpriseTerrainProvider.prototype.getLevelMaximumGeometricError = function (
-  level
-) {
-  return this._levelZeroMaximumGeometricError / (1 << level);
-};
+GoogleEarthEnterpriseTerrainProvider.prototype.getLevelMaximumGeometricError =
+  function (level) {
+    return this._levelZeroMaximumGeometricError / (1 << level);
+  };
 
 /**
  * Determines whether data for a tile is available to be loaded.
@@ -503,7 +502,7 @@ GoogleEarthEnterpriseTerrainProvider.prototype.getLevelMaximumGeometricError = f
 GoogleEarthEnterpriseTerrainProvider.prototype.getTileDataAvailable = function (
   x,
   y,
-  level
+  level,
 ) {
   const metadata = this._metadata;
   let quadKey = GoogleEarthEnterpriseMetadata.tileXYToQuadKey(x, y, level);
@@ -557,13 +556,10 @@ GoogleEarthEnterpriseTerrainProvider.prototype.getTileDataAvailable = function (
  * @param {number} level The level of the tile for which to request geometry.
  * @returns {undefined}
  */
-GoogleEarthEnterpriseTerrainProvider.prototype.loadTileDataAvailability = function (
-  x,
-  y,
-  level
-) {
-  return undefined;
-};
+GoogleEarthEnterpriseTerrainProvider.prototype.loadTileDataAvailability =
+  function (x, y, level) {
+    return undefined;
+  };
 
 //
 // Functions to handle imagery packets

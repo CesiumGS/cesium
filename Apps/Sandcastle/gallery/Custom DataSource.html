@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -319,12 +319,12 @@
               const surfacePosition = Cesium.Cartesian3.fromDegrees(
                 longitude,
                 latitude,
-                0
+                0,
               );
               const heightPosition = Cesium.Cartesian3.fromDegrees(
                 longitude,
                 latitude,
-                height * heightScale
+                height * heightScale,
               );
 
               //WebGL Globe only contains lines, so that's the only graphics we create.

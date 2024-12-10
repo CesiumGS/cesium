@@ -1950,6 +1950,9 @@ function loadPrimitive(loader, gltfPrimitive, hasInstances, frameState) {
   if (loader._loadGaussianSplatting && defined(gaussianSplattingExtension)) {
     needsPostProcessing = true;
     primitivePlan.needsGaussianSplats = true;
+    primitivePlan.gaussianSplatScalingMatrix = loader.gltfJson.nodes[0].matrix;
+    // loader.gltfJson.nodes[0].matrix[6] = loader.gltfJson.nodes[0].matrix[0];
+    // loader.gltfJson.nodes[0].matrix[10] = loader.gltfJson.nodes[0].matrix[0];
   }
 
   const loadForClassification = loader._loadForClassification;

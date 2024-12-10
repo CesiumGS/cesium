@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -73,27 +73,27 @@
 
         // Add Bing Maps Aerial with Labels to the left panel
         const bingMapsAerialWithLabels = Cesium.ImageryLayer.fromProviderAsync(
-          Cesium.IonImageryProvider.fromAssetId(3)
+          Cesium.IonImageryProvider.fromAssetId(3),
         );
         bingMapsAerialWithLabels.splitDirection = Cesium.SplitDirection.LEFT;
         layers.add(bingMapsAerialWithLabels);
 
         // Add Bing Maps Aerial (unlabeled) to the right panel
         const bingMapsAerial = Cesium.ImageryLayer.fromProviderAsync(
-          Cesium.IonImageryProvider.fromAssetId(2)
+          Cesium.IonImageryProvider.fromAssetId(2),
         );
         bingMapsAerial.splitDirection = Cesium.SplitDirection.RIGHT;
         layers.add(bingMapsAerial);
 
         // Add high resolution Washington DC imagery to both panels.
         const imageryLayer = Cesium.ImageryLayer.fromProviderAsync(
-          Cesium.IonImageryProvider.fromAssetId(3827)
+          Cesium.IonImageryProvider.fromAssetId(3827),
         );
         viewer.imageryLayers.add(imageryLayer);
 
         // Add Bing Maps Labels Only to the right panel
         const bingMapsLabelsOnly = Cesium.ImageryLayer.fromProviderAsync(
-          Cesium.IonImageryProvider.fromAssetId(2411391)
+          Cesium.IonImageryProvider.fromAssetId(2411391),
         );
         bingMapsLabelsOnly.splitDirection = Cesium.SplitDirection.RIGHT; // Only show to the left of the slider.
         layers.add(bingMapsLabelsOnly);

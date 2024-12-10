@@ -192,7 +192,8 @@ function CesiumWidget(container, options) {
   container.appendChild(element);
 
   const canvas = document.createElement("canvas");
-  const supportsImageRenderingPixelated = FeatureDetection.supportsImageRenderingPixelated();
+  const supportsImageRenderingPixelated =
+    FeatureDetection.supportsImageRenderingPixelated();
   this._supportsImageRenderingPixelated = supportsImageRenderingPixelated;
   if (supportsImageRenderingPixelated) {
     canvas.style.imageRendering = FeatureDetection.imageRenderingValue();
@@ -221,7 +222,7 @@ function CesiumWidget(container, options) {
 
   const blurActiveElementOnCanvasFocus = defaultValue(
     options.blurActiveElementOnCanvasFocus,
-    true
+    true,
   );
 
   if (blurActiveElementOnCanvasFocus) {
@@ -247,7 +248,7 @@ function CesiumWidget(container, options) {
 
   const useBrowserRecommendedResolution = defaultValue(
     options.useBrowserRecommendedResolution,
-    true
+    true,
   );
 
   this._element = element;
@@ -303,7 +304,7 @@ function CesiumWidget(container, options) {
       scene.globe = globe;
       scene.globe.shadows = defaultValue(
         options.terrainShadows,
-        ShadowMode.RECEIVE_ONLY
+        ShadowMode.RECEIVE_ONLY,
       );
     }
 
@@ -348,7 +349,7 @@ function CesiumWidget(container, options) {
       //>>includeStart('debug', pragmas.debug);
       if (defined(options.terrainProvider)) {
         throw new DeveloperError(
-          "Specify either options.terrainProvider or options.terrain."
+          "Specify either options.terrainProvider or options.terrain.",
         );
       }
       //>>includeEnd('debug')
@@ -370,7 +371,7 @@ function CesiumWidget(container, options) {
     this._useDefaultRenderLoop = undefined;
     this.useDefaultRenderLoop = defaultValue(
       options.useDefaultRenderLoop,
-      true
+      true,
     );
 
     this._targetFrameRate = undefined;
@@ -573,7 +574,7 @@ Object.defineProperties(CesiumWidget.prototype, {
       //>>includeStart('debug', pragmas.debug);
       if (value <= 0) {
         throw new DeveloperError(
-          "targetFrameRate must be greater than 0, or undefined."
+          "targetFrameRate must be greater than 0, or undefined.",
         );
       }
       //>>includeEnd('debug');
@@ -693,7 +694,7 @@ CesiumWidget.prototype.showErrorPanel = function (title, message, error) {
   function resizeCallback() {
     errorPanelScroller.style.maxHeight = `${Math.max(
       Math.round(element.clientHeight * 0.9 - 100),
-      30
+      30,
     )}px`;
   }
   resizeCallback();

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -44,7 +44,7 @@
         });
 
         viewer.clock.currentTime = Cesium.JulianDate.fromIso8601(
-          "2021-11-09T20:27:37.016064475348684937Z"
+          "2021-11-09T20:27:37.016064475348684937Z",
         );
 
         // Model positioning ===============================================
@@ -53,7 +53,7 @@
         const hpr = new Cesium.HeadingPitchRoll(0, 0, 0);
         const fixedFrameTransform = Cesium.Transforms.localFrameToFixedFrameGenerator(
           "north",
-          "west"
+          "west",
         );
 
         // Custom Shader Definitions ========================================
@@ -394,9 +394,9 @@
                   position,
                   hpr,
                   Cesium.Ellipsoid.WGS84,
-                  fixedFrameTransform
+                  fixedFrameTransform,
                 ),
-              })
+              }),
             );
 
             const removeListener = model.readyEvent.addEventListener(() => {
@@ -452,7 +452,7 @@
             const drag = Cesium.Cartesian3.subtract(
               movement.endPosition,
               dragCenter,
-              scratchDrag
+              scratchDrag,
             );
 
             // Update uniforms

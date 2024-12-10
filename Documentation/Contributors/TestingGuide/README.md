@@ -421,11 +421,11 @@ it("angleBetween works for acute angles", function () {
   const y = new Cartesian3(1.0, 1.0, 0.0);
   expect(Cartesian3.angleBetween(x, y)).toEqualEpsilon(
     CesiumMath.PI_OVER_FOUR,
-    CesiumMath.EPSILON14
+    CesiumMath.EPSILON14,
   );
   expect(Cartesian3.angleBetween(y, x)).toEqualEpsilon(
     CesiumMath.PI_OVER_FOUR,
-    CesiumMath.EPSILON14
+    CesiumMath.EPSILON14,
   );
 });
 ```
@@ -533,7 +533,7 @@ it("does not render when show is false", function () {
   scene.primitives.add(
     new DebugModelMatrixPrimitive({
       show: false,
-    })
+    }),
   );
   expect(scene).toRender([0, 0, 0, 255]);
 });
@@ -777,13 +777,13 @@ it("Zooms to longitude, latitude, height", function () {
   viewModel.search();
   expect(Camera.prototype.flyTo).toHaveBeenCalled();
   expect(Camera.prototype.flyTo.calls.mostRecent().args[0].destination).toEqual(
-    Cartesian3.fromDegrees(1.0, 2.0, 3.0)
+    Cartesian3.fromDegrees(1.0, 2.0, 3.0),
   );
 
   viewModel.searchText = "1.0   2.0   3.0";
   viewModel.search();
   expect(Camera.prototype.flyTo.calls.mostRecent().args[0].destination).toEqual(
-    Cartesian3.fromDegrees(1.0, 2.0, 3.0)
+    Cartesian3.fromDegrees(1.0, 2.0, 3.0),
   );
 });
 ```
@@ -895,7 +895,7 @@ it("fromUrl throws if the SRS is not supported", async function () {
   metadata.spatialReference.latestWkid = 1234;
 
   await expectAsync(
-    ArcGISTiledElevationTerrainProvider.fromUrl(baseUrl)
+    ArcGISTiledElevationTerrainProvider.fromUrl(baseUrl),
   ).toBeRejectedWithError(RuntimeError, "Invalid spatial reference");
 });
 ```
@@ -905,7 +905,7 @@ Since developer errors are removed for release builds, CesiumJS's `toBeRejectedW
 ```javascript
 it("fromUrl throws without url", async function () {
   await expectAsync(Cesium3DTileset.fromUrl()).toBeRejectedWithDeveloperError(
-    "url is required, actual value was undefined"
+    "url is required, actual value was undefined",
   );
 });
 ```
@@ -967,7 +967,7 @@ describe(
 
     // ...
   },
-  "WebGL"
+  "WebGL",
 );
 ```
 

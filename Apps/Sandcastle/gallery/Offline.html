@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -40,8 +40,8 @@
         const viewer = new Cesium.Viewer("cesiumContainer", {
           baseLayer: Cesium.ImageryLayer.fromProviderAsync(
             Cesium.TileMapServiceImageryProvider.fromUrl(
-              Cesium.buildModuleUrl("Assets/Textures/NaturalEarthII")
-            )
+              Cesium.buildModuleUrl("Assets/Textures/NaturalEarthII"),
+            ),
           ),
           baseLayerPicker: false,
           geocoder: false,

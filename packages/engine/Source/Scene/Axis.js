@@ -41,7 +41,7 @@ const Axis = {
  */
 Axis.Y_UP_TO_Z_UP = Matrix4.fromRotationTranslation(
   // Rotation about PI/2 around the X-axis
-  Matrix3.fromArray([1, 0, 0, 0, 0, 1, 0, -1, 0])
+  Matrix3.fromArray([1, 0, 0, 0, 0, 1, 0, -1, 0]),
 );
 
 /**
@@ -52,7 +52,7 @@ Axis.Y_UP_TO_Z_UP = Matrix4.fromRotationTranslation(
  */
 Axis.Z_UP_TO_Y_UP = Matrix4.fromRotationTranslation(
   // Rotation about -PI/2 around the X-axis
-  Matrix3.fromArray([1, 0, 0, 0, 0, -1, 0, 1, 0])
+  Matrix3.fromArray([1, 0, 0, 0, 0, -1, 0, 1, 0]),
 );
 
 /**
@@ -63,7 +63,7 @@ Axis.Z_UP_TO_Y_UP = Matrix4.fromRotationTranslation(
  */
 Axis.X_UP_TO_Z_UP = Matrix4.fromRotationTranslation(
   // Rotation about -PI/2 around the Y-axis
-  Matrix3.fromArray([0, 0, 1, 0, 1, 0, -1, 0, 0])
+  Matrix3.fromArray([0, 0, 1, 0, 1, 0, -1, 0, 0]),
 );
 
 /**
@@ -74,7 +74,7 @@ Axis.X_UP_TO_Z_UP = Matrix4.fromRotationTranslation(
  */
 Axis.Z_UP_TO_X_UP = Matrix4.fromRotationTranslation(
   // Rotation about PI/2 around the Y-axis
-  Matrix3.fromArray([0, 0, -1, 0, 1, 0, 1, 0, 0])
+  Matrix3.fromArray([0, 0, -1, 0, 1, 0, 1, 0, 0]),
 );
 
 /**
@@ -85,7 +85,7 @@ Axis.Z_UP_TO_X_UP = Matrix4.fromRotationTranslation(
  */
 Axis.X_UP_TO_Y_UP = Matrix4.fromRotationTranslation(
   // Rotation about PI/2 around the Z-axis
-  Matrix3.fromArray([0, 1, 0, -1, 0, 0, 0, 0, 1])
+  Matrix3.fromArray([0, 1, 0, -1, 0, 0, 0, 0, 1]),
 );
 
 /**
@@ -96,7 +96,7 @@ Axis.X_UP_TO_Y_UP = Matrix4.fromRotationTranslation(
  */
 Axis.Y_UP_TO_X_UP = Matrix4.fromRotationTranslation(
   // Rotation about -PI/2 around the Z-axis
-  Matrix3.fromArray([0, -1, 0, 1, 0, 0, 0, 0, 1])
+  Matrix3.fromArray([0, -1, 0, 1, 0, 0, 0, 0, 1]),
 );
 
 /**

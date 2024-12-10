@@ -188,25 +188,25 @@ PropertyTextureProperty.prototype.isGpuCompatible = function () {
     // only support arrays of 1-4 UINT8 scalars (normalized or unnormalized)
     if (classProperty.isVariableLengthArray) {
       oneTimeWarning(
-        `Property texture property ${classProperty.id} is a variable-length array, which is not supported`
+        `Property texture property ${classProperty.id} is a variable-length array, which is not supported`,
       );
       return false;
     }
     if (classProperty.arrayLength > 4) {
       oneTimeWarning(
-        `Property texture property ${classProperty.id} is an array of length ${classProperty.arrayLength}, but may have at most a length of 4`
+        `Property texture property ${classProperty.id} is an array of length ${classProperty.arrayLength}, but may have at most a length of 4`,
       );
       return false;
     }
     if (type !== MetadataType.SCALAR) {
       oneTimeWarning(
-        `Property texture property ${classProperty.id} is an array of type ${type}, but only SCALAR is supported`
+        `Property texture property ${classProperty.id} is an array of type ${type}, but only SCALAR is supported`,
       );
       return false;
     }
     if (componentType !== MetadataComponentType.UINT8) {
       oneTimeWarning(
-        `Property texture property ${classProperty.id} is an array with component type ${componentType}, but only UINT8 is supported`
+        `Property texture property ${classProperty.id} is an array with component type ${componentType}, but only UINT8 is supported`,
       );
       return false;
     }
@@ -216,7 +216,7 @@ PropertyTextureProperty.prototype.isGpuCompatible = function () {
   if (MetadataType.isVectorType(type) || type === MetadataType.SCALAR) {
     if (componentType !== MetadataComponentType.UINT8) {
       oneTimeWarning(
-        `Property texture property ${classProperty.id} has component type ${componentType}, but only UINT8 is supported`
+        `Property texture property ${classProperty.id} has component type ${componentType}, but only UINT8 is supported`,
       );
       return false;
     }
@@ -226,7 +226,7 @@ PropertyTextureProperty.prototype.isGpuCompatible = function () {
   // For this initial implementation, only UINT8-based properties
   // are supported.
   oneTimeWarning(
-    `Property texture property ${classProperty.id} has an unsupported type`
+    `Property texture property ${classProperty.id} has an unsupported type`,
   );
   return false;
 };

@@ -38,7 +38,7 @@ void calcCov3D(vec3 scale, vec4 rot, out float[6] cov3D)
 }
 
 vec3 calcCov2D(vec3 worldPos, float focal_x, float focal_y, float tan_fovx, float tan_fovy, float[6] cov3D, mat4 viewmatrix) {
-     vec4 t = viewmatrix * vec4(worldPos, 1.0);
+    vec4 t = viewmatrix * vec4(worldPos, 1.0);
 
     float limx = 1.3 * tan_fovx;
     float limy = 1.3 * tan_fovy;
@@ -53,7 +53,7 @@ vec3 calcCov2D(vec3 worldPos, float focal_x, float focal_y, float tan_fovx, floa
         0, 0, 0
     );
 
-    mat3 W =  mat3(
+   mat3 W =  mat3(
         viewmatrix[0][0], viewmatrix[1][0], viewmatrix[2][0],
         viewmatrix[0][1], viewmatrix[1][1], viewmatrix[2][1],
         viewmatrix[0][2], viewmatrix[1][2], viewmatrix[2][2]
@@ -72,25 +72,16 @@ vec3 calcCov2D(vec3 worldPos, float focal_x, float focal_y, float tan_fovx, floa
     return vec3(cov[0][0], cov[0][1], cov[1][1]);
 }
 
-vec3 dequantizePos(uvec3 qPos) {
-    vec3 normalizedPos = vec3(qPos) / 65535.0;
-
-    vec4 worldPos = u_scalingMatrix * vec4(normalizedPos, 1.0);
-
-    return vec3(worldPos);
-}
-
 
 void gaussianSplatStage(ProcessedAttributes attributes, inout vec4 positionClip) {
     mat4 viewMatrix = czm_modelView;
 
-    vec3 deqPos = dequantizePos(a_splatPosition);
-    vec4 clipPosition = czm_modelViewProjection * vec4(deqPos ,1.0);
+    vec4 clipPosition = czm_modelViewProjection * vec4(a_splatPosition,1.0);
     positionClip = clipPosition;
 
     float[6] cov3D;
     calcCov3D(attributes.scale, attributes.rotation, cov3D);
-    vec3 cov = calcCov2D(deqPos, u_focalX, u_focalY, u_tan_fovX, u_tan_fovY, cov3D, viewMatrix);
+    vec3 cov = calcCov2D(a_splatPosition, u_focalX, u_focalY, u_tan_fovX, u_tan_fovY, cov3D, viewMatrix);
 
     float mid = (cov.x + cov.z) / 2.0;
     float radius = length(vec2((cov.x - cov.z) / 2.0, cov.y));

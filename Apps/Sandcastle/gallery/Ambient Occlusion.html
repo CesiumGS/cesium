@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+﻿<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -110,7 +110,7 @@
 
         if (!Cesium.PostProcessStageLibrary.isAmbientOcclusionSupported(viewer.scene)) {
           window.alert(
-            "This browser does not support the ambient occlusion post process."
+            "This browser does not support the ambient occlusion post process.",
           );
         }
 
@@ -138,7 +138,7 @@
           ambientOcclusion.enabled =
             Boolean(viewModel.show) || Boolean(viewModel.ambientOcclusionOnly);
           ambientOcclusion.uniforms.ambientOcclusionOnly = Boolean(
-            viewModel.ambientOcclusionOnly
+            viewModel.ambientOcclusionOnly,
           );
           ambientOcclusion.uniforms.intensity = Number(viewModel.intensity);
           ambientOcclusion.uniforms.bias = Number(viewModel.bias);
@@ -152,22 +152,22 @@
         camera.position = new Cesium.Cartesian3(
           1234127.2294710164,
           -5086011.666443127,
-          3633337.0413351045
+          3633337.0413351045,
         );
         camera.direction = new Cesium.Cartesian3(
           -0.5310064396211631,
           -0.30299013818088416,
-          -0.7913464078682514
+          -0.7913464078682514,
         );
         camera.right = new Cesium.Cartesian3(
           -0.8468592075426076,
           0.1574051185945647,
-          0.507989282604011
+          0.507989282604011,
         );
         camera.up = Cesium.Cartesian3.cross(
           camera.right,
           camera.direction,
-          new Cesium.Cartesian3()
+          new Cesium.Cartesian3(),
         );
 
         try {

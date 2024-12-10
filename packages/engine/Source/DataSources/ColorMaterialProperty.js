@@ -90,7 +90,7 @@ ColorMaterialProperty.prototype.getValue = function (time, result) {
     this._color,
     time,
     Color.WHITE,
-    result.color
+    result.color,
   );
   return result;
 };

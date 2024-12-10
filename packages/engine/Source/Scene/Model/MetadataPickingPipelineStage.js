@@ -39,45 +39,45 @@ const MetadataPickingPipelineStage = {
 MetadataPickingPipelineStage.process = function (
   renderResources,
   primitive,
-  frameState
+  frameState,
 ) {
   const shaderBuilder = renderResources.shaderBuilder;
 
   shaderBuilder.addDefine(
     MetadataPickingPipelineStage.METADATA_PICKING_VALUE_TYPE,
     "float",
-    ShaderDestination.FRAGMENT
+    ShaderDestination.FRAGMENT,
   );
   shaderBuilder.addDefine(
     MetadataPickingPipelineStage.METADATA_PICKING_VALUE_STRING,
     "0.0",
-    ShaderDestination.FRAGMENT
+    ShaderDestination.FRAGMENT,
   );
   shaderBuilder.addDefine(
     MetadataPickingPipelineStage.METADATA_PICKING_VALUE_COMPONENT_X,
     "0.0",
-    ShaderDestination.FRAGMENT
+    ShaderDestination.FRAGMENT,
   );
   shaderBuilder.addDefine(
     MetadataPickingPipelineStage.METADATA_PICKING_VALUE_COMPONENT_Y,
     "0.0",
-    ShaderDestination.FRAGMENT
+    ShaderDestination.FRAGMENT,
   );
   shaderBuilder.addDefine(
     MetadataPickingPipelineStage.METADATA_PICKING_VALUE_COMPONENT_Z,
     "0.0",
-    ShaderDestination.FRAGMENT
+    ShaderDestination.FRAGMENT,
   );
   shaderBuilder.addDefine(
     MetadataPickingPipelineStage.METADATA_PICKING_VALUE_COMPONENT_W,
     "0.0",
-    ShaderDestination.FRAGMENT
+    ShaderDestination.FRAGMENT,
   );
 
   shaderBuilder.addFunction(
     "metadataPickingStage",
     "void metadataPickingStage(Metadata metadata, MetadataClass metadataClass, inout vec4 metadataValues)",
-    ShaderDestination.FRAGMENT
+    ShaderDestination.FRAGMENT,
   );
 
   shaderBuilder.addFunctionLines(
@@ -89,7 +89,7 @@ MetadataPickingPipelineStage.process = function (
       `metadataValues.z = ${MetadataPickingPipelineStage.METADATA_PICKING_VALUE_COMPONENT_Z};`,
       `metadataValues.w = ${MetadataPickingPipelineStage.METADATA_PICKING_VALUE_COMPONENT_W};`,
     ],
-    ShaderDestination.FRAGMENT
+    ShaderDestination.FRAGMENT,
   );
 };
 

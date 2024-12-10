@@ -11,7 +11,7 @@ test("loads animated model", async ({ cesiumPage }) => {
     const position = Cesium.Cartesian3.fromDegrees(
       -123.0744619,
       44.0503706,
-      150.0
+      150.0,
     );
     const heading = Cesium.Math.toRadians(135);
     const pitch = 0;
@@ -19,7 +19,7 @@ test("loads animated model", async ({ cesiumPage }) => {
     const hpr = new Cesium.HeadingPitchRoll(heading, pitch, roll);
     const orientation = Cesium.Transforms.headingPitchRollQuaternion(
       position,
-      hpr
+      hpr,
     );
 
     const entity = viewer.entities.add({
@@ -55,7 +55,7 @@ test("loads draco model", async ({ cesiumPage }) => {
     const position = Cesium.Cartesian3.fromDegrees(
       -123.0744619,
       44.0503706,
-      0.0
+      0.0,
     );
     const heading = Cesium.Math.toRadians(135);
     const pitch = 0;
@@ -63,15 +63,14 @@ test("loads draco model", async ({ cesiumPage }) => {
     const hpr = new Cesium.HeadingPitchRoll(heading, pitch, roll);
     const orientation = Cesium.Transforms.headingPitchRollQuaternion(
       position,
-      hpr
+      hpr,
     );
 
     const entity = viewer.entities.add({
       position: position,
       orientation: orientation,
       model: {
-        uri:
-          "../../Apps/SampleData/models/DracoCompressed/CesiumMilkTruck.gltf",
+        uri: "../../Apps/SampleData/models/DracoCompressed/CesiumMilkTruck.gltf",
         minimumPixelSize: 128,
         maximumScale: 20000,
       },
@@ -93,7 +92,7 @@ test("loads model with KTX2 textures", async ({ cesiumPage }) => {
     const position = Cesium.Cartesian3.fromDegrees(
       -123.0744619,
       44.0503706,
-      1000.0
+      1000.0,
     );
     const heading = Cesium.Math.toRadians(135);
     const pitch = 0;
@@ -101,15 +100,14 @@ test("loads model with KTX2 textures", async ({ cesiumPage }) => {
     const hpr = new Cesium.HeadingPitchRoll(heading, pitch, roll);
     const orientation = Cesium.Transforms.headingPitchRollQuaternion(
       position,
-      hpr
+      hpr,
     );
 
     const entity = viewer.entities.add({
       position: position,
       orientation: orientation,
       model: {
-        uri:
-          "../../Apps/SampleData/models/CesiumBalloonKTX2/CesiumBalloonKTX2.glb",
+        uri: "../../Apps/SampleData/models/CesiumBalloonKTX2/CesiumBalloonKTX2.glb",
         minimumPixelSize: 128,
         maximumScale: 20000,
       },

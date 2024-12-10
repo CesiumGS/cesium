@@ -68,7 +68,7 @@ function createGlyphCanvas(
   outlineColor,
   outlineWidth,
   style,
-  verticalOrigin
+  verticalOrigin,
 ) {
   writeTextToCanvasParameters.font = font;
   writeTextToCanvasParameters.fillColor = fillColor;
@@ -211,13 +211,13 @@ function rebindAllGlyphs(labelCollection, label) {
         Color.WHITE,
         0.0,
         LabelStyle.FILL,
-        verticalOrigin
+        verticalOrigin,
       );
 
       glyphTextureInfo = new GlyphTextureInfo(
         labelCollection,
         -1,
-        canvas.dimensions
+        canvas.dimensions,
       );
       glyphTextureCache[id] = glyphTextureInfo;
 
@@ -249,7 +249,7 @@ function rebindAllGlyphs(labelCollection, label) {
             labelCollection._textureAtlas,
             id,
             canvas,
-            glyphTextureInfo
+            glyphTextureInfo,
           );
         }
       }
@@ -360,7 +360,7 @@ function repositionAllGlyphs(label) {
   const backgroundBillboard = label._backgroundBillboard;
   const backgroundPadding = Cartesian2.clone(
     defined(backgroundBillboard) ? label._backgroundPadding : Cartesian2.ZERO,
-    scratchBackgroundPadding
+    scratchBackgroundPadding,
   );
 
   // We need to scale the background padding, which is specified in pixels by the inverse of the relative size so it is scaled properly.
@@ -397,7 +397,7 @@ function repositionAllGlyphs(label) {
   let widthOffset = calculateWidthOffset(
     lineWidth,
     horizontalOrigin,
-    backgroundPadding
+    backgroundPadding,
   );
   const lineSpacing =
     (defined(label._lineHeight)
@@ -427,7 +427,7 @@ function repositionAllGlyphs(label) {
       widthOffset = calculateWidthOffset(
         lineWidth,
         horizontalOrigin,
-        backgroundPadding
+        backgroundPadding,
       );
       glyphPixelOffset.x = widthOffset * scale;
       firstCharOfLine = true;
@@ -506,7 +506,7 @@ function repositionAllGlyphs(label) {
     backgroundBillboard._setTranslate(glyphPixelOffset);
     backgroundBillboard._labelTranslate = Cartesian2.clone(
       glyphPixelOffset,
-      backgroundBillboard._labelTranslate
+      backgroundBillboard._labelTranslate,
     );
   }
 
@@ -517,7 +517,7 @@ function repositionAllGlyphs(label) {
       if (defined(billboard)) {
         billboard._labelTranslate = Cartesian2.clone(
           glyphPixelOffset,
-          billboard._labelTranslate
+          billboard._labelTranslate,
         );
       }
     }
@@ -531,7 +531,7 @@ function destroyLabel(labelCollection, label) {
   }
   if (defined(label._backgroundBillboard)) {
     labelCollection._backgroundBillboardCollection.remove(
-      label._backgroundBillboard
+      label._backgroundBillboard,
     );
     label._backgroundBillboard = undefined;
   }
@@ -659,7 +659,7 @@ function LabelCollection(options) {
    * });
    */
   this.modelMatrix = Matrix4.clone(
-    defaultValue(options.modelMatrix, Matrix4.IDENTITY)
+    defaultValue(options.modelMatrix, Matrix4.IDENTITY),
   );
 
   /**
@@ -674,7 +674,7 @@ function LabelCollection(options) {
    */
   this.debugShowBoundingVolume = defaultValue(
     options.debugShowBoundingVolume,
-    false
+    false,
   );
 
   /**
@@ -687,7 +687,7 @@ function LabelCollection(options) {
    */
   this.blendOption = defaultValue(
     options.blendOption,
-    BlendOption.OPAQUE_AND_TRANSLUCENT
+    BlendOption.OPAQUE_AND_TRANSLUCENT,
   );
 }
 
@@ -896,7 +896,8 @@ LabelCollection.prototype.update = function (frameState) {
   billboardCollection.modelMatrix = this.modelMatrix;
   billboardCollection.debugShowBoundingVolume = this.debugShowBoundingVolume;
   backgroundBillboardCollection.modelMatrix = this.modelMatrix;
-  backgroundBillboardCollection.debugShowBoundingVolume = this.debugShowBoundingVolume;
+  backgroundBillboardCollection.debugShowBoundingVolume =
+    this.debugShowBoundingVolume;
 
   const context = frameState.context;
 
@@ -990,7 +991,8 @@ LabelCollection.prototype.destroy = function () {
   this.removeAll();
   this._billboardCollection = this._billboardCollection.destroy();
   this._textureAtlas = this._textureAtlas && this._textureAtlas.destroy();
-  this._backgroundBillboardCollection = this._backgroundBillboardCollection.destroy();
+  this._backgroundBillboardCollection =
+    this._backgroundBillboardCollection.destroy();
   this._backgroundTextureAtlas =
     this._backgroundTextureAtlas && this._backgroundTextureAtlas.destroy();
 

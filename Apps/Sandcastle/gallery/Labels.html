@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -91,7 +91,7 @@
                   1.5e2,
                   3.0,
                   1.5e7,
-                  0.5
+                  0.5,
                 ),
               },
             });
@@ -158,21 +158,20 @@
           const minFontSize = 1.0;
           const maxFontSize = 48.0;
 
-          labelListenerCallback = viewer.scene.preUpdate.addEventListener(function (
-            scene,
-            time
-          ) {
-            entity.label.outlineWidth += outlineDelta;
-            if (entity.label.outlineWidth >= 4.0 || entity.label.outlineWidth <= 0.0) {
-              outlineDelta *= -1.0;
-            }
+          labelListenerCallback = viewer.scene.preUpdate.addEventListener(
+            function (scene, time) {
+              entity.label.outlineWidth += outlineDelta;
+              if (entity.label.outlineWidth >= 4.0 || entity.label.outlineWidth <= 0.0) {
+                outlineDelta *= -1.0;
+              }
 
-            fontSize += fontDelta;
-            if (fontSize >= maxFontSize || fontSize <= minFontSize) {
-              fontDelta *= -1.0;
-            }
-            entity.label.font = `${fontSize}px Calibri`;
-          });
+              fontSize += fontDelta;
+              if (fontSize >= maxFontSize || fontSize <= minFontSize) {
+                fontDelta *= -1.0;
+              }
+              entity.label.font = `${fontSize}px Calibri`;
+            },
+          );
         }
 
         Sandcastle.addToolbarMenu([

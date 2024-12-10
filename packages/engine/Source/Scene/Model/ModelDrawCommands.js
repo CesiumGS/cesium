@@ -50,21 +50,22 @@ ModelDrawCommands.buildModelDrawCommand = function (
     shaderBuilder,
     frameState,
   );
-
-  const command = primitiveRenderResources.runtimePrimitive.primitive
-    .isGaussianSplatPrimitive
-    ? buildDrawCommandForGaussianSplatPrimitive(
-        primitiveRenderResources,
-        shaderProgram,
-        frameState,
-      )
-    : buildDrawCommandForModel(
-        primitiveRenderResources,
-        shaderProgram,
-        frameState,
-      );
-
   const model = primitiveRenderResources.model;
+  const command =
+    primitiveRenderResources.runtimePrimitive.primitive
+      .isGaussianSplatPrimitive &&
+    (model?.style?.showGaussianSplatting ?? model.showGaussianSplatting)
+      ? buildDrawCommandForGaussianSplatPrimitive(
+          primitiveRenderResources,
+          shaderProgram,
+          frameState,
+        )
+      : buildDrawCommandForModel(
+          primitiveRenderResources,
+          shaderProgram,
+          frameState,
+        );
+
   const hasClassification = defined(model.classificationType);
   if (hasClassification) {
     return new ClassificationModelDrawCommand({
@@ -233,20 +234,20 @@ function buildDrawCommandForGaussianSplatPrimitive(
       )
     ) {
       const splatQuadAttrLocations = {
-        0: 9,
+        0: 4,
         1: 1,
         2: 2,
         3: 3,
-        4: 4,
-        splatPosition: 7,
-        splatColor: 8,
+        screenQuadPosition: 0,
+        splatPosition: 5,
+        splatColor: 6,
       };
       const geometry = new Geometry({
         attributes: {
           screenQuadPosition: new GeometryAttribute({
             componentDatatype: ComponentDatatype.FLOAT,
             componentsPerAttribute: 2,
-            values: [-2, -2, 2, -2, 2, 2, -2, 2],
+            values: [-2.0, -2.0, 2.0, -2.0, 2.0, 2.0, -2.0, 2.0],
             name: "_SCREEN_QUAD_POS",
             variableName: "screenQuadPos",
           }),

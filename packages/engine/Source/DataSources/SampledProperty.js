@@ -168,7 +168,7 @@ function SampledProperty(type, derivativeTypes) {
   let packedLength = innerType.packedLength;
   let packedInterpolationLength = defaultValue(
     innerType.packedInterpolationLength,
-    packedLength
+    packedLength,
   );
 
   let inputOrder = 0;
@@ -185,7 +185,7 @@ function SampledProperty(type, derivativeTypes) {
       packedLength += derivativePackedLength;
       packedInterpolationLength += defaultValue(
         derivativeType.packedInterpolationLength,
-        derivativePackedLength
+        derivativePackedLength,
       );
       innerDerivativeTypes[i] = derivativeType;
     }
@@ -429,9 +429,9 @@ SampledProperty.prototype.getValue = function (time, result) {
       const numberOfPoints = Math.min(
         interpolationAlgorithm.getRequiredDataPoints(
           this._interpolationDegree,
-          inputOrder
+          inputOrder,
         ),
-        timesLength
+        timesLength,
       );
       if (numberOfPoints !== this._numberOfPoints) {
         this._numberOfPoints = numberOfPoints;
@@ -472,7 +472,7 @@ SampledProperty.prototype.getValue = function (time, result) {
     for (let i = 0; i < length; ++i) {
       xTable[i] = JulianDate.secondsDifference(
         times[firstIndex + i],
-        times[lastIndex]
+        times[lastIndex],
       );
     }
 
@@ -492,7 +492,7 @@ SampledProperty.prototype.getValue = function (time, result) {
         values,
         firstIndex,
         lastIndex,
-        yTable
+        yTable,
       );
     }
 
@@ -505,7 +505,7 @@ SampledProperty.prototype.getValue = function (time, result) {
         xTable,
         yTable,
         packedInterpolationLength,
-        this._interpolationResult
+        this._interpolationResult,
       );
     } else {
       const yStride = Math.floor(packedInterpolationLength / (inputOrder + 1));
@@ -516,7 +516,7 @@ SampledProperty.prototype.getValue = function (time, result) {
         yStride,
         inputOrder,
         inputOrder,
-        this._interpolationResult
+        this._interpolationResult,
       );
     }
 
@@ -528,7 +528,7 @@ SampledProperty.prototype.getValue = function (time, result) {
       values,
       firstIndex,
       lastIndex,
-      result
+      result,
     );
   }
   return innerType.unpack(values, index * this._packedLength, result);
@@ -608,7 +608,7 @@ SampledProperty.prototype.addSample = function (time, value, derivatives) {
     this._times,
     this._values,
     data,
-    this._packedLength
+    this._packedLength,
   );
   this._updateTableLength = true;
   this._definitionChanged.raiseEvent(this);
@@ -627,7 +627,7 @@ SampledProperty.prototype.addSample = function (time, value, derivatives) {
 SampledProperty.prototype.addSamples = function (
   times,
   values,
-  derivativeValues
+  derivativeValues,
 ) {
   const innerDerivativeTypes = this._innerDerivativeTypes;
   const hasDerivatives = defined(innerDerivativeTypes);
@@ -643,7 +643,7 @@ SampledProperty.prototype.addSamples = function (
     (!defined(derivativeValues) || derivativeValues.length !== times.length)
   ) {
     throw new DeveloperError(
-      "times and derivativeValues must be the same length."
+      "times and derivativeValues must be the same length.",
     );
   }
   //>>includeEnd('debug');
@@ -668,7 +668,7 @@ SampledProperty.prototype.addSamples = function (
     this._times,
     this._values,
     data,
-    this._packedLength
+    this._packedLength,
   );
   this._updateTableLength = true;
   this._definitionChanged.raiseEvent(this);
@@ -683,7 +683,7 @@ SampledProperty.prototype.addSamples = function (
  */
 SampledProperty.prototype.addSamplesPackedArray = function (
   packedSamples,
-  epoch
+  epoch,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("packedSamples", packedSamples);
@@ -694,7 +694,7 @@ SampledProperty.prototype.addSamplesPackedArray = function (
     this._times,
     this._values,
     packedSamples,
-    this._packedLength
+    this._packedLength,
   );
   this._updateTableLength = true;
   this._definitionChanged.raiseEvent(this);
@@ -724,7 +724,7 @@ function removeSamples(property, startIndex, numberToRemove) {
   property._times.splice(startIndex, numberToRemove);
   property._values.splice(
     startIndex * packedLength,
-    numberToRemove * packedLength
+    numberToRemove * packedLength,
   );
   property._updateTableLength = true;
   property._definitionChanged.raiseEvent(property);

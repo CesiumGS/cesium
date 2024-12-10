@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -47,14 +47,7 @@
           const widePolyline = polylines.add({
             positions: Cesium.PolylinePipeline.generateCartesianArc({
               positions: Cesium.Cartesian3.fromDegreesArray([
-                -105.0,
-                40.0,
-                -100.0,
-                38.0,
-                -105.0,
-                35.0,
-                -100.0,
-                32.0,
+                -105.0, 40.0, -100.0, 38.0, -105.0, 35.0, -100.0, 32.0,
               ]),
             }),
             material: Cesium.Material.fromType(Cesium.Material.PolylineOutlineType, {
@@ -82,14 +75,7 @@
           const loopPolyline = polylines.add({
             positions: Cesium.PolylinePipeline.generateCartesianArc({
               positions: Cesium.Cartesian3.fromDegreesArray([
-                -105.0,
-                30.0,
-                -105.0,
-                25.0,
-                -100.0,
-                22.0,
-                -100.0,
-                28.0,
+                -105.0, 30.0, -105.0, 25.0, -100.0, 22.0, -100.0, 28.0,
               ]),
             }),
             width: 3.0,
@@ -117,12 +103,7 @@
           const fadingPolyline = polylines.add({
             positions: Cesium.PolylinePipeline.generateCartesianArc({
               positions: Cesium.Cartesian3.fromDegreesArrayHeights([
-                -75,
-                43,
-                500000,
-                -125,
-                43,
-                500000,
+                -75, 43, 500000, -125, 43, 500000,
               ]),
             }),
             width: 5,

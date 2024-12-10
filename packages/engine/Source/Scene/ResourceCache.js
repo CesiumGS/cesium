@@ -89,7 +89,7 @@ ResourceCache.add = function (resourceLoader) {
 
   if (defined(ResourceCache.cacheEntries[cacheKey])) {
     throw new DeveloperError(
-      `Resource with this cacheKey is already in the cache: ${cacheKey}`
+      `Resource with this cacheKey is already in the cache: ${cacheKey}`,
     );
   }
   //>>includeEnd('debug');
@@ -151,7 +151,7 @@ ResourceCache.getSchemaLoader = function (options) {
   //>>includeStart('debug', pragmas.debug);
   if (defined(schema) === defined(resource)) {
     throw new DeveloperError(
-      "One of options.schema and options.resource must be defined."
+      "One of options.schema and options.resource must be defined.",
     );
   }
   //>>includeEnd('debug');
@@ -434,7 +434,7 @@ ResourceCache.getVertexBufferLoader = function (options) {
   Check.typeOf.object("options.frameState", frameState);
   if (!loadBuffer && !loadTypedArray) {
     throw new DeveloperError(
-      "At least one of loadBuffer and loadTypedArray must be true."
+      "At least one of loadBuffer and loadTypedArray must be true.",
     );
   }
 
@@ -445,19 +445,19 @@ ResourceCache.getVertexBufferLoader = function (options) {
 
   if (hasBufferViewId === hasDraco) {
     throw new DeveloperError(
-      "One of options.bufferViewId and options.draco must be defined."
+      "One of options.bufferViewId and options.draco must be defined.",
     );
   }
 
   if (hasDraco && !hasAttributeSemantic) {
     throw new DeveloperError(
-      "When options.draco is defined options.attributeSemantic must also be defined."
+      "When options.draco is defined options.attributeSemantic must also be defined.",
     );
   }
 
   if (hasDraco && !hasAccessorId) {
     throw new DeveloperError(
-      "When options.draco is defined options.haAccessorId must also be defined."
+      "When options.draco is defined options.haAccessorId must also be defined.",
     );
   }
 
@@ -551,7 +551,7 @@ ResourceCache.getIndexBufferLoader = function (options) {
   Check.typeOf.object("options.frameState", frameState);
   if (!loadBuffer && !loadTypedArray) {
     throw new DeveloperError(
-      "At least one of loadBuffer and loadTypedArray must be true."
+      "At least one of loadBuffer and loadTypedArray must be true.",
     );
   }
   //>>includeEnd('debug');

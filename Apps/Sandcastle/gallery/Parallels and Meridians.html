@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -120,13 +120,13 @@
               minLatitude,
               midpoint,
               depth - 1,
-              color
+              color,
             );
             const northernLines = makeParallelsRecursive(
               midpoint,
               maxLatitude,
               depth - 1,
-              color
+              color,
             );
             result = southernLines.concat(result, northernLines);
           }
@@ -144,13 +144,13 @@
               minLongitude,
               midpoint,
               depth - 1,
-              color
+              color,
             );
             const easternLines = makeMeridiansRecursive(
               midpoint,
               maxLongitude,
               depth - 1,
-              color
+              color,
             );
             result = westernLines.concat(result, easternLines);
           }
@@ -200,12 +200,12 @@
           selectedPoint.parallel = parallel(
             toDegrees(cartographic.latitude),
             red,
-            finerGranularity
+            finerGranularity,
           );
           selectedPoint.meridian = meridian(
             toDegrees(cartographic.longitude),
             red,
-            finerGranularity
+            finerGranularity,
           );
           selectedPoint.label = labelCoordinates(cartographic);
 
@@ -213,7 +213,7 @@
           const antipode = new Cesium.Cartographic.fromDegrees(
             antipodeLongitude,
             antipodeLatitude,
-            0
+            0,
           );
           antipodalPoint.parallel = parallel(antipodeLatitude, cyan, finerGranularity);
           antipodalPoint.meridian = meridian(antipodeLongitude, cyan, finerGranularity);
@@ -253,13 +253,15 @@
           });
         });
 
-        Sandcastle.addToggleButton("Show higher-resolution grid", false, function (
-          checked
-        ) {
-          primitives.higherResolutionGrid.forEach(function (line) {
-            line.show = checked;
-          });
-        });
+        Sandcastle.addToggleButton(
+          "Show higher-resolution grid",
+          false,
+          function (checked) {
+            primitives.higherResolutionGrid.forEach(function (line) {
+              line.show = checked;
+            });
+          },
+        );
 
         Sandcastle.addToggleButton("Show antipodal point", false, function (checked) {
           showAntipodalPoint = checked;

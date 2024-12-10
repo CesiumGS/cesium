@@ -12,6 +12,8 @@ import Texture from "../Renderer/Texture.js";
 import PixelFormat from "../Core/PixelFormat.js";
 import PixelDatatype from "../Renderer/PixelDatatype.js";
 import Sampler from "../Renderer/Sampler.js";
+import AttributeCompression from "../Core/AttributeCompression.js";
+import Cartesian3 from "../Core/Cartesian3.js";
 
 /**
  * Simple struct for tracking whether an attribute will be loaded as a buffer
@@ -178,7 +180,7 @@ function PrimitiveLoadPlan(primitive) {
    * @type {boolean}
    * @private
    */
-  this.generateGaussianSplatTexture = true;
+  this.generateGaussianSplatTexture = false;
 }
 
 /**
@@ -258,6 +260,11 @@ function makeOutlineCoordinatesAttribute(outlineCoordinatesTypedArray) {
   return attribute;
 }
 
+/**
+ * Do our dequantizing here. When using meshopt, our positions are quantized,
+ * as well as our quaternions. decodeFilterQuat returns quantized shorts
+ */
+
 function setupGaussianSplatBuffers(loadPlan, context) {
   const attributePlans = loadPlan.attributePlans;
   const attrLen = attributePlans.length;
@@ -266,6 +273,55 @@ function setupGaussianSplatBuffers(loadPlan, context) {
     //defer til much later into the pipeline
     attributePlan.loadBuffer = false;
     attributePlan.loadTypedArray = true;
+
+    const attribute = attributePlan.attribute;
+    if (
+      attribute.name === "_ROTATION" &&
+      attribute.componentDatatype === ComponentDatatype.SHORT
+    ) {
+      attribute.typedArray = AttributeCompression.dequantize(
+        attribute.typedArray,
+        ComponentDatatype.SHORT,
+        AttributeType.VEC4,
+        attribute.count,
+      );
+      attribute.componentDatatype = ComponentDatatype.FLOAT;
+    }
+
+    if (
+      attribute.name === "POSITION" &&
+      attribute.componentDatatype === ComponentDatatype.SHORT
+    ) {
+      const scale = [
+        loadPlan.gaussianSplatScalingMatrix[0],
+        -loadPlan.gaussianSplatScalingMatrix[6],
+        loadPlan.gaussianSplatScalingMatrix[9],
+      ];
+
+      const translation = [
+        loadPlan.gaussianSplatScalingMatrix[12],
+        loadPlan.gaussianSplatScalingMatrix[14],
+        loadPlan.gaussianSplatScalingMatrix[13],
+      ];
+
+      const fa = new Float32Array(attribute.typedArray).map(
+        (n, i) => (n / 32767.0) * scale[i % 3],
+      );
+      attribute.typedArray = fa;
+      attribute.componentDatatype = ComponentDatatype.FLOAT;
+      attribute.normalized = false;
+      attribute.constant = new Cartesian3(0, 0, 0);
+      attribute.min = new Cartesian3(
+        translation[0],
+        translation[1],
+        translation[2],
+      );
+      attribute.max = new Cartesian3(
+        translation[0] + scale[0],
+        translation[1] + scale[1],
+        translation[2] + scale[2],
+      );
+    }
   }
 }
 

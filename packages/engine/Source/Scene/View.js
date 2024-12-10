@@ -67,7 +67,7 @@ function View(scene, camera, viewport) {
   this.globeTranslucencyFramebuffer = new GlobeTranslucencyFramebuffer();
   this.oit = oit;
   this.translucentTileClassification = new TranslucentTileClassification(
-    context
+    context,
   );
   /**
    * @type {PickDepth[]}
@@ -96,11 +96,11 @@ const scratchPosition1 = new Cartesian3();
 function cameraEqual(camera0, camera1, epsilon) {
   const maximumPositionComponent = Math.max(
     Cartesian3.maximumComponent(
-      Cartesian3.abs(camera0.position, scratchPosition0)
+      Cartesian3.abs(camera0.position, scratchPosition0),
     ),
     Cartesian3.maximumComponent(
-      Cartesian3.abs(camera1.position, scratchPosition1)
-    )
+      Cartesian3.abs(camera1.position, scratchPosition1),
+    ),
   );
   const scalar = 1 / Math.max(1, maximumPositionComponent);
   Cartesian3.multiplyByScalar(camera0.position, scalar, scratchPosition0);
@@ -186,7 +186,7 @@ function updateFrustums(view, scene, near, far) {
     far = Math.min(far, camera.position.z + scene.nearToFarDistance2D);
     near = Math.min(near, far);
     numFrustums = Math.ceil(
-      Math.max(1.0, far - near) / scene.nearToFarDistance2D
+      Math.max(1.0, far - near) / scene.nearToFarDistance2D,
     );
   } else {
     // The multifrustum for 3D/CV is non-uniformly distributed.
@@ -202,7 +202,7 @@ function updateFrustums(view, scene, near, far) {
     if (is2D) {
       curNear = Math.min(
         far - nearToFarDistance2D,
-        near + m * nearToFarDistance2D
+        near + m * nearToFarDistance2D,
       );
       curFar = Math.min(far, curNear + nearToFarDistance2D);
     } else {
@@ -213,7 +213,7 @@ function updateFrustums(view, scene, near, far) {
     if (!defined(frustumCommands)) {
       frustumCommands = frustumCommandsList[m] = new FrustumCommands(
         curNear,
-        curFar
+        curFar,
       );
     } else {
       frustumCommands.near = curNear;
@@ -349,7 +349,7 @@ View.prototype.createPotentiallyVisibleSet = function (scene) {
         const nearFarInterval = boundingVolume.computePlaneDistances(
           positionWC,
           directionWC,
-          scratchNearFarInterval
+          scratchNearFarInterval,
         );
         commandNear = nearFarInterval.start;
         commandFar = nearFarInterval.stop;

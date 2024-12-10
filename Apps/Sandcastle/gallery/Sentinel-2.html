@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -35,7 +35,7 @@
         // Sentinel-2 (mostly) cloudless global imagery between 10 and 60 meter resolution.
         const viewer = new Cesium.Viewer("cesiumContainer", {
           baseLayer: Cesium.ImageryLayer.fromProviderAsync(
-            Cesium.IonImageryProvider.fromAssetId(3954)
+            Cesium.IonImageryProvider.fromAssetId(3954),
           ),
         });
         //Sandcastle_End

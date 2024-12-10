@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -58,7 +58,7 @@
           centerLongitude - rectangleHalfSize,
           centerLatitude - rectangleHalfSize,
           centerLongitude + rectangleHalfSize,
-          centerLatitude + rectangleHalfSize
+          centerLatitude + rectangleHalfSize,
         );
 
         function resetBillboardCollection() {
@@ -69,7 +69,7 @@
           billboardCollection = scene.primitives.add(
             new Cesium.BillboardCollection({
               scene: scene,
-            })
+            }),
           );
 
           const gridSize = Math.sqrt(billboardCount);

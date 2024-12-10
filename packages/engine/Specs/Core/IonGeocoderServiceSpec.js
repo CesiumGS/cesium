@@ -47,7 +47,7 @@ describe("Core/IonGeocoderService", function () {
 
     const expectedResult = ["results"];
     spyOn(service._pelias, "geocode").and.returnValue(
-      Promise.resolve(expectedResult)
+      Promise.resolve(expectedResult),
     );
 
     const query = "some query";
@@ -55,7 +55,7 @@ describe("Core/IonGeocoderService", function () {
     expect(result).toEqual(expectedResult);
     expect(service._pelias.geocode).toHaveBeenCalledWith(
       query,
-      GeocodeType.SEARCH
+      GeocodeType.SEARCH,
     );
   });
 

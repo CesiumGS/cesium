@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -50,7 +50,7 @@
         });
 
         viewer.cesiumWidget.screenSpaceEventHandler.removeInputAction(
-          Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK
+          Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK,
         );
         function createPoint(worldPosition) {
           const point = viewer.entities.add({
@@ -79,7 +79,7 @@
               polygon: {
                 hierarchy: positionData,
                 material: new Cesium.ColorMaterialProperty(
-                  Cesium.Color.WHITE.withAlpha(0.7)
+                  Cesium.Color.WHITE.withAlpha(0.7),
                 ),
               },
             });
@@ -163,7 +163,7 @@
         // Zoom in to an area with mountains
         viewer.camera.lookAt(
           Cesium.Cartesian3.fromDegrees(-122.2058, 46.1955, 1000.0),
-          new Cesium.Cartesian3(5000.0, 5000.0, 5000.0)
+          new Cesium.Cartesian3(5000.0, 5000.0, 5000.0),
         );
         viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
         //Sandcastle_End

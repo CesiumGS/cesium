@@ -93,7 +93,7 @@ describe("Core/LinearSpline", function () {
       cartesianPoints[0],
       cartesianPoints[1],
       t,
-      scratchCartesian
+      scratchCartesian,
     );
     expect(ls.evaluate(time)).toEqual(expected);
   });
@@ -112,7 +112,7 @@ describe("Core/LinearSpline", function () {
       cartesianPoints[0],
       cartesianPoints[1],
       t,
-      scratchCartesian
+      scratchCartesian,
     );
     expect(point).toBe(result);
     expect(result).toEqual(expected);

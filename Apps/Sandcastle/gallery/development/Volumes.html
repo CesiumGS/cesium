@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -38,18 +38,18 @@
               center: Cesium.Cartesian3.fromDegrees(-75.0, 40.0, 500000.0),
               radii: new Cesium.Cartesian3(500000.0, 500000.0, 500000.0),
               material: Cesium.Material.fromType(Cesium.Material.RimLightingType),
-            })
+            }),
           );
           Sandcastle.declare(e); // For Sandcastle highlighting.
 
           const e2 = scene.primitives.add(
             new Cesium.EllipsoidPrimitive({
               modelMatrix: Cesium.Transforms.eastNorthUpToFixedFrame(
-                Cesium.Cartesian3.fromDegrees(-95.0, 40.0, 500000.0)
+                Cesium.Cartesian3.fromDegrees(-95.0, 40.0, 500000.0),
               ),
               radii: new Cesium.Cartesian3(300000.0, 300000.0, 500000.0),
               material: Cesium.Material.fromType(Cesium.Material.StripeType),
-            })
+            }),
           );
           Sandcastle.declare(e2); // For Sandcastle highlighting.
         }

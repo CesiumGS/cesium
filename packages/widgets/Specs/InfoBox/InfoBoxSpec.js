@@ -49,7 +49,7 @@ describe("Widgets/InfoBox/InfoBox", function () {
         infoBox.viewModel.description =
           '<div style="background-color: rgb(255, 255, 255);">Please do not crash</div>';
         expect(infoElement.style["background-color"]).toEqual(
-          "rgb(255, 255, 255)"
+          "rgb(255, 255, 255)",
         );
         return pollToPromise(function () {
           return node.innerHTML === infoBox.viewModel.description;
