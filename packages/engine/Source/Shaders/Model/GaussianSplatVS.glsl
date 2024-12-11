@@ -135,19 +135,10 @@ vec4 calcCovVectors(vec3 worldPos, mat3 Vrk, mat3 viewmatrix) {
 
 highp vec4 discardVec = vec4(0.0, 0.0, 2.0, 1.0);
 
-vec4 dequantizePos(uvec4 qPos) {
-    vec3 normalizedPos = vec3(qPos) / 65535.0;
-
-    vec4 worldPos = u_scalingMatrix * vec4(normalizedPos, 1.0);
-
-    return worldPos;
-}
-
 void gaussianSplatStage(ProcessedAttributes attributes, inout vec4 positionClip) {
     uint texIdx = uint(a_splatIndex);
     ivec2 posCoord = ivec2((texIdx & 0x3ffu) << 1, texIdx >> 10);
     vec4 splatPosition = vec4( uintBitsToFloat(uvec4(texelFetch(u_splatAttributeTexture, posCoord, 0))) );
-    //vec4 splatPosition = dequantizePos(uvec4(texelFetch(u_splatAttributeTexture, posCoord, 0)));
 
     vec4 splatViewPos = czm_modelView * vec4(splatPosition.xyz, 1.0);
     vec4 clipPosition = czm_projection * splatViewPos;

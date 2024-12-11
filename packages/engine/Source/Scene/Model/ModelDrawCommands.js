@@ -280,8 +280,8 @@ function buildDrawCommandForGaussianSplatPrimitive(
       });
     }
     const splatQuadAttrLocations = {
-      5: 5,
-      splatIndex: 7,
+      //    5: 5,
+      splatIndex: 5,
     };
     const geometry = new Geometry({
       attributes: {

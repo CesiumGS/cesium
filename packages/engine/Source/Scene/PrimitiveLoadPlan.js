@@ -180,7 +180,7 @@ function PrimitiveLoadPlan(primitive) {
    * @type {boolean}
    * @private
    */
-  this.generateGaussianSplatTexture = false;
+  this.generateGaussianSplatTexture = true;
 }
 
 /**
@@ -349,6 +349,7 @@ function generateSplatTexture(loadPlan, context) {
     const count = loadPlan.primitive.attributes[0].count;
     const attribute = new ModelComponents.Attribute();
 
+    //index attribute for indexing into attribute texture
     attribute.name = "_SPLAT_INDEXES";
     attribute.typedArray = new Uint32Array([...Array(count).keys()]);
     attribute.componentDatatype = ComponentDatatype.UNSIGNED_INT;

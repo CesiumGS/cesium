@@ -36,7 +36,7 @@ GaussianSplatTexturePipelineStage.process = function (
     ShaderDestination.BOTH,
   );
 
-  shaderBuilder.addAttribute("vec2", "a_screenQuadPosition");
+  //shaderBuilder.addAttribute("vec2", "a_screenQuadPosition");
   shaderBuilder.addAttribute("float", "a_splatIndex");
 
   shaderBuilder.addVarying("vec4", "v_splatColor");
@@ -53,7 +53,6 @@ GaussianSplatTexturePipelineStage.process = function (
   shaderBuilder.addUniform("float", "u_splatScale", ShaderDestination.VERTEX);
 
   const uniformMap = renderResources.uniformMap;
-  //const cam = frameState.camera;
 
   uniformMap.u_splatScale = function () {
     return renderResources.model?.style?.splatScale ?? 1.0;
