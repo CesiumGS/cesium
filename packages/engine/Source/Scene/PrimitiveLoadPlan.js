@@ -202,10 +202,9 @@ PrimitiveLoadPlan.prototype.postProcess = function (context) {
   //handle splat post-processing for point primitives
   if (this.needsGaussianSplats) {
     this.primitive.isGaussianSplatPrimitive = true;
+    setupGaussianSplatBuffers(this, context);
     if (this.generateGaussianSplatTexture) {
       generateSplatTexture(this, context);
-    } else {
-      setupGaussianSplatBuffers(this, context);
     }
   }
 };
@@ -264,6 +263,62 @@ function makeOutlineCoordinatesAttribute(outlineCoordinatesTypedArray) {
  * Do our dequantizing here. When using meshopt, our positions are quantized,
  * as well as our quaternions. decodeFilterQuat returns quantized shorts
  */
+function dequantizeSplatMeshopt(attribute, matrix) {
+  if (
+    attribute.name === "_ROTATION" &&
+    attribute.componentDatatype === ComponentDatatype.SHORT
+  ) {
+    attribute.typedArray = AttributeCompression.dequantize(
+      attribute.typedArray,
+      ComponentDatatype.SHORT,
+      AttributeType.VEC4,
+      attribute.count,
+    );
+    attribute.componentDatatype = ComponentDatatype.FLOAT;
+  }
+
+  if (
+    attribute.name === "POSITION" &&
+    attribute.componentDatatype === ComponentDatatype.SHORT
+  ) {
+    const fa = new Float32Array(attribute.typedArray).map(
+      (n, i) => (n / 32767.0) * matrix[0],
+    );
+    attribute.typedArray = fa;
+    attribute.componentDatatype = ComponentDatatype.FLOAT;
+    attribute.normalized = false;
+    attribute.constant = new Cartesian3(0, 0, 0);
+
+    const findMinMaxXY = (flatArray) => {
+      let minX = Infinity;
+      let maxX = -Infinity;
+      let minY = Infinity;
+      let maxY = -Infinity;
+      let minZ = Infinity;
+      let maxZ = -Infinity;
+
+      // Step through array 3 values at a time
+      for (let i = 0; i < flatArray.length; i += 3) {
+        const x = flatArray[i];
+        const y = flatArray[i + 1];
+        const z = flatArray[i + 2];
+
+        minX = Math.min(minX, x);
+        maxX = Math.max(maxX, x);
+        minY = Math.min(minY, y);
+        maxY = Math.max(maxY, y);
+        minZ = Math.min(minZ, z);
+        maxZ = Math.max(maxZ, z);
+      }
+
+      return [
+        new Cartesian3(minX, minY, minZ),
+        new Cartesian3(maxX, maxY, maxZ),
+      ];
+    };
+    [attribute.min, attribute.max] = findMinMaxXY(attribute.typedArray);
+  }
+}
 
 function setupGaussianSplatBuffers(loadPlan, context) {
   const attributePlans = loadPlan.attributePlans;
@@ -275,53 +330,7 @@ function setupGaussianSplatBuffers(loadPlan, context) {
     attributePlan.loadTypedArray = true;
 
     const attribute = attributePlan.attribute;
-    if (
-      attribute.name === "_ROTATION" &&
-      attribute.componentDatatype === ComponentDatatype.SHORT
-    ) {
-      attribute.typedArray = AttributeCompression.dequantize(
-        attribute.typedArray,
-        ComponentDatatype.SHORT,
-        AttributeType.VEC4,
-        attribute.count,
-      );
-      attribute.componentDatatype = ComponentDatatype.FLOAT;
-    }
-
-    if (
-      attribute.name === "POSITION" &&
-      attribute.componentDatatype === ComponentDatatype.SHORT
-    ) {
-      const scale = [
-        loadPlan.gaussianSplatScalingMatrix[0],
-        -loadPlan.gaussianSplatScalingMatrix[6],
-        loadPlan.gaussianSplatScalingMatrix[9],
-      ];
-
-      const translation = [
-        loadPlan.gaussianSplatScalingMatrix[12],
-        loadPlan.gaussianSplatScalingMatrix[14],
-        loadPlan.gaussianSplatScalingMatrix[13],
-      ];
-
-      const fa = new Float32Array(attribute.typedArray).map(
-        (n, i) => (n / 32767.0) * scale[i % 3],
-      );
-      attribute.typedArray = fa;
-      attribute.componentDatatype = ComponentDatatype.FLOAT;
-      attribute.normalized = false;
-      attribute.constant = new Cartesian3(0, 0, 0);
-      attribute.min = new Cartesian3(
-        translation[0],
-        translation[1],
-        translation[2],
-      );
-      attribute.max = new Cartesian3(
-        translation[0] + scale[0],
-        translation[1] + scale[1],
-        translation[2] + scale[2],
-      );
-    }
+    dequantizeSplatMeshopt(attribute, loadPlan.gaussianSplatScalingMatrix);
   }
 }
 

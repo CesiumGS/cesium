@@ -47,7 +47,11 @@ GaussianSplatTexturePipelineStage.process = function (
     ShaderDestination.VERTEX,
   );
 
-  shaderBuilder.addUniform("mat4", "u_scalingMatrix", ShaderDestination.VERTEX);
+  shaderBuilder.addUniform(
+    "mat4",
+    "u_transformMatrix",
+    ShaderDestination.VERTEX,
+  );
 
   shaderBuilder.addUniform("float", "u_splatScale", ShaderDestination.VERTEX);
 
@@ -61,7 +65,7 @@ GaussianSplatTexturePipelineStage.process = function (
     return primitive.gaussianSplatTexture;
   };
 
-  uniformMap.u_scalingMatrix = function () {
+  uniformMap.u_transformMatrix = function () {
     return renderResources.model.sceneGraph.components.nodes[0].matrix;
   };
 

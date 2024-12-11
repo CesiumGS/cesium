@@ -516,6 +516,10 @@ function postProcessGeometry(loader, context) {
       // finished. This way they can be destroyed when the loader is destroyed.
       gatherPostProcessBuffers(loader, loadPlan);
     }
+
+    if (loadPlan.needsGaussianSplatting) {
+      loader.gltfJson.nodes[0].matrix = loadPlan.gaussianSplatScalingMatrix;
+    }
   }
 }
 
@@ -1951,8 +1955,6 @@ function loadPrimitive(loader, gltfPrimitive, hasInstances, frameState) {
     needsPostProcessing = true;
     primitivePlan.needsGaussianSplats = true;
     primitivePlan.gaussianSplatScalingMatrix = loader.gltfJson.nodes[0].matrix;
-    // loader.gltfJson.nodes[0].matrix[6] = loader.gltfJson.nodes[0].matrix[0];
-    // loader.gltfJson.nodes[0].matrix[10] = loader.gltfJson.nodes[0].matrix[0];
   }
 
   const loadForClassification = loader._loadForClassification;
