@@ -41,25 +41,21 @@ GaussianSplatTextureGenerator.generateFromAttrs = async function (
   attributes,
   count,
 ) {
-  try {
-    if (!this.wasmModule || !this.wasmInitialized) {
-      this.initWasmModule();
+  if (!this.wasmModule || !this.wasmInitialized) {
+    this.initWasmModule();
 
-      while (!this.wasmModule) {
-        await new Promise((r) => setTimeout(r, 100));
-      }
-      return generate_splat_texture_from_attrs(
-        attributes.find((a) => a.name === "POSITION").typedArray,
-        attributes.find((a) => a.name === "_SCALE").typedArray,
-        attributes.find((a) => a.name === "_ROTATION").typedArray,
-        attributes.find((a) => a.name === "COLOR_0").typedArray,
-        count,
-      );
+    while (!this.wasmModule) {
+      await new Promise((r) => setTimeout(r, 100));
     }
-  } catch (e) {
-    console.err(e);
-    return 0;
   }
+
+  return generate_splat_texture_from_attrs(
+    attributes.find((a) => a.name === "POSITION").typedArray,
+    attributes.find((a) => a.name === "_SCALE").typedArray,
+    attributes.find((a) => a.name === "_ROTATION").typedArray,
+    attributes.find((a) => a.name === "COLOR_0").typedArray,
+    count,
+  );
 };
 
 ////////////////////////////////////////////////////

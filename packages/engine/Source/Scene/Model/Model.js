@@ -2172,7 +2172,6 @@ function updateGaussianSplatting(model, frameState) {
         });
 
         if (promise === undefined) {
-          model.resetDrawCommands();
           return;
         }
 
