@@ -36,7 +36,6 @@ GaussianSplatTexturePipelineStage.process = function (
     ShaderDestination.BOTH,
   );
 
-  //shaderBuilder.addAttribute("vec2", "a_screenQuadPosition");
   shaderBuilder.addAttribute("float", "a_splatIndex");
 
   shaderBuilder.addVarying("vec4", "v_splatColor");

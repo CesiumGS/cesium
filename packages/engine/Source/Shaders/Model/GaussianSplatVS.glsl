@@ -160,6 +160,9 @@ void gaussianSplatStage(ProcessedAttributes attributes, inout vec4 positionClip)
     vec2 u3 = unpackHalf2x16(covariance.z);
     mat3 Vrk = mat3(u1.x, u1.y, u2.x, u1.y, u2.y, u3.x, u2.x, u3.x, u3.y);
 
+    //we can still apply scale here even though cov3d is pre-computed
+    Vrk *= u_splatScale;
+
     vec4 covVectors = calcCovVectors(
         splatViewPos.xyz,
         Vrk,
