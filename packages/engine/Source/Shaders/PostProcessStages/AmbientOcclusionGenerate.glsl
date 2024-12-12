@@ -5,16 +5,21 @@ uniform sampler2D depthTexture;
 uniform float intensity;
 uniform float bias;
 uniform float lengthCap;
-uniform float stepSize;
-uniform float frustumLength;
+uniform int stepCount;
+uniform int directionCount;
 
-vec3 pixelToEye(vec2 screenCoordinate)
+vec4 pixelToEye(vec2 screenCoordinate)
 {
     vec2 uv = screenCoordinate / czm_viewport.zw;
     float depth = czm_readDepth(depthTexture, uv);
     vec2 xy = 2.0 * uv - vec2(1.0);
     vec4 posEC = czm_inverseProjection * vec4(xy, depth, 1.0);
-    return posEC.xyz / posEC.w;
+    posEC = posEC / posEC.w;
+    // Avoid numerical error at far plane
+    if (depth >= 1.0) {
+        posEC.z = czm_currentFrustum.y;
+    }
+    return posEC;
 }
 
 // Reconstruct surface normal in eye coordinates, avoiding edges
@@ -22,10 +27,10 @@ vec3 getNormalXEdge(vec3 positionEC)
 {
     // Find the 3D surface positions at adjacent screen pixels
     vec2 centerCoord = gl_FragCoord.xy;
-    vec3 positionLeft = pixelToEye(centerCoord + vec2(-1.0, 0.0));
-    vec3 positionRight = pixelToEye(centerCoord + vec2(1.0, 0.0));
-    vec3 positionUp = pixelToEye(centerCoord + vec2(0.0, 1.0));
-    vec3 positionDown = pixelToEye(centerCoord + vec2(0.0, -1.0));
+    vec3 positionLeft = pixelToEye(centerCoord + vec2(-1.0, 0.0)).xyz;
+    vec3 positionRight = pixelToEye(centerCoord + vec2(1.0, 0.0)).xyz;
+    vec3 positionUp = pixelToEye(centerCoord + vec2(0.0, 1.0)).xyz;
+    vec3 positionDown = pixelToEye(centerCoord + vec2(0.0, -1.0)).xyz;
 
     // Compute potential tangent vectors
     vec3 dx0 = positionEC - positionLeft;
@@ -40,22 +45,35 @@ vec3 getNormalXEdge(vec3 positionEC)
     return normalize(cross(dx, dy));
 }
 
+const float sqrtTwoPi = sqrt(czm_twoPi);
+
+float gaussian(float x, float standardDeviation) {
+    float argument = x / standardDeviation;
+    return exp(-0.5 * argument * argument) / (sqrtTwoPi * standardDeviation);
+}
+
 void main(void)
 {
-    vec3 positionEC = pixelToEye(gl_FragCoord.xy);
+    vec4 positionEC = pixelToEye(gl_FragCoord.xy);
 
-    if (positionEC.z > frustumLength)
+    // Exit if we are too close to the back of the frustum, where the depth value is invalid.
+    float maxValidDepth = czm_currentFrustum.y - lengthCap;
+    if (-positionEC.z > maxValidDepth)
     {
         out_FragColor = vec4(1.0);
         return;
     }
 
-    vec3 normalEC = getNormalXEdge(positionEC);
+    vec3 normalEC = getNormalXEdge(positionEC.xyz);
+    float gaussianVariance = lengthCap * sqrt(-positionEC.z);
+    // Choose a step length such that the marching stops just before 3 * variance.
+    float stepLength = 3.0 * gaussianVariance / (float(stepCount) + 1.0);
+    float metersPerPixel = czm_metersPerPixel(positionEC, 1.0);
+    // Minimum step is 1 pixel to avoid double sampling
+    float pixelsPerStep = max(stepLength / metersPerPixel, 1.0);
+    stepLength = pixelsPerStep * metersPerPixel;
 
-    float ao = 0.0;
-
-    const int ANGLE_STEPS = 4;
-    float angleStepScale = 1.0 / float(ANGLE_STEPS);
+    float angleStepScale = 1.0 / float(directionCount);
     float angleStep = angleStepScale * czm_twoPi;
     float cosStep = cos(angleStep);
     float sinStep = sin(angleStep);
@@ -67,48 +85,59 @@ void main(void)
     float randomVal = texture(randomTexture, randomTexCoord).x;
     vec2 sampleDirection = vec2(cos(angleStep * randomVal), sin(angleStep * randomVal));
 
+    float ao = 0.0;
     // Loop over sampling directions
-    for (int i = 0; i < ANGLE_STEPS; i++)
+#if __VERSION__ == 300
+    for (int i = 0; i < directionCount; i++)
     {
+#else
+    for (int i = 0; i < 16; i++)
+    {
+        if (i >= directionCount) {
+            break;
+        }
+#endif
         sampleDirection = rotateStep * sampleDirection;
 
         float localAO = 0.0;
-        vec2 radialStep = stepSize * sampleDirection;
+        vec2 radialStep = pixelsPerStep * sampleDirection;
 
-        for (int j = 0; j < 6; j++)
+#if __VERSION__ == 300
+        for (int j = 0; j < stepCount; j++)
         {
+#else
+        for (int j = 0; j < 64; j++)
+        {
+            if (j >= stepCount) {
+                break;
+            }
+#endif
             // Step along sampling direction, away from output pixel
-            vec2 newCoords = floor(gl_FragCoord.xy + float(j + 1) * radialStep) + vec2(0.5);
+            vec2 samplePixel = floor(gl_FragCoord.xy + float(j + 1) * radialStep) + vec2(0.5);
 
             // Exit if we stepped off the screen
-            if (clamp(newCoords, vec2(0.0), czm_viewport.zw) != newCoords)
-            {
+            if (clamp(samplePixel, vec2(0.0), czm_viewport.zw) != samplePixel) {
                 break;
             }
 
-            vec3 stepPositionEC = pixelToEye(newCoords);
-            vec3 stepVector = stepPositionEC - positionEC;
-            float stepLength = length(stepVector);
+            // Compute step vector from output point to sampled point
+            vec4 samplePositionEC = pixelToEye(samplePixel);
+            vec3 stepVector = samplePositionEC.xyz - positionEC.xyz;
 
-            if (stepLength > lengthCap)
-            {
-                break;
-            }
-
+            // Estimate the angle from the surface normal.
             float dotVal = clamp(dot(normalEC, normalize(stepVector)), 0.0, 1.0);
-            if (dotVal < bias)
-            {
-                dotVal = 0.0;
-            }
+            dotVal = czm_branchFreeTernary(dotVal > bias, dotVal, 0.0);
+            dotVal = czm_branchFreeTernary(-samplePositionEC.z <= maxValidDepth, dotVal, 0.0);
 
-            float weight = stepLength / lengthCap;
-            weight = 1.0 - weight * weight;
-            localAO = max(localAO, dotVal * weight);
+            // Weight contribution based on the distance from the output point
+            float sampleDistance = length(stepVector);
+            float weight = gaussian(sampleDistance, gaussianVariance);
+            localAO += weight * dotVal;
         }
         ao += localAO;
     }
 
-    ao *= angleStepScale;
+    ao *= angleStepScale * stepLength;
     ao = 1.0 - clamp(ao, 0.0, 1.0);
     ao = pow(ao, intensity);
     out_FragColor = vec4(vec3(ao), 1.0);
