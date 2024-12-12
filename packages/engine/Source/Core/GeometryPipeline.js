@@ -2945,13 +2945,13 @@ function updateLineLength(geometry) {
   for (let j = 0; (j*3) < length; j++) {
     const s = sts[j*2];
     const t = sts[j*2+1];
-    if(s <= prevS || t != 0) {
+    if(s <= prevS || t !== 0) {
         lineLengths.push(polylineLength);
         continue;
     }
     prevS = s;
     const position = Cartesian3.unpack(positions, j*3, cartesian3Scratch0);
-    if(prevPosition == null) {
+    if(prevPosition === null) {
         // first point
         prevPosition = position.clone();
         lineLengths.push(0);
