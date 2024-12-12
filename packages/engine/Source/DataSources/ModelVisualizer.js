@@ -85,6 +85,7 @@ async function createModelPrimitive(
       url: resource,
       incrementallyLoadTextures: incrementallyLoadTextures,
       scene: visualizer._scene,
+      environmentMapOptions: entity._environmentMapOptions,
     });
 
     if (visualizer.isDestroyed() || !defined(modelHash[entity.id])) {
