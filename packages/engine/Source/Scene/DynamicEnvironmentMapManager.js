@@ -33,7 +33,7 @@ import ConvolveSpecularMapVS from "../Shaders/ConvolveSpecularMapVS.js";
  * @typedef {object} DynamicEnvironmentMapManager.ConstructorOptions
  * Options for the DynamicEnvironmentMapManager constructor
  * @property {boolean} [enabled=true] If true, the environment map and related properties will continue to update.
- * @property {number} [mipmapLevels=10] The number of mipmap levels to generate for specular maps. More mipmap levels will produce a higher resolution specular reflection.
+ * @property {number} [mipmapLevels=7] The number of mipmap levels to generate for specular maps. More mipmap levels will produce a higher resolution specular reflection.
  * @property {number} [maximumSecondsDifference=3600] The maximum amount of elapsed seconds before a new environment map is created.
  * @property {number} [maximumPositionEpsilon=1000] The maximum difference in position before a new environment map is created, in meters. Small differences in position will not visibly affect results.
  * @property {number} [atmosphereScatteringIntensity=2.0] The intensity of the scattered light emitted from the atmosphere. This should be adjusted relative to the value of {@link Scene.light} intensity.
@@ -77,11 +77,12 @@ function DynamicEnvironmentMapManager(options) {
   this._sphericalHarmonicCoefficientsDirty = false;
 
   this._shouldRegenerateShaders = false;
+  this._shouldReset = false;
 
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
   const mipmapLevels = Math.min(
-    defaultValue(options.mipmapLevels, 10),
+    defaultValue(options.mipmapLevels, 7),
     Math.log2(ContextLimits.maximumCubeMapSize),
   );
 
@@ -251,7 +252,7 @@ Object.defineProperties(DynamicEnvironmentMapManager.prototype, {
       }
 
       this._position = Cartesian3.clone(value, this._position);
-      this.reset();
+      this._shouldReset = true;
     },
   },
 
@@ -345,7 +346,7 @@ DynamicEnvironmentMapManager._updateCommandQueue = (frameState) => {
       DynamicEnvironmentMapManager._activeComputeCommandCount <
         DynamicEnvironmentMapManager._maximumComputeCommandCount
     ) {
-      if (command.canceled) {
+      if (command.owner.isDestroyed() || command.canceled) {
         command = DynamicEnvironmentMapManager._nextFrameCommandQueue.shift();
         continue;
       }
@@ -353,6 +354,10 @@ DynamicEnvironmentMapManager._updateCommandQueue = (frameState) => {
       frameState.commandList.push(command);
       DynamicEnvironmentMapManager._activeComputeCommandCount++;
       command = DynamicEnvironmentMapManager._nextFrameCommandQueue.shift();
+    }
+
+    if (defined(command)) {
+      DynamicEnvironmentMapManager._nextFrameCommandQueue.push(command);
     }
   }
 };
@@ -398,7 +403,6 @@ DynamicEnvironmentMapManager.prototype.reset = function () {
   for (let i = 0; i < length; ++i) {
     if (defined(this._radianceMapComputeCommands[i])) {
       this._radianceMapComputeCommands[i].canceled = true;
-      DynamicEnvironmentMapManager._activeComputeCommandCount--;
     }
     this._radianceMapComputeCommands[i] = undefined;
   }
@@ -407,19 +411,19 @@ DynamicEnvironmentMapManager.prototype.reset = function () {
   for (let i = 0; i < length; ++i) {
     if (defined(this._convolutionComputeCommands[i])) {
       this._convolutionComputeCommands[i].canceled = true;
-      DynamicEnvironmentMapManager._activeComputeCommandCount--;
     }
     this._convolutionComputeCommands[i] = undefined;
   }
 
   if (defined(this._irradianceComputeCommand)) {
     this._irradianceComputeCommand.canceled = true;
-    DynamicEnvironmentMapManager._activeComputeCommandCount--;
     this._irradianceComputeCommand = undefined;
   }
 
   this._radianceMapDirty = true;
   this._radianceCommandsDirty = true;
+  this._convolutionsCommandsDirty = false;
+  this._irradianceCommandDirty = false;
 };
 
 const scratchPackedAtmosphere = new Cartesian3();
@@ -539,7 +543,8 @@ function updateRadianceMap(manager, frameState) {
     let i = 0;
     for (const face of CubeMap.faceNames()) {
       let texture = manager._radianceMapTextures[i];
-      if (defined(texture)) {
+      // Destroy any existing textures that have no yet been cleaned up
+      if (defined(texture) && !texture.isDestroyed()) {
         texture.destroy();
       }
 
@@ -570,36 +575,35 @@ function updateRadianceMap(manager, frameState) {
             );
           },
         },
-        persists: true,
         owner: manager,
-        postExecute: () => {
-          const commands = manager._radianceMapComputeCommands;
-          if (!defined(commands[index])) {
-            // This command was cancelled
-            return;
-          }
-          commands[index] = undefined;
-
-          const framebuffer = new Framebuffer({
-            context: context,
-            colorTextures: [manager._radianceMapTextures[index]],
-            destroyAttachments: false,
-          });
-
-          // Copy the output texture into the corresponding cubemap face
-          framebuffer._bind();
-          manager._radianceCubeMap[face].copyFromFramebuffer();
-          framebuffer._unBind();
-          framebuffer.destroy();
-
-          DynamicEnvironmentMapManager._activeComputeCommandCount--;
-
-          if (!commands.some(defined)) {
-            manager._convolutionsCommandsDirty = true;
-            manager._shouldRegenerateShaders = true;
-          }
-        },
       });
+      command.postExecute = () => {
+        if (manager.isDestroyed() || command.canceled) {
+          DynamicEnvironmentMapManager._activeComputeCommandCount--;
+          return;
+        }
+
+        const commands = manager._radianceMapComputeCommands;
+        commands[index] = undefined;
+
+        const framebuffer = new Framebuffer({
+          context: context,
+          colorTextures: [manager._radianceMapTextures[index]],
+        });
+
+        // Copy the output texture into the corresponding cubemap face
+        framebuffer._bind();
+        manager._radianceCubeMap[face].copyFromFramebuffer();
+        framebuffer._unBind();
+        framebuffer.destroy();
+
+        DynamicEnvironmentMapManager._activeComputeCommandCount--;
+
+        if (!commands.some(defined)) {
+          manager._convolutionsCommandsDirty = true;
+          manager._shouldRegenerateShaders = true;
+        }
+      };
 
       manager._radianceMapComputeCommands[i] = command;
       DynamicEnvironmentMapManager._queueCommand(command, frameState);
@@ -626,32 +630,48 @@ function updateSpecularMaps(manager, frameState) {
   const context = frameState.context;
 
   let facesCopied = 0;
-  const getPostExecute = (index, texture, face, level) => () => {
-    // Copy output texture to corresponding face and mipmap level
-    const commands = manager._convolutionComputeCommands;
-    if (!defined(commands[index]) || commands[index].canceled) {
-      // This command was cancelled
+  const getPostExecute = (command, index, texture, face, level) => () => {
+    if (manager.isDestroyed() || command.canceled) {
+      DynamicEnvironmentMapManager._activeComputeCommandCount--;
       return;
     }
+
+    // Copy output texture to corresponding face and mipmap level
+    const commands = manager._convolutionComputeCommands;
     commands[index] = undefined;
 
     radianceCubeMap.copyFace(frameState, texture, face, level);
     facesCopied++;
     DynamicEnvironmentMapManager._activeComputeCommandCount--;
 
-    // All faces and levels have been copied
-    if (facesCopied === manager._specularMapTextures.length) {
+    texture.destroy();
+    manager._specularMapTextures[index] = undefined;
+
+    // All faces for each mipmap level have been copied
+    const length = manager._specularMapTextures.length;
+    if (facesCopied >= length) {
       manager._irradianceCommandDirty = true;
       radianceCubeMap.sampler = new Sampler({
         minificationFilter: TextureMinificationFilter.LINEAR_MIPMAP_LINEAR,
       });
+
       manager._shouldRegenerateShaders = true;
+
+      // Cleanup shared resources
+      manager._va.destroy();
+      manager._va = undefined;
+      manager._convolveSP.destroy();
+      manager._convolveSP = undefined;
     }
   };
 
   let index = 0;
   for (let level = 1; level < mipmapLevels; ++level) {
     for (const face of CubeMap.faceNames()) {
+      if (defined(manager._specularMapTextures[index])) {
+        manager._specularMapTextures[index].destroy();
+      }
+
       const texture = (manager._specularMapTextures[index] = new Texture({
         context: context,
         width: width,
@@ -683,6 +703,8 @@ function updateSpecularMaps(manager, frameState) {
         shaderProgram: shaderProgram,
         vertexArray: vertexArray,
         outputTexture: texture,
+        // Persist so we can use a shared shader progam and vertex array across all commands
+        // Shared resources are instead destroyed in postExecute
         persists: true,
         owner: manager,
         uniformMap: {
@@ -692,8 +714,14 @@ function updateSpecularMaps(manager, frameState) {
             return CubeMap.getDirection(face, scratchCartesian);
           },
         },
-        postExecute: getPostExecute(index, texture, face, level),
       });
+      command.postExecute = getPostExecute(
+        command,
+        index,
+        texture,
+        face,
+        level,
+      );
       manager._convolutionComputeCommands[index] = command;
       DynamicEnvironmentMapManager._queueCommand(command, frameState);
       ++index;
@@ -717,16 +745,18 @@ function updateIrradianceResources(manager, frameState) {
   const dimensions = irradianceTextureDimensions;
 
   let texture = manager._irradianceMapTexture;
-  if (!defined(texture)) {
-    texture = new Texture({
-      context: context,
-      width: dimensions.x,
-      height: dimensions.y,
-      pixelDatatype: PixelDatatype.FLOAT,
-      pixelFormat: PixelFormat.RGBA,
-    });
-    manager._irradianceMapTexture = texture;
+  if (defined(texture) && !texture.isDestroyed()) {
+    texture.destroy();
   }
+
+  texture = new Texture({
+    context: context,
+    width: dimensions.x,
+    height: dimensions.y,
+    pixelDatatype: PixelDatatype.FLOAT,
+    pixelFormat: PixelFormat.RGBA,
+  });
+  manager._irradianceMapTexture = texture;
 
   let fs = manager._irradianceMapFS;
   if (!defined(fs)) {
@@ -739,21 +769,25 @@ function updateIrradianceResources(manager, frameState) {
   const command = new ComputeCommand({
     fragmentShaderSource: fs,
     outputTexture: texture,
+    owner: manager,
     uniformMap: {
       u_radianceMap: () => manager._radianceCubeMap ?? context.defaultTexture,
     },
-    postExecute: () => {
-      if (!defined(manager._irradianceComputeCommand)) {
-        // This command was cancelled
-        return;
-      }
-      manager._irradianceTextureDirty = false;
-      manager._irradianceComputeCommand = undefined;
-      manager._sphericalHarmonicCoefficientsDirty = true;
-
-      DynamicEnvironmentMapManager._activeComputeCommandCount--;
-    },
   });
+
+  command.postExecute = () => {
+    if (manager.isDestroyed() || command.canceled) {
+      DynamicEnvironmentMapManager._activeComputeCommandCount--;
+      return;
+    }
+    manager._irradianceTextureDirty = false;
+    manager._irradianceComputeCommand = undefined;
+    manager._sphericalHarmonicCoefficientsDirty = true;
+    manager._irradianceMapFS = undefined;
+
+    DynamicEnvironmentMapManager._activeComputeCommandCount--;
+  };
+
   manager._irradianceComputeCommand = command;
   DynamicEnvironmentMapManager._queueCommand(command, frameState);
   manager._irradianceTextureDirty = true;
@@ -767,6 +801,11 @@ function updateIrradianceResources(manager, frameState) {
  */
 function updateSphericalHarmonicCoefficients(manager, frameState) {
   const context = frameState.context;
+
+  if (!defined(manager._irradianceMapTexture)) {
+    // Operation was canceled
+    return;
+  }
 
   const framebuffer = new Framebuffer({
     context: context,
@@ -793,6 +832,8 @@ function updateSphericalHarmonicCoefficients(manager, frameState) {
   }
 
   framebuffer.destroy();
+  manager._irradianceMapTexture.destroy();
+  manager._irradianceMapTexture = undefined;
   manager._shouldRegenerateShaders = true;
 }
 
@@ -834,9 +875,11 @@ DynamicEnvironmentMapManager.prototype.update = function (frameState) {
         this.maximumSecondsDifference,
       ));
 
-  if (regenerateEnvironmentMap) {
+  if (this._shouldReset || regenerateEnvironmentMap) {
     this.reset();
+    this._shouldReset = false;
     this._lastTime = JulianDate.clone(frameState.time, this._lastTime);
+    return;
   }
 
   if (this._radianceMapDirty) {
@@ -910,19 +953,33 @@ DynamicEnvironmentMapManager.prototype.destroy = function () {
   length = this._radianceMapTextures.length;
   for (let i = 0; i < length; ++i) {
     this._radianceMapTextures[i] =
-      this._radianceMapTextures[i] && this._radianceMapTextures[i].destroy();
+      this._radianceMapTextures[i] &&
+      !this._radianceMapTextures[i].isDestroyed() &&
+      this._radianceMapTextures[i].destroy();
   }
 
   length = this._specularMapTextures.length;
   for (let i = 0; i < length; ++i) {
     this._specularMapTextures[i] =
-      this._specularMapTextures[i] && this._specularMapTextures[i].destroy();
+      this._specularMapTextures[i] &&
+      !this._specularMapTextures[i].isDestroyed() &&
+      this._specularMapTextures[i].destroy();
   }
 
   this._radianceCubeMap =
     this._radianceCubeMap && this._radianceCubeMap.destroy();
   this._irradianceMapTexture =
-    this._irradianceMapTexture && this._irradianceMapTexture.destroy();
+    this._irradianceMapTexture &&
+    !this._irradianceMapTexture.isDestroyed() &&
+    this._irradianceMapTexture.destroy();
+
+  if (defined(this._va)) {
+    this._va.destroy();
+  }
+
+  if (defined(this._convolveSP)) {
+    this._convolveSP.destroy();
+  }
 
   return destroyObject(this);
 };
