@@ -3,7 +3,7 @@ import defined from "./defined.js";
 /**
  * Adds all elements from the given source array to the given target array.
  *
- * If the `source` is `undefined`, then nothing will be done. Otherwise,
+ * If the <code>source</code> is <code>undefined</code>, then nothing will be done. Otherwise,
  * this has the same semantics as
  * ```
  * for (const s of source) target.push(s);
