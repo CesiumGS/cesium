@@ -1,5 +1,11 @@
 # Change Log
 
+### 1.125 - 2025-01-02
+
+##### Fixes :wrench:
+
+- Fixed JulianDate to always generate valid ISO strings for fractional milliseconds [#12345](https://github.com/CesiumGS/cesium/pull/12345)
+
 ### 1.124 - 2024-12-02
 
 #### @cesium/engine

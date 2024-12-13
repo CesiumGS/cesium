@@ -441,14 +441,26 @@ In addition to testing success cases, we also test all failure cases. The custom
 ```javascript
 it("fromDegrees throws with no latitude", function () {
   expect(function () {
-    Cartesian3.fromDegrees(0.0);
-  }).toThrowDeveloperError();
+    Cartesian3.fromDegrees(0.0, undefined);
+  }).toThrowDeveloperError(
+    "Expected latitude to be typeof number, actual typeof was undefined",
+  );
 });
 ```
 
 Above, `Cartesian3.fromDegrees` is expected to throw a `DeveloperError` because it expects longitude and latitude arguments, and only longitude is provided.
 
-Tips:
+#### Tips
+
+- When testing for exceptions it is recommended to test for the expected error message to verify that the test is triggering the correct error. This can be achieved either with the full error message, like above, or with a regular expression that will match the error message like this:
+
+```javascript
+it("fromDegrees throws with no latitude", function () {
+  expect(function () {
+    Cartesian3.fromDegrees(0.0, undefined);
+  }).toThrowDeveloperError(/Expected latitude to be/);
+});
+```
 
 - When testing for exceptions, put only code that is expected to trigger the exception inside the function passed to `expect()`, in case setup code unintentionally throws an exception.
 - To verify the right exception is thrown, it is often useful to comment out the `expect` call when first running the test, for example:
@@ -456,7 +468,7 @@ Tips:
 ```javascript
 it("fromDegrees throws with no latitude", function () {
   //    expect(function() {
-  Cartesian3.fromDegrees(0.0);
+  Cartesian3.fromDegrees(0.0, undefined);
   //    }).toThrowDeveloperError();
 });
 ```
