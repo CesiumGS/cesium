@@ -1,5 +1,5 @@
 import {
-  addAll,
+  addAllToArray,
   binarySearch,
   ClockRange,
   ClockStep,
@@ -507,7 +507,7 @@ AnimationViewModel.prototype.setShuttleRingTicks = function (positiveTicks) {
       allTicks.push(-tick);
     }
   }
-  addAll(sortedFilteredPositiveTicks, allTicks);
+  addAllToArray(allTicks, sortedFilteredPositiveTicks);
 
   this._allShuttleRingTicks = allTicks;
 };

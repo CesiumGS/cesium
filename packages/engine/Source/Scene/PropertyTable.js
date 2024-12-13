@@ -3,7 +3,7 @@ import defaultValue from "../Core/defaultValue.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import defined from "../Core/defined.js";
 import JsonMetadataTable from "./JsonMetadataTable.js";
-import addAll from "../Core/addAll.js";
+import addAllToArray from "../Core/addAllToArray.js";
 
 /**
  * A property table for use with the <code>EXT_structural_metadata</code> extension or
@@ -298,17 +298,17 @@ PropertyTable.prototype.getPropertyIds = function (index, results) {
   if (defined(this._metadataTable)) {
     // concat in place to avoid unnecessary array allocation
     const ids = this._metadataTable.getPropertyIds(scratchResults);
-    addAll(ids, results);
+    addAllToArray(results, ids);
   }
 
   if (defined(this._batchTableHierarchy)) {
     const ids = this._batchTableHierarchy.getPropertyIds(index, scratchResults);
-    addAll(ids, results);
+    addAllToArray(results, ids);
   }
 
   if (defined(this._jsonMetadataTable)) {
     const ids = this._jsonMetadataTable.getPropertyIds(scratchResults);
-    addAll(ids, results);
+    addAllToArray(results, ids);
   }
 
   return results;

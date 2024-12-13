@@ -1,4 +1,4 @@
-import addAll from "../Core/addAll.js";
+import addAllToArray from "../Core/addAllToArray.js";
 import clone from "../Core/clone.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
@@ -1456,15 +1456,15 @@ Cesium3DTileStyle.prototype.getVariables = function () {
   let variables = [];
 
   if (defined(this.color) && defined(this.color.getVariables)) {
-    addAll(this.color.getVariables(), variables);
+    addAllToArray(variables, this.color.getVariables());
   }
 
   if (defined(this.show) && defined(this.show.getVariables)) {
-    addAll(this.show.getVariables(), variables);
+    addAllToArray(variables, this.show.getVariables());
   }
 
   if (defined(this.pointSize) && defined(this.pointSize.getVariables)) {
-    addAll(this.pointSize.getVariables(), variables);
+    addAllToArray(variables, this.pointSize.getVariables());
   }
 
   // Remove duplicates

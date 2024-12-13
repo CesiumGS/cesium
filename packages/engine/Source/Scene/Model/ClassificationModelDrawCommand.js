@@ -1,4 +1,4 @@
-import addAll from "../../Core/addAll.js";
+import addAllToArray from "../../Core/addAllToArray.js";
 import BoundingSphere from "../../Core/BoundingSphere.js";
 import Check from "../../Core/Check.js";
 import defaultValue from "../../Core/defaultValue.js";
@@ -483,16 +483,16 @@ ClassificationModelDrawCommand.prototype.pushCommands = function (
   const passes = frameState.passes;
   if (passes.render) {
     if (this._useDebugWireframe) {
-      addAll(this._commandListDebugWireframe, result);
+      addAllToArray(result, this._commandListDebugWireframe);
       return;
     }
 
     if (this._classifiesTerrain) {
-      addAll(this._commandListTerrain, result);
+      addAllToArray(result, this._commandListTerrain);
     }
 
     if (this._classifies3DTiles) {
-      addAll(this._commandList3DTiles, result);
+      addAllToArray(result, this._commandList3DTiles);
     }
 
     const useIgnoreShowCommands =
@@ -514,17 +514,17 @@ ClassificationModelDrawCommand.prototype.pushCommands = function (
         );
       }
 
-      addAll(this._commandListIgnoreShow, result);
+      addAllToArray(result, this._commandListIgnoreShow);
     }
   }
 
   if (passes.pick) {
     if (this._classifiesTerrain) {
-      addAll(this._commandListTerrainPicking, result);
+      addAllToArray(result, this._commandListTerrainPicking);
     }
 
     if (this._classifies3DTiles) {
-      addAll(this._commandList3DTilesPicking, result);
+      addAllToArray(result, this._commandList3DTilesPicking);
     }
   }
 

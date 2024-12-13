@@ -1,5 +1,5 @@
 import {
-  addAll,
+  addAllToArray,
   BlendingState,
   BoundingSphere,
   Cartesian3,
@@ -815,8 +815,8 @@ describe(
       expect(drawCommand.modelMatrix).toBe(command.modelMatrix);
 
       const commandList = [];
-      addAll(drawCommand._commandListTerrain, commandList);
-      addAll(drawCommand._commandList3DTiles, commandList);
+      addAllToArray(commandList, drawCommand._commandListTerrain);
+      addAllToArray(commandList, drawCommand._commandList3DTiles);
 
       const length = commandList.length;
       expect(length).toEqual(12);
