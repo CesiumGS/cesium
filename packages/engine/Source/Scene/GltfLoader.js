@@ -748,11 +748,30 @@ function getBufferViewLoader(loader, bufferViewId) {
 }
 
 function getPackedTypedArray(gltf, accessor, bufferViewTypedArray) {
-  let byteOffset = accessor.byteOffset;
+  const byteOffset = accessor.byteOffset;
   const byteStride = getAccessorByteStride(gltf, accessor);
   const count = accessor.count;
-  const componentCount = numberOfComponentsForType(accessor.type);
   const componentType = accessor.componentType;
+  const type = accessor.type;
+  return GltfLoader.getPackedTypedArrayFromBufferViewTypedArray(
+    bufferViewTypedArray,
+    byteOffset,
+    type,
+    componentType,
+    byteStride,
+    count,
+  );
+}
+
+GltfLoader.getPackedTypedArrayFromBufferViewTypedArray = function (
+  bufferViewTypedArray,
+  byteOffset,
+  type,
+  componentType,
+  byteStride,
+  count,
+) {
+  const componentCount = numberOfComponentsForType(type);
   const componentByteLength = ComponentDatatype.getSizeInBytes(componentType);
   const defaultByteStride = componentByteLength * componentCount;
   const componentsLength = count * componentCount;
@@ -775,7 +794,7 @@ function getPackedTypedArray(gltf, accessor, bufferViewTypedArray) {
 
   const dataView = new DataView(bufferViewTypedArray.buffer);
   const components = new Array(componentCount);
-  const componentReader = getComponentReader(accessor.componentType);
+  const componentReader = getComponentReader(componentType);
   byteOffset = bufferViewTypedArray.byteOffset + byteOffset;
 
   for (let i = 0; i < count; ++i) {
@@ -793,7 +812,7 @@ function getPackedTypedArray(gltf, accessor, bufferViewTypedArray) {
   }
 
   return accessorTypedArray;
-}
+};
 
 function loadDefaultAccessorValues(accessor, values) {
   const accessorType = accessor.type;
