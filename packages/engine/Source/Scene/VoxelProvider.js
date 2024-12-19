@@ -223,6 +223,7 @@ Object.defineProperties(VoxelProvider.prototype, {
  * @param {number} [options.tileX=0] The tile's X coordinate.
  * @param {number} [options.tileY=0] The tile's Y coordinate.
  * @param {number} [options.tileZ=0] The tile's Z coordinate.
+ * @param {FrameState} options.frameState The frame state
  * @privateparam {number} [options.keyframe=0] The requested keyframe.
  * @returns {Promise<Array[]>|undefined} A promise to an array of typed arrays containing the requested voxel data or undefined if there was a problem loading the data.
  */

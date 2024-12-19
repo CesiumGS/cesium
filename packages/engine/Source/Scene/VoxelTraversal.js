@@ -406,10 +406,11 @@ function recomputeBoundingVolumesRecursive(that, node) {
  *
  * @param {VoxelTraversal} that
  * @param {KeyframeNode} keyframeNode
+ * @param {FrameState} frameState
  *
  * @private
  */
-function requestData(that, keyframeNode) {
+function requestData(that, keyframeNode, frameState) {
   if (
     that._simultaneousRequestCount >=
     VoxelTraversal.simultaneousRequestCountMaximum
@@ -451,19 +452,21 @@ function requestData(that, keyframeNode) {
     }
   }
 
-  function postRequestFailure() {
+  function postRequestFailure(error) {
     that._simultaneousRequestCount--;
     keyframeNode.state = KeyframeNode.LoadState.FAILED;
   }
 
   const { keyframe, spatialNode } = keyframeNode;
-  const promise = provider.requestData({
+  const requestParameters = {
     tileLevel: spatialNode.level,
     tileX: spatialNode.x,
     tileY: spatialNode.y,
     tileZ: spatialNode.z,
     keyframe: keyframe,
-  });
+    frameState: frameState,
+  };
+  const promise = provider.requestData(requestParameters);
 
   if (defined(promise)) {
     that._simultaneousRequestCount++;
@@ -635,7 +638,7 @@ function loadAndUnload(that, frameState) {
       continue;
     }
     if (highPriorityKeyframeNode.state === KeyframeNode.LoadState.UNLOADED) {
-      requestData(that, highPriorityKeyframeNode);
+      requestData(that, highPriorityKeyframeNode, frameState);
     }
     if (highPriorityKeyframeNode.state === KeyframeNode.LoadState.RECEIVED) {
       let addNodeIndex = 0;

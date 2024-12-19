@@ -1,26 +1,28 @@
 import Cartesian3 from "../Core/Cartesian3.js";
+import Cesium3DTilesetMetadata from "./Cesium3DTilesetMetadata.js";
 import Check from "../Core/Check.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
-import Matrix4 from "../Core/Matrix4.js";
-import OrientedBoundingBox from "../Core/OrientedBoundingBox.js";
-import Resource from "../Core/Resource.js";
-import RuntimeError from "../Core/RuntimeError.js";
-import Cesium3DTilesetMetadata from "./Cesium3DTilesetMetadata.js";
+import GltfLoader from "./GltfLoader.js";
 import hasExtension from "./hasExtension.js";
 import ImplicitSubtree from "./ImplicitSubtree.js";
 import ImplicitSubtreeCache from "./ImplicitSubtreeCache.js";
 import ImplicitTileCoordinates from "./ImplicitTileCoordinates.js";
 import ImplicitTileset from "./ImplicitTileset.js";
+import Matrix4 from "../Core/Matrix4.js";
 import MetadataSemantic from "./MetadataSemantic.js";
 import MetadataType from "./MetadataType.js";
+import OrientedBoundingBox from "../Core/OrientedBoundingBox.js";
 import preprocess3DTileContent from "./preprocess3DTileContent.js";
+import Resource from "../Core/Resource.js";
 import ResourceCache from "./ResourceCache.js";
+import RuntimeError from "../Core/RuntimeError.js";
 import VoxelBoxShape from "./VoxelBoxShape.js";
-import VoxelContent from "./VoxelContent.js";
 import VoxelCylinderShape from "./VoxelCylinderShape.js";
 import VoxelShapeType from "./VoxelShapeType.js";
+import MetadataComponentType from "./MetadataComponentType.js";
+import ComponentDatatype from "../Core/ComponentDatatype.js";
 
 /**
  * A {@link VoxelProvider} that fetches voxel data from a 3D Tiles tileset.
@@ -89,6 +91,14 @@ function Cesium3DTilesVoxelProvider(options) {
   /** @inheritdoc */
   this.maximumTileCount = undefined;
 
+  /**
+   * glTFs that are in the process of being loaded.
+   *
+   * @type {GltfLoader[]}
+   * @private
+   */
+  this._gltfLoaders = new Array();
+
   this._implicitTileset = undefined;
   this._subtreeCache = new ImplicitSubtreeCache();
 }
@@ -127,14 +137,14 @@ Cesium3DTilesVoxelProvider.fromUrl = async function (url) {
     : tilesetJson;
 
   const metadataSchema = schemaLoader.schema;
-  const metadata = new Cesium3DTilesetMetadata({
+  const tilesetMetadata = new Cesium3DTilesetMetadata({
     metadataJson: metadataJson,
     schema: metadataSchema,
   });
 
   const provider = new Cesium3DTilesVoxelProvider();
 
-  addAttributeInfo(provider, metadata, className);
+  addAttributeInfo(provider, tilesetMetadata, className);
 
   const implicitTileset = new ImplicitTileset(resource, root, metadataSchema);
 
@@ -147,7 +157,7 @@ Cesium3DTilesVoxelProvider.fromUrl = async function (url) {
   provider.dimensions = Cartesian3.unpack(voxel.dimensions);
   provider.shapeTransform = shapeTransform;
   provider.globalTransform = globalTransform;
-  provider.maximumTileCount = getTileCount(metadata);
+  provider.maximumTileCount = getTileCount(tilesetMetadata);
 
   let paddingBefore;
   let paddingAfter;
@@ -339,29 +349,7 @@ function copyArray(values, length) {
   return Array.from({ length }, (v, i) => valuesArray[i]);
 }
 
-async function getVoxelContent(implicitTileset, tileCoordinates) {
-  const voxelRelative =
-    implicitTileset.contentUriTemplates[0].getDerivedResource({
-      templateValues: tileCoordinates.getTemplateValues(),
-    });
-  const voxelResource = implicitTileset.baseResource.getDerivedResource({
-    url: voxelRelative.url,
-  });
-
-  const arrayBuffer = await voxelResource.fetchArrayBuffer();
-  const preprocessed = preprocess3DTileContent(arrayBuffer);
-
-  const voxelContent = await VoxelContent.fromJson(
-    voxelResource,
-    preprocessed.jsonPayload,
-    preprocessed.binaryPayload,
-    implicitTileset.metadataSchema,
-  );
-
-  return voxelContent;
-}
-
-async function getSubtreePromise(provider, subtreeCoord) {
+async function getSubtree(provider, subtreeCoord) {
   const implicitTileset = provider._implicitTileset;
   const subtreeCache = provider._subtreeCache;
 
@@ -403,13 +391,20 @@ async function getSubtreePromise(provider, subtreeCoord) {
 }
 
 /** @inheritdoc */
-Cesium3DTilesVoxelProvider.prototype.requestData = function (options) {
+Cesium3DTilesVoxelProvider.prototype.requestData = async function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  const tileLevel = defaultValue(options.tileLevel, 0);
-  const tileX = defaultValue(options.tileX, 0);
-  const tileY = defaultValue(options.tileY, 0);
-  const tileZ = defaultValue(options.tileZ, 0);
-  const keyframe = defaultValue(options.keyframe, 0);
+  const {
+    tileLevel = 0,
+    tileX = 0,
+    tileY = 0,
+    tileZ = 0,
+    keyframe = 0,
+    frameState,
+  } = options;
+
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeof.object("options.frameState", frameState);
+  //>>includeEnd('debug');
 
   // 3D Tiles currently doesn't support time-dynamic data.
   if (keyframe !== 0) {
@@ -420,7 +415,7 @@ Cesium3DTilesVoxelProvider.prototype.requestData = function (options) {
   // 2. Load the voxel content if available
 
   const implicitTileset = this._implicitTileset;
-  const names = this.names;
+  const { names, types, componentTypes } = this;
 
   // Can't use a scratch variable here because the object is used inside the promise chain.
   const tileCoordinates = new ImplicitTileCoordinates({
@@ -444,23 +439,79 @@ Cesium3DTilesVoxelProvider.prototype.requestData = function (options) {
 
   const that = this;
 
-  return getSubtreePromise(that, subtreeCoord)
-    .then(function (subtree) {
-      const available = isSubtreeRoot
-        ? subtree.childSubtreeIsAvailableAtCoordinates(tileCoordinates)
-        : subtree.tileIsAvailableAtCoordinates(tileCoordinates);
+  const subtree = await getSubtree(that, subtreeCoord);
+  // TODO: this looks wrong? We get !available for tiles that are present if we ignore availability
+  // NOTE: these two subtree methods are ONLY used by voxels!
+  // NOTE: the errors are coming from the first call, childSubtreeIsAvailableAtCoordinates
+  const available = isSubtreeRoot
+    ? subtree.childSubtreeIsAvailableAtCoordinates(tileCoordinates)
+    : subtree.tileIsAvailableAtCoordinates(tileCoordinates);
 
-      if (!available) {
-        return Promise.reject("Tile is not available");
-      }
+  if (!available) {
+    //console.log(`requestData: not available. isSubtreeRoot = ${isSubtreeRoot}, tileLevel = ${tileLevel}`);
+    return Promise.reject("Tile is not available");
+  }
 
-      return getVoxelContent(implicitTileset, tileCoordinates);
-    })
-    .then(function (voxelContent) {
-      return names.map(function (name) {
-        return voxelContent.metadataTable.getPropertyTypedArray(name);
-      });
-    });
+  const gltfLoader = getGltfLoader(implicitTileset, tileCoordinates);
+  that._gltfLoaders.push(gltfLoader);
+  // TODO: try / catch
+  await gltfLoader.load(true);
+  gltfLoader.process(frameState);
+  await gltfLoader._loadResourcesPromise;
+  gltfLoader.process(frameState);
+
+  const { attributes } = gltfLoader.components.scene.nodes[0].primitives[0];
+
+  const data = new Array(attributes.length);
+  for (let i = 0; i < attributes.length; i++) {
+    // The attributes array from GltfLoader is not in the same order as
+    // names, types, etc. from the provider.
+    // Find the appropriate glTF attribute based on its name.
+    // Note: glTF custom attribute names are prefixed with "_"
+    const name = `_${names[i]}`;
+    const attribute = attributes.find((a) => a.name === name);
+    if (!defined(attribute)) {
+      continue;
+    }
+
+    const componentDatatype = MetadataComponentType.toComponentDatatype(
+      componentTypes[i],
+    );
+    const componentCount = MetadataType.getComponentCount(types[i]);
+    const totalCount = attribute.count * componentCount;
+    data[i] = ComponentDatatype.createArrayBufferView(
+      componentDatatype,
+      attribute.typedArray.buffer,
+      attribute.typedArray.byteOffset + attribute.byteOffset,
+      totalCount,
+    );
+  }
+
+  that._gltfLoaders.splice(that._gltfLoaders.indexOf(gltfLoader), 1);
+  return data;
 };
+
+/**
+ * Get a loader for a glTF tile from a tileset
+ * @param {ImplicitTileset} implicitTileset The tileset from which the loader will retrieve a glTF tile
+ * @param {ImplicitTileCoordinates} tileCoord The coordinates of the desired tile
+ * @returns {GltfLoader} A loader for the requested tile
+ * @private
+ */
+function getGltfLoader(implicitTileset, tileCoord) {
+  const { contentUriTemplates, baseResource } = implicitTileset;
+  const gltfRelative = contentUriTemplates[0].getDerivedResource({
+    templateValues: tileCoord.getTemplateValues(),
+  });
+  const gltfResource = baseResource.getDerivedResource({
+    url: gltfRelative.url,
+  });
+
+  return new GltfLoader({
+    gltfResource: gltfResource,
+    releaseGltfJson: false,
+    loadAttributesAsTypedArray: true,
+  });
+}
 
 export default Cesium3DTilesVoxelProvider;
