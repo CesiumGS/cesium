@@ -342,7 +342,13 @@ GeometryVisualizer.prototype.getBoundingSphere = function (entity, result) {
   const batchesLength = batches.length;
 
   const id = entity.id;
-  const updaters = this._updaterSets.get(id).updaters;
+  const updaterSets = this._updaterSets.get(id);
+
+  if (!defined(updaterSets)) {
+    return BoundingSphereState.FAILED;
+  }
+
+  const updaters = updaterSets.updaters;
 
   for (let j = 0; j < updaters.length; j++) {
     const updater = updaters[j];
