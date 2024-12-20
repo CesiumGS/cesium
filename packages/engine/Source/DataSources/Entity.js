@@ -98,6 +98,7 @@ function createPropertyTypeDescriptor(name, Type) {
  * @property {PolylineVolumeGraphics | PolylineVolumeGraphics.ConstructorOptions} [polylineVolume] A polylineVolume to associate with this entity.
  * @property {RectangleGraphics | RectangleGraphics.ConstructorOptions} [rectangle] A rectangle to associate with this entity.
  * @property {WallGraphics | WallGraphics.ConstructorOptions} [wall] A wall to associate with this entity.
+ * @property {DynamicEnvironmentMapManager.ConstructorOptions} [environmentMapOptions={enabled: false}] The properties for managing dynamic environment maps on this entity.
  */
 
 /**
@@ -122,6 +123,9 @@ function Entity(options) {
   this._availability = undefined;
   this._id = id;
   this._definitionChanged = new Event();
+  this._environmentMapOptions = defaultValue(options.environmentMapOptions, {
+    enabled: false,
+  });
   this._name = options.name;
   this._show = defaultValue(options.show, true);
   this._trackingReferenceFrame = defaultValue(
