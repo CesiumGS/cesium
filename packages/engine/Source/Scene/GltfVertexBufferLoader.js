@@ -1,10 +1,15 @@
 import Check from "../Core/Check.js";
+import ComponentDatatype from "../Core/ComponentDatatype.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Buffer from "../Renderer/Buffer.js";
 import BufferUsage from "../Renderer/BufferUsage.js";
 import AttributeType from "./AttributeType.js";
+import getComponentWriter from "./getComponentWriter.js";
+import GltfIndexBufferLoader from "./GltfIndexBufferLoader.js";
+import GltfLoader from "./GltfLoader.js";
+import numberOfComponentsForType from "./GltfPipeline/numberOfComponentsForType.js";
 import JobType from "./JobType.js";
 import ModelComponents from "./ModelComponents.js";
 import ResourceLoader from "./ResourceLoader.js";
@@ -335,6 +340,15 @@ async function loadFromBufferView(vertexBufferLoader) {
     }
 
     vertexBufferLoader._typedArray = bufferViewLoader.typedArray;
+
+    if (defined(vertexBufferLoader._accessorId)) {
+      const accessor =
+        vertexBufferLoader._gltf.accessors[vertexBufferLoader._accessorId];
+      if (defined(accessor.sparse)) {
+        await handleSparseAccessor(vertexBufferLoader, accessor);
+      }
+    }
+
     vertexBufferLoader._state = ResourceLoaderState.PROCESSING;
     return vertexBufferLoader;
   } catch (error) {
@@ -346,11 +360,112 @@ async function loadFromBufferView(vertexBufferLoader) {
   }
 }
 
+async function handleSparseAccessor(vertexBufferLoader, accessor) {
+  const sparse = accessor.sparse;
+
+  console.log("There, there, sparse!", sparse);
+  const count = sparse.count;
+
+  const indices = sparse.indices;
+  const indicesBufferViewId = indices.bufferView;
+  const indicesBufferViewTypedArray = await loadDependencyBufferViewTypedArray(
+    vertexBufferLoader,
+    indicesBufferViewId,
+  );
+
+  const indicesByteOffset = indices.byteOffset;
+  const indicesComponentType = indices.componentType;
+  const indicesTypedArray =
+    GltfIndexBufferLoader.createIndicesTypedArrayFromBufferViewTypedArray(
+      indicesBufferViewTypedArray,
+      indicesByteOffset,
+      indicesComponentType,
+      count,
+    );
+  console.log("indices typed array ", indicesTypedArray);
+
+  const values = sparse.values;
+  const valuesBufferViewId = values.bufferView;
+  const valuesBufferViewTypedArray = await loadDependencyBufferViewTypedArray(
+    vertexBufferLoader,
+    valuesBufferViewId,
+  );
+
+  const valuesByteOffset = values.byteOffset;
+  const valuesComponentType = accessor.componentType;
+  const componentByteLength =
+    ComponentDatatype.getSizeInBytes(valuesComponentType);
+  const type = accessor.type;
+  const componentCount = numberOfComponentsForType(type);
+  const byteStride = componentByteLength * componentCount;
+  const valuesTypedArray =
+    GltfLoader.getPackedTypedArrayFromBufferViewTypedArray(
+      valuesBufferViewTypedArray,
+      valuesByteOffset,
+      type,
+      valuesComponentType,
+      byteStride,
+      count,
+    );
+  console.log("values typed array ", valuesTypedArray);
+
+  const targetTypedArray = vertexBufferLoader._typedArray;
+  const targetDataView = new DataView(
+    targetTypedArray.buffer,
+    targetTypedArray.byteOffset,
+    targetTypedArray.byteLength,
+  );
+  const componentWriter = getComponentWriter(valuesComponentType);
+
+  console.log("target typed array     ", targetTypedArray);
+  const n = indicesTypedArray.length;
+  for (let i = 0; i < n; i++) {
+    const index = indicesTypedArray[i];
+    for (let c = 0; c < componentCount; c++) {
+      const value = valuesTypedArray[i * componentCount + c];
+      console.log(
+        `setting ${value} at component ${c} of index ${index} of ${targetTypedArray}`,
+      );
+      componentWriter(targetDataView, index * componentCount + c, value);
+    }
+  }
+  console.log("target typed array now ", targetTypedArray);
+}
+
 function handleError(vertexBufferLoader, error) {
   vertexBufferLoader.unload();
   vertexBufferLoader._state = ResourceLoaderState.FAILED;
   const errorMessage = "Failed to load vertex buffer";
   throw vertexBufferLoader.getError(errorMessage, error);
+}
+
+async function loadDependencyBufferViewTypedArray(
+  vertexBufferLoader,
+  bufferViewId,
+) {
+  vertexBufferLoader._state = ResourceLoaderState.LOADING;
+  const resourceCache = vertexBufferLoader._resourceCache;
+  try {
+    const bufferViewLoader = resourceCache.getBufferViewLoader({
+      gltf: vertexBufferLoader._gltf,
+      bufferViewId: bufferViewId,
+      gltfResource: vertexBufferLoader._gltfResource,
+      baseResource: vertexBufferLoader._baseResource,
+    });
+    vertexBufferLoader._bufferViewLoader = bufferViewLoader;
+    await bufferViewLoader.load();
+
+    if (vertexBufferLoader.isDestroyed()) {
+      return;
+    }
+    return bufferViewLoader.typedArray;
+  } catch (error) {
+    if (vertexBufferLoader.isDestroyed()) {
+      return;
+    }
+
+    handleError(vertexBufferLoader, error);
+  }
 }
 
 function CreateVertexBufferJob() {
