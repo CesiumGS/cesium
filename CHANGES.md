@@ -8,6 +8,7 @@
 
 - Fix TypeError on setting the Viewer selectedEntity. [#12322](https://github.com/CesiumGS/cesium/pull/12322)
 - Fixed JulianDate to always generate valid ISO strings for fractional milliseconds [#12345](https://github.com/CesiumGS/cesium/pull/12345)
+- Fixed intermittent z-fighting issue. [#12337](https://github.com/CesiumGS/cesium/issues/12337)
 
 ### 1.124 - 2024-12-02
 
