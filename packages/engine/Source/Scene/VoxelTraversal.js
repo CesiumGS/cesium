@@ -422,6 +422,7 @@ function requestData(that, keyframeNode) {
   function postRequestSuccess(result) {
     that._simultaneousRequestCount--;
     const length = provider.types.length;
+    that._primitive.tileLoad.raiseEvent();
 
     if (!defined(result)) {
       keyframeNode.state = KeyframeNode.LoadState.UNAVAILABLE;
@@ -645,6 +646,7 @@ function loadAndUnload(that, frameState) {
         destroyedCount++;
 
         const discardNode = keyframeNodesInMegatexture[addNodeIndex];
+        that._primitive.tileUnload.raiseEvent();
         discardNode.spatialNode.destroyKeyframeNode(
           discardNode,
           that.megatextures,

@@ -450,6 +450,49 @@ function VoxelPrimitive(options) {
     }
   }
 
+  /**
+   * The event fired to indicate that a tile's content was loaded.
+   * <p>
+   * The loaded tile is passed to the event listener.
+   * </p>
+   * <p>
+   * This event is fired during the tileset traversal while the frame is being rendered
+   * so that updates to the tile take effect in the same frame.  Do not create or modify
+   * Cesium entities or primitives during the event listener.
+   * </p>
+   *
+   * @type {Event}
+   * @default new Event()
+   *
+   * @example
+   * voxelPrimitive.tileLoad.addEventListener(function(tile) {
+   *     console.log('A tile was loaded.');
+   * });
+   */
+  this.tileLoad = new Event();
+
+  /**
+   * The event fired to indicate that a tile's content was unloaded.
+   * <p>
+   * The unloaded {@link Cesium3DTile} is passed to the event listener.
+   * </p>
+   * <p>
+   * This event is fired immediately before the tile's content is unloaded while the frame is being
+   * rendered so that the event listener has access to the tile's content.  Do not create
+   * or modify Cesium entities or primitives during the event listener.
+   * </p>
+   *
+   * @type {Event}
+   * @default new Event()
+   *
+   * @example
+   * primitive.tileUnload.addEventListener(function(tile) {
+   *     console.log('A tile was unloaded from the cache.');
+   * });
+   *
+   */
+  this.tileUnload = new Event();
+
   // If the provider fails to initialize the primitive will fail too.
   const provider = this._provider;
   initialize(this, provider);
