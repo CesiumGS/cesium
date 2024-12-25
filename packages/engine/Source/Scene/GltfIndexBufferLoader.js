@@ -2,11 +2,10 @@ import Check from "../Core/Check.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
-import deprecationWarning from "../Core/deprecationWarning.js";
 import DeveloperError from "../Core/DeveloperError.js";
-import IndexDatatype from "../Core/IndexDatatype.js";
 import Buffer from "../Renderer/Buffer.js";
 import BufferUsage from "../Renderer/BufferUsage.js";
+import GltfUtil from "./GltfUtil.js";
 import JobType from "./JobType.js";
 import ResourceLoader from "./ResourceLoader.js";
 import ResourceLoaderState from "./ResourceLoaderState.js";
@@ -242,48 +241,13 @@ function createIndicesTypedArray(indexBufferLoader, bufferViewTypedArray) {
   const count = accessor.count;
   const byteOffset = accessor.byteOffset;
   const componentType = accessor.componentType;
-  return GltfIndexBufferLoader.createIndicesTypedArrayFromBufferViewTypedArray(
+  return GltfUtil.createIndicesTypedArrayFromBufferViewTypedArray(
     bufferViewTypedArray,
     byteOffset,
     componentType,
     count,
   );
 }
-
-GltfIndexBufferLoader.createIndicesTypedArrayFromBufferViewTypedArray =
-  function (bufferViewTypedArray, byteOffset, componentType, count) {
-    const indexSize = IndexDatatype.getSizeInBytes(componentType);
-
-    let arrayBuffer = bufferViewTypedArray.buffer;
-    let arrayBufferByteOffset = bufferViewTypedArray.byteOffset + byteOffset;
-
-    if (arrayBufferByteOffset % indexSize !== 0) {
-      const byteLength = count * indexSize;
-      const view = new Uint8Array(
-        arrayBuffer,
-        arrayBufferByteOffset,
-        byteLength,
-      );
-      const copy = new Uint8Array(view);
-      arrayBuffer = copy.buffer;
-      arrayBufferByteOffset = 0;
-      deprecationWarning(
-        "index-buffer-unaligned",
-        `The index array is not aligned to a ${indexSize}-byte boundary.`,
-      );
-    }
-
-    let typedArray;
-    if (componentType === IndexDatatype.UNSIGNED_BYTE) {
-      typedArray = new Uint8Array(arrayBuffer, arrayBufferByteOffset, count);
-    } else if (componentType === IndexDatatype.UNSIGNED_SHORT) {
-      typedArray = new Uint16Array(arrayBuffer, arrayBufferByteOffset, count);
-    } else if (componentType === IndexDatatype.UNSIGNED_INT) {
-      typedArray = new Uint32Array(arrayBuffer, arrayBufferByteOffset, count);
-    }
-
-    return typedArray;
-  };
 
 function handleError(indexBufferLoader, error) {
   indexBufferLoader.unload();

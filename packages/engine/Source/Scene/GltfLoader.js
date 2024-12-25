@@ -15,8 +15,6 @@ import Quaternion from "../Core/Quaternion.js";
 import RuntimeError from "../Core/RuntimeError.js";
 import Sampler from "../Renderer/Sampler.js";
 import getAccessorByteStride from "./GltfPipeline/getAccessorByteStride.js";
-import getComponentReader from "./GltfPipeline/getComponentReader.js";
-import numberOfComponentsForType from "./GltfPipeline/numberOfComponentsForType.js";
 import GltfStructuralMetadataLoader from "./GltfStructuralMetadataLoader.js";
 import AttributeType from "./AttributeType.js";
 import Axis from "./Axis.js";
@@ -32,6 +30,7 @@ import VertexAttributeSemantic from "./VertexAttributeSemantic.js";
 import GltfGpmLoader from "./Model/Extensions/Gpm/GltfGpmLoader.js";
 import GltfMeshPrimitiveGpmLoader from "./Model/Extensions/Gpm/GltfMeshPrimitiveGpmLoader.js";
 import oneTimeWarning from "../Core/oneTimeWarning.js";
+import GltfUtil from "./GltfUtil.js";
 
 const {
   Attribute,
@@ -753,7 +752,7 @@ function getPackedTypedArray(gltf, accessor, bufferViewTypedArray) {
   const count = accessor.count;
   const componentType = accessor.componentType;
   const type = accessor.type;
-  return GltfLoader.getPackedTypedArrayFromBufferViewTypedArray(
+  return GltfUtil.getPackedTypedArrayFromBufferViewTypedArray(
     bufferViewTypedArray,
     byteOffset,
     type,
@@ -762,57 +761,6 @@ function getPackedTypedArray(gltf, accessor, bufferViewTypedArray) {
     count,
   );
 }
-
-GltfLoader.getPackedTypedArrayFromBufferViewTypedArray = function (
-  bufferViewTypedArray,
-  byteOffset,
-  type,
-  componentType,
-  byteStride,
-  count,
-) {
-  const componentCount = numberOfComponentsForType(type);
-  const componentByteLength = ComponentDatatype.getSizeInBytes(componentType);
-  const defaultByteStride = componentByteLength * componentCount;
-  const componentsLength = count * componentCount;
-
-  if (byteStride === defaultByteStride) {
-    // Copy the typed array and let the underlying ArrayBuffer be freed
-    bufferViewTypedArray = new Uint8Array(bufferViewTypedArray);
-    return ComponentDatatype.createArrayBufferView(
-      componentType,
-      bufferViewTypedArray.buffer,
-      bufferViewTypedArray.byteOffset + byteOffset,
-      componentsLength,
-    );
-  }
-
-  const accessorTypedArray = ComponentDatatype.createTypedArray(
-    componentType,
-    componentsLength,
-  );
-
-  const dataView = new DataView(bufferViewTypedArray.buffer);
-  const components = new Array(componentCount);
-  const componentReader = getComponentReader(componentType);
-  byteOffset = bufferViewTypedArray.byteOffset + byteOffset;
-
-  for (let i = 0; i < count; ++i) {
-    componentReader(
-      dataView,
-      byteOffset,
-      componentCount,
-      componentByteLength,
-      components,
-    );
-    for (let j = 0; j < componentCount; ++j) {
-      accessorTypedArray[i * componentCount + j] = components[j];
-    }
-    byteOffset += byteStride;
-  }
-
-  return accessorTypedArray;
-};
 
 function loadDefaultAccessorValues(accessor, values) {
   const accessorType = accessor.type;
@@ -1221,11 +1169,7 @@ function loadAttribute(
   // Save this finish callback by the loader index so it can be called
   // in process().
   loader._geometryCallbacks[index] = () => {
-    if (
-      defined(draco) &&
-      defined(draco.attributes) &&
-      defined(draco.attributes[gltfSemantic])
-    ) {
+    if (GltfUtil.hasDracoCompression(draco, gltfSemantic)) {
       finalizeDracoAttribute(
         attribute,
         vertexBufferLoader,

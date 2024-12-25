@@ -4,6 +4,7 @@ import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import getAbsoluteUri from "../Core/getAbsoluteUri.js";
 import GltfLoaderUtil from "./GltfLoaderUtil.js";
+import GltfUtil from "./GltfUtil.js";
 import hasExtension from "./hasExtension.js";
 
 /**
@@ -314,7 +315,7 @@ ResourceCacheKey.getVertexBufferCacheKey = function (options) {
   Check.typeOf.object("options.frameState", frameState);
 
   const hasBufferViewId = defined(bufferViewId);
-  const hasDraco = hasDracoCompression(draco, attributeSemantic);
+  const hasDraco = GltfUtil.hasDracoCompression(draco, attributeSemantic);
   const hasAttributeSemantic = defined(attributeSemantic);
 
   if (hasBufferViewId === hasDraco) {
@@ -380,14 +381,6 @@ ResourceCacheKey.getVertexBufferCacheKey = function (options) {
 
   return `vertex-buffer:${bufferCacheKey}-range-${bufferViewCacheKey}${cacheKeySuffix}`;
 };
-
-function hasDracoCompression(draco, semantic) {
-  return (
-    defined(draco) &&
-    defined(draco.attributes) &&
-    defined(draco.attributes[semantic])
-  );
-}
 
 /**
  * Gets the index buffer cache key.

@@ -9,6 +9,7 @@ import GltfImageLoader from "./GltfImageLoader.js";
 import GltfIndexBufferLoader from "./GltfIndexBufferLoader.js";
 import GltfJsonLoader from "./GltfJsonLoader.js";
 import GltfTextureLoader from "./GltfTextureLoader.js";
+import GltfUtil from "./GltfUtil.js";
 import GltfVertexBufferLoader from "./GltfVertexBufferLoader.js";
 import MetadataSchemaLoader from "./MetadataSchemaLoader.js";
 import ResourceCacheKey from "./ResourceCacheKey.js";
@@ -439,7 +440,7 @@ ResourceCache.getVertexBufferLoader = function (options) {
   }
 
   const hasBufferViewId = defined(bufferViewId);
-  const hasDraco = hasDracoCompression(draco, attributeSemantic);
+  const hasDraco = GltfUtil.hasDracoCompression(draco, attributeSemantic);
   const hasAttributeSemantic = defined(attributeSemantic);
   const hasAccessorId = defined(accessorId);
 
@@ -504,14 +505,6 @@ ResourceCache.getVertexBufferLoader = function (options) {
 
   return ResourceCache.add(vertexBufferLoader);
 };
-
-function hasDracoCompression(draco, semantic) {
-  return (
-    defined(draco) &&
-    defined(draco.attributes) &&
-    defined(draco.attributes[semantic])
-  );
-}
 
 /**
  * Gets an existing glTF index buffer from the cache, or creates a new loader if one does not already exist.
