@@ -93,6 +93,22 @@ Object.defineProperties(GltfDracoLoader.prototype, {
   },
 });
 
+/**
+ * The only function that is called from the "ResourceLoader.load" implementation
+ * of this class: It loads the buffer view data that is referred to by the
+ * draco extension object.
+ *
+ * When the returned promise completes, then the loaded buffer view data will
+ * be available as a typed array, namely, the "loader._bufferViewTypedArray",
+ * and the state of the given loader will be ResourceLoaderState.PROCESSING.
+ *
+ * Based on this state, the "ResourceLoader.process" function of this class
+ * will decode this typed array. The resulting decoded data will be handled
+ * in "processDecode"
+ *
+ * @param {GltfDracoLoader} loader - The loader, "this"
+ * @returns A promise that is fulfilled when the resources are loaded
+ */
 async function loadResources(loader) {
   const resourceCache = loader._resourceCache;
   try {
@@ -143,6 +159,28 @@ function handleError(dracoLoader, error) {
   throw dracoLoader.getError(errorMessage, error);
 }
 
+/**
+ * Will be called from the "ResourceLoader.process" implementation of
+ * this class, as soon as the underlying raw buffer view data has
+ * been draco-decoded from the "loader._bufferViewTypedArray" and
+ * converted into a structure that contains the "indexArray"
+ * and the "attributeData" from the Draco decoding process.
+ *
+ * The resulting data will be stored as the "loader._decodedData".
+ *
+ * The exact structure of this data is not known (by me), but it is
+ * later accessed with lines like
+ * <code><pre>
+ * dracoLoader.decodedData.indices.typedArray
+ * dracoLoader.decodedData.vertexAttributes[semantic].array
+ * </pre></code>
+ *
+ * @param {GltfDracoLoader} loader - The draco loader, "this"
+ * @param {Promise<object>} decodePromise - The promise that returns
+ * the decoded data.
+ * @returns A promise that fulfills when the decoded data is stored
+ * in the loader
+ */
 async function processDecode(loader, decodePromise) {
   try {
     const results = await decodePromise;
